@@ -1,240 +1,216 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:37773 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750749AbeELJaP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 12 May 2018 05:30:15 -0400
-Date: Sat, 12 May 2018 17:30:09 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH 2/2] generic: test swapfile creation, activation, and
- deactivation
-Message-ID: <20180512092858.GR8373@desktop>
-References: <152579843989.18959.14108003206856326245.stgit@magnolia>
- <152579844608.18959.5745995713836937294.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:33300 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751033AbeELORs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 12 May 2018 10:17:48 -0400
+Date: Sat, 12 May 2018 10:17:47 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 5/9] xfs: fix double ijoin in xfs_inactive_symlink_rmt()
+Message-ID: <20180512141747.GA2365@bfoster.bfoster>
+References: <20180508034202.10136-1-david@fromorbit.com>
+ <20180508034202.10136-6-david@fromorbit.com>
+ <20180508141810.GF4764@bfoster.bfoster>
+ <20180509002428.GN23861@dastard>
+ <20180509101042.GA64624@bfoster.bfoster>
+ <20180509150238.GM11261@magnolia>
+ <20180511020425.GW10363@dastard>
+ <20180511132449.GA104776@bfoster.bfoster>
+ <20180512020007.GC23861@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <152579844608.18959.5745995713836937294.stgit@magnolia>
+In-Reply-To: <20180512020007.GC23861@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Tue, May 08, 2018 at 09:54:06AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Sat, May 12, 2018 at 12:00:07PM +1000, Dave Chinner wrote:
+> On Fri, May 11, 2018 at 09:24:49AM -0400, Brian Foster wrote:
+> > On Fri, May 11, 2018 at 12:04:25PM +1000, Dave Chinner wrote:
+> > > On Wed, May 09, 2018 at 08:02:38AM -0700, Darrick J. Wong wrote:
+> > > > On Wed, May 09, 2018 at 06:10:42AM -0400, Brian Foster wrote:
+> > > > > On Wed, May 09, 2018 at 10:24:28AM +1000, Dave Chinner wrote:
+> > > > > > On Tue, May 08, 2018 at 10:18:11AM -0400, Brian Foster wrote:
+> > > > > > > On Tue, May 08, 2018 at 01:41:58PM +1000, Dave Chinner wrote:
+> > > > > > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > > > > > 
+> > > > > > > > xfs_inactive_symlink_rmt() does something nasty - it joins an inode
+> > > > > > > > into a transaction it is already joined to. This means the inode can
+> > > > > > > > have multiple log item descriptors attached to the transaction for
+> > > > > > > > it. This breaks teh 1:1 mapping that is supposed to exist
+> > > > > > > > between the log item and log item descriptor.
+> > > > > > > > 
+> > > > > > > > This results in the log item being processed twice during
+> > > > > > > > transaction commit and CIL formatting, and there are lots of other
+> > > > > > > > potential issues tha arise from double processing of log items in
+> > > > > > > > the transaction commit state machine.
+> > > > > > > > 
+> > > > > > > > In this case, the inode is already held by the rolling transaction
+> > > > > > > > returned from xfs_defer_finish(), so there's no need to join it
+> > > > > > > > again.
+> > > > > > > > 
+> > > > > > > > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> > > > > > > > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > > > > > > > ---
+> > > > > > > >  fs/xfs/xfs_symlink.c | 9 ++-------
+> > > > > > > >  1 file changed, 2 insertions(+), 7 deletions(-)
+> > > > > > > > 
+> > > > > > > > diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+> > > > > > > > index 5b66ac12913c..27870e5cd259 100644
+> > > > > > > > --- a/fs/xfs/xfs_symlink.c
+> > > > > > > > +++ b/fs/xfs/xfs_symlink.c
+> > > > > > > > @@ -488,16 +488,11 @@ xfs_inactive_symlink_rmt(
+> > > > > > > >  	error = xfs_defer_finish(&tp, &dfops);
+> > > > > > > >  	if (error)
+> > > > > > > >  		goto error_bmap_cancel;
+> > > > > > > > -	/*
+> > > > > > > > -	 * The first xact was committed, so add the inode to the new one.
+> > > > > > > > -	 * Mark it dirty so it will be logged and moved forward in the log as
+> > > > > > > > -	 * part of every commit.
+> > > > > > > > -	 */
+> > > > > > > > -	xfs_trans_ijoin(tp, ip, 0);
+> > > > > > > > -	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+> > > > > > > > +
+> > > > > > > >  	/*
+> > > > > > > >  	 * Commit the transaction containing extent freeing and EFDs.
+> > > > > > > >  	 */
+> > > > > > > > +	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+> > > > > > > 
+> > > > > > > Seems fine.. but do we even need this call? We're about to commit the
+> > > > > > > transaction and unlock the inode...
+> > > > > > 
+> > > > > > Yes, I think we do. We need it to be committed in each of the
+> > > > > > rolling transactions so that the inode doesn't get written/replayed
+> > > > > > before any of the other dependent metadata changes in this final
+> > > > > > transaction.
+> > > > > > 
+> > > > > 
+> > > > > Hmm, I don't follow what that means. IIUC the act of logging it again
+> > > > > simply moves it forward in the log. That makes sense down in the dfops
+> > > > > code but seems unecessary here given that we are about to complete the
+> > > > > chain of transactions.
+> > > > > 
+> > > > > xfs_inactive_symlink_rmt() makes changes to the inode, invals/unmaps the
+> > > > > remote bufs, joins the inode to the dfops and finishes the dfops. We
+> > > > > return from xfs_defer_finish() having committed the (still locked) inode
+> > > > > modifications and have a new/rolled transaction that covers the free of
+> > > > > the associated blocks (EFDs). I could certainly be missing something,
+> > > > > but from that point what difference does it make whether the final
+> > > > > transaction relogs the inode before it commits?
+> > > 
+> > > It ensures the inode changes are sanely ordered. i.e. we don't
+> > > write the inode to disk before all the other changes made in the
+> > > rolling transaction are written to disk. And the same goes for
+> > > recovery.
+> > > 
+> > 
+> > But what exactly does that accomplish? The inode changes, block unmap
+> > and and EFIs are all logged in the same transaction. Given the inode
+> > remains locked, what difference does it make whether it is relogged in
+> > the transaction that processes the EFIs? IOW, what can go wrong here
+> > without the additional inode relog?
+> > 
+> > Also, what do you mean by "sanely ordered?" AFAICT, there is no such
+> > writeback ordering guarantee even if the log items are part of the same
+> > transaction.
 > 
-> Test swapfile activation and deactivation.
+> The rolling tranactions can be committed can be in different
+> checkpoints. If the journal is commited after the last roll but
+> before the final commit, then the inode is unpinned before it is
+> unlocked, while everything in the current transaction is still
+> pinned in memory. When the last transaction commits, the inode gets
+> unlocked and can be written back before the remaining operations in
+> the rolling transaction are committed to stable storage.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  tests/generic/708     |  152 +++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/708.out |   10 +++
->  tests/generic/group   |    1 
->  3 files changed, 163 insertions(+)
->  create mode 100755 tests/generic/708
->  create mode 100644 tests/generic/708.out
+> i.e. we end up with an inode on disk with a younger LSN in it than a
+> bunch of it's dependent changes have. Strictly speaking, that's an
+> on-disk ordering violation and potentially an on-disk transactional
+> change atomicity violation. We don't get a violation in memory
+> because of the inode locking being held across the transaction
+> commit, but we do get one on disk because the inode is unpinned in
+> memory before all it's dependent changes are in stable journal
+> storage....
 > 
+
+It's unpinned before it's unlocked in that case because there are no
+dependent changes in the subsequent transaction. The subsequent
+transaction doesn't modify the inode, it is just arbitrarily
+dirtied/relogged in the final transaction without having been modified
+since the previous roll.
+
+Therefore, ISTM that it's perfectly fine if the inode were written back
+immediately after being unlocked after the final tx commit. The first
+transaction that did ultimately commit, checkpoint to the log and unpin
+the inode included an EFI that ensures the filesystem remains consistent
+in the event of a crash.
+
+> Hence by logging the inode in the final transaction, we ensure it
+> stays pinned in memory until the entire transaction is stable in the
+> journal and we've guaranteed the on disk ordering and atomicity
+> matches what is provided by the in-memory locking....
 > 
-> diff --git a/tests/generic/708 b/tests/generic/708
-> new file mode 100755
-> index 00000000..48feeb25
-> --- /dev/null
-> +++ b/tests/generic/708
-> @@ -0,0 +1,152 @@
-> +#! /bin/bash
-> +# FS QA Test No. 708
-> +#
-> +# Test various swapfile activation oddities.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2018 Oracle.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#
-> +#-----------------------------------------------------------------------
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $testfile
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# real QA test starts here
-> +_supported_fs generic
-> +_supported_os Linux
-> +_require_scratch_swapfile
-> +
-> +rm -f $seqres.full
-> +_scratch_mkfs >>$seqres.full 2>&1
-> +_scratch_mount >>$seqres.full 2>&1
-> +
-> +swapfile=$SCRATCH_MNT/swap
-> +len=$((2 * 1048576))
-> +
-> +swapfile_cycle() {
-> +	local swapfile="$1"
-> +
-> +	mkswap $swapfile >> $seqres.full
-> +	filefrag -v $swapfile >> $seqres.full
-> +	swapon $swapfile 2>&1 | _filter_scratch
-> +	swapon -v --bytes >> $seqres.full
-> +	swapoff $swapfile 2>> $seeqres.full
-> +	rm -f $swapfile
-> +}
-> +
-> +test_can_falloc_swap() {
-> +	local test_swapfile=$TEST_DIR/swapfile
-> +
-> +	echo "can we fallocate swap?"
-> +	$XFS_IO_PROG -f -c "falloc 0 64k" $test_swapfile
-
-mkswap(8) says "mkswap refuses areas smaller than 10 pages", so I
-suspect 64k won't work for hosts with larger page size, e.g. ppc64, even
-if the kernel supports swapfile on fallocated file. But I don't have the
-hardware to actually try it..
-
-> +	test -f $test_swapfile || return 1
-> +	mkswap $test_swapfile
-> +	swapon $test_swapfile
-> +	res=$?
-> +	swapoff $test_swapfile
-> +	rm -f $test_swapfile
-> +	return $res
-> +}
-
-When 'test_can_falloc_swap' returns non-zero, how could we tell if it's
-because the kernel doesn't support swap on fallocate file or it's a
-regression bug in the swap on fallocate file code?
-
-
-And the kernel patch says "This enables XFS to support fallocate'd swap
-files and swap files on realtime devices." So xfs/419 would start to
-fail when the patch lands in upstream?
-
-Thanks,
-Eryu
-
-> +
-> +unset can_falloc_swap
-> +test_can_falloc_swap >> $seqres.full 2>&1 && can_falloc_swap=yes
-> +page_size=$(get_page_size)
-> +
-> +# Create a sparse swap file
-> +echo "sparse swap" | tee -a $seqres.full
-> +$XFS_IO_PROG -f -c "truncate $len" $swapfile >> $seqres.full
-> +swapfile_cycle $swapfile
-> +
-> +# Create a regular swap file
-> +echo "regular swap" | tee -a $seqres.full
-> +_pwrite_byte 0x58 0 $len $swapfile >> $seqres.full
-> +swapfile_cycle $swapfile
-> +
-> +# Create a fallocated swap file
-> +echo "fallocate swap" | tee -a $seqres.full
-> +if [ "$can_falloc_swap" = "yes" ]; then
-> +	$XFS_IO_PROG -f -c "falloc 0 $len" $swapfile >> $seqres.full
-> +	swapfile_cycle $swapfile
-> +fi
-> +
-> +# Create a swap file with a little too much junk on the end
-> +echo "too long swap" | tee -a $seqres.full
-> +_pwrite_byte 0x58 0 $((len + 3)) $swapfile >> $seqres.full
-> +swapfile_cycle $swapfile
-> +
-> +# Create a swap file with a large discontiguous range(?)
-> +echo "large discontig swap" | tee -a $seqres.full
-> +_pwrite_byte 0x58 0 $((len * 2)) $swapfile >> $seqres.full
-> +old_sz="$(stat -c '%s' $swapfile)"
-> +$XFS_IO_PROG -c "fcollapse $((len / 2)) $len" $swapfile >> $seqres.full 2>&1
-> +new_sz="$(stat -c '%s' $swapfile)"
-> +if [ $old_sz -gt $new_sz ]; then
-> +	swapfile_cycle $swapfile
-> +fi
-> +rm -f $swapfile
-> +
-> +# Create a swap file with a small discontiguous range(?)
-> +echo "small discontig swap" | tee -a $seqres.full
-> +_pwrite_byte 0x58 0 $((len + 1024)) $swapfile >> $seqres.full
-> +old_sz="$(stat -c '%s' $swapfile)"
-> +$XFS_IO_PROG -c "fcollapse 66560 1024" $swapfile >> $seqres.full 2>&1
-> +new_sz="$(stat -c '%s' $swapfile)"
-> +if [ $old_sz -gt $new_sz ]; then
-> +	swapfile_cycle $swapfile
-> +fi
-> +rm -f $swapfile
-> +
-> +# Create a fallocated swap file and touch every other $PAGE_SIZE to create
-> +# a mess of written/unwritten extent records
-> +echo "mixed swap" | tee -a $seqres.full
-> +if [ "$can_falloc_swap" = "yes" ]; then
-> +	$XFS_IO_PROG -f -c "falloc 0 $len" $swapfile >> $seqres.full
-> +	seq $page_size $((page_size * 2)) $len | while read offset; do
-> +		_pwrite_byte 0x58 $offset 1 $swapfile >> $seqres.full
-> +	done
-> +	swapfile_cycle $swapfile
-> +fi
-> +
-> +# Create a ridiculously small swap file; mkswap says the minimum is 40k.
-> +# However, each swap file must be at least two pages long.
-> +echo "tiny swap" | tee -a $seqres.full
-> +tiny_len=40960
-> +min_swap_size=$((page_size * 2))
-> +if [ "$min_swap_size" -gt "$tiny_len" ]; then
-> +	tiny_len=$min_swap_size
-> +fi
-> +_pwrite_byte 0x58 0 $tiny_len $swapfile >> $seqres.full
-> +swapfile_cycle $swapfile
-> +
-> +status=0
-> +exit
-> diff --git a/tests/generic/708.out b/tests/generic/708.out
-> new file mode 100644
-> index 00000000..d6199b99
-> --- /dev/null
-> +++ b/tests/generic/708.out
-> @@ -0,0 +1,10 @@
-> +QA output created by 708
-> +sparse swap
-> +swapon: SCRATCH_MNT/swap: skipping - it appears to have holes.
-> +regular swap
-> +fallocate swap
-> +too long swap
-> +large discontig swap
-> +small discontig swap
-> +mixed swap
-> +tiny swap
-> diff --git a/tests/generic/group b/tests/generic/group
-> index 505383f7..9f3a933e 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -489,3 +489,4 @@
->  484 auto quick
->  485 auto quick insert
->  486 auto quick attr
-> +708 auto quick swapfile
+> > Suppose we return from xfs_inactive_symlink_rmt(),
+> > everything is committed/unlocked and an AIL push occurs.
 > 
+> All the objects are still pinned in memory, so they can't be written
+> back by the AIL until the journal commits. :P
+> 
+
+I don't think I stated the context clearly enough. The context for the
+example I'm giving is that xfs_inactive_symlink_rmt() completes and the
+log has checkpointed since the final transaction has committed. The
+associated log items are unlocked, AIL resident and unpinned. The inode
+was relogged in the final symlink_rmt() transaction, so we can assume
+the lsn of the inode log item matches everything else committed in the
+final tx. The only thing left to do now is writeback the associated
+metadata objects from the AIL.
+
+The example is otherwise the same... Given that context, ISTM that AIL
+writeback contending with a newly created transaction can cause
+writeback of the inode to complete while other objects in that final
+symlink_rmt() transaction go from the starting point defined by the
+above context (AIL+unpinned) to AIL+locked -> AIL+unlocked+pinned to
+then being physically relogged in a new checkpoint (i.e., back to
+AIL+unpinned) by a log force and thus ultimately written back with a
+different LSN from that of the checkpoint that included the
+xfs_inactive_symlink_rmt() changes.
+
+The inode is relogged in this example, but the writeback looks roughly
+equivalent to me as if the inode were not relogged in your example above
+(and thus written back immediately after unlock). If I'm still missing
+something here, a more specific example would be helpful..
+
+> > Nothing
+> > prevents a completely unrelated transaction from locking those same
+> > allocation btree buffers that were in the same (rolled) transaction as
+> > the EFD (plus relogged inode) before xfsaild gets to them, which means
+> > the associated items could be written back in arbitrary order anyways.
+> 
+> Sure, but the combination of locking and journal ordering via
+> relogging in the CIL handles reuse via independent atomic
+> transaction cases just fine. That's different to ordering within a
+> a single atomic transaction chain....
+> 
+
+See the context above. The example refers to writeback of an already
+checkpointed transaction contending with one that is just starting. IOW,
+the AIL push races with a new transaction locking previously unlocked
+objects in the AIL. Nothing is in the CIL until the contending
+transaction commits and so the CIL has nothing to reorder. The
+associated items are physically relogged when the CIL checkpoints the
+contending transaction.
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
