@@ -1,190 +1,719 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:52904 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750747AbeELA27 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 May 2018 20:28:59 -0400
-Date: Fri, 11 May 2018 17:28:56 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:56428 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750793AbeELAgF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 May 2018 20:36:05 -0400
+Date: Fri, 11 May 2018 17:36:00 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/2] xfs: add mount delay debug option
-Message-ID: <20180512002856.GN11261@magnolia>
-References: <20180511020943.10132-1-david@fromorbit.com>
- <20180511020943.10132-2-david@fromorbit.com>
+Subject: Re: [PATCH 02/10] xfs: factor out AG header initialisation from
+ growfs core
+Message-ID: <20180512003600.GO11261@magnolia>
+References: <20180511225107.27171-1-david@fromorbit.com>
+ <20180511225107.27171-3-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180511020943.10132-2-david@fromorbit.com>
+In-Reply-To: <20180511225107.27171-3-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, May 11, 2018 at 12:09:42PM +1000, Dave Chinner wrote:
+On Sat, May 12, 2018 at 08:50:59AM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Similar to log_recovery_delay, this delay occurs between the VFS
-> superblock being initialised and the xfs_mount being fully
-> initialised. It also poisons the per-ag radix tree node so that it
-> can be used for triggering shrinker races during mount
-> such as the following:
-> 
-> <run memory pressure workload in background>
-> 
-> $ cat dirty-mount.sh
-> #! /bin/bash
-> 
-> umount -f /dev/pmem0
-> mkfs.xfs -f /dev/pmem0
-> mount /dev/pmem0 /mnt/test
-> rm -f /mnt/test/foo
-> xfs_io -fxc "pwrite 0 4k" -c fsync -c "shutdown" /mnt/test/foo
-> umount /dev/pmem0
-> 
-> # let's crash it now!
-> echo 30 > /sys/fs/xfs/debug/mount_delay
-> mount /dev/pmem0 /mnt/test
-> echo 0 > /sys/fs/xfs/debug/mount_delay
-> umount /dev/pmem0
-> $ sudo ./dirty-mount.sh
-> .....
-> [   60.378118] CPU: 3 PID: 3577 Comm: fs_mark Tainted: G      D W        4.16.0-rc5-dgc #440
-> [   60.378120] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1 04/01/2014
-> [   60.378124] RIP: 0010:radix_tree_next_chunk+0x76/0x320
-> [   60.378127] RSP: 0018:ffffc9000276f4f8 EFLAGS: 00010282
-> [   60.383670] RAX: a5a5a5a5a5a5a5a4 RBX: 0000000000000010 RCX: 000000000000001a
-> [   60.385277] RDX: 0000000000000000 RSI: ffffc9000276f540 RDI: 0000000000000000
-> [   60.386554] RBP: 0000000000000000 R08: 0000000000000000 R09: a5a5a5a5a5a5a5a5
-> [   60.388194] R10: 0000000000000006 R11: 0000000000000001 R12: ffffc9000276f598
-> [   60.389288] R13: 0000000000000040 R14: 0000000000000228 R15: ffff880816cd6458
-> [   60.390827] FS:  00007f5c124b9740(0000) GS:ffff88083fc00000(0000) knlGS:0000000000000000
-> [   60.392253] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [   60.393423] CR2: 00007f5c11bba0b8 CR3: 000000035580e001 CR4: 00000000000606e0
-> [   60.394519] Call Trace:
-> [   60.395252]  radix_tree_gang_lookup_tag+0xc4/0x130
-> [   60.395948]  xfs_perag_get_tag+0x37/0xf0
-> [   60.396522]  xfs_reclaim_inodes_count+0x32/0x40
-> [   60.397178]  xfs_fs_nr_cached_objects+0x11/0x20
-> [   60.397837]  super_cache_count+0x35/0xc0
-> [   60.399159]  shrink_slab.part.66+0xb1/0x370
-> [   60.400194]  shrink_node+0x7e/0x1a0
-> [   60.401058]  try_to_free_pages+0x199/0x470
-> [   60.402081]  __alloc_pages_slowpath+0x3a1/0xd20
-> [   60.403729]  __alloc_pages_nodemask+0x1c3/0x200
-> [   60.404941]  cache_grow_begin+0x20b/0x2e0
-> [   60.406164]  fallback_alloc+0x160/0x200
-> [   60.407088]  kmem_cache_alloc+0x111/0x4e0
-> [   60.408038]  ? xfs_buf_rele+0x61/0x430
-> [   60.408925]  kmem_zone_alloc+0x61/0xe0
-> [   60.409965]  xfs_inode_alloc+0x24/0x1d0
-> .....
-> 
+> The intialisation of new AG headers is mostly common with the
+> userspace mkfs code and growfs in the kernel, so start factoring it
+> out so we can move it to libxfs and use it in both places.
 > 
 > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 > Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Looks ok, will test...
+Looks ok,
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
 > ---
->  fs/xfs/xfs_globals.c |  1 +
->  fs/xfs/xfs_super.c   | 11 +++++++++++
->  fs/xfs/xfs_sysctl.h  |  1 +
->  fs/xfs/xfs_sysfs.c   | 31 +++++++++++++++++++++++++++++++
->  4 files changed, 44 insertions(+)
+>  fs/xfs/xfs_fsops.c | 637 +++++++++++++++++++++++----------------------
+>  1 file changed, 331 insertions(+), 306 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_globals.c b/fs/xfs/xfs_globals.c
-> index 3e1cc3001bcb..fdde17a2333c 100644
-> --- a/fs/xfs/xfs_globals.c
-> +++ b/fs/xfs/xfs_globals.c
-> @@ -47,6 +47,7 @@ xfs_param_t xfs_params = {
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index 523792768080..391d1938a6c8 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -71,20 +71,344 @@ xfs_growfs_get_hdr_buf(
+>  	return bp;
+>  }
 >  
->  struct xfs_globals xfs_globals = {
->  	.log_recovery_delay	=	0,	/* no delay by default */
-> +	.mount_delay		=	0,	/* no delay by default */
->  #ifdef XFS_ASSERT_FATAL
->  	.bug_on_assert		=	true,	/* assert failures BUG() */
->  #else
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 5726ef496980..a523eaeb3f29 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1635,6 +1635,17 @@ xfs_fs_fill_super(
->  #endif
->  	sb->s_op = &xfs_super_operations;
->  
+> +/*
+> + * Write new AG headers to disk. Non-transactional, but written
+> + * synchronously so they are completed prior to the growfs transaction
+> + * being logged.
+> + */
+> +static int
+> +xfs_grow_ag_headers(
+> +	struct xfs_mount	*mp,
+> +	xfs_agnumber_t		agno,
+> +	xfs_extlen_t		agsize,
+> +	xfs_rfsblock_t		*nfree)
+> +{
+> +	struct xfs_agf		*agf;
+> +	struct xfs_agi		*agi;
+> +	struct xfs_agfl		*agfl;
+> +	__be32			*agfl_bno;
+> +	xfs_alloc_rec_t		*arec;
+> +	struct xfs_buf		*bp;
+> +	int			bucket;
+> +	xfs_extlen_t		tmpsize;
+> +	int			error = 0;
+> +
 > +	/*
-> +	 * Delay mount work if the debug hook is set. This is debug
-> +	 * instrumention to coordinate simulation of xfs mount failures with
-> +	 * VFS superblock operations
+> +	 * AG freespace header block
 > +	 */
-> +	if (xfs_globals.mount_delay) {
-> +		xfs_notice(mp, "Delaying mount for %d seconds.",
-> +			xfs_globals.mount_delay);
-> +		msleep(xfs_globals.mount_delay * 1000);
+> +	bp = xfs_growfs_get_hdr_buf(mp,
+> +			XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
+> +			XFS_FSS_TO_BB(mp, 1), 0,
+> +			&xfs_agf_buf_ops);
+> +	if (!bp) {
+> +		error = -ENOMEM;
+> +		goto out_error;
 > +	}
 > +
->  	if (silent)
->  		flags |= XFS_MFSI_QUIET;
->  
-> diff --git a/fs/xfs/xfs_sysctl.h b/fs/xfs/xfs_sysctl.h
-> index 82afee005140..b53a33e69932 100644
-> --- a/fs/xfs/xfs_sysctl.h
-> +++ b/fs/xfs/xfs_sysctl.h
-> @@ -95,6 +95,7 @@ extern xfs_param_t	xfs_params;
->  
->  struct xfs_globals {
->  	int	log_recovery_delay;	/* log recovery delay (secs) */
-> +	int	mount_delay;		/* mount setup delay (secs) */
->  	bool	bug_on_assert;		/* BUG() the kernel on assert failure */
->  };
->  extern struct xfs_globals	xfs_globals;
-> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-> index 8b2ccc234f36..2d5cd2529f8e 100644
-> --- a/fs/xfs/xfs_sysfs.c
-> +++ b/fs/xfs/xfs_sysfs.c
-> @@ -165,9 +165,40 @@ log_recovery_delay_show(
->  }
->  XFS_SYSFS_ATTR_RW(log_recovery_delay);
->  
-> +STATIC ssize_t
-> +mount_delay_store(
-> +	struct kobject	*kobject,
-> +	const char	*buf,
-> +	size_t		count)
-> +{
-> +	int		ret;
-> +	int		val;
+> +	agf = XFS_BUF_TO_AGF(bp);
+> +	agf->agf_magicnum = cpu_to_be32(XFS_AGF_MAGIC);
+> +	agf->agf_versionnum = cpu_to_be32(XFS_AGF_VERSION);
+> +	agf->agf_seqno = cpu_to_be32(agno);
+> +	agf->agf_length = cpu_to_be32(agsize);
+> +	agf->agf_roots[XFS_BTNUM_BNOi] = cpu_to_be32(XFS_BNO_BLOCK(mp));
+> +	agf->agf_roots[XFS_BTNUM_CNTi] = cpu_to_be32(XFS_CNT_BLOCK(mp));
+> +	agf->agf_levels[XFS_BTNUM_BNOi] = cpu_to_be32(1);
+> +	agf->agf_levels[XFS_BTNUM_CNTi] = cpu_to_be32(1);
+> +	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
+> +		agf->agf_roots[XFS_BTNUM_RMAPi] =
+> +					cpu_to_be32(XFS_RMAP_BLOCK(mp));
+> +		agf->agf_levels[XFS_BTNUM_RMAPi] = cpu_to_be32(1);
+> +		agf->agf_rmap_blocks = cpu_to_be32(1);
+> +	}
 > +
-> +	ret = kstrtoint(buf, 0, &val);
-> +	if (ret)
-> +		return ret;
+> +	agf->agf_flfirst = cpu_to_be32(1);
+> +	agf->agf_fllast = 0;
+> +	agf->agf_flcount = 0;
+> +	tmpsize = agsize - mp->m_ag_prealloc_blocks;
+> +	agf->agf_freeblks = cpu_to_be32(tmpsize);
+> +	agf->agf_longest = cpu_to_be32(tmpsize);
+> +	if (xfs_sb_version_hascrc(&mp->m_sb))
+> +		uuid_copy(&agf->agf_uuid, &mp->m_sb.sb_meta_uuid);
+> +	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+> +		agf->agf_refcount_root = cpu_to_be32(
+> +				xfs_refc_block(mp));
+> +		agf->agf_refcount_level = cpu_to_be32(1);
+> +		agf->agf_refcount_blocks = cpu_to_be32(1);
+> +	}
 > +
-> +	if (val < 0 || val > 60)
-> +		return -EINVAL;
+> +	error = xfs_bwrite(bp);
+> +	xfs_buf_relse(bp);
+> +	if (error)
+> +		goto out_error;
 > +
-> +	xfs_globals.mount_delay = val;
+> +	/*
+> +	 * AG freelist header block
+> +	 */
+> +	bp = xfs_growfs_get_hdr_buf(mp,
+> +			XFS_AG_DADDR(mp, agno, XFS_AGFL_DADDR(mp)),
+> +			XFS_FSS_TO_BB(mp, 1), 0,
+> +			&xfs_agfl_buf_ops);
+> +	if (!bp) {
+> +		error = -ENOMEM;
+> +		goto out_error;
+> +	}
 > +
-> +	return count;
+> +	agfl = XFS_BUF_TO_AGFL(bp);
+> +	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> +		agfl->agfl_magicnum = cpu_to_be32(XFS_AGFL_MAGIC);
+> +		agfl->agfl_seqno = cpu_to_be32(agno);
+> +		uuid_copy(&agfl->agfl_uuid, &mp->m_sb.sb_meta_uuid);
+> +	}
+> +
+> +	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, bp);
+> +	for (bucket = 0; bucket < xfs_agfl_size(mp); bucket++)
+> +		agfl_bno[bucket] = cpu_to_be32(NULLAGBLOCK);
+> +
+> +	error = xfs_bwrite(bp);
+> +	xfs_buf_relse(bp);
+> +	if (error)
+> +		goto out_error;
+> +
+> +	/*
+> +	 * AG inode header block
+> +	 */
+> +	bp = xfs_growfs_get_hdr_buf(mp,
+> +			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
+> +			XFS_FSS_TO_BB(mp, 1), 0,
+> +			&xfs_agi_buf_ops);
+> +	if (!bp) {
+> +		error = -ENOMEM;
+> +		goto out_error;
+> +	}
+> +
+> +	agi = XFS_BUF_TO_AGI(bp);
+> +	agi->agi_magicnum = cpu_to_be32(XFS_AGI_MAGIC);
+> +	agi->agi_versionnum = cpu_to_be32(XFS_AGI_VERSION);
+> +	agi->agi_seqno = cpu_to_be32(agno);
+> +	agi->agi_length = cpu_to_be32(agsize);
+> +	agi->agi_count = 0;
+> +	agi->agi_root = cpu_to_be32(XFS_IBT_BLOCK(mp));
+> +	agi->agi_level = cpu_to_be32(1);
+> +	agi->agi_freecount = 0;
+> +	agi->agi_newino = cpu_to_be32(NULLAGINO);
+> +	agi->agi_dirino = cpu_to_be32(NULLAGINO);
+> +	if (xfs_sb_version_hascrc(&mp->m_sb))
+> +		uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_meta_uuid);
+> +	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
+> +		agi->agi_free_root = cpu_to_be32(XFS_FIBT_BLOCK(mp));
+> +		agi->agi_free_level = cpu_to_be32(1);
+> +	}
+> +	for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++)
+> +		agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
+> +
+> +	error = xfs_bwrite(bp);
+> +	xfs_buf_relse(bp);
+> +	if (error)
+> +		goto out_error;
+> +
+> +	/*
+> +	 * BNO btree root block
+> +	 */
+> +	bp = xfs_growfs_get_hdr_buf(mp,
+> +			XFS_AGB_TO_DADDR(mp, agno, XFS_BNO_BLOCK(mp)),
+> +			BTOBB(mp->m_sb.sb_blocksize), 0,
+> +			&xfs_allocbt_buf_ops);
+> +
+> +	if (!bp) {
+> +		error = -ENOMEM;
+> +		goto out_error;
+> +	}
+> +
+> +	xfs_btree_init_block(mp, bp, XFS_BTNUM_BNO, 0, 1, agno, 0);
+> +
+> +	arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
+> +	arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
+> +	arec->ar_blockcount = cpu_to_be32(
+> +		agsize - be32_to_cpu(arec->ar_startblock));
+> +
+> +	error = xfs_bwrite(bp);
+> +	xfs_buf_relse(bp);
+> +	if (error)
+> +		goto out_error;
+> +
+> +	/*
+> +	 * CNT btree root block
+> +	 */
+> +	bp = xfs_growfs_get_hdr_buf(mp,
+> +			XFS_AGB_TO_DADDR(mp, agno, XFS_CNT_BLOCK(mp)),
+> +			BTOBB(mp->m_sb.sb_blocksize), 0,
+> +			&xfs_allocbt_buf_ops);
+> +	if (!bp) {
+> +		error = -ENOMEM;
+> +		goto out_error;
+> +	}
+> +
+> +	xfs_btree_init_block(mp, bp, XFS_BTNUM_CNT, 0, 1, agno, 0);
+> +
+> +	arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
+> +	arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
+> +	arec->ar_blockcount = cpu_to_be32(
+> +		agsize - be32_to_cpu(arec->ar_startblock));
+> +	*nfree += be32_to_cpu(arec->ar_blockcount);
+> +
+> +	error = xfs_bwrite(bp);
+> +	xfs_buf_relse(bp);
+> +	if (error)
+> +		goto out_error;
+> +
+> +	/* RMAP btree root block */
+> +	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
+> +		struct xfs_rmap_rec	*rrec;
+> +		struct xfs_btree_block	*block;
+> +
+> +		bp = xfs_growfs_get_hdr_buf(mp,
+> +			XFS_AGB_TO_DADDR(mp, agno, XFS_RMAP_BLOCK(mp)),
+> +			BTOBB(mp->m_sb.sb_blocksize), 0,
+> +			&xfs_rmapbt_buf_ops);
+> +		if (!bp) {
+> +			error = -ENOMEM;
+> +			goto out_error;
+> +		}
+> +
+> +		xfs_btree_init_block(mp, bp, XFS_BTNUM_RMAP, 0, 0,
+> +					agno, 0);
+> +		block = XFS_BUF_TO_BLOCK(bp);
+> +
+> +
+> +		/*
+> +		 * mark the AG header regions as static metadata The BNO
+> +		 * btree block is the first block after the headers, so
+> +		 * it's location defines the size of region the static
+> +		 * metadata consumes.
+> +		 *
+> +		 * Note: unlike mkfs, we never have to account for log
+> +		 * space when growing the data regions
+> +		 */
+> +		rrec = XFS_RMAP_REC_ADDR(block, 1);
+> +		rrec->rm_startblock = 0;
+> +		rrec->rm_blockcount = cpu_to_be32(XFS_BNO_BLOCK(mp));
+> +		rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_FS);
+> +		rrec->rm_offset = 0;
+> +		be16_add_cpu(&block->bb_numrecs, 1);
+> +
+> +		/* account freespace btree root blocks */
+> +		rrec = XFS_RMAP_REC_ADDR(block, 2);
+> +		rrec->rm_startblock = cpu_to_be32(XFS_BNO_BLOCK(mp));
+> +		rrec->rm_blockcount = cpu_to_be32(2);
+> +		rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_AG);
+> +		rrec->rm_offset = 0;
+> +		be16_add_cpu(&block->bb_numrecs, 1);
+> +
+> +		/* account inode btree root blocks */
+> +		rrec = XFS_RMAP_REC_ADDR(block, 3);
+> +		rrec->rm_startblock = cpu_to_be32(XFS_IBT_BLOCK(mp));
+> +		rrec->rm_blockcount = cpu_to_be32(XFS_RMAP_BLOCK(mp) -
+> +						XFS_IBT_BLOCK(mp));
+> +		rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_INOBT);
+> +		rrec->rm_offset = 0;
+> +		be16_add_cpu(&block->bb_numrecs, 1);
+> +
+> +		/* account for rmap btree root */
+> +		rrec = XFS_RMAP_REC_ADDR(block, 4);
+> +		rrec->rm_startblock = cpu_to_be32(XFS_RMAP_BLOCK(mp));
+> +		rrec->rm_blockcount = cpu_to_be32(1);
+> +		rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_AG);
+> +		rrec->rm_offset = 0;
+> +		be16_add_cpu(&block->bb_numrecs, 1);
+> +
+> +		/* account for refc btree root */
+> +		if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+> +			rrec = XFS_RMAP_REC_ADDR(block, 5);
+> +			rrec->rm_startblock = cpu_to_be32(xfs_refc_block(mp));
+> +			rrec->rm_blockcount = cpu_to_be32(1);
+> +			rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_REFC);
+> +			rrec->rm_offset = 0;
+> +			be16_add_cpu(&block->bb_numrecs, 1);
+> +		}
+> +
+> +		error = xfs_bwrite(bp);
+> +		xfs_buf_relse(bp);
+> +		if (error)
+> +			goto out_error;
+> +	}
+> +
+> +	/*
+> +	 * INO btree root block
+> +	 */
+> +	bp = xfs_growfs_get_hdr_buf(mp,
+> +			XFS_AGB_TO_DADDR(mp, agno, XFS_IBT_BLOCK(mp)),
+> +			BTOBB(mp->m_sb.sb_blocksize), 0,
+> +			&xfs_inobt_buf_ops);
+> +	if (!bp) {
+> +		error = -ENOMEM;
+> +		goto out_error;
+> +	}
+> +
+> +	xfs_btree_init_block(mp, bp, XFS_BTNUM_INO , 0, 0, agno, 0);
+> +
+> +	error = xfs_bwrite(bp);
+> +	xfs_buf_relse(bp);
+> +	if (error)
+> +		goto out_error;
+> +
+> +	/*
+> +	 * FINO btree root block
+> +	 */
+> +	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
+> +		bp = xfs_growfs_get_hdr_buf(mp,
+> +			XFS_AGB_TO_DADDR(mp, agno, XFS_FIBT_BLOCK(mp)),
+> +			BTOBB(mp->m_sb.sb_blocksize), 0,
+> +			&xfs_inobt_buf_ops);
+> +		if (!bp) {
+> +			error = -ENOMEM;
+> +			goto out_error;
+> +		}
+> +
+> +		xfs_btree_init_block(mp, bp, XFS_BTNUM_FINO,
+> +					     0, 0, agno, 0);
+> +
+> +		error = xfs_bwrite(bp);
+> +		xfs_buf_relse(bp);
+> +		if (error)
+> +			goto out_error;
+> +	}
+> +
+> +	/*
+> +	 * refcount btree root block
+> +	 */
+> +	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+> +		bp = xfs_growfs_get_hdr_buf(mp,
+> +			XFS_AGB_TO_DADDR(mp, agno, xfs_refc_block(mp)),
+> +			BTOBB(mp->m_sb.sb_blocksize), 0,
+> +			&xfs_refcountbt_buf_ops);
+> +		if (!bp) {
+> +			error = -ENOMEM;
+> +			goto out_error;
+> +		}
+> +
+> +		xfs_btree_init_block(mp, bp, XFS_BTNUM_REFC,
+> +				     0, 0, agno, 0);
+> +
+> +		error = xfs_bwrite(bp);
+> +		xfs_buf_relse(bp);
+> +		if (error)
+> +			goto out_error;
+> +	}
+> +
+> +out_error:
+> +	return error;
 > +}
 > +
-> +STATIC ssize_t
-> +mount_delay_show(
-> +	struct kobject	*kobject,
-> +	char		*buf)
-> +{
-> +	return snprintf(buf, PAGE_SIZE, "%d\n", xfs_globals.mount_delay);
-> +}
-> +XFS_SYSFS_ATTR_RW(mount_delay);
-> +
->  static struct attribute *xfs_dbg_attrs[] = {
->  	ATTR_LIST(bug_on_assert),
->  	ATTR_LIST(log_recovery_delay),
-> +	ATTR_LIST(mount_delay),
->  	NULL,
->  };
+>  static int
+>  xfs_growfs_data_private(
+>  	xfs_mount_t		*mp,		/* mount point for filesystem */
+>  	xfs_growfs_data_t	*in)		/* growfs data input struct */
+>  {
+>  	xfs_agf_t		*agf;
+> -	struct xfs_agfl		*agfl;
+>  	xfs_agi_t		*agi;
+>  	xfs_agnumber_t		agno;
+>  	xfs_extlen_t		agsize;
+> -	xfs_extlen_t		tmpsize;
+> -	xfs_alloc_rec_t		*arec;
+>  	xfs_buf_t		*bp;
+> -	int			bucket;
+>  	int			dpct;
+>  	int			error, saved_error = 0;
+>  	xfs_agnumber_t		nagcount;
+> @@ -141,318 +465,19 @@ xfs_growfs_data_private(
+>  	 */
+>  	nfree = 0;
+>  	for (agno = nagcount - 1; agno >= oagcount; agno--, new -= agsize) {
+> -		__be32	*agfl_bno;
+> -
+> -		/*
+> -		 * AG freespace header block
+> -		 */
+> -		bp = xfs_growfs_get_hdr_buf(mp,
+> -				XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
+> -				XFS_FSS_TO_BB(mp, 1), 0,
+> -				&xfs_agf_buf_ops);
+> -		if (!bp) {
+> -			error = -ENOMEM;
+> -			goto error0;
+> -		}
 >  
+> -		agf = XFS_BUF_TO_AGF(bp);
+> -		agf->agf_magicnum = cpu_to_be32(XFS_AGF_MAGIC);
+> -		agf->agf_versionnum = cpu_to_be32(XFS_AGF_VERSION);
+> -		agf->agf_seqno = cpu_to_be32(agno);
+>  		if (agno == nagcount - 1)
+> -			agsize =
+> -				nb -
+> +			agsize = nb -
+>  				(agno * (xfs_rfsblock_t)mp->m_sb.sb_agblocks);
+>  		else
+>  			agsize = mp->m_sb.sb_agblocks;
+> -		agf->agf_length = cpu_to_be32(agsize);
+> -		agf->agf_roots[XFS_BTNUM_BNOi] = cpu_to_be32(XFS_BNO_BLOCK(mp));
+> -		agf->agf_roots[XFS_BTNUM_CNTi] = cpu_to_be32(XFS_CNT_BLOCK(mp));
+> -		agf->agf_levels[XFS_BTNUM_BNOi] = cpu_to_be32(1);
+> -		agf->agf_levels[XFS_BTNUM_CNTi] = cpu_to_be32(1);
+> -		if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
+> -			agf->agf_roots[XFS_BTNUM_RMAPi] =
+> -						cpu_to_be32(XFS_RMAP_BLOCK(mp));
+> -			agf->agf_levels[XFS_BTNUM_RMAPi] = cpu_to_be32(1);
+> -			agf->agf_rmap_blocks = cpu_to_be32(1);
+> -		}
+> -
+> -		agf->agf_flfirst = cpu_to_be32(1);
+> -		agf->agf_fllast = 0;
+> -		agf->agf_flcount = 0;
+> -		tmpsize = agsize - mp->m_ag_prealloc_blocks;
+> -		agf->agf_freeblks = cpu_to_be32(tmpsize);
+> -		agf->agf_longest = cpu_to_be32(tmpsize);
+> -		if (xfs_sb_version_hascrc(&mp->m_sb))
+> -			uuid_copy(&agf->agf_uuid, &mp->m_sb.sb_meta_uuid);
+> -		if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+> -			agf->agf_refcount_root = cpu_to_be32(
+> -					xfs_refc_block(mp));
+> -			agf->agf_refcount_level = cpu_to_be32(1);
+> -			agf->agf_refcount_blocks = cpu_to_be32(1);
+> -		}
+> -
+> -		error = xfs_bwrite(bp);
+> -		xfs_buf_relse(bp);
+> -		if (error)
+> -			goto error0;
+> -
+> -		/*
+> -		 * AG freelist header block
+> -		 */
+> -		bp = xfs_growfs_get_hdr_buf(mp,
+> -				XFS_AG_DADDR(mp, agno, XFS_AGFL_DADDR(mp)),
+> -				XFS_FSS_TO_BB(mp, 1), 0,
+> -				&xfs_agfl_buf_ops);
+> -		if (!bp) {
+> -			error = -ENOMEM;
+> -			goto error0;
+> -		}
+> -
+> -		agfl = XFS_BUF_TO_AGFL(bp);
+> -		if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> -			agfl->agfl_magicnum = cpu_to_be32(XFS_AGFL_MAGIC);
+> -			agfl->agfl_seqno = cpu_to_be32(agno);
+> -			uuid_copy(&agfl->agfl_uuid, &mp->m_sb.sb_meta_uuid);
+> -		}
+> -
+> -		agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, bp);
+> -		for (bucket = 0; bucket < xfs_agfl_size(mp); bucket++)
+> -			agfl_bno[bucket] = cpu_to_be32(NULLAGBLOCK);
+>  
+> -		error = xfs_bwrite(bp);
+> -		xfs_buf_relse(bp);
+> +		error = xfs_grow_ag_headers(mp, agno, agsize, &nfree);
+>  		if (error)
+>  			goto error0;
+> -
+> -		/*
+> -		 * AG inode header block
+> -		 */
+> -		bp = xfs_growfs_get_hdr_buf(mp,
+> -				XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
+> -				XFS_FSS_TO_BB(mp, 1), 0,
+> -				&xfs_agi_buf_ops);
+> -		if (!bp) {
+> -			error = -ENOMEM;
+> -			goto error0;
+> -		}
+> -
+> -		agi = XFS_BUF_TO_AGI(bp);
+> -		agi->agi_magicnum = cpu_to_be32(XFS_AGI_MAGIC);
+> -		agi->agi_versionnum = cpu_to_be32(XFS_AGI_VERSION);
+> -		agi->agi_seqno = cpu_to_be32(agno);
+> -		agi->agi_length = cpu_to_be32(agsize);
+> -		agi->agi_count = 0;
+> -		agi->agi_root = cpu_to_be32(XFS_IBT_BLOCK(mp));
+> -		agi->agi_level = cpu_to_be32(1);
+> -		agi->agi_freecount = 0;
+> -		agi->agi_newino = cpu_to_be32(NULLAGINO);
+> -		agi->agi_dirino = cpu_to_be32(NULLAGINO);
+> -		if (xfs_sb_version_hascrc(&mp->m_sb))
+> -			uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_meta_uuid);
+> -		if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
+> -			agi->agi_free_root = cpu_to_be32(XFS_FIBT_BLOCK(mp));
+> -			agi->agi_free_level = cpu_to_be32(1);
+> -		}
+> -		for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++)
+> -			agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
+> -
+> -		error = xfs_bwrite(bp);
+> -		xfs_buf_relse(bp);
+> -		if (error)
+> -			goto error0;
+> -
+> -		/*
+> -		 * BNO btree root block
+> -		 */
+> -		bp = xfs_growfs_get_hdr_buf(mp,
+> -				XFS_AGB_TO_DADDR(mp, agno, XFS_BNO_BLOCK(mp)),
+> -				BTOBB(mp->m_sb.sb_blocksize), 0,
+> -				&xfs_allocbt_buf_ops);
+> -
+> -		if (!bp) {
+> -			error = -ENOMEM;
+> -			goto error0;
+> -		}
+> -
+> -		xfs_btree_init_block(mp, bp, XFS_BTNUM_BNO, 0, 1, agno, 0);
+> -
+> -		arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
+> -		arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
+> -		arec->ar_blockcount = cpu_to_be32(
+> -			agsize - be32_to_cpu(arec->ar_startblock));
+> -
+> -		error = xfs_bwrite(bp);
+> -		xfs_buf_relse(bp);
+> -		if (error)
+> -			goto error0;
+> -
+> -		/*
+> -		 * CNT btree root block
+> -		 */
+> -		bp = xfs_growfs_get_hdr_buf(mp,
+> -				XFS_AGB_TO_DADDR(mp, agno, XFS_CNT_BLOCK(mp)),
+> -				BTOBB(mp->m_sb.sb_blocksize), 0,
+> -				&xfs_allocbt_buf_ops);
+> -		if (!bp) {
+> -			error = -ENOMEM;
+> -			goto error0;
+> -		}
+> -
+> -		xfs_btree_init_block(mp, bp, XFS_BTNUM_CNT, 0, 1, agno, 0);
+> -
+> -		arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
+> -		arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
+> -		arec->ar_blockcount = cpu_to_be32(
+> -			agsize - be32_to_cpu(arec->ar_startblock));
+> -		nfree += be32_to_cpu(arec->ar_blockcount);
+> -
+> -		error = xfs_bwrite(bp);
+> -		xfs_buf_relse(bp);
+> -		if (error)
+> -			goto error0;
+> -
+> -		/* RMAP btree root block */
+> -		if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
+> -			struct xfs_rmap_rec	*rrec;
+> -			struct xfs_btree_block	*block;
+> -
+> -			bp = xfs_growfs_get_hdr_buf(mp,
+> -				XFS_AGB_TO_DADDR(mp, agno, XFS_RMAP_BLOCK(mp)),
+> -				BTOBB(mp->m_sb.sb_blocksize), 0,
+> -				&xfs_rmapbt_buf_ops);
+> -			if (!bp) {
+> -				error = -ENOMEM;
+> -				goto error0;
+> -			}
+> -
+> -			xfs_btree_init_block(mp, bp, XFS_BTNUM_RMAP, 0, 0,
+> -						agno, 0);
+> -			block = XFS_BUF_TO_BLOCK(bp);
+> -
+> -
+> -			/*
+> -			 * mark the AG header regions as static metadata The BNO
+> -			 * btree block is the first block after the headers, so
+> -			 * it's location defines the size of region the static
+> -			 * metadata consumes.
+> -			 *
+> -			 * Note: unlike mkfs, we never have to account for log
+> -			 * space when growing the data regions
+> -			 */
+> -			rrec = XFS_RMAP_REC_ADDR(block, 1);
+> -			rrec->rm_startblock = 0;
+> -			rrec->rm_blockcount = cpu_to_be32(XFS_BNO_BLOCK(mp));
+> -			rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_FS);
+> -			rrec->rm_offset = 0;
+> -			be16_add_cpu(&block->bb_numrecs, 1);
+> -
+> -			/* account freespace btree root blocks */
+> -			rrec = XFS_RMAP_REC_ADDR(block, 2);
+> -			rrec->rm_startblock = cpu_to_be32(XFS_BNO_BLOCK(mp));
+> -			rrec->rm_blockcount = cpu_to_be32(2);
+> -			rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_AG);
+> -			rrec->rm_offset = 0;
+> -			be16_add_cpu(&block->bb_numrecs, 1);
+> -
+> -			/* account inode btree root blocks */
+> -			rrec = XFS_RMAP_REC_ADDR(block, 3);
+> -			rrec->rm_startblock = cpu_to_be32(XFS_IBT_BLOCK(mp));
+> -			rrec->rm_blockcount = cpu_to_be32(XFS_RMAP_BLOCK(mp) -
+> -							XFS_IBT_BLOCK(mp));
+> -			rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_INOBT);
+> -			rrec->rm_offset = 0;
+> -			be16_add_cpu(&block->bb_numrecs, 1);
+> -
+> -			/* account for rmap btree root */
+> -			rrec = XFS_RMAP_REC_ADDR(block, 4);
+> -			rrec->rm_startblock = cpu_to_be32(XFS_RMAP_BLOCK(mp));
+> -			rrec->rm_blockcount = cpu_to_be32(1);
+> -			rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_AG);
+> -			rrec->rm_offset = 0;
+> -			be16_add_cpu(&block->bb_numrecs, 1);
+> -
+> -			/* account for refc btree root */
+> -			if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+> -				rrec = XFS_RMAP_REC_ADDR(block, 5);
+> -				rrec->rm_startblock = cpu_to_be32(
+> -						xfs_refc_block(mp));
+> -				rrec->rm_blockcount = cpu_to_be32(1);
+> -				rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_REFC);
+> -				rrec->rm_offset = 0;
+> -				be16_add_cpu(&block->bb_numrecs, 1);
+> -			}
+> -
+> -			error = xfs_bwrite(bp);
+> -			xfs_buf_relse(bp);
+> -			if (error)
+> -				goto error0;
+> -		}
+> -
+> -		/*
+> -		 * INO btree root block
+> -		 */
+> -		bp = xfs_growfs_get_hdr_buf(mp,
+> -				XFS_AGB_TO_DADDR(mp, agno, XFS_IBT_BLOCK(mp)),
+> -				BTOBB(mp->m_sb.sb_blocksize), 0,
+> -				&xfs_inobt_buf_ops);
+> -		if (!bp) {
+> -			error = -ENOMEM;
+> -			goto error0;
+> -		}
+> -
+> -		xfs_btree_init_block(mp, bp, XFS_BTNUM_INO , 0, 0, agno, 0);
+> -
+> -		error = xfs_bwrite(bp);
+> -		xfs_buf_relse(bp);
+> -		if (error)
+> -			goto error0;
+> -
+> -		/*
+> -		 * FINO btree root block
+> -		 */
+> -		if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
+> -			bp = xfs_growfs_get_hdr_buf(mp,
+> -				XFS_AGB_TO_DADDR(mp, agno, XFS_FIBT_BLOCK(mp)),
+> -				BTOBB(mp->m_sb.sb_blocksize), 0,
+> -				&xfs_inobt_buf_ops);
+> -			if (!bp) {
+> -				error = -ENOMEM;
+> -				goto error0;
+> -			}
+> -
+> -			xfs_btree_init_block(mp, bp, XFS_BTNUM_FINO,
+> -						     0, 0, agno, 0);
+> -
+> -			error = xfs_bwrite(bp);
+> -			xfs_buf_relse(bp);
+> -			if (error)
+> -				goto error0;
+> -		}
+> -
+> -		/*
+> -		 * refcount btree root block
+> -		 */
+> -		if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+> -			bp = xfs_growfs_get_hdr_buf(mp,
+> -				XFS_AGB_TO_DADDR(mp, agno, xfs_refc_block(mp)),
+> -				BTOBB(mp->m_sb.sb_blocksize), 0,
+> -				&xfs_refcountbt_buf_ops);
+> -			if (!bp) {
+> -				error = -ENOMEM;
+> -				goto error0;
+> -			}
+> -
+> -			xfs_btree_init_block(mp, bp, XFS_BTNUM_REFC,
+> -					     0, 0, agno, 0);
+> -
+> -			error = xfs_bwrite(bp);
+> -			xfs_buf_relse(bp);
+> -			if (error)
+> -				goto error0;
+> -		}
+>  	}
+>  	xfs_trans_agblocks_delta(tp, nfree);
+> +
+>  	/*
+>  	 * There are new blocks in the old last a.g.
+>  	 */
 > -- 
 > 2.17.0
 > 
