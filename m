@@ -1,72 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:8941 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751487AbeENK0e (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 14 May 2018 06:26:34 -0400
-Date: Mon, 14 May 2018 06:26:33 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2 8/8] xfs: teach xfs_bmapi_remap to accept some bmapi
- flags
-Message-ID: <20180514102632.GC8919@bfoster.bfoster>
-References: <152597988038.25215.9276761144353662866.stgit@magnolia>
- <152597993604.25215.2923117604057991749.stgit@magnolia>
- <20180511234616.GL11261@magnolia>
+Received: from tartarus.angband.pl ([89.206.35.136]:37782 "EHLO
+        tartarus.angband.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750740AbeELCtZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 May 2018 22:49:25 -0400
+Date: Sat, 12 May 2018 04:49:20 +0200
+From: Adam Borowski <kilobyte@angband.pl>
+Subject: Re: [PATCH 1/2] vfs: allow dedupe of user owned read-only files
+Message-ID: <20180512024920.i7duhoi3lnkha4yl@angband.pl>
+References: <20180511192651.21324-1-mfasheh@suse.de>
+ <20180511192651.21324-2-mfasheh@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20180511234616.GL11261@magnolia>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20180511192651.21324-2-mfasheh@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Mark Fasheh <mfasheh@suse.de>
+Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Fri, May 11, 2018 at 04:46:16PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, May 11, 2018 at 12:26:50PM -0700, Mark Fasheh wrote:
+> The permission check in vfs_dedupe_file_range() is too coarse - We
+> only allow dedupe of the destination file if the user is root, or
+> they have the file open for write.
 > 
-> Teach xfs_bmapi_remap how to map in unwritten extent and to skip rmap
-> updates.  This enables us to rebuild real and unwritten extents from the
-> rmapbt.
+> This effectively limits a non-root user from deduping their own
+> read-only files. As file data during a dedupe does not change,
+> this is unexpected behavior and this has caused a number of issue
+> reports. For an example, see:
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> https://github.com/markfasheh/duperemove/issues/129
+> 
+> So change the check so we allow dedupe on the target if:
+> 
+> - the root or admin is asking for it
+> - the owner of the file is asking for the dedupe
+> - the process has write access
+
+I submitted a similar patch in May 2016, yet it has never been applied
+despite multiple pings, with no NAK.  My version allowed dedupe if:
+- the root or admin is asking for it
+- the file has w permission (on the inode -- ie, could have been opened rw)
+
+There was a request to include in xfstests a test case for the ETXTBSY race
+this patch fixes, but there's no reasonable way to make such a test case:
+the race condition is not a bug, it's write-xor-exec working as designed.
+
+Another idea discussed was about possibly just allowing everyone who can
+open the file to deduplicate it, as the file contents are not modified in
+any way.  Zygo Blaxell expressed a concern that it could be used by an
+unprivileged user who can trigger a crash to abuse writeout bugs.
+
+I like this new version better than mine: "root or owner or w" is more
+Unixy than "could have been opened w".
+
+> Signed-off-by: Mark Fasheh <mfasheh@suse.de>
 > ---
-> v2: tidy up the assert checking for ATTR|PREALLOC
-> ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/libxfs/xfs_bmap.c |   10 ++++++++--
->  1 file changed, 8 insertions(+), 2 deletions(-)
+>  fs/read_write.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index b63e15a114f3..7b0e2b551e23 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -4543,7 +4543,10 @@ xfs_bmapi_remap(
->  	ASSERT(len > 0);
->  	ASSERT(len <= (xfs_filblks_t)MAXEXTLEN);
->  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> -	ASSERT(!(flags & ~(XFS_BMAPI_ATTRFORK)));
-> +	ASSERT(!(flags & ~(XFS_BMAPI_ATTRFORK | XFS_BMAPI_PREALLOC |
-> +			   XFS_BMAPI_NORMAP)));
-> +	ASSERT((flags & (XFS_BMAPI_ATTRFORK | XFS_BMAPI_PREALLOC)) !=
-> +			(XFS_BMAPI_ATTRFORK | XFS_BMAPI_PREALLOC));
+> diff --git a/fs/read_write.c b/fs/read_write.c
+> index c4eabbfc90df..77986a2e2a3b 100644
+> --- a/fs/read_write.c
+> +++ b/fs/read_write.c
+> @@ -2036,7 +2036,8 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
 >  
->  	if (unlikely(XFS_TEST_ERROR(
->  	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
-> @@ -4581,7 +4584,10 @@ xfs_bmapi_remap(
->  	got.br_startoff = bno;
->  	got.br_startblock = startblock;
->  	got.br_blockcount = len;
-> -	got.br_state = XFS_EXT_NORM;
-> +	if (flags & XFS_BMAPI_PREALLOC)
-> +		got.br_state = XFS_EXT_UNWRITTEN;
-> +	else
-> +		got.br_state = XFS_EXT_NORM;
->  
->  	error = xfs_bmap_add_extent_hole_real(tp, ip, whichfork, &icur,
->  			&cur, &got, &firstblock, dfops, &logflags, flags);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  		if (info->reserved) {
+>  			info->status = -EINVAL;
+> -		} else if (!(is_admin || (dst_file->f_mode & FMODE_WRITE))) {
+> +		} else if (!(is_admin || (dst_file->f_mode & FMODE_WRITE) ||
+> +			     uid_eq(current_fsuid(), dst->i_uid))) {
+I had:
+  +		} else if (!(is_admin || !inode_permission(dst, MAY_WRITE))) {
+>  			info->status = -EINVAL;
+>  		} else if (file->f_path.mnt != dst_file->f_path.mnt) {
+>  			info->status = -EXDEV;
+> -- 
+
+Meow!
+-- 
+⢀⣴⠾⠻⢶⣦⠀ 
+⣾⠁⢰⠒⠀⣿⡁ 
+⢿⡄⠘⠷⠚⠋⠀ Certified airhead; got the CT scan to prove that!
+⠈⠳⣄⠀⠀⠀⠀ 
