@@ -1,134 +1,299 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:42822 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750776AbeELBQR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 May 2018 21:16:17 -0400
-Date: Sat, 12 May 2018 11:16:10 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: WARNING: bad unlock balance in xfs_iunlock
-Message-ID: <20180512011610.GB23861@dastard>
-References: <95c1400b-94f2-1af4-2d5d-c61c274c28ff@sandeen.net>
- <CACT4Y+aiwgRg5pk+N7bq9HYpgumTFyqG6-y3EZ8pWkq9-uB1aA@mail.gmail.com>
- <9f8d657c-7f42-7bd9-4477-6c3addf16dee@sandeen.net>
- <CACT4Y+bUx4jw83Ux7w9URL9bCy1ERLaVGTTwvA9Fe_UtLFeqCw@mail.gmail.com>
- <d7c8e0eb-61ed-1aad-6faa-82a0ef8c25b8@sandeen.net>
- <CACT4Y+YNRt5YSrOYKKFUP25jodpK0xeZhysSGoz2UaiGs_Gx=A@mail.gmail.com>
- <9adacfed-0de6-cb94-bf14-3e639678a02a@sandeen.net>
- <CACT4Y+Ya0cSP7eKjzcbfxQHYLJeR8Qnp_f4MwcM_QU91unnD5w@mail.gmail.com>
- <20180509232254.GQ10363@dastard>
- <CACT4Y+ZpyBVD3yhNxV-7fpKbCOm975kHDmxbHwpU6t13kK=FGw@mail.gmail.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:44762 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751273AbeELBUu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 May 2018 21:20:50 -0400
+Date: Fri, 11 May 2018 18:20:45 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 07/10] xfs: separate secondary sb update in growfs
+Message-ID: <20180512012045.GT11261@magnolia>
+References: <20180511225107.27171-1-david@fromorbit.com>
+ <20180511225107.27171-8-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CACT4Y+ZpyBVD3yhNxV-7fpKbCOm975kHDmxbHwpU6t13kK=FGw@mail.gmail.com>
+In-Reply-To: <20180511225107.27171-8-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dmitry Vyukov <dvyukov@google.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, syzbot <syzbot+84a67953651a971809ba@syzkaller.appspotmail.com>, LKML <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, syzkaller-bugs <syzkaller-bugs@googlegroups.com>, Theodore Ts'o <tytso@mit.edu>, syzkaller <syzkaller@googlegroups.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, May 11, 2018 at 10:59:53AM +0200, Dmitry Vyukov wrote:
-> On Thu, May 10, 2018 at 1:22 AM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Wed, May 09, 2018 at 10:43:05AM +0200, Dmitry Vyukov wrote:
-> >> Does "xfstests fuzzing infrastructure" use coverage-guidance?
-> >
-> > It's guided manually to fuzz a substantial proportion of the fields
-> > in the on-disk format that are susceptible to fuzzing bqased
-> > attacks. It's not complete coverage yet, but it's getting better and
-> > better, and we're finding more problems from it that random bit
-> > based fuzzing has ever uncovered.
-> >
-> > Also, the xfstests fuzzing defeats the CRC protection now built into
-> > the metadata, which means it can exercise all the new filesystem
-> > features that random bit fuzzers cannot exercise. That's the problem
-> > with fuzzers like syzbot - they can only usefully fuzz the legacy
-> > filesystem format which doesn't have CRC validation, nor many of the
-> > other protections that the current filesystem format has to detect
-> > corruption. This will also allow us to test things like online
-> > repair of fuzzed structures....
+On Sat, May 12, 2018 at 08:51:04AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> syzkaller has 2 techniques to deal with checksums, if you are
-> interested I can go into more detail.
-
-You can if you want, but I'm betting it basically comes down to
-teaching syzcaller about parts of the on-disk format, similar to
-AFL. And, like AFL, I doubt any XFS developer has the time to
-add such support to syzbot.
-
-> > Given the results we're getting from our own fuzzers, I don't see
-> > much point in (XFS developers) investing huge amounts of effort to
-> > make some other fuzzer equivalent to what we already have. If
-> > someone else starts fuzzing the current format (v5) XFS filesystems
-> > and finding problems we haven't, then I'm going to be interested in
-> > their fuzzing tools.  But (guided) random bit perturbation fuzzing
-> > of legacy filesystem formats is really not that useful or
-> > interesting to us right now.
+> This happens after all the transactions to update the superblock
+> occur, and errors need to be handled slightly differently. Seperate
+> out the code into it's own function, and clean up the error goto
+> stack in the core growfs code as it is now much simpler.
 > 
-> Just asked.
+> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> ---
+>  fs/xfs/xfs_fsops.c | 159 ++++++++++++++++++++++++++-------------------
+>  1 file changed, 92 insertions(+), 67 deletions(-)
 > 
-> Note that coverage-guidance does not necessary mean bit flipping.
-> syzkaller combines coverage-guidance with grammar-awareness and other
-> smartness.
-
-Yup, I assumed that this would be the case - those sorts of
-"directed fuzzing" techniques were pioneered by the Samba guys for
-reverse engineering the SMB protocol used by MS servers all those
-years ago. But at it's most basic level, it's still using bit
-flipping techniques to perturb the input and provoke responses.
-
-> Based on our experience with network testing, main advantage of
-> syzkaller over just feeding blobs as network packets (even if these
-> blobs are built in a very smart way) is the following. syzkaller can
-> build complex interactions between syscalls, external inputs and
-> blobs.
-
-Yup, nothing new there - that's what every other filesystem fuzzer
-infrastructure does, too.  The problem with this is that it doesn't
-pin-point the actual operation that tripped over the on-disk
-corruption. It's catching downstream symptoms of an unknown,
-undetected on-disk format corruption. i.e. it's a poor substitute
-for explicit testing of structure bounds and data relationships of a
-known format.
-
-That's the fundamental premise of fuzz testing - most software does
-not have robust validation of it's inputs and so fuzzing those
-inputs finds problems. We've moved on from the old "trust and don't
-validate" model of filesystem structure architecture.  The on-disk
-format is very well defined, it is constrained in most cases, and we
-can validate most individual structures at runtime with relatively
-little cost.
-
-Hence the "structure bounds" exploits that fuzzers tend to exercise
-are pretty much taken out of the picture, and that leaves us with
-"data relationships" between structures as the main vector for
-undetected corruptions. These are mostly detectable, and many are
-correctable as the current on-disk format has a lot of redundant
-information. So the space for fuzzers to detect problems is getting
-smaller and smaller all the time.
-
-IOWs, filesystem image fuzzers have their place, but if you want us
-to take your fuzzing seriously then your fuzzer needs to understand
-all the mechanisms we now use to detect corruptions to show us where
-they are deficient. If your fuzzing doesn't expose flaws in our
-current validation techniques, then it's really not useful to us.
-
-> For example, handling of external network packets depend on if
-> there is an open socket on that port, what setsockopts were called, if
-> there is a pending receive, what flags were passed to that receive,
-> were some data sent the other way, etc. For filesystems that would be
-> various filesystem syscalls executed against the mounted image,
-> concurrent umount, rebind, switch to read-only mode, etc.
-> But maybe xfstests do this too, I don't know. Do they?
-
-Generally there is no need to do this because we know exactly what
-syscalls will trigger access and/or modification to on-disk
-structures. Access to the on-disk structures triggers the built in
-verifier infrastructure, which then catches the majority of
-corruptions before the structure is used by anything in the kernel.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index 0fd50c68f1b0..69facd4aa7c1 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -398,9 +398,8 @@ xfs_growfs_data_private(
+>  {
+>  	xfs_agf_t		*agf;
+>  	xfs_agi_t		*agi;
+> -	xfs_agnumber_t		agno;
+>  	xfs_buf_t		*bp;
+> -	int			error, saved_error = 0;
+> +	int			error;
+>  	xfs_agnumber_t		nagcount;
+>  	xfs_agnumber_t		nagimax = 0;
+>  	xfs_rfsblock_t		nb, nb_mod;
+> @@ -472,12 +471,12 @@ xfs_growfs_data_private(
+>  		error = xfs_grow_ag_headers(mp, &id);
+>  		if (error) {
+>  			xfs_buf_delwri_cancel(&id.buffer_list);
+> -			goto error0;
+> +			goto out_trans_cancel;
+>  		}
+>  	}
+>  	error = xfs_buf_delwri_submit(&id.buffer_list);
+>  	if (error)
+> -		goto error0;
+> +		goto out_trans_cancel;
+>  
+>  	xfs_trans_agblocks_delta(tp, id.nfree);
+>  
+> @@ -491,22 +490,23 @@ xfs_growfs_data_private(
+>  		 * Change the agi length.
+>  		 */
+>  		error = xfs_ialloc_read_agi(mp, tp, id.agno, &bp);
+> -		if (error) {
+> -			goto error0;
+> -		}
+> +		if (error)
+> +			goto out_trans_cancel;
+> +
+>  		ASSERT(bp);
+>  		agi = XFS_BUF_TO_AGI(bp);
+>  		be32_add_cpu(&agi->agi_length, new);
+>  		ASSERT(nagcount == oagcount ||
+>  		       be32_to_cpu(agi->agi_length) == mp->m_sb.sb_agblocks);
+>  		xfs_ialloc_log_agi(tp, bp, XFS_AGI_LENGTH);
+> +
+>  		/*
+>  		 * Change agf length.
+>  		 */
+>  		error = xfs_alloc_read_agf(mp, tp, id.agno, 0, &bp);
+> -		if (error) {
+> -			goto error0;
+> -		}
+> +		if (error)
+> +			goto out_trans_cancel;
+> +
+>  		ASSERT(bp);
+>  		agf = XFS_BUF_TO_AGF(bp);
+>  		be32_add_cpu(&agf->agf_length, new);
+> @@ -526,13 +526,13 @@ xfs_growfs_data_private(
+>  				be32_to_cpu(agf->agf_length) - new,
+>  				new, &oinfo);
+>  		if (error)
+> -			goto error0;
+> +			goto out_trans_cancel;
+>  		error = xfs_free_extent(tp,
+>  				XFS_AGB_TO_FSB(mp, id.agno,
+>  					be32_to_cpu(agf->agf_length) - new),
+>  				new, &oinfo, XFS_AG_RESV_NONE);
+>  		if (error)
+> -			goto error0;
+> +			goto out_trans_cancel;
+>  	}
+>  
+>  	/*
+> @@ -569,16 +569,86 @@ xfs_growfs_data_private(
+>  		error = xfs_ag_resv_free(pag);
+>  		xfs_perag_put(pag);
+>  		if (error)
+> -			goto out;
+> +			return error;
+>  	}
+>  
+> -	/* Reserve AG metadata blocks. */
+> +	/*
+> +	 * Reserve AG metadata blocks. ENOSPC here does not mean there was a
+> +	 * growfs failure, just that there still isn't space for new user data
+> +	 * after the grow has been run.
+> +	 */
+>  	error = xfs_fs_reserve_ag_blocks(mp);
+> -	if (error && error != -ENOSPC)
+> -		goto out;
+> +	if (error == -ENOSPC)
+> +		error = 0;
+> +	return error;
+> +
+> +out_trans_cancel:
+> +	xfs_trans_cancel(tp);
+> +	return error;
+> +}
+> +
+> +static int
+> +xfs_growfs_log_private(
+> +	xfs_mount_t		*mp,	/* mount point for filesystem */
+> +	xfs_growfs_log_t	*in)	/* growfs log input struct */
+> +{
+> +	xfs_extlen_t		nb;
+> +
+> +	nb = in->newblocks;
+> +	if (nb < XFS_MIN_LOG_BLOCKS || nb < XFS_B_TO_FSB(mp, XFS_MIN_LOG_BYTES))
+> +		return -EINVAL;
+> +	if (nb == mp->m_sb.sb_logblocks &&
+> +	    in->isint == (mp->m_sb.sb_logstart != 0))
+> +		return -EINVAL;
+> +	/*
+> +	 * Moving the log is hard, need new interfaces to sync
+> +	 * the log first, hold off all activity while moving it.
+> +	 * Can have shorter or longer log in the same space,
+> +	 * or transform internal to external log or vice versa.
+> +	 */
+> +	return -ENOSYS;
+> +}
+> +
+> +static int
+> +xfs_growfs_imaxpct(
+> +	struct xfs_mount	*mp,
+> +	__u32			imaxpct)
+> +{
+> +	struct xfs_trans	*tp;
+> +	int			dpct;
+> +	int			error;
+> +
+> +	if (imaxpct > 100)
+> +		return -EINVAL;
+> +
+> +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growdata,
+> +			XFS_GROWFS_SPACE_RES(mp), 0, XFS_TRANS_RESERVE, &tp);
+> +	if (error)
+> +		return error;
+> +
+> +	dpct = imaxpct - mp->m_sb.sb_imax_pct;
+> +	xfs_trans_mod_sb(tp, XFS_TRANS_SB_IMAXPCT, dpct);
+> +	xfs_trans_set_sync(tp);
+> +	return xfs_trans_commit(tp);
+> +}
+> +
+> +/*
+> + * After a grow operation, we need to update all the secondary superblocks
+> + * to match the new state of the primary. Read/init the superblocks and update
+> + * them appropriately.
+> + */
+> +static int
+> +xfs_growfs_update_superblocks(
+> +	struct xfs_mount	*mp,
+> +	xfs_agnumber_t		oagcount)
+> +{
+> +	struct xfs_buf		*bp;
+> +	xfs_agnumber_t		agno;
+> +	int			saved_error = 0;
+> +	int			error = 0;
+>  
+>  	/* update secondary superblocks. */
+> -	for (agno = 1; agno < nagcount; agno++) {
+> +	for (agno = 1; agno < mp->m_sb.sb_agcount; agno++) {
+>  		error = 0;
+>  		/*
+>  		 * new secondary superblocks need to be zeroed, not read from
+> @@ -628,57 +698,7 @@ xfs_growfs_data_private(
+>  		}
+>  	}
+>  
+> - out:
+>  	return saved_error ? saved_error : error;
+> -
+> - error0:
+> -	xfs_trans_cancel(tp);
+> -	return error;
+> -}
+> -
+> -static int
+> -xfs_growfs_log_private(
+> -	xfs_mount_t		*mp,	/* mount point for filesystem */
+> -	xfs_growfs_log_t	*in)	/* growfs log input struct */
+> -{
+> -	xfs_extlen_t		nb;
+> -
+> -	nb = in->newblocks;
+> -	if (nb < XFS_MIN_LOG_BLOCKS || nb < XFS_B_TO_FSB(mp, XFS_MIN_LOG_BYTES))
+> -		return -EINVAL;
+> -	if (nb == mp->m_sb.sb_logblocks &&
+> -	    in->isint == (mp->m_sb.sb_logstart != 0))
+> -		return -EINVAL;
+> -	/*
+> -	 * Moving the log is hard, need new interfaces to sync
+> -	 * the log first, hold off all activity while moving it.
+> -	 * Can have shorter or longer log in the same space,
+> -	 * or transform internal to external log or vice versa.
+> -	 */
+> -	return -ENOSYS;
+> -}
+> -
+> -static int
+> -xfs_growfs_imaxpct(
+> -	struct xfs_mount	*mp,
+> -	__u32			imaxpct)
+> -{
+> -	struct xfs_trans	*tp;
+> -	int64_t			dpct;
+> -	int			error;
+> -
+> -	if (imaxpct > 100)
+> -		return -EINVAL;
+> -
+> -	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growdata,
+> -			XFS_GROWFS_SPACE_RES(mp), 0, XFS_TRANS_RESERVE, &tp);
+> -	if (error)
+> -		return error;
+> -
+> -	dpct = (int64_t)imaxpct - mp->m_sb.sb_imax_pct;
+> -	xfs_trans_mod_sb(tp, XFS_TRANS_SB_IMAXPCT, dpct);
+> -	xfs_trans_set_sync(tp);
+> -	return xfs_trans_commit(tp);
+>  }
+>  
+>  /*
+> @@ -691,6 +711,7 @@ xfs_growfs_data(
+>  	struct xfs_mount	*mp,
+>  	struct xfs_growfs_data	*in)
+>  {
+> +	xfs_agnumber_t		oagcount;
+>  	int			error = 0;
+>  
+>  	if (!capable(CAP_SYS_ADMIN))
+> @@ -705,6 +726,7 @@ xfs_growfs_data(
+>  			goto out_error;
+>  	}
+>  
+> +	oagcount = mp->m_sb.sb_agcount;
+>  	if (in->newblocks != mp->m_sb.sb_dblocks) {
+>  		error = xfs_growfs_data_private(mp, in);
+>  		if (error)
+> @@ -719,6 +741,9 @@ xfs_growfs_data(
+>  	} else
+>  		mp->m_maxicount = 0;
+>  
+> +	/* Update secondary superblocks now the physical grow has completed */
+> +	error = xfs_growfs_update_superblocks(mp, oagcount);
+> +
+>  out_error:
+>  	/*
+>  	 * Increment the generation unconditionally, the error could be from
+> -- 
+> 2.17.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
