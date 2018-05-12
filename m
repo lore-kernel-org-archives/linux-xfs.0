@@ -1,242 +1,235 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:36596 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:37420 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750793AbeELBrt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 May 2018 21:47:49 -0400
-Date: Fri, 11 May 2018 18:47:43 -0700
+        with ESMTP id S1750793AbeELBsd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 May 2018 21:48:33 -0400
+Date: Fri, 11 May 2018 18:48:30 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 08/10] xfs: rework secondary superblock updates in growfs
-Message-ID: <20180512014743.GU11261@magnolia>
+Subject: Re: [PATCH 10/10] xfs: factor the ag length extension code into
+ libxfs
+Message-ID: <20180512014830.GV11261@magnolia>
 References: <20180511225107.27171-1-david@fromorbit.com>
- <20180511225107.27171-9-david@fromorbit.com>
+ <20180511225107.27171-11-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180511225107.27171-9-david@fromorbit.com>
+In-Reply-To: <20180511225107.27171-11-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Sat, May 12, 2018 at 08:51:05AM +1000, Dave Chinner wrote:
+On Sat, May 12, 2018 at 08:51:07AM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Right now we wait until we've committed changes to the primary
-> superblock before we initialise any of the new secondary
-> superblocks. This means that if we have any write errors for new
-> secondary superblocks we end up with garbage in place rather than
-> zeros or even an "in progress" superblock to indicate a grow
-> operation is being done.
-> 
-> To ensure we can write the secondary superblocks, initialise them
-> earlier in the same loop that initialises the AG headers. We stamp
-> the new secondary superblocks here with the old geometry, but set
-> the "sb_inprogress" field to indicate that updates are being done to
-> the superblock so they cannot be used.  This will result in the
-> secondary superblock fields being updated or triggering errors that
-> will abort the grow before we commit any permanent changes.
-> 
-> This also means we can change the update mechanism of the secondary
-> superblocks.  We know that we are going to wholly overwrite the
-> information in the struct xfs_sb in the buffer, so there's no point
-> reading it from disk. Just allocate an uncached buffer, zero it in
-> memory, stamp the new superblock structure in it and write it out.
-> If we fail to write it out, then we'll leave the existing sb (old or
-> new w/ inprogress) on disk for repair to deal with later.
+> Growfs currently manually codes teh extension of the last AG in a
+> filesytem during the growfs process. Factor that out of the growfs
+> code and move it into libxfs along with teh rest of the AG header
+> modification code.
 > 
 > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_fsops.c | 99 +++++++++++++++++++++++++++++-----------------
->  1 file changed, 62 insertions(+), 37 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> index 69facd4aa7c1..28692b0e61ce 100644
-> --- a/fs/xfs/xfs_fsops.c
-> +++ b/fs/xfs/xfs_fsops.c
-> @@ -192,6 +192,25 @@ xfs_rmaproot_init(
->  	}
->  }
->  
-> +/*
-> + * Initialise new secondary superblocks with the pre-grow geometry, but mark
-> + * them as "in progress" so we know they haven't yet been activated. This will
-> + * get cleared when the update with the new geometry information is done after
-> + * changes to the primary are committed. This isn't strictly necessary, but we
-> + * get it for free with the delayed buffer write lists and it means we can tell
-> + * if a grow operation didn't complete properly after the fact.
-> + */
-> +static void
-> +xfs_sbblock_init(
-> +	struct xfs_mount	*mp,
-> +	struct xfs_buf		*bp,
-> +	struct aghdr_init_data	*id)
-> +{
-> +	struct xfs_dsb		*dsb = XFS_BUF_TO_SBP(bp);
-> +
-> +	xfs_sb_to_disk(dsb, &mp->m_sb);
-> +	dsb->sb_inprogress = 1;
-> +}
->  
->  static void
->  xfs_agfblock_init(
-> @@ -328,6 +347,10 @@ xfs_grow_ag_headers(
->  
->  {
->  	struct xfs_aghdr_grow_data aghdr_data[] = {
-> +		/* SB */
-> +		{ XFS_AG_DADDR(mp, id->agno, XFS_SB_DADDR),
-> +		  XFS_FSS_TO_BB(mp, 1), &xfs_sb_buf_ops,
-> +		  &xfs_sbblock_init, 0, 0, true },
->  		/* AGF */
->  		{ XFS_AG_DADDR(mp, id->agno, XFS_AGF_DADDR(mp)),
->  		  XFS_FSS_TO_BB(mp, 1), &xfs_agf_buf_ops,
-> @@ -634,43 +657,30 @@ xfs_growfs_imaxpct(
->  
->  /*
->   * After a grow operation, we need to update all the secondary superblocks
-> - * to match the new state of the primary. Read/init the superblocks and update
-> - * them appropriately.
-> + * to match the new state of the primary. Because we are completely overwriting
-> + * all the existing fields in the secondary superblock buffers, there is no need
-> + * to read them in from disk. Just get a new buffer, stamp it and write it.
-> + *
-> + * The sb buffers need to be cached here so that we serialise against scrub
-> + * scanning secondary superblocks, but we don't want to keep it in memory once
-> + * it is written so we mark it as a one-shot buffer.
->   */
->  static int
->  xfs_growfs_update_superblocks(
-> -	struct xfs_mount	*mp,
-> -	xfs_agnumber_t		oagcount)
-> +	struct xfs_mount	*mp)
->  {
-> -	struct xfs_buf		*bp;
->  	xfs_agnumber_t		agno;
->  	int			saved_error = 0;
->  	int			error = 0;
-> +	LIST_HEAD		(buffer_list);
->  
->  	/* update secondary superblocks. */
->  	for (agno = 1; agno < mp->m_sb.sb_agcount; agno++) {
-> -		error = 0;
-> -		/*
-> -		 * new secondary superblocks need to be zeroed, not read from
-> -		 * disk as the contents of the new area we are growing into is
-> -		 * completely unknown.
-> -		 */
-> -		if (agno < oagcount) {
-> -			error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
-> -				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
-> -				  XFS_FSS_TO_BB(mp, 1), 0, &bp,
-> -				  &xfs_sb_buf_ops);
-> -		} else {
-> -			bp = xfs_trans_get_buf(NULL, mp->m_ddev_targp,
-> -				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
-> -				  XFS_FSS_TO_BB(mp, 1), 0);
-> -			if (bp) {
-> -				bp->b_ops = &xfs_sb_buf_ops;
-> -				xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
-> -			} else
-> -				error = -ENOMEM;
-> -		}
-> +		struct xfs_buf		*bp;
->  
-> +		bp = xfs_buf_get(mp->m_ddev_targp,
-> +				 XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
-> +				 XFS_FSS_TO_BB(mp, 1), 0);
->  		/*
->  		 * If we get an error reading or writing alternate superblocks,
->  		 * continue.  xfs_repair chooses the "best" superblock based
-> @@ -678,25 +688,42 @@ xfs_growfs_update_superblocks(
->  		 * superblocks un-updated than updated, and xfs_repair may
->  		 * pick them over the properly-updated primary.
->  		 */
-> -		if (error) {
-> +		if (!bp) {
->  			xfs_warn(mp,
-> -		"error %d reading secondary superblock for ag %d",
-> -				error, agno);
-> -			saved_error = error;
-> +		"error allocating secondary superblock for ag %d",
-> +				agno);
-> +			if (!saved_error)
-> +				saved_error = -ENOMEM;
->  			continue;
->  		}
-> -		xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb);
->  
-> -		error = xfs_bwrite(bp);
-> +		bp->b_ops = &xfs_sb_buf_ops;
-> +		xfs_buf_oneshot(bp);
 
-For online repair I refactored this into a xfs_sb_get_secondary function
-that does all this; I guess we can clean that up later when either/both
-of those things get merged.
-
-Looks ok,
+Looks ok, will give this a spin...
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
-
---D
-
-> +		xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
-> +		xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb);
-> +		xfs_buf_delwri_queue(bp, &buffer_list);
->  		xfs_buf_relse(bp);
-> +
-> +		/* don't hold too many buffers at once */
-> +		if (agno % 16)
-> +			continue;
-> +
-> +		error = xfs_buf_delwri_submit(&buffer_list);
->  		if (error) {
->  			xfs_warn(mp,
-> -		"write error %d updating secondary superblock for ag %d",
-> +		"write error %d updating a secondary superblock near ag %d",
->  				error, agno);
-> -			saved_error = error;
-> +			if (!saved_error)
-> +				saved_error = error;
->  			continue;
->  		}
->  	}
-> +	error = xfs_buf_delwri_submit(&buffer_list);
-> +	if (error) {
-> +		xfs_warn(mp,
-> +		"write error %d updating a secondary superblock near ag %d",
-> +			error, agno);
-> +	}
+> ---
+>  fs/xfs/libxfs/xfs_ag.c | 60 ++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/libxfs/xfs_ag.h |  7 ++++-
+>  fs/xfs/xfs_fsops.c     | 58 ++--------------------------------------
+>  3 files changed, 68 insertions(+), 57 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+> index 638bc162afb5..81c3c5b2fa65 100644
+> --- a/fs/xfs/libxfs/xfs_ag.c
+> +++ b/fs/xfs/libxfs/xfs_ag.c
+> @@ -16,6 +16,7 @@
+>  #include "xfs_alloc_btree.h"
+>  #include "xfs_rmap_btree.h"
+>  #include "xfs_alloc.h"
+> +#include "xfs_ialloc.h"
+>  #include "xfs_rmap.h"
+>  #include "xfs_ag.h"
 >  
->  	return saved_error ? saved_error : error;
+> @@ -374,3 +375,62 @@ xfs_ag_init_headers(
+>  	}
+>  	return error;
 >  }
-> @@ -711,7 +738,6 @@ xfs_growfs_data(
->  	struct xfs_mount	*mp,
->  	struct xfs_growfs_data	*in)
+> +
+> +/*
+> + * Extent the AG indicated by the @id by the length passed in
+> + */
+> +int
+> +xfs_ag_extend_space(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_trans	*tp,
+> +	struct aghdr_init_data	*id,
+> +	xfs_extlen_t		len)
+> +{
+> +	struct xfs_owner_info	oinfo;
+> +	struct xfs_buf		*bp;
+> +	struct xfs_agi		*agi;
+> +	struct xfs_agf		*agf;
+> +	int			error;
+> +
+> +	/*
+> +	 * Change the agi length.
+> +	 */
+> +	error = xfs_ialloc_read_agi(mp, tp, id->agno, &bp);
+> +	if (error)
+> +		return error;
+> +
+> +	agi = XFS_BUF_TO_AGI(bp);
+> +	be32_add_cpu(&agi->agi_length, len);
+> +	ASSERT(id->agno == mp->m_sb.sb_agcount - 1 ||
+> +	       be32_to_cpu(agi->agi_length) == mp->m_sb.sb_agblocks);
+> +	xfs_ialloc_log_agi(tp, bp, XFS_AGI_LENGTH);
+> +
+> +	/*
+> +	 * Change agf length.
+> +	 */
+> +	error = xfs_alloc_read_agf(mp, tp, id->agno, 0, &bp);
+> +	if (error)
+> +		return error;
+> +
+> +	agf = XFS_BUF_TO_AGF(bp);
+> +	be32_add_cpu(&agf->agf_length, len);
+> +	ASSERT(agf->agf_length == agi->agi_length);
+> +	xfs_alloc_log_agf(tp, bp, XFS_AGF_LENGTH);
+> +
+> +	/*
+> +	 * Free the new space.
+> +	 *
+> +	 * XFS_RMAP_OWN_NULL is used here to tell the rmap btree that
+> +	 * this doesn't actually exist in the rmap btree.
+> +	 */
+> +	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_NULL);
+> +	error = xfs_rmap_free(tp, bp, id->agno,
+> +				be32_to_cpu(agf->agf_length) - len,
+> +				len, &oinfo);
+> +	if (error)
+> +		return error;
+> +
+> +	return  xfs_free_extent(tp, XFS_AGB_TO_FSB(mp, id->agno,
+> +					be32_to_cpu(agf->agf_length) - len),
+> +				len, &oinfo, XFS_AG_RESV_NONE);
+> +}
+> diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+> index 788f37df6610..695953db41e5 100644
+> --- a/fs/xfs/libxfs/xfs_ag.h
+> +++ b/fs/xfs/libxfs/xfs_ag.h
+> @@ -7,6 +7,9 @@
+>  #ifndef __LIBXFS_AG_H
+>  #define __LIBXFS_AG_H 1
+>  
+> +struct xfs_mount;
+> +struct xfs_trans;
+> +
+>  struct aghdr_init_data {
+>  	/* per ag data */
+>  	xfs_agblock_t		agno;		/* ag to init */
+> @@ -21,6 +24,8 @@ struct aghdr_init_data {
+>  	int			numrecs;	/* recs in btree root block */
+>  };
+>  
+> -int xfs_ag_init_headers( struct xfs_mount *mp, struct aghdr_init_data *id);
+> +int xfs_ag_init_headers(struct xfs_mount *mp, struct aghdr_init_data *id);
+> +int xfs_ag_extend_space(struct xfs_mount *mp, struct xfs_trans *tp,
+> +			struct aghdr_init_data *id, xfs_extlen_t len);
+>  
+>  #endif /* __LIBXFS_AG_H */
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index c5087b79bcea..bc7ef18da243 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -27,16 +27,12 @@
+>  #include "xfs_trans.h"
+>  #include "xfs_error.h"
+>  #include "xfs_btree.h"
+> -#include "xfs_alloc_btree.h"
+>  #include "xfs_alloc.h"
+> -#include "xfs_rmap_btree.h"
+> -#include "xfs_ialloc.h"
+>  #include "xfs_fsops.h"
+>  #include "xfs_trans_space.h"
+>  #include "xfs_rtalloc.h"
+>  #include "xfs_trace.h"
+>  #include "xfs_log.h"
+> -#include "xfs_rmap.h"
+>  #include "xfs_ag.h"
+>  #include "xfs_ag_resv.h"
+>  
+> @@ -48,8 +44,6 @@ xfs_growfs_data_private(
+>  	xfs_mount_t		*mp,		/* mount point for filesystem */
+>  	xfs_growfs_data_t	*in)		/* growfs data input struct */
 >  {
-> -	xfs_agnumber_t		oagcount;
->  	int			error = 0;
+> -	xfs_agf_t		*agf;
+> -	xfs_agi_t		*agi;
+>  	xfs_buf_t		*bp;
+>  	int			error;
+>  	xfs_agnumber_t		nagcount;
+> @@ -132,57 +126,9 @@ xfs_growfs_data_private(
 >  
->  	if (!capable(CAP_SYS_ADMIN))
-> @@ -726,7 +752,6 @@ xfs_growfs_data(
->  			goto out_error;
->  	}
+>  	xfs_trans_agblocks_delta(tp, id.nfree);
 >  
-> -	oagcount = mp->m_sb.sb_agcount;
->  	if (in->newblocks != mp->m_sb.sb_dblocks) {
->  		error = xfs_growfs_data_private(mp, in);
+> -	/*
+> -	 * There are new blocks in the old last a.g.
+> -	 */
+> +	/* If there are new blocks in the old last AG, extend it. */
+>  	if (new) {
+> -		struct xfs_owner_info	oinfo;
+> -
+> -		/*
+> -		 * Change the agi length.
+> -		 */
+> -		error = xfs_ialloc_read_agi(mp, tp, id.agno, &bp);
+> -		if (error)
+> -			goto out_trans_cancel;
+> -
+> -		ASSERT(bp);
+> -		agi = XFS_BUF_TO_AGI(bp);
+> -		be32_add_cpu(&agi->agi_length, new);
+> -		ASSERT(nagcount == oagcount ||
+> -		       be32_to_cpu(agi->agi_length) == mp->m_sb.sb_agblocks);
+> -		xfs_ialloc_log_agi(tp, bp, XFS_AGI_LENGTH);
+> -
+> -		/*
+> -		 * Change agf length.
+> -		 */
+> -		error = xfs_alloc_read_agf(mp, tp, id.agno, 0, &bp);
+> -		if (error)
+> -			goto out_trans_cancel;
+> -
+> -		ASSERT(bp);
+> -		agf = XFS_BUF_TO_AGF(bp);
+> -		be32_add_cpu(&agf->agf_length, new);
+> -		ASSERT(be32_to_cpu(agf->agf_length) ==
+> -		       be32_to_cpu(agi->agi_length));
+> -
+> -		xfs_alloc_log_agf(tp, bp, XFS_AGF_LENGTH);
+> -
+> -		/*
+> -		 * Free the new space.
+> -		 *
+> -		 * XFS_RMAP_OWN_NULL is used here to tell the rmap btree that
+> -		 * this doesn't actually exist in the rmap btree.
+> -		 */
+> -		xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_NULL);
+> -		error = xfs_rmap_free(tp, bp, id.agno,
+> -				be32_to_cpu(agf->agf_length) - new,
+> -				new, &oinfo);
+> -		if (error)
+> -			goto out_trans_cancel;
+> -		error = xfs_free_extent(tp,
+> -				XFS_AGB_TO_FSB(mp, id.agno,
+> -					be32_to_cpu(agf->agf_length) - new),
+> -				new, &oinfo, XFS_AG_RESV_NONE);
+> +		error = xfs_ag_extend_space(mp, tp, &id, new);
 >  		if (error)
-> @@ -742,7 +767,7 @@ xfs_growfs_data(
->  		mp->m_maxicount = 0;
->  
->  	/* Update secondary superblocks now the physical grow has completed */
-> -	error = xfs_growfs_update_superblocks(mp, oagcount);
-> +	error = xfs_growfs_update_superblocks(mp);
->  
->  out_error:
->  	/*
+>  			goto out_trans_cancel;
+>  	}
 > -- 
 > 2.17.0
 > 
