@@ -1,55 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:64064 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750794AbeEKXyJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 May 2018 19:54:09 -0400
-Date: Sat, 12 May 2018 09:54:06 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: test mount vs superblock shrinker races
-Message-ID: <20180511235406.GA23861@dastard>
-References: <20180511021152.10803-1-david@fromorbit.com>
- <CAOQ4uxh+D_1jEJquR5uyv2-AQpnNyZ9iiXFSqW6eSMmcPDi7Jw@mail.gmail.com>
+Received: from mail-yw0-f193.google.com ([209.85.161.193]:42152 "EHLO
+        mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750722AbeELEPg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 12 May 2018 00:15:36 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxh+D_1jEJquR5uyv2-AQpnNyZ9iiXFSqW6eSMmcPDi7Jw@mail.gmail.com>
+In-Reply-To: <20180512000634.GG9510@magnolia>
+References: <20180511192651.21324-1-mfasheh@suse.de> <20180511192651.21324-3-mfasheh@suse.de>
+ <20180512000634.GG9510@magnolia>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Sat, 12 May 2018 07:15:35 +0300
+Message-ID: <CAOQ4uxiR+_Vzy-XWm6tfgF16h_ksxMR4hBBqnCvQUwHy0xn+7Q@mail.gmail.com>
+Subject: Re: [PATCH 2/2] vfs: dedupe should return EPERM if permission is not granted
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Mark Fasheh <mfasheh@suse.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, May 11, 2018 at 08:41:58AM +0300, Amir Goldstein wrote:
-> On Fri, May 11, 2018 at 5:11 AM, Dave Chinner
-> <david@fromorbit.com> wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> >
-> > Test case for superblock shrinkers running while the filesystem
-> > is being set up and/or torn down and tripping over inconsistent
-> > state.
-> >
-> > Signed-Off-By: Dave Chinner <dchinner@redhat.com> ---
-...
-> 
-> Isn't it dangerous for the time being? Your fix commit message
-> says you got reports of OOPS.
+On Sat, May 12, 2018 at 3:06 AM, Darrick J. Wong
+<darrick.wong@oracle.com> wrote:
+> On Fri, May 11, 2018 at 12:26:51PM -0700, Mark Fasheh wrote:
+>> Right now we return EINVAL if a process does not have permission to dedupe a
+>> file. This was an oversight on my part. EPERM gives a true description of
+>> the nature of our error, and EINVAL is already used for the case that the
+>> filesystem does not support dedupe.
+>>
+>> Signed-off-by: Mark Fasheh <mfasheh@suse.de>
+>> ---
+>>  fs/read_write.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/fs/read_write.c b/fs/read_write.c
+>> index 77986a2e2a3b..8edef43a182c 100644
+>> --- a/fs/read_write.c
+>> +++ b/fs/read_write.c
+>> @@ -2038,7 +2038,7 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
+>>                       info->status = -EINVAL;
+>>               } else if (!(is_admin || (dst_file->f_mode & FMODE_WRITE) ||
+>>                            uid_eq(current_fsuid(), dst->i_uid))) {
+>> -                     info->status = -EINVAL;
+>> +                     info->status = -EPERM;
+>
+> Hmm, are we allowed to change this aspect of the kabi after the fact?
+>
+> Granted, we're only trading one error code for another, but will the
+> existing users of this care?  xfs_io won't and I assume duperemove won't
+> either, but what about bees? :)
+>
 
-If you have a kernel with the mount_delay sysfs option, you will
-have a kernel with the fix. If you don't have mount_delay, the test
-won't run.
+Relaxing -EINVAL is the common case with kabi.
+Every new flag we add support for does that and is it also common
+that a new flag we support is restricted for certain capabilities so
+EINVAL is replaced with EPERM.
+BTW, man page doesn't say anything about the is_admin case.
 
-> Not sure what should be the authoritative condition to remove dangerous
-> point kernel release with a fix??
+IMO EPERM makes perfect sense here and btw, we also return
+EPERM from overlayfs if dst is on lower layer.
 
-I'm not going to add "dangerous" to new regression tests that have a
-fix pending anymore because nobody is doing maintenance tasks like
-sweeping out tests that aren't dangerous to upstream. Tagging new
-regression tests as dangerous just creates unnecessary technical
-debt.
+Mark,
 
-Cheers,
+Please be aware that these changes conflict with Miklos' dedupe-cleanup
+patches, so I suggest you collaborate on that
+https://marc.info/?l=linux-fsdevel&m=152568128031031&w=2
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Amir.
