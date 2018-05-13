@@ -1,62 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:35654 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751013AbeELCI1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 May 2018 22:08:27 -0400
-Date: Fri, 11 May 2018 19:08:23 -0700
+Received: from aserp2130.oracle.com ([141.146.126.79]:39256 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751617AbeEMS0q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 13 May 2018 14:26:46 -0400
+Date: Sun, 13 May 2018 11:26:39 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 01/10] xfs: one-shot cached buffers
-Message-ID: <20180512020823.GA4937@magnolia>
-References: <20180511225107.27171-1-david@fromorbit.com>
- <20180511225107.27171-2-david@fromorbit.com>
- <20180512002448.GM11261@magnolia>
- <20180512020606.GA10363@dastard>
+Subject: Re: [PATCH 2/2] vfs: dedupe should return EPERM if permission is not
+ granted
+Message-ID: <20180513182639.GB4933@magnolia>
+References: <20180511192651.21324-1-mfasheh@suse.de>
+ <20180511192651.21324-3-mfasheh@suse.de>
+ <20180512000634.GG9510@magnolia>
+ <20180513182152.GE27915@wotan.suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180512020606.GA10363@dastard>
+In-Reply-To: <20180513182152.GE27915@wotan.suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Mark Fasheh <mfasheh@suse.de>
+Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Sat, May 12, 2018 at 12:06:06PM +1000, Dave Chinner wrote:
-> On Fri, May 11, 2018 at 05:24:48PM -0700, Darrick J. Wong wrote:
-> > On Sat, May 12, 2018 at 08:50:58AM +1000, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
+On Sun, May 13, 2018 at 06:21:52PM +0000, Mark Fasheh wrote:
+> On Fri, May 11, 2018 at 05:06:34PM -0700, Darrick J. Wong wrote:
+> > On Fri, May 11, 2018 at 12:26:51PM -0700, Mark Fasheh wrote:
+> > > Right now we return EINVAL if a process does not have permission to dedupe a
+> > > file. This was an oversight on my part. EPERM gives a true description of
+> > > the nature of our error, and EINVAL is already used for the case that the
+> > > filesystem does not support dedupe.
 > > > 
-> > > For the new growfs work, we want to ensure that we serialise
-> > > secondary superblock updates with other operations (e.g. scrub)
-> > > correctly, but we don't want to cache the buffers for long term
-> > > reuse. We need cached buffers for serialisation, however.
+> > > Signed-off-by: Mark Fasheh <mfasheh@suse.de>
+> > > ---
+> > >  fs/read_write.c | 2 +-
+> > >  1 file changed, 1 insertion(+), 1 deletion(-)
 > > > 
-> > > To solve this, introduce a "oneshot" buffer which will be marshalled
-> > > through the cache but then released once the last current reference
-> > > goes away. If the buffer is already cached, then we ignore the
-> > > "one-shot" behaviour and leave the buffer in the state it was prior
-> > > to the one-shot command being run. This means we don't perturb
-> > > either the working set or existing cached buffer state by a one-shot
-> > > operation.
-> > > 
-> > > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> > > diff --git a/fs/read_write.c b/fs/read_write.c
+> > > index 77986a2e2a3b..8edef43a182c 100644
+> > > --- a/fs/read_write.c
+> > > +++ b/fs/read_write.c
+> > > @@ -2038,7 +2038,7 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
+> > >  			info->status = -EINVAL;
+> > >  		} else if (!(is_admin || (dst_file->f_mode & FMODE_WRITE) ||
+> > >  			     uid_eq(current_fsuid(), dst->i_uid))) {
+> > > -			info->status = -EINVAL;
+> > > +			info->status = -EPERM;
 > > 
-> > Hmm, should the xfs_sb_read_secondary function in "xfs: superblock scrub
-> > should use short-lived buffers" be calling this to set a zero lru_ref
-> > instead of doing it directly?
+> > Hmm, are we allowed to change this aspect of the kabi after the fact?
+> > 
+> > Granted, we're only trading one error code for another, but will the
+> > existing users of this care?  xfs_io won't and I assume duperemove won't
+> > either, but what about bees? :)
 > 
-> That's not yet merged, is it? I'm guessing that it all depends on
-> what order everything gets merged - we can clean up all the loose
-> ends once we get everything in?
+> Yeah if you see my initial e-mail I check bees and also rust-btrfs. I think
+> this is fine as we're simply expanding on an error code return. There's no
+> magic behavior expected with respect to these error codes either.
 
-I... already have a series of cleanups to go in after online repair
-lands, so I don't mind tacking more on. 8-)
+Ok.  No objections from me, then.
+
+Acked-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> 	--Mark
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
