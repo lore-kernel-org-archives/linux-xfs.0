@@ -1,56 +1,30 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from tartarus.angband.pl ([89.206.35.136]:51158 "EHLO
-        tartarus.angband.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751830AbeEMOa3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 13 May 2018 10:30:29 -0400
-Date: Sun, 13 May 2018 16:30:20 +0200
-From: Adam Borowski <kilobyte@angband.pl>
-Subject: Re: [PATCH 2/2] vfs: dedupe should return EPERM if permission is not
- granted
-Message-ID: <20180513143020.6lp7eg6pg5ckl4nn@angband.pl>
-References: <20180511192651.21324-1-mfasheh@suse.de>
- <20180511192651.21324-3-mfasheh@suse.de>
- <20180512000634.GG9510@magnolia>
+Received: from userp2130.oracle.com ([156.151.31.86]:59634 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751859AbeEMRAl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 13 May 2018 13:00:41 -0400
+Subject: [PATCH 0/4] xfs-docs: incorporate design documents
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Sun, 13 May 2018 10:00:24 -0700
+Message-ID: <152623082465.10242.9458731018482450171.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20180512000634.GG9510@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Mark Fasheh <mfasheh@suse.de>, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, azarus@posteo.net
 
-On Fri, May 11, 2018 at 05:06:34PM -0700, Darrick J. Wong wrote:
-> On Fri, May 11, 2018 at 12:26:51PM -0700, Mark Fasheh wrote:
-> > Right now we return EINVAL if a process does not have permission to dedupe a
-> > file. This was an oversight on my part. EPERM gives a true description of
-> > the nature of our error, and EINVAL is already used for the case that the
-> > filesystem does not support dedupe.
+Hi all,
 
-> > -			info->status = -EINVAL;
-> > +			info->status = -EPERM;
-> 
-> Hmm, are we allowed to change this aspect of the kabi after the fact?
-> 
-> Granted, we're only trading one error code for another, but will the
-> existing users of this care?  xfs_io won't and I assume duperemove won't
-> either, but what about bees? :)
+This series renames the old on-disk filesystem structure book to 'XFS
+Algorithms and Data Structures', and moves the delayed logging and
+self-describing metadata design documents into the book.  No changes
+have been made to the contents of either document.  This series begins
+the process of migrating the more up-to-date documentation into the
+kernel.  See branch[1] if you actually want to build the docs.
 
-There's more:
-https://codesearch.debian.net/search?q=FILE_EXTENT_SAME
+--D
 
-This includes only software that has been packaged for Debian (notably, not
-bees), but that gives enough interesting coverage.  And none of these cases
-discriminate between error codes -- they merely report them to the user.
-
-Thus, I can't think of a downside of making the error code more accurate.
-
-
-Meow!
--- 
-⢀⣴⠾⠻⢶⣦⠀ 
-⣾⠁⢰⠒⠀⣿⡁ 
-⢿⡄⠘⠷⠚⠋⠀ Certified airhead; got the CT scan to prove that!
-⠈⠳⣄⠀⠀⠀⠀ 
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-documentation.git/log/?h=djwong-devel
