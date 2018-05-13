@@ -1,71 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:62428 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751028AbeEKWvR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 May 2018 18:51:17 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1fHGsX-0008Fa-L6
-        for linux-xfs@vger.kernel.org; Sat, 12 May 2018 08:51:09 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.91)
-        (envelope-from <david@fromorbit.com>)
-        id 1fHGsX-0007Cg-Jm
-        for linux-xfs@vger.kernel.org; Sat, 12 May 2018 08:51:09 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 01/10] xfs: one-shot cached buffers
-Date: Sat, 12 May 2018 08:50:58 +1000
-Message-Id: <20180511225107.27171-2-david@fromorbit.com>
-In-Reply-To: <20180511225107.27171-1-david@fromorbit.com>
-References: <20180511225107.27171-1-david@fromorbit.com>
+Received: from tartarus.angband.pl ([89.206.35.136]:34040 "EHLO
+        tartarus.angband.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751295AbeEMUu3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 13 May 2018 16:50:29 -0400
+Date: Sun, 13 May 2018 22:50:25 +0200
+From: Adam Borowski <kilobyte@angband.pl>
+Subject: Re: [PATCH 1/2] vfs: allow dedupe of user owned read-only files
+Message-ID: <20180513205025.3kolgcnbpy4grqtv@angband.pl>
+References: <20180511192651.21324-1-mfasheh@suse.de>
+ <20180511192651.21324-2-mfasheh@suse.de>
+ <20180512024920.i7duhoi3lnkha4yl@angband.pl>
+ <20180513181653.GD27915@wotan.suse.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20180513181653.GD27915@wotan.suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Mark Fasheh <mfasheh@suse.de>
+Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Sun, May 13, 2018 at 06:16:53PM +0000, Mark Fasheh wrote:
+> On Sat, May 12, 2018 at 04:49:20AM +0200, Adam Borowski wrote:
+> > On Fri, May 11, 2018 at 12:26:50PM -0700, Mark Fasheh wrote:
+> > > The permission check in vfs_dedupe_file_range() is too coarse - We
+> > > only allow dedupe of the destination file if the user is root, or
+> > > they have the file open for write.
+> > > 
+> > > This effectively limits a non-root user from deduping their own
+> > > read-only files. As file data during a dedupe does not change,
+> > > this is unexpected behavior and this has caused a number of issue
+> > > reports.
+[...]
+> > > So change the check so we allow dedupe on the target if:
+> > > 
+> > > - the root or admin is asking for it
+> > > - the owner of the file is asking for the dedupe
+> > > - the process has write access
+> > 
+> > I submitted a similar patch in May 2016, yet it has never been applied
+> > despite multiple pings, with no NAK.  My version allowed dedupe if:
+> > - the root or admin is asking for it
+> > - the file has w permission (on the inode -- ie, could have been opened rw)
+> 
+> Ahh, yes I see that now. I did wind up acking it too :)
+> > 
+> > I like this new version better than mine: "root or owner or w" is more
+> > Unixy than "could have been opened w".
+> 
+> I agree, IMHO the behavior in this patch is intuitive. What we had before
+> would surprise users.
 
-For the new growfs work, we want to ensure that we serialise
-secondary superblock updates with other operations (e.g. scrub)
-correctly, but we don't want to cache the buffers for long term
-reuse. We need cached buffers for serialisation, however.
+Actually, there's one reason to still consider "could have been opened w":
+with it, deduplication programs can simply open the file r and not care
+about ETXTBSY at all.  Otherwise, every program needs to stat() and have
+logic to pick the proper argument to the open() call (r if owner/root,
+rw or w if not).
 
-To solve this, introduce a "oneshot" buffer which will be marshalled
-through the cache but then released once the last current reference
-goes away. If the buffer is already cached, then we ignore the
-"one-shot" behaviour and leave the buffer in the state it was prior
-to the one-shot command being run. This means we don't perturb
-either the working set or existing cached buffer state by a one-shot
-operation.
+I also have a sister patch: btrfs_ioctl_defrag wants the same change, for
+the very same reason.  But, let's discuss dedupe first to avoid unnecessary
+round trips.
 
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_buf.h | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
 
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 830e2f6c064a..f5f2b71c2fde 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -347,6 +347,18 @@ extern void xfs_buf_terminate(void);
- 
- void xfs_buf_set_ref(struct xfs_buf *bp, int lru_ref);
- 
-+/*
-+ * If the buffer is already on the LRU, do nothing. Otherwise set the buffer
-+ * up with a reference count of 0 so it will be tossed from the cache when
-+ * released.
-+ */
-+static inline void xfs_buf_oneshot(struct xfs_buf *bp)
-+{
-+	if (!list_empty(&bp->b_lru) || atomic_read(&bp->b_lru_ref) > 1)
-+		return;
-+	atomic_set(&bp->b_lru_ref, 0);
-+}
-+
- static inline int xfs_buf_ispinned(struct xfs_buf *bp)
- {
- 	return atomic_read(&bp->b_pin_count);
+Meow!
 -- 
-2.17.0
-
+⢀⣴⠾⠻⢶⣦⠀ 
+⣾⠁⢰⠒⠀⣿⡁ 
+⢿⡄⠘⠷⠚⠋⠀ Certified airhead; got the CT scan to prove that!
+⠈⠳⣄⠀⠀⠀⠀ 
