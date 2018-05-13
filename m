@@ -1,94 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:59534 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753032AbeENRiG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 May 2018 13:38:06 -0400
-Date: Mon, 14 May 2018 10:37:45 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH V2 1/5] fs: copy BTRFS_IOC_[SG]ET_FSLABEL to vfs
-Message-ID: <20180514173745.GD4933@magnolia>
-References: <5957a0ff-0fd7-c1f3-2d44-86b825c2eb3b@redhat.com>
- <4d21659d-5b21-81ff-e759-b1f1519f526c@redhat.com>
+Received: from mx2.suse.de ([195.135.220.15]:42747 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752005AbeEMSVy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 13 May 2018 14:21:54 -0400
+Date: Sun, 13 May 2018 18:21:52 +0000
+From: Mark Fasheh <mfasheh@suse.de>
+Subject: Re: [PATCH 2/2] vfs: dedupe should return EPERM if permission is not
+ granted
+Message-ID: <20180513182152.GE27915@wotan.suse.de>
+Reply-To: Mark Fasheh <mfasheh@suse.de>
+References: <20180511192651.21324-1-mfasheh@suse.de>
+ <20180511192651.21324-3-mfasheh@suse.de>
+ <20180512000634.GG9510@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <4d21659d-5b21-81ff-e759-b1f1519f526c@redhat.com>
+In-Reply-To: <20180512000634.GG9510@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Mon, May 14, 2018 at 12:35:18PM -0500, Eric Sandeen wrote:
-> This retains 256 chars as the maximum size through the interface, which
-> is the btrfs limit and AFAIK exceeds any other filesystem's maximum
-> label size.
+On Fri, May 11, 2018 at 05:06:34PM -0700, Darrick J. Wong wrote:
+> On Fri, May 11, 2018 at 12:26:51PM -0700, Mark Fasheh wrote:
+> > Right now we return EINVAL if a process does not have permission to dedupe a
+> > file. This was an oversight on my part. EPERM gives a true description of
+> > the nature of our error, and EINVAL is already used for the case that the
+> > filesystem does not support dedupe.
+> > 
+> > Signed-off-by: Mark Fasheh <mfasheh@suse.de>
+> > ---
+> >  fs/read_write.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/read_write.c b/fs/read_write.c
+> > index 77986a2e2a3b..8edef43a182c 100644
+> > --- a/fs/read_write.c
+> > +++ b/fs/read_write.c
+> > @@ -2038,7 +2038,7 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
+> >  			info->status = -EINVAL;
+> >  		} else if (!(is_admin || (dst_file->f_mode & FMODE_WRITE) ||
+> >  			     uid_eq(current_fsuid(), dst->i_uid))) {
+> > -			info->status = -EINVAL;
+> > +			info->status = -EPERM;
 > 
-> This just copies the ioctl for now and leaves it in place for btrfs
-> for the time being.  A later patch will allow btrfs to use the new
-> common ioctl definition, but it may be sent after this is merged.
+> Hmm, are we allowed to change this aspect of the kabi after the fact?
 > 
-> (Note, Reviewed-by's were originally given for the combined vfs+btrfs
-> patch, some license taken here.)
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> Reviewed-by: Andreas Dilger <adilger@dilger.ca>
-> Reviewed-by: David Sterba <dsterba@suse.com>
+> Granted, we're only trading one error code for another, but will the
+> existing users of this care?  xfs_io won't and I assume duperemove won't
+> either, but what about bees? :)
 
-Looks ok, having decided not to fuss about whitespace this time:
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> ---
->  Documentation/ioctl/ioctl-number.txt | 3 ++-
->  include/uapi/linux/fs.h              | 8 ++++++--
->  2 files changed, 8 insertions(+), 3 deletions(-)
-> 
-> diff --git a/Documentation/ioctl/ioctl-number.txt b/Documentation/ioctl/ioctl-number.txt
-> index 7f7413e597f3..27c1b7b78504 100644
-> --- a/Documentation/ioctl/ioctl-number.txt
-> +++ b/Documentation/ioctl/ioctl-number.txt
-> @@ -296,7 +296,8 @@ Code  Seq#(hex)	Include File		Comments
->  0x90	00	drivers/cdrom/sbpcd.h
->  0x92	00-0F	drivers/usb/mon/mon_bin.c
->  0x93	60-7F	linux/auto_fs.h
-> -0x94	all	fs/btrfs/ioctl.h
-> +0x94	all	fs/btrfs/ioctl.h	Btrfs filesystem
-> +		and linux/fs.h		some lifted to vfs/generic
->  0x97	00-7F	fs/ceph/ioctl.h		Ceph file system
->  0x99	00-0F				537-Addinboard driver
->  					<mailto:buk@buks.ipn.de>
-> diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
-> index d2a8313fabd7..9d132f8f2df8 100644
-> --- a/include/uapi/linux/fs.h
-> +++ b/include/uapi/linux/fs.h
-> @@ -242,6 +242,8 @@ struct fsxattr {
->  #define FICLONERANGE	_IOW(0x94, 13, struct file_clone_range)
->  #define FIDEDUPERANGE	_IOWR(0x94, 54, struct file_dedupe_range)
->  
-> +#define FSLABEL_MAX 256	/* Max chars for the interface; each fs may differ */
-> +
->  #define	FS_IOC_GETFLAGS			_IOR('f', 1, long)
->  #define	FS_IOC_SETFLAGS			_IOW('f', 2, long)
->  #define	FS_IOC_GETVERSION		_IOR('v', 1, long)
-> @@ -251,8 +253,10 @@ struct fsxattr {
->  #define FS_IOC32_SETFLAGS		_IOW('f', 2, int)
->  #define FS_IOC32_GETVERSION		_IOR('v', 1, int)
->  #define FS_IOC32_SETVERSION		_IOW('v', 2, int)
-> -#define FS_IOC_FSGETXATTR		_IOR ('X', 31, struct fsxattr)
-> -#define FS_IOC_FSSETXATTR		_IOW ('X', 32, struct fsxattr)
-> +#define FS_IOC_FSGETXATTR		_IOR('X', 31, struct fsxattr)
-> +#define FS_IOC_FSSETXATTR		_IOW('X', 32, struct fsxattr)
-> +#define FS_IOC_GETFSLABEL		_IOR(0x94, 49, char[FSLABEL_MAX])
-> +#define FS_IOC_SETFSLABEL		_IOW(0x94, 50, char[FSLABEL_MAX])
->  
->  /*
->   * File system encryption support
-> -- 
-> 2.17.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yeah if you see my initial e-mail I check bees and also rust-btrfs. I think
+this is fine as we're simply expanding on an error code return. There's no
+magic behavior expected with respect to these error codes either.
+	--Mark
