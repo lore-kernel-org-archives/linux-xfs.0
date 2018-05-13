@@ -1,293 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:4160 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750748AbeENETJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 May 2018 00:19:09 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1fI4x0-0002vC-9h
-        for linux-xfs@vger.kernel.org; Mon, 14 May 2018 14:19:06 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.91)
-        (envelope-from <david@fromorbit.com>)
-        id 1fI4x0-0002xe-8B
-        for linux-xfs@vger.kernel.org; Mon, 14 May 2018 14:19:06 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 07/10] xfs: separate secondary sb update in growfs
-Date: Mon, 14 May 2018 14:19:01 +1000
-Message-Id: <20180514041904.11140-8-david@fromorbit.com>
-In-Reply-To: <20180514041904.11140-1-david@fromorbit.com>
-References: <20180514041904.11140-1-david@fromorbit.com>
+Received: from mx2.suse.de ([195.135.220.15]:42616 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751295AbeEMSQy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 13 May 2018 14:16:54 -0400
+Date: Sun, 13 May 2018 18:16:53 +0000
+From: Mark Fasheh <mfasheh@suse.de>
+Subject: Re: [PATCH 1/2] vfs: allow dedupe of user owned read-only files
+Message-ID: <20180513181653.GD27915@wotan.suse.de>
+Reply-To: Mark Fasheh <mfasheh@suse.de>
+References: <20180511192651.21324-1-mfasheh@suse.de>
+ <20180511192651.21324-2-mfasheh@suse.de>
+ <20180512024920.i7duhoi3lnkha4yl@angband.pl>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180512024920.i7duhoi3lnkha4yl@angband.pl>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Adam Borowski <kilobyte@angband.pl>
+Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+Hey Adam,
 
-This happens after all the transactions to update the superblock
-occur, and errors need to be handled slightly differently. Seperate
-out the code into it's own function, and clean up the error goto
-stack in the core growfs code as it is now much simpler.
+On Sat, May 12, 2018 at 04:49:20AM +0200, Adam Borowski wrote:
+> On Fri, May 11, 2018 at 12:26:50PM -0700, Mark Fasheh wrote:
+> > The permission check in vfs_dedupe_file_range() is too coarse - We
+> > only allow dedupe of the destination file if the user is root, or
+> > they have the file open for write.
+> > 
+> > This effectively limits a non-root user from deduping their own
+> > read-only files. As file data during a dedupe does not change,
+> > this is unexpected behavior and this has caused a number of issue
+> > reports. For an example, see:
+> > 
+> > https://github.com/markfasheh/duperemove/issues/129
+> > 
+> > So change the check so we allow dedupe on the target if:
+> > 
+> > - the root or admin is asking for it
+> > - the owner of the file is asking for the dedupe
+> > - the process has write access
+> 
+> I submitted a similar patch in May 2016, yet it has never been applied
+> despite multiple pings, with no NAK.  My version allowed dedupe if:
+> - the root or admin is asking for it
+> - the file has w permission (on the inode -- ie, could have been opened rw)
 
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_fsops.c | 159 ++++++++++++++++++++++++++-------------------
- 1 file changed, 92 insertions(+), 67 deletions(-)
+Ahh, yes I see that now. I did wind up acking it too :)
 
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 4e66d390e2a4..a718bb002cf4 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -422,9 +422,8 @@ xfs_growfs_data_private(
- {
- 	xfs_agf_t		*agf;
- 	xfs_agi_t		*agi;
--	xfs_agnumber_t		agno;
- 	xfs_buf_t		*bp;
--	int			error, saved_error = 0;
-+	int			error;
- 	xfs_agnumber_t		nagcount;
- 	xfs_agnumber_t		nagimax = 0;
- 	xfs_rfsblock_t		nb, nb_mod;
-@@ -496,12 +495,12 @@ xfs_growfs_data_private(
- 		error = xfs_grow_ag_headers(mp, &id);
- 		if (error) {
- 			xfs_buf_delwri_cancel(&id.buffer_list);
--			goto error0;
-+			goto out_trans_cancel;
- 		}
- 	}
- 	error = xfs_buf_delwri_submit(&id.buffer_list);
- 	if (error)
--		goto error0;
-+		goto out_trans_cancel;
- 
- 	xfs_trans_agblocks_delta(tp, id.nfree);
- 
-@@ -515,22 +514,23 @@ xfs_growfs_data_private(
- 		 * Change the agi length.
- 		 */
- 		error = xfs_ialloc_read_agi(mp, tp, id.agno, &bp);
--		if (error) {
--			goto error0;
--		}
-+		if (error)
-+			goto out_trans_cancel;
-+
- 		ASSERT(bp);
- 		agi = XFS_BUF_TO_AGI(bp);
- 		be32_add_cpu(&agi->agi_length, new);
- 		ASSERT(nagcount == oagcount ||
- 		       be32_to_cpu(agi->agi_length) == mp->m_sb.sb_agblocks);
- 		xfs_ialloc_log_agi(tp, bp, XFS_AGI_LENGTH);
-+
- 		/*
- 		 * Change agf length.
- 		 */
- 		error = xfs_alloc_read_agf(mp, tp, id.agno, 0, &bp);
--		if (error) {
--			goto error0;
--		}
-+		if (error)
-+			goto out_trans_cancel;
-+
- 		ASSERT(bp);
- 		agf = XFS_BUF_TO_AGF(bp);
- 		be32_add_cpu(&agf->agf_length, new);
-@@ -550,13 +550,13 @@ xfs_growfs_data_private(
- 				be32_to_cpu(agf->agf_length) - new,
- 				new, &oinfo);
- 		if (error)
--			goto error0;
-+			goto out_trans_cancel;
- 		error = xfs_free_extent(tp,
- 				XFS_AGB_TO_FSB(mp, id.agno,
- 					be32_to_cpu(agf->agf_length) - new),
- 				new, &oinfo, XFS_AG_RESV_NONE);
- 		if (error)
--			goto error0;
-+			goto out_trans_cancel;
- 	}
- 
- 	/*
-@@ -593,16 +593,86 @@ xfs_growfs_data_private(
- 		error = xfs_ag_resv_free(pag);
- 		xfs_perag_put(pag);
- 		if (error)
--			goto out;
-+			return error;
- 	}
- 
--	/* Reserve AG metadata blocks. */
-+	/*
-+	 * Reserve AG metadata blocks. ENOSPC here does not mean there was a
-+	 * growfs failure, just that there still isn't space for new user data
-+	 * after the grow has been run.
-+	 */
- 	error = xfs_fs_reserve_ag_blocks(mp);
--	if (error && error != -ENOSPC)
--		goto out;
-+	if (error == -ENOSPC)
-+		error = 0;
-+	return error;
-+
-+out_trans_cancel:
-+	xfs_trans_cancel(tp);
-+	return error;
-+}
-+
-+static int
-+xfs_growfs_log_private(
-+	xfs_mount_t		*mp,	/* mount point for filesystem */
-+	xfs_growfs_log_t	*in)	/* growfs log input struct */
-+{
-+	xfs_extlen_t		nb;
-+
-+	nb = in->newblocks;
-+	if (nb < XFS_MIN_LOG_BLOCKS || nb < XFS_B_TO_FSB(mp, XFS_MIN_LOG_BYTES))
-+		return -EINVAL;
-+	if (nb == mp->m_sb.sb_logblocks &&
-+	    in->isint == (mp->m_sb.sb_logstart != 0))
-+		return -EINVAL;
-+	/*
-+	 * Moving the log is hard, need new interfaces to sync
-+	 * the log first, hold off all activity while moving it.
-+	 * Can have shorter or longer log in the same space,
-+	 * or transform internal to external log or vice versa.
-+	 */
-+	return -ENOSYS;
-+}
-+
-+static int
-+xfs_growfs_imaxpct(
-+	struct xfs_mount	*mp,
-+	__u32			imaxpct)
-+{
-+	struct xfs_trans	*tp;
-+	int			dpct;
-+	int			error;
-+
-+	if (imaxpct > 100)
-+		return -EINVAL;
-+
-+	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growdata,
-+			XFS_GROWFS_SPACE_RES(mp), 0, XFS_TRANS_RESERVE, &tp);
-+	if (error)
-+		return error;
-+
-+	dpct = imaxpct - mp->m_sb.sb_imax_pct;
-+	xfs_trans_mod_sb(tp, XFS_TRANS_SB_IMAXPCT, dpct);
-+	xfs_trans_set_sync(tp);
-+	return xfs_trans_commit(tp);
-+}
-+
-+/*
-+ * After a grow operation, we need to update all the secondary superblocks
-+ * to match the new state of the primary. Read/init the superblocks and update
-+ * them appropriately.
-+ */
-+static int
-+xfs_growfs_update_superblocks(
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		oagcount)
-+{
-+	struct xfs_buf		*bp;
-+	xfs_agnumber_t		agno;
-+	int			saved_error = 0;
-+	int			error = 0;
- 
- 	/* update secondary superblocks. */
--	for (agno = 1; agno < nagcount; agno++) {
-+	for (agno = 1; agno < mp->m_sb.sb_agcount; agno++) {
- 		error = 0;
- 		/*
- 		 * new secondary superblocks need to be zeroed, not read from
-@@ -652,57 +722,7 @@ xfs_growfs_data_private(
- 		}
- 	}
- 
-- out:
- 	return saved_error ? saved_error : error;
--
-- error0:
--	xfs_trans_cancel(tp);
--	return error;
--}
--
--static int
--xfs_growfs_log_private(
--	xfs_mount_t		*mp,	/* mount point for filesystem */
--	xfs_growfs_log_t	*in)	/* growfs log input struct */
--{
--	xfs_extlen_t		nb;
--
--	nb = in->newblocks;
--	if (nb < XFS_MIN_LOG_BLOCKS || nb < XFS_B_TO_FSB(mp, XFS_MIN_LOG_BYTES))
--		return -EINVAL;
--	if (nb == mp->m_sb.sb_logblocks &&
--	    in->isint == (mp->m_sb.sb_logstart != 0))
--		return -EINVAL;
--	/*
--	 * Moving the log is hard, need new interfaces to sync
--	 * the log first, hold off all activity while moving it.
--	 * Can have shorter or longer log in the same space,
--	 * or transform internal to external log or vice versa.
--	 */
--	return -ENOSYS;
--}
--
--static int
--xfs_growfs_imaxpct(
--	struct xfs_mount	*mp,
--	__u32			imaxpct)
--{
--	struct xfs_trans	*tp;
--	int64_t			dpct;
--	int			error;
--
--	if (imaxpct > 100)
--		return -EINVAL;
--
--	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growdata,
--			XFS_GROWFS_SPACE_RES(mp), 0, XFS_TRANS_RESERVE, &tp);
--	if (error)
--		return error;
--
--	dpct = (int64_t)imaxpct - mp->m_sb.sb_imax_pct;
--	xfs_trans_mod_sb(tp, XFS_TRANS_SB_IMAXPCT, dpct);
--	xfs_trans_set_sync(tp);
--	return xfs_trans_commit(tp);
- }
- 
- /*
-@@ -715,6 +735,7 @@ xfs_growfs_data(
- 	struct xfs_mount	*mp,
- 	struct xfs_growfs_data	*in)
- {
-+	xfs_agnumber_t		oagcount;
- 	int			error = 0;
- 
- 	if (!capable(CAP_SYS_ADMIN))
-@@ -729,6 +750,7 @@ xfs_growfs_data(
- 			goto out_error;
- 	}
- 
-+	oagcount = mp->m_sb.sb_agcount;
- 	if (in->newblocks != mp->m_sb.sb_dblocks) {
- 		error = xfs_growfs_data_private(mp, in);
- 		if (error)
-@@ -743,6 +765,9 @@ xfs_growfs_data(
- 	} else
- 		mp->m_maxicount = 0;
- 
-+	/* Update secondary superblocks now the physical grow has completed */
-+	error = xfs_growfs_update_superblocks(mp, oagcount);
-+
- out_error:
- 	/*
- 	 * Increment the generation unconditionally, the error could be from
--- 
-2.17.0
+> There was a request to include in xfstests a test case for the ETXTBSY race
+> this patch fixes, but there's no reasonable way to make such a test case:
+> the race condition is not a bug, it's write-xor-exec working as designed.
+> 
+> Another idea discussed was about possibly just allowing everyone who can
+> open the file to deduplicate it, as the file contents are not modified in
+> any way.  Zygo Blaxell expressed a concern that it could be used by an
+> unprivileged user who can trigger a crash to abuse writeout bugs.
+> 
+> I like this new version better than mine: "root or owner or w" is more
+> Unixy than "could have been opened w".
 
+I agree, IMHO the behavior in this patch is intuitive. What we had before
+would surprise users.
+
+Yeah we've been careful about not letting a user dedupe some other users
+file. Data-wise it technically might be ok but I can imagine several
+scenarios where you might not want some other user deduping your files.
+
+Thanks for the review,
+	--Mark
