@@ -1,140 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:42414 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751400AbeEPAlv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 May 2018 20:41:51 -0400
-Date: Tue, 15 May 2018 17:41:29 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: change xfs_update_secondary_supers to use
- xfS_sb_read_secondary
-Message-ID: <20180516004129.GP4933@magnolia>
-References: <20180515204721.GM4933@magnolia>
- <20180515230811.GJ23861@dastard>
- <20180515233656.GO4933@magnolia>
- <20180516002346.GL23861@dastard>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:45988 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752115AbeENW5z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 May 2018 18:57:55 -0400
+Date: Tue, 15 May 2018 08:57:51 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: How to reliably measure fs usage with reflinks enabled?
+Message-ID: <20180514225751.GB10363@dastard>
+References: <5398ddaf2b876c3563bc1c2927bfe1b9@ruhr-uni-bochum.de>
+ <866a5e96-e900-d330-0efb-6413f85f86a3@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20180516002346.GL23861@dastard>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <866a5e96-e900-d330-0efb-6413f85f86a3@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Tarik Ceylan <Tarik.Ceylan@ruhr-uni-bochum.de>, linux-xfs@vger.kernel.org
 
-On Wed, May 16, 2018 at 10:23:46AM +1000, Dave Chinner wrote:
-> On Tue, May 15, 2018 at 04:36:56PM -0700, Darrick J. Wong wrote:
-> > On Wed, May 16, 2018 at 09:08:11AM +1000, Dave Chinner wrote:
-> > > On Tue, May 15, 2018 at 01:47:21PM -0700, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > 
-> > > > Use the new helper to read secondary superblocks instead of opencoding
-> > > > it ourselves.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > ---
-> > > >  fs/xfs/xfs_fsops.c |   10 ++++------
-> > > >  1 file changed, 4 insertions(+), 6 deletions(-)
-> > > > 
-> > > > diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> > > > index 056a76689197..40c131ebf772 100644
-> > > > --- a/fs/xfs/xfs_fsops.c
-> > > > +++ b/fs/xfs/xfs_fsops.c
-> > > > @@ -191,18 +191,15 @@ xfs_growfs_data_private(
-> > > >   */
-> > > >  int
-> > > >  xfs_update_secondary_supers(
-> > > > -	xfs_mount_t		*mp)
-> > > > +	struct xfs_mount	*mp)
-> > > >  {
-> > > > -	int			error, saved_error;
-> > > > +	struct xfs_buf		*bp;
-> > > >  	xfs_agnumber_t		agno;
-> > > > -	xfs_buf_t		*bp;
-> > > > +	int			error, saved_error;
-> > > >  
-> > > >  	error = saved_error = 0;
-> > > >  
-> > > >  	for (agno = 1; agno < mp->m_sb.sb_agcount; agno++) {
-> > > > -		error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
-> > > > -			  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
-> > > > -			  XFS_FSS_TO_BB(mp, 1), 0, &bp, &xfs_sb_buf_ops);
-> > > >  		/*
-> > > >  		 * If we get an error reading or writing alternate superblocks,
-> > > >  		 * continue.  xfs_repair chooses the "best" superblock based
-> > > > @@ -210,6 +207,7 @@ xfs_update_secondary_supers(
-> > > >  		 * superblocks un-updated than updated, and xfs_repair may
-> > > >  		 * pick them over the properly-updated primary.
-> > > >  		 */
-> > > > +		error = xfs_sb_read_secondary(mp, NULL, agno, &bp);
-> > > >  		if (error) {
-> > > >  			xfs_warn(mp,
-> > > >  		"error %d reading secondary superblock for ag %d",
-> > > 
-> > > Why change this now when my growfs patchset ireworks it and then
-> > > moves the function entirely? Doing this now just breaks that
-> > > patchset unnecessarily and forces another rebase - can we move this
-> > > to the end of the growfs patchset?
-> > 
-> > The label stuff will come after your growfs stuff... maybe I'll try this
-> > again tomorrow when I'm more awake.
+On Mon, May 14, 2018 at 05:02:53PM -0500, Eric Sandeen wrote:
 > 
-> *nod*
-
-Aha, just s/xfs_update_secondary_supers/xfs_update_secondary_sbs/ in
-Eric's online label patch, and drop the one where he adds
-xfs_update_secondary_supers.
-
-> > Scrub wants a function to read a secondary sb, and a second one to clone
-> > the primary to fix damage by getting the sb, formatting the incore sb
-> > into the buffer, and writing it to disk.
 > 
-> This is all done in a transaction context during scrub, isn't it?
-> Which means it's mostly separate to the non-transactional "update
-> all secondary SB's?
-
-Yes.  It's likely we only want to update a single secondary sb, and
-updating all of them is overkill, so maybe it's fine just to open code
-this one use?  Seeing as I don't think we'd ordinarily be updating only
-a single secondary sb.
-
-> > Label wants a function to read each secondary sb, format the incore sb
-> > into the buffer, and write it to disk.
+> On 5/14/18 3:02 PM, Tarik Ceylan wrote:
+> > How can one reliably measure filesystem usage on partitions that were compiled with -m reflink=1 ?
+> > Here are some numbers i am measuring with df -h (on different partitions holding the same data):
+> > 7.7G of 36G  (-b size=512  -m crc=0 )
+> > 8.6G of 36G  (-b size=4096 -m crc=1 )
 > 
-> Yup - it can just use the function I added to rewrite all the
-> secondary superblocks.
+> 8x larger inodes will take 8x more space, but you didn't say how many
+> inodes you have allocated.
 > 
-> Hmmmm - just a thought here: does repair check and repair
-> inconsistent labels across secondary superblocks? What about UUID
-> updates? Do we have a generic need for some superblock updates to be
-> atomic across all superblocks?
-
-Online fsck checks both sb_fname and sb_uuid and complains if the
-secondaries are out of date.  xfs_repair doesn't check at all.
-
-> > Growfs wants to (read an existing ag's secondary sb | get a new ag's
-> > sb), format the incore sb into the buffer, and write it to disk.
+> > 11G  of 36G  (-b size=1024 -m crc=1,reflink=1,rmapbt=1 -i sparse=1 )
+> > 32G  of 864G (-b size=4096 -m crc=1,reflink=1 )
 > 
-> After my changes, growfs no longer reads the secondary superblocks.
-> It just rewrites them all completely by rewriting the primary SB
-> into them. The existing code rewrites them completely, too, so the
-> read is actually redundant and, potentially, can cause the grow to
-> fail.
-
-Ok, I had wondered myself if we should unconditionally rewrite the
-secondary sbs, because why would we care what the previous contents
-were?
-
---D
-
-> Cheers,
+> In that last case, you have a wildly different total fs size, so probably
+> no fair comparison here either.
 > 
-> Dave.
-> 
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> The reverse mapping btree also takes up space.  You're turning too many
+> knobs at once.  ;)
+
+Also, we reserve a lot of space for reflink/rmapbt metadata that
+isn't actually used, so you're not actually using any more space
+than the "-b size=4096 -m crc=1" case. I have plans for hiding that
+reservation from users so that we don't get questions like this....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
