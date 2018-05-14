@@ -1,541 +1,691 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:36298 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751402AbeEOWgE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 May 2018 18:36:04 -0400
-Subject: [PATCH 22/22] xfs: implement live quotacheck as part of quota repair
+Received: from userp2120.oracle.com ([156.151.31.85]:34426 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750750AbeENT0B (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 May 2018 15:26:01 -0400
+Date: Mon, 14 May 2018 12:25:56 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 15 May 2018 15:36:01 -0700
-Message-ID: <152642376103.1556.5472150335241911371.stgit@magnolia>
-In-Reply-To: <152642361893.1556.9335169821674946249.stgit@magnolia>
-References: <152642361893.1556.9335169821674946249.stgit@magnolia>
+Subject: Re: [PATCH 04/10] xfs: factor ag btree root block initialisation
+Message-ID: <20180514192555.GE4933@magnolia>
+References: <20180514041904.11140-1-david@fromorbit.com>
+ <20180514041904.11140-5-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180514041904.11140-5-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, david@fromorbit.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, May 14, 2018 at 02:18:58PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Cookie cutter code, easily factored.
+> 
+> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 
-Use the fs freezing mechanism we developed for the rmapbt repair to
-freeze the fs, this time to scan the fs for a live quotacheck.  We add a
-new dqget variant to use the existing scrub transaction to allocate an
-on-disk dquot block if it is missing.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/scrub/quota.c        |   20 +++
- fs/xfs/scrub/quota_repair.c |  286 +++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_dquot.c          |   59 ++++++++-
- fs/xfs/xfs_dquot.h          |    3 
- 4 files changed, 360 insertions(+), 8 deletions(-)
+--D
 
-
-diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
-index 64776257fd88..596c660ca155 100644
---- a/fs/xfs/scrub/quota.c
-+++ b/fs/xfs/scrub/quota.c
-@@ -41,6 +41,7 @@
- #include "scrub/scrub.h"
- #include "scrub/common.h"
- #include "scrub/trace.h"
-+#include "scrub/repair.h"
- 
- /* Convert a scrub type code to a DQ flag, or return 0 if error. */
- uint
-@@ -78,12 +79,29 @@ xfs_scrub_setup_quota(
- 	mutex_lock(&sc->mp->m_quotainfo->qi_quotaofflock);
- 	if (!xfs_this_quota_on(sc->mp, dqtype))
- 		return -ENOENT;
-+	/*
-+	 * Freeze out anything that can alter an inode because we reconstruct
-+	 * the quota counts by iterating all the inodes in the system.
-+	 */
-+	if ((sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) &&
-+	    (sc->try_harder || XFS_QM_NEED_QUOTACHECK(sc->mp))) {
-+		error = xfs_repair_fs_freeze(sc);
-+		if (error)
-+			return error;
-+	}
- 	error = xfs_scrub_setup_fs(sc, ip);
- 	if (error)
- 		return error;
- 	sc->ip = xfs_quota_inode(sc->mp, dqtype);
--	xfs_ilock(sc->ip, XFS_ILOCK_EXCL);
- 	sc->ilock_flags = XFS_ILOCK_EXCL;
-+	/*
-+	 * Pretend to be an ILOCK parent to shut up lockdep if we're going to
-+	 * do a full inode scan of the fs.  Quota inodes do not count towards
-+	 * quota accounting, so we shouldn't deadlock on ourselves.
-+	 */
-+	if (sc->fs_frozen)
-+		sc->ilock_flags |= XFS_ILOCK_PARENT;
-+	xfs_ilock(sc->ip, sc->ilock_flags);
- 	return 0;
- }
- 
-diff --git a/fs/xfs/scrub/quota_repair.c b/fs/xfs/scrub/quota_repair.c
-index 68b7082af30a..5865025fe04d 100644
---- a/fs/xfs/scrub/quota_repair.c
-+++ b/fs/xfs/scrub/quota_repair.c
-@@ -30,13 +30,20 @@
- #include "xfs_trans.h"
- #include "xfs_sb.h"
- #include "xfs_inode.h"
-+#include "xfs_icache.h"
- #include "xfs_inode_fork.h"
- #include "xfs_alloc.h"
- #include "xfs_bmap.h"
-+#include "xfs_bmap_util.h"
-+#include "xfs_ialloc.h"
-+#include "xfs_ialloc_btree.h"
- #include "xfs_quota.h"
- #include "xfs_qm.h"
- #include "xfs_dquot.h"
- #include "xfs_dquot_item.h"
-+#include "xfs_trans_space.h"
-+#include "xfs_error.h"
-+#include "xfs_errortag.h"
- #include "scrub/xfs_scrub.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
-@@ -314,6 +321,269 @@ xfs_repair_quota_data_fork(
- 	return error;
- }
- 
-+/*
-+ * Add this inode's resource usage to the dquot.  We adjust the in-core and
-+ * the (cached) on-disk copies of the counters and leave the dquot dirty.  A
-+ * subsequent pass through the dquots logs them all to disk.  Fortunately we
-+ * froze the filesystem before starting so at least we don't have to deal
-+ * with chown/chproj races.
-+ */
-+STATIC int
-+xfs_repair_quotacheck_dqadjust(
-+	struct xfs_scrub_context	*sc,
-+	uint				type,
-+	xfs_qcnt_t			nblks,
-+	xfs_qcnt_t			rtblks)
-+{
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_inode		*ip = sc->ip;
-+	struct xfs_dquot		*dqp;
-+	xfs_dqid_t			id;
-+	int				error;
-+
-+	/* Try to read in the dquot. */
-+	id = xfs_qm_id_for_quotatype(ip, type);
-+	error = xfs_qm_dqget(mp, id, type, false, &dqp);
-+	if (error == -ENOENT) {
-+		/* Allocate a dquot using our special transaction. */
-+		error = xfs_qm_dqget_alloc(&sc->tp, id, type, &dqp);
-+		if (error)
-+			return error;
-+		error = xfs_trans_roll_inode(&sc->tp, sc->ip);
-+	}
-+	if (error) {
-+		/*
-+		 * Shouldn't be able to turn off quotas here.
-+		 */
-+		ASSERT(error != -ESRCH);
-+		ASSERT(error != -ENOENT);
-+		return error;
-+	}
-+
-+	/*
-+	 * Adjust the inode count and the block count to reflect this inode's
-+	 * resource usage.
-+	 */
-+	be64_add_cpu(&dqp->q_core.d_icount, 1);
-+	dqp->q_res_icount++;
-+	if (nblks) {
-+		be64_add_cpu(&dqp->q_core.d_bcount, nblks);
-+		dqp->q_res_bcount += nblks;
-+	}
-+	if (rtblks) {
-+		be64_add_cpu(&dqp->q_core.d_rtbcount, rtblks);
-+		dqp->q_res_rtbcount += rtblks;
-+	}
-+
-+	/*
-+	 * Set default limits, adjust timers (since we changed usages)
-+	 *
-+	 * There are no timers for the default values set in the root dquot.
-+	 */
-+	if (dqp->q_core.d_id) {
-+		xfs_qm_adjust_dqlimits(mp, dqp);
-+		xfs_qm_adjust_dqtimers(mp, &dqp->q_core);
-+	}
-+
-+	dqp->dq_flags |= XFS_DQ_DIRTY;
-+	xfs_qm_dqput(dqp);
-+	return 0;
-+}
-+
-+/* Record this inode's quota use. */
-+STATIC int
-+xfs_repair_quotacheck_inode(
-+	struct xfs_scrub_context	*sc,
-+	uint				dqtype,
-+	struct xfs_inode		*ip)
-+{
-+	struct xfs_ifork		*ifp;
-+	xfs_filblks_t			rtblks = 0;	/* total rt blks */
-+	xfs_qcnt_t			nblks;
-+	int				error;
-+
-+	/* Count the realtime blocks. */
-+	if (XFS_IS_REALTIME_INODE(ip)) {
-+		ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+
-+		if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-+			error = xfs_iread_extents(sc->tp, ip, XFS_DATA_FORK);
-+			if (error)
-+				return error;
-+		}
-+
-+		xfs_bmap_count_leaves(ifp, &rtblks);
-+	}
-+
-+	nblks = (xfs_qcnt_t)ip->i_d.di_nblocks - rtblks;
-+
-+	/* Adjust the dquot. */
-+	return xfs_repair_quotacheck_dqadjust(sc, dqtype, nblks, rtblks);
-+}
-+
-+struct xfs_repair_quotacheck {
-+	struct xfs_scrub_context	*sc;
-+	uint				dqtype;
-+};
-+
-+/* Iterate all the inodes in an AG group. */
-+STATIC int
-+xfs_repair_quotacheck_inobt(
-+	struct xfs_btree_cur		*cur,
-+	union xfs_btree_rec		*rec,
-+	void				*priv)
-+{
-+	struct xfs_inobt_rec_incore	irec;
-+	struct xfs_mount		*mp = cur->bc_mp;
-+	struct xfs_inode		*ip = NULL;
-+	struct xfs_repair_quotacheck	*rq = priv;
-+	xfs_ino_t			ino;
-+	xfs_agino_t			agino;
-+	int				chunkidx;
-+	int				error = 0;
-+
-+	xfs_inobt_btrec_to_irec(mp, rec, &irec);
-+
-+	for (chunkidx = 0, agino = irec.ir_startino;
-+	     chunkidx < XFS_INODES_PER_CHUNK;
-+	     chunkidx++, agino++) {
-+		bool	inuse;
-+
-+		/* Skip if this inode is free */
-+		if (XFS_INOBT_MASK(chunkidx) & irec.ir_free)
-+			continue;
-+		ino = XFS_AGINO_TO_INO(mp, cur->bc_private.a.agno, agino);
-+		if (xfs_is_quota_inode(&mp->m_sb, ino))
-+			continue;
-+
-+		/* Back off and try again if an inode is being reclaimed */
-+		error = xfs_icache_inode_is_allocated(mp, NULL, ino, &inuse);
-+		if (error == -EAGAIN)
-+			return -EDEADLOCK;
-+
-+		/*
-+		 * Grab inode for scanning.  We cannot use DONTCACHE here
-+		 * because we already have a transaction so the iput must not
-+		 * trigger inode reclaim (which might allocate a transaction
-+		 * to clean up posteof blocks).
-+		 */
-+		error = xfs_iget(mp, NULL, ino, 0, XFS_ILOCK_EXCL, &ip);
-+		if (error)
-+			return error;
-+
-+		error = xfs_repair_quotacheck_inode(rq->sc, rq->dqtype, ip);
-+		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+		xfs_repair_frozen_iput(rq->sc, ip);
-+		if (error)
-+			return error;
-+	}
-+
-+	return 0;
-+}
-+
-+/* Zero a dquot prior to regenerating the counts. */
-+static int
-+xfs_repair_quotacheck_zero_dquot(
-+	struct xfs_dquot		*dq,
-+	uint				dqtype,
-+	void				*priv)
-+{
-+	dq->q_res_bcount -= be64_to_cpu(dq->q_core.d_bcount);
-+	dq->q_core.d_bcount = 0;
-+	dq->q_res_icount -= be64_to_cpu(dq->q_core.d_icount);
-+	dq->q_core.d_icount = 0;
-+	dq->q_res_rtbcount -= be64_to_cpu(dq->q_core.d_rtbcount);
-+	dq->q_core.d_rtbcount = 0;
-+	dq->dq_flags |= XFS_DQ_DIRTY;
-+	return 0;
-+}
-+
-+/* Log a dirty dquot after we regenerated the counters. */
-+static int
-+xfs_repair_quotacheck_log_dquot(
-+	struct xfs_dquot		*dq,
-+	uint				dqtype,
-+	void				*priv)
-+{
-+	struct xfs_scrub_context	*sc = priv;
-+	int				error;
-+
-+	xfs_trans_dqjoin(sc->tp, dq);
-+	xfs_trans_log_dquot(sc->tp, dq);
-+	error = xfs_trans_roll(&sc->tp);
-+	xfs_dqlock(dq);
-+	return error;
-+}
-+
-+/* Execute an online quotacheck. */
-+STATIC int
-+xfs_repair_quotacheck(
-+	struct xfs_scrub_context	*sc,
-+	uint				dqtype)
-+{
-+	struct xfs_repair_quotacheck	rq;
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_buf			*bp;
-+	struct xfs_btree_cur		*cur;
-+	xfs_agnumber_t			ag;
-+	uint				flag;
-+	int				error;
-+
-+	/*
-+	 * Commit the transaction so that we can allocate new quota ip
-+	 * mappings if we have to.  If we crash after this point, the sb
-+	 * still has the CHKD flags cleared, so mount quotacheck will fix
-+	 * all of this up.
-+	 */
-+	error = xfs_trans_commit(sc->tp);
-+	sc->tp = NULL;
-+	if (error)
-+		return error;
-+
-+	/* Zero all the quota items. */
-+	error = xfs_qm_dqiterate(mp, dqtype, xfs_repair_quotacheck_zero_dquot,
-+			sc);
-+	if (error)
-+		goto out;
-+
-+	rq.sc = sc;
-+	rq.dqtype = dqtype;
-+
-+	/* Iterate all AGs for inodes. */
-+	for (ag = 0; ag < mp->m_sb.sb_agcount; ag++) {
-+		error = xfs_ialloc_read_agi(mp, NULL, ag, &bp);
-+		if (error)
-+			goto out;
-+		cur = xfs_inobt_init_cursor(mp, NULL, bp, ag, XFS_BTNUM_INO);
-+		error = xfs_btree_query_all(cur, xfs_repair_quotacheck_inobt,
-+				&rq);
-+		xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR :
-+						  XFS_BTREE_NOERROR);
-+		xfs_buf_relse(bp);
-+		if (error)
-+			goto out;
-+	}
-+
-+	/* Log dquots. */
-+	error = xfs_scrub_trans_alloc(sc, 0);
-+	if (error)
-+		goto out;
-+	error = xfs_qm_dqiterate(mp, dqtype, xfs_repair_quotacheck_log_dquot,
-+			sc);
-+	if (error)
-+		goto out;
-+
-+	/* Set quotachecked flag. */
-+	flag = xfs_quota_chkd_flag(dqtype);
-+	sc->mp->m_qflags |= flag;
-+	spin_lock(&sc->mp->m_sb_lock);
-+	sc->mp->m_sb.sb_qflags |= flag;
-+	spin_unlock(&sc->mp->m_sb_lock);
-+	xfs_log_sb(sc->tp);
-+out:
-+	return error;
-+}
-+
- /* Repair all of a quota type's items. */
- int
- xfs_repair_quota(
-@@ -322,6 +592,7 @@ xfs_repair_quota(
- 	struct xfs_repair_quota_info	rqi;
- 	struct xfs_mount		*mp = sc->mp;
- 	uint				dqtype;
-+	uint				flag;
- 	int				error = 0;
- 
- 	dqtype = xfs_scrub_quota_to_dqtype(sc);
-@@ -344,9 +615,22 @@ xfs_repair_quota(
- 		goto out_relock;
- 
- 	/* Make a quotacheck happen. */
--	if (rqi.need_quotacheck)
-+	if (rqi.need_quotacheck ||
-+	    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_FORCE_SCRUB_REPAIR))
- 		xfs_repair_force_quotacheck(sc, dqtype);
- 
-+	/* Do we need a quotacheck?  Did we need one? */
-+	flag = xfs_quota_chkd_flag(dqtype);
-+	if (!(flag & sc->mp->m_qflags)) {
-+		/* We need to freeze the fs before we can scan inodes. */
-+		if (!sc->fs_frozen) {
-+			error = -EDEADLOCK;
-+			goto out_relock;
-+		}
-+
-+		error = xfs_repair_quotacheck(sc, dqtype);
-+	}
-+
- out_relock:
- 	sc->ilock_flags = XFS_ILOCK_EXCL;
- 	xfs_ilock(sc->ip, sc->ilock_flags);
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 2567391489bd..be0e07f42b17 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -546,6 +546,7 @@ xfs_dquot_from_disk(
- static int
- xfs_qm_dqread_alloc(
- 	struct xfs_mount	*mp,
-+	struct xfs_trans	**tpp,
- 	struct xfs_dquot	*dqp,
- 	struct xfs_buf		**bpp)
- {
-@@ -553,6 +554,18 @@ xfs_qm_dqread_alloc(
- 	struct xfs_buf		*bp;
- 	int			error;
- 
-+	/*
-+	 * The caller passed in a transaction which we don't control, so
-+	 * release the hold before passing back the buffer.
-+	 */
-+	if (tpp) {
-+		error = xfs_dquot_disk_alloc(tpp, dqp, &bp);
-+		if (error)
-+			return error;
-+		xfs_trans_bhold_release(*tpp, bp);
-+		return 0;
-+	}
-+
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_dqalloc,
- 			XFS_QM_DQALLOC_SPACE_RES(mp), 0, 0, &tp);
- 	if (error)
-@@ -588,6 +601,7 @@ xfs_qm_dqread_alloc(
- static int
- xfs_qm_dqread(
- 	struct xfs_mount	*mp,
-+	struct xfs_trans	**tpp,
- 	xfs_dqid_t		id,
- 	uint			type,
- 	bool			can_alloc,
-@@ -603,7 +617,7 @@ xfs_qm_dqread(
- 	/* Try to read the buffer, allocating if necessary. */
- 	error = xfs_dquot_disk_read(mp, dqp, &bp);
- 	if (error == -ENOENT && can_alloc)
--		error = xfs_qm_dqread_alloc(mp, dqp, &bp);
-+		error = xfs_qm_dqread_alloc(mp, tpp, dqp, &bp);
- 	if (error)
- 		goto err;
- 
-@@ -787,9 +801,10 @@ xfs_qm_dqget_checks(
-  * Given the file system, id, and type (UDQUOT/GDQUOT), return a a locked
-  * dquot, doing an allocation (if requested) as needed.
-  */
--int
--xfs_qm_dqget(
-+static int
-+__xfs_qm_dqget(
- 	struct xfs_mount	*mp,
-+	struct xfs_trans	**tpp,
- 	xfs_dqid_t		id,
- 	uint			type,
- 	bool			can_alloc,
-@@ -811,7 +826,7 @@ xfs_qm_dqget(
- 		return 0;
- 	}
- 
--	error = xfs_qm_dqread(mp, id, type, can_alloc, &dqp);
-+	error = xfs_qm_dqread(mp, NULL, id, type, can_alloc, &dqp);
- 	if (error)
- 		return error;
- 
-@@ -850,7 +865,39 @@ xfs_qm_dqget_uncached(
- 	if (error)
- 		return error;
- 
--	return xfs_qm_dqread(mp, id, type, 0, dqpp);
-+	return xfs_qm_dqread(mp, NULL, id, type, 0, dqpp);
-+}
-+
-+/*
-+ * Given the file system, id, and type (UDQUOT/GDQUOT), return a a locked
-+ * dquot, doing an allocation (if requested) as needed.
-+ */
-+int
-+xfs_qm_dqget(
-+	struct xfs_mount	*mp,
-+	xfs_dqid_t		id,
-+	uint			type,
-+	bool			can_alloc,
-+	struct xfs_dquot	**O_dqpp)
-+{
-+	return __xfs_qm_dqget(mp, NULL, id, type, can_alloc, O_dqpp);
-+}
-+
-+/*
-+ * Given the file system, id, and type (UDQUOT/GDQUOT) and a hole in the quota
-+ * data where the on-disk dquot is supposed to live, return a locked dquot
-+ * having allocated blocks with the transaction.  This is a corner case
-+ * required by online repair, which already has a transaction and has to pass
-+ * that into dquot_setup.
-+ */
-+int
-+xfs_qm_dqget_alloc(
-+	struct xfs_trans	**tpp,
-+	xfs_dqid_t		id,
-+	uint			type,
-+	struct xfs_dquot	**dqpp)
-+{
-+	return __xfs_qm_dqget((*tpp)->t_mountp, tpp, id, type, true, dqpp);
- }
- 
- /* Return the quota id for a given inode and type. */
-@@ -914,7 +961,7 @@ xfs_qm_dqget_inode(
- 	 * we re-acquire the lock.
- 	 */
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
--	error = xfs_qm_dqread(mp, id, type, can_alloc, &dqp);
-+	error = xfs_qm_dqread(mp, NULL, id, type, can_alloc, &dqp);
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	if (error)
- 		return error;
-diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
-index bdd6bd921528..27e6df439493 100644
---- a/fs/xfs/xfs_dquot.h
-+++ b/fs/xfs/xfs_dquot.h
-@@ -180,6 +180,9 @@ extern int		xfs_qm_dqget_next(struct xfs_mount *mp, xfs_dqid_t id,
- extern int		xfs_qm_dqget_uncached(struct xfs_mount *mp,
- 					xfs_dqid_t id, uint type,
- 					struct xfs_dquot **dqpp);
-+extern int		xfs_qm_dqget_alloc(struct xfs_trans **tpp,
-+					xfs_dqid_t id, uint type,
-+					struct xfs_dquot **dqpp);
- extern void		xfs_qm_dqput(xfs_dquot_t *);
- 
- extern void		xfs_dqlock2(struct xfs_dquot *, struct xfs_dquot *);
-
+> ---
+>  fs/xfs/xfs_fsops.c | 481 ++++++++++++++++++++++++---------------------
+>  1 file changed, 259 insertions(+), 222 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index 4b560caaf397..ec3c51ee8134 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -71,46 +71,140 @@ xfs_growfs_get_hdr_buf(
+>  	return bp;
+>  }
+>  
+> +struct aghdr_init_data {
+> +	/* per ag data */
+> +	xfs_agnumber_t		agno;		/* ag to init */
+> +	xfs_extlen_t		agsize;		/* new AG size */
+> +	struct list_head	buffer_list;	/* buffer writeback list */
+> +	xfs_rfsblock_t		nfree;		/* cumulative new free space */
+> +
+> +	/* per header data */
+> +	xfs_daddr_t		daddr;		/* header location */
+> +	size_t			numblks;	/* size of header */
+> +	xfs_btnum_t		type;		/* type of btree root block */
+> +};
+> +
+>  /*
+> - * Write new AG headers to disk. Non-transactional, but written
+> - * synchronously so they are completed prior to the growfs transaction
+> - * being logged.
+> + * Generic btree root block init function
+>   */
+> -static int
+> -xfs_grow_ag_headers(
+> +static void
+> +xfs_btroot_init(
+>  	struct xfs_mount	*mp,
+> -	xfs_agnumber_t		agno,
+> -	xfs_extlen_t		agsize,
+> -	xfs_rfsblock_t		*nfree,
+> -	struct list_head	*buffer_list)
+> +	struct xfs_buf		*bp,
+> +	struct aghdr_init_data	*id)
+>  {
+> -	struct xfs_agf		*agf;
+> -	struct xfs_agi		*agi;
+> -	struct xfs_agfl		*agfl;
+> -	__be32			*agfl_bno;
+> -	xfs_alloc_rec_t		*arec;
+> -	struct xfs_buf		*bp;
+> -	int			bucket;
+> -	xfs_extlen_t		tmpsize;
+> -	int			error = 0;
+> +	xfs_btree_init_block(mp, bp, id->type, 0, 0, id->agno, 0);
+> +}
+> +
+> +/*
+> + * Alloc btree root block init functions
+> + */
+> +static void
+> +xfs_bnoroot_init(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_buf		*bp,
+> +	struct aghdr_init_data	*id)
+> +{
+> +	struct xfs_alloc_rec	*arec;
+> +
+> +	xfs_btree_init_block(mp, bp, XFS_BTNUM_BNO, 0, 1, id->agno, 0);
+> +	arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
+> +	arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
+> +	arec->ar_blockcount = cpu_to_be32(id->agsize -
+> +					  be32_to_cpu(arec->ar_startblock));
+> +}
+> +
+> +static void
+> +xfs_cntroot_init(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_buf		*bp,
+> +	struct aghdr_init_data	*id)
+> +{
+> +	struct xfs_alloc_rec	*arec;
+> +
+> +	xfs_btree_init_block(mp, bp, XFS_BTNUM_CNT, 0, 1, id->agno, 0);
+> +	arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
+> +	arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
+> +	arec->ar_blockcount = cpu_to_be32(id->agsize -
+> +					  be32_to_cpu(arec->ar_startblock));
+> +}
+> +
+> +/*
+> + * Reverse map root block init
+> + */
+> +static void
+> +xfs_rmaproot_init(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_buf		*bp,
+> +	struct aghdr_init_data	*id)
+> +{
+> +	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
+> +	struct xfs_rmap_rec	*rrec;
+> +
+> +	xfs_btree_init_block(mp, bp, XFS_BTNUM_RMAP, 0, 4, id->agno, 0);
+>  
+>  	/*
+> -	 * AG freespace header block
+> +	 * mark the AG header regions as static metadata The BNO
+> +	 * btree block is the first block after the headers, so
+> +	 * it's location defines the size of region the static
+> +	 * metadata consumes.
+> +	 *
+> +	 * Note: unlike mkfs, we never have to account for log
+> +	 * space when growing the data regions
+>  	 */
+> -	bp = xfs_growfs_get_hdr_buf(mp,
+> -			XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
+> -			XFS_FSS_TO_BB(mp, 1), 0,
+> -			&xfs_agf_buf_ops);
+> -	if (!bp) {
+> -		error = -ENOMEM;
+> -		goto out_error;
+> +	rrec = XFS_RMAP_REC_ADDR(block, 1);
+> +	rrec->rm_startblock = 0;
+> +	rrec->rm_blockcount = cpu_to_be32(XFS_BNO_BLOCK(mp));
+> +	rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_FS);
+> +	rrec->rm_offset = 0;
+> +
+> +	/* account freespace btree root blocks */
+> +	rrec = XFS_RMAP_REC_ADDR(block, 2);
+> +	rrec->rm_startblock = cpu_to_be32(XFS_BNO_BLOCK(mp));
+> +	rrec->rm_blockcount = cpu_to_be32(2);
+> +	rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_AG);
+> +	rrec->rm_offset = 0;
+> +
+> +	/* account inode btree root blocks */
+> +	rrec = XFS_RMAP_REC_ADDR(block, 3);
+> +	rrec->rm_startblock = cpu_to_be32(XFS_IBT_BLOCK(mp));
+> +	rrec->rm_blockcount = cpu_to_be32(XFS_RMAP_BLOCK(mp) -
+> +					  XFS_IBT_BLOCK(mp));
+> +	rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_INOBT);
+> +	rrec->rm_offset = 0;
+> +
+> +	/* account for rmap btree root */
+> +	rrec = XFS_RMAP_REC_ADDR(block, 4);
+> +	rrec->rm_startblock = cpu_to_be32(XFS_RMAP_BLOCK(mp));
+> +	rrec->rm_blockcount = cpu_to_be32(1);
+> +	rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_AG);
+> +	rrec->rm_offset = 0;
+> +
+> +	/* account for refc btree root */
+> +	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+> +		rrec = XFS_RMAP_REC_ADDR(block, 5);
+> +		rrec->rm_startblock = cpu_to_be32(xfs_refc_block(mp));
+> +		rrec->rm_blockcount = cpu_to_be32(1);
+> +		rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_REFC);
+> +		rrec->rm_offset = 0;
+> +		be16_add_cpu(&block->bb_numrecs, 1);
+>  	}
+> +}
+> +
+> +
+> +static void
+> +xfs_agfblock_init(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_buf		*bp,
+> +	struct aghdr_init_data	*id)
+> +{
+> +	struct xfs_agf		*agf = XFS_BUF_TO_AGF(bp);
+> +	xfs_extlen_t		tmpsize;
+>  
+> -	agf = XFS_BUF_TO_AGF(bp);
+>  	agf->agf_magicnum = cpu_to_be32(XFS_AGF_MAGIC);
+>  	agf->agf_versionnum = cpu_to_be32(XFS_AGF_VERSION);
+> -	agf->agf_seqno = cpu_to_be32(agno);
+> -	agf->agf_length = cpu_to_be32(agsize);
+> +	agf->agf_seqno = cpu_to_be32(id->agno);
+> +	agf->agf_length = cpu_to_be32(id->agsize);
+>  	agf->agf_roots[XFS_BTNUM_BNOi] = cpu_to_be32(XFS_BNO_BLOCK(mp));
+>  	agf->agf_roots[XFS_BTNUM_CNTi] = cpu_to_be32(XFS_CNT_BLOCK(mp));
+>  	agf->agf_levels[XFS_BTNUM_BNOi] = cpu_to_be32(1);
+> @@ -125,7 +219,7 @@ xfs_grow_ag_headers(
+>  	agf->agf_flfirst = cpu_to_be32(1);
+>  	agf->agf_fllast = 0;
+>  	agf->agf_flcount = 0;
+> -	tmpsize = agsize - mp->m_ag_prealloc_blocks;
+> +	tmpsize = id->agsize - mp->m_ag_prealloc_blocks;
+>  	agf->agf_freeblks = cpu_to_be32(tmpsize);
+>  	agf->agf_longest = cpu_to_be32(tmpsize);
+>  	if (xfs_sb_version_hascrc(&mp->m_sb))
+> @@ -136,52 +230,42 @@ xfs_grow_ag_headers(
+>  		agf->agf_refcount_level = cpu_to_be32(1);
+>  		agf->agf_refcount_blocks = cpu_to_be32(1);
+>  	}
+> -	xfs_buf_delwri_queue(bp, buffer_list);
+> -	xfs_buf_relse(bp);
+> +}
+>  
+> -	/*
+> -	 * AG freelist header block
+> -	 */
+> -	bp = xfs_growfs_get_hdr_buf(mp,
+> -			XFS_AG_DADDR(mp, agno, XFS_AGFL_DADDR(mp)),
+> -			XFS_FSS_TO_BB(mp, 1), 0,
+> -			&xfs_agfl_buf_ops);
+> -	if (!bp) {
+> -		error = -ENOMEM;
+> -		goto out_error;
+> -	}
+> +static void
+> +xfs_agflblock_init(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_buf		*bp,
+> +	struct aghdr_init_data	*id)
+> +{
+> +	struct xfs_agfl		*agfl = XFS_BUF_TO_AGFL(bp);
+> +	__be32			*agfl_bno;
+> +	int			bucket;
+>  
+> -	agfl = XFS_BUF_TO_AGFL(bp);
+>  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+>  		agfl->agfl_magicnum = cpu_to_be32(XFS_AGFL_MAGIC);
+> -		agfl->agfl_seqno = cpu_to_be32(agno);
+> +		agfl->agfl_seqno = cpu_to_be32(id->agno);
+>  		uuid_copy(&agfl->agfl_uuid, &mp->m_sb.sb_meta_uuid);
+>  	}
+>  
+>  	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, bp);
+>  	for (bucket = 0; bucket < xfs_agfl_size(mp); bucket++)
+>  		agfl_bno[bucket] = cpu_to_be32(NULLAGBLOCK);
+> +}
+>  
+> -	xfs_buf_delwri_queue(bp, buffer_list);
+> -	xfs_buf_relse(bp);
+> -
+> -	/*
+> -	 * AG inode header block
+> -	 */
+> -	bp = xfs_growfs_get_hdr_buf(mp,
+> -			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
+> -			XFS_FSS_TO_BB(mp, 1), 0,
+> -			&xfs_agi_buf_ops);
+> -	if (!bp) {
+> -		error = -ENOMEM;
+> -		goto out_error;
+> -	}
+> +static void
+> +xfs_agiblock_init(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_buf		*bp,
+> +	struct aghdr_init_data	*id)
+> +{
+> +	struct xfs_agi		*agi = XFS_BUF_TO_AGI(bp);
+> +	int			bucket;
+>  
+> -	agi = XFS_BUF_TO_AGI(bp);
+>  	agi->agi_magicnum = cpu_to_be32(XFS_AGI_MAGIC);
+>  	agi->agi_versionnum = cpu_to_be32(XFS_AGI_VERSION);
+> -	agi->agi_seqno = cpu_to_be32(agno);
+> -	agi->agi_length = cpu_to_be32(agsize);
+> +	agi->agi_seqno = cpu_to_be32(id->agno);
+> +	agi->agi_length = cpu_to_be32(id->agsize);
+>  	agi->agi_count = 0;
+>  	agi->agi_root = cpu_to_be32(XFS_IBT_BLOCK(mp));
+>  	agi->agi_level = cpu_to_be32(1);
+> @@ -196,180 +280,133 @@ xfs_grow_ag_headers(
+>  	}
+>  	for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++)
+>  		agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
+> +}
+>  
+> -	xfs_buf_delwri_queue(bp, buffer_list);
+> -	xfs_buf_relse(bp);
+> -
+> -	/*
+> -	 * BNO btree root block
+> -	 */
+> -	bp = xfs_growfs_get_hdr_buf(mp,
+> -			XFS_AGB_TO_DADDR(mp, agno, XFS_BNO_BLOCK(mp)),
+> -			BTOBB(mp->m_sb.sb_blocksize), 0,
+> -			&xfs_allocbt_buf_ops);
+> +static int
+> +xfs_growfs_init_aghdr(
+> +	struct xfs_mount	*mp,
+> +	struct aghdr_init_data	*id,
+> +	void			(*work)(struct xfs_mount *, struct xfs_buf *,
+> +					struct aghdr_init_data *),
+> +	const struct xfs_buf_ops *ops)
+>  
+> -	if (!bp) {
+> -		error = -ENOMEM;
+> -		goto out_error;
+> -	}
+> +{
+> +	struct xfs_buf		*bp;
+>  
+> -	xfs_btree_init_block(mp, bp, XFS_BTNUM_BNO, 0, 1, agno, 0);
+> +	bp = xfs_growfs_get_hdr_buf(mp, id->daddr, id->numblks, 0, ops);
+> +	if (!bp)
+> +		return -ENOMEM;
+>  
+> -	arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
+> -	arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
+> -	arec->ar_blockcount = cpu_to_be32(
+> -		agsize - be32_to_cpu(arec->ar_startblock));
+> +	(*work)(mp, bp, id);
+>  
+> -	xfs_buf_delwri_queue(bp, buffer_list);
+> +	xfs_buf_delwri_queue(bp, &id->buffer_list);
+>  	xfs_buf_relse(bp);
+> +	return 0;
+> +}
+>  
+> -	/*
+> -	 * CNT btree root block
+> -	 */
+> -	bp = xfs_growfs_get_hdr_buf(mp,
+> -			XFS_AGB_TO_DADDR(mp, agno, XFS_CNT_BLOCK(mp)),
+> -			BTOBB(mp->m_sb.sb_blocksize), 0,
+> -			&xfs_allocbt_buf_ops);
+> -	if (!bp) {
+> -		error = -ENOMEM;
+> -		goto out_error;
+> -	}
+> -
+> -	xfs_btree_init_block(mp, bp, XFS_BTNUM_CNT, 0, 1, agno, 0);
+> +/*
+> + * Write new AG headers to disk. Non-transactional, but written
+> + * synchronously so they are completed prior to the growfs transaction
+> + * being logged.
+> + */
+> +static int
+> +xfs_grow_ag_headers(
+> +	struct xfs_mount	*mp,
+> +	struct aghdr_init_data	*id)
+>  
+> -	arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
+> -	arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
+> -	arec->ar_blockcount = cpu_to_be32(
+> -		agsize - be32_to_cpu(arec->ar_startblock));
+> -	*nfree += be32_to_cpu(arec->ar_blockcount);
+> +{
+> +	int			error = 0;
+>  
+> -	xfs_buf_delwri_queue(bp, buffer_list);
+> -	xfs_buf_relse(bp);
+> +	/* Account for AG free space in new AG */
+> +	id->nfree += id->agsize - mp->m_ag_prealloc_blocks;
+>  
+> -	/* RMAP btree root block */
+> -	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
+> -		struct xfs_rmap_rec	*rrec;
+> -		struct xfs_btree_block	*block;
+> -
+> -		bp = xfs_growfs_get_hdr_buf(mp,
+> -			XFS_AGB_TO_DADDR(mp, agno, XFS_RMAP_BLOCK(mp)),
+> -			BTOBB(mp->m_sb.sb_blocksize), 0,
+> -			&xfs_rmapbt_buf_ops);
+> -		if (!bp) {
+> -			error = -ENOMEM;
+> -			goto out_error;
+> -		}
+> +	/* AG freespace header block */
+> +	id->daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGF_DADDR(mp));
+> +	id->numblks = XFS_FSS_TO_BB(mp, 1);
+> +	error = xfs_growfs_init_aghdr(mp, id, xfs_agfblock_init,
+> +					&xfs_agf_buf_ops);
+> +	if (error)
+> +		goto out_error;
+>  
+> -		xfs_btree_init_block(mp, bp, XFS_BTNUM_RMAP, 0, 0,
+> -					agno, 0);
+> -		block = XFS_BUF_TO_BLOCK(bp);
+> +	/* AG freelist header block */
+> +	id->daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGFL_DADDR(mp));
+> +	id->numblks = XFS_FSS_TO_BB(mp, 1);
+> +	error = xfs_growfs_init_aghdr(mp, id, xfs_agflblock_init,
+> +					&xfs_agfl_buf_ops);
+> +	if (error)
+> +		goto out_error;
+>  
+> +	/* AG inode header block */
+> +	id->daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGI_DADDR(mp));
+> +	id->numblks = XFS_FSS_TO_BB(mp, 1);
+> +	error = xfs_growfs_init_aghdr(mp, id, xfs_agiblock_init,
+> +					&xfs_agi_buf_ops);
+> +	if (error)
+> +		goto out_error;
+>  
+> -		/*
+> -		 * mark the AG header regions as static metadata The BNO
+> -		 * btree block is the first block after the headers, so
+> -		 * it's location defines the size of region the static
+> -		 * metadata consumes.
+> -		 *
+> -		 * Note: unlike mkfs, we never have to account for log
+> -		 * space when growing the data regions
+> -		 */
+> -		rrec = XFS_RMAP_REC_ADDR(block, 1);
+> -		rrec->rm_startblock = 0;
+> -		rrec->rm_blockcount = cpu_to_be32(XFS_BNO_BLOCK(mp));
+> -		rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_FS);
+> -		rrec->rm_offset = 0;
+> -		be16_add_cpu(&block->bb_numrecs, 1);
+>  
+> -		/* account freespace btree root blocks */
+> -		rrec = XFS_RMAP_REC_ADDR(block, 2);
+> -		rrec->rm_startblock = cpu_to_be32(XFS_BNO_BLOCK(mp));
+> -		rrec->rm_blockcount = cpu_to_be32(2);
+> -		rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_AG);
+> -		rrec->rm_offset = 0;
+> -		be16_add_cpu(&block->bb_numrecs, 1);
+> +	/* BNO btree root block */
+> +	id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_BNO_BLOCK(mp));
+> +	id->numblks = BTOBB(mp->m_sb.sb_blocksize);
+> +	error = xfs_growfs_init_aghdr(mp, id, xfs_bnoroot_init,
+> +				   &xfs_allocbt_buf_ops);
+> +	if (error)
+> +		goto out_error;
+>  
+> -		/* account inode btree root blocks */
+> -		rrec = XFS_RMAP_REC_ADDR(block, 3);
+> -		rrec->rm_startblock = cpu_to_be32(XFS_IBT_BLOCK(mp));
+> -		rrec->rm_blockcount = cpu_to_be32(XFS_RMAP_BLOCK(mp) -
+> -						XFS_IBT_BLOCK(mp));
+> -		rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_INOBT);
+> -		rrec->rm_offset = 0;
+> -		be16_add_cpu(&block->bb_numrecs, 1);
+>  
+> -		/* account for rmap btree root */
+> -		rrec = XFS_RMAP_REC_ADDR(block, 4);
+> -		rrec->rm_startblock = cpu_to_be32(XFS_RMAP_BLOCK(mp));
+> -		rrec->rm_blockcount = cpu_to_be32(1);
+> -		rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_AG);
+> -		rrec->rm_offset = 0;
+> -		be16_add_cpu(&block->bb_numrecs, 1);
+> +	/* CNT btree root block */
+> +	id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_CNT_BLOCK(mp));
+> +	id->numblks = BTOBB(mp->m_sb.sb_blocksize);
+> +	error = xfs_growfs_init_aghdr(mp, id, xfs_cntroot_init,
+> +				   &xfs_allocbt_buf_ops);
+> +	if (error)
+> +		goto out_error;
+>  
+> -		/* account for refc btree root */
+> -		if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+> -			rrec = XFS_RMAP_REC_ADDR(block, 5);
+> -			rrec->rm_startblock = cpu_to_be32(xfs_refc_block(mp));
+> -			rrec->rm_blockcount = cpu_to_be32(1);
+> -			rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_REFC);
+> -			rrec->rm_offset = 0;
+> -			be16_add_cpu(&block->bb_numrecs, 1);
+> -		}
+> +	/* RMAP btree root block */
+> +	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
+> +		id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_RMAP_BLOCK(mp));
+> +		id->numblks = BTOBB(mp->m_sb.sb_blocksize);
+> +		error = xfs_growfs_init_aghdr(mp, id, xfs_rmaproot_init,
+> +					   &xfs_rmapbt_buf_ops);
+> +		if (error)
+> +			goto out_error;
+>  
+> -		xfs_buf_delwri_queue(bp, buffer_list);
+> -		xfs_buf_relse(bp);
+>  	}
+>  
+> -	/*
+> -	 * INO btree root block
+> -	 */
+> -	bp = xfs_growfs_get_hdr_buf(mp,
+> -			XFS_AGB_TO_DADDR(mp, agno, XFS_IBT_BLOCK(mp)),
+> -			BTOBB(mp->m_sb.sb_blocksize), 0,
+> -			&xfs_inobt_buf_ops);
+> -	if (!bp) {
+> -		error = -ENOMEM;
+> +	/* INO btree root block */
+> +	id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_IBT_BLOCK(mp));
+> +	id->numblks = BTOBB(mp->m_sb.sb_blocksize);
+> +	id->type = XFS_BTNUM_INO;
+> +	error = xfs_growfs_init_aghdr(mp, id, xfs_btroot_init,
+> +				   &xfs_inobt_buf_ops);
+> +	if (error)
+>  		goto out_error;
+> -	}
+>  
+> -	xfs_btree_init_block(mp, bp, XFS_BTNUM_INO , 0, 0, agno, 0);
+> -	xfs_buf_delwri_queue(bp, buffer_list);
+> -	xfs_buf_relse(bp);
+>  
+>  	/*
+>  	 * FINO btree root block
+>  	 */
+>  	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
+> -		bp = xfs_growfs_get_hdr_buf(mp,
+> -			XFS_AGB_TO_DADDR(mp, agno, XFS_FIBT_BLOCK(mp)),
+> -			BTOBB(mp->m_sb.sb_blocksize), 0,
+> -			&xfs_inobt_buf_ops);
+> -		if (!bp) {
+> -			error = -ENOMEM;
+> +		id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_FIBT_BLOCK(mp));
+> +		id->numblks = BTOBB(mp->m_sb.sb_blocksize);
+> +		id->type = XFS_BTNUM_FINO;
+> +		error = xfs_growfs_init_aghdr(mp, id, xfs_btroot_init,
+> +					   &xfs_inobt_buf_ops);
+> +		if (error)
+>  			goto out_error;
+> -		}
+> -
+> -		xfs_btree_init_block(mp, bp, XFS_BTNUM_FINO, 0, 0, agno, 0);
+> -		xfs_buf_delwri_queue(bp, buffer_list);
+> -		xfs_buf_relse(bp);
+>  	}
+>  
+>  	/*
+>  	 * refcount btree root block
+>  	 */
+>  	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+> -		bp = xfs_growfs_get_hdr_buf(mp,
+> -			XFS_AGB_TO_DADDR(mp, agno, xfs_refc_block(mp)),
+> -			BTOBB(mp->m_sb.sb_blocksize), 0,
+> -			&xfs_refcountbt_buf_ops);
+> -		if (!bp) {
+> -			error = -ENOMEM;
+> +		id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, xfs_refc_block(mp));
+> +		id->numblks = BTOBB(mp->m_sb.sb_blocksize);
+> +		id->type = XFS_BTNUM_REFC;
+> +		error = xfs_growfs_init_aghdr(mp, id, xfs_btroot_init,
+> +					   &xfs_refcountbt_buf_ops);
+> +		if (error)
+>  			goto out_error;
+> -		}
+> -
+> -		xfs_btree_init_block(mp, bp, XFS_BTNUM_REFC, 0, 0, agno, 0);
+> -		xfs_buf_delwri_queue(bp, buffer_list);
+> -		xfs_buf_relse(bp);
+>  	}
+>  
+>  out_error:
+> @@ -384,7 +421,6 @@ xfs_growfs_data_private(
+>  	xfs_agf_t		*agf;
+>  	xfs_agi_t		*agi;
+>  	xfs_agnumber_t		agno;
+> -	xfs_extlen_t		agsize;
+>  	xfs_buf_t		*bp;
+>  	int			dpct;
+>  	int			error, saved_error = 0;
+> @@ -392,11 +428,11 @@ xfs_growfs_data_private(
+>  	xfs_agnumber_t		nagimax = 0;
+>  	xfs_rfsblock_t		nb, nb_mod;
+>  	xfs_rfsblock_t		new;
+> -	xfs_rfsblock_t		nfree;
+>  	xfs_agnumber_t		oagcount;
+>  	int			pct;
+>  	xfs_trans_t		*tp;
+>  	LIST_HEAD		(buffer_list);
+> +	struct aghdr_init_data	id = {};
+>  
+>  	nb = in->newblocks;
+>  	pct = in->imaxpct;
+> @@ -448,27 +484,28 @@ xfs_growfs_data_private(
+>  	 * list to write, we can cancel the entire list without having written
+>  	 * anything.
+>  	 */
+> -	nfree = 0;
+> -	for (agno = nagcount - 1; agno >= oagcount; agno--, new -= agsize) {
+> -
+> -		if (agno == nagcount - 1)
+> -			agsize = nb -
+> -				(agno * (xfs_rfsblock_t)mp->m_sb.sb_agblocks);
+> +	INIT_LIST_HEAD(&id.buffer_list);
+> +	for (id.agno = nagcount - 1;
+> +	     id.agno >= oagcount;
+> +	     id.agno--, new -= id.agsize) {
+> +
+> +		if (id.agno == nagcount - 1)
+> +			id.agsize = nb -
+> +				(id.agno * (xfs_rfsblock_t)mp->m_sb.sb_agblocks);
+>  		else
+> -			agsize = mp->m_sb.sb_agblocks;
+> +			id.agsize = mp->m_sb.sb_agblocks;
+>  
+> -		error = xfs_grow_ag_headers(mp, agno, agsize, &nfree,
+> -					    &buffer_list);
+> +		error = xfs_grow_ag_headers(mp, &id);
+>  		if (error) {
+> -			xfs_buf_delwri_cancel(&buffer_list);
+> +			xfs_buf_delwri_cancel(&id.buffer_list);
+>  			goto error0;
+>  		}
+>  	}
+> -	error = xfs_buf_delwri_submit(&buffer_list);
+> +	error = xfs_buf_delwri_submit(&id.buffer_list);
+>  	if (error)
+>  		goto error0;
+>  
+> -	xfs_trans_agblocks_delta(tp, nfree);
+> +	xfs_trans_agblocks_delta(tp, id.nfree);
+>  
+>  	/*
+>  	 * There are new blocks in the old last a.g.
+> @@ -479,7 +516,7 @@ xfs_growfs_data_private(
+>  		/*
+>  		 * Change the agi length.
+>  		 */
+> -		error = xfs_ialloc_read_agi(mp, tp, agno, &bp);
+> +		error = xfs_ialloc_read_agi(mp, tp, id.agno, &bp);
+>  		if (error) {
+>  			goto error0;
+>  		}
+> @@ -492,7 +529,7 @@ xfs_growfs_data_private(
+>  		/*
+>  		 * Change agf length.
+>  		 */
+> -		error = xfs_alloc_read_agf(mp, tp, agno, 0, &bp);
+> +		error = xfs_alloc_read_agf(mp, tp, id.agno, 0, &bp);
+>  		if (error) {
+>  			goto error0;
+>  		}
+> @@ -511,13 +548,13 @@ xfs_growfs_data_private(
+>  		 * this doesn't actually exist in the rmap btree.
+>  		 */
+>  		xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_NULL);
+> -		error = xfs_rmap_free(tp, bp, agno,
+> +		error = xfs_rmap_free(tp, bp, id.agno,
+>  				be32_to_cpu(agf->agf_length) - new,
+>  				new, &oinfo);
+>  		if (error)
+>  			goto error0;
+>  		error = xfs_free_extent(tp,
+> -				XFS_AGB_TO_FSB(mp, agno,
+> +				XFS_AGB_TO_FSB(mp, id.agno,
+>  					be32_to_cpu(agf->agf_length) - new),
+>  				new, &oinfo, XFS_AG_RESV_NONE);
+>  		if (error)
+> @@ -534,8 +571,8 @@ xfs_growfs_data_private(
+>  	if (nb > mp->m_sb.sb_dblocks)
+>  		xfs_trans_mod_sb(tp, XFS_TRANS_SB_DBLOCKS,
+>  				 nb - mp->m_sb.sb_dblocks);
+> -	if (nfree)
+> -		xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, nfree);
+> +	if (id.nfree)
+> +		xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, id.nfree);
+>  	if (dpct)
+>  		xfs_trans_mod_sb(tp, XFS_TRANS_SB_IMAXPCT, dpct);
+>  	xfs_trans_set_sync(tp);
+> @@ -562,7 +599,7 @@ xfs_growfs_data_private(
+>  	if (new) {
+>  		struct xfs_perag	*pag;
+>  
+> -		pag = xfs_perag_get(mp, agno);
+> +		pag = xfs_perag_get(mp, id.agno);
+>  		error = xfs_ag_resv_free(pag);
+>  		xfs_perag_put(pag);
+>  		if (error)
+> -- 
+> 2.17.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
