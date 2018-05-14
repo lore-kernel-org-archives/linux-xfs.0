@@ -1,72 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:1693 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751104AbeENETL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 May 2018 00:19:11 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1fI4x0-0002uu-2i
-        for linux-xfs@vger.kernel.org; Mon, 14 May 2018 14:19:06 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.91)
-        (envelope-from <david@fromorbit.com>)
-        id 1fI4x0-0002xM-1R
-        for linux-xfs@vger.kernel.org; Mon, 14 May 2018 14:19:06 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 01/10] xfs: one-shot cached buffers
-Date: Mon, 14 May 2018 14:18:55 +1000
-Message-Id: <20180514041904.11140-2-david@fromorbit.com>
-In-Reply-To: <20180514041904.11140-1-david@fromorbit.com>
-References: <20180514041904.11140-1-david@fromorbit.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:54330 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751978AbeENVld (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 May 2018 17:41:33 -0400
+Date: Mon, 14 May 2018 14:41:11 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 4/5] btrfs: use common label ioctl definitions
+Message-ID: <20180514214111.GH4933@magnolia>
+References: <5957a0ff-0fd7-c1f3-2d44-86b825c2eb3b@redhat.com>
+ <060d984f-6386-2b23-7fd4-66b1a9a96aef@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <060d984f-6386-2b23-7fd4-66b1a9a96aef@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Dave Chinner <dchinner@redhat.com>
+On Mon, May 14, 2018 at 12:42:10PM -0500, Eric Sandeen wrote:
+> Use the new common online get/set label get/set definitions.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> Mostly for reference; this can be sent explicitly to the btrfs list
+> after the common definitions are in place.  Happy to do that so btrfs
+> changes won't go through the xfs tree.
+> 
+>  fs/btrfs/ioctl.c           | 8 ++++----
+>  include/uapi/linux/btrfs.h | 6 ++----
+>  2 files changed, 6 insertions(+), 8 deletions(-)
+> 
+> diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c
+> index 632e26d6f7ce..8feea790bd00 100644
+> --- a/fs/btrfs/ioctl.c
+> +++ b/fs/btrfs/ioctl.c
+> @@ -5444,6 +5444,10 @@ long btrfs_ioctl(struct file *file, unsigned int
+>  		return btrfs_ioctl_setflags(file, argp);
+>  	case FS_IOC_GETVERSION:
+>  		return btrfs_ioctl_getversion(file, argp);
+> +	case FS_IOC_GETFSLABEL:
+> +		return btrfs_ioctl_get_fslabel(file, argp);
+> +	case FS_IOC_SETFSLABEL:
+> +		return btrfs_ioctl_set_fslabel(file, argp);
+>  	case FITRIM:
+>  		return btrfs_ioctl_fitrim(file, argp);
+>  	case BTRFS_IOC_SNAP_CREATE:
+> @@ -5555,10 +5559,6 @@ long btrfs_ioctl(struct file *file, unsigned int
+>  		return btrfs_ioctl_quota_rescan_wait(file, argp);
+>  	case BTRFS_IOC_DEV_REPLACE:
+>  		return btrfs_ioctl_dev_replace(fs_info, argp);
+> -	case BTRFS_IOC_GET_FSLABEL:
+> -		return btrfs_ioctl_get_fslabel(file, argp);
+> -	case BTRFS_IOC_SET_FSLABEL:
+> -		return btrfs_ioctl_set_fslabel(file, argp);
+>  	case BTRFS_IOC_GET_SUPPORTED_FEATURES:
+>  		return btrfs_ioctl_get_supported_features(argp);
+>  	case BTRFS_IOC_GET_FEATURES:
+> diff --git a/include/uapi/linux/btrfs.h b/include/uapi/linux/btrfs.h
+> index c8d99b9ca550..af29cc9032a2 100644
+> --- a/include/uapi/linux/btrfs.h
+> +++ b/include/uapi/linux/btrfs.h
+> @@ -823,10 +823,8 @@ enum btrfs_err_code {
+>  #define BTRFS_IOC_QUOTA_RESCAN_STATUS _IOR(BTRFS_IOCTL_MAGIC, 45, \
+>  			       struct btrfs_ioctl_quota_rescan_args)
+>  #define BTRFS_IOC_QUOTA_RESCAN_WAIT _IO(BTRFS_IOCTL_MAGIC, 46)
+> -#define BTRFS_IOC_GET_FSLABEL _IOR(BTRFS_IOCTL_MAGIC, 49, \
+> -				   char[BTRFS_LABEL_SIZE])
+> -#define BTRFS_IOC_SET_FSLABEL _IOW(BTRFS_IOCTL_MAGIC, 50, \
+> -				   char[BTRFS_LABEL_SIZE])
+> +#define BTRFS_IOC_GET_FSLABEL 	FS_IOC_GETFSLABEL
 
-For the new growfs work, we want to ensure that we serialise
-secondary superblock updates with other operations (e.g. scrub)
-correctly, but we don't want to cache the buffers for long term
-reuse. We need cached buffers for serialisation, however.
+Looks ok other than the space after '_GET_FSLABEL'...
 
-To solve this, introduce a "oneshot" buffer which will be marshalled
-through the cache but then released once the last current reference
-goes away. If the buffer is already cached, then we ignore the
-"one-shot" behaviour and leave the buffer in the state it was prior
-to the one-shot command being run. This means we don't perturb
-either the working set or existing cached buffer state by a one-shot
-operation.
+Acked-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_buf.h | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+--D
 
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 830e2f6c064a..f5f2b71c2fde 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -347,6 +347,18 @@ extern void xfs_buf_terminate(void);
- 
- void xfs_buf_set_ref(struct xfs_buf *bp, int lru_ref);
- 
-+/*
-+ * If the buffer is already on the LRU, do nothing. Otherwise set the buffer
-+ * up with a reference count of 0 so it will be tossed from the cache when
-+ * released.
-+ */
-+static inline void xfs_buf_oneshot(struct xfs_buf *bp)
-+{
-+	if (!list_empty(&bp->b_lru) || atomic_read(&bp->b_lru_ref) > 1)
-+		return;
-+	atomic_set(&bp->b_lru_ref, 0);
-+}
-+
- static inline int xfs_buf_ispinned(struct xfs_buf *bp)
- {
- 	return atomic_read(&bp->b_pin_count);
--- 
-2.17.0
-
+> +#define BTRFS_IOC_SET_FSLABEL	FS_IOC_SETFSLABEL
+>  #define BTRFS_IOC_GET_DEV_STATS _IOWR(BTRFS_IOCTL_MAGIC, 52, \
+>  				      struct btrfs_ioctl_get_dev_stats)
+>  #define BTRFS_IOC_DEV_REPLACE _IOWR(BTRFS_IOCTL_MAGIC, 53, \
+> -- 
+> 2.17.0
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
