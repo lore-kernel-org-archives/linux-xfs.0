@@ -1,214 +1,236 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41694 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752146AbeENKZk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 14 May 2018 06:25:40 -0400
-Date: Mon, 14 May 2018 06:25:38 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2 1/8] xfs: refactor quota limits initialization
-Message-ID: <20180514102537.GA8919@bfoster.bfoster>
-References: <152597988038.25215.9276761144353662866.stgit@magnolia>
- <152597988679.25215.8852024160735275694.stgit@magnolia>
- <20180511234424.GK11261@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180511234424.GK11261@magnolia>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:49953 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751233AbeENETO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 May 2018 00:19:14 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1fI4x0-0002vN-B0
+        for linux-xfs@vger.kernel.org; Mon, 14 May 2018 14:19:06 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1fI4x0-0002xh-9N
+        for linux-xfs@vger.kernel.org; Mon, 14 May 2018 14:19:06 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 08/10] xfs: rework secondary superblock updates in growfs
+Date: Mon, 14 May 2018 14:19:02 +1000
+Message-Id: <20180514041904.11140-9-david@fromorbit.com>
+In-Reply-To: <20180514041904.11140-1-david@fromorbit.com>
+References: <20180514041904.11140-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Fri, May 11, 2018 at 04:44:24PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Replace all the if (!error) weirdness with helper functions that follow
-> our regular coding practices, and factor out the ternary expression soup.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v2: refactor out ternary expressions
-> ---
+From: Dave Chinner <dchinner@redhat.com>
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Right now we wait until we've committed changes to the primary
+superblock before we initialise any of the new secondary
+superblocks. This means that if we have any write errors for new
+secondary superblocks we end up with garbage in place rather than
+zeros or even an "in progress" superblock to indicate a grow
+operation is being done.
 
->  fs/xfs/xfs_qm.c |  142 ++++++++++++++++++++++++++++++-------------------------
->  1 file changed, 78 insertions(+), 64 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> index f927b7d72db1..913d46d01bfc 100644
-> --- a/fs/xfs/xfs_qm.c
-> +++ b/fs/xfs/xfs_qm.c
-> @@ -561,26 +561,88 @@ xfs_qm_set_defquota(
->  {
->  	xfs_dquot_t		*dqp;
->  	struct xfs_def_quota    *defq;
-> +	struct xfs_disk_dquot	*ddqp;
->  	int			error;
->  
->  	error = xfs_qm_dqget_uncached(mp, 0, type, &dqp);
-> -	if (!error) {
-> -		xfs_disk_dquot_t        *ddqp = &dqp->q_core;
-> +	if (error)
-> +		return;
->  
-> -		defq = xfs_get_defquota(dqp, qinf);
-> +	ddqp = &dqp->q_core;
-> +	defq = xfs_get_defquota(dqp, qinf);
->  
-> -		/*
-> -		 * Timers and warnings have been already set, let's just set the
-> -		 * default limits for this quota type
-> -		 */
-> -		defq->bhardlimit = be64_to_cpu(ddqp->d_blk_hardlimit);
-> -		defq->bsoftlimit = be64_to_cpu(ddqp->d_blk_softlimit);
-> -		defq->ihardlimit = be64_to_cpu(ddqp->d_ino_hardlimit);
-> -		defq->isoftlimit = be64_to_cpu(ddqp->d_ino_softlimit);
-> -		defq->rtbhardlimit = be64_to_cpu(ddqp->d_rtb_hardlimit);
-> -		defq->rtbsoftlimit = be64_to_cpu(ddqp->d_rtb_softlimit);
-> -		xfs_qm_dqdestroy(dqp);
-> -	}
-> +	/*
-> +	 * Timers and warnings have been already set, let's just set the
-> +	 * default limits for this quota type
-> +	 */
-> +	defq->bhardlimit = be64_to_cpu(ddqp->d_blk_hardlimit);
-> +	defq->bsoftlimit = be64_to_cpu(ddqp->d_blk_softlimit);
-> +	defq->ihardlimit = be64_to_cpu(ddqp->d_ino_hardlimit);
-> +	defq->isoftlimit = be64_to_cpu(ddqp->d_ino_softlimit);
-> +	defq->rtbhardlimit = be64_to_cpu(ddqp->d_rtb_hardlimit);
-> +	defq->rtbsoftlimit = be64_to_cpu(ddqp->d_rtb_softlimit);
-> +	xfs_qm_dqdestroy(dqp);
-> +}
-> +
-> +/* Initialize quota time limits from the root dquot. */
-> +static void
-> +xfs_qm_init_timelimits(
-> +	struct xfs_mount	*mp,
-> +	struct xfs_quotainfo	*qinf)
-> +{
-> +	struct xfs_disk_dquot	*ddqp;
-> +	struct xfs_dquot	*dqp;
-> +	uint			type;
-> +	int			error;
-> +
-> +	qinf->qi_btimelimit = XFS_QM_BTIMELIMIT;
-> +	qinf->qi_itimelimit = XFS_QM_ITIMELIMIT;
-> +	qinf->qi_rtbtimelimit = XFS_QM_RTBTIMELIMIT;
-> +	qinf->qi_bwarnlimit = XFS_QM_BWARNLIMIT;
-> +	qinf->qi_iwarnlimit = XFS_QM_IWARNLIMIT;
-> +	qinf->qi_rtbwarnlimit = XFS_QM_RTBWARNLIMIT;
-> +
-> +	/*
-> +	 * We try to get the limits from the superuser's limits fields.
-> +	 * This is quite hacky, but it is standard quota practice.
-> +	 *
-> +	 * Since we may not have done a quotacheck by this point, just read
-> +	 * the dquot without attaching it to any hashtables or lists.
-> +	 *
-> +	 * Timers and warnings are globally set by the first timer found in
-> +	 * user/group/proj quota types, otherwise a default value is used.
-> +	 * This should be split into different fields per quota type.
-> +	 */
-> +	if (XFS_IS_UQUOTA_RUNNING(mp))
-> +		type = XFS_DQ_USER;
-> +	else if (XFS_IS_GQUOTA_RUNNING(mp))
-> +		type = XFS_DQ_GROUP;
-> +	else
-> +		type = XFS_DQ_PROJ;
-> +	error = xfs_qm_dqget_uncached(mp, 0, type, &dqp);
-> +	if (error)
-> +		return;
-> +
-> +	ddqp = &dqp->q_core;
-> +	/*
-> +	 * The warnings and timers set the grace period given to
-> +	 * a user or group before he or she can not perform any
-> +	 * more writing. If it is zero, a default is used.
-> +	 */
-> +	if (ddqp->d_btimer)
-> +		qinf->qi_btimelimit = be32_to_cpu(ddqp->d_btimer);
-> +	if (ddqp->d_itimer)
-> +		qinf->qi_itimelimit = be32_to_cpu(ddqp->d_itimer);
-> +	if (ddqp->d_rtbtimer)
-> +		qinf->qi_rtbtimelimit = be32_to_cpu(ddqp->d_rtbtimer);
-> +	if (ddqp->d_bwarns)
-> +		qinf->qi_bwarnlimit = be32_to_cpu(ddqp->d_bwarns);
-> +	if (ddqp->d_iwarns)
-> +		qinf->qi_iwarnlimit = be32_to_cpu(ddqp->d_iwarns);
-> +	if (ddqp->d_rtbwarns)
-> +		qinf->qi_rtbwarnlimit = be32_to_cpu(ddqp->d_rtbwarns);
-> +
-> +	xfs_qm_dqdestroy(dqp);
->  }
->  
->  /*
-> @@ -592,8 +654,6 @@ xfs_qm_init_quotainfo(
->  	struct xfs_mount	*mp)
->  {
->  	struct xfs_quotainfo	*qinf;
-> -	struct xfs_dquot	*dqp;
-> -	uint			type;
->  	int			error;
->  
->  	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
-> @@ -626,53 +686,7 @@ xfs_qm_init_quotainfo(
->  
->  	mp->m_qflags |= (mp->m_sb.sb_qflags & XFS_ALL_QUOTA_CHKD);
->  
-> -	/*
-> -	 * We try to get the limits from the superuser's limits fields.
-> -	 * This is quite hacky, but it is standard quota practice.
-> -	 *
-> -	 * Since we may not have done a quotacheck by this point, just read
-> -	 * the dquot without attaching it to any hashtables or lists.
-> -	 *
-> -	 * Timers and warnings are globally set by the first timer found in
-> -	 * user/group/proj quota types, otherwise a default value is used.
-> -	 * This should be split into different fields per quota type.
-> -	 */
-> -	if (XFS_IS_UQUOTA_RUNNING(mp))
-> -		type = XFS_DQ_USER;
-> -	else if (XFS_IS_GQUOTA_RUNNING(mp))
-> -		type = XFS_DQ_GROUP;
-> -	else
-> -		type = XFS_DQ_PROJ;
-> -	error = xfs_qm_dqget_uncached(mp, 0, type, &dqp);
-> -	if (!error) {
-> -		xfs_disk_dquot_t	*ddqp = &dqp->q_core;
-> -
-> -		/*
-> -		 * The warnings and timers set the grace period given to
-> -		 * a user or group before he or she can not perform any
-> -		 * more writing. If it is zero, a default is used.
-> -		 */
-> -		qinf->qi_btimelimit = ddqp->d_btimer ?
-> -			be32_to_cpu(ddqp->d_btimer) : XFS_QM_BTIMELIMIT;
-> -		qinf->qi_itimelimit = ddqp->d_itimer ?
-> -			be32_to_cpu(ddqp->d_itimer) : XFS_QM_ITIMELIMIT;
-> -		qinf->qi_rtbtimelimit = ddqp->d_rtbtimer ?
-> -			be32_to_cpu(ddqp->d_rtbtimer) : XFS_QM_RTBTIMELIMIT;
-> -		qinf->qi_bwarnlimit = ddqp->d_bwarns ?
-> -			be16_to_cpu(ddqp->d_bwarns) : XFS_QM_BWARNLIMIT;
-> -		qinf->qi_iwarnlimit = ddqp->d_iwarns ?
-> -			be16_to_cpu(ddqp->d_iwarns) : XFS_QM_IWARNLIMIT;
-> -		qinf->qi_rtbwarnlimit = ddqp->d_rtbwarns ?
-> -			be16_to_cpu(ddqp->d_rtbwarns) : XFS_QM_RTBWARNLIMIT;
-> -		xfs_qm_dqdestroy(dqp);
-> -	} else {
-> -		qinf->qi_btimelimit = XFS_QM_BTIMELIMIT;
-> -		qinf->qi_itimelimit = XFS_QM_ITIMELIMIT;
-> -		qinf->qi_rtbtimelimit = XFS_QM_RTBTIMELIMIT;
-> -		qinf->qi_bwarnlimit = XFS_QM_BWARNLIMIT;
-> -		qinf->qi_iwarnlimit = XFS_QM_IWARNLIMIT;
-> -		qinf->qi_rtbwarnlimit = XFS_QM_RTBWARNLIMIT;
-> -	}
-> +	xfs_qm_init_timelimits(mp, qinf);
->  
->  	if (XFS_IS_UQUOTA_RUNNING(mp))
->  		xfs_qm_set_defquota(mp, XFS_DQ_USER, qinf);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To ensure we can write the secondary superblocks, initialise them
+earlier in the same loop that initialises the AG headers. We stamp
+the new secondary superblocks here with the old geometry, but set
+the "sb_inprogress" field to indicate that updates are being done to
+the superblock so they cannot be used.  This will result in the
+secondary superblock fields being updated or triggering errors that
+will abort the grow before we commit any permanent changes.
+
+This also means we can change the update mechanism of the secondary
+superblocks.  We know that we are going to wholly overwrite the
+information in the struct xfs_sb in the buffer, so there's no point
+reading it from disk. Just allocate an uncached buffer, zero it in
+memory, stamp the new superblock structure in it and write it out.
+If we fail to write it out, then we'll leave the existing sb (old or
+new w/ inprogress) on disk for repair to deal with later.
+
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_fsops.c | 102 +++++++++++++++++++++++++++++----------------
+ 1 file changed, 65 insertions(+), 37 deletions(-)
+
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index a718bb002cf4..ca3cf3f6239a 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -191,6 +191,25 @@ xfs_rmaproot_init(
+ 	}
+ }
+ 
++/*
++ * Initialise new secondary superblocks with the pre-grow geometry, but mark
++ * them as "in progress" so we know they haven't yet been activated. This will
++ * get cleared when the update with the new geometry information is done after
++ * changes to the primary are committed. This isn't strictly necessary, but we
++ * get it for free with the delayed buffer write lists and it means we can tell
++ * if a grow operation didn't complete properly after the fact.
++ */
++static void
++xfs_sbblock_init(
++	struct xfs_mount	*mp,
++	struct xfs_buf		*bp,
++	struct aghdr_init_data	*id)
++{
++	struct xfs_dsb		*dsb = XFS_BUF_TO_SBP(bp);
++
++	xfs_sb_to_disk(dsb, &mp->m_sb);
++	dsb->sb_inprogress = 1;
++}
+ 
+ static void
+ xfs_agfblock_init(
+@@ -326,6 +345,13 @@ xfs_grow_ag_headers(
+ 
+ {
+ 	struct xfs_aghdr_grow_data aghdr_data[] = {
++	{ /* SB */
++		.daddr = XFS_AG_DADDR(mp, id->agno, XFS_SB_DADDR),
++		.numblks = XFS_FSS_TO_BB(mp, 1),
++		.ops = &xfs_sb_buf_ops,
++		.work = &xfs_sbblock_init,
++		.need_init = true
++	},
+ 	{ /* AGF */
+ 		.daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGF_DADDR(mp)),
+ 		.numblks = XFS_FSS_TO_BB(mp, 1),
+@@ -658,43 +684,30 @@ xfs_growfs_imaxpct(
+ 
+ /*
+  * After a grow operation, we need to update all the secondary superblocks
+- * to match the new state of the primary. Read/init the superblocks and update
+- * them appropriately.
++ * to match the new state of the primary. Because we are completely overwriting
++ * all the existing fields in the secondary superblock buffers, there is no need
++ * to read them in from disk. Just get a new buffer, stamp it and write it.
++ *
++ * The sb buffers need to be cached here so that we serialise against scrub
++ * scanning secondary superblocks, but we don't want to keep it in memory once
++ * it is written so we mark it as a one-shot buffer.
+  */
+ static int
+ xfs_growfs_update_superblocks(
+-	struct xfs_mount	*mp,
+-	xfs_agnumber_t		oagcount)
++	struct xfs_mount	*mp)
+ {
+-	struct xfs_buf		*bp;
+ 	xfs_agnumber_t		agno;
+ 	int			saved_error = 0;
+ 	int			error = 0;
++	LIST_HEAD		(buffer_list);
+ 
+ 	/* update secondary superblocks. */
+ 	for (agno = 1; agno < mp->m_sb.sb_agcount; agno++) {
+-		error = 0;
+-		/*
+-		 * new secondary superblocks need to be zeroed, not read from
+-		 * disk as the contents of the new area we are growing into is
+-		 * completely unknown.
+-		 */
+-		if (agno < oagcount) {
+-			error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
+-				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
+-				  XFS_FSS_TO_BB(mp, 1), 0, &bp,
+-				  &xfs_sb_buf_ops);
+-		} else {
+-			bp = xfs_trans_get_buf(NULL, mp->m_ddev_targp,
+-				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
+-				  XFS_FSS_TO_BB(mp, 1), 0);
+-			if (bp) {
+-				bp->b_ops = &xfs_sb_buf_ops;
+-				xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
+-			} else
+-				error = -ENOMEM;
+-		}
++		struct xfs_buf		*bp;
+ 
++		bp = xfs_buf_get(mp->m_ddev_targp,
++				 XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
++				 XFS_FSS_TO_BB(mp, 1), 0);
+ 		/*
+ 		 * If we get an error reading or writing alternate superblocks,
+ 		 * continue.  xfs_repair chooses the "best" superblock based
+@@ -702,25 +715,42 @@ xfs_growfs_update_superblocks(
+ 		 * superblocks un-updated than updated, and xfs_repair may
+ 		 * pick them over the properly-updated primary.
+ 		 */
+-		if (error) {
++		if (!bp) {
+ 			xfs_warn(mp,
+-		"error %d reading secondary superblock for ag %d",
+-				error, agno);
+-			saved_error = error;
++		"error allocating secondary superblock for ag %d",
++				agno);
++			if (!saved_error)
++				saved_error = -ENOMEM;
+ 			continue;
+ 		}
+-		xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb);
+ 
+-		error = xfs_bwrite(bp);
++		bp->b_ops = &xfs_sb_buf_ops;
++		xfs_buf_oneshot(bp);
++		xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
++		xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb);
++		xfs_buf_delwri_queue(bp, &buffer_list);
+ 		xfs_buf_relse(bp);
++
++		/* don't hold too many buffers at once */
++		if (agno % 16)
++			continue;
++
++		error = xfs_buf_delwri_submit(&buffer_list);
+ 		if (error) {
+ 			xfs_warn(mp,
+-		"write error %d updating secondary superblock for ag %d",
++		"write error %d updating a secondary superblock near ag %d",
+ 				error, agno);
+-			saved_error = error;
++			if (!saved_error)
++				saved_error = error;
+ 			continue;
+ 		}
+ 	}
++	error = xfs_buf_delwri_submit(&buffer_list);
++	if (error) {
++		xfs_warn(mp,
++		"write error %d updating a secondary superblock near ag %d",
++			error, agno);
++	}
+ 
+ 	return saved_error ? saved_error : error;
+ }
+@@ -735,7 +765,6 @@ xfs_growfs_data(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_growfs_data	*in)
+ {
+-	xfs_agnumber_t		oagcount;
+ 	int			error = 0;
+ 
+ 	if (!capable(CAP_SYS_ADMIN))
+@@ -750,7 +779,6 @@ xfs_growfs_data(
+ 			goto out_error;
+ 	}
+ 
+-	oagcount = mp->m_sb.sb_agcount;
+ 	if (in->newblocks != mp->m_sb.sb_dblocks) {
+ 		error = xfs_growfs_data_private(mp, in);
+ 		if (error)
+@@ -766,7 +794,7 @@ xfs_growfs_data(
+ 		mp->m_maxicount = 0;
+ 
+ 	/* Update secondary superblocks now the physical grow has completed */
+-	error = xfs_growfs_update_superblocks(mp, oagcount);
++	error = xfs_growfs_update_superblocks(mp);
+ 
+ out_error:
+ 	/*
+-- 
+2.17.0
+
