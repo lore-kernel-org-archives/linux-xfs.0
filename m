@@ -1,132 +1,185 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:3085 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750718AbeDRELH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Apr 2018 00:11:07 -0400
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/4] xfs: move generic_write_sync calls inwards
-Date: Wed, 18 Apr 2018 14:08:25 +1000
-Message-Id: <20180418040828.18165-2-david@fromorbit.com>
-In-Reply-To: <20180418040828.18165-1-david@fromorbit.com>
-References: <20180418040828.18165-1-david@fromorbit.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:53264 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752112AbeENXm0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 May 2018 19:42:26 -0400
+Date: Mon, 14 May 2018 16:42:07 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH 5/4] xfs_scrub: actually check for errors coming from close()
+Message-ID: <20180514234207.GI4933@magnolia>
+References: <152579743411.10641.4577883761846454290.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <152579743411.10641.4577883761846454290.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, hch@lst.de, rdorr@microsoft.com
+To: sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-To prepare for iomap iinfrastructure based DSYNC optimisations.
+Report errors reported by close().
 
-While moving the code araound, move the XFS write bytes metric
-update for direct IO into xfs_dio_write_end_io callback so that we
-always capture the amount of data written via AIO+DIO. This fixes
-the problem where queued AIO+DIO writes are not accounted to this
-metric.
-
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_file.c | 48 +++++++++++++++++++++++++++++++++---------------
- 1 file changed, 33 insertions(+), 15 deletions(-)
+ scrub/phase1.c |    6 +++++-
+ scrub/phase3.c |   27 +++++++++++++++++++++++++--
+ scrub/phase5.c |    8 ++++++--
+ scrub/phase6.c |   10 +++++++---
+ scrub/vfs.c    |    4 +++-
+ 5 files changed, 46 insertions(+), 9 deletions(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index a5b6973bf15a..6f15027661b6 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -416,6 +416,12 @@ xfs_dio_write_end_io(
- 	if (size <= 0)
- 		return size;
- 
-+	/*
-+	 * Capture amount written on completion as we can't reliably account
-+	 * for it on submission.
-+	 */
-+	XFS_STATS_ADD(ip->i_mount, xs_write_bytes, size);
+diff --git a/scrub/phase1.c b/scrub/phase1.c
+index c2b9067a..87847259 100644
+--- a/scrub/phase1.c
++++ b/scrub/phase1.c
+@@ -60,6 +60,8 @@ bool
+ xfs_cleanup_fs(
+ 	struct scrub_ctx	*ctx)
+ {
++	int			error;
 +
- 	if (flags & IOMAP_DIO_COW) {
- 		error = xfs_reflink_end_cow(ip, offset, size);
- 		if (error)
-@@ -564,6 +570,11 @@ xfs_file_dio_aio_write(
- 	 * complete fully or fail.
- 	 */
- 	ASSERT(ret < 0 || ret == count);
-+
-+	if (ret > 0) {
-+		/* Handle various SYNC-type writes */
-+		ret = generic_write_sync(iocb, ret);
-+	}
- 	return ret;
- }
- 
-@@ -601,7 +612,16 @@ xfs_file_dax_write(
- 	}
- out:
- 	xfs_iunlock(ip, iolock);
--	return error ? error : ret;
+ 	if (ctx->fshandle)
+ 		free_handle(ctx->fshandle, ctx->fshandle_len);
+ 	if (ctx->rtdev)
+@@ -69,7 +71,9 @@ xfs_cleanup_fs(
+ 	if (ctx->datadev)
+ 		disk_close(ctx->datadev);
+ 	fshandle_destroy();
+-	close(ctx->mnt_fd);
++	error = close(ctx->mnt_fd);
 +	if (error)
-+		return error;
-+
-+	if (ret > 0) {
-+		XFS_STATS_ADD(ip->i_mount, xs_write_bytes, ret);
-+
-+		/* Handle various SYNC-type writes */
-+		ret = generic_write_sync(iocb, ret);
-+	}
-+	return ret;
- }
++		str_errno(ctx, _("closing mountpoint fd"));
+ 	fs_table_destroy();
  
- STATIC ssize_t
-@@ -671,6 +691,12 @@ xfs_file_buffered_aio_write(
+ 	return true;
+diff --git a/scrub/phase3.c b/scrub/phase3.c
+index 68c95e67..cbaa80ba 100644
+--- a/scrub/phase3.c
++++ b/scrub/phase3.c
+@@ -53,6 +53,25 @@ struct scrub_inode_ctx {
+ 	bool			moveon;
+ };
+ 
++/* Report a filesystem error that the vfs fed us on close. */
++static void
++xfs_scrub_inode_vfs_error(
++	struct scrub_ctx	*ctx,
++	struct xfs_bstat	*bstat)
++{
++	char			descr[DESCR_BUFSZ];
++	xfs_agnumber_t		agno;
++	xfs_agino_t		agino;
++	int			old_errno = errno;
++
++	agno = bstat->bs_ino / (1ULL << (ctx->inopblog + ctx->agblklog));
++	agino = bstat->bs_ino % (1ULL << (ctx->inopblog + ctx->agblklog));
++	snprintf(descr, DESCR_BUFSZ, _("inode %"PRIu64" (%u/%u)"),
++			(uint64_t)bstat->bs_ino, agno, agino);
++	errno = old_errno;
++	str_errno(ctx, descr);
++}
++
+ /* Verify the contents, xattrs, and extent maps of an inode. */
+ static int
+ xfs_scrub_inode(
+@@ -65,6 +84,7 @@ xfs_scrub_inode(
+ 	struct ptcounter	*icount = ictx->icount;
+ 	bool			moveon = true;
+ 	int			fd = -1;
++	int			error;
+ 
+ 	background_sleep();
+ 
+@@ -116,8 +136,11 @@ xfs_scrub_inode(
  out:
- 	if (iolock)
- 		xfs_iunlock(ip, iolock);
-+
-+	if (ret > 0) {
-+		XFS_STATS_ADD(ip->i_mount, xs_write_bytes, ret);
-+		/* Handle various SYNC-type writes */
-+		ret = generic_write_sync(iocb, ret);
+ 	ptcounter_add(icount, 1);
+ 	progress_add(1);
+-	if (fd >= 0)
+-		close(fd);
++	if (fd >= 0) {
++		error = close(fd);
++		if (error)
++			xfs_scrub_inode_vfs_error(ctx, bstat);
 +	}
- 	return ret;
+ 	if (!moveon)
+ 		ictx->moveon = false;
+ 	return ictx->moveon ? 0 : XFS_ITERATE_INODES_ABORT;
+diff --git a/scrub/phase5.c b/scrub/phase5.c
+index 01038f77..456f38e2 100644
+--- a/scrub/phase5.c
++++ b/scrub/phase5.c
+@@ -250,6 +250,7 @@ xfs_scrub_connections(
+ 	xfs_agnumber_t		agno;
+ 	xfs_agino_t		agino;
+ 	int			fd = -1;
++	int			error;
+ 
+ 	agno = bstat->bs_ino / (1ULL << (ctx->inopblog + ctx->agblklog));
+ 	agino = bstat->bs_ino % (1ULL << (ctx->inopblog + ctx->agblklog));
+@@ -285,8 +286,11 @@ xfs_scrub_connections(
+ 
+ out:
+ 	progress_add(1);
+-	if (fd >= 0)
+-		close(fd);
++	if (fd >= 0) {
++		error = close(fd);
++		if (error)
++			str_errno(ctx, descr);
++	}
+ 	if (!moveon)
+ 		*pmoveon = false;
+ 	return *pmoveon ? 0 : XFS_ITERATE_INODES_ABORT;
+diff --git a/scrub/phase6.c b/scrub/phase6.c
+index b533cbbd..26540155 100644
+--- a/scrub/phase6.c
++++ b/scrub/phase6.c
+@@ -212,7 +212,9 @@ _("Disappeared during read error reporting."));
+ 
+ 	/* Go find the badness. */
+ 	moveon = xfs_report_verify_fd(ctx, descr, fd, arg);
+-	close(fd);
++	error = close(fd);
++	if (error)
++		str_errno(ctx, descr);
+ 
+ 	return moveon ? 0 : XFS_ITERATE_INODES_ABORT;
+ }
+@@ -243,6 +245,7 @@ xfs_report_verify_dirent(
+ {
+ 	bool			moveon;
+ 	int			fd;
++	int			error;
+ 
+ 	/* Ignore things we can't open. */
+ 	if (!S_ISREG(sb->st_mode) && !S_ISDIR(sb->st_mode))
+@@ -268,8 +271,9 @@ xfs_report_verify_dirent(
+ 		goto out;
+ 
+ out:
+-	close(fd);
+-
++	error = close(fd);
++	if (error)
++		str_errno(ctx, path);
+ 	return moveon;
  }
  
-@@ -695,8 +721,9 @@ xfs_file_write_iter(
- 		return -EIO;
- 
- 	if (IS_DAX(inode))
--		ret = xfs_file_dax_write(iocb, from);
--	else if (iocb->ki_flags & IOCB_DIRECT) {
-+		return xfs_file_dax_write(iocb, from);
-+
-+	if (iocb->ki_flags & IOCB_DIRECT) {
- 		/*
- 		 * Allow a directio write to fall back to a buffered
- 		 * write *only* in the case that we're doing a reflink
-@@ -704,20 +731,11 @@ xfs_file_write_iter(
- 		 * allow an operation to fall back to buffered mode.
- 		 */
- 		ret = xfs_file_dio_aio_write(iocb, from);
--		if (ret == -EREMCHG)
--			goto buffered;
--	} else {
--buffered:
--		ret = xfs_file_buffered_aio_write(iocb, from);
-+		if (ret != -EREMCHG)
-+			return ret;
+diff --git a/scrub/vfs.c b/scrub/vfs.c
+index cfb58782..77df2874 100644
+--- a/scrub/vfs.c
++++ b/scrub/vfs.c
+@@ -86,7 +86,9 @@ scan_fs_dir(
+ 	/* Caller-specific directory checks. */
+ 	if (!sft->dir_fn(ctx, sftd->path, dir_fd, sft->arg)) {
+ 		sft->moveon = false;
+-		close(dir_fd);
++		error = close(dir_fd);
++		if (error)
++			str_errno(ctx, sftd->path);
+ 		goto out;
  	}
  
--	if (ret > 0) {
--		XFS_STATS_ADD(ip->i_mount, xs_write_bytes, ret);
--
--		/* Handle various SYNC-type writes */
--		ret = generic_write_sync(iocb, ret);
--	}
--	return ret;
-+	return xfs_file_buffered_aio_write(iocb, from);
- }
- 
- #define	XFS_FALLOC_FL_SUPPORTED						\
--- 
-2.16.1
-
