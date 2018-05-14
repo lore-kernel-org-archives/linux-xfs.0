@@ -1,267 +1,232 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:48288 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750750AbeENT1W (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 May 2018 15:27:22 -0400
-Date: Mon, 14 May 2018 12:27:18 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 05/10] xfs: turn ag header initialisation into a table
- driven operation
-Message-ID: <20180514192718.GF4933@magnolia>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:4160 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750748AbeENETM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 May 2018 00:19:12 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1fI4x0-0002vX-DN
+        for linux-xfs@vger.kernel.org; Mon, 14 May 2018 14:19:06 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1fI4x0-0002xn-Br
+        for linux-xfs@vger.kernel.org; Mon, 14 May 2018 14:19:06 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 10/10] xfs: factor the ag length extension code into libxfs
+Date: Mon, 14 May 2018 14:19:04 +1000
+Message-Id: <20180514041904.11140-11-david@fromorbit.com>
+In-Reply-To: <20180514041904.11140-1-david@fromorbit.com>
 References: <20180514041904.11140-1-david@fromorbit.com>
- <20180514041904.11140-6-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180514041904.11140-6-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Mon, May 14, 2018 at 02:18:59PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> There's still more cookie cutter code in setting up each AG header.
-> Separate all the variables into a simple structure and iterate a
-> table of header definitions to initialise everything.
-> 
-> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/xfs/xfs_fsops.c | 182 +++++++++++++++++++++++----------------------
->  1 file changed, 92 insertions(+), 90 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> index ec3c51ee8134..fb283d2cf42b 100644
-> --- a/fs/xfs/xfs_fsops.c
-> +++ b/fs/xfs/xfs_fsops.c
-> @@ -282,12 +282,13 @@ xfs_agiblock_init(
->  		agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
->  }
->  
-> +typedef void (*aghdr_init_work_f)(struct xfs_mount *mp, struct xfs_buf *bp,
-> +				  struct aghdr_init_data *id);
->  static int
->  xfs_growfs_init_aghdr(
->  	struct xfs_mount	*mp,
->  	struct aghdr_init_data	*id,
-> -	void			(*work)(struct xfs_mount *, struct xfs_buf *,
-> -					struct aghdr_init_data *),
-> +	aghdr_init_work_f	work,
->  	const struct xfs_buf_ops *ops)
->  
->  {
-> @@ -304,6 +305,15 @@ xfs_growfs_init_aghdr(
->  	return 0;
->  }
->  
-> +struct xfs_aghdr_grow_data {
-> +	xfs_daddr_t		daddr;
-> +	size_t			numblks;
-> +	const struct xfs_buf_ops *ops;
-> +	aghdr_init_work_f	work;
-> +	xfs_btnum_t		type;
-> +	bool			need_init;
-> +};
-> +
->  /*
->   * Write new AG headers to disk. Non-transactional, but written
->   * synchronously so they are completed prior to the growfs transaction
-> @@ -315,101 +325,93 @@ xfs_grow_ag_headers(
->  	struct aghdr_init_data	*id)
->  
->  {
-> +	struct xfs_aghdr_grow_data aghdr_data[] = {
-> +	{ /* AGF */
-> +		.daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGF_DADDR(mp)),
-> +		.numblks = XFS_FSS_TO_BB(mp, 1),
-> +		.ops = &xfs_agf_buf_ops,
-> +		.work = &xfs_agfblock_init,
-> +		.need_init = true
-> +	},
-> +	{ /* AGFL */
-> +		.daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGFL_DADDR(mp)),
-> +		.numblks = XFS_FSS_TO_BB(mp, 1),
-> +		.ops = &xfs_agfl_buf_ops,
-> +		.work = &xfs_agflblock_init,
-> +		.need_init = true
-> +	},
-> +	{ /* AGI */
-> +		.daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGI_DADDR(mp)),
-> +		.numblks = XFS_FSS_TO_BB(mp, 1),
-> +		.ops = &xfs_agi_buf_ops,
-> +		.work = &xfs_agiblock_init,
-> +		.need_init = true
-> +	},
-> +	{ /* BNO root block */
-> +		.daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_BNO_BLOCK(mp)),
-> +		.numblks = BTOBB(mp->m_sb.sb_blocksize),
-> +		.ops = &xfs_allocbt_buf_ops,
-> +		.work = &xfs_bnoroot_init,
-> +		.need_init = true
-> +	},
-> +	{ /* CNT root block */
-> +		.daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_CNT_BLOCK(mp)),
-> +		.numblks = BTOBB(mp->m_sb.sb_blocksize),
-> +		.ops = &xfs_allocbt_buf_ops,
-> +		.work = &xfs_cntroot_init,
-> +		.need_init = true
-> +	},
-> +	{ /* INO root block */
-> +		.daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_IBT_BLOCK(mp)),
-> +		.numblks = BTOBB(mp->m_sb.sb_blocksize),
-> +		.ops = &xfs_inobt_buf_ops,
-> +		.work = &xfs_btroot_init,
-> +		.type = XFS_BTNUM_INO,
-> +		.need_init = true
-> +	},
-> +	{ /* FINO root block */
-> +		.daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_FIBT_BLOCK(mp)),
-> +		.numblks = BTOBB(mp->m_sb.sb_blocksize),
-> +		.ops = &xfs_inobt_buf_ops,
-> +		.work = &xfs_btroot_init,
-> +		.type = XFS_BTNUM_FINO,
-> +		.need_init =  xfs_sb_version_hasfinobt(&mp->m_sb)
-> +	},
-> +	{ /* RMAP root block */
-> +		.daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_RMAP_BLOCK(mp)),
-> +		.numblks = BTOBB(mp->m_sb.sb_blocksize),
-> +		.ops = &xfs_rmapbt_buf_ops,
-> +		.work = &xfs_rmaproot_init,
-> +		.need_init = xfs_sb_version_hasrmapbt(&mp->m_sb)
-> +	},
-> +	{ /* REFC root block */
-> +		.daddr = XFS_AGB_TO_DADDR(mp, id->agno, xfs_refc_block(mp)),
-> +		.numblks = BTOBB(mp->m_sb.sb_blocksize),
-> +		.ops = &xfs_refcountbt_buf_ops,
-> +		.work = &xfs_btroot_init,
-> +		.type = XFS_BTNUM_REFC,
-> +		.need_init = xfs_sb_version_hasreflink(&mp->m_sb)
+From: Dave Chinner <dchinner@redhat.com>
 
-Muuuuch easier to read,
+Growfs currently manually codes the extension of the last AG in a
+filesytem during the growfs process. Factor that out of the growfs
+code and move it into libxfs along with teh rest of the AG header
+modification code.
+
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_ag.c | 60 ++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_ag.h |  7 ++++-
+ fs/xfs/xfs_fsops.c     | 58 ++--------------------------------------
+ 3 files changed, 68 insertions(+), 57 deletions(-)
 
---D
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index 5baa22c07095..9345802c99f7 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -16,6 +16,7 @@
+ #include "xfs_alloc_btree.h"
+ #include "xfs_rmap_btree.h"
+ #include "xfs_alloc.h"
++#include "xfs_ialloc.h"
+ #include "xfs_rmap.h"
+ #include "xfs_ag.h"
+ 
+@@ -402,3 +403,62 @@ xfs_ag_init_headers(
+ 	}
+ 	return error;
+ }
++
++/*
++ * Extent the AG indicated by the @id by the length passed in
++ */
++int
++xfs_ag_extend_space(
++	struct xfs_mount	*mp,
++	struct xfs_trans	*tp,
++	struct aghdr_init_data	*id,
++	xfs_extlen_t		len)
++{
++	struct xfs_owner_info	oinfo;
++	struct xfs_buf		*bp;
++	struct xfs_agi		*agi;
++	struct xfs_agf		*agf;
++	int			error;
++
++	/*
++	 * Change the agi length.
++	 */
++	error = xfs_ialloc_read_agi(mp, tp, id->agno, &bp);
++	if (error)
++		return error;
++
++	agi = XFS_BUF_TO_AGI(bp);
++	be32_add_cpu(&agi->agi_length, len);
++	ASSERT(id->agno == mp->m_sb.sb_agcount - 1 ||
++	       be32_to_cpu(agi->agi_length) == mp->m_sb.sb_agblocks);
++	xfs_ialloc_log_agi(tp, bp, XFS_AGI_LENGTH);
++
++	/*
++	 * Change agf length.
++	 */
++	error = xfs_alloc_read_agf(mp, tp, id->agno, 0, &bp);
++	if (error)
++		return error;
++
++	agf = XFS_BUF_TO_AGF(bp);
++	be32_add_cpu(&agf->agf_length, len);
++	ASSERT(agf->agf_length == agi->agi_length);
++	xfs_alloc_log_agf(tp, bp, XFS_AGF_LENGTH);
++
++	/*
++	 * Free the new space.
++	 *
++	 * XFS_RMAP_OWN_NULL is used here to tell the rmap btree that
++	 * this doesn't actually exist in the rmap btree.
++	 */
++	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_NULL);
++	error = xfs_rmap_free(tp, bp, id->agno,
++				be32_to_cpu(agf->agf_length) - len,
++				len, &oinfo);
++	if (error)
++		return error;
++
++	return  xfs_free_extent(tp, XFS_AGB_TO_FSB(mp, id->agno,
++					be32_to_cpu(agf->agf_length) - len),
++				len, &oinfo, XFS_AG_RESV_NONE);
++}
+diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+index 69f2fd4be0ea..412702e23f61 100644
+--- a/fs/xfs/libxfs/xfs_ag.h
++++ b/fs/xfs/libxfs/xfs_ag.h
+@@ -7,6 +7,9 @@
+ #ifndef __LIBXFS_AG_H
+ #define __LIBXFS_AG_H 1
+ 
++struct xfs_mount;
++struct xfs_trans;
++
+ struct aghdr_init_data {
+ 	/* per ag data */
+ 	xfs_agblock_t		agno;		/* ag to init */
+@@ -20,6 +23,8 @@ struct aghdr_init_data {
+ 	xfs_btnum_t		type;		/* type of btree root block */
+ };
+ 
+-int xfs_ag_init_headers( struct xfs_mount *mp, struct aghdr_init_data *id);
++int xfs_ag_init_headers(struct xfs_mount *mp, struct aghdr_init_data *id);
++int xfs_ag_extend_space(struct xfs_mount *mp, struct xfs_trans *tp,
++			struct aghdr_init_data *id, xfs_extlen_t len);
+ 
+ #endif /* __LIBXFS_AG_H */
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index c5087b79bcea..bc7ef18da243 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -27,16 +27,12 @@
+ #include "xfs_trans.h"
+ #include "xfs_error.h"
+ #include "xfs_btree.h"
+-#include "xfs_alloc_btree.h"
+ #include "xfs_alloc.h"
+-#include "xfs_rmap_btree.h"
+-#include "xfs_ialloc.h"
+ #include "xfs_fsops.h"
+ #include "xfs_trans_space.h"
+ #include "xfs_rtalloc.h"
+ #include "xfs_trace.h"
+ #include "xfs_log.h"
+-#include "xfs_rmap.h"
+ #include "xfs_ag.h"
+ #include "xfs_ag_resv.h"
+ 
+@@ -48,8 +44,6 @@ xfs_growfs_data_private(
+ 	xfs_mount_t		*mp,		/* mount point for filesystem */
+ 	xfs_growfs_data_t	*in)		/* growfs data input struct */
+ {
+-	xfs_agf_t		*agf;
+-	xfs_agi_t		*agi;
+ 	xfs_buf_t		*bp;
+ 	int			error;
+ 	xfs_agnumber_t		nagcount;
+@@ -132,57 +126,9 @@ xfs_growfs_data_private(
+ 
+ 	xfs_trans_agblocks_delta(tp, id.nfree);
+ 
+-	/*
+-	 * There are new blocks in the old last a.g.
+-	 */
++	/* If there are new blocks in the old last AG, extend it. */
+ 	if (new) {
+-		struct xfs_owner_info	oinfo;
+-
+-		/*
+-		 * Change the agi length.
+-		 */
+-		error = xfs_ialloc_read_agi(mp, tp, id.agno, &bp);
+-		if (error)
+-			goto out_trans_cancel;
+-
+-		ASSERT(bp);
+-		agi = XFS_BUF_TO_AGI(bp);
+-		be32_add_cpu(&agi->agi_length, new);
+-		ASSERT(nagcount == oagcount ||
+-		       be32_to_cpu(agi->agi_length) == mp->m_sb.sb_agblocks);
+-		xfs_ialloc_log_agi(tp, bp, XFS_AGI_LENGTH);
+-
+-		/*
+-		 * Change agf length.
+-		 */
+-		error = xfs_alloc_read_agf(mp, tp, id.agno, 0, &bp);
+-		if (error)
+-			goto out_trans_cancel;
+-
+-		ASSERT(bp);
+-		agf = XFS_BUF_TO_AGF(bp);
+-		be32_add_cpu(&agf->agf_length, new);
+-		ASSERT(be32_to_cpu(agf->agf_length) ==
+-		       be32_to_cpu(agi->agi_length));
+-
+-		xfs_alloc_log_agf(tp, bp, XFS_AGF_LENGTH);
+-
+-		/*
+-		 * Free the new space.
+-		 *
+-		 * XFS_RMAP_OWN_NULL is used here to tell the rmap btree that
+-		 * this doesn't actually exist in the rmap btree.
+-		 */
+-		xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_NULL);
+-		error = xfs_rmap_free(tp, bp, id.agno,
+-				be32_to_cpu(agf->agf_length) - new,
+-				new, &oinfo);
+-		if (error)
+-			goto out_trans_cancel;
+-		error = xfs_free_extent(tp,
+-				XFS_AGB_TO_FSB(mp, id.agno,
+-					be32_to_cpu(agf->agf_length) - new),
+-				new, &oinfo, XFS_AG_RESV_NONE);
++		error = xfs_ag_extend_space(mp, tp, &id, new);
+ 		if (error)
+ 			goto out_trans_cancel;
+ 	}
+-- 
+2.17.0
 
-
-> +	},
-> +	{ /* NULL terminating block */
-> +		.daddr = XFS_BUF_DADDR_NULL,
-> +	}
-> +	};
-> +	struct  xfs_aghdr_grow_data *dp;
->  	int			error = 0;
->  
->  	/* Account for AG free space in new AG */
->  	id->nfree += id->agsize - mp->m_ag_prealloc_blocks;
-> +	for (dp = &aghdr_data[0]; dp->daddr != XFS_BUF_DADDR_NULL; dp++) {
-> +		if (!dp->need_init)
-> +			continue;
->  
-> -	/* AG freespace header block */
-> -	id->daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGF_DADDR(mp));
-> -	id->numblks = XFS_FSS_TO_BB(mp, 1);
-> -	error = xfs_growfs_init_aghdr(mp, id, xfs_agfblock_init,
-> -					&xfs_agf_buf_ops);
-> -	if (error)
-> -		goto out_error;
-> -
-> -	/* AG freelist header block */
-> -	id->daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGFL_DADDR(mp));
-> -	id->numblks = XFS_FSS_TO_BB(mp, 1);
-> -	error = xfs_growfs_init_aghdr(mp, id, xfs_agflblock_init,
-> -					&xfs_agfl_buf_ops);
-> -	if (error)
-> -		goto out_error;
-> -
-> -	/* AG inode header block */
-> -	id->daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGI_DADDR(mp));
-> -	id->numblks = XFS_FSS_TO_BB(mp, 1);
-> -	error = xfs_growfs_init_aghdr(mp, id, xfs_agiblock_init,
-> -					&xfs_agi_buf_ops);
-> -	if (error)
-> -		goto out_error;
-> -
-> -
-> -	/* BNO btree root block */
-> -	id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_BNO_BLOCK(mp));
-> -	id->numblks = BTOBB(mp->m_sb.sb_blocksize);
-> -	error = xfs_growfs_init_aghdr(mp, id, xfs_bnoroot_init,
-> -				   &xfs_allocbt_buf_ops);
-> -	if (error)
-> -		goto out_error;
-> -
-> -
-> -	/* CNT btree root block */
-> -	id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_CNT_BLOCK(mp));
-> -	id->numblks = BTOBB(mp->m_sb.sb_blocksize);
-> -	error = xfs_growfs_init_aghdr(mp, id, xfs_cntroot_init,
-> -				   &xfs_allocbt_buf_ops);
-> -	if (error)
-> -		goto out_error;
-> -
-> -	/* RMAP btree root block */
-> -	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
-> -		id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_RMAP_BLOCK(mp));
-> -		id->numblks = BTOBB(mp->m_sb.sb_blocksize);
-> -		error = xfs_growfs_init_aghdr(mp, id, xfs_rmaproot_init,
-> -					   &xfs_rmapbt_buf_ops);
-> -		if (error)
-> -			goto out_error;
-> -
-> -	}
-> -
-> -	/* INO btree root block */
-> -	id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_IBT_BLOCK(mp));
-> -	id->numblks = BTOBB(mp->m_sb.sb_blocksize);
-> -	id->type = XFS_BTNUM_INO;
-> -	error = xfs_growfs_init_aghdr(mp, id, xfs_btroot_init,
-> -				   &xfs_inobt_buf_ops);
-> -	if (error)
-> -		goto out_error;
-> -
-> -
-> -	/*
-> -	 * FINO btree root block
-> -	 */
-> -	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
-> -		id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_FIBT_BLOCK(mp));
-> -		id->numblks = BTOBB(mp->m_sb.sb_blocksize);
-> -		id->type = XFS_BTNUM_FINO;
-> -		error = xfs_growfs_init_aghdr(mp, id, xfs_btroot_init,
-> -					   &xfs_inobt_buf_ops);
-> -		if (error)
-> -			goto out_error;
-> -	}
-> -
-> -	/*
-> -	 * refcount btree root block
-> -	 */
-> -	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
-> -		id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, xfs_refc_block(mp));
-> -		id->numblks = BTOBB(mp->m_sb.sb_blocksize);
-> -		id->type = XFS_BTNUM_REFC;
-> -		error = xfs_growfs_init_aghdr(mp, id, xfs_btroot_init,
-> -					   &xfs_refcountbt_buf_ops);
-> +		id->daddr = dp->daddr;
-> +		id->numblks = dp->numblks;
-> +		id->type = dp->type;
-> +		error = xfs_growfs_init_aghdr(mp, id, dp->work, dp->ops);
->  		if (error)
-> -			goto out_error;
-> +			break;
->  	}
-> -
-> -out_error:
->  	return error;
->  }
->  
-> -- 
-> 2.17.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
