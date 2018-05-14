@@ -1,93 +1,258 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:54330 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751978AbeENVld (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 May 2018 17:41:33 -0400
-Date: Mon, 14 May 2018 14:41:11 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 4/5] btrfs: use common label ioctl definitions
-Message-ID: <20180514214111.GH4933@magnolia>
-References: <5957a0ff-0fd7-c1f3-2d44-86b825c2eb3b@redhat.com>
- <060d984f-6386-2b23-7fd4-66b1a9a96aef@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <060d984f-6386-2b23-7fd4-66b1a9a96aef@sandeen.net>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:1693 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751099AbeENETN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 May 2018 00:19:13 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1fI4x0-0002v6-7F
+        for linux-xfs@vger.kernel.org; Mon, 14 May 2018 14:19:06 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1fI4x0-0002xY-5o
+        for linux-xfs@vger.kernel.org; Mon, 14 May 2018 14:19:06 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 05/10] xfs: turn ag header initialisation into a table driven operation
+Date: Mon, 14 May 2018 14:18:59 +1000
+Message-Id: <20180514041904.11140-6-david@fromorbit.com>
+In-Reply-To: <20180514041904.11140-1-david@fromorbit.com>
+References: <20180514041904.11140-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Mon, May 14, 2018 at 12:42:10PM -0500, Eric Sandeen wrote:
-> Use the new common online get/set label get/set definitions.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> Mostly for reference; this can be sent explicitly to the btrfs list
-> after the common definitions are in place.  Happy to do that so btrfs
-> changes won't go through the xfs tree.
-> 
->  fs/btrfs/ioctl.c           | 8 ++++----
->  include/uapi/linux/btrfs.h | 6 ++----
->  2 files changed, 6 insertions(+), 8 deletions(-)
-> 
-> diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c
-> index 632e26d6f7ce..8feea790bd00 100644
-> --- a/fs/btrfs/ioctl.c
-> +++ b/fs/btrfs/ioctl.c
-> @@ -5444,6 +5444,10 @@ long btrfs_ioctl(struct file *file, unsigned int
->  		return btrfs_ioctl_setflags(file, argp);
->  	case FS_IOC_GETVERSION:
->  		return btrfs_ioctl_getversion(file, argp);
-> +	case FS_IOC_GETFSLABEL:
-> +		return btrfs_ioctl_get_fslabel(file, argp);
-> +	case FS_IOC_SETFSLABEL:
-> +		return btrfs_ioctl_set_fslabel(file, argp);
->  	case FITRIM:
->  		return btrfs_ioctl_fitrim(file, argp);
->  	case BTRFS_IOC_SNAP_CREATE:
-> @@ -5555,10 +5559,6 @@ long btrfs_ioctl(struct file *file, unsigned int
->  		return btrfs_ioctl_quota_rescan_wait(file, argp);
->  	case BTRFS_IOC_DEV_REPLACE:
->  		return btrfs_ioctl_dev_replace(fs_info, argp);
-> -	case BTRFS_IOC_GET_FSLABEL:
-> -		return btrfs_ioctl_get_fslabel(file, argp);
-> -	case BTRFS_IOC_SET_FSLABEL:
-> -		return btrfs_ioctl_set_fslabel(file, argp);
->  	case BTRFS_IOC_GET_SUPPORTED_FEATURES:
->  		return btrfs_ioctl_get_supported_features(argp);
->  	case BTRFS_IOC_GET_FEATURES:
-> diff --git a/include/uapi/linux/btrfs.h b/include/uapi/linux/btrfs.h
-> index c8d99b9ca550..af29cc9032a2 100644
-> --- a/include/uapi/linux/btrfs.h
-> +++ b/include/uapi/linux/btrfs.h
-> @@ -823,10 +823,8 @@ enum btrfs_err_code {
->  #define BTRFS_IOC_QUOTA_RESCAN_STATUS _IOR(BTRFS_IOCTL_MAGIC, 45, \
->  			       struct btrfs_ioctl_quota_rescan_args)
->  #define BTRFS_IOC_QUOTA_RESCAN_WAIT _IO(BTRFS_IOCTL_MAGIC, 46)
-> -#define BTRFS_IOC_GET_FSLABEL _IOR(BTRFS_IOCTL_MAGIC, 49, \
-> -				   char[BTRFS_LABEL_SIZE])
-> -#define BTRFS_IOC_SET_FSLABEL _IOW(BTRFS_IOCTL_MAGIC, 50, \
-> -				   char[BTRFS_LABEL_SIZE])
-> +#define BTRFS_IOC_GET_FSLABEL 	FS_IOC_GETFSLABEL
+From: Dave Chinner <dchinner@redhat.com>
 
-Looks ok other than the space after '_GET_FSLABEL'...
+There's still more cookie cutter code in setting up each AG header.
+Separate all the variables into a simple structure and iterate a
+table of header definitions to initialise everything.
 
-Acked-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_fsops.c | 182 +++++++++++++++++++++++----------------------
+ 1 file changed, 92 insertions(+), 90 deletions(-)
 
---D
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index ec3c51ee8134..fb283d2cf42b 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -282,12 +282,13 @@ xfs_agiblock_init(
+ 		agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
+ }
+ 
++typedef void (*aghdr_init_work_f)(struct xfs_mount *mp, struct xfs_buf *bp,
++				  struct aghdr_init_data *id);
+ static int
+ xfs_growfs_init_aghdr(
+ 	struct xfs_mount	*mp,
+ 	struct aghdr_init_data	*id,
+-	void			(*work)(struct xfs_mount *, struct xfs_buf *,
+-					struct aghdr_init_data *),
++	aghdr_init_work_f	work,
+ 	const struct xfs_buf_ops *ops)
+ 
+ {
+@@ -304,6 +305,15 @@ xfs_growfs_init_aghdr(
+ 	return 0;
+ }
+ 
++struct xfs_aghdr_grow_data {
++	xfs_daddr_t		daddr;
++	size_t			numblks;
++	const struct xfs_buf_ops *ops;
++	aghdr_init_work_f	work;
++	xfs_btnum_t		type;
++	bool			need_init;
++};
++
+ /*
+  * Write new AG headers to disk. Non-transactional, but written
+  * synchronously so they are completed prior to the growfs transaction
+@@ -315,101 +325,93 @@ xfs_grow_ag_headers(
+ 	struct aghdr_init_data	*id)
+ 
+ {
++	struct xfs_aghdr_grow_data aghdr_data[] = {
++	{ /* AGF */
++		.daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGF_DADDR(mp)),
++		.numblks = XFS_FSS_TO_BB(mp, 1),
++		.ops = &xfs_agf_buf_ops,
++		.work = &xfs_agfblock_init,
++		.need_init = true
++	},
++	{ /* AGFL */
++		.daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGFL_DADDR(mp)),
++		.numblks = XFS_FSS_TO_BB(mp, 1),
++		.ops = &xfs_agfl_buf_ops,
++		.work = &xfs_agflblock_init,
++		.need_init = true
++	},
++	{ /* AGI */
++		.daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGI_DADDR(mp)),
++		.numblks = XFS_FSS_TO_BB(mp, 1),
++		.ops = &xfs_agi_buf_ops,
++		.work = &xfs_agiblock_init,
++		.need_init = true
++	},
++	{ /* BNO root block */
++		.daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_BNO_BLOCK(mp)),
++		.numblks = BTOBB(mp->m_sb.sb_blocksize),
++		.ops = &xfs_allocbt_buf_ops,
++		.work = &xfs_bnoroot_init,
++		.need_init = true
++	},
++	{ /* CNT root block */
++		.daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_CNT_BLOCK(mp)),
++		.numblks = BTOBB(mp->m_sb.sb_blocksize),
++		.ops = &xfs_allocbt_buf_ops,
++		.work = &xfs_cntroot_init,
++		.need_init = true
++	},
++	{ /* INO root block */
++		.daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_IBT_BLOCK(mp)),
++		.numblks = BTOBB(mp->m_sb.sb_blocksize),
++		.ops = &xfs_inobt_buf_ops,
++		.work = &xfs_btroot_init,
++		.type = XFS_BTNUM_INO,
++		.need_init = true
++	},
++	{ /* FINO root block */
++		.daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_FIBT_BLOCK(mp)),
++		.numblks = BTOBB(mp->m_sb.sb_blocksize),
++		.ops = &xfs_inobt_buf_ops,
++		.work = &xfs_btroot_init,
++		.type = XFS_BTNUM_FINO,
++		.need_init =  xfs_sb_version_hasfinobt(&mp->m_sb)
++	},
++	{ /* RMAP root block */
++		.daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_RMAP_BLOCK(mp)),
++		.numblks = BTOBB(mp->m_sb.sb_blocksize),
++		.ops = &xfs_rmapbt_buf_ops,
++		.work = &xfs_rmaproot_init,
++		.need_init = xfs_sb_version_hasrmapbt(&mp->m_sb)
++	},
++	{ /* REFC root block */
++		.daddr = XFS_AGB_TO_DADDR(mp, id->agno, xfs_refc_block(mp)),
++		.numblks = BTOBB(mp->m_sb.sb_blocksize),
++		.ops = &xfs_refcountbt_buf_ops,
++		.work = &xfs_btroot_init,
++		.type = XFS_BTNUM_REFC,
++		.need_init = xfs_sb_version_hasreflink(&mp->m_sb)
++	},
++	{ /* NULL terminating block */
++		.daddr = XFS_BUF_DADDR_NULL,
++	}
++	};
++	struct  xfs_aghdr_grow_data *dp;
+ 	int			error = 0;
+ 
+ 	/* Account for AG free space in new AG */
+ 	id->nfree += id->agsize - mp->m_ag_prealloc_blocks;
++	for (dp = &aghdr_data[0]; dp->daddr != XFS_BUF_DADDR_NULL; dp++) {
++		if (!dp->need_init)
++			continue;
+ 
+-	/* AG freespace header block */
+-	id->daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGF_DADDR(mp));
+-	id->numblks = XFS_FSS_TO_BB(mp, 1);
+-	error = xfs_growfs_init_aghdr(mp, id, xfs_agfblock_init,
+-					&xfs_agf_buf_ops);
+-	if (error)
+-		goto out_error;
+-
+-	/* AG freelist header block */
+-	id->daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGFL_DADDR(mp));
+-	id->numblks = XFS_FSS_TO_BB(mp, 1);
+-	error = xfs_growfs_init_aghdr(mp, id, xfs_agflblock_init,
+-					&xfs_agfl_buf_ops);
+-	if (error)
+-		goto out_error;
+-
+-	/* AG inode header block */
+-	id->daddr = XFS_AG_DADDR(mp, id->agno, XFS_AGI_DADDR(mp));
+-	id->numblks = XFS_FSS_TO_BB(mp, 1);
+-	error = xfs_growfs_init_aghdr(mp, id, xfs_agiblock_init,
+-					&xfs_agi_buf_ops);
+-	if (error)
+-		goto out_error;
+-
+-
+-	/* BNO btree root block */
+-	id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_BNO_BLOCK(mp));
+-	id->numblks = BTOBB(mp->m_sb.sb_blocksize);
+-	error = xfs_growfs_init_aghdr(mp, id, xfs_bnoroot_init,
+-				   &xfs_allocbt_buf_ops);
+-	if (error)
+-		goto out_error;
+-
+-
+-	/* CNT btree root block */
+-	id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_CNT_BLOCK(mp));
+-	id->numblks = BTOBB(mp->m_sb.sb_blocksize);
+-	error = xfs_growfs_init_aghdr(mp, id, xfs_cntroot_init,
+-				   &xfs_allocbt_buf_ops);
+-	if (error)
+-		goto out_error;
+-
+-	/* RMAP btree root block */
+-	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
+-		id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_RMAP_BLOCK(mp));
+-		id->numblks = BTOBB(mp->m_sb.sb_blocksize);
+-		error = xfs_growfs_init_aghdr(mp, id, xfs_rmaproot_init,
+-					   &xfs_rmapbt_buf_ops);
+-		if (error)
+-			goto out_error;
+-
+-	}
+-
+-	/* INO btree root block */
+-	id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_IBT_BLOCK(mp));
+-	id->numblks = BTOBB(mp->m_sb.sb_blocksize);
+-	id->type = XFS_BTNUM_INO;
+-	error = xfs_growfs_init_aghdr(mp, id, xfs_btroot_init,
+-				   &xfs_inobt_buf_ops);
+-	if (error)
+-		goto out_error;
+-
+-
+-	/*
+-	 * FINO btree root block
+-	 */
+-	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
+-		id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, XFS_FIBT_BLOCK(mp));
+-		id->numblks = BTOBB(mp->m_sb.sb_blocksize);
+-		id->type = XFS_BTNUM_FINO;
+-		error = xfs_growfs_init_aghdr(mp, id, xfs_btroot_init,
+-					   &xfs_inobt_buf_ops);
+-		if (error)
+-			goto out_error;
+-	}
+-
+-	/*
+-	 * refcount btree root block
+-	 */
+-	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+-		id->daddr = XFS_AGB_TO_DADDR(mp, id->agno, xfs_refc_block(mp));
+-		id->numblks = BTOBB(mp->m_sb.sb_blocksize);
+-		id->type = XFS_BTNUM_REFC;
+-		error = xfs_growfs_init_aghdr(mp, id, xfs_btroot_init,
+-					   &xfs_refcountbt_buf_ops);
++		id->daddr = dp->daddr;
++		id->numblks = dp->numblks;
++		id->type = dp->type;
++		error = xfs_growfs_init_aghdr(mp, id, dp->work, dp->ops);
+ 		if (error)
+-			goto out_error;
++			break;
+ 	}
+-
+-out_error:
+ 	return error;
+ }
+ 
+-- 
+2.17.0
 
-> +#define BTRFS_IOC_SET_FSLABEL	FS_IOC_SETFSLABEL
->  #define BTRFS_IOC_GET_DEV_STATS _IOWR(BTRFS_IOCTL_MAGIC, 52, \
->  				      struct btrfs_ioctl_get_dev_stats)
->  #define BTRFS_IOC_DEV_REPLACE _IOWR(BTRFS_IOCTL_MAGIC, 53, \
-> -- 
-> 2.17.0
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
