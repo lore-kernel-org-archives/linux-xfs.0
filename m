@@ -1,148 +1,122 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:47900 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751009AbeERO6N (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 10:58:13 -0400
-Date: Fri, 18 May 2018 07:58:04 -0700
+Received: from userp2120.oracle.com ([156.151.31.85]:46350 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752162AbeEOUSJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 May 2018 16:18:09 -0400
+Date: Tue, 15 May 2018 13:17:48 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: How to reliably measure fs usage with reflinks enabled?
-Message-ID: <20180518145713.GF23858@magnolia>
-References: <5398ddaf2b876c3563bc1c2927bfe1b9@ruhr-uni-bochum.de>
- <866a5e96-e900-d330-0efb-6413f85f86a3@sandeen.net>
- <20180514225751.GB10363@dastard>
- <b2fe69d6216f165b2c84ca5a377d06ab@ruhr-uni-bochum.de>
- <20180515012926.GC10363@dastard>
+Subject: Re: [PATCH 2/4] xfs: New function for secondary superblock updates
+Message-ID: <20180515201748.GL4933@magnolia>
+References: <5957a0ff-0fd7-c1f3-2d44-86b825c2eb3b@redhat.com>
+ <7e8d428a-2150-d044-c1f3-5b53c5404246@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20180515012926.GC10363@dastard>
+In-Reply-To: <7e8d428a-2150-d044-c1f3-5b53c5404246@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Tarik Ceylan <Tarik.Ceylan@ruhr-uni-bochum.de>, linux-xfs@vger.kernel.org, sandeen@sandeen.net
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, May 15, 2018 at 11:29:26AM +1000, Dave Chinner wrote:
-> On Tue, May 15, 2018 at 01:37:32AM +0200, Tarik Ceylan wrote:
-> > Am 2018-05-15 00:57, schrieb Dave Chinner:
-> > >On Mon, May 14, 2018 at 05:02:53PM -0500, Eric Sandeen wrote:
-> > >>
-> > >>
-> > >>On 5/14/18 3:02 PM, Tarik Ceylan wrote:
-> > >>> How can one reliably measure filesystem usage on partitions that were compiled with -m reflink=1 ?
-> > >>> Here are some numbers i am measuring with df -h (on different partitions holding the same data):
-> > >>> 7.7G of 36G  (-b size=512  -m crc=0 )
-> > >>> 8.6G of 36G  (-b size=4096 -m crc=1 )
-> > >>
-> > >>8x larger inodes will take 8x more space, but you didn't say how many
-> > >>inodes you have allocated.
-> > >>
-> > >>> 11G  of 36G  (-b size=1024 -m crc=1,reflink=1,rmapbt=1 -i sparse=1 )
-> > >>> 32G  of 864G (-b size=4096 -m crc=1,reflink=1 )
-> > >>
-> > >>In that last case, you have a wildly different total fs size, so
-> > >>probably
-> > >>no fair comparison here either.
-> > >>
-> > >>The reverse mapping btree also takes up space.  You're turning
-> > >>too many
-> > >>knobs at once.  ;)
-> > 
-> > Thanks,
-> > here's a test in which i only compare reflink=0 to reflink=1, all other
-> > variables being the same:
-> > 
-> > mkfs.xfs -f -m reflink=0 /dev/sdc4
-> > meta-data=/dev/sdc4              isize=512    agcount=4,
-> > agsize=58687982 blks
-> >          =                       sectsz=512   attr=2, projid32bit=1
-> >          =                       crc=1        finobt=1, sparse=0,
-> > rmapbt=0, reflink=0
-> > data     =                       bsize=4096   blocks=234751926,
-> > imaxpct=25
-> >          =                       sunit=0      swidth=0 blks
-> > naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-> > log      =internal log           bsize=4096   blocks=114624, version=2
-> >          =                       sectsz=512   sunit=0 blks, lazy-count=1
-> > realtime =none                   extsz=4096   blocks=0, rtextents=0
-> > 
-> > "df -h" shows a usage of 8.8G of 896G
-> > 
-> > mkfs.xfs -f -m reflink=1 /dev/sdc4
-> > [output same as before except the reflink parameter]
-> > 15G of 896G
+On Mon, May 14, 2018 at 12:36:36PM -0500, Eric Sandeen wrote:
+> Relabel must update all secondary superblocks, as offline relabel does.
 > 
-> So the reflink code reserved ~7GB of space in the filesystem (less
-> than 1%) for it's own reflink related metadata if it ever needs it.
-> It hasn't used it yet but we need to make sure that it's available
-> when the filesystem is near ENOSPC. Hence it's considered used space
-> because users cannot store user data in that space.
+> This is essentially a simpler copy of the current growfs code, which is
+> undergoing an independent refactor; we can see about merging stuff back
+> together after all this work is done.  In the meantime, this is a fairly
+> small, simple bit of code to facilitate the online label work.
 > 
-> The change I plan to make is to reduce the user reported filesystem
-> size rather than account for it as used space. IOWs, you'd see a
-> filesystem size of 889G instead of 896G, but have only 8.8GB used.
-> It means exactly the same thingi and will behave exactly the same
-> way, it's just a different space accounting technique....
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+>  fs/xfs/xfs_fsops.c | 48 ++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_fsops.h |  1 +
+>  2 files changed, 49 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index 523792768080..1aaa93051f78 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -71,6 +71,54 @@ xfs_growfs_get_hdr_buf(
+>  	return bp;
+>  }
+>  
+> +/*
+> + * Copy the contents of the primary super to all backup supers.
+> + * Not currently used for growfs, as it only looks at existing supers.
+> + */
+> +int
+> +xfs_update_secondary_supers(
+> +	xfs_mount_t		*mp)
+> +{
+> +	int			error, saved_error;
+> +	xfs_agnumber_t		agno;
+> +	xfs_buf_t		*bp;
+> +
+> +	error = saved_error = 0;
+> +
+> +	for (agno = 1; agno < mp->m_sb.sb_agcount; agno++) {
+> +		error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
+> +			  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
+> +			  XFS_FSS_TO_BB(mp, 1), 0, &bp, &xfs_sb_buf_ops);
 
-FWIW generic/260 also assumes that f_blocks reflects the size of the
-device and stumbles when we tell it to fstrim (0..ULLONG_MAX) and the
-number of bytes returned is greater than the f_blocks size of the fs,
-which is what (I think) will happen if we start reducing f_blocks by the
-size of the per-AG reservations.
+This whole thing /should/ use the new xfs_sb_read_secondary() helper,
+but between Dave's growfs refactor, this series, and secondary sb online
+repair I think I prefer to land all three and immediately clean up all
+three common use cases.
 
-I think the underlying problem is confusion over the definition of the
-address space that fstrim's range parameters run over.  The current
-usage in ext4/xfs suggests that the units are byte offsets into the main
-block device, but there's no uniform way to find out the maximum
-physical address that the filesystem uses, is there?  And what of
-multi-device filesystems like btrfs and xfs+realtime?  Do we just
-concatenate the block devices in a virtual address space?
-
-ext4: reports physical size of fs via f_blocks
-
-xfs: reports physical size of fs via f_blocks, but soon will start
-decreasing f_blocks by the size of per-ag metadata reservations since it
-is never possible for users to get at those blocks
-
-btrfs: iirc internally they create a virtual address space out of all
-the devices attached, but I've no idea how to find the size
-
-Looking over xfs_ioc_trim, it seems to me that we do not ever try to
-trim the realtime device?
-
-I /hope/ the common caller case is (0..ULLONG_MAX)...
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
-> > >Also, we reserve a lot of space for reflink/rmapbt metadata that
-> > >isn't actually used, so you're not actually using any more space
-> > >than the "-b size=4096 -m crc=1" case. I have plans for hiding that
-> > >reservation from users so that we don't get questions like this....
-> > 
-> > That should resolve my confusion. Sorry to have bothered, but it's
-> > kind of an obvious question.
-> 
-> It's the sort of "obvious question" which almost no-one has asked us
-> about... :)
-> 
-> > To get back to my original question - can i assume  "df" to be a
-> > reliable
-> > way of measuring fs usage going forward (after the change you mention),
-> 
-> df is reliable now, regardless of any change we make in the future.
-> 
-> > or will specialized tools be necessary as is the case with btrfs?
-> 
-> No - df works and it should always work. We try to learn from other
-> people's mistakes, not just our own... :)
-> 
-> Cheers,
-> 
-> Dave.
+> +		/*
+> +		 * If we get an error reading or writing alternate superblocks,
+> +		 * continue.  xfs_repair chooses the "best" superblock based
+> +		 * on most matches; if we break early, we'll leave more
+> +		 * superblocks un-updated than updated, and xfs_repair may
+> +		 * pick them over the properly-updated primary.
+> +		 */
+> +		if (error) {
+> +			xfs_warn(mp,
+> +		"error %d reading secondary superblock for ag %d",
+> +				error, agno);
+> +			saved_error = error;
+> +			continue;
+> +		}
+> +		xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb);
+> +
+> +		error = xfs_bwrite(bp);
+> +		xfs_buf_relse(bp);
+> +		if (error) {
+> +			xfs_warn(mp,
+> +		"write error %d updating secondary superblock for ag %d",
+> +				error, agno);
+> +			saved_error = error;
+> +			continue;
+> +		}
+> +	}
+> +
+> +	return saved_error ? saved_error : error;
+> +}
+> +
+>  static int
+>  xfs_growfs_data_private(
+>  	xfs_mount_t		*mp,		/* mount point for filesystem */
+> diff --git a/fs/xfs/xfs_fsops.h b/fs/xfs/xfs_fsops.h
+> index 20484ed5e919..257d3018bc39 100644
+> --- a/fs/xfs/xfs_fsops.h
+> +++ b/fs/xfs/xfs_fsops.h
+> @@ -18,6 +18,7 @@
+>  #ifndef __XFS_FSOPS_H__
+>  #define	__XFS_FSOPS_H__
+>  
+> +extern int xfs_update_secondary_supers(xfs_mount_t *mp);
+>  extern int xfs_growfs_data(xfs_mount_t *mp, xfs_growfs_data_t *in);
+>  extern int xfs_growfs_log(xfs_mount_t *mp, xfs_growfs_log_t *in);
+>  extern int xfs_fs_counts(xfs_mount_t *mp, xfs_fsop_counts_t *cnt);
 > -- 
-> Dave Chinner
-> david@fromorbit.com
+> 2.17.0
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
