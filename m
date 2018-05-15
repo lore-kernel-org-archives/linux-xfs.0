@@ -1,42 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bullwinkle.deer-run.com ([50.23.32.3]:58842 "EHLO
-        bullwinkle.deer-run.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932815AbeEHQo7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 May 2018 12:44:59 -0400
-Date: Tue, 8 May 2018 11:43:40 -0500
-From: hal@deer-run.com
-Subject: Re: [PATCH] xfs_db: add -R option
-Message-ID: <20180508164340.GB18224@deer-run.com>
-References: <20180504140244.GA32161@deer-run.com>
- <db080bb2-a649-fbb3-ec91-d16f00ad30f0@sandeen.net>
- <20180508161353.GA18224@deer-run.com>
- <c542d34d-3afa-c75e-32ba-9ba2df17b8d0@sandeen.net>
+Received: from sandeen.net ([63.231.237.45]:38982 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752009AbeEODOW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 14 May 2018 23:14:22 -0400
+Subject: Re: [PATCH] xfs_db: add blockget -L option
+References: <20180510213636.GA5045@deer-run.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <3ae25107-7242-a645-c0f7-784f35ed3e79@sandeen.net>
+Date: Mon, 14 May 2018 22:14:20 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c542d34d-3afa-c75e-32ba-9ba2df17b8d0@sandeen.net>
+In-Reply-To: <20180510213636.GA5045@deer-run.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: hal@deer-run.com, linux-xfs@vger.kernel.org
 
-> Well, I don't really like either patch for the reasons stated above.
-> xfs_db /can/ write to the filesystem, and -r disables that... but -r
-> as a modifier to affect the behavior of a read-only command is
-> unintuitive.
+
+
+On 5/10/18 4:36 PM, hal@deer-run.com wrote:
+> From: Hal Pomeranz <hal@deer-run.com>
 > 
-> "It is only necessary to omit this flag if a command that changes data
-> (write, blocktrash, crc) is to be used."
+> Allow blockget on a mounted file system or "dirty" file system image
+> with pending log entries-- by simply ignoring the log.  This makes
+> xfs_db more useful for forensics where we are often dealing with these
+> types of images.  Flushing log entries to disk by mounting/unmounting
+> the file system would allow us to use blockget, but would make changes
+> to the file system state which are not desirable in forensics contexts.
 > 
-> What are the objections to a blockget modifier option?  That seemed like
-> the most direct & obvious solution to me.
-> 
-> "blockget/check -L : attempt to perform the blockget and check functions
-> even if the log contains unreplayed metadata," or something like that?
+> Signed-off-by: Hal Pomeranz <hal@deer-run.com>
 
-Ah, OK. I'm getting what you're saying now. Let me poke around with
-the code some and produce a patch that does what you're suggesting.
+Well, I'm back on the fence about this one; I know I steered you in
+this direction, but after talking to dchinner a bit, he raised some valid
+concerns about adding an option which essentially makes the tool behave
+in unpredictable ways (by trying to traverse an inconsistent filesystem).
 
---Hal
+I had jumped to the conclusion that the usecase was for examining an
+offline filesystem image without needing to perturb it by replaying the
+log; Dave pointed out that you're talking about using this on a live
+filesystem, and even baking this behavior into other higher level tools.
+That kind of opened my eyes to all the ways this can go wrong.  :(
 
+Thus spake Dave:
+
+> IMO, the only thing worse than not having a forensic tool for a
+> specific job is having a forensic tool provided by a trusted toolkit
+> whose results are unreliable and cannot be trusted....
+
+...
+
+> I'd suggest, in that case, that you limit it's use to off-line or
+> read-only snapshots of online filesystems? This would mean that the
+> results of xfs_db operations (while eceedingly slow) will be
+> reliable.
+
+And in both of those cases, you won't need to ignore a dirty log.
+Especially with teh express stated purpose of examining live
+filesystems, I really hate to give you this much rope.
+
+Stuff like parent pointers and fsmap are (eventually) going to give
+you a much better way to achieve what (I think) you want, here.
+
+-Eric
