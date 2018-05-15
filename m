@@ -1,44 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:58388 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751853AbeEPBB3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 May 2018 21:01:29 -0400
-Date: Tue, 15 May 2018 18:01:08 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: fix refactor quota limits initialization
-Message-ID: <20180516010108.GA23858@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:36554 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752421AbeEOMUT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 May 2018 08:20:19 -0400
+Date: Tue, 15 May 2018 05:20:15 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: xfsprogs 4.16.0 format change, GRUB error unknown filesystem
+Message-ID: <20180515122015.GA2213@infradead.org>
+References: <CAJCQCtQbns7bbE=mWvYuWMi+R5wdphfEjF1F995PVBsoUovnpg@mail.gmail.com>
+ <20180514173610.GC4933@magnolia>
+ <CAJCQCtQ04viW=GzfTBWdQPab8orRmzQ2MjHGCSy_VY_k7-PdRw@mail.gmail.com>
+ <d6405778-f3cb-57c8-33d6-6ea66fe06b44@sandeen.net>
+ <CAJCQCtSSEmwAzED6uzkevV_o4cxwhcZ9sf398wG-7HNCg3dOsA@mail.gmail.com>
+ <20180514191114.GB4937@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20180514191114.GB4937@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
-Cc: bfoster@redhat.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Chris Murphy <lists@colorremedies.com>, Eric Sandeen <sandeen@sandeen.net>, xfs list <linux-xfs@vger.kernel.org>
 
-dquot warning fields are be16, not be32.  Fix this mistake.
+On Mon, May 14, 2018 at 12:11:14PM -0700, Darrick J. Wong wrote:
+> We're working on moving all that to Documentation/, time permitting.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_qm.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 913d46d01bfc..c3e014bfc848 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -636,11 +636,11 @@ xfs_qm_init_timelimits(
- 	if (ddqp->d_rtbtimer)
- 		qinf->qi_rtbtimelimit = be32_to_cpu(ddqp->d_rtbtimer);
- 	if (ddqp->d_bwarns)
--		qinf->qi_bwarnlimit = be32_to_cpu(ddqp->d_bwarns);
-+		qinf->qi_bwarnlimit = be16_to_cpu(ddqp->d_bwarns);
- 	if (ddqp->d_iwarns)
--		qinf->qi_iwarnlimit = be32_to_cpu(ddqp->d_iwarns);
-+		qinf->qi_iwarnlimit = be16_to_cpu(ddqp->d_iwarns);
- 	if (ddqp->d_rtbwarns)
--		qinf->qi_rtbwarnlimit = be32_to_cpu(ddqp->d_rtbwarns);
-+		qinf->qi_rtbwarnlimit = be16_to_cpu(ddqp->d_rtbwarns);
- 
- 	xfs_qm_dqdestroy(dqp);
- }
+Of the kernel tree?  Of xfsprogs?  Why?
