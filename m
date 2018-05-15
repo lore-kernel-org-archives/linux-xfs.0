@@ -1,144 +1,174 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53460 "EHLO mail.kernel.org"
+Received: from sandeen.net ([63.231.237.45]:58502 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751151AbeEPN1k (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 16 May 2018 09:27:40 -0400
-Received: from tleilax.poochiereds.net (cpe-71-70-156-158.nc.res.rr.com [71.70.156.158])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CE94E20834
-        for <linux-xfs@vger.kernel.org>; Wed, 16 May 2018 13:27:39 +0000 (UTC)
-From: Jeff Layton <jlayton@kernel.org>
-Subject: [PATCH 1/2] xfs_io: add the ability to do an O_PATH open
-Date: Wed, 16 May 2018 09:27:37 -0400
-Message-Id: <20180516132738.27776-1-jlayton@kernel.org>
+        id S1753432AbeEOPcX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 15 May 2018 11:32:23 -0400
+Subject: [PATCH 5/5 V2] xfs_io: add label command
+References: <5957a0ff-0fd7-c1f3-2d44-86b825c2eb3b@redhat.com>
+ <ef558e14-5b31-4c5a-a07c-3d2ac67dd993@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <0f9a7c17-233c-042a-5449-acd7e0a27316@sandeen.net>
+Date: Tue, 15 May 2018 10:32:22 -0500
+MIME-Version: 1.0
+In-Reply-To: <ef558e14-5b31-4c5a-a07c-3d2ac67dd993@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Jeff Layton <jlayton@redhat.com>
+This adds a get/set label command to xfs_io.
 
-Signed-off-by: Jeff Layton <jlayton@redhat.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- io/file.c         | 3 ++-
- io/init.c         | 5 ++++-
- io/io.h           | 1 +
- io/open.c         | 7 ++++++-
- io/stat.c         | 4 +++-
- man/man8/xfs_io.8 | 3 +++
- 6 files changed, 19 insertions(+), 4 deletions(-)
 
-diff --git a/io/file.c b/io/file.c
-index 349b19cdc420..ff80652b183b 100644
---- a/io/file.c
-+++ b/io/file.c
-@@ -44,7 +44,8 @@ print_fileio(
- 		file->flags & IO_REALTIME ? _(",real-time") : "",
- 		file->flags & IO_APPEND ? _(",append-only") : "",
- 		file->flags & IO_NONBLOCK ? _(",non-block") : "",
--		file->flags & IO_TMPFILE ? _(",tmpfile") : "");
-+		file->flags & IO_TMPFILE ? _(",tmpfile") : "",
-+		file->flags & IO_PATH ? _(",path") : "");
- }
- 
- int
+V2: Set exitcode rather than error return on ioctl failure
+     fix ioctl definitions o_O :)
+
+diff --git a/io/Makefile b/io/Makefile
+index 88e47517..b40156da 100644
+--- a/io/Makefile
++++ b/io/Makefile
+@@ -10,9 +10,9 @@ LSRCFILES = xfs_bmap.sh xfs_freeze.sh xfs_mkfile.sh
+  HFILES = init.h io.h
+  CFILES = init.c \
+  	attr.c bmap.c cowextsize.c encrypt.c file.c freeze.c fsync.c \
+-	getrusage.c imap.c link.c mmap.c open.c parent.c pread.c prealloc.c \
+-	pwrite.c reflink.c scrub.c seek.c shutdown.c stat.c swapext.c sync.c \
+-	truncate.c utimes.c
++	getrusage.c imap.c label.c link.c mmap.c open.c parent.c pread.c \
++	prealloc.c pwrite.c reflink.c scrub.c seek.c shutdown.c stat.c \
++	swapext.c sync.c truncate.c utimes.c
+  
+  LLDLIBS = $(LIBXCMD) $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD)
+  LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE) $(LIBFROG)
 diff --git a/io/init.c b/io/init.c
-index 0336c9623beb..d4e84e82a77e 100644
+index 0336c962..612962e8 100644
 --- a/io/init.c
 +++ b/io/init.c
-@@ -154,7 +154,7 @@ init(
- 	gettimeofday(&stopwatch, NULL);
- 
- 	fs_table_initialise(0, NULL, 0, NULL);
--	while ((c = getopt(argc, argv, "ac:C:dFfim:p:nrRstTVx")) != EOF) {
-+	while ((c = getopt(argc, argv, "ac:C:dFfim:Pp:nrRstTVx")) != EOF) {
- 		switch (c) {
- 		case 'a':
- 			flags |= IO_APPEND;
-@@ -200,6 +200,9 @@ init(
- 		case 't':
- 			flags |= IO_TRUNC;
- 			break;
-+		case 'P':
-+			flags |= IO_PATH;
-+			break;
- 		case 'R':
- 			flags |= IO_REALTIME;
- 			break;
+@@ -72,6 +72,7 @@ init_commands(void)
+  	help_init();
+  	imap_init();
+  	inject_init();
++	label_init();
+  	log_writes_init();
+  	madvise_init();
+  	mincore_init();
 diff --git a/io/io.h b/io/io.h
-index a26763610877..0acc332b5dbb 100644
+index a2676361..7f8197ca 100644
 --- a/io/io.h
 +++ b/io/io.h
-@@ -40,6 +40,7 @@
- #define IO_FOREIGN	(1<<7)
- #define IO_NONBLOCK	(1<<8)
- #define IO_TMPFILE	(1<<9)
-+#define IO_PATH		(1<<10)
- 
- /*
-  * Regular file I/O control
-diff --git a/io/open.c b/io/open.c
-index 2cce0455263a..ba73f1d0361f 100644
---- a/io/open.c
-+++ b/io/open.c
-@@ -74,6 +74,8 @@ openfile(
- 		oflags |= O_NONBLOCK;
- 	if (flags & IO_TMPFILE)
- 		oflags |= O_TMPFILE;
-+	if (flags & IO_PATH)
-+		oflags |= O_PATH;
- 
- 	fd = open(path, oflags, mode);
- 	if (fd < 0) {
-@@ -216,7 +218,7 @@ open_f(
- 		return 0;
- 	}
- 
--	while ((c = getopt(argc, argv, "FRTacdfm:nrstx")) != EOF) {
-+	while ((c = getopt(argc, argv, "FRTacdfm:nPrstx")) != EOF) {
- 		switch (c) {
- 		case 'F':
- 			/* Ignored / deprecated now, handled automatically */
-@@ -250,6 +252,9 @@ open_f(
- 		case 't':
- 			flags |= IO_TRUNC;
- 			break;
-+		case 'P':
-+			flags |= IO_PATH;
-+			break;
- 		case 'R':
- 		case 'x':	/* backwards compatibility */
- 			flags |= IO_REALTIME;
-diff --git a/io/stat.c b/io/stat.c
-index 41d421525791..2db2736359e0 100644
---- a/io/stat.c
-+++ b/io/stat.c
-@@ -100,7 +100,9 @@ void print_file_info(void)
- 		file->flags & IO_REALTIME ? _(",real-time") : "",
- 		file->flags & IO_APPEND ? _(",append-only") : "",
- 		file->flags & IO_NONBLOCK ? _(",non-block") : "",
--		file->flags & IO_TMPFILE ? _(",tmpfile") : "");
-+		file->flags & IO_TMPFILE ? _(",tmpfile") : "",
-+		file->flags & IO_PATH ? _(",path") : "");
+@@ -109,6 +109,7 @@ extern void		getrusage_init(void);
+  extern void		help_init(void);
+  extern void		imap_init(void);
+  extern void		inject_init(void);
++extern void		label_init(void);
+  extern void		mmap_init(void);
+  extern void		open_init(void);
+  extern void		parent_init(void);
+diff --git a/io/label.c b/io/label.c
+new file mode 100644
+index 00000000..7eeab324
+--- /dev/null
++++ b/io/label.c
+@@ -0,0 +1,75 @@
++/*
++ * Copyright (c) 2018 Red Hat, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
 +
- }
- 
- void print_xfs_info(int verbose)
++#include <sys/ioctl.h>
++#include <sys/mount.h>
++#include "platform_defs.h"
++#include "libxfs.h"
++#include "path.h"
++#include "command.h"
++#include "init.h"
++#include "io.h"
++
++#ifndef FS_IOC_GETFSLABEL
++/* Max chars for the interface; fs limits may differ */
++#define FSLABEL_MAX 256
++#define FS_IOC_GETFSLABEL		_IOR(0x94, 49, char[FSLABEL_MAX])
++#define FS_IOC_SETFSLABEL		_IOW(0x94, 50, char[FSLABEL_MAX])
++#endif
++
++static cmdinfo_t label_cmd;
++
++static int
++label_f(
++	int		argc,
++	char		**argv)
++{
++	int		error;
++	char		label[FSLABEL_MAX];
++
++	if (argc == 1) {
++		memset(label, 0, sizeof(label));
++		error = ioctl(file->fd, FS_IOC_GETFSLABEL, &label);
++	} else {
++		strncpy(label, argv[1], sizeof(label));
++		error = ioctl(file->fd, FS_IOC_SETFSLABEL, label);
++	}
++
++	if (error) {
++		perror("label");
++		exitcode = 1;
++	} else
++		printf("label = \"%s\"\n", label);
++
++	return 0;
++}
++
++void
++label_init(void)
++{
++	label_cmd.name = "label";
++	label_cmd.cfunc = label_f;
++	label_cmd.argmin = 0;
++	label_cmd.argmax = 1;
++	label_cmd.args = _("[label]");
++	label_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
++	label_cmd.oneline =
++		_("query or set the filesystem label while mounted");
++
++	add_command(&label_cmd);
++}
 diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index c3ab532da03f..89e8e4be460e 100644
+index c3ab532d..52b983d5 100644
 --- a/man/man8/xfs_io.8
 +++ b/man/man8/xfs_io.8
-@@ -153,6 +153,9 @@ truncates on open (O_TRUNC).
- .B \-n
- opens in non-blocking mode if possible (O_NONBLOCK).
- .TP
-+.B \-P
-+opens the file for location only (O_PATH).
+@@ -1175,6 +1175,16 @@ This is intended to be equivalent to the shell command:
+  See the
+  .B log_writes
+  command.
 +.TP
- .B \-T
- create a temporary file not linked into the filesystem namespace
- (O_TMPFILE).  The pathname passed must refer to a directory which
--- 
-2.17.0
++.BI "label" " " [ " label " ]
++On  filesystems  that  support  online label manipulation, set or get the
++filesystem label.  With no options, get the current filesystem label.
++With one option, set the filesystem label to
++.IR label .
++If the label is longer than the filesystem will accept,
++.B xfs_io
++will print an error message.  XFS filesystem labels can be at most 12
++characters long, excluding any terminating NULL.
+  .SH SEE ALSO
+  .BR mkfs.xfs (8),
+  .BR xfsctl (3),
+
 
