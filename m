@@ -1,68 +1,224 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:56894 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:57902 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752133AbeEOPGy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 15 May 2018 11:06:54 -0400
-Subject: Re: [PATCH 5/5] xfs_io: add label command
-References: <5957a0ff-0fd7-c1f3-2d44-86b825c2eb3b@redhat.com>
- <ef558e14-5b31-4c5a-a07c-3d2ac67dd993@redhat.com>
- <20180515043241.GG23861@dastard>
+        id S1752425AbeEOPWj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 15 May 2018 11:22:39 -0400
+Subject: [PATCH V3] test online label ioctl
+References: <2a743318-585d-9eb1-5430-2b07246348ab@redhat.com>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <d5db1a4e-4efe-30cb-4c8d-0a32f1f50a94@sandeen.net>
-Date: Tue, 15 May 2018 10:06:53 -0500
+Message-ID: <d65893a4-c6d8-1d85-4650-e63d04e8366a@sandeen.net>
+Date: Tue, 15 May 2018 10:22:37 -0500
 MIME-Version: 1.0
-In-Reply-To: <20180515043241.GG23861@dastard>
+In-Reply-To: <2a743318-585d-9eb1-5430-2b07246348ab@redhat.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@redhat.com>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>
+
+This tests the online label ioctl that btrfs has, which has been
+recently proposed for XFS.
+
+To run, it requires an updated xfs_io with the label command and a
+filesystem that supports it
+
+A slight change here to _require_xfs_io_command as well, so that tests
+which simply fail with "Inappropriate ioctl" can be caught in the
+common case.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+(urgh send as proper new thread, sorry)
+
+This passes on btrfs, _notruns on xfs/ext4 of yore, and passes
+on xfs w/ my online label patchset (as long as xfs_io has the new
+capability)
+
+V2: Add a max label length helper
+     Set the proper btrfs max label length o_O oops
+     Filter trailing whitespace from blkid output
+
+V3: lowercase local vars, simplify max label len function
 
 
 
-On 5/14/18 11:32 PM, Dave Chinner wrote:
-> On Mon, May 14, 2018 at 12:43:20PM -0500, Eric Sandeen wrote:
->> This adds a get/set label command to xfs_io.
-> ....
->> +static int
->> +label_f(
->> +	int		argc,
->> +	char		**argv)
->> +{
->> +	int		error;
->> +	char		label[FSLABEL_MAX];
->> +
->> +	if (argc == 1) {
->> +		memset(&label, 0, sizeof(label));
->> +		error = ioctl(file->fd, FS_IOC_GET_FSLABEL, &label);
->> +	} else {
->> +		strncpy(label, argv[1], sizeof(label));
->> +		error = ioctl(file->fd, FS_IOC_SET_FSLABEL, &label);
->> +	}
->> +
->> +	if (error)
->> +		perror("label");
-> 
-> Need to set exitcode = 1 here so that xfs_io fails with a non-zero
-> exit status....
-> 
->> +	else
->> +		printf("label = \"%s\"\n", label);
->> +
->> +	return error;
-> 
-> Because this isn't the exit status - this is the "continue
-> processing the next command" return value. i.e. return 0 if we want
-> to continue, non-zero if we want to abort further CLI processing....
+diff --git a/common/rc b/common/rc
+index ffe53236..333cfb82 100644
+--- a/common/rc
++++ b/common/rc
+@@ -2144,6 +2144,9 @@ _require_xfs_io_command()
+  		echo $testio | grep -q "Inappropriate ioctl" && \
+  			_notrun "xfs_io $command support is missing"
+  		;;
++	"label")
++		testio=`$XFS_IO_PROG -c "label" $TEST_DIR 2>&1`
++		;;
+  	"open")
+  		# -c "open $f" is broken in xfs_io <= 4.8. Along with the fix,
+  		# a new -C flag was introduced to execute one shot commands.
+@@ -2182,7 +2185,7 @@ _require_xfs_io_command()
+  	rm -f $testfile 2>&1 > /dev/null
+  	echo $testio | grep -q "not found" && \
+  		_notrun "xfs_io $command support is missing"
+-	echo $testio | grep -q "Operation not supported" && \
++	echo $testio | grep -q "Operation not supported\|Inappropriate ioctl" && \
+  		_notrun "xfs_io $command failed (old kernel/wrong fs?)"
+  	echo $testio | grep -q "Invalid" && \
+  		_notrun "xfs_io $command failed (old kernel/wrong fs/bad args?)"
+@@ -3788,6 +3791,29 @@ _require_scratch_feature()
+  	esac
+  }
+  
++# The maximum filesystem label length, /not/ including terminating NULL
++_label_get_max()
++{
++	case $FSTYP in
++	xfs)
++		echo 12
++		;;
++	btrfs)
++		echo 255
++		;;
++	*)
++		_notrun "$FSTYP does not define maximum label length"
++		;;
++	esac
++}
++
++# Helper to check above early in a script
++_require_label_get_max()
++{
++	# Just call _label_get_max which will notrun if appropriate
++	dummy=$(_label_get_max)
++}
++
+  init_rc
+  
+  ################################################################################
+diff --git a/tests/generic/479 b/tests/generic/479
+old mode 100644
+new mode 100755
+diff --git a/tests/generic/488 b/tests/generic/488
+new file mode 100755
+index 00000000..9521c5ba
+--- /dev/null
++++ b/tests/generic/488
+@@ -0,0 +1,90 @@
++#! /bin/bash
++# FS QA Test 488
++#
++# Test the online filesystem label set/get ioctls
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2018 Red Hat, Inc.  All Rights Reserved.
++# Author: Eric Sandeen <sandeen@redhat.com>
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# real QA test starts here
++
++_supported_fs generic
++_supported_os Linux
++_require_scratch
++_require_xfs_io_command "label"
++_require_label_get_max
++
++_scratch_mkfs > $seqres.full 2>&1
++_scratch_mount
++
++# Make sure we can set & clear the label
++$XFS_IO_PROG -c "label label.$seq" $SCRATCH_MNT
++$XFS_IO_PROG -c "label" $SCRATCH_MNT
++
++# And that userspace can see it now, while mounted
++# NB: some blkid has trailing whitespace, filter it out here
++blkid -s LABEL $SCRATCH_DEV | _filter_scratch | sed -e "s/ $//g"
++
++# And that the it is still there when it's unmounted
++_scratch_unmount
++blkid -s LABEL $SCRATCH_DEV | _filter_scratch | sed -e "s/ $//g"
++
++# And that it persists after a remount
++_scratch_mount
++$XFS_IO_PROG -c "label" $SCRATCH_MNT
++
++# And that a too-long label is rejected, beyond the interface max:
++fs_label=$(perl -e "print 'l' x 257;")
++$XFS_IO_PROG -c "label $fs_label" $SCRATCH_MNT
++
++# And it succeeds right at the filesystem max:
++max_label_len=$(_label_get_max)
++fs_label=$(perl -e "print 'o' x $max_label_len;")
++$XFS_IO_PROG -c "label $fs_label" $SCRATCH_MNT | sed -e 's/o\+/MAXLABEL/'
++
++# And that it fails past the filesystem max:
++let toolong_label_len=max_label_len+1
++fs_label=$(perl -e "print 'o' x $toolong_label_len;")
++$XFS_IO_PROG -c "label $fs_label " $SCRATCH_MNT
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/488.out b/tests/generic/488.out
+new file mode 100644
+index 00000000..3c70a15f
+--- /dev/null
++++ b/tests/generic/488.out
+@@ -0,0 +1,9 @@
++QA output created by 488
++label = "label.488"
++label = "label.488"
++SCRATCH_DEV: LABEL="label.488"
++SCRATCH_DEV: LABEL="label.488"
++label = "label.488"
++label: Invalid argument
++label = "MAXLABEL"
++label: Invalid argument
+diff --git a/tests/generic/group b/tests/generic/group
+index dc637c96..6266213e 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -490,3 +490,4 @@
+  485 auto quick insert
+  486 auto quick attr
+  487 auto quick
++488 auto quick
 
-Hm, ok.  Today we only set exitcode for bmap, fiemap, freeze/thaw, and
-imap.  It's really consistently used at all, and needs an audit I guess.
-
-Maybe we should add an io_error() which sets it automatically, or something.
-
-Anyway, I can add it here.
-
--Eric
