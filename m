@@ -1,76 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bullwinkle.deer-run.com ([50.23.32.3]:32969 "EHLO
-        bullwinkle.deer-run.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750952AbeEOE1q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 May 2018 00:27:46 -0400
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (1.0)
-Subject: Re: [PATCH] xfs_db: add blockget -L option
-From: Hal Pomeranz <hal@deer-run.com>
-In-Reply-To: <3ae25107-7242-a645-c0f7-784f35ed3e79@sandeen.net>
-Date: Tue, 15 May 2018 00:27:38 -0400
-Content-Transfer-Encoding: 8BIT
-Message-Id: <1C5C502C-D536-4C2C-B7CA-9B13F9B2EB20@deer-run.com>
-References: <20180510213636.GA5045@deer-run.com> <3ae25107-7242-a645-c0f7-784f35ed3e79@sandeen.net>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:18335 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750952AbeEOEdZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 May 2018 00:33:25 -0400
+Date: Tue, 15 May 2018 14:32:41 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 5/5] xfs_io: add label command
+Message-ID: <20180515043241.GG23861@dastard>
+References: <5957a0ff-0fd7-c1f3-2d44-86b825c2eb3b@redhat.com>
+ <ef558e14-5b31-4c5a-a07c-3d2ac67dd993@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ef558e14-5b31-4c5a-a07c-3d2ac67dd993@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-I get the argument Dave is making. But the reality of forensics is that many of our tools are not reliable in all cases. We do a lot of cross-validation for crucial results. 
+On Mon, May 14, 2018 at 12:43:20PM -0500, Eric Sandeen wrote:
+> This adds a get/set label command to xfs_io.
+....
+> +static int
+> +label_f(
+> +	int		argc,
+> +	char		**argv)
+> +{
+> +	int		error;
+> +	char		label[FSLABEL_MAX];
+> +
+> +	if (argc == 1) {
+> +		memset(&label, 0, sizeof(label));
+> +		error = ioctl(file->fd, FS_IOC_GET_FSLABEL, &label);
+> +	} else {
+> +		strncpy(label, argv[1], sizeof(label));
+> +		error = ioctl(file->fd, FS_IOC_SET_FSLABEL, &label);
+> +	}
+> +
+> +	if (error)
+> +		perror("label");
 
-Having multiple tools helps. Right now, we basically have nothing for XFS. So adding this option to xfs_db makes things better. 
+Need to set exitcode = 1 here so that xfs_io fails with a non-zero
+exit status....
 
-We work with underplayed file systems constantly, and it’s less of a worry than you might think. Try my patched version of xfs_db on a live file system of your choice. See if you can make it blow up. When it doesn’t, please consider folding in my patch.
+> +	else
+> +		printf("label = \"%s\"\n", label);
+> +
+> +	return error;
 
---Hal
+Because this isn't the exit status - this is the "continue
+processing the next command" return value. i.e. return 0 if we want
+to continue, non-zero if we want to abort further CLI processing....
 
-> On May 14, 2018, at 11:14 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
-> 
-> 
-> 
->> On 5/10/18 4:36 PM, hal@deer-run.com wrote:
->> From: Hal Pomeranz <hal@deer-run.com>
->> Allow blockget on a mounted file system or "dirty" file system image
->> with pending log entries-- by simply ignoring the log.  This makes
->> xfs_db more useful for forensics where we are often dealing with these
->> types of images.  Flushing log entries to disk by mounting/unmounting
->> the file system would allow us to use blockget, but would make changes
->> to the file system state which are not desirable in forensics contexts.
->> Signed-off-by: Hal Pomeranz <hal@deer-run.com>
-> 
-> Well, I'm back on the fence about this one; I know I steered you in
-> this direction, but after talking to dchinner a bit, he raised some valid
-> concerns about adding an option which essentially makes the tool behave
-> in unpredictable ways (by trying to traverse an inconsistent filesystem).
-> 
-> I had jumped to the conclusion that the usecase was for examining an
-> offline filesystem image without needing to perturb it by replaying the
-> log; Dave pointed out that you're talking about using this on a live
-> filesystem, and even baking this behavior into other higher level tools.
-> That kind of opened my eyes to all the ways this can go wrong.  :(
-> 
-> Thus spake Dave:
-> 
->> IMO, the only thing worse than not having a forensic tool for a
->> specific job is having a forensic tool provided by a trusted toolkit
->> whose results are unreliable and cannot be trusted....
-> 
-> ...
-> 
->> I'd suggest, in that case, that you limit it's use to off-line or
->> read-only snapshots of online filesystems? This would mean that the
->> results of xfs_db operations (while eceedingly slow) will be
->> reliable.
-> 
-> And in both of those cases, you won't need to ignore a dirty log.
-> Especially with teh express stated purpose of examining live
-> filesystems, I really hate to give you this much rope.
-> 
-> Stuff like parent pointers and fsmap are (eventually) going to give
-> you a much better way to achieve what (I think) you want, here.
-> 
-> -Eric
+Cheers,
 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
