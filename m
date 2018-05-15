@@ -1,140 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:52320 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:47210 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752112AbeENX0I (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 14 May 2018 19:26:08 -0400
-Subject: Re: [PATCH V2] test online label ioctl
-References: <2a743318-585d-9eb1-5430-2b07246348ab@redhat.com>
- <20180514231100.GE23861@dastard>
+        id S1753060AbeEOTz5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 15 May 2018 15:55:57 -0400
+References: 
+Subject: [GRUB PATCH] xfs: accept filesystem with sparse inodes
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <d4dea5fc-9f68-604d-92ec-c9cd2510db52@sandeen.net>
-Date: Mon, 14 May 2018 18:26:07 -0500
+Message-ID: <ce584ae1-ee62-2dcb-9366-eb0a6df6e98e@sandeen.net>
+Date: Tue, 15 May 2018 14:55:55 -0500
 MIME-Version: 1.0
-In-Reply-To: <20180514231100.GE23861@dastard>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>
-Cc: fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>
+To: grub-devel@gnu.org
+Cc: dkiper@net-space.pl, Peter Jones <pjones@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Chris Murphy <lists@colorremedies.com>
 
-On 5/14/18 6:11 PM, Dave Chinner wrote:
-> On Mon, May 14, 2018 at 12:09:16PM -0500, Eric Sandeen wrote:
->> This tests the online label ioctl that btrfs has, which has been
->> recently proposed for XFS.
->>
->> To run, it requires an updated xfs_io with the label command and a
->> filesystem that supports it
->>
->> A slight change here to _require_xfs_io_command as well, so that tests
->> which simply fail with "Inappropriate ioctl" can be caught in the
->> common case.
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
+The sparse inode metadata format became a mkfs.xfs default in
+xfsprogs-4.16.0, and such filesystems are now rejected by grub as
+containing an incompatible feature.
 
-<snip>
- 
->> +# The maximum filesystem label length, not including terminating NULL
->> +_label_get_max()
->> +{
->> +	case $FSTYP in
->> +	xfs)
->> +		MAXLEN=12
->> +		;;
->> +	btrfs)
->> +		MAXLEN=255
->> +		;;
->> +	*)
->> +		MAXLEN=0
-> 
-> Why not just _notrun here?
+In essence, this feature allows xfs to allocate inodes into fragmented
+freespace.  (Without this feature, if xfs could not allocate contiguous
+space for 64 new inodes, inode creation would fail.)
 
-do we want to go through the other steps only to get here and notrun
-halfway through?
+In practice, the disk format change is restricted to the inode btree,
+which as far as I can tell is not used by grub.  If all you're doing
+today is parsing a directory, reading an inode number, and converting
+that inode number to a disk location, then ignoring this feature
+should be fine, so I've added it to XFS_SB_FEAT_INCOMPAT_SUPPORTED
 
->> +		;;
->> +	esac
->> +
->> +	echo $MAXLEN
->> +}
->> +
->> +_require_label_get_max()
->> +{
->> +	if [ $(_label_get_max) -eq 0 ]; then
->> +		_notrun "$FSTYP does not define maximum label length"
->> +	fi
-> 
-> And this check can go away?
+I did some brief testing of this patch by hacking up the regression
+tests to completely fragment freespace on the test xfs filesystem, and
+then write a large-ish number of inodes to consume any existing
+contiguous 64-inode chunk.  This way any files the grub tests add and
+traverse would be in such a fragmented inode allocation.  Tests passed,
+but I'm not sure how to cleanly integrate that into the test harness.
 
-We'd like to know if all the validations in this can complete before we
-get started, right?  That's why I did it this way.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-> Also, shouldn't it be _require_online_label_change() ? And then
-> maybe you can move the xfs_io label command check inside it?
+diff --git a/grub-core/fs/xfs.c b/grub-core/fs/xfs.c
+index c6031bd3f..effe9de17 100644
+--- a/grub-core/fs/xfs.c
++++ b/grub-core/fs/xfs.c
+@@ -79,9 +79,18 @@ GRUB_MOD_LICENSE ("GPLv3+");
+  #define XFS_SB_FEAT_INCOMPAT_SPINODES   (1 << 1)        /* sparse inode chunks */
+  #define XFS_SB_FEAT_INCOMPAT_META_UUID  (1 << 2)        /* metadata UUID */
+  
+-/* We do not currently verify metadata UUID so it is safe to read such filesystem */
++/*
++ * Directory entries with ftype are explicitly handled by grub code.
++ *
++ * We do not currently verify metadata UUID, so it is safe to read filesystems
++ * with the XFS_SB_FEAT_INCOMPAT_META_UUID feature.
++ *
++ * We do not currently read the inode btrees, so it is safe to read filesystems
++ * with the XFS_SB_FEAT_INCOMPAT_SPINODES feature.
++ */
+  #define XFS_SB_FEAT_INCOMPAT_SUPPORTED \
+  	(XFS_SB_FEAT_INCOMPAT_FTYPE | \
++	 XFS_SB_FEAT_INCOMPAT_SPINODES | \
+  	 XFS_SB_FEAT_INCOMPAT_META_UUID)
+  
+  struct grub_xfs_sblock
 
-Well, we want to know a lot of things:
-
-1) can the kernel code for this filesystem support online label
-2) does xfs_io support the label command
-3) does this test know the maximum label length to test for this fs
-
-the above stuff is for 3)
-
->> +# remove previous $seqres.full before test
->> +rm -f $seqres.full
->> +
->> +# real QA test starts here
->> +
->> +_supported_fs generic
->> +_supported_os Linux
->> +_require_scratch
->> +_require_xfs_io_command "label"
->> +_require_label_get_max
->> +
->> +_scratch_mkfs > $seqres.full 2>&1
->> +_scratch_mount
->> +
->> +# Make sure we can set & clear the label
->> +$XFS_IO_PROG -c "label label.$seq" $SCRATCH_MNT
->> +$XFS_IO_PROG -c "label" $SCRATCH_MNT
->> +
->> +# And that userspace can see it now, while mounted
->> +# NB: some blkid has trailing whitespace, filter it out here
->> +blkid -s LABEL $SCRATCH_DEV | _filter_scratch | sed -e "s/ $//g"
->> +
->> +# And that the it is still there when it's unmounted
->> +_scratch_unmount
->> +blkid -s LABEL $SCRATCH_DEV | _filter_scratch | sed -e "s/ $//g"
-> 
-> Ok, so "LABEL" here is a special blkid match token....
-
-yep
-
->> +# And that it persists after a remount
->> +_scratch_mount
->> +$XFS_IO_PROG -c "label" $SCRATCH_MNT
->> +
->> +# And that a too-long label is rejected, beyond the interface max:
->> +LABEL=$(perl -e "print 'l' x 257;")
-> 
-> And now you use it as a variable. Nasty and confusing. Using lower
-> case for local variables is the norm, right? I thought we were only
-> supposed to use upper case for global test harness variables...
-
-I guess I didn't know about that convention (or forgot)
-
-ok, yeah, that's a little confusing I guess.  *shrug*  I can change it
-if you prefer.  Obviously the "blkid -s LABEL" must remain "LABEL"
-
-> But even making it "label" is problematic:
-> 
->> +$XFS_IO_PROG -c "label $LABEL" $SCRATCH_MNT
-> 
-> because "label" is an xfs_io command. Perhaps call it "fs_label"?
-
-ok
-
--Eric
