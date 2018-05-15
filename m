@@ -1,99 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:57432 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752452AbeEOWfy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 May 2018 18:35:54 -0400
-Subject: [PATCH 20/22] xfs: scrub should set preen if attr leaf has holes
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 15 May 2018 15:35:48 -0700
-Message-ID: <152642374847.1556.13690686401136684889.stgit@magnolia>
-In-Reply-To: <152642361893.1556.9335169821674946249.stgit@magnolia>
-References: <152642361893.1556.9335169821674946249.stgit@magnolia>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:18687 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752208AbeEOXIO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 May 2018 19:08:14 -0400
+Date: Wed, 16 May 2018 09:08:11 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: change xfs_update_secondary_supers to use
+ xfS_sb_read_secondary
+Message-ID: <20180515230811.GJ23861@dastard>
+References: <20180515204721.GM4933@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180515204721.GM4933@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, david@fromorbit.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, May 15, 2018 at 01:47:21PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Use the new helper to read secondary superblocks instead of opencoding
+> it ourselves.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_fsops.c |   10 ++++------
+>  1 file changed, 4 insertions(+), 6 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index 056a76689197..40c131ebf772 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -191,18 +191,15 @@ xfs_growfs_data_private(
+>   */
+>  int
+>  xfs_update_secondary_supers(
+> -	xfs_mount_t		*mp)
+> +	struct xfs_mount	*mp)
+>  {
+> -	int			error, saved_error;
+> +	struct xfs_buf		*bp;
+>  	xfs_agnumber_t		agno;
+> -	xfs_buf_t		*bp;
+> +	int			error, saved_error;
+>  
+>  	error = saved_error = 0;
+>  
+>  	for (agno = 1; agno < mp->m_sb.sb_agcount; agno++) {
+> -		error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
+> -			  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
+> -			  XFS_FSS_TO_BB(mp, 1), 0, &bp, &xfs_sb_buf_ops);
+>  		/*
+>  		 * If we get an error reading or writing alternate superblocks,
+>  		 * continue.  xfs_repair chooses the "best" superblock based
+> @@ -210,6 +207,7 @@ xfs_update_secondary_supers(
+>  		 * superblocks un-updated than updated, and xfs_repair may
+>  		 * pick them over the properly-updated primary.
+>  		 */
+> +		error = xfs_sb_read_secondary(mp, NULL, agno, &bp);
+>  		if (error) {
+>  			xfs_warn(mp,
+>  		"error %d reading secondary superblock for ag %d",
 
-If an attr block indicates that it could use compaction, set the preen
-flag to have the attr fork rebuilt, since the attr fork rebuilder can
-take care of that for us.
+Why change this now when my growfs patchset ireworks it and then
+moves the function entirely? Doing this now just breaks that
+patchset unnecessarily and forces another rebase - can we move this
+to the end of the growfs patchset?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/scrub/attr.c    |    2 ++
- fs/xfs/scrub/dabtree.c |   15 +++++++++++++++
- fs/xfs/scrub/dabtree.h |    1 +
- fs/xfs/scrub/trace.h   |    1 +
- 4 files changed, 19 insertions(+)
+Cheers,
 
-
-diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-index ac25d624286e..ce27357a8dd1 100644
---- a/fs/xfs/scrub/attr.c
-+++ b/fs/xfs/scrub/attr.c
-@@ -307,6 +307,8 @@ xfs_scrub_xattr_block(
- 		xfs_scrub_da_set_corrupt(ds, level);
- 	if (!xfs_scrub_xattr_set_map(ds->sc, usedmap, 0, hdrsize))
- 		xfs_scrub_da_set_corrupt(ds, level);
-+	if (leafhdr.holes)
-+		xfs_scrub_da_set_preen(ds, level);
- 
- 	if (ds->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
- 		goto out;
-diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
-index bffdb7dc09bf..d11364d48286 100644
---- a/fs/xfs/scrub/dabtree.c
-+++ b/fs/xfs/scrub/dabtree.c
-@@ -99,6 +99,21 @@ xfs_scrub_da_set_corrupt(
- 			__return_address);
- }
- 
-+/* Flag a da btree node in need of optimization. */
-+void
-+xfs_scrub_da_set_preen(
-+	struct xfs_scrub_da_btree	*ds,
-+	int				level)
-+{
-+	struct xfs_scrub_context	*sc = ds->sc;
-+
-+	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_PREEN;
-+	trace_xfs_scrub_fblock_preen(sc, ds->dargs.whichfork,
-+			xfs_dir2_da_to_db(ds->dargs.geo,
-+				ds->state->path.blk[level].blkno),
-+			__return_address);
-+}
-+
- /* Find an entry at a certain level in a da btree. */
- STATIC void *
- xfs_scrub_da_btree_entry(
-diff --git a/fs/xfs/scrub/dabtree.h b/fs/xfs/scrub/dabtree.h
-index d31468d68cef..681f82faee3e 100644
---- a/fs/xfs/scrub/dabtree.h
-+++ b/fs/xfs/scrub/dabtree.h
-@@ -50,6 +50,7 @@ bool xfs_scrub_da_process_error(struct xfs_scrub_da_btree *ds, int level, int *e
- 
- /* Check for da btree corruption. */
- void xfs_scrub_da_set_corrupt(struct xfs_scrub_da_btree *ds, int level);
-+void xfs_scrub_da_set_preen(struct xfs_scrub_da_btree *ds, int level);
- 
- int xfs_scrub_da_btree_hash(struct xfs_scrub_da_btree *ds, int level,
- 			    __be32 *hashp);
-diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index 794d56bb1af8..1e25cc1cf34b 100644
---- a/fs/xfs/scrub/trace.h
-+++ b/fs/xfs/scrub/trace.h
-@@ -244,6 +244,7 @@ DEFINE_EVENT(xfs_scrub_fblock_error_class, name, \
- 
- DEFINE_SCRUB_FBLOCK_ERROR_EVENT(xfs_scrub_fblock_error);
- DEFINE_SCRUB_FBLOCK_ERROR_EVENT(xfs_scrub_fblock_warning);
-+DEFINE_SCRUB_FBLOCK_ERROR_EVENT(xfs_scrub_fblock_preen);
- 
- TRACE_EVENT(xfs_scrub_incomplete,
- 	TP_PROTO(struct xfs_scrub_context *sc, void *ret_ip),
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
