@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:44776 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751774AbeEOWeC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 May 2018 18:34:02 -0400
-Subject: [PATCH 03/22] xfs: add helpers to collect and sift btree block
- pointers during repair
+Received: from aserp2120.oracle.com ([141.146.126.78]:56616 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751774AbeEOWeU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 May 2018 18:34:20 -0400
+Subject: [PATCH 06/22] xfs: add a repair helper to reset superblock counters
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 15 May 2018 15:33:58 -0700
-Message-ID: <152642363794.1556.12771807615463619233.stgit@magnolia>
+Date: Tue, 15 May 2018 15:34:16 -0700
+Message-ID: <152642365674.1556.6776151224606075985.stgit@magnolia>
 In-Reply-To: <152642361893.1556.9335169821674946249.stgit@magnolia>
 References: <152642361893.1556.9335169821674946249.stgit@magnolia>
 MIME-Version: 1.0
@@ -21,276 +20,154 @@ Cc: linux-xfs@vger.kernel.org, david@fromorbit.com
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Add some helpers to assemble a list of fs block extents.  Generally,
-repair functions will iterate the rmapbt to make a list (1) of all
-extents owned by the nominal owner of the metadata structure; then they
-will iterate all other structures with the same rmap owner to make a
-list (2) of active blocks; and finally we have a subtraction function to
-subtract all the blocks in (2) from (1), with the result that (1) is now
-a list of blocks that were owned by the old btree and must be disposed.
+Add a helper function to reset the superblock inode and block counters.
+The AG rebuilding functions will need these to adjust the counts if they
+need to change as a part of recovering from corruption.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/scrub/repair.c |  207 +++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/repair.h |   31 +++++++
- 2 files changed, 238 insertions(+)
+ fs/xfs/scrub/repair.c |   79 +++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/repair.h |    7 ++++
+ fs/xfs/scrub/scrub.c  |    2 +
+ fs/xfs/scrub/scrub.h  |    1 +
+ 4 files changed, 89 insertions(+)
 
 
 diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index 72f04a717150..8e8ecddd7537 100644
+index 06c84f76d7ff..1ca7e124e1a7 100644
 --- a/fs/xfs/scrub/repair.c
 +++ b/fs/xfs/scrub/repair.c
-@@ -361,3 +361,210 @@ xfs_repair_init_btblock(
+@@ -944,3 +944,82 @@ xfs_repair_find_ag_btree_roots(
  
- 	return 0;
+ 	return error;
  }
 +
-+/* Collect a dead btree extent for later disposal. */
++/* Reset the superblock counters from the AGF/AGI. */
 +int
-+xfs_repair_collect_btree_extent(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_repair_extent_list	*exlist,
-+	xfs_fsblock_t			fsbno,
-+	xfs_extlen_t			len)
++xfs_repair_reset_counters(
++	struct xfs_mount	*mp)
 +{
-+	struct xfs_repair_extent	*rex;
++	struct xfs_buf		*agi_bp;
++	struct xfs_buf		*agf_bp;
++	struct xfs_agi		*agi;
++	struct xfs_agf		*agf;
++	xfs_agnumber_t		agno;
++	xfs_ino_t		icount = 0;
++	xfs_ino_t		ifree = 0;
++	xfs_filblks_t		fdblocks = 0;
++	int64_t			delta_icount;
++	int64_t			delta_ifree;
++	int64_t			delta_fdblocks;
++	int			error;
 +
-+	trace_xfs_repair_collect_btree_extent(sc->mp,
-+			XFS_FSB_TO_AGNO(sc->mp, fsbno),
-+			XFS_FSB_TO_AGBNO(sc->mp, fsbno), len);
++	trace_xfs_repair_reset_counters(mp);
 +
-+	rex = kmem_alloc(sizeof(struct xfs_repair_extent), KM_MAYFAIL);
-+	if (!rex)
-+		return -ENOMEM;
++	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
++		/* Count all the inodes... */
++		error = xfs_ialloc_read_agi(mp, NULL, agno, &agi_bp);
++		if (error)
++			return error;
++		agi = XFS_BUF_TO_AGI(agi_bp);
++		icount += be32_to_cpu(agi->agi_count);
++		ifree += be32_to_cpu(agi->agi_freecount);
++		xfs_buf_relse(agi_bp);
 +
-+	INIT_LIST_HEAD(&rex->list);
-+	rex->fsbno = fsbno;
-+	rex->len = len;
-+	list_add_tail(&rex->list, &exlist->list);
++		/* Add up the free/freelist/bnobt/cntbt blocks... */
++		error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agf_bp);
++		if (error)
++			return error;
++		if (!agf_bp)
++			return -ENOMEM;
++		agf = XFS_BUF_TO_AGF(agf_bp);
++		fdblocks += be32_to_cpu(agf->agf_freeblks);
++		fdblocks += be32_to_cpu(agf->agf_flcount);
++		fdblocks += be32_to_cpu(agf->agf_btreeblks);
++		xfs_buf_relse(agf_bp);
++	}
++
++	/*
++	 * Reinitialize the counters.  The on-disk and in-core counters differ
++	 * by the number of inodes/blocks reserved by the admin, the per-AG
++	 * reservation, and any transactions in progress, so we have to
++	 * account for that.  First we take the sb lock and update its
++	 * counters...
++	 */
++	spin_lock(&mp->m_sb_lock);
++	delta_icount = (int64_t)mp->m_sb.sb_icount - icount;
++	delta_ifree = (int64_t)mp->m_sb.sb_ifree - ifree;
++	delta_fdblocks = (int64_t)mp->m_sb.sb_fdblocks - fdblocks;
++	mp->m_sb.sb_icount = icount;
++	mp->m_sb.sb_ifree = ifree;
++	mp->m_sb.sb_fdblocks = fdblocks;
++	spin_unlock(&mp->m_sb_lock);
++
++	/* ...and then update the per-cpu counters. */
++	if (delta_icount) {
++		error = xfs_mod_icount(mp, delta_icount);
++		if (error)
++			return error;
++	}
++	if (delta_ifree) {
++		error = xfs_mod_ifree(mp, delta_ifree);
++		if (error)
++			return error;
++	}
++	if (delta_fdblocks) {
++		error = xfs_mod_fdblocks(mp, delta_fdblocks, false);
++		if (error)
++			return error;
++	}
 +
 +	return 0;
 +}
-+
-+/*
-+ * Dispose of btree blocks from the old btree so that we can start using the
-+ * new btree once the transaction commits.
-+ */
-+int
-+xfs_repair_reap_btree_extents(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_repair_extent_list	*exlist,
-+	struct xfs_owner_info		*oinfo,
-+	enum xfs_ag_resv_type		type)
-+{
-+	struct xfs_repair_extent	*rex;
-+	struct xfs_repair_extent	*n;
-+	int				error = 0;
-+
-+	for_each_xfs_repair_extent_safe(rex, n, exlist) {
-+		/* TODO: free the extent */
-+		list_del(&rex->list);
-+		kmem_free(rex);
-+	}
-+
-+	return error;
-+}
-+
-+/*
-+ * An error happened during the rebuild so the transaction will be cancelled.
-+ * The fs will shut down, and the administrator has to unmount and run repair.
-+ * Therefore, free all the memory associated with the list so we can die.
-+ */
-+void
-+xfs_repair_cancel_btree_extents(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_repair_extent_list	*exlist)
-+{
-+	struct xfs_repair_extent	*rex;
-+	struct xfs_repair_extent	*n;
-+
-+	for_each_xfs_repair_extent_safe(rex, n, exlist) {
-+		list_del(&rex->list);
-+		kmem_free(rex);
-+	}
-+}
-+
-+/* Compare two btree extents. */
-+static int
-+xfs_repair_btree_extent_cmp(
-+	void				*priv,
-+	struct list_head		*a,
-+	struct list_head		*b)
-+{
-+	struct xfs_repair_extent	*ap;
-+	struct xfs_repair_extent	*bp;
-+
-+	ap = container_of(a, struct xfs_repair_extent, list);
-+	bp = container_of(b, struct xfs_repair_extent, list);
-+
-+	if (ap->fsbno > bp->fsbno)
-+		return 1;
-+	else if (ap->fsbno < bp->fsbno)
-+		return -1;
-+	return 0;
-+}
-+
-+/*
-+ * Remove all the blocks mentioned in sublist from the extents in exlist.
-+ *
-+ * The intent is that callers will iterate the rmapbt for all of its records
-+ * for a given owner to generate exlist; and iterate all the blocks of the
-+ * metadata structures that are not being rebuilt and have the same rmapbt
-+ * owner to generate sublist.  This routine subtracts all the extents
-+ * mentioned in sublist from all the extents linked in exlist, which leaves
-+ * exlist as the list of blocks that are not accounted for, which we assume
-+ * are the dead blocks of the old metadata structure.  The blocks mentioned in
-+ * exlist can be reaped.
-+ */
-+#define XFS_REPAIR_EXT_LEFT_CONTIG	(1 << 0)
-+#define XFS_REPAIR_EXT_RIGHT_CONTIG	(1 << 1)
-+int
-+xfs_repair_subtract_extents(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_repair_extent_list	*exlist,
-+	struct xfs_repair_extent_list	*sublist)
-+{
-+	struct list_head		*lp;
-+	struct xfs_repair_extent	*ex;
-+	struct xfs_repair_extent	*newex;
-+	struct xfs_repair_extent	*subex;
-+	xfs_fsblock_t			sub_fsb;
-+	xfs_extlen_t			sub_len;
-+	int				state;
-+	int				error = 0;
-+
-+	if (list_empty(&exlist->list) || list_empty(&sublist->list))
-+		return 0;
-+	ASSERT(!list_empty(&sublist->list));
-+
-+	list_sort(NULL, &exlist->list, xfs_repair_btree_extent_cmp);
-+	list_sort(NULL, &sublist->list, xfs_repair_btree_extent_cmp);
-+
-+	subex = list_first_entry(&sublist->list, struct xfs_repair_extent,
-+			list);
-+	lp = exlist->list.next;
-+	while (lp != &exlist->list) {
-+		ex = list_entry(lp, struct xfs_repair_extent, list);
-+
-+		/*
-+		 * Advance subex and/or ex until we find a pair that
-+		 * intersect or we run out of extents.
-+		 */
-+		while (subex->fsbno + subex->len <= ex->fsbno) {
-+			if (list_is_last(&subex->list, &sublist->list))
-+				goto out;
-+			subex = list_next_entry(subex, list);
-+		}
-+		if (subex->fsbno >= ex->fsbno + ex->len) {
-+			lp = lp->next;
-+			continue;
-+		}
-+
-+		/* trim subex to fit the extent we have */
-+		sub_fsb = subex->fsbno;
-+		sub_len = subex->len;
-+		if (subex->fsbno < ex->fsbno) {
-+			sub_len -= ex->fsbno - subex->fsbno;
-+			sub_fsb = ex->fsbno;
-+		}
-+		if (sub_len > ex->len)
-+			sub_len = ex->len;
-+
-+		state = 0;
-+		if (sub_fsb == ex->fsbno)
-+			state |= XFS_REPAIR_EXT_LEFT_CONTIG;
-+		if (sub_fsb + sub_len == ex->fsbno + ex->len)
-+			state |= XFS_REPAIR_EXT_RIGHT_CONTIG;
-+		switch (state) {
-+		case XFS_REPAIR_EXT_LEFT_CONTIG:
-+			/* Coincides with only the left. */
-+			ex->fsbno += sub_len;
-+			ex->len -= sub_len;
-+			break;
-+		case XFS_REPAIR_EXT_RIGHT_CONTIG:
-+			/* Coincides with only the right. */
-+			ex->len -= sub_len;
-+			lp = lp->next;
-+			break;
-+		case XFS_REPAIR_EXT_LEFT_CONTIG | XFS_REPAIR_EXT_RIGHT_CONTIG:
-+			/* Total overlap, just delete ex. */
-+			lp = lp->next;
-+			list_del(&ex->list);
-+			kmem_free(ex);
-+			break;
-+		case 0:
-+			/*
-+			 * Deleting from the middle: add the new right extent
-+			 * and then shrink the left extent.
-+			 */
-+			newex = kmem_alloc(sizeof(struct xfs_repair_extent),
-+					KM_MAYFAIL);
-+			if (!newex) {
-+				error = -ENOMEM;
-+				goto out;
-+			}
-+			INIT_LIST_HEAD(&newex->list);
-+			newex->fsbno = sub_fsb + sub_len;
-+			newex->len = ex->len - (sub_fsb - ex->fsbno) - sub_len;
-+			list_add(&newex->list, &ex->list);
-+			ex->len = sub_fsb - ex->fsbno;
-+			lp = lp->next;
-+			break;
-+		default:
-+			ASSERT(0);
-+			break;
-+		}
-+	}
-+
-+out:
-+	return error;
-+}
-+#undef XFS_REPAIR_EXT_LEFT_CONTIG
-+#undef XFS_REPAIR_EXT_RIGHT_CONTIG
 diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-index 40990fa5f381..b288201030f8 100644
+index 55441774e8e5..eea32a26f947 100644
 --- a/fs/xfs/scrub/repair.h
 +++ b/fs/xfs/scrub/repair.h
-@@ -43,6 +43,37 @@ int xfs_repair_init_btblock(struct xfs_scrub_context *sc, xfs_fsblock_t fsb,
- 		struct xfs_buf **bpp, xfs_btnum_t btnum,
- 		const struct xfs_buf_ops *ops);
+@@ -96,6 +96,7 @@ int xfs_repair_find_ag_btree_roots(struct xfs_scrub_context *sc,
+ 		struct xfs_buf *agf_bp,
+ 		struct xfs_repair_find_ag_btree *btree_info,
+ 		struct xfs_buf *agfl_bp);
++int xfs_repair_reset_counters(struct xfs_mount *mp);
  
-+struct xfs_repair_extent {
-+	struct list_head		list;
-+	xfs_fsblock_t			fsbno;
-+	xfs_extlen_t			len;
-+};
-+
-+struct xfs_repair_extent_list {
-+	struct list_head		list;
-+};
-+
-+static inline void
-+xfs_repair_init_extent_list(
-+	struct xfs_repair_extent_list	*exlist)
-+{
-+	INIT_LIST_HEAD(&exlist->list);
-+}
-+
-+#define for_each_xfs_repair_extent_safe(rbe, n, exlist) \
-+	list_for_each_entry_safe((rbe), (n), &(exlist)->list, list)
-+int xfs_repair_collect_btree_extent(struct xfs_scrub_context *sc,
-+		struct xfs_repair_extent_list *btlist, xfs_fsblock_t fsbno,
-+		xfs_extlen_t len);
-+int xfs_repair_reap_btree_extents(struct xfs_scrub_context *sc,
-+		struct xfs_repair_extent_list *btlist,
-+		struct xfs_owner_info *oinfo, enum xfs_ag_resv_type type);
-+void xfs_repair_cancel_btree_extents(struct xfs_scrub_context *sc,
-+		struct xfs_repair_extent_list *btlist);
-+int xfs_repair_subtract_extents(struct xfs_scrub_context *sc,
-+		struct xfs_repair_extent_list *exlist,
-+		struct xfs_repair_extent_list *sublist);
-+
  /* Metadata repairers */
  
- int xfs_repair_probe(struct xfs_scrub_context *sc);
+@@ -121,6 +122,12 @@ xfs_repair_calc_ag_resblks(
+ 	return 0;
+ }
+ 
++static inline int xfs_repair_reset_counters(struct xfs_mount *mp)
++{
++	ASSERT(0);
++	return -EIO;
++}
++
+ #define xfs_repair_probe		xfs_repair_notsupported
+ 
+ #endif /* CONFIG_XFS_ONLINE_REPAIR */
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index c5999c28c20c..bf5e8dd66133 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -200,6 +200,8 @@ xfs_scrub_teardown(
+ 		kmem_free(sc->buf);
+ 		sc->buf = NULL;
+ 	}
++	if (sc->reset_counters && !error)
++		error = xfs_repair_reset_counters(sc->mp);
+ 	return error;
+ }
+ 
+diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
+index 2f89a84a0e10..1aaea393c2d1 100644
+--- a/fs/xfs/scrub/scrub.h
++++ b/fs/xfs/scrub/scrub.h
+@@ -77,6 +77,7 @@ struct xfs_scrub_context {
+ 	uint				ilock_flags;
+ 	bool				try_harder;
+ 	bool				has_quotaofflock;
++	bool				reset_counters;
+ 
+ 	/* State tracking for single-AG operations. */
+ 	struct xfs_scrub_ag		sa;
 
