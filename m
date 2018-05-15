@@ -1,220 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:53218 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755365AbeE2Dmi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 May 2018 23:42:38 -0400
-Date: Tue, 29 May 2018 13:42:35 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 08/22] xfs: repair superblocks
-Message-ID: <20180529034235.GO10363@dastard>
-References: <152642361893.1556.9335169821674946249.stgit@magnolia>
- <152642367052.1556.15718680556361907984.stgit@magnolia>
+Received: from aserp2120.oracle.com ([141.146.126.78]:56310 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751774AbeEOWdn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 May 2018 18:33:43 -0400
+Subject: [PATCH v15.1 00/22] xfs-4.18: online repair support
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 15 May 2018 15:33:39 -0700
+Message-ID: <152642361893.1556.9335169821674946249.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <152642367052.1556.15718680556361907984.stgit@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, david@fromorbit.com
 
-On Tue, May 15, 2018 at 03:34:30PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> If one of the backup superblocks is found to differ seriously from
-> superblock 0, write out a fresh copy from the in-core sb.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Hi all,
 
-Looks good, couple of minor things and one for a followup patch.
+This is the fifteenth revision of a patchset that adds to XFS kernel
+support for online metadata scrubbing and repair.  There aren't any
+on-disk format changes.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+New in v15 of the patch series is the ability to scavenge broken
+attribute forks for intact extended attributes, to repair minor
+corruptions in the on-disk quota records, and to perform quotacheck
+online.  The series was rebased atop for-next for 4.18 and a number
+of minor bitrots bugs were fixed.
 
-> ---
->  fs/xfs/Makefile                |    1 +
->  fs/xfs/libxfs/xfs_sb.c         |   22 +++++++++++++
->  fs/xfs/libxfs/xfs_sb.h         |    3 ++
->  fs/xfs/scrub/agheader_repair.c |   70 ++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/scrub/repair.h          |    2 +
->  fs/xfs/scrub/scrub.c           |    2 +
->  6 files changed, 99 insertions(+), 1 deletion(-)
->  create mode 100644 fs/xfs/scrub/agheader_repair.c
-> 
-> 
-> diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-> index 0e93a099359b..29fe115f29d5 100644
-> --- a/fs/xfs/Makefile
-> +++ b/fs/xfs/Makefile
-> @@ -174,6 +174,7 @@ xfs-$(CONFIG_XFS_QUOTA)		+= scrub/quota.o
->  # online repair
->  ifeq ($(CONFIG_XFS_ONLINE_REPAIR),y)
->  xfs-y				+= $(addprefix scrub/, \
-> +				   agheader_repair.o \
->  				   repair.o \
->  				   )
->  endif
-> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index ea6c85a4c27c..3a3273572a5c 100644
-> --- a/fs/xfs/libxfs/xfs_sb.c
-> +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -1097,3 +1097,25 @@ xfs_sb_read_secondary(
->  	*bpp = bp;
->  	return 0;
->  }
-> +
-> +/* Get a secondary superblock buffer. */
+The first seven patches are helper functions that are internal to the
+online repair code, as follows:
 
-/* get an uninitialised secondary superblock buffer */
+ - Estimating transaction block reservations and creating transactions
+   suitable for repairing metadata.
+ - Allocating and initializing per-AG btree blocks.
+ - Managing lists of AG blocks; we find all the dead blocks of a btree
+   we're rebuilding by making a list of blocks with the same rmap owner,
+   and subtracting out any blocks in use by other data structures.
+ - Disposing of lists of dead per-AG btree blocks.
+ - Finding btree roots given only rmap information.
+ - Resetting filesystem counters.
+ - Calling dqattach for inodes being repaired and scheduling quotacheck.
 
-> +int
-> +xfs_sb_get_secondary(
-> +	struct xfs_mount	*mp,
-> +	struct xfs_trans	*tp,
-> +	xfs_agnumber_t		agno,
-> +	struct xfs_buf		**bpp)
-> +{
-> +	struct xfs_buf		*bp;
-> +
-> +	ASSERT(agno != 0 && agno != NULLAGNUMBER);
-> +	bp = xfs_trans_get_buf(tp, mp->m_ddev_targp,
-> +			XFS_AG_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
-> +			XFS_FSS_TO_BB(mp, 1), 0);
-> +	if (!bp)
-> +		return -ENOMEM;
-> +	bp->b_ops = &xfs_sb_buf_ops;
-> +	xfs_buf_set_ref(bp, XFS_SSB_REF);
-> +	*bpp = bp;
+Patches 8-22 introduce the online repair functionality for space
+metadata and certain file data.  Our general strategy for rebuilding
+damaged primary metadata is to rebuild the structure completely from
+secondary metadata and free the old structure after the fact; we do not
+try to salvage anything.  Consequently, online repair requires rmapbt.
+Rebuilding the secondary metadata (rmap) is much harder -- due to our
+locking rules (primary and then secondary) we have to shut down the
+filesystem temporarily while we scan all the primary metadata for data
+to put in the new secondary structure.
 
-This should probably call xfs_buf_oneshot(bp) rather than having
-multiple mechanisms for doing the same thing. Same goes for
-xfs_sb_read_secondary().
+Reconstructing inodes is difficult -- the ability to rebuild files
+depends on the filesystem being able to load an inode (xfs_iget), which
+means repair has to know how to zap any part of an inode record that
+might trigger corruption errors from iget.  To that end, we can now
+reset most of an inode record or an inode fork so that we can rebuild
+the file.
 
-> +	return 0;
-> +}
-> diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
-> index 03e0cc6bf3a6..244e0162c49e 100644
-> --- a/fs/xfs/libxfs/xfs_sb.h
-> +++ b/fs/xfs/libxfs/xfs_sb.h
-> @@ -50,5 +50,8 @@ extern int	xfs_fs_geometry(struct xfs_sb *sbp, struct xfs_fsop_geom *geo,
->  extern int	xfs_sb_read_secondary(struct xfs_mount *mp,
->  				struct xfs_trans *tp, xfs_agnumber_t agno,
->  				struct xfs_buf **bpp);
-> +extern int	xfs_sb_get_secondary(struct xfs_mount *mp,
-> +				struct xfs_trans *tp, xfs_agnumber_t agno,
-> +				struct xfs_buf **bpp);
->  
->  #endif	/* __XFS_SB_H__ */
-> diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-> new file mode 100644
-> index 000000000000..8b91e9ebe1e7
-> --- /dev/null
-> +++ b/fs/xfs/scrub/agheader_repair.c
-> @@ -0,0 +1,70 @@
-> +/*
-> + * Copyright (C) 2018 Oracle.  All Rights Reserved.
-> + *
-> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License
-> + * as published by the Free Software Foundation; either version 2
-> + * of the License, or (at your option) any later version.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation,
-> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-> + */
-> +#include "xfs.h"
-> +#include "xfs_fs.h"
-> +#include "xfs_shared.h"
-> +#include "xfs_format.h"
-> +#include "xfs_trans_resv.h"
-> +#include "xfs_mount.h"
-> +#include "xfs_defer.h"
-> +#include "xfs_btree.h"
-> +#include "xfs_bit.h"
-> +#include "xfs_log_format.h"
-> +#include "xfs_trans.h"
-> +#include "xfs_sb.h"
-> +#include "xfs_inode.h"
-> +#include "xfs_alloc.h"
-> +#include "xfs_ialloc.h"
-> +#include "xfs_rmap.h"
-> +#include "scrub/xfs_scrub.h"
-> +#include "scrub/scrub.h"
-> +#include "scrub/common.h"
-> +#include "scrub/trace.h"
-> +
-> +/* Superblock */
-> +
-> +/* Repair the superblock. */
-> +int
-> +xfs_repair_superblock(
-> +	struct xfs_scrub_context	*sc)
-> +{
-> +	struct xfs_mount		*mp = sc->mp;
-> +	struct xfs_buf			*bp;
-> +	xfs_agnumber_t			agno;
-> +	int				error;
-> +
-> +	/* Don't try to repair AG 0's sb; let xfs_repair deal with it. */
-> +	agno = sc->sm->sm_agno;
-> +	if (agno == 0)
-> +		return -EOPNOTSUPP;
-> +
-> +	error = xfs_sb_get_secondary(mp, sc->tp, agno, &bp);
-> +	if (error)
-> +		return error;
-> +
-> +	/* Copy AG 0's superblock to this one. */
-> +	xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
-> +	xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb);
-> +
-> +	/* Write this to disk. */
-> +	xfs_trans_buf_set_type(sc->tp, bp, XFS_BLFT_SB_BUF);
-> +	xfs_trans_log_buf(sc->tp, bp, 0, BBTOB(bp->b_length) - 1);
-> +	return error;
-> +}
+The refcount rebuilder is more or less the same algorithm that
+xfs_repair uses, but modified to reflect the constraints of running in
+kernel space.
 
-This is largely common with the core of xfs_update_secondary_sbs()
-and can go into fs/xfs/libxfs/xfs_sb.c
+For rmap rebuilds, we cannot have anything on the filesystem taking
+exclusive locks and we cannot have any allocation activity at all.
+Therefore, we start by freezing the filesystem to allow other
+transactions to finish.  Next, we scan all other AG metadata structures,
+every inode, and every block map to reconstruct the rmap data.  Then, we
+reinitialize the rmap btree root and reload the rmap btree.  Finally, we
+release all the resource we grabbed and the filesystem returns to
+normal.
 
-int
-xfs_sb_init_secondary(
-	struct xfs_mount	*mp,
-	struct xfs_trans	*tp,
-	xfs_agnumber_t		agno
-	struct xfs_buf		**bpp)
-{
-	struct xfs_buf		*bp;
-	int			error;
+The extended attribute repair function uses a different strategy from
+the other repair code.  Since there are no secondary metadata for
+extended attributes, we can't simply rebuild from an alternate data
+source.  Therefore, this repairer simply walks through the blocks in the
+attribute fork looking for attribute names and values that appear to be
+intact, zaps the attr fork, and re-adds the collected names and values
+to the new fork.  This enables us to trigger optimization notices for
+attributes blocks with holes.
 
-	error = xfs_sb_get_secondary(mp, tp, agno, &bp);
-	if (error)
-		return error;
+Quota repairs are fairly straightforward -- repair anything wrong with
+the inode data fork, eliminate garbage extents, and then iterate all the
+dquot blocks fixing up things that the dquot buffer verifier will
+complain about.  This should leave the quota ip in good enough shape for
+online quotacheck!  Here we reuse the same fs freezing mechanism as in
+the rmap repair to block all other filesystem users.  Then we zero all
+the quota counters, iterate all the inodes in the system to recalculate
+the counts, and log all the dquots to disk.  We of course clear the CHKD
+flags before starting out, so if we crash midway through, the mount time
+quotacheck will run.
 
-	/* Copy AG 0's superblock to this one. */
-	xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
-	xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb);
+Looking forward, the parent pointer feature that Allison Henderson is
+working on will enable us to reconstruct directories, at which point
+we'll be able to reconstruct most of a lightly damaged filesystem.  But
+that's future talk.
 
-	if (tp) {
-		xfs_trans_buf_set_type(sc->tp, bp, XFS_BLFT_SB_BUF);
-		xfs_trans_log_buf(sc->tp, bp, 0, BBTOB(bp->b_length) - 1);
-	}
-	if (bpp)
-		*bpp = bp;
-	return 0;
-}
+If you're going to start using this mess, you probably ought to just
+pull from my git trees.  The kernel patches[1] should apply against
+4.17-rc5.  xfsprogs[2] and xfstests[3] can be found in their usual
+places.  The git trees contain all four series' worth of changes.
 
-Cheers,
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--D
+
+[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
+[2] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
+[3] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=djwong-devel
