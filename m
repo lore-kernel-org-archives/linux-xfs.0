@@ -1,53 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from boksu.net-space.pl ([185.15.1.105]:56361 "EHLO
-        boksu.net-space.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752047AbeEPJQZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 May 2018 05:16:25 -0400
-Received: (from localhost user: 'dkiper' uid#4000 fake: STDIN
-        (dkiper@boksu.net-space.pl)) by router-fw-old.local.net-space.pl
-        id S1839706AbeEPJAL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 16 May 2018 11:00:11 +0200
-Date: Wed, 16 May 2018 11:00:11 +0200
-From: Daniel Kiper <dkiper@net-space.pl>
-Subject: Re: [GRUB PATCH] xfs: accept filesystem with sparse inodes
-Message-ID: <20180516090011.GA24959@router-fw-old.local.net-space.pl>
-References: <ce584ae1-ee62-2dcb-9366-eb0a6df6e98e@sandeen.net>
-Mime-Version: 1.0
+Received: from bombadil.infradead.org ([198.137.202.133]:51784 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752296AbeEOHuF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 May 2018 03:50:05 -0400
+Date: Tue, 15 May 2018 00:50:01 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: xfsprogs 4.16.0 format change, GRUB error unknown filesystem
+Message-ID: <20180515075001.GA17568@infradead.org>
+References: <CAJCQCtQbns7bbE=mWvYuWMi+R5wdphfEjF1F995PVBsoUovnpg@mail.gmail.com>
+ <20180514173610.GC4933@magnolia>
+ <CAJCQCtQ04viW=GzfTBWdQPab8orRmzQ2MjHGCSy_VY_k7-PdRw@mail.gmail.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ce584ae1-ee62-2dcb-9366-eb0a6df6e98e@sandeen.net>
+In-Reply-To: <CAJCQCtQ04viW=GzfTBWdQPab8orRmzQ2MjHGCSy_VY_k7-PdRw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: grub-devel@gnu.org, dkiper@net-space.pl, Peter Jones <pjones@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Chris Murphy <lists@colorremedies.com>
+To: Chris Murphy <lists@colorremedies.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs list <linux-xfs@vger.kernel.org>
 
-On Tue, May 15, 2018 at 02:55:55PM -0500, Eric Sandeen wrote:
-> The sparse inode metadata format became a mkfs.xfs default in
-> xfsprogs-4.16.0, and such filesystems are now rejected by grub as
-> containing an incompatible feature.
->
-> In essence, this feature allows xfs to allocate inodes into fragmented
-> freespace.  (Without this feature, if xfs could not allocate contiguous
-> space for 64 new inodes, inode creation would fail.)
->
-> In practice, the disk format change is restricted to the inode btree,
-> which as far as I can tell is not used by grub.  If all you're doing
-> today is parsing a directory, reading an inode number, and converting
-> that inode number to a disk location, then ignoring this feature
-> should be fine, so I've added it to XFS_SB_FEAT_INCOMPAT_SUPPORTED
->
-> I did some brief testing of this patch by hacking up the regression
-> tests to completely fragment freespace on the test xfs filesystem, and
-> then write a large-ish number of inodes to consume any existing
-> contiguous 64-inode chunk.  This way any files the grub tests add and
-> traverse would be in such a fragmented inode allocation.  Tests passed,
-> but I'm not sure how to cleanly integrate that into the test harness.
->
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+On Mon, May 14, 2018 at 11:52:18AM -0600, Chris Murphy wrote:
+> Is there a reason why this was made default before GRUB was fixed? Or
+> would XFS devs prefer to not support /boot on XFS?
 
-Eric, thank you for posting the patch. LGTM.
-
-Chris, may I ask you to test it and add your "Tested-by:" if it works?
-
-Daniel
+A bootloader that reads any non-trivial file system (and that includes
+XFS for sure) is a bad idea.  So yes, if distros would not do that by
+default it would help a lot.
