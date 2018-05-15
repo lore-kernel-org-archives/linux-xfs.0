@@ -1,252 +1,135 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:43630 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:51772 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752095AbeEOBHq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 May 2018 21:07:46 -0400
-Date: Mon, 14 May 2018 18:07:24 -0700
+        with ESMTP id S1752483AbeEOVTR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 May 2018 17:19:17 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w4FLGGp3112154
+        for <linux-xfs@vger.kernel.org>; Tue, 15 May 2018 21:19:16 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by userp2130.oracle.com with ESMTP id 2hx29wa8eg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 15 May 2018 21:19:16 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w4FLJEUV013213
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 15 May 2018 21:19:15 GMT
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w4FLJEeT022603
+        for <linux-xfs@vger.kernel.org>; Tue, 15 May 2018 21:19:14 GMT
+Date: Tue, 15 May 2018 14:19:13 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/5 V2] xfs: implement online get/set fs label
-Message-ID: <20180515010724.GJ4933@magnolia>
-References: <5957a0ff-0fd7-c1f3-2d44-86b825c2eb3b@redhat.com>
- <6abac150-604e-b011-4d2d-1ee20fc56759@sandeen.net>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 68932e193b27
+Message-ID: <20180515211913.GN4933@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <6abac150-604e-b011-4d2d-1ee20fc56759@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: xfs <linux-xfs@vger.kernel.org>
 
-On Mon, May 14, 2018 at 12:39:19PM -0500, Eric Sandeen wrote:
-> The GET ioctl is trivial, just return the current label.
-> 
-> The SET ioctl is more involved:
-> It transactionally modifies the superblock to write a new filesystem
-> label to the primary super.
-> 
-> A new variant of xfs_sync_sb then writes the superblock buffer
-> immediately to disk so that the change is visible from userspace.
-> 
-> It then invalidates any page cache that userspace might have previously
-> read on the block device so that i.e. blkid can see the change
-> immediately, and updates all secondary superblocks as userspace relable
-> does.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Hi folks,
 
-Looks ok, to me....
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+The for-next branch of the xfs-linux repository at:
 
---D
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-> ---
-> 
-> V2, rework the max length handling a bit, add comments re: userspace,
-> do the blkdev flush at the end, sleep for growfs lock, add locking around
-> getlabel, add define for max label length ...
-> 
->  fs/xfs/libxfs/xfs_format.h |  7 +++-
->  fs/xfs/libxfs/xfs_sb.c     | 30 +++++++++++++
->  fs/xfs/libxfs/xfs_sb.h     |  1 +
->  fs/xfs/xfs_ioctl.c         | 86 ++++++++++++++++++++++++++++++++++++++
->  4 files changed, 122 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> index 42956d8d95ed..c1cb29a5f4f6 100644
-> --- a/fs/xfs/libxfs/xfs_format.h
-> +++ b/fs/xfs/libxfs/xfs_format.h
-> @@ -98,6 +98,9 @@ struct xfs_ifork;
->  	 XFS_SB_VERSION2_PROJID32BIT	| \
->  	 XFS_SB_VERSION2_FTYPE)
->  
-> +/* Maximum size of the xfs filesystem label, no terminating NULL */
-> +#define XFSLABEL_MAX			12
-> +
->  /*
->   * Superblock - in core version.  Must match the ondisk version below.
->   * Must be padded to 64 bit alignment.
-> @@ -122,7 +125,7 @@ typedef struct xfs_sb {
->  	uint16_t	sb_sectsize;	/* volume sector size, bytes */
->  	uint16_t	sb_inodesize;	/* inode size, bytes */
->  	uint16_t	sb_inopblock;	/* inodes per block */
-> -	char		sb_fname[12];	/* file system name */
-> +	char		sb_fname[XFSLABEL_MAX]; /* file system name */
->  	uint8_t		sb_blocklog;	/* log2 of sb_blocksize */
->  	uint8_t		sb_sectlog;	/* log2 of sb_sectsize */
->  	uint8_t		sb_inodelog;	/* log2 of sb_inodesize */
-> @@ -213,7 +216,7 @@ typedef struct xfs_dsb {
->  	__be16		sb_sectsize;	/* volume sector size, bytes */
->  	__be16		sb_inodesize;	/* inode size, bytes */
->  	__be16		sb_inopblock;	/* inodes per block */
-> -	char		sb_fname[12];	/* file system name */
-> +	char		sb_fname[XFSLABEL_MAX]; /* file system name */
->  	__u8		sb_blocklog;	/* log2 of sb_blocksize */
->  	__u8		sb_sectlog;	/* log2 of sb_sectsize */
->  	__u8		sb_inodelog;	/* log2 of sb_inodesize */
-> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index d9b94bd5f689..0bc0a40764e1 100644
-> --- a/fs/xfs/libxfs/xfs_sb.c
-> +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -888,6 +888,36 @@ xfs_sync_sb(
->  	return xfs_trans_commit(tp);
->  }
->  
-> +/*
-> + * Same behavior as xfs_sync_sb, except that it is always synchronous and it
-> + * also writes the superblock buffer to disk sector 0 immediately.
-> + */
-> +int
-> +xfs_sync_sb_buf(
-> +	struct xfs_mount	*mp)
-> +{
-> +	struct xfs_trans	*tp;
-> +	int			error;
-> +
-> +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_sb, 0, 0, 0, &tp);
-> +	if (error)
-> +		return error;
-> +
-> +	xfs_log_sb(tp);
-> +	xfs_trans_bhold(tp, mp->m_sb_bp);
-> +	xfs_trans_set_sync(tp);
-> +	error = xfs_trans_commit(tp);
-> +	if (error)
-> +		goto out;
-> +	/*
-> +	 * write out the sb buffer to get the changes to disk
-> +	 */
-> +	error = xfs_bwrite(mp->m_sb_bp);
-> +out:
-> +	xfs_buf_relse(mp->m_sb_bp);
-> +	return error;
-> +}
-> +
->  int
->  xfs_fs_geometry(
->  	struct xfs_sb		*sbp,
-> diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
-> index 63dcd2a1a657..226827281760 100644
-> --- a/fs/xfs/libxfs/xfs_sb.h
-> +++ b/fs/xfs/libxfs/xfs_sb.h
-> @@ -29,6 +29,7 @@ extern int	xfs_initialize_perag_data(struct xfs_mount *, xfs_agnumber_t);
->  
->  extern void	xfs_log_sb(struct xfs_trans *tp);
->  extern int	xfs_sync_sb(struct xfs_mount *mp, bool wait);
-> +extern int	xfs_sync_sb_buf(struct xfs_mount *mp);
->  extern void	xfs_sb_mount_common(struct xfs_mount *mp, struct xfs_sb *sbp);
->  extern void	xfs_sb_from_disk(struct xfs_sb *to, struct xfs_dsb *from);
->  extern void	xfs_sb_to_disk(struct xfs_dsb *to, struct xfs_sb *from);
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 89fb1eb80aae..5e7116ff3dd3 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -1811,6 +1811,88 @@ xfs_ioc_swapext(
->  	return error;
->  }
->  
-> +static int
-> +xfs_ioc_getlabel(
-> +	struct xfs_mount	*mp,
-> +	char			__user *user_label)
-> +{
-> +	struct xfs_sb		*sbp = &mp->m_sb;
-> +	char			label[XFSLABEL_MAX + 1];
-> +
-> +	/* Paranoia */
-> +	BUILD_BUG_ON(sizeof(sbp->sb_fname) > FSLABEL_MAX);
-> +
-> +	spin_lock(&mp->m_sb_lock);
-> +	strncpy(label, sbp->sb_fname, sizeof(sbp->sb_fname));
-> +	spin_unlock(&mp->m_sb_lock);
-> +
-> +	/* xfs on-disk label is 12 chars, be sure we send a null to user */
-> +	label[XFSLABEL_MAX] = '\0';
-> +	if (copy_to_user(user_label, label, sizeof(sbp->sb_fname)))
-> +		return -EFAULT;
-> +	return 0;
-> +}
-> +
-> +static int
-> +xfs_ioc_setlabel(
-> +	struct file		*filp,
-> +	struct xfs_mount	*mp,
-> +	char			__user *newlabel)
-> +{
-> +	struct xfs_sb		*sbp = &mp->m_sb;
-> +	char			label[XFSLABEL_MAX + 1];
-> +	size_t			len;
-> +	int			error;
-> +
-> +	if (!capable(CAP_SYS_ADMIN))
-> +		return -EPERM;
-> +	/*
-> +	 * The generic ioctl allows up to FSLABEL_MAX chars, but XFS is much
-> +	 * smaller, at 12 bytes.  We copy one more to be sure we find the
-> +	 * (required) NULL character to test the incoming label length.
-> +	 * NB: The on disk label doesn't need to be null terminated.
-> +	 */
-> +	if (copy_from_user(label, newlabel, XFSLABEL_MAX + 1))
-> +		return -EFAULT;
-> +	len = strnlen(label, XFSLABEL_MAX + 1);
-> +	if (len > sizeof(sbp->sb_fname))
-> +		return -EINVAL;
-> +
-> +	error = mnt_want_write_file(filp);
-> +	if (error)
-> +		return error;
-> +
-> +	spin_lock(&mp->m_sb_lock);
-> +	memset(sbp->sb_fname, 0, sizeof(sbp->sb_fname));
-> +	strncpy(sbp->sb_fname, label, sizeof(sbp->sb_fname));
-> +	spin_unlock(&mp->m_sb_lock);
-> +
-> +	/*
-> +	 * Now we do several things to satisfy userspace.
-> +	 * In addition to normal logging of the primary superblock, we also
-> +	 * immediately write these changes to sector zero for the primary, then
-> +	 * update all backup supers (as xfs_db does for a label change), then
-> +	 * invalidate the block device page cache.  This is so that any prior
-> +	 * buffered reads from userspace (i.e. from blkid) are invalidated,
-> +	 * and userspace will see the newly-written label.
-> +	 */
-> +	error = xfs_sync_sb_buf(mp);
-> +	if (error)
-> +		goto out;
-> +	/*
-> +	 * growfs also updates backup supers so lock against that.
-> +	 */
-> +	mutex_lock(&mp->m_growlock);
-> +	error = xfs_update_secondary_supers(mp);
-> +	mutex_unlock(&mp->m_growlock);
-> +
-> +	invalidate_bdev(mp->m_ddev_targp->bt_bdev);
-> +
-> +out:
-> +	mnt_drop_write_file(filp);
-> +	return error;
-> +}
-> +
->  /*
->   * Note: some of the ioctl's return positive numbers as a
->   * byte count indicating success, such as readlink_by_handle.
-> @@ -1834,6 +1916,10 @@ xfs_file_ioctl(
->  	switch (cmd) {
->  	case FITRIM:
->  		return xfs_ioc_trim(mp, arg);
-> +	case FS_IOC_GETFSLABEL:
-> +		return xfs_ioc_getlabel(mp, arg);
-> +	case FS_IOC_SETFSLABEL:
-> +		return xfs_ioc_setlabel(filp, mp, arg);
->  	case XFS_IOC_ALLOCSP:
->  	case XFS_IOC_FREESP:
->  	case XFS_IOC_RESVSP:
-> -- 
-> 2.17.0
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+has just been updated.
+
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.  At this point I think the only things
+left to review are Christoph's iomap bufferhead removal and online
+repair.
+
+The new head of the for-next branch is commit:
+
+68932e193b27 xfs: factor the ag length extension code into libxfs
+
+New Commits:
+
+Brian Foster (1):
+      [1a04f418edc1] xfs: factor out nodiscard helpers
+
+Darrick J. Wong (12):
+      [16b501076b2d] xfs: skip scrub xref if corruption already noted
+      [8c4f7226897d] xfs: superblock scrub should use short-lived buffers
+      [a919a9fe5506] xfs: refactor quota limits initialization
+      [792991a8dc4b] xfs: don't continue scrub if already corrupt
+      [6be32cc1333f] xfs: quota scrub should use bmapbtd scrubber
+      [d7d7c05fa262] xfs: scrub the data fork of the realtime inodes
+      [5e52c88aaef5] xfs: avoid ABBA deadlock when scrubbing parent pointers
+      [b76c0050f026] xfs: hoist xfs_scrub_agfl_walk to libxfs as xfs_agfl_walk
+      [edda0726ec71] xfs: make xfs_bmapi_remapi work with attribute forks
+      [3c0e061f3a76] xfs: teach xfs_bmapi_remap to accept some bmapi flags
+      [81633d16e012] xfs: create tracepoints for online repair
+      [1cfb2a768dea] xfs: implement the metadata repair ioctl flag
+
+Dave Chinner (12):
+      [8ab11a7b19d0] xfs: add mount delay debug option
+      [939c8ca6f50e] xfs: clear sb->s_fs_info on mount failure
+      [dcea0413ef5c] xfs: one-shot cached buffers
+      [f65ede6d9e8e] xfs: factor out AG header initialisation from growfs core
+      [26c2e0a3c4b8] xfs: convert growfs AG header init to use buffer lists
+      [5a64ce3f2972] xfs: factor ag btree root block initialisation
+      [49d414e60b01] xfs: turn ag header initialisation into a table driven operation
+      [0e3f1e4debfe] xfs: make imaxpct changes in growfs separate
+      [36a7674290cb] xfs: separate secondary sb update in growfs
+      [d154678bf58e] xfs: rework secondary superblock updates in growfs
+      [e5a8059784d7] xfs: move growfs core to libxfs
+      [68932e193b27] xfs: factor the ag length extension code into libxfs
+
+
+Code Diffstat:
+
+ fs/xfs/Kconfig               |  18 ++
+ fs/xfs/Makefile              |   8 +
+ fs/xfs/libxfs/xfs_ag.c       | 464 ++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_ag.h       |  30 +++
+ fs/xfs/libxfs/xfs_alloc.c    |  37 +++
+ fs/xfs/libxfs/xfs_alloc.h    |  16 +-
+ fs/xfs/libxfs/xfs_bmap.c     |  49 ++--
+ fs/xfs/libxfs/xfs_bmap.h     |  15 +-
+ fs/xfs/libxfs/xfs_errortag.h |   4 +-
+ fs/xfs/libxfs/xfs_fs.h       |   9 +-
+ fs/xfs/libxfs/xfs_sb.c       |  95 +++++++
+ fs/xfs/libxfs/xfs_sb.h       |  12 +
+ fs/xfs/libxfs/xfs_shared.h   |   1 +
+ fs/xfs/scrub/agheader.c      |  82 ++----
+ fs/xfs/scrub/alloc.c         |   4 +-
+ fs/xfs/scrub/attr.c          |   3 +-
+ fs/xfs/scrub/bmap.c          |   5 +-
+ fs/xfs/scrub/common.c        |  83 ++++++
+ fs/xfs/scrub/common.h        |  17 +-
+ fs/xfs/scrub/dir.c           |  35 ++-
+ fs/xfs/scrub/ialloc.c        |   7 +-
+ fs/xfs/scrub/inode.c         |   5 +-
+ fs/xfs/scrub/parent.c        |  19 +-
+ fs/xfs/scrub/quota.c         |  83 +++---
+ fs/xfs/scrub/refcount.c      |   8 +-
+ fs/xfs/scrub/repair.c        | 130 ++++++++++
+ fs/xfs/scrub/repair.h        |  56 +++++
+ fs/xfs/scrub/rmap.c          |   6 +-
+ fs/xfs/scrub/rtbitmap.c      |  37 ++-
+ fs/xfs/scrub/scrub.c         | 138 +++++++++-
+ fs/xfs/scrub/scrub.h         |   3 +
+ fs/xfs/scrub/trace.h         | 258 +++++++++++++++++++
+ fs/xfs/xfs_bmap_util.c       |   4 +-
+ fs/xfs/xfs_buf.h             |  12 +
+ fs/xfs/xfs_error.c           |   3 +
+ fs/xfs/xfs_fsops.c           | 587 ++++++++-----------------------------------
+ fs/xfs/xfs_globals.c         |   1 +
+ fs/xfs/xfs_inode.c           |   9 +-
+ fs/xfs/xfs_inode.h           |  16 +-
+ fs/xfs/xfs_qm.c              | 142 ++++++-----
+ fs/xfs/xfs_super.c           |  21 ++
+ fs/xfs/xfs_sysctl.h          |   1 +
+ fs/xfs/xfs_sysfs.c           |  31 +++
+ fs/xfs/xfs_trans_extfree.c   |   9 +-
+ 44 files changed, 1800 insertions(+), 773 deletions(-)
+ create mode 100644 fs/xfs/libxfs/xfs_ag.c
+ create mode 100644 fs/xfs/libxfs/xfs_ag.h
+ create mode 100644 fs/xfs/scrub/repair.c
+ create mode 100644 fs/xfs/scrub/repair.h
