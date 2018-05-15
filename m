@@ -1,47 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:4617 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752137AbeEOE6p (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 May 2018 00:58:45 -0400
-Date: Tue, 15 May 2018 14:58:42 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS 2038 rollover?
-Message-ID: <20180515045842.GH23861@dastard>
-References: <7BDFF86A-062B-4731-97E8-33E920CF7E7D@deer-run.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <7BDFF86A-062B-4731-97E8-33E920CF7E7D@deer-run.com>
+Received: from bullwinkle.deer-run.com ([50.23.32.3]:32969 "EHLO
+        bullwinkle.deer-run.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750952AbeEOE1q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 May 2018 00:27:46 -0400
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (1.0)
+Subject: Re: [PATCH] xfs_db: add blockget -L option
+From: Hal Pomeranz <hal@deer-run.com>
+In-Reply-To: <3ae25107-7242-a645-c0f7-784f35ed3e79@sandeen.net>
+Date: Tue, 15 May 2018 00:27:38 -0400
+Content-Transfer-Encoding: 8BIT
+Message-Id: <1C5C502C-D536-4C2C-B7CA-9B13F9B2EB20@deer-run.com>
+References: <20180510213636.GA5045@deer-run.com> <3ae25107-7242-a645-c0f7-784f35ed3e79@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Hal Pomeranz <hal@deer-run.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, May 15, 2018 at 12:33:01AM -0400, Hal Pomeranz wrote:
-> I was curious about the roadmap for solving the 32-bit signed
-> rollover issue for XFS (aka the “Y2K38” issue). You could
-> cheat in a similar fashion to EXT4 and use the upper two bits of
-> the nsec values to extend the seconds field to 34 bits. Or will
-> the inode core be expanding to allow full 64-bit seconds values?
-> Or is there some other plan?
+I get the argument Dave is making. But the reality of forensics is that many of our tools are not reliable in all cases. We do a lot of cross-validation for crucial results. 
+
+Having multiple tools helps. Right now, we basically have nothing for XFS. So adding this option to xfs_db makes things better. 
+
+We work with underplayed file systems constantly, and it’s less of a worry than you might think. Try my patched version of xfs_db on a live file system of your choice. See if you can make it blow up. When it doesn’t, please consider folding in my patch.
+
+--Hal
+
+> On May 14, 2018, at 11:14 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
 > 
-> I’ve checked the FAQ and haven’t been able to find
-> anything via Google. 
+> 
+> 
+>> On 5/10/18 4:36 PM, hal@deer-run.com wrote:
+>> From: Hal Pomeranz <hal@deer-run.com>
+>> Allow blockget on a mounted file system or "dirty" file system image
+>> with pending log entries-- by simply ignoring the log.  This makes
+>> xfs_db more useful for forensics where we are often dealing with these
+>> types of images.  Flushing log entries to disk by mounting/unmounting
+>> the file system would allow us to use blockget, but would make changes
+>> to the file system state which are not desirable in forensics contexts.
+>> Signed-off-by: Hal Pomeranz <hal@deer-run.com>
+> 
+> Well, I'm back on the fence about this one; I know I steered you in
+> this direction, but after talking to dchinner a bit, he raised some valid
+> concerns about adding an option which essentially makes the tool behave
+> in unpredictable ways (by trying to traverse an inconsistent filesystem).
+> 
+> I had jumped to the conclusion that the usecase was for examining an
+> offline filesystem image without needing to perturb it by replaying the
+> log; Dave pointed out that you're talking about using this on a live
+> filesystem, and even baking this behavior into other higher level tools.
+> That kind of opened my eyes to all the ways this can go wrong.  :(
+> 
+> Thus spake Dave:
+> 
+>> IMO, the only thing worse than not having a forensic tool for a
+>> specific job is having a forensic tool provided by a trusted toolkit
+>> whose results are unreliable and cannot be trusted....
+> 
+> ...
+> 
+>> I'd suggest, in that case, that you limit it's use to off-line or
+>> read-only snapshots of online filesystems? This would mean that the
+>> results of xfs_db operations (while eceedingly slow) will be
+>> reliable.
+> 
+> And in both of those cases, you won't need to ignore a dirty log.
+> Especially with teh express stated purpose of examining live
+> filesystems, I really hate to give you this much rope.
+> 
+> Stuff like parent pointers and fsmap are (eventually) going to give
+> you a much better way to achieve what (I think) you want, here.
+> 
+> -Eric
 
-Something along these lines:
-
-https://lkml.org/lkml/2014/6/1/240
-
-However, the VFS infrastructure I was asking for back in 2014 for
-clamping timestamp ranges to the valid on-disk supported filesystem
-range hasn't appeared yet, so there's a lot more work than just the
-preliminary on-disk extended range support to be done....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
