@@ -1,136 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:61392 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752594AbeEOXAn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 15 May 2018 19:00:43 -0400
-Date: Wed, 16 May 2018 06:59:58 +0800
-From: kbuild test robot <lkp@intel.com>
-Subject: [xfs-linux:xfs-4.18-merge 66/85] fs/xfs/xfs_qm.c:639:39: sparse:
- cast to restricted __be32
-Message-ID: <201805160657.uyigUTOB%fengguang.wu@intel.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:50443 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750952AbeEOE3a (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 May 2018 00:29:30 -0400
+Date: Tue, 15 May 2018 14:29:23 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH V2] test online label ioctl
+Message-ID: <20180515042923.GD10363@dastard>
+References: <2a743318-585d-9eb1-5430-2b07246348ab@redhat.com>
+ <20180514231100.GE23861@dastard>
+ <d4dea5fc-9f68-604d-92ec-c9cd2510db52@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <d4dea5fc-9f68-604d-92ec-c9cd2510db52@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: kbuild-all@01.org, linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>
 
-tree:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git xfs-4.18-merge
-head:   68932e193b273d94e4291d70301e42c3658d1805
-commit: a919a9fe5506389209d5e0759d8965d966802162 [66/85] xfs: refactor quota limits initialization
-reproduce:
-        # apt-get install sparse
-        git checkout a919a9fe5506389209d5e0759d8965d966802162
-        make ARCH=x86_64 allmodconfig
-        make C=1 CF=-D__CHECK_ENDIAN__
+On Mon, May 14, 2018 at 06:26:07PM -0500, Eric Sandeen wrote:
+> On 5/14/18 6:11 PM, Dave Chinner wrote:
+> > On Mon, May 14, 2018 at 12:09:16PM -0500, Eric Sandeen wrote:
+> >> This tests the online label ioctl that btrfs has, which has been
+> >> recently proposed for XFS.
+> >>
+> >> To run, it requires an updated xfs_io with the label command and a
+> >> filesystem that supports it
+> >>
+> >> A slight change here to _require_xfs_io_command as well, so that tests
+> >> which simply fail with "Inappropriate ioctl" can be caught in the
+> >> common case.
+> >>
+> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> >> ---
+> 
+> <snip>
+>  
+> >> +# The maximum filesystem label length, not including terminating NULL
+> >> +_label_get_max()
+> >> +{
+> >> +	case $FSTYP in
+> >> +	xfs)
+> >> +		MAXLEN=12
+> >> +		;;
+> >> +	btrfs)
+> >> +		MAXLEN=255
+> >> +		;;
+> >> +	*)
+> >> +		MAXLEN=0
+> > 
+> > Why not just _notrun here?
+> 
+> do we want to go through the other steps only to get here and notrun
+> halfway through?
+> 
+> >> +		;;
+> >> +	esac
+> >> +
+> >> +	echo $MAXLEN
+> >> +}
+> >> +
+> >> +_require_label_get_max()
+> >> +{
+> >> +	if [ $(_label_get_max) -eq 0 ]; then
+> >> +		_notrun "$FSTYP does not define maximum label length"
+> >> +	fi
+> > 
+> > And this check can go away?
+> 
+> We'd like to know if all the validations in this can complete before we
+> get started, right?  That's why I did it this way.
 
+Sure, just trying to be a bit defensive as people often forget
+_requires directives when writing new tests....
 
-sparse warnings: (new ones prefixed by >>)
+> > Also, shouldn't it be _require_online_label_change() ? And then
+> > maybe you can move the xfs_io label command check inside it?
+> 
+> Well, we want to know a lot of things:
+> 
+> 1) can the kernel code for this filesystem support online label
+> 2) does xfs_io support the label command
+> 3) does this test know the maximum label length to test for this fs
+> 
+> the above stuff is for 3)
 
->> fs/xfs/xfs_qm.c:639:39: sparse: cast to restricted __be32
->> fs/xfs/xfs_qm.c:639:39: sparse: cast from restricted __be16
->> fs/xfs/xfs_qm.c:639:39: sparse: cast to restricted __be32
->> fs/xfs/xfs_qm.c:639:39: sparse: cast from restricted __be16
->> fs/xfs/xfs_qm.c:639:39: sparse: cast to restricted __be32
->> fs/xfs/xfs_qm.c:639:39: sparse: cast from restricted __be16
->> fs/xfs/xfs_qm.c:639:39: sparse: cast to restricted __be32
->> fs/xfs/xfs_qm.c:639:39: sparse: cast from restricted __be16
->> fs/xfs/xfs_qm.c:639:39: sparse: cast to restricted __be32
->> fs/xfs/xfs_qm.c:639:39: sparse: cast from restricted __be16
->> fs/xfs/xfs_qm.c:639:39: sparse: cast to restricted __be32
->> fs/xfs/xfs_qm.c:639:39: sparse: cast from restricted __be16
-   fs/xfs/xfs_qm.c:641:39: sparse: cast to restricted __be32
-   fs/xfs/xfs_qm.c:641:39: sparse: cast from restricted __be16
-   fs/xfs/xfs_qm.c:641:39: sparse: cast to restricted __be32
-   fs/xfs/xfs_qm.c:641:39: sparse: cast from restricted __be16
-   fs/xfs/xfs_qm.c:641:39: sparse: cast to restricted __be32
-   fs/xfs/xfs_qm.c:641:39: sparse: cast from restricted __be16
-   fs/xfs/xfs_qm.c:641:39: sparse: cast to restricted __be32
-   fs/xfs/xfs_qm.c:641:39: sparse: cast from restricted __be16
-   fs/xfs/xfs_qm.c:641:39: sparse: cast to restricted __be32
-   fs/xfs/xfs_qm.c:641:39: sparse: cast from restricted __be16
-   fs/xfs/xfs_qm.c:641:39: sparse: cast to restricted __be32
-   fs/xfs/xfs_qm.c:641:39: sparse: cast from restricted __be16
-   fs/xfs/xfs_qm.c:643:41: sparse: cast to restricted __be32
-   fs/xfs/xfs_qm.c:643:41: sparse: cast from restricted __be16
-   fs/xfs/xfs_qm.c:643:41: sparse: cast to restricted __be32
-   fs/xfs/xfs_qm.c:643:41: sparse: cast from restricted __be16
-   fs/xfs/xfs_qm.c:643:41: sparse: cast to restricted __be32
-   fs/xfs/xfs_qm.c:643:41: sparse: cast from restricted __be16
-   fs/xfs/xfs_qm.c:643:41: sparse: cast to restricted __be32
-   fs/xfs/xfs_qm.c:643:41: sparse: cast from restricted __be16
-   fs/xfs/xfs_qm.c:643:41: sparse: cast to restricted __be32
-   fs/xfs/xfs_qm.c:643:41: sparse: cast from restricted __be16
-   fs/xfs/xfs_qm.c:643:41: sparse: cast to restricted __be32
-   fs/xfs/xfs_qm.c:643:41: sparse: cast from restricted __be16
+What I was suggesting was doing all of these in one function similar
+to _require_xfs_sparse_inodes, _require_meta_uuid, etc:
 
-vim +639 fs/xfs/xfs_qm.c
+_require_online_label_change()
+{
+	# need xfs_io support
+	_require_xfs_io_command "label"
 
-   586	
-   587	/* Initialize quota time limits from the root dquot. */
-   588	static void
-   589	xfs_qm_init_timelimits(
-   590		struct xfs_mount	*mp,
-   591		struct xfs_quotainfo	*qinf)
-   592	{
-   593		struct xfs_disk_dquot	*ddqp;
-   594		struct xfs_dquot	*dqp;
-   595		uint			type;
-   596		int			error;
-   597	
-   598		qinf->qi_btimelimit = XFS_QM_BTIMELIMIT;
-   599		qinf->qi_itimelimit = XFS_QM_ITIMELIMIT;
-   600		qinf->qi_rtbtimelimit = XFS_QM_RTBTIMELIMIT;
-   601		qinf->qi_bwarnlimit = XFS_QM_BWARNLIMIT;
-   602		qinf->qi_iwarnlimit = XFS_QM_IWARNLIMIT;
-   603		qinf->qi_rtbwarnlimit = XFS_QM_RTBWARNLIMIT;
-   604	
-   605		/*
-   606		 * We try to get the limits from the superuser's limits fields.
-   607		 * This is quite hacky, but it is standard quota practice.
-   608		 *
-   609		 * Since we may not have done a quotacheck by this point, just read
-   610		 * the dquot without attaching it to any hashtables or lists.
-   611		 *
-   612		 * Timers and warnings are globally set by the first timer found in
-   613		 * user/group/proj quota types, otherwise a default value is used.
-   614		 * This should be split into different fields per quota type.
-   615		 */
-   616		if (XFS_IS_UQUOTA_RUNNING(mp))
-   617			type = XFS_DQ_USER;
-   618		else if (XFS_IS_GQUOTA_RUNNING(mp))
-   619			type = XFS_DQ_GROUP;
-   620		else
-   621			type = XFS_DQ_PROJ;
-   622		error = xfs_qm_dqget_uncached(mp, 0, type, &dqp);
-   623		if (error)
-   624			return;
-   625	
-   626		ddqp = &dqp->q_core;
-   627		/*
-   628		 * The warnings and timers set the grace period given to
-   629		 * a user or group before he or she can not perform any
-   630		 * more writing. If it is zero, a default is used.
-   631		 */
-   632		if (ddqp->d_btimer)
-   633			qinf->qi_btimelimit = be32_to_cpu(ddqp->d_btimer);
-   634		if (ddqp->d_itimer)
-   635			qinf->qi_itimelimit = be32_to_cpu(ddqp->d_itimer);
-   636		if (ddqp->d_rtbtimer)
-   637			qinf->qi_rtbtimelimit = be32_to_cpu(ddqp->d_rtbtimer);
-   638		if (ddqp->d_bwarns)
- > 639			qinf->qi_bwarnlimit = be32_to_cpu(ddqp->d_bwarns);
-   640		if (ddqp->d_iwarns)
-   641			qinf->qi_iwarnlimit = be32_to_cpu(ddqp->d_iwarns);
-   642		if (ddqp->d_rtbwarns)
-   643			qinf->qi_rtbwarnlimit = be32_to_cpu(ddqp->d_rtbwarns);
-   644	
-   645		xfs_qm_dqdestroy(dqp);
-   646	}
-   647	
+	# need fstests knowledge of label size
+	[ $(_label_get_max) -eq 0 ] && _notrun "$FSTYP does not define maximum label length"
 
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+	# need kernel support
+	$XFS_IO_PROG -c label $TEST_DIR > /dev/null 2>&1
+	[ $? -ne 0 ] && _notrun "Kernel does not support FS_IOC_GETLABEL"
+}
+
+Which also means that the label_f command in xfs_io needs to set the
+exitcode to non-zero when the ioctl fails so that xfs_io returns
+non-zero on failure...
+
+Cheers,
+
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
