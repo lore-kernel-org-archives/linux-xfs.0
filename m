@@ -1,185 +1,140 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:37016 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:42414 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751533AbeEOWer (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 May 2018 18:34:47 -0400
-Subject: [PATCH 10/22] xfs: repair the AGI
+        with ESMTP id S1751400AbeEPAlv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 May 2018 20:41:51 -0400
+Date: Tue, 15 May 2018 17:41:29 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 15 May 2018 15:34:43 -0700
-Message-ID: <152642368318.1556.13906339023822214013.stgit@magnolia>
-In-Reply-To: <152642361893.1556.9335169821674946249.stgit@magnolia>
-References: <152642361893.1556.9335169821674946249.stgit@magnolia>
+Subject: Re: [PATCH] xfs: change xfs_update_secondary_supers to use
+ xfS_sb_read_secondary
+Message-ID: <20180516004129.GP4933@magnolia>
+References: <20180515204721.GM4933@magnolia>
+ <20180515230811.GJ23861@dastard>
+ <20180515233656.GO4933@magnolia>
+ <20180516002346.GL23861@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180516002346.GL23861@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, david@fromorbit.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, May 16, 2018 at 10:23:46AM +1000, Dave Chinner wrote:
+> On Tue, May 15, 2018 at 04:36:56PM -0700, Darrick J. Wong wrote:
+> > On Wed, May 16, 2018 at 09:08:11AM +1000, Dave Chinner wrote:
+> > > On Tue, May 15, 2018 at 01:47:21PM -0700, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > 
+> > > > Use the new helper to read secondary superblocks instead of opencoding
+> > > > it ourselves.
+> > > > 
+> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > ---
+> > > >  fs/xfs/xfs_fsops.c |   10 ++++------
+> > > >  1 file changed, 4 insertions(+), 6 deletions(-)
+> > > > 
+> > > > diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> > > > index 056a76689197..40c131ebf772 100644
+> > > > --- a/fs/xfs/xfs_fsops.c
+> > > > +++ b/fs/xfs/xfs_fsops.c
+> > > > @@ -191,18 +191,15 @@ xfs_growfs_data_private(
+> > > >   */
+> > > >  int
+> > > >  xfs_update_secondary_supers(
+> > > > -	xfs_mount_t		*mp)
+> > > > +	struct xfs_mount	*mp)
+> > > >  {
+> > > > -	int			error, saved_error;
+> > > > +	struct xfs_buf		*bp;
+> > > >  	xfs_agnumber_t		agno;
+> > > > -	xfs_buf_t		*bp;
+> > > > +	int			error, saved_error;
+> > > >  
+> > > >  	error = saved_error = 0;
+> > > >  
+> > > >  	for (agno = 1; agno < mp->m_sb.sb_agcount; agno++) {
+> > > > -		error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
+> > > > -			  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
+> > > > -			  XFS_FSS_TO_BB(mp, 1), 0, &bp, &xfs_sb_buf_ops);
+> > > >  		/*
+> > > >  		 * If we get an error reading or writing alternate superblocks,
+> > > >  		 * continue.  xfs_repair chooses the "best" superblock based
+> > > > @@ -210,6 +207,7 @@ xfs_update_secondary_supers(
+> > > >  		 * superblocks un-updated than updated, and xfs_repair may
+> > > >  		 * pick them over the properly-updated primary.
+> > > >  		 */
+> > > > +		error = xfs_sb_read_secondary(mp, NULL, agno, &bp);
+> > > >  		if (error) {
+> > > >  			xfs_warn(mp,
+> > > >  		"error %d reading secondary superblock for ag %d",
+> > > 
+> > > Why change this now when my growfs patchset ireworks it and then
+> > > moves the function entirely? Doing this now just breaks that
+> > > patchset unnecessarily and forces another rebase - can we move this
+> > > to the end of the growfs patchset?
+> > 
+> > The label stuff will come after your growfs stuff... maybe I'll try this
+> > again tomorrow when I'm more awake.
+> 
+> *nod*
 
-Rebuild the AGI header items with some help from the rmapbt.
+Aha, just s/xfs_update_secondary_supers/xfs_update_secondary_sbs/ in
+Eric's online label patch, and drop the one where he adds
+xfs_update_secondary_supers.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/scrub/agheader_repair.c |  111 ++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/repair.h          |    2 +
- fs/xfs/scrub/scrub.c           |    2 -
- 3 files changed, 114 insertions(+), 1 deletion(-)
+> > Scrub wants a function to read a secondary sb, and a second one to clone
+> > the primary to fix damage by getting the sb, formatting the incore sb
+> > into the buffer, and writing it to disk.
+> 
+> This is all done in a transaction context during scrub, isn't it?
+> Which means it's mostly separate to the non-transactional "update
+> all secondary SB's?
 
+Yes.  It's likely we only want to update a single secondary sb, and
+updating all of them is overkill, so maybe it's fine just to open code
+this one use?  Seeing as I don't think we'd ordinarily be updating only
+a single secondary sb.
 
-diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-index b09bb1ee9613..fe21e6a87a37 100644
---- a/fs/xfs/scrub/agheader_repair.c
-+++ b/fs/xfs/scrub/agheader_repair.c
-@@ -527,3 +527,114 @@ xfs_repair_agfl(
- 				XFS_BTREE_NOERROR);
- 	return error;
- }
-+
-+/* AGI */
-+
-+int
-+xfs_repair_agi(
-+	struct xfs_scrub_context	*sc)
-+{
-+	struct xfs_repair_find_ag_btree	fab[] = {
-+		{
-+			.rmap_owner = XFS_RMAP_OWN_INOBT,
-+			.buf_ops = &xfs_inobt_buf_ops,
-+			.magic = XFS_IBT_CRC_MAGIC,
-+		},
-+		{
-+			.rmap_owner = XFS_RMAP_OWN_INOBT,
-+			.buf_ops = &xfs_inobt_buf_ops,
-+			.magic = XFS_FIBT_CRC_MAGIC,
-+		},
-+		{
-+			.buf_ops = NULL
-+		},
-+	};
-+	struct xfs_agi			old_agi;
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_buf			*agi_bp;
-+	struct xfs_buf			*agf_bp;
-+	struct xfs_agi			*agi;
-+	struct xfs_btree_cur		*cur;
-+	struct xfs_perag		*pag;
-+	xfs_agino_t			old_count;
-+	xfs_agino_t			old_freecount;
-+	xfs_agino_t			count;
-+	xfs_agino_t			freecount;
-+	int				bucket;
-+	int				error;
-+
-+	/* We require the rmapbt to rebuild anything. */
-+	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
-+		return -EOPNOTSUPP;
-+
-+	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
-+			XFS_AG_DADDR(mp, sc->sa.agno, XFS_AGI_DADDR(mp)),
-+			XFS_FSS_TO_BB(mp, 1), 0, &agi_bp, NULL);
-+	if (error)
-+		return error;
-+	agi_bp->b_ops = &xfs_agi_buf_ops;
-+
-+	error = xfs_alloc_read_agf(mp, sc->tp, sc->sa.agno, 0, &agf_bp);
-+	if (error)
-+		return error;
-+	if (!agf_bp)
-+		return -ENOMEM;
-+
-+	/* Find the btree roots. */
-+	error = xfs_repair_find_ag_btree_roots(sc, agf_bp, fab, NULL);
-+	if (error)
-+		return error;
-+	if (fab[0].root == NULLAGBLOCK || fab[0].height > XFS_BTREE_MAXLEVELS)
-+		return -EFSCORRUPTED;
-+	if (xfs_sb_version_hasfinobt(&mp->m_sb) &&
-+	    (fab[1].root == NULLAGBLOCK || fab[1].height > XFS_BTREE_MAXLEVELS))
-+		return -EFSCORRUPTED;
-+
-+	/* Start rewriting the header. */
-+	agi = XFS_BUF_TO_AGI(agi_bp);
-+	old_agi = *agi;
-+	old_count = be32_to_cpu(old_agi.agi_count);
-+	old_freecount = be32_to_cpu(old_agi.agi_freecount);
-+	memset(agi, 0, mp->m_sb.sb_sectsize);
-+	agi->agi_magicnum = cpu_to_be32(XFS_AGI_MAGIC);
-+	agi->agi_versionnum = cpu_to_be32(XFS_AGI_VERSION);
-+	agi->agi_seqno = cpu_to_be32(sc->sa.agno);
-+	agi->agi_length = cpu_to_be32(xfs_ag_block_count(mp, sc->sa.agno));
-+	agi->agi_newino = cpu_to_be32(NULLAGINO);
-+	agi->agi_dirino = cpu_to_be32(NULLAGINO);
-+	if (xfs_sb_version_hascrc(&mp->m_sb))
-+		uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_meta_uuid);
-+	for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++)
-+		agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
-+	agi->agi_root = cpu_to_be32(fab[0].root);
-+	agi->agi_level = cpu_to_be32(fab[0].height);
-+	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
-+		agi->agi_free_root = cpu_to_be32(fab[1].root);
-+		agi->agi_free_level = cpu_to_be32(fab[1].height);
-+	}
-+
-+	/* Update the AGI counters. */
-+	cur = xfs_inobt_init_cursor(mp, sc->tp, agi_bp, sc->sa.agno,
-+			XFS_BTNUM_INO);
-+	error = xfs_ialloc_count_inodes(cur, &count, &freecount);
-+	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+	if (error)
-+		goto err;
-+	agi->agi_count = cpu_to_be32(count);
-+	agi->agi_freecount = cpu_to_be32(freecount);
-+	if (old_count != count || old_freecount != freecount) {
-+		pag = xfs_perag_get(mp, sc->sa.agno);
-+		pag->pagi_init = 0;
-+		xfs_perag_put(pag);
-+		sc->reset_counters = true;
-+	}
-+
-+	/* Write this to disk. */
-+	xfs_trans_buf_set_type(sc->tp, agi_bp, XFS_BLFT_AGI_BUF);
-+	xfs_trans_log_buf(sc->tp, agi_bp, 0, mp->m_sb.sb_sectsize - 1);
-+	return error;
-+
-+err:
-+	*agi = old_agi;
-+	return error;
-+}
-diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-index 8c19136ccdbe..9a22428f970c 100644
---- a/fs/xfs/scrub/repair.h
-+++ b/fs/xfs/scrub/repair.h
-@@ -106,6 +106,7 @@ int xfs_repair_probe(struct xfs_scrub_context *sc);
- int xfs_repair_superblock(struct xfs_scrub_context *sc);
- int xfs_repair_agf(struct xfs_scrub_context *sc);
- int xfs_repair_agfl(struct xfs_scrub_context *sc);
-+int xfs_repair_agi(struct xfs_scrub_context *sc);
- 
- #else
- 
-@@ -137,6 +138,7 @@ static inline int xfs_repair_reset_counters(struct xfs_mount *mp)
- #define xfs_repair_superblock		xfs_repair_notsupported
- #define xfs_repair_agf			xfs_repair_notsupported
- #define xfs_repair_agfl			xfs_repair_notsupported
-+#define xfs_repair_agi			xfs_repair_notsupported
- 
- #endif /* CONFIG_XFS_ONLINE_REPAIR */
- 
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index f129693777c3..af551a2339e4 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -236,7 +236,7 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
- 		.type	= ST_PERAG,
- 		.setup	= xfs_scrub_setup_fs,
- 		.scrub	= xfs_scrub_agi,
--		.repair	= xfs_repair_notsupported,
-+		.repair	= xfs_repair_agi,
- 	},
- 	[XFS_SCRUB_TYPE_BNOBT] = {	/* bnobt */
- 		.type	= ST_PERAG,
+> > Label wants a function to read each secondary sb, format the incore sb
+> > into the buffer, and write it to disk.
+> 
+> Yup - it can just use the function I added to rewrite all the
+> secondary superblocks.
+> 
+> Hmmmm - just a thought here: does repair check and repair
+> inconsistent labels across secondary superblocks? What about UUID
+> updates? Do we have a generic need for some superblock updates to be
+> atomic across all superblocks?
 
+Online fsck checks both sb_fname and sb_uuid and complains if the
+secondaries are out of date.  xfs_repair doesn't check at all.
+
+> > Growfs wants to (read an existing ag's secondary sb | get a new ag's
+> > sb), format the incore sb into the buffer, and write it to disk.
+> 
+> After my changes, growfs no longer reads the secondary superblocks.
+> It just rewrites them all completely by rewriting the primary SB
+> into them. The existing code rewrites them completely, too, so the
+> read is actually redundant and, potentially, can cause the grow to
+> fail.
+
+Ok, I had wondered myself if we should unconditionally rewrite the
+secondary sbs, because why would we care what the previous contents
+were?
+
+--D
+
+> Cheers,
+> 
+> Dave.
+> 
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
