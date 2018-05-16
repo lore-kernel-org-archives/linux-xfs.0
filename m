@@ -1,139 +1,161 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:45041 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751163AbeEPUjA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 May 2018 16:39:00 -0400
-Received: by mail-pg0-f67.google.com with SMTP id c22-v6so117886pgn.11
-        for <linux-xfs@vger.kernel.org>; Wed, 16 May 2018 13:39:00 -0700 (PDT)
-From: Omar Sandoval <osandov@osandov.com>
-Subject: [PATCH v2 4/5] generic: add test for truncate/fpunch of an active swapfile
-Date: Wed, 16 May 2018 13:38:48 -0700
-Message-Id: <7ac9cec61da44d083476e7d02f57f1a148745431.1526503000.git.osandov@fb.com>
-In-Reply-To: <cover.1526503000.git.osandov@fb.com>
-References: <cover.1526503000.git.osandov@fb.com>
-In-Reply-To: <cover.1526503000.git.osandov@fb.com>
-References: <cover.1526503000.git.osandov@fb.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:47162 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751028AbeEPWVL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 May 2018 18:21:11 -0400
+Subject: Re: [PATCH 07/22] xfs: add helpers to attach quotas to inodes
+References: <152642361893.1556.9335169821674946249.stgit@magnolia>
+ <152642366309.1556.5697073197011046065.stgit@magnolia>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <ff58d88b-da17-384d-e96e-ea414bf27ab9@oracle.com>
+Date: Wed, 16 May 2018 15:21:07 -0700
+MIME-Version: 1.0
+In-Reply-To: <152642366309.1556.5697073197011046065.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Eryu Guan <guaneryu@gmail.com>, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, kernel-team@fb.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, david@fromorbit.com
 
-From: Omar Sandoval <osandov@fb.com>
+This one looks good to me.  Thx!
 
-These should not be allowed.
+Reviewed by: Allison Henderson <allison.henderson@oracle.com>
 
-Signed-off-by: Omar Sandoval <osandov@fb.com>
----
- tests/generic/489     | 73 +++++++++++++++++++++++++++++++++++++++++++
- tests/generic/489.out |  8 +++++
- tests/generic/group   |  1 +
- 3 files changed, 82 insertions(+)
- create mode 100755 tests/generic/489
- create mode 100644 tests/generic/489.out
-
-diff --git a/tests/generic/489 b/tests/generic/489
-new file mode 100755
-index 00000000..dd40a81d
---- /dev/null
-+++ b/tests/generic/489
-@@ -0,0 +1,73 @@
-+#! /bin/bash
-+# FS QA Test 489
-+#
-+# Test truncation/hole punching of an active swapfile.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2018 Facebook.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+. ./common/rc
-+. ./common/filter
-+
-+rm -f $seqres.full
-+
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch_swapfile
-+_require_xfs_io_command "fpunch"
-+
-+echo "Format and mount"
-+_scratch_mkfs > $seqres.full 2>&1
-+_scratch_mount >> $seqres.full 2>&1
-+
-+testdir="$SCRATCH_MNT/test-$seq"
-+mkdir "$testdir"
-+
-+blocks=160
-+blksz=65536
-+
-+echo "Initialize file"
-+_format_swapfile "$testdir/file1" $((blocks * blksz))
-+swapon "$testdir/file1"
-+
-+echo "Try to truncate"
-+$XFS_IO_PROG -c "truncate $blksz" "$testdir/file1"
-+
-+echo "Try to punch hole"
-+$XFS_IO_PROG -c "fpunch $blksz $((2 * blksz))" "$testdir/file1"
-+
-+echo "Tear it down"
-+swapoff "$testdir/file1"
-+
-+status=0
-+exit
-diff --git a/tests/generic/489.out b/tests/generic/489.out
-new file mode 100644
-index 00000000..e2ebc530
---- /dev/null
-+++ b/tests/generic/489.out
-@@ -0,0 +1,8 @@
-+QA output created by 489
-+Format and mount
-+Initialize file
-+Try to truncate
-+ftruncate: Text file busy
-+Try to punch hole
-+fallocate: Text file busy
-+Tear it down
-diff --git a/tests/generic/group b/tests/generic/group
-index 1f504ce1..a5252aeb 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -491,3 +491,4 @@
- 486 auto quick attr
- 487 auto quick
- 488 auto quick swap
-+489 auto quick swap
--- 
-2.17.0
-
+On 05/15/2018 03:34 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Add a helper routine to attach quota information to inodes that are
+> about to undergo repair.  If that fails, we need to schedule a
+> quotacheck for the next mount but allow the corrupted metadata repair to
+> continue.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>   fs/xfs/scrub/repair.c |   58 +++++++++++++++++++++++++++++++++++++++++++++++++
+>   fs/xfs/scrub/repair.h |    2 ++
+>   fs/xfs/xfs_quota.h    |   16 ++++++++++++++
+>   3 files changed, 76 insertions(+)
+> 
+> 
+> diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+> index 1ca7e124e1a7..1679fe7cc912 100644
+> --- a/fs/xfs/scrub/repair.c
+> +++ b/fs/xfs/scrub/repair.c
+> @@ -42,6 +42,7 @@
+>   #include "xfs_extent_busy.h"
+>   #include "xfs_ag_resv.h"
+>   #include "xfs_trans_space.h"
+> +#include "xfs_quota.h"
+>   #include "scrub/xfs_scrub.h"
+>   #include "scrub/scrub.h"
+>   #include "scrub/common.h"
+> @@ -1023,3 +1024,60 @@ xfs_repair_reset_counters(
+>   
+>   	return 0;
+>   }
+> +
+> +/* Force a quotacheck the next time we mount. */
+> +void
+> +xfs_repair_force_quotacheck(
+> +	struct xfs_scrub_context	*sc,
+> +	uint				dqtype)
+> +{
+> +	uint				flag;
+> +
+> +	flag = xfs_quota_chkd_flag(dqtype);
+> +	if (!(flag & sc->mp->m_qflags))
+> +		return;
+> +
+> +	sc->mp->m_qflags &= ~flag;
+> +	spin_lock(&sc->mp->m_sb_lock);
+> +	sc->mp->m_sb.sb_qflags &= ~flag;
+> +	spin_unlock(&sc->mp->m_sb_lock);
+> +	xfs_log_sb(sc->tp);
+> +}
+> +
+> +/*
+> + * Ensure that dquots are attached to this inode.   We cannot allow the dquot
+> + * code to allocate an on-disk dquot block here because we're already in
+> + * transaction context with the inode locked.  The on-disk dquot should
+> + * already exist anyway.  If the quota code signals corruption or missing
+> + * quota information, schedule quotacheck at next mount.
+> + */
+> +int
+> +xfs_repair_ino_dqattach(
+> +	struct xfs_scrub_context	*sc)
+> +{
+> +	int				error;
+> +
+> +	error = xfs_qm_dqattach_locked(sc->ip, false);
+> +	switch (error) {
+> +	case -EFSBADCRC:
+> +	case -EFSCORRUPTED:
+> +	case -ENOENT:
+> +		xfs_err_ratelimited(sc->mp,
+> +"inode %llu repair encountered quota error %d, quotacheck forced.",
+> +				(unsigned long long)sc->ip->i_ino, error);
+> +		if (XFS_IS_UQUOTA_ON(sc->mp) && !sc->ip->i_udquot)
+> +			xfs_repair_force_quotacheck(sc, XFS_DQ_USER);
+> +		if (XFS_IS_GQUOTA_ON(sc->mp) && !sc->ip->i_gdquot)
+> +			xfs_repair_force_quotacheck(sc, XFS_DQ_GROUP);
+> +		if (XFS_IS_PQUOTA_ON(sc->mp) && !sc->ip->i_pdquot)
+> +			xfs_repair_force_quotacheck(sc, XFS_DQ_PROJ);
+> +		/* fall through */
+> +	case -ESRCH:
+> +		error = 0;
+> +		break;
+> +	default:
+> +		break;
+> +	}
+> +
+> +	return error;
+> +}
+> diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+> index eea32a26f947..0cb91dcb9f1e 100644
+> --- a/fs/xfs/scrub/repair.h
+> +++ b/fs/xfs/scrub/repair.h
+> @@ -97,6 +97,8 @@ int xfs_repair_find_ag_btree_roots(struct xfs_scrub_context *sc,
+>   		struct xfs_repair_find_ag_btree *btree_info,
+>   		struct xfs_buf *agfl_bp);
+>   int xfs_repair_reset_counters(struct xfs_mount *mp);
+> +void xfs_repair_force_quotacheck(struct xfs_scrub_context *sc, uint dqtype);
+> +int xfs_repair_ino_dqattach(struct xfs_scrub_context *sc);
+>   
+>   /* Metadata repairers */
+>   
+> diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
+> index 1c79ebbe5236..3edf52b14919 100644
+> --- a/fs/xfs/xfs_quota.h
+> +++ b/fs/xfs/xfs_quota.h
+> @@ -48,6 +48,22 @@ struct xfs_trans;
+>   	 (XFS_IS_PQUOTA_ON(mp) && \
+>   		(mp->m_sb.sb_qflags & XFS_PQUOTA_CHKD) == 0))
+>   
+> +static inline uint
+> +xfs_quota_chkd_flag(
+> +	uint		dqtype)
+> +{
+> +	switch (dqtype) {
+> +	case XFS_DQ_USER:
+> +		return XFS_UQUOTA_CHKD;
+> +	case XFS_DQ_GROUP:
+> +		return XFS_GQUOTA_CHKD;
+> +	case XFS_DQ_PROJ:
+> +		return XFS_PQUOTA_CHKD;
+> +	default:
+> +		return 0;
+> +	}
+> +}
+> +
+>   /*
+>    * The structure kept inside the xfs_trans_t keep track of dquot changes
+>    * within a transaction and apply them later.
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwICaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=i_MKNIO9laMI_y2D3Tgc19EICKaIyy10IeEKdvc3soc&s=cw8pXW84tup1SVubP_G8I3xvwifkDLcg8scJFxK9nZ4&e=
+> 
