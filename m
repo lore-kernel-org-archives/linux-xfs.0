@@ -1,60 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33002 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750846AbeEPOmS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 16 May 2018 10:42:18 -0400
-Subject: Re: [PATCH V3] test online label ioctl
-References: <2a743318-585d-9eb1-5430-2b07246348ab@redhat.com>
- <d65893a4-c6d8-1d85-4650-e63d04e8366a@sandeen.net>
- <20180516005139.GI10363@dastard>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <505eba27-476e-2bb7-9d72-11d64d31e6c3@redhat.com>
-Date: Wed, 16 May 2018 09:42:17 -0500
+Received: from mail-ot0-f169.google.com ([74.125.82.169]:37987 "EHLO
+        mail-ot0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751550AbeEPGTt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 May 2018 02:19:49 -0400
+Received: by mail-ot0-f169.google.com with SMTP id n3-v6so3107060ota.5
+        for <linux-xfs@vger.kernel.org>; Tue, 15 May 2018 23:19:49 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20180516005139.GI10363@dastard>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20180515075001.GA17568@infradead.org>
+References: <CAJCQCtQbns7bbE=mWvYuWMi+R5wdphfEjF1F995PVBsoUovnpg@mail.gmail.com>
+ <20180514173610.GC4933@magnolia> <CAJCQCtQ04viW=GzfTBWdQPab8orRmzQ2MjHGCSy_VY_k7-PdRw@mail.gmail.com>
+ <20180515075001.GA17568@infradead.org>
+From: Chris Murphy <lists@colorremedies.com>
+Date: Wed, 16 May 2018 00:19:48 -0600
+Message-ID: <CAJCQCtRn2HV-y0EqjLkEHbzvTCeiDoETXKMeaXDrP42NjMRgHA@mail.gmail.com>
+Subject: Re: xfsprogs 4.16.0 format change, GRUB error unknown filesystem
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@sandeen.net>
-Cc: fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Chris Murphy <lists@colorremedies.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, xfs list <linux-xfs@vger.kernel.org>
 
-On 5/15/18 7:51 PM, Dave Chinner wrote:
-> On Tue, May 15, 2018 at 10:22:37AM -0500, Eric Sandeen wrote:
->> This tests the online label ioctl that btrfs has, which has been
->> recently proposed for XFS.
->>
->> To run, it requires an updated xfs_io with the label command and a
->> filesystem that supports it
->>
->> A slight change here to _require_xfs_io_command as well, so that tests
->> which simply fail with "Inappropriate ioctl" can be caught in the
->> common case.
->>
->> Signed-off-by: Eric Sandeen<sandeen@redhat.com>
->> ---
->>
->> (urgh send as proper new thread, sorry)
->>
->> This passes on btrfs, _notruns on xfs/ext4 of yore, and passes
->> on xfs w/ my online label patchset (as long as xfs_io has the new
->> capability)
->>
->> V2: Add a max label length helper
->>      Set the proper btrfs max label length o_O oops
->>      Filter trailing whitespace from blkid output
->>
->> V3: lowercase local vars, simplify max label len function
-> Looks good now, but I wondered about one thing the test doesn't
-> cover: can you clear the label by setting it to a null string?
-> i.e you check max length bounds, but don't check empty string
-> behaviour...
+On Tue, May 15, 2018 at 1:50 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Mon, May 14, 2018 at 11:52:18AM -0600, Chris Murphy wrote:
+>> Is there a reason why this was made default before GRUB was fixed? Or
+>> would XFS devs prefer to not support /boot on XFS?
+>
+> A bootloader that reads any non-trivial file system (and that includes
+> XFS for sure) is a bad idea.
 
-hohum, yes.  I'll fix that, which will also require a change to xfs_io
-to be able to set a null string.
+What constitutes non-trivial? It seems like this ship sailed a very
+long time ago. The Windows bootloader's first job is to teach the
+computer how to read NTFS, that's been true for over 20 years. Apple's
+done the same with journaled HFS+ and most recently with their switch
+to APFS. GRUB and syslinux have read Btrfs for around 8 years.
 
-Will send a V3 in a bit.
+> So yes, if distros would not do that by
+> default it would help a lot.
 
--Eric
+Fedora does not do this by default, but it doesn't disallow it. The
+problem was discovered with a custom installation where /boot is a
+dedicated XFS volume; but it's also reproducible in the likely more
+common case where /boot is a directory on an XFS root fs.
+
+Solutions are:
+1. Update GRUB to support sparse inodes.
+2. If /boot is on XFS, installer uses '-i sparse=0' at mkfs time.
+3. Installer proscribes /boot on XFS (for any installation).
+
+Fedora's release criteria requires that the system actually be able to
+boot following an installation, so it's not OK to just pancake and let
+the poor hapless user go find documentation or a bug report. Option 2
+gets a bit complicated to account for the /boot dir on XFS case. GRUB
+folks say they will eventually get to it, but have no time now or a
+time estimate, so off hand I'd say that's check back in ~6 months.
+
+I'm thinking it'll end up needing to be option 3, in the short term at least.
+
+
+-- 
+Chris Murphy
