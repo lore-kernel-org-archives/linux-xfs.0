@@ -1,230 +1,142 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53804 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751040AbeEPFGV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 May 2018 01:06:21 -0400
-Subject: Re: [PATCH 01/33] block: add a lower-level bio_add_page interface
-References: <20180509074830.16196-1-hch@lst.de>
- <20180509074830.16196-2-hch@lst.de>
-From: Ritesh Harjani <riteshh@codeaurora.org>
-Message-ID: <37c16316-aa3a-e3df-79d0-9fca37a5996f@codeaurora.org>
-Date: Wed, 16 May 2018 10:36:14 +0530
-MIME-Version: 1.0
-In-Reply-To: <20180509074830.16196-2-hch@lst.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from mail-pg0-f46.google.com ([74.125.83.46]:37736 "EHLO
+        mail-pg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751273AbeEPUi7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 May 2018 16:38:59 -0400
+Received: by mail-pg0-f46.google.com with SMTP id a13-v6so787411pgu.4
+        for <linux-xfs@vger.kernel.org>; Wed, 16 May 2018 13:38:58 -0700 (PDT)
+From: Omar Sandoval <osandov@osandov.com>
+Subject: [PATCH v2 3/5] generic: add test for dedupe on an active swapfile
+Date: Wed, 16 May 2018 13:38:47 -0700
+Message-Id: <a0b71ac1816cc6dd80f3ace9e406a72137623db2.1526503000.git.osandov@fb.com>
+In-Reply-To: <cover.1526503000.git.osandov@fb.com>
+References: <cover.1526503000.git.osandov@fb.com>
+In-Reply-To: <cover.1526503000.git.osandov@fb.com>
+References: <cover.1526503000.git.osandov@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
+To: fstests@vger.kernel.org
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Eryu Guan <guaneryu@gmail.com>, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, kernel-team@fb.com
 
+From: Omar Sandoval <osandov@fb.com>
 
+Similar to generic/356 that makes sure we can't reflink an active
+swapfile.
 
-On 5/9/2018 1:17 PM, Christoph Hellwig wrote:
-> For the upcoming removal of buffer heads in XFS we need to keep track of
-> the number of outstanding writeback requests per page.  For this we need
-> to know if bio_add_page merged a region with the previous bvec or not.
-> Instead of adding additional arguments this refactors bio_add_page to
-> be implemented using three lower level helpers which users like XFS can
-> use directly if they care about the merge decisions.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->   block/bio.c         | 87 ++++++++++++++++++++++++++++++---------------
->   include/linux/bio.h |  9 +++++
->   2 files changed, 67 insertions(+), 29 deletions(-)
-> 
-> diff --git a/block/bio.c b/block/bio.c
-> index 53e0f0a1ed94..6ceba6adbf42 100644
-> --- a/block/bio.c
-> +++ b/block/bio.c
-> @@ -773,7 +773,7 @@ int bio_add_pc_page(struct request_queue *q, struct bio *bio, struct page
->   			return 0;
->   	}
->   
-> -	if (bio->bi_vcnt >= bio->bi_max_vecs)
-> +	if (bio_full(bio))
->   		return 0;
->   
->   	/*
-> @@ -820,6 +820,59 @@ int bio_add_pc_page(struct request_queue *q, struct bio *bio, struct page
->   }
->   EXPORT_SYMBOL(bio_add_pc_page);
->   
-> +/**
-> + * __bio_try_merge_page - try adding data to an existing bvec
-> + * @bio: destination bio
-> + * @page: page to add
-> + * @len: length of the range to add
-> + * @off: offset into @page
-> + *
-> + * Try adding the data described at @page + @offset to the last bvec of @bio.
-> + * Return %true on success or %false on failure.  This can happen frequently
-> + * for file systems with a block size smaller than the page size.
-> + */
-> +bool __bio_try_merge_page(struct bio *bio, struct page *page,
-> +		unsigned int len, unsigned int off)
-> +{
-> +	if (bio->bi_vcnt > 0) {
-> +		struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt - 1];
-> +
-> +		if (page == bv->bv_page && off == bv->bv_offset + bv->bv_len) {
-> +			bv->bv_len += len;
-> +			bio->bi_iter.bi_size += len;
-> +			return true;
-> +		}
-> +	}
-> +	return false;
-> +}
-> +EXPORT_SYMBOL_GPL(__bio_try_merge_page);
-> +
-> +/**
-> + * __bio_add_page - add page to a bio in a new segment
-> + * @bio: destination bio
-> + * @page: page to add
-> + * @len: length of the range to add
-> + * @off: offset into @page
-> + *
-> + * Add the data at @page + @offset to @bio as a new bvec.  The caller must
-> + * ensure that @bio has space for another bvec.
-> + */
-> +void __bio_add_page(struct bio *bio, struct page *page,
-> +		unsigned int len, unsigned int off)
-> +{
-> +	struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt];
-> +
-> +	WARN_ON_ONCE(bio_full(bio));
+Signed-off-by: Omar Sandoval <osandov@fb.com>
+---
+ tests/generic/488     | 76 +++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/488.out |  7 ++++
+ tests/generic/group   |  1 +
+ 3 files changed, 84 insertions(+)
+ create mode 100755 tests/generic/488
+ create mode 100644 tests/generic/488.out
 
-Please correct my understanding here. I am still new at understanding this.
-
-1. if bio_full is true that means no space in bio->bio_io_vec[] no?
-Than how come we are still proceeding ahead with only warning?
-While originally in bio_add_page we used to return after checking
-bio_full. Callers can still call __bio_add_page directly right.
-
-2. Also the bio_io_vec size allocated will only be upto bio->bi_max_vecs 
-right?
-I could not follow up very well with the bvec_alloc function,
-mainly when nr_iovec > inline_vecs. So how and where it is getting sure 
-that we are getting _nr_iovecs_ allocated from the bvec_pool?
-
-hmm.. tricky. Please help me understand this.
-1. So we have defined different slabs of different sizes in bvec_slabs. 
-and when the allocation request of nr_iovecs come
-we try to grab the predefined(in terms of size) slab of bvec_slabs
-and return. In case if that allocation does not succeed from slab,
-we go for mempool_alloc.
-
-2. IF above is correct why don't we set the bio->bi_max_vecs to the size
-of the slab instead of keeeping it to nr_iovecs which user requested?
-(in bio_alloc_bioset)
-
-
-3. Could you please help understand why for cloned bio we still allow
-__bio_add_page to work? why not WARN and return like in original code?
-
-4. Ok, I see that in patch 32 you are first checking bio_full and 
-calling for xfs_chain_bio. But there also I think you are making sure 
-that new ioend->io_bio is the new chained bio which is not full.
-
-Apologies if above doesn't make any sense.
-
-> +
-> +	bv->bv_page = page;
-> +	bv->bv_offset = off;
-> +	bv->bv_len = len;
-> +
-> +	bio->bi_iter.bi_size += len;
-> +	bio->bi_vcnt++;
-> +}
-> +EXPORT_SYMBOL_GPL(__bio_add_page);
-> +
->   /**
->    *	bio_add_page	-	attempt to add page to bio
->    *	@bio: destination bio
-> @@ -833,40 +886,16 @@ EXPORT_SYMBOL(bio_add_pc_page);
->   int bio_add_page(struct bio *bio, struct page *page,
->   		 unsigned int len, unsigned int offset)
->   {
-> -	struct bio_vec *bv;
-> -
->   	/*
->   	 * cloned bio must not modify vec list
->   	 */
->   	if (WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED)))
->   		return 0;
-> -
-> -	/*
-> -	 * For filesystems with a blocksize smaller than the pagesize
-> -	 * we will often be called with the same page as last time and
-> -	 * a consecutive offset.  Optimize this special case.
-> -	 */
-> -	if (bio->bi_vcnt > 0) {
-> -		bv = &bio->bi_io_vec[bio->bi_vcnt - 1];
-> -
-> -		if (page == bv->bv_page &&
-> -		    offset == bv->bv_offset + bv->bv_len) {
-> -			bv->bv_len += len;
-> -			goto done;
-> -		}
-> +	if (!__bio_try_merge_page(bio, page, len, offset)) {
-> +		if (bio_full(bio))
-> +			return 0;
-> +		__bio_add_page(bio, page, len, offset);
->   	}
-> -
-> -	if (bio->bi_vcnt >= bio->bi_max_vecs)
-> -		return 0;
-Originally here we were supposed to return and not proceed further.
-Should __bio_add_page not have similar checks to safeguard crossing
-the bio_io_vec[] boundary?
-
-
-> -
-> -	bv		= &bio->bi_io_vec[bio->bi_vcnt];
-> -	bv->bv_page	= page;
-> -	bv->bv_len	= len;
-> -	bv->bv_offset	= offset;
-> -
-> -	bio->bi_vcnt++;
-> -done:
-> -	bio->bi_iter.bi_size += len;
->   	return len;
->   }
->   EXPORT_SYMBOL(bio_add_page);
-> diff --git a/include/linux/bio.h b/include/linux/bio.h
-> index ce547a25e8ae..3e73c8bc25ea 100644
-> --- a/include/linux/bio.h
-> +++ b/include/linux/bio.h
-> @@ -123,6 +123,11 @@ static inline void *bio_data(struct bio *bio)
->   	return NULL;
->   }
->   
-> +static inline bool bio_full(struct bio *bio)
-> +{
-> +	return bio->bi_vcnt >= bio->bi_max_vecs;
-> +}
-> +
->   /*
->    * will die
->    */
-> @@ -470,6 +475,10 @@ void bio_chain(struct bio *, struct bio *);
->   extern int bio_add_page(struct bio *, struct page *, unsigned int,unsigned int);
->   extern int bio_add_pc_page(struct request_queue *, struct bio *, struct page *,
->   			   unsigned int, unsigned int);
-> +bool __bio_try_merge_page(struct bio *bio, struct page *page,
-> +		unsigned int len, unsigned int off);
-> +void __bio_add_page(struct bio *bio, struct page *page,
-> +		unsigned int len, unsigned int off);
->   int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter);
->   struct rq_map_data;
->   extern struct bio *bio_map_user_iov(struct request_queue *,
-> 
-
+diff --git a/tests/generic/488 b/tests/generic/488
+new file mode 100755
+index 00000000..39fc887c
+--- /dev/null
++++ b/tests/generic/488
+@@ -0,0 +1,76 @@
++#! /bin/bash
++# FS QA Test 488
++#
++# Check that we can't dedupe a swapfile.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2018 Facebook.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++. ./common/rc
++. ./common/filter
++. ./common/reflink
++
++rm -f $seqres.full
++
++_supported_fs generic
++_supported_os Linux
++_require_scratch_swapfile
++_require_scratch_dedupe
++
++echo "Format and mount"
++_scratch_mkfs > $seqres.full 2>&1
++_scratch_mount >> $seqres.full 2>&1
++
++testdir="$SCRATCH_MNT/test-$seq"
++mkdir "$testdir"
++
++blocks=160
++blksz=65536
++
++echo "Initialize file"
++_format_swapfile "$testdir/file1" $((blocks * blksz))
++swapon "$testdir/file1"
++
++touch "$testdir/file2"
++$CHATTR_PROG +C "$testdir/file2" >/dev/null 2>&1
++
++echo "Try to dedupe"
++cp "$testdir/file1" "$testdir/file2"
++_dedupe_range "$testdir/file1" 0 "$testdir/file2" 0 $((blocks * blksz))
++_dedupe_range "$testdir/file2" 0 "$testdir/file1" 0 $((blocks * blksz))
++
++echo "Tear it down"
++swapoff "$testdir/file1"
++
++status=0
++exit
+diff --git a/tests/generic/488.out b/tests/generic/488.out
+new file mode 100644
+index 00000000..e5a195d1
+--- /dev/null
++++ b/tests/generic/488.out
+@@ -0,0 +1,7 @@
++QA output created by 488
++Format and mount
++Initialize file
++Try to dedupe
++XFS_IOC_FILE_EXTENT_SAME: Text file busy
++XFS_IOC_FILE_EXTENT_SAME: Text file busy
++Tear it down
+diff --git a/tests/generic/group b/tests/generic/group
+index cded10f8..1f504ce1 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -490,3 +490,4 @@
+ 485 auto quick insert
+ 486 auto quick attr
+ 487 auto quick
++488 auto quick swap
 -- 
-Qualcomm India Private Limited, on behalf of Qualcomm Innovation Center, 
-Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
-Linux Foundation Collaborative Project.
+2.17.0
+
