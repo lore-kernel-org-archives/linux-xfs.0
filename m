@@ -1,241 +1,302 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:26078 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752022AbeEPH45 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 May 2018 03:56:57 -0400
-Date: Wed, 16 May 2018 17:56:52 +1000
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:2076 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750775AbeEPIcf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 May 2018 04:32:35 -0400
+Date: Wed, 16 May 2018 18:32:32 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 03/22] xfs: add helpers to collect and sift btree block
- pointers during repair
-Message-ID: <20180516075652.GR23861@dastard>
+Subject: Re: [PATCH 04/22] xfs: add helpers to dispose of old btree blocks
+ after a repair
+Message-ID: <20180516083232.GS23861@dastard>
 References: <152642361893.1556.9335169821674946249.stgit@magnolia>
- <152642363794.1556.12771807615463619233.stgit@magnolia>
+ <152642364418.1556.17533271717583168316.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <152642363794.1556.12771807615463619233.stgit@magnolia>
+In-Reply-To: <152642364418.1556.17533271717583168316.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, May 15, 2018 at 03:33:58PM -0700, Darrick J. Wong wrote:
+On Tue, May 15, 2018 at 03:34:04PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Add some helpers to assemble a list of fs block extents.  Generally,
-> repair functions will iterate the rmapbt to make a list (1) of all
-> extents owned by the nominal owner of the metadata structure; then they
-> will iterate all other structures with the same rmap owner to make a
-> list (2) of active blocks; and finally we have a subtraction function to
-> subtract all the blocks in (2) from (1), with the result that (1) is now
-> a list of blocks that were owned by the old btree and must be disposed.
+> Now that we've plumbed in the ability to construct a list of dead btree
+> blocks following a repair, add more helpers to dispose of them.  This is
+> done by examining the rmapbt -- if the btree was the only owner we can
+> free the block, otherwise it's crosslinked and we can only remove the
+> rmapbt record.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/scrub/repair.c |  207 +++++++++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/scrub/repair.h |   31 +++++++
->  2 files changed, 238 insertions(+)
+>  fs/xfs/scrub/repair.c |  200 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/scrub/repair.h |    3 +
+>  2 files changed, 202 insertions(+), 1 deletion(-)
 > 
 > 
 > diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-> index 72f04a717150..8e8ecddd7537 100644
+> index 8e8ecddd7537..d820e01d1146 100644
 > --- a/fs/xfs/scrub/repair.c
 > +++ b/fs/xfs/scrub/repair.c
-> @@ -361,3 +361,210 @@ xfs_repair_init_btblock(
->  
+> @@ -362,6 +362,173 @@ xfs_repair_init_btblock(
 >  	return 0;
 >  }
-> +
-> +/* Collect a dead btree extent for later disposal. */
+>  
+> +/* Ensure the freelist is the correct size. */
 > +int
-> +xfs_repair_collect_btree_extent(
+> +xfs_repair_fix_freelist(
 > +	struct xfs_scrub_context	*sc,
-> +	struct xfs_repair_extent_list	*exlist,
-> +	xfs_fsblock_t			fsbno,
-> +	xfs_extlen_t			len)
+> +	bool				can_shrink)
 > +{
-> +	struct xfs_repair_extent	*rex;
+> +	struct xfs_alloc_arg		args = {0};
+> +	int				error;
 > +
-> +	trace_xfs_repair_collect_btree_extent(sc->mp,
-> +			XFS_FSB_TO_AGNO(sc->mp, fsbno),
-> +			XFS_FSB_TO_AGBNO(sc->mp, fsbno), len);
+> +	args.mp = sc->mp;
+> +	args.tp = sc->tp;
+> +	args.agno = sc->sa.agno;
+> +	args.alignment = 1;
+> +	args.pag = xfs_perag_get(args.mp, sc->sa.agno);
 > +
-> +	rex = kmem_alloc(sizeof(struct xfs_repair_extent), KM_MAYFAIL);
-> +	if (!rex)
-> +		return -ENOMEM;
+> +	error = xfs_alloc_fix_freelist(&args,
+> +			can_shrink ? 0 : XFS_ALLOC_FLAG_NOSHRINK);
+> +	xfs_perag_put(args.pag);
 
-Is this in transaction context? Regardless, I think we need to run
-the entire of scrub/repair in a memalloc_nofs_save() context so we
-don't have memory reclaim recursion issues...
+with all these pag lookups, I'm starting to wonder if you should
+just add a lookup and store the pag in the scrub context? That'd
+save a lot of lookups - the pag structures never go away and i never
+really intended them to be used like this in single, very short use
+contexts. Grab once per operation, hold the reference across the
+entire operation context, then release it....
 
-[...]
-
-> +/* Compare two btree extents. */
-> +static int
-> +xfs_repair_btree_extent_cmp(
-> +	void				*priv,
-> +	struct list_head		*a,
-> +	struct list_head		*b)
-> +{
-> +	struct xfs_repair_extent	*ap;
-> +	struct xfs_repair_extent	*bp;
-> +
-> +	ap = container_of(a, struct xfs_repair_extent, list);
-> +	bp = container_of(b, struct xfs_repair_extent, list);
-> +
-> +	if (ap->fsbno > bp->fsbno)
-> +		return 1;
-> +	else if (ap->fsbno < bp->fsbno)
-> +		return -1;
-
-No need for the else there.
-
-> +	return 0;
+> +	return error;
 > +}
 > +
 > +/*
-> + * Remove all the blocks mentioned in sublist from the extents in exlist.
-> + *
-> + * The intent is that callers will iterate the rmapbt for all of its records
-> + * for a given owner to generate exlist; and iterate all the blocks of the
-
-generate @exlist
-
-> + * metadata structures that are not being rebuilt and have the same rmapbt
-> + * owner to generate sublist.  This routine subtracts all the extents
-
-generate @sublist.
-
-> + * mentioned in sublist from all the extents linked in exlist, which leaves
-> + * exlist as the list of blocks that are not accounted for, which we assume
-> + * are the dead blocks of the old metadata structure.  The blocks mentioned in
-> + * exlist can be reaped.
+> + * Put a block back on the AGFL.
 > + */
-> +#define XFS_REPAIR_EXT_LEFT_CONTIG	(1 << 0)
-> +#define XFS_REPAIR_EXT_RIGHT_CONTIG	(1 << 1)
-> +int
-> +xfs_repair_subtract_extents(
+> +STATIC int
+> +xfs_repair_put_freelist(
 > +	struct xfs_scrub_context	*sc,
-> +	struct xfs_repair_extent_list	*exlist,
-> +	struct xfs_repair_extent_list	*sublist)
+> +	xfs_agblock_t			agbno)
 > +{
-> +	struct list_head		*lp;
-> +	struct xfs_repair_extent	*ex;
-> +	struct xfs_repair_extent	*newex;
-> +	struct xfs_repair_extent	*subex;
-> +	xfs_fsblock_t			sub_fsb;
-> +	xfs_extlen_t			sub_len;
-> +	int				state;
+> +	struct xfs_owner_info		oinfo;
+> +	struct xfs_perag		*pag;
+> +	int				error;
+> +
+> +	/* Make sure there's space on the freelist. */
+> +	error = xfs_repair_fix_freelist(sc, true);
+> +	if (error)
+> +		return error;
+> +	pag = xfs_perag_get(sc->mp, sc->sa.agno);
+
+Because this is how it quickly gets it gets to silly numbers of
+lookups. That's two now in this function.
+
+> +	if (pag->pagf_flcount == 0) {
+> +		xfs_perag_put(pag);
+> +		return -EFSCORRUPTED;
+
+Why is having an empty freelist a problem here? It's an AG thatis
+completely out of space, but it isn't corruption? And I don't see
+why an empty freelist prevents us from adding a backs back onto the
+AGFL?
+
+> +	}
+> +	xfs_perag_put(pag);
+> +
+> +	/*
+> +	 * Since we're "freeing" a lost block onto the AGFL, we have to
+> +	 * create an rmap for the block prior to merging it or else other
+> +	 * parts will break.
+> +	 */
+> +	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_AG);
+> +	error = xfs_rmap_alloc(sc->tp, sc->sa.agf_bp, sc->sa.agno, agbno, 1,
+> +			&oinfo);
+> +	if (error)
+> +		return error;
+> +
+> +	/* Put the block on the AGFL. */
+> +	error = xfs_alloc_put_freelist(sc->tp, sc->sa.agf_bp, sc->sa.agfl_bp,
+> +			agbno, 0);
+
+There's another pag lookup in here.
+
+> +	if (error)
+> +		return error;
+> +	xfs_extent_busy_insert(sc->tp, sc->sa.agno, agbno, 1,
+> +			XFS_EXTENT_BUSY_SKIP_DISCARD);
+
+And another in here, so 4 perag lookups for the same structure in
+one simple operation. The code here in the function is fine, but I
+really think we need to rethink how we use the perag in our
+allocation code...
+
+> +
+> +	return 0;
+> +}
+> +
+> +/* Dispose of a single metadata block. */
+> +STATIC int
+> +xfs_repair_dispose_btree_block(
+> +	struct xfs_scrub_context	*sc,
+> +	xfs_fsblock_t			fsbno,
+> +	struct xfs_owner_info		*oinfo,
+> +	enum xfs_ag_resv_type		resv)
+> +{
+> +	struct xfs_btree_cur		*cur;
+> +	struct xfs_buf			*agf_bp = NULL;
+> +	xfs_agnumber_t			agno;
+> +	xfs_agblock_t			agbno;
+> +	bool				has_other_rmap;
+> +	int				error;
+> +
+> +	agno = XFS_FSB_TO_AGNO(sc->mp, fsbno);
+> +	agbno = XFS_FSB_TO_AGBNO(sc->mp, fsbno);
+> +
+> +	if (sc->ip) {
+> +		/* Repairing per-inode metadata, read in the AGF. */
+
+This would be better with a comment above saying:
+
+	/*
+	 * If we are repairing per-inode metadata, we need to read
+	 * in the AGF buffer. Otherwise we can re-use the existing
+	 * AGF buffer we set up for repairing the per-AG btrees.
+	 */
+> +		error = xfs_alloc_read_agf(sc->mp, sc->tp, agno, 0, &agf_bp);
+> +		if (error)
+> +			return error;
+> +		if (!agf_bp)
+> +			return -ENOMEM;
+> +	} else {
+> +		/* Repairing per-AG btree, reuse existing AGF buffer. */
+> +		agf_bp = sc->sa.agf_bp;
+> +	}
+> +	cur = xfs_rmapbt_init_cursor(sc->mp, sc->tp, agf_bp, agno);
+> +
+> +	/* Can we find any other rmappings? */
+> +	error = xfs_rmap_has_other_keys(cur, agbno, 1, oinfo, &has_other_rmap);
+> +	if (error)
+> +		goto out_cur;
+> +	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+> +
+> +	/*
+> +	 * If there are other rmappings, this block is cross linked and must
+> +	 * not be freed.  Remove the reverse mapping and move on.  Otherwise,
+
+Why do we just remove the reverse mapping if the block cannot be
+freed? I have my suspicions that this is removing cross-links one by
+one until there's only one reference left to the extent, but then I
+ask "how do we know which one is the correct mapping"?
+
+i.e. this comment raised more questions about the algorithm for
+dealing with cross-linked blocks - which doesn't appear to be
+explained anywhere - than it answers....
+
+> +	 * we were the only owner of the block, so free the extent, which will
+> +	 * also remove the rmap.
+> +	 */
+> +	if (has_other_rmap)
+> +		error = xfs_rmap_free(sc->tp, agf_bp, agno, agbno, 1, oinfo);
+> +	else if (resv == XFS_AG_RESV_AGFL)
+> +		error = xfs_repair_put_freelist(sc, agbno);
+> +	else
+> +		error = xfs_free_extent(sc->tp, fsbno, 1, oinfo, resv);
+> +	if (agf_bp != sc->sa.agf_bp)
+> +		xfs_trans_brelse(sc->tp, agf_bp);
+> +	if (error)
+> +		return error;
+> +
+> +	if (sc->ip)
+> +		return xfs_trans_roll_inode(&sc->tp, sc->ip);
+> +	return xfs_repair_roll_ag_trans(sc);
+> +
+> +out_cur:
+> +	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+> +	if (agf_bp != sc->sa.agf_bp)
+> +		xfs_trans_brelse(sc->tp, agf_bp);
+> +	return error;
+> +}
+> +
+> +/*
+> + * Dispose of a given metadata extent.
+> + *
+> + * If the rmapbt says the extent has multiple owners, we simply remove the
+> + * rmap associated with this owner hoping that we'll eventually disentangle
+> + * the crosslinked metadata.  Otherwise, there's one owner, so call the
+> + * regular free code to remove the rmap and free the extent.  Any existing
+> + * buffers for the blocks in the extent must have been _binval'd previously.
+
+Ok, so there's a little more detail about cross-linked files. Seems
+my suspicions of "remove and hope" were close to the mark :P
+
+Perhaps we need a document that describes the various algorithms we
+use for resolving these problems, so they can be discussed and
+improved without having to troll through the code to understand?
+
+> + */
+> +STATIC int
+> +xfs_repair_dispose_btree_extent(
+> +	struct xfs_scrub_context	*sc,
+> +	xfs_fsblock_t			fsbno,
+> +	xfs_extlen_t			len,
+> +	struct xfs_owner_info		*oinfo,
+> +	enum xfs_ag_resv_type		resv)
+> +{
+> +	struct xfs_mount		*mp = sc->mp;
 > +	int				error = 0;
 > +
-> +	if (list_empty(&exlist->list) || list_empty(&sublist->list))
-> +		return 0;
-> +	ASSERT(!list_empty(&sublist->list));
+> +	ASSERT(xfs_sb_version_hasrmapbt(&mp->m_sb));
+> +	ASSERT(sc->ip != NULL || XFS_FSB_TO_AGNO(mp, fsbno) == sc->sa.agno);
 > +
-> +	list_sort(NULL, &exlist->list, xfs_repair_btree_extent_cmp);
-> +	list_sort(NULL, &sublist->list, xfs_repair_btree_extent_cmp);
+> +	trace_xfs_repair_dispose_btree_extent(mp, XFS_FSB_TO_AGNO(mp, fsbno),
+> +			XFS_FSB_TO_AGBNO(mp, fsbno), len);
 > +
-> +	subex = list_first_entry(&sublist->list, struct xfs_repair_extent,
-> +			list);
-> +	lp = exlist->list.next;
-> +	while (lp != &exlist->list) {
-> +		ex = list_entry(lp, struct xfs_repair_extent, list);
+> +	for (; len > 0; len--, fsbno++) {
+> +		error = xfs_repair_dispose_btree_block(sc, fsbno, oinfo, resv);
+> +		if (error)
+> +			return error;
+
+So why do we do this one block at a time, rather than freeing it
+as an entire extent in one go? And if there is only a single caller,
+why not just open code the loop in the caller?
+
+
+> +/*
+> + * Invalidate buffers for per-AG btree blocks we're dumping.  We assume that
+> + * exlist points only to metadata blocks.
+> + */
+> +int
+> +xfs_repair_invalidate_blocks(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_repair_extent_list	*exlist)
+> +{
+> +	struct xfs_repair_extent	*rex;
+> +	struct xfs_repair_extent	*n;
+> +	struct xfs_buf			*bp;
+> +	xfs_agnumber_t			agno;
+> +	xfs_agblock_t			agbno;
+> +	xfs_agblock_t			i;
 > +
-> +		/*
-> +		 * Advance subex and/or ex until we find a pair that
-> +		 * intersect or we run out of extents.
-> +		 */
-> +		while (subex->fsbno + subex->len <= ex->fsbno) {
-> +			if (list_is_last(&subex->list, &sublist->list))
-> +				goto out;
-> +			subex = list_next_entry(subex, list);
+> +	for_each_xfs_repair_extent_safe(rex, n, exlist) {
+> +		agno = XFS_FSB_TO_AGNO(sc->mp, rex->fsbno);
+> +		agbno = XFS_FSB_TO_AGBNO(sc->mp, rex->fsbno);
+> +		for (i = 0; i < rex->len; i++) {
+> +			bp = xfs_btree_get_bufs(sc->mp, sc->tp, agno,
+> +					agbno + i, 0);
+> +			xfs_trans_binval(sc->tp, bp);
 > +		}
 
-So this is a O(n^2) algorithm, right? How does it scale with large
-extent lists? Given that these extents are dynamically allocated,
-and we're already burning 16 bytes for a list head on each extent,
-would it be better to use a smarter structure better suited for
-exact lookups? e.g. an rbtree only takes an extra 8 bytes per
-extent, and we get O(log N) searches on the inner loop here...
+Again, this is doing things by single blocks. We do have multi-block
+metadata (inodes, directory blocks, remote attrs) that, if it
+is already in memory, needs to be treated as multi-block extents. If
+we don't do that, we'll cause aliasing problems in the buffer cache
+(see _xfs_buf_obj_cmp()) and it's all downhill from there.
 
-I guess this isn't necessary to fix right now, but I think it's
-going to be an issue for maybe mark this down as "needing to be
-fixed before removing EXPERIMENTAL tags"?
-
-> +		if (subex->fsbno >= ex->fsbno + ex->len) {
-> +			lp = lp->next;
-> +			continue;
-> +		}
-> +
-> +		/* trim subex to fit the extent we have */
-> +		sub_fsb = subex->fsbno;
-> +		sub_len = subex->len;
-> +		if (subex->fsbno < ex->fsbno) {
-> +			sub_len -= ex->fsbno - subex->fsbno;
-> +			sub_fsb = ex->fsbno;
-> +		}
-> +		if (sub_len > ex->len)
-> +			sub_len = ex->len;
-> +
-> +		state = 0;
-> +		if (sub_fsb == ex->fsbno)
-> +			state |= XFS_REPAIR_EXT_LEFT_CONTIG;
-> +		if (sub_fsb + sub_len == ex->fsbno + ex->len)
-> +			state |= XFS_REPAIR_EXT_RIGHT_CONTIG;
-
-Ok, I think "CONTIG" is not the right word to use here. In the BMAP
-btrees, the merge state flags were to tell us whether the edge of
-the new extent is contiguous with the left and right extents in
-the tree, not whether the new extents overlapped to the left/right
-edges.
-
-i.e. we're checking whether extent start/end overlaps are aligned
-here, not whether they are contiguous with some other extent. So in
-this case, I'd just name the variables "LEFT_ALIGNED" and
-"RIGHT_ALIGNED" and drop all the namespace bits from them.
-
-> +		switch (state) {
-> +		case XFS_REPAIR_EXT_LEFT_CONTIG:
-> +			/* Coincides with only the left. */
-
-And by calling them aligned, the comments become redundant:
-
-		case LEFT_ALIGNED:
-> +			ex->fsbno += sub_len;
-> +			ex->len -= sub_len;
-> +			break;
-> +		case XFS_REPAIR_EXT_RIGHT_CONTIG:
-> +			/* Coincides with only the right. */
-> +			ex->len -= sub_len;
-> +			lp = lp->next;
-> +			break;
-> +		case XFS_REPAIR_EXT_LEFT_CONTIG | XFS_REPAIR_EXT_RIGHT_CONTIG:
-> +			/* Total overlap, just delete ex. */
-> +			lp = lp->next;
-> +			list_del(&ex->list);
-> +			kmem_free(ex);
-> +			break;
-> +		case 0:
-> +			/*
-> +			 * Deleting from the middle: add the new right extent
-> +			 * and then shrink the left extent.
-> +			 */
-> +			newex = kmem_alloc(sizeof(struct xfs_repair_extent),
-> +					KM_MAYFAIL);
-> +			if (!newex) {
-> +				error = -ENOMEM;
-> +				goto out;
-> +			}
-> +			INIT_LIST_HEAD(&newex->list);
-> +			newex->fsbno = sub_fsb + sub_len;
-> +			newex->len = ex->len - (sub_fsb - ex->fsbno) - sub_len;
-
-so: new len = old len - (length of first extent) - length of overlap.
-
-I think this is more obvious as "new len = old end - new start", i.e.:
-
-			newex->len = ex->fsbno + ex->len - newex->fsbno;
+That's why I get worried when I see assumptions that we can process
+contiguous metadata ranges in single block buffers....
 
 Cheers,
 
