@@ -1,63 +1,304 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:45579 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751254AbeEPRyX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 May 2018 13:54:23 -0400
-Received: by mail-pf0-f195.google.com with SMTP id c10-v6so722553pfi.12
-        for <linux-xfs@vger.kernel.org>; Wed, 16 May 2018 10:54:23 -0700 (PDT)
-From: Omar Sandoval <osandov@osandov.com>
-Subject: [PATCH v3 2/2] iomap: don't allow holes in swapfiles
-Date: Wed, 16 May 2018 10:54:11 -0700
-Message-Id: <cdb5dc22c56b30f693741361f6d6168f97f26bc1.1526493125.git.osandov@fb.com>
-In-Reply-To: <cover.1526493125.git.osandov@fb.com>
-References: <cover.1526493125.git.osandov@fb.com>
-In-Reply-To: <cover.1526493125.git.osandov@fb.com>
-References: <cover.1526493125.git.osandov@fb.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:38754 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750858AbeEPSBd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 May 2018 14:01:33 -0400
+Date: Wed, 16 May 2018 11:01:27 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 03/22] xfs: add helpers to collect and sift btree block
+ pointers during repair
+Message-ID: <20180516180125.GI23858@magnolia>
+References: <152642361893.1556.9335169821674946249.stgit@magnolia>
+ <152642363794.1556.12771807615463619233.stgit@magnolia>
+ <20180516075652.GR23861@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180516075652.GR23861@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>, Aleksei Besogonov <cyberax@amazon.com>, kernel-team@fb.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Omar Sandoval <osandov@fb.com>
+On Wed, May 16, 2018 at 05:56:52PM +1000, Dave Chinner wrote:
+> On Tue, May 15, 2018 at 03:33:58PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Add some helpers to assemble a list of fs block extents.  Generally,
+> > repair functions will iterate the rmapbt to make a list (1) of all
+> > extents owned by the nominal owner of the metadata structure; then they
+> > will iterate all other structures with the same rmap owner to make a
+> > list (2) of active blocks; and finally we have a subtraction function to
+> > subtract all the blocks in (2) from (1), with the result that (1) is now
+> > a list of blocks that were owned by the old btree and must be disposed.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/scrub/repair.c |  207 +++++++++++++++++++++++++++++++++++++++++++++++++
+> >  fs/xfs/scrub/repair.h |   31 +++++++
+> >  2 files changed, 238 insertions(+)
+> > 
+> > 
+> > diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+> > index 72f04a717150..8e8ecddd7537 100644
+> > --- a/fs/xfs/scrub/repair.c
+> > +++ b/fs/xfs/scrub/repair.c
+> > @@ -361,3 +361,210 @@ xfs_repair_init_btblock(
+> >  
+> >  	return 0;
+> >  }
+> > +
+> > +/* Collect a dead btree extent for later disposal. */
+> > +int
+> > +xfs_repair_collect_btree_extent(
+> > +	struct xfs_scrub_context	*sc,
+> > +	struct xfs_repair_extent_list	*exlist,
+> > +	xfs_fsblock_t			fsbno,
+> > +	xfs_extlen_t			len)
+> > +{
+> > +	struct xfs_repair_extent	*rex;
+> > +
+> > +	trace_xfs_repair_collect_btree_extent(sc->mp,
+> > +			XFS_FSB_TO_AGNO(sc->mp, fsbno),
+> > +			XFS_FSB_TO_AGBNO(sc->mp, fsbno), len);
+> > +
+> > +	rex = kmem_alloc(sizeof(struct xfs_repair_extent), KM_MAYFAIL);
+> > +	if (!rex)
+> > +		return -ENOMEM;
+> 
+> Is this in transaction context?
 
-generic_swapfile_activate() doesn't allow holes, so we should be
-consistent here. This is also a bit safer: if the user creates a
-swapfile with, say, truncate -s $SIZE followed by mkswap, they should
-really get an error and not much less swap space than they expected.
-swapon(8) will error out before calling swapon(2) if the file has holes,
-anyways.
+Yes.  After the setup function finishes we're required to own a
+transaction and hold a lock on whatever resource we're playing with.
 
-Fixes: 9d93388b0afe ("iomap: add a swapfile activation function")
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Omar Sandoval <osandov@fb.com>
----
- fs/iomap.c | 5 -----
- 1 file changed, 5 deletions(-)
+> Regardless, I think we need to run the entire of scrub/repair in a
+> memalloc_nofs_save() context so we don't have memory reclaim recursion
+> issues...
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 89517442e296..f2456d0d8ddd 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -1220,10 +1220,6 @@ static loff_t iomap_swapfile_activate_actor(struct inode *inode, loff_t pos,
- 		return -EINVAL;
- 	}
- 
--	/* Skip holes. */
--	if (iomap->type == IOMAP_HOLE)
--		goto out;
--
- 	/* Only real or unwritten extents. */
- 	if (iomap->type != IOMAP_MAPPED && iomap->type != IOMAP_UNWRITTEN) {
- 		pr_err("swapon: file has unallocated extents\n");
-@@ -1259,7 +1255,6 @@ static loff_t iomap_swapfile_activate_actor(struct inode *inode, loff_t pos,
- 			return error;
- 		memcpy(&isi->iomap, iomap, sizeof(isi->iomap));
- 	}
--out:
- 	return count;
- }
- 
--- 
-2.17.0
+xfs_trans_reserve should take care of this, right?  So we don't have to
+feed KM_NOFS to kmem_*_alloc because this is already taken care of.  The
+MAYFAIL exists because we prefer ENOMEM'ing out to pushing on reclaim.
 
+> 
+> [...]
+> 
+> > +/* Compare two btree extents. */
+> > +static int
+> > +xfs_repair_btree_extent_cmp(
+> > +	void				*priv,
+> > +	struct list_head		*a,
+> > +	struct list_head		*b)
+> > +{
+> > +	struct xfs_repair_extent	*ap;
+> > +	struct xfs_repair_extent	*bp;
+> > +
+> > +	ap = container_of(a, struct xfs_repair_extent, list);
+> > +	bp = container_of(b, struct xfs_repair_extent, list);
+> > +
+> > +	if (ap->fsbno > bp->fsbno)
+> > +		return 1;
+> > +	else if (ap->fsbno < bp->fsbno)
+> > +		return -1;
+> 
+> No need for the else there.
+
+Fixed.
+
+> > +	return 0;
+> > +}
+> > +
+> > +/*
+> > + * Remove all the blocks mentioned in sublist from the extents in exlist.
+> > + *
+> > + * The intent is that callers will iterate the rmapbt for all of its records
+> > + * for a given owner to generate exlist; and iterate all the blocks of the
+> 
+> generate @exlist
+> 
+> > + * metadata structures that are not being rebuilt and have the same rmapbt
+> > + * owner to generate sublist.  This routine subtracts all the extents
+> 
+> generate @sublist.
+
+Fixed both.
+
+> > + * mentioned in sublist from all the extents linked in exlist, which leaves
+> > + * exlist as the list of blocks that are not accounted for, which we assume
+> > + * are the dead blocks of the old metadata structure.  The blocks mentioned in
+> > + * exlist can be reaped.
+> > + */
+> > +#define XFS_REPAIR_EXT_LEFT_CONTIG	(1 << 0)
+> > +#define XFS_REPAIR_EXT_RIGHT_CONTIG	(1 << 1)
+> > +int
+> > +xfs_repair_subtract_extents(
+> > +	struct xfs_scrub_context	*sc,
+> > +	struct xfs_repair_extent_list	*exlist,
+> > +	struct xfs_repair_extent_list	*sublist)
+> > +{
+> > +	struct list_head		*lp;
+> > +	struct xfs_repair_extent	*ex;
+> > +	struct xfs_repair_extent	*newex;
+> > +	struct xfs_repair_extent	*subex;
+> > +	xfs_fsblock_t			sub_fsb;
+> > +	xfs_extlen_t			sub_len;
+> > +	int				state;
+> > +	int				error = 0;
+> > +
+> > +	if (list_empty(&exlist->list) || list_empty(&sublist->list))
+> > +		return 0;
+> > +	ASSERT(!list_empty(&sublist->list));
+> > +
+> > +	list_sort(NULL, &exlist->list, xfs_repair_btree_extent_cmp);
+> > +	list_sort(NULL, &sublist->list, xfs_repair_btree_extent_cmp);
+> > +
+> > +	subex = list_first_entry(&sublist->list, struct xfs_repair_extent,
+> > +			list);
+> > +	lp = exlist->list.next;
+> > +	while (lp != &exlist->list) {
+> > +		ex = list_entry(lp, struct xfs_repair_extent, list);
+> > +
+> > +		/*
+> > +		 * Advance subex and/or ex until we find a pair that
+> > +		 * intersect or we run out of extents.
+> > +		 */
+> > +		while (subex->fsbno + subex->len <= ex->fsbno) {
+> > +			if (list_is_last(&subex->list, &sublist->list))
+> > +				goto out;
+> > +			subex = list_next_entry(subex, list);
+> > +		}
+> 
+> So this is a O(n^2) algorithm, right? How does it scale with large
+> extent lists?
+
+I don't think this is O(n^2) -- each list sort is O(n log n).  Then we
+iterate exlist once, rolling forward through sublist as necessary.  We
+never reset lp to the head of exlist nor do we reset subex to the head
+of sublist.  We're not performing random lookups on the sublist extents
+at all.
+
+So far I haven't noticed /much/ heat from this routine even with
+deliberately aged filesystems, but that's probably due to the slab
+allocator eating way more time. :(
+
+> Given that these extents are dynamically allocated, and we're already
+> burning 16 bytes for a list head on each extent, would it be better to
+> use a smarter structure better suited for exact lookups? e.g. an
+> rbtree only takes an extra 8 bytes per extent, and we get O(log N)
+> searches on the inner loop here...
+> 
+> I guess this isn't necessary to fix right now, but I think it's
+> going to be an issue for maybe mark this down as "needing to be
+> fixed before removing EXPERIMENTAL tags"?
+
+I've thought about converting this to an rbtree or something, since
+these are basically glorified bitmap operations.  Set all the bits
+corresponding to this rmap owner; set all the bits corresponding to
+blocks with the same rmap owner but owned by the other data structures
+sharing the rmap owner; then free anything in (ex & ~sub) because those
+are the old btree blocks.  It's on my list for optimization, but first
+I want to get this thing working correctly.
+
+TBH the other thing that irks me about the current orepair design is its
+heavy reliance on creating potentially huge linked lists of the records
+that need to be put into the new structure.  I'd really like a data
+structure where I can do fast unsorted appends without list overhead,
+sort the data structure once, and then insert in sorted order.  The slab
+thing I put into xfs_repair provides this, but we can't easily allocate
+128M of space in the kernel.  I also want to do a bulk load of an empty
+a btree leaf so that we log the leaf block once and update the node
+pointers once, kind of like what xfs_repair does during phase 5.
+
+...all this optimization can come after merging.
+
+> > +		if (subex->fsbno >= ex->fsbno + ex->len) {
+> > +			lp = lp->next;
+> > +			continue;
+> > +		}
+> > +
+> > +		/* trim subex to fit the extent we have */
+> > +		sub_fsb = subex->fsbno;
+> > +		sub_len = subex->len;
+> > +		if (subex->fsbno < ex->fsbno) {
+> > +			sub_len -= ex->fsbno - subex->fsbno;
+> > +			sub_fsb = ex->fsbno;
+> > +		}
+> > +		if (sub_len > ex->len)
+> > +			sub_len = ex->len;
+> > +
+> > +		state = 0;
+> > +		if (sub_fsb == ex->fsbno)
+> > +			state |= XFS_REPAIR_EXT_LEFT_CONTIG;
+> > +		if (sub_fsb + sub_len == ex->fsbno + ex->len)
+> > +			state |= XFS_REPAIR_EXT_RIGHT_CONTIG;
+> 
+> Ok, I think "CONTIG" is not the right word to use here. In the BMAP
+> btrees, the merge state flags were to tell us whether the edge of
+> the new extent is contiguous with the left and right extents in
+> the tree, not whether the new extents overlapped to the left/right
+> edges.
+> 
+> i.e. we're checking whether extent start/end overlaps are aligned
+> here, not whether they are contiguous with some other extent. So in
+> this case, I'd just name the variables "LEFT_ALIGNED" and
+> "RIGHT_ALIGNED" and drop all the namespace bits from them.
+> 
+> > +		switch (state) {
+> > +		case XFS_REPAIR_EXT_LEFT_CONTIG:
+> > +			/* Coincides with only the left. */
+> 
+> And by calling them aligned, the comments become redundant:
+
+Fixed.
+
+> 		case LEFT_ALIGNED:
+> > +			ex->fsbno += sub_len;
+> > +			ex->len -= sub_len;
+> > +			break;
+> > +		case XFS_REPAIR_EXT_RIGHT_CONTIG:
+> > +			/* Coincides with only the right. */
+> > +			ex->len -= sub_len;
+> > +			lp = lp->next;
+> > +			break;
+> > +		case XFS_REPAIR_EXT_LEFT_CONTIG | XFS_REPAIR_EXT_RIGHT_CONTIG:
+> > +			/* Total overlap, just delete ex. */
+> > +			lp = lp->next;
+> > +			list_del(&ex->list);
+> > +			kmem_free(ex);
+> > +			break;
+> > +		case 0:
+> > +			/*
+> > +			 * Deleting from the middle: add the new right extent
+> > +			 * and then shrink the left extent.
+> > +			 */
+> > +			newex = kmem_alloc(sizeof(struct xfs_repair_extent),
+> > +					KM_MAYFAIL);
+> > +			if (!newex) {
+> > +				error = -ENOMEM;
+> > +				goto out;
+> > +			}
+> > +			INIT_LIST_HEAD(&newex->list);
+> > +			newex->fsbno = sub_fsb + sub_len;
+> > +			newex->len = ex->len - (sub_fsb - ex->fsbno) - sub_len;
+> 
+> so: new len = old len - (length of first extent) - length of overlap.
+> 
+> I think this is more obvious as "new len = old end - new start", i.e.:
+> 
+> 			newex->len = ex->fsbno + ex->len - newex->fsbno;
+
+Yep.  Fixed.
+
+--D
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
