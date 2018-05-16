@@ -1,29 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:51784 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752296AbeEOHuF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 May 2018 03:50:05 -0400
-Date: Tue, 15 May 2018 00:50:01 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfsprogs 4.16.0 format change, GRUB error unknown filesystem
-Message-ID: <20180515075001.GA17568@infradead.org>
-References: <CAJCQCtQbns7bbE=mWvYuWMi+R5wdphfEjF1F995PVBsoUovnpg@mail.gmail.com>
- <20180514173610.GC4933@magnolia>
- <CAJCQCtQ04viW=GzfTBWdQPab8orRmzQ2MjHGCSy_VY_k7-PdRw@mail.gmail.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:43954 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750847AbeEPSMH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 May 2018 14:12:07 -0400
+Date: Wed, 16 May 2018 11:11:42 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 1/2] iomap: provide more useful errors for invalid
+ swap files
+Message-ID: <20180516181142.GK23858@magnolia>
+References: <cover.1526488995.git.osandov@fb.com>
+ <9faf09627cfa469437b76edb73ac7cc822dc33c8.1526488995.git.osandov@fb.com>
+ <20180516172531.GA13464@infradead.org>
+ <20180516173251.GA29231@vader>
+ <20180516174645.GA8815@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAJCQCtQ04viW=GzfTBWdQPab8orRmzQ2MjHGCSy_VY_k7-PdRw@mail.gmail.com>
+In-Reply-To: <20180516174645.GA8815@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chris Murphy <lists@colorremedies.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs list <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Omar Sandoval <osandov@osandov.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, Aleksei Besogonov <cyberax@amazon.com>, kernel-team@fb.com
 
-On Mon, May 14, 2018 at 11:52:18AM -0600, Chris Murphy wrote:
-> Is there a reason why this was made default before GRUB was fixed? Or
-> would XFS devs prefer to not support /boot on XFS?
+On Wed, May 16, 2018 at 10:46:45AM -0700, Christoph Hellwig wrote:
+> On Wed, May 16, 2018 at 10:32:51AM -0700, Omar Sandoval wrote:
+> > On Wed, May 16, 2018 at 10:25:31AM -0700, Christoph Hellwig wrote:
+> > > On Wed, May 16, 2018 at 09:45:50AM -0700, Omar Sandoval wrote:
+> > > > +	if ((iomap->type != IOMAP_MAPPED && iomap->type != IOMAP_UNWRITTEN) ||
+> > > > +	    iomap->addr == IOMAP_NULL_ADDR) {
+> > > > +		pr_err("swapon: file has unallocated extents\n");
+> > > > +		return -EINVAL;
+> > > > +	}
+> > > 
+> > > The two are really different cases - IOMAP_NULL_ADDR shouldn't really
+> > > happen for any of the above.  Although we might have to move the
+> > > inline check before the type check above for the message to make sense.
+> > > 
+> > > I have a patch in the local queue that makes inline a type instead of
+> > > a flag, btw as it really isn't a flag.
 
-A bootloader that reads any non-trivial file system (and that includes
-XFS for sure) is a bad idea.  So yes, if distros would not do that by
-default it would help a lot.
+That's what I thought -- we only see NULL_ADDR for holes and delalloc
+extents, and we already check for both of those.  But I didn't see
+anything in iomap.h expressly saying that, so I decided to be defensive
+and check it anyway.
+
+IOWs it would be helpful to have a little more documentation about which
+flags go together, particularly for things like IOMAP_F_BOUNDARY that
+don't have any meaning in xfs.
+
+> > So something like this, moving the inline check and removing the hole
+> > check since that doesn't make sense for mapped or unwritten? Then the
+> > inline flag check can be converted to a type check.
+> 
+> Yes, this looks great!
+
+Yeah, the v3 patch looks ok.
+
+--D
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
