@@ -1,99 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:54708 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751322AbeEQFxw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 May 2018 01:53:52 -0400
-Date: Wed, 16 May 2018 22:53:46 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 05/22] xfs: recover AG btree roots from rmap data
-Message-ID: <20180517055346.GQ23858@magnolia>
-References: <152642361893.1556.9335169821674946249.stgit@magnolia>
- <152642365045.1556.6221144971800322852.stgit@magnolia>
- <20180516085151.GT23861@dastard>
- <20180516183729.GL23858@magnolia>
- <20180516223622.GY23861@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180516223622.GY23861@dastard>
+Received: from mail-pl0-f66.google.com ([209.85.160.66]:38556 "EHLO
+        mail-pl0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751332AbeEPQp6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 May 2018 12:45:58 -0400
+Received: by mail-pl0-f66.google.com with SMTP id c11-v6so757171plr.5
+        for <linux-xfs@vger.kernel.org>; Wed, 16 May 2018 09:45:58 -0700 (PDT)
+From: Omar Sandoval <osandov@osandov.com>
+Subject: [PATCH v2 0/2] iomap: swapfile tweaks
+Date: Wed, 16 May 2018 09:45:49 -0700
+Message-Id: <cover.1526488995.git.osandov@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>, Aleksei Besogonov <cyberax@amazon.com>, kernel-team@fb.com
 
-On Thu, May 17, 2018 at 08:36:22AM +1000, Dave Chinner wrote:
-> On Wed, May 16, 2018 at 11:37:29AM -0700, Darrick J. Wong wrote:
-> > On Wed, May 16, 2018 at 06:51:52PM +1000, Dave Chinner wrote:
-> > > On Tue, May 15, 2018 at 03:34:10PM -0700, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > 
-> > > > Add a helper function to help us recover btree roots from the rmap data.
-> > > > Callers pass in a list of rmap owner codes, buffer ops, and magic
-> > > > numbers.  We iterate the rmap records looking for owner matches, and
-> > > > then read the matching blocks to see if the magic number & uuid match.
-> > > > If so, we then read-verify the block, and if that passes then we retain
-> > > > a pointer to the block with the highest level, assuming that by the end
-> > > > of the call we will have found the root.  This will be used to reset the
-> > > > AGF/AGI btree root fields during their rebuild procedures.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> .....
-> > > > +	/* Ignore this block if it's lower in the tree than we've seen. */
-> > > > +	if (fab->root != NULLAGBLOCK &&
-> > > > +	    xfs_btree_get_level(btblock) < fab->height)
-> > > > +		goto out;
-> > > > +
-> > > > +	/* Make sure we pass the verifiers. */
-> > > > +	bp->b_ops->verify_read(bp);
-> > > > +	if (bp->b_error)
-> > > > +		goto out;
-> > > > +	fab->root = agbno;
-> > > > +	fab->height = xfs_btree_get_level(btblock) + 1;
-> > > > +	*found_it = true;
-> > > > +
-> > > > +	trace_xfs_repair_findroot_block(mp, ri->sc->sa.agno, agbno,
-> > > > +			be32_to_cpu(btblock->bb_magic), fab->height - 1);
-> > > > +out:
-> > > > +	xfs_trans_brelse(ri->sc->tp, bp);
-> > > 
-> > > So we release the buffer once we've found it, which also unlocks it.
-> > > That means when we come back to it later, it may have been accessed
-> > > and changed by something else and no longer be the block we are
-> > > looking for. How do you protect against this sort of race given we
-> > > are unlocking the buffer? Perhaps it should be held on the fab
-> > > structure, and released when a better candidate is found?
-> > 
-> > The two callers of this function are the AGF and AGI repair functions.
-> > AGF repair holds the locked AGF buffer, and AGI repair holds the locked
-> > AGF & AGI buffers, which should be enough to prevent anyone else from
-> > accessing the AG btrees.  They keep the all the AG header buffers locked
-> > until they're completely finished with rebuilding the headers (i.e.
-> > xfs_scrub_teardown) and it's safe for the shape to change.
-> > 
-> > How about I add to the comment for this function:
-> > 
-> > /*
-> >  * The caller must lock the applicable per-AG header buffers (AGF, AGI)
-> >  * to prevent other threads from changing the shape of the btrees that
-> >  * we are looking for.  It must maintain those locks until it's safe for
-> >  * other threads to change the btrees' shapes.
-> >  */
-> 
-> That's helpful. :) Can you sprinkle some checks like
-> ASSERT(xfs_buf_islocked(agbp)) to remind readers of the
-> leaf/callback functions that they expect the AGF/AGI to be locked on
-> entry?
+From: Omar Sandoval <osandov@fb.com>
 
-Ok, will do.
+Changes from v1:
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+- Added patch 1 to provide more useful error messages (suggested by me)
+  and move the bdev check (suggested by Christoph)
+- Changed patch 2 to simply delete the hole check, since it will be
+  caught by the mapped || unwritten check below
+
+Based on xfs-linux/for-next. Thanks!
+
+Omar Sandoval (2):
+  iomap: provide more useful errors for invalid swap files
+  iomap: don't allow holes in swapfiles
+
+ fs/iomap.c | 42 ++++++++++++++++++++++--------------------
+ 1 file changed, 22 insertions(+), 20 deletions(-)
+
+-- 
+2.17.0
+
