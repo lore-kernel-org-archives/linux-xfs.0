@@ -1,77 +1,147 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:50772 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752417AbeEOUun (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 15 May 2018 16:50:43 -0400
-Subject: Re: [PATCH] xfs: change xfs_update_secondary_supers to use
- xfS_sb_read_secondary
-References: <20180515204721.GM4933@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <512fcda2-e649-846d-65f8-6c927779e6cb@sandeen.net>
-Date: Tue, 15 May 2018 15:50:40 -0500
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:57343 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750775AbeEPGvG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 May 2018 02:51:06 -0400
+Date: Wed, 16 May 2018 16:51:03 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 01/22] xfs: add helpers to deal with transaction
+ allocation and rolling
+Message-ID: <20180516065103.GP23861@dastard>
+References: <152642361893.1556.9335169821674946249.stgit@magnolia>
+ <152642362544.1556.12056546958129943758.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20180515204721.GM4933@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <152642362544.1556.12056546958129943758.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 5/15/18 3:47 PM, Darrick J. Wong wrote:
+On Tue, May 15, 2018 at 03:33:45PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Use the new helper to read secondary superblocks instead of opencoding
-> it ourselves.
+> For repairs, we need to reserve at least as many blocks as we think
+> we're going to need to rebuild the data structure, and we're going to
+> need some helpers to roll transactions while maintaining locks on the AG
+> headers so that other threads cannot wander into the middle of a repair.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Thanks, sorry I forgot^Wdidn't know that existed.
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
 > ---
->   fs/xfs/xfs_fsops.c |   10 ++++------
->   1 file changed, 4 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> index 056a76689197..40c131ebf772 100644
-> --- a/fs/xfs/xfs_fsops.c
-> +++ b/fs/xfs/xfs_fsops.c
-> @@ -191,18 +191,15 @@ xfs_growfs_data_private(
->    */
->   int
->   xfs_update_secondary_supers(
-> -	xfs_mount_t		*mp)
-> +	struct xfs_mount	*mp)
->   {
-> -	int			error, saved_error;
-> +	struct xfs_buf		*bp;
->   	xfs_agnumber_t		agno;
-> -	xfs_buf_t		*bp;
-> +	int			error, saved_error;
->   
->   	error = saved_error = 0;
->   
->   	for (agno = 1; agno < mp->m_sb.sb_agcount; agno++) {
-> -		error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
-> -			  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
-> -			  XFS_FSS_TO_BB(mp, 1), 0, &bp, &xfs_sb_buf_ops);
->   		/*
->   		 * If we get an error reading or writing alternate superblocks,
->   		 * continue.  xfs_repair chooses the "best" superblock based
-> @@ -210,6 +207,7 @@ xfs_update_secondary_supers(
->   		 * superblocks un-updated than updated, and xfs_repair may
->   		 * pick them over the properly-updated primary.
->   		 */
-> +		error = xfs_sb_read_secondary(mp, NULL, agno, &bp);
->   		if (error) {
->   			xfs_warn(mp,
->   		"error %d reading secondary superblock for ag %d",
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+>  fs/xfs/scrub/bmap.c   |    2 -
+>  fs/xfs/scrub/common.c |   21 ++++++-
+>  fs/xfs/scrub/common.h |    2 -
+>  fs/xfs/scrub/inode.c  |    4 +
+>  fs/xfs/scrub/repair.c |  152 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/scrub/repair.h |   12 ++++
+>  6 files changed, 186 insertions(+), 7 deletions(-)
+
+mostly looks good.
+
+[...]
+> +/*
+> + * Figure out how many blocks to reserve for an AG repair.  We calculate the
+> + * worst case estimate for the number of blocks we'd need to rebuild one of
+> + * any type of per-AG btree.
+> + */
+> +xfs_extlen_t
+> +xfs_repair_calc_ag_resblks(
+> +	struct xfs_scrub_context	*sc)
+> +{
+> +	struct xfs_mount		*mp = sc->mp;
+> +	struct xfs_scrub_metadata	*sm = sc->sm;
+> +	struct xfs_perag		*pag;
+> +	struct xfs_buf			*bp;
+> +	xfs_agino_t			icount = 0;
+> +	xfs_extlen_t			aglen = 0;
+> +	xfs_extlen_t			usedlen;
+> +	xfs_extlen_t			freelen;
+> +	xfs_extlen_t			bnobt_sz;
+> +	xfs_extlen_t			inobt_sz;
+> +	xfs_extlen_t			rmapbt_sz;
+> +	xfs_extlen_t			refcbt_sz;
+> +	int				error;
+> +
+> +	if (!(sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR))
+> +		return 0;
+> +
+> +	/* Use in-core counters if possible. */
+> +	pag = xfs_perag_get(mp, sm->sm_agno);
+> +	if (pag->pagi_init)
+> +		icount = pag->pagi_count;
+> +	xfs_perag_put(pag);
+
+Don't drop the pag here, do it ....
+> +
+> +	/*
+> +	 * Otherwise try to get the actual counters from disk; if not, make
+> +	 * some worst case assumptions.
+> +	 */
+> +	if (icount == 0) {
+> +		error = xfs_ialloc_read_agi(mp, NULL, sm->sm_agno, &bp);
+> +		if (error) {
+> +			icount = mp->m_sb.sb_agblocks / mp->m_sb.sb_inopblock;
+> +		} else {
+> +			pag = xfs_perag_get(mp, sm->sm_agno);
+> +			icount = pag->pagi_count;
+> +			xfs_perag_put(pag);
+> +			xfs_buf_relse(bp);
+> +		}
+> +	}
+> +
+> +	/* Now grab the block counters from the AGF. */
+> +	error = xfs_alloc_read_agf(mp, NULL, sm->sm_agno, 0, &bp);
+> +	if (error) {
+> +		aglen = mp->m_sb.sb_agblocks;
+> +		freelen = aglen;
+> +		usedlen = aglen;
+> +	} else {
+> +		pag = xfs_perag_get(mp, sm->sm_agno);
+> +		aglen = be32_to_cpu(XFS_BUF_TO_AGF(bp)->agf_length);
+> +		freelen = pag->pagf_freeblks;
+> +		usedlen = aglen - freelen;
+> +		xfs_perag_put(pag);
+> +		xfs_buf_relse(bp);
+> +	}
+
+.... here, so we don't have to do repeated lookups.
+
+> +	trace_xfs_repair_calc_ag_resblks(mp, sm->sm_agno, icount, aglen,
+> +			freelen, usedlen);
+> +
+> +	/*
+> +	 * Figure out how many blocks we'd need worst case to rebuild
+> +	 * each type of btree.  Note that we can only rebuild the
+> +	 * bnobt/cntbt or inobt/finobt as pairs.
+> +	 */
+> +	bnobt_sz = 2 * xfs_allocbt_calc_size(mp, freelen);
+> +	if (xfs_sb_version_hassparseinodes(&mp->m_sb))
+> +		inobt_sz = xfs_iallocbt_calc_size(mp, icount /
+> +				XFS_INODES_PER_HOLEMASK_BIT);
+> +	else
+> +		inobt_sz = xfs_iallocbt_calc_size(mp, icount /
+> +				XFS_INODES_PER_CHUNK);
+> +	if (xfs_sb_version_hasfinobt(&mp->m_sb))
+> +		inobt_sz *= 2;
+> +	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+> +		rmapbt_sz = xfs_rmapbt_calc_size(mp, aglen);
+> +		refcbt_sz = xfs_refcountbt_calc_size(mp, usedlen);
+> +	} else {
+> +		rmapbt_sz = xfs_rmapbt_calc_size(mp, usedlen);
+> +		refcbt_sz = 0;
+> +	}
+> +	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
+> +		rmapbt_sz = 0;
+
+This looks kinda whacky. reflink and rmapbt are different features,
+maybe a comment to explain why the rmapbt size calc is done all
+back to front?
+
+Otherwise looks ok.
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+-- 
+Dave Chinner
+david@fromorbit.com
