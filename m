@@ -1,45 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:55510 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750759AbeEPSWY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 May 2018 14:22:24 -0400
-Date: Wed, 16 May 2018 11:22:22 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 1/2] iomap: provide more useful errors for invalid
- swap files
-Message-ID: <20180516182222.GA21917@infradead.org>
-References: <cover.1526488995.git.osandov@fb.com>
- <9faf09627cfa469437b76edb73ac7cc822dc33c8.1526488995.git.osandov@fb.com>
- <20180516172531.GA13464@infradead.org>
- <20180516173251.GA29231@vader>
- <20180516174645.GA8815@infradead.org>
- <20180516181142.GK23858@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180516181142.GK23858@magnolia>
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:33532 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751013AbeEPUiz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 May 2018 16:38:55 -0400
+Received: by mail-pg0-f65.google.com with SMTP id v7-v6so807599pgs.0
+        for <linux-xfs@vger.kernel.org>; Wed, 16 May 2018 13:38:55 -0700 (PDT)
+From: Omar Sandoval <osandov@osandov.com>
+Subject: [PATCH v2 0/5] xfstests: generic swap file tests
+Date: Wed, 16 May 2018 13:38:44 -0700
+Message-Id: <cover.1526503000.git.osandov@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Omar Sandoval <osandov@osandov.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, Aleksei Besogonov <cyberax@amazon.com>, kernel-team@fb.com
+To: fstests@vger.kernel.org
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Eryu Guan <guaneryu@gmail.com>, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, kernel-team@fb.com
 
-On Wed, May 16, 2018 at 11:11:42AM -0700, Darrick J. Wong wrote:
-> That's what I thought -- we only see NULL_ADDR for holes and delalloc
-> extents, and we already check for both of those.  But I didn't see
-> anything in iomap.h expressly saying that, so I decided to be defensive
-> and check it anyway.
-> 
-> IOWs it would be helpful to have a little more documentation about which
-> flags go together,
+From: Omar Sandoval <osandov@fb.com>
 
-patches welcome :)
+Changes since v1:
 
-> particularly for things like IOMAP_F_BOUNDARY that
-> don't have any meaning in xfs.
+- Add patch 1 to create a group for swap
+- Add a helper for formatting a swap file instead of open coding
+  everywhere
+- Use $CHATTR_PROG instead of chattr in a few places that I forgot
 
-Yikes, how did that even end in the tree?  That whole boundary
-thing already made little sene on buffer heads, and even less
-so in the generic iomap code.  I think we just need to allocate
-a few flags for fs specific uses and move it into gfs2.
+Thanks!
+
+Omar Sandoval (5):
+  xfstests: create swap group
+  generic: enable swapfile tests on Btrfs
+  generic: add test for dedupe on an active swapfile
+  generic: add test for truncate/fpunch of an active swapfile
+  generic: test invalid swap file activation
+
+ .gitignore            |  2 ++
+ common/rc             | 15 ++++++--
+ src/Makefile          |  2 +-
+ src/mkswap.c          | 83 +++++++++++++++++++++++++++++++++++++++++++
+ src/swapon.c          | 24 +++++++++++++
+ tests/generic/356     |  7 ++--
+ tests/generic/357     |  6 ++--
+ tests/generic/488     | 76 +++++++++++++++++++++++++++++++++++++++
+ tests/generic/488.out |  7 ++++
+ tests/generic/489     | 73 +++++++++++++++++++++++++++++++++++++
+ tests/generic/489.out |  8 +++++
+ tests/generic/490     | 77 +++++++++++++++++++++++++++++++++++++++
+ tests/generic/490.out |  5 +++
+ tests/generic/group   |  7 ++--
+ tests/xfs/group       |  2 +-
+ 15 files changed, 381 insertions(+), 13 deletions(-)
+ create mode 100644 src/mkswap.c
+ create mode 100644 src/swapon.c
+ create mode 100755 tests/generic/488
+ create mode 100644 tests/generic/488.out
+ create mode 100755 tests/generic/489
+ create mode 100644 tests/generic/489.out
+ create mode 100755 tests/generic/490
+ create mode 100644 tests/generic/490.out
+
+-- 
+2.17.0
 
