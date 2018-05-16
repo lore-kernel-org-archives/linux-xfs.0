@@ -1,302 +1,188 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:2076 "EHLO
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:20101 "EHLO
         ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750775AbeEPIcf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 May 2018 04:32:35 -0400
-Date: Wed, 16 May 2018 18:32:32 +1000
+        by vger.kernel.org with ESMTP id S1752143AbeEPIvz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 May 2018 04:51:55 -0400
+Date: Wed, 16 May 2018 18:51:52 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 04/22] xfs: add helpers to dispose of old btree blocks
- after a repair
-Message-ID: <20180516083232.GS23861@dastard>
+Subject: Re: [PATCH 05/22] xfs: recover AG btree roots from rmap data
+Message-ID: <20180516085151.GT23861@dastard>
 References: <152642361893.1556.9335169821674946249.stgit@magnolia>
- <152642364418.1556.17533271717583168316.stgit@magnolia>
+ <152642365045.1556.6221144971800322852.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <152642364418.1556.17533271717583168316.stgit@magnolia>
+In-Reply-To: <152642365045.1556.6221144971800322852.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, May 15, 2018 at 03:34:04PM -0700, Darrick J. Wong wrote:
+On Tue, May 15, 2018 at 03:34:10PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Now that we've plumbed in the ability to construct a list of dead btree
-> blocks following a repair, add more helpers to dispose of them.  This is
-> done by examining the rmapbt -- if the btree was the only owner we can
-> free the block, otherwise it's crosslinked and we can only remove the
-> rmapbt record.
+> Add a helper function to help us recover btree roots from the rmap data.
+> Callers pass in a list of rmap owner codes, buffer ops, and magic
+> numbers.  We iterate the rmap records looking for owner matches, and
+> then read the matching blocks to see if the magic number & uuid match.
+> If so, we then read-verify the block, and if that passes then we retain
+> a pointer to the block with the highest level, assuming that by the end
+> of the call we will have found the root.  This will be used to reset the
+> AGF/AGI btree root fields during their rebuild procedures.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/scrub/repair.c |  200 +++++++++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/scrub/repair.h |    3 +
->  2 files changed, 202 insertions(+), 1 deletion(-)
+>  fs/xfs/scrub/repair.c |  178 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/scrub/repair.h |   20 ++++++
+>  2 files changed, 198 insertions(+)
 > 
 > 
 > diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-> index 8e8ecddd7537..d820e01d1146 100644
+> index d820e01d1146..06c84f76d7ff 100644
 > --- a/fs/xfs/scrub/repair.c
 > +++ b/fs/xfs/scrub/repair.c
-> @@ -362,6 +362,173 @@ xfs_repair_init_btblock(
+> @@ -766,3 +766,181 @@ xfs_repair_invalidate_blocks(
+>  
 >  	return 0;
 >  }
->  
-> +/* Ensure the freelist is the correct size. */
-> +int
-> +xfs_repair_fix_freelist(
-> +	struct xfs_scrub_context	*sc,
-> +	bool				can_shrink)
+> +
+> +/* See if our block is in the AGFL. */
+> +STATIC int
+> +xfs_repair_findroot_agfl_walk(
+> +	struct xfs_mount		*mp,
+> +	xfs_agblock_t			bno,
+> +	void				*priv)
 > +{
-> +	struct xfs_alloc_arg		args = {0};
-> +	int				error;
+> +	xfs_agblock_t			*agbno = priv;
 > +
-> +	args.mp = sc->mp;
-> +	args.tp = sc->tp;
-> +	args.agno = sc->sa.agno;
-> +	args.alignment = 1;
-> +	args.pag = xfs_perag_get(args.mp, sc->sa.agno);
-> +
-> +	error = xfs_alloc_fix_freelist(&args,
-> +			can_shrink ? 0 : XFS_ALLOC_FLAG_NOSHRINK);
-> +	xfs_perag_put(args.pag);
-
-with all these pag lookups, I'm starting to wonder if you should
-just add a lookup and store the pag in the scrub context? That'd
-save a lot of lookups - the pag structures never go away and i never
-really intended them to be used like this in single, very short use
-contexts. Grab once per operation, hold the reference across the
-entire operation context, then release it....
-
-> +	return error;
+> +	return (*agbno == bno) ? XFS_BTREE_QUERY_RANGE_ABORT : 0;
 > +}
 > +
-> +/*
-> + * Put a block back on the AGFL.
-> + */
+> +struct xfs_repair_findroot {
+> +	struct xfs_scrub_context	*sc;
+> +	struct xfs_buf			*agfl_bp;
+> +	struct xfs_agf			*agf;
+> +	struct xfs_repair_find_ag_btree	*btree_info;
+> +};
+> +
+> +/* Does this block match the btree information passed in? */
 > +STATIC int
-> +xfs_repair_put_freelist(
-> +	struct xfs_scrub_context	*sc,
-> +	xfs_agblock_t			agbno)
+> +xfs_repair_findroot_block(
+> +	struct xfs_repair_findroot	*ri,
+> +	struct xfs_repair_find_ag_btree	*fab,
+> +	uint64_t			owner,
+> +	xfs_agblock_t			agbno,
+> +	bool				*found_it)
 > +{
-> +	struct xfs_owner_info		oinfo;
-> +	struct xfs_perag		*pag;
+> +	struct xfs_mount		*mp = ri->sc->mp;
+> +	struct xfs_buf			*bp;
+> +	struct xfs_btree_block		*btblock;
+> +	xfs_daddr_t			daddr;
 > +	int				error;
 > +
-> +	/* Make sure there's space on the freelist. */
-> +	error = xfs_repair_fix_freelist(sc, true);
-> +	if (error)
-> +		return error;
-> +	pag = xfs_perag_get(sc->mp, sc->sa.agno);
+> +	/* rmap owner match? */
+> +	if (owner != fab->rmap_owner)
+> +		return 0;
 
-Because this is how it quickly gets it gets to silly numbers of
-lookups. That's two now in this function.
+I'd put that in the caller - it's iterating the fab array and it
+knows the owner it is looking for, so I think it makes more sense to
+go there....
 
-> +	if (pag->pagf_flcount == 0) {
-> +		xfs_perag_put(pag);
-> +		return -EFSCORRUPTED;
-
-Why is having an empty freelist a problem here? It's an AG thatis
-completely out of space, but it isn't corruption? And I don't see
-why an empty freelist prevents us from adding a backs back onto the
-AGFL?
-
-> +	}
-> +	xfs_perag_put(pag);
+> +
+> +	daddr = XFS_AGB_TO_DADDR(mp, ri->sc->sa.agno, agbno);
 > +
 > +	/*
-> +	 * Since we're "freeing" a lost block onto the AGFL, we have to
-> +	 * create an rmap for the block prior to merging it or else other
-> +	 * parts will break.
+> +	 * Blocks in the AGFL have stale contents that might just happen to
+> +	 * have a matching magic and uuid.  We don't want to pull these blocks
+> +	 * in as part of a tree root, so we have to filter out the AGFL stuff
+> +	 * here.  If the AGFL looks insane we'll just refuse to repair.
 > +	 */
-> +	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_AG);
-> +	error = xfs_rmap_alloc(sc->tp, sc->sa.agf_bp, sc->sa.agno, agbno, 1,
-> +			&oinfo);
-> +	if (error)
-> +		return error;
-> +
-> +	/* Put the block on the AGFL. */
-> +	error = xfs_alloc_put_freelist(sc->tp, sc->sa.agf_bp, sc->sa.agfl_bp,
-> +			agbno, 0);
-
-There's another pag lookup in here.
-
-> +	if (error)
-> +		return error;
-> +	xfs_extent_busy_insert(sc->tp, sc->sa.agno, agbno, 1,
-> +			XFS_EXTENT_BUSY_SKIP_DISCARD);
-
-And another in here, so 4 perag lookups for the same structure in
-one simple operation. The code here in the function is fine, but I
-really think we need to rethink how we use the perag in our
-allocation code...
-
-> +
-> +	return 0;
-> +}
-> +
-> +/* Dispose of a single metadata block. */
-> +STATIC int
-> +xfs_repair_dispose_btree_block(
-> +	struct xfs_scrub_context	*sc,
-> +	xfs_fsblock_t			fsbno,
-> +	struct xfs_owner_info		*oinfo,
-> +	enum xfs_ag_resv_type		resv)
-> +{
-> +	struct xfs_btree_cur		*cur;
-> +	struct xfs_buf			*agf_bp = NULL;
-> +	xfs_agnumber_t			agno;
-> +	xfs_agblock_t			agbno;
-> +	bool				has_other_rmap;
-> +	int				error;
-> +
-> +	agno = XFS_FSB_TO_AGNO(sc->mp, fsbno);
-> +	agbno = XFS_FSB_TO_AGBNO(sc->mp, fsbno);
-> +
-> +	if (sc->ip) {
-> +		/* Repairing per-inode metadata, read in the AGF. */
-
-This would be better with a comment above saying:
-
-	/*
-	 * If we are repairing per-inode metadata, we need to read
-	 * in the AGF buffer. Otherwise we can re-use the existing
-	 * AGF buffer we set up for repairing the per-AG btrees.
-	 */
-> +		error = xfs_alloc_read_agf(sc->mp, sc->tp, agno, 0, &agf_bp);
+> +	if (owner == XFS_RMAP_OWN_AG) {
+> +		error = xfs_agfl_walk(mp, ri->agf, ri->agfl_bp,
+> +				xfs_repair_findroot_agfl_walk, &agbno);
+> +		if (error == XFS_BTREE_QUERY_RANGE_ABORT)
+> +			return 0;
 > +		if (error)
 > +			return error;
-> +		if (!agf_bp)
-> +			return -ENOMEM;
-> +	} else {
-> +		/* Repairing per-AG btree, reuse existing AGF buffer. */
-> +		agf_bp = sc->sa.agf_bp;
 > +	}
-> +	cur = xfs_rmapbt_init_cursor(sc->mp, sc->tp, agf_bp, agno);
 > +
-> +	/* Can we find any other rmappings? */
-> +	error = xfs_rmap_has_other_keys(cur, agbno, 1, oinfo, &has_other_rmap);
-> +	if (error)
-> +		goto out_cur;
-> +	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-> +
-> +	/*
-> +	 * If there are other rmappings, this block is cross linked and must
-> +	 * not be freed.  Remove the reverse mapping and move on.  Otherwise,
-
-Why do we just remove the reverse mapping if the block cannot be
-freed? I have my suspicions that this is removing cross-links one by
-one until there's only one reference left to the extent, but then I
-ask "how do we know which one is the correct mapping"?
-
-i.e. this comment raised more questions about the algorithm for
-dealing with cross-linked blocks - which doesn't appear to be
-explained anywhere - than it answers....
-
-> +	 * we were the only owner of the block, so free the extent, which will
-> +	 * also remove the rmap.
-> +	 */
-> +	if (has_other_rmap)
-> +		error = xfs_rmap_free(sc->tp, agf_bp, agno, agbno, 1, oinfo);
-> +	else if (resv == XFS_AG_RESV_AGFL)
-> +		error = xfs_repair_put_freelist(sc, agbno);
-> +	else
-> +		error = xfs_free_extent(sc->tp, fsbno, 1, oinfo, resv);
-> +	if (agf_bp != sc->sa.agf_bp)
-> +		xfs_trans_brelse(sc->tp, agf_bp);
+> +	error = xfs_trans_read_buf(mp, ri->sc->tp, mp->m_ddev_targp, daddr,
+> +			mp->m_bsize, 0, &bp, NULL);
 > +	if (error)
 > +		return error;
 > +
-> +	if (sc->ip)
-> +		return xfs_trans_roll_inode(&sc->tp, sc->ip);
-> +	return xfs_repair_roll_ag_trans(sc);
+> +	/*
+> +	 * Does this look like a block matching our fs and higher than any
+> +	 * other block we've found so far?  If so, reattach buffer verifiers
+> +	 * so the AIL won't complain if the buffer is also dirty.
+> +	 */
+> +	btblock = XFS_BUF_TO_BLOCK(bp);
+> +	if (be32_to_cpu(btblock->bb_magic) != fab->magic)
+> +		goto out;
+> +	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+> +	    !uuid_equal(&btblock->bb_u.s.bb_uuid, &mp->m_sb.sb_meta_uuid))
+> +		goto out;
+> +	bp->b_ops = fab->buf_ops;
 > +
-> +out_cur:
-> +	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-> +	if (agf_bp != sc->sa.agf_bp)
-> +		xfs_trans_brelse(sc->tp, agf_bp);
+> +	/* Ignore this block if it's lower in the tree than we've seen. */
+> +	if (fab->root != NULLAGBLOCK &&
+> +	    xfs_btree_get_level(btblock) < fab->height)
+> +		goto out;
+> +
+> +	/* Make sure we pass the verifiers. */
+> +	bp->b_ops->verify_read(bp);
+> +	if (bp->b_error)
+> +		goto out;
+> +	fab->root = agbno;
+> +	fab->height = xfs_btree_get_level(btblock) + 1;
+> +	*found_it = true;
+> +
+> +	trace_xfs_repair_findroot_block(mp, ri->sc->sa.agno, agbno,
+> +			be32_to_cpu(btblock->bb_magic), fab->height - 1);
+> +out:
+> +	xfs_trans_brelse(ri->sc->tp, bp);
+
+So we release the buffer once we've found it, which also unlocks it.
+That means when we come back to it later, it may have been accessed
+and changed by something else and no longer be the block we are
+looking for. How do you protect against this sort of race given we
+are unlocking the buffer? Perhaps it should be held on the fab
+structure, and released when a better candidate is found?
+
 > +	return error;
 > +}
 > +
 > +/*
-> + * Dispose of a given metadata extent.
-> + *
-> + * If the rmapbt says the extent has multiple owners, we simply remove the
-> + * rmap associated with this owner hoping that we'll eventually disentangle
-> + * the crosslinked metadata.  Otherwise, there's one owner, so call the
-> + * regular free code to remove the rmap and free the extent.  Any existing
-> + * buffers for the blocks in the extent must have been _binval'd previously.
-
-Ok, so there's a little more detail about cross-linked files. Seems
-my suspicions of "remove and hope" were close to the mark :P
-
-Perhaps we need a document that describes the various algorithms we
-use for resolving these problems, so they can be discussed and
-improved without having to troll through the code to understand?
-
+> + * Do any of the blocks in this rmap record match one of the btrees we're
+> + * looking for?
 > + */
 > +STATIC int
-> +xfs_repair_dispose_btree_extent(
-> +	struct xfs_scrub_context	*sc,
-> +	xfs_fsblock_t			fsbno,
-> +	xfs_extlen_t			len,
-> +	struct xfs_owner_info		*oinfo,
-> +	enum xfs_ag_resv_type		resv)
+> +xfs_repair_findroot_rmap(
+> +	struct xfs_btree_cur		*cur,
+> +	struct xfs_rmap_irec		*rec,
+> +	void				*priv)
 > +{
-> +	struct xfs_mount		*mp = sc->mp;
+> +	struct xfs_repair_findroot	*ri = priv;
+> +	struct xfs_repair_find_ag_btree	*fab;
+> +	xfs_agblock_t			b;
+> +	bool				found_it;
 > +	int				error = 0;
 > +
-> +	ASSERT(xfs_sb_version_hasrmapbt(&mp->m_sb));
-> +	ASSERT(sc->ip != NULL || XFS_FSB_TO_AGNO(mp, fsbno) == sc->sa.agno);
+> +	/* Ignore anything that isn't AG metadata. */
+> +	if (!XFS_RMAP_NON_INODE_OWNER(rec->rm_owner))
+> +		return 0;
 > +
-> +	trace_xfs_repair_dispose_btree_extent(mp, XFS_FSB_TO_AGNO(mp, fsbno),
-> +			XFS_FSB_TO_AGBNO(mp, fsbno), len);
-> +
-> +	for (; len > 0; len--, fsbno++) {
-> +		error = xfs_repair_dispose_btree_block(sc, fsbno, oinfo, resv);
-> +		if (error)
-> +			return error;
+> +	/* Otherwise scan each block + btree type. */
+> +	for (b = 0; b < rec->rm_blockcount; b++) {
+> +		found_it = false;
+> +		for (fab = ri->btree_info; fab->buf_ops; fab++) {
+> +			error = xfs_repair_findroot_block(ri, fab,
+> +					rec->rm_owner, rec->rm_startblock + b,
+> +					&found_it);
 
-So why do we do this one block at a time, rather than freeing it
-as an entire extent in one go? And if there is only a single caller,
-why not just open code the loop in the caller?
-
-
-> +/*
-> + * Invalidate buffers for per-AG btree blocks we're dumping.  We assume that
-> + * exlist points only to metadata blocks.
-> + */
-> +int
-> +xfs_repair_invalidate_blocks(
-> +	struct xfs_scrub_context	*sc,
-> +	struct xfs_repair_extent_list	*exlist)
-> +{
-> +	struct xfs_repair_extent	*rex;
-> +	struct xfs_repair_extent	*n;
-> +	struct xfs_buf			*bp;
-> +	xfs_agnumber_t			agno;
-> +	xfs_agblock_t			agbno;
-> +	xfs_agblock_t			i;
-> +
-> +	for_each_xfs_repair_extent_safe(rex, n, exlist) {
-> +		agno = XFS_FSB_TO_AGNO(sc->mp, rex->fsbno);
-> +		agbno = XFS_FSB_TO_AGBNO(sc->mp, rex->fsbno);
-> +		for (i = 0; i < rex->len; i++) {
-> +			bp = xfs_btree_get_bufs(sc->mp, sc->tp, agno,
-> +					agbno + i, 0);
-> +			xfs_trans_binval(sc->tp, bp);
-> +		}
-
-Again, this is doing things by single blocks. We do have multi-block
-metadata (inodes, directory blocks, remote attrs) that, if it
-is already in memory, needs to be treated as multi-block extents. If
-we don't do that, we'll cause aliasing problems in the buffer cache
-(see _xfs_buf_obj_cmp()) and it's all downhill from there.
-
-That's why I get worried when I see assumptions that we can process
-contiguous metadata ranges in single block buffers....
+This loop is where I think the fab->owner/rec->rm_owner check
+should go....
 
 Cheers,
 
