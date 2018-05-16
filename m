@@ -1,148 +1,144 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:60750 "EHLO sandeen.net"
+Received: from mail.kernel.org ([198.145.29.99]:53460 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753641AbeE3SKt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 30 May 2018 14:10:49 -0400
-Subject: [PATCH 3.5/4] mkfs.xfs: document defaults config file details
-References: <20180529220603.29420-1-mcgrof@kernel.org>
- <20180529220603.29420-4-mcgrof@kernel.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <7f30d5cb-800e-13a2-9ad7-d884cebc31e4@sandeen.net>
-Date: Wed, 30 May 2018 13:10:48 -0500
-MIME-Version: 1.0
-In-Reply-To: <20180529220603.29420-4-mcgrof@kernel.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        id S1751151AbeEPN1k (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 16 May 2018 09:27:40 -0400
+Received: from tleilax.poochiereds.net (cpe-71-70-156-158.nc.res.rr.com [71.70.156.158])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id CE94E20834
+        for <linux-xfs@vger.kernel.org>; Wed, 16 May 2018 13:27:39 +0000 (UTC)
+From: Jeff Layton <jlayton@kernel.org>
+Subject: [PATCH 1/2] xfs_io: add the ability to do an O_PATH open
+Date: Wed, 16 May 2018 09:27:37 -0400
+Message-Id: <20180516132738.27776-1-jlayton@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com
+To: linux-xfs@vger.kernel.org
 
-Here's my stab at documenting the defaults/config file behavior.
+From: Jeff Layton <jlayton@redhat.com>
 
-I've condensed it down to just mkfs.xfs 8 changes, and tried to
-make it more concise.  I'll let people bikeshed this while I work
-out a proper way to substitute %sysconfdir% in the text.
-
-Note that what I describe in terms of bare filename behavior doesn't
-match the code today - I think we still need to reach a consensus
-on whether a bare filename looks in $PWD first, or only in the
-/etc/ path.  (I'd prefer the latter, I think, but still slightly
-wobbly on this)
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Jeff Layton <jlayton@redhat.com>
 ---
+ io/file.c         | 3 ++-
+ io/init.c         | 5 ++++-
+ io/io.h           | 1 +
+ io/open.c         | 7 ++++++-
+ io/stat.c         | 4 +++-
+ man/man8/xfs_io.8 | 3 +++
+ 6 files changed, 19 insertions(+), 4 deletions(-)
 
-diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
-index 4b8c78c..64853cc 100644
---- a/man/man8/mkfs.xfs.8
-+++ b/man/man8/mkfs.xfs.8
-@@ -4,6 +4,10 @@ mkfs.xfs \- construct an XFS filesystem
-  .SH SYNOPSIS
-  .B mkfs.xfs
-  [
-+.B \-c
-+.I configuration
-+] [
-+[
-  .B \-b
-  .I block_size_options
-  ] [
-@@ -121,8 +125,38 @@ when parameters are quantified in those units.
-  .PP
-  Many feature options allow an optional argument of 0 or 1, to explicitly
-  disable or enable the functionality.
-+.SH DEFAULT VALUES
-+.BR mkfs.xfs (8)
-+contains built-in default values for every option as described in the sections
-+below.
-+These built-in defaults may evolve over time as new capabilities are added.
-+If the file
-+.B /etc/xfs/mkfs/defaults
-+exists, it will be parsed to override built-in defaults as specified in the
-+.B defaults
-+file, and the defaults described in sections below may no longer apply.
-+.PP
-+The
-+.B \-c
-+option may also be used to specify an alternate configuration file
-+as descibed in the OPTIONS section.
-  .SH OPTIONS
-  .TP
-+.BI \-c " configuration"
-+This option may be used to specify a configuration file other than
-+.B /etc/xfs/mkfs/defaults
-+to override selected built-in parameter defaults.
-+If
-+.B configuration
-+is a bare filename, it will be searched in the
-+.B /etc/xfs/mkfs/
-+directory.  If
-+.B configuration
-+is a full pathname or a relative pathname starting with
-+.BR \'./\' " or " \'../\'
-+then that explicit path to the configuration file will be used.
-+See also the CONFIGURATION FILE FORMAT section below.
+diff --git a/io/file.c b/io/file.c
+index 349b19cdc420..ff80652b183b 100644
+--- a/io/file.c
++++ b/io/file.c
+@@ -44,7 +44,8 @@ print_fileio(
+ 		file->flags & IO_REALTIME ? _(",real-time") : "",
+ 		file->flags & IO_APPEND ? _(",append-only") : "",
+ 		file->flags & IO_NONBLOCK ? _(",non-block") : "",
+-		file->flags & IO_TMPFILE ? _(",tmpfile") : "");
++		file->flags & IO_TMPFILE ? _(",tmpfile") : "",
++		file->flags & IO_PATH ? _(",path") : "");
+ }
+ 
+ int
+diff --git a/io/init.c b/io/init.c
+index 0336c9623beb..d4e84e82a77e 100644
+--- a/io/init.c
++++ b/io/init.c
+@@ -154,7 +154,7 @@ init(
+ 	gettimeofday(&stopwatch, NULL);
+ 
+ 	fs_table_initialise(0, NULL, 0, NULL);
+-	while ((c = getopt(argc, argv, "ac:C:dFfim:p:nrRstTVx")) != EOF) {
++	while ((c = getopt(argc, argv, "ac:C:dFfim:Pp:nrRstTVx")) != EOF) {
+ 		switch (c) {
+ 		case 'a':
+ 			flags |= IO_APPEND;
+@@ -200,6 +200,9 @@ init(
+ 		case 't':
+ 			flags |= IO_TRUNC;
+ 			break;
++		case 'P':
++			flags |= IO_PATH;
++			break;
+ 		case 'R':
+ 			flags |= IO_REALTIME;
+ 			break;
+diff --git a/io/io.h b/io/io.h
+index a26763610877..0acc332b5dbb 100644
+--- a/io/io.h
++++ b/io/io.h
+@@ -40,6 +40,7 @@
+ #define IO_FOREIGN	(1<<7)
+ #define IO_NONBLOCK	(1<<8)
+ #define IO_TMPFILE	(1<<9)
++#define IO_PATH		(1<<10)
+ 
+ /*
+  * Regular file I/O control
+diff --git a/io/open.c b/io/open.c
+index 2cce0455263a..ba73f1d0361f 100644
+--- a/io/open.c
++++ b/io/open.c
+@@ -74,6 +74,8 @@ openfile(
+ 		oflags |= O_NONBLOCK;
+ 	if (flags & IO_TMPFILE)
+ 		oflags |= O_TMPFILE;
++	if (flags & IO_PATH)
++		oflags |= O_PATH;
+ 
+ 	fd = open(path, oflags, mode);
+ 	if (fd < 0) {
+@@ -216,7 +218,7 @@ open_f(
+ 		return 0;
+ 	}
+ 
+-	while ((c = getopt(argc, argv, "FRTacdfm:nrstx")) != EOF) {
++	while ((c = getopt(argc, argv, "FRTacdfm:nPrstx")) != EOF) {
+ 		switch (c) {
+ 		case 'F':
+ 			/* Ignored / deprecated now, handled automatically */
+@@ -250,6 +252,9 @@ open_f(
+ 		case 't':
+ 			flags |= IO_TRUNC;
+ 			break;
++		case 'P':
++			flags |= IO_PATH;
++			break;
+ 		case 'R':
+ 		case 'x':	/* backwards compatibility */
+ 			flags |= IO_REALTIME;
+diff --git a/io/stat.c b/io/stat.c
+index 41d421525791..2db2736359e0 100644
+--- a/io/stat.c
++++ b/io/stat.c
+@@ -100,7 +100,9 @@ void print_file_info(void)
+ 		file->flags & IO_REALTIME ? _(",real-time") : "",
+ 		file->flags & IO_APPEND ? _(",append-only") : "",
+ 		file->flags & IO_NONBLOCK ? _(",non-block") : "",
+-		file->flags & IO_TMPFILE ? _(",tmpfile") : "");
++		file->flags & IO_TMPFILE ? _(",tmpfile") : "",
++		file->flags & IO_PATH ? _(",path") : "");
++
+ }
+ 
+ void print_xfs_info(int verbose)
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index c3ab532da03f..89e8e4be460e 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -153,6 +153,9 @@ truncates on open (O_TRUNC).
+ .B \-n
+ opens in non-blocking mode if possible (O_NONBLOCK).
+ .TP
++.B \-P
++opens the file for location only (O_PATH).
 +.TP
-  .BI \-b " block_size_options"
-  This option specifies the fundamental block size of the filesystem.
-  The valid
-@@ -920,6 +954,55 @@ Do not attempt to discard blocks at mkfs time.
-  .TP
-  .B \-V
-  Prints the version number and exits.
-+.SH CONFIGURATION FILE FORMAT
-+The optional default configuration file in
-+.B /etc/xfs/mkfs/default
-+as well as any alternate configuration file specified via the
-+.B \-c
-+option follow a simple ini-style format as shown below.
-+Available options consist of a small subset of the parameters available
-+via the
-+.BR mkfs.xfs (8)
-+command line.
-+Currently all default parameters can only be either enabled or disabled,
-+with a value of 1 to enable or 0 to disable.
-+See below for a list of all supported configuration parameters and their
-+current built-in default settings.
-+.PP
-+.BI [data]
-+.br
-+.BI noalign=0
-+.PP
-+.BI [inode]
-+.br
-+.BI align=1
-+.br
-+.BI projid32bit=1
-+.br
-+.BI sparse=0
-+.PP
-+.BI [log]
-+.br
-+.BI lazy-count=1
-+.PP
-+.BI [metadata]
-+.br
-+.BI crc=1
-+.br
-+.BI finobt=1
-+.br
-+.BI rmapbt=0
-+.br
-+.BI reflink=0
-+.PP
-+.BI [naming]
-+.br
-+.BI ftype=1
-+.PP
-+.BI [rtdev]
-+.br
-+.BI noalign=0
-+.PP
-  .SH SEE ALSO
-  .BR xfs (5),
-  .BR mkfs (8),
+ .B \-T
+ create a temporary file not linked into the filesystem namespace
+ (O_TMPFILE).  The pathname passed must refer to a directory which
+-- 
+2.17.0
 
