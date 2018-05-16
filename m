@@ -1,14 +1,18 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf0-f179.google.com ([209.85.192.179]:35821 "EHLO
-        mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751096AbeEPRyU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 May 2018 13:54:20 -0400
-Received: by mail-pf0-f179.google.com with SMTP id x9-v6so736934pfm.2
-        for <linux-xfs@vger.kernel.org>; Wed, 16 May 2018 10:54:20 -0700 (PDT)
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:33788 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751062AbeEPRyV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 May 2018 13:54:21 -0400
+Received: by mail-pf0-f193.google.com with SMTP id a20-v6so739342pfo.0
+        for <linux-xfs@vger.kernel.org>; Wed, 16 May 2018 10:54:21 -0700 (PDT)
 From: Omar Sandoval <osandov@osandov.com>
-Subject: [PATCH v3 0/2] iomap: swapfile tweaks
-Date: Wed, 16 May 2018 10:54:09 -0700
-Message-Id: <cover.1526493125.git.osandov@fb.com>
+Subject: [PATCH v3 1/2] iomap: provide more useful errors for invalid swap files
+Date: Wed, 16 May 2018 10:54:10 -0700
+Message-Id: <5299c1f79f445e89b4b1c3c6c21da6b0b8510cfb.1526493125.git.osandov@fb.com>
+In-Reply-To: <cover.1526493125.git.osandov@fb.com>
+References: <cover.1526493125.git.osandov@fb.com>
+In-Reply-To: <cover.1526493125.git.osandov@fb.com>
+References: <cover.1526493125.git.osandov@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
@@ -17,20 +21,84 @@ Cc: linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, Christoph Hellwig <h
 
 From: Omar Sandoval <osandov@fb.com>
 
-Changes from v2:
+Currently, for an invalid swap file, we print the same error message
+regardless of the reason. This isn't very useful for an admin, who will
+likely want to know why exactly they can't use their swap file. So,
+let's add specific error messages for each reason, and also move the
+bdev check after the flags checks, since the latter are more
+fundamental.
 
-- Move up inline flag check, which Christoph is going to turn into a
-  type at some point
-- Remove null address check, since it doesn't make sense for
-  IOMAP_MAPPED or IOMAP_UNWRITTEN
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Omar Sandoval <osandov@fb.com>
+---
+ fs/iomap.c | 40 ++++++++++++++++++++++++----------------
+ 1 file changed, 24 insertions(+), 16 deletions(-)
 
-Omar Sandoval (2):
-  iomap: provide more useful errors for invalid swap files
-  iomap: don't allow holes in swapfiles
-
- fs/iomap.c | 43 +++++++++++++++++++++++--------------------
- 1 file changed, 23 insertions(+), 20 deletions(-)
-
+diff --git a/fs/iomap.c b/fs/iomap.c
+index d193390a1c20..89517442e296 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -1214,26 +1214,37 @@ static loff_t iomap_swapfile_activate_actor(struct inode *inode, loff_t pos,
+ 	struct iomap_swapfile_info *isi = data;
+ 	int error;
+ 
++	/* No inline data. */
++	if (iomap->flags & IOMAP_F_DATA_INLINE) {
++		pr_err("swapon: file is inline\n");
++		return -EINVAL;
++	}
++
+ 	/* Skip holes. */
+ 	if (iomap->type == IOMAP_HOLE)
+ 		goto out;
+ 
+-	/* Only one bdev per swap file. */
+-	if (iomap->bdev != isi->sis->bdev)
+-		goto err;
+-
+ 	/* Only real or unwritten extents. */
+-	if (iomap->type != IOMAP_MAPPED && iomap->type != IOMAP_UNWRITTEN)
+-		goto err;
++	if (iomap->type != IOMAP_MAPPED && iomap->type != IOMAP_UNWRITTEN) {
++		pr_err("swapon: file has unallocated extents\n");
++		return -EINVAL;
++	}
+ 
+-	/* No uncommitted metadata or shared blocks or inline data. */
+-	if (iomap->flags & (IOMAP_F_DIRTY | IOMAP_F_SHARED |
+-			    IOMAP_F_DATA_INLINE))
+-		goto err;
++	/* No uncommitted metadata or shared blocks. */
++	if (iomap->flags & IOMAP_F_DIRTY) {
++		pr_err("swapon: file is not committed\n");
++		return -EINVAL;
++	}
++	if (iomap->flags & IOMAP_F_SHARED) {
++		pr_err("swapon: file has shared extents\n");
++		return -EINVAL;
++	}
+ 
+-	/* No null physical addresses. */
+-	if (iomap->addr == IOMAP_NULL_ADDR)
+-		goto err;
++	/* Only one bdev per swap file. */
++	if (iomap->bdev != isi->sis->bdev) {
++		pr_err("swapon: file is on multiple devices\n");
++		return -EINVAL;
++	}
+ 
+ 	if (isi->iomap.length == 0) {
+ 		/* No accumulated extent, so just store it. */
+@@ -1250,9 +1261,6 @@ static loff_t iomap_swapfile_activate_actor(struct inode *inode, loff_t pos,
+ 	}
+ out:
+ 	return count;
+-err:
+-	pr_err("swapon: file cannot be used for swap\n");
+-	return -EINVAL;
+ }
+ 
+ /*
 -- 
 2.17.0
 
