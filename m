@@ -1,74 +1,109 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:40646 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750891AbeEQI7I (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 May 2018 04:59:08 -0400
-Date: Thu, 17 May 2018 10:59:06 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v3 2/2] iomap: don't allow holes in swapfiles
-Message-ID: <20180517085906.t4mb5oowufdyz2lk@quack2.suse.cz>
-References: <cover.1526493125.git.osandov@fb.com>
- <cdb5dc22c56b30f693741361f6d6168f97f26bc1.1526493125.git.osandov@fb.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:52166 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751928AbeEPQzA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 May 2018 12:55:00 -0400
+Date: Wed, 16 May 2018 09:54:34 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 1/2] iomap: provide more useful errors for invalid
+ swap files
+Message-ID: <20180516165434.GG23858@magnolia>
+References: <cover.1526488995.git.osandov@fb.com>
+ <9faf09627cfa469437b76edb73ac7cc822dc33c8.1526488995.git.osandov@fb.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <cdb5dc22c56b30f693741361f6d6168f97f26bc1.1526493125.git.osandov@fb.com>
+In-Reply-To: <9faf09627cfa469437b76edb73ac7cc822dc33c8.1526488995.git.osandov@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Omar Sandoval <osandov@osandov.com>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>, Aleksei Besogonov <cyberax@amazon.com>, kernel-team@fb.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>, Aleksei Besogonov <cyberax@amazon.com>, kernel-team@fb.com
 
-On Wed 16-05-18 10:54:11, Omar Sandoval wrote:
+On Wed, May 16, 2018 at 09:45:50AM -0700, Omar Sandoval wrote:
 > From: Omar Sandoval <osandov@fb.com>
 > 
-> generic_swapfile_activate() doesn't allow holes, so we should be
-> consistent here. This is also a bit safer: if the user creates a
-> swapfile with, say, truncate -s $SIZE followed by mkswap, they should
-> really get an error and not much less swap space than they expected.
-> swapon(8) will error out before calling swapon(2) if the file has holes,
-> anyways.
+> Currently, for an invalid swap file, we print the same error message
+> regardless of the reason. This isn't very useful for an admin, who will
+> likely want to know why exactly they can't use their swap file. So,
+> let's add specific error messages for each reason, and also move the
+> bdev check after the flags checks, since the latter are more
+> fundamental.
 > 
-> Fixes: 9d93388b0afe ("iomap: add a swapfile activation function")
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 > Signed-off-by: Omar Sandoval <osandov@fb.com>
 
-Good catch. You can add:
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Reviewed-by: Jan Kara <jack@suse.cz>
-
-								Honza
+--D
 
 > ---
->  fs/iomap.c | 5 -----
->  1 file changed, 5 deletions(-)
+>  fs/iomap.c | 37 ++++++++++++++++++++++---------------
+>  1 file changed, 22 insertions(+), 15 deletions(-)
 > 
 > diff --git a/fs/iomap.c b/fs/iomap.c
-> index 89517442e296..f2456d0d8ddd 100644
+> index d193390a1c20..318724375ffe 100644
 > --- a/fs/iomap.c
 > +++ b/fs/iomap.c
-> @@ -1220,10 +1220,6 @@ static loff_t iomap_swapfile_activate_actor(struct inode *inode, loff_t pos,
->  		return -EINVAL;
->  	}
+> @@ -1218,22 +1218,32 @@ static loff_t iomap_swapfile_activate_actor(struct inode *inode, loff_t pos,
+>  	if (iomap->type == IOMAP_HOLE)
+>  		goto out;
 >  
-> -	/* Skip holes. */
-> -	if (iomap->type == IOMAP_HOLE)
-> -		goto out;
+> -	/* Only one bdev per swap file. */
+> -	if (iomap->bdev != isi->sis->bdev)
+> -		goto err;
 > -
 >  	/* Only real or unwritten extents. */
->  	if (iomap->type != IOMAP_MAPPED && iomap->type != IOMAP_UNWRITTEN) {
->  		pr_err("swapon: file has unallocated extents\n");
-> @@ -1259,7 +1255,6 @@ static loff_t iomap_swapfile_activate_actor(struct inode *inode, loff_t pos,
->  			return error;
->  		memcpy(&isi->iomap, iomap, sizeof(isi->iomap));
+> -	if (iomap->type != IOMAP_MAPPED && iomap->type != IOMAP_UNWRITTEN)
+> -		goto err;
+> +	if ((iomap->type != IOMAP_MAPPED && iomap->type != IOMAP_UNWRITTEN) ||
+> +	    iomap->addr == IOMAP_NULL_ADDR) {
+> +		pr_err("swapon: file has unallocated extents\n");
+> +		return -EINVAL;
+> +	}
+>  
+>  	/* No uncommitted metadata or shared blocks or inline data. */
+> -	if (iomap->flags & (IOMAP_F_DIRTY | IOMAP_F_SHARED |
+> -			    IOMAP_F_DATA_INLINE))
+> -		goto err;
+> +	if (iomap->flags & IOMAP_F_DIRTY) {
+> +		pr_err("swapon: file is not committed\n");
+> +		return -EINVAL;
+> +	}
+> +	if (iomap->flags & IOMAP_F_SHARED) {
+> +		pr_err("swapon: file has shared extents\n");
+> +		return -EINVAL;
+> +	}
+> +	if (iomap->flags & IOMAP_F_DATA_INLINE) {
+> +		pr_err("swapon: file is inline\n");
+> +		return -EINVAL;
+> +	}
+>  
+> -	/* No null physical addresses. */
+> -	if (iomap->addr == IOMAP_NULL_ADDR)
+> -		goto err;
+> +	/* Only one bdev per swap file. */
+> +	if (iomap->bdev != isi->sis->bdev) {
+> +		pr_err("swapon: file is on multiple devices\n");
+> +		return -EINVAL;
+> +	}
+>  
+>  	if (isi->iomap.length == 0) {
+>  		/* No accumulated extent, so just store it. */
+> @@ -1250,9 +1260,6 @@ static loff_t iomap_swapfile_activate_actor(struct inode *inode, loff_t pos,
 >  	}
-> -out:
+>  out:
 >  	return count;
+> -err:
+> -	pr_err("swapon: file cannot be used for swap\n");
+> -	return -EINVAL;
 >  }
 >  
+>  /*
 > -- 
 > 2.17.0
 > 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
