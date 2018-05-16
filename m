@@ -1,166 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:18027 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751013AbeEPVcl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 May 2018 17:32:41 -0400
-Date: Thu, 17 May 2018 07:32:37 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 03/22] xfs: add helpers to collect and sift btree block
- pointers during repair
-Message-ID: <20180516213237.GW23861@dastard>
-References: <152642361893.1556.9335169821674946249.stgit@magnolia>
- <152642363794.1556.12771807615463619233.stgit@magnolia>
- <20180516075652.GR23861@dastard>
- <20180516180125.GI23858@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:33002 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750846AbeEPOmS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 16 May 2018 10:42:18 -0400
+Subject: Re: [PATCH V3] test online label ioctl
+References: <2a743318-585d-9eb1-5430-2b07246348ab@redhat.com>
+ <d65893a4-c6d8-1d85-4650-e63d04e8366a@sandeen.net>
+ <20180516005139.GI10363@dastard>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <505eba27-476e-2bb7-9d72-11d64d31e6c3@redhat.com>
+Date: Wed, 16 May 2018 09:42:17 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180516180125.GI23858@magnolia>
+In-Reply-To: <20180516005139.GI10363@dastard>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@sandeen.net>
+Cc: fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>
 
-On Wed, May 16, 2018 at 11:01:27AM -0700, Darrick J. Wong wrote:
-> On Wed, May 16, 2018 at 05:56:52PM +1000, Dave Chinner wrote:
-> > On Tue, May 15, 2018 at 03:33:58PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Add some helpers to assemble a list of fs block extents.  Generally,
-> > > repair functions will iterate the rmapbt to make a list (1) of all
-> > > extents owned by the nominal owner of the metadata structure; then they
-> > > will iterate all other structures with the same rmap owner to make a
-> > > list (2) of active blocks; and finally we have a subtraction function to
-> > > subtract all the blocks in (2) from (1), with the result that (1) is now
-> > > a list of blocks that were owned by the old btree and must be disposed.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  fs/xfs/scrub/repair.c |  207 +++++++++++++++++++++++++++++++++++++++++++++++++
-> > >  fs/xfs/scrub/repair.h |   31 +++++++
-> > >  2 files changed, 238 insertions(+)
-> > > 
-> > > 
-> > > diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-> > > index 72f04a717150..8e8ecddd7537 100644
-> > > --- a/fs/xfs/scrub/repair.c
-> > > +++ b/fs/xfs/scrub/repair.c
-> > > @@ -361,3 +361,210 @@ xfs_repair_init_btblock(
-> > >  
-> > >  	return 0;
-> > >  }
-> > > +
-> > > +/* Collect a dead btree extent for later disposal. */
-> > > +int
-> > > +xfs_repair_collect_btree_extent(
-> > > +	struct xfs_scrub_context	*sc,
-> > > +	struct xfs_repair_extent_list	*exlist,
-> > > +	xfs_fsblock_t			fsbno,
-> > > +	xfs_extlen_t			len)
-> > > +{
-> > > +	struct xfs_repair_extent	*rex;
-> > > +
-> > > +	trace_xfs_repair_collect_btree_extent(sc->mp,
-> > > +			XFS_FSB_TO_AGNO(sc->mp, fsbno),
-> > > +			XFS_FSB_TO_AGBNO(sc->mp, fsbno), len);
-> > > +
-> > > +	rex = kmem_alloc(sizeof(struct xfs_repair_extent), KM_MAYFAIL);
-> > > +	if (!rex)
-> > > +		return -ENOMEM;
-> > 
-> > Is this in transaction context?
-> 
-> Yes.  After the setup function finishes we're required to own a
-> transaction and hold a lock on whatever resource we're playing with.
-> 
-> > Regardless, I think we need to run the entire of scrub/repair in a
-> > memalloc_nofs_save() context so we don't have memory reclaim recursion
-> > issues...
-> 
-> xfs_trans_reserve should take care of this, right?  So we don't have to
-> feed KM_NOFS to kmem_*_alloc because this is already taken care of.  The
-> MAYFAIL exists because we prefer ENOMEM'ing out to pushing on reclaim.
+On 5/15/18 7:51 PM, Dave Chinner wrote:
+> On Tue, May 15, 2018 at 10:22:37AM -0500, Eric Sandeen wrote:
+>> This tests the online label ioctl that btrfs has, which has been
+>> recently proposed for XFS.
+>>
+>> To run, it requires an updated xfs_io with the label command and a
+>> filesystem that supports it
+>>
+>> A slight change here to _require_xfs_io_command as well, so that tests
+>> which simply fail with "Inappropriate ioctl" can be caught in the
+>> common case.
+>>
+>> Signed-off-by: Eric Sandeen<sandeen@redhat.com>
+>> ---
+>>
+>> (urgh send as proper new thread, sorry)
+>>
+>> This passes on btrfs, _notruns on xfs/ext4 of yore, and passes
+>> on xfs w/ my online label patchset (as long as xfs_io has the new
+>> capability)
+>>
+>> V2: Add a max label length helper
+>>      Set the proper btrfs max label length o_O oops
+>>      Filter trailing whitespace from blkid output
+>>
+>> V3: lowercase local vars, simplify max label len function
+> Looks good now, but I wondered about one thing the test doesn't
+> cover: can you clear the label by setting it to a null string?
+> i.e you check max length bounds, but don't check empty string
+> behaviour...
 
-Right, if we have an active transaction we are under NOFS allocation
-conditions. I'm jus tnot sure how much of scrub/repair is covered by
-the transaction context (too early in the morning to go code
-spelunking!).
+hohum, yes.  I'll fix that, which will also require a change to xfs_io
+to be able to set a null string.
 
-w.r.t reclaim, NOFS allocations will still push on reclaim - NOFS
-just means it won't push on any dirty file pages or scan/reclaim
-filesystem caches.
+Will send a V3 in a bit.
 
-> > > +	while (lp != &exlist->list) {
-> > > +		ex = list_entry(lp, struct xfs_repair_extent, list);
-> > > +
-> > > +		/*
-> > > +		 * Advance subex and/or ex until we find a pair that
-> > > +		 * intersect or we run out of extents.
-> > > +		 */
-> > > +		while (subex->fsbno + subex->len <= ex->fsbno) {
-> > > +			if (list_is_last(&subex->list, &sublist->list))
-> > > +				goto out;
-> > > +			subex = list_next_entry(subex, list);
-> > > +		}
-> > 
-> > So this is a O(n^2) algorithm, right? How does it scale with large
-> > extent lists?
-> 
-> I don't think this is O(n^2) -- each list sort is O(n log n).
-
-I'm not worried about the list sort. :)
-
-> Then we
-> iterate exlist once, rolling forward through sublist as necessary.  We
-> never reset lp to the head of exlist nor do we reset subex to the head
-> of sublist.  We're not performing random lookups on the sublist extents
-> at all.
-
-Ah, I missed the fact the loop doesn't reset the subex list to the
-start for each ex entry. Perhaps a better comment explaining the way
-the algorithm steps through both lists?
-
-> So far I haven't noticed /much/ heat from this routine even with
-> deliberately aged filesystems, but that's probably due to the slab
-> allocator eating way more time. :(
-
-Perhaps it is worth looking at using named slab caches for some of
-these objects to take some heat off of the heap slabs?
-
-> > Given that these extents are dynamically allocated, and we're already
-> > burning 16 bytes for a list head on each extent, would it be better to
-> > use a smarter structure better suited for exact lookups? e.g. an
-> > rbtree only takes an extra 8 bytes per extent, and we get O(log N)
-> > searches on the inner loop here...
-> > 
-> > I guess this isn't necessary to fix right now, but I think it's
-> > going to be an issue for maybe mark this down as "needing to be
-> > fixed before removing EXPERIMENTAL tags"?
-> 
-> I've thought about converting this to an rbtree or something, since
-> these are basically glorified bitmap operations.
-
-You can probably ignore that because I was thinking it was a full
-subex list search for each ex, which is not the case...
->
-> TBH the other thing that irks me about the current orepair design is its
-> heavy reliance on creating potentially huge linked lists of the records
-> that need to be put into the new structure.  I'd really like a data
-> structure where I can do fast unsorted appends without list overhead,
-> sort the data structure once, and then insert in sorted order.  The slab
-> thing I put into xfs_repair provides this, but we can't easily allocate
-> 128M of space in the kernel.  I also want to do a bulk load of an empty
-> a btree leaf so that we log the leaf block once and update the node
-> pointers once, kind of like what xfs_repair does during phase 5.
-> 
-> ...all this optimization can come after merging.
-
-*nod*.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+-Eric
