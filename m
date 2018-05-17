@@ -1,828 +1,1221 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:33528 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752563AbeERQwS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 12:52:18 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/2] xfs: add support for sub-pagesize writeback without buffer_heads
-Date: Fri, 18 May 2018 18:52:06 +0200
-Message-Id: <20180518165206.13829-3-hch@lst.de>
-In-Reply-To: <20180518165206.13829-1-hch@lst.de>
-References: <20180518165206.13829-1-hch@lst.de>
+Received: from aserp2120.oracle.com ([141.146.126.78]:47586 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750924AbeEQVbt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 May 2018 17:31:49 -0400
+Date: Thu, 17 May 2018 14:31:21 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 5/5] mkfs.xfs: add configuration file parsing support
+ using our own parser
+Message-ID: <20180517205845.GV23858@magnolia>
+References: <20180517192700.23457-1-mcgrof@kernel.org>
+ <20180517192700.23457-6-mcgrof@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180517192700.23457-6-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: sandeen@sandeen.net, linux-xfs@vger.kernel.org, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com
 
-Switch to using the iomap_page structure for checking sub-page uptodate
-status and track sub-page I/O completion status, and remove large
-quantities of boilerplate code working around buffer heads.
+On Thu, May 17, 2018 at 12:27:00PM -0700, Luis R. Rodriguez wrote:
+> You may want to stick to specific set of configuration options when
+> creating filesystems with mkfs.xfs -- sometimes due to pure technical
+> reasons, but some other times to ensure systems remain compatible as
+> new features are introduced with older kernels, or if you always want
+> to take advantage of some new feature which would otherwise typically
+> be disruptive.
+> 
+> This adds support for parsing a configuration file to override defaults
+> parameters to be used for mkfs.xfs.
+> 
+> We define an XFS configuration directory, /etc/mkfs.xfs.d/ and allow for
+> different configuration files, if none is specified we look for the
+> default configuration file, /etc/mkfs.xfs.d/default. You can override
+> with -c.  For instance, if you specify:
+> 
+> 	mkfs.xfs -c experimental -f /dev/loop0
+> 
+> The file /etc/mkfs.xfs.d/experimental will be used as your configuration
+> file. If you really need to override the full path of the configuration
+> file you may use the MKFS_XFS_CONFIG environment variable.
+> 
+> To verify what configuration file is used on a system use the typical:
+> 
+>   mkfs.xfs -N
+> 
+> There is only a subset of options allowed to be set on the configuration
+> file, and currently only 1 or 0 are acceptable values. The default
+> parameters you can override on a configuration file and their current
+> built-in default settings are:
+> 
+> [data]
+> noalign=0
+> 
+> [inode]
+> align=1
+> projid32bit=1
+> sparse=0
+> 
+> [log]
+> lazy-count=1
+> 
+> [metadata]
+> crc=1
+> finobt=1
+> rmapbt=0
+> reflink=0
+> 
+> [naming]
+> ftype=1
+> 
+> [rtdev]
+> noalign=0
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_aops.c  | 534 +++++++--------------------------------------
- fs/xfs/xfs_buf.h   |   1 -
- fs/xfs/xfs_iomap.c |   3 -
- fs/xfs/xfs_super.c |   2 +-
- fs/xfs/xfs_trace.h |  18 +-
- 5 files changed, 77 insertions(+), 481 deletions(-)
+Separate patch, but should there be a way to spit out the current mkfs
+settings as a config file?
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index efa2cbb27d67..fd664ba423e6 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -32,9 +32,6 @@
- #include "xfs_bmap_util.h"
- #include "xfs_bmap_btree.h"
- #include "xfs_reflink.h"
--#include <linux/gfp.h>
--#include <linux/mpage.h>
--#include <linux/pagevec.h>
- #include <linux/writeback.h>
- 
- /*
-@@ -46,25 +43,6 @@ struct xfs_writepage_ctx {
- 	struct xfs_ioend	*ioend;
- };
- 
--void
--xfs_count_page_state(
--	struct page		*page,
--	int			*delalloc,
--	int			*unwritten)
--{
--	struct buffer_head	*bh, *head;
--
--	*delalloc = *unwritten = 0;
--
--	bh = head = page_buffers(page);
--	do {
--		if (buffer_unwritten(bh))
--			(*unwritten) = 1;
--		else if (buffer_delay(bh))
--			(*delalloc) = 1;
--	} while ((bh = bh->b_this_page) != head);
--}
--
- struct block_device *
- xfs_find_bdev_for_inode(
- 	struct inode		*inode)
-@@ -97,67 +75,17 @@ xfs_finish_page_writeback(
- 	struct bio_vec		*bvec,
- 	int			error)
- {
-+	struct iomap_page	*iop = to_iomap_page(bvec->bv_page);
-+
- 	if (error) {
- 		SetPageError(bvec->bv_page);
- 		mapping_set_error(inode->i_mapping, -EIO);
- 	}
--	end_page_writeback(bvec->bv_page);
--}
- 
--/*
-- * We're now finished for good with this page.  Update the page state via the
-- * associated buffer_heads, paying attention to the start and end offsets that
-- * we need to process on the page.
-- *
-- * Note that we open code the action in end_buffer_async_write here so that we
-- * only have to iterate over the buffers attached to the page once.  This is not
-- * only more efficient, but also ensures that we only calls end_page_writeback
-- * at the end of the iteration, and thus avoids the pitfall of having the page
-- * and buffers potentially freed after every call to end_buffer_async_write.
-- */
--static void
--xfs_finish_buffer_writeback(
--	struct inode		*inode,
--	struct bio_vec		*bvec,
--	int			error)
--{
--	struct buffer_head	*head = page_buffers(bvec->bv_page), *bh = head;
--	bool			busy = false;
--	unsigned int		off = 0;
--	unsigned long		flags;
--
--	ASSERT(bvec->bv_offset < PAGE_SIZE);
--	ASSERT((bvec->bv_offset & (i_blocksize(inode) - 1)) == 0);
--	ASSERT(bvec->bv_offset + bvec->bv_len <= PAGE_SIZE);
--	ASSERT((bvec->bv_len & (i_blocksize(inode) - 1)) == 0);
--
--	local_irq_save(flags);
--	bit_spin_lock(BH_Uptodate_Lock, &head->b_state);
--	do {
--		if (off >= bvec->bv_offset &&
--		    off < bvec->bv_offset + bvec->bv_len) {
--			ASSERT(buffer_async_write(bh));
--			ASSERT(bh->b_end_io == NULL);
--
--			if (error) {
--				mark_buffer_write_io_error(bh);
--				clear_buffer_uptodate(bh);
--				SetPageError(bvec->bv_page);
--			} else {
--				set_buffer_uptodate(bh);
--			}
--			clear_buffer_async_write(bh);
--			unlock_buffer(bh);
--		} else if (buffer_async_write(bh)) {
--			ASSERT(buffer_locked(bh));
--			busy = true;
--		}
--		off += bh->b_size;
--	} while ((bh = bh->b_this_page) != head);
--	bit_spin_unlock(BH_Uptodate_Lock, &head->b_state);
--	local_irq_restore(flags);
-+	ASSERT(iop || i_blocksize(inode) == PAGE_SIZE);
-+	ASSERT(!iop || atomic_read(&iop->write_count) > 0);
- 
--	if (!busy)
-+	if (!iop || atomic_dec_and_test(&iop->write_count))
- 		end_page_writeback(bvec->bv_page);
- }
- 
-@@ -191,12 +119,8 @@ xfs_destroy_ioend(
- 			next = bio->bi_private;
- 
- 		/* walk each page on bio, ending page IO on them */
--		bio_for_each_segment_all(bvec, bio, i) {
--			if (page_has_buffers(bvec->bv_page))
--				xfs_finish_buffer_writeback(inode, bvec, error);
--			else
--				xfs_finish_page_writeback(inode, bvec, error);
--		}
-+		bio_for_each_segment_all(bvec, bio, i)
-+			xfs_finish_page_writeback(inode, bvec, error);
- 		bio_put(bio);
- 	}
- 
-@@ -638,6 +562,7 @@ xfs_add_to_ioend(
- 	struct inode		*inode,
- 	xfs_off_t		offset,
- 	struct page		*page,
-+	struct iomap_page	*iop,
- 	struct xfs_writepage_ctx *wpc,
- 	struct writeback_control *wbc,
- 	struct list_head	*iolist)
-@@ -661,100 +586,27 @@ xfs_add_to_ioend(
- 				bdev, sector);
- 	}
- 
--	/*
--	 * If the block doesn't fit into the bio we need to allocate a new
--	 * one.  This shouldn't happen more than once for a given block.
--	 */
--	while (bio_add_page(wpc->ioend->io_bio, page, len, poff) != len)
--		xfs_chain_bio(wpc->ioend, wbc, bdev, sector);
-+	if (!__bio_try_merge_page(wpc->ioend->io_bio, page, len, poff)) {
-+		if (iop)
-+			atomic_inc(&iop->write_count);
-+		if (bio_full(wpc->ioend->io_bio))
-+			xfs_chain_bio(wpc->ioend, wbc, bdev, sector);
-+		__bio_add_page(wpc->ioend->io_bio, page, len, poff);
-+	}
- 
- 	wpc->ioend->io_size += len;
- }
- 
--STATIC void
--xfs_map_buffer(
--	struct inode		*inode,
--	struct buffer_head	*bh,
--	struct xfs_bmbt_irec	*imap,
--	xfs_off_t		offset)
--{
--	sector_t		bn;
--	struct xfs_mount	*m = XFS_I(inode)->i_mount;
--	xfs_off_t		iomap_offset = XFS_FSB_TO_B(m, imap->br_startoff);
--	xfs_daddr_t		iomap_bn = xfs_fsb_to_db(XFS_I(inode), imap->br_startblock);
--
--	ASSERT(imap->br_startblock != HOLESTARTBLOCK);
--	ASSERT(imap->br_startblock != DELAYSTARTBLOCK);
--
--	bn = (iomap_bn >> (inode->i_blkbits - BBSHIFT)) +
--	      ((offset - iomap_offset) >> inode->i_blkbits);
--
--	ASSERT(bn || XFS_IS_REALTIME_INODE(XFS_I(inode)));
--
--	bh->b_blocknr = bn;
--	set_buffer_mapped(bh);
--}
--
--STATIC void
--xfs_map_at_offset(
--	struct inode		*inode,
--	struct buffer_head	*bh,
--	struct xfs_bmbt_irec	*imap,
--	xfs_off_t		offset)
--{
--	ASSERT(imap->br_startblock != HOLESTARTBLOCK);
--	ASSERT(imap->br_startblock != DELAYSTARTBLOCK);
--
--	lock_buffer(bh);
--	xfs_map_buffer(inode, bh, imap, offset);
--	set_buffer_mapped(bh);
--	clear_buffer_delay(bh);
--	clear_buffer_unwritten(bh);
--
--	/*
--	 * If this is a realtime file, data may be on a different device.
--	 * to that pointed to from the buffer_head b_bdev currently. We can't
--	 * trust that the bufferhead has a already been mapped correctly, so
--	 * set the bdev now.
--	 */
--	bh->b_bdev = xfs_find_bdev_for_inode(inode);
--	bh->b_end_io = NULL;
--	set_buffer_async_write(bh);
--	set_buffer_uptodate(bh);
--	clear_buffer_dirty(bh);
--}
--
--STATIC void
--xfs_vm_invalidatepage(
--	struct page		*page,
--	unsigned int		offset,
--	unsigned int		length)
--{
--	trace_xfs_invalidatepage(page->mapping->host, page, offset,
--				 length);
--
--	/*
--	 * If we are invalidating the entire page, clear the dirty state from it
--	 * so that we can check for attempts to release dirty cached pages in
--	 * xfs_vm_releasepage().
--	 */
--	if (offset == 0 && length >= PAGE_SIZE)
--		cancel_dirty_page(page);
--	block_invalidatepage(page, offset, length);
--}
--
- /*
-- * If the page has delalloc buffers on it, we need to punch them out before we
-- * invalidate the page. If we don't, we leave a stale delalloc mapping on the
-- * inode that can trip a BUG() in xfs_get_blocks() later on if a direct IO read
-- * is done on that same region - the delalloc extent is returned when none is
-- * supposed to be there.
-+ * If the page has delalloc blocks on it, we need to punch them out before we
-+ * invalidate the page.  If we don't, we leave a stale delalloc mapping on the
-+ * inode that can trip up a later direct I/O read operation on the same region.
-  *
-- * We prevent this by truncating away the delalloc regions on the page before
-- * invalidating it. Because they are delalloc, we can do this without needing a
-- * transaction. Indeed - if we get ENOSPC errors, we have to be able to do this
-- * truncation without a transaction as there is no space left for block
-- * reservation (typically why we see a ENOSPC in writeback).
-+ * We prevent this by truncating away the delalloc regions on the page.  Because
-+ * they are delalloc, we can do this without needing a transaction. Indeed - if
-+ * we get ENOSPC errors, we have to be able to do this truncation without a
-+ * transaction as there is no space left for block reservation (typically why we
-+ * see a ENOSPC in writeback).
-  */
- STATIC void
- xfs_aops_discard_page(
-@@ -768,7 +620,7 @@ xfs_aops_discard_page(
- 	int			error;
- 
- 	if (XFS_FORCED_SHUTDOWN(mp))
--		goto out_invalidate;
-+		return;
- 
- 	xfs_alert(mp,
- 		"page discard on page "PTR_FMT", inode 0x%llx, offset %llu.",
-@@ -778,15 +630,13 @@ xfs_aops_discard_page(
- 			PAGE_SIZE / i_blocksize(inode));
- 	if (error && !XFS_FORCED_SHUTDOWN(mp))
- 		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
--out_invalidate:
--	xfs_vm_invalidatepage(page, 0, PAGE_SIZE);
- }
- 
- /*
-  * We implement an immediate ioend submission policy here to avoid needing to
-  * chain multiple ioends and hence nest mempool allocations which can violate
-  * forward progress guarantees we need to provide. The current ioend we are
-- * adding buffers to is cached on the writepage context, and if the new buffer
-+ * adding blocks to is cached on the writepage context, and if the new block
-  * does not append to the cached ioend it will create a new ioend and cache that
-  * instead.
-  *
-@@ -807,41 +657,28 @@ xfs_writepage_map(
- 	uint64_t		end_offset)
- {
- 	LIST_HEAD(submit_list);
-+	struct iomap_page	*iop = to_iomap_page(page);
-+	unsigned		len = i_blocksize(inode);
- 	struct xfs_ioend	*ioend, *next;
--	struct buffer_head	*bh = NULL;
--	ssize_t			len = i_blocksize(inode);
--	int			error = 0;
--	int			count = 0;
--	loff_t			file_offset;	/* file offset of page */
--	unsigned		poffset;	/* offset into page */
-+	int			error = 0, count = 0, i;
-+	u64			file_offset;	/* file offset of page */
- 
--	if (page_has_buffers(page))
--		bh = page_buffers(page);
-+	ASSERT(iop || i_blocksize(inode) == PAGE_SIZE);
-+	ASSERT(!iop || atomic_read(&iop->write_count) == 0);
- 
- 	/*
--	 * Walk the blocks on the page, and we we run off then end of the
--	 * current map or find the current map invalid, grab a new one.
--	 * We only use bufferheads here to check per-block state - they no
--	 * longer control the iteration through the page. This allows us to
--	 * replace the bufferhead with some other state tracking mechanism in
--	 * future.
-+	 * Walk through the page to find areas to write back. If we run off the
-+	 * end of the current map or find the current map invalid, grab a new
-+	 * one.
- 	 */
--	for (poffset = 0, file_offset = page_offset(page);
--	     poffset < PAGE_SIZE;
--	     poffset += len, file_offset += len) {
--		/* past the range we are writing, so nothing more to write. */
--		if (file_offset >= end_offset)
--			break;
--
-+	for (i = 0, file_offset = page_offset(page);
-+	     i < (PAGE_SIZE >> inode->i_blkbits) && file_offset < end_offset;
-+	     i++, file_offset += len) {
- 		/*
- 		 * Block does not contain valid data, skip it.
- 		 */
--		if (bh && !buffer_uptodate(bh)) {
--			if (PageUptodate(page))
--				ASSERT(buffer_mapped(bh));
--			bh = bh->b_this_page;
-+		if (iop && !test_bit(i, iop->uptodate))
- 			continue;
--		}
- 
- 		/*
- 		 * If we don't have a valid map, now it's time to get a new one
-@@ -854,52 +691,33 @@ xfs_writepage_map(
- 			error = xfs_map_blocks(inode, file_offset, &wpc->imap,
- 					     &wpc->io_type);
- 			if (error)
--				goto out;
-+				break;
- 		}
- 
--		if (wpc->io_type == XFS_IO_HOLE) {
--			/*
--			 * set_page_dirty dirties all buffers in a page, independent
--			 * of their state.  The dirty state however is entirely
--			 * meaningless for holes (!mapped && uptodate), so check we did
--			 * have a buffer covering a hole here and continue.
--			 */
--			if (bh)
--				bh = bh->b_this_page;
--			continue;
-+		if (wpc->io_type != XFS_IO_HOLE) {
-+			xfs_add_to_ioend(inode, file_offset, page, iop, wpc,
-+				wbc, &submit_list);
-+			count++;
- 		}
--
--		if (bh) {
--			xfs_map_at_offset(inode, bh, &wpc->imap, file_offset);
--			bh = bh->b_this_page;
--		}
--		xfs_add_to_ioend(inode, file_offset, page, wpc, wbc,
--				&submit_list);
--		count++;
- 	}
- 
- 	ASSERT(wpc->ioend || list_empty(&submit_list));
--
--out:
- 	ASSERT(PageLocked(page));
- 	ASSERT(!PageWriteback(page));
- 
- 	/*
--	 * On error, we have to fail the ioend here because we have locked
--	 * buffers in the ioend. If we don't do this, we'll deadlock
--	 * invalidating the page as that tries to lock the buffers on the page.
--	 * Also, because we may have set pages under writeback, we have to make
--	 * sure we run IO completion to mark the error state of the IO
--	 * appropriately, so we can't cancel the ioend directly here. That means
--	 * we have to mark this page as under writeback if we included any
--	 * buffers from it in the ioend chain so that completion treats it
--	 * correctly.
-+	 * On error, we have to fail the ioend here because we may have set
-+	 * pages under writeback, we have to make sure we run IO completion to
-+	 * mark the error state of the IO appropriately, so we can't cancel the
-+	 * ioend directly here.  That means we have to mark this page as under
-+	 * writeback if we included any blocks from it in the ioend chain so
-+	 * that completion treats it correctly.
- 	 *
- 	 * If we didn't include the page in the ioend, the on error we can
- 	 * simply discard and unlock it as there are no other users of the page
--	 * or it's buffers right now. The caller will still need to trigger
--	 * submission of outstanding ioends on the writepage context so they are
--	 * treated correctly on error.
-+	 * now.  The caller will still need to trigger submission of outstanding
-+	 * ioends on the writepage context so they are treated correctly on
-+	 * error.
- 	 */
- 	if (unlikely(error)) {
- 		if (!count) {
-@@ -940,8 +758,8 @@ xfs_writepage_map(
- 	}
- 
- 	/*
--	 * We can end up here with no error and nothing to write if we race with
--	 * a partial page truncate on a sub-page block sized filesystem.
-+	 * We can end up here with no error and nothing to write only if we race
-+	 * with a partial page truncate on a sub-page block sized filesystem.
- 	 */
- 	if (!count)
- 		end_page_writeback(page);
-@@ -956,7 +774,6 @@ xfs_writepage_map(
-  * For delalloc space on the page we need to allocate space and flush it.
-  * For unwritten space on the page we need to start the conversion to
-  * regular allocated space.
-- * For any other dirty buffer heads on the page we should flush them.
-  */
- STATIC int
- xfs_do_writepage(
-@@ -1110,168 +927,6 @@ xfs_dax_writepages(
- 			xfs_find_bdev_for_inode(mapping->host), wbc);
- }
- 
--/*
-- * Called to move a page into cleanable state - and from there
-- * to be released. The page should already be clean. We always
-- * have buffer heads in this call.
-- *
-- * Returns 1 if the page is ok to release, 0 otherwise.
-- */
--STATIC int
--xfs_vm_releasepage(
--	struct page		*page,
--	gfp_t			gfp_mask)
--{
--	int			delalloc, unwritten;
--
--	trace_xfs_releasepage(page->mapping->host, page, 0, 0);
--
--	/*
--	 * mm accommodates an old ext3 case where clean pages might not have had
--	 * the dirty bit cleared. Thus, it can send actual dirty pages to
--	 * ->releasepage() via shrink_active_list(). Conversely,
--	 * block_invalidatepage() can send pages that are still marked dirty but
--	 * otherwise have invalidated buffers.
--	 *
--	 * We want to release the latter to avoid unnecessary buildup of the
--	 * LRU, so xfs_vm_invalidatepage() clears the page dirty flag on pages
--	 * that are entirely invalidated and need to be released.  Hence the
--	 * only time we should get dirty pages here is through
--	 * shrink_active_list() and so we can simply skip those now.
--	 *
--	 * warn if we've left any lingering delalloc/unwritten buffers on clean
--	 * or invalidated pages we are about to release.
--	 */
--	if (PageDirty(page))
--		return 0;
--
--	xfs_count_page_state(page, &delalloc, &unwritten);
--
--	if (WARN_ON_ONCE(delalloc))
--		return 0;
--	if (WARN_ON_ONCE(unwritten))
--		return 0;
--
--	return try_to_free_buffers(page);
--}
--
--/*
-- * If this is O_DIRECT or the mpage code calling tell them how large the mapping
-- * is, so that we can avoid repeated get_blocks calls.
-- *
-- * If the mapping spans EOF, then we have to break the mapping up as the mapping
-- * for blocks beyond EOF must be marked new so that sub block regions can be
-- * correctly zeroed. We can't do this for mappings within EOF unless the mapping
-- * was just allocated or is unwritten, otherwise the callers would overwrite
-- * existing data with zeros. Hence we have to split the mapping into a range up
-- * to and including EOF, and a second mapping for beyond EOF.
-- */
--static void
--xfs_map_trim_size(
--	struct inode		*inode,
--	sector_t		iblock,
--	struct buffer_head	*bh_result,
--	struct xfs_bmbt_irec	*imap,
--	xfs_off_t		offset,
--	ssize_t			size)
--{
--	xfs_off_t		mapping_size;
--
--	mapping_size = imap->br_startoff + imap->br_blockcount - iblock;
--	mapping_size <<= inode->i_blkbits;
--
--	ASSERT(mapping_size > 0);
--	if (mapping_size > size)
--		mapping_size = size;
--	if (offset < i_size_read(inode) &&
--	    (xfs_ufsize_t)offset + mapping_size >= i_size_read(inode)) {
--		/* limit mapping to block that spans EOF */
--		mapping_size = roundup_64(i_size_read(inode) - offset,
--					  i_blocksize(inode));
--	}
--	if (mapping_size > LONG_MAX)
--		mapping_size = LONG_MAX;
--
--	bh_result->b_size = mapping_size;
--}
--
--static int
--xfs_get_blocks(
--	struct inode		*inode,
--	sector_t		iblock,
--	struct buffer_head	*bh_result,
--	int			create)
--{
--	struct xfs_inode	*ip = XFS_I(inode);
--	struct xfs_mount	*mp = ip->i_mount;
--	xfs_fileoff_t		offset_fsb, end_fsb;
--	int			error = 0;
--	int			lockmode = 0;
--	struct xfs_bmbt_irec	imap;
--	int			nimaps = 1;
--	xfs_off_t		offset;
--	ssize_t			size;
--
--	BUG_ON(create);
--
--	if (XFS_FORCED_SHUTDOWN(mp))
--		return -EIO;
--
--	offset = (xfs_off_t)iblock << inode->i_blkbits;
--	ASSERT(bh_result->b_size >= i_blocksize(inode));
--	size = bh_result->b_size;
--
--	if (offset >= i_size_read(inode))
--		return 0;
--
--	/*
--	 * Direct I/O is usually done on preallocated files, so try getting
--	 * a block mapping without an exclusive lock first.
--	 */
--	lockmode = xfs_ilock_data_map_shared(ip);
--
--	ASSERT(offset <= mp->m_super->s_maxbytes);
--	if (offset > mp->m_super->s_maxbytes - size)
--		size = mp->m_super->s_maxbytes - offset;
--	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + size);
--	offset_fsb = XFS_B_TO_FSBT(mp, offset);
--
--	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb, &imap,
--			&nimaps, 0);
--	if (error)
--		goto out_unlock;
--	if (!nimaps) {
--		trace_xfs_get_blocks_notfound(ip, offset, size);
--		goto out_unlock;
--	}
--
--	trace_xfs_get_blocks_found(ip, offset, size,
--		imap.br_state == XFS_EXT_UNWRITTEN ?
--			XFS_IO_UNWRITTEN : XFS_IO_OVERWRITE, &imap);
--	xfs_iunlock(ip, lockmode);
--
--	/* trim mapping down to size requested */
--	xfs_map_trim_size(inode, iblock, bh_result, &imap, offset, size);
--
--	/*
--	 * For unwritten extents do not report a disk address in the buffered
--	 * read case (treat as if we're reading into a hole).
--	 */
--	if (xfs_bmap_is_real_extent(&imap))
--		xfs_map_buffer(inode, bh_result, &imap, offset);
--
--	/*
--	 * If this is a realtime file, data may be on a different device.
--	 * to that pointed to from the buffer_head b_bdev currently.
--	 */
--	bh_result->b_bdev = xfs_find_bdev_for_inode(inode);
--	return 0;
--
--out_unlock:
--	xfs_iunlock(ip, lockmode);
--	return error;
--}
--
- STATIC sector_t
- xfs_vm_bmap(
- 	struct address_space	*mapping,
-@@ -1301,9 +956,7 @@ xfs_vm_readpage(
- 	struct page		*page)
- {
- 	trace_xfs_vm_readpage(page->mapping->host, 1);
--	if (i_blocksize(page->mapping->host) == PAGE_SIZE)
--		return iomap_readpage(page, &xfs_iomap_ops);
--	return mpage_readpage(page, xfs_get_blocks);
-+	return iomap_readpage(page, &xfs_iomap_ops);
- }
- 
- STATIC int
-@@ -1314,65 +967,26 @@ xfs_vm_readpages(
- 	unsigned		nr_pages)
- {
- 	trace_xfs_vm_readpages(mapping->host, nr_pages);
--	if (i_blocksize(mapping->host) == PAGE_SIZE)
--		return iomap_readpages(mapping, pages, nr_pages, &xfs_iomap_ops);
--	return mpage_readpages(mapping, pages, nr_pages, xfs_get_blocks);
-+	return iomap_readpages(mapping, pages, nr_pages, &xfs_iomap_ops);
- }
- 
--/*
-- * This is basically a copy of __set_page_dirty_buffers() with one
-- * small tweak: buffers beyond EOF do not get marked dirty. If we mark them
-- * dirty, we'll never be able to clean them because we don't write buffers
-- * beyond EOF, and that means we can't invalidate pages that span EOF
-- * that have been marked dirty. Further, the dirty state can leak into
-- * the file interior if the file is extended, resulting in all sorts of
-- * bad things happening as the state does not match the underlying data.
-- *
-- * XXX: this really indicates that bufferheads in XFS need to die. Warts like
-- * this only exist because of bufferheads and how the generic code manages them.
-- */
--STATIC int
--xfs_vm_set_page_dirty(
--	struct page		*page)
-+static int
-+xfs_vm_releasepage(
-+	struct page		*page,
-+	gfp_t			gfp_mask)
- {
--	struct address_space	*mapping = page->mapping;
--	struct inode		*inode = mapping->host;
--	loff_t			end_offset;
--	loff_t			offset;
--	int			newly_dirty;
--
--	if (unlikely(!mapping))
--		return !TestSetPageDirty(page);
--
--	end_offset = i_size_read(inode);
--	offset = page_offset(page);
--
--	spin_lock(&mapping->private_lock);
--	if (page_has_buffers(page)) {
--		struct buffer_head *head = page_buffers(page);
--		struct buffer_head *bh = head;
-+	trace_xfs_releasepage(page->mapping->host, page, 0, 0);
-+	return iomap_releasepage(page, gfp_mask);
-+}
- 
--		do {
--			if (offset < end_offset)
--				set_buffer_dirty(bh);
--			bh = bh->b_this_page;
--			offset += i_blocksize(inode);
--		} while (bh != head);
--	}
--	/*
--	 * Lock out page->mem_cgroup migration to keep PageDirty
--	 * synchronized with per-memcg dirty page counters.
--	 */
--	lock_page_memcg(page);
--	newly_dirty = !TestSetPageDirty(page);
--	spin_unlock(&mapping->private_lock);
--
--	if (newly_dirty)
--		__set_page_dirty(page, mapping, 1);
--	unlock_page_memcg(page);
--	if (newly_dirty)
--		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
--	return newly_dirty;
-+static void
-+xfs_vm_invalidatepage(
-+	struct page		*page,
-+	unsigned int		offset,
-+	unsigned int		length)
-+{
-+	trace_xfs_invalidatepage(page->mapping->host, page, offset, length);
-+	iomap_invalidatepage(page, offset, length);
- }
- 
- static int
-@@ -1390,13 +1004,13 @@ const struct address_space_operations xfs_address_space_operations = {
- 	.readpages		= xfs_vm_readpages,
- 	.writepage		= xfs_vm_writepage,
- 	.writepages		= xfs_vm_writepages,
--	.set_page_dirty		= xfs_vm_set_page_dirty,
-+	.set_page_dirty		= iomap_set_page_dirty,
- 	.releasepage		= xfs_vm_releasepage,
- 	.invalidatepage		= xfs_vm_invalidatepage,
- 	.bmap			= xfs_vm_bmap,
- 	.direct_IO		= noop_direct_IO,
--	.migratepage		= buffer_migrate_page,
--	.is_partially_uptodate  = block_is_partially_uptodate,
-+	.migratepage		= iomap_migrate_page,
-+	.is_partially_uptodate  = iomap_is_partially_uptodate,
- 	.error_remove_page	= generic_error_remove_page,
- 	.swap_activate		= xfs_iomap_swapfile_activate,
- };
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index f5f2b71c2fde..f3fa197bd272 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -24,7 +24,6 @@
- #include <linux/mm.h>
- #include <linux/fs.h>
- #include <linux/dax.h>
--#include <linux/buffer_head.h>
- #include <linux/uio.h>
- #include <linux/list_lru.h>
- 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 93c40da3378a..c646d84cd55e 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1031,9 +1031,6 @@ xfs_file_iomap_begin(
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
- 
--	if (i_blocksize(inode) < PAGE_SIZE)
--		iomap->flags |= IOMAP_F_BUFFER_HEAD;
--
- 	if (((flags & (IOMAP_WRITE | IOMAP_DIRECT)) == IOMAP_WRITE) &&
- 			!IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
- 		/* Reserve delalloc blocks for regular writeback. */
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 39e5ec3d407f..a9f23ec95216 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1866,7 +1866,7 @@ MODULE_ALIAS_FS("xfs");
- STATIC int __init
- xfs_init_zones(void)
- {
--	xfs_ioend_bioset = bioset_create(4 * MAX_BUF_PER_PAGE,
-+	xfs_ioend_bioset = bioset_create(4 * (PAGE_SIZE / SECTOR_SIZE),
- 			offsetof(struct xfs_ioend, io_inline_bio),
- 			BIOSET_NEED_BVECS);
- 	if (!xfs_ioend_bioset)
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index ed8f774944ba..e4dc7c7f3da9 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -1165,33 +1165,23 @@ DECLARE_EVENT_CLASS(xfs_page_class,
- 		__field(loff_t, size)
- 		__field(unsigned long, offset)
- 		__field(unsigned int, length)
--		__field(int, delalloc)
--		__field(int, unwritten)
- 	),
- 	TP_fast_assign(
--		int delalloc = -1, unwritten = -1;
--
--		if (page_has_buffers(page))
--			xfs_count_page_state(page, &delalloc, &unwritten);
- 		__entry->dev = inode->i_sb->s_dev;
- 		__entry->ino = XFS_I(inode)->i_ino;
- 		__entry->pgoff = page_offset(page);
- 		__entry->size = i_size_read(inode);
- 		__entry->offset = off;
- 		__entry->length = len;
--		__entry->delalloc = delalloc;
--		__entry->unwritten = unwritten;
- 	),
- 	TP_printk("dev %d:%d ino 0x%llx pgoff 0x%lx size 0x%llx offset %lx "
--		  "length %x delalloc %d unwritten %d",
-+		  "length %x",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->ino,
- 		  __entry->pgoff,
- 		  __entry->size,
- 		  __entry->offset,
--		  __entry->length,
--		  __entry->delalloc,
--		  __entry->unwritten)
-+		  __entry->length)
- )
- 
- #define DEFINE_PAGE_EVENT(name)		\
-@@ -1275,9 +1265,6 @@ DEFINE_EVENT(xfs_imap_class, name,	\
- 	TP_ARGS(ip, offset, count, type, irec))
- DEFINE_IOMAP_EVENT(xfs_map_blocks_found);
- DEFINE_IOMAP_EVENT(xfs_map_blocks_alloc);
--DEFINE_IOMAP_EVENT(xfs_get_blocks_found);
--DEFINE_IOMAP_EVENT(xfs_get_blocks_alloc);
--DEFINE_IOMAP_EVENT(xfs_get_blocks_map_direct);
- DEFINE_IOMAP_EVENT(xfs_iomap_alloc);
- DEFINE_IOMAP_EVENT(xfs_iomap_found);
- 
-@@ -1316,7 +1303,6 @@ DEFINE_EVENT(xfs_simple_io_class, name,	\
- 	TP_ARGS(ip, offset, count))
- DEFINE_SIMPLE_IO_EVENT(xfs_delalloc_enospc);
- DEFINE_SIMPLE_IO_EVENT(xfs_unwritten_convert);
--DEFINE_SIMPLE_IO_EVENT(xfs_get_blocks_notfound);
- DEFINE_SIMPLE_IO_EVENT(xfs_setfilesize);
- DEFINE_SIMPLE_IO_EVENT(xfs_zero_eof);
- DEFINE_SIMPLE_IO_EVENT(xfs_end_io_direct_write);
--- 
-2.17.0
+> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+> ---
+>  include/builddefs.in   |   2 +
+>  man/man5/mkfs.xfs.d.5  | 121 ++++++++++
+>  man/man8/mkfs.xfs.8    |  26 +++
+>  mkfs/Makefile          |   2 +-
+>  mkfs/xfs_mkfs.c        |  47 +++-
+>  mkfs/xfs_mkfs_common.h |  12 +
+>  mkfs/xfs_mkfs_config.c | 591 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  mkfs/xfs_mkfs_config.h |  11 +
+>  8 files changed, 801 insertions(+), 11 deletions(-)
+>  create mode 100644 man/man5/mkfs.xfs.d.5
+>  create mode 100644 mkfs/xfs_mkfs_config.c
+>  create mode 100644 mkfs/xfs_mkfs_config.h
+> 
+> diff --git a/include/builddefs.in b/include/builddefs.in
+> index 8aac06cf90dc..e1ee9f7ba086 100644
+> --- a/include/builddefs.in
+> +++ b/include/builddefs.in
+> @@ -62,6 +62,7 @@ PKG_LIB_DIR	= @libdir@@libdirsuffix@
+>  PKG_INC_DIR	= @includedir@/xfs
+>  DK_INC_DIR	= @includedir@/disk
+>  PKG_MAN_DIR	= @mandir@
+> +PKG_ETC_DIR	= @sysconfdir@
+>  PKG_DOC_DIR	= @datadir@/doc/@pkg_name@
+>  PKG_LOCALE_DIR	= @datadir@/locale
+>  
+> @@ -196,6 +197,7 @@ endif
+>  
+>  GCFLAGS = $(DEBUG) \
+>  	  -DVERSION=\"$(PKG_VERSION)\" -DLOCALEDIR=\"$(PKG_LOCALE_DIR)\"  \
+> +	  -DROOT_SYSCONFDIR=\"$(PKG_ETC_DIR)\"  \
+>  	  -DPACKAGE=\"$(PKG_NAME)\" -I$(TOPDIR)/include -I$(TOPDIR)/libxfs
+>  
+>  ifeq ($(ENABLE_GETTEXT),yes)
+> diff --git a/man/man5/mkfs.xfs.d.5 b/man/man5/mkfs.xfs.d.5
+> new file mode 100644
+> index 000000000000..5424f730a2e5
+> --- /dev/null
+> +++ b/man/man5/mkfs.xfs.d.5
+> @@ -0,0 +1,121 @@
+> +.TH mkfs.xfs.d 5
+> +.SH NAME
+> +mkfs.xfs.d \- mkfs.xfs configuration directory
+> +.SH DESCRIPTION
+> +.B mkfs.xfs (8)
+> +uses a set of initial default parameters for configuration. These defaults
+> +are conservatively decided by the community as xfsprogs and features for XFS
+> +in the kernel advance. One can override these defaults on the
 
+I'm not sure what the sentence "These defaults...in the kernel advance."
+means... is this close to what you meant?:
+
+"The builtin mkfs defaults are decided by the XFS community.  New features
+are only enabled by default when the community consider it stable."
+
+> +.B mkfs.xfs (8)
+> +command line, but there are cases where it is desirable for sensible defaults
+> +to always be specified by the system where
+
+"...where it is desirable for the distro or the system administrator to
+establish their own supported defaults in a uniform manner." ?
+
+> +.B mkfs.xfs (8)
+> +runs on. This may desirable for example on systems with old kernels where the
+> +built-in default parameters on
+> +.B mkfs.xfs (8)
+> +may not be able to create a filesystem which the old kernel supports and it
+
+"...where the built-in default mkfs.xfs parameters create a filesystem
+that is not supported by the old kernel."
+
+> +would be unclear what parameters are needed to produce a compatible filesystem.
+> +Overriding
+> +.B mkfs.xfs (8)
+> +built-in defaults may also be desirable if you have a series of systems with
+> +different kernels and want to be able to create filesystems which all systems
+> +are able to support properly.
+> +.PP
+> +The XFS configuration directory
+> +.B mkfs.xfs.d (5)
+> +can be used to define different configuration files which can be used to
+> +override the built-in default parameters by
+> +.B mkfs.xfs (8).
+> +Different configuration files are supported, the default
+> +configuration file,
+> +.I /etc/mkfs.xfs.d/default
+
+The "/etc" part of the path should be sysconfdir and replaced by the
+build script to match whatever we're encoding into the mkfs.xfs binary.
+
+> +, will be looked for first and if present will be used to override
+> +.B mkfs.xfs (8)
+> +built-in default parameters. You can override the configuration file by
+> +specifying its name when using
+> +.B mkfs.xfs (8)
+> +by using the
+> +.B -c
+> +parameter. For example:
+> +.I mkfs.xfs -c experimental -f /dev/sda1
+> +will make
+> +.B mkfs.xfs (8)
+> +look for and use the configuration file
+> +.I /etc/mkfs.xfs.d/experimental
+> +to override
+> +.B mkfs.xfs (8)
+> +default parameters. If you need to override the full path for a configuration
+> +file you can use the
+> +.I MKFS_XFS_CONFIG
+> +environment variable prior to calling
+> +.B mkfs.xfs (8)
+> +to define the
+> +full path to the configuration file to be used.
+
+Does the environment variable override -c, or the other way around?
+
+> If you used the
+> +.B -c
+> +parameter or if you set the
+> +.I MKFS_XFS_CONFIG
+> +environment variable the configuration file must be present and should parse
+
+"...must parse..."
+
+> +correctly.
+> +.PP
+> +Parameters passed to to the
+
+"...passed to the..."
+
+> +.B mkfs.xfs (8)
+> +command line always override any defaults set on the configuration file used.
+> +.PP
+> +.B mkfs.xfs (8)
+> +will always describe what configuration file was used, if any
+> +was used at all. To verify which configuration file would be used prior to
+> +execution of
+> +.B mkfs.xfs (8)
+> +you can use
+> +.I mkfs.xfs -N.
+> +.PP
+> +.SH DEFAULT PARAMETERS
+> +Default parameters for
+> +.B mkfs.xfs (8)
+> +consists of a small subset of the parameters one can set with on the command
+> +line. Currently all default parameters can only be either enabled or disabled,
+> +you can set their value to 1 to enable or 0 to disable. Below we list the
+> +different supported default parameters which can be defined on configuration
+> +files, along with the current built-in setting.
+> +.PP
+> +.BI [data]
+> +.br
+> +.BI noalign=0
+> +.PP
+> +.BI [inode]
+> +.br
+> +.BI align=1
+> +.br
+> +.BI projid32bit=1
+> +.br
+> +.BI sparse=0
+> +.PP
+> +.BI [log]
+> +.br
+> +.BI lazy-count=1
+> +.PP
+> +.BI [metadata]
+> +.br
+> +.BI crc=1
+> +.br
+> +.BI finobt=1
+> +.br
+> +.BI rmapbt=0
+> +.br
+> +.BI reflink=0
+> +.PP
+> +.BI [naming]
+> +.br
+> +.BI ftype=1
+> +.PP
+> +.BI [rtdev]
+> +.br
+> +.BI noalign=0
+> +.PP
+> +.SH SEE ALSO
+> +.BR mkfs.xfs (8),
+> +.BR xfsctl (3),
+> +.BR xfs_info (8),
+> +.BR xfs_admin (8),
+> +.BR xfsdump (8),
+> +.BR xfsrestore (8).
+> diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+> index 4b8c78c37806..fadc4c589a8c 100644
+> --- a/man/man8/mkfs.xfs.8
+> +++ b/man/man8/mkfs.xfs.8
+> @@ -83,6 +83,26 @@ and
+>  .B \-l internal \-l size=10m
+>  are equivalent.
+>  .PP
+> +An optional XFS configuration file directory
+> +.B mkfs.xfs.d (5)
+
+%sysconfigdir%/mkfs.xfs.d ?
+
+> +exists to help fine tune default parameters which can be used when calling
+> +.B mkfs.xfs (8).
+> +If present, the default file /etc/mkfs.xfs.d/default
+> +will be used to override system build-in defaults. Refer to mkfs.xfs.d (5)
+> +for a list of current defaults.
+> +Command line arguments directly passed to
+> +.B mkfs.xfs (8)
+> +will always override parameters set in the configuration file.
+> +You can override the configuration file used within the
+> +.B mkfs.xfs.d (5)
+> +directory by using the -c parameter. Alternatively
+> +you can set and use the MKFS_XFS_CONFIG environment variable to override
+> +the default full path of the configuration file which
+> +.B mkfs.xfs (8)
+> +looks for.
+> +If you use -c the configuration file must be present under
+> +.B mkfs.xfs.d (8).
+> +.PP
+>  In the descriptions below, sizes are given in sectors, bytes, blocks,
+>  kilobytes, megabytes, gigabytes, etc.
+>  Sizes are treated as hexadecimal if prefixed by 0x or 0X,
+> @@ -123,6 +143,11 @@ Many feature options allow an optional argument of 0 or 1, to explicitly
+>  disable or enable the functionality.
+>  .SH OPTIONS
+>  .TP
+> +.BI \-c " configuration-file"
+> +Override the configuration file used under the
+> +.B mkfs.xfs.d
+> +directory.
+> +.TP
+>  .BI \-b " block_size_options"
+>  This option specifies the fundamental block size of the filesystem.
+>  The valid
+> @@ -923,6 +948,7 @@ Prints the version number and exits.
+>  .SH SEE ALSO
+>  .BR xfs (5),
+>  .BR mkfs (8),
+> +.BR mkfs.xfs.d (5),
+>  .BR mount (8),
+>  .BR xfs_info (8),
+>  .BR xfs_admin (8).
+> diff --git a/mkfs/Makefile b/mkfs/Makefile
+> index c84f9b6ae63b..7906b1d4e67d 100644
+> --- a/mkfs/Makefile
+> +++ b/mkfs/Makefile
+> @@ -8,7 +8,7 @@ include $(TOPDIR)/include/builddefs
+>  LTCOMMAND = mkfs.xfs
+>  
+>  HFILES =
+> -CFILES = proto.c xfs_mkfs.c
+> +CFILES = proto.c xfs_mkfs.c xfs_mkfs_config.c
+>  
+>  LLDLIBS += $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBRT) $(LIBPTHREAD) $(LIBBLKID) \
+>  	$(LIBUUID)
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index cb549be89835..aaf3f71a93cf 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -21,6 +21,7 @@
+>  #include "xfs_multidisk.h"
+>  #include "libxcmd.h"
+>  #include "xfs_mkfs_common.h"
+> +#include "xfs_mkfs_config.h"
+>  #include "xfs_mkfs_cli.h"
+>  
+>  
+> @@ -3077,11 +3078,13 @@ print_mkfs_cfg(
+>  	struct mkfs_params	*cfg,
+>  	char			*dfile,
+>  	char			*logfile,
+> -	char			*rtfile)
+> +	char			*rtfile,
+> +	struct mkfs_default_params *dft)
+>  {
+>  	struct sb_feat_args	*fp = &cfg->sb_feat;
+>  
+>  	printf(_(
+> +"config-file=%-22s\n"
+>  "meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
+>  "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
+>  "         =%-22s crc=%-8u finobt=%u, sparse=%u, rmapbt=%u, reflink=%u\n"
+> @@ -3091,6 +3094,7 @@ print_mkfs_cfg(
+>  "log      =%-22s bsize=%-6d blocks=%lld, version=%d\n"
+>  "         =%-22s sectsz=%-5u sunit=%d blks, lazy-count=%d\n"
+>  "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
+> +		dft->type != DEFAULTS_BUILTIN ? dft->config_file : "empty",
+>  		dfile, cfg->inodesize, (long long)cfg->agcount,
+>  			(long long)cfg->agsize,
+>  		"", cfg->sectorsize, fp->attr_version, fp->projid32bit,
+
+FWIW all this geometry printing was refactored into libfrog.
+
+Though, you already print where we got the configuration data, so just
+print dft->config_file there.
+
+> @@ -3665,6 +3669,7 @@ rewrite_secondary_superblocks(
+>  /* build time defaults */
+>  struct mkfs_default_params	built_in_dft = {
+>  	.type = DEFAULTS_BUILTIN,
+> +	.config_file = MKFS_XFS_CONF_DIR "default",
+>  	.sectorsize = XFS_MIN_SECTORSIZE,
+>  	.blocksize = 1 << XFS_DFL_BLOCKSIZE_LOG,
+>  	.sb_feat = {
+> @@ -3714,6 +3719,13 @@ static void process_defaults(
+>  	struct mkfs_default_params	*dft,
+>  	struct cli_params		*cli)
+>  {
+> +	int ret;
+> +
+> +	ret = parse_config_init(dft);
+> +
+> +	if (ret && dft->type != DEFAULTS_BUILTIN)
+> +		usage();
+> +
+>  	install_defaults(dft, cli);
+>  }
+>  
+> @@ -3750,6 +3762,8 @@ main(
+>  	};
+>  	struct mkfs_params	cfg = {};
+>  	struct mkfs_default_params	dft;
+> +	char *tmp_config;
+> +	char custom_config[PATH_MAX];
+>  
+>  	reset_defaults_and_cli(&dft, &cli);
+>  
+> @@ -3760,21 +3774,36 @@ main(
+>  	textdomain(PACKAGE);
+>  
+>  	/*
+> -	 * TODO: Sourcing defaults from a config file
+> -	 *
+>  	 * Before anything else, see if there's a config file with different
+> -	 * defaults. If a file exists in <package location>, read in the new
+> +	 * defaults. If a file exists in MKFS_XFS_CONF_DIR/default, read the new
+>  	 * default values and overwrite them in the &dft structure. This way the
+>  	 * new defaults will apply before we parse the CLI, and the CLI will
+>  	 * still be able to override them. When more than one source is
+>  	 * implemented, emit a message to indicate where the defaults being
+>  	 * used came from.
+>  	 */
+> +	tmp_config = getenv("MKFS_XFS_CONFIG");
+> +	if (tmp_config != NULL) {
+> +		dft.config_file = tmp_config;
+> +		dft.type = DEFAULTS_ENVIRONMENT_CONFIG;
+> +	}
+>  
+>  	process_defaults(&dft, &cli);
+>  
+> -	while ((c = getopt(argc, argv, "b:d:i:l:L:m:n:KNp:qr:s:CfV")) != EOF) {
+> +	while ((c = getopt(argc, argv, "b:c:d:i:l:L:m:n:KNp:qr:s:CfV")) != EOF) {
+>  		switch (c) {
+> +		case 'c':
+> +			reset_defaults_and_cli(&dft, &cli);
+> +
+> +			memset(custom_config, 0, sizeof(custom_config));
+> +			snprintf(custom_config, sizeof(custom_config), "%s%s",
+> +				 MKFS_XFS_CONF_DIR, optarg);
+> +			dft.config_file = custom_config;
+> +			dft.type = DEFAULTS_TYPE_CONFIG;
+
+Ok, so we parse $MKFS_XFS_CONFIG but then if the user specifies -c we
+reset all that and parse that config file.
+
+Just for fun I decided to run:
+
+$ cat > /tmp/butts.lol
+[gugugugug]
+bye = 1
+[metadata]
+hork = 1
+$ ./build-x64/mkfs/mkfs.xfs -c ../../../../../../../tmp/butts.lol -N /dev/sda
+Error parsine line: bye=1
+
+I think we need to error out on unrecognized section names:
+
+"Unrecognized section name 'gugugugug'."
+
+And probably report the section name for unrecognized keys:
+
+"Unrecognized name 'metadata.hork"."
+
+> +
+> +			process_defaults(&dft, &cli);
+> +
+> +			break;
+>  		case 'C':
+>  		case 'f':
+>  			force_overwrite = 1;
+> @@ -3823,10 +3852,8 @@ main(
+>  	} else
+>  		dfile = xi.dname;
+>  
+> -	/*
+> -	 * printf(_("Default configuration sourced from %s\n"),
+> -	 *	  default_type_str(dft.type));
+> -	 */
+> +	printf(_("Default configuration sourced from %s\n"),
+> +	       default_type_str(dft.type));
+>  
+>  	protostring = setup_proto(protofile);
+>  
+> @@ -3902,7 +3929,7 @@ main(
+>  	calculate_log_size(&cfg, &cli, mp);
+>  
+>  	if (!quiet || dry_run) {
+> -		print_mkfs_cfg(&cfg, dfile, logfile, rtfile);
+> +		print_mkfs_cfg(&cfg, dfile, logfile, rtfile, &dft);
+>  		if (dry_run)
+>  			exit(0);
+>  	}
+> diff --git a/mkfs/xfs_mkfs_common.h b/mkfs/xfs_mkfs_common.h
+> index d867ab377185..028bbf96017f 100644
+> --- a/mkfs/xfs_mkfs_common.h
+> +++ b/mkfs/xfs_mkfs_common.h
+> @@ -46,9 +46,20 @@ struct sb_feat_args {
+>   * These are the different possibilities by which you can end up parsing
+>   * default settings with. DEFAULTS_BUILTIN indicates there was no configuration
+>   * file parsed and we are using the built-in defaults on this code.
+> + * DEFAULTS_CONFIG means the default configuration file was found and used.
+> + * DEFAULTS_TYPE_CONFIG means the user asked for a custom configuration type
+> + * and it was used, this means the default directory for mkfs.xfs
+> + * configuration files was used to look for the type specified. If you need
+> + * to override the default mkfs.xfs directory for configuration file you can
+> + * use the MKFS_XFS_CONFIG environment variable to set the absolute path to
+> + * your custom configuration file, when this is set the type is set to
+> + * DEFAULTS_ENVIRONMENT_CONFIG.
+>   */
+>  enum default_params_type {
+>  	DEFAULTS_BUILTIN = 0,
+> +	DEFAULTS_CONFIG,
+> +	DEFAULTS_ENVIRONMENT_CONFIG,
+> +	DEFAULTS_TYPE_CONFIG,
+>  };
+>  
+>  /*
+> @@ -61,6 +72,7 @@ enum default_params_type {
+>   */
+>  struct mkfs_default_params {
+>  	enum default_params_type type; /* where the defaults came from */
+> +	const char *config_file;
+>  
+>  	int	sectorsize;
+>  	int	blocksize;
+> diff --git a/mkfs/xfs_mkfs_config.c b/mkfs/xfs_mkfs_config.c
+> new file mode 100644
+> index 000000000000..d554638982ff
+> --- /dev/null
+> +++ b/mkfs/xfs_mkfs_config.c
+> @@ -0,0 +1,591 @@
+> +/*
+> + * Copyright (c) 2018 Luis R. Rodriguez <mcgrof@kernel.org>
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License as
+> + * published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> + */
+> +
+> +#include "xfs_mkfs_common.h"
+> +#include "xfs_mkfs_config.h"
+> +
+> +#define CONFIG_MAX_KEY		1024
+> +#define CONFIG_MAX_VALUE	PATH_MAX
+
+That's a pretty big size considering we only allow 0 and 1...
+
+> +#define CONFIG_MAX_BUFFER	CONFIG_MAX_KEY + CONFIG_MAX_VALUE + 3
+> +
+> +/*
+> + * Enums for each configuration option. All these currently match the CLI
+> + * parameters for now but this may change later, so we keep all this code
+> + * and definitions separate. The rules for configuration parameters may also
+> + * differ.
+> + */
+
+So... I think these enums should be shared between cli and config file
+processing, or if the config file parser retains its own private
+definitions then it should only have the options that we support in the
+config file.  It's weird how things like data.sunit are specified here
+but the config file doesn't actually do anything with it?
+
+$ cat > /tmp/butts.lol
+[data]
+sunit = 5
+$ ./build-x64/mkfs/mkfs.xfs -c ../../../tmp/butts.lol -N /dev/sda | grep sunit
+         =                       sunit=0      swidth=0 blks
+
+That really ought to error out, since we don't support setting sunit?
+
+> +
+> +enum {
+> +	B_SIZE = 0,
+> +	B_MAX_OPTS,
+> +};
+> +
+> +enum {
+> +	D_AGCOUNT = 0,
+> +	D_FILE,
+> +	D_NAME,
+> +	D_SIZE,
+> +	D_SUNIT,
+> +	D_SWIDTH,
+> +	D_AGSIZE,
+> +	D_SU,
+> +	D_SW,
+> +	D_SECTSIZE,
+> +	D_NOALIGN,
+> +	D_RTINHERIT,
+> +	D_PROJINHERIT,
+> +	D_EXTSZINHERIT,
+> +	D_COWEXTSIZE,
+> +	D_MAX_OPTS,
+> +};
+> +
+> +enum {
+> +	I_ALIGN = 0,
+> +	I_MAXPCT,
+> +	I_PERBLOCK,
+> +	I_SIZE,
+> +	I_ATTR,
+> +	I_PROJID32BIT,
+> +	I_SPINODES,
+> +	I_MAX_OPTS,
+> +};
+> +
+> +enum {
+> +	L_AGNUM = 0,
+> +	L_INTERNAL,
+> +	L_SIZE,
+> +	L_VERSION,
+> +	L_SUNIT,
+> +	L_SU,
+> +	L_DEV,
+> +	L_SECTSIZE,
+> +	L_FILE,
+> +	L_NAME,
+> +	L_LAZYSBCNTR,
+> +	L_MAX_OPTS,
+> +};
+> +
+> +enum {
+> +	N_SIZE = 0,
+> +	N_VERSION,
+> +	N_FTYPE,
+> +	N_MAX_OPTS,
+> +};
+> +
+> +enum {
+> +	R_EXTSIZE = 0,
+> +	R_SIZE,
+> +	R_DEV,
+> +	R_FILE,
+> +	R_NAME,
+> +	R_NOALIGN,
+> +	R_MAX_OPTS,
+> +};
+> +
+> +enum {
+> +	S_SIZE = 0,
+> +	S_SECTSIZE,
+> +	S_MAX_OPTS,
+> +};
+> +
+> +enum {
+> +	M_CRC = 0,
+> +	M_FINOBT,
+> +	M_UUID,
+> +	M_RMAPBT,
+> +	M_REFLINK,
+> +	M_MAX_OPTS,
+> +};
+> +
+> +/* Just define the max options array size manually right now */
+> +#define MAX_SUBOPTS	D_MAX_OPTS
+> +
+> +enum mkfs_config_section {
+> +	MKFS_CONFIG_SECTION_BLOCK = 0,
+> +	MKFS_CONFIG_SECTION_DATA,
+> +	MKFS_CONFIG_SECTION_INODE,
+> +	MKFS_CONFIG_SECTION_LOG,
+> +	MKFS_CONFIG_SECTION_METADATA,
+> +	MKFS_CONFIG_SECTION_NAMING,
+> +	MKFS_CONFIG_SECTION_RTDEV,
+> +	MKFS_CONFIG_SECTION_SECTOR,
+> +
+> +	MKFS_CONFIG_SECTION_INVALID,
+> +};
+> +
+> +struct opt_params {
+> +	const enum mkfs_config_section section;
+> +	const char	*subopts[MAX_SUBOPTS];
+> +};
+> +
+> +extern struct opt_params config_sopts;
+> +
+> +struct opt_params config_bopts = {
+> +	.section = 'b',
+> +	.subopts = {
+> +		[B_SIZE] = "size",
+> +	},
+> +};
+> +
+> +struct opt_params config_dopts = {
+> +	.section = 'd',
+> +	.subopts = {
+> +		[D_AGCOUNT] = "agcount",
+> +		[D_FILE] = "file",
+> +		[D_NAME] = "name",
+> +		[D_SIZE] = "size",
+> +		[D_SUNIT] = "sunit",
+> +		[D_SWIDTH] = "swidth",
+> +		[D_AGSIZE] = "agsize",
+> +		[D_SU] = "su",
+> +		[D_SW] = "sw",
+> +		[D_SECTSIZE] = "sectsize",
+> +		[D_NOALIGN] = "noalign",
+> +		[D_RTINHERIT] = "rtinherit",
+> +		[D_PROJINHERIT] = "projinherit",
+> +		[D_EXTSZINHERIT] = "extszinherit",
+> +		[D_COWEXTSIZE] = "cowextsize",
+> +	},
+> +};
+> +
+> +struct opt_params config_iopts = {
+> +	.section = 'i',
+> +	.subopts = {
+> +		[I_ALIGN] = "align",
+> +		[I_MAXPCT] = "maxpct",
+> +		[I_PERBLOCK] = "perblock",
+> +		[I_SIZE] = "size",
+> +		[I_ATTR] = "attr",
+> +		[I_PROJID32BIT] = "projid32bit",
+> +		[I_SPINODES] = "sparse",
+> +	},
+> +};
+> +
+> +struct opt_params config_lopts = {
+> +	.section = 'l',
+> +	.subopts = {
+> +		[L_AGNUM] = "agnum",
+> +		[L_INTERNAL] = "internal",
+> +		[L_SIZE] = "size",
+> +		[L_VERSION] = "version",
+> +		[L_SUNIT] = "sunit",
+> +		[L_SU] = "su",
+> +		[L_DEV] = "logdev",
+> +		[L_SECTSIZE] = "sectsize",
+> +		[L_FILE] = "file",
+> +		[L_NAME] = "name",
+> +		[L_LAZYSBCNTR] = "lazy-count",
+> +	},
+> +};
+> +
+> +struct opt_params config_nopts = {
+> +	.section = 'n',
+> +	.subopts = {
+> +		[N_SIZE] = "size",
+> +		[N_VERSION] = "version",
+> +		[N_FTYPE] = "ftype",
+> +	},
+> +};
+> +
+> +struct opt_params config_ropts = {
+> +	.section = 'r',
+> +	.subopts = {
+> +		[R_EXTSIZE] = "extsize",
+> +		[R_SIZE] = "size",
+> +		[R_DEV] = "rtdev",
+> +		[R_FILE] = "file",
+> +		[R_NAME] = "name",
+> +		[R_NOALIGN] = "noalign",
+> +	},
+> +};
+> +
+> +struct opt_params config_sopts = {
+> +	.section = 's',
+> +	.subopts = {
+> +		[S_SIZE] = "size",
+> +		[S_SECTSIZE] = "sectsize",
+> +	},
+> +};
+> +
+> +struct opt_params config_mopts = {
+> +	.section = 'm',
+> +	.subopts = {
+> +		[M_CRC] = "crc",
+> +		[M_FINOBT] = "finobt",
+> +		[M_UUID] = "uuid",
+> +		[M_RMAPBT] = "rmapbt",
+> +		[M_REFLINK] = "reflink",
+> +	},
+> +};
+> +
+> +const char *default_type_str(enum default_params_type type)
+
+const char *
+default_type_str(
+	enum default_params_type	type)
+{
+	...
+}
+
+Please follow regular xfs formatting conventions.
+
+> +{
+> +	switch (type) {
+> +	case DEFAULTS_BUILTIN:
+> +		return _("package built-in definitions");
+> +	case DEFAULTS_CONFIG:
+> +		return _("default configuration system file");
+> +	case DEFAULTS_ENVIRONMENT_CONFIG:
+> +		return _("custom configuration file set by environment");
+> +	case DEFAULTS_TYPE_CONFIG:
+> +		return _("custom configuration type file");
+> +	}
+> +	return _("Unkown\n");
+
+"Unknown"
+
+> +}
+> +
+> +static int block_config_parser(struct mkfs_default_params *dft, int subopt,
+> +			       bool value)
+> +{
+> +	return -EINVAL;
+> +}
+> +
+> +static int data_config_parser(struct mkfs_default_params *dft, int subopt,
+> +			      bool value)
+> +{
+> +	switch (subopt) {
+> +	case D_NOALIGN:
+> +		dft->sb_feat.nodalign = value;
+> +		break;
+> +	default:
+> +		return -EINVAL;
+> +	}
+> +	return 0;
+> +}
+> +
+> +static int inode_config_parser(struct mkfs_default_params *dft, int subopt,
+> +			       bool value)
+> +{
+> +	switch (subopt) {
+> +	case I_ALIGN:
+> +		dft->sb_feat.inode_align = value;
+> +		break;
+> +	case I_PROJID32BIT:
+> +		dft->sb_feat.projid32bit = value;
+> +		break;
+> +	case I_SPINODES:
+> +		dft->sb_feat.spinodes = value;
+> +		break;
+> +	default:
+> +		return -EINVAL;
+> +	}
+> +	return 0;
+> +}
+> +
+> +static int log_config_parser(struct mkfs_default_params *dft, int subopt,
+> +			     bool value)
+> +{
+> +	switch (subopt) {
+> +	case L_LAZYSBCNTR:
+> +		dft->sb_feat.lazy_sb_counters = value;
+> +		break;
+> +	default:
+> +		return -EINVAL;
+> +	}
+> +	return 0;
+> +}
+> +
+> +static int meta_config_parser(struct mkfs_default_params *dft, int subopt,
+> +			      bool value)
+> +{
+> +	switch (subopt) {
+> +	case M_CRC:
+> +		dft->sb_feat.crcs_enabled = value;
+> +		if (dft->sb_feat.crcs_enabled)
+> +			dft->sb_feat.dirftype = true;
+> +		break;
+> +	case M_FINOBT:
+> +		dft->sb_feat.finobt = value;
+> +		break;
+> +	case M_RMAPBT:
+> +		dft->sb_feat.rmapbt = value;
+> +		break;
+> +	case M_REFLINK:
+> +		dft->sb_feat.reflink = value;
+> +		break;
+> +	default:
+> +		return -EINVAL;
+> +	}
+> +	return 0;
+> +}
+> +
+> +static int naming_config_parser(struct mkfs_default_params *dft, int subopt,
+> +				bool value)
+> +{
+> +	switch (subopt) {
+> +	case N_FTYPE:
+> +		dft->sb_feat.dirftype = value;
+> +		break;
+> +	default:
+> +		return -EINVAL;
+> +	}
+> +	return 0;
+> +}
+> +
+> +static int rtdev_config_parser(struct mkfs_default_params *dft, int subopt,
+> +			       bool value)
+> +{
+> +	switch (subopt) {
+> +	case R_NOALIGN:
+> +		dft->sb_feat.nortalign = value;
+> +		break;
+> +	default:
+> +		return -EINVAL;
+> +	}
+> +	return 0;
+> +}
+> +
+> +static int sector_config_parser(struct mkfs_default_params *dft, int subopt,
+> +				bool value)
+> +{
+> +	return -EINVAL;
+> +}
+> +
+> +struct config_subopts {
+> +	enum mkfs_config_section	section;
+> +	struct opt_params		*opts;
+> +	int (*config_parser)(struct mkfs_default_params *dft,
+> +			     int subop, bool value);
+> +} config_subopt_tab[] = {
+> +	{ MKFS_CONFIG_SECTION_BLOCK, &config_bopts, block_config_parser },
+> +	{ MKFS_CONFIG_SECTION_DATA, &config_dopts, data_config_parser },
+> +	{ MKFS_CONFIG_SECTION_INODE, &config_iopts, inode_config_parser },
+> +	{ MKFS_CONFIG_SECTION_LOG, &config_lopts, log_config_parser },
+> +	{ MKFS_CONFIG_SECTION_METADATA, &config_mopts, meta_config_parser },
+> +	{ MKFS_CONFIG_SECTION_NAMING, &config_nopts, naming_config_parser },
+> +	{ MKFS_CONFIG_SECTION_RTDEV, &config_ropts, rtdev_config_parser },
+> +	{ MKFS_CONFIG_SECTION_SECTOR, &config_sopts, sector_config_parser },
+> +	{ '\0', NULL },
+> +};
+> +
+> +static int
+> +parse_config_subopts(
+> +	enum mkfs_config_section	section,
+> +	bool				value,
+> +	char				*line,
+> +	struct mkfs_default_params	*dft)
+> +{
+> +	struct config_subopts *sop = &config_subopt_tab[0];
+> +	char	**subopts = (char **)sop->opts->subopts;
+> +	int	subopt;
+> +	char *val;
+> +
+> +	while (sop->opts) {
+> +		if (sop->section == section)
+> +			break;
+> +		sop++;
+> +	}
+> +
+> +	/* should never happen */
+> +	if (!sop->opts)
+> +		return -EINVAL;
+> +
+> +	subopts = (char **)sop->opts->subopts;
+> +	subopt = getsubopt(&line, subopts, &val);
+> +	return (sop->config_parser)(dft, subopt, value);
+> +}
+> +
+> +static enum mkfs_config_section get_config_section(const char *buffer)
+> +{
+> +	if (strncmp("block", buffer, 5) == 0)
+> +		return MKFS_CONFIG_SECTION_BLOCK;
+> +	if (strncmp("data", buffer, 4) == 0)
+> +		return MKFS_CONFIG_SECTION_DATA;
+> +	if (strncmp("inode", buffer, 5) == 0)
+> +		return MKFS_CONFIG_SECTION_INODE;
+> +	if (strncmp("log", buffer, 3) == 0)
+> +		return MKFS_CONFIG_SECTION_LOG;
+> +	if (strncmp("metadata", buffer, 8) == 0)
+> +		return MKFS_CONFIG_SECTION_METADATA;
+> +	if (strncmp("naming", buffer, 6) == 0)
+> +		return MKFS_CONFIG_SECTION_NAMING;
+> +	if (strncmp("rtdev", buffer, 5) == 0)
+> +		return MKFS_CONFIG_SECTION_RTDEV;
+> +	if (strncmp("sector", buffer, 6) == 0)
+> +		return MKFS_CONFIG_SECTION_SECTOR;
+> +
+> +	return MKFS_CONFIG_SECTION_INVALID;
+> +}
+> +
+> +static int mkfs_check_config_file_limits(const char *filename,
+> +					 const struct stat *sb,
+> +					 unsigned int max_entries)
+> +{
+> +	unsigned long long size_limit;
+> +
+> +	size_limit = CONFIG_MAX_BUFFER * max_entries;
+> +
+> +	/*
+> +	 * Detect wrap around -- if max_entries * size_limit goves over
+> +	 * unsigned long long we detect that there. Note some libraries,
+> +	 * like libiniconfig, only groks max INT_MAX entries anyway, so
+> +	 * if we ever use a library for parsing we'd be restricted to that
+> +	 * limit.
+> +	 */
+> +	if (size_limit < max_entries || max_entries > INT_MAX)
+> +		return -E2BIG;
+> +
+> +	if (sb->st_size > size_limit) {
+> +		fprintf(stderr,
+> +			"File %s is too big! File size limit: %llu\n",
+> +			filename, size_limit);
+> +		return -E2BIG;
+> +	}
+
+Not sure why we care about the file size?  If the config file
+respecifies options a trillion times then let it.
+
+> +
+> +	return 0;
+> +}
+> +
+> +enum parse_line_type {
+> +	PARSE_COMMENT = 0,
+> +	PARSE_SECTION,
+> +	PARSE_TAG_VALUE,
+> +	PARSE_INVALID,
+> +	PARSE_EOF,
+> +};
+> +
+> +static int parse_line_section(const char *line, char *tag)
+> +{
+> +	return sscanf(line, " [%[^]]s]", tag);
+> +}
+> +
+> +static int parse_line_tag_value(const char *line, char *tag,
+> +				unsigned int *value)
+> +{
+> +	return sscanf(line, " %[^ \t=]"
+> +		      " = "
+> +		      "%u ",
+> +		      tag, value);
+> +}
+> +
+> +static enum parse_line_type parse_get_line_type(const char *line, char *tag,
+> +						bool *value)
+> +{
+> +	int ret;
+> +	unsigned int uint_value;
+> +
+> +	memset(tag, 0, 80);
+> +
+> +	if (strlen(line) < 2)
+> +		return PARSE_INVALID;
+> +
+> +	if (line[0] == '#')
+> +		return PARSE_COMMENT;
+> +
+> +	ret = parse_line_section(line, tag);
+> +	if (ret == 1)
+> +		return  PARSE_SECTION;
+> +
+> +	if (ret == EOF)
+> +		return PARSE_EOF;
+> +
+> +	ret = parse_line_tag_value(line, tag, &uint_value);
+> +	if (ret == 2) {
+> +		if (uint_value != 1 && uint_value != 0)
+> +			return -EINVAL;
+
+If I set data.sunit = 5 this will return -EINVAL to the switch in
+parse_config_init.  However, the switch lacks a default clause so it
+silently drops invalid values and proceeds with the format.
+
+> +
+> +		*value = !!uint_value;
+> +
+> +		return PARSE_TAG_VALUE;
+> +	}
+> +
+> +	if (ret == EOF)
+> +		return PARSE_EOF;
+> +
+> +	return PARSE_INVALID;
+> +}
+> +
+> +int parse_config_init(struct mkfs_default_params *dft)
+> +{
+> +	int ret;
+> +	FILE *fp;
+> +	struct stat sp;
+> +	unsigned int num_subopts_sections = sizeof(config_subopt_tab) /
+> +					    sizeof(struct config_subopts) - 1;
+> +	char *p;
+> +	char line[80], tag[80];
+
+Waitaminute, didn't we set CONFIG_MAX_KEY = 1024 and CONFIG_MAX_VALUE
+to PATH_MAX?
+
+> +	bool value;
+> +	enum parse_line_type parse_type;
+> +	enum mkfs_config_section section = MKFS_CONFIG_SECTION_INVALID;
+> +
+> +	fp = fopen(dft->config_file, "r");
+> +	if (!fp) {
+> +		if (dft->type != DEFAULTS_BUILTIN) {
+
+Why would we be parsing a config file if dft->type == DEFAULTS_BUILTIN?
+
+> +			fprintf(stderr, _("could not open config file: %s\n"),
+> +				dft->config_file);
+> +			ret = -ENOENT;
+> +		} else
+> +			ret = 0;
+> +		return ret;
+> +	}
+> +
+> +	/*
+> +	 * If we found a file without it being specified on the command line,
+> +	 * it would be the default configuration file.
+> +	 */
+> +	if (dft->type == DEFAULTS_BUILTIN)
+> +		dft->type = DEFAULTS_CONFIG;
+
+Oh, I see, type == _BUILTIN really means "we picked up
+/etc/mkfs.xfs.d/defaults"... shouldn't the caller set this?
+
+> +
+> +	ret = stat(dft->config_file, &sp);
+
+fstat(fileno(fp), &sp); ?
+
+> +	if (ret) {
+> +		if (dft->type != DEFAULTS_BUILTIN)
+
+Didn't we just set this to _CONFIG?
+
+> +			fprintf(stderr, _("could not stat() config file: %s: %s\n"),
+> +				dft->config_file, strerror(ret));
+> +		return ret;
+
+We just leaked fp...
+
+> +	}
+> +
+> +	if (!sp.st_size)
+> +		return 0;
+
+Can't we just keep going?  If the file size is zero we never execute the
+loop.
+
+> +	ret = mkfs_check_config_file_limits(dft->config_file, &sp,
+> +					    num_subopts_sections);
+> +	if (ret)
+> +		return ret;
+> +
+> +	while (!feof(fp)) {
+> +		p = fgets(line, sizeof(line), fp);
+> +		if (!p)
+> +			continue;
+> +
+> +		parse_type = parse_get_line_type(line, tag, &value);
+> +
+> +		switch (parse_type) {
+> +		case PARSE_COMMENT:
+> +		case PARSE_INVALID:
+> +		case PARSE_EOF:
+> +			break;
+> +		case PARSE_SECTION:
+> +			section = get_config_section(tag);
+> +			if (!section) {
+> +				fprintf(stderr, _("Invalid section: %s\n"),
+> +						tag);
+> +				return -EINVAL;
+> +			}
+> +			break;
+> +		case PARSE_TAG_VALUE:
+> +			/* Trims white spaces */
+> +			snprintf(line, sizeof(line), "%s=%u", tag, value);
+
+So we reconstruct the line (without the whitespaces) so that we can use
+getsubopt to map the tag to an integer value (e.g. D_AGCOUNT)... we
+already isolated *tag, so can't we map it directly?
+
+> +			ret = parse_config_subopts(section, value, line, dft);
+> +			if (ret) {
+> +				fprintf(stderr, _("Error parsine line: %s\n"),
+> +						line);
+> +				return ret;
+> +			}
+> +			break;
+
+case -EINVAL?
+
+--D
+
+> +		}
+> +	}
+> +
+> +	return 0;
+> +}
+> diff --git a/mkfs/xfs_mkfs_config.h b/mkfs/xfs_mkfs_config.h
+> new file mode 100644
+> index 000000000000..407d37fffb1a
+> --- /dev/null
+> +++ b/mkfs/xfs_mkfs_config.h
+> @@ -0,0 +1,11 @@
+> +#ifndef _XFS_MKFS_CONFIG_H
+> +#define _XFS_MKFS_CONFIG_H
+> +
+> +#include "xfs_mkfs_common.h"
+> +
+> +#define MKFS_XFS_CONF_DIR      ROOT_SYSCONFDIR "/mkfs.xfs.d/"
+> +
+> +const char *default_type_str(enum default_params_type type);
+> +int parse_config_init(struct mkfs_default_params *dft);
+> +
+> +#endif /* _XFS_MKFS_CONFIG_H */
+> -- 
+> 2.16.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
