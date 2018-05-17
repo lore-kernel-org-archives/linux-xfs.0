@@ -1,94 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:47292 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933444AbeEWOop (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 10:44:45 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 14/34] iomap: add an iomap-based bmap implementation
-Date: Wed, 23 May 2018 16:43:37 +0200
-Message-Id: <20180523144357.18985-15-hch@lst.de>
-In-Reply-To: <20180523144357.18985-1-hch@lst.de>
-References: <20180523144357.18985-1-hch@lst.de>
+Received: from mail.kernel.org ([198.145.29.99]:41566 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751231AbeEQT1D (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 May 2018 15:27:03 -0400
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v2 1/5] mkfs: distinguish between struct sb_feat_args and struct cli_params
+Date: Thu, 17 May 2018 12:26:56 -0700
+Message-Id: <20180517192700.23457-2-mcgrof@kernel.org>
+In-Reply-To: <20180517192700.23457-1-mcgrof@kernel.org>
+References: <20180517192700.23457-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+To: sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com, "Luis R. Rodriguez" <mcgrof@kernel.org>
 
-This adds a simple iomap-based implementation of the legacy ->bmap
-interface.  Note that we can't easily add checks for rt or reflink
-files, so these will have to remain in the callers.  This interface
-just needs to die..
+The struct sb_feat_args will actually be shared between the code which
+processes command line options and the configuration file, as such we
+need to clarify and reflect this clearly in documentation.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 ---
- fs/iomap.c            | 34 ++++++++++++++++++++++++++++++++++
- include/linux/iomap.h |  3 +++
- 2 files changed, 37 insertions(+)
+ mkfs/xfs_mkfs.c | 45 ++++++++++++++++++++++++++++-----------------
+ 1 file changed, 28 insertions(+), 17 deletions(-)
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index f928df4ab9a9..fa278ed338ce 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -1411,3 +1411,37 @@ int iomap_swapfile_activate(struct swap_info_struct *sis,
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 3804814b3b8a..95cd6ced13f0 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -707,26 +707,18 @@ cli_opt_set(
  }
- EXPORT_SYMBOL_GPL(iomap_swapfile_activate);
- #endif /* CONFIG_SWAP */
-+
-+static loff_t
-+iomap_bmap_actor(struct inode *inode, loff_t pos, loff_t length,
-+		void *data, struct iomap *iomap)
-+{
-+	sector_t *bno = data, addr;
-+
-+	if (iomap->type == IOMAP_MAPPED) {
-+		addr = (pos - iomap->offset + iomap->addr) >> inode->i_blkbits;
-+		if (addr > INT_MAX)
-+			WARN(1, "would truncate bmap result\n");
-+		else
-+			*bno = addr;
-+	}
-+	return 0;
-+}
-+
-+/* legacy ->bmap interface.  0 is the error return (!) */
-+sector_t
-+iomap_bmap(struct address_space *mapping, sector_t bno,
-+		const struct iomap_ops *ops)
-+{
-+	struct inode *inode = mapping->host;
-+	loff_t pos = bno >> inode->i_blkbits;
-+	unsigned blocksize = i_blocksize(inode);
-+
-+	if (filemap_write_and_wait(mapping))
-+		return 0;
-+
-+	bno = 0;
-+	iomap_apply(inode, pos, blocksize, 0, ops, &bno, iomap_bmap_actor);
-+	return bno;
-+}
-+EXPORT_SYMBOL_GPL(iomap_bmap);
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 819e0cd2a950..a044a824da85 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -4,6 +4,7 @@
- 
- #include <linux/types.h>
- 
-+struct address_space;
- struct fiemap_extent_info;
- struct inode;
- struct iov_iter;
-@@ -100,6 +101,8 @@ loff_t iomap_seek_hole(struct inode *inode, loff_t offset,
- 		const struct iomap_ops *ops);
- loff_t iomap_seek_data(struct inode *inode, loff_t offset,
- 		const struct iomap_ops *ops);
-+sector_t iomap_bmap(struct address_space *mapping, sector_t bno,
-+		const struct iomap_ops *ops);
  
  /*
-  * Flags for direct I/O ->end_io:
+- * Options configured on the command line.
+- *
+- * This stores all the specific config parameters the user sets on the command
+- * line. We do not use these values directly - they are inputs to the mkfs
+- * geometry validation and override any default configuration value we have.
++ * Shared superblock configuration options
+  *
+- * We don't keep flags to indicate what parameters are set - if we need to check
+- * if an option was set on the command line, we check the relevant entry in the
+- * option table which records whether it was specified in the .seen and
+- * .str_seen variables in the table.
++ * These options provide shared configuration tunables for the filesystem
++ * superblock. There are three possible sources for these options set, each
++ * source can overriding the later source:
+  *
+- * Some parameters are stored as strings for post-parsing after their dependent
+- * options have been resolved (e.g. block size and sector size have been parsed
+- * and validated).
++ * 	o built-in defaults
++ * 	o configuration file (XXX)
++ * 	o command line
+  *
+- * This allows us to check that values have been set without needing separate
+- * flags for each value, and hence avoids needing to record and check for each
+- * specific option that can set the value later on in the code. In the cases
+- * where we don't have a cli_params structure around, the above cli_opt_set()
+- * function can be used.
++ * These values are not used directly - they are inputs into the mkfs geometry
++ * validation.
+  */
+ struct sb_feat_args {
+ 	int	log_version;
+@@ -747,6 +739,25 @@ struct sb_feat_args {
+ 	bool	nortalign;
+ };
+ 
++/*
++ * Options configured on the command line.
++ *
++ * This stores all the specific config parameters the user sets on the command
++ * line.  We don't keep flags to indicate what parameters are set - if we need
++ * to check if an option was set on the command line, we check the relevant
++ * entry in the option table which records whether it was specified in the
++ * .seen and .str_seen variables in the table.
++ *
++ * Some parameters are stored as strings for post-parsing after their dependent
++ * options have been resolved (e.g. block size and sector size have been parsed
++ * and validated).
++ *
++ * This allows us to check that values have been set without needing separate
++ * flags for each value, and hence avoids needing to record and check for each
++ * specific option that can set the value later on in the code. In the cases
++ * where we don't have a cli_params structure around, the function cli_opt_set()
++ * function can be used.
++ */
+ struct cli_params {
+ 	int	sectorsize;
+ 	int	blocksize;
 -- 
-2.17.0
+2.16.3
 
