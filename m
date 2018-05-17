@@ -1,109 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:52166 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751928AbeEPQzA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 May 2018 12:55:00 -0400
-Date: Wed, 16 May 2018 09:54:34 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 1/2] iomap: provide more useful errors for invalid
- swap files
-Message-ID: <20180516165434.GG23858@magnolia>
-References: <cover.1526488995.git.osandov@fb.com>
- <9faf09627cfa469437b76edb73ac7cc822dc33c8.1526488995.git.osandov@fb.com>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:54481 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752121AbeEQLdT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 May 2018 07:33:19 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <9faf09627cfa469437b76edb73ac7cc822dc33c8.1526488995.git.osandov@fb.com>
+In-Reply-To: <20180509074830.16196-5-hch@lst.de>
+References: <20180509074830.16196-1-hch@lst.de> <20180509074830.16196-5-hch@lst.de>
+From: =?UTF-8?Q?Andreas_Gr=C3=BCnbacher?= <andreas.gruenbacher@gmail.com>
+Date: Thu, 17 May 2018 13:33:17 +0200
+Message-ID: <CAHpGcM+i1sAPGLxN9m5tcu973cx-Jr-DU2D7xWYScp7hfpcvnA@mail.gmail.com>
+Subject: Re: [PATCH 04/33] fs: remove the buffer_unwritten check in page_seek_hole_data
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Omar Sandoval <osandov@osandov.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>, Aleksei Besogonov <cyberax@amazon.com>, kernel-team@fb.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-On Wed, May 16, 2018 at 09:45:50AM -0700, Omar Sandoval wrote:
-> From: Omar Sandoval <osandov@fb.com>
-> 
-> Currently, for an invalid swap file, we print the same error message
-> regardless of the reason. This isn't very useful for an admin, who will
-> likely want to know why exactly they can't use their swap file. So,
-> let's add specific error messages for each reason, and also move the
-> bdev check after the flags checks, since the latter are more
-> fundamental.
-> 
-> Signed-off-by: Omar Sandoval <osandov@fb.com>
+2018-05-09 9:48 GMT+02:00 Christoph Hellwig <hch@lst.de>:
+> We only call into this function through the iomap iterators, so we already
+> know the buffer is unwritten.  In addition to that we always require the
+> uptodate flag that is ORed with the result anyway.
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Please update the page_cache_seek_hole_data description as well:
 
---D
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -647,8 +647,8 @@
+  * Seek for SEEK_DATA / SEEK_HOLE in the page cache.
+  *
+  * Within unwritten extents, the page cache determines which parts are holes
+- * and which are data: unwritten and uptodate buffer heads count as data;
+- * everything else counts as a hole.
++ * and which are data: uptodate buffer heads count as data; everything else
++ * counts as a hole.
+  *
+  * Returns the resulting offset on successs, and -ENOENT otherwise.
+  */
 
-> ---
->  fs/iomap.c | 37 ++++++++++++++++++++++---------------
->  1 file changed, 22 insertions(+), 15 deletions(-)
-> 
-> diff --git a/fs/iomap.c b/fs/iomap.c
-> index d193390a1c20..318724375ffe 100644
-> --- a/fs/iomap.c
-> +++ b/fs/iomap.c
-> @@ -1218,22 +1218,32 @@ static loff_t iomap_swapfile_activate_actor(struct inode *inode, loff_t pos,
->  	if (iomap->type == IOMAP_HOLE)
->  		goto out;
->  
-> -	/* Only one bdev per swap file. */
-> -	if (iomap->bdev != isi->sis->bdev)
-> -		goto err;
-> -
->  	/* Only real or unwritten extents. */
-> -	if (iomap->type != IOMAP_MAPPED && iomap->type != IOMAP_UNWRITTEN)
-> -		goto err;
-> +	if ((iomap->type != IOMAP_MAPPED && iomap->type != IOMAP_UNWRITTEN) ||
-> +	    iomap->addr == IOMAP_NULL_ADDR) {
-> +		pr_err("swapon: file has unallocated extents\n");
-> +		return -EINVAL;
-> +	}
->  
->  	/* No uncommitted metadata or shared blocks or inline data. */
-> -	if (iomap->flags & (IOMAP_F_DIRTY | IOMAP_F_SHARED |
-> -			    IOMAP_F_DATA_INLINE))
-> -		goto err;
-> +	if (iomap->flags & IOMAP_F_DIRTY) {
-> +		pr_err("swapon: file is not committed\n");
-> +		return -EINVAL;
-> +	}
-> +	if (iomap->flags & IOMAP_F_SHARED) {
-> +		pr_err("swapon: file has shared extents\n");
-> +		return -EINVAL;
-> +	}
-> +	if (iomap->flags & IOMAP_F_DATA_INLINE) {
-> +		pr_err("swapon: file is inline\n");
-> +		return -EINVAL;
-> +	}
->  
-> -	/* No null physical addresses. */
-> -	if (iomap->addr == IOMAP_NULL_ADDR)
-> -		goto err;
-> +	/* Only one bdev per swap file. */
-> +	if (iomap->bdev != isi->sis->bdev) {
-> +		pr_err("swapon: file is on multiple devices\n");
-> +		return -EINVAL;
-> +	}
->  
->  	if (isi->iomap.length == 0) {
->  		/* No accumulated extent, so just store it. */
-> @@ -1250,9 +1260,6 @@ static loff_t iomap_swapfile_activate_actor(struct inode *inode, loff_t pos,
->  	}
->  out:
->  	return count;
-> -err:
-> -	pr_err("swapon: file cannot be used for swap\n");
-> -	return -EINVAL;
->  }
->  
->  /*
-> -- 
-> 2.17.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Andreas
