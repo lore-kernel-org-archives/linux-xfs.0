@@ -1,110 +1,268 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from canopus.corp.1gb.ru ([81.177.167.38]:13548 "EHLO
-        canopus.corp.1gb.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751013AbeEPUOf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 May 2018 16:14:35 -0400
-Received: from canopus.corp.1gb.ru (canopus.corp.1gb.ru [81.177.167.38] (may be forged))
-        by canopus.corp.1gb.ru (8.14.5/8.14.7) with ESMTP id w4GJuMm8063076
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 16 May 2018 22:56:22 +0300 (MSK)
-        (envelope-from renton@renton.name)
-Received: (from renton@localhost)
-        by canopus.corp.1gb.ru (8.14.5/8.14.7/Submit) id w4GJuL2w063075
-        for linux-xfs@vger.kernel.org; Wed, 16 May 2018 22:56:21 +0300 (MSK)
-        (envelope-from renton@renton.name)
-Date: Wed, 16 May 2018 22:56:21 +0300
-From: Alexey Vlasov <renton@renton.name>
-Subject: kernel BUG at fs/xfs/xfs_message.c:113
-Message-ID: <20180516195621.GC54864@canopus.corp.1gb.ru>
+Received: from userp2130.oracle.com ([156.151.31.86]:34328 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751468AbeEQOrQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 May 2018 10:47:16 -0400
+Date: Thu, 17 May 2018 07:47:12 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/2] generic: test swapfile creation, activation, and
+ deactivation
+Message-ID: <20180517144712.GD4910@magnolia>
+References: <152579843989.18959.14108003206856326245.stgit@magnolia>
+ <152579844608.18959.5745995713836937294.stgit@magnolia>
+ <20180512092858.GR8373@desktop>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="ZPt4rx8FFjLCG7dd"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20180512092858.GR8373@desktop>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
+On Sat, May 12, 2018 at 05:30:09PM +0800, Eryu Guan wrote:
+> On Tue, May 08, 2018 at 09:54:06AM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Test swapfile activation and deactivation.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  tests/generic/708     |  152 +++++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/generic/708.out |   10 +++
+> >  tests/generic/group   |    1 
+> >  3 files changed, 163 insertions(+)
+> >  create mode 100755 tests/generic/708
+> >  create mode 100644 tests/generic/708.out
+> > 
+> > 
+> > diff --git a/tests/generic/708 b/tests/generic/708
+> > new file mode 100755
+> > index 00000000..48feeb25
+> > --- /dev/null
+> > +++ b/tests/generic/708
+> > @@ -0,0 +1,152 @@
+> > +#! /bin/bash
+> > +# FS QA Test No. 708
+> > +#
+> > +# Test various swapfile activation oddities.
+> > +#
+> > +#-----------------------------------------------------------------------
+> > +# Copyright (c) 2018 Oracle.  All Rights Reserved.
+> > +#
+> > +# This program is free software; you can redistribute it and/or
+> > +# modify it under the terms of the GNU General Public License as
+> > +# published by the Free Software Foundation.
+> > +#
+> > +# This program is distributed in the hope that it would be useful,
+> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > +# GNU General Public License for more details.
+> > +#
+> > +# You should have received a copy of the GNU General Public License
+> > +# along with this program; if not, write the Free Software Foundation,
+> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > +#
+> > +#-----------------------------------------------------------------------
+> > +
+> > +seq=`basename $0`
+> > +seqres=$RESULT_DIR/$seq
+> > +echo "QA output created by $seq"
+> > +
+> > +status=1	# failure is the default!
+> > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > +
+> > +_cleanup()
+> > +{
+> > +	cd /
+> > +	rm -f $testfile
+> > +}
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common/rc
+> > +. ./common/filter
+> > +
+> > +# remove previous $seqres.full before test
+> > +rm -f $seqres.full
+> > +
+> > +# real QA test starts here
+> > +_supported_fs generic
+> > +_supported_os Linux
+> > +_require_scratch_swapfile
+> > +
+> > +rm -f $seqres.full
+> > +_scratch_mkfs >>$seqres.full 2>&1
+> > +_scratch_mount >>$seqres.full 2>&1
+> > +
+> > +swapfile=$SCRATCH_MNT/swap
+> > +len=$((2 * 1048576))
+> > +
+> > +swapfile_cycle() {
+> > +	local swapfile="$1"
+> > +
+> > +	mkswap $swapfile >> $seqres.full
+> > +	filefrag -v $swapfile >> $seqres.full
+> > +	swapon $swapfile 2>&1 | _filter_scratch
+> > +	swapon -v --bytes >> $seqres.full
+> > +	swapoff $swapfile 2>> $seeqres.full
+> > +	rm -f $swapfile
+> > +}
+> > +
+> > +test_can_falloc_swap() {
+> > +	local test_swapfile=$TEST_DIR/swapfile
+> > +
+> > +	echo "can we fallocate swap?"
+> > +	$XFS_IO_PROG -f -c "falloc 0 64k" $test_swapfile
+> 
+> mkswap(8) says "mkswap refuses areas smaller than 10 pages", so I
+> suspect 64k won't work for hosts with larger page size, e.g. ppc64, even
+> if the kernel supports swapfile on fallocated file. But I don't have the
+> hardware to actually try it..
 
---ZPt4rx8FFjLCG7dd
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Ok, I'll take a look.
 
-Hi,
+> > +	test -f $test_swapfile || return 1
+> > +	mkswap $test_swapfile
+> > +	swapon $test_swapfile
+> > +	res=$?
+> > +	swapoff $test_swapfile
+> > +	rm -f $test_swapfile
+> > +	return $res
+> > +}
+> 
+> When 'test_can_falloc_swap' returns non-zero, how could we tell if it's
+> because the kernel doesn't support swap on fallocate file or it's a
+> regression bug in the swap on fallocate file code?
 
-I have got from time to time this bug on my server. I can not reproduce
-it that happens randomly. 
+Can you think of a good way to detect whether or not a filesystem
+supports unwritten extents in a swapfile?  xfs didn't support that
+before the iomap swapfile activation series but does if that patch is
+present.  ext4 on the other hand already supported unwritten extents in
+swap.
 
-I found similar issue:
-https://www.spinics.net/lists/xfs/msg42484.html
-but that patch already merged with kernel 4.9.95 which I use.
+Nobody ever defined whether or not the kernel supports using unwritten
+extents for swap, so I decided to make the testing contingent on "if we
+make a normal looking swapfile with unwritten extents and swapon
+succeeds then go for it", assuming that if it doesn't work for the
+simple case then either the fs doesn't support it or it's completely
+regressed (and hopefully someone will notice...)
 
-Any ideas how to fix this?
+> And the kernel patch says "This enables XFS to support fallocate'd swap
+> files and swap files on realtime devices." So xfs/419 would start to
+> fail when the patch lands in upstream?
 
-trace in attach
+Yep.  I was going to delete that one (and possibly xfs/333 for
+unrelated reasons) after the 4.18 merge window.
 
---ZPt4rx8FFjLCG7dd
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: attachment; filename="xfs_message.trace"
+Anyway, this patch deserves a rewrite after Omar's swapfile tests, so
+I'll wait for those to land.
 
-May 12 04:10:39 ul14 kernel: XFS: Assertion failed: tp->t_blk_res_used <= tp->t_blk_res, file: fs/xfs/xfs_trans.c, line: 331
-May 12 04:10:39 ul14 kernel: ------------[ cut here ]------------
-May 12 04:10:39 ul14 kernel: kernel BUG at fs/xfs/xfs_message.c:113!
-May 12 04:10:39 ul14 kernel: invalid opcode: 0000 [#1] SMP
-May 12 04:10:39 ul14 kernel: Modules linked in: dm_cache_smq ixgbe mdio x86_pkg_temp_thermal dm_cache dm_bio_prison dm_persistent_data dm_bufio sg
-May 12 04:10:39 ul14 kernel: CPU: 3 PID: 15696 Comm: unlink Not tainted 4.9.95-gcm-efi #1
-May 12 04:10:39 ul14 kernel: Hardware name: Intel Corporation S2600WTTR/S2600WTTR, BIOS SE5C610.86B.01.01.0020.122820161512 12/28/2016
-May 12 04:10:39 ul14 kernel: task: ffff880a20e00000 task.stack: ffffc9001c914000
-May 12 04:10:39 ul14 kernel: RIP: 0010:[<ffffffff812b273d>]  [<ffffffff812b273d>] assfail+0x1d/0x20
-May 12 04:10:39 ul14 kernel: RSP: 0018:ffffc9001c9177b0  EFLAGS: 00010282
-May 12 04:10:39 ul14 kernel: RAX: 00000000ffffffea RBX: ffff88074c9bb000 RCX: 0000000000000021
-May 12 04:10:39 ul14 kernel: RDX: ffffc9001c9176d8 RSI: 000000000000000a RDI: ffffffff819a735b
-May 12 04:10:39 ul14 kernel: RBP: ffffc9001c9177b0 R08: 0000000000000000 R09: 0000000000000000
-May 12 04:10:39 ul14 kernel: R10: 000000000000000a R11: f000000000000000 R12: ffffffffffffffff
-May 12 04:10:39 ul14 kernel: R13: ffff88180f5f1000 R14: ffff88180f5f1000 R15: ffffc9001c917868
-May 12 04:10:39 ul14 kernel: FS:  00007fd35c567700(0000) GS:ffff88181f8c0000(0000) knlGS:0000000000000000
-May 12 04:10:39 ul14 kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-May 12 04:10:39 ul14 kernel: CR2: 00007fd35c08fb20 CR3: 00000006695de000 CR4: 0000000000360670
-May 12 04:10:39 ul14 kernel: DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-May 12 04:10:39 ul14 kernel: DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-May 12 04:10:39 ul14 kernel: Stack:
-May 12 04:10:39 ul14 kernel:  ffffc9001c9177d8 ffffffff812bb9be ffffc9001c917868 0000000000000000
-May 12 04:10:39 ul14 kernel:  0000000000000000 ffffc9001c917800 ffffffff81288cbb ffffc9001c917868
-May 12 04:10:39 ul14 kernel:  0000000000c80000 0000000001000000 ffffc9001c917818 ffffffff81247ed0
-May 12 04:10:39 ul14 kernel: Call Trace:
-May 12 04:10:39 ul14 kernel:  [<ffffffff812bb9be>] xfs_trans_mod_sb+0x1fe/0x290
-May 12 04:10:39 ul14 kernel:  [<ffffffff81288cbb>] xfs_ag_resv_alloc_extent+0x9b/0xc0
-May 12 04:10:39 ul14 kernel:  [<ffffffff81247ed0>] xfs_alloc_ag_vextent+0x130/0x330
-May 12 04:10:39 ul14 kernel:  [<ffffffff81249044>] xfs_alloc_vextent+0x544/0x6a0
-May 12 04:10:39 ul14 kernel:  [<ffffffff812836f1>] __xfs_inobt_alloc_block+0x91/0x110
-May 12 04:10:39 ul14 kernel:  [<ffffffff8128378f>] xfs_finobt_alloc_block+0xf/0x20
-May 12 04:10:39 ul14 kernel:  [<ffffffff81267246>] __xfs_btree_split+0xb6/0xae0
-May 12 04:10:39 ul14 kernel:  [<ffffffff8134e5ed>] ? list_del+0xd/0x30
-May 12 04:10:39 ul14 kernel:  [<ffffffff8113e766>] ? memcg_kmem_charge+0x56/0xd0
-May 12 04:10:39 ul14 kernel:  [<ffffffff812bd54e>] ? uuid_equal+0xe/0x20
-May 12 04:10:39 ul14 kernel:  [<ffffffff81262167>] ? xfs_btree_check_sblock+0xc7/0x1b0
-May 12 04:10:39 ul14 kernel:  [<ffffffff81267d34>] xfs_btree_split+0x34/0xc0
-May 12 04:10:39 ul14 kernel:  [<ffffffff8112bf15>] ? kmem_cache_alloc+0xb5/0x100
-May 12 04:10:39 ul14 kernel:  [<ffffffff81268d3f>] xfs_btree_make_block_unfull+0xef/0x160
-May 12 04:10:39 ul14 kernel:  [<ffffffff812691ad>] xfs_btree_insrec+0x3fd/0xbd0
-May 12 04:10:39 ul14 kernel:  [<ffffffff812d16d8>] ? xfs_trans_read_buf_map+0x268/0x300
-May 12 04:10:39 ul14 kernel:  [<ffffffff81269a1f>] xfs_btree_insert+0x9f/0x220
-May 12 04:10:39 ul14 kernel:  [<ffffffff812837d9>] ? xfs_inobt_init_cursor+0x39/0xc0
-May 12 04:10:39 ul14 kernel:  [<ffffffff812804a5>] xfs_difree_finobt+0xa5/0x290
-May 12 04:10:39 ul14 kernel:  [<ffffffff812826d7>] xfs_difree+0xf7/0x1e0
-May 12 04:10:39 ul14 kernel:  [<ffffffff812ae9a6>] xfs_ifree+0xb6/0x260
-May 12 04:10:39 ul14 kernel:  [<ffffffff812aebf7>] xfs_inactive_ifree+0xa7/0x250
-May 12 04:10:39 ul14 kernel:  [<ffffffff812aee90>] xfs_inactive+0xf0/0x250
-May 12 04:10:39 ul14 kernel:  [<ffffffff812b7491>] xfs_fs_destroy_inode+0xa1/0x210
-May 12 04:10:39 ul14 kernel:  [<ffffffff8115f966>] destroy_inode+0x36/0x60
-May 12 04:10:39 ul14 kernel:  [<ffffffff8115faa7>] evict+0x117/0x170
-May 12 04:10:39 ul14 kernel:  [<ffffffff81160143>] iput+0x133/0x1a0
-May 12 04:10:39 ul14 kernel:  [<ffffffff8115551b>] do_unlinkat+0x17b/0x290
-May 12 04:10:39 ul14 kernel:  [<ffffffff81155da1>] SyS_unlink+0x11/0x20
-May 12 04:10:39 ul14 kernel:  [<ffffffff81001426>] do_syscall_64+0x56/0xc0
-May 12 04:10:39 ul14 kernel:  [<ffffffff8166f93e>] entry_SYSCALL_64_after_swapgs+0x58/0xc6
-May 12 04:10:39 ul14 kernel: Code: 48 c7 c7 1f d9 9c 81 e8 72 dc d9 ff 5d c3 55 48 89 f1 41 89 d0 48 c7 c6 e0 84 9e 81 48 89 fa 48 89 e5 31 ff 31 c0 e8 63 fa ff ff <0f> 0b 90 55 48 63 f6 49 89 f9 41 b8 01 00 00 00 48 89 e5 48 83
-May 12 04:10:39 ul14 kernel: RIP  [<ffffffff812b273d>] assfail+0x1d/0x20
-May 12 04:10:39 ul14 kernel:  RSP <ffffc9001c9177b0>
-May 12 04:10:39 ul14 kernel: ---[ end trace ca888781a46423f8 ]---
+--D
 
---ZPt4rx8FFjLCG7dd--
+> Thanks,
+> Eryu
+> 
+> > +
+> > +unset can_falloc_swap
+> > +test_can_falloc_swap >> $seqres.full 2>&1 && can_falloc_swap=yes
+> > +page_size=$(get_page_size)
+> > +
+> > +# Create a sparse swap file
+> > +echo "sparse swap" | tee -a $seqres.full
+> > +$XFS_IO_PROG -f -c "truncate $len" $swapfile >> $seqres.full
+> > +swapfile_cycle $swapfile
+> > +
+> > +# Create a regular swap file
+> > +echo "regular swap" | tee -a $seqres.full
+> > +_pwrite_byte 0x58 0 $len $swapfile >> $seqres.full
+> > +swapfile_cycle $swapfile
+> > +
+> > +# Create a fallocated swap file
+> > +echo "fallocate swap" | tee -a $seqres.full
+> > +if [ "$can_falloc_swap" = "yes" ]; then
+> > +	$XFS_IO_PROG -f -c "falloc 0 $len" $swapfile >> $seqres.full
+> > +	swapfile_cycle $swapfile
+> > +fi
+> > +
+> > +# Create a swap file with a little too much junk on the end
+> > +echo "too long swap" | tee -a $seqres.full
+> > +_pwrite_byte 0x58 0 $((len + 3)) $swapfile >> $seqres.full
+> > +swapfile_cycle $swapfile
+> > +
+> > +# Create a swap file with a large discontiguous range(?)
+> > +echo "large discontig swap" | tee -a $seqres.full
+> > +_pwrite_byte 0x58 0 $((len * 2)) $swapfile >> $seqres.full
+> > +old_sz="$(stat -c '%s' $swapfile)"
+> > +$XFS_IO_PROG -c "fcollapse $((len / 2)) $len" $swapfile >> $seqres.full 2>&1
+> > +new_sz="$(stat -c '%s' $swapfile)"
+> > +if [ $old_sz -gt $new_sz ]; then
+> > +	swapfile_cycle $swapfile
+> > +fi
+> > +rm -f $swapfile
+> > +
+> > +# Create a swap file with a small discontiguous range(?)
+> > +echo "small discontig swap" | tee -a $seqres.full
+> > +_pwrite_byte 0x58 0 $((len + 1024)) $swapfile >> $seqres.full
+> > +old_sz="$(stat -c '%s' $swapfile)"
+> > +$XFS_IO_PROG -c "fcollapse 66560 1024" $swapfile >> $seqres.full 2>&1
+> > +new_sz="$(stat -c '%s' $swapfile)"
+> > +if [ $old_sz -gt $new_sz ]; then
+> > +	swapfile_cycle $swapfile
+> > +fi
+> > +rm -f $swapfile
+> > +
+> > +# Create a fallocated swap file and touch every other $PAGE_SIZE to create
+> > +# a mess of written/unwritten extent records
+> > +echo "mixed swap" | tee -a $seqres.full
+> > +if [ "$can_falloc_swap" = "yes" ]; then
+> > +	$XFS_IO_PROG -f -c "falloc 0 $len" $swapfile >> $seqres.full
+> > +	seq $page_size $((page_size * 2)) $len | while read offset; do
+> > +		_pwrite_byte 0x58 $offset 1 $swapfile >> $seqres.full
+> > +	done
+> > +	swapfile_cycle $swapfile
+> > +fi
+> > +
+> > +# Create a ridiculously small swap file; mkswap says the minimum is 40k.
+> > +# However, each swap file must be at least two pages long.
+> > +echo "tiny swap" | tee -a $seqres.full
+> > +tiny_len=40960
+> > +min_swap_size=$((page_size * 2))
+> > +if [ "$min_swap_size" -gt "$tiny_len" ]; then
+> > +	tiny_len=$min_swap_size
+> > +fi
+> > +_pwrite_byte 0x58 0 $tiny_len $swapfile >> $seqres.full
+> > +swapfile_cycle $swapfile
+> > +
+> > +status=0
+> > +exit
+> > diff --git a/tests/generic/708.out b/tests/generic/708.out
+> > new file mode 100644
+> > index 00000000..d6199b99
+> > --- /dev/null
+> > +++ b/tests/generic/708.out
+> > @@ -0,0 +1,10 @@
+> > +QA output created by 708
+> > +sparse swap
+> > +swapon: SCRATCH_MNT/swap: skipping - it appears to have holes.
+> > +regular swap
+> > +fallocate swap
+> > +too long swap
+> > +large discontig swap
+> > +small discontig swap
+> > +mixed swap
+> > +tiny swap
+> > diff --git a/tests/generic/group b/tests/generic/group
+> > index 505383f7..9f3a933e 100644
+> > --- a/tests/generic/group
+> > +++ b/tests/generic/group
+> > @@ -489,3 +489,4 @@
+> >  484 auto quick
+> >  485 auto quick insert
+> >  486 auto quick attr
+> > +708 auto quick swapfile
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
