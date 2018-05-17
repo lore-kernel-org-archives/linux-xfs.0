@@ -1,174 +1,171 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:51744 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752171AbeERQuB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 12:50:01 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 29/34] xfs: don't look at buffer heads in xfs_add_to_ioend
-Date: Fri, 18 May 2018 18:48:25 +0200
-Message-Id: <20180518164830.1552-30-hch@lst.de>
-In-Reply-To: <20180518164830.1552-1-hch@lst.de>
-References: <20180518164830.1552-1-hch@lst.de>
+Received: from mail-pl0-f68.google.com ([209.85.160.68]:46079 "EHLO
+        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751293AbeEQXyH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 May 2018 19:54:07 -0400
+Received: by mail-pl0-f68.google.com with SMTP id bi12-v6so3457849plb.12
+        for <linux-xfs@vger.kernel.org>; Thu, 17 May 2018 16:54:07 -0700 (PDT)
+Date: Thu, 17 May 2018 16:54:03 -0700
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH v2 2/5] mkfs: move shared structs and cli params into
+ their own headers
+Message-ID: <20180517235403.GB24680@garbanzo.do-not-panic.com>
+References: <20180517192700.23457-1-mcgrof@kernel.org>
+ <20180517192700.23457-3-mcgrof@kernel.org>
+ <20180517224008.GC23861@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180517224008.GC23861@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, sandeen@sandeen.net, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com
 
-Calculate all information for the bio based on the passed in information
-without requiring a buffer_head structure.
+On Fri, May 18, 2018 at 08:40:08AM +1000, Dave Chinner wrote:
+> On Thu, May 17, 2018 at 12:26:57PM -0700, Luis R. Rodriguez wrote:
+> > Both struct sb_feat_args and struct mkfs_default_params will be shared
+> > between CLI processing and the configuration file processing added later,
+> > so move these to their own header. The struct cli_params are CLI specific
+> > so move them to its own CLI header as well.
+> 
+> I'd separate out the CLI details when the CLI parsing is split into
+> it's own file - it's not necssary to do that here.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_aops.c | 68 ++++++++++++++++++++++-------------------------
- 1 file changed, 32 insertions(+), 36 deletions(-)
+Alright.
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index f01c1dd737ec..592b33b35a30 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -44,7 +44,6 @@ struct xfs_writepage_ctx {
- 	struct xfs_bmbt_irec    imap;
- 	unsigned int		io_type;
- 	struct xfs_ioend	*ioend;
--	sector_t		last_block;
- };
- 
- void
-@@ -545,11 +544,6 @@ xfs_start_page_writeback(
- 	unlock_page(page);
- }
- 
--static inline int xfs_bio_add_buffer(struct bio *bio, struct buffer_head *bh)
--{
--	return bio_add_page(bio, bh->b_page, bh->b_size, bh_offset(bh));
--}
--
- /*
-  * Submit the bio for an ioend. We are passed an ioend with a bio attached to
-  * it, and we submit that bio. The ioend may be used for multiple bio
-@@ -604,27 +598,20 @@ xfs_submit_ioend(
- 	return 0;
- }
- 
--static void
--xfs_init_bio_from_bh(
--	struct bio		*bio,
--	struct buffer_head	*bh)
--{
--	bio->bi_iter.bi_sector = bh->b_blocknr * (bh->b_size >> 9);
--	bio_set_dev(bio, bh->b_bdev);
--}
--
- static struct xfs_ioend *
- xfs_alloc_ioend(
- 	struct inode		*inode,
- 	unsigned int		type,
- 	xfs_off_t		offset,
--	struct buffer_head	*bh)
-+	struct block_device	*bdev,
-+	sector_t		sector)
- {
- 	struct xfs_ioend	*ioend;
- 	struct bio		*bio;
- 
- 	bio = bio_alloc_bioset(GFP_NOFS, BIO_MAX_PAGES, xfs_ioend_bioset);
--	xfs_init_bio_from_bh(bio, bh);
-+	bio_set_dev(bio, bdev);
-+	bio->bi_iter.bi_sector = sector;
- 
- 	ioend = container_of(bio, struct xfs_ioend, io_inline_bio);
- 	INIT_LIST_HEAD(&ioend->io_list);
-@@ -649,13 +636,14 @@ static void
- xfs_chain_bio(
- 	struct xfs_ioend	*ioend,
- 	struct writeback_control *wbc,
--	struct buffer_head	*bh)
-+	struct block_device	*bdev,
-+	sector_t		sector)
- {
- 	struct bio *new;
- 
- 	new = bio_alloc(GFP_NOFS, BIO_MAX_PAGES);
--	xfs_init_bio_from_bh(new, bh);
--
-+	bio_set_dev(new, bdev);
-+	new->bi_iter.bi_sector = sector;
- 	bio_chain(ioend->io_bio, new);
- 	bio_get(ioend->io_bio);		/* for xfs_destroy_ioend */
- 	ioend->io_bio->bi_opf = REQ_OP_WRITE | wbc_to_write_flags(wbc);
-@@ -665,39 +653,45 @@ xfs_chain_bio(
- }
- 
- /*
-- * Test to see if we've been building up a completion structure for
-- * earlier buffers -- if so, we try to append to this ioend if we
-- * can, otherwise we finish off any current ioend and start another.
-- * Return the ioend we finished off so that the caller can submit it
-- * once it has finished processing the dirty page.
-+ * Test to see if we have an existing ioend structure that we could append to
-+ * first, otherwise finish off the current ioend and start another.
-  */
- STATIC void
- xfs_add_to_ioend(
- 	struct inode		*inode,
--	struct buffer_head	*bh,
- 	xfs_off_t		offset,
-+	struct page		*page,
- 	struct xfs_writepage_ctx *wpc,
- 	struct writeback_control *wbc,
- 	struct list_head	*iolist)
- {
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct block_device	*bdev = xfs_find_bdev_for_inode(inode);
-+	unsigned		len = i_blocksize(inode);
-+	unsigned		poff = offset & (PAGE_SIZE - 1);
-+	sector_t		sector;
-+
-+	sector = xfs_fsb_to_db(ip, wpc->imap.br_startblock) +
-+		((offset - XFS_FSB_TO_B(mp, wpc->imap.br_startoff)) >> 9);
-+
- 	if (!wpc->ioend || wpc->io_type != wpc->ioend->io_type ||
--	    bh->b_blocknr != wpc->last_block + 1 ||
-+	    sector != bio_end_sector(wpc->ioend->io_bio) ||
- 	    offset != wpc->ioend->io_offset + wpc->ioend->io_size) {
- 		if (wpc->ioend)
- 			list_add(&wpc->ioend->io_list, iolist);
--		wpc->ioend = xfs_alloc_ioend(inode, wpc->io_type, offset, bh);
-+		wpc->ioend = xfs_alloc_ioend(inode, wpc->io_type, offset,
-+				bdev, sector);
- 	}
- 
- 	/*
--	 * If the buffer doesn't fit into the bio we need to allocate a new
--	 * one.  This shouldn't happen more than once for a given buffer.
-+	 * If the block doesn't fit into the bio we need to allocate a new
-+	 * one.  This shouldn't happen more than once for a given block.
- 	 */
--	while (xfs_bio_add_buffer(wpc->ioend->io_bio, bh) != bh->b_size)
--		xfs_chain_bio(wpc->ioend, wbc, bh);
-+	while (bio_add_page(wpc->ioend->io_bio, page, len, poff) != len)
-+		xfs_chain_bio(wpc->ioend, wbc, bdev, sector);
- 
--	wpc->ioend->io_size += bh->b_size;
--	wpc->last_block = bh->b_blocknr;
--	xfs_start_buffer_writeback(bh);
-+	wpc->ioend->io_size += len;
- }
- 
- STATIC void
-@@ -893,7 +887,9 @@ xfs_writepage_map(
- 
- 		lock_buffer(bh);
- 		xfs_map_at_offset(inode, bh, &wpc->imap, file_offset);
--		xfs_add_to_ioend(inode, bh, file_offset, wpc, wbc, &submit_list);
-+		xfs_add_to_ioend(inode, file_offset, page, wpc, wbc,
-+				&submit_list);
-+		xfs_start_buffer_writeback(bh);
- 		count++;
- 	}
- 
--- 
-2.17.0
+> > This will help ensure we split things neatly later and also will help
+> > ensure the configuration file processing code from the CLI code are kept
+> > separate and cannot touch each other's data structures. This also makes
+> > it clear what is actually shared between both.
+> > 
+> > There are no introduced functional changes in this commit and no
+> > documentation changes, this is just code shuffling.
+> > 
+> > Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+> > ---
+> >  mkfs/xfs_mkfs.c        | 115 +------------------------------------------------
+> >  mkfs/xfs_mkfs_cli.h    |  65 ++++++++++++++++++++++++++++
+> >  mkfs/xfs_mkfs_common.h |  64 +++++++++++++++++++++++++++
+> 
+> File names.
+> 
+> xfs_mkfs.c is named that way by an old convention - it's the same as
+> xfs_repair.c, xfs_db.c, etc. Every other file in the directory does
+> not need a "xfs_mkfs_" prefix.
 
+Yay.
+
+> I'd also prefer we don't have "common" as a dumping ground header.
+
+input.h it is.
+
+> The CLI, config files, etc are all part of config processing, so
+> config.h would be more appropriate here. Or perhaps "input.h"
+> because they are both processing external inputs....
+
+Alrighty.
+
+> >  3 files changed, 131 insertions(+), 113 deletions(-)
+> >  create mode 100644 mkfs/xfs_mkfs_cli.h
+> >  create mode 100644 mkfs/xfs_mkfs_common.h
+> > 
+> > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> > index 95cd6ced13f0..ac97039abc34 100644
+> > --- a/mkfs/xfs_mkfs.c
+> > +++ b/mkfs/xfs_mkfs.c
+> > @@ -20,6 +20,8 @@
+> >  #include <ctype.h>
+> >  #include "xfs_multidisk.h"
+> >  #include "libxcmd.h"
+> > +#include "xfs_mkfs_common.h"
+> > +#include "xfs_mkfs_cli.h"
+> 
+> #include "config.h"
+
+You mean input.h ? The config.h would be for the configuration file, no?
+
+> > diff --git a/mkfs/xfs_mkfs_cli.h b/mkfs/xfs_mkfs_cli.h
+> > new file mode 100644
+> > index 000000000000..2050814aec02
+> > --- /dev/null
+> > +++ b/mkfs/xfs_mkfs_cli.h
+> > @@ -0,0 +1,65 @@
+> > +#ifndef _XFS_MKFS_CLI_H
+> > +#define _XFS_MKFS_CLI_H
+> 
+> Missing license and copyright. It'll be the same license as the main
+> xfs_mkfs.c file. Copyright will be Red Hat, Inc (because it's new
+> code I wrote as dchinner@redhat.com) and you'll need to pull the
+> date from the commit message.
+> 
+> (Yeah, I know it's weird putting someone elses copyright on code
+> you're moving about, but that's how it goes :P)
+
+I'll ignore cli.h for now. The comment below applies to the future
+input.h (currently the xfs_mkfs_common.h)
+
+Both data structures on input.h (sb features and the defaults) were
+introduced in 2017 so using that. Is the following header OK?
+
+/*                                                                              
+ * Copyright (c) 2017 Red Hat, Inc.                                             
+ * All Rights Reserved.                                                         
+ *                                                                              
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation.                                   
+ *                                                                              
+ * This program is distributed in the hope that it would be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.                                 
+ *                                                                              
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write the Free Software Foundation,
+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA              
+ */    
+
+Took it as template from a random existing header file.
+
+I'd prefer if we just went with this as the last paragraph:
+
+ * You should have received a copy of the GNU General Public License            
+ * along with this program; if not, see <http://www.gnu.org/licenses/>.   
+
+It used in the kernel as well, and checkpatch now asks you to consider
+this.
+
+Lemme know your preference.
+
+> > +
+> > +#include "xfs_mkfs_common.h"
+> 
+> No includes in header files if we can avoid them.
+
+OK! This cli.h file will not be added in my next iteration though.
+I'll avoid any header file not needed though.
+
+> [...]
+> 
+> > diff --git a/mkfs/xfs_mkfs_common.h b/mkfs/xfs_mkfs_common.h
+> > new file mode 100644
+> > index 000000000000..9b0f67b70cf1
+> > --- /dev/null
+> > +++ b/mkfs/xfs_mkfs_common.h
+> > @@ -0,0 +1,64 @@
+> > +#ifndef _XFS_MKFS_COMMON_H
+> > +#define _XFS_MKFS_COMMON_H
+> > +
+> > +#include "libxfs.h"
+> > +
+> > +#include <ctype.h>
+> 
+> Same as above for license, copyright and includes, except the
+> copyright will also need to include the SGI copyright line from
+> xfs_mkfs.c...
+
+Why SGI? I don't see anything from SGI on input.h.
+
+  Luis
