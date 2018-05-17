@@ -1,117 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:51998 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752514AbeERQuK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 12:50:10 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 32/34] xfs: refactor the tail of xfs_writepage_map
-Date: Fri, 18 May 2018 18:48:28 +0200
-Message-Id: <20180518164830.1552-33-hch@lst.de>
-In-Reply-To: <20180518164830.1552-1-hch@lst.de>
-References: <20180518164830.1552-1-hch@lst.de>
+Received: from ipmail02.adl2.internode.on.net ([150.101.137.139]:41496 "EHLO
+        ipmail02.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751734AbeEQV46 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 May 2018 17:56:58 -0400
+Date: Fri, 18 May 2018 07:56:55 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 5/5 V3] xfs_io: add label command
+Message-ID: <20180517215655.GA23861@dastard>
+References: <5957a0ff-0fd7-c1f3-2d44-86b825c2eb3b@redhat.com>
+ <ef558e14-5b31-4c5a-a07c-3d2ac67dd993@redhat.com>
+ <0f9a7c17-233c-042a-5449-acd7e0a27316@sandeen.net>
+ <9cee370a-41e2-6dae-4ae1-97fbd7393d38@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <9cee370a-41e2-6dae-4ae1-97fbd7393d38@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-Rejuggle how we deal with the different error vs non-error and have
-ioends vs not have ioend cases to keep the fast path streamlined, and
-the duplicate code at a minimum.
+On Thu, May 17, 2018 at 10:22:09AM -0500, Eric Sandeen wrote:
+> This adds an online get/set/clear label command to xfs_io.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> +static int
+> +label_f(
+> +	int		argc,
+> +	char		**argv)
+> +{
+> +	int		c;
+> +	int		error;
+> +	char		label[FSLABEL_MAX];
+> +
+> +	if (argc == 1) {
+> +		memset(label, 0, sizeof(label));
+> +		error = ioctl(file->fd, FS_IOC_GETFSLABEL, &label);
+> +		goto out;
+> +	}
+> +
+> +	while ((c = getopt(argc, argv, "cs:")) != EOF) {
+> +		switch (c) {
+> +		case 'c':
+> +			label[0] = '\0';
+> +			break;
+> +		case 's':
+> +			strncpy(label, optarg, sizeof(label));
+> +			break;
+> +		default:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_aops.c | 65 +++++++++++++++++++++++------------------------
- 1 file changed, 32 insertions(+), 33 deletions(-)
+			exitcode = 1
+			;
+> +			return command_usage(&label_cmd);
+> +		}
+> +	}
+> +
+> +	/* Check for trailing arguments */
+> +	if (argc != optind)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index dd92d99df51f..a4e53e0a57c2 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -883,7 +883,14 @@ xfs_writepage_map(
- 	 * submission of outstanding ioends on the writepage context so they are
- 	 * treated correctly on error.
- 	 */
--	if (count) {
-+	if (unlikely(error)) {
-+		if (!count) {
-+			xfs_aops_discard_page(page);
-+			ClearPageUptodate(page);
-+			unlock_page(page);
-+			goto done;
-+		}
-+
- 		/*
- 		 * If the page was not fully cleaned, we need to ensure that the
- 		 * higher layers come back to it correctly.  That means we need
-@@ -892,43 +899,35 @@ xfs_writepage_map(
- 		 * so another attempt to write this page in this writeback sweep
- 		 * will be made.
- 		 */
--		if (error) {
--			set_page_writeback_keepwrite(page);
--		} else {
--			clear_page_dirty_for_io(page);
--			set_page_writeback(page);
--		}
--		unlock_page(page);
--
--		/*
--		 * Preserve the original error if there was one, otherwise catch
--		 * submission errors here and propagate into subsequent ioend
--		 * submissions.
--		 */
--		list_for_each_entry_safe(ioend, next, &submit_list, io_list) {
--			int error2;
--
--			list_del_init(&ioend->io_list);
--			error2 = xfs_submit_ioend(wbc, ioend, error);
--			if (error2 && !error)
--				error = error2;
--		}
--	} else if (error) {
--		xfs_aops_discard_page(page);
--		ClearPageUptodate(page);
--		unlock_page(page);
-+		set_page_writeback_keepwrite(page);
- 	} else {
--		/*
--		 * We can end up here with no error and nothing to write if we
--		 * race with a partial page truncate on a sub-page block sized
--		 * filesystem. In that case we need to mark the page clean.
--		 */
- 		clear_page_dirty_for_io(page);
- 		set_page_writeback(page);
--		unlock_page(page);
--		end_page_writeback(page);
- 	}
- 
-+	unlock_page(page);
-+
-+	/*
-+	 * Preserve the original error if there was one, otherwise catch
-+	 * submission errors here and propagate into subsequent ioend
-+	 * submissions.
-+	 */
-+	list_for_each_entry_safe(ioend, next, &submit_list, io_list) {
-+		int error2;
-+
-+		list_del_init(&ioend->io_list);
-+		error2 = xfs_submit_ioend(wbc, ioend, error);
-+		if (error2 && !error)
-+			error = error2;
-+	}
-+
-+	/*
-+	 * We can end up here with no error and nothing to write if we race with
-+	 * a partial page truncate on a sub-page block sized filesystem.
-+	 */
-+	if (!count)
-+		end_page_writeback(page);
-+done:
- 	mapping_set_error(page->mapping, error);
- 	return error;
- }
+		exitcode = 1
+
+> +		return command_usage(&label_cmd);
+> +
+> +	error = ioctl(file->fd, FS_IOC_SETFSLABEL, label);
+> +out:
+> +	if (error) {
+> +		perror("label");
+> +		exitcode = 1;
+> +	} else {
+> +		printf("label = \"%s\"\n", label);
+> +	}
+> +
+> +	return 0;
+
+Otherwise looks OK.
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 -- 
-2.17.0
-
+Dave Chinner
+david@fromorbit.com
