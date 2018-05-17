@@ -1,31 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:32864 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752597AbeERQwL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 12:52:11 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: sub-page blocksize support in iomap non-buffer head path
-Date: Fri, 18 May 2018 18:52:04 +0200
-Message-Id: <20180518165206.13829-1-hch@lst.de>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:34142 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751047AbeEQVLX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 May 2018 17:11:23 -0400
+Date: Thu, 17 May 2018 16:11:21 -0500
+From: Bill O'Donnell <billodo@redhat.com>
+Subject: Re: [PATCH] mkfs.xfs: if either sunit or swidth is nonzero, the
+ other must be as well
+Message-ID: <20180517211121.GA31576@redhat.com>
+References: <026467a9-0249-26a4-9661-c2f5f6e0586e@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <026467a9-0249-26a4-9661-c2f5f6e0586e@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-Hi all,
+On Thu, May 17, 2018 at 01:33:29PM -0500, Eric Sandeen wrote:
+> Don't allow the user to set one but not the other.
+> 
+> Reported-by: Xiao Yang <yangx.jy@cn.fujitsu.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 
-this series adds support for buffered I/O without buffer heads for
-block size < PAGE_SIZE to the iomap and XFS code.
+looks fine.
 
-A git tree is available at:
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
 
-    git://git.infradead.org/users/hch/xfs.git xfs-iomap-read xfs-remove-bufferheads.2
-
-Gitweb:
-
-    http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-remove-bufferheads.2
-
-Changes since v1:
- - call iomap_page_create in page_mkwrite to fix generic/095
- - split into a separate series
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 78d0ce5..b356d4d 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -2271,7 +2271,8 @@ _("data stripe width (%lld) is too large of a multiple of the data stripe unit (
+>  		dswidth = big_dswidth;
+>  	}
+> -	if (dsunit && (!dswidth || (dswidth % dsunit != 0))) {
+> +	if ((dsunit && !dswidth) || (!dsunit && dswidth) ||
+> +           (dsunit && (dswidth % dsunit != 0))) {
+>  		fprintf(stderr,
+>  _("data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"),
+>  			dswidth, dsunit);
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
