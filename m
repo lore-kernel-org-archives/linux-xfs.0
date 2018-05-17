@@ -1,154 +1,118 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:41924 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750772AbeEPRAj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 May 2018 13:00:39 -0400
-Subject: Re: [PATCH 02/22] xfs: add helpers to allocate and initialize fresh
- btree roots
-References: <152642361893.1556.9335169821674946249.stgit@magnolia>
- <152642363169.1556.14593532407537096653.stgit@magnolia>
-From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <38ce2aaa-8acb-0d56-28b9-465415db39aa@oracle.com>
-Date: Wed, 16 May 2018 10:00:33 -0700
+Received: from james.kirk.hungrycats.org ([174.142.39.145]:37608 "EHLO
+        james.kirk.hungrycats.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750779AbeEQFW2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 May 2018 01:22:28 -0400
+Date: Thu, 17 May 2018 01:15:51 -0400
+From: Zygo Blaxell <ce3g8jdj@umail.furryterror.org>
+Subject: Re: [PATCH 2/2] vfs: dedupe should return EPERM if permission is not
+ granted
+Message-ID: <20180517051550.GB22356@hungrycats.org>
+References: <20180511192651.21324-1-mfasheh@suse.de>
+ <20180511192651.21324-3-mfasheh@suse.de>
+ <20180512000634.GG9510@magnolia>
+ <20180513182152.GE27915@wotan.suse.de>
+ <20180513182639.GB4933@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <152642363169.1556.14593532407537096653.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="ftEhullJWpWg/VHq"
+Content-Disposition: inline
+In-Reply-To: <20180513182639.GB4933@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, david@fromorbit.com
+Cc: Mark Fasheh <mfasheh@suse.de>, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-Alrighty, you can add my review:
-Reviewed by: Allison Henderson <allison.henderson@oracle.com>
 
-Thx!
+--ftEhullJWpWg/VHq
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On 05/15/2018 03:33 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
->
-> Add a pair of helper functions to allocate and initialize fresh btree
-> roots.  The repair functions will use these as part of recreating
-> corrupted metadata.
->
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->   fs/xfs/scrub/repair.c |   81 +++++++++++++++++++++++++++++++++++++++++++++++++
->   fs/xfs/scrub/repair.h |    6 ++++
->   2 files changed, 87 insertions(+)
->
->
-> diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-> index 486e6e319b1f..72f04a717150 100644
-> --- a/fs/xfs/scrub/repair.c
-> +++ b/fs/xfs/scrub/repair.c
-> @@ -280,3 +280,84 @@ xfs_repair_calc_ag_resblks(
->   
->   	return max(max(bnobt_sz, inobt_sz), max(rmapbt_sz, refcbt_sz));
->   }
-> +
-> +/* Allocate a block in an AG. */
-> +int
-> +xfs_repair_alloc_ag_block(
-> +	struct xfs_scrub_context	*sc,
-> +	struct xfs_owner_info		*oinfo,
-> +	xfs_fsblock_t			*fsbno,
-> +	enum xfs_ag_resv_type		resv)
-> +{
-> +	struct xfs_alloc_arg		args = {0};
-> +	xfs_agblock_t			bno;
-> +	int				error;
-> +
-> +	switch (resv) {
-> +	case XFS_AG_RESV_AGFL:
-> +	case XFS_AG_RESV_RMAPBT:
-> +		error = xfs_alloc_get_freelist(sc->tp, sc->sa.agf_bp, &bno, 1);
-> +		if (error)
-> +			return error;
-> +		if (bno == NULLAGBLOCK)
-> +			return -ENOSPC;
-> +		xfs_extent_busy_reuse(sc->mp, sc->sa.agno, bno,
-> +				1, false);
-> +		*fsbno = XFS_AGB_TO_FSB(sc->mp, sc->sa.agno, bno);
-> +		if (resv == XFS_AG_RESV_RMAPBT)
-> +			xfs_ag_resv_rmapbt_alloc(sc->mp, sc->sa.agno);
-> +		return 0;
-> +	default:
-> +		break;
-> +	}
-> +
-> +	args.tp = sc->tp;
-> +	args.mp = sc->mp;
-> +	args.oinfo = *oinfo;
-> +	args.fsbno = XFS_AGB_TO_FSB(args.mp, sc->sa.agno, 0);
-> +	args.minlen = 1;
-> +	args.maxlen = 1;
-> +	args.prod = 1;
-> +	args.type = XFS_ALLOCTYPE_THIS_AG;
-> +	args.resv = resv;
-> +
-> +	error = xfs_alloc_vextent(&args);
-> +	if (error)
-> +		return error;
-> +	if (args.fsbno == NULLFSBLOCK)
-> +		return -ENOSPC;
-> +	ASSERT(args.len == 1);
-> +	*fsbno = args.fsbno;
-> +
-> +	return 0;
-> +}
-> +
-> +/* Initialize a new AG btree root block with zero entries. */
-> +int
-> +xfs_repair_init_btblock(
-> +	struct xfs_scrub_context	*sc,
-> +	xfs_fsblock_t			fsb,
-> +	struct xfs_buf			**bpp,
-> +	xfs_btnum_t			btnum,
-> +	const struct xfs_buf_ops	*ops)
-> +{
-> +	struct xfs_trans		*tp = sc->tp;
-> +	struct xfs_mount		*mp = sc->mp;
-> +	struct xfs_buf			*bp;
-> +
-> +	trace_xfs_repair_init_btblock(mp, XFS_FSB_TO_AGNO(mp, fsb),
-> +			XFS_FSB_TO_AGBNO(mp, fsb), btnum);
-> +
-> +	ASSERT(XFS_FSB_TO_AGNO(mp, fsb) == sc->sa.agno);
-> +	bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, XFS_FSB_TO_DADDR(mp, fsb),
-> +			XFS_FSB_TO_BB(mp, 1), 0);
-> +	xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
-> +	xfs_btree_init_block(mp, bp, btnum, 0, 0, sc->sa.agno,
-> +			XFS_BTREE_CRC_BLOCKS);
-> +	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_BTREE_BUF);
-> +	xfs_trans_log_buf(tp, bp, 0, bp->b_length);
-> +	bp->b_ops = ops;
-> +	*bpp = bp;
-> +
-> +	return 0;
-> +}
-> diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-> index 8d181dce6171..40990fa5f381 100644
-> --- a/fs/xfs/scrub/repair.h
-> +++ b/fs/xfs/scrub/repair.h
-> @@ -36,6 +36,12 @@ int xfs_repair_roll_ag_trans(struct xfs_scrub_context *sc);
->   bool xfs_repair_ag_has_space(struct xfs_perag *pag, xfs_extlen_t nr_blocks,
->   		enum xfs_ag_resv_type type);
->   xfs_extlen_t xfs_repair_calc_ag_resblks(struct xfs_scrub_context *sc);
-> +int xfs_repair_alloc_ag_block(struct xfs_scrub_context *sc,
-> +		struct xfs_owner_info *oinfo, xfs_fsblock_t *fsbno,
-> +		enum xfs_ag_resv_type resv);
-> +int xfs_repair_init_btblock(struct xfs_scrub_context *sc, xfs_fsblock_t fsb,
-> +		struct xfs_buf **bpp, xfs_btnum_t btnum,
-> +		const struct xfs_buf_ops *ops);
->   
->   /* Metadata repairers */
->   
->
+On Sun, May 13, 2018 at 11:26:39AM -0700, Darrick J. Wong wrote:
+> On Sun, May 13, 2018 at 06:21:52PM +0000, Mark Fasheh wrote:
+> > On Fri, May 11, 2018 at 05:06:34PM -0700, Darrick J. Wong wrote:
+> > > On Fri, May 11, 2018 at 12:26:51PM -0700, Mark Fasheh wrote:
+> > > > Right now we return EINVAL if a process does not have permission to=
+ dedupe a
+> > > > file. This was an oversight on my part. EPERM gives a true descript=
+ion of
+> > > > the nature of our error, and EINVAL is already used for the case th=
+at the
+> > > > filesystem does not support dedupe.
+> > > >=20
+> > > > Signed-off-by: Mark Fasheh <mfasheh@suse.de>
+> > > > ---
+> > > >  fs/read_write.c | 2 +-
+> > > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > >=20
+> > > > diff --git a/fs/read_write.c b/fs/read_write.c
+> > > > index 77986a2e2a3b..8edef43a182c 100644
+> > > > --- a/fs/read_write.c
+> > > > +++ b/fs/read_write.c
+> > > > @@ -2038,7 +2038,7 @@ int vfs_dedupe_file_range(struct file *file, =
+struct file_dedupe_range *same)
+> > > >  			info->status =3D -EINVAL;
+> > > >  		} else if (!(is_admin || (dst_file->f_mode & FMODE_WRITE) ||
+> > > >  			     uid_eq(current_fsuid(), dst->i_uid))) {
+> > > > -			info->status =3D -EINVAL;
+> > > > +			info->status =3D -EPERM;
+> > >=20
+> > > Hmm, are we allowed to change this aspect of the kabi after the fact?
+> > >=20
+> > > Granted, we're only trading one error code for another, but will the
+> > > existing users of this care?  xfs_io won't and I assume duperemove wo=
+n't
+> > > either, but what about bees? :)
+> >=20
+> > Yeah if you see my initial e-mail I check bees and also rust-btrfs. I t=
+hink
+> > this is fine as we're simply expanding on an error code return. There's=
+ no
+> > magic behavior expected with respect to these error codes either.
+>=20
+> Ok.  No objections from me, then.
+>=20
+> Acked-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+For what it's worth, no objection from me either.  ;)
+
+bees runs only with admin privilege and will never hit the modified line.
+
+If bees is started without admin privilege, the TREE_SEARCH_V2 ioctl
+fails.  bees uses this ioctl to walk over all the data in the filesystem,
+so without admin privilege, bees never opens, reads, or dedupes anything.
+
+bees relies on having an accurate internal model of btrfs structure and
+behavior to issue dedup commands that will work and do useful things;
+however, unexpected kernel behavior or concurrent user data changes
+will make some dedups fail.  When that happens bees just abandons the
+extent immediately:  a user data change will be handled in the next pass
+over the filesystem, but an unexpected kernel behavior needs bees code
+changes to correctly predict the new kernel behavior before the dedup
+can be reattempted.
+
+> --D
+>=20
+> > 	--Mark
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> To unsubscribe from this list: send the line "unsubscribe linux-btrfs" in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwICaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=4QHdmNFIP7trSueA8XyY8TjPFBlv0bJ8UpmheOu6zJA&s=nvq_2KNHpSbVaDCf2vQai6hS8Pkmm8mnLSLrA8erFCk&e=
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+--ftEhullJWpWg/VHq
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iF0EABECAB0WIQSnOVjcfGcC/+em7H2B+YsaVrMbnAUCWv0QAwAKCRCB+YsaVrMb
+nIv+AJ9urEZriSYOpZSs3/4c4GCPHbSvvgCeIlfsU/mnNXhE19Jy/qxk7Jb80J4=
+=7Xt9
+-----END PGP SIGNATURE-----
+
+--ftEhullJWpWg/VHq--
