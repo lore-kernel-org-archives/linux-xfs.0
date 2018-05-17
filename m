@@ -1,44 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:46258 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753851AbeEAPjh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 May 2018 11:39:37 -0400
-Subject: [PATCH 2/9] xfs/439: repair corrupted filesystem afterwards
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 01 May 2018 08:39:32 -0700
-Message-ID: <152518917279.23023.13530280927017959292.stgit@magnolia>
-In-Reply-To: <152518916007.23023.4793255395982876953.stgit@magnolia>
-References: <152518916007.23023.4793255395982876953.stgit@magnolia>
+Received: from sandeen.net ([63.231.237.45]:58936 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751017AbeEQSda (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 May 2018 14:33:30 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 9158146C7CB
+        for <linux-xfs@vger.kernel.org>; Thu, 17 May 2018 13:33:25 -0500 (CDT)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [PATCH] mkfs.xfs: if either sunit or swidth is nonzero, the other
+ must be as well
+Message-ID: <026467a9-0249-26a4-9661-c2f5f6e0586e@sandeen.net>
+Date: Thu, 17 May 2018 13:33:29 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Don't allow the user to set one but not the other.
 
-After we mess with logsunit and test that we can't mount the fs, repair
-the filesystem to make sure that repair can deal with it.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reported-by: Xiao Yang <yangx.jy@cn.fujitsu.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- tests/xfs/439 |    1 +
- 1 file changed, 1 insertion(+)
 
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 78d0ce5..b356d4d 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2271,7 +2271,8 @@ _("data stripe width (%lld) is too large of a multiple of the data stripe unit (
+  		dswidth = big_dswidth;
+  	}
+  
+-	if (dsunit && (!dswidth || (dswidth % dsunit != 0))) {
++	if ((dsunit && !dswidth) || (!dsunit && dswidth) ||
++           (dsunit && (dswidth % dsunit != 0))) {
+  		fprintf(stderr,
+  _("data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"),
+  			dswidth, dsunit);
 
-diff --git a/tests/xfs/439 b/tests/xfs/439
-index 215c4b90..9d5f6892 100755
---- a/tests/xfs/439
-+++ b/tests/xfs/439
-@@ -79,6 +79,7 @@ fi
- _check_dmesg _filter_assert_dmesg
- 
- echo "Silence is golden"
-+_scratch_xfs_repair >> $seqres.full 2>&1
- 
- # success, all done
- status=0
 
