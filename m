@@ -1,94 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:49940 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752204AbeERQtP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 12:49:15 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 14/34] iomap: add an iomap-based bmap implementation
-Date: Fri, 18 May 2018 18:48:10 +0200
-Message-Id: <20180518164830.1552-15-hch@lst.de>
-In-Reply-To: <20180518164830.1552-1-hch@lst.de>
-References: <20180518164830.1552-1-hch@lst.de>
+Received: from mx2.suse.de ([195.135.220.15]:51907 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751280AbeEQXBv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 May 2018 19:01:51 -0400
+Date: Fri, 18 May 2018 01:01:50 +0200
+From: Mark Fasheh <mfasheh@suse.de>
+Subject: Re: [PATCH 1/2] vfs: allow dedupe of user owned read-only files
+Message-ID: <20180517230150.GA28045@wotan.suse.de>
+Reply-To: Mark Fasheh <mfasheh@suse.de>
+References: <20180511192651.21324-1-mfasheh@suse.de>
+ <20180511192651.21324-2-mfasheh@suse.de>
+ <20180512024920.i7duhoi3lnkha4yl@angband.pl>
+ <20180513181653.GD27915@wotan.suse.de>
+ <20180513205025.3kolgcnbpy4grqtv@angband.pl>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180513205025.3kolgcnbpy4grqtv@angband.pl>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
+To: Adam Borowski <kilobyte@angband.pl>
+Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
 
-This adds a simple iomap-based implementation of the legacy ->bmap
-interface.  Note that we can't easily add checks for rt or reflink
-files, so these will have to remain in the callers.  This interface
-just needs to die..
+On Sun, May 13, 2018 at 10:50:25PM +0200, Adam Borowski wrote:
+> On Sun, May 13, 2018 at 06:16:53PM +0000, Mark Fasheh wrote:
+> > On Sat, May 12, 2018 at 04:49:20AM +0200, Adam Borowski wrote:
+> > > On Fri, May 11, 2018 at 12:26:50PM -0700, Mark Fasheh wrote:
+> > > > The permission check in vfs_dedupe_file_range() is too coarse - We
+> > > > only allow dedupe of the destination file if the user is root, or
+> > > > they have the file open for write.
+> > > > 
+> > > > This effectively limits a non-root user from deduping their own
+> > > > read-only files. As file data during a dedupe does not change,
+> > > > this is unexpected behavior and this has caused a number of issue
+> > > > reports.
+> [...]
+> > > > So change the check so we allow dedupe on the target if:
+> > > > 
+> > > > - the root or admin is asking for it
+> > > > - the owner of the file is asking for the dedupe
+> > > > - the process has write access
+> > > 
+> > > I submitted a similar patch in May 2016, yet it has never been applied
+> > > despite multiple pings, with no NAK.  My version allowed dedupe if:
+> > > - the root or admin is asking for it
+> > > - the file has w permission (on the inode -- ie, could have been opened rw)
+> > 
+> > Ahh, yes I see that now. I did wind up acking it too :)
+> > > 
+> > > I like this new version better than mine: "root or owner or w" is more
+> > > Unixy than "could have been opened w".
+> > 
+> > I agree, IMHO the behavior in this patch is intuitive. What we had before
+> > would surprise users.
+> 
+> Actually, there's one reason to still consider "could have been opened w":
+> with it, deduplication programs can simply open the file r and not care
+> about ETXTBSY at all.  Otherwise, every program needs to stat() and have
+> logic to pick the proper argument to the open() call (r if owner/root,
+> rw or w if not).
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/iomap.c            | 34 ++++++++++++++++++++++++++++++++++
- include/linux/iomap.h |  3 +++
- 2 files changed, 37 insertions(+)
+That makes sense. The goal after all is to be able to just open r and not
+worry about it. I hadn't considered the other possibilities that
+inode_permission() covers. I'll make that change for my next series.
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 44259eadb69d..7c1b071d115c 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -1419,3 +1419,37 @@ int iomap_swapfile_activate(struct swap_info_struct *sis,
- }
- EXPORT_SYMBOL_GPL(iomap_swapfile_activate);
- #endif /* CONFIG_SWAP */
-+
-+static loff_t
-+iomap_bmap_actor(struct inode *inode, loff_t pos, loff_t length,
-+		void *data, struct iomap *iomap)
-+{
-+	sector_t *bno = data, addr;
-+
-+	if (iomap->type == IOMAP_MAPPED) {
-+		addr = (pos - iomap->offset + iomap->addr) >> inode->i_blkbits;
-+		if (addr > INT_MAX)
-+			WARN(1, "would truncate bmap result\n");
-+		else
-+			*bno = addr;
-+	}
-+	return 0;
-+}
-+
-+/* legacy ->bmap interface.  0 is the error return (!) */
-+sector_t
-+iomap_bmap(struct address_space *mapping, sector_t bno,
-+		const struct iomap_ops *ops)
-+{
-+	struct inode *inode = mapping->host;
-+	loff_t pos = bno >> inode->i_blkbits;
-+	unsigned blocksize = i_blocksize(inode);
-+
-+	if (filemap_write_and_wait(mapping))
-+		return 0;
-+
-+	bno = 0;
-+	iomap_apply(inode, pos, blocksize, 0, ops, &bno, iomap_bmap_actor);
-+	return bno;
-+}
-+EXPORT_SYMBOL_GPL(iomap_bmap);
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 819e0cd2a950..a044a824da85 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -4,6 +4,7 @@
- 
- #include <linux/types.h>
- 
-+struct address_space;
- struct fiemap_extent_info;
- struct inode;
- struct iov_iter;
-@@ -100,6 +101,8 @@ loff_t iomap_seek_hole(struct inode *inode, loff_t offset,
- 		const struct iomap_ops *ops);
- loff_t iomap_seek_data(struct inode *inode, loff_t offset,
- 		const struct iomap_ops *ops);
-+sector_t iomap_bmap(struct address_space *mapping, sector_t bno,
-+		const struct iomap_ops *ops);
- 
- /*
-  * Flags for direct I/O ->end_io:
--- 
-2.17.0
-
+Thanks,
+  --Mark
