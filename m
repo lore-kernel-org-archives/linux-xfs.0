@@ -1,154 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:50814 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752447AbeERQts (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 12:49:48 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 25/34] xfs: remove xfs_reflink_trim_irec_to_next_cow
-Date: Fri, 18 May 2018 18:48:21 +0200
-Message-Id: <20180518164830.1552-26-hch@lst.de>
-In-Reply-To: <20180518164830.1552-1-hch@lst.de>
-References: <20180518164830.1552-1-hch@lst.de>
+Received: from userp2130.oracle.com ([156.151.31.86]:59162 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752535AbeEQRY3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 May 2018 13:24:29 -0400
+Date: Thu, 17 May 2018 10:23:55 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v3 0/2] iomap: swapfile tweaks
+Message-ID: <20180517172355.GS23858@magnolia>
+References: <cover.1526493125.git.osandov@fb.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <cover.1526493125.git.osandov@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
+To: Omar Sandoval <osandov@osandov.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>, Aleksei Besogonov <cyberax@amazon.com>, kernel-team@fb.com
 
-In the only caller we just did a lookup in the COW extent tree for
-the same offset.  Reuse that result and save a lookup, as well as
-shortening the ilock hold time.
+On Wed, May 16, 2018 at 10:54:09AM -0700, Omar Sandoval wrote:
+> From: Omar Sandoval <osandov@fb.com>
+> 
+> Changes from v2:
+> 
+> - Move up inline flag check, which Christoph is going to turn into a
+>   type at some point
+> - Remove null address check, since it doesn't make sense for
+>   IOMAP_MAPPED or IOMAP_UNWRITTEN
+> 
+> Omar Sandoval (2):
+>   iomap: provide more useful errors for invalid swap files
+>   iomap: don't allow holes in swapfiles
+> 
+>  fs/iomap.c | 43 +++++++++++++++++++++++--------------------
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_aops.c    | 25 +++++++++++++++++--------
- fs/xfs/xfs_reflink.c | 33 ---------------------------------
- fs/xfs/xfs_reflink.h |  2 --
- 3 files changed, 17 insertions(+), 43 deletions(-)
+Tested ok overnight, so:
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index a4b4a7037deb..354d26d66c12 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -383,11 +383,12 @@ xfs_map_blocks(
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
- 	ssize_t			count = i_blocksize(inode);
--	xfs_fileoff_t		offset_fsb, end_fsb;
-+	xfs_fileoff_t		offset_fsb, end_fsb, cow_fsb = 0;
- 	int			whichfork = XFS_DATA_FORK;
- 	struct xfs_iext_cursor	icur;
- 	int			error = 0;
- 	int			nimaps = 1;
-+	bool			cow_valid = false;
- 
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
-@@ -407,8 +408,11 @@ xfs_map_blocks(
- 	 * it directly instead of looking up anything in the data fork.
- 	 */
- 	if (xfs_is_reflink_inode(ip) &&
--	    xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, imap) &&
--	    imap->br_startoff <= offset_fsb) {
-+	    xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, imap)) {
-+		cow_fsb = imap->br_startoff;
-+		cow_valid = true;
-+	}
-+	if (cow_valid && cow_fsb <= offset_fsb) {
- 		xfs_iunlock(ip, XFS_ILOCK_SHARED);
- 		/*
- 		 * Truncate can race with writeback since writeback doesn't
-@@ -430,6 +434,10 @@ xfs_map_blocks(
- 
- 	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
- 				imap, &nimaps, XFS_BMAPI_ENTIRE);
-+	xfs_iunlock(ip, XFS_ILOCK_SHARED);
-+	if (error)
-+		return error;
-+
- 	if (!nimaps) {
- 		/*
- 		 * Lookup returns no match? Beyond eof? regardless,
-@@ -451,16 +459,17 @@ xfs_map_blocks(
- 		 * is a pending CoW reservation before the end of this extent,
- 		 * so that we pick up the COW extents in the next iteration.
- 		 */
--		xfs_reflink_trim_irec_to_next_cow(ip, offset_fsb, imap);
-+		if (cow_valid &&
-+		    cow_fsb < imap->br_startoff + imap->br_blockcount) {
-+			imap->br_blockcount = cow_fsb - imap->br_startoff;
-+			trace_xfs_reflink_trim_irec(ip, imap);
-+		}
-+
- 		if (imap->br_state == XFS_EXT_UNWRITTEN)
- 			*type = XFS_IO_UNWRITTEN;
- 		else
- 			*type = XFS_IO_OVERWRITE;
- 	}
--	xfs_iunlock(ip, XFS_ILOCK_SHARED);
--	if (error)
--		return error;
--
- done:
- 	switch (*type) {
- 	case XFS_IO_HOLE:
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 8e5eb8e70c89..ff76bc56ff3d 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -484,39 +484,6 @@ xfs_reflink_allocate_cow(
- 	return error;
- }
- 
--/*
-- * Trim an extent to end at the next CoW reservation past offset_fsb.
-- */
--void
--xfs_reflink_trim_irec_to_next_cow(
--	struct xfs_inode		*ip,
--	xfs_fileoff_t			offset_fsb,
--	struct xfs_bmbt_irec		*imap)
--{
--	struct xfs_ifork		*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
--	struct xfs_bmbt_irec		got;
--	struct xfs_iext_cursor		icur;
--
--	if (!xfs_is_reflink_inode(ip))
--		return;
--
--	/* Find the extent in the CoW fork. */
--	if (!xfs_iext_lookup_extent(ip, ifp, offset_fsb, &icur, &got))
--		return;
--
--	/* This is the extent before; try sliding up one. */
--	if (got.br_startoff < offset_fsb) {
--		if (!xfs_iext_next_extent(ifp, &icur, &got))
--			return;
--	}
--
--	if (got.br_startoff >= imap->br_startoff + imap->br_blockcount)
--		return;
--
--	imap->br_blockcount = got.br_startoff - imap->br_startoff;
--	trace_xfs_reflink_trim_irec(ip, imap);
--}
--
- /*
-  * Cancel CoW reservations for some block range of an inode.
-  *
-diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index 15a456492667..e8d4d50c629f 100644
---- a/fs/xfs/xfs_reflink.h
-+++ b/fs/xfs/xfs_reflink.h
-@@ -32,8 +32,6 @@ extern int xfs_reflink_allocate_cow(struct xfs_inode *ip,
- 		struct xfs_bmbt_irec *imap, bool *shared, uint *lockmode);
- extern int xfs_reflink_convert_cow(struct xfs_inode *ip, xfs_off_t offset,
- 		xfs_off_t count);
--extern void xfs_reflink_trim_irec_to_next_cow(struct xfs_inode *ip,
--		xfs_fileoff_t offset_fsb, struct xfs_bmbt_irec *imap);
- 
- extern int xfs_reflink_cancel_cow_blocks(struct xfs_inode *ip,
- 		struct xfs_trans **tpp, xfs_fileoff_t offset_fsb,
--- 
-2.17.0
+--D
 
+>  1 file changed, 23 insertions(+), 20 deletions(-)
+> 
+> -- 
+> 2.17.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
