@@ -1,83 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail02.adl2.internode.on.net ([150.101.137.139]:41496 "EHLO
-        ipmail02.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751734AbeEQV46 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 May 2018 17:56:58 -0400
-Date: Fri, 18 May 2018 07:56:55 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 5/5 V3] xfs_io: add label command
-Message-ID: <20180517215655.GA23861@dastard>
-References: <5957a0ff-0fd7-c1f3-2d44-86b825c2eb3b@redhat.com>
- <ef558e14-5b31-4c5a-a07c-3d2ac67dd993@redhat.com>
- <0f9a7c17-233c-042a-5449-acd7e0a27316@sandeen.net>
- <9cee370a-41e2-6dae-4ae1-97fbd7393d38@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <9cee370a-41e2-6dae-4ae1-97fbd7393d38@sandeen.net>
+Received: from bombadil.infradead.org ([198.137.202.133]:52120 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752519AbeERQuO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 12:50:14 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 33/34] xfs: do not set the page uptodate in xfs_writepage_map
+Date: Fri, 18 May 2018 18:48:29 +0200
+Message-Id: <20180518164830.1552-34-hch@lst.de>
+In-Reply-To: <20180518164830.1552-1-hch@lst.de>
+References: <20180518164830.1552-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-On Thu, May 17, 2018 at 10:22:09AM -0500, Eric Sandeen wrote:
-> This adds an online get/set/clear label command to xfs_io.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> +static int
-> +label_f(
-> +	int		argc,
-> +	char		**argv)
-> +{
-> +	int		c;
-> +	int		error;
-> +	char		label[FSLABEL_MAX];
-> +
-> +	if (argc == 1) {
-> +		memset(label, 0, sizeof(label));
-> +		error = ioctl(file->fd, FS_IOC_GETFSLABEL, &label);
-> +		goto out;
-> +	}
-> +
-> +	while ((c = getopt(argc, argv, "cs:")) != EOF) {
-> +		switch (c) {
-> +		case 'c':
-> +			label[0] = '\0';
-> +			break;
-> +		case 's':
-> +			strncpy(label, optarg, sizeof(label));
-> +			break;
-> +		default:
+We already track the page uptodate status based on the buffer uptodate
+status, which is updated whenever reading or zeroing blocks.
 
-			exitcode = 1
-			;
-> +			return command_usage(&label_cmd);
-> +		}
-> +	}
-> +
-> +	/* Check for trailing arguments */
-> +	if (argc != optind)
+This code has been there since commit a ptool commit in 2002, which
+claims to:
 
-		exitcode = 1
+    "merge" the 2.4 fsx fix for block size < page size to 2.5.  This needed
+    major changes to actually fit.
 
-> +		return command_usage(&label_cmd);
-> +
-> +	error = ioctl(file->fd, FS_IOC_SETFSLABEL, label);
-> +out:
-> +	if (error) {
-> +		perror("label");
-> +		exitcode = 1;
-> +	} else {
-> +		printf("label = \"%s\"\n", label);
-> +	}
-> +
-> +	return 0;
+and isn't present in other writepage implementations.
 
-Otherwise looks OK.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_aops.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index a4e53e0a57c2..492f4a4b1deb 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -796,7 +796,6 @@ xfs_writepage_map(
+ 	ssize_t			len = i_blocksize(inode);
+ 	int			error = 0;
+ 	int			count = 0;
+-	bool			uptodate = true;
+ 	loff_t			file_offset;	/* file offset of page */
+ 	unsigned		poffset;	/* offset into page */
+ 
+@@ -823,7 +822,6 @@ xfs_writepage_map(
+ 		if (!buffer_uptodate(bh)) {
+ 			if (PageUptodate(page))
+ 				ASSERT(buffer_mapped(bh));
+-			uptodate = false;
+ 			continue;
+ 		}
+ 
+@@ -857,9 +855,6 @@ xfs_writepage_map(
+ 		count++;
+ 	}
+ 
+-	if (uptodate && poffset == PAGE_SIZE)
+-		SetPageUptodate(page);
+-
+ 	ASSERT(wpc->ioend || list_empty(&submit_list));
+ 
+ out:
 -- 
-Dave Chinner
-david@fromorbit.com
+2.17.0
+
