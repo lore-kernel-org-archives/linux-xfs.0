@@ -1,181 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:5670 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751958AbeEQWxc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 May 2018 18:53:32 -0400
-Date: Fri, 18 May 2018 08:53:29 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 4/5] mkfs: add helpers to process defaults
-Message-ID: <20180517225329.GE23861@dastard>
-References: <20180517192700.23457-1-mcgrof@kernel.org>
- <20180517192700.23457-5-mcgrof@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180517192700.23457-5-mcgrof@kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.133]:49940 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752204AbeERQtP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 12:49:15 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 14/34] iomap: add an iomap-based bmap implementation
+Date: Fri, 18 May 2018 18:48:10 +0200
+Message-Id: <20180518164830.1552-15-hch@lst.de>
+In-Reply-To: <20180518164830.1552-1-hch@lst.de>
+References: <20180518164830.1552-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: sandeen@sandeen.net, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-On Thu, May 17, 2018 at 12:26:59PM -0700, Luis R. Rodriguez wrote:
-> Move the built-in defaults globally and add helpers to reset and
-> process the defaults. This will be expanded on later. The commented
-> out print of the defaults source is moved below CLI processing to
-> acknowledge that one will later want to be able to specify a
-> different configuration file to be used through the CLI.
-> 
-> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
-> ---
->  mkfs/xfs_mkfs.c | 93 ++++++++++++++++++++++++++++++++++++++-------------------
->  1 file changed, 63 insertions(+), 30 deletions(-)
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index de0eab3f68e0..cb549be89835 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -3662,6 +3662,61 @@ rewrite_secondary_superblocks(
->  	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
->  }
->  
-> +/* build time defaults */
-> +struct mkfs_default_params	built_in_dft = {
-> +	.type = DEFAULTS_BUILTIN,
-> +	.sectorsize = XFS_MIN_SECTORSIZE,
-> +	.blocksize = 1 << XFS_DFL_BLOCKSIZE_LOG,
-> +	.sb_feat = {
-> +		.log_version = 2,
-> +		.attr_version = 2,
-> +		.dir_version = 2,
-> +		.inode_align = true,
-> +		.nci = false,
-> +		.lazy_sb_counters = true,
-> +		.projid32bit = true,
-> +		.crcs_enabled = true,
-> +		.dirftype = true,
-> +		.finobt = true,
-> +		.spinodes = true,
-> +		.rmapbt = false,
-> +		.reflink = false,
-> +		.parent_pointers = false,
-> +		.nodalign = false,
-> +		.nortalign = false,
-> +	},
-> +};
+This adds a simple iomap-based implementation of the legacy ->bmap
+interface.  Note that we can't easily add checks for rt or reflink
+files, so these will have to remain in the callers.  This interface
+just needs to die..
 
-Why? We've already got a perfectly good structure initialiser for
-the default settings in the main() function. Why do we need to
-create a new structure and a bunch of infrastructure to update
-it?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/iomap.c            | 34 ++++++++++++++++++++++++++++++++++
+ include/linux/iomap.h |  3 +++
+ 2 files changed, 37 insertions(+)
 
-> +/* installs new defaults into the CLI parsing structure */
-> +static void install_defaults(
-> +	struct mkfs_default_params	*dft,
-> +	struct cli_params		*cli)
-> +{
-> +	memcpy(&cli->sb_feat, &dft->sb_feat, sizeof(cli->sb_feat));
-> +	memcpy(&cli->fsx, &dft->fsx, sizeof(cli->fsx));
-> +}
-> +
-> +/*
-> + * Reset defaults first to built-in defaults. Then resets cli opts to start
-> + * with these built-in defaults. All previously set CLI options will be ignored.
-> + */
-> +static void reset_defaults_and_cli(
-> +	struct mkfs_default_params	*dft,
-> +	struct cli_params		*cli)
-> +{
-> +	*dft = built_in_dft;
-> +
-> +	install_defaults(dft, cli);
-> +}
-> +
-> +/* Does the required work to process a new set of defaults */
-> +static void process_defaults(
-> +	struct mkfs_default_params	*dft,
-> +	struct cli_params		*cli)
-> +{
-> +	install_defaults(dft, cli);
-> +}
-> +
->  int
->  main(
->  	int			argc,
-> @@ -3694,31 +3749,9 @@ main(
->  		.loginternal = 1,
->  	};
->  	struct mkfs_params	cfg = {};
-> +	struct mkfs_default_params	dft;
->  
-> -	/* build time defaults */
-> -	struct mkfs_default_params	dft = {
-> -		.type = DEFAULTS_BUILTIN,
-> -		.sectorsize = XFS_MIN_SECTORSIZE,
-> -		.blocksize = 1 << XFS_DFL_BLOCKSIZE_LOG,
-> -		.sb_feat = {
-> -			.log_version = 2,
-> -			.attr_version = 2,
-> -			.dir_version = 2,
-> -			.inode_align = true,
-> -			.nci = false,
-> -			.lazy_sb_counters = true,
-> -			.projid32bit = true,
-> -			.crcs_enabled = true,
-> -			.dirftype = true,
-> -			.finobt = true,
-> -			.spinodes = true,
-> -			.rmapbt = false,
-> -			.reflink = false,
-> -			.parent_pointers = false,
-> -			.nodalign = false,
-> -			.nortalign = false,
-> -		},
-> -	};
-> +	reset_defaults_and_cli(&dft, &cli);
-
-I just don't seee what this abstraction improves over just declaring
-dft directly like this. It's also not explained why the CLI
-structure needs to be initialised here, because we're going to
-overwrite it again as soon as we've selected the default value
-source....
-
->  
->  	platform_uuid_generate(&cli.uuid);
->  	progname = basename(argv[0]);
-> @@ -3736,14 +3769,9 @@ main(
->  	 * still be able to override them. When more than one source is
->  	 * implemented, emit a message to indicate where the defaults being
->  	 * used came from.
-> -	 *
-> -	 * printf(_("Default configuration sourced from %s\n"),
-> -	 *	  default_type_str(dft.type));
->  	 */
->  
-> -	/* copy new defaults into CLI parsing structure */
-> -	memcpy(&cli.sb_feat, &dft.sb_feat, sizeof(cli.sb_feat));
-> -	memcpy(&cli.fsx, &dft.fsx, sizeof(cli.fsx));
-> +	process_defaults(&dft, &cli);
-
-i.e. here.
-
->  
->  	while ((c = getopt(argc, argv, "b:d:i:l:L:m:n:KNp:qr:s:CfV")) != EOF) {
->  		switch (c) {
-> @@ -3795,6 +3823,11 @@ main(
->  	} else
->  		dfile = xi.dname;
->  
-> +	/*
-> +	 * printf(_("Default configuration sourced from %s\n"),
-> +	 *	  default_type_str(dft.type));
-> +	 */
-
-What does moving this acheive?
-
-Cheers,
-
-Dave.
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 44259eadb69d..7c1b071d115c 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -1419,3 +1419,37 @@ int iomap_swapfile_activate(struct swap_info_struct *sis,
+ }
+ EXPORT_SYMBOL_GPL(iomap_swapfile_activate);
+ #endif /* CONFIG_SWAP */
++
++static loff_t
++iomap_bmap_actor(struct inode *inode, loff_t pos, loff_t length,
++		void *data, struct iomap *iomap)
++{
++	sector_t *bno = data, addr;
++
++	if (iomap->type == IOMAP_MAPPED) {
++		addr = (pos - iomap->offset + iomap->addr) >> inode->i_blkbits;
++		if (addr > INT_MAX)
++			WARN(1, "would truncate bmap result\n");
++		else
++			*bno = addr;
++	}
++	return 0;
++}
++
++/* legacy ->bmap interface.  0 is the error return (!) */
++sector_t
++iomap_bmap(struct address_space *mapping, sector_t bno,
++		const struct iomap_ops *ops)
++{
++	struct inode *inode = mapping->host;
++	loff_t pos = bno >> inode->i_blkbits;
++	unsigned blocksize = i_blocksize(inode);
++
++	if (filemap_write_and_wait(mapping))
++		return 0;
++
++	bno = 0;
++	iomap_apply(inode, pos, blocksize, 0, ops, &bno, iomap_bmap_actor);
++	return bno;
++}
++EXPORT_SYMBOL_GPL(iomap_bmap);
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 819e0cd2a950..a044a824da85 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -4,6 +4,7 @@
+ 
+ #include <linux/types.h>
+ 
++struct address_space;
+ struct fiemap_extent_info;
+ struct inode;
+ struct iov_iter;
+@@ -100,6 +101,8 @@ loff_t iomap_seek_hole(struct inode *inode, loff_t offset,
+ 		const struct iomap_ops *ops);
+ loff_t iomap_seek_data(struct inode *inode, loff_t offset,
+ 		const struct iomap_ops *ops);
++sector_t iomap_bmap(struct address_space *mapping, sector_t bno,
++		const struct iomap_ops *ops);
+ 
+ /*
+  * Flags for direct I/O ->end_io:
 -- 
-Dave Chinner
-david@fromorbit.com
+2.17.0
+
