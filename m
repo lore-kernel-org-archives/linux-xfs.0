@@ -1,152 +1,345 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:50028 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751816AbeERQtb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 12:49:31 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 20/34] xfs: simplify xfs_aops_discard_page
-Date: Fri, 18 May 2018 18:48:16 +0200
-Message-Id: <20180518164830.1552-21-hch@lst.de>
-In-Reply-To: <20180518164830.1552-1-hch@lst.de>
-References: <20180518164830.1552-1-hch@lst.de>
+Received: from userp2130.oracle.com ([156.151.31.86]:60870 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751698AbeERDtK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 May 2018 23:49:10 -0400
+Date: Thu, 17 May 2018 20:49:04 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 01/22] xfs: add helpers to deal with transaction
+ allocation and rolling
+Message-ID: <20180518034904.GY23858@magnolia>
+References: <152642361893.1556.9335169821674946249.stgit@magnolia>
+ <152642362544.1556.12056546958129943758.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <152642362544.1556.12056546958129943758.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
+To: linux-xfs@vger.kernel.org, david@fromorbit.com
 
-Instead of looking at the buffer heads to see if a block is delalloc just
-call xfs_bmap_punch_delalloc_range on the whole page - this will leave
-any non-delalloc block intact and handle the iteration for us.  As a side
-effect one more place stops caring about buffer heads and we can remove the
-xfs_check_page_type function entirely.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+For repairs, we need to reserve at least as many blocks as we think
+we're going to need to rebuild the data structure, and we're going to
+need some helpers to roll transactions while maintaining locks on the AG
+headers so that other threads cannot wander into the middle of a repair.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- fs/xfs/xfs_aops.c | 85 +++++------------------------------------------
- 1 file changed, 9 insertions(+), 76 deletions(-)
+v2: fix whacky rmap reservation code, better docs
+---
+ fs/xfs/scrub/bmap.c   |    2 -
+ fs/xfs/scrub/common.c |   21 ++++++
+ fs/xfs/scrub/common.h |    2 -
+ fs/xfs/scrub/inode.c  |    4 +
+ fs/xfs/scrub/repair.c |  160 +++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/repair.h |   12 ++++
+ 6 files changed, 194 insertions(+), 7 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index c631c457b444..f2333e351e07 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -711,49 +711,6 @@ xfs_map_at_offset(
- 	clear_buffer_unwritten(bh);
- }
+diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+index 42a115e83739..eeadb33a701c 100644
+--- a/fs/xfs/scrub/bmap.c
++++ b/fs/xfs/scrub/bmap.c
+@@ -74,7 +74,7 @@ xfs_scrub_setup_inode_bmap(
+ 	}
  
--/*
-- * Test if a given page contains at least one buffer of a given @type.
-- * If @check_all_buffers is true, then we walk all the buffers in the page to
-- * try to find one of the type passed in. If it is not set, then the caller only
-- * needs to check the first buffer on the page for a match.
-- */
--STATIC bool
--xfs_check_page_type(
--	struct page		*page,
--	unsigned int		type,
--	bool			check_all_buffers)
--{
--	struct buffer_head	*bh;
--	struct buffer_head	*head;
--
--	if (PageWriteback(page))
--		return false;
--	if (!page->mapping)
--		return false;
--	if (!page_has_buffers(page))
--		return false;
--
--	bh = head = page_buffers(page);
--	do {
--		if (buffer_unwritten(bh)) {
--			if (type == XFS_IO_UNWRITTEN)
--				return true;
--		} else if (buffer_delay(bh)) {
--			if (type == XFS_IO_DELALLOC)
--				return true;
--		} else if (buffer_dirty(bh) && buffer_mapped(bh)) {
--			if (type == XFS_IO_OVERWRITE)
--				return true;
--		}
--
--		/* If we are only checking the first buffer, we are done now. */
--		if (!check_all_buffers)
--			break;
--	} while ((bh = bh->b_this_page) != head);
--
--	return false;
--}
--
- STATIC void
- xfs_vm_invalidatepage(
- 	struct page		*page,
-@@ -785,9 +742,6 @@ xfs_vm_invalidatepage(
-  * transaction. Indeed - if we get ENOSPC errors, we have to be able to do this
-  * truncation without a transaction as there is no space left for block
-  * reservation (typically why we see a ENOSPC in writeback).
-- *
-- * This is not a performance critical path, so for now just do the punching a
-- * buffer head at a time.
+ 	/* Got the inode, lock it and we're ready to go. */
+-	error = xfs_scrub_trans_alloc(sc);
++	error = xfs_scrub_trans_alloc(sc, 0);
+ 	if (error)
+ 		goto out;
+ 	sc->ilock_flags |= XFS_ILOCK_EXCL;
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index d3e5adc96411..41198a5f872c 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -51,6 +51,7 @@
+ #include "scrub/common.h"
+ #include "scrub/trace.h"
+ #include "scrub/btree.h"
++#include "scrub/repair.h"
+ 
+ /* Common code for the metadata scrubbers. */
+ 
+@@ -590,11 +591,22 @@ xfs_scrub_perag_get(
+ /*
+  * Grab an empty transaction so that we can re-grab locked buffers if
+  * one of our btrees turns out to be cyclic.
++ *
++ * If we're going to repair something, we need to ask for the largest possible
++ * log reservation so that we can handle the worst case scenario for metadata
++ * updates while rebuilding a metadata item.  We also need to reserve as many
++ * blocks in the head transaction as we think we're going to need to rebuild
++ * the metadata object.
   */
- STATIC void
- xfs_aops_discard_page(
-@@ -795,47 +749,26 @@ xfs_aops_discard_page(
+ int
+ xfs_scrub_trans_alloc(
+-	struct xfs_scrub_context	*sc)
++	struct xfs_scrub_context	*sc,
++	uint				resblks)
  {
- 	struct inode		*inode = page->mapping->host;
- 	struct xfs_inode	*ip = XFS_I(inode);
--	struct buffer_head	*bh, *head;
-+	struct xfs_mount	*mp = ip->i_mount;
- 	loff_t			offset = page_offset(page);
-+	xfs_fileoff_t		start_fsb = XFS_B_TO_FSBT(mp, offset);
-+	int			error;
- 
--	if (!xfs_check_page_type(page, XFS_IO_DELALLOC, true))
--		goto out_invalidate;
--
--	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
-+	if (XFS_FORCED_SHUTDOWN(mp))
- 		goto out_invalidate;
- 
--	xfs_alert(ip->i_mount,
-+	xfs_alert(mp,
- 		"page discard on page "PTR_FMT", inode 0x%llx, offset %llu.",
- 			page, ip->i_ino, offset);
- 
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	bh = head = page_buffers(page);
--	do {
--		int		error;
--		xfs_fileoff_t	start_fsb;
--
--		if (!buffer_delay(bh))
--			goto next_buffer;
--
--		start_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
--		error = xfs_bmap_punch_delalloc_range(ip, start_fsb, 1);
--		if (error) {
--			/* something screwed, just bail */
--			if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
--				xfs_alert(ip->i_mount,
--			"page discard unable to remove delalloc mapping.");
--			}
--			break;
--		}
--next_buffer:
--		offset += i_blocksize(inode);
--
--	} while ((bh = bh->b_this_page) != head);
--
-+	error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
-+			PAGE_SIZE / i_blocksize(inode));
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	if (error && !XFS_FORCED_SHUTDOWN(mp))
-+		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
- out_invalidate:
- 	xfs_vm_invalidatepage(page, 0, PAGE_SIZE);
--	return;
++	if (sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR)
++		return xfs_trans_alloc(sc->mp, &M_RES(sc->mp)->tr_itruncate,
++				resblks, 0, 0, &sc->tp);
++
+ 	return xfs_trans_alloc_empty(sc->mp, &sc->tp);
  }
  
- static int
--- 
-2.17.0
-
+@@ -604,7 +616,10 @@ xfs_scrub_setup_fs(
+ 	struct xfs_scrub_context	*sc,
+ 	struct xfs_inode		*ip)
+ {
+-	return xfs_scrub_trans_alloc(sc);
++	uint				resblks;
++
++	resblks = xfs_repair_calc_ag_resblks(sc);
++	return xfs_scrub_trans_alloc(sc, resblks);
+ }
+ 
+ /* Set us up with AG headers and btree cursors. */
+@@ -734,7 +749,7 @@ xfs_scrub_setup_inode_contents(
+ 	/* Got the inode, lock it and we're ready to go. */
+ 	sc->ilock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+ 	xfs_ilock(sc->ip, sc->ilock_flags);
+-	error = xfs_scrub_trans_alloc(sc);
++	error = xfs_scrub_trans_alloc(sc, resblks);
+ 	if (error)
+ 		goto out;
+ 	sc->ilock_flags |= XFS_ILOCK_EXCL;
+diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+index fbb91a7144fd..76bb2d1d808c 100644
+--- a/fs/xfs/scrub/common.h
++++ b/fs/xfs/scrub/common.h
+@@ -38,7 +38,7 @@ xfs_scrub_should_terminate(
+ 	return false;
+ }
+ 
+-int xfs_scrub_trans_alloc(struct xfs_scrub_context *sc);
++int xfs_scrub_trans_alloc(struct xfs_scrub_context *sc, uint resblks);
+ bool xfs_scrub_process_error(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
+ 		xfs_agblock_t bno, int *error);
+ bool xfs_scrub_fblock_process_error(struct xfs_scrub_context *sc, int whichfork,
+diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+index 550c0cf70a92..0c696f7018de 100644
+--- a/fs/xfs/scrub/inode.c
++++ b/fs/xfs/scrub/inode.c
+@@ -67,7 +67,7 @@ xfs_scrub_setup_inode(
+ 		break;
+ 	case -EFSCORRUPTED:
+ 	case -EFSBADCRC:
+-		return xfs_scrub_trans_alloc(sc);
++		return xfs_scrub_trans_alloc(sc, 0);
+ 	default:
+ 		return error;
+ 	}
+@@ -75,7 +75,7 @@ xfs_scrub_setup_inode(
+ 	/* Got the inode, lock it and we're ready to go. */
+ 	sc->ilock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+ 	xfs_ilock(sc->ip, sc->ilock_flags);
+-	error = xfs_scrub_trans_alloc(sc);
++	error = xfs_scrub_trans_alloc(sc, 0);
+ 	if (error)
+ 		goto out;
+ 	sc->ilock_flags |= XFS_ILOCK_EXCL;
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index be30825c47c6..d86f8731a78f 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -128,3 +128,163 @@ xfs_repair_probe(
+ 
+ 	return 0;
+ }
++
++/*
++ * Roll a transaction, keeping the AG headers locked and reinitializing
++ * the btree cursors.
++ */
++int
++xfs_repair_roll_ag_trans(
++	struct xfs_scrub_context	*sc)
++{
++	int				error;
++
++	/* Keep the AG header buffers locked so we can keep going. */
++	xfs_trans_bhold(sc->tp, sc->sa.agi_bp);
++	xfs_trans_bhold(sc->tp, sc->sa.agf_bp);
++	xfs_trans_bhold(sc->tp, sc->sa.agfl_bp);
++
++	/* Roll the transaction. */
++	error = xfs_trans_roll(&sc->tp);
++	if (error)
++		goto out_release;
++
++	/* Join AG headers to the new transaction. */
++	xfs_trans_bjoin(sc->tp, sc->sa.agi_bp);
++	xfs_trans_bjoin(sc->tp, sc->sa.agf_bp);
++	xfs_trans_bjoin(sc->tp, sc->sa.agfl_bp);
++
++	return 0;
++
++out_release:
++	/*
++	 * Rolling failed, so release the hold on the buffers.  The
++	 * buffers will be released during teardown on our way out
++	 * of the kernel.
++	 */
++	xfs_trans_bhold_release(sc->tp, sc->sa.agi_bp);
++	xfs_trans_bhold_release(sc->tp, sc->sa.agf_bp);
++	xfs_trans_bhold_release(sc->tp, sc->sa.agfl_bp);
++
++	return error;
++}
++
++/*
++ * Does the given AG have enough space to rebuild a btree?  Neither AG
++ * reservation can be critical, and we must have enough space (factoring
++ * in AG reservations) to construct a whole btree.
++ */
++bool
++xfs_repair_ag_has_space(
++	struct xfs_perag		*pag,
++	xfs_extlen_t			nr_blocks,
++	enum xfs_ag_resv_type		type)
++{
++	return  !xfs_ag_resv_critical(pag, XFS_AG_RESV_RMAPBT) &&
++		!xfs_ag_resv_critical(pag, XFS_AG_RESV_METADATA) &&
++		pag->pagf_freeblks > xfs_ag_resv_needed(pag, type) + nr_blocks;
++}
++
++/*
++ * Figure out how many blocks to reserve for an AG repair.  We calculate the
++ * worst case estimate for the number of blocks we'd need to rebuild one of
++ * any type of per-AG btree.
++ */
++xfs_extlen_t
++xfs_repair_calc_ag_resblks(
++	struct xfs_scrub_context	*sc)
++{
++	struct xfs_mount		*mp = sc->mp;
++	struct xfs_scrub_metadata	*sm = sc->sm;
++	struct xfs_perag		*pag;
++	struct xfs_buf			*bp;
++	xfs_agino_t			icount = 0;
++	xfs_extlen_t			aglen = 0;
++	xfs_extlen_t			usedlen;
++	xfs_extlen_t			freelen;
++	xfs_extlen_t			bnobt_sz;
++	xfs_extlen_t			inobt_sz;
++	xfs_extlen_t			rmapbt_sz;
++	xfs_extlen_t			refcbt_sz;
++	int				error;
++
++	if (!(sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR))
++		return 0;
++
++	/* Use in-core counters if possible. */
++	pag = xfs_perag_get(mp, sm->sm_agno);
++	if (pag->pagi_init)
++		icount = pag->pagi_count;
++
++	/*
++	 * Otherwise try to get the actual counters from disk; if not, make
++	 * some worst case assumptions.
++	 */
++	if (icount == 0) {
++		error = xfs_ialloc_read_agi(mp, NULL, sm->sm_agno, &bp);
++		if (error) {
++			icount = mp->m_sb.sb_agblocks / mp->m_sb.sb_inopblock;
++		} else {
++			icount = pag->pagi_count;
++			xfs_buf_relse(bp);
++		}
++	}
++
++	/* Now grab the block counters from the AGF. */
++	error = xfs_alloc_read_agf(mp, NULL, sm->sm_agno, 0, &bp);
++	if (error) {
++		aglen = mp->m_sb.sb_agblocks;
++		freelen = aglen;
++		usedlen = aglen;
++	} else {
++		aglen = be32_to_cpu(XFS_BUF_TO_AGF(bp)->agf_length);
++		freelen = pag->pagf_freeblks;
++		usedlen = aglen - freelen;
++		xfs_buf_relse(bp);
++	}
++	xfs_perag_put(pag);
++
++	trace_xfs_repair_calc_ag_resblks(mp, sm->sm_agno, icount, aglen,
++			freelen, usedlen);
++
++	/*
++	 * Figure out how many blocks we'd need worst case to rebuild
++	 * each type of btree.  Note that we can only rebuild the
++	 * bnobt/cntbt or inobt/finobt as pairs.
++	 */
++	bnobt_sz = 2 * xfs_allocbt_calc_size(mp, freelen);
++	if (xfs_sb_version_hassparseinodes(&mp->m_sb))
++		inobt_sz = xfs_iallocbt_calc_size(mp, icount /
++				XFS_INODES_PER_HOLEMASK_BIT);
++	else
++		inobt_sz = xfs_iallocbt_calc_size(mp, icount /
++				XFS_INODES_PER_CHUNK);
++	if (xfs_sb_version_hasfinobt(&mp->m_sb))
++		inobt_sz *= 2;
++	if (xfs_sb_version_hasreflink(&mp->m_sb))
++		refcbt_sz = xfs_refcountbt_calc_size(mp, usedlen);
++	else
++		refcbt_sz = 0;
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
++		/*
++		 * Guess how many blocks we need to rebuild the rmapbt.
++		 * For non-reflink filesystems we can't have more records than
++		 * used blocks.  However, with reflink it's possible to have
++		 * more than one rmap record per AG block.  We don't know how
++		 * many rmaps there could be in the AG, so we start off with
++		 * what we hope is an generous over-estimation.
++		 */
++		if (xfs_sb_version_hasreflink(&mp->m_sb))
++			rmapbt_sz = xfs_rmapbt_calc_size(mp,
++					(unsigned long long)aglen * 2);
++		else
++			rmapbt_sz = xfs_rmapbt_calc_size(mp, usedlen);
++	} else {
++		rmapbt_sz = 0;
++	}
++
++	trace_xfs_repair_calc_ag_resblks_btsize(mp, sm->sm_agno, bnobt_sz,
++			inobt_sz, rmapbt_sz, refcbt_sz);
++
++	return max(max(bnobt_sz, inobt_sz), max(rmapbt_sz, refcbt_sz));
++}
+diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+index 83170dd3388c..8d181dce6171 100644
+--- a/fs/xfs/scrub/repair.h
++++ b/fs/xfs/scrub/repair.h
+@@ -32,6 +32,10 @@ static inline int xfs_repair_notsupported(struct xfs_scrub_context *sc)
+ int xfs_repair_attempt(struct xfs_inode *ip, struct xfs_scrub_context *sc,
+ 		bool *fixed);
+ void xfs_repair_failure(struct xfs_mount *mp);
++int xfs_repair_roll_ag_trans(struct xfs_scrub_context *sc);
++bool xfs_repair_ag_has_space(struct xfs_perag *pag, xfs_extlen_t nr_blocks,
++		enum xfs_ag_resv_type type);
++xfs_extlen_t xfs_repair_calc_ag_resblks(struct xfs_scrub_context *sc);
+ 
+ /* Metadata repairers */
+ 
+@@ -49,6 +53,14 @@ static inline int xfs_repair_attempt(
+ 
+ static inline void xfs_repair_failure(struct xfs_mount *mp) {}
+ 
++static inline xfs_extlen_t
++xfs_repair_calc_ag_resblks(
++	struct xfs_scrub_context	*sc)
++{
++	ASSERT(!(sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR));
++	return 0;
++}
++
+ #define xfs_repair_probe		xfs_repair_notsupported
+ 
+ #endif /* CONFIG_XFS_ONLINE_REPAIR */
