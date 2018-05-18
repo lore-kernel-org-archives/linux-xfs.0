@@ -1,73 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52017 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751921AbeEQXDC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 May 2018 19:03:02 -0400
-Date: Fri, 18 May 2018 01:03:00 +0200
-From: Mark Fasheh <mfasheh@suse.de>
-Subject: Re: [PATCH 2/2] vfs: dedupe should return EPERM if permission is not
- granted
-Message-ID: <20180517230300.GB28045@wotan.suse.de>
-Reply-To: Mark Fasheh <mfasheh@suse.de>
-References: <20180511192651.21324-1-mfasheh@suse.de>
- <20180511192651.21324-3-mfasheh@suse.de>
- <20180512000634.GG9510@magnolia>
- <20180513182152.GE27915@wotan.suse.de>
- <20180513182639.GB4933@magnolia>
- <20180517051550.GB22356@hungrycats.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180517051550.GB22356@hungrycats.org>
+Received: from bombadil.infradead.org ([198.137.202.133]:51836 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752469AbeERQuF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 12:50:05 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 30/34] xfs: move all writeback buffer_head manipulation into xfs_map_at_offset
+Date: Fri, 18 May 2018 18:48:26 +0200
+Message-Id: <20180518164830.1552-31-hch@lst.de>
+In-Reply-To: <20180518164830.1552-1-hch@lst.de>
+References: <20180518164830.1552-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Zygo Blaxell <ce3g8jdj@umail.furryterror.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-On Thu, May 17, 2018 at 01:15:51AM -0400, Zygo Blaxell wrote:
-> On Sun, May 13, 2018 at 11:26:39AM -0700, Darrick J. Wong wrote:
-> > On Sun, May 13, 2018 at 06:21:52PM +0000, Mark Fasheh wrote:
-> > > On Fri, May 11, 2018 at 05:06:34PM -0700, Darrick J. Wong wrote:
-> > > > On Fri, May 11, 2018 at 12:26:51PM -0700, Mark Fasheh wrote:
-> > > > > Right now we return EINVAL if a process does not have permission to dedupe a
-> > > > > file. This was an oversight on my part. EPERM gives a true description of
-> > > > > the nature of our error, and EINVAL is already used for the case that the
-> > > > > filesystem does not support dedupe.
-> > > > > 
-> > > > > Signed-off-by: Mark Fasheh <mfasheh@suse.de>
-> > > > > ---
-> > > > >  fs/read_write.c | 2 +-
-> > > > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > > > 
-> > > > > diff --git a/fs/read_write.c b/fs/read_write.c
-> > > > > index 77986a2e2a3b..8edef43a182c 100644
-> > > > > --- a/fs/read_write.c
-> > > > > +++ b/fs/read_write.c
-> > > > > @@ -2038,7 +2038,7 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
-> > > > >  			info->status = -EINVAL;
-> > > > >  		} else if (!(is_admin || (dst_file->f_mode & FMODE_WRITE) ||
-> > > > >  			     uid_eq(current_fsuid(), dst->i_uid))) {
-> > > > > -			info->status = -EINVAL;
-> > > > > +			info->status = -EPERM;
-> > > > 
-> > > > Hmm, are we allowed to change this aspect of the kabi after the fact?
-> > > > 
-> > > > Granted, we're only trading one error code for another, but will the
-> > > > existing users of this care?  xfs_io won't and I assume duperemove won't
-> > > > either, but what about bees? :)
-> > > 
-> > > Yeah if you see my initial e-mail I check bees and also rust-btrfs. I think
-> > > this is fine as we're simply expanding on an error code return. There's no
-> > > magic behavior expected with respect to these error codes either.
-> > 
-> > Ok.  No objections from me, then.
-> > 
-> > Acked-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> For what it's worth, no objection from me either.  ;)
-> 
-> bees runs only with admin privilege and will never hit the modified line.
+This keeps it in a single place so it can be made otional more easily.
 
-Awesome, thanks for the review Zygo.
-	--Mark
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_aops.c | 22 +++++-----------------
+ 1 file changed, 5 insertions(+), 17 deletions(-)
+
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 592b33b35a30..951b329abb23 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -505,21 +505,6 @@ xfs_imap_valid(
+ 		offset < imap->br_startoff + imap->br_blockcount;
+ }
+ 
+-STATIC void
+-xfs_start_buffer_writeback(
+-	struct buffer_head	*bh)
+-{
+-	ASSERT(buffer_mapped(bh));
+-	ASSERT(buffer_locked(bh));
+-	ASSERT(!buffer_delay(bh));
+-	ASSERT(!buffer_unwritten(bh));
+-
+-	bh->b_end_io = NULL;
+-	set_buffer_async_write(bh);
+-	set_buffer_uptodate(bh);
+-	clear_buffer_dirty(bh);
+-}
+-
+ STATIC void
+ xfs_start_page_writeback(
+ 	struct page		*page,
+@@ -728,6 +713,7 @@ xfs_map_at_offset(
+ 	ASSERT(imap->br_startblock != HOLESTARTBLOCK);
+ 	ASSERT(imap->br_startblock != DELAYSTARTBLOCK);
+ 
++	lock_buffer(bh);
+ 	xfs_map_buffer(inode, bh, imap, offset);
+ 	set_buffer_mapped(bh);
+ 	clear_buffer_delay(bh);
+@@ -740,6 +726,10 @@ xfs_map_at_offset(
+ 	 * set the bdev now.
+ 	 */
+ 	bh->b_bdev = xfs_find_bdev_for_inode(inode);
++	bh->b_end_io = NULL;
++	set_buffer_async_write(bh);
++	set_buffer_uptodate(bh);
++	clear_buffer_dirty(bh);
+ }
+ 
+ STATIC void
+@@ -885,11 +875,9 @@ xfs_writepage_map(
+ 			continue;
+ 		}
+ 
+-		lock_buffer(bh);
+ 		xfs_map_at_offset(inode, bh, &wpc->imap, file_offset);
+ 		xfs_add_to_ioend(inode, file_offset, page, wpc, wbc,
+ 				&submit_list);
+-		xfs_start_buffer_writeback(bh);
+ 		count++;
+ 	}
+ 
+-- 
+2.17.0
+
