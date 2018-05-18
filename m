@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:49960 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:49912 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752295AbeERQtU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 12:49:20 -0400
+        with ESMTP id S1751395AbeERQtM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 12:49:12 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 16/34] iomap: add initial support for writes without buffer heads
-Date: Fri, 18 May 2018 18:48:12 +0200
-Message-Id: <20180518164830.1552-17-hch@lst.de>
+Subject: [PATCH 13/34] iomap: add a iomap_sector helper
+Date: Fri, 18 May 2018 18:48:09 +0200
+Message-Id: <20180518164830.1552-14-hch@lst.de>
 In-Reply-To: <20180518164830.1552-1-hch@lst.de>
 References: <20180518164830.1552-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,264 +15,65 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-For now just limited to blocksize == PAGE_SIZE, where we can simply read
-in the full page in write begin, and just set the whole page dirty after
-copying data into it.  This code is enabled by default and XFS will now
-be feed pages without buffer heads in ->writepage and ->writepages.
-
-If a file system sets the IOMAP_F_BUFFER_HEAD flag on the iomap the old
-path will still be used, this both helps the transition in XFS and
-prepares for the gfs2 migration to the iomap infrastructure.
+Factor the repeated calculation of the on-disk sector for a given logical
+block into a littler helper.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/iomap.c            | 132 ++++++++++++++++++++++++++++++++++++++----
- fs/xfs/xfs_iomap.c    |   6 +-
- include/linux/iomap.h |   2 +
- 3 files changed, 127 insertions(+), 13 deletions(-)
+ fs/iomap.c | 19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-)
 
 diff --git a/fs/iomap.c b/fs/iomap.c
-index 821671af2618..cd4c563db80a 100644
+index 6427627a247f..44259eadb69d 100644
 --- a/fs/iomap.c
 +++ b/fs/iomap.c
-@@ -314,6 +314,58 @@ iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
- 		truncate_pagecache_range(inode, max(pos, i_size), pos + len);
+@@ -97,6 +97,12 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
+ 	return written ? written : ret;
  }
  
-+static int
-+iomap_read_page_sync(struct inode *inode, loff_t block_start, struct page *page,
-+		unsigned poff, unsigned plen, struct iomap *iomap)
++static sector_t
++iomap_sector(struct iomap *iomap, loff_t pos)
 +{
-+	struct bio_vec bvec;
-+	struct bio bio;
-+	int ret;
-+
-+	bio_init(&bio, &bvec, 1);
-+	bio.bi_opf = REQ_OP_READ;
-+	bio.bi_iter.bi_sector = iomap_sector(iomap, block_start);
-+	bio_set_dev(&bio, iomap->bdev);
-+	__bio_add_page(&bio, page, plen, poff);
-+	ret = submit_bio_wait(&bio);
-+	if (ret < 0 && iomap_block_needs_zeroing(inode, block_start, iomap))
-+		zero_user(page, poff, plen);
-+	return ret;
++	return (iomap->addr + pos - iomap->offset) >> SECTOR_SHIFT;
 +}
 +
-+static int
-+__iomap_write_begin(struct inode *inode, loff_t pos, unsigned len,
-+		struct page *page, struct iomap *iomap)
-+{
-+	loff_t block_size = i_blocksize(inode);
-+	loff_t block_start = pos & ~(block_size - 1);
-+	loff_t block_end = (pos + len + block_size - 1) & ~(block_size - 1);
-+	unsigned poff = block_start & (PAGE_SIZE - 1);
-+	unsigned plen = min_t(loff_t, PAGE_SIZE - poff, block_end - block_start);
-+	int status;
-+
-+	WARN_ON_ONCE(i_blocksize(inode) < PAGE_SIZE);
-+
-+	if (PageUptodate(page))
-+		return 0;
-+
-+	if (iomap_block_needs_zeroing(inode, block_start, iomap)) {
-+		unsigned from = pos & (PAGE_SIZE - 1), to = from + len;
-+		unsigned pend = poff + plen;
-+
-+		if (poff < from || pend > to)
-+			zero_user_segments(page, poff, from, to, pend);
-+	} else {
-+		status = iomap_read_page_sync(inode, block_start, page,
-+				poff, plen, iomap);
-+		if (status < 0)
-+			return status;
-+		SetPageUptodate(page);
-+	}
-+
-+	return 0;
-+}
-+
- static int
- iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
- 		struct page **pagep, struct iomap *iomap)
-@@ -331,7 +383,10 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
- 	if (!page)
- 		return -ENOMEM;
- 
--	status = __block_write_begin_int(page, pos, len, NULL, iomap);
-+	if (iomap->flags & IOMAP_F_BUFFER_HEAD)
-+		status = __block_write_begin_int(page, pos, len, NULL, iomap);
-+	else
-+		status = __iomap_write_begin(inode, pos, len, page, iomap);
- 	if (unlikely(status)) {
- 		unlock_page(page);
- 		put_page(page);
-@@ -344,14 +399,63 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
- 	return status;
- }
- 
-+int
-+iomap_set_page_dirty(struct page *page)
-+{
-+	struct address_space *mapping = page_mapping(page);
-+	int newly_dirty;
-+
-+	if (unlikely(!mapping))
-+		return !TestSetPageDirty(page);
-+
-+	/*
-+	 * Lock out page->mem_cgroup migration to keep PageDirty
-+	 * synchronized with per-memcg dirty page counters.
-+	 */
-+	lock_page_memcg(page);
-+	newly_dirty = !TestSetPageDirty(page);
-+	if (newly_dirty)
-+		__set_page_dirty(page, mapping, 0);
-+	unlock_page_memcg(page);
-+
-+	if (newly_dirty)
-+		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
-+	return newly_dirty;
-+}
-+EXPORT_SYMBOL_GPL(iomap_set_page_dirty);
-+
-+static int
-+__iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
-+		unsigned copied, struct page *page, struct iomap *iomap)
-+{
-+	unsigned start = pos & (PAGE_SIZE - 1);
-+
-+	if (unlikely(copied < len)) {
-+		/* see block_write_end() for an explanation */
-+		if (!PageUptodate(page))
-+			copied = 0;
-+		if (iomap_block_needs_zeroing(inode, pos, iomap))
-+			zero_user(page, start + copied, len - copied);
-+	}
-+
-+	flush_dcache_page(page);
-+	SetPageUptodate(page);
-+	iomap_set_page_dirty(page);
-+	return __generic_write_end(inode, pos, copied, page);
-+}
-+
- static int
- iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
--		unsigned copied, struct page *page)
-+		unsigned copied, struct page *page, struct iomap *iomap)
+ static void
+ iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
  {
- 	int ret;
- 
--	ret = generic_write_end(NULL, inode->i_mapping, pos, len,
--			copied, page, NULL);
-+	if (iomap->flags & IOMAP_F_BUFFER_HEAD)
-+		ret = generic_write_end(NULL, inode->i_mapping, pos, len,
-+				copied, page, NULL);
-+	else
-+		ret = __iomap_write_end(inode, pos, len, copied, page, iomap);
-+
- 	if (ret < len)
- 		iomap_write_failed(inode, pos, len);
- 	return ret;
-@@ -406,7 +510,8 @@ iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 
- 		flush_dcache_page(page);
- 
--		status = iomap_write_end(inode, pos, bytes, copied, page);
-+		status = iomap_write_end(inode, pos, bytes, copied, page,
-+				iomap);
- 		if (unlikely(status < 0))
- 			break;
- 		copied = status;
-@@ -500,7 +605,7 @@ iomap_dirty_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 
- 		WARN_ON_ONCE(!PageUptodate(page));
- 
--		status = iomap_write_end(inode, pos, bytes, bytes, page);
-+		status = iomap_write_end(inode, pos, bytes, bytes, page, iomap);
- 		if (unlikely(status <= 0)) {
- 			if (WARN_ON_ONCE(status == 0))
- 				return -EIO;
-@@ -552,7 +657,7 @@ static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
- 	zero_user(page, offset, bytes);
- 	mark_page_accessed(page);
- 
--	return iomap_write_end(inode, pos, bytes, bytes, page);
-+	return iomap_write_end(inode, pos, bytes, bytes, page, iomap);
- }
- 
+@@ -354,11 +360,8 @@ static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
  static int iomap_dax_zero(loff_t pos, unsigned offset, unsigned bytes,
-@@ -638,11 +743,16 @@ iomap_page_mkwrite_actor(struct inode *inode, loff_t pos, loff_t length,
- 	struct page *page = data;
- 	int ret;
- 
--	ret = __block_write_begin_int(page, pos, length, NULL, iomap);
--	if (ret)
--		return ret;
-+	if (iomap->flags & IOMAP_F_BUFFER_HEAD) {
-+		ret = __block_write_begin_int(page, pos, length, NULL, iomap);
-+		if (ret)
-+			return ret;
-+		block_commit_write(page, 0, length);
-+	} else {
-+		WARN_ON_ONCE(!PageUptodate(page));
-+		WARN_ON_ONCE(i_blocksize(inode) < PAGE_SIZE);
-+	}
- 
--	block_commit_write(page, 0, length);
- 	return length;
+ 		struct iomap *iomap)
+ {
+-	sector_t sector = (iomap->addr +
+-			   (pos & PAGE_MASK) - iomap->offset) >> 9;
+-
+-	return __dax_zero_page_range(iomap->bdev, iomap->dax_dev, sector,
+-			offset, bytes);
++	return __dax_zero_page_range(iomap->bdev, iomap->dax_dev,
++			iomap_sector(iomap, pos & PAGE_MASK), offset, bytes);
  }
  
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index c6ce6f9335b6..da6d1995e460 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -638,7 +638,7 @@ xfs_file_iomap_begin_delay(
- 	 * Flag newly allocated delalloc blocks with IOMAP_F_NEW so we punch
- 	 * them out if the write happens to fail.
- 	 */
--	iomap->flags = IOMAP_F_NEW;
-+	iomap->flags |= IOMAP_F_NEW;
- 	trace_xfs_iomap_alloc(ip, offset, count, 0, &got);
- done:
- 	if (isnullstartblock(got.br_startblock))
-@@ -1031,6 +1031,8 @@ xfs_file_iomap_begin(
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
+ static loff_t
+@@ -951,8 +954,7 @@ iomap_dio_zero(struct iomap_dio *dio, struct iomap *iomap, loff_t pos,
  
-+	iomap->flags |= IOMAP_F_BUFFER_HEAD;
-+
- 	if (((flags & (IOMAP_WRITE | IOMAP_DIRECT)) == IOMAP_WRITE) &&
- 			!IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
- 		/* Reserve delalloc blocks for regular writeback. */
-@@ -1131,7 +1133,7 @@ xfs_file_iomap_begin(
- 	if (error)
- 		return error;
+ 	bio = bio_alloc(GFP_KERNEL, 1);
+ 	bio_set_dev(bio, iomap->bdev);
+-	bio->bi_iter.bi_sector =
+-		(iomap->addr + pos - iomap->offset) >> 9;
++	bio->bi_iter.bi_sector = iomap_sector(iomap, pos);
+ 	bio->bi_private = dio;
+ 	bio->bi_end_io = iomap_dio_bio_end_io;
  
--	iomap->flags = IOMAP_F_NEW;
-+	iomap->flags |= IOMAP_F_NEW;
- 	trace_xfs_iomap_alloc(ip, offset, length, 0, &imap);
+@@ -1046,8 +1048,7 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
  
- out_finish:
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 7300d30ca495..4d3d9d0cd69f 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -30,6 +30,7 @@ struct vm_fault;
-  */
- #define IOMAP_F_NEW		0x01	/* blocks have been newly allocated */
- #define IOMAP_F_DIRTY		0x02	/* uncommitted metadata */
-+#define IOMAP_F_BUFFER_HEAD	0x04	/* file system requires buffer heads */
- 
- /*
-  * Flags that only need to be reported for IOMAP_REPORT requests:
-@@ -92,6 +93,7 @@ ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
- int iomap_readpage(struct page *page, const struct iomap_ops *ops);
- int iomap_readpages(struct address_space *mapping, struct list_head *pages,
- 		unsigned nr_pages, const struct iomap_ops *ops);
-+int iomap_set_page_dirty(struct page *page);
- int iomap_file_dirty(struct inode *inode, loff_t pos, loff_t len,
- 		const struct iomap_ops *ops);
- int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
+ 		bio = bio_alloc(GFP_KERNEL, nr_pages);
+ 		bio_set_dev(bio, iomap->bdev);
+-		bio->bi_iter.bi_sector =
+-			(iomap->addr + pos - iomap->offset) >> 9;
++		bio->bi_iter.bi_sector = iomap_sector(iomap, pos);
+ 		bio->bi_write_hint = dio->iocb->ki_hint;
+ 		bio->bi_private = dio;
+ 		bio->bi_end_io = iomap_dio_bio_end_io;
 -- 
 2.17.0
 
