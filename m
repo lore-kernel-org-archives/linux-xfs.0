@@ -1,121 +1,136 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:20497 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751640AbeEQWkL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 May 2018 18:40:11 -0400
-Date: Fri, 18 May 2018 08:40:08 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 2/5] mkfs: move shared structs and cli params into
- their own headers
-Message-ID: <20180517224008.GC23861@dastard>
-References: <20180517192700.23457-1-mcgrof@kernel.org>
- <20180517192700.23457-3-mcgrof@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180517192700.23457-3-mcgrof@kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.133]:50024 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752348AbeERQt2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 12:49:28 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 19/34] xfs: simplify xfs_bmap_punch_delalloc_range
+Date: Fri, 18 May 2018 18:48:15 +0200
+Message-Id: <20180518164830.1552-20-hch@lst.de>
+In-Reply-To: <20180518164830.1552-1-hch@lst.de>
+References: <20180518164830.1552-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: sandeen@sandeen.net, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-On Thu, May 17, 2018 at 12:26:57PM -0700, Luis R. Rodriguez wrote:
-> Both struct sb_feat_args and struct mkfs_default_params will be shared
-> between CLI processing and the configuration file processing added later,
-> so move these to their own header. The struct cli_params are CLI specific
-> so move them to its own CLI header as well.
+Instead of using xfs_bmapi_read to find delalloc extents and then punch
+them out using xfs_bunmapi, opencode the loop to iterate over the extents
+and call xfs_bmap_del_extent_delay directly.  This both simplifies the
+code and reduces the number of extent tree lookups required.
 
-I'd separate out the CLI details when the CLI parsing is split into
-it's own file - it's not necssary to do that here.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_bmap_util.c | 78 ++++++++++++++----------------------------
+ 1 file changed, 25 insertions(+), 53 deletions(-)
 
-> 
-> This will help ensure we split things neatly later and also will help
-> ensure the configuration file processing code from the CLI code are kept
-> separate and cannot touch each other's data structures. This also makes
-> it clear what is actually shared between both.
-> 
-> There are no introduced functional changes in this commit and no
-> documentation changes, this is just code shuffling.
-> 
-> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
-> ---
->  mkfs/xfs_mkfs.c        | 115 +------------------------------------------------
->  mkfs/xfs_mkfs_cli.h    |  65 ++++++++++++++++++++++++++++
->  mkfs/xfs_mkfs_common.h |  64 +++++++++++++++++++++++++++
-
-File names.
-
-xfs_mkfs.c is named that way by an old convention - it's the same as
-xfs_repair.c, xfs_db.c, etc. Every other file in the directory does
-not need a "xfs_mkfs_" prefix.
-
-I'd also prefer we don't have "common" as a dumping ground header.
-The CLI, config files, etc are all part of config processing, so
-config.h would be more appropriate here. Or perhaps "input.h"
-because they are both processing external inputs....
-
->  3 files changed, 131 insertions(+), 113 deletions(-)
->  create mode 100644 mkfs/xfs_mkfs_cli.h
->  create mode 100644 mkfs/xfs_mkfs_common.h
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 95cd6ced13f0..ac97039abc34 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -20,6 +20,8 @@
->  #include <ctype.h>
->  #include "xfs_multidisk.h"
->  #include "libxcmd.h"
-> +#include "xfs_mkfs_common.h"
-> +#include "xfs_mkfs_cli.h"
-
-#include "config.h"
-
-> diff --git a/mkfs/xfs_mkfs_cli.h b/mkfs/xfs_mkfs_cli.h
-> new file mode 100644
-> index 000000000000..2050814aec02
-> --- /dev/null
-> +++ b/mkfs/xfs_mkfs_cli.h
-> @@ -0,0 +1,65 @@
-> +#ifndef _XFS_MKFS_CLI_H
-> +#define _XFS_MKFS_CLI_H
-
-Missing license and copyright. It'll be the same license as the main
-xfs_mkfs.c file. Copyright will be Red Hat, Inc (because it's new
-code I wrote as dchinner@redhat.com) and you'll need to pull the
-date from the commit message.
-
-(Yeah, I know it's weird putting someone elses copyright on code
-you're moving about, but that's how it goes :P)
-
-> +
-> +#include "xfs_mkfs_common.h"
-
-No includes in header files if we can avoid them.
-
-[...]
-
-> diff --git a/mkfs/xfs_mkfs_common.h b/mkfs/xfs_mkfs_common.h
-> new file mode 100644
-> index 000000000000..9b0f67b70cf1
-> --- /dev/null
-> +++ b/mkfs/xfs_mkfs_common.h
-> @@ -0,0 +1,64 @@
-> +#ifndef _XFS_MKFS_COMMON_H
-> +#define _XFS_MKFS_COMMON_H
-> +
-> +#include "libxfs.h"
-> +
-> +#include <ctype.h>
-
-Same as above for license, copyright and includes, except the
-copyright will also need to include the SGI copyright line from
-xfs_mkfs.c...
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 06badcbadeb4..c009bdf9fdce 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -695,12 +695,10 @@ xfs_getbmap(
+ }
+ 
+ /*
+- * dead simple method of punching delalyed allocation blocks from a range in
+- * the inode. Walks a block at a time so will be slow, but is only executed in
+- * rare error cases so the overhead is not critical. This will always punch out
+- * both the start and end blocks, even if the ranges only partially overlap
+- * them, so it is up to the caller to ensure that partial blocks are not
+- * passed in.
++ * Dead simple method of punching delalyed allocation blocks from a range in
++ * the inode.  This will always punch out both the start and end blocks, even
++ * if the ranges only partially overlap them, so it is up to the caller to
++ * ensure that partial blocks are not passed in.
+  */
+ int
+ xfs_bmap_punch_delalloc_range(
+@@ -708,63 +706,37 @@ xfs_bmap_punch_delalloc_range(
+ 	xfs_fileoff_t		start_fsb,
+ 	xfs_fileoff_t		length)
+ {
+-	xfs_fileoff_t		remaining = length;
++	struct xfs_ifork	*ifp = &ip->i_df;
++	struct xfs_bmbt_irec	got, del;
++	struct xfs_iext_cursor	icur;
+ 	int			error = 0;
+ 
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+ 
+-	do {
+-		int		done;
+-		xfs_bmbt_irec_t	imap;
+-		int		nimaps = 1;
+-		xfs_fsblock_t	firstblock;
+-		struct xfs_defer_ops dfops;
++	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
++		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
++		if (error)
++			return error;
++	}
+ 
+-		/*
+-		 * Map the range first and check that it is a delalloc extent
+-		 * before trying to unmap the range. Otherwise we will be
+-		 * trying to remove a real extent (which requires a
+-		 * transaction) or a hole, which is probably a bad idea...
+-		 */
+-		error = xfs_bmapi_read(ip, start_fsb, 1, &imap, &nimaps,
+-				       XFS_BMAPI_ENTIRE);
++	if (!xfs_iext_lookup_extent(ip, ifp, start_fsb, &icur, &got))
++		return 0;
+ 
+-		if (error) {
+-			/* something screwed, just bail */
+-			if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+-				xfs_alert(ip->i_mount,
+-			"Failed delalloc mapping lookup ino %lld fsb %lld.",
+-						ip->i_ino, start_fsb);
+-			}
++	do {
++		if (got.br_startoff >= start_fsb + length)
+ 			break;
+-		}
+-		if (!nimaps) {
+-			/* nothing there */
+-			goto next_block;
+-		}
+-		if (imap.br_startblock != DELAYSTARTBLOCK) {
+-			/* been converted, ignore */
+-			goto next_block;
+-		}
+-		WARN_ON(imap.br_blockcount == 0);
++		if (!isnullstartblock(got.br_startblock))
++			continue;
+ 
+-		/*
+-		 * Note: while we initialise the firstblock/dfops pair, they
+-		 * should never be used because blocks should never be
+-		 * allocated or freed for a delalloc extent and hence we need
+-		 * don't cancel or finish them after the xfs_bunmapi() call.
+-		 */
+-		xfs_defer_init(&dfops, &firstblock);
+-		error = xfs_bunmapi(NULL, ip, start_fsb, 1, 0, 1, &firstblock,
+-					&dfops, &done);
++		del = got;
++		xfs_trim_extent(&del, start_fsb, length);
++		error = xfs_bmap_del_extent_delay(ip, XFS_DATA_FORK, &icur,
++				&got, &del);
+ 		if (error)
+ 			break;
+-
+-		ASSERT(!xfs_defer_has_unfinished_work(&dfops));
+-next_block:
+-		start_fsb++;
+-		remaining--;
+-	} while(remaining > 0);
++		if (!xfs_iext_get_extent(ifp, &icur, &got))
++			break;
++	} while (xfs_iext_next_extent(ifp, &icur, &got));
+ 
+ 	return error;
+ }
 -- 
-Dave Chinner
-david@fromorbit.com
+2.17.0
+
