@@ -1,69 +1,107 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51907 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751280AbeEQXBv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 May 2018 19:01:51 -0400
-Date: Fri, 18 May 2018 01:01:50 +0200
-From: Mark Fasheh <mfasheh@suse.de>
-Subject: Re: [PATCH 1/2] vfs: allow dedupe of user owned read-only files
-Message-ID: <20180517230150.GA28045@wotan.suse.de>
-Reply-To: Mark Fasheh <mfasheh@suse.de>
-References: <20180511192651.21324-1-mfasheh@suse.de>
- <20180511192651.21324-2-mfasheh@suse.de>
- <20180512024920.i7duhoi3lnkha4yl@angband.pl>
- <20180513181653.GD27915@wotan.suse.de>
- <20180513205025.3kolgcnbpy4grqtv@angband.pl>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180513205025.3kolgcnbpy4grqtv@angband.pl>
+Received: from bombadil.infradead.org ([198.137.202.133]:51908 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752482AbeERQuG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 12:50:06 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 31/34] xfs: remove xfs_start_page_writeback
+Date: Fri, 18 May 2018 18:48:27 +0200
+Message-Id: <20180518164830.1552-32-hch@lst.de>
+In-Reply-To: <20180518164830.1552-1-hch@lst.de>
+References: <20180518164830.1552-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Adam Borowski <kilobyte@angband.pl>
-Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-On Sun, May 13, 2018 at 10:50:25PM +0200, Adam Borowski wrote:
-> On Sun, May 13, 2018 at 06:16:53PM +0000, Mark Fasheh wrote:
-> > On Sat, May 12, 2018 at 04:49:20AM +0200, Adam Borowski wrote:
-> > > On Fri, May 11, 2018 at 12:26:50PM -0700, Mark Fasheh wrote:
-> > > > The permission check in vfs_dedupe_file_range() is too coarse - We
-> > > > only allow dedupe of the destination file if the user is root, or
-> > > > they have the file open for write.
-> > > > 
-> > > > This effectively limits a non-root user from deduping their own
-> > > > read-only files. As file data during a dedupe does not change,
-> > > > this is unexpected behavior and this has caused a number of issue
-> > > > reports.
-> [...]
-> > > > So change the check so we allow dedupe on the target if:
-> > > > 
-> > > > - the root or admin is asking for it
-> > > > - the owner of the file is asking for the dedupe
-> > > > - the process has write access
-> > > 
-> > > I submitted a similar patch in May 2016, yet it has never been applied
-> > > despite multiple pings, with no NAK.  My version allowed dedupe if:
-> > > - the root or admin is asking for it
-> > > - the file has w permission (on the inode -- ie, could have been opened rw)
-> > 
-> > Ahh, yes I see that now. I did wind up acking it too :)
-> > > 
-> > > I like this new version better than mine: "root or owner or w" is more
-> > > Unixy than "could have been opened w".
-> > 
-> > I agree, IMHO the behavior in this patch is intuitive. What we had before
-> > would surprise users.
-> 
-> Actually, there's one reason to still consider "could have been opened w":
-> with it, deduplication programs can simply open the file r and not care
-> about ETXTBSY at all.  Otherwise, every program needs to stat() and have
-> logic to pick the proper argument to the open() call (r if owner/root,
-> rw or w if not).
+This helper only has two callers, one of them with a constant error
+argument.  Remove it to make pending changes to the code a little easier.
 
-That makes sense. The goal after all is to be able to just open r and not
-worry about it. I hadn't considered the other possibilities that
-inode_permission() covers. I'll make that change for my next series.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_aops.c | 47 +++++++++++++++++++++--------------------------
+ 1 file changed, 21 insertions(+), 26 deletions(-)
 
-Thanks,
-  --Mark
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 951b329abb23..dd92d99df51f 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -505,30 +505,6 @@ xfs_imap_valid(
+ 		offset < imap->br_startoff + imap->br_blockcount;
+ }
+ 
+-STATIC void
+-xfs_start_page_writeback(
+-	struct page		*page,
+-	int			clear_dirty)
+-{
+-	ASSERT(PageLocked(page));
+-	ASSERT(!PageWriteback(page));
+-
+-	/*
+-	 * if the page was not fully cleaned, we need to ensure that the higher
+-	 * layers come back to it correctly. That means we need to keep the page
+-	 * dirty, and for WB_SYNC_ALL writeback we need to ensure the
+-	 * PAGECACHE_TAG_TOWRITE index mark is not removed so another attempt to
+-	 * write this page in this writeback sweep will be made.
+-	 */
+-	if (clear_dirty) {
+-		clear_page_dirty_for_io(page);
+-		set_page_writeback(page);
+-	} else
+-		set_page_writeback_keepwrite(page);
+-
+-	unlock_page(page);
+-}
+-
+ /*
+  * Submit the bio for an ioend. We are passed an ioend with a bio attached to
+  * it, and we submit that bio. The ioend may be used for multiple bio
+@@ -887,6 +863,9 @@ xfs_writepage_map(
+ 	ASSERT(wpc->ioend || list_empty(&submit_list));
+ 
+ out:
++	ASSERT(PageLocked(page));
++	ASSERT(!PageWriteback(page));
++
+ 	/*
+ 	 * On error, we have to fail the ioend here because we have locked
+ 	 * buffers in the ioend. If we don't do this, we'll deadlock
+@@ -905,7 +884,21 @@ xfs_writepage_map(
+ 	 * treated correctly on error.
+ 	 */
+ 	if (count) {
+-		xfs_start_page_writeback(page, !error);
++		/*
++		 * If the page was not fully cleaned, we need to ensure that the
++		 * higher layers come back to it correctly.  That means we need
++		 * to keep the page dirty, and for WB_SYNC_ALL writeback we need
++		 * to ensure the PAGECACHE_TAG_TOWRITE index mark is not removed
++		 * so another attempt to write this page in this writeback sweep
++		 * will be made.
++		 */
++		if (error) {
++			set_page_writeback_keepwrite(page);
++		} else {
++			clear_page_dirty_for_io(page);
++			set_page_writeback(page);
++		}
++		unlock_page(page);
+ 
+ 		/*
+ 		 * Preserve the original error if there was one, otherwise catch
+@@ -930,7 +923,9 @@ xfs_writepage_map(
+ 		 * race with a partial page truncate on a sub-page block sized
+ 		 * filesystem. In that case we need to mark the page clean.
+ 		 */
+-		xfs_start_page_writeback(page, 1);
++		clear_page_dirty_for_io(page);
++		set_page_writeback(page);
++		unlock_page(page);
+ 		end_page_writeback(page);
+ 	}
+ 
+-- 
+2.17.0
+
