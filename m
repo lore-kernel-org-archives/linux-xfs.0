@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:49714 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:51458 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750957AbeERQsp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 12:48:45 -0400
+        with ESMTP id S1752171AbeERQt5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 12:49:57 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 04/34] fs: remove the buffer_unwritten check in page_seek_hole_data
-Date: Fri, 18 May 2018 18:48:00 +0200
-Message-Id: <20180518164830.1552-5-hch@lst.de>
+Subject: [PATCH 27/34] xfs: don't clear imap_valid for a non-uptodate buffers
+Date: Fri, 18 May 2018 18:48:23 +0200
+Message-Id: <20180518164830.1552-28-hch@lst.de>
 In-Reply-To: <20180518164830.1552-1-hch@lst.de>
 References: <20180518164830.1552-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,47 +15,38 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-We only call into this function through the iomap iterators, so we already
-know the buffer is unwritten.  In addition to that we always require the
-uptodate flag that is ORed with the result anyway.
+Finding a buffer that isn't uptodate doesn't invalidate the mapping for
+any given block.  The last_sector check will already take care of starting
+another ioend as soon as we find any non-update buffer, and if the current
+mapping doesn't include the next uptodate buffer the xfs_imap_valid check
+will take care of it.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/iomap.c | 13 ++++---------
- 1 file changed, 4 insertions(+), 9 deletions(-)
+ fs/xfs/xfs_aops.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 4a01d2f4e8e9..bef5e91d40bf 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -611,14 +611,9 @@ page_seek_hole_data(struct page *page, loff_t lastoff, int whence)
- 			continue;
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index b1dee2171194..82fd08c29f7f 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -859,15 +859,12 @@ xfs_writepage_map(
+ 			break;
  
  		/*
--		 * Unwritten extents that have data in the page cache covering
--		 * them can be identified by the BH_Unwritten state flag.
--		 * Pages with multiple buffers might have a mix of holes, data
--		 * and unwritten extents - any buffer with valid data in it
--		 * should have BH_Uptodate flag set on it.
-+		 * Any buffer with valid data in it should have BH_Uptodate set.
+-		 * Block does not contain valid data, skip it, mark the current
+-		 * map as invalid because we have a discontiguity. This ensures
+-		 * we put subsequent writeable buffers into a new ioend.
++		 * Block does not contain valid data, skip it.
  		 */
--
--		if ((buffer_unwritten(bh) || buffer_uptodate(bh)) == seek_data)
-+		if (buffer_uptodate(bh) == seek_data)
- 			return lastoff;
+ 		if (!buffer_uptodate(bh)) {
+ 			if (PageUptodate(page))
+ 				ASSERT(buffer_mapped(bh));
+ 			uptodate = false;
+-			wpc->imap_valid = false;
+ 			continue;
+ 		}
  
- 		lastoff = offset;
-@@ -630,8 +625,8 @@ page_seek_hole_data(struct page *page, loff_t lastoff, int whence)
-  * Seek for SEEK_DATA / SEEK_HOLE in the page cache.
-  *
-  * Within unwritten extents, the page cache determines which parts are holes
-- * and which are data: unwritten and uptodate buffer heads count as data;
-- * everything else counts as a hole.
-+ * and which are data: uptodate buffer heads count as data; everything else
-+ * counts as a hole.
-  *
-  * Returns the resulting offset on successs, and -ENOENT otherwise.
-  */
 -- 
 2.17.0
 
