@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:49788 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:51546 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751906AbeERQsx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 12:48:53 -0400
+        with ESMTP id S1752457AbeERQt6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 12:49:58 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 07/34] mm: return an unsigned int from __do_page_cache_readahead
-Date: Fri, 18 May 2018 18:48:03 +0200
-Message-Id: <20180518164830.1552-8-hch@lst.de>
+Subject: [PATCH 28/34] xfs: remove the imap_valid flag
+Date: Fri, 18 May 2018 18:48:24 +0200
+Message-Id: <20180518164830.1552-29-hch@lst.de>
 In-Reply-To: <20180518164830.1552-1-hch@lst.de>
 References: <20180518164830.1552-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,73 +15,58 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-We never return an error, so switch to returning an unsigned int.  Most
-callers already did implicit casts to an unsigned type, and the one that
-didn't can be simplified now.
+Simplify the way we check for a valid imap - we know we have a valid
+mapping after xfs_map_blocks returned successfully, and we know we can
+call xfs_imap_valid on any imap, as it will always fail on a
+zero-initialized map.
 
-Suggested-by: Matthew Wilcox <willy@infradead.org>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- mm/internal.h  |  2 +-
- mm/readahead.c | 15 +++++----------
- 2 files changed, 6 insertions(+), 11 deletions(-)
+ fs/xfs/xfs_aops.c | 11 ++---------
+ 1 file changed, 2 insertions(+), 9 deletions(-)
 
-diff --git a/mm/internal.h b/mm/internal.h
-index 62d8c34e63d5..954003ac766a 100644
---- a/mm/internal.h
-+++ b/mm/internal.h
-@@ -53,7 +53,7 @@ void unmap_page_range(struct mmu_gather *tlb,
- 			     unsigned long addr, unsigned long end,
- 			     struct zap_details *details);
- 
--extern int __do_page_cache_readahead(struct address_space *mapping,
-+extern unsigned int __do_page_cache_readahead(struct address_space *mapping,
- 		struct file *filp, pgoff_t offset, unsigned long nr_to_read,
- 		unsigned long lookahead_size);
- 
-diff --git a/mm/readahead.c b/mm/readahead.c
-index 16d0cb1e2616..fa4d4b767130 100644
---- a/mm/readahead.c
-+++ b/mm/readahead.c
-@@ -147,16 +147,16 @@ static int read_pages(struct address_space *mapping, struct file *filp,
-  *
-  * Returns the number of pages requested, or the maximum amount of I/O allowed.
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 82fd08c29f7f..f01c1dd737ec 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -42,7 +42,6 @@
   */
--int __do_page_cache_readahead(struct address_space *mapping, struct file *filp,
--			pgoff_t offset, unsigned long nr_to_read,
--			unsigned long lookahead_size)
-+unsigned int __do_page_cache_readahead(struct address_space *mapping,
-+		struct file *filp, pgoff_t offset, unsigned long nr_to_read,
-+		unsigned long lookahead_size)
- {
- 	struct inode *inode = mapping->host;
- 	struct page *page;
- 	unsigned long end_index;	/* The last page we want to read */
- 	LIST_HEAD(page_pool);
- 	int page_idx;
--	int nr_pages = 0;
-+	unsigned int nr_pages = 0;
- 	loff_t isize = i_size_read(inode);
- 	gfp_t gfp_mask = readahead_gfp_mask(mapping);
+ struct xfs_writepage_ctx {
+ 	struct xfs_bmbt_irec    imap;
+-	bool			imap_valid;
+ 	unsigned int		io_type;
+ 	struct xfs_ioend	*ioend;
+ 	sector_t		last_block;
+@@ -868,10 +867,6 @@ xfs_writepage_map(
+ 			continue;
+ 		}
  
-@@ -223,16 +223,11 @@ int force_page_cache_readahead(struct address_space *mapping, struct file *filp,
- 	max_pages = max_t(unsigned long, bdi->io_pages, ra->ra_pages);
- 	nr_to_read = min(nr_to_read, max_pages);
- 	while (nr_to_read) {
--		int err;
--
- 		unsigned long this_chunk = (2 * 1024 * 1024) / PAGE_SIZE;
+-		/* Check to see if current map spans this file offset */
+-		if (wpc->imap_valid)
+-			wpc->imap_valid = xfs_imap_valid(inode, &wpc->imap,
+-							 file_offset);
+ 		/*
+ 		 * If we don't have a valid map, now it's time to get a new one
+ 		 * for this offset.  This will convert delayed allocations
+@@ -879,16 +874,14 @@ xfs_writepage_map(
+ 		 * a valid map, it means we landed in a hole and we skip the
+ 		 * block.
+ 		 */
+-		if (!wpc->imap_valid) {
++		if (!xfs_imap_valid(inode, &wpc->imap, file_offset)) {
+ 			error = xfs_map_blocks(inode, file_offset, &wpc->imap,
+ 					     &wpc->io_type);
+ 			if (error)
+ 				goto out;
+-			wpc->imap_valid = xfs_imap_valid(inode, &wpc->imap,
+-							 file_offset);
+ 		}
  
- 		if (this_chunk > nr_to_read)
- 			this_chunk = nr_to_read;
--		err = __do_page_cache_readahead(mapping, filp,
--						offset, this_chunk, 0);
--		if (err < 0)
--			return err;
-+		__do_page_cache_readahead(mapping, filp, offset, this_chunk, 0);
- 
- 		offset += this_chunk;
- 		nr_to_read -= this_chunk;
+-		if (!wpc->imap_valid || wpc->io_type == XFS_IO_HOLE) {
++		if (wpc->io_type == XFS_IO_HOLE) {
+ 			/*
+ 			 * set_page_dirty dirties all buffers in a page, independent
+ 			 * of their state.  The dirty state however is entirely
 -- 
 2.17.0
 
