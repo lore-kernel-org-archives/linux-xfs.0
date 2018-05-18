@@ -1,140 +1,128 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:42609 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750763AbeEROnO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 10:43:14 -0400
-Received: by mail-oi0-f65.google.com with SMTP id t27-v6so7300232oij.9
-        for <linux-xfs@vger.kernel.org>; Fri, 18 May 2018 07:43:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20180516001342.GK23861@dastard>
-References: <5398ddaf2b876c3563bc1c2927bfe1b9@ruhr-uni-bochum.de>
- <866a5e96-e900-d330-0efb-6413f85f86a3@sandeen.net> <20180514225751.GB10363@dastard>
- <b2fe69d6216f165b2c84ca5a377d06ab@ruhr-uni-bochum.de> <20180515012926.GC10363@dastard>
- <CAMU1PDgMH_K1N71SmkwDj159wTjFM3js-hhFGr8uE_GhmLn5mA@mail.gmail.com> <20180516001342.GK23861@dastard>
-From: Mike Fleetwood <mike.fleetwood@googlemail.com>
-Date: Fri, 18 May 2018 15:43:13 +0100
-Message-ID: <CAMU1PDg-aOE-gakEtktq8nDRWXcsdorcx0a25_uQ_MFM1nUTpQ@mail.gmail.com>
-Subject: Re: How to reliably measure fs usage with reflinks enabled?
-Content-Type: text/plain; charset="UTF-8"
+Received: from bombadil.infradead.org ([198.137.202.133]:49700 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751049AbeERQsk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 12:48:40 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 02/34] fs: factor out a __generic_write_end helper
+Date: Fri, 18 May 2018 18:47:58 +0200
+Message-Id: <20180518164830.1552-3-hch@lst.de>
+In-Reply-To: <20180518164830.1552-1-hch@lst.de>
+References: <20180518164830.1552-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Tarik Ceylan <Tarik.Ceylan@ruhr-uni-bochum.de>, linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-(Sorry for the late reply, work commitments)
+Bits of the buffer.c based write_end implementations that don't know
+about buffer_heads and can be reused by other implementations.
 
-On 16 May 2018 at 01:13, Dave Chinner <david@fromorbit.com> wrote:
-> On Tue, May 15, 2018 at 02:52:30PM +0100, Mike Fleetwood wrote:
->> On 15 May 2018 at 02:29, Dave Chinner <david@fromorbit.com> wrote:
->> > So the reflink code reserved ~7GB of space in the filesystem (less
->> > than 1%) for it's own reflink related metadata if it ever needs it.
->> > It hasn't used it yet but we need to make sure that it's available
->> > when the filesystem is near ENOSPC. Hence it's considered used space
->> > because users cannot store user data in that space.
->> >
->> > The change I plan to make is to reduce the user reported filesystem
->> > size rather than account for it as used space. IOWs, you'd see a
->> > filesystem size of 889G instead of 896G, but have only 8.8GB used.
->> > It means exactly the same thingi and will behave exactly the same
->> > way, it's just a different space accounting technique....
->>
->> I'm one of the authors of GParted and it uses the reported file system
->> size [1] and compares it to the block device size to see if the file
->> system fills the partition or not and whether to show unallocated space
->> to the user and advise them to grown the file system to fill the block
->> device [2].  As such we prefer that the reported size of the file system
->> match the highest offset that the file system can write to in the block
->> device.
->
-> I think that's a narrow, use case specific assumption. There is
-> absolutely no guarantee that the filesystem on a device fills the
-> entire device or that the filesystem space reported by df/statvfs
-> accurately reflects the size of the underlying block device.
->
-> Filesystems are moving towards a virtualised world where space usage
-> and capacity is kept separate from the capacity of the underlying
-> storage provider. That's a solid direction we are moving with xfs:
->
-> https://www.spinics.net/lists/linux-xfs/msg12216.html
->
-> so we can support subvolumes:
->
-> https://www.youtube.com/watch?v=wG8FUvSGROw
->
-> via a virtual block address space that remaps the filesystem space
-> accounting away from the underlying physical block device:
->
-> https://lwn.net/SubscriberLink/753650/32230c15f3453808/
->
-> This will completely break any assumption that the filesystem size
-> is related to the underlying storage device(s).
->
-> GParted deals very firmly with a specific aspect of disk based
-> storage - managing partitions on a physical block device.
-> Filesystems need to move beyond physical block devices - sanely
-> supporting sparse virtual block devices has been on everyone's
-> enterprise filesystem wish list for years.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/buffer.c   | 67 +++++++++++++++++++++++++++------------------------
+ fs/internal.h |  2 ++
+ 2 files changed, 37 insertions(+), 32 deletions(-)
 
-Agreed that GParted is a tool for simple storage setups with current
-full fat block devices and file systems.  As such enterprise users with
-multiple levels in their storage stack is not it's target audience.
+diff --git a/fs/buffer.c b/fs/buffer.c
+index 249b83fafe48..bd964b2ad99a 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -2076,6 +2076,40 @@ int block_write_begin(struct address_space *mapping, loff_t pos, unsigned len,
+ }
+ EXPORT_SYMBOL(block_write_begin);
+ 
++int __generic_write_end(struct inode *inode, loff_t pos, unsigned copied,
++		struct page *page)
++{
++	loff_t old_size = inode->i_size;
++	bool i_size_changed = false;
++
++	/*
++	 * No need to use i_size_read() here, the i_size cannot change under us
++	 * because we hold i_rwsem.
++	 *
++	 * But it's important to update i_size while still holding page lock:
++	 * page writeout could otherwise come in and zero beyond i_size.
++	 */
++	if (pos + copied > inode->i_size) {
++		i_size_write(inode, pos + copied);
++		i_size_changed = true;
++	}
++
++	unlock_page(page);
++	put_page(page);
++
++	if (old_size < pos)
++		pagecache_isize_extended(inode, old_size, pos);
++	/*
++	 * Don't mark the inode dirty under page lock. First, it unnecessarily
++	 * makes the holding time of page lock longer. Second, it forces lock
++	 * ordering of page lock and transaction start for journaling
++	 * filesystems.
++	 */
++	if (i_size_changed)
++		mark_inode_dirty(inode);
++	return copied;
++}
++
+ int block_write_end(struct file *file, struct address_space *mapping,
+ 			loff_t pos, unsigned len, unsigned copied,
+ 			struct page *page, void *fsdata)
+@@ -2116,39 +2150,8 @@ int generic_write_end(struct file *file, struct address_space *mapping,
+ 			loff_t pos, unsigned len, unsigned copied,
+ 			struct page *page, void *fsdata)
+ {
+-	struct inode *inode = mapping->host;
+-	loff_t old_size = inode->i_size;
+-	int i_size_changed = 0;
+-
+ 	copied = block_write_end(file, mapping, pos, len, copied, page, fsdata);
+-
+-	/*
+-	 * No need to use i_size_read() here, the i_size
+-	 * cannot change under us because we hold i_mutex.
+-	 *
+-	 * But it's important to update i_size while still holding page lock:
+-	 * page writeout could otherwise come in and zero beyond i_size.
+-	 */
+-	if (pos+copied > inode->i_size) {
+-		i_size_write(inode, pos+copied);
+-		i_size_changed = 1;
+-	}
+-
+-	unlock_page(page);
+-	put_page(page);
+-
+-	if (old_size < pos)
+-		pagecache_isize_extended(inode, old_size, pos);
+-	/*
+-	 * Don't mark the inode dirty under page lock. First, it unnecessarily
+-	 * makes the holding time of page lock longer. Second, it forces lock
+-	 * ordering of page lock and transaction start for journaling
+-	 * filesystems.
+-	 */
+-	if (i_size_changed)
+-		mark_inode_dirty(inode);
+-
+-	return copied;
++	return __generic_write_end(mapping->host, pos, copied, page);
+ }
+ EXPORT_SYMBOL(generic_write_end);
+ 
+diff --git a/fs/internal.h b/fs/internal.h
+index e08972db0303..b955232d3d49 100644
+--- a/fs/internal.h
++++ b/fs/internal.h
+@@ -43,6 +43,8 @@ static inline int __sync_blockdev(struct block_device *bdev, int wait)
+ extern void guard_bio_eod(int rw, struct bio *bio);
+ extern int __block_write_begin_int(struct page *page, loff_t pos, unsigned len,
+ 		get_block_t *get_block, struct iomap *iomap);
++int __generic_write_end(struct inode *inode, loff_t pos, unsigned copied,
++		struct page *page);
+ 
+ /*
+  * char_dev.c
+-- 
+2.17.0
 
-> GParted doesn't have to support these new features - it can simply
-> turn them off for filesystems it creates on physical disk
-> partitions, but we're doing stuff to support the storage models
-> needed for container hosting, virtualisation, efficient backups and
-> cloning, etc. If that means we have to break assumptions that legacy
-> infrastructure make to support those new features, then so be it....
->
-> <snip>
->
->> [2] For full disclosure, because tools for various FSs under report
->>     their file system size, there is a heuristic that there must be at
->>     least 2% difference before unallocated space and grow file system
->>     recommendation is generated so under reporting the FS size by less
->>     than 1% wouldn't actually be an issue. for us.
->
-> So, an ext3 example on a small root filesystem:
->
-> $ grep sda1 /proc/partitions
->    8        1    9984366 sda1
-> $ df -k /
-> Filesystem     1K-blocks    Used Available Use% Mounted on
-> /dev/root        9696448 8615892    581340  94% /
-> $
->
-> Just under 3% difference between fs reported size and the block
-> device size, and obviously GParted has been fine with this sort of
-> discrepancy on ext3 for the past 15+years. IIRC the XFS metadata
-> reservations max out at around 3% of total filesystem space, so
-> GParted should be just fine with us hiding them by reducing total
-> filesystem size...
-
-(I assume you are aware, but for completeness ...)
-By default ext2/4 kernel code subtracts some overhead blocks from the
-statvfs reported f_blocks figure.  This is documented in mount(8)
-against the bsddf/minixdf options.
-
-So after checking, GParted was modified to use the dumpe2fs command to
-read the superblock to get the file system size for mounted ext* file
-systems too.
-
-https://marc.info/?l=linux-ext4&m=134706477618732&w=2
-
-I see that xfs_db doesn't allow reading the super block of mounted XFS
-file systems.  So for the case of a mounted XFS on full fat block device
-I guess I'll wait and see how much overhead is subtracted from the
-statvfs f_blocks figure and make sure GParted accounts for that.
-
->> Just providing an app authors point of view.
->
-> *nod*.
->
-> We're aware that we need to let existing apps continue to work on
-> existing formats and features. But we need to break from the old
-> ways to do what people are asking us to do, so we're not going to
-> lock ourselves in. If we're not breaking old things and making
-> people unhappy, then we're not making sufficient progress.
-
-Mike
