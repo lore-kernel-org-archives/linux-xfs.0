@@ -1,56 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:49980 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752274AbeERQtX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 12:49:23 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 17/34] xfs: use iomap_bmap
-Date: Fri, 18 May 2018 18:48:13 +0200
-Message-Id: <20180518164830.1552-18-hch@lst.de>
-In-Reply-To: <20180518164830.1552-1-hch@lst.de>
-References: <20180518164830.1552-1-hch@lst.de>
+Received: from userp2120.oracle.com ([156.151.31.85]:43088 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751698AbeERDrh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 May 2018 23:47:37 -0400
+Date: Thu, 17 May 2018 20:47:32 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH 0.5/22] xfs: grab the per-ag structure whenever relevant
+Message-ID: <20180518034732.GX23858@magnolia>
+References: <152642361893.1556.9335169821674946249.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <152642361893.1556.9335169821674946249.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
+To: linux-xfs@vger.kernel.org, david@fromorbit.com
 
-Switch to the iomap based bmap implementation to get rid of one of the
-last users of xfs_get_blocks.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Grab and hold the per-AG data across a scrub run whenever relevant.
+This helps us avoid repeated trips through rcu in the repair code.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_aops.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+ fs/xfs/scrub/common.c |   17 +++++++++++++++++
+ fs/xfs/scrub/common.h |    1 +
+ fs/xfs/scrub/scrub.h  |    1 +
+ 3 files changed, 19 insertions(+)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 80de476cecf8..56e405572909 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1378,10 +1378,9 @@ xfs_vm_bmap(
- 	struct address_space	*mapping,
- 	sector_t		block)
- {
--	struct inode		*inode = (struct inode *)mapping->host;
--	struct xfs_inode	*ip = XFS_I(inode);
-+	struct xfs_inode	*ip = XFS_I(mapping->host);
- 
--	trace_xfs_vm_bmap(XFS_I(inode));
-+	trace_xfs_vm_bmap(ip);
- 
- 	/*
- 	 * The swap code (ab-)uses ->bmap to get a block mapping and then
-@@ -1394,9 +1393,7 @@ xfs_vm_bmap(
- 	 */
- 	if (xfs_is_reflink_inode(ip) || XFS_IS_REALTIME_INODE(ip))
- 		return 0;
--
--	filemap_write_and_wait(mapping);
--	return generic_block_bmap(mapping, block, xfs_get_blocks);
-+	return iomap_bmap(mapping, block, &xfs_iomap_ops);
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index 518bff2be0c9..d3e5adc96411 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -541,6 +541,10 @@ xfs_scrub_ag_free(
+ 		xfs_trans_brelse(sc->tp, sa->agi_bp);
+ 		sa->agi_bp = NULL;
+ 	}
++	if (sa->pag) {
++		xfs_perag_put(sa->pag);
++		sa->pag = NULL;
++	}
+ 	sa->agno = NULLAGNUMBER;
  }
  
- STATIC int
--- 
-2.17.0
-
+@@ -568,6 +572,19 @@ xfs_scrub_ag_init(
+ 	return xfs_scrub_ag_btcur_init(sc, sa);
+ }
+ 
++/*
++ * Grab the per-ag structure if we haven't already gotten it.  Teardown of the
++ * xfs_scrub_ag will release it for us.
++ */
++void
++xfs_scrub_perag_get(
++	struct xfs_mount	*mp,
++	struct xfs_scrub_ag	*sa)
++{
++	if (!sa->pag)
++		sa->pag = xfs_perag_get(mp, sa->agno);
++}
++
+ /* Per-scrubber setup functions */
+ 
+ /*
+diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+index a660087b606e..fbb91a7144fd 100644
+--- a/fs/xfs/scrub/common.h
++++ b/fs/xfs/scrub/common.h
+@@ -123,6 +123,7 @@ xfs_scrub_setup_quota(struct xfs_scrub_context *sc, struct xfs_inode *ip)
+ void xfs_scrub_ag_free(struct xfs_scrub_context *sc, struct xfs_scrub_ag *sa);
+ int xfs_scrub_ag_init(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
+ 		      struct xfs_scrub_ag *sa);
++void xfs_scrub_perag_get(struct xfs_mount *mp, struct xfs_scrub_ag *sa);
+ int xfs_scrub_ag_read_headers(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
+ 			      struct xfs_buf **agi, struct xfs_buf **agf,
+ 			      struct xfs_buf **agfl);
+diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
+index 2f89a84a0e10..636424d5e2ee 100644
+--- a/fs/xfs/scrub/scrub.h
++++ b/fs/xfs/scrub/scrub.h
+@@ -51,6 +51,7 @@ struct xfs_scrub_meta_ops {
+ /* Buffer pointers and btree cursors for an entire AG. */
+ struct xfs_scrub_ag {
+ 	xfs_agnumber_t			agno;
++	struct xfs_perag		*pag;
+ 
+ 	/* AG btree roots */
+ 	struct xfs_buf			*agf_bp;
