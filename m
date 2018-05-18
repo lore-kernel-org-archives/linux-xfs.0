@@ -1,88 +1,188 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56687 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751009AbeERV5p (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 18 May 2018 17:57:45 -0400
-From: Mark Fasheh <mfasheh@suse.de>
-Subject: [PATCH v2 1/2] vfs: allow dedupe of user owned read-only files
-Date: Fri, 18 May 2018 14:57:26 -0700
-Message-Id: <20180518215727.26418-2-mfasheh@suse.de>
-In-Reply-To: <20180518215727.26418-1-mfasheh@suse.de>
-References: <20180518215727.26418-1-mfasheh@suse.de>
+Received: from bombadil.infradead.org ([198.137.202.133]:49692 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750957AbeERQsh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 12:48:37 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 01/34] block: add a lower-level bio_add_page interface
+Date: Fri, 18 May 2018 18:47:57 +0200
+Message-Id: <20180518164830.1552-2-hch@lst.de>
+In-Reply-To: <20180518164830.1552-1-hch@lst.de>
+References: <20180518164830.1552-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, Adam Borowski <kilobyte@angband.pl>, Mark Fasheh <mfasheh@suse.de>
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-The permission check in vfs_dedupe_file_range() is too coarse - We
-only allow dedupe of the destination file if the user is root, or
-they have the file open for write.
+For the upcoming removal of buffer heads in XFS we need to keep track of
+the number of outstanding writeback requests per page.  For this we need
+to know if bio_add_page merged a region with the previous bvec or not.
+Instead of adding additional arguments this refactors bio_add_page to
+be implemented using three lower level helpers which users like XFS can
+use directly if they care about the merge decisions.
 
-This effectively limits a non-root user from deduping their own read-only
-files. In addition, the write file descriptor that the user is forced to
-hold open can prevent execution of files. As file data during a dedupe
-does not change, the behavior is unexpected and this has caused a number of
-issue reports. For an example, see:
-
-https://github.com/markfasheh/duperemove/issues/129
-
-So change the check so we allow dedupe on the target if:
-
-- the root or admin is asking for it
-- the process has write access
-- the owner of the file is asking for the dedupe
-- the process could get write access
-
-That way users can open read-only and still get dedupe.
-
-Signed-off-by: Mark Fasheh <mfasheh@suse.de>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/read_write.c | 17 +++++++++++++++--
- 1 file changed, 15 insertions(+), 2 deletions(-)
+ block/bio.c         | 96 +++++++++++++++++++++++++++++----------------
+ include/linux/bio.h |  9 +++++
+ 2 files changed, 72 insertions(+), 33 deletions(-)
 
-diff --git a/fs/read_write.c b/fs/read_write.c
-index c4eabbfc90df..cbea4ce58ad1 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -1964,6 +1964,20 @@ int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
- }
- EXPORT_SYMBOL(vfs_dedupe_file_range_compare);
+diff --git a/block/bio.c b/block/bio.c
+index 53e0f0a1ed94..fdf635d42bbd 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -773,7 +773,7 @@ int bio_add_pc_page(struct request_queue *q, struct bio *bio, struct page
+ 			return 0;
+ 	}
  
-+/* Check whether we are allowed to dedupe the destination file */
-+static int allow_file_dedupe(struct file *file)
+-	if (bio->bi_vcnt >= bio->bi_max_vecs)
++	if (bio_full(bio))
+ 		return 0;
+ 
+ 	/*
+@@ -821,52 +821,82 @@ int bio_add_pc_page(struct request_queue *q, struct bio *bio, struct page
+ EXPORT_SYMBOL(bio_add_pc_page);
+ 
+ /**
+- *	bio_add_page	-	attempt to add page to bio
+- *	@bio: destination bio
+- *	@page: page to add
+- *	@len: vec entry length
+- *	@offset: vec entry offset
++ * __bio_try_merge_page - try appending data to an existing bvec.
++ * @bio: destination bio
++ * @page: page to add
++ * @len: length of the data to add
++ * @off: offset of the data in @page
+  *
+- *	Attempt to add a page to the bio_vec maplist. This will only fail
+- *	if either bio->bi_vcnt == bio->bi_max_vecs or it's a cloned bio.
++ * Try to add the data at @page + @off to the last bvec of @bio.  This is a
++ * a useful optimisation for file systems with a block size smaller than the
++ * page size.
++ *
++ * Return %true on success or %false on failure.
+  */
+-int bio_add_page(struct bio *bio, struct page *page,
+-		 unsigned int len, unsigned int offset)
++bool __bio_try_merge_page(struct bio *bio, struct page *page,
++		unsigned int len, unsigned int off)
+ {
+-	struct bio_vec *bv;
+-
+-	/*
+-	 * cloned bio must not modify vec list
+-	 */
+ 	if (WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED)))
+-		return 0;
++		return false;
+ 
+-	/*
+-	 * For filesystems with a blocksize smaller than the pagesize
+-	 * we will often be called with the same page as last time and
+-	 * a consecutive offset.  Optimize this special case.
+-	 */
+ 	if (bio->bi_vcnt > 0) {
+-		bv = &bio->bi_io_vec[bio->bi_vcnt - 1];
++		struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt - 1];
+ 
+-		if (page == bv->bv_page &&
+-		    offset == bv->bv_offset + bv->bv_len) {
++		if (page == bv->bv_page && off == bv->bv_offset + bv->bv_len) {
+ 			bv->bv_len += len;
+-			goto done;
++			bio->bi_iter.bi_size += len;
++			return true;
+ 		}
+ 	}
++	return false;
++}
++EXPORT_SYMBOL_GPL(__bio_try_merge_page);
+ 
+-	if (bio->bi_vcnt >= bio->bi_max_vecs)
+-		return 0;
++/**
++ * __bio_add_page - add page to a bio in a new segment
++ * @bio: destination bio
++ * @page: page to add
++ * @len: length of the data to add
++ * @off: offset of the data in @page
++ *
++ * Add the data at @page + @off to @bio as a new bvec.  The caller must ensure
++ * that @bio has space for another bvec.
++ */
++void __bio_add_page(struct bio *bio, struct page *page,
++		unsigned int len, unsigned int off)
 +{
-+	if (capable(CAP_SYS_ADMIN))
-+		return 1;
-+	if (file->f_mode & FMODE_WRITE)
-+		return 1;
-+	if (uid_eq(current_fsuid(), file_inode(file)->i_uid))
-+		return 1;
-+	if (!inode_permission(file_inode(file), MAY_WRITE))
-+		return 1;
-+	return 0;
++	struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt];
+ 
+-	bv		= &bio->bi_io_vec[bio->bi_vcnt];
+-	bv->bv_page	= page;
+-	bv->bv_len	= len;
+-	bv->bv_offset	= offset;
++	WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED));
++	WARN_ON_ONCE(bio_full(bio));
++
++	bv->bv_page = page;
++	bv->bv_offset = off;
++	bv->bv_len = len;
+ 
+-	bio->bi_vcnt++;
+-done:
+ 	bio->bi_iter.bi_size += len;
++	bio->bi_vcnt++;
++}
++EXPORT_SYMBOL_GPL(__bio_add_page);
++
++/**
++ *	bio_add_page	-	attempt to add page to bio
++ *	@bio: destination bio
++ *	@page: page to add
++ *	@len: vec entry length
++ *	@offset: vec entry offset
++ *
++ *	Attempt to add a page to the bio_vec maplist. This will only fail
++ *	if either bio->bi_vcnt == bio->bi_max_vecs or it's a cloned bio.
++ */
++int bio_add_page(struct bio *bio, struct page *page,
++		 unsigned int len, unsigned int offset)
++{
++	if (!__bio_try_merge_page(bio, page, len, offset)) {
++		if (bio_full(bio))
++			return 0;
++		__bio_add_page(bio, page, len, offset);
++	}
+ 	return len;
+ }
+ EXPORT_SYMBOL(bio_add_page);
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index ce547a25e8ae..3e73c8bc25ea 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -123,6 +123,11 @@ static inline void *bio_data(struct bio *bio)
+ 	return NULL;
+ }
+ 
++static inline bool bio_full(struct bio *bio)
++{
++	return bio->bi_vcnt >= bio->bi_max_vecs;
 +}
 +
- int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
- {
- 	struct file_dedupe_range_info *info;
-@@ -1972,7 +1986,6 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
- 	u64 len;
- 	int i;
- 	int ret;
--	bool is_admin = capable(CAP_SYS_ADMIN);
- 	u16 count = same->dest_count;
- 	struct file *dst_file;
- 	loff_t dst_off;
-@@ -2036,7 +2049,7 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
- 
- 		if (info->reserved) {
- 			info->status = -EINVAL;
--		} else if (!(is_admin || (dst_file->f_mode & FMODE_WRITE))) {
-+		} else if (!allow_file_dedupe(dst_file)) {
- 			info->status = -EINVAL;
- 		} else if (file->f_path.mnt != dst_file->f_path.mnt) {
- 			info->status = -EXDEV;
+ /*
+  * will die
+  */
+@@ -470,6 +475,10 @@ void bio_chain(struct bio *, struct bio *);
+ extern int bio_add_page(struct bio *, struct page *, unsigned int,unsigned int);
+ extern int bio_add_pc_page(struct request_queue *, struct bio *, struct page *,
+ 			   unsigned int, unsigned int);
++bool __bio_try_merge_page(struct bio *bio, struct page *page,
++		unsigned int len, unsigned int off);
++void __bio_add_page(struct bio *bio, struct page *page,
++		unsigned int len, unsigned int off);
+ int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter);
+ struct rq_map_data;
+ extern struct bio *bio_map_user_iov(struct request_queue *,
 -- 
-2.15.1
+2.17.0
 
