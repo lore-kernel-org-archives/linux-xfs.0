@@ -1,90 +1,152 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:43088 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751698AbeERDrh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 May 2018 23:47:37 -0400
-Date: Thu, 17 May 2018 20:47:32 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 0.5/22] xfs: grab the per-ag structure whenever relevant
-Message-ID: <20180518034732.GX23858@magnolia>
-References: <152642361893.1556.9335169821674946249.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <152642361893.1556.9335169821674946249.stgit@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:50028 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751816AbeERQtb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 12:49:31 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 20/34] xfs: simplify xfs_aops_discard_page
+Date: Fri, 18 May 2018 18:48:16 +0200
+Message-Id: <20180518164830.1552-21-hch@lst.de>
+In-Reply-To: <20180518164830.1552-1-hch@lst.de>
+References: <20180518164830.1552-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, david@fromorbit.com
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Instead of looking at the buffer heads to see if a block is delalloc just
+call xfs_bmap_punch_delalloc_range on the whole page - this will leave
+any non-delalloc block intact and handle the iteration for us.  As a side
+effect one more place stops caring about buffer heads and we can remove the
+xfs_check_page_type function entirely.
 
-Grab and hold the per-AG data across a scrub run whenever relevant.
-This helps us avoid repeated trips through rcu in the repair code.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/common.c |   17 +++++++++++++++++
- fs/xfs/scrub/common.h |    1 +
- fs/xfs/scrub/scrub.h  |    1 +
- 3 files changed, 19 insertions(+)
+ fs/xfs/xfs_aops.c | 85 +++++------------------------------------------
+ 1 file changed, 9 insertions(+), 76 deletions(-)
 
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 518bff2be0c9..d3e5adc96411 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -541,6 +541,10 @@ xfs_scrub_ag_free(
- 		xfs_trans_brelse(sc->tp, sa->agi_bp);
- 		sa->agi_bp = NULL;
- 	}
-+	if (sa->pag) {
-+		xfs_perag_put(sa->pag);
-+		sa->pag = NULL;
-+	}
- 	sa->agno = NULLAGNUMBER;
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index c631c457b444..f2333e351e07 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -711,49 +711,6 @@ xfs_map_at_offset(
+ 	clear_buffer_unwritten(bh);
  }
  
-@@ -568,6 +572,19 @@ xfs_scrub_ag_init(
- 	return xfs_scrub_ag_btcur_init(sc, sa);
+-/*
+- * Test if a given page contains at least one buffer of a given @type.
+- * If @check_all_buffers is true, then we walk all the buffers in the page to
+- * try to find one of the type passed in. If it is not set, then the caller only
+- * needs to check the first buffer on the page for a match.
+- */
+-STATIC bool
+-xfs_check_page_type(
+-	struct page		*page,
+-	unsigned int		type,
+-	bool			check_all_buffers)
+-{
+-	struct buffer_head	*bh;
+-	struct buffer_head	*head;
+-
+-	if (PageWriteback(page))
+-		return false;
+-	if (!page->mapping)
+-		return false;
+-	if (!page_has_buffers(page))
+-		return false;
+-
+-	bh = head = page_buffers(page);
+-	do {
+-		if (buffer_unwritten(bh)) {
+-			if (type == XFS_IO_UNWRITTEN)
+-				return true;
+-		} else if (buffer_delay(bh)) {
+-			if (type == XFS_IO_DELALLOC)
+-				return true;
+-		} else if (buffer_dirty(bh) && buffer_mapped(bh)) {
+-			if (type == XFS_IO_OVERWRITE)
+-				return true;
+-		}
+-
+-		/* If we are only checking the first buffer, we are done now. */
+-		if (!check_all_buffers)
+-			break;
+-	} while ((bh = bh->b_this_page) != head);
+-
+-	return false;
+-}
+-
+ STATIC void
+ xfs_vm_invalidatepage(
+ 	struct page		*page,
+@@ -785,9 +742,6 @@ xfs_vm_invalidatepage(
+  * transaction. Indeed - if we get ENOSPC errors, we have to be able to do this
+  * truncation without a transaction as there is no space left for block
+  * reservation (typically why we see a ENOSPC in writeback).
+- *
+- * This is not a performance critical path, so for now just do the punching a
+- * buffer head at a time.
+  */
+ STATIC void
+ xfs_aops_discard_page(
+@@ -795,47 +749,26 @@ xfs_aops_discard_page(
+ {
+ 	struct inode		*inode = page->mapping->host;
+ 	struct xfs_inode	*ip = XFS_I(inode);
+-	struct buffer_head	*bh, *head;
++	struct xfs_mount	*mp = ip->i_mount;
+ 	loff_t			offset = page_offset(page);
++	xfs_fileoff_t		start_fsb = XFS_B_TO_FSBT(mp, offset);
++	int			error;
+ 
+-	if (!xfs_check_page_type(page, XFS_IO_DELALLOC, true))
+-		goto out_invalidate;
+-
+-	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
++	if (XFS_FORCED_SHUTDOWN(mp))
+ 		goto out_invalidate;
+ 
+-	xfs_alert(ip->i_mount,
++	xfs_alert(mp,
+ 		"page discard on page "PTR_FMT", inode 0x%llx, offset %llu.",
+ 			page, ip->i_ino, offset);
+ 
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+-	bh = head = page_buffers(page);
+-	do {
+-		int		error;
+-		xfs_fileoff_t	start_fsb;
+-
+-		if (!buffer_delay(bh))
+-			goto next_buffer;
+-
+-		start_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
+-		error = xfs_bmap_punch_delalloc_range(ip, start_fsb, 1);
+-		if (error) {
+-			/* something screwed, just bail */
+-			if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+-				xfs_alert(ip->i_mount,
+-			"page discard unable to remove delalloc mapping.");
+-			}
+-			break;
+-		}
+-next_buffer:
+-		offset += i_blocksize(inode);
+-
+-	} while ((bh = bh->b_this_page) != head);
+-
++	error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
++			PAGE_SIZE / i_blocksize(inode));
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	if (error && !XFS_FORCED_SHUTDOWN(mp))
++		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
+ out_invalidate:
+ 	xfs_vm_invalidatepage(page, 0, PAGE_SIZE);
+-	return;
  }
  
-+/*
-+ * Grab the per-ag structure if we haven't already gotten it.  Teardown of the
-+ * xfs_scrub_ag will release it for us.
-+ */
-+void
-+xfs_scrub_perag_get(
-+	struct xfs_mount	*mp,
-+	struct xfs_scrub_ag	*sa)
-+{
-+	if (!sa->pag)
-+		sa->pag = xfs_perag_get(mp, sa->agno);
-+}
-+
- /* Per-scrubber setup functions */
- 
- /*
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index a660087b606e..fbb91a7144fd 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -123,6 +123,7 @@ xfs_scrub_setup_quota(struct xfs_scrub_context *sc, struct xfs_inode *ip)
- void xfs_scrub_ag_free(struct xfs_scrub_context *sc, struct xfs_scrub_ag *sa);
- int xfs_scrub_ag_init(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
- 		      struct xfs_scrub_ag *sa);
-+void xfs_scrub_perag_get(struct xfs_mount *mp, struct xfs_scrub_ag *sa);
- int xfs_scrub_ag_read_headers(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
- 			      struct xfs_buf **agi, struct xfs_buf **agf,
- 			      struct xfs_buf **agfl);
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index 2f89a84a0e10..636424d5e2ee 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -51,6 +51,7 @@ struct xfs_scrub_meta_ops {
- /* Buffer pointers and btree cursors for an entire AG. */
- struct xfs_scrub_ag {
- 	xfs_agnumber_t			agno;
-+	struct xfs_perag		*pag;
- 
- 	/* AG btree roots */
- 	struct xfs_buf			*agf_bp;
+ static int
+-- 
+2.17.0
+
