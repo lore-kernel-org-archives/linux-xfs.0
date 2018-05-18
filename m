@@ -1,345 +1,523 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:60870 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751698AbeERDtK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 May 2018 23:49:10 -0400
-Date: Thu, 17 May 2018 20:49:04 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 01/22] xfs: add helpers to deal with transaction
- allocation and rolling
-Message-ID: <20180518034904.GY23858@magnolia>
-References: <152642361893.1556.9335169821674946249.stgit@magnolia>
- <152642362544.1556.12056546958129943758.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <152642362544.1556.12056546958129943758.stgit@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:50116 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752386AbeERQti (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 12:49:38 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 22/34] xfs: make xfs_writepage_map extent map centric
+Date: Fri, 18 May 2018 18:48:18 +0200
+Message-Id: <20180518164830.1552-23-hch@lst.de>
+In-Reply-To: <20180518164830.1552-1-hch@lst.de>
+References: <20180518164830.1552-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, david@fromorbit.com
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-For repairs, we need to reserve at least as many blocks as we think
-we're going to need to rebuild the data structure, and we're going to
-need some helpers to roll transactions while maintaining locks on the AG
-headers so that other threads cannot wander into the middle of a repair.
+xfs_writepage_map() iterates over the bufferheads on a page to decide
+what sort of IO to do and what actions to take.  However, when it comes
+to reflink and deciding when it needs to execute a COW operation, we no
+longer look at the bufferhead state but instead we ignore than and look
+up internal state held in teh COW fork extent list.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+This means xfs_writepage_map() is somewhat confused. It does stuff, then
+ignores it, then tries to handle the impedence mismatch by shovelling the
+results inside the existing mapping code.  It works, but it's a bit of a
+mess and it makes it hard to fix the cached map bug that the writepage
+code currently has.
+
+To unify the two different mechanisms, we first have to choose a direction.
+That's already been set - we're de-emphasising bufferheads so they are no
+longer a control structure as we need to do taht to allow for eventual
+removal.  Hence we need to move away from looking at bufferhead state to
+determine what operations we need to perform.
+
+We can't completely get rid of bufferheads yet - they do contain some
+state that is absolutely necessary, such as whether that part of the page
+contains valid data or not (buffer_uptodate()).  Other state in the
+bufferhead is redundant:
+
+	BH_dirty - the page is dirty, so we can ignore this and just
+		write it
+	BH_delay - we have delalloc extent info in the DATA fork extent
+		tree
+	BH_unwritten - same as BH_delay
+	BH_mapped - indicates we've already used it once for IO and it is
+		mapped to a disk address. Needs to be ignored for COW
+		blocks.
+
+The BH_mapped flag is an interesting case - it's supposed to indicate that
+it's already mapped to disk and so we can just use it "as is".  In theory,
+we don't even have to do an extent lookup to find where to write it too,
+but we have to do that anyway to determine we are actually writing over a
+valid extent.  Hence it's not even serving the purpose of avoiding a an
+extent lookup during writeback, and so we can pretty much ignore it.
+Especially as we have to ignore it for COW operations...
+
+Therefore, use the extent map as the source of information to tell us
+what actions we need to take and what sort of IO we should perform.  The
+first step is integration xfs_map_blocks() and xfs_map_cow() and have
+xfs_map_blocks() set the io type according to what it looks up.  This
+means it can easily handle both normal overwrite and COW cases.  The
+only thing we also need to add is the ability to return hole mappings.
+
+We need to return and cache hole mappings now for the case of multiple
+blocks per page.  We no longer use the BH_mapped to indicate a block over
+a hole, so we have to get that info from xfs_map_blocks().  We cache it so
+that holes that span two pages don't need separate lookups.  This allows us
+to avoid ever doing write IO over a hole, too.
+
+Further, we need to drop the XFS_BMAPI_IGSTATE flag so that we don't
+combine contiguous written and unwritten extents into a single map.  The
+io type needs to match the extent type we are writing to so that we run the
+correct IO completion routine for the IO. There is scope for optimisation
+that would allow us to re-instate the XFS_BMAPI_IGSTATE flag, but this
+requires tweaks to code outside the scope of this change.
+
+Now that we have xfs_map_blocks() returning both a cached map and the type
+of IO we need to perform, we can rewrite xfs_writepage_map() to drop all
+the bufferhead control. It's also much simplified because it doesn't need
+to explicitly handle COW operations.  Instead of iterating bufferheads, it
+iterates blocks within the page and then looks up what per-block state is
+required from the appropriate bufferhead.  It then validates the cached
+map, and if it's not valid, we get a new map.  If we don't get a valid map
+or it's over a hole, we skip the block.
+
+At this point, we have to remap the bufferhead via xfs_map_at_offset().
+As previously noted, we had to do this even if the buffer was already
+mapped as the mapping would be stale for XFS_IO_DELALLOC, XFS_IO_UNWRITTEN
+and XFS_IO_COW IO types.  With xfs_map_blocks() now controlling the type,
+even XFS_IO_OVERWRITE types need remapping, as converted-but-not-yet-
+written delalloc extents beyond EOF can be reported at XFS_IO_OVERWRITE.
+Bufferheads that span such regions still need their BH_Delay flags cleared
+and their block numbers calculated, so we now unconditionally map each
+bufferhead before submission.
+
+But wait! There's more - remember the old "treat unwritten extents as
+holes on read" hack?  Yeah, that means we can have a dirty page with
+unmapped, unwritten bufferheads that contain data!  What makes these so
+special is that the unwritten "hole" bufferheads do not have a valid block
+device pointer, so if we attempt to write them xfs_add_to_ioend() blows
+up. So we make xfs_map_at_offset() do the "realtime or data device"
+lookup from the inode and ignore what was or wasn't put into the
+bufferhead when the buffer was instantiated.
+
+The astute reader will have realised by now that this code treats
+unwritten extents in multiple-blocks-per-page situations differently.
+If we get any combination of unwritten blocks on a dirty page that contain
+valid data in the page, we're going to convert them to real extents.  This
+can actually be a win, because it means that pages with interleaving
+unwritten and written blocks will get converted to a single written extent
+with zeros replacing the interspersed unwritten blocks.  This is actually
+good for reducing extent list and conversion overhead, and it means we
+issue a contiguous IO instead of lots of little ones.  The downside is
+that we use up a little extra IO bandwidth.  Neither of these seem like a
+bad thing given that spinning disks are seek sensitive, and SSDs/pmem have
+bandwidth to burn and the lower Io latency/CPU overhead of fewer, larger
+IOs will result in better performance on them...
+
+As a result of all this, the only state we actually care about from the
+bufferhead is a single flag - BH_Uptodate. We still use the bufferhead to
+pass some information to the bio via xfs_add_to_ioend(), but that is
+trivial to separate and pass explicitly.  This means we really only need
+1 bit of state per block per page from the buffered write path in the
+writeback path.  Everything else we do with the bufferhead is purely to
+make the buffered IO front end continue to work correctly. i.e we've
+pretty much marginalised bufferheads in the writeback path completely.
+
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+[hch: forward port + slight refactoring]
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
-v2: fix whacky rmap reservation code, better docs
----
- fs/xfs/scrub/bmap.c   |    2 -
- fs/xfs/scrub/common.c |   21 ++++++
- fs/xfs/scrub/common.h |    2 -
- fs/xfs/scrub/inode.c  |    4 +
- fs/xfs/scrub/repair.c |  160 +++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/repair.h |   12 ++++
- 6 files changed, 194 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_aops.c | 277 +++++++++++++++++++++-------------------------
+ fs/xfs/xfs_aops.h |   4 +-
+ 2 files changed, 130 insertions(+), 151 deletions(-)
 
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index 42a115e83739..eeadb33a701c 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -74,7 +74,7 @@ xfs_scrub_setup_inode_bmap(
- 	}
- 
- 	/* Got the inode, lock it and we're ready to go. */
--	error = xfs_scrub_trans_alloc(sc);
-+	error = xfs_scrub_trans_alloc(sc, 0);
- 	if (error)
- 		goto out;
- 	sc->ilock_flags |= XFS_ILOCK_EXCL;
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index d3e5adc96411..41198a5f872c 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -51,6 +51,7 @@
- #include "scrub/common.h"
- #include "scrub/trace.h"
- #include "scrub/btree.h"
-+#include "scrub/repair.h"
- 
- /* Common code for the metadata scrubbers. */
- 
-@@ -590,11 +591,22 @@ xfs_scrub_perag_get(
- /*
-  * Grab an empty transaction so that we can re-grab locked buffers if
-  * one of our btrees turns out to be cyclic.
-+ *
-+ * If we're going to repair something, we need to ask for the largest possible
-+ * log reservation so that we can handle the worst case scenario for metadata
-+ * updates while rebuilding a metadata item.  We also need to reserve as many
-+ * blocks in the head transaction as we think we're going to need to rebuild
-+ * the metadata object.
-  */
- int
- xfs_scrub_trans_alloc(
--	struct xfs_scrub_context	*sc)
-+	struct xfs_scrub_context	*sc,
-+	uint				resblks)
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 5dd09e83c81c..a50f69c2c602 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -378,78 +378,101 @@ xfs_map_blocks(
+ 	struct inode		*inode,
+ 	loff_t			offset,
+ 	struct xfs_bmbt_irec	*imap,
+-	int			type)
++	int			*type)
  {
-+	if (sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR)
-+		return xfs_trans_alloc(sc->mp, &M_RES(sc->mp)->tr_itruncate,
-+				resblks, 0, 0, &sc->tp);
-+
- 	return xfs_trans_alloc_empty(sc->mp, &sc->tp);
- }
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	ssize_t			count = i_blocksize(inode);
+ 	xfs_fileoff_t		offset_fsb, end_fsb;
++	int			whichfork = XFS_DATA_FORK;
+ 	int			error = 0;
+-	int			bmapi_flags = XFS_BMAPI_ENTIRE;
+ 	int			nimaps = 1;
  
-@@ -604,7 +616,10 @@ xfs_scrub_setup_fs(
- 	struct xfs_scrub_context	*sc,
- 	struct xfs_inode		*ip)
- {
--	return xfs_scrub_trans_alloc(sc);
-+	uint				resblks;
-+
-+	resblks = xfs_repair_calc_ag_resblks(sc);
-+	return xfs_scrub_trans_alloc(sc, resblks);
- }
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
  
- /* Set us up with AG headers and btree cursors. */
-@@ -734,7 +749,7 @@ xfs_scrub_setup_inode_contents(
- 	/* Got the inode, lock it and we're ready to go. */
- 	sc->ilock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
- 	xfs_ilock(sc->ip, sc->ilock_flags);
--	error = xfs_scrub_trans_alloc(sc);
-+	error = xfs_scrub_trans_alloc(sc, resblks);
- 	if (error)
- 		goto out;
- 	sc->ilock_flags |= XFS_ILOCK_EXCL;
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index fbb91a7144fd..76bb2d1d808c 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -38,7 +38,7 @@ xfs_scrub_should_terminate(
- 	return false;
- }
+-	/*
+-	 * Truncate can race with writeback since writeback doesn't take the
+-	 * iolock and truncate decreases the file size before it starts
+-	 * truncating the pages between new_size and old_size.  Therefore, we
+-	 * can end up in the situation where writeback gets a CoW fork mapping
+-	 * but the truncate makes the mapping invalid and we end up in here
+-	 * trying to get a new mapping.  Bail out here so that we simply never
+-	 * get a valid mapping and so we drop the write altogether.  The page
+-	 * truncation will kill the contents anyway.
+-	 */
+-	if (type == XFS_IO_COW && offset > i_size_read(inode))
+-		return 0;
+-
+-	ASSERT(type != XFS_IO_COW);
+-	if (type == XFS_IO_UNWRITTEN)
+-		bmapi_flags |= XFS_BMAPI_IGSTATE;
+-
+ 	xfs_ilock(ip, XFS_ILOCK_SHARED);
+ 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
+ 	       (ip->i_df.if_flags & XFS_IFEXTENTS));
+ 	ASSERT(offset <= mp->m_super->s_maxbytes);
  
--int xfs_scrub_trans_alloc(struct xfs_scrub_context *sc);
-+int xfs_scrub_trans_alloc(struct xfs_scrub_context *sc, uint resblks);
- bool xfs_scrub_process_error(struct xfs_scrub_context *sc, xfs_agnumber_t agno,
- 		xfs_agblock_t bno, int *error);
- bool xfs_scrub_fblock_process_error(struct xfs_scrub_context *sc, int whichfork,
-diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
-index 550c0cf70a92..0c696f7018de 100644
---- a/fs/xfs/scrub/inode.c
-+++ b/fs/xfs/scrub/inode.c
-@@ -67,7 +67,7 @@ xfs_scrub_setup_inode(
- 		break;
- 	case -EFSCORRUPTED:
- 	case -EFSBADCRC:
--		return xfs_scrub_trans_alloc(sc);
-+		return xfs_scrub_trans_alloc(sc, 0);
- 	default:
- 		return error;
- 	}
-@@ -75,7 +75,7 @@ xfs_scrub_setup_inode(
- 	/* Got the inode, lock it and we're ready to go. */
- 	sc->ilock_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
- 	xfs_ilock(sc->ip, sc->ilock_flags);
--	error = xfs_scrub_trans_alloc(sc);
-+	error = xfs_scrub_trans_alloc(sc, 0);
- 	if (error)
- 		goto out;
- 	sc->ilock_flags |= XFS_ILOCK_EXCL;
-diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index be30825c47c6..d86f8731a78f 100644
---- a/fs/xfs/scrub/repair.c
-+++ b/fs/xfs/scrub/repair.c
-@@ -128,3 +128,163 @@ xfs_repair_probe(
- 
- 	return 0;
- }
-+
-+/*
-+ * Roll a transaction, keeping the AG headers locked and reinitializing
-+ * the btree cursors.
-+ */
-+int
-+xfs_repair_roll_ag_trans(
-+	struct xfs_scrub_context	*sc)
-+{
-+	int				error;
-+
-+	/* Keep the AG header buffers locked so we can keep going. */
-+	xfs_trans_bhold(sc->tp, sc->sa.agi_bp);
-+	xfs_trans_bhold(sc->tp, sc->sa.agf_bp);
-+	xfs_trans_bhold(sc->tp, sc->sa.agfl_bp);
-+
-+	/* Roll the transaction. */
-+	error = xfs_trans_roll(&sc->tp);
-+	if (error)
-+		goto out_release;
-+
-+	/* Join AG headers to the new transaction. */
-+	xfs_trans_bjoin(sc->tp, sc->sa.agi_bp);
-+	xfs_trans_bjoin(sc->tp, sc->sa.agf_bp);
-+	xfs_trans_bjoin(sc->tp, sc->sa.agfl_bp);
-+
-+	return 0;
-+
-+out_release:
-+	/*
-+	 * Rolling failed, so release the hold on the buffers.  The
-+	 * buffers will be released during teardown on our way out
-+	 * of the kernel.
-+	 */
-+	xfs_trans_bhold_release(sc->tp, sc->sa.agi_bp);
-+	xfs_trans_bhold_release(sc->tp, sc->sa.agf_bp);
-+	xfs_trans_bhold_release(sc->tp, sc->sa.agfl_bp);
-+
-+	return error;
-+}
-+
-+/*
-+ * Does the given AG have enough space to rebuild a btree?  Neither AG
-+ * reservation can be critical, and we must have enough space (factoring
-+ * in AG reservations) to construct a whole btree.
-+ */
-+bool
-+xfs_repair_ag_has_space(
-+	struct xfs_perag		*pag,
-+	xfs_extlen_t			nr_blocks,
-+	enum xfs_ag_resv_type		type)
-+{
-+	return  !xfs_ag_resv_critical(pag, XFS_AG_RESV_RMAPBT) &&
-+		!xfs_ag_resv_critical(pag, XFS_AG_RESV_METADATA) &&
-+		pag->pagf_freeblks > xfs_ag_resv_needed(pag, type) + nr_blocks;
-+}
-+
-+/*
-+ * Figure out how many blocks to reserve for an AG repair.  We calculate the
-+ * worst case estimate for the number of blocks we'd need to rebuild one of
-+ * any type of per-AG btree.
-+ */
-+xfs_extlen_t
-+xfs_repair_calc_ag_resblks(
-+	struct xfs_scrub_context	*sc)
-+{
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_scrub_metadata	*sm = sc->sm;
-+	struct xfs_perag		*pag;
-+	struct xfs_buf			*bp;
-+	xfs_agino_t			icount = 0;
-+	xfs_extlen_t			aglen = 0;
-+	xfs_extlen_t			usedlen;
-+	xfs_extlen_t			freelen;
-+	xfs_extlen_t			bnobt_sz;
-+	xfs_extlen_t			inobt_sz;
-+	xfs_extlen_t			rmapbt_sz;
-+	xfs_extlen_t			refcbt_sz;
-+	int				error;
-+
-+	if (!(sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR))
-+		return 0;
-+
-+	/* Use in-core counters if possible. */
-+	pag = xfs_perag_get(mp, sm->sm_agno);
-+	if (pag->pagi_init)
-+		icount = pag->pagi_count;
-+
-+	/*
-+	 * Otherwise try to get the actual counters from disk; if not, make
-+	 * some worst case assumptions.
-+	 */
-+	if (icount == 0) {
-+		error = xfs_ialloc_read_agi(mp, NULL, sm->sm_agno, &bp);
-+		if (error) {
-+			icount = mp->m_sb.sb_agblocks / mp->m_sb.sb_inopblock;
-+		} else {
-+			icount = pag->pagi_count;
-+			xfs_buf_relse(bp);
-+		}
-+	}
-+
-+	/* Now grab the block counters from the AGF. */
-+	error = xfs_alloc_read_agf(mp, NULL, sm->sm_agno, 0, &bp);
-+	if (error) {
-+		aglen = mp->m_sb.sb_agblocks;
-+		freelen = aglen;
-+		usedlen = aglen;
-+	} else {
-+		aglen = be32_to_cpu(XFS_BUF_TO_AGF(bp)->agf_length);
-+		freelen = pag->pagf_freeblks;
-+		usedlen = aglen - freelen;
-+		xfs_buf_relse(bp);
-+	}
-+	xfs_perag_put(pag);
-+
-+	trace_xfs_repair_calc_ag_resblks(mp, sm->sm_agno, icount, aglen,
-+			freelen, usedlen);
-+
-+	/*
-+	 * Figure out how many blocks we'd need worst case to rebuild
-+	 * each type of btree.  Note that we can only rebuild the
-+	 * bnobt/cntbt or inobt/finobt as pairs.
-+	 */
-+	bnobt_sz = 2 * xfs_allocbt_calc_size(mp, freelen);
-+	if (xfs_sb_version_hassparseinodes(&mp->m_sb))
-+		inobt_sz = xfs_iallocbt_calc_size(mp, icount /
-+				XFS_INODES_PER_HOLEMASK_BIT);
-+	else
-+		inobt_sz = xfs_iallocbt_calc_size(mp, icount /
-+				XFS_INODES_PER_CHUNK);
-+	if (xfs_sb_version_hasfinobt(&mp->m_sb))
-+		inobt_sz *= 2;
-+	if (xfs_sb_version_hasreflink(&mp->m_sb))
-+		refcbt_sz = xfs_refcountbt_calc_size(mp, usedlen);
-+	else
-+		refcbt_sz = 0;
-+	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
++	if (xfs_is_reflink_inode(ip) &&
++	    xfs_reflink_find_cow_mapping(ip, offset, imap)) {
++		xfs_iunlock(ip, XFS_ILOCK_SHARED);
 +		/*
-+		 * Guess how many blocks we need to rebuild the rmapbt.
-+		 * For non-reflink filesystems we can't have more records than
-+		 * used blocks.  However, with reflink it's possible to have
-+		 * more than one rmap record per AG block.  We don't know how
-+		 * many rmaps there could be in the AG, so we start off with
-+		 * what we hope is an generous over-estimation.
++		 * Truncate can race with writeback since writeback doesn't
++		 * take the iolock and truncate decreases the file size before
++		 * it starts truncating the pages between new_size and old_size.
++		 * Therefore, we can end up in the situation where writeback
++		 * gets a CoW fork mapping but the truncate makes the mapping
++		 * invalid and we end up in here trying to get a new mapping.
++		 * bail out here so that we simply never get a valid mapping
++		 * and so we drop the write altogether.  The page truncation
++		 * will kill the contents anyway.
 +		 */
-+		if (xfs_sb_version_hasreflink(&mp->m_sb))
-+			rmapbt_sz = xfs_rmapbt_calc_size(mp,
-+					(unsigned long long)aglen * 2);
-+		else
-+			rmapbt_sz = xfs_rmapbt_calc_size(mp, usedlen);
-+	} else {
-+		rmapbt_sz = 0;
++		if (offset > i_size_read(inode))
++			return 0;
++		whichfork = XFS_COW_FORK;
++		*type = XFS_IO_COW;
++		goto done;
 +	}
 +
-+	trace_xfs_repair_calc_ag_resblks_btsize(mp, sm->sm_agno, bnobt_sz,
-+			inobt_sz, rmapbt_sz, refcbt_sz);
+ 	if (offset > mp->m_super->s_maxbytes - count)
+ 		count = mp->m_super->s_maxbytes - offset;
+ 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
+ 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
+ 	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
+-				imap, &nimaps, bmapi_flags);
+-	/*
+-	 * Truncate an overwrite extent if there's a pending CoW
+-	 * reservation before the end of this extent.  This forces us
+-	 * to come back to writepage to take care of the CoW.
+-	 */
+-	if (nimaps && type == XFS_IO_OVERWRITE)
++				imap, &nimaps, XFS_BMAPI_ENTIRE);
++	if (!nimaps) {
++		/*
++		 * Lookup returns no match? Beyond eof? regardless,
++		 * return it as a hole so we don't write it
++		 */
++		imap->br_startoff = offset_fsb;
++		imap->br_blockcount = end_fsb - offset_fsb;
++		imap->br_startblock = HOLESTARTBLOCK;
++		*type = XFS_IO_HOLE;
++	} else if (imap->br_startblock == HOLESTARTBLOCK) {
++		/* landed in a hole */
++		*type = XFS_IO_HOLE;
++	} else if (isnullstartblock(imap->br_startblock)) {
++		/* got a delalloc extent */
++		*type = XFS_IO_DELALLOC;
++	} else {
++		/*
++		 * Got an existing extent for overwrite.  Truncate it if there
++		 * is a pending CoW reservation before the end of this extent,
++		 * so that we pick up the COW extents in the next iteration.
++		 */
+ 		xfs_reflink_trim_irec_to_next_cow(ip, offset_fsb, imap);
++		if (imap->br_state == XFS_EXT_UNWRITTEN)
++			*type = XFS_IO_UNWRITTEN;
++		else
++			*type = XFS_IO_OVERWRITE;
++	}
+ 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+-
+ 	if (error)
+ 		return error;
+ 
+-	if (type == XFS_IO_DELALLOC &&
+-	    (!nimaps || isnullstartblock(imap->br_startblock))) {
+-		error = xfs_iomap_write_allocate(ip, XFS_DATA_FORK, offset,
+-				imap);
+-		if (!error)
+-			trace_xfs_map_blocks_alloc(ip, offset, count, type, imap);
+-		return error;
+-	}
+-
+-#ifdef DEBUG
+-	if (type == XFS_IO_UNWRITTEN) {
+-		ASSERT(nimaps);
+-		ASSERT(imap->br_startblock != HOLESTARTBLOCK);
+-		ASSERT(imap->br_startblock != DELAYSTARTBLOCK);
++done:
++	switch (*type) {
++	case XFS_IO_HOLE:
++	case XFS_IO_OVERWRITE:
++	case XFS_IO_UNWRITTEN:
++		/* nothing to do! */
++		trace_xfs_map_blocks_found(ip, offset, count, *type, imap);
++		return 0;
++	case XFS_IO_DELALLOC:
++	case XFS_IO_COW:
++		error = xfs_iomap_write_allocate(ip, whichfork, offset, imap);
++		if (error)
++			return error;
++		trace_xfs_map_blocks_alloc(ip, offset, count, *type, imap);
++		return 0;
++	default:
++		ASSERT(1);
++		return -EFSCORRUPTED;
+ 	}
+-#endif
+-	if (nimaps)
+-		trace_xfs_map_blocks_found(ip, offset, count, type, imap);
+-	return 0;
+ }
+ 
+ STATIC bool
+@@ -709,6 +732,14 @@ xfs_map_at_offset(
+ 	set_buffer_mapped(bh);
+ 	clear_buffer_delay(bh);
+ 	clear_buffer_unwritten(bh);
 +
-+	return max(max(bnobt_sz, inobt_sz), max(rmapbt_sz, refcbt_sz));
-+}
-diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-index 83170dd3388c..8d181dce6171 100644
---- a/fs/xfs/scrub/repair.h
-+++ b/fs/xfs/scrub/repair.h
-@@ -32,6 +32,10 @@ static inline int xfs_repair_notsupported(struct xfs_scrub_context *sc)
- int xfs_repair_attempt(struct xfs_inode *ip, struct xfs_scrub_context *sc,
- 		bool *fixed);
- void xfs_repair_failure(struct xfs_mount *mp);
-+int xfs_repair_roll_ag_trans(struct xfs_scrub_context *sc);
-+bool xfs_repair_ag_has_space(struct xfs_perag *pag, xfs_extlen_t nr_blocks,
-+		enum xfs_ag_resv_type type);
-+xfs_extlen_t xfs_repair_calc_ag_resblks(struct xfs_scrub_context *sc);
++	/*
++	 * If this is a realtime file, data may be on a different device.
++	 * to that pointed to from the buffer_head b_bdev currently. We can't
++	 * trust that the bufferhead has a already been mapped correctly, so
++	 * set the bdev now.
++	 */
++	bh->b_bdev = xfs_find_bdev_for_inode(inode);
+ }
  
- /* Metadata repairers */
+ STATIC void
+@@ -769,56 +800,6 @@ xfs_aops_discard_page(
+ 	xfs_vm_invalidatepage(page, 0, PAGE_SIZE);
+ }
  
-@@ -49,6 +53,14 @@ static inline int xfs_repair_attempt(
+-static int
+-xfs_map_cow(
+-	struct xfs_writepage_ctx *wpc,
+-	struct inode		*inode,
+-	loff_t			offset,
+-	unsigned int		*new_type)
+-{
+-	struct xfs_inode	*ip = XFS_I(inode);
+-	struct xfs_bmbt_irec	imap;
+-	bool			is_cow = false;
+-	int			error;
+-
+-	/*
+-	 * If we already have a valid COW mapping keep using it.
+-	 */
+-	if (wpc->io_type == XFS_IO_COW) {
+-		wpc->imap_valid = xfs_imap_valid(inode, &wpc->imap, offset);
+-		if (wpc->imap_valid) {
+-			*new_type = XFS_IO_COW;
+-			return 0;
+-		}
+-	}
+-
+-	/*
+-	 * Else we need to check if there is a COW mapping at this offset.
+-	 */
+-	xfs_ilock(ip, XFS_ILOCK_SHARED);
+-	is_cow = xfs_reflink_find_cow_mapping(ip, offset, &imap);
+-	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+-
+-	if (!is_cow)
+-		return 0;
+-
+-	/*
+-	 * And if the COW mapping has a delayed extent here we need to
+-	 * allocate real space for it now.
+-	 */
+-	if (isnullstartblock(imap.br_startblock)) {
+-		error = xfs_iomap_write_allocate(ip, XFS_COW_FORK, offset,
+-				&imap);
+-		if (error)
+-			return error;
+-	}
+-
+-	wpc->io_type = *new_type = XFS_IO_COW;
+-	wpc->imap_valid = true;
+-	wpc->imap = imap;
+-	return 0;
+-}
+-
+ /*
+  * We implement an immediate ioend submission policy here to avoid needing to
+  * chain multiple ioends and hence nest mempool allocations which can violate
+@@ -845,85 +826,81 @@ xfs_writepage_map(
+ {
+ 	LIST_HEAD(submit_list);
+ 	struct xfs_ioend	*ioend, *next;
+-	struct buffer_head	*bh, *head;
++	struct buffer_head	*bh;
+ 	ssize_t			len = i_blocksize(inode);
+-	uint64_t		offset;
+ 	int			error = 0;
+ 	int			count = 0;
+-	int			uptodate = 1;
+-	unsigned int		new_type;
++	bool			uptodate = true;
++	loff_t			file_offset;	/* file offset of page */
++	unsigned		poffset;	/* offset into page */
  
- static inline void xfs_repair_failure(struct xfs_mount *mp) {}
+-	bh = head = page_buffers(page);
+-	offset = page_offset(page);
+-	do {
+-		if (offset >= end_offset)
++	/*
++	 * Walk the blocks on the page, and we we run off then end of the
++	 * current map or find the current map invalid, grab a new one.
++	 * We only use bufferheads here to check per-block state - they no
++	 * longer control the iteration through the page. This allows us to
++	 * replace the bufferhead with some other state tracking mechanism in
++	 * future.
++	 */
++	file_offset = page_offset(page);
++	bh = page_buffers(page);
++	for (poffset = 0;
++	     poffset < PAGE_SIZE;
++	     poffset += len, file_offset += len, bh = bh->b_this_page) {
++		/* past the range we are writing, so nothing more to write. */
++		if (file_offset >= end_offset)
+ 			break;
+-		if (!buffer_uptodate(bh))
+-			uptodate = 0;
  
-+static inline xfs_extlen_t
-+xfs_repair_calc_ag_resblks(
-+	struct xfs_scrub_context	*sc)
-+{
-+	ASSERT(!(sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR));
-+	return 0;
-+}
+ 		/*
+-		 * set_page_dirty dirties all buffers in a page, independent
+-		 * of their state.  The dirty state however is entirely
+-		 * meaningless for holes (!mapped && uptodate), so skip
+-		 * buffers covering holes here.
++		 * Block does not contain valid data, skip it, mark the current
++		 * map as invalid because we have a discontiguity. This ensures
++		 * we put subsequent writeable buffers into a new ioend.
+ 		 */
+-		if (!buffer_mapped(bh) && buffer_uptodate(bh)) {
+-			wpc->imap_valid = false;
+-			continue;
+-		}
+-
+-		if (buffer_unwritten(bh))
+-			new_type = XFS_IO_UNWRITTEN;
+-		else if (buffer_delay(bh))
+-			new_type = XFS_IO_DELALLOC;
+-		else if (buffer_uptodate(bh))
+-			new_type = XFS_IO_OVERWRITE;
+-		else {
++		if (!buffer_uptodate(bh)) {
+ 			if (PageUptodate(page))
+ 				ASSERT(buffer_mapped(bh));
+-			/*
+-			 * This buffer is not uptodate and will not be
+-			 * written to disk.  Ensure that we will put any
+-			 * subsequent writeable buffers into a new
+-			 * ioend.
+-			 */
++			uptodate = false;
+ 			wpc->imap_valid = false;
+ 			continue;
+ 		}
+ 
+-		if (xfs_is_reflink_inode(XFS_I(inode))) {
+-			error = xfs_map_cow(wpc, inode, offset, &new_type);
+-			if (error)
+-				goto out;
+-		}
+-
+-		if (wpc->io_type != new_type) {
+-			wpc->io_type = new_type;
+-			wpc->imap_valid = false;
+-		}
+-
++		/* Check to see if current map spans this file offset */
+ 		if (wpc->imap_valid)
+ 			wpc->imap_valid = xfs_imap_valid(inode, &wpc->imap,
+-							 offset);
++							 file_offset);
++		/*
++		 * If we don't have a valid map, now it's time to get a new one
++		 * for this offset.  This will convert delayed allocations
++		 * (including COW ones) into real extents.  If we return without
++		 * a valid map, it means we landed in a hole and we skip the
++		 * block.
++		 */
+ 		if (!wpc->imap_valid) {
+-			error = xfs_map_blocks(inode, offset, &wpc->imap,
+-					     wpc->io_type);
++			error = xfs_map_blocks(inode, file_offset, &wpc->imap,
++					     &wpc->io_type);
+ 			if (error)
+ 				goto out;
+ 			wpc->imap_valid = xfs_imap_valid(inode, &wpc->imap,
+-							 offset);
++							 file_offset);
+ 		}
+-		if (wpc->imap_valid) {
+-			lock_buffer(bh);
+-			if (wpc->io_type != XFS_IO_OVERWRITE)
+-				xfs_map_at_offset(inode, bh, &wpc->imap, offset);
+-			xfs_add_to_ioend(inode, bh, offset, wpc, wbc, &submit_list);
+-			count++;
 +
- #define xfs_repair_probe		xfs_repair_notsupported
++		if (!wpc->imap_valid || wpc->io_type == XFS_IO_HOLE) {
++			/*
++			 * set_page_dirty dirties all buffers in a page, independent
++			 * of their state.  The dirty state however is entirely
++			 * meaningless for holes (!mapped && uptodate), so check we did
++			 * have a buffer covering a hole here and continue.
++			 */
++			continue;
+ 		}
  
- #endif /* CONFIG_XFS_ONLINE_REPAIR */
+-	} while (offset += len, ((bh = bh->b_this_page) != head));
++		lock_buffer(bh);
++		xfs_map_at_offset(inode, bh, &wpc->imap, file_offset);
++		xfs_add_to_ioend(inode, bh, file_offset, wpc, wbc, &submit_list);
++		count++;
++	}
+ 
+-	if (uptodate && bh == head)
++	if (uptodate && poffset == PAGE_SIZE)
+ 		SetPageUptodate(page);
+ 
+ 	ASSERT(wpc->ioend || list_empty(&submit_list));
+diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
+index 69346d460dfa..b2ef5b661761 100644
+--- a/fs/xfs/xfs_aops.h
++++ b/fs/xfs/xfs_aops.h
+@@ -29,6 +29,7 @@ enum {
+ 	XFS_IO_UNWRITTEN,	/* covers allocated but uninitialized data */
+ 	XFS_IO_OVERWRITE,	/* covers already allocated extent */
+ 	XFS_IO_COW,		/* covers copy-on-write extent */
++	XFS_IO_HOLE,		/* covers region without any block allocation */
+ };
+ 
+ #define XFS_IO_TYPES \
+@@ -36,7 +37,8 @@ enum {
+ 	{ XFS_IO_DELALLOC,		"delalloc" }, \
+ 	{ XFS_IO_UNWRITTEN,		"unwritten" }, \
+ 	{ XFS_IO_OVERWRITE,		"overwrite" }, \
+-	{ XFS_IO_COW,			"CoW" }
++	{ XFS_IO_COW,			"CoW" }, \
++	{ XFS_IO_HOLE,			"hole" }
+ 
+ /*
+  * Structure for buffered I/O completions.
+-- 
+2.17.0
+
