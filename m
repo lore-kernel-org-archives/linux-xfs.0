@@ -1,60 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:53838 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751296AbeERO4D (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 18 May 2018 10:56:03 -0400
-Subject: Re: How to reliably measure fs usage with reflinks enabled?
-References: <5398ddaf2b876c3563bc1c2927bfe1b9@ruhr-uni-bochum.de>
- <866a5e96-e900-d330-0efb-6413f85f86a3@sandeen.net>
- <20180514225751.GB10363@dastard>
- <b2fe69d6216f165b2c84ca5a377d06ab@ruhr-uni-bochum.de>
- <20180515012926.GC10363@dastard>
- <CAMU1PDgMH_K1N71SmkwDj159wTjFM3js-hhFGr8uE_GhmLn5mA@mail.gmail.com>
- <20180516001342.GK23861@dastard>
- <CAMU1PDg-aOE-gakEtktq8nDRWXcsdorcx0a25_uQ_MFM1nUTpQ@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <f220ccc1-00ed-879e-94d0-33cb9d5a1e37@sandeen.net>
-Date: Fri, 18 May 2018 09:56:02 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAMU1PDg-aOE-gakEtktq8nDRWXcsdorcx0a25_uQ_MFM1nUTpQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from bombadil.infradead.org ([198.137.202.133]:49678 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750957AbeERQse (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 12:48:34 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: buffered I/O without buffer heads in xfs and iomap v2
+Date: Fri, 18 May 2018 18:47:56 +0200
+Message-Id: <20180518164830.1552-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Mike Fleetwood <mike.fleetwood@googlemail.com>, Dave Chinner <david@fromorbit.com>
-Cc: Tarik Ceylan <Tarik.Ceylan@ruhr-uni-bochum.de>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-On 5/18/18 9:43 AM, Mike Fleetwood wrote:
-> (Sorry for the late reply, work commitments)
-> 
-...
+Hi all,
 
-> So after checking, GParted was modified to use the dumpe2fs command to
-> read the superblock to get the file system size for mounted ext* file
-> systems too.
-> 
-> https://marc.info/?l=linux-ext4&m=134706477618732&w=2
-> 
-> I see that xfs_db doesn't allow reading the super block of mounted XFS
-> file systems.  So for the case of a mounted XFS on full fat block device
-> I guess I'll wait and see how much overhead is subtracted from the
-> statvfs f_blocks figure and make sure GParted accounts for that.
+this series adds support for buffered I/O without buffer heads to
+the iomap and XFS code.
 
-Actually you can, with -r:
+For now this series only contains support for block size == PAGE_SIZE,
+with the 4k support split into a separate series.
 
-# mount /dev/sda1 /mnt/test
-# xfs_db -r -c "sb 0" -c "p dblocks" /dev/sda1
-dblocks = 229771264
 
-though I may be giving you rope to hang yourself here ;)
+A git tree is available at:
 
-It's generally a bit dicey to be reading a mounted block device for any
-filesystem, as there's no coordination with changes the filesystem may
-be making while it's mounted.
+    git://git.infradead.org/users/hch/xfs.git xfs-iomap-read.2
 
-The XFS_IOC_FSGEOMETRY would be a better choice for gathering geometry
-information for a mounted xfs filesystem.
+Gitweb:
 
--Eric
+    http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-iomap-read.2
+
+Changes since v1:
+ - fix the iomap_readpages error handling
+ - use unsigned file offsets in a few places to avoid arithmetic overflows
+ - allocate a iomap_page in iomap_page_mkwrite to fix generic/095
+ - improve a few comments
+ - add more asserts
+ - warn about truncated block numbers from ->bmap
+ - new patch to change the __do_page_cache_readahead return value to
+   unsigned int
+ - remove an incorrectly added empty line
+ - make inline data an explicit iomap type instead of a flag
+ - add a IOMAP_F_BUFFER_HEAD flag to force use of buffers heads for gfs2,
+   and keep the basic buffer head infrastructure around for now.
