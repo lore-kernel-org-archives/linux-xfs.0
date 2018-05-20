@@ -1,51 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:37210 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751088AbeEUXjA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 May 2018 19:39:00 -0400
-Date: Mon, 21 May 2018 19:38:55 -0400
-From: Kent Overstreet <kent.overstreet@gmail.com>
-Subject: Re: [PATCH 00/13] convert block layer to bioset_init()/mempool_init()
-Message-ID: <20180521233855.GI11495@kmo-pixel>
-References: <2bbeeb1a-8b99-b06a-eb9b-eb8523c16460@kernel.dk>
- <20180521144703.GA19303@redhat.com>
- <4b343aef-e11c-73ba-1d88-7e73ca838cad@kernel.dk>
- <20180521150439.GA19379@redhat.com>
- <61e30dcf-a01c-f47d-087a-12930caf9aef@kernel.dk>
- <20180521151817.GA19454@redhat.com>
- <d01a150a-7752-f6ce-78f2-17a65c1e6fa5@kernel.dk>
- <20180521160907.GA19553@redhat.com>
- <20180521173724.GG11495@kmo-pixel>
- <20180521182427.GA20013@redhat.com>
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:33175 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752280AbeETAQv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 19 May 2018 20:16:51 -0400
+Date: Sun, 20 May 2018 10:16:48 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 5/5] mkfs.xfs: add configuration file parsing support
+ using our own parser
+Message-ID: <20180520001648.GN23861@dastard>
+References: <20180517192700.23457-1-mcgrof@kernel.org>
+ <20180517192700.23457-6-mcgrof@kernel.org>
+ <1f1e87df-aba5-e285-e3cb-820306f24f1c@sandeen.net>
+ <20180518034600.GW23858@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180521182427.GA20013@redhat.com>
+In-Reply-To: <20180518034600.GW23858@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, colyli@suse.de, darrick.wong@oracle.com, clm@fb.com, bacik@fb.com, linux-xfs@vger.kernel.org, drbd-dev@lists.linbit.com, linux-btrfs@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com
 
-On Mon, May 21, 2018 at 02:24:32PM -0400, Mike Snitzer wrote:
-> Every single data structure change in this series should be reviewed for
-> unforeseen alignment consequences.  Jens seemed to say that is
-> worthwhile.  Not sure if he'll do it or we divide it up.  If we divide
-> it up a temp topic branch should be published for others to inspect.
+On Thu, May 17, 2018 at 08:46:00PM -0700, Darrick J. Wong wrote:
+> On Thu, May 17, 2018 at 10:24:13PM -0500, Eric Sandeen wrote:
+> > On 5/17/18 2:27 PM, Luis R. Rodriguez wrote:
+> > > You may want to stick to specific set of configuration options when
+> > > creating filesystems with mkfs.xfs -- sometimes due to pure technical
+> > > reasons, but some other times to ensure systems remain compatible as
+> > > new features are introduced with older kernels, or if you always want
+> > > to take advantage of some new feature which would otherwise typically
+> > > be disruptive.
+> > > 
+> > > This adds support for parsing a configuration file to override defaults
+> > > parameters to be used for mkfs.xfs.
+> > > 
+> > > We define an XFS configuration directory,/etc/mkfs.xfs.d/  and allow for
+> > > different configuration files, if none is specified we look for the
+> > > default configuration file, /etc/mkfs.xfs.d/default. You can override
+> > > with -c.  For instance, if you specify:
+> > > 
+> > > 	mkfs.xfs -c experimental -f /dev/loop0
+> > > 
+> > > The file /etc/mkfs.xfs.d/experimental will be used as your configuration
+> > > file. If you really need to override the full path of the configuration
+> > > file you may use the MKFS_XFS_CONFIG environment variable.
+> > 
+> > I'm swamped under a deadline at work this week so just commenting at a
+> > very high level for now, but I'm curious; why use an env var vs
+> > providing a full path for -c ?  env vars always strike me as magic unexpected
+> > behaviors.
+> > 
+> > # mkfs.xfs -c /my/fancy/path/to/config
+> > 
+> > seems much clearer than
+> > 
+> > # export MKFS_XFS_CONFIG=/my/fancy/path/to/
+> > # mkfs.xfs -c config
+> > 
+> > i.e. if a full path is specified use it, else use the config directory.
+> > 
+> > Thoughts?
 > 
-> Could be alignment hasn't been a historic concern for a bunch of the
-> data structures changed in this series.. if so then all we can do is fix
-> up any obvious potential for false sharing.
+> In this case your choices are:
+> MKFS_XFS_CONFIG=/my/fancy/path/to/config mkfs.xfs
+> 
+> or:
+> cp /my/fancy/path/to/config /etc/mkfs.xfs.d/hoogah
+> mkfs.xfs -c hooga
 
-Honestly, I almost never worry about alignment... the very few times I do care,
-I use __cacheline_aligned_in_smp.
+Sorry, why do we need to copy it to /etc/mkfs.xfs.d/?
 
-If alignment is a concern in any of those structs, there really ought to be a
-comment indicating it. I very much doubt anything I touched was performance
-sensitive enough for it to be an issue, though. And if there is a performance
-impact, it should be oughtweighed by the reduced pointer chasing.
+> <shrug> Bikeshedding more, what if either option accepted either an
+> absolute path, or a file in $sysconfdir/etc/mkfs.xfs.d/ ? 
 
-If you disagree, I don't mind leaving the device mapper patch out, it really
-makes no difference to me. I could glance over for alignment issues but I feel
-like my analysis would not be terribly valuable to you considering I've already
-said my position on alignment is "meh, don't care" :)
+I kinda assumed that config files could be located anywhere, but we
+only searched the sysconfig path if it didn't point at a local
+file...
+
+Cheers,
+
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
