@@ -1,66 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:37184 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751045AbeETTUP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 20 May 2018 15:20:15 -0400
-Date: Sun, 20 May 2018 12:20:09 -0700
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH] fs: clear writeback errors in inode_init_always
-Message-ID: <20180520192009.GA22365@bombadil.infradead.org>
-References: <20180518225037.GA26206@thunk.org>
- <630faadb74f608aa5a42649b81657e8b62d46bc3.camel@kernel.org>
- <20180519152700.GB4507@magnolia>
- <20180519231944.GB23448@thunk.org>
- <fa3b4dec3452aa5696b8657ef509891908901d95.camel@kernel.org>
- <20180520125843.GA25612@bombadil.infradead.org>
- <20180520162954.GA5250@thunk.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180520162954.GA5250@thunk.org>
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:45984 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752569AbeETW0g (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 20 May 2018 18:26:36 -0400
+From: Kent Overstreet <kent.overstreet@gmail.com>
+Subject: [PATCH 09/12] fs: convert block_dev.c to bioset_init()
+Date: Sun, 20 May 2018 18:25:55 -0400
+Message-Id: <20180520222558.7053-10-kent.overstreet@gmail.com>
+In-Reply-To: <20180520222558.7053-1-kent.overstreet@gmail.com>
+References: <20180520222558.7053-1-kent.overstreet@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Theodore Y. Ts'o" <tytso@mit.edu>
-Cc: Jeff Layton <jlayton@kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel@vger.kernel.org, fstests@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, axboe@kernel.dk, hch@infradead.org, colyli@suse.de, snitzer@redhat.com, darrick.wong@oracle.com, clm@fb.com, bacik@fb.com, linux-xfs@vger.kernel.org, drbd-dev@lists.linbit.com, linux-btrfs@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.com
+Cc: Kent Overstreet <kent.overstreet@gmail.com>
 
-On Sun, May 20, 2018 at 12:29:54PM -0400, Theodore Y. Ts'o wrote:
-> On Sun, May 20, 2018 at 05:58:43AM -0700, Matthew Wilcox wrote:
-> > On Sun, May 20, 2018 at 07:45:31AM -0400, Jeff Layton wrote:
-> > > [PATCH] loop: clear wb_err in bd_inode when detaching backing file
-> > 
-> > Is this the right thing to do?  Putting the test-suite aside for the
-> > moment, if I have a loop device on a file and I hit a real error on the
-> > storage backing that file, I don't see why detaching the loop device
-> > from the file should clear the error.
-> > 
-> > I'm really tempted to say that we should fix the test-suite to consume
-> > the error; once it's been read by at least one reader, it won't go back
-> > to zero, but neither will it show up for new readers.
-> 
-> You can't detach the backing store if there are any open file
-> descriptors (or if there is another loop device keeping the loop
-> device open, or if there is a file system mounted on it, etc.).
-> 
-> If you can detach the backing store, once you detach the backing
-> store, the loop device is *gone*.  The user of /dev/loop0 will very
-> likely be a completely different backing store, so returning an error
-> simply doesn't make any sense.  There is a very good chance it will be
-> a completely different backing store, with potentially a different
-> user, so returning a carried over error is just going confuse, annoy,
-> and anger the user.....
+Signed-off-by: Kent Overstreet <kent.overstreet@gmail.com>
+---
+ fs/block_dev.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-Oh!  I misunderstood.  I thought that bd_inode->i_mapping pointed to
-lo_backing_file->f_mapping.
-
-So how about this to preserve the error _in the file with the error_?
-
-	if (bdev) {
-		bdput(bdev);
-		invalidate_bdev(bdev);
-+		filp->f_mapping->wb_err = bdev->bd_inode->i_mapping->wb_err;
-+		bdev->bd_inode->i_mapping->wb_err = 0;
-	}
-	set_capacity(lo->lo_disk, 0);
-	loop_sysfs_exit(lo);
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index 7ec920e270..b550ae280f 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -272,7 +272,7 @@ struct blkdev_dio {
+ 	struct bio		bio;
+ };
+ 
+-static struct bio_set *blkdev_dio_pool __read_mostly;
++static struct bio_set blkdev_dio_pool;
+ 
+ static void blkdev_bio_end_io(struct bio *bio)
+ {
+@@ -334,7 +334,7 @@ __blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter, int nr_pages)
+ 	    (bdev_logical_block_size(bdev) - 1))
+ 		return -EINVAL;
+ 
+-	bio = bio_alloc_bioset(GFP_KERNEL, nr_pages, blkdev_dio_pool);
++	bio = bio_alloc_bioset(GFP_KERNEL, nr_pages, &blkdev_dio_pool);
+ 	bio_get(bio); /* extra ref for the completion handler */
+ 
+ 	dio = container_of(bio, struct blkdev_dio, bio);
+@@ -432,10 +432,7 @@ blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
+ 
+ static __init int blkdev_init(void)
+ {
+-	blkdev_dio_pool = bioset_create(4, offsetof(struct blkdev_dio, bio), BIOSET_NEED_BVECS);
+-	if (!blkdev_dio_pool)
+-		return -ENOMEM;
+-	return 0;
++	return bioset_init(&blkdev_dio_pool, 4, offsetof(struct blkdev_dio, bio), BIOSET_NEED_BVECS);
+ }
+ module_init(blkdev_init);
+ 
+-- 
+2.17.0
 
