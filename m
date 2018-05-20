@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:36524 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752631AbeETW0d (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 20 May 2018 18:26:33 -0400
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:37706 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752605AbeETW0b (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 20 May 2018 18:26:31 -0400
 From: Kent Overstreet <kent.overstreet@gmail.com>
-Subject: [PATCH 07/12] dm: convert to bioset_init()/mempool_init()
-Date: Sun, 20 May 2018 18:25:53 -0400
-Message-Id: <20180520222558.7053-8-kent.overstreet@gmail.com>
+Subject: [PATCH 06/12] md: convert to bioset_init()/mempool_init()
+Date: Sun, 20 May 2018 18:25:52 -0400
+Message-Id: <20180520222558.7053-7-kent.overstreet@gmail.com>
 In-Reply-To: <20180520222558.7053-1-kent.overstreet@gmail.com>
 References: <20180520222558.7053-1-kent.overstreet@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,1378 +17,1070 @@ Cc: Kent Overstreet <kent.overstreet@gmail.com>
 
 Signed-off-by: Kent Overstreet <kent.overstreet@gmail.com>
 ---
- drivers/md/dm-bio-prison-v1.c      | 13 ++++---
- drivers/md/dm-bio-prison-v2.c      | 13 ++++---
- drivers/md/dm-cache-target.c       | 25 ++++++-------
- drivers/md/dm-core.h               |  4 +-
- drivers/md/dm-crypt.c              | 60 ++++++++++++++----------------
- drivers/md/dm-integrity.c          | 15 ++++----
- drivers/md/dm-io.c                 | 29 ++++++++-------
- drivers/md/dm-kcopyd.c             | 22 ++++++-----
- drivers/md/dm-log-userspace-base.c | 19 +++++-----
- drivers/md/dm-region-hash.c        | 23 ++++++------
- drivers/md/dm-rq.c                 |  2 +-
- drivers/md/dm-snap.c               | 17 ++++-----
- drivers/md/dm-thin.c               | 32 ++++++++--------
- drivers/md/dm-verity-fec.c         | 55 +++++++++++++--------------
- drivers/md/dm-verity-fec.h         |  8 ++--
- drivers/md/dm-zoned-target.c       | 13 +++----
- drivers/md/dm.c                    | 53 ++++++++++++--------------
- 17 files changed, 197 insertions(+), 206 deletions(-)
+ drivers/md/md-faulty.c    |  2 +-
+ drivers/md/md-linear.c    |  2 +-
+ drivers/md/md-multipath.c | 17 ++++-----
+ drivers/md/md-multipath.h |  2 +-
+ drivers/md/md.c           | 61 +++++++++++++------------------
+ drivers/md/md.h           |  4 +--
+ drivers/md/raid0.c        |  5 +--
+ drivers/md/raid1.c        | 76 +++++++++++++++++++--------------------
+ drivers/md/raid1.h        |  6 ++--
+ drivers/md/raid10.c       | 60 +++++++++++++++----------------
+ drivers/md/raid10.h       |  6 ++--
+ drivers/md/raid5-cache.c  | 43 +++++++++++-----------
+ drivers/md/raid5-ppl.c    | 42 +++++++++-------------
+ drivers/md/raid5.c        | 12 +++----
+ drivers/md/raid5.h        |  2 +-
+ 15 files changed, 159 insertions(+), 181 deletions(-)
 
-diff --git a/drivers/md/dm-bio-prison-v1.c b/drivers/md/dm-bio-prison-v1.c
-index 874841f0fc..8e33a38083 100644
---- a/drivers/md/dm-bio-prison-v1.c
-+++ b/drivers/md/dm-bio-prison-v1.c
-@@ -19,7 +19,7 @@
- 
- struct dm_bio_prison {
- 	spinlock_t lock;
--	mempool_t *cell_pool;
-+	mempool_t cell_pool;
- 	struct rb_root cells;
- };
- 
-@@ -34,14 +34,15 @@ static struct kmem_cache *_cell_cache;
- struct dm_bio_prison *dm_bio_prison_create(void)
- {
- 	struct dm_bio_prison *prison = kmalloc(sizeof(*prison), GFP_KERNEL);
-+	int ret;
- 
- 	if (!prison)
- 		return NULL;
- 
- 	spin_lock_init(&prison->lock);
- 
--	prison->cell_pool = mempool_create_slab_pool(MIN_CELLS, _cell_cache);
--	if (!prison->cell_pool) {
-+	ret = mempool_init_slab_pool(&prison->cell_pool, MIN_CELLS, _cell_cache);
-+	if (ret) {
- 		kfree(prison);
- 		return NULL;
- 	}
-@@ -54,21 +55,21 @@ EXPORT_SYMBOL_GPL(dm_bio_prison_create);
- 
- void dm_bio_prison_destroy(struct dm_bio_prison *prison)
- {
--	mempool_destroy(prison->cell_pool);
-+	mempool_exit(&prison->cell_pool);
- 	kfree(prison);
- }
- EXPORT_SYMBOL_GPL(dm_bio_prison_destroy);
- 
- struct dm_bio_prison_cell *dm_bio_prison_alloc_cell(struct dm_bio_prison *prison, gfp_t gfp)
- {
--	return mempool_alloc(prison->cell_pool, gfp);
-+	return mempool_alloc(&prison->cell_pool, gfp);
- }
- EXPORT_SYMBOL_GPL(dm_bio_prison_alloc_cell);
- 
- void dm_bio_prison_free_cell(struct dm_bio_prison *prison,
- 			     struct dm_bio_prison_cell *cell)
- {
--	mempool_free(cell, prison->cell_pool);
-+	mempool_free(cell, &prison->cell_pool);
- }
- EXPORT_SYMBOL_GPL(dm_bio_prison_free_cell);
- 
-diff --git a/drivers/md/dm-bio-prison-v2.c b/drivers/md/dm-bio-prison-v2.c
-index 8ce3a1a588..601b156920 100644
---- a/drivers/md/dm-bio-prison-v2.c
-+++ b/drivers/md/dm-bio-prison-v2.c
-@@ -21,7 +21,7 @@ struct dm_bio_prison_v2 {
- 	struct workqueue_struct *wq;
- 
- 	spinlock_t lock;
--	mempool_t *cell_pool;
-+	mempool_t cell_pool;
- 	struct rb_root cells;
- };
- 
-@@ -36,6 +36,7 @@ static struct kmem_cache *_cell_cache;
- struct dm_bio_prison_v2 *dm_bio_prison_create_v2(struct workqueue_struct *wq)
- {
- 	struct dm_bio_prison_v2 *prison = kmalloc(sizeof(*prison), GFP_KERNEL);
-+	int ret;
- 
- 	if (!prison)
- 		return NULL;
-@@ -43,8 +44,8 @@ struct dm_bio_prison_v2 *dm_bio_prison_create_v2(struct workqueue_struct *wq)
- 	prison->wq = wq;
- 	spin_lock_init(&prison->lock);
- 
--	prison->cell_pool = mempool_create_slab_pool(MIN_CELLS, _cell_cache);
--	if (!prison->cell_pool) {
-+	ret = mempool_init_slab_pool(&prison->cell_pool, MIN_CELLS, _cell_cache);
-+	if (ret) {
- 		kfree(prison);
- 		return NULL;
- 	}
-@@ -57,21 +58,21 @@ EXPORT_SYMBOL_GPL(dm_bio_prison_create_v2);
- 
- void dm_bio_prison_destroy_v2(struct dm_bio_prison_v2 *prison)
- {
--	mempool_destroy(prison->cell_pool);
-+	mempool_exit(&prison->cell_pool);
- 	kfree(prison);
- }
- EXPORT_SYMBOL_GPL(dm_bio_prison_destroy_v2);
- 
- struct dm_bio_prison_cell_v2 *dm_bio_prison_alloc_cell_v2(struct dm_bio_prison_v2 *prison, gfp_t gfp)
- {
--	return mempool_alloc(prison->cell_pool, gfp);
-+	return mempool_alloc(&prison->cell_pool, gfp);
- }
- EXPORT_SYMBOL_GPL(dm_bio_prison_alloc_cell_v2);
- 
- void dm_bio_prison_free_cell_v2(struct dm_bio_prison_v2 *prison,
- 				struct dm_bio_prison_cell_v2 *cell)
- {
--	mempool_free(cell, prison->cell_pool);
-+	mempool_free(cell, &prison->cell_pool);
- }
- EXPORT_SYMBOL_GPL(dm_bio_prison_free_cell_v2);
- 
-diff --git a/drivers/md/dm-cache-target.c b/drivers/md/dm-cache-target.c
-index da208638fb..001c712482 100644
---- a/drivers/md/dm-cache-target.c
-+++ b/drivers/md/dm-cache-target.c
-@@ -447,9 +447,9 @@ struct cache {
- 	struct work_struct migration_worker;
- 	struct delayed_work waker;
- 	struct dm_bio_prison_v2 *prison;
--	struct bio_set *bs;
-+	struct bio_set bs;
- 
--	mempool_t *migration_pool;
-+	mempool_t migration_pool;
- 
- 	struct dm_cache_policy *policy;
- 	unsigned policy_nr_args;
-@@ -550,7 +550,7 @@ static struct dm_cache_migration *alloc_migration(struct cache *cache)
- {
- 	struct dm_cache_migration *mg;
- 
--	mg = mempool_alloc(cache->migration_pool, GFP_NOWAIT);
-+	mg = mempool_alloc(&cache->migration_pool, GFP_NOWAIT);
- 	if (!mg)
- 		return NULL;
- 
-@@ -569,7 +569,7 @@ static void free_migration(struct dm_cache_migration *mg)
- 	if (atomic_dec_and_test(&cache->nr_allocated_migrations))
- 		wake_up(&cache->migration_wait);
- 
--	mempool_free(mg, cache->migration_pool);
-+	mempool_free(mg, &cache->migration_pool);
- }
- 
- /*----------------------------------------------------------------*/
-@@ -924,7 +924,7 @@ static void issue_op(struct bio *bio, void *context)
- static void remap_to_origin_and_cache(struct cache *cache, struct bio *bio,
- 				      dm_oblock_t oblock, dm_cblock_t cblock)
- {
--	struct bio *origin_bio = bio_clone_fast(bio, GFP_NOIO, cache->bs);
-+	struct bio *origin_bio = bio_clone_fast(bio, GFP_NOIO, &cache->bs);
- 
- 	BUG_ON(!origin_bio);
- 
-@@ -2011,7 +2011,7 @@ static void destroy(struct cache *cache)
- {
- 	unsigned i;
- 
--	mempool_destroy(cache->migration_pool);
-+	mempool_exit(&cache->migration_pool);
- 
- 	if (cache->prison)
- 		dm_bio_prison_destroy_v2(cache->prison);
-@@ -2047,8 +2047,7 @@ static void destroy(struct cache *cache)
- 		kfree(cache->ctr_args[i]);
- 	kfree(cache->ctr_args);
- 
--	if (cache->bs)
--		bioset_free(cache->bs);
-+	bioset_exit(&cache->bs);
- 
- 	kfree(cache);
- }
-@@ -2498,8 +2497,8 @@ static int cache_create(struct cache_args *ca, struct cache **result)
- 	cache->features = ca->features;
- 	if (writethrough_mode(cache)) {
- 		/* Create bioset for writethrough bios issued to origin */
--		cache->bs = bioset_create(BIO_POOL_SIZE, 0, 0);
--		if (!cache->bs)
-+		r = bioset_init(&cache->bs, BIO_POOL_SIZE, 0, 0);
-+		if (r)
- 			goto bad;
- 	}
- 
-@@ -2630,9 +2629,9 @@ static int cache_create(struct cache_args *ca, struct cache **result)
- 		goto bad;
- 	}
- 
--	cache->migration_pool = mempool_create_slab_pool(MIGRATION_POOL_SIZE,
--							 migration_cache);
--	if (!cache->migration_pool) {
-+	r = mempool_init_slab_pool(&cache->migration_pool, MIGRATION_POOL_SIZE,
-+				   migration_cache);
-+	if (r) {
- 		*error = "Error creating cache's migration mempool";
- 		goto bad;
- 	}
-diff --git a/drivers/md/dm-core.h b/drivers/md/dm-core.h
-index 3222e21cbb..f21c5d21bf 100644
---- a/drivers/md/dm-core.h
-+++ b/drivers/md/dm-core.h
-@@ -91,8 +91,8 @@ struct mapped_device {
- 	/*
- 	 * io objects are allocated from here.
- 	 */
--	struct bio_set *io_bs;
--	struct bio_set *bs;
-+	struct bio_set io_bs;
-+	struct bio_set bs;
- 
- 	/*
- 	 * freeze/thaw support require holding onto a super block
-diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
-index 44ff473dab..eaf6b279ac 100644
---- a/drivers/md/dm-crypt.c
-+++ b/drivers/md/dm-crypt.c
-@@ -143,14 +143,14 @@ struct crypt_config {
- 	 * pool for per bio private data, crypto requests,
- 	 * encryption requeusts/buffer pages and integrity tags
- 	 */
--	mempool_t *req_pool;
--	mempool_t *page_pool;
--	mempool_t *tag_pool;
-+	mempool_t req_pool;
-+	mempool_t page_pool;
-+	mempool_t tag_pool;
- 	unsigned tag_pool_max_sectors;
- 
- 	struct percpu_counter n_allocated_pages;
- 
--	struct bio_set *bs;
-+	struct bio_set bs;
- 	struct mutex bio_alloc_lock;
- 
- 	struct workqueue_struct *io_queue;
-@@ -1245,7 +1245,7 @@ static void crypt_alloc_req_skcipher(struct crypt_config *cc,
- 	unsigned key_index = ctx->cc_sector & (cc->tfms_count - 1);
- 
- 	if (!ctx->r.req)
--		ctx->r.req = mempool_alloc(cc->req_pool, GFP_NOIO);
-+		ctx->r.req = mempool_alloc(&cc->req_pool, GFP_NOIO);
- 
- 	skcipher_request_set_tfm(ctx->r.req, cc->cipher_tfm.tfms[key_index]);
- 
-@@ -1262,7 +1262,7 @@ static void crypt_alloc_req_aead(struct crypt_config *cc,
- 				 struct convert_context *ctx)
- {
- 	if (!ctx->r.req_aead)
--		ctx->r.req_aead = mempool_alloc(cc->req_pool, GFP_NOIO);
-+		ctx->r.req_aead = mempool_alloc(&cc->req_pool, GFP_NOIO);
- 
- 	aead_request_set_tfm(ctx->r.req_aead, cc->cipher_tfm.tfms_aead[0]);
- 
-@@ -1290,7 +1290,7 @@ static void crypt_free_req_skcipher(struct crypt_config *cc,
- 	struct dm_crypt_io *io = dm_per_bio_data(base_bio, cc->per_bio_data_size);
- 
- 	if ((struct skcipher_request *)(io + 1) != req)
--		mempool_free(req, cc->req_pool);
-+		mempool_free(req, &cc->req_pool);
- }
- 
- static void crypt_free_req_aead(struct crypt_config *cc,
-@@ -1299,7 +1299,7 @@ static void crypt_free_req_aead(struct crypt_config *cc,
- 	struct dm_crypt_io *io = dm_per_bio_data(base_bio, cc->per_bio_data_size);
- 
- 	if ((struct aead_request *)(io + 1) != req)
--		mempool_free(req, cc->req_pool);
-+		mempool_free(req, &cc->req_pool);
- }
- 
- static void crypt_free_req(struct crypt_config *cc, void *req, struct bio *base_bio)
-@@ -1409,7 +1409,7 @@ static struct bio *crypt_alloc_buffer(struct dm_crypt_io *io, unsigned size)
- 	if (unlikely(gfp_mask & __GFP_DIRECT_RECLAIM))
- 		mutex_lock(&cc->bio_alloc_lock);
- 
--	clone = bio_alloc_bioset(GFP_NOIO, nr_iovecs, cc->bs);
-+	clone = bio_alloc_bioset(GFP_NOIO, nr_iovecs, &cc->bs);
- 	if (!clone)
- 		goto out;
- 
-@@ -1418,7 +1418,7 @@ static struct bio *crypt_alloc_buffer(struct dm_crypt_io *io, unsigned size)
- 	remaining_size = size;
- 
- 	for (i = 0; i < nr_iovecs; i++) {
--		page = mempool_alloc(cc->page_pool, gfp_mask);
-+		page = mempool_alloc(&cc->page_pool, gfp_mask);
- 		if (!page) {
- 			crypt_free_buffer_pages(cc, clone);
- 			bio_put(clone);
-@@ -1453,7 +1453,7 @@ static void crypt_free_buffer_pages(struct crypt_config *cc, struct bio *clone)
- 
- 	bio_for_each_segment_all(bv, clone, i) {
- 		BUG_ON(!bv->bv_page);
--		mempool_free(bv->bv_page, cc->page_pool);
-+		mempool_free(bv->bv_page, &cc->page_pool);
- 	}
- }
- 
-@@ -1492,7 +1492,7 @@ static void crypt_dec_pending(struct dm_crypt_io *io)
- 		crypt_free_req(cc, io->ctx.r.req, base_bio);
- 
- 	if (unlikely(io->integrity_metadata_from_pool))
--		mempool_free(io->integrity_metadata, io->cc->tag_pool);
-+		mempool_free(io->integrity_metadata, &io->cc->tag_pool);
- 	else
- 		kfree(io->integrity_metadata);
- 
-@@ -1565,7 +1565,7 @@ static int kcryptd_io_read(struct dm_crypt_io *io, gfp_t gfp)
- 	 * biovecs we don't need to worry about the block layer
- 	 * modifying the biovec array; so leverage bio_clone_fast().
- 	 */
--	clone = bio_clone_fast(io->base_bio, gfp, cc->bs);
-+	clone = bio_clone_fast(io->base_bio, gfp, &cc->bs);
- 	if (!clone)
- 		return 1;
- 
-@@ -2219,17 +2219,16 @@ static void crypt_dtr(struct dm_target *ti)
- 
- 	crypt_free_tfms(cc);
- 
--	if (cc->bs)
--		bioset_free(cc->bs);
-+	bioset_exit(&cc->bs);
- 
--	mempool_destroy(cc->page_pool);
--	mempool_destroy(cc->req_pool);
--	mempool_destroy(cc->tag_pool);
--
--	if (cc->page_pool)
-+	if (mempool_initialized(&cc->page_pool))
- 		WARN_ON(percpu_counter_sum(&cc->n_allocated_pages) != 0);
- 	percpu_counter_destroy(&cc->n_allocated_pages);
- 
-+	mempool_exit(&cc->page_pool);
-+	mempool_exit(&cc->req_pool);
-+	mempool_exit(&cc->tag_pool);
-+
- 	if (cc->iv_gen_ops && cc->iv_gen_ops->dtr)
- 		cc->iv_gen_ops->dtr(cc);
- 
-@@ -2743,8 +2742,6 @@ static int crypt_ctr(struct dm_target *ti, unsigned int argc, char **argv)
- 		iv_size_padding = align_mask;
- 	}
- 
--	ret = -ENOMEM;
--
- 	/*  ...| IV + padding | original IV | original sec. number | bio tag offset | */
- 	additional_req_size = sizeof(struct dm_crypt_request) +
- 		iv_size_padding + cc->iv_size +
-@@ -2752,8 +2749,8 @@ static int crypt_ctr(struct dm_target *ti, unsigned int argc, char **argv)
- 		sizeof(uint64_t) +
- 		sizeof(unsigned int);
- 
--	cc->req_pool = mempool_create_kmalloc_pool(MIN_IOS, cc->dmreq_start + additional_req_size);
--	if (!cc->req_pool) {
-+	ret = mempool_init_kmalloc_pool(&cc->req_pool, MIN_IOS, cc->dmreq_start + additional_req_size);
-+	if (ret) {
- 		ti->error = "Cannot allocate crypt request mempool";
- 		goto bad;
- 	}
-@@ -2762,14 +2759,14 @@ static int crypt_ctr(struct dm_target *ti, unsigned int argc, char **argv)
- 		ALIGN(sizeof(struct dm_crypt_io) + cc->dmreq_start + additional_req_size,
- 		      ARCH_KMALLOC_MINALIGN);
- 
--	cc->page_pool = mempool_create(BIO_MAX_PAGES, crypt_page_alloc, crypt_page_free, cc);
--	if (!cc->page_pool) {
-+	ret = mempool_init(&cc->page_pool, BIO_MAX_PAGES, crypt_page_alloc, crypt_page_free, cc);
-+	if (ret) {
- 		ti->error = "Cannot allocate page mempool";
- 		goto bad;
- 	}
- 
--	cc->bs = bioset_create(MIN_IOS, 0, BIOSET_NEED_BVECS);
--	if (!cc->bs) {
-+	ret = bioset_init(&cc->bs, MIN_IOS, 0, BIOSET_NEED_BVECS);
-+	if (ret) {
- 		ti->error = "Cannot allocate crypt bioset";
- 		goto bad;
- 	}
-@@ -2806,11 +2803,10 @@ static int crypt_ctr(struct dm_target *ti, unsigned int argc, char **argv)
- 		if (!cc->tag_pool_max_sectors)
- 			cc->tag_pool_max_sectors = 1;
- 
--		cc->tag_pool = mempool_create_kmalloc_pool(MIN_IOS,
-+		ret = mempool_init_kmalloc_pool(&cc->tag_pool, MIN_IOS,
- 			cc->tag_pool_max_sectors * cc->on_disk_tag_size);
--		if (!cc->tag_pool) {
-+		if (ret) {
- 			ti->error = "Cannot allocate integrity tags mempool";
--			ret = -ENOMEM;
- 			goto bad;
- 		}
- 
-@@ -2903,7 +2899,7 @@ static int crypt_map(struct dm_target *ti, struct bio *bio)
- 				GFP_NOIO | __GFP_NORETRY | __GFP_NOMEMALLOC | __GFP_NOWARN)))) {
- 			if (bio_sectors(bio) > cc->tag_pool_max_sectors)
- 				dm_accept_partial_bio(bio, cc->tag_pool_max_sectors);
--			io->integrity_metadata = mempool_alloc(cc->tag_pool, GFP_NOIO);
-+			io->integrity_metadata = mempool_alloc(&cc->tag_pool, GFP_NOIO);
- 			io->integrity_metadata_from_pool = true;
+diff --git a/drivers/md/md-faulty.c b/drivers/md/md-faulty.c
+index 38264b3842..c2fdf899de 100644
+--- a/drivers/md/md-faulty.c
++++ b/drivers/md/md-faulty.c
+@@ -214,7 +214,7 @@ static bool faulty_make_request(struct mddev *mddev, struct bio *bio)
  		}
  	}
-diff --git a/drivers/md/dm-integrity.c b/drivers/md/dm-integrity.c
-index 77d9fe58da..20f5bc1c74 100644
---- a/drivers/md/dm-integrity.c
-+++ b/drivers/md/dm-integrity.c
-@@ -142,7 +142,7 @@ struct dm_integrity_c {
- 	unsigned tag_size;
- 	__s8 log2_tag_size;
- 	sector_t start;
--	mempool_t *journal_io_mempool;
-+	mempool_t journal_io_mempool;
- 	struct dm_io_client *io;
- 	struct dm_bufio_client *bufio;
- 	struct workqueue_struct *metadata_wq;
-@@ -1817,7 +1817,7 @@ static void complete_copy_from_journal(unsigned long error, void *context)
- 	struct journal_completion *comp = io->comp;
- 	struct dm_integrity_c *ic = comp->ic;
- 	remove_range(ic, &io->range);
--	mempool_free(io, ic->journal_io_mempool);
-+	mempool_free(io, &ic->journal_io_mempool);
- 	if (unlikely(error != 0))
- 		dm_integrity_io_error(ic, "copying from journal", -EIO);
- 	complete_journal_op(comp);
-@@ -1886,7 +1886,7 @@ static void do_journal_write(struct dm_integrity_c *ic, unsigned write_start,
- 			}
- 			next_loop = k - 1;
+ 	if (failit) {
+-		struct bio *b = bio_clone_fast(bio, GFP_NOIO, mddev->bio_set);
++		struct bio *b = bio_clone_fast(bio, GFP_NOIO, &mddev->bio_set);
  
--			io = mempool_alloc(ic->journal_io_mempool, GFP_NOIO);
-+			io = mempool_alloc(&ic->journal_io_mempool, GFP_NOIO);
- 			io->comp = &comp;
- 			io->range.logical_sector = sec;
- 			io->range.n_sectors = (k - j) << ic->sb->log2_sectors_per_block;
-@@ -1918,7 +1918,7 @@ static void do_journal_write(struct dm_integrity_c *ic, unsigned write_start,
- 				if (j == k) {
- 					remove_range_unlocked(ic, &io->range);
- 					spin_unlock_irq(&ic->endio_wait.lock);
--					mempool_free(io, ic->journal_io_mempool);
-+					mempool_free(io, &ic->journal_io_mempool);
- 					goto skip_io;
- 				}
- 				for (l = j; l < k; l++) {
-@@ -2980,9 +2980,8 @@ static int dm_integrity_ctr(struct dm_target *ti, unsigned argc, char **argv)
- 		goto bad;
+ 		bio_set_dev(b, conf->rdev->bdev);
+ 		b->bi_private = bio;
+diff --git a/drivers/md/md-linear.c b/drivers/md/md-linear.c
+index 4964323d93..d45c697c0e 100644
+--- a/drivers/md/md-linear.c
++++ b/drivers/md/md-linear.c
+@@ -269,7 +269,7 @@ static bool linear_make_request(struct mddev *mddev, struct bio *bio)
+ 	if (unlikely(bio_end_sector(bio) > end_sector)) {
+ 		/* This bio crosses a device boundary, so we have to split it */
+ 		struct bio *split = bio_split(bio, end_sector - bio_sector,
+-					      GFP_NOIO, mddev->bio_set);
++					      GFP_NOIO, &mddev->bio_set);
+ 		bio_chain(split, bio);
+ 		generic_make_request(bio);
+ 		bio = split;
+diff --git a/drivers/md/md-multipath.c b/drivers/md/md-multipath.c
+index 0a7e99d62c..f71fcdb9b3 100644
+--- a/drivers/md/md-multipath.c
++++ b/drivers/md/md-multipath.c
+@@ -80,7 +80,7 @@ static void multipath_end_bh_io(struct multipath_bh *mp_bh, blk_status_t status)
+ 
+ 	bio->bi_status = status;
+ 	bio_endio(bio);
+-	mempool_free(mp_bh, conf->pool);
++	mempool_free(mp_bh, &conf->pool);
+ }
+ 
+ static void multipath_end_request(struct bio *bio)
+@@ -117,7 +117,7 @@ static bool multipath_make_request(struct mddev *mddev, struct bio * bio)
+ 		return true;
  	}
  
--	ic->journal_io_mempool = mempool_create_slab_pool(JOURNAL_IO_MEMPOOL, journal_io_cache);
--	if (!ic->journal_io_mempool) {
--		r = -ENOMEM;
-+	r = mempool_init_slab_pool(&ic->journal_io_mempool, JOURNAL_IO_MEMPOOL, journal_io_cache);
-+	if (r) {
- 		ti->error = "Cannot allocate mempool";
- 		goto bad;
- 	}
-@@ -3196,7 +3195,7 @@ static void dm_integrity_dtr(struct dm_target *ti)
- 		destroy_workqueue(ic->writer_wq);
- 	if (ic->bufio)
- 		dm_bufio_client_destroy(ic->bufio);
--	mempool_destroy(ic->journal_io_mempool);
-+	mempool_exit(&ic->journal_io_mempool);
- 	if (ic->io)
- 		dm_io_client_destroy(ic->io);
- 	if (ic->dev)
-diff --git a/drivers/md/dm-io.c b/drivers/md/dm-io.c
-index a8d914d5ab..53c6ed0eaa 100644
---- a/drivers/md/dm-io.c
-+++ b/drivers/md/dm-io.c
-@@ -22,8 +22,8 @@
- #define DM_IO_MAX_REGIONS	BITS_PER_LONG
+-	mp_bh = mempool_alloc(conf->pool, GFP_NOIO);
++	mp_bh = mempool_alloc(&conf->pool, GFP_NOIO);
  
- struct dm_io_client {
--	mempool_t *pool;
--	struct bio_set *bios;
-+	mempool_t pool;
-+	struct bio_set bios;
+ 	mp_bh->master_bio = bio;
+ 	mp_bh->mddev = mddev;
+@@ -125,7 +125,7 @@ static bool multipath_make_request(struct mddev *mddev, struct bio * bio)
+ 	mp_bh->path = multipath_map(conf);
+ 	if (mp_bh->path < 0) {
+ 		bio_io_error(bio);
+-		mempool_free(mp_bh, conf->pool);
++		mempool_free(mp_bh, &conf->pool);
+ 		return true;
+ 	}
+ 	multipath = conf->multipaths + mp_bh->path;
+@@ -378,6 +378,7 @@ static int multipath_run (struct mddev *mddev)
+ 	struct multipath_info *disk;
+ 	struct md_rdev *rdev;
+ 	int working_disks;
++	int ret;
+ 
+ 	if (md_check_no_bitmap(mddev))
+ 		return -EINVAL;
+@@ -431,9 +432,9 @@ static int multipath_run (struct mddev *mddev)
+ 	}
+ 	mddev->degraded = conf->raid_disks - working_disks;
+ 
+-	conf->pool = mempool_create_kmalloc_pool(NR_RESERVED_BUFS,
+-						 sizeof(struct multipath_bh));
+-	if (conf->pool == NULL)
++	ret = mempool_init_kmalloc_pool(&conf->pool, NR_RESERVED_BUFS,
++					sizeof(struct multipath_bh));
++	if (ret)
+ 		goto out_free_conf;
+ 
+ 	mddev->thread = md_register_thread(multipathd, mddev,
+@@ -455,7 +456,7 @@ static int multipath_run (struct mddev *mddev)
+ 	return 0;
+ 
+ out_free_conf:
+-	mempool_destroy(conf->pool);
++	mempool_exit(&conf->pool);
+ 	kfree(conf->multipaths);
+ 	kfree(conf);
+ 	mddev->private = NULL;
+@@ -467,7 +468,7 @@ static void multipath_free(struct mddev *mddev, void *priv)
+ {
+ 	struct mpconf *conf = priv;
+ 
+-	mempool_destroy(conf->pool);
++	mempool_exit(&conf->pool);
+ 	kfree(conf->multipaths);
+ 	kfree(conf);
+ }
+diff --git a/drivers/md/md-multipath.h b/drivers/md/md-multipath.h
+index 0adb941f48..b3099e5fc4 100644
+--- a/drivers/md/md-multipath.h
++++ b/drivers/md/md-multipath.h
+@@ -13,7 +13,7 @@ struct mpconf {
+ 	spinlock_t		device_lock;
+ 	struct list_head	retry_list;
+ 
+-	mempool_t		*pool;
++	mempool_t		pool;
  };
  
  /*
-@@ -49,32 +49,33 @@ struct dm_io_client *dm_io_client_create(void)
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index c208c01f63..fc692b7128 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -193,10 +193,10 @@ struct bio *bio_alloc_mddev(gfp_t gfp_mask, int nr_iovecs,
  {
- 	struct dm_io_client *client;
- 	unsigned min_ios = dm_get_reserved_bio_based_ios();
-+	int ret;
+ 	struct bio *b;
  
- 	client = kmalloc(sizeof(*client), GFP_KERNEL);
- 	if (!client)
- 		return ERR_PTR(-ENOMEM);
+-	if (!mddev || !mddev->bio_set)
++	if (!mddev || !bioset_initialized(&mddev->bio_set))
+ 		return bio_alloc(gfp_mask, nr_iovecs);
  
--	client->pool = mempool_create_slab_pool(min_ios, _dm_io_cache);
--	if (!client->pool)
-+	ret = mempool_init_slab_pool(&client->pool, min_ios, _dm_io_cache);
-+	if (ret)
- 		goto bad;
+-	b = bio_alloc_bioset(gfp_mask, nr_iovecs, mddev->bio_set);
++	b = bio_alloc_bioset(gfp_mask, nr_iovecs, &mddev->bio_set);
+ 	if (!b)
+ 		return NULL;
+ 	return b;
+@@ -205,10 +205,10 @@ EXPORT_SYMBOL_GPL(bio_alloc_mddev);
  
--	client->bios = bioset_create(min_ios, 0, BIOSET_NEED_BVECS);
--	if (!client->bios)
-+	ret = bioset_init(&client->bios, min_ios, 0, BIOSET_NEED_BVECS);
-+	if (ret)
- 		goto bad;
- 
- 	return client;
- 
-    bad:
--	mempool_destroy(client->pool);
-+	mempool_exit(&client->pool);
- 	kfree(client);
--	return ERR_PTR(-ENOMEM);
-+	return ERR_PTR(ret);
- }
- EXPORT_SYMBOL(dm_io_client_create);
- 
- void dm_io_client_destroy(struct dm_io_client *client)
+ static struct bio *md_bio_alloc_sync(struct mddev *mddev)
  {
--	mempool_destroy(client->pool);
--	bioset_free(client->bios);
-+	mempool_exit(&client->pool);
-+	bioset_exit(&client->bios);
- 	kfree(client);
- }
- EXPORT_SYMBOL(dm_io_client_destroy);
-@@ -120,7 +121,7 @@ static void complete_io(struct io *io)
- 		invalidate_kernel_vmap_range(io->vma_invalidate_address,
- 					     io->vma_invalidate_size);
+-	if (!mddev || !mddev->sync_set)
++	if (!mddev || !bioset_initialized(&mddev->sync_set))
+ 		return bio_alloc(GFP_NOIO, 1);
  
--	mempool_free(io, io->client->pool);
-+	mempool_free(io, &io->client->pool);
- 	fn(error_bits, context);
+-	return bio_alloc_bioset(GFP_NOIO, 1, mddev->sync_set);
++	return bio_alloc_bioset(GFP_NOIO, 1, &mddev->sync_set);
  }
  
-@@ -344,7 +345,7 @@ static void do_region(int op, int op_flags, unsigned region,
- 					  dm_sector_div_up(remaining, (PAGE_SIZE >> SECTOR_SHIFT)));
+ /*
+@@ -510,7 +510,10 @@ static void mddev_delayed_delete(struct work_struct *ws);
+ 
+ static void mddev_put(struct mddev *mddev)
+ {
+-	struct bio_set *bs = NULL, *sync_bs = NULL;
++	struct bio_set bs, sync_bs;
++
++	memset(&bs, 0, sizeof(bs));
++	memset(&sync_bs, 0, sizeof(sync_bs));
+ 
+ 	if (!atomic_dec_and_lock(&mddev->active, &all_mddevs_lock))
+ 		return;
+@@ -521,8 +524,8 @@ static void mddev_put(struct mddev *mddev)
+ 		list_del_init(&mddev->all_mddevs);
+ 		bs = mddev->bio_set;
+ 		sync_bs = mddev->sync_set;
+-		mddev->bio_set = NULL;
+-		mddev->sync_set = NULL;
++		memset(&mddev->bio_set, 0, sizeof(mddev->bio_set));
++		memset(&mddev->sync_set, 0, sizeof(mddev->sync_set));
+ 		if (mddev->gendisk) {
+ 			/* We did a probe so need to clean up.  Call
+ 			 * queue_work inside the spinlock so that
+@@ -535,10 +538,8 @@ static void mddev_put(struct mddev *mddev)
+ 			kfree(mddev);
+ 	}
+ 	spin_unlock(&all_mddevs_lock);
+-	if (bs)
+-		bioset_free(bs);
+-	if (sync_bs)
+-		bioset_free(sync_bs);
++	bioset_exit(&bs);
++	bioset_exit(&sync_bs);
+ }
+ 
+ static void md_safemode_timeout(struct timer_list *t);
+@@ -2123,7 +2124,7 @@ int md_integrity_register(struct mddev *mddev)
+ 			       bdev_get_integrity(reference->bdev));
+ 
+ 	pr_debug("md: data integrity enabled on %s\n", mdname(mddev));
+-	if (bioset_integrity_create(mddev->bio_set, BIO_POOL_SIZE)) {
++	if (bioset_integrity_create(&mddev->bio_set, BIO_POOL_SIZE)) {
+ 		pr_err("md: failed to create integrity pool for %s\n",
+ 		       mdname(mddev));
+ 		return -EINVAL;
+@@ -5497,17 +5498,15 @@ int md_run(struct mddev *mddev)
+ 		sysfs_notify_dirent_safe(rdev->sysfs_state);
+ 	}
+ 
+-	if (mddev->bio_set == NULL) {
+-		mddev->bio_set = bioset_create(BIO_POOL_SIZE, 0, BIOSET_NEED_BVECS);
+-		if (!mddev->bio_set)
+-			return -ENOMEM;
++	if (!bioset_initialized(&mddev->bio_set)) {
++		err = bioset_init(&mddev->bio_set, BIO_POOL_SIZE, 0, BIOSET_NEED_BVECS);
++		if (err)
++			return err;
+ 	}
+-	if (mddev->sync_set == NULL) {
+-		mddev->sync_set = bioset_create(BIO_POOL_SIZE, 0, BIOSET_NEED_BVECS);
+-		if (!mddev->sync_set) {
+-			err = -ENOMEM;
++	if (!bioset_initialized(&mddev->sync_set)) {
++		err = bioset_init(&mddev->sync_set, BIO_POOL_SIZE, 0, BIOSET_NEED_BVECS);
++		if (err)
+ 			goto abort;
+-		}
+ 	}
+ 
+ 	spin_lock(&pers_lock);
+@@ -5668,14 +5667,8 @@ int md_run(struct mddev *mddev)
+ 	return 0;
+ 
+ abort:
+-	if (mddev->bio_set) {
+-		bioset_free(mddev->bio_set);
+-		mddev->bio_set = NULL;
+-	}
+-	if (mddev->sync_set) {
+-		bioset_free(mddev->sync_set);
+-		mddev->sync_set = NULL;
+-	}
++	bioset_exit(&mddev->bio_set);
++	bioset_exit(&mddev->sync_set);
+ 
+ 	return err;
+ }
+@@ -5888,14 +5881,8 @@ void md_stop(struct mddev *mddev)
+ 	 * This is called from dm-raid
+ 	 */
+ 	__md_stop(mddev);
+-	if (mddev->bio_set) {
+-		bioset_free(mddev->bio_set);
+-		mddev->bio_set = NULL;
+-	}
+-	if (mddev->sync_set) {
+-		bioset_free(mddev->sync_set);
+-		mddev->sync_set = NULL;
+-	}
++	bioset_exit(&mddev->bio_set);
++	bioset_exit(&mddev->sync_set);
+ }
+ 
+ EXPORT_SYMBOL_GPL(md_stop);
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index fbc925cce8..3507cab22c 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -452,8 +452,8 @@ struct mddev {
+ 
+ 	struct attribute_group		*to_remove;
+ 
+-	struct bio_set			*bio_set;
+-	struct bio_set			*sync_set; /* for sync operations like
++	struct bio_set			bio_set;
++	struct bio_set			sync_set; /* for sync operations like
+ 						   * metadata and bitmap writes
+ 						   */
+ 
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index 584c103472..65ae47a022 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -479,7 +479,7 @@ static void raid0_handle_discard(struct mddev *mddev, struct bio *bio)
+ 	if (bio_end_sector(bio) > zone->zone_end) {
+ 		struct bio *split = bio_split(bio,
+ 			zone->zone_end - bio->bi_iter.bi_sector, GFP_NOIO,
+-			mddev->bio_set);
++			&mddev->bio_set);
+ 		bio_chain(split, bio);
+ 		generic_make_request(bio);
+ 		bio = split;
+@@ -582,7 +582,8 @@ static bool raid0_make_request(struct mddev *mddev, struct bio *bio)
+ 	sector = bio_sector;
+ 
+ 	if (sectors < bio_sectors(bio)) {
+-		struct bio *split = bio_split(bio, sectors, GFP_NOIO, mddev->bio_set);
++		struct bio *split = bio_split(bio, sectors, GFP_NOIO,
++					      &mddev->bio_set);
+ 		bio_chain(split, bio);
+ 		generic_make_request(bio);
+ 		bio = split;
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index e9e3308cb0..bad2852071 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -221,7 +221,7 @@ static void free_r1bio(struct r1bio *r1_bio)
+ 	struct r1conf *conf = r1_bio->mddev->private;
+ 
+ 	put_all_bios(conf, r1_bio);
+-	mempool_free(r1_bio, conf->r1bio_pool);
++	mempool_free(r1_bio, &conf->r1bio_pool);
+ }
+ 
+ static void put_buf(struct r1bio *r1_bio)
+@@ -236,7 +236,7 @@ static void put_buf(struct r1bio *r1_bio)
+ 			rdev_dec_pending(conf->mirrors[i].rdev, r1_bio->mddev);
+ 	}
+ 
+-	mempool_free(r1_bio, conf->r1buf_pool);
++	mempool_free(r1_bio, &conf->r1buf_pool);
+ 
+ 	lower_barrier(conf, sect);
+ }
+@@ -1178,7 +1178,7 @@ alloc_r1bio(struct mddev *mddev, struct bio *bio)
+ 	struct r1conf *conf = mddev->private;
+ 	struct r1bio *r1_bio;
+ 
+-	r1_bio = mempool_alloc(conf->r1bio_pool, GFP_NOIO);
++	r1_bio = mempool_alloc(&conf->r1bio_pool, GFP_NOIO);
+ 	/* Ensure no bio records IO_BLOCKED */
+ 	memset(r1_bio->bios, 0, conf->raid_disks * sizeof(r1_bio->bios[0]));
+ 	init_r1bio(r1_bio, mddev, bio);
+@@ -1268,7 +1268,7 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
+ 
+ 	if (max_sectors < bio_sectors(bio)) {
+ 		struct bio *split = bio_split(bio, max_sectors,
+-					      gfp, conf->bio_split);
++					      gfp, &conf->bio_split);
+ 		bio_chain(split, bio);
+ 		generic_make_request(bio);
+ 		bio = split;
+@@ -1278,7 +1278,7 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
+ 
+ 	r1_bio->read_disk = rdisk;
+ 
+-	read_bio = bio_clone_fast(bio, gfp, mddev->bio_set);
++	read_bio = bio_clone_fast(bio, gfp, &mddev->bio_set);
+ 
+ 	r1_bio->bios[rdisk] = read_bio;
+ 
+@@ -1439,7 +1439,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 
+ 	if (max_sectors < bio_sectors(bio)) {
+ 		struct bio *split = bio_split(bio, max_sectors,
+-					      GFP_NOIO, conf->bio_split);
++					      GFP_NOIO, &conf->bio_split);
+ 		bio_chain(split, bio);
+ 		generic_make_request(bio);
+ 		bio = split;
+@@ -1479,9 +1479,9 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 
+ 		if (r1_bio->behind_master_bio)
+ 			mbio = bio_clone_fast(r1_bio->behind_master_bio,
+-					      GFP_NOIO, mddev->bio_set);
++					      GFP_NOIO, &mddev->bio_set);
+ 		else
+-			mbio = bio_clone_fast(bio, GFP_NOIO, mddev->bio_set);
++			mbio = bio_clone_fast(bio, GFP_NOIO, &mddev->bio_set);
+ 
+ 		if (r1_bio->behind_master_bio) {
+ 			if (test_bit(WriteMostly, &conf->mirrors[i].rdev->flags))
+@@ -1657,8 +1657,7 @@ static void close_sync(struct r1conf *conf)
+ 		_allow_barrier(conf, idx);
+ 	}
+ 
+-	mempool_destroy(conf->r1buf_pool);
+-	conf->r1buf_pool = NULL;
++	mempool_exit(&conf->r1buf_pool);
+ }
+ 
+ static int raid1_spare_active(struct mddev *mddev)
+@@ -2348,10 +2347,10 @@ static int narrow_write_error(struct r1bio *r1_bio, int i)
+ 		if (test_bit(R1BIO_BehindIO, &r1_bio->state)) {
+ 			wbio = bio_clone_fast(r1_bio->behind_master_bio,
+ 					      GFP_NOIO,
+-					      mddev->bio_set);
++					      &mddev->bio_set);
+ 		} else {
+ 			wbio = bio_clone_fast(r1_bio->master_bio, GFP_NOIO,
+-					      mddev->bio_set);
++					      &mddev->bio_set);
  		}
  
--		bio = bio_alloc_bioset(GFP_NOIO, num_bvecs, io->client->bios);
-+		bio = bio_alloc_bioset(GFP_NOIO, num_bvecs, &io->client->bios);
- 		bio->bi_iter.bi_sector = where->sector + (where->count - remaining);
- 		bio_set_dev(bio, where->bdev);
- 		bio->bi_end_io = endio;
-@@ -442,7 +443,7 @@ static int sync_io(struct dm_io_client *client, unsigned int num_regions,
+ 		bio_set_op_attrs(wbio, REQ_OP_WRITE, 0);
+@@ -2564,17 +2563,15 @@ static int init_resync(struct r1conf *conf)
+ 	int buffs;
  
- 	init_completion(&sio.wait);
- 
--	io = mempool_alloc(client->pool, GFP_NOIO);
-+	io = mempool_alloc(&client->pool, GFP_NOIO);
- 	io->error_bits = 0;
- 	atomic_set(&io->count, 1); /* see dispatch_io() */
- 	io->client = client;
-@@ -474,7 +475,7 @@ static int async_io(struct dm_io_client *client, unsigned int num_regions,
- 		return -EIO;
- 	}
- 
--	io = mempool_alloc(client->pool, GFP_NOIO);
-+	io = mempool_alloc(&client->pool, GFP_NOIO);
- 	io->error_bits = 0;
- 	atomic_set(&io->count, 1); /* see dispatch_io() */
- 	io->client = client;
-diff --git a/drivers/md/dm-kcopyd.c b/drivers/md/dm-kcopyd.c
-index e6e7c68664..c89a675a2a 100644
---- a/drivers/md/dm-kcopyd.c
-+++ b/drivers/md/dm-kcopyd.c
-@@ -47,7 +47,7 @@ struct dm_kcopyd_client {
- 	wait_queue_head_t destroyq;
- 	atomic_t nr_jobs;
- 
--	mempool_t *job_pool;
-+	mempool_t job_pool;
- 
- 	struct workqueue_struct *kcopyd_wq;
- 	struct work_struct kcopyd_work;
-@@ -479,7 +479,7 @@ static int run_complete_job(struct kcopyd_job *job)
- 	 */
- 	if (job->master_job == job) {
- 		mutex_destroy(&job->lock);
--		mempool_free(job, kc->job_pool);
-+		mempool_free(job, &kc->job_pool);
- 	}
- 	fn(read_err, write_err, context);
- 
-@@ -751,7 +751,7 @@ int dm_kcopyd_copy(struct dm_kcopyd_client *kc, struct dm_io_region *from,
- 	 * Allocate an array of jobs consisting of one master job
- 	 * followed by SPLIT_COUNT sub jobs.
- 	 */
--	job = mempool_alloc(kc->job_pool, GFP_NOIO);
-+	job = mempool_alloc(&kc->job_pool, GFP_NOIO);
- 	mutex_init(&job->lock);
- 
- 	/*
-@@ -835,7 +835,7 @@ void *dm_kcopyd_prepare_callback(struct dm_kcopyd_client *kc,
- {
- 	struct kcopyd_job *job;
- 
--	job = mempool_alloc(kc->job_pool, GFP_NOIO);
-+	job = mempool_alloc(&kc->job_pool, GFP_NOIO);
- 
- 	memset(job, 0, sizeof(struct kcopyd_job));
- 	job->kc = kc;
-@@ -879,7 +879,7 @@ int kcopyd_cancel(struct kcopyd_job *job, int block)
-  *---------------------------------------------------------------*/
- struct dm_kcopyd_client *dm_kcopyd_client_create(struct dm_kcopyd_throttle *throttle)
- {
--	int r = -ENOMEM;
-+	int r;
- 	struct dm_kcopyd_client *kc;
- 
- 	kc = kmalloc(sizeof(*kc), GFP_KERNEL);
-@@ -892,14 +892,16 @@ struct dm_kcopyd_client *dm_kcopyd_client_create(struct dm_kcopyd_throttle *thro
- 	INIT_LIST_HEAD(&kc->pages_jobs);
- 	kc->throttle = throttle;
- 
--	kc->job_pool = mempool_create_slab_pool(MIN_JOBS, _job_cache);
--	if (!kc->job_pool)
-+	r = mempool_init_slab_pool(&kc->job_pool, MIN_JOBS, _job_cache);
-+	if (r)
- 		goto bad_slab;
- 
- 	INIT_WORK(&kc->kcopyd_work, do_work);
- 	kc->kcopyd_wq = alloc_workqueue("kcopyd", WQ_MEM_RECLAIM, 0);
--	if (!kc->kcopyd_wq)
-+	if (!kc->kcopyd_wq) {
-+		r = -ENOMEM;
- 		goto bad_workqueue;
-+	}
- 
- 	kc->pages = NULL;
- 	kc->nr_reserved_pages = kc->nr_free_pages = 0;
-@@ -923,7 +925,7 @@ struct dm_kcopyd_client *dm_kcopyd_client_create(struct dm_kcopyd_throttle *thro
- bad_client_pages:
- 	destroy_workqueue(kc->kcopyd_wq);
- bad_workqueue:
--	mempool_destroy(kc->job_pool);
-+	mempool_exit(&kc->job_pool);
- bad_slab:
- 	kfree(kc);
- 
-@@ -942,7 +944,7 @@ void dm_kcopyd_client_destroy(struct dm_kcopyd_client *kc)
- 	destroy_workqueue(kc->kcopyd_wq);
- 	dm_io_client_destroy(kc->io_client);
- 	client_free_pages(kc);
--	mempool_destroy(kc->job_pool);
-+	mempool_exit(&kc->job_pool);
- 	kfree(kc);
+ 	buffs = RESYNC_WINDOW / RESYNC_BLOCK_SIZE;
+-	BUG_ON(conf->r1buf_pool);
+-	conf->r1buf_pool = mempool_create(buffs, r1buf_pool_alloc, r1buf_pool_free,
+-					  conf->poolinfo);
+-	if (!conf->r1buf_pool)
+-		return -ENOMEM;
+-	return 0;
++	BUG_ON(mempool_initialized(&conf->r1buf_pool));
++
++	return mempool_init(&conf->r1buf_pool, buffs, r1buf_pool_alloc,
++			    r1buf_pool_free, conf->poolinfo);
  }
- EXPORT_SYMBOL(dm_kcopyd_client_destroy);
-diff --git a/drivers/md/dm-log-userspace-base.c b/drivers/md/dm-log-userspace-base.c
-index 53b7b06d0a..52090bee17 100644
---- a/drivers/md/dm-log-userspace-base.c
-+++ b/drivers/md/dm-log-userspace-base.c
-@@ -76,7 +76,7 @@ struct log_c {
- 	 */
- 	uint32_t integrated_flush;
  
--	mempool_t *flush_entry_pool;
-+	mempool_t flush_entry_pool;
- };
+ static struct r1bio *raid1_alloc_init_r1buf(struct r1conf *conf)
+ {
+-	struct r1bio *r1bio = mempool_alloc(conf->r1buf_pool, GFP_NOIO);
++	struct r1bio *r1bio = mempool_alloc(&conf->r1buf_pool, GFP_NOIO);
+ 	struct resync_pages *rps;
+ 	struct bio *bio;
+ 	int i;
+@@ -2617,7 +2614,7 @@ static sector_t raid1_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 	int idx = sector_to_idx(sector_nr);
+ 	int page_idx = 0;
  
- static struct kmem_cache *_flush_entry_cache;
-@@ -249,11 +249,10 @@ static int userspace_ctr(struct dm_dirty_log *log, struct dm_target *ti,
- 		goto out;
+-	if (!conf->r1buf_pool)
++	if (!mempool_initialized(&conf->r1buf_pool))
+ 		if (init_resync(conf))
+ 			return 0;
+ 
+@@ -2953,14 +2950,13 @@ static struct r1conf *setup_conf(struct mddev *mddev)
+ 	if (!conf->poolinfo)
+ 		goto abort;
+ 	conf->poolinfo->raid_disks = mddev->raid_disks * 2;
+-	conf->r1bio_pool = mempool_create(NR_RAID1_BIOS, r1bio_pool_alloc,
+-					  r1bio_pool_free,
+-					  conf->poolinfo);
+-	if (!conf->r1bio_pool)
++	err = mempool_init(&conf->r1bio_pool, NR_RAID1_BIOS, r1bio_pool_alloc,
++			   r1bio_pool_free, conf->poolinfo);
++	if (err)
+ 		goto abort;
+ 
+-	conf->bio_split = bioset_create(BIO_POOL_SIZE, 0, 0);
+-	if (!conf->bio_split)
++	err = bioset_init(&conf->bio_split, BIO_POOL_SIZE, 0, 0);
++	if (err)
+ 		goto abort;
+ 
+ 	conf->poolinfo->mddev = mddev;
+@@ -3033,7 +3029,7 @@ static struct r1conf *setup_conf(struct mddev *mddev)
+ 
+  abort:
+ 	if (conf) {
+-		mempool_destroy(conf->r1bio_pool);
++		mempool_exit(&conf->r1bio_pool);
+ 		kfree(conf->mirrors);
+ 		safe_put_page(conf->tmppage);
+ 		kfree(conf->poolinfo);
+@@ -3041,8 +3037,7 @@ static struct r1conf *setup_conf(struct mddev *mddev)
+ 		kfree(conf->nr_waiting);
+ 		kfree(conf->nr_queued);
+ 		kfree(conf->barrier);
+-		if (conf->bio_split)
+-			bioset_free(conf->bio_split);
++		bioset_exit(&conf->bio_split);
+ 		kfree(conf);
  	}
+ 	return ERR_PTR(err);
+@@ -3144,7 +3139,7 @@ static void raid1_free(struct mddev *mddev, void *priv)
+ {
+ 	struct r1conf *conf = priv;
  
--	lc->flush_entry_pool = mempool_create_slab_pool(FLUSH_ENTRY_POOL_SIZE,
--							_flush_entry_cache);
--	if (!lc->flush_entry_pool) {
-+	r = mempool_init_slab_pool(&lc->flush_entry_pool, FLUSH_ENTRY_POOL_SIZE,
-+				   _flush_entry_cache);
-+	if (r) {
- 		DMERR("Failed to create flush_entry_pool");
--		r = -ENOMEM;
- 		goto out;
- 	}
+-	mempool_destroy(conf->r1bio_pool);
++	mempool_exit(&conf->r1bio_pool);
+ 	kfree(conf->mirrors);
+ 	safe_put_page(conf->tmppage);
+ 	kfree(conf->poolinfo);
+@@ -3152,8 +3147,7 @@ static void raid1_free(struct mddev *mddev, void *priv)
+ 	kfree(conf->nr_waiting);
+ 	kfree(conf->nr_queued);
+ 	kfree(conf->barrier);
+-	if (conf->bio_split)
+-		bioset_free(conf->bio_split);
++	bioset_exit(&conf->bio_split);
+ 	kfree(conf);
+ }
  
-@@ -313,7 +312,7 @@ static int userspace_ctr(struct dm_dirty_log *log, struct dm_target *ti,
- out:
- 	kfree(devices_rdata);
- 	if (r) {
--		mempool_destroy(lc->flush_entry_pool);
-+		mempool_exit(&lc->flush_entry_pool);
- 		kfree(lc);
- 		kfree(ctr_str);
- 	} else {
-@@ -342,7 +341,7 @@ static void userspace_dtr(struct dm_dirty_log *log)
- 	if (lc->log_dev)
- 		dm_put_device(lc->ti, lc->log_dev);
- 
--	mempool_destroy(lc->flush_entry_pool);
-+	mempool_exit(&lc->flush_entry_pool);
- 
- 	kfree(lc->usr_argv_str);
- 	kfree(lc);
-@@ -570,7 +569,7 @@ static int userspace_flush(struct dm_dirty_log *log)
- 	int mark_list_is_empty;
- 	int clear_list_is_empty;
- 	struct dm_dirty_log_flush_entry *fe, *tmp_fe;
--	mempool_t *flush_entry_pool = lc->flush_entry_pool;
-+	mempool_t *flush_entry_pool = &lc->flush_entry_pool;
- 
- 	spin_lock_irqsave(&lc->flush_lock, flags);
- 	list_splice_init(&lc->mark_list, &mark_list);
-@@ -653,7 +652,7 @@ static void userspace_mark_region(struct dm_dirty_log *log, region_t region)
- 	struct dm_dirty_log_flush_entry *fe;
- 
- 	/* Wait for an allocation, but _never_ fail */
--	fe = mempool_alloc(lc->flush_entry_pool, GFP_NOIO);
-+	fe = mempool_alloc(&lc->flush_entry_pool, GFP_NOIO);
- 	BUG_ON(!fe);
- 
- 	spin_lock_irqsave(&lc->flush_lock, flags);
-@@ -687,7 +686,7 @@ static void userspace_clear_region(struct dm_dirty_log *log, region_t region)
- 	 * to cause the region to be resync'ed when the
- 	 * device is activated next time.
+@@ -3199,13 +3193,17 @@ static int raid1_reshape(struct mddev *mddev)
+ 	 * At the same time, we "pack" the devices so that all the missing
+ 	 * devices have the higher raid_disk numbers.
  	 */
--	fe = mempool_alloc(lc->flush_entry_pool, GFP_ATOMIC);
-+	fe = mempool_alloc(&lc->flush_entry_pool, GFP_ATOMIC);
- 	if (!fe) {
- 		DMERR("Failed to allocate memory to clear region.");
- 		return;
-diff --git a/drivers/md/dm-region-hash.c b/drivers/md/dm-region-hash.c
-index 85c32b22a4..43149eb493 100644
---- a/drivers/md/dm-region-hash.c
-+++ b/drivers/md/dm-region-hash.c
-@@ -63,7 +63,7 @@ struct dm_region_hash {
- 
- 	/* hash table */
- 	rwlock_t hash_lock;
--	mempool_t *region_pool;
-+	mempool_t region_pool;
- 	unsigned mask;
- 	unsigned nr_buckets;
- 	unsigned prime;
-@@ -169,6 +169,7 @@ struct dm_region_hash *dm_region_hash_create(
- 	struct dm_region_hash *rh;
- 	unsigned nr_buckets, max_buckets;
- 	size_t i;
+-	mempool_t *newpool, *oldpool;
++	mempool_t newpool, oldpool;
+ 	struct pool_info *newpoolinfo;
+ 	struct raid1_info *newmirrors;
+ 	struct r1conf *conf = mddev->private;
+ 	int cnt, raid_disks;
+ 	unsigned long flags;
+ 	int d, d2;
 +	int ret;
++
++	memset(&newpool, 0, sizeof(newpool));
++	memset(&oldpool, 0, sizeof(oldpool));
  
- 	/*
- 	 * Calculate a suitable number of buckets for our hash
-@@ -220,9 +221,9 @@ struct dm_region_hash *dm_region_hash_create(
- 	INIT_LIST_HEAD(&rh->failed_recovered_regions);
- 	rh->flush_failure = 0;
+ 	/* Cannot change chunk_size, layout, or level */
+ 	if (mddev->chunk_sectors != mddev->new_chunk_sectors ||
+@@ -3237,17 +3235,17 @@ static int raid1_reshape(struct mddev *mddev)
+ 	newpoolinfo->mddev = mddev;
+ 	newpoolinfo->raid_disks = raid_disks * 2;
  
--	rh->region_pool = mempool_create_kmalloc_pool(MIN_REGIONS,
--						      sizeof(struct dm_region));
--	if (!rh->region_pool) {
-+	ret = mempool_init_kmalloc_pool(&rh->region_pool, MIN_REGIONS,
-+					sizeof(struct dm_region));
+-	newpool = mempool_create(NR_RAID1_BIOS, r1bio_pool_alloc,
+-				 r1bio_pool_free, newpoolinfo);
+-	if (!newpool) {
++	ret = mempool_init(&newpool, NR_RAID1_BIOS, r1bio_pool_alloc,
++			   r1bio_pool_free, newpoolinfo);
 +	if (ret) {
- 		vfree(rh->buckets);
- 		kfree(rh);
- 		rh = ERR_PTR(-ENOMEM);
-@@ -242,14 +243,14 @@ void dm_region_hash_destroy(struct dm_region_hash *rh)
- 		list_for_each_entry_safe(reg, nreg, rh->buckets + h,
- 					 hash_list) {
- 			BUG_ON(atomic_read(&reg->pending));
--			mempool_free(reg, rh->region_pool);
-+			mempool_free(reg, &rh->region_pool);
- 		}
+ 		kfree(newpoolinfo);
+-		return -ENOMEM;
++		return ret;
+ 	}
+ 	newmirrors = kzalloc(sizeof(struct raid1_info) * raid_disks * 2,
+ 			     GFP_KERNEL);
+ 	if (!newmirrors) {
+ 		kfree(newpoolinfo);
+-		mempool_destroy(newpool);
++		mempool_exit(&newpool);
+ 		return -ENOMEM;
  	}
  
- 	if (rh->log)
- 		dm_dirty_log_destroy(rh->log);
+@@ -3287,7 +3285,7 @@ static int raid1_reshape(struct mddev *mddev)
+ 	set_bit(MD_RECOVERY_NEEDED, &mddev->recovery);
+ 	md_wakeup_thread(mddev->thread);
  
--	mempool_destroy(rh->region_pool);
-+	mempool_exit(&rh->region_pool);
- 	vfree(rh->buckets);
- 	kfree(rh);
- }
-@@ -287,7 +288,7 @@ static struct dm_region *__rh_alloc(struct dm_region_hash *rh, region_t region)
- {
- 	struct dm_region *reg, *nreg;
- 
--	nreg = mempool_alloc(rh->region_pool, GFP_ATOMIC);
-+	nreg = mempool_alloc(&rh->region_pool, GFP_ATOMIC);
- 	if (unlikely(!nreg))
- 		nreg = kmalloc(sizeof(*nreg), GFP_NOIO | __GFP_NOFAIL);
- 
-@@ -303,7 +304,7 @@ static struct dm_region *__rh_alloc(struct dm_region_hash *rh, region_t region)
- 	reg = __rh_lookup(rh, region);
- 	if (reg)
- 		/* We lost the race. */
--		mempool_free(nreg, rh->region_pool);
-+		mempool_free(nreg, &rh->region_pool);
- 	else {
- 		__rh_insert(rh, nreg);
- 		if (nreg->state == DM_RH_CLEAN) {
-@@ -481,17 +482,17 @@ void dm_rh_update_states(struct dm_region_hash *rh, int errors_handled)
- 	list_for_each_entry_safe(reg, next, &recovered, list) {
- 		rh->log->type->clear_region(rh->log, reg->key);
- 		complete_resync_work(reg, 1);
--		mempool_free(reg, rh->region_pool);
-+		mempool_free(reg, &rh->region_pool);
- 	}
- 
- 	list_for_each_entry_safe(reg, next, &failed_recovered, list) {
- 		complete_resync_work(reg, errors_handled ? 0 : 1);
--		mempool_free(reg, rh->region_pool);
-+		mempool_free(reg, &rh->region_pool);
- 	}
- 
- 	list_for_each_entry_safe(reg, next, &clean, list) {
- 		rh->log->type->clear_region(rh->log, reg->key);
--		mempool_free(reg, rh->region_pool);
-+		mempool_free(reg, &rh->region_pool);
- 	}
- 
- 	rh->log->type->flush(rh->log);
-diff --git a/drivers/md/dm-rq.c b/drivers/md/dm-rq.c
-index 1c18f335da..6e547b8dd2 100644
---- a/drivers/md/dm-rq.c
-+++ b/drivers/md/dm-rq.c
-@@ -433,7 +433,7 @@ static int setup_clone(struct request *clone, struct request *rq,
- {
- 	int r;
- 
--	r = blk_rq_prep_clone(clone, rq, tio->md->bs, gfp_mask,
-+	r = blk_rq_prep_clone(clone, rq, &tio->md->bs, gfp_mask,
- 			      dm_rq_bio_constructor, tio);
- 	if (r)
- 		return r;
-diff --git a/drivers/md/dm-snap.c b/drivers/md/dm-snap.c
-index 216035be56..b11ddc55f2 100644
---- a/drivers/md/dm-snap.c
-+++ b/drivers/md/dm-snap.c
-@@ -87,7 +87,7 @@ struct dm_snapshot {
- 	 */
- 	struct list_head out_of_order_list;
- 
--	mempool_t *pending_pool;
-+	mempool_t pending_pool;
- 
- 	struct dm_exception_table pending;
- 	struct dm_exception_table complete;
-@@ -682,7 +682,7 @@ static void free_completed_exception(struct dm_exception *e)
- 
- static struct dm_snap_pending_exception *alloc_pending_exception(struct dm_snapshot *s)
- {
--	struct dm_snap_pending_exception *pe = mempool_alloc(s->pending_pool,
-+	struct dm_snap_pending_exception *pe = mempool_alloc(&s->pending_pool,
- 							     GFP_NOIO);
- 
- 	atomic_inc(&s->pending_exceptions_count);
-@@ -695,7 +695,7 @@ static void free_pending_exception(struct dm_snap_pending_exception *pe)
- {
- 	struct dm_snapshot *s = pe->snap;
- 
--	mempool_free(pe, s->pending_pool);
-+	mempool_free(pe, &s->pending_pool);
- 	smp_mb__before_atomic();
- 	atomic_dec(&s->pending_exceptions_count);
- }
-@@ -1196,10 +1196,9 @@ static int snapshot_ctr(struct dm_target *ti, unsigned int argc, char **argv)
- 		goto bad_kcopyd;
- 	}
- 
--	s->pending_pool = mempool_create_slab_pool(MIN_IOS, pending_cache);
--	if (!s->pending_pool) {
-+	r = mempool_init_slab_pool(&s->pending_pool, MIN_IOS, pending_cache);
-+	if (r) {
- 		ti->error = "Could not allocate mempool for pending exceptions";
--		r = -ENOMEM;
- 		goto bad_pending_pool;
- 	}
- 
-@@ -1259,7 +1258,7 @@ static int snapshot_ctr(struct dm_target *ti, unsigned int argc, char **argv)
- 	unregister_snapshot(s);
- 
- bad_load_and_register:
--	mempool_destroy(s->pending_pool);
-+	mempool_exit(&s->pending_pool);
- 
- bad_pending_pool:
- 	dm_kcopyd_client_destroy(s->kcopyd_client);
-@@ -1355,7 +1354,7 @@ static void snapshot_dtr(struct dm_target *ti)
- 	while (atomic_read(&s->pending_exceptions_count))
- 		msleep(1);
- 	/*
--	 * Ensure instructions in mempool_destroy aren't reordered
-+	 * Ensure instructions in mempool_exit aren't reordered
- 	 * before atomic_read.
- 	 */
- 	smp_mb();
-@@ -1367,7 +1366,7 @@ static void snapshot_dtr(struct dm_target *ti)
- 
- 	__free_exceptions(s);
- 
--	mempool_destroy(s->pending_pool);
-+	mempool_exit(&s->pending_pool);
- 
- 	dm_exception_store_destroy(s->store);
- 
-diff --git a/drivers/md/dm-thin.c b/drivers/md/dm-thin.c
-index b11107497d..6c923824ec 100644
---- a/drivers/md/dm-thin.c
-+++ b/drivers/md/dm-thin.c
-@@ -260,7 +260,7 @@ struct pool {
- 	struct dm_deferred_set *all_io_ds;
- 
- 	struct dm_thin_new_mapping *next_mapping;
--	mempool_t *mapping_pool;
-+	mempool_t mapping_pool;
- 
- 	process_bio_fn process_bio;
- 	process_bio_fn process_discard;
-@@ -917,7 +917,7 @@ static void process_prepared_mapping_fail(struct dm_thin_new_mapping *m)
- {
- 	cell_error(m->tc->pool, m->cell);
- 	list_del(&m->list);
--	mempool_free(m, m->tc->pool->mapping_pool);
-+	mempool_free(m, &m->tc->pool->mapping_pool);
- }
- 
- static void process_prepared_mapping(struct dm_thin_new_mapping *m)
-@@ -961,7 +961,7 @@ static void process_prepared_mapping(struct dm_thin_new_mapping *m)
- 
- out:
- 	list_del(&m->list);
--	mempool_free(m, pool->mapping_pool);
-+	mempool_free(m, &pool->mapping_pool);
- }
- 
- /*----------------------------------------------------------------*/
-@@ -971,7 +971,7 @@ static void free_discard_mapping(struct dm_thin_new_mapping *m)
- 	struct thin_c *tc = m->tc;
- 	if (m->cell)
- 		cell_defer_no_holder(tc, m->cell);
--	mempool_free(m, tc->pool->mapping_pool);
-+	mempool_free(m, &tc->pool->mapping_pool);
- }
- 
- static void process_prepared_discard_fail(struct dm_thin_new_mapping *m)
-@@ -999,7 +999,7 @@ static void process_prepared_discard_no_passdown(struct dm_thin_new_mapping *m)
- 		bio_endio(m->bio);
- 
- 	cell_defer_no_holder(tc, m->cell);
--	mempool_free(m, tc->pool->mapping_pool);
-+	mempool_free(m, &tc->pool->mapping_pool);
- }
- 
- /*----------------------------------------------------------------*/
-@@ -1092,7 +1092,7 @@ static void process_prepared_discard_passdown_pt1(struct dm_thin_new_mapping *m)
- 		metadata_operation_failed(pool, "dm_thin_remove_range", r);
- 		bio_io_error(m->bio);
- 		cell_defer_no_holder(tc, m->cell);
--		mempool_free(m, pool->mapping_pool);
-+		mempool_free(m, &pool->mapping_pool);
- 		return;
- 	}
- 
-@@ -1105,7 +1105,7 @@ static void process_prepared_discard_passdown_pt1(struct dm_thin_new_mapping *m)
- 		metadata_operation_failed(pool, "dm_pool_inc_data_range", r);
- 		bio_io_error(m->bio);
- 		cell_defer_no_holder(tc, m->cell);
--		mempool_free(m, pool->mapping_pool);
-+		mempool_free(m, &pool->mapping_pool);
- 		return;
- 	}
- 
-@@ -1150,7 +1150,7 @@ static void process_prepared_discard_passdown_pt2(struct dm_thin_new_mapping *m)
- 		bio_endio(m->bio);
- 
- 	cell_defer_no_holder(tc, m->cell);
--	mempool_free(m, pool->mapping_pool);
-+	mempool_free(m, &pool->mapping_pool);
- }
- 
- static void process_prepared(struct pool *pool, struct list_head *head,
-@@ -1196,7 +1196,7 @@ static int ensure_next_mapping(struct pool *pool)
- 	if (pool->next_mapping)
- 		return 0;
- 
--	pool->next_mapping = mempool_alloc(pool->mapping_pool, GFP_ATOMIC);
-+	pool->next_mapping = mempool_alloc(&pool->mapping_pool, GFP_ATOMIC);
- 
- 	return pool->next_mapping ? 0 : -ENOMEM;
- }
-@@ -2835,8 +2835,8 @@ static void __pool_destroy(struct pool *pool)
- 		destroy_workqueue(pool->wq);
- 
- 	if (pool->next_mapping)
--		mempool_free(pool->next_mapping, pool->mapping_pool);
--	mempool_destroy(pool->mapping_pool);
-+		mempool_free(pool->next_mapping, &pool->mapping_pool);
-+	mempool_exit(&pool->mapping_pool);
- 	dm_deferred_set_destroy(pool->shared_read_ds);
- 	dm_deferred_set_destroy(pool->all_io_ds);
- 	kfree(pool);
-@@ -2931,11 +2931,11 @@ static struct pool *pool_create(struct mapped_device *pool_md,
- 	}
- 
- 	pool->next_mapping = NULL;
--	pool->mapping_pool = mempool_create_slab_pool(MAPPING_POOL_SIZE,
--						      _new_mapping_cache);
--	if (!pool->mapping_pool) {
-+	r = mempool_init_slab_pool(&pool->mapping_pool, MAPPING_POOL_SIZE,
-+				   _new_mapping_cache);
-+	if (r) {
- 		*error = "Error creating pool's mapping mempool";
--		err_p = ERR_PTR(-ENOMEM);
-+		err_p = ERR_PTR(r);
- 		goto bad_mapping_pool;
- 	}
- 
-@@ -2955,7 +2955,7 @@ static struct pool *pool_create(struct mapped_device *pool_md,
- 	return pool;
- 
- bad_sort_array:
--	mempool_destroy(pool->mapping_pool);
-+	mempool_exit(&pool->mapping_pool);
- bad_mapping_pool:
- 	dm_deferred_set_destroy(pool->all_io_ds);
- bad_all_io_ds:
-diff --git a/drivers/md/dm-verity-fec.c b/drivers/md/dm-verity-fec.c
-index e13f90832b..86405869f1 100644
---- a/drivers/md/dm-verity-fec.c
-+++ b/drivers/md/dm-verity-fec.c
-@@ -309,13 +309,13 @@ static int fec_alloc_bufs(struct dm_verity *v, struct dm_verity_fec_io *fio)
- 	unsigned n;
- 
- 	if (!fio->rs)
--		fio->rs = mempool_alloc(v->fec->rs_pool, GFP_NOIO);
-+		fio->rs = mempool_alloc(&v->fec->rs_pool, GFP_NOIO);
- 
- 	fec_for_each_prealloc_buffer(n) {
- 		if (fio->bufs[n])
- 			continue;
- 
--		fio->bufs[n] = mempool_alloc(v->fec->prealloc_pool, GFP_NOWAIT);
-+		fio->bufs[n] = mempool_alloc(&v->fec->prealloc_pool, GFP_NOWAIT);
- 		if (unlikely(!fio->bufs[n])) {
- 			DMERR("failed to allocate FEC buffer");
- 			return -ENOMEM;
-@@ -327,7 +327,7 @@ static int fec_alloc_bufs(struct dm_verity *v, struct dm_verity_fec_io *fio)
- 		if (fio->bufs[n])
- 			continue;
- 
--		fio->bufs[n] = mempool_alloc(v->fec->extra_pool, GFP_NOWAIT);
-+		fio->bufs[n] = mempool_alloc(&v->fec->extra_pool, GFP_NOWAIT);
- 		/* we can manage with even one buffer if necessary */
- 		if (unlikely(!fio->bufs[n]))
- 			break;
-@@ -335,7 +335,7 @@ static int fec_alloc_bufs(struct dm_verity *v, struct dm_verity_fec_io *fio)
- 	fio->nbufs = n;
- 
- 	if (!fio->output)
--		fio->output = mempool_alloc(v->fec->output_pool, GFP_NOIO);
-+		fio->output = mempool_alloc(&v->fec->output_pool, GFP_NOIO);
- 
+-	mempool_destroy(oldpool);
++	mempool_exit(&oldpool);
  	return 0;
  }
-@@ -493,15 +493,15 @@ void verity_fec_finish_io(struct dm_verity_io *io)
- 	if (!verity_fec_is_enabled(io->v))
- 		return;
  
--	mempool_free(fio->rs, f->rs_pool);
-+	mempool_free(fio->rs, &f->rs_pool);
+diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
+index eb84bc68e2..e7ccad8987 100644
+--- a/drivers/md/raid1.h
++++ b/drivers/md/raid1.h
+@@ -118,10 +118,10 @@ struct r1conf {
+ 	 * mempools - it changes when the array grows or shrinks
+ 	 */
+ 	struct pool_info	*poolinfo;
+-	mempool_t		*r1bio_pool;
+-	mempool_t		*r1buf_pool;
++	mempool_t		r1bio_pool;
++	mempool_t		r1buf_pool;
  
- 	fec_for_each_prealloc_buffer(n)
--		mempool_free(fio->bufs[n], f->prealloc_pool);
-+		mempool_free(fio->bufs[n], &f->prealloc_pool);
+-	struct bio_set		*bio_split;
++	struct bio_set		bio_split;
  
- 	fec_for_each_extra_buffer(fio, n)
--		mempool_free(fio->bufs[n], f->extra_pool);
-+		mempool_free(fio->bufs[n], &f->extra_pool);
+ 	/* temporary buffer to synchronous IO when attempting to repair
+ 	 * a read error.
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 3c60774c84..37d4b236b8 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -291,14 +291,14 @@ static void free_r10bio(struct r10bio *r10_bio)
+ 	struct r10conf *conf = r10_bio->mddev->private;
  
--	mempool_free(fio->output, f->output_pool);
-+	mempool_free(fio->output, &f->output_pool);
+ 	put_all_bios(conf, r10_bio);
+-	mempool_free(r10_bio, conf->r10bio_pool);
++	mempool_free(r10_bio, &conf->r10bio_pool);
  }
  
- /*
-@@ -549,9 +549,9 @@ void verity_fec_dtr(struct dm_verity *v)
- 	if (!verity_fec_is_enabled(v))
+ static void put_buf(struct r10bio *r10_bio)
+ {
+ 	struct r10conf *conf = r10_bio->mddev->private;
+ 
+-	mempool_free(r10_bio, conf->r10buf_pool);
++	mempool_free(r10_bio, &conf->r10buf_pool);
+ 
+ 	lower_barrier(conf);
+ }
+@@ -1204,7 +1204,7 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
+ 				   (unsigned long long)r10_bio->sector);
+ 	if (max_sectors < bio_sectors(bio)) {
+ 		struct bio *split = bio_split(bio, max_sectors,
+-					      gfp, conf->bio_split);
++					      gfp, &conf->bio_split);
+ 		bio_chain(split, bio);
+ 		generic_make_request(bio);
+ 		bio = split;
+@@ -1213,7 +1213,7 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
+ 	}
+ 	slot = r10_bio->read_slot;
+ 
+-	read_bio = bio_clone_fast(bio, gfp, mddev->bio_set);
++	read_bio = bio_clone_fast(bio, gfp, &mddev->bio_set);
+ 
+ 	r10_bio->devs[slot].bio = read_bio;
+ 	r10_bio->devs[slot].rdev = rdev;
+@@ -1261,7 +1261,7 @@ static void raid10_write_one_disk(struct mddev *mddev, struct r10bio *r10_bio,
+ 	} else
+ 		rdev = conf->mirrors[devnum].rdev;
+ 
+-	mbio = bio_clone_fast(bio, GFP_NOIO, mddev->bio_set);
++	mbio = bio_clone_fast(bio, GFP_NOIO, &mddev->bio_set);
+ 	if (replacement)
+ 		r10_bio->devs[n_copy].repl_bio = mbio;
+ 	else
+@@ -1509,7 +1509,7 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
+ 
+ 	if (r10_bio->sectors < bio_sectors(bio)) {
+ 		struct bio *split = bio_split(bio, r10_bio->sectors,
+-					      GFP_NOIO, conf->bio_split);
++					      GFP_NOIO, &conf->bio_split);
+ 		bio_chain(split, bio);
+ 		generic_make_request(bio);
+ 		bio = split;
+@@ -1533,7 +1533,7 @@ static void __make_request(struct mddev *mddev, struct bio *bio, int sectors)
+ 	struct r10conf *conf = mddev->private;
+ 	struct r10bio *r10_bio;
+ 
+-	r10_bio = mempool_alloc(conf->r10bio_pool, GFP_NOIO);
++	r10_bio = mempool_alloc(&conf->r10bio_pool, GFP_NOIO);
+ 
+ 	r10_bio->master_bio = bio;
+ 	r10_bio->sectors = sectors;
+@@ -1732,8 +1732,7 @@ static void close_sync(struct r10conf *conf)
+ 	wait_barrier(conf);
+ 	allow_barrier(conf);
+ 
+-	mempool_destroy(conf->r10buf_pool);
+-	conf->r10buf_pool = NULL;
++	mempool_exit(&conf->r10buf_pool);
+ }
+ 
+ static int raid10_spare_active(struct mddev *mddev)
+@@ -2583,7 +2582,7 @@ static int narrow_write_error(struct r10bio *r10_bio, int i)
+ 		if (sectors > sect_to_write)
+ 			sectors = sect_to_write;
+ 		/* Write at 'sector' for 'sectors' */
+-		wbio = bio_clone_fast(bio, GFP_NOIO, mddev->bio_set);
++		wbio = bio_clone_fast(bio, GFP_NOIO, &mddev->bio_set);
+ 		bio_trim(wbio, sector - bio->bi_iter.bi_sector, sectors);
+ 		wsector = r10_bio->devs[i].addr + (sector - r10_bio->sector);
+ 		wbio->bi_iter.bi_sector = wsector +
+@@ -2816,25 +2815,25 @@ static void raid10d(struct md_thread *thread)
+ 
+ static int init_resync(struct r10conf *conf)
+ {
+-	int buffs;
+-	int i;
++	int ret, buffs, i;
+ 
+ 	buffs = RESYNC_WINDOW / RESYNC_BLOCK_SIZE;
+-	BUG_ON(conf->r10buf_pool);
++	BUG_ON(mempool_initialized(&conf->r10buf_pool));
+ 	conf->have_replacement = 0;
+ 	for (i = 0; i < conf->geo.raid_disks; i++)
+ 		if (conf->mirrors[i].replacement)
+ 			conf->have_replacement = 1;
+-	conf->r10buf_pool = mempool_create(buffs, r10buf_pool_alloc, r10buf_pool_free, conf);
+-	if (!conf->r10buf_pool)
+-		return -ENOMEM;
++	ret = mempool_init(&conf->r10buf_pool, buffs,
++			   r10buf_pool_alloc, r10buf_pool_free, conf);
++	if (ret)
++		return ret;
+ 	conf->next_resync = 0;
+ 	return 0;
+ }
+ 
+ static struct r10bio *raid10_alloc_init_r10buf(struct r10conf *conf)
+ {
+-	struct r10bio *r10bio = mempool_alloc(conf->r10buf_pool, GFP_NOIO);
++	struct r10bio *r10bio = mempool_alloc(&conf->r10buf_pool, GFP_NOIO);
+ 	struct rsync_pages *rp;
+ 	struct bio *bio;
+ 	int nalloc;
+@@ -2945,7 +2944,7 @@ static sector_t raid10_sync_request(struct mddev *mddev, sector_t sector_nr,
+ 	sector_t chunk_mask = conf->geo.chunk_mask;
+ 	int page_idx = 0;
+ 
+-	if (!conf->r10buf_pool)
++	if (!mempool_initialized(&conf->r10buf_pool))
+ 		if (init_resync(conf))
+ 			return 0;
+ 
+@@ -3699,13 +3698,13 @@ static struct r10conf *setup_conf(struct mddev *mddev)
+ 
+ 	conf->geo = geo;
+ 	conf->copies = copies;
+-	conf->r10bio_pool = mempool_create(NR_RAID10_BIOS, r10bio_pool_alloc,
+-					   r10bio_pool_free, conf);
+-	if (!conf->r10bio_pool)
++	err = mempool_init(&conf->r10bio_pool, NR_RAID10_BIOS, r10bio_pool_alloc,
++			   r10bio_pool_free, conf);
++	if (err)
  		goto out;
  
--	mempool_destroy(f->rs_pool);
--	mempool_destroy(f->prealloc_pool);
--	mempool_destroy(f->extra_pool);
-+	mempool_exit(&f->rs_pool);
-+	mempool_exit(&f->prealloc_pool);
-+	mempool_exit(&f->extra_pool);
- 	kmem_cache_destroy(f->cache);
+-	conf->bio_split = bioset_create(BIO_POOL_SIZE, 0, 0);
+-	if (!conf->bio_split)
++	err = bioset_init(&conf->bio_split, BIO_POOL_SIZE, 0, 0);
++	if (err)
+ 		goto out;
  
- 	if (f->data_bufio)
-@@ -675,6 +675,7 @@ int verity_fec_ctr(struct dm_verity *v)
- 	struct dm_verity_fec *f = v->fec;
- 	struct dm_target *ti = v->ti;
- 	u64 hash_blocks;
-+	int ret;
+ 	calc_sectors(conf, mddev->dev_sectors);
+@@ -3733,6 +3732,7 @@ static struct r10conf *setup_conf(struct mddev *mddev)
+ 	init_waitqueue_head(&conf->wait_barrier);
+ 	atomic_set(&conf->nr_pending, 0);
  
- 	if (!verity_fec_is_enabled(v)) {
- 		verity_fec_dtr(v);
-@@ -770,11 +771,11 @@ int verity_fec_ctr(struct dm_verity *v)
++	err = -ENOMEM;
+ 	conf->thread = md_register_thread(raid10d, mddev, "raid10");
+ 	if (!conf->thread)
+ 		goto out;
+@@ -3742,11 +3742,10 @@ static struct r10conf *setup_conf(struct mddev *mddev)
+ 
+  out:
+ 	if (conf) {
+-		mempool_destroy(conf->r10bio_pool);
++		mempool_exit(&conf->r10bio_pool);
+ 		kfree(conf->mirrors);
+ 		safe_put_page(conf->tmppage);
+-		if (conf->bio_split)
+-			bioset_free(conf->bio_split);
++		bioset_exit(&conf->bio_split);
+ 		kfree(conf);
  	}
+ 	return ERR_PTR(err);
+@@ -3953,7 +3952,7 @@ static int raid10_run(struct mddev *mddev)
  
- 	/* Preallocate an rs_control structure for each worker thread */
--	f->rs_pool = mempool_create(num_online_cpus(), fec_rs_alloc,
--				    fec_rs_free, (void *) v);
--	if (!f->rs_pool) {
-+	ret = mempool_init(&f->rs_pool, num_online_cpus(), fec_rs_alloc,
-+			   fec_rs_free, (void *) v);
-+	if (ret) {
- 		ti->error = "Cannot allocate RS pool";
--		return -ENOMEM;
-+		return ret;
+ out_free_conf:
+ 	md_unregister_thread(&mddev->thread);
+-	mempool_destroy(conf->r10bio_pool);
++	mempool_exit(&conf->r10bio_pool);
+ 	safe_put_page(conf->tmppage);
+ 	kfree(conf->mirrors);
+ 	kfree(conf);
+@@ -3966,13 +3965,12 @@ static void raid10_free(struct mddev *mddev, void *priv)
+ {
+ 	struct r10conf *conf = priv;
+ 
+-	mempool_destroy(conf->r10bio_pool);
++	mempool_exit(&conf->r10bio_pool);
+ 	safe_put_page(conf->tmppage);
+ 	kfree(conf->mirrors);
+ 	kfree(conf->mirrors_old);
+ 	kfree(conf->mirrors_new);
+-	if (conf->bio_split)
+-		bioset_free(conf->bio_split);
++	bioset_exit(&conf->bio_split);
+ 	kfree(conf);
+ }
+ 
+@@ -4543,7 +4541,7 @@ static sector_t reshape_request(struct mddev *mddev, sector_t sector_nr,
+ 		 * on all the target devices.
+ 		 */
+ 		// FIXME
+-		mempool_free(r10_bio, conf->r10buf_pool);
++		mempool_free(r10_bio, &conf->r10buf_pool);
+ 		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
+ 		return sectors_done;
  	}
+diff --git a/drivers/md/raid10.h b/drivers/md/raid10.h
+index e2e8840de9..d3eaaf3eb1 100644
+--- a/drivers/md/raid10.h
++++ b/drivers/md/raid10.h
+@@ -93,10 +93,10 @@ struct r10conf {
+ 						   */
+ 	wait_queue_head_t	wait_barrier;
  
- 	f->cache = kmem_cache_create("dm_verity_fec_buffers",
-@@ -786,26 +787,26 @@ int verity_fec_ctr(struct dm_verity *v)
- 	}
+-	mempool_t		*r10bio_pool;
+-	mempool_t		*r10buf_pool;
++	mempool_t		r10bio_pool;
++	mempool_t		r10buf_pool;
+ 	struct page		*tmppage;
+-	struct bio_set		*bio_split;
++	struct bio_set		bio_split;
  
- 	/* Preallocate DM_VERITY_FEC_BUF_PREALLOC buffers for each thread */
--	f->prealloc_pool = mempool_create_slab_pool(num_online_cpus() *
--						    DM_VERITY_FEC_BUF_PREALLOC,
--						    f->cache);
--	if (!f->prealloc_pool) {
-+	ret = mempool_init_slab_pool(&f->prealloc_pool, num_online_cpus() *
-+				     DM_VERITY_FEC_BUF_PREALLOC,
-+				     f->cache);
-+	if (ret) {
- 		ti->error = "Cannot allocate FEC buffer prealloc pool";
--		return -ENOMEM;
-+		return ret;
- 	}
+ 	/* When taking over an array from a different personality, we store
+ 	 * the new thread here until we fully activate the array.
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 3c65f52b68..2b775abf37 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -125,9 +125,9 @@ struct r5l_log {
+ 	struct list_head no_mem_stripes;   /* pending stripes, -ENOMEM */
  
--	f->extra_pool = mempool_create_slab_pool(0, f->cache);
--	if (!f->extra_pool) {
-+	ret = mempool_init_slab_pool(&f->extra_pool, 0, f->cache);
-+	if (ret) {
- 		ti->error = "Cannot allocate FEC buffer extra pool";
--		return -ENOMEM;
-+		return ret;
- 	}
+ 	struct kmem_cache *io_kc;
+-	mempool_t *io_pool;
+-	struct bio_set *bs;
+-	mempool_t *meta_pool;
++	mempool_t io_pool;
++	struct bio_set bs;
++	mempool_t meta_pool;
  
- 	/* Preallocate an output buffer for each thread */
--	f->output_pool = mempool_create_kmalloc_pool(num_online_cpus(),
--						     1 << v->data_dev_block_bits);
--	if (!f->output_pool) {
-+	ret = mempool_init_kmalloc_pool(&f->output_pool, num_online_cpus(),
-+					1 << v->data_dev_block_bits);
-+	if (ret) {
- 		ti->error = "Cannot allocate FEC output pool";
--		return -ENOMEM;
-+		return ret;
- 	}
+ 	struct md_thread *reclaim_thread;
+ 	unsigned long reclaim_target;	/* number of space that need to be
+@@ -579,7 +579,7 @@ static void r5l_log_endio(struct bio *bio)
+ 		md_error(log->rdev->mddev, log->rdev);
  
- 	/* Reserve space for our per-bio data */
-diff --git a/drivers/md/dm-verity-fec.h b/drivers/md/dm-verity-fec.h
-index bb31ce87a9..6ad803b2b3 100644
---- a/drivers/md/dm-verity-fec.h
-+++ b/drivers/md/dm-verity-fec.h
-@@ -46,10 +46,10 @@ struct dm_verity_fec {
- 	sector_t hash_blocks;	/* blocks covered after v->hash_start */
- 	unsigned char roots;	/* number of parity bytes, M-N of RS(M, N) */
- 	unsigned char rsn;	/* N of RS(M, N) */
--	mempool_t *rs_pool;	/* mempool for fio->rs */
--	mempool_t *prealloc_pool;	/* mempool for preallocated buffers */
--	mempool_t *extra_pool;	/* mempool for extra buffers */
--	mempool_t *output_pool;	/* mempool for output */
-+	mempool_t rs_pool;	/* mempool for fio->rs */
-+	mempool_t prealloc_pool;	/* mempool for preallocated buffers */
-+	mempool_t extra_pool;	/* mempool for extra buffers */
-+	mempool_t output_pool;	/* mempool for output */
- 	struct kmem_cache *cache;	/* cache for buffers */
- };
+ 	bio_put(bio);
+-	mempool_free(io->meta_page, log->meta_pool);
++	mempool_free(io->meta_page, &log->meta_pool);
  
-diff --git a/drivers/md/dm-zoned-target.c b/drivers/md/dm-zoned-target.c
-index e73b077668..30602d15ad 100644
---- a/drivers/md/dm-zoned-target.c
-+++ b/drivers/md/dm-zoned-target.c
-@@ -57,7 +57,7 @@ struct dmz_target {
- 	struct workqueue_struct *chunk_wq;
+ 	spin_lock_irqsave(&log->io_list_lock, flags);
+ 	__r5l_set_io_unit_state(io, IO_UNIT_IO_END);
+@@ -748,7 +748,7 @@ static void r5l_submit_current_io(struct r5l_log *log)
  
- 	/* For cloned BIOs to zones */
--	struct bio_set		*bio_set;
-+	struct bio_set		bio_set;
+ static struct bio *r5l_bio_alloc(struct r5l_log *log)
+ {
+-	struct bio *bio = bio_alloc_bioset(GFP_NOIO, BIO_MAX_PAGES, log->bs);
++	struct bio *bio = bio_alloc_bioset(GFP_NOIO, BIO_MAX_PAGES, &log->bs);
  
- 	/* For flush */
- 	spinlock_t		flush_lock;
-@@ -121,7 +121,7 @@ static int dmz_submit_read_bio(struct dmz_target *dmz, struct dm_zone *zone,
- 	}
+ 	bio_set_op_attrs(bio, REQ_OP_WRITE, 0);
+ 	bio_set_dev(bio, log->rdev->bdev);
+@@ -780,7 +780,7 @@ static struct r5l_io_unit *r5l_new_meta(struct r5l_log *log)
+ 	struct r5l_io_unit *io;
+ 	struct r5l_meta_block *block;
  
- 	/* Partial BIO: we need to clone the BIO */
--	clone = bio_clone_fast(bio, GFP_NOIO, dmz->bio_set);
-+	clone = bio_clone_fast(bio, GFP_NOIO, &dmz->bio_set);
- 	if (!clone)
+-	io = mempool_alloc(log->io_pool, GFP_ATOMIC);
++	io = mempool_alloc(&log->io_pool, GFP_ATOMIC);
+ 	if (!io)
+ 		return NULL;
+ 	memset(io, 0, sizeof(*io));
+@@ -791,7 +791,7 @@ static struct r5l_io_unit *r5l_new_meta(struct r5l_log *log)
+ 	bio_list_init(&io->flush_barriers);
+ 	io->state = IO_UNIT_RUNNING;
+ 
+-	io->meta_page = mempool_alloc(log->meta_pool, GFP_NOIO);
++	io->meta_page = mempool_alloc(&log->meta_pool, GFP_NOIO);
+ 	block = page_address(io->meta_page);
+ 	clear_page(block);
+ 	block->magic = cpu_to_le32(R5LOG_MAGIC);
+@@ -1223,7 +1223,7 @@ static bool r5l_complete_finished_ios(struct r5l_log *log)
+ 		log->next_checkpoint = io->log_start;
+ 
+ 		list_del(&io->log_sibling);
+-		mempool_free(io, log->io_pool);
++		mempool_free(io, &log->io_pool);
+ 		r5l_run_no_mem_stripe(log);
+ 
+ 		found = true;
+@@ -1647,7 +1647,7 @@ static int r5l_recovery_allocate_ra_pool(struct r5l_log *log,
+ {
+ 	struct page *page;
+ 
+-	ctx->ra_bio = bio_alloc_bioset(GFP_KERNEL, BIO_MAX_PAGES, log->bs);
++	ctx->ra_bio = bio_alloc_bioset(GFP_KERNEL, BIO_MAX_PAGES, &log->bs);
+ 	if (!ctx->ra_bio)
  		return -ENOMEM;
  
-@@ -779,10 +779,9 @@ static int dmz_ctr(struct dm_target *ti, unsigned int argc, char **argv)
- 	ti->len = (sector_t)dmz_nr_chunks(dmz->metadata) << dev->zone_nr_sectors_shift;
- 
- 	/* Zone BIO */
--	dmz->bio_set = bioset_create(DMZ_MIN_BIOS, 0, 0);
--	if (!dmz->bio_set) {
-+	ret = bioset_init(&dmz->bio_set, DMZ_MIN_BIOS, 0, 0);
-+	if (ret) {
- 		ti->error = "Create BIO set failed";
--		ret = -ENOMEM;
- 		goto err_meta;
- 	}
- 
-@@ -828,7 +827,7 @@ static int dmz_ctr(struct dm_target *ti, unsigned int argc, char **argv)
- 	destroy_workqueue(dmz->chunk_wq);
- err_bio:
- 	mutex_destroy(&dmz->chunk_lock);
--	bioset_free(dmz->bio_set);
-+	bioset_exit(&dmz->bio_set);
- err_meta:
- 	dmz_dtr_metadata(dmz->metadata);
- err_dev:
-@@ -858,7 +857,7 @@ static void dmz_dtr(struct dm_target *ti)
- 
- 	dmz_dtr_metadata(dmz->metadata);
- 
--	bioset_free(dmz->bio_set);
-+	bioset_exit(&dmz->bio_set);
- 
- 	dmz_put_zoned_device(ti);
- 
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index 7d98ee1137..7dc0c5ef7c 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -148,8 +148,8 @@ static int dm_numa_node = DM_NUMA_NODE;
-  * For mempools pre-allocation at the table loading time.
-  */
- struct dm_md_mempools {
--	struct bio_set *bs;
--	struct bio_set *io_bs;
-+	struct bio_set bs;
-+	struct bio_set io_bs;
- };
- 
- struct table_device {
-@@ -537,7 +537,7 @@ static struct dm_io *alloc_io(struct mapped_device *md, struct bio *bio)
- 	struct dm_target_io *tio;
- 	struct bio *clone;
- 
--	clone = bio_alloc_bioset(GFP_NOIO, 0, md->io_bs);
-+	clone = bio_alloc_bioset(GFP_NOIO, 0, &md->io_bs);
- 	if (!clone)
- 		return NULL;
- 
-@@ -572,7 +572,7 @@ static struct dm_target_io *alloc_tio(struct clone_info *ci, struct dm_target *t
- 		/* the dm_target_io embedded in ci->io is available */
- 		tio = &ci->io->tio;
- 	} else {
--		struct bio *clone = bio_alloc_bioset(gfp_mask, 0, ci->io->md->bs);
-+		struct bio *clone = bio_alloc_bioset(gfp_mask, 0, &ci->io->md->bs);
- 		if (!clone)
- 			return NULL;
- 
-@@ -1784,10 +1784,8 @@ static void cleanup_mapped_device(struct mapped_device *md)
- 		destroy_workqueue(md->wq);
- 	if (md->kworker_task)
- 		kthread_stop(md->kworker_task);
--	if (md->bs)
--		bioset_free(md->bs);
--	if (md->io_bs)
--		bioset_free(md->io_bs);
-+	bioset_exit(&md->bs);
-+	bioset_exit(&md->io_bs);
- 
- 	if (md->dax_dev) {
- 		kill_dax(md->dax_dev);
-@@ -1964,16 +1962,10 @@ static void __bind_mempools(struct mapped_device *md, struct dm_table *t)
- 		 * If so, reload bioset because front_pad may have changed
- 		 * because a different table was loaded.
- 		 */
--		if (md->bs) {
--			bioset_free(md->bs);
--			md->bs = NULL;
--		}
--		if (md->io_bs) {
--			bioset_free(md->io_bs);
--			md->io_bs = NULL;
--		}
-+		bioset_exit(&md->bs);
-+		bioset_exit(&md->io_bs);
- 
--	} else if (md->bs) {
-+	} else if (bioset_initialized(&md->bs)) {
- 		/*
- 		 * There's no need to reload with request-based dm
- 		 * because the size of front_pad doesn't change.
-@@ -1985,12 +1977,14 @@ static void __bind_mempools(struct mapped_device *md, struct dm_table *t)
- 		goto out;
- 	}
- 
--	BUG_ON(!p || md->bs || md->io_bs);
-+	BUG_ON(!p ||
-+	       bioset_initialized(&md->bs) ||
-+	       bioset_initialized(&md->io_bs));
- 
- 	md->bs = p->bs;
--	p->bs = NULL;
-+	memset(&p->bs, 0, sizeof(p->bs));
- 	md->io_bs = p->io_bs;
--	p->io_bs = NULL;
-+	memset(&p->io_bs, 0, sizeof(p->io_bs));
- out:
- 	/* mempool bind completed, no longer need any mempools in the table */
- 	dm_table_free_md_mempools(t);
-@@ -2904,6 +2898,7 @@ struct dm_md_mempools *dm_alloc_md_mempools(struct mapped_device *md, enum dm_qu
- 	struct dm_md_mempools *pools = kzalloc_node(sizeof(*pools), GFP_KERNEL, md->numa_node_id);
- 	unsigned int pool_size = 0;
- 	unsigned int front_pad, io_front_pad;
+@@ -3066,6 +3066,7 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
+ 	struct request_queue *q = bdev_get_queue(rdev->bdev);
+ 	struct r5l_log *log;
+ 	char b[BDEVNAME_SIZE];
 +	int ret;
  
- 	if (!pools)
+ 	pr_debug("md/raid:%s: using device %s as journal\n",
+ 		 mdname(conf->mddev), bdevname(rdev->bdev, b));
+@@ -3111,16 +3112,16 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
+ 	if (!log->io_kc)
+ 		goto io_kc;
+ 
+-	log->io_pool = mempool_create_slab_pool(R5L_POOL_SIZE, log->io_kc);
+-	if (!log->io_pool)
++	ret = mempool_init_slab_pool(&log->io_pool, R5L_POOL_SIZE, log->io_kc);
++	if (ret)
+ 		goto io_pool;
+ 
+-	log->bs = bioset_create(R5L_POOL_SIZE, 0, BIOSET_NEED_BVECS);
+-	if (!log->bs)
++	ret = bioset_init(&log->bs, R5L_POOL_SIZE, 0, BIOSET_NEED_BVECS);
++	if (ret)
+ 		goto io_bs;
+ 
+-	log->meta_pool = mempool_create_page_pool(R5L_POOL_SIZE, 0);
+-	if (!log->meta_pool)
++	ret = mempool_init_page_pool(&log->meta_pool, R5L_POOL_SIZE, 0);
++	if (ret)
+ 		goto out_mempool;
+ 
+ 	spin_lock_init(&log->tree_lock);
+@@ -3155,11 +3156,11 @@ int r5l_init_log(struct r5conf *conf, struct md_rdev *rdev)
+ 	rcu_assign_pointer(conf->log, NULL);
+ 	md_unregister_thread(&log->reclaim_thread);
+ reclaim_thread:
+-	mempool_destroy(log->meta_pool);
++	mempool_exit(&log->meta_pool);
+ out_mempool:
+-	bioset_free(log->bs);
++	bioset_exit(&log->bs);
+ io_bs:
+-	mempool_destroy(log->io_pool);
++	mempool_exit(&log->io_pool);
+ io_pool:
+ 	kmem_cache_destroy(log->io_kc);
+ io_kc:
+@@ -3178,9 +3179,9 @@ void r5l_exit_log(struct r5conf *conf)
+ 	wake_up(&conf->mddev->sb_wait);
+ 	flush_work(&log->disable_writeback_work);
+ 	md_unregister_thread(&log->reclaim_thread);
+-	mempool_destroy(log->meta_pool);
+-	bioset_free(log->bs);
+-	mempool_destroy(log->io_pool);
++	mempool_exit(&log->meta_pool);
++	bioset_exit(&log->bs);
++	mempool_exit(&log->io_pool);
+ 	kmem_cache_destroy(log->io_kc);
+ 	kfree(log);
+ }
+diff --git a/drivers/md/raid5-ppl.c b/drivers/md/raid5-ppl.c
+index 42890a0837..3a7c363265 100644
+--- a/drivers/md/raid5-ppl.c
++++ b/drivers/md/raid5-ppl.c
+@@ -105,9 +105,9 @@ struct ppl_conf {
+ 	atomic64_t seq;		/* current log write sequence number */
+ 
+ 	struct kmem_cache *io_kc;
+-	mempool_t *io_pool;
+-	struct bio_set *bs;
+-	struct bio_set *flush_bs;
++	mempool_t io_pool;
++	struct bio_set bs;
++	struct bio_set flush_bs;
+ 
+ 	/* used only for recovery */
+ 	int recovered_entries;
+@@ -244,7 +244,7 @@ static struct ppl_io_unit *ppl_new_iounit(struct ppl_log *log,
+ 	struct ppl_header *pplhdr;
+ 	struct page *header_page;
+ 
+-	io = mempool_alloc(ppl_conf->io_pool, GFP_NOWAIT);
++	io = mempool_alloc(&ppl_conf->io_pool, GFP_NOWAIT);
+ 	if (!io)
  		return NULL;
-@@ -2915,10 +2910,10 @@ struct dm_md_mempools *dm_alloc_md_mempools(struct mapped_device *md, enum dm_qu
- 		pool_size = max(dm_get_reserved_bio_based_ios(), min_pool_size);
- 		front_pad = roundup(per_io_data_size, __alignof__(struct dm_target_io)) + offsetof(struct dm_target_io, clone);
- 		io_front_pad = roundup(front_pad,  __alignof__(struct dm_io)) + offsetof(struct dm_io, tio);
--		pools->io_bs = bioset_create(pool_size, io_front_pad, 0);
--		if (!pools->io_bs)
-+		ret = bioset_init(&pools->io_bs, pool_size, io_front_pad, 0);
-+		if (ret)
- 			goto out;
--		if (integrity && bioset_integrity_create(pools->io_bs, pool_size))
-+		if (integrity && bioset_integrity_create(&pools->io_bs, pool_size))
- 			goto out;
- 		break;
- 	case DM_TYPE_REQUEST_BASED:
-@@ -2931,11 +2926,11 @@ struct dm_md_mempools *dm_alloc_md_mempools(struct mapped_device *md, enum dm_qu
- 		BUG();
+ 
+@@ -503,7 +503,7 @@ static void ppl_submit_iounit(struct ppl_io_unit *io)
+ 			struct bio *prev = bio;
+ 
+ 			bio = bio_alloc_bioset(GFP_NOIO, BIO_MAX_PAGES,
+-					       ppl_conf->bs);
++					       &ppl_conf->bs);
+ 			bio->bi_opf = prev->bi_opf;
+ 			bio_copy_dev(bio, prev);
+ 			bio->bi_iter.bi_sector = bio_end_sector(prev);
+@@ -570,7 +570,7 @@ static void ppl_io_unit_finished(struct ppl_io_unit *io)
+ 	list_del(&io->log_sibling);
+ 	spin_unlock(&log->io_list_lock);
+ 
+-	mempool_free(io, ppl_conf->io_pool);
++	mempool_free(io, &ppl_conf->io_pool);
+ 
+ 	spin_lock(&ppl_conf->no_mem_stripes_lock);
+ 	if (!list_empty(&ppl_conf->no_mem_stripes)) {
+@@ -642,7 +642,7 @@ static void ppl_do_flush(struct ppl_io_unit *io)
+ 			struct bio *bio;
+ 			char b[BDEVNAME_SIZE];
+ 
+-			bio = bio_alloc_bioset(GFP_NOIO, 0, ppl_conf->flush_bs);
++			bio = bio_alloc_bioset(GFP_NOIO, 0, &ppl_conf->flush_bs);
+ 			bio_set_dev(bio, bdev);
+ 			bio->bi_private = io;
+ 			bio->bi_opf = REQ_OP_WRITE | REQ_PREFLUSH;
+@@ -1246,11 +1246,9 @@ static void __ppl_exit_log(struct ppl_conf *ppl_conf)
+ 
+ 	kfree(ppl_conf->child_logs);
+ 
+-	if (ppl_conf->bs)
+-		bioset_free(ppl_conf->bs);
+-	if (ppl_conf->flush_bs)
+-		bioset_free(ppl_conf->flush_bs);
+-	mempool_destroy(ppl_conf->io_pool);
++	bioset_exit(&ppl_conf->bs);
++	bioset_exit(&ppl_conf->flush_bs);
++	mempool_exit(&ppl_conf->io_pool);
+ 	kmem_cache_destroy(ppl_conf->io_kc);
+ 
+ 	kfree(ppl_conf);
+@@ -1387,24 +1385,18 @@ int ppl_init_log(struct r5conf *conf)
+ 		goto err;
  	}
  
--	pools->bs = bioset_create(pool_size, front_pad, 0);
--	if (!pools->bs)
-+	ret = bioset_init(&pools->bs, pool_size, front_pad, 0);
+-	ppl_conf->io_pool = mempool_create(conf->raid_disks, ppl_io_pool_alloc,
+-					   ppl_io_pool_free, ppl_conf->io_kc);
+-	if (!ppl_conf->io_pool) {
+-		ret = -ENOMEM;
++	ret = mempool_init(&ppl_conf->io_pool, conf->raid_disks, ppl_io_pool_alloc,
++			   ppl_io_pool_free, ppl_conf->io_kc);
 +	if (ret)
- 		goto out;
+ 		goto err;
+-	}
  
--	if (integrity && bioset_integrity_create(pools->bs, pool_size))
-+	if (integrity && bioset_integrity_create(&pools->bs, pool_size))
- 		goto out;
+-	ppl_conf->bs = bioset_create(conf->raid_disks, 0, BIOSET_NEED_BVECS);
+-	if (!ppl_conf->bs) {
+-		ret = -ENOMEM;
++	ret = bioset_init(&ppl_conf->bs, conf->raid_disks, 0, BIOSET_NEED_BVECS);
++	if (ret)
+ 		goto err;
+-	}
  
- 	return pools;
-@@ -2951,10 +2946,8 @@ void dm_free_md_mempools(struct dm_md_mempools *pools)
- 	if (!pools)
- 		return;
+-	ppl_conf->flush_bs = bioset_create(conf->raid_disks, 0, 0);
+-	if (!ppl_conf->flush_bs) {
+-		ret = -ENOMEM;
++	ret = bioset_init(&ppl_conf->flush_bs, conf->raid_disks, 0, 0);
++	if (ret)
+ 		goto err;
+-	}
  
--	if (pools->bs)
--		bioset_free(pools->bs);
--	if (pools->io_bs)
--		bioset_free(pools->io_bs);
-+	bioset_exit(&pools->bs);
-+	bioset_exit(&pools->io_bs);
+ 	ppl_conf->count = conf->raid_disks;
+ 	ppl_conf->child_logs = kcalloc(ppl_conf->count, sizeof(struct ppl_log),
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index be117d0a65..a2e64989b0 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -5192,7 +5192,7 @@ static int raid5_read_one_chunk(struct mddev *mddev, struct bio *raid_bio)
+ 	/*
+ 	 * use bio_clone_fast to make a copy of the bio
+ 	 */
+-	align_bi = bio_clone_fast(raid_bio, GFP_NOIO, mddev->bio_set);
++	align_bi = bio_clone_fast(raid_bio, GFP_NOIO, &mddev->bio_set);
+ 	if (!align_bi)
+ 		return 0;
+ 	/*
+@@ -5277,7 +5277,7 @@ static struct bio *chunk_aligned_read(struct mddev *mddev, struct bio *raid_bio)
  
- 	kfree(pools);
- }
+ 	if (sectors < bio_sectors(raid_bio)) {
+ 		struct r5conf *conf = mddev->private;
+-		split = bio_split(raid_bio, sectors, GFP_NOIO, conf->bio_split);
++		split = bio_split(raid_bio, sectors, GFP_NOIO, &conf->bio_split);
+ 		bio_chain(split, raid_bio);
+ 		generic_make_request(raid_bio);
+ 		raid_bio = split;
+@@ -6773,8 +6773,7 @@ static void free_conf(struct r5conf *conf)
+ 		if (conf->disks[i].extra_page)
+ 			put_page(conf->disks[i].extra_page);
+ 	kfree(conf->disks);
+-	if (conf->bio_split)
+-		bioset_free(conf->bio_split);
++	bioset_exit(&conf->bio_split);
+ 	kfree(conf->stripe_hashtbl);
+ 	kfree(conf->pending_data);
+ 	kfree(conf);
+@@ -6853,6 +6852,7 @@ static struct r5conf *setup_conf(struct mddev *mddev)
+ 	int i;
+ 	int group_cnt, worker_cnt_per_group;
+ 	struct r5worker_group *new_group;
++	int ret;
+ 
+ 	if (mddev->new_level != 5
+ 	    && mddev->new_level != 4
+@@ -6950,8 +6950,8 @@ static struct r5conf *setup_conf(struct mddev *mddev)
+ 			goto abort;
+ 	}
+ 
+-	conf->bio_split = bioset_create(BIO_POOL_SIZE, 0, 0);
+-	if (!conf->bio_split)
++	ret = bioset_init(&conf->bio_split, BIO_POOL_SIZE, 0, 0);
++	if (ret)
+ 		goto abort;
+ 	conf->mddev = mddev;
+ 
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index 3f8da26032..72e75ba6ab 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -669,7 +669,7 @@ struct r5conf {
+ 	int			pool_size; /* number of disks in stripeheads in pool */
+ 	spinlock_t		device_lock;
+ 	struct disk_info	*disks;
+-	struct bio_set		*bio_split;
++	struct bio_set		bio_split;
+ 
+ 	/* When taking over an array from a different personality, we store
+ 	 * the new thread here until we fully activate the array.
 -- 
 2.17.0
 
