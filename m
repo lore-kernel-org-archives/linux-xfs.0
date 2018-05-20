@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt0-f194.google.com ([209.85.216.194]:36532 "EHLO
-        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752655AbeETW0h (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 20 May 2018 18:26:37 -0400
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:33000 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751902AbeETW0l (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 20 May 2018 18:26:41 -0400
 From: Kent Overstreet <kent.overstreet@gmail.com>
-Subject: [PATCH 10/12] btrfs: convert to bioset_init()/mempool_init()
-Date: Sun, 20 May 2018 18:25:56 -0400
-Message-Id: <20180520222558.7053-11-kent.overstreet@gmail.com>
+Subject: [PATCH 12/12] block: Drop bioset_create()
+Date: Sun, 20 May 2018 18:25:58 -0400
+Message-Id: <20180520222558.7053-13-kent.overstreet@gmail.com>
 In-Reply-To: <20180520222558.7053-1-kent.overstreet@gmail.com>
 References: <20180520222558.7053-1-kent.overstreet@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,96 +15,121 @@ List-Id: xfs
 To: linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, axboe@kernel.dk, hch@infradead.org, colyli@suse.de, snitzer@redhat.com, darrick.wong@oracle.com, clm@fb.com, bacik@fb.com, linux-xfs@vger.kernel.org, drbd-dev@lists.linbit.com, linux-btrfs@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.com
 Cc: Kent Overstreet <kent.overstreet@gmail.com>
 
+All users have been converted to bioset_init()
+
 Signed-off-by: Kent Overstreet <kent.overstreet@gmail.com>
 ---
- fs/btrfs/extent_io.c | 25 +++++++++++--------------
- 1 file changed, 11 insertions(+), 14 deletions(-)
+ block/bio.c         | 61 ++++++++++-----------------------------------
+ include/linux/bio.h |  6 ++---
+ 2 files changed, 15 insertions(+), 52 deletions(-)
 
-diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
-index e99b329002..56d32bb462 100644
---- a/fs/btrfs/extent_io.c
-+++ b/fs/btrfs/extent_io.c
-@@ -26,7 +26,7 @@
+diff --git a/block/bio.c b/block/bio.c
+index 0a4df92cd6..595663e028 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -1908,22 +1908,26 @@ void bioset_exit(struct bio_set *bs)
+ }
+ EXPORT_SYMBOL(bioset_exit);
  
- static struct kmem_cache *extent_state_cache;
- static struct kmem_cache *extent_buffer_cache;
--static struct bio_set *btrfs_bioset;
-+static struct bio_set btrfs_bioset;
+-void bioset_free(struct bio_set *bs)
+-{
+-	bioset_exit(bs);
+-	kfree(bs);
+-}
+-EXPORT_SYMBOL(bioset_free);
+-
+ /**
+  * bioset_init - Initialize a bio_set
++ * @bs:		pool to initialize
+  * @pool_size:	Number of bio and bio_vecs to cache in the mempool
+  * @front_pad:	Number of bytes to allocate in front of the returned bio
+  * @flags:	Flags to modify behavior, currently %BIOSET_NEED_BVECS
+  *              and %BIOSET_NEED_RESCUER
+  *
+- * Similar to bioset_create(), but initializes a passed-in bioset instead of
+- * separately allocating it.
++ * Description:
++ *    Set up a bio_set to be used with @bio_alloc_bioset. Allows the caller
++ *    to ask for a number of bytes to be allocated in front of the bio.
++ *    Front pad allocation is useful for embedding the bio inside
++ *    another structure, to avoid allocating extra data to go with the bio.
++ *    Note that the bio must be embedded at the END of that structure always,
++ *    or things will break badly.
++ *    If %BIOSET_NEED_BVECS is set in @flags, a separate pool will be allocated
++ *    for allocating iovecs.  This pool is not needed e.g. for bio_clone_fast().
++ *    If %BIOSET_NEED_RESCUER is set, a workqueue is created which can be used to
++ *    dispatch queued requests when the mempool runs out of space.
++ *
+  */
+ int bioset_init(struct bio_set *bs,
+ 		unsigned int pool_size,
+@@ -1963,45 +1967,6 @@ int bioset_init(struct bio_set *bs,
+ }
+ EXPORT_SYMBOL(bioset_init);
  
- static inline bool extent_state_in_tree(const struct extent_state *state)
- {
-@@ -162,20 +162,18 @@ int __init extent_io_init(void)
- 	if (!extent_buffer_cache)
- 		goto free_state_cache;
+-/**
+- * bioset_create  - Create a bio_set
+- * @pool_size:	Number of bio and bio_vecs to cache in the mempool
+- * @front_pad:	Number of bytes to allocate in front of the returned bio
+- * @flags:	Flags to modify behavior, currently %BIOSET_NEED_BVECS
+- *              and %BIOSET_NEED_RESCUER
+- *
+- * Description:
+- *    Set up a bio_set to be used with @bio_alloc_bioset. Allows the caller
+- *    to ask for a number of bytes to be allocated in front of the bio.
+- *    Front pad allocation is useful for embedding the bio inside
+- *    another structure, to avoid allocating extra data to go with the bio.
+- *    Note that the bio must be embedded at the END of that structure always,
+- *    or things will break badly.
+- *    If %BIOSET_NEED_BVECS is set in @flags, a separate pool will be allocated
+- *    for allocating iovecs.  This pool is not needed e.g. for bio_clone_fast().
+- *    If %BIOSET_NEED_RESCUER is set, a workqueue is created which can be used to
+- *    dispatch queued requests when the mempool runs out of space.
+- *
+- */
+-struct bio_set *bioset_create(unsigned int pool_size,
+-			      unsigned int front_pad,
+-			      int flags)
+-{
+-	struct bio_set *bs;
+-
+-	bs = kzalloc(sizeof(*bs), GFP_KERNEL);
+-	if (!bs)
+-		return NULL;
+-
+-	if (bioset_init(bs, pool_size, front_pad, flags)) {
+-		kfree(bs);
+-		return NULL;
+-	}
+-
+-	return bs;
+-}
+-EXPORT_SYMBOL(bioset_create);
+-
+ #ifdef CONFIG_BLK_CGROUP
  
--	btrfs_bioset = bioset_create(BIO_POOL_SIZE,
--				     offsetof(struct btrfs_io_bio, bio),
--				     BIOSET_NEED_BVECS);
--	if (!btrfs_bioset)
-+	if (bioset_init(&btrfs_bioset, BIO_POOL_SIZE,
-+			offsetof(struct btrfs_io_bio, bio),
-+			BIOSET_NEED_BVECS))
- 		goto free_buffer_cache;
- 
--	if (bioset_integrity_create(btrfs_bioset, BIO_POOL_SIZE))
-+	if (bioset_integrity_create(&btrfs_bioset, BIO_POOL_SIZE))
- 		goto free_bioset;
- 
- 	return 0;
- 
- free_bioset:
--	bioset_free(btrfs_bioset);
--	btrfs_bioset = NULL;
-+	bioset_exit(&btrfs_bioset);
- 
- free_buffer_cache:
- 	kmem_cache_destroy(extent_buffer_cache);
-@@ -198,8 +196,7 @@ void __cold extent_io_exit(void)
- 	rcu_barrier();
- 	kmem_cache_destroy(extent_state_cache);
- 	kmem_cache_destroy(extent_buffer_cache);
--	if (btrfs_bioset)
--		bioset_free(btrfs_bioset);
-+	bioset_exit(&btrfs_bioset);
+ /**
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 5e472fcafa..810a8bee8f 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -410,14 +410,12 @@ static inline struct bio *bio_next_split(struct bio *bio, int sectors,
+ 	return bio_split(bio, sectors, gfp, bs);
  }
  
- void extent_io_tree_init(struct extent_io_tree *tree,
-@@ -2679,7 +2676,7 @@ struct bio *btrfs_bio_alloc(struct block_device *bdev, u64 first_byte)
- {
- 	struct bio *bio;
+-extern int bioset_init(struct bio_set *, unsigned int, unsigned int, int flags);
+-extern void bioset_exit(struct bio_set *);
+-extern struct bio_set *bioset_create(unsigned int, unsigned int, int flags);
+ enum {
+ 	BIOSET_NEED_BVECS = BIT(0),
+ 	BIOSET_NEED_RESCUER = BIT(1),
+ };
+-extern void bioset_free(struct bio_set *);
++extern int bioset_init(struct bio_set *, unsigned int, unsigned int, int flags);
++extern void bioset_exit(struct bio_set *);
+ extern int biovec_init_pool(mempool_t *pool, int pool_entries);
  
--	bio = bio_alloc_bioset(GFP_NOFS, BIO_MAX_PAGES, btrfs_bioset);
-+	bio = bio_alloc_bioset(GFP_NOFS, BIO_MAX_PAGES, &btrfs_bioset);
- 	bio_set_dev(bio, bdev);
- 	bio->bi_iter.bi_sector = first_byte >> 9;
- 	btrfs_io_bio_init(btrfs_io_bio(bio));
-@@ -2692,7 +2689,7 @@ struct bio *btrfs_bio_clone(struct bio *bio)
- 	struct bio *new;
- 
- 	/* Bio allocation backed by a bioset does not fail */
--	new = bio_clone_fast(bio, GFP_NOFS, btrfs_bioset);
-+	new = bio_clone_fast(bio, GFP_NOFS, &btrfs_bioset);
- 	btrfs_bio = btrfs_io_bio(new);
- 	btrfs_io_bio_init(btrfs_bio);
- 	btrfs_bio->iter = bio->bi_iter;
-@@ -2704,7 +2701,7 @@ struct bio *btrfs_io_bio_alloc(unsigned int nr_iovecs)
- 	struct bio *bio;
- 
- 	/* Bio allocation backed by a bioset does not fail */
--	bio = bio_alloc_bioset(GFP_NOFS, nr_iovecs, btrfs_bioset);
-+	bio = bio_alloc_bioset(GFP_NOFS, nr_iovecs, &btrfs_bioset);
- 	btrfs_io_bio_init(btrfs_io_bio(bio));
- 	return bio;
- }
-@@ -2715,7 +2712,7 @@ struct bio *btrfs_bio_clone_partial(struct bio *orig, int offset, int size)
- 	struct btrfs_io_bio *btrfs_bio;
- 
- 	/* this will never fail when it's backed by a bioset */
--	bio = bio_clone_fast(orig, GFP_NOFS, btrfs_bioset);
-+	bio = bio_clone_fast(orig, GFP_NOFS, &btrfs_bioset);
- 	ASSERT(bio);
- 
- 	btrfs_bio = btrfs_io_bio(bio);
+ extern struct bio *bio_alloc_bioset(gfp_t, unsigned int, struct bio_set *);
 -- 
 2.17.0
 
