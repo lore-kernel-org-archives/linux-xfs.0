@@ -1,28 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35914 "EHLO mail.kernel.org"
+Received: from imap.thunk.org ([74.207.234.97]:58938 "EHLO imap.thunk.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750936AbeETNSx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 20 May 2018 09:18:53 -0400
-Message-ID: <e7ed8ce036a5148f9101f2498cbb593e67b72069.camel@kernel.org>
+        id S1751162AbeETQaR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 20 May 2018 12:30:17 -0400
+Date: Sun, 20 May 2018 12:29:54 -0400
+From: "Theodore Y. Ts'o" <tytso@mit.edu>
 Subject: Re: [PATCH] fs: clear writeback errors in inode_init_always
-From: Jeff Layton <jlayton@kernel.org>
-Date: Sun, 20 May 2018 09:18:50 -0400
-In-Reply-To: <20180520125843.GA25612@bombadil.infradead.org>
+Message-ID: <20180520162954.GA5250@thunk.org>
 References: <20180518225037.GA26206@thunk.org>
-         <630faadb74f608aa5a42649b81657e8b62d46bc3.camel@kernel.org>
-         <20180519152700.GB4507@magnolia> <20180519231944.GB23448@thunk.org>
-         <fa3b4dec3452aa5696b8657ef509891908901d95.camel@kernel.org>
-         <20180520125843.GA25612@bombadil.infradead.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+ <630faadb74f608aa5a42649b81657e8b62d46bc3.camel@kernel.org>
+ <20180519152700.GB4507@magnolia>
+ <20180519231944.GB23448@thunk.org>
+ <fa3b4dec3452aa5696b8657ef509891908901d95.camel@kernel.org>
+ <20180520125843.GA25612@bombadil.infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180520125843.GA25612@bombadil.infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Matthew Wilcox <willy@infradead.org>
-Cc: "Theodore Y. Ts'o" <tytso@mit.edu>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel@vger.kernel.org, fstests@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
+Cc: Jeff Layton <jlayton@kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel@vger.kernel.org, fstests@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
 
-On Sun, 2018-05-20 at 05:58 -0700, Matthew Wilcox wrote:
+On Sun, May 20, 2018 at 05:58:43AM -0700, Matthew Wilcox wrote:
 > On Sun, May 20, 2018 at 07:45:31AM -0400, Jeff Layton wrote:
 > > [PATCH] loop: clear wb_err in bd_inode when detaching backing file
 > 
@@ -35,15 +36,16 @@ On Sun, 2018-05-20 at 05:58 -0700, Matthew Wilcox wrote:
 > the error; once it's been read by at least one reader, it won't go back
 > to zero, but neither will it show up for new readers.
 
-This is a bit of a grey area, for sure. FWIW, I looked at doing this in
-invalidate_bdev, but backed off since I wasn't sure about the other
-callers.
+You can't detach the backing store if there are any open file
+descriptors (or if there is another loop device keeping the loop
+device open, or if there is a file system mounted on it, etc.).
 
-I still think it probably is the right thing to do. I'd think that
-detaching the backing store is sort of an indicator that you really
-don't care about it anymore (including any stored errors concerning it).
+If you can detach the backing store, once you detach the backing
+store, the loop device is *gone*.  The user of /dev/loop0 will very
+likely be a completely different backing store, so returning an error
+simply doesn't make any sense.  There is a very good chance it will be
+a completely different backing store, with potentially a different
+user, so returning a carried over error is just going confuse, annoy,
+and anger the user.....
 
-OTOH, my track record on predicting what applications care about is
-pretty abysmal. I'll go with whatever the consensus is here...
--- 
-Jeff Layton <jlayton@kernel.org>
+					- Ted
