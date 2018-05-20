@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:45984 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752569AbeETW0g (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 20 May 2018 18:26:36 -0400
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:36569 "EHLO
+        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752654AbeETW0j (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 20 May 2018 18:26:39 -0400
 From: Kent Overstreet <kent.overstreet@gmail.com>
-Subject: [PATCH 09/12] fs: convert block_dev.c to bioset_init()
-Date: Sun, 20 May 2018 18:25:55 -0400
-Message-Id: <20180520222558.7053-10-kent.overstreet@gmail.com>
+Subject: [PATCH 11/12] xfs: convert to bioset_init()/mempool_init()
+Date: Sun, 20 May 2018 18:25:57 -0400
+Message-Id: <20180520222558.7053-12-kent.overstreet@gmail.com>
 In-Reply-To: <20180520222558.7053-1-kent.overstreet@gmail.com>
 References: <20180520222558.7053-1-kent.overstreet@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,43 +17,81 @@ Cc: Kent Overstreet <kent.overstreet@gmail.com>
 
 Signed-off-by: Kent Overstreet <kent.overstreet@gmail.com>
 ---
- fs/block_dev.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_aops.c  |  2 +-
+ fs/xfs/xfs_aops.h  |  2 +-
+ fs/xfs/xfs_super.c | 11 +++++------
+ 3 files changed, 7 insertions(+), 8 deletions(-)
 
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 7ec920e270..b550ae280f 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -272,7 +272,7 @@ struct blkdev_dio {
- 	struct bio		bio;
- };
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 0ab824f574..102463543d 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -594,7 +594,7 @@ xfs_alloc_ioend(
+ 	struct xfs_ioend	*ioend;
+ 	struct bio		*bio;
  
--static struct bio_set *blkdev_dio_pool __read_mostly;
-+static struct bio_set blkdev_dio_pool;
+-	bio = bio_alloc_bioset(GFP_NOFS, BIO_MAX_PAGES, xfs_ioend_bioset);
++	bio = bio_alloc_bioset(GFP_NOFS, BIO_MAX_PAGES, &xfs_ioend_bioset);
+ 	xfs_init_bio_from_bh(bio, bh);
  
- static void blkdev_bio_end_io(struct bio *bio)
+ 	ioend = container_of(bio, struct xfs_ioend, io_inline_bio);
+diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
+index 69346d460d..694c85b038 100644
+--- a/fs/xfs/xfs_aops.h
++++ b/fs/xfs/xfs_aops.h
+@@ -18,7 +18,7 @@
+ #ifndef __XFS_AOPS_H__
+ #define __XFS_AOPS_H__
+ 
+-extern struct bio_set *xfs_ioend_bioset;
++extern struct bio_set xfs_ioend_bioset;
+ 
+ /*
+  * Types of I/O for bmap clustering and I/O completion tracking.
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index d714240529..f643d76db5 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -63,7 +63,7 @@
+ #include <linux/parser.h>
+ 
+ static const struct super_operations xfs_super_operations;
+-struct bio_set *xfs_ioend_bioset;
++struct bio_set xfs_ioend_bioset;
+ 
+ static struct kset *xfs_kset;		/* top-level xfs sysfs dir */
+ #ifdef DEBUG
+@@ -1845,10 +1845,9 @@ MODULE_ALIAS_FS("xfs");
+ STATIC int __init
+ xfs_init_zones(void)
  {
-@@ -334,7 +334,7 @@ __blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter, int nr_pages)
- 	    (bdev_logical_block_size(bdev) - 1))
- 		return -EINVAL;
+-	xfs_ioend_bioset = bioset_create(4 * MAX_BUF_PER_PAGE,
++	if (bioset_init(&xfs_ioend_bioset, 4 * MAX_BUF_PER_PAGE,
+ 			offsetof(struct xfs_ioend, io_inline_bio),
+-			BIOSET_NEED_BVECS);
+-	if (!xfs_ioend_bioset)
++			BIOSET_NEED_BVECS))
+ 		goto out;
  
--	bio = bio_alloc_bioset(GFP_KERNEL, nr_pages, blkdev_dio_pool);
-+	bio = bio_alloc_bioset(GFP_KERNEL, nr_pages, &blkdev_dio_pool);
- 	bio_get(bio); /* extra ref for the completion handler */
- 
- 	dio = container_of(bio, struct blkdev_dio, bio);
-@@ -432,10 +432,7 @@ blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
- 
- static __init int blkdev_init(void)
- {
--	blkdev_dio_pool = bioset_create(4, offsetof(struct blkdev_dio, bio), BIOSET_NEED_BVECS);
--	if (!blkdev_dio_pool)
--		return -ENOMEM;
--	return 0;
-+	return bioset_init(&blkdev_dio_pool, 4, offsetof(struct blkdev_dio, bio), BIOSET_NEED_BVECS);
+ 	xfs_log_ticket_zone = kmem_zone_init(sizeof(xlog_ticket_t),
+@@ -1997,7 +1996,7 @@ xfs_init_zones(void)
+  out_destroy_log_ticket_zone:
+ 	kmem_zone_destroy(xfs_log_ticket_zone);
+  out_free_ioend_bioset:
+-	bioset_free(xfs_ioend_bioset);
++	bioset_exit(&xfs_ioend_bioset);
+  out:
+ 	return -ENOMEM;
  }
- module_init(blkdev_init);
+@@ -2029,7 +2028,7 @@ xfs_destroy_zones(void)
+ 	kmem_zone_destroy(xfs_btree_cur_zone);
+ 	kmem_zone_destroy(xfs_bmap_free_item_zone);
+ 	kmem_zone_destroy(xfs_log_ticket_zone);
+-	bioset_free(xfs_ioend_bioset);
++	bioset_exit(&xfs_ioend_bioset);
+ }
  
+ STATIC int __init
 -- 
 2.17.0
 
