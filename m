@@ -1,107 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:39620 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751384AbeERPiK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 11:38:10 -0400
-Received: by mail-pl0-f67.google.com with SMTP id c19-v6so4798389pls.6
-        for <linux-xfs@vger.kernel.org>; Fri, 18 May 2018 08:38:10 -0700 (PDT)
-Date: Fri, 18 May 2018 08:38:05 -0700
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH v2 5/5] mkfs.xfs: add configuration file parsing support
- using our own parser
-Message-ID: <20180518153805.GE24680@garbanzo.do-not-panic.com>
-References: <20180517192700.23457-1-mcgrof@kernel.org>
- <20180517192700.23457-6-mcgrof@kernel.org>
- <1f1e87df-aba5-e285-e3cb-820306f24f1c@sandeen.net>
- <20180518034600.GW23858@magnolia>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:60714 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751030AbeETShB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 20 May 2018 14:37:01 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id E26E24201B1F
+        for <linux-xfs@vger.kernel.org>; Sun, 20 May 2018 18:37:00 +0000 (UTC)
+Received: from localhost (hp-dl360g9-06.rhts.eng.pek2.redhat.com [10.73.4.165])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 4FFDF63A49
+        for <linux-xfs@vger.kernel.org>; Sun, 20 May 2018 18:37:00 +0000 (UTC)
+Date: Mon, 21 May 2018 02:36:58 +0800
+From: Zorro Lang <zlang@redhat.com>
+Subject: [xfstests xfs/170]: filestreams test fail, multi-file data stream
+ doesn't write into seperate AGs
+Message-ID: <20180520183658.GH4893@hp-dl360g9-06.rhts.eng.pek2.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180518034600.GW23858@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com
+To: linux-xfs@vger.kernel.org
 
-On Thu, May 17, 2018 at 08:46:00PM -0700, Darrick J. Wong wrote:
-> On Thu, May 17, 2018 at 10:24:13PM -0500, Eric Sandeen wrote:
-> > On 5/17/18 2:27 PM, Luis R. Rodriguez wrote:
-> > > You may want to stick to specific set of configuration options when
-> > > creating filesystems with mkfs.xfs -- sometimes due to pure technical
-> > > reasons, but some other times to ensure systems remain compatible as
-> > > new features are introduced with older kernels, or if you always want
-> > > to take advantage of some new feature which would otherwise typically
-> > > be disruptive.
-> > > 
-> > > This adds support for parsing a configuration file to override defaults
-> > > parameters to be used for mkfs.xfs.
-> > > 
-> > > We define an XFS configuration directory,/etc/mkfs.xfs.d/  and allow for
-> > > different configuration files, if none is specified we look for the
-> > > default configuration file, /etc/mkfs.xfs.d/default. You can override
-> > > with -c.  For instance, if you specify:
-> > > 
-> > > 	mkfs.xfs -c experimental -f /dev/loop0
-> > > 
-> > > The file /etc/mkfs.xfs.d/experimental will be used as your configuration
-> > > file. If you really need to override the full path of the configuration
-> > > file you may use the MKFS_XFS_CONFIG environment variable.
-> > 
-> > I'm swamped under a deadline at work this week so just commenting at a
-> > very high level for now, but I'm curious; why use an env var vs
-> > providing a full path for -c ?  env vars always strike me as magic unexpected
-> > behaviors.
-> > 
-> > # mkfs.xfs -c /my/fancy/path/to/config
-> > 
-> > seems much clearer than
-> > 
-> > # export MKFS_XFS_CONFIG=/my/fancy/path/to/
-> > # mkfs.xfs -c config
-> > 
-> > i.e. if a full path is specified use it, else use the config directory.
-> > 
-> > Thoughts?
-> 
-> In this case your choices are:
-> MKFS_XFS_CONFIG=/my/fancy/path/to/config mkfs.xfs
-> 
-> or:
-> cp /my/fancy/path/to/config /etc/mkfs.xfs.d/hoogah
-> mkfs.xfs -c hooga
-> 
-> <shrug> Bikeshedding more, what if either option accepted either an
-> absolute path, or a file in $sysconfdir/etc/mkfs.xfs.d/ ?
+Hi,
 
-Let us recall that the reason for -c set in stone on /@sysconfigdir@/mkfs.xfs.d/
-was to allow clean simple code.
+I hit a strange failure[3] when run xfs/170 on latest upstream kernel 4.17-rc5
+and latest xfsprogs. The strange thing is this failure only can be reproduced
+when rmapbt=1 and reflink=1. If either of them is 0, can't reproduce this
+failure.
 
-The MKFS_XFS_CONFIG is simply a comopromise to allow flexibility on a
-full path in case you cannot use the /@sysconfigdir@/mkfs.xfs.d/
-directory.
+Another thing is I can't reproduce this failure on a device which sunit is not 0.
 
-Supporting both remains simple.
+Is this bug? Or case issue? The xfs/170 expect Multi-file data streams should
+always write into seperate AGs, can it still be sure 100% now?
 
-If we wanted to support what you suggest, if a user specified -c hoogah
-we'd have to treat multiple possibilities in code, increasing complexity:
+Thanks,
+Zorro
 
-  a) Did the user mean the hoogah in the present directory?
-  b) Did the user mean hoogah in /@sysconfigdir@/mkfs.xfs.d/
+# mkfs.xfs -f -m rmapbt=1,reflink=1 -i sparse=1 /dev/mapper/fedora_ibm--x3650m4--10-xfstest
+meta-data=/dev/mapper/fedora_ibm--x3650m4--10-xfstest isize=512    agcount=4, agsize=1310720 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=1, reflink=1
+data     =                       bsize=4096   blocks=5242880, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal log           bsize=4096   blocks=3693, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-Granted, if the user specified a -c /tmp/hoogah its clearer that the
-full path would be desirable. So, I think what you suggest makes sense
-provided we get rid of a) option and require only an alternative path
-*iff* the first character in the path is '/'. Does this work for all
-cases we wish to support a full path in?
+[1]
+# cat local.config
+export TEST_DEV=/dev/mapper/fedora_ibm--x3650m4--10-xfstest
+export TEST_DIR=/mnt/test
+export SCRATCH_DEV=/dev/mapper/fedora_ibm--x3650m4--10-xfscratch
+export SCRATCH_MNT=/mnt/scratch
+export MKFS_OPTIONS="-m rmapbt=1,reflink=1 -i sparse=1"
 
-> And the -c
-> option can be specified once to override the environment variable /
-> builtin detaults?
+[2]
+# cat /home/git/xfstests-dev/results//xfs/170.full 
+stream 1 AGs: 0 0 0 0 0 4 5 5
+stream 2 AGs: 1 1 1 1 1 5 5 5
+duplicate AG 5 found
+stream 3 AGs: 2 2 2 2 2 6 6 6
+stream 4 AGs: 3 3 3 3 3 7 7 7
+- failed, 1 streams with matching AGs
 
-The -c option as-is in my patch series always overrides the environment
-variable, but it is currently always tied to
-/@sysconfigdir@/mkfs.xfs.d/. So if you specify both the -c wins. Its
-also why I implemented the reset feature / mechanism.
-
-  Luis
+[3]
+# cat /home/git/xfstests-dev/results//xfs/170.out.bad         
+QA output created by 170
+# testing 8 16 4 8 3 0 0 ....
+# streaming
+# sync AGs...
+# checking stream AGs...
+- failed, 1 streams with matching AGs
+(see /home/git/xfstests-dev/results//xfs/170.full for details)
