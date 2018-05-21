@@ -1,54 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:31864
-        "EHLO ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750977AbeEUWuY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 May 2018 18:50:24 -0400
-Date: Tue, 22 May 2018 08:50:21 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfs: test inode allocation state missmatch corruption
-Message-ID: <20180521225021.GS23861@dastard>
-References: <20180521015857.7339-1-zlang@redhat.com>
- <20180521090411.GM29080@desktop.hz.ali.com>
- <20180521155530.GH4910@magnolia>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:45344 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750781AbeEUSYe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 21 May 2018 14:24:34 -0400
+Date: Mon, 21 May 2018 14:24:32 -0400
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 00/13] convert block layer to bioset_init()/mempool_init()
+Message-ID: <20180521182427.GA20013@redhat.com>
+References: <20180521143132.GB19194@redhat.com>
+ <2bbeeb1a-8b99-b06a-eb9b-eb8523c16460@kernel.dk>
+ <20180521144703.GA19303@redhat.com>
+ <4b343aef-e11c-73ba-1d88-7e73ca838cad@kernel.dk>
+ <20180521150439.GA19379@redhat.com>
+ <61e30dcf-a01c-f47d-087a-12930caf9aef@kernel.dk>
+ <20180521151817.GA19454@redhat.com>
+ <d01a150a-7752-f6ce-78f2-17a65c1e6fa5@kernel.dk>
+ <20180521160907.GA19553@redhat.com>
+ <20180521173724.GG11495@kmo-pixel>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180521155530.GH4910@magnolia>
+In-Reply-To: <20180521173724.GG11495@kmo-pixel>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eryu Guan <guaneryu@gmail.com>, Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Kent Overstreet <kent.overstreet@gmail.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, colyli@suse.de, darrick.wong@oracle.com, clm@fb.com, bacik@fb.com, linux-xfs@vger.kernel.org, drbd-dev@lists.linbit.com, linux-btrfs@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.com
 
-On Mon, May 21, 2018 at 08:55:30AM -0700, Darrick J. Wong wrote:
-> On Mon, May 21, 2018 at 05:04:11PM +0800, Eryu Guan wrote:
-> > On Mon, May 21, 2018 at 09:58:57AM +0800, Zorro Lang wrote:
-> > > +$XFS_IO_PROG -fc 'pwrite 0 $blksz' -c fsync $SCRATCH_MNT/dir/newfile 2>&1 | \
-> > > +	grep -i "Structure needs cleaning" | _filter_scratch
-> > > +
-> > > +# filter a intentional internal errors
-> > > +_check_dmesg _filter_dmesg
-> > > +
-> > > +# success, all done
-> > > +status=0
+On Mon, May 21 2018 at  1:37pm -0400,
+Kent Overstreet <kent.overstreet@gmail.com> wrote:
+
 > 
-> Does this test leave the scratch fs mounted but shut down if the kernel
-> hasn't been patched?  The _require_scratch_nocheck means that the broken
-> fs doesn't get scraped off the system and subsequent tests can go all
-> wacky when operations on $SCRATCH_MNT error out...
+> Uh, you came across as upset and paranoid to me too. Chalk it up to email? :)
 
-There's another discussion going on about fix this because xfs/132
-triggers the same issue (it's a problem with _check_filesystem() not
-cycling the mount after the test when _require_scratch_nocheck() is
-used).
+Awesome.  See how easy it is to make someone with purely constructive
+questions and feedback come off as upset and paranoid?
 
-I didn't see it here in testing because there was no test run after
-the new test I proposed. Same here - its xfs/999, and no test is run
-after it so this sort of thing isn't noticed.
+The tipping point occurs when bait is set with:
+"It's not like <insert complete non sequitur>".
+Then:
+"Let's focus on getting it reviewed, rather than pontificate on what
+could potentially go all wrong with this."
 
-Cheers,
+Message received: less pontificating, more doing!
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+And here I thought that focusing on what could go wrong (across all code
+touched) was review.  But OK, I'm the one that made this all weird ;)
+
+It is what it is at this point.
+
+> I personally don't care, I have no horse in this race. This particular patch
+> series wasn't my idea, Christoph wanted all these conversions done so
+> bioset_create() could be deleted. If you want us to hold off on the dm patch for
+> awhile until someone can get around to testing it or whatever (since I don't
+> have tests for everything I pushed) that would be perfectly fine by me.
+
+As I clarified already: this isn't about DM.
+
+Every single data structure change in this series should be reviewed for
+unforeseen alignment consequences.  Jens seemed to say that is
+worthwhile.  Not sure if he'll do it or we divide it up.  If we divide
+it up a temp topic branch should be published for others to inspect.
+
+Could be alignment hasn't been a historic concern for a bunch of the
+data structures changed in this series.. if so then all we can do is fix
+up any obvious potential for false sharing.
+
+Mike
