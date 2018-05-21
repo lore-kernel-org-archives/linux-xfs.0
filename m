@@ -1,113 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:53586 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752985AbeEUQJQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 21 May 2018 12:09:16 -0400
-Date: Mon, 21 May 2018 12:09:14 -0400
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH 00/13] convert block layer to bioset_init()/mempool_init()
-Message-ID: <20180521160907.GA19553@redhat.com>
-References: <20180521140348.GA19069@redhat.com>
- <686d7df6-c7d1-48a6-b7ff-48dc8aff6a62@kernel.dk>
- <20180521143132.GB19194@redhat.com>
- <2bbeeb1a-8b99-b06a-eb9b-eb8523c16460@kernel.dk>
- <20180521144703.GA19303@redhat.com>
- <4b343aef-e11c-73ba-1d88-7e73ca838cad@kernel.dk>
- <20180521150439.GA19379@redhat.com>
- <61e30dcf-a01c-f47d-087a-12930caf9aef@kernel.dk>
- <20180521151817.GA19454@redhat.com>
- <d01a150a-7752-f6ce-78f2-17a65c1e6fa5@kernel.dk>
+Received: from userp2120.oracle.com ([156.151.31.85]:37370 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753506AbeEURzX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 May 2018 13:55:23 -0400
+Date: Mon, 21 May 2018 10:54:57 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] fs: clear writeback errors in inode_init_always
+Message-ID: <20180521175457.GI23858@magnolia>
+References: <20180518225037.GA26206@thunk.org>
+ <630faadb74f608aa5a42649b81657e8b62d46bc3.camel@kernel.org>
+ <20180519152700.GB4507@magnolia>
+ <20180519153619.GA24698@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <d01a150a-7752-f6ce-78f2-17a65c1e6fa5@kernel.dk>
+In-Reply-To: <20180519153619.GA24698@bombadil.infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Kent Overstreet <kent.overstreet@gmail.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, colyli@suse.de, darrick.wong@oracle.com, clm@fb.com, bacik@fb.com, linux-xfs@vger.kernel.org, drbd-dev@lists.linbit.com, linux-btrfs@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.com
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Jeff Layton <jlayton@kernel.org>, "Theodore Y. Ts'o" <tytso@mit.edu>, linux-fsdevel@vger.kernel.org, fstests@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
 
-On Mon, May 21 2018 at 11:36am -0400,
-Jens Axboe <axboe@kernel.dk> wrote:
-
-> On 5/21/18 9:18 AM, Mike Snitzer wrote:
-> > On Mon, May 21 2018 at 11:09am -0400,
-> > Jens Axboe <axboe@kernel.dk> wrote:
+On Sat, May 19, 2018 at 08:36:19AM -0700, Matthew Wilcox wrote:
+> On Sat, May 19, 2018 at 08:27:00AM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> >> On 5/21/18 9:04 AM, Mike Snitzer wrote:
-> >>> On Mon, May 21 2018 at 10:52am -0400,
-> >>> Jens Axboe <axboe@kernel.dk> wrote:
-> >>>
-...
-> >>>> IMHO you're making a big deal out of something that should not be.
-> >>>
-> >>> I raised an issue that had seemingly not been considered at all.  Not
-> >>> making a big deal.  Raising it for others' benefit.
-> >>>
-> >>>> If the dm bits are that sensitive and cache line honed to perfection
-> >>>> already due to previous regressions in that area, then it might
-> >>>> not be a bad idea to have some compile checks for false cacheline
-> >>>> sharing between sensitive members, or spilling of a sub-struct
-> >>>> into multiple cachelines.
-> >>>>
-> >>>> It's not like this was pushed behind your back. It's posted for
-> >>>> review. It's quite possible the net change is a win for dm. Let's
-> >>>> focus on getting it reviewed, rather than pontificate on what
-> >>>> could potentially go all wrong with this.
-> >>>
-> >>> Why are you making this personal?  Or purely about DM?  I'm merely
-> >>> pointing out this change isn't something that can be given a quick
-> >>> blanket "looks good".
-> >>
-> >> I'm not making this personal at all?! You raised a (valid) concern,
-> >> I'm merely stating why I don't think it's a high risk issue. I'm
-> >> assuming your worry is related to dm, as those are the reports
-> >> that would ultimately land on your desk.
+> > In inode_init_always(), we clear the inode mapping flags, which clears
+> > any retained error (AS_EIO, AS_ENOSC) bits.  Unfortunately, we do not
+> 
+> typo of ENOSPC in case you do a new version
+
+Fixed, thanks.
+
+> > also clear wb_err, which means that old mapping errors can leak through
+> > to new inodes.
 > > 
-> > Then we'll just agree to disagree with what this implies: "It's not like
-> > this was pushed behind your back."
+> > This is crucial for the XFS inode allocation path because we recycle old
+> > in-core inodes and we do not want error state from an old file to leak
+> > into the new file.  This bug was discovered by running generic/036 and
+> > generic/047 in a loop and noticing that the EIOs generated by the
+> > collision of direct and buffered writes in generic/036 would survive the
+> > remount between 036 and 047, and get reported to the fsyncs (on
+> > different files on a reformatted fs!) in generic/047.
+> > 
+> > Since we're changing the semantics of inode_init_always, we must also
+> > change xfs_reinit_inode to retain the writeback error state when we go
+> > to recover an inode that has been torn down in the vfs but not yet
+> > disposed of by XFS.
 > 
-> I'm afraid you've lost me now - it was not pushed behind your back,
-> it was posted for review, with you on the CC list. Not trying to
-> be deliberately dense here, I just don't see what our disagreement is.
+> Don't you also need to preserve inode->i_mapping->flags across the
+> reinitialisation for the users which aren't yet using ->wb_err?
 
-You're having an off day ;)  Mondays and all?
+At first I thought (mistakenly) that xfs had been completely converted,
+but digging further we still use the old filemap_check_errors.  It seems
+reasonable to me that if we're going to resurrect an incore inode then
+we should try to hang on to AS_EIO/AS_ENOSPC for as long as we can.
 
-I just raised an alignment concern that needs to be considered during
-review by all stakeholders.  Wasn't upset at all.  Maybe my email tone
-came off otherwise?
+--D
 
-And then you got confused by me pointing out how it was weird for you to
-suggest I felt this stuff was pushed behind my back.. and went on to
-think I really think that.  It's almost like you're a confused hypnotist
-seeding me with paranoid dilutions. ;)
-
-/me waits for Jens to snap his fingers so he can just slowly step away
-from this line of discussion that is solidly dead now...
-
-> > Reality is I'm fine with the change.  Just think there is follow-on work
-> > (now or later) that is needed.
-> 
-> It's not hard to run the quick struct layout checks or alignment. If
-> there's a concern, that should be done now, instead of being deferred to
-> later. There's no point merging something that we expect to have
-> follow-on work. If that's the case, then it should not be merged. There
-> are no dependencies in the patchset, except that the last patch
-> obviously can't be applied until all of the previous ones are in.
-
-Cool, sounds good.
-
-> I took a quick look at the struct mapped_device layout, which I'm
-> assuming is the most important on the dm side. It's pretty big to
-> begin with, obviously this makes it bigger since we're now
-> embedding the bio_sets. On my config, doesn't show any false sharing
-> that would be problematic, or layout changes that would worry me. FWIW.
-
-Great, thanks, do you happen to have a tree you can push so others can
-get a quick compile and look at the series fully applied?
-
-BTW, I'm upstream DM maintainer but I have a role in caring for related
-subsystems (e.g. block core, etc) in downstream releases.. *cough* RHEL.
-So this alignment concern wasn't ever purely about DM.
-
-Mike
+> > +++ b/fs/xfs/xfs_icache.c
+> > @@ -298,6 +298,7 @@ xfs_reinit_inode(
+> >  	uint64_t	version = inode_peek_iversion(inode);
+> >  	umode_t		mode = inode->i_mode;
+> >  	dev_t		dev = inode->i_rdev;
+> > +	errseq_t	old_err = inode->i_mapping->wb_err;
+> >  
+> >  	error = inode_init_always(mp->m_super, inode);
+> >  
+> > @@ -306,6 +307,7 @@ xfs_reinit_inode(
+> >  	inode_set_iversion_queried(inode, version);
+> >  	inode->i_mode = mode;
+> >  	inode->i_rdev = dev;
+> > +	inode->i_mapping->wb_err = old_err;
+> >  	return error;
+> >  }
+> >  
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
