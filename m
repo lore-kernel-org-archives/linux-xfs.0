@@ -1,141 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:50528 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752419AbeERQto (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 12:49:44 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 24/34] xfs: remove xfs_reflink_find_cow_mapping
-Date: Fri, 18 May 2018 18:48:20 +0200
-Message-Id: <20180518164830.1552-25-hch@lst.de>
-In-Reply-To: <20180518164830.1552-1-hch@lst.de>
-References: <20180518164830.1552-1-hch@lst.de>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:59009 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751559AbeEUWd1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 May 2018 18:33:27 -0400
+Date: Tue, 22 May 2018 08:32:52 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: pass extra params to _scratch_mkfs_xfs_opts in
+ _scratch_mkfs_xfs
+Message-ID: <20180521223252.GQ23861@dastard>
+References: <20180511030559.26502-1-guaneryu@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180511030559.26502-1-guaneryu@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-We only have one caller left, and open coding the simple extent list
-lookup in it allows us to make the code both more understandable and
-reuse calculations and variables already present.
+On Fri, May 11, 2018 at 11:05:59AM +0800, Eryu Guan wrote:
+> One of _scratch_mkfs_xfs_opts()'s job is to remove any metadata
+> related mkfs options if mkfs.xfs binary doesn't support them, so
+> that tests that pass metadata mkfs options to _scratch_mkfs, e.g.
+> "_scratch_mkfs -m crc=0" won't break with old mkfs.xfs.
+> 
+> But commit 596a068bf130 ("fstests: teach _scratch_mkfs to handle
+> mkfs option conflicts") broke this, because it didn't pass any mkfs
+> options to _scratch_mkfs_xfs_opts(). So fix it.
+> 
+> Also declare a variable as 'local' and fix a typo.
+> 
+> Reported-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Eryu Guan <guaneryu@gmail.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_aops.c    | 17 ++++++++++++-----
- fs/xfs/xfs_reflink.c | 30 ------------------------------
- fs/xfs/xfs_reflink.h |  2 --
- fs/xfs/xfs_trace.h   |  1 -
- 4 files changed, 12 insertions(+), 38 deletions(-)
+Looks fine.
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index a50f69c2c602..a4b4a7037deb 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -385,6 +385,7 @@ xfs_map_blocks(
- 	ssize_t			count = i_blocksize(inode);
- 	xfs_fileoff_t		offset_fsb, end_fsb;
- 	int			whichfork = XFS_DATA_FORK;
-+	struct xfs_iext_cursor	icur;
- 	int			error = 0;
- 	int			nimaps = 1;
- 
-@@ -396,8 +397,18 @@ xfs_map_blocks(
- 	       (ip->i_df.if_flags & XFS_IFEXTENTS));
- 	ASSERT(offset <= mp->m_super->s_maxbytes);
- 
-+	if (offset > mp->m_super->s_maxbytes - count)
-+		count = mp->m_super->s_maxbytes - offset;
-+	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
-+	offset_fsb = XFS_B_TO_FSBT(mp, offset);
-+
-+	/*
-+	 * Check if this is offset is covered by a COW extents, and if yes use
-+	 * it directly instead of looking up anything in the data fork.
-+	 */
- 	if (xfs_is_reflink_inode(ip) &&
--	    xfs_reflink_find_cow_mapping(ip, offset, imap)) {
-+	    xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, imap) &&
-+	    imap->br_startoff <= offset_fsb) {
- 		xfs_iunlock(ip, XFS_ILOCK_SHARED);
- 		/*
- 		 * Truncate can race with writeback since writeback doesn't
-@@ -417,10 +428,6 @@ xfs_map_blocks(
- 		goto done;
- 	}
- 
--	if (offset > mp->m_super->s_maxbytes - count)
--		count = mp->m_super->s_maxbytes - offset;
--	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
--	offset_fsb = XFS_B_TO_FSBT(mp, offset);
- 	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
- 				imap, &nimaps, XFS_BMAPI_ENTIRE);
- 	if (!nimaps) {
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 713e857d9ffa..8e5eb8e70c89 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -484,36 +484,6 @@ xfs_reflink_allocate_cow(
- 	return error;
- }
- 
--/*
-- * Find the CoW reservation for a given byte offset of a file.
-- */
--bool
--xfs_reflink_find_cow_mapping(
--	struct xfs_inode		*ip,
--	xfs_off_t			offset,
--	struct xfs_bmbt_irec		*imap)
--{
--	struct xfs_ifork		*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
--	xfs_fileoff_t			offset_fsb;
--	struct xfs_bmbt_irec		got;
--	struct xfs_iext_cursor		icur;
--
--	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
--
--	if (!xfs_is_reflink_inode(ip))
--		return false;
--	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
--	if (!xfs_iext_lookup_extent(ip, ifp, offset_fsb, &icur, &got))
--		return false;
--	if (got.br_startoff > offset_fsb)
--		return false;
--
--	trace_xfs_reflink_find_cow_mapping(ip, offset, 1, XFS_IO_OVERWRITE,
--			&got);
--	*imap = got;
--	return true;
--}
--
- /*
-  * Trim an extent to end at the next CoW reservation past offset_fsb.
-  */
-diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index 701487bab468..15a456492667 100644
---- a/fs/xfs/xfs_reflink.h
-+++ b/fs/xfs/xfs_reflink.h
-@@ -32,8 +32,6 @@ extern int xfs_reflink_allocate_cow(struct xfs_inode *ip,
- 		struct xfs_bmbt_irec *imap, bool *shared, uint *lockmode);
- extern int xfs_reflink_convert_cow(struct xfs_inode *ip, xfs_off_t offset,
- 		xfs_off_t count);
--extern bool xfs_reflink_find_cow_mapping(struct xfs_inode *ip, xfs_off_t offset,
--		struct xfs_bmbt_irec *imap);
- extern void xfs_reflink_trim_irec_to_next_cow(struct xfs_inode *ip,
- 		xfs_fileoff_t offset_fsb, struct xfs_bmbt_irec *imap);
- 
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 9d4c4ca24fe6..ed8f774944ba 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3227,7 +3227,6 @@ DEFINE_INODE_IREC_EVENT(xfs_reflink_convert_cow);
- DEFINE_RW_EVENT(xfs_reflink_reserve_cow);
- 
- DEFINE_SIMPLE_IO_EVENT(xfs_reflink_bounce_dio_write);
--DEFINE_IOMAP_EVENT(xfs_reflink_find_cow_mapping);
- DEFINE_INODE_IREC_EVENT(xfs_reflink_trim_irec);
- 
- DEFINE_SIMPLE_IO_EVENT(xfs_reflink_cancel_cow_range);
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+(sorry for missing this when you opsted it first time)
+
+-Dave.
 -- 
-2.17.0
-
+Dave Chinner
+david@fromorbit.com
