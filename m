@@ -1,235 +1,128 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:48896 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752739AbeEUPzt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 May 2018 11:55:49 -0400
-Date: Mon, 21 May 2018 08:55:30 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] xfs: test inode allocation state missmatch corruption
-Message-ID: <20180521155530.GH4910@magnolia>
-References: <20180521015857.7339-1-zlang@redhat.com>
- <20180521090411.GM29080@desktop.hz.ali.com>
+Received: from mail-it0-f67.google.com ([209.85.214.67]:54185 "EHLO
+        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752803AbeEUQUv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 May 2018 12:20:51 -0400
+Received: by mail-it0-f67.google.com with SMTP id n64-v6so21699874itb.3
+        for <linux-xfs@vger.kernel.org>; Mon, 21 May 2018 09:20:50 -0700 (PDT)
+Subject: Re: [PATCH 00/13] convert block layer to bioset_init()/mempool_init()
+References: <20180521140348.GA19069@redhat.com>
+ <686d7df6-c7d1-48a6-b7ff-48dc8aff6a62@kernel.dk>
+ <20180521143132.GB19194@redhat.com>
+ <2bbeeb1a-8b99-b06a-eb9b-eb8523c16460@kernel.dk>
+ <20180521144703.GA19303@redhat.com>
+ <4b343aef-e11c-73ba-1d88-7e73ca838cad@kernel.dk>
+ <20180521150439.GA19379@redhat.com>
+ <61e30dcf-a01c-f47d-087a-12930caf9aef@kernel.dk>
+ <20180521151817.GA19454@redhat.com>
+ <d01a150a-7752-f6ce-78f2-17a65c1e6fa5@kernel.dk>
+ <20180521160907.GA19553@redhat.com>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <f9e3714c-b7c9-d5f6-4018-2a87dd5babb2@kernel.dk>
+Date: Mon, 21 May 2018 10:20:47 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180521090411.GM29080@desktop.hz.ali.com>
+In-Reply-To: <20180521160907.GA19553@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Kent Overstreet <kent.overstreet@gmail.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, colyli@suse.de, darrick.wong@oracle.com, clm@fb.com, bacik@fb.com, linux-xfs@vger.kernel.org, drbd-dev@lists.linbit.com, linux-btrfs@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.com
 
-On Mon, May 21, 2018 at 05:04:11PM +0800, Eryu Guan wrote:
-> On Mon, May 21, 2018 at 09:58:57AM +0800, Zorro Lang wrote:
-> > There's a situation where the directory structure and the inobt
-> > thinks the inode is free, but the inode on disk thinks it is still
-> > in use. XFS should detect it and prevent the kernel from oopsing
-> > on lookup.
-> > 
-> > Signed-off-by: Zorro Lang <zlang@redhat.com>
+On 5/21/18 10:09 AM, Mike Snitzer wrote:
+> On Mon, May 21 2018 at 11:36am -0400,
+> Jens Axboe <axboe@kernel.dk> wrote:
 > 
-> Looks fine to me overall, reviews from xfs list would be good.
+>> On 5/21/18 9:18 AM, Mike Snitzer wrote:
+>>> On Mon, May 21 2018 at 11:09am -0400,
+>>> Jens Axboe <axboe@kernel.dk> wrote:
+>>>
+>>>> On 5/21/18 9:04 AM, Mike Snitzer wrote:
+>>>>> On Mon, May 21 2018 at 10:52am -0400,
+>>>>> Jens Axboe <axboe@kernel.dk> wrote:
+>>>>>
+> ...
+>>>>>> IMHO you're making a big deal out of something that should not be.
+>>>>>
+>>>>> I raised an issue that had seemingly not been considered at all.  Not
+>>>>> making a big deal.  Raising it for others' benefit.
+>>>>>
+>>>>>> If the dm bits are that sensitive and cache line honed to perfection
+>>>>>> already due to previous regressions in that area, then it might
+>>>>>> not be a bad idea to have some compile checks for false cacheline
+>>>>>> sharing between sensitive members, or spilling of a sub-struct
+>>>>>> into multiple cachelines.
+>>>>>>
+>>>>>> It's not like this was pushed behind your back. It's posted for
+>>>>>> review. It's quite possible the net change is a win for dm. Let's
+>>>>>> focus on getting it reviewed, rather than pontificate on what
+>>>>>> could potentially go all wrong with this.
+>>>>>
+>>>>> Why are you making this personal?  Or purely about DM?  I'm merely
+>>>>> pointing out this change isn't something that can be given a quick
+>>>>> blanket "looks good".
+>>>>
+>>>> I'm not making this personal at all?! You raised a (valid) concern,
+>>>> I'm merely stating why I don't think it's a high risk issue. I'm
+>>>> assuming your worry is related to dm, as those are the reports
+>>>> that would ultimately land on your desk.
+>>>
+>>> Then we'll just agree to disagree with what this implies: "It's not like
+>>> this was pushed behind your back."
+>>
+>> I'm afraid you've lost me now - it was not pushed behind your back,
+>> it was posted for review, with you on the CC list. Not trying to
+>> be deliberately dense here, I just don't see what our disagreement is.
 > 
-> (Add linux-xfs to cc list, and please add fs-specific list to cc when
-> submitting fs-specific patches in future.)
+> You're having an off day ;)  Mondays and all?
 > 
-> > ---
-> > 
-> > Hi,
-> > 
-> > Re-send this case due to we can use it to test different code
-> > paths, refer to:
-> > https://marc.info/?l=fstests&m=152662117205960&w=2
+> I just raised an alignment concern that needs to be considered during
+> review by all stakeholders.  Wasn't upset at all.  Maybe my email tone
+> came off otherwise?
 > 
-> Would be good to include some information on this, e.g. it's testing the
-> same problem as in xfs/132, but by different code path.
+> And then you got confused by me pointing out how it was weird for you to
+> suggest I felt this stuff was pushed behind my back.. and went on to
+> think I really think that.  It's almost like you're a confused hypnotist
+> seeding me with paranoid dilutions. ;)
 > 
-> And the fix is already in upstream, it'd be good to mention the fix in
-> commit log and/or test description too.
-> 
-> > 
-> > V2 did below changes:
-> > 1) Fix Copyright
-> > 2) Use 'convert' command of xfs_db to get agino from inode number.
-> > 
-> > V1 and related reply as below:
-> > https://marc.info/?l=fstests&m=152229518811044&w=2
-> > 
-> > Thanks,
-> > Zorro
-> > 
-> >  tests/xfs/999     | 114 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/xfs/999.out |   2 +
-> >  tests/xfs/group   |   1 +
-> >  3 files changed, 117 insertions(+)
-> >  create mode 100755 tests/xfs/999
-> >  create mode 100644 tests/xfs/999.out
-> > 
-> > diff --git a/tests/xfs/999 b/tests/xfs/999
-> > new file mode 100755
-> > index 00000000..be26420a
-> > --- /dev/null
-> > +++ b/tests/xfs/999
-> > @@ -0,0 +1,114 @@
-> > +#! /bin/bash
-> > +# FS QA Test No. 999
-> > +#
-> > +# Test a corruption when the directory structure and the inobt thinks the inode
-> > +# is free, but the inode on disk thinks it is still in use.
-> > +#
-> > +#-----------------------------------------------------------------------
-> > +# Copyright (c) 2018 Red Hat, Inc.  All Rights Reserved.
-> > +#
-> > +# This program is free software; you can redistribute it and/or
-> > +# modify it under the terms of the GNU General Public License as
-> > +# published by the Free Software Foundation.
-> > +#
-> > +# This program is distributed in the hope that it would be useful,
-> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > +# GNU General Public License for more details.
-> > +#
-> > +# You should have received a copy of the GNU General Public License
-> > +# along with this program; if not, write the Free Software Foundation,
-> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> > +#-----------------------------------------------------------------------
-> > +#
-> > +
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +
-> > +here=`pwd`
-> > +tmp=/tmp/$$
-> > +status=1	# failure is the default!
-> > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > +
-> > +_cleanup()
-> > +{
-> > +	cd /
-> > +	rm -f $tmp.*
-> > +}
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +. ./common/filter
-> > +
-> > +# remove previous $seqres.full before test
-> > +rm -f $seqres.full
-> > +
-> > +# real QA test starts here
-> > +
-> > +# Modify as appropriate.
-> > +_supported_fs xfs
-> > +_supported_os Linux
-> > +_require_scratch_nocheck
-> > +_require_no_xfs_bug_on_assert
-> > +
-> > +_filter_dmesg()
-> 
-> No need name local functions with leading underscore.
-> 
-> > +{
-> > +	local warn1="Internal error xfs_trans_cancel.*fs/xfs/xfs_trans\.c.*"
-> > +	local warn2="WARNING:.*fs/xfs/xfs_message\.c:.*assfail.*"
-> > +
-> > +	sed -e "s#$warn1#Intentional error in xfs_trans_cancel#" \
-> > +	    -e "s#$warn2#Intentional warnings in assfail#"
-> > +}
-> > +
-> > +# Use crc=0, due to this crash is only possible on v4 XFS or v5 XFS mounted
-> > +# with the ikeep mount option. For all other V5 XFS, this problem cannot
-> > +# occur because we don't read inodes we are allocating from disk - we simply
-> > +# overwrite them with the new inode information.
-> > +_scratch_mkfs_xfs -m crc=0 >> $seqres.full 2>&1
-> 
-> This depends on a recent fix from me for _scratch_mkfs_xfs_opts(),
-> otherwise older mkfs.xfs that doesn't support metadata would fail the
-> mkfs (or use _require_xfs_mkfs_crc as in xfs/132). I'll ping that patch
-> for review.
-> 
-> Thanks,
-> Eryu
-> 
-> > +blksz=$(_scratch_xfs_get_sb_field blocksize)
-> > +agcount=$(_scratch_xfs_get_sb_field agcount)
-> > +
-> > +_scratch_mount
-> > +# Create a directory for later allocation in same AG (AG 0, due to this's an
-> > +# empty XFS for now)
-> > +mkdir $SCRATCH_MNT/dir
-> > +
-> > +# Allocate 1 block for testfile
-> > +$XFS_IO_PROG -fc 'pwrite 0 $blksz' -c fsync $SCRATCH_MNT/dir/testfile >> $seqres.full
-> > +inum=`stat -c %i $SCRATCH_MNT/dir/testfile`
-> > +_scratch_unmount
-> > +
-> > +# Find the AG which contains testfile
-> > +agi=`_scratch_xfs_db -c "convert inode $inum agno" | sed -e 's/^.*(\([0-9]*\).*$/\1/g'`
-> > +
-> > +# Due to we only allocate 1 block for testfile, and this's the only one data
-> > +# block we use. So we use single level inobt, So the ${agi}->root->recs[1]
-> > +# should be the only one record points the chunk which contains testfile's
-> > +# inode.
-> > +# An exmaple of inode record is as below:
-> > +#   recs[1] = [startino,freecount,free] 1:[1024,59,0xffffffffffffffe0]
-> > +freecount=$(_scratch_xfs_get_metadata_field "recs[1].freecount" \
-> > +					    "agi $agi" "addr root")
-> > +fmask=$(_scratch_xfs_get_metadata_field "recs[1].free" "agi $agi" "addr root")
-> > +
-> > +# fmask shift right 1 bit, and freecount++, to mark testfile inode as free in
-> > +# inobt. (But the inode itself isn't freed, it still has allocated block)
-> > +freecount="$((freecount + 1))"
-> > +fmask="$((fmask / 2))"
-> > +_scratch_xfs_set_metadata_field "recs[1].freecount" "$freecount" \
-> > +				"agi $agi" "addr root" >/dev/null
-> > +_scratch_xfs_set_metadata_field "recs[1].free" "$fmask" \
-> > +				"agi $agi" "addr root" >/dev/null
-> > +
-> > +# Mount again and create a new inode cover that inode we just 'freed' from inobt
-> > +_scratch_mount
-> > +$XFS_IO_PROG -fc 'pwrite 0 $blksz' -c fsync $SCRATCH_MNT/dir/newfile 2>&1 | \
-> > +	grep -i "Structure needs cleaning" | _filter_scratch
-> > +
-> > +# filter a intentional internal errors
-> > +_check_dmesg _filter_dmesg
-> > +
-> > +# success, all done
-> > +status=0
+> /me waits for Jens to snap his fingers so he can just slowly step away
+> from this line of discussion that is solidly dead now...
 
-Does this test leave the scratch fs mounted but shut down if the kernel
-hasn't been patched?  The _require_scratch_nocheck means that the broken
-fs doesn't get scraped off the system and subsequent tests can go all
-wacky when operations on $SCRATCH_MNT error out...
+Mike, wtf are you talking about.
 
---D
+>>> Reality is I'm fine with the change.  Just think there is follow-on work
+>>> (now or later) that is needed.
+>>
+>> It's not hard to run the quick struct layout checks or alignment. If
+>> there's a concern, that should be done now, instead of being deferred to
+>> later. There's no point merging something that we expect to have
+>> follow-on work. If that's the case, then it should not be merged. There
+>> are no dependencies in the patchset, except that the last patch
+>> obviously can't be applied until all of the previous ones are in.
+> 
+> Cool, sounds good.
+> 
+>> I took a quick look at the struct mapped_device layout, which I'm
+>> assuming is the most important on the dm side. It's pretty big to
+>> begin with, obviously this makes it bigger since we're now
+>> embedding the bio_sets. On my config, doesn't show any false sharing
+>> that would be problematic, or layout changes that would worry me. FWIW.
+> 
+> Great, thanks, do you happen to have a tree you can push so others can
+> get a quick compile and look at the series fully applied?
 
-> > +exit
-> > diff --git a/tests/xfs/999.out b/tests/xfs/999.out
-> > new file mode 100644
-> > index 00000000..cb8d9e34
-> > --- /dev/null
-> > +++ b/tests/xfs/999.out
-> > @@ -0,0 +1,2 @@
-> > +QA output created by 999
-> > +SCRATCH_MNT/dir/newfile: Structure needs cleaning
-> > diff --git a/tests/xfs/group b/tests/xfs/group
-> > index 32bf4f71..ec3cca62 100644
-> > --- a/tests/xfs/group
-> > +++ b/tests/xfs/group
-> > @@ -442,3 +442,4 @@
-> >  443 auto quick ioctl fsr
-> >  444 auto quick
-> >  445 auto quick filestreams
-> > +999 auto quick
-> > -- 
-> > 2.14.3
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe fstests" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I do not, I simply ran a quick analysis of the layout, then applied the
+full patchset, and repeated that exercise. Literally a 5 minute thing.
+I haven't applied the series, so haven't pushed anything out.
+
+> BTW, I'm upstream DM maintainer but I have a role in caring for related
+> subsystems (e.g. block core, etc) in downstream releases.. *cough* RHEL.
+> So this alignment concern wasn't ever purely about DM.
+
+I tend to care about that too...
+
+-- 
+Jens Axboe
+
