@@ -1,69 +1,156 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:45344 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750781AbeEUSYe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 21 May 2018 14:24:34 -0400
-Date: Mon, 21 May 2018 14:24:32 -0400
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH 00/13] convert block layer to bioset_init()/mempool_init()
-Message-ID: <20180521182427.GA20013@redhat.com>
-References: <20180521143132.GB19194@redhat.com>
- <2bbeeb1a-8b99-b06a-eb9b-eb8523c16460@kernel.dk>
- <20180521144703.GA19303@redhat.com>
- <4b343aef-e11c-73ba-1d88-7e73ca838cad@kernel.dk>
- <20180521150439.GA19379@redhat.com>
- <61e30dcf-a01c-f47d-087a-12930caf9aef@kernel.dk>
- <20180521151817.GA19454@redhat.com>
- <d01a150a-7752-f6ce-78f2-17a65c1e6fa5@kernel.dk>
- <20180521160907.GA19553@redhat.com>
- <20180521173724.GG11495@kmo-pixel>
+Received: from aserp2120.oracle.com ([141.146.126.78]:54092 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751081AbeEUTxN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 May 2018 15:53:13 -0400
+Date: Mon, 21 May 2018 12:53:04 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 05/34] fs: use ->is_partially_uptodate in
+ page_cache_seek_hole_data
+Message-ID: <20180521195304.GA14384@magnolia>
+References: <20180518164830.1552-1-hch@lst.de>
+ <20180518164830.1552-6-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180521173724.GG11495@kmo-pixel>
+In-Reply-To: <20180518164830.1552-6-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Kent Overstreet <kent.overstreet@gmail.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, colyli@suse.de, darrick.wong@oracle.com, clm@fb.com, bacik@fb.com, linux-xfs@vger.kernel.org, drbd-dev@lists.linbit.com, linux-btrfs@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-On Mon, May 21 2018 at  1:37pm -0400,
-Kent Overstreet <kent.overstreet@gmail.com> wrote:
-
+On Fri, May 18, 2018 at 06:48:01PM +0200, Christoph Hellwig wrote:
+> This way the implementation doesn't depend on buffer_head internals.
 > 
-> Uh, you came across as upset and paranoid to me too. Chalk it up to email? :)
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/iomap.c | 83 +++++++++++++++++++++++++++---------------------------
+>  1 file changed, 42 insertions(+), 41 deletions(-)
+> 
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index bef5e91d40bf..0fecd5789d7b 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -594,31 +594,54 @@ EXPORT_SYMBOL_GPL(iomap_fiemap);
+>   *
+>   * Returns the offset within the file on success, and -ENOENT otherwise.
 
-Awesome.  See how easy it is to make someone with purely constructive
-questions and feedback come off as upset and paranoid?
+This comment is now wrong, since we return the offset via *lastoff and I
+think the return value is whether or not we found what we were looking
+for...?
 
-The tipping point occurs when bait is set with:
-"It's not like <insert complete non sequitur>".
-Then:
-"Let's focus on getting it reviewed, rather than pontificate on what
-could potentially go all wrong with this."
+>   */
+> -static loff_t
+> -page_seek_hole_data(struct page *page, loff_t lastoff, int whence)
+> +static bool
+> +page_seek_hole_data(struct inode *inode, struct page *page, loff_t *lastoff,
+> +		int whence)
+>  {
+> -	loff_t offset = page_offset(page);
+> -	struct buffer_head *bh, *head;
+> +	const struct address_space_operations *ops = inode->i_mapping->a_ops;
+> +	unsigned int bsize = i_blocksize(inode), off;
+>  	bool seek_data = whence == SEEK_DATA;
+> +	loff_t poff = page_offset(page);
+>  
+> -	if (lastoff < offset)
+> -		lastoff = offset;
+> -
+> -	bh = head = page_buffers(page);
+> -	do {
+> -		offset += bh->b_size;
+> -		if (lastoff >= offset)
+> -			continue;
+> +	if (WARN_ON_ONCE(*lastoff >= poff + PAGE_SIZE))
+> +		return false;
+>  
+> +	if (*lastoff < poff) {
+>  		/*
+> -		 * Any buffer with valid data in it should have BH_Uptodate set.
+> +		 * Last offset smaller than the start of the page means we found
+> +		 * a hole:
+>  		 */
+> -		if (buffer_uptodate(bh) == seek_data)
+> -			return lastoff;
+> +		if (whence == SEEK_HOLE)
+> +			return true;
+> +		*lastoff = poff;
+> +	}
+>  
+> -		lastoff = offset;
+> -	} while ((bh = bh->b_this_page) != head);
+> -	return -ENOENT;
+> +	/*
+> +	 * Just check the page unless we can and should check block ranges:
+> +	 */
+> +	if (bsize == PAGE_SIZE || !ops->is_partially_uptodate) {
+> +		if (PageUptodate(page) == seek_data)
+> +			return true;
+> +		return false;
 
-Message received: less pontificating, more doing!
+return PageUptodate(page) == seek_data; ?
 
-And here I thought that focusing on what could go wrong (across all code
-touched) was review.  But OK, I'm the one that made this all weird ;)
+--D
 
-It is what it is at this point.
-
-> I personally don't care, I have no horse in this race. This particular patch
-> series wasn't my idea, Christoph wanted all these conversions done so
-> bioset_create() could be deleted. If you want us to hold off on the dm patch for
-> awhile until someone can get around to testing it or whatever (since I don't
-> have tests for everything I pushed) that would be perfectly fine by me.
-
-As I clarified already: this isn't about DM.
-
-Every single data structure change in this series should be reviewed for
-unforeseen alignment consequences.  Jens seemed to say that is
-worthwhile.  Not sure if he'll do it or we divide it up.  If we divide
-it up a temp topic branch should be published for others to inspect.
-
-Could be alignment hasn't been a historic concern for a bunch of the
-data structures changed in this series.. if so then all we can do is fix
-up any obvious potential for false sharing.
-
-Mike
+> +	}
+> +
+> +	lock_page(page);
+> +	if (unlikely(page->mapping != inode->i_mapping))
+> +		goto out_unlock_not_found;
+> +
+> +	for (off = 0; off < PAGE_SIZE; off += bsize) {
+> +		if ((*lastoff & ~PAGE_MASK) >= off + bsize)
+> +			continue;
+> +		if (ops->is_partially_uptodate(page, off, bsize) == seek_data) {
+> +			unlock_page(page);
+> +			return true;
+> +		}
+> +		*lastoff = poff + off + bsize;
+> +	}
+> +
+> +out_unlock_not_found:
+> +	unlock_page(page);
+> +	return false;
+>  }
+>  
+>  /*
+> @@ -655,30 +678,8 @@ page_cache_seek_hole_data(struct inode *inode, loff_t offset, loff_t length,
+>  		for (i = 0; i < nr_pages; i++) {
+>  			struct page *page = pvec.pages[i];
+>  
+> -			/*
+> -			 * At this point, the page may be truncated or
+> -			 * invalidated (changing page->mapping to NULL), or
+> -			 * even swizzled back from swapper_space to tmpfs file
+> -			 * mapping.  However, page->index will not change
+> -			 * because we have a reference on the page.
+> -                         *
+> -			 * If current page offset is beyond where we've ended,
+> -			 * we've found a hole.
+> -                         */
+> -			if (whence == SEEK_HOLE &&
+> -			    lastoff < page_offset(page))
+> +			if (page_seek_hole_data(inode, page, &lastoff, whence))
+>  				goto check_range;
+> -
+> -			lock_page(page);
+> -			if (likely(page->mapping == inode->i_mapping) &&
+> -			    page_has_buffers(page)) {
+> -				lastoff = page_seek_hole_data(page, lastoff, whence);
+> -				if (lastoff >= 0) {
+> -					unlock_page(page);
+> -					goto check_range;
+> -				}
+> -			}
+> -			unlock_page(page);
+>  			lastoff = page_offset(page) + PAGE_SIZE;
+>  		}
+>  		pagevec_release(&pvec);
+> -- 
+> 2.17.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
