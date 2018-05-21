@@ -1,73 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:59262 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751543AbeERAxT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 May 2018 20:53:19 -0400
-Date: Fri, 18 May 2018 10:53:16 +1000
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:6464 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753756AbeEUWLB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 May 2018 18:11:01 -0400
+Date: Tue, 22 May 2018 08:10:57 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 3/5] mkfs: replace defaults source with an enum
-Message-ID: <20180518005316.GH23861@dastard>
+Subject: Re: [PATCH v2 5/5] mkfs.xfs: add configuration file parsing support
+ using our own parser
+Message-ID: <20180521221057.GP23861@dastard>
 References: <20180517192700.23457-1-mcgrof@kernel.org>
- <20180517192700.23457-4-mcgrof@kernel.org>
- <20180517224849.GD23861@dastard>
- <20180517230918.GA24680@garbanzo.do-not-panic.com>
+ <20180517192700.23457-6-mcgrof@kernel.org>
+ <1f1e87df-aba5-e285-e3cb-820306f24f1c@sandeen.net>
+ <20180518034600.GW23858@magnolia>
+ <20180520001648.GN23861@dastard>
+ <20180521153354.GH23858@magnolia>
+ <20180521170530.GH24680@garbanzo.do-not-panic.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180517230918.GA24680@garbanzo.do-not-panic.com>
+In-Reply-To: <20180521170530.GH24680@garbanzo.do-not-panic.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: sandeen@sandeen.net, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com
 
-On Thu, May 17, 2018 at 04:09:18PM -0700, Luis R. Rodriguez wrote:
-> On Fri, May 18, 2018 at 08:48:49AM +1000, Dave Chinner wrote:
-> > On Thu, May 17, 2018 at 12:26:58PM -0700, Luis R. Rodriguez wrote:
-> > > Using an enum will let us later just use a switch statement to print
-> > > out the source, this makes sources easier to document, update and
-> > > manage.
+On Mon, May 21, 2018 at 10:05:30AM -0700, Luis R. Rodriguez wrote:
+> On Mon, May 21, 2018 at 08:33:54AM -0700, Darrick J. Wong wrote:
+> > On Sun, May 20, 2018 at 10:16:48AM +1000, Dave Chinner wrote:
+> > > On Thu, May 17, 2018 at 08:46:00PM -0700, Darrick J. Wong wrote:
+> > > > <shrug> Bikeshedding more, what if either option accepted either an
+> > > > absolute path, or a file in $sysconfdir/etc/mkfs.xfs.d/ ? 
 > > > 
-> > > Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+> > > I kinda assumed that config files could be located anywhere, but we
+> > > only searched the sysconfig path if it didn't point at a local
+> > > file...
 > > 
-> > This is incomplete. :(
+> > <shrug> openat() semantics are fine enough with me, I think.
 > 
-> It builds, the comment was intentional.
-
-That doesn't make it complete. Usually when introducing new code one
-part at a time, the entire functionality of that part is separated
-out so it can be reviewed whole, not split across multilple patches
-and intermingled with other new functionality....
-
-> > >  /*
-> > >   * Default filesystem features and configuration values
-> > >   *
-> > > @@ -49,7 +60,7 @@ struct sb_feat_args {
-> > >   * calculations.
-> > >   */
-> > >  struct mkfs_default_params {
-> > > -	char	*source;	/* where the defaults came from */
-> > > +	enum default_params_type type; /* where the defaults came from */
-> > >  
-> > >  	int	sectorsize;
-> > >  	int	blocksize;
-> > 
-> > As it is, I don't see why this change it necessary - you can just
-> > store the appropriate string (as the code currently does) into the
-> > structure once the source is known. Why do we need infrastructure to
-> > abstract printing a string when we set it directly, anyway?
+> Well this is a big difference, and I think being clear on this would
+> be good. If the user specified:
 > 
-> Using an enum we get to document the different sources clearly, and we
-> also get to have an enum to compare against for conditionals later,
-> instead of having to strcmp().
+> 	-c foo
+> 	
+> and the file 'foo' is present but also exists on
+> $sysconfdir/etc/mkfs.xfs.d/foo do we use the local file if the user
+> did not pass ./foo ?
 
-See my comments in later patches, where I suggest all that gets
-removed because i don't think it works. :P
+I would have expected "foo" to be considered the same as "./foo".
+It's a relative path.
 
 Cheers,
 
 Dave.
-
 -- 
 Dave Chinner
 david@fromorbit.com
