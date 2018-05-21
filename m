@@ -1,429 +1,338 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail02.adl2.internode.on.net ([150.101.137.139]:34058 "EHLO
-        ipmail02.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751773AbeEUAOi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 20 May 2018 20:14:38 -0400
-Date: Mon, 21 May 2018 10:14:34 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 5/5] mkfs.xfs: add configuration file parsing support
- using our own parser
-Message-ID: <20180521001434.GO23861@dastard>
-References: <20180517192700.23457-1-mcgrof@kernel.org>
- <20180517192700.23457-6-mcgrof@kernel.org>
- <20180518004404.GF23861@dastard>
- <20180519013224.GG27875@wotan.suse.de>
+Received: from mx2.suse.de ([195.135.220.15]:52988 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751657AbeEUD7I (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 20 May 2018 23:59:08 -0400
+Subject: Re: [PATCH 05/12] bcache: convert to bioset_init()/mempool_init()
+References: <20180520222558.7053-1-kent.overstreet@gmail.com>
+ <20180520222558.7053-6-kent.overstreet@gmail.com>
+From: Coly Li <colyli@suse.de>
+Message-ID: <52b76a42-2107-36bf-a9e3-7b13b935f4e6@suse.de>
+Date: Mon, 21 May 2018 11:58:56 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180519013224.GG27875@wotan.suse.de>
+In-Reply-To: <20180520222558.7053-6-kent.overstreet@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: sandeen@sandeen.net, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com
+To: Kent Overstreet <kent.overstreet@gmail.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, axboe@kernel.dk, hch@infradead.org, snitzer@redhat.com, darrick.wong@oracle.com, clm@fb.com, bacik@fb.com, linux-xfs@vger.kernel.org, drbd-dev@lists.linbit.com, linux-btrfs@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.com
 
-On Sat, May 19, 2018 at 03:32:24AM +0200, Luis R. Rodriguez wrote:
-> On Fri, May 18, 2018 at 10:44:04AM +1000, Dave Chinner wrote:
-> > On Thu, May 17, 2018 at 12:27:00PM -0700, Luis R. Rodriguez wrote:
-> > > --- a/mkfs/xfs_mkfs.c
-> > > +++ b/mkfs/xfs_mkfs.c
-> > > @@ -3077,11 +3078,13 @@ print_mkfs_cfg(
-> > >  	struct mkfs_params	*cfg,
-> > >  	char			*dfile,
-> > >  	char			*logfile,
-> > > -	char			*rtfile)
-> > > +	char			*rtfile,
-> > > +	struct mkfs_default_params *dft)
-> > >  {
-> > >  	struct sb_feat_args	*fp = &cfg->sb_feat;
-> > >  
-> > >  	printf(_(
-> > > +"config-file=%-22s\n"
-> > >  "meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
-> > >  "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
-> > >  "         =%-22s crc=%-8u finobt=%u, sparse=%u, rmapbt=%u, reflink=%u\n"
-> > > @@ -3091,6 +3094,7 @@ print_mkfs_cfg(
-> > >  "log      =%-22s bsize=%-6d blocks=%lld, version=%d\n"
-> > >  "         =%-22s sectsz=%-5u sunit=%d blks, lazy-count=%d\n"
-> > >  "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
-> > > +		dft->type != DEFAULTS_BUILTIN ? dft->config_file : "empty",
-> > >  		dfile, cfg->inodesize, (long long)cfg->agcount,
-> > >  			(long long)cfg->agsize,
-> > >  		"", cfg->sectorsize, fp->attr_version, fp->projid32bit,
-> > 
-> > Haven't we already printed where the config was sourced from? Why do
-> > we need to print it again here?
+On 2018/5/21 6:25 AM, Kent Overstreet wrote:
+> Signed-off-by: Kent Overstreet <kent.overstreet@gmail.com>
+
+Hi Kent,
+
+This change looks good to me,
+
+Reviewed-by: Coly Li <colyli@suse.de>
+
+Thanks.
+
+Coly Li
+
+> ---
+>  drivers/md/bcache/bcache.h  | 10 +++++-----
+>  drivers/md/bcache/bset.c    | 13 ++++---------
+>  drivers/md/bcache/bset.h    |  2 +-
+>  drivers/md/bcache/btree.c   |  4 ++--
+>  drivers/md/bcache/io.c      |  4 ++--
+>  drivers/md/bcache/request.c | 18 +++++++++---------
+>  drivers/md/bcache/super.c   | 38 ++++++++++++++-----------------------
+>  7 files changed, 37 insertions(+), 52 deletions(-)
 > 
-> The other print describes the enum, this print prints out the *used*
-> config file path if a config file was actually used. Without the other
-> print this would just print either the config file or empty.
-
-If you look at the changes I proposed, I suggested we change the
-initial print out the path of the source file, not how the user
-specified the source file. So this becomes redundant. And given this
-code is now shared with xfs_info, it has no idea about mkfs config
-files, so it's not ideal to be adding mkfs-specific stuff to this
-output.
-
-Further....
-
-> Since we are going to remove the environment variable option, then
-> I think the other print is now not needed anymore and my preference
-> is to keep it here.
+> diff --git a/drivers/md/bcache/bcache.h b/drivers/md/bcache/bcache.h
+> index 3a0cfb237a..3050438761 100644
+> --- a/drivers/md/bcache/bcache.h
+> +++ b/drivers/md/bcache/bcache.h
+> @@ -269,7 +269,7 @@ struct bcache_device {
+>  	atomic_t		*stripe_sectors_dirty;
+>  	unsigned long		*full_dirty_stripes;
+>  
+> -	struct bio_set		*bio_split;
+> +	struct bio_set		bio_split;
+>  
+>  	unsigned		data_csum:1;
+>  
+> @@ -528,9 +528,9 @@ struct cache_set {
+>  	struct closure		sb_write;
+>  	struct semaphore	sb_write_mutex;
+>  
+> -	mempool_t		*search;
+> -	mempool_t		*bio_meta;
+> -	struct bio_set		*bio_split;
+> +	mempool_t		search;
+> +	mempool_t		bio_meta;
+> +	struct bio_set		bio_split;
+>  
+>  	/* For the btree cache */
+>  	struct shrinker		shrink;
+> @@ -655,7 +655,7 @@ struct cache_set {
+>  	 * A btree node on disk could have too many bsets for an iterator to fit
+>  	 * on the stack - have to dynamically allocate them
+>  	 */
+> -	mempool_t		*fill_iter;
+> +	mempool_t		fill_iter;
+>  
+>  	struct bset_sort_state	sort;
+>  
+> diff --git a/drivers/md/bcache/bset.c b/drivers/md/bcache/bset.c
+> index 579c696a5f..f3403b45bc 100644
+> --- a/drivers/md/bcache/bset.c
+> +++ b/drivers/md/bcache/bset.c
+> @@ -1118,8 +1118,7 @@ struct bkey *bch_btree_iter_next_filter(struct btree_iter *iter,
+>  
+>  void bch_bset_sort_state_free(struct bset_sort_state *state)
+>  {
+> -	if (state->pool)
+> -		mempool_destroy(state->pool);
+> +	mempool_exit(&state->pool);
+>  }
+>  
+>  int bch_bset_sort_state_init(struct bset_sort_state *state, unsigned page_order)
+> @@ -1129,11 +1128,7 @@ int bch_bset_sort_state_init(struct bset_sort_state *state, unsigned page_order)
+>  	state->page_order = page_order;
+>  	state->crit_factor = int_sqrt(1 << page_order);
+>  
+> -	state->pool = mempool_create_page_pool(1, page_order);
+> -	if (!state->pool)
+> -		return -ENOMEM;
+> -
+> -	return 0;
+> +	return mempool_init_page_pool(&state->pool, 1, page_order);
+>  }
+>  EXPORT_SYMBOL(bch_bset_sort_state_init);
+>  
+> @@ -1191,7 +1186,7 @@ static void __btree_sort(struct btree_keys *b, struct btree_iter *iter,
+>  
+>  		BUG_ON(order > state->page_order);
+>  
+> -		outp = mempool_alloc(state->pool, GFP_NOIO);
+> +		outp = mempool_alloc(&state->pool, GFP_NOIO);
+>  		out = page_address(outp);
+>  		used_mempool = true;
+>  		order = state->page_order;
+> @@ -1220,7 +1215,7 @@ static void __btree_sort(struct btree_keys *b, struct btree_iter *iter,
+>  	}
+>  
+>  	if (used_mempool)
+> -		mempool_free(virt_to_page(out), state->pool);
+> +		mempool_free(virt_to_page(out), &state->pool);
+>  	else
+>  		free_pages((unsigned long) out, order);
+>  
+> diff --git a/drivers/md/bcache/bset.h b/drivers/md/bcache/bset.h
+> index 0c24280f3b..b867f22004 100644
+> --- a/drivers/md/bcache/bset.h
+> +++ b/drivers/md/bcache/bset.h
+> @@ -347,7 +347,7 @@ static inline struct bkey *bch_bset_search(struct btree_keys *b,
+>  /* Sorting */
+>  
+>  struct bset_sort_state {
+> -	mempool_t		*pool;
+> +	mempool_t		pool;
+>  
+>  	unsigned		page_order;
+>  	unsigned		crit_factor;
+> diff --git a/drivers/md/bcache/btree.c b/drivers/md/bcache/btree.c
+> index 17936b2dc7..2a0968c04e 100644
+> --- a/drivers/md/bcache/btree.c
+> +++ b/drivers/md/bcache/btree.c
+> @@ -204,7 +204,7 @@ void bch_btree_node_read_done(struct btree *b)
+>  	struct bset *i = btree_bset_first(b);
+>  	struct btree_iter *iter;
+>  
+> -	iter = mempool_alloc(b->c->fill_iter, GFP_NOIO);
+> +	iter = mempool_alloc(&b->c->fill_iter, GFP_NOIO);
+>  	iter->size = b->c->sb.bucket_size / b->c->sb.block_size;
+>  	iter->used = 0;
+>  
+> @@ -271,7 +271,7 @@ void bch_btree_node_read_done(struct btree *b)
+>  		bch_bset_init_next(&b->keys, write_block(b),
+>  				   bset_magic(&b->c->sb));
+>  out:
+> -	mempool_free(iter, b->c->fill_iter);
+> +	mempool_free(iter, &b->c->fill_iter);
+>  	return;
+>  err:
+>  	set_btree_node_io_error(b);
+> diff --git a/drivers/md/bcache/io.c b/drivers/md/bcache/io.c
+> index 2ddf8515e6..9612873afe 100644
+> --- a/drivers/md/bcache/io.c
+> +++ b/drivers/md/bcache/io.c
+> @@ -17,12 +17,12 @@
+>  void bch_bbio_free(struct bio *bio, struct cache_set *c)
+>  {
+>  	struct bbio *b = container_of(bio, struct bbio, bio);
+> -	mempool_free(b, c->bio_meta);
+> +	mempool_free(b, &c->bio_meta);
+>  }
+>  
+>  struct bio *bch_bbio_alloc(struct cache_set *c)
+>  {
+> -	struct bbio *b = mempool_alloc(c->bio_meta, GFP_NOIO);
+> +	struct bbio *b = mempool_alloc(&c->bio_meta, GFP_NOIO);
+>  	struct bio *bio = &b->bio;
+>  
+>  	bio_init(bio, bio->bi_inline_vecs, bucket_pages(c));
+> diff --git a/drivers/md/bcache/request.c b/drivers/md/bcache/request.c
+> index 8e3e8655ed..ae67f5fa80 100644
+> --- a/drivers/md/bcache/request.c
+> +++ b/drivers/md/bcache/request.c
+> @@ -213,7 +213,7 @@ static void bch_data_insert_start(struct closure *cl)
+>  	do {
+>  		unsigned i;
+>  		struct bkey *k;
+> -		struct bio_set *split = op->c->bio_split;
+> +		struct bio_set *split = &op->c->bio_split;
+>  
+>  		/* 1 for the device pointer and 1 for the chksum */
+>  		if (bch_keylist_realloc(&op->insert_keys,
+> @@ -548,7 +548,7 @@ static int cache_lookup_fn(struct btree_op *op, struct btree *b, struct bkey *k)
+>  
+>  	n = bio_next_split(bio, min_t(uint64_t, INT_MAX,
+>  				      KEY_OFFSET(k) - bio->bi_iter.bi_sector),
+> -			   GFP_NOIO, s->d->bio_split);
+> +			   GFP_NOIO, &s->d->bio_split);
+>  
+>  	bio_key = &container_of(n, struct bbio, bio)->key;
+>  	bch_bkey_copy_single_ptr(bio_key, k, ptr);
+> @@ -707,7 +707,7 @@ static void search_free(struct closure *cl)
+>  
+>  	bio_complete(s);
+>  	closure_debug_destroy(cl);
+> -	mempool_free(s, s->d->c->search);
+> +	mempool_free(s, &s->d->c->search);
+>  }
+>  
+>  static inline struct search *search_alloc(struct bio *bio,
+> @@ -715,7 +715,7 @@ static inline struct search *search_alloc(struct bio *bio,
+>  {
+>  	struct search *s;
+>  
+> -	s = mempool_alloc(d->c->search, GFP_NOIO);
+> +	s = mempool_alloc(&d->c->search, GFP_NOIO);
+>  
+>  	closure_init(&s->cl, NULL);
+>  	do_bio_hook(s, bio, request_endio);
+> @@ -864,7 +864,7 @@ static int cached_dev_cache_miss(struct btree *b, struct search *s,
+>  	s->cache_missed = 1;
+>  
+>  	if (s->cache_miss || s->iop.bypass) {
+> -		miss = bio_next_split(bio, sectors, GFP_NOIO, s->d->bio_split);
+> +		miss = bio_next_split(bio, sectors, GFP_NOIO, &s->d->bio_split);
+>  		ret = miss == bio ? MAP_DONE : MAP_CONTINUE;
+>  		goto out_submit;
+>  	}
+> @@ -887,14 +887,14 @@ static int cached_dev_cache_miss(struct btree *b, struct search *s,
+>  
+>  	s->iop.replace = true;
+>  
+> -	miss = bio_next_split(bio, sectors, GFP_NOIO, s->d->bio_split);
+> +	miss = bio_next_split(bio, sectors, GFP_NOIO, &s->d->bio_split);
+>  
+>  	/* btree_search_recurse()'s btree iterator is no good anymore */
+>  	ret = miss == bio ? MAP_DONE : -EINTR;
+>  
+>  	cache_bio = bio_alloc_bioset(GFP_NOWAIT,
+>  			DIV_ROUND_UP(s->insert_bio_sectors, PAGE_SECTORS),
+> -			dc->disk.bio_split);
+> +			&dc->disk.bio_split);
+>  	if (!cache_bio)
+>  		goto out_submit;
+>  
+> @@ -1008,7 +1008,7 @@ static void cached_dev_write(struct cached_dev *dc, struct search *s)
+>  			struct bio *flush;
+>  
+>  			flush = bio_alloc_bioset(GFP_NOIO, 0,
+> -						 dc->disk.bio_split);
+> +						 &dc->disk.bio_split);
+>  			if (!flush) {
+>  				s->iop.status = BLK_STS_RESOURCE;
+>  				goto insert_data;
+> @@ -1021,7 +1021,7 @@ static void cached_dev_write(struct cached_dev *dc, struct search *s)
+>  			closure_bio_submit(s->iop.c, flush, cl);
+>  		}
+>  	} else {
+> -		s->iop.bio = bio_clone_fast(bio, GFP_NOIO, dc->disk.bio_split);
+> +		s->iop.bio = bio_clone_fast(bio, GFP_NOIO, &dc->disk.bio_split);
+>  		/* I/O request sent to backing device */
+>  		bio->bi_end_io = backing_request_endio;
+>  		closure_bio_submit(s->iop.c, bio, cl);
+> diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
+> index 3dea06b41d..862b575827 100644
+> --- a/drivers/md/bcache/super.c
+> +++ b/drivers/md/bcache/super.c
+> @@ -766,8 +766,7 @@ static void bcache_device_free(struct bcache_device *d)
+>  		put_disk(d->disk);
+>  	}
+>  
+> -	if (d->bio_split)
+> -		bioset_free(d->bio_split);
+> +	bioset_exit(&d->bio_split);
+>  	kvfree(d->full_dirty_stripes);
+>  	kvfree(d->stripe_sectors_dirty);
+>  
+> @@ -809,9 +808,8 @@ static int bcache_device_init(struct bcache_device *d, unsigned block_size,
+>  	if (idx < 0)
+>  		return idx;
+>  
+> -	if (!(d->bio_split = bioset_create(4, offsetof(struct bbio, bio),
+> -					   BIOSET_NEED_BVECS |
+> -					   BIOSET_NEED_RESCUER)) ||
+> +	if (bioset_init(&d->bio_split, 4, offsetof(struct bbio, bio),
+> +			BIOSET_NEED_BVECS|BIOSET_NEED_RESCUER) ||
+>  	    !(d->disk = alloc_disk(BCACHE_MINORS))) {
+>  		ida_simple_remove(&bcache_device_idx, idx);
+>  		return -ENOMEM;
+> @@ -1465,14 +1463,10 @@ static void cache_set_free(struct closure *cl)
+>  
+>  	if (c->moving_gc_wq)
+>  		destroy_workqueue(c->moving_gc_wq);
+> -	if (c->bio_split)
+> -		bioset_free(c->bio_split);
+> -	if (c->fill_iter)
+> -		mempool_destroy(c->fill_iter);
+> -	if (c->bio_meta)
+> -		mempool_destroy(c->bio_meta);
+> -	if (c->search)
+> -		mempool_destroy(c->search);
+> +	bioset_exit(&c->bio_split);
+> +	mempool_exit(&c->fill_iter);
+> +	mempool_exit(&c->bio_meta);
+> +	mempool_exit(&c->search);
+>  	kfree(c->devices);
+>  
+>  	mutex_lock(&bch_register_lock);
+> @@ -1683,21 +1677,17 @@ struct cache_set *bch_cache_set_alloc(struct cache_sb *sb)
+>  	INIT_LIST_HEAD(&c->btree_cache_freed);
+>  	INIT_LIST_HEAD(&c->data_buckets);
+>  
+> -	c->search = mempool_create_slab_pool(32, bch_search_cache);
+> -	if (!c->search)
+> -		goto err;
+> -
+>  	iter_size = (sb->bucket_size / sb->block_size + 1) *
+>  		sizeof(struct btree_iter_set);
+>  
+>  	if (!(c->devices = kzalloc(c->nr_uuids * sizeof(void *), GFP_KERNEL)) ||
+> -	    !(c->bio_meta = mempool_create_kmalloc_pool(2,
+> -				sizeof(struct bbio) + sizeof(struct bio_vec) *
+> -				bucket_pages(c))) ||
+> -	    !(c->fill_iter = mempool_create_kmalloc_pool(1, iter_size)) ||
+> -	    !(c->bio_split = bioset_create(4, offsetof(struct bbio, bio),
+> -					   BIOSET_NEED_BVECS |
+> -					   BIOSET_NEED_RESCUER)) ||
+> +	    mempool_init_slab_pool(&c->search, 32, bch_search_cache) ||
+> +	    mempool_init_kmalloc_pool(&c->bio_meta, 2,
+> +				      sizeof(struct bbio) + sizeof(struct bio_vec) *
+> +				      bucket_pages(c)) ||
+> +	    mempool_init_kmalloc_pool(&c->fill_iter, 1, iter_size) ||
+> +	    bioset_init(&c->bio_split, 4, offsetof(struct bbio, bio),
+> +			BIOSET_NEED_BVECS|BIOSET_NEED_RESCUER) ||
+>  	    !(c->uuids = alloc_bucket_pages(GFP_KERNEL, c)) ||
+>  	    !(c->moving_gc_wq = alloc_workqueue("bcache_gc",
+>  						WQ_MEM_RECLAIM, 0)) ||
 > 
-> Thoughts?
 
-.... this printout only happens after al input has been validated
-and we're about to make the filesystem.  If there's a validation
-problem, nobody knows what file the defaults were sourced from.
-IOWs, the file the default are sourced from needs to be printed even
-before the file is read...
-
-> > >  	.sectorsize = XFS_MIN_SECTORSIZE,
-> > >  	.blocksize = 1 << XFS_DFL_BLOCKSIZE_LOG,
-> > >  	.sb_feat = {
-> > > @@ -3714,6 +3719,13 @@ static void process_defaults(
-> > >  	struct mkfs_default_params	*dft,
-> > >  	struct cli_params		*cli)
-> > >  {
-> > > +	int ret;
-> > > +
-> > > +	ret = parse_config_init(dft);
-> > > +
-> > > +	if (ret && dft->type != DEFAULTS_BUILTIN)
-> > > +		usage();
-> > 
-> > That doesn't make any sense in isolation.
-> 
-> Not sure what you meant at first, but I see that you prefer this
-> to be hidden from the caller. Will change.
-
-I meant I have no idea what this is checking and why there's a usage
-call there because usage() is for CLI input, not setting up
-defaults before CLI processing. Explanation in comments are needed.
-
-> > >  	install_defaults(dft, cli);
-> > >  }
-> > >  
-> > > @@ -3750,6 +3762,8 @@ main(
-> > >  	};
-> > >  	struct mkfs_params	cfg = {};
-> > >  	struct mkfs_default_params	dft;
-> > > +	char *tmp_config;
-> > > +	char custom_config[PATH_MAX];
-> > >  
-> > >  	reset_defaults_and_cli(&dft, &cli);
-> > >  
-> > > @@ -3760,21 +3774,36 @@ main(
-> > >  	textdomain(PACKAGE);
-> > >  
-> > >  	/*
-> > > -	 * TODO: Sourcing defaults from a config file
-> > > -	 *
-> > >  	 * Before anything else, see if there's a config file with different
-> > > -	 * defaults. If a file exists in <package location>, read in the new
-> > > +	 * defaults. If a file exists in MKFS_XFS_CONF_DIR/default, read the new
-> > >  	 * default values and overwrite them in the &dft structure. This way the
-> > >  	 * new defaults will apply before we parse the CLI, and the CLI will
-> > >  	 * still be able to override them. When more than one source is
-> > >  	 * implemented, emit a message to indicate where the defaults being
-> > >  	 * used came from.
-> > >  	 */
-> > 
-> > This comment makes no mention of environment variables, or how they
-> > interact with other sources of config files.
-> 
-> As per Eric's request, We're getting rid of the environment variable option, so
-> mentioning it is no longer needed.
-
-I thought Darrick wanted it kept?
-
-> > > +	tmp_config = getenv("MKFS_XFS_CONFIG");
-> > > +	if (tmp_config != NULL) {
-> > > +		dft.config_file = tmp_config;
-> > > +		dft.type = DEFAULTS_ENVIRONMENT_CONFIG;
-> > > +	}
-> > >  
-> > >  	process_defaults(&dft, &cli);
-> > 
-> > So why are we processing the defaults before we've checked if a
-> > default file is specified on the command line? All this should do is
-> > set up the config file to be read, and set the dft.source =
-> > _("Environment Variable");
-> 
-> This was being done *here* since I previously has setup to process the
-> arguments *early* and check if a -c was specified, and if so use the config
-> file for the defaults, otherwise the environment variable if set. But since
-> the way I had implemented processing the arguments early relied on not well
-> guaranteed mechanisms I resorted to avoid that approach.
-> 
-> This was the alternative I came up with.
-> 
-> The environment variable stuff is going away so this should be much simpler
-> now, however the question of argument processing early still remains.
-> 
-> > >  
-> > > -	while ((c = getopt(argc, argv, "b:d:i:l:L:m:n:KNp:qr:s:CfV")) != EOF) {
-> > > +	while ((c = getopt(argc, argv, "b:c:d:i:l:L:m:n:KNp:qr:s:CfV")) != EOF) {
-> > >  		switch (c) {
-> > > +		case 'c':
-> > > +			reset_defaults_and_cli(&dft, &cli);
-> > 
-> > This will trash the existing CLI inputs that have already been
-> > parsed. 
-> 
-> Exactly.
-> 
-> > All this code here should do is set up the config file
-> > to be read.
-> 
-> Consider the case of /etc/mkfs.d/default existing and it having
-> 
-> [metadata]
-> crc = 1
-> [naming]
-> ftype=1
-> 
-> And suppose the user passed -c foo which had:
-> 
-> [metadata]
-> crc = 0
-> 
-> Without the reset we'd make /etc/mkfs.d/default the system wide defaults onto
-> which -c parameters overlay on top of. I figured that was not desirable.
-
-It's not desirable. If the user specified a config file, then
-/etc/mkfs.d/default *is never read*. The user config file is used
-instead. If the user supplied file does not exist (even after
-searching) then we fail, not use some other set of defaults.
-
-> > Again, what happens if the user specifies multiple config files?
-> 
-> The reset strategy lets the user set -c as many times as they wish and also
-> starts from a clean base always.
-
-multiple "-c" options is a user error and should error out.
-
-> > The second config file will trash everything from the first, as well
-> > as any other options between them.
-> 
-> Yes! By design as we couldn't easily parse arguments early first and then
-> choose just one strategy.
->
-> I liked the simplicity that this brings.
-> 
-> Would you really want multiple -c options to work as overlays, one on top of
-> the other?
-
-I don't want multiple -c option to be supported at all. We source
-defaults from a single file only - either the user specified file,
-or the default if it exists. Not both, not multiple user specified
-files. One file.
-
-> > I think that we need to pull the "-c <file>" option from the command
-> > line and process all the defaults /before/ we enter the main command
-> > line processing loop.
-> 
-> That is what I had done originally but ran into that snag of processing
-> arguments twice and the undocumented functionality I found that worked.
-
-Multiple pass option parsing is documented as supported and has been
-for a long, long time. And to make that clear, we even have a
-wrapper in xfsprogs for it:
-
-$ git grep platform_getoptreset
-db/command.c:   platform_getoptreset();
-include/darwin.h:static __inline__ void platform_getoptreset(void)
-include/freebsd.h:static __inline__ void platform_getoptreset(void)
-include/gnukfreebsd.h:static __inline__ void platform_getoptreset(void)
-include/linux.h:static __inline__ void platform_getoptreset(void)
-libxcmd/command.c:      platform_getoptreset();
-
-And we use it in libxcmd so that each function in xfs_io, xfs_db,
-xfs_quota, etc can run their own sub-command getopt calls correctly.
-It was in the initial commits for xfs_db back in 2001, so we've been
-using multiple pass CLI option parsing in xfsprogs since 2001....
-
-> > IOWs:
-> > 	config_file = getenv("MKFS_XFS_CONFIG");
-> > 	if (config_file)
-> > 		dft.source = _("Environment Variable");
-> > 
-> > 	/*
-> > 	 * Pull config line options from command line
-> > 	 */
-> > 	while ((c = getopt(argc, argv, "c:")) != EOF) {
-> > 		switch (c) {
-> > 		case 'c':
-> > 			/* XXX: fail if already seen a CLI option */
-> 
-> BTW isn't my enum here sufficient to check for this easily in a clean
-> short and easy way?
-
-A local boolean variable is all that is ncessary for this....
-
-[....]
-
-> > 	memcpy(/* sb_feats */);
-> > 	memcpy(/* fsxattr */);
-> > 	optind = 1;
-> 
-> My getopt(3) *does* not make mention of any of this. This man page however does:
-
-It's been there as long as I can remember. 2nd paragraph of the
-description:
-
-$man 3 getopt
-[...]
-DESCRIPTION
-[...]
-       The variable optind is the index of the next element to be
-       processed in argv.  The system initializes this value to  1.
-       The  caller  can reset it to 1 to restart scanning of the
-       same argv, or when scanning a new argument vector.
-
-
-> optind = 1;
-> 
-> However perhaps a big fat NOTE is worthy?
-
-Why? It's documented, well known behaviour....
-
-> > [...]
-> > 
-> > > +const char *default_type_str(enum default_params_type type)
-> > > +{
-> > > +	switch (type) {
-> > > +	case DEFAULTS_BUILTIN:
-> > > +		return _("package built-in definitions");
-> > > +	case DEFAULTS_CONFIG:
-> > > +		return _("default configuration system file");
-> > > +	case DEFAULTS_ENVIRONMENT_CONFIG:
-> > > +		return _("custom configuration file set by environment");
-> > > +	case DEFAULTS_TYPE_CONFIG:
-> > > +		return _("custom configuration type file");
-> > > +	}
-> > > +	return _("Unkown\n");
-> > > +}
-> > 
-> > This function can go away.
-> 
-> Well depends, if we keep the enum the no ?
-
-That enum needs to die. It's unnecssary abstraction.
-
-> > > +	if (strlen(line) < 2)
-> > > +		return PARSE_INVALID;
-> > 
-> > So empty lines return PARSE_INVALID?
-> 
-> Yes, but that's not fatal, we just discard it.
-
-That's "ignore", like comments, not "invalid".
-
-> 
-> > > +
-> > > +	if (line[0] == '#')
-> > > +		return PARSE_COMMENT;
-> > 
-> > What about lines starting with whitespace? e.g. " # comment"
-> 
-> parse_line_section() below would not return 1 and its ignored
-> in the end as its also not a proper tag/value pair and the
-> section is not set.
-
-So it silently ignores a valid sections/{tag/value pair} if there's
-trailing stuff on the line? Shouldn't that throw an error?
-
-> > > +{
-> > > +	int ret;
-> > > +	FILE *fp;
-> > > +	struct stat sp;
-> > > +	unsigned int num_subopts_sections = sizeof(config_subopt_tab) /
-> > > +					    sizeof(struct config_subopts) - 1;
-> > > +	char *p;
-> > > +	char line[80], tag[80];
-> > > +	bool value;
-> > > +	enum parse_line_type parse_type;
-> > > +	enum mkfs_config_section section = MKFS_CONFIG_SECTION_INVALID;
-> > > +
-> > > +	fp = fopen(dft->config_file, "r");
-> > > +	if (!fp) {
-> > > +		if (dft->type != DEFAULTS_BUILTIN) {
-> > > +			fprintf(stderr, _("could not open config file: %s\n"),
-> > > +				dft->config_file);
-> > > +			ret = -ENOENT;
-> > > +		} else
-> > > +			ret = 0;
-> > > +		return ret;
-> > > +	}
-> > 
-> > This should be split out into a separate function that takes the
-> > config file and tries to open it. If it's a relative path that was
-> > supplied, then this function can also try all the configured search
-> > paths for config files.
-> 
-> Eric asked to support 3 cases:
-> 
->  a) ./ -- current working directory
->  b) /  -- full path
->  c) no prefix - we use the sysconfigdir/mkfs.d/
-
-That's pretty much what I just suggested. :)
-
-> > > +		return ret;
-> > > +
-> > > +	while (!feof(fp)) {
-> > > +		p = fgets(line, sizeof(line), fp);
-> > 
-> > What if the line is longer than 80 characters? e.g. a long comment
-> 
-> If its a comment or spaces with a comment, we still only care for
-> the first 80 characters, no?
-
-What does fgets() do with the remaining characters on the line? They
-are still parked in the input stream, so won't the next fgets() call
-read them? And then we parse those bytes as if they are a new config
-line?
-
-IOWs, shouldn't we be using a line-based input function here? Say,
-getline(3)?
-
-> > > +		if (!p)
-> > > +			continue;
-> > > +
-> > > +		parse_type = parse_get_line_type(line, tag, &value);
-> > > +
-> > > +		switch (parse_type) {
-> > > +		case PARSE_COMMENT:
-> > > +		case PARSE_INVALID:
-> > > +		case PARSE_EOF:
-> > > +			break;
-> > > +		case PARSE_SECTION:
-> > > +			section = get_config_section(tag);
-> > > +			if (!section) {
-> > > +				fprintf(stderr, _("Invalid section: %s\n"),
-> > > +						tag);
-> > > +				return -EINVAL;
-> > > +			}
-> > > +			break;
-> > > +		case PARSE_TAG_VALUE:
-> > > +			/* Trims white spaces */
-> > > +			snprintf(line, sizeof(line), "%s=%u", tag, value);
-> > > +			ret = parse_config_subopts(section, value, line, dft);
-> > 
-> > We've already got the tag and value as discrete variables - why put
-> > them back into an ascii string to pass to another function for it to
-> > split them back into discrete variables?
-> 
-> The comment above it explains, "Trims white spaces"
-
-Why do we need to do that? Doesn't the token parser trim away excess
-whitespace around each token it returns?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
