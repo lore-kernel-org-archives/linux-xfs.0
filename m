@@ -1,58 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:38869 "EHLO
-        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753156AbeEUPSj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 May 2018 11:18:39 -0400
-Received: by mail-io0-f195.google.com with SMTP id z4-v6so14730668iof.5
-        for <linux-xfs@vger.kernel.org>; Mon, 21 May 2018 08:18:38 -0700 (PDT)
-Subject: Re: [PATCH 00/13] convert block layer to bioset_init()/mempool_init()
-References: <20180520222558.7053-1-kent.overstreet@gmail.com>
- <20180521140348.GA19069@redhat.com>
- <686d7df6-c7d1-48a6-b7ff-48dc8aff6a62@kernel.dk>
- <20180521151251.GX6649@twin.jikos.cz>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <87471185-1f64-2002-a7c8-f584ea6827a5@kernel.dk>
-Date: Mon, 21 May 2018 09:18:36 -0600
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:45725 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751134AbeEUJkw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 May 2018 05:40:52 -0400
+Received: by mail-wr0-f196.google.com with SMTP id w3-v6so7609701wrl.12
+        for <linux-xfs@vger.kernel.org>; Mon, 21 May 2018 02:40:51 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20180521151251.GX6649@twin.jikos.cz>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20180518235610.GF24680@garbanzo.do-not-panic.com>
+References: <20180517192700.23457-1-mcgrof@kernel.org> <20180517192700.23457-6-mcgrof@kernel.org>
+ <1f1e87df-aba5-e285-e3cb-820306f24f1c@sandeen.net> <20180518034600.GW23858@magnolia>
+ <20180518153805.GE24680@garbanzo.do-not-panic.com> <c2e7b213-0dad-7609-7984-e4c897d6bb08@sandeen.net>
+ <20180518235610.GF24680@garbanzo.do-not-panic.com>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Mon, 21 May 2018 11:40:30 +0200
+Message-ID: <CACj3i70TM0uZpOLdD=gAguOvt-eGuypWtPC6LUH5_HKMCUxGhw@mail.gmail.com>
+Subject: Re: [PATCH v2 5/5] mkfs.xfs: add configuration file parsing support
+ using our own parser
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: dsterba@suse.cz, Mike Snitzer <snitzer@redhat.com>, Kent Overstreet <kent.overstreet@gmail.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, colyli@suse.de, darrick.wong@oracle.com, clm@fb.com, bacik@fb.com, linux-xfs@vger.kernel.org, drbd-dev@lists.linbit.com, linux-btrfs@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.com
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, jack@suse.com, Jeff Mahoney <jeffm@suse.com>, okurz@suse.com, lpechacek@suse.com
 
-On 5/21/18 9:12 AM, David Sterba wrote:
-> On Mon, May 21, 2018 at 08:19:58AM -0600, Jens Axboe wrote:
->> On 5/21/18 8:03 AM, Mike Snitzer wrote:
->>> On Sun, May 20 2018 at  6:25pm -0400,
->>> Kent Overstreet <kent.overstreet@gmail.com> wrote:
->>>
->>>> Jens - this series does the rest of the conversions that Christoph wanted, and
->>>> drops bioset_create().
->>>>
->>>> Only lightly tested, but the changes are pretty mechanical. Based on your
->>>> for-next tree.
->>>
->>> By switching 'mempool_t *' to 'mempool_t' and 'bio_set *' to 'bio_set'
->>> you've altered the alignment of members in data structures.  So I'll
->>> need to audit all the data structures you've modified in DM.
->>>
->>> Could we get the backstory on _why_ you're making this change?
->>> Would go a long way to helping me appreciate why this is a good use of
->>> anyone's time.
+On Sat, May 19, 2018 at 1:56 AM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
+> On Fri, May 18, 2018 at 12:09:23PM -0500, Eric Sandeen wrote:
+...
 >>
->> Yeah, it's in the first series, it gets rid of a pointer indirection.
-> 
-> This should to be also mentioned the changelog of each patch. There are
-> 12 subsystems changed, this could be about 10 maintainers and I guess
-> everybody has the same question why the change is made.
+>> mkfs.xfs -c hoogah            searches /@sysconfigdir@/mkfs.xfs.d/
+>> mkfs.xfs -c ./hoogah          or
+>> mkfs.xfs -c /path/to/hoogah   do exactly what you'd expect.
+>>
+...
+>
+> Sounds good. I'll drop the environment variable junk and only support
+> the above 3 cases.
+>
 
-Agree, the justification should be in this series as well, of course.
-Kent, might not be a bad idea to resend with a more descriptive
-cover letter.
+mkfs.xfs -c ../hoogah too, please. :-)
 
--- 
-Jens Axboe
-
+Jan
