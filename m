@@ -1,128 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:46568 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933407AbeEWOoK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 10:44:10 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 02/34] fs: factor out a __generic_write_end helper
-Date: Wed, 23 May 2018 16:43:25 +0200
-Message-Id: <20180523144357.18985-3-hch@lst.de>
-In-Reply-To: <20180523144357.18985-1-hch@lst.de>
-References: <20180523144357.18985-1-hch@lst.de>
+Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:5419 "EHLO
+        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753088AbeEVW0X (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 May 2018 18:26:23 -0400
+Date: Wed, 23 May 2018 08:26:20 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: INFO: task hung in xlog_grant_head_check
+Message-ID: <20180522222620.GW23861@dastard>
+References: <000000000000457b2d056cbb0044@google.com>
+ <20180522123107.GC3751@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180522123107.GC3751@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: syzbot <syzbot+568245b88fbaedcb1959@syzkaller.appspotmail.com>, darrick.wong@oracle.com, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
 
-Bits of the buffer.c based write_end implementations that don't know
-about buffer_heads and can be reused by other implementations.
+On Tue, May 22, 2018 at 08:31:08AM -0400, Brian Foster wrote:
+> On Mon, May 21, 2018 at 10:55:02AM -0700, syzbot wrote:
+> > Hello,
+> > 
+> > syzbot found the following crash on:
+> > 
+> > HEAD commit:    203ec2fed17a Merge tag 'armsoc-fixes' of git://git.kernel...
+> > git tree:       upstream
+> > console output: https://syzkaller.appspot.com/x/log.txt?x=11c1ad77800000
+> > kernel config:  https://syzkaller.appspot.com/x/.config?x=f3b4e30da84ec1ed
+> > dashboard link: https://syzkaller.appspot.com/bug?extid=568245b88fbaedcb1959
+> > compiler:       gcc (GCC) 8.0.1 20180413 (experimental)
+> > syzkaller repro:https://syzkaller.appspot.com/x/repro.syz?x=122c7427800000
+> > C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=10387057800000
+> > 
+> > IMPORTANT: if you fix the bug, please add the following tag to the commit:
+> > Reported-by: syzbot+568245b88fbaedcb1959@syzkaller.appspotmail.com
+> > 
+> >         (ptrval): 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> > ................
+> >         (ptrval): 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> > ................
+> > XFS (loop0): metadata I/O error in "xfs_trans_read_buf_map" at daddr 0x2 len
+> > 1 error 117
+> > XFS (loop0): xfs_imap_lookup: xfs_ialloc_read_agi() returned error -117,
+> > agno 0
+> > XFS (loop0): failed to read root inode
+> 
+> FWIW, the initial console output is actually:
+> 
+> [  448.028253] XFS (loop0): Mounting V4 Filesystem
+> [  448.033540] XFS (loop0): Log size 9371840 blocks too large, maximum size is 1048576 blocks
+> [  448.042287] XFS (loop0): Log size out of supported range.
+> [  448.047841] XFS (loop0): Continuing onwards, but if log hangs are experienced then please report this message in the bug report.
+> [  448.060712] XFS (loop0): totally zeroed log
+> 
+> ... which warns about an oversized log and resulting log hangs. Not
+> having dug into the details of why this occurs so quickly in this mount
+> failure path,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/buffer.c   | 67 +++++++++++++++++++++++++++------------------------
- fs/internal.h |  2 ++
- 2 files changed, 37 insertions(+), 32 deletions(-)
+I suspect that it is a head and/or log tail pointer overflow, so when it
+tries to do the first trans reserve of the mount - to write the
+unmount record - it says "no log space available, please wait".
 
-diff --git a/fs/buffer.c b/fs/buffer.c
-index 249b83fafe48..bd964b2ad99a 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -2076,6 +2076,40 @@ int block_write_begin(struct address_space *mapping, loff_t pos, unsigned len,
- }
- EXPORT_SYMBOL(block_write_begin);
- 
-+int __generic_write_end(struct inode *inode, loff_t pos, unsigned copied,
-+		struct page *page)
-+{
-+	loff_t old_size = inode->i_size;
-+	bool i_size_changed = false;
-+
-+	/*
-+	 * No need to use i_size_read() here, the i_size cannot change under us
-+	 * because we hold i_rwsem.
-+	 *
-+	 * But it's important to update i_size while still holding page lock:
-+	 * page writeout could otherwise come in and zero beyond i_size.
-+	 */
-+	if (pos + copied > inode->i_size) {
-+		i_size_write(inode, pos + copied);
-+		i_size_changed = true;
-+	}
-+
-+	unlock_page(page);
-+	put_page(page);
-+
-+	if (old_size < pos)
-+		pagecache_isize_extended(inode, old_size, pos);
-+	/*
-+	 * Don't mark the inode dirty under page lock. First, it unnecessarily
-+	 * makes the holding time of page lock longer. Second, it forces lock
-+	 * ordering of page lock and transaction start for journaling
-+	 * filesystems.
-+	 */
-+	if (i_size_changed)
-+		mark_inode_dirty(inode);
-+	return copied;
-+}
-+
- int block_write_end(struct file *file, struct address_space *mapping,
- 			loff_t pos, unsigned len, unsigned copied,
- 			struct page *page, void *fsdata)
-@@ -2116,39 +2150,8 @@ int generic_write_end(struct file *file, struct address_space *mapping,
- 			loff_t pos, unsigned len, unsigned copied,
- 			struct page *page, void *fsdata)
- {
--	struct inode *inode = mapping->host;
--	loff_t old_size = inode->i_size;
--	int i_size_changed = 0;
--
- 	copied = block_write_end(file, mapping, pos, len, copied, page, fsdata);
--
--	/*
--	 * No need to use i_size_read() here, the i_size
--	 * cannot change under us because we hold i_mutex.
--	 *
--	 * But it's important to update i_size while still holding page lock:
--	 * page writeout could otherwise come in and zero beyond i_size.
--	 */
--	if (pos+copied > inode->i_size) {
--		i_size_write(inode, pos+copied);
--		i_size_changed = 1;
--	}
--
--	unlock_page(page);
--	put_page(page);
--
--	if (old_size < pos)
--		pagecache_isize_extended(inode, old_size, pos);
--	/*
--	 * Don't mark the inode dirty under page lock. First, it unnecessarily
--	 * makes the holding time of page lock longer. Second, it forces lock
--	 * ordering of page lock and transaction start for journaling
--	 * filesystems.
--	 */
--	if (i_size_changed)
--		mark_inode_dirty(inode);
--
--	return copied;
-+	return __generic_write_end(mapping->host, pos, copied, page);
- }
- EXPORT_SYMBOL(generic_write_end);
- 
-diff --git a/fs/internal.h b/fs/internal.h
-index e08972db0303..b955232d3d49 100644
---- a/fs/internal.h
-+++ b/fs/internal.h
-@@ -43,6 +43,8 @@ static inline int __sync_blockdev(struct block_device *bdev, int wait)
- extern void guard_bio_eod(int rw, struct bio *bio);
- extern int __block_write_begin_int(struct page *page, loff_t pos, unsigned len,
- 		get_block_t *get_block, struct iomap *iomap);
-+int __generic_write_end(struct inode *inode, loff_t pos, unsigned copied,
-+		struct page *page);
- 
- /*
-  * char_dev.c
+> it does look like we'd never have got past this point on a
+> v5 fs (i.e., the above warning would become an error and we'd not enter
+> the xfs_log_mount_cancel() path).
+
+And this comes back to my repeated comments about fuzzers needing
+to fuzz properly made V5 filesystems as we catch and error out on
+things like this. Fuzzing random collections of v4 filesystem
+fragments will continue to trip over problems we've avoided with v5
+filesystems, and this is further evidence to point to that.
+
+I'd suggest that at this point, syzbot XFS reports should be
+redirected to /dev/null. It's not worth our time to triage
+unreviewed bot generated bug reports until the syzbot developers
+start listening and acting on what we have been telling them
+about fuzzing filesystems and reproducing bugs that are meaningful
+and useful to us.
+
+Cheers,
+
+Dave.
 -- 
-2.17.0
-
+Dave Chinner
+david@fromorbit.com
