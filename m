@@ -1,180 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:41526 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753787AbeEWD6A (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 May 2018 23:58:00 -0400
-Subject: Re: [PATCH v2 4/9] xfs_db: add a superblock info command
-References: <152401952391.13048.15040850425873030425.stgit@magnolia>
- <152401955677.13048.14823962842951881263.stgit@magnolia>
- <20180523033013.GI14384@magnolia>
-From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <c568041f-8af8-aae9-ba75-2fe996ba72fc@oracle.com>
-Date: Tue, 22 May 2018 20:57:44 -0700
+Received: from mx1.redhat.com ([209.132.183.28]:41440 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751172AbeEVMzQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 22 May 2018 08:55:16 -0400
+Date: Tue, 22 May 2018 08:55:14 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: kernel BUG at fs/xfs/xfs_message.c:113
+Message-ID: <20180522125514.GD3751@bfoster.bfoster>
+References: <20180516195621.GC54864@canopus.corp.1gb.ru>
 MIME-Version: 1.0
-In-Reply-To: <20180523033013.GI14384@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180516195621.GC54864@canopus.corp.1gb.ru>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+To: Alexey Vlasov <renton@renton.name>
 Cc: linux-xfs@vger.kernel.org
 
-Alrighty, looks ok.
+On Wed, May 16, 2018 at 10:56:21PM +0300, Alexey Vlasov wrote:
+> Hi,
+> 
+> I have got from time to time this bug on my server. I can not reproduce
+> it that happens randomly. 
+> 
+> I found similar issue:
+> https://www.spinics.net/lists/xfs/msg42484.html
+> but that patch already merged with kernel 4.9.95 which I use.
+> 
+> Any ideas how to fix this?
+> 
 
-Reviewed by: Allison Henderson <allison.henderson@oracle.com>
+For anything finobt related I'd probably start with trying upstream
+commit ad90bb585c ("xfs: account finobt blocks properly in perag
+reservation"). It looks like the commit it fixes (referenced in the
+commit log) is present in v4.9.95, but I don't see this one anywhere in
+the v4.9 stable branch (not sure if it came in a later branch or not at
+all...).
 
-On 05/22/2018 08:30 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Add an 'info' command to pretty-print the superblock geometry.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->   db/Makefile       |    2 +
->   db/command.c      |    1 +
->   db/command.h      |    1 +
->   db/info.c         |   74 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->   man/man8/xfs_db.8 |    8 ++++++
->   5 files changed, 85 insertions(+), 1 deletion(-)
->   create mode 100644 db/info.c
-> 
-> diff --git a/db/Makefile b/db/Makefile
-> index 6caa6348..c73d7f25 100644
-> --- a/db/Makefile
-> +++ b/db/Makefile
-> @@ -14,7 +14,7 @@ HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
->   	io.h logformat.h malloc.h metadump.h output.h print.h quit.h sb.h \
->   	sig.h strvec.h text.h type.h write.h attrset.h symlink.h fsmap.h \
->   	fuzz.h
-> -CFILES = $(HFILES:.h=.c) btdump.c
-> +CFILES = $(HFILES:.h=.c) btdump.c info.c
->   LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
->   
->   LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
-> diff --git a/db/command.c b/db/command.c
-> index 12ae5b78..087955e0 100644
-> --- a/db/command.c
-> +++ b/db/command.c
-> @@ -136,6 +136,7 @@ init_commands(void)
->   	fsmap_init();
->   	help_init();
->   	hash_init();
-> +	info_init();
->   	inode_init();
->   	input_init();
->   	logres_init();
-> diff --git a/db/command.h b/db/command.h
-> index 9b4ed2d7..84cd0b10 100644
-> --- a/db/command.h
-> +++ b/db/command.h
-> @@ -41,3 +41,4 @@ extern const cmdinfo_t	*find_command(const char *cmd);
->   extern void		init_commands(void);
->   
->   extern void		btdump_init(void);
-> +extern void		info_init(void);
-> diff --git a/db/info.c b/db/info.c
-> new file mode 100644
-> index 00000000..05b3c1f0
-> --- /dev/null
-> +++ b/db/info.c
-> @@ -0,0 +1,74 @@
-> +/*
-> + * Copyright (C) 2018 Oracle.  All Rights Reserved.
-> + *
-> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License
-> + * as published by the Free Software Foundation; either version 2
-> + * of the License, or (at your option) any later version.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation,
-> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-> + */
-> +#include "libxfs.h"
-> +#include "command.h"
-> +#include "init.h"
-> +#include "output.h"
-> +#include "fsgeom.h"
-> +
-> +static void
-> +info_help(void)
-> +{
-> +	dbprintf(_(
-> +"\n"
-> +" Pretty-prints the filesystem geometry as derived from the superblock.\n"
-> +" The output has the same format as mkfs.xfs, xfs_info, and other utilities.\n"
-> +"\n"
-> +));
-> +
-> +}
-> +
-> +static int
-> +info_f(
-> +	int			argc,
-> +	char			**argv)
-> +{
-> +	struct xfs_fsop_geom	geo;
-> +	int			error;
-> +
-> +	error = -libxfs_fs_geometry(&mp->m_sb, &geo,
-> +			XFS_FS_GEOM_MAX_STRUCT_VER);
-> +	if (error) {
-> +		dbprintf(_("could not obtain geometry\n"));
-> +		exitcode = 1;
-> +		return 0;
-> +	}
-> +
-> +	xfs_report_geom(&geo, fsdevice, x.logname, x.rtname);
-> +	return 0;
-> +}
-> +
-> +static const struct cmdinfo info_cmd = {
-> +	.name =		"info",
-> +	.altname =	"i",
-> +	.cfunc =	info_f,
-> +	.argmin =	0,
-> +	.argmax =	0,
-> +	.canpush =	0,
-> +	.args =		NULL,
-> +	.oneline =	N_("pretty-print superblock info"),
-> +	.help =		info_help,
-> +};
-> +
-> +void
-> +info_init(void)
-> +{
-> +	add_command(&info_cmd);
-> +}
-> diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-> index 524b1ef6..10f2beb9 100644
-> --- a/man/man8/xfs_db.8
-> +++ b/man/man8/xfs_db.8
-> @@ -670,6 +670,14 @@ using the hash function of the XFS directory and attribute implementation.
->   .BI "help [" command ]
->   Print help for one or all commands.
->   .TP
-> +.B info
-> +Displays selected geometry information about the filesystem.
-> +The output will have the same format that
-> +.BR "mkfs.xfs" "(8)"
-> +prints when creating a filesystem or
-> +.BR "xfs_info" "(8)"
-> +prints when querying a filesystem.
-> +.TP
->   .BI "inode [" inode# ]
->   Set the current inode number. If no
->   .I inode#
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIBAg&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=C4CGnxIhMfo-ZhlFRisC8dnLAsedNv4JxrtRdRDlaZ4&s=-VqBB1V3hpBVGR47wcYi0laLhS-aFZIqDbn6xsx5IUM&e=
-> 
+Brian
+
+> trace in attach
+
+> May 12 04:10:39 ul14 kernel: XFS: Assertion failed: tp->t_blk_res_used <= tp->t_blk_res, file: fs/xfs/xfs_trans.c, line: 331
+> May 12 04:10:39 ul14 kernel: ------------[ cut here ]------------
+> May 12 04:10:39 ul14 kernel: kernel BUG at fs/xfs/xfs_message.c:113!
+> May 12 04:10:39 ul14 kernel: invalid opcode: 0000 [#1] SMP
+> May 12 04:10:39 ul14 kernel: Modules linked in: dm_cache_smq ixgbe mdio x86_pkg_temp_thermal dm_cache dm_bio_prison dm_persistent_data dm_bufio sg
+> May 12 04:10:39 ul14 kernel: CPU: 3 PID: 15696 Comm: unlink Not tainted 4.9.95-gcm-efi #1
+> May 12 04:10:39 ul14 kernel: Hardware name: Intel Corporation S2600WTTR/S2600WTTR, BIOS SE5C610.86B.01.01.0020.122820161512 12/28/2016
+> May 12 04:10:39 ul14 kernel: task: ffff880a20e00000 task.stack: ffffc9001c914000
+> May 12 04:10:39 ul14 kernel: RIP: 0010:[<ffffffff812b273d>]  [<ffffffff812b273d>] assfail+0x1d/0x20
+> May 12 04:10:39 ul14 kernel: RSP: 0018:ffffc9001c9177b0  EFLAGS: 00010282
+> May 12 04:10:39 ul14 kernel: RAX: 00000000ffffffea RBX: ffff88074c9bb000 RCX: 0000000000000021
+> May 12 04:10:39 ul14 kernel: RDX: ffffc9001c9176d8 RSI: 000000000000000a RDI: ffffffff819a735b
+> May 12 04:10:39 ul14 kernel: RBP: ffffc9001c9177b0 R08: 0000000000000000 R09: 0000000000000000
+> May 12 04:10:39 ul14 kernel: R10: 000000000000000a R11: f000000000000000 R12: ffffffffffffffff
+> May 12 04:10:39 ul14 kernel: R13: ffff88180f5f1000 R14: ffff88180f5f1000 R15: ffffc9001c917868
+> May 12 04:10:39 ul14 kernel: FS:  00007fd35c567700(0000) GS:ffff88181f8c0000(0000) knlGS:0000000000000000
+> May 12 04:10:39 ul14 kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> May 12 04:10:39 ul14 kernel: CR2: 00007fd35c08fb20 CR3: 00000006695de000 CR4: 0000000000360670
+> May 12 04:10:39 ul14 kernel: DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> May 12 04:10:39 ul14 kernel: DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+> May 12 04:10:39 ul14 kernel: Stack:
+> May 12 04:10:39 ul14 kernel:  ffffc9001c9177d8 ffffffff812bb9be ffffc9001c917868 0000000000000000
+> May 12 04:10:39 ul14 kernel:  0000000000000000 ffffc9001c917800 ffffffff81288cbb ffffc9001c917868
+> May 12 04:10:39 ul14 kernel:  0000000000c80000 0000000001000000 ffffc9001c917818 ffffffff81247ed0
+> May 12 04:10:39 ul14 kernel: Call Trace:
+> May 12 04:10:39 ul14 kernel:  [<ffffffff812bb9be>] xfs_trans_mod_sb+0x1fe/0x290
+> May 12 04:10:39 ul14 kernel:  [<ffffffff81288cbb>] xfs_ag_resv_alloc_extent+0x9b/0xc0
+> May 12 04:10:39 ul14 kernel:  [<ffffffff81247ed0>] xfs_alloc_ag_vextent+0x130/0x330
+> May 12 04:10:39 ul14 kernel:  [<ffffffff81249044>] xfs_alloc_vextent+0x544/0x6a0
+> May 12 04:10:39 ul14 kernel:  [<ffffffff812836f1>] __xfs_inobt_alloc_block+0x91/0x110
+> May 12 04:10:39 ul14 kernel:  [<ffffffff8128378f>] xfs_finobt_alloc_block+0xf/0x20
+> May 12 04:10:39 ul14 kernel:  [<ffffffff81267246>] __xfs_btree_split+0xb6/0xae0
+> May 12 04:10:39 ul14 kernel:  [<ffffffff8134e5ed>] ? list_del+0xd/0x30
+> May 12 04:10:39 ul14 kernel:  [<ffffffff8113e766>] ? memcg_kmem_charge+0x56/0xd0
+> May 12 04:10:39 ul14 kernel:  [<ffffffff812bd54e>] ? uuid_equal+0xe/0x20
+> May 12 04:10:39 ul14 kernel:  [<ffffffff81262167>] ? xfs_btree_check_sblock+0xc7/0x1b0
+> May 12 04:10:39 ul14 kernel:  [<ffffffff81267d34>] xfs_btree_split+0x34/0xc0
+> May 12 04:10:39 ul14 kernel:  [<ffffffff8112bf15>] ? kmem_cache_alloc+0xb5/0x100
+> May 12 04:10:39 ul14 kernel:  [<ffffffff81268d3f>] xfs_btree_make_block_unfull+0xef/0x160
+> May 12 04:10:39 ul14 kernel:  [<ffffffff812691ad>] xfs_btree_insrec+0x3fd/0xbd0
+> May 12 04:10:39 ul14 kernel:  [<ffffffff812d16d8>] ? xfs_trans_read_buf_map+0x268/0x300
+> May 12 04:10:39 ul14 kernel:  [<ffffffff81269a1f>] xfs_btree_insert+0x9f/0x220
+> May 12 04:10:39 ul14 kernel:  [<ffffffff812837d9>] ? xfs_inobt_init_cursor+0x39/0xc0
+> May 12 04:10:39 ul14 kernel:  [<ffffffff812804a5>] xfs_difree_finobt+0xa5/0x290
+> May 12 04:10:39 ul14 kernel:  [<ffffffff812826d7>] xfs_difree+0xf7/0x1e0
+> May 12 04:10:39 ul14 kernel:  [<ffffffff812ae9a6>] xfs_ifree+0xb6/0x260
+> May 12 04:10:39 ul14 kernel:  [<ffffffff812aebf7>] xfs_inactive_ifree+0xa7/0x250
+> May 12 04:10:39 ul14 kernel:  [<ffffffff812aee90>] xfs_inactive+0xf0/0x250
+> May 12 04:10:39 ul14 kernel:  [<ffffffff812b7491>] xfs_fs_destroy_inode+0xa1/0x210
+> May 12 04:10:39 ul14 kernel:  [<ffffffff8115f966>] destroy_inode+0x36/0x60
+> May 12 04:10:39 ul14 kernel:  [<ffffffff8115faa7>] evict+0x117/0x170
+> May 12 04:10:39 ul14 kernel:  [<ffffffff81160143>] iput+0x133/0x1a0
+> May 12 04:10:39 ul14 kernel:  [<ffffffff8115551b>] do_unlinkat+0x17b/0x290
+> May 12 04:10:39 ul14 kernel:  [<ffffffff81155da1>] SyS_unlink+0x11/0x20
+> May 12 04:10:39 ul14 kernel:  [<ffffffff81001426>] do_syscall_64+0x56/0xc0
+> May 12 04:10:39 ul14 kernel:  [<ffffffff8166f93e>] entry_SYSCALL_64_after_swapgs+0x58/0xc6
+> May 12 04:10:39 ul14 kernel: Code: 48 c7 c7 1f d9 9c 81 e8 72 dc d9 ff 5d c3 55 48 89 f1 41 89 d0 48 c7 c6 e0 84 9e 81 48 89 fa 48 89 e5 31 ff 31 c0 e8 63 fa ff ff <0f> 0b 90 55 48 63 f6 49 89 f9 41 b8 01 00 00 00 48 89 e5 48 83
+> May 12 04:10:39 ul14 kernel: RIP  [<ffffffff812b273d>] assfail+0x1d/0x20
+> May 12 04:10:39 ul14 kernel:  RSP <ffffc9001c9177b0>
+> May 12 04:10:39 ul14 kernel: ---[ end trace ca888781a46423f8 ]---
+
