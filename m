@@ -1,46 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:47131 "EHLO newverein.lst.de"
+Received: from verein.lst.de ([213.95.11.211]:47174 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750733AbeEVITl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 22 May 2018 04:19:41 -0400
-Date: Tue, 22 May 2018 10:24:54 +0200
+        id S1750707AbeEVIZu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 22 May 2018 04:25:50 -0400
+Date: Tue, 22 May 2018 10:31:03 +0200
 From: Christoph Hellwig <hch@lst.de>
 Subject: Re: [PATCH 16/34] iomap: add initial support for writes without
         buffer heads
-Message-ID: <20180522082454.GB9801@lst.de>
-References: <20180518164830.1552-1-hch@lst.de> <20180518164830.1552-17-hch@lst.de> <20180521232700.GB14384@magnolia> <20180522000745.GU23861@dastard>
+Message-ID: <20180522083103.GA10079@lst.de>
+References: <20180518164830.1552-1-hch@lst.de> <20180518164830.1552-17-hch@lst.de> <20180521232700.GB14384@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180522000745.GU23861@dastard>
+In-Reply-To: <20180521232700.GB14384@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-On Tue, May 22, 2018 at 10:07:45AM +1000, Dave Chinner wrote:
-> > Something doesn't smell right here.  The only pages we need to read in
-> > are the first and last pages in the write_begin range, and only if they
-> > aren't page aligned and the underlying extent is IOMAP_MAPPED, right?
-> 
-> And not beyond EOF, too.
-> 
-> The bufferhead code handles this via the buffer_new() flag - it
-> triggers the skipping of read IO and the states in which it is
-> set are clearly indicated in iomap_to_bh(). That same logic needs to
-> apply here.
+The fix should be as simple as this:
 
-The buffer_new logic itself isn't really something to copy directly
-as it has all kinds of warts..
-
-> > I also noticed that speculative preallocation kicks in by the second 80M
-> > write() call and writeback for the second call can successfully allocate
-> > the entire preallocation, which means that the third (or nth) write call
-> > can have a real extent already mapped in, and then we end up reading it.
-> 
-> Yeah, that's because there's no check against EOF here. These writes
-> are all beyond EOF, so there shouldn't be any read at all...
-
-The EOF case is already handled in iomap_block_needs_zeroing.  We just
-need to skip the read for ranges entirely covered by the write.
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 357711e50cfa..212c3c21e51c 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -342,19 +342,19 @@ __iomap_write_begin(struct inode *inode, loff_t pos, unsigned len,
+ 	loff_t block_end = (pos + len + block_size - 1) & ~(block_size - 1);
+ 	unsigned poff = block_start & (PAGE_SIZE - 1);
+ 	unsigned plen = min_t(loff_t, PAGE_SIZE - poff, block_end - block_start);
++	unsigned from = pos & (PAGE_SIZE - 1);
++	unsigned to = from + len;
+ 	int status;
+ 
+ 	WARN_ON_ONCE(i_blocksize(inode) < PAGE_SIZE);
+ 
+ 	if (PageUptodate(page))
+ 		return 0;
++	if (poff >= from && poff + len <= to)
++		return 0;
+ 
+ 	if (iomap_block_needs_zeroing(inode, block_start, iomap)) {
+-		unsigned from = pos & (PAGE_SIZE - 1), to = from + len;
+-		unsigned pend = poff + plen;
+-
+-		if (poff < from || pend > to)
+-			zero_user_segments(page, poff, from, to, pend);
++		zero_user_segments(page, poff, from, to, poff + len);
+ 	} else {
+ 		status = iomap_read_page_sync(inode, block_start, page,
+ 				poff, plen, iomap);
