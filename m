@@ -1,74 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60917 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751245AbeEVOw2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 22 May 2018 10:52:28 -0400
-Date: Tue, 22 May 2018 10:52:27 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 08/34] mm: split ->readpages calls to avoid
- non-contiguous pages lists
-Message-ID: <20180522145226.GA25251@bfoster.bfoster>
-References: <20180518164830.1552-1-hch@lst.de>
- <20180518164830.1552-9-hch@lst.de>
+Received: from aserp2130.oracle.com ([141.146.126.79]:59386 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751656AbeEVBnE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 May 2018 21:43:04 -0400
+Date: Mon, 21 May 2018 18:43:01 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: xfs regression
+Message-ID: <20180522014301.GC14384@magnolia>
+References: <446e1035-335f-afe1-3448-8428a338a1ad@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180518164830.1552-9-hch@lst.de>
+In-Reply-To: <446e1035-335f-afe1-3448-8428a338a1ad@intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
+To: Dave Jiang <dave.jiang@intel.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, May 18, 2018 at 06:48:04PM +0200, Christoph Hellwig wrote:
-> That way file systems don't have to go spotting for non-contiguous pages
-> and work around them.  It also kicks off I/O earlier, allowing it to
-> finish earlier and reduce latency.
+On Mon, May 21, 2018 at 05:29:44PM -0700, Dave Jiang wrote:
+> Darrick,
+> I may have hit an xfs regression that shows up in 4.16 that fails
+> xfstest xfs/348. I have bisected it to this commit:
+> 9cfb9b47479e237d217dbcfafe034cbf98f45909 ("xfs: provide a centralized
+> method for verifying inline fork data")
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  mm/readahead.c | 12 +++++++++++-
->  1 file changed, 11 insertions(+), 1 deletion(-)
+> # ./check xfs/348
+> FSTYP         -- xfs (non-debug)
+> PLATFORM      -- Linux/x86_64 skx-ntbusd 4.15.0-rc7+
+> MKFS_OPTIONS  -- -f -bsize=4096 /dev/pmem0p2
+> MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/pmem0p2
+> /mnt/xfstests_scratch
 > 
-> diff --git a/mm/readahead.c b/mm/readahead.c
-> index fa4d4b767130..044ab0c137cc 100644
-> --- a/mm/readahead.c
-> +++ b/mm/readahead.c
-> @@ -177,8 +177,18 @@ unsigned int __do_page_cache_readahead(struct address_space *mapping,
->  		rcu_read_lock();
->  		page = radix_tree_lookup(&mapping->i_pages, page_offset);
->  		rcu_read_unlock();
-> -		if (page && !radix_tree_exceptional_entry(page))
-> +		if (page && !radix_tree_exceptional_entry(page)) {
-> +			/*
-> +			 * Page already present?  Kick off the current batch of
-> +			 * contiguous pages before continuing with the next
-> +			 * batch.
-> +			 */
-> +			if (nr_pages)
-> +				read_pages(mapping, filp, &page_pool, nr_pages,
-> +						gfp_mask);
-> +			nr_pages = 0;
->  			continue;
-> +		}
+> xfs/348 29s ... - output mismatch (see
+> /root/xfstests/xfstests-dev/results//xfs/348.out.bad)
+>     --- tests/xfs/348.out       2017-10-19 10:57:22.561819578 -0700
+>     +++ /root/xfstests/xfstests-dev/results//xfs/348.out.bad
+> 2018-05-21 17:13:39.171256163 -0700
+>     @@ -239,7 +239,7 @@
+>      would have junked entry "DIR" in directory PARENT_INO
+>      would have junked entry "EMPTY" in directory PARENT_INO
+>      would have junked entry "FIFO" in directory PARENT_INO
+>     -stat: 'SCRATCH_MNT/test/DIR' is a symbolic link
+>     +stat: cannot stat 'SCRATCH_MNT/test/DIR': Structure needs cleaning
 
-The comment at the top of this function explicitly states that we don't
-submit I/Os before all of the pages are allocated. That probably needs
-an update, at least.
+That was fixed in (xfstests) commit 60ba1274f5d79b.
 
-That aside, couldn't this introduce that kind of problematic read/write
-behavior if the mapping was sparsely populated for whatever reason
-(every other page, for example)? Perhaps that's just too unlikely to
-matter.
+--D
 
-Brian
-
->  
->  		page = __page_cache_alloc(gfp_mask);
->  		if (!page)
+>      stat: 'SCRATCH_MNT/test/DATA' is a symbolic link
+>      stat: cannot stat 'SCRATCH_MNT/test/EMPTY': Structure needs cleaning
+>     ...
+>     (Run 'diff -u tests/xfs/348.out
+> /root/xfstests/xfstests-dev/results//xfs/348.out.bad'  to see the entire
+> diff)
+> Ran: xfs/348
+> Failures: xfs/348
+> Failed 1 of 1 tests
+> 
 > -- 
-> 2.17.0
 > 
+> Dave Jiang
+> Software Engineer, SSG/OTC
+> Intel Corp.
+> dave.jiang@intel.com
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
