@@ -1,259 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:40062 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750744AbeEWEgs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 00:36:48 -0400
-Subject: Re: [PATCH v2 8/9] xfs_info: call xfs_db for offline filesystems
-References: <152401952391.13048.15040850425873030425.stgit@magnolia>
- <152401958146.13048.3834702512829151272.stgit@magnolia>
- <20180523033339.GL14384@magnolia>
-From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <9fa4166d-b5f7-74f1-4ac3-024c45df1d02@oracle.com>
-Date: Tue, 22 May 2018 21:36:27 -0700
+Received: from verein.lst.de ([213.95.11.211]:50582 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751423AbeEVU2Q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 22 May 2018 16:28:16 -0400
+Date: Tue, 22 May 2018 22:33:34 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: buffered I/O without buffer heads in xfs and iomap v2
+Message-ID: <20180522203334.GA24978@lst.de>
+References: <20180518164830.1552-1-hch@lst.de> <20180521204610.GC4507@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20180523033339.GL14384@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180521204610.GC4507@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-Ok, you can add my review:
-Reviewed by: Allison Henderson <allison.henderson@oracle.com>
+On Mon, May 21, 2018 at 01:46:10PM -0700, Darrick J. Wong wrote:
+> On Fri, May 18, 2018 at 06:47:56PM +0200, Christoph Hellwig wrote:
+> > Hi all,
+> > 
+> > this series adds support for buffered I/O without buffer heads to
+> > the iomap and XFS code.
+> > 
+> > For now this series only contains support for block size == PAGE_SIZE,
+> > with the 4k support split into a separate series.
+> > 
+> > 
+> > A git tree is available at:
+> > 
+> >     git://git.infradead.org/users/hch/xfs.git xfs-iomap-read.2
+> > 
+> > Gitweb:
+> > 
+> >     http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-iomap-read.2
+> 
+> Hmm, so I pulled this and ran my trivial stupid benchmark on for-next.
+> It's a stupid VM with a 2G of RAM and a 12GB virtio-scsi disk backed by
+> tmpfs:
 
-On 05/22/2018 08:33 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> If the online filesystem geometry query doesn't work, try using xfs_db
-> to see if we can grab the information offline.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->   man/man8/xfs_growfs.8 |   47 +-----------------------
->   man/man8/xfs_info.8   |   97 +++++++++++++++++++++++++++++++++++++++++++++++++
->   spaceman/xfs_info.sh  |   12 +++++-
->   3 files changed, 108 insertions(+), 48 deletions(-)
->   create mode 100644 man/man8/xfs_info.8
-> 
-> diff --git a/man/man8/xfs_growfs.8 b/man/man8/xfs_growfs.8
-> index e23d30e2..7e6a387c 100644
-> --- a/man/man8/xfs_growfs.8
-> +++ b/man/man8/xfs_growfs.8
-> @@ -11,7 +11,7 @@
->   
->   .TH xfs_growfs 8
->   .SH NAME
-> -xfs_growfs, xfs_info \- expand an XFS filesystem
-> +xfs_growfs \- expand an XFS filesystem
->   .SH SYNOPSIS
->   .B xfs_growfs
->   [
-> @@ -38,16 +38,6 @@ xfs_growfs, xfs_info \- expand an XFS filesystem
->   .I mount-point
->   .br
->   .B xfs_growfs \-V
-> -.PP
-> -.br
-> -.B xfs_info
-> -[
-> -.B \-t
-> -.I mtab
-> -]
-> -.I mount-point
-> -.br
-> -.B xfs_info \-V
->   .SH DESCRIPTION
->   .B xfs_growfs
->   expands an existing XFS filesystem (see
-> @@ -59,13 +49,6 @@ is mounted. The filesystem must be mounted to be grown (see
->   .BR mount (8)).
->   The existing contents of the filesystem are undisturbed, and the added space
->   becomes available for additional file storage.
-> -.PP
-> -.B xfs_info
-> -is equivalent to invoking
-> -.B xfs_growfs
-> -with the
-> -.B \-n
-> -option (see discussion below).
->   .SH OPTIONS
->   .TP
->   .BI "\-d | \-D " size
-> @@ -169,35 +152,9 @@ reside. In order to grow a filesystem, it is necessary to provide added
->   space for it to occupy. Therefore there must be at least one spare new
->   disk partition available. Adding the space is often done through the use
->   of a logical volume manager.
-> -.SH "EXAMPLES"
-> -
-> -Understanding xfs_info output.
-> -.PP
-> -Suppose one has the following "xfs_info /dev/sda" output:
-> -.PP
-> -.RS 2
-> -.Vb
-> -\&meta-data=/dev/sda      isize=256    agcount=32, agsize=16777184 blks
-> -\&         =              sectsz=512   attr=2
-> -\&data     =              bsize=4096   blocks=536869888, imaxpct=5
-> -\&         =              sunit=32     swidth=128 blks
-> -\&naming   =version 2     bsize=4096
-> -\&log      =internal      bsize=4096   blocks=32768, version=2
-> -\&         =              sectsz=512   sunit=32 blks, lazy-count=1
-> -\&realtime =none          extsz=524288 blocks=0, rtextents=0
-> -.Ve
-> -.RE
-> -.PP
-> -
-> -Here, the data section of the output indicates "bsize=4096",
-> -meaning the data block size for this filesystem is 4096 bytes.
-> -This section also shows "sunit=32 swidth=128 blks", which means
-> -the stripe unit is 32*4096 bytes = 128 kibibytes and the stripe
-> -width is 128*4096 bytes = 512 kibibytes.
-> -A single stripe of this filesystem therefore consists
-> -of four stripe units (128 blocks / 32 blocks per unit).
->   .SH SEE ALSO
->   .BR mkfs.xfs (8),
-> +.BR xfs_info (8),
->   .BR md (4),
->   .BR lvm (8),
->   .BR mount (8).
-> diff --git a/man/man8/xfs_info.8 b/man/man8/xfs_info.8
-> new file mode 100644
-> index 00000000..429356a8
-> --- /dev/null
-> +++ b/man/man8/xfs_info.8
-> @@ -0,0 +1,97 @@
-> +.\" Verbatim blocks taken from openssl req manpage content
-> +.de Vb \" Begin verbatim text
-> +.ft CW
-> +.nf
-> +.ne \\$1
-> +..
-> +.de Ve \" End verbatim text
-> +.ft R
-> +.fi
-> +..
-> +
-> +.TH xfs_info 8
-> +.SH NAME
-> +xfs_info \- display XFS filesystem geometry information
-> +.SH SYNOPSIS
-> +.B xfs_info
-> +[
-> +.B \-t
-> +.I mtab
-> +]
-> +[
-> +.I mount-point
-> +|
-> +.I block-device
-> +|
-> +.I file-image
-> +]
-> +.br
-> +.B xfs_info \-V
-> +.SH DESCRIPTION
-> +.B xfs_info
-> +displays geometry information about an existing XFS filesystem.
-> +The
-> +.I mount-point
-> +argument is the pathname of a directory where the filesystem
-> +is mounted.
-> +The
-> +.I block-device
-> +or
-> +.I file-image
-> +contain a raw XFS filesystem.
-> +The existing contents of the filesystem are undisturbed.
-> +.SH OPTIONS
-> +.TP
-> +.B \-t
-> +Specifies an alternate mount table file (default is
-> +.I /proc/mounts
-> +if it exists, else
-> +.IR /etc/mtab ).
-> +This is used when working with filesystems mounted without writing to
-> +.I /etc/mtab
-> +file - refer to
-> +.BR mount (8)
-> +for further details.
-> +This option has no effect with the
-> +.IR block-device " or " file-image
-> +parameters.
-> +.TP
-> +.B \-V
-> +Prints the version number and exits. The
-> +.I mount-point
-> +argument is not required with
-> +.BR \-V .
-> +.SH "EXAMPLES"
-> +
-> +Understanding xfs_info output.
-> +.PP
-> +Suppose one has the following "xfs_info /dev/sda" output:
-> +.PP
-> +.RS 2
-> +.Vb
-> +\&meta-data=/dev/pmem0             isize=512    agcount=8, agsize=5974144 blks
-> +\&         =                       sectsz=512   attr=2, projid32bit=1
-> +\&         =                       crc=1        finobt=1, sparse=1, rmapbt=1
-> +\&         =                       reflink=1
-> +\&data     =                       bsize=4096   blocks=47793152, imaxpct=25
-> +\&         =                       sunit=32     swidth=128 blks
-> +\&naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-> +\&log      =internal log           bsize=4096   blocks=23336, version=2
-> +\&         =                       sectsz=512   sunit=0 blks, lazy-count=1
-> +\&realtime =none                   extsz=4096   blocks=0, rtextents=0
-> +.Ve
-> +.RE
-> +.PP
-> +
-> +Here, the data section of the output indicates "bsize=4096",
-> +meaning the data block size for this filesystem is 4096 bytes.
-> +This section also shows "sunit=32 swidth=128 blks", which means
-> +the stripe unit is 32*4096 bytes = 128 kibibytes and the stripe
-> +width is 128*4096 bytes = 512 kibibytes.
-> +A single stripe of this filesystem therefore consists
-> +of four stripe units (128 blocks / 32 blocks per unit).
-> +.SH SEE ALSO
-> +.BR mkfs.xfs (8),
-> +.BR md (4),
-> +.BR lvm (8),
-> +.BR mount (8).
-> diff --git a/spaceman/xfs_info.sh b/spaceman/xfs_info.sh
-> index 5df0a265..2e17fd91 100755
-> --- a/spaceman/xfs_info.sh
-> +++ b/spaceman/xfs_info.sh
-> @@ -4,7 +4,7 @@
->   #
->   
->   OPTS=""
-> -USAGE="Usage: xfs_info [-V] [-t mtab] mountpoint"
-> +USAGE="Usage: xfs_info [-V] [-t mtab] [mountpoint|device|file]"
->   
->   while getopts "t:V" c
->   do
-> @@ -22,8 +22,14 @@ done
->   set -- extra "$@"
->   shift $OPTIND
->   case $# in
-> -	1)	xfs_spaceman -p xfs_info -c "info" $OPTS "$1"
-> -		status=$?
-> +	1)
-> +		if [ -b "$1" ] || [ -f "$1" ]; then
-> +			xfs_db -p xfs_info -c "info" $OPTS "$1"
-> +			status=$?
-> +		else
-> +			xfs_spaceman -p xfs_info -c "info" $OPTS "$1"
-> +			status=$?
-> +		fi
->   		;;
->   	*)	echo $USAGE 1>&2
->   		exit 2
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIBAg&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=uRT-Nkq5vtStwvh7rxxmiMIK1XkFKJjNdYWIowr_5RE&s=KrEravyvnIfkZJLlnByf7D3rwq_HRTTeL8E4BGwiaoc&e=
-> 
+The xfs-iomap-read.3 branch in the above repo should sort out these
+issues.  Still waiting for some more feedback before reposting.
