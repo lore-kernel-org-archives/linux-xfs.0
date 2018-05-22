@@ -1,91 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ua0-f193.google.com ([209.85.217.193]:37977 "EHLO
-        mail-ua0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932282AbeEWKoQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 06:44:16 -0400
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:49853 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752770AbeEVWiJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 May 2018 18:38:09 -0400
+Date: Wed, 23 May 2018 08:38:06 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 16/34] iomap: add initial support for writes without
+ buffer heads
+Message-ID: <20180522223806.GX23861@dastard>
+References: <20180518164830.1552-1-hch@lst.de>
+ <20180518164830.1552-17-hch@lst.de>
+ <20180521232700.GB14384@magnolia>
+ <20180522000745.GU23861@dastard>
+ <20180522082454.GB9801@lst.de>
 MIME-Version: 1.0
-Reply-To: fdmanana@gmail.com
-In-Reply-To: <CAPaz=E+=aVagu2g3ZUiD-SjvnAAU0zb0SSaPKUitHT9CWuKW8A@mail.gmail.com>
-References: <CAPaz=E+=aVagu2g3ZUiD-SjvnAAU0zb0SSaPKUitHT9CWuKW8A@mail.gmail.com>
-From: Filipe Manana <fdmanana@gmail.com>
-Date: Wed, 23 May 2018 11:44:14 +0100
-Message-ID: <CAL3q7H7n9cTZyhdbvfLUXZ7u7W7ed5FLXBQBEQyTE9SrUWK3tw@mail.gmail.com>
-Subject: Re: Strange behavior (possible bugs) in btrfs
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180522082454.GB9801@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Vijay Chidambaram <vvijay03@gmail.com>
-Cc: Linux Btrfs <linux-btrfs@vger.kernel.org>, Soujanya Ponnapalli <soujanyap95@gmail.com>, Jayashree Mohan <jayashree2912@gmail.com>, linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-On Mon, Apr 30, 2018 at 5:04 PM, Vijay Chidambaram <vvijay03@gmail.com> wro=
-te:
-> Hi,
->
-> We found two more cases where the btrfs behavior is a little strange.
-> In one case, an fsync-ed file goes missing after a crash. In the
-> other, a renamed file shows up in both directories after a crash.
->
-> Workload 1:
->
-> mkdir A
-> mkdir B
-> mkdir A/C
-> creat B/foo
-> fsync B/foo
-> link B/foo A/C/foo
-> fsync A
-> -- crash --
->
-> Expected state after recovery:
-> B B/foo A A/C exist
+On Tue, May 22, 2018 at 10:24:54AM +0200, Christoph Hellwig wrote:
+> On Tue, May 22, 2018 at 10:07:45AM +1000, Dave Chinner wrote:
+> > > Something doesn't smell right here.  The only pages we need to read in
+> > > are the first and last pages in the write_begin range, and only if they
+> > > aren't page aligned and the underlying extent is IOMAP_MAPPED, right?
+> > 
+> > And not beyond EOF, too.
+> > 
+> > The bufferhead code handles this via the buffer_new() flag - it
+> > triggers the skipping of read IO and the states in which it is
+> > set are clearly indicated in iomap_to_bh(). That same logic needs to
+> > apply here.
+> 
+> The buffer_new logic itself isn't really something to copy directly
+> as it has all kinds of warts..
 
-Why don't you expect A/C/foo as well? I would expect it to be persisted.
-With xfs we don't get A/C/foo persisted, but it's persisted with ext4 and f=
-2fs.
+Sure, my point was that it documents all the cases where we can
+avoid reading from disk, not that we should copy the logic.
 
-Adding xfs folks in cc to confirm the expected behaviour.
+> > > I also noticed that speculative preallocation kicks in by the second 80M
+> > > write() call and writeback for the second call can successfully allocate
+> > > the entire preallocation, which means that the third (or nth) write call
+> > > can have a real extent already mapped in, and then we end up reading it.
+> > 
+> > Yeah, that's because there's no check against EOF here. These writes
+> > are all beyond EOF, so there shouldn't be any read at all...
+> 
+> The EOF case is already handled in iomap_block_needs_zeroing.
 
->
-> What we find:
-> Only B B/foo exist
->
-> A is lost even after explicit fsync to A.
->
-> Workload 2:
->
-> mkdir A
-> mkdir A/C
-> rename A/C B
-> touch B/bar
-> fsync B/bar
-> rename B/bar A/bar
-> rename A B (replacing B with A at this point)
-> fsync B/bar
-> -- crash --
->
-> Expected contents after recovery:
-> A/bar
->
-> What we find after recovery:
-> A/bar
-> B/bar
->
-> We think this breaks rename's atomicity guarantee. bar should be
-> present in either A or B, but now it is present in both.
->
-> Thanks,
-> Vijay
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-btrfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Ok, I missed that detail as it's in a different patch. It looks like
+if (pos > EOF) it will zeroed. But in this case I think that pos ==
+EOF and so it was reading instead. That smells like off-by-one bug
+to me.
 
+> We just
+> need to skip the read for ranges entirely covered by the write.
 
+Yup.
 
---=20
-Filipe David Manana,
+Cheers,
 
-=E2=80=9CWhether you think you can, or you think you can't =E2=80=94 you're=
- right.=E2=80=9D
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
