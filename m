@@ -1,89 +1,139 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:43631 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753272AbeEVXcU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 May 2018 19:32:20 -0400
-Received: by mail-pf0-f196.google.com with SMTP id j20-v6so9508051pff.10
-        for <linux-xfs@vger.kernel.org>; Tue, 22 May 2018 16:32:20 -0700 (PDT)
-Date: Tue, 22 May 2018 16:32:18 -0700
+Received: from mail-pf0-f182.google.com ([209.85.192.182]:34487 "EHLO
+        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753502AbeEVXeS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 May 2018 19:34:18 -0400
+Received: by mail-pf0-f182.google.com with SMTP id a14-v6so9514341pfi.1
+        for <linux-xfs@vger.kernel.org>; Tue, 22 May 2018 16:34:18 -0700 (PDT)
 From: Omar Sandoval <osandov@osandov.com>
-Subject: Re: [PATCH v2 2/5] generic: enable swapfile tests on Btrfs
-Message-ID: <20180522233218.GG9536@vader>
-References: <cover.1526503000.git.osandov@fb.com>
- <80a5002310ab7f06efd9fed76cf268673e631335.1526503000.git.osandov@fb.com>
- <20180522064145.GQ29080@desktop.hz.ali.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180522064145.GQ29080@desktop.hz.ali.com>
+Subject: [PATCH v3 4/5] generic: add test for truncate/fpunch of an active swapfile
+Date: Tue, 22 May 2018 16:33:59 -0700
+Message-Id: <e96a2f6d01ece8a59b8aa4b066cfd44eb8de1355.1527031843.git.osandov@fb.com>
+In-Reply-To: <cover.1527031843.git.osandov@fb.com>
+References: <cover.1527031843.git.osandov@fb.com>
+In-Reply-To: <cover.1527031843.git.osandov@fb.com>
+References: <cover.1527031843.git.osandov@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: fstests@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, kernel-team@fb.com
+To: fstests@vger.kernel.org
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Eryu Guan <guaneryu@gmail.com>, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, kernel-team@fb.com
 
-On Tue, May 22, 2018 at 02:41:45PM +0800, Eryu Guan wrote:
-> On Wed, May 16, 2018 at 01:38:46PM -0700, Omar Sandoval wrote:
-> > From: Omar Sandoval <osandov@fb.com>
-> > 
-> > Commit 8c96cfbfe530 ("generic/35[67]: disable swapfile tests on Btrfs")
-> > disabled the swapfile tests on Btrfs because it did not support
-> > swapfiles at the time. Now that we're adding support, we want these
-> 
-> So currently btrfs has no swapfile support yet, and tests still _notrun
-> with current v4.17-rc5 kernel? Just want to make sure that's expected.
+From: Omar Sandoval <osandov@fb.com>
 
-Yes, that's correct.
+These should not be allowed.
 
-> > tests to run, but they don't. _require_scratch_swapfile always fails for
-> > Btrfs because swapfiles on Btrfs must be set to nocow. After fixing
-> > that, generic/356 and generic/357 fail for the same reason. After fixing
-> > _that_, both tests still fail because we don't allow reflinking a
-> > non-checksummed extent (which nocow implies) to a checksummed extent.
-> > Add a helper for formatting a swap file which does the chattr, and
-> > chattr the second file, which gets these tests running on kernels
-> > supporting Btrfs swapfiles.
-> > 
-> > Signed-off-by: Omar Sandoval <osandov@fb.com>
-> > ---
-> >  common/rc         | 15 ++++++++++++---
-> >  tests/generic/356 |  7 ++++---
-> >  tests/generic/357 |  6 +++---
-> >  3 files changed, 19 insertions(+), 9 deletions(-)
-> > 
-> > diff --git a/common/rc b/common/rc
-> > index ffe53236..814b8b5c 100644
-> > --- a/common/rc
-> > +++ b/common/rc
-> > @@ -2222,6 +2222,17 @@ _require_odirect()
-> >  	rm -f $testfile 2>&1 > /dev/null
-> >  }
-> >  
-> > +_format_swapfile() {
-> > +	local fname="$1"
-> > +	local sz="$2"
-> > +
-> > +	touch "$fname"
-> 
-> Better to remove $fname first, just in case it's an existing file with
-> some blocks allocated, as chattr(1) says
-> 
-> "Note: For btrfs, the 'C' flag should be set on new or empty files.  If
-> it is set on a file which already has data blocks, it is undefined when
-> the blocks assigned to the file will be fully stable"
+Signed-off-by: Omar Sandoval <osandov@fb.com>
+---
+ tests/generic/493     | 73 +++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/493.out |  8 +++++
+ tests/generic/group   |  1 +
+ 3 files changed, 82 insertions(+)
+ create mode 100755 tests/generic/493
+ create mode 100644 tests/generic/493.out
 
-Good point.
+diff --git a/tests/generic/493 b/tests/generic/493
+new file mode 100755
+index 00000000..eba62dcb
+--- /dev/null
++++ b/tests/generic/493
+@@ -0,0 +1,73 @@
++#! /bin/bash
++# FS QA Test 493
++#
++# Test truncation/hole punching of an active swapfile.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2018 Facebook.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++. ./common/rc
++. ./common/filter
++
++rm -f $seqres.full
++
++_supported_fs generic
++_supported_os Linux
++_require_scratch_swapfile
++_require_xfs_io_command "fpunch"
++
++echo "Format and mount"
++_scratch_mkfs > $seqres.full 2>&1
++_scratch_mount >> $seqres.full 2>&1
++
++testdir="$SCRATCH_MNT/test-$seq"
++mkdir "$testdir"
++
++blocks=160
++blksz=65536
++
++echo "Initialize file"
++_format_swapfile "$testdir/file1" $((blocks * blksz))
++swapon "$testdir/file1"
++
++echo "Try to truncate"
++$XFS_IO_PROG -c "truncate $blksz" "$testdir/file1"
++
++echo "Try to punch hole"
++$XFS_IO_PROG -c "fpunch $blksz $((2 * blksz))" "$testdir/file1"
++
++echo "Tear it down"
++swapoff "$testdir/file1"
++
++status=0
++exit
+diff --git a/tests/generic/493.out b/tests/generic/493.out
+new file mode 100644
+index 00000000..929a76b6
+--- /dev/null
++++ b/tests/generic/493.out
+@@ -0,0 +1,8 @@
++QA output created by 493
++Format and mount
++Initialize file
++Try to truncate
++ftruncate: Text file busy
++Try to punch hole
++fallocate: Text file busy
++Tear it down
+diff --git a/tests/generic/group b/tests/generic/group
+index dc5adf04..9778930a 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -495,3 +495,4 @@
+ 490 auto quick rw
+ 491 auto quick freeze mount
+ 492 auto quick swap
++493 auto quick swap
+-- 
+2.17.0
 
-> > +	chmod 0600 "$fname"
-> > +	$CHATTR_PROG +C "$fname" > /dev/null 2>&1
-> 
-> It'd be good to have some comments on this chattr +C.
-
-Will do.
-
-> > +	_pwrite_byte 0x61 0 "$sz" "$fname" >> $seqres.full
-> > +	mkswap -U 27376b42-ff65-42ca-919f-6c9b62292a5c "$fname" >> $seqres.full
-> 
-> Is the label really needed?
-
-Nope, doesn't look like it. Thanks!
