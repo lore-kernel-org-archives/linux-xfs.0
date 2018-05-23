@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:49012 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:49348 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933359AbeEWOpZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 10:45:25 -0400
+        with ESMTP id S933486AbeEWOpj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 10:45:39 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 27/34] xfs: don't clear imap_valid for a non-uptodate buffers
-Date: Wed, 23 May 2018 16:43:50 +0200
-Message-Id: <20180523144357.18985-28-hch@lst.de>
+Subject: [PATCH 31/34] xfs: remove xfs_start_page_writeback
+Date: Wed, 23 May 2018 16:43:54 +0200
+Message-Id: <20180523144357.18985-32-hch@lst.de>
 In-Reply-To: <20180523144357.18985-1-hch@lst.de>
 References: <20180523144357.18985-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,37 +15,92 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-Finding a buffer that isn't uptodate doesn't invalidate the mapping for
-any given block.  The last_sector check will already take care of starting
-another ioend as soon as we find any non-update buffer, and if the current
-mapping doesn't include the next uptodate buffer the xfs_imap_valid check
-will take care of it.
+This helper only has two callers, one of them with a constant error
+argument.  Remove it to make pending changes to the code a little easier.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_aops.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ fs/xfs/xfs_aops.c | 47 +++++++++++++++++++++--------------------------
+ 1 file changed, 21 insertions(+), 26 deletions(-)
 
 diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index b1dee2171194..82fd08c29f7f 100644
+index 951b329abb23..dd92d99df51f 100644
 --- a/fs/xfs/xfs_aops.c
 +++ b/fs/xfs/xfs_aops.c
-@@ -859,15 +859,12 @@ xfs_writepage_map(
- 			break;
+@@ -505,30 +505,6 @@ xfs_imap_valid(
+ 		offset < imap->br_startoff + imap->br_blockcount;
+ }
+ 
+-STATIC void
+-xfs_start_page_writeback(
+-	struct page		*page,
+-	int			clear_dirty)
+-{
+-	ASSERT(PageLocked(page));
+-	ASSERT(!PageWriteback(page));
+-
+-	/*
+-	 * if the page was not fully cleaned, we need to ensure that the higher
+-	 * layers come back to it correctly. That means we need to keep the page
+-	 * dirty, and for WB_SYNC_ALL writeback we need to ensure the
+-	 * PAGECACHE_TAG_TOWRITE index mark is not removed so another attempt to
+-	 * write this page in this writeback sweep will be made.
+-	 */
+-	if (clear_dirty) {
+-		clear_page_dirty_for_io(page);
+-		set_page_writeback(page);
+-	} else
+-		set_page_writeback_keepwrite(page);
+-
+-	unlock_page(page);
+-}
+-
+ /*
+  * Submit the bio for an ioend. We are passed an ioend with a bio attached to
+  * it, and we submit that bio. The ioend may be used for multiple bio
+@@ -887,6 +863,9 @@ xfs_writepage_map(
+ 	ASSERT(wpc->ioend || list_empty(&submit_list));
+ 
+ out:
++	ASSERT(PageLocked(page));
++	ASSERT(!PageWriteback(page));
++
+ 	/*
+ 	 * On error, we have to fail the ioend here because we have locked
+ 	 * buffers in the ioend. If we don't do this, we'll deadlock
+@@ -905,7 +884,21 @@ xfs_writepage_map(
+ 	 * treated correctly on error.
+ 	 */
+ 	if (count) {
+-		xfs_start_page_writeback(page, !error);
++		/*
++		 * If the page was not fully cleaned, we need to ensure that the
++		 * higher layers come back to it correctly.  That means we need
++		 * to keep the page dirty, and for WB_SYNC_ALL writeback we need
++		 * to ensure the PAGECACHE_TAG_TOWRITE index mark is not removed
++		 * so another attempt to write this page in this writeback sweep
++		 * will be made.
++		 */
++		if (error) {
++			set_page_writeback_keepwrite(page);
++		} else {
++			clear_page_dirty_for_io(page);
++			set_page_writeback(page);
++		}
++		unlock_page(page);
  
  		/*
--		 * Block does not contain valid data, skip it, mark the current
--		 * map as invalid because we have a discontiguity. This ensures
--		 * we put subsequent writeable buffers into a new ioend.
-+		 * Block does not contain valid data, skip it.
+ 		 * Preserve the original error if there was one, otherwise catch
+@@ -930,7 +923,9 @@ xfs_writepage_map(
+ 		 * race with a partial page truncate on a sub-page block sized
+ 		 * filesystem. In that case we need to mark the page clean.
  		 */
- 		if (!buffer_uptodate(bh)) {
- 			if (PageUptodate(page))
- 				ASSERT(buffer_mapped(bh));
- 			uptodate = false;
--			wpc->imap_valid = false;
- 			continue;
- 		}
+-		xfs_start_page_writeback(page, 1);
++		clear_page_dirty_for_io(page);
++		set_page_writeback(page);
++		unlock_page(page);
+ 		end_page_writeback(page);
+ 	}
  
 -- 
 2.17.0
