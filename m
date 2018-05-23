@@ -1,219 +1,174 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:57302 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753116AbeEYDgI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 May 2018 23:36:08 -0400
-Date: Thu, 24 May 2018 20:35:48 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3 2/4] mkfs: move shared config structs and into their
- own headers
-Message-ID: <20180525033548.GQ14384@magnolia>
-References: <20180525031943.29440-1-mcgrof@kernel.org>
- <20180525031943.29440-3-mcgrof@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180525031943.29440-3-mcgrof@kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.133]:49142 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933482AbeEWOpc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 10:45:32 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 29/34] xfs: don't look at buffer heads in xfs_add_to_ioend
+Date: Wed, 23 May 2018 16:43:52 +0200
+Message-Id: <20180523144357.18985-30-hch@lst.de>
+In-Reply-To: <20180523144357.18985-1-hch@lst.de>
+References: <20180523144357.18985-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: sandeen@sandeen.net, linux-xfs@vger.kernel.org, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-On Thu, May 24, 2018 at 08:19:41PM -0700, Luis R. Rodriguez wrote:
-> Both struct sb_feat_args and struct mkfs_default_params will be shared
-> between CLI processing and the configuration file processing added later,
-> so move these to their own header.
-> 
-> This will help ensure we split things neatly later and also will help
-> ensure the configuration file processing code from the CLI code are kept
-> separate and cannot touch each other's data structures. This also makes
-> it clear what is actually shared between both.
-> 
-> There are no introduced functional changes in this commit and no
-> documentation changes, this is just code shuffling.
-> 
-> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
-> ---
->  mkfs/config.h   | 78 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  mkfs/xfs_mkfs.c | 55 +---------------------------------------
->  2 files changed, 79 insertions(+), 54 deletions(-)
->  create mode 100644 mkfs/config.h
-> 
-> diff --git a/mkfs/config.h b/mkfs/config.h
-> new file mode 100644
-> index 000000000000..e5ea968e2d65
-> --- /dev/null
-> +++ b/mkfs/config.h
-> @@ -0,0 +1,78 @@
-> +/*
-> + * Copyright (c) 2000-2005 Silicon Graphics, Inc.
-> + * Copyright (c) 2016-2017 Red Hat, Inc.
-> + * All Rights Reserved.
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License as
-> + * published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation,
-> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> + */
-> +#ifndef _XFS_MKFS_CONFIG_H
-> +#define _XFS_MKFS_CONFIG_H
-> +
-> +struct fsxattr;
-> +
-> +/*
-> + * Shared superblock configuration options
-> + *
-> + * These options provide shared configuration tunables for the filesystem
-> + * superblock. There are three possible sources for these options set, each
-> + * source can overriding the later source:
-> + *
-> + * 	o built-in defaults
-> + * 	o configuration file (XXX)
-> + * 	o command line
-> + *
-> + * These values are not used directly - they are inputs into the mkfs geometry
-> + * validation.
-> + */
-> +struct sb_feat_args {
-> +	int	log_version;
-> +	int	attr_version;
-> +	int	dir_version;
-> +	bool	inode_align;		/* XFS_SB_VERSION_ALIGNBIT */
-> +	bool	nci;			/* XFS_SB_VERSION_BORGBIT */
-> +	bool	lazy_sb_counters;	/* XFS_SB_VERSION2_LAZYSBCOUNTBIT */
-> +	bool	parent_pointers;	/* XFS_SB_VERSION2_PARENTBIT */
-> +	bool	projid32bit;		/* XFS_SB_VERSION2_PROJID32BIT */
-> +	bool	crcs_enabled;		/* XFS_SB_VERSION2_CRCBIT */
-> +	bool	dirftype;		/* XFS_SB_VERSION2_FTYPE */
-> +	bool	finobt;			/* XFS_SB_FEAT_RO_COMPAT_FINOBT */
-> +	bool	spinodes;		/* XFS_SB_FEAT_INCOMPAT_SPINODES */
-> +	bool	rmapbt;			/* XFS_SB_FEAT_RO_COMPAT_RMAPBT */
-> +	bool	reflink;		/* XFS_SB_FEAT_RO_COMPAT_REFLINK */
-> +	bool	nodalign;
-> +	bool	nortalign;
-> +};
-> +
-> +/*
-> + * Default filesystem features and configuration values
-> + *
-> + * This structure contains the default mkfs values that are to be used when
-> + * a user does not specify the option on the command line. We do not use these
-> + * values directly - they are inputs to the mkfs geometry validation and
-> + * calculations.
-> + */
-> +struct mkfs_default_params {
-> +	char	*source;	/* where the defaults came from */
-> +
-> +	int	sectorsize;
-> +	int	blocksize;
+Calculate all information for the bio based on the passed in information
+without requiring a buffer_head structure.
 
-Indentation ^^^ is uneven with the rest of the struct, but otherwise:
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_aops.c | 68 ++++++++++++++++++++++-------------------------
+ 1 file changed, 32 insertions(+), 36 deletions(-)
 
---D
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index f01c1dd737ec..592b33b35a30 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -44,7 +44,6 @@ struct xfs_writepage_ctx {
+ 	struct xfs_bmbt_irec    imap;
+ 	unsigned int		io_type;
+ 	struct xfs_ioend	*ioend;
+-	sector_t		last_block;
+ };
+ 
+ void
+@@ -545,11 +544,6 @@ xfs_start_page_writeback(
+ 	unlock_page(page);
+ }
+ 
+-static inline int xfs_bio_add_buffer(struct bio *bio, struct buffer_head *bh)
+-{
+-	return bio_add_page(bio, bh->b_page, bh->b_size, bh_offset(bh));
+-}
+-
+ /*
+  * Submit the bio for an ioend. We are passed an ioend with a bio attached to
+  * it, and we submit that bio. The ioend may be used for multiple bio
+@@ -604,27 +598,20 @@ xfs_submit_ioend(
+ 	return 0;
+ }
+ 
+-static void
+-xfs_init_bio_from_bh(
+-	struct bio		*bio,
+-	struct buffer_head	*bh)
+-{
+-	bio->bi_iter.bi_sector = bh->b_blocknr * (bh->b_size >> 9);
+-	bio_set_dev(bio, bh->b_bdev);
+-}
+-
+ static struct xfs_ioend *
+ xfs_alloc_ioend(
+ 	struct inode		*inode,
+ 	unsigned int		type,
+ 	xfs_off_t		offset,
+-	struct buffer_head	*bh)
++	struct block_device	*bdev,
++	sector_t		sector)
+ {
+ 	struct xfs_ioend	*ioend;
+ 	struct bio		*bio;
+ 
+ 	bio = bio_alloc_bioset(GFP_NOFS, BIO_MAX_PAGES, xfs_ioend_bioset);
+-	xfs_init_bio_from_bh(bio, bh);
++	bio_set_dev(bio, bdev);
++	bio->bi_iter.bi_sector = sector;
+ 
+ 	ioend = container_of(bio, struct xfs_ioend, io_inline_bio);
+ 	INIT_LIST_HEAD(&ioend->io_list);
+@@ -649,13 +636,14 @@ static void
+ xfs_chain_bio(
+ 	struct xfs_ioend	*ioend,
+ 	struct writeback_control *wbc,
+-	struct buffer_head	*bh)
++	struct block_device	*bdev,
++	sector_t		sector)
+ {
+ 	struct bio *new;
+ 
+ 	new = bio_alloc(GFP_NOFS, BIO_MAX_PAGES);
+-	xfs_init_bio_from_bh(new, bh);
+-
++	bio_set_dev(new, bdev);
++	new->bi_iter.bi_sector = sector;
+ 	bio_chain(ioend->io_bio, new);
+ 	bio_get(ioend->io_bio);		/* for xfs_destroy_ioend */
+ 	ioend->io_bio->bi_opf = REQ_OP_WRITE | wbc_to_write_flags(wbc);
+@@ -665,39 +653,45 @@ xfs_chain_bio(
+ }
+ 
+ /*
+- * Test to see if we've been building up a completion structure for
+- * earlier buffers -- if so, we try to append to this ioend if we
+- * can, otherwise we finish off any current ioend and start another.
+- * Return the ioend we finished off so that the caller can submit it
+- * once it has finished processing the dirty page.
++ * Test to see if we have an existing ioend structure that we could append to
++ * first, otherwise finish off the current ioend and start another.
+  */
+ STATIC void
+ xfs_add_to_ioend(
+ 	struct inode		*inode,
+-	struct buffer_head	*bh,
+ 	xfs_off_t		offset,
++	struct page		*page,
+ 	struct xfs_writepage_ctx *wpc,
+ 	struct writeback_control *wbc,
+ 	struct list_head	*iolist)
+ {
++	struct xfs_inode	*ip = XFS_I(inode);
++	struct xfs_mount	*mp = ip->i_mount;
++	struct block_device	*bdev = xfs_find_bdev_for_inode(inode);
++	unsigned		len = i_blocksize(inode);
++	unsigned		poff = offset & (PAGE_SIZE - 1);
++	sector_t		sector;
++
++	sector = xfs_fsb_to_db(ip, wpc->imap.br_startblock) +
++		((offset - XFS_FSB_TO_B(mp, wpc->imap.br_startoff)) >> 9);
++
+ 	if (!wpc->ioend || wpc->io_type != wpc->ioend->io_type ||
+-	    bh->b_blocknr != wpc->last_block + 1 ||
++	    sector != bio_end_sector(wpc->ioend->io_bio) ||
+ 	    offset != wpc->ioend->io_offset + wpc->ioend->io_size) {
+ 		if (wpc->ioend)
+ 			list_add(&wpc->ioend->io_list, iolist);
+-		wpc->ioend = xfs_alloc_ioend(inode, wpc->io_type, offset, bh);
++		wpc->ioend = xfs_alloc_ioend(inode, wpc->io_type, offset,
++				bdev, sector);
+ 	}
+ 
+ 	/*
+-	 * If the buffer doesn't fit into the bio we need to allocate a new
+-	 * one.  This shouldn't happen more than once for a given buffer.
++	 * If the block doesn't fit into the bio we need to allocate a new
++	 * one.  This shouldn't happen more than once for a given block.
+ 	 */
+-	while (xfs_bio_add_buffer(wpc->ioend->io_bio, bh) != bh->b_size)
+-		xfs_chain_bio(wpc->ioend, wbc, bh);
++	while (bio_add_page(wpc->ioend->io_bio, page, len, poff) != len)
++		xfs_chain_bio(wpc->ioend, wbc, bdev, sector);
+ 
+-	wpc->ioend->io_size += bh->b_size;
+-	wpc->last_block = bh->b_blocknr;
+-	xfs_start_buffer_writeback(bh);
++	wpc->ioend->io_size += len;
+ }
+ 
+ STATIC void
+@@ -893,7 +887,9 @@ xfs_writepage_map(
+ 
+ 		lock_buffer(bh);
+ 		xfs_map_at_offset(inode, bh, &wpc->imap, file_offset);
+-		xfs_add_to_ioend(inode, bh, file_offset, wpc, wbc, &submit_list);
++		xfs_add_to_ioend(inode, file_offset, page, wpc, wbc,
++				&submit_list);
++		xfs_start_buffer_writeback(bh);
+ 		count++;
+ 	}
+ 
+-- 
+2.17.0
 
-> +
-> +	/* feature flags that are set */
-> +	struct sb_feat_args	sb_feat;
-> +
-> +	/* root inode characteristics */
-> +	struct fsxattr		fsx;
-> +};
-> +
-> +#endif /* _XFS_MKFS_CONFIG_H */
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 95cd6ced13f0..217bb972538d 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -20,6 +20,7 @@
->  #include <ctype.h>
->  #include "xfs_multidisk.h"
->  #include "libxcmd.h"
-> +#include "config.h"
->  
->  
->  
-> @@ -706,39 +707,6 @@ cli_opt_set(
->  	       opts->subopt_params[subopt].str_seen;
->  }
->  
-> -/*
-> - * Shared superblock configuration options
-> - *
-> - * These options provide shared configuration tunables for the filesystem
-> - * superblock. There are three possible sources for these options set, each
-> - * source can overriding the later source:
-> - *
-> - * 	o built-in defaults
-> - * 	o configuration file (XXX)
-> - * 	o command line
-> - *
-> - * These values are not used directly - they are inputs into the mkfs geometry
-> - * validation.
-> - */
-> -struct sb_feat_args {
-> -	int	log_version;
-> -	int	attr_version;
-> -	int	dir_version;
-> -	bool	inode_align;		/* XFS_SB_VERSION_ALIGNBIT */
-> -	bool	nci;			/* XFS_SB_VERSION_BORGBIT */
-> -	bool	lazy_sb_counters;	/* XFS_SB_VERSION2_LAZYSBCOUNTBIT */
-> -	bool	parent_pointers;	/* XFS_SB_VERSION2_PARENTBIT */
-> -	bool	projid32bit;		/* XFS_SB_VERSION2_PROJID32BIT */
-> -	bool	crcs_enabled;		/* XFS_SB_VERSION2_CRCBIT */
-> -	bool	dirftype;		/* XFS_SB_VERSION2_FTYPE */
-> -	bool	finobt;			/* XFS_SB_FEAT_RO_COMPAT_FINOBT */
-> -	bool	spinodes;		/* XFS_SB_FEAT_INCOMPAT_SPINODES */
-> -	bool	rmapbt;			/* XFS_SB_FEAT_RO_COMPAT_RMAPBT */
-> -	bool	reflink;		/* XFS_SB_FEAT_RO_COMPAT_REFLINK */
-> -	bool	nodalign;
-> -	bool	nortalign;
-> -};
-> -
->  /*
->   * Options configured on the command line.
->   *
-> @@ -850,27 +818,6 @@ struct mkfs_params {
->  	struct sb_feat_args	sb_feat;
->  };
->  
-> -/*
-> - * Default filesystem features and configuration values
-> - *
-> - * This structure contains the default mkfs values that are to be used when
-> - * a user does not specify the option on the command line. We do not use these
-> - * values directly - they are inputs to the mkfs geometry validation and
-> - * calculations.
-> - */
-> -struct mkfs_default_params {
-> -	char	*source;	/* where the defaults came from */
-> -
-> -	int	sectorsize;
-> -	int	blocksize;
-> -
-> -	/* feature flags that are set */
-> -	struct sb_feat_args	sb_feat;
-> -
-> -	/* root inode characteristics */
-> -	struct fsxattr		fsx;
-> -};
-> -
->  static void __attribute__((noreturn))
->  usage( void )
->  {
-> -- 
-> 2.16.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
