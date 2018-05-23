@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:47068 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:47292 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933174AbeEWOo1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 10:44:27 -0400
+        with ESMTP id S933444AbeEWOop (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 10:44:45 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 08/34] mm: split ->readpages calls to avoid non-contiguous pages lists
-Date: Wed, 23 May 2018 16:43:31 +0200
-Message-Id: <20180523144357.18985-9-hch@lst.de>
+Subject: [PATCH 14/34] iomap: add an iomap-based bmap implementation
+Date: Wed, 23 May 2018 16:43:37 +0200
+Message-Id: <20180523144357.18985-15-hch@lst.de>
 In-Reply-To: <20180523144357.18985-1-hch@lst.de>
 References: <20180523144357.18985-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,50 +15,80 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-That way file systems don't have to go spotting for non-contiguous pages
-and work around them.  It also kicks off I/O earlier, allowing it to
-finish earlier and reduce latency.
+This adds a simple iomap-based implementation of the legacy ->bmap
+interface.  Note that we can't easily add checks for rt or reflink
+files, so these will have to remain in the callers.  This interface
+just needs to die..
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- mm/readahead.c | 16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
+ fs/iomap.c            | 34 ++++++++++++++++++++++++++++++++++
+ include/linux/iomap.h |  3 +++
+ 2 files changed, 37 insertions(+)
 
-diff --git a/mm/readahead.c b/mm/readahead.c
-index fa4d4b767130..e273f0de3376 100644
---- a/mm/readahead.c
-+++ b/mm/readahead.c
-@@ -140,8 +140,8 @@ static int read_pages(struct address_space *mapping, struct file *filp,
+diff --git a/fs/iomap.c b/fs/iomap.c
+index f928df4ab9a9..fa278ed338ce 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -1411,3 +1411,37 @@ int iomap_swapfile_activate(struct swap_info_struct *sis,
  }
+ EXPORT_SYMBOL_GPL(iomap_swapfile_activate);
+ #endif /* CONFIG_SWAP */
++
++static loff_t
++iomap_bmap_actor(struct inode *inode, loff_t pos, loff_t length,
++		void *data, struct iomap *iomap)
++{
++	sector_t *bno = data, addr;
++
++	if (iomap->type == IOMAP_MAPPED) {
++		addr = (pos - iomap->offset + iomap->addr) >> inode->i_blkbits;
++		if (addr > INT_MAX)
++			WARN(1, "would truncate bmap result\n");
++		else
++			*bno = addr;
++	}
++	return 0;
++}
++
++/* legacy ->bmap interface.  0 is the error return (!) */
++sector_t
++iomap_bmap(struct address_space *mapping, sector_t bno,
++		const struct iomap_ops *ops)
++{
++	struct inode *inode = mapping->host;
++	loff_t pos = bno >> inode->i_blkbits;
++	unsigned blocksize = i_blocksize(inode);
++
++	if (filemap_write_and_wait(mapping))
++		return 0;
++
++	bno = 0;
++	iomap_apply(inode, pos, blocksize, 0, ops, &bno, iomap_bmap_actor);
++	return bno;
++}
++EXPORT_SYMBOL_GPL(iomap_bmap);
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 819e0cd2a950..a044a824da85 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -4,6 +4,7 @@
+ 
+ #include <linux/types.h>
+ 
++struct address_space;
+ struct fiemap_extent_info;
+ struct inode;
+ struct iov_iter;
+@@ -100,6 +101,8 @@ loff_t iomap_seek_hole(struct inode *inode, loff_t offset,
+ 		const struct iomap_ops *ops);
+ loff_t iomap_seek_data(struct inode *inode, loff_t offset,
+ 		const struct iomap_ops *ops);
++sector_t iomap_bmap(struct address_space *mapping, sector_t bno,
++		const struct iomap_ops *ops);
  
  /*
-- * __do_page_cache_readahead() actually reads a chunk of disk.  It allocates all
-- * the pages first, then submits them all for I/O. This avoids the very bad
-+ * __do_page_cache_readahead() actually reads a chunk of disk.  It allocates
-+ * the pages first, then submits them for I/O. This avoids the very bad
-  * behaviour which would occur if page allocations are causing VM writeback.
-  * We really don't want to intermingle reads and writes like that.
-  *
-@@ -177,8 +177,18 @@ unsigned int __do_page_cache_readahead(struct address_space *mapping,
- 		rcu_read_lock();
- 		page = radix_tree_lookup(&mapping->i_pages, page_offset);
- 		rcu_read_unlock();
--		if (page && !radix_tree_exceptional_entry(page))
-+		if (page && !radix_tree_exceptional_entry(page)) {
-+			/*
-+			 * Page already present?  Kick off the current batch of
-+			 * contiguous pages before continuing with the next
-+			 * batch.
-+			 */
-+			if (nr_pages)
-+				read_pages(mapping, filp, &page_pool, nr_pages,
-+						gfp_mask);
-+			nr_pages = 0;
- 			continue;
-+		}
- 
- 		page = __page_cache_alloc(gfp_mask);
- 		if (!page)
+  * Flags for direct I/O ->end_io:
 -- 
 2.17.0
 
