@@ -1,144 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34166 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754649AbeEWQRN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 23 May 2018 12:17:13 -0400
-Date: Wed, 23 May 2018 12:17:11 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 19/34] xfs: simplify xfs_bmap_punch_delalloc_range
-Message-ID: <20180523161710.GA33498@bfoster.bfoster>
-References: <20180523144357.18985-1-hch@lst.de>
- <20180523144357.18985-20-hch@lst.de>
+Received: from userp2130.oracle.com ([156.151.31.86]:52836 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753847AbeEWDr0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 May 2018 23:47:26 -0400
+Subject: Re: [PATCH v2 01/11] xfs_repair: examine all remote attribute blocks
+References: <152401958920.13319.10756339531174871801.stgit@magnolia>
+ <152401959780.13319.9582448473529615015.stgit@magnolia>
+ <20180523031513.GG14384@magnolia>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <beb30217-1aa7-015c-2774-bb3a23ddf074@oracle.com>
+Date: Tue, 22 May 2018 20:47:09 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180523144357.18985-20-hch@lst.de>
+In-Reply-To: <20180523031513.GG14384@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, May 23, 2018 at 04:43:42PM +0200, Christoph Hellwig wrote:
-> Instead of using xfs_bmapi_read to find delalloc extents and then punch
-> them out using xfs_bunmapi, opencode the loop to iterate over the extents
-> and call xfs_bmap_del_extent_delay directly.  This both simplifies the
-> code and reduces the number of extent tree lookups required.
+Alrighty, looks ok.  Thx!
+
+Reviewed by: Allison Henderson <allison.henderson@oracle.com>
+
+On 05/22/2018 08:15 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Examine all remote xattr values of a file, not just the XFS_ATTR_ROOT
+> values.  This enables us to detect and zap corrupt user xattrs, as
+> tested by xfs/404.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/xfs_bmap_util.c | 78 ++++++++++++++----------------------------
->  1 file changed, 25 insertions(+), 53 deletions(-)
+>   repair/attr_repair.c |    6 ++----
+>   1 file changed, 2 insertions(+), 4 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 06badcbadeb4..c009bdf9fdce 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-...
-> @@ -708,63 +706,37 @@ xfs_bmap_punch_delalloc_range(
->  	xfs_fileoff_t		start_fsb,
->  	xfs_fileoff_t		length)
->  {
-> -	xfs_fileoff_t		remaining = length;
-> +	struct xfs_ifork	*ifp = &ip->i_df;
-> +	struct xfs_bmbt_irec	got, del;
-> +	struct xfs_iext_cursor	icur;
->  	int			error = 0;
->  
->  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
->  
-> -	do {
-> -		int		done;
-> -		xfs_bmbt_irec_t	imap;
-> -		int		nimaps = 1;
-> -		xfs_fsblock_t	firstblock;
-> -		struct xfs_defer_ops dfops;
-> +	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> +		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
-> +		if (error)
-> +			return error;
-> +	}
->  
-> -		/*
-> -		 * Map the range first and check that it is a delalloc extent
-> -		 * before trying to unmap the range. Otherwise we will be
-> -		 * trying to remove a real extent (which requires a
-> -		 * transaction) or a hole, which is probably a bad idea...
-> -		 */
-> -		error = xfs_bmapi_read(ip, start_fsb, 1, &imap, &nimaps,
-> -				       XFS_BMAPI_ENTIRE);
-> +	if (!xfs_iext_lookup_extent(ip, ifp, start_fsb, &icur, &got))
-> +		return 0;
->  
-> -		if (error) {
-> -			/* something screwed, just bail */
-> -			if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
-> -				xfs_alert(ip->i_mount,
-> -			"Failed delalloc mapping lookup ino %lld fsb %lld.",
-> -						ip->i_ino, start_fsb);
-> -			}
-> +	do {
-> +		if (got.br_startoff >= start_fsb + length)
->  			break;
-> -		}
-> -		if (!nimaps) {
-> -			/* nothing there */
-> -			goto next_block;
-> -		}
-> -		if (imap.br_startblock != DELAYSTARTBLOCK) {
-> -			/* been converted, ignore */
-> -			goto next_block;
-> -		}
-> -		WARN_ON(imap.br_blockcount == 0);
-> +		if (!isnullstartblock(got.br_startblock))
-> +			continue;
->  
-> -		/*
-> -		 * Note: while we initialise the firstblock/dfops pair, they
-> -		 * should never be used because blocks should never be
-> -		 * allocated or freed for a delalloc extent and hence we need
-> -		 * don't cancel or finish them after the xfs_bunmapi() call.
-> -		 */
-> -		xfs_defer_init(&dfops, &firstblock);
-> -		error = xfs_bunmapi(NULL, ip, start_fsb, 1, 0, 1, &firstblock,
-> -					&dfops, &done);
-> +		del = got;
-> +		xfs_trim_extent(&del, start_fsb, length);
-> +		error = xfs_bmap_del_extent_delay(ip, XFS_DATA_FORK, &icur,
-> +				&got, &del);
->  		if (error)
->  			break;
+> diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+> index 8b1b8a75..67bb41ec 100644
+> --- a/repair/attr_repair.c
+> +++ b/repair/attr_repair.c
+> @@ -537,9 +537,6 @@ process_leaf_attr_remote(
+>   		return -1;
+>   	}
+>   
+> -	if (!(entry->flags & XFS_ATTR_ROOT))
+> -		goto out;
 > -
-> -		ASSERT(!xfs_defer_has_unfinished_work(&dfops));
-> -next_block:
-> -		start_fsb++;
-> -		remaining--;
-> -	} while(remaining > 0);
-> +		if (!xfs_iext_get_extent(ifp, &icur, &got))
-> +			break;
-
-Mostly looks Ok, but I'm not following what this get_extent() call is
-for..? It also doesn't look like it would always do the right thing with
-sub-page blocks. Consider a page with a couple discontig delalloc blocks
-that happen to be the first extents in the file. The first
-xfs_bmap_del_extent_delay() would do:
-
-	xfs_iext_remove(ip, icur, state);
-	xfs_iext_prev(ifp, icur);
-
-... which I think sets cur->pos to -1, causes the get_extent() to fail
-and thus fails to remove the subsequent delalloc blocks. Hm?
-
-Brian
-
-> +	} while (xfs_iext_next_extent(ifp, &icur, &got));
->  
->  	return error;
->  }
-> -- 
-> 2.17.0
-> 
+>   	value = malloc(be32_to_cpu(remotep->valuelen));
+>   	if (value == NULL) {
+>   		do_warn(
+> @@ -555,7 +552,8 @@ process_leaf_attr_remote(
+>   			i, ino);
+>   		goto bad_free_out;
+>   	}
+> -	if (valuecheck(mp, (char *)&remotep->name[0], value, remotep->namelen,
+> +	if ((entry->flags & XFS_ATTR_ROOT) &&
+> +	    valuecheck(mp, (char *)&remotep->name[0], value, remotep->namelen,
+>   				be32_to_cpu(remotep->valuelen))) {
+>   		do_warn(
+>   	_("remote attribute value check failed for entry %d, inode %" PRIu64 "\n"),
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIBAg&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=Vc_K6AveietpcEeQdJ30FwiEHLOuaBg_hGM_aW3IuTM&s=0ZEyUF20gQ7jZ-6j_k9Nsrddrvue9p8Wr6Xo9hwqMZE&e=
+> 
