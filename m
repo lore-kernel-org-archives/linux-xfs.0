@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:47254 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:47020 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933434AbeEWOol (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 10:44:41 -0400
+        with ESMTP id S933421AbeEWOoY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 10:44:24 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 13/34] iomap: add a iomap_sector helper
-Date: Wed, 23 May 2018 16:43:36 +0200
-Message-Id: <20180523144357.18985-14-hch@lst.de>
+Subject: [PATCH 07/34] mm: return an unsigned int from __do_page_cache_readahead
+Date: Wed, 23 May 2018 16:43:30 +0200
+Message-Id: <20180523144357.18985-8-hch@lst.de>
 In-Reply-To: <20180523144357.18985-1-hch@lst.de>
 References: <20180523144357.18985-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,65 +15,73 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-Factor the repeated calculation of the on-disk sector for a given logical
-block into a littler helper.
+We never return an error, so switch to returning an unsigned int.  Most
+callers already did implicit casts to an unsigned type, and the one that
+didn't can be simplified now.
 
+Suggested-by: Matthew Wilcox <willy@infradead.org>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/iomap.c | 19 ++++++++++---------
- 1 file changed, 10 insertions(+), 9 deletions(-)
+ mm/internal.h  |  2 +-
+ mm/readahead.c | 15 +++++----------
+ 2 files changed, 6 insertions(+), 11 deletions(-)
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 8e28f25f086f..f928df4ab9a9 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -97,6 +97,12 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
- 	return written ? written : ret;
- }
+diff --git a/mm/internal.h b/mm/internal.h
+index 62d8c34e63d5..954003ac766a 100644
+--- a/mm/internal.h
++++ b/mm/internal.h
+@@ -53,7 +53,7 @@ void unmap_page_range(struct mmu_gather *tlb,
+ 			     unsigned long addr, unsigned long end,
+ 			     struct zap_details *details);
  
-+static sector_t
-+iomap_sector(struct iomap *iomap, loff_t pos)
-+{
-+	return (iomap->addr + pos - iomap->offset) >> SECTOR_SHIFT;
-+}
-+
- static void
- iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
+-extern int __do_page_cache_readahead(struct address_space *mapping,
++extern unsigned int __do_page_cache_readahead(struct address_space *mapping,
+ 		struct file *filp, pgoff_t offset, unsigned long nr_to_read,
+ 		unsigned long lookahead_size);
+ 
+diff --git a/mm/readahead.c b/mm/readahead.c
+index 16d0cb1e2616..fa4d4b767130 100644
+--- a/mm/readahead.c
++++ b/mm/readahead.c
+@@ -147,16 +147,16 @@ static int read_pages(struct address_space *mapping, struct file *filp,
+  *
+  * Returns the number of pages requested, or the maximum amount of I/O allowed.
+  */
+-int __do_page_cache_readahead(struct address_space *mapping, struct file *filp,
+-			pgoff_t offset, unsigned long nr_to_read,
+-			unsigned long lookahead_size)
++unsigned int __do_page_cache_readahead(struct address_space *mapping,
++		struct file *filp, pgoff_t offset, unsigned long nr_to_read,
++		unsigned long lookahead_size)
  {
-@@ -354,11 +360,8 @@ static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
- static int iomap_dax_zero(loff_t pos, unsigned offset, unsigned bytes,
- 		struct iomap *iomap)
- {
--	sector_t sector = (iomap->addr +
--			   (pos & PAGE_MASK) - iomap->offset) >> 9;
+ 	struct inode *inode = mapping->host;
+ 	struct page *page;
+ 	unsigned long end_index;	/* The last page we want to read */
+ 	LIST_HEAD(page_pool);
+ 	int page_idx;
+-	int nr_pages = 0;
++	unsigned int nr_pages = 0;
+ 	loff_t isize = i_size_read(inode);
+ 	gfp_t gfp_mask = readahead_gfp_mask(mapping);
+ 
+@@ -223,16 +223,11 @@ int force_page_cache_readahead(struct address_space *mapping, struct file *filp,
+ 	max_pages = max_t(unsigned long, bdi->io_pages, ra->ra_pages);
+ 	nr_to_read = min(nr_to_read, max_pages);
+ 	while (nr_to_read) {
+-		int err;
 -
--	return __dax_zero_page_range(iomap->bdev, iomap->dax_dev, sector,
--			offset, bytes);
-+	return __dax_zero_page_range(iomap->bdev, iomap->dax_dev,
-+			iomap_sector(iomap, pos & PAGE_MASK), offset, bytes);
- }
+ 		unsigned long this_chunk = (2 * 1024 * 1024) / PAGE_SIZE;
  
- static loff_t
-@@ -943,8 +946,7 @@ iomap_dio_zero(struct iomap_dio *dio, struct iomap *iomap, loff_t pos,
+ 		if (this_chunk > nr_to_read)
+ 			this_chunk = nr_to_read;
+-		err = __do_page_cache_readahead(mapping, filp,
+-						offset, this_chunk, 0);
+-		if (err < 0)
+-			return err;
++		__do_page_cache_readahead(mapping, filp, offset, this_chunk, 0);
  
- 	bio = bio_alloc(GFP_KERNEL, 1);
- 	bio_set_dev(bio, iomap->bdev);
--	bio->bi_iter.bi_sector =
--		(iomap->addr + pos - iomap->offset) >> 9;
-+	bio->bi_iter.bi_sector = iomap_sector(iomap, pos);
- 	bio->bi_private = dio;
- 	bio->bi_end_io = iomap_dio_bio_end_io;
- 
-@@ -1038,8 +1040,7 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
- 
- 		bio = bio_alloc(GFP_KERNEL, nr_pages);
- 		bio_set_dev(bio, iomap->bdev);
--		bio->bi_iter.bi_sector =
--			(iomap->addr + pos - iomap->offset) >> 9;
-+		bio->bi_iter.bi_sector = iomap_sector(iomap, pos);
- 		bio->bi_write_hint = dio->iocb->ki_hint;
- 		bio->bi_private = dio;
- 		bio->bi_end_io = iomap_dio_bio_end_io;
+ 		offset += this_chunk;
+ 		nr_to_read -= this_chunk;
 -- 
 2.17.0
 
