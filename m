@@ -1,51 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:35085 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935423AbeEYGNX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 25 May 2018 02:13:23 -0400
-Date: Fri, 25 May 2018 08:19:00 +0200
+Received: from bombadil.infradead.org ([198.137.202.133]:47964 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933268AbeEWOo7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 10:44:59 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 22/34] xfs: make xfs_writepage_map extent map centric
-Message-ID: <20180525061900.GA16409@lst.de>
-References: <20180523144357.18985-1-hch@lst.de> <20180523144357.18985-23-hch@lst.de> <20180524145935.GA84959@bfoster.bfoster> <20180524165350.GA22675@lst.de> <20180524181356.GA89391@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180524181356.GA89391@bfoster.bfoster>
+Subject: [PATCH 17/34] xfs: use iomap_bmap
+Date: Wed, 23 May 2018 16:43:40 +0200
+Message-Id: <20180523144357.18985-18-hch@lst.de>
+In-Reply-To: <20180523144357.18985-1-hch@lst.de>
+References: <20180523144357.18985-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-On Thu, May 24, 2018 at 02:13:56PM -0400, Brian Foster wrote:
-> Ok, so I guess writeback can see uptodate blocks over a hole if some
-> other block in that page is dirty.
+Switch to the iomap based bmap implementation to get rid of one of the
+last users of xfs_get_blocks.
 
-Yes.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_aops.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-> Perhaps we could make sure that a
-> dirty page has at least one block that maps to an actual extent or
-> otherwise the page has been truncated..?
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 80de476cecf8..56e405572909 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1378,10 +1378,9 @@ xfs_vm_bmap(
+ 	struct address_space	*mapping,
+ 	sector_t		block)
+ {
+-	struct inode		*inode = (struct inode *)mapping->host;
+-	struct xfs_inode	*ip = XFS_I(inode);
++	struct xfs_inode	*ip = XFS_I(mapping->host);
+ 
+-	trace_xfs_vm_bmap(XFS_I(inode));
++	trace_xfs_vm_bmap(ip);
+ 
+ 	/*
+ 	 * The swap code (ab-)uses ->bmap to get a block mapping and then
+@@ -1394,9 +1393,7 @@ xfs_vm_bmap(
+ 	 */
+ 	if (xfs_is_reflink_inode(ip) || XFS_IS_REALTIME_INODE(ip))
+ 		return 0;
+-
+-	filemap_write_and_wait(mapping);
+-	return generic_block_bmap(mapping, block, xfs_get_blocks);
++	return iomap_bmap(mapping, block, &xfs_iomap_ops);
+ }
+ 
+ STATIC int
+-- 
+2.17.0
 
-We have the following comment near the end of xfs_writepage_map:
-
-	/*
-	 * We can end up here with no error and nothing to write if we
-	 * race with a partial page truncate on a sub-page block sized
-	 * filesystem. In that case we need to mark the page clean.
-	 */
-
-And I'm pretty sure I managed to hit that case easily in xfstests,
-as my initial handling of it was wrong.  So I don't think we can
-even check for that.
-
-> I guess having another dirty block bitmap similar to
-> iomap_page->uptodate could be required to tell for sure whether a
-> particular block should definitely have a block on-disk or not. It may
-> not be worth doing that just for additional error checks, but I still
-> have to look into the last few patches to grok all the iomap_page stuff.
-
-I don't think it's worth it.  The sub-page dirty tracking has been one
-of the issues with the buffer head code that caused a lot of problems,
-and that we want to get rid of.
