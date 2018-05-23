@@ -1,269 +1,194 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:43700 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751269AbeECRr2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 May 2018 13:47:28 -0400
-Date: Thu, 3 May 2018 10:46:59 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v3 1/2] iomap: add a swapfile activation function
-Message-ID: <20180503174659.GD4127@magnolia>
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:39001 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754656AbeEWQUS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 12:20:18 -0400
+Date: Wed, 23 May 2018 09:20:15 -0700
+From: Eric Biggers <ebiggers3@gmail.com>
+Subject: Re: INFO: task hung in xlog_grant_head_check
+Message-ID: <20180523162015.GA3684@sol.localdomain>
+References: <000000000000457b2d056cbb0044@google.com>
+ <20180522123107.GC3751@bfoster.bfoster>
+ <20180522222620.GW23861@dastard>
+ <20180522225208.GB658@sol.localdomain>
+ <20180523074425.GM14384@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20180523074425.GM14384@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-mm@kvack.org
-Cc: hch@infradead.org, cyberax@amazon.com, jack@suse.cz, osandov@osandov.com, Eryu Guan <guaneryu@gmail.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>, syzbot <syzbot+568245b88fbaedcb1959@syzkaller.appspotmail.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Hi Darrick,
 
-Add a new iomap_swapfile_activate function so that filesystems can
-activate swap files without having to use the obsolete and slow bmap
-function.  This enables XFS to support fallocate'd swap files and
-swap files on realtime devices.
+On Wed, May 23, 2018 at 12:44:25AM -0700, Darrick J. Wong wrote:
+> On Tue, May 22, 2018 at 03:52:08PM -0700, Eric Biggers wrote:
+> > On Wed, May 23, 2018 at 08:26:20AM +1000, Dave Chinner wrote:
+> > > On Tue, May 22, 2018 at 08:31:08AM -0400, Brian Foster wrote:
+> > > > On Mon, May 21, 2018 at 10:55:02AM -0700, syzbot wrote:
+> > > > > Hello,
+> > > > > 
+> > > > > syzbot found the following crash on:
+> > > > > 
+> > > > > HEAD commit:    203ec2fed17a Merge tag 'armsoc-fixes' of git://git.kernel...
+> > > > > git tree:       upstream
+> > > > > console output: https://syzkaller.appspot.com/x/log.txt?x=11c1ad77800000
+> > > > > kernel config:  https://syzkaller.appspot.com/x/.config?x=f3b4e30da84ec1ed
+> > > > > dashboard link: https://syzkaller.appspot.com/bug?extid=568245b88fbaedcb1959
+> > > > > compiler:       gcc (GCC) 8.0.1 20180413 (experimental)
+> > > > > syzkaller repro:https://syzkaller.appspot.com/x/repro.syz?x=122c7427800000
+> > > > > C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=10387057800000
+> > > > > 
+> > > > > IMPORTANT: if you fix the bug, please add the following tag to the commit:
+> > > > > Reported-by: syzbot+568245b88fbaedcb1959@syzkaller.appspotmail.com
+> > > > > 
+> > > > >         (ptrval): 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> > > > > ................
+> > > > >         (ptrval): 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> > > > > ................
+> > > > > XFS (loop0): metadata I/O error in "xfs_trans_read_buf_map" at daddr 0x2 len
+> > > > > 1 error 117
+> > > > > XFS (loop0): xfs_imap_lookup: xfs_ialloc_read_agi() returned error -117,
+> > > > > agno 0
+> > > > > XFS (loop0): failed to read root inode
+> > > > 
+> > > > FWIW, the initial console output is actually:
+> > > > 
+> > > > [  448.028253] XFS (loop0): Mounting V4 Filesystem
+> > > > [  448.033540] XFS (loop0): Log size 9371840 blocks too large, maximum size is 1048576 blocks
+> > > > [  448.042287] XFS (loop0): Log size out of supported range.
+> > > > [  448.047841] XFS (loop0): Continuing onwards, but if log hangs are experienced then please report this message in the bug report.
+> > > > [  448.060712] XFS (loop0): totally zeroed log
+> > > > 
+> > > > ... which warns about an oversized log and resulting log hangs. Not
+> > > > having dug into the details of why this occurs so quickly in this mount
+> > > > failure path,
+> > > 
+> > > I suspect that it is a head and/or log tail pointer overflow, so when it
+> > > tries to do the first trans reserve of the mount - to write the
+> > > unmount record - it says "no log space available, please wait".
+> > > 
+> > > > it does look like we'd never have got past this point on a
+> > > > v5 fs (i.e., the above warning would become an error and we'd not enter
+> > > > the xfs_log_mount_cancel() path).
+> > > 
+> > > And this comes back to my repeated comments about fuzzers needing
+> > > to fuzz properly made V5 filesystems as we catch and error out on
+> > > things like this. Fuzzing random collections of v4 filesystem
+> > > fragments will continue to trip over problems we've avoided with v5
+> > > filesystems, and this is further evidence to point to that.
+> > >
+> > > 
+> > > I'd suggest that at this point, syzbot XFS reports should be
+> > > redirected to /dev/null. It's not worth our time to triage
+> > > unreviewed bot generated bug reports until the syzbot developers
+> > > start listening and acting on what we have been telling them
+> > > about fuzzing filesystems and reproducing bugs that are meaningful
+> > > and useful to us.
+> > 
+> > The whole point of fuzzing is to provide improper inputs.  A kernel
+> > bug is a kernel bug, even if it's in deprecated/unmaintained code, or
+> > involves userspace doing something unexpected.  If you have known
+> > buggy code in XFS that you refuse to fix,
+> 
+> Ok, that's it.
+> 
+> I disagree with Google's syzbot strategy, and I dissent most vehemently!
+> 
+> The whole point of constructing free software in public is that we
+> people communally build things that anyone can use for any purpose and
+> that anyone can modify.  That privilege comes with a societal
+> expectation that the people using this commons will contribute to the
+> upkeep of that commons or it rots.  For end users that means helping us
+> to find the gaps, but for software developers at large multinational
+> companies that means (to a first approximation) pitching in to write the
+> code, write the documentation, and to fix the problems.
+> 
+> Yes, there are many places where fs metadata validation is insufficient
+> to avoid misbehavior.  Google's strategy of dumping vulnerability
+> disclosures on public mailing lists every week, demanding that other
+> people regularly reallocate their time to fix these problems, and not
+> helping to fix anything breaks our free software societal norms.  Again,
+> the whole point of free software is to share the responsibility, share
+> the work, and share the gains.  That is how collaboration works.
+> 
+> Help us to improve the software so that we all will be better off.
+> 
+> Figure out how to strengthen the validation, figure out how to balance
+> the risk of exposure against the risk of nonfunctionality, and figure
+> out how to discuss with this community.  That is how the game works.
+> 
+> Google has enough money and smart people that you have (collectively)
+> learned how to spoof humans, so you can well afford to spend a small
+> fraction of that hiring some developers and writers and putting them to
+> work with us.
+> 
+> If you refuse to do this, you already /have/ a config option to turn off
+> the 'known buggy/unmaintained code in [your] kernel'; use it.  I will
+> not repeat this message again[1].
+> 
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v3: catch null iomap addr, fix too-short extent detection
-v2: document the swap file layout requirements, combine adjacent
-    real/unwritten extents, align reported swap extents to physical page
-    size boundaries, fix compiler errors when swap disabled
----
- fs/iomap.c            |  162 +++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_aops.c     |   12 ++++
- include/linux/iomap.h |   11 +++
- 3 files changed, 185 insertions(+)
+I actually agree that Google should doing more, but I think you're also shooting
+the messenger.  The fact is that these bugs exist, a not-insignificant number of
+which are exploitable security vulnerabilities, and *everyone* needs to be doing
+more to address them.  I'm not sure you're aware, but Google employees have
+already fixed around 200 syzkaller/syzbot reported bugs in the last 6 months;
+that's hardly "not helping to fix anything".  Unfortunately it's still not
+enough to even keep up with the rate of new bugs being reported, so we need to
+be doing more still.  (And for context, as at other companies it's unfortunately
+difficult to get organizational support for kernel-wide work; I'm not actually
+on the syzbot team and have so far ended up working quite a bit on this in my
+"free time" on this, fixing 35+ bugs, because I care, and I know that other
+people care too, about the security and reliability of the Linux kernel.)
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index afd163586aa0..ac7115492366 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -27,6 +27,7 @@
- #include <linux/task_io_accounting_ops.h>
- #include <linux/dax.h>
- #include <linux/sched/signal.h>
-+#include <linux/swap.h>
- 
- #include "internal.h"
- 
-@@ -1089,3 +1090,164 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	return ret;
- }
- EXPORT_SYMBOL_GPL(iomap_dio_rw);
-+
-+/* Swapfile activation */
-+
-+#ifdef CONFIG_SWAP
-+struct iomap_swapfile_info {
-+	struct iomap iomap;		/* accumulated iomap */
-+	struct swap_info_struct *sis;
-+	uint64_t lowest_ppage;		/* lowest physical addr seen (pages) */
-+	uint64_t highest_ppage;		/* highest physical addr seen (pages) */
-+	unsigned long nr_pages;		/* number of pages collected */
-+	int nr_extents;			/* extent count */
-+};
-+
-+/*
-+ * Collect physical extents for this swap file.  Physical extents reported to
-+ * the swap code must be trimmed to align to a page boundary.  The logical
-+ * offset within the file is irrelevant since the swapfile code maps logical
-+ * page numbers of the swap device to the physical page-aligned extents.
-+ */
-+static int iomap_swapfile_add_extent(struct iomap_swapfile_info *isi)
-+{
-+	struct iomap *iomap = &isi->iomap;
-+	unsigned long nr_pages;
-+	uint64_t first_ppage;
-+	uint64_t first_ppage_reported;
-+	uint64_t last_ppage;
-+	int error;
-+
-+	/*
-+	 * Round the start up and the end down so that the physical
-+	 * extent aligns to a page boundary.
-+	 */
-+	first_ppage = ALIGN(iomap->addr, PAGE_SIZE) >> PAGE_SHIFT;
-+	last_ppage = (ALIGN_DOWN(iomap->addr + iomap->length, PAGE_SIZE) >>
-+			PAGE_SHIFT) - 1;
-+
-+	/* Skip too-short physical extents. */
-+	if (first_ppage > last_ppage)
-+		return 0;
-+	nr_pages = last_ppage - first_ppage + 1;
-+
-+	/*
-+	 * Calculate how much swap space we're adding; the first page contains
-+	 * the swap header and doesn't count.  The mm still wants that first
-+	 * page fed to add_swap_extent, however.
-+	 */
-+	first_ppage_reported = first_ppage;
-+	if (iomap->offset == 0)
-+		first_ppage_reported++;
-+	if (isi->lowest_ppage > first_ppage_reported)
-+		isi->lowest_ppage = first_ppage_reported;
-+	if (isi->highest_ppage < last_ppage)
-+		isi->highest_ppage = last_ppage;
-+
-+	/* Add extent, set up for the next call. */
-+	error = add_swap_extent(isi->sis, isi->nr_pages, nr_pages, first_ppage);
-+	if (error < 0)
-+		return error;
-+	isi->nr_extents += error;
-+	isi->nr_pages += nr_pages;
-+	return 0;
-+}
-+
-+/*
-+ * Accumulate iomaps for this swap file.  We have to accumulate iomaps because
-+ * swap only cares about contiguous page-aligned physical extents and makes no
-+ * distinction between written and unwritten extents.
-+ */
-+static loff_t iomap_swapfile_activate_actor(struct inode *inode, loff_t pos,
-+		loff_t count, void *data, struct iomap *iomap)
-+{
-+	struct iomap_swapfile_info *isi = data;
-+	int error;
-+
-+	/* Skip holes. */
-+	if (iomap->type == IOMAP_HOLE)
-+		goto out;
-+
-+	/* Only one bdev per swap file. */
-+	if (iomap->bdev != isi->sis->bdev)
-+		goto err;
-+
-+	/* Only real or unwritten extents. */
-+	if (iomap->type != IOMAP_MAPPED && iomap->type != IOMAP_UNWRITTEN)
-+		goto err;
-+
-+	/* No uncommitted metadata or shared blocks or inline data. */
-+	if (iomap->flags & (IOMAP_F_DIRTY | IOMAP_F_SHARED |
-+			    IOMAP_F_DATA_INLINE))
-+		goto err;
-+
-+	/* No null physical addresses. */
-+	if (iomap->addr == IOMAP_NULL_ADDR)
-+		goto err;
-+
-+	if (isi->iomap.length == 0) {
-+		/* No accumulated extent, so just store it. */
-+		memcpy(&isi->iomap, iomap, sizeof(isi->iomap));
-+	} else if (isi->iomap.addr + isi->iomap.length == iomap->addr) {
-+		/* Append this to the accumulated extent. */
-+		isi->iomap.length += iomap->length;
-+	} else {
-+		/* Otherwise, add the retained iomap and store this one. */
-+		error = iomap_swapfile_add_extent(isi);
-+		if (error)
-+			return error;
-+		memcpy(&isi->iomap, iomap, sizeof(isi->iomap));
-+	}
-+out:
-+	return count;
-+err:
-+	pr_err("swapon: file cannot be used for swap\n");
-+	return -EINVAL;
-+}
-+
-+/*
-+ * Iterate a swap file's iomaps to construct physical extents that can be
-+ * passed to the swapfile subsystem.
-+ */
-+int iomap_swapfile_activate(struct swap_info_struct *sis,
-+		struct file *swap_file, sector_t *pagespan,
-+		const struct iomap_ops *ops)
-+{
-+	struct iomap_swapfile_info isi = {
-+		.sis = sis,
-+		.lowest_ppage = (sector_t)-1ULL,
-+	};
-+	struct address_space *mapping = swap_file->f_mapping;
-+	struct inode *inode = mapping->host;
-+	loff_t pos = 0;
-+	loff_t len = ALIGN_DOWN(i_size_read(inode), PAGE_SIZE);
-+	loff_t ret;
-+
-+	ret = filemap_write_and_wait(inode->i_mapping);
-+	if (ret)
-+		return ret;
-+
-+	while (len > 0) {
-+		ret = iomap_apply(inode, pos, len, IOMAP_REPORT,
-+				ops, &isi, iomap_swapfile_activate_actor);
-+		if (ret <= 0)
-+			return ret;
-+
-+		pos += ret;
-+		len -= ret;
-+	}
-+
-+	if (isi.iomap.length) {
-+		ret = iomap_swapfile_add_extent(&isi);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	*pagespan = 1 + isi.highest_ppage - isi.lowest_ppage;
-+	sis->max = isi.nr_pages;
-+	sis->pages = isi.nr_pages - 1;
-+	sis->highest_bit = isi.nr_pages - 1;
-+	return isi.nr_extents;
-+}
-+EXPORT_SYMBOL_GPL(iomap_swapfile_activate);
-+#endif /* CONFIG_SWAP */
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 0ab824f574ed..80de476cecf8 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1475,6 +1475,16 @@ xfs_vm_set_page_dirty(
- 	return newly_dirty;
- }
- 
-+static int
-+xfs_iomap_swapfile_activate(
-+	struct swap_info_struct		*sis,
-+	struct file			*swap_file,
-+	sector_t			*span)
-+{
-+	sis->bdev = xfs_find_bdev_for_inode(file_inode(swap_file));
-+	return iomap_swapfile_activate(sis, swap_file, span, &xfs_iomap_ops);
-+}
-+
- const struct address_space_operations xfs_address_space_operations = {
- 	.readpage		= xfs_vm_readpage,
- 	.readpages		= xfs_vm_readpages,
-@@ -1488,6 +1498,7 @@ const struct address_space_operations xfs_address_space_operations = {
- 	.migratepage		= buffer_migrate_page,
- 	.is_partially_uptodate  = block_is_partially_uptodate,
- 	.error_remove_page	= generic_error_remove_page,
-+	.swap_activate		= xfs_iomap_swapfile_activate,
- };
- 
- const struct address_space_operations xfs_dax_aops = {
-@@ -1495,4 +1506,5 @@ const struct address_space_operations xfs_dax_aops = {
- 	.direct_IO		= noop_direct_IO,
- 	.set_page_dirty		= noop_set_page_dirty,
- 	.invalidatepage		= noop_invalidatepage,
-+	.swap_activate		= xfs_iomap_swapfile_activate,
- };
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 19a07de28212..4bd87294219a 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -106,4 +106,15 @@ typedef int (iomap_dio_end_io_t)(struct kiocb *iocb, ssize_t ret,
- ssize_t iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 		const struct iomap_ops *ops, iomap_dio_end_io_t end_io);
- 
-+#ifdef CONFIG_SWAP
-+struct file;
-+struct swap_info_struct;
-+
-+int iomap_swapfile_activate(struct swap_info_struct *sis,
-+		struct file *swap_file, sector_t *pagespan,
-+		const struct iomap_ops *ops);
-+#else
-+# define iomap_swapfile_activate(sis, swapfile, pagespan, ops)	(-EIO)
-+#endif /* CONFIG_SWAP */
-+
- #endif /* LINUX_IOMAP_H */
+But even with more resources, the kernel is a huge project and there are always
+going to be some subsystems without in-house experts.  For example, AFAIK Google
+doesn't use XFS for anything, and CONFIG_XFS_FS isn't even enabled in Google's
+production, Android, or Chrome OS.  Given that you are actually apparently paid
+to work on XFS, I'd really hope you'd have a better attitude towards receiving
+XFS bug reports with reproducers.  Other maintainers have responded differently
+and it's unclear why XFS is so different.  For example the F2FS maintainer
+immediately fixed all the syzbot bugs that were reported to them, and
+maintainers of some networking subsystems have also been very responsive and
+positive about receiving bug reports.  Though, unfortunately there seems to be a
+lot of de-facto unmaintained code in the kernel too (or alternatively: Andrew
+and Linus are the "maintainers"), so I will at least give you more credit than
+that :-)
+
+Now, if you *really* don't want syzbot to report XFS bugs as you believe XFS
+contains known unfixable bugs or for other reasons, you can formally ask Dmitry
+to remove CONFIG_XFS_FS from the syzbot config.  But of course that doesn't make
+the bugs go away, it just makes the bug reports go away; you'll have to fix them
+eventually anyway, one way or another.  I do think you're drastically
+underestimating how useful the syzbot bug reports can be too -- note e.g. that
+the bug Dave fixed by "fs: don't scan the inode cache before SB_BORN is set"
+took only 3 days to be reported by syzbot after it gained support for mounting
+XFS filesystems.  AFAICS that bug was in XFS for 7 years and was causing
+production systems to mysteriously crash (very rarely), yet it took syzbot only
+3 days to send you a C reproducer.
+
+This is only at the early stage too --- syzkaller doesn't know how to fuzz the
+XFS-specific ioctls yet, for example, but it could be taught.  It's already been
+finding ext4 bugs that allowed anyone with access to an ext4 directory to
+corrupt the filesystem and crash the kernel.  And note that syzkaller is
+coverage-guided, using CONFIG_KCOV, so it *will* find bugs that you never
+thought to test for in manually written (fuzz) tests.  Non-coverage-guided
+fuzzers are no longer state of the art.  I've been really amazed at the bugs
+syzkaller been able to find in other kernel subsystems, e.g. obscure races that
+no one would have ever thought to test for.
+
+Anyone is welcome to contribute to syzkaller and syzbot too; all the code is on
+Github and Apache licensed.  AFAIK the only thing missing from the git repo is a
+few configuration files that control how the specific syzbot installation that
+Dmitry is running is set up (like how many VMs to use, the credentials, etc.)
+
+Anyway, I'm going to keep helping with bugs either way.  Getting into arguments
+like this is just a waste of time, and distracts from the real work getting
+done.
+
+Thanks,
+
+- Eric
