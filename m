@@ -1,190 +1,248 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:58380 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750925AbeEBFvt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 01:51:49 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1fDkg6-0002O5-9k
-        for linux-xfs@vger.kernel.org; Wed, 02 May 2018 15:51:46 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.91)
-        (envelope-from <david@fromorbit.com>)
-        id 1fDkg6-0007X0-8e
-        for linux-xfs@vger.kernel.org; Wed, 02 May 2018 15:51:46 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/2] xfs: clean up locking in xfs_file_iomap_begin
-Date: Wed,  2 May 2018 15:51:44 +1000
-Message-Id: <20180502055144.28851-3-david@fromorbit.com>
-In-Reply-To: <20180502055144.28851-1-david@fromorbit.com>
-References: <20180502055144.28851-1-david@fromorbit.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:48358 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753165AbeEWDdy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 May 2018 23:33:54 -0400
+Date: Tue, 22 May 2018 20:33:39 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 8/9] xfs_info: call xfs_db for offline filesystems
+Message-ID: <20180523033339.GL14384@magnolia>
+References: <152401952391.13048.15040850425873030425.stgit@magnolia>
+ <152401958146.13048.3834702512829151272.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <152401958146.13048.3834702512829151272.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Rather than checking what kind of locking is needed in a helper
-function and then jumping through hoops to do the locking in line,
-move the locking to the helper function that does all the checks
-and rename it to xfs_ilock_for_iomap().
+If the online filesystem geometry query doesn't work, try using xfs_db
+to see if we can grab the information offline.
 
-This also allows us to hoist all the nonblocking checks up into the
-locking helper, further simplifier the code flow in
-xfs_file_iomap_begin() and making it easier to understand.
-
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_iomap.c | 98 +++++++++++++++++++++++++++++-----------------
- 1 file changed, 61 insertions(+), 37 deletions(-)
+ man/man8/xfs_growfs.8 |   47 +-----------------------
+ man/man8/xfs_info.8   |   97 +++++++++++++++++++++++++++++++++++++++++++++++++
+ spaceman/xfs_info.sh  |   12 +++++-
+ 3 files changed, 108 insertions(+), 48 deletions(-)
+ create mode 100644 man/man8/xfs_info.8
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 16565da67bb6..d03e65f01c89 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -946,8 +946,11 @@ xfs_iomap_write_unwritten(
- 	return error;
- }
+diff --git a/man/man8/xfs_growfs.8 b/man/man8/xfs_growfs.8
+index e23d30e2..7e6a387c 100644
+--- a/man/man8/xfs_growfs.8
++++ b/man/man8/xfs_growfs.8
+@@ -11,7 +11,7 @@
  
--static inline bool imap_needs_alloc(struct inode *inode,
--		struct xfs_bmbt_irec *imap, int nimaps)
-+static inline bool
-+imap_needs_alloc(
-+	struct inode		*inode,
-+	struct xfs_bmbt_irec	*imap,
-+	int			nimaps)
- {
- 	return !nimaps ||
- 		imap->br_startblock == HOLESTARTBLOCK ||
-@@ -955,31 +958,58 @@ static inline bool imap_needs_alloc(struct inode *inode,
- 		(IS_DAX(inode) && imap->br_state == XFS_EXT_UNWRITTEN);
- }
- 
--static inline bool needs_cow_for_zeroing(struct xfs_bmbt_irec *imap, int nimaps)
-+static inline bool
-+needs_cow_for_zeroing(
-+	struct xfs_bmbt_irec	*imap,
-+	int			nimaps)
- {
- 	return nimaps &&
- 		imap->br_startblock != HOLESTARTBLOCK &&
- 		imap->br_state != XFS_EXT_UNWRITTEN;
- }
- 
--static inline bool need_excl_ilock(struct xfs_inode *ip, unsigned flags)
-+static int
-+xfs_ilock_for_iomap(
-+	struct xfs_inode	*ip,
-+	unsigned		flags,
-+	unsigned		*lockmode)
- {
-+	unsigned		mode = XFS_ILOCK_SHARED;
-+
- 	/*
- 	 * COW writes may allocate delalloc space or convert unwritten COW
- 	 * extents, so we need to make sure to take the lock exclusively here.
- 	 */
--	if (xfs_is_reflink_inode(ip) && (flags & (IOMAP_WRITE | IOMAP_ZERO)))
--		return true;
-+	if (xfs_is_reflink_inode(ip) && (flags & (IOMAP_WRITE | IOMAP_ZERO))) {
-+		/*
-+		 * FIXME: It could still overwrite on unshared extents and not
-+		 * need allocation.
-+		 */
-+		if (flags & IOMAP_NOWAIT)
-+			return -EAGAIN;
-+		mode = XFS_ILOCK_EXCL;
-+	}
- 
- 	/*
--	 * Extents not yet cached requires exclusive access, don't block.
--	 * This is an opencoded xfs_ilock_data_map_shared() to cater for the
-+	 * Extents not yet cached requires exclusive access, don't block.  This
-+	 * is an opencoded xfs_ilock_data_map_shared() call but with
- 	 * non-blocking behaviour.
- 	 */
--	if (ip->i_d.di_format == XFS_DINODE_FMT_BTREE &&
--	    !(ip->i_df.if_flags & XFS_IFEXTENTS))
--		return true;
--	return false;
-+	if (!(ip->i_df.if_flags & XFS_IFEXTENTS)) {
-+		if (flags & IOMAP_NOWAIT)
-+			return -EAGAIN;
-+		mode = XFS_ILOCK_EXCL;
-+	}
-+
-+	if (flags & IOMAP_NOWAIT) {
-+		if (!xfs_ilock_nowait(ip, mode))
-+			return -EAGAIN;
-+	} else {
-+		xfs_ilock(ip, mode);
-+	}
-+
-+	*lockmode = mode;
-+	return 0;
- }
- 
- static int
-@@ -1007,19 +1037,15 @@ xfs_file_iomap_begin(
- 		return xfs_file_iomap_begin_delay(inode, offset, length, iomap);
- 	}
- 
--	if (need_excl_ilock(ip, flags))
--		lockmode = XFS_ILOCK_EXCL;
--	else
--		lockmode = XFS_ILOCK_SHARED;
+ .TH xfs_growfs 8
+ .SH NAME
+-xfs_growfs, xfs_info \- expand an XFS filesystem
++xfs_growfs \- expand an XFS filesystem
+ .SH SYNOPSIS
+ .B xfs_growfs
+ [
+@@ -38,16 +38,6 @@ xfs_growfs, xfs_info \- expand an XFS filesystem
+ .I mount-point
+ .br
+ .B xfs_growfs \-V
+-.PP
+-.br
+-.B xfs_info
+-[
+-.B \-t
+-.I mtab
+-]
+-.I mount-point
+-.br
+-.B xfs_info \-V
+ .SH DESCRIPTION
+ .B xfs_growfs
+ expands an existing XFS filesystem (see
+@@ -59,13 +49,6 @@ is mounted. The filesystem must be mounted to be grown (see
+ .BR mount (8)).
+ The existing contents of the filesystem are undisturbed, and the added space
+ becomes available for additional file storage.
+-.PP
+-.B xfs_info
+-is equivalent to invoking
+-.B xfs_growfs
+-with the
+-.B \-n
+-option (see discussion below).
+ .SH OPTIONS
+ .TP
+ .BI "\-d | \-D " size
+@@ -169,35 +152,9 @@ reside. In order to grow a filesystem, it is necessary to provide added
+ space for it to occupy. Therefore there must be at least one spare new
+ disk partition available. Adding the space is often done through the use
+ of a logical volume manager.
+-.SH "EXAMPLES"
 -
--	if (flags & IOMAP_NOWAIT) {
--		if (!(ip->i_df.if_flags & XFS_IFEXTENTS))
--			return -EAGAIN;
--		if (!xfs_ilock_nowait(ip, lockmode))
--			return -EAGAIN;
--	} else {
--		xfs_ilock(ip, lockmode);
--	}
-+	/*
-+	 * Lock the inode in the manner required for the specified operation and
-+	 * check for as many conditions that would result in blocking as
-+	 * possible. This removes most of the non-blocking checks from the
-+	 * mapping code below.
-+	 */
-+	error = xfs_ilock_for_iomap(ip, flags, &lockmode);
-+	if (error)
-+		return error;
- 
- 	ASSERT(offset <= mp->m_super->s_maxbytes);
- 	if (offset > mp->m_super->s_maxbytes - length)
-@@ -1044,19 +1070,17 @@ xfs_file_iomap_begin(
- 	if (!(flags & (IOMAP_WRITE | IOMAP_ZERO)))
- 		goto out_found;
- 
--	if (xfs_is_reflink_inode(ip) &&
--	    ((flags & IOMAP_WRITE) ||
--	     ((flags & IOMAP_ZERO) && needs_cow_for_zeroing(&imap, nimaps)))) {
-+	/*
-+	 * Break shared extents if necessary. Checks for non-blocking IO have
-+	 * been done up front, so we don't need to do them here.
-+	 */
-+	if (xfs_is_reflink_inode(ip)) {
-+		/* if zeroing doesn't need COW allocation, then we are done. */
-+		if ((flags & IOMAP_ZERO) &&
-+		    !needs_cow_for_zeroing(&imap, nimaps))
-+			goto out_found;
+-Understanding xfs_info output.
+-.PP
+-Suppose one has the following "xfs_info /dev/sda" output:
+-.PP
+-.RS 2
+-.Vb
+-\&meta-data=/dev/sda      isize=256    agcount=32, agsize=16777184 blks
+-\&         =              sectsz=512   attr=2
+-\&data     =              bsize=4096   blocks=536869888, imaxpct=5
+-\&         =              sunit=32     swidth=128 blks
+-\&naming   =version 2     bsize=4096
+-\&log      =internal      bsize=4096   blocks=32768, version=2
+-\&         =              sectsz=512   sunit=32 blks, lazy-count=1
+-\&realtime =none          extsz=524288 blocks=0, rtextents=0
+-.Ve
+-.RE
+-.PP
+-
+-Here, the data section of the output indicates "bsize=4096",
+-meaning the data block size for this filesystem is 4096 bytes.
+-This section also shows "sunit=32 swidth=128 blks", which means
+-the stripe unit is 32*4096 bytes = 128 kibibytes and the stripe
+-width is 128*4096 bytes = 512 kibibytes.
+-A single stripe of this filesystem therefore consists
+-of four stripe units (128 blocks / 32 blocks per unit).
+ .SH SEE ALSO
+ .BR mkfs.xfs (8),
++.BR xfs_info (8),
+ .BR md (4),
+ .BR lvm (8),
+ .BR mount (8).
+diff --git a/man/man8/xfs_info.8 b/man/man8/xfs_info.8
+new file mode 100644
+index 00000000..429356a8
+--- /dev/null
++++ b/man/man8/xfs_info.8
+@@ -0,0 +1,97 @@
++.\" Verbatim blocks taken from openssl req manpage content
++.de Vb \" Begin verbatim text
++.ft CW
++.nf
++.ne \\$1
++..
++.de Ve \" End verbatim text
++.ft R
++.fi
++..
 +
- 		if (flags & IOMAP_DIRECT) {
--			/*
--			 * A reflinked inode will result in CoW alloc.
--			 * FIXME: It could still overwrite on unshared extents
--			 * and not need allocation.
--			 */
--			if (flags & IOMAP_NOWAIT) {
--				error = -EAGAIN;
--				goto out_unlock;
--			}
- 			/* may drop and re-acquire the ilock */
- 			error = xfs_reflink_allocate_cow(ip, &imap, &shared,
- 					&lockmode);
--- 
-2.17.0
-
++.TH xfs_info 8
++.SH NAME
++xfs_info \- display XFS filesystem geometry information
++.SH SYNOPSIS
++.B xfs_info
++[
++.B \-t
++.I mtab
++]
++[
++.I mount-point
++|
++.I block-device
++|
++.I file-image
++]
++.br
++.B xfs_info \-V
++.SH DESCRIPTION
++.B xfs_info
++displays geometry information about an existing XFS filesystem.
++The
++.I mount-point
++argument is the pathname of a directory where the filesystem
++is mounted.
++The
++.I block-device
++or
++.I file-image
++contain a raw XFS filesystem.
++The existing contents of the filesystem are undisturbed.
++.SH OPTIONS
++.TP
++.B \-t
++Specifies an alternate mount table file (default is
++.I /proc/mounts
++if it exists, else
++.IR /etc/mtab ).
++This is used when working with filesystems mounted without writing to
++.I /etc/mtab
++file - refer to
++.BR mount (8)
++for further details.
++This option has no effect with the
++.IR block-device " or " file-image
++parameters.
++.TP
++.B \-V
++Prints the version number and exits. The
++.I mount-point
++argument is not required with
++.BR \-V .
++.SH "EXAMPLES"
++
++Understanding xfs_info output.
++.PP
++Suppose one has the following "xfs_info /dev/sda" output:
++.PP
++.RS 2
++.Vb
++\&meta-data=/dev/pmem0             isize=512    agcount=8, agsize=5974144 blks
++\&         =                       sectsz=512   attr=2, projid32bit=1
++\&         =                       crc=1        finobt=1, sparse=1, rmapbt=1
++\&         =                       reflink=1
++\&data     =                       bsize=4096   blocks=47793152, imaxpct=25
++\&         =                       sunit=32     swidth=128 blks
++\&naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
++\&log      =internal log           bsize=4096   blocks=23336, version=2
++\&         =                       sectsz=512   sunit=0 blks, lazy-count=1
++\&realtime =none                   extsz=4096   blocks=0, rtextents=0
++.Ve
++.RE
++.PP
++
++Here, the data section of the output indicates "bsize=4096",
++meaning the data block size for this filesystem is 4096 bytes.
++This section also shows "sunit=32 swidth=128 blks", which means
++the stripe unit is 32*4096 bytes = 128 kibibytes and the stripe
++width is 128*4096 bytes = 512 kibibytes.
++A single stripe of this filesystem therefore consists
++of four stripe units (128 blocks / 32 blocks per unit).
++.SH SEE ALSO
++.BR mkfs.xfs (8),
++.BR md (4),
++.BR lvm (8),
++.BR mount (8).
+diff --git a/spaceman/xfs_info.sh b/spaceman/xfs_info.sh
+index 5df0a265..2e17fd91 100755
+--- a/spaceman/xfs_info.sh
++++ b/spaceman/xfs_info.sh
+@@ -4,7 +4,7 @@
+ #
+ 
+ OPTS=""
+-USAGE="Usage: xfs_info [-V] [-t mtab] mountpoint"
++USAGE="Usage: xfs_info [-V] [-t mtab] [mountpoint|device|file]"
+ 
+ while getopts "t:V" c
+ do
+@@ -22,8 +22,14 @@ done
+ set -- extra "$@"
+ shift $OPTIND
+ case $# in
+-	1)	xfs_spaceman -p xfs_info -c "info" $OPTS "$1"
+-		status=$?
++	1)
++		if [ -b "$1" ] || [ -f "$1" ]; then
++			xfs_db -p xfs_info -c "info" $OPTS "$1"
++			status=$?
++		else
++			xfs_spaceman -p xfs_info -c "info" $OPTS "$1"
++			status=$?
++		fi
+ 		;;
+ 	*)	echo $USAGE 1>&2
+ 		exit 2
