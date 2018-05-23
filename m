@@ -1,52 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:47174 "EHLO newverein.lst.de"
+Received: from sandeen.net ([63.231.237.45]:56092 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750707AbeEVIZu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 22 May 2018 04:25:50 -0400
-Date: Tue, 22 May 2018 10:31:03 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 16/34] iomap: add initial support for writes without
-        buffer heads
-Message-ID: <20180522083103.GA10079@lst.de>
-References: <20180518164830.1552-1-hch@lst.de> <20180518164830.1552-17-hch@lst.de> <20180521232700.GB14384@magnolia>
+        id S1750771AbeEWSCB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 23 May 2018 14:02:01 -0400
+Subject: Re: INFO: task hung in xlog_grant_head_check
+References: <000000000000457b2d056cbb0044@google.com>
+ <20180522123107.GC3751@bfoster.bfoster> <20180522222620.GW23861@dastard>
+ <20180522225208.GB658@sol.localdomain> <20180523074425.GM14384@magnolia>
+ <20180523162015.GA3684@sol.localdomain>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <a52266f9-0096-b28c-c01c-046ababcfe3a@sandeen.net>
+Date: Wed, 23 May 2018 13:01:59 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180521232700.GB14384@magnolia>
+In-Reply-To: <20180523162015.GA3684@sol.localdomain>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
+To: Eric Biggers <ebiggers3@gmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>, syzbot <syzbot+568245b88fbaedcb1959@syzkaller.appspotmail.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
 
-The fix should be as simple as this:
+On 5/23/18 11:20 AM, Eric Biggers wrote:
+> Hi Darrick,
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 357711e50cfa..212c3c21e51c 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -342,19 +342,19 @@ __iomap_write_begin(struct inode *inode, loff_t pos, unsigned len,
- 	loff_t block_end = (pos + len + block_size - 1) & ~(block_size - 1);
- 	unsigned poff = block_start & (PAGE_SIZE - 1);
- 	unsigned plen = min_t(loff_t, PAGE_SIZE - poff, block_end - block_start);
-+	unsigned from = pos & (PAGE_SIZE - 1);
-+	unsigned to = from + len;
- 	int status;
- 
- 	WARN_ON_ONCE(i_blocksize(inode) < PAGE_SIZE);
- 
- 	if (PageUptodate(page))
- 		return 0;
-+	if (poff >= from && poff + len <= to)
-+		return 0;
- 
- 	if (iomap_block_needs_zeroing(inode, block_start, iomap)) {
--		unsigned from = pos & (PAGE_SIZE - 1), to = from + len;
--		unsigned pend = poff + plen;
--
--		if (poff < from || pend > to)
--			zero_user_segments(page, poff, from, to, pend);
-+		zero_user_segments(page, poff, from, to, poff + len);
- 	} else {
- 		status = iomap_read_page_sync(inode, block_start, page,
- 				poff, plen, iomap);
+...
+
+> Now, if you *really* don't want syzbot to report XFS bugs as you believe XFS
+> contains known unfixable bugs or for other reasons, you can formally ask Dmitry
+> to remove CONFIG_XFS_FS from the syzbot config.  But of course that doesn't make
+> the bugs go away, it just makes the bug reports go away; you'll have to fix them
+> eventually anyway, one way or another.
+
+I'd revise that to "have to fix /some/ of them anyway."
+
+What I'm personally hung up on are the bugs where the "exploit" involves merely
+mounting a crafted filesystem that in reality would never (until the heat death
+of the universe) corrupt itself into that state on its own; it's the "malicious
+image" case, which is quite different than exposing fundamental bugs like the
+SB_BORN race or or the user-exploitable ext4 flaw you mentioned in your reply.
+Those are more insidious and/or things which can be hit by real users in real life.
+
+I don't know if I can win the "malicious images aren't a critical security
+threat" battle, but I do think they are at least a different class of flaws,
+because as Dave said, mount is supposed to be a privileged operation.
+In a perfect world we'd fix them anyway, but I don't know that our resource
+pool can keep up with your google-scale bot and still make progress in other
+critical areas.
+
+Anyway, the upshot is that we're probably just not going to care much about V4
+filesystem oops-or-hang-on-mount bugs.  Those problems are solved (largely) with
+V5 filesystem format.  Maybe I /will/ propose a system-wide tunable to disallow
+V4 for those who are worried about such things.
+
+To Darrick's points about more collaboration, I still wish that our requests
+for more traditional fs fuzzer reporting (i.e. a filesystem image) weren't met
+with such resistance.Tailoring your bug reports to the needs of the developer
+community you're interacting with seems like a pretty reasonable thing to do.
+
+As an aside, I wonder how much coverage of the V5 format code syzkaller /has/
+achieved; that would be another useful datapoint google could provide - if
+syzkaller is in fact traversing the V5 codepaths and isn't turning anything
+up, that'd be pretty useful to know.
+
+Thanks,
+-Eric
