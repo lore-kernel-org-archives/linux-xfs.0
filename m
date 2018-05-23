@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:48966 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:49032 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933412AbeEWOpV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 10:45:21 -0400
+        with ESMTP id S933475AbeEWOp1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 10:45:27 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 26/34] xfs: simplify xfs_map_blocks by using xfs_iext_lookup_extent directly
-Date: Wed, 23 May 2018 16:43:49 +0200
-Message-Id: <20180523144357.18985-27-hch@lst.de>
+Subject: [PATCH 28/34] xfs: remove the imap_valid flag
+Date: Wed, 23 May 2018 16:43:51 +0200
+Message-Id: <20180523144357.18985-29-hch@lst.de>
 In-Reply-To: <20180523144357.18985-1-hch@lst.de>
 References: <20180523144357.18985-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,56 +15,58 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-xfs_bmapi_read adds zero value in xfs_map_blocks.  Replace it with a
-direct call to the low-level extent lookup function.
+Simplify the way we check for a valid imap - we know we have a valid
+mapping after xfs_map_blocks returned successfully, and we know we can
+call xfs_imap_valid on any imap, as it will always fail on a
+zero-initialized map.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_aops.c | 19 +++++--------------
- 1 file changed, 5 insertions(+), 14 deletions(-)
+ fs/xfs/xfs_aops.c | 11 ++---------
+ 1 file changed, 2 insertions(+), 9 deletions(-)
 
 diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 354d26d66c12..b1dee2171194 100644
+index 82fd08c29f7f..f01c1dd737ec 100644
 --- a/fs/xfs/xfs_aops.c
 +++ b/fs/xfs/xfs_aops.c
-@@ -387,7 +387,6 @@ xfs_map_blocks(
- 	int			whichfork = XFS_DATA_FORK;
- 	struct xfs_iext_cursor	icur;
- 	int			error = 0;
--	int			nimaps = 1;
- 	bool			cow_valid = false;
+@@ -42,7 +42,6 @@
+  */
+ struct xfs_writepage_ctx {
+ 	struct xfs_bmbt_irec    imap;
+-	bool			imap_valid;
+ 	unsigned int		io_type;
+ 	struct xfs_ioend	*ioend;
+ 	sector_t		last_block;
+@@ -868,10 +867,6 @@ xfs_writepage_map(
+ 			continue;
+ 		}
  
- 	if (XFS_FORCED_SHUTDOWN(mp))
-@@ -432,24 +431,16 @@ xfs_map_blocks(
- 		goto done;
- 	}
+-		/* Check to see if current map spans this file offset */
+-		if (wpc->imap_valid)
+-			wpc->imap_valid = xfs_imap_valid(inode, &wpc->imap,
+-							 file_offset);
+ 		/*
+ 		 * If we don't have a valid map, now it's time to get a new one
+ 		 * for this offset.  This will convert delayed allocations
+@@ -879,16 +874,14 @@ xfs_writepage_map(
+ 		 * a valid map, it means we landed in a hole and we skip the
+ 		 * block.
+ 		 */
+-		if (!wpc->imap_valid) {
++		if (!xfs_imap_valid(inode, &wpc->imap, file_offset)) {
+ 			error = xfs_map_blocks(inode, file_offset, &wpc->imap,
+ 					     &wpc->io_type);
+ 			if (error)
+ 				goto out;
+-			wpc->imap_valid = xfs_imap_valid(inode, &wpc->imap,
+-							 file_offset);
+ 		}
  
--	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
--				imap, &nimaps, XFS_BMAPI_ENTIRE);
-+	if (!xfs_iext_lookup_extent(ip, &ip->i_df, offset_fsb, &icur, imap))
-+		imap->br_startoff = end_fsb;	/* fake a hole past EOF */
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
--	if (error)
--		return error;
- 
--	if (!nimaps) {
--		/*
--		 * Lookup returns no match? Beyond eof? regardless,
--		 * return it as a hole so we don't write it
--		 */
-+	if (imap->br_startoff > offset_fsb) {
-+		/* landed in a hole or beyond EOF */
-+		imap->br_blockcount = imap->br_startoff - offset_fsb;
- 		imap->br_startoff = offset_fsb;
--		imap->br_blockcount = end_fsb - offset_fsb;
- 		imap->br_startblock = HOLESTARTBLOCK;
- 		*type = XFS_IO_HOLE;
--	} else if (imap->br_startblock == HOLESTARTBLOCK) {
--		/* landed in a hole */
--		*type = XFS_IO_HOLE;
- 	} else if (isnullstartblock(imap->br_startblock)) {
- 		/* got a delalloc extent */
- 		*type = XFS_IO_DELALLOC;
+-		if (!wpc->imap_valid || wpc->io_type == XFS_IO_HOLE) {
++		if (wpc->io_type == XFS_IO_HOLE) {
+ 			/*
+ 			 * set_page_dirty dirties all buffers in a page, independent
+ 			 * of their state.  The dirty state however is entirely
 -- 
 2.17.0
 
