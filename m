@@ -1,141 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:48816 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933412AbeEWOpQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 10:45:16 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 24/34] xfs: remove xfs_reflink_find_cow_mapping
-Date: Wed, 23 May 2018 16:43:47 +0200
-Message-Id: <20180523144357.18985-25-hch@lst.de>
-In-Reply-To: <20180523144357.18985-1-hch@lst.de>
-References: <20180523144357.18985-1-hch@lst.de>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:13132 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S935022AbeEWXfh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 19:35:37 -0400
+Date: Thu, 24 May 2018 09:35:33 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: INFO: task hung in xlog_grant_head_check
+Message-ID: <20180523233533.GA23861@dastard>
+References: <000000000000457b2d056cbb0044@google.com>
+ <20180522123107.GC3751@bfoster.bfoster>
+ <20180522222620.GW23861@dastard>
+ <20180522225208.GB658@sol.localdomain>
+ <20180523074425.GM14384@magnolia>
+ <20180523162015.GA3684@sol.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180523162015.GA3684@sol.localdomain>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+To: Eric Biggers <ebiggers3@gmail.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>, syzbot <syzbot+568245b88fbaedcb1959@syzkaller.appspotmail.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
 
-We only have one caller left, and open coding the simple extent list
-lookup in it allows us to make the code both more understandable and
-reuse calculations and variables already present.
+On Wed, May 23, 2018 at 09:20:15AM -0700, Eric Biggers wrote:
+> Now, if you *really* don't want syzbot to report XFS bugs as you believe XFS
+> contains known unfixable bugs or for other reasons, you can formally ask Dmitry
+> to remove CONFIG_XFS_FS from the syzbot config.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_aops.c    | 17 ++++++++++++-----
- fs/xfs/xfs_reflink.c | 30 ------------------------------
- fs/xfs/xfs_reflink.h |  2 --
- fs/xfs/xfs_trace.h   |  1 -
- 4 files changed, 12 insertions(+), 38 deletions(-)
+We haven't said "we don't want syzbot to run on XFS" - we've been
+saying "we want syzbot to run on the new XFS format". i.e. you've
+got completely the wrong end of the stick.
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index a50f69c2c602..a4b4a7037deb 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -385,6 +385,7 @@ xfs_map_blocks(
- 	ssize_t			count = i_blocksize(inode);
- 	xfs_fileoff_t		offset_fsb, end_fsb;
- 	int			whichfork = XFS_DATA_FORK;
-+	struct xfs_iext_cursor	icur;
- 	int			error = 0;
- 	int			nimaps = 1;
- 
-@@ -396,8 +397,18 @@ xfs_map_blocks(
- 	       (ip->i_df.if_flags & XFS_IFEXTENTS));
- 	ASSERT(offset <= mp->m_super->s_maxbytes);
- 
-+	if (offset > mp->m_super->s_maxbytes - count)
-+		count = mp->m_super->s_maxbytes - offset;
-+	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
-+	offset_fsb = XFS_B_TO_FSBT(mp, offset);
-+
-+	/*
-+	 * Check if this is offset is covered by a COW extents, and if yes use
-+	 * it directly instead of looking up anything in the data fork.
-+	 */
- 	if (xfs_is_reflink_inode(ip) &&
--	    xfs_reflink_find_cow_mapping(ip, offset, imap)) {
-+	    xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, imap) &&
-+	    imap->br_startoff <= offset_fsb) {
- 		xfs_iunlock(ip, XFS_ILOCK_SHARED);
- 		/*
- 		 * Truncate can race with writeback since writeback doesn't
-@@ -417,10 +428,6 @@ xfs_map_blocks(
- 		goto done;
- 	}
- 
--	if (offset > mp->m_super->s_maxbytes - count)
--		count = mp->m_super->s_maxbytes - offset;
--	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
--	offset_fsb = XFS_B_TO_FSBT(mp, offset);
- 	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
- 				imap, &nimaps, XFS_BMAPI_ENTIRE);
- 	if (!nimaps) {
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 713e857d9ffa..8e5eb8e70c89 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -484,36 +484,6 @@ xfs_reflink_allocate_cow(
- 	return error;
- }
- 
--/*
-- * Find the CoW reservation for a given byte offset of a file.
-- */
--bool
--xfs_reflink_find_cow_mapping(
--	struct xfs_inode		*ip,
--	xfs_off_t			offset,
--	struct xfs_bmbt_irec		*imap)
--{
--	struct xfs_ifork		*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
--	xfs_fileoff_t			offset_fsb;
--	struct xfs_bmbt_irec		got;
--	struct xfs_iext_cursor		icur;
--
--	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
--
--	if (!xfs_is_reflink_inode(ip))
--		return false;
--	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
--	if (!xfs_iext_lookup_extent(ip, ifp, offset_fsb, &icur, &got))
--		return false;
--	if (got.br_startoff > offset_fsb)
--		return false;
--
--	trace_xfs_reflink_find_cow_mapping(ip, offset, 1, XFS_IO_OVERWRITE,
--			&got);
--	*imap = got;
--	return true;
--}
--
- /*
-  * Trim an extent to end at the next CoW reservation past offset_fsb.
-  */
-diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index 701487bab468..15a456492667 100644
---- a/fs/xfs/xfs_reflink.h
-+++ b/fs/xfs/xfs_reflink.h
-@@ -32,8 +32,6 @@ extern int xfs_reflink_allocate_cow(struct xfs_inode *ip,
- 		struct xfs_bmbt_irec *imap, bool *shared, uint *lockmode);
- extern int xfs_reflink_convert_cow(struct xfs_inode *ip, xfs_off_t offset,
- 		xfs_off_t count);
--extern bool xfs_reflink_find_cow_mapping(struct xfs_inode *ip, xfs_off_t offset,
--		struct xfs_bmbt_irec *imap);
- extern void xfs_reflink_trim_irec_to_next_cow(struct xfs_inode *ip,
- 		xfs_fileoff_t offset_fsb, struct xfs_bmbt_irec *imap);
- 
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 9d4c4ca24fe6..ed8f774944ba 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3227,7 +3227,6 @@ DEFINE_INODE_IREC_EVENT(xfs_reflink_convert_cow);
- DEFINE_RW_EVENT(xfs_reflink_reserve_cow);
- 
- DEFINE_SIMPLE_IO_EVENT(xfs_reflink_bounce_dio_write);
--DEFINE_IOMAP_EVENT(xfs_reflink_find_cow_mapping);
- DEFINE_INODE_IREC_EVENT(xfs_reflink_trim_irec);
- 
- DEFINE_SIMPLE_IO_EVENT(xfs_reflink_cancel_cow_range);
+> But of course that doesn't make
+> the bugs go away, it just makes the bug reports go away; you'll have to fix them
+> eventually anyway, one way or another.  I do think you're drastically
+> underestimating how useful the syzbot bug reports can be too -- note e.g. that
+> the bug Dave fixed by "fs: don't scan the inode cache before SB_BORN is set"
+> took only 3 days to be reported by syzbot after it gained support for mounting
+> XFS filesystems.  AFAICS that bug was in XFS for 7 years and was causing
+> production systems to mysteriously crash (very rarely), yet it took syzbot only
+> 3 days to send you a C reproducer.
+
+We got the first ever usable user bug report for this in late
+February on a v5 filesystem. Just because a bug has been there for
+a long time, it doesn't mean that users or test programs are
+tripping over it.  e.g.  trinity has been fuzzing filesystems (as
+have many other tools), but they never hit this because of the
+unlikely combination of events needed to trigger the failure.
+
+The first proposed fix was mid-march:
+
+https://www.spinics.net/lists/linux-xfs/msg16601.html
+
+IOWs, trying to associate this bug with the on-disk format issues we
+want fixed, or even attributing the finding and fixing this bug to
+syzbot is stretching the truth somewhat. Yes, syzbot tripped over it
+fairly quickly and that is great, but let's no try to rewrite
+history....
+
+However, I think this silly desire to get everything syzbot reports
+attributed to syzbot regardless of reality has clouded the important
+observation that should have been made here.  Everyone seems to have
+missed the fact that syzbot uncovered a general class of filesystem
+implementation error.  i.e.  Several filesystem implementations have
+failed to handle ->fill_super errors correctly and syzbot tripped
+over many of them - XFS is just one example.
+
+The common mistake being made is failing to clear sb->s_fs_info when
+it was freed on ->fill_super failure, and hence had subsequent
+problems when ->kill_super was called and the code assumed
+->s_fs_info was still valid. There have been other problems due to
+sb->s_fs_info needing to be being assigned before the filesystem is
+fully set up, and some of them were fixed by the SB_BORN change the
+above patch morphed into after initial review.
+
+IOWs, there is a general class of implementation bug here, and maybe
+there's something we can learn from that - is our documentation
+lacking, the API too convoluted, etc? Understanding why this
+happened and making sure we don't do it again is far more important
+than fixing any individual bug. And what other general
+programming/API error patterns has syzbot tripped over that nobody
+has noticed because there's no-one actually paying attention to the
+general scope of bugs that syzbot is discovering?
+
+> This is only at the early stage too --- syzkaller doesn't know how to fuzz the
+> XFS-specific ioctls yet, for example, but it could be taught.  It's already been
+> finding ext4 bugs that allowed anyone with access to an ext4 directory to
+> corrupt the filesystem and crash the kernel.  And note that syzkaller is
+> coverage-guided, using CONFIG_KCOV, so it *will* find bugs that you never
+> thought to test for in manually written (fuzz) tests.  Non-coverage-guided
+> fuzzers are no longer state of the art.  I've been really amazed at the bugs
+> syzkaller been able to find in other kernel subsystems, e.g. obscure races that
+> no one would have ever thought to test for.
+
+OTOH, knowing how many bugs lurk in our code base, I'm still amazed
+that tools like syzbot find so few of them.
+
+Cheers,
+
+Dave.
 -- 
-2.17.0
-
+Dave Chinner
+david@fromorbit.com
