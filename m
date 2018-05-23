@@ -1,110 +1,191 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:37574 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750791AbeEPRPw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 May 2018 13:15:52 -0400
-Date: Wed, 16 May 2018 10:15:48 -0700
+Received: from aserp2130.oracle.com ([141.146.126.79]:44414 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753165AbeEWDc7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 May 2018 23:32:59 -0400
+Date: Tue, 22 May 2018 20:32:46 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 02/22] xfs: add helpers to allocate and initialize fresh
- btree roots
-Message-ID: <20180516171548.GH23858@magnolia>
-References: <152642361893.1556.9335169821674946249.stgit@magnolia>
- <152642363169.1556.14593532407537096653.stgit@magnolia>
- <20180516070746.GQ23861@dastard>
+Subject: [PATCH v2 6/9] xfs_spaceman: add a superblock info command
+Message-ID: <20180523033246.GK14384@magnolia>
+References: <152401952391.13048.15040850425873030425.stgit@magnolia>
+ <152401956907.13048.9916119316995542280.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180516070746.GQ23861@dastard>
+In-Reply-To: <152401956907.13048.9916119316995542280.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: sandeen@redhat.com
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, May 16, 2018 at 05:07:46PM +1000, Dave Chinner wrote:
-> On Tue, May 15, 2018 at 03:33:51PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Add a pair of helper functions to allocate and initialize fresh btree
-> > roots.  The repair functions will use these as part of recreating
-> > corrupted metadata.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/scrub/repair.c |   81 +++++++++++++++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/scrub/repair.h |    6 ++++
-> >  2 files changed, 87 insertions(+)
-> 
-> Looks good, but....
-> 
-> > +/* Initialize a new AG btree root block with zero entries. */
-> > +int
-> > +xfs_repair_init_btblock(
-> > +	struct xfs_scrub_context	*sc,
-> > +	xfs_fsblock_t			fsb,
-> > +	struct xfs_buf			**bpp,
-> > +	xfs_btnum_t			btnum,
-> > +	const struct xfs_buf_ops	*ops)
-> > +{
-> > +	struct xfs_trans		*tp = sc->tp;
-> > +	struct xfs_mount		*mp = sc->mp;
-> > +	struct xfs_buf			*bp;
-> > +
-> > +	trace_xfs_repair_init_btblock(mp, XFS_FSB_TO_AGNO(mp, fsb),
-> > +			XFS_FSB_TO_AGBNO(mp, fsb), btnum);
-> > +
-> > +	ASSERT(XFS_FSB_TO_AGNO(mp, fsb) == sc->sa.agno);
-> > +	bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, XFS_FSB_TO_DADDR(mp, fsb),
-> > +			XFS_FSB_TO_BB(mp, 1), 0);
-> > +	xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
-> > +	xfs_btree_init_block(mp, bp, btnum, 0, 0, sc->sa.agno,
-> > +			XFS_BTREE_CRC_BLOCKS);
-> 
-> This flag does nothing in xfs_btree_init_block(). Any reason for
-> setting it?
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Nope.  Will fix.
+Add an 'info' command to pretty-print the superblock geometry.
 
-> With that fixed, though,
-> 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> 
-> > +	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_BTREE_BUF);
-> > +	xfs_trans_log_buf(tp, bp, 0, bp->b_length);
-> > +	bp->b_ops = ops;
-> > +	*bpp = bp;
-> > +
-> > +	return 0;
-> > +}
-> 
-> For followup patches, I think there's some overlap with the new
-> libxfs/xfs_ag.c functions for initialising new btree root blocks for
-> growfs? e.g. Make the struct xfs_aghdr_grow_data aghdr_data[] array
-> a static global, and then we can do something like:
-> 
-> 	bp = xfs_ag_init_btroot(mp, tp, agno, agbno, btnum);
-> 	xfs_trans_log_buf(tp, bp, 0, bp->b_length);
-> 
-> and all the details of reading the btree block and setting it up go
-> away from this code....
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ man/man8/xfs_spaceman.8 |    7 +++
+ spaceman/Makefile       |    2 -
+ spaceman/info.c         |   96 +++++++++++++++++++++++++++++++++++++++++++++++
+ spaceman/init.c         |    1 
+ spaceman/space.h        |    1 
+ 6 files changed, 111 insertions(+), 6 deletions(-)
+ create mode 100644 spaceman/info.c
 
-I'm not sure aghdr_data can be made static global since parts of it
-depend on the struct xfs_mount, but at the very least we should try to
-refactor this (in the followup series) to simplify the repair code.
-
-There may be complications relating to the xfs_*root_init functions
-initializing default records that are appropriate for a freshly created
-AG that are totally wrong for regenerating a broken AG, and in any case
-repair really requires totally empty root blocks since it has already
-generated the list of records it's going to put into the new btree.
-
---D
-
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/man/man8/xfs_spaceman.8 b/man/man8/xfs_spaceman.8
+index e4a9137f..12dd04e4 100644
+--- a/man/man8/xfs_spaceman.8
++++ b/man/man8/xfs_spaceman.8
+@@ -84,6 +84,13 @@ Display a summary of the free space information found.
+ .PD
+ .RE
+ .TP
++.B info
++Displays selected geometry information about the filesystem.
++The opened file must be a mount point of a XFS filesystem.
++The output will have the same format that
++.BR "xfs_info" "(8)"
++prints when querying a filesystem.
++.TP
+ .BR "help [ " command " ]"
+ Display a brief description of one or all commands.
+ .TP
+diff --git a/spaceman/Makefile b/spaceman/Makefile
+index 8b310309..c1d903ba 100644
+--- a/spaceman/Makefile
++++ b/spaceman/Makefile
+@@ -7,7 +7,7 @@ include $(TOPDIR)/include/builddefs
+ 
+ LTCOMMAND = xfs_spaceman
+ HFILES = init.h space.h
+-CFILES = init.c file.c prealloc.c trim.c
++CFILES = info.c init.c file.c prealloc.c trim.c
+ 
+ LLDLIBS = $(LIBXCMD) $(LIBFROG)
+ LTDEPENDENCIES = $(LIBXCMD) $(LIBFROG)
+diff --git a/spaceman/info.c b/spaceman/info.c
+new file mode 100644
+index 00000000..8889346b
+--- /dev/null
++++ b/spaceman/info.c
+@@ -0,0 +1,96 @@
++/*
++ * Copyright (C) 2018 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#include "libxfs.h"
++#include "command.h"
++#include "init.h"
++#include "path.h"
++#include "space.h"
++#include "fsgeom.h"
++
++static void
++info_help(void)
++{
++	printf(_(
++"\n"
++" Pretty-prints the filesystem geometry as derived from the superblock.\n"
++" The output has the same format as mkfs.xfs, xfs_info, and other utilities.\n"
++" The opened file must be an XFS mount point.\n"
++"\n"
++));
++
++}
++
++static int
++info_f(
++	int			argc,
++	char			**argv)
++{
++	struct xfs_fsop_geom	geo;
++	int			error;
++
++	if (fs_table_lookup_mount(file->name) == NULL) {
++		fprintf(stderr, _("%s: Not a XFS mount point.\n"), file->name);
++		return 1;
++	}
++
++	/* get the current filesystem size & geometry */
++	error = ioctl(file->fd, XFS_IOC_FSGEOMETRY, &geo);
++	if (error) {
++		/*
++		 * OK, new xfsctl barfed - back off and try earlier version
++		 * as we're probably running an older kernel version.
++		 * Only field added in the v2 geometry xfsctl is "logsunit"
++		 * so we'll zero that out for later display (as zero).
++		 */
++		geo.logsunit = 0;
++		error = ioctl(file->fd, XFS_IOC_FSGEOMETRY_V1, &geo);
++		if (error) {
++			fprintf(stderr, _(
++				"%s: cannot determine geometry of filesystem"
++				" mounted at %s: %s\n"),
++				progname, file->name, strerror(errno));
++			exitcode = 1;
++			return 0;
++		}
++	}
++
++	xfs_report_geom(&geo, file->fs_path.fs_name, file->fs_path.fs_log,
++			file->fs_path.fs_rt);
++	return 0;
++}
++
++static const struct cmdinfo info_cmd = {
++	.name =		"info",
++	.altname =	"i",
++	.cfunc =	info_f,
++	.argmin =	0,
++	.argmax =	0,
++	.canpush =	0,
++	.args =		NULL,
++	.flags =	CMD_FLAG_ONESHOT,
++	.oneline =	N_("pretty-print superblock geometry info"),
++	.help =		info_help,
++};
++
++void
++info_init(void)
++{
++	add_command(&info_cmd);
++}
+diff --git a/spaceman/init.c b/spaceman/init.c
+index b3efacef..895504f3 100644
+--- a/spaceman/init.c
++++ b/spaceman/init.c
+@@ -40,6 +40,7 @@ init_commands(void)
+ {
+ 	print_init();
+ 	help_init();
++	info_init();
+ 	prealloc_init();
+ 	quit_init();
+ 	trim_init();
+diff --git a/spaceman/space.h b/spaceman/space.h
+index 5f4a8a0b..d2a25432 100644
+--- a/spaceman/space.h
++++ b/spaceman/space.h
+@@ -42,5 +42,6 @@ extern void	freesp_init(void);
+ #else
+ # define freesp_init()	do { } while (0)
+ #endif
++extern void	info_init(void);
+ 
+ #endif /* XFS_SPACEMAN_SPACE_H_ */
