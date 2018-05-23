@@ -1,110 +1,275 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56092 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751057AbeEYQxG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 25 May 2018 12:53:06 -0400
-Subject: Re: [PATCH] xfs: mark sb_fname as nonstring
-References: <20180525151421.2317292-1-arnd@arndb.de>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <d6a4b528-4336-48d4-1e0a-7b135c92f97e@redhat.com>
-Date: Fri, 25 May 2018 11:53:03 -0500
-MIME-Version: 1.0
-In-Reply-To: <20180525151421.2317292-1-arnd@arndb.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from bombadil.infradead.org ([198.137.202.133]:47690 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933268AbeEWOoy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 10:44:54 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 16/34] iomap: add initial support for writes without buffer heads
+Date: Wed, 23 May 2018 16:43:39 +0200
+Message-Id: <20180523144357.18985-17-hch@lst.de>
+In-Reply-To: <20180523144357.18985-1-hch@lst.de>
+References: <20180523144357.18985-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Arnd Bergmann <arnd@arndb.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
-Cc: Martin Sebor <msebor@gmail.com>, Brian Foster <bfoster@redhat.com>, Dave Chinner <dchinner@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-kernel@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-On 5/25/18 10:14 AM, Arnd Bergmann wrote:
-> gcc-8 reports two warnings for the newly added getlabel/setlabel code:
+For now just limited to blocksize == PAGE_SIZE, where we can simply read
+in the full page in write begin, and just set the whole page dirty after
+copying data into it.  This code is enabled by default and XFS will now
+be feed pages without buffer heads in ->writepage and ->writepages.
 
-Thanks for catching these.
+If a file system sets the IOMAP_F_BUFFER_HEAD flag on the iomap the old
+path will still be used, this both helps the transition in XFS and
+prepares for the gfs2 migration to the iomap infrastructure.
 
-The patch summary confuses me, what does "mark sb_fname as nonstring"
-mean in the context of the actual patch?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/iomap.c            | 129 ++++++++++++++++++++++++++++++++++++++----
+ fs/xfs/xfs_iomap.c    |   6 +-
+ include/linux/iomap.h |   2 +
+ 3 files changed, 124 insertions(+), 13 deletions(-)
 
-I hate strings in C!  ;)
-
-> fs/xfs/xfs_ioctl.c: In function 'xfs_ioc_getlabel':
-> fs/xfs/xfs_ioctl.c:1822:38: error: argument to 'sizeof' in 'strncpy' call is the same expression as the source; did you mean to use the size of the destination? [-Werror=sizeof-pointer-memaccess]
->    strncpy(label, sbp->sb_fname, sizeof(sbp->sb_fname));                                         ^
-o_O hrpmh.
-
-> In function 'strncpy',
->      inlined from 'xfs_ioc_setlabel' at /git/arm-soc/fs/xfs/xfs_ioctl.c:1863:2,
->      inlined from 'xfs_file_ioctl' at /git/arm-soc/fs/xfs/xfs_ioctl.c:1918:10:
-> include/linux/string.h:254:9: error: '__builtin_strncpy' output may be truncated copying 12 bytes from a string of length 12 [-Werror=stringop-truncation]
->    return __builtin_strncpy(p, q, size);
-> 
-> In both cases, part of the problem is that one of the strncpy()
-> arguments is a fixed-length character array with zero-padding rather
-> than a zero-terminated string. In the first one case, we also get an
-> odd warning about sizeof-pointer-memaccess, which doesn't seem right
-> (the sizeof is for an array that happens to be the same as the second
-> strncpy argument).
-> 
-> To work around the bogus warning, I use a plain 'XFSLABEL_MAX' for
-> the strncpy() length when copying the label in getlabel. For setlabel(),
-> using memcpy() with the correct length that is already known avoids
-> the second warning and is slightly simpler.
-> 
-> In a related issue, it appears that we accidentally skip the trailing
-> \0 when copying a 12-character label back to user space in getlabel().
-> Using the correct sizeof() argument here copies the extra character.
-
-Oops, you are correct.  Sigh, I wonder why testing didn't see that.
-
-> Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85602
-> Fixes: f7664b31975b ("xfs: implement online get/set fs label")
-> Cc: Eric Sandeen <sandeen@redhat.com>
-> Cc: Martin Sebor <msebor@gmail.com>
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->   fs/xfs/xfs_ioctl.c | 6 +++---
->   1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 84fbf164cbc3..eb79f2bc4dcc 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -1819,12 +1819,12 @@ xfs_ioc_getlabel(
->   	BUILD_BUG_ON(sizeof(sbp->sb_fname) > FSLABEL_MAX);
->   
->   	spin_lock(&mp->m_sb_lock);
-> -	strncpy(label, sbp->sb_fname, sizeof(sbp->sb_fname));
-> +	strncpy(label, sbp->sb_fname, XFSLABEL_MAX);
-
-ok
-
->   	spin_unlock(&mp->m_sb_lock);
->   
->   	/* xfs on-disk label is 12 chars, be sure we send a null to user */
->   	label[XFSLABEL_MAX] = '\0';
-> -	if (copy_to_user(user_label, label, sizeof(sbp->sb_fname)))
-> +	if (copy_to_user(user_label, label, sizeof(label)))
-
-
-ok.  (odd how this is ok for copy_to_user but not for strncpy above) :)
-
->   		return -EFAULT;
->   	return 0;
->   }
-> @@ -1860,7 +1860,7 @@ xfs_ioc_setlabel(
->   
->   	spin_lock(&mp->m_sb_lock);
->   	memset(sbp->sb_fname, 0, sizeof(sbp->sb_fname));
-> -	strncpy(sbp->sb_fname, label, sizeof(sbp->sb_fname));
-> +	memcpy(sbp->sb_fname, label, len);
-
-Hm but len = strnlen(label, XFSLABEL_MAX + 1);
-which could be one longer than sbp->sb_fname, no?
-
->   	spin_unlock(&mp->m_sb_lock);
->   
->   	/*
-> 
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 78259a2249f4..debb859a8a14 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -308,6 +308,49 @@ iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
+ 		truncate_pagecache_range(inode, max(pos, i_size), pos + len);
+ }
+ 
++static int
++iomap_read_page_sync(struct inode *inode, loff_t block_start, struct page *page,
++		unsigned poff, unsigned plen, unsigned from, unsigned to,
++		struct iomap *iomap)
++{
++	struct bio_vec bvec;
++	struct bio bio;
++
++	if (iomap->type != IOMAP_MAPPED || block_start >= i_size_read(inode)) {
++		zero_user_segments(page, poff, from, to, poff + plen);
++		return 0;
++	}
++
++	bio_init(&bio, &bvec, 1);
++	bio.bi_opf = REQ_OP_READ;
++	bio.bi_iter.bi_sector = iomap_sector(iomap, block_start);
++	bio_set_dev(&bio, iomap->bdev);
++	__bio_add_page(&bio, page, plen, poff);
++	return submit_bio_wait(&bio);
++}
++
++static int
++__iomap_write_begin(struct inode *inode, loff_t pos, unsigned len,
++		struct page *page, struct iomap *iomap)
++{
++	loff_t block_size = i_blocksize(inode);
++	loff_t block_start = pos & ~(block_size - 1);
++	loff_t block_end = (pos + len + block_size - 1) & ~(block_size - 1);
++	unsigned poff = block_start & (PAGE_SIZE - 1);
++	unsigned plen = min_t(loff_t, PAGE_SIZE - poff, block_end - block_start);
++	unsigned from = pos & (PAGE_SIZE - 1);
++	unsigned to = from + len;
++
++	WARN_ON_ONCE(i_blocksize(inode) < PAGE_SIZE);
++
++	if (PageUptodate(page))
++		return 0;
++	if (from <= poff && to >= poff + plen)
++		return 0;
++	return iomap_read_page_sync(inode, block_start, page,
++			poff, plen, from, to, iomap);
++}
++
+ static int
+ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
+ 		struct page **pagep, struct iomap *iomap)
+@@ -325,7 +368,10 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
+ 	if (!page)
+ 		return -ENOMEM;
+ 
+-	status = __block_write_begin_int(page, pos, len, NULL, iomap);
++	if (iomap->flags & IOMAP_F_BUFFER_HEAD)
++		status = __block_write_begin_int(page, pos, len, NULL, iomap);
++	else
++		status = __iomap_write_begin(inode, pos, len, page, iomap);
+ 	if (unlikely(status)) {
+ 		unlock_page(page);
+ 		put_page(page);
+@@ -338,14 +384,69 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
+ 	return status;
+ }
+ 
++int
++iomap_set_page_dirty(struct page *page)
++{
++	struct address_space *mapping = page_mapping(page);
++	int newly_dirty;
++
++	if (unlikely(!mapping))
++		return !TestSetPageDirty(page);
++
++	/*
++	 * Lock out page->mem_cgroup migration to keep PageDirty
++	 * synchronized with per-memcg dirty page counters.
++	 */
++	lock_page_memcg(page);
++	newly_dirty = !TestSetPageDirty(page);
++	if (newly_dirty)
++		__set_page_dirty(page, mapping, 0);
++	unlock_page_memcg(page);
++
++	if (newly_dirty)
++		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
++	return newly_dirty;
++}
++EXPORT_SYMBOL_GPL(iomap_set_page_dirty);
++
++static int
++__iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
++		unsigned copied, struct page *page, struct iomap *iomap)
++{
++	flush_dcache_page(page);
++
++	/*
++	 * The blocks that were entirely written will now be uptodate, so we
++	 * don't have to worry about a readpage reading them and overwriting a
++	 * partial write.  However if we have encountered a short write and only
++	 * partially written into a block, it will not be marked uptodate, so a
++	 * readpage might come in and destroy our partial write.
++	 *
++	 * Do the simplest thing, and just treat any short write to a non
++	 * uptodate page as a zero-length write, and force the caller to redo
++	 * the whole thing.
++	 */
++	if (unlikely(copied < len && !PageUptodate(page))) {
++		copied = 0;
++	} else {
++		SetPageUptodate(page);
++		iomap_set_page_dirty(page);
++	}
++	return __generic_write_end(inode, pos, copied, page);
++}
++
+ static int
+ iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
+-		unsigned copied, struct page *page)
++		unsigned copied, struct page *page, struct iomap *iomap)
+ {
+ 	int ret;
+ 
+-	ret = generic_write_end(NULL, inode->i_mapping, pos, len,
+-			copied, page, NULL);
++	if (iomap->flags & IOMAP_F_BUFFER_HEAD)
++		ret = generic_write_end(NULL, inode->i_mapping, pos, len,
++				copied, page, NULL);
++	else
++		ret = __iomap_write_end(inode, pos, len, copied, page, iomap);
++
+ 	if (ret < len)
+ 		iomap_write_failed(inode, pos, len);
+ 	return ret;
+@@ -400,7 +501,8 @@ iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 
+ 		flush_dcache_page(page);
+ 
+-		status = iomap_write_end(inode, pos, bytes, copied, page);
++		status = iomap_write_end(inode, pos, bytes, copied, page,
++				iomap);
+ 		if (unlikely(status < 0))
+ 			break;
+ 		copied = status;
+@@ -494,7 +596,7 @@ iomap_dirty_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 
+ 		WARN_ON_ONCE(!PageUptodate(page));
+ 
+-		status = iomap_write_end(inode, pos, bytes, bytes, page);
++		status = iomap_write_end(inode, pos, bytes, bytes, page, iomap);
+ 		if (unlikely(status <= 0)) {
+ 			if (WARN_ON_ONCE(status == 0))
+ 				return -EIO;
+@@ -546,7 +648,7 @@ static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
+ 	zero_user(page, offset, bytes);
+ 	mark_page_accessed(page);
+ 
+-	return iomap_write_end(inode, pos, bytes, bytes, page);
++	return iomap_write_end(inode, pos, bytes, bytes, page, iomap);
+ }
+ 
+ static int iomap_dax_zero(loff_t pos, unsigned offset, unsigned bytes,
+@@ -632,11 +734,16 @@ iomap_page_mkwrite_actor(struct inode *inode, loff_t pos, loff_t length,
+ 	struct page *page = data;
+ 	int ret;
+ 
+-	ret = __block_write_begin_int(page, pos, length, NULL, iomap);
+-	if (ret)
+-		return ret;
++	if (iomap->flags & IOMAP_F_BUFFER_HEAD) {
++		ret = __block_write_begin_int(page, pos, length, NULL, iomap);
++		if (ret)
++			return ret;
++		block_commit_write(page, 0, length);
++	} else {
++		WARN_ON_ONCE(!PageUptodate(page));
++		WARN_ON_ONCE(i_blocksize(inode) < PAGE_SIZE);
++	}
+ 
+-	block_commit_write(page, 0, length);
+ 	return length;
+ }
+ 
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index c6ce6f9335b6..da6d1995e460 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -638,7 +638,7 @@ xfs_file_iomap_begin_delay(
+ 	 * Flag newly allocated delalloc blocks with IOMAP_F_NEW so we punch
+ 	 * them out if the write happens to fail.
+ 	 */
+-	iomap->flags = IOMAP_F_NEW;
++	iomap->flags |= IOMAP_F_NEW;
+ 	trace_xfs_iomap_alloc(ip, offset, count, 0, &got);
+ done:
+ 	if (isnullstartblock(got.br_startblock))
+@@ -1031,6 +1031,8 @@ xfs_file_iomap_begin(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+ 
++	iomap->flags |= IOMAP_F_BUFFER_HEAD;
++
+ 	if (((flags & (IOMAP_WRITE | IOMAP_DIRECT)) == IOMAP_WRITE) &&
+ 			!IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
+ 		/* Reserve delalloc blocks for regular writeback. */
+@@ -1131,7 +1133,7 @@ xfs_file_iomap_begin(
+ 	if (error)
+ 		return error;
+ 
+-	iomap->flags = IOMAP_F_NEW;
++	iomap->flags |= IOMAP_F_NEW;
+ 	trace_xfs_iomap_alloc(ip, offset, length, 0, &imap);
+ 
+ out_finish:
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 7300d30ca495..4d3d9d0cd69f 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -30,6 +30,7 @@ struct vm_fault;
+  */
+ #define IOMAP_F_NEW		0x01	/* blocks have been newly allocated */
+ #define IOMAP_F_DIRTY		0x02	/* uncommitted metadata */
++#define IOMAP_F_BUFFER_HEAD	0x04	/* file system requires buffer heads */
+ 
+ /*
+  * Flags that only need to be reported for IOMAP_REPORT requests:
+@@ -92,6 +93,7 @@ ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
+ int iomap_readpage(struct page *page, const struct iomap_ops *ops);
+ int iomap_readpages(struct address_space *mapping, struct list_head *pages,
+ 		unsigned nr_pages, const struct iomap_ops *ops);
++int iomap_set_page_dirty(struct page *page);
+ int iomap_file_dirty(struct inode *inode, loff_t pos, loff_t len,
+ 		const struct iomap_ops *ops);
+ int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
+-- 
+2.17.0
 
