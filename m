@@ -1,138 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:46932 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933407AbeEWOoT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 10:44:19 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 05/34] fs: use ->is_partially_uptodate in page_cache_seek_hole_data
-Date: Wed, 23 May 2018 16:43:28 +0200
-Message-Id: <20180523144357.18985-6-hch@lst.de>
-In-Reply-To: <20180523144357.18985-1-hch@lst.de>
-References: <20180523144357.18985-1-hch@lst.de>
+Received: from mx2.suse.de ([195.135.220.15]:33451 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753493AbeEWIkd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 23 May 2018 04:40:33 -0400
+Date: Wed, 23 May 2018 10:40:30 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 05/11] filesystem-dax: set page->index
+Message-ID: <20180523084030.dvv4jbvsnzrsaz6q@quack2.suse.cz>
+References: <152699997165.24093.12194490924829406111.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <152699999778.24093.18007971664703285330.stgit@dwillia2-desk3.amr.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <152699999778.24093.18007971664703285330.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-nvdimm@lists.01.org, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, tony.luck@intel.com, linux-xfs@vger.kernel.org
 
-This way the implementation doesn't depend on buffer_head internals.
+On Tue 22-05-18 07:39:57, Dan Williams wrote:
+> In support of enabling memory_failure() handling for filesystem-dax
+> mappings, set ->index to the pgoff of the page. The rmap implementation
+> requires ->index to bound the search through the vma interval tree. The
+> index is set and cleared at dax_associate_entry() and
+> dax_disassociate_entry() time respectively.
+> 
+> Cc: Jan Kara <jack@suse.cz>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Matthew Wilcox <mawilcox@microsoft.com>
+> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+>  fs/dax.c |   11 ++++++++---
+>  1 file changed, 8 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/dax.c b/fs/dax.c
+> index aaec72ded1b6..2e4682cd7c69 100644
+> --- a/fs/dax.c
+> +++ b/fs/dax.c
+> @@ -319,18 +319,22 @@ static unsigned long dax_radix_end_pfn(void *entry)
+>  	for (pfn = dax_radix_pfn(entry); \
+>  			pfn < dax_radix_end_pfn(entry); pfn++)
+>  
+> -static void dax_associate_entry(void *entry, struct address_space *mapping)
+> +static void dax_associate_entry(void *entry, struct address_space *mapping,
+> +		struct vm_area_struct *vma, unsigned long address)
+>  {
+> -	unsigned long pfn;
+> +	unsigned long size = dax_entry_size(entry), pfn, index;
+> +	int i = 0;
+>  
+>  	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
+>  		return;
+>  
+> +	index = linear_page_index(vma, address & ~(size - 1));
+>  	for_each_mapped_pfn(entry, pfn) {
+>  		struct page *page = pfn_to_page(pfn);
+>  
+>  		WARN_ON_ONCE(page->mapping);
+>  		page->mapping = mapping;
+> +		page->index = index + i++;
+>  	}
+>  }
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/iomap.c | 85 +++++++++++++++++++++++++-----------------------------
- 1 file changed, 39 insertions(+), 46 deletions(-)
+Hum, this just made me think: How is this going to work with XFS reflink?
+In fact is not the page->mapping association already broken by XFS reflink?
+Because with reflink we can have two or more mappings pointing to the same
+physical blocks (i.e., pages in DAX case)...
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index bef5e91d40bf..0900da23172c 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -589,36 +589,51 @@ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
- }
- EXPORT_SYMBOL_GPL(iomap_fiemap);
- 
--/*
-- * Seek for SEEK_DATA / SEEK_HOLE within @page, starting at @lastoff.
-- *
-- * Returns the offset within the file on success, and -ENOENT otherwise.
-- */
--static loff_t
--page_seek_hole_data(struct page *page, loff_t lastoff, int whence)
-+static bool
-+page_seek_hole_data(struct inode *inode, struct page *page, loff_t *lastoff,
-+		int whence)
- {
--	loff_t offset = page_offset(page);
--	struct buffer_head *bh, *head;
-+	const struct address_space_operations *ops = inode->i_mapping->a_ops;
-+	unsigned int bsize = i_blocksize(inode), off;
- 	bool seek_data = whence == SEEK_DATA;
-+	loff_t poff = page_offset(page);
- 
--	if (lastoff < offset)
--		lastoff = offset;
--
--	bh = head = page_buffers(page);
--	do {
--		offset += bh->b_size;
--		if (lastoff >= offset)
--			continue;
-+	if (WARN_ON_ONCE(*lastoff >= poff + PAGE_SIZE))
-+		return false;
- 
-+	if (*lastoff < poff) {
- 		/*
--		 * Any buffer with valid data in it should have BH_Uptodate set.
-+		 * Last offset smaller than the start of the page means we found
-+		 * a hole:
- 		 */
--		if (buffer_uptodate(bh) == seek_data)
--			return lastoff;
-+		if (whence == SEEK_HOLE)
-+			return true;
-+		*lastoff = poff;
-+	}
-+
-+	/*
-+	 * Just check the page unless we can and should check block ranges:
-+	 */
-+	if (bsize == PAGE_SIZE || !ops->is_partially_uptodate)
-+		return PageUptodate(page) == seek_data;
- 
--		lastoff = offset;
--	} while ((bh = bh->b_this_page) != head);
--	return -ENOENT;
-+	lock_page(page);
-+	if (unlikely(page->mapping != inode->i_mapping))
-+		goto out_unlock_not_found;
-+
-+	for (off = 0; off < PAGE_SIZE; off += bsize) {
-+		if ((*lastoff & ~PAGE_MASK) >= off + bsize)
-+			continue;
-+		if (ops->is_partially_uptodate(page, off, bsize) == seek_data) {
-+			unlock_page(page);
-+			return true;
-+		}
-+		*lastoff = poff + off + bsize;
-+	}
-+
-+out_unlock_not_found:
-+	unlock_page(page);
-+	return false;
- }
- 
- /*
-@@ -655,30 +670,8 @@ page_cache_seek_hole_data(struct inode *inode, loff_t offset, loff_t length,
- 		for (i = 0; i < nr_pages; i++) {
- 			struct page *page = pvec.pages[i];
- 
--			/*
--			 * At this point, the page may be truncated or
--			 * invalidated (changing page->mapping to NULL), or
--			 * even swizzled back from swapper_space to tmpfs file
--			 * mapping.  However, page->index will not change
--			 * because we have a reference on the page.
--                         *
--			 * If current page offset is beyond where we've ended,
--			 * we've found a hole.
--                         */
--			if (whence == SEEK_HOLE &&
--			    lastoff < page_offset(page))
-+			if (page_seek_hole_data(inode, page, &lastoff, whence))
- 				goto check_range;
--
--			lock_page(page);
--			if (likely(page->mapping == inode->i_mapping) &&
--			    page_has_buffers(page)) {
--				lastoff = page_seek_hole_data(page, lastoff, whence);
--				if (lastoff >= 0) {
--					unlock_page(page);
--					goto check_range;
--				}
--			}
--			unlock_page(page);
- 			lastoff = page_offset(page) + PAGE_SIZE;
- 		}
- 		pagevec_release(&pvec);
+								Honza
+
 -- 
-2.17.0
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
