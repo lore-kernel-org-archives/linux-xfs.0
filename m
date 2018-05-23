@@ -1,73 +1,136 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43034 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S966235AbeEYLfe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 25 May 2018 07:35:34 -0400
-Date: Fri, 25 May 2018 07:35:33 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 22/34] xfs: make xfs_writepage_map extent map centric
-Message-ID: <20180525113532.GA92036@bfoster.bfoster>
+Received: from bombadil.infradead.org ([198.137.202.133]:48244 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933455AbeEWOpE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 10:45:04 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 19/34] xfs: simplify xfs_bmap_punch_delalloc_range
+Date: Wed, 23 May 2018 16:43:42 +0200
+Message-Id: <20180523144357.18985-20-hch@lst.de>
+In-Reply-To: <20180523144357.18985-1-hch@lst.de>
 References: <20180523144357.18985-1-hch@lst.de>
- <20180523144357.18985-23-hch@lst.de>
- <20180524145935.GA84959@bfoster.bfoster>
- <20180524165350.GA22675@lst.de>
- <20180524181356.GA89391@bfoster.bfoster>
- <20180525061900.GA16409@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180525061900.GA16409@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-On Fri, May 25, 2018 at 08:19:00AM +0200, Christoph Hellwig wrote:
-> On Thu, May 24, 2018 at 02:13:56PM -0400, Brian Foster wrote:
-> > Ok, so I guess writeback can see uptodate blocks over a hole if some
-> > other block in that page is dirty.
-> 
-> Yes.
-> 
-> > Perhaps we could make sure that a
-> > dirty page has at least one block that maps to an actual extent or
-> > otherwise the page has been truncated..?
-> 
-> We have the following comment near the end of xfs_writepage_map:
-> 
+Instead of using xfs_bmapi_read to find delalloc extents and then punch
+them out using xfs_bunmapi, opencode the loop to iterate over the extents
+and call xfs_bmap_del_extent_delay directly.  This both simplifies the
+code and reduces the number of extent tree lookups required.
 
-That comment is what I'm basing on...
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_bmap_util.c | 78 ++++++++++++++----------------------------
+ 1 file changed, 25 insertions(+), 53 deletions(-)
 
-> 	/*
-> 	 * We can end up here with no error and nothing to write if we
-> 	 * race with a partial page truncate on a sub-page block sized
-> 	 * filesystem. In that case we need to mark the page clean.
-> 	 */
-> 
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 06badcbadeb4..c009bdf9fdce 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -695,12 +695,10 @@ xfs_getbmap(
+ }
+ 
+ /*
+- * dead simple method of punching delalyed allocation blocks from a range in
+- * the inode. Walks a block at a time so will be slow, but is only executed in
+- * rare error cases so the overhead is not critical. This will always punch out
+- * both the start and end blocks, even if the ranges only partially overlap
+- * them, so it is up to the caller to ensure that partial blocks are not
+- * passed in.
++ * Dead simple method of punching delalyed allocation blocks from a range in
++ * the inode.  This will always punch out both the start and end blocks, even
++ * if the ranges only partially overlap them, so it is up to the caller to
++ * ensure that partial blocks are not passed in.
+  */
+ int
+ xfs_bmap_punch_delalloc_range(
+@@ -708,63 +706,37 @@ xfs_bmap_punch_delalloc_range(
+ 	xfs_fileoff_t		start_fsb,
+ 	xfs_fileoff_t		length)
+ {
+-	xfs_fileoff_t		remaining = length;
++	struct xfs_ifork	*ifp = &ip->i_df;
++	struct xfs_bmbt_irec	got, del;
++	struct xfs_iext_cursor	icur;
+ 	int			error = 0;
+ 
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+ 
+-	do {
+-		int		done;
+-		xfs_bmbt_irec_t	imap;
+-		int		nimaps = 1;
+-		xfs_fsblock_t	firstblock;
+-		struct xfs_defer_ops dfops;
++	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
++		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
++		if (error)
++			return error;
++	}
+ 
+-		/*
+-		 * Map the range first and check that it is a delalloc extent
+-		 * before trying to unmap the range. Otherwise we will be
+-		 * trying to remove a real extent (which requires a
+-		 * transaction) or a hole, which is probably a bad idea...
+-		 */
+-		error = xfs_bmapi_read(ip, start_fsb, 1, &imap, &nimaps,
+-				       XFS_BMAPI_ENTIRE);
++	if (!xfs_iext_lookup_extent(ip, ifp, start_fsb, &icur, &got))
++		return 0;
+ 
+-		if (error) {
+-			/* something screwed, just bail */
+-			if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+-				xfs_alert(ip->i_mount,
+-			"Failed delalloc mapping lookup ino %lld fsb %lld.",
+-						ip->i_ino, start_fsb);
+-			}
++	do {
++		if (got.br_startoff >= start_fsb + length)
+ 			break;
+-		}
+-		if (!nimaps) {
+-			/* nothing there */
+-			goto next_block;
+-		}
+-		if (imap.br_startblock != DELAYSTARTBLOCK) {
+-			/* been converted, ignore */
+-			goto next_block;
+-		}
+-		WARN_ON(imap.br_blockcount == 0);
++		if (!isnullstartblock(got.br_startblock))
++			continue;
+ 
+-		/*
+-		 * Note: while we initialise the firstblock/dfops pair, they
+-		 * should never be used because blocks should never be
+-		 * allocated or freed for a delalloc extent and hence we need
+-		 * don't cancel or finish them after the xfs_bunmapi() call.
+-		 */
+-		xfs_defer_init(&dfops, &firstblock);
+-		error = xfs_bunmapi(NULL, ip, start_fsb, 1, 0, 1, &firstblock,
+-					&dfops, &done);
++		del = got;
++		xfs_trim_extent(&del, start_fsb, length);
++		error = xfs_bmap_del_extent_delay(ip, XFS_DATA_FORK, &icur,
++				&got, &del);
+ 		if (error)
+ 			break;
+-
+-		ASSERT(!xfs_defer_has_unfinished_work(&dfops));
+-next_block:
+-		start_fsb++;
+-		remaining--;
+-	} while(remaining > 0);
++		if (!xfs_iext_get_extent(ifp, &icur, &got))
++			break;
++	} while (xfs_iext_next_extent(ifp, &icur, &got));
+ 
+ 	return error;
+ }
+-- 
+2.17.0
 
-So we can correctly end up with nothing to write on a dirty page, but it
-presumes a race with truncate. So suppose we end up with a dirty page,
-at least one uptodate block, count is zero (i.e., due to holes) and
-i_size is beyond the page. Would that not be completely bogus? If bogus,
-I think that would at least detect the dumb example I posted earlier.
-
-Brian
-
-> And I'm pretty sure I managed to hit that case easily in xfstests,
-> as my initial handling of it was wrong.  So I don't think we can
-> even check for that.
-> 
-> > I guess having another dirty block bitmap similar to
-> > iomap_page->uptodate could be required to tell for sure whether a
-> > particular block should definitely have a block on-disk or not. It may
-> > not be worth doing that just for additional error checks, but I still
-> > have to look into the last few patches to grok all the iomap_page stuff.
-> 
-> I don't think it's worth it.  The sub-page dirty tracking has been one
-> of the issues with the buffer head code that caused a lot of problems,
-> and that we want to get rid of.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
