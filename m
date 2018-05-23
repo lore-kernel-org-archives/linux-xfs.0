@@ -1,95 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41566 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751231AbeEQT1D (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 May 2018 15:27:03 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v2 1/5] mkfs: distinguish between struct sb_feat_args and struct cli_params
-Date: Thu, 17 May 2018 12:26:56 -0700
-Message-Id: <20180517192700.23457-2-mcgrof@kernel.org>
-In-Reply-To: <20180517192700.23457-1-mcgrof@kernel.org>
-References: <20180517192700.23457-1-mcgrof@kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.133]:47254 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933434AbeEWOol (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 10:44:41 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 13/34] iomap: add a iomap_sector helper
+Date: Wed, 23 May 2018 16:43:36 +0200
+Message-Id: <20180523144357.18985-14-hch@lst.de>
+In-Reply-To: <20180523144357.18985-1-hch@lst.de>
+References: <20180523144357.18985-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com, "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-The struct sb_feat_args will actually be shared between the code which
-processes command line options and the configuration file, as such we
-need to clarify and reflect this clearly in documentation.
+Factor the repeated calculation of the on-disk sector for a given logical
+block into a littler helper.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- mkfs/xfs_mkfs.c | 45 ++++++++++++++++++++++++++++-----------------
- 1 file changed, 28 insertions(+), 17 deletions(-)
+ fs/iomap.c | 19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-)
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 3804814b3b8a..95cd6ced13f0 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -707,26 +707,18 @@ cli_opt_set(
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 8e28f25f086f..f928df4ab9a9 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -97,6 +97,12 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
+ 	return written ? written : ret;
  }
  
- /*
-- * Options configured on the command line.
-- *
-- * This stores all the specific config parameters the user sets on the command
-- * line. We do not use these values directly - they are inputs to the mkfs
-- * geometry validation and override any default configuration value we have.
-+ * Shared superblock configuration options
-  *
-- * We don't keep flags to indicate what parameters are set - if we need to check
-- * if an option was set on the command line, we check the relevant entry in the
-- * option table which records whether it was specified in the .seen and
-- * .str_seen variables in the table.
-+ * These options provide shared configuration tunables for the filesystem
-+ * superblock. There are three possible sources for these options set, each
-+ * source can overriding the later source:
-  *
-- * Some parameters are stored as strings for post-parsing after their dependent
-- * options have been resolved (e.g. block size and sector size have been parsed
-- * and validated).
-+ * 	o built-in defaults
-+ * 	o configuration file (XXX)
-+ * 	o command line
-  *
-- * This allows us to check that values have been set without needing separate
-- * flags for each value, and hence avoids needing to record and check for each
-- * specific option that can set the value later on in the code. In the cases
-- * where we don't have a cli_params structure around, the above cli_opt_set()
-- * function can be used.
-+ * These values are not used directly - they are inputs into the mkfs geometry
-+ * validation.
-  */
- struct sb_feat_args {
- 	int	log_version;
-@@ -747,6 +739,25 @@ struct sb_feat_args {
- 	bool	nortalign;
- };
++static sector_t
++iomap_sector(struct iomap *iomap, loff_t pos)
++{
++	return (iomap->addr + pos - iomap->offset) >> SECTOR_SHIFT;
++}
++
+ static void
+ iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
+ {
+@@ -354,11 +360,8 @@ static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
+ static int iomap_dax_zero(loff_t pos, unsigned offset, unsigned bytes,
+ 		struct iomap *iomap)
+ {
+-	sector_t sector = (iomap->addr +
+-			   (pos & PAGE_MASK) - iomap->offset) >> 9;
+-
+-	return __dax_zero_page_range(iomap->bdev, iomap->dax_dev, sector,
+-			offset, bytes);
++	return __dax_zero_page_range(iomap->bdev, iomap->dax_dev,
++			iomap_sector(iomap, pos & PAGE_MASK), offset, bytes);
+ }
  
-+/*
-+ * Options configured on the command line.
-+ *
-+ * This stores all the specific config parameters the user sets on the command
-+ * line.  We don't keep flags to indicate what parameters are set - if we need
-+ * to check if an option was set on the command line, we check the relevant
-+ * entry in the option table which records whether it was specified in the
-+ * .seen and .str_seen variables in the table.
-+ *
-+ * Some parameters are stored as strings for post-parsing after their dependent
-+ * options have been resolved (e.g. block size and sector size have been parsed
-+ * and validated).
-+ *
-+ * This allows us to check that values have been set without needing separate
-+ * flags for each value, and hence avoids needing to record and check for each
-+ * specific option that can set the value later on in the code. In the cases
-+ * where we don't have a cli_params structure around, the function cli_opt_set()
-+ * function can be used.
-+ */
- struct cli_params {
- 	int	sectorsize;
- 	int	blocksize;
+ static loff_t
+@@ -943,8 +946,7 @@ iomap_dio_zero(struct iomap_dio *dio, struct iomap *iomap, loff_t pos,
+ 
+ 	bio = bio_alloc(GFP_KERNEL, 1);
+ 	bio_set_dev(bio, iomap->bdev);
+-	bio->bi_iter.bi_sector =
+-		(iomap->addr + pos - iomap->offset) >> 9;
++	bio->bi_iter.bi_sector = iomap_sector(iomap, pos);
+ 	bio->bi_private = dio;
+ 	bio->bi_end_io = iomap_dio_bio_end_io;
+ 
+@@ -1038,8 +1040,7 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+ 
+ 		bio = bio_alloc(GFP_KERNEL, nr_pages);
+ 		bio_set_dev(bio, iomap->bdev);
+-		bio->bi_iter.bi_sector =
+-			(iomap->addr + pos - iomap->offset) >> 9;
++		bio->bi_iter.bi_sector = iomap_sector(iomap, pos);
+ 		bio->bi_write_hint = dio->iocb->ki_hint;
+ 		bio->bi_private = dio;
+ 		bio->bi_end_io = iomap_dio_bio_end_io;
 -- 
-2.16.3
+2.17.0
 
