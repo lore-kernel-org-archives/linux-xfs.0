@@ -1,89 +1,107 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:49816 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755912AbeEaSGd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:06:33 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 03/13] mm: return an unsigned int from __do_page_cache_readahead
-Date: Thu, 31 May 2018 20:06:04 +0200
-Message-Id: <20180531180614.21506-4-hch@lst.de>
-In-Reply-To: <20180531180614.21506-1-hch@lst.de>
-References: <20180531180614.21506-1-hch@lst.de>
+Received: from userp2120.oracle.com ([156.151.31.85]:55094 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753684AbeEWDPv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 May 2018 23:15:51 -0400
+Date: Tue, 22 May 2018 20:15:36 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 03/11] xfs_repair: validate some of the log space
+ information
+Message-ID: <20180523031536.GH14384@magnolia>
+References: <152401958920.13319.10756339531174871801.stgit@magnolia>
+ <152401961080.13319.3976228325503296406.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <152401961080.13319.3976228325503296406.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+To: sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-We never return an error, so switch to returning an unsigned int.  Most
-callers already did implicit casts to an unsigned type, and the one that
-didn't can be simplified now.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Suggested-by: Matthew Wilcox <willy@infradead.org>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Validate the log space information in a similar manner to the kernel so
+that repair will stumble over (and fix) broken log info that prevents
+mounting.  Fixes logsunit fuzz-and-fix failures in xfs/350.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- mm/internal.h  |  2 +-
- mm/readahead.c | 15 +++++----------
- 2 files changed, 6 insertions(+), 11 deletions(-)
+ repair/globals.h    |    3 ++-
+ repair/sb.c         |   27 +++++++++++++++++++++++++++
+ repair/xfs_repair.c |    2 ++
+ 3 files changed, 31 insertions(+), 1 deletion(-)
 
-diff --git a/mm/internal.h b/mm/internal.h
-index 62d8c34e63d5..954003ac766a 100644
---- a/mm/internal.h
-+++ b/mm/internal.h
-@@ -53,7 +53,7 @@ void unmap_page_range(struct mmu_gather *tlb,
- 			     unsigned long addr, unsigned long end,
- 			     struct zap_details *details);
+diff --git a/repair/globals.h b/repair/globals.h
+index e777ba27..164619b0 100644
+--- a/repair/globals.h
++++ b/repair/globals.h
+@@ -51,7 +51,8 @@
+ #define XR_BAD_SVN		19	/* bad shared version number */
+ #define XR_BAD_CRC		20	/* Bad CRC */
+ #define XR_BAD_DIR_SIZE_DATA	21	/* Bad directory geometry */
+-#define XR_BAD_ERR_CODE		22	/* Bad error code */
++#define XR_BAD_LOG_GEOMETRY	22	/* Bad log geometry */
++#define XR_BAD_ERR_CODE		23	/* Bad error code */
  
--extern int __do_page_cache_readahead(struct address_space *mapping,
-+extern unsigned int __do_page_cache_readahead(struct address_space *mapping,
- 		struct file *filp, pgoff_t offset, unsigned long nr_to_read,
- 		unsigned long lookahead_size);
+ /* XFS filesystem (il)legal values */
  
-diff --git a/mm/readahead.c b/mm/readahead.c
-index 16d0cb1e2616..fa4d4b767130 100644
---- a/mm/readahead.c
-+++ b/mm/readahead.c
-@@ -147,16 +147,16 @@ static int read_pages(struct address_space *mapping, struct file *filp,
-  *
-  * Returns the number of pages requested, or the maximum amount of I/O allowed.
-  */
--int __do_page_cache_readahead(struct address_space *mapping, struct file *filp,
--			pgoff_t offset, unsigned long nr_to_read,
--			unsigned long lookahead_size)
-+unsigned int __do_page_cache_readahead(struct address_space *mapping,
-+		struct file *filp, pgoff_t offset, unsigned long nr_to_read,
-+		unsigned long lookahead_size)
- {
- 	struct inode *inode = mapping->host;
- 	struct page *page;
- 	unsigned long end_index;	/* The last page we want to read */
- 	LIST_HEAD(page_pool);
- 	int page_idx;
--	int nr_pages = 0;
-+	unsigned int nr_pages = 0;
- 	loff_t isize = i_size_read(inode);
- 	gfp_t gfp_mask = readahead_gfp_mask(mapping);
+diff --git a/repair/sb.c b/repair/sb.c
+index 3dc6538b..ef44e39c 100644
+--- a/repair/sb.c
++++ b/repair/sb.c
+@@ -298,6 +298,30 @@ sb_validate_ino_align(struct xfs_sb *sb)
+ 	return false;
+ }
  
-@@ -223,16 +223,11 @@ int force_page_cache_readahead(struct address_space *mapping, struct file *filp,
- 	max_pages = max_t(unsigned long, bdi->io_pages, ra->ra_pages);
- 	nr_to_read = min(nr_to_read, max_pages);
- 	while (nr_to_read) {
--		int err;
--
- 		unsigned long this_chunk = (2 * 1024 * 1024) / PAGE_SIZE;
++/*
++ * Validate the given log space.  Derived from xfs_log_mount, though we
++ * can't validate the minimum log size until later.  We only do this
++ * validation on V5 filesystems because the kernel doesn't reject malformed
++ * log geometry on older revision filesystems.
++ *
++ * Returns false if the log is garbage.
++ */
++static bool
++verify_sb_loginfo(
++	struct xfs_sb	*sb)
++{
++	if (xfs_sb_version_hascrc(sb) &&
++	    (sb->sb_logblocks == 0 ||
++	     sb->sb_logblocks > XFS_MAX_LOG_BLOCKS ||
++	     (sb->sb_logblocks << sb->sb_blocklog) > XFS_MAX_LOG_BYTES))
++		return false;
++
++	if (sb->sb_logsunit > 1 && sb->sb_logsunit % sb->sb_blocksize)
++		return false;
++
++	return true;
++}
++
+ /*
+  * verify a superblock -- does not verify root inode #
+  *	can only check that geometry info is internally
+@@ -412,6 +436,9 @@ verify_sb(char *sb_buf, xfs_sb_t *sb, int is_primary_sb)
+ 	    (sb->sb_blocklog - sb->sb_inodelog != sb->sb_inopblog))
+ 		return XR_BAD_INO_SIZE_DATA;
  
- 		if (this_chunk > nr_to_read)
- 			this_chunk = nr_to_read;
--		err = __do_page_cache_readahead(mapping, filp,
--						offset, this_chunk, 0);
--		if (err < 0)
--			return err;
-+		__do_page_cache_readahead(mapping, filp, offset, this_chunk, 0);
++	if (!verify_sb_loginfo(sb))
++		return XR_BAD_LOG_GEOMETRY;
++
+ 	if (xfs_sb_version_hassector(sb))  {
  
- 		offset += this_chunk;
- 		nr_to_read -= this_chunk;
--- 
-2.17.0
-
+ 		/* check to make sure log sector is legal 2^N, 9 <= N <= 15 */
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index ff6a7384..b7c2d267 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -155,6 +155,8 @@ err_string(int err_code)
+ 			_("bad CRC in superblock");
+ 		err_message[XR_BAD_DIR_SIZE_DATA] =
+ 			_("inconsistent directory geometry information");
++		err_message[XR_BAD_LOG_GEOMETRY] =
++			_("inconsistent log geometry information");
+ 		done = 1;
+ 	}
+ 
