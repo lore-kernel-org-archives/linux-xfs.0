@@ -1,55 +1,154 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga18.intel.com ([134.134.136.126]:65454 "EHLO mga18.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965570AbeEYPma (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 25 May 2018 11:42:30 -0400
-Date: Fri, 25 May 2018 09:42:29 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH 1/7] fs: allow per-device dax status checking for
- filesystems
-Message-ID: <20180525154229.GA11044@linux.intel.com>
-References: <20180525025518.11405-1-ross.zwisler@linux.intel.com>
- <20180525025518.11405-2-ross.zwisler@linux.intel.com>
- <20180525050218.GF4507@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180525050218.GF4507@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:48912 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933471AbeEWOpT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 10:45:19 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 25/34] xfs: remove xfs_reflink_trim_irec_to_next_cow
+Date: Wed, 23 May 2018 16:43:48 +0200
+Message-Id: <20180523144357.18985-26-hch@lst.de>
+In-Reply-To: <20180523144357.18985-1-hch@lst.de>
+References: <20180523144357.18985-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Toshi Kani <toshi.kani@hpe.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-On Thu, May 24, 2018 at 10:02:18PM -0700, Darrick J. Wong wrote:
-> On Thu, May 24, 2018 at 08:55:12PM -0600, Ross Zwisler wrote:
-> > From: "Darrick J. Wong" <darrick.wong@oracle.com>
-> > 
-> > Remove __bdev_dax_supported and change to bdev_dax_supported that takes a
-> > bdev parameter.  This enables multi-device filesystems like xfs to check
-> > that a dax device can work for the particular filesystem.  Once that's
-> > in place, actually fix all the parts of XFS where we need to be able to
-> > distinguish between datadev and rtdev.
-> > 
-> > This patch fixes the problem where we screw up the dax support checking
-> > in xfs if the datadev and rtdev have different dax capabilities.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> 
-> Reviewed-by: Darr...oh, I'm not allowed to do that, am I?
-> 
-> Would you mind (re)sending this to the xfs list so that someone else can
-> review it?
-> 
-> --D
+In the only caller we just did a lookup in the COW extent tree for
+the same offset.  Reuse that result and save a lookup, as well as
+shortening the ilock hold time.
 
-Thanks for the review, Darrick.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_aops.c    | 25 +++++++++++++++++--------
+ fs/xfs/xfs_reflink.c | 33 ---------------------------------
+ fs/xfs/xfs_reflink.h |  2 --
+ 3 files changed, 17 insertions(+), 43 deletions(-)
 
-I think at one point Dave said that if you touch more than 1 filesystem with a
-series you should just CC linux-fsdevel and omit the individual filesystems?
-I realize that this series only touches ext2 and ext4 a little, but that's
-what I opted for.
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index a4b4a7037deb..354d26d66c12 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -383,11 +383,12 @@ xfs_map_blocks(
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	ssize_t			count = i_blocksize(inode);
+-	xfs_fileoff_t		offset_fsb, end_fsb;
++	xfs_fileoff_t		offset_fsb, end_fsb, cow_fsb = 0;
+ 	int			whichfork = XFS_DATA_FORK;
+ 	struct xfs_iext_cursor	icur;
+ 	int			error = 0;
+ 	int			nimaps = 1;
++	bool			cow_valid = false;
+ 
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+@@ -407,8 +408,11 @@ xfs_map_blocks(
+ 	 * it directly instead of looking up anything in the data fork.
+ 	 */
+ 	if (xfs_is_reflink_inode(ip) &&
+-	    xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, imap) &&
+-	    imap->br_startoff <= offset_fsb) {
++	    xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, imap)) {
++		cow_fsb = imap->br_startoff;
++		cow_valid = true;
++	}
++	if (cow_valid && cow_fsb <= offset_fsb) {
+ 		xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ 		/*
+ 		 * Truncate can race with writeback since writeback doesn't
+@@ -430,6 +434,10 @@ xfs_map_blocks(
+ 
+ 	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
+ 				imap, &nimaps, XFS_BMAPI_ENTIRE);
++	xfs_iunlock(ip, XFS_ILOCK_SHARED);
++	if (error)
++		return error;
++
+ 	if (!nimaps) {
+ 		/*
+ 		 * Lookup returns no match? Beyond eof? regardless,
+@@ -451,16 +459,17 @@ xfs_map_blocks(
+ 		 * is a pending CoW reservation before the end of this extent,
+ 		 * so that we pick up the COW extents in the next iteration.
+ 		 */
+-		xfs_reflink_trim_irec_to_next_cow(ip, offset_fsb, imap);
++		if (cow_valid &&
++		    cow_fsb < imap->br_startoff + imap->br_blockcount) {
++			imap->br_blockcount = cow_fsb - imap->br_startoff;
++			trace_xfs_reflink_trim_irec(ip, imap);
++		}
++
+ 		if (imap->br_state == XFS_EXT_UNWRITTEN)
+ 			*type = XFS_IO_UNWRITTEN;
+ 		else
+ 			*type = XFS_IO_OVERWRITE;
+ 	}
+-	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+-	if (error)
+-		return error;
+-
+ done:
+ 	switch (*type) {
+ 	case XFS_IO_HOLE:
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 8e5eb8e70c89..ff76bc56ff3d 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -484,39 +484,6 @@ xfs_reflink_allocate_cow(
+ 	return error;
+ }
+ 
+-/*
+- * Trim an extent to end at the next CoW reservation past offset_fsb.
+- */
+-void
+-xfs_reflink_trim_irec_to_next_cow(
+-	struct xfs_inode		*ip,
+-	xfs_fileoff_t			offset_fsb,
+-	struct xfs_bmbt_irec		*imap)
+-{
+-	struct xfs_ifork		*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
+-	struct xfs_bmbt_irec		got;
+-	struct xfs_iext_cursor		icur;
+-
+-	if (!xfs_is_reflink_inode(ip))
+-		return;
+-
+-	/* Find the extent in the CoW fork. */
+-	if (!xfs_iext_lookup_extent(ip, ifp, offset_fsb, &icur, &got))
+-		return;
+-
+-	/* This is the extent before; try sliding up one. */
+-	if (got.br_startoff < offset_fsb) {
+-		if (!xfs_iext_next_extent(ifp, &icur, &got))
+-			return;
+-	}
+-
+-	if (got.br_startoff >= imap->br_startoff + imap->br_blockcount)
+-		return;
+-
+-	imap->br_blockcount = got.br_startoff - imap->br_startoff;
+-	trace_xfs_reflink_trim_irec(ip, imap);
+-}
+-
+ /*
+  * Cancel CoW reservations for some block range of an inode.
+  *
+diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+index 15a456492667..e8d4d50c629f 100644
+--- a/fs/xfs/xfs_reflink.h
++++ b/fs/xfs/xfs_reflink.h
+@@ -32,8 +32,6 @@ extern int xfs_reflink_allocate_cow(struct xfs_inode *ip,
+ 		struct xfs_bmbt_irec *imap, bool *shared, uint *lockmode);
+ extern int xfs_reflink_convert_cow(struct xfs_inode *ip, xfs_off_t offset,
+ 		xfs_off_t count);
+-extern void xfs_reflink_trim_irec_to_next_cow(struct xfs_inode *ip,
+-		xfs_fileoff_t offset_fsb, struct xfs_bmbt_irec *imap);
+ 
+ extern int xfs_reflink_cancel_cow_blocks(struct xfs_inode *ip,
+ 		struct xfs_trans **tpp, xfs_fileoff_t offset_fsb,
+-- 
+2.17.0
 
-Is that sufficient to get to the rest of the XFS developers, or would you like
-a resend adding linux-xfs?
