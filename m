@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:47020 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:47400 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933421AbeEWOoY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 10:44:24 -0400
+        with ESMTP id S933344AbeEWOot (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 10:44:49 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 07/34] mm: return an unsigned int from __do_page_cache_readahead
-Date: Wed, 23 May 2018 16:43:30 +0200
-Message-Id: <20180523144357.18985-8-hch@lst.de>
+Subject: [PATCH 15/34] iomap: add an iomap-based readpage and readpages implementation
+Date: Wed, 23 May 2018 16:43:38 +0200
+Message-Id: <20180523144357.18985-16-hch@lst.de>
 In-Reply-To: <20180523144357.18985-1-hch@lst.de>
 References: <20180523144357.18985-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,73 +15,257 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-We never return an error, so switch to returning an unsigned int.  Most
-callers already did implicit casts to an unsigned type, and the one that
-didn't can be simplified now.
+Simply use iomap_apply to iterate over the file and a submit a bio for
+each non-uptodate but mapped region and zero everything else.  Note that
+as-is this can not be used for file systems with a blocksize smaller than
+the page size, but that support will be added later.
 
-Suggested-by: Matthew Wilcox <willy@infradead.org>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- mm/internal.h  |  2 +-
- mm/readahead.c | 15 +++++----------
- 2 files changed, 6 insertions(+), 11 deletions(-)
+ fs/iomap.c            | 194 +++++++++++++++++++++++++++++++++++++++++-
+ include/linux/iomap.h |   4 +
+ 2 files changed, 197 insertions(+), 1 deletion(-)
 
-diff --git a/mm/internal.h b/mm/internal.h
-index 62d8c34e63d5..954003ac766a 100644
---- a/mm/internal.h
-+++ b/mm/internal.h
-@@ -53,7 +53,7 @@ void unmap_page_range(struct mmu_gather *tlb,
- 			     unsigned long addr, unsigned long end,
- 			     struct zap_details *details);
- 
--extern int __do_page_cache_readahead(struct address_space *mapping,
-+extern unsigned int __do_page_cache_readahead(struct address_space *mapping,
- 		struct file *filp, pgoff_t offset, unsigned long nr_to_read,
- 		unsigned long lookahead_size);
- 
-diff --git a/mm/readahead.c b/mm/readahead.c
-index 16d0cb1e2616..fa4d4b767130 100644
---- a/mm/readahead.c
-+++ b/mm/readahead.c
-@@ -147,16 +147,16 @@ static int read_pages(struct address_space *mapping, struct file *filp,
+diff --git a/fs/iomap.c b/fs/iomap.c
+index fa278ed338ce..78259a2249f4 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -1,6 +1,6 @@
+ /*
+  * Copyright (C) 2010 Red Hat, Inc.
+- * Copyright (c) 2016 Christoph Hellwig.
++ * Copyright (c) 2016-2018 Christoph Hellwig.
   *
-  * Returns the number of pages requested, or the maximum amount of I/O allowed.
-  */
--int __do_page_cache_readahead(struct address_space *mapping, struct file *filp,
--			pgoff_t offset, unsigned long nr_to_read,
--			unsigned long lookahead_size)
-+unsigned int __do_page_cache_readahead(struct address_space *mapping,
-+		struct file *filp, pgoff_t offset, unsigned long nr_to_read,
-+		unsigned long lookahead_size)
+  * This program is free software; you can redistribute it and/or modify it
+  * under the terms and conditions of the GNU General Public License,
+@@ -18,6 +18,7 @@
+ #include <linux/uaccess.h>
+ #include <linux/gfp.h>
+ #include <linux/mm.h>
++#include <linux/mm_inline.h>
+ #include <linux/swap.h>
+ #include <linux/pagemap.h>
+ #include <linux/pagevec.h>
+@@ -103,6 +104,197 @@ iomap_sector(struct iomap *iomap, loff_t pos)
+ 	return (iomap->addr + pos - iomap->offset) >> SECTOR_SHIFT;
+ }
+ 
++static void
++iomap_read_end_io(struct bio *bio)
++{
++	int error = blk_status_to_errno(bio->bi_status);
++	struct bio_vec *bvec;
++	int i;
++
++	bio_for_each_segment_all(bvec, bio, i)
++		page_endio(bvec->bv_page, false, error);
++	bio_put(bio);
++}
++
++static struct bio *
++iomap_read_bio_alloc(struct iomap *iomap, sector_t sector, loff_t length)
++{
++	int nr_vecs = (length + PAGE_SIZE - 1) >> PAGE_SHIFT;
++	struct bio *bio = bio_alloc(GFP_NOFS, min(BIO_MAX_PAGES, nr_vecs));
++
++	bio->bi_opf = REQ_OP_READ;
++	bio->bi_iter.bi_sector = sector;
++	bio_set_dev(bio, iomap->bdev);
++	bio->bi_end_io = iomap_read_end_io;
++	return bio;
++}
++
++struct iomap_readpage_ctx {
++	struct page		*cur_page;
++	bool			cur_page_in_bio;
++	struct bio		*bio;
++	struct list_head	*pages;
++};
++
++static loff_t
++iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
++		struct iomap *iomap)
++{
++	struct iomap_readpage_ctx *ctx = data;
++	struct page *page = ctx->cur_page;
++	unsigned poff = pos & (PAGE_SIZE - 1);
++	unsigned plen = min_t(loff_t, PAGE_SIZE - poff, length);
++	bool is_contig = false;
++	sector_t sector;
++
++	/* we don't support blocksize < PAGE_SIZE quite yet: */
++	WARN_ON_ONCE(pos != page_offset(page));
++	WARN_ON_ONCE(plen != PAGE_SIZE);
++
++	if (iomap->type != IOMAP_MAPPED || pos >= i_size_read(inode)) {
++		zero_user(page, poff, plen);
++		SetPageUptodate(page);
++		goto done;
++	}
++
++	ctx->cur_page_in_bio = true;
++
++	/*
++	 * Try to merge into a previous segment if we can.
++	 */
++	sector = iomap_sector(iomap, pos);
++	if (ctx->bio && bio_end_sector(ctx->bio) == sector) {
++		if (__bio_try_merge_page(ctx->bio, page, plen, poff))
++			goto done;
++		is_contig = true;
++	}
++
++	if (!ctx->bio || !is_contig || bio_full(ctx->bio)) {
++		if (ctx->bio)
++			submit_bio(ctx->bio);
++		ctx->bio = iomap_read_bio_alloc(iomap, sector, length);
++	}
++
++	__bio_add_page(ctx->bio, page, plen, poff);
++done:
++	return plen;
++}
++
++int
++iomap_readpage(struct page *page, const struct iomap_ops *ops)
++{
++	struct iomap_readpage_ctx ctx = { .cur_page = page };
++	struct inode *inode = page->mapping->host;
++	unsigned poff;
++	loff_t ret;
++
++	WARN_ON_ONCE(page_has_buffers(page));
++
++	for (poff = 0; poff < PAGE_SIZE; poff += ret) {
++		ret = iomap_apply(inode, page_offset(page) + poff,
++				PAGE_SIZE - poff, 0, ops, &ctx,
++				iomap_readpage_actor);
++		if (ret <= 0) {
++			WARN_ON_ONCE(ret == 0);
++			SetPageError(page);
++			break;
++		}
++	}
++
++	if (ctx.bio) {
++		submit_bio(ctx.bio);
++		WARN_ON_ONCE(!ctx.cur_page_in_bio);
++	} else {
++		WARN_ON_ONCE(ctx.cur_page_in_bio);
++		unlock_page(page);
++	}
++	return 0;
++}
++EXPORT_SYMBOL_GPL(iomap_readpage);
++
++static struct page *
++iomap_next_page(struct inode *inode, struct list_head *pages, loff_t pos,
++		loff_t length, loff_t *done)
++{
++	while (!list_empty(pages)) {
++		struct page *page = lru_to_page(pages);
++
++		if (page_offset(page) >= (u64)pos + length)
++			break;
++
++		list_del(&page->lru);
++		if (!add_to_page_cache_lru(page, inode->i_mapping, page->index,
++				GFP_NOFS))
++			return page;
++
++		*done += PAGE_SIZE;
++		put_page(page);
++	}
++
++	return NULL;
++}
++
++static loff_t
++iomap_readpages_actor(struct inode *inode, loff_t pos, loff_t length,
++		void *data, struct iomap *iomap)
++{
++	struct iomap_readpage_ctx *ctx = data;
++	loff_t done, ret;
++
++	for (done = 0; done < length; done += ret) {
++		if (ctx->cur_page && ((pos + done) & (PAGE_SIZE - 1)) == 0) {
++			if (!ctx->cur_page_in_bio)
++				unlock_page(ctx->cur_page);
++			put_page(ctx->cur_page);
++			ctx->cur_page = NULL;
++		}
++		if (!ctx->cur_page) {
++			ctx->cur_page = iomap_next_page(inode, ctx->pages,
++					pos, length, &done);
++			if (!ctx->cur_page)
++				break;
++			ctx->cur_page_in_bio = false;
++		}
++		ret = iomap_readpage_actor(inode, pos + done, length - done,
++				ctx, iomap);
++	}
++
++	return done;
++}
++
++int
++iomap_readpages(struct address_space *mapping, struct list_head *pages,
++		unsigned nr_pages, const struct iomap_ops *ops)
++{
++	struct iomap_readpage_ctx ctx = { .pages = pages };
++	loff_t pos = page_offset(list_entry(pages->prev, struct page, lru));
++	loff_t last = page_offset(list_entry(pages->next, struct page, lru));
++	loff_t length = last - pos + PAGE_SIZE, ret = 0;
++
++	while (length > 0) {
++		ret = iomap_apply(mapping->host, pos, length, 0, ops,
++				&ctx, iomap_readpages_actor);
++		if (ret <= 0) {
++			WARN_ON_ONCE(ret == 0);
++			goto done;
++		}
++		pos += ret;
++		length -= ret;
++	}
++	ret = 0;
++done:
++	if (ctx.bio)
++		submit_bio(ctx.bio);
++	if (ctx.cur_page) {
++		if (!ctx.cur_page_in_bio)
++			unlock_page(ctx.cur_page);
++		put_page(ctx.cur_page);
++	}
++	WARN_ON_ONCE(!ret && !list_empty(ctx.pages));
++	return ret;
++}
++EXPORT_SYMBOL_GPL(iomap_readpages);
++
+ static void
+ iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
  {
- 	struct inode *inode = mapping->host;
- 	struct page *page;
- 	unsigned long end_index;	/* The last page we want to read */
- 	LIST_HEAD(page_pool);
- 	int page_idx;
--	int nr_pages = 0;
-+	unsigned int nr_pages = 0;
- 	loff_t isize = i_size_read(inode);
- 	gfp_t gfp_mask = readahead_gfp_mask(mapping);
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index a044a824da85..7300d30ca495 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -9,6 +9,7 @@ struct fiemap_extent_info;
+ struct inode;
+ struct iov_iter;
+ struct kiocb;
++struct page;
+ struct vm_area_struct;
+ struct vm_fault;
  
-@@ -223,16 +223,11 @@ int force_page_cache_readahead(struct address_space *mapping, struct file *filp,
- 	max_pages = max_t(unsigned long, bdi->io_pages, ra->ra_pages);
- 	nr_to_read = min(nr_to_read, max_pages);
- 	while (nr_to_read) {
--		int err;
--
- 		unsigned long this_chunk = (2 * 1024 * 1024) / PAGE_SIZE;
+@@ -88,6 +89,9 @@ struct iomap_ops {
  
- 		if (this_chunk > nr_to_read)
- 			this_chunk = nr_to_read;
--		err = __do_page_cache_readahead(mapping, filp,
--						offset, this_chunk, 0);
--		if (err < 0)
--			return err;
-+		__do_page_cache_readahead(mapping, filp, offset, this_chunk, 0);
- 
- 		offset += this_chunk;
- 		nr_to_read -= this_chunk;
+ ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
+ 		const struct iomap_ops *ops);
++int iomap_readpage(struct page *page, const struct iomap_ops *ops);
++int iomap_readpages(struct address_space *mapping, struct list_head *pages,
++		unsigned nr_pages, const struct iomap_ops *ops);
+ int iomap_file_dirty(struct inode *inode, loff_t pos, loff_t len,
+ 		const struct iomap_ops *ops);
+ int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
 -- 
 2.17.0
 
