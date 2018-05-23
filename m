@@ -1,80 +1,168 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:59570 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751532AbeEBVxq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 17:53:46 -0400
-Date: Thu, 3 May 2018 07:53:43 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 10/10] xfs: get rid of the log item descriptor
-Message-ID: <20180502215343.GB23861@dastard>
-References: <20180502080157.11386-1-david@fromorbit.com>
- <20180502080157.11386-11-david@fromorbit.com>
- <20180502200510.GA4127@magnolia>
+Received: from userp2120.oracle.com ([156.151.31.85]:60570 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753859AbeEWDa2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 May 2018 23:30:28 -0400
+Date: Tue, 22 May 2018 20:30:13 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 4/9] xfs_db: add a superblock info command
+Message-ID: <20180523033013.GI14384@magnolia>
+References: <152401952391.13048.15040850425873030425.stgit@magnolia>
+ <152401955677.13048.14823962842951881263.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180502200510.GA4127@magnolia>
+In-Reply-To: <152401955677.13048.14823962842951881263.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: sandeen@redhat.com
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, May 02, 2018 at 01:05:10PM -0700, Darrick J. Wong wrote:
-> On Wed, May 02, 2018 at 06:01:57PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > It's just a connector between a transaction and a log item. There's
-> > a 1:1 relationship between a log item descriptor and a log item,
-> > and a 1:1 relationship between a log item descriptor and a
-> > transaction. Both relationships are created and terminated at the
-> > same time, so why do we even have the descriptor?
-> > 
-> > Replace it with a specific list_head in the log item and a new
-> > log item dirtied flag to replace the XFS_LID_DIRTY flag.
-> > 
-> > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-.....
-> >  		/*
-> >  		 * Skip items that do not have any vectors for writing. These
-> >  		 * log items must now be considered clean in this transaction,
-> > -		 * so clear the XFS_LID_DIRTY flag to ensure it doesn't get
-> > +		 * so clear the XFS_LI_DIRTY flag to ensure it doesn't get
-> >  		 * added to the CIL by mistake.
-> >  		 */
-> >  		if (!shadow->lv_niovecs && !ordered) {
-> > -			lidp->lid_flags &= ~XFS_LID_DIRTY;
-> > +			clear_bit(XFS_LI_DIRTY, &lip->li_flags);
-> 
-> So this requires "xfs: handle inconsistent log item formatting state
-> correctly" as a prerequisite...
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Ah, forgot that was sitting high up in the patch stack. It's not
-dependent on it - and I can't remember exactly what the state of
-that patch was.
+Add an 'info' command to pretty-print the superblock geometry.
 
-...
-> > @@ -633,7 +629,7 @@ xfs_trans_binval(
-> >  	bip->bli_flags |= XFS_BLI_STALE;
-> >  
-> >  	/* Mark the log item as dirty. */
-> > -	bip->bli_item.li_desc->lid_flags |= XFS_LID_DIRTY;
-> > +	set_bit(XFS_LI_DIRTY, &bip->bli_item.li_flags);
-> >  	tp->t_flags |= XFS_TRANS_DIRTY;
-> 
-> ...but even with that patch, this hunk doesn't apply.  I've never seen
-> the comment in any patch.  What are the prerequisites for this series?
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ db/Makefile       |    2 +
+ db/command.c      |    1 +
+ db/command.h      |    1 +
+ db/info.c         |   74 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ man/man8/xfs_db.8 |    8 ++++++
+ 5 files changed, 85 insertions(+), 1 deletion(-)
+ create mode 100644 db/info.c
 
-Ah, I also have the buffer range logging patch in the series up near
-the top with the other patch. Again, not dependent, just got so many
-stalled patches in my tree that have been sitting around for ages
-that I've forgotten where there are dependencies. 
-
-I'll have to do some more reordering...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/db/Makefile b/db/Makefile
+index 6caa6348..c73d7f25 100644
+--- a/db/Makefile
++++ b/db/Makefile
+@@ -14,7 +14,7 @@ HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
+ 	io.h logformat.h malloc.h metadump.h output.h print.h quit.h sb.h \
+ 	sig.h strvec.h text.h type.h write.h attrset.h symlink.h fsmap.h \
+ 	fuzz.h
+-CFILES = $(HFILES:.h=.c) btdump.c
++CFILES = $(HFILES:.h=.c) btdump.c info.c
+ LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
+ 
+ LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
+diff --git a/db/command.c b/db/command.c
+index 12ae5b78..087955e0 100644
+--- a/db/command.c
++++ b/db/command.c
+@@ -136,6 +136,7 @@ init_commands(void)
+ 	fsmap_init();
+ 	help_init();
+ 	hash_init();
++	info_init();
+ 	inode_init();
+ 	input_init();
+ 	logres_init();
+diff --git a/db/command.h b/db/command.h
+index 9b4ed2d7..84cd0b10 100644
+--- a/db/command.h
++++ b/db/command.h
+@@ -41,3 +41,4 @@ extern const cmdinfo_t	*find_command(const char *cmd);
+ extern void		init_commands(void);
+ 
+ extern void		btdump_init(void);
++extern void		info_init(void);
+diff --git a/db/info.c b/db/info.c
+new file mode 100644
+index 00000000..05b3c1f0
+--- /dev/null
++++ b/db/info.c
+@@ -0,0 +1,74 @@
++/*
++ * Copyright (C) 2018 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#include "libxfs.h"
++#include "command.h"
++#include "init.h"
++#include "output.h"
++#include "fsgeom.h"
++
++static void
++info_help(void)
++{
++	dbprintf(_(
++"\n"
++" Pretty-prints the filesystem geometry as derived from the superblock.\n"
++" The output has the same format as mkfs.xfs, xfs_info, and other utilities.\n"
++"\n"
++));
++
++}
++
++static int
++info_f(
++	int			argc,
++	char			**argv)
++{
++	struct xfs_fsop_geom	geo;
++	int			error;
++
++	error = -libxfs_fs_geometry(&mp->m_sb, &geo,
++			XFS_FS_GEOM_MAX_STRUCT_VER);
++	if (error) {
++		dbprintf(_("could not obtain geometry\n"));
++		exitcode = 1;
++		return 0;
++	}
++
++	xfs_report_geom(&geo, fsdevice, x.logname, x.rtname);
++	return 0;
++}
++
++static const struct cmdinfo info_cmd = {
++	.name =		"info",
++	.altname =	"i",
++	.cfunc =	info_f,
++	.argmin =	0,
++	.argmax =	0,
++	.canpush =	0,
++	.args =		NULL,
++	.oneline =	N_("pretty-print superblock info"),
++	.help =		info_help,
++};
++
++void
++info_init(void)
++{
++	add_command(&info_cmd);
++}
+diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+index 524b1ef6..10f2beb9 100644
+--- a/man/man8/xfs_db.8
++++ b/man/man8/xfs_db.8
+@@ -670,6 +670,14 @@ using the hash function of the XFS directory and attribute implementation.
+ .BI "help [" command ]
+ Print help for one or all commands.
+ .TP
++.B info
++Displays selected geometry information about the filesystem.
++The output will have the same format that
++.BR "mkfs.xfs" "(8)"
++prints when creating a filesystem or
++.BR "xfs_info" "(8)"
++prints when querying a filesystem.
++.TP
+ .BI "inode [" inode# ]
+ Set the current inode number. If no
+ .I inode#
