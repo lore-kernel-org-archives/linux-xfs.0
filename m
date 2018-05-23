@@ -1,87 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:37994 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753624AbeEWAZy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 May 2018 20:25:54 -0400
-Date: Wed, 23 May 2018 10:25:52 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Deleting a project from XFS quotas
-Message-ID: <20180523002552.GY23861@dastard>
-References: <d30e573b-9c2a-cf97-7608-ad10a7b1b21c@gn.apc.org>
+Received: from aserp2120.oracle.com ([141.146.126.78]:55260 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753787AbeEWD7C (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 May 2018 23:59:02 -0400
+Subject: Re: [PATCH v2 5/9] xfs_spaceman: print a nicer message when the file
+ path isn't on an xfs
+References: <152401952391.13048.15040850425873030425.stgit@magnolia>
+ <152401956294.13048.1815463748899965760.stgit@magnolia>
+ <20180523033117.GJ14384@magnolia>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <cabdf0a3-b3db-8c13-3724-a048b8936664@oracle.com>
+Date: Tue, 22 May 2018 20:58:46 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d30e573b-9c2a-cf97-7608-ad10a7b1b21c@gn.apc.org>
+In-Reply-To: <20180523033117.GJ14384@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ian Macdonald <imac@gn.apc.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, May 22, 2018 at 10:46:28AM +0200, Ian Macdonald wrote:
-> Hi,
+Ok, looks good.  Thx!
+
+Reviewed by: Allison Henderson <allison.henderson@oracle.com>
+
+On 05/22/2018 08:31 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> We have been using XFS project quotas to track disk usage for various
-> websites that we have on a server. The machine was running Debian jessie
-> and this is what the quota report looked like:
-> # xfs_quota -xc "report -h" /var
+> If the file path passed in is not something on an xfs filesystem, print
+> a nice message about that instead of yelling about ioctls.
 > 
-> Project quota on /var (/dev/xvda3)
->                         Blocks
-> Project ID   Used   Soft   Hard Warn/Grace
-> ---------- ---------------------------------
-> web01       74.3G    80G    81G  00 [------]
-> web02       72.5G    75G    76G  00 [------]
-> web03       18.5G    20G    21G  00 [------]
-> web04       33.3G    40G    42G  00 [------]
-> web05       10.3G    20G    21G  00 [------]
-> web06        2.9G    20G    21G  00 [------]
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>   spaceman/file.c |    7 ++++++-
+>   1 file changed, 6 insertions(+), 1 deletion(-)
 > 
-> However, after upgrading the server to Debian stretch, that same report
-> now looks like this:
-
-Yup, newer kernels use a different (more efficient) mechanism for
-iterating the known quotas. It's driven from the kernel side, so
-it finds all initialised dquots in the quota file, not just those
-that userspace has name mappings for.
-
-> Project quota on /var (/dev/xvda3)
->                         Blocks
-> Project ID   Used   Soft   Hard Warn/Grace
-> ---------- ---------------------------------
-> #0          14.3G      0      0  00 [------]
-> #15             0    20G    21G  00 [------]
-> #32             0    20G    21G  00 [------]
-> #33             0    20G    21G  00 [------]
-> #34             0    20G    21G  00 [------]
-> #35             0    20G    21G  00 [------]
-> #36             0    20G    21G  00 [------]
-> web01       86.5G    95G    96G  00 [------]
-> web02       73.2G    75G    76G  00 [------]
-> web03       19.5G    20G    21G  00 [------]
-> web04       33.3G    40G    42G  00 [------]
-> web05       10.3G    20G    21G  00 [------]
-> web06        3.1G    20G    21G  00 [------]
+> diff --git a/spaceman/file.c b/spaceman/file.c
+> index 4c13b4a8..23f8be1c 100644
+> --- a/spaceman/file.c
+> +++ b/spaceman/file.c
+> @@ -69,7 +69,12 @@ openfile(
+>   	}
+>   
+>   	if (ioctl(fd, XFS_IOC_FSGEOMETRY, geom) < 0) {
+> -		perror("XFS_IOC_FSGEOMETRY");
+> +		if (errno == ENOTTY)
+> +			fprintf(stderr,
+> +_("%s: Not on a mounted XFS filesystem.\n"),
+> +					path);
+> +		else
+> +			perror("XFS_IOC_FSGEOMETRY");
+>   		close(fd);
+>   		return -1;
+>   	}
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIBAg&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=c2CCB3K_iIfSsLpTfhw0rxFL87ZYlPnPvGWzEfJ_t2E&s=KTX7FsHojy6HKAINeB5zGTNlqQlJ037Cw09OFK9tBhY&e=
 > 
-> I only have the 'web01' to 'web06' projects listed in my /etc/projects
-> and /etc/projid files, for the particular directories whose disk usage I
-> want to manage via XFS quotas.
-
-The quota file has dquots on disk for quota IDs 15, and 32-36 as
-well as whatever you have assigned to web0[1-6]. Quota ID 0 is the
-default project quota, telling you how much used space is not
-assigned to other project quotas. What you are probably seeing is
-old dquots from previously configured project IDs. They are still
-allocated on disk, just empty now that nobody is using them.
-
-I don't know if reporting these empty quota IDs is intentional or
-what you need to do to avoid having them reported - someone involved
-in changing the dquot iteration mechanism will have to chime in on
-that....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
