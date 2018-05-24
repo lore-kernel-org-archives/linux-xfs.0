@@ -1,70 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from imap.thunk.org ([74.207.234.97]:47146 "EHLO imap.thunk.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935196AbeEXA7M (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 23 May 2018 20:59:12 -0400
-Date: Wed, 23 May 2018 20:59:06 -0400
-From: "Theodore Y. Ts'o" <tytso@mit.edu>
-Subject: Re: Bugs involving maliciously crafted file system
-Message-ID: <20180524005906.GC3434@thunk.org>
-References: <000000000000457b2d056cbb0044@google.com>
- <20180522123107.GC3751@bfoster.bfoster>
- <20180522222620.GW23861@dastard>
- <20180522225208.GB658@sol.localdomain>
- <20180523074425.GM14384@magnolia>
- <20180523162015.GA3684@sol.localdomain>
- <a52266f9-0096-b28c-c01c-046ababcfe3a@sandeen.net>
- <20180523234114.GA3434@thunk.org>
- <20180524004931.GB23861@dastard>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:33916 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1030352AbeEXR5W (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 24 May 2018 13:57:22 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 15EA640BC048
+        for <linux-xfs@vger.kernel.org>; Thu, 24 May 2018 17:57:22 +0000 (UTC)
+Received: from localhost (hp-dl360g9-06.rhts.eng.pek2.redhat.com [10.73.4.165])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 774D0111AF17
+        for <linux-xfs@vger.kernel.org>; Thu, 24 May 2018 17:57:21 +0000 (UTC)
+Date: Fri, 25 May 2018 01:57:19 +0800
+From: Zorro Lang <zlang@redhat.com>
+Subject: [Bug report]
+Message-ID: <20180524175719.GV4893@hp-dl360g9-06.rhts.eng.pek2.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180524004931.GB23861@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Eric Biggers <ebiggers3@gmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+To: linux-xfs@vger.kernel.org
 
-On Thu, May 24, 2018 at 10:49:31AM +1000, Dave Chinner wrote:
-> 
-> We've learnt this lesson the hard way over and over again: don't
-> parse untrusted input in privileged contexts. How many times do we
-> have to make the same mistakes before people start to learn from
-> them?
+Hi,
 
-Good question.  For how many years (or is it decades, now) has Fedora
-auto-mounted USB sticks?  :-) Let me know when you successfully get
-Fedora to turn of a feature which appears to have great user appeal.
+I just hit a XFS crash [1] when I tested XFS on a 500T storage. And a XFS
+corruption [2] can be found by "xfs_repair -n".
 
-And I'll note that Eric Beiderman just posted a patch series allowing
-unprivileged processes to mount file systems in containers.
+Tested on 4.17-rc6, xfsprogs-4.16.1. mkfs.xfs options are "-m crc=1,finobt=1,
+rmapbt=1,reflink=1 -i sparse=1".
 
-And remember the mantra which the containner people keep chanting.
-Containers are just as secure as VM's.   Hahahaha.....
+I've report a bug as below:
+https://bugzilla.kernel.org/show_bug.cgi?id=199825
 
-> User automounting of removable storage should be done via a
-> privilege separation mechanism and hence avoid this whole class of
-> security problems. We can get this separation by using FUSE in these
-> situations, right?
+[1]
+ kernel: XFS: Assertion failed: XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0, file: fs/xfs/xfs_super.c, line: 984
+ kernel: WARNING: CPU: 39 PID: 487 at fs/xfs/xfs_message.c:105 asswarn+0x1e/0x30 [xfs]
+ kernel: Modules linked in: loop intel_powerclamp coretemp kvm_intel sunrpc kvm irqbypass crct10dif_pclmul crc32_pclmul ghash_clmulni_intel pcbc aesni_intel crypto_simd cryptd glue_helper iTCO_wdt gpio_ich iTCO_vendor_support dm_service_time pcspkr ipmi_ssif ipmi_si ipmi_devintf hpilo hpwdt sg i7core_edac lpc_ich ipmi_msghandler shpchp acpi_power_meter pcc_cpufreq dm_multipath ip_tables xfs libcrc32c sr_mod cdrom ata_generic pata_acpi radeon i2c_algo_bit drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops ttm ata_piix sd_mod drm mpt3sas libata crc32c_intel serio_raw hpsa netxen_nic i2c_core raid_class scsi_transport_sas dm_mirror dm_region_hash dm_log dm_mod
+ kernel: CPU: 39 PID: 487 Comm: kswapd0 Not tainted 4.17.0-rc6+ #2
+ kernel: Hardware name: HP ProLiant DL580 G7, BIOS P65 10/01/2013
+ kernel: RIP: 0010:asswarn+0x1e/0x30 [xfs]
+ kernel: RSP: 0018:ffff9b9887d9fbc0 EFLAGS: 00010246
+ kernel: RAX: 0000000000000000 RBX: ffff882b91e009d8 RCX: 0000000000000000
+ kernel: RDX: ffff9b9887d9fae0 RSI: 000000000000000a RDI: ffffffffc05ecff9
+ kernel: RBP: ffff882b91e008c8 R08: 0000000000000000 R09: 0000000000000021
+ kernel: R10: 0000000000000000 R11: 000000000000000a R12: ffff882b91e00780
+ kernel: R13: 000000000000ce58 R14: 000000000000000c R15: 00000000000000e5
+ kernel: FS:  0000000000000000(0000) GS:ffff882f6fbc0000(0000) knlGS:0000000000000000
+ kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+ kernel: CR2: 00007f832588eff0 CR3: 0000000a2dc0a002 CR4: 00000000000206e0
+ kernel: Call Trace:
+ kernel: xfs_fs_destroy_inode+0x1db/0x200 [xfs]
+ kernel: dispose_list+0x48/0x60
+ kernel: prune_icache_sb+0x52/0x70
+ kernel: super_cache_scan+0x139/0x190
+ kernel: shrink_slab+0x249/0x430
+ kernel: shrink_node+0x44a/0x490
+ kernel: balance_pgdat+0x188/0x360
+ kernel: kswapd+0x171/0x410
+ kernel: ? remove_wait_queue+0x60/0x60
+ kernel: kthread+0xf8/0x130
+ kernel: ? balance_pgdat+0x360/0x360
+ kernel: ? kthread_bind+0x10/0x10
+ kernel: ret_from_fork+0x35/0x40
+ kernel: Code: 99 f9 ff ff 0f 0b e8 c2 d4 4e c8 66 90 66 66 66 66 90 48 89 f1 41 89 d0 48 c7 c6 08 7f 5f c0 48 89 fa 31 c0 31 ff e8 b2 fc ff ff <0f> 0b c3 0f 1f 44 00 00 66 2e 0f 1f 84 00 00 00 00 00 66 66 66 
+ kernel: ---[ end trace 6d72efdc406c28bc ]---
 
-FUSE is a pretty terrible security boundary.  And not all file systems
-have FUSE support.  As I had suggested earlier, probably better to use
-9P, and mount the file system in a VM.
+[2]
 
-> Bugs don't have to be exploitable to be a "security issue". Detected
-> filesystem corruptions on a errors=panic mount, or undetected
-> problems that cause a x/NULL deref are still a user-triggerable
-> kernel crash (i.e. a DOS) and therefore considered a security
-> problem.
-
-I disagree here.  I think it's worth it to disambiguate the two.  If
-you have physical access to the machine, you can also apply AC mains
-voltage to the USB port, which will likely cause the system to crash.
-And at least for Chrome OS, it reboots really quickly.  :-)
-
-If someone can gain control of the system so they can exfiltrate data,
-or be able to modify files owned as root, that's a much bigger deal
-that crashing the machcine in my view.
-
-							- Ted
+Phase 1 - find and verify superblock...
+        - reporting progress in intervals of 15 minutes
+Memory available for repair (48300MB) may not be sufficient.
+At least 64121MB is needed to repair this filesystem efficiently
+If repair fails due to lack of memory, please
+turn prefetching off (-P) to reduce the memory footprint.
+Phase 2 - using internal log
+        - zero log...
+        - scan filesystem freespace and inode maps...
+sb_fdblocks 2570207456, counted 2570207543
+        - 10:12:40: scanning filesystem freespace - 501 of 501 allocation groups done
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan (but don't clear) agi unlinked lists...
+        - 10:12:40: scanning agi unlinked lists - 501 of 501 allocation groups done
+        - process known inodes and perform inode discovery...
+        - agno = 0
+        - agno = 15
+        ...
+        (501 AGs)
+        ...
+        - agno = 254                           
+        - 10:57:14: process known inodes and inode discovery - 21719296 of 19087328 inodes done
+        - process newly discovered inodes...   
+        - 10:57:14: process newly discovered inodes - 501 of 501 allocation groups done        
+Phase 4 - check for duplicate blocks...        
+        - setting up duplicate extent list...  
+        - 10:57:17: setting up duplicate extent list - 501 of 501 allocation groups done       
+        - check for inodes claiming duplicate blocks...                                        
+        - agno = 30                            
+        - agno = 0                             
+        - agno = 45
+        ...                                    
+        (501 AGs)                              
+        ...
+        - agno = 253                           
+        - agno = 254                           
+        - 11:42:57: check for inodes claiming duplicate blocks - 21719296 of 19087328 inodes done
+No modify flag set, skipping phase 5           
+Phase 6 - check inode connectivity...          
+        - traversing filesystem ...            
+        - traversal finished ...               
+        - moving disconnected inodes to lost+found ...                                         
+Phase 7 - verify link counts...                
+        - 11:52:50: verify and correct link counts - 501 of 501 allocation groups done         
+No modify flag set, skipping filesystem flush and exiting.
