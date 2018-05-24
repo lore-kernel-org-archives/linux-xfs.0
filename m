@@ -1,67 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:47176 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934235AbeEWWDG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 23 May 2018 18:03:06 -0400
-Subject: Re: [PATCH v3] xfs_io: Allow -P and -L to be given to open for O_PATH
- and O_NOFOLLOW
-From: Eric Sandeen <sandeen@sandeen.net>
-References: <20180516132738.27776-1-jlayton@kernel.org>
- <20180516171428.25576-1-jlayton@kernel.org>
- <7a2485bc-de36-e3c5-58ab-4023b965c6c5@sandeen.net>
-Message-ID: <f801db6e-6ce3-a79f-3458-6b99c8622c1a@sandeen.net>
-Date: Wed, 23 May 2018 17:03:05 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:33846 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S967622AbeEXPzz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 May 2018 11:55:55 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w4OFtZvE026937
+        for <linux-xfs@vger.kernel.org>; Thu, 24 May 2018 15:55:54 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp2130.oracle.com with ESMTP id 2j4nh7h2hp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 24 May 2018 15:55:54 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w4OFtssw024773
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 24 May 2018 15:55:54 GMT
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w4OFtrc8022839
+        for <linux-xfs@vger.kernel.org>; Thu, 24 May 2018 15:55:54 GMT
+Date: Thu, 24 May 2018 08:55:53 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: fix inobt magic number check
+Message-ID: <20180524155553.GO14384@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <7a2485bc-de36-e3c5-58ab-4023b965c6c5@sandeen.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@kernel.org>
-Cc: linux-xfs@vger.kernel.org, dhowells@redhat.com
+To: xfs <linux-xfs@vger.kernel.org>
 
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
+In commit a6a781a58befcbd467c ("xfs: have buffer verifier functions
+report failing address") the bad magic number return was ported
+incorrectly.
 
-On 5/23/18 4:51 PM, Eric Sandeen wrote:
-> On 5/16/18 12:14 PM, Jeff Layton wrote:
->> From: David Howells <dhowells@redhat.com>
->>
->> Allow "open -P" to specify O_PATH so that paths which would otherwise be
->> unopenable might be opened for stat()'ing.  Such things include files that
->> would incur an access error or device files for which no corresponding
->> driver is available.
->>
->> Allow "-L" to be given in conjunction with O_PATH to specify O_NOFOLLOW
->> also.
->>
->> We also have to avoid calling xfsctl() if O_PATH is given as ioctls are
->> forbidden on such fds.  This means we cannot retrieve the geometry
->> information on an XFS filesystem, so the record gets cleared instead.  For
->> the moment, only the xfsctl() calls in the 'open' command are
->> conditionalised.
->>
->> Signed-off-by: David Howells <dhowells@redhat.com>
->> Signed-off-by: Jeff Layton <jlayton@redhat.com>
-> 
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Fixes: a6a781a58befcbd467ce843af4eaca3906aa1f08
+Reported-by: syzbot+08ab33be0178b76851c8@syzkaller.appspotmail.com
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_ialloc_btree.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-hm actually I'll need to locally define O_PATH so it builds on older
-systems:
-
-+#ifndef O_PATH
-+#if defined __alpha__
-+#define O_PATH          040000000
-+#elif defined(__hppa__)
-+#define O_PATH          020000000
-+#elif defined(__sparc__)
-+#define O_PATH          0x1000000
-+#else
-+#define O_PATH          010000000
-+#endif
-+#endif /* O_PATH */
-
-... like we do for O_TMPFILE.  I can do that on the way in.
-
--Eric
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index ba053a4c124f..b04c55512159 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -296,7 +296,7 @@ xfs_inobt_verify(
+ 	case cpu_to_be32(XFS_FIBT_MAGIC):
+ 		break;
+ 	default:
+-		return NULL;
++		return __this_address;
+ 	}
+ 
+ 	/* level verification */
