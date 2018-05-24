@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from imap.thunk.org ([74.207.234.97]:46962 "EHLO imap.thunk.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935015AbeEWXlV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 23 May 2018 19:41:21 -0400
-Date: Wed, 23 May 2018 19:41:15 -0400
-From: "Theodore Y. Ts'o" <tytso@mit.edu>
-Subject: Bugs involving maliciously crafted file system
-Message-ID: <20180523234114.GA3434@thunk.org>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:31543 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S935171AbeEXDzg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 23:55:36 -0400
+Date: Thu, 24 May 2018 13:55:32 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Bugs involving maliciously crafted file system
+Message-ID: <20180524035532.GC23861@dastard>
 References: <000000000000457b2d056cbb0044@google.com>
  <20180522123107.GC3751@bfoster.bfoster>
  <20180522222620.GW23861@dastard>
@@ -14,77 +14,86 @@ References: <000000000000457b2d056cbb0044@google.com>
  <20180523074425.GM14384@magnolia>
  <20180523162015.GA3684@sol.localdomain>
  <a52266f9-0096-b28c-c01c-046ababcfe3a@sandeen.net>
+ <20180523234114.GA3434@thunk.org>
+ <20180524004931.GB23861@dastard>
+ <20180524005906.GC3434@thunk.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <a52266f9-0096-b28c-c01c-046ababcfe3a@sandeen.net>
+In-Reply-To: <20180524005906.GC3434@thunk.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Biggers <ebiggers3@gmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+To: "Theodore Y. Ts'o" <tytso@mit.edu>, Eric Sandeen <sandeen@sandeen.net>, Eric Biggers <ebiggers3@gmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
 
-On Wed, May 23, 2018 at 01:01:59PM -0500, Eric Sandeen wrote:
+On Wed, May 23, 2018 at 08:59:06PM -0400, Theodore Y. Ts'o wrote:
+> On Thu, May 24, 2018 at 10:49:31AM +1000, Dave Chinner wrote:
+> > 
+> > We've learnt this lesson the hard way over and over again: don't
+> > parse untrusted input in privileged contexts. How many times do we
+> > have to make the same mistakes before people start to learn from
+> > them?
 > 
-> What I'm personally hung up on are the bugs where the "exploit" involves merely
-> mounting a crafted filesystem that in reality would never (until the heat death
-> of the universe) corrupt itself into that state on its own; it's the "malicious
-> image" case, which is quite different than exposing fundamental bugs like the
-> SB_BORN race or or the user-exploitable ext4 flaw you mentioned in your reply.
-> Those are more insidious and/or things which can be hit by real users in real life.
+> Good question.  For how many years (or is it decades, now) has Fedora
+> auto-mounted USB sticks?  :-) Let me know when you successfully get
+> Fedora to turn of a feature which appears to have great user appeal.
 
-Well, it *can* be hit in real life.  If you have a system which auto
-mounts USB sticks, then an attacker might be able to weaponize that
-bug by creating a USB stick where mounted and the user opens a
-particular file, the buffer overrun causes code to be executed that
-grabs the user's credentials (e.g., ssh-agent keys, OATH creds, etc.)
-and exfiltrates them to a collection server.
+They'll do that when we provide them with a safe, easy to use
+solution to the problem. This is our problem to solve, not
+blame-shift it away.
 
-Fedora and Chrome OS might be two such platforms where someone could
-very easily create a weaponized exploit tool where you could insert a
-file system buffer overrun bug, and "hey presto!" it becomes a serious
-zero day vulnerability.
+> And I'll note that Eric Beiderman just posted a patch series allowing
+> unprivileged processes to mount file systems in containers.
 
-(I recently suggested to a security researcher who was concerned that
-file system developers weren't taking these sorts of things seriously
-enough could do a service to the community by creating a demonstration
-about how these sorts of bugs can be weaponized.  And I suspect it
-could be about just as easily on Chrome OS as Fedora, and that can be
-one way that an argument could be made to management that more
-resources should be applied to this problem.  :-)
+Yup, that's to make it easy for virtual kernel filesystems to be
+mounted inside containers, and to solve some of FUSEs security
+issues caused by needing root permissions to mount FUSE filesystems.
 
-Of course, not all bugs triggered by a maliciously crafted file system
-are equally weaponizable.  An errors=panic or a NULL derefrence are
-probably not easily exploitable at all.  A buffer overrun (and I fixed
-two in ext4 in the last two days while being stuck in a T13 standards
-meeting, so I do feel your pain) might be a very different story.
+Enabling unprivileged mounts requires an opt-in flag in the
+filesystem fs-type definition, and we most certainly won't be
+setting that flag on XFS. I also doubt it will ever get set on any
+other existing block device based filesystem because of the trust
+model problems it exposes.
 
-Solutions
----------
+> And remember the mantra which the containner people keep chanting.
+> Containers are just as secure as VM's.   Hahahaha.....
 
-One of the things I've wanted to get help from the syzbot folks is if
-there was some kind of machine learning or expert system evaluation
-that could be done so malicious image bugs could be binned into
-different categories, based on how easily they can be weaponized.
-That way, when there is a resource shortage situation, humans can be
-more easily guided into detremining which bugs should be prioritized
-and given attention, and which we can defer to when we have more time.
-Or maybe it would be useful if there was a way where maintainers could
-be able to annotate bugs with priority and severity levels, and maybe
-make comments that can be viewed from the Syzbot dashboard UI.
+So your solution is to have VM guests and container users spin up
+sandboxed VMs to access filesystem images safely? That's not really
+a practical solution. :/
 
+> > User automounting of removable storage should be done via a
+> > privilege separation mechanism and hence avoid this whole class of
+> > security problems. We can get this separation by using FUSE in these
+> > situations, right?
+> 
+> FUSE is a pretty terrible security boundary.
 
-The other thing that perhaps could be done is to set up a system where
-the USB stick is automounted in a guest VM (using libvirt in Fedora,
-and perhaps Crostini for Chrome OS), and the contents of the file
-system would then get exported from the guest OS to the host OS using
-either NFS or 9P.  (9P2000.u is the solution that was used in
-gVisor[1].)
+That may be true, but it's so much better than using the kernel to
+parse untrusted filesystem metadata.
 
-[1] https://github.com/google/gvisor
+> And not all file systems
+> have FUSE support.
 
-It could be that putting this kind of security layer in front to
-automounted USB sticks is less work than playing whack-a-mole fixing a
-lot of security bugs with maliciously crafted file systems.  
+Except there is now fusefs-lkl, so all kernel filesystem are fully
+accessible through FUSE.
 
-					- Ted
+> > Bugs don't have to be exploitable to be a "security issue". Detected
+> > filesystem corruptions on a errors=panic mount, or undetected
+> > problems that cause a x/NULL deref are still a user-triggerable
+> > kernel crash (i.e. a DOS) and therefore considered a security
+> > problem.
+> 
+> I disagree here.  I think it's worth it to disambiguate the two.
+
+Been trying to get security people to understand this for years.
+I've given up because there's always some new security person who
+follows The Process and simply does not understand that there is a
+difference.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
