@@ -1,52 +1,36 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:48132 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933268AbeEWOpC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 10:45:02 -0400
+Received: from verein.lst.de ([213.95.11.211]:58228 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935605AbeEXH4O (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 24 May 2018 03:56:14 -0400
+Date: Thu, 24 May 2018 10:01:43 +0200
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 18/34] xfs: use iomap for blocksize == PAGE_SIZE readpage and readpages
-Date: Wed, 23 May 2018 16:43:41 +0200
-Message-Id: <20180523144357.18985-19-hch@lst.de>
-In-Reply-To: <20180523144357.18985-1-hch@lst.de>
-References: <20180523144357.18985-1-hch@lst.de>
+Subject: Re: [PATCH 19/34] xfs: simplify xfs_bmap_punch_delalloc_range
+Message-ID: <20180524080143.GA11149@lst.de>
+References: <20180523144357.18985-1-hch@lst.de> <20180523144357.18985-20-hch@lst.de> <20180523161710.GA33498@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180523161710.GA33498@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-For file systems with a block size that equals the page size we never do
-partial reads, so we can use the buffer_head-less iomap versions of
-readpage and readpages without conflicting with the buffer_head structures
-create later in write_begin.
+On Wed, May 23, 2018 at 12:17:11PM -0400, Brian Foster wrote:
+> Mostly looks Ok, but I'm not following what this get_extent() call is
+> for..? It also doesn't look like it would always do the right thing with
+> sub-page blocks. Consider a page with a couple discontig delalloc blocks
+> that happen to be the first extents in the file. The first
+> xfs_bmap_del_extent_delay() would do:
+> 
+> 	xfs_iext_remove(ip, icur, state);
+> 	xfs_iext_prev(ifp, icur);
+> 
+> ... which I think sets cur->pos to -1, causes the get_extent() to fail
+> and thus fails to remove the subsequent delalloc blocks. Hm?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_aops.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 56e405572909..c631c457b444 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1402,6 +1402,8 @@ xfs_vm_readpage(
- 	struct page		*page)
- {
- 	trace_xfs_vm_readpage(page->mapping->host, 1);
-+	if (i_blocksize(page->mapping->host) == PAGE_SIZE)
-+		return iomap_readpage(page, &xfs_iomap_ops);
- 	return mpage_readpage(page, xfs_get_blocks);
- }
- 
-@@ -1413,6 +1415,8 @@ xfs_vm_readpages(
- 	unsigned		nr_pages)
- {
- 	trace_xfs_vm_readpages(mapping->host, nr_pages);
-+	if (i_blocksize(mapping->host) == PAGE_SIZE)
-+		return iomap_readpages(mapping, pages, nr_pages, &xfs_iomap_ops);
- 	return mpage_readpages(mapping, pages, nr_pages, xfs_get_blocks);
- }
- 
--- 
-2.17.0
-
+True.  This function should probably walk the extent list backwards
+like xfs_bunmapi as that is the model that xfs_bmap_del_extent_* is
+built around.
