@@ -1,275 +1,120 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:47690 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933268AbeEWOoy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 10:44:54 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 16/34] iomap: add initial support for writes without buffer heads
-Date: Wed, 23 May 2018 16:43:39 +0200
-Message-Id: <20180523144357.18985-17-hch@lst.de>
-In-Reply-To: <20180523144357.18985-1-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:49334 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1030579AbeEXSN6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 24 May 2018 14:13:58 -0400
+Date: Thu, 24 May 2018 14:13:56 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 22/34] xfs: make xfs_writepage_map extent map centric
+Message-ID: <20180524181356.GA89391@bfoster.bfoster>
 References: <20180523144357.18985-1-hch@lst.de>
+ <20180523144357.18985-23-hch@lst.de>
+ <20180524145935.GA84959@bfoster.bfoster>
+ <20180524165350.GA22675@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180524165350.GA22675@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>
 
-For now just limited to blocksize == PAGE_SIZE, where we can simply read
-in the full page in write begin, and just set the whole page dirty after
-copying data into it.  This code is enabled by default and XFS will now
-be feed pages without buffer heads in ->writepage and ->writepages.
+On Thu, May 24, 2018 at 06:53:50PM +0200, Christoph Hellwig wrote:
+> > > +		if (!wpc->imap_valid || wpc->io_type == XFS_IO_HOLE) {
+> > > +			/*
+> > > +			 * set_page_dirty dirties all buffers in a page, independent
+> > > +			 * of their state.  The dirty state however is entirely
+> > > +			 * meaningless for holes (!mapped && uptodate), so check we did
+> > > +			 * have a buffer covering a hole here and continue.
+> > > +			 */
+> > 
+> > The comment above doesn't make much sense given that we don't check for
+> > anything here and just continue the loop.
+> 
+> It gets removed in the last patch of the original series when we
+> kill buffer heads.  But I can fold the removal into this patch as well.
+> 
 
-If a file system sets the IOMAP_F_BUFFER_HEAD flag on the iomap the old
-path will still be used, this both helps the transition in XFS and
-prepares for the gfs2 migration to the iomap infrastructure.
+Ah, I was thinking this patch added that comment when it actually mostly
+moves it (it does tweak it a bit). Eh, no big deal either way.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/iomap.c            | 129 ++++++++++++++++++++++++++++++++++++++----
- fs/xfs/xfs_iomap.c    |   6 +-
- include/linux/iomap.h |   2 +
- 3 files changed, 124 insertions(+), 13 deletions(-)
+> > That aside, the concern I had with this patch when it was last posted is
+> > that it indirectly dropped the error/consistency check between page
+> > state and extent state provided by the XFS_BMAPI_DELALLOC flag. What was
+> > historically an accounting/reservation issue was turned into something
+> > like this by XFS_BMAPI_DELALLOC:
+> > 
+> > # xfs_io -c "pwrite 0 4k" -c fsync /mnt/file
+> > wrote 4096/4096 bytes at offset 0
+> > 4 KiB, 1 ops; 0.0041 sec (974.184 KiB/sec and 243.5460 ops/sec)
+> > fsync: Input/output error
+> 
+> What is that issue that gets you an I/O error on a 4k write?  That
+> is what is missing in the above reproducer?
+> 
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 78259a2249f4..debb859a8a14 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -308,6 +308,49 @@ iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
- 		truncate_pagecache_range(inode, max(pos, i_size), pos + len);
- }
- 
-+static int
-+iomap_read_page_sync(struct inode *inode, loff_t block_start, struct page *page,
-+		unsigned poff, unsigned plen, unsigned from, unsigned to,
-+		struct iomap *iomap)
-+{
-+	struct bio_vec bvec;
-+	struct bio bio;
-+
-+	if (iomap->type != IOMAP_MAPPED || block_start >= i_size_read(inode)) {
-+		zero_user_segments(page, poff, from, to, poff + plen);
-+		return 0;
-+	}
-+
-+	bio_init(&bio, &bvec, 1);
-+	bio.bi_opf = REQ_OP_READ;
-+	bio.bi_iter.bi_sector = iomap_sector(iomap, block_start);
-+	bio_set_dev(&bio, iomap->bdev);
-+	__bio_add_page(&bio, page, plen, poff);
-+	return submit_bio_wait(&bio);
-+}
-+
-+static int
-+__iomap_write_begin(struct inode *inode, loff_t pos, unsigned len,
-+		struct page *page, struct iomap *iomap)
-+{
-+	loff_t block_size = i_blocksize(inode);
-+	loff_t block_start = pos & ~(block_size - 1);
-+	loff_t block_end = (pos + len + block_size - 1) & ~(block_size - 1);
-+	unsigned poff = block_start & (PAGE_SIZE - 1);
-+	unsigned plen = min_t(loff_t, PAGE_SIZE - poff, block_end - block_start);
-+	unsigned from = pos & (PAGE_SIZE - 1);
-+	unsigned to = from + len;
-+
-+	WARN_ON_ONCE(i_blocksize(inode) < PAGE_SIZE);
-+
-+	if (PageUptodate(page))
-+		return 0;
-+	if (from <= poff && to >= poff + plen)
-+		return 0;
-+	return iomap_read_page_sync(inode, block_start, page,
-+			poff, plen, from, to, iomap);
-+}
-+
- static int
- iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
- 		struct page **pagep, struct iomap *iomap)
-@@ -325,7 +368,10 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
- 	if (!page)
- 		return -ENOMEM;
- 
--	status = __block_write_begin_int(page, pos, len, NULL, iomap);
-+	if (iomap->flags & IOMAP_F_BUFFER_HEAD)
-+		status = __block_write_begin_int(page, pos, len, NULL, iomap);
-+	else
-+		status = __iomap_write_begin(inode, pos, len, page, iomap);
- 	if (unlikely(status)) {
- 		unlock_page(page);
- 		put_page(page);
-@@ -338,14 +384,69 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
- 	return status;
- }
- 
-+int
-+iomap_set_page_dirty(struct page *page)
-+{
-+	struct address_space *mapping = page_mapping(page);
-+	int newly_dirty;
-+
-+	if (unlikely(!mapping))
-+		return !TestSetPageDirty(page);
-+
-+	/*
-+	 * Lock out page->mem_cgroup migration to keep PageDirty
-+	 * synchronized with per-memcg dirty page counters.
-+	 */
-+	lock_page_memcg(page);
-+	newly_dirty = !TestSetPageDirty(page);
-+	if (newly_dirty)
-+		__set_page_dirty(page, mapping, 0);
-+	unlock_page_memcg(page);
-+
-+	if (newly_dirty)
-+		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
-+	return newly_dirty;
-+}
-+EXPORT_SYMBOL_GPL(iomap_set_page_dirty);
-+
-+static int
-+__iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
-+		unsigned copied, struct page *page, struct iomap *iomap)
-+{
-+	flush_dcache_page(page);
-+
-+	/*
-+	 * The blocks that were entirely written will now be uptodate, so we
-+	 * don't have to worry about a readpage reading them and overwriting a
-+	 * partial write.  However if we have encountered a short write and only
-+	 * partially written into a block, it will not be marked uptodate, so a
-+	 * readpage might come in and destroy our partial write.
-+	 *
-+	 * Do the simplest thing, and just treat any short write to a non
-+	 * uptodate page as a zero-length write, and force the caller to redo
-+	 * the whole thing.
-+	 */
-+	if (unlikely(copied < len && !PageUptodate(page))) {
-+		copied = 0;
-+	} else {
-+		SetPageUptodate(page);
-+		iomap_set_page_dirty(page);
-+	}
-+	return __generic_write_end(inode, pos, copied, page);
-+}
-+
- static int
- iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
--		unsigned copied, struct page *page)
-+		unsigned copied, struct page *page, struct iomap *iomap)
- {
- 	int ret;
- 
--	ret = generic_write_end(NULL, inode->i_mapping, pos, len,
--			copied, page, NULL);
-+	if (iomap->flags & IOMAP_F_BUFFER_HEAD)
-+		ret = generic_write_end(NULL, inode->i_mapping, pos, len,
-+				copied, page, NULL);
-+	else
-+		ret = __iomap_write_end(inode, pos, len, copied, page, iomap);
-+
- 	if (ret < len)
- 		iomap_write_failed(inode, pos, len);
- 	return ret;
-@@ -400,7 +501,8 @@ iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 
- 		flush_dcache_page(page);
- 
--		status = iomap_write_end(inode, pos, bytes, copied, page);
-+		status = iomap_write_end(inode, pos, bytes, copied, page,
-+				iomap);
- 		if (unlikely(status < 0))
- 			break;
- 		copied = status;
-@@ -494,7 +596,7 @@ iomap_dirty_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 
- 		WARN_ON_ONCE(!PageUptodate(page));
- 
--		status = iomap_write_end(inode, pos, bytes, bytes, page);
-+		status = iomap_write_end(inode, pos, bytes, bytes, page, iomap);
- 		if (unlikely(status <= 0)) {
- 			if (WARN_ON_ONCE(status == 0))
- 				return -EIO;
-@@ -546,7 +648,7 @@ static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
- 	zero_user(page, offset, bytes);
- 	mark_page_accessed(page);
- 
--	return iomap_write_end(inode, pos, bytes, bytes, page);
-+	return iomap_write_end(inode, pos, bytes, bytes, page, iomap);
- }
- 
- static int iomap_dax_zero(loff_t pos, unsigned offset, unsigned bytes,
-@@ -632,11 +734,16 @@ iomap_page_mkwrite_actor(struct inode *inode, loff_t pos, loff_t length,
- 	struct page *page = data;
- 	int ret;
- 
--	ret = __block_write_begin_int(page, pos, length, NULL, iomap);
--	if (ret)
--		return ret;
-+	if (iomap->flags & IOMAP_F_BUFFER_HEAD) {
-+		ret = __block_write_begin_int(page, pos, length, NULL, iomap);
-+		if (ret)
-+			return ret;
-+		block_commit_write(page, 0, length);
-+	} else {
-+		WARN_ON_ONCE(!PageUptodate(page));
-+		WARN_ON_ONCE(i_blocksize(inode) < PAGE_SIZE);
-+	}
- 
--	block_commit_write(page, 0, length);
- 	return length;
- }
- 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index c6ce6f9335b6..da6d1995e460 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -638,7 +638,7 @@ xfs_file_iomap_begin_delay(
- 	 * Flag newly allocated delalloc blocks with IOMAP_F_NEW so we punch
- 	 * them out if the write happens to fail.
- 	 */
--	iomap->flags = IOMAP_F_NEW;
-+	iomap->flags |= IOMAP_F_NEW;
- 	trace_xfs_iomap_alloc(ip, offset, count, 0, &got);
- done:
- 	if (isnullstartblock(got.br_startblock))
-@@ -1031,6 +1031,8 @@ xfs_file_iomap_begin(
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
- 
-+	iomap->flags |= IOMAP_F_BUFFER_HEAD;
-+
- 	if (((flags & (IOMAP_WRITE | IOMAP_DIRECT)) == IOMAP_WRITE) &&
- 			!IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
- 		/* Reserve delalloc blocks for regular writeback. */
-@@ -1131,7 +1133,7 @@ xfs_file_iomap_begin(
- 	if (error)
- 		return error;
- 
--	iomap->flags = IOMAP_F_NEW;
-+	iomap->flags |= IOMAP_F_NEW;
- 	trace_xfs_iomap_alloc(ip, offset, length, 0, &imap);
- 
- out_finish:
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 7300d30ca495..4d3d9d0cd69f 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -30,6 +30,7 @@ struct vm_fault;
-  */
- #define IOMAP_F_NEW		0x01	/* blocks have been newly allocated */
- #define IOMAP_F_DIRTY		0x02	/* uncommitted metadata */
-+#define IOMAP_F_BUFFER_HEAD	0x04	/* file system requires buffer heads */
- 
- /*
-  * Flags that only need to be reported for IOMAP_REPORT requests:
-@@ -92,6 +93,7 @@ ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
- int iomap_readpage(struct page *page, const struct iomap_ops *ops);
- int iomap_readpages(struct address_space *mapping, struct list_head *pages,
- 		unsigned nr_pages, const struct iomap_ops *ops);
-+int iomap_set_page_dirty(struct page *page);
- int iomap_file_dirty(struct inode *inode, loff_t pos, loff_t len,
- 		const struct iomap_ops *ops);
- int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
--- 
-2.17.0
+Sorry... I should have mentioned this is a simulated error and not
+something that actually occurs right now. You can manufacture it easy
+enough using the drop_writes error tag and comment out the pagecache
+truncate code in xfs_file_iomap_end_delalloc().
 
+> > As of this patch, that same error condition now behaves something like
+> > this:
+> > 
+> > [root@localhost ~]# xfs_io -c "pwrite 0 4k" -c fsync /mnt/file
+> > wrote 4096/4096 bytes at offset 0
+> > 4 KiB, 1 ops; 0.0029 sec (1.325 MiB/sec and 339.2130 ops/sec)
+> > [root@localhost ~]# ls -al /mnt/file
+> > -rw-r--r--. 1 root root 4096 May 24 08:27 /mnt/file
+> > [root@localhost ~]# umount  /mnt ; mount /dev/test/scratch /mnt/
+> > [root@localhost ~]# ls -al /mnt/file
+> > -rw-r--r--. 1 root root 0 May 24 08:27 /mnt/file
+> > 
+> > So our behavior has changed from forced block allocation (violating
+> > reservation) and writing the data, to instead return an error, and now
+> > to silently skip the page.
+> 
+> We should never, ever allocate space that we didn't have a delalloc
+> reservation for in writepage/writepages.  But I agree that we should
+> record and error.  I have to admit I'm lost on where we did record
+> the error and why we don't do that now.  I'd be happy to fix it.
+> 
+
+Right, the error behavior came from the XFS_BMAPI_DELALLOC flag that was
+passed from xfs_iomap_write_allocate(). It caused xfs_bmapi_write() to
+detect that we were in a hole and return an error in the !COW_FORK case
+since we were expecting to do delalloc conversion from writeback.
+
+Note that I'm not saying there's a vector to reproduce this problem in
+the current code that I'm aware of. I'm just saying it's happened in the
+past due to bugs and I'd like to preserve some kind of basic sanity
+check (as an error or assert) if we have enough state available to do
+so.
+
+> > I suppose there are situations (i.e., races
+> > with truncate) where a hole is valid and the correct behavior is to skip
+> > the page, and this is admittedly an error condition that "should never
+> > happen," but can we at least add an assert somewhere in this series that
+> > ensures if uptodate data maps over a hole that the associated block
+> > offset is beyond EOF (or something of that nature)?
+> 
+> We can have plenty of holes in dirty pages.  However we should never
+> allocate blocks for them.  Fortunately we stop even looking at anything
+> but the extent tree for block status by the end of this series for 4k
+> file systems, and with the next series even for small block sizes, so
+> that whole mismatch is a thing of the past now.
+
+Ok, so I guess writeback can see uptodate blocks over a hole if some
+other block in that page is dirty. Perhaps we could make sure that a
+dirty page has at least one block that maps to an actual extent or
+otherwise the page has been truncated..?
+
+I guess having another dirty block bitmap similar to
+iomap_page->uptodate could be required to tell for sure whether a
+particular block should definitely have a block on-disk or not. It may
+not be worth doing that just for additional error checks, but I still
+have to look into the last few patches to grok all the iomap_page stuff.
+
+Brian
