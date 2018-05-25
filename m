@@ -1,164 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:49806 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933385AbeEWOpx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 10:45:53 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 34/34] xfs: allow writeback on pages without buffer heads
-Date: Wed, 23 May 2018 16:43:57 +0200
-Message-Id: <20180523144357.18985-35-hch@lst.de>
-In-Reply-To: <20180523144357.18985-1-hch@lst.de>
-References: <20180523144357.18985-1-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:41786 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S967408AbeEYR2T (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 25 May 2018 13:28:19 -0400
+Subject: Re: Temporary drive failure leads to massive data corruption?
+References: <CAKGkouuK6Dz82JBx2s8cccC-ST_enhF3jyVCHr+w=O_-QeppRw@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <1b397e88-0e1f-5f33-7def-a38a4a1e484a@sandeen.net>
+Date: Fri, 25 May 2018 12:28:18 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAKGkouuK6Dz82JBx2s8cccC-ST_enhF3jyVCHr+w=O_-QeppRw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+To: "Patrick J. LoPresti" <lopresti@gmail.com>, linux-xfs@vger.kernel.org
 
-Disable the IOMAP_F_BUFFER_HEAD flag on file systems with a block size
-equal to the page size, and deal with pages without buffer heads in
-writeback.  Thanks to the previous refactoring this is basically trivial
-now.
+On 5/25/18 12:02 PM, Patrick J. LoPresti wrote:
+> Hi. We are using XFS on a hardware RAID6 container with around 100
+> terabytes of data in 500K files. (Actually, we have four such
+> containers per server and around a dozen servers.)
+> 
+> Anyway, we had a power event a couple of nights ago that took several
+> of the drives -- and thus the container -- offline.
+> 
+> We got the drives, and thus the hardware RAID6, back online, but when
+> we tried to mount the file system the message said it was corrupted
+> and we should run xfs_repair. Running xfs_repair complained that there
+> were uncommitted entries in the transaction log and we should try to
+> mount the file system.
+> 
+> Ultimately, we had to use "xfs_repair -L" to get the file system to mount.
+> 
+> Now, I understand that any files or directories being modified during
+> the event could be corrupted. But we are seeing something completely
+> different; namely...
+> 
+> Tens of thousands of our files -- each 100-ish megabytes -- appear to
+> have had large sections replaced with zeroes. (We are still evaluating
+> the damage.) None of these files were being modified at the time; in
+> fact, the majority were written years ago and are never changed.
+> 
+> Is this an expected failure mode for XFS? I understand we may have
+> corrupted a few disk blocks, but should we expect that to corrupt a
+> significant fraction of our at-rest data?
+> 
+> This is using Red Hat Enterprise Linux 6.6 (kernel
+> 2.6.32-504.16.2.el6.x86_64 of Tue Apr 21 10:35:19 CDT 2015), if it
+> makes a difference.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_aops.c  | 47 +++++++++++++++++++++++++++++++++-------------
- fs/xfs/xfs_iomap.c |  3 ++-
- 2 files changed, 36 insertions(+), 14 deletions(-)
+I'm sure you won't like this answer, and I can't base it on empirical
+evidence, but my first hunch would be that your controller did a poor job
+of recovering from the error, and damaged the storage beneath the
+filesystem.
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 492f4a4b1deb..efa2cbb27d67 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -91,6 +91,19 @@ xfs_find_daxdev_for_inode(
- 		return mp->m_ddev_targp->bt_daxdev;
- }
- 
-+static void
-+xfs_finish_page_writeback(
-+	struct inode		*inode,
-+	struct bio_vec		*bvec,
-+	int			error)
-+{
-+	if (error) {
-+		SetPageError(bvec->bv_page);
-+		mapping_set_error(inode->i_mapping, -EIO);
-+	}
-+	end_page_writeback(bvec->bv_page);
-+}
-+
- /*
-  * We're now finished for good with this page.  Update the page state via the
-  * associated buffer_heads, paying attention to the start and end offsets that
-@@ -103,7 +116,7 @@ xfs_find_daxdev_for_inode(
-  * and buffers potentially freed after every call to end_buffer_async_write.
-  */
- static void
--xfs_finish_page_writeback(
-+xfs_finish_buffer_writeback(
- 	struct inode		*inode,
- 	struct bio_vec		*bvec,
- 	int			error)
-@@ -178,9 +191,12 @@ xfs_destroy_ioend(
- 			next = bio->bi_private;
- 
- 		/* walk each page on bio, ending page IO on them */
--		bio_for_each_segment_all(bvec, bio, i)
--			xfs_finish_page_writeback(inode, bvec, error);
--
-+		bio_for_each_segment_all(bvec, bio, i) {
-+			if (page_has_buffers(bvec->bv_page))
-+				xfs_finish_buffer_writeback(inode, bvec, error);
-+			else
-+				xfs_finish_page_writeback(inode, bvec, error);
-+		}
- 		bio_put(bio);
- 	}
- 
-@@ -792,13 +808,16 @@ xfs_writepage_map(
- {
- 	LIST_HEAD(submit_list);
- 	struct xfs_ioend	*ioend, *next;
--	struct buffer_head	*bh;
-+	struct buffer_head	*bh = NULL;
- 	ssize_t			len = i_blocksize(inode);
- 	int			error = 0;
- 	int			count = 0;
- 	loff_t			file_offset;	/* file offset of page */
- 	unsigned		poffset;	/* offset into page */
- 
-+	if (page_has_buffers(page))
-+		bh = page_buffers(page);
-+
- 	/*
- 	 * Walk the blocks on the page, and we we run off then end of the
- 	 * current map or find the current map invalid, grab a new one.
-@@ -807,11 +826,9 @@ xfs_writepage_map(
- 	 * replace the bufferhead with some other state tracking mechanism in
- 	 * future.
- 	 */
--	file_offset = page_offset(page);
--	bh = page_buffers(page);
--	for (poffset = 0;
-+	for (poffset = 0, file_offset = page_offset(page);
- 	     poffset < PAGE_SIZE;
--	     poffset += len, file_offset += len, bh = bh->b_this_page) {
-+	     poffset += len, file_offset += len) {
- 		/* past the range we are writing, so nothing more to write. */
- 		if (file_offset >= end_offset)
- 			break;
-@@ -819,9 +836,10 @@ xfs_writepage_map(
- 		/*
- 		 * Block does not contain valid data, skip it.
- 		 */
--		if (!buffer_uptodate(bh)) {
-+		if (bh && !buffer_uptodate(bh)) {
- 			if (PageUptodate(page))
- 				ASSERT(buffer_mapped(bh));
-+			bh = bh->b_this_page;
- 			continue;
- 		}
- 
-@@ -846,10 +864,15 @@ xfs_writepage_map(
- 			 * meaningless for holes (!mapped && uptodate), so check we did
- 			 * have a buffer covering a hole here and continue.
- 			 */
-+			if (bh)
-+				bh = bh->b_this_page;
- 			continue;
- 		}
- 
--		xfs_map_at_offset(inode, bh, &wpc->imap, file_offset);
-+		if (bh) {
-+			xfs_map_at_offset(inode, bh, &wpc->imap, file_offset);
-+			bh = bh->b_this_page;
-+		}
- 		xfs_add_to_ioend(inode, file_offset, page, wpc, wbc,
- 				&submit_list);
- 		count++;
-@@ -949,8 +972,6 @@ xfs_do_writepage(
- 
- 	trace_xfs_writepage(inode, page, 0, 0);
- 
--	ASSERT(page_has_buffers(page));
--
- 	/*
- 	 * Refuse to write the page out if we are called from reclaim context.
- 	 *
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index f949f0dd7382..93c40da3378a 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1031,7 +1031,8 @@ xfs_file_iomap_begin(
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
- 
--	iomap->flags |= IOMAP_F_BUFFER_HEAD;
-+	if (i_blocksize(inode) < PAGE_SIZE)
-+		iomap->flags |= IOMAP_F_BUFFER_HEAD;
- 
- 	if (((flags & (IOMAP_WRITE | IOMAP_DIRECT)) == IOMAP_WRITE) &&
- 			!IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
--- 
-2.17.0
+I'd at least take a good look at controller logs (if any?) and see what
+it did.  In general, you absolutely must make sure that the storage is
+in proper shape before running the higher level fs repair tools.
 
+On a more concrete note, it would be interestting to run xfs_bmap -vv
+on some of those files with zeros and see what extents, if any,
+cover the zeroed ranges.  i.e. are they holes, allocated, unwritten, etc.
+
+-Eric
