@@ -1,201 +1,154 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:7360 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S966530AbeE2TvN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 29 May 2018 15:51:13 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v2 2/7] dax: change bdev_dax_supported() to support boolean returns
-Date: Tue, 29 May 2018 13:51:01 -0600
-Message-Id: <20180529195106.14268-3-ross.zwisler@linux.intel.com>
-In-Reply-To: <20180529195106.14268-1-ross.zwisler@linux.intel.com>
-References: <20180529195106.14268-1-ross.zwisler@linux.intel.com>
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:44616 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1030651AbeEYXdM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 May 2018 19:33:12 -0400
+Received: by mail-pg0-f65.google.com with SMTP id p21-v6so2882924pgd.11
+        for <linux-xfs@vger.kernel.org>; Fri, 25 May 2018 16:33:12 -0700 (PDT)
+Date: Fri, 25 May 2018 16:33:07 -0700
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH v3 3/4] mkfs.xfs: add configuration file parsing support
+ using our own parser
+Message-ID: <20180525233307.GE24593@garbanzo.do-not-panic.com>
+References: <20180525031943.29440-1-mcgrof@kernel.org>
+ <20180525031943.29440-4-mcgrof@kernel.org>
+ <20180525040143.GR14384@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180525040143.GR14384@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Toshi Kani <toshi.kani@hpe.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com
-Cc: Dave Jiang <dave.jiang@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, g@garbanzo.do-not-panic.com
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, sandeen@sandeen.net, linux-xfs@vger.kernel.org, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com
 
-From: Dave Jiang <dave.jiang@intel.com>
+I've applied all the recommendations for the man page updates you
+provided. More below on the code questions.
 
-The function return values are confusing with the way the function is
-named. We expect a true or false return value but it actually returns
-0/-errno.  This makes the code very confusing. Changing the return values
-to return a bool where if DAX is supported then return true and no DAX
-support returns false.
+On Thu, May 24, 2018 at 09:01:43PM -0700, Darrick J. Wong wrote:
+> On Thu, May 24, 2018 at 08:19:42PM -0700, Luis R. Rodriguez wrote:
+> > +static struct confopts *
+> > +get_confopts(
+> > +	const char	*section)
+> > +{
+> > +	unsigned int	i;
+> > +	struct confopts	*opts;
+> > +
+> > +	for (i=0; i < ARRAY_SIZE(confopts_tab); i++) {
+> > +		opts = &confopts_tab[i];
+> > +		if (!opts)
+> > +			return NULL;
+> > +		if (strcmp(opts->name, section) == 0) {
+> > +			if (opts->seen) {
+> > +				fprintf(stderr, _("Section '%s' respecified\n"),
+> > +						section);
+> 
+> If I have two [data] sections, will this resuilt in:
+> 
+> # mkfs.xfs -c foo /dev/sda1
+> Section 'data' respecified
+> Invalid section on line foo:1 [data]
+> 
+> ?
 
-Signed-off-by: Dave Jiang <dave.jiang@intel.com>
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
----
- drivers/dax/super.c | 16 ++++++++--------
- fs/ext2/super.c     |  3 +--
- fs/ext4/super.c     |  3 +--
- fs/xfs/xfs_ioctl.c  |  4 ++--
- fs/xfs/xfs_super.c  | 12 ++++++------
- include/linux/dax.h |  8 ++++----
- 6 files changed, 22 insertions(+), 24 deletions(-)
+Yeah.
 
-diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-index 3943feb9a090..1d7bd96511f0 100644
---- a/drivers/dax/super.c
-+++ b/drivers/dax/super.c
-@@ -80,9 +80,9 @@ EXPORT_SYMBOL_GPL(fs_dax_get_by_bdev);
-  * This is a library function for filesystems to check if the block device
-  * can be mounted with dax option.
-  *
-- * Return: negative errno if unsupported, 0 if supported.
-+ * Return: true if supported, false if unsupported
-  */
--int __bdev_dax_supported(struct block_device *bdev, int blocksize)
-+bool __bdev_dax_supported(struct block_device *bdev, int blocksize)
- {
- 	struct dax_device *dax_dev;
- 	pgoff_t pgoff;
-@@ -95,21 +95,21 @@ int __bdev_dax_supported(struct block_device *bdev, int blocksize)
- 	if (blocksize != PAGE_SIZE) {
- 		pr_debug("%s: error: unsupported blocksize for dax\n",
- 				bdevname(bdev, buf));
--		return -EINVAL;
-+		return false;
- 	}
- 
- 	err = bdev_dax_pgoff(bdev, 0, PAGE_SIZE, &pgoff);
- 	if (err) {
- 		pr_debug("%s: error: unaligned partition for dax\n",
- 				bdevname(bdev, buf));
--		return err;
-+		return false;
- 	}
- 
- 	dax_dev = dax_get_by_host(bdev->bd_disk->disk_name);
- 	if (!dax_dev) {
- 		pr_debug("%s: error: device does not support dax\n",
- 				bdevname(bdev, buf));
--		return -EOPNOTSUPP;
-+		return false;
- 	}
- 
- 	id = dax_read_lock();
-@@ -121,7 +121,7 @@ int __bdev_dax_supported(struct block_device *bdev, int blocksize)
- 	if (len < 1) {
- 		pr_debug("%s: error: dax access failed (%ld)\n",
- 				bdevname(bdev, buf), len);
--		return len < 0 ? len : -EIO;
-+		return false;
- 	}
- 
- 	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED) && pfn_t_special(pfn)) {
-@@ -139,10 +139,10 @@ int __bdev_dax_supported(struct block_device *bdev, int blocksize)
- 	} else {
- 		pr_debug("%s: error: dax support not enabled\n",
- 				bdevname(bdev, buf));
--		return -EOPNOTSUPP;
-+		return false;
- 	}
- 
--	return 0;
-+	return true;
- }
- EXPORT_SYMBOL_GPL(__bdev_dax_supported);
- #endif
-diff --git a/fs/ext2/super.c b/fs/ext2/super.c
-index 9627c3054b5c..c09289a42dc5 100644
---- a/fs/ext2/super.c
-+++ b/fs/ext2/super.c
-@@ -961,8 +961,7 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
- 	blocksize = BLOCK_SIZE << le32_to_cpu(sbi->s_es->s_log_block_size);
- 
- 	if (sbi->s_mount_opt & EXT2_MOUNT_DAX) {
--		err = bdev_dax_supported(sb->s_bdev, blocksize);
--		if (err) {
-+		if (!bdev_dax_supported(sb->s_bdev, blocksize)) {
- 			ext2_msg(sb, KERN_ERR,
- 				"DAX unsupported by block device. Turning off DAX.");
- 			sbi->s_mount_opt &= ~EXT2_MOUNT_DAX;
-diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-index 089170e99895..2e1622907f4a 100644
---- a/fs/ext4/super.c
-+++ b/fs/ext4/super.c
-@@ -3732,8 +3732,7 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
- 					" that may contain inline data");
- 			sbi->s_mount_opt &= ~EXT4_MOUNT_DAX;
- 		}
--		err = bdev_dax_supported(sb->s_bdev, blocksize);
--		if (err) {
-+		if (!bdev_dax_supported(sb->s_bdev, blocksize)) {
- 			ext4_msg(sb, KERN_ERR,
- 				"DAX unsupported by block device. Turning off DAX.");
- 			sbi->s_mount_opt &= ~EXT4_MOUNT_DAX;
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 0effd46b965f..2c70a0a4f59f 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1103,8 +1103,8 @@ xfs_ioctl_setattr_dax_invalidate(
- 	if (fa->fsx_xflags & FS_XFLAG_DAX) {
- 		if (!(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode)))
- 			return -EINVAL;
--		if (bdev_dax_supported(xfs_find_bdev_for_inode(VFS_I(ip)),
--				sb->s_blocksize) < 0)
-+		if (!bdev_dax_supported(xfs_find_bdev_for_inode(VFS_I(ip)),
-+				sb->s_blocksize))
- 			return -EINVAL;
- 	}
- 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 62188c2a4c36..86915dc40eed 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1690,17 +1690,17 @@ xfs_fs_fill_super(
- 		sb->s_flags |= SB_I_VERSION;
- 
- 	if (mp->m_flags & XFS_MOUNT_DAX) {
--		int	error2 = 0;
-+		bool rtdev_is_dax = false, datadev_is_dax;
- 
- 		xfs_warn(mp,
- 		"DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
- 
--		error = bdev_dax_supported(mp->m_ddev_targp->bt_bdev,
--				sb->s_blocksize);
-+		datadev_is_dax = bdev_dax_supported(mp->m_ddev_targp->bt_bdev,
-+			sb->s_blocksize);
- 		if (mp->m_rtdev_targp)
--			error2 = bdev_dax_supported(mp->m_rtdev_targp->bt_bdev,
--					sb->s_blocksize);
--		if (error && error2) {
-+			rtdev_is_dax = bdev_dax_supported(
-+				mp->m_rtdev_targp->bt_bdev, sb->s_blocksize);
-+		if (!rtdev_is_dax && !datadev_is_dax) {
- 			xfs_alert(mp,
- 			"DAX unsupported by block device. Turning off DAX.");
- 			mp->m_flags &= ~XFS_MOUNT_DAX;
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 2a4f7295c12b..c99692ddd4b5 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -64,8 +64,8 @@ static inline bool dax_write_cache_enabled(struct dax_device *dax_dev)
- struct writeback_control;
- int bdev_dax_pgoff(struct block_device *, sector_t, size_t, pgoff_t *pgoff);
- #if IS_ENABLED(CONFIG_FS_DAX)
--int __bdev_dax_supported(struct block_device *bdev, int blocksize);
--static inline int bdev_dax_supported(struct block_device *bdev, int blocksize)
-+bool __bdev_dax_supported(struct block_device *bdev, int blocksize);
-+static inline bool bdev_dax_supported(struct block_device *bdev, int blocksize)
- {
- 	return __bdev_dax_supported(bdev, blocksize);
- }
-@@ -84,10 +84,10 @@ struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev);
- int dax_writeback_mapping_range(struct address_space *mapping,
- 		struct block_device *bdev, struct writeback_control *wbc);
- #else
--static inline int bdev_dax_supported(struct block_device *bdev,
-+static inline bool bdev_dax_supported(struct block_device *bdev,
- 		int blocksize)
- {
--	return -EOPNOTSUPP;
-+	return false;
- }
- 
- static inline struct dax_device *fs_dax_get_by_host(const char *host)
--- 
-2.14.3
+> The section isn't invalid, it's just double-specified, so...
 
+I've fixed this, now we get:
+
+ergon:~ # mkfs.xfs -f /dev/loop5 -c bar 
+Section 'metadata' respecified
+Error parsing command line config file: bar : Invalid argument
+
+> > +				return NULL;
+> > +			}
+> > +			opts->seen = true;
+> > +			return opts;
+> > +		}
+> > +	}
+> 
+> ...I'd print the 'Invalid section' error message here.
+
+Or move the respecification error message check to the switch
+statement handlig the section. I went with the later.
+
+> > +static const char *conf_paths[] = {
+> > +	".",
+> > +	MKFS_XFS_CONF_DIR,
+> > +};
+> > +
+> > +/*
+> > + * If the file is not found -1 is returned and errno set. Otherwise
+> > + * the file descriptor is returned.
+> > + */
+> > +int
+> > +open_cli_config(
+> > +	char			*cli_config_file,
+> > +	char			**fpath)
+> > +{
+> > +	int			fd, len;
+> > +	char			*final_path = NULL;
+> > +	char			*relative_path= NULL;
+> > +	unsigned int		i;
+> > +
+> > +	if (strlen(cli_config_file) > 2) {
+> > +		if (cli_config_file[0] == '.' && cli_config_file[1] == '/')
+> > +			final_path = cli_config_file;
+> > +		else if (cli_config_file[0] == '.' && cli_config_file[1] == '.')
+> > +			final_path = cli_config_file;
+> > +		else if (cli_config_file[0] == '/')
+> > +			final_path = cli_config_file;
+> > +		else
+> > +			relative_path = cli_config_file;
+> > +	} else if (strlen(cli_config_file) == 1) {
+> > +		if (cli_config_file[0] == '.' || cli_config_file[0] == '/') {
+> > +			errno = EINVAL;
+> > +			return -1;
+> > +		} else
+> > +			relative_path = cli_config_file;
+> > +	}
+> > +
+> > +	if (final_path) {
+> > +		fd = open(final_path, O_RDONLY);
+> > +		if (fd >= 0)
+> > +			memcpy(*fpath, final_path, strlen(final_path));
+> > +		return fd;
+> > +	}
+> > +
+> > +	/* We finally know the path is relative but just to be sure */
+> > +	if (!relative_path) {
+> > +		errno = ENXIO;
+> > +		return -1;
+> > +	}
+> > +
+> > +	for (i = 0; i < ARRAY_SIZE(conf_paths); i++) {
+> > +		memset(*fpath, 0, PATH_MAX);
+> > +		/*
+> > +		 * For current directory evaluation, skip concatenating the
+> > +		 * ./ from the file passed. We only concatenate for the other
+> > +		 * paths we look up on.
+> 
+> If conf_paths[0] was "./" then you wouldn't have to special case this,
+> I think.
+
+No, I had tried it, it looks odd still, if the user specified -c foo,
+the output should show ./foo, not just foo.
+
+> > +	fp = fdopen(fd, "r");
+> > +	if (!fp) {
+> > +		ret = errno;
+> > +		fprintf(stderr, _("Unable to open stream for config file: %s : %s\n"),
+> > +				fpath, strerror(errno));
+> 
+> perror(fpath); ?
+
+Sure.
+
+> Looks good otherwise.
+
+Groovy. I'll wait for others to comment otherwise I can spin up 4th
+iteration after the weekend.
+
+  Luis
