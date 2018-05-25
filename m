@@ -1,45 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt0-f194.google.com ([209.85.216.194]:36989 "EHLO
-        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S967951AbeEYUSR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 May 2018 16:18:17 -0400
-MIME-Version: 1.0
-In-Reply-To: <20180525165222.GA7567@infradead.org>
-References: <20180525151421.2317292-1-arnd@arndb.de> <20180525165222.GA7567@infradead.org>
+Received: from mout.kundenserver.de ([212.227.17.10]:52581 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936240AbeEYPO6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 May 2018 11:14:58 -0400
 From: Arnd Bergmann <arnd@arndb.de>
-Date: Fri, 25 May 2018 22:18:16 +0200
-Message-ID: <CAK8P3a285ALRRECYVW=1_e7Dx0ybzG_1OWzVstXcm9VPQ3vUZA@mail.gmail.com>
-Subject: Re: [PATCH] xfs: mark sb_fname as nonstring
-Content-Type: text/plain; charset="UTF-8"
+Subject: [PATCH] xfs: mark sb_fname as nonstring
+Date: Fri, 25 May 2018 17:14:09 +0200
+Message-Id: <20180525151421.2317292-1-arnd@arndb.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>, Martin Sebor <msebor@gmail.com>, Brian Foster <bfoster@redhat.com>, Dave Chinner <dchinner@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, Eric Sandeen <sandeen@redhat.com>, Martin Sebor <msebor@gmail.com>, Brian Foster <bfoster@redhat.com>, Dave Chinner <dchinner@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-kernel@vger.kernel.org
 
-On Fri, May 25, 2018 at 6:52 PM, Christoph Hellwig <hch@infradead.org> wrote:
->> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
->> index 84fbf164cbc3..eb79f2bc4dcc 100644
->> --- a/fs/xfs/xfs_ioctl.c
->> +++ b/fs/xfs/xfs_ioctl.c
->> @@ -1819,12 +1819,12 @@ xfs_ioc_getlabel(
->>       BUILD_BUG_ON(sizeof(sbp->sb_fname) > FSLABEL_MAX);
->>
->>       spin_lock(&mp->m_sb_lock);
->> -     strncpy(label, sbp->sb_fname, sizeof(sbp->sb_fname));
->> +     strncpy(label, sbp->sb_fname, XFSLABEL_MAX);
->>       spin_unlock(&mp->m_sb_lock);
->
-> Hmm, shouldn't we just do a memcpy here?
+gcc-8 reports two warnings for the newly added getlabel/setlabel code:
 
-I thought about that as well, but decided that strncpy()'s zero-padding
-is better here than padding with potentially random contents of the user
-space stack.
+fs/xfs/xfs_ioctl.c: In function 'xfs_ioc_getlabel':
+fs/xfs/xfs_ioctl.c:1822:38: error: argument to 'sizeof' in 'strncpy' call is the same expression as the source; did you mean to use the size of the destination? [-Werror=sizeof-pointer-memaccess]
+  strncpy(label, sbp->sb_fname, sizeof(sbp->sb_fname));
+                                      ^
+In function 'strncpy',
+    inlined from 'xfs_ioc_setlabel' at /git/arm-soc/fs/xfs/xfs_ioctl.c:1863:2,
+    inlined from 'xfs_file_ioctl' at /git/arm-soc/fs/xfs/xfs_ioctl.c:1918:10:
+include/linux/string.h:254:9: error: '__builtin_strncpy' output may be truncated copying 12 bytes from a string of length 12 [-Werror=stringop-truncation]
+  return __builtin_strncpy(p, q, size);
 
-> Also given that the kernel never even looks at sb_fname maybe
-> we can turn into an array of unsigned chars to escape those string
-> warnings?
+In both cases, part of the problem is that one of the strncpy()
+arguments is a fixed-length character array with zero-padding rather
+than a zero-terminated string. In the first one case, we also get an
+odd warning about sizeof-pointer-memaccess, which doesn't seem right
+(the sizeof is for an array that happens to be the same as the second
+strncpy argument).
 
-I don't think that makes a difference to gcc.
+To work around the bogus warning, I use a plain 'XFSLABEL_MAX' for
+the strncpy() length when copying the label in getlabel. For setlabel(),
+using memcpy() with the correct length that is already known avoids
+the second warning and is slightly simpler.
 
-        Arnd
+In a related issue, it appears that we accidentally skip the trailing
+\0 when copying a 12-character label back to user space in getlabel().
+Using the correct sizeof() argument here copies the extra character.
+
+Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85602
+Fixes: f7664b31975b ("xfs: implement online get/set fs label")
+Cc: Eric Sandeen <sandeen@redhat.com>
+Cc: Martin Sebor <msebor@gmail.com>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ fs/xfs/xfs_ioctl.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 84fbf164cbc3..eb79f2bc4dcc 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1819,12 +1819,12 @@ xfs_ioc_getlabel(
+ 	BUILD_BUG_ON(sizeof(sbp->sb_fname) > FSLABEL_MAX);
+ 
+ 	spin_lock(&mp->m_sb_lock);
+-	strncpy(label, sbp->sb_fname, sizeof(sbp->sb_fname));
++	strncpy(label, sbp->sb_fname, XFSLABEL_MAX);
+ 	spin_unlock(&mp->m_sb_lock);
+ 
+ 	/* xfs on-disk label is 12 chars, be sure we send a null to user */
+ 	label[XFSLABEL_MAX] = '\0';
+-	if (copy_to_user(user_label, label, sizeof(sbp->sb_fname)))
++	if (copy_to_user(user_label, label, sizeof(label)))
+ 		return -EFAULT;
+ 	return 0;
+ }
+@@ -1860,7 +1860,7 @@ xfs_ioc_setlabel(
+ 
+ 	spin_lock(&mp->m_sb_lock);
+ 	memset(sbp->sb_fname, 0, sizeof(sbp->sb_fname));
+-	strncpy(sbp->sb_fname, label, sizeof(sbp->sb_fname));
++	memcpy(sbp->sb_fname, label, len);
+ 	spin_unlock(&mp->m_sb_lock);
+ 
+ 	/*
+-- 
+2.9.0
+
