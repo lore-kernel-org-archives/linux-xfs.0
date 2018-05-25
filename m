@@ -1,42 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:44635 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S970030AbeEYAyK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 May 2018 20:54:10 -0400
-Received: by mail-pg0-f67.google.com with SMTP id p21-v6so1520610pgd.11
-        for <linux-xfs@vger.kernel.org>; Thu, 24 May 2018 17:54:10 -0700 (PDT)
-Date: Thu, 24 May 2018 17:54:06 -0700
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH v2 5/5] mkfs.xfs: add configuration file parsing support
- using our own parser
-Message-ID: <20180525005406.GD24593@garbanzo.do-not-panic.com>
-References: <20180517192700.23457-1-mcgrof@kernel.org>
- <20180517192700.23457-6-mcgrof@kernel.org>
- <1f1e87df-aba5-e285-e3cb-820306f24f1c@sandeen.net>
- <20180518034600.GW23858@magnolia>
- <20180520001648.GN23861@dastard>
- <20180521153354.GH23858@magnolia>
+Received: from userp2120.oracle.com ([156.151.31.85]:34594 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S967587AbeEYTXs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 May 2018 15:23:48 -0400
+Date: Fri, 25 May 2018 12:23:27 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/7] fs: allow per-device dax status checking for
+ filesystems
+Message-ID: <20180525192327.GR12940@magnolia>
+References: <20180525025518.11405-1-ross.zwisler@linux.intel.com>
+ <20180525025518.11405-2-ross.zwisler@linux.intel.com>
+ <20180525050218.GF4507@magnolia>
+ <20180525154229.GA11044@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180521153354.GH23858@magnolia>
+In-Reply-To: <20180525154229.GA11044@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@sandeen.net>, "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com
+To: Ross Zwisler <ross.zwisler@linux.intel.com>, Toshi Kani <toshi.kani@hpe.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, xfs <linux-xfs@vger.kernel.org>
 
-On Mon, May 21, 2018 at 08:33:54AM -0700, Darrick J. Wong wrote:
-> <shrug> openat() semantics are fine enough with me, I think.
+On Fri, May 25, 2018 at 09:42:29AM -0600, Ross Zwisler wrote:
+> On Thu, May 24, 2018 at 10:02:18PM -0700, Darrick J. Wong wrote:
+> > On Thu, May 24, 2018 at 08:55:12PM -0600, Ross Zwisler wrote:
+> > > From: "Darrick J. Wong" <darrick.wong@oracle.com>
+> > > 
+> > > Remove __bdev_dax_supported and change to bdev_dax_supported that takes a
+> > > bdev parameter.  This enables multi-device filesystems like xfs to check
+> > > that a dax device can work for the particular filesystem.  Once that's
+> > > in place, actually fix all the parts of XFS where we need to be able to
+> > > distinguish between datadev and rtdev.
+> > > 
+> > > This patch fixes the problem where we screw up the dax support checking
+> > > in xfs if the datadev and rtdev have different dax capabilities.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> > 
+> > Reviewed-by: Darr...oh, I'm not allowed to do that, am I?
+> > 
+> > Would you mind (re)sending this to the xfs list so that someone else can
+> > review it?
+> > 
+> > --D
+> 
+> Thanks for the review, Darrick.
+> 
+> I think at one point Dave said that if you touch more than 1 filesystem with a
+> series you should just CC linux-fsdevel and omit the individual filesystems?
+> I realize that this series only touches ext2 and ext4 a little, but that's
+> what I opted for.
+> 
+> Is that sufficient to get to the rest of the XFS developers, or would you like
+> a resend adding linux-xfs?
 
-I tried.
+For a patch by any other author I'd be fine with -fsdevel, but for this
+specific one (because it's written by me and I'm not yet so bofh that I
+review my own patches ;)) someone else from the xfs community has to
+review it, so yes I'd like it to be sent to linux-xfs, please.
 
-With openat() we'd have to go through a bit of hoops to figure out which
-actual file we ended up using and it was not pretty.  And given the
-other snowflake considerations folks wanted to support as that *is* what
-typically users support, it turned out much easier to just use good 'ol
-open().
+(And it's ok to note in the resend that this is the same as the -fsdevel
+series, but posted here to attract the attention of the other xfs
+developers.)
 
-New patch set coming.
-
-  Luis
+--D
