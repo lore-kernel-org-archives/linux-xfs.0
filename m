@@ -1,115 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:35786 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753276AbeE3Q6W (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 May 2018 12:58:22 -0400
-Date: Wed, 30 May 2018 09:58:04 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 05/18] xfs: move locking into
- xfs_bmap_punch_delalloc_range
-Message-ID: <20180530165804.GI837@magnolia>
-References: <20180530100013.31358-1-hch@lst.de>
- <20180530100013.31358-6-hch@lst.de>
- <20180530133551.GE112411@bfoster.bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180530133551.GE112411@bfoster.bfoster>
+Received: from mail.kernel.org ([198.145.29.99]:56048 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754991AbeEYDTq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 24 May 2018 23:19:46 -0400
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v3 1/4] mkfs: distinguish between struct sb_feat_args and struct cli_params
+Date: Thu, 24 May 2018 20:19:40 -0700
+Message-Id: <20180525031943.29440-2-mcgrof@kernel.org>
+In-Reply-To: <20180525031943.29440-1-mcgrof@kernel.org>
+References: <20180525031943.29440-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+To: sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com, "Luis R. Rodriguez" <mcgrof@kernel.org>
 
-On Wed, May 30, 2018 at 09:35:52AM -0400, Brian Foster wrote:
-> On Wed, May 30, 2018 at 12:00:00PM +0200, Christoph Hellwig wrote:
-> > Both callers want the same looking, so do it only once.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >  fs/xfs/xfs_aops.c      | 2 --
-> >  fs/xfs/xfs_bmap_util.c | 7 ++++---
-> >  fs/xfs/xfs_iomap.c     | 3 ---
-> >  3 files changed, 4 insertions(+), 8 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> > index f2333e351e07..5dd09e83c81c 100644
-> > --- a/fs/xfs/xfs_aops.c
-> > +++ b/fs/xfs/xfs_aops.c
-> > @@ -761,10 +761,8 @@ xfs_aops_discard_page(
-> >  		"page discard on page "PTR_FMT", inode 0x%llx, offset %llu.",
-> >  			page, ip->i_ino, offset);
-> >  
-> > -	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> >  	error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
-> >  			PAGE_SIZE / i_blocksize(inode));
-> > -	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> >  	if (error && !XFS_FORCED_SHUTDOWN(mp))
-> >  		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
-> >  out_invalidate:
-> > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> > index f2b87873612d..86a7ee425bfc 100644
-> > --- a/fs/xfs/xfs_bmap_util.c
-> > +++ b/fs/xfs/xfs_bmap_util.c
-> > @@ -712,12 +712,11 @@ xfs_bmap_punch_delalloc_range(
-> >  	struct xfs_iext_cursor	icur;
-> >  	int			error = 0;
-> >  
-> > -	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> > -
-> > +	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> >  	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> >  		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
-> >  		if (error)
-> > -			return error;
-> > +			goto out_unlock;
-> >  	}
-> >  
-> >  	if (!xfs_iext_lookup_extent_before(ip, ifp, &end_fsb, &icur, &got))
-> 
-> There's a return 0 just below here that needs the exit label treatment.
-> Otherwise looks Ok.
+The struct sb_feat_args will actually be shared between the code which
+processes command line options and the configuration file, as such we
+need to clarify and reflect this clearly in documentation.
 
-Will fix that in my tree for testing.  Brian, will you RVB the fixed up
-patch?
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+---
+ mkfs/xfs_mkfs.c | 45 ++++++++++++++++++++++++++++-----------------
+ 1 file changed, 28 insertions(+), 17 deletions(-)
 
---D
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 3804814b3b8a..95cd6ced13f0 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -707,26 +707,18 @@ cli_opt_set(
+ }
+ 
+ /*
+- * Options configured on the command line.
+- *
+- * This stores all the specific config parameters the user sets on the command
+- * line. We do not use these values directly - they are inputs to the mkfs
+- * geometry validation and override any default configuration value we have.
++ * Shared superblock configuration options
+  *
+- * We don't keep flags to indicate what parameters are set - if we need to check
+- * if an option was set on the command line, we check the relevant entry in the
+- * option table which records whether it was specified in the .seen and
+- * .str_seen variables in the table.
++ * These options provide shared configuration tunables for the filesystem
++ * superblock. There are three possible sources for these options set, each
++ * source can overriding the later source:
+  *
+- * Some parameters are stored as strings for post-parsing after their dependent
+- * options have been resolved (e.g. block size and sector size have been parsed
+- * and validated).
++ * 	o built-in defaults
++ * 	o configuration file (XXX)
++ * 	o command line
+  *
+- * This allows us to check that values have been set without needing separate
+- * flags for each value, and hence avoids needing to record and check for each
+- * specific option that can set the value later on in the code. In the cases
+- * where we don't have a cli_params structure around, the above cli_opt_set()
+- * function can be used.
++ * These values are not used directly - they are inputs into the mkfs geometry
++ * validation.
+  */
+ struct sb_feat_args {
+ 	int	log_version;
+@@ -747,6 +739,25 @@ struct sb_feat_args {
+ 	bool	nortalign;
+ };
+ 
++/*
++ * Options configured on the command line.
++ *
++ * This stores all the specific config parameters the user sets on the command
++ * line.  We don't keep flags to indicate what parameters are set - if we need
++ * to check if an option was set on the command line, we check the relevant
++ * entry in the option table which records whether it was specified in the
++ * .seen and .str_seen variables in the table.
++ *
++ * Some parameters are stored as strings for post-parsing after their dependent
++ * options have been resolved (e.g. block size and sector size have been parsed
++ * and validated).
++ *
++ * This allows us to check that values have been set without needing separate
++ * flags for each value, and hence avoids needing to record and check for each
++ * specific option that can set the value later on in the code. In the cases
++ * where we don't have a cli_params structure around, the function cli_opt_set()
++ * function can be used.
++ */
+ struct cli_params {
+ 	int	sectorsize;
+ 	int	blocksize;
+-- 
+2.16.3
 
-> Brian
-> 
-> > @@ -738,6 +737,8 @@ xfs_bmap_punch_delalloc_range(
-> >  		}
-> >  	}
-> >  
-> > +out_unlock:
-> > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> >  	return error;
-> >  }
-> >  
-> > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> > index da6d1995e460..f949f0dd7382 100644
-> > --- a/fs/xfs/xfs_iomap.c
-> > +++ b/fs/xfs/xfs_iomap.c
-> > @@ -1203,11 +1203,8 @@ xfs_file_iomap_end_delalloc(
-> >  		truncate_pagecache_range(VFS_I(ip), XFS_FSB_TO_B(mp, start_fsb),
-> >  					 XFS_FSB_TO_B(mp, end_fsb) - 1);
-> >  
-> > -		xfs_ilock(ip, XFS_ILOCK_EXCL);
-> >  		error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
-> >  					       end_fsb - start_fsb);
-> > -		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > -
-> >  		if (error && !XFS_FORCED_SHUTDOWN(mp)) {
-> >  			xfs_alert(mp, "%s: unable to clean up ino %lld",
-> >  				__func__, ip->i_ino);
-> > -- 
-> > 2.17.0
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
