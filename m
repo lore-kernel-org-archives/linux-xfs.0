@@ -1,47 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga12.intel.com ([192.55.52.136]:62286 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S967368AbeE2WBP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 29 May 2018 18:01:15 -0400
-Date: Tue, 29 May 2018 16:01:14 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH v2 2/7] dax: change bdev_dax_supported() to support
- boolean returns
-Message-ID: <20180529220114.GA13948@linux.intel.com>
-References: <20180529195106.14268-1-ross.zwisler@linux.intel.com>
- <20180529195106.14268-3-ross.zwisler@linux.intel.com>
- <20180529212510.GJ30110@magnolia>
+Received: from userp2130.oracle.com ([156.151.31.86]:50094 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1030394AbeEYWMM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 May 2018 18:12:12 -0400
+Subject: [PATCH 4/7] xfs_buflock: record buffer initialization
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 25 May 2018 15:12:01 -0700
+Message-ID: <152728632163.22515.2423877809843536137.stgit@magnolia>
+In-Reply-To: <152728629694.22515.17699396814561914788.stgit@magnolia>
+References: <152728629694.22515.17699396814561914788.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180529212510.GJ30110@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Toshi Kani <toshi.kani@hpe.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Dave Jiang <dave.jiang@intel.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, May 29, 2018 at 02:25:10PM -0700, Darrick J. Wong wrote:
-> On Tue, May 29, 2018 at 01:51:01PM -0600, Ross Zwisler wrote:
-> > From: Dave Jiang <dave.jiang@intel.com>
-> > 
-> > The function return values are confusing with the way the function is
-> > named. We expect a true or false return value but it actually returns
-> > 0/-errno.  This makes the code very confusing. Changing the return values
-> > to return a bool where if DAX is supported then return true and no DAX
-> > support returns false.
-> > 
-> > Signed-off-by: Dave Jiang <dave.jiang@intel.com>
-> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> 
-> Looks ok, do you want me to pull the first two patches through the xfs
-> tree?
-> 
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Thanks for the review.
+Buffers are created locked, so we have to factor that into the buffer
+state machine that the script utilizes.
 
-I'm not sure what's best.  If you do that then Mike will need to have a DM
-branch for the rest of the series based on your stable commits, yea?
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ tools/xfsbuflock.py |   11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-Mike what would you prefer?
+
+diff --git a/tools/xfsbuflock.py b/tools/xfsbuflock.py
+index 954f0954..8f38f9f0 100755
+--- a/tools/xfsbuflock.py
++++ b/tools/xfsbuflock.py
+@@ -91,6 +91,13 @@ class Buffer:
+ 		if not self.locked:
+ 			self.lockdone(process, time)
+ 
++	def init(self, process, time):
++		# Buffers are initialized locked, but we could be allocating
++		# a surplus buffer while trying to grab a buffer that may or
++		# may not already exist.
++		if not self.locked:
++			self.lockdone(process, time)
++
+ 	def lockdone(self, process, time):
+ 		if self.locked:
+ 			print('Buffer 0x%x already locked at line %d? (line %d)' % \
+@@ -183,6 +190,10 @@ for line in fileinput.input():
+ 		buf = getbuf(toks)
+ 		if buf is not None:
+ 			buf.trylock(proc, time)
++	elif fn == 'xfs_buf_init':
++		buf = getbuf(toks)
++		if buf is not None:
++			buf.init(proc, time)
+ 	elif fn == 'xfs_buf_item_unlock':
+ 		pass
+ 	else:
+
