@@ -1,74 +1,147 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:54402 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751215AbeE1Dwm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 May 2018 23:52:42 -0400
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: Re: [PATCH 5/7] fsck: fix more bashisms
-References: <152728629694.22515.17699396814561914788.stgit@magnolia>
- <152728632778.22515.10077636373761717143.stgit@magnolia>
-Message-ID: <0e373663-3c31-71f2-ddfe-aebd23bf573c@oracle.com>
-Date: Sun, 27 May 2018 20:52:27 -0700
+Received: from sandeen.net ([63.231.237.45]:55952 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S968220AbeEYUfP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 25 May 2018 16:35:15 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 2066A4872EB
+        for <linux-xfs@vger.kernel.org>; Fri, 25 May 2018 15:34:58 -0500 (CDT)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs: for-next updated to fc52865
+Message-ID: <f10b59d7-ea39-d980-db6a-4d63c256b41a@sandeen.net>
+Date: Fri, 25 May 2018 15:35:13 -0500
 MIME-Version: 1.0
-In-Reply-To: <152728632778.22515.10077636373761717143.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-Alrighty, you can add my review
-Reviewed by: Allison Henderson <allison.henderson@oracle.com>
+Hi folks,
 
-On 05/25/2018 03:12 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> command -v is a bashism, so we need to get rid of it.  The shell returns
-> an error code of 127 if it couldn't invoke xfs_repair, so teach
-> repair2fsck_code to deal with this.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->   fsck/xfs_fsck.sh |   12 +++++-------
->   1 file changed, 5 insertions(+), 7 deletions(-)
-> 
-> 
-> diff --git a/fsck/xfs_fsck.sh b/fsck/xfs_fsck.sh
-> index 1916c07e..6af0f224 100755
-> --- a/fsck/xfs_fsck.sh
-> +++ b/fsck/xfs_fsck.sh
-> @@ -20,6 +20,10 @@ repair2fsck_code() {
->   		;;
->   	4)  return 1 # The fs has been fixed
->   		;;
-> +	127)
-> +		echo "$NAME error: xfs_repair was not found!" 1>&2
-> +		return 4
-> +		;;
->   	*)  echo "$NAME error: An unknown return code from xfs_repair '$1'" 1>&2
->   		return 4 # something went wrong with xfs_repair
->   	esac
-> @@ -59,13 +63,7 @@ if [ -n "$PS1" -o -t 0 ]; then
->   fi
->   
->   if $FORCE; then
-> -	XFS_REPAIR=`command -v xfs_repair`
-> -	if [ ! -x "$XFS_REPAIR" ] ; then
-> -		echo "$NAME error: xfs_repair was not found!" 1>&2
-> -		exit 4
-> -	fi
-> -
-> -	$XFS_REPAIR -e $DEV
-> +	xfs_repair -e $DEV
->   	repair2fsck_code $?
->   	exit $?
->   fi
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwICaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=esB0ntIPOKHhY_lkqtduLsdDYUrE4GycWhxY5h4WJLo&s=rMUHX1OjhARCGXqcRie_xKoEdOlq1hooycaZJzLEqX0&e=
-> 
+The for-next branch of the xfsprogs repository at:
+
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+
+has just been updated.
+
+** This also rebased the tree **
+
+(Sorry, I accidentally pushed from a guilt branch for a merge and
+wanted to clean that up)
+
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
+
+The new head of the master branch is commit:
+
+fc52865 xfs_io: Allow -P and -L to be given to open for O_PATH and  O_NOFOLLOW
+
+New Commits:
+
+Darrick J. Wong (21):
+       [dee7606] xfs: don't fail when converting shortform attr to long form duri
+       [930af86] xfs_repair: examine all remote attribute blocks
+       [41b465f] xfs_repair: don't leak buffer on xattr remote buf verifier  erro
+       [eb9cee6] xfs_repair: validate some of the log space information
+       [d2be29d] xfs_repair: zap corrupt remote symlink
+       [67a79e2] xfs_repair: treat zero da btree pointers as corruption
+       [f9c559f] xfs_repair: invalidate dirty dir buffers when we zap a  director
+       [bf67850] xfs_repair: only update in-core extent state after scanning full
+       [3cc93dd] xfs_repair: don't crash if da btree is corrupt
+       [7554707] xfs_repair: actually fix .. entries that point to inode zero
+       [8fec4f7] xfs_repair: check inode nsec for obviously garbage values
+       [369c0b5] xfs_repair: don't assert on bad '.' entry in no-modify mode
+       [fe08f67] libfrog: move platform specific runtime support code out of libx
+       [96aaf9b] libfrog: refactor fs geometry printing function
+       [ebc2e79] mkfs: use geometry generation / helper functions
+       [172793e] xfs_db: add a superblock info command
+       [6fb7087] xfs_spaceman: print a nicer message when file path isn't on xfs
+       [6719d62] xfs_spaceman: add a superblock info command
+       [3fda24e] xfs_info: move to xfs_spaceman
+       [6750f2b] xfs_info: call xfs_db for offline filesystems
+       [35f7c5b] xfs_growfs: refactor geometry reporting
+
+David Howells (1):
+       [fc52865] xfs_io: Allow -P and -L to be given to open for O_PATH and  O_NO
+
+Eric Sandeen (6):
+       [3060f26] xfs: enhance dinode verifier
+       [7c4d311] xfs: set format back to extents if xfs_bmap_extents_to_btree
+       [73b28e5] Merge branch 'libxfs-4.17-sync' into for-next
+       [98c4a01] xfsprogs: be careful about what we stat in platform_check_mount
+       [5857dce] xfs_repair: check and repair quota metadata
+       [cfa10b0] xfs_io: add label command
+
+Jeff Layton (1):
+       [7c4889e] xfs_io: syncfs can fail
+
+
+Code Diffstat:
+
+  db/Makefile                      |   2 +-
+  db/command.c                     |   1 +
+  db/command.h                     |   1 +
+  db/info.c                        |  74 ++++++++++++++
+  growfs/Makefile                  |   2 -
+  growfs/xfs_growfs.c              |  88 +---------------
+  include/fsgeom.h                 |  24 +++++
+  io/Makefile                      |   6 +-
+  io/file.c                        |   6 +-
+  io/init.c                        |   9 +-
+  io/io.h                          |   3 +
+  io/label.c                       | 108 ++++++++++++++++++++
+  io/open.c                        |  41 +++++++-
+  io/sync.c                        |   6 +-
+  libfrog/Makefile                 |   5 +
+  {libxfs => libfrog}/darwin.c     |   0
+  {libxfs => libfrog}/freebsd.c    |   0
+  libfrog/fsgeom.c                 |  82 +++++++++++++++
+  {libxfs => libfrog}/irix.c       |   0
+  {libxfs => libfrog}/linux.c      |  10 ++
+  libxfs/Makefile                  |   3 -
+  libxfs/libxfs_api_defs.h         |   3 +
+  libxfs/libxfs_priv.h             |   2 -
+  libxfs/xfs_attr.c                |   9 +-
+  libxfs/xfs_bmap.c                |   4 +
+  libxfs/xfs_inode_buf.c           |  21 ++++
+  libxfs/xfs_quota_defs.h          |   2 +
+  man/man8/xfs_db.8                |   8 ++
+  man/man8/xfs_growfs.8            |  47 +--------
+  man/man8/xfs_info.8              |  97 ++++++++++++++++++
+  man/man8/xfs_io.8                |  25 ++++-
+  man/man8/xfs_spaceman.8          |   7 ++
+  mkfs/xfs_mkfs.c                  |  54 +++-------
+  repair/attr_repair.c             |   7 +-
+  repair/da_util.c                 |   8 ++
+  repair/dinode.c                  | 216 +++++++++++++++++++++++++++++++++++++--
+  repair/dir2.c                    |  23 ++++-
+  repair/globals.h                 |   3 +-
+  repair/incore.h                  |   3 +
+  repair/phase6.c                  |  49 ++++++++-
+  repair/sb.c                      |  27 +++++
+  repair/xfs_repair.c              |   2 +
+  spaceman/Makefile                |   4 +-
+  spaceman/file.c                  |   7 +-
+  spaceman/info.c                  |  96 +++++++++++++++++
+  spaceman/init.c                  |   6 +-
+  spaceman/space.h                 |   1 +
+  {growfs => spaceman}/xfs_info.sh |  14 ++-
+  48 files changed, 1004 insertions(+), 212 deletions(-)
+  create mode 100644 db/info.c
+  create mode 100644 include/fsgeom.h
+  create mode 100644 io/label.c
+  rename {libxfs => libfrog}/darwin.c (100%)
+  rename {libxfs => libfrog}/freebsd.c (100%)
+  create mode 100644 libfrog/fsgeom.c
+  rename {libxfs => libfrog}/irix.c (100%)
+  rename {libxfs => libfrog}/linux.c (93%)
+  create mode 100644 man/man8/xfs_info.8
+  create mode 100644 spaceman/info.c
+  rename {growfs => spaceman}/xfs_info.sh (55%)
