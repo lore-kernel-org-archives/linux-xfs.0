@@ -1,50 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:49044 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:43034 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1031530AbeEXRLl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 24 May 2018 13:11:41 -0400
-Subject: Re: [PATCH] xfs: fix inobt magic number check
-References: <20180524155553.GO14384@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <3fb6744f-15af-48b6-1e99-7629373cfbce@sandeen.net>
-Date: Thu, 24 May 2018 12:11:39 -0500
+        id S966235AbeEYLfe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 25 May 2018 07:35:34 -0400
+Date: Fri, 25 May 2018 07:35:33 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 22/34] xfs: make xfs_writepage_map extent map centric
+Message-ID: <20180525113532.GA92036@bfoster.bfoster>
+References: <20180523144357.18985-1-hch@lst.de>
+ <20180523144357.18985-23-hch@lst.de>
+ <20180524145935.GA84959@bfoster.bfoster>
+ <20180524165350.GA22675@lst.de>
+ <20180524181356.GA89391@bfoster.bfoster>
+ <20180525061900.GA16409@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20180524155553.GO14384@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180525061900.GA16409@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>
 
-On 5/24/18 10:55 AM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, May 25, 2018 at 08:19:00AM +0200, Christoph Hellwig wrote:
+> On Thu, May 24, 2018 at 02:13:56PM -0400, Brian Foster wrote:
+> > Ok, so I guess writeback can see uptodate blocks over a hole if some
+> > other block in that page is dirty.
 > 
-> In commit a6a781a58befcbd467c ("xfs: have buffer verifier functions
-> report failing address") the bad magic number return was ported
-> incorrectly.
+> Yes.
 > 
-> Fixes: a6a781a58befcbd467ce843af4eaca3906aa1f08
-> Reported-by: syzbot+08ab33be0178b76851c8@syzkaller.appspotmail.com
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > Perhaps we could make sure that a
+> > dirty page has at least one block that maps to an actual extent or
+> > otherwise the page has been truncated..?
+> 
+> We have the following comment near the end of xfs_writepage_map:
+> 
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+That comment is what I'm basing on...
 
-> ---
->   fs/xfs/libxfs/xfs_ialloc_btree.c |    2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+> 	/*
+> 	 * We can end up here with no error and nothing to write if we
+> 	 * race with a partial page truncate on a sub-page block sized
+> 	 * filesystem. In that case we need to mark the page clean.
+> 	 */
 > 
-> diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-> index ba053a4c124f..b04c55512159 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-> +++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-> @@ -296,7 +296,7 @@ xfs_inobt_verify(
->   	case cpu_to_be32(XFS_FIBT_MAGIC):
->   		break;
->   	default:
-> -		return NULL;
-> +		return __this_address;
->   	}
->   
->   	/* level verification */
+
+So we can correctly end up with nothing to write on a dirty page, but it
+presumes a race with truncate. So suppose we end up with a dirty page,
+at least one uptodate block, count is zero (i.e., due to holes) and
+i_size is beyond the page. Would that not be completely bogus? If bogus,
+I think that would at least detect the dumb example I posted earlier.
+
+Brian
+
+> And I'm pretty sure I managed to hit that case easily in xfstests,
+> as my initial handling of it was wrong.  So I don't think we can
+> even check for that.
+> 
+> > I guess having another dirty block bitmap similar to
+> > iomap_page->uptodate could be required to tell for sure whether a
+> > particular block should definitely have a block on-disk or not. It may
+> > not be worth doing that just for additional error checks, but I still
+> > have to look into the last few patches to grok all the iomap_page stuff.
+> 
+> I don't think it's worth it.  The sub-page dirty tracking has been one
+> of the issues with the buffer head code that caused a lot of problems,
+> and that we want to get rid of.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
