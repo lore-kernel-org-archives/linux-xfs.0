@@ -1,84 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:49218 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933485AbeEWOpf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 May 2018 10:45:35 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 30/34] xfs: move all writeback buffer_head manipulation into xfs_map_at_offset
-Date: Wed, 23 May 2018 16:43:53 +0200
-Message-Id: <20180523144357.18985-31-hch@lst.de>
-In-Reply-To: <20180523144357.18985-1-hch@lst.de>
-References: <20180523144357.18985-1-hch@lst.de>
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:36407 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S970030AbeEYAuE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 May 2018 20:50:04 -0400
+Received: by mail-pf0-f194.google.com with SMTP id w129-v6so1711230pfd.3
+        for <linux-xfs@vger.kernel.org>; Thu, 24 May 2018 17:50:04 -0700 (PDT)
+Date: Thu, 24 May 2018 17:50:00 -0700
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH v2 5/5] mkfs.xfs: add configuration file parsing support
+ using our own parser
+Message-ID: <20180525005000.GB24593@garbanzo.do-not-panic.com>
+References: <20180517192700.23457-1-mcgrof@kernel.org>
+ <20180517192700.23457-6-mcgrof@kernel.org>
+ <1f1e87df-aba5-e285-e3cb-820306f24f1c@sandeen.net>
+ <20180518034600.GW23858@magnolia>
+ <20180518153805.GE24680@garbanzo.do-not-panic.com>
+ <c2e7b213-0dad-7609-7984-e4c897d6bb08@sandeen.net>
+ <20180518235610.GF24680@garbanzo.do-not-panic.com>
+ <CACj3i70TM0uZpOLdD=gAguOvt-eGuypWtPC6LUH5_HKMCUxGhw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CACj3i70TM0uZpOLdD=gAguOvt-eGuypWtPC6LUH5_HKMCUxGhw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+To: Jan Tulak <jtulak@redhat.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, Eric Sandeen <sandeen@sandeen.net>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, jack@suse.com, Jeff Mahoney <jeffm@suse.com>, okurz@suse.com, lpechacek@suse.com
 
-This keeps it in a single place so it can be made otional more easily.
+On Mon, May 21, 2018 at 11:40:30AM +0200, Jan Tulak wrote:
+> On Sat, May 19, 2018 at 1:56 AM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
+> > On Fri, May 18, 2018 at 12:09:23PM -0500, Eric Sandeen wrote:
+> ...
+> >>
+> >> mkfs.xfs -c hoogah            searches /@sysconfigdir@/mkfs.xfs.d/
+> >> mkfs.xfs -c ./hoogah          or
+> >> mkfs.xfs -c /path/to/hoogah   do exactly what you'd expect.
+> >>
+> ...
+> >
+> > Sounds good. I'll drop the environment variable junk and only support
+> > the above 3 cases.
+> >
+> 
+> mkfs.xfs -c ../hoogah too, please. :-)
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_aops.c | 22 +++++-----------------
- 1 file changed, 5 insertions(+), 17 deletions(-)
+Done.
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 592b33b35a30..951b329abb23 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -505,21 +505,6 @@ xfs_imap_valid(
- 		offset < imap->br_startoff + imap->br_blockcount;
- }
- 
--STATIC void
--xfs_start_buffer_writeback(
--	struct buffer_head	*bh)
--{
--	ASSERT(buffer_mapped(bh));
--	ASSERT(buffer_locked(bh));
--	ASSERT(!buffer_delay(bh));
--	ASSERT(!buffer_unwritten(bh));
--
--	bh->b_end_io = NULL;
--	set_buffer_async_write(bh);
--	set_buffer_uptodate(bh);
--	clear_buffer_dirty(bh);
--}
--
- STATIC void
- xfs_start_page_writeback(
- 	struct page		*page,
-@@ -728,6 +713,7 @@ xfs_map_at_offset(
- 	ASSERT(imap->br_startblock != HOLESTARTBLOCK);
- 	ASSERT(imap->br_startblock != DELAYSTARTBLOCK);
- 
-+	lock_buffer(bh);
- 	xfs_map_buffer(inode, bh, imap, offset);
- 	set_buffer_mapped(bh);
- 	clear_buffer_delay(bh);
-@@ -740,6 +726,10 @@ xfs_map_at_offset(
- 	 * set the bdev now.
- 	 */
- 	bh->b_bdev = xfs_find_bdev_for_inode(inode);
-+	bh->b_end_io = NULL;
-+	set_buffer_async_write(bh);
-+	set_buffer_uptodate(bh);
-+	clear_buffer_dirty(bh);
- }
- 
- STATIC void
-@@ -885,11 +875,9 @@ xfs_writepage_map(
- 			continue;
- 		}
- 
--		lock_buffer(bh);
- 		xfs_map_at_offset(inode, bh, &wpc->imap, file_offset);
- 		xfs_add_to_ioend(inode, file_offset, page, wpc, wbc,
- 				&submit_list);
--		xfs_start_buffer_writeback(bh);
- 		count++;
- 	}
- 
--- 
-2.17.0
-
+  Luis
