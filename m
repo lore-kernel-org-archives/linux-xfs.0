@@ -1,74 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:46814 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S972019AbeEYAvb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 May 2018 20:51:31 -0400
-Received: by mail-pg0-f65.google.com with SMTP id a3-v6so1516840pgt.13
-        for <linux-xfs@vger.kernel.org>; Thu, 24 May 2018 17:51:31 -0700 (PDT)
-Date: Thu, 24 May 2018 17:51:27 -0700
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH v2 5/5] mkfs.xfs: add configuration file parsing support
- using our own parser
-Message-ID: <20180525005127.GC24593@garbanzo.do-not-panic.com>
-References: <20180517192700.23457-1-mcgrof@kernel.org>
- <20180517192700.23457-6-mcgrof@kernel.org>
- <1f1e87df-aba5-e285-e3cb-820306f24f1c@sandeen.net>
- <20180518034600.GW23858@magnolia>
- <20180520001648.GN23861@dastard>
- <20180521153354.GH23858@magnolia>
- <20180521170530.GH24680@garbanzo.do-not-panic.com>
- <20180521221057.GP23861@dastard>
- <80799366-31c1-7f23-7020-80caaf17a80c@sandeen.net>
- <20180522003857.GV23861@dastard>
+Received: from mail-qk0-f195.google.com ([209.85.220.195]:33737 "EHLO
+        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S967879AbeEYUQO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 May 2018 16:16:14 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180522003857.GV23861@dastard>
+In-Reply-To: <d6a4b528-4336-48d4-1e0a-7b135c92f97e@redhat.com>
+References: <20180525151421.2317292-1-arnd@arndb.de> <d6a4b528-4336-48d4-1e0a-7b135c92f97e@redhat.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Fri, 25 May 2018 22:16:12 +0200
+Message-ID: <CAK8P3a1n3ME0f_mVTcph8aQ3x7rFriypd0kzxz9Up+sZJdLb=g@mail.gmail.com>
+Subject: Re: [PATCH] xfs: mark sb_fname as nonstring
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, "Luis R. Rodriguez" <mcgrof@kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, Martin Sebor <msebor@gmail.com>, Brian Foster <bfoster@redhat.com>, Dave Chinner <dchinner@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Tue, May 22, 2018 at 10:38:57AM +1000, Dave Chinner wrote:
-> On Mon, May 21, 2018 at 05:24:34PM -0500, Eric Sandeen wrote:
-> > On 5/21/18 5:10 PM, Dave Chinner wrote:
-> > >On Mon, May 21, 2018 at 10:05:30AM -0700, Luis R. Rodriguez wrote:
-> > >>On Mon, May 21, 2018 at 08:33:54AM -0700, Darrick J. Wong wrote:
-> > >>>On Sun, May 20, 2018 at 10:16:48AM +1000, Dave Chinner wrote:
-> > >>>>On Thu, May 17, 2018 at 08:46:00PM -0700, Darrick J. Wong wrote:
-> > >>>>><shrug> Bikeshedding more, what if either option accepted either an
-> > >>>>>absolute path, or a file in $sysconfdir/etc/mkfs.xfs.d/ ?
-> > >>>>
-> > >>>>I kinda assumed that config files could be located anywhere, but we
-> > >>>>only searched the sysconfig path if it didn't point at a local
-> > >>>>file...
-> > >>>
-> > >>><shrug> openat() semantics are fine enough with me, I think.
-> > >>
-> > >>Well this is a big difference, and I think being clear on this would
-> > >>be good. If the user specified:
-> > >>
-> > >>	-c foo
-> > >>	
-> > >>and the file 'foo' is present but also exists on
-> > >>$sysconfdir/etc/mkfs.xfs.d/foo do we use the local file if the user
-> > >>did not pass ./foo ?
-> > >
-> > >I would have expected "foo" to be considered the same as "./foo".
-> > >It's a relative path.
-> > 
-> > Urgh, so now if foo exists in $PWD /and/ in $sysconfdir/etc/mkfs.xfs.d/foo
-> > we have to have a hierarchy between the two?  :/
-> 
-> Of course there is. The user may not know anything about admin
-> configured defaults, and they are well within their rights to have
-> their own local files that have names that match global admin
-> default files.
+On Fri, May 25, 2018 at 6:53 PM, Eric Sandeen <sandeen@redhat.com> wrote:
+> On 5/25/18 10:14 AM, Arnd Bergmann wrote:
+>>
+>> gcc-8 reports two warnings for the newly added getlabel/setlabel code:
+>
+>
+> Thanks for catching these.
+>
+> The patch summary confuses me, what does "mark sb_fname as nonstring"
+> mean in the context of the actual patch?
 
-Chinner's got a point here. If felt silly to not support this so I just
-added support for it.
+My mistake. I tried a few different approaches and ended up using the
+subject line from an earlier version with a later patch.
 
-Will spin out a new set as I think I've taken care of all comments now.
+The 'nonstring' annotation is a variable attribute that gets gcc-8
+to shut up about -Wstringop-truncation warnings, and is intended
+to mark those character arrays that are not expected to be
+null-terminated but still used with strncpy().
 
-  Luis
+>>         spin_unlock(&mp->m_sb_lock);
+>>         /* xfs on-disk label is 12 chars, be sure we send a null to user
+>> */
+>>         label[XFSLABEL_MAX] = '\0';
+>> -       if (copy_to_user(user_label, label, sizeof(sbp->sb_fname)))
+>> +       if (copy_to_user(user_label, label, sizeof(label)))
+>
+>
+>
+> ok.  (odd how this is ok for copy_to_user but not for strncpy above) :)
+
+No idea. Maybe the gcc bug only happens with struct members but
+not local variables?
+
+>>                 return -EFAULT;
+>>         return 0;
+>>   }
+>> @@ -1860,7 +1860,7 @@ xfs_ioc_setlabel(
+>>         spin_lock(&mp->m_sb_lock);
+>>         memset(sbp->sb_fname, 0, sizeof(sbp->sb_fname));
+>> -       strncpy(sbp->sb_fname, label, sizeof(sbp->sb_fname));
+>> +       memcpy(sbp->sb_fname, label, len);
+>
+>
+> Hm but len = strnlen(label, XFSLABEL_MAX + 1);
+> which could be one longer than sbp->sb_fname, no?
+
+We have an explicit check for that, so I think it's ok:
+
+        if (len > sizeof(sbp->sb_fname))
+                return -EINVAL;
+
+       Arnd
