@@ -1,57 +1,203 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:33846 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S967622AbeEXPzz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 May 2018 11:55:55 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w4OFtZvE026937
-        for <linux-xfs@vger.kernel.org>; Thu, 24 May 2018 15:55:54 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp2130.oracle.com with ESMTP id 2j4nh7h2hp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 24 May 2018 15:55:54 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w4OFtssw024773
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 24 May 2018 15:55:54 GMT
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w4OFtrc8022839
-        for <linux-xfs@vger.kernel.org>; Thu, 24 May 2018 15:55:54 GMT
-Date: Thu, 24 May 2018 08:55:53 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: fix inobt magic number check
-Message-ID: <20180524155553.GO14384@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: from mail.kernel.org ([198.145.29.99]:56060 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755024AbeEYDTq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 24 May 2018 23:19:46 -0400
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v3 2/4] mkfs: move shared config structs and into their own headers
+Date: Thu, 24 May 2018 20:19:41 -0700
+Message-Id: <20180525031943.29440-3-mcgrof@kernel.org>
+In-Reply-To: <20180525031943.29440-1-mcgrof@kernel.org>
+References: <20180525031943.29440-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com, "Luis R. Rodriguez" <mcgrof@kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Both struct sb_feat_args and struct mkfs_default_params will be shared
+between CLI processing and the configuration file processing added later,
+so move these to their own header.
 
-In commit a6a781a58befcbd467c ("xfs: have buffer verifier functions
-report failing address") the bad magic number return was ported
-incorrectly.
+This will help ensure we split things neatly later and also will help
+ensure the configuration file processing code from the CLI code are kept
+separate and cannot touch each other's data structures. This also makes
+it clear what is actually shared between both.
 
-Fixes: a6a781a58befcbd467ce843af4eaca3906aa1f08
-Reported-by: syzbot+08ab33be0178b76851c8@syzkaller.appspotmail.com
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+There are no introduced functional changes in this commit and no
+documentation changes, this is just code shuffling.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 ---
- fs/xfs/libxfs/xfs_ialloc_btree.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ mkfs/config.h   | 78 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ mkfs/xfs_mkfs.c | 55 +---------------------------------------
+ 2 files changed, 79 insertions(+), 54 deletions(-)
+ create mode 100644 mkfs/config.h
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-index ba053a4c124f..b04c55512159 100644
---- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-@@ -296,7 +296,7 @@ xfs_inobt_verify(
- 	case cpu_to_be32(XFS_FIBT_MAGIC):
- 		break;
- 	default:
--		return NULL;
-+		return __this_address;
- 	}
+diff --git a/mkfs/config.h b/mkfs/config.h
+new file mode 100644
+index 000000000000..e5ea968e2d65
+--- /dev/null
++++ b/mkfs/config.h
+@@ -0,0 +1,78 @@
++/*
++ * Copyright (c) 2000-2005 Silicon Graphics, Inc.
++ * Copyright (c) 2016-2017 Red Hat, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++#ifndef _XFS_MKFS_CONFIG_H
++#define _XFS_MKFS_CONFIG_H
++
++struct fsxattr;
++
++/*
++ * Shared superblock configuration options
++ *
++ * These options provide shared configuration tunables for the filesystem
++ * superblock. There are three possible sources for these options set, each
++ * source can overriding the later source:
++ *
++ * 	o built-in defaults
++ * 	o configuration file (XXX)
++ * 	o command line
++ *
++ * These values are not used directly - they are inputs into the mkfs geometry
++ * validation.
++ */
++struct sb_feat_args {
++	int	log_version;
++	int	attr_version;
++	int	dir_version;
++	bool	inode_align;		/* XFS_SB_VERSION_ALIGNBIT */
++	bool	nci;			/* XFS_SB_VERSION_BORGBIT */
++	bool	lazy_sb_counters;	/* XFS_SB_VERSION2_LAZYSBCOUNTBIT */
++	bool	parent_pointers;	/* XFS_SB_VERSION2_PARENTBIT */
++	bool	projid32bit;		/* XFS_SB_VERSION2_PROJID32BIT */
++	bool	crcs_enabled;		/* XFS_SB_VERSION2_CRCBIT */
++	bool	dirftype;		/* XFS_SB_VERSION2_FTYPE */
++	bool	finobt;			/* XFS_SB_FEAT_RO_COMPAT_FINOBT */
++	bool	spinodes;		/* XFS_SB_FEAT_INCOMPAT_SPINODES */
++	bool	rmapbt;			/* XFS_SB_FEAT_RO_COMPAT_RMAPBT */
++	bool	reflink;		/* XFS_SB_FEAT_RO_COMPAT_REFLINK */
++	bool	nodalign;
++	bool	nortalign;
++};
++
++/*
++ * Default filesystem features and configuration values
++ *
++ * This structure contains the default mkfs values that are to be used when
++ * a user does not specify the option on the command line. We do not use these
++ * values directly - they are inputs to the mkfs geometry validation and
++ * calculations.
++ */
++struct mkfs_default_params {
++	char	*source;	/* where the defaults came from */
++
++	int	sectorsize;
++	int	blocksize;
++
++	/* feature flags that are set */
++	struct sb_feat_args	sb_feat;
++
++	/* root inode characteristics */
++	struct fsxattr		fsx;
++};
++
++#endif /* _XFS_MKFS_CONFIG_H */
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 95cd6ced13f0..217bb972538d 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -20,6 +20,7 @@
+ #include <ctype.h>
+ #include "xfs_multidisk.h"
+ #include "libxcmd.h"
++#include "config.h"
  
- 	/* level verification */
+ 
+ 
+@@ -706,39 +707,6 @@ cli_opt_set(
+ 	       opts->subopt_params[subopt].str_seen;
+ }
+ 
+-/*
+- * Shared superblock configuration options
+- *
+- * These options provide shared configuration tunables for the filesystem
+- * superblock. There are three possible sources for these options set, each
+- * source can overriding the later source:
+- *
+- * 	o built-in defaults
+- * 	o configuration file (XXX)
+- * 	o command line
+- *
+- * These values are not used directly - they are inputs into the mkfs geometry
+- * validation.
+- */
+-struct sb_feat_args {
+-	int	log_version;
+-	int	attr_version;
+-	int	dir_version;
+-	bool	inode_align;		/* XFS_SB_VERSION_ALIGNBIT */
+-	bool	nci;			/* XFS_SB_VERSION_BORGBIT */
+-	bool	lazy_sb_counters;	/* XFS_SB_VERSION2_LAZYSBCOUNTBIT */
+-	bool	parent_pointers;	/* XFS_SB_VERSION2_PARENTBIT */
+-	bool	projid32bit;		/* XFS_SB_VERSION2_PROJID32BIT */
+-	bool	crcs_enabled;		/* XFS_SB_VERSION2_CRCBIT */
+-	bool	dirftype;		/* XFS_SB_VERSION2_FTYPE */
+-	bool	finobt;			/* XFS_SB_FEAT_RO_COMPAT_FINOBT */
+-	bool	spinodes;		/* XFS_SB_FEAT_INCOMPAT_SPINODES */
+-	bool	rmapbt;			/* XFS_SB_FEAT_RO_COMPAT_RMAPBT */
+-	bool	reflink;		/* XFS_SB_FEAT_RO_COMPAT_REFLINK */
+-	bool	nodalign;
+-	bool	nortalign;
+-};
+-
+ /*
+  * Options configured on the command line.
+  *
+@@ -850,27 +818,6 @@ struct mkfs_params {
+ 	struct sb_feat_args	sb_feat;
+ };
+ 
+-/*
+- * Default filesystem features and configuration values
+- *
+- * This structure contains the default mkfs values that are to be used when
+- * a user does not specify the option on the command line. We do not use these
+- * values directly - they are inputs to the mkfs geometry validation and
+- * calculations.
+- */
+-struct mkfs_default_params {
+-	char	*source;	/* where the defaults came from */
+-
+-	int	sectorsize;
+-	int	blocksize;
+-
+-	/* feature flags that are set */
+-	struct sb_feat_args	sb_feat;
+-
+-	/* root inode characteristics */
+-	struct fsxattr		fsx;
+-};
+-
+ static void __attribute__((noreturn))
+ usage( void )
+ {
+-- 
+2.16.3
+
