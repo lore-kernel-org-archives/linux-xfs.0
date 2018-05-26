@@ -1,202 +1,149 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:54473 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1162498AbeE1OG0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 May 2018 10:06:26 -0400
-Received: by mail-wm0-f67.google.com with SMTP id f6-v6so32482610wmc.4
-        for <linux-xfs@vger.kernel.org>; Mon, 28 May 2018 07:06:26 -0700 (PDT)
-Date: Mon, 28 May 2018 16:06:22 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 6/7] xfs_scrub: actually check for errors coming from
- close()
-Message-ID: <20180528140622.3jum5g2h7npgpm22@odin.usersys.redhat.com>
-References: <152728629694.22515.17699396814561914788.stgit@magnolia>
- <152728633395.22515.8564988242826363746.stgit@magnolia>
+Received: from mail-pl0-f67.google.com ([209.85.160.67]:35179 "EHLO
+        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1032230AbeEZRNK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 26 May 2018 13:13:10 -0400
+Received: by mail-pl0-f67.google.com with SMTP id i5-v6so4875137plt.2
+        for <linux-xfs@vger.kernel.org>; Sat, 26 May 2018 10:13:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <152728633395.22515.8564988242826363746.stgit@magnolia>
+In-Reply-To: <20180523234114.GA3434@thunk.org>
+References: <000000000000457b2d056cbb0044@google.com> <20180522123107.GC3751@bfoster.bfoster>
+ <20180522222620.GW23861@dastard> <20180522225208.GB658@sol.localdomain>
+ <20180523074425.GM14384@magnolia> <20180523162015.GA3684@sol.localdomain>
+ <a52266f9-0096-b28c-c01c-046ababcfe3a@sandeen.net> <20180523234114.GA3434@thunk.org>
+From: Dmitry Vyukov <dvyukov@google.com>
+Date: Sat, 26 May 2018 19:12:49 +0200
+Message-ID: <CACT4Y+YEpThQj=63F8CSHeWSZxbWJ1cTDB7ZvM8OYR921uXT2g@mail.gmail.com>
+Subject: Re: Bugs involving maliciously crafted file system
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: "Theodore Y. Ts'o" <tytso@mit.edu>, Eric Sandeen <sandeen@sandeen.net>, Eric Biggers <ebiggers3@gmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>, LKML <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, syzkaller-bugs <syzkaller-bugs@googlegroups.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, syzkaller <syzkaller@googlegroups.com>
 
-On Fri, May 25, 2018 at 03:12:14PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Report errors reported by close().
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, May 24, 2018 at 1:41 AM, Theodore Y. Ts'o <tytso@mit.edu> wrote:
+> On Wed, May 23, 2018 at 01:01:59PM -0500, Eric Sandeen wrote:
+>>
+>> What I'm personally hung up on are the bugs where the "exploit" involves merely
+>> mounting a crafted filesystem that in reality would never (until the heat death
+>> of the universe) corrupt itself into that state on its own; it's the "malicious
+>> image" case, which is quite different than exposing fundamental bugs like the
+>> SB_BORN race or or the user-exploitable ext4 flaw you mentioned in your reply.
+>> Those are more insidious and/or things which can be hit by real users in real life.
+>
+> Well, it *can* be hit in real life.  If you have a system which auto
+> mounts USB sticks, then an attacker might be able to weaponize that
+> bug by creating a USB stick where mounted and the user opens a
+> particular file, the buffer overrun causes code to be executed that
+> grabs the user's credentials (e.g., ssh-agent keys, OATH creds, etc.)
+> and exfiltrates them to a collection server.
+>
+> Fedora and Chrome OS might be two such platforms where someone could
+> very easily create a weaponized exploit tool where you could insert a
+> file system buffer overrun bug, and "hey presto!" it becomes a serious
+> zero day vulnerability.
+>
+> (I recently suggested to a security researcher who was concerned that
+> file system developers weren't taking these sorts of things seriously
+> enough could do a service to the community by creating a demonstration
+> about how these sorts of bugs can be weaponized.  And I suspect it
+> could be about just as easily on Chrome OS as Fedora, and that can be
+> one way that an argument could be made to management that more
+> resources should be applied to this problem.  :-)
+>
+> Of course, not all bugs triggered by a maliciously crafted file system
+> are equally weaponizable.  An errors=panic or a NULL derefrence are
+> probably not easily exploitable at all.  A buffer overrun (and I fixed
+> two in ext4 in the last two days while being stuck in a T13 standards
+> meeting, so I do feel your pain) might be a very different story.
+>
+> Solutions
+> ---------
+>
+> One of the things I've wanted to get help from the syzbot folks is if
+> there was some kind of machine learning or expert system evaluation
+> that could be done so malicious image bugs could be binned into
+> different categories, based on how easily they can be weaponized.
+> That way, when there is a resource shortage situation, humans can be
+> more easily guided into detremining which bugs should be prioritized
+> and given attention, and which we can defer to when we have more time.
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Hi Ted,
 
-> ---
->  scrub/phase1.c |    6 +++++-
->  scrub/phase3.c |   27 +++++++++++++++++++++++++--
->  scrub/phase5.c |    8 ++++++--
->  scrub/phase6.c |   10 +++++++---
->  scrub/vfs.c    |    4 +++-
->  5 files changed, 46 insertions(+), 9 deletions(-)
-> 
-> 
-> diff --git a/scrub/phase1.c b/scrub/phase1.c
-> index c2b9067a..87847259 100644
-> --- a/scrub/phase1.c
-> +++ b/scrub/phase1.c
-> @@ -60,6 +60,8 @@ bool
->  xfs_cleanup_fs(
->  	struct scrub_ctx	*ctx)
->  {
-> +	int			error;
-> +
->  	if (ctx->fshandle)
->  		free_handle(ctx->fshandle, ctx->fshandle_len);
->  	if (ctx->rtdev)
-> @@ -69,7 +71,9 @@ xfs_cleanup_fs(
->  	if (ctx->datadev)
->  		disk_close(ctx->datadev);
->  	fshandle_destroy();
-> -	close(ctx->mnt_fd);
-> +	error = close(ctx->mnt_fd);
-> +	if (error)
-> +		str_errno(ctx, _("closing mountpoint fd"));
->  	fs_table_destroy();
->  
->  	return true;
-> diff --git a/scrub/phase3.c b/scrub/phase3.c
-> index 68c95e67..cbaa80ba 100644
-> --- a/scrub/phase3.c
-> +++ b/scrub/phase3.c
-> @@ -53,6 +53,25 @@ struct scrub_inode_ctx {
->  	bool			moveon;
->  };
->  
-> +/* Report a filesystem error that the vfs fed us on close. */
-> +static void
-> +xfs_scrub_inode_vfs_error(
-> +	struct scrub_ctx	*ctx,
-> +	struct xfs_bstat	*bstat)
-> +{
-> +	char			descr[DESCR_BUFSZ];
-> +	xfs_agnumber_t		agno;
-> +	xfs_agino_t		agino;
-> +	int			old_errno = errno;
-> +
-> +	agno = bstat->bs_ino / (1ULL << (ctx->inopblog + ctx->agblklog));
-> +	agino = bstat->bs_ino % (1ULL << (ctx->inopblog + ctx->agblklog));
-> +	snprintf(descr, DESCR_BUFSZ, _("inode %"PRIu64" (%u/%u)"),
-> +			(uint64_t)bstat->bs_ino, agno, agino);
-> +	errno = old_errno;
-> +	str_errno(ctx, descr);
-> +}
-> +
->  /* Verify the contents, xattrs, and extent maps of an inode. */
->  static int
->  xfs_scrub_inode(
-> @@ -65,6 +84,7 @@ xfs_scrub_inode(
->  	struct ptcounter	*icount = ictx->icount;
->  	bool			moveon = true;
->  	int			fd = -1;
-> +	int			error;
->  
->  	background_sleep();
->  
-> @@ -116,8 +136,11 @@ xfs_scrub_inode(
->  out:
->  	ptcounter_add(icount, 1);
->  	progress_add(1);
-> -	if (fd >= 0)
-> -		close(fd);
-> +	if (fd >= 0) {
-> +		error = close(fd);
-> +		if (error)
-> +			xfs_scrub_inode_vfs_error(ctx, bstat);
-> +	}
->  	if (!moveon)
->  		ictx->moveon = false;
->  	return ictx->moveon ? 0 : XFS_ITERATE_INODES_ABORT;
-> diff --git a/scrub/phase5.c b/scrub/phase5.c
-> index 01038f77..456f38e2 100644
-> --- a/scrub/phase5.c
-> +++ b/scrub/phase5.c
-> @@ -250,6 +250,7 @@ xfs_scrub_connections(
->  	xfs_agnumber_t		agno;
->  	xfs_agino_t		agino;
->  	int			fd = -1;
-> +	int			error;
->  
->  	agno = bstat->bs_ino / (1ULL << (ctx->inopblog + ctx->agblklog));
->  	agino = bstat->bs_ino % (1ULL << (ctx->inopblog + ctx->agblklog));
-> @@ -285,8 +286,11 @@ xfs_scrub_connections(
->  
->  out:
->  	progress_add(1);
-> -	if (fd >= 0)
-> -		close(fd);
-> +	if (fd >= 0) {
-> +		error = close(fd);
-> +		if (error)
-> +			str_errno(ctx, descr);
-> +	}
->  	if (!moveon)
->  		*pmoveon = false;
->  	return *pmoveon ? 0 : XFS_ITERATE_INODES_ABORT;
-> diff --git a/scrub/phase6.c b/scrub/phase6.c
-> index b533cbbd..26540155 100644
-> --- a/scrub/phase6.c
-> +++ b/scrub/phase6.c
-> @@ -212,7 +212,9 @@ _("Disappeared during read error reporting."));
->  
->  	/* Go find the badness. */
->  	moveon = xfs_report_verify_fd(ctx, descr, fd, arg);
-> -	close(fd);
-> +	error = close(fd);
-> +	if (error)
-> +		str_errno(ctx, descr);
->  
->  	return moveon ? 0 : XFS_ITERATE_INODES_ABORT;
->  }
-> @@ -243,6 +245,7 @@ xfs_report_verify_dirent(
->  {
->  	bool			moveon;
->  	int			fd;
-> +	int			error;
->  
->  	/* Ignore things we can't open. */
->  	if (!S_ISREG(sb->st_mode) && !S_ISDIR(sb->st_mode))
-> @@ -268,8 +271,9 @@ xfs_report_verify_dirent(
->  		goto out;
->  
->  out:
-> -	close(fd);
-> -
-> +	error = close(fd);
-> +	if (error)
-> +		str_errno(ctx, path);
->  	return moveon;
->  }
->  
-> diff --git a/scrub/vfs.c b/scrub/vfs.c
-> index cfb58782..77df2874 100644
-> --- a/scrub/vfs.c
-> +++ b/scrub/vfs.c
-> @@ -86,7 +86,9 @@ scan_fs_dir(
->  	/* Caller-specific directory checks. */
->  	if (!sft->dir_fn(ctx, sftd->path, dir_fd, sft->arg)) {
->  		sft->moveon = false;
-> -		close(dir_fd);
-> +		error = close(dir_fd);
-> +		if (error)
-> +			str_errno(ctx, sftd->path);
->  		goto out;
->  	}
->  
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I don't see that "some kind of machine learning or expert system
+evaluation" is feasible. At least not in short/mid-term. There are
+innocently-looking bugs that actually turn out to be very bad, and
+there are badly looking at first glance bugs that actually not that
+bad for some complex reasons. Full security assessment is a complex
+task and I think stays "human expert area" for now. One can get some
+coarse estimation by searching for "use-after-free" and
+"out-of-bounds" on the dashboard.
 
--- 
-Carlos
+Also note that even the most innocent bugs can block ability to
+discover deeper and worse bugs during any runtime testing. So
+ultimately all need to be fixed if we want correct, stable and secure
+kernel. To significant degree it's like compiler warnings: you either
+fix them all, or turn them off, there is no middle ground of having
+thousands of unfixed warnings and still getting benefit from them.
+
+
+> Or maybe it would be useful if there was a way where maintainers could
+> be able to annotate bugs with priority and severity levels, and maybe
+> make comments that can be viewed from the Syzbot dashboard UI.
+
+This looks more realistic. +Tetsuo proposed something similar:
+https://github.com/google/syzkaller/issues/608
+
+I think to make it useful we need to settle on some small set of
+well-defined tags for bugs that we can show on the dashboard.
+Arbitrary detailed free-form comments can be left on the mailing list
+threads that are always referenced from the dashboard.
+
+What tags would you use today for existing bugs? One would be
+"security-critical", right?
+
+
+
+> The other thing that perhaps could be done is to set up a system where
+> the USB stick is automounted in a guest VM (using libvirt in Fedora,
+> and perhaps Crostini for Chrome OS), and the contents of the file
+> system would then get exported from the guest OS to the host OS using
+> either NFS or 9P.  (9P2000.u is the solution that was used in
+> gVisor[1].)
+>
+> [1] https://github.com/google/gvisor
+>
+> It could be that putting this kind of security layer in front to
+> automounted USB sticks is less work than playing whack-a-mole fixing a
+> lot of security bugs with maliciously crafted file systems.
+
+I don't think that auto mounting or "requires root" is significantly
+relevant in this context. If one needs to use a USB stick, or DVD or
+just any filesystem that they did not create themselves, there is
+pretty much no choice than to mount it, issuing sudo if necessary. If
+you did not create it yourself with a trusted program, there is no way
+you can be sure in the contents of the thing and there is no way you
+can verify every byte of it before mounting. That's exactly the work
+for software. Responsibility shifting like "you said sudo so now it's
+all on you" is not useful for users. It's like web sites that give you
+a hundred page license agreement before you can use it, but now you
+clicked Agree so it's all on you, you read and understood every word
+of it and if there would be any concern you would not click Agree,
+right?
+Fixing large legacy code bases is hard. But there is no other way than
+persistent testing and fixing one bug at a time. We know that it's
+doable because browsers did it over the past 10 years for much larger
+set of input formats.
+
+
+
+> For sure.  I guess some subset of the crashes could be more carefully
+> crafted to be more dangerous, but fuzzers really don't tell us that today,
+> in fact the more insidious flaws that don't turn up as a crash or hang likely
+> go unnoticed.
+
+Well, we have KASAN, almost have KMSAN and will have KTSAN in future.
+They can detect detect significant portion of bugs that go unnoticed
+otherwise. At least this prevents "bad guys" from also using tooling
+to cheaply harvest exploits. Systematic use of these tools on browsers
+raised exploit costs to $1M+ for a reason.
