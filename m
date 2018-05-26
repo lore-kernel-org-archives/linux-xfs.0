@@ -1,202 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f181.google.com ([209.85.128.181]:33853 "EHLO
-        mail-wr0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1162303AbeE1OLk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 May 2018 10:11:40 -0400
-Received: by mail-wr0-f181.google.com with SMTP id j1-v6so20527497wrm.1
-        for <linux-xfs@vger.kernel.org>; Mon, 28 May 2018 07:11:39 -0700 (PDT)
-Date: Mon, 28 May 2018 16:11:36 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 7/7] libxfs: remove crc32 functions
-Message-ID: <20180528141136.3anksl5xaftofkkk@odin.usersys.redhat.com>
-References: <152728629694.22515.17699396814561914788.stgit@magnolia>
- <152728634020.22515.16684194597988861920.stgit@magnolia>
- <23568dc9-61d2-0eb9-819a-1386f7276408@oracle.com>
+Received: from zeniv.linux.org.uk ([195.92.253.2]:43820 "EHLO
+        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1030804AbeEZAeP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 May 2018 20:34:15 -0400
+Date: Sat, 26 May 2018 01:34:13 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: [PATCH] xfs, proc: hide unused xfs procfs helpers
+Message-ID: <20180526003412.GN30522@ZenIV.linux.org.uk>
+References: <20180525151612.2408651-1-arnd@arndb.de>
+ <20180525162204.GA28900@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <23568dc9-61d2-0eb9-819a-1386f7276408@oracle.com>
+In-Reply-To: <20180525162204.GA28900@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Allison Henderson <allison.henderson@oracle.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Arnd Bergmann <arnd@arndb.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sun, May 27, 2018 at 08:53:04PM -0700, Allison Henderson wrote:
-> Seems like it would be ok.  But if these functions are not really used,
-> is there a reason as to why we are just commenting them out instead of
-> removing them entirely?  Thx!
-
-I've the same question, I'd say you expect to keep them there for historical
-reasons, but I think at least a comment in the patch description would be fine,
-but either if you keep the commented code, or remove it completely:
-
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-
-
+On Fri, May 25, 2018 at 06:22:04PM +0200, Christoph Hellwig wrote:
+> Looks fine to me:
 > 
-> Allison
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > 
-> On 05/25/2018 03:12 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > XFS uses crc32c, not crc32.  Remove the unnecessary crc32 code, which
-> > decreases binary size by the 8K crc32 table.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >   include/libxfs.h        |    3 ---
-> >   libxfs/crc32.c          |   16 ++++++++++------
-> >   libxfs/gen_crc32table.c |    8 +++++++-
-> >   libxfs/libxfs_priv.h    |    3 ---
-> >   4 files changed, 17 insertions(+), 13 deletions(-)
-> > 
-> > 
-> > diff --git a/include/libxfs.h b/include/libxfs.h
-> > index fbaae089..109866de 100644
-> > --- a/include/libxfs.h
-> > +++ b/include/libxfs.h
-> > @@ -43,10 +43,7 @@
-> >   /* CRC stuff, buffer API dependent on it */
-> > -extern uint32_t crc32_le(uint32_t crc, unsigned char const *p, size_t len);
-> >   extern uint32_t crc32c_le(uint32_t crc, unsigned char const *p, size_t len);
-> > -
-> > -#define crc32(c,p,l)	crc32_le((c),(unsigned char const *)(p),(l))
-> >   #define crc32c(c,p,l)	crc32c_le((c),(unsigned char const *)(p),(l))
-> >   #include "xfs_cksum.h"
-> > diff --git a/libxfs/crc32.c b/libxfs/crc32.c
-> > index 783d62e9..8fe5c42c 100644
-> > --- a/libxfs/crc32.c
-> > +++ b/libxfs/crc32.c
-> > @@ -176,20 +176,26 @@ static inline u32 __pure crc32_le_generic(u32 crc, unsigned char const *p,
-> >   }
-> >   #if CRC_LE_BITS == 1
-> > +/*
-> > + * not used by xfs.
-> >   u32 __pure crc32_le(u32 crc, unsigned char const *p, size_t len)
-> >   {
-> >   	return crc32_le_generic(crc, p, len, NULL, CRCPOLY_LE);
-> >   }
-> > + */
-> >   u32 __pure crc32c_le(u32 crc, unsigned char const *p, size_t len)
-> >   {
-> >   	return crc32_le_generic(crc, p, len, NULL, CRC32C_POLY_LE);
-> >   }
-> >   #else
-> > +/*
-> > + * not used by xfs.
-> >   u32 __pure crc32_le(u32 crc, unsigned char const *p, size_t len)
-> >   {
-> >   	return crc32_le_generic(crc, p, len,
-> >   			(const u32 (*)[256])crc32table_le, CRCPOLY_LE);
-> >   }
-> > + */
-> >   u32 __pure crc32c_le(u32 crc, unsigned char const *p, size_t len)
-> >   {
-> >   	return crc32_le_generic(crc, p, len,
-> > @@ -970,6 +976,7 @@ static int crc32c_test(void)
-> >   	return errors;
-> >   }
-> > +#if 0	/* not used by xfs */
-> >   static int crc32_test(void)
-> >   {
-> >   	int i;
-> > @@ -989,10 +996,8 @@ static int crc32_test(void)
-> >   		crc ^= crc32_le(test[i].crc, test_buf +
-> >   		    test[i].start, test[i].length);
-> > -#if 0 /* not used */
-> >   		crc ^= crc32_be(test[i].crc, test_buf +
-> >   		    test[i].start, test[i].length);
-> > -#endif
-> >   	}
-> >   	gettimeofday(&start, NULL);
-> > @@ -1001,11 +1006,9 @@ static int crc32_test(void)
-> >   		    test[i].start, test[i].length))
-> >   			errors++;
-> > -#if 0 /* not used */
-> >   		if (test[i].crc_be != crc32_be(test[i].crc, test_buf +
-> >   		    test[i].start, test[i].length))
-> >   			errors++;
-> > -#endif
-> >   	}
-> >   	gettimeofday(&stop, NULL);
-> > @@ -1021,6 +1024,8 @@ static int crc32_test(void)
-> >   	return errors;
-> >   }
-> > +#endif
-> > +
-> >   /*
-> >    * make sure we always return 0 for a successful test run, and non-zero for a
-> >    * failed run. The build infrastructure is looking for this information to
-> > @@ -1032,8 +1037,7 @@ int main(int argc, char **argv)
-> >   	printf("CRC_LE_BITS = %d\n", CRC_LE_BITS);
-> > -	errors = crc32_test();
-> > -	errors += crc32c_test();
-> > +	errors = crc32c_test();
-> >   	return errors != 0;
-> >   }
-> > diff --git a/libxfs/gen_crc32table.c b/libxfs/gen_crc32table.c
-> > index 574a2d1a..d81164b7 100644
-> > --- a/libxfs/gen_crc32table.c
-> > +++ b/libxfs/gen_crc32table.c
-> > @@ -20,7 +20,10 @@
-> >   # define BE_TABLE_SIZE (1 << CRC_BE_BITS)
-> >   #endif
-> > +/*
-> > + * crc32 not used by xfs.
-> >   static uint32_t crc32table_le[LE_TABLE_ROWS][256];
-> > + */
-> >   static uint32_t crc32ctable_le[LE_TABLE_ROWS][256];
-> >   /*
-> > @@ -57,10 +60,13 @@ static void crc32init_le_generic(const uint32_t polynomial,
-> >   	}
-> >   }
-> > +/*
-> > + * crc32 not used by xfs.
-> >   static void crc32init_le(void)
-> >   {
-> >   	crc32init_le_generic(CRCPOLY_LE, crc32table_le);
-> >   }
-> > + */
-> >   static void crc32cinit_le(void)
-> >   {
-> > @@ -112,6 +118,7 @@ int main(int argc, char** argv)
-> >   {
-> >   	printf("/* this file is generated - do not edit */\n\n");
-> > +#if 0	/* not used by xfsprogs */
-> >   	if (CRC_LE_BITS > 1) {
-> >   		crc32init_le();
-> >   		printf("static u32 crc32table_le[%d][%d] = {",
-> > @@ -121,7 +128,6 @@ int main(int argc, char** argv)
-> >   		printf("};\n");
-> >   	}
-> > -#if 0	/* not used by xfsprogs */
-> >   	if (CRC_BE_BITS > 1) {
-> >   		crc32init_be();
-> >   		printf("static u32 crc32table_be[%d][%d] = {",
-> > diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-> > index e5eb3de1..fae32411 100644
-> > --- a/libxfs/libxfs_priv.h
-> > +++ b/libxfs/libxfs_priv.h
-> > @@ -67,10 +67,7 @@
-> >   #include "xfs_fs.h"
-> >   /* CRC stuff, buffer API dependent on it */
-> > -extern uint32_t crc32_le(uint32_t crc, unsigned char const *p, size_t len);
-> >   extern uint32_t crc32c_le(uint32_t crc, unsigned char const *p, size_t len);
-> > -
-> > -#define crc32(c,p,l)	crc32_le((c),(unsigned char const *)(p),(l))
-> >   #define crc32c(c,p,l)	crc32c_le((c),(unsigned char const *)(p),(l))
-> >   #include "xfs_cksum.h"
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwICaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=UTANtlZSRetfnz4BmXOr1fXJ6ePKjcWFnaB8-d9hRFk&s=SKcuMvUHSCQzGlRx1lPp-Hym6boKRBUhcRY7YNsWRQo&e=
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Al, can you pick this up?
 
--- 
-Carlos
+Done
