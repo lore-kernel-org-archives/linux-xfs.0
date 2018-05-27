@@ -1,55 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:52862 "EHLO sandeen.net"
+Received: from trent.utfs.org ([94.185.90.103]:38196 "EHLO trent.utfs.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965614AbeE2TKL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 29 May 2018 15:10:11 -0400
-Subject: Re: [PATCH 0/7] xfsprogs-4.17: last of the fixes
-References: <152728629694.22515.17699396814561914788.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <9b740760-3890-057a-5650-f8a4b5c468dc@sandeen.net>
-Date: Tue, 29 May 2018 14:10:09 -0500
+        id S1755179AbeE0SoO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 27 May 2018 14:44:14 -0400
+Date: Sun, 27 May 2018 11:36:47 -0700 (PDT)
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: xfs_repair: Invalid inode number 0x0 / couldn't map inode
+Message-ID: <alpine.DEB.2.21.999.1805271107250.6371@trent.utfs.org>
 MIME-Version: 1.0
-In-Reply-To: <152728629694.22515.17699396814561914788.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: eflorac@intellique.com
 
-On 5/25/18 5:11 PM, Darrick J. Wong wrote:
-> Hi all,
+Hi,
 
-Thanks, I will pull these all in today.
+so, after some months of stable service, this Raspberry Pi 3B acted up 
+again and logged some XFS errors:
 
-And thank for the reviews, that helps.
+kernel: XFS (dm-1): Metadata corruption detected at xfs_inode_buf_verify+0x94/0x140, xfs_inode block 0x1b4b1c5b0
+kernel: XFS (dm-1): Unmount and run xfs_repair
+kernel: XFS (dm-1): First 128 bytes of corrupted metadata buffer:
 
-Alison, can you be sure to add a "-" in your "Reviewed-by:" tags
-in the future, please?
+This dm-1 is a dm-crypt device, backed by a 2 TB disk in an USB-attached 
+disk enclosure. I've been told that this RPI (1 GB RAM) may be a bit weak 
+to handle disks that large, but I just won't listen :-)
 
-Thanks,
--Eric
-  
-> The first patch fixes a Coverity bug that was introduced in the latest
-> push of for-next.
-> 
-> Then there are three patches to fix some deficiencies I found when I
-> tried to use xfsbuflock.py to diagnose deadlocks in generic/388.  The
-> script didn't know that buffers are created locked, it didn't tell you
-> the line number of when a buffer got locked, and it got a little
-> confused about trylock.  So fix all three of those.
-> 
-> The fourth patch fixes another bashism in fsck.xfs.
-> 
-> The fifth patch removes crc32 support (not crc32c support) which is not
-> used anywhere in xfs.  This reduces text segment size by 8K in all
-> programs.
-> 
-> --D
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Now the interesting part: I ran xfs_repair 4.15.1 on that same RPI, and 
+although it was not killed by any out-of-memory mechanisms this time, it 
+always ended with:
+
+=================================
+Phase 6 - check inode connectivity...
+        - resetting contents of realtime bitmap and summary inodes
+        - traversing filesystem ...
+        - agno = 0
+entry "libsystemd-238.76-1.0" in dir ino 399463 doesn't have a .. entry, will set it in ino 5905743567.
+        - agno = 1
+Invalid inode number 0x0
+xfs_dir_ino_validate: XFS_ERROR_REPORT
+
+fatal error -- couldn't map inode 268555554, err = 117
+=================================
+
+
+I've then attached the storage to a Thinkpad laptop (x86-64, 32 GB RAM) 
+but xfs_repair 4.15.1 reported just the same. Only a freshly compiled 
+xfs_repair 4.16.1 was able to repair the file system. Nothing was moved to 
+lost+found. Please note that I was able to mount the file system at all 
+times, i.e. even after a failed repair attempt.
+
+This "Invalid inode number 0x0" was reported last year on this list, but 
+it seems to be a different issue (I did not see any "Badness in key 
+lookup" messages):
+
+  > Re: Weird xfs_repair error
+  > https://www.spinics.net/lists/linux-xfs/msg08593.html
+
+The file system appears to be repaired now and is running again on that 
+RPI, but I thought I report that incident anyways. Here are the full logs 
+of all that:
+
+   http://nerdbynature.de/bits/4.16/xfs/
+
+So, thanks for maintaining and developing xfsprogs, v4.16.1 really did the 
+trick here! :-)
+
+Christian.
+-- 
+BOFH excuse #81:
+
+Please excuse me, I have to circuit an AC line through my head to get this database working.
