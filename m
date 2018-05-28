@@ -1,16 +1,17 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:42548 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:42280 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751776AbeE1DxU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 May 2018 23:53:20 -0400
+        with ESMTP id S1751215AbeE1Dwx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 May 2018 23:52:53 -0400
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: Re: [PATCH 7/7] libxfs: remove crc32 functions
+Subject: Re: [PATCH 6/7] xfs_scrub: actually check for errors coming from
+ close()
 References: <152728629694.22515.17699396814561914788.stgit@magnolia>
- <152728634020.22515.16684194597988861920.stgit@magnolia>
-Message-ID: <23568dc9-61d2-0eb9-819a-1386f7276408@oracle.com>
-Date: Sun, 27 May 2018 20:53:04 -0700
+ <152728633395.22515.8564988242826363746.stgit@magnolia>
+Message-ID: <7c4dccad-4216-187f-7f84-7e6caf3f44d7@oracle.com>
+Date: Sun, 27 May 2018 20:52:39 -0700
 MIME-Version: 1.0
-In-Reply-To: <152728634020.22515.16684194597988861920.stgit@magnolia>
+In-Reply-To: <152728633395.22515.8564988242826363746.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -20,186 +21,179 @@ List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
 Cc: linux-xfs@vger.kernel.org
 
-Seems like it would be ok.  But if these functions are not really used,
-is there a reason as to why we are just commenting them out instead of 
-removing them entirely?  Thx!
-
-Allison
+Looks ok:
+Reviewed by: Allison Henderson <allison.henderson@oracle.com>
 
 On 05/25/2018 03:12 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> XFS uses crc32c, not crc32.  Remove the unnecessary crc32 code, which
-> decreases binary size by the 8K crc32 table.
+> Report errors reported by close().
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->   include/libxfs.h        |    3 ---
->   libxfs/crc32.c          |   16 ++++++++++------
->   libxfs/gen_crc32table.c |    8 +++++++-
->   libxfs/libxfs_priv.h    |    3 ---
->   4 files changed, 17 insertions(+), 13 deletions(-)
+>   scrub/phase1.c |    6 +++++-
+>   scrub/phase3.c |   27 +++++++++++++++++++++++++--
+>   scrub/phase5.c |    8 ++++++--
+>   scrub/phase6.c |   10 +++++++---
+>   scrub/vfs.c    |    4 +++-
+>   5 files changed, 46 insertions(+), 9 deletions(-)
 > 
 > 
-> diff --git a/include/libxfs.h b/include/libxfs.h
-> index fbaae089..109866de 100644
-> --- a/include/libxfs.h
-> +++ b/include/libxfs.h
-> @@ -43,10 +43,7 @@
->   
->   
->   /* CRC stuff, buffer API dependent on it */
-> -extern uint32_t crc32_le(uint32_t crc, unsigned char const *p, size_t len);
->   extern uint32_t crc32c_le(uint32_t crc, unsigned char const *p, size_t len);
-> -
-> -#define crc32(c,p,l)	crc32_le((c),(unsigned char const *)(p),(l))
->   #define crc32c(c,p,l)	crc32c_le((c),(unsigned char const *)(p),(l))
->   
->   #include "xfs_cksum.h"
-> diff --git a/libxfs/crc32.c b/libxfs/crc32.c
-> index 783d62e9..8fe5c42c 100644
-> --- a/libxfs/crc32.c
-> +++ b/libxfs/crc32.c
-> @@ -176,20 +176,26 @@ static inline u32 __pure crc32_le_generic(u32 crc, unsigned char const *p,
->   }
->   
->   #if CRC_LE_BITS == 1
-> +/*
-> + * not used by xfs.
->   u32 __pure crc32_le(u32 crc, unsigned char const *p, size_t len)
+> diff --git a/scrub/phase1.c b/scrub/phase1.c
+> index c2b9067a..87847259 100644
+> --- a/scrub/phase1.c
+> +++ b/scrub/phase1.c
+> @@ -60,6 +60,8 @@ bool
+>   xfs_cleanup_fs(
+>   	struct scrub_ctx	*ctx)
 >   {
->   	return crc32_le_generic(crc, p, len, NULL, CRCPOLY_LE);
->   }
-> + */
->   u32 __pure crc32c_le(u32 crc, unsigned char const *p, size_t len)
->   {
->   	return crc32_le_generic(crc, p, len, NULL, CRC32C_POLY_LE);
->   }
->   #else
-> +/*
-> + * not used by xfs.
->   u32 __pure crc32_le(u32 crc, unsigned char const *p, size_t len)
->   {
->   	return crc32_le_generic(crc, p, len,
->   			(const u32 (*)[256])crc32table_le, CRCPOLY_LE);
->   }
-> + */
->   u32 __pure crc32c_le(u32 crc, unsigned char const *p, size_t len)
->   {
->   	return crc32_le_generic(crc, p, len,
-> @@ -970,6 +976,7 @@ static int crc32c_test(void)
->   	return errors;
->   }
->   
-> +#if 0	/* not used by xfs */
->   static int crc32_test(void)
->   {
->   	int i;
-> @@ -989,10 +996,8 @@ static int crc32_test(void)
->   		crc ^= crc32_le(test[i].crc, test_buf +
->   		    test[i].start, test[i].length);
->   
-> -#if 0 /* not used */
->   		crc ^= crc32_be(test[i].crc, test_buf +
->   		    test[i].start, test[i].length);
-> -#endif
->   	}
->   
->   	gettimeofday(&start, NULL);
-> @@ -1001,11 +1006,9 @@ static int crc32_test(void)
->   		    test[i].start, test[i].length))
->   			errors++;
->   
-> -#if 0 /* not used */
->   		if (test[i].crc_be != crc32_be(test[i].crc, test_buf +
->   		    test[i].start, test[i].length))
->   			errors++;
-> -#endif
->   	}
->   	gettimeofday(&stop, NULL);
->   
-> @@ -1021,6 +1024,8 @@ static int crc32_test(void)
->   
->   	return errors;
->   }
-> +#endif
+> +	int			error;
 > +
->   /*
->    * make sure we always return 0 for a successful test run, and non-zero for a
->    * failed run. The build infrastructure is looking for this information to
-> @@ -1032,8 +1037,7 @@ int main(int argc, char **argv)
+>   	if (ctx->fshandle)
+>   		free_handle(ctx->fshandle, ctx->fshandle_len);
+>   	if (ctx->rtdev)
+> @@ -69,7 +71,9 @@ xfs_cleanup_fs(
+>   	if (ctx->datadev)
+>   		disk_close(ctx->datadev);
+>   	fshandle_destroy();
+> -	close(ctx->mnt_fd);
+> +	error = close(ctx->mnt_fd);
+> +	if (error)
+> +		str_errno(ctx, _("closing mountpoint fd"));
+>   	fs_table_destroy();
 >   
->   	printf("CRC_LE_BITS = %d\n", CRC_LE_BITS);
+>   	return true;
+> diff --git a/scrub/phase3.c b/scrub/phase3.c
+> index 68c95e67..cbaa80ba 100644
+> --- a/scrub/phase3.c
+> +++ b/scrub/phase3.c
+> @@ -53,6 +53,25 @@ struct scrub_inode_ctx {
+>   	bool			moveon;
+>   };
 >   
-> -	errors = crc32_test();
-> -	errors += crc32c_test();
-> +	errors = crc32c_test();
+> +/* Report a filesystem error that the vfs fed us on close. */
+> +static void
+> +xfs_scrub_inode_vfs_error(
+> +	struct scrub_ctx	*ctx,
+> +	struct xfs_bstat	*bstat)
+> +{
+> +	char			descr[DESCR_BUFSZ];
+> +	xfs_agnumber_t		agno;
+> +	xfs_agino_t		agino;
+> +	int			old_errno = errno;
+> +
+> +	agno = bstat->bs_ino / (1ULL << (ctx->inopblog + ctx->agblklog));
+> +	agino = bstat->bs_ino % (1ULL << (ctx->inopblog + ctx->agblklog));
+> +	snprintf(descr, DESCR_BUFSZ, _("inode %"PRIu64" (%u/%u)"),
+> +			(uint64_t)bstat->bs_ino, agno, agino);
+> +	errno = old_errno;
+> +	str_errno(ctx, descr);
+> +}
+> +
+>   /* Verify the contents, xattrs, and extent maps of an inode. */
+>   static int
+>   xfs_scrub_inode(
+> @@ -65,6 +84,7 @@ xfs_scrub_inode(
+>   	struct ptcounter	*icount = ictx->icount;
+>   	bool			moveon = true;
+>   	int			fd = -1;
+> +	int			error;
 >   
->   	return errors != 0;
+>   	background_sleep();
+>   
+> @@ -116,8 +136,11 @@ xfs_scrub_inode(
+>   out:
+>   	ptcounter_add(icount, 1);
+>   	progress_add(1);
+> -	if (fd >= 0)
+> -		close(fd);
+> +	if (fd >= 0) {
+> +		error = close(fd);
+> +		if (error)
+> +			xfs_scrub_inode_vfs_error(ctx, bstat);
+> +	}
+>   	if (!moveon)
+>   		ictx->moveon = false;
+>   	return ictx->moveon ? 0 : XFS_ITERATE_INODES_ABORT;
+> diff --git a/scrub/phase5.c b/scrub/phase5.c
+> index 01038f77..456f38e2 100644
+> --- a/scrub/phase5.c
+> +++ b/scrub/phase5.c
+> @@ -250,6 +250,7 @@ xfs_scrub_connections(
+>   	xfs_agnumber_t		agno;
+>   	xfs_agino_t		agino;
+>   	int			fd = -1;
+> +	int			error;
+>   
+>   	agno = bstat->bs_ino / (1ULL << (ctx->inopblog + ctx->agblklog));
+>   	agino = bstat->bs_ino % (1ULL << (ctx->inopblog + ctx->agblklog));
+> @@ -285,8 +286,11 @@ xfs_scrub_connections(
+>   
+>   out:
+>   	progress_add(1);
+> -	if (fd >= 0)
+> -		close(fd);
+> +	if (fd >= 0) {
+> +		error = close(fd);
+> +		if (error)
+> +			str_errno(ctx, descr);
+> +	}
+>   	if (!moveon)
+>   		*pmoveon = false;
+>   	return *pmoveon ? 0 : XFS_ITERATE_INODES_ABORT;
+> diff --git a/scrub/phase6.c b/scrub/phase6.c
+> index b533cbbd..26540155 100644
+> --- a/scrub/phase6.c
+> +++ b/scrub/phase6.c
+> @@ -212,7 +212,9 @@ _("Disappeared during read error reporting."));
+>   
+>   	/* Go find the badness. */
+>   	moveon = xfs_report_verify_fd(ctx, descr, fd, arg);
+> -	close(fd);
+> +	error = close(fd);
+> +	if (error)
+> +		str_errno(ctx, descr);
+>   
+>   	return moveon ? 0 : XFS_ITERATE_INODES_ABORT;
 >   }
-> diff --git a/libxfs/gen_crc32table.c b/libxfs/gen_crc32table.c
-> index 574a2d1a..d81164b7 100644
-> --- a/libxfs/gen_crc32table.c
-> +++ b/libxfs/gen_crc32table.c
-> @@ -20,7 +20,10 @@
->   # define BE_TABLE_SIZE (1 << CRC_BE_BITS)
->   #endif
->   
-> +/*
-> + * crc32 not used by xfs.
->   static uint32_t crc32table_le[LE_TABLE_ROWS][256];
-> + */
->   static uint32_t crc32ctable_le[LE_TABLE_ROWS][256];
->   
->   /*
-> @@ -57,10 +60,13 @@ static void crc32init_le_generic(const uint32_t polynomial,
->   	}
->   }
->   
-> +/*
-> + * crc32 not used by xfs.
->   static void crc32init_le(void)
+> @@ -243,6 +245,7 @@ xfs_report_verify_dirent(
 >   {
->   	crc32init_le_generic(CRCPOLY_LE, crc32table_le);
->   }
-> + */
+>   	bool			moveon;
+>   	int			fd;
+> +	int			error;
 >   
->   static void crc32cinit_le(void)
->   {
-> @@ -112,6 +118,7 @@ int main(int argc, char** argv)
->   {
->   	printf("/* this file is generated - do not edit */\n\n");
+>   	/* Ignore things we can't open. */
+>   	if (!S_ISREG(sb->st_mode) && !S_ISDIR(sb->st_mode))
+> @@ -268,8 +271,9 @@ xfs_report_verify_dirent(
+>   		goto out;
 >   
-> +#if 0	/* not used by xfsprogs */
->   	if (CRC_LE_BITS > 1) {
->   		crc32init_le();
->   		printf("static u32 crc32table_le[%d][%d] = {",
-> @@ -121,7 +128,6 @@ int main(int argc, char** argv)
->   		printf("};\n");
->   	}
->   
-> -#if 0	/* not used by xfsprogs */
->   	if (CRC_BE_BITS > 1) {
->   		crc32init_be();
->   		printf("static u32 crc32table_be[%d][%d] = {",
-> diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-> index e5eb3de1..fae32411 100644
-> --- a/libxfs/libxfs_priv.h
-> +++ b/libxfs/libxfs_priv.h
-> @@ -67,10 +67,7 @@
->   #include "xfs_fs.h"
->   
->   /* CRC stuff, buffer API dependent on it */
-> -extern uint32_t crc32_le(uint32_t crc, unsigned char const *p, size_t len);
->   extern uint32_t crc32c_le(uint32_t crc, unsigned char const *p, size_t len);
+>   out:
+> -	close(fd);
 > -
-> -#define crc32(c,p,l)	crc32_le((c),(unsigned char const *)(p),(l))
->   #define crc32c(c,p,l)	crc32c_le((c),(unsigned char const *)(p),(l))
+> +	error = close(fd);
+> +	if (error)
+> +		str_errno(ctx, path);
+>   	return moveon;
+>   }
 >   
->   #include "xfs_cksum.h"
+> diff --git a/scrub/vfs.c b/scrub/vfs.c
+> index cfb58782..77df2874 100644
+> --- a/scrub/vfs.c
+> +++ b/scrub/vfs.c
+> @@ -86,7 +86,9 @@ scan_fs_dir(
+>   	/* Caller-specific directory checks. */
+>   	if (!sft->dir_fn(ctx, sftd->path, dir_fd, sft->arg)) {
+>   		sft->moveon = false;
+> -		close(dir_fd);
+> +		error = close(dir_fd);
+> +		if (error)
+> +			str_errno(ctx, sftd->path);
+>   		goto out;
+>   	}
+>   
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwICaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=UTANtlZSRetfnz4BmXOr1fXJ6ePKjcWFnaB8-d9hRFk&s=SKcuMvUHSCQzGlRx1lPp-Hym6boKRBUhcRY7YNsWRQo&e=
+> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwICaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=QEHg-4gJOhupzORWTApyuKuBTYX6Sum0GqFWPnC_mCo&s=QA446VHazWxqoc7nECcFGE-upy-amurTz6LUSuZURGg&e=
 > 
