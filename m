@@ -1,184 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:42258 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751183AbeE1Eyd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 28 May 2018 00:54:33 -0400
-From: Zorro Lang <zlang@redhat.com>
-Subject: [PATCH] xfstests/shared: dedup integrity test by duperemove
-Date: Mon, 28 May 2018 12:54:27 +0800
-Message-Id: <20180528045427.11159-1-zlang@redhat.com>
+Received: from verein.lst.de ([213.95.11.211]:47154 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751085AbeE1Gvs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 28 May 2018 02:51:48 -0400
+Date: Mon, 28 May 2018 08:57:50 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 2/2] xfs: add support for sub-pagesize writeback
+        without buffer_heads
+Message-ID: <20180528065750.GA5098@lst.de>
+References: <20180523144646.19159-1-hch@lst.de> <20180523144646.19159-3-hch@lst.de> <20180525171714.GB92502@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180525171714.GB92502@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-Duperemove is a tool for finding duplicated extents and submitting
-them for deduplication, and it supports XFS. This case trys to
-verify the integrity of XFS after running duperemove.
+On Fri, May 25, 2018 at 01:17:15PM -0400, Brian Foster wrote:
+> On Wed, May 23, 2018 at 04:46:46PM +0200, Christoph Hellwig wrote:
+> > Switch to using the iomap_page structure for checking sub-page uptodate
+> > status and track sub-page I/O completion status, and remove large
+> > quantities of boilerplate code working around buffer heads.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  fs/xfs/xfs_aops.c  | 536 +++++++--------------------------------------
+> >  fs/xfs/xfs_buf.h   |   1 -
+> >  fs/xfs/xfs_iomap.c |   3 -
+> >  fs/xfs/xfs_super.c |   2 +-
+> >  fs/xfs/xfs_trace.h |  18 +-
+> >  5 files changed, 79 insertions(+), 481 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> > index efa2cbb27d67..d279929e53fb 100644
+> > --- a/fs/xfs/xfs_aops.c
+> > +++ b/fs/xfs/xfs_aops.c
+> ...
+> > @@ -768,7 +620,7 @@ xfs_aops_discard_page(
+> >  	int			error;
+> >  
+> >  	if (XFS_FORCED_SHUTDOWN(mp))
+> > -		goto out_invalidate;
+> > +		goto out;
+> >  
+> >  	xfs_alert(mp,
+> >  		"page discard on page "PTR_FMT", inode 0x%llx, offset %llu.",
+> > @@ -778,15 +630,15 @@ xfs_aops_discard_page(
+> >  			PAGE_SIZE / i_blocksize(inode));
+> >  	if (error && !XFS_FORCED_SHUTDOWN(mp))
+> >  		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
+> > -out_invalidate:
+> > -	xfs_vm_invalidatepage(page, 0, PAGE_SIZE);
+> > +out:
+> > +	iomap_invalidatepage(page, 0, PAGE_SIZE);
+> 
+> All this does is lose the tracepoint. I don't think this call needs to
+> change. The rest looks Ok to me, but I still need to run some tests on
+> the whole thing.
 
-Signed-off-by: Zorro Lang <zlang@redhat.com>
----
-
-Hi,
-
-There's not many softwares support XFS dedup now, duperemove is a rare one.
-So I write this case by using duperemove.
-
-I use fsstress to make many files and data randomly, I don't know if there're
-better things I can use? Because fsstress only write '0xff' into files, maybe
-I should add an option to make fsstress can write random character?
-
-Please tell me, if you have better ideas:)
-
-PS: This case test passed on XFS(with reflink=1) and btrfs. And the duperemove
-can reclaim some space in the test, see below:
-
-  Before duperemove
-    Filesystem                 1K-blocks    Used Available Use% Mounted on
-    /dev/mapper/xxxx-xfscratch 31441920K 583692K 30858228K   2% /mnt/scratch
-
-  After duperemove
-    Filesystem                 1K-blocks    Used Available Use% Mounted on
-    /dev/mapper/xxxx-xfscratch 31441920K 345728K 31096192K   2% /mnt/scratch
-
-Thanks,
-Zorro
-
- common/config        |  1 +
- tests/shared/008     | 88 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/shared/008.out |  2 ++
- tests/shared/group   |  1 +
- 4 files changed, 92 insertions(+)
- create mode 100755 tests/shared/008
- create mode 100644 tests/shared/008.out
-
-diff --git a/common/config b/common/config
-index 02c378a9..def559c1 100644
---- a/common/config
-+++ b/common/config
-@@ -207,6 +207,7 @@ export SQLITE3_PROG="`set_prog_path sqlite3`"
- export TIMEOUT_PROG="`set_prog_path timeout`"
- export SETCAP_PROG="`set_prog_path setcap`"
- export GETCAP_PROG="`set_prog_path getcap`"
-+export DUPEREMOVE_PROG="`set_prog_path duperemove`"
- 
- # use 'udevadm settle' or 'udevsettle' to wait for lv to be settled.
- # newer systems have udevadm command but older systems like RHEL5 don't.
-diff --git a/tests/shared/008 b/tests/shared/008
-new file mode 100755
-index 00000000..dace5429
---- /dev/null
-+++ b/tests/shared/008
-@@ -0,0 +1,88 @@
-+#! /bin/bash
-+# FS QA Test 008
-+#
-+# Dedup integrity test by duperemove
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2018 Red Hat Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/reflink
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+
-+# duperemove only supports btrfs and xfs (with reflink feature).
-+# Add other filesystems if it supports more later.
-+_supported_fs xfs btrfs
-+_supported_os Linux
-+_require_scratch_reflink
-+
-+[ "$DUPEREMOVE_PROG" = "" ] && _notrun "duperemove not found"
-+_scratch_mkfs > $seqres.full 2>&1
-+_scratch_mount >> $seqres.full 2>&1
-+
-+testdir=$SCRATCH_MNT/test-$seq
-+mkdir $testdir
-+
-+fsstress_opts="-w -r -f mknod=0"
-+# Create some files and make a duplicate
-+$FSSTRESS_PROG $fsstress_opts -d $testdir \
-+	       -n $((500 * LOAD_FACTOR)) -p 10 >/dev/null 2>&1
-+duptestdir=${testdir}.dup
-+cp -a $testdir $duptestdir
-+
-+# Make some difference in two directories
-+$FSSTRESS_PROG $fsstress_opts -d $testdir -n 200 -p 5 >/dev/null 2>&1
-+$FSSTRESS_PROG $fsstress_opts -d $duptestdir -n 200 -p 5 >/dev/null 2>&1
-+
-+# Record all files' md5 checksum
-+find $testdir -type f -exec md5sum {} \; > $TEST_DIR/${seq}md5.sum
-+find $duptestdir -type f -exec md5sum {} \; > $TEST_DIR/dup${seq}md5.sum
-+
-+# Dedup
-+echo "== Duperemove output ==" >> $seqres.full
-+$DUPEREMOVE_PROG -dr $SCRATCH_MNT/ >>$seqres.full 2>&1
-+
-+# Verify all files' integrity
-+md5sum -c --quiet $TEST_DIR/${seq}md5.sum
-+md5sum -c --quiet $TEST_DIR/dup${seq}md5.sum
-+
-+echo "Silence is golden"
-+
-+status=0
-+exit
-diff --git a/tests/shared/008.out b/tests/shared/008.out
-new file mode 100644
-index 00000000..dd68d5a4
---- /dev/null
-+++ b/tests/shared/008.out
-@@ -0,0 +1,2 @@
-+QA output created by 008
-+Silence is golden
-diff --git a/tests/shared/group b/tests/shared/group
-index b3663a03..de7fe79f 100644
---- a/tests/shared/group
-+++ b/tests/shared/group
-@@ -10,6 +10,7 @@
- 005 dangerous_fuzzers
- 006 auto enospc
- 007 dangerous_fuzzers
-+008 auto quick dedupe
- 032 mkfs auto quick
- 272 auto enospc rw
- 289 auto quick
--- 
-2.14.3
-
+Ok.  I actually had it that way, then thought we shouldn't need the
+invalidatepage without bufferheads, but it turns out we still do and
+added it back this way.  I'll go back to start and won't collect $200..
