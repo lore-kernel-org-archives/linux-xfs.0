@@ -1,130 +1,134 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:53650 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S968376AbeEYVFX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 May 2018 17:05:23 -0400
-Date: Fri, 25 May 2018 14:05:06 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [Bug report] XFS: Assertion failed:
- XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0
-Message-ID: <20180525210506.GT14384@magnolia>
-References: <20180524181639.GW4893@hp-dl360g9-06.rhts.eng.pek2.redhat.com>
+Received: from verein.lst.de ([213.95.11.211]:47136 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751085AbeE1Gog (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 28 May 2018 02:44:36 -0400
+Date: Mon, 28 May 2018 08:50:37 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 1/2] iomap: add support for sub-pagesize buffered I/O
+        without buffer heads
+Message-ID: <20180528065037.GA4849@lst.de>
+References: <20180523144646.19159-1-hch@lst.de> <20180523144646.19159-2-hch@lst.de> <20180525171701.GA92502@bfoster.bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180524181639.GW4893@hp-dl360g9-06.rhts.eng.pek2.redhat.com>
+In-Reply-To: <20180525171701.GA92502@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Zorro Lang <zlang@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
 
-On Fri, May 25, 2018 at 02:16:39AM +0800, Zorro Lang wrote:
-> Hi,
+On Fri, May 25, 2018 at 01:17:02PM -0400, Brian Foster wrote:
+> > +static struct iomap_page *
+> > +iomap_page_create(struct inode *inode, struct page *page)
+> > +{
+> > +	struct iomap_page *iop = to_iomap_page(page);
+> > +
+> > +	if (iop || i_blocksize(inode) == PAGE_SIZE)
+> > +		return iop;
+> > +
+> > +	iop = kmalloc(sizeof(*iop), GFP_NOFS | __GFP_NOFAIL);
+> > +	atomic_set(&iop->read_count, 0);
+> > +	atomic_set(&iop->write_count, 0);
+> > +	bitmap_zero(iop->uptodate, PAGE_SIZE / SECTOR_SIZE);
+> > +	set_page_private(page, (unsigned long)iop);
+> > +	SetPagePrivate(page);
 > 
-> I just hit a XFS crash [1] when I tested XFS on a 500T storage. And a XFS
-> corruption [2] can be found by "xfs_repair -n".
-> 
-> Tested on 4.17-rc6, xfsprogs-4.16.1. mkfs.xfs options are "-m crc=1,finobt=1,
-> rmapbt=1,reflink=1 -i sparse=1".
-> 
-> I've report a bug as below:
-> https://bugzilla.kernel.org/show_bug.cgi?id=199825
-> 
-> [1]
->  kernel: XFS: Assertion failed: XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0, file: fs/xfs/xfs_super.c, line: 984
+> The buffer head implementation does a get/put page when the private
+> state is set. I'm not quite sure why that is tbh, but do you know
+> whether we need that here or not?
 
-Maybe it's time I cleaned up & sent out my patch that dumps the data and
-cow forks to ftrace when we hit this assert.
+I don't really see any good reason why that would be needed, as we need
+a successfull ->releasepage return to drop the page from the page cache.
+I'll look around a little more if there is any other reason for it -
+adding get/put page pair here would be easy to do, so maybe we should just
+cargo-cult it in to be on the safe side.
 
-Also, I think i_dlayed_blks should be xfs_filblks_t, not unsigned int...
-
---D
-
->  kernel: WARNING: CPU: 39 PID: 487 at fs/xfs/xfs_message.c:105 asswarn+0x1e/0x30 [xfs]
->  kernel: Modules linked in: loop intel_powerclamp coretemp kvm_intel sunrpc kvm irqbypass crct10dif_pclmul crc32_pclmul ghash_clmulni_intel pcbc aesni_intel crypto_simd cryptd glue_helper iTCO_wdt gpio_ich iTCO_vendor_support dm_service_time pcspkr ipmi_ssif ipmi_si ipmi_devintf hpilo hpwdt sg i7core_edac lpc_ich ipmi_msghandler shpchp acpi_power_meter pcc_cpufreq dm_multipath ip_tables xfs libcrc32c sr_mod cdrom ata_generic pata_acpi radeon i2c_algo_bit drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops ttm ata_piix sd_mod drm mpt3sas libata crc32c_intel serio_raw hpsa netxen_nic i2c_core raid_class scsi_transport_sas dm_mirror dm_region_hash dm_log dm_mod
->  kernel: CPU: 39 PID: 487 Comm: kswapd0 Not tainted 4.17.0-rc6+ #2
->  kernel: Hardware name: HP ProLiant DL580 G7, BIOS P65 10/01/2013
->  kernel: RIP: 0010:asswarn+0x1e/0x30 [xfs]
->  kernel: RSP: 0018:ffff9b9887d9fbc0 EFLAGS: 00010246
->  kernel: RAX: 0000000000000000 RBX: ffff882b91e009d8 RCX: 0000000000000000
->  kernel: RDX: ffff9b9887d9fae0 RSI: 000000000000000a RDI: ffffffffc05ecff9
->  kernel: RBP: ffff882b91e008c8 R08: 0000000000000000 R09: 0000000000000021
->  kernel: R10: 0000000000000000 R11: 000000000000000a R12: ffff882b91e00780
->  kernel: R13: 000000000000ce58 R14: 000000000000000c R15: 00000000000000e5
->  kernel: FS:  0000000000000000(0000) GS:ffff882f6fbc0000(0000) knlGS:0000000000000000
->  kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->  kernel: CR2: 00007f832588eff0 CR3: 0000000a2dc0a002 CR4: 00000000000206e0
->  kernel: Call Trace:
->  kernel: xfs_fs_destroy_inode+0x1db/0x200 [xfs]
->  kernel: dispose_list+0x48/0x60
->  kernel: prune_icache_sb+0x52/0x70
->  kernel: super_cache_scan+0x139/0x190
->  kernel: shrink_slab+0x249/0x430
->  kernel: shrink_node+0x44a/0x490
->  kernel: balance_pgdat+0x188/0x360
->  kernel: kswapd+0x171/0x410
->  kernel: ? remove_wait_queue+0x60/0x60
->  kernel: kthread+0xf8/0x130
->  kernel: ? balance_pgdat+0x360/0x360
->  kernel: ? kthread_bind+0x10/0x10
->  kernel: ret_from_fork+0x35/0x40
->  kernel: Code: 99 f9 ff ff 0f 0b e8 c2 d4 4e c8 66 90 66 66 66 66 90 48 89 f1 41 89 d0 48 c7 c6 08 7f 5f c0 48 89 fa 31 c0 31 ff e8 b2 fc ff ff <0f> 0b c3 0f 1f 44 00 00 66 2e 0f 1f 84 00 00 00 00 00 66 66 66 
->  kernel: ---[ end trace 6d72efdc406c28bc ]---
+> > -	return plen;
+> > +	return pos - orig_pos + plen;
 > 
-> [2]
+> A brief comment here (or above the adjust_read_range() call) to explain
+> the final length calculation would be helpful. E.g., it looks like
+> leading uptodate blocks are part of the read while trailing uptodate
+> blocks can be truncated by the above call.
+
+Ok.
+
+> > +int
+> > +iomap_is_partially_uptodate(struct page *page, unsigned long from,
+> > +		unsigned long count)
+> > +{
+> > +	struct iomap_page *iop = to_iomap_page(page);
+> > +	struct inode *inode = page->mapping->host;
+> > +	unsigned first = from >> inode->i_blkbits;
+> > +	unsigned last = (from + count - 1) >> inode->i_blkbits;
+> > +	unsigned i;
+> > +
 > 
-> Phase 1 - find and verify superblock...
->         - reporting progress in intervals of 15 minutes
-> Memory available for repair (48300MB) may not be sufficient.
-> At least 64121MB is needed to repair this filesystem efficiently
-> If repair fails due to lack of memory, please
-> turn prefetching off (-P) to reduce the memory footprint.
-> Phase 2 - using internal log
->         - zero log...
->         - scan filesystem freespace and inode maps...
-> sb_fdblocks 2570207456, counted 2570207543
->         - 10:12:40: scanning filesystem freespace - 501 of 501 allocation groups done
->         - found root inode chunk
-> Phase 3 - for each AG...
->         - scan (but don't clear) agi unlinked lists...
->         - 10:12:40: scanning agi unlinked lists - 501 of 501 allocation groups done
->         - process known inodes and perform inode discovery...
->         - agno = 0
->         - agno = 15
->         ...
->         (501 AGs)
->         ...
->         - agno = 254                           
->         - 10:57:14: process known inodes and inode discovery - 21719296 of 19087328 inodes done
->         - process newly discovered inodes...   
->         - 10:57:14: process newly discovered inodes - 501 of 501 allocation groups done        
-> Phase 4 - check for duplicate blocks...        
->         - setting up duplicate extent list...  
->         - 10:57:17: setting up duplicate extent list - 501 of 501 allocation groups done       
->         - check for inodes claiming duplicate blocks...                                        
->         - agno = 30                            
->         - agno = 0                             
->         - agno = 45
->         ...                                    
->         (501 AGs)                              
->         ...
->         - agno = 253                           
->         - agno = 254                           
->         - 11:42:57: check for inodes claiming duplicate blocks - 21719296 of 19087328 inodes done
-> No modify flag set, skipping phase 5           
-> Phase 6 - check inode connectivity...          
->         - traversing filesystem ...            
->         - traversal finished ...               
->         - moving disconnected inodes to lost+found ...                                         
-> Phase 7 - verify link counts...                
->         - 11:52:50: verify and correct link counts - 501 of 501 allocation groups done         
-> No modify flag set, skipping filesystem flush and exiting.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> block_is_partially_uptodate() has this check:
+> 
+>         if (from < blocksize && to > PAGE_SIZE - blocksize)
+>                 return 0;
+> 
+> ... which looks like it checks that the range is actually partial wrt to
+> block size. The only callers check the page first, but I'm still not
+> sure why it returns 0 in that case. Any idea?
+
+The calling convention is generally pretty insane.  I plan to clean
+this up, but didn't want to grow my XFS-related series even more.
+
+> > +{
+> > +	/*
+> > +	 * If we are invalidating the entire page, clear the dirty state from it
+> > +	 * and release it to avoid unnecessary buildup of the LRU.
+> > +	 */
+> > +	if (offset == 0 && len == PAGE_SIZE) {
+> > +		cancel_dirty_page(page);
+> > +		iomap_releasepage(page, GFP_NOIO);
+> 
+> Seems like this should probably be calling ->releasepage().
+
+Not really.  I don't want the fs in the loop here.  My other option
+was to have a iomap_page_free helper called here and in ->releasepage.
+Maybe I'll move back to that is it is less confusing.
+
+> > @@ -333,6 +529,7 @@ static int
+> >  __iomap_write_begin(struct inode *inode, loff_t pos, unsigned len,
+> >  		struct page *page, struct iomap *iomap)
+> >  {
+> > +	struct iomap_page *iop = iomap_page_create(inode, page);
+> >  	loff_t block_size = i_blocksize(inode);
+> >  	loff_t block_start = pos & ~(block_size - 1);
+> >  	loff_t block_end = (pos + len + block_size - 1) & ~(block_size - 1);
+> > @@ -340,15 +537,29 @@ __iomap_write_begin(struct inode *inode, loff_t pos, unsigned len,
+> >  	unsigned plen = min_t(loff_t, PAGE_SIZE - poff, block_end - block_start);
+> 
+> poff/plen are now initialized here and in iomap_adjust_read_range().
+> Perhaps drop this one so the semantic of these being set by the latter
+> is a bit more clear?
+
+Yes, will do.
+
+> > +
+> > +	do {
+> > +		iomap_adjust_read_range(inode, iop, &block_start,
+> > +				block_end - block_start, &poff, &plen);
+> > +		if (plen == 0)
+> > +			break;
+> > +
+> > +		if ((from > poff && from < poff + plen) ||
+> > +		    (to > poff && to < poff + plen)) {
+> > +			status = iomap_read_page_sync(inode, block_start, page,
+> > +					poff, plen, from, to, iomap);
+> > +			if (status)
+> > +				return status;
+> > +		}
+> > +
+> > +		block_start += plen;
+> > +	} while (poff + plen < PAGE_SIZE);
+> 
+> Something like while (block_start < block_end) would seem a bit more
+> clear here as well.
+
+I'll look into it.
