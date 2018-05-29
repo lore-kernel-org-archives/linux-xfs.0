@@ -1,269 +1,304 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga18.intel.com ([134.134.136.126]:17942 "EHLO mga18.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1030441AbeEYWBA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 25 May 2018 18:01:00 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH resend 1/7] fs: allow per-device dax status checking for filesystems
-Date: Fri, 25 May 2018 16:00:49 -0600
-Message-Id: <20180525220055.18920-2-ross.zwisler@linux.intel.com>
-In-Reply-To: <20180525220055.18920-1-ross.zwisler@linux.intel.com>
-References: <20180525220055.18920-1-ross.zwisler@linux.intel.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:46294 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965376AbeE2Rmy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 May 2018 13:42:54 -0400
+Date: Tue, 29 May 2018 10:42:38 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfstests/shared: dedup integrity test by duperemove
+Message-ID: <20180529174238.GN4910@magnolia>
+References: <20180528045427.11159-1-zlang@redhat.com>
+ <20180529150759.GC30110@magnolia>
+ <20180529161304.GB4893@hp-dl360g9-06.rhts.eng.pek2.redhat.com>
+ <20180529163023.GF30110@magnolia>
+ <20180529171344.GD4893@hp-dl360g9-06.rhts.eng.pek2.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180529171344.GD4893@hp-dl360g9-06.rhts.eng.pek2.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Toshi Kani <toshi.kani@hpe.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+On Wed, May 30, 2018 at 01:13:45AM +0800, Zorro Lang wrote:
+> On Tue, May 29, 2018 at 09:30:23AM -0700, Darrick J. Wong wrote:
+> > On Wed, May 30, 2018 at 12:13:04AM +0800, Zorro Lang wrote:
+> > > On Tue, May 29, 2018 at 08:07:59AM -0700, Darrick J. Wong wrote:
+> > > > On Mon, May 28, 2018 at 12:54:27PM +0800, Zorro Lang wrote:
+> > > > > Duperemove is a tool for finding duplicated extents and submitting
+> > > > > them for deduplication, and it supports XFS. This case trys to
+> > > > > verify the integrity of XFS after running duperemove.
+> > > > > 
+> > > > > Signed-off-by: Zorro Lang <zlang@redhat.com>
+> > > > > ---
+> > > > > 
+> > > > > Hi,
+> > > > > 
+> > > > > There's not many softwares support XFS dedup now, duperemove is a rare one.
+> > > > > So I write this case by using duperemove.
+> > > > > 
+> > > > > I use fsstress to make many files and data randomly, I don't know if there're
+> > > > > better things I can use? Because fsstress only write '0xff' into files, maybe
+> > > > > I should add an option to make fsstress can write random character?
+> > > > 
+> > > > Heh.  But you probably don't want totally random contents because then
+> > > > dupremove doesn't do much.
+> > > 
+> > > No matter how random contents I get, I will copy once :)
+> > 
+> > I suppose so.  Once fsstress pokes reflink enough there ought to be a
+> > fair number of easy targets for dedupe... on the other hand I think it's
+> > a useful test for "literally everything in this fs is identical, dedupe
+> > everything" :)
+> 
+> Do you mean dd (with same char) a big file to fill the whole scratch_dev, then
+> dedupe?
 
-Remove __bdev_dax_supported and change to bdev_dax_supported that takes a
-bdev parameter.  This enables multi-device filesystems like xfs to check
-that a dax device can work for the particular filesystem.  Once that's
-in place, actually fix all the parts of XFS where we need to be able to
-distinguish between datadev and rtdev.
+I was mostly thinking one test where the entire fs is dedupable (because
+we only ever write 0xff or whatever), and a second one where we make
+duperemove hunt for things.
 
-This patch fixes the problem where we screw up the dax support checking
-in xfs if the datadev and rtdev have different dax capabilities.
+> Hmm... how about iteration test as below?
+> 
+> # fsstress -d $mnt/dir0 ...
+> # for ((i=1; i<100; i++));do
+>     cp -a dir$((i-1)) dir$i
+>     find $dir$i -type f -exec md5sum {} \; > $TEST_DIR/${seq}md5.sum$i
+>     duperemove -dr $mnt/
+>     md5sum -c $TEST_DIR/${seq}md5.sum$i
+>   done
+> # scratch_cycle_mount
+> # for ((i=1; i<100; i++));do
+>     md5sum -c $TEST_DIR/${seq}md5.sum$i
+>   done
+> 
+> But this will cost lots of test time. For save time, need to reduce files count
+> and size.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
----
- drivers/dax/super.c | 30 +++++++++++++++---------------
- fs/ext2/super.c     |  2 +-
- fs/ext4/super.c     |  2 +-
- fs/xfs/xfs_ioctl.c  |  3 ++-
- fs/xfs/xfs_iops.c   | 30 +++++++++++++++++++++++++-----
- fs/xfs/xfs_super.c  | 10 ++++++++--
- include/linux/dax.h | 10 +++-------
- 7 files changed, 55 insertions(+), 32 deletions(-)
+Constrict the fs size?
 
-diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-index 2b2332b605e4..9206539c8330 100644
---- a/drivers/dax/super.c
-+++ b/drivers/dax/super.c
-@@ -73,8 +73,8 @@ EXPORT_SYMBOL_GPL(fs_dax_get_by_bdev);
- #endif
- 
- /**
-- * __bdev_dax_supported() - Check if the device supports dax for filesystem
-- * @sb: The superblock of the device
-+ * bdev_dax_supported() - Check if the device supports dax for filesystem
-+ * @bdev: block device to check
-  * @blocksize: The block size of the device
-  *
-  * This is a library function for filesystems to check if the block device
-@@ -82,33 +82,33 @@ EXPORT_SYMBOL_GPL(fs_dax_get_by_bdev);
-  *
-  * Return: negative errno if unsupported, 0 if supported.
-  */
--int __bdev_dax_supported(struct super_block *sb, int blocksize)
-+int bdev_dax_supported(struct block_device *bdev, int blocksize)
- {
--	struct block_device *bdev = sb->s_bdev;
- 	struct dax_device *dax_dev;
- 	pgoff_t pgoff;
- 	int err, id;
- 	void *kaddr;
- 	pfn_t pfn;
- 	long len;
-+	char buf[BDEVNAME_SIZE];
- 
- 	if (blocksize != PAGE_SIZE) {
--		pr_debug("VFS (%s): error: unsupported blocksize for dax\n",
--				sb->s_id);
-+		pr_debug("%s: error: unsupported blocksize for dax\n",
-+				bdevname(bdev, buf));
- 		return -EINVAL;
- 	}
- 
- 	err = bdev_dax_pgoff(bdev, 0, PAGE_SIZE, &pgoff);
- 	if (err) {
--		pr_debug("VFS (%s): error: unaligned partition for dax\n",
--				sb->s_id);
-+		pr_debug("%s: error: unaligned partition for dax\n",
-+				bdevname(bdev, buf));
- 		return err;
- 	}
- 
- 	dax_dev = dax_get_by_host(bdev->bd_disk->disk_name);
- 	if (!dax_dev) {
--		pr_debug("VFS (%s): error: device does not support dax\n",
--				sb->s_id);
-+		pr_debug("%s: error: device does not support dax\n",
-+				bdevname(bdev, buf));
- 		return -EOPNOTSUPP;
- 	}
- 
-@@ -119,8 +119,8 @@ int __bdev_dax_supported(struct super_block *sb, int blocksize)
- 	put_dax(dax_dev);
- 
- 	if (len < 1) {
--		pr_debug("VFS (%s): error: dax access failed (%ld)\n",
--				sb->s_id, len);
-+		pr_debug("%s: error: dax access failed (%ld)\n",
-+				bdevname(bdev, buf), len);
- 		return len < 0 ? len : -EIO;
- 	}
- 
-@@ -137,14 +137,14 @@ int __bdev_dax_supported(struct super_block *sb, int blocksize)
- 	} else if (pfn_t_devmap(pfn)) {
- 		/* pass */;
- 	} else {
--		pr_debug("VFS (%s): error: dax support not enabled\n",
--				sb->s_id);
-+		pr_debug("%s: error: dax support not enabled\n",
-+				bdevname(bdev, buf));
- 		return -EOPNOTSUPP;
- 	}
- 
- 	return 0;
- }
--EXPORT_SYMBOL_GPL(__bdev_dax_supported);
-+EXPORT_SYMBOL_GPL(bdev_dax_supported);
- #endif
- 
- enum dax_device_flags {
-diff --git a/fs/ext2/super.c b/fs/ext2/super.c
-index de1694512f1f..9627c3054b5c 100644
---- a/fs/ext2/super.c
-+++ b/fs/ext2/super.c
-@@ -961,7 +961,7 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
- 	blocksize = BLOCK_SIZE << le32_to_cpu(sbi->s_es->s_log_block_size);
- 
- 	if (sbi->s_mount_opt & EXT2_MOUNT_DAX) {
--		err = bdev_dax_supported(sb, blocksize);
-+		err = bdev_dax_supported(sb->s_bdev, blocksize);
- 		if (err) {
- 			ext2_msg(sb, KERN_ERR,
- 				"DAX unsupported by block device. Turning off DAX.");
-diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-index eb104e8476f0..089170e99895 100644
---- a/fs/ext4/super.c
-+++ b/fs/ext4/super.c
-@@ -3732,7 +3732,7 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
- 					" that may contain inline data");
- 			sbi->s_mount_opt &= ~EXT4_MOUNT_DAX;
- 		}
--		err = bdev_dax_supported(sb, blocksize);
-+		err = bdev_dax_supported(sb->s_bdev, blocksize);
- 		if (err) {
- 			ext4_msg(sb, KERN_ERR,
- 				"DAX unsupported by block device. Turning off DAX.");
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 89fb1eb80aae..0effd46b965f 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1103,7 +1103,8 @@ xfs_ioctl_setattr_dax_invalidate(
- 	if (fa->fsx_xflags & FS_XFLAG_DAX) {
- 		if (!(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode)))
- 			return -EINVAL;
--		if (bdev_dax_supported(sb, sb->s_blocksize) < 0)
-+		if (bdev_dax_supported(xfs_find_bdev_for_inode(VFS_I(ip)),
-+				sb->s_blocksize) < 0)
- 			return -EINVAL;
- 	}
- 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index a3ed3c811dfa..6e83acf74a95 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1195,6 +1195,30 @@ static const struct inode_operations xfs_inline_symlink_inode_operations = {
- 	.update_time		= xfs_vn_update_time,
- };
- 
-+/* Figure out if this file actually supports DAX. */
-+static bool
-+xfs_inode_supports_dax(
-+	struct xfs_inode	*ip)
-+{
-+	struct xfs_mount	*mp = ip->i_mount;
-+
-+	/* Only supported on non-reflinked files. */
-+	if (!S_ISREG(VFS_I(ip)->i_mode) || xfs_is_reflink_inode(ip))
-+		return false;
-+
-+	/* DAX mount option or DAX iflag must be set. */
-+	if (!(mp->m_flags & XFS_MOUNT_DAX) &&
-+	    !(ip->i_d.di_flags2 & XFS_DIFLAG2_DAX))
-+		return false;
-+
-+	/* Block size must match page size */
-+	if (mp->m_sb.sb_blocksize != PAGE_SIZE)
-+		return false;
-+
-+	/* Device has to support DAX too. */
-+	return xfs_find_daxdev_for_inode(VFS_I(ip)) != NULL;
-+}
-+
- STATIC void
- xfs_diflags_to_iflags(
- 	struct inode		*inode,
-@@ -1213,11 +1237,7 @@ xfs_diflags_to_iflags(
- 		inode->i_flags |= S_SYNC;
- 	if (flags & XFS_DIFLAG_NOATIME)
- 		inode->i_flags |= S_NOATIME;
--	if (S_ISREG(inode->i_mode) &&
--	    ip->i_mount->m_sb.sb_blocksize == PAGE_SIZE &&
--	    !xfs_is_reflink_inode(ip) &&
--	    (ip->i_mount->m_flags & XFS_MOUNT_DAX ||
--	     ip->i_d.di_flags2 & XFS_DIFLAG2_DAX))
-+	if (xfs_inode_supports_dax(ip))
- 		inode->i_flags |= S_DAX;
- }
- 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index d71424052917..62188c2a4c36 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1690,11 +1690,17 @@ xfs_fs_fill_super(
- 		sb->s_flags |= SB_I_VERSION;
- 
- 	if (mp->m_flags & XFS_MOUNT_DAX) {
-+		int	error2 = 0;
-+
- 		xfs_warn(mp,
- 		"DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
- 
--		error = bdev_dax_supported(sb, sb->s_blocksize);
--		if (error) {
-+		error = bdev_dax_supported(mp->m_ddev_targp->bt_bdev,
-+				sb->s_blocksize);
-+		if (mp->m_rtdev_targp)
-+			error2 = bdev_dax_supported(mp->m_rtdev_targp->bt_bdev,
-+					sb->s_blocksize);
-+		if (error && error2) {
- 			xfs_alert(mp,
- 			"DAX unsupported by block device. Turning off DAX.");
- 			mp->m_flags &= ~XFS_MOUNT_DAX;
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index f9eb22ad341e..509a85ac8470 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -64,12 +64,7 @@ static inline bool dax_write_cache_enabled(struct dax_device *dax_dev)
- struct writeback_control;
- int bdev_dax_pgoff(struct block_device *, sector_t, size_t, pgoff_t *pgoff);
- #if IS_ENABLED(CONFIG_FS_DAX)
--int __bdev_dax_supported(struct super_block *sb, int blocksize);
--static inline int bdev_dax_supported(struct super_block *sb, int blocksize)
--{
--	return __bdev_dax_supported(sb, blocksize);
--}
--
-+int bdev_dax_supported(struct block_device *bdev, int blocksize);
- static inline struct dax_device *fs_dax_get_by_host(const char *host)
- {
- 	return dax_get_by_host(host);
-@@ -84,7 +79,8 @@ struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev);
- int dax_writeback_mapping_range(struct address_space *mapping,
- 		struct block_device *bdev, struct writeback_control *wbc);
- #else
--static inline int bdev_dax_supported(struct super_block *sb, int blocksize)
-+static inline int bdev_dax_supported(struct block_device *bdev,
-+		int blocksize)
- {
- 	return -EOPNOTSUPP;
- }
--- 
-2.14.3
+> Hmm... if we have different dedupe test ways, maybe we can write not only one
+> cases.
+> 
+> > 
+> > > > 
+> > > > > 
+> > > > > Please tell me, if you have better ideas:)
+> > > > > 
+> > > > > PS: This case test passed on XFS(with reflink=1) and btrfs. And the duperemove
+> > > > > can reclaim some space in the test, see below:
+> > > > > 
+> > > > >   Before duperemove
+> > > > >     Filesystem                 1K-blocks    Used Available Use% Mounted on
+> > > > >     /dev/mapper/xxxx-xfscratch 31441920K 583692K 30858228K   2% /mnt/scratch
+> > > > > 
+> > > > >   After duperemove
+> > > > >     Filesystem                 1K-blocks    Used Available Use% Mounted on
+> > > > >     /dev/mapper/xxxx-xfscratch 31441920K 345728K 31096192K   2% /mnt/scratch
+> > > > > 
+> > > > > Thanks,
+> > > > > Zorro
+> > > > > 
+> > > > >  common/config        |  1 +
+> > > > >  tests/shared/008     | 88 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+> > > > >  tests/shared/008.out |  2 ++
+> > > > >  tests/shared/group   |  1 +
+> > > > >  4 files changed, 92 insertions(+)
+> > > > >  create mode 100755 tests/shared/008
+> > > > >  create mode 100644 tests/shared/008.out
+> > > > > 
+> > > > > diff --git a/common/config b/common/config
+> > > > > index 02c378a9..def559c1 100644
+> > > > > --- a/common/config
+> > > > > +++ b/common/config
+> > > > > @@ -207,6 +207,7 @@ export SQLITE3_PROG="`set_prog_path sqlite3`"
+> > > > >  export TIMEOUT_PROG="`set_prog_path timeout`"
+> > > > >  export SETCAP_PROG="`set_prog_path setcap`"
+> > > > >  export GETCAP_PROG="`set_prog_path getcap`"
+> > > > > +export DUPEREMOVE_PROG="`set_prog_path duperemove`"
+> > > > >  
+> > > > >  # use 'udevadm settle' or 'udevsettle' to wait for lv to be settled.
+> > > > >  # newer systems have udevadm command but older systems like RHEL5 don't.
+> > > > > diff --git a/tests/shared/008 b/tests/shared/008
+> > > > > new file mode 100755
+> > > > > index 00000000..dace5429
+> > > > > --- /dev/null
+> > > > > +++ b/tests/shared/008
+> > > > > @@ -0,0 +1,88 @@
+> > > > > +#! /bin/bash
+> > > > > +# FS QA Test 008
+> > > > > +#
+> > > > > +# Dedup integrity test by duperemove
+> > > > > +#
+> > > > > +#-----------------------------------------------------------------------
+> > > > > +# Copyright (c) 2018 Red Hat Inc.  All Rights Reserved.
+> > > > > +#
+> > > > > +# This program is free software; you can redistribute it and/or
+> > > > > +# modify it under the terms of the GNU General Public License as
+> > > > > +# published by the Free Software Foundation.
+> > > > > +#
+> > > > > +# This program is distributed in the hope that it would be useful,
+> > > > > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > > > > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > > > > +# GNU General Public License for more details.
+> > > > > +#
+> > > > > +# You should have received a copy of the GNU General Public License
+> > > > > +# along with this program; if not, write the Free Software Foundation,
+> > > > > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > > > > +#-----------------------------------------------------------------------
+> > > > > +#
+> > > > > +
+> > > > > +seq=`basename $0`
+> > > > > +seqres=$RESULT_DIR/$seq
+> > > > > +echo "QA output created by $seq"
+> > > > > +
+> > > > > +here=`pwd`
+> > > > > +tmp=/tmp/$$
+> > > > > +status=1	# failure is the default!
+> > > > > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > > > > +
+> > > > > +_cleanup()
+> > > > > +{
+> > > > > +	cd /
+> > > > > +	rm -f $tmp.*
+> > > > > +}
+> > > > > +
+> > > > > +# get standard environment, filters and checks
+> > > > > +. ./common/rc
+> > > > > +. ./common/filter
+> > > > > +. ./common/reflink
+> > > > > +
+> > > > > +# remove previous $seqres.full before test
+> > > > > +rm -f $seqres.full
+> > > > > +
+> > > > > +# real QA test starts here
+> > > > > +
+> > > > > +# duperemove only supports btrfs and xfs (with reflink feature).
+> > > > > +# Add other filesystems if it supports more later.
+> > > > > +_supported_fs xfs btrfs
+> > > > > +_supported_os Linux
+> > > > 
+> > > > _require_command "$DUPEREMOVE_PROG" duperemove ?
+> > > 
+> > > Yes, it would be better to use this template, not check
+> > > [ "$DUPEREMOVE_PROG" = "" ].
+> > > 
+> > > > 
+> > > > > +_require_scratch_reflink
+> > > > 
+> > > > _require_scratch_dedupe
+> > > 
+> > > Yes, I should check XFS_IOC_FILE_EXTENT_SAME, not XFS_IOC_CLONE*.
+> > > 
+> > > > 
+> > > > > +
+> > > > > +[ "$DUPEREMOVE_PROG" = "" ] && _notrun "duperemove not found"
+> > > > > +_scratch_mkfs > $seqres.full 2>&1
+> > > > > +_scratch_mount >> $seqres.full 2>&1
+> > > > > +
+> > > > > +testdir=$SCRATCH_MNT/test-$seq
+> > > > > +mkdir $testdir
+> > > > > +
+> > > > > +fsstress_opts="-w -r -f mknod=0"
+> > > > > +# Create some files and make a duplicate
+> > > > > +$FSSTRESS_PROG $fsstress_opts -d $testdir \
+> > > > > +	       -n $((500 * LOAD_FACTOR)) -p 10 >/dev/null 2>&1
+> > > > > +duptestdir=${testdir}.dup
+> > > > > +cp -a $testdir $duptestdir
+> > > > > +
+> > > > > +# Make some difference in two directories
+> > > > > +$FSSTRESS_PROG $fsstress_opts -d $testdir -n 200 -p 5 >/dev/null 2>&1
+> > > > > +$FSSTRESS_PROG $fsstress_opts -d $duptestdir -n 200 -p 5 >/dev/null 2>&1
+> > > > > +
+> > > > > +# Record all files' md5 checksum
+> > > > > +find $testdir -type f -exec md5sum {} \; > $TEST_DIR/${seq}md5.sum
+> > > > > +find $duptestdir -type f -exec md5sum {} \; > $TEST_DIR/dup${seq}md5.sum
+> > > > > +
+> > > > > +# Dedup
+> > > > > +echo "== Duperemove output ==" >> $seqres.full
+> > > > > +$DUPEREMOVE_PROG -dr $SCRATCH_MNT/ >>$seqres.full 2>&1
+> > > > > +
+> > > > > +# Verify all files' integrity
+> > > > > +md5sum -c --quiet $TEST_DIR/${seq}md5.sum
+> > > > > +md5sum -c --quiet $TEST_DIR/dup${seq}md5.sum
+> > > > 
+> > > > Can we _scratch_mount_cycle and md5sum -c again so that we test that the
+> > > > pagecache contents don't mutate and a fresh read from the disk also
+> > > > doesn't show mutations?
+> > > 
+> > > If so, is the md5sum data safe? Should I do cycle_mount before get md5 checksum?
+> > > What 'fresh read' do you mean, from above duperemove processes? Or you hope to
+> > > read all files once before cycle_mount?
+> > 
+> > Since this is dedupe, the md5sum should never change.  The existing
+> > md5sum -c check makes sure that the dedupe operation doesn't
+> > mishandle/corrupt the page cache such that it suddenly starts returning
+> > incorrect contents; and the post-cycle md5sum -c check I propose would
+> > flush the page cache and make sure that the on-disk contents also have
+> > not changed.
+> 
+> Make sense, I'll do a cycle_mount and md5sum -c check again.
 
+Ok.
+
+--D
+
+> > 
+> > --D
+> > 
+> > > Thanks,
+> > > Zorro
+> > > 
+> > > > 
+> > > > --D
+> > > > 
+> > > > > +
+> > > > > +echo "Silence is golden"
+> > > > > +
+> > > > > +status=0
+> > > > > +exit
+> > > > > diff --git a/tests/shared/008.out b/tests/shared/008.out
+> > > > > new file mode 100644
+> > > > > index 00000000..dd68d5a4
+> > > > > --- /dev/null
+> > > > > +++ b/tests/shared/008.out
+> > > > > @@ -0,0 +1,2 @@
+> > > > > +QA output created by 008
+> > > > > +Silence is golden
+> > > > > diff --git a/tests/shared/group b/tests/shared/group
+> > > > > index b3663a03..de7fe79f 100644
+> > > > > --- a/tests/shared/group
+> > > > > +++ b/tests/shared/group
+> > > > > @@ -10,6 +10,7 @@
+> > > > >  005 dangerous_fuzzers
+> > > > >  006 auto enospc
+> > > > >  007 dangerous_fuzzers
+> > > > > +008 auto quick dedupe
+> > > > >  032 mkfs auto quick
+> > > > >  272 auto enospc rw
+> > > > >  289 auto quick
+> > > > > -- 
+> > > > > 2.14.3
+> > > > > 
+> > > > > --
+> > > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > > the body of a message to majordomo@vger.kernel.org
+> > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > > --
+> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe fstests" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
