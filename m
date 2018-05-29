@@ -1,214 +1,218 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:40572 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:47916 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935506AbeE2O5A (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 May 2018 10:57:00 -0400
-Date: Tue, 29 May 2018 07:56:50 -0700
+        with ESMTP id S966689AbeE2V0a (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 May 2018 17:26:30 -0400
+Date: Tue, 29 May 2018 14:25:10 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 7/7] libxfs: remove crc32 functions
-Message-ID: <20180529145650.GB30110@magnolia>
-References: <152728629694.22515.17699396814561914788.stgit@magnolia>
- <152728634020.22515.16684194597988861920.stgit@magnolia>
- <23568dc9-61d2-0eb9-819a-1386f7276408@oracle.com>
- <20180528141136.3anksl5xaftofkkk@odin.usersys.redhat.com>
+Subject: Re: [PATCH v2 2/7] dax: change bdev_dax_supported() to support
+ boolean returns
+Message-ID: <20180529212510.GJ30110@magnolia>
+References: <20180529195106.14268-1-ross.zwisler@linux.intel.com>
+ <20180529195106.14268-3-ross.zwisler@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180528141136.3anksl5xaftofkkk@odin.usersys.redhat.com>
+In-Reply-To: <20180529195106.14268-3-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Allison Henderson <allison.henderson@oracle.com>, sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Toshi Kani <toshi.kani@hpe.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Dave Jiang <dave.jiang@intel.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Mon, May 28, 2018 at 04:11:36PM +0200, Carlos Maiolino wrote:
-> On Sun, May 27, 2018 at 08:53:04PM -0700, Allison Henderson wrote:
-> > Seems like it would be ok.  But if these functions are not really used,
-> > is there a reason as to why we are just commenting them out instead of
-> > removing them entirely?  Thx!
+On Tue, May 29, 2018 at 01:51:01PM -0600, Ross Zwisler wrote:
+> From: Dave Jiang <dave.jiang@intel.com>
 > 
-> I've the same question, I'd say you expect to keep them there for historical
-> reasons, but I think at least a comment in the patch description would be fine,
-> but either if you keep the commented code, or remove it completely:
+> The function return values are confusing with the way the function is
+> named. We expect a true or false return value but it actually returns
+> 0/-errno.  This makes the code very confusing. Changing the return values
+> to return a bool where if DAX is supported then return true and no DAX
+> support returns false.
+> 
+> Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 
-It's hard to say -- xfsprogs ported the slice-by-8 code from the kernel,
-then #if'd out some of the irrelevant bits.  If we ever need to resync
-w/ the kernel it'd be much easier to do so if the file is mostly intact
-save for some preprocessor gunk to debloat the object files.
+Looks ok, do you want me to pull the first two patches through the xfs
+tree?
 
-OTOH this file is ugly.  Let's see if the maintainer accepts this or
-yells 'rewrite!' :)
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
-> Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+> ---
+>  drivers/dax/super.c | 16 ++++++++--------
+>  fs/ext2/super.c     |  3 +--
+>  fs/ext4/super.c     |  3 +--
+>  fs/xfs/xfs_ioctl.c  |  4 ++--
+>  fs/xfs/xfs_super.c  | 12 ++++++------
+>  include/linux/dax.h |  8 ++++----
+>  6 files changed, 22 insertions(+), 24 deletions(-)
 > 
-> 
-> > 
-> > Allison
-> > 
-> > On 05/25/2018 03:12 PM, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > XFS uses crc32c, not crc32.  Remove the unnecessary crc32 code, which
-> > > decreases binary size by the 8K crc32 table.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >   include/libxfs.h        |    3 ---
-> > >   libxfs/crc32.c          |   16 ++++++++++------
-> > >   libxfs/gen_crc32table.c |    8 +++++++-
-> > >   libxfs/libxfs_priv.h    |    3 ---
-> > >   4 files changed, 17 insertions(+), 13 deletions(-)
-> > > 
-> > > 
-> > > diff --git a/include/libxfs.h b/include/libxfs.h
-> > > index fbaae089..109866de 100644
-> > > --- a/include/libxfs.h
-> > > +++ b/include/libxfs.h
-> > > @@ -43,10 +43,7 @@
-> > >   /* CRC stuff, buffer API dependent on it */
-> > > -extern uint32_t crc32_le(uint32_t crc, unsigned char const *p, size_t len);
-> > >   extern uint32_t crc32c_le(uint32_t crc, unsigned char const *p, size_t len);
-> > > -
-> > > -#define crc32(c,p,l)	crc32_le((c),(unsigned char const *)(p),(l))
-> > >   #define crc32c(c,p,l)	crc32c_le((c),(unsigned char const *)(p),(l))
-> > >   #include "xfs_cksum.h"
-> > > diff --git a/libxfs/crc32.c b/libxfs/crc32.c
-> > > index 783d62e9..8fe5c42c 100644
-> > > --- a/libxfs/crc32.c
-> > > +++ b/libxfs/crc32.c
-> > > @@ -176,20 +176,26 @@ static inline u32 __pure crc32_le_generic(u32 crc, unsigned char const *p,
-> > >   }
-> > >   #if CRC_LE_BITS == 1
-> > > +/*
-> > > + * not used by xfs.
-> > >   u32 __pure crc32_le(u32 crc, unsigned char const *p, size_t len)
-> > >   {
-> > >   	return crc32_le_generic(crc, p, len, NULL, CRCPOLY_LE);
-> > >   }
-> > > + */
-> > >   u32 __pure crc32c_le(u32 crc, unsigned char const *p, size_t len)
-> > >   {
-> > >   	return crc32_le_generic(crc, p, len, NULL, CRC32C_POLY_LE);
-> > >   }
-> > >   #else
-> > > +/*
-> > > + * not used by xfs.
-> > >   u32 __pure crc32_le(u32 crc, unsigned char const *p, size_t len)
-> > >   {
-> > >   	return crc32_le_generic(crc, p, len,
-> > >   			(const u32 (*)[256])crc32table_le, CRCPOLY_LE);
-> > >   }
-> > > + */
-> > >   u32 __pure crc32c_le(u32 crc, unsigned char const *p, size_t len)
-> > >   {
-> > >   	return crc32_le_generic(crc, p, len,
-> > > @@ -970,6 +976,7 @@ static int crc32c_test(void)
-> > >   	return errors;
-> > >   }
-> > > +#if 0	/* not used by xfs */
-> > >   static int crc32_test(void)
-> > >   {
-> > >   	int i;
-> > > @@ -989,10 +996,8 @@ static int crc32_test(void)
-> > >   		crc ^= crc32_le(test[i].crc, test_buf +
-> > >   		    test[i].start, test[i].length);
-> > > -#if 0 /* not used */
-> > >   		crc ^= crc32_be(test[i].crc, test_buf +
-> > >   		    test[i].start, test[i].length);
-> > > -#endif
-> > >   	}
-> > >   	gettimeofday(&start, NULL);
-> > > @@ -1001,11 +1006,9 @@ static int crc32_test(void)
-> > >   		    test[i].start, test[i].length))
-> > >   			errors++;
-> > > -#if 0 /* not used */
-> > >   		if (test[i].crc_be != crc32_be(test[i].crc, test_buf +
-> > >   		    test[i].start, test[i].length))
-> > >   			errors++;
-> > > -#endif
-> > >   	}
-> > >   	gettimeofday(&stop, NULL);
-> > > @@ -1021,6 +1024,8 @@ static int crc32_test(void)
-> > >   	return errors;
-> > >   }
-> > > +#endif
-> > > +
-> > >   /*
-> > >    * make sure we always return 0 for a successful test run, and non-zero for a
-> > >    * failed run. The build infrastructure is looking for this information to
-> > > @@ -1032,8 +1037,7 @@ int main(int argc, char **argv)
-> > >   	printf("CRC_LE_BITS = %d\n", CRC_LE_BITS);
-> > > -	errors = crc32_test();
-> > > -	errors += crc32c_test();
-> > > +	errors = crc32c_test();
-> > >   	return errors != 0;
-> > >   }
-> > > diff --git a/libxfs/gen_crc32table.c b/libxfs/gen_crc32table.c
-> > > index 574a2d1a..d81164b7 100644
-> > > --- a/libxfs/gen_crc32table.c
-> > > +++ b/libxfs/gen_crc32table.c
-> > > @@ -20,7 +20,10 @@
-> > >   # define BE_TABLE_SIZE (1 << CRC_BE_BITS)
-> > >   #endif
-> > > +/*
-> > > + * crc32 not used by xfs.
-> > >   static uint32_t crc32table_le[LE_TABLE_ROWS][256];
-> > > + */
-> > >   static uint32_t crc32ctable_le[LE_TABLE_ROWS][256];
-> > >   /*
-> > > @@ -57,10 +60,13 @@ static void crc32init_le_generic(const uint32_t polynomial,
-> > >   	}
-> > >   }
-> > > +/*
-> > > + * crc32 not used by xfs.
-> > >   static void crc32init_le(void)
-> > >   {
-> > >   	crc32init_le_generic(CRCPOLY_LE, crc32table_le);
-> > >   }
-> > > + */
-> > >   static void crc32cinit_le(void)
-> > >   {
-> > > @@ -112,6 +118,7 @@ int main(int argc, char** argv)
-> > >   {
-> > >   	printf("/* this file is generated - do not edit */\n\n");
-> > > +#if 0	/* not used by xfsprogs */
-> > >   	if (CRC_LE_BITS > 1) {
-> > >   		crc32init_le();
-> > >   		printf("static u32 crc32table_le[%d][%d] = {",
-> > > @@ -121,7 +128,6 @@ int main(int argc, char** argv)
-> > >   		printf("};\n");
-> > >   	}
-> > > -#if 0	/* not used by xfsprogs */
-> > >   	if (CRC_BE_BITS > 1) {
-> > >   		crc32init_be();
-> > >   		printf("static u32 crc32table_be[%d][%d] = {",
-> > > diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-> > > index e5eb3de1..fae32411 100644
-> > > --- a/libxfs/libxfs_priv.h
-> > > +++ b/libxfs/libxfs_priv.h
-> > > @@ -67,10 +67,7 @@
-> > >   #include "xfs_fs.h"
-> > >   /* CRC stuff, buffer API dependent on it */
-> > > -extern uint32_t crc32_le(uint32_t crc, unsigned char const *p, size_t len);
-> > >   extern uint32_t crc32c_le(uint32_t crc, unsigned char const *p, size_t len);
-> > > -
-> > > -#define crc32(c,p,l)	crc32_le((c),(unsigned char const *)(p),(l))
-> > >   #define crc32c(c,p,l)	crc32c_le((c),(unsigned char const *)(p),(l))
-> > >   #include "xfs_cksum.h"
-> > > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwICaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=UTANtlZSRetfnz4BmXOr1fXJ6ePKjcWFnaB8-d9hRFk&s=SKcuMvUHSCQzGlRx1lPp-Hym6boKRBUhcRY7YNsWRQo&e=
-> > > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+> index 3943feb9a090..1d7bd96511f0 100644
+> --- a/drivers/dax/super.c
+> +++ b/drivers/dax/super.c
+> @@ -80,9 +80,9 @@ EXPORT_SYMBOL_GPL(fs_dax_get_by_bdev);
+>   * This is a library function for filesystems to check if the block device
+>   * can be mounted with dax option.
+>   *
+> - * Return: negative errno if unsupported, 0 if supported.
+> + * Return: true if supported, false if unsupported
+>   */
+> -int __bdev_dax_supported(struct block_device *bdev, int blocksize)
+> +bool __bdev_dax_supported(struct block_device *bdev, int blocksize)
+>  {
+>  	struct dax_device *dax_dev;
+>  	pgoff_t pgoff;
+> @@ -95,21 +95,21 @@ int __bdev_dax_supported(struct block_device *bdev, int blocksize)
+>  	if (blocksize != PAGE_SIZE) {
+>  		pr_debug("%s: error: unsupported blocksize for dax\n",
+>  				bdevname(bdev, buf));
+> -		return -EINVAL;
+> +		return false;
+>  	}
+>  
+>  	err = bdev_dax_pgoff(bdev, 0, PAGE_SIZE, &pgoff);
+>  	if (err) {
+>  		pr_debug("%s: error: unaligned partition for dax\n",
+>  				bdevname(bdev, buf));
+> -		return err;
+> +		return false;
+>  	}
+>  
+>  	dax_dev = dax_get_by_host(bdev->bd_disk->disk_name);
+>  	if (!dax_dev) {
+>  		pr_debug("%s: error: device does not support dax\n",
+>  				bdevname(bdev, buf));
+> -		return -EOPNOTSUPP;
+> +		return false;
+>  	}
+>  
+>  	id = dax_read_lock();
+> @@ -121,7 +121,7 @@ int __bdev_dax_supported(struct block_device *bdev, int blocksize)
+>  	if (len < 1) {
+>  		pr_debug("%s: error: dax access failed (%ld)\n",
+>  				bdevname(bdev, buf), len);
+> -		return len < 0 ? len : -EIO;
+> +		return false;
+>  	}
+>  
+>  	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED) && pfn_t_special(pfn)) {
+> @@ -139,10 +139,10 @@ int __bdev_dax_supported(struct block_device *bdev, int blocksize)
+>  	} else {
+>  		pr_debug("%s: error: dax support not enabled\n",
+>  				bdevname(bdev, buf));
+> -		return -EOPNOTSUPP;
+> +		return false;
+>  	}
+>  
+> -	return 0;
+> +	return true;
+>  }
+>  EXPORT_SYMBOL_GPL(__bdev_dax_supported);
+>  #endif
+> diff --git a/fs/ext2/super.c b/fs/ext2/super.c
+> index 9627c3054b5c..c09289a42dc5 100644
+> --- a/fs/ext2/super.c
+> +++ b/fs/ext2/super.c
+> @@ -961,8 +961,7 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
+>  	blocksize = BLOCK_SIZE << le32_to_cpu(sbi->s_es->s_log_block_size);
+>  
+>  	if (sbi->s_mount_opt & EXT2_MOUNT_DAX) {
+> -		err = bdev_dax_supported(sb->s_bdev, blocksize);
+> -		if (err) {
+> +		if (!bdev_dax_supported(sb->s_bdev, blocksize)) {
+>  			ext2_msg(sb, KERN_ERR,
+>  				"DAX unsupported by block device. Turning off DAX.");
+>  			sbi->s_mount_opt &= ~EXT2_MOUNT_DAX;
+> diff --git a/fs/ext4/super.c b/fs/ext4/super.c
+> index 089170e99895..2e1622907f4a 100644
+> --- a/fs/ext4/super.c
+> +++ b/fs/ext4/super.c
+> @@ -3732,8 +3732,7 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
+>  					" that may contain inline data");
+>  			sbi->s_mount_opt &= ~EXT4_MOUNT_DAX;
+>  		}
+> -		err = bdev_dax_supported(sb->s_bdev, blocksize);
+> -		if (err) {
+> +		if (!bdev_dax_supported(sb->s_bdev, blocksize)) {
+>  			ext4_msg(sb, KERN_ERR,
+>  				"DAX unsupported by block device. Turning off DAX.");
+>  			sbi->s_mount_opt &= ~EXT4_MOUNT_DAX;
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 0effd46b965f..2c70a0a4f59f 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1103,8 +1103,8 @@ xfs_ioctl_setattr_dax_invalidate(
+>  	if (fa->fsx_xflags & FS_XFLAG_DAX) {
+>  		if (!(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode)))
+>  			return -EINVAL;
+> -		if (bdev_dax_supported(xfs_find_bdev_for_inode(VFS_I(ip)),
+> -				sb->s_blocksize) < 0)
+> +		if (!bdev_dax_supported(xfs_find_bdev_for_inode(VFS_I(ip)),
+> +				sb->s_blocksize))
+>  			return -EINVAL;
+>  	}
+>  
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 62188c2a4c36..86915dc40eed 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1690,17 +1690,17 @@ xfs_fs_fill_super(
+>  		sb->s_flags |= SB_I_VERSION;
+>  
+>  	if (mp->m_flags & XFS_MOUNT_DAX) {
+> -		int	error2 = 0;
+> +		bool rtdev_is_dax = false, datadev_is_dax;
+>  
+>  		xfs_warn(mp,
+>  		"DAX enabled. Warning: EXPERIMENTAL, use at your own risk");
+>  
+> -		error = bdev_dax_supported(mp->m_ddev_targp->bt_bdev,
+> -				sb->s_blocksize);
+> +		datadev_is_dax = bdev_dax_supported(mp->m_ddev_targp->bt_bdev,
+> +			sb->s_blocksize);
+>  		if (mp->m_rtdev_targp)
+> -			error2 = bdev_dax_supported(mp->m_rtdev_targp->bt_bdev,
+> -					sb->s_blocksize);
+> -		if (error && error2) {
+> +			rtdev_is_dax = bdev_dax_supported(
+> +				mp->m_rtdev_targp->bt_bdev, sb->s_blocksize);
+> +		if (!rtdev_is_dax && !datadev_is_dax) {
+>  			xfs_alert(mp,
+>  			"DAX unsupported by block device. Turning off DAX.");
+>  			mp->m_flags &= ~XFS_MOUNT_DAX;
+> diff --git a/include/linux/dax.h b/include/linux/dax.h
+> index 2a4f7295c12b..c99692ddd4b5 100644
+> --- a/include/linux/dax.h
+> +++ b/include/linux/dax.h
+> @@ -64,8 +64,8 @@ static inline bool dax_write_cache_enabled(struct dax_device *dax_dev)
+>  struct writeback_control;
+>  int bdev_dax_pgoff(struct block_device *, sector_t, size_t, pgoff_t *pgoff);
+>  #if IS_ENABLED(CONFIG_FS_DAX)
+> -int __bdev_dax_supported(struct block_device *bdev, int blocksize);
+> -static inline int bdev_dax_supported(struct block_device *bdev, int blocksize)
+> +bool __bdev_dax_supported(struct block_device *bdev, int blocksize);
+> +static inline bool bdev_dax_supported(struct block_device *bdev, int blocksize)
+>  {
+>  	return __bdev_dax_supported(bdev, blocksize);
+>  }
+> @@ -84,10 +84,10 @@ struct dax_device *fs_dax_get_by_bdev(struct block_device *bdev);
+>  int dax_writeback_mapping_range(struct address_space *mapping,
+>  		struct block_device *bdev, struct writeback_control *wbc);
+>  #else
+> -static inline int bdev_dax_supported(struct block_device *bdev,
+> +static inline bool bdev_dax_supported(struct block_device *bdev,
+>  		int blocksize)
+>  {
+> -	return -EOPNOTSUPP;
+> +	return false;
+>  }
+>  
+>  static inline struct dax_device *fs_dax_get_by_host(const char *host)
 > -- 
-> Carlos
+> 2.14.3
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
