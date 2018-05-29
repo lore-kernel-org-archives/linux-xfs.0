@@ -1,45 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:63521 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932475AbeE2DQC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 May 2018 23:16:02 -0400
-Date: Tue, 29 May 2018 13:16:00 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 05/22] xfs: recover AG btree roots from rmap data
-Message-ID: <20180529031600.GL10363@dastard>
-References: <152642361893.1556.9335169821674946249.stgit@magnolia>
- <152642365045.1556.6221144971800322852.stgit@magnolia>
- <20180518035449.GB23858@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:53398 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932949AbeE2L0d (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 29 May 2018 07:26:33 -0400
+Date: Tue, 29 May 2018 07:26:31 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 22/34] xfs: make xfs_writepage_map extent map centric
+Message-ID: <20180529112630.GA107328@bfoster.bfoster>
+References: <20180523144357.18985-1-hch@lst.de>
+ <20180523144357.18985-23-hch@lst.de>
+ <20180524145935.GA84959@bfoster.bfoster>
+ <20180524165350.GA22675@lst.de>
+ <20180524181356.GA89391@bfoster.bfoster>
+ <20180525061900.GA16409@lst.de>
+ <20180525113532.GA92036@bfoster.bfoster>
+ <20180528071543.GA5428@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180518035449.GB23858@magnolia>
+In-Reply-To: <20180528071543.GA5428@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>
 
-On Thu, May 17, 2018 at 08:54:49PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, May 28, 2018 at 09:15:43AM +0200, Christoph Hellwig wrote:
+> On Fri, May 25, 2018 at 07:35:33AM -0400, Brian Foster wrote:
+> > That comment is what I'm basing on...
+> > 
+> > > 	/*
+> > > 	 * We can end up here with no error and nothing to write if we
+> > > 	 * race with a partial page truncate on a sub-page block sized
+> > > 	 * filesystem. In that case we need to mark the page clean.
+> > > 	 */
+> > > 
+> > 
+> > So we can correctly end up with nothing to write on a dirty page, but it
+> > presumes a race with truncate. So suppose we end up with a dirty page,
+> >
+> > at least one uptodate block, count is zero (i.e., due to holes) and
+> > i_size is beyond the page. Would that not be completely bogus? If bogus,
+> > I think that would at least detect the dumb example I posted earlier.
 > 
-> Add a helper function to help us recover btree roots from the rmap data.
-> Callers pass in a list of rmap owner codes, buffer ops, and magic
-> numbers.  We iterate the rmap records looking for owner matches, and
-> then read the matching blocks to see if the magic number & uuid match.
-> If so, we then read-verify the block, and if that passes then we retain
-> a pointer to the block with the highest level, assuming that by the end
-> of the call we will have found the root.  This will be used to reset the
-> AGF/AGI btree root fields during their rebuild procedures.
+> The trivial file_offset >= i_size_read assert explodes pretty soon
+> in generic/091, and already does so with the existing mainline code.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v2: document how we probe for btree roots and dcoument the locking
->     requirements for the callers
 
-Looks good.
+What exactly is the trivial check? Can you show the code please?
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
--- 
-Dave Chinner
-david@fromorbit.com
+Brian
+
+> I'd rather not open another can of worms right now..
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
