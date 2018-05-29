@@ -1,77 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:55082 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750740AbeEaW1J (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 18:27:09 -0400
-Date: Thu, 31 May 2018 15:26:45 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [dm-devel] [PATCH v2 2/7] dax: change bdev_dax_supported() to
- support boolean returns
-Message-ID: <20180531222645.GA6086@magnolia>
-References: <20180529195106.14268-1-ross.zwisler@linux.intel.com>
- <20180529195106.14268-3-ross.zwisler@linux.intel.com>
- <20180529212510.GJ30110@magnolia>
- <20180529220114.GA13948@linux.intel.com>
- <20180531191332.GB7825@magnolia>
- <20180531205206.GA12681@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180531205206.GA12681@redhat.com>
+Received: from mga06.intel.com ([134.134.136.31]:7359 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S966529AbeE2TvM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 29 May 2018 15:51:12 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH v2 0/7] Fix DM DAX handling
+Date: Tue, 29 May 2018 13:50:59 -0600
+Message-Id: <20180529195106.14268-1-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Dave Jiang <dave.jiang@intel.com>, Toshi Kani <toshi.kani@hpe.com>, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: Toshi Kani <toshi.kani@hpe.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Thu, May 31, 2018 at 04:52:06PM -0400, Mike Snitzer wrote:
-> On Thu, May 31 2018 at  3:13pm -0400,
-> Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> 
-> > On Tue, May 29, 2018 at 04:01:14PM -0600, Ross Zwisler wrote:
-> > > On Tue, May 29, 2018 at 02:25:10PM -0700, Darrick J. Wong wrote:
-> > > > On Tue, May 29, 2018 at 01:51:01PM -0600, Ross Zwisler wrote:
-> > > > > From: Dave Jiang <dave.jiang@intel.com>
-> > > > > 
-> > > > > The function return values are confusing with the way the function is
-> > > > > named. We expect a true or false return value but it actually returns
-> > > > > 0/-errno.  This makes the code very confusing. Changing the return values
-> > > > > to return a bool where if DAX is supported then return true and no DAX
-> > > > > support returns false.
-> > > > > 
-> > > > > Signed-off-by: Dave Jiang <dave.jiang@intel.com>
-> > > > > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> > > > 
-> > > > Looks ok, do you want me to pull the first two patches through the xfs
-> > > > tree?
-> > > > 
-> > > > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Thanks for the review.
-> > > 
-> > > I'm not sure what's best.  If you do that then Mike will need to have a DM
-> > > branch for the rest of the series based on your stable commits, yea?
-> > > 
-> > > Mike what would you prefer?
-> > 
-> > I /was/ about to say that I would pull in the first two patches, but now
-> > I can't get xfs to mount with pmem at all, and have no way of testing
-> > this...?
-> 
-> Once you get this sorted out, please feel free to pull in the first 2.
+Changes from v1:
+ * Reworked patches 1 and 2 so that the __bdev_dax_supported() function
+   stays hidden behind the bdev_dax_supported() wrapper.  This is needed
+   to prevent compilation errors in configs where CONFIG_FS_DAX isn't
+   defined. (0-day)
 
-Sorted.  It'll be in Friday's for-next.  Ross helped me bang on the pmem
-devices w/ ndctl to enable fsdax mode and twist qemu until everything
-worked properly. ;)
+ * Added Eric's Reviewed-by to patch 1.  I did this in spite of the
+   bdev_dax_supported() changes because they were minor and I think
+   Eric's review was focused on the XFS parts.
 
---D
+---
 
-> I'm unlikely to get to reviewing the DM patches in this series until
-> tomorrow at the earliest.
-> 
-> Mike
-> 
-> --
-> dm-devel mailing list
-> dm-devel@redhat.com
-> https://www.redhat.com/mailman/listinfo/dm-devel
+This series fixes a few issues that I found with DM's handling of DAX
+devices.  Here are some of the issues I found:
+
+ * We can create a dm-stripe or dm-linear device which is made up of an
+   fsdax PMEM namespace and a raw PMEM namespace but which can hold a
+   filesystem mounted with the -o dax mount option.  DAX operations to
+   the raw PMEM namespace part lack struct page and can fail in
+   interesting/unexpected ways when doing things like fork(), examining
+   memory with gdb, etc.
+
+ * We can create a dm-stripe or dm-linear device which is made up of an
+   fsdax PMEM namespace and a BRD ramdisk which can hold a filesystem
+   mounted with the -o dax mount option.  All I/O to this filesystem
+   will fail.
+
+ * In DM you can't transition a dm target which could possibly support
+   DAX (mode DM_TYPE_DAX_BIO_BASED) to one which can't support DAX
+   (mode DM_TYPE_BIO_BASED), even if you never use DAX.
+
+The first 2 patches in this series are prep work from Darrick and Dave
+which improve bdev_dax_supported().  The last 5 problems fix the above
+mentioned problems in DM.  I feel that this series simplifies the
+handling of DAX devices in DM, and the last 5 DM-related patches have a
+net code reduction of 50 lines.
+
+Darrick J. Wong (1):
+  fs: allow per-device dax status checking for filesystems
+
+Dave Jiang (1):
+  dax: change bdev_dax_supported() to support boolean returns
+
+Ross Zwisler (5):
+  dm: fix test for DAX device support
+  dm: prevent DAX mounts if not supported
+  dm: remove DM_TYPE_DAX_BIO_BASED dm_queue_mode
+  dm-snap: remove unnecessary direct_access() stub
+  dm-error: remove unnecessary direct_access() stub
+
+ drivers/dax/super.c           | 40 ++++++++++++++++++++--------------------
+ drivers/md/dm-ioctl.c         | 16 ++++++----------
+ drivers/md/dm-snap.c          |  8 --------
+ drivers/md/dm-table.c         | 29 +++++++++++------------------
+ drivers/md/dm-target.c        |  7 -------
+ drivers/md/dm.c               |  7 ++-----
+ fs/ext2/super.c               |  3 +--
+ fs/ext4/super.c               |  3 +--
+ fs/xfs/xfs_ioctl.c            |  3 ++-
+ fs/xfs/xfs_iops.c             | 30 +++++++++++++++++++++++++-----
+ fs/xfs/xfs_super.c            | 10 ++++++++--
+ include/linux/dax.h           | 11 ++++++-----
+ include/linux/device-mapper.h |  8 ++++++--
+ 13 files changed, 88 insertions(+), 87 deletions(-)
+
+-- 
+2.14.3
+
