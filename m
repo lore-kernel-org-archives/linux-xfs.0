@@ -1,204 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45212 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S967446AbeE2WGI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 29 May 2018 18:06:08 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v4 2/4] mkfs: move shared config structs and into their own headers
-Date: Tue, 29 May 2018 15:06:01 -0700
-Message-Id: <20180529220603.29420-3-mcgrof@kernel.org>
-In-Reply-To: <20180529220603.29420-1-mcgrof@kernel.org>
-References: <20180529220603.29420-1-mcgrof@kernel.org>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:12123 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932479AbeE2DKE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 May 2018 23:10:04 -0400
+Date: Tue, 29 May 2018 13:10:01 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 03/22] xfs: add helpers to collect and sift btree
+ block pointers during repair
+Message-ID: <20180529031001.GJ10363@dastard>
+References: <152642361893.1556.9335169821674946249.stgit@magnolia>
+ <152642363794.1556.12771807615463619233.stgit@magnolia>
+ <20180518035155.GZ23858@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180518035155.GZ23858@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com, "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Allison Henderson <allison.henderson@oracle.com>
 
-Both struct sb_feat_args and struct mkfs_default_params will be shared
-between CLI processing and the configuration file processing added later,
-so move these to their own header.
+On Thu, May 17, 2018 at 08:51:55PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Add some helpers to assemble a list of fs block extents.  Generally,
+> repair functions will iterate the rmapbt to make a list (1) of all
+> extents owned by the nominal owner of the metadata structure; then they
+> will iterate all other structures with the same rmap owner to make a
+> list (2) of active blocks; and finally we have a subtraction function to
+> subtract all the blocks in (2) from (1), with the result that (1) is now
+> a list of blocks that were owned by the old btree and must be disposed.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v2: document the design of how repair functions are supposed to work,
+>     implement review comments
+> ---
 
-This will help ensure we split things neatly later and also will help
-ensure the configuration file processing code from the CLI code are kept
-separate and cannot touch each other's data structures. This also makes
-it clear what is actually shared between both.
+Much easier to understand now. Thanks!
 
-There are no introduced functional changes in this commit and no
-documentation changes, this is just code shuffling.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
----
- mkfs/config.h   | 78 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- mkfs/xfs_mkfs.c | 55 +---------------------------------------
- 2 files changed, 79 insertions(+), 54 deletions(-)
- create mode 100644 mkfs/config.h
+One thing for a followup patch, though.
 
-diff --git a/mkfs/config.h b/mkfs/config.h
-new file mode 100644
-index 000000000000..e5ea968e2d65
---- /dev/null
-+++ b/mkfs/config.h
-@@ -0,0 +1,78 @@
-+/*
-+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.
-+ * Copyright (c) 2016-2017 Red Hat, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+#ifndef _XFS_MKFS_CONFIG_H
-+#define _XFS_MKFS_CONFIG_H
-+
-+struct fsxattr;
-+
-+/*
-+ * Shared superblock configuration options
-+ *
-+ * These options provide shared configuration tunables for the filesystem
-+ * superblock. There are three possible sources for these options set, each
-+ * source can overriding the later source:
-+ *
-+ * 	o built-in defaults
-+ * 	o configuration file (XXX)
-+ * 	o command line
-+ *
-+ * These values are not used directly - they are inputs into the mkfs geometry
-+ * validation.
-+ */
-+struct sb_feat_args {
-+	int	log_version;
-+	int	attr_version;
-+	int	dir_version;
-+	bool	inode_align;		/* XFS_SB_VERSION_ALIGNBIT */
-+	bool	nci;			/* XFS_SB_VERSION_BORGBIT */
-+	bool	lazy_sb_counters;	/* XFS_SB_VERSION2_LAZYSBCOUNTBIT */
-+	bool	parent_pointers;	/* XFS_SB_VERSION2_PARENTBIT */
-+	bool	projid32bit;		/* XFS_SB_VERSION2_PROJID32BIT */
-+	bool	crcs_enabled;		/* XFS_SB_VERSION2_CRCBIT */
-+	bool	dirftype;		/* XFS_SB_VERSION2_FTYPE */
-+	bool	finobt;			/* XFS_SB_FEAT_RO_COMPAT_FINOBT */
-+	bool	spinodes;		/* XFS_SB_FEAT_INCOMPAT_SPINODES */
-+	bool	rmapbt;			/* XFS_SB_FEAT_RO_COMPAT_RMAPBT */
-+	bool	reflink;		/* XFS_SB_FEAT_RO_COMPAT_REFLINK */
-+	bool	nodalign;
-+	bool	nortalign;
-+};
-+
-+/*
-+ * Default filesystem features and configuration values
-+ *
-+ * This structure contains the default mkfs values that are to be used when
-+ * a user does not specify the option on the command line. We do not use these
-+ * values directly - they are inputs to the mkfs geometry validation and
-+ * calculations.
-+ */
-+struct mkfs_default_params {
-+	char	*source;	/* where the defaults came from */
-+
-+	int	sectorsize;
-+	int	blocksize;
-+
-+	/* feature flags that are set */
-+	struct sb_feat_args	sb_feat;
-+
-+	/* root inode characteristics */
-+	struct fsxattr		fsx;
-+};
-+
-+#endif /* _XFS_MKFS_CONFIG_H */
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 84e9d6b2562a..4664e507afbf 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -21,6 +21,7 @@
- #include "xfs_multidisk.h"
- #include "libxcmd.h"
- #include "fsgeom.h"
-+#include "config.h"
- 
- 
- #define TERABYTES(count, blog)	((uint64_t)(count) << (40 - (blog)))
-@@ -706,39 +707,6 @@ cli_opt_set(
- 	       opts->subopt_params[subopt].str_seen;
- }
- 
--/*
-- * Shared superblock configuration options
-- *
-- * These options provide shared configuration tunables for the filesystem
-- * superblock. There are three possible sources for these options set, each
-- * source can overriding the later source:
-- *
-- * 	o built-in defaults
-- * 	o configuration file (XXX)
-- * 	o command line
-- *
-- * These values are not used directly - they are inputs into the mkfs geometry
-- * validation.
-- */
--struct sb_feat_args {
--	int	log_version;
--	int	attr_version;
--	int	dir_version;
--	bool	inode_align;		/* XFS_SB_VERSION_ALIGNBIT */
--	bool	nci;			/* XFS_SB_VERSION_BORGBIT */
--	bool	lazy_sb_counters;	/* XFS_SB_VERSION2_LAZYSBCOUNTBIT */
--	bool	parent_pointers;	/* XFS_SB_VERSION2_PARENTBIT */
--	bool	projid32bit;		/* XFS_SB_VERSION2_PROJID32BIT */
--	bool	crcs_enabled;		/* XFS_SB_VERSION2_CRCBIT */
--	bool	dirftype;		/* XFS_SB_VERSION2_FTYPE */
--	bool	finobt;			/* XFS_SB_FEAT_RO_COMPAT_FINOBT */
--	bool	spinodes;		/* XFS_SB_FEAT_INCOMPAT_SPINODES */
--	bool	rmapbt;			/* XFS_SB_FEAT_RO_COMPAT_RMAPBT */
--	bool	reflink;		/* XFS_SB_FEAT_RO_COMPAT_REFLINK */
--	bool	nodalign;
--	bool	nortalign;
--};
--
- /*
-  * Options configured on the command line.
-  *
-@@ -850,27 +818,6 @@ struct mkfs_params {
- 	struct sb_feat_args	sb_feat;
- };
- 
--/*
-- * Default filesystem features and configuration values
-- *
-- * This structure contains the default mkfs values that are to be used when
-- * a user does not specify the option on the command line. We do not use these
-- * values directly - they are inputs to the mkfs geometry validation and
-- * calculations.
-- */
--struct mkfs_default_params {
--	char	*source;	/* where the defaults came from */
--
--	int	sectorsize;
--	int	blocksize;
--
--	/* feature flags that are set */
--	struct sb_feat_args	sb_feat;
--
--	/* root inode characteristics */
--	struct fsxattr		fsx;
--};
--
- static void __attribute__((noreturn))
- usage( void )
- {
+> +/* Collect a dead btree extent for later disposal. */
+> +int
+> +xfs_repair_collect_btree_extent(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_repair_extent_list	*exlist,
+> +	xfs_fsblock_t			fsbno,
+> +	xfs_extlen_t			len)
+> +{
+> +	struct xfs_repair_extent	*rex;
+> +
+> +	trace_xfs_repair_collect_btree_extent(sc->mp,
+> +			XFS_FSB_TO_AGNO(sc->mp, fsbno),
+> +			XFS_FSB_TO_AGBNO(sc->mp, fsbno), len);
+> +
+> +	rex = kmem_alloc(sizeof(struct xfs_repair_extent), KM_MAYFAIL);
+> +	if (!rex)
+> +		return -ENOMEM;
+> +
+> +	INIT_LIST_HEAD(&rex->list);
+> +	rex->fsbno = fsbno;
+> +	rex->len = len;
+
+This allocation is repeated a couple of times. Single function to do
+it would be nice to encapsulate alloc+setup - something like rex =
+alloc_rex(fsbno, len) which returns NULL if it fails.
+
+> +		case LEFT_ALIGNED | RIGHT_ALIGNED:
+> +			/* Total overlap, just delete ex. */
+> +			lp = lp->next;
+> +			list_del(&ex->list);
+> +			kmem_free(ex);
+> +			break;
+> +		case 0:
+> +			/*
+> +			 * Deleting from the middle: add the new right extent
+> +			 * and then shrink the left extent.
+> +			 */
+> +			newex = kmem_alloc(sizeof(struct xfs_repair_extent),
+> +					KM_MAYFAIL);
+> +			if (!newex) {
+> +				error = -ENOMEM;
+> +				goto out;
+> +			}
+> +			INIT_LIST_HEAD(&newex->list);
+> +			newex->fsbno = sub_fsb + sub_len;
+> +			newex->len = ex->fsbno + ex->len - newex->fsbno;
+
+This is the other place it is called...
+
+Cheers,
+
+Dave.
 -- 
-2.16.3
-
+Dave Chinner
+david@fromorbit.com
