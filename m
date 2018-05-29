@@ -1,112 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:56310 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751774AbeEOWdn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 May 2018 18:33:43 -0400
-Subject: [PATCH v15.1 00/22] xfs-4.18: online repair support
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 15 May 2018 15:33:39 -0700
-Message-ID: <152642361893.1556.9335169821674946249.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:60978 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965094AbeE2REH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 29 May 2018 13:04:07 -0400
+Date: Tue, 29 May 2018 13:04:04 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 22/34] xfs: make xfs_writepage_map extent map centric
+Message-ID: <20180529170403.GA107867@bfoster.bfoster>
+References: <20180523144357.18985-1-hch@lst.de>
+ <20180523144357.18985-23-hch@lst.de>
+ <20180524145935.GA84959@bfoster.bfoster>
+ <20180524165350.GA22675@lst.de>
+ <20180524181356.GA89391@bfoster.bfoster>
+ <20180525061900.GA16409@lst.de>
+ <20180525113532.GA92036@bfoster.bfoster>
+ <20180528071543.GA5428@lst.de>
+ <20180529112630.GA107328@bfoster.bfoster>
+ <20180529130846.GA8205@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180529130846.GA8205@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, david@fromorbit.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>
 
-Hi all,
+On Tue, May 29, 2018 at 03:08:46PM +0200, Christoph Hellwig wrote:
+> On Tue, May 29, 2018 at 07:26:31AM -0400, Brian Foster wrote:
+> > What exactly is the trivial check? Can you show the code please?
+> 
+> ASSERT(file_offset > i_size_read(inode)) in the !count block
+> at the end of xfs_writepage_map.
+> 
+> (file_offset replaced with page_offset(page) + offset for the mainline
+> code).
 
-This is the fifteenth revision of a patchset that adds to XFS kernel
-support for online metadata scrubbing and repair.  There aren't any
-on-disk format changes.
+Ok, so we (mainline) somehow or another end up in writeback with a page
+(inside EOF) with a combination of (!mapped && !uptodate) and (!mapped
+&& uptodate) (unwritten?) buffers, none of them actually being dirty.
+I'm not quite sure how that happens, but I think it does rule out the
+count == 0 && at least one uptodate segment logic I proposed earlier.
 
-New in v15 of the patch series is the ability to scavenge broken
-attribute forks for intact extended attributes, to repair minor
-corruptions in the on-disk quota records, and to perform quotacheck
-online.  The series was rebased atop for-next for 4.18 and a number
-of minor bitrots bugs were fixed.
+Fair enough. Given that, I'm not sure there's a good way to trigger such
+error detection without actual dirty state, and it's certainly not worth
+complicating the design just for that. Thanks for trying, at least.
 
-The first seven patches are helper functions that are internal to the
-online repair code, as follows:
+Hmm, that does have me wondering a bit if/how we'd end up writing back
+zeroed blocks over unwritten extents with no other dirty user data in
+the page (since the initial xfs_writepage_map() rework patch factors out
+the uptodate && !mapped skipping logic).
 
- - Estimating transaction block reservations and creating transactions
-   suitable for repairing metadata.
- - Allocating and initializing per-AG btree blocks.
- - Managing lists of AG blocks; we find all the dead blocks of a btree
-   we're rebuilding by making a list of blocks with the same rmap owner,
-   and subtracting out any blocks in use by other data structures.
- - Disposing of lists of dead per-AG btree blocks.
- - Finding btree roots given only rmap information.
- - Resetting filesystem counters.
- - Calling dqattach for inodes being repaired and scheduling quotacheck.
+Brian
 
-Patches 8-22 introduce the online repair functionality for space
-metadata and certain file data.  Our general strategy for rebuilding
-damaged primary metadata is to rebuild the structure completely from
-secondary metadata and free the old structure after the fact; we do not
-try to salvage anything.  Consequently, online repair requires rmapbt.
-Rebuilding the secondary metadata (rmap) is much harder -- due to our
-locking rules (primary and then secondary) we have to shut down the
-filesystem temporarily while we scan all the primary metadata for data
-to put in the new secondary structure.
-
-Reconstructing inodes is difficult -- the ability to rebuild files
-depends on the filesystem being able to load an inode (xfs_iget), which
-means repair has to know how to zap any part of an inode record that
-might trigger corruption errors from iget.  To that end, we can now
-reset most of an inode record or an inode fork so that we can rebuild
-the file.
-
-The refcount rebuilder is more or less the same algorithm that
-xfs_repair uses, but modified to reflect the constraints of running in
-kernel space.
-
-For rmap rebuilds, we cannot have anything on the filesystem taking
-exclusive locks and we cannot have any allocation activity at all.
-Therefore, we start by freezing the filesystem to allow other
-transactions to finish.  Next, we scan all other AG metadata structures,
-every inode, and every block map to reconstruct the rmap data.  Then, we
-reinitialize the rmap btree root and reload the rmap btree.  Finally, we
-release all the resource we grabbed and the filesystem returns to
-normal.
-
-The extended attribute repair function uses a different strategy from
-the other repair code.  Since there are no secondary metadata for
-extended attributes, we can't simply rebuild from an alternate data
-source.  Therefore, this repairer simply walks through the blocks in the
-attribute fork looking for attribute names and values that appear to be
-intact, zaps the attr fork, and re-adds the collected names and values
-to the new fork.  This enables us to trigger optimization notices for
-attributes blocks with holes.
-
-Quota repairs are fairly straightforward -- repair anything wrong with
-the inode data fork, eliminate garbage extents, and then iterate all the
-dquot blocks fixing up things that the dquot buffer verifier will
-complain about.  This should leave the quota ip in good enough shape for
-online quotacheck!  Here we reuse the same fs freezing mechanism as in
-the rmap repair to block all other filesystem users.  Then we zero all
-the quota counters, iterate all the inodes in the system to recalculate
-the counts, and log all the dquots to disk.  We of course clear the CHKD
-flags before starting out, so if we crash midway through, the mount time
-quotacheck will run.
-
-Looking forward, the parent pointer feature that Allison Henderson is
-working on will enable us to reconstruct directories, at which point
-we'll be able to reconstruct most of a lightly damaged filesystem.  But
-that's future talk.
-
-If you're going to start using this mess, you probably ought to just
-pull from my git trees.  The kernel patches[1] should apply against
-4.17-rc5.  xfsprogs[2] and xfstests[3] can be found in their usual
-places.  The git trees contain all four series' worth of changes.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
-[2] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
-[3] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=djwong-devel
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
