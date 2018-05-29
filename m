@@ -1,55 +1,215 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:7360 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S966584AbeE2TvR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 29 May 2018 15:51:17 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v2 6/7] dm-snap: remove unnecessary direct_access() stub
-Date: Tue, 29 May 2018 13:51:05 -0600
-Message-Id: <20180529195106.14268-7-ross.zwisler@linux.intel.com>
-In-Reply-To: <20180529195106.14268-1-ross.zwisler@linux.intel.com>
-References: <20180529195106.14268-1-ross.zwisler@linux.intel.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:40572 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935506AbeE2O5A (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 May 2018 10:57:00 -0400
+Date: Tue, 29 May 2018 07:56:50 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 7/7] libxfs: remove crc32 functions
+Message-ID: <20180529145650.GB30110@magnolia>
+References: <152728629694.22515.17699396814561914788.stgit@magnolia>
+ <152728634020.22515.16684194597988861920.stgit@magnolia>
+ <23568dc9-61d2-0eb9-819a-1386f7276408@oracle.com>
+ <20180528141136.3anksl5xaftofkkk@odin.usersys.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180528141136.3anksl5xaftofkkk@odin.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Toshi Kani <toshi.kani@hpe.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: Allison Henderson <allison.henderson@oracle.com>, sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-This stub was added so that we could use dm-snap with DM_TYPE_DAX_BIO_BASED
-mode devices.  That mode and the transition issues associated with it no
-longer exist, so we can remove this dead code.
+On Mon, May 28, 2018 at 04:11:36PM +0200, Carlos Maiolino wrote:
+> On Sun, May 27, 2018 at 08:53:04PM -0700, Allison Henderson wrote:
+> > Seems like it would be ok.  But if these functions are not really used,
+> > is there a reason as to why we are just commenting them out instead of
+> > removing them entirely?  Thx!
+> 
+> I've the same question, I'd say you expect to keep them there for historical
+> reasons, but I think at least a comment in the patch description would be fine,
+> but either if you keep the commented code, or remove it completely:
 
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
----
- drivers/md/dm-snap.c | 8 --------
- 1 file changed, 8 deletions(-)
+It's hard to say -- xfsprogs ported the slice-by-8 code from the kernel,
+then #if'd out some of the irrelevant bits.  If we ever need to resync
+w/ the kernel it'd be much easier to do so if the file is mostly intact
+save for some preprocessor gunk to debloat the object files.
 
-diff --git a/drivers/md/dm-snap.c b/drivers/md/dm-snap.c
-index 216035be5661..0143b158d52d 100644
---- a/drivers/md/dm-snap.c
-+++ b/drivers/md/dm-snap.c
-@@ -2305,13 +2305,6 @@ static int origin_map(struct dm_target *ti, struct bio *bio)
- 	return do_origin(o->dev, bio);
- }
- 
--static long origin_dax_direct_access(struct dm_target *ti, pgoff_t pgoff,
--		long nr_pages, void **kaddr, pfn_t *pfn)
--{
--	DMWARN("device does not support dax.");
--	return -EIO;
--}
--
- /*
-  * Set the target "max_io_len" field to the minimum of all the snapshots'
-  * chunk sizes.
-@@ -2371,7 +2364,6 @@ static struct target_type origin_target = {
- 	.postsuspend = origin_postsuspend,
- 	.status  = origin_status,
- 	.iterate_devices = origin_iterate_devices,
--	.direct_access = origin_dax_direct_access,
- };
- 
- static struct target_type snapshot_target = {
--- 
-2.14.3
+OTOH this file is ugly.  Let's see if the maintainer accepts this or
+yells 'rewrite!' :)
 
+--D
+
+> Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+> 
+> 
+> > 
+> > Allison
+> > 
+> > On 05/25/2018 03:12 PM, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > XFS uses crc32c, not crc32.  Remove the unnecessary crc32 code, which
+> > > decreases binary size by the 8K crc32 table.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >   include/libxfs.h        |    3 ---
+> > >   libxfs/crc32.c          |   16 ++++++++++------
+> > >   libxfs/gen_crc32table.c |    8 +++++++-
+> > >   libxfs/libxfs_priv.h    |    3 ---
+> > >   4 files changed, 17 insertions(+), 13 deletions(-)
+> > > 
+> > > 
+> > > diff --git a/include/libxfs.h b/include/libxfs.h
+> > > index fbaae089..109866de 100644
+> > > --- a/include/libxfs.h
+> > > +++ b/include/libxfs.h
+> > > @@ -43,10 +43,7 @@
+> > >   /* CRC stuff, buffer API dependent on it */
+> > > -extern uint32_t crc32_le(uint32_t crc, unsigned char const *p, size_t len);
+> > >   extern uint32_t crc32c_le(uint32_t crc, unsigned char const *p, size_t len);
+> > > -
+> > > -#define crc32(c,p,l)	crc32_le((c),(unsigned char const *)(p),(l))
+> > >   #define crc32c(c,p,l)	crc32c_le((c),(unsigned char const *)(p),(l))
+> > >   #include "xfs_cksum.h"
+> > > diff --git a/libxfs/crc32.c b/libxfs/crc32.c
+> > > index 783d62e9..8fe5c42c 100644
+> > > --- a/libxfs/crc32.c
+> > > +++ b/libxfs/crc32.c
+> > > @@ -176,20 +176,26 @@ static inline u32 __pure crc32_le_generic(u32 crc, unsigned char const *p,
+> > >   }
+> > >   #if CRC_LE_BITS == 1
+> > > +/*
+> > > + * not used by xfs.
+> > >   u32 __pure crc32_le(u32 crc, unsigned char const *p, size_t len)
+> > >   {
+> > >   	return crc32_le_generic(crc, p, len, NULL, CRCPOLY_LE);
+> > >   }
+> > > + */
+> > >   u32 __pure crc32c_le(u32 crc, unsigned char const *p, size_t len)
+> > >   {
+> > >   	return crc32_le_generic(crc, p, len, NULL, CRC32C_POLY_LE);
+> > >   }
+> > >   #else
+> > > +/*
+> > > + * not used by xfs.
+> > >   u32 __pure crc32_le(u32 crc, unsigned char const *p, size_t len)
+> > >   {
+> > >   	return crc32_le_generic(crc, p, len,
+> > >   			(const u32 (*)[256])crc32table_le, CRCPOLY_LE);
+> > >   }
+> > > + */
+> > >   u32 __pure crc32c_le(u32 crc, unsigned char const *p, size_t len)
+> > >   {
+> > >   	return crc32_le_generic(crc, p, len,
+> > > @@ -970,6 +976,7 @@ static int crc32c_test(void)
+> > >   	return errors;
+> > >   }
+> > > +#if 0	/* not used by xfs */
+> > >   static int crc32_test(void)
+> > >   {
+> > >   	int i;
+> > > @@ -989,10 +996,8 @@ static int crc32_test(void)
+> > >   		crc ^= crc32_le(test[i].crc, test_buf +
+> > >   		    test[i].start, test[i].length);
+> > > -#if 0 /* not used */
+> > >   		crc ^= crc32_be(test[i].crc, test_buf +
+> > >   		    test[i].start, test[i].length);
+> > > -#endif
+> > >   	}
+> > >   	gettimeofday(&start, NULL);
+> > > @@ -1001,11 +1006,9 @@ static int crc32_test(void)
+> > >   		    test[i].start, test[i].length))
+> > >   			errors++;
+> > > -#if 0 /* not used */
+> > >   		if (test[i].crc_be != crc32_be(test[i].crc, test_buf +
+> > >   		    test[i].start, test[i].length))
+> > >   			errors++;
+> > > -#endif
+> > >   	}
+> > >   	gettimeofday(&stop, NULL);
+> > > @@ -1021,6 +1024,8 @@ static int crc32_test(void)
+> > >   	return errors;
+> > >   }
+> > > +#endif
+> > > +
+> > >   /*
+> > >    * make sure we always return 0 for a successful test run, and non-zero for a
+> > >    * failed run. The build infrastructure is looking for this information to
+> > > @@ -1032,8 +1037,7 @@ int main(int argc, char **argv)
+> > >   	printf("CRC_LE_BITS = %d\n", CRC_LE_BITS);
+> > > -	errors = crc32_test();
+> > > -	errors += crc32c_test();
+> > > +	errors = crc32c_test();
+> > >   	return errors != 0;
+> > >   }
+> > > diff --git a/libxfs/gen_crc32table.c b/libxfs/gen_crc32table.c
+> > > index 574a2d1a..d81164b7 100644
+> > > --- a/libxfs/gen_crc32table.c
+> > > +++ b/libxfs/gen_crc32table.c
+> > > @@ -20,7 +20,10 @@
+> > >   # define BE_TABLE_SIZE (1 << CRC_BE_BITS)
+> > >   #endif
+> > > +/*
+> > > + * crc32 not used by xfs.
+> > >   static uint32_t crc32table_le[LE_TABLE_ROWS][256];
+> > > + */
+> > >   static uint32_t crc32ctable_le[LE_TABLE_ROWS][256];
+> > >   /*
+> > > @@ -57,10 +60,13 @@ static void crc32init_le_generic(const uint32_t polynomial,
+> > >   	}
+> > >   }
+> > > +/*
+> > > + * crc32 not used by xfs.
+> > >   static void crc32init_le(void)
+> > >   {
+> > >   	crc32init_le_generic(CRCPOLY_LE, crc32table_le);
+> > >   }
+> > > + */
+> > >   static void crc32cinit_le(void)
+> > >   {
+> > > @@ -112,6 +118,7 @@ int main(int argc, char** argv)
+> > >   {
+> > >   	printf("/* this file is generated - do not edit */\n\n");
+> > > +#if 0	/* not used by xfsprogs */
+> > >   	if (CRC_LE_BITS > 1) {
+> > >   		crc32init_le();
+> > >   		printf("static u32 crc32table_le[%d][%d] = {",
+> > > @@ -121,7 +128,6 @@ int main(int argc, char** argv)
+> > >   		printf("};\n");
+> > >   	}
+> > > -#if 0	/* not used by xfsprogs */
+> > >   	if (CRC_BE_BITS > 1) {
+> > >   		crc32init_be();
+> > >   		printf("static u32 crc32table_be[%d][%d] = {",
+> > > diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+> > > index e5eb3de1..fae32411 100644
+> > > --- a/libxfs/libxfs_priv.h
+> > > +++ b/libxfs/libxfs_priv.h
+> > > @@ -67,10 +67,7 @@
+> > >   #include "xfs_fs.h"
+> > >   /* CRC stuff, buffer API dependent on it */
+> > > -extern uint32_t crc32_le(uint32_t crc, unsigned char const *p, size_t len);
+> > >   extern uint32_t crc32c_le(uint32_t crc, unsigned char const *p, size_t len);
+> > > -
+> > > -#define crc32(c,p,l)	crc32_le((c),(unsigned char const *)(p),(l))
+> > >   #define crc32c(c,p,l)	crc32c_le((c),(unsigned char const *)(p),(l))
+> > >   #include "xfs_cksum.h"
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwICaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=UTANtlZSRetfnz4BmXOr1fXJ6ePKjcWFnaB8-d9hRFk&s=SKcuMvUHSCQzGlRx1lPp-Hym6boKRBUhcRY7YNsWRQo&e=
+> > > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> -- 
+> Carlos
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
