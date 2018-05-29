@@ -1,34 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:60206 "EHLO newverein.lst.de"
+Received: from mail.kernel.org ([198.145.29.99]:45234 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750710AbeE3KDo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 30 May 2018 06:03:44 -0400
-Date: Wed, 30 May 2018 12:10:03 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [Cluster-devel] [PATCH 11/34] iomap: move IOMAP_F_BOUNDARY to
-        gfs2
-Message-ID: <20180530101003.GA31419@lst.de>
-References: <20180523144357.18985-1-hch@lst.de> <20180523144357.18985-12-hch@lst.de> <20180530055033.GZ30110@magnolia> <bc621d7c-f1a6-14c2-663f-57ded16811fa@redhat.com> <20180530095911.GB31068@lst.de> <e14b3cfb-73ca-e712-e1e9-4ceabc8c7b6d@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <e14b3cfb-73ca-e712-e1e9-4ceabc8c7b6d@redhat.com>
+        id S967460AbeE2WGJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 29 May 2018 18:06:09 -0400
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v4 4/4] debian/rules: use the new sysconfdir configuration setting
+Date: Tue, 29 May 2018 15:06:03 -0700
+Message-Id: <20180529220603.29420-5-mcgrof@kernel.org>
+In-Reply-To: <20180529220603.29420-1-mcgrof@kernel.org>
+References: <20180529220603.29420-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Steven Whitehouse <swhiteho@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com, linux-mm@kvack.org, Andreas =?iso-8859-1?Q?Gr=FCnbacher?= <agruenba@redhat.com>
+To: sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com, "Luis R. Rodriguez" <mcgrof@kernel.org>
 
-On Wed, May 30, 2018 at 11:02:08AM +0100, Steven Whitehouse wrote:
-> In that case,  maybe it would be simpler to drop it for GFS2. Unless we 
-> are getting a lot of benefit from it, then we should probably just follow 
-> the generic pattern here. Eventually we'll move everything to iomap, so 
-> that the bh mapping interface will be gone. That implies that we might be 
-> able to drop it now, to avoid this complication during the conversion.
->
-> Andreas, do you see any issues with that?
+Configuration file support requires setting --sysconfdir=/etc/ if your
+distribution expects mkfs.xfs.d directory to be in /etc.
 
-I suspect it actually is doing the wrong thing today.  It certainly
-does for SSDs, and it probably doesn't do a useful thing for modern
-disks with intelligent caches either.
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+---
+ debian/rules | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/debian/rules b/debian/rules
+index cb4fa22c1584..599d7998052e 100755
+--- a/debian/rules
++++ b/debian/rules
+@@ -20,9 +20,9 @@ stdenv = @GZIP=-q; export GZIP;
+ 
+ options = export DEBUG=-DNDEBUG DISTRIBUTION=debian \
+ 	  INSTALL_USER=root INSTALL_GROUP=root \
+-	  LOCAL_CONFIGURE_OPTIONS="--enable-readline=yes --enable-blkid=yes --disable-ubsan --disable-addrsan --disable-threadsan --enable-lto" ;
++	  LOCAL_CONFIGURE_OPTIONS="--enable-readline=yes --enable-blkid=yes --disable-ubsan --disable-addrsan --disable-threadsan --enable-lto --sysconfdir=/etc/" ;
+ diopts  = $(options) \
+-	  export OPTIMIZER=-Os LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no --disable-ubsan --disable-addrsan --disable-threadsan --enable-lto" ;
++	  export OPTIMIZER=-Os LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no --disable-ubsan --disable-addrsan --disable-threadsan --enable-lto --sysconfdir=/etc/" ;
+ checkdir = test -f debian/rules
+ 
+ build: build-arch build-indep
+-- 
+2.16.3
+
