@@ -1,117 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:36698 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935216AbeE2P2D (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 May 2018 11:28:03 -0400
-Date: Tue, 29 May 2018 08:28:00 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 03/22] xfs: add helpers to collect and sift btree
- block pointers during repair
-Message-ID: <20180529152800.GE30110@magnolia>
-References: <152642361893.1556.9335169821674946249.stgit@magnolia>
- <152642363794.1556.12771807615463619233.stgit@magnolia>
- <20180518035155.GZ23858@magnolia>
- <20180529031001.GJ10363@dastard>
+Received: from sandeen.net ([63.231.237.45]:43816 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S936853AbeE2RAu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 29 May 2018 13:00:50 -0400
+Subject: Re: Temporary drive failure leads to massive data corruption?
+References: <CAKGkouuK6Dz82JBx2s8cccC-ST_enhF3jyVCHr+w=O_-QeppRw@mail.gmail.com>
+ <1b397e88-0e1f-5f33-7def-a38a4a1e484a@sandeen.net>
+ <8636yav20g.fsf@self-evident.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <6169654a-7f46-5fb7-492a-56356c4d2fca@sandeen.net>
+Date: Tue, 29 May 2018 12:00:49 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180529031001.GJ10363@dastard>
+In-Reply-To: <8636yav20g.fsf@self-evident.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, Allison Henderson <allison.henderson@oracle.com>
+To: "Patrick J. LoPresti" <lopresti@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, May 29, 2018 at 01:10:01PM +1000, Dave Chinner wrote:
-> On Thu, May 17, 2018 at 08:51:55PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Add some helpers to assemble a list of fs block extents.  Generally,
-> > repair functions will iterate the rmapbt to make a list (1) of all
-> > extents owned by the nominal owner of the metadata structure; then they
-> > will iterate all other structures with the same rmap owner to make a
-> > list (2) of active blocks; and finally we have a subtraction function to
-> > subtract all the blocks in (2) from (1), with the result that (1) is now
-> > a list of blocks that were owned by the old btree and must be disposed.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> > v2: document the design of how repair functions are supposed to work,
-> >     implement review comments
-> > ---
+On 5/29/18 11:51 AM, Patrick J. LoPresti wrote:
+>> On a more concrete note, it would be interestting to run xfs_bmap -vv
+>> on some of those files with zeros and see what extents, if any, cover
+>> the zeroed ranges.  i.e. are they holes, allocated, unwritten, etc.
+> I tried this on a few of the damaged files. Here is a typical output:
 > 
-> Much easier to understand now. Thanks!
+> # xfs_bmap -p -v xxx
+>      xxx:
+>     EXT: FILE-OFFSET      BLOCK-RANGE                 AG  AG-OFFSET  TOTAL FLAGS
+>       0: [0..16255]:      195467240568..195467256823  91  (46229328..46245583)  16256 00000
+>       1: [16256..715959]: 195477629880..195478329583  91  (56618640..57318343) 699704 00000
 > 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> Looking at the "zeroed" data ranges (there are several), none of them
+> are near the beginning nor end of either extent.
 > 
-> One thing for a followup patch, though.
-> 
-> > +/* Collect a dead btree extent for later disposal. */
-> > +int
-> > +xfs_repair_collect_btree_extent(
-> > +	struct xfs_scrub_context	*sc,
-> > +	struct xfs_repair_extent_list	*exlist,
-> > +	xfs_fsblock_t			fsbno,
-> > +	xfs_extlen_t			len)
-> > +{
-> > +	struct xfs_repair_extent	*rex;
-> > +
-> > +	trace_xfs_repair_collect_btree_extent(sc->mp,
-> > +			XFS_FSB_TO_AGNO(sc->mp, fsbno),
-> > +			XFS_FSB_TO_AGBNO(sc->mp, fsbno), len);
-> > +
-> > +	rex = kmem_alloc(sizeof(struct xfs_repair_extent), KM_MAYFAIL);
-> > +	if (!rex)
-> > +		return -ENOMEM;
-> > +
-> > +	INIT_LIST_HEAD(&rex->list);
-> > +	rex->fsbno = fsbno;
-> > +	rex->len = len;
-> 
-> This allocation is repeated a couple of times. Single function to do
-> it would be nice to encapsulate alloc+setup - something like rex =
-> alloc_rex(fsbno, len) which returns NULL if it fails.
-> 
-> > +		case LEFT_ALIGNED | RIGHT_ALIGNED:
-> > +			/* Total overlap, just delete ex. */
-> > +			lp = lp->next;
-> > +			list_del(&ex->list);
-> > +			kmem_free(ex);
-> > +			break;
-> > +		case 0:
-> > +			/*
-> > +			 * Deleting from the middle: add the new right extent
-> > +			 * and then shrink the left extent.
-> > +			 */
-> > +			newex = kmem_alloc(sizeof(struct xfs_repair_extent),
-> > +					KM_MAYFAIL);
-> > +			if (!newex) {
-> > +				error = -ENOMEM;
-> > +				goto out;
-> > +			}
-> > +			INIT_LIST_HEAD(&newex->list);
-> > +			newex->fsbno = sub_fsb + sub_len;
-> > +			newex->len = ex->fsbno + ex->len - newex->fsbno;
-> 
-> This is the other place it is called...
+> None of the files I looked at had FLAGS other than 00000.
 
-<nod> I'll add this to the pile of enhancements to come after
-upstreaming; maybe this will turn into more generic per-ag bitmap
-structure.
-
-I'd also like to replace the list usage in the later repair patches with
-some kind of sort-once array structure and an xfs_btree_bulkload to
-reduce overhead and memory consumption.
-
---D
-
-> Cheers,
+Ok, so flags with 00000 mean "this is a normal, allocated, written extent"
+and nothing fancy like preallocated/unwritten - and they aren't holes either.
+  
+> All of the zeroed ranges I checked are page-aligned (4K multiple).
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> It really feels like some small amount of damage in one area of the file
+> system got amplified into corruption across many files' contents by
+> xfs_repair.
+> 
+> I do not know much about XFS internals, so forgive me if the following
+> is stupid... I imagine there are global data structures recording the
+> free/in-use blocks, as well as local data structures recording the
+> extents used by each file. Is it possible xfs_repair decided to "trust"
+> some corrupted global data structure instead of the local extents
+> associated with each file, and responded by wiping parts of the latter?
+> 
+> In general, could anything cause xfs_repair to zero out whole ranges of
+> blocks allocated to many files?
+
+Others may think of a scenario I'm missing, but xfs_repair simply does
+not touch the contents of file data blocks.  It might truncate some away,
+or remove entire extents from a file, or even junk an inode that looks
+irredeemable, but it will never go in and zero out data in file blocks.
+That's what leads me to think that there's something else happening on
+the storage side of things.
+
+Did you keep the xfs_repair output?  It would be interesting to correlate
+the inodes w/ missing data to anything repair might have touched, I guess.
+
+-Eric
