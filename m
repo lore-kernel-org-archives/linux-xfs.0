@@ -1,97 +1,211 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40382 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965927AbeE2UkQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 29 May 2018 16:40:16 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id E5D609EC8A
-        for <linux-xfs@vger.kernel.org>; Tue, 29 May 2018 20:40:15 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 710E0600C2
-        for <linux-xfs@vger.kernel.org>; Tue, 29 May 2018 20:40:15 +0000 (UTC)
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs_repair: fix libxfs api violations in quota repair code
-Message-ID: <6aeb5192-00b5-175d-fa3d-7864a2ba2d27@redhat.com>
-Date: Tue, 29 May 2018 15:40:14 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:52496 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935454AbeE2PIK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 May 2018 11:08:10 -0400
+Date: Tue, 29 May 2018 08:07:59 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfstests/shared: dedup integrity test by duperemove
+Message-ID: <20180529150759.GC30110@magnolia>
+References: <20180528045427.11159-1-zlang@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180528045427.11159-1-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-My "repair quotas" patch forgot about our libxfs API tricks,
-fix that.
+On Mon, May 28, 2018 at 12:54:27PM +0800, Zorro Lang wrote:
+> Duperemove is a tool for finding duplicated extents and submitting
+> them for deduplication, and it supports XFS. This case trys to
+> verify the integrity of XFS after running duperemove.
+> 
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> ---
+> 
+> Hi,
+> 
+> There's not many softwares support XFS dedup now, duperemove is a rare one.
+> So I write this case by using duperemove.
+> 
+> I use fsstress to make many files and data randomly, I don't know if there're
+> better things I can use? Because fsstress only write '0xff' into files, maybe
+> I should add an option to make fsstress can write random character?
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Heh.  But you probably don't want totally random contents because then
+dupremove doesn't do much.
 
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index 56f9f8c..63bf27e 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -126,6 +126,10 @@
-  #define xfs_sb_quota_from_disk		libxfs_sb_quota_from_disk
-  #define xfs_sb_to_disk			libxfs_sb_to_disk
-  
-+#define xfs_calc_dquots_per_chunk	libxfs_calc_dquots_per_chunk
-+#define xfs_dquot_verify		libxfs_dquot_verify
-+#define xfs_dquot_repair		libxfs_dquot_repair
-+
-  #define xfs_symlink_blocks		libxfs_symlink_blocks
-  #define xfs_symlink_hdr_ok		libxfs_symlink_hdr_ok
-  
-diff --git a/repair/dinode.c b/repair/dinode.c
-index e8edcd4..49d5d05 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -1345,7 +1345,7 @@ process_quota_inode(
-  	}
-  
-  	dqchunklen = XFS_FSB_TO_BB(mp, XFS_DQUOT_CLUSTER_SIZE_FSB);
--	dqperchunk = xfs_calc_dquots_per_chunk(dqchunklen);
-+	dqperchunk = libxfs_calc_dquots_per_chunk(dqchunklen);
-  	dqid = 0;
-  	qbno = NULLFILEOFF;
-  
-@@ -1367,12 +1367,12 @@ _("cannot read inode %" PRIu64 ", file block %" PRIu64 ", disk block %" PRIu64 "
-  
-  		dqb = bp->b_addr;
-  		for (i = 0; i < dqperchunk; i++, dqid++, dqb++) {
--			xfs_failaddr_t	fa;
-  			int		bad_dqb = 0;
-  
-  			/* We only print the first problem we find */
-  			if (xfs_sb_version_hascrc(&mp->m_sb)) {
--				if (!xfs_verify_cksum((char *)dqb, sizeof(*dqb),
-+				if (!libxfs_verify_cksum((char *)dqb,
-+							sizeof(*dqb),
-  							XFS_DQUOT_CRC_OFF)) {
-  					do_warn(_("%s: bad CRC for id %u. "),
-  							quota_string, dqid);
-@@ -1388,8 +1388,8 @@ _("cannot read inode %" PRIu64 ", file block %" PRIu64 ", disk block %" PRIu64 "
-  					goto bad;
-  				}
-  			}
--			fa = xfs_dquot_verify(mp, &dqb->dd_diskdq, dqid, quota_type, 0);
--			if (fa) {
-+			if (libxfs_dquot_verify(mp, &dqb->dd_diskdq, dqid,
-+						quota_type, 0) != NULL) {
-  				do_warn(_("%s: Corrupt quota for id %u. "),
-  						quota_string, dqid);
-  				bad_dqb = 1;
-@@ -1401,7 +1401,8 @@ bad:
-  					do_warn(_("Would correct.\n"));
-  				else {
-  					do_warn(_("Corrected.\n"));
--					xfs_dquot_repair(mp, &dqb->dd_diskdq, dqid, quota_type);
-+					libxfs_dquot_repair(mp, &dqb->dd_diskdq,
-+							    dqid, quota_type);
-  					writebuf = 1;
-  				}
-  			}
+> 
+> Please tell me, if you have better ideas:)
+> 
+> PS: This case test passed on XFS(with reflink=1) and btrfs. And the duperemove
+> can reclaim some space in the test, see below:
+> 
+>   Before duperemove
+>     Filesystem                 1K-blocks    Used Available Use% Mounted on
+>     /dev/mapper/xxxx-xfscratch 31441920K 583692K 30858228K   2% /mnt/scratch
+> 
+>   After duperemove
+>     Filesystem                 1K-blocks    Used Available Use% Mounted on
+>     /dev/mapper/xxxx-xfscratch 31441920K 345728K 31096192K   2% /mnt/scratch
+> 
+> Thanks,
+> Zorro
+> 
+>  common/config        |  1 +
+>  tests/shared/008     | 88 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/shared/008.out |  2 ++
+>  tests/shared/group   |  1 +
+>  4 files changed, 92 insertions(+)
+>  create mode 100755 tests/shared/008
+>  create mode 100644 tests/shared/008.out
+> 
+> diff --git a/common/config b/common/config
+> index 02c378a9..def559c1 100644
+> --- a/common/config
+> +++ b/common/config
+> @@ -207,6 +207,7 @@ export SQLITE3_PROG="`set_prog_path sqlite3`"
+>  export TIMEOUT_PROG="`set_prog_path timeout`"
+>  export SETCAP_PROG="`set_prog_path setcap`"
+>  export GETCAP_PROG="`set_prog_path getcap`"
+> +export DUPEREMOVE_PROG="`set_prog_path duperemove`"
+>  
+>  # use 'udevadm settle' or 'udevsettle' to wait for lv to be settled.
+>  # newer systems have udevadm command but older systems like RHEL5 don't.
+> diff --git a/tests/shared/008 b/tests/shared/008
+> new file mode 100755
+> index 00000000..dace5429
+> --- /dev/null
+> +++ b/tests/shared/008
+> @@ -0,0 +1,88 @@
+> +#! /bin/bash
+> +# FS QA Test 008
+> +#
+> +# Dedup integrity test by duperemove
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2018 Red Hat Inc.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +. ./common/reflink
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +# real QA test starts here
+> +
+> +# duperemove only supports btrfs and xfs (with reflink feature).
+> +# Add other filesystems if it supports more later.
+> +_supported_fs xfs btrfs
+> +_supported_os Linux
 
+_require_command "$DUPEREMOVE_PROG" duperemove ?
+
+> +_require_scratch_reflink
+
+_require_scratch_dedupe
+
+> +
+> +[ "$DUPEREMOVE_PROG" = "" ] && _notrun "duperemove not found"
+> +_scratch_mkfs > $seqres.full 2>&1
+> +_scratch_mount >> $seqres.full 2>&1
+> +
+> +testdir=$SCRATCH_MNT/test-$seq
+> +mkdir $testdir
+> +
+> +fsstress_opts="-w -r -f mknod=0"
+> +# Create some files and make a duplicate
+> +$FSSTRESS_PROG $fsstress_opts -d $testdir \
+> +	       -n $((500 * LOAD_FACTOR)) -p 10 >/dev/null 2>&1
+> +duptestdir=${testdir}.dup
+> +cp -a $testdir $duptestdir
+> +
+> +# Make some difference in two directories
+> +$FSSTRESS_PROG $fsstress_opts -d $testdir -n 200 -p 5 >/dev/null 2>&1
+> +$FSSTRESS_PROG $fsstress_opts -d $duptestdir -n 200 -p 5 >/dev/null 2>&1
+> +
+> +# Record all files' md5 checksum
+> +find $testdir -type f -exec md5sum {} \; > $TEST_DIR/${seq}md5.sum
+> +find $duptestdir -type f -exec md5sum {} \; > $TEST_DIR/dup${seq}md5.sum
+> +
+> +# Dedup
+> +echo "== Duperemove output ==" >> $seqres.full
+> +$DUPEREMOVE_PROG -dr $SCRATCH_MNT/ >>$seqres.full 2>&1
+> +
+> +# Verify all files' integrity
+> +md5sum -c --quiet $TEST_DIR/${seq}md5.sum
+> +md5sum -c --quiet $TEST_DIR/dup${seq}md5.sum
+
+Can we _scratch_mount_cycle and md5sum -c again so that we test that the
+pagecache contents don't mutate and a fresh read from the disk also
+doesn't show mutations?
+
+--D
+
+> +
+> +echo "Silence is golden"
+> +
+> +status=0
+> +exit
+> diff --git a/tests/shared/008.out b/tests/shared/008.out
+> new file mode 100644
+> index 00000000..dd68d5a4
+> --- /dev/null
+> +++ b/tests/shared/008.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 008
+> +Silence is golden
+> diff --git a/tests/shared/group b/tests/shared/group
+> index b3663a03..de7fe79f 100644
+> --- a/tests/shared/group
+> +++ b/tests/shared/group
+> @@ -10,6 +10,7 @@
+>  005 dangerous_fuzzers
+>  006 auto enospc
+>  007 dangerous_fuzzers
+> +008 auto quick dedupe
+>  032 mkfs auto quick
+>  272 auto enospc rw
+>  289 auto quick
+> -- 
+> 2.14.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
