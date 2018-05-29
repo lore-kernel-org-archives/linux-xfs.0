@@ -1,199 +1,132 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:42280 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751215AbeE1Dwx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 May 2018 23:52:53 -0400
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: Re: [PATCH 6/7] xfs_scrub: actually check for errors coming from
- close()
-References: <152728629694.22515.17699396814561914788.stgit@magnolia>
- <152728633395.22515.8564988242826363746.stgit@magnolia>
-Message-ID: <7c4dccad-4216-187f-7f84-7e6caf3f44d7@oracle.com>
-Date: Sun, 27 May 2018 20:52:39 -0700
-MIME-Version: 1.0
-In-Reply-To: <152728633395.22515.8564988242826363746.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from mail.kernel.org ([198.145.29.99]:45186 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S967368AbeE2WGH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 29 May 2018 18:06:07 -0400
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v4 0/4] xfsprogs: add mkfs.xfs configuration file parsing support
+Date: Tue, 29 May 2018 15:05:59 -0700
+Message-Id: <20180529220603.29420-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com, "Luis R. Rodriguez" <mcgrof@kernel.org>
 
-Looks ok:
-Reviewed by: Allison Henderson <allison.henderson@oracle.com>
+This is v4 series addresses the feedback from Darrick mostly on man page
+text changes and a few minor code updates listed below. I've also
+amended the patches with Reviewed-by tags where appropriate, and rebased
+it onto the latest origin/for-next branch. The details of the changes in
+this v4 iteration and prior are listed below.
 
-On 05/25/2018 03:12 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Report errors reported by close().
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->   scrub/phase1.c |    6 +++++-
->   scrub/phase3.c |   27 +++++++++++++++++++++++++--
->   scrub/phase5.c |    8 ++++++--
->   scrub/phase6.c |   10 +++++++---
->   scrub/vfs.c    |    4 +++-
->   5 files changed, 46 insertions(+), 9 deletions(-)
-> 
-> 
-> diff --git a/scrub/phase1.c b/scrub/phase1.c
-> index c2b9067a..87847259 100644
-> --- a/scrub/phase1.c
-> +++ b/scrub/phase1.c
-> @@ -60,6 +60,8 @@ bool
->   xfs_cleanup_fs(
->   	struct scrub_ctx	*ctx)
->   {
-> +	int			error;
-> +
->   	if (ctx->fshandle)
->   		free_handle(ctx->fshandle, ctx->fshandle_len);
->   	if (ctx->rtdev)
-> @@ -69,7 +71,9 @@ xfs_cleanup_fs(
->   	if (ctx->datadev)
->   		disk_close(ctx->datadev);
->   	fshandle_destroy();
-> -	close(ctx->mnt_fd);
-> +	error = close(ctx->mnt_fd);
-> +	if (error)
-> +		str_errno(ctx, _("closing mountpoint fd"));
->   	fs_table_destroy();
->   
->   	return true;
-> diff --git a/scrub/phase3.c b/scrub/phase3.c
-> index 68c95e67..cbaa80ba 100644
-> --- a/scrub/phase3.c
-> +++ b/scrub/phase3.c
-> @@ -53,6 +53,25 @@ struct scrub_inode_ctx {
->   	bool			moveon;
->   };
->   
-> +/* Report a filesystem error that the vfs fed us on close. */
-> +static void
-> +xfs_scrub_inode_vfs_error(
-> +	struct scrub_ctx	*ctx,
-> +	struct xfs_bstat	*bstat)
-> +{
-> +	char			descr[DESCR_BUFSZ];
-> +	xfs_agnumber_t		agno;
-> +	xfs_agino_t		agino;
-> +	int			old_errno = errno;
-> +
-> +	agno = bstat->bs_ino / (1ULL << (ctx->inopblog + ctx->agblklog));
-> +	agino = bstat->bs_ino % (1ULL << (ctx->inopblog + ctx->agblklog));
-> +	snprintf(descr, DESCR_BUFSZ, _("inode %"PRIu64" (%u/%u)"),
-> +			(uint64_t)bstat->bs_ino, agno, agino);
-> +	errno = old_errno;
-> +	str_errno(ctx, descr);
-> +}
-> +
->   /* Verify the contents, xattrs, and extent maps of an inode. */
->   static int
->   xfs_scrub_inode(
-> @@ -65,6 +84,7 @@ xfs_scrub_inode(
->   	struct ptcounter	*icount = ictx->icount;
->   	bool			moveon = true;
->   	int			fd = -1;
-> +	int			error;
->   
->   	background_sleep();
->   
-> @@ -116,8 +136,11 @@ xfs_scrub_inode(
->   out:
->   	ptcounter_add(icount, 1);
->   	progress_add(1);
-> -	if (fd >= 0)
-> -		close(fd);
-> +	if (fd >= 0) {
-> +		error = close(fd);
-> +		if (error)
-> +			xfs_scrub_inode_vfs_error(ctx, bstat);
-> +	}
->   	if (!moveon)
->   		ictx->moveon = false;
->   	return ictx->moveon ? 0 : XFS_ITERATE_INODES_ABORT;
-> diff --git a/scrub/phase5.c b/scrub/phase5.c
-> index 01038f77..456f38e2 100644
-> --- a/scrub/phase5.c
-> +++ b/scrub/phase5.c
-> @@ -250,6 +250,7 @@ xfs_scrub_connections(
->   	xfs_agnumber_t		agno;
->   	xfs_agino_t		agino;
->   	int			fd = -1;
-> +	int			error;
->   
->   	agno = bstat->bs_ino / (1ULL << (ctx->inopblog + ctx->agblklog));
->   	agino = bstat->bs_ino % (1ULL << (ctx->inopblog + ctx->agblklog));
-> @@ -285,8 +286,11 @@ xfs_scrub_connections(
->   
->   out:
->   	progress_add(1);
-> -	if (fd >= 0)
-> -		close(fd);
-> +	if (fd >= 0) {
-> +		error = close(fd);
-> +		if (error)
-> +			str_errno(ctx, descr);
-> +	}
->   	if (!moveon)
->   		*pmoveon = false;
->   	return *pmoveon ? 0 : XFS_ITERATE_INODES_ABORT;
-> diff --git a/scrub/phase6.c b/scrub/phase6.c
-> index b533cbbd..26540155 100644
-> --- a/scrub/phase6.c
-> +++ b/scrub/phase6.c
-> @@ -212,7 +212,9 @@ _("Disappeared during read error reporting."));
->   
->   	/* Go find the badness. */
->   	moveon = xfs_report_verify_fd(ctx, descr, fd, arg);
-> -	close(fd);
-> +	error = close(fd);
-> +	if (error)
-> +		str_errno(ctx, descr);
->   
->   	return moveon ? 0 : XFS_ITERATE_INODES_ABORT;
->   }
-> @@ -243,6 +245,7 @@ xfs_report_verify_dirent(
->   {
->   	bool			moveon;
->   	int			fd;
-> +	int			error;
->   
->   	/* Ignore things we can't open. */
->   	if (!S_ISREG(sb->st_mode) && !S_ISDIR(sb->st_mode))
-> @@ -268,8 +271,9 @@ xfs_report_verify_dirent(
->   		goto out;
->   
->   out:
-> -	close(fd);
-> -
-> +	error = close(fd);
-> +	if (error)
-> +		str_errno(ctx, path);
->   	return moveon;
->   }
->   
-> diff --git a/scrub/vfs.c b/scrub/vfs.c
-> index cfb58782..77df2874 100644
-> --- a/scrub/vfs.c
-> +++ b/scrub/vfs.c
-> @@ -86,7 +86,9 @@ scan_fs_dir(
->   	/* Caller-specific directory checks. */
->   	if (!sft->dir_fn(ctx, sftd->path, dir_fd, sft->arg)) {
->   		sft->moveon = false;
-> -		close(dir_fd);
-> +		error = close(dir_fd);
-> +		if (error)
-> +			str_errno(ctx, sftd->path);
->   		goto out;
->   	}
->   
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwICaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=QEHg-4gJOhupzORWTApyuKuBTYX6Sum0GqFWPnC_mCo&s=QA446VHazWxqoc7nECcFGE-upy-amurTz6LUSuZURGg&e=
-> 
+You can also get the code from my kernel.org xfsprogs-dev 20180529-own-parser-v4
+branch [0].
+
+Reviews, questions, or rants are greatly appreciated.
+
+[0] https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/xfsprogs-dev.git/log/?h=20180529-own-parser-v4
+
+Changes on v4:
+
+- Tons of man page documentation enhancements from Darrick.
+
+- Adjusted a few error code messages/ paths to make more sense as per
+  Darrick's feedback.
+
+Changes on v3:
+
+- Prefix errors on the configuration parsing with config file used and
+  exact line.
+
+- Use uint64_t throughout all parsers as requested.
+
+- Parse the CLI early for -c as I originally had implemented this on v1
+  but now platform_getoptreset() to reset the opts.
+
+- Drop the enum for the source type for the configuration file type,
+  note that since we rely on the stack to set the variables we should
+  then always set the dft.src on main().
+
+- Use getline() for fetching lines as requested
+
+- Add a special iscomment() and isempty() to handle all space and
+  comment parsing. Now when PARSE_INVALID issued we really mean it.
+
+- Embrace latest bikeshed preferences:
+        config.c, config.h, random function names
+
+- Add man pages to be parsed via configure so that @sysconfigdir@ gets
+  properly parsed
+
+- get_confopts() now iterates over the known sections tab and gives you
+  the right struct right away.
+
+- Add respecification checks for a section.
+
+- Add respecification checks for -c, -c is only allowed once.
+
+- Add --sysconfigdir to debian/rules, note that if you *don't* set
+  --sysconfigdir your man pages will end up with ${prefix}. We could
+  add a secondary target parsing just in case, or we can do some hacks
+  with autoconf for this, but I don't think its worth it. Other packages
+  deal with this by having ./configure always run with --sysconfigdir
+  set (see systemd for instance).
+
+- Reduced the number of declared enums, only enums for the config
+  subparams which are currently supported for parsing are declared.
+
+- mkfs.xfs -c foo now will search for $PWD/foo and if that fails the
+  sysconfigdir/mkfs.xfs.d/foo.
+
+- mkfs.xfs -c ../foo works and so should ./foo, etc.
+
+- The MKFS_XFS_CONFIG variable support was dropped in favor or just
+  allowing the user to specify the full path now.
+
+- Embraces xfsprogs coding style, c'est la vie.
+
+Changes on v2:
+
+- Stayed with our own parser as its the smallest and we're willing to
+  maintain it as its simple and clear.
+
+- Use -c for the configuration file, and drop the "type" nomenclature to
+  avoid confusion on the interwebs.
+
+- Start to split files off
+
+- Duplicate a bit of items as suggested at LSFMM for the configuration
+  parser structures. We can later consolidate if we think its really
+  needed, however we want the freedom to change these as we see fit and
+  most importantly keep the code apart.
+
+- Conflict resolution and validation is managed now by piggy backing off
+  of the idea of using the defaults to instantiate CLI parameters. CLI
+  always overrides.
+
+Luis R. Rodriguez (4):
+  mkfs: distinguish between struct sb_feat_args and struct cli_params
+  mkfs: move shared config structs and into their own headers
+  mkfs.xfs: add configuration file parsing support using our own parser
+  debian/rules: use the new sysconfdir configuration setting
+
+ configure.ac                           |   6 +-
+ debian/rules                           |   4 +-
+ include/builddefs.in                   |   2 +
+ man/man5/Makefile                      |   2 +
+ man/man5/mkfs.xfs.d.5.in               | 151 ++++++++
+ man/man8/Makefile                      |   2 +
+ man/man8/{mkfs.xfs.8 => mkfs.xfs.8.in} |  27 ++
+ mkfs/Makefile                          |   2 +-
+ mkfs/config.c                          | 645 +++++++++++++++++++++++++++++++++
+ mkfs/config.h                          |  86 +++++
+ mkfs/xfs_mkfs.c                        | 130 ++++---
+ 11 files changed, 994 insertions(+), 63 deletions(-)
+ create mode 100644 man/man5/mkfs.xfs.d.5.in
+ rename man/man8/{mkfs.xfs.8 => mkfs.xfs.8.in} (96%)
+ create mode 100644 mkfs/config.c
+ create mode 100644 mkfs/config.h
+
+-- 
+2.16.3
+
