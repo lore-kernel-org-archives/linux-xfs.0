@@ -1,57 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53398 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932949AbeE2L0d (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 29 May 2018 07:26:33 -0400
-Date: Tue, 29 May 2018 07:26:31 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 22/34] xfs: make xfs_writepage_map extent map centric
-Message-ID: <20180529112630.GA107328@bfoster.bfoster>
-References: <20180523144357.18985-1-hch@lst.de>
- <20180523144357.18985-23-hch@lst.de>
- <20180524145935.GA84959@bfoster.bfoster>
- <20180524165350.GA22675@lst.de>
- <20180524181356.GA89391@bfoster.bfoster>
- <20180525061900.GA16409@lst.de>
- <20180525113532.GA92036@bfoster.bfoster>
- <20180528071543.GA5428@lst.de>
+Received: from aserp2120.oracle.com ([141.146.126.78]:36698 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935216AbeE2P2D (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 May 2018 11:28:03 -0400
+Date: Tue, 29 May 2018 08:28:00 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 03/22] xfs: add helpers to collect and sift btree
+ block pointers during repair
+Message-ID: <20180529152800.GE30110@magnolia>
+References: <152642361893.1556.9335169821674946249.stgit@magnolia>
+ <152642363794.1556.12771807615463619233.stgit@magnolia>
+ <20180518035155.GZ23858@magnolia>
+ <20180529031001.GJ10363@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180528071543.GA5428@lst.de>
+In-Reply-To: <20180529031001.GJ10363@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, Allison Henderson <allison.henderson@oracle.com>
 
-On Mon, May 28, 2018 at 09:15:43AM +0200, Christoph Hellwig wrote:
-> On Fri, May 25, 2018 at 07:35:33AM -0400, Brian Foster wrote:
-> > That comment is what I'm basing on...
+On Tue, May 29, 2018 at 01:10:01PM +1000, Dave Chinner wrote:
+> On Thu, May 17, 2018 at 08:51:55PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > > 	/*
-> > > 	 * We can end up here with no error and nothing to write if we
-> > > 	 * race with a partial page truncate on a sub-page block sized
-> > > 	 * filesystem. In that case we need to mark the page clean.
-> > > 	 */
-> > > 
+> > Add some helpers to assemble a list of fs block extents.  Generally,
+> > repair functions will iterate the rmapbt to make a list (1) of all
+> > extents owned by the nominal owner of the metadata structure; then they
+> > will iterate all other structures with the same rmap owner to make a
+> > list (2) of active blocks; and finally we have a subtraction function to
+> > subtract all the blocks in (2) from (1), with the result that (1) is now
+> > a list of blocks that were owned by the old btree and must be disposed.
 > > 
-> > So we can correctly end up with nothing to write on a dirty page, but it
-> > presumes a race with truncate. So suppose we end up with a dirty page,
-> >
-> > at least one uptodate block, count is zero (i.e., due to holes) and
-> > i_size is beyond the page. Would that not be completely bogus? If bogus,
-> > I think that would at least detect the dumb example I posted earlier.
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> > v2: document the design of how repair functions are supposed to work,
+> >     implement review comments
+> > ---
 > 
-> The trivial file_offset >= i_size_read assert explodes pretty soon
-> in generic/091, and already does so with the existing mainline code.
+> Much easier to understand now. Thanks!
 > 
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> 
+> One thing for a followup patch, though.
+> 
+> > +/* Collect a dead btree extent for later disposal. */
+> > +int
+> > +xfs_repair_collect_btree_extent(
+> > +	struct xfs_scrub_context	*sc,
+> > +	struct xfs_repair_extent_list	*exlist,
+> > +	xfs_fsblock_t			fsbno,
+> > +	xfs_extlen_t			len)
+> > +{
+> > +	struct xfs_repair_extent	*rex;
+> > +
+> > +	trace_xfs_repair_collect_btree_extent(sc->mp,
+> > +			XFS_FSB_TO_AGNO(sc->mp, fsbno),
+> > +			XFS_FSB_TO_AGBNO(sc->mp, fsbno), len);
+> > +
+> > +	rex = kmem_alloc(sizeof(struct xfs_repair_extent), KM_MAYFAIL);
+> > +	if (!rex)
+> > +		return -ENOMEM;
+> > +
+> > +	INIT_LIST_HEAD(&rex->list);
+> > +	rex->fsbno = fsbno;
+> > +	rex->len = len;
+> 
+> This allocation is repeated a couple of times. Single function to do
+> it would be nice to encapsulate alloc+setup - something like rex =
+> alloc_rex(fsbno, len) which returns NULL if it fails.
+> 
+> > +		case LEFT_ALIGNED | RIGHT_ALIGNED:
+> > +			/* Total overlap, just delete ex. */
+> > +			lp = lp->next;
+> > +			list_del(&ex->list);
+> > +			kmem_free(ex);
+> > +			break;
+> > +		case 0:
+> > +			/*
+> > +			 * Deleting from the middle: add the new right extent
+> > +			 * and then shrink the left extent.
+> > +			 */
+> > +			newex = kmem_alloc(sizeof(struct xfs_repair_extent),
+> > +					KM_MAYFAIL);
+> > +			if (!newex) {
+> > +				error = -ENOMEM;
+> > +				goto out;
+> > +			}
+> > +			INIT_LIST_HEAD(&newex->list);
+> > +			newex->fsbno = sub_fsb + sub_len;
+> > +			newex->len = ex->fsbno + ex->len - newex->fsbno;
+> 
+> This is the other place it is called...
 
-What exactly is the trivial check? Can you show the code please?
+<nod> I'll add this to the pile of enhancements to come after
+upstreaming; maybe this will turn into more generic per-ag bitmap
+structure.
 
-Brian
+I'd also like to replace the list usage in the later repair patches with
+some kind of sort-once array structure and an xfs_btree_bulkload to
+reduce overhead and memory consumption.
 
-> I'd rather not open another can of worms right now..
+--D
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
