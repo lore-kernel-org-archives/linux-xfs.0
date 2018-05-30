@@ -1,155 +1,146 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:59212 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S937100AbeE3DWO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 May 2018 23:22:14 -0400
-Date: Tue, 29 May 2018 20:22:02 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 06/22] xfs: add a repair helper to reset superblock
- counters
-Message-ID: <20180530032202.GN30110@magnolia>
-References: <152642361893.1556.9335169821674946249.stgit@magnolia>
- <152642365674.1556.6776151224606075985.stgit@magnolia>
- <20180518035623.GD23858@magnolia>
- <20180529032810.GM10363@dastard>
- <20180529220716.GK30110@magnolia>
- <20180529222428.GR10363@dastard>
- <20180529224332.GL30110@magnolia>
- <20180530012332.GS10363@dastard>
+Received: from mx1.redhat.com ([209.132.183.28]:56099 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752634AbeE3Nfl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 30 May 2018 09:35:41 -0400
+Date: Wed, 30 May 2018 09:35:39 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 03/18] xfs: simplify xfs_bmap_punch_delalloc_range
+Message-ID: <20180530133538.GC112411@bfoster.bfoster>
+References: <20180530100013.31358-1-hch@lst.de>
+ <20180530100013.31358-4-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180530012332.GS10363@dastard>
+In-Reply-To: <20180530100013.31358-4-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-On Wed, May 30, 2018 at 11:23:33AM +1000, Dave Chinner wrote:
-> On Tue, May 29, 2018 at 03:43:32PM -0700, Darrick J. Wong wrote:
-> > On Wed, May 30, 2018 at 08:24:28AM +1000, Dave Chinner wrote:
-> > > On Tue, May 29, 2018 at 03:07:16PM -0700, Darrick J. Wong wrote:
-> > > > On Tue, May 29, 2018 at 01:28:10PM +1000, Dave Chinner wrote:
-> > > > > On Thu, May 17, 2018 at 08:56:23PM -0700, Darrick J. Wong wrote:
-> > > > > > +	/*
-> > > > > > +	 * Reinitialize the counters.  The on-disk and in-core counters differ
-> > > > > > +	 * by the number of inodes/blocks reserved by the admin, the per-AG
-> > > > > > +	 * reservation, and any transactions in progress, so we have to
-> > > > > > +	 * account for that.  First we take the sb lock and update its
-> > > > > > +	 * counters...
-> > > > > > +	 */
-> > > > > > +	spin_lock(&mp->m_sb_lock);
-> > > > > > +	delta_icount = (int64_t)mp->m_sb.sb_icount - icount;
-> > > > > > +	delta_ifree = (int64_t)mp->m_sb.sb_ifree - ifree;
-> > > > > > +	delta_fdblocks = (int64_t)mp->m_sb.sb_fdblocks - fdblocks;
-> > > > > > +	mp->m_sb.sb_icount = icount;
-> > > > > > +	mp->m_sb.sb_ifree = ifree;
-> > > > > > +	mp->m_sb.sb_fdblocks = fdblocks;
-> > > > > > +	spin_unlock(&mp->m_sb_lock);
-> > > > > 
-> > > > > This seems racy to me ? i.e. the per-ag counters can change while
-> > > > > we are summing them, and once we've summed them then sb counters
-> > > > > can change while we are waiting for the m_sb_lock. It's looks to me
-> > > > > like the summed per-ag counters are not in any way coherent
-> > > > > wit the superblock or the in-core per-CPU counters, so I'm
-> > > > > struggling to understand why this is safe?
-> > > > 
-> > > > Hmm, yes, I think this is racy too.  The purpose of this code is to
-> > > > recompute the global counters from the AG counters after any operation
-> > > > that modifies anything that would affect the icount/ifreecount/fdblocks
-> > > > counters...
-> > > 
-> > > *nod*
-> > > 
-> > > > > We can do this sort of summation at mount time (in
-> > > > > xfs_initialize_perag_data()) because the filesystem is running
-> > > > > single threaded while the summation is taking place and so nothing
-> > > > > is changing during th summation. The filesystem is active in this
-> > > > > case, so I don't think we can do the same thing here.
-> > > > 
-> > > > ...however, you're correct to point out that the fs must be quiesced
-> > > > before we can actually do this.  In other words, I think the filesystem
-> > > > has to be completely frozen before we can do this.  Perhaps it's better
-> > > > to have the per-ag rebuilders fix only the per-ag counters and leave the
-> > > > global counters alone.  Then add a new scrubber that checks the summary
-> > > > counters and fixes them if necessary.
-> > > 
-> > > So the question here is whether we actually need to accurately
-> > > correct the global superblock counters?
-> > 
-> > I think so, because what happens if the superblock counter is
-> > artificially high but the AGs do not actually have the free space?
-> > xfs_trans_reserve won't ENOSPC like it should, so we could end up
-> > blowing out of transactions and shutting down because some allocation
-> > that has to succeed ("because trans_reserve said there was space!")
-> > fails...
+On Wed, May 30, 2018 at 11:59:58AM +0200, Christoph Hellwig wrote:
+> Instead of using xfs_bmapi_read to find delalloc extents and then punch
+> them out using xfs_bunmapi, opencode the loop to iterate over the extents
+> and call xfs_bmap_del_extent_delay directly.  This both simplifies the
+> code and reduces the number of extent tree lookups required.
 > 
-> Yes, but I would have thought the reset will get us close enough
-> that this wouldn't be an issue for the vast majority of people.
-
-<nod> I'll adjust the sb counters based on the agf/agi/inobt adjustments
-and we'll leave verifying and/or fixing the superblock counters as a
-Future Research Topic(tm).
-
-> And the other side of it is that if we get close enough to ENOSPC
-> that it matters, we could freeze/sum/thaw to be fully accurate on
-> demand in xfs_trans_reserve(), right? We already slow down greatly
-> at ENOSPC, so at that point the perf overhead fo a freeze/thaw cycle
-> just doesn't matter...
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_bmap_util.c | 84 ++++++++++++++----------------------------
+>  1 file changed, 28 insertions(+), 56 deletions(-)
 > 
-> > > We know that if we have a dirty unmount, the counters will we
-> > > re-initialised on mount from the AG header information, so perhaps
-> > > what we need here is a flag to tell unmount to dirty the log again
-> > > after it has written the unmount record (like we currently do for
-> > > quiesce).
-> > 
-> > ...but now that we've repaired the filesystem, it could potentially run
-> > for a very long time until the next unmount.  During that run, we'd be
-> > misleading users about the real amount of free space and risking a hard
-> > shutdown.  I prefer that online repair try not to leave any weird state
-> > around after xfs_scrub exits.
-> 
-> Sure, but user's may not want a freeze/read-all-ag-headers/thaw
-> cycle as part of repair if it can be avoided. If there are thousands
-> of AGs, this could take many seconds....
-> 
-> > > That was we can do a racy "near enough" update here to get us out of
-> > > the worst of the space accounting mismatches, knowing that on the
-> > > next mount it will be accurately rebuilt.
-> > >
-> > > Thoughts?
-> > 
-> > Well, I think the best solution is to have the AGF/AGI/inobt rebuilders
-> > adjust the global counters by the same amount that they're adjusting the
-> > counters in the AGF/AGI, then add a new scrubber that runs at the end to
-> > freeze the fs and check/repair the global counter state. :)
-> 
-> I'm just not convinced that we can get away with a global freeze to
-> do this summation without having noticable impact on applications.
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 06badcbadeb4..f2b87873612d 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -695,12 +695,10 @@ xfs_getbmap(
+>  }
+>  
+>  /*
+> - * dead simple method of punching delalyed allocation blocks from a range in
+> - * the inode. Walks a block at a time so will be slow, but is only executed in
+> - * rare error cases so the overhead is not critical. This will always punch out
+> - * both the start and end blocks, even if the ranges only partially overlap
+> - * them, so it is up to the caller to ensure that partial blocks are not
+> - * passed in.
+> + * Dead simple method of punching delalyed allocation blocks from a range in
+> + * the inode.  This will always punch out both the start and end blocks, even
+> + * if the ranges only partially overlap them, so it is up to the caller to
+> + * ensure that partial blocks are not passed in.
+>   */
+>  int
+>  xfs_bmap_punch_delalloc_range(
+> @@ -708,63 +706,37 @@ xfs_bmap_punch_delalloc_range(
+>  	xfs_fileoff_t		start_fsb,
+>  	xfs_fileoff_t		length)
+>  {
+...
+> +	if (!xfs_iext_lookup_extent_before(ip, ifp, &end_fsb, &icur, &got))
+> +		return 0;
+>  
+> -		/*
+> -		 * Note: while we initialise the firstblock/dfops pair, they
+> -		 * should never be used because blocks should never be
+> -		 * allocated or freed for a delalloc extent and hence we need
+> -		 * don't cancel or finish them after the xfs_bunmapi() call.
+> -		 */
+> -		xfs_defer_init(&dfops, &firstblock);
+> -		error = xfs_bunmapi(NULL, ip, start_fsb, 1, 0, 1, &firstblock,
+> -					&dfops, &done);
+> -		if (error)
+> -			break;
+> +	while (got.br_startoff + got.br_blockcount > start_fsb) {
+> +		del = got;
+> +		xfs_trim_extent(&del, start_fsb, length);
+>  
+> -		ASSERT(!xfs_defer_has_unfinished_work(&dfops));
+> -next_block:
+> -		start_fsb++;
+> -		remaining--;
+> -	} while(remaining > 0);
+> +		if (del.br_blockcount && isnullstartblock(del.br_startblock)) {
 
-Admittedly, online repair has a semi-implicit design assumption that
-either (a) it's running on fast enough storage that a bunch of random
-IOs won't seriously harm performance or (b) whoever runs the client
-program will throttle it to avoid starving regular operations, and (c)
-repairs will not frequently be required.
+I think there's subtle behavior here that warrants a comment (and
+describes the somewhat funky logic). E.g., something like:
 
-Of course, the fsfreeze repairs totally blow (b) out of the water, which
-means that in the long run I'm going to have to find a way shorten the
-runtime of those repair types (rmap, quota).  If (a) is true then maybe
-we can parallelize some of the AG accesses to reduce freeze time.  I'm
-hoping that will reduce the pain of such things, though.  $god help the
-users on floppy disks.
+/*
+ * got might point to the extent after del in some cases. The next
+ * iteration will detect this and step back to the previous extent.
+ */
 
---D
+Alternatively, I find separating the if/else a bit more readable (see
+the appended hunk). But otherwise looks fine:
 
-> Cheers,
-> 
-> Dave.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> +			error = xfs_bmap_del_extent_delay(ip, XFS_DATA_FORK,
+> +					&icur, &got, &del);
+> +			if (error || !xfs_iext_get_extent(ifp, &icur, &got))
+> +				break;
+> +		} else {
+> +			if (!xfs_iext_prev_extent(ifp, &icur, &got))
+> +				break;
+> +		}
+> +	}
+>  
+>  	return error;
+>  }
 > -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 2.17.0
+
+--- 8< ---
+
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index f2b87873612d..0070b877ed94 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -727,15 +727,22 @@ xfs_bmap_punch_delalloc_range(
+ 		del = got;
+ 		xfs_trim_extent(&del, start_fsb, length);
+ 
+-		if (del.br_blockcount && isnullstartblock(del.br_startblock)) {
+-			error = xfs_bmap_del_extent_delay(ip, XFS_DATA_FORK,
+-					&icur, &got, &del);
+-			if (error || !xfs_iext_get_extent(ifp, &icur, &got))
+-				break;
+-		} else {
++		/*
++		 * A delete can push the cursor forward. Step back to the
++		 * previous extent on non-delalloc or extents outside the
++		 * target range.
++		 */
++		if (!del.br_blockcount ||
++		    !isnullstartblock(del.br_startblock)) {
+ 			if (!xfs_iext_prev_extent(ifp, &icur, &got))
+ 				break;
++			continue;
+ 		}
++
++		error = xfs_bmap_del_extent_delay(ip, XFS_DATA_FORK, &icur,
++						  &got, &del);
++		if (error || !xfs_iext_get_extent(ifp, &icur, &got))
++			break;
+ 	}
+ 
+ 	return error;
