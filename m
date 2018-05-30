@@ -1,107 +1,120 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35186 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935919AbeE3IN6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 30 May 2018 04:13:58 -0400
-Date: Wed, 30 May 2018 10:13:56 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 05/11] filesystem-dax: set page->index
-Message-ID: <20180530081356.mohu6fx22fzd7fxb@quack2.suse.cz>
-References: <152699997165.24093.12194490924829406111.stgit@dwillia2-desk3.amr.corp.intel.com>
- <152699999778.24093.18007971664703285330.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20180523084030.dvv4jbvsnzrsaz6q@quack2.suse.cz>
- <CAPcyv4gUM7Br3XONOVkNCg-mvR5U8QLq+OOc54cLpP61LXhJXA@mail.gmail.com>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:41396 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S965209AbeE3Jai (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 30 May 2018 05:30:38 -0400
+Subject: Re: [Cluster-devel] [PATCH 11/34] iomap: move IOMAP_F_BOUNDARY to
+ gfs2
+References: <20180523144357.18985-1-hch@lst.de>
+ <20180523144357.18985-12-hch@lst.de> <20180530055033.GZ30110@magnolia>
+From: Steven Whitehouse <swhiteho@redhat.com>
+Message-ID: <bc621d7c-f1a6-14c2-663f-57ded16811fa@redhat.com>
+Date: Wed, 30 May 2018 10:30:32 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4gUM7Br3XONOVkNCg-mvR5U8QLq+OOc54cLpP61LXhJXA@mail.gmail.com>
+In-Reply-To: <20180530055033.GZ30110@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Jan Kara <jack@suse.cz>, linux-nvdimm <linux-nvdimm@lists.01.org>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Linux MM <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "Luck, Tony" <tony.luck@intel.com>, linux-xfs <linux-xfs@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com, linux-mm@kvack.org
 
-On Tue 29-05-18 18:38:41, Dan Williams wrote:
-> On Wed, May 23, 2018 at 1:40 AM, Jan Kara <jack@suse.cz> wrote:
-> > On Tue 22-05-18 07:39:57, Dan Williams wrote:
-> >> In support of enabling memory_failure() handling for filesystem-dax
-> >> mappings, set ->index to the pgoff of the page. The rmap implementation
-> >> requires ->index to bound the search through the vma interval tree. The
-> >> index is set and cleared at dax_associate_entry() and
-> >> dax_disassociate_entry() time respectively.
-> >>
-> >> Cc: Jan Kara <jack@suse.cz>
-> >> Cc: Christoph Hellwig <hch@lst.de>
-> >> Cc: Matthew Wilcox <mawilcox@microsoft.com>
-> >> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
-> >> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> >> ---
-> >>  fs/dax.c |   11 ++++++++---
-> >>  1 file changed, 8 insertions(+), 3 deletions(-)
-> >>
-> >> diff --git a/fs/dax.c b/fs/dax.c
-> >> index aaec72ded1b6..2e4682cd7c69 100644
-> >> --- a/fs/dax.c
-> >> +++ b/fs/dax.c
-> >> @@ -319,18 +319,22 @@ static unsigned long dax_radix_end_pfn(void *entry)
-> >>       for (pfn = dax_radix_pfn(entry); \
-> >>                       pfn < dax_radix_end_pfn(entry); pfn++)
-> >>
-> >> -static void dax_associate_entry(void *entry, struct address_space *mapping)
-> >> +static void dax_associate_entry(void *entry, struct address_space *mapping,
-> >> +             struct vm_area_struct *vma, unsigned long address)
-> >>  {
-> >> -     unsigned long pfn;
-> >> +     unsigned long size = dax_entry_size(entry), pfn, index;
-> >> +     int i = 0;
-> >>
-> >>       if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
-> >>               return;
-> >>
-> >> +     index = linear_page_index(vma, address & ~(size - 1));
-> >>       for_each_mapped_pfn(entry, pfn) {
-> >>               struct page *page = pfn_to_page(pfn);
-> >>
-> >>               WARN_ON_ONCE(page->mapping);
-> >>               page->mapping = mapping;
-> >> +             page->index = index + i++;
-> >>       }
-> >>  }
-> >
-> > Hum, this just made me think: How is this going to work with XFS reflink?
-> > In fact is not the page->mapping association already broken by XFS reflink?
-> > Because with reflink we can have two or more mappings pointing to the same
-> > physical blocks (i.e., pages in DAX case)...
-> 
-> Good question. I assume we are ok in the non-DAX reflink case because
-> rmap of failing / poison pages is only relative to the specific page
-> cache page for a given inode in the reflink. However, DAX would seem
-> to break this because we only get one shared 'struct page' for all
-> possible mappings of the physical file block. I think this means for
-> iterating over the rmap of "where is this page mapped" would require
-> iterating over the other "sibling" inodes that know about the given
-> physical file block.
-> 
-> As far as I can see reflink+dax would require teaching kernel code
-> paths that ->mapping may not be a singular relationship. Something
-> along the line's of what Jerome was presenting at LSF to create a
-> special value to indicate, "call back into the filesystem (or the page
-> owner)" to perform this operation.
-> 
-> In the meantime the kernel crashes when userspace accesses poisoned
-> pmem via DAX. I assume that reworking rmap for the dax+reflink case
-> should not block dax poison handling? Yell if you disagree.
+Hi,
 
-The thing is, up until get_user_pages() vs truncate series ("fs, dax: use
-page->mapping to warn if truncate collides with a busy page" in
-particular), DAX was perfectly fine with reflinks since we never needed
-page->mapping. Now this series adds even page->index dependency which makes
-life for rmap with reflinks even harder. So if nothing else we should at
-least make sure reflinked filesystems cannot be mounted with dax mount
-option for now and seriously start looking into how to implement rmap with
-reflinked files for DAX because this noticeably reduces its usefulness.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+On 30/05/18 06:50, Darrick J. Wong wrote:
+> On Wed, May 23, 2018 at 04:43:34PM +0200, Christoph Hellwig wrote:
+>> Just define a range of fs specific flags and use that in gfs2 instead of
+>> exposing this internal flag flobally.
+>>
+>> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Looks ok to me, but better if the gfs2 folks [cc'd now] ack this...
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+>
+> --D
+I may have missed the context here, but I thought that the boundary was 
+a generic thing meaning "there will have to be a metadata read before 
+more blocks can be mapped" so I'm not sure why that would now be GFS2 
+specific?
+
+Steve.
+
+>> ---
+>>   fs/gfs2/bmap.c        | 8 +++++---
+>>   include/linux/iomap.h | 9 +++++++--
+>>   2 files changed, 12 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/fs/gfs2/bmap.c b/fs/gfs2/bmap.c
+>> index cbeedd3cfb36..8efa6297e19c 100644
+>> --- a/fs/gfs2/bmap.c
+>> +++ b/fs/gfs2/bmap.c
+>> @@ -683,6 +683,8 @@ static void gfs2_stuffed_iomap(struct inode *inode, struct iomap *iomap)
+>>   	iomap->type = IOMAP_INLINE;
+>>   }
+>>   
+>> +#define IOMAP_F_GFS2_BOUNDARY IOMAP_F_PRIVATE
+>> +
+>>   /**
+>>    * gfs2_iomap_begin - Map blocks from an inode to disk blocks
+>>    * @inode: The inode
+>> @@ -774,7 +776,7 @@ int gfs2_iomap_begin(struct inode *inode, loff_t pos, loff_t length,
+>>   	bh = mp.mp_bh[ip->i_height - 1];
+>>   	len = gfs2_extent_length(bh->b_data, bh->b_size, ptr, lend - lblock, &eob);
+>>   	if (eob)
+>> -		iomap->flags |= IOMAP_F_BOUNDARY;
+>> +		iomap->flags |= IOMAP_F_GFS2_BOUNDARY;
+>>   	iomap->length = (u64)len << inode->i_blkbits;
+>>   
+>>   out_release:
+>> @@ -846,12 +848,12 @@ int gfs2_block_map(struct inode *inode, sector_t lblock,
+>>   
+>>   	if (iomap.length > bh_map->b_size) {
+>>   		iomap.length = bh_map->b_size;
+>> -		iomap.flags &= ~IOMAP_F_BOUNDARY;
+>> +		iomap.flags &= ~IOMAP_F_GFS2_BOUNDARY;
+>>   	}
+>>   	if (iomap.addr != IOMAP_NULL_ADDR)
+>>   		map_bh(bh_map, inode->i_sb, iomap.addr >> inode->i_blkbits);
+>>   	bh_map->b_size = iomap.length;
+>> -	if (iomap.flags & IOMAP_F_BOUNDARY)
+>> +	if (iomap.flags & IOMAP_F_GFS2_BOUNDARY)
+>>   		set_buffer_boundary(bh_map);
+>>   	if (iomap.flags & IOMAP_F_NEW)
+>>   		set_buffer_new(bh_map);
+>> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+>> index 13d19b4c29a9..819e0cd2a950 100644
+>> --- a/include/linux/iomap.h
+>> +++ b/include/linux/iomap.h
+>> @@ -27,8 +27,7 @@ struct vm_fault;
+>>    * written data and requires fdatasync to commit them to persistent storage.
+>>    */
+>>   #define IOMAP_F_NEW		0x01	/* blocks have been newly allocated */
+>> -#define IOMAP_F_BOUNDARY	0x02	/* mapping ends at metadata boundary */
+>> -#define IOMAP_F_DIRTY		0x04	/* uncommitted metadata */
+>> +#define IOMAP_F_DIRTY		0x02	/* uncommitted metadata */
+>>   
+>>   /*
+>>    * Flags that only need to be reported for IOMAP_REPORT requests:
+>> @@ -36,6 +35,12 @@ struct vm_fault;
+>>   #define IOMAP_F_MERGED		0x10	/* contains multiple blocks/extents */
+>>   #define IOMAP_F_SHARED		0x20	/* block shared with another file */
+>>   
+>> +/*
+>> + * Flags from 0x1000 up are for file system specific usage:
+>> + */
+>> +#define IOMAP_F_PRIVATE		0x1000
+>> +
+>> +
+>>   /*
+>>    * Magic value for addr:
+>>    */
+>> -- 
+>> 2.17.0
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
