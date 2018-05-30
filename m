@@ -1,164 +1,138 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:38510 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:38700 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751755AbeE3KBd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 May 2018 06:01:33 -0400
+        with ESMTP id S1751808AbeE3KCY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 May 2018 06:02:24 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 18/18] xfs: allow writeback on pages without buffer heads
-Date: Wed, 30 May 2018 12:00:13 +0200
-Message-Id: <20180530100013.31358-19-hch@lst.de>
-In-Reply-To: <20180530100013.31358-1-hch@lst.de>
-References: <20180530100013.31358-1-hch@lst.de>
+Subject: [PATCH 3/3] fs: use ->is_partially_uptodate in page_cache_seek_hole_data
+Date: Wed, 30 May 2018 12:02:08 +0200
+Message-Id: <20180530100208.31490-4-hch@lst.de>
+In-Reply-To: <20180530100208.31490-1-hch@lst.de>
+References: <20180530100208.31490-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+Cc: Andreas Gruenbacher <agruenba@redhat.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-Disable the IOMAP_F_BUFFER_HEAD flag on file systems with a block size
-equal to the page size, and deal with pages without buffer heads in
-writeback.  Thanks to the previous refactoring this is basically trivial
-now.
+This way the implementation doesn't depend on buffer_head internals.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_aops.c  | 47 +++++++++++++++++++++++++++++++++-------------
- fs/xfs/xfs_iomap.c |  3 ++-
- 2 files changed, 36 insertions(+), 14 deletions(-)
+ fs/iomap.c | 85 +++++++++++++++++++++++++-----------------------------
+ 1 file changed, 39 insertions(+), 46 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 84f88cecd2f1..6640377b6eae 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -91,6 +91,19 @@ xfs_find_daxdev_for_inode(
- 		return mp->m_ddev_targp->bt_daxdev;
+diff --git a/fs/iomap.c b/fs/iomap.c
+index e75153f52748..5b92243808d3 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -794,36 +794,51 @@ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
+ }
+ EXPORT_SYMBOL_GPL(iomap_fiemap);
+ 
+-/*
+- * Seek for SEEK_DATA / SEEK_HOLE within @page, starting at @lastoff.
+- *
+- * Returns the offset within the file on success, and -ENOENT otherwise.
+- */
+-static loff_t
+-page_seek_hole_data(struct page *page, loff_t lastoff, int whence)
++static bool
++page_seek_hole_data(struct inode *inode, struct page *page, loff_t *lastoff,
++		int whence)
+ {
+-	loff_t offset = page_offset(page);
+-	struct buffer_head *bh, *head;
++	const struct address_space_operations *ops = inode->i_mapping->a_ops;
++	unsigned int bsize = i_blocksize(inode), off;
+ 	bool seek_data = whence == SEEK_DATA;
++	loff_t poff = page_offset(page);
+ 
+-	if (lastoff < offset)
+-		lastoff = offset;
+-
+-	bh = head = page_buffers(page);
+-	do {
+-		offset += bh->b_size;
+-		if (lastoff >= offset)
+-			continue;
++	if (WARN_ON_ONCE(*lastoff >= poff + PAGE_SIZE))
++		return false;
+ 
++	if (*lastoff < poff) {
+ 		/*
+-		 * Any buffer with valid data in it should have BH_Uptodate set.
++		 * Last offset smaller than the start of the page means we found
++		 * a hole:
+ 		 */
+-		if (buffer_uptodate(bh) == seek_data)
+-			return lastoff;
++		if (whence == SEEK_HOLE)
++			return true;
++		*lastoff = poff;
++	}
++
++	/*
++	 * Just check the page unless we can and should check block ranges:
++	 */
++	if (bsize == PAGE_SIZE || !ops->is_partially_uptodate)
++		return PageUptodate(page) == seek_data;
+ 
+-		lastoff = offset;
+-	} while ((bh = bh->b_this_page) != head);
+-	return -ENOENT;
++	lock_page(page);
++	if (unlikely(page->mapping != inode->i_mapping))
++		goto out_unlock_not_found;
++
++	for (off = 0; off < PAGE_SIZE; off += bsize) {
++		if ((*lastoff & ~PAGE_MASK) >= off + bsize)
++			continue;
++		if (ops->is_partially_uptodate(page, off, bsize) == seek_data) {
++			unlock_page(page);
++			return true;
++		}
++		*lastoff = poff + off + bsize;
++	}
++
++out_unlock_not_found:
++	unlock_page(page);
++	return false;
  }
  
-+static void
-+xfs_finish_page_writeback(
-+	struct inode		*inode,
-+	struct bio_vec		*bvec,
-+	int			error)
-+{
-+	if (error) {
-+		SetPageError(bvec->bv_page);
-+		mapping_set_error(inode->i_mapping, -EIO);
-+	}
-+	end_page_writeback(bvec->bv_page);
-+}
-+
  /*
-  * We're now finished for good with this page.  Update the page state via the
-  * associated buffer_heads, paying attention to the start and end offsets that
-@@ -103,7 +116,7 @@ xfs_find_daxdev_for_inode(
-  * and buffers potentially freed after every call to end_buffer_async_write.
-  */
- static void
--xfs_finish_page_writeback(
-+xfs_finish_buffer_writeback(
- 	struct inode		*inode,
- 	struct bio_vec		*bvec,
- 	int			error)
-@@ -178,9 +191,12 @@ xfs_destroy_ioend(
- 			next = bio->bi_private;
+@@ -860,30 +875,8 @@ page_cache_seek_hole_data(struct inode *inode, loff_t offset, loff_t length,
+ 		for (i = 0; i < nr_pages; i++) {
+ 			struct page *page = pvec.pages[i];
  
- 		/* walk each page on bio, ending page IO on them */
--		bio_for_each_segment_all(bvec, bio, i)
--			xfs_finish_page_writeback(inode, bvec, error);
+-			/*
+-			 * At this point, the page may be truncated or
+-			 * invalidated (changing page->mapping to NULL), or
+-			 * even swizzled back from swapper_space to tmpfs file
+-			 * mapping.  However, page->index will not change
+-			 * because we have a reference on the page.
+-                         *
+-			 * If current page offset is beyond where we've ended,
+-			 * we've found a hole.
+-                         */
+-			if (whence == SEEK_HOLE &&
+-			    lastoff < page_offset(page))
++			if (page_seek_hole_data(inode, page, &lastoff, whence))
+ 				goto check_range;
 -
-+		bio_for_each_segment_all(bvec, bio, i) {
-+			if (page_has_buffers(bvec->bv_page))
-+				xfs_finish_buffer_writeback(inode, bvec, error);
-+			else
-+				xfs_finish_page_writeback(inode, bvec, error);
-+		}
- 		bio_put(bio);
- 	}
- 
-@@ -782,13 +798,16 @@ xfs_writepage_map(
- {
- 	LIST_HEAD(submit_list);
- 	struct xfs_ioend	*ioend, *next;
--	struct buffer_head	*bh;
-+	struct buffer_head	*bh = NULL;
- 	ssize_t			len = i_blocksize(inode);
- 	int			error = 0;
- 	int			count = 0;
- 	loff_t			file_offset;	/* file offset of page */
- 	unsigned		poffset;	/* offset into page */
- 
-+	if (page_has_buffers(page))
-+		bh = page_buffers(page);
-+
- 	/*
- 	 * Walk the blocks on the page, and we we run off then end of the
- 	 * current map or find the current map invalid, grab a new one.
-@@ -797,11 +816,9 @@ xfs_writepage_map(
- 	 * replace the bufferhead with some other state tracking mechanism in
- 	 * future.
- 	 */
--	file_offset = page_offset(page);
--	bh = page_buffers(page);
--	for (poffset = 0;
-+	for (poffset = 0, file_offset = page_offset(page);
- 	     poffset < PAGE_SIZE;
--	     poffset += len, file_offset += len, bh = bh->b_this_page) {
-+	     poffset += len, file_offset += len) {
- 		/* past the range we are writing, so nothing more to write. */
- 		if (file_offset >= end_offset)
- 			break;
-@@ -809,9 +826,10 @@ xfs_writepage_map(
- 		/*
- 		 * Block does not contain valid data, skip it.
- 		 */
--		if (!buffer_uptodate(bh)) {
-+		if (bh && !buffer_uptodate(bh)) {
- 			if (PageUptodate(page))
- 				ASSERT(buffer_mapped(bh));
-+			bh = bh->b_this_page;
- 			continue;
+-			lock_page(page);
+-			if (likely(page->mapping == inode->i_mapping) &&
+-			    page_has_buffers(page)) {
+-				lastoff = page_seek_hole_data(page, lastoff, whence);
+-				if (lastoff >= 0) {
+-					unlock_page(page);
+-					goto check_range;
+-				}
+-			}
+-			unlock_page(page);
+ 			lastoff = page_offset(page) + PAGE_SIZE;
  		}
- 
-@@ -836,10 +854,15 @@ xfs_writepage_map(
- 			 * meaningless for holes (!mapped && uptodate), so check we did
- 			 * have a buffer covering a hole here and continue.
- 			 */
-+			if (bh)
-+				bh = bh->b_this_page;
- 			continue;
- 		}
- 
--		xfs_map_at_offset(inode, bh, &wpc->imap, file_offset);
-+		if (bh) {
-+			xfs_map_at_offset(inode, bh, &wpc->imap, file_offset);
-+			bh = bh->b_this_page;
-+		}
- 		xfs_add_to_ioend(inode, file_offset, page, wpc, wbc,
- 				&submit_list);
- 		count++;
-@@ -939,8 +962,6 @@ xfs_do_writepage(
- 
- 	trace_xfs_writepage(inode, page, 0, 0);
- 
--	ASSERT(page_has_buffers(page));
--
- 	/*
- 	 * Refuse to write the page out if we are called from reclaim context.
- 	 *
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index f949f0dd7382..93c40da3378a 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1031,7 +1031,8 @@ xfs_file_iomap_begin(
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
- 
--	iomap->flags |= IOMAP_F_BUFFER_HEAD;
-+	if (i_blocksize(inode) < PAGE_SIZE)
-+		iomap->flags |= IOMAP_F_BUFFER_HEAD;
- 
- 	if (((flags & (IOMAP_WRITE | IOMAP_DIRECT)) == IOMAP_WRITE) &&
- 			!IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
+ 		pagevec_release(&pvec);
 -- 
 2.17.0
 
