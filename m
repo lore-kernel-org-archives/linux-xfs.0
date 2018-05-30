@@ -1,70 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:35726 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755549AbeEaQYF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 31 May 2018 12:24:05 -0400
-Subject: Re: xfs_db and ASSERT fails dur type mismatch
-References: <20180509114554.2slvfi3hqt4na6vy@odin.usersys.redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <a34eb2d1-5f1c-eaf0-a892-f91061bb075b@sandeen.net>
-Date: Thu, 31 May 2018 11:24:03 -0500
+Received: from mail-pl0-f67.google.com ([209.85.160.67]:36358 "EHLO
+        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932487AbeE3WYJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 May 2018 18:24:09 -0400
+Received: by mail-pl0-f67.google.com with SMTP id v24-v6so11931657plo.3
+        for <linux-xfs@vger.kernel.org>; Wed, 30 May 2018 15:24:09 -0700 (PDT)
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH 00/13] convert block layer to bioset_init()/mempool_init()
+References: <20180520222558.7053-1-kent.overstreet@gmail.com>
+Message-ID: <234774e0-38d8-77ea-ca40-88da8b3c5ec6@kernel.dk>
+Date: Wed, 30 May 2018 16:24:03 -0600
 MIME-Version: 1.0
-In-Reply-To: <20180509114554.2slvfi3hqt4na6vy@odin.usersys.redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20180520222558.7053-1-kent.overstreet@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, sandeen@redhat.com
+To: Kent Overstreet <kent.overstreet@gmail.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, colyli@suse.de, snitzer@redhat.com, darrick.wong@oracle.com, clm@fb.com, bacik@fb.com, linux-xfs@vger.kernel.org, drbd-dev@lists.linbit.com, linux-btrfs@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.com
 
-On 5/9/18 6:45 AM, Carlos Maiolino wrote:
-> Hey folks,
+On 5/20/18 4:25 PM, Kent Overstreet wrote:
+> Jens - this series does the rest of the conversions that Christoph wanted, and
+> drops bioset_create().
 > 
-> I've been thinking about different ways to fix those crashes on xfs_db due type
-> mismatch, based on the previous discussion and a chat I had with Eric on irc.
+> Only lightly tested, but the changes are pretty mechanical. Based on your
+> for-next tree.
 > 
-> After thinking a bit more about it, I do think using unknown header types adds
-> unneeded extra complexity to the code, to achieve the same result as an extra
-> check on print_flist_1().
+> It's also in the for-jens branch at https://evilpiepirate.org/git/bcachefs.git
 > 
-> Adding an unknown type, will require a change to all types affected by this
-> issue. I am not sure if a single unknown type can be used for all metadata types
-> which is affected by this, but I think it requires an unknown type for each of
-> these metadata. Or at least an entry for an unknown header type (in case of of
-> the known ones are not found).
-> 
-> While, the crash caused by unrecognized metadata when using these types, can be
-> fixed by something like my original change.
-> 
-> I wrote a slightly different patch like this:
+> Kent Overstreet (12):
+>   block: convert bounce, q->bio_split to bioset_init()/mempool_init()
+>   drbd: convert to bioset_init()/mempool_init()
+>   pktcdvd: convert to bioset_init()/mempool_init()
+>   lightnvm: convert to bioset_init()/mempool_init()
+>   bcache: convert to bioset_init()/mempool_init()
+>   md: convert to bioset_init()/mempool_init()
+>   dm: convert to bioset_init()/mempool_init()
+>   target: convert to bioset_init()/mempool_init()
+>   fs: convert block_dev.c to bioset_init()
+>   btrfs: convert to bioset_init()/mempool_init()
+>   xfs: convert to bioset_init()/mempool_init()
+>   block: Drop bioset_create()
 
-Ok, I'll merge this, with a proper commit log.
+With the reviews, I've queued this up for 4.18.
 
-> diff --git a/db/print.c b/db/print.c
-> index 0da36c27..f8a48281 100644
-> --- a/db/print.c
-> +++ b/db/print.c
-> @@ -160,9 +160,10 @@ print_flist_1(
->                                          (f->flags & FLD_ARRAY) != 0);
->                                  if (neednl)
->                                          dbprintf("\n");
-> -                       } else {
-> -                               ASSERT(fa->arg & FTARG_OKEMPTY);
-> +                       } else if (fa->arg & FTARG_OKEMPTY) {
->                                  dbprintf(_("(empty)\n"));
-> +                       } else {
-> +                               dbprintf(_("Unrecognized metadata or type mismatch\n"));
->                          }
->                  }
->                  free_strvec(pfx);
-> 
-> 
-> This will still keep printing "(empty)" where it should be printed, or print out
-> a hint that something went wrong.
-> 
-> I honestly think this the best solution for these crashes, what you guys think?
-> 
-> Cheers
-> 
-> 
+-- 
+Jens Axboe
+
