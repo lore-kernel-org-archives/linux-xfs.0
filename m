@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:38450 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:38510 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751585AbeE3KB0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 May 2018 06:01:26 -0400
+        with ESMTP id S1751755AbeE3KBd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 May 2018 06:01:33 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 16/18] xfs: refactor the tail of xfs_writepage_map
-Date: Wed, 30 May 2018 12:00:11 +0200
-Message-Id: <20180530100013.31358-17-hch@lst.de>
+Subject: [PATCH 18/18] xfs: allow writeback on pages without buffer heads
+Date: Wed, 30 May 2018 12:00:13 +0200
+Message-Id: <20180530100013.31358-19-hch@lst.de>
 In-Reply-To: <20180530100013.31358-1-hch@lst.de>
 References: <20180530100013.31358-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,103 +15,150 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-Rejuggle how we deal with the different error vs non-error and have
-ioends vs not have ioend cases to keep the fast path streamlined, and
-the duplicate code at a minimum.
+Disable the IOMAP_F_BUFFER_HEAD flag on file systems with a block size
+equal to the page size, and deal with pages without buffer heads in
+writeback.  Thanks to the previous refactoring this is basically trivial
+now.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_aops.c | 65 +++++++++++++++++++++++------------------------
- 1 file changed, 32 insertions(+), 33 deletions(-)
+ fs/xfs/xfs_aops.c  | 47 +++++++++++++++++++++++++++++++++-------------
+ fs/xfs/xfs_iomap.c |  3 ++-
+ 2 files changed, 36 insertions(+), 14 deletions(-)
 
 diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 38021023131e..ac417ef326a9 100644
+index 84f88cecd2f1..6640377b6eae 100644
 --- a/fs/xfs/xfs_aops.c
 +++ b/fs/xfs/xfs_aops.c
-@@ -873,7 +873,14 @@ xfs_writepage_map(
- 	 * submission of outstanding ioends on the writepage context so they are
- 	 * treated correctly on error.
- 	 */
--	if (count) {
-+	if (unlikely(error)) {
-+		if (!count) {
-+			xfs_aops_discard_page(page);
-+			ClearPageUptodate(page);
-+			unlock_page(page);
-+			goto done;
-+		}
+@@ -91,6 +91,19 @@ xfs_find_daxdev_for_inode(
+ 		return mp->m_ddev_targp->bt_daxdev;
+ }
+ 
++static void
++xfs_finish_page_writeback(
++	struct inode		*inode,
++	struct bio_vec		*bvec,
++	int			error)
++{
++	if (error) {
++		SetPageError(bvec->bv_page);
++		mapping_set_error(inode->i_mapping, -EIO);
++	}
++	end_page_writeback(bvec->bv_page);
++}
 +
- 		/*
- 		 * If the page was not fully cleaned, we need to ensure that the
- 		 * higher layers come back to it correctly.  That means we need
-@@ -882,43 +889,35 @@ xfs_writepage_map(
- 		 * so another attempt to write this page in this writeback sweep
- 		 * will be made.
- 		 */
--		if (error) {
--			set_page_writeback_keepwrite(page);
--		} else {
--			clear_page_dirty_for_io(page);
--			set_page_writeback(page);
--		}
--		unlock_page(page);
+ /*
+  * We're now finished for good with this page.  Update the page state via the
+  * associated buffer_heads, paying attention to the start and end offsets that
+@@ -103,7 +116,7 @@ xfs_find_daxdev_for_inode(
+  * and buffers potentially freed after every call to end_buffer_async_write.
+  */
+ static void
+-xfs_finish_page_writeback(
++xfs_finish_buffer_writeback(
+ 	struct inode		*inode,
+ 	struct bio_vec		*bvec,
+ 	int			error)
+@@ -178,9 +191,12 @@ xfs_destroy_ioend(
+ 			next = bio->bi_private;
+ 
+ 		/* walk each page on bio, ending page IO on them */
+-		bio_for_each_segment_all(bvec, bio, i)
+-			xfs_finish_page_writeback(inode, bvec, error);
 -
--		/*
--		 * Preserve the original error if there was one, otherwise catch
--		 * submission errors here and propagate into subsequent ioend
--		 * submissions.
--		 */
--		list_for_each_entry_safe(ioend, next, &submit_list, io_list) {
--			int error2;
--
--			list_del_init(&ioend->io_list);
--			error2 = xfs_submit_ioend(wbc, ioend, error);
--			if (error2 && !error)
--				error = error2;
--		}
--	} else if (error) {
--		xfs_aops_discard_page(page);
--		ClearPageUptodate(page);
--		unlock_page(page);
-+		set_page_writeback_keepwrite(page);
- 	} else {
--		/*
--		 * We can end up here with no error and nothing to write if we
--		 * race with a partial page truncate on a sub-page block sized
--		 * filesystem. In that case we need to mark the page clean.
--		 */
- 		clear_page_dirty_for_io(page);
- 		set_page_writeback(page);
--		unlock_page(page);
--		end_page_writeback(page);
++		bio_for_each_segment_all(bvec, bio, i) {
++			if (page_has_buffers(bvec->bv_page))
++				xfs_finish_buffer_writeback(inode, bvec, error);
++			else
++				xfs_finish_page_writeback(inode, bvec, error);
++		}
+ 		bio_put(bio);
  	}
  
-+	unlock_page(page);
+@@ -782,13 +798,16 @@ xfs_writepage_map(
+ {
+ 	LIST_HEAD(submit_list);
+ 	struct xfs_ioend	*ioend, *next;
+-	struct buffer_head	*bh;
++	struct buffer_head	*bh = NULL;
+ 	ssize_t			len = i_blocksize(inode);
+ 	int			error = 0;
+ 	int			count = 0;
+ 	loff_t			file_offset;	/* file offset of page */
+ 	unsigned		poffset;	/* offset into page */
+ 
++	if (page_has_buffers(page))
++		bh = page_buffers(page);
 +
-+	/*
-+	 * Preserve the original error if there was one, otherwise catch
-+	 * submission errors here and propagate into subsequent ioend
-+	 * submissions.
-+	 */
-+	list_for_each_entry_safe(ioend, next, &submit_list, io_list) {
-+		int error2;
-+
-+		list_del_init(&ioend->io_list);
-+		error2 = xfs_submit_ioend(wbc, ioend, error);
-+		if (error2 && !error)
-+			error = error2;
-+	}
-+
-+	/*
-+	 * We can end up here with no error and nothing to write if we race with
-+	 * a partial page truncate on a sub-page block sized filesystem.
-+	 */
-+	if (!count)
-+		end_page_writeback(page);
-+done:
- 	mapping_set_error(page->mapping, error);
- 	return error;
- }
+ 	/*
+ 	 * Walk the blocks on the page, and we we run off then end of the
+ 	 * current map or find the current map invalid, grab a new one.
+@@ -797,11 +816,9 @@ xfs_writepage_map(
+ 	 * replace the bufferhead with some other state tracking mechanism in
+ 	 * future.
+ 	 */
+-	file_offset = page_offset(page);
+-	bh = page_buffers(page);
+-	for (poffset = 0;
++	for (poffset = 0, file_offset = page_offset(page);
+ 	     poffset < PAGE_SIZE;
+-	     poffset += len, file_offset += len, bh = bh->b_this_page) {
++	     poffset += len, file_offset += len) {
+ 		/* past the range we are writing, so nothing more to write. */
+ 		if (file_offset >= end_offset)
+ 			break;
+@@ -809,9 +826,10 @@ xfs_writepage_map(
+ 		/*
+ 		 * Block does not contain valid data, skip it.
+ 		 */
+-		if (!buffer_uptodate(bh)) {
++		if (bh && !buffer_uptodate(bh)) {
+ 			if (PageUptodate(page))
+ 				ASSERT(buffer_mapped(bh));
++			bh = bh->b_this_page;
+ 			continue;
+ 		}
+ 
+@@ -836,10 +854,15 @@ xfs_writepage_map(
+ 			 * meaningless for holes (!mapped && uptodate), so check we did
+ 			 * have a buffer covering a hole here and continue.
+ 			 */
++			if (bh)
++				bh = bh->b_this_page;
+ 			continue;
+ 		}
+ 
+-		xfs_map_at_offset(inode, bh, &wpc->imap, file_offset);
++		if (bh) {
++			xfs_map_at_offset(inode, bh, &wpc->imap, file_offset);
++			bh = bh->b_this_page;
++		}
+ 		xfs_add_to_ioend(inode, file_offset, page, wpc, wbc,
+ 				&submit_list);
+ 		count++;
+@@ -939,8 +962,6 @@ xfs_do_writepage(
+ 
+ 	trace_xfs_writepage(inode, page, 0, 0);
+ 
+-	ASSERT(page_has_buffers(page));
+-
+ 	/*
+ 	 * Refuse to write the page out if we are called from reclaim context.
+ 	 *
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index f949f0dd7382..93c40da3378a 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1031,7 +1031,8 @@ xfs_file_iomap_begin(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+ 
+-	iomap->flags |= IOMAP_F_BUFFER_HEAD;
++	if (i_blocksize(inode) < PAGE_SIZE)
++		iomap->flags |= IOMAP_F_BUFFER_HEAD;
+ 
+ 	if (((flags & (IOMAP_WRITE | IOMAP_DIRECT)) == IOMAP_WRITE) &&
+ 			!IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
 -- 
 2.17.0
 
