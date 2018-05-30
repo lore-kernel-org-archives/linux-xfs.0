@@ -1,398 +1,143 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:52124 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932076AbeE3Tbq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 May 2018 15:31:46 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w4UJPVWb120211
-        for <linux-xfs@vger.kernel.org>; Wed, 30 May 2018 19:31:46 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp2130.oracle.com with ESMTP id 2j9x4h93a0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 30 May 2018 19:31:46 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w4UJVi50004180
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 30 May 2018 19:31:45 GMT
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w4UJVih8031398
-        for <linux-xfs@vger.kernel.org>; Wed, 30 May 2018 19:31:44 GMT
-Subject: [PATCH 10/14] xfs: repair damaged symlinks
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 30 May 2018 12:31:43 -0700
-Message-ID: <152770870330.11611.4065002602830341040.stgit@magnolia>
-In-Reply-To: <152770863951.11611.5866814627357136911.stgit@magnolia>
-References: <152770863951.11611.5866814627357136911.stgit@magnolia>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:38728 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751591AbeE3Ngb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 30 May 2018 09:36:31 -0400
+Date: Wed, 30 May 2018 09:36:29 -0400
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 00/13] convert block layer to bioset_init()/mempool_init()
+Message-ID: <20180530133629.GC5157@redhat.com>
+References: <20180521143132.GB19194@redhat.com>
+ <2bbeeb1a-8b99-b06a-eb9b-eb8523c16460@kernel.dk>
+ <20180521144703.GA19303@redhat.com>
+ <4b343aef-e11c-73ba-1d88-7e73ca838cad@kernel.dk>
+ <20180521150439.GA19379@redhat.com>
+ <61e30dcf-a01c-f47d-087a-12930caf9aef@kernel.dk>
+ <20180521151817.GA19454@redhat.com>
+ <d01a150a-7752-f6ce-78f2-17a65c1e6fa5@kernel.dk>
+ <20180521160907.GA19553@redhat.com>
+ <f9e3714c-b7c9-d5f6-4018-2a87dd5babb2@kernel.dk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f9e3714c-b7c9-d5f6-4018-2a87dd5babb2@kernel.dk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Kent Overstreet <kent.overstreet@gmail.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, colyli@suse.de, darrick.wong@oracle.com, clm@fb.com, bacik@fb.com, linux-xfs@vger.kernel.org, drbd-dev@lists.linbit.com, linux-btrfs@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.com
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, May 21 2018 at 12:20pm -0400,
+Jens Axboe <axboe@kernel.dk> wrote:
 
-Repair inconsistent symbolic link data.
+> On 5/21/18 10:09 AM, Mike Snitzer wrote:
+> > On Mon, May 21 2018 at 11:36am -0400,
+> > Jens Axboe <axboe@kernel.dk> wrote:
+> > 
+> >> On 5/21/18 9:18 AM, Mike Snitzer wrote:
+> >>> On Mon, May 21 2018 at 11:09am -0400,
+> >>> Jens Axboe <axboe@kernel.dk> wrote:
+> >>>
+> >>>> On 5/21/18 9:04 AM, Mike Snitzer wrote:
+> >>>>> On Mon, May 21 2018 at 10:52am -0400,
+> >>>>> Jens Axboe <axboe@kernel.dk> wrote:
+> >>>>>
+> > ...
+> >>>>>> IMHO you're making a big deal out of something that should not be.
+> >>>>>
+> >>>>> I raised an issue that had seemingly not been considered at all.  Not
+> >>>>> making a big deal.  Raising it for others' benefit.
+> >>>>>
+> >>>>>> If the dm bits are that sensitive and cache line honed to perfection
+> >>>>>> already due to previous regressions in that area, then it might
+> >>>>>> not be a bad idea to have some compile checks for false cacheline
+> >>>>>> sharing between sensitive members, or spilling of a sub-struct
+> >>>>>> into multiple cachelines.
+> >>>>>>
+> >>>>>> It's not like this was pushed behind your back. It's posted for
+> >>>>>> review. It's quite possible the net change is a win for dm. Let's
+> >>>>>> focus on getting it reviewed, rather than pontificate on what
+> >>>>>> could potentially go all wrong with this.
+> >>>>>
+> >>>>> Why are you making this personal?  Or purely about DM?  I'm merely
+> >>>>> pointing out this change isn't something that can be given a quick
+> >>>>> blanket "looks good".
+> >>>>
+> >>>> I'm not making this personal at all?! You raised a (valid) concern,
+> >>>> I'm merely stating why I don't think it's a high risk issue. I'm
+> >>>> assuming your worry is related to dm, as those are the reports
+> >>>> that would ultimately land on your desk.
+> >>>
+> >>> Then we'll just agree to disagree with what this implies: "It's not like
+> >>> this was pushed behind your back."
+> >>
+> >> I'm afraid you've lost me now - it was not pushed behind your back,
+> >> it was posted for review, with you on the CC list. Not trying to
+> >> be deliberately dense here, I just don't see what our disagreement is.
+> > 
+> > You're having an off day ;)  Mondays and all?
+> > 
+> > I just raised an alignment concern that needs to be considered during
+> > review by all stakeholders.  Wasn't upset at all.  Maybe my email tone
+> > came off otherwise?
+> > 
+> > And then you got confused by me pointing out how it was weird for you to
+> > suggest I felt this stuff was pushed behind my back.. and went on to
+> > think I really think that.  It's almost like you're a confused hypnotist
+> > seeding me with paranoid dilutions. ;)
+> > 
+> > /me waits for Jens to snap his fingers so he can just slowly step away
+> > from this line of discussion that is solidly dead now...
+> 
+> Mike, wtf are you talking about.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/Makefile               |    1 
- fs/xfs/scrub/repair.h         |    2 
- fs/xfs/scrub/scrub.c          |    2 
- fs/xfs/scrub/symlink.c        |    2 
- fs/xfs/scrub/symlink_repair.c |  284 +++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 289 insertions(+), 2 deletions(-)
- create mode 100644 fs/xfs/scrub/symlink_repair.c
+He Jens, just wanted to formally apologize for how I mishandled this
+chain of communication.
 
+As you know I like to joke (as happens to unfunny people, sometimes it
+only makes sense to me).  In this instance I was being playful when in
+reality I should've stayed on message.
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 653da1fe6b26..5e336892f21f 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -182,6 +182,7 @@ xfs-y				+= $(addprefix scrub/, \
- 				   refcount_repair.o \
- 				   repair.o \
- 				   rmap_repair.o \
-+				   symlink_repair.o \
- 				   )
- endif
- endif
-diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-index f572539e7b55..9897649b659f 100644
---- a/fs/xfs/scrub/repair.h
-+++ b/fs/xfs/scrub/repair.h
-@@ -123,6 +123,7 @@ int xfs_repair_refcountbt(struct xfs_scrub_context *sc);
- int xfs_repair_inode(struct xfs_scrub_context *sc);
- int xfs_repair_bmap_data(struct xfs_scrub_context *sc);
- int xfs_repair_bmap_attr(struct xfs_scrub_context *sc);
-+int xfs_repair_symlink(struct xfs_scrub_context *sc);
- 
- #else
- 
-@@ -176,6 +177,7 @@ static inline int xfs_repair_rmapbt_setup(
- #define xfs_repair_inode		xfs_repair_notsupported
- #define xfs_repair_bmap_data		xfs_repair_notsupported
- #define xfs_repair_bmap_attr		xfs_repair_notsupported
-+#define xfs_repair_symlink		xfs_repair_notsupported
- 
- #endif /* CONFIG_XFS_ONLINE_REPAIR */
- 
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 675b04f07205..462c44ca3080 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -323,7 +323,7 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
- 		.type	= ST_INODE,
- 		.setup	= xfs_scrub_setup_symlink,
- 		.scrub	= xfs_scrub_symlink,
--		.repair	= xfs_repair_notsupported,
-+		.repair	= xfs_repair_symlink,
- 	},
- 	[XFS_SCRUB_TYPE_PARENT] = {	/* parent pointers */
- 		.type	= ST_INODE,
-diff --git a/fs/xfs/scrub/symlink.c b/fs/xfs/scrub/symlink.c
-index 3aa3d60f7c16..a370aad5233f 100644
---- a/fs/xfs/scrub/symlink.c
-+++ b/fs/xfs/scrub/symlink.c
-@@ -48,7 +48,7 @@ xfs_scrub_setup_symlink(
- 	if (!sc->buf)
- 		return -ENOMEM;
- 
--	return xfs_scrub_setup_inode_contents(sc, ip, 0);
-+	return xfs_scrub_setup_inode_contents(sc, ip, XFS_SYMLINK_MAPS);
- }
- 
- /* Symbolic links. */
-diff --git a/fs/xfs/scrub/symlink_repair.c b/fs/xfs/scrub/symlink_repair.c
-new file mode 100644
-index 000000000000..a58eb96dd448
---- /dev/null
-+++ b/fs/xfs/scrub/symlink_repair.c
-@@ -0,0 +1,284 @@
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_btree.h"
-+#include "xfs_bit.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_sb.h"
-+#include "xfs_inode.h"
-+#include "xfs_inode_fork.h"
-+#include "xfs_symlink.h"
-+#include "xfs_bmap.h"
-+#include "xfs_quota.h"
-+#include "scrub/xfs_scrub.h"
-+#include "scrub/scrub.h"
-+#include "scrub/common.h"
-+#include "scrub/trace.h"
-+#include "scrub/repair.h"
-+
-+/* Blow out the whole symlink; replace contents. */
-+STATIC int
-+xfs_repair_symlink_rewrite(
-+	struct xfs_trans	**tpp,
-+	struct xfs_inode	*ip,
-+	const char		*target_path,
-+	int			pathlen)
-+{
-+	struct xfs_defer_ops	dfops;
-+	struct xfs_bmbt_irec	mval[XFS_SYMLINK_MAPS];
-+	struct xfs_ifork	*ifp;
-+	const char		*cur_chunk;
-+	struct xfs_mount	*mp = (*tpp)->t_mountp;
-+	struct xfs_buf		*bp;
-+	xfs_fsblock_t		first_block;
-+	xfs_fileoff_t		first_fsb;
-+	xfs_filblks_t		fs_blocks;
-+	xfs_daddr_t		d;
-+	int			byte_cnt;
-+	int			n;
-+	int			nmaps;
-+	int			offset;
-+	int			error = 0;
-+
-+	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+
-+	/* Truncate the whole data fork if it wasn't inline. */
-+	if (!(ifp->if_flags & XFS_IFINLINE)) {
-+		error = xfs_itruncate_extents(tpp, ip, XFS_DATA_FORK, 0);
-+		if (error)
-+			goto out;
-+	}
-+
-+	/* Blow out the in-core fork and zero the on-disk fork. */
-+	xfs_idestroy_fork(ip, XFS_DATA_FORK);
-+	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
-+	ip->i_d.di_nextents = 0;
-+	memset(&ip->i_df, 0, sizeof(struct xfs_ifork));
-+	ip->i_df.if_flags |= XFS_IFEXTENTS;
-+
-+	/* Rewrite an inline symlink. */
-+	if (pathlen <= XFS_IFORK_DSIZE(ip)) {
-+		xfs_init_local_fork(ip, XFS_DATA_FORK, target_path, pathlen);
-+
-+		i_size_write(VFS_I(ip), pathlen);
-+		ip->i_d.di_size = pathlen;
-+		ip->i_d.di_format = XFS_DINODE_FMT_LOCAL;
-+		xfs_trans_log_inode(*tpp, ip, XFS_ILOG_DDATA | XFS_ILOG_CORE);
-+		goto out;
-+
-+	}
-+
-+	/* Rewrite a remote symlink. */
-+	fs_blocks = xfs_symlink_blocks(mp, pathlen);
-+	first_fsb = 0;
-+	nmaps = XFS_SYMLINK_MAPS;
-+
-+	/* Reserve quota for new blocks. */
-+	error = xfs_trans_reserve_quota_nblks(*tpp, ip, fs_blocks, 0,
-+			XFS_QMOPT_RES_REGBLKS);
-+	if (error)
-+		goto out;
-+
-+	/* Map blocks, write symlink target. */
-+	xfs_defer_init(&dfops, &first_block);
-+
-+	error = xfs_bmapi_write(*tpp, ip, first_fsb, fs_blocks,
-+			  XFS_BMAPI_METADATA, &first_block, fs_blocks,
-+			  mval, &nmaps, &dfops);
-+	if (error)
-+		goto out_bmap_cancel;
-+
-+	ip->i_d.di_size = pathlen;
-+	i_size_write(VFS_I(ip), pathlen);
-+	xfs_trans_log_inode(*tpp, ip, XFS_ILOG_CORE);
-+
-+	cur_chunk = target_path;
-+	offset = 0;
-+	for (n = 0; n < nmaps; n++) {
-+		char	*buf;
-+
-+		d = XFS_FSB_TO_DADDR(mp, mval[n].br_startblock);
-+		byte_cnt = XFS_FSB_TO_B(mp, mval[n].br_blockcount);
-+		bp = xfs_trans_get_buf(*tpp, mp->m_ddev_targp, d,
-+				       BTOBB(byte_cnt), 0);
-+		if (!bp) {
-+			error = -ENOMEM;
-+			goto out_bmap_cancel;
-+		}
-+		bp->b_ops = &xfs_symlink_buf_ops;
-+
-+		byte_cnt = XFS_SYMLINK_BUF_SPACE(mp, byte_cnt);
-+		byte_cnt = min(byte_cnt, pathlen);
-+
-+		buf = bp->b_addr;
-+		buf += xfs_symlink_hdr_set(mp, ip->i_ino, offset,
-+					   byte_cnt, bp);
-+
-+		memcpy(buf, cur_chunk, byte_cnt);
-+
-+		cur_chunk += byte_cnt;
-+		pathlen -= byte_cnt;
-+		offset += byte_cnt;
-+
-+		xfs_trans_buf_set_type(*tpp, bp, XFS_BLFT_SYMLINK_BUF);
-+		xfs_trans_log_buf(*tpp, bp, 0, (buf + byte_cnt - 1) -
-+						(char *)bp->b_addr);
-+	}
-+	ASSERT(pathlen == 0);
-+
-+	error = xfs_defer_finish(tpp, &dfops);
-+	if (error)
-+		goto out_bmap_cancel;
-+
-+	return 0;
-+
-+out_bmap_cancel:
-+	xfs_defer_cancel(&dfops);
-+out:
-+	return error;
-+}
-+
-+/* Fix everything that fails the verifiers in the remote blocks. */
-+STATIC int
-+xfs_repair_symlink_fix_remotes(
-+	struct xfs_scrub_context	*sc,
-+	loff_t				len)
-+{
-+	struct xfs_bmbt_irec		mval[XFS_SYMLINK_MAPS];
-+	struct xfs_buf			*bp;
-+	xfs_filblks_t			fsblocks;
-+	xfs_daddr_t			d;
-+	loff_t				offset;
-+	unsigned int			byte_cnt;
-+	int				n;
-+	int				nmaps = XFS_SYMLINK_MAPS;
-+	int				nr;
-+	int				error;
-+
-+	fsblocks = xfs_symlink_blocks(sc->mp, len);
-+	error = xfs_bmapi_read(sc->ip, 0, fsblocks, mval, &nmaps, 0);
-+	if (error)
-+		return error;
-+
-+	offset = 0;
-+	for (n = 0; n < nmaps; n++) {
-+		d = XFS_FSB_TO_DADDR(sc->mp, mval[n].br_startblock);
-+		byte_cnt = XFS_FSB_TO_B(sc->mp, mval[n].br_blockcount);
-+
-+		error = xfs_trans_read_buf(sc->mp, sc->tp, sc->mp->m_ddev_targp,
-+				d, BTOBB(byte_cnt), 0, &bp, NULL);
-+		if (error)
-+			return error;
-+		bp->b_ops = &xfs_symlink_buf_ops;
-+
-+		byte_cnt = XFS_SYMLINK_BUF_SPACE(sc->mp, byte_cnt);
-+		if (len < byte_cnt)
-+			byte_cnt = len;
-+
-+		nr = xfs_symlink_hdr_set(sc->mp, sc->ip->i_ino, offset,
-+				byte_cnt, bp);
-+
-+		len -= byte_cnt;
-+		offset += byte_cnt;
-+
-+		xfs_trans_buf_set_type(sc->tp, bp, XFS_BLFT_SYMLINK_BUF);
-+		xfs_trans_log_buf(sc->tp, bp, 0, nr - 1);
-+		xfs_trans_brelse(sc->tp, bp);
-+	}
-+	if (len != 0)
-+		return -EFSCORRUPTED;
-+
-+	return 0;
-+}
-+
-+int
-+xfs_repair_symlink(
-+	struct xfs_scrub_context	*sc)
-+{
-+	struct xfs_inode		*ip = sc->ip;
-+	struct xfs_ifork		*ifp;
-+	loff_t				len;
-+	size_t				newlen;
-+	int				error = 0;
-+
-+	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+	len = i_size_read(VFS_I(ip));
-+	xfs_trans_ijoin(sc->tp, ip, 0);
-+
-+	/* Truncate the inode if there's a zero inside the length. */
-+	if (ifp->if_flags & XFS_IFINLINE) {
-+		if (ifp->if_u1.if_data)
-+			newlen = strnlen(ifp->if_u1.if_data,
-+					XFS_IFORK_DSIZE(ip));
-+		else {
-+			/* Zero length symlink becomes a root symlink. */
-+			ifp->if_u1.if_data = kmem_alloc(4, KM_SLEEP);
-+			snprintf(ifp->if_u1.if_data, 4, "/");
-+			newlen = 1;
-+		}
-+		if (len > newlen) {
-+			i_size_write(VFS_I(ip), newlen);
-+			ip->i_d.di_size = newlen;
-+			xfs_trans_log_inode(sc->tp, ip, XFS_ILOG_DDATA |
-+					XFS_ILOG_CORE);
-+		}
-+		goto out;
-+	}
-+
-+	error = xfs_repair_symlink_fix_remotes(sc, len);
-+	if (error)
-+		goto out;
-+
-+	/* Roll transaction, release buffers. */
-+	error = xfs_trans_roll_inode(&sc->tp, ip);
-+	if (error)
-+		goto out;
-+
-+	/* Size set correctly? */
-+	len = i_size_read(VFS_I(ip));
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	error = xfs_readlink(ip, sc->buf);
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	if (error)
-+		goto out;
-+
-+	/*
-+	 * Figure out the new target length.  We can't handle zero-length
-+	 * symlinks, so make sure that we don't write that out.
-+	 */
-+	newlen = strnlen(sc->buf, XFS_SYMLINK_MAXLEN);
-+	if (newlen == 0) {
-+		*((char *)sc->buf) = '/';
-+		newlen = 1;
-+	}
-+
-+	if (len > newlen)
-+		error = xfs_repair_symlink_rewrite(&sc->tp, ip, sc->buf,
-+				newlen);
-+out:
-+	return error;
-+}
+It clouded the issue further and I regret that, I also regret my follow
+up to Kent where I spelled out why I later felt attacked.
 
+This is on me.
+
+> >>> Reality is I'm fine with the change.  Just think there is follow-on work
+> >>> (now or later) that is needed.
+> >>
+> >> It's not hard to run the quick struct layout checks or alignment. If
+> >> there's a concern, that should be done now, instead of being deferred to
+> >> later. There's no point merging something that we expect to have
+> >> follow-on work. If that's the case, then it should not be merged. There
+> >> are no dependencies in the patchset, except that the last patch
+> >> obviously can't be applied until all of the previous ones are in.
+> > 
+> > Cool, sounds good.
+> > 
+> >> I took a quick look at the struct mapped_device layout, which I'm
+> >> assuming is the most important on the dm side. It's pretty big to
+> >> begin with, obviously this makes it bigger since we're now
+> >> embedding the bio_sets. On my config, doesn't show any false sharing
+> >> that would be problematic, or layout changes that would worry me. FWIW.
+> > 
+> > Great, thanks, do you happen to have a tree you can push so others can
+> > get a quick compile and look at the series fully applied?
+> 
+> I do not, I simply ran a quick analysis of the layout, then applied the
+> full patchset, and repeated that exercise. Literally a 5 minute thing.
+> I haven't applied the series, so haven't pushed anything out.
+> 
+> > BTW, I'm upstream DM maintainer but I have a role in caring for related
+> > subsystems (e.g. block core, etc) in downstream releases.. *cough* RHEL.
+> > So this alignment concern wasn't ever purely about DM.
+> 
+> I tend to care about that too...
+
+So revisiting this patchset: are you inclined to take these changes (I
+assume yes)?  If so, what would you need in order to get them staged for
+4.18?  I'll start with offering my review in reply to the DM patch.  I'd
+much prefer to see this level of change go in sooner rather than later.
+
+Thanks,
+Mike
