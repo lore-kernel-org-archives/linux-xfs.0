@@ -1,138 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:38700 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751808AbeE3KCY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 May 2018 06:02:24 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 3/3] fs: use ->is_partially_uptodate in page_cache_seek_hole_data
-Date: Wed, 30 May 2018 12:02:08 +0200
-Message-Id: <20180530100208.31490-4-hch@lst.de>
-In-Reply-To: <20180530100208.31490-1-hch@lst.de>
-References: <20180530100208.31490-1-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:56642 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753293AbeE3Nfy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 30 May 2018 09:35:54 -0400
+Date: Wed, 30 May 2018 09:35:52 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 05/18] xfs: move locking into
+ xfs_bmap_punch_delalloc_range
+Message-ID: <20180530133551.GE112411@bfoster.bfoster>
+References: <20180530100013.31358-1-hch@lst.de>
+ <20180530100013.31358-6-hch@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180530100013.31358-6-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Andreas Gruenbacher <agruenba@redhat.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-This way the implementation doesn't depend on buffer_head internals.
+On Wed, May 30, 2018 at 12:00:00PM +0200, Christoph Hellwig wrote:
+> Both callers want the same looking, so do it only once.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_aops.c      | 2 --
+>  fs/xfs/xfs_bmap_util.c | 7 ++++---
+>  fs/xfs/xfs_iomap.c     | 3 ---
+>  3 files changed, 4 insertions(+), 8 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index f2333e351e07..5dd09e83c81c 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -761,10 +761,8 @@ xfs_aops_discard_page(
+>  		"page discard on page "PTR_FMT", inode 0x%llx, offset %llu.",
+>  			page, ip->i_ino, offset);
+>  
+> -	xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  	error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
+>  			PAGE_SIZE / i_blocksize(inode));
+> -	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>  	if (error && !XFS_FORCED_SHUTDOWN(mp))
+>  		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
+>  out_invalidate:
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index f2b87873612d..86a7ee425bfc 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -712,12 +712,11 @@ xfs_bmap_punch_delalloc_range(
+>  	struct xfs_iext_cursor	icur;
+>  	int			error = 0;
+>  
+> -	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+> -
+> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+>  		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
+>  		if (error)
+> -			return error;
+> +			goto out_unlock;
+>  	}
+>  
+>  	if (!xfs_iext_lookup_extent_before(ip, ifp, &end_fsb, &icur, &got))
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/iomap.c | 85 +++++++++++++++++++++++++-----------------------------
- 1 file changed, 39 insertions(+), 46 deletions(-)
+There's a return 0 just below here that needs the exit label treatment.
+Otherwise looks Ok.
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index e75153f52748..5b92243808d3 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -794,36 +794,51 @@ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
- }
- EXPORT_SYMBOL_GPL(iomap_fiemap);
- 
--/*
-- * Seek for SEEK_DATA / SEEK_HOLE within @page, starting at @lastoff.
-- *
-- * Returns the offset within the file on success, and -ENOENT otherwise.
-- */
--static loff_t
--page_seek_hole_data(struct page *page, loff_t lastoff, int whence)
-+static bool
-+page_seek_hole_data(struct inode *inode, struct page *page, loff_t *lastoff,
-+		int whence)
- {
--	loff_t offset = page_offset(page);
--	struct buffer_head *bh, *head;
-+	const struct address_space_operations *ops = inode->i_mapping->a_ops;
-+	unsigned int bsize = i_blocksize(inode), off;
- 	bool seek_data = whence == SEEK_DATA;
-+	loff_t poff = page_offset(page);
- 
--	if (lastoff < offset)
--		lastoff = offset;
--
--	bh = head = page_buffers(page);
--	do {
--		offset += bh->b_size;
--		if (lastoff >= offset)
--			continue;
-+	if (WARN_ON_ONCE(*lastoff >= poff + PAGE_SIZE))
-+		return false;
- 
-+	if (*lastoff < poff) {
- 		/*
--		 * Any buffer with valid data in it should have BH_Uptodate set.
-+		 * Last offset smaller than the start of the page means we found
-+		 * a hole:
- 		 */
--		if (buffer_uptodate(bh) == seek_data)
--			return lastoff;
-+		if (whence == SEEK_HOLE)
-+			return true;
-+		*lastoff = poff;
-+	}
-+
-+	/*
-+	 * Just check the page unless we can and should check block ranges:
-+	 */
-+	if (bsize == PAGE_SIZE || !ops->is_partially_uptodate)
-+		return PageUptodate(page) == seek_data;
- 
--		lastoff = offset;
--	} while ((bh = bh->b_this_page) != head);
--	return -ENOENT;
-+	lock_page(page);
-+	if (unlikely(page->mapping != inode->i_mapping))
-+		goto out_unlock_not_found;
-+
-+	for (off = 0; off < PAGE_SIZE; off += bsize) {
-+		if ((*lastoff & ~PAGE_MASK) >= off + bsize)
-+			continue;
-+		if (ops->is_partially_uptodate(page, off, bsize) == seek_data) {
-+			unlock_page(page);
-+			return true;
-+		}
-+		*lastoff = poff + off + bsize;
-+	}
-+
-+out_unlock_not_found:
-+	unlock_page(page);
-+	return false;
- }
- 
- /*
-@@ -860,30 +875,8 @@ page_cache_seek_hole_data(struct inode *inode, loff_t offset, loff_t length,
- 		for (i = 0; i < nr_pages; i++) {
- 			struct page *page = pvec.pages[i];
- 
--			/*
--			 * At this point, the page may be truncated or
--			 * invalidated (changing page->mapping to NULL), or
--			 * even swizzled back from swapper_space to tmpfs file
--			 * mapping.  However, page->index will not change
--			 * because we have a reference on the page.
--                         *
--			 * If current page offset is beyond where we've ended,
--			 * we've found a hole.
--                         */
--			if (whence == SEEK_HOLE &&
--			    lastoff < page_offset(page))
-+			if (page_seek_hole_data(inode, page, &lastoff, whence))
- 				goto check_range;
--
--			lock_page(page);
--			if (likely(page->mapping == inode->i_mapping) &&
--			    page_has_buffers(page)) {
--				lastoff = page_seek_hole_data(page, lastoff, whence);
--				if (lastoff >= 0) {
--					unlock_page(page);
--					goto check_range;
--				}
--			}
--			unlock_page(page);
- 			lastoff = page_offset(page) + PAGE_SIZE;
- 		}
- 		pagevec_release(&pvec);
--- 
-2.17.0
+Brian
 
+> @@ -738,6 +737,8 @@ xfs_bmap_punch_delalloc_range(
+>  		}
+>  	}
+>  
+> +out_unlock:
+> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>  	return error;
+>  }
+>  
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index da6d1995e460..f949f0dd7382 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -1203,11 +1203,8 @@ xfs_file_iomap_end_delalloc(
+>  		truncate_pagecache_range(VFS_I(ip), XFS_FSB_TO_B(mp, start_fsb),
+>  					 XFS_FSB_TO_B(mp, end_fsb) - 1);
+>  
+> -		xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  		error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
+>  					       end_fsb - start_fsb);
+> -		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> -
+>  		if (error && !XFS_FORCED_SHUTDOWN(mp)) {
+>  			xfs_alert(mp, "%s: unable to clean up ino %lld",
+>  				__func__, ip->i_ino);
+> -- 
+> 2.17.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
