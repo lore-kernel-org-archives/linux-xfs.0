@@ -1,152 +1,571 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it0-f68.google.com ([209.85.214.68]:34841 "EHLO
-        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753353AbeE3NsY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 May 2018 09:48:24 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:51828 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751623AbeE3TbC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 May 2018 15:31:02 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w4UJPcvS120273
+        for <linux-xfs@vger.kernel.org>; Wed, 30 May 2018 19:31:01 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp2130.oracle.com with ESMTP id 2j9x4h9382-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 30 May 2018 19:31:01 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w4UJV0E5014069
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 30 May 2018 19:31:00 GMT
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w4UJV00i032683
+        for <linux-xfs@vger.kernel.org>; Wed, 30 May 2018 19:31:00 GMT
+Subject: [PATCH 03/14] xfs: repair free space btrees
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 30 May 2018 12:30:58 -0700
+Message-ID: <152770865831.11611.7628478596629227707.stgit@magnolia>
+In-Reply-To: <152770863951.11611.5866814627357136911.stgit@magnolia>
+References: <152770863951.11611.5866814627357136911.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20180530100208.31490-4-hch@lst.de>
-References: <20180530100208.31490-1-hch@lst.de> <20180530100208.31490-4-hch@lst.de>
-From: =?UTF-8?Q?Andreas_Gr=C3=BCnbacher?= <andreas.gruenbacher@gmail.com>
-Date: Wed, 30 May 2018 15:48:23 +0200
-Message-ID: <CAHpGcM+NeMcEpBZZiesq6NUQZmwjvyUaLEnBXTwEVPCpNmkzXA@mail.gmail.com>
-Subject: Re: [PATCH 3/3] fs: use ->is_partially_uptodate in page_cache_seek_hole_data
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, Andreas Gruenbacher <agruenba@redhat.com>, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, linux-ext4@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-2018-05-30 12:02 GMT+02:00 Christoph Hellwig <hch@lst.de>:
-> This way the implementation doesn't depend on buffer_head internals.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/iomap.c | 85 +++++++++++++++++++++++++-----------------------------
->  1 file changed, 39 insertions(+), 46 deletions(-)
->
-> diff --git a/fs/iomap.c b/fs/iomap.c
-> index e75153f52748..5b92243808d3 100644
-> --- a/fs/iomap.c
-> +++ b/fs/iomap.c
-> @@ -794,36 +794,51 @@ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
->  }
->  EXPORT_SYMBOL_GPL(iomap_fiemap);
->
-> -/*
-> - * Seek for SEEK_DATA / SEEK_HOLE within @page, starting at @lastoff.
-> - *
-> - * Returns the offset within the file on success, and -ENOENT otherwise.
-> - */
-> -static loff_t
-> -page_seek_hole_data(struct page *page, loff_t lastoff, int whence)
-> +static bool
-> +page_seek_hole_data(struct inode *inode, struct page *page, loff_t *lastoff,
-> +               int whence)
->  {
-> -       loff_t offset = page_offset(page);
-> -       struct buffer_head *bh, *head;
-> +       const struct address_space_operations *ops = inode->i_mapping->a_ops;
-> +       unsigned int bsize = i_blocksize(inode), off;
->         bool seek_data = whence == SEEK_DATA;
-> +       loff_t poff = page_offset(page);
->
-> -       if (lastoff < offset)
-> -               lastoff = offset;
-> -
-> -       bh = head = page_buffers(page);
-> -       do {
-> -               offset += bh->b_size;
-> -               if (lastoff >= offset)
-> -                       continue;
-> +       if (WARN_ON_ONCE(*lastoff >= poff + PAGE_SIZE))
-> +               return false;
->
-> +       if (*lastoff < poff) {
->                 /*
-> -                * Any buffer with valid data in it should have BH_Uptodate set.
-> +                * Last offset smaller than the start of the page means we found
-> +                * a hole:
->                  */
-> -               if (buffer_uptodate(bh) == seek_data)
-> -                       return lastoff;
-> +               if (whence == SEEK_HOLE)
-> +                       return true;
-> +               *lastoff = poff;
-> +       }
-> +
-> +       /*
-> +        * Just check the page unless we can and should check block ranges:
-> +        */
-> +       if (bsize == PAGE_SIZE || !ops->is_partially_uptodate)
-> +               return PageUptodate(page) == seek_data;
->
-> -               lastoff = offset;
-> -       } while ((bh = bh->b_this_page) != head);
-> -       return -ENOENT;
-> +       lock_page(page);
-> +       if (unlikely(page->mapping != inode->i_mapping))
-> +               goto out_unlock_not_found;
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Not a regression, but I guess it would make more sense to treat the
-above as a hole.
+Rebuild the free space btrees from the gaps in the rmap btree.
 
-> +
-> +       for (off = 0; off < PAGE_SIZE; off += bsize) {
-> +               if ((*lastoff & ~PAGE_MASK) >= off + bsize)
-> +                       continue;
-> +               if (ops->is_partially_uptodate(page, off, bsize) == seek_data) {
-> +                       unlock_page(page);
-> +                       return true;
-> +               }
-> +               *lastoff = poff + off + bsize;
-> +       }
-> +
-> +out_unlock_not_found:
-> +       unlock_page(page);
-> +       return false;
->  }
->
->  /*
-> @@ -860,30 +875,8 @@ page_cache_seek_hole_data(struct inode *inode, loff_t offset, loff_t length,
->                 for (i = 0; i < nr_pages; i++) {
->                         struct page *page = pvec.pages[i];
->
-> -                       /*
-> -                        * At this point, the page may be truncated or
-> -                        * invalidated (changing page->mapping to NULL), or
-> -                        * even swizzled back from swapper_space to tmpfs file
-> -                        * mapping.  However, page->index will not change
-> -                        * because we have a reference on the page.
-> -                         *
-> -                        * If current page offset is beyond where we've ended,
-> -                        * we've found a hole.
-> -                         */
-> -                       if (whence == SEEK_HOLE &&
-> -                           lastoff < page_offset(page))
-> +                       if (page_seek_hole_data(inode, page, &lastoff, whence))
->                                 goto check_range;
-> -
-> -                       lock_page(page);
-> -                       if (likely(page->mapping == inode->i_mapping) &&
-> -                           page_has_buffers(page)) {
-> -                               lastoff = page_seek_hole_data(page, lastoff, whence);
-> -                               if (lastoff >= 0) {
-> -                                       unlock_page(page);
-> -                                       goto check_range;
-> -                               }
-> -                       }
-> -                       unlock_page(page);
->                         lastoff = page_offset(page) + PAGE_SIZE;
->                 }
->                 pagevec_release(&pvec);
-> --
-> 2.17.0
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/Makefile             |    1 
+ fs/xfs/scrub/alloc.c        |    1 
+ fs/xfs/scrub/alloc_repair.c |  430 +++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/common.c       |    8 +
+ fs/xfs/scrub/repair.h       |    2 
+ fs/xfs/scrub/scrub.c        |    4 
+ 6 files changed, 442 insertions(+), 4 deletions(-)
+ create mode 100644 fs/xfs/scrub/alloc_repair.c
 
-Other than the above, these three patches look okay, and they have
-passed xfstests on gfs2.
 
-Reviewed-by: Andreas Gruenbacher <agruenba@redhat.com>
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 29fe115f29d5..abe035ad0aa4 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -175,6 +175,7 @@ xfs-$(CONFIG_XFS_QUOTA)		+= scrub/quota.o
+ ifeq ($(CONFIG_XFS_ONLINE_REPAIR),y)
+ xfs-y				+= $(addprefix scrub/, \
+ 				   agheader_repair.o \
++				   alloc_repair.o \
+ 				   repair.o \
+ 				   )
+ endif
+diff --git a/fs/xfs/scrub/alloc.c b/fs/xfs/scrub/alloc.c
+index 941a0a55224e..fe7e8bdf4a52 100644
+--- a/fs/xfs/scrub/alloc.c
++++ b/fs/xfs/scrub/alloc.c
+@@ -29,7 +29,6 @@
+ #include "xfs_log_format.h"
+ #include "xfs_trans.h"
+ #include "xfs_sb.h"
+-#include "xfs_alloc.h"
+ #include "xfs_rmap.h"
+ #include "xfs_alloc.h"
+ #include "scrub/xfs_scrub.h"
+diff --git a/fs/xfs/scrub/alloc_repair.c b/fs/xfs/scrub/alloc_repair.c
+new file mode 100644
+index 000000000000..5a81713a69cd
+--- /dev/null
++++ b/fs/xfs/scrub/alloc_repair.c
+@@ -0,0 +1,430 @@
++/*
++ * Copyright (C) 2017 Oracle.  All Rights Reserved.
++ *
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
++#include "xfs_defer.h"
++#include "xfs_btree.h"
++#include "xfs_bit.h"
++#include "xfs_log_format.h"
++#include "xfs_trans.h"
++#include "xfs_sb.h"
++#include "xfs_alloc.h"
++#include "xfs_alloc_btree.h"
++#include "xfs_rmap.h"
++#include "xfs_rmap_btree.h"
++#include "xfs_inode.h"
++#include "xfs_refcount.h"
++#include "scrub/xfs_scrub.h"
++#include "scrub/scrub.h"
++#include "scrub/common.h"
++#include "scrub/btree.h"
++#include "scrub/trace.h"
++#include "scrub/repair.h"
++
++/* Free space btree repair. */
++
++struct xfs_repair_alloc_extent {
++	struct list_head		list;
++	xfs_agblock_t			bno;
++	xfs_extlen_t			len;
++};
++
++struct xfs_repair_alloc {
++	struct list_head		extlist;
++	struct xfs_repair_extent_list	btlist;	  /* OWN_AG blocks */
++	struct xfs_repair_extent_list	nobtlist; /* rmapbt/agfl blocks */
++	struct xfs_scrub_context	*sc;
++	xfs_agblock_t			next_bno;
++	uint64_t			nr_records;
++};
++
++/* Record extents that aren't in use from gaps in the rmap records. */
++STATIC int
++xfs_repair_alloc_extent_fn(
++	struct xfs_btree_cur		*cur,
++	struct xfs_rmap_irec		*rec,
++	void				*priv)
++{
++	struct xfs_repair_alloc		*ra = priv;
++	struct xfs_repair_alloc_extent	*rae;
++	struct xfs_buf			*bp;
++	xfs_fsblock_t			fsb;
++	int				i;
++	int				error;
++
++	/* Record all the OWN_AG blocks... */
++	if (rec->rm_owner == XFS_RMAP_OWN_AG) {
++		fsb = XFS_AGB_TO_FSB(cur->bc_mp, cur->bc_private.a.agno,
++				rec->rm_startblock);
++		error = xfs_repair_collect_btree_extent(ra->sc,
++				&ra->btlist, fsb, rec->rm_blockcount);
++		if (error)
++			return error;
++	}
++
++	/* ...and all the rmapbt blocks... */
++	for (i = 0; i < cur->bc_nlevels && cur->bc_ptrs[i] == 1; i++) {
++		xfs_btree_get_block(cur, i, &bp);
++		if (!bp)
++			continue;
++		fsb = XFS_DADDR_TO_FSB(cur->bc_mp, bp->b_bn);
++		error = xfs_repair_collect_btree_extent(ra->sc,
++				&ra->nobtlist, fsb, 1);
++		if (error)
++			return error;
++	}
++
++	/* ...and all the free space. */
++	if (rec->rm_startblock > ra->next_bno) {
++		trace_xfs_repair_alloc_extent_fn(cur->bc_mp,
++				cur->bc_private.a.agno,
++				ra->next_bno, rec->rm_startblock - ra->next_bno,
++				XFS_RMAP_OWN_NULL, 0, 0);
++
++		rae = kmem_alloc(sizeof(struct xfs_repair_alloc_extent),
++				KM_MAYFAIL);
++		if (!rae)
++			return -ENOMEM;
++		INIT_LIST_HEAD(&rae->list);
++		rae->bno = ra->next_bno;
++		rae->len = rec->rm_startblock - ra->next_bno;
++		list_add_tail(&rae->list, &ra->extlist);
++		ra->nr_records++;
++	}
++	ra->next_bno = max_t(xfs_agblock_t, ra->next_bno,
++			rec->rm_startblock + rec->rm_blockcount);
++	return 0;
++}
++
++/* Find the longest free extent in the list. */
++static struct xfs_repair_alloc_extent *
++xfs_repair_allocbt_get_longest(
++	struct xfs_repair_alloc		*ra)
++{
++	struct xfs_repair_alloc_extent	*rae;
++	struct xfs_repair_alloc_extent	*longest = NULL;
++
++	list_for_each_entry(rae, &ra->extlist, list) {
++		if (!longest || rae->len > longest->len)
++			longest = rae;
++	}
++	return longest;
++}
++
++/* Collect an AGFL block for the not-to-release list. */
++static int
++xfs_repair_collect_agfl_block(
++	struct xfs_mount		*mp,
++	xfs_agblock_t			bno,
++	void				*priv)
++{
++	struct xfs_repair_alloc		*ra = priv;
++	xfs_fsblock_t			fsb;
++
++	fsb = XFS_AGB_TO_FSB(mp, ra->sc->sa.agno, bno);
++	return xfs_repair_collect_btree_extent(ra->sc, &ra->nobtlist, fsb, 1);
++}
++
++/* Compare two btree extents. */
++static int
++xfs_repair_allocbt_extent_cmp(
++	void				*priv,
++	struct list_head		*a,
++	struct list_head		*b)
++{
++	struct xfs_repair_alloc_extent	*ap;
++	struct xfs_repair_alloc_extent	*bp;
++
++	ap = container_of(a, struct xfs_repair_alloc_extent, list);
++	bp = container_of(b, struct xfs_repair_alloc_extent, list);
++
++	if (ap->bno > bp->bno)
++		return 1;
++	else if (ap->bno < bp->bno)
++		return -1;
++	return 0;
++}
++
++/* Put an extent onto the free list. */
++STATIC int
++xfs_repair_allocbt_free_extent(
++	struct xfs_scrub_context	*sc,
++	xfs_fsblock_t			fsbno,
++	xfs_extlen_t			len,
++	struct xfs_owner_info		*oinfo)
++{
++	int				error;
++
++	error = xfs_free_extent(sc->tp, fsbno, len, oinfo, 0);
++	if (error)
++		return error;
++	error = xfs_repair_roll_ag_trans(sc);
++	if (error)
++		return error;
++	return xfs_mod_fdblocks(sc->mp, -(int64_t)len, false);
++}
++
++/* Allocate a block from the (cached) longest extent in the AG. */
++STATIC xfs_fsblock_t
++xfs_repair_allocbt_alloc_from_longest(
++	struct xfs_repair_alloc		*ra,
++	struct xfs_repair_alloc_extent	**longest)
++{
++	xfs_fsblock_t			fsb;
++
++	if (*longest && (*longest)->len == 0) {
++		list_del(&(*longest)->list);
++		kmem_free(*longest);
++		*longest = NULL;
++	}
++
++	if (*longest == NULL) {
++		*longest = xfs_repair_allocbt_get_longest(ra);
++		if (*longest == NULL)
++			return NULLFSBLOCK;
++	}
++
++	fsb = XFS_AGB_TO_FSB(ra->sc->mp, ra->sc->sa.agno, (*longest)->bno);
++	(*longest)->bno++;
++	(*longest)->len--;
++	return fsb;
++}
++
++/* Repair the freespace btrees for some AG. */
++int
++xfs_repair_allocbt(
++	struct xfs_scrub_context	*sc)
++{
++	struct xfs_repair_alloc		ra;
++	struct xfs_owner_info		oinfo;
++	struct xfs_mount		*mp = sc->mp;
++	struct xfs_btree_cur		*cur = NULL;
++	struct xfs_repair_alloc_extent	*longest = NULL;
++	struct xfs_repair_alloc_extent	*rae;
++	struct xfs_repair_alloc_extent	*n;
++	struct xfs_perag		*pag;
++	struct xfs_agf			*agf;
++	struct xfs_buf			*bp;
++	xfs_fsblock_t			bnofsb;
++	xfs_fsblock_t			cntfsb;
++	xfs_extlen_t			oldf;
++	xfs_extlen_t			nr_blocks;
++	xfs_agblock_t			agend;
++	int				error;
++
++	/* We require the rmapbt to rebuild anything. */
++	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
++		return -EOPNOTSUPP;
++
++	xfs_scrub_perag_get(sc->mp, &sc->sa);
++	pag = sc->sa.pag;
++	/*
++	 * Make sure the busy extent list is clear because we can't put
++	 * extents on there twice.
++	 */
++	spin_lock(&pag->pagb_lock);
++	if (pag->pagb_tree.rb_node) {
++		spin_unlock(&pag->pagb_lock);
++		return -EDEADLOCK;
++	}
++	spin_unlock(&pag->pagb_lock);
++
++	/*
++	 * Collect all reverse mappings for free extents, and the rmapbt
++	 * blocks.  We can discover the rmapbt blocks completely from a
++	 * query_all handler because there are always rmapbt entries.
++	 * (One cannot use on query_all to visit all of a btree's blocks
++	 * unless that btree is guaranteed to have at least one entry.)
++	 */
++	INIT_LIST_HEAD(&ra.extlist);
++	xfs_repair_init_extent_list(&ra.btlist);
++	xfs_repair_init_extent_list(&ra.nobtlist);
++	ra.next_bno = 0;
++	ra.nr_records = 0;
++	ra.sc = sc;
++
++	cur = xfs_rmapbt_init_cursor(mp, sc->tp, sc->sa.agf_bp, sc->sa.agno);
++	error = xfs_rmap_query_all(cur, xfs_repair_alloc_extent_fn, &ra);
++	if (error)
++		goto out;
++	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++	cur = NULL;
++
++	/* Insert a record for space between the last rmap and EOAG. */
++	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
++	agend = be32_to_cpu(agf->agf_length);
++	if (ra.next_bno < agend) {
++		rae = kmem_alloc(sizeof(struct xfs_repair_alloc_extent),
++				KM_MAYFAIL);
++		if (!rae) {
++			error = -ENOMEM;
++			goto out;
++		}
++		INIT_LIST_HEAD(&rae->list);
++		rae->bno = ra.next_bno;
++		rae->len = agend - ra.next_bno;
++		list_add_tail(&rae->list, &ra.extlist);
++		ra.nr_records++;
++	}
++
++	/* Collect all the AGFL blocks. */
++	error = xfs_agfl_walk(sc->mp, XFS_BUF_TO_AGF(sc->sa.agf_bp),
++			sc->sa.agfl_bp, xfs_repair_collect_agfl_block, &ra);
++	if (error)
++		goto out;
++
++	/* Do we actually have enough space to do this? */
++	nr_blocks = 2 * xfs_allocbt_calc_size(mp, ra.nr_records);
++	if (!xfs_repair_ag_has_space(pag, nr_blocks, XFS_AG_RESV_NONE)) {
++		error = -ENOSPC;
++		goto out;
++	}
++
++	/* Invalidate all the bnobt/cntbt blocks in btlist. */
++	error = xfs_repair_subtract_extents(sc, &ra.btlist, &ra.nobtlist);
++	if (error)
++		goto out;
++	xfs_repair_cancel_btree_extents(sc, &ra.nobtlist);
++	error = xfs_repair_invalidate_blocks(sc, &ra.btlist);
++	if (error)
++		goto out;
++
++	/* Allocate new bnobt root. */
++	bnofsb = xfs_repair_allocbt_alloc_from_longest(&ra, &longest);
++	if (bnofsb == NULLFSBLOCK) {
++		error = -ENOSPC;
++		goto out;
++	}
++
++	/* Allocate new cntbt root. */
++	cntfsb = xfs_repair_allocbt_alloc_from_longest(&ra, &longest);
++	if (cntfsb == NULLFSBLOCK) {
++		error = -ENOSPC;
++		goto out;
++	}
++
++	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
++	/* Initialize new bnobt root. */
++	error = xfs_repair_init_btblock(sc, bnofsb, &bp, XFS_BTNUM_BNO,
++			&xfs_allocbt_buf_ops);
++	if (error)
++		goto out;
++	agf->agf_roots[XFS_BTNUM_BNOi] =
++			cpu_to_be32(XFS_FSB_TO_AGBNO(mp, bnofsb));
++	agf->agf_levels[XFS_BTNUM_BNOi] = cpu_to_be32(1);
++
++	/* Initialize new cntbt root. */
++	error = xfs_repair_init_btblock(sc, cntfsb, &bp, XFS_BTNUM_CNT,
++			&xfs_allocbt_buf_ops);
++	if (error)
++		goto out;
++	agf->agf_roots[XFS_BTNUM_CNTi] =
++			cpu_to_be32(XFS_FSB_TO_AGBNO(mp, cntfsb));
++	agf->agf_levels[XFS_BTNUM_CNTi] = cpu_to_be32(1);
++
++	/*
++	 * Since we're abandoning the old bnobt/cntbt, we have to
++	 * decrease fdblocks by the # of blocks in those trees.
++	 * btreeblks counts the non-root blocks of the free space
++	 * and rmap btrees.  Do this before resetting the AGF counters.
++	 */
++	oldf = pag->pagf_btreeblks + 2;
++	oldf -= (be32_to_cpu(agf->agf_rmap_blocks) - 1);
++	error = xfs_mod_fdblocks(mp, -(int64_t)oldf, false);
++	if (error)
++		goto out;
++
++	/* Reset the perag info. */
++	pag->pagf_btreeblks = be32_to_cpu(agf->agf_rmap_blocks) - 1;
++	pag->pagf_freeblks = 0;
++	pag->pagf_longest = 0;
++	pag->pagf_levels[XFS_BTNUM_BNOi] =
++			be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNOi]);
++	pag->pagf_levels[XFS_BTNUM_CNTi] =
++			be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]);
++
++	/* Now reset the AGF counters. */
++	agf->agf_btreeblks = cpu_to_be32(pag->pagf_btreeblks);
++	agf->agf_freeblks = cpu_to_be32(pag->pagf_freeblks);
++	agf->agf_longest = cpu_to_be32(pag->pagf_longest);
++	xfs_alloc_log_agf(sc->tp, sc->sa.agf_bp,
++			XFS_AGF_ROOTS | XFS_AGF_LEVELS | XFS_AGF_BTREEBLKS |
++			XFS_AGF_LONGEST | XFS_AGF_FREEBLKS);
++	error = xfs_repair_roll_ag_trans(sc);
++	if (error)
++		goto out;
++
++	/*
++	 * Insert the longest free extent in case it's necessary to
++	 * refresh the AGFL with multiple blocks.
++	 */
++	xfs_rmap_skip_owner_update(&oinfo);
++	if (longest && longest->len == 0) {
++		error = xfs_repair_allocbt_free_extent(sc,
++				XFS_AGB_TO_FSB(sc->mp, sc->sa.agno,
++					longest->bno),
++				longest->len, &oinfo);
++		if (error)
++			goto out;
++		list_del(&longest->list);
++		kmem_free(longest);
++	}
++
++	/* Insert records into the new btrees. */
++	list_sort(NULL, &ra.extlist, xfs_repair_allocbt_extent_cmp);
++	list_for_each_entry_safe(rae, n, &ra.extlist, list) {
++		error = xfs_repair_allocbt_free_extent(sc,
++				XFS_AGB_TO_FSB(sc->mp, sc->sa.agno, rae->bno),
++				rae->len, &oinfo);
++		if (error)
++			goto out;
++		list_del(&rae->list);
++		kmem_free(rae);
++	}
++
++	/* Add rmap records for the btree roots */
++	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_AG);
++	error = xfs_rmap_alloc(sc->tp, sc->sa.agf_bp, sc->sa.agno,
++			XFS_FSB_TO_AGBNO(mp, bnofsb), 1, &oinfo);
++	if (error)
++		goto out;
++	error = xfs_rmap_alloc(sc->tp, sc->sa.agf_bp, sc->sa.agno,
++			XFS_FSB_TO_AGBNO(mp, cntfsb), 1, &oinfo);
++	if (error)
++		goto out;
++
++	/* Free all the OWN_AG blocks that are not in the rmapbt/agfl. */
++	return xfs_repair_reap_btree_extents(sc, &ra.btlist, &oinfo,
++			XFS_AG_RESV_NONE);
++out:
++	xfs_repair_cancel_btree_extents(sc, &ra.btlist);
++	xfs_repair_cancel_btree_extents(sc, &ra.nobtlist);
++	if (cur)
++		xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
++	list_for_each_entry_safe(rae, n, &ra.extlist, list) {
++		list_del(&rae->list);
++		kmem_free(rae);
++	}
++	return error;
++}
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index 41198a5f872c..89938b328954 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -637,8 +637,14 @@ xfs_scrub_setup_ag_btree(
+ 	 * expensive operation should be performed infrequently and only
+ 	 * as a last resort.  Any caller that sets force_log should
+ 	 * document why they need to do so.
++	 *
++	 * Force everything in memory out to disk if we're repairing.
++	 * This ensures we won't get tripped up by btree blocks sitting
++	 * in memory waiting to have LSNs stamped in.  The AGF/AGI repair
++	 * routines use any available rmap data to try to find a btree
++	 * root that also passes the read verifiers.
+ 	 */
+-	if (force_log) {
++	if (force_log || (sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR)) {
+ 		error = xfs_scrub_checkpoint_log(mp);
+ 		if (error)
+ 			return error;
+diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+index 9d69d03f1bfe..82cf2d012ebc 100644
+--- a/fs/xfs/scrub/repair.h
++++ b/fs/xfs/scrub/repair.h
+@@ -111,6 +111,7 @@ int xfs_repair_superblock(struct xfs_scrub_context *sc);
+ int xfs_repair_agf(struct xfs_scrub_context *sc);
+ int xfs_repair_agfl(struct xfs_scrub_context *sc);
+ int xfs_repair_agi(struct xfs_scrub_context *sc);
++int xfs_repair_allocbt(struct xfs_scrub_context *sc);
+ 
+ #else
+ 
+@@ -137,6 +138,7 @@ xfs_repair_calc_ag_resblks(
+ #define xfs_repair_agf			xfs_repair_notsupported
+ #define xfs_repair_agfl			xfs_repair_notsupported
+ #define xfs_repair_agi			xfs_repair_notsupported
++#define xfs_repair_allocbt		xfs_repair_notsupported
+ 
+ #endif /* CONFIG_XFS_ONLINE_REPAIR */
+ 
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index d68cfcd31f30..213d7e21466a 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -240,13 +240,13 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
+ 		.type	= ST_PERAG,
+ 		.setup	= xfs_scrub_setup_ag_allocbt,
+ 		.scrub	= xfs_scrub_bnobt,
+-		.repair	= xfs_repair_notsupported,
++		.repair	= xfs_repair_allocbt,
+ 	},
+ 	[XFS_SCRUB_TYPE_CNTBT] = {	/* cntbt */
+ 		.type	= ST_PERAG,
+ 		.setup	= xfs_scrub_setup_ag_allocbt,
+ 		.scrub	= xfs_scrub_cntbt,
+-		.repair	= xfs_repair_notsupported,
++		.repair	= xfs_repair_allocbt,
+ 	},
+ 	[XFS_SCRUB_TYPE_INOBT] = {	/* inobt */
+ 		.type	= ST_PERAG,
 
-Thanks,
-Andreas
