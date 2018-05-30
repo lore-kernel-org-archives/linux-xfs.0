@@ -1,71 +1,36 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:54662 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935256AbeE3GOn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 May 2018 02:14:43 -0400
-Date: Tue, 29 May 2018 23:14:36 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 17/34] xfs: use iomap_bmap
-Message-ID: <20180530061436.GE30110@magnolia>
-References: <20180523144357.18985-1-hch@lst.de>
- <20180523144357.18985-18-hch@lst.de>
+Received: from verein.lst.de ([213.95.11.211]:59216 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935672AbeE3GRU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 30 May 2018 02:17:20 -0400
+Date: Wed, 30 May 2018 08:23:37 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 15/34] iomap: add an iomap-based readpage and readpages
+        implementation
+Message-ID: <20180530062337.GA25732@lst.de>
+References: <20180523144357.18985-1-hch@lst.de> <20180523144357.18985-16-hch@lst.de> <20180530061146.GD30110@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180523144357.18985-18-hch@lst.de>
+In-Reply-To: <20180530061146.GD30110@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-On Wed, May 23, 2018 at 04:43:40PM +0200, Christoph Hellwig wrote:
-> Switch to the iomap based bmap implementation to get rid of one of the
-> last users of xfs_get_blocks.
+On Tue, May 29, 2018 at 11:11:46PM -0700, Darrick J. Wong wrote:
+> > +		list_del(&page->lru);
+> > +		if (!add_to_page_cache_lru(page, inode->i_mapping, page->index,
+> > +				GFP_NOFS))
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> ---
->  fs/xfs/xfs_aops.c | 9 +++------
->  1 file changed, 3 insertions(+), 6 deletions(-)
+> I'm curious about this line -- if add_to_page_cache_lru returns an
+> error, why don't we want to send that back up the stack?  Is the idea
+> that the page doesn't become uptodate and something else notices?   It
+> seems a little odd that on error we just skip to the next page.
 > 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 80de476cecf8..56e405572909 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -1378,10 +1378,9 @@ xfs_vm_bmap(
->  	struct address_space	*mapping,
->  	sector_t		block)
->  {
-> -	struct inode		*inode = (struct inode *)mapping->host;
-> -	struct xfs_inode	*ip = XFS_I(inode);
-> +	struct xfs_inode	*ip = XFS_I(mapping->host);
->  
-> -	trace_xfs_vm_bmap(XFS_I(inode));
-> +	trace_xfs_vm_bmap(ip);
->  
->  	/*
->  	 * The swap code (ab-)uses ->bmap to get a block mapping and then
-> @@ -1394,9 +1393,7 @@ xfs_vm_bmap(
->  	 */
->  	if (xfs_is_reflink_inode(ip) || XFS_IS_REALTIME_INODE(ip))
->  		return 0;
-> -
-> -	filemap_write_and_wait(mapping);
-> -	return generic_block_bmap(mapping, block, xfs_get_blocks);
-> +	return iomap_bmap(mapping, block, &xfs_iomap_ops);
->  }
->  
->  STATIC int
-> -- 
-> 2.17.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> (If this /is/ correct then comment is needed here.)
+
+readpages is only used for read-ahead, so the upper layers literally
+don't care as long as we don't mess up the page refcount.  This logic
+is taken straight from mpage_readpages, but I'll add a comment anyway.
