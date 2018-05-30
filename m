@@ -1,29 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:60168 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965247AbeE3Jww (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 30 May 2018 05:52:52 -0400
-Date: Wed, 30 May 2018 11:59:11 +0200
+Received: from bombadil.infradead.org ([198.137.202.133]:34506 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751512AbeE3J6S (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 May 2018 05:58:18 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [Cluster-devel] [PATCH 11/34] iomap: move IOMAP_F_BOUNDARY to
-        gfs2
-Message-ID: <20180530095911.GB31068@lst.de>
-References: <20180523144357.18985-1-hch@lst.de> <20180523144357.18985-12-hch@lst.de> <20180530055033.GZ30110@magnolia> <bc621d7c-f1a6-14c2-663f-57ded16811fa@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <bc621d7c-f1a6-14c2-663f-57ded16811fa@redhat.com>
+Subject: iomap based buffered reads & iomap cleanups v4
+Date: Wed, 30 May 2018 11:58:00 +0200
+Message-Id: <20180530095813.31245-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Steven Whitehouse <swhiteho@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com, linux-mm@kvack.org
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-On Wed, May 30, 2018 at 10:30:32AM +0100, Steven Whitehouse wrote:
-> I may have missed the context here, but I thought that the boundary was a 
-> generic thing meaning "there will have to be a metadata read before more 
-> blocks can be mapped" so I'm not sure why that would now be GFS2 specific?
+Hi all,
 
-It was always a hack.  But with iomap it doesn't make any sensee to start
-with, all metadata I/O happens in iomap_begin, so there is no point in
-marking an iomap with flags like this for the actual iomap interface.
+this series adds support for buffered reads without buffer heads to
+the iomap and XFS code.  It has been split from the larger series
+for easier review.
+
+
+A git tree is available at:
+
+    git://git.infradead.org/users/hch/xfs.git xfs-iomap-read.4
+
+Gitweb:
+
+    http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-iomap-read.4
+
+Changes since v3:
+ - remove iomap_read_bio_alloc
+ - set REQ_RAHEAD flag for readpages
+ - better commen on the add_to_page_cache_lru semantics for readpages
+ - move all write related patches to a separate series
+
+Changes since v2:
+ - minor page_seek_hole_data tweaks
+ - don't read data entirely covered by the write operation in write_begin
+ - fix zeroing on write_begin I/O failure
+ - remove iomap_block_needs_zeroing to make the code more clear
+ - update comments on __do_page_cache_readahead
+
+Changes since v1:
+ - fix the iomap_readpages error handling
+ - use unsigned file offsets in a few places to avoid arithmetic overflows
+ - allocate a iomap_page in iomap_page_mkwrite to fix generic/095
+ - improve a few comments
+ - add more asserts
+ - warn about truncated block numbers from ->bmap
+ - new patch to change the __do_page_cache_readahead return value to
+   unsigned int
+ - remove an incorrectly added empty line
+ - make inline data an explicit iomap type instead of a flag
+ - add a IOMAP_F_BUFFER_HEAD flag to force use of buffers heads for gfs2,
+   and keep the basic buffer head infrastructure around for now.
