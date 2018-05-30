@@ -1,151 +1,159 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60089 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755103AbeEaNqp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 31 May 2018 09:46:45 -0400
-Date: Thu, 31 May 2018 09:46:44 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 08/18] xfs: remove xfs_reflink_find_cow_mapping
-Message-ID: <20180531134643.GB2997@bfoster.bfoster>
-References: <20180530100013.31358-1-hch@lst.de>
- <20180530100013.31358-9-hch@lst.de>
+Received: from userp2130.oracle.com ([156.151.31.86]:38896 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932394AbeE3WIx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 May 2018 18:08:53 -0400
+Date: Wed, 30 May 2018 15:08:30 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3.5/4 V2] mkfs.xfs: document defaults config file details
+Message-ID: <20180530220830.GX837@magnolia>
+References: <20180529220603.29420-1-mcgrof@kernel.org>
+ <20180529220603.29420-4-mcgrof@kernel.org>
+ <7f30d5cb-800e-13a2-9ad7-d884cebc31e4@sandeen.net>
+ <cbffce6a-718b-6a0a-e78d-043999053bd1@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180530100013.31358-9-hch@lst.de>
+In-Reply-To: <cbffce6a-718b-6a0a-e78d-043999053bd1@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com
 
-On Wed, May 30, 2018 at 12:00:03PM +0200, Christoph Hellwig wrote:
-> We only have one caller left, and open coding the simple extent list
-> lookup in it allows us to make the code both more understandable and
-> reuse calculations and variables already present.
+On Wed, May 30, 2018 at 03:51:48PM -0500, Eric Sandeen wrote:
+> Document the mkfs default config file behavior.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/xfs_aops.c    | 17 ++++++++++++-----
->  fs/xfs/xfs_reflink.c | 30 ------------------------------
->  fs/xfs/xfs_reflink.h |  2 --
->  fs/xfs/xfs_trace.h   |  1 -
->  4 files changed, 12 insertions(+), 38 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 8cc41a786b5e..e2671b223409 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -385,6 +385,7 @@ xfs_map_blocks(
->  	ssize_t			count = i_blocksize(inode);
->  	xfs_fileoff_t		offset_fsb, end_fsb;
->  	int			whichfork = XFS_DATA_FORK;
-> +	struct xfs_iext_cursor	icur;
->  	int			error = 0;
->  	int			nimaps = 1;
->  
-> @@ -396,8 +397,18 @@ xfs_map_blocks(
->  	       (ip->i_df.if_flags & XFS_IFEXTENTS));
->  	ASSERT(offset <= mp->m_super->s_maxbytes);
->  
-> +	if (offset > mp->m_super->s_maxbytes - count)
-> +		count = mp->m_super->s_maxbytes - offset;
-> +	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
-> +	offset_fsb = XFS_B_TO_FSBT(mp, offset);
-> +
-> +	/*
-> +	 * Check if this is offset is covered by a COW extents, and if yes use
-> +	 * it directly instead of looking up anything in the data fork.
-> +	 */
->  	if (xfs_is_reflink_inode(ip) &&
-> -	    xfs_reflink_find_cow_mapping(ip, offset, imap)) {
-> +	    xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, imap) &&
-> +	    imap->br_startoff <= offset_fsb) {
->  		xfs_iunlock(ip, XFS_ILOCK_SHARED);
->  		/*
->  		 * Truncate can race with writeback since writeback doesn't
-> @@ -417,10 +428,6 @@ xfs_map_blocks(
->  		goto allocate_blocks;
->  	}
->  
-> -	if (offset > mp->m_super->s_maxbytes - count)
-> -		count = mp->m_super->s_maxbytes - offset;
-> -	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
-> -	offset_fsb = XFS_B_TO_FSBT(mp, offset);
->  	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
->  				imap, &nimaps, XFS_BMAPI_ENTIRE);
->  	if (!nimaps) {
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 713e857d9ffa..8e5eb8e70c89 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -484,36 +484,6 @@ xfs_reflink_allocate_cow(
->  	return error;
->  }
->  
-> -/*
-> - * Find the CoW reservation for a given byte offset of a file.
-> - */
-> -bool
-> -xfs_reflink_find_cow_mapping(
-> -	struct xfs_inode		*ip,
-> -	xfs_off_t			offset,
-> -	struct xfs_bmbt_irec		*imap)
-> -{
-> -	struct xfs_ifork		*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
-> -	xfs_fileoff_t			offset_fsb;
-> -	struct xfs_bmbt_irec		got;
-> -	struct xfs_iext_cursor		icur;
-> -
-> -	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
-> -
-> -	if (!xfs_is_reflink_inode(ip))
-> -		return false;
-> -	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
-> -	if (!xfs_iext_lookup_extent(ip, ifp, offset_fsb, &icur, &got))
-> -		return false;
-> -	if (got.br_startoff > offset_fsb)
-> -		return false;
-> -
-> -	trace_xfs_reflink_find_cow_mapping(ip, offset, 1, XFS_IO_OVERWRITE,
-> -			&got);
-> -	*imap = got;
-> -	return true;
-> -}
-> -
->  /*
->   * Trim an extent to end at the next CoW reservation past offset_fsb.
->   */
-> diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-> index 701487bab468..15a456492667 100644
-> --- a/fs/xfs/xfs_reflink.h
-> +++ b/fs/xfs/xfs_reflink.h
-> @@ -32,8 +32,6 @@ extern int xfs_reflink_allocate_cow(struct xfs_inode *ip,
->  		struct xfs_bmbt_irec *imap, bool *shared, uint *lockmode);
->  extern int xfs_reflink_convert_cow(struct xfs_inode *ip, xfs_off_t offset,
->  		xfs_off_t count);
-> -extern bool xfs_reflink_find_cow_mapping(struct xfs_inode *ip, xfs_off_t offset,
-> -		struct xfs_bmbt_irec *imap);
->  extern void xfs_reflink_trim_irec_to_next_cow(struct xfs_inode *ip,
->  		xfs_fileoff_t offset_fsb, struct xfs_bmbt_irec *imap);
->  
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 9d4c4ca24fe6..ed8f774944ba 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -3227,7 +3227,6 @@ DEFINE_INODE_IREC_EVENT(xfs_reflink_convert_cow);
->  DEFINE_RW_EVENT(xfs_reflink_reserve_cow);
->  
->  DEFINE_SIMPLE_IO_EVENT(xfs_reflink_bounce_dio_write);
-> -DEFINE_IOMAP_EVENT(xfs_reflink_find_cow_mapping);
->  DEFINE_INODE_IREC_EVENT(xfs_reflink_trim_irec);
->  
->  DEFINE_SIMPLE_IO_EVENT(xfs_reflink_cancel_cow_range);
-> -- 
-> 2.17.0
+> V2: implement most of darrick's suggestions
+> 
+> diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+> index 4b8c78c..ca8c775 100644
+> --- a/man/man8/mkfs.xfs.8
+> +++ b/man/man8/mkfs.xfs.8
+> @@ -4,6 +4,10 @@ mkfs.xfs \- construct an XFS filesystem
+>  .SH SYNOPSIS
+>  .B mkfs.xfs
+>  [
+> +.B \-c
+> +.I configuration
+> +] [
+> +[
+>  .B \-b
+>  .I block_size_options
+>  ] [
+> @@ -121,8 +125,41 @@ when parameters are quantified in those units.
+>  .PP
+>  Many feature options allow an optional argument of 0 or 1, to explicitly
+>  disable or enable the functionality.
+> +.SH DEFAULT VALUES
+> +.BR mkfs.xfs (8)
+> +contains built-in default values for every option as described in the sections
+> +below.
+> +These built-in defaults may evolve over time as new capabilities are added.
+> +If the file
+> +.B /etc/xfs/mkfs/default
+> +exists, it will be parsed to override built-in defaults, and the defaults
+> +described in sections below may no longer apply.
+> +.PP
+> +The
+> +.B \-c
+> +option may also be used to specify an alternate configuration file
+> +as described in the OPTIONS section.
+>  .SH OPTIONS
+>  .TP
+> +.BI \-c " configuration"
+> +This option may be used to specify a configuration file other than
+> +.B /etc/xfs/mkfs/default
+> +to override selected built-in parameter defaults.
+> +If
+> +.B configuration
+> +is a simple filename with no path components, it will be searched in the
+> +.B /etc/xfs/mkfs/
+> +directory.
+> +If
+> +.B configuration
+> +is an absolute pathname, that path will be used to find the configuration file.
+> +Otherwise, if
+> +.B configuration
+> +begins with
+> +.BR \'./\' " or " \'../\'
+> +it will be treated as a pathname relative to the current working directory.
+> +See also the CONFIGURATION FILE FORMAT section below.
+> +.TP
+>  .BI \-b " block_size_options"
+>  This option specifies the fundamental block size of the filesystem.
+>  The valid
+> @@ -920,6 +957,55 @@ Do not attempt to discard blocks at mkfs time.
+>  .TP
+>  .B \-V
+>  Prints the version number and exits.
+> +.SH CONFIGURATION FILE FORMAT
+> +The optional default configuration file in
+> +.B /etc/xfs/mkfs/default
+> +as well as any alternate configuration file specified via the
+> +.B \-c
+> +option must follow a simple ini-style format as shown below.
+> +Available options consist of a subset of the parameters available
+> +via the
+> +.BR mkfs.xfs (8)
+> +command line.
+> +Currently all default parameters can only be either enabled or disabled,
+> +with a value of 1 to enable or 0 to disable.
+> +See below for a list of all supported configuration parameters and their
+> +current built-in default settings.
+> +.PP
+> +.BI [data]
+> +.br
+> +.BI noalign=0
+> +.PP
+> +.BI [inode]
+> +.br
+> +.BI align=1
+> +.br
+> +.BI projid32bit=1
+> +.br
+> +.BI sparse=0
+
+sparse=1
+
+Otherwise this looks ok provided we ensure the code does what the docs
+say.
+
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+
+> +.PP
+> +.BI [log]
+> +.br
+> +.BI lazy-count=1
+> +.PP
+> +.BI [metadata]
+> +.br
+> +.BI crc=1
+> +.br
+> +.BI finobt=1
+> +.br
+> +.BI rmapbt=0
+> +.br
+> +.BI reflink=0
+> +.PP
+> +.BI [naming]
+> +.br
+> +.BI ftype=1
+> +.PP
+> +.BI [rtdev]
+> +.br
+> +.BI noalign=0
+> +.PP
+>  .SH SEE ALSO
+>  .BR xfs (5),
+>  .BR mkfs (8),
+> 
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
