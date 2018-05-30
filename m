@@ -1,119 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:60732 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935813AbeE2Wng (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 May 2018 18:43:36 -0400
-Date: Tue, 29 May 2018 15:43:32 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 06/22] xfs: add a repair helper to reset superblock
- counters
-Message-ID: <20180529224332.GL30110@magnolia>
-References: <152642361893.1556.9335169821674946249.stgit@magnolia>
- <152642365674.1556.6776151224606075985.stgit@magnolia>
- <20180518035623.GD23858@magnolia>
- <20180529032810.GM10363@dastard>
- <20180529220716.GK30110@magnolia>
- <20180529222428.GR10363@dastard>
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:46300 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751656AbeE3MfQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 May 2018 08:35:16 -0400
+Received: by mail-lf0-f65.google.com with SMTP id h9-v6so4027814lfc.13
+        for <linux-xfs@vger.kernel.org>; Wed, 30 May 2018 05:35:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180529222428.GR10363@dastard>
+In-Reply-To: <20180416170329.GA5203@magnolia>
+References: <20180414215937.GH5572@dastard> <20180414222407.GA15294@bombadil.infradead.org>
+ <20180415072121.GA13601@infradead.org> <20180415111104.GB25513@bombadil.infradead.org>
+ <20180415120426.GA10479@infradead.org> <20180415123427.GA11379@bombadil.infradead.org>
+ <20180416085707.GB30363@infradead.org> <20180416111423.GA26022@bombadil.infradead.org>
+ <20180416112353.GA22921@infradead.org> <20180416113139.GB26022@bombadil.infradead.org>
+ <20180416170329.GA5203@magnolia>
+From: Souptick Joarder <jrdr.linux@gmail.com>
+Date: Wed, 30 May 2018 18:05:13 +0530
+Message-ID: <CAFqt6za9AUAbt7g7tY7iQ2SQtgGOUZ266aym1zrm9Z5PhBvvaw@mail.gmail.com>
+Subject: Re: [PATCH] fs: xfs: Change return type to vm_fault_t
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Matthew Wilcox <willy@infradead.org>, Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-On Wed, May 30, 2018 at 08:24:28AM +1000, Dave Chinner wrote:
-> On Tue, May 29, 2018 at 03:07:16PM -0700, Darrick J. Wong wrote:
-> > On Tue, May 29, 2018 at 01:28:10PM +1000, Dave Chinner wrote:
-> > > On Thu, May 17, 2018 at 08:56:23PM -0700, Darrick J. Wong wrote:
-> > > > +	/*
-> > > > +	 * Reinitialize the counters.  The on-disk and in-core counters differ
-> > > > +	 * by the number of inodes/blocks reserved by the admin, the per-AG
-> > > > +	 * reservation, and any transactions in progress, so we have to
-> > > > +	 * account for that.  First we take the sb lock and update its
-> > > > +	 * counters...
-> > > > +	 */
-> > > > +	spin_lock(&mp->m_sb_lock);
-> > > > +	delta_icount = (int64_t)mp->m_sb.sb_icount - icount;
-> > > > +	delta_ifree = (int64_t)mp->m_sb.sb_ifree - ifree;
-> > > > +	delta_fdblocks = (int64_t)mp->m_sb.sb_fdblocks - fdblocks;
-> > > > +	mp->m_sb.sb_icount = icount;
-> > > > +	mp->m_sb.sb_ifree = ifree;
-> > > > +	mp->m_sb.sb_fdblocks = fdblocks;
-> > > > +	spin_unlock(&mp->m_sb_lock);
-> > > 
-> > > This seems racy to me ? i.e. the per-ag counters can change while
-> > > we are summing them, and once we've summed them then sb counters
-> > > can change while we are waiting for the m_sb_lock. It's looks to me
-> > > like the summed per-ag counters are not in any way coherent
-> > > wit the superblock or the in-core per-CPU counters, so I'm
-> > > struggling to understand why this is safe?
-> > 
-> > Hmm, yes, I think this is racy too.  The purpose of this code is to
-> > recompute the global counters from the AG counters after any operation
-> > that modifies anything that would affect the icount/ifreecount/fdblocks
-> > counters...
-> 
-> *nod*
-> 
-> > > We can do this sort of summation at mount time (in
-> > > xfs_initialize_perag_data()) because the filesystem is running
-> > > single threaded while the summation is taking place and so nothing
-> > > is changing during th summation. The filesystem is active in this
-> > > case, so I don't think we can do the same thing here.
-> > 
-> > ...however, you're correct to point out that the fs must be quiesced
-> > before we can actually do this.  In other words, I think the filesystem
-> > has to be completely frozen before we can do this.  Perhaps it's better
-> > to have the per-ag rebuilders fix only the per-ag counters and leave the
-> > global counters alone.  Then add a new scrubber that checks the summary
-> > counters and fixes them if necessary.
-> 
-> So the question here is whether we actually need to accurately
-> correct the global superblock counters?
-
-I think so, because what happens if the superblock counter is
-artificially high but the AGs do not actually have the free space?
-xfs_trans_reserve won't ENOSPC like it should, so we could end up
-blowing out of transactions and shutting down because some allocation
-that has to succeed ("because trans_reserve said there was space!")
-fails...
-
-> We know that if we have a dirty unmount, the counters will we
-> re-initialised on mount from the AG header information, so perhaps
-> what we need here is a flag to tell unmount to dirty the log again
-> after it has written the unmount record (like we currently do for
-> quiesce).
-
-...but now that we've repaired the filesystem, it could potentially run
-for a very long time until the next unmount.  During that run, we'd be
-misleading users about the real amount of free space and risking a hard
-shutdown.  I prefer that online repair try not to leave any weird state
-around after xfs_scrub exits.
-
-> That was we can do a racy "near enough" update here to get us out of
-> the worst of the space accounting mismatches, knowing that on the
-> next mount it will be accurately rebuilt.
+On Mon, Apr 16, 2018 at 10:33 PM, Darrick J. Wong
+<darrick.wong@oracle.com> wrote:
+> On Mon, Apr 16, 2018 at 04:31:39AM -0700, Matthew Wilcox wrote:
+>> On Mon, Apr 16, 2018 at 04:23:53AM -0700, Christoph Hellwig wrote:
+>> > On Mon, Apr 16, 2018 at 04:14:23AM -0700, Matthew Wilcox wrote:
+>> > > That's an unreasonable request.  It would (usually) require writing more
+>> > > code to convert errnos into VM_FAULT returns.  And that code would get
+>> > > precisely zero testing upstream because the next commit would come along
+>> > > and delete it, replacing it with calls to common code.
+>> >
+>> > Well, introduce the damn common code first.  It does not require
+>> > using the typedef in any way.
+>>
+>> Already done.
 >
-> Thoughts?
+> I wondered "Yeah, why isn't this one big series?  Where are the rest of
+> the patches to convert everything else?" and then realized the patch
+> author landed the function pointer prototype changes in mm.h prior to
+> 4.17-rc1 and is now playing scattershot catch-up across the tree...
+>
+> ...hm, the original mm patch wasn't cc'd to fsdevel either, so that's
+> probably why I never heard of any of this until now.
+>
+> So, uh, why wasn't this whole series (all the mm changes and all the
+> required fs changes) sent out for review prior to the merge window?
+>
+> I don't like "Hey we bitrotted your filesystem without telling you, now
+> here's a patch to fix it..."  The code change looks ok, but now I'm
+> going to schedule some time to go digging to see if there's anything
+> else lurking beneath the surface here.
+>
+>> > In this current form of single patches:  NAK to anything I maintain
+>> > or review.
+>>
+>> Yeah, we already have a plan for dealing with arsehole or MIA maintainers.
+>> Fortunately, you're not actually the maintainer for XFS, so it'll be up
+>> to Darrick whether to take it or not.
+>
+> I also dislike being pitted against the other XFS developers.
+>
 
-Well, I think the best solution is to have the AGF/AGI/inobt rebuilders
-adjust the global counters by the same amount that they're adjusting the
-counters in the AGF/AGI, then add a new scrubber that runs at the end to
-freeze the fs and check/repair the global counter state. :)
-
---D
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks Darrick. This patch is now available in linux-next-20180530.
