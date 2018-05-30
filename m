@@ -1,165 +1,200 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:40392 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S967134AbeE2WHU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 May 2018 18:07:20 -0400
-Date: Tue, 29 May 2018 15:07:16 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 06/22] xfs: add a repair helper to reset superblock
- counters
-Message-ID: <20180529220716.GK30110@magnolia>
-References: <152642361893.1556.9335169821674946249.stgit@magnolia>
- <152642365674.1556.6776151224606075985.stgit@magnolia>
- <20180518035623.GD23858@magnolia>
- <20180529032810.GM10363@dastard>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:51996 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751057AbeE3KM6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 May 2018 06:12:58 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180529032810.GM10363@dastard>
+In-Reply-To: <20180530095813.31245-2-hch@lst.de>
+References: <20180530095813.31245-1-hch@lst.de> <20180530095813.31245-2-hch@lst.de>
+From: Ming Lei <tom.leiming@gmail.com>
+Date: Wed, 30 May 2018 18:12:56 +0800
+Message-ID: <CACVXFVMb6LWYtp4MjryAW-UAH-dLtU+z1AO4b-_wC0amMXFKww@mail.gmail.com>
+Subject: Re: [PATCH 01/13] block: add a lower-level bio_add_page interface
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>
 
-On Tue, May 29, 2018 at 01:28:10PM +1000, Dave Chinner wrote:
-> On Thu, May 17, 2018 at 08:56:23PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Add a helper function to reset the superblock inode and block counters.
-> > The AG rebuilding functions will need these to adjust the counts if they
-> > need to change as a part of recovering from corruption.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
-> > ---
-> > v2: improve documentation
-> > ---
-> >  fs/xfs/scrub/repair.c |   89 +++++++++++++++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/scrub/repair.h |    7 ++++
-> >  fs/xfs/scrub/scrub.c  |    2 +
-> >  fs/xfs/scrub/scrub.h  |    1 +
-> >  4 files changed, 99 insertions(+)
-> > 
-> > diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-> > index 877488ce4bc8..4b95a15c0bd0 100644
-> > --- a/fs/xfs/scrub/repair.c
-> > +++ b/fs/xfs/scrub/repair.c
-> > @@ -1026,3 +1026,92 @@ xfs_repair_find_ag_btree_roots(
-> >  
-> >  	return error;
-> >  }
-> > +
-> > +/*
-> > + * Reset the superblock counters.
-> > + *
-> > + * If a repair function changes the inode or free block counters, it must set
-> > + * reset_counters to push this function to reset the global counters.  Repair
-> > + * functions are responsible for resetting all other in-core state.  This
-> > + * function runs outside of transaction context after the repair context has
-> > + * been torn down, so if there's further filesystem corruption we'll error out
-> > + * to userspace and give userspace a chance to call back to fix the further
-> > + * errors.
-> > + */
-> > +int
-> > +xfs_repair_reset_counters(
-> > +	struct xfs_mount	*mp)
-> > +{
-> > +	struct xfs_buf		*agi_bp;
-> > +	struct xfs_buf		*agf_bp;
-> > +	struct xfs_agi		*agi;
-> > +	struct xfs_agf		*agf;
-> > +	xfs_agnumber_t		agno;
-> > +	xfs_ino_t		icount = 0;
-> > +	xfs_ino_t		ifree = 0;
-> > +	xfs_filblks_t		fdblocks = 0;
-> > +	int64_t			delta_icount;
-> > +	int64_t			delta_ifree;
-> > +	int64_t			delta_fdblocks;
-> > +	int			error;
-> > +
-> > +	trace_xfs_repair_reset_counters(mp);
-> > +
-> > +	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
-> > +		/* Count all the inodes... */
-> > +		error = xfs_ialloc_read_agi(mp, NULL, agno, &agi_bp);
-> > +		if (error)
-> > +			return error;
-> > +		agi = XFS_BUF_TO_AGI(agi_bp);
-> > +		icount += be32_to_cpu(agi->agi_count);
-> > +		ifree += be32_to_cpu(agi->agi_freecount);
-> > +		xfs_buf_relse(agi_bp);
-> > +
-> > +		/* Add up the free/freelist/bnobt/cntbt blocks... */
-> > +		error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agf_bp);
-> > +		if (error)
-> > +			return error;
-> > +		if (!agf_bp)
-> > +			return -ENOMEM;
-> > +		agf = XFS_BUF_TO_AGF(agf_bp);
-> > +		fdblocks += be32_to_cpu(agf->agf_freeblks);
-> > +		fdblocks += be32_to_cpu(agf->agf_flcount);
-> > +		fdblocks += be32_to_cpu(agf->agf_btreeblks);
-> > +		xfs_buf_relse(agf_bp);
-> > +	}
-> > +
-> > +	/*
-> > +	 * Reinitialize the counters.  The on-disk and in-core counters differ
-> > +	 * by the number of inodes/blocks reserved by the admin, the per-AG
-> > +	 * reservation, and any transactions in progress, so we have to
-> > +	 * account for that.  First we take the sb lock and update its
-> > +	 * counters...
-> > +	 */
-> > +	spin_lock(&mp->m_sb_lock);
-> > +	delta_icount = (int64_t)mp->m_sb.sb_icount - icount;
-> > +	delta_ifree = (int64_t)mp->m_sb.sb_ifree - ifree;
-> > +	delta_fdblocks = (int64_t)mp->m_sb.sb_fdblocks - fdblocks;
-> > +	mp->m_sb.sb_icount = icount;
-> > +	mp->m_sb.sb_ifree = ifree;
-> > +	mp->m_sb.sb_fdblocks = fdblocks;
-> > +	spin_unlock(&mp->m_sb_lock);
-> 
-> This seems racy to me ? i.e. the per-ag counters can change while
-> we are summing them, and once we've summed them then sb counters
-> can change while we are waiting for the m_sb_lock. It's looks to me
-> like the summed per-ag counters are not in any way coherent
-> wit the superblock or the in-core per-CPU counters, so I'm
-> struggling to understand why this is safe?
-
-Hmm, yes, I think this is racy too.  The purpose of this code is to
-recompute the global counters from the AG counters after any operation
-that modifies anything that would affect the icount/ifreecount/fdblocks
-counters...
-
-> We can do this sort of summation at mount time (in
-> xfs_initialize_perag_data()) because the filesystem is running
-> single threaded while the summation is taking place and so nothing
-> is changing during th summation. The filesystem is active in this
-> case, so I don't think we can do the same thing here.
-
-...however, you're correct to point out that the fs must be quiesced
-before we can actually do this.  In other words, I think the filesystem
-has to be completely frozen before we can do this.  Perhaps it's better
-to have the per-ag rebuilders fix only the per-ag counters and leave the
-global counters alone.  Then add a new scrubber that checks the summary
-counters and fixes them if necessary.
-
-> Also, it brought a question to mind because I haven't clearly noted
-> it happening yet: when do the xfs_perag counters get corrected? And
-> if they are already correct, why not just iterate the perag
-> counters?
-
-The xfs_perag counters are updated by the AGF/AGI/inobt rebuild code.
-
---D
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+On Wed, May 30, 2018 at 5:58 PM, Christoph Hellwig <hch@lst.de> wrote:
+> For the upcoming removal of buffer heads in XFS we need to keep track of
+> the number of outstanding writeback requests per page.  For this we need
+> to know if bio_add_page merged a region with the previous bvec or not.
+> Instead of adding additional arguments this refactors bio_add_page to
+> be implemented using three lower level helpers which users like XFS can
+> use directly if they care about the merge decisions.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Jens Axboe <axboe@kernel.dk>
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  block/bio.c         | 96 +++++++++++++++++++++++++++++----------------
+>  include/linux/bio.h |  9 +++++
+>  2 files changed, 72 insertions(+), 33 deletions(-)
+>
+> diff --git a/block/bio.c b/block/bio.c
+> index 53e0f0a1ed94..fdf635d42bbd 100644
+> --- a/block/bio.c
+> +++ b/block/bio.c
+> @@ -773,7 +773,7 @@ int bio_add_pc_page(struct request_queue *q, struct bio *bio, struct page
+>                         return 0;
+>         }
+>
+> -       if (bio->bi_vcnt >= bio->bi_max_vecs)
+> +       if (bio_full(bio))
+>                 return 0;
+>
+>         /*
+> @@ -821,52 +821,82 @@ int bio_add_pc_page(struct request_queue *q, struct bio *bio, struct page
+>  EXPORT_SYMBOL(bio_add_pc_page);
+>
+>  /**
+> - *     bio_add_page    -       attempt to add page to bio
+> - *     @bio: destination bio
+> - *     @page: page to add
+> - *     @len: vec entry length
+> - *     @offset: vec entry offset
+> + * __bio_try_merge_page - try appending data to an existing bvec.
+> + * @bio: destination bio
+> + * @page: page to add
+> + * @len: length of the data to add
+> + * @off: offset of the data in @page
+>   *
+> - *     Attempt to add a page to the bio_vec maplist. This will only fail
+> - *     if either bio->bi_vcnt == bio->bi_max_vecs or it's a cloned bio.
+> + * Try to add the data at @page + @off to the last bvec of @bio.  This is a
+> + * a useful optimisation for file systems with a block size smaller than the
+> + * page size.
+> + *
+> + * Return %true on success or %false on failure.
+>   */
+> -int bio_add_page(struct bio *bio, struct page *page,
+> -                unsigned int len, unsigned int offset)
+> +bool __bio_try_merge_page(struct bio *bio, struct page *page,
+> +               unsigned int len, unsigned int off)
+>  {
+> -       struct bio_vec *bv;
+> -
+> -       /*
+> -        * cloned bio must not modify vec list
+> -        */
+>         if (WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED)))
+> -               return 0;
+> +               return false;
+>
+> -       /*
+> -        * For filesystems with a blocksize smaller than the pagesize
+> -        * we will often be called with the same page as last time and
+> -        * a consecutive offset.  Optimize this special case.
+> -        */
+>         if (bio->bi_vcnt > 0) {
+> -               bv = &bio->bi_io_vec[bio->bi_vcnt - 1];
+> +               struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt - 1];
+>
+> -               if (page == bv->bv_page &&
+> -                   offset == bv->bv_offset + bv->bv_len) {
+> +               if (page == bv->bv_page && off == bv->bv_offset + bv->bv_len) {
+>                         bv->bv_len += len;
+> -                       goto done;
+> +                       bio->bi_iter.bi_size += len;
+> +                       return true;
+>                 }
+>         }
+> +       return false;
+> +}
+> +EXPORT_SYMBOL_GPL(__bio_try_merge_page);
+>
+> -       if (bio->bi_vcnt >= bio->bi_max_vecs)
+> -               return 0;
+> +/**
+> + * __bio_add_page - add page to a bio in a new segment
+> + * @bio: destination bio
+> + * @page: page to add
+> + * @len: length of the data to add
+> + * @off: offset of the data in @page
+> + *
+> + * Add the data at @page + @off to @bio as a new bvec.  The caller must ensure
+> + * that @bio has space for another bvec.
+> + */
+> +void __bio_add_page(struct bio *bio, struct page *page,
+> +               unsigned int len, unsigned int off)
+> +{
+> +       struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt];
+>
+> -       bv              = &bio->bi_io_vec[bio->bi_vcnt];
+> -       bv->bv_page     = page;
+> -       bv->bv_len      = len;
+> -       bv->bv_offset   = offset;
+> +       WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED));
+> +       WARN_ON_ONCE(bio_full(bio));
+> +
+> +       bv->bv_page = page;
+> +       bv->bv_offset = off;
+> +       bv->bv_len = len;
+>
+> -       bio->bi_vcnt++;
+> -done:
+>         bio->bi_iter.bi_size += len;
+> +       bio->bi_vcnt++;
+> +}
+> +EXPORT_SYMBOL_GPL(__bio_add_page);
+> +
+> +/**
+> + *     bio_add_page    -       attempt to add page to bio
+> + *     @bio: destination bio
+> + *     @page: page to add
+> + *     @len: vec entry length
+> + *     @offset: vec entry offset
+> + *
+> + *     Attempt to add a page to the bio_vec maplist. This will only fail
+> + *     if either bio->bi_vcnt == bio->bi_max_vecs or it's a cloned bio.
+> + */
+> +int bio_add_page(struct bio *bio, struct page *page,
+> +                unsigned int len, unsigned int offset)
+> +{
+> +       if (!__bio_try_merge_page(bio, page, len, offset)) {
+> +               if (bio_full(bio))
+> +                       return 0;
+> +               __bio_add_page(bio, page, len, offset);
+> +       }
+>         return len;
+>  }
+>  EXPORT_SYMBOL(bio_add_page);
+> diff --git a/include/linux/bio.h b/include/linux/bio.h
+> index ce547a25e8ae..3e73c8bc25ea 100644
+> --- a/include/linux/bio.h
+> +++ b/include/linux/bio.h
+> @@ -123,6 +123,11 @@ static inline void *bio_data(struct bio *bio)
+>         return NULL;
+>  }
+>
+> +static inline bool bio_full(struct bio *bio)
+> +{
+> +       return bio->bi_vcnt >= bio->bi_max_vecs;
+> +}
+> +
+>  /*
+>   * will die
+>   */
+> @@ -470,6 +475,10 @@ void bio_chain(struct bio *, struct bio *);
+>  extern int bio_add_page(struct bio *, struct page *, unsigned int,unsigned int);
+>  extern int bio_add_pc_page(struct request_queue *, struct bio *, struct page *,
+>                            unsigned int, unsigned int);
+> +bool __bio_try_merge_page(struct bio *bio, struct page *page,
+> +               unsigned int len, unsigned int off);
+> +void __bio_add_page(struct bio *bio, struct page *page,
+> +               unsigned int len, unsigned int off);
+>  int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter);
+>  struct rq_map_data;
+>  extern struct bio *bio_map_user_iov(struct request_queue *,
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 2.17.0
+>
+
+Looks fine:
+
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
+
+-- 
+Ming Lei
