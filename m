@@ -1,68 +1,37 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:58552 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935668AbeE3GWr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 May 2018 02:22:47 -0400
-Date: Tue, 29 May 2018 23:22:41 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 18/34] xfs: use iomap for blocksize == PAGE_SIZE readpage
- and readpages
-Message-ID: <20180530062241.GG30110@magnolia>
-References: <20180523144357.18985-1-hch@lst.de>
- <20180523144357.18985-19-hch@lst.de>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:46836 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S935883AbeE3Goz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 May 2018 02:44:55 -0400
+Date: Wed, 30 May 2018 16:44:52 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 0.5/22] xfs: grab the per-ag structure whenever relevant
+Message-ID: <20180530064452.GV10363@dastard>
+References: <152642361893.1556.9335169821674946249.stgit@magnolia>
+ <20180518034732.GX23858@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180523144357.18985-19-hch@lst.de>
+In-Reply-To: <20180518034732.GX23858@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, May 23, 2018 at 04:43:41PM +0200, Christoph Hellwig wrote:
-> For file systems with a block size that equals the page size we never do
-> partial reads, so we can use the buffer_head-less iomap versions of
-> readpage and readpages without conflicting with the buffer_head structures
-> create later in write_begin.
+On Thu, May 17, 2018 at 08:47:32PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Grab and hold the per-AG data across a scrub run whenever relevant.
+> This helps us avoid repeated trips through rcu in the repair code.
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+rcu and the radix tree
 
---D
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-> ---
->  fs/xfs/xfs_aops.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 56e405572909..c631c457b444 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -1402,6 +1402,8 @@ xfs_vm_readpage(
->  	struct page		*page)
->  {
->  	trace_xfs_vm_readpage(page->mapping->host, 1);
-> +	if (i_blocksize(page->mapping->host) == PAGE_SIZE)
-> +		return iomap_readpage(page, &xfs_iomap_ops);
->  	return mpage_readpage(page, xfs_get_blocks);
->  }
->  
-> @@ -1413,6 +1415,8 @@ xfs_vm_readpages(
->  	unsigned		nr_pages)
->  {
->  	trace_xfs_vm_readpages(mapping->host, nr_pages);
-> +	if (i_blocksize(mapping->host) == PAGE_SIZE)
-> +		return iomap_readpages(mapping, pages, nr_pages, &xfs_iomap_ops);
->  	return mpage_readpages(mapping, pages, nr_pages, xfs_get_blocks);
->  }
->  
-> -- 
-> 2.17.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Code looks fine.
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+-- 
+Dave Chinner
+david@fromorbit.com
