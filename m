@@ -1,286 +1,154 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42840 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753073AbeE3Nez (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 30 May 2018 09:34:55 -0400
-Date: Wed, 30 May 2018 09:34:54 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 02/18] iomap: add initial support for writes without
- buffer heads
-Message-ID: <20180530133453.GB112411@bfoster.bfoster>
-References: <20180530100013.31358-1-hch@lst.de>
- <20180530100013.31358-3-hch@lst.de>
+Received: from userp2130.oracle.com ([156.151.31.86]:59212 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S937100AbeE3DWO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 May 2018 23:22:14 -0400
+Date: Tue, 29 May 2018 20:22:02 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 06/22] xfs: add a repair helper to reset superblock
+ counters
+Message-ID: <20180530032202.GN30110@magnolia>
+References: <152642361893.1556.9335169821674946249.stgit@magnolia>
+ <152642365674.1556.6776151224606075985.stgit@magnolia>
+ <20180518035623.GD23858@magnolia>
+ <20180529032810.GM10363@dastard>
+ <20180529220716.GK30110@magnolia>
+ <20180529222428.GR10363@dastard>
+ <20180529224332.GL30110@magnolia>
+ <20180530012332.GS10363@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180530100013.31358-3-hch@lst.de>
+In-Reply-To: <20180530012332.GS10363@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, May 30, 2018 at 11:59:57AM +0200, Christoph Hellwig wrote:
-> For now just limited to blocksize == PAGE_SIZE, where we can simply read
-> in the full page in write begin, and just set the whole page dirty after
-> copying data into it.  This code is enabled by default and XFS will now
-> be feed pages without buffer heads in ->writepage and ->writepages.
+On Wed, May 30, 2018 at 11:23:33AM +1000, Dave Chinner wrote:
+> On Tue, May 29, 2018 at 03:43:32PM -0700, Darrick J. Wong wrote:
+> > On Wed, May 30, 2018 at 08:24:28AM +1000, Dave Chinner wrote:
+> > > On Tue, May 29, 2018 at 03:07:16PM -0700, Darrick J. Wong wrote:
+> > > > On Tue, May 29, 2018 at 01:28:10PM +1000, Dave Chinner wrote:
+> > > > > On Thu, May 17, 2018 at 08:56:23PM -0700, Darrick J. Wong wrote:
+> > > > > > +	/*
+> > > > > > +	 * Reinitialize the counters.  The on-disk and in-core counters differ
+> > > > > > +	 * by the number of inodes/blocks reserved by the admin, the per-AG
+> > > > > > +	 * reservation, and any transactions in progress, so we have to
+> > > > > > +	 * account for that.  First we take the sb lock and update its
+> > > > > > +	 * counters...
+> > > > > > +	 */
+> > > > > > +	spin_lock(&mp->m_sb_lock);
+> > > > > > +	delta_icount = (int64_t)mp->m_sb.sb_icount - icount;
+> > > > > > +	delta_ifree = (int64_t)mp->m_sb.sb_ifree - ifree;
+> > > > > > +	delta_fdblocks = (int64_t)mp->m_sb.sb_fdblocks - fdblocks;
+> > > > > > +	mp->m_sb.sb_icount = icount;
+> > > > > > +	mp->m_sb.sb_ifree = ifree;
+> > > > > > +	mp->m_sb.sb_fdblocks = fdblocks;
+> > > > > > +	spin_unlock(&mp->m_sb_lock);
+> > > > > 
+> > > > > This seems racy to me ? i.e. the per-ag counters can change while
+> > > > > we are summing them, and once we've summed them then sb counters
+> > > > > can change while we are waiting for the m_sb_lock. It's looks to me
+> > > > > like the summed per-ag counters are not in any way coherent
+> > > > > wit the superblock or the in-core per-CPU counters, so I'm
+> > > > > struggling to understand why this is safe?
+> > > > 
+> > > > Hmm, yes, I think this is racy too.  The purpose of this code is to
+> > > > recompute the global counters from the AG counters after any operation
+> > > > that modifies anything that would affect the icount/ifreecount/fdblocks
+> > > > counters...
+> > > 
+> > > *nod*
+> > > 
+> > > > > We can do this sort of summation at mount time (in
+> > > > > xfs_initialize_perag_data()) because the filesystem is running
+> > > > > single threaded while the summation is taking place and so nothing
+> > > > > is changing during th summation. The filesystem is active in this
+> > > > > case, so I don't think we can do the same thing here.
+> > > > 
+> > > > ...however, you're correct to point out that the fs must be quiesced
+> > > > before we can actually do this.  In other words, I think the filesystem
+> > > > has to be completely frozen before we can do this.  Perhaps it's better
+> > > > to have the per-ag rebuilders fix only the per-ag counters and leave the
+> > > > global counters alone.  Then add a new scrubber that checks the summary
+> > > > counters and fixes them if necessary.
+> > > 
+> > > So the question here is whether we actually need to accurately
+> > > correct the global superblock counters?
+> > 
+> > I think so, because what happens if the superblock counter is
+> > artificially high but the AGs do not actually have the free space?
+> > xfs_trans_reserve won't ENOSPC like it should, so we could end up
+> > blowing out of transactions and shutting down because some allocation
+> > that has to succeed ("because trans_reserve said there was space!")
+> > fails...
 > 
-> If a file system sets the IOMAP_F_BUFFER_HEAD flag on the iomap the old
-> path will still be used, this both helps the transition in XFS and
-> prepares for the gfs2 migration to the iomap infrastructure.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+> Yes, but I would have thought the reset will get us close enough
+> that this wouldn't be an issue for the vast majority of people.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+<nod> I'll adjust the sb counters based on the agf/agi/inobt adjustments
+and we'll leave verifying and/or fixing the superblock counters as a
+Future Research Topic(tm).
 
->  fs/iomap.c            | 128 ++++++++++++++++++++++++++++++++++++++----
->  fs/xfs/xfs_iomap.c    |   6 +-
->  include/linux/iomap.h |   2 +
->  3 files changed, 123 insertions(+), 13 deletions(-)
+> And the other side of it is that if we get close enough to ENOSPC
+> that it matters, we could freeze/sum/thaw to be fully accurate on
+> demand in xfs_trans_reserve(), right? We already slow down greatly
+> at ENOSPC, so at that point the perf overhead fo a freeze/thaw cycle
+> just doesn't matter...
 > 
-> diff --git a/fs/iomap.c b/fs/iomap.c
-> index 5e5a266e3325..0c9d9be59184 100644
-> --- a/fs/iomap.c
-> +++ b/fs/iomap.c
-> @@ -316,6 +316,48 @@ iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
->  		truncate_pagecache_range(inode, max(pos, i_size), pos + len);
->  }
->  
-> +static int
-> +iomap_read_page_sync(struct inode *inode, loff_t block_start, struct page *page,
-> +		unsigned poff, unsigned plen, unsigned from, unsigned to,
-> +		struct iomap *iomap)
-> +{
-> +	struct bio_vec bvec;
-> +	struct bio bio;
-> +
-> +	if (iomap->type != IOMAP_MAPPED || block_start >= i_size_read(inode)) {
-> +		zero_user_segments(page, poff, from, to, poff + plen);
-> +		return 0;
-> +	}
-> +
-> +	bio_init(&bio, &bvec, 1);
-> +	bio.bi_opf = REQ_OP_READ;
-> +	bio.bi_iter.bi_sector = iomap_sector(iomap, block_start);
-> +	bio_set_dev(&bio, iomap->bdev);
-> +	__bio_add_page(&bio, page, plen, poff);
-> +	return submit_bio_wait(&bio);
-> +}
-> +
-> +static int
-> +__iomap_write_begin(struct inode *inode, loff_t pos, unsigned len,
-> +		struct page *page, struct iomap *iomap)
-> +{
-> +	loff_t block_size = i_blocksize(inode);
-> +	loff_t block_start = pos & ~(block_size - 1);
-> +	loff_t block_end = (pos + len + block_size - 1) & ~(block_size - 1);
-> +	unsigned poff = block_start & (PAGE_SIZE - 1);
-> +	unsigned plen = min_t(loff_t, PAGE_SIZE - poff, block_end - block_start);
-> +	unsigned from = pos & (PAGE_SIZE - 1), to = from + len;
-> +
-> +	WARN_ON_ONCE(i_blocksize(inode) < PAGE_SIZE);
-> +
-> +	if (PageUptodate(page))
-> +		return 0;
-> +	if (from <= poff && to >= poff + plen)
-> +		return 0;
-> +	return iomap_read_page_sync(inode, block_start, page,
-> +			poff, plen, from, to, iomap);
-> +}
-> +
->  static int
->  iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
->  		struct page **pagep, struct iomap *iomap)
-> @@ -333,7 +375,10 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
->  	if (!page)
->  		return -ENOMEM;
->  
-> -	status = __block_write_begin_int(page, pos, len, NULL, iomap);
-> +	if (iomap->flags & IOMAP_F_BUFFER_HEAD)
-> +		status = __block_write_begin_int(page, pos, len, NULL, iomap);
-> +	else
-> +		status = __iomap_write_begin(inode, pos, len, page, iomap);
->  	if (unlikely(status)) {
->  		unlock_page(page);
->  		put_page(page);
-> @@ -346,14 +391,69 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
->  	return status;
->  }
->  
-> +int
-> +iomap_set_page_dirty(struct page *page)
-> +{
-> +	struct address_space *mapping = page_mapping(page);
-> +	int newly_dirty;
-> +
-> +	if (unlikely(!mapping))
-> +		return !TestSetPageDirty(page);
-> +
-> +	/*
-> +	 * Lock out page->mem_cgroup migration to keep PageDirty
-> +	 * synchronized with per-memcg dirty page counters.
-> +	 */
-> +	lock_page_memcg(page);
-> +	newly_dirty = !TestSetPageDirty(page);
-> +	if (newly_dirty)
-> +		__set_page_dirty(page, mapping, 0);
-> +	unlock_page_memcg(page);
-> +
-> +	if (newly_dirty)
-> +		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
-> +	return newly_dirty;
-> +}
-> +EXPORT_SYMBOL_GPL(iomap_set_page_dirty);
-> +
-> +static int
-> +__iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
-> +		unsigned copied, struct page *page, struct iomap *iomap)
-> +{
-> +	flush_dcache_page(page);
-> +
-> +	/*
-> +	 * The blocks that were entirely written will now be uptodate, so we
-> +	 * don't have to worry about a readpage reading them and overwriting a
-> +	 * partial write.  However if we have encountered a short write and only
-> +	 * partially written into a block, it will not be marked uptodate, so a
-> +	 * readpage might come in and destroy our partial write.
-> +	 *
-> +	 * Do the simplest thing, and just treat any short write to a non
-> +	 * uptodate page as a zero-length write, and force the caller to redo
-> +	 * the whole thing.
-> +	 */
-> +	if (unlikely(copied < len && !PageUptodate(page))) {
-> +		copied = 0;
-> +	} else {
-> +		SetPageUptodate(page);
-> +		iomap_set_page_dirty(page);
-> +	}
-> +	return __generic_write_end(inode, pos, copied, page);
-> +}
-> +
->  static int
->  iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
-> -		unsigned copied, struct page *page)
-> +		unsigned copied, struct page *page, struct iomap *iomap)
->  {
->  	int ret;
->  
-> -	ret = generic_write_end(NULL, inode->i_mapping, pos, len,
-> -			copied, page, NULL);
-> +	if (iomap->flags & IOMAP_F_BUFFER_HEAD)
-> +		ret = generic_write_end(NULL, inode->i_mapping, pos, len,
-> +				copied, page, NULL);
-> +	else
-> +		ret = __iomap_write_end(inode, pos, len, copied, page, iomap);
-> +
->  	if (ret < len)
->  		iomap_write_failed(inode, pos, len);
->  	return ret;
-> @@ -408,7 +508,8 @@ iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
->  
->  		flush_dcache_page(page);
->  
-> -		status = iomap_write_end(inode, pos, bytes, copied, page);
-> +		status = iomap_write_end(inode, pos, bytes, copied, page,
-> +				iomap);
->  		if (unlikely(status < 0))
->  			break;
->  		copied = status;
-> @@ -502,7 +603,7 @@ iomap_dirty_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
->  
->  		WARN_ON_ONCE(!PageUptodate(page));
->  
-> -		status = iomap_write_end(inode, pos, bytes, bytes, page);
-> +		status = iomap_write_end(inode, pos, bytes, bytes, page, iomap);
->  		if (unlikely(status <= 0)) {
->  			if (WARN_ON_ONCE(status == 0))
->  				return -EIO;
-> @@ -554,7 +655,7 @@ static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
->  	zero_user(page, offset, bytes);
->  	mark_page_accessed(page);
->  
-> -	return iomap_write_end(inode, pos, bytes, bytes, page);
-> +	return iomap_write_end(inode, pos, bytes, bytes, page, iomap);
->  }
->  
->  static int iomap_dax_zero(loff_t pos, unsigned offset, unsigned bytes,
-> @@ -640,11 +741,16 @@ iomap_page_mkwrite_actor(struct inode *inode, loff_t pos, loff_t length,
->  	struct page *page = data;
->  	int ret;
->  
-> -	ret = __block_write_begin_int(page, pos, length, NULL, iomap);
-> -	if (ret)
-> -		return ret;
-> +	if (iomap->flags & IOMAP_F_BUFFER_HEAD) {
-> +		ret = __block_write_begin_int(page, pos, length, NULL, iomap);
-> +		if (ret)
-> +			return ret;
-> +		block_commit_write(page, 0, length);
-> +	} else {
-> +		WARN_ON_ONCE(!PageUptodate(page));
-> +		WARN_ON_ONCE(i_blocksize(inode) < PAGE_SIZE);
-> +	}
->  
-> -	block_commit_write(page, 0, length);
->  	return length;
->  }
->  
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index c6ce6f9335b6..da6d1995e460 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -638,7 +638,7 @@ xfs_file_iomap_begin_delay(
->  	 * Flag newly allocated delalloc blocks with IOMAP_F_NEW so we punch
->  	 * them out if the write happens to fail.
->  	 */
-> -	iomap->flags = IOMAP_F_NEW;
-> +	iomap->flags |= IOMAP_F_NEW;
->  	trace_xfs_iomap_alloc(ip, offset, count, 0, &got);
->  done:
->  	if (isnullstartblock(got.br_startblock))
-> @@ -1031,6 +1031,8 @@ xfs_file_iomap_begin(
->  	if (XFS_FORCED_SHUTDOWN(mp))
->  		return -EIO;
->  
-> +	iomap->flags |= IOMAP_F_BUFFER_HEAD;
-> +
->  	if (((flags & (IOMAP_WRITE | IOMAP_DIRECT)) == IOMAP_WRITE) &&
->  			!IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
->  		/* Reserve delalloc blocks for regular writeback. */
-> @@ -1131,7 +1133,7 @@ xfs_file_iomap_begin(
->  	if (error)
->  		return error;
->  
-> -	iomap->flags = IOMAP_F_NEW;
-> +	iomap->flags |= IOMAP_F_NEW;
->  	trace_xfs_iomap_alloc(ip, offset, length, 0, &imap);
->  
->  out_finish:
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index 7300d30ca495..4d3d9d0cd69f 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -30,6 +30,7 @@ struct vm_fault;
->   */
->  #define IOMAP_F_NEW		0x01	/* blocks have been newly allocated */
->  #define IOMAP_F_DIRTY		0x02	/* uncommitted metadata */
-> +#define IOMAP_F_BUFFER_HEAD	0x04	/* file system requires buffer heads */
->  
->  /*
->   * Flags that only need to be reported for IOMAP_REPORT requests:
-> @@ -92,6 +93,7 @@ ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
->  int iomap_readpage(struct page *page, const struct iomap_ops *ops);
->  int iomap_readpages(struct address_space *mapping, struct list_head *pages,
->  		unsigned nr_pages, const struct iomap_ops *ops);
-> +int iomap_set_page_dirty(struct page *page);
->  int iomap_file_dirty(struct inode *inode, loff_t pos, loff_t len,
->  		const struct iomap_ops *ops);
->  int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
+> > > We know that if we have a dirty unmount, the counters will we
+> > > re-initialised on mount from the AG header information, so perhaps
+> > > what we need here is a flag to tell unmount to dirty the log again
+> > > after it has written the unmount record (like we currently do for
+> > > quiesce).
+> > 
+> > ...but now that we've repaired the filesystem, it could potentially run
+> > for a very long time until the next unmount.  During that run, we'd be
+> > misleading users about the real amount of free space and risking a hard
+> > shutdown.  I prefer that online repair try not to leave any weird state
+> > around after xfs_scrub exits.
+> 
+> Sure, but user's may not want a freeze/read-all-ag-headers/thaw
+> cycle as part of repair if it can be avoided. If there are thousands
+> of AGs, this could take many seconds....
+> 
+> > > That was we can do a racy "near enough" update here to get us out of
+> > > the worst of the space accounting mismatches, knowing that on the
+> > > next mount it will be accurately rebuilt.
+> > >
+> > > Thoughts?
+> > 
+> > Well, I think the best solution is to have the AGF/AGI/inobt rebuilders
+> > adjust the global counters by the same amount that they're adjusting the
+> > counters in the AGF/AGI, then add a new scrubber that runs at the end to
+> > freeze the fs and check/repair the global counter state. :)
+> 
+> I'm just not convinced that we can get away with a global freeze to
+> do this summation without having noticable impact on applications.
+
+Admittedly, online repair has a semi-implicit design assumption that
+either (a) it's running on fast enough storage that a bunch of random
+IOs won't seriously harm performance or (b) whoever runs the client
+program will throttle it to avoid starving regular operations, and (c)
+repairs will not frequently be required.
+
+Of course, the fsfreeze repairs totally blow (b) out of the water, which
+means that in the long run I'm going to have to find a way shorten the
+runtime of those repair types (rmap, quota).  If (a) is true then maybe
+we can parallelize some of the AG accesses to reduce freeze time.  I'm
+hoping that will reduce the pain of such things, though.  $god help the
+users on floppy disks.
+
+--D
+
+> Cheers,
+> 
+> Dave.
 > -- 
-> 2.17.0
-> 
+> Dave Chinner
+> david@fromorbit.com
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
