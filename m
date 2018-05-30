@@ -1,140 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59508 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752634AbeE3Nev (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 30 May 2018 09:34:51 -0400
-Date: Wed, 30 May 2018 09:34:49 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 01/18] fs: factor out a __generic_write_end helper
-Message-ID: <20180530133448.GA112411@bfoster.bfoster>
-References: <20180530100013.31358-1-hch@lst.de>
- <20180530100013.31358-2-hch@lst.de>
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:58172 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S968253AbeE3Bbq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 May 2018 21:31:46 -0400
+Date: Wed, 30 May 2018 11:23:33 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 06/22] xfs: add a repair helper to reset superblock
+ counters
+Message-ID: <20180530012332.GS10363@dastard>
+References: <152642361893.1556.9335169821674946249.stgit@magnolia>
+ <152642365674.1556.6776151224606075985.stgit@magnolia>
+ <20180518035623.GD23858@magnolia>
+ <20180529032810.GM10363@dastard>
+ <20180529220716.GK30110@magnolia>
+ <20180529222428.GR10363@dastard>
+ <20180529224332.GL30110@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180530100013.31358-2-hch@lst.de>
+In-Reply-To: <20180529224332.GL30110@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, May 30, 2018 at 11:59:56AM +0200, Christoph Hellwig wrote:
-> Bits of the buffer.c based write_end implementations that don't know
-> about buffer_heads and can be reused by other implementations.
+On Tue, May 29, 2018 at 03:43:32PM -0700, Darrick J. Wong wrote:
+> On Wed, May 30, 2018 at 08:24:28AM +1000, Dave Chinner wrote:
+> > On Tue, May 29, 2018 at 03:07:16PM -0700, Darrick J. Wong wrote:
+> > > On Tue, May 29, 2018 at 01:28:10PM +1000, Dave Chinner wrote:
+> > > > On Thu, May 17, 2018 at 08:56:23PM -0700, Darrick J. Wong wrote:
+> > > > > +	/*
+> > > > > +	 * Reinitialize the counters.  The on-disk and in-core counters differ
+> > > > > +	 * by the number of inodes/blocks reserved by the admin, the per-AG
+> > > > > +	 * reservation, and any transactions in progress, so we have to
+> > > > > +	 * account for that.  First we take the sb lock and update its
+> > > > > +	 * counters...
+> > > > > +	 */
+> > > > > +	spin_lock(&mp->m_sb_lock);
+> > > > > +	delta_icount = (int64_t)mp->m_sb.sb_icount - icount;
+> > > > > +	delta_ifree = (int64_t)mp->m_sb.sb_ifree - ifree;
+> > > > > +	delta_fdblocks = (int64_t)mp->m_sb.sb_fdblocks - fdblocks;
+> > > > > +	mp->m_sb.sb_icount = icount;
+> > > > > +	mp->m_sb.sb_ifree = ifree;
+> > > > > +	mp->m_sb.sb_fdblocks = fdblocks;
+> > > > > +	spin_unlock(&mp->m_sb_lock);
+> > > > 
+> > > > This seems racy to me ? i.e. the per-ag counters can change while
+> > > > we are summing them, and once we've summed them then sb counters
+> > > > can change while we are waiting for the m_sb_lock. It's looks to me
+> > > > like the summed per-ag counters are not in any way coherent
+> > > > wit the superblock or the in-core per-CPU counters, so I'm
+> > > > struggling to understand why this is safe?
+> > > 
+> > > Hmm, yes, I think this is racy too.  The purpose of this code is to
+> > > recompute the global counters from the AG counters after any operation
+> > > that modifies anything that would affect the icount/ifreecount/fdblocks
+> > > counters...
+> > 
+> > *nod*
+> > 
+> > > > We can do this sort of summation at mount time (in
+> > > > xfs_initialize_perag_data()) because the filesystem is running
+> > > > single threaded while the summation is taking place and so nothing
+> > > > is changing during th summation. The filesystem is active in this
+> > > > case, so I don't think we can do the same thing here.
+> > > 
+> > > ...however, you're correct to point out that the fs must be quiesced
+> > > before we can actually do this.  In other words, I think the filesystem
+> > > has to be completely frozen before we can do this.  Perhaps it's better
+> > > to have the per-ag rebuilders fix only the per-ag counters and leave the
+> > > global counters alone.  Then add a new scrubber that checks the summary
+> > > counters and fixes them if necessary.
+> > 
+> > So the question here is whether we actually need to accurately
+> > correct the global superblock counters?
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+> I think so, because what happens if the superblock counter is
+> artificially high but the AGs do not actually have the free space?
+> xfs_trans_reserve won't ENOSPC like it should, so we could end up
+> blowing out of transactions and shutting down because some allocation
+> that has to succeed ("because trans_reserve said there was space!")
+> fails...
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Yes, but I would have thought the reset will get us close enough
+that this wouldn't be an issue for the vast majority of people.
 
->  fs/buffer.c   | 67 +++++++++++++++++++++++++++------------------------
->  fs/internal.h |  2 ++
->  2 files changed, 37 insertions(+), 32 deletions(-)
+And the other side of it is that if we get close enough to ENOSPC
+that it matters, we could freeze/sum/thaw to be fully accurate on
+demand in xfs_trans_reserve(), right? We already slow down greatly
+at ENOSPC, so at that point the perf overhead fo a freeze/thaw cycle
+just doesn't matter...
+
+> > We know that if we have a dirty unmount, the counters will we
+> > re-initialised on mount from the AG header information, so perhaps
+> > what we need here is a flag to tell unmount to dirty the log again
+> > after it has written the unmount record (like we currently do for
+> > quiesce).
 > 
-> diff --git a/fs/buffer.c b/fs/buffer.c
-> index 249b83fafe48..bd964b2ad99a 100644
-> --- a/fs/buffer.c
-> +++ b/fs/buffer.c
-> @@ -2076,6 +2076,40 @@ int block_write_begin(struct address_space *mapping, loff_t pos, unsigned len,
->  }
->  EXPORT_SYMBOL(block_write_begin);
->  
-> +int __generic_write_end(struct inode *inode, loff_t pos, unsigned copied,
-> +		struct page *page)
-> +{
-> +	loff_t old_size = inode->i_size;
-> +	bool i_size_changed = false;
-> +
-> +	/*
-> +	 * No need to use i_size_read() here, the i_size cannot change under us
-> +	 * because we hold i_rwsem.
-> +	 *
-> +	 * But it's important to update i_size while still holding page lock:
-> +	 * page writeout could otherwise come in and zero beyond i_size.
-> +	 */
-> +	if (pos + copied > inode->i_size) {
-> +		i_size_write(inode, pos + copied);
-> +		i_size_changed = true;
-> +	}
-> +
-> +	unlock_page(page);
-> +	put_page(page);
-> +
-> +	if (old_size < pos)
-> +		pagecache_isize_extended(inode, old_size, pos);
-> +	/*
-> +	 * Don't mark the inode dirty under page lock. First, it unnecessarily
-> +	 * makes the holding time of page lock longer. Second, it forces lock
-> +	 * ordering of page lock and transaction start for journaling
-> +	 * filesystems.
-> +	 */
-> +	if (i_size_changed)
-> +		mark_inode_dirty(inode);
-> +	return copied;
-> +}
-> +
->  int block_write_end(struct file *file, struct address_space *mapping,
->  			loff_t pos, unsigned len, unsigned copied,
->  			struct page *page, void *fsdata)
-> @@ -2116,39 +2150,8 @@ int generic_write_end(struct file *file, struct address_space *mapping,
->  			loff_t pos, unsigned len, unsigned copied,
->  			struct page *page, void *fsdata)
->  {
-> -	struct inode *inode = mapping->host;
-> -	loff_t old_size = inode->i_size;
-> -	int i_size_changed = 0;
-> -
->  	copied = block_write_end(file, mapping, pos, len, copied, page, fsdata);
-> -
-> -	/*
-> -	 * No need to use i_size_read() here, the i_size
-> -	 * cannot change under us because we hold i_mutex.
-> -	 *
-> -	 * But it's important to update i_size while still holding page lock:
-> -	 * page writeout could otherwise come in and zero beyond i_size.
-> -	 */
-> -	if (pos+copied > inode->i_size) {
-> -		i_size_write(inode, pos+copied);
-> -		i_size_changed = 1;
-> -	}
-> -
-> -	unlock_page(page);
-> -	put_page(page);
-> -
-> -	if (old_size < pos)
-> -		pagecache_isize_extended(inode, old_size, pos);
-> -	/*
-> -	 * Don't mark the inode dirty under page lock. First, it unnecessarily
-> -	 * makes the holding time of page lock longer. Second, it forces lock
-> -	 * ordering of page lock and transaction start for journaling
-> -	 * filesystems.
-> -	 */
-> -	if (i_size_changed)
-> -		mark_inode_dirty(inode);
-> -
-> -	return copied;
-> +	return __generic_write_end(mapping->host, pos, copied, page);
->  }
->  EXPORT_SYMBOL(generic_write_end);
->  
-> diff --git a/fs/internal.h b/fs/internal.h
-> index e08972db0303..b955232d3d49 100644
-> --- a/fs/internal.h
-> +++ b/fs/internal.h
-> @@ -43,6 +43,8 @@ static inline int __sync_blockdev(struct block_device *bdev, int wait)
->  extern void guard_bio_eod(int rw, struct bio *bio);
->  extern int __block_write_begin_int(struct page *page, loff_t pos, unsigned len,
->  		get_block_t *get_block, struct iomap *iomap);
-> +int __generic_write_end(struct inode *inode, loff_t pos, unsigned copied,
-> +		struct page *page);
->  
->  /*
->   * char_dev.c
-> -- 
-> 2.17.0
+> ...but now that we've repaired the filesystem, it could potentially run
+> for a very long time until the next unmount.  During that run, we'd be
+> misleading users about the real amount of free space and risking a hard
+> shutdown.  I prefer that online repair try not to leave any weird state
+> around after xfs_scrub exits.
+
+Sure, but user's may not want a freeze/read-all-ag-headers/thaw
+cycle as part of repair if it can be avoided. If there are thousands
+of AGs, this could take many seconds....
+
+> > That was we can do a racy "near enough" update here to get us out of
+> > the worst of the space accounting mismatches, knowing that on the
+> > next mount it will be accurately rebuilt.
+> >
+> > Thoughts?
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Well, I think the best solution is to have the AGF/AGI/inobt rebuilders
+> adjust the global counters by the same amount that they're adjusting the
+> counters in the AGF/AGI, then add a new scrubber that runs at the end to
+> freeze the fs and check/repair the global counter state. :)
+
+I'm just not convinced that we can get away with a global freeze to
+do this summation without having noticable impact on applications.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
