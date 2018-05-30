@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:60372 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753442AbeE3Tas (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 May 2018 15:30:48 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w4UJPijH063381
-        for <linux-xfs@vger.kernel.org>; Wed, 30 May 2018 19:30:48 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp2120.oracle.com with ESMTP id 2j9ev8c0v3-1
+Received: from userp2130.oracle.com ([156.151.31.86]:52250 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932091AbeE3Taz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 May 2018 15:30:55 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w4UJPZp8178368
+        for <linux-xfs@vger.kernel.org>; Wed, 30 May 2018 19:30:55 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2130.oracle.com with ESMTP id 2j9x4h9322-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 30 May 2018 19:30:47 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w4UJUl9J000462
+        for <linux-xfs@vger.kernel.org>; Wed, 30 May 2018 19:30:54 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w4UJUrFq028436
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 30 May 2018 19:30:47 GMT
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w4UJUl24030870
-        for <linux-xfs@vger.kernel.org>; Wed, 30 May 2018 19:30:47 GMT
-Subject: [PATCH 01/14] xfs: repair the AGF and AGFL
+        for <linux-xfs@vger.kernel.org>; Wed, 30 May 2018 19:30:54 GMT
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w4UJUrhH032210
+        for <linux-xfs@vger.kernel.org>; Wed, 30 May 2018 19:30:53 GMT
+Subject: [PATCH 02/14] xfs: repair the AGI
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 30 May 2018 12:30:45 -0700
-Message-ID: <152770864591.11611.5564813732568495676.stgit@magnolia>
+Date: Wed, 30 May 2018 12:30:52 -0700
+Message-ID: <152770865219.11611.15383367715338540008.stgit@magnolia>
 In-Reply-To: <152770863951.11611.5866814627357136911.stgit@magnolia>
 References: <152770863951.11611.5866814627357136911.stgit@magnolia>
 MIME-Version: 1.0
@@ -34,129 +34,58 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Regenerate the AGF and AGFL from the rmap data.
+Rebuild the AGI header items with some help from the rmapbt.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/scrub/agheader_repair.c |  484 ++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/repair.c          |   30 ++
- fs/xfs/scrub/repair.h          |    6 
- fs/xfs/scrub/scrub.c           |    4 
- fs/xfs/xfs_trans.c             |   54 ++++
- fs/xfs/xfs_trans.h             |    2 
- 6 files changed, 578 insertions(+), 2 deletions(-)
+ fs/xfs/scrub/agheader_repair.c |  108 ++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/repair.c          |   29 +++++++++++
+ fs/xfs/scrub/repair.h          |    5 ++
+ fs/xfs/scrub/scrub.c           |    2 -
+ 4 files changed, 143 insertions(+), 1 deletion(-)
 
 
 diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-index 8b91e9ebe1e7..0f794d27382a 100644
+index 0f794d27382a..ba750d3d11f0 100644
 --- a/fs/xfs/scrub/agheader_repair.c
 +++ b/fs/xfs/scrub/agheader_repair.c
-@@ -31,12 +31,18 @@
- #include "xfs_sb.h"
- #include "xfs_inode.h"
- #include "xfs_alloc.h"
-+#include "xfs_alloc_btree.h"
- #include "xfs_ialloc.h"
-+#include "xfs_ialloc_btree.h"
- #include "xfs_rmap.h"
-+#include "xfs_rmap_btree.h"
-+#include "xfs_refcount.h"
-+#include "xfs_refcount_btree.h"
- #include "scrub/xfs_scrub.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
- #include "scrub/trace.h"
-+#include "scrub/repair.h"
- 
- /* Superblock */
- 
-@@ -68,3 +74,481 @@ xfs_repair_superblock(
- 	xfs_trans_log_buf(sc->tp, bp, 0, BBTOB(bp->b_length) - 1);
+@@ -552,3 +552,111 @@ xfs_repair_agfl(
+ 				XFS_BTREE_NOERROR);
  	return error;
  }
 +
-+/* AGF */
++/* AGI */
 +
-+struct xfs_repair_agf_allocbt {
-+	struct xfs_scrub_context	*sc;
-+	xfs_agblock_t			freeblks;
-+	xfs_agblock_t			longest;
-+};
-+
-+/* Record free space shape information. */
-+STATIC int
-+xfs_repair_agf_walk_allocbt(
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_alloc_rec_incore	*rec,
-+	void				*priv)
-+{
-+	struct xfs_repair_agf_allocbt	*raa = priv;
-+	int				error = 0;
-+
-+	if (xfs_scrub_should_terminate(raa->sc, &error))
-+		return error;
-+
-+	raa->freeblks += rec->ar_blockcount;
-+	if (rec->ar_blockcount > raa->longest)
-+		raa->longest = rec->ar_blockcount;
-+	return error;
-+}
-+
-+/* Does this AGFL block look sane? */
-+STATIC int
-+xfs_repair_agf_check_agfl_block(
-+	struct xfs_mount		*mp,
-+	xfs_agblock_t			agbno,
-+	void				*priv)
-+{
-+	struct xfs_scrub_context	*sc = priv;
-+
-+	if (!xfs_verify_agbno(mp, sc->sa.agno, agbno))
-+		return -EFSCORRUPTED;
-+	return 0;
-+}
-+
-+/* Repair the AGF. */
 +int
-+xfs_repair_agf(
++xfs_repair_agi(
 +	struct xfs_scrub_context	*sc)
 +{
 +	struct xfs_repair_find_ag_btree	fab[] = {
 +		{
-+			.rmap_owner = XFS_RMAP_OWN_AG,
-+			.buf_ops = &xfs_allocbt_buf_ops,
-+			.magic = XFS_ABTB_CRC_MAGIC,
++			.rmap_owner = XFS_RMAP_OWN_INOBT,
++			.buf_ops = &xfs_inobt_buf_ops,
++			.magic = XFS_IBT_CRC_MAGIC,
 +		},
 +		{
-+			.rmap_owner = XFS_RMAP_OWN_AG,
-+			.buf_ops = &xfs_allocbt_buf_ops,
-+			.magic = XFS_ABTC_CRC_MAGIC,
++			.rmap_owner = XFS_RMAP_OWN_INOBT,
++			.buf_ops = &xfs_inobt_buf_ops,
++			.magic = XFS_FIBT_CRC_MAGIC,
 +		},
 +		{
-+			.rmap_owner = XFS_RMAP_OWN_AG,
-+			.buf_ops = &xfs_rmapbt_buf_ops,
-+			.magic = XFS_RMAP_CRC_MAGIC,
-+		},
-+		{
-+			.rmap_owner = XFS_RMAP_OWN_REFC,
-+			.buf_ops = &xfs_refcountbt_buf_ops,
-+			.magic = XFS_REFC_CRC_MAGIC,
-+		},
-+		{
-+			.buf_ops = NULL,
++			.buf_ops = NULL
 +		},
 +	};
-+	struct xfs_repair_agf_allocbt	raa;
-+	struct xfs_agf			old_agf;
++	struct xfs_agi			old_agi;
 +	struct xfs_mount		*mp = sc->mp;
++	struct xfs_buf			*agi_bp;
 +	struct xfs_buf			*agf_bp;
-+	struct xfs_buf			*agfl_bp;
-+	struct xfs_agf			*agf;
-+	struct xfs_btree_cur		*cur = NULL;
-+	struct xfs_perag		*pag;
-+	xfs_agblock_t			blocks;
-+	xfs_agblock_t			freesp_blocks;
-+	int64_t				delta_fdblocks = 0;
++	struct xfs_agi			*agi;
++	struct xfs_btree_cur		*cur;
++	xfs_agino_t			old_count;
++	xfs_agino_t			old_freecount;
++	xfs_agino_t			count;
++	xfs_agino_t			freecount;
++	int				bucket;
 +	int				error;
 +
 +	/* We require the rmapbt to rebuild anything. */
@@ -164,269 +93,12 @@ index 8b91e9ebe1e7..0f794d27382a 100644
 +		return -EOPNOTSUPP;
 +
 +	xfs_scrub_perag_get(sc->mp, &sc->sa);
-+	pag = sc->sa.pag;
-+	memset(&raa, 0, sizeof(raa));
 +	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
-+			XFS_AG_DADDR(mp, sc->sa.agno, XFS_AGF_DADDR(mp)),
-+			XFS_FSS_TO_BB(mp, 1), 0, &agf_bp, NULL);
++			XFS_AG_DADDR(mp, sc->sa.agno, XFS_AGI_DADDR(mp)),
++			XFS_FSS_TO_BB(mp, 1), 0, &agi_bp, NULL);
 +	if (error)
 +		return error;
-+	agf_bp->b_ops = &xfs_agf_buf_ops;
-+
-+	/*
-+	 * Load the AGFL so that we can screen out OWN_AG blocks that
-+	 * are on the AGFL now; these blocks might have once been part
-+	 * of the bno/cnt/rmap btrees but are not now.
-+	 */
-+	error = xfs_alloc_read_agfl(mp, sc->tp, sc->sa.agno, &agfl_bp);
-+	if (error)
-+		return error;
-+	error = xfs_agfl_walk(sc->mp, XFS_BUF_TO_AGF(agf_bp), agfl_bp,
-+			xfs_repair_agf_check_agfl_block, sc);
-+	if (error)
-+		return error;
-+
-+	/* Find the btree roots. */
-+	error = xfs_repair_find_ag_btree_roots(sc, agf_bp, fab, agfl_bp);
-+	if (error)
-+		return error;
-+	if (fab[0].root == NULLAGBLOCK || fab[0].height > XFS_BTREE_MAXLEVELS ||
-+	    fab[1].root == NULLAGBLOCK || fab[1].height > XFS_BTREE_MAXLEVELS ||
-+	    fab[2].root == NULLAGBLOCK || fab[2].height > XFS_BTREE_MAXLEVELS)
-+		return -EFSCORRUPTED;
-+	if (xfs_sb_version_hasreflink(&mp->m_sb) &&
-+	    (fab[3].root == NULLAGBLOCK || fab[3].height > XFS_BTREE_MAXLEVELS))
-+		return -EFSCORRUPTED;
-+
-+	/* Start rewriting the header. */
-+	agf = XFS_BUF_TO_AGF(agf_bp);
-+	memcpy(&old_agf, agf, sizeof(old_agf));
-+
-+	/*
-+	 * We relied on the rmapbt to reconstruct the AGF.  If we get a
-+	 * different root then something's seriously wrong.
-+	 */
-+	if (be32_to_cpu(old_agf.agf_roots[XFS_BTNUM_RMAPi]) != fab[2].root)
-+		return -EFSCORRUPTED;
-+	memset(agf, 0, mp->m_sb.sb_sectsize);
-+	agf->agf_magicnum = cpu_to_be32(XFS_AGF_MAGIC);
-+	agf->agf_versionnum = cpu_to_be32(XFS_AGF_VERSION);
-+	agf->agf_seqno = cpu_to_be32(sc->sa.agno);
-+	agf->agf_length = cpu_to_be32(xfs_ag_block_count(mp, sc->sa.agno));
-+	agf->agf_roots[XFS_BTNUM_BNOi] = cpu_to_be32(fab[0].root);
-+	agf->agf_roots[XFS_BTNUM_CNTi] = cpu_to_be32(fab[1].root);
-+	agf->agf_roots[XFS_BTNUM_RMAPi] = cpu_to_be32(fab[2].root);
-+	agf->agf_levels[XFS_BTNUM_BNOi] = cpu_to_be32(fab[0].height);
-+	agf->agf_levels[XFS_BTNUM_CNTi] = cpu_to_be32(fab[1].height);
-+	agf->agf_levels[XFS_BTNUM_RMAPi] = cpu_to_be32(fab[2].height);
-+	agf->agf_flfirst = old_agf.agf_flfirst;
-+	agf->agf_fllast = old_agf.agf_fllast;
-+	agf->agf_flcount = old_agf.agf_flcount;
-+	if (xfs_sb_version_hascrc(&mp->m_sb))
-+		uuid_copy(&agf->agf_uuid, &mp->m_sb.sb_meta_uuid);
-+	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
-+		agf->agf_refcount_root = cpu_to_be32(fab[3].root);
-+		agf->agf_refcount_level = cpu_to_be32(fab[3].height);
-+	}
-+
-+	/* Update the AGF counters from the bnobt. */
-+	cur = xfs_allocbt_init_cursor(mp, sc->tp, agf_bp, sc->sa.agno,
-+			XFS_BTNUM_BNO);
-+	raa.sc = sc;
-+	error = xfs_alloc_query_all(cur, xfs_repair_agf_walk_allocbt, &raa);
-+	if (error)
-+		goto err;
-+	error = xfs_btree_count_blocks(cur, &blocks);
-+	if (error)
-+		goto err;
-+	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+	freesp_blocks = blocks - 1;
-+	agf->agf_freeblks = cpu_to_be32(raa.freeblks);
-+	agf->agf_longest = cpu_to_be32(raa.longest);
-+
-+	/* Update the AGF counters from the cntbt. */
-+	cur = xfs_allocbt_init_cursor(mp, sc->tp, agf_bp, sc->sa.agno,
-+			XFS_BTNUM_CNT);
-+	error = xfs_btree_count_blocks(cur, &blocks);
-+	if (error)
-+		goto err;
-+	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+	freesp_blocks += blocks - 1;
-+
-+	/* Update the AGF counters from the rmapbt. */
-+	cur = xfs_rmapbt_init_cursor(mp, sc->tp, agf_bp, sc->sa.agno);
-+	error = xfs_btree_count_blocks(cur, &blocks);
-+	if (error)
-+		goto err;
-+	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+	agf->agf_rmap_blocks = cpu_to_be32(blocks);
-+	freesp_blocks += blocks - 1;
-+
-+	/* Update the AGF counters from the refcountbt. */
-+	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
-+		cur = xfs_refcountbt_init_cursor(mp, sc->tp, agf_bp,
-+				sc->sa.agno, NULL);
-+		error = xfs_btree_count_blocks(cur, &blocks);
-+		if (error)
-+			goto err;
-+		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+		agf->agf_refcount_blocks = cpu_to_be32(blocks);
-+	}
-+	agf->agf_btreeblks = cpu_to_be32(freesp_blocks);
-+	cur = NULL;
-+
-+	/* Trigger reinitialization of the in-core data. */
-+	if (raa.freeblks != be32_to_cpu(old_agf.agf_freeblks)) {
-+		delta_fdblocks += (int64_t)raa.freeblks -
-+				be32_to_cpu(old_agf.agf_freeblks);
-+		if (pag->pagf_init)
-+			pag->pagf_freeblks = be32_to_cpu(agf->agf_freeblks);
-+	}
-+
-+	if (freesp_blocks != be32_to_cpu(old_agf.agf_btreeblks)) {
-+		delta_fdblocks += (int64_t)freesp_blocks -
-+				be32_to_cpu(old_agf.agf_btreeblks);
-+		if (pag->pagf_init)
-+			pag->pagf_btreeblks = be32_to_cpu(agf->agf_btreeblks);
-+	}
-+
-+	if (pag->pagf_init &&
-+	    (raa.longest != be32_to_cpu(old_agf.agf_longest) ||
-+	     fab[0].height != be32_to_cpu(old_agf.agf_levels[XFS_BTNUM_BNOi]) ||
-+	     fab[1].height != be32_to_cpu(old_agf.agf_levels[XFS_BTNUM_CNTi]) ||
-+	     fab[2].height != be32_to_cpu(old_agf.agf_levels[XFS_BTNUM_RMAPi]) ||
-+	     fab[3].height != be32_to_cpu(old_agf.agf_refcount_level))) {
-+		pag->pagf_longest = be32_to_cpu(agf->agf_longest);
-+		pag->pagf_levels[XFS_BTNUM_BNOi] =
-+				be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNOi]);
-+		pag->pagf_levels[XFS_BTNUM_CNTi] =
-+				be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]);
-+		pag->pagf_levels[XFS_BTNUM_RMAPi] =
-+				be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAPi]);
-+		pag->pagf_refcount_level =
-+				be32_to_cpu(agf->agf_refcount_level);
-+	}
-+
-+	error = xfs_repair_mod_fdblocks(sc, delta_fdblocks);
-+	if (error)
-+		goto err;
-+
-+	/* Write this to disk. */
-+	xfs_trans_buf_set_type(sc->tp, agf_bp, XFS_BLFT_AGF_BUF);
-+	xfs_trans_log_buf(sc->tp, agf_bp, 0, BBTOB(agf_bp->b_length) - 1);
-+	return error;
-+
-+err:
-+	if (cur)
-+		xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR :
-+				XFS_BTREE_NOERROR);
-+	memcpy(agf, &old_agf, sizeof(old_agf));
-+	return error;
-+}
-+
-+/* AGFL */
-+
-+struct xfs_repair_agfl {
-+	struct xfs_repair_extent_list	freesp_list;
-+	struct xfs_repair_extent_list	agmeta_list;
-+	struct xfs_scrub_context	*sc;
-+};
-+
-+/* Record all freespace information. */
-+STATIC int
-+xfs_repair_agfl_rmap_fn(
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_rmap_irec		*rec,
-+	void				*priv)
-+{
-+	struct xfs_repair_agfl		*ra = priv;
-+	struct xfs_buf			*bp;
-+	xfs_fsblock_t			fsb;
-+	int				i;
-+	int				error = 0;
-+
-+	if (xfs_scrub_should_terminate(ra->sc, &error))
-+		return error;
-+
-+	/* Record all the OWN_AG blocks... */
-+	if (rec->rm_owner == XFS_RMAP_OWN_AG) {
-+		fsb = XFS_AGB_TO_FSB(cur->bc_mp, cur->bc_private.a.agno,
-+				rec->rm_startblock);
-+		error = xfs_repair_collect_btree_extent(ra->sc,
-+				&ra->freesp_list, fsb, rec->rm_blockcount);
-+		if (error)
-+			return error;
-+	}
-+
-+	/* ...and all the rmapbt blocks... */
-+	for (i = 0; i < cur->bc_nlevels && cur->bc_ptrs[i] == 1; i++) {
-+		xfs_btree_get_block(cur, i, &bp);
-+		if (!bp)
-+			continue;
-+		fsb = XFS_DADDR_TO_FSB(cur->bc_mp, bp->b_bn);
-+		error = xfs_repair_collect_btree_extent(ra->sc,
-+				&ra->agmeta_list, fsb, 1);
-+		if (error)
-+			return error;
-+	}
-+
-+	return 0;
-+}
-+
-+/* Add a btree block to the agmeta list. */
-+STATIC int
-+xfs_repair_agfl_visit_btblock(
-+	struct xfs_btree_cur		*cur,
-+	int				level,
-+	void				*priv)
-+{
-+	struct xfs_repair_agfl		*ra = priv;
-+	struct xfs_buf			*bp;
-+	xfs_fsblock_t			fsb;
-+	int				error = 0;
-+
-+	if (xfs_scrub_should_terminate(ra->sc, &error))
-+		return error;
-+
-+	xfs_btree_get_block(cur, level, &bp);
-+	if (!bp)
-+		return 0;
-+
-+	fsb = XFS_DADDR_TO_FSB(cur->bc_mp, bp->b_bn);
-+	return xfs_repair_collect_btree_extent(ra->sc, &ra->agmeta_list,
-+			fsb, 1);
-+}
-+
-+/* Repair the AGFL. */
-+int
-+xfs_repair_agfl(
-+	struct xfs_scrub_context	*sc)
-+{
-+	struct xfs_repair_agfl		ra;
-+	struct xfs_owner_info		oinfo;
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_buf			*agf_bp;
-+	struct xfs_buf			*agfl_bp;
-+	struct xfs_agf			*agf;
-+	struct xfs_agfl			*agfl;
-+	struct xfs_btree_cur		*cur = NULL;
-+	__be32				*agfl_bno;
-+	struct xfs_repair_extent	*rae;
-+	struct xfs_repair_extent	*n;
-+	xfs_agblock_t			flcount;
-+	xfs_agblock_t			agbno;
-+	xfs_agblock_t			bno;
-+	xfs_agblock_t			old_flcount;
-+	int				error;
-+
-+	/* We require the rmapbt to rebuild anything. */
-+	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
-+		return -EOPNOTSUPP;
-+
-+	xfs_scrub_perag_get(sc->mp, &sc->sa);
-+	xfs_repair_init_extent_list(&ra.freesp_list);
-+	xfs_repair_init_extent_list(&ra.agmeta_list);
-+	ra.sc = sc;
++	agi_bp->b_ops = &xfs_agi_buf_ops;
 +
 +	error = xfs_alloc_read_agf(mp, sc->tp, sc->sa.agno, 0, &agf_bp);
 +	if (error)
@@ -434,287 +106,139 @@ index 8b91e9ebe1e7..0f794d27382a 100644
 +	if (!agf_bp)
 +		return -ENOMEM;
 +
-+	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
-+			XFS_AG_DADDR(mp, sc->sa.agno, XFS_AGFL_DADDR(mp)),
-+			XFS_FSS_TO_BB(mp, 1), 0, &agfl_bp, NULL);
++	/* Find the btree roots. */
++	error = xfs_repair_find_ag_btree_roots(sc, agf_bp, fab, NULL);
 +	if (error)
 +		return error;
-+	agfl_bp->b_ops = &xfs_agfl_buf_ops;
-+
-+	/* Find all space used by the free space btrees & rmapbt. */
-+	cur = xfs_rmapbt_init_cursor(mp, sc->tp, agf_bp, sc->sa.agno);
-+	error = xfs_rmap_query_all(cur, xfs_repair_agfl_rmap_fn, &ra);
-+	if (error)
-+		goto err;
-+	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+
-+	/* Find all space used by bnobt. */
-+	cur = xfs_allocbt_init_cursor(mp, sc->tp, agf_bp, sc->sa.agno,
-+			XFS_BTNUM_BNO);
-+	error = xfs_btree_visit_blocks(cur, xfs_repair_agfl_visit_btblock,
-+			&ra);
-+	if (error)
-+		goto err;
-+	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+
-+	/* Find all space used by cntbt. */
-+	cur = xfs_allocbt_init_cursor(mp, sc->tp, agf_bp, sc->sa.agno,
-+			XFS_BTNUM_CNT);
-+	error = xfs_btree_visit_blocks(cur, xfs_repair_agfl_visit_btblock,
-+			&ra);
-+	if (error)
-+		goto err;
-+	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+	cur = NULL;
-+
-+	/*
-+	 * Drop the freesp meta blocks that are in use by btrees.
-+	 * The remaining blocks /should/ be AGFL blocks.
-+	 */
-+	error = xfs_repair_subtract_extents(sc, &ra.freesp_list,
-+			&ra.agmeta_list);
-+	if (error)
-+		goto err;
-+	xfs_repair_cancel_btree_extents(sc, &ra.agmeta_list);
-+
-+	/* Calculate the new AGFL size. */
-+	flcount = 0;
-+	for_each_xfs_repair_extent_safe(rae, n, &ra.freesp_list) {
-+		for (bno = 0; bno < rae->len; bno++) {
-+			if (flcount >= xfs_agfl_size(mp) - 1)
-+				break;
-+			flcount++;
-+		}
-+	}
-+
-+	/* Update fdblocks if flcount changed. */
-+	agf = XFS_BUF_TO_AGF(agf_bp);
-+	old_flcount = be32_to_cpu(agf->agf_flcount);
-+	if (flcount != old_flcount) {
-+		int64_t	delta_fdblocks = (int64_t)flcount - old_flcount;
-+
-+		error = xfs_repair_mod_fdblocks(sc, delta_fdblocks);
-+		if (error)
-+			goto err;
-+		if (sc->sa.pag->pagf_init)
-+			sc->sa.pag->pagf_flcount = flcount;
-+	}
-+
-+	/* Update the AGF pointers. */
-+	agf->agf_flfirst = cpu_to_be32(1);
-+	agf->agf_flcount = cpu_to_be32(flcount);
-+	agf->agf_fllast = cpu_to_be32(flcount);
++	if (fab[0].root == NULLAGBLOCK || fab[0].height > XFS_BTREE_MAXLEVELS)
++		return -EFSCORRUPTED;
++	if (xfs_sb_version_hasfinobt(&mp->m_sb) &&
++	    (fab[1].root == NULLAGBLOCK || fab[1].height > XFS_BTREE_MAXLEVELS))
++		return -EFSCORRUPTED;
 +
 +	/* Start rewriting the header. */
-+	agfl = XFS_BUF_TO_AGFL(agfl_bp);
-+	memset(agfl, 0xFF, mp->m_sb.sb_sectsize);
-+	agfl->agfl_magicnum = cpu_to_be32(XFS_AGFL_MAGIC);
-+	agfl->agfl_seqno = cpu_to_be32(sc->sa.agno);
-+	uuid_copy(&agfl->agfl_uuid, &mp->m_sb.sb_meta_uuid);
-+
-+	/* Fill the AGFL with the remaining blocks. */
-+	flcount = 0;
-+	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agfl_bp);
-+	for_each_xfs_repair_extent_safe(rae, n, &ra.freesp_list) {
-+		agbno = XFS_FSB_TO_AGBNO(mp, rae->fsbno);
-+
-+		trace_xfs_repair_agfl_insert(mp, sc->sa.agno, agbno, rae->len);
-+
-+		for (bno = 0; bno < rae->len; bno++) {
-+			if (flcount >= xfs_agfl_size(mp) - 1)
-+				break;
-+			agfl_bno[flcount + 1] = cpu_to_be32(agbno + bno);
-+			flcount++;
-+		}
-+		rae->fsbno += bno;
-+		rae->len -= bno;
-+		if (rae->len)
-+			break;
-+		list_del(&rae->list);
-+		kmem_free(rae);
++	agi = XFS_BUF_TO_AGI(agi_bp);
++	old_agi = *agi;
++	old_count = be32_to_cpu(old_agi.agi_count);
++	old_freecount = be32_to_cpu(old_agi.agi_freecount);
++	memset(agi, 0, mp->m_sb.sb_sectsize);
++	agi->agi_magicnum = cpu_to_be32(XFS_AGI_MAGIC);
++	agi->agi_versionnum = cpu_to_be32(XFS_AGI_VERSION);
++	agi->agi_seqno = cpu_to_be32(sc->sa.agno);
++	agi->agi_length = cpu_to_be32(xfs_ag_block_count(mp, sc->sa.agno));
++	agi->agi_newino = cpu_to_be32(NULLAGINO);
++	agi->agi_dirino = cpu_to_be32(NULLAGINO);
++	if (xfs_sb_version_hascrc(&mp->m_sb))
++		uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_meta_uuid);
++	for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++)
++		agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
++	agi->agi_root = cpu_to_be32(fab[0].root);
++	agi->agi_level = cpu_to_be32(fab[0].height);
++	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
++		agi->agi_free_root = cpu_to_be32(fab[1].root);
++		agi->agi_free_level = cpu_to_be32(fab[1].height);
 +	}
 +
-+	/* Write AGF and AGFL to disk. */
-+	xfs_alloc_log_agf(sc->tp, agf_bp,
-+			XFS_AGF_FLFIRST | XFS_AGF_FLLAST | XFS_AGF_FLCOUNT);
-+	xfs_trans_buf_set_type(sc->tp, agfl_bp, XFS_BLFT_AGFL_BUF);
-+	xfs_trans_log_buf(sc->tp, agfl_bp, 0, BBTOB(agfl_bp->b_length) - 1);
++	/* Update the AGI counters. */
++	cur = xfs_inobt_init_cursor(mp, sc->tp, agi_bp, sc->sa.agno,
++			XFS_BTNUM_INO);
++	error = xfs_ialloc_count_inodes(cur, &count, &freecount);
++	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++	if (error)
++		goto err;
++	agi->agi_count = cpu_to_be32(count);
++	agi->agi_freecount = cpu_to_be32(freecount);
 +
-+	/* Dump any AGFL overflow. */
-+	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_AG);
-+	return xfs_repair_reap_btree_extents(sc, &ra.freesp_list, &oinfo,
-+			XFS_AG_RESV_AGFL);
++	xfs_repair_mod_ino_counts(sc, old_count, count, old_freecount,
++			freecount);
++
++	/* Write this to disk. */
++	xfs_trans_buf_set_type(sc->tp, agi_bp, XFS_BLFT_AGI_BUF);
++	xfs_trans_log_buf(sc->tp, agi_bp, 0, BBTOB(agi_bp->b_length) - 1);
++	return error;
++
 +err:
-+	xfs_repair_cancel_btree_extents(sc, &ra.agmeta_list);
-+	xfs_repair_cancel_btree_extents(sc, &ra.freesp_list);
-+	if (cur)
-+		xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR :
-+				XFS_BTREE_NOERROR);
++	*agi = old_agi;
 +	return error;
 +}
 diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index e3e8fba1c99c..5f31dc8af505 100644
+index 5f31dc8af505..45a91841c0ac 100644
 --- a/fs/xfs/scrub/repair.c
 +++ b/fs/xfs/scrub/repair.c
-@@ -1087,3 +1087,33 @@ xfs_repair_ino_dqattach(
- 
- 	return error;
+@@ -1117,3 +1117,32 @@ xfs_repair_mod_fdblocks(
+ 	xfs_trans_mod_sb(sc->tp, XFS_TRANS_SB_FDBLOCKS, delta_fdblocks);
+ 	return 0;
  }
 +
 +/*
-+ * We changed this AGF's free block count, so now we need to reset the global
-+ * counters.  We use the transaction to update the global counters, so if the
-+ * AG free counts were low we have to ask the transaction for more block
-+ * reservation before decreasing fdblocks.
++ * Update in-core and superblock inode counters.
 + *
-+ * XXX: We ought to have some mechanism for checking and fixing the superblock
-+ * counters (particularly if we're close to ENOSPC) but that's left as an open
-+ * research question for now.
++ * XXX: Need to check the sb counters, see the comment in
++ * xfs_repair_mod_fdblocks about sb counter checking being unfinished.
 + */
-+int
-+xfs_repair_mod_fdblocks(
++void
++xfs_repair_mod_ino_counts(
 +	struct xfs_scrub_context	*sc,
-+	int64_t				delta_fdblocks)
++	xfs_agino_t			old_count,
++	xfs_agino_t			count,
++	xfs_agino_t			old_freecount,
++	xfs_agino_t			freecount)
 +{
-+	int				error;
-+
-+	if (delta_fdblocks == 0)
-+		return 0;
-+
-+	if (delta_fdblocks < 0) {
-+		error = xfs_trans_reserve_more(sc->tp, -delta_fdblocks, 0);
-+		if (error)
-+			return error;
++	if (old_count != count) {
++		if (sc->sa.pag->pagi_init)
++			sc->sa.pag->pagi_count = count;
++		xfs_trans_mod_sb(sc->tp, XFS_TRANS_SB_ICOUNT,
++				(int64_t)count - old_count);
 +	}
 +
-+	xfs_trans_mod_sb(sc->tp, XFS_TRANS_SB_FDBLOCKS, delta_fdblocks);
-+	return 0;
++	if (old_freecount != freecount) {
++		if (sc->sa.pag->pagi_init)
++			sc->sa.pag->pagi_freecount = freecount;
++		xfs_trans_mod_sb(sc->tp, XFS_TRANS_SB_IFREE,
++				(int64_t)freecount - old_freecount);
++	}
 +}
 diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-index f2b0895294db..97794c281a23 100644
+index 97794c281a23..9d69d03f1bfe 100644
 --- a/fs/xfs/scrub/repair.h
 +++ b/fs/xfs/scrub/repair.h
-@@ -98,11 +98,15 @@ int xfs_repair_find_ag_btree_roots(struct xfs_scrub_context *sc,
- 		struct xfs_buf *agfl_bp);
- void xfs_repair_force_quotacheck(struct xfs_scrub_context *sc, uint dqtype);
+@@ -100,6 +100,9 @@ void xfs_repair_force_quotacheck(struct xfs_scrub_context *sc, uint dqtype);
  int xfs_repair_ino_dqattach(struct xfs_scrub_context *sc);
-+int xfs_repair_mod_fdblocks(struct xfs_scrub_context *sc,
-+		int64_t delta_fdblocks);
+ int xfs_repair_mod_fdblocks(struct xfs_scrub_context *sc,
+ 		int64_t delta_fdblocks);
++void xfs_repair_mod_ino_counts(struct xfs_scrub_context *sc,
++		xfs_agino_t old_count, xfs_agino_t count,
++		xfs_agino_t old_freecount, xfs_agino_t freecount);
  
  /* Metadata repairers */
  
- int xfs_repair_probe(struct xfs_scrub_context *sc);
+@@ -107,6 +110,7 @@ int xfs_repair_probe(struct xfs_scrub_context *sc);
  int xfs_repair_superblock(struct xfs_scrub_context *sc);
-+int xfs_repair_agf(struct xfs_scrub_context *sc);
-+int xfs_repair_agfl(struct xfs_scrub_context *sc);
+ int xfs_repair_agf(struct xfs_scrub_context *sc);
+ int xfs_repair_agfl(struct xfs_scrub_context *sc);
++int xfs_repair_agi(struct xfs_scrub_context *sc);
  
  #else
  
-@@ -126,6 +130,8 @@ xfs_repair_calc_ag_resblks(
- 
- #define xfs_repair_probe		xfs_repair_notsupported
+@@ -132,6 +136,7 @@ xfs_repair_calc_ag_resblks(
  #define xfs_repair_superblock		xfs_repair_notsupported
-+#define xfs_repair_agf			xfs_repair_notsupported
-+#define xfs_repair_agfl			xfs_repair_notsupported
+ #define xfs_repair_agf			xfs_repair_notsupported
+ #define xfs_repair_agfl			xfs_repair_notsupported
++#define xfs_repair_agi			xfs_repair_notsupported
  
  #endif /* CONFIG_XFS_ONLINE_REPAIR */
  
 diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 36db098ba583..0b523ab9b8b0 100644
+index 0b523ab9b8b0..d68cfcd31f30 100644
 --- a/fs/xfs/scrub/scrub.c
 +++ b/fs/xfs/scrub/scrub.c
-@@ -222,13 +222,13 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
+@@ -234,7 +234,7 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
  		.type	= ST_PERAG,
  		.setup	= xfs_scrub_setup_fs,
- 		.scrub	= xfs_scrub_agf,
+ 		.scrub	= xfs_scrub_agi,
 -		.repair	= xfs_repair_notsupported,
-+		.repair	= xfs_repair_agf,
++		.repair	= xfs_repair_agi,
  	},
- 	[XFS_SCRUB_TYPE_AGFL]= {	/* agfl */
+ 	[XFS_SCRUB_TYPE_BNOBT] = {	/* bnobt */
  		.type	= ST_PERAG,
- 		.setup	= xfs_scrub_setup_fs,
- 		.scrub	= xfs_scrub_agfl,
--		.repair	= xfs_repair_notsupported,
-+		.repair	= xfs_repair_agfl,
- 	},
- 	[XFS_SCRUB_TYPE_AGI] = {	/* agi */
- 		.type	= ST_PERAG,
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index fc7ba75b8b69..5c24e66170fe 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -138,6 +138,60 @@ xfs_trans_dup(
- 	return ntp;
- }
- 
-+/*
-+ * Try to reserve more blocks for a transaction.  The single use case we
-+ * support is for online repair -- use a transaction to gather data without
-+ * fear of btree cycle deadlocks; calculate how many blocks we really need
-+ * from that data; and only then start modifying data.  This can fail due to
-+ * ENOSPC, so we have to be able to cancel the transaction.
-+ */
-+int
-+xfs_trans_reserve_more(
-+	struct xfs_trans	*tp,
-+	uint			blocks,
-+	uint			rtextents)
-+{
-+	struct xfs_mount	*mp = tp->t_mountp;
-+	bool			rsvd = (tp->t_flags & XFS_TRANS_RESERVE) != 0;
-+	int			error = 0;
-+
-+	ASSERT(!(tp->t_flags & XFS_TRANS_DIRTY));
-+
-+	/*
-+	 * Attempt to reserve the needed disk blocks by decrementing
-+	 * the number needed from the number available.  This will
-+	 * fail if the count would go below zero.
-+	 */
-+	if (blocks > 0) {
-+		error = xfs_mod_fdblocks(mp, -((int64_t)blocks), rsvd);
-+		if (error != 0)
-+			return -ENOSPC;
-+		tp->t_blk_res += blocks;
-+	}
-+
-+	/*
-+	 * Attempt to reserve the needed realtime extents by decrementing
-+	 * the number needed from the number available.  This will
-+	 * fail if the count would go below zero.
-+	 */
-+	if (rtextents > 0) {
-+		error = xfs_mod_frextents(mp, -((int64_t)rtextents));
-+		if (error) {
-+			error = -ENOSPC;
-+			goto out_blocks;
-+		}
-+		tp->t_rtx_res += rtextents;
-+	}
-+
-+	return 0;
-+out_blocks:
-+	if (blocks > 0) {
-+		xfs_mod_fdblocks(mp, (int64_t)blocks, rsvd);
-+		tp->t_blk_res -= blocks;
-+	}
-+	return error;
-+}
-+
- /*
-  * This is called to reserve free disk blocks and log space for the
-  * given transaction.  This must be done before allocating any resources
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 29706b8b3bd4..7284555c4801 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -165,6 +165,8 @@ typedef struct xfs_trans {
- int		xfs_trans_alloc(struct xfs_mount *mp, struct xfs_trans_res *resp,
- 			uint blocks, uint rtextents, uint flags,
- 			struct xfs_trans **tpp);
-+int		xfs_trans_reserve_more(struct xfs_trans *tp, uint blocks,
-+			uint rtextents);
- int		xfs_trans_alloc_empty(struct xfs_mount *mp,
- 			struct xfs_trans **tpp);
- void		xfs_trans_mod_sb(xfs_trans_t *, uint, int64_t);
 
