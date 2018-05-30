@@ -1,55 +1,145 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:53288 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932191AbeE3ThJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 30 May 2018 15:37:09 -0400
-Date: Wed, 30 May 2018 15:37:07 -0400
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH 00/13] convert block layer to bioset_init()/mempool_init()
-Message-ID: <20180530193707.GB6568@redhat.com>
-References: <20180521144703.GA19303@redhat.com>
- <4b343aef-e11c-73ba-1d88-7e73ca838cad@kernel.dk>
- <20180521150439.GA19379@redhat.com>
- <61e30dcf-a01c-f47d-087a-12930caf9aef@kernel.dk>
- <20180521151817.GA19454@redhat.com>
- <d01a150a-7752-f6ce-78f2-17a65c1e6fa5@kernel.dk>
- <20180521160907.GA19553@redhat.com>
- <f9e3714c-b7c9-d5f6-4018-2a87dd5babb2@kernel.dk>
- <20180530133629.GC5157@redhat.com>
- <f654ad69-aa90-9580-4731-a05d0604f353@kernel.dk>
+Received: from sandeen.net ([63.231.237.45]:43826 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932241AbeE3Uvu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 30 May 2018 16:51:50 -0400
+Subject: [PATCH 3.5/4 V2] mkfs.xfs: document defaults config file details
+From: Eric Sandeen <sandeen@sandeen.net>
+References: <20180529220603.29420-1-mcgrof@kernel.org>
+ <20180529220603.29420-4-mcgrof@kernel.org>
+ <7f30d5cb-800e-13a2-9ad7-d884cebc31e4@sandeen.net>
+Message-ID: <cbffce6a-718b-6a0a-e78d-043999053bd1@sandeen.net>
+Date: Wed, 30 May 2018 15:51:48 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f654ad69-aa90-9580-4731-a05d0604f353@kernel.dk>
+In-Reply-To: <7f30d5cb-800e-13a2-9ad7-d884cebc31e4@sandeen.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Kent Overstreet <kent.overstreet@gmail.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, colyli@suse.de, darrick.wong@oracle.com, clm@fb.com, bacik@fb.com, linux-xfs@vger.kernel.org, drbd-dev@lists.linbit.com, linux-btrfs@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.com
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com
 
-On Wed, May 30 2018 at  2:55pm -0400,
-Jens Axboe <axboe@kernel.dk> wrote:
+Document the mkfs default config file behavior.
 
-> On 5/30/18 7:36 AM, Mike Snitzer wrote:
-> > So revisiting this patchset: are you inclined to take these changes (I
-> > assume yes)?  If so, what would you need in order to get them staged for
-> > 4.18?  I'll start with offering my review in reply to the DM patch.  I'd
-> > much prefer to see this level of change go in sooner rather than later.
-> 
-> Yeah I'd like to take the changes, but we might have to wait for
-> 4.19 at this point. It'd certainly help to have the dm bits reviewed,
-> as they are some of the larger ones. The grunt of the others are mostly
-> trivial and smaller in scope.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-I _really_ would like to see this land for 4.18.  It'll avoid downstream
-backport problems (due to all the churn in this patchset).
+V2: implement most of darrick's suggestions
 
-As I'm sure you've seen I reviewed and Acked-by the DM patch.
+diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+index 4b8c78c..ca8c775 100644
+--- a/man/man8/mkfs.xfs.8
++++ b/man/man8/mkfs.xfs.8
+@@ -4,6 +4,10 @@ mkfs.xfs \- construct an XFS filesystem
+  .SH SYNOPSIS
+  .B mkfs.xfs
+  [
++.B \-c
++.I configuration
++] [
++[
+  .B \-b
+  .I block_size_options
+  ] [
+@@ -121,8 +125,41 @@ when parameters are quantified in those units.
+  .PP
+  Many feature options allow an optional argument of 0 or 1, to explicitly
+  disable or enable the functionality.
++.SH DEFAULT VALUES
++.BR mkfs.xfs (8)
++contains built-in default values for every option as described in the sections
++below.
++These built-in defaults may evolve over time as new capabilities are added.
++If the file
++.B /etc/xfs/mkfs/default
++exists, it will be parsed to override built-in defaults, and the defaults
++described in sections below may no longer apply.
++.PP
++The
++.B \-c
++option may also be used to specify an alternate configuration file
++as described in the OPTIONS section.
+  .SH OPTIONS
+  .TP
++.BI \-c " configuration"
++This option may be used to specify a configuration file other than
++.B /etc/xfs/mkfs/default
++to override selected built-in parameter defaults.
++If
++.B configuration
++is a simple filename with no path components, it will be searched in the
++.B /etc/xfs/mkfs/
++directory.
++If
++.B configuration
++is an absolute pathname, that path will be used to find the configuration file.
++Otherwise, if
++.B configuration
++begins with
++.BR \'./\' " or " \'../\'
++it will be treated as a pathname relative to the current working directory.
++See also the CONFIGURATION FILE FORMAT section below.
++.TP
+  .BI \-b " block_size_options"
+  This option specifies the fundamental block size of the filesystem.
+  The valid
+@@ -920,6 +957,55 @@ Do not attempt to discard blocks at mkfs time.
+  .TP
+  .B \-V
+  Prints the version number and exits.
++.SH CONFIGURATION FILE FORMAT
++The optional default configuration file in
++.B /etc/xfs/mkfs/default
++as well as any alternate configuration file specified via the
++.B \-c
++option must follow a simple ini-style format as shown below.
++Available options consist of a subset of the parameters available
++via the
++.BR mkfs.xfs (8)
++command line.
++Currently all default parameters can only be either enabled or disabled,
++with a value of 1 to enable or 0 to disable.
++See below for a list of all supported configuration parameters and their
++current built-in default settings.
++.PP
++.BI [data]
++.br
++.BI noalign=0
++.PP
++.BI [inode]
++.br
++.BI align=1
++.br
++.BI projid32bit=1
++.br
++.BI sparse=0
++.PP
++.BI [log]
++.br
++.BI lazy-count=1
++.PP
++.BI [metadata]
++.br
++.BI crc=1
++.br
++.BI finobt=1
++.br
++.BI rmapbt=0
++.br
++.BI reflink=0
++.PP
++.BI [naming]
++.br
++.BI ftype=1
++.PP
++.BI [rtdev]
++.br
++.BI noalign=0
++.PP
+  .SH SEE ALSO
+  .BR xfs (5),
+  .BR mkfs (8),
 
-I mentioned I've been chatting with Kent, he is available if anything
-needs a v2 for whatever reason.
 
-Would you be OK adding a single sentence description to each driver's
-patch header (rather than leaving empty like how Kent submitted)?  Or
-should Kent resubmit the entire set with that boilerplate header for
-each patch?
