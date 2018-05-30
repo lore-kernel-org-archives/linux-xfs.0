@@ -1,288 +1,199 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:51006 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750905AbeE3Qd0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 May 2018 12:33:26 -0400
-Date: Wed, 30 May 2018 09:33:20 -0700
+Received: from aserp2120.oracle.com ([141.146.126.78]:59734 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751684AbeE3SbI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 May 2018 14:31:08 -0400
+Date: Wed, 30 May 2018 11:30:44 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 02/18] iomap: add initial support for writes without
- buffer heads
-Message-ID: <20180530163320.GF837@magnolia>
-References: <20180530100013.31358-1-hch@lst.de>
- <20180530100013.31358-3-hch@lst.de>
+Subject: Re: [PATCH 3.5/4] mkfs.xfs: document defaults config file details
+Message-ID: <20180530183044.GW837@magnolia>
+References: <20180529220603.29420-1-mcgrof@kernel.org>
+ <20180529220603.29420-4-mcgrof@kernel.org>
+ <7f30d5cb-800e-13a2-9ad7-d884cebc31e4@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180530100013.31358-3-hch@lst.de>
+In-Reply-To: <7f30d5cb-800e-13a2-9ad7-d884cebc31e4@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com
 
-On Wed, May 30, 2018 at 11:59:57AM +0200, Christoph Hellwig wrote:
-> For now just limited to blocksize == PAGE_SIZE, where we can simply read
-> in the full page in write begin, and just set the whole page dirty after
-> copying data into it.  This code is enabled by default and XFS will now
-> be feed pages without buffer heads in ->writepage and ->writepages.
+On Wed, May 30, 2018 at 01:10:48PM -0500, Eric Sandeen wrote:
+> Here's my stab at documenting the defaults/config file behavior.
 > 
-> If a file system sets the IOMAP_F_BUFFER_HEAD flag on the iomap the old
-> path will still be used, this both helps the transition in XFS and
-> prepares for the gfs2 migration to the iomap infrastructure.
+> I've condensed it down to just mkfs.xfs 8 changes, and tried to
+> make it more concise.  I'll let people bikeshed this while I work
+> out a proper way to substitute %sysconfdir% in the text.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Note that what I describe in terms of bare filename behavior doesn't
+> match the code today - I think we still need to reach a consensus
+> on whether a bare filename looks in $PWD first, or only in the
+> /etc/ path.  (I'd prefer the latter, I think, but still slightly
+> wobbly on this)
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+> index 4b8c78c..64853cc 100644
+> --- a/man/man8/mkfs.xfs.8
+> +++ b/man/man8/mkfs.xfs.8
+> @@ -4,6 +4,10 @@ mkfs.xfs \- construct an XFS filesystem
+>  .SH SYNOPSIS
+>  .B mkfs.xfs
+>  [
+> +.B \-c
+> +.I configuration
+> +] [
+> +[
+>  .B \-b
+>  .I block_size_options
+>  ] [
+> @@ -121,8 +125,38 @@ when parameters are quantified in those units.
+>  .PP
+>  Many feature options allow an optional argument of 0 or 1, to explicitly
+>  disable or enable the functionality.
+> +.SH DEFAULT VALUES
+> +.BR mkfs.xfs (8)
+> +contains built-in default values for every option as described in the sections
+> +below.
+> +These built-in defaults may evolve over time as new capabilities are added.
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Yay, each sentence starts on its own line, like regular manpages...
+
+> +If the file
+> +.B /etc/xfs/mkfs/defaults
+
+@sysconfdir@/xfs/mkfs/defaults ?
+
+> +exists, it will be parsed to override built-in defaults as specified in the
+> +.B defaults
+> +file, and the defaults described in sections below may no longer apply.
+
+I think "as specified in the defaults file" is redundant?  We already
+said that we were parsing the defaults file...
+
+> +.PP
+> +The
+> +.B \-c
+> +option may also be used to specify an alternate configuration file
+> +as descibed in the OPTIONS section.
+
+...described... (typo)
+
+>  .SH OPTIONS
+>  .TP
+> +.BI \-c " configuration"
+> +This option may be used to specify a configuration file other than
+> +.B /etc/xfs/mkfs/defaults
+
+@sysconfdir@/xfs/mkfs/defaults
+
+> +to override selected built-in parameter defaults.
+> +If
+> +.B configuration
+> +is a bare filename, it will be searched in the
+
+What is a bare filename?
+
+> +.B /etc/xfs/mkfs/
+
+@sysco.... yeah.
+
+> +directory.  If
+
+Start new sentence on new line?
+
+> +.B configuration
+> +is a full pathname or a relative pathname starting with
+
+Ugh, I still find this a little contorted...
+
+"If $configuration is an absolute pathname, then that path will be used
+to find the configuration file.
+
+"Otherwise, if $configuration contains at least one slash, it will be
+treated as a pathname relative to the current working directory.
+
+"If $configuration contains no slashes, first the current working
+directory and then @sysconfdir@/xfs/mkfs/ will be searched for that
+file."
+
+> +.BR \'./\' " or " \'../\'
+> +then that explicit path to the configuration file will be used.
+> +See also the CONFIGURATION FILE FORMAT section below.
+> +.TP
+>  .BI \-b " block_size_options"
+>  This option specifies the fundamental block size of the filesystem.
+>  The valid
+> @@ -920,6 +954,55 @@ Do not attempt to discard blocks at mkfs time.
+>  .TP
+>  .B \-V
+>  Prints the version number and exits.
+> +.SH CONFIGURATION FILE FORMAT
+> +The optional default configuration file in
+> +.B /etc/xfs/mkfs/default
+> +as well as any alternate configuration file specified via the
+> +.B \-c
+> +option follow a simple ini-style format as shown below.
+
+"...must follow the simple ini-style format..."
+
+> +Available options consist of a small subset of the parameters available
+> +via the
+> +.BR mkfs.xfs (8)
+> +command line.
+> +Currently all default parameters can only be either enabled or disabled,
+> +with a value of 1 to enable or 0 to disable.
+> +See below for a list of all supported configuration parameters and their
+> +current built-in default settings.
+> +.PP
+> +.BI [data]
+> +.br
+> +.BI noalign=0
+> +.PP
+> +.BI [inode]
+> +.br
+> +.BI align=1
+> +.br
+> +.BI projid32bit=1
+> +.br
+> +.BI sparse=0
+> +.PP
+> +.BI [log]
+> +.br
+> +.BI lazy-count=1
+> +.PP
+> +.BI [metadata]
+> +.br
+> +.BI crc=1
+> +.br
+> +.BI finobt=1
+> +.br
+> +.BI rmapbt=0
+> +.br
+> +.BI reflink=0
+> +.PP
+> +.BI [naming]
+> +.br
+> +.BI ftype=1
+> +.PP
+> +.BI [rtdev]
+> +.br
+> +.BI noalign=0
+
+Probably we need to add a build-time helper that reads in the default
+config and spits out an ini file which can then be rolled into this
+manpage and/or used to generate a totally commented out defaults file.
 
 --D
 
-> ---
->  fs/iomap.c            | 128 ++++++++++++++++++++++++++++++++++++++----
->  fs/xfs/xfs_iomap.c    |   6 +-
->  include/linux/iomap.h |   2 +
->  3 files changed, 123 insertions(+), 13 deletions(-)
-> 
-> diff --git a/fs/iomap.c b/fs/iomap.c
-> index 5e5a266e3325..0c9d9be59184 100644
-> --- a/fs/iomap.c
-> +++ b/fs/iomap.c
-> @@ -316,6 +316,48 @@ iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
->  		truncate_pagecache_range(inode, max(pos, i_size), pos + len);
->  }
->  
-> +static int
-> +iomap_read_page_sync(struct inode *inode, loff_t block_start, struct page *page,
-> +		unsigned poff, unsigned plen, unsigned from, unsigned to,
-> +		struct iomap *iomap)
-> +{
-> +	struct bio_vec bvec;
-> +	struct bio bio;
-> +
-> +	if (iomap->type != IOMAP_MAPPED || block_start >= i_size_read(inode)) {
-> +		zero_user_segments(page, poff, from, to, poff + plen);
-> +		return 0;
-> +	}
-> +
-> +	bio_init(&bio, &bvec, 1);
-> +	bio.bi_opf = REQ_OP_READ;
-> +	bio.bi_iter.bi_sector = iomap_sector(iomap, block_start);
-> +	bio_set_dev(&bio, iomap->bdev);
-> +	__bio_add_page(&bio, page, plen, poff);
-> +	return submit_bio_wait(&bio);
-> +}
-> +
-> +static int
-> +__iomap_write_begin(struct inode *inode, loff_t pos, unsigned len,
-> +		struct page *page, struct iomap *iomap)
-> +{
-> +	loff_t block_size = i_blocksize(inode);
-> +	loff_t block_start = pos & ~(block_size - 1);
-> +	loff_t block_end = (pos + len + block_size - 1) & ~(block_size - 1);
-> +	unsigned poff = block_start & (PAGE_SIZE - 1);
-> +	unsigned plen = min_t(loff_t, PAGE_SIZE - poff, block_end - block_start);
-> +	unsigned from = pos & (PAGE_SIZE - 1), to = from + len;
-> +
-> +	WARN_ON_ONCE(i_blocksize(inode) < PAGE_SIZE);
-> +
-> +	if (PageUptodate(page))
-> +		return 0;
-> +	if (from <= poff && to >= poff + plen)
-> +		return 0;
-> +	return iomap_read_page_sync(inode, block_start, page,
-> +			poff, plen, from, to, iomap);
-> +}
-> +
->  static int
->  iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
->  		struct page **pagep, struct iomap *iomap)
-> @@ -333,7 +375,10 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
->  	if (!page)
->  		return -ENOMEM;
->  
-> -	status = __block_write_begin_int(page, pos, len, NULL, iomap);
-> +	if (iomap->flags & IOMAP_F_BUFFER_HEAD)
-> +		status = __block_write_begin_int(page, pos, len, NULL, iomap);
-> +	else
-> +		status = __iomap_write_begin(inode, pos, len, page, iomap);
->  	if (unlikely(status)) {
->  		unlock_page(page);
->  		put_page(page);
-> @@ -346,14 +391,69 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
->  	return status;
->  }
->  
-> +int
-> +iomap_set_page_dirty(struct page *page)
-> +{
-> +	struct address_space *mapping = page_mapping(page);
-> +	int newly_dirty;
-> +
-> +	if (unlikely(!mapping))
-> +		return !TestSetPageDirty(page);
-> +
-> +	/*
-> +	 * Lock out page->mem_cgroup migration to keep PageDirty
-> +	 * synchronized with per-memcg dirty page counters.
-> +	 */
-> +	lock_page_memcg(page);
-> +	newly_dirty = !TestSetPageDirty(page);
-> +	if (newly_dirty)
-> +		__set_page_dirty(page, mapping, 0);
-> +	unlock_page_memcg(page);
-> +
-> +	if (newly_dirty)
-> +		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
-> +	return newly_dirty;
-> +}
-> +EXPORT_SYMBOL_GPL(iomap_set_page_dirty);
-> +
-> +static int
-> +__iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
-> +		unsigned copied, struct page *page, struct iomap *iomap)
-> +{
-> +	flush_dcache_page(page);
-> +
-> +	/*
-> +	 * The blocks that were entirely written will now be uptodate, so we
-> +	 * don't have to worry about a readpage reading them and overwriting a
-> +	 * partial write.  However if we have encountered a short write and only
-> +	 * partially written into a block, it will not be marked uptodate, so a
-> +	 * readpage might come in and destroy our partial write.
-> +	 *
-> +	 * Do the simplest thing, and just treat any short write to a non
-> +	 * uptodate page as a zero-length write, and force the caller to redo
-> +	 * the whole thing.
-> +	 */
-> +	if (unlikely(copied < len && !PageUptodate(page))) {
-> +		copied = 0;
-> +	} else {
-> +		SetPageUptodate(page);
-> +		iomap_set_page_dirty(page);
-> +	}
-> +	return __generic_write_end(inode, pos, copied, page);
-> +}
-> +
->  static int
->  iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
-> -		unsigned copied, struct page *page)
-> +		unsigned copied, struct page *page, struct iomap *iomap)
->  {
->  	int ret;
->  
-> -	ret = generic_write_end(NULL, inode->i_mapping, pos, len,
-> -			copied, page, NULL);
-> +	if (iomap->flags & IOMAP_F_BUFFER_HEAD)
-> +		ret = generic_write_end(NULL, inode->i_mapping, pos, len,
-> +				copied, page, NULL);
-> +	else
-> +		ret = __iomap_write_end(inode, pos, len, copied, page, iomap);
-> +
->  	if (ret < len)
->  		iomap_write_failed(inode, pos, len);
->  	return ret;
-> @@ -408,7 +508,8 @@ iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
->  
->  		flush_dcache_page(page);
->  
-> -		status = iomap_write_end(inode, pos, bytes, copied, page);
-> +		status = iomap_write_end(inode, pos, bytes, copied, page,
-> +				iomap);
->  		if (unlikely(status < 0))
->  			break;
->  		copied = status;
-> @@ -502,7 +603,7 @@ iomap_dirty_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
->  
->  		WARN_ON_ONCE(!PageUptodate(page));
->  
-> -		status = iomap_write_end(inode, pos, bytes, bytes, page);
-> +		status = iomap_write_end(inode, pos, bytes, bytes, page, iomap);
->  		if (unlikely(status <= 0)) {
->  			if (WARN_ON_ONCE(status == 0))
->  				return -EIO;
-> @@ -554,7 +655,7 @@ static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
->  	zero_user(page, offset, bytes);
->  	mark_page_accessed(page);
->  
-> -	return iomap_write_end(inode, pos, bytes, bytes, page);
-> +	return iomap_write_end(inode, pos, bytes, bytes, page, iomap);
->  }
->  
->  static int iomap_dax_zero(loff_t pos, unsigned offset, unsigned bytes,
-> @@ -640,11 +741,16 @@ iomap_page_mkwrite_actor(struct inode *inode, loff_t pos, loff_t length,
->  	struct page *page = data;
->  	int ret;
->  
-> -	ret = __block_write_begin_int(page, pos, length, NULL, iomap);
-> -	if (ret)
-> -		return ret;
-> +	if (iomap->flags & IOMAP_F_BUFFER_HEAD) {
-> +		ret = __block_write_begin_int(page, pos, length, NULL, iomap);
-> +		if (ret)
-> +			return ret;
-> +		block_commit_write(page, 0, length);
-> +	} else {
-> +		WARN_ON_ONCE(!PageUptodate(page));
-> +		WARN_ON_ONCE(i_blocksize(inode) < PAGE_SIZE);
-> +	}
->  
-> -	block_commit_write(page, 0, length);
->  	return length;
->  }
->  
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index c6ce6f9335b6..da6d1995e460 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -638,7 +638,7 @@ xfs_file_iomap_begin_delay(
->  	 * Flag newly allocated delalloc blocks with IOMAP_F_NEW so we punch
->  	 * them out if the write happens to fail.
->  	 */
-> -	iomap->flags = IOMAP_F_NEW;
-> +	iomap->flags |= IOMAP_F_NEW;
->  	trace_xfs_iomap_alloc(ip, offset, count, 0, &got);
->  done:
->  	if (isnullstartblock(got.br_startblock))
-> @@ -1031,6 +1031,8 @@ xfs_file_iomap_begin(
->  	if (XFS_FORCED_SHUTDOWN(mp))
->  		return -EIO;
->  
-> +	iomap->flags |= IOMAP_F_BUFFER_HEAD;
-> +
->  	if (((flags & (IOMAP_WRITE | IOMAP_DIRECT)) == IOMAP_WRITE) &&
->  			!IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
->  		/* Reserve delalloc blocks for regular writeback. */
-> @@ -1131,7 +1133,7 @@ xfs_file_iomap_begin(
->  	if (error)
->  		return error;
->  
-> -	iomap->flags = IOMAP_F_NEW;
-> +	iomap->flags |= IOMAP_F_NEW;
->  	trace_xfs_iomap_alloc(ip, offset, length, 0, &imap);
->  
->  out_finish:
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index 7300d30ca495..4d3d9d0cd69f 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -30,6 +30,7 @@ struct vm_fault;
->   */
->  #define IOMAP_F_NEW		0x01	/* blocks have been newly allocated */
->  #define IOMAP_F_DIRTY		0x02	/* uncommitted metadata */
-> +#define IOMAP_F_BUFFER_HEAD	0x04	/* file system requires buffer heads */
->  
->  /*
->   * Flags that only need to be reported for IOMAP_REPORT requests:
-> @@ -92,6 +93,7 @@ ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
->  int iomap_readpage(struct page *page, const struct iomap_ops *ops);
->  int iomap_readpages(struct address_space *mapping, struct list_head *pages,
->  		unsigned nr_pages, const struct iomap_ops *ops);
-> +int iomap_set_page_dirty(struct page *page);
->  int iomap_file_dirty(struct inode *inode, loff_t pos, loff_t len,
->  		const struct iomap_ops *ops);
->  int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
-> -- 
-> 2.17.0
+> +.PP
+>  .SH SEE ALSO
+>  .BR xfs (5),
+>  .BR mkfs (8),
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
