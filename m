@@ -1,130 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:58172 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S968253AbeE3Bbq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 May 2018 21:31:46 -0400
-Date: Wed, 30 May 2018 11:23:33 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 06/22] xfs: add a repair helper to reset superblock
- counters
-Message-ID: <20180530012332.GS10363@dastard>
-References: <152642361893.1556.9335169821674946249.stgit@magnolia>
- <152642365674.1556.6776151224606075985.stgit@magnolia>
- <20180518035623.GD23858@magnolia>
- <20180529032810.GM10363@dastard>
- <20180529220716.GK30110@magnolia>
- <20180529222428.GR10363@dastard>
- <20180529224332.GL30110@magnolia>
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:33876 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S968532AbeE3Bim (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 May 2018 21:38:42 -0400
+Received: by mail-oi0-f66.google.com with SMTP id i205-v6so329221oib.1
+        for <linux-xfs@vger.kernel.org>; Tue, 29 May 2018 18:38:42 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180529224332.GL30110@magnolia>
+In-Reply-To: <20180523084030.dvv4jbvsnzrsaz6q@quack2.suse.cz>
+References: <152699997165.24093.12194490924829406111.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <152699999778.24093.18007971664703285330.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20180523084030.dvv4jbvsnzrsaz6q@quack2.suse.cz>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Tue, 29 May 2018 18:38:41 -0700
+Message-ID: <CAPcyv4gUM7Br3XONOVkNCg-mvR5U8QLq+OOc54cLpP61LXhJXA@mail.gmail.com>
+Subject: Re: [PATCH 05/11] filesystem-dax: set page->index
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Linux MM <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "Luck, Tony" <tony.luck@intel.com>, linux-xfs <linux-xfs@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On Tue, May 29, 2018 at 03:43:32PM -0700, Darrick J. Wong wrote:
-> On Wed, May 30, 2018 at 08:24:28AM +1000, Dave Chinner wrote:
-> > On Tue, May 29, 2018 at 03:07:16PM -0700, Darrick J. Wong wrote:
-> > > On Tue, May 29, 2018 at 01:28:10PM +1000, Dave Chinner wrote:
-> > > > On Thu, May 17, 2018 at 08:56:23PM -0700, Darrick J. Wong wrote:
-> > > > > +	/*
-> > > > > +	 * Reinitialize the counters.  The on-disk and in-core counters differ
-> > > > > +	 * by the number of inodes/blocks reserved by the admin, the per-AG
-> > > > > +	 * reservation, and any transactions in progress, so we have to
-> > > > > +	 * account for that.  First we take the sb lock and update its
-> > > > > +	 * counters...
-> > > > > +	 */
-> > > > > +	spin_lock(&mp->m_sb_lock);
-> > > > > +	delta_icount = (int64_t)mp->m_sb.sb_icount - icount;
-> > > > > +	delta_ifree = (int64_t)mp->m_sb.sb_ifree - ifree;
-> > > > > +	delta_fdblocks = (int64_t)mp->m_sb.sb_fdblocks - fdblocks;
-> > > > > +	mp->m_sb.sb_icount = icount;
-> > > > > +	mp->m_sb.sb_ifree = ifree;
-> > > > > +	mp->m_sb.sb_fdblocks = fdblocks;
-> > > > > +	spin_unlock(&mp->m_sb_lock);
-> > > > 
-> > > > This seems racy to me ? i.e. the per-ag counters can change while
-> > > > we are summing them, and once we've summed them then sb counters
-> > > > can change while we are waiting for the m_sb_lock. It's looks to me
-> > > > like the summed per-ag counters are not in any way coherent
-> > > > wit the superblock or the in-core per-CPU counters, so I'm
-> > > > struggling to understand why this is safe?
-> > > 
-> > > Hmm, yes, I think this is racy too.  The purpose of this code is to
-> > > recompute the global counters from the AG counters after any operation
-> > > that modifies anything that would affect the icount/ifreecount/fdblocks
-> > > counters...
-> > 
-> > *nod*
-> > 
-> > > > We can do this sort of summation at mount time (in
-> > > > xfs_initialize_perag_data()) because the filesystem is running
-> > > > single threaded while the summation is taking place and so nothing
-> > > > is changing during th summation. The filesystem is active in this
-> > > > case, so I don't think we can do the same thing here.
-> > > 
-> > > ...however, you're correct to point out that the fs must be quiesced
-> > > before we can actually do this.  In other words, I think the filesystem
-> > > has to be completely frozen before we can do this.  Perhaps it's better
-> > > to have the per-ag rebuilders fix only the per-ag counters and leave the
-> > > global counters alone.  Then add a new scrubber that checks the summary
-> > > counters and fixes them if necessary.
-> > 
-> > So the question here is whether we actually need to accurately
-> > correct the global superblock counters?
-> 
-> I think so, because what happens if the superblock counter is
-> artificially high but the AGs do not actually have the free space?
-> xfs_trans_reserve won't ENOSPC like it should, so we could end up
-> blowing out of transactions and shutting down because some allocation
-> that has to succeed ("because trans_reserve said there was space!")
-> fails...
+On Wed, May 23, 2018 at 1:40 AM, Jan Kara <jack@suse.cz> wrote:
+> On Tue 22-05-18 07:39:57, Dan Williams wrote:
+>> In support of enabling memory_failure() handling for filesystem-dax
+>> mappings, set ->index to the pgoff of the page. The rmap implementation
+>> requires ->index to bound the search through the vma interval tree. The
+>> index is set and cleared at dax_associate_entry() and
+>> dax_disassociate_entry() time respectively.
+>>
+>> Cc: Jan Kara <jack@suse.cz>
+>> Cc: Christoph Hellwig <hch@lst.de>
+>> Cc: Matthew Wilcox <mawilcox@microsoft.com>
+>> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
+>> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+>> ---
+>>  fs/dax.c |   11 ++++++++---
+>>  1 file changed, 8 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/fs/dax.c b/fs/dax.c
+>> index aaec72ded1b6..2e4682cd7c69 100644
+>> --- a/fs/dax.c
+>> +++ b/fs/dax.c
+>> @@ -319,18 +319,22 @@ static unsigned long dax_radix_end_pfn(void *entry)
+>>       for (pfn = dax_radix_pfn(entry); \
+>>                       pfn < dax_radix_end_pfn(entry); pfn++)
+>>
+>> -static void dax_associate_entry(void *entry, struct address_space *mapping)
+>> +static void dax_associate_entry(void *entry, struct address_space *mapping,
+>> +             struct vm_area_struct *vma, unsigned long address)
+>>  {
+>> -     unsigned long pfn;
+>> +     unsigned long size = dax_entry_size(entry), pfn, index;
+>> +     int i = 0;
+>>
+>>       if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
+>>               return;
+>>
+>> +     index = linear_page_index(vma, address & ~(size - 1));
+>>       for_each_mapped_pfn(entry, pfn) {
+>>               struct page *page = pfn_to_page(pfn);
+>>
+>>               WARN_ON_ONCE(page->mapping);
+>>               page->mapping = mapping;
+>> +             page->index = index + i++;
+>>       }
+>>  }
+>
+> Hum, this just made me think: How is this going to work with XFS reflink?
+> In fact is not the page->mapping association already broken by XFS reflink?
+> Because with reflink we can have two or more mappings pointing to the same
+> physical blocks (i.e., pages in DAX case)...
 
-Yes, but I would have thought the reset will get us close enough
-that this wouldn't be an issue for the vast majority of people.
+Good question. I assume we are ok in the non-DAX reflink case because
+rmap of failing / poison pages is only relative to the specific page
+cache page for a given inode in the reflink. However, DAX would seem
+to break this because we only get one shared 'struct page' for all
+possible mappings of the physical file block. I think this means for
+iterating over the rmap of "where is this page mapped" would require
+iterating over the other "sibling" inodes that know about the given
+physical file block.
 
-And the other side of it is that if we get close enough to ENOSPC
-that it matters, we could freeze/sum/thaw to be fully accurate on
-demand in xfs_trans_reserve(), right? We already slow down greatly
-at ENOSPC, so at that point the perf overhead fo a freeze/thaw cycle
-just doesn't matter...
+As far as I can see reflink+dax would require teaching kernel code
+paths that ->mapping may not be a singular relationship. Something
+along the line's of what Jerome was presenting at LSF to create a
+special value to indicate, "call back into the filesystem (or the page
+owner)" to perform this operation.
 
-> > We know that if we have a dirty unmount, the counters will we
-> > re-initialised on mount from the AG header information, so perhaps
-> > what we need here is a flag to tell unmount to dirty the log again
-> > after it has written the unmount record (like we currently do for
-> > quiesce).
-> 
-> ...but now that we've repaired the filesystem, it could potentially run
-> for a very long time until the next unmount.  During that run, we'd be
-> misleading users about the real amount of free space and risking a hard
-> shutdown.  I prefer that online repair try not to leave any weird state
-> around after xfs_scrub exits.
-
-Sure, but user's may not want a freeze/read-all-ag-headers/thaw
-cycle as part of repair if it can be avoided. If there are thousands
-of AGs, this could take many seconds....
-
-> > That was we can do a racy "near enough" update here to get us out of
-> > the worst of the space accounting mismatches, knowing that on the
-> > next mount it will be accurately rebuilt.
-> >
-> > Thoughts?
-> 
-> Well, I think the best solution is to have the AGF/AGI/inobt rebuilders
-> adjust the global counters by the same amount that they're adjusting the
-> counters in the AGF/AGI, then add a new scrubber that runs at the end to
-> freeze the fs and check/repair the global counter state. :)
-
-I'm just not convinced that we can get away with a global freeze to
-do this summation without having noticable impact on applications.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+In the meantime the kernel crashes when userspace accesses poisoned
+pmem via DAX. I assume that reworking rmap for the dax+reflink case
+should not block dax poison handling? Yell if you disagree.
