@@ -1,309 +1,287 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:60536 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:42840 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752854AbeE3DdI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 29 May 2018 23:33:08 -0400
-Subject: Re: [PATCH v4 3/4] mkfs.xfs: add configuration file parsing support
- using our own parser
-References: <20180529220603.29420-1-mcgrof@kernel.org>
- <20180529220603.29420-4-mcgrof@kernel.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <bf2052b1-91ae-3564-33fa-8cd029ab54f0@sandeen.net>
-Date: Tue, 29 May 2018 22:33:04 -0500
+        id S1753073AbeE3Nez (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 30 May 2018 09:34:55 -0400
+Date: Wed, 30 May 2018 09:34:54 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 02/18] iomap: add initial support for writes without
+ buffer heads
+Message-ID: <20180530133453.GB112411@bfoster.bfoster>
+References: <20180530100013.31358-1-hch@lst.de>
+ <20180530100013.31358-3-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20180529220603.29420-4-mcgrof@kernel.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180530100013.31358-3-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-On 5/29/18 5:06 PM, Luis R. Rodriguez wrote:
-> You may want to stick to specific set of configuration options when
-> creating filesystems with mkfs.xfs -- sometimes due to pure technical
-> reasons, but some other times to ensure systems remain compatible as
-> new features are introduced with older kernels, or if you always want
-> to take advantage of some new feature which would otherwise typically
-> be disruptive.
+On Wed, May 30, 2018 at 11:59:57AM +0200, Christoph Hellwig wrote:
+> For now just limited to blocksize == PAGE_SIZE, where we can simply read
+> in the full page in write begin, and just set the whole page dirty after
+> copying data into it.  This code is enabled by default and XFS will now
+> be feed pages without buffer heads in ->writepage and ->writepages.
 > 
-> This adds support for parsing a configuration file to override defaults
-> parameters to be used for mkfs.xfs.
+> If a file system sets the IOMAP_F_BUFFER_HEAD flag on the iomap the old
+> path will still be used, this both helps the transition in XFS and
+> prepares for the gfs2 migration to the iomap infrastructure.
 > 
-> We define an XFS configuration directory, /etc/mkfs.xfs.d/ and allow for
-> different configuration files, if none is specified we look for the
-> default configuration file, /etc/mkfs.xfs.d/default. You can override
-> with -c.  For instance, if you specify:
-> 
-> 	mkfs.xfs -c experimental -f /dev/loop0
-> 
-> The search path for the configuration file will be:
-> 
-> 	1) $PWD/experimental
-> 	2) /etc/mkfs.xfs.d/experimental
-
-by default this still lands in /usr/etc/mkfs.xfs.d - is there a way to
-default to /etc ?  (see below)
-
-> Absolute paths are supported, in which case they will be used directly
-> and the mkfs.xfs.d directory is ignored.
-> 
-> To verify what configuration file is used on a system use the typical:
-> 
->    mkfs.xfs -N
-> 
-> There is only a subset of options allowed to be set on the configuration
-> file. The default parameters you can override on a configuration file and
-> their current built-in default settings are:
-> 
-> [data]
-> noalign=0
-> 
-> [inode]
-> align=1
-> projid32bit=1
-> sparse=0
-> 
-> [log]
-> lazy-count=1
-> 
-> [metadata]
-> crc=1
-> finobt=1
-> rmapbt=0
-> reflink=0
-> 
-> [naming]
-> ftype=1
-> 
-> [rtdev]
-> noalign=0
-> 
-> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->   configure.ac                           |   6 +-
->   include/builddefs.in                   |   2 +
->   man/man5/Makefile                      |   2 +
->   man/man5/mkfs.xfs.d.5.in               | 151 ++++++++
->   man/man8/Makefile                      |   2 +
->   man/man8/{mkfs.xfs.8 => mkfs.xfs.8.in} |  27 ++
->   mkfs/Makefile                          |   2 +-
->   mkfs/config.c                          | 645 +++++++++++++++++++++++++++++++++
->   mkfs/config.h                          |  10 +-
->   mkfs/xfs_mkfs.c                        |  76 +++-
->   10 files changed, 909 insertions(+), 14 deletions(-)
->   create mode 100644 man/man5/mkfs.xfs.d.5.in
->   rename man/man8/{mkfs.xfs.8 => mkfs.xfs.8.in} (96%)
->   create mode 100644 mkfs/config.c
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/iomap.c            | 128 ++++++++++++++++++++++++++++++++++++++----
+>  fs/xfs/xfs_iomap.c    |   6 +-
+>  include/linux/iomap.h |   2 +
+>  3 files changed, 123 insertions(+), 13 deletions(-)
 > 
-> diff --git a/configure.ac b/configure.ac
-> index 508eefede073..94c5bda725f2 100644
-> --- a/configure.ac
-> +++ b/configure.ac
-> @@ -233,5 +233,9 @@ AC_CHECK_SIZEOF([char *])
->   AC_TYPE_UMODE_T
->   AC_MANUAL_FORMAT
->   
-> -AC_CONFIG_FILES([include/builddefs])
-> +AC_CONFIG_FILES([
-> +	include/builddefs
-> +	man/man5/mkfs.xfs.d.5
-> +	man/man8/mkfs.xfs.8
-> +])
->   AC_OUTPUT
-> diff --git a/include/builddefs.in b/include/builddefs.in
-> index 8aac06cf90dc..e1ee9f7ba086 100644
-> --- a/include/builddefs.in
-> +++ b/include/builddefs.in
-> @@ -62,6 +62,7 @@ PKG_LIB_DIR	= @libdir@@libdirsuffix@
->   PKG_INC_DIR	= @includedir@/xfs
->   DK_INC_DIR	= @includedir@/disk
->   PKG_MAN_DIR	= @mandir@
-> +PKG_ETC_DIR	= @sysconfdir@
-
-can configure scripts somehow default this to /etc ?  I think this works:
-
-diff --git a/configure.ac b/configure.ac
-index 94c5bda..8f6c793 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -6,6 +6,8 @@ AC_CONFIG_SRCDIR([include/libxfs.h])
-  AC_CONFIG_HEADER(include/platform_defs.h)
-  AC_PREFIX_DEFAULT(/usr)
-  
-+test "$sysconfdir" = '${prefix}/etc' && sysconfdir=/etc
-+
-  AC_PROG_INSTALL
-  AC_PROG_LIBTOOL
-
->   PKG_DOC_DIR	= @datadir@/doc/@pkg_name@
->   PKG_LOCALE_DIR	= @datadir@/locale
->   
-> @@ -196,6 +197,7 @@ endif
->   
->   GCFLAGS = $(DEBUG) \
->   	  -DVERSION=\"$(PKG_VERSION)\" -DLOCALEDIR=\"$(PKG_LOCALE_DIR)\"  \
-> +	  -DROOT_SYSCONFDIR=\"$(PKG_ETC_DIR)\"  \
->   	  -DPACKAGE=\"$(PKG_NAME)\" -I$(TOPDIR)/include -I$(TOPDIR)/libxfs
->   
->   ifeq ($(ENABLE_GETTEXT),yes)
-> diff --git a/man/man5/Makefile b/man/man5/Makefile
-> index fe0aef6f016b..0b33122b064e 100644
-> --- a/man/man5/Makefile
-> +++ b/man/man5/Makefile
-> @@ -19,3 +19,5 @@ install : default
->   	$(INSTALL) -m 755 -d $(MAN_DEST)
->   	$(INSTALL_MAN)
->   install-dev :
-> +
-> +LDIRT += mkfs.xfs.d.5
-> diff --git a/man/man5/mkfs.xfs.d.5.in b/man/man5/mkfs.xfs.d.5.in
-> new file mode 100644
-> index 000000000000..287877ce029d
-> --- /dev/null
-> +++ b/man/man5/mkfs.xfs.d.5.in
-> @@ -0,0 +1,151 @@
-> +.TH mkfs.xfs.d 5
-> +.SH NAME
-> +mkfs.xfs.d \- mkfs.xfs configuration directory
-> +.SH DESCRIPTION
-> +.B mkfs.xfs (8)
-
-.BR mkfs.xfs (8)
-
-so that it alternates bold/regular, similar fix for all instances below.
-
-> +uses a set of initial default parameters for configuration.
-> +
-> +The built-in mkfs defaults are decided by the XFS community. New features are
-> +only enabled by default when the community consider them stable.  One can
-> +override these defaults on the
-> +.B mkfs.xfs (8)
-> +command line, but there are cases where it is desirable for the distro or the
-
-colloquial, "distribution" please
-
-(actually I'd like to edit this a lot still - maybe just leave it as is and
-I'll take a crack at it)
-
-
-...
-
-> +look for the following configuration files and use the first one it finds:
-> +.IP
-> +.B $PWD/experimental
-> +.br
-> +.B @sysconfdir@/mkfs.xfs.d/experimental
-> +.PP
-
-This gets replaced as:
-
-${prefix}/etc/mkfs.xfs.d/experimental
-
-which is probably not as intended.  (though I think maybe my configure.ac
-patch above makes that go away ...)
-
-Anyway, I really still don't like this "look for the file in pwd by default"
-thing.  I get it that a bare filename is technically a relative path, but
-I still think this will lead to surprise, confusion, and sadness when a
-similar filename just happens to exist in the hapless admin's $PWD.  I may
-need to arm-wrestle dave over this.
-
-
-> diff --git a/man/man8/Makefile b/man/man8/Makefile
-> index 36620da172ae..2a6548079997 100644
-> --- a/man/man8/Makefile
-> +++ b/man/man8/Makefile
-> @@ -19,3 +19,5 @@ install : default
->   	$(INSTALL) -m 755 -d $(MAN_DEST)
->   	$(INSTALL_MAN)
->   install-dev :
-> +
-> +LDIRT += mkfs.xfs.8
-> diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8.in
-> similarity index 96%
-> rename from man/man8/mkfs.xfs.8
-> rename to man/man8/mkfs.xfs.8.in
-> index 4b8c78c37806..81e2753bd2b5 100644
-> --- a/man/man8/mkfs.xfs.8
-> +++ b/man/man8/mkfs.xfs.8.in
-
--c should be added to the synopsis, yes?
-The first mention of -c in this manpage is:
-
-"If present, and if -c is not used" which is a very odd introduction.  ;)
-
-> @@ -83,6 +83,24 @@ and
->   .B \-l internal \-l size=10m
->   are equivalent.
->   .PP
-> +An optional XFS configuration file directory
-> +.B mkfs.xfs.d (5)
-> +exists to help fine tune different default parameters which can be used when
-> +calling
-> +.B mkfs.xfs (8).
-> +If present, and if
-> +.B -c
-> +is not used, the default configuration file @sysconfigdir@/mkfs.xfs.d/default
-
-s/sysconfigdir/sysconfdir/ or this won't get replaced.
-
-...
-
-> diff --git a/mkfs/Makefile b/mkfs/Makefile
-> index c84f9b6ae63b..c7815b3e106b 100644
-> --- a/mkfs/Makefile
-> +++ b/mkfs/Makefile
-> @@ -8,7 +8,7 @@ include $(TOPDIR)/include/builddefs
->   LTCOMMAND = mkfs.xfs
->   
->   HFILES =
-> -CFILES = proto.c xfs_mkfs.c
-> +CFILES = proto.c xfs_mkfs.c config.c
->   
->   LLDLIBS += $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBRT) $(LIBPTHREAD) $(LIBBLKID) \
->   	$(LIBUUID)
-
-... snip stuff i'll circle back to, sorry for being a bit rando ...
-
-> +/*
-> + * If the file is not found -1 is returned and errno set. Otherwise
-> + * the file descriptor is returned.
-> + */
-> +int
-> +open_cli_config(
-> +	char			*cli_config_file,
-> +	char			**fpath)
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index 5e5a266e3325..0c9d9be59184 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -316,6 +316,48 @@ iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
+>  		truncate_pagecache_range(inode, max(pos, i_size), pos + len);
+>  }
+>  
+> +static int
+> +iomap_read_page_sync(struct inode *inode, loff_t block_start, struct page *page,
+> +		unsigned poff, unsigned plen, unsigned from, unsigned to,
+> +		struct iomap *iomap)
 > +{
-> +	int			fd, len;
-> +	char			*final_path = NULL;
-> +	char			*relative_path= NULL;
-> +	unsigned int		i;
+> +	struct bio_vec bvec;
+> +	struct bio bio;
 > +
-> +	if (strlen(cli_config_file) > 2) {
-> +		if (cli_config_file[0] == '.' && cli_config_file[1] == '/')
-> +			final_path = cli_config_file;
-> +		else if (cli_config_file[0] == '.' && cli_config_file[1] == '.')
-> +			final_path = cli_config_file;
-> +		else if (cli_config_file[0] == '/')
-> +			final_path = cli_config_file;
-> +		else
-> +			relative_path = cli_config_file;
-> +	} else if (strlen(cli_config_file) == 1) {
-> +		if (cli_config_file[0] == '.' || cli_config_file[0] == '/') {
-> +			errno = EINVAL;
-> +			return -1;
-> +		} else
-> +			relative_path = cli_config_file;
+> +	if (iomap->type != IOMAP_MAPPED || block_start >= i_size_read(inode)) {
+> +		zero_user_segments(page, poff, from, to, poff + plen);
+> +		return 0;
 > +	}
-
-I mentioned the problem w/ strlen == 2; I also noticed that you can
-point -c at i.e. /dev/sdb1 and it'll try to read it.  Dave suggested that
-a stat and rejection of anything but a regular file is in order here.
-
-
-bed();
-
-will look more tomorrow.
+> +
+> +	bio_init(&bio, &bvec, 1);
+> +	bio.bi_opf = REQ_OP_READ;
+> +	bio.bi_iter.bi_sector = iomap_sector(iomap, block_start);
+> +	bio_set_dev(&bio, iomap->bdev);
+> +	__bio_add_page(&bio, page, plen, poff);
+> +	return submit_bio_wait(&bio);
+> +}
+> +
+> +static int
+> +__iomap_write_begin(struct inode *inode, loff_t pos, unsigned len,
+> +		struct page *page, struct iomap *iomap)
+> +{
+> +	loff_t block_size = i_blocksize(inode);
+> +	loff_t block_start = pos & ~(block_size - 1);
+> +	loff_t block_end = (pos + len + block_size - 1) & ~(block_size - 1);
+> +	unsigned poff = block_start & (PAGE_SIZE - 1);
+> +	unsigned plen = min_t(loff_t, PAGE_SIZE - poff, block_end - block_start);
+> +	unsigned from = pos & (PAGE_SIZE - 1), to = from + len;
+> +
+> +	WARN_ON_ONCE(i_blocksize(inode) < PAGE_SIZE);
+> +
+> +	if (PageUptodate(page))
+> +		return 0;
+> +	if (from <= poff && to >= poff + plen)
+> +		return 0;
+> +	return iomap_read_page_sync(inode, block_start, page,
+> +			poff, plen, from, to, iomap);
+> +}
+> +
+>  static int
+>  iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
+>  		struct page **pagep, struct iomap *iomap)
+> @@ -333,7 +375,10 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
+>  	if (!page)
+>  		return -ENOMEM;
+>  
+> -	status = __block_write_begin_int(page, pos, len, NULL, iomap);
+> +	if (iomap->flags & IOMAP_F_BUFFER_HEAD)
+> +		status = __block_write_begin_int(page, pos, len, NULL, iomap);
+> +	else
+> +		status = __iomap_write_begin(inode, pos, len, page, iomap);
+>  	if (unlikely(status)) {
+>  		unlock_page(page);
+>  		put_page(page);
+> @@ -346,14 +391,69 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
+>  	return status;
+>  }
+>  
+> +int
+> +iomap_set_page_dirty(struct page *page)
+> +{
+> +	struct address_space *mapping = page_mapping(page);
+> +	int newly_dirty;
+> +
+> +	if (unlikely(!mapping))
+> +		return !TestSetPageDirty(page);
+> +
+> +	/*
+> +	 * Lock out page->mem_cgroup migration to keep PageDirty
+> +	 * synchronized with per-memcg dirty page counters.
+> +	 */
+> +	lock_page_memcg(page);
+> +	newly_dirty = !TestSetPageDirty(page);
+> +	if (newly_dirty)
+> +		__set_page_dirty(page, mapping, 0);
+> +	unlock_page_memcg(page);
+> +
+> +	if (newly_dirty)
+> +		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
+> +	return newly_dirty;
+> +}
+> +EXPORT_SYMBOL_GPL(iomap_set_page_dirty);
+> +
+> +static int
+> +__iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
+> +		unsigned copied, struct page *page, struct iomap *iomap)
+> +{
+> +	flush_dcache_page(page);
+> +
+> +	/*
+> +	 * The blocks that were entirely written will now be uptodate, so we
+> +	 * don't have to worry about a readpage reading them and overwriting a
+> +	 * partial write.  However if we have encountered a short write and only
+> +	 * partially written into a block, it will not be marked uptodate, so a
+> +	 * readpage might come in and destroy our partial write.
+> +	 *
+> +	 * Do the simplest thing, and just treat any short write to a non
+> +	 * uptodate page as a zero-length write, and force the caller to redo
+> +	 * the whole thing.
+> +	 */
+> +	if (unlikely(copied < len && !PageUptodate(page))) {
+> +		copied = 0;
+> +	} else {
+> +		SetPageUptodate(page);
+> +		iomap_set_page_dirty(page);
+> +	}
+> +	return __generic_write_end(inode, pos, copied, page);
+> +}
+> +
+>  static int
+>  iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
+> -		unsigned copied, struct page *page)
+> +		unsigned copied, struct page *page, struct iomap *iomap)
+>  {
+>  	int ret;
+>  
+> -	ret = generic_write_end(NULL, inode->i_mapping, pos, len,
+> -			copied, page, NULL);
+> +	if (iomap->flags & IOMAP_F_BUFFER_HEAD)
+> +		ret = generic_write_end(NULL, inode->i_mapping, pos, len,
+> +				copied, page, NULL);
+> +	else
+> +		ret = __iomap_write_end(inode, pos, len, copied, page, iomap);
+> +
+>  	if (ret < len)
+>  		iomap_write_failed(inode, pos, len);
+>  	return ret;
+> @@ -408,7 +508,8 @@ iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+>  
+>  		flush_dcache_page(page);
+>  
+> -		status = iomap_write_end(inode, pos, bytes, copied, page);
+> +		status = iomap_write_end(inode, pos, bytes, copied, page,
+> +				iomap);
+>  		if (unlikely(status < 0))
+>  			break;
+>  		copied = status;
+> @@ -502,7 +603,7 @@ iomap_dirty_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+>  
+>  		WARN_ON_ONCE(!PageUptodate(page));
+>  
+> -		status = iomap_write_end(inode, pos, bytes, bytes, page);
+> +		status = iomap_write_end(inode, pos, bytes, bytes, page, iomap);
+>  		if (unlikely(status <= 0)) {
+>  			if (WARN_ON_ONCE(status == 0))
+>  				return -EIO;
+> @@ -554,7 +655,7 @@ static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
+>  	zero_user(page, offset, bytes);
+>  	mark_page_accessed(page);
+>  
+> -	return iomap_write_end(inode, pos, bytes, bytes, page);
+> +	return iomap_write_end(inode, pos, bytes, bytes, page, iomap);
+>  }
+>  
+>  static int iomap_dax_zero(loff_t pos, unsigned offset, unsigned bytes,
+> @@ -640,11 +741,16 @@ iomap_page_mkwrite_actor(struct inode *inode, loff_t pos, loff_t length,
+>  	struct page *page = data;
+>  	int ret;
+>  
+> -	ret = __block_write_begin_int(page, pos, length, NULL, iomap);
+> -	if (ret)
+> -		return ret;
+> +	if (iomap->flags & IOMAP_F_BUFFER_HEAD) {
+> +		ret = __block_write_begin_int(page, pos, length, NULL, iomap);
+> +		if (ret)
+> +			return ret;
+> +		block_commit_write(page, 0, length);
+> +	} else {
+> +		WARN_ON_ONCE(!PageUptodate(page));
+> +		WARN_ON_ONCE(i_blocksize(inode) < PAGE_SIZE);
+> +	}
+>  
+> -	block_commit_write(page, 0, length);
+>  	return length;
+>  }
+>  
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index c6ce6f9335b6..da6d1995e460 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -638,7 +638,7 @@ xfs_file_iomap_begin_delay(
+>  	 * Flag newly allocated delalloc blocks with IOMAP_F_NEW so we punch
+>  	 * them out if the write happens to fail.
+>  	 */
+> -	iomap->flags = IOMAP_F_NEW;
+> +	iomap->flags |= IOMAP_F_NEW;
+>  	trace_xfs_iomap_alloc(ip, offset, count, 0, &got);
+>  done:
+>  	if (isnullstartblock(got.br_startblock))
+> @@ -1031,6 +1031,8 @@ xfs_file_iomap_begin(
+>  	if (XFS_FORCED_SHUTDOWN(mp))
+>  		return -EIO;
+>  
+> +	iomap->flags |= IOMAP_F_BUFFER_HEAD;
+> +
+>  	if (((flags & (IOMAP_WRITE | IOMAP_DIRECT)) == IOMAP_WRITE) &&
+>  			!IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
+>  		/* Reserve delalloc blocks for regular writeback. */
+> @@ -1131,7 +1133,7 @@ xfs_file_iomap_begin(
+>  	if (error)
+>  		return error;
+>  
+> -	iomap->flags = IOMAP_F_NEW;
+> +	iomap->flags |= IOMAP_F_NEW;
+>  	trace_xfs_iomap_alloc(ip, offset, length, 0, &imap);
+>  
+>  out_finish:
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index 7300d30ca495..4d3d9d0cd69f 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -30,6 +30,7 @@ struct vm_fault;
+>   */
+>  #define IOMAP_F_NEW		0x01	/* blocks have been newly allocated */
+>  #define IOMAP_F_DIRTY		0x02	/* uncommitted metadata */
+> +#define IOMAP_F_BUFFER_HEAD	0x04	/* file system requires buffer heads */
+>  
+>  /*
+>   * Flags that only need to be reported for IOMAP_REPORT requests:
+> @@ -92,6 +93,7 @@ ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
+>  int iomap_readpage(struct page *page, const struct iomap_ops *ops);
+>  int iomap_readpages(struct address_space *mapping, struct list_head *pages,
+>  		unsigned nr_pages, const struct iomap_ops *ops);
+> +int iomap_set_page_dirty(struct page *page);
+>  int iomap_file_dirty(struct inode *inode, loff_t pos, loff_t len,
+>  		const struct iomap_ops *ops);
+>  int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
+> -- 
+> 2.17.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
