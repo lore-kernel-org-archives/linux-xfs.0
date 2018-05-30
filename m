@@ -1,132 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45186 "EHLO mail.kernel.org"
+Received: from sandeen.net ([63.231.237.45]:54552 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S967368AbeE2WGH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 29 May 2018 18:06:07 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v4 0/4] xfsprogs: add mkfs.xfs configuration file parsing support
-Date: Tue, 29 May 2018 15:05:59 -0700
-Message-Id: <20180529220603.29420-1-mcgrof@kernel.org>
+        id S935643AbeE3CJf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 29 May 2018 22:09:35 -0400
+Subject: Re: [PATCH v4 3/4] mkfs.xfs: add configuration file parsing support
+ using our own parser
+References: <20180529220603.29420-1-mcgrof@kernel.org>
+ <20180529220603.29420-4-mcgrof@kernel.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <47de5ed0-443a-0a37-2618-963fb9a46973@sandeen.net>
+Date: Tue, 29 May 2018 21:09:33 -0500
+MIME-Version: 1.0
+In-Reply-To: <20180529220603.29420-4-mcgrof@kernel.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com, "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com
 
-This is v4 series addresses the feedback from Darrick mostly on man page
-text changes and a few minor code updates listed below. I've also
-amended the patches with Reviewed-by tags where appropriate, and rebased
-it onto the latest origin/for-next branch. The details of the changes in
-this v4 iteration and prior are listed below.
+On 5/29/18 5:06 PM, Luis R. Rodriguez wrote:
+> +/*
+> + * If the file is not found -1 is returned and errno set. Otherwise
+> + * the file descriptor is returned.
+> + */
+> +int
+> +open_cli_config(
+> +	char			*cli_config_file,
+> +	char			**fpath)
+> +{
+> +	int			fd, len;
+> +	char			*final_path = NULL;
+> +	char			*relative_path= NULL;
+> +	unsigned int		i;
+> +
+> +	if (strlen(cli_config_file) > 2) {
+> +		if (cli_config_file[0] == '.' && cli_config_file[1] == '/')
+> +			final_path = cli_config_file;
+> +		else if (cli_config_file[0] == '.' && cli_config_file[1] == '.')
+> +			final_path = cli_config_file;
+> +		else if (cli_config_file[0] == '/')
+> +			final_path = cli_config_file;
+> +		else
+> +			relative_path = cli_config_file;
+> +	} else if (strlen(cli_config_file) == 1) {
+> +		if (cli_config_file[0] == '.' || cli_config_file[0] == '/') {
+> +			errno = EINVAL;
+> +			return -1;
+> +		} else
+> +			relative_path = cli_config_file;
+> +	}
 
-You can also get the code from my kernel.org xfsprogs-dev 20180529-own-parser-v4
-branch [0].
+so you have 2 cases, strlen > 2 and strlen == 1.  What about == 2?
 
-Reviews, questions, or rants are greatly appreciated.
+# ls /a
+/a
+# mkfs/mkfs.xfs -c /a /dev/sdb1
+Error parsing command line config file: /a : No such device or address
 
-[0] https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/xfsprogs-dev.git/log/?h=20180529-own-parser-v4
+so that looks like a bug here.
 
-Changes on v4:
-
-- Tons of man page documentation enhancements from Darrick.
-
-- Adjusted a few error code messages/ paths to make more sense as per
-  Darrick's feedback.
-
-Changes on v3:
-
-- Prefix errors on the configuration parsing with config file used and
-  exact line.
-
-- Use uint64_t throughout all parsers as requested.
-
-- Parse the CLI early for -c as I originally had implemented this on v1
-  but now platform_getoptreset() to reset the opts.
-
-- Drop the enum for the source type for the configuration file type,
-  note that since we rely on the stack to set the variables we should
-  then always set the dft.src on main().
-
-- Use getline() for fetching lines as requested
-
-- Add a special iscomment() and isempty() to handle all space and
-  comment parsing. Now when PARSE_INVALID issued we really mean it.
-
-- Embrace latest bikeshed preferences:
-        config.c, config.h, random function names
-
-- Add man pages to be parsed via configure so that @sysconfigdir@ gets
-  properly parsed
-
-- get_confopts() now iterates over the known sections tab and gives you
-  the right struct right away.
-
-- Add respecification checks for a section.
-
-- Add respecification checks for -c, -c is only allowed once.
-
-- Add --sysconfigdir to debian/rules, note that if you *don't* set
-  --sysconfigdir your man pages will end up with ${prefix}. We could
-  add a secondary target parsing just in case, or we can do some hacks
-  with autoconf for this, but I don't think its worth it. Other packages
-  deal with this by having ./configure always run with --sysconfigdir
-  set (see systemd for instance).
-
-- Reduced the number of declared enums, only enums for the config
-  subparams which are currently supported for parsing are declared.
-
-- mkfs.xfs -c foo now will search for $PWD/foo and if that fails the
-  sysconfigdir/mkfs.xfs.d/foo.
-
-- mkfs.xfs -c ../foo works and so should ./foo, etc.
-
-- The MKFS_XFS_CONFIG variable support was dropped in favor or just
-  allowing the user to specify the full path now.
-
-- Embraces xfsprogs coding style, c'est la vie.
-
-Changes on v2:
-
-- Stayed with our own parser as its the smallest and we're willing to
-  maintain it as its simple and clear.
-
-- Use -c for the configuration file, and drop the "type" nomenclature to
-  avoid confusion on the interwebs.
-
-- Start to split files off
-
-- Duplicate a bit of items as suggested at LSFMM for the configuration
-  parser structures. We can later consolidate if we think its really
-  needed, however we want the freedom to change these as we see fit and
-  most importantly keep the code apart.
-
-- Conflict resolution and validation is managed now by piggy backing off
-  of the idea of using the defaults to instantiate CLI parameters. CLI
-  always overrides.
-
-Luis R. Rodriguez (4):
-  mkfs: distinguish between struct sb_feat_args and struct cli_params
-  mkfs: move shared config structs and into their own headers
-  mkfs.xfs: add configuration file parsing support using our own parser
-  debian/rules: use the new sysconfdir configuration setting
-
- configure.ac                           |   6 +-
- debian/rules                           |   4 +-
- include/builddefs.in                   |   2 +
- man/man5/Makefile                      |   2 +
- man/man5/mkfs.xfs.d.5.in               | 151 ++++++++
- man/man8/Makefile                      |   2 +
- man/man8/{mkfs.xfs.8 => mkfs.xfs.8.in} |  27 ++
- mkfs/Makefile                          |   2 +-
- mkfs/config.c                          | 645 +++++++++++++++++++++++++++++++++
- mkfs/config.h                          |  86 +++++
- mkfs/xfs_mkfs.c                        | 130 ++++---
- 11 files changed, 994 insertions(+), 63 deletions(-)
- create mode 100644 man/man5/mkfs.xfs.d.5.in
- rename man/man8/{mkfs.xfs.8 => mkfs.xfs.8.in} (96%)
- create mode 100644 mkfs/config.c
- create mode 100644 mkfs/config.h
-
--- 
-2.16.3
-
+-Eric
