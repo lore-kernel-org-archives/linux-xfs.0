@@ -1,146 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56099 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752634AbeE3Nfl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 30 May 2018 09:35:41 -0400
-Date: Wed, 30 May 2018 09:35:39 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 03/18] xfs: simplify xfs_bmap_punch_delalloc_range
-Message-ID: <20180530133538.GC112411@bfoster.bfoster>
+Received: from bombadil.infradead.org ([198.137.202.133]:38494 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751699AbeE3KB3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 May 2018 06:01:29 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 17/18] xfs: do not set the page uptodate in xfs_writepage_map
+Date: Wed, 30 May 2018 12:00:12 +0200
+Message-Id: <20180530100013.31358-18-hch@lst.de>
+In-Reply-To: <20180530100013.31358-1-hch@lst.de>
 References: <20180530100013.31358-1-hch@lst.de>
- <20180530100013.31358-4-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180530100013.31358-4-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-On Wed, May 30, 2018 at 11:59:58AM +0200, Christoph Hellwig wrote:
-> Instead of using xfs_bmapi_read to find delalloc extents and then punch
-> them out using xfs_bunmapi, opencode the loop to iterate over the extents
-> and call xfs_bmap_del_extent_delay directly.  This both simplifies the
-> code and reduces the number of extent tree lookups required.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_bmap_util.c | 84 ++++++++++++++----------------------------
->  1 file changed, 28 insertions(+), 56 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 06badcbadeb4..f2b87873612d 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -695,12 +695,10 @@ xfs_getbmap(
->  }
->  
->  /*
-> - * dead simple method of punching delalyed allocation blocks from a range in
-> - * the inode. Walks a block at a time so will be slow, but is only executed in
-> - * rare error cases so the overhead is not critical. This will always punch out
-> - * both the start and end blocks, even if the ranges only partially overlap
-> - * them, so it is up to the caller to ensure that partial blocks are not
-> - * passed in.
-> + * Dead simple method of punching delalyed allocation blocks from a range in
-> + * the inode.  This will always punch out both the start and end blocks, even
-> + * if the ranges only partially overlap them, so it is up to the caller to
-> + * ensure that partial blocks are not passed in.
->   */
->  int
->  xfs_bmap_punch_delalloc_range(
-> @@ -708,63 +706,37 @@ xfs_bmap_punch_delalloc_range(
->  	xfs_fileoff_t		start_fsb,
->  	xfs_fileoff_t		length)
->  {
-...
-> +	if (!xfs_iext_lookup_extent_before(ip, ifp, &end_fsb, &icur, &got))
-> +		return 0;
->  
-> -		/*
-> -		 * Note: while we initialise the firstblock/dfops pair, they
-> -		 * should never be used because blocks should never be
-> -		 * allocated or freed for a delalloc extent and hence we need
-> -		 * don't cancel or finish them after the xfs_bunmapi() call.
-> -		 */
-> -		xfs_defer_init(&dfops, &firstblock);
-> -		error = xfs_bunmapi(NULL, ip, start_fsb, 1, 0, 1, &firstblock,
-> -					&dfops, &done);
-> -		if (error)
-> -			break;
-> +	while (got.br_startoff + got.br_blockcount > start_fsb) {
-> +		del = got;
-> +		xfs_trim_extent(&del, start_fsb, length);
->  
-> -		ASSERT(!xfs_defer_has_unfinished_work(&dfops));
-> -next_block:
-> -		start_fsb++;
-> -		remaining--;
-> -	} while(remaining > 0);
-> +		if (del.br_blockcount && isnullstartblock(del.br_startblock)) {
+We already track the page uptodate status based on the buffer uptodate
+status, which is updated whenever reading or zeroing blocks.
 
-I think there's subtle behavior here that warrants a comment (and
-describes the somewhat funky logic). E.g., something like:
+This code has been there since commit a ptool commit in 2002, which
+claims to:
 
-/*
- * got might point to the extent after del in some cases. The next
- * iteration will detect this and step back to the previous extent.
- */
+    "merge" the 2.4 fsx fix for block size < page size to 2.5.  This needed
+    major changes to actually fit.
 
-Alternatively, I find separating the if/else a bit more readable (see
-the appended hunk). But otherwise looks fine:
+and isn't present in other writepage implementations.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_aops.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-> +			error = xfs_bmap_del_extent_delay(ip, XFS_DATA_FORK,
-> +					&icur, &got, &del);
-> +			if (error || !xfs_iext_get_extent(ifp, &icur, &got))
-> +				break;
-> +		} else {
-> +			if (!xfs_iext_prev_extent(ifp, &icur, &got))
-> +				break;
-> +		}
-> +	}
->  
->  	return error;
->  }
-> -- 
-> 2.17.0
-
---- 8< ---
-
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index f2b87873612d..0070b877ed94 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -727,15 +727,22 @@ xfs_bmap_punch_delalloc_range(
- 		del = got;
- 		xfs_trim_extent(&del, start_fsb, length);
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index ac417ef326a9..84f88cecd2f1 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -786,7 +786,6 @@ xfs_writepage_map(
+ 	ssize_t			len = i_blocksize(inode);
+ 	int			error = 0;
+ 	int			count = 0;
+-	bool			uptodate = true;
+ 	loff_t			file_offset;	/* file offset of page */
+ 	unsigned		poffset;	/* offset into page */
  
--		if (del.br_blockcount && isnullstartblock(del.br_startblock)) {
--			error = xfs_bmap_del_extent_delay(ip, XFS_DATA_FORK,
--					&icur, &got, &del);
--			if (error || !xfs_iext_get_extent(ifp, &icur, &got))
--				break;
--		} else {
-+		/*
-+		 * A delete can push the cursor forward. Step back to the
-+		 * previous extent on non-delalloc or extents outside the
-+		 * target range.
-+		 */
-+		if (!del.br_blockcount ||
-+		    !isnullstartblock(del.br_startblock)) {
- 			if (!xfs_iext_prev_extent(ifp, &icur, &got))
- 				break;
-+			continue;
+@@ -813,7 +812,6 @@ xfs_writepage_map(
+ 		if (!buffer_uptodate(bh)) {
+ 			if (PageUptodate(page))
+ 				ASSERT(buffer_mapped(bh));
+-			uptodate = false;
+ 			continue;
  		}
-+
-+		error = xfs_bmap_del_extent_delay(ip, XFS_DATA_FORK, &icur,
-+						  &got, &del);
-+		if (error || !xfs_iext_get_extent(ifp, &icur, &got))
-+			break;
+ 
+@@ -847,9 +845,6 @@ xfs_writepage_map(
+ 		count++;
  	}
  
- 	return error;
+-	if (uptodate && poffset == PAGE_SIZE)
+-		SetPageUptodate(page);
+-
+ 	ASSERT(wpc->ioend || list_empty(&submit_list));
+ 
+ out:
+-- 
+2.17.0
+
