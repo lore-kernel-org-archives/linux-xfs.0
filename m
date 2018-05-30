@@ -1,73 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mondschein.lichtvoll.de ([194.150.191.11]:55497 "EHLO
-        mail.lichtvoll.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S968664AbeE3HgF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 May 2018 03:36:05 -0400
-From: Martin Steigerwald <martin@lichtvoll.de>
-Subject: Re: [PATCH v4 3/4] mkfs.xfs: add configuration file parsing support using our own parser
-Date: Wed, 30 May 2018 09:36:02 +0200
-Message-ID: <2285295.f3V5SjJ2Sg@merkaba>
-In-Reply-To: <20180529220603.29420-4-mcgrof@kernel.org>
-References: <20180529220603.29420-1-mcgrof@kernel.org> <20180529220603.29420-4-mcgrof@kernel.org>
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:35137 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753627AbeE3Tej (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 May 2018 15:34:39 -0400
+Date: Wed, 30 May 2018 15:34:35 -0400
+From: Kent Overstreet <kent.overstreet@gmail.com>
+Subject: Re: [PATCH 00/13] convert block layer to bioset_init()/mempool_init()
+Message-ID: <20180530193435.GC3487@kmo-pixel>
+References: <20180521144703.GA19303@redhat.com>
+ <4b343aef-e11c-73ba-1d88-7e73ca838cad@kernel.dk>
+ <20180521150439.GA19379@redhat.com>
+ <61e30dcf-a01c-f47d-087a-12930caf9aef@kernel.dk>
+ <20180521151817.GA19454@redhat.com>
+ <d01a150a-7752-f6ce-78f2-17a65c1e6fa5@kernel.dk>
+ <20180521160907.GA19553@redhat.com>
+ <f9e3714c-b7c9-d5f6-4018-2a87dd5babb2@kernel.dk>
+ <20180530133629.GC5157@redhat.com>
+ <f654ad69-aa90-9580-4731-a05d0604f353@kernel.dk>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f654ad69-aa90-9580-4731-a05d0604f353@kernel.dk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: sandeen@sandeen.net, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Mike Snitzer <snitzer@redhat.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, hch@infradead.org, colyli@suse.de, darrick.wong@oracle.com, clm@fb.com, bacik@fb.com, linux-xfs@vger.kernel.org, drbd-dev@lists.linbit.com, linux-btrfs@vger.kernel.org, linux-raid@vger.kernel.org, neilb@suse.com
 
-Hi Luis.
+On Wed, May 30, 2018 at 12:55:48PM -0600, Jens Axboe wrote:
+> On 5/30/18 7:36 AM, Mike Snitzer wrote:
+> > So revisiting this patchset: are you inclined to take these changes (I
+> > assume yes)?  If so, what would you need in order to get them staged for
+> > 4.18?  I'll start with offering my review in reply to the DM patch.  I'd
+> > much prefer to see this level of change go in sooner rather than later.
+> 
+> Yeah I'd like to take the changes, but we might have to wait for
+> 4.19 at this point. It'd certainly help to have the dm bits reviewed,
+> as they are some of the larger ones. The grunt of the others are mostly
+> trivial and smaller in scope.
 
-Luis R. Rodriguez - 30.05.18, 00:06:
-> You may want to stick to specific set of configuration options when
-> creating filesystems with mkfs.xfs -- sometimes due to pure technical
-> reasons, but some other times to ensure systems remain compatible as
-> new features are introduced with older kernels, or if you always want
-> to take advantage of some new feature which would otherwise typically
-> be disruptive.
-> 
-> This adds support for parsing a configuration file to override
-> defaults parameters to be used for mkfs.xfs.
-> 
-> We define an XFS configuration directory, /etc/mkfs.xfs.d/ and allow
-> for different configuration files, if none is specified we look for
-> the default configuration file, /etc/mkfs.xfs.d/default. You can
-> override with -c.  For instance, if you specify:
-> 
-> 	mkfs.xfs -c experimental -f /dev/loop0
-
-Just two considerations (I am myself not sure ATM whether it makes sense 
-to implement them):
-
-Usually for "*.d" directories in /etc all configuration files are 
-parsed, yet you parse only one which makes perfect sense for the 
-usecase, but may not be what the admin expects. So it may make sense to 
-use a different directory name.
-
-Also in case you ever want to implement default mount options or 
-whatever… it may make sense to use /etc/xfs as a base directory for 
-everything (unless that is taken by something else, but I think X11 font 
-server stuff is inside /etc/X11 if at all present).
-
-> The search path for the configuration file will be:
-> 
-> 	1) $PWD/experimental
-> 	2) /etc/mkfs.xfs.d/experimental
-> 
-> Absolute paths are supported, in which case they will be used directly
-> and the mkfs.xfs.d directory is ignored.
-> 
-> To verify what configuration file is used on a system use the typical:
-> 
->   mkfs.xfs -N
-> 
-> There is only a subset of options allowed to be set on the
-> configuration file. The default parameters you can override on a
-> configuration file and their current built-in default settings are:
-[…]
--- 
-Martin
-
-
+I don't have a strong opinion on 4.18 vs. 4.19, but I'm available to do whatever
+fixups are needed if it'll help get them in faster.
