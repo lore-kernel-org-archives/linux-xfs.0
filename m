@@ -1,219 +1,296 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:34330 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753487AbeE3ShC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 30 May 2018 14:37:02 -0400
-Subject: Re: [PATCH 3.5/4] mkfs.xfs: document defaults config file details
-References: <20180529220603.29420-1-mcgrof@kernel.org>
- <20180529220603.29420-4-mcgrof@kernel.org>
- <7f30d5cb-800e-13a2-9ad7-d884cebc31e4@sandeen.net>
- <20180530183044.GW837@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <22755902-3f6a-658d-8551-8621198df0c2@sandeen.net>
-Date: Wed, 30 May 2018 13:37:00 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:51672 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753664AbeE3QWu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 May 2018 12:22:50 -0400
+Date: Wed, 30 May 2018 09:22:43 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 11/13] iomap: add an iomap-based readpage and readpages
+ implementation
+Message-ID: <20180530162243.GC837@magnolia>
+References: <20180530095813.31245-1-hch@lst.de>
+ <20180530095813.31245-12-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20180530183044.GW837@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180530095813.31245-12-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-On 5/30/18 1:30 PM, Darrick J. Wong wrote:
-> On Wed, May 30, 2018 at 01:10:48PM -0500, Eric Sandeen wrote:
->> Here's my stab at documenting the defaults/config file behavior.
->>
->> I've condensed it down to just mkfs.xfs 8 changes, and tried to
->> make it more concise.  I'll let people bikeshed this while I work
->> out a proper way to substitute %sysconfdir% in the text.
->>
->> Note that what I describe in terms of bare filename behavior doesn't
->> match the code today - I think we still need to reach a consensus
->> on whether a bare filename looks in $PWD first, or only in the
->> /etc/ path.  (I'd prefer the latter, I think, but still slightly
->> wobbly on this)
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->>
->> diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
->> index 4b8c78c..64853cc 100644
->> --- a/man/man8/mkfs.xfs.8
->> +++ b/man/man8/mkfs.xfs.8
->> @@ -4,6 +4,10 @@ mkfs.xfs \- construct an XFS filesystem
->>   .SH SYNOPSIS
->>   .B mkfs.xfs
->>   [
->> +.B \-c
->> +.I configuration
->> +] [
->> +[
->>   .B \-b
->>   .I block_size_options
->>   ] [
->> @@ -121,8 +125,38 @@ when parameters are quantified in those units.
->>   .PP
->>   Many feature options allow an optional argument of 0 or 1, to explicitly
->>   disable or enable the functionality.
->> +.SH DEFAULT VALUES
->> +.BR mkfs.xfs (8)
->> +contains built-in default values for every option as described in the sections
->> +below.
->> +These built-in defaults may evolve over time as new capabilities are added.
+On Wed, May 30, 2018 at 11:58:11AM +0200, Christoph Hellwig wrote:
+> Simply use iomap_apply to iterate over the file and a submit a bio for
+> each non-uptodate but mapped region and zero everything else.  Note that
+> as-is this can not be used for file systems with a blocksize smaller than
+> the page size, but that support will be added later.
 > 
-> Yay, each sentence starts on its own line, like regular manpages...
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> ---
+>  fs/iomap.c            | 203 +++++++++++++++++++++++++++++++++++++++++-
+>  include/linux/iomap.h |   4 +
+>  2 files changed, 206 insertions(+), 1 deletion(-)
 > 
->> +If the file
->> +.B /etc/xfs/mkfs/defaults
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index b0bc928672af..5e5a266e3325 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -1,6 +1,6 @@
+>  /*
+>   * Copyright (C) 2010 Red Hat, Inc.
+> - * Copyright (c) 2016 Christoph Hellwig.
+> + * Copyright (c) 2016-2018 Christoph Hellwig.
+>   *
+>   * This program is free software; you can redistribute it and/or modify it
+>   * under the terms and conditions of the GNU General Public License,
+> @@ -18,6 +18,7 @@
+>  #include <linux/uaccess.h>
+>  #include <linux/gfp.h>
+>  #include <linux/mm.h>
+> +#include <linux/mm_inline.h>
+>  #include <linux/swap.h>
+>  #include <linux/pagemap.h>
+>  #include <linux/file.h>
+> @@ -102,6 +103,206 @@ iomap_sector(struct iomap *iomap, loff_t pos)
+>  	return (iomap->addr + pos - iomap->offset) >> SECTOR_SHIFT;
+>  }
+>  
+> +static void
+> +iomap_read_end_io(struct bio *bio)
+> +{
+> +	int error = blk_status_to_errno(bio->bi_status);
+> +	struct bio_vec *bvec;
+> +	int i;
+> +
+> +	bio_for_each_segment_all(bvec, bio, i)
+> +		page_endio(bvec->bv_page, false, error);
+> +	bio_put(bio);
+> +}
+> +
+> +struct iomap_readpage_ctx {
+> +	struct page		*cur_page;
+> +	bool			cur_page_in_bio;
+> +	bool			is_readahead;
+> +	struct bio		*bio;
+> +	struct list_head	*pages;
+> +};
+> +
+> +static loff_t
+> +iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+> +		struct iomap *iomap)
+> +{
+> +	struct iomap_readpage_ctx *ctx = data;
+> +	struct page *page = ctx->cur_page;
+> +	unsigned poff = pos & (PAGE_SIZE - 1);
+> +	unsigned plen = min_t(loff_t, PAGE_SIZE - poff, length);
+> +	bool is_contig = false;
+> +	sector_t sector;
+> +
+> +	/* we don't support blocksize < PAGE_SIZE quite yet: */
+> +	WARN_ON_ONCE(pos != page_offset(page));
+> +	WARN_ON_ONCE(plen != PAGE_SIZE);
+> +
+> +	if (iomap->type != IOMAP_MAPPED || pos >= i_size_read(inode)) {
+> +		zero_user(page, poff, plen);
+> +		SetPageUptodate(page);
+> +		goto done;
+> +	}
+> +
+> +	ctx->cur_page_in_bio = true;
+> +
+> +	/*
+> +	 * Try to merge into a previous segment if we can.
+> +	 */
+> +	sector = iomap_sector(iomap, pos);
+> +	if (ctx->bio && bio_end_sector(ctx->bio) == sector) {
+> +		if (__bio_try_merge_page(ctx->bio, page, plen, poff))
+> +			goto done;
+> +		is_contig = true;
+> +	}
+> +
+> +	if (!ctx->bio || !is_contig || bio_full(ctx->bio)) {
+> +		gfp_t gfp = mapping_gfp_constraint(page->mapping, GFP_KERNEL);
+> +		int nr_vecs = (length + PAGE_SIZE - 1) >> PAGE_SHIFT;
+> +
+> +		if (ctx->bio)
+> +			submit_bio(ctx->bio);
+> +
+> +		if (ctx->is_readahead) /* same as readahead_gfp_mask */
+> +			gfp |= __GFP_NORETRY | __GFP_NOWARN;
+> +		ctx->bio = bio_alloc(gfp, min(BIO_MAX_PAGES, nr_vecs));
+> +		ctx->bio->bi_opf = REQ_OP_READ;
+> +		if (ctx->is_readahead)
+> +			ctx->bio->bi_opf |= REQ_RAHEAD;
+> +		ctx->bio->bi_iter.bi_sector = sector;
+> +		bio_set_dev(ctx->bio, iomap->bdev);
+> +		ctx->bio->bi_end_io = iomap_read_end_io;
+> +	}
+> +
+> +	__bio_add_page(ctx->bio, page, plen, poff);
+> +done:
+> +	return plen;
+> +}
+> +
+> +int
+> +iomap_readpage(struct page *page, const struct iomap_ops *ops)
+> +{
+> +	struct iomap_readpage_ctx ctx = { .cur_page = page };
+> +	struct inode *inode = page->mapping->host;
+> +	unsigned poff;
+> +	loff_t ret;
+> +
+> +	WARN_ON_ONCE(page_has_buffers(page));
+> +
+> +	for (poff = 0; poff < PAGE_SIZE; poff += ret) {
+> +		ret = iomap_apply(inode, page_offset(page) + poff,
+> +				PAGE_SIZE - poff, 0, ops, &ctx,
+> +				iomap_readpage_actor);
+> +		if (ret <= 0) {
+> +			WARN_ON_ONCE(ret == 0);
+> +			SetPageError(page);
+> +			break;
+> +		}
+> +	}
+> +
+> +	if (ctx.bio) {
+> +		submit_bio(ctx.bio);
+> +		WARN_ON_ONCE(!ctx.cur_page_in_bio);
+> +	} else {
+> +		WARN_ON_ONCE(ctx.cur_page_in_bio);
+> +		unlock_page(page);
+> +	}
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(iomap_readpage);
+> +
+> +static struct page *
+> +iomap_next_page(struct inode *inode, struct list_head *pages, loff_t pos,
+> +		loff_t length, loff_t *done)
+> +{
+> +	while (!list_empty(pages)) {
+> +		struct page *page = lru_to_page(pages);
+> +
+> +		if (page_offset(page) >= (u64)pos + length)
+> +			break;
+> +
+> +		list_del(&page->lru);
+> +		if (!add_to_page_cache_lru(page, inode->i_mapping, page->index,
+> +				GFP_NOFS))
+> +			return page;
+> +
+> +		/*
+> +		 * If we already have a page in the page cache at index we are
+> +		 * done.  Upper layers don't care if it is uptodate after the
+> +		 * readpages call itself as every page gets checked again once
+> +		 * actually needed.
+> +		 */
+> +		*done += PAGE_SIZE;
+> +		put_page(page);
+> +	}
+> +
+> +	return NULL;
+> +}
+> +
+> +static loff_t
+> +iomap_readpages_actor(struct inode *inode, loff_t pos, loff_t length,
+> +		void *data, struct iomap *iomap)
+> +{
+> +	struct iomap_readpage_ctx *ctx = data;
+> +	loff_t done, ret;
+> +
+> +	for (done = 0; done < length; done += ret) {
+> +		if (ctx->cur_page && ((pos + done) & (PAGE_SIZE - 1)) == 0) {
+> +			if (!ctx->cur_page_in_bio)
+> +				unlock_page(ctx->cur_page);
+> +			put_page(ctx->cur_page);
+> +			ctx->cur_page = NULL;
+> +		}
+> +		if (!ctx->cur_page) {
+> +			ctx->cur_page = iomap_next_page(inode, ctx->pages,
+> +					pos, length, &done);
+> +			if (!ctx->cur_page)
+> +				break;
+> +			ctx->cur_page_in_bio = false;
+> +		}
+> +		ret = iomap_readpage_actor(inode, pos + done, length - done,
+> +				ctx, iomap);
+> +	}
+> +
+> +	return done;
+> +}
+> +
+> +int
+> +iomap_readpages(struct address_space *mapping, struct list_head *pages,
+> +		unsigned nr_pages, const struct iomap_ops *ops)
+> +{
+> +	struct iomap_readpage_ctx ctx = {
+> +		.pages		= pages,
+> +		.is_readahead	= true,
+> +	};
+> +	loff_t pos = page_offset(list_entry(pages->prev, struct page, lru));
+> +	loff_t last = page_offset(list_entry(pages->next, struct page, lru));
+> +	loff_t length = last - pos + PAGE_SIZE, ret = 0;
+> +
+> +	while (length > 0) {
+> +		ret = iomap_apply(mapping->host, pos, length, 0, ops,
+> +				&ctx, iomap_readpages_actor);
+> +		if (ret <= 0) {
+> +			WARN_ON_ONCE(ret == 0);
+> +			goto done;
+> +		}
+> +		pos += ret;
+> +		length -= ret;
+> +	}
+> +	ret = 0;
+> +done:
+> +	if (ctx.bio)
+> +		submit_bio(ctx.bio);
+> +	if (ctx.cur_page) {
+> +		if (!ctx.cur_page_in_bio)
+> +			unlock_page(ctx.cur_page);
+> +		put_page(ctx.cur_page);
+> +	}
+> +	WARN_ON_ONCE(!ret && !list_empty(ctx.pages));
+> +	return ret;
+> +}
+> +EXPORT_SYMBOL_GPL(iomap_readpages);
+> +
+>  static void
+>  iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
+>  {
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index a044a824da85..7300d30ca495 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -9,6 +9,7 @@ struct fiemap_extent_info;
+>  struct inode;
+>  struct iov_iter;
+>  struct kiocb;
+> +struct page;
+>  struct vm_area_struct;
+>  struct vm_fault;
+>  
+> @@ -88,6 +89,9 @@ struct iomap_ops {
+>  
+>  ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
+>  		const struct iomap_ops *ops);
+> +int iomap_readpage(struct page *page, const struct iomap_ops *ops);
+> +int iomap_readpages(struct address_space *mapping, struct list_head *pages,
+> +		unsigned nr_pages, const struct iomap_ops *ops);
+>  int iomap_file_dirty(struct inode *inode, loff_t pos, loff_t len,
+>  		const struct iomap_ops *ops);
+>  int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
+> -- 
+> 2.17.0
 > 
-> @sysconfdir@/xfs/mkfs/defaults ?
-
-"I'll let people bikeshed this while I work
-out a proper way to substitute %sysconfdir% in the text."  ;)
-  
->> +exists, it will be parsed to override built-in defaults as specified in the
->> +.B defaults
->> +file, and the defaults described in sections below may no longer apply.
-> 
-> I think "as specified in the defaults file" is redundant?  We already
-> said that we were parsing the defaults file...
-
-sure
-
->> +.PP
->> +The
->> +.B \-c
->> +option may also be used to specify an alternate configuration file
->> +as descibed in the OPTIONS section.
-> 
-> ...described... (typo)
-
-thx
-
->>   .SH OPTIONS
->>   .TP
->> +.BI \-c " configuration"
->> +This option may be used to specify a configuration file other than
->> +.B /etc/xfs/mkfs/defaults
-> 
-> @sysconfdir@/xfs/mkfs/defaults
-
-grr ;)
-  
->> +to override selected built-in parameter defaults.
->> +If
->> +.B configuration
->> +is a bare filename, it will be searched in the
-> 
-> What is a bare filename?
-
-how would you describe a collection of characters that contains
-not absolute or relative path components?
-  
->> +.B /etc/xfs/mkfs/
-> 
-> @sysco.... yeah.
-> 
->> +directory.  If
-> 
-> Start new sentence on new line?
-
-k
-  
->> +.B configuration
->> +is a full pathname or a relative pathname starting with
-> 
-> Ugh, I still find this a little contorted...
-> 
-> "If $configuration is an absolute pathname, then that path will be used
-> to find the configuration file.
-> 
-> "Otherwise, if $configuration contains at least one slash, it will be
-> treated as a pathname relative to the current working directory.
-
-
-mkfs.xfs -c foo/bar/baz ?
-
-/me wonders what that does today
-
-> "If $configuration contains no slashes, first the current working
-> directory and then @sysconfdir@/xfs/mkfs/ will be searched for that
-> file."
-
-if we want that.
-  
->> +.BR \'./\' " or " \'../\'
->> +then that explicit path to the configuration file will be used.
->> +See also the CONFIGURATION FILE FORMAT section below.
->> +.TP
->>   .BI \-b " block_size_options"
->>   This option specifies the fundamental block size of the filesystem.
->>   The valid
->> @@ -920,6 +954,55 @@ Do not attempt to discard blocks at mkfs time.
->>   .TP
->>   .B \-V
->>   Prints the version number and exits.
->> +.SH CONFIGURATION FILE FORMAT
->> +The optional default configuration file in
->> +.B /etc/xfs/mkfs/default
->> +as well as any alternate configuration file specified via the
->> +.B \-c
->> +option follow a simple ini-style format as shown below.
-> 
-> "...must follow the simple ini-style format..."
-
-i suppose.  bad grammar from me in any case.
-
->> +Available options consist of a small subset of the parameters available
->> +via the
->> +.BR mkfs.xfs (8)
->> +command line.
->> +Currently all default parameters can only be either enabled or disabled,
->> +with a value of 1 to enable or 0 to disable.
->> +See below for a list of all supported configuration parameters and their
->> +current built-in default settings.
->> +.PP
->> +.BI [data]
->> +.br
->> +.BI noalign=0
->> +.PP
->> +.BI [inode]
->> +.br
->> +.BI align=1
->> +.br
->> +.BI projid32bit=1
->> +.br
->> +.BI sparse=0
->> +.PP
->> +.BI [log]
->> +.br
->> +.BI lazy-count=1
->> +.PP
->> +.BI [metadata]
->> +.br
->> +.BI crc=1
->> +.br
->> +.BI finobt=1
->> +.br
->> +.BI rmapbt=0
->> +.br
->> +.BI reflink=0
->> +.PP
->> +.BI [naming]
->> +.br
->> +.BI ftype=1
->> +.PP
->> +.BI [rtdev]
->> +.br
->> +.BI noalign=0
-> 
-> Probably we need to add a build-time helper that reads in the default
-> config and spits out an ini file which can then be rolled into this
-> manpage and/or used to generate a totally commented out defaults file.
-
-Eventually.
-
--Eric
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
