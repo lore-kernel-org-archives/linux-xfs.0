@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:56690 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753442AbeE3TbH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 May 2018 15:31:07 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w4UJPV6T011425
-        for <linux-xfs@vger.kernel.org>; Wed, 30 May 2018 19:31:07 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp2120.oracle.com with ESMTP id 2j9ev8425t-1
+Received: from userp2130.oracle.com ([156.151.31.86]:52478 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932076AbeE3Tbe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 May 2018 15:31:34 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w4UJPXXR178344
+        for <linux-xfs@vger.kernel.org>; Wed, 30 May 2018 19:31:33 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2130.oracle.com with ESMTP id 2j9x4h933y-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 30 May 2018 19:31:07 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w4UJV6P9014684
+        for <linux-xfs@vger.kernel.org>; Wed, 30 May 2018 19:31:33 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w4UJVWvv030893
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 30 May 2018 19:31:06 GMT
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w4UJV6cj018254
-        for <linux-xfs@vger.kernel.org>; Wed, 30 May 2018 19:31:06 GMT
-Subject: [PATCH 04/14] xfs: repair inode btrees
+        for <linux-xfs@vger.kernel.org>; Wed, 30 May 2018 19:31:32 GMT
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w4UJVWi1031218
+        for <linux-xfs@vger.kernel.org>; Wed, 30 May 2018 19:31:32 GMT
+Subject: [PATCH 08/14] xfs: zap broken inode forks
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 30 May 2018 12:31:04 -0700
-Message-ID: <152770866495.11611.1193477717645761767.stgit@magnolia>
+Date: Wed, 30 May 2018 12:31:30 -0700
+Message-ID: <152770868999.11611.2084478144191022515.stgit@magnolia>
 In-Reply-To: <152770863951.11611.5866814627357136911.stgit@magnolia>
 References: <152770863951.11611.5866814627357136911.stgit@magnolia>
 MIME-Version: 1.0
@@ -34,556 +34,587 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Use the rmapbt to find inode chunks, query the chunks to compute
-hole and free masks, and with that information rebuild the inobt
-and finobt.
+Determine if inode fork damage is responsible for the inode being unable
+to pass the ifork verifiers in xfs_iget and zap the fork contents if
+this is true.  Once this is done the fork will be empty but we'll be
+able to construct an in-core inode, and a subsequent call to the inode
+fork repair ioctl will search the rmapbt to rebuild the records that
+were in the fork.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/Makefile              |    1 
- fs/xfs/scrub/ialloc_repair.c |  479 ++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/repair.h        |    2 
- fs/xfs/scrub/scrub.c         |    4 
- 4 files changed, 484 insertions(+), 2 deletions(-)
- create mode 100644 fs/xfs/scrub/ialloc_repair.c
+ fs/xfs/libxfs/xfs_attr_leaf.c |   32 ++-
+ fs/xfs/libxfs/xfs_attr_leaf.h |    2 
+ fs/xfs/libxfs/xfs_bmap.c      |   21 ++
+ fs/xfs/libxfs/xfs_bmap.h      |    2 
+ fs/xfs/scrub/inode_repair.c   |  393 +++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 433 insertions(+), 17 deletions(-)
 
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index abe035ad0aa4..7c442f83b179 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -176,6 +176,7 @@ ifeq ($(CONFIG_XFS_ONLINE_REPAIR),y)
- xfs-y				+= $(addprefix scrub/, \
- 				   agheader_repair.o \
- 				   alloc_repair.o \
-+				   ialloc_repair.o \
- 				   repair.o \
- 				   )
- endif
-diff --git a/fs/xfs/scrub/ialloc_repair.c b/fs/xfs/scrub/ialloc_repair.c
-new file mode 100644
-index 000000000000..dc7b3e95b6c1
---- /dev/null
-+++ b/fs/xfs/scrub/ialloc_repair.c
-@@ -0,0 +1,479 @@
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ *
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * as published by the Free Software Foundation; either version 2
-+ * of the License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_btree.h"
-+#include "xfs_bit.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_sb.h"
-+#include "xfs_inode.h"
-+#include "xfs_alloc.h"
-+#include "xfs_ialloc.h"
-+#include "xfs_ialloc_btree.h"
-+#include "xfs_icache.h"
-+#include "xfs_rmap.h"
-+#include "xfs_rmap_btree.h"
-+#include "xfs_log.h"
-+#include "xfs_trans_priv.h"
-+#include "xfs_error.h"
-+#include "scrub/xfs_scrub.h"
-+#include "scrub/scrub.h"
-+#include "scrub/common.h"
-+#include "scrub/btree.h"
-+#include "scrub/trace.h"
-+#include "scrub/repair.h"
-+
-+/* Inode btree repair. */
-+
-+struct xfs_repair_ialloc_extent {
-+	struct list_head		list;
-+	xfs_inofree_t			freemask;
-+	xfs_agino_t			startino;
-+	unsigned int			count;
-+	unsigned int			usedcount;
-+	uint16_t			holemask;
-+};
-+
-+struct xfs_repair_ialloc {
-+	struct list_head		extlist;
-+	struct xfs_repair_extent_list		btlist;
-+	struct xfs_scrub_context	*sc;
-+	uint64_t			nr_records;
-+};
-+
-+/* Set usedmask if the inode is in use. */
-+STATIC int
-+xfs_repair_ialloc_check_free(
-+	struct xfs_btree_cur	*cur,
-+	struct xfs_buf		*bp,
-+	xfs_ino_t		fsino,
-+	xfs_agino_t		bpino,
-+	bool			*inuse)
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 2135b8e67dcc..01ce59a4fc92 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -889,23 +889,16 @@ xfs_attr_shortform_allfit(
+ 	return xfs_attr_shortform_bytesfit(dp, bytes);
+ }
+ 
+-/* Verify the consistency of an inline attribute fork. */
++/* Verify the consistency of a raw inline attribute fork. */
+ xfs_failaddr_t
+-xfs_attr_shortform_verify(
+-	struct xfs_inode		*ip)
++xfs_attr_shortform_verify_struct(
++	struct xfs_attr_shortform	*sfp,
++	size_t				size)
+ {
+-	struct xfs_attr_shortform	*sfp;
+ 	struct xfs_attr_sf_entry	*sfep;
+ 	struct xfs_attr_sf_entry	*next_sfep;
+ 	char				*endp;
+-	struct xfs_ifork		*ifp;
+ 	int				i;
+-	int				size;
+-
+-	ASSERT(ip->i_d.di_aformat == XFS_DINODE_FMT_LOCAL);
+-	ifp = XFS_IFORK_PTR(ip, XFS_ATTR_FORK);
+-	sfp = (struct xfs_attr_shortform *)ifp->if_u1.if_data;
+-	size = ifp->if_bytes;
+ 
+ 	/*
+ 	 * Give up if the attribute is way too short.
+@@ -963,6 +956,23 @@ xfs_attr_shortform_verify(
+ 	return NULL;
+ }
+ 
++/* Verify the consistency of an inline attribute fork. */
++xfs_failaddr_t
++xfs_attr_shortform_verify(
++	struct xfs_inode		*ip)
 +{
-+	struct xfs_mount	*mp = cur->bc_mp;
-+	struct xfs_dinode	*dip;
-+	int			error;
++	struct xfs_attr_shortform	*sfp;
++	struct xfs_ifork		*ifp;
++	int				size;
 +
-+	/* Will the in-core inode tell us if it's in use? */
-+	error = xfs_icache_inode_is_allocated(mp, cur->bc_tp, fsino, inuse);
-+	if (!error)
-+		return 0;
++	ASSERT(ip->i_d.di_aformat == XFS_DINODE_FMT_LOCAL);
++	ifp = XFS_IFORK_PTR(ip, XFS_ATTR_FORK);
++	sfp = (struct xfs_attr_shortform *)ifp->if_u1.if_data;
++	size = ifp->if_bytes;
 +
-+	/* Inode uncached or half assembled, read disk buffer */
-+	dip = xfs_buf_offset(bp, bpino * mp->m_sb.sb_inodesize);
-+	if (be16_to_cpu(dip->di_magic) != XFS_DINODE_MAGIC)
-+		return -EFSCORRUPTED;
-+
-+	if (dip->di_version >= 3 && be64_to_cpu(dip->di_ino) != fsino)
-+		return -EFSCORRUPTED;
-+
-+	*inuse = dip->di_mode != 0;
-+	return 0;
++	return xfs_attr_shortform_verify_struct(sfp, size);
 +}
 +
-+/* Record extents that belong to inode btrees. */
+ /*
+  * Convert a leaf attribute list to shortform attribute list
+  */
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
+index 4da08af5b134..e5b4102772c1 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.h
++++ b/fs/xfs/libxfs/xfs_attr_leaf.h
+@@ -53,6 +53,8 @@ int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args,
+ int	xfs_attr_shortform_remove(struct xfs_da_args *args);
+ int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
+ int	xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
++xfs_failaddr_t xfs_attr_shortform_verify_struct(struct xfs_attr_shortform *sfp,
++		size_t size);
+ xfs_failaddr_t xfs_attr_shortform_verify(struct xfs_inode *ip);
+ void	xfs_attr_fork_remove(struct xfs_inode *ip, struct xfs_trans *tp);
+ 
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 7b0e2b551e23..16d17e6a16d2 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -6187,18 +6187,16 @@ xfs_bmap_finish_one(
+ 	return error;
+ }
+ 
+-/* Check that an inode's extent does not have invalid flags or bad ranges. */
++/* Check that an extent does not have invalid flags or bad ranges. */
+ xfs_failaddr_t
+-xfs_bmap_validate_extent(
+-	struct xfs_inode	*ip,
++xfs_bmbt_validate_extent(
++	struct xfs_mount	*mp,
++	bool			isrt,
+ 	int			whichfork,
+ 	struct xfs_bmbt_irec	*irec)
+ {
+-	struct xfs_mount	*mp = ip->i_mount;
+ 	xfs_fsblock_t		endfsb;
+-	bool			isrt;
+ 
+-	isrt = XFS_IS_REALTIME_INODE(ip);
+ 	endfsb = irec->br_startblock + irec->br_blockcount - 1;
+ 	if (isrt) {
+ 		if (!xfs_verify_rtbno(mp, irec->br_startblock))
+@@ -6222,3 +6220,14 @@ xfs_bmap_validate_extent(
+ 	}
+ 	return NULL;
+ }
++
++/* Check that an inode's extent does not have invalid flags or bad ranges. */
++xfs_failaddr_t
++xfs_bmap_validate_extent(
++	struct xfs_inode	*ip,
++	int			whichfork,
++	struct xfs_bmbt_irec	*irec)
++{
++	return xfs_bmbt_validate_extent(ip->i_mount, XFS_IS_REALTIME_INODE(ip),
++			whichfork, irec);
++}
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index 2c233f9f1a26..3b9a83e054c9 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -294,6 +294,8 @@ static inline int xfs_bmap_fork_to_state(int whichfork)
+ 	}
+ }
+ 
++xfs_failaddr_t xfs_bmbt_validate_extent(struct xfs_mount *mp, bool isrt,
++		int whichfork, struct xfs_bmbt_irec *irec);
+ xfs_failaddr_t xfs_bmap_validate_extent(struct xfs_inode *ip, int whichfork,
+ 		struct xfs_bmbt_irec *irec);
+ 
+diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
+index 90208a58a1d1..da37e04bc4df 100644
+--- a/fs/xfs/scrub/inode_repair.c
++++ b/fs/xfs/scrub/inode_repair.c
+@@ -36,11 +36,15 @@
+ #include "xfs_ialloc.h"
+ #include "xfs_da_format.h"
+ #include "xfs_reflink.h"
++#include "xfs_alloc.h"
+ #include "xfs_rmap.h"
++#include "xfs_rmap_btree.h"
+ #include "xfs_bmap.h"
++#include "xfs_bmap_btree.h"
+ #include "xfs_bmap_util.h"
+ #include "xfs_dir2.h"
+ #include "xfs_quota_defs.h"
++#include "xfs_attr_leaf.h"
+ #include "scrub/xfs_scrub.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+@@ -87,11 +91,387 @@ xfs_repair_inode_buf(
+ 	}
+ }
+ 
++struct xfs_repair_inode_fork_counters {
++	struct xfs_scrub_context	*sc;
++	xfs_rfsblock_t			data_blocks;
++	xfs_rfsblock_t			rt_blocks;
++	xfs_rfsblock_t			attr_blocks;
++	xfs_extnum_t			data_extents;
++	xfs_extnum_t			rt_extents;
++	xfs_aextnum_t			attr_extents;
++};
++
++/* Count extents and blocks for an inode given an rmap. */
 +STATIC int
-+xfs_repair_ialloc_extent_fn(
++xfs_repair_inode_count_rmap(
 +	struct xfs_btree_cur		*cur,
 +	struct xfs_rmap_irec		*rec,
 +	void				*priv)
 +{
-+	struct xfs_imap			imap;
-+	struct xfs_repair_ialloc	*ri = priv;
-+	struct xfs_repair_ialloc_extent	*rie;
-+	struct xfs_dinode		*dip;
-+	struct xfs_buf			*bp;
-+	struct xfs_mount		*mp = cur->bc_mp;
-+	xfs_ino_t			fsino;
-+	xfs_inofree_t			usedmask;
-+	xfs_fsblock_t			fsbno;
-+	xfs_agnumber_t			agno;
-+	xfs_agblock_t			agbno;
-+	xfs_agino_t			cdist;
-+	xfs_agino_t			startino;
-+	xfs_agino_t			clusterino;
-+	xfs_agino_t			nr_inodes;
-+	xfs_agino_t			inoalign;
-+	xfs_agino_t			agino;
-+	xfs_agino_t			rmino;
-+	uint16_t			fillmask;
-+	bool				inuse;
-+	int				blks_per_cluster;
-+	int				usedcount;
-+	int				error = 0;
++	struct xfs_repair_inode_fork_counters	*rifc = priv;
 +
-+	if (xfs_scrub_should_terminate(ri->sc, &error))
-+		return error;
-+
-+	/* Fragment of the old btrees; dispose of them later. */
-+	if (rec->rm_owner == XFS_RMAP_OWN_INOBT) {
-+		fsbno = XFS_AGB_TO_FSB(cur->bc_mp, cur->bc_private.a.agno,
-+				rec->rm_startblock);
-+		return xfs_repair_collect_btree_extent(ri->sc, &ri->btlist,
-+				fsbno, rec->rm_blockcount);
-+	}
-+
-+	/* Skip extents which are not owned by this inode and fork. */
-+	if (rec->rm_owner != XFS_RMAP_OWN_INODES)
++	/* Is this even the right fork? */
++	if (rec->rm_owner != rifc->sc->sm->sm_ino)
 +		return 0;
-+
-+	agno = cur->bc_private.a.agno;
-+	blks_per_cluster = xfs_icluster_size_fsb(mp);
-+	nr_inodes = XFS_OFFBNO_TO_AGINO(mp, blks_per_cluster, 0);
-+
-+	if (rec->rm_startblock % blks_per_cluster != 0)
-+		return -EFSCORRUPTED;
-+
-+	trace_xfs_repair_ialloc_extent_fn(mp, cur->bc_private.a.agno,
-+			rec->rm_startblock, rec->rm_blockcount, rec->rm_owner,
-+			rec->rm_offset, rec->rm_flags);
-+
-+	/*
-+	 * Determine the inode block alignment, and where the block
-+	 * ought to start if it's aligned properly.  On a sparse inode
-+	 * system the rmap doesn't have to start on an alignment boundary,
-+	 * but the record does.  On pre-sparse filesystems, we /must/
-+	 * start both rmap and inobt on an alignment boundary.
-+	 */
-+	inoalign = xfs_ialloc_cluster_alignment(mp);
-+	agbno = rec->rm_startblock;
-+	agino = XFS_OFFBNO_TO_AGINO(mp, agbno, 0);
-+	rmino = XFS_OFFBNO_TO_AGINO(mp, rounddown(agbno, inoalign), 0);
-+	if (!xfs_sb_version_hassparseinodes(&mp->m_sb) && agino != rmino)
-+		return -EFSCORRUPTED;
-+
-+	/*
-+	 * For each cluster in this blob of inode, we must calculate the
-+	 * properly aligned startino of that cluster, then iterate each
-+	 * cluster to fill in used and filled masks appropriately.  We
-+	 * then use the (startino, used, filled) information to construct
-+	 * the appropriate inode records.
-+	 */
-+	for (agbno = rec->rm_startblock;
-+	     agbno < rec->rm_startblock + rec->rm_blockcount;
-+	     agbno += blks_per_cluster) {
-+		/* The per-AG inum of this inode cluster. */
-+		agino = XFS_OFFBNO_TO_AGINO(mp, agbno, 0);
-+
-+		/* The per-AG inum of the inobt record. */
-+		startino = rmino +
-+				rounddown(agino - rmino, XFS_INODES_PER_CHUNK);
-+		cdist = agino - startino;
-+
-+		/* Every inode in this holemask slot is filled. */
-+		fillmask = xfs_inobt_maskn(
-+				cdist / XFS_INODES_PER_HOLEMASK_BIT,
-+				nr_inodes / XFS_INODES_PER_HOLEMASK_BIT);
-+
-+		/* Grab the inode cluster buffer. */
-+		imap.im_blkno = XFS_AGB_TO_DADDR(mp, agno, agbno);
-+		imap.im_len = XFS_FSB_TO_BB(mp, blks_per_cluster);
-+		imap.im_boffset = 0;
-+
-+		error = xfs_imap_to_bp(mp, cur->bc_tp, &imap,
-+				&dip, &bp, 0, XFS_IGET_UNTRUSTED);
-+		if (error)
-+			return error;
-+
-+		usedmask = 0;
-+		usedcount = 0;
-+		/* Which inodes within this cluster are free? */
-+		for (clusterino = 0; clusterino < nr_inodes; clusterino++) {
-+			fsino = XFS_AGINO_TO_INO(mp, cur->bc_private.a.agno,
-+					agino + clusterino);
-+			error = xfs_repair_ialloc_check_free(cur, bp, fsino,
-+					clusterino, &inuse);
-+			if (error) {
-+				xfs_trans_brelse(cur->bc_tp, bp);
-+				return error;
-+			}
-+			if (inuse) {
-+				usedcount++;
-+				usedmask |= XFS_INOBT_MASK(cdist + clusterino);
-+			}
-+		}
-+		xfs_trans_brelse(cur->bc_tp, bp);
-+
-+		/*
-+		 * If the last item in the list is our chunk record,
-+		 * update that.
-+		 */
-+		if (!list_empty(&ri->extlist)) {
-+			rie = list_last_entry(&ri->extlist,
-+					struct xfs_repair_ialloc_extent, list);
-+			if (rie->startino + XFS_INODES_PER_CHUNK > startino) {
-+				rie->freemask &= ~usedmask;
-+				rie->holemask &= ~fillmask;
-+				rie->count += nr_inodes;
-+				rie->usedcount += usedcount;
-+				continue;
-+			}
-+		}
-+
-+		/* New inode chunk; add to the list. */
-+		rie = kmem_alloc(sizeof(struct xfs_repair_ialloc_extent),
-+				KM_MAYFAIL);
-+		if (!rie)
-+			return -ENOMEM;
-+
-+		INIT_LIST_HEAD(&rie->list);
-+		rie->startino = startino;
-+		rie->freemask = XFS_INOBT_ALL_FREE & ~usedmask;
-+		rie->holemask = XFS_INOBT_ALL_FREE & ~fillmask;
-+		rie->count = nr_inodes;
-+		rie->usedcount = usedcount;
-+		list_add_tail(&rie->list, &ri->extlist);
-+		ri->nr_records++;
++	if (rec->rm_flags & XFS_RMAP_ATTR_FORK) {
++		rifc->attr_blocks += rec->rm_blockcount;
++		if (!(rec->rm_flags & XFS_RMAP_BMBT_BLOCK))
++			rifc->attr_extents++;
++	} else {
++		rifc->data_blocks += rec->rm_blockcount;
++		if (!(rec->rm_flags & XFS_RMAP_BMBT_BLOCK))
++			rifc->data_extents++;
 +	}
-+
 +	return 0;
 +}
 +
-+/* Compare two ialloc extents. */
-+static int
-+xfs_repair_ialloc_extent_cmp(
-+	void				*priv,
-+	struct list_head		*a,
-+	struct list_head		*b)
-+{
-+	struct xfs_repair_ialloc_extent	*ap;
-+	struct xfs_repair_ialloc_extent	*bp;
-+
-+	ap = container_of(a, struct xfs_repair_ialloc_extent, list);
-+	bp = container_of(b, struct xfs_repair_ialloc_extent, list);
-+
-+	if (ap->startino > bp->startino)
-+		return 1;
-+	else if (ap->startino < bp->startino)
-+		return -1;
-+	return 0;
-+}
-+
-+/* Insert an inode chunk record into a given btree. */
-+static int
-+xfs_repair_iallocbt_insert_btrec(
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_repair_ialloc_extent	*rie)
-+{
-+	int				stat;
-+	int				error;
-+
-+	error = xfs_inobt_lookup(cur, rie->startino, XFS_LOOKUP_EQ, &stat);
-+	if (error)
-+		return error;
-+	XFS_WANT_CORRUPTED_RETURN(cur->bc_mp, stat == 0);
-+	error = xfs_inobt_insert_rec(cur, rie->holemask, rie->count,
-+			rie->count - rie->usedcount, rie->freemask, &stat);
-+	if (error)
-+		return error;
-+	XFS_WANT_CORRUPTED_RETURN(cur->bc_mp, stat == 1);
-+	return error;
-+}
-+
-+/* Insert an inode chunk record into both inode btrees. */
-+static int
-+xfs_repair_iallocbt_insert_rec(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_repair_ialloc_extent	*rie)
++/* Count extents and blocks for an inode from all AG rmap data. */
++STATIC int
++xfs_repair_inode_count_ag_rmaps(
++	struct xfs_repair_inode_fork_counters	*rifc,
++	xfs_agnumber_t			agno)
 +{
 +	struct xfs_btree_cur		*cur;
++	struct xfs_buf			*agf;
 +	int				error;
 +
-+	trace_xfs_repair_ialloc_insert(sc->mp, sc->sa.agno, rie->startino,
-+			rie->holemask, rie->count, rie->count - rie->usedcount,
-+			rie->freemask);
-+
-+	/* Insert into the inobt. */
-+	cur = xfs_inobt_init_cursor(sc->mp, sc->tp, sc->sa.agi_bp, sc->sa.agno,
-+			XFS_BTNUM_INO);
-+	error = xfs_repair_iallocbt_insert_btrec(cur, rie);
++	error = xfs_alloc_read_agf(rifc->sc->mp, rifc->sc->tp, agno, 0, &agf);
 +	if (error)
-+		goto out_cur;
-+	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++		return error;
 +
-+	/* Insert into the finobt if chunk has free inodes. */
-+	if (xfs_sb_version_hasfinobt(&sc->mp->m_sb) &&
-+	    rie->count != rie->usedcount) {
-+		cur = xfs_inobt_init_cursor(sc->mp, sc->tp, sc->sa.agi_bp,
-+				sc->sa.agno, XFS_BTNUM_FINO);
-+		error = xfs_repair_iallocbt_insert_btrec(cur, rie);
-+		if (error)
-+			goto out_cur;
-+		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++	cur = xfs_rmapbt_init_cursor(rifc->sc->mp, rifc->sc->tp, agf, agno);
++	if (!cur) {
++		error = -ENOMEM;
++		goto out_agf;
 +	}
 +
-+	return xfs_repair_roll_ag_trans(sc);
-+out_cur:
++	error = xfs_rmap_query_all(cur, xfs_repair_inode_count_rmap, rifc);
++	if (error == XFS_BTREE_QUERY_RANGE_ABORT)
++		error = 0;
++
 +	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
++out_agf:
++	xfs_trans_brelse(rifc->sc->tp, agf);
 +	return error;
 +}
 +
-+/* Repair both inode btrees. */
-+int
-+xfs_repair_iallocbt(
-+	struct xfs_scrub_context	*sc)
++/* Count extents and blocks for a given inode from all rmap data. */
++STATIC int
++xfs_repair_inode_count_rmaps(
++	struct xfs_repair_inode_fork_counters	*rifc)
 +{
-+	struct xfs_repair_ialloc	ri;
-+	struct xfs_owner_info		oinfo;
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_buf			*bp;
-+	struct xfs_repair_ialloc_extent	*rie;
-+	struct xfs_repair_ialloc_extent	*n;
-+	struct xfs_agi			*agi;
-+	struct xfs_btree_cur		*cur = NULL;
-+	struct xfs_perag		*pag;
-+	xfs_fsblock_t			inofsb;
-+	xfs_fsblock_t			finofsb;
-+	xfs_extlen_t			nr_blocks;
-+	xfs_agino_t			old_count;
-+	xfs_agino_t			old_freecount;
-+	xfs_agino_t			freecount;
-+	unsigned int			count;
-+	unsigned int			usedcount;
-+	int				logflags;
-+	int				error = 0;
++	xfs_agnumber_t			agno;
++	int				error;
 +
-+	/* We require the rmapbt to rebuild anything. */
-+	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
++	if (!xfs_sb_version_hasrmapbt(&rifc->sc->mp->m_sb) ||
++	    xfs_sb_version_hasrealtime(&rifc->sc->mp->m_sb))
 +		return -EOPNOTSUPP;
 +
-+	xfs_scrub_perag_get(sc->mp, &sc->sa);
-+	pag = sc->sa.pag;
-+	/* Collect all reverse mappings for inode blocks. */
-+	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_INOBT);
-+	INIT_LIST_HEAD(&ri.extlist);
-+	xfs_repair_init_extent_list(&ri.btlist);
-+	ri.nr_records = 0;
-+	ri.sc = sc;
++	/* XXX: find rt blocks too */
 +
-+	cur = xfs_rmapbt_init_cursor(mp, sc->tp, sc->sa.agf_bp, sc->sa.agno);
-+	error = xfs_rmap_query_all(cur, xfs_repair_ialloc_extent_fn, &ri);
-+	if (error)
-+		goto out;
-+	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+	cur = NULL;
-+
-+	/* Do we actually have enough space to do this? */
-+	nr_blocks = xfs_iallocbt_calc_size(mp, ri.nr_records);
-+	if (xfs_sb_version_hasfinobt(&mp->m_sb))
-+		nr_blocks *= 2;
-+	if (!xfs_repair_ag_has_space(pag, nr_blocks, XFS_AG_RESV_NONE)) {
-+		error = -ENOSPC;
-+		goto out;
-+	}
-+
-+	/* Invalidate all the inobt/finobt blocks in btlist. */
-+	error = xfs_repair_invalidate_blocks(sc, &ri.btlist);
-+	if (error)
-+		goto out;
-+
-+	agi = XFS_BUF_TO_AGI(sc->sa.agi_bp);
-+	/* Initialize new btree roots. */
-+	error = xfs_repair_alloc_ag_block(sc, &oinfo, &inofsb,
-+			XFS_AG_RESV_NONE);
-+	if (error)
-+		goto out;
-+	error = xfs_repair_init_btblock(sc, inofsb, &bp, XFS_BTNUM_INO,
-+			&xfs_inobt_buf_ops);
-+	if (error)
-+		goto out;
-+	agi->agi_root = cpu_to_be32(XFS_FSB_TO_AGBNO(mp, inofsb));
-+	agi->agi_level = cpu_to_be32(1);
-+	logflags = XFS_AGI_ROOT | XFS_AGI_LEVEL;
-+
-+	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
-+		error = xfs_repair_alloc_ag_block(sc, &oinfo, &finofsb,
-+				mp->m_inotbt_nores ? XFS_AG_RESV_NONE :
-+						     XFS_AG_RESV_METADATA);
++	for (agno = 0; agno < rifc->sc->mp->m_sb.sb_agcount; agno++) {
++		error = xfs_repair_inode_count_ag_rmaps(rifc, agno);
 +		if (error)
-+			goto out;
-+		error = xfs_repair_init_btblock(sc, finofsb, &bp,
-+				XFS_BTNUM_FINO, &xfs_inobt_buf_ops);
-+		if (error)
-+			goto out;
-+		agi->agi_free_root = cpu_to_be32(XFS_FSB_TO_AGBNO(mp, finofsb));
-+		agi->agi_free_level = cpu_to_be32(1);
-+		logflags |= XFS_AGI_FREE_ROOT | XFS_AGI_FREE_LEVEL;
++			return error;
 +	}
 +
-+	xfs_ialloc_log_agi(sc->tp, sc->sa.agi_bp, logflags);
-+	error = xfs_repair_roll_ag_trans(sc);
-+	if (error)
-+		goto out;
++	/* Can't have extents on both the rt and the data device. */
++	if (rifc->data_extents && rifc->rt_extents)
++		return -EFSCORRUPTED;
 +
-+	/* Insert records into the new btrees. */
-+	count = 0;
-+	usedcount = 0;
-+	list_sort(NULL, &ri.extlist, xfs_repair_ialloc_extent_cmp);
-+	list_for_each_entry_safe(rie, n, &ri.extlist, list) {
-+		count += rie->count;
-+		usedcount += rie->usedcount;
-+
-+		error = xfs_repair_iallocbt_insert_rec(sc, rie);
-+		if (error)
-+			goto out;
-+
-+		list_del(&rie->list);
-+		kmem_free(rie);
-+	}
-+
-+
-+	/* Update the AGI counters. */
-+	agi = XFS_BUF_TO_AGI(sc->sa.agi_bp);
-+	old_count = be32_to_cpu(agi->agi_count);
-+	old_freecount = be32_to_cpu(agi->agi_freecount);
-+	freecount = count - usedcount;
-+
-+	xfs_repair_mod_ino_counts(sc, old_count, count, old_freecount,
-+			freecount);
-+
-+	if (count != old_count) {
-+		if (sc->sa.pag->pagi_init)
-+			sc->sa.pag->pagi_count = count;
-+		agi->agi_count = cpu_to_be32(count);
-+		xfs_ialloc_log_agi(sc->tp, sc->sa.agi_bp, XFS_AGI_COUNT);
-+	}
-+
-+	if (freecount != old_freecount) {
-+		if (sc->sa.pag->pagi_init)
-+			sc->sa.pag->pagi_freecount = freecount;
-+		agi->agi_freecount = cpu_to_be32(freecount);
-+		xfs_ialloc_log_agi(sc->tp, sc->sa.agi_bp, XFS_AGI_FREECOUNT);
-+	}
-+
-+	/* Free the old inode btree blocks if they're not in use. */
-+	return xfs_repair_reap_btree_extents(sc, &ri.btlist, &oinfo,
-+			XFS_AG_RESV_NONE);
-+out:
-+	if (cur)
-+		xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-+	xfs_repair_cancel_btree_extents(sc, &ri.btlist);
-+	list_for_each_entry_safe(rie, n, &ri.extlist, list) {
-+		list_del(&rie->list);
-+		kmem_free(rie);
-+	}
-+	return error;
++	return 0;
 +}
-diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-index 82cf2d012ebc..eaacbd589754 100644
---- a/fs/xfs/scrub/repair.h
-+++ b/fs/xfs/scrub/repair.h
-@@ -112,6 +112,7 @@ int xfs_repair_agf(struct xfs_scrub_context *sc);
- int xfs_repair_agfl(struct xfs_scrub_context *sc);
- int xfs_repair_agi(struct xfs_scrub_context *sc);
- int xfs_repair_allocbt(struct xfs_scrub_context *sc);
-+int xfs_repair_iallocbt(struct xfs_scrub_context *sc);
++
++/* Figure out if we need to zap this extents format fork. */
++STATIC bool
++xfs_repair_inode_core_check_extents_fork(
++	struct xfs_scrub_context	*sc,
++	struct xfs_dinode		*dip,
++	int				dfork_size,
++	int				whichfork)
++{
++	struct xfs_bmbt_irec		new;
++	struct xfs_bmbt_rec		*dp;
++	bool				isrt;
++	int				i;
++	int				nex;
++	int				fork_size;
++
++	nex = XFS_DFORK_NEXTENTS(dip, whichfork);
++	fork_size = nex * sizeof(struct xfs_bmbt_rec);
++	if (fork_size < 0 || fork_size > dfork_size)
++		return true;
++	dp = (struct xfs_bmbt_rec *)XFS_DFORK_PTR(dip, whichfork);
++
++	isrt = dip->di_flags & cpu_to_be16(XFS_DIFLAG_REALTIME);
++	for (i = 0; i < nex; i++, dp++) {
++		xfs_failaddr_t	fa;
++
++		xfs_bmbt_disk_get_all(dp, &new);
++		fa = xfs_bmbt_validate_extent(sc->mp, isrt, whichfork, &new);
++		if (fa)
++			return true;
++	}
++
++	return false;
++}
++
++/* Figure out if we need to zap this btree format fork. */
++STATIC bool
++xfs_repair_inode_core_check_btree_fork(
++	struct xfs_scrub_context	*sc,
++	struct xfs_dinode		*dip,
++	int				dfork_size,
++	int				whichfork)
++{
++	struct xfs_bmdr_block		*dfp;
++	int				nrecs;
++	int				level;
++
++	if (XFS_DFORK_NEXTENTS(dip, whichfork) <=
++			dfork_size / sizeof(struct xfs_bmbt_irec))
++		return true;
++
++	dfp = (struct xfs_bmdr_block *)XFS_DFORK_PTR(dip, whichfork);
++	nrecs = be16_to_cpu(dfp->bb_numrecs);
++	level = be16_to_cpu(dfp->bb_level);
++
++	if (nrecs == 0 || XFS_BMDR_SPACE_CALC(nrecs) > dfork_size)
++		return true;
++	if (level == 0 || level > XFS_BTREE_MAXLEVELS)
++		return true;
++	return false;
++}
++
++/*
++ * Check the data fork for things that will fail the ifork verifiers or the
++ * ifork formatters.
++ */
++STATIC bool
++xfs_repair_inode_core_check_data_fork(
++	struct xfs_scrub_context	*sc,
++	struct xfs_dinode		*dip,
++	uint16_t			mode)
++{
++	uint64_t			size;
++	int				dfork_size;
++
++	size = be64_to_cpu(dip->di_size);
++	switch (mode & S_IFMT) {
++	case S_IFIFO:
++	case S_IFCHR:
++	case S_IFBLK:
++	case S_IFSOCK:
++		if (XFS_DFORK_FORMAT(dip, XFS_DATA_FORK) != XFS_DINODE_FMT_DEV)
++			return true;
++		break;
++	case S_IFREG:
++	case S_IFLNK:
++	case S_IFDIR:
++		switch (XFS_DFORK_FORMAT(dip, XFS_DATA_FORK)) {
++		case XFS_DINODE_FMT_LOCAL:
++		case XFS_DINODE_FMT_EXTENTS:
++		case XFS_DINODE_FMT_BTREE:
++			break;
++		default:
++			return true;
++		}
++		break;
++	default:
++		return true;
++	}
++	dfork_size = XFS_DFORK_SIZE(dip, sc->mp, XFS_DATA_FORK);
++	switch (XFS_DFORK_FORMAT(dip, XFS_DATA_FORK)) {
++	case XFS_DINODE_FMT_DEV:
++		break;
++	case XFS_DINODE_FMT_LOCAL:
++		if (size > dfork_size)
++			return true;
++		break;
++	case XFS_DINODE_FMT_EXTENTS:
++		if (xfs_repair_inode_core_check_extents_fork(sc, dip,
++				dfork_size, XFS_DATA_FORK))
++			return true;
++		break;
++	case XFS_DINODE_FMT_BTREE:
++		if (xfs_repair_inode_core_check_btree_fork(sc, dip,
++				dfork_size, XFS_DATA_FORK))
++			return true;
++		break;
++	default:
++		return true;
++	}
++
++	return false;
++}
++
++/* Reset the data fork to something sane. */
++STATIC void
++xfs_repair_inode_core_zap_data_fork(
++	struct xfs_scrub_context	*sc,
++	struct xfs_dinode		*dip,
++	uint16_t			mode,
++	struct xfs_repair_inode_fork_counters	*rifc)
++{
++	char				*p;
++	const struct xfs_dir_ops	*ops;
++	struct xfs_dir2_sf_hdr		*sfp;
++	int				i8count;
++
++	/* Special files always get reset to DEV */
++	switch (mode & S_IFMT) {
++	case S_IFIFO:
++	case S_IFCHR:
++	case S_IFBLK:
++	case S_IFSOCK:
++		dip->di_format = XFS_DINODE_FMT_DEV;
++		dip->di_size = 0;
++		return;
++	}
++
++	/*
++	 * If we have data extents, reset to an empty map and hope the user
++	 * will run the bmapbtd checker next.
++	 */
++	if (rifc->data_extents || rifc->rt_extents || S_ISREG(mode)) {
++		dip->di_format = XFS_DINODE_FMT_EXTENTS;
++		dip->di_nextents = 0;
++		return;
++	}
++
++	/* Otherwise, reset the local format to the minimum. */
++	switch (mode & S_IFMT) {
++	case S_IFLNK:
++		/* Blow out symlink; now it points to root dir */
++		dip->di_format = XFS_DINODE_FMT_LOCAL;
++		dip->di_size = cpu_to_be64(1);
++		p = XFS_DFORK_PTR(dip, XFS_DATA_FORK);
++		*p = '/';
++		break;
++	case S_IFDIR:
++		/*
++		 * Blow out dir, make it point to the root.  In the
++		 * future the direction repair will reconstruct this
++		 * dir for us.
++		 */
++		dip->di_format = XFS_DINODE_FMT_LOCAL;
++		i8count = sc->mp->m_sb.sb_rootino > XFS_DIR2_MAX_SHORT_INUM;
++		ops = xfs_dir_get_ops(sc->mp, NULL);
++		sfp = (struct xfs_dir2_sf_hdr *)XFS_DFORK_PTR(dip,
++				XFS_DATA_FORK);
++		sfp->count = 0;
++		sfp->i8count = i8count;
++		ops->sf_put_parent_ino(sfp, sc->mp->m_sb.sb_rootino);
++		dip->di_size = cpu_to_be64(xfs_dir2_sf_hdr_size(i8count));
++		break;
++	}
++}
++
++/*
++ * Check the attr fork for things that will fail the ifork verifiers or the
++ * ifork formatters.
++ */
++STATIC bool
++xfs_repair_inode_core_check_attr_fork(
++	struct xfs_scrub_context	*sc,
++	struct xfs_dinode		*dip)
++{
++	struct xfs_attr_shortform	*sfp;
++	int				size;
++
++	if (XFS_DFORK_BOFF(dip) == 0)
++		return dip->di_aformat != XFS_DINODE_FMT_EXTENTS ||
++		       dip->di_anextents != 0;
++
++	size = XFS_DFORK_SIZE(dip, sc->mp, XFS_ATTR_FORK);
++	switch (XFS_DFORK_FORMAT(dip, XFS_ATTR_FORK)) {
++	case XFS_DINODE_FMT_LOCAL:
++		sfp = (struct xfs_attr_shortform *)XFS_DFORK_PTR(dip,
++				XFS_ATTR_FORK);
++		return xfs_attr_shortform_verify_struct(sfp, size) != NULL;
++	case XFS_DINODE_FMT_EXTENTS:
++		if (xfs_repair_inode_core_check_extents_fork(sc, dip, size,
++				XFS_ATTR_FORK))
++			return true;
++		break;
++	case XFS_DINODE_FMT_BTREE:
++		if (xfs_repair_inode_core_check_btree_fork(sc, dip, size,
++				XFS_ATTR_FORK))
++			return true;
++		break;
++	default:
++		return true;
++	}
++
++	return false;
++}
++
++/* Reset the attr fork to something sane. */
++STATIC void
++xfs_repair_inode_core_zap_attr_fork(
++	struct xfs_scrub_context	*sc,
++	struct xfs_dinode		*dip,
++	struct xfs_repair_inode_fork_counters	*rifc)
++{
++	dip->di_aformat = XFS_DINODE_FMT_EXTENTS;
++	dip->di_anextents = 0;
++	/*
++	 * We leave a nonzero forkoff so that the bmap scrub will look for
++	 * attr rmaps.
++	 */
++	dip->di_forkoff = rifc->attr_extents ? 1 : 0;
++}
++
++/*
++ * Zap the data/attr forks if we spot anything that isn't going to pass the
++ * ifork verifiers or the ifork formatters, because we need to get the inode
++ * into good enough shape that the higher level repair functions can run.
++ */
++STATIC void
++xfs_repair_inode_core_zap_forks(
++	struct xfs_scrub_context	*sc,
++	struct xfs_dinode		*dip,
++	uint16_t			mode,
++	struct xfs_repair_inode_fork_counters	*rifc)
++{
++	bool				zap_datafork = false;
++	bool				zap_attrfork = false;
++
++	/* Inode counters don't make sense? */
++	if (be32_to_cpu(dip->di_nextents) > be64_to_cpu(dip->di_nblocks))
++		zap_datafork = true;
++	if (be16_to_cpu(dip->di_anextents) > be64_to_cpu(dip->di_nblocks))
++		zap_attrfork = true;
++	if (be32_to_cpu(dip->di_nextents) + be16_to_cpu(dip->di_anextents) >
++			be64_to_cpu(dip->di_nblocks))
++		zap_datafork = zap_attrfork = true;
++
++	if (!zap_datafork)
++		zap_datafork = xfs_repair_inode_core_check_data_fork(sc, dip,
++				mode);
++	if (!zap_attrfork)
++		zap_attrfork = xfs_repair_inode_core_check_attr_fork(sc, dip);
++
++	/* Zap whatever's bad. */
++	if (zap_attrfork)
++		xfs_repair_inode_core_zap_attr_fork(sc, dip, rifc);
++	if (zap_datafork)
++		xfs_repair_inode_core_zap_data_fork(sc, dip, mode, rifc);
++	dip->di_nblocks = 0;
++	if (!zap_attrfork)
++		be64_add_cpu(&dip->di_nblocks, rifc->attr_blocks);
++	if (!zap_datafork) {
++		be64_add_cpu(&dip->di_nblocks, rifc->data_blocks);
++		be64_add_cpu(&dip->di_nblocks, rifc->rt_blocks);
++	}
++}
++
+ /* Inode didn't pass verifiers, so fix the raw buffer and retry iget. */
+ STATIC int
+ xfs_repair_inode_core(
+ 	struct xfs_scrub_context	*sc)
+ {
++	struct xfs_repair_inode_fork_counters	rifc;
+ 	struct xfs_imap			imap;
+ 	struct xfs_buf			*bp;
+ 	struct xfs_dinode		*dip;
+@@ -101,6 +481,13 @@ xfs_repair_inode_core(
+ 	uint16_t			mode;
+ 	int				error;
  
- #else
++	/* Figure out what this inode had mapped in both forks. */
++	memset(&rifc, 0, sizeof(rifc));
++	rifc.sc = sc;
++	error = xfs_repair_inode_count_rmaps(&rifc);
++	if (error)
++		return error;
++
+ 	/* Map & read inode. */
+ 	ino = sc->sm->sm_ino;
+ 	error = xfs_imap(sc->mp, sc->tp, ino, &imap, XFS_IGET_UNTRUSTED);
+@@ -133,6 +520,10 @@ xfs_repair_inode_core(
+ 	uuid_copy(&dip->di_uuid, &sc->mp->m_sb.sb_meta_uuid);
+ 	flags = be16_to_cpu(dip->di_flags);
+ 	flags2 = be64_to_cpu(dip->di_flags2);
++	if (rifc.rt_extents)
++		flags |= XFS_DIFLAG_REALTIME;
++	else
++		flags &= ~XFS_DIFLAG_REALTIME;
+ 	if (xfs_sb_version_hasreflink(&sc->mp->m_sb) && S_ISREG(mode))
+ 		flags2 |= XFS_DIFLAG2_REFLINK;
+ 	else
+@@ -147,6 +538,8 @@ xfs_repair_inode_core(
+ 	if (be64_to_cpu(dip->di_size) & (1ULL << 63))
+ 		dip->di_size = cpu_to_be64((1ULL << 63) - 1);
  
-@@ -139,6 +140,7 @@ xfs_repair_calc_ag_resblks(
- #define xfs_repair_agfl			xfs_repair_notsupported
- #define xfs_repair_agi			xfs_repair_notsupported
- #define xfs_repair_allocbt		xfs_repair_notsupported
-+#define xfs_repair_iallocbt		xfs_repair_notsupported
- 
- #endif /* CONFIG_XFS_ONLINE_REPAIR */
- 
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 213d7e21466a..95f82c7f77f6 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -252,14 +252,14 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
- 		.type	= ST_PERAG,
- 		.setup	= xfs_scrub_setup_ag_iallocbt,
- 		.scrub	= xfs_scrub_inobt,
--		.repair	= xfs_repair_notsupported,
-+		.repair	= xfs_repair_iallocbt,
- 	},
- 	[XFS_SCRUB_TYPE_FINOBT] = {	/* finobt */
- 		.type	= ST_PERAG,
- 		.setup	= xfs_scrub_setup_ag_iallocbt,
- 		.scrub	= xfs_scrub_finobt,
- 		.has	= xfs_sb_version_hasfinobt,
--		.repair	= xfs_repair_notsupported,
-+		.repair	= xfs_repair_iallocbt,
- 	},
- 	[XFS_SCRUB_TYPE_RMAPBT] = {	/* rmapbt */
- 		.type	= ST_PERAG,
++	xfs_repair_inode_core_zap_forks(sc, dip, mode, &rifc);
++
+ 	/* Write out the inode... */
+ 	xfs_dinode_calc_crc(sc->mp, dip);
+ 	xfs_trans_buf_set_type(sc->tp, bp, XFS_BLFT_DINO_BUF);
 
