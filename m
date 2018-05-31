@@ -1,62 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:51106 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932722AbeEaSI3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:08:29 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 08/21] xfs: don't use XFS_BMAPI_IGSTATE in xfs_map_blocks
-Date: Thu, 31 May 2018 20:07:46 +0200
-Message-Id: <20180531180759.21631-9-hch@lst.de>
-In-Reply-To: <20180531180759.21631-1-hch@lst.de>
-References: <20180531180759.21631-1-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:57996 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754986AbeEaO7w (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 May 2018 10:59:52 -0400
+Subject: Re: [PATCH] xfs_io: Make copy_range arguments understand *iB values
+References: <20180511002223.14386-1-rgoldwyn@suse.de>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <0aee28ec-7e45-9f53-2923-d0da4004b0b8@sandeen.net>
+Date: Thu, 31 May 2018 09:59:50 -0500
+MIME-Version: 1.0
+In-Reply-To: <20180511002223.14386-1-rgoldwyn@suse.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>, linux-xfs@vger.kernel.org
+Cc: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-We want to be able to use the extent state as a reliably indicator for
-the type of I/O, and stop using the buffer head state.  For this we
-need to stop using the XFS_BMAPI_IGSTATE so that we don't see merged
-extents of different types.
+On 5/10/18 7:22 PM, Goldwyn Rodrigues wrote:
+> Arguments such as 2MiB or 2M are converted to 2 because copy_range uses
+> strtoull(). Convert strtoull() to cvtnum().
+> 
+> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Based on a patch from Dave Chinner.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_aops.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+Thanks
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 25d112a4bcf5..2966d62b0594 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -385,7 +385,6 @@ xfs_map_blocks(
- 	ssize_t			count = i_blocksize(inode);
- 	xfs_fileoff_t		offset_fsb, end_fsb;
- 	int			error = 0;
--	int			bmapi_flags = XFS_BMAPI_ENTIRE;
- 	int			nimaps = 1;
- 
- 	if (XFS_FORCED_SHUTDOWN(mp))
-@@ -405,8 +404,6 @@ xfs_map_blocks(
- 		return 0;
- 
- 	ASSERT(type != XFS_IO_COW);
--	if (type == XFS_IO_UNWRITTEN)
--		bmapi_flags |= XFS_BMAPI_IGSTATE;
- 
- 	xfs_ilock(ip, XFS_ILOCK_SHARED);
- 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
-@@ -418,7 +415,7 @@ xfs_map_blocks(
- 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
- 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
- 	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
--				imap, &nimaps, bmapi_flags);
-+				imap, &nimaps, XFS_BMAPI_ENTIRE);
- 	/*
- 	 * Truncate an overwrite extent if there's a pending CoW
- 	 * reservation before the end of this extent.  This forces us
--- 
-2.17.0
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
+> 
+> diff --git a/io/copy_file_range.c b/io/copy_file_range.c
+> index 99fba20a..0cf658e1 100644
+> --- a/io/copy_file_range.c
+> +++ b/io/copy_file_range.c
+> @@ -47,7 +47,7 @@ copy_range_help(void)
+>    * glibc buffered copy fallback.
+>    */
+>   static loff_t
+> -copy_file_range_cmd(int fd, loff_t *src, loff_t *dst, size_t len)
+> +copy_file_range_cmd(int fd, long long *src, long long *dst, long long len)
+>   {
+>   	loff_t ret;
+>   
+> @@ -89,34 +89,36 @@ copy_dst_truncate(void)
+>   static int
+>   copy_range_f(int argc, char **argv)
+>   {
+> -	loff_t src = 0;
+> -	loff_t dst = 0;
+> +	long long src = 0;
+> +	long long dst = 0;
+>   	size_t len = 0;
+> -	char *sp;
+>   	int opt;
+>   	int ret;
+>   	int fd;
+> +	size_t fsblocksize, fssectsize;
+> +
+> +	init_cvtnum(&fsblocksize, &fssectsize);
+>   
+>   	while ((opt = getopt(argc, argv, "s:d:l:")) != -1) {
+>   		switch (opt) {
+>   		case 's':
+> -			src = strtoull(optarg, &sp, 10);
+> -			if (!sp || sp == optarg) {
+> -				printf(_("invalid source offset -- %s\n"), sp);
+> +			src = cvtnum(fsblocksize, fssectsize, optarg);
+> +			if (src < 0) {
+> +				printf(_("invalid source offset -- %s\n"), optarg);
+>   				return 0;
+>   			}
+>   			break;
+>   		case 'd':
+> -			dst = strtoull(optarg, &sp, 10);
+> -			if (!sp || sp == optarg) {
+> -				printf(_("invalid destination offset -- %s\n"), sp);
+> +			dst = cvtnum(fsblocksize, fssectsize, optarg);
+> +			if (dst < 0) {
+> +				printf(_("invalid destination offset -- %s\n"), optarg);
+>   				return 0;
+>   			}
+>   			break;
+>   		case 'l':
+> -			len = strtoull(optarg, &sp, 10);
+> -			if (!sp || sp == optarg) {
+> -				printf(_("invalid length -- %s\n"), sp);
+> +			len = cvtnum(fsblocksize, fssectsize, optarg);
+> +			if (len < 0) {
+> +				printf(_("invalid length -- %s\n"), optarg);
+>   				return 0;
+>   			}
+>   			break;
