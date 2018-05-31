@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:50368 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:50640 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755982AbeEaSGp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:06:45 -0400
+        with ESMTP id S1755982AbeEaSG6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:06:58 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 08/13] iomap: use __bio_add_page in iomap_dio_zero
-Date: Thu, 31 May 2018 20:06:09 +0200
-Message-Id: <20180531180614.21506-9-hch@lst.de>
+Subject: [PATCH 12/13] xfs: use iomap_bmap
+Date: Thu, 31 May 2018 20:06:13 +0200
+Message-Id: <20180531180614.21506-13-hch@lst.de>
 In-Reply-To: <20180531180614.21506-1-hch@lst.de>
 References: <20180531180614.21506-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,30 +15,44 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-We don't need any merging logic, and this also replaces a BUG_ON with a
-WARN_ON_ONCE inside __bio_add_page for the impossible overflow condition.
+Switch to the iomap based bmap implementation to get rid of one of the
+last users of xfs_get_blocks.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/iomap.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ fs/xfs/xfs_aops.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index df2652b0d85d..85901b449146 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -845,8 +845,7 @@ iomap_dio_zero(struct iomap_dio *dio, struct iomap *iomap, loff_t pos,
- 	bio->bi_end_io = iomap_dio_bio_end_io;
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 80de476cecf8..56e405572909 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1378,10 +1378,9 @@ xfs_vm_bmap(
+ 	struct address_space	*mapping,
+ 	sector_t		block)
+ {
+-	struct inode		*inode = (struct inode *)mapping->host;
+-	struct xfs_inode	*ip = XFS_I(inode);
++	struct xfs_inode	*ip = XFS_I(mapping->host);
  
- 	get_page(page);
--	if (bio_add_page(bio, page, len, 0) != len)
--		BUG();
-+	__bio_add_page(bio, page, len, 0);
- 	bio_set_op_attrs(bio, REQ_OP_WRITE, REQ_SYNC | REQ_IDLE);
+-	trace_xfs_vm_bmap(XFS_I(inode));
++	trace_xfs_vm_bmap(ip);
  
- 	atomic_inc(&dio->ref);
+ 	/*
+ 	 * The swap code (ab-)uses ->bmap to get a block mapping and then
+@@ -1394,9 +1393,7 @@ xfs_vm_bmap(
+ 	 */
+ 	if (xfs_is_reflink_inode(ip) || XFS_IS_REALTIME_INODE(ip))
+ 		return 0;
+-
+-	filemap_write_and_wait(mapping);
+-	return generic_block_bmap(mapping, block, xfs_get_blocks);
++	return iomap_bmap(mapping, block, &xfs_iomap_ops);
+ }
+ 
+ STATIC int
 -- 
 2.17.0
 
