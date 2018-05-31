@@ -1,108 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43512 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:51542 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755085AbeEaNqj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 31 May 2018 09:46:39 -0400
-Date: Thu, 31 May 2018 09:46:38 -0400
+        id S1755294AbeEaNqx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 May 2018 09:46:53 -0400
+Date: Thu, 31 May 2018 09:46:52 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 07/18] xfs: remove the now unused XFS_BMAPI_IGSTATE flag
-Message-ID: <20180531134637.GA2997@bfoster.bfoster>
+Subject: Re: [PATCH 10/18] xfs: simplify xfs_map_blocks by using
+ xfs_iext_lookup_extent directly
+Message-ID: <20180531134651.GD2997@bfoster.bfoster>
 References: <20180530100013.31358-1-hch@lst.de>
- <20180530100013.31358-8-hch@lst.de>
+ <20180530100013.31358-11-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180530100013.31358-8-hch@lst.de>
+In-Reply-To: <20180530100013.31358-11-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-On Wed, May 30, 2018 at 12:00:02PM +0200, Christoph Hellwig wrote:
+On Wed, May 30, 2018 at 12:00:05PM +0200, Christoph Hellwig wrote:
+> xfs_bmapi_read adds zero value in xfs_map_blocks.  Replace it with a
+> direct call to the low-level extent lookup function.
+> 
+> Note that we now always pass a 0 length to the trace points as we ask
+> for an unspecified len.
+> 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
 
-The change looks Ok... It's clearly reasonable to remove a flag that is
-no longer used, but why is it no longer used? The previous patch drops
-it to "make xfs_writepage_map() extent map centric," but the description
-doesn't exactly explain why (and it's not immediately clear to me
-amongst all the other code changes).
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-My understanding of the purpose of IGSTATE here is that if we already
-have an iotype == unwritten ioend, it makes sense to combine contiguous
-mappings since we'd convert the unwritten portions on I/O completion.
-Now that we look up extent first and establish the ioend type from that
-rather than set the ioend type based on the buffer state, I suppose it
-is possible for IGSTATE to lose the fact that a contiguous unwritten
-extent ends up being merged with a normal extent before the ioend type
-is established..? Then again, was IGSTATE even effective in this context
-with nimaps == 1?
-
-This change may very well be fine in the end, but it's made
-unnecessarily difficult to review by the nature of the previous patch.
-ISTM that if this is a dependency of the broader change, it should be
-split off into a separate patch that drops the usage and the flag
-together and explains why.
-
-Brian
-
->  fs/xfs/libxfs/xfs_bmap.c | 6 ++----
->  fs/xfs/libxfs/xfs_bmap.h | 3 ---
->  2 files changed, 2 insertions(+), 7 deletions(-)
+>  fs/xfs/xfs_aops.c | 19 +++++--------------
+>  1 file changed, 5 insertions(+), 14 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 7b0e2b551e23..4b5e014417d2 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -3799,8 +3799,7 @@ xfs_bmapi_update_map(
->  		   mval[-1].br_startblock != HOLESTARTBLOCK &&
->  		   mval->br_startblock == mval[-1].br_startblock +
->  					  mval[-1].br_blockcount &&
-> -		   ((flags & XFS_BMAPI_IGSTATE) ||
-> -			mval[-1].br_state == mval->br_state)) {
-> +		   mval[-1].br_state == mval->br_state) {
->  		ASSERT(mval->br_startoff ==
->  		       mval[-1].br_startoff + mval[-1].br_blockcount);
->  		mval[-1].br_blockcount += mval->br_blockcount;
-> @@ -3845,7 +3844,7 @@ xfs_bmapi_read(
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 587493e9c8a1..cef2bc3cf98b 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -387,7 +387,6 @@ xfs_map_blocks(
+>  	int			whichfork = XFS_DATA_FORK;
+>  	struct xfs_iext_cursor	icur;
+>  	int			error = 0;
+> -	int			nimaps = 1;
 >  
->  	ASSERT(*nmap >= 1);
->  	ASSERT(!(flags & ~(XFS_BMAPI_ATTRFORK|XFS_BMAPI_ENTIRE|
-> -			   XFS_BMAPI_IGSTATE|XFS_BMAPI_COWFORK)));
-> +			   XFS_BMAPI_COWFORK)));
->  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_SHARED|XFS_ILOCK_EXCL));
+>  	if (XFS_FORCED_SHUTDOWN(mp))
+>  		return -EIO;
+> @@ -429,24 +428,16 @@ xfs_map_blocks(
+>  		goto allocate_blocks;
+>  	}
 >  
->  	if (unlikely(XFS_TEST_ERROR(
-> @@ -4290,7 +4289,6 @@ xfs_bmapi_write(
+> -	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
+> -				imap, &nimaps, XFS_BMAPI_ENTIRE);
+> +	if (!xfs_iext_lookup_extent(ip, &ip->i_df, offset_fsb, &icur, imap))
+> +		imap->br_startoff = end_fsb;	/* fake a hole past EOF */
+>  	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+> -	if (error)
+> -		return error;
 >  
->  	ASSERT(*nmap >= 1);
->  	ASSERT(*nmap <= XFS_BMAP_MAX_NMAP);
-> -	ASSERT(!(flags & XFS_BMAPI_IGSTATE));
->  	ASSERT(tp != NULL ||
->  	       (flags & (XFS_BMAPI_CONVERT | XFS_BMAPI_COWFORK)) ==
->  			(XFS_BMAPI_CONVERT | XFS_BMAPI_COWFORK));
-> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-> index 2c233f9f1a26..a845fe57d1b5 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.h
-> +++ b/fs/xfs/libxfs/xfs_bmap.h
-> @@ -80,8 +80,6 @@ struct xfs_extent_free_item
->  #define XFS_BMAPI_METADATA	0x002	/* mapping metadata not user data */
->  #define XFS_BMAPI_ATTRFORK	0x004	/* use attribute fork not data */
->  #define XFS_BMAPI_PREALLOC	0x008	/* preallocation op: unwritten space */
-> -#define XFS_BMAPI_IGSTATE	0x010	/* Ignore state - */
-> -					/* combine contig. space */
->  #define XFS_BMAPI_CONTIG	0x020	/* must allocate only one extent */
->  /*
->   * unwritten extent conversion - this needs write cache flushing and no additional
-> @@ -128,7 +126,6 @@ struct xfs_extent_free_item
->  	{ XFS_BMAPI_METADATA,	"METADATA" }, \
->  	{ XFS_BMAPI_ATTRFORK,	"ATTRFORK" }, \
->  	{ XFS_BMAPI_PREALLOC,	"PREALLOC" }, \
-> -	{ XFS_BMAPI_IGSTATE,	"IGSTATE" }, \
->  	{ XFS_BMAPI_CONTIG,	"CONTIG" }, \
->  	{ XFS_BMAPI_CONVERT,	"CONVERT" }, \
->  	{ XFS_BMAPI_ZERO,	"ZERO" }, \
+> -	if (!nimaps) {
+> -		/*
+> -		 * Lookup returns no match? Beyond eof? regardless,
+> -		 * return it as a hole so we don't write it
+> -		 */
+> +	if (imap->br_startoff > offset_fsb) {
+> +		/* landed in a hole or beyond EOF */
+> +		imap->br_blockcount = imap->br_startoff - offset_fsb;
+>  		imap->br_startoff = offset_fsb;
+> -		imap->br_blockcount = end_fsb - offset_fsb;
+>  		imap->br_startblock = HOLESTARTBLOCK;
+>  		*type = XFS_IO_HOLE;
+> -	} else if (imap->br_startblock == HOLESTARTBLOCK) {
+> -		/* landed in a hole */
+> -		*type = XFS_IO_HOLE;
+>  	} else {
+>  		if (isnullstartblock(imap->br_startblock)) {
+>  			/* got a delalloc extent */
 > -- 
 > 2.17.0
 > 
