@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:49970 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:50284 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755912AbeEaSGg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:06:36 -0400
+        with ESMTP id S1755928AbeEaSGn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:06:43 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 04/13] mm: split ->readpages calls to avoid non-contiguous pages lists
-Date: Thu, 31 May 2018 20:06:05 +0200
-Message-Id: <20180531180614.21506-5-hch@lst.de>
+Subject: [PATCH 07/13] iomap: move IOMAP_F_BOUNDARY to gfs2
+Date: Thu, 31 May 2018 20:06:08 +0200
+Message-Id: <20180531180614.21506-8-hch@lst.de>
 In-Reply-To: <20180531180614.21506-1-hch@lst.de>
 References: <20180531180614.21506-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,52 +15,81 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-That way file systems don't have to go spotting for non-contiguous pages
-and work around them.  It also kicks off I/O earlier, allowing it to
-finish earlier and reduce latency.
+Just define a range of fs specific flags and use that in gfs2 instead of
+exposing this internal flag globally.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- mm/readahead.c | 16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
+ fs/gfs2/bmap.c        | 8 +++++---
+ include/linux/iomap.h | 9 +++++++--
+ 2 files changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/mm/readahead.c b/mm/readahead.c
-index fa4d4b767130..e273f0de3376 100644
---- a/mm/readahead.c
-+++ b/mm/readahead.c
-@@ -140,8 +140,8 @@ static int read_pages(struct address_space *mapping, struct file *filp,
+diff --git a/fs/gfs2/bmap.c b/fs/gfs2/bmap.c
+index cbeedd3cfb36..8efa6297e19c 100644
+--- a/fs/gfs2/bmap.c
++++ b/fs/gfs2/bmap.c
+@@ -683,6 +683,8 @@ static void gfs2_stuffed_iomap(struct inode *inode, struct iomap *iomap)
+ 	iomap->type = IOMAP_INLINE;
  }
  
- /*
-- * __do_page_cache_readahead() actually reads a chunk of disk.  It allocates all
-- * the pages first, then submits them all for I/O. This avoids the very bad
-+ * __do_page_cache_readahead() actually reads a chunk of disk.  It allocates
-+ * the pages first, then submits them for I/O. This avoids the very bad
-  * behaviour which would occur if page allocations are causing VM writeback.
-  * We really don't want to intermingle reads and writes like that.
-  *
-@@ -177,8 +177,18 @@ unsigned int __do_page_cache_readahead(struct address_space *mapping,
- 		rcu_read_lock();
- 		page = radix_tree_lookup(&mapping->i_pages, page_offset);
- 		rcu_read_unlock();
--		if (page && !radix_tree_exceptional_entry(page))
-+		if (page && !radix_tree_exceptional_entry(page)) {
-+			/*
-+			 * Page already present?  Kick off the current batch of
-+			 * contiguous pages before continuing with the next
-+			 * batch.
-+			 */
-+			if (nr_pages)
-+				read_pages(mapping, filp, &page_pool, nr_pages,
-+						gfp_mask);
-+			nr_pages = 0;
- 			continue;
-+		}
++#define IOMAP_F_GFS2_BOUNDARY IOMAP_F_PRIVATE
++
+ /**
+  * gfs2_iomap_begin - Map blocks from an inode to disk blocks
+  * @inode: The inode
+@@ -774,7 +776,7 @@ int gfs2_iomap_begin(struct inode *inode, loff_t pos, loff_t length,
+ 	bh = mp.mp_bh[ip->i_height - 1];
+ 	len = gfs2_extent_length(bh->b_data, bh->b_size, ptr, lend - lblock, &eob);
+ 	if (eob)
+-		iomap->flags |= IOMAP_F_BOUNDARY;
++		iomap->flags |= IOMAP_F_GFS2_BOUNDARY;
+ 	iomap->length = (u64)len << inode->i_blkbits;
  
- 		page = __page_cache_alloc(gfp_mask);
- 		if (!page)
+ out_release:
+@@ -846,12 +848,12 @@ int gfs2_block_map(struct inode *inode, sector_t lblock,
+ 
+ 	if (iomap.length > bh_map->b_size) {
+ 		iomap.length = bh_map->b_size;
+-		iomap.flags &= ~IOMAP_F_BOUNDARY;
++		iomap.flags &= ~IOMAP_F_GFS2_BOUNDARY;
+ 	}
+ 	if (iomap.addr != IOMAP_NULL_ADDR)
+ 		map_bh(bh_map, inode->i_sb, iomap.addr >> inode->i_blkbits);
+ 	bh_map->b_size = iomap.length;
+-	if (iomap.flags & IOMAP_F_BOUNDARY)
++	if (iomap.flags & IOMAP_F_GFS2_BOUNDARY)
+ 		set_buffer_boundary(bh_map);
+ 	if (iomap.flags & IOMAP_F_NEW)
+ 		set_buffer_new(bh_map);
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 13d19b4c29a9..819e0cd2a950 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -27,8 +27,7 @@ struct vm_fault;
+  * written data and requires fdatasync to commit them to persistent storage.
+  */
+ #define IOMAP_F_NEW		0x01	/* blocks have been newly allocated */
+-#define IOMAP_F_BOUNDARY	0x02	/* mapping ends at metadata boundary */
+-#define IOMAP_F_DIRTY		0x04	/* uncommitted metadata */
++#define IOMAP_F_DIRTY		0x02	/* uncommitted metadata */
+ 
+ /*
+  * Flags that only need to be reported for IOMAP_REPORT requests:
+@@ -36,6 +35,12 @@ struct vm_fault;
+ #define IOMAP_F_MERGED		0x10	/* contains multiple blocks/extents */
+ #define IOMAP_F_SHARED		0x20	/* block shared with another file */
+ 
++/*
++ * Flags from 0x1000 up are for file system specific usage:
++ */
++#define IOMAP_F_PRIVATE		0x1000
++
++
+ /*
+  * Magic value for addr:
+  */
 -- 
 2.17.0
 
