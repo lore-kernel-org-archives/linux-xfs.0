@@ -1,62 +1,31 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:51096 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756028AbeEaSI0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:08:26 -0400
+Received: from verein.lst.de ([213.95.11.211]:38842 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755530AbeEaQFx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 May 2018 12:05:53 -0400
+Date: Thu, 31 May 2018 18:12:22 +0200
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 07/21] xfs: don't clear imap_valid for a non-uptodate buffers
-Date: Thu, 31 May 2018 20:07:45 +0200
-Message-Id: <20180531180759.21631-8-hch@lst.de>
-In-Reply-To: <20180531180759.21631-1-hch@lst.de>
-References: <20180531180759.21631-1-hch@lst.de>
+Subject: Re: [PATCH 06/18] xfs: make xfs_writepage_map extent map centric
+Message-ID: <20180531161222.GC30465@lst.de>
+References: <20180530100013.31358-1-hch@lst.de> <20180530100013.31358-7-hch@lst.de> <20180530173955.GF112411@bfoster.bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180530173955.GF112411@bfoster.bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>
 
-Finding a buffer that isn't uptodate doesn't invalidate the mapping for
-any given block.  The last_sector check will already take care of starting
-another ioend as soon as we find any non-update buffer, and if the current
-mapping doesn't include the next uptodate buffer the xfs_imap_valid check
-will take care of it.
+On Wed, May 30, 2018 at 01:39:56PM -0400, Brian Foster wrote:
+> What if the file is reflinked and the current page covers a non-shared
+> block but has an overlapping cow mapping due to cowextsize? The current
+> logic unconditionally uses the COW mapping for writeback. The updated
+> logic doesn't appear to do that in all cases. Consider if the current
+> imap was delalloc (and so not trimmed) or the cow mapping was introduced
+> after the current imap was mapped. This logic appears to prioritize the
+> current mapping so long as it is valid. Doesn't that break the
+> cowextsize hint?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_aops.c | 9 ++-------
- 1 file changed, 2 insertions(+), 7 deletions(-)
-
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 236154d2572f..25d112a4bcf5 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -864,10 +864,8 @@ xfs_writepage_map(
- 		 * meaningless for holes (!mapped && uptodate), so skip
- 		 * buffers covering holes here.
- 		 */
--		if (!buffer_mapped(bh) && buffer_uptodate(bh)) {
--			wpc->imap_valid = false;
-+		if (!buffer_mapped(bh) && buffer_uptodate(bh))
- 			continue;
--		}
- 
- 		if (buffer_unwritten(bh))
- 			new_type = XFS_IO_UNWRITTEN;
-@@ -880,11 +878,8 @@ xfs_writepage_map(
- 				ASSERT(buffer_mapped(bh));
- 			/*
- 			 * This buffer is not uptodate and will not be
--			 * written to disk.  Ensure that we will put any
--			 * subsequent writeable buffers into a new
--			 * ioend.
-+			 * written to disk.
- 			 */
--			wpc->imap_valid = false;
- 			continue;
- 		}
- 
--- 
-2.17.0
-
+It does.  I've fixed it for the next version.
