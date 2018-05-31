@@ -1,89 +1,279 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:51156 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:51172 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755894AbeEaSIi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:08:38 -0400
+        with ESMTP id S1755894AbeEaSIl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:08:41 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 11/21] xfs: rename the offset variable in xfs_writepage_map
-Date: Thu, 31 May 2018 20:07:49 +0200
-Message-Id: <20180531180759.21631-12-hch@lst.de>
+Subject: [PATCH 12/21] xfs: make xfs_writepage_map extent map centric
+Date: Thu, 31 May 2018 20:07:50 +0200
+Message-Id: <20180531180759.21631-13-hch@lst.de>
 In-Reply-To: <20180531180759.21631-1-hch@lst.de>
 References: <20180531180759.21631-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-Calling it file_offset makes the usage more clear, especially with
-a new poffset variable that will be added soon for the offset inside
-the page.
+From: Dave Chinner <dchinner@redhat.com>
 
+xfs_writepage_map() iterates over the bufferheads on a page to decide
+what sort of IO to do and what actions to take.  However, when it comes
+to reflink and deciding when it needs to execute a COW operation, we no
+longer look at the bufferhead state but instead we ignore than and look
+up internal state held in the COW fork extent list.
+
+This means xfs_writepage_map() is somewhat confused. It does stuff, then
+ignores it, then tries to handle the impedence mismatch by shovelling the
+results inside the existing mapping code.  It works, but it's a bit of a
+mess and it makes it hard to fix the cached map bug that the writepage
+code currently has.
+
+To unify the two different mechanisms, we first have to choose a direction.
+That's already been set - we're de-emphasising bufferheads so they are no
+longer a control structure as we need to do taht to allow for eventual
+removal.  Hence we need to move away from looking at bufferhead state to
+determine what operations we need to perform.
+
+We can't completely get rid of bufferheads yet - they do contain some
+state that is absolutely necessary, such as whether that part of the page
+contains valid data or not (buffer_uptodate()).  Other state in the
+bufferhead is redundant:
+
+	BH_dirty - the page is dirty, so we can ignore this and just
+		write it
+	BH_delay - we have delalloc extent info in the DATA fork extent
+		tree
+	BH_unwritten - same as BH_delay
+	BH_mapped - indicates we've already used it once for IO and it is
+		mapped to a disk address. Needs to be ignored for COW
+		blocks.
+
+The BH_mapped flag is an interesting case - it's supposed to indicate that
+it's already mapped to disk and so we can just use it "as is".  In theory,
+we don't even have to do an extent lookup to find where to write it too,
+but we have to do that anyway to determine we are actually writing over a
+valid extent.  Hence it's not even serving the purpose of avoiding a an
+extent lookup during writeback, and so we can pretty much ignore it.
+Especially as we have to ignore it for COW operations...
+
+Therefore, use the extent map as the source of information to tell us
+what actions we need to take and what sort of IO we should perform.  The
+first step is to have xfs_map_blocks() set the io type according to what
+it looks up.  This means it can easily handle both normal overwrite and
+COW cases.  The only thing we also need to add is the ability to return
+hole mappings.
+
+We need to return and cache hole mappings now for the case of multiple
+blocks per page.  We no longer use the BH_mapped to indicate a block over
+a hole, so we have to get that info from xfs_map_blocks().  We cache it so
+that holes that span two pages don't need separate lookups.  This allows us
+to avoid ever doing write IO over a hole, too.
+
+Now that we have xfs_map_blocks() returning both a cached map and the type
+of IO we need to perform, we can rewrite xfs_writepage_map() to drop all
+the bufferhead control. It's also much simplified because it doesn't need
+to explicitly handle COW operations.  Instead of iterating bufferheads, it
+iterates blocks within the page and then looks up what per-block state is
+required from the appropriate bufferhead.  It then validates the cached
+map, and if it's not valid, we get a new map.  If we don't get a valid map
+or it's over a hole, we skip the block.
+
+At this point, we have to remap the bufferhead via xfs_map_at_offset().
+As previously noted, we had to do this even if the buffer was already
+mapped as the mapping would be stale for XFS_IO_DELALLOC, XFS_IO_UNWRITTEN
+and XFS_IO_COW IO types.  With xfs_map_blocks() now controlling the type,
+even XFS_IO_OVERWRITE types need remapping, as converted-but-not-yet-
+written delalloc extents beyond EOF can be reported at XFS_IO_OVERWRITE.
+Bufferheads that span such regions still need their BH_Delay flags cleared
+and their block numbers calculated, so we now unconditionally map each
+bufferhead before submission.
+
+But wait! There's more - remember the old "treat unwritten extents as
+holes on read" hack?  Yeah, that means we can have a dirty page with
+unmapped, unwritten bufferheads that contain data!  What makes these so
+special is that the unwritten "hole" bufferheads do not have a valid block
+device pointer, so if we attempt to write them xfs_add_to_ioend() blows
+up. So we make xfs_map_at_offset() do the "realtime or data device"
+lookup from the inode and ignore what was or wasn't put into the
+bufferhead when the buffer was instantiated.
+
+The astute reader will have realised by now that this code treats
+unwritten extents in multiple-blocks-per-page situations differently.
+If we get any combination of unwritten blocks on a dirty page that contain
+valid data in the page, we're going to convert them to real extents.  This
+can actually be a win, because it means that pages with interleaving
+unwritten and written blocks will get converted to a single written extent
+with zeros replacing the interspersed unwritten blocks.  This is actually
+good for reducing extent list and conversion overhead, and it means we
+issue a contiguous IO instead of lots of little ones.  The downside is
+that we use up a little extra IO bandwidth.  Neither of these seem like a
+bad thing given that spinning disks are seek sensitive, and SSDs/pmem have
+bandwidth to burn and the lower Io latency/CPU overhead of fewer, larger
+IOs will result in better performance on them...
+
+As a result of all this, the only state we actually care about from the
+bufferhead is a single flag - BH_Uptodate. We still use the bufferhead to
+pass some information to the bio via xfs_add_to_ioend(), but that is
+trivial to separate and pass explicitly.  This means we really only need
+1 bit of state per block per page from the buffered write path in the
+writeback path.  Everything else we do with the bufferhead is purely to
+make the buffered IO front end continue to work correctly. i.e we've
+pretty much marginalised bufferheads in the writeback path completely.
+
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+[hch: forward port + slight refactoring]
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_aops.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+ fs/xfs/xfs_aops.c | 96 ++++++++++++++++++++++-------------------------
+ 1 file changed, 44 insertions(+), 52 deletions(-)
 
 diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index d536509ca05b..6f57a785f4d3 100644
+index 6f57a785f4d3..a0ecfd63b858 100644
 --- a/fs/xfs/xfs_aops.c
 +++ b/fs/xfs/xfs_aops.c
-@@ -824,15 +824,15 @@ xfs_writepage_map(
+@@ -454,19 +454,19 @@ xfs_map_blocks(
+ 	} else if (imap.br_startblock == HOLESTARTBLOCK) {
+ 		/* landed in a hole */
+ 		wpc->io_type = XFS_IO_HOLE;
+-	}
+-
+-	if (wpc->io_type == XFS_IO_DELALLOC &&
+-	    (!nimaps || isnullstartblock(imap.br_startblock)))
+-		goto allocate_blocks;
++	} else {
++		if (isnullstartblock(imap.br_startblock)) {
++			/* got a delalloc extent */
++			wpc->io_type = XFS_IO_DELALLOC;
++			goto allocate_blocks;
++		}
+ 
+-#ifdef DEBUG
+-	if (wpc->io_type == XFS_IO_UNWRITTEN) {
+-		ASSERT(nimaps);
+-		ASSERT(imap.br_startblock != HOLESTARTBLOCK);
+-		ASSERT(imap.br_startblock != DELAYSTARTBLOCK);
++		if (imap.br_state == XFS_EXT_UNWRITTEN)
++			wpc->io_type = XFS_IO_UNWRITTEN;
++		else
++			wpc->io_type = XFS_IO_OVERWRITE;
+ 	}
+-#endif
++
+ 	wpc->imap = imap;
+ 	trace_xfs_map_blocks_found(ip, offset, count, wpc->io_type, &imap);
+ 	return 0;
+@@ -736,6 +736,14 @@ xfs_map_at_offset(
+ 	set_buffer_mapped(bh);
+ 	clear_buffer_delay(bh);
+ 	clear_buffer_unwritten(bh);
++
++	/*
++	 * If this is a realtime file, data may be on a different device.
++	 * to that pointed to from the buffer_head b_bdev currently. We can't
++	 * trust that the bufferhead has a already been mapped correctly, so
++	 * set the bdev now.
++	 */
++	bh->b_bdev = xfs_find_bdev_for_inode(inode);
+ }
+ 
+ STATIC void
+@@ -822,61 +830,46 @@ xfs_writepage_map(
+ {
+ 	LIST_HEAD(submit_list);
  	struct xfs_ioend	*ioend, *next;
- 	struct buffer_head	*bh, *head;
+-	struct buffer_head	*bh, *head;
++	struct buffer_head	*bh;
  	ssize_t			len = i_blocksize(inode);
--	uint64_t		offset;
-+	uint64_t		file_offset;	/* file offset of page */
+ 	uint64_t		file_offset;	/* file offset of page */
++	unsigned		poffset;	/* offset into page */
  	int			error = 0;
  	int			count = 0;
- 	unsigned int		new_type;
+-	unsigned int		new_type;
  
- 	bh = head = page_buffers(page);
--	offset = page_offset(page);
-+	file_offset = page_offset(page);
- 	do {
--		if (offset >= end_offset)
-+		if (file_offset >= end_offset)
+-	bh = head = page_buffers(page);
++	/*
++	 * Walk the blocks on the page, and we we run off then end of the
++	 * current map or find the current map invalid, grab a new one.
++	 * We only use bufferheads here to check per-block state - they no
++	 * longer control the iteration through the page. This allows us to
++	 * replace the bufferhead with some other state tracking mechanism in
++	 * future.
++	 */
+ 	file_offset = page_offset(page);
+-	do {
++	bh = page_buffers(page);
++	for (poffset = 0;
++	     poffset < PAGE_SIZE;
++	     poffset += len, file_offset += len, bh = bh->b_this_page) {
++		/* past the range we are writing, so nothing more to write. */
+ 		if (file_offset >= end_offset)
  			break;
  
- 		/*
-@@ -864,7 +864,7 @@ xfs_writepage_map(
- 		 * If we already have a valid COW mapping keep using it.
- 		 */
- 		if (wpc->io_type == XFS_IO_COW &&
--		    xfs_imap_valid(inode, &wpc->imap, offset)) {
-+		    xfs_imap_valid(inode, &wpc->imap, file_offset)) {
- 			wpc->imap_valid = true;
- 			new_type = XFS_IO_COW;
+-		/*
+-		 * set_page_dirty dirties all buffers in a page, independent
+-		 * of their state.  The dirty state however is entirely
+-		 * meaningless for holes (!mapped && uptodate), so skip
+-		 * buffers covering holes here.
+-		 */
+-		if (!buffer_mapped(bh) && buffer_uptodate(bh))
+-			continue;
+-
+-		if (buffer_unwritten(bh))
+-			new_type = XFS_IO_UNWRITTEN;
+-		else if (buffer_delay(bh))
+-			new_type = XFS_IO_DELALLOC;
+-		else if (buffer_uptodate(bh))
+-			new_type = XFS_IO_OVERWRITE;
+-		else {
++		if (!buffer_uptodate(bh)) {
+ 			if (PageUptodate(page))
+ 				ASSERT(buffer_mapped(bh));
+-			/*
+-			 * This buffer is not uptodate and will not be
+-			 * written to disk.
+-			 */
+ 			continue;
  		}
-@@ -876,13 +876,13 @@ xfs_writepage_map(
  
+-		/*
+-		 * If we already have a valid COW mapping keep using it.
+-		 */
+-		if (wpc->io_type == XFS_IO_COW &&
+-		    xfs_imap_valid(inode, &wpc->imap, file_offset)) {
+-			wpc->imap_valid = true;
+-			new_type = XFS_IO_COW;
+-		}
+-
+-		if (wpc->io_type != new_type) {
+-			wpc->io_type = new_type;
+-			wpc->imap_valid = false;
+-		}
+-
  		if (wpc->imap_valid)
  			wpc->imap_valid = xfs_imap_valid(inode, &wpc->imap,
--							 offset);
-+							 file_offset);
+ 							 file_offset);
++		/*
++		 * If we don't have a valid map, now it's time to get a new one
++		 * for this offset.  This will convert delayed allocations
++		 * (including COW ones) into real extents.  If we return without
++		 * a valid map, it means we landed in a hole and we skip the
++		 * block.
++		 */
  		if (!wpc->imap_valid || xfs_is_reflink_inode(XFS_I(inode))) {
--			error = xfs_map_blocks(wpc, inode, offset);
-+			error = xfs_map_blocks(wpc, inode, file_offset);
+ 			error = xfs_map_blocks(wpc, inode, file_offset);
  			if (error)
- 				goto out;
- 			wpc->imap_valid = xfs_imap_valid(inode, &wpc->imap,
--							 offset);
-+							 file_offset);
- 		}
- 
- 		if (!wpc->imap_valid || wpc->io_type == XFS_IO_HOLE)
-@@ -890,10 +890,10 @@ xfs_writepage_map(
+@@ -889,11 +882,10 @@ xfs_writepage_map(
+ 			continue;
  
  		lock_buffer(bh);
- 		if (wpc->io_type != XFS_IO_OVERWRITE)
--			xfs_map_at_offset(inode, bh, &wpc->imap, offset);
--		xfs_add_to_ioend(inode, bh, offset, wpc, wbc, &submit_list);
-+			xfs_map_at_offset(inode, bh, &wpc->imap, file_offset);
-+		xfs_add_to_ioend(inode, bh, file_offset, wpc, wbc, &submit_list);
+-		if (wpc->io_type != XFS_IO_OVERWRITE)
+-			xfs_map_at_offset(inode, bh, &wpc->imap, file_offset);
++		xfs_map_at_offset(inode, bh, &wpc->imap, file_offset);
+ 		xfs_add_to_ioend(inode, bh, file_offset, wpc, wbc, &submit_list);
  		count++;
--	} while (offset += len, ((bh = bh->b_this_page) != head));
-+	} while (file_offset += len, ((bh = bh->b_this_page) != head));
+-	} while (file_offset += len, ((bh = bh->b_this_page) != head));
++	}
  
  	ASSERT(wpc->ioend || list_empty(&submit_list));
  
