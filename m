@@ -1,119 +1,137 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:59760 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934517AbeEIOw0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 10:52:26 -0400
-Date: Wed, 9 May 2018 07:52:22 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 4/9] xfs: don't assert fail with AIL lock held
-Message-ID: <20180509145222.GL11261@magnolia>
-References: <20180508034202.10136-1-david@fromorbit.com>
- <20180508034202.10136-5-david@fromorbit.com>
+Received: from sandeen.net ([63.231.237.45]:47926 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754030AbeEaTQc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 May 2018 15:16:32 -0400
+Received: from [10.0.0.4] (erlite [10.0.0.1])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 2BD30116F9
+        for <linux-xfs@vger.kernel.org>; Thu, 31 May 2018 14:16:27 -0500 (CDT)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs: for-next updated to a023e1a
+Message-ID: <bcd26b6c-0c04-1e6b-424d-c2dc82949ca8@sandeen.net>
+Date: Thu, 31 May 2018 14:16:30 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180508034202.10136-5-david@fromorbit.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="JiEyIs7NGlcBEBaSiZXspEVD0VxzAorz4"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, May 08, 2018 at 01:41:57PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Been hitting AIL ordering assert failures recently, but been unable
-> to trace them down because the system immediately hangs up onteh
-> spinlock that was held when this assert fires:
-> 
-> XFS: Assertion failed: XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) <= 0, file: fs/xfs/xfs_trans_ail.c, line: 52
-> 
-> Move the assertions outside of the spinlock so the corpse can
-> be dissected. Thanks to Brian Foster for supplying a clean
-> way of doing this.
-> 
-> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--JiEyIs7NGlcBEBaSiZXspEVD0VxzAorz4
+Content-Type: multipart/mixed; boundary="uAZGYoquj8RsQB6Dx1f2oL7N3oOJeIQGv";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <bcd26b6c-0c04-1e6b-424d-c2dc82949ca8@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs: for-next updated to a023e1a
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+--uAZGYoquj8RsQB6Dx1f2oL7N3oOJeIQGv
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
---D
+Hi folks,
 
-> ---
->  fs/xfs/xfs_trans_ail.c | 43 +++++++++++++++++++++++++++++++-----------
->  1 file changed, 32 insertions(+), 11 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-> index 50611d2bcbc2..41e280ef1483 100644
-> --- a/fs/xfs/xfs_trans_ail.c
-> +++ b/fs/xfs/xfs_trans_ail.c
-> @@ -32,30 +32,51 @@
->  #ifdef DEBUG
->  /*
->   * Check that the list is sorted as it should be.
-> + *
-> + * Called with the ail lock held, but we don't want to assert fail with it
-> + * held otherwise we'll lock everything up and won't be able to debug the
-> + * cause. Hence we sample and check the state under the AIL lock and return if
-> + * everything is fine, otherwise we drop the lock and run the ASSERT checks.
-> + * Asserts may not be fatal, so pick the lock back up and continue onwards.
->   */
->  STATIC void
->  xfs_ail_check(
-> -	struct xfs_ail	*ailp,
-> -	xfs_log_item_t	*lip)
-> +	struct xfs_ail		*ailp,
-> +	struct xfs_log_item	*lip)
->  {
-> -	xfs_log_item_t	*prev_lip;
-> +	struct xfs_log_item	*prev_lip;
-> +	struct xfs_log_item	*next_lip;
-> +	xfs_lsn_t		prev_lsn = NULLCOMMITLSN;
-> +	xfs_lsn_t		next_lsn = NULLCOMMITLSN;
-> +	xfs_lsn_t		lsn;
-> +	bool			in_ail;
-> +
->  
->  	if (list_empty(&ailp->ail_head))
->  		return;
->  
->  	/*
-> -	 * Check the next and previous entries are valid.
-> +	 * Sample then check the next and previous entries are valid.
->  	 */
-> -	ASSERT(test_bit(XFS_LI_IN_AIL, &lip->li_flags));
-> -	prev_lip = list_entry(lip->li_ail.prev, xfs_log_item_t, li_ail);
-> +	in_ail = test_bit(XFS_LI_IN_AIL, &lip->li_flags);
-> +	prev_lip = list_entry(lip->li_ail.prev, struct xfs_log_item, li_ail);
->  	if (&prev_lip->li_ail != &ailp->ail_head)
-> -		ASSERT(XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) <= 0);
-> -
-> -	prev_lip = list_entry(lip->li_ail.next, xfs_log_item_t, li_ail);
-> -	if (&prev_lip->li_ail != &ailp->ail_head)
-> -		ASSERT(XFS_LSN_CMP(prev_lip->li_lsn, lip->li_lsn) >= 0);
-> +		prev_lsn = prev_lip->li_lsn;
-> +	next_lip = list_entry(lip->li_ail.next, struct xfs_log_item, li_ail);
-> +	if (&next_lip->li_ail != &ailp->ail_head)
-> +		next_lsn = next_lip->li_lsn;
-> +	lsn = lip->li_lsn;
->  
-> +	if (in_ail &&
-> +	    (prev_lsn == NULLCOMMITLSN || XFS_LSN_CMP(prev_lsn, lsn) <= 0) &&
-> +	    (next_lsn == NULLCOMMITLSN || XFS_LSN_CMP(next_lsn, lsn) >= 0))
-> +		return;
->  
-> +	spin_unlock(&ailp->ail_lock);
-> +	ASSERT(in_ail);
-> +	ASSERT(prev_lsn == NULLCOMMITLSN || XFS_LSN_CMP(prev_lsn, lsn) <= 0);
-> +	ASSERT(next_lsn == NULLCOMMITLSN || XFS_LSN_CMP(next_lsn, lsn) >= 0);
-> +	spin_lock(&ailp->ail_lock);
->  }
->  #else /* !DEBUG */
->  #define	xfs_ail_check(a,l)
-> -- 
-> 2.17.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The for-next branch of the xfsprogs repository at:
+
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+
+has just been updated.
+
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
+
+I'm still holding out a little hope that we can get the config file
+code into the xfsprogs 4.17 release, so if that gels within the next
+week or so, I'll do it.
+
+If you have other small bugfixes I've missed now's the time.  Anything
+else feature-wise, we'll hold off for xfsprogs 4.18.
+
+Thanks,
+-Eric
+
+The new head of the for-next branch is commit:
+
+a023e1a xfs_db: Don't ASSERT on unrecognized metadata
+
+New Commits:
+
+Carlos Maiolino (1):
+      [a023e1a] xfs_db: Don't ASSERT on unrecognized metadata
+
+Darrick J. Wong (8):
+      [7931f86] xfs_repair: fix integer handling issues
+      [c2b571f] xfs_buflock: ignore if buffer already locked
+      [ece9fa6] xfs_buflock: record line number of trace where we locked =
+the buf
+      [184798f] xfs_buflock: record buffer initialization
+      [e3f20e6] fsck: fix more bashisms
+      [6c05cc5] xfs_scrub: actually check for errors coming from close()
+      [7856ed0] xfs_io: fix null pointer deref when complaining about scr=
+ub comm
+      [87a271c] xfs_db: handle realtime bitmap / summary files as text
+
+Eric Sandeen (2):
+      [585acbe] xfs_repair: fix libxfs api violations in quota repair cod=
+e
+      [14c57d5] mkfs.xfs: if either sunit or swidth is nonzero,  the othe=
+r must=20
+
+Goldwyn Rodrigues (1):
+      [25b4549] xfs_io: Make copy_range arguments understand *iB values
+
+
+Code Diffstat:
+
+ db/print.c               |  5 +++--
+ db/type.c                | 12 ++++++------
+ fsck/xfs_fsck.sh         | 12 +++++-------
+ io/copy_file_range.c     | 28 +++++++++++++++-------------
+ io/scrub.c               |  3 +--
+ libxfs/libxfs_api_defs.h |  4 ++++
+ mkfs/xfs_mkfs.c          |  3 ++-
+ repair/dinode.c          | 13 +++++++------
+ repair/sb.c              |  3 ++-
+ scrub/phase1.c           |  6 +++++-
+ scrub/phase3.c           | 27 +++++++++++++++++++++++++--
+ scrub/phase5.c           |  8 ++++++--
+ scrub/phase6.c           | 10 +++++++---
+ scrub/vfs.c              |  4 +++-
+ tools/xfsbuflock.py      | 22 +++++++++++++++++++---
+ 15 files changed, 110 insertions(+), 50 deletions(-)
+
+
+--uAZGYoquj8RsQB6Dx1f2oL7N3oOJeIQGv--
+
+--JiEyIs7NGlcBEBaSiZXspEVD0VxzAorz4
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAlsQSg8ACgkQIK4WkuE9
+3uDIgxAAg/FHDGJwg2Q6f9t/4UzIgKmsXbogK9RF63PW/Ek4CfjX267EeB1aHVbT
+PdFP5XHNJiqI25ZdY4jqZvGfj+UayVCeTQXh6WUzJH4U2tAoFk9u8AF97auvdHoa
+h96r0cH6jtP12iJ5U9Wki4po15kmOA5KW6PoK0AQNiR53BKpObdydiEbH4aBM23S
+3EWHU599zCQ2Z8RGUC+QFyOK1vF3sPumgD+wiuJWvN+Y9X+lN78O6SP4hH/JOrtn
+4scdhO1z9eIpl7hHfbYvFBmCBml2xbNvrGvvXkjAUPYZ9BF3hjY2Acg/QP6u8aBK
+MV73leZ4pWBI0+1+KfzDCptDlO/4ctpYFIF+g05cA5KH2whMSj1RFmrEaTlZ5WKO
+hYjbTr6QMQaOh7QouorMlHSyNJof9PkKHDz4kgTMJvOEQyCURQwaYpcyILNwe5yl
+V46gES4p1f8Vyo7PcJ4OTcKOxhO5cdDzuQaxJUEkTSHbAevb1Tn9DswqXYm3LrQH
+RZnNCN6DEZQtV8nwGiCesmUQCxzAs1EAo8XTMvpYMCfuBbAy2ZqoD/hfY7u3QEYE
+BkDFpjJs2sMqU20bOjdsH+6WdXeP/n1K4r8RVAQQpgVQ8aEtOKFQvA+uv4lHtIJb
+37RY0jLNxXc0w3hl/7xgYqqSFcmDbA4lXqOpMuXGDrsZOJ2n2zo=
+=hG0r
+-----END PGP SIGNATURE-----
+
+--JiEyIs7NGlcBEBaSiZXspEVD0VxzAorz4--
