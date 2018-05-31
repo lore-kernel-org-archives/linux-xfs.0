@@ -1,58 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:50640 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:50922 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755982AbeEaSG6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:06:58 -0400
+        with ESMTP id S1755847AbeEaSID (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:08:03 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 12/13] xfs: use iomap_bmap
-Date: Thu, 31 May 2018 20:06:13 +0200
-Message-Id: <20180531180614.21506-13-hch@lst.de>
-In-Reply-To: <20180531180614.21506-1-hch@lst.de>
-References: <20180531180614.21506-1-hch@lst.de>
+Subject: buffered writes without buffer heads in xfs and iomap v5
+Date: Thu, 31 May 2018 20:07:38 +0200
+Message-Id: <20180531180759.21631-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+Cc: linux-fsdevel@vger.kernel.org
 
-Switch to the iomap based bmap implementation to get rid of one of the
-last users of xfs_get_blocks.
+Hi all,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_aops.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+this series adds support for buffered writes without buffer heads to
+the iomap and XFS code.
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 80de476cecf8..56e405572909 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1378,10 +1378,9 @@ xfs_vm_bmap(
- 	struct address_space	*mapping,
- 	sector_t		block)
- {
--	struct inode		*inode = (struct inode *)mapping->host;
--	struct xfs_inode	*ip = XFS_I(inode);
-+	struct xfs_inode	*ip = XFS_I(mapping->host);
- 
--	trace_xfs_vm_bmap(XFS_I(inode));
-+	trace_xfs_vm_bmap(ip);
- 
- 	/*
- 	 * The swap code (ab-)uses ->bmap to get a block mapping and then
-@@ -1394,9 +1393,7 @@ xfs_vm_bmap(
- 	 */
- 	if (xfs_is_reflink_inode(ip) || XFS_IS_REALTIME_INODE(ip))
- 		return 0;
--
--	filemap_write_and_wait(mapping);
--	return generic_block_bmap(mapping, block, xfs_get_blocks);
-+	return iomap_bmap(mapping, block, &xfs_iomap_ops);
- }
- 
- STATIC int
--- 
-2.17.0
+For now this series only contains support for block size == PAGE_SIZE,
+with the 4k support split into a separate series.
 
+
+A git tree is available at:
+
+    git://git.infradead.org/users/hch/xfs.git xfs-iomap-write.5
+
+Gitweb:
+
+    http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-iomap-write.5
+
+Changes since v4:
+ - make the logic more clear in xfs_bmap_punch_delalloc_range
+ - fix a missing unlock in xfs_bmap_punch_delalloc_range
+ - always look up COW extents to check for overlaps
+ - lots of patch reshuffling and splitting without impact to the final result
+
+Changes since v3:
+ - iterate backwards in xfs_bmap_punch_delalloc_range
+ - remove the cow_valid variable in xfs_reflink_trim_irec_to_next_cow
+ - additional trivial xfs_map_blocks simplifications
+ - split the read side into a separate prep series
+ - moved the SEEK_HOLE/DATA patches not strictly required out of the series
+
+Changes since v2:
+ - minor page_seek_hole_data tweaks
+ - don't read data entirely covered by the write operation in write_begin
+ - fix zeroing on write_begin I/O failure
+ - remove iomap_block_needs_zeroing to make the code more clear
+ - update comments on __do_page_cache_readahead
+
+Changes since v1:
+ - fix the iomap_readpages error handling
+ - use unsigned file offsets in a few places to avoid arithmetic overflows
+ - allocate a iomap_page in iomap_page_mkwrite to fix generic/095
+ - improve a few comments
+ - add more asserts
+ - warn about truncated block numbers from ->bmap
+ - new patch to change the __do_page_cache_readahead return value to
+   unsigned int
+ - remove an incorrectly added empty line
+ - make inline data an explicit iomap type instead of a flag
+ - add a IOMAP_F_BUFFER_HEAD flag to force use of buffers heads for gfs2,
+   and keep the basic buffer head infrastructure around for now.
