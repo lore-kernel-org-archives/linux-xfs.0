@@ -1,276 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:50938 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755847AbeEaSIJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:08:09 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 02/21] iomap: add initial support for writes without buffer heads
-Date: Thu, 31 May 2018 20:07:40 +0200
-Message-Id: <20180531180759.21631-3-hch@lst.de>
-In-Reply-To: <20180531180759.21631-1-hch@lst.de>
-References: <20180531180759.21631-1-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:43512 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755085AbeEaNqj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 May 2018 09:46:39 -0400
+Date: Thu, 31 May 2018 09:46:38 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 07/18] xfs: remove the now unused XFS_BMAPI_IGSTATE flag
+Message-ID: <20180531134637.GA2997@bfoster.bfoster>
+References: <20180530100013.31358-1-hch@lst.de>
+ <20180530100013.31358-8-hch@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180530100013.31358-8-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-For now just limited to blocksize == PAGE_SIZE, where we can simply read
-in the full page in write begin, and just set the whole page dirty after
-copying data into it.  This code is enabled by default and XFS will now
-be feed pages without buffer heads in ->writepage and ->writepages.
+On Wed, May 30, 2018 at 12:00:02PM +0200, Christoph Hellwig wrote:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
 
-If a file system sets the IOMAP_F_BUFFER_HEAD flag on the iomap the old
-path will still be used, this both helps the transition in XFS and
-prepares for the gfs2 migration to the iomap infrastructure.
+The change looks Ok... It's clearly reasonable to remove a flag that is
+no longer used, but why is it no longer used? The previous patch drops
+it to "make xfs_writepage_map() extent map centric," but the description
+doesn't exactly explain why (and it's not immediately clear to me
+amongst all the other code changes).
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/iomap.c            | 128 ++++++++++++++++++++++++++++++++++++++----
- fs/xfs/xfs_iomap.c    |   6 +-
- include/linux/iomap.h |   2 +
- 3 files changed, 123 insertions(+), 13 deletions(-)
+My understanding of the purpose of IGSTATE here is that if we already
+have an iotype == unwritten ioend, it makes sense to combine contiguous
+mappings since we'd convert the unwritten portions on I/O completion.
+Now that we look up extent first and establish the ioend type from that
+rather than set the ioend type based on the buffer state, I suppose it
+is possible for IGSTATE to lose the fact that a contiguous unwritten
+extent ends up being merged with a normal extent before the ioend type
+is established..? Then again, was IGSTATE even effective in this context
+with nimaps == 1?
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 49119e64edc3..5b81d4463520 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -328,6 +328,48 @@ iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
- 		truncate_pagecache_range(inode, max(pos, i_size), pos + len);
- }
- 
-+static int
-+iomap_read_page_sync(struct inode *inode, loff_t block_start, struct page *page,
-+		unsigned poff, unsigned plen, unsigned from, unsigned to,
-+		struct iomap *iomap)
-+{
-+	struct bio_vec bvec;
-+	struct bio bio;
-+
-+	if (iomap->type != IOMAP_MAPPED || block_start >= i_size_read(inode)) {
-+		zero_user_segments(page, poff, from, to, poff + plen);
-+		return 0;
-+	}
-+
-+	bio_init(&bio, &bvec, 1);
-+	bio.bi_opf = REQ_OP_READ;
-+	bio.bi_iter.bi_sector = iomap_sector(iomap, block_start);
-+	bio_set_dev(&bio, iomap->bdev);
-+	__bio_add_page(&bio, page, plen, poff);
-+	return submit_bio_wait(&bio);
-+}
-+
-+static int
-+__iomap_write_begin(struct inode *inode, loff_t pos, unsigned len,
-+		struct page *page, struct iomap *iomap)
-+{
-+	loff_t block_size = i_blocksize(inode);
-+	loff_t block_start = pos & ~(block_size - 1);
-+	loff_t block_end = (pos + len + block_size - 1) & ~(block_size - 1);
-+	unsigned poff = block_start & (PAGE_SIZE - 1);
-+	unsigned plen = min_t(loff_t, PAGE_SIZE - poff, block_end - block_start);
-+	unsigned from = pos & (PAGE_SIZE - 1), to = from + len;
-+
-+	WARN_ON_ONCE(i_blocksize(inode) < PAGE_SIZE);
-+
-+	if (PageUptodate(page))
-+		return 0;
-+	if (from <= poff && to >= poff + plen)
-+		return 0;
-+	return iomap_read_page_sync(inode, block_start, page,
-+			poff, plen, from, to, iomap);
-+}
-+
- static int
- iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
- 		struct page **pagep, struct iomap *iomap)
-@@ -345,7 +387,10 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
- 	if (!page)
- 		return -ENOMEM;
- 
--	status = __block_write_begin_int(page, pos, len, NULL, iomap);
-+	if (iomap->flags & IOMAP_F_BUFFER_HEAD)
-+		status = __block_write_begin_int(page, pos, len, NULL, iomap);
-+	else
-+		status = __iomap_write_begin(inode, pos, len, page, iomap);
- 	if (unlikely(status)) {
- 		unlock_page(page);
- 		put_page(page);
-@@ -358,14 +403,69 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
- 	return status;
- }
- 
-+int
-+iomap_set_page_dirty(struct page *page)
-+{
-+	struct address_space *mapping = page_mapping(page);
-+	int newly_dirty;
-+
-+	if (unlikely(!mapping))
-+		return !TestSetPageDirty(page);
-+
-+	/*
-+	 * Lock out page->mem_cgroup migration to keep PageDirty
-+	 * synchronized with per-memcg dirty page counters.
-+	 */
-+	lock_page_memcg(page);
-+	newly_dirty = !TestSetPageDirty(page);
-+	if (newly_dirty)
-+		__set_page_dirty(page, mapping, 0);
-+	unlock_page_memcg(page);
-+
-+	if (newly_dirty)
-+		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
-+	return newly_dirty;
-+}
-+EXPORT_SYMBOL_GPL(iomap_set_page_dirty);
-+
-+static int
-+__iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
-+		unsigned copied, struct page *page, struct iomap *iomap)
-+{
-+	flush_dcache_page(page);
-+
-+	/*
-+	 * The blocks that were entirely written will now be uptodate, so we
-+	 * don't have to worry about a readpage reading them and overwriting a
-+	 * partial write.  However if we have encountered a short write and only
-+	 * partially written into a block, it will not be marked uptodate, so a
-+	 * readpage might come in and destroy our partial write.
-+	 *
-+	 * Do the simplest thing, and just treat any short write to a non
-+	 * uptodate page as a zero-length write, and force the caller to redo
-+	 * the whole thing.
-+	 */
-+	if (unlikely(copied < len && !PageUptodate(page))) {
-+		copied = 0;
-+	} else {
-+		SetPageUptodate(page);
-+		iomap_set_page_dirty(page);
-+	}
-+	return __generic_write_end(inode, pos, copied, page);
-+}
-+
- static int
- iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
--		unsigned copied, struct page *page)
-+		unsigned copied, struct page *page, struct iomap *iomap)
- {
- 	int ret;
- 
--	ret = generic_write_end(NULL, inode->i_mapping, pos, len,
--			copied, page, NULL);
-+	if (iomap->flags & IOMAP_F_BUFFER_HEAD)
-+		ret = generic_write_end(NULL, inode->i_mapping, pos, len,
-+				copied, page, NULL);
-+	else
-+		ret = __iomap_write_end(inode, pos, len, copied, page, iomap);
-+
- 	if (ret < len)
- 		iomap_write_failed(inode, pos, len);
- 	return ret;
-@@ -420,7 +520,8 @@ iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 
- 		flush_dcache_page(page);
- 
--		status = iomap_write_end(inode, pos, bytes, copied, page);
-+		status = iomap_write_end(inode, pos, bytes, copied, page,
-+				iomap);
- 		if (unlikely(status < 0))
- 			break;
- 		copied = status;
-@@ -514,7 +615,7 @@ iomap_dirty_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 
- 		WARN_ON_ONCE(!PageUptodate(page));
- 
--		status = iomap_write_end(inode, pos, bytes, bytes, page);
-+		status = iomap_write_end(inode, pos, bytes, bytes, page, iomap);
- 		if (unlikely(status <= 0)) {
- 			if (WARN_ON_ONCE(status == 0))
- 				return -EIO;
-@@ -566,7 +667,7 @@ static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
- 	zero_user(page, offset, bytes);
- 	mark_page_accessed(page);
- 
--	return iomap_write_end(inode, pos, bytes, bytes, page);
-+	return iomap_write_end(inode, pos, bytes, bytes, page, iomap);
- }
- 
- static int iomap_dax_zero(loff_t pos, unsigned offset, unsigned bytes,
-@@ -652,11 +753,16 @@ iomap_page_mkwrite_actor(struct inode *inode, loff_t pos, loff_t length,
- 	struct page *page = data;
- 	int ret;
- 
--	ret = __block_write_begin_int(page, pos, length, NULL, iomap);
--	if (ret)
--		return ret;
-+	if (iomap->flags & IOMAP_F_BUFFER_HEAD) {
-+		ret = __block_write_begin_int(page, pos, length, NULL, iomap);
-+		if (ret)
-+			return ret;
-+		block_commit_write(page, 0, length);
-+	} else {
-+		WARN_ON_ONCE(!PageUptodate(page));
-+		WARN_ON_ONCE(i_blocksize(inode) < PAGE_SIZE);
-+	}
- 
--	block_commit_write(page, 0, length);
- 	return length;
- }
- 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index c6ce6f9335b6..da6d1995e460 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -638,7 +638,7 @@ xfs_file_iomap_begin_delay(
- 	 * Flag newly allocated delalloc blocks with IOMAP_F_NEW so we punch
- 	 * them out if the write happens to fail.
- 	 */
--	iomap->flags = IOMAP_F_NEW;
-+	iomap->flags |= IOMAP_F_NEW;
- 	trace_xfs_iomap_alloc(ip, offset, count, 0, &got);
- done:
- 	if (isnullstartblock(got.br_startblock))
-@@ -1031,6 +1031,8 @@ xfs_file_iomap_begin(
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
- 
-+	iomap->flags |= IOMAP_F_BUFFER_HEAD;
-+
- 	if (((flags & (IOMAP_WRITE | IOMAP_DIRECT)) == IOMAP_WRITE) &&
- 			!IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
- 		/* Reserve delalloc blocks for regular writeback. */
-@@ -1131,7 +1133,7 @@ xfs_file_iomap_begin(
- 	if (error)
- 		return error;
- 
--	iomap->flags = IOMAP_F_NEW;
-+	iomap->flags |= IOMAP_F_NEW;
- 	trace_xfs_iomap_alloc(ip, offset, length, 0, &imap);
- 
- out_finish:
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 7300d30ca495..4d3d9d0cd69f 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -30,6 +30,7 @@ struct vm_fault;
-  */
- #define IOMAP_F_NEW		0x01	/* blocks have been newly allocated */
- #define IOMAP_F_DIRTY		0x02	/* uncommitted metadata */
-+#define IOMAP_F_BUFFER_HEAD	0x04	/* file system requires buffer heads */
- 
- /*
-  * Flags that only need to be reported for IOMAP_REPORT requests:
-@@ -92,6 +93,7 @@ ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
- int iomap_readpage(struct page *page, const struct iomap_ops *ops);
- int iomap_readpages(struct address_space *mapping, struct list_head *pages,
- 		unsigned nr_pages, const struct iomap_ops *ops);
-+int iomap_set_page_dirty(struct page *page);
- int iomap_file_dirty(struct inode *inode, loff_t pos, loff_t len,
- 		const struct iomap_ops *ops);
- int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
--- 
-2.17.0
+This change may very well be fine in the end, but it's made
+unnecessarily difficult to review by the nature of the previous patch.
+ISTM that if this is a dependency of the broader change, it should be
+split off into a separate patch that drops the usage and the flag
+together and explains why.
 
+Brian
+
+>  fs/xfs/libxfs/xfs_bmap.c | 6 ++----
+>  fs/xfs/libxfs/xfs_bmap.h | 3 ---
+>  2 files changed, 2 insertions(+), 7 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 7b0e2b551e23..4b5e014417d2 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -3799,8 +3799,7 @@ xfs_bmapi_update_map(
+>  		   mval[-1].br_startblock != HOLESTARTBLOCK &&
+>  		   mval->br_startblock == mval[-1].br_startblock +
+>  					  mval[-1].br_blockcount &&
+> -		   ((flags & XFS_BMAPI_IGSTATE) ||
+> -			mval[-1].br_state == mval->br_state)) {
+> +		   mval[-1].br_state == mval->br_state) {
+>  		ASSERT(mval->br_startoff ==
+>  		       mval[-1].br_startoff + mval[-1].br_blockcount);
+>  		mval[-1].br_blockcount += mval->br_blockcount;
+> @@ -3845,7 +3844,7 @@ xfs_bmapi_read(
+>  
+>  	ASSERT(*nmap >= 1);
+>  	ASSERT(!(flags & ~(XFS_BMAPI_ATTRFORK|XFS_BMAPI_ENTIRE|
+> -			   XFS_BMAPI_IGSTATE|XFS_BMAPI_COWFORK)));
+> +			   XFS_BMAPI_COWFORK)));
+>  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_SHARED|XFS_ILOCK_EXCL));
+>  
+>  	if (unlikely(XFS_TEST_ERROR(
+> @@ -4290,7 +4289,6 @@ xfs_bmapi_write(
+>  
+>  	ASSERT(*nmap >= 1);
+>  	ASSERT(*nmap <= XFS_BMAP_MAX_NMAP);
+> -	ASSERT(!(flags & XFS_BMAPI_IGSTATE));
+>  	ASSERT(tp != NULL ||
+>  	       (flags & (XFS_BMAPI_CONVERT | XFS_BMAPI_COWFORK)) ==
+>  			(XFS_BMAPI_CONVERT | XFS_BMAPI_COWFORK));
+> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+> index 2c233f9f1a26..a845fe57d1b5 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.h
+> +++ b/fs/xfs/libxfs/xfs_bmap.h
+> @@ -80,8 +80,6 @@ struct xfs_extent_free_item
+>  #define XFS_BMAPI_METADATA	0x002	/* mapping metadata not user data */
+>  #define XFS_BMAPI_ATTRFORK	0x004	/* use attribute fork not data */
+>  #define XFS_BMAPI_PREALLOC	0x008	/* preallocation op: unwritten space */
+> -#define XFS_BMAPI_IGSTATE	0x010	/* Ignore state - */
+> -					/* combine contig. space */
+>  #define XFS_BMAPI_CONTIG	0x020	/* must allocate only one extent */
+>  /*
+>   * unwritten extent conversion - this needs write cache flushing and no additional
+> @@ -128,7 +126,6 @@ struct xfs_extent_free_item
+>  	{ XFS_BMAPI_METADATA,	"METADATA" }, \
+>  	{ XFS_BMAPI_ATTRFORK,	"ATTRFORK" }, \
+>  	{ XFS_BMAPI_PREALLOC,	"PREALLOC" }, \
+> -	{ XFS_BMAPI_IGSTATE,	"IGSTATE" }, \
+>  	{ XFS_BMAPI_CONTIG,	"CONTIG" }, \
+>  	{ XFS_BMAPI_CONVERT,	"CONVERT" }, \
+>  	{ XFS_BMAPI_ZERO,	"ZERO" }, \
+> -- 
+> 2.17.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
