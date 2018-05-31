@@ -1,124 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:5816 "EHLO mga06.intel.com"
+Received: from mga14.intel.com ([192.55.52.115]:65166 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754184AbeEaUZ5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 31 May 2018 16:25:57 -0400
-Date: Thu, 31 May 2018 14:25:56 -0600
+        id S1754121AbeEaUeM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 May 2018 16:34:12 -0400
+Date: Thu, 31 May 2018 14:34:10 -0600
 From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: Question about Experimental of Filesystem DAX.
-Message-ID: <20180531202556.GA28256@linux.intel.com>
-References: <20180531112731.0CAC.E1E9C6FF@jp.fujitsu.com>
- <20180531150716.GA19764@linux.intel.com>
- <CAPcyv4jpffaM60tTdLTojhh0CDwcbVUdS8td7R6LKWM3bb15dw@mail.gmail.com>
- <20180531174636.GA7825@magnolia>
- <CAPcyv4gS1GCN9TFjngTmmHu83-uMgRpvvx842ZGnvxB3PbgU+Q@mail.gmail.com>
+Subject: Re: [PATCH v2 2/7] dax: change bdev_dax_supported() to support
+ boolean returns
+Message-ID: <20180531203410.GB28256@linux.intel.com>
+References: <20180529195106.14268-1-ross.zwisler@linux.intel.com>
+ <20180529195106.14268-3-ross.zwisler@linux.intel.com>
+ <20180529212510.GJ30110@magnolia>
+ <20180529220114.GA13948@linux.intel.com>
+ <20180531191332.GB7825@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4gS1GCN9TFjngTmmHu83-uMgRpvvx842ZGnvxB3PbgU+Q@mail.gmail.com>
+In-Reply-To: <20180531191332.GB7825@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Yasunori Goto <y-goto@jp.fujitsu.com>, Jan Kara <jack@suse.cz>, linux-xfs <linux-xfs@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, NVDIMM-ML <linux-nvdimm@lists.01.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Toshi Kani <toshi.kani@hpe.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Dave Jiang <dave.jiang@intel.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Thu, May 31, 2018 at 11:26:43AM -0700, Dan Williams wrote:
-> On Thu, May 31, 2018 at 10:46 AM, Darrick J. Wong
-> <darrick.wong@oracle.com> wrote:
-> > On Thu, May 31, 2018 at 09:29:15AM -0700, Dan Williams wrote:
-> >> On Thu, May 31, 2018 at 8:07 AM, Ross Zwisler
-> >> <ross.zwisler@linux.intel.com> wrote:
-> >> > On Thu, May 31, 2018 at 11:27:33AM +0900, Yasunori Goto wrote:
-> >> >> Hello,
-> >> >>
-> >> >>
-> >> >> I would like to know about the Experimental message of Filesystem DAX.
-> >> >> --------------------------------------------------------
-> >> >> DAX enabled. Warning: EXPERIMENTAL, use at your own risk
-> >> >> --------------------------------------------------------
-> >> >>
-> >> >> AFAIK, the final issue of Filesystem DAX is metadata update problem,
-> >> >> and it is(will be?) solved by great effort of MAP_SYNC and
-> >> >> "fix dma vs truncate/hole-punch" patch set.
-> >> >> So, I suppose that the Experimental message can be removed,
-> >> >> but I'm not sure.
-> >> >>
-> >> >> Is it possible?
-> >> >> Otherwise, are there any other issues in Filesystem DAX yet?
-> >> >>
-> >> >> If this is silly question, sorry for noise....
-> >> >>
-> >> >> Thanks,
-> >> >> ---
-> >> >> Yasunori Goto
-> >> >
-> >> > Adding in the XFS and ext4 developers, as it's really their call when to
-> >> > remove this notice.
-> >> >
-> >> > We've talked about this off and on for a long while, but IMHO we should remove
-> >> > the EXPERIMENTAL warning.  The last few things that we had on our TODO list
-> >> > before this was removed were:
-> >> >
-> >> > 1) Get consistent handling of the DAX mount option.  We currently have this,
-> >> > as both filesystems will behave the same and fall back and remove the DAX
-> >> > mount option if it is unsupported by the block device, etc.
-> >
-> > <nod>
-> >
-> > As an aside, I wonder if Christoph's musings about "just have the kernel
-> > determine the appropriate dax/non-dax setting from the acpi tables and
-> > skip the inode flag entirely" ever got resolved?
-> >
-> >> > 2) Get consistent handling of the DAX inode option.  We currently have this,
-> >> > as all DAX behavior now happens through the mount option.  If/when we
-> >> > re-enable the per-inode DAX flag we should do it consistently for all DAX
-> >> > enabled filesystems.
-> >
-> > The behavior of the inode flag isn't all that consistent.  ext4 doesn't
-> > support it at all.  On XFS, you can set or clear FS_XFLAG_DAX on a
-> > directory which will propagate the setting to any files created in that
-> > directory.
-> >
-> > However, if you set or clear it on a file we update the on-disk inode
-> > but we can't change the in-core state flag (S_DAX) until the next
-> > in-core inode instantiation.  It's weird that users can change the flag
-> > but the intended behavior changes won't happen until some ... time ...
-> > in the future??
-> >
-> >> > 3) Make DAX work with other XFS features like reflink, etc.  This one isn't
-> >> > done, but we at least disallow DAX with XFS features like reflink where it
-> >> > could be an issue.  Darrick, do you still feel like we need to get these
-> >> > working together to remove EXPERIMENTAL, or are you happy enough that we're
-> >> > keeping them separated and that we're keeping user data safe?
-> >
-> > Yes, reflink and dax still need to work together.  I've not heard any
-> > good arguments for why page sharing + copy on write are fundamentally
-> > incompatible with the dax model, or why dax users will never, ever
-> > require reflink.
+On Thu, May 31, 2018 at 12:13:32PM -0700, Darrick J. Wong wrote:
+> On Tue, May 29, 2018 at 04:01:14PM -0600, Ross Zwisler wrote:
+> > On Tue, May 29, 2018 at 02:25:10PM -0700, Darrick J. Wong wrote:
+> > > On Tue, May 29, 2018 at 01:51:01PM -0600, Ross Zwisler wrote:
+> > > > From: Dave Jiang <dave.jiang@intel.com>
+> > > > 
+> > > > The function return values are confusing with the way the function is
+> > > > named. We expect a true or false return value but it actually returns
+> > > > 0/-errno.  This makes the code very confusing. Changing the return values
+> > > > to return a bool where if DAX is supported then return true and no DAX
+> > > > support returns false.
+> > > > 
+> > > > Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+> > > > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> > > 
+> > > Looks ok, do you want me to pull the first two patches through the xfs
+> > > tree?
+> > > 
+> > > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Thanks for the review.
+> > 
+> > I'm not sure what's best.  If you do that then Mike will need to have a DM
+> > branch for the rest of the series based on your stable commits, yea?
+> > 
+> > Mike what would you prefer?
 > 
-> Right, but that's separate from DAX being scream in your face
-> "EXPERIMENTAL!". It's just an additional feature that can be added on
-> once all the normal expectations of a userspace mapping work. I think
-> reliable rmap is the last of those requirements.
-> 
-> > The recent thread between Jan and Dan make me wonder if making mappings
-> > share struct pages is going to be a nightmare to add to the mm code,
-> > though...
-> 
-> It's going to be a bit messy because a singular page->mapping
-> association is fundamentally incompatible with DAX. Perhaps a linked
-> list of mapping "siblings"?
-> 
-> > Also: ideally XFS would also be able to consume poison event
-> > notifications from the pmem so that it can try to deal with metadata
-> > loss, but that's probably a separate effort.
-> 
-> Right, not a gating item for declaring DAX ready for prime time.
+> I /was/ about to say that I would pull in the first two patches, but now
+> I can't get xfs to mount with pmem at all, and have no way of testing
+> this...?
 
-Yep, I think that the very loud EXPERIMENTAL message is essentially telling
-users "your data is at risk if you use this".  I totally agree that we still
-have lots of work to do.  However, I don't think that these feature
-enhancements should gate removal of the EXPERIMENTAL notice.   IMHO that
-should only exist as long as we have issues that we know could corrupt data,
-crash the box, etc.  As far as I know those are basically the 2 items on Dan's
-list from a few mails ago (poison recovery & DMA vs truncate).
+I'm not sure what's up - I'll dig in and find out.
