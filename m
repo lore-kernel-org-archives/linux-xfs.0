@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:50284 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:50554 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755928AbeEaSGn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:06:43 -0400
+        with ESMTP id S1755982AbeEaSGw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:06:52 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 07/13] iomap: move IOMAP_F_BOUNDARY to gfs2
-Date: Thu, 31 May 2018 20:06:08 +0200
-Message-Id: <20180531180614.21506-8-hch@lst.de>
+Subject: [PATCH 10/13] iomap: add an iomap-based bmap implementation
+Date: Thu, 31 May 2018 20:06:11 +0200
+Message-Id: <20180531180614.21506-11-hch@lst.de>
 In-Reply-To: <20180531180614.21506-1-hch@lst.de>
 References: <20180531180614.21506-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,81 +15,82 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-Just define a range of fs specific flags and use that in gfs2 instead of
-exposing this internal flag globally.
+This adds a simple iomap-based implementation of the legacy ->bmap
+interface.  Note that we can't easily add checks for rt or reflink
+files, so these will have to remain in the callers.  This interface
+just needs to die..
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/gfs2/bmap.c        | 8 +++++---
- include/linux/iomap.h | 9 +++++++--
- 2 files changed, 12 insertions(+), 5 deletions(-)
+ fs/iomap.c            | 34 ++++++++++++++++++++++++++++++++++
+ include/linux/iomap.h |  3 +++
+ 2 files changed, 37 insertions(+)
 
-diff --git a/fs/gfs2/bmap.c b/fs/gfs2/bmap.c
-index cbeedd3cfb36..8efa6297e19c 100644
---- a/fs/gfs2/bmap.c
-+++ b/fs/gfs2/bmap.c
-@@ -683,6 +683,8 @@ static void gfs2_stuffed_iomap(struct inode *inode, struct iomap *iomap)
- 	iomap->type = IOMAP_INLINE;
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 74cdf8b5bbb0..b0bc928672af 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -1307,3 +1307,37 @@ int iomap_swapfile_activate(struct swap_info_struct *sis,
  }
- 
-+#define IOMAP_F_GFS2_BOUNDARY IOMAP_F_PRIVATE
+ EXPORT_SYMBOL_GPL(iomap_swapfile_activate);
+ #endif /* CONFIG_SWAP */
 +
- /**
-  * gfs2_iomap_begin - Map blocks from an inode to disk blocks
-  * @inode: The inode
-@@ -774,7 +776,7 @@ int gfs2_iomap_begin(struct inode *inode, loff_t pos, loff_t length,
- 	bh = mp.mp_bh[ip->i_height - 1];
- 	len = gfs2_extent_length(bh->b_data, bh->b_size, ptr, lend - lblock, &eob);
- 	if (eob)
--		iomap->flags |= IOMAP_F_BOUNDARY;
-+		iomap->flags |= IOMAP_F_GFS2_BOUNDARY;
- 	iomap->length = (u64)len << inode->i_blkbits;
- 
- out_release:
-@@ -846,12 +848,12 @@ int gfs2_block_map(struct inode *inode, sector_t lblock,
- 
- 	if (iomap.length > bh_map->b_size) {
- 		iomap.length = bh_map->b_size;
--		iomap.flags &= ~IOMAP_F_BOUNDARY;
-+		iomap.flags &= ~IOMAP_F_GFS2_BOUNDARY;
- 	}
- 	if (iomap.addr != IOMAP_NULL_ADDR)
- 		map_bh(bh_map, inode->i_sb, iomap.addr >> inode->i_blkbits);
- 	bh_map->b_size = iomap.length;
--	if (iomap.flags & IOMAP_F_BOUNDARY)
-+	if (iomap.flags & IOMAP_F_GFS2_BOUNDARY)
- 		set_buffer_boundary(bh_map);
- 	if (iomap.flags & IOMAP_F_NEW)
- 		set_buffer_new(bh_map);
++static loff_t
++iomap_bmap_actor(struct inode *inode, loff_t pos, loff_t length,
++		void *data, struct iomap *iomap)
++{
++	sector_t *bno = data, addr;
++
++	if (iomap->type == IOMAP_MAPPED) {
++		addr = (pos - iomap->offset + iomap->addr) >> inode->i_blkbits;
++		if (addr > INT_MAX)
++			WARN(1, "would truncate bmap result\n");
++		else
++			*bno = addr;
++	}
++	return 0;
++}
++
++/* legacy ->bmap interface.  0 is the error return (!) */
++sector_t
++iomap_bmap(struct address_space *mapping, sector_t bno,
++		const struct iomap_ops *ops)
++{
++	struct inode *inode = mapping->host;
++	loff_t pos = bno >> inode->i_blkbits;
++	unsigned blocksize = i_blocksize(inode);
++
++	if (filemap_write_and_wait(mapping))
++		return 0;
++
++	bno = 0;
++	iomap_apply(inode, pos, blocksize, 0, ops, &bno, iomap_bmap_actor);
++	return bno;
++}
++EXPORT_SYMBOL_GPL(iomap_bmap);
 diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 13d19b4c29a9..819e0cd2a950 100644
+index 819e0cd2a950..a044a824da85 100644
 --- a/include/linux/iomap.h
 +++ b/include/linux/iomap.h
-@@ -27,8 +27,7 @@ struct vm_fault;
-  * written data and requires fdatasync to commit them to persistent storage.
-  */
- #define IOMAP_F_NEW		0x01	/* blocks have been newly allocated */
--#define IOMAP_F_BOUNDARY	0x02	/* mapping ends at metadata boundary */
--#define IOMAP_F_DIRTY		0x04	/* uncommitted metadata */
-+#define IOMAP_F_DIRTY		0x02	/* uncommitted metadata */
+@@ -4,6 +4,7 @@
+ 
+ #include <linux/types.h>
+ 
++struct address_space;
+ struct fiemap_extent_info;
+ struct inode;
+ struct iov_iter;
+@@ -100,6 +101,8 @@ loff_t iomap_seek_hole(struct inode *inode, loff_t offset,
+ 		const struct iomap_ops *ops);
+ loff_t iomap_seek_data(struct inode *inode, loff_t offset,
+ 		const struct iomap_ops *ops);
++sector_t iomap_bmap(struct address_space *mapping, sector_t bno,
++		const struct iomap_ops *ops);
  
  /*
-  * Flags that only need to be reported for IOMAP_REPORT requests:
-@@ -36,6 +35,12 @@ struct vm_fault;
- #define IOMAP_F_MERGED		0x10	/* contains multiple blocks/extents */
- #define IOMAP_F_SHARED		0x20	/* block shared with another file */
- 
-+/*
-+ * Flags from 0x1000 up are for file system specific usage:
-+ */
-+#define IOMAP_F_PRIVATE		0x1000
-+
-+
- /*
-  * Magic value for addr:
-  */
+  * Flags for direct I/O ->end_io:
 -- 
 2.17.0
 
