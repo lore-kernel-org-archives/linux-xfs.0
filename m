@@ -1,62 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:55260 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753787AbeEWD7C (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 May 2018 23:59:02 -0400
-Subject: Re: [PATCH v2 5/9] xfs_spaceman: print a nicer message when the file
- path isn't on an xfs
-References: <152401952391.13048.15040850425873030425.stgit@magnolia>
- <152401956294.13048.1815463748899965760.stgit@magnolia>
- <20180523033117.GJ14384@magnolia>
-From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <cabdf0a3-b3db-8c13-3724-a048b8936664@oracle.com>
-Date: Tue, 22 May 2018 20:58:46 -0700
-MIME-Version: 1.0
-In-Reply-To: <20180523033117.GJ14384@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from bombadil.infradead.org ([198.137.202.133]:49816 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755912AbeEaSGd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:06:33 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 03/13] mm: return an unsigned int from __do_page_cache_readahead
+Date: Thu, 31 May 2018 20:06:04 +0200
+Message-Id: <20180531180614.21506-4-hch@lst.de>
+In-Reply-To: <20180531180614.21506-1-hch@lst.de>
+References: <20180531180614.21506-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-Ok, looks good.  Thx!
+We never return an error, so switch to returning an unsigned int.  Most
+callers already did implicit casts to an unsigned type, and the one that
+didn't can be simplified now.
 
-Reviewed by: Allison Henderson <allison.henderson@oracle.com>
+Suggested-by: Matthew Wilcox <willy@infradead.org>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ mm/internal.h  |  2 +-
+ mm/readahead.c | 15 +++++----------
+ 2 files changed, 6 insertions(+), 11 deletions(-)
 
-On 05/22/2018 08:31 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> If the file path passed in is not something on an xfs filesystem, print
-> a nice message about that instead of yelling about ioctls.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->   spaceman/file.c |    7 ++++++-
->   1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/spaceman/file.c b/spaceman/file.c
-> index 4c13b4a8..23f8be1c 100644
-> --- a/spaceman/file.c
-> +++ b/spaceman/file.c
-> @@ -69,7 +69,12 @@ openfile(
->   	}
->   
->   	if (ioctl(fd, XFS_IOC_FSGEOMETRY, geom) < 0) {
-> -		perror("XFS_IOC_FSGEOMETRY");
-> +		if (errno == ENOTTY)
-> +			fprintf(stderr,
-> +_("%s: Not on a mounted XFS filesystem.\n"),
-> +					path);
-> +		else
-> +			perror("XFS_IOC_FSGEOMETRY");
->   		close(fd);
->   		return -1;
->   	}
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIBAg&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=c2CCB3K_iIfSsLpTfhw0rxFL87ZYlPnPvGWzEfJ_t2E&s=KTX7FsHojy6HKAINeB5zGTNlqQlJ037Cw09OFK9tBhY&e=
-> 
+diff --git a/mm/internal.h b/mm/internal.h
+index 62d8c34e63d5..954003ac766a 100644
+--- a/mm/internal.h
++++ b/mm/internal.h
+@@ -53,7 +53,7 @@ void unmap_page_range(struct mmu_gather *tlb,
+ 			     unsigned long addr, unsigned long end,
+ 			     struct zap_details *details);
+ 
+-extern int __do_page_cache_readahead(struct address_space *mapping,
++extern unsigned int __do_page_cache_readahead(struct address_space *mapping,
+ 		struct file *filp, pgoff_t offset, unsigned long nr_to_read,
+ 		unsigned long lookahead_size);
+ 
+diff --git a/mm/readahead.c b/mm/readahead.c
+index 16d0cb1e2616..fa4d4b767130 100644
+--- a/mm/readahead.c
++++ b/mm/readahead.c
+@@ -147,16 +147,16 @@ static int read_pages(struct address_space *mapping, struct file *filp,
+  *
+  * Returns the number of pages requested, or the maximum amount of I/O allowed.
+  */
+-int __do_page_cache_readahead(struct address_space *mapping, struct file *filp,
+-			pgoff_t offset, unsigned long nr_to_read,
+-			unsigned long lookahead_size)
++unsigned int __do_page_cache_readahead(struct address_space *mapping,
++		struct file *filp, pgoff_t offset, unsigned long nr_to_read,
++		unsigned long lookahead_size)
+ {
+ 	struct inode *inode = mapping->host;
+ 	struct page *page;
+ 	unsigned long end_index;	/* The last page we want to read */
+ 	LIST_HEAD(page_pool);
+ 	int page_idx;
+-	int nr_pages = 0;
++	unsigned int nr_pages = 0;
+ 	loff_t isize = i_size_read(inode);
+ 	gfp_t gfp_mask = readahead_gfp_mask(mapping);
+ 
+@@ -223,16 +223,11 @@ int force_page_cache_readahead(struct address_space *mapping, struct file *filp,
+ 	max_pages = max_t(unsigned long, bdi->io_pages, ra->ra_pages);
+ 	nr_to_read = min(nr_to_read, max_pages);
+ 	while (nr_to_read) {
+-		int err;
+-
+ 		unsigned long this_chunk = (2 * 1024 * 1024) / PAGE_SIZE;
+ 
+ 		if (this_chunk > nr_to_read)
+ 			this_chunk = nr_to_read;
+-		err = __do_page_cache_readahead(mapping, filp,
+-						offset, this_chunk, 0);
+-		if (err < 0)
+-			return err;
++		__do_page_cache_readahead(mapping, filp, offset, this_chunk, 0);
+ 
+ 		offset += this_chunk;
+ 		nr_to_read -= this_chunk;
+-- 
+2.17.0
+
