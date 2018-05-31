@@ -1,139 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:40802 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965799AbeEIWyR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 May 2018 18:54:17 -0400
-Received: by mail-oi0-f66.google.com with SMTP id c203-v6so159524oib.7
-        for <linux-xfs@vger.kernel.org>; Wed, 09 May 2018 15:54:17 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20180509122733.lokyqv5aluwhlml7@quack2.suse.cz>
-References: <152461278149.17530.2867511144531572045.stgit@dwillia2-desk3.amr.corp.intel.com>
- <152461283072.17530.11313844322317294220.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20180509122733.lokyqv5aluwhlml7@quack2.suse.cz>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 9 May 2018 15:54:16 -0700
-Message-ID: <CAPcyv4hwGc0GUST-bNrgpgrmnfHgcxKf35M8p8mnu2FbSJe7Qw@mail.gmail.com>
-Subject: Re: [PATCH v9 9/9] xfs, dax: introduce xfs_break_dax_layouts()
-Content-Type: text/plain; charset="UTF-8"
+Received: from bombadil.infradead.org ([198.137.202.133]:48942 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755848AbeEaSGS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:06:18 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: iomap based buffered reads & iomap cleanups v5
+Date: Thu, 31 May 2018 20:06:01 +0200
+Message-Id: <20180531180614.21506-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Christoph Hellwig <hch@lst.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-On Wed, May 9, 2018 at 5:27 AM, Jan Kara <jack@suse.cz> wrote:
-> On Tue 24-04-18 16:33:50, Dan Williams wrote:
->> xfs_break_dax_layouts(), similar to xfs_break_leased_layouts(), scans
->> for busy / pinned dax pages and waits for those pages to go idle before
->> any potential extent unmap operation.
->>
->> dax_layout_busy_page() handles synchronizing against new page-busy
->> events (get_user_pages). It invalidates all mappings to trigger the
->> get_user_pages slow path which will eventually block on the xfs inode
->> lock held in XFS_MMAPLOCK_EXCL mode. If dax_layout_busy_page() finds a
->> busy page it returns it for xfs to wait for the page-idle event that
->> will fire when the page reference count reaches 1 (recall ZONE_DEVICE
->> pages are idle at count 1, see generic_dax_pagefree()).
->>
->> While waiting, the XFS_MMAPLOCK_EXCL lock is dropped in order to not
->> deadlock the process that might be trying to elevate the page count of
->> more pages before arranging for any of them to go idle. I.e. the typical
->> case of submitting I/O is that iov_iter_get_pages() elevates the
->> reference count of all pages in the I/O before starting I/O on the first
->> page. The process of elevating the reference count of all pages involved
->> in an I/O may cause faults that need to take XFS_MMAPLOCK_EXCL.
->>
->> Although XFS_MMAPLOCK_EXCL is dropped while waiting, XFS_IOLOCK_EXCL is
->> held while sleeping. We need this to prevent starvation of the truncate
->> path as continuous submission of direct-I/O could starve the truncate
->> path indefinitely if the lock is dropped.
->>
->> Cc: Dave Chinner <david@fromorbit.com>
->> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
->> Cc: Ross Zwisler <ross.zwisler@linux.intel.com>
->> Reported-by: Jan Kara <jack@suse.cz>
->> Cc: Christoph Hellwig <hch@lst.de>
->> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
->
-> Looks good to me except some nits below. Feel free to add:
->
-> Reviewed-by: Jan Kara <jack@suse.cz>
->
-> for as much as it is worth with XFS code ;)
->
->> +static int
->> +xfs_break_dax_layouts(
->> +     struct inode            *inode,
->> +     uint                    iolock,
->> +     bool                    *did_unlock)
->> +{
->> +     struct page             *page;
->> +
->> +     *did_unlock = false;
->> +     page = dax_layout_busy_page(inode->i_mapping);
->> +     if (!page)
->> +             return 0;
->> +
->> +     return ___wait_var_event(&page->_refcount,
->> +                     atomic_read(&page->_refcount) == 1, TASK_INTERRUPTIBLE,
->> +                     0, 0, xfs_wait_dax_page(inode, did_unlock));
->> +}
->> +
->>  int
->>  xfs_break_layouts(
->>       struct inode            *inode,
->> @@ -729,17 +760,23 @@ xfs_break_layouts(
->>
->>       ASSERT(xfs_isilocked(XFS_I(inode), XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL));
->>
->> -     switch (reason) {
->> -     case BREAK_UNMAP:
->> -             ASSERT(xfs_isilocked(XFS_I(inode), XFS_MMAPLOCK_EXCL));
->> -             /* fall through */
->> -     case BREAK_WRITE:
->> -             error = xfs_break_leased_layouts(inode, iolock, &retry);
->> -             break;
->> -     default:
->> -             WARN_ON_ONCE(1);
->> -             return -EINVAL;
->> -     }
->> +     do {
->> +             switch (reason) {
->> +             case BREAK_UNMAP:
->> +                     ASSERT(xfs_isilocked(XFS_I(inode), XFS_MMAPLOCK_EXCL));
->
-> Maybe move the assertion to xfs_break_dax_layouts()?
+Hi all,
 
-Makes sense, sure.
+this series adds support for buffered reads without buffer heads to
+the iomap and XFS code.  It has been split from the larger series
+for easier review.
 
->
->> +
->> +                     error = xfs_break_dax_layouts(inode, *iolock, &retry);
->> +                     /* fall through */
->> +             case BREAK_WRITE:
->> +                     if (error || retry)
->> +                             break;
->
-> The error handling IMHO belongs above the 'fall through' comment above.
 
-Ok, yes I think this location is a stale holdover.
+A git tree is available at:
 
->
->> +                     error = xfs_break_leased_layouts(inode, iolock, &retry);
->> +                     break;
->> +             default:
->> +                     WARN_ON_ONCE(1);
->> +                     return -EINVAL;
->> +             }
->> +     } while (error == 0 && retry);
->
-> As a general 'taste' comment, I prefer if the 'retry' is always initialized
-> to 'false' at the beginning of the loop body in these kinds of loops. That
-> way it is obvious we are doing the right thing when looking at the loop
-> body and we don't have to verify that each case statement initializes
-> 'retry' properly (in fact I'd remove the initialization from
-> xfs_break_dax_layouts() and xfs_break_leased_layouts()). But this is more a
-> matter of taste and consistency with other code in the area so I defer to
-> XFS maintainers for a final opinion. Darrick?
+    git://git.infradead.org/users/hch/xfs.git xfs-iomap-read.5
 
-I'm fine with making this change, I'll proceed unless / until Darrick says no.
+Gitweb:
+
+    http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-iomap-read.5
+
+Changes since v4:
+ - a couple comment updates
+
+Changes since v3:
+ - remove iomap_read_bio_alloc
+ - set REQ_RAHEAD flag for readpages
+ - better commen on the add_to_page_cache_lru semantics for readpages
+ - move all write related patches to a separate series
+
+Changes since v2:
+ - minor page_seek_hole_data tweaks
+ - don't read data entirely covered by the write operation in write_begin
+ - fix zeroing on write_begin I/O failure
+ - remove iomap_block_needs_zeroing to make the code more clear
+ - update comments on __do_page_cache_readahead
+
+Changes since v1:
+ - fix the iomap_readpages error handling
+ - use unsigned file offsets in a few places to avoid arithmetic overflows
+ - allocate a iomap_page in iomap_page_mkwrite to fix generic/095
+ - improve a few comments
+ - add more asserts
+ - warn about truncated block numbers from ->bmap
+ - new patch to change the __do_page_cache_readahead return value to
+   unsigned int
+ - remove an incorrectly added empty line
+ - make inline data an explicit iomap type instead of a flag
+ - add a IOMAP_F_BUFFER_HEAD flag to force use of buffers heads for gfs2,
+   and keep the basic buffer head infrastructure around for now.
