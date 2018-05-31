@@ -1,13 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:65166 "EHLO mga14.intel.com"
+Received: from mga04.intel.com ([192.55.52.120]:45700 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754121AbeEaUeM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 31 May 2018 16:34:12 -0400
-Date: Thu, 31 May 2018 14:34:10 -0600
+        id S1754372AbeEaUlX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 May 2018 16:41:23 -0400
+Date: Thu, 31 May 2018 14:41:22 -0600
 From: Ross Zwisler <ross.zwisler@linux.intel.com>
 Subject: Re: [PATCH v2 2/7] dax: change bdev_dax_supported() to support
  boolean returns
-Message-ID: <20180531203410.GB28256@linux.intel.com>
+Message-ID: <20180531204122.GC28256@linux.intel.com>
 References: <20180529195106.14268-1-ross.zwisler@linux.intel.com>
  <20180529195106.14268-3-ross.zwisler@linux.intel.com>
  <20180529212510.GJ30110@magnolia>
@@ -53,5 +53,70 @@ On Thu, May 31, 2018 at 12:13:32PM -0700, Darrick J. Wong wrote:
 > I /was/ about to say that I would pull in the first two patches, but now
 > I can't get xfs to mount with pmem at all, and have no way of testing
 > this...?
+> 
+> # echo 'file drivers/dax/* +p' > /sys/kernel/debug/dynamic_debug/control
+> # mount /dev/pmem3 -o rtdev=/dev/pmem4,dax /mnt
+> # dmesg
+> <snip>
+> SGI XFS with ACLs, security attributes, realtime, scrub, debug enabled
+> XFS (pmem3): DAX enabled. Warning: EXPERIMENTAL, use at your own risk
+> pmem3: error: dax support not enabled
+> pmem4: error: dax support not enabled
+> XFS (pmem3): DAX unsupported by block device. Turning off DAX.
+> XFS (pmem3): Mounting V5 Filesystem
+> XFS (pmem3): Ending clean mount
 
-I'm not sure what's up - I'll dig in and find out.
+This same sequence worked fine in my QEMU setup.
+
+My guess is the issue is that your namespaces are in raw mode:
+
+# ndctl list
+[
+  {
+    "dev":"namespace1.0",
+    "mode":"raw",			<< this
+    "size":18119393280,
+    "sector_size":512,
+    "blockdev":"pmem1",
+    "numa_node":0
+  },
+  {
+    "dev":"namespace0.0",
+    "mode":"raw",			<< this
+    "size":18119393280,
+    "sector_size":512,
+    "blockdev":"pmem0",
+    "numa_node":0
+  }
+]
+
+If so, you can solve this by putting them in fsdax mode with ndctl:
+
+# ndctl create-namespace -f -e namespace0.0 --mode=fsdax
+{
+  "dev":"namespace0.0",
+  "mode":"fsdax",
+  "size":"16.61 GiB (17.83 GB)",
+  "uuid":"4c193c83-c031-41d4-8f96-2ff5c7b59c69",
+  "raw_uuid":"2f785f09-717a-4a5e-9e9d-88d489ef1030",
+  "sector_size":512,
+  "blockdev":"pmem0",
+  "numa_node":0
+}
+
+# ndctl create-namespace -f -e namespace1.0 --mode=fsdax
+{
+  "dev":"namespace1.0",
+  "mode":"fsdax",
+  "size":"16.61 GiB (17.83 GB)",
+  "uuid":"39ec9cc4-a7ef-4f99-8354-60105543bf47",
+  "raw_uuid":"403fae76-d4f8-4bed-9a3f-ef40924762be",
+  "sector_size":512,
+  "blockdev":"pmem1",
+  "numa_node":0
+}
+
+If that doesn't fix it for you, ping me on freenode and we'll figure it out.
+
+Thanks,
+- Ross
