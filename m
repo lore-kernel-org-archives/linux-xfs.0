@@ -1,105 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:47928 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751350AbeEBUaX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 May 2018 16:30:23 -0400
-Date: Wed, 2 May 2018 13:29:55 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] iomap: add a swapfile activation function
-Message-ID: <20180502202955.GA4112@magnolia>
-References: <20180418025023.GM24738@magnolia>
- <20180421123301.v7bbofc2joaibpi6@quack2.suse.cz>
+Received: from mx1.redhat.com ([209.132.183.28]:3731 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755638AbeEaQCR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 May 2018 12:02:17 -0400
+Subject: Re: [PATCH] xfs_db: handle realtime bitmap / summary files as text
+References: <20180531155724.GZ837@magnolia>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <29f4d635-e090-ddaf-c2b4-bcd1309f4196@redhat.com>
+Date: Thu, 31 May 2018 11:02:16 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180421123301.v7bbofc2joaibpi6@quack2.suse.cz>
+In-Reply-To: <20180531155724.GZ837@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Sat, Apr 21, 2018 at 02:33:01PM +0200, Jan Kara wrote:
-> On Tue 17-04-18 19:50:23, Darrick J. Wong wrote:
-> > +
-> > +/* Swapfile activation */
-> > +
-> > +struct iomap_swapfile_info {
-> > +	struct swap_info_struct *sis;
-> > +	uint64_t lowest_ppage;		/* lowest physical addr seen (pages) */
-> > +	uint64_t highest_ppage;		/* highest physical addr seen (pages) */
-> > +	unsigned long expected_page_no;	/* next logical offset wanted (pages) */
-> > +	int nr_extents;			/* extent count */
-> > +};
-> > +
-> > +static loff_t iomap_swapfile_activate_actor(struct inode *inode, loff_t pos,
-> > +		loff_t count, void *data, struct iomap *iomap)
-> > +{
-> > +	struct iomap_swapfile_info *isi = data;
-> > +	unsigned long page_no = iomap->offset >> PAGE_SHIFT;
-> > +	unsigned long nr_pages = iomap->length >> PAGE_SHIFT;
-> > +	uint64_t first_ppage = iomap->addr >> PAGE_SHIFT;
-> > +	uint64_t last_ppage = ((iomap->addr + iomap->length) >> PAGE_SHIFT) - 1;
-> > +
-> > +	/* Only one bdev per swap file. */
-> > +	if (iomap->bdev != isi->sis->bdev)
-> > +		goto err;
-> > +
-> > +	/* Must be aligned to a page boundary. */
-> > +	if ((iomap->offset & ~PAGE_MASK) || (iomap->addr & ~PAGE_MASK) ||
-> > +	    (iomap->length & ~PAGE_MASK))
-> > +		goto err;
+On 5/31/18 10:57 AM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Reporting error in this case does not look equivalent to
-> generic_swapfile_activate()? That function just skips blocks with
-> insufficient alignment...
-
-Yes, I've fixed this to emulate more closely the behavior of the old
-bmap implementation, so now we collect physically contiguous iomaps
-and trim the accumulated iomap to satisfy the page alignment
-requirements.
-
-> And I'm actually puzzled why alignment of physical block is needed but
-> that's independent question.
-
-I'm not sure why either. :)
-
-> > +	/* Only real or unwritten extents. */
-> > +	if (iomap->type != IOMAP_MAPPED && iomap->type != IOMAP_UNWRITTEN)
-> > +		goto err;
-> > +
-> > +	/* No sparse files. */
-> > +	if (isi->expected_page_no != page_no)
-> > +		goto err;
-> > +
-> > +	/* No uncommitted metadata or shared blocks or inline data. */
-> > +	if (iomap->flags & (IOMAP_F_DIRTY | IOMAP_F_SHARED |
-> > +			    IOMAP_F_DATA_INLINE))
-> > +		goto err;
-> > +
-> > +	/*
-> > +	 * Calculate how much swap space we're adding; the first page contains
-> > +	 * the swap header and doesn't count.
-> > +	 */
-> > +	if (page_no == 0)
-> > +		first_ppage++;
-> > +	if (isi->lowest_ppage > first_ppage)
-> > +		isi->lowest_ppage = first_ppage;
-> > +	if (isi->highest_ppage < last_ppage)
-> > +		isi->highest_ppage = last_ppage;
-> > +
-> > +	/* Add extent, set up for the next call. */
-> > +	isi->nr_extents += add_swap_extent(isi->sis, page_no, nr_pages,
-> > +			first_ppage);
+> Use handle_text to print realtime bitmap / summary file blocks instead
+> of erroring out.
 > 
-> And here add_swap_extent() can return error.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Fixed, thanks.
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
---D
-
+> ---
+>   db/type.c |   12 ++++++------
+>   1 file changed, 6 insertions(+), 6 deletions(-)
 > 
-> 								Honza
-> -- 
-> Jan Kara <jack@suse.com>
-> SUSE Labs, CR
+> diff --git a/db/type.c b/db/type.c
+> index 8b2f7b2f..7045d829 100644
+> --- a/db/type.c
+> +++ b/db/type.c
+> @@ -71,8 +71,8 @@ static const typ_t	__typtab[] = {
+>   	{ TYP_INODATA, "inodata", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
+>   	{ TYP_INODE, "inode", handle_struct, inode_hfld, NULL, TYP_F_NO_CRC_OFF },
+>   	{ TYP_LOG, "log", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
+> -	{ TYP_RTBITMAP, "rtbitmap", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
+> -	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
+> +	{ TYP_RTBITMAP, "rtbitmap", handle_text, NULL, NULL, TYP_F_NO_CRC_OFF },
+> +	{ TYP_RTSUMMARY, "rtsummary", handle_text, NULL, NULL, TYP_F_NO_CRC_OFF },
+>   	{ TYP_SB, "sb", handle_struct, sb_hfld, NULL, TYP_F_NO_CRC_OFF },
+>   	{ TYP_SYMLINK, "symlink", handle_string, NULL, NULL, TYP_F_NO_CRC_OFF },
+>   	{ TYP_TEXT, "text", handle_text, NULL, NULL, TYP_F_NO_CRC_OFF },
+> @@ -115,8 +115,8 @@ static const typ_t	__typtab_crc[] = {
+>   	{ TYP_INODE, "inode", handle_struct, inode_crc_hfld,
+>   		&xfs_inode_buf_ops, TYP_F_CRC_FUNC, xfs_inode_set_crc },
+>   	{ TYP_LOG, "log", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
+> -	{ TYP_RTBITMAP, "rtbitmap", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
+> -	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
+> +	{ TYP_RTBITMAP, "rtbitmap", handle_text, NULL, NULL, TYP_F_NO_CRC_OFF },
+> +	{ TYP_RTSUMMARY, "rtsummary", handle_text, NULL, NULL, TYP_F_NO_CRC_OFF },
+>   	{ TYP_SB, "sb", handle_struct, sb_hfld, &xfs_sb_buf_ops,
+>   		XFS_SB_CRC_OFF },
+>   	{ TYP_SYMLINK, "symlink", handle_struct, symlink_crc_hfld,
+> @@ -161,8 +161,8 @@ static const typ_t	__typtab_spcrc[] = {
+>   	{ TYP_INODE, "inode", handle_struct, inode_crc_hfld,
+>   		&xfs_inode_buf_ops, TYP_F_CRC_FUNC, xfs_inode_set_crc },
+>   	{ TYP_LOG, "log", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
+> -	{ TYP_RTBITMAP, "rtbitmap", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
+> -	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
+> +	{ TYP_RTBITMAP, "rtbitmap", handle_text, NULL, NULL, TYP_F_NO_CRC_OFF },
+> +	{ TYP_RTSUMMARY, "rtsummary", handle_text, NULL, NULL, TYP_F_NO_CRC_OFF },
+>   	{ TYP_SB, "sb", handle_struct, sb_hfld, &xfs_sb_buf_ops,
+>   		XFS_SB_CRC_OFF },
+>   	{ TYP_SYMLINK, "symlink", handle_struct, symlink_crc_hfld,
+> 
+
