@@ -1,62 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:52136 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753155AbeEVV6V (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 22 May 2018 17:58:21 -0400
-Subject: [PATCH V2] xfsprogs: be careful about what we stat in
- platform_check_mount
-From: Eric Sandeen <sandeen@sandeen.net>
-References: <92bcf603-5106-9fa0-1b48-0d13ff0608c8@sandeen.net>
-Message-ID: <998e7209-d700-5006-a2a0-e4c37ef0c024@sandeen.net>
-Date: Tue, 22 May 2018 16:58:20 -0500
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:52401 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755556AbeEaRTN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 13:19:13 -0400
+Received: by mail-wm0-f67.google.com with SMTP id 18-v6so49802161wml.2
+        for <linux-xfs@vger.kernel.org>; Thu, 31 May 2018 10:19:12 -0700 (PDT)
+Date: Thu, 31 May 2018 19:19:09 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 0/4 V2] Remove a few macros
+Message-ID: <20180531171909.cedwobpqlaf2h5ly@odin.usersys.redhat.com>
+References: <20180307090506.30199-1-cmaiolino@redhat.com>
+ <b5e4681b-8198-82fc-e4da-bfbad08cf32d@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <92bcf603-5106-9fa0-1b48-0d13ff0608c8@sandeen.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b5e4681b-8198-82fc-e4da-bfbad08cf32d@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Cc: Dave Chinner <david@fromorbit.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-After we lost ustat(2) in commit 4e7a824, we ended up with a slightly
-bonkers method to determine if our target block device was mounted:
-it goes through every entry returned by getmntent and stats the dir
-to see if its underlying device matches ours.
+On Thu, May 31, 2018 at 11:58:51AM -0500, Eric Sandeen wrote:
+> On 3/7/18 3:05 AM, Carlos Maiolino wrote:
+> > Hi,
+> > 
+> > this is a second version of the patchset aimed to clean up some old macros from
+> > xfsprogs, as the objective to bring xfs_buf handling code closer to kernel code.
+> > 
+> > It fixes some pointer castings Dave mentioned on the V1 patch, also, it removes
+> > a few unneeded castings I spotted while reviewing the ones Dave mentioned.
+> > 
+> > Cheers
+> > 
+> > Carlos Maiolino (4):
+> >    Get rid of XFS_BUF_PTR() macro
+> >    Get rid of XFS_BUF_TARGET() macro
+> >    get rid of XFS_BUF_COUNT() macro
+> >    Get rid of XFS_BUF_SET_COUNT() macro
+> 
+> Sorry, I'd still like to merge these but they need a rebase now.
+> And did the casting-wars between dchinner & hch ever get resolved?
+> 
 
-Unfortunately that dir might be a hung nfs server and sadness ensues.
 
-So just do a really simple sanity check before we try to stat the
-mountpoint: does its device start with a / ?  If not, skip it.
+I don't know actually, I don't remember seeing Dave replying agreeing or not
+with hch
 
-Fixes: 4e7a824 ("libxfs/linux.c: Replace use of ustat by stat")
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+> Thanks,
+> -Eric
 
-V2: just look for fully-qualified device paths vs expecting an actual
-block device.
-
-diff --git a/libxfs/linux.c b/libxfs/linux.c
-index 0bace3e..5c8602e 100644
---- a/libxfs/linux.c
-+++ b/libxfs/linux.c
-@@ -77,7 +77,17 @@ platform_check_mount(char *name, char *block, struct stat *s, int flags)
-  		    progname, name);
-  		return 1;
-  	}
-+	/*
-+	 * This whole business is to work out if our block device is mounted
-+	 * after we lost ustat(2), see:
-+	 * 	4e7a824 libxfs/linux.c: Replace use of ustat by stat
-+	 * We don't really want to stat every single mounted directory,
-+	 * as that may include tmpfs, cgroups, procfs or - worst - hung nfs
-+	 * servers.  So first, a simple check: does the "dev" start with "/" ?
-+	 */
-  	while ((mnt = getmntent(f)) != NULL) {
-+		if (mnt->mnt_fsname[0] != '/')
-+			continue;
-  		if (stat(mnt->mnt_dir, &mst) < 0)
-  			continue;
-  		if (mst.st_dev != s->st_rdev)
-
+-- 
+Carlos
