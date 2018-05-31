@@ -1,38 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:28338 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753750AbeE3Wrf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 May 2018 18:47:35 -0400
-Date: Thu, 31 May 2018 08:47:06 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/3] fs: remove the buffer_unwritten check in
- page_seek_hole_data
-Message-ID: <20180530224706.GX10363@dastard>
-References: <20180530100208.31490-1-hch@lst.de>
- <20180530100208.31490-3-hch@lst.de>
+Received: from sandeen.net ([63.231.237.45]:35726 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755549AbeEaQYF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 May 2018 12:24:05 -0400
+Subject: Re: xfs_db and ASSERT fails dur type mismatch
+References: <20180509114554.2slvfi3hqt4na6vy@odin.usersys.redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <a34eb2d1-5f1c-eaf0-a892-f91061bb075b@sandeen.net>
+Date: Thu, 31 May 2018 11:24:03 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180530100208.31490-3-hch@lst.de>
+In-Reply-To: <20180509114554.2slvfi3hqt4na6vy@odin.usersys.redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, Andreas Gruenbacher <agruenba@redhat.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: linux-xfs@vger.kernel.org, sandeen@redhat.com
 
-On Wed, May 30, 2018 at 12:02:07PM +0200, Christoph Hellwig wrote:
-> We only call into this function through the iomap iterators, so we already
-> know the buffer is unwritten.  In addition to that we always require the
-> uptodate flag that is ORed with the result anyway.
+On 5/9/18 6:45 AM, Carlos Maiolino wrote:
+> Hey folks,
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/iomap.c | 13 ++++---------
->  1 file changed, 4 insertions(+), 9 deletions(-)
+> I've been thinking about different ways to fix those crashes on xfs_db due type
+> mismatch, based on the previous discussion and a chat I had with Eric on irc.
+> 
+> After thinking a bit more about it, I do think using unknown header types adds
+> unneeded extra complexity to the code, to achieve the same result as an extra
+> check on print_flist_1().
+> 
+> Adding an unknown type, will require a change to all types affected by this
+> issue. I am not sure if a single unknown type can be used for all metadata types
+> which is affected by this, but I think it requires an unknown type for each of
+> these metadata. Or at least an entry for an unknown header type (in case of of
+> the known ones are not found).
+> 
+> While, the crash caused by unrecognized metadata when using these types, can be
+> fixed by something like my original change.
+> 
+> I wrote a slightly different patch like this:
 
-Makes sense to me.
+Ok, I'll merge this, with a proper commit log.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
--- 
-Dave Chinner
-david@fromorbit.com
+> diff --git a/db/print.c b/db/print.c
+> index 0da36c27..f8a48281 100644
+> --- a/db/print.c
+> +++ b/db/print.c
+> @@ -160,9 +160,10 @@ print_flist_1(
+>                                          (f->flags & FLD_ARRAY) != 0);
+>                                  if (neednl)
+>                                          dbprintf("\n");
+> -                       } else {
+> -                               ASSERT(fa->arg & FTARG_OKEMPTY);
+> +                       } else if (fa->arg & FTARG_OKEMPTY) {
+>                                  dbprintf(_("(empty)\n"));
+> +                       } else {
+> +                               dbprintf(_("Unrecognized metadata or type mismatch\n"));
+>                          }
+>                  }
+>                  free_strvec(pfx);
+> 
+> 
+> This will still keep printing "(empty)" where it should be printed, or print out
+> a hint that something went wrong.
+> 
+> I honestly think this the best solution for these crashes, what you guys think?
+> 
+> Cheers
+> 
+> 
