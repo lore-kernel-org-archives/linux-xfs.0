@@ -1,86 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:46773 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750758AbeEaVtu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 17:49:50 -0400
-Received: by mail-oi0-f68.google.com with SMTP id h79-v6so14320957oig.13
-        for <linux-xfs@vger.kernel.org>; Thu, 31 May 2018 14:49:50 -0700 (PDT)
+Received: from userp2130.oracle.com ([156.151.31.86]:51260 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750737AbeEaWTO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 18:19:14 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w4VMGMCF100966
+        for <linux-xfs@vger.kernel.org>; Thu, 31 May 2018 22:19:13 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by userp2130.oracle.com with ESMTP id 2janje1345-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 31 May 2018 22:19:13 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w4VMJCn0011413
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 31 May 2018 22:19:13 GMT
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w4VMJCPO001286
+        for <linux-xfs@vger.kernel.org>; Thu, 31 May 2018 22:19:12 GMT
+Date: Thu, 31 May 2018 15:19:11 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: don't forbid setting dax flag on directories if device
+ doesn't dax
+Message-ID: <20180531221911.GD7825@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20180531100849.xkwe5xsjpkw6nev7@quack2.suse.cz>
-References: <152699997165.24093.12194490924829406111.stgit@dwillia2-desk3.amr.corp.intel.com>
- <152699999778.24093.18007971664703285330.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20180523084030.dvv4jbvsnzrsaz6q@quack2.suse.cz> <CAPcyv4gUM7Br3XONOVkNCg-mvR5U8QLq+OOc54cLpP61LXhJXA@mail.gmail.com>
- <20180530081356.mohu6fx22fzd7fxb@quack2.suse.cz> <CAPcyv4iPa_n7c6iLRtNyE4GdXcn7JcF=Z1bUDmNrjrKvnLic2A@mail.gmail.com>
- <20180531100849.xkwe5xsjpkw6nev7@quack2.suse.cz>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 31 May 2018 14:49:49 -0700
-Message-ID: <CAPcyv4j6zjvzxKb3JUHU+iSrPXybj-uRNFAWXoc46dkMgjyN6g@mail.gmail.com>
-Subject: Re: [PATCH 05/11] filesystem-dax: set page->index
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-nvdimm <linux-nvdimm@lists.01.org>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <mawilcox@microsoft.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Linux MM <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "Luck, Tony" <tony.luck@intel.com>, linux-xfs <linux-xfs@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: xfs <linux-xfs@vger.kernel.org>
 
-On Thu, May 31, 2018 at 3:08 AM, Jan Kara <jack@suse.cz> wrote:
-[..]
->> >> As far as I can see reflink+dax would require teaching kernel code
->> >> paths that ->mapping may not be a singular relationship. Something
->> >> along the line's of what Jerome was presenting at LSF to create a
->> >> special value to indicate, "call back into the filesystem (or the page
->> >> owner)" to perform this operation.
->> >>
->> >> In the meantime the kernel crashes when userspace accesses poisoned
->> >> pmem via DAX. I assume that reworking rmap for the dax+reflink case
->> >> should not block dax poison handling? Yell if you disagree.
->> >
->> > The thing is, up until get_user_pages() vs truncate series ("fs, dax: use
->> > page->mapping to warn if truncate collides with a busy page" in
->> > particular), DAX was perfectly fine with reflinks since we never needed
->> > page->mapping.
->>
->> Sure, but if this rmap series had come first I still would have needed
->> to implement ->mapping. So unless we invent a general ->mapping
->> replacement and switch all mapping users, it was always going to
->> collide with DAX eventually.
->
-> Yes, my comment was more in direction that life would be easier if we could
-> keep DAX without rmap support but I guess that's just too cumbersome.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I'm open to deeper reworks later. As it stands currently just calling
-madvise(..., MADV_HWPOISON) on a DAX mapping causes a page reference
-to be leaked because the madvise code has no clue about proper
-handling of DAX pages, and consuming real poison leads to a fatal
-condition / reset.
+On a directory, the DAX flag is merely a hint that files created in the
+directory should have the DAX flag set at creation time.  We don't care
+if the underlying device supports DAX or not because directory metadata
+are always cached in DRAM.  We don't care if new files get the flag even
+if the device doesn't support DAX because we always check for DAX
+support before setting the VFS flag (S_DAX).
 
-I think fixing those bugs with the current rmap dependencies on
-->mapping and ->index is step1 and step2 is a longer term solution for
-dax rmap that does also allow reflink. I.e. it's an rmap > reflink
-argument for now.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_ioctl.c |    9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
->
->> > Now this series adds even page->index dependency which makes
->> > life for rmap with reflinks even harder. So if nothing else we should at
->> > least make sure reflinked filesystems cannot be mounted with dax mount
->> > option for now and seriously start looking into how to implement rmap with
->> > reflinked files for DAX because this noticeably reduces its usefulness.
->>
->> This restriction is already in place. In xfs_reflink_remap_range() we have:
->>
->>         /* Don't share DAX file data for now. */
->>         if (IS_DAX(inode_in) || IS_DAX(inode_out))
->>                 goto out_unlock;
->
-> OK, good.
->
->> All this said, perhaps we don't need to set ->link, it would just mean
->> a wider search through the rmap tree to find if the given page is
->> mapped. So, I think I can forgo setting ->link if I teach the rmap
->> code to search the entire ->mapping.
->
-> I guess you mean ->index in the above. And now when thinking about it I don't
-> think it is worth the complications to avoid using ->index.
-
-Ok, and yes I meant ->index... sorry, too much struct page on the
-brain presently.
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 3d72dfc9c83f..78b2e29ffae3 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1086,12 +1086,14 @@ xfs_ioctl_setattr_dax_invalidate(
+ 	/*
+ 	 * It is only valid to set the DAX flag on regular files and
+ 	 * directories on filesystems where the block size is equal to the page
+-	 * size. On directories it serves as an inherit hint.
++	 * size. On directories it serves as an inherited hint so we don't
++	 * have to check the device for dax support or flush pagecache.
+ 	 */
+ 	if (fa->fsx_xflags & FS_XFLAG_DAX) {
+ 		if (!(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode)))
+ 			return -EINVAL;
+-		if (!bdev_dax_supported(xfs_find_bdev_for_inode(VFS_I(ip)),
++		if (S_ISREG(inode->i_mode) &&
++		    !bdev_dax_supported(xfs_find_bdev_for_inode(VFS_I(ip)),
+ 				sb->s_blocksize))
+ 			return -EINVAL;
+ 	}
+@@ -1102,6 +1104,9 @@ xfs_ioctl_setattr_dax_invalidate(
+ 	if (!(fa->fsx_xflags & FS_XFLAG_DAX) && !IS_DAX(inode))
+ 		return 0;
+ 
++	if (S_ISDIR(inode->i_mode))
++		return 0;
++
+ 	/* lock, flush and invalidate mapping in preparation for flag change */
+ 	xfs_ilock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
+ 	error = filemap_write_and_wait(inode->i_mapping);
