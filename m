@@ -1,127 +1,198 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot0-f194.google.com ([74.125.82.194]:38728 "EHLO
-        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751048AbeFAECy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Jun 2018 00:02:54 -0400
-Received: by mail-ot0-f194.google.com with SMTP id n3-v6so27808986ota.5
-        for <linux-xfs@vger.kernel.org>; Thu, 31 May 2018 21:02:54 -0700 (PDT)
+Received: from aserp2120.oracle.com ([141.146.126.78]:40332 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755753AbeEaRJ6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 13:09:58 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w4VH5xk1148192
+        for <linux-xfs@vger.kernel.org>; Thu, 31 May 2018 17:09:57 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp2120.oracle.com with ESMTP id 2j9ev8fxec-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 31 May 2018 17:09:57 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w4VH9uTx008118
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 31 May 2018 17:09:56 GMT
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w4VH9u4c031252
+        for <linux-xfs@vger.kernel.org>; Thu, 31 May 2018 17:09:56 GMT
+Subject: Re: [PATCH 4/4] xfs: fix xfs_rtalloc_rec units
+References: <152778442467.6891.15278589749191666547.stgit@magnolia>
+ <152778444915.6891.6242045520033580515.stgit@magnolia>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <5fe3d8c0-f993-f557-e58f-cfde349d8aba@oracle.com>
+Date: Thu, 31 May 2018 10:09:55 -0700
 MIME-Version: 1.0
-In-Reply-To: <20180601022418.GR10363@dastard>
-References: <20180529195106.14268-1-ross.zwisler@linux.intel.com>
- <20180529195106.14268-3-ross.zwisler@linux.intel.com> <20180529212510.GJ30110@magnolia>
- <20180529220114.GA13948@linux.intel.com> <20180531191332.GB7825@magnolia>
- <20180601012657.GQ10363@dastard> <CAPcyv4g6dv9sG9dR-iY+aEfSi2r3ey1dXGbX-nexKsN72t0QMw@mail.gmail.com>
- <20180601022418.GR10363@dastard>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 31 May 2018 21:02:52 -0700
-Message-ID: <CAPcyv4iXTsxmQgjoLs2E_8QrLHrFOV_58T7UYf0zPJuB2744qQ@mail.gmail.com>
-Subject: Re: [PATCH v2 2/7] dax: change bdev_dax_supported() to support
- boolean returns
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <152778444915.6891.6242045520033580515.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Mike Snitzer <snitzer@redhat.com>, linux-nvdimm <linux-nvdimm@lists.01.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, May 31, 2018 at 7:24 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Thu, May 31, 2018 at 06:57:33PM -0700, Dan Williams wrote:
->> On Thu, May 31, 2018 at 6:26 PM, Dave Chinner <david@fromorbit.com> wrote:
->> > On Thu, May 31, 2018 at 12:13:32PM -0700, Darrick J. Wong wrote:
->> >> On Tue, May 29, 2018 at 04:01:14PM -0600, Ross Zwisler wrote:
->> >> > On Tue, May 29, 2018 at 02:25:10PM -0700, Darrick J. Wong wrote:
->> >> > > On Tue, May 29, 2018 at 01:51:01PM -0600, Ross Zwisler wrote:
->> >> > > > From: Dave Jiang <dave.jiang@intel.com>
->> >> > > >
->> >> > > > The function return values are confusing with the way the function is
->> >> > > > named. We expect a true or false return value but it actually returns
->> >> > > > 0/-errno.  This makes the code very confusing. Changing the return values
->> >> > > > to return a bool where if DAX is supported then return true and no DAX
->> >> > > > support returns false.
->> >> > > >
->> >> > > > Signed-off-by: Dave Jiang <dave.jiang@intel.com>
->> >> > > > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
->> >> > >
->> >> > > Looks ok, do you want me to pull the first two patches through the xfs
->> >> > > tree?
->> >> > >
->> >> > > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
->> >> >
->> >> > Thanks for the review.
->> >> >
->> >> > I'm not sure what's best.  If you do that then Mike will need to have a DM
->> >> > branch for the rest of the series based on your stable commits, yea?
->> >> >
->> >> > Mike what would you prefer?
->> >>
->> >> I /was/ about to say that I would pull in the first two patches, but now
->> >> I can't get xfs to mount with pmem at all, and have no way of testing
->> >> this...?
->> >
->> > I have similar problems, too, but:
->> >
->> > $ ndctl list
->> > [
->> >   {
->> >     "dev":"namespace1.0",
->> >     "mode":"raw",
->> >     "size":8589934592,
->> >     "sector_size":512,
->> >     "blockdev":"pmem1"
->> >   },
->> >   {
->> >     "dev":"namespace0.0",
->> >     "mode":"raw",
->> >     "size":8589934592,
->> >     "sector_size":512,
->> >     "blockdev":"pmem0"
->> >   }
->> > ]
->> > $ sudo ndctl create-namespace -f -e namespace0.0 --mode=fsdax
->> >   Error: operation failed, region0 fsdax mode not available
->> >
->> > failed to reconfigure namespace: Invalid argument
->> > $
->> >
->> > I can't make head or tail of what is going wrong here - how am I
->> > supposed to debug this and get it working again?
->> >
->> > FWIW, XFS+DAX used to just work on this setup (I hadn't even
->> > installed ndctl until this morning!) but after changing the kernel
->> > it no longer works. That would make it a regression, yes?
->>
->> This commit caused the behavior change:
->>
->>     569d0365f571 dax: require 'struct page' by default for filesystem dax
->>
->> The justification is in that patch, but the short summary is we killed
->> off "pageless" dax because it had so many incomplete holes and
->> surprise behaviors. It needed to die on the path to making dax not
->> experimental, i.e. to close safety holes, and be feature complete for
->> all the ways userspace expects to use mappings (direct-io, fork,
->> poison handling, etc).
->>
->> I suspect your kernel does not have CONFIG_ZONE_DEVICE enabled which
->> has the following dependencies:
->>
->>         depends on MEMORY_HOTPLUG
->>         depends on MEMORY_HOTREMOVE
->>         depends on SPARSEMEM_VMEMMAP
->
-> Filesystem DAX now has a dependency on memory hotplug?
->
-> Fmeh. No wonder I never enabled CONFIG_ZONE_DEVICE. It's described in
-> menuconfig as "Device memory (pmem, HMM, etc...) hotplug support".
-> This isn't for hotplug support - it required for basic DAX
-> functionality. I've never enabled memory hotplug in any of my test
-> kernel configs, because the VMs I run the kernels on don't ever get
-> memory hotplugged....
->
-> OK, works now I've found the magic config incantantions to turn
-> everything I now need on.
->
-> Can we get this rationalised to a single top level config
-> option in the filesystems menu "Enable Filesystem DAX" that turns
-> on every knob that is required?
-
-That sounds good to me. Will do.
+On 05/31/2018 09:34 AM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> All the realtime allocation functions deal with space on the rtdev in
+> units of realtime extents.  However, struct xfs_rtalloc_rec confusingly
+> uses the word 'block' in the name, even though they're really extents.
+> 
+> Fix the naming problem and fix all the unit handling problems in the two
+> existing users.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>   fs/xfs/libxfs/xfs_rtbitmap.c |   26 +++++++++++++-------------
+>   fs/xfs/scrub/rtbitmap.c      |   12 ++++++++----
+>   fs/xfs/xfs_fsmap.c           |   13 +++++++------
+>   fs/xfs/xfs_rtalloc.h         |    9 +++++++--
+>   4 files changed, 35 insertions(+), 25 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
+> index 1855182c11ec..369eeb7a52ec 100644
+> --- a/fs/xfs/libxfs/xfs_rtbitmap.c
+> +++ b/fs/xfs/libxfs/xfs_rtbitmap.c
+> @@ -1036,17 +1036,17 @@ xfs_rtalloc_query_range(
+>   	int				is_free;
+>   	int				error = 0;
+>   
+> -	if (low_rec->ar_startblock > high_rec->ar_startblock)
+> +	if (low_rec->ar_startext > high_rec->ar_startext)
+>   		return -EINVAL;
+> -	if (low_rec->ar_startblock >= mp->m_sb.sb_rextents ||
+> -	    low_rec->ar_startblock == high_rec->ar_startblock)
+> +	if (low_rec->ar_startext >= mp->m_sb.sb_rextents ||
+> +	    low_rec->ar_startext == high_rec->ar_startext)
+>   		return 0;
+> -	if (high_rec->ar_startblock >= mp->m_sb.sb_rextents)
+> -		high_rec->ar_startblock = mp->m_sb.sb_rextents - 1;
+> +	if (high_rec->ar_startext >= mp->m_sb.sb_rextents)
+> +		high_rec->ar_startext = mp->m_sb.sb_rextents - 1;
+>   
+>   	/* Iterate the bitmap, looking for discrepancies. */
+> -	rtstart = low_rec->ar_startblock;
+> -	rem = high_rec->ar_startblock - rtstart;
+> +	rtstart = low_rec->ar_startext;
+> +	rem = high_rec->ar_startext - rtstart;
+>   	while (rem) {
+>   		/* Is the first block free? */
+>   		error = xfs_rtcheck_range(mp, tp, rtstart, 1, 1, &rtend,
+> @@ -1056,13 +1056,13 @@ xfs_rtalloc_query_range(
+>   
+>   		/* How long does the extent go for? */
+>   		error = xfs_rtfind_forw(mp, tp, rtstart,
+> -				high_rec->ar_startblock - 1, &rtend);
+> +				high_rec->ar_startext - 1, &rtend);
+>   		if (error)
+>   			break;
+>   
+>   		if (is_free) {
+> -			rec.ar_startblock = rtstart;
+> -			rec.ar_blockcount = rtend - rtstart + 1;
+> +			rec.ar_startext = rtstart;
+> +			rec.ar_extcount = rtend - rtstart + 1;
+>   
+>   			error = fn(tp, &rec, priv);
+>   			if (error)
+> @@ -1085,9 +1085,9 @@ xfs_rtalloc_query_all(
+>   {
+>   	struct xfs_rtalloc_rec		keys[2];
+>   
+> -	keys[0].ar_startblock = 0;
+> -	keys[1].ar_startblock = tp->t_mountp->m_sb.sb_rextents - 1;
+> -	keys[0].ar_blockcount = keys[1].ar_blockcount = 0;
+> +	keys[0].ar_startext = 0;
+> +	keys[1].ar_startext = tp->t_mountp->m_sb.sb_rextents - 1;
+> +	keys[0].ar_extcount = keys[1].ar_extcount = 0;
+>   
+>   	return xfs_rtalloc_query_range(tp, &keys[0], &keys[1], fn, priv);
+>   }
+> diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
+> index 0fa3ef5c83b8..177d77878b0d 100644
+> --- a/fs/xfs/scrub/rtbitmap.c
+> +++ b/fs/xfs/scrub/rtbitmap.c
+> @@ -66,11 +66,15 @@ xfs_scrub_rtbitmap_rec(
+>   	void				*priv)
+>   {
+>   	struct xfs_scrub_context	*sc = priv;
+> +	xfs_rtblock_t			startblock;
+> +	xfs_rtblock_t			blockcount;
+>   
+> -	if (rec->ar_startblock + rec->ar_blockcount <= rec->ar_startblock ||
+> -	    !xfs_verify_rtbno(sc->mp, rec->ar_startblock) ||
+> -	    !xfs_verify_rtbno(sc->mp, rec->ar_startblock +
+> -			rec->ar_blockcount - 1))
+> +	startblock = rec->ar_startext * tp->t_mountp->m_sb.sb_rextsize;
+> +	blockcount = rec->ar_extcount * tp->t_mountp->m_sb.sb_rextsize;
+> +
+> +	if (startblock + blockcount <= startblock ||
+> +	    !xfs_verify_rtbno(sc->mp, startblock) ||
+> +	    !xfs_verify_rtbno(sc->mp, startblock + blockcount - 1))
+>   		xfs_scrub_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
+>   	return 0;
+>   }
+> diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+> index 43cfc07996a4..92ce0e94085a 100644
+> --- a/fs/xfs/xfs_fsmap.c
+> +++ b/fs/xfs/xfs_fsmap.c
+> @@ -465,10 +465,9 @@ xfs_getfsmap_rtdev_rtbitmap_helper(
+>   	struct xfs_rmap_irec		irec;
+>   	xfs_daddr_t			rec_daddr;
+>   
+> -	rec_daddr = XFS_FSB_TO_BB(mp, rec->ar_startblock);
+> -
+> -	irec.rm_startblock = rec->ar_startblock;
+> -	irec.rm_blockcount = rec->ar_blockcount;
+> +	irec.rm_startblock = rec->ar_startext * mp->m_sb.sb_rextsize;
+> +	rec_daddr = XFS_FSB_TO_BB(mp, irec.rm_startblock);
+> +	irec.rm_blockcount = rec->ar_extcount * mp->m_sb.sb_rextsize;
+>   	irec.rm_owner = XFS_RMAP_OWN_NULL;	/* "free" */
+>   	irec.rm_offset = 0;
+>   	irec.rm_flags = 0;
+> @@ -534,8 +533,10 @@ xfs_getfsmap_rtdev_rtbitmap_query(
+>   
+>   	xfs_ilock(tp->t_mountp->m_rbmip, XFS_ILOCK_SHARED);
+>   
+> -	alow.ar_startblock = info->low.rm_startblock;
+> -	ahigh.ar_startblock = info->high.rm_startblock;
+> +	alow.ar_startext = info->low.rm_startblock;
+> +	ahigh.ar_startext = info->high.rm_startblock;
+> +	do_div(alow.ar_startext, tp->t_mountp->m_sb.sb_rextsize);
+> +	do_div(ahigh.ar_startext, tp->t_mountp->m_sb.sb_rextsize);
+>   	error = xfs_rtalloc_query_range(tp, &alow, &ahigh,
+>   			xfs_getfsmap_rtdev_rtbitmap_helper, info);
+>   	if (error)
+> diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
+> index dfee3c991155..52632ab727f7 100644
+> --- a/fs/xfs/xfs_rtalloc.h
+> +++ b/fs/xfs/xfs_rtalloc.h
+> @@ -23,9 +23,14 @@
+>   struct xfs_mount;
+>   struct xfs_trans;
+>   
+> +/*
+> + * XXX: Most of the realtime allocation functions deal in units of realtime
+> + * extents, not realtime blocks.  This looks funny when paired with the type
+> + * name and screams for a larger cleanup.
+> + */
+>   struct xfs_rtalloc_rec {
+> -	xfs_rtblock_t		ar_startblock;
+> -	xfs_rtblock_t		ar_blockcount;
+> +	xfs_rtblock_t		ar_startext;
+> +	xfs_rtblock_t		ar_extcount;
+>   };
+>   
+>   typedef int (*xfs_rtalloc_query_range_fn)(
+> 
+Ok, I think that looks better than it was.  Thx!
+Reviewed by: Allison Henderson <allison.henderson@oracle.com>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwICaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=qCtkjUk7DtakiO_0mbtpZoMENgwkzaIEiA4aAX5QCmM&s=YXBJILtyvqDQuErf-gZPvJ461gczA0x4C47nvpL4Su0&e=
+> 
