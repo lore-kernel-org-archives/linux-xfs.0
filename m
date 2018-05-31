@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:50048 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:50368 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755957AbeEaSGi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:06:38 -0400
+        with ESMTP id S1755982AbeEaSGp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:06:45 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 05/13] iomap: inline data should be an iomap type, not a flag
-Date: Thu, 31 May 2018 20:06:06 +0200
-Message-Id: <20180531180614.21506-6-hch@lst.de>
+Subject: [PATCH 08/13] iomap: use __bio_add_page in iomap_dio_zero
+Date: Thu, 31 May 2018 20:06:09 +0200
+Message-Id: <20180531180614.21506-9-hch@lst.de>
 In-Reply-To: <20180531180614.21506-1-hch@lst.de>
 References: <20180531180614.21506-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,120 +15,30 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-Inline data is fundamentally different from our normal mapped case in that
-it doesn't even have a block address.  So instead of having a flag for it
-it should be an entirely separate iomap range type.
+We don't need any merging logic, and this also replaces a BUG_ON with a
+WARN_ON_ONCE inside __bio_add_page for the impossible overflow condition.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/ext4/inline.c      |  4 ++--
- fs/gfs2/bmap.c        |  3 +--
- fs/iomap.c            | 21 ++++++++++++---------
- include/linux/iomap.h |  2 +-
- 4 files changed, 16 insertions(+), 14 deletions(-)
+ fs/iomap.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/fs/ext4/inline.c b/fs/ext4/inline.c
-index 70cf4c7b268a..e1f00891ef95 100644
---- a/fs/ext4/inline.c
-+++ b/fs/ext4/inline.c
-@@ -1835,8 +1835,8 @@ int ext4_inline_data_iomap(struct inode *inode, struct iomap *iomap)
- 	iomap->offset = 0;
- 	iomap->length = min_t(loff_t, ext4_get_inline_size(inode),
- 			      i_size_read(inode));
--	iomap->type = 0;
--	iomap->flags = IOMAP_F_DATA_INLINE;
-+	iomap->type = IOMAP_INLINE;
-+	iomap->flags = 0;
- 
- out:
- 	up_read(&EXT4_I(inode)->xattr_sem);
-diff --git a/fs/gfs2/bmap.c b/fs/gfs2/bmap.c
-index 278ed0869c3c..cbeedd3cfb36 100644
---- a/fs/gfs2/bmap.c
-+++ b/fs/gfs2/bmap.c
-@@ -680,8 +680,7 @@ static void gfs2_stuffed_iomap(struct inode *inode, struct iomap *iomap)
- 		      sizeof(struct gfs2_dinode);
- 	iomap->offset = 0;
- 	iomap->length = i_size_read(inode);
--	iomap->type = IOMAP_MAPPED;
--	iomap->flags = IOMAP_F_DATA_INLINE;
-+	iomap->type = IOMAP_INLINE;
- }
- 
- /**
 diff --git a/fs/iomap.c b/fs/iomap.c
-index f2456d0d8ddd..df2652b0d85d 100644
+index df2652b0d85d..85901b449146 100644
 --- a/fs/iomap.c
 +++ b/fs/iomap.c
-@@ -502,10 +502,13 @@ static int iomap_to_fiemap(struct fiemap_extent_info *fi,
- 	case IOMAP_DELALLOC:
- 		flags |= FIEMAP_EXTENT_DELALLOC | FIEMAP_EXTENT_UNKNOWN;
- 		break;
-+	case IOMAP_MAPPED:
-+		break;
- 	case IOMAP_UNWRITTEN:
- 		flags |= FIEMAP_EXTENT_UNWRITTEN;
- 		break;
--	case IOMAP_MAPPED:
-+	case IOMAP_INLINE:
-+		flags |= FIEMAP_EXTENT_DATA_INLINE;
- 		break;
- 	}
+@@ -845,8 +845,7 @@ iomap_dio_zero(struct iomap_dio *dio, struct iomap *iomap, loff_t pos,
+ 	bio->bi_end_io = iomap_dio_bio_end_io;
  
-@@ -513,8 +516,6 @@ static int iomap_to_fiemap(struct fiemap_extent_info *fi,
- 		flags |= FIEMAP_EXTENT_MERGED;
- 	if (iomap->flags & IOMAP_F_SHARED)
- 		flags |= FIEMAP_EXTENT_SHARED;
--	if (iomap->flags & IOMAP_F_DATA_INLINE)
--		flags |= FIEMAP_EXTENT_DATA_INLINE;
+ 	get_page(page);
+-	if (bio_add_page(bio, page, len, 0) != len)
+-		BUG();
++	__bio_add_page(bio, page, len, 0);
+ 	bio_set_op_attrs(bio, REQ_OP_WRITE, REQ_SYNC | REQ_IDLE);
  
- 	return fiemap_fill_next_extent(fi, iomap->offset,
- 			iomap->addr != IOMAP_NULL_ADDR ? iomap->addr : 0,
-@@ -1214,14 +1215,16 @@ static loff_t iomap_swapfile_activate_actor(struct inode *inode, loff_t pos,
- 	struct iomap_swapfile_info *isi = data;
- 	int error;
- 
--	/* No inline data. */
--	if (iomap->flags & IOMAP_F_DATA_INLINE) {
-+	switch (iomap->type) {
-+	case IOMAP_MAPPED:
-+	case IOMAP_UNWRITTEN:
-+		/* Only real or unwritten extents. */
-+		break;
-+	case IOMAP_INLINE:
-+		/* No inline data. */
- 		pr_err("swapon: file is inline\n");
- 		return -EINVAL;
--	}
--
--	/* Only real or unwritten extents. */
--	if (iomap->type != IOMAP_MAPPED && iomap->type != IOMAP_UNWRITTEN) {
-+	default:
- 		pr_err("swapon: file has unallocated extents\n");
- 		return -EINVAL;
- 	}
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 4bd87294219a..8f7095fc514e 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -18,6 +18,7 @@ struct vm_fault;
- #define IOMAP_DELALLOC	0x02	/* delayed allocation blocks */
- #define IOMAP_MAPPED	0x03	/* blocks allocated at @addr */
- #define IOMAP_UNWRITTEN	0x04	/* blocks allocated at @addr in unwritten state */
-+#define IOMAP_INLINE	0x05	/* data inline in the inode */
- 
- /*
-  * Flags for all iomap mappings:
-@@ -34,7 +35,6 @@ struct vm_fault;
-  */
- #define IOMAP_F_MERGED		0x10	/* contains multiple blocks/extents */
- #define IOMAP_F_SHARED		0x20	/* block shared with another file */
--#define IOMAP_F_DATA_INLINE	0x40	/* data inline in the inode */
- 
- /*
-  * Magic value for addr:
+ 	atomic_inc(&dio->ref);
 -- 
 2.17.0
 
