@@ -1,70 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:51232 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:49406 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752451AbeERQty (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 May 2018 12:49:54 -0400
+        with ESMTP id S1755912AbeEaSG2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:06:28 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 26/34] xfs: simplify xfs_map_blocks by using xfs_iext_lookup_extent directly
-Date: Fri, 18 May 2018 18:48:22 +0200
-Message-Id: <20180518164830.1552-27-hch@lst.de>
-In-Reply-To: <20180518164830.1552-1-hch@lst.de>
-References: <20180518164830.1552-1-hch@lst.de>
+Subject: [PATCH 02/13] mm: give the 'ret' variable a better name __do_page_cache_readahead
+Date: Thu, 31 May 2018 20:06:03 +0200
+Message-Id: <20180531180614.21506-3-hch@lst.de>
+In-Reply-To: <20180531180614.21506-1-hch@lst.de>
+References: <20180531180614.21506-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-xfs_bmapi_read adds zero value in xfs_map_blocks.  Replace it with a
-direct call to the low-level extent lookup function.
+It counts the number of pages acted on, so name it nr_pages to make that
+obvious.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_aops.c | 19 +++++--------------
- 1 file changed, 5 insertions(+), 14 deletions(-)
+ mm/readahead.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 354d26d66c12..b1dee2171194 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -387,7 +387,6 @@ xfs_map_blocks(
- 	int			whichfork = XFS_DATA_FORK;
- 	struct xfs_iext_cursor	icur;
- 	int			error = 0;
--	int			nimaps = 1;
- 	bool			cow_valid = false;
+diff --git a/mm/readahead.c b/mm/readahead.c
+index 539bbb6c1fad..16d0cb1e2616 100644
+--- a/mm/readahead.c
++++ b/mm/readahead.c
+@@ -156,7 +156,7 @@ int __do_page_cache_readahead(struct address_space *mapping, struct file *filp,
+ 	unsigned long end_index;	/* The last page we want to read */
+ 	LIST_HEAD(page_pool);
+ 	int page_idx;
+-	int ret = 0;
++	int nr_pages = 0;
+ 	loff_t isize = i_size_read(inode);
+ 	gfp_t gfp_mask = readahead_gfp_mask(mapping);
  
- 	if (XFS_FORCED_SHUTDOWN(mp))
-@@ -432,24 +431,16 @@ xfs_map_blocks(
- 		goto done;
+@@ -187,7 +187,7 @@ int __do_page_cache_readahead(struct address_space *mapping, struct file *filp,
+ 		list_add(&page->lru, &page_pool);
+ 		if (page_idx == nr_to_read - lookahead_size)
+ 			SetPageReadahead(page);
+-		ret++;
++		nr_pages++;
  	}
  
--	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
--				imap, &nimaps, XFS_BMAPI_ENTIRE);
-+	if (!xfs_iext_lookup_extent(ip, &ip->i_df, offset_fsb, &icur, imap))
-+		imap->br_startoff = end_fsb;	/* fake a hole past EOF */
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
--	if (error)
--		return error;
+ 	/*
+@@ -195,11 +195,11 @@ int __do_page_cache_readahead(struct address_space *mapping, struct file *filp,
+ 	 * uptodate then the caller will launch readpage again, and
+ 	 * will then handle the error.
+ 	 */
+-	if (ret)
+-		read_pages(mapping, filp, &page_pool, ret, gfp_mask);
++	if (nr_pages)
++		read_pages(mapping, filp, &page_pool, nr_pages, gfp_mask);
+ 	BUG_ON(!list_empty(&page_pool));
+ out:
+-	return ret;
++	return nr_pages;
+ }
  
--	if (!nimaps) {
--		/*
--		 * Lookup returns no match? Beyond eof? regardless,
--		 * return it as a hole so we don't write it
--		 */
-+	if (imap->br_startoff > offset_fsb) {
-+		/* landed in a hole or beyond EOF */
-+		imap->br_blockcount = imap->br_startoff - offset_fsb;
- 		imap->br_startoff = offset_fsb;
--		imap->br_blockcount = end_fsb - offset_fsb;
- 		imap->br_startblock = HOLESTARTBLOCK;
- 		*type = XFS_IO_HOLE;
--	} else if (imap->br_startblock == HOLESTARTBLOCK) {
--		/* landed in a hole */
--		*type = XFS_IO_HOLE;
- 	} else if (isnullstartblock(imap->br_startblock)) {
- 		/* got a delalloc extent */
- 		*type = XFS_IO_DELALLOC;
+ /*
 -- 
 2.17.0
 
