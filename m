@@ -1,83 +1,144 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:7359 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S966529AbeE2TvM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 29 May 2018 15:51:12 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v2 0/7] Fix DM DAX handling
-Date: Tue, 29 May 2018 13:50:59 -0600
-Message-Id: <20180529195106.14268-1-ross.zwisler@linux.intel.com>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:24660 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750714AbeEaXFz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 19:05:55 -0400
+Date: Fri, 1 Jun 2018 09:05:50 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Question about Experimental of Filesystem DAX.
+Message-ID: <20180531230550.GN10363@dastard>
+References: <20180531112731.0CAC.E1E9C6FF@jp.fujitsu.com>
+ <20180531150716.GA19764@linux.intel.com>
+ <CAPcyv4jpffaM60tTdLTojhh0CDwcbVUdS8td7R6LKWM3bb15dw@mail.gmail.com>
+ <20180531174636.GA7825@magnolia>
+ <CAPcyv4gS1GCN9TFjngTmmHu83-uMgRpvvx842ZGnvxB3PbgU+Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4gS1GCN9TFjngTmmHu83-uMgRpvvx842ZGnvxB3PbgU+Q@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Toshi Kani <toshi.kani@hpe.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Yasunori Goto <y-goto@jp.fujitsu.com>, Jan Kara <jack@suse.cz>, linux-xfs <linux-xfs@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, NVDIMM-ML <linux-nvdimm@lists.01.org>
 
-Changes from v1:
- * Reworked patches 1 and 2 so that the __bdev_dax_supported() function
-   stays hidden behind the bdev_dax_supported() wrapper.  This is needed
-   to prevent compilation errors in configs where CONFIG_FS_DAX isn't
-   defined. (0-day)
+On Thu, May 31, 2018 at 11:26:43AM -0700, Dan Williams wrote:
+> On Thu, May 31, 2018 at 10:46 AM, Darrick J. Wong
+> <darrick.wong@oracle.com> wrote:
+> > On Thu, May 31, 2018 at 09:29:15AM -0700, Dan Williams wrote:
+> >> On Thu, May 31, 2018 at 8:07 AM, Ross Zwisler
+> >> <ross.zwisler@linux.intel.com> wrote:
+> >> > On Thu, May 31, 2018 at 11:27:33AM +0900, Yasunori Goto wrote:
+> >> >> Hello,
+> >> >>
+> >> >>
+> >> >> I would like to know about the Experimental message of Filesystem DAX.
+> >> >> --------------------------------------------------------
+> >> >> DAX enabled. Warning: EXPERIMENTAL, use at your own risk
+> >> >> --------------------------------------------------------
+> >> >>
+> >> >> AFAIK, the final issue of Filesystem DAX is metadata update problem,
+> >> >> and it is(will be?) solved by great effort of MAP_SYNC and
+> >> >> "fix dma vs truncate/hole-punch" patch set.
+> >> >> So, I suppose that the Experimental message can be removed,
+> >> >> but I'm not sure.
+> >> >>
+> >> >> Is it possible?
+> >> >> Otherwise, are there any other issues in Filesystem DAX yet?
+> >> >>
+> >> >> If this is silly question, sorry for noise....
+> >> >>
+> >> >> Thanks,
+> >> >> ---
+> >> >> Yasunori Goto
+> >> >
+> >> > Adding in the XFS and ext4 developers, as it's really their call when to
+> >> > remove this notice.
+> >> >
+> >> > We've talked about this off and on for a long while, but IMHO we should remove
+> >> > the EXPERIMENTAL warning.  The last few things that we had on our TODO list
+> >> > before this was removed were:
+> >> >
+> >> > 1) Get consistent handling of the DAX mount option.  We currently have this,
+> >> > as both filesystems will behave the same and fall back and remove the DAX
+> >> > mount option if it is unsupported by the block device, etc.
+> >
+> > <nod>
+> >
+> > As an aside, I wonder if Christoph's musings about "just have the kernel
+> > determine the appropriate dax/non-dax setting from the acpi tables and
+> > skip the inode flag entirely" ever got resolved?
+> >
+> >> > 2) Get consistent handling of the DAX inode option.  We currently have this,
+> >> > as all DAX behavior now happens through the mount option.  If/when we
+> >> > re-enable the per-inode DAX flag we should do it consistently for all DAX
+> >> > enabled filesystems.
+> >
+> > The behavior of the inode flag isn't all that consistent.  ext4 doesn't
+> > support it at all.  On XFS, you can set or clear FS_XFLAG_DAX on a
+> > directory which will propagate the setting to any files created in that
+> > directory.
+> >
+> > However, if you set or clear it on a file we update the on-disk inode
+> > but we can't change the in-core state flag (S_DAX) until the next
+> > in-core inode instantiation.  It's weird that users can change the flag
+> > but the intended behavior changes won't happen until some ... time ...
+> > in the future??
+> >
+> >> > 3) Make DAX work with other XFS features like reflink, etc.  This one isn't
+> >> > done, but we at least disallow DAX with XFS features like reflink where it
+> >> > could be an issue.  Darrick, do you still feel like we need to get these
+> >> > working together to remove EXPERIMENTAL, or are you happy enough that we're
+> >> > keeping them separated and that we're keeping user data safe?
+> >
+> > Yes, reflink and dax still need to work together.  I've not heard any
+> > good arguments for why page sharing + copy on write are fundamentally
+> > incompatible with the dax model, or why dax users will never, ever
+> > require reflink.
+> 
+> Right, but that's separate from DAX being scream in your face
+> "EXPERIMENTAL!". It's just an additional feature that can be added on
+> once all the normal expectations of a userspace mapping work. I think
+> reliable rmap is the last of those requirements.
+> 
+> > The recent thread between Jan and Dan make me wonder if making mappings
+> > share struct pages is going to be a nightmare to add to the mm code,
+> > though...
+> 
+> It's going to be a bit messy because a singular page->mapping
+> association is fundamentally incompatible with DAX. Perhaps a linked
+> list of mapping "siblings"?
 
- * Added Eric's Reviewed-by to patch 1.  I did this in spite of the
-   bdev_dax_supported() changes because they were minor and I think
-   Eric's review was focused on the XFS parts.
+I'd much prefer the filesystem allocate/control the struct page that
+is inserted into mapping trees so we can have multiple struct pages
+pointing at the one physical page.  That way we can just insert
+these dynamic struct pages into the relevant mappings and it works
+the same way for both DAX and shared page cache pages.
 
----
+i.e. the filesystem knows they are shared physical blocks, the
+filesystem controls COW of physical blocks, the filesystem controls
+truncate/invalidation of physical blocks, the filesystem controls
+cache state of the physical blocks. So why are we designing
+infrastructure around the virtual memory and caching infrastructure
+that bypasses the layer that manages and arbitrates access to the
+physical storage?
 
-This series fixes a few issues that I found with DM's handling of DAX
-devices.  Here are some of the issues I found:
+This seems like we're well down the path of a architectural layering
+violation that is backing us into a corner we're not going to be
+able to get ourselves out of...
 
- * We can create a dm-stripe or dm-linear device which is made up of an
-   fsdax PMEM namespace and a raw PMEM namespace but which can hold a
-   filesystem mounted with the -o dax mount option.  DAX operations to
-   the raw PMEM namespace part lack struct page and can fail in
-   interesting/unexpected ways when doing things like fork(), examining
-   memory with gdb, etc.
+> > Also: ideally XFS would also be able to consume poison event
+> > notifications from the pmem so that it can try to deal with metadata
+> > loss, but that's probably a separate effort.
 
- * We can create a dm-stripe or dm-linear device which is made up of an
-   fsdax PMEM namespace and a BRD ramdisk which can hold a filesystem
-   mounted with the -o dax mount option.  All I/O to this filesystem
-   will fail.
+If the design is such that the layer that manages the physical
+storage isn't going to be told about physical storage failures
+before anyone else is informed, it would seem to me like we really
+have introduced a major architectural flaw in DAX....
 
- * In DM you can't transition a dm target which could possibly support
-   DAX (mode DM_TYPE_DAX_BIO_BASED) to one which can't support DAX
-   (mode DM_TYPE_BIO_BASED), even if you never use DAX.
+Cheers,
 
-The first 2 patches in this series are prep work from Darrick and Dave
-which improve bdev_dax_supported().  The last 5 problems fix the above
-mentioned problems in DM.  I feel that this series simplifies the
-handling of DAX devices in DM, and the last 5 DM-related patches have a
-net code reduction of 50 lines.
-
-Darrick J. Wong (1):
-  fs: allow per-device dax status checking for filesystems
-
-Dave Jiang (1):
-  dax: change bdev_dax_supported() to support boolean returns
-
-Ross Zwisler (5):
-  dm: fix test for DAX device support
-  dm: prevent DAX mounts if not supported
-  dm: remove DM_TYPE_DAX_BIO_BASED dm_queue_mode
-  dm-snap: remove unnecessary direct_access() stub
-  dm-error: remove unnecessary direct_access() stub
-
- drivers/dax/super.c           | 40 ++++++++++++++++++++--------------------
- drivers/md/dm-ioctl.c         | 16 ++++++----------
- drivers/md/dm-snap.c          |  8 --------
- drivers/md/dm-table.c         | 29 +++++++++++------------------
- drivers/md/dm-target.c        |  7 -------
- drivers/md/dm.c               |  7 ++-----
- fs/ext2/super.c               |  3 +--
- fs/ext4/super.c               |  3 +--
- fs/xfs/xfs_ioctl.c            |  3 ++-
- fs/xfs/xfs_iops.c             | 30 +++++++++++++++++++++++++-----
- fs/xfs/xfs_super.c            | 10 ++++++++--
- include/linux/dax.h           | 11 ++++++-----
- include/linux/device-mapper.h |  8 ++++++--
- 13 files changed, 88 insertions(+), 87 deletions(-)
-
+Dave.
 -- 
-2.14.3
-
+Dave Chinner
+david@fromorbit.com
