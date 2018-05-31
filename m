@@ -1,165 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:51572 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932782AbeEaSJM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:09:12 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 21/21] xfs: allow writeback on pages without buffer heads
-Date: Thu, 31 May 2018 20:07:59 +0200
-Message-Id: <20180531180759.21631-22-hch@lst.de>
-In-Reply-To: <20180531180759.21631-1-hch@lst.de>
-References: <20180531180759.21631-1-hch@lst.de>
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:42486 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755869AbeEaS0p (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:26:45 -0400
+Received: by mail-oi0-f65.google.com with SMTP id k190-v6so2795061oib.9
+        for <linux-xfs@vger.kernel.org>; Thu, 31 May 2018 11:26:44 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20180531174636.GA7825@magnolia>
+References: <20180531112731.0CAC.E1E9C6FF@jp.fujitsu.com> <20180531150716.GA19764@linux.intel.com>
+ <CAPcyv4jpffaM60tTdLTojhh0CDwcbVUdS8td7R6LKWM3bb15dw@mail.gmail.com> <20180531174636.GA7825@magnolia>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 31 May 2018 11:26:43 -0700
+Message-ID: <CAPcyv4gS1GCN9TFjngTmmHu83-uMgRpvvx842ZGnvxB3PbgU+Q@mail.gmail.com>
+Subject: Re: Question about Experimental of Filesystem DAX.
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Yasunori Goto <y-goto@jp.fujitsu.com>, Jan Kara <jack@suse.cz>, linux-xfs <linux-xfs@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, NVDIMM-ML <linux-nvdimm@lists.01.org>
 
-Disable the IOMAP_F_BUFFER_HEAD flag on file systems with a block size
-equal to the page size, and deal with pages without buffer heads in
-writeback.  Thanks to the previous refactoring this is basically trivial
-now.
+On Thu, May 31, 2018 at 10:46 AM, Darrick J. Wong
+<darrick.wong@oracle.com> wrote:
+> On Thu, May 31, 2018 at 09:29:15AM -0700, Dan Williams wrote:
+>> On Thu, May 31, 2018 at 8:07 AM, Ross Zwisler
+>> <ross.zwisler@linux.intel.com> wrote:
+>> > On Thu, May 31, 2018 at 11:27:33AM +0900, Yasunori Goto wrote:
+>> >> Hello,
+>> >>
+>> >>
+>> >> I would like to know about the Experimental message of Filesystem DAX.
+>> >> --------------------------------------------------------
+>> >> DAX enabled. Warning: EXPERIMENTAL, use at your own risk
+>> >> --------------------------------------------------------
+>> >>
+>> >> AFAIK, the final issue of Filesystem DAX is metadata update problem,
+>> >> and it is(will be?) solved by great effort of MAP_SYNC and
+>> >> "fix dma vs truncate/hole-punch" patch set.
+>> >> So, I suppose that the Experimental message can be removed,
+>> >> but I'm not sure.
+>> >>
+>> >> Is it possible?
+>> >> Otherwise, are there any other issues in Filesystem DAX yet?
+>> >>
+>> >> If this is silly question, sorry for noise....
+>> >>
+>> >> Thanks,
+>> >> ---
+>> >> Yasunori Goto
+>> >
+>> > Adding in the XFS and ext4 developers, as it's really their call when to
+>> > remove this notice.
+>> >
+>> > We've talked about this off and on for a long while, but IMHO we should remove
+>> > the EXPERIMENTAL warning.  The last few things that we had on our TODO list
+>> > before this was removed were:
+>> >
+>> > 1) Get consistent handling of the DAX mount option.  We currently have this,
+>> > as both filesystems will behave the same and fall back and remove the DAX
+>> > mount option if it is unsupported by the block device, etc.
+>
+> <nod>
+>
+> As an aside, I wonder if Christoph's musings about "just have the kernel
+> determine the appropriate dax/non-dax setting from the acpi tables and
+> skip the inode flag entirely" ever got resolved?
+>
+>> > 2) Get consistent handling of the DAX inode option.  We currently have this,
+>> > as all DAX behavior now happens through the mount option.  If/when we
+>> > re-enable the per-inode DAX flag we should do it consistently for all DAX
+>> > enabled filesystems.
+>
+> The behavior of the inode flag isn't all that consistent.  ext4 doesn't
+> support it at all.  On XFS, you can set or clear FS_XFLAG_DAX on a
+> directory which will propagate the setting to any files created in that
+> directory.
+>
+> However, if you set or clear it on a file we update the on-disk inode
+> but we can't change the in-core state flag (S_DAX) until the next
+> in-core inode instantiation.  It's weird that users can change the flag
+> but the intended behavior changes won't happen until some ... time ...
+> in the future??
+>
+>> > 3) Make DAX work with other XFS features like reflink, etc.  This one isn't
+>> > done, but we at least disallow DAX with XFS features like reflink where it
+>> > could be an issue.  Darrick, do you still feel like we need to get these
+>> > working together to remove EXPERIMENTAL, or are you happy enough that we're
+>> > keeping them separated and that we're keeping user data safe?
+>
+> Yes, reflink and dax still need to work together.  I've not heard any
+> good arguments for why page sharing + copy on write are fundamentally
+> incompatible with the dax model, or why dax users will never, ever
+> require reflink.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_aops.c  | 50 +++++++++++++++++++++++++++++++++-------------
- fs/xfs/xfs_iomap.c |  3 ++-
- 2 files changed, 38 insertions(+), 15 deletions(-)
+Right, but that's separate from DAX being scream in your face
+"EXPERIMENTAL!". It's just an additional feature that can be added on
+once all the normal expectations of a userspace mapping work. I think
+reliable rmap is the last of those requirements.
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 1988835390ab..ff100706ae28 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -91,6 +91,19 @@ xfs_find_daxdev_for_inode(
- 		return mp->m_ddev_targp->bt_daxdev;
- }
- 
-+static void
-+xfs_finish_page_writeback(
-+	struct inode		*inode,
-+	struct bio_vec		*bvec,
-+	int			error)
-+{
-+	if (error) {
-+		SetPageError(bvec->bv_page);
-+		mapping_set_error(inode->i_mapping, -EIO);
-+	}
-+	end_page_writeback(bvec->bv_page);
-+}
-+
- /*
-  * We're now finished for good with this page.  Update the page state via the
-  * associated buffer_heads, paying attention to the start and end offsets that
-@@ -103,7 +116,7 @@ xfs_find_daxdev_for_inode(
-  * and buffers potentially freed after every call to end_buffer_async_write.
-  */
- static void
--xfs_finish_page_writeback(
-+xfs_finish_buffer_writeback(
- 	struct inode		*inode,
- 	struct bio_vec		*bvec,
- 	int			error)
-@@ -178,9 +191,12 @@ xfs_destroy_ioend(
- 			next = bio->bi_private;
- 
- 		/* walk each page on bio, ending page IO on them */
--		bio_for_each_segment_all(bvec, bio, i)
--			xfs_finish_page_writeback(inode, bvec, error);
--
-+		bio_for_each_segment_all(bvec, bio, i) {
-+			if (page_has_buffers(bvec->bv_page))
-+				xfs_finish_buffer_writeback(inode, bvec, error);
-+			else
-+				xfs_finish_page_writeback(inode, bvec, error);
-+		}
- 		bio_put(bio);
- 	}
- 
-@@ -786,13 +802,16 @@ xfs_writepage_map(
- {
- 	LIST_HEAD(submit_list);
- 	struct xfs_ioend	*ioend, *next;
--	struct buffer_head	*bh;
-+	struct buffer_head	*bh = NULL;
- 	ssize_t			len = i_blocksize(inode);
- 	uint64_t		file_offset;	/* file offset of page */
- 	unsigned		poffset;	/* offset into page */
- 	int			error = 0;
- 	int			count = 0;
- 
-+	if (page_has_buffers(page))
-+		bh = page_buffers(page);
-+
- 	/*
- 	 * Walk the blocks on the page, and we we run off then end of the
- 	 * current map or find the current map invalid, grab a new one.
-@@ -801,18 +820,17 @@ xfs_writepage_map(
- 	 * replace the bufferhead with some other state tracking mechanism in
- 	 * future.
- 	 */
--	file_offset = page_offset(page);
--	bh = page_buffers(page);
--	for (poffset = 0;
-+	for (poffset = 0, file_offset = page_offset(page);
- 	     poffset < PAGE_SIZE;
--	     poffset += len, file_offset += len, bh = bh->b_this_page) {
-+	     poffset += len, file_offset += len) {
- 		/* past the range we are writing, so nothing more to write. */
- 		if (file_offset >= end_offset)
- 			break;
- 
--		if (!buffer_uptodate(bh)) {
-+		if (bh && !buffer_uptodate(bh)) {
- 			if (PageUptodate(page))
- 				ASSERT(buffer_mapped(bh));
-+			bh = bh->b_this_page;
- 			continue;
- 		}
- 
-@@ -820,10 +838,16 @@ xfs_writepage_map(
- 		if (error)
- 			goto out;
- 
--		if (wpc->io_type == XFS_IO_HOLE)
-+		if (wpc->io_type == XFS_IO_HOLE) {
-+			if (bh)
-+				bh = bh->b_this_page;
- 			continue;
-+		}
- 
--		xfs_map_at_offset(inode, bh, &wpc->imap, file_offset);
-+		if (bh) {
-+			xfs_map_at_offset(inode, bh, &wpc->imap, file_offset);
-+			bh = bh->b_this_page;
-+		}
- 		xfs_add_to_ioend(inode, file_offset, page, wpc, wbc,
- 				&submit_list);
- 		count++;
-@@ -923,8 +947,6 @@ xfs_do_writepage(
- 
- 	trace_xfs_writepage(inode, page, 0, 0);
- 
--	ASSERT(page_has_buffers(page));
--
- 	/*
- 	 * Refuse to write the page out if we are called from reclaim context.
- 	 *
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index f949f0dd7382..93c40da3378a 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1031,7 +1031,8 @@ xfs_file_iomap_begin(
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
- 
--	iomap->flags |= IOMAP_F_BUFFER_HEAD;
-+	if (i_blocksize(inode) < PAGE_SIZE)
-+		iomap->flags |= IOMAP_F_BUFFER_HEAD;
- 
- 	if (((flags & (IOMAP_WRITE | IOMAP_DIRECT)) == IOMAP_WRITE) &&
- 			!IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
--- 
-2.17.0
+> The recent thread between Jan and Dan make me wonder if making mappings
+> share struct pages is going to be a nightmare to add to the mm code,
+> though...
 
+It's going to be a bit messy because a singular page->mapping
+association is fundamentally incompatible with DAX. Perhaps a linked
+list of mapping "siblings"?
+
+> Also: ideally XFS would also be able to consume poison event
+> notifications from the pmem so that it can try to deal with metadata
+> loss, but that's probably a separate effort.
+
+Right, not a gating item for declaring DAX ready for prime time.
