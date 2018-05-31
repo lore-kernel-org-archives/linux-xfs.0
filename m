@@ -1,145 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:50946 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755847AbeEaSIN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:08:13 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 03/21] xfs: simplify xfs_bmap_punch_delalloc_range
-Date: Thu, 31 May 2018 20:07:41 +0200
-Message-Id: <20180531180759.21631-4-hch@lst.de>
-In-Reply-To: <20180531180759.21631-1-hch@lst.de>
-References: <20180531180759.21631-1-hch@lst.de>
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:41131 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754121AbeEaUfz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 16:35:55 -0400
+Received: by mail-ot0-f193.google.com with SMTP id t1-v6so26803333oth.8
+        for <linux-xfs@vger.kernel.org>; Thu, 31 May 2018 13:35:55 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20180531191332.GB7825@magnolia>
+References: <20180529195106.14268-1-ross.zwisler@linux.intel.com>
+ <20180529195106.14268-3-ross.zwisler@linux.intel.com> <20180529212510.GJ30110@magnolia>
+ <20180529220114.GA13948@linux.intel.com> <20180531191332.GB7825@magnolia>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 31 May 2018 13:35:54 -0700
+Message-ID: <CAPcyv4i6t1zahuL73m+oL5qiRJ_oikOszBvTMxoby62Z_0e7Hw@mail.gmail.com>
+Subject: Re: [PATCH v2 2/7] dax: change bdev_dax_supported() to support
+ boolean returns
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Toshi Kani <toshi.kani@hpe.com>, Mike Snitzer <snitzer@redhat.com>, device-mapper development <dm-devel@redhat.com>, Dave Jiang <dave.jiang@intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-Instead of using xfs_bmapi_read to find delalloc extents and then punch
-them out using xfs_bunmapi, opencode the loop to iterate over the extents
-and call xfs_bmap_del_extent_delay directly.  This both simplifies the
-code and reduces the number of extent tree lookups required.
+On Thu, May 31, 2018 at 12:13 PM, Darrick J. Wong
+<darrick.wong@oracle.com> wrote:
+> On Tue, May 29, 2018 at 04:01:14PM -0600, Ross Zwisler wrote:
+>> On Tue, May 29, 2018 at 02:25:10PM -0700, Darrick J. Wong wrote:
+>> > On Tue, May 29, 2018 at 01:51:01PM -0600, Ross Zwisler wrote:
+>> > > From: Dave Jiang <dave.jiang@intel.com>
+>> > >
+>> > > The function return values are confusing with the way the function is
+>> > > named. We expect a true or false return value but it actually returns
+>> > > 0/-errno.  This makes the code very confusing. Changing the return values
+>> > > to return a bool where if DAX is supported then return true and no DAX
+>> > > support returns false.
+>> > >
+>> > > Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+>> > > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+>> >
+>> > Looks ok, do you want me to pull the first two patches through the xfs
+>> > tree?
+>> >
+>> > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+>>
+>> Thanks for the review.
+>>
+>> I'm not sure what's best.  If you do that then Mike will need to have a DM
+>> branch for the rest of the series based on your stable commits, yea?
+>>
+>> Mike what would you prefer?
+>
+> I /was/ about to say that I would pull in the first two patches, but now
+> I can't get xfs to mount with pmem at all, and have no way of testing
+> this...?
+>
+> # echo 'file drivers/dax/* +p' > /sys/kernel/debug/dynamic_debug/control
+> # mount /dev/pmem3 -o rtdev=/dev/pmem4,dax /mnt
+> # dmesg
+> <snip>
+> SGI XFS with ACLs, security attributes, realtime, scrub, debug enabled
+> XFS (pmem3): DAX enabled. Warning: EXPERIMENTAL, use at your own risk
+> pmem3: error: dax support not enabled
+> pmem4: error: dax support not enabled
+> XFS (pmem3): DAX unsupported by block device. Turning off DAX.
+> XFS (pmem3): Mounting V5 Filesystem
+> XFS (pmem3): Ending clean mount
+>
+> Evidently the pfn it picks up is missing PFN_MAP in flags because
+> ND_REGION_PAGEMAP isn't set, and looking at the kernel source, pmem that
+> comes in via NFIT never gets that set...?
+>
+> relevant qemu pmem options:
+>
+> -object memory-backend-file,id=memnvdimm0,prealloc=no,mem-path=/dev/shm/a.img,share=yes,size=13488881664
+> -device nvdimm,node=0,memdev=memnvdimm0,id=nvdimm0,slot=0
+> (repeat for five more devices)
+>
+> <confused>
+>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_bmap_util.c | 85 ++++++++++++++++--------------------------
- 1 file changed, 32 insertions(+), 53 deletions(-)
-
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 06badcbadeb4..0070b877ed94 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -695,12 +695,10 @@ xfs_getbmap(
- }
- 
- /*
-- * dead simple method of punching delalyed allocation blocks from a range in
-- * the inode. Walks a block at a time so will be slow, but is only executed in
-- * rare error cases so the overhead is not critical. This will always punch out
-- * both the start and end blocks, even if the ranges only partially overlap
-- * them, so it is up to the caller to ensure that partial blocks are not
-- * passed in.
-+ * Dead simple method of punching delalyed allocation blocks from a range in
-+ * the inode.  This will always punch out both the start and end blocks, even
-+ * if the ranges only partially overlap them, so it is up to the caller to
-+ * ensure that partial blocks are not passed in.
-  */
- int
- xfs_bmap_punch_delalloc_range(
-@@ -708,63 +706,44 @@ xfs_bmap_punch_delalloc_range(
- 	xfs_fileoff_t		start_fsb,
- 	xfs_fileoff_t		length)
- {
--	xfs_fileoff_t		remaining = length;
-+	struct xfs_ifork	*ifp = &ip->i_df;
-+	xfs_fileoff_t		end_fsb = start_fsb + length;
-+	struct xfs_bmbt_irec	got, del;
-+	struct xfs_iext_cursor	icur;
- 	int			error = 0;
- 
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
- 
--	do {
--		int		done;
--		xfs_bmbt_irec_t	imap;
--		int		nimaps = 1;
--		xfs_fsblock_t	firstblock;
--		struct xfs_defer_ops dfops;
-+	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-+		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
-+		if (error)
-+			return error;
-+	}
- 
--		/*
--		 * Map the range first and check that it is a delalloc extent
--		 * before trying to unmap the range. Otherwise we will be
--		 * trying to remove a real extent (which requires a
--		 * transaction) or a hole, which is probably a bad idea...
--		 */
--		error = xfs_bmapi_read(ip, start_fsb, 1, &imap, &nimaps,
--				       XFS_BMAPI_ENTIRE);
-+	if (!xfs_iext_lookup_extent_before(ip, ifp, &end_fsb, &icur, &got))
-+		return 0;
- 
--		if (error) {
--			/* something screwed, just bail */
--			if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
--				xfs_alert(ip->i_mount,
--			"Failed delalloc mapping lookup ino %lld fsb %lld.",
--						ip->i_ino, start_fsb);
--			}
--			break;
--		}
--		if (!nimaps) {
--			/* nothing there */
--			goto next_block;
--		}
--		if (imap.br_startblock != DELAYSTARTBLOCK) {
--			/* been converted, ignore */
--			goto next_block;
--		}
--		WARN_ON(imap.br_blockcount == 0);
-+	while (got.br_startoff + got.br_blockcount > start_fsb) {
-+		del = got;
-+		xfs_trim_extent(&del, start_fsb, length);
- 
- 		/*
--		 * Note: while we initialise the firstblock/dfops pair, they
--		 * should never be used because blocks should never be
--		 * allocated or freed for a delalloc extent and hence we need
--		 * don't cancel or finish them after the xfs_bunmapi() call.
-+		 * A delete can push the cursor forward. Step back to the
-+		 * previous extent on non-delalloc or extents outside the
-+		 * target range.
- 		 */
--		xfs_defer_init(&dfops, &firstblock);
--		error = xfs_bunmapi(NULL, ip, start_fsb, 1, 0, 1, &firstblock,
--					&dfops, &done);
--		if (error)
--			break;
-+		if (!del.br_blockcount ||
-+		    !isnullstartblock(del.br_startblock)) {
-+			if (!xfs_iext_prev_extent(ifp, &icur, &got))
-+				break;
-+			continue;
-+		}
- 
--		ASSERT(!xfs_defer_has_unfinished_work(&dfops));
--next_block:
--		start_fsb++;
--		remaining--;
--	} while(remaining > 0);
-+		error = xfs_bmap_del_extent_delay(ip, XFS_DATA_FORK, &icur,
-+						  &got, &del);
-+		if (error || !xfs_iext_get_extent(ifp, &icur, &got))
-+			break;
-+	}
- 
- 	return error;
- }
--- 
-2.17.0
-
+What does "ndctl list" say? The namespaces need to be in fsdax mode.
