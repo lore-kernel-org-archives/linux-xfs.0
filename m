@@ -1,140 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:24660 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750714AbeEaXFz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 19:05:55 -0400
-Date: Fri, 1 Jun 2018 09:05:50 +1000
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:39658 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750737AbeEaXoU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 19:44:20 -0400
+Received: from dave by dastard with local (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1fOXEv-0004Ex-Hy
+        for linux-xfs@vger.kernel.org; Fri, 01 Jun 2018 09:44:17 +1000
+Date: Fri, 1 Jun 2018 09:44:17 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Question about Experimental of Filesystem DAX.
-Message-ID: <20180531230550.GN10363@dastard>
-References: <20180531112731.0CAC.E1E9C6FF@jp.fujitsu.com>
- <20180531150716.GA19764@linux.intel.com>
- <CAPcyv4jpffaM60tTdLTojhh0CDwcbVUdS8td7R6LKWM3bb15dw@mail.gmail.com>
- <20180531174636.GA7825@magnolia>
- <CAPcyv4gS1GCN9TFjngTmmHu83-uMgRpvvx842ZGnvxB3PbgU+Q@mail.gmail.com>
+Subject: Re: [PATCH] xfs: convert to SPDX license tags
+Message-ID: <20180531234417.GP10363@dastard>
+References: <20180531042621.11786-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4gS1GCN9TFjngTmmHu83-uMgRpvvx842ZGnvxB3PbgU+Q@mail.gmail.com>
+In-Reply-To: <20180531042621.11786-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Yasunori Goto <y-goto@jp.fujitsu.com>, Jan Kara <jack@suse.cz>, linux-xfs <linux-xfs@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, NVDIMM-ML <linux-nvdimm@lists.01.org>
+To: linux-xfs@vger.kernel.org
 
-On Thu, May 31, 2018 at 11:26:43AM -0700, Dan Williams wrote:
-> On Thu, May 31, 2018 at 10:46 AM, Darrick J. Wong
-> <darrick.wong@oracle.com> wrote:
-> > On Thu, May 31, 2018 at 09:29:15AM -0700, Dan Williams wrote:
-> >> On Thu, May 31, 2018 at 8:07 AM, Ross Zwisler
-> >> <ross.zwisler@linux.intel.com> wrote:
-> >> > On Thu, May 31, 2018 at 11:27:33AM +0900, Yasunori Goto wrote:
-> >> >> Hello,
-> >> >>
-> >> >>
-> >> >> I would like to know about the Experimental message of Filesystem DAX.
-> >> >> --------------------------------------------------------
-> >> >> DAX enabled. Warning: EXPERIMENTAL, use at your own risk
-> >> >> --------------------------------------------------------
-> >> >>
-> >> >> AFAIK, the final issue of Filesystem DAX is metadata update problem,
-> >> >> and it is(will be?) solved by great effort of MAP_SYNC and
-> >> >> "fix dma vs truncate/hole-punch" patch set.
-> >> >> So, I suppose that the Experimental message can be removed,
-> >> >> but I'm not sure.
-> >> >>
-> >> >> Is it possible?
-> >> >> Otherwise, are there any other issues in Filesystem DAX yet?
-> >> >>
-> >> >> If this is silly question, sorry for noise....
-> >> >>
-> >> >> Thanks,
-> >> >> ---
-> >> >> Yasunori Goto
-> >> >
-> >> > Adding in the XFS and ext4 developers, as it's really their call when to
-> >> > remove this notice.
-> >> >
-> >> > We've talked about this off and on for a long while, but IMHO we should remove
-> >> > the EXPERIMENTAL warning.  The last few things that we had on our TODO list
-> >> > before this was removed were:
-> >> >
-> >> > 1) Get consistent handling of the DAX mount option.  We currently have this,
-> >> > as both filesystems will behave the same and fall back and remove the DAX
-> >> > mount option if it is unsupported by the block device, etc.
-> >
-> > <nod>
-> >
-> > As an aside, I wonder if Christoph's musings about "just have the kernel
-> > determine the appropriate dax/non-dax setting from the acpi tables and
-> > skip the inode flag entirely" ever got resolved?
-> >
-> >> > 2) Get consistent handling of the DAX inode option.  We currently have this,
-> >> > as all DAX behavior now happens through the mount option.  If/when we
-> >> > re-enable the per-inode DAX flag we should do it consistently for all DAX
-> >> > enabled filesystems.
-> >
-> > The behavior of the inode flag isn't all that consistent.  ext4 doesn't
-> > support it at all.  On XFS, you can set or clear FS_XFLAG_DAX on a
-> > directory which will propagate the setting to any files created in that
-> > directory.
-> >
-> > However, if you set or clear it on a file we update the on-disk inode
-> > but we can't change the in-core state flag (S_DAX) until the next
-> > in-core inode instantiation.  It's weird that users can change the flag
-> > but the intended behavior changes won't happen until some ... time ...
-> > in the future??
-> >
-> >> > 3) Make DAX work with other XFS features like reflink, etc.  This one isn't
-> >> > done, but we at least disallow DAX with XFS features like reflink where it
-> >> > could be an issue.  Darrick, do you still feel like we need to get these
-> >> > working together to remove EXPERIMENTAL, or are you happy enough that we're
-> >> > keeping them separated and that we're keeping user data safe?
-> >
-> > Yes, reflink and dax still need to work together.  I've not heard any
-> > good arguments for why page sharing + copy on write are fundamentally
-> > incompatible with the dax model, or why dax users will never, ever
-> > require reflink.
+On Thu, May 31, 2018 at 02:26:21PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Right, but that's separate from DAX being scream in your face
-> "EXPERIMENTAL!". It's just an additional feature that can be added on
-> once all the normal expectations of a userspace mapping work. I think
-> reliable rmap is the last of those requirements.
+> Remove the verbose license text from XFS files and replace them
+> with SPDX tags. This does not change the license of any of the code,
+> merely refers to the common, up-to-date license files in LICENSES/
 > 
-> > The recent thread between Jan and Dan make me wonder if making mappings
-> > share struct pages is going to be a nightmare to add to the mm code,
-> > though...
-> 
-> It's going to be a bit messy because a singular page->mapping
-> association is fundamentally incompatible with DAX. Perhaps a linked
-> list of mapping "siblings"?
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-I'd much prefer the filesystem allocate/control the struct page that
-is inserted into mapping trees so we can have multiple struct pages
-pointing at the one physical page.  That way we can just insert
-these dynamic struct pages into the relevant mappings and it works
-the same way for both DAX and shared page cache pages.
+Self-NAK.
 
-i.e. the filesystem knows they are shared physical blocks, the
-filesystem controls COW of physical blocks, the filesystem controls
-truncate/invalidation of physical blocks, the filesystem controls
-cache state of the physical blocks. So why are we designing
-infrastructure around the virtual memory and caching infrastructure
-that bypasses the layer that manages and arbitrates access to the
-physical storage?
-
-This seems like we're well down the path of a architectural layering
-violation that is backing us into a corner we're not going to be
-able to get ourselves out of...
-
-> > Also: ideally XFS would also be able to consume poison event
-> > notifications from the pmem so that it can try to deal with metadata
-> > loss, but that's probably a separate effort.
-
-If the design is such that the layer that manages the physical
-storage isn't going to be told about physical storage failures
-before anyone else is informed, it would seem to me like we really
-have introduced a major architectural flaw in DAX....
+I didn't realise that the scrub code has "or any later version"
+clauses in the license, and so they need to be tagged with
+"GPL-2.0+" and not "GPL-2.0" as I did. I'll rework the script and
+resubmit.
 
 Cheers,
 
