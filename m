@@ -1,305 +1,154 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:50838 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:50972 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755824AbeEaSHb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:07:31 -0400
+        with ESMTP id S1755954AbeEaSIQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:08:16 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/3] fs: move page_cache_seek_hole_data to iomap.c
-Date: Thu, 31 May 2018 20:07:22 +0200
-Message-Id: <20180531180724.21573-2-hch@lst.de>
-In-Reply-To: <20180531180724.21573-1-hch@lst.de>
-References: <20180531180724.21573-1-hch@lst.de>
+Subject: [PATCH 04/21] xfs: simplify xfs_aops_discard_page
+Date: Thu, 31 May 2018 20:07:42 +0200
+Message-Id: <20180531180759.21631-5-hch@lst.de>
+In-Reply-To: <20180531180759.21631-1-hch@lst.de>
+References: <20180531180759.21631-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: Andreas Gruenbacher <agruenba@redhat.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org
 
-This function is only used by the iomap code, depends on being called
-from it, and will soon stop poking into buffer head internals.
+Instead of looking at the buffer heads to see if a block is delalloc just
+call xfs_bmap_punch_delalloc_range on the whole page - this will leave
+any non-delalloc block intact and handle the iteration for us.  As a side
+effect one more place stops caring about buffer heads and we can remove the
+xfs_check_page_type function entirely.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Andreas Gruenbacher <agruenba@redhat.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/buffer.c                 | 114 -----------------------------------
- fs/iomap.c                  | 116 ++++++++++++++++++++++++++++++++++++
- include/linux/buffer_head.h |   2 -
- 3 files changed, 116 insertions(+), 116 deletions(-)
+ fs/xfs/xfs_aops.c | 85 +++++------------------------------------------
+ 1 file changed, 9 insertions(+), 76 deletions(-)
 
-diff --git a/fs/buffer.c b/fs/buffer.c
-index 249b83fafe48..cabc045f483d 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -3427,120 +3427,6 @@ int bh_submit_read(struct buffer_head *bh)
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index c631c457b444..f2333e351e07 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -711,49 +711,6 @@ xfs_map_at_offset(
+ 	clear_buffer_unwritten(bh);
  }
- EXPORT_SYMBOL(bh_submit_read);
  
 -/*
-- * Seek for SEEK_DATA / SEEK_HOLE within @page, starting at @lastoff.
-- *
-- * Returns the offset within the file on success, and -ENOENT otherwise.
+- * Test if a given page contains at least one buffer of a given @type.
+- * If @check_all_buffers is true, then we walk all the buffers in the page to
+- * try to find one of the type passed in. If it is not set, then the caller only
+- * needs to check the first buffer on the page for a match.
 - */
--static loff_t
--page_seek_hole_data(struct page *page, loff_t lastoff, int whence)
+-STATIC bool
+-xfs_check_page_type(
+-	struct page		*page,
+-	unsigned int		type,
+-	bool			check_all_buffers)
 -{
--	loff_t offset = page_offset(page);
--	struct buffer_head *bh, *head;
--	bool seek_data = whence == SEEK_DATA;
+-	struct buffer_head	*bh;
+-	struct buffer_head	*head;
 -
--	if (lastoff < offset)
--		lastoff = offset;
+-	if (PageWriteback(page))
+-		return false;
+-	if (!page->mapping)
+-		return false;
+-	if (!page_has_buffers(page))
+-		return false;
 -
 -	bh = head = page_buffers(page);
 -	do {
--		offset += bh->b_size;
--		if (lastoff >= offset)
--			continue;
--
--		/*
--		 * Unwritten extents that have data in the page cache covering
--		 * them can be identified by the BH_Unwritten state flag.
--		 * Pages with multiple buffers might have a mix of holes, data
--		 * and unwritten extents - any buffer with valid data in it
--		 * should have BH_Uptodate flag set on it.
--		 */
--
--		if ((buffer_unwritten(bh) || buffer_uptodate(bh)) == seek_data)
--			return lastoff;
--
--		lastoff = offset;
--	} while ((bh = bh->b_this_page) != head);
--	return -ENOENT;
--}
--
--/*
-- * Seek for SEEK_DATA / SEEK_HOLE in the page cache.
-- *
-- * Within unwritten extents, the page cache determines which parts are holes
-- * and which are data: unwritten and uptodate buffer heads count as data;
-- * everything else counts as a hole.
-- *
-- * Returns the resulting offset on successs, and -ENOENT otherwise.
-- */
--loff_t
--page_cache_seek_hole_data(struct inode *inode, loff_t offset, loff_t length,
--			  int whence)
--{
--	pgoff_t index = offset >> PAGE_SHIFT;
--	pgoff_t end = DIV_ROUND_UP(offset + length, PAGE_SIZE);
--	loff_t lastoff = offset;
--	struct pagevec pvec;
--
--	if (length <= 0)
--		return -ENOENT;
--
--	pagevec_init(&pvec);
--
--	do {
--		unsigned nr_pages, i;
--
--		nr_pages = pagevec_lookup_range(&pvec, inode->i_mapping, &index,
--						end - 1);
--		if (nr_pages == 0)
--			break;
--
--		for (i = 0; i < nr_pages; i++) {
--			struct page *page = pvec.pages[i];
--
--			/*
--			 * At this point, the page may be truncated or
--			 * invalidated (changing page->mapping to NULL), or
--			 * even swizzled back from swapper_space to tmpfs file
--			 * mapping.  However, page->index will not change
--			 * because we have a reference on the page.
--                         *
--			 * If current page offset is beyond where we've ended,
--			 * we've found a hole.
--                         */
--			if (whence == SEEK_HOLE &&
--			    lastoff < page_offset(page))
--				goto check_range;
--
--			lock_page(page);
--			if (likely(page->mapping == inode->i_mapping) &&
--			    page_has_buffers(page)) {
--				lastoff = page_seek_hole_data(page, lastoff, whence);
--				if (lastoff >= 0) {
--					unlock_page(page);
--					goto check_range;
--				}
--			}
--			unlock_page(page);
--			lastoff = page_offset(page) + PAGE_SIZE;
+-		if (buffer_unwritten(bh)) {
+-			if (type == XFS_IO_UNWRITTEN)
+-				return true;
+-		} else if (buffer_delay(bh)) {
+-			if (type == XFS_IO_DELALLOC)
+-				return true;
+-		} else if (buffer_dirty(bh) && buffer_mapped(bh)) {
+-			if (type == XFS_IO_OVERWRITE)
+-				return true;
 -		}
--		pagevec_release(&pvec);
--	} while (index < end);
 -
--	/* When no page at lastoff and we are not done, we found a hole. */
--	if (whence != SEEK_HOLE)
--		goto not_found;
+-		/* If we are only checking the first buffer, we are done now. */
+-		if (!check_all_buffers)
+-			break;
+-	} while ((bh = bh->b_this_page) != head);
 -
--check_range:
--	if (lastoff < offset + length)
--		goto out;
--not_found:
--	lastoff = -ENOENT;
--out:
--	pagevec_release(&pvec);
--	return lastoff;
+-	return false;
 -}
 -
- void __init buffer_init(void)
+ STATIC void
+ xfs_vm_invalidatepage(
+ 	struct page		*page,
+@@ -785,9 +742,6 @@ xfs_vm_invalidatepage(
+  * transaction. Indeed - if we get ENOSPC errors, we have to be able to do this
+  * truncation without a transaction as there is no space left for block
+  * reservation (typically why we see a ENOSPC in writeback).
+- *
+- * This is not a performance critical path, so for now just do the punching a
+- * buffer head at a time.
+  */
+ STATIC void
+ xfs_aops_discard_page(
+@@ -795,47 +749,26 @@ xfs_aops_discard_page(
  {
- 	unsigned long nrpages;
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 106720355963..f553a2d8a5fa 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -21,6 +21,7 @@
- #include <linux/mm_inline.h>
- #include <linux/swap.h>
- #include <linux/pagemap.h>
-+#include <linux/pagevec.h>
- #include <linux/file.h>
- #include <linux/uio.h>
- #include <linux/backing-dev.h>
-@@ -804,6 +805,121 @@ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
+ 	struct inode		*inode = page->mapping->host;
+ 	struct xfs_inode	*ip = XFS_I(inode);
+-	struct buffer_head	*bh, *head;
++	struct xfs_mount	*mp = ip->i_mount;
+ 	loff_t			offset = page_offset(page);
++	xfs_fileoff_t		start_fsb = XFS_B_TO_FSBT(mp, offset);
++	int			error;
+ 
+-	if (!xfs_check_page_type(page, XFS_IO_DELALLOC, true))
+-		goto out_invalidate;
+-
+-	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
++	if (XFS_FORCED_SHUTDOWN(mp))
+ 		goto out_invalidate;
+ 
+-	xfs_alert(ip->i_mount,
++	xfs_alert(mp,
+ 		"page discard on page "PTR_FMT", inode 0x%llx, offset %llu.",
+ 			page, ip->i_ino, offset);
+ 
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+-	bh = head = page_buffers(page);
+-	do {
+-		int		error;
+-		xfs_fileoff_t	start_fsb;
+-
+-		if (!buffer_delay(bh))
+-			goto next_buffer;
+-
+-		start_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
+-		error = xfs_bmap_punch_delalloc_range(ip, start_fsb, 1);
+-		if (error) {
+-			/* something screwed, just bail */
+-			if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+-				xfs_alert(ip->i_mount,
+-			"page discard unable to remove delalloc mapping.");
+-			}
+-			break;
+-		}
+-next_buffer:
+-		offset += i_blocksize(inode);
+-
+-	} while ((bh = bh->b_this_page) != head);
+-
++	error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
++			PAGE_SIZE / i_blocksize(inode));
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	if (error && !XFS_FORCED_SHUTDOWN(mp))
++		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
+ out_invalidate:
+ 	xfs_vm_invalidatepage(page, 0, PAGE_SIZE);
+-	return;
  }
- EXPORT_SYMBOL_GPL(iomap_fiemap);
  
-+/*
-+ * Seek for SEEK_DATA / SEEK_HOLE within @page, starting at @lastoff.
-+ *
-+ * Returns the offset within the file on success, and -ENOENT otherwise.
-+ */
-+static loff_t
-+page_seek_hole_data(struct page *page, loff_t lastoff, int whence)
-+{
-+	loff_t offset = page_offset(page);
-+	struct buffer_head *bh, *head;
-+	bool seek_data = whence == SEEK_DATA;
-+
-+	if (lastoff < offset)
-+		lastoff = offset;
-+
-+	bh = head = page_buffers(page);
-+	do {
-+		offset += bh->b_size;
-+		if (lastoff >= offset)
-+			continue;
-+
-+		/*
-+		 * Unwritten extents that have data in the page cache covering
-+		 * them can be identified by the BH_Unwritten state flag.
-+		 * Pages with multiple buffers might have a mix of holes, data
-+		 * and unwritten extents - any buffer with valid data in it
-+		 * should have BH_Uptodate flag set on it.
-+		 */
-+
-+		if ((buffer_unwritten(bh) || buffer_uptodate(bh)) == seek_data)
-+			return lastoff;
-+
-+		lastoff = offset;
-+	} while ((bh = bh->b_this_page) != head);
-+	return -ENOENT;
-+}
-+
-+/*
-+ * Seek for SEEK_DATA / SEEK_HOLE in the page cache.
-+ *
-+ * Within unwritten extents, the page cache determines which parts are holes
-+ * and which are data: unwritten and uptodate buffer heads count as data;
-+ * everything else counts as a hole.
-+ *
-+ * Returns the resulting offset on successs, and -ENOENT otherwise.
-+ */
-+static loff_t
-+page_cache_seek_hole_data(struct inode *inode, loff_t offset, loff_t length,
-+		int whence)
-+{
-+	pgoff_t index = offset >> PAGE_SHIFT;
-+	pgoff_t end = DIV_ROUND_UP(offset + length, PAGE_SIZE);
-+	loff_t lastoff = offset;
-+	struct pagevec pvec;
-+
-+	if (length <= 0)
-+		return -ENOENT;
-+
-+	pagevec_init(&pvec);
-+
-+	do {
-+		unsigned nr_pages, i;
-+
-+		nr_pages = pagevec_lookup_range(&pvec, inode->i_mapping, &index,
-+						end - 1);
-+		if (nr_pages == 0)
-+			break;
-+
-+		for (i = 0; i < nr_pages; i++) {
-+			struct page *page = pvec.pages[i];
-+
-+			/*
-+			 * At this point, the page may be truncated or
-+			 * invalidated (changing page->mapping to NULL), or
-+			 * even swizzled back from swapper_space to tmpfs file
-+			 * mapping.  However, page->index will not change
-+			 * because we have a reference on the page.
-+                         *
-+			 * If current page offset is beyond where we've ended,
-+			 * we've found a hole.
-+                         */
-+			if (whence == SEEK_HOLE &&
-+			    lastoff < page_offset(page))
-+				goto check_range;
-+
-+			lock_page(page);
-+			if (likely(page->mapping == inode->i_mapping) &&
-+			    page_has_buffers(page)) {
-+				lastoff = page_seek_hole_data(page, lastoff, whence);
-+				if (lastoff >= 0) {
-+					unlock_page(page);
-+					goto check_range;
-+				}
-+			}
-+			unlock_page(page);
-+			lastoff = page_offset(page) + PAGE_SIZE;
-+		}
-+		pagevec_release(&pvec);
-+	} while (index < end);
-+
-+	/* When no page at lastoff and we are not done, we found a hole. */
-+	if (whence != SEEK_HOLE)
-+		goto not_found;
-+
-+check_range:
-+	if (lastoff < offset + length)
-+		goto out;
-+not_found:
-+	lastoff = -ENOENT;
-+out:
-+	pagevec_release(&pvec);
-+	return lastoff;
-+}
-+
-+
- static loff_t
- iomap_seek_hole_actor(struct inode *inode, loff_t offset, loff_t length,
- 		      void *data, struct iomap *iomap)
-diff --git a/include/linux/buffer_head.h b/include/linux/buffer_head.h
-index 894e5d125de6..96225a77c112 100644
---- a/include/linux/buffer_head.h
-+++ b/include/linux/buffer_head.h
-@@ -205,8 +205,6 @@ void write_boundary_block(struct block_device *bdev,
- 			sector_t bblock, unsigned blocksize);
- int bh_uptodate_or_lock(struct buffer_head *bh);
- int bh_submit_read(struct buffer_head *bh);
--loff_t page_cache_seek_hole_data(struct inode *inode, loff_t offset,
--				 loff_t length, int whence);
- 
- extern int buffer_heads_over_limit;
- 
+ static int
 -- 
 2.17.0
 
