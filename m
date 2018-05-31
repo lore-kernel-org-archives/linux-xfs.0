@@ -1,96 +1,22 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:50554 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:50820 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755982AbeEaSGw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:06:52 -0400
+        with ESMTP id S1755824AbeEaSH2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:07:28 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 10/13] iomap: add an iomap-based bmap implementation
-Date: Thu, 31 May 2018 20:06:11 +0200
-Message-Id: <20180531180614.21506-11-hch@lst.de>
-In-Reply-To: <20180531180614.21506-1-hch@lst.de>
-References: <20180531180614.21506-1-hch@lst.de>
+Subject: iomap SEEK_HOLE / SEEK_DATA cleanups and generalization v2
+Date: Thu, 31 May 2018 20:07:21 +0200
+Message-Id: <20180531180724.21573-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+Cc: Andreas Gruenbacher <agruenba@redhat.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-This adds a simple iomap-based implementation of the legacy ->bmap
-interface.  Note that we can't easily add checks for rt or reflink
-files, so these will have to remain in the callers.  This interface
-just needs to die..
+Refactor the seek pagecache helpers to work independent of buffer_heads,
+and clean up a few lose bits.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/iomap.c            | 34 ++++++++++++++++++++++++++++++++++
- include/linux/iomap.h |  3 +++
- 2 files changed, 37 insertions(+)
+This is needed for the small blocksize buffered I/O support in iomap.
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 74cdf8b5bbb0..b0bc928672af 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -1307,3 +1307,37 @@ int iomap_swapfile_activate(struct swap_info_struct *sis,
- }
- EXPORT_SYMBOL_GPL(iomap_swapfile_activate);
- #endif /* CONFIG_SWAP */
-+
-+static loff_t
-+iomap_bmap_actor(struct inode *inode, loff_t pos, loff_t length,
-+		void *data, struct iomap *iomap)
-+{
-+	sector_t *bno = data, addr;
-+
-+	if (iomap->type == IOMAP_MAPPED) {
-+		addr = (pos - iomap->offset + iomap->addr) >> inode->i_blkbits;
-+		if (addr > INT_MAX)
-+			WARN(1, "would truncate bmap result\n");
-+		else
-+			*bno = addr;
-+	}
-+	return 0;
-+}
-+
-+/* legacy ->bmap interface.  0 is the error return (!) */
-+sector_t
-+iomap_bmap(struct address_space *mapping, sector_t bno,
-+		const struct iomap_ops *ops)
-+{
-+	struct inode *inode = mapping->host;
-+	loff_t pos = bno >> inode->i_blkbits;
-+	unsigned blocksize = i_blocksize(inode);
-+
-+	if (filemap_write_and_wait(mapping))
-+		return 0;
-+
-+	bno = 0;
-+	iomap_apply(inode, pos, blocksize, 0, ops, &bno, iomap_bmap_actor);
-+	return bno;
-+}
-+EXPORT_SYMBOL_GPL(iomap_bmap);
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 819e0cd2a950..a044a824da85 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -4,6 +4,7 @@
- 
- #include <linux/types.h>
- 
-+struct address_space;
- struct fiemap_extent_info;
- struct inode;
- struct iov_iter;
-@@ -100,6 +101,8 @@ loff_t iomap_seek_hole(struct inode *inode, loff_t offset,
- 		const struct iomap_ops *ops);
- loff_t iomap_seek_data(struct inode *inode, loff_t offset,
- 		const struct iomap_ops *ops);
-+sector_t iomap_bmap(struct address_space *mapping, sector_t bno,
-+		const struct iomap_ops *ops);
- 
- /*
-  * Flags for direct I/O ->end_io:
--- 
-2.17.0
-
+Changes since v1:
+ - a trivial comment update
