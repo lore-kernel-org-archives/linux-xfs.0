@@ -1,54 +1,130 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:50708 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:50926 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755948AbeEaSHB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:07:01 -0400
+        with ESMTP id S1755847AbeEaSIG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:08:06 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 13/13] xfs: use iomap for blocksize == PAGE_SIZE readpage and readpages
-Date: Thu, 31 May 2018 20:06:14 +0200
-Message-Id: <20180531180614.21506-14-hch@lst.de>
-In-Reply-To: <20180531180614.21506-1-hch@lst.de>
-References: <20180531180614.21506-1-hch@lst.de>
+Subject: [PATCH 01/21] fs: factor out a __generic_write_end helper
+Date: Thu, 31 May 2018 20:07:39 +0200
+Message-Id: <20180531180759.21631-2-hch@lst.de>
+In-Reply-To: <20180531180759.21631-1-hch@lst.de>
+References: <20180531180759.21631-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+Cc: linux-fsdevel@vger.kernel.org
 
-For file systems with a block size that equals the page size we never do
-partial reads, so we can use the buffer_head-less iomap versions of
-readpage and readpages without conflicting with the buffer_head structures
-create later in write_begin.
+Bits of the buffer.c based write_end implementations that don't know
+about buffer_heads and can be reused by other implementations.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_aops.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ fs/buffer.c   | 67 +++++++++++++++++++++++++++------------------------
+ fs/internal.h |  2 ++
+ 2 files changed, 37 insertions(+), 32 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 56e405572909..c631c457b444 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1402,6 +1402,8 @@ xfs_vm_readpage(
- 	struct page		*page)
- {
- 	trace_xfs_vm_readpage(page->mapping->host, 1);
-+	if (i_blocksize(page->mapping->host) == PAGE_SIZE)
-+		return iomap_readpage(page, &xfs_iomap_ops);
- 	return mpage_readpage(page, xfs_get_blocks);
+diff --git a/fs/buffer.c b/fs/buffer.c
+index cabc045f483d..aba2a948b235 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -2076,6 +2076,40 @@ int block_write_begin(struct address_space *mapping, loff_t pos, unsigned len,
  }
+ EXPORT_SYMBOL(block_write_begin);
  
-@@ -1413,6 +1415,8 @@ xfs_vm_readpages(
- 	unsigned		nr_pages)
++int __generic_write_end(struct inode *inode, loff_t pos, unsigned copied,
++		struct page *page)
++{
++	loff_t old_size = inode->i_size;
++	bool i_size_changed = false;
++
++	/*
++	 * No need to use i_size_read() here, the i_size cannot change under us
++	 * because we hold i_rwsem.
++	 *
++	 * But it's important to update i_size while still holding page lock:
++	 * page writeout could otherwise come in and zero beyond i_size.
++	 */
++	if (pos + copied > inode->i_size) {
++		i_size_write(inode, pos + copied);
++		i_size_changed = true;
++	}
++
++	unlock_page(page);
++	put_page(page);
++
++	if (old_size < pos)
++		pagecache_isize_extended(inode, old_size, pos);
++	/*
++	 * Don't mark the inode dirty under page lock. First, it unnecessarily
++	 * makes the holding time of page lock longer. Second, it forces lock
++	 * ordering of page lock and transaction start for journaling
++	 * filesystems.
++	 */
++	if (i_size_changed)
++		mark_inode_dirty(inode);
++	return copied;
++}
++
+ int block_write_end(struct file *file, struct address_space *mapping,
+ 			loff_t pos, unsigned len, unsigned copied,
+ 			struct page *page, void *fsdata)
+@@ -2116,39 +2150,8 @@ int generic_write_end(struct file *file, struct address_space *mapping,
+ 			loff_t pos, unsigned len, unsigned copied,
+ 			struct page *page, void *fsdata)
  {
- 	trace_xfs_vm_readpages(mapping->host, nr_pages);
-+	if (i_blocksize(mapping->host) == PAGE_SIZE)
-+		return iomap_readpages(mapping, pages, nr_pages, &xfs_iomap_ops);
- 	return mpage_readpages(mapping, pages, nr_pages, xfs_get_blocks);
+-	struct inode *inode = mapping->host;
+-	loff_t old_size = inode->i_size;
+-	int i_size_changed = 0;
+-
+ 	copied = block_write_end(file, mapping, pos, len, copied, page, fsdata);
+-
+-	/*
+-	 * No need to use i_size_read() here, the i_size
+-	 * cannot change under us because we hold i_mutex.
+-	 *
+-	 * But it's important to update i_size while still holding page lock:
+-	 * page writeout could otherwise come in and zero beyond i_size.
+-	 */
+-	if (pos+copied > inode->i_size) {
+-		i_size_write(inode, pos+copied);
+-		i_size_changed = 1;
+-	}
+-
+-	unlock_page(page);
+-	put_page(page);
+-
+-	if (old_size < pos)
+-		pagecache_isize_extended(inode, old_size, pos);
+-	/*
+-	 * Don't mark the inode dirty under page lock. First, it unnecessarily
+-	 * makes the holding time of page lock longer. Second, it forces lock
+-	 * ordering of page lock and transaction start for journaling
+-	 * filesystems.
+-	 */
+-	if (i_size_changed)
+-		mark_inode_dirty(inode);
+-
+-	return copied;
++	return __generic_write_end(mapping->host, pos, copied, page);
  }
+ EXPORT_SYMBOL(generic_write_end);
  
+diff --git a/fs/internal.h b/fs/internal.h
+index e08972db0303..b955232d3d49 100644
+--- a/fs/internal.h
++++ b/fs/internal.h
+@@ -43,6 +43,8 @@ static inline int __sync_blockdev(struct block_device *bdev, int wait)
+ extern void guard_bio_eod(int rw, struct bio *bio);
+ extern int __block_write_begin_int(struct page *page, loff_t pos, unsigned len,
+ 		get_block_t *get_block, struct iomap *iomap);
++int __generic_write_end(struct inode *inode, loff_t pos, unsigned copied,
++		struct page *page);
+ 
+ /*
+  * char_dev.c
 -- 
 2.17.0
 
