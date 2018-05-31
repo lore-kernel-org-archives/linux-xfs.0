@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:51130 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:51142 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932709AbeEaSIc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:08:32 -0400
+        with ESMTP id S932709AbeEaSIf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:08:35 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 09/21] xfs: remove xfs_reflink_trim_irec_to_next_cow
-Date: Thu, 31 May 2018 20:07:47 +0200
-Message-Id: <20180531180759.21631-10-hch@lst.de>
+Subject: [PATCH 10/21] xfs: remove xfs_map_cow
+Date: Thu, 31 May 2018 20:07:48 +0200
+Message-Id: <20180531180759.21631-11-hch@lst.de>
 In-Reply-To: <20180531180759.21631-1-hch@lst.de>
 References: <20180531180759.21631-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,105 +15,300 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org
 
-We already have to check for overlapping COW extents everytime we
-come back to a page in xfs_writepage_map / xfs_map_cow, so this
-additional trim is not required.
+We can handle the existing cow mapping case as a special case directly
+in xfs_writepage_map, and share code for allocating delalloc blocks
+with regular I/O in xfs_map_blocks.  This means we need to always
+call xfs_map_blocks for reflink inodes, but we can still skip most of
+the work if it turns out that there is no COW mapping overlapping the
+current block.
+
+As a subtle detail we need to start caching holes in the wpc to deal
+with the case of COW reservations between EOF.  But we'll need that
+infrastructure later anyway, so this is no big deal.
+
+Based on a patch from Dave Chinner.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_aops.c    |  7 -------
- fs/xfs/xfs_reflink.c | 33 ---------------------------------
- fs/xfs/xfs_reflink.h |  2 --
- fs/xfs/xfs_trace.h   |  1 -
- 4 files changed, 43 deletions(-)
+ fs/xfs/xfs_aops.c | 184 ++++++++++++++++++++++------------------------
+ fs/xfs/xfs_aops.h |   4 +-
+ 2 files changed, 90 insertions(+), 98 deletions(-)
 
 diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 2966d62b0594..9b5a4b6e268c 100644
+index 9b5a4b6e268c..d536509ca05b 100644
 --- a/fs/xfs/xfs_aops.c
 +++ b/fs/xfs/xfs_aops.c
-@@ -416,13 +416,6 @@ xfs_map_blocks(
+@@ -375,70 +375,107 @@ xfs_end_bio(
+ 
+ STATIC int
+ xfs_map_blocks(
++	struct xfs_writepage_ctx *wpc,
+ 	struct inode		*inode,
+-	loff_t			offset,
+-	struct xfs_bmbt_irec	*imap,
+-	int			type)
++	loff_t			offset)
+ {
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	ssize_t			count = i_blocksize(inode);
+-	xfs_fileoff_t		offset_fsb, end_fsb;
++	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset), end_fsb;
++	struct xfs_bmbt_irec	imap;
++	int			whichfork = XFS_DATA_FORK;
+ 	int			error = 0;
+ 	int			nimaps = 1;
+ 
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+ 
+-	/*
+-	 * Truncate can race with writeback since writeback doesn't take the
+-	 * iolock and truncate decreases the file size before it starts
+-	 * truncating the pages between new_size and old_size.  Therefore, we
+-	 * can end up in the situation where writeback gets a CoW fork mapping
+-	 * but the truncate makes the mapping invalid and we end up in here
+-	 * trying to get a new mapping.  Bail out here so that we simply never
+-	 * get a valid mapping and so we drop the write altogether.  The page
+-	 * truncation will kill the contents anyway.
+-	 */
+-	if (type == XFS_IO_COW && offset > i_size_read(inode))
+-		return 0;
+-
+-	ASSERT(type != XFS_IO_COW);
+-
+ 	xfs_ilock(ip, XFS_ILOCK_SHARED);
+ 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
+ 	       (ip->i_df.if_flags & XFS_IFEXTENTS));
+ 	ASSERT(offset <= mp->m_super->s_maxbytes);
+ 
++	if (xfs_is_reflink_inode(ip) &&
++	    xfs_reflink_find_cow_mapping(ip, offset, &imap)) {
++		xfs_iunlock(ip, XFS_ILOCK_SHARED);
++		/*
++		 * Truncate can race with writeback since writeback doesn't
++		 * take the iolock and truncate decreases the file size before
++		 * it starts truncating the pages between new_size and old_size.
++		 * Therefore, we can end up in the situation where writeback
++		 * gets a CoW fork mapping but the truncate makes the mapping
++		 * invalid and we end up in here trying to get a new mapping.
++		 * bail out here so that we simply never get a valid mapping
++		 * and so we drop the write altogether.  The page truncation
++		 * will kill the contents anyway.
++		 */
++		if (offset > i_size_read(inode)) {
++			whichfork = XFS_IO_HOLE;
++			return 0;
++		}
++		whichfork = XFS_COW_FORK;
++		wpc->io_type = XFS_IO_COW;
++		goto allocate_blocks;
++	}
++
++	/*
++	 * Map valid and no COW extent in the way?  We're done.
++	 */
++	if (wpc->imap_valid) {
++		xfs_iunlock(ip, XFS_ILOCK_SHARED);
++		return 0;
++	}
++
++	/*
++	 * If we don't have a valid map, now it's time to get a new one for this
++	 * offset.  This will convert delayed allocations (including COW ones)
++	 * into real extents.
++	 */
+ 	if (offset > mp->m_super->s_maxbytes - count)
+ 		count = mp->m_super->s_maxbytes - offset;
+ 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
  	offset_fsb = XFS_B_TO_FSBT(mp, offset);
  	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
- 				imap, &nimaps, XFS_BMAPI_ENTIRE);
--	/*
--	 * Truncate an overwrite extent if there's a pending CoW
--	 * reservation before the end of this extent.  This forces us
--	 * to come back to writepage to take care of the CoW.
--	 */
--	if (nimaps && type == XFS_IO_OVERWRITE)
--		xfs_reflink_trim_irec_to_next_cow(ip, offset_fsb, imap);
+-				imap, &nimaps, XFS_BMAPI_ENTIRE);
++				&imap, &nimaps, XFS_BMAPI_ENTIRE);
  	xfs_iunlock(ip, XFS_ILOCK_SHARED);
- 
+-
  	if (error)
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 713e857d9ffa..d0092c864458 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -514,39 +514,6 @@ xfs_reflink_find_cow_mapping(
- 	return true;
+ 		return error;
+ 
+-	if (type == XFS_IO_DELALLOC &&
+-	    (!nimaps || isnullstartblock(imap->br_startblock))) {
+-		error = xfs_iomap_write_allocate(ip, XFS_DATA_FORK, offset,
+-				imap);
+-		if (!error)
+-			trace_xfs_map_blocks_alloc(ip, offset, count, type, imap);
+-		return error;
++	if (!nimaps) {
++		/*
++		 * Lookup returns no match? Beyond eof? regardless,
++		 * return it as a hole so we don't write it
++		 */
++		imap.br_startoff = offset_fsb;
++		imap.br_blockcount = end_fsb - offset_fsb;
++		imap.br_startblock = HOLESTARTBLOCK;
++		wpc->io_type = XFS_IO_HOLE;
++	} else if (imap.br_startblock == HOLESTARTBLOCK) {
++		/* landed in a hole */
++		wpc->io_type = XFS_IO_HOLE;
+ 	}
+ 
++	if (wpc->io_type == XFS_IO_DELALLOC &&
++	    (!nimaps || isnullstartblock(imap.br_startblock)))
++		goto allocate_blocks;
++
+ #ifdef DEBUG
+-	if (type == XFS_IO_UNWRITTEN) {
++	if (wpc->io_type == XFS_IO_UNWRITTEN) {
+ 		ASSERT(nimaps);
+-		ASSERT(imap->br_startblock != HOLESTARTBLOCK);
+-		ASSERT(imap->br_startblock != DELAYSTARTBLOCK);
++		ASSERT(imap.br_startblock != HOLESTARTBLOCK);
++		ASSERT(imap.br_startblock != DELAYSTARTBLOCK);
+ 	}
+ #endif
+-	if (nimaps)
+-		trace_xfs_map_blocks_found(ip, offset, count, type, imap);
++	wpc->imap = imap;
++	trace_xfs_map_blocks_found(ip, offset, count, wpc->io_type, &imap);
++	return 0;
++allocate_blocks:
++	error = xfs_iomap_write_allocate(ip, whichfork, offset, &imap);
++	if (error)
++		return error;
++	wpc->imap = imap;
++	trace_xfs_map_blocks_alloc(ip, offset, count, wpc->io_type, &imap);
+ 	return 0;
  }
  
--/*
-- * Trim an extent to end at the next CoW reservation past offset_fsb.
-- */
--void
--xfs_reflink_trim_irec_to_next_cow(
--	struct xfs_inode		*ip,
--	xfs_fileoff_t			offset_fsb,
--	struct xfs_bmbt_irec		*imap)
+@@ -759,56 +796,6 @@ xfs_aops_discard_page(
+ 	xfs_vm_invalidatepage(page, 0, PAGE_SIZE);
+ }
+ 
+-static int
+-xfs_map_cow(
+-	struct xfs_writepage_ctx *wpc,
+-	struct inode		*inode,
+-	loff_t			offset,
+-	unsigned int		*new_type)
 -{
--	struct xfs_ifork		*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
--	struct xfs_bmbt_irec		got;
--	struct xfs_iext_cursor		icur;
+-	struct xfs_inode	*ip = XFS_I(inode);
+-	struct xfs_bmbt_irec	imap;
+-	bool			is_cow = false;
+-	int			error;
 -
--	if (!xfs_is_reflink_inode(ip))
--		return;
--
--	/* Find the extent in the CoW fork. */
--	if (!xfs_iext_lookup_extent(ip, ifp, offset_fsb, &icur, &got))
--		return;
--
--	/* This is the extent before; try sliding up one. */
--	if (got.br_startoff < offset_fsb) {
--		if (!xfs_iext_next_extent(ifp, &icur, &got))
--			return;
+-	/*
+-	 * If we already have a valid COW mapping keep using it.
+-	 */
+-	if (wpc->io_type == XFS_IO_COW) {
+-		wpc->imap_valid = xfs_imap_valid(inode, &wpc->imap, offset);
+-		if (wpc->imap_valid) {
+-			*new_type = XFS_IO_COW;
+-			return 0;
+-		}
 -	}
 -
--	if (got.br_startoff >= imap->br_startoff + imap->br_blockcount)
--		return;
+-	/*
+-	 * Else we need to check if there is a COW mapping at this offset.
+-	 */
+-	xfs_ilock(ip, XFS_ILOCK_SHARED);
+-	is_cow = xfs_reflink_find_cow_mapping(ip, offset, &imap);
+-	xfs_iunlock(ip, XFS_ILOCK_SHARED);
 -
--	imap->br_blockcount = got.br_startoff - imap->br_startoff;
--	trace_xfs_reflink_trim_irec(ip, imap);
+-	if (!is_cow)
+-		return 0;
+-
+-	/*
+-	 * And if the COW mapping has a delayed extent here we need to
+-	 * allocate real space for it now.
+-	 */
+-	if (isnullstartblock(imap.br_startblock)) {
+-		error = xfs_iomap_write_allocate(ip, XFS_COW_FORK, offset,
+-				&imap);
+-		if (error)
+-			return error;
+-	}
+-
+-	wpc->io_type = *new_type = XFS_IO_COW;
+-	wpc->imap_valid = true;
+-	wpc->imap = imap;
+-	return 0;
 -}
 -
  /*
-  * Cancel CoW reservations for some block range of an inode.
-  *
-diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index 701487bab468..c0a25609007b 100644
---- a/fs/xfs/xfs_reflink.h
-+++ b/fs/xfs/xfs_reflink.h
-@@ -34,8 +34,6 @@ extern int xfs_reflink_convert_cow(struct xfs_inode *ip, xfs_off_t offset,
- 		xfs_off_t count);
- extern bool xfs_reflink_find_cow_mapping(struct xfs_inode *ip, xfs_off_t offset,
- 		struct xfs_bmbt_irec *imap);
--extern void xfs_reflink_trim_irec_to_next_cow(struct xfs_inode *ip,
--		xfs_fileoff_t offset_fsb, struct xfs_bmbt_irec *imap);
+  * We implement an immediate ioend submission policy here to avoid needing to
+  * chain multiple ioends and hence nest mempool allocations which can violate
+@@ -873,10 +860,13 @@ xfs_writepage_map(
+ 			continue;
+ 		}
  
- extern int xfs_reflink_cancel_cow_blocks(struct xfs_inode *ip,
- 		struct xfs_trans **tpp, xfs_fileoff_t offset_fsb,
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 9d4c4ca24fe6..041045a8d65c 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3228,7 +3228,6 @@ DEFINE_RW_EVENT(xfs_reflink_reserve_cow);
+-		if (xfs_is_reflink_inode(XFS_I(inode))) {
+-			error = xfs_map_cow(wpc, inode, offset, &new_type);
+-			if (error)
+-				goto out;
++		/*
++		 * If we already have a valid COW mapping keep using it.
++		 */
++		if (wpc->io_type == XFS_IO_COW &&
++		    xfs_imap_valid(inode, &wpc->imap, offset)) {
++			wpc->imap_valid = true;
++			new_type = XFS_IO_COW;
+ 		}
  
- DEFINE_SIMPLE_IO_EVENT(xfs_reflink_bounce_dio_write);
- DEFINE_IOMAP_EVENT(xfs_reflink_find_cow_mapping);
--DEFINE_INODE_IREC_EVENT(xfs_reflink_trim_irec);
+ 		if (wpc->io_type != new_type) {
+@@ -887,22 +877,22 @@ xfs_writepage_map(
+ 		if (wpc->imap_valid)
+ 			wpc->imap_valid = xfs_imap_valid(inode, &wpc->imap,
+ 							 offset);
+-		if (!wpc->imap_valid) {
+-			error = xfs_map_blocks(inode, offset, &wpc->imap,
+-					     wpc->io_type);
++		if (!wpc->imap_valid || xfs_is_reflink_inode(XFS_I(inode))) {
++			error = xfs_map_blocks(wpc, inode, offset);
+ 			if (error)
+ 				goto out;
+ 			wpc->imap_valid = xfs_imap_valid(inode, &wpc->imap,
+ 							 offset);
+ 		}
+-		if (wpc->imap_valid) {
+-			lock_buffer(bh);
+-			if (wpc->io_type != XFS_IO_OVERWRITE)
+-				xfs_map_at_offset(inode, bh, &wpc->imap, offset);
+-			xfs_add_to_ioend(inode, bh, offset, wpc, wbc, &submit_list);
+-			count++;
+-		}
  
- DEFINE_SIMPLE_IO_EVENT(xfs_reflink_cancel_cow_range);
- DEFINE_SIMPLE_IO_EVENT(xfs_reflink_end_cow);
++		if (!wpc->imap_valid || wpc->io_type == XFS_IO_HOLE)
++			continue;
++
++		lock_buffer(bh);
++		if (wpc->io_type != XFS_IO_OVERWRITE)
++			xfs_map_at_offset(inode, bh, &wpc->imap, offset);
++		xfs_add_to_ioend(inode, bh, offset, wpc, wbc, &submit_list);
++		count++;
+ 	} while (offset += len, ((bh = bh->b_this_page) != head));
+ 
+ 	ASSERT(wpc->ioend || list_empty(&submit_list));
+diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
+index 69346d460dfa..b2ef5b661761 100644
+--- a/fs/xfs/xfs_aops.h
++++ b/fs/xfs/xfs_aops.h
+@@ -29,6 +29,7 @@ enum {
+ 	XFS_IO_UNWRITTEN,	/* covers allocated but uninitialized data */
+ 	XFS_IO_OVERWRITE,	/* covers already allocated extent */
+ 	XFS_IO_COW,		/* covers copy-on-write extent */
++	XFS_IO_HOLE,		/* covers region without any block allocation */
+ };
+ 
+ #define XFS_IO_TYPES \
+@@ -36,7 +37,8 @@ enum {
+ 	{ XFS_IO_DELALLOC,		"delalloc" }, \
+ 	{ XFS_IO_UNWRITTEN,		"unwritten" }, \
+ 	{ XFS_IO_OVERWRITE,		"overwrite" }, \
+-	{ XFS_IO_COW,			"CoW" }
++	{ XFS_IO_COW,			"CoW" }, \
++	{ XFS_IO_HOLE,			"hole" }
+ 
+ /*
+  * Structure for buffered I/O completions.
 -- 
 2.17.0
 
