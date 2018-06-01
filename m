@@ -1,231 +1,119 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:56202 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750916AbeFAWEp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 1 Jun 2018 18:04:45 -0400
-Date: Fri, 1 Jun 2018 18:04:43 -0400
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH v2 5/7] dm: remove DM_TYPE_DAX_BIO_BASED dm_queue_mode
-Message-ID: <20180601220443.GB18712@redhat.com>
-References: <20180529195106.14268-1-ross.zwisler@linux.intel.com>
- <20180529195106.14268-6-ross.zwisler@linux.intel.com>
+Received: from ozlabs.org ([203.11.71.1]:49699 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750724AbeFAI7G (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 1 Jun 2018 04:59:06 -0400
+Date: Fri, 1 Jun 2018 18:58:46 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: linux-next: manual merge of the nvdimm tree with the xfs tree
+Message-ID: <20180601185846.1c5b7d0a@canb.auug.org.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180529195106.14268-6-ross.zwisler@linux.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/nO66g8gdPLsiZHK6IX858ml"; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
-Cc: Toshi Kani <toshi.kani@hpe.com>, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Dave Jiang <dave.jiang@intel.com>
 
-On Tue, May 29 2018 at  3:51pm -0400,
-Ross Zwisler <ross.zwisler@linux.intel.com> wrote:
+--Sig_/nO66g8gdPLsiZHK6IX858ml
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-> The DM_TYPE_DAX_BIO_BASED dm_queue_mode was introduced to prevent DM
-> devices that could possibly support DAX from transitioning into DM devices
-> that cannot support DAX.
-> 
-> For example, the following transition will currently fail:
-> 
->  dm-linear: [fsdax pmem][fsdax pmem] => [fsdax pmem][fsdax raw]
-> 	      DM_TYPE_DAX_BIO_BASED       DM_TYPE_BIO_BASED
-> 
-> but these will both succeed:
-> 
->  dm-linear: [fsdax pmem][brd ramdisk] => [fsdax pmem][fsdax raw]
->  	      DM_TYPE_DAX_BIO_BASED        DM_TYPE_BIO_BASED
-> 
+Hi Dan,
 
-I fail to see how this succeeds given
-drivers/md/dm-ioctl.c:is_valid_type() only allows transitions from:
+Today's linux-next merge of the nvdimm tree got a conflict in:
 
-DM_TYPE_BIO_BASED => DM_TYPE_DAX_BIO_BASED
+  drivers/dax/super.c
 
->  dm-linear: [fsdax pmem][fsdax raw] => [fsdax pmem][fsdax pmem]
->  		DM_TYPE_BIO_BASED        DM_TYPE_DAX_BIO_BASED
-> 
-> This seems arbitrary, as really the choice on whether to use DAX happens at
-> filesystem mount time.  There's no guarantee that the in the first case
-> (double fsdax pmem) we were using the dax mount option with our file
-> system.
-> 
-> Instead, get rid of DM_TYPE_DAX_BIO_BASED and all the special casing around
-> it, and instead make the request queue's QUEUE_FLAG_DAX be our one source
-> of truth.  If this is set, we can use DAX, and if not, not.  We keep this
-> up to date in table_load() as the table changes.  As with regular block
-> devices the filesystem will then know at mount time whether DAX is a
-> supported mount option or not.
+between commits:
 
-If you don't think you need this specialization that is fine.. but DM
-devices supporting suspending (as part of table reloads) so is there any
-risk that there will be inflight IO (say if someone did 'dmsetup suspend
---noflush').. and then upon reload the device type changed out from
-under us.. anyway, I don't have all the PMEM DAX stuff paged back into
-my head yet.
+  ba23cba9b3bd ("fs: allow per-device dax status checking for filesystems")
+  80660f20252d ("dax: change bdev_dax_supported() to support boolean return=
+s")
 
-But this just seems like we really shouldn't be allowing the
-transition from what was DM_TYPE_DAX_BIO_BASED back to DM_TYPE_BIO_BASED
+from the xfs tree and commit:
 
-Mike
+  e76384884344 ("mm: introduce MEMORY_DEVICE_FS_DAX and CONFIG_DEV_PAGEMAP_=
+OPS")
 
-> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> ---
->  drivers/md/dm-ioctl.c         | 16 ++++++----------
->  drivers/md/dm-table.c         | 25 ++++++++++---------------
->  drivers/md/dm.c               |  2 --
->  include/linux/device-mapper.h |  8 ++++++--
->  4 files changed, 22 insertions(+), 29 deletions(-)
-> 
-> diff --git a/drivers/md/dm-ioctl.c b/drivers/md/dm-ioctl.c
-> index 5acf77de5945..d1f86d0bb2d0 100644
-> --- a/drivers/md/dm-ioctl.c
-> +++ b/drivers/md/dm-ioctl.c
-> @@ -1292,15 +1292,6 @@ static int populate_table(struct dm_table *table,
->  	return dm_table_complete(table);
->  }
->  
-> -static bool is_valid_type(enum dm_queue_mode cur, enum dm_queue_mode new)
-> -{
-> -	if (cur == new ||
-> -	    (cur == DM_TYPE_BIO_BASED && new == DM_TYPE_DAX_BIO_BASED))
-> -		return true;
-> -
-> -	return false;
-> -}
-> -
->  static int table_load(struct file *filp, struct dm_ioctl *param, size_t param_size)
->  {
->  	int r;
-> @@ -1343,12 +1334,17 @@ static int table_load(struct file *filp, struct dm_ioctl *param, size_t param_si
->  			DMWARN("unable to set up device queue for new table.");
->  			goto err_unlock_md_type;
->  		}
-> -	} else if (!is_valid_type(dm_get_md_type(md), dm_table_get_type(t))) {
-> +	} else if (dm_get_md_type(md) != dm_table_get_type(t)) {
->  		DMWARN("can't change device type after initial table load.");
->  		r = -EINVAL;
->  		goto err_unlock_md_type;
->  	}
->  
-> +	if (dm_table_supports_dax(t))
-> +		blk_queue_flag_set(QUEUE_FLAG_DAX, md->queue);
-> +	else
-> +		blk_queue_flag_clear(QUEUE_FLAG_DAX, md->queue);
-> +
->  	dm_unlock_md_type(md);
->  
->  	/* stage inactive table */
-> diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
-> index 5bb994b012ca..ea5c4a1e6f5b 100644
-> --- a/drivers/md/dm-table.c
-> +++ b/drivers/md/dm-table.c
-> @@ -866,7 +866,6 @@ EXPORT_SYMBOL(dm_consume_args);
->  static bool __table_type_bio_based(enum dm_queue_mode table_type)
->  {
->  	return (table_type == DM_TYPE_BIO_BASED ||
-> -		table_type == DM_TYPE_DAX_BIO_BASED ||
->  		table_type == DM_TYPE_NVME_BIO_BASED);
->  }
->  
-> @@ -888,7 +887,7 @@ static int device_supports_dax(struct dm_target *ti, struct dm_dev *dev,
->  	return bdev_dax_supported(dev->bdev, PAGE_SIZE);
->  }
->  
-> -static bool dm_table_supports_dax(struct dm_table *t)
-> +bool dm_table_supports_dax(struct dm_table *t)
->  {
->  	struct dm_target *ti;
->  	unsigned i;
-> @@ -907,6 +906,7 @@ static bool dm_table_supports_dax(struct dm_table *t)
->  
->  	return true;
->  }
-> +EXPORT_SYMBOL_GPL(dm_table_supports_dax);
->  
->  static bool dm_table_does_not_support_partial_completion(struct dm_table *t);
->  
-> @@ -944,7 +944,6 @@ static int dm_table_determine_type(struct dm_table *t)
->  			/* possibly upgrade to a variant of bio-based */
->  			goto verify_bio_based;
->  		}
-> -		BUG_ON(t->type == DM_TYPE_DAX_BIO_BASED);
->  		BUG_ON(t->type == DM_TYPE_NVME_BIO_BASED);
->  		goto verify_rq_based;
->  	}
-> @@ -981,18 +980,14 @@ static int dm_table_determine_type(struct dm_table *t)
->  verify_bio_based:
->  		/* We must use this table as bio-based */
->  		t->type = DM_TYPE_BIO_BASED;
-> -		if (dm_table_supports_dax(t) ||
-> -		    (list_empty(devices) && live_md_type == DM_TYPE_DAX_BIO_BASED)) {
-> -			t->type = DM_TYPE_DAX_BIO_BASED;
-> -		} else {
-> -			/* Check if upgrading to NVMe bio-based is valid or required */
-> -			tgt = dm_table_get_immutable_target(t);
-> -			if (tgt && !tgt->max_io_len && dm_table_does_not_support_partial_completion(t)) {
-> -				t->type = DM_TYPE_NVME_BIO_BASED;
-> -				goto verify_rq_based; /* must be stacked directly on NVMe (blk-mq) */
-> -			} else if (list_empty(devices) && live_md_type == DM_TYPE_NVME_BIO_BASED) {
-> -				t->type = DM_TYPE_NVME_BIO_BASED;
-> -			}
-> +
-> +		/* Check if upgrading to NVMe bio-based is valid or required */
-> +		tgt = dm_table_get_immutable_target(t);
-> +		if (tgt && !tgt->max_io_len && dm_table_does_not_support_partial_completion(t)) {
-> +			t->type = DM_TYPE_NVME_BIO_BASED;
-> +			goto verify_rq_based; /* must be stacked directly on NVMe (blk-mq) */
-> +		} else if (list_empty(devices) && live_md_type == DM_TYPE_NVME_BIO_BASED) {
-> +			t->type = DM_TYPE_NVME_BIO_BASED;
->  		}
->  		return 0;
->  	}
-> diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-> index 9728433362d1..0ce06fa292fd 100644
-> --- a/drivers/md/dm.c
-> +++ b/drivers/md/dm.c
-> @@ -2192,7 +2192,6 @@ int dm_setup_md_queue(struct mapped_device *md, struct dm_table *t)
->  		}
->  		break;
->  	case DM_TYPE_BIO_BASED:
-> -	case DM_TYPE_DAX_BIO_BASED:
->  		dm_init_normal_md_queue(md);
->  		blk_queue_make_request(md->queue, dm_make_request);
->  		break;
-> @@ -2910,7 +2909,6 @@ struct dm_md_mempools *dm_alloc_md_mempools(struct mapped_device *md, enum dm_qu
->  
->  	switch (type) {
->  	case DM_TYPE_BIO_BASED:
-> -	case DM_TYPE_DAX_BIO_BASED:
->  	case DM_TYPE_NVME_BIO_BASED:
->  		pool_size = max(dm_get_reserved_bio_based_ios(), min_pool_size);
->  		front_pad = roundup(per_io_data_size, __alignof__(struct dm_target_io)) + offsetof(struct dm_target_io, clone);
-> diff --git a/include/linux/device-mapper.h b/include/linux/device-mapper.h
-> index 31fef7c34185..cbf3d7e7ed33 100644
-> --- a/include/linux/device-mapper.h
-> +++ b/include/linux/device-mapper.h
-> @@ -27,8 +27,7 @@ enum dm_queue_mode {
->  	DM_TYPE_BIO_BASED	 = 1,
->  	DM_TYPE_REQUEST_BASED	 = 2,
->  	DM_TYPE_MQ_REQUEST_BASED = 3,
-> -	DM_TYPE_DAX_BIO_BASED	 = 4,
-> -	DM_TYPE_NVME_BIO_BASED	 = 5,
-> +	DM_TYPE_NVME_BIO_BASED	 = 4,
->  };
->  
->  typedef enum { STATUSTYPE_INFO, STATUSTYPE_TABLE } status_type_t;
-> @@ -460,6 +459,11 @@ void dm_table_add_target_callbacks(struct dm_table *t, struct dm_target_callback
->   */
->  void dm_table_set_type(struct dm_table *t, enum dm_queue_mode type);
->  
-> +/*
-> + * Check to see if this target type and all table devices support DAX.
-> + */
-> +bool dm_table_supports_dax(struct dm_table *t);
-> +
->  /*
->   * Finally call this to make the table ready for use.
->   */
-> -- 
-> 2.14.3
-> 
+from the nvdimm tree.
+
+I fixed it up (see below) and can carry the fix as necessary. This
+is now fixed as far as linux-next is concerned, but any non trivial
+conflicts should be mentioned to your upstream maintainer when your tree
+is submitted for merging.  You may also want to consider cooperating
+with the maintainer of the conflicting tree to minimise any particularly
+complex conflicts.
+
+--=20
+Cheers,
+Stephen Rothwell
+diff --cc drivers/dax/super.c
+index 1d7bd96511f0,88672b6f6252..000000000000
+--- a/drivers/dax/super.c
++++ b/drivers/dax/super.c
+@@@ -80,11 -80,13 +80,12 @@@ EXPORT_SYMBOL_GPL(fs_dax_get_by_bdev)
+   * This is a library function for filesystems to check if the block device
+   * can be mounted with dax option.
+   *
+ - * Return: negative errno if unsupported, 0 if supported.
+ + * Return: true if supported, false if unsupported
+   */
+ -int __bdev_dax_supported(struct super_block *sb, int blocksize)
+ +bool __bdev_dax_supported(struct block_device *bdev, int blocksize)
+  {
+ -	struct block_device *bdev =3D sb->s_bdev;
+  	struct dax_device *dax_dev;
++ 	bool dax_enabled =3D false;
+  	pgoff_t pgoff;
+  	int err, id;
+  	void *kaddr;
+@@@ -134,15 -135,22 +135,22 @@@
+  		 * on being able to do (page_address(pfn_to_page())).
+  		 */
+  		WARN_ON(IS_ENABLED(CONFIG_ARCH_HAS_PMEM_API));
++ 		dax_enabled =3D true;
+  	} else if (pfn_t_devmap(pfn)) {
+- 		/* pass */;
+- 	} else {
++ 		struct dev_pagemap *pgmap;
++=20
++ 		pgmap =3D get_dev_pagemap(pfn_t_to_pfn(pfn), NULL);
++ 		if (pgmap && pgmap->type =3D=3D MEMORY_DEVICE_FS_DAX)
++ 			dax_enabled =3D true;
++ 		put_dev_pagemap(pgmap);
++ 	}
++=20
++ 	if (!dax_enabled) {
+ -		pr_debug("VFS (%s): error: dax support not enabled\n",
+ -				sb->s_id);
+ +		pr_debug("%s: error: dax support not enabled\n",
+ +				bdevname(bdev, buf));
+- 		return false;
++ 		return -EOPNOTSUPP;
+  	}
+-=20
+- 	return true;
++ 	return 0;
+  }
+  EXPORT_SYMBOL_GPL(__bdev_dax_supported);
+  #endif
+
+--Sig_/nO66g8gdPLsiZHK6IX858ml
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEyBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAlsRCsYACgkQAVBC80lX
+0GyFOAf2K+fI2g6HeikpCglpE1Sy2lLveEtJwmDWERcgWp2uTChs2ayL2EM/lsEy
+IYtX0eF5hHP+w2M3T3vPtxFR4unKa8ushPRBOkv4enZB1LxbUq4WmRBOGuBBJ9sg
+4EnxdyikLdQ0Ko7++qdtTEsiQ9HoPAvmArmeEH2ixDsDkSsB7vddaqoUtSTZwoQA
+WdgaW6CdZGUhRwxV60aiJlC+43V9LGSljEqdTyK3u8nh4xkLlOSqiMhPnzsGcfih
+aYXP8wj0XXYlQmIdcKDQ5vrOUtdw6aMejtAVVGXmGlFty55ez4aEtXQON+5x29gZ
+vue3ERWlIfRrup6E5xNuzO1eUd43
+=jYhb
+-----END PGP SIGNATURE-----
+
+--Sig_/nO66g8gdPLsiZHK6IX858ml--
