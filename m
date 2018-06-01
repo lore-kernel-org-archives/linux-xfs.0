@@ -1,63 +1,169 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:39700 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751132AbeFCXXR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Jun 2018 19:23:17 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w53NL1PS190005
-        for <linux-xfs@vger.kernel.org>; Sun, 3 Jun 2018 23:23:17 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp2120.oracle.com with ESMTP id 2jbvyp9fqx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 03 Jun 2018 23:23:17 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w53NNGuU030644
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 3 Jun 2018 23:23:16 GMT
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w53NNGnn016883
-        for <linux-xfs@vger.kernel.org>; Sun, 3 Jun 2018 23:23:16 GMT
-Subject: [PATCH 08/10] xfs: btree lookup shouldn't ASSERT on empty btree
- nodes
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sun, 03 Jun 2018 16:23:15 -0700
-Message-ID: <152806819494.18187.5772777797608092085.stgit@magnolia>
-In-Reply-To: <152806814253.18187.4009340462930782844.stgit@magnolia>
-References: <152806814253.18187.4009340462930782844.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:57514 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751042AbeFAIHy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 1 Jun 2018 04:07:54 -0400
+From: Zorro Lang <zlang@redhat.com>
+Subject: [PATCH 3/3] xfstests: dedupe with random io race test
+Date: Fri,  1 Jun 2018 16:07:33 +0800
+Message-Id: <20180601080733.20703-3-zlang@redhat.com>
+In-Reply-To: <20180601080733.20703-1-zlang@redhat.com>
+References: <20180601080733.20703-1-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
+To: fstests@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Run several duperemove processes with fsstress on same directory at
+same time. Make sure the race won't break the fs or kernel.
 
-If a btree lookup encounters an empty btree node or an empty btree leaf
-on a multi-level btree, that's evidence of a corrupt on-disk btree.
-Therefore, we should return -EFSCORRUPTED to the upper levels, not an
-ASSERT failure.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Zorro Lang <zlang@redhat.com>
 ---
- fs/xfs/libxfs/xfs_btree.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ tests/shared/010     | 111 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/shared/010.out |   2 +
+ tests/shared/group   |   1 +
+ 3 files changed, 114 insertions(+)
+ create mode 100755 tests/shared/010
+ create mode 100644 tests/shared/010.out
 
-
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 6101ad685019..4e79baa230f9 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -1939,7 +1939,8 @@ xfs_btree_lookup(
- 			high = xfs_btree_get_numrecs(block);
- 			if (!high) {
- 				/* Block is empty, must be an empty leaf. */
--				ASSERT(level == 0 && cur->bc_nlevels == 1);
-+				if (level != 0 || cur->bc_nlevels != 1)
-+					return -EFSCORRUPTED;
- 
- 				cur->bc_ptrs[0] = dir != XFS_LOOKUP_LE;
- 				*stat = 0;
+diff --git a/tests/shared/010 b/tests/shared/010
+new file mode 100755
+index 00000000..b9618ee6
+--- /dev/null
++++ b/tests/shared/010
+@@ -0,0 +1,111 @@
++#! /bin/bash
++# FS QA Test 010
++#
++# Dedup & random I/O race test, do multi-threads fsstress and dedupe on
++# same directory/files
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2018 Red Hat Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++	kill_all_stress
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/reflink
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# real QA test starts here
++
++# duperemove only supports btrfs and xfs (with reflink feature).
++# Add other filesystems if it supports more later.
++_supported_fs xfs btrfs
++_supported_os Linux
++_require_scratch_dedupe
++_require_command "$DUPEREMOVE_PROG" duperemove
++_require_command "$KILLALL_PROG" killall
++
++_scratch_mkfs > $seqres.full 2>&1
++_scratch_mount >> $seqres.full 2>&1
++
++function kill_all_stress()
++{
++	local f=1
++	local d=1
++
++	# kill the bash process which loop run duperemove
++	if [ -n "$loop_dedup_pid" ]; then
++		kill $loop_dedup_pid > /dev/null 2>&1
++		wait $loop_dedup_pid > /dev/null 2>&1
++		loop_dedup_pid=""
++	fi
++
++	# Make sure all fsstress and duperemove processes get killed
++	while [ $((f + d)) -ne 0 ]; do
++		$KILLALL_PROG -q $FSSTRESS_PROG > /dev/null 2>&1
++		$KILLALL_PROG -q $DUPEREMOVE_PROG > /dev/null 2>&1
++		f=`ps -eLf | grep $FSSTRESS_PROG | grep -v "grep" | wc -l`
++		d=`ps -eLf | grep $DUPEREMOVE_PROG | grep -v "grep" | wc -l`
++		sleep 2
++	done
++}
++
++SLEEP_TIME=$((50 * TIME_FACTOR))
++
++# Start fsstress
++fsstress_opts="-r -n 1000 -p $((5 * LOAD_FACTOR))"
++$FSSTRESS_PROG $fsstress_opts -d $SCRATCH_MNT -l 0 >> $seqres.full 2>&1 &
++loop_dedup_pid=""
++# Start several dedupe processes on same directory
++for ((i = 0; i < $((2 * LOAD_FACTOR)); i++)); do
++	while true; do
++		$DUPEREMOVE_PROG -dr --dedupe-options=same $SCRATCH_MNT/ \
++			>>$seqres.full 2>&1
++	done &
++	loop_dedup_pid="$! $loop_dedup_pid"
++done
++
++# End the test after $SLEEP_TIME seconds
++sleep $SLEEP_TIME
++kill_all_stress
++
++# umount and mount again, verify pagecache contents don't mutate and a fresh
++# read from the disk also doesn't show mutations.
++find $testdir -type f -exec md5sum {} \; > $TEST_DIR/${seq}md5.sum
++_scratch_cycle_mount
++md5sum -c --quiet $TEST_DIR/${seq}md5.sum
++
++echo "Silence is golden"
++status=0
++exit
+diff --git a/tests/shared/010.out b/tests/shared/010.out
+new file mode 100644
+index 00000000..1d83a8d6
+--- /dev/null
++++ b/tests/shared/010.out
+@@ -0,0 +1,2 @@
++QA output created by 010
++Silence is golden
+diff --git a/tests/shared/group b/tests/shared/group
+index 2255844b..9ab88bac 100644
+--- a/tests/shared/group
++++ b/tests/shared/group
+@@ -12,6 +12,7 @@
+ 007 dangerous_fuzzers
+ 008 auto quick dedupe
+ 009 auto dedupe
++010 auto dedupe
+ 032 mkfs auto quick
+ 272 auto enospc rw
+ 289 auto quick
+-- 
+2.14.3
 
