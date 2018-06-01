@@ -1,97 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45198 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S967390AbeE2WGH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 29 May 2018 18:06:07 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v4 1/4] mkfs: distinguish between struct sb_feat_args and struct cli_params
-Date: Tue, 29 May 2018 15:06:00 -0700
-Message-Id: <20180529220603.29420-2-mcgrof@kernel.org>
-In-Reply-To: <20180529220603.29420-1-mcgrof@kernel.org>
-References: <20180529220603.29420-1-mcgrof@kernel.org>
+Received: from userp2130.oracle.com ([156.151.31.86]:52656 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750831AbeFAALy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 20:11:54 -0400
+Date: Thu, 31 May 2018 17:11:39 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs_io: fix signed comparison problem in copy_file_range
+Message-ID: <20180601001139.GG7825@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com, "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-The struct sb_feat_args will actually be shared between the code which
-processes command line options and the configuration file, as such we
-need to clarify and reflect this clearly in documentation.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+cvtnum() returns a signed long long, so the type of 'len' should be a
+signed type so that a user entering a negative length doesn't produce
+some huge positive integer.  The negative len check demands it anyway.
+
+Coverity-id: 1435895
+Fixes: 25b4549c8b54134106cff094aa098eab9e86eee7
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- mkfs/xfs_mkfs.c | 45 ++++++++++++++++++++++++++++-----------------
- 1 file changed, 28 insertions(+), 17 deletions(-)
+ io/copy_file_range.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 2de017130831..84e9d6b2562a 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -707,26 +707,18 @@ cli_opt_set(
- }
- 
- /*
-- * Options configured on the command line.
-- *
-- * This stores all the specific config parameters the user sets on the command
-- * line. We do not use these values directly - they are inputs to the mkfs
-- * geometry validation and override any default configuration value we have.
-+ * Shared superblock configuration options
-  *
-- * We don't keep flags to indicate what parameters are set - if we need to check
-- * if an option was set on the command line, we check the relevant entry in the
-- * option table which records whether it was specified in the .seen and
-- * .str_seen variables in the table.
-+ * These options provide shared configuration tunables for the filesystem
-+ * superblock. There are three possible sources for these options set, each
-+ * source can overriding the later source:
-  *
-- * Some parameters are stored as strings for post-parsing after their dependent
-- * options have been resolved (e.g. block size and sector size have been parsed
-- * and validated).
-+ * 	o built-in defaults
-+ * 	o configuration file (XXX)
-+ * 	o command line
-  *
-- * This allows us to check that values have been set without needing separate
-- * flags for each value, and hence avoids needing to record and check for each
-- * specific option that can set the value later on in the code. In the cases
-- * where we don't have a cli_params structure around, the above cli_opt_set()
-- * function can be used.
-+ * These values are not used directly - they are inputs into the mkfs geometry
-+ * validation.
-  */
- struct sb_feat_args {
- 	int	log_version;
-@@ -747,6 +739,25 @@ struct sb_feat_args {
- 	bool	nortalign;
- };
- 
-+/*
-+ * Options configured on the command line.
-+ *
-+ * This stores all the specific config parameters the user sets on the command
-+ * line.  We don't keep flags to indicate what parameters are set - if we need
-+ * to check if an option was set on the command line, we check the relevant
-+ * entry in the option table which records whether it was specified in the
-+ * .seen and .str_seen variables in the table.
-+ *
-+ * Some parameters are stored as strings for post-parsing after their dependent
-+ * options have been resolved (e.g. block size and sector size have been parsed
-+ * and validated).
-+ *
-+ * This allows us to check that values have been set without needing separate
-+ * flags for each value, and hence avoids needing to record and check for each
-+ * specific option that can set the value later on in the code. In the cases
-+ * where we don't have a cli_params structure around, the function cli_opt_set()
-+ * function can be used.
-+ */
- struct cli_params {
- 	int	sectorsize;
- 	int	blocksize;
--- 
-2.16.3
-
+diff --git a/io/copy_file_range.c b/io/copy_file_range.c
+index ebd1ec76..4d0770ef 100644
+--- a/io/copy_file_range.c
++++ b/io/copy_file_range.c
+@@ -91,7 +91,7 @@ copy_range_f(int argc, char **argv)
+ {
+ 	long long src = 0;
+ 	long long dst = 0;
+-	size_t len = 0;
++	long long len = 0;
+ 	int opt;
+ 	int ret;
+ 	int fd;
