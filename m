@@ -1,155 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:60092 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751132AbeFCXIg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Jun 2018 19:08:36 -0400
-Date: Sun, 3 Jun 2018 16:08:31 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: NULL pointer dereference in xfs_bmap_extents_to_btree() when
- mounting and operating a crafted image
-Message-ID: <20180603230831.GK7825@magnolia>
-References: <CANrHXgzLvaud2HEv3jAFGTfn5S80d7Rwj-ztJNWPT8eyFTohMg@mail.gmail.com>
- <20180603223435.GU10363@dastard>
- <20180603230341.GV10363@dastard>
+Received: from mail-yb0-f196.google.com ([209.85.213.196]:34112 "EHLO
+        mail-yb0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750796AbeFAIGF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Jun 2018 04:06:05 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180603230341.GV10363@dastard>
+In-Reply-To: <20180601075702.12467-1-yosun@suse.com>
+References: <20180601075702.12467-1-yosun@suse.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Fri, 1 Jun 2018 11:06:04 +0300
+Message-ID: <CAOQ4uxhA31ZMvvUZetyV-EegaWs4w5-ibhen7fNrNFHa8=SW4Q@mail.gmail.com>
+Subject: Re: [PATCH] xfstests/btrfs: adapt ppc64le node size at least 65536
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Wen Xu <xuwen.sjtu@gmail.com>, linux-xfs@vger.kernel.org
+To: Yong Sun <yosun@suse.com>
+Cc: fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Jun 04, 2018 at 09:03:41AM +1000, Dave Chinner wrote:
-> On Mon, Jun 04, 2018 at 08:34:35AM +1000, Dave Chinner wrote:
-> > On Sun, Jun 03, 2018 at 06:19:54PM -0400, Wen Xu wrote:
-> > > Hi XFS developers and maintainers,
-> > > Please check: https://bugzilla.kernel.org/show_bug.cgi?id=199915
-> > 
-> > Please report bugs straight to this list - it's much easier to
-> > track and faster to discuss bugs through email than it is through
-> > bugzilla.
-> 
-> Image log size is too small for the filesystem config. If this was
-> a v5 filesystem, then the image would refuse to mount right there.
-> 
-> As it is, a CONFIG_XFS_DEBUG=y kernel assert fails at mount in
-> xfs_check_agi_unlinked().
-> 
-> #ifdef DEBUG
-> STATIC void
-> xfs_check_agi_unlinked(
->         struct xfs_agi          *agi)
-> {
->         int                     i;
-> 
->         for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++)
->                 ASSERT(agi->agi_unlinked[i]);
-> }
-> #else
-> #define xfs_check_agi_unlinked(agi)
-> #endif
-> 
-> With the patch below, the image fails to mount with an error:
-> 
-> [   89.695774] XFS (loop0): Mounting V4 Filesystem
-> [   89.696941] XFS (loop0): Log size 864 blocks too small, minimum size is 942 blocks
-> [   89.698603] XFS (loop0): Log size out of supported range.
-> [   89.699833] XFS (loop0): Continuing onwards, but if log hangs are experienced then please report this message in the bug report.
-> [   89.703651] XFS (loop0): Metadata corruption detected at xfs_agi_verify+0x153/0x170, xfs_agi block 0x2
-> [   89.705349] XFS (loop0): Unmount and run xfs_repair
-> [   89.706179] XFS (loop0): First 128 bytes of corrupted metadata buffer:
-> [   89.707317] 00000000bef77f4d: 58 41 47 49 00 00 00 01 00 00 00 00 00 00 10 00  XAGI............
-> [   89.708824] 000000003cd6f10c: 00 00 00 40 00 00 00 03 00 00 00 01 00 00 00 00  ...@............
-> [   89.710309] 000000002ec75c4c: 00 00 00 00 00 00 00 00 00 00 00 ff ff ff ff ff  ................
-> [   89.711749] 00000000d83fa14d: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff  ................
-> [   89.713127] 00000000c41242dd: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff  ................
-> [   89.714484] 000000006c41c134: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff  ................
-> [   89.715841] 00000000b8f9ac70: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff  ................
-> [   89.717145] 000000005258d181: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 00  ................
-> [   89.718444] XFS (loop0): metadata I/O error in "xfs_trans_read_buf_map" at daddr 0x2 len 1 error 117
-> [   89.719834] XFS (loop0): xfs_imap_lookup: xfs_ialloc_read_agi() returned error -117, agno 0
-> [   89.721099] XFS (loop0): failed to read root inode
-> 
-> Please rework the test image so that it mounts cleanly without
-> warnings or shutdowns with the patch below and then retest the POC
-> code.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> xfs: verify AGI unlinked list contains valid blocks
-> 
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> The heads of tha AGI unlinked list are only scanned on debug
-> kernels when the verifier runs. Change that to always scan the heads
-> and validate that the inode numbers are valid.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Wrong list. You were looking for <fstests@vger.kernel.org>
 
-Looks good to me,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Thanks,
+Amir.
 
---D
-
-> 
+On Fri, Jun 1, 2018 at 10:57 AM, Yong Sun <yosun@suse.com> wrote:
+> From: yosun <yosun@suse.com>
+>
+> node size(leaf size) in ppc64le at least 65536, so mkfs with --nodesize smaller than that number will cause a fail on 057 and 122.
+>
+> Signed-off-by: Yong Sun <yosun@suse.com>
 > ---
->  fs/xfs/libxfs/xfs_ialloc.c | 23 ++++++++---------------
->  1 file changed, 8 insertions(+), 15 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> index 1ef6ff2ca002..ec5ea02b5553 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc.c
-> +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> @@ -2465,26 +2465,13 @@ xfs_ialloc_log_agi(
->  	}
->  }
->  
-> -#ifdef DEBUG
-> -STATIC void
-> -xfs_check_agi_unlinked(
-> -	struct xfs_agi		*agi)
-> -{
-> -	int			i;
-> -
-> -	for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++)
-> -		ASSERT(agi->agi_unlinked[i]);
-> -}
-> -#else
-> -#define xfs_check_agi_unlinked(agi)
-> -#endif
-> -
->  static xfs_failaddr_t
->  xfs_agi_verify(
->  	struct xfs_buf	*bp)
->  {
->  	struct xfs_mount *mp = bp->b_target->bt_mount;
->  	struct xfs_agi	*agi = XFS_BUF_TO_AGI(bp);
-> +	int		i;
->  
->  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
->  		if (!uuid_equal(&agi->agi_uuid, &mp->m_sb.sb_meta_uuid))
-> @@ -2520,7 +2507,13 @@ xfs_agi_verify(
->  	if (bp->b_pag && be32_to_cpu(agi->agi_seqno) != bp->b_pag->pag_agno)
->  		return __this_address;
->  
-> -	xfs_check_agi_unlinked(agi);
-> +	for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++) {
-> +		if (agi->agi_unlinked[i] == NULLAGINO)
-> +			continue;
-> +		if (!xfs_verify_ino(mp, be32_to_cpu(agi->agi_unlinked[i])))
-> +			return __this_address;
-> +	}
+>  tests/btrfs/057 | 6 ++++++
+>  tests/btrfs/122 | 8 +++++++-
+>  2 files changed, 13 insertions(+), 1 deletion(-)
+>
+> diff --git a/tests/btrfs/057 b/tests/btrfs/057
+> index a834b763..69d096fb 100755
+> --- a/tests/btrfs/057
+> +++ b/tests/btrfs/057
+> @@ -48,6 +48,12 @@ _require_scratch
+>
+>  rm -f $seqres.full
+>
+> +# the nodesize in ppc64le is at least 65536, it will mismatch output
+> +HARDWARE_PLATFORM=`uname -i`
+> +if [ "$HARDWARE_PLATFORM" = "ppc64le" ]; then
+> +        _notrun "Not supported on ppc64le with nodesize > 4096"
+> +fi
 > +
->  	return NULL;
->  }
->  
+>  # use small leaf size to get higher btree height.
+>  run_check _scratch_mkfs "-b 1g --nodesize 4096"
+>
+> diff --git a/tests/btrfs/122 b/tests/btrfs/122
+> index 213a27f8..50003ad0 100755
+> --- a/tests/btrfs/122
+> +++ b/tests/btrfs/122
+> @@ -55,7 +55,13 @@ rm -f $seqres.full
+>
+>  # Force a small leaf size to make it easier to blow out our root
+>  # subvolume tree
+> -_scratch_mkfs "--nodesize 16384" >/dev/null
+> +# Exception: leaf size at least 65536 in ppc64le
+> +HARDWARE_PLATFORM=`uname -i`
+> +if [ "$HARDWARE_PLATFORM" = "ppc64le" ]; then
+> +        _scratch_mkfs "--nodesize 65536" >/dev/null
+> +else
+> +        _scratch_mkfs "--nodesize 16384" >/dev/null
+> +fi
+>  _scratch_mount
+>  _run_btrfs_util_prog quota enable $SCRATCH_MNT
+>
+> --
+> 2.13.6
+>
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
