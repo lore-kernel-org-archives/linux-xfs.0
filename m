@@ -1,101 +1,231 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:45917 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750964AbeFCBv5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 2 Jun 2018 21:51:57 -0400
-Received: from Thorsten-PC.fritz.box ([5.147.28.226]) by mail.gmx.com
- (mrgmx102 [212.227.17.168]) with ESMTPSA (Nemesis) id
- 0LuJDv-1gPGtI3icR-011hjR for <linux-xfs@vger.kernel.org>; Sun, 03 Jun 2018
- 03:51:55 +0200
-Message-ID: <e462d333d2089a7c3c59e7584fa83f720365fa46.camel@quantentunnel.de>
-Subject: Strange XFS problem
-From: Thorsten Hufnagel <Mondsuechtig@quantentunnel.de>
-Date: Sun, 03 Jun 2018 03:51:55 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8BIT
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:56202 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750916AbeFAWEp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 1 Jun 2018 18:04:45 -0400
+Date: Fri, 1 Jun 2018 18:04:43 -0400
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH v2 5/7] dm: remove DM_TYPE_DAX_BIO_BASED dm_queue_mode
+Message-ID: <20180601220443.GB18712@redhat.com>
+References: <20180529195106.14268-1-ross.zwisler@linux.intel.com>
+ <20180529195106.14268-6-ross.zwisler@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180529195106.14268-6-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Toshi Kani <toshi.kani@hpe.com>, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-Hi there,
+On Tue, May 29 2018 at  3:51pm -0400,
+Ross Zwisler <ross.zwisler@linux.intel.com> wrote:
 
-I've just a big problem with my XFS file system used on a mdraid raid 5
-array.
+> The DM_TYPE_DAX_BIO_BASED dm_queue_mode was introduced to prevent DM
+> devices that could possibly support DAX from transitioning into DM devices
+> that cannot support DAX.
+> 
+> For example, the following transition will currently fail:
+> 
+>  dm-linear: [fsdax pmem][fsdax pmem] => [fsdax pmem][fsdax raw]
+> 	      DM_TYPE_DAX_BIO_BASED       DM_TYPE_BIO_BASED
+> 
+> but these will both succeed:
+> 
+>  dm-linear: [fsdax pmem][brd ramdisk] => [fsdax pmem][fsdax raw]
+>  	      DM_TYPE_DAX_BIO_BASED        DM_TYPE_BIO_BASED
+> 
 
-It started with the situation that the mount of my device was not
-possible any more (don't know why, hdd's are OK).
+I fail to see how this succeeds given
+drivers/md/dm-ioctl.c:is_valid_type() only allows transitions from:
 
-"xfs_repair" results in
+DM_TYPE_BIO_BASED => DM_TYPE_DAX_BIO_BASED
 
-"
-ERROR: The log head and/or tail cannot be discovered. Attempt to mount
-the
-filesystem to replay the log or use the -L option to destroy the log
-and
-attempt a repair.
-"
+>  dm-linear: [fsdax pmem][fsdax raw] => [fsdax pmem][fsdax pmem]
+>  		DM_TYPE_BIO_BASED        DM_TYPE_DAX_BIO_BASED
+> 
+> This seems arbitrary, as really the choice on whether to use DAX happens at
+> filesystem mount time.  There's no guarantee that the in the first case
+> (double fsdax pmem) we were using the dax mount option with our file
+> system.
+> 
+> Instead, get rid of DM_TYPE_DAX_BIO_BASED and all the special casing around
+> it, and instead make the request queue's QUEUE_FLAG_DAX be our one source
+> of truth.  If this is set, we can use DAX, and if not, not.  We keep this
+> up to date in table_load() as the table changes.  As with regular block
+> devices the filesystem will then know at mount time whether DAX is a
+> supported mount option or not.
 
-"xfs_repair -L " ran, but unfortunately it was interrupted by an
-automatic server shutdown after it stuck after stage 7.
+If you don't think you need this specialization that is fine.. but DM
+devices supporting suspending (as part of table reloads) so is there any
+risk that there will be inflight IO (say if someone did 'dmsetup suspend
+--noflush').. and then upon reload the device type changed out from
+under us.. anyway, I don't have all the PMEM DAX stuff paged back into
+my head yet.
 
-Now, "xfs_repair" results in
+But this just seems like we really shouldn't be allowing the
+transition from what was DM_TYPE_DAX_BIO_BASED back to DM_TYPE_BIO_BASED
 
-"
-Phase 1 - Superblock finden und überprüfen...
-        - Berichts-Prozess in Abständen von 15 Minutes
-Phase 2 - ein internes Protokoll benutzen
-        - Null-Protokoll...
-Log inconsistent or not a log (last==0, first!=1)
-empty log check failed
-zero_log: cannot find log head/tail (xlog_find_tail=22)
-ERROR: The log head and/or tail cannot be discovered. Attempt to mount
-the
-filesystem to replay the log or use the -L option to destroy the log
-and
-attempt a repair.
-"
+Mike
 
-A mount attemp results in 
-
-"
-mount: /mnt/test: Falscher Dateisystemtyp, ungültige Optionen, der
-Superblock von /dev/md2 ist beschädigt, fehlende Kodierungsseite oder
-ein anderer Fehler.
-"
-
-And "xfs_repair -L" results in 
-
-"
-Phase 1 - Superblock finden und überprüfen...
-        - Berichts-Prozess in Abständen von 15 Minutes
-Phase 2 - ein internes Protokoll benutzen
-        - Null-Protokoll...
-Log inconsistent or not a log (last==0, first!=1)
-empty log check failed
-zero_log: cannot find log head/tail (xlog_find_tail=22)
-"
-
-Sounds linke some kind of "Hen-egg" problem.
-
-Is there any change to get the XFS file sytem back running without
-recreating the filesystem?
-
-Kernel:
-
-"
-uname -r
-4.16.12-1-default
-"
-
-Distribution: "Opensuse - Tumbleween"
-
-XFS tools: "xfs_repair Version 4.15.1"
-
-Thank you in advance,
-Kind regards,
-
-Thorsten Hufnagel
-
-
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> ---
+>  drivers/md/dm-ioctl.c         | 16 ++++++----------
+>  drivers/md/dm-table.c         | 25 ++++++++++---------------
+>  drivers/md/dm.c               |  2 --
+>  include/linux/device-mapper.h |  8 ++++++--
+>  4 files changed, 22 insertions(+), 29 deletions(-)
+> 
+> diff --git a/drivers/md/dm-ioctl.c b/drivers/md/dm-ioctl.c
+> index 5acf77de5945..d1f86d0bb2d0 100644
+> --- a/drivers/md/dm-ioctl.c
+> +++ b/drivers/md/dm-ioctl.c
+> @@ -1292,15 +1292,6 @@ static int populate_table(struct dm_table *table,
+>  	return dm_table_complete(table);
+>  }
+>  
+> -static bool is_valid_type(enum dm_queue_mode cur, enum dm_queue_mode new)
+> -{
+> -	if (cur == new ||
+> -	    (cur == DM_TYPE_BIO_BASED && new == DM_TYPE_DAX_BIO_BASED))
+> -		return true;
+> -
+> -	return false;
+> -}
+> -
+>  static int table_load(struct file *filp, struct dm_ioctl *param, size_t param_size)
+>  {
+>  	int r;
+> @@ -1343,12 +1334,17 @@ static int table_load(struct file *filp, struct dm_ioctl *param, size_t param_si
+>  			DMWARN("unable to set up device queue for new table.");
+>  			goto err_unlock_md_type;
+>  		}
+> -	} else if (!is_valid_type(dm_get_md_type(md), dm_table_get_type(t))) {
+> +	} else if (dm_get_md_type(md) != dm_table_get_type(t)) {
+>  		DMWARN("can't change device type after initial table load.");
+>  		r = -EINVAL;
+>  		goto err_unlock_md_type;
+>  	}
+>  
+> +	if (dm_table_supports_dax(t))
+> +		blk_queue_flag_set(QUEUE_FLAG_DAX, md->queue);
+> +	else
+> +		blk_queue_flag_clear(QUEUE_FLAG_DAX, md->queue);
+> +
+>  	dm_unlock_md_type(md);
+>  
+>  	/* stage inactive table */
+> diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
+> index 5bb994b012ca..ea5c4a1e6f5b 100644
+> --- a/drivers/md/dm-table.c
+> +++ b/drivers/md/dm-table.c
+> @@ -866,7 +866,6 @@ EXPORT_SYMBOL(dm_consume_args);
+>  static bool __table_type_bio_based(enum dm_queue_mode table_type)
+>  {
+>  	return (table_type == DM_TYPE_BIO_BASED ||
+> -		table_type == DM_TYPE_DAX_BIO_BASED ||
+>  		table_type == DM_TYPE_NVME_BIO_BASED);
+>  }
+>  
+> @@ -888,7 +887,7 @@ static int device_supports_dax(struct dm_target *ti, struct dm_dev *dev,
+>  	return bdev_dax_supported(dev->bdev, PAGE_SIZE);
+>  }
+>  
+> -static bool dm_table_supports_dax(struct dm_table *t)
+> +bool dm_table_supports_dax(struct dm_table *t)
+>  {
+>  	struct dm_target *ti;
+>  	unsigned i;
+> @@ -907,6 +906,7 @@ static bool dm_table_supports_dax(struct dm_table *t)
+>  
+>  	return true;
+>  }
+> +EXPORT_SYMBOL_GPL(dm_table_supports_dax);
+>  
+>  static bool dm_table_does_not_support_partial_completion(struct dm_table *t);
+>  
+> @@ -944,7 +944,6 @@ static int dm_table_determine_type(struct dm_table *t)
+>  			/* possibly upgrade to a variant of bio-based */
+>  			goto verify_bio_based;
+>  		}
+> -		BUG_ON(t->type == DM_TYPE_DAX_BIO_BASED);
+>  		BUG_ON(t->type == DM_TYPE_NVME_BIO_BASED);
+>  		goto verify_rq_based;
+>  	}
+> @@ -981,18 +980,14 @@ static int dm_table_determine_type(struct dm_table *t)
+>  verify_bio_based:
+>  		/* We must use this table as bio-based */
+>  		t->type = DM_TYPE_BIO_BASED;
+> -		if (dm_table_supports_dax(t) ||
+> -		    (list_empty(devices) && live_md_type == DM_TYPE_DAX_BIO_BASED)) {
+> -			t->type = DM_TYPE_DAX_BIO_BASED;
+> -		} else {
+> -			/* Check if upgrading to NVMe bio-based is valid or required */
+> -			tgt = dm_table_get_immutable_target(t);
+> -			if (tgt && !tgt->max_io_len && dm_table_does_not_support_partial_completion(t)) {
+> -				t->type = DM_TYPE_NVME_BIO_BASED;
+> -				goto verify_rq_based; /* must be stacked directly on NVMe (blk-mq) */
+> -			} else if (list_empty(devices) && live_md_type == DM_TYPE_NVME_BIO_BASED) {
+> -				t->type = DM_TYPE_NVME_BIO_BASED;
+> -			}
+> +
+> +		/* Check if upgrading to NVMe bio-based is valid or required */
+> +		tgt = dm_table_get_immutable_target(t);
+> +		if (tgt && !tgt->max_io_len && dm_table_does_not_support_partial_completion(t)) {
+> +			t->type = DM_TYPE_NVME_BIO_BASED;
+> +			goto verify_rq_based; /* must be stacked directly on NVMe (blk-mq) */
+> +		} else if (list_empty(devices) && live_md_type == DM_TYPE_NVME_BIO_BASED) {
+> +			t->type = DM_TYPE_NVME_BIO_BASED;
+>  		}
+>  		return 0;
+>  	}
+> diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+> index 9728433362d1..0ce06fa292fd 100644
+> --- a/drivers/md/dm.c
+> +++ b/drivers/md/dm.c
+> @@ -2192,7 +2192,6 @@ int dm_setup_md_queue(struct mapped_device *md, struct dm_table *t)
+>  		}
+>  		break;
+>  	case DM_TYPE_BIO_BASED:
+> -	case DM_TYPE_DAX_BIO_BASED:
+>  		dm_init_normal_md_queue(md);
+>  		blk_queue_make_request(md->queue, dm_make_request);
+>  		break;
+> @@ -2910,7 +2909,6 @@ struct dm_md_mempools *dm_alloc_md_mempools(struct mapped_device *md, enum dm_qu
+>  
+>  	switch (type) {
+>  	case DM_TYPE_BIO_BASED:
+> -	case DM_TYPE_DAX_BIO_BASED:
+>  	case DM_TYPE_NVME_BIO_BASED:
+>  		pool_size = max(dm_get_reserved_bio_based_ios(), min_pool_size);
+>  		front_pad = roundup(per_io_data_size, __alignof__(struct dm_target_io)) + offsetof(struct dm_target_io, clone);
+> diff --git a/include/linux/device-mapper.h b/include/linux/device-mapper.h
+> index 31fef7c34185..cbf3d7e7ed33 100644
+> --- a/include/linux/device-mapper.h
+> +++ b/include/linux/device-mapper.h
+> @@ -27,8 +27,7 @@ enum dm_queue_mode {
+>  	DM_TYPE_BIO_BASED	 = 1,
+>  	DM_TYPE_REQUEST_BASED	 = 2,
+>  	DM_TYPE_MQ_REQUEST_BASED = 3,
+> -	DM_TYPE_DAX_BIO_BASED	 = 4,
+> -	DM_TYPE_NVME_BIO_BASED	 = 5,
+> +	DM_TYPE_NVME_BIO_BASED	 = 4,
+>  };
+>  
+>  typedef enum { STATUSTYPE_INFO, STATUSTYPE_TABLE } status_type_t;
+> @@ -460,6 +459,11 @@ void dm_table_add_target_callbacks(struct dm_table *t, struct dm_target_callback
+>   */
+>  void dm_table_set_type(struct dm_table *t, enum dm_queue_mode type);
+>  
+> +/*
+> + * Check to see if this target type and all table devices support DAX.
+> + */
+> +bool dm_table_supports_dax(struct dm_table *t);
+> +
+>  /*
+>   * Finally call this to make the table ready for use.
+>   */
+> -- 
+> 2.14.3
+> 
