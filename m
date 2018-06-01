@@ -1,153 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot0-f195.google.com ([74.125.82.195]:36627 "EHLO
-        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750756AbeFABDq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 21:03:46 -0400
-Received: by mail-ot0-f195.google.com with SMTP id m11-v6so27448959otf.3
-        for <linux-xfs@vger.kernel.org>; Thu, 31 May 2018 18:03:46 -0700 (PDT)
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:45306 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750941AbeFAB5e (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 21:57:34 -0400
+Received: by mail-oi0-f67.google.com with SMTP id b130-v6so21191516oif.12
+        for <linux-xfs@vger.kernel.org>; Thu, 31 May 2018 18:57:34 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20180531230550.GN10363@dastard>
-References: <20180531112731.0CAC.E1E9C6FF@jp.fujitsu.com> <20180531150716.GA19764@linux.intel.com>
- <CAPcyv4jpffaM60tTdLTojhh0CDwcbVUdS8td7R6LKWM3bb15dw@mail.gmail.com>
- <20180531174636.GA7825@magnolia> <CAPcyv4gS1GCN9TFjngTmmHu83-uMgRpvvx842ZGnvxB3PbgU+Q@mail.gmail.com>
- <20180531230550.GN10363@dastard>
+In-Reply-To: <20180601012657.GQ10363@dastard>
+References: <20180529195106.14268-1-ross.zwisler@linux.intel.com>
+ <20180529195106.14268-3-ross.zwisler@linux.intel.com> <20180529212510.GJ30110@magnolia>
+ <20180529220114.GA13948@linux.intel.com> <20180531191332.GB7825@magnolia> <20180601012657.GQ10363@dastard>
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 31 May 2018 18:03:45 -0700
-Message-ID: <CAPcyv4g6z5Bm7iQ6sbPMc95+AYG6W_CoHFCQK4h143bnAa5+FQ@mail.gmail.com>
-Subject: Re: Question about Experimental of Filesystem DAX.
+Date: Thu, 31 May 2018 18:57:33 -0700
+Message-ID: <CAPcyv4g6dv9sG9dR-iY+aEfSi2r3ey1dXGbX-nexKsN72t0QMw@mail.gmail.com>
+Subject: Re: [PATCH v2 2/7] dax: change bdev_dax_supported() to support
+ boolean returns
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Yasunori Goto <y-goto@jp.fujitsu.com>, Jan Kara <jack@suse.cz>, linux-xfs <linux-xfs@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, NVDIMM-ML <linux-nvdimm@lists.01.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Mike Snitzer <snitzer@redhat.com>, linux-nvdimm <linux-nvdimm@lists.01.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-On Thu, May 31, 2018 at 4:05 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Thu, May 31, 2018 at 11:26:43AM -0700, Dan Williams wrote:
->> On Thu, May 31, 2018 at 10:46 AM, Darrick J. Wong
->> <darrick.wong@oracle.com> wrote:
->> > On Thu, May 31, 2018 at 09:29:15AM -0700, Dan Williams wrote:
->> >> On Thu, May 31, 2018 at 8:07 AM, Ross Zwisler
->> >> <ross.zwisler@linux.intel.com> wrote:
->> >> > On Thu, May 31, 2018 at 11:27:33AM +0900, Yasunori Goto wrote:
->> >> >> Hello,
->> >> >>
->> >> >>
->> >> >> I would like to know about the Experimental message of Filesystem DAX.
->> >> >> --------------------------------------------------------
->> >> >> DAX enabled. Warning: EXPERIMENTAL, use at your own risk
->> >> >> --------------------------------------------------------
->> >> >>
->> >> >> AFAIK, the final issue of Filesystem DAX is metadata update problem,
->> >> >> and it is(will be?) solved by great effort of MAP_SYNC and
->> >> >> "fix dma vs truncate/hole-punch" patch set.
->> >> >> So, I suppose that the Experimental message can be removed,
->> >> >> but I'm not sure.
->> >> >>
->> >> >> Is it possible?
->> >> >> Otherwise, are there any other issues in Filesystem DAX yet?
->> >> >>
->> >> >> If this is silly question, sorry for noise....
->> >> >>
->> >> >> Thanks,
->> >> >> ---
->> >> >> Yasunori Goto
->> >> >
->> >> > Adding in the XFS and ext4 developers, as it's really their call when to
->> >> > remove this notice.
->> >> >
->> >> > We've talked about this off and on for a long while, but IMHO we should remove
->> >> > the EXPERIMENTAL warning.  The last few things that we had on our TODO list
->> >> > before this was removed were:
->> >> >
->> >> > 1) Get consistent handling of the DAX mount option.  We currently have this,
->> >> > as both filesystems will behave the same and fall back and remove the DAX
->> >> > mount option if it is unsupported by the block device, etc.
+On Thu, May 31, 2018 at 6:26 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Thu, May 31, 2018 at 12:13:32PM -0700, Darrick J. Wong wrote:
+>> On Tue, May 29, 2018 at 04:01:14PM -0600, Ross Zwisler wrote:
+>> > On Tue, May 29, 2018 at 02:25:10PM -0700, Darrick J. Wong wrote:
+>> > > On Tue, May 29, 2018 at 01:51:01PM -0600, Ross Zwisler wrote:
+>> > > > From: Dave Jiang <dave.jiang@intel.com>
+>> > > >
+>> > > > The function return values are confusing with the way the function is
+>> > > > named. We expect a true or false return value but it actually returns
+>> > > > 0/-errno.  This makes the code very confusing. Changing the return values
+>> > > > to return a bool where if DAX is supported then return true and no DAX
+>> > > > support returns false.
+>> > > >
+>> > > > Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+>> > > > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+>> > >
+>> > > Looks ok, do you want me to pull the first two patches through the xfs
+>> > > tree?
+>> > >
+>> > > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 >> >
->> > <nod>
+>> > Thanks for the review.
 >> >
->> > As an aside, I wonder if Christoph's musings about "just have the kernel
->> > determine the appropriate dax/non-dax setting from the acpi tables and
->> > skip the inode flag entirely" ever got resolved?
+>> > I'm not sure what's best.  If you do that then Mike will need to have a DM
+>> > branch for the rest of the series based on your stable commits, yea?
 >> >
->> >> > 2) Get consistent handling of the DAX inode option.  We currently have this,
->> >> > as all DAX behavior now happens through the mount option.  If/when we
->> >> > re-enable the per-inode DAX flag we should do it consistently for all DAX
->> >> > enabled filesystems.
->> >
->> > The behavior of the inode flag isn't all that consistent.  ext4 doesn't
->> > support it at all.  On XFS, you can set or clear FS_XFLAG_DAX on a
->> > directory which will propagate the setting to any files created in that
->> > directory.
->> >
->> > However, if you set or clear it on a file we update the on-disk inode
->> > but we can't change the in-core state flag (S_DAX) until the next
->> > in-core inode instantiation.  It's weird that users can change the flag
->> > but the intended behavior changes won't happen until some ... time ...
->> > in the future??
->> >
->> >> > 3) Make DAX work with other XFS features like reflink, etc.  This one isn't
->> >> > done, but we at least disallow DAX with XFS features like reflink where it
->> >> > could be an issue.  Darrick, do you still feel like we need to get these
->> >> > working together to remove EXPERIMENTAL, or are you happy enough that we're
->> >> > keeping them separated and that we're keeping user data safe?
->> >
->> > Yes, reflink and dax still need to work together.  I've not heard any
->> > good arguments for why page sharing + copy on write are fundamentally
->> > incompatible with the dax model, or why dax users will never, ever
->> > require reflink.
+>> > Mike what would you prefer?
 >>
->> Right, but that's separate from DAX being scream in your face
->> "EXPERIMENTAL!". It's just an additional feature that can be added on
->> once all the normal expectations of a userspace mapping work. I think
->> reliable rmap is the last of those requirements.
->>
->> > The recent thread between Jan and Dan make me wonder if making mappings
->> > share struct pages is going to be a nightmare to add to the mm code,
->> > though...
->>
->> It's going to be a bit messy because a singular page->mapping
->> association is fundamentally incompatible with DAX. Perhaps a linked
->> list of mapping "siblings"?
+>> I /was/ about to say that I would pull in the first two patches, but now
+>> I can't get xfs to mount with pmem at all, and have no way of testing
+>> this...?
 >
-> I'd much prefer the filesystem allocate/control the struct page that
-> is inserted into mapping trees so we can have multiple struct pages
-> pointing at the one physical page.  That way we can just insert
-> these dynamic struct pages into the relevant mappings and it works
-> the same way for both DAX and shared page cache pages.
-
-How would that work when there is a 1:1 pfn-to-page and
-file-block-to-pfn relationship?
-
-> i.e. the filesystem knows they are shared physical blocks, the
-> filesystem controls COW of physical blocks, the filesystem controls
-> truncate/invalidation of physical blocks, the filesystem controls
-> cache state of the physical blocks. So why are we designing
-> infrastructure around the virtual memory and caching infrastructure
-> that bypasses the layer that manages and arbitrates access to the
-> physical storage?
-
-Yes, because DAX broke the vm's assumptions that pages are not
-physical storage blocks.
-
-> This seems like we're well down the path of a architectural layering
-> violation that is backing us into a corner we're not going to be
-> able to get ourselves out of...
-
-I think it is solvable by teaching the vm more about dax pages and
-having it call back into the filesytem for some of these operations.
-
->> > Also: ideally XFS would also be able to consume poison event
->> > notifications from the pmem so that it can try to deal with metadata
->> > loss, but that's probably a separate effort.
+> I have similar problems, too, but:
 >
-> If the design is such that the layer that manages the physical
-> storage isn't going to be told about physical storage failures
-> before anyone else is informed, it would seem to me like we really
-> have introduced a major architectural flaw in DAX....
+> $ ndctl list
+> [
+>   {
+>     "dev":"namespace1.0",
+>     "mode":"raw",
+>     "size":8589934592,
+>     "sector_size":512,
+>     "blockdev":"pmem1"
+>   },
+>   {
+>     "dev":"namespace0.0",
+>     "mode":"raw",
+>     "size":8589934592,
+>     "sector_size":512,
+>     "blockdev":"pmem0"
+>   }
+> ]
+> $ sudo ndctl create-namespace -f -e namespace0.0 --mode=fsdax
+>   Error: operation failed, region0 fsdax mode not available
+>
+> failed to reconfigure namespace: Invalid argument
+> $
+>
+> I can't make head or tail of what is going wrong here - how am I
+> supposed to debug this and get it working again?
+>
+> FWIW, XFS+DAX used to just work on this setup (I hadn't even
+> installed ndctl until this morning!) but after changing the kernel
+> it no longer works. That would make it a regression, yes?
 
-It would be trivial to hook these notifications into the filesystem.
-This is something we've had on the backlog for a long time to circle
-back and address. This has been waiting for the xfs reverse-map work
-to settle and for one of us pmem developers to free up and do the
-work.
+This commit caused the behavior change:
+
+    569d0365f571 dax: require 'struct page' by default for filesystem dax
+
+The justification is in that patch, but the short summary is we killed
+off "pageless" dax because it had so many incomplete holes and
+surprise behaviors. It needed to die on the path to making dax not
+experimental, i.e. to close safety holes, and be feature complete for
+all the ways userspace expects to use mappings (direct-io, fork,
+poison handling, etc).
+
+I suspect your kernel does not have CONFIG_ZONE_DEVICE enabled which
+has the following dependencies:
+
+        depends on MEMORY_HOTPLUG
+        depends on MEMORY_HOTREMOVE
+        depends on SPARSEMEM_VMEMMAP
+
+I've created a task to go improve ndctl's error reporting for
+troubleshooting this failure.
