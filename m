@@ -1,35 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from smtp-fw-4101.amazon.com ([72.21.198.25]:14604 "EHLO
-        smtp-fw-4101.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756364AbeEASsR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 May 2018 14:48:17 -0400
-From: Aleksei Besogonov <cyberax@amazon.com>
-Subject: [PATCH 0/2] RFC: iomap-based swapfile activation
-Date: Tue, 1 May 2018 18:48:05 +0000
-Message-ID: <20180501184807.123111-1-cyberax@amazon.com>
+Received: from sandeen.net ([63.231.237.45]:42104 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750736AbeFAAgT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 May 2018 20:36:19 -0400
+Subject: Re: [PATCH] xfs_io: fix signed comparison problem in copy_file_range
+References: <20180601001139.GG7825@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <48284374-1214-c269-97ca-55bfd73344ef@sandeen.net>
+Date: Thu, 31 May 2018 19:36:17 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20180601001139.GG7825@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, darrick.wong@oracle.com
-Cc: Aleksei Besogonov <cyberax@amazon.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-V2 of iomap-based swapfile support. 
 
-Changes from V1: additional validations for file extents, based on
-a patch from Darrick Wong.
 
-Aleksei Besogonov (2):
-  fs: Add iomap_swap_activate
-  xfs: add support for iomap-based swapfile activation
+On 5/31/18 7:11 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> cvtnum() returns a signed long long, so the type of 'len' should be a
+> signed type so that a user entering a negative length doesn't produce
+> some huge positive integer.  The negative len check demands it anyway.
+> 
+> Coverity-id: 1435895
+> Fixes: 25b4549c8b54134106cff094aa098eab9e86eee7
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
- fs/iomap.c            | 106 ++++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_aops.c     |   8 ++++
- include/linux/iomap.h |   5 +++
- mm/swapfile.c         |   1 +
- 4 files changed, 120 insertions(+)
+*sigh* I actually looked at the first two long longs, verified that's
+what cvtnum returned, and moved on before spot-checking the 3rd o_O.
 
--- 
-2.14.1
+Thanks!
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+> ---
+>  io/copy_file_range.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/io/copy_file_range.c b/io/copy_file_range.c
+> index ebd1ec76..4d0770ef 100644
+> --- a/io/copy_file_range.c
+> +++ b/io/copy_file_range.c
+> @@ -91,7 +91,7 @@ copy_range_f(int argc, char **argv)
+>  {
+>  	long long src = 0;
+>  	long long dst = 0;
+> -	size_t len = 0;
+> +	long long len = 0;
+>  	int opt;
+>  	int ret;
+>  	int fd;
 
