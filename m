@@ -1,65 +1,153 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:50922 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755847AbeEaSID (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 14:08:03 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: buffered writes without buffer heads in xfs and iomap v5
-Date: Thu, 31 May 2018 20:07:38 +0200
-Message-Id: <20180531180759.21631-1-hch@lst.de>
+Received: from mail-ot0-f195.google.com ([74.125.82.195]:36627 "EHLO
+        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750756AbeFABDq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 May 2018 21:03:46 -0400
+Received: by mail-ot0-f195.google.com with SMTP id m11-v6so27448959otf.3
+        for <linux-xfs@vger.kernel.org>; Thu, 31 May 2018 18:03:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20180531230550.GN10363@dastard>
+References: <20180531112731.0CAC.E1E9C6FF@jp.fujitsu.com> <20180531150716.GA19764@linux.intel.com>
+ <CAPcyv4jpffaM60tTdLTojhh0CDwcbVUdS8td7R6LKWM3bb15dw@mail.gmail.com>
+ <20180531174636.GA7825@magnolia> <CAPcyv4gS1GCN9TFjngTmmHu83-uMgRpvvx842ZGnvxB3PbgU+Q@mail.gmail.com>
+ <20180531230550.GN10363@dastard>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 31 May 2018 18:03:45 -0700
+Message-ID: <CAPcyv4g6z5Bm7iQ6sbPMc95+AYG6W_CoHFCQK4h143bnAa5+FQ@mail.gmail.com>
+Subject: Re: Question about Experimental of Filesystem DAX.
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Yasunori Goto <y-goto@jp.fujitsu.com>, Jan Kara <jack@suse.cz>, linux-xfs <linux-xfs@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, NVDIMM-ML <linux-nvdimm@lists.01.org>
 
-Hi all,
+On Thu, May 31, 2018 at 4:05 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Thu, May 31, 2018 at 11:26:43AM -0700, Dan Williams wrote:
+>> On Thu, May 31, 2018 at 10:46 AM, Darrick J. Wong
+>> <darrick.wong@oracle.com> wrote:
+>> > On Thu, May 31, 2018 at 09:29:15AM -0700, Dan Williams wrote:
+>> >> On Thu, May 31, 2018 at 8:07 AM, Ross Zwisler
+>> >> <ross.zwisler@linux.intel.com> wrote:
+>> >> > On Thu, May 31, 2018 at 11:27:33AM +0900, Yasunori Goto wrote:
+>> >> >> Hello,
+>> >> >>
+>> >> >>
+>> >> >> I would like to know about the Experimental message of Filesystem DAX.
+>> >> >> --------------------------------------------------------
+>> >> >> DAX enabled. Warning: EXPERIMENTAL, use at your own risk
+>> >> >> --------------------------------------------------------
+>> >> >>
+>> >> >> AFAIK, the final issue of Filesystem DAX is metadata update problem,
+>> >> >> and it is(will be?) solved by great effort of MAP_SYNC and
+>> >> >> "fix dma vs truncate/hole-punch" patch set.
+>> >> >> So, I suppose that the Experimental message can be removed,
+>> >> >> but I'm not sure.
+>> >> >>
+>> >> >> Is it possible?
+>> >> >> Otherwise, are there any other issues in Filesystem DAX yet?
+>> >> >>
+>> >> >> If this is silly question, sorry for noise....
+>> >> >>
+>> >> >> Thanks,
+>> >> >> ---
+>> >> >> Yasunori Goto
+>> >> >
+>> >> > Adding in the XFS and ext4 developers, as it's really their call when to
+>> >> > remove this notice.
+>> >> >
+>> >> > We've talked about this off and on for a long while, but IMHO we should remove
+>> >> > the EXPERIMENTAL warning.  The last few things that we had on our TODO list
+>> >> > before this was removed were:
+>> >> >
+>> >> > 1) Get consistent handling of the DAX mount option.  We currently have this,
+>> >> > as both filesystems will behave the same and fall back and remove the DAX
+>> >> > mount option if it is unsupported by the block device, etc.
+>> >
+>> > <nod>
+>> >
+>> > As an aside, I wonder if Christoph's musings about "just have the kernel
+>> > determine the appropriate dax/non-dax setting from the acpi tables and
+>> > skip the inode flag entirely" ever got resolved?
+>> >
+>> >> > 2) Get consistent handling of the DAX inode option.  We currently have this,
+>> >> > as all DAX behavior now happens through the mount option.  If/when we
+>> >> > re-enable the per-inode DAX flag we should do it consistently for all DAX
+>> >> > enabled filesystems.
+>> >
+>> > The behavior of the inode flag isn't all that consistent.  ext4 doesn't
+>> > support it at all.  On XFS, you can set or clear FS_XFLAG_DAX on a
+>> > directory which will propagate the setting to any files created in that
+>> > directory.
+>> >
+>> > However, if you set or clear it on a file we update the on-disk inode
+>> > but we can't change the in-core state flag (S_DAX) until the next
+>> > in-core inode instantiation.  It's weird that users can change the flag
+>> > but the intended behavior changes won't happen until some ... time ...
+>> > in the future??
+>> >
+>> >> > 3) Make DAX work with other XFS features like reflink, etc.  This one isn't
+>> >> > done, but we at least disallow DAX with XFS features like reflink where it
+>> >> > could be an issue.  Darrick, do you still feel like we need to get these
+>> >> > working together to remove EXPERIMENTAL, or are you happy enough that we're
+>> >> > keeping them separated and that we're keeping user data safe?
+>> >
+>> > Yes, reflink and dax still need to work together.  I've not heard any
+>> > good arguments for why page sharing + copy on write are fundamentally
+>> > incompatible with the dax model, or why dax users will never, ever
+>> > require reflink.
+>>
+>> Right, but that's separate from DAX being scream in your face
+>> "EXPERIMENTAL!". It's just an additional feature that can be added on
+>> once all the normal expectations of a userspace mapping work. I think
+>> reliable rmap is the last of those requirements.
+>>
+>> > The recent thread between Jan and Dan make me wonder if making mappings
+>> > share struct pages is going to be a nightmare to add to the mm code,
+>> > though...
+>>
+>> It's going to be a bit messy because a singular page->mapping
+>> association is fundamentally incompatible with DAX. Perhaps a linked
+>> list of mapping "siblings"?
+>
+> I'd much prefer the filesystem allocate/control the struct page that
+> is inserted into mapping trees so we can have multiple struct pages
+> pointing at the one physical page.  That way we can just insert
+> these dynamic struct pages into the relevant mappings and it works
+> the same way for both DAX and shared page cache pages.
 
-this series adds support for buffered writes without buffer heads to
-the iomap and XFS code.
+How would that work when there is a 1:1 pfn-to-page and
+file-block-to-pfn relationship?
 
-For now this series only contains support for block size == PAGE_SIZE,
-with the 4k support split into a separate series.
+> i.e. the filesystem knows they are shared physical blocks, the
+> filesystem controls COW of physical blocks, the filesystem controls
+> truncate/invalidation of physical blocks, the filesystem controls
+> cache state of the physical blocks. So why are we designing
+> infrastructure around the virtual memory and caching infrastructure
+> that bypasses the layer that manages and arbitrates access to the
+> physical storage?
 
+Yes, because DAX broke the vm's assumptions that pages are not
+physical storage blocks.
 
-A git tree is available at:
+> This seems like we're well down the path of a architectural layering
+> violation that is backing us into a corner we're not going to be
+> able to get ourselves out of...
 
-    git://git.infradead.org/users/hch/xfs.git xfs-iomap-write.5
+I think it is solvable by teaching the vm more about dax pages and
+having it call back into the filesytem for some of these operations.
 
-Gitweb:
+>> > Also: ideally XFS would also be able to consume poison event
+>> > notifications from the pmem so that it can try to deal with metadata
+>> > loss, but that's probably a separate effort.
+>
+> If the design is such that the layer that manages the physical
+> storage isn't going to be told about physical storage failures
+> before anyone else is informed, it would seem to me like we really
+> have introduced a major architectural flaw in DAX....
 
-    http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-iomap-write.5
-
-Changes since v4:
- - make the logic more clear in xfs_bmap_punch_delalloc_range
- - fix a missing unlock in xfs_bmap_punch_delalloc_range
- - always look up COW extents to check for overlaps
- - lots of patch reshuffling and splitting without impact to the final result
-
-Changes since v3:
- - iterate backwards in xfs_bmap_punch_delalloc_range
- - remove the cow_valid variable in xfs_reflink_trim_irec_to_next_cow
- - additional trivial xfs_map_blocks simplifications
- - split the read side into a separate prep series
- - moved the SEEK_HOLE/DATA patches not strictly required out of the series
-
-Changes since v2:
- - minor page_seek_hole_data tweaks
- - don't read data entirely covered by the write operation in write_begin
- - fix zeroing on write_begin I/O failure
- - remove iomap_block_needs_zeroing to make the code more clear
- - update comments on __do_page_cache_readahead
-
-Changes since v1:
- - fix the iomap_readpages error handling
- - use unsigned file offsets in a few places to avoid arithmetic overflows
- - allocate a iomap_page in iomap_page_mkwrite to fix generic/095
- - improve a few comments
- - add more asserts
- - warn about truncated block numbers from ->bmap
- - new patch to change the __do_page_cache_readahead return value to
-   unsigned int
- - remove an incorrectly added empty line
- - make inline data an explicit iomap type instead of a flag
- - add a IOMAP_F_BUFFER_HEAD flag to force use of buffers heads for gfs2,
-   and keep the basic buffer head infrastructure around for now.
+It would be trivial to hook these notifications into the filesystem.
+This is something we've had on the backlog for a long time to circle
+back and address. This has been waiting for the xfs reverse-map work
+to settle and for one of us pmem developers to free up and do the
+work.
