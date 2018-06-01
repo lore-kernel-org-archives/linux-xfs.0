@@ -1,176 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:33776 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:55064 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750973AbeFAIHt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 1 Jun 2018 04:07:49 -0400
-From: Zorro Lang <zlang@redhat.com>
-Subject: [PATCH 2/3] xfstests: iterate dedupe integrity test
-Date: Fri,  1 Jun 2018 16:07:32 +0800
-Message-Id: <20180601080733.20703-2-zlang@redhat.com>
-In-Reply-To: <20180601080733.20703-1-zlang@redhat.com>
-References: <20180601080733.20703-1-zlang@redhat.com>
+        id S1750934AbeFAVzP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 1 Jun 2018 17:55:15 -0400
+Date: Fri, 1 Jun 2018 17:55:13 -0400
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH v2 4/7] dm: prevent DAX mounts if not supported
+Message-ID: <20180601215513.GA18712@redhat.com>
+References: <20180529195106.14268-1-ross.zwisler@linux.intel.com>
+ <20180529195106.14268-5-ross.zwisler@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180529195106.14268-5-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Toshi Kani <toshi.kani@hpe.com>, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-This case does dedupe on a dir, then copy the dir to next dir. Dedupe
-the next dir again, then copy this dir to next again, and dedupe
-again ... At the end, verify the data in the last dir is still same
-with the first one.
+On Tue, May 29 2018 at  3:51pm -0400,
+Ross Zwisler <ross.zwisler@linux.intel.com> wrote:
 
-Signed-off-by: Zorro Lang <zlang@redhat.com>
----
- tests/shared/009     | 114 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/shared/009.out |   4 ++
- tests/shared/group   |   1 +
- 3 files changed, 119 insertions(+)
- create mode 100755 tests/shared/009
- create mode 100644 tests/shared/009.out
+> Currently the code in dm_dax_direct_access() only checks whether the target
+> type has a direct_access() operation defined, not whether the underlying
+> block devices all support DAX.  This latter property can be seen by looking
+> at whether we set the QUEUE_FLAG_DAX request queue flag when creating the
+> DM device.
 
-diff --git a/tests/shared/009 b/tests/shared/009
-new file mode 100755
-index 00000000..f1f9215f
---- /dev/null
-+++ b/tests/shared/009
-@@ -0,0 +1,114 @@
-+#! /bin/bash
-+# FS QA Test 009
-+#
-+# Iterate dedupe integrity test
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2018 Red Hat Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/reflink
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+
-+# duperemove only supports btrfs and xfs (with reflink feature).
-+# Add other filesystems if it supports more later.
-+_supported_fs xfs btrfs
-+_supported_os Linux
-+_require_scratch_dedupe
-+_require_command "$DUPEREMOVE_PROG" duperemove
-+
-+_scratch_mkfs > $seqres.full 2>&1
-+_scratch_mount >> $seqres.full 2>&1
-+
-+function iterate_dedup_verify()
-+{
-+	local src=$srcdir
-+	local dest=$dupdir/1
-+
-+	for ((index = 1; index <= times; index++))
-+	do
-+		cp -a $src $dest
-+		find $dest -type f -exec md5sum {} \; \
-+			> $md5file$index
-+		# Too many output, so only save error output
-+		$DUPEREMOVE_PROG -dr --dedupe-options=same $dupdir \
-+			>/dev/null 2>$seqres.full
-+		md5sum -c --quiet $md5file$index
-+		src=$dest
-+		dest=$dupdir/$((index + 1))
-+	done
-+}
-+
-+srcdir=$SCRATCH_MNT/src
-+dupdir=$SCRATCH_MNT/dup
-+mkdir $srcdir $dupdir
-+
-+md5file=$TEST_DIR/${seq}md5.sum
-+
-+fsstress_opts="-w -r -f mknod=0"
-+# Create some files to be original data
-+$FSSTRESS_PROG $fsstress_opts -d $srcdir \
-+	       -n 200 -p $((5 * LOAD_FACTOR)) >/dev/null 2>&1
-+
-+# Calculate how many test cycles will be run
-+src_size=`du -ks $srcdir | awk '{print $1}'`
-+free_size=`df -kP $SCRATCH_MNT | grep -v Filesystem | awk '{print $4}'`
-+times=$((free_size / src_size))
-+if [ $times -gt $((10 * TIME_FACTOR)) ]; then
-+	times=$((10 * TIME_FACTOR))
-+fi
-+
-+echo "= Do dedup and verify ="
-+iterate_dedup_verify
-+
-+# Use the last checksum file to verify the original data
-+sed -e s#dup/$times#src#g $md5file$times > $md5file
-+echo "= Backwords verify ="
-+md5sum -c --quiet $md5file
-+
-+# read from the disk also doesn't show mutations.
-+_scratch_cycle_mount
-+echo "= Verify after cycle mount ="
-+for ((index = 1; index <= times; index++))
-+do
-+	md5sum -c --quiet $md5file$index
-+done
-+
-+status=0
-+exit
-diff --git a/tests/shared/009.out b/tests/shared/009.out
-new file mode 100644
-index 00000000..44a78ba3
---- /dev/null
-+++ b/tests/shared/009.out
-@@ -0,0 +1,4 @@
-+QA output created by 009
-+= Do dedup and verify =
-+= Backwords verify =
-+= Verify after cycle mount =
-diff --git a/tests/shared/group b/tests/shared/group
-index de7fe79f..2255844b 100644
---- a/tests/shared/group
-+++ b/tests/shared/group
-@@ -11,6 +11,7 @@
- 006 auto enospc
- 007 dangerous_fuzzers
- 008 auto quick dedupe
-+009 auto dedupe
- 032 mkfs auto quick
- 272 auto enospc rw
- 289 auto quick
--- 
-2.14.3
+Wait... I thought DAX support was all or nothing?
 
+> This is problematic if we have, for example, a dm-linear device made up of
+> a PMEM namespace in fsdax mode followed by a ramdisk from BRD.
+> QUEUE_FLAG_DAX won't be set on the dm-linear device's request queue, but
+> we have a working direct_access() entry point and the first member of the
+> dm-linear set *does* support DAX.
+
+If you don't have a uniformly capable device then it is very dangerous
+to advertise that the entire device has a certain capability.  That
+completely bit me in the past with discard (because for every IO I
+wasn't then checking if the destination device supported discards).
+
+It is all well and good that you're adding that check here.  But what I
+don't like is how you're saying QUEUE_FLAG_DAX implies direct_access()
+operation exists.. yet for raw PMEM namespaces we just discussed how
+that is a lie.
+
+SO this type of change showcases how the QUEUE_FLAG_DAX doesn't _really_
+imply direct_access() exists.
+
+> This allows the user to create a filesystem on the dm-linear device, and
+> then mount it with DAX.  The filesystem's bdev_dax_supported() test will
+> pass because it'll operate on the first member of the dm-linear device,
+> which happens to be a fsdax PMEM namespace.
+> 
+> All DAX I/O will then fail to that dm-linear device because the lack of
+> QUEUE_FLAG_DAX prevents fs_dax_get_by_bdev() from working.  This means that
+> the struct dax_device isn't ever set in the filesystem, so
+> dax_direct_access() will always return -EOPNOTSUPP.
+
+Now you've lost me... these past 2 paragraphs.  Why can a user mount it
+is DAX mode?  Because bdev_dax_supported() only accesses the first
+portion (which happens to have DAX capabilities?)
+
+Isn't this exactly why you should be checking for QUEUE_FLAG_DAX in the
+caller (bdev_dax_supported)?  Why not use bdev_get_queue() and verify
+QUEUE_FLAG_DAX is set in there?
+
+> By failing out of dm_dax_direct_access() if QUEUE_FLAG_DAX isn't set we let
+> the filesystem know we don't support DAX at mount time.  The filesystem
+> will then silently fall back and remove the dax mount option, causing it to
+> work properly.
+
+This shouldn't be needed.  Again, QUEUE_FLAG_DAX wasn't set.. so don't
+allow code to falsely try operations that should've been gated by the
+fact it wasn't set.
+
+SO Nack on this patch.. until/unless I'm corrected ;)
+
+Thanks,
+Mike
+
+
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> Fixes: commit 545ed20e6df6 ("dm: add infrastructure for DAX support")
+> ---
+>  drivers/md/dm.c | 5 ++---
+>  1 file changed, 2 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+> index 0a7b0107ca78..9728433362d1 100644
+> --- a/drivers/md/dm.c
+> +++ b/drivers/md/dm.c
+> @@ -1050,14 +1050,13 @@ static long dm_dax_direct_access(struct dax_device *dax_dev, pgoff_t pgoff,
+>  
+>  	if (!ti)
+>  		goto out;
+> -	if (!ti->type->direct_access)
+> +	if (!blk_queue_dax(md->queue))
+>  		goto out;
+>  	len = max_io_len(sector, ti) / PAGE_SECTORS;
+>  	if (len < 1)
+>  		goto out;
+>  	nr_pages = min(len, nr_pages);
+> -	if (ti->type->direct_access)
+> -		ret = ti->type->direct_access(ti, pgoff, nr_pages, kaddr, pfn);
+> +	ret = ti->type->direct_access(ti, pgoff, nr_pages, kaddr, pfn);
+>  
+>   out:
+>  	dm_put_live_table(md, srcu_idx);
+> -- 
+> 2.14.3
+> 
