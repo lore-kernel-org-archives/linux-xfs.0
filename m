@@ -1,48 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f50.google.com ([209.85.218.50]:34768 "EHLO
-        mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750812AbeFBDiA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Jun 2018 23:38:00 -0400
-Received: by mail-oi0-f50.google.com with SMTP id i205-v6so9582863oib.1
-        for <linux-xfs@vger.kernel.org>; Fri, 01 Jun 2018 20:38:00 -0700 (PDT)
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:5341 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751132AbeFCXbR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Jun 2018 19:31:17 -0400
+Date: Mon, 4 Jun 2018 09:31:14 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: NULL pointer dereference in xfs_bmap_extents_to_btree() when
+ mounting and operating a crafted image
+Message-ID: <20180603233114.GW10363@dastard>
+References: <CANrHXgzLvaud2HEv3jAFGTfn5S80d7Rwj-ztJNWPT8eyFTohMg@mail.gmail.com>
+ <20180603223435.GU10363@dastard>
+ <20180603230341.GV10363@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20180602113312.55667641@canb.auug.org.au>
-References: <20180601185846.1c5b7d0a@canb.auug.org.au> <20180602005948.GH7825@magnolia>
- <20180602113312.55667641@canb.auug.org.au>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 1 Jun 2018 20:37:59 -0700
-Message-ID: <CAPcyv4gTcVL0cWy_uB3MRa4BH+4Tz8uoCvkqBxt-BxxFkWOUdw@mail.gmail.com>
-Subject: Re: linux-next: manual merge of the nvdimm tree with the xfs tree
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180603230341.GV10363@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, David Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, Linux-Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Dave Jiang <dave.jiang@intel.com>
+To: Wen Xu <xuwen.sjtu@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Jun 1, 2018 at 6:33 PM, Stephen Rothwell <sfr@canb.auug.org.au> wrote:
-> Hi Darrick,
->
-> On Fri, 1 Jun 2018 17:59:48 -0700 "Darrick J. Wong" <darrick.wong@oracle.com> wrote:
->>
->> > +   if (!dax_enabled) {
->> >  -          pr_debug("VFS (%s): error: dax support not enabled\n",
->> >  -                          sb->s_id);
->> >  +          pr_debug("%s: error: dax support not enabled\n",
->> >  +                          bdevname(bdev, buf));
->> > -           return false;
->> > +           return -EOPNOTSUPP;
->>
->> Hang on a sec, the changes in the xfs tree make this function return a
->> boolean (true for dax-is-supported, false for dax-not-supported), but
->> this change partially reverts the boolean return values.
->
-> OK, weird, that is what I though I had done.  Thanks for pointing it
-> out (I guess it was getting late :-().
->
->> >     }
->> > -
->> > -   return true;
->> > +   return 0;
+On Mon, Jun 04, 2018 at 09:03:41AM +1000, Dave Chinner wrote:
+> On Mon, Jun 04, 2018 at 08:34:35AM +1000, Dave Chinner wrote:
+> > On Sun, Jun 03, 2018 at 06:19:54PM -0400, Wen Xu wrote:
+> > > Hi XFS developers and maintainers,
+> > > Please check: https://bugzilla.kernel.org/show_bug.cgi?id=199915
+> > 
+> > Please report bugs straight to this list - it's much easier to
+> > track and faster to discuss bugs through email than it is through
+> > bugzilla.
+> 
+> Image log size is too small for the filesystem config. If this was
+> a v5 filesystem, then the image would refuse to mount right there.
+> 
+> As it is, a CONFIG_XFS_DEBUG=y kernel assert fails at mount in
+> xfs_check_agi_unlinked().
 
-Good catch Darrick, I missed that too...
+FWIW, with this check commented out, I can't reproduce the problem
+reported in the bugzilla on a current 4.17-rc7 + xfs-for-next tree.
+The POC dumps this in the log:
+
+[  262.021574] XFS (loop0): Mounting V4 Filesystem
+[  262.022689] XFS (loop0): Log size 864 blocks too small, minimum size is 942 blocks
+[  262.024173] XFS (loop0): Log size out of supported range.
+[  262.025107] XFS (loop0): Continuing onwards, but if log hangs are experienced then please report this message in the bug report.
+[  262.028529] XFS (loop0): Ending clean mount
+[  263.448565] XFS (loop0): bad inode magic/vsn daddr 7008 #1 (magic=ffe2)
+[  263.450389] XFS (loop0): Metadata corruption detected at xfs_buf_ioend+0x64/0x170, xfs_inode block 0x1b60 xfs_inode_buf_verify
+[  263.453309] XFS (loop0): Unmount and run xfs_repair
+[  263.454605] XFS (loop0): First 128 bytes of corrupted metadata buffer:
+[  263.456301] 00000000d3db45c2: ff e2 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[  263.458496] 0000000025677d6d: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[  263.460528] 0000000082376c33: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[  263.462534] 000000002e73e1fc: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[  263.464469] 00000000dfbbb4d7: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 64  ...............d
+[  263.466457] 00000000a9156d94: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[  263.468383] 00000000f55f3544: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[  263.470227] 00000000c0d68803: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[  263.472029] XFS (loop0): metadata I/O error in "xfs_trans_read_buf_map" at daddr 0x1b60 len 16 error 117
+[  263.474049] XFS (loop0): xfs_imap_to_bp: xfs_trans_read_buf() returned error -117.
+ 
+And does nothing else.
+
+Can you confirm this?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
