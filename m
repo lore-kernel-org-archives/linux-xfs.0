@@ -1,95 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:35222 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751296AbeFEEY4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jun 2018 00:24:56 -0400
-Date: Tue, 5 Jun 2018 14:24:53 +1000
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:11937 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751132AbeFCXli (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Jun 2018 19:41:38 -0400
+Date: Mon, 4 Jun 2018 09:41:36 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/3] xfs: verify extent size hint is valid in inode
- verifier
-Message-ID: <20180605042453.GA10363@dastard>
-References: <20180605024313.18737-1-david@fromorbit.com>
- <20180605024313.18737-3-david@fromorbit.com>
- <20180605040817.GE9437@magnolia>
+Subject: Re: [PATCH 01/10] xfs: don't forbid setting dax flag on directories
+ if device doesn't dax
+Message-ID: <20180603234136.GX10363@dastard>
+References: <152806814253.18187.4009340462930782844.stgit@magnolia>
+ <152806814871.18187.4240645095990301961.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180605040817.GE9437@magnolia>
+In-Reply-To: <152806814871.18187.4240645095990301961.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jun 04, 2018 at 09:08:17PM -0700, Darrick J. Wong wrote:
-> On Tue, Jun 05, 2018 at 12:43:12PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > There are rules for vald extent size hints. We enforce them when
-> > applications set them, but fuzzers violate those rules and that
-> > screws us over.
-> > 
-> > This results in alignment assertion failures when setting up
-> > allocations such as this in direct IO:
-> > 
-> > XFS: Assertion failed: ap->length, file: fs/xfs/libxfs/xfs_bmap.c, line: 3432
-> > ....
-> > Call Trace:
-> >  xfs_bmap_btalloc+0x415/0x910
-> >  xfs_bmapi_write+0x71c/0x12e0
-> >  xfs_iomap_write_direct+0x2a9/0x420
-> >  xfs_file_iomap_begin+0x4dc/0xa70
-> >  iomap_apply+0x43/0x100
-> >  iomap_file_buffered_write+0x62/0x90
-> >  xfs_file_buffered_aio_write+0xba/0x300
-> >  __vfs_write+0xd5/0x150
-> >  vfs_write+0xb6/0x180
-> >  ksys_write+0x45/0xa0
-> >  do_syscall_64+0x5a/0x180
-> >  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-> > 
-> > And from xfs_db:
-> > 
-> > core.extsize = 10380288
-> > 
-> > Which is not an integer multiple of the block size, and so violates
-> > Rule #7 for setting extent size hints. Validate extent size hint
-> > rules in the inode verifier to catch this.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_inode_buf.c | 7 +++++++
-> >  1 file changed, 7 insertions(+)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> > index f5fff1ccb61d..be197c91307b 100644
-> > --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> > +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> > @@ -385,6 +385,7 @@ xfs_dinode_verify(
-> >  	xfs_ino_t		ino,
-> >  	struct xfs_dinode	*dip)
-> >  {
-> > +	xfs_failaddr_t		fa;
-> >  	uint16_t		mode;
-> >  	uint16_t		flags;
-> >  	uint64_t		flags2;
-> > @@ -501,6 +502,12 @@ xfs_dinode_verify(
-> >  			return __this_address;
-> >  	}
-> >  
-> > +	/* extent size hint validation */
-> > +	fa = xfs_inode_validate_extsize(mp, be32_to_cpu(dip->di_extsize),
-> > +					mode, be32_to_cpu(dip->di_flags));
+On Sun, Jun 03, 2018 at 04:22:28PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> What if the cowextsize is garbage?  Do we handle that better, or do we
-> blow up there too?
+> On a directory, the DAX flag is merely a hint that files created in the
+> directory should have the DAX flag set at creation time.  We don't care
+> if the underlying device supports DAX or not because directory metadata
+> are always cached in DRAM.  We don't care if new files get the flag even
+> if the device doesn't support DAX because we always check for DAX
+> support before setting the VFS flag (S_DAX).
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-I haven't checked (it was a v4 image that I was looking at) - are
-the rules the same?
+Am I correct in assuming this allows directory hints to work on
+a filesystem with a DAX capable RT device, but a normal data device?
 
-Cheers,
+Regardless, behaviour seems sensible to me.
 
-Dave.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 -- 
 Dave Chinner
 david@fromorbit.com
