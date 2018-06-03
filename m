@@ -1,53 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:51952 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751132AbeFCW7G (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Jun 2018 18:59:06 -0400
-Date: Sun, 3 Jun 2018 15:59:01 -0700
+Received: from aserp2130.oracle.com ([141.146.126.79]:48340 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751132AbeFCXW6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Jun 2018 19:22:58 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w53NMRXo052500
+        for <linux-xfs@vger.kernel.org>; Sun, 3 Jun 2018 23:22:58 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp2130.oracle.com with ESMTP id 2jbvynsfhd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 03 Jun 2018 23:22:58 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w53NMvPI030155
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 3 Jun 2018 23:22:57 GMT
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w53NMvDQ004137
+        for <linux-xfs@vger.kernel.org>; Sun, 3 Jun 2018 23:22:57 GMT
+Subject: [PATCH 05/10] xfs: don't assert when reporting on-disk corruption
+ while loading btree
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: NULL pointer dereference in xfs_bmap_extents_to_btree() when
- mounting and operating a crafted image
-Message-ID: <20180603225901.GJ7825@magnolia>
-References: <CANrHXgzLvaud2HEv3jAFGTfn5S80d7Rwj-ztJNWPT8eyFTohMg@mail.gmail.com>
- <20180603223435.GU10363@dastard>
+Date: Sun, 03 Jun 2018 16:22:56 -0700
+Message-ID: <152806817663.18187.1063422880493258360.stgit@magnolia>
+In-Reply-To: <152806814253.18187.4009340462930782844.stgit@magnolia>
+References: <152806814253.18187.4009340462930782844.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180603223435.GU10363@dastard>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Wen Xu <xuwen.sjtu@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jun 04, 2018 at 08:34:35AM +1000, Dave Chinner wrote:
-> On Sun, Jun 03, 2018 at 06:19:54PM -0400, Wen Xu wrote:
-> > Hi XFS developers and maintainers,
-> > Please check: https://bugzilla.kernel.org/show_bug.cgi?id=199915
-> 
-> Please report bugs straight to this list - it's much easier to
-> track and faster to discuss bugs through email than it is through
-> bugzilla.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Seconded.
+Don't bother ASSERTing when we're already going to log and return the
+corruption status.
 
-I appreciate your wokr on the suggested code patch, but it needs a
-Signed-off-by tag with your name on it.  The patch ought to be sent to
-the list so that we can record it with all the other patch traffic.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-Also, the patch needs to release all the resources that the function
-acquires prior to the 'return -EFSCORRUPTED'.
 
---D
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 7b0e2b551e23..368a1179f0ff 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1248,7 +1248,6 @@ xfs_iread_extents(
+ 
+ 		num_recs = xfs_btree_get_numrecs(block);
+ 		if (unlikely(i + num_recs > nextents)) {
+-			ASSERT(i + num_recs <= nextents);
+ 			xfs_warn(ip->i_mount,
+ 				"corrupt dinode %Lu, (btree extents).",
+ 				(unsigned long long) ip->i_ino);
 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
