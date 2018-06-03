@@ -1,35 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:63429 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751201AbeFCWe7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Jun 2018 18:34:59 -0400
-Date: Mon, 4 Jun 2018 08:34:35 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: NULL pointer dereference in xfs_bmap_extents_to_btree() when
- mounting and operating a crafted image
-Message-ID: <20180603223435.GU10363@dastard>
-References: <CANrHXgzLvaud2HEv3jAFGTfn5S80d7Rwj-ztJNWPT8eyFTohMg@mail.gmail.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:39700 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751132AbeFCXXR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Jun 2018 19:23:17 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w53NL1PS190005
+        for <linux-xfs@vger.kernel.org>; Sun, 3 Jun 2018 23:23:17 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp2120.oracle.com with ESMTP id 2jbvyp9fqx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 03 Jun 2018 23:23:17 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w53NNGuU030644
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 3 Jun 2018 23:23:16 GMT
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w53NNGnn016883
+        for <linux-xfs@vger.kernel.org>; Sun, 3 Jun 2018 23:23:16 GMT
+Subject: [PATCH 08/10] xfs: btree lookup shouldn't ASSERT on empty btree
+ nodes
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Sun, 03 Jun 2018 16:23:15 -0700
+Message-ID: <152806819494.18187.5772777797608092085.stgit@magnolia>
+In-Reply-To: <152806814253.18187.4009340462930782844.stgit@magnolia>
+References: <152806814253.18187.4009340462930782844.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CANrHXgzLvaud2HEv3jAFGTfn5S80d7Rwj-ztJNWPT8eyFTohMg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Wen Xu <xuwen.sjtu@gmail.com>
+To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-On Sun, Jun 03, 2018 at 06:19:54PM -0400, Wen Xu wrote:
-> Hi XFS developers and maintainers,
-> Please check: https://bugzilla.kernel.org/show_bug.cgi?id=199915
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Please report bugs straight to this list - it's much easier to
-track and faster to discuss bugs through email than it is through
-bugzilla.
+If a btree lookup encounters an empty btree node or an empty btree leaf
+on a multi-level btree, that's evidence of a corrupt on-disk btree.
+Therefore, we should return -EFSCORRUPTED to the upper levels, not an
+ASSERT failure.
 
-Cheers,
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_btree.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 6101ad685019..4e79baa230f9 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -1939,7 +1939,8 @@ xfs_btree_lookup(
+ 			high = xfs_btree_get_numrecs(block);
+ 			if (!high) {
+ 				/* Block is empty, must be an empty leaf. */
+-				ASSERT(level == 0 && cur->bc_nlevels == 1);
++				if (level != 0 || cur->bc_nlevels != 1)
++					return -EFSCORRUPTED;
+ 
+ 				cur->bc_ptrs[0] = dir != XFS_LOOKUP_LE;
+ 				*stat = 0;
+
