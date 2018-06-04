@@ -1,112 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb0-f194.google.com ([209.85.213.194]:46634 "EHLO
-        mail-yb0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751530AbeFDEwe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jun 2018 00:52:34 -0400
-Received: by mail-yb0-f194.google.com with SMTP id p22-v6so10632842yba.13
-        for <linux-xfs@vger.kernel.org>; Sun, 03 Jun 2018 21:52:34 -0700 (PDT)
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 11.3 \(3445.6.18\))
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:46609 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751894AbeFDHCq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jun 2018 03:02:46 -0400
+Date: Mon, 4 Jun 2018 17:02:39 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: NULL pointer dereference in xfs_bmap_extents_to_btree() when
  mounting and operating a crafted image
-From: Wen Xu <xuwen.sjtu@gmail.com>
-In-Reply-To: <20180604042227.GO10363@dastard>
-Date: Mon, 4 Jun 2018 00:52:33 -0400
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <20906E91-1B6B-4F3E-AA97-8AAA86BE715B@gmail.com>
+Message-ID: <20180604070239.GP10363@dastard>
 References: <CANrHXgzLvaud2HEv3jAFGTfn5S80d7Rwj-ztJNWPT8eyFTohMg@mail.gmail.com>
- <20180603223435.GU10363@dastard> <20180603230341.GV10363@dastard>
+ <20180603223435.GU10363@dastard>
+ <20180603230341.GV10363@dastard>
  <20180603233114.GW10363@dastard>
  <CANrHXgwP5nOaG6nZwUs-bM_oJDNdUnXj=33xrrLJ-OvyCaz_EA@mail.gmail.com>
  <20180604042227.GO10363@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180604042227.GO10363@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: Wen Xu <xuwen.sjtu@gmail.com>
 Cc: linux-xfs@vger.kernel.org
 
-
-
-> On Jun 4, 2018, at 12:22 AM, Dave Chinner <david@fromorbit.com> wrote:
->=20
+On Mon, Jun 04, 2018 at 02:22:27PM +1000, Dave Chinner wrote:
 > On Sun, Jun 03, 2018 at 10:07:52PM -0400, Wen Xu wrote:
->> Hi Dave,
->>=20
->> Very strange.
->>=20
->> I checkout v4.17-rc7 of
->> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/
->> and merge with for-next of
->> https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git/ to make the
->> kernel build.
->=20
-> The last commit from the for-next tree I have is:
->=20
-> d25522f10cfa xfs: repair superblocks
->=20
-> Does that match what you merged?
-
-Ah it seems not=E2=80=A6 Considering the commit log =
-(https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git/log/?h=3Dfor-next),
-The last commit here is fs: use ->is_partially_uptodate in =
-page_cache_seek_hole_data
-
->=20
->> d1dabff17081af94c9604c5fdddd0de7  20.img
->> mounting 20.img and running poc.c on mounted folder still gives me
->> nullptr access.
->>=20
->> [ 1381.524410] XFS (loop0): Mounting V4 Filesystem
->> [ 1381.524484] XFS (loop0): Log size 864 blocks too small, minimum
->> size is 942 blocks
->> [ 1381.524487] XFS (loop0): Log size out of supported range.
->> [ 1381.525728] XFS (loop0): Continuing onwards, but if log hangs are
->> experienced then please report this message in the bug report.
->> [ 1381.533754] XFS (loop0): Ending clean mount
->> [ 1388.369552] XFS (loop0): xfs_buf_find: daddr 0x7fb28 out of range, =
-EOFS 0x8000
->=20
-> So, somehow, it's getting a block beyond EOF being allocated out of
-> the free space tree. So what we have here is an uncaught corrupt
-> freespace record....
->=20
-> <sigh>
->=20
-> $ sudo xfs_repair -n -f xfs.img
-> Phase 1 - find and verify superblock...
-> bad primary superblock - inconsistent filesystem geometry in
-> realtime filesystem component !!!
->=20
-> attempting to find secondary superblock...
-> ...Sorry, could not find valid secondary superblock
-> Exiting now.
-> $
->=20
-> Please use a filesystem with at least 2 AGs as the basis of your
-> fuzzing in future.
->=20
 > But, yeah, xfs_db tells me the by-size freespace btree is full of
 > crap, but the by-cnt tree is completely empty (i.e. corrupt) so
 > allocation should definitely be failing long before if gets anywhere
 > near returning an allocated block.
->=20
-> Ok, I just worked out why I haven't been able to reproduce the
-> issue: you have no error checking in your test code, so I get no
-> indication that it fails to run correctly when run as a user.
->=20
-> Alright, lets start this whole thing again.
->=20
-> Cheers,
->=20
-> Dave.
-> --=20
-> Dave Chinner
-> david@fromorbit.com
 
-I see. Yeah, my test code is a bit scratchy=E2=80=A6I will make a new =
-seed image w/ at least 2ag for my fuzzing later.
+Running a debug kernel assert fails in extent allocation setup for
+writeback, tripping over a bad extent alignment. The superblock
+has an invalid stripe alignment/width setup, which I've fixed.
+The extent size hint on the inode also has an invalid alignment (not
+a multiple of block size), which the inode verifiers will now catch,
+such as this:
 
-Thanks,
-Wen
+XFS (loop0): Metadata corruption detected at xfs_inode_validate_extsize+0xe5/0x110, inode 0x6d5 dinode
+XFS (loop0): Unmount and run xfs_repair
+XFS (loop0): First 128 bytes of corrupted metadata buffer:
+....
 
+And the alignment assert has now gone away. Now there's an assert
+like this:
+
+XFS: Assertion failed: *len > 0, file: fs/xfs/xfs_extent_busy.c, line: 344
+Call Trace:
+ xfs_extent_busy_trim+0x243/0x250
+ xfs_alloc_ag_vextent_exact+0xc3/0x3b0
+ xfs_alloc_ag_vextent+0x1c9/0x330
+ xfs_alloc_vextent+0x56a/0x870
+ xfs_ialloc_ag_alloc+0x160/0x6f0
+ xfs_dialloc+0x116/0x270
+ xfs_ialloc+0x5c/0x5e0
+ xfs_dir_ialloc+0x6a/0x260
+ xfs_create+0x418/0x670
+ xfs_generic_create+0x1f6/0x2c0
+ vfs_create+0xf9/0x180
+ do_mknodat+0x1f9/0x210
+ do_syscall_64+0x5a/0x180
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+
+I'm pretty sure this is because there are bogus extent records in
+the free space tree - pretty sure we can catch them on lookup
+via a change to ->init_key_from_rec() to validate the record before
+letting them be used.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
