@@ -1,52 +1,129 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:50984 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751303AbeFEDiE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jun 2018 23:38:04 -0400
-Date: Mon, 4 Jun 2018 20:38:00 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 0/3] xfs: more verifications!
-Message-ID: <20180605033800.GA9437@magnolia>
-References: <20180605024313.18737-1-david@fromorbit.com>
+Received: from mga07.intel.com ([134.134.136.100]:58988 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751042AbeFDXPK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 4 Jun 2018 19:15:10 -0400
+Date: Mon, 4 Jun 2018 17:15:08 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH v2 4/7] dm: prevent DAX mounts if not supported
+Message-ID: <20180604231508.GA10666@linux.intel.com>
+References: <20180529195106.14268-1-ross.zwisler@linux.intel.com>
+ <20180529195106.14268-5-ross.zwisler@linux.intel.com>
+ <20180601215513.GA18712@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180605024313.18737-1-david@fromorbit.com>
+In-Reply-To: <20180601215513.GA18712@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Toshi Kani <toshi.kani@hpe.com>, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Tue, Jun 05, 2018 at 12:43:10PM +1000, Dave Chinner wrote:
-> Hi folks,
+On Fri, Jun 01, 2018 at 05:55:13PM -0400, Mike Snitzer wrote:
+> On Tue, May 29 2018 at  3:51pm -0400,
+> Ross Zwisler <ross.zwisler@linux.intel.com> wrote:
 > 
-> This patchset addresses a series of corruptions noticed in an image
-> provided by Wen Xu. The patches only address detecting corruptions
-> before they can do damage - it does not address/fix the crash the
-> image caused but instead prevents the bad information from getting
-> to the point where it can cause a crash.
+> > Currently the code in dm_dax_direct_access() only checks whether the target
+> > type has a direct_access() operation defined, not whether the underlying
+> > block devices all support DAX.  This latter property can be seen by looking
+> > at whether we set the QUEUE_FLAG_DAX request queue flag when creating the
+> > DM device.
 > 
-> The third patch addresses a general btree record validation issue;
-> we should probably dirve this inwards to each btree implementation
-> with a ->verify_record() callout, as this patch does not address
-> all the places that btree records are traversed during searches. It
-> will catch any attempt to use a bad record that a search lands on,
-> however.
-> 
-> Comments?
+> Wait... I thought DAX support was all or nothing?
 
-So, uh, does xfs_repair catch all these things and fix them?
+Right, it is, and that's what I'm trying to capture.  The point of this series
+is to make sure that we don't use DAX thru DM if one of the DM members doesn't
+support DAX.
 
-I wonder if online repair catches and fixes them too, but I won't yet
-start heckling people about that. :P
+This is a bit tricky, though, because as you've pointed out there are a lot of
+elements that go into a block device actually supporting DAX.  
 
---D
+First, the block device has to have a direct_access() operation defined in its
+struct dax_operations table.  This is a static definition in the drivers,
+though, so it's necessary but not sufficient.  For example, the PMEM driver
+always defines a direct_access() operation, but depending on the mode of the
+namespace (raw, fsdax or sector) it may or may not support DAX.
 
-> -Dave.
+The next step is that a driver needs to say that he block queue supports
+QUEUE_FLAG_DAX.  This again is necessary but not sufficient.  The PMEM driver
+currently sets this for all namespace modes, but I agree that this should be
+restricted to modes that support DAX.  Even once we do that, though, for the
+block driver this isn't fully sufficient.  We'd really like users to call
+bdev_dax_supported() so it can run some additional tests to make sure that DAX
+will work.
+
+So, the real test that filesystems rely on is bdev_dax_suppported().
+
+The trick is that with DM we need to verify each block device via
+bdev_dax_supported() just like a filesystem would, and then have some way of
+communicating the result of all those checks to the filesystem which is
+eventually mounted on the DM device.  At DAX mount time the filesystem will
+call bdev_dax_supported() on the DM device, but it'll really only check the
+first device.  
+
+So, the strategy is to have DM manually check each member device via
+bdev_dax_supported() then if they all pass set QUEUE_FLAG_DAX.  This then
+becomes our one source of truth on whether or not a DM device supports DAX.
+When the filesystem mounts with DAX support it'll also run
+bdev_dax_supported(), but if we have QUEUE_FLAG_DAX set on the DM device, we
+know that this check will pass.
+
+> > This is problematic if we have, for example, a dm-linear device made up of
+> > a PMEM namespace in fsdax mode followed by a ramdisk from BRD.
+> > QUEUE_FLAG_DAX won't be set on the dm-linear device's request queue, but
+> > we have a working direct_access() entry point and the first member of the
+> > dm-linear set *does* support DAX.
 > 
+> If you don't have a uniformly capable device then it is very dangerous
+> to advertise that the entire device has a certain capability.  That
+> completely bit me in the past with discard (because for every IO I
+> wasn't then checking if the destination device supported discards).
+>
+> It is all well and good that you're adding that check here.  But what I
+> don't like is how you're saying QUEUE_FLAG_DAX implies direct_access()
+> operation exists.. yet for raw PMEM namespaces we just discussed how
+> that is a lie.
+
+QUEUE_FLAG_DAX does imply that direct_access() exits.  However, as discussed
+above for a given bdev we really do need to check bdev_dax_supported().
+
+> SO this type of change showcases how the QUEUE_FLAG_DAX doesn't _really_
+> imply direct_access() exists.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > This allows the user to create a filesystem on the dm-linear device, and
+> > then mount it with DAX.  The filesystem's bdev_dax_supported() test will
+> > pass because it'll operate on the first member of the dm-linear device,
+> > which happens to be a fsdax PMEM namespace.
+> > 
+> > All DAX I/O will then fail to that dm-linear device because the lack of
+> > QUEUE_FLAG_DAX prevents fs_dax_get_by_bdev() from working.  This means that
+> > the struct dax_device isn't ever set in the filesystem, so
+> > dax_direct_access() will always return -EOPNOTSUPP.
+> 
+> Now you've lost me... these past 2 paragraphs.  Why can a user mount it
+> is DAX mode?  Because bdev_dax_supported() only accesses the first
+> portion (which happens to have DAX capabilities?)
+
+Right.  bdev_dax_supported() runs all of its checks, and because they are
+running against the first block device in the dm set, they all pass.  But the
+overall DM device does not actually support DAX.
+
+> Isn't this exactly why you should be checking for QUEUE_FLAG_DAX in the
+> caller (bdev_dax_supported)?  Why not use bdev_get_queue() and verify
+> QUEUE_FLAG_DAX is set in there?
+
+I'll look into that for the next revision, thanks.
+
+> > By failing out of dm_dax_direct_access() if QUEUE_FLAG_DAX isn't set we let
+> > the filesystem know we don't support DAX at mount time.  The filesystem
+> > will then silently fall back and remove the dax mount option, causing it to
+> > work properly.
+> 
+> This shouldn't be needed.  Again, QUEUE_FLAG_DAX wasn't set.. so don't
+> allow code to falsely try operations that should've been gated by the
+> fact it wasn't set.
+
+Right, the goal is to make QUEUE_FLAG_DAX our one source of truth for whether
+DM devices support DAX, and not have it half defined by that and half by the
+DM_TYPE_DAX_BIO_BASED.
