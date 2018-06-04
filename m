@@ -1,119 +1,467 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.11.71.1]:49699 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750724AbeFAI7G (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 1 Jun 2018 04:59:06 -0400
-Date: Fri, 1 Jun 2018 18:58:46 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: linux-next: manual merge of the nvdimm tree with the xfs tree
-Message-ID: <20180601185846.1c5b7d0a@canb.auug.org.au>
+Received: from ipmail02.adl2.internode.on.net ([150.101.137.139]:26609 "EHLO
+        ipmail02.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751373AbeFDCMi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Jun 2018 22:12:38 -0400
+Date: Mon, 4 Jun 2018 12:12:34 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 03/14] xfs: repair free space btrees
+Message-ID: <20180604021234.GL10363@dastard>
+References: <152770863951.11611.5866814627357136911.stgit@magnolia>
+ <152770865831.11611.7628478596629227707.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/nO66g8gdPLsiZHK6IX858ml"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <152770865831.11611.7628478596629227707.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Dave Jiang <dave.jiang@intel.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
---Sig_/nO66g8gdPLsiZHK6IX858ml
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Wed, May 30, 2018 at 12:30:58PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Rebuild the free space btrees from the gaps in the rmap btree.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/Makefile             |    1 
+>  fs/xfs/scrub/alloc.c        |    1 
+>  fs/xfs/scrub/alloc_repair.c |  430 +++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/scrub/common.c       |    8 +
+>  fs/xfs/scrub/repair.h       |    2 
+>  fs/xfs/scrub/scrub.c        |    4 
+>  6 files changed, 442 insertions(+), 4 deletions(-)
+>  create mode 100644 fs/xfs/scrub/alloc_repair.c
+> 
+> 
+> diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+> index 29fe115f29d5..abe035ad0aa4 100644
+> --- a/fs/xfs/Makefile
+> +++ b/fs/xfs/Makefile
+> @@ -175,6 +175,7 @@ xfs-$(CONFIG_XFS_QUOTA)		+= scrub/quota.o
+>  ifeq ($(CONFIG_XFS_ONLINE_REPAIR),y)
+>  xfs-y				+= $(addprefix scrub/, \
+>  				   agheader_repair.o \
+> +				   alloc_repair.o \
+>  				   repair.o \
+>  				   )
+>  endif
+> diff --git a/fs/xfs/scrub/alloc.c b/fs/xfs/scrub/alloc.c
+> index 941a0a55224e..fe7e8bdf4a52 100644
+> --- a/fs/xfs/scrub/alloc.c
+> +++ b/fs/xfs/scrub/alloc.c
+> @@ -29,7 +29,6 @@
+>  #include "xfs_log_format.h"
+>  #include "xfs_trans.h"
+>  #include "xfs_sb.h"
+> -#include "xfs_alloc.h"
+>  #include "xfs_rmap.h"
+>  #include "xfs_alloc.h"
+>  #include "scrub/xfs_scrub.h"
+> diff --git a/fs/xfs/scrub/alloc_repair.c b/fs/xfs/scrub/alloc_repair.c
+> new file mode 100644
+> index 000000000000..5a81713a69cd
+> --- /dev/null
+> +++ b/fs/xfs/scrub/alloc_repair.c
+> @@ -0,0 +1,430 @@
+> +/*
+> + * Copyright (C) 2017 Oracle.  All Rights Reserved.
+> + *
+> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License
+> + * as published by the Free Software Foundation; either version 2
+> + * of the License, or (at your option) any later version.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
+> + */
+> +#include "xfs.h"
+> +#include "xfs_fs.h"
+> +#include "xfs_shared.h"
+> +#include "xfs_format.h"
+> +#include "xfs_trans_resv.h"
+> +#include "xfs_mount.h"
+> +#include "xfs_defer.h"
+> +#include "xfs_btree.h"
+> +#include "xfs_bit.h"
+> +#include "xfs_log_format.h"
+> +#include "xfs_trans.h"
+> +#include "xfs_sb.h"
+> +#include "xfs_alloc.h"
+> +#include "xfs_alloc_btree.h"
+> +#include "xfs_rmap.h"
+> +#include "xfs_rmap_btree.h"
+> +#include "xfs_inode.h"
+> +#include "xfs_refcount.h"
+> +#include "scrub/xfs_scrub.h"
+> +#include "scrub/scrub.h"
+> +#include "scrub/common.h"
+> +#include "scrub/btree.h"
+> +#include "scrub/trace.h"
+> +#include "scrub/repair.h"
+> +
+> +/* Free space btree repair. */
 
-Hi Dan,
+Can you add a decription of the algorithm used here.
 
-Today's linux-next merge of the nvdimm tree got a conflict in:
+> +
+> +struct xfs_repair_alloc_extent {
+> +	struct list_head		list;
+> +	xfs_agblock_t			bno;
+> +	xfs_extlen_t			len;
+> +};
+> +
+> +struct xfs_repair_alloc {
+> +	struct list_head		extlist;
+> +	struct xfs_repair_extent_list	btlist;	  /* OWN_AG blocks */
+> +	struct xfs_repair_extent_list	nobtlist; /* rmapbt/agfl blocks */
+> +	struct xfs_scrub_context	*sc;
+> +	xfs_agblock_t			next_bno;
+> +	uint64_t			nr_records;
+> +};
+> +
+> +/* Record extents that aren't in use from gaps in the rmap records. */
+> +STATIC int
+> +xfs_repair_alloc_extent_fn(
+> +	struct xfs_btree_cur		*cur,
+> +	struct xfs_rmap_irec		*rec,
+> +	void				*priv)
+> +{
+> +	struct xfs_repair_alloc		*ra = priv;
+> +	struct xfs_repair_alloc_extent	*rae;
+> +	struct xfs_buf			*bp;
+> +	xfs_fsblock_t			fsb;
+> +	int				i;
+> +	int				error;
+> +
+> +	/* Record all the OWN_AG blocks... */
+> +	if (rec->rm_owner == XFS_RMAP_OWN_AG) {
+> +		fsb = XFS_AGB_TO_FSB(cur->bc_mp, cur->bc_private.a.agno,
+> +				rec->rm_startblock);
+> +		error = xfs_repair_collect_btree_extent(ra->sc,
+> +				&ra->btlist, fsb, rec->rm_blockcount);
+> +		if (error)
+> +			return error;
+> +	}
+> +
+> +	/* ...and all the rmapbt blocks... */
+> +	for (i = 0; i < cur->bc_nlevels && cur->bc_ptrs[i] == 1; i++) {
+> +		xfs_btree_get_block(cur, i, &bp);
+> +		if (!bp)
+> +			continue;
+> +		fsb = XFS_DADDR_TO_FSB(cur->bc_mp, bp->b_bn);
+> +		error = xfs_repair_collect_btree_extent(ra->sc,
+> +				&ra->nobtlist, fsb, 1);
+> +		if (error)
+> +			return error;
+> +	}
 
-  drivers/dax/super.c
+This looks familiar from previous patches, including the magic
+bc_ptrs check. factoring opportunity?
 
-between commits:
+> +
+> +	/* ...and all the free space. */
+> +	if (rec->rm_startblock > ra->next_bno) {
+> +		trace_xfs_repair_alloc_extent_fn(cur->bc_mp,
+> +				cur->bc_private.a.agno,
+> +				ra->next_bno, rec->rm_startblock - ra->next_bno,
+> +				XFS_RMAP_OWN_NULL, 0, 0);
+> +
+> +		rae = kmem_alloc(sizeof(struct xfs_repair_alloc_extent),
+> +				KM_MAYFAIL);
+> +		if (!rae)
+> +			return -ENOMEM;
+> +		INIT_LIST_HEAD(&rae->list);
+> +		rae->bno = ra->next_bno;
+> +		rae->len = rec->rm_startblock - ra->next_bno;
+> +		list_add_tail(&rae->list, &ra->extlist);
+> +		ra->nr_records++;
+> +	}
+> +	ra->next_bno = max_t(xfs_agblock_t, ra->next_bno,
+> +			rec->rm_startblock + rec->rm_blockcount);
+> +	return 0;
+> +}
 
-  ba23cba9b3bd ("fs: allow per-device dax status checking for filesystems")
-  80660f20252d ("dax: change bdev_dax_supported() to support boolean return=
-s")
+[....]
 
-from the xfs tree and commit:
+> +/* Allocate a block from the (cached) longest extent in the AG. */
+> +STATIC xfs_fsblock_t
+> +xfs_repair_allocbt_alloc_from_longest(
+> +	struct xfs_repair_alloc		*ra,
+> +	struct xfs_repair_alloc_extent	**longest)
+> +{
+> +	xfs_fsblock_t			fsb;
+> +
+> +	if (*longest && (*longest)->len == 0) {
+> +		list_del(&(*longest)->list);
+> +		kmem_free(*longest);
+> +		*longest = NULL;
+> +	}
+> +
+> +	if (*longest == NULL) {
+> +		*longest = xfs_repair_allocbt_get_longest(ra);
+> +		if (*longest == NULL)
+> +			return NULLFSBLOCK;
+> +	}
+> +
+> +	fsb = XFS_AGB_TO_FSB(ra->sc->mp, ra->sc->sa.agno, (*longest)->bno);
+> +	(*longest)->bno++;
+> +	(*longest)->len--;
 
-  e76384884344 ("mm: introduce MEMORY_DEVICE_FS_DAX and CONFIG_DEV_PAGEMAP_=
-OPS")
+What if this makes the longest extent no longer the longest on the
+extent list?
 
-from the nvdimm tree.
+> +	return fsb;
+> +}
+> +
+> +/* Repair the freespace btrees for some AG. */
+> +int
+> +xfs_repair_allocbt(
+> +	struct xfs_scrub_context	*sc)
+> +{
+> +	struct xfs_repair_alloc		ra;
+> +	struct xfs_owner_info		oinfo;
+> +	struct xfs_mount		*mp = sc->mp;
+> +	struct xfs_btree_cur		*cur = NULL;
+> +	struct xfs_repair_alloc_extent	*longest = NULL;
+> +	struct xfs_repair_alloc_extent	*rae;
+> +	struct xfs_repair_alloc_extent	*n;
+> +	struct xfs_perag		*pag;
+> +	struct xfs_agf			*agf;
+> +	struct xfs_buf			*bp;
+> +	xfs_fsblock_t			bnofsb;
+> +	xfs_fsblock_t			cntfsb;
+> +	xfs_extlen_t			oldf;
+> +	xfs_extlen_t			nr_blocks;
+> +	xfs_agblock_t			agend;
+> +	int				error;
+> +
+> +	/* We require the rmapbt to rebuild anything. */
+> +	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
+> +		return -EOPNOTSUPP;
+> +
+> +	xfs_scrub_perag_get(sc->mp, &sc->sa);
+> +	pag = sc->sa.pag;
 
-I fixed it up (see below) and can carry the fix as necessary. This
-is now fixed as far as linux-next is concerned, but any non trivial
-conflicts should be mentioned to your upstream maintainer when your tree
-is submitted for merging.  You may also want to consider cooperating
-with the maintainer of the conflicting tree to minimise any particularly
-complex conflicts.
+Probably shoulld make xfs_scrub_perag_get() return the pag directly.
 
---=20
-Cheers,
-Stephen Rothwell
-diff --cc drivers/dax/super.c
-index 1d7bd96511f0,88672b6f6252..000000000000
---- a/drivers/dax/super.c
-+++ b/drivers/dax/super.c
-@@@ -80,11 -80,13 +80,12 @@@ EXPORT_SYMBOL_GPL(fs_dax_get_by_bdev)
-   * This is a library function for filesystems to check if the block device
-   * can be mounted with dax option.
-   *
- - * Return: negative errno if unsupported, 0 if supported.
- + * Return: true if supported, false if unsupported
-   */
- -int __bdev_dax_supported(struct super_block *sb, int blocksize)
- +bool __bdev_dax_supported(struct block_device *bdev, int blocksize)
-  {
- -	struct block_device *bdev =3D sb->s_bdev;
-  	struct dax_device *dax_dev;
-+ 	bool dax_enabled =3D false;
-  	pgoff_t pgoff;
-  	int err, id;
-  	void *kaddr;
-@@@ -134,15 -135,22 +135,22 @@@
-  		 * on being able to do (page_address(pfn_to_page())).
-  		 */
-  		WARN_ON(IS_ENABLED(CONFIG_ARCH_HAS_PMEM_API));
-+ 		dax_enabled =3D true;
-  	} else if (pfn_t_devmap(pfn)) {
-- 		/* pass */;
-- 	} else {
-+ 		struct dev_pagemap *pgmap;
-+=20
-+ 		pgmap =3D get_dev_pagemap(pfn_t_to_pfn(pfn), NULL);
-+ 		if (pgmap && pgmap->type =3D=3D MEMORY_DEVICE_FS_DAX)
-+ 			dax_enabled =3D true;
-+ 		put_dev_pagemap(pgmap);
-+ 	}
-+=20
-+ 	if (!dax_enabled) {
- -		pr_debug("VFS (%s): error: dax support not enabled\n",
- -				sb->s_id);
- +		pr_debug("%s: error: dax support not enabled\n",
- +				bdevname(bdev, buf));
-- 		return false;
-+ 		return -EOPNOTSUPP;
-  	}
--=20
-- 	return true;
-+ 	return 0;
-  }
-  EXPORT_SYMBOL_GPL(__bdev_dax_supported);
-  #endif
+> +	/*
+> +	 * Make sure the busy extent list is clear because we can't put
+> +	 * extents on there twice.
+> +	 */
+> +	spin_lock(&pag->pagb_lock);
+> +	if (pag->pagb_tree.rb_node) {
+> +		spin_unlock(&pag->pagb_lock);
+> +		return -EDEADLOCK;
+> +	}
+> +	spin_unlock(&pag->pagb_lock);
 
---Sig_/nO66g8gdPLsiZHK6IX858ml
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+Can you wrap that up a helper, say, xfs_extent_busy_list_empty()?
 
------BEGIN PGP SIGNATURE-----
+	if (!xfs_extent_busy_list_empty(pag))
+		return -EDEADLOCK;
 
-iQEyBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAlsRCsYACgkQAVBC80lX
-0GyFOAf2K+fI2g6HeikpCglpE1Sy2lLveEtJwmDWERcgWp2uTChs2ayL2EM/lsEy
-IYtX0eF5hHP+w2M3T3vPtxFR4unKa8ushPRBOkv4enZB1LxbUq4WmRBOGuBBJ9sg
-4EnxdyikLdQ0Ko7++qdtTEsiQ9HoPAvmArmeEH2ixDsDkSsB7vddaqoUtSTZwoQA
-WdgaW6CdZGUhRwxV60aiJlC+43V9LGSljEqdTyK3u8nh4xkLlOSqiMhPnzsGcfih
-aYXP8wj0XXYlQmIdcKDQ5vrOUtdw6aMejtAVVGXmGlFty55ez4aEtXQON+5x29gZ
-vue3ERWlIfRrup6E5xNuzO1eUd43
-=jYhb
------END PGP SIGNATURE-----
+> +	/*
+> +	 * Collect all reverse mappings for free extents, and the rmapbt
+> +	 * blocks.  We can discover the rmapbt blocks completely from a
+> +	 * query_all handler because there are always rmapbt entries.
+> +	 * (One cannot use on query_all to visit all of a btree's blocks
+> +	 * unless that btree is guaranteed to have at least one entry.)
+> +	 */
+> +	INIT_LIST_HEAD(&ra.extlist);
+> +	xfs_repair_init_extent_list(&ra.btlist);
+> +	xfs_repair_init_extent_list(&ra.nobtlist);
+> +	ra.next_bno = 0;
+> +	ra.nr_records = 0;
+> +	ra.sc = sc;
+> +
+> +	cur = xfs_rmapbt_init_cursor(mp, sc->tp, sc->sa.agf_bp, sc->sa.agno);
+> +	error = xfs_rmap_query_all(cur, xfs_repair_alloc_extent_fn, &ra);
+> +	if (error)
+> +		goto out;
+> +	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+> +	cur = NULL;
+> +
+> +	/* Insert a record for space between the last rmap and EOAG. */
+> +	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
+> +	agend = be32_to_cpu(agf->agf_length);
+> +	if (ra.next_bno < agend) {
+> +		rae = kmem_alloc(sizeof(struct xfs_repair_alloc_extent),
+> +				KM_MAYFAIL);
+> +		if (!rae) {
+> +			error = -ENOMEM;
+> +			goto out;
+> +		}
+> +		INIT_LIST_HEAD(&rae->list);
+> +		rae->bno = ra.next_bno;
+> +		rae->len = agend - ra.next_bno;
+> +		list_add_tail(&rae->list, &ra.extlist);
+> +		ra.nr_records++;
+> +	}
+> +
+> +	/* Collect all the AGFL blocks. */
+> +	error = xfs_agfl_walk(sc->mp, XFS_BUF_TO_AGF(sc->sa.agf_bp),
+> +			sc->sa.agfl_bp, xfs_repair_collect_agfl_block, &ra);
+> +	if (error)
+> +		goto out;
+> +
+> +	/* Do we actually have enough space to do this? */
+> +	nr_blocks = 2 * xfs_allocbt_calc_size(mp, ra.nr_records);
+> +	if (!xfs_repair_ag_has_space(pag, nr_blocks, XFS_AG_RESV_NONE)) {
+> +		error = -ENOSPC;
+> +		goto out;
+> +	}
+> +
+> +	/* Invalidate all the bnobt/cntbt blocks in btlist. */
+> +	error = xfs_repair_subtract_extents(sc, &ra.btlist, &ra.nobtlist);
+> +	if (error)
+> +		goto out;
+> +	xfs_repair_cancel_btree_extents(sc, &ra.nobtlist);
+> +	error = xfs_repair_invalidate_blocks(sc, &ra.btlist);
+> +	if (error)
+> +		goto out;
 
---Sig_/nO66g8gdPLsiZHK6IX858ml--
+So this could be factored in xfs_repair_allocbt_get_free_extents().
+
+> +
+> +	/* Allocate new bnobt root. */
+> +	bnofsb = xfs_repair_allocbt_alloc_from_longest(&ra, &longest);
+> +	if (bnofsb == NULLFSBLOCK) {
+> +		error = -ENOSPC;
+> +		goto out;
+> +	}
+> +
+> +	/* Allocate new cntbt root. */
+> +	cntfsb = xfs_repair_allocbt_alloc_from_longest(&ra, &longest);
+> +	if (cntfsb == NULLFSBLOCK) {
+> +		error = -ENOSPC;
+> +		goto out;
+> +	}
+> +
+> +	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
+> +	/* Initialize new bnobt root. */
+> +	error = xfs_repair_init_btblock(sc, bnofsb, &bp, XFS_BTNUM_BNO,
+> +			&xfs_allocbt_buf_ops);
+> +	if (error)
+> +		goto out;
+> +	agf->agf_roots[XFS_BTNUM_BNOi] =
+> +			cpu_to_be32(XFS_FSB_TO_AGBNO(mp, bnofsb));
+> +	agf->agf_levels[XFS_BTNUM_BNOi] = cpu_to_be32(1);
+> +
+> +	/* Initialize new cntbt root. */
+> +	error = xfs_repair_init_btblock(sc, cntfsb, &bp, XFS_BTNUM_CNT,
+> +			&xfs_allocbt_buf_ops);
+> +	if (error)
+> +		goto out;
+> +	agf->agf_roots[XFS_BTNUM_CNTi] =
+> +			cpu_to_be32(XFS_FSB_TO_AGBNO(mp, cntfsb));
+> +	agf->agf_levels[XFS_BTNUM_CNTi] = cpu_to_be32(1);
+
+xfs_repair_allocbt_new_btree_roots()
+
+> +
+> +	/*
+> +	 * Since we're abandoning the old bnobt/cntbt, we have to
+> +	 * decrease fdblocks by the # of blocks in those trees.
+> +	 * btreeblks counts the non-root blocks of the free space
+> +	 * and rmap btrees.  Do this before resetting the AGF counters.
+> +	 */
+> +	oldf = pag->pagf_btreeblks + 2;
+> +	oldf -= (be32_to_cpu(agf->agf_rmap_blocks) - 1);
+> +	error = xfs_mod_fdblocks(mp, -(int64_t)oldf, false);
+> +	if (error)
+> +		goto out;
+> +
+> +	/* Reset the perag info. */
+> +	pag->pagf_btreeblks = be32_to_cpu(agf->agf_rmap_blocks) - 1;
+> +	pag->pagf_freeblks = 0;
+> +	pag->pagf_longest = 0;
+> +	pag->pagf_levels[XFS_BTNUM_BNOi] =
+> +			be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNOi]);
+> +	pag->pagf_levels[XFS_BTNUM_CNTi] =
+> +			be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNTi]);
+> +
+> +	/* Now reset the AGF counters. */
+> +	agf->agf_btreeblks = cpu_to_be32(pag->pagf_btreeblks);
+> +	agf->agf_freeblks = cpu_to_be32(pag->pagf_freeblks);
+> +	agf->agf_longest = cpu_to_be32(pag->pagf_longest);
+> +	xfs_alloc_log_agf(sc->tp, sc->sa.agf_bp,
+> +			XFS_AGF_ROOTS | XFS_AGF_LEVELS | XFS_AGF_BTREEBLKS |
+> +			XFS_AGF_LONGEST | XFS_AGF_FREEBLKS);
+> +	error = xfs_repair_roll_ag_trans(sc);
+> +	if (error)
+> +		goto out;
+
+xfs_repair_allocbt_reset_counters()?
+
+> +	/*
+> +	 * Insert the longest free extent in case it's necessary to
+> +	 * refresh the AGFL with multiple blocks.
+> +	 */
+> +	xfs_rmap_skip_owner_update(&oinfo);
+> +	if (longest && longest->len == 0) {
+> +		error = xfs_repair_allocbt_free_extent(sc,
+> +				XFS_AGB_TO_FSB(sc->mp, sc->sa.agno,
+> +					longest->bno),
+> +				longest->len, &oinfo);
+> +		if (error)
+> +			goto out;
+> +		list_del(&longest->list);
+> +		kmem_free(longest);
+> +	}
+> +
+> +	/* Insert records into the new btrees. */
+> +	list_sort(NULL, &ra.extlist, xfs_repair_allocbt_extent_cmp);
+> +	list_for_each_entry_safe(rae, n, &ra.extlist, list) {
+> +		error = xfs_repair_allocbt_free_extent(sc,
+> +				XFS_AGB_TO_FSB(sc->mp, sc->sa.agno, rae->bno),
+> +				rae->len, &oinfo);
+> +		if (error)
+> +			goto out;
+> +		list_del(&rae->list);
+> +		kmem_free(rae);
+> +	}
+> +
+> +	/* Add rmap records for the btree roots */
+> +	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_AG);
+> +	error = xfs_rmap_alloc(sc->tp, sc->sa.agf_bp, sc->sa.agno,
+> +			XFS_FSB_TO_AGBNO(mp, bnofsb), 1, &oinfo);
+> +	if (error)
+> +		goto out;
+> +	error = xfs_rmap_alloc(sc->tp, sc->sa.agf_bp, sc->sa.agno,
+> +			XFS_FSB_TO_AGBNO(mp, cntfsb), 1, &oinfo);
+> +	if (error)
+> +		goto out;
+
+xfs_repair_allocbt_rebuild_tree()
+
+> +
+> +	/* Free all the OWN_AG blocks that are not in the rmapbt/agfl. */
+> +	return xfs_repair_reap_btree_extents(sc, &ra.btlist, &oinfo,
+> +			XFS_AG_RESV_NONE);
+> +out:
+> +	xfs_repair_cancel_btree_extents(sc, &ra.btlist);
+> +	xfs_repair_cancel_btree_extents(sc, &ra.nobtlist);
+> +	if (cur)
+> +		xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+> +	list_for_each_entry_safe(rae, n, &ra.extlist, list) {
+> +		list_del(&rae->list);
+> +		kmem_free(rae);
+> +	}
+> +	return error;
+> +}
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
