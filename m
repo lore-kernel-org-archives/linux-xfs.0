@@ -1,28 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot0-f179.google.com ([74.125.82.179]:34046 "EHLO
-        mail-ot0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751293AbeFALO5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Jun 2018 07:14:57 -0400
-Received: by mail-ot0-f179.google.com with SMTP id i5-v6so28863398otf.1
-        for <linux-xfs@vger.kernel.org>; Fri, 01 Jun 2018 04:14:57 -0700 (PDT)
+Received: from mail-ot0-f194.google.com ([74.125.82.194]:33093 "EHLO
+        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751373AbeFDBsZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Jun 2018 21:48:25 -0400
+Received: by mail-ot0-f194.google.com with SMTP id h6-v6so16627959otj.0
+        for <linux-xfs@vger.kernel.org>; Sun, 03 Jun 2018 18:48:25 -0700 (PDT)
 MIME-Version: 1.0
-From: Anatoly Trosinenko <anatoly.trosinenko@gmail.com>
-Date: Fri, 1 Jun 2018 14:14:45 +0300
-Message-ID: <CAE5jQCecO_JF64v+Fy1fNbh46dhSyiU6KN+Ax0_qFo8HtSe9Fg@mail.gmail.com>
-Subject: New bugs reported for XFS
+In-Reply-To: <20180604002525.GI10363@dastard>
+References: <20180529195106.14268-1-ross.zwisler@linux.intel.com>
+ <20180529195106.14268-3-ross.zwisler@linux.intel.com> <20180529212510.GJ30110@magnolia>
+ <20180529220114.GA13948@linux.intel.com> <20180531191332.GB7825@magnolia>
+ <20180601012657.GQ10363@dastard> <CAPcyv4g6dv9sG9dR-iY+aEfSi2r3ey1dXGbX-nexKsN72t0QMw@mail.gmail.com>
+ <20180601022418.GR10363@dastard> <CAPcyv4iXTsxmQgjoLs2E_8QrLHrFOV_58T7UYf0zPJuB2744qQ@mail.gmail.com>
+ <20180603222038.GS10363@dastard> <20180604002525.GI10363@dastard>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Sun, 3 Jun 2018 18:48:23 -0700
+Message-ID: <CAPcyv4jL5AKgP3io_hBZxkrKzBZq8wtuqk49L48v=XRiOHdoEw@mail.gmail.com>
+Subject: Re: [PATCH v2 2/7] dax: change bdev_dax_supported() to support
+ boolean returns
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Mike Snitzer <snitzer@redhat.com>, linux-nvdimm <linux-nvdimm@lists.01.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-In Bug 199119 you have  told that Bugzilla does not send bugs to
-proper mailing list. Could you please look at
+On Sun, Jun 3, 2018 at 5:25 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Mon, Jun 04, 2018 at 08:20:38AM +1000, Dave Chinner wrote:
+>> On Thu, May 31, 2018 at 09:02:52PM -0700, Dan Williams wrote:
+>> > On Thu, May 31, 2018 at 7:24 PM, Dave Chinner <david@fromorbit.com> wrote:
+>> > > On Thu, May 31, 2018 at 06:57:33PM -0700, Dan Williams wrote:
+>> > >> > FWIW, XFS+DAX used to just work on this setup (I hadn't even
+>> > >> > installed ndctl until this morning!) but after changing the kernel
+>> > >> > it no longer works. That would make it a regression, yes?
+>>
+>> [....]
+>>
+>> > >> I suspect your kernel does not have CONFIG_ZONE_DEVICE enabled which
+>> > >> has the following dependencies:
+>> > >>
+>> > >>         depends on MEMORY_HOTPLUG
+>> > >>         depends on MEMORY_HOTREMOVE
+>> > >>         depends on SPARSEMEM_VMEMMAP
+>> > >
+>> > > Filesystem DAX now has a dependency on memory hotplug?
+>>
+>> [....]
+>>
+>> > > OK, works now I've found the magic config incantantions to turn
+>> > > everything I now need on.
+>>
+>> By enabling these options, my test VM now has a ~30s pause in the
+>> boot very soon after the nvdimm subsystem is initialised.
+>>
+>> [    1.523718] Serial: 8250/16550 driver, 4 ports, IRQ sharing enabled
+>> [    1.550353] 00:05: ttyS0 at I/O 0x3f8 (irq = 4, base_baud = 115200) is a 16550A
+>> [    1.552175] Non-volatile memory driver v1.3
+>> [    2.332045] tsc: Refined TSC clocksource calibration: 2199.909 MHz
+>> [    2.333280] clocksource: tsc: mask: 0xffffffffffffffff max_cycles: 0x1fb5dcd4620, max_idle_ns: 440795264143 ns
+>> [   37.217453] brd: module loaded
+>> [   37.225423] loop: module loaded
+>> [   37.228441] virtio_blk virtio2: [vda] 10485760 512-byte logical blocks (5.37 GB/5.00 GiB)
+>> [   37.245418] virtio_blk virtio3: [vdb] 146800640 512-byte logical blocks (75.2 GB/70.0 GiB)
+>> [   37.255794] virtio_blk virtio4: [vdc] 1073741824000 512-byte logical blocks (550 TB/500 TiB)
+>> [   37.265403] nd_pmem namespace1.0: unable to guarantee persistence of writes
+>> [   37.265618] nd_pmem namespace0.0: unable to guarantee persistence of writes
+>>
+>> The system does not appear to be consuming CPU, but it is blocking
+>> NMIs so I can't get a CPU trace. For a VM that I rely on booting in
+>> a few seconds because I reboot it tens of times a day, this is a
+>> problem....
+>
+> And when I turn on KASAN, the kernel fails to boot to a login prompt
+> because:
 
-Bug 199899 - Mounting broken XFS partition causes infinite dmesg flood
-(system still responds)
-
-(there are other new bugs reported as well)
-
---
-Anatoly
+What's your qemu and kernel command line? I'll take look at this first
+thing tomorrow.
