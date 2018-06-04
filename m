@@ -1,72 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34536 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:34586 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750868AbeFDMZG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 4 Jun 2018 08:25:06 -0400
-Date: Mon, 4 Jun 2018 08:25:04 -0400
+        id S1752478AbeFDMZL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 4 Jun 2018 08:25:11 -0400
+Date: Mon, 4 Jun 2018 08:25:09 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 08/21] xfs: don't use XFS_BMAPI_IGSTATE in xfs_map_blocks
-Message-ID: <20180604122503.GA110455@bfoster.bfoster>
+Subject: Re: [PATCH 09/21] xfs: remove xfs_reflink_trim_irec_to_next_cow
+Message-ID: <20180604122509.GB110455@bfoster.bfoster>
 References: <20180531180759.21631-1-hch@lst.de>
- <20180531180759.21631-9-hch@lst.de>
+ <20180531180759.21631-10-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180531180759.21631-9-hch@lst.de>
+In-Reply-To: <20180531180759.21631-10-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Thu, May 31, 2018 at 08:07:46PM +0200, Christoph Hellwig wrote:
-> We want to be able to use the extent state as a reliably indicator for
-> the type of I/O, and stop using the buffer head state.  For this we
-> need to stop using the XFS_BMAPI_IGSTATE so that we don't see merged
-> extents of different types.
-> 
-> Based on a patch from Dave Chinner.
+On Thu, May 31, 2018 at 08:07:47PM +0200, Christoph Hellwig wrote:
+> We already have to check for overlapping COW extents everytime we
+> come back to a page in xfs_writepage_map / xfs_map_cow, so this
+> additional trim is not required.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
 
-Thanks for splitting these up. Looks good to me:
-
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/xfs_aops.c | 5 +----
->  1 file changed, 1 insertion(+), 4 deletions(-)
+>  fs/xfs/xfs_aops.c    |  7 -------
+>  fs/xfs/xfs_reflink.c | 33 ---------------------------------
+>  fs/xfs/xfs_reflink.h |  2 --
+>  fs/xfs/xfs_trace.h   |  1 -
+>  4 files changed, 43 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 25d112a4bcf5..2966d62b0594 100644
+> index 2966d62b0594..9b5a4b6e268c 100644
 > --- a/fs/xfs/xfs_aops.c
 > +++ b/fs/xfs/xfs_aops.c
-> @@ -385,7 +385,6 @@ xfs_map_blocks(
->  	ssize_t			count = i_blocksize(inode);
->  	xfs_fileoff_t		offset_fsb, end_fsb;
->  	int			error = 0;
-> -	int			bmapi_flags = XFS_BMAPI_ENTIRE;
->  	int			nimaps = 1;
->  
->  	if (XFS_FORCED_SHUTDOWN(mp))
-> @@ -405,8 +404,6 @@ xfs_map_blocks(
->  		return 0;
->  
->  	ASSERT(type != XFS_IO_COW);
-> -	if (type == XFS_IO_UNWRITTEN)
-> -		bmapi_flags |= XFS_BMAPI_IGSTATE;
->  
->  	xfs_ilock(ip, XFS_ILOCK_SHARED);
->  	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
-> @@ -418,7 +415,7 @@ xfs_map_blocks(
->  	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
+> @@ -416,13 +416,6 @@ xfs_map_blocks(
 >  	offset_fsb = XFS_B_TO_FSBT(mp, offset);
 >  	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
-> -				imap, &nimaps, bmapi_flags);
-> +				imap, &nimaps, XFS_BMAPI_ENTIRE);
->  	/*
->  	 * Truncate an overwrite extent if there's a pending CoW
->  	 * reservation before the end of this extent.  This forces us
+>  				imap, &nimaps, XFS_BMAPI_ENTIRE);
+> -	/*
+> -	 * Truncate an overwrite extent if there's a pending CoW
+> -	 * reservation before the end of this extent.  This forces us
+> -	 * to come back to writepage to take care of the CoW.
+> -	 */
+> -	if (nimaps && type == XFS_IO_OVERWRITE)
+> -		xfs_reflink_trim_irec_to_next_cow(ip, offset_fsb, imap);
+>  	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+>  
+>  	if (error)
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index 713e857d9ffa..d0092c864458 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -514,39 +514,6 @@ xfs_reflink_find_cow_mapping(
+>  	return true;
+>  }
+>  
+> -/*
+> - * Trim an extent to end at the next CoW reservation past offset_fsb.
+> - */
+> -void
+> -xfs_reflink_trim_irec_to_next_cow(
+> -	struct xfs_inode		*ip,
+> -	xfs_fileoff_t			offset_fsb,
+> -	struct xfs_bmbt_irec		*imap)
+> -{
+> -	struct xfs_ifork		*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
+> -	struct xfs_bmbt_irec		got;
+> -	struct xfs_iext_cursor		icur;
+> -
+> -	if (!xfs_is_reflink_inode(ip))
+> -		return;
+> -
+> -	/* Find the extent in the CoW fork. */
+> -	if (!xfs_iext_lookup_extent(ip, ifp, offset_fsb, &icur, &got))
+> -		return;
+> -
+> -	/* This is the extent before; try sliding up one. */
+> -	if (got.br_startoff < offset_fsb) {
+> -		if (!xfs_iext_next_extent(ifp, &icur, &got))
+> -			return;
+> -	}
+> -
+> -	if (got.br_startoff >= imap->br_startoff + imap->br_blockcount)
+> -		return;
+> -
+> -	imap->br_blockcount = got.br_startoff - imap->br_startoff;
+> -	trace_xfs_reflink_trim_irec(ip, imap);
+> -}
+> -
+>  /*
+>   * Cancel CoW reservations for some block range of an inode.
+>   *
+> diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+> index 701487bab468..c0a25609007b 100644
+> --- a/fs/xfs/xfs_reflink.h
+> +++ b/fs/xfs/xfs_reflink.h
+> @@ -34,8 +34,6 @@ extern int xfs_reflink_convert_cow(struct xfs_inode *ip, xfs_off_t offset,
+>  		xfs_off_t count);
+>  extern bool xfs_reflink_find_cow_mapping(struct xfs_inode *ip, xfs_off_t offset,
+>  		struct xfs_bmbt_irec *imap);
+> -extern void xfs_reflink_trim_irec_to_next_cow(struct xfs_inode *ip,
+> -		xfs_fileoff_t offset_fsb, struct xfs_bmbt_irec *imap);
+>  
+>  extern int xfs_reflink_cancel_cow_blocks(struct xfs_inode *ip,
+>  		struct xfs_trans **tpp, xfs_fileoff_t offset_fsb,
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 9d4c4ca24fe6..041045a8d65c 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -3228,7 +3228,6 @@ DEFINE_RW_EVENT(xfs_reflink_reserve_cow);
+>  
+>  DEFINE_SIMPLE_IO_EVENT(xfs_reflink_bounce_dio_write);
+>  DEFINE_IOMAP_EVENT(xfs_reflink_find_cow_mapping);
+> -DEFINE_INODE_IREC_EVENT(xfs_reflink_trim_irec);
+>  
+>  DEFINE_SIMPLE_IO_EVENT(xfs_reflink_cancel_cow_range);
+>  DEFINE_SIMPLE_IO_EVENT(xfs_reflink_end_cow);
 > -- 
 > 2.17.0
 > 
