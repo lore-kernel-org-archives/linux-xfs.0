@@ -1,26 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:48140 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750931AbeFDQKY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jun 2018 12:10:24 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w54G5xkd181043
-        for <linux-xfs@vger.kernel.org>; Mon, 4 Jun 2018 16:10:24 GMT
+Received: from aserp2130.oracle.com ([141.146.126.79]:50036 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751163AbeFDQKb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jun 2018 12:10:31 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w54G5wXA118187
+        for <linux-xfs@vger.kernel.org>; Mon, 4 Jun 2018 16:10:30 GMT
 Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp2130.oracle.com with ESMTP id 2jbvyp47tc-1
+        by aserp2130.oracle.com with ESMTP id 2jbvynv853-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 04 Jun 2018 16:10:24 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w54GANYZ031943
+        for <linux-xfs@vger.kernel.org>; Mon, 04 Jun 2018 16:10:30 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w54GATi1032240
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 4 Jun 2018 16:10:23 GMT
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w54GAMOb008565
-        for <linux-xfs@vger.kernel.org>; Mon, 4 Jun 2018 16:10:23 GMT
-Subject: [PATCH v2 0/4] xfs: fix various checking problems
+        for <linux-xfs@vger.kernel.org>; Mon, 4 Jun 2018 16:10:29 GMT
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w54GATN7025732
+        for <linux-xfs@vger.kernel.org>; Mon, 4 Jun 2018 16:10:29 GMT
+Subject: [PATCH 1/4] xfs: check directory bestfree information in the
+ verifier
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 04 Jun 2018 09:10:20 -0700
-Message-ID: <152812862079.2736.15381483104759513267.stgit@magnolia>
+Date: Mon, 04 Jun 2018 09:10:28 -0700
+Message-ID: <152812862797.2736.1635127719444719703.stgit@magnolia>
+In-Reply-To: <152812862079.2736.15381483104759513267.stgit@magnolia>
+References: <152812862079.2736.15381483104759513267.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -30,15 +33,173 @@ List-Id: xfs
 To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Here's a series of patches to fix some inadequacies in the metadata
-integrity checking of XFS.  The first patch teaches the directory code
-to check the bestfree data while reading in the block instead of
-ASSERTing later.  The last three refactor some btree debug code so that
-it will always (even in non-debug mode) check pointers before loading
-blocks.
+Create a variant of xfs_dir2_data_freefind that is suitable for use in a
+verifier.  Because _freefind is called by the verifier, we simply
+duplicate the _freefind function, convert the ASSERTs to return
+__this_address, and modify the verifier to call our new function.  Once
+we've made it impossible for directory blocks with bad bestfree data to
+make it into the filesystem we can remove the DEBUG code from the
+regular _freefind function.
 
-Comments and questions are, as always, welcome.
+Underlying argument: corruption of on-disk metadata should return
+-EFSCORRUPTED instead of blowing ASSERTs.
 
---D
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_dir2_data.c |  103 +++++++++++++++++++++++++++--------------
+ 1 file changed, 68 insertions(+), 35 deletions(-)
+
+
+diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
+index cb67ec730b9b..2c16bb4f2155 100644
+--- a/fs/xfs/libxfs/xfs_dir2_data.c
++++ b/fs/xfs/libxfs/xfs_dir2_data.c
+@@ -33,6 +33,11 @@
+ #include "xfs_cksum.h"
+ #include "xfs_log.h"
+ 
++static xfs_failaddr_t xfs_dir2_data_freefind_verify(
++		struct xfs_dir2_data_hdr *hdr, struct xfs_dir2_data_free *bf,
++		struct xfs_dir2_data_unused *dup,
++		struct xfs_dir2_data_free **bf_ent);
++
+ /*
+  * Check the consistency of the data block.
+  * The input can also be a block-format directory.
+@@ -147,6 +152,8 @@ __xfs_dir3_data_check(
+ 		 * doesn't need to be there.
+ 		 */
+ 		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
++			xfs_failaddr_t	fa;
++
+ 			if (lastfree != 0)
+ 				return __this_address;
+ 			if (endp < p + be16_to_cpu(dup->length))
+@@ -154,7 +161,9 @@ __xfs_dir3_data_check(
+ 			if (be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) !=
+ 			    (char *)dup - (char *)hdr)
+ 				return __this_address;
+-			dfp = xfs_dir2_data_freefind(hdr, bf, dup);
++			fa = xfs_dir2_data_freefind_verify(hdr, bf, dup, &dfp);
++			if (fa)
++				return fa;
+ 			if (dfp) {
+ 				i = (int)(dfp - bf);
+ 				if ((freeseen & (1 << i)) != 0)
+@@ -381,55 +390,79 @@ xfs_dir3_data_readahead(
+ }
+ 
+ /*
+- * Given a data block and an unused entry from that block,
+- * return the bestfree entry if any that corresponds to it.
++ * Find the bestfree entry that exactly coincides with unused directory space
++ * or a verifier error because the bestfree data are bad.
+  */
+-xfs_dir2_data_free_t *
+-xfs_dir2_data_freefind(
+-	struct xfs_dir2_data_hdr *hdr,		/* data block header */
+-	struct xfs_dir2_data_free *bf,		/* bestfree table pointer */
+-	struct xfs_dir2_data_unused *dup)	/* unused space */
++static xfs_failaddr_t
++xfs_dir2_data_freefind_verify(
++	struct xfs_dir2_data_hdr	*hdr,
++	struct xfs_dir2_data_free	*bf,
++	struct xfs_dir2_data_unused	*dup,
++	struct xfs_dir2_data_free	**bf_ent)
+ {
+-	xfs_dir2_data_free_t	*dfp;		/* bestfree entry */
+-	xfs_dir2_data_aoff_t	off;		/* offset value needed */
+-#ifdef DEBUG
+-	int			matched;	/* matched the value */
+-	int			seenzero;	/* saw a 0 bestfree entry */
+-#endif
++	struct xfs_dir2_data_free	*dfp;
++	xfs_dir2_data_aoff_t		off;
++	bool				matched = false;
++	bool				seenzero = false;
+ 
++	*bf_ent = NULL;
+ 	off = (xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr);
+ 
+-#ifdef DEBUG
+ 	/*
+ 	 * Validate some consistency in the bestfree table.
+ 	 * Check order, non-overlapping entries, and if we find the
+ 	 * one we're looking for it has to be exact.
+ 	 */
+-	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
+-	       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC) ||
+-	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
+-	       hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC));
+-	for (dfp = &bf[0], seenzero = matched = 0;
+-	     dfp < &bf[XFS_DIR2_DATA_FD_COUNT];
+-	     dfp++) {
++	for (dfp = &bf[0]; dfp < &bf[XFS_DIR2_DATA_FD_COUNT]; dfp++) {
+ 		if (!dfp->offset) {
+-			ASSERT(!dfp->length);
+-			seenzero = 1;
++			if (dfp->length)
++				return __this_address;
++			seenzero = true;
+ 			continue;
+ 		}
+-		ASSERT(seenzero == 0);
++		if (seenzero)
++			return __this_address;
+ 		if (be16_to_cpu(dfp->offset) == off) {
+-			matched = 1;
+-			ASSERT(dfp->length == dup->length);
+-		} else if (off < be16_to_cpu(dfp->offset))
+-			ASSERT(off + be16_to_cpu(dup->length) <= be16_to_cpu(dfp->offset));
+-		else
+-			ASSERT(be16_to_cpu(dfp->offset) + be16_to_cpu(dfp->length) <= off);
+-		ASSERT(matched || be16_to_cpu(dfp->length) >= be16_to_cpu(dup->length));
+-		if (dfp > &bf[0])
+-			ASSERT(be16_to_cpu(dfp[-1].length) >= be16_to_cpu(dfp[0].length));
++			matched = true;
++			if (dfp->length != dup->length)
++				return __this_address;
++		} else if (be16_to_cpu(dfp->offset) > off) {
++			if (off + be16_to_cpu(dup->length) >
++					be16_to_cpu(dfp->offset))
++				return __this_address;
++		} else {
++			if (be16_to_cpu(dfp->offset) +
++					be16_to_cpu(dfp->length) > off)
++				return __this_address;
++		}
++		if (!matched &&
++		    be16_to_cpu(dfp->length) < be16_to_cpu(dup->length))
++			return __this_address;
++		if (dfp > &bf[0] &&
++		    be16_to_cpu(dfp[-1].length) < be16_to_cpu(dfp[0].length))
++			return __this_address;
+ 	}
+-#endif
++
++	/* Looks ok so far; now try to match up with a bestfree entry. */
++	*bf_ent = xfs_dir2_data_freefind(hdr, bf, dup);
++	return NULL;
++}
++
++/*
++ * Given a data block and an unused entry from that block,
++ * return the bestfree entry if any that corresponds to it.
++ */
++xfs_dir2_data_free_t *
++xfs_dir2_data_freefind(
++	struct xfs_dir2_data_hdr *hdr,		/* data block header */
++	struct xfs_dir2_data_free *bf,		/* bestfree table pointer */
++	struct xfs_dir2_data_unused *dup)	/* unused space */
++{
++	xfs_dir2_data_free_t	*dfp;		/* bestfree entry */
++	xfs_dir2_data_aoff_t	off;		/* offset value needed */
++
++	off = (xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr);
++
+ 	/*
+ 	 * If this is smaller than the smallest bestfree entry,
+ 	 * it can't be there since they're sorted.
+
