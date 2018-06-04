@@ -1,99 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:30930 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751361AbeFEErc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jun 2018 00:47:32 -0400
-Date: Tue, 5 Jun 2018 14:47:29 +1000
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:42220 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751625AbeFDXWD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jun 2018 19:22:03 -0400
+Date: Tue, 5 Jun 2018 09:22:00 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/3] xfs: verify extent size hint is valid in inode
- verifier
-Message-ID: <20180605044729.GD10363@dastard>
-References: <20180605024313.18737-1-david@fromorbit.com>
- <20180605024313.18737-3-david@fromorbit.com>
- <20180605040817.GE9437@magnolia>
- <20180605042453.GA10363@dastard>
- <20180605042836.GF9437@magnolia>
+Subject: Re: [PATCH 07/10] xfs: xfs_alloc_get_rec should return EFSCORRUPTED
+ for obvious bnobt corruption
+Message-ID: <20180604232200.GW10363@dastard>
+References: <152806814253.18187.4009340462930782844.stgit@magnolia>
+ <152806818878.18187.4844773238575124410.stgit@magnolia>
+ <20180604001406.GE10363@dastard>
+ <20180604043221.GN7825@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180605042836.GF9437@magnolia>
+In-Reply-To: <20180604043221.GN7825@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jun 04, 2018 at 09:28:36PM -0700, Darrick J. Wong wrote:
-> On Tue, Jun 05, 2018 at 02:24:53PM +1000, Dave Chinner wrote:
-> > On Mon, Jun 04, 2018 at 09:08:17PM -0700, Darrick J. Wong wrote:
-> > > On Tue, Jun 05, 2018 at 12:43:12PM +1000, Dave Chinner wrote:
-> > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > 
-> > > > There are rules for vald extent size hints. We enforce them when
-> > > > applications set them, but fuzzers violate those rules and that
-> > > > screws us over.
-> > > > 
-> > > > This results in alignment assertion failures when setting up
-> > > > allocations such as this in direct IO:
-> > > > 
-> > > > XFS: Assertion failed: ap->length, file: fs/xfs/libxfs/xfs_bmap.c, line: 3432
-> > > > ....
-> > > > Call Trace:
-> > > >  xfs_bmap_btalloc+0x415/0x910
-> > > >  xfs_bmapi_write+0x71c/0x12e0
-> > > >  xfs_iomap_write_direct+0x2a9/0x420
-> > > >  xfs_file_iomap_begin+0x4dc/0xa70
-> > > >  iomap_apply+0x43/0x100
-> > > >  iomap_file_buffered_write+0x62/0x90
-> > > >  xfs_file_buffered_aio_write+0xba/0x300
-> > > >  __vfs_write+0xd5/0x150
-> > > >  vfs_write+0xb6/0x180
-> > > >  ksys_write+0x45/0xa0
-> > > >  do_syscall_64+0x5a/0x180
-> > > >  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-> > > > 
-> > > > And from xfs_db:
-> > > > 
-> > > > core.extsize = 10380288
-> > > > 
-> > > > Which is not an integer multiple of the block size, and so violates
-> > > > Rule #7 for setting extent size hints. Validate extent size hint
-> > > > rules in the inode verifier to catch this.
-> > > > 
-> > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > > ---
-> > > >  fs/xfs/libxfs/xfs_inode_buf.c | 7 +++++++
-> > > >  1 file changed, 7 insertions(+)
-> > > > 
-> > > > diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> > > > index f5fff1ccb61d..be197c91307b 100644
-> > > > --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> > > > +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> > > > @@ -385,6 +385,7 @@ xfs_dinode_verify(
-> > > >  	xfs_ino_t		ino,
-> > > >  	struct xfs_dinode	*dip)
-> > > >  {
-> > > > +	xfs_failaddr_t		fa;
-> > > >  	uint16_t		mode;
-> > > >  	uint16_t		flags;
-> > > >  	uint64_t		flags2;
-> > > > @@ -501,6 +502,12 @@ xfs_dinode_verify(
-> > > >  			return __this_address;
-> > > >  	}
-> > > >  
-> > > > +	/* extent size hint validation */
-> > > > +	fa = xfs_inode_validate_extsize(mp, be32_to_cpu(dip->di_extsize),
-> > > > +					mode, be32_to_cpu(dip->di_flags));
+On Sun, Jun 03, 2018 at 09:32:21PM -0700, Darrick J. Wong wrote:
+> On Mon, Jun 04, 2018 at 10:14:06AM +1000, Dave Chinner wrote:
+> > On Sun, Jun 03, 2018 at 04:23:08PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > > 
-> > > What if the cowextsize is garbage?  Do we handle that better, or do we
-> > > blow up there too?
+> > > Return -EFSCORRUPTED when the bnobt/cntbt return obviously corrupt
+> > > values, rather than letting them bounce around in the internal code.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  fs/xfs/libxfs/xfs_alloc.c |   12 ++++++++----
+> > >  1 file changed, 8 insertions(+), 4 deletions(-)
+> > > 
+> > > 
+> > > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> > > index dc9dd3805d97..0214a77808d0 100644
+> > > --- a/fs/xfs/libxfs/xfs_alloc.c
+> > > +++ b/fs/xfs/libxfs/xfs_alloc.c
+> > > @@ -231,10 +231,14 @@ xfs_alloc_get_rec(
+> > >  	int			error;
+> > >  
+> > >  	error = xfs_btree_get_rec(cur, &rec, stat);
+> > > -	if (!error && *stat == 1) {
+> > > -		*bno = be32_to_cpu(rec->alloc.ar_startblock);
+> > > -		*len = be32_to_cpu(rec->alloc.ar_blockcount);
+> > > -	}
+> > > +	if (error || !(*stat))
+> > > +		return error;
+> > > +	if (rec->alloc.ar_blockcount == 0)
+> > > +		return -EFSCORRUPTED;
+> > > +
+> > > +	*bno = be32_to_cpu(rec->alloc.ar_startblock);
+> > > +	*len = be32_to_cpu(rec->alloc.ar_blockcount);
 > > 
-> > I haven't checked (it was a v4 image that I was looking at) - are
-> > the rules the same?
+> > Looks good, but makes me wonder if we should verify that
+> > ar_startblock is a valid agbno, and that the extent lies wholly
+> > within the AG? That can be another patch, though.
 > 
-> Similar, but not entirely the same.  See xfs_inode_validate_cowextsize. :)
+> We probably ought to fix all the _get_rec functions to check that
+> they're not returning obviously garbage results.
 
-OK, I'll cook up a similar patch then.
+Yup, because that's exactly what the latest fuzzer images are
+tripping over - zero'd and/or invalid allocbt records. I'll
+make a pass at converting all the _get_rec functions to bounds check
+the records they are asked to convert.
 
 Cheers,
 
