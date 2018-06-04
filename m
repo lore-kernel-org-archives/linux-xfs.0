@@ -1,53 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:52268 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750779AbeFDEZ3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jun 2018 00:25:29 -0400
-Date: Sun, 3 Jun 2018 21:25:25 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 01/10] xfs: don't forbid setting dax flag on directories
- if device doesn't dax
-Message-ID: <20180604042525.GM7825@magnolia>
-References: <152806814253.18187.4009340462930782844.stgit@magnolia>
- <152806814871.18187.4240645095990301961.stgit@magnolia>
- <20180603234136.GX10363@dastard>
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:32332 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750779AbeFDEZd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jun 2018 00:25:33 -0400
+Date: Mon, 4 Jun 2018 14:22:27 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: NULL pointer dereference in xfs_bmap_extents_to_btree() when
+ mounting and operating a crafted image
+Message-ID: <20180604042227.GO10363@dastard>
+References: <CANrHXgzLvaud2HEv3jAFGTfn5S80d7Rwj-ztJNWPT8eyFTohMg@mail.gmail.com>
+ <20180603223435.GU10363@dastard>
+ <20180603230341.GV10363@dastard>
+ <20180603233114.GW10363@dastard>
+ <CANrHXgwP5nOaG6nZwUs-bM_oJDNdUnXj=33xrrLJ-OvyCaz_EA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180603234136.GX10363@dastard>
+In-Reply-To: <CANrHXgwP5nOaG6nZwUs-bM_oJDNdUnXj=33xrrLJ-OvyCaz_EA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: Wen Xu <xuwen.sjtu@gmail.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jun 04, 2018 at 09:41:36AM +1000, Dave Chinner wrote:
-> On Sun, Jun 03, 2018 at 04:22:28PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > On a directory, the DAX flag is merely a hint that files created in the
-> > directory should have the DAX flag set at creation time.  We don't care
-> > if the underlying device supports DAX or not because directory metadata
-> > are always cached in DRAM.  We don't care if new files get the flag even
-> > if the device doesn't support DAX because we always check for DAX
-> > support before setting the VFS flag (S_DAX).
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Sun, Jun 03, 2018 at 10:07:52PM -0400, Wen Xu wrote:
+> Hi Dave,
 > 
-> Am I correct in assuming this allows directory hints to work on
-> a filesystem with a DAX capable RT device, but a normal data device?
-
-Correct.
-
---D
-
-> Regardless, behaviour seems sensible to me.
+> Very strange.
 > 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I checkout v4.17-rc7 of
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/
+> and merge with for-next of
+> https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git/ to make the
+> kernel build.
+
+The last commit from the for-next tree I have is:
+
+d25522f10cfa xfs: repair superblocks
+
+Does that match what you merged?
+
+> d1dabff17081af94c9604c5fdddd0de7  20.img
+> mounting 20.img and running poc.c on mounted folder still gives me
+> nullptr access.
+> 
+> [ 1381.524410] XFS (loop0): Mounting V4 Filesystem
+> [ 1381.524484] XFS (loop0): Log size 864 blocks too small, minimum
+> size is 942 blocks
+> [ 1381.524487] XFS (loop0): Log size out of supported range.
+> [ 1381.525728] XFS (loop0): Continuing onwards, but if log hangs are
+> experienced then please report this message in the bug report.
+> [ 1381.533754] XFS (loop0): Ending clean mount
+> [ 1388.369552] XFS (loop0): xfs_buf_find: daddr 0x7fb28 out of range, EOFS 0x8000
+
+So, somehow, it's getting a block beyond EOF being allocated out of
+the free space tree. So what we have here is an uncaught corrupt
+freespace record....
+
+<sigh>
+
+$ sudo xfs_repair -n -f xfs.img
+Phase 1 - find and verify superblock...
+bad primary superblock - inconsistent filesystem geometry in
+realtime filesystem component !!!
+
+attempting to find secondary superblock...
+...Sorry, could not find valid secondary superblock
+Exiting now.
+$
+
+Please use a filesystem with at least 2 AGs as the basis of your
+fuzzing in future.
+
+But, yeah, xfs_db tells me the by-size freespace btree is full of
+crap, but the by-cnt tree is completely empty (i.e. corrupt) so
+allocation should definitely be failing long before if gets anywhere
+near returning an allocated block.
+
+Ok, I just worked out why I haven't been able to reproduce the
+issue: you have no error checking in your test code, so I get no
+indication that it fails to run correctly when run as a user.
+
+Alright, lets start this whole thing again.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
