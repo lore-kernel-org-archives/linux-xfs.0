@@ -1,91 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35198 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752222AbeFDM1G (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 4 Jun 2018 08:27:06 -0400
-Date: Mon, 4 Jun 2018 08:27:04 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 13/21] xfs: remove the now unused XFS_BMAPI_IGSTATE flag
-Message-ID: <20180604122703.GF110455@bfoster.bfoster>
-References: <20180531180759.21631-1-hch@lst.de>
- <20180531180759.21631-14-hch@lst.de>
+Received: from userp2130.oracle.com ([156.151.31.86]:48140 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750931AbeFDQKY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jun 2018 12:10:24 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w54G5xkd181043
+        for <linux-xfs@vger.kernel.org>; Mon, 4 Jun 2018 16:10:24 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp2130.oracle.com with ESMTP id 2jbvyp47tc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 04 Jun 2018 16:10:24 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w54GANYZ031943
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 4 Jun 2018 16:10:23 GMT
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w54GAMOb008565
+        for <linux-xfs@vger.kernel.org>; Mon, 4 Jun 2018 16:10:23 GMT
+Subject: [PATCH v2 0/4] xfs: fix various checking problems
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 04 Jun 2018 09:10:20 -0700
+Message-ID: <152812862079.2736.15381483104759513267.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180531180759.21631-14-hch@lst.de>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, May 31, 2018 at 08:07:51PM +0200, Christoph Hellwig wrote:
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+Hi all,
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Here's a series of patches to fix some inadequacies in the metadata
+integrity checking of XFS.  The first patch teaches the directory code
+to check the bestfree data while reading in the block instead of
+ASSERTing later.  The last three refactor some btree debug code so that
+it will always (even in non-debug mode) check pointers before loading
+blocks.
 
->  fs/xfs/libxfs/xfs_bmap.c | 6 ++----
->  fs/xfs/libxfs/xfs_bmap.h | 3 ---
->  2 files changed, 2 insertions(+), 7 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 7b0e2b551e23..4b5e014417d2 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -3799,8 +3799,7 @@ xfs_bmapi_update_map(
->  		   mval[-1].br_startblock != HOLESTARTBLOCK &&
->  		   mval->br_startblock == mval[-1].br_startblock +
->  					  mval[-1].br_blockcount &&
-> -		   ((flags & XFS_BMAPI_IGSTATE) ||
-> -			mval[-1].br_state == mval->br_state)) {
-> +		   mval[-1].br_state == mval->br_state) {
->  		ASSERT(mval->br_startoff ==
->  		       mval[-1].br_startoff + mval[-1].br_blockcount);
->  		mval[-1].br_blockcount += mval->br_blockcount;
-> @@ -3845,7 +3844,7 @@ xfs_bmapi_read(
->  
->  	ASSERT(*nmap >= 1);
->  	ASSERT(!(flags & ~(XFS_BMAPI_ATTRFORK|XFS_BMAPI_ENTIRE|
-> -			   XFS_BMAPI_IGSTATE|XFS_BMAPI_COWFORK)));
-> +			   XFS_BMAPI_COWFORK)));
->  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_SHARED|XFS_ILOCK_EXCL));
->  
->  	if (unlikely(XFS_TEST_ERROR(
-> @@ -4290,7 +4289,6 @@ xfs_bmapi_write(
->  
->  	ASSERT(*nmap >= 1);
->  	ASSERT(*nmap <= XFS_BMAP_MAX_NMAP);
-> -	ASSERT(!(flags & XFS_BMAPI_IGSTATE));
->  	ASSERT(tp != NULL ||
->  	       (flags & (XFS_BMAPI_CONVERT | XFS_BMAPI_COWFORK)) ==
->  			(XFS_BMAPI_CONVERT | XFS_BMAPI_COWFORK));
-> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-> index 2c233f9f1a26..a845fe57d1b5 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.h
-> +++ b/fs/xfs/libxfs/xfs_bmap.h
-> @@ -80,8 +80,6 @@ struct xfs_extent_free_item
->  #define XFS_BMAPI_METADATA	0x002	/* mapping metadata not user data */
->  #define XFS_BMAPI_ATTRFORK	0x004	/* use attribute fork not data */
->  #define XFS_BMAPI_PREALLOC	0x008	/* preallocation op: unwritten space */
-> -#define XFS_BMAPI_IGSTATE	0x010	/* Ignore state - */
-> -					/* combine contig. space */
->  #define XFS_BMAPI_CONTIG	0x020	/* must allocate only one extent */
->  /*
->   * unwritten extent conversion - this needs write cache flushing and no additional
-> @@ -128,7 +126,6 @@ struct xfs_extent_free_item
->  	{ XFS_BMAPI_METADATA,	"METADATA" }, \
->  	{ XFS_BMAPI_ATTRFORK,	"ATTRFORK" }, \
->  	{ XFS_BMAPI_PREALLOC,	"PREALLOC" }, \
-> -	{ XFS_BMAPI_IGSTATE,	"IGSTATE" }, \
->  	{ XFS_BMAPI_CONTIG,	"CONTIG" }, \
->  	{ XFS_BMAPI_CONVERT,	"CONVERT" }, \
->  	{ XFS_BMAPI_ZERO,	"ZERO" }, \
-> -- 
-> 2.17.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Comments and questions are, as always, welcome.
+
+--D
