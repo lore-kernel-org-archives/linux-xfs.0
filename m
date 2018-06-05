@@ -1,103 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:53884 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751046AbeFEAq3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 4 Jun 2018 20:46:29 -0400
-Date: Mon, 4 Jun 2018 20:46:28 -0400
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH v2 5/7] dm: remove DM_TYPE_DAX_BIO_BASED dm_queue_mode
-Message-ID: <20180605004558.GB6898@redhat.com>
-References: <20180529195106.14268-1-ross.zwisler@linux.intel.com>
- <20180529195106.14268-6-ross.zwisler@linux.intel.com>
- <20180601220443.GB18712@redhat.com>
- <20180604232416.GB10666@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180604232416.GB10666@linux.intel.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:49426 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751386AbeFECnW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jun 2018 22:43:22 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1fQ1wJ-0001lg-S1
+        for linux-xfs@vger.kernel.org; Tue, 05 Jun 2018 12:43:15 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1fQ1wJ-0004uz-R6
+        for linux-xfs@vger.kernel.org; Tue, 05 Jun 2018 12:43:15 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 2/3] xfs: verify extent size hint is valid in inode verifier
+Date: Tue,  5 Jun 2018 12:43:12 +1000
+Message-Id: <20180605024313.18737-3-david@fromorbit.com>
+In-Reply-To: <20180605024313.18737-1-david@fromorbit.com>
+References: <20180605024313.18737-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>, Toshi Kani <toshi.kani@hpe.com>, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Mon, Jun 04 2018 at  7:24pm -0400,
-Ross Zwisler <ross.zwisler@linux.intel.com> wrote:
+From: Dave Chinner <dchinner@redhat.com>
 
-> On Fri, Jun 01, 2018 at 06:04:43PM -0400, Mike Snitzer wrote:
-> > On Tue, May 29 2018 at  3:51pm -0400,
-> > Ross Zwisler <ross.zwisler@linux.intel.com> wrote:
-> > 
-> > > The DM_TYPE_DAX_BIO_BASED dm_queue_mode was introduced to prevent DM
-> > > devices that could possibly support DAX from transitioning into DM devices
-> > > that cannot support DAX.
-> > > 
-> > > For example, the following transition will currently fail:
-> > > 
-> > >  dm-linear: [fsdax pmem][fsdax pmem] => [fsdax pmem][fsdax raw]
-> > > 	      DM_TYPE_DAX_BIO_BASED       DM_TYPE_BIO_BASED
-> > > 
-> > > but these will both succeed:
-> > > 
-> > >  dm-linear: [fsdax pmem][brd ramdisk] => [fsdax pmem][fsdax raw]
-> > >  	      DM_TYPE_DAX_BIO_BASED        DM_TYPE_BIO_BASED
-> > > 
-> > 
-> > I fail to see how this succeeds given
-> > drivers/md/dm-ioctl.c:is_valid_type() only allows transitions from:
-> > 
-> > DM_TYPE_BIO_BASED => DM_TYPE_DAX_BIO_BASED
-> 
-> Right, sorry, that was a typo.  What I meant was:
-> 
-> > For example, the following transition will currently fail:
-> > 
-> >  dm-linear: [fsdax pmem][fsdax pmem] => [fsdax pmem][fsdax raw]
-> >               DM_TYPE_DAX_BIO_BASED       DM_TYPE_BIO_BASED
-> > 
-> > but these will both succeed:
-> > 
-> >  dm-linear: [fsdax pmem][brd ramdisk] => [fsdax pmem][fsdax raw]
-> >                 DM_TYPE_BIO_BASED        DM_TYPE_BIO_BASED
-> > 
-> >  dm-linear: [fsdax pmem][fsdax raw] => [fsdax pmem][fsdax pmem]
-> >                 DM_TYPE_BIO_BASED        DM_TYPE_DAX_BIO_BASED
-> 
-> So we allow 2 of the 3 transitions, but the reason that we disallow the third
-> isn't fully clear to me.
-> 
-> > >  dm-linear: [fsdax pmem][fsdax raw] => [fsdax pmem][fsdax pmem]
-> > >  		DM_TYPE_BIO_BASED        DM_TYPE_DAX_BIO_BASED
-> > > 
-> > > This seems arbitrary, as really the choice on whether to use DAX happens at
-> > > filesystem mount time.  There's no guarantee that the in the first case
-> > > (double fsdax pmem) we were using the dax mount option with our file
-> > > system.
-> > > 
-> > > Instead, get rid of DM_TYPE_DAX_BIO_BASED and all the special casing around
-> > > it, and instead make the request queue's QUEUE_FLAG_DAX be our one source
-> > > of truth.  If this is set, we can use DAX, and if not, not.  We keep this
-> > > up to date in table_load() as the table changes.  As with regular block
-> > > devices the filesystem will then know at mount time whether DAX is a
-> > > supported mount option or not.
-> > 
-> > If you don't think you need this specialization that is fine.. but DM
-> > devices supporting suspending (as part of table reloads) so is there any
-> > risk that there will be inflight IO (say if someone did 'dmsetup suspend
-> > --noflush').. and then upon reload the device type changed out from
-> > under us.. anyway, I don't have all the PMEM DAX stuff paged back into
-> > my head yet.
-> > 
-> > But this just seems like we really shouldn't be allowing the
-> > transition from what was DM_TYPE_DAX_BIO_BASED back to DM_TYPE_BIO_BASED
-> 
-> I admit I don't fully understand all the ways that DM supports suspending and
-> resuming devices.  Is there actually a case where we can change out the DM
-> devices while I/O is running, and somehow end up trying to issue a DAX I/O to
-> a device that doesn't support DAX?
+There are rules for vald extent size hints. We enforce them when
+applications set them, but fuzzers violate those rules and that
+screws us over.
 
-Yes, provided root permissions, it's very easy to dmsetup suspend/load/resume
-to replace any portion of the DM device's logical address space to map to an
-entirely different DM target (with a different backing store).  It's
-pretty intrusive to do such things, but easily done and powerful.
+This results in alignment assertion failures when setting up
+allocations such as this in direct IO:
 
-Mike
+XFS: Assertion failed: ap->length, file: fs/xfs/libxfs/xfs_bmap.c, line: 3432
+....
+Call Trace:
+ xfs_bmap_btalloc+0x415/0x910
+ xfs_bmapi_write+0x71c/0x12e0
+ xfs_iomap_write_direct+0x2a9/0x420
+ xfs_file_iomap_begin+0x4dc/0xa70
+ iomap_apply+0x43/0x100
+ iomap_file_buffered_write+0x62/0x90
+ xfs_file_buffered_aio_write+0xba/0x300
+ __vfs_write+0xd5/0x150
+ vfs_write+0xb6/0x180
+ ksys_write+0x45/0xa0
+ do_syscall_64+0x5a/0x180
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+
+And from xfs_db:
+
+core.extsize = 10380288
+
+Which is not an integer multiple of the block size, and so violates
+Rule #7 for setting extent size hints. Validate extent size hint
+rules in the inode verifier to catch this.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/libxfs/xfs_inode_buf.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index f5fff1ccb61d..be197c91307b 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -385,6 +385,7 @@ xfs_dinode_verify(
+ 	xfs_ino_t		ino,
+ 	struct xfs_dinode	*dip)
+ {
++	xfs_failaddr_t		fa;
+ 	uint16_t		mode;
+ 	uint16_t		flags;
+ 	uint64_t		flags2;
+@@ -501,6 +502,12 @@ xfs_dinode_verify(
+ 			return __this_address;
+ 	}
+ 
++	/* extent size hint validation */
++	fa = xfs_inode_validate_extsize(mp, be32_to_cpu(dip->di_extsize),
++					mode, be32_to_cpu(dip->di_flags));
++	if (fa)
++		return fa;
++
+ 	/* only version 3 or greater inodes are extensively verified here */
+ 	if (dip->di_version < 3)
+ 		return NULL;
+-- 
+2.17.0
+
