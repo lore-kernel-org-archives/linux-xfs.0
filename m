@@ -1,257 +1,144 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:48302 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751163AbeFDQKg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jun 2018 12:10:36 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w54G5qkm180989
-        for <linux-xfs@vger.kernel.org>; Mon, 4 Jun 2018 16:10:36 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp2130.oracle.com with ESMTP id 2jbvyp47u7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 04 Jun 2018 16:10:36 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w54GAZ2F032728
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 4 Jun 2018 16:10:35 GMT
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w54GAZKv008663
-        for <linux-xfs@vger.kernel.org>; Mon, 4 Jun 2018 16:10:35 GMT
-Subject: [PATCH 2/4] xfs: introduce xfs_btree_debug_check_ptr
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 04 Jun 2018 09:10:34 -0700
-Message-ID: <152812863422.2736.10487632470115859469.stgit@magnolia>
-In-Reply-To: <152812862079.2736.15381483104759513267.stgit@magnolia>
-References: <152812862079.2736.15381483104759513267.stgit@magnolia>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:8106 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751296AbeFEEjU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jun 2018 00:39:20 -0400
+Date: Tue, 5 Jun 2018 14:39:16 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/3] xfs: validate btree records on retreival
+Message-ID: <20180605043916.GB10363@dastard>
+References: <20180605024313.18737-1-david@fromorbit.com>
+ <20180605024313.18737-4-david@fromorbit.com>
+ <20180605040232.GC9437@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180605040232.GC9437@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Jun 04, 2018 at 09:02:32PM -0700, Darrick J. Wong wrote:
+> On Tue, Jun 05, 2018 at 12:43:13PM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > So we don't check the validity of records as we walk the btree. When
+> > there are corrupt records in the free space btree (e.g. zero
+> > startblock/length or beyond EOAG) we just blindly use it and things
+> > go bad from there. That leads to assert failures on debug kernels
+> > like this:
+....
+> > @@ -222,12 +224,24 @@ xfs_alloc_get_rec(
+> >  	if (error || !(*stat))
+> >  		return error;
+> >  	if (rec->alloc.ar_blockcount == 0)
+> > -		return -EFSCORRUPTED;
+> > +		goto out_bad_rec;
+> >  
+> >  	*bno = be32_to_cpu(rec->alloc.ar_startblock);
+> >  	*len = be32_to_cpu(rec->alloc.ar_blockcount);
+> >  
+> > -	return error;
+> > +	if (!xfs_verify_agbno(mp, agno, *bno) ||
+> > +	    !xfs_verify_agbno(mp, agno, *bno + *len - 1))
+> 
+> What about overflows?
 
-Make xfs_btree_check_ptr a non-debug function and introduce a new _debug
-version that only runs when #ifdef DEBUG.   This will enable us to reuse
-the checking logic with other parts of the btree code.
+I guess that also means I have to add a (*bno > *bno + *len) check
+because it's all unsigned, right?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_btree.c |   68 +++++++++++++++++++--------------------------
- 1 file changed, 28 insertions(+), 40 deletions(-)
+....
 
+> > +	xfs_inobt_btrec_to_irec(mp, rec, irec);
+> > +
+> > +	if (!xfs_verify_agino(mp, agno, irec->ir_startino))
+> > +		goto out_bad_rec;
+> > +	if (irec->ir_count < XFS_INODES_PER_HOLEMASK_BIT ||
+> > +	    irec->ir_count > XFS_INODES_PER_CHUNK)
+> > +		goto out_bad_rec;
+> > +	if (irec->ir_freecount > XFS_INODES_PER_CHUNK)
+> > +		goto out_bad_rec;
+> > +
+> > +	/* if there are no holes, return the first available offset */
+> > +	if (!xfs_inobt_issparse(irec->ir_holemask))
+> > +		realfree = irec->ir_free;
+> > +	else
+> > +		realfree = irec->ir_free & xfs_inobt_irec_to_allocmask(irec);
+> > +	if (hweight64(realfree) != irec->ir_freecount)
+> > +		goto out_bad_rec;
+> 
+> Hmmm... there's a fair amount of shared logic between this and
+> xfs_scrub_iallocbt_rec().
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index cc8122ad37c5..ef93721c0d49 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -234,7 +234,6 @@ xfs_btree_check_sptr(
- 	return xfs_verify_agbno(cur->bc_mp, cur->bc_private.a.agno, agbno);
- }
- 
--#ifdef DEBUG
- /*
-  * Check that a given (indexed) btree pointer at a certain level of a
-  * btree is valid and doesn't point past where it should.
-@@ -258,6 +257,11 @@ xfs_btree_check_ptr(
- 
- 	return 0;
- }
-+
-+#ifdef DEBUG
-+# define xfs_btree_debug_check_ptr	xfs_btree_check_ptr
-+#else
-+# define xfs_btree_debug_check_ptr(...)	(0)
- #endif
- 
- /*
-@@ -1947,11 +1951,10 @@ xfs_btree_lookup(
- 				keyno = 1;
- 			pp = xfs_btree_ptr_addr(cur, keyno, block);
- 
--#ifdef DEBUG
--			error = xfs_btree_check_ptr(cur, pp, 0, level);
-+			error = xfs_btree_debug_check_ptr(cur, pp, 0, level);
- 			if (error)
- 				goto error0;
--#endif
-+
- 			cur->bc_ptrs[level] = keyno;
- 		}
- 	}
-@@ -2355,11 +2358,11 @@ xfs_btree_lshift(
- 
- 		lpp = xfs_btree_ptr_addr(cur, lrecs, left);
- 		rpp = xfs_btree_ptr_addr(cur, 1, right);
--#ifdef DEBUG
--		error = xfs_btree_check_ptr(cur, rpp, 0, level);
-+
-+		error = xfs_btree_debug_check_ptr(cur, rpp, 0, level);
- 		if (error)
- 			goto error0;
--#endif
-+
- 		xfs_btree_copy_keys(cur, lkp, rkp, 1);
- 		xfs_btree_copy_ptrs(cur, lpp, rpp, 1);
- 
-@@ -2394,15 +2397,14 @@ xfs_btree_lshift(
- 	XFS_BTREE_STATS_ADD(cur, moves, rrecs - 1);
- 	if (level > 0) {
- 		/* It's a nonleaf. operate on keys and ptrs */
--#ifdef DEBUG
- 		int			i;		/* loop index */
- 
- 		for (i = 0; i < rrecs; i++) {
--			error = xfs_btree_check_ptr(cur, rpp, i + 1, level);
-+			error = xfs_btree_debug_check_ptr(cur, rpp, i + 1, level);
- 			if (error)
- 				goto error0;
- 		}
--#endif
-+
- 		xfs_btree_shift_keys(cur,
- 				xfs_btree_key_addr(cur, 2, right),
- 				-1, rrecs);
-@@ -2542,22 +2544,18 @@ xfs_btree_rshift(
- 		rkp = xfs_btree_key_addr(cur, 1, right);
- 		rpp = xfs_btree_ptr_addr(cur, 1, right);
- 
--#ifdef DEBUG
- 		for (i = rrecs - 1; i >= 0; i--) {
--			error = xfs_btree_check_ptr(cur, rpp, i, level);
-+			error = xfs_btree_debug_check_ptr(cur, rpp, i, level);
- 			if (error)
- 				goto error0;
- 		}
--#endif
- 
- 		xfs_btree_shift_keys(cur, rkp, 1, rrecs);
- 		xfs_btree_shift_ptrs(cur, rpp, 1, rrecs);
- 
--#ifdef DEBUG
--		error = xfs_btree_check_ptr(cur, lpp, 0, level);
-+		error = xfs_btree_debug_check_ptr(cur, lpp, 0, level);
- 		if (error)
- 			goto error0;
--#endif
- 
- 		/* Now put the new data in, and log it. */
- 		xfs_btree_copy_keys(cur, rkp, lkp, 1);
-@@ -2730,13 +2728,11 @@ __xfs_btree_split(
- 		rkp = xfs_btree_key_addr(cur, 1, right);
- 		rpp = xfs_btree_ptr_addr(cur, 1, right);
- 
--#ifdef DEBUG
- 		for (i = src_index; i < rrecs; i++) {
--			error = xfs_btree_check_ptr(cur, lpp, i, level);
-+			error = xfs_btree_debug_check_ptr(cur, lpp, i, level);
- 			if (error)
- 				goto error0;
- 		}
--#endif
- 
- 		/* Copy the keys & pointers to the new block. */
- 		xfs_btree_copy_keys(cur, rkp, lkp, rrecs);
-@@ -2973,20 +2969,18 @@ xfs_btree_new_iroot(
- 	xfs_btree_copy_keys(cur, ckp, kp, xfs_btree_get_numrecs(cblock));
- 
- 	cpp = xfs_btree_ptr_addr(cur, 1, cblock);
--#ifdef DEBUG
- 	for (i = 0; i < be16_to_cpu(cblock->bb_numrecs); i++) {
--		error = xfs_btree_check_ptr(cur, pp, i, level);
-+		error = xfs_btree_debug_check_ptr(cur, pp, i, level);
- 		if (error)
- 			goto error0;
- 	}
--#endif
-+
- 	xfs_btree_copy_ptrs(cur, cpp, pp, xfs_btree_get_numrecs(cblock));
- 
--#ifdef DEBUG
--	error = xfs_btree_check_ptr(cur, &nptr, 0, level);
-+	error = xfs_btree_debug_check_ptr(cur, &nptr, 0, level);
- 	if (error)
- 		goto error0;
--#endif
-+
- 	xfs_btree_copy_ptrs(cur, pp, &nptr, 1);
- 
- 	xfs_iroot_realloc(cur->bc_private.b.ip,
-@@ -3322,22 +3316,18 @@ xfs_btree_insrec(
- 		kp = xfs_btree_key_addr(cur, ptr, block);
- 		pp = xfs_btree_ptr_addr(cur, ptr, block);
- 
--#ifdef DEBUG
- 		for (i = numrecs - ptr; i >= 0; i--) {
--			error = xfs_btree_check_ptr(cur, pp, i, level);
-+			error = xfs_btree_debug_check_ptr(cur, pp, i, level);
- 			if (error)
- 				return error;
- 		}
--#endif
- 
- 		xfs_btree_shift_keys(cur, kp, 1, numrecs - ptr + 1);
- 		xfs_btree_shift_ptrs(cur, pp, 1, numrecs - ptr + 1);
- 
--#ifdef DEBUG
--		error = xfs_btree_check_ptr(cur, ptrp, 0, level);
-+		error = xfs_btree_debug_check_ptr(cur, ptrp, 0, level);
- 		if (error)
- 			goto error0;
--#endif
- 
- 		/* Now put the new data in, bump numrecs and log it. */
- 		xfs_btree_copy_keys(cur, kp, key, 1);
-@@ -3582,13 +3572,13 @@ xfs_btree_kill_iroot(
- 
- 	pp = xfs_btree_ptr_addr(cur, 1, block);
- 	cpp = xfs_btree_ptr_addr(cur, 1, cblock);
--#ifdef DEBUG
-+
- 	for (i = 0; i < numrecs; i++) {
--		error = xfs_btree_check_ptr(cur, cpp, i, level - 1);
-+		error = xfs_btree_debug_check_ptr(cur, cpp, i, level - 1);
- 		if (error)
- 			return error;
- 	}
--#endif
-+
- 	xfs_btree_copy_ptrs(cur, pp, cpp, numrecs);
- 
- 	error = xfs_btree_free_block(cur, cbp);
-@@ -3722,13 +3712,11 @@ xfs_btree_delrec(
- 		lkp = xfs_btree_key_addr(cur, ptr + 1, block);
- 		lpp = xfs_btree_ptr_addr(cur, ptr + 1, block);
- 
--#ifdef DEBUG
- 		for (i = 0; i < numrecs - ptr; i++) {
--			error = xfs_btree_check_ptr(cur, lpp, i, level);
-+			error = xfs_btree_debug_check_ptr(cur, lpp, i, level);
- 			if (error)
- 				goto error0;
- 		}
--#endif
- 
- 		if (ptr < numrecs) {
- 			xfs_btree_shift_keys(cur, lkp, -1, numrecs - ptr);
-@@ -4061,13 +4049,13 @@ xfs_btree_delrec(
- 		lpp = xfs_btree_ptr_addr(cur, lrecs + 1, left);
- 		rkp = xfs_btree_key_addr(cur, 1, right);
- 		rpp = xfs_btree_ptr_addr(cur, 1, right);
--#ifdef DEBUG
-+
- 		for (i = 1; i < rrecs; i++) {
--			error = xfs_btree_check_ptr(cur, rpp, i, level);
-+			error = xfs_btree_debug_check_ptr(cur, rpp, i, level);
- 			if (error)
- 				goto error0;
- 		}
--#endif
-+
- 		xfs_btree_copy_keys(cur, lkp, rkp, rrecs);
- 		xfs_btree_copy_ptrs(cur, lpp, rpp, rrecs);
- 
+Probably, I did just wrote the checks from first principles.
 
+> Maybe the validation logic should be a new
+> xfs_btree_ops->verify_rec() function so that we can trap bad records as
+> they come in, and share the code with the btree scrubbers?
+
+Yeah, that's kinda what I was thinking is the next step. i.e this
+patch starts us down the road, and then we drive it inwards to
+capture more and more of the places we access the raw record data.
+
+> This also gets us to the broader question of where do we draw the line
+> between hot-path verifiers and online fsck?  This code (and its
+> counterparts through the rest of this patch) are very very similar to
+> the existing scrub/ record checking code, and as the fuzz attacks become
+> more sophisticated it makes more sense just to run online fsck.
+
+The problem is that we don't know we have a corruption if we don't
+do checks like these, and hence have no trigger to tell us that
+we need to scrub. And given the number of "my freespace tree got
+corrupted, do you have any idea why?" reports we get, we need
+something like this at runtime.
+
+The other thing I was considering is that we do these checks in the
+buffer verifier - we're already checksumming the metadata, so it's
+hot in cache. Hence the overhead of checking each record isn't going
+to be that bad, and it protects searches as well. That will probably
+be a more efficient approach and it matches the way we currently do
+most of the validation.
+
+I'd still like to get this patch in first and then have some time to
+work out how best to optimise it.
+
+> Then we
+> gain the secondary side effect of pulling all of an AG's metadata into
+> memory right then and there, which (at least on fast storage) won't be
+> so painful.  Also if we know an AG is toast we could adapt xfs to handle
+> offlining of bad AGs while we fix them.
+> 
+> The awkward part is that online fsck is far short of a full deck...
+
+I think we should aim for a robust, efficient corruption detection
+mechanism first - repair comes after detection :P
+
+> >  	return 0;
+> > +
+> > +out_bad_rec:
+> > +	xfs_warn(mp,
+> > +		"%s Inode BTree record corruption in AG %d detected!",
+> > +		cur->bc_btnum == XFS_BTNUM_INO ? "Used" : "Free", agno);
+> > +	xfs_warn(mp,
+> > +"start inode 0x%x, count 0x%x, free 0x%x freemask 0x%llx, holemask 0x%x",
+> > +		irec->ir_startino, irec->ir_count, irec->ir_freecount,
+> > +		irec->ir_free, irec->ir_holemask);
+> 
+> I've also been wondering given the insane amount of dmesg output from
+> the dangerous_*repair xfstests if we should be turning these into
+> tracepoints so that we don't hose the system when people feed us garbage
+> filesystems.  The downside is that you'd then have to use ftrace to
+> capture the exactly buffer we fell over on.
+
+The problem is that won't help us with the on-off corruption issues
+or the people who cannot supply us with a metadump or reproducable
+test case. Perhaps these should be ratelimited?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
