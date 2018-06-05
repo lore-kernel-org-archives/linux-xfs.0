@@ -1,24 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:37333 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751729AbeFFL5z (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 6 Jun 2018 07:57:55 -0400
-Date: Wed, 6 Jun 2018 14:05:10 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 2/6] iomap: move bdev and dax_dev in a union
-Message-ID: <20180606120510.GA13047@lst.de>
-References: <20180606104033.4947-1-hch@lst.de> <20180606104033.4947-3-hch@lst.de> <CAHc6FU5xFMmN1EPGrZOhx9S5Focwq0Ky9HZeQ9VRGFC-o-cZZw@mail.gmail.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:45798 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751748AbeFEQnA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jun 2018 12:43:00 -0400
+Subject: [PATCH 1/6] xfs/439: don't check filesystem afterwards
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 05 Jun 2018 09:42:56 -0700
+Message-ID: <152821697647.24976.16158232867443217035.stgit@magnolia>
+In-Reply-To: <152821697018.24976.12939094615403004592.stgit@magnolia>
+References: <152821697018.24976.12939094615403004592.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAHc6FU5xFMmN1EPGrZOhx9S5Focwq0Ky9HZeQ9VRGFC-o-cZZw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andreas Gruenbacher <agruenba@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, cluster-devel <cluster-devel@redhat.com>, linux-ext4 <linux-ext4@vger.kernel.org>
+To: guaneryu@gmail.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Wed, Jun 06, 2018 at 01:37:02PM +0200, Andreas Gruenbacher wrote:
-> This seems backwards.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-It is.  So much for last minute polarity fixups..
+We deliberately corrupted the scratch fs, so don't check it afterwards.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ tests/xfs/439 |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+
+diff --git a/tests/xfs/439 b/tests/xfs/439
+index 215c4b90..4ab1c986 100755
+--- a/tests/xfs/439
++++ b/tests/xfs/439
+@@ -47,7 +47,7 @@ _cleanup()
+ # real QA test starts here
+ _supported_os Linux
+ _supported_fs xfs
+-_require_scratch
++_require_scratch_nocheck
+ # We corrupt XFS on purpose, and check if assert failures would crash system.
+ _require_no_xfs_bug_on_assert
+ 
+
