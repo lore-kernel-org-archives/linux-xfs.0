@@ -1,40 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:39215 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751099AbeFEA4v (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jun 2018 20:56:51 -0400
-Date: Tue, 5 Jun 2018 10:56:47 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: use xfs_trans_getsb in xfs_sync_sb_buf
-Message-ID: <20180605005647.GX10363@dastard>
-References: <bd3ee55c-30a4-4e45-10fc-3458c7b93a1d@redhat.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:50984 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751303AbeFEDiE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jun 2018 23:38:04 -0400
+Date: Mon, 4 Jun 2018 20:38:00 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 0/3] xfs: more verifications!
+Message-ID: <20180605033800.GA9437@magnolia>
+References: <20180605024313.18737-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <bd3ee55c-30a4-4e45-10fc-3458c7b93a1d@redhat.com>
+In-Reply-To: <20180605024313.18737-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jun 04, 2018 at 06:50:05PM -0500, Eric Sandeen wrote:
-> Use xfs_trans_getsb rather than reaching right in for
-> mp->m_sb_bp; I think this is more correct, and it facilitates
-> building this libxfs code in userspace as well.
+On Tue, Jun 05, 2018 at 12:43:10PM +1000, Dave Chinner wrote:
+> Hi folks,
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+> This patchset addresses a series of corruptions noticed in an image
+> provided by Wen Xu. The patches only address detecting corruptions
+> before they can do damage - it does not address/fix the crash the
+> image caused but instead prevents the bad information from getting
+> to the point where it can cause a crash.
 > 
-> This passes the online label test ... tbh I'm not quite
-> sure if I'm unwinding/unlocking/putting the bp properly
-> here, though, so ... eyes & advice appreciated?
+> The third patch addresses a general btree record validation issue;
+> we should probably dirve this inwards to each btree implementation
+> with a ->verify_record() callout, as this patch does not address
+> all the places that btree records are traversed during searches. It
+> will catch any attempt to use a bad record that a search lands on,
+> however.
+> 
+> Comments?
 
-I think it's ok - the transaction context is gone with the commit,
-so xfs_trans_brelse() would just call xfs_buf_relse() anyway.
+So, uh, does xfs_repair catch all these things and fix them?
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+I wonder if online repair catches and fixes them too, but I won't yet
+start heckling people about that. :P
 
--- 
-Dave Chinner
-david@fromorbit.com
+--D
+
+> -Dave.
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
