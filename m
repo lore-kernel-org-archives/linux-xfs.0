@@ -1,120 +1,197 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:59062 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750713AbeFFEBn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Jun 2018 00:01:43 -0400
-Date: Tue, 5 Jun 2018 21:01:39 -0700
+Received: from aserp2130.oracle.com ([141.146.126.79]:49070 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751748AbeFEQni (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jun 2018 12:43:38 -0400
+Subject: [PATCH 6/6] xfs: make sure pretty printed geometry output matches
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 03/14] xfs: repair free space btrees
-Message-ID: <20180606040139.GU9437@magnolia>
-References: <152770863951.11611.5866814627357136911.stgit@magnolia>
- <152770865831.11611.7628478596629227707.stgit@magnolia>
- <20180604021234.GL10363@dastard>
- <20180606015026.GQ9437@magnolia>
- <20180606033438.GN10363@dastard>
+Date: Tue, 05 Jun 2018 09:43:33 -0700
+Message-ID: <152821701376.24976.4940261016750526905.stgit@magnolia>
+In-Reply-To: <152821697018.24976.12939094615403004592.stgit@magnolia>
+References: <152821697018.24976.12939094615403004592.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180606033438.GN10363@dastard>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: guaneryu@gmail.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Wed, Jun 06, 2018 at 01:34:38PM +1000, Dave Chinner wrote:
-> On Tue, Jun 05, 2018 at 06:50:26PM -0700, Darrick J. Wong wrote:
-> > On Mon, Jun 04, 2018 at 12:12:34PM +1000, Dave Chinner wrote:
-> > > On Wed, May 30, 2018 at 12:30:58PM -0700, Darrick J. Wong wrote:
-> > > > +
-> > > > +/* Free space btree repair. */
-> > > 
-> > > Can you add a decription of the algorithm used here.
-> > 
-> > Ok.
-> > 
-> > /*
-> >  * Free Space Btree Repair
-> >  * =======================
-> >  *
-> >  * The reverse mappings are supposed to record all space usage for the
-> >  * entire AG.  Therefore, we can recalculate the free extents in an AG
-> >  * by looking for gaps in the physical extents recorded in the rmapbt.
-> >  * On a reflink filesystem this is a little more tricky in that we have
-> >  * to be aware that the rmap records are allowed to overlap.
-> >  *
-> >  * We derive which blocks belonged to the old bnobt/cntbt by recording
-> >  * all the OWN_AG extents and subtracting out the blocks owned by all
-> >  * other OWN_AG metadata: the rmapbt blocks visited while iterating the
-> >  * reverse mappings and the AGFL blocks.
-> >  *
-> >  * Once we have both of those pieces, we can reconstruct the bnobt and
-> >  * cntbt by blowing out the free block state and freeing all the extents
-> >  * that we found.  This adds the requirement that we can't have any busy
-> >  * extents in the AG because the busy code cannot handle duplicate
-> >  * records.
-> >  *
-> >  * Note that we can only rebuild both free space btrees at the same
-> >  * time.
-> 
-> Ok, so if I've got this right, the limitations indicated in the last
-> two paragraphs are a result of makring space free by calling
-> xfs_free_extent() on all the extents in the list? If so, can you
-> mention that this is an implementation artifact, not a algorithmic
-> limitation?
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Ok.
+Make sure that all of our commands that can print geometry information
+all print the /same/ information.
 
-> > > > +/* Allocate a block from the (cached) longest extent in the AG. */
-> > > > +STATIC xfs_fsblock_t
-> > > > +xfs_repair_allocbt_alloc_from_longest(
-> > > > +	struct xfs_repair_alloc		*ra,
-> > > > +	struct xfs_repair_alloc_extent	**longest)
-> > > > +{
-> > > > +	xfs_fsblock_t			fsb;
-> > > > +
-> > > > +	if (*longest && (*longest)->len == 0) {
-> > > > +		list_del(&(*longest)->list);
-> > > > +		kmem_free(*longest);
-> > > > +		*longest = NULL;
-> > > > +	}
-> > > > +
-> > > > +	if (*longest == NULL) {
-> > > > +		*longest = xfs_repair_allocbt_get_longest(ra);
-> > > > +		if (*longest == NULL)
-> > > > +			return NULLFSBLOCK;
-> > > > +	}
-> > > > +
-> > > > +	fsb = XFS_AGB_TO_FSB(ra->sc->mp, ra->sc->sa.agno, (*longest)->bno);
-> > > > +	(*longest)->bno++;
-> > > > +	(*longest)->len--;
-> > > 
-> > > What if this makes the longest extent no longer the longest on the
-> > > extent list?
-> > 
-> > It should be fine, since all we do later is zero out the free space
-> > counters in the AG and start freeing extents.  The regular extent
-> > freeing code takes care to update the agf/perag longest-free counter
-> > appropriately.
-> 
-> Comment, please. :P
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ common/xfs        |   41 +++++++++++++++++++++++++
+ tests/xfs/710     |   88 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/710.out |    2 +
+ tests/xfs/group   |    1 +
+ 4 files changed, 132 insertions(+)
+ create mode 100755 tests/xfs/710
+ create mode 100644 tests/xfs/710.out
 
-I'll do it one better and refactor it out of the code entirely. :)
 
-The bnobt/cntbt roots can come from the shortest extent in the free
-space, which means we can pluck the longest extent off our list and
-insert it first, and it's always the longest one.
+diff --git a/common/xfs b/common/xfs
+index 3e34b118..bc35cd87 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -710,3 +710,44 @@ _require_xfs_db_write_array()
+ 	rm -f $TEST_DIR/$seq.img
+ 	[ $supported -eq 0 ] && _notrun "xfs_db write can't support array"
+ }
++
++_require_xfs_spaceman_command()
++{
++	if [ -z "$1" ]
++	then
++		echo "Usage: _require_xfs_spaceman_command command [switch]" 1>&2
++		exit 1
++	fi
++	local command=$1
++	shift
++	local param="$*"
++	local param_checked=0
++	local opts=""
++
++	_require_command "$XFS_SPACEMAN_PROG" "xfs_spaceman"
++
++	testfile=$TEST_DIR/$$.xfs_spaceman
++	case $command in
++	*)
++		testio=`$XFS_SPACEMAN_PROG -c "help $command" $TEST_DIR 2>&1`
++	esac
++
++	rm -f $testfile 2>&1 > /dev/null
++	echo $testio | grep -q "not found" && \
++		_notrun "xfs_spaceman $command support is missing"
++	echo $testio | grep -q "Operation not supported" && \
++		_notrun "xfs_spaceman $command failed (old kernel/wrong fs?)"
++	echo $testio | grep -q "Invalid" && \
++		_notrun "xfs_spaceman $command failed (old kernel/wrong fs/bad args?)"
++	echo $testio | grep -q "foreign file active" && \
++		_notrun "xfs_spaceman $command not supported on $FSTYP"
++	echo $testio | grep -q "Function not implemented" && \
++		_notrun "xfs_spaceman $command support is missing (missing syscall?)"
++
++	[ -n "$param" ] || return
++
++	if [ $param_checked -eq 0 ]; then
++		$XFS_IO_PROG -c "help $command" | grep -q "^ $param --" || \
++			_notrun "xfs_spaceman $command doesn't support $param"
++	fi
++}
+diff --git a/tests/xfs/710 b/tests/xfs/710
+new file mode 100755
+index 00000000..b03d4836
+--- /dev/null
++++ b/tests/xfs/710
+@@ -0,0 +1,88 @@
++#! /bin/bash
++# FS QA Test No. 710
++#
++# Make sure pretty printed XFS geometry is the same across all programs.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2018 Oracle, Inc.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1
++trap "_cleanup; rm -f $tmp.*; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++rm -f $seqres.full
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/xfs
++
++# real QA test starts here
++_supported_fs xfs
++_supported_os Linux
++
++_require_scratch_nocheck
++
++# Geometry printing wasn't unified until xfs_spaceman grew an 'info'
++# command, so skip this test if there is no spaceman or it doesn't
++# know what 'info' is.
++_require_xfs_spaceman_command "info"
++_require_command "$XFS_DB_PROG" xfs_db
++_require_command "$XFS_GROWFS_PROG" xfs_growfs
++_require_command "$XFS_INFO_PROG" xfs_info
++
++_scratch_mkfs > $tmp.mkfs
++echo MKFS >> $seqres.full
++cat $tmp.mkfs >> $seqres.full
++
++_scratch_xfs_db -c "info" > $tmp.dbinfo
++echo DB >> $seqres.full
++cat $tmp.dbinfo >> $seqres.full
++diff -u $tmp.mkfs $tmp.dbinfo
++
++_scratch_mount
++
++$XFS_SPACEMAN_PROG -c "info" $SCRATCH_MNT > $tmp.spaceman
++echo SPACEMAN >> $seqres.full
++cat $tmp.spaceman >> $seqres.full
++diff -u $tmp.mkfs $tmp.spaceman
++
++$XFS_GROWFS_PROG -n $SCRATCH_MNT > $tmp.growfs
++echo GROWFS >> $seqres.full
++cat $tmp.growfs >> $seqres.full
++diff -u $tmp.mkfs $tmp.growfs
++
++$XFS_INFO_PROG $SCRATCH_MNT > $tmp.info
++echo INFO >> $seqres.full
++cat $tmp.info >> $seqres.full
++diff -u $tmp.mkfs $tmp.info
++
++echo "Silence is golden."
++status=0
++exit 0
+diff --git a/tests/xfs/710.out b/tests/xfs/710.out
+new file mode 100644
+index 00000000..ae2659d5
+--- /dev/null
++++ b/tests/xfs/710.out
+@@ -0,0 +1,2 @@
++QA output created by 710
++Silence is golden.
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 2319f58f..9dd30ae0 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -445,3 +445,4 @@
+ 445 auto quick filestreams
+ 446 auto quick
+ 447 auto mount
++710 auto quick
 
---D
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
