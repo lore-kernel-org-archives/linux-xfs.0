@@ -1,38 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:19919 "EHLO
-        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751461AbeFDB4k (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Jun 2018 21:56:40 -0400
-Date: Mon, 4 Jun 2018 11:56:38 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 02/14] xfs: repair the AGI
-Message-ID: <20180604015637.GK10363@dastard>
-References: <152770863951.11611.5866814627357136911.stgit@magnolia>
- <152770865219.11611.15383367715338540008.stgit@magnolia>
+Received: from userp2120.oracle.com ([156.151.31.85]:44050 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750828AbeFEE2l (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jun 2018 00:28:41 -0400
+Date: Mon, 4 Jun 2018 21:28:36 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/3] xfs: verify extent size hint is valid in inode
+ verifier
+Message-ID: <20180605042836.GF9437@magnolia>
+References: <20180605024313.18737-1-david@fromorbit.com>
+ <20180605024313.18737-3-david@fromorbit.com>
+ <20180605040817.GE9437@magnolia>
+ <20180605042453.GA10363@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <152770865219.11611.15383367715338540008.stgit@magnolia>
+In-Reply-To: <20180605042453.GA10363@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, May 30, 2018 at 12:30:52PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Jun 05, 2018 at 02:24:53PM +1000, Dave Chinner wrote:
+> On Mon, Jun 04, 2018 at 09:08:17PM -0700, Darrick J. Wong wrote:
+> > On Tue, Jun 05, 2018 at 12:43:12PM +1000, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > There are rules for vald extent size hints. We enforce them when
+> > > applications set them, but fuzzers violate those rules and that
+> > > screws us over.
+> > > 
+> > > This results in alignment assertion failures when setting up
+> > > allocations such as this in direct IO:
+> > > 
+> > > XFS: Assertion failed: ap->length, file: fs/xfs/libxfs/xfs_bmap.c, line: 3432
+> > > ....
+> > > Call Trace:
+> > >  xfs_bmap_btalloc+0x415/0x910
+> > >  xfs_bmapi_write+0x71c/0x12e0
+> > >  xfs_iomap_write_direct+0x2a9/0x420
+> > >  xfs_file_iomap_begin+0x4dc/0xa70
+> > >  iomap_apply+0x43/0x100
+> > >  iomap_file_buffered_write+0x62/0x90
+> > >  xfs_file_buffered_aio_write+0xba/0x300
+> > >  __vfs_write+0xd5/0x150
+> > >  vfs_write+0xb6/0x180
+> > >  ksys_write+0x45/0xa0
+> > >  do_syscall_64+0x5a/0x180
+> > >  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+> > > 
+> > > And from xfs_db:
+> > > 
+> > > core.extsize = 10380288
+> > > 
+> > > Which is not an integer multiple of the block size, and so violates
+> > > Rule #7 for setting extent size hints. Validate extent size hint
+> > > rules in the inode verifier to catch this.
+> > > 
+> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > ---
+> > >  fs/xfs/libxfs/xfs_inode_buf.c | 7 +++++++
+> > >  1 file changed, 7 insertions(+)
+> > > 
+> > > diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> > > index f5fff1ccb61d..be197c91307b 100644
+> > > --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> > > +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> > > @@ -385,6 +385,7 @@ xfs_dinode_verify(
+> > >  	xfs_ino_t		ino,
+> > >  	struct xfs_dinode	*dip)
+> > >  {
+> > > +	xfs_failaddr_t		fa;
+> > >  	uint16_t		mode;
+> > >  	uint16_t		flags;
+> > >  	uint64_t		flags2;
+> > > @@ -501,6 +502,12 @@ xfs_dinode_verify(
+> > >  			return __this_address;
+> > >  	}
+> > >  
+> > > +	/* extent size hint validation */
+> > > +	fa = xfs_inode_validate_extsize(mp, be32_to_cpu(dip->di_extsize),
+> > > +					mode, be32_to_cpu(dip->di_flags));
+> > 
+> > What if the cowextsize is garbage?  Do we handle that better, or do we
+> > blow up there too?
 > 
-> Rebuild the AGI header items with some help from the rmapbt.
+> I haven't checked (it was a v4 image that I was looking at) - are
+> the rules the same?
+
+Similar, but not entirely the same.  See xfs_inode_validate_cowextsize. :)
+
+--D
+
+> Cheers,
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Looks OK, but I can't help but think it should be structured similar
-to the AGF rebuild, even though the functions would be smaller and
-simpler...
-
-Thoughts?
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
