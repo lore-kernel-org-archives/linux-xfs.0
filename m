@@ -1,155 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:48622 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750931AbeFDQKv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jun 2018 12:10:51 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w54GAowe064158
-        for <linux-xfs@vger.kernel.org>; Mon, 4 Jun 2018 16:10:50 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp2120.oracle.com with ESMTP id 2jbvypc8b1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 04 Jun 2018 16:10:50 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w54GAlgG001004
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 4 Jun 2018 16:10:47 GMT
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w54GAlOJ013646
-        for <linux-xfs@vger.kernel.org>; Mon, 4 Jun 2018 16:10:47 GMT
-Subject: [PATCH 4/4] xfs: strengthen btree pointer checks before use
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 04 Jun 2018 09:10:46 -0700
-Message-ID: <152812864651.2736.14013770828662833917.stgit@magnolia>
-In-Reply-To: <152812862079.2736.15381483104759513267.stgit@magnolia>
-References: <152812862079.2736.15381483104759513267.stgit@magnolia>
+Received: from mail-ot0-f196.google.com ([74.125.82.196]:43623 "EHLO
+        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751303AbeFEDcb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jun 2018 23:32:31 -0400
+Received: by mail-ot0-f196.google.com with SMTP id i19-v6so1041723otk.10
+        for <linux-xfs@vger.kernel.org>; Mon, 04 Jun 2018 20:32:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <CAPcyv4iVU3n3G3Vxf9e6cKuCtQtmrm6+R6vS379NyHX6eTZ5Lg@mail.gmail.com>
+References: <20180529195106.14268-1-ross.zwisler@linux.intel.com>
+ <20180529195106.14268-3-ross.zwisler@linux.intel.com> <20180529212510.GJ30110@magnolia>
+ <20180529220114.GA13948@linux.intel.com> <20180531191332.GB7825@magnolia>
+ <20180601012657.GQ10363@dastard> <CAPcyv4g6dv9sG9dR-iY+aEfSi2r3ey1dXGbX-nexKsN72t0QMw@mail.gmail.com>
+ <20180601022418.GR10363@dastard> <CAPcyv4iXTsxmQgjoLs2E_8QrLHrFOV_58T7UYf0zPJuB2744qQ@mail.gmail.com>
+ <20180603222038.GS10363@dastard> <20180604002525.GI10363@dastard>
+ <CAPcyv4jL5AKgP3io_hBZxkrKzBZq8wtuqk49L48v=XRiOHdoEw@mail.gmail.com> <CAPcyv4iVU3n3G3Vxf9e6cKuCtQtmrm6+R6vS379NyHX6eTZ5Lg@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Mon, 4 Jun 2018 20:32:30 -0700
+Message-ID: <CAPcyv4i-ocx3-9dCsKfyhf=vBtYnfJwzYyCU2jektHZ2LPL0rA@mail.gmail.com>
+Subject: Re: [PATCH v2 2/7] dax: change bdev_dax_supported() to support
+ boolean returns
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Mike Snitzer <snitzer@redhat.com>, linux-nvdimm <linux-nvdimm@lists.01.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Dmitry Vyukov <dvyukov@google.com>, Alexander Potapenko <glider@google.com>, Andrey Ryabinin <aryabinin@virtuozzo.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+[ adding KASAN devs...]
 
-Instead of ASSERTing on null btree pointers in xfs_btree_ptr_to_daddr,
-use the new block number verifiers to ensure that the btree pointer
-doesn't point to any sensitive areas (AG headers, past-EOFS) and return
--EFSCORRUPTED if this is the case.  Remove the ASSERT because on-disk
-corruptions shouldn't trigger ASSERTs.
+On Mon, Jun 4, 2018 at 4:40 PM, Dan Williams <dan.j.williams@intel.com> wrote:
+> On Sun, Jun 3, 2018 at 6:48 PM, Dan Williams <dan.j.williams@intel.com> wrote:
+>> On Sun, Jun 3, 2018 at 5:25 PM, Dave Chinner <david@fromorbit.com> wrote:
+>>> On Mon, Jun 04, 2018 at 08:20:38AM +1000, Dave Chinner wrote:
+>>>> On Thu, May 31, 2018 at 09:02:52PM -0700, Dan Williams wrote:
+>>>> > On Thu, May 31, 2018 at 7:24 PM, Dave Chinner <david@fromorbit.com> wrote:
+>>>> > > On Thu, May 31, 2018 at 06:57:33PM -0700, Dan Williams wrote:
+>>>> > >> > FWIW, XFS+DAX used to just work on this setup (I hadn't even
+>>>> > >> > installed ndctl until this morning!) but after changing the kernel
+>>>> > >> > it no longer works. That would make it a regression, yes?
+>>>>
+>>>> [....]
+>>>>
+>>>> > >> I suspect your kernel does not have CONFIG_ZONE_DEVICE enabled which
+>>>> > >> has the following dependencies:
+>>>> > >>
+>>>> > >>         depends on MEMORY_HOTPLUG
+>>>> > >>         depends on MEMORY_HOTREMOVE
+>>>> > >>         depends on SPARSEMEM_VMEMMAP
+>>>> > >
+>>>> > > Filesystem DAX now has a dependency on memory hotplug?
+>>>>
+>>>> [....]
+>>>>
+>>>> > > OK, works now I've found the magic config incantantions to turn
+>>>> > > everything I now need on.
+>>>>
+>>>> By enabling these options, my test VM now has a ~30s pause in the
+>>>> boot very soon after the nvdimm subsystem is initialised.
+>>>>
+>>>> [    1.523718] Serial: 8250/16550 driver, 4 ports, IRQ sharing enabled
+>>>> [    1.550353] 00:05: ttyS0 at I/O 0x3f8 (irq = 4, base_baud = 115200) is a 16550A
+>>>> [    1.552175] Non-volatile memory driver v1.3
+>>>> [    2.332045] tsc: Refined TSC clocksource calibration: 2199.909 MHz
+>>>> [    2.333280] clocksource: tsc: mask: 0xffffffffffffffff max_cycles: 0x1fb5dcd4620, max_idle_ns: 440795264143 ns
+>>>> [   37.217453] brd: module loaded
+>>>> [   37.225423] loop: module loaded
+>>>> [   37.228441] virtio_blk virtio2: [vda] 10485760 512-byte logical blocks (5.37 GB/5.00 GiB)
+>>>> [   37.245418] virtio_blk virtio3: [vdb] 146800640 512-byte logical blocks (75.2 GB/70.0 GiB)
+>>>> [   37.255794] virtio_blk virtio4: [vdc] 1073741824000 512-byte logical blocks (550 TB/500 TiB)
+>>>> [   37.265403] nd_pmem namespace1.0: unable to guarantee persistence of writes
+>>>> [   37.265618] nd_pmem namespace0.0: unable to guarantee persistence of writes
+>>>>
+>>>> The system does not appear to be consuming CPU, but it is blocking
+>>>> NMIs so I can't get a CPU trace. For a VM that I rely on booting in
+>>>> a few seconds because I reboot it tens of times a day, this is a
+>>>> problem....
+>>>
+>>> And when I turn on KASAN, the kernel fails to boot to a login prompt
+>>> because:
+>>
+>> What's your qemu and kernel command line? I'll take look at this first
+>> thing tomorrow.
+>
+> I was able to reproduce this crash by just turning on KASAN...
+> investigating. It would still help to have your config for our own
+> regression testing purposes it makes sense for us to prioritize
+> "Dave's test config", similar to the priority of not breaking Linus'
+> laptop.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_btree.c |   50 ++++++++++++++++++++++++++++++++-------------
- 1 file changed, 35 insertions(+), 15 deletions(-)
+I believe this is a bug in KASAN, or a bug in devm_memremap_pages(),
+depends on your point of view. At the very least it is a mismatch of
+assumptions. KASAN learns of hot added memory via the memory hotplug
+notifier. However, the devm_memremap_pages() implementation is
+intentionally limited to the "first half" of the memory hotplug
+procedure. I.e. it does just enough to setup the linear map for
+pfn_to_page() and initialize the "struct page" memmap, but then stops
+short of onlining the pages. This is why we are getting a NULL ptr
+deref and not a KASAN report, because KASAN has no shadow area setup
+for the linearly mapped pmem range.
 
-
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 5d5fe6b96e09..43171a22f085 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -1001,22 +1001,30 @@ xfs_btree_readahead(
- 	return xfs_btree_readahead_sblock(cur, lr, block);
- }
- 
--STATIC xfs_daddr_t
-+STATIC int
- xfs_btree_ptr_to_daddr(
- 	struct xfs_btree_cur	*cur,
--	union xfs_btree_ptr	*ptr)
-+	union xfs_btree_ptr	*ptr,
-+	xfs_daddr_t		*daddr)
- {
--	if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
--		ASSERT(ptr->l != cpu_to_be64(NULLFSBLOCK));
-+	xfs_fsblock_t		fsbno;
-+	xfs_agblock_t		agbno;
-+	int			error;
- 
--		return XFS_FSB_TO_DADDR(cur->bc_mp, be64_to_cpu(ptr->l));
--	} else {
--		ASSERT(cur->bc_private.a.agno != NULLAGNUMBER);
--		ASSERT(ptr->s != cpu_to_be32(NULLAGBLOCK));
-+	error = xfs_btree_check_ptr(cur, ptr, 0, 1);
-+	if (error)
-+		return error;
- 
--		return XFS_AGB_TO_DADDR(cur->bc_mp, cur->bc_private.a.agno,
--					be32_to_cpu(ptr->s));
-+	if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
-+		fsbno = be64_to_cpu(ptr->l);
-+		*daddr = XFS_FSB_TO_DADDR(cur->bc_mp, fsbno);
-+	} else {
-+		agbno = be32_to_cpu(ptr->s);
-+		*daddr = XFS_AGB_TO_DADDR(cur->bc_mp, cur->bc_private.a.agno,
-+				agbno);
- 	}
-+
-+	return 0;
- }
- 
- /*
-@@ -1031,8 +1039,11 @@ xfs_btree_readahead_ptr(
- 	union xfs_btree_ptr	*ptr,
- 	xfs_extlen_t		count)
- {
--	xfs_buf_readahead(cur->bc_mp->m_ddev_targp,
--			  xfs_btree_ptr_to_daddr(cur, ptr),
-+	xfs_daddr_t		daddr;
-+
-+	if (xfs_btree_ptr_to_daddr(cur, ptr, &daddr))
-+		return;
-+	xfs_buf_readahead(cur->bc_mp->m_ddev_targp, daddr,
- 			  cur->bc_mp->m_bsize * count, cur->bc_ops->buf_ops);
- }
- 
-@@ -1295,11 +1306,14 @@ xfs_btree_get_buf_block(
- {
- 	struct xfs_mount	*mp = cur->bc_mp;
- 	xfs_daddr_t		d;
-+	int			error;
- 
- 	/* need to sort out how callers deal with failures first */
- 	ASSERT(!(flags & XBF_TRYLOCK));
- 
--	d = xfs_btree_ptr_to_daddr(cur, ptr);
-+	error = xfs_btree_ptr_to_daddr(cur, ptr, &d);
-+	if (error)
-+		return error;
- 	*bpp = xfs_trans_get_buf(cur->bc_tp, mp->m_ddev_targp, d,
- 				 mp->m_bsize, flags);
- 
-@@ -1330,7 +1344,9 @@ xfs_btree_read_buf_block(
- 	/* need to sort out how callers deal with failures first */
- 	ASSERT(!(flags & XBF_TRYLOCK));
- 
--	d = xfs_btree_ptr_to_daddr(cur, ptr);
-+	error = xfs_btree_ptr_to_daddr(cur, ptr, &d);
-+	if (error)
-+		return error;
- 	error = xfs_trans_read_buf(mp, cur->bc_tp, mp->m_ddev_targp, d,
- 				   mp->m_bsize, flags, bpp,
- 				   cur->bc_ops->buf_ops);
-@@ -1777,6 +1793,7 @@ xfs_btree_lookup_get_block(
- 	struct xfs_btree_block	**blkp) /* return btree block */
- {
- 	struct xfs_buf		*bp;	/* buffer pointer for btree block */
-+	xfs_daddr_t		daddr;
- 	int			error = 0;
- 
- 	/* special case the root block if in an inode */
-@@ -1793,7 +1810,10 @@ xfs_btree_lookup_get_block(
- 	 * Otherwise throw it away and get a new one.
- 	 */
- 	bp = cur->bc_bufs[level];
--	if (bp && XFS_BUF_ADDR(bp) == xfs_btree_ptr_to_daddr(cur, pp)) {
-+	error = xfs_btree_ptr_to_daddr(cur, pp, &daddr);
-+	if (error)
-+		return error;
-+	if (bp && XFS_BUF_ADDR(bp) == daddr) {
- 		*blkp = XFS_BUF_TO_BLOCK(bp);
- 		return 0;
- 	}
-
+In terms of solving it we could refactor kasan_mem_notifier() so that
+devm_memremap_pages() can call it outside of the notifier... I'll give
+this a shot.
