@@ -1,21 +1,21 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:8585 "EHLO
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:29352 "EHLO
         ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751361AbeFEGYc (ORCPT
+        by vger.kernel.org with ESMTP id S1751354AbeFEGYc (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jun 2018 02:24:32 -0400
 Received: from discord.disaster.area ([192.168.1.111])
         by dastard with esmtp (Exim 4.80)
         (envelope-from <david@fromorbit.com>)
-        id 1fQ5OM-00022Q-Pk
+        id 1fQ5OM-00022a-TB
         for linux-xfs@vger.kernel.org; Tue, 05 Jun 2018 16:24:26 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.91)
         (envelope-from <david@fromorbit.com>)
-        id 1fQ5OM-0001JB-Ot
+        id 1fQ5OM-0001JN-S1
         for linux-xfs@vger.kernel.org; Tue, 05 Jun 2018 16:24:26 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/6] xfs: catch bad stripe alignment configurations
-Date: Tue,  5 Jun 2018 16:24:18 +1000
-Message-Id: <20180605062423.4877-2-david@fromorbit.com>
+Subject: [PATCH 5/6] xfs: verify root inode more thoroughly
+Date: Tue,  5 Jun 2018 16:24:22 +1000
+Message-Id: <20180605062423.4877-6-david@fromorbit.com>
 In-Reply-To: <20180605062423.4877-1-david@fromorbit.com>
 References: <20180605062423.4877-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -25,60 +25,39 @@ To: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When stripe alignments are invalid, data alignment algorithms in the
-allocator may not work correctly. Ensure we catch superblocks with
-invalid stripe alignment setups at mount time. These data alignment
-mismatches are now detected at mount time like this:
-
-XFS (loop0): SB stripe unit sanity check failed
-XFS (loop0): Metadata corruption detected at xfs_sb_read_verify+0xab/0x110, xfs_sb block 0xffffffffffffffff
-XFS (loop0): Unmount and run xfs_repair
-XFS (loop0): First 128 bytes of corrupted metadata buffer:
-0000000091c2de02: 58 46 53 42 00 00 10 00 00 00 00 00 00 00 10 00  XFSB............
-0000000023bff869: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-00000000cdd8c893: 17 32 37 15 ff ca 46 3d 9a 17 d3 33 04 b5 f1 a2  .27...F=...3....
-000000009fd2844f: 00 00 00 00 00 00 00 04 00 00 00 00 00 00 06 d0  ................
-0000000088e9b0bb: 00 00 00 00 00 00 06 d1 00 00 00 00 00 00 06 d2  ................
-00000000ff233a20: 00 00 00 01 00 00 10 00 00 00 00 01 00 00 00 00  ................
-000000009db0ac8b: 00 00 03 60 e1 34 02 00 08 00 00 02 00 00 00 00  ...`.4..........
-00000000f7022460: 00 00 00 00 00 00 00 00 0c 09 0b 01 0c 00 00 19  ................
-XFS (loop0): SB validate failed with error -117.
-
-And the mount fails.
+When looking up the root inode at mount time, we don't actually do
+any verification to check that the inode is allocated and accounted
+for correctly in the INOBT. Make the checks on the root inode more
+robust by making it an untrusted lookup. This forces the inode
+lookup to use the inode btree to verify the inode is allocated
+and mapped correctly to disk. This will also have the effect of
+catching a significant number of AGI/INOBT related corruptions in
+AG 0 at mount time.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_sb.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ fs/xfs/xfs_mount.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index 54c5e14fdfda..fe9448862667 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -266,6 +266,22 @@ xfs_mount_validate_sb(
- 		return -EFSCORRUPTED;
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 189fa7b615d3..a3378252baa1 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -862,9 +862,12 @@ xfs_mountfs(
+ 	 * Get and sanity-check the root inode.
+ 	 * Save the pointer to it in the mount structure.
+ 	 */
+-	error = xfs_iget(mp, NULL, sbp->sb_rootino, 0, XFS_ILOCK_EXCL, &rip);
++	error = xfs_iget(mp, NULL, sbp->sb_rootino, XFS_IGET_UNTRUSTED,
++			 XFS_ILOCK_EXCL, &rip);
+ 	if (error) {
+-		xfs_warn(mp, "failed to read root inode");
++		xfs_warn(mp,
++			"Failed to read root inode 0x%llx, error %d",
++			sbp->sb_rootino, -error);
+ 		goto out_log_dealloc;
  	}
  
-+	if (sbp->sb_unit) {
-+		if (!xfs_sb_version_hasdalign(sbp) ||
-+		    sbp->sb_unit > sbp->sb_width ||
-+		    (sbp->sb_width % sbp->sb_unit) != 0) {
-+			xfs_notice(mp, "SB stripe unit sanity check failed");
-+			return -EFSCORRUPTED;
-+		}
-+	} else if (xfs_sb_version_hasdalign(sbp)) {
-+		xfs_notice(mp, "SB stripe alignment sanity check failed");
-+		return -EFSCORRUPTED;
-+	} else if (sbp->sb_width) {
-+		xfs_notice(mp, "SB stripe width sanity check failed");
-+		return -EFSCORRUPTED;
-+	}
-+
-+
- 	if (xfs_sb_version_hascrc(&mp->m_sb) &&
- 	    sbp->sb_blocksize < XFS_MIN_CRC_BLOCKSIZE) {
- 		xfs_notice(mp, "v5 SB sanity check failed");
 -- 
 2.17.0
 
