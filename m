@@ -1,112 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.11.71.1]:40877 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750991AbeFBBdb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 1 Jun 2018 21:33:31 -0400
-Date: Sat, 2 Jun 2018 11:33:12 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: linux-next: manual merge of the nvdimm tree with the xfs tree
-Message-ID: <20180602113312.55667641@canb.auug.org.au>
-In-Reply-To: <20180602005948.GH7825@magnolia>
-References: <20180601185846.1c5b7d0a@canb.auug.org.au>
-        <20180602005948.GH7825@magnolia>
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:35222 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751296AbeFEEY4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jun 2018 00:24:56 -0400
+Date: Tue, 5 Jun 2018 14:24:53 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/3] xfs: verify extent size hint is valid in inode
+ verifier
+Message-ID: <20180605042453.GA10363@dastard>
+References: <20180605024313.18737-1-david@fromorbit.com>
+ <20180605024313.18737-3-david@fromorbit.com>
+ <20180605040817.GE9437@magnolia>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/sr=3AYeLDjRXYPvJh5U_ts0"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180605040817.GE9437@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Linux-Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Dave Jiang <dave.jiang@intel.com>
+Cc: linux-xfs@vger.kernel.org
 
---Sig_/sr=3AYeLDjRXYPvJh5U_ts0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Mon, Jun 04, 2018 at 09:08:17PM -0700, Darrick J. Wong wrote:
+> On Tue, Jun 05, 2018 at 12:43:12PM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > There are rules for vald extent size hints. We enforce them when
+> > applications set them, but fuzzers violate those rules and that
+> > screws us over.
+> > 
+> > This results in alignment assertion failures when setting up
+> > allocations such as this in direct IO:
+> > 
+> > XFS: Assertion failed: ap->length, file: fs/xfs/libxfs/xfs_bmap.c, line: 3432
+> > ....
+> > Call Trace:
+> >  xfs_bmap_btalloc+0x415/0x910
+> >  xfs_bmapi_write+0x71c/0x12e0
+> >  xfs_iomap_write_direct+0x2a9/0x420
+> >  xfs_file_iomap_begin+0x4dc/0xa70
+> >  iomap_apply+0x43/0x100
+> >  iomap_file_buffered_write+0x62/0x90
+> >  xfs_file_buffered_aio_write+0xba/0x300
+> >  __vfs_write+0xd5/0x150
+> >  vfs_write+0xb6/0x180
+> >  ksys_write+0x45/0xa0
+> >  do_syscall_64+0x5a/0x180
+> >  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+> > 
+> > And from xfs_db:
+> > 
+> > core.extsize = 10380288
+> > 
+> > Which is not an integer multiple of the block size, and so violates
+> > Rule #7 for setting extent size hints. Validate extent size hint
+> > rules in the inode verifier to catch this.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_inode_buf.c | 7 +++++++
+> >  1 file changed, 7 insertions(+)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> > index f5fff1ccb61d..be197c91307b 100644
+> > --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> > +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> > @@ -385,6 +385,7 @@ xfs_dinode_verify(
+> >  	xfs_ino_t		ino,
+> >  	struct xfs_dinode	*dip)
+> >  {
+> > +	xfs_failaddr_t		fa;
+> >  	uint16_t		mode;
+> >  	uint16_t		flags;
+> >  	uint64_t		flags2;
+> > @@ -501,6 +502,12 @@ xfs_dinode_verify(
+> >  			return __this_address;
+> >  	}
+> >  
+> > +	/* extent size hint validation */
+> > +	fa = xfs_inode_validate_extsize(mp, be32_to_cpu(dip->di_extsize),
+> > +					mode, be32_to_cpu(dip->di_flags));
+> 
+> What if the cowextsize is garbage?  Do we handle that better, or do we
+> blow up there too?
 
-Hi Darrick,
+I haven't checked (it was a v4 image that I was looking at) - are
+the rules the same?
 
-On Fri, 1 Jun 2018 17:59:48 -0700 "Darrick J. Wong" <darrick.wong@oracle.co=
-m> wrote:
->
-> > + 	if (!dax_enabled) {
-> >  -		pr_debug("VFS (%s): error: dax support not enabled\n",
-> >  -				sb->s_id);
-> >  +		pr_debug("%s: error: dax support not enabled\n",
-> >  +				bdevname(bdev, buf));
-> > - 		return false;
-> > + 		return -EOPNOTSUPP; =20
->=20
-> Hang on a sec, the changes in the xfs tree make this function return a
-> boolean (true for dax-is-supported, false for dax-not-supported), but
-> this change partially reverts the boolean return values.
-
-OK, weird, that is what I though I had done.  Thanks for pointing it
-out (I guess it was getting late :-().
-
-> >   	}
-> > -=20
-> > - 	return true;
-> > + 	return 0; =20
->=20
-> The merge should retain the 'return false' above and the 'return true'
-> here... or possibly just return dax_enabled:
->=20
-> if (!dax_enabled) {
-> 	pr_debug(...);
-> 	pr_debug(...);
-> }
->=20
-> return dax_enabled;
-
-OK, I have fixed up my merge resolution.  The end of that function will
-now look like this:
-
-	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED) && pfn_t_special(pfn)) {
-		/*
-		 * An arch that has enabled the pmem api should also
-		 * have its drivers support pfn_t_devmap()
-		 *
-		 * This is a developer warning and should not trigger in
-		 * production. dax_flush() will crash since it depends
-		 * on being able to do (page_address(pfn_to_page())).
-		 */
-		WARN_ON(IS_ENABLED(CONFIG_ARCH_HAS_PMEM_API));
-		dax_enabled =3D true;
-	} else if (pfn_t_devmap(pfn)) {
-		struct dev_pagemap *pgmap;
-
-		pgmap =3D get_dev_pagemap(pfn_t_to_pfn(pfn), NULL);
-		if (pgmap && pgmap->type =3D=3D MEMORY_DEVICE_FS_DAX)
-			dax_enabled =3D true;
-		put_dev_pagemap(pgmap);
-	}
-
-	if (!dax_enabled)
-		pr_debug("%s: error: dax support not enabled\n",
-				bdevname(bdev, buf));
-
-	return dax_enabled;
-}
-EXPORT_SYMBOL_GPL(__bdev_dax_supported);
-
---=20
 Cheers,
-Stephen Rothwell
 
---Sig_/sr=3AYeLDjRXYPvJh5U_ts0
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAlsR89gACgkQAVBC80lX
-0GyA2Qf/ZX3JXduaYkrCSj80K7ImW47ZFBitmDJVce5TMwTDCdYvkJvWRccKKYn/
-/UMxxAD6M2OhvrX/D1Z/x603r4gQo3vDED2GHYZodVDWnCeyy25Wy4BuZotYumop
-xWpN/QLBu4C+uy51WGaWOUDWQvPk48MisHjE9B2L5tVdNqmxwehen//RT3SH/ekh
-RTh08MGr2wbkhBHJ2+xUtLKfIZKXfdZpaxd9SHCZdd3VlB8OxXl7dDrAoI9RI0Ei
-LXj4u5f3fD0m6g6ouJjpFtfMliVOmUuLBlH5fflrzOE2x3ARKafbVfa/LpwGkXhU
-wYjTedmU9zxLsGPC5SnFhljoMTFRzw==
-=8N8b
------END PGP SIGNATURE-----
-
---Sig_/sr=3AYeLDjRXYPvJh5U_ts0--
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
