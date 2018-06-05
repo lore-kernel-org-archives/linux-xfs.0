@@ -1,71 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37024 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751000AbeFDXuG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 4 Jun 2018 19:50:06 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 744523002489
-        for <linux-xfs@vger.kernel.org>; Mon,  4 Jun 2018 23:50:06 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 4449660E37
-        for <linux-xfs@vger.kernel.org>; Mon,  4 Jun 2018 23:50:06 +0000 (UTC)
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs: use xfs_trans_getsb in xfs_sync_sb_buf
-Message-ID: <bd3ee55c-30a4-4e45-10fc-3458c7b93a1d@redhat.com>
-Date: Mon, 4 Jun 2018 18:50:05 -0500
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:32939 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751770AbeFEBNp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jun 2018 21:13:45 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20180605005904.GY10363@dastard>
+References: <20180605103403.3e5b2c91@canb.auug.org.au> <20180605005904.GY10363@dastard>
+From: =?UTF-8?Q?Andreas_Gr=C3=BCnbacher?= <andreas.gruenbacher@gmail.com>
+Date: Tue, 5 Jun 2018 03:13:43 +0200
+Message-ID: <CAHpGcMJJPedQhrkkZDpauAFr-9YfoY9oeTYBWHKe8dr7k6gUWw@mail.gmail.com>
+Subject: Re: linux-next: manual merge of the xfs tree with Linus' tree
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Linux-Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andreas Gruenbacher <agruenba@redhat.com>, Bob Peterson <rpeterso@redhat.com>, Christoph Hellwig <hch@lst.de>
 
-Use xfs_trans_getsb rather than reaching right in for
-mp->m_sb_bp; I think this is more correct, and it facilitates
-building this libxfs code in userspace as well.
+2018-06-05 2:59 GMT+02:00 Dave Chinner <david@fromorbit.com>:
+> On Tue, Jun 05, 2018 at 10:34:03AM +1000, Stephen Rothwell wrote:
+>> Hi all,
+>>
+>> Today's linux-next merge of the xfs tree got a conflict in:
+>>
+>>   fs/gfs2/bmap.c
+>>
+>> between commit:
+>>
+>>   628e366df11c ("gfs2: Iomap cleanups and improvements")
+>>
+>> from Linus' tree and commit:
+>>
+>>   7ee66c03e40a ("iomap: move IOMAP_F_BOUNDARY to gfs2")
+>>
+>> from the xfs tree.
+>>
+>> I fixed it up (see below) and can carry the fix as necessary. This
+>> is now fixed as far as linux-next is concerned, but any non trivial
+>> conflicts should be mentioned to your upstream maintainer when your tree
+>> is submitted for merging.  You may also want to consider cooperating
+>> with the maintainer of the conflicting tree to minimise any particularly
+>> complex conflicts.
+>
+> We should have seen this before the gfs2 tree was merged into Linus'
+> tree. Does that mean the gfs2 tree is not being pulled into the
+> linux-next tree?
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+That's probably our fault, the gfs2 for-next branch was slightly
+outdated. That patch would have been better in the gfs2 tree. How
+would you like to proceed?
 
-This passes the online label test ... tbh I'm not quite
-sure if I'm unwinding/unlocking/putting the bp properly
-here, though, so ... eyes & advice appreciated?
-
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index 0bc0a40764e1..5f25aac04aa9 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -897,14 +897,16 @@ xfs_sync_sb_buf(
- 	struct xfs_mount	*mp)
- {
- 	struct xfs_trans	*tp;
-+	struct xfs_buf		*bp;
- 	int			error;
- 
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_sb, 0, 0, 0, &tp);
- 	if (error)
- 		return error;
- 
-+	bp = xfs_trans_getsb(tp, mp, 0);
- 	xfs_log_sb(tp);
--	xfs_trans_bhold(tp, mp->m_sb_bp);
-+	xfs_trans_bhold(tp, bp);
- 	xfs_trans_set_sync(tp);
- 	error = xfs_trans_commit(tp);
- 	if (error)
-@@ -912,9 +914,9 @@ xfs_sync_sb_buf(
- 	/*
- 	 * write out the sb buffer to get the changes to disk
- 	 */
--	error = xfs_bwrite(mp->m_sb_bp);
-+	error = xfs_bwrite(bp);
- out:
--	xfs_buf_relse(mp->m_sb_bp);
-+	xfs_buf_relse(bp);
- 	return error;
- }
- 
+Thanks,
+Andreas
