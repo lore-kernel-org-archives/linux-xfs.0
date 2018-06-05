@@ -1,32 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:37066 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932428AbeFFKvv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 6 Jun 2018 06:51:51 -0400
-Date: Wed, 6 Jun 2018 12:59:06 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 1/6] fs: factor out a __generic_write_end helper
-Message-ID: <20180606105906.GA11821@lst.de>
-References: <20180606104033.4947-1-hch@lst.de> <20180606104033.4947-2-hch@lst.de>
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:38783 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751409AbeFEIdX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jun 2018 04:33:23 -0400
+Received: by mail-ot0-f193.google.com with SMTP id n3-v6so1807409ota.5
+        for <linux-xfs@vger.kernel.org>; Tue, 05 Jun 2018 01:33:23 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180606104033.4947-2-hch@lst.de>
+In-Reply-To: <20180604084336.GA11333@infradead.org>
+References: <20180529144339.16538-1-mszeredi@redhat.com> <20180529144339.16538-2-mszeredi@redhat.com>
+ <20180604084336.GA11333@infradead.org>
+From: Miklos Szeredi <miklos@szeredi.hu>
+Date: Tue, 5 Jun 2018 10:33:22 +0200
+Message-ID: <CAJfpegun8HyjODXguHstxYrGE2nuSoCCicaHT3yfYWMkxxmVWg@mail.gmail.com>
+Subject: Re: [PATCH 01/39] vfs: dedpue: return loff_t
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com, linux-ext4@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Miklos Szeredi <mszeredi@redhat.com>, overlayfs <linux-unionfs@vger.kernel.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-xfs <linux-xfs@vger.kernel.org>, ocfs2-devel@oss.oracle.com
 
-On Wed, Jun 06, 2018 at 12:40:28PM +0200, Christoph Hellwig wrote:
-> Bits of the buffer.c based write_end implementations that don't know
-> about buffer_heads and can be reused by other implementations.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Mon, Jun 4, 2018 at 10:43 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Tue, May 29, 2018 at 04:43:01PM +0200, Miklos Szeredi wrote:
+>> f_op->dedupe_file_range() gets a u64 length to dedup and returns an ssize_t
+>> actual length deduped.  This breaks badly on 32bit archs since the returned
+>> length will be truncated and possibly overflow into the sign bit (xfs and
+>> ocfs2 are affected, btrfs limits actual length to 16MiB).
+>
+> Can we just make it return 0 vs errno?  The only time we return
+> a different length than the one passed in is due to the btrfs cap.
+>
+> Given that this API started out on btrfs we should just do the cap
+> everywhere to not confuse userspace.
 
-This actually already had two reviews:
+And that's a completely arbitrary cap; sure btrfs started out with
+that, but there's no fundamental reason for that becoming the global
+limit.  Xfs now added a different, larger limit, so based on what
+reason should that limit be reduced?
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+I don't care either way, but at this stage I'm not going to change
+this patch, unless there's a very good reason to do so, because if I
+do someone will come and suggest another improvement, ad-infinitum...
 
-That got lost through the detour via gfs2.
+Thanks,
+Miklos
