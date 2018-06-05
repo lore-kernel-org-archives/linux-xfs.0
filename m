@@ -1,60 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:25035 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751398AbeFEC5H (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Jun 2018 22:57:07 -0400
-Received: from dave by dastard with local (Exim 4.80)
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:5837 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751281AbeFEGYa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jun 2018 02:24:30 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
         (envelope-from <david@fromorbit.com>)
-        id 1fQ29g-0001nB-BM
-        for linux-xfs@vger.kernel.org; Tue, 05 Jun 2018 12:57:04 +1000
-Date: Tue, 5 Jun 2018 12:57:04 +1000
+        id 1fQ5OM-00022S-RU
+        for linux-xfs@vger.kernel.org; Tue, 05 Jun 2018 16:24:26 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1fQ5OM-0001JH-QX
+        for linux-xfs@vger.kernel.org; Tue, 05 Jun 2018 16:24:26 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/3] xfs: verify root inode more thoroughly
-Message-ID: <20180605025704.GZ10363@dastard>
-References: <20180605024313.18737-1-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180605024313.18737-1-david@fromorbit.com>
+Subject: [PATCH 3/6] xfs: verify COW extent size hint is valid in inode verifier
+Date: Tue,  5 Jun 2018 16:24:20 +1000
+Message-Id: <20180605062423.4877-4-david@fromorbit.com>
+In-Reply-To: <20180605062423.4877-1-david@fromorbit.com>
+References: <20180605062423.4877-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-
 From: Dave Chinner <dchinner@redhat.com>
 
-When looking up the root inode at mount time, we don't actually do
-any verification to check that the inode is allocated and accounted
-for correctly in the INOBT. Make the checks on the root inode more
-robust by making it an untrusted lookup. This forces the inode
-lookup to use the inode btree to verify the inode is allocated
-and mapped correctly to disk. This will also have the effect of
-catching a significant number of AGI/INOBT related corruptions in
-AG 0 at mount time.
+There are rules for vald extent size hints. We enforce them when
+applications set them, but fuzzers violate those rules and that
+screws us over. Validate COW extent size hint rules in the inode
+verifier to catch this.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-
 ---
- fs/xfs/xfs_mount.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_inode_buf.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 189fa7b615d3..a3378252baa1 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -862,9 +862,12 @@ xfs_mountfs(
- 	 * Get and sanity-check the root inode.
- 	 * Save the pointer to it in the mount structure.
- 	 */
--	error = xfs_iget(mp, NULL, sbp->sb_rootino, 0, XFS_ILOCK_EXCL, &rip);
-+	error = xfs_iget(mp, NULL, sbp->sb_rootino, XFS_IGET_UNTRUSTED,
-+			 XFS_ILOCK_EXCL, &rip);
- 	if (error) {
--		xfs_warn(mp, "failed to read root inode");
-+		xfs_warn(mp,
-+			"Failed to read root inode 0x%llx, error %d",
-+			sbp->sb_rootino, -error);
- 		goto out_log_dealloc;
- 	}
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index be197c91307b..ea64be7cbd98 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -504,7 +504,7 @@ xfs_dinode_verify(
  
+ 	/* extent size hint validation */
+ 	fa = xfs_inode_validate_extsize(mp, be32_to_cpu(dip->di_extsize),
+-					mode, be32_to_cpu(dip->di_flags));
++					mode, flags);
+ 	if (fa)
+ 		return fa;
+ 
+@@ -516,7 +516,7 @@ xfs_dinode_verify(
+ 
+ 	/* don't allow reflink/cowextsize if we don't have reflink */
+ 	if ((flags2 & (XFS_DIFLAG2_REFLINK | XFS_DIFLAG2_COWEXTSIZE)) &&
+-            !xfs_sb_version_hasreflink(&mp->m_sb))
++	     !xfs_sb_version_hasreflink(&mp->m_sb))
+ 		return __this_address;
+ 
+ 	/* only regular files get reflink */
+@@ -531,6 +531,12 @@ xfs_dinode_verify(
+ 	if ((flags2 & XFS_DIFLAG2_REFLINK) && (flags2 & XFS_DIFLAG2_DAX))
+ 		return __this_address;
+ 
++	/* COW extent size hint validation */
++	fa = xfs_inode_validate_cowextsize(mp, be32_to_cpu(dip->di_cowextsize),
++					mode, flags, flags2);
++	if (fa)
++		return fa;
++
+ 	return NULL;
+ }
+ 
+-- 
+2.17.0
+
