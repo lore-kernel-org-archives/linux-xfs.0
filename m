@@ -1,126 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.11.71.1]:33699 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751046AbeFEAi0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 4 Jun 2018 20:38:26 -0400
-Date: Tue, 5 Jun 2018 10:38:23 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: linux-next: manual merge of the xfs tree with Linus' tree
-Message-ID: <20180605103823.2ce02805@canb.auug.org.au>
-In-Reply-To: <20180605103403.3e5b2c91@canb.auug.org.au>
-References: <20180605103403.3e5b2c91@canb.auug.org.au>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:30930 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751361AbeFEErc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jun 2018 00:47:32 -0400
+Date: Tue, 5 Jun 2018 14:47:29 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/3] xfs: verify extent size hint is valid in inode
+ verifier
+Message-ID: <20180605044729.GD10363@dastard>
+References: <20180605024313.18737-1-david@fromorbit.com>
+ <20180605024313.18737-3-david@fromorbit.com>
+ <20180605040817.GE9437@magnolia>
+ <20180605042453.GA10363@dastard>
+ <20180605042836.GF9437@magnolia>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/X4xRD2gfPK5/0=N=lZZ8RQa"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180605042836.GF9437@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andreas Gruenbacher <agruenba@redhat.com>, Bob Peterson <rpeterso@redhat.com>, Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
---Sig_/X4xRD2gfPK5/0=N=lZZ8RQa
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Mon, Jun 04, 2018 at 09:28:36PM -0700, Darrick J. Wong wrote:
+> On Tue, Jun 05, 2018 at 02:24:53PM +1000, Dave Chinner wrote:
+> > On Mon, Jun 04, 2018 at 09:08:17PM -0700, Darrick J. Wong wrote:
+> > > On Tue, Jun 05, 2018 at 12:43:12PM +1000, Dave Chinner wrote:
+> > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > 
+> > > > There are rules for vald extent size hints. We enforce them when
+> > > > applications set them, but fuzzers violate those rules and that
+> > > > screws us over.
+> > > > 
+> > > > This results in alignment assertion failures when setting up
+> > > > allocations such as this in direct IO:
+> > > > 
+> > > > XFS: Assertion failed: ap->length, file: fs/xfs/libxfs/xfs_bmap.c, line: 3432
+> > > > ....
+> > > > Call Trace:
+> > > >  xfs_bmap_btalloc+0x415/0x910
+> > > >  xfs_bmapi_write+0x71c/0x12e0
+> > > >  xfs_iomap_write_direct+0x2a9/0x420
+> > > >  xfs_file_iomap_begin+0x4dc/0xa70
+> > > >  iomap_apply+0x43/0x100
+> > > >  iomap_file_buffered_write+0x62/0x90
+> > > >  xfs_file_buffered_aio_write+0xba/0x300
+> > > >  __vfs_write+0xd5/0x150
+> > > >  vfs_write+0xb6/0x180
+> > > >  ksys_write+0x45/0xa0
+> > > >  do_syscall_64+0x5a/0x180
+> > > >  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+> > > > 
+> > > > And from xfs_db:
+> > > > 
+> > > > core.extsize = 10380288
+> > > > 
+> > > > Which is not an integer multiple of the block size, and so violates
+> > > > Rule #7 for setting extent size hints. Validate extent size hint
+> > > > rules in the inode verifier to catch this.
+> > > > 
+> > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > > ---
+> > > >  fs/xfs/libxfs/xfs_inode_buf.c | 7 +++++++
+> > > >  1 file changed, 7 insertions(+)
+> > > > 
+> > > > diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> > > > index f5fff1ccb61d..be197c91307b 100644
+> > > > --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> > > > +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> > > > @@ -385,6 +385,7 @@ xfs_dinode_verify(
+> > > >  	xfs_ino_t		ino,
+> > > >  	struct xfs_dinode	*dip)
+> > > >  {
+> > > > +	xfs_failaddr_t		fa;
+> > > >  	uint16_t		mode;
+> > > >  	uint16_t		flags;
+> > > >  	uint64_t		flags2;
+> > > > @@ -501,6 +502,12 @@ xfs_dinode_verify(
+> > > >  			return __this_address;
+> > > >  	}
+> > > >  
+> > > > +	/* extent size hint validation */
+> > > > +	fa = xfs_inode_validate_extsize(mp, be32_to_cpu(dip->di_extsize),
+> > > > +					mode, be32_to_cpu(dip->di_flags));
+> > > 
+> > > What if the cowextsize is garbage?  Do we handle that better, or do we
+> > > blow up there too?
+> > 
+> > I haven't checked (it was a v4 image that I was looking at) - are
+> > the rules the same?
+> 
+> Similar, but not entirely the same.  See xfs_inode_validate_cowextsize. :)
 
-Hi all,
+OK, I'll cook up a similar patch then.
 
-On Tue, 5 Jun 2018 10:34:03 +1000 Stephen Rothwell <sfr@canb.auug.org.au> w=
-rote:
->
-> Today's linux-next merge of the xfs tree got a conflict in:
->=20
->   fs/gfs2/bmap.c
->=20
-> between commit:
->=20
->   628e366df11c ("gfs2: Iomap cleanups and improvements")
->=20
-> from Linus' tree and commit:
->=20
->   7ee66c03e40a ("iomap: move IOMAP_F_BOUNDARY to gfs2")
->=20
-> from the xfs tree.
->=20
-> I fixed it up (see below) and can carry the fix as necessary. This
-> is now fixed as far as linux-next is concerned, but any non trivial
-> conflicts should be mentioned to your upstream maintainer when your tree
-> is submitted for merging.  You may also want to consider cooperating
-> with the maintainer of the conflicting tree to minimise any particularly
-> complex conflicts.
-
-Forgot the diff :-(
---=20
 Cheers,
-Stephen Rothwell
 
-diff --cc fs/gfs2/bmap.c
-index a7b586e02693,8efa6297e19c..000000000000
---- a/fs/gfs2/bmap.c
-+++ b/fs/gfs2/bmap.c
-@@@ -767,12 -680,13 +767,13 @@@ static void gfs2_stuffed_iomap(struct i
-  		      sizeof(struct gfs2_dinode);
-  	iomap->offset =3D 0;
-  	iomap->length =3D i_size_read(inode);
-- 	iomap->type =3D IOMAP_MAPPED;
-- 	iomap->flags =3D IOMAP_F_DATA_INLINE;
-+ 	iomap->type =3D IOMAP_INLINE;
-  }
- =20
-+ #define IOMAP_F_GFS2_BOUNDARY IOMAP_F_PRIVATE
-+=20
-  /**
- - * gfs2_iomap_begin - Map blocks from an inode to disk blocks
- + * gfs2_iomap_get - Map blocks from an inode to disk blocks
-   * @inode: The inode
-   * @pos: Starting position in bytes
-   * @length: Length to map, in bytes
-@@@ -838,20 -770,20 +839,20 @@@ static int gfs2_iomap_get(struct inode=20
-  	if (*ptr =3D=3D 0)
-  		goto do_alloc;
- =20
- -	iomap->type =3D IOMAP_MAPPED;
- -	iomap->addr =3D be64_to_cpu(*ptr) << inode->i_blkbits;
- +	bh =3D mp->mp_bh[ip->i_height - 1];
- +	len =3D gfs2_extent_length(bh->b_data, bh->b_size, ptr, len, &eob);
- =20
- -	bh =3D mp.mp_bh[ip->i_height - 1];
- -	len =3D gfs2_extent_length(bh->b_data, bh->b_size, ptr, lend - lblock, &=
-eob);
- +	iomap->addr =3D be64_to_cpu(*ptr) << inode->i_blkbits;
- +	iomap->length =3D len << inode->i_blkbits;
- +	iomap->type =3D IOMAP_MAPPED;
- +	iomap->flags =3D IOMAP_F_MERGED;
-  	if (eob)
-- 		iomap->flags |=3D IOMAP_F_BOUNDARY;
-+ 		iomap->flags |=3D IOMAP_F_GFS2_BOUNDARY;
- -	iomap->length =3D (u64)len << inode->i_blkbits;
- =20
- -out_release:
- -	release_metapath(&mp);
- -	bmap_unlock(ip, flags & IOMAP_WRITE);
-  out:
- -	trace_gfs2_iomap_end(ip, iomap, ret);
- +	iomap->bdev =3D inode->i_sb->s_bdev;
- +unlock:
- +	up_read(&ip->i_rw_mutex);
-  	return ret;
- =20
-  do_alloc:
-
---Sig_/X4xRD2gfPK5/0=N=lZZ8RQa
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAlsV238ACgkQAVBC80lX
-0GyauwgAlVhiYB9DYApT38VM3the3KD3DvpIlv8BSa9hUCvNGWmb1AxyXVskmg55
-n8gkLYVHifBor3kJ/8bJiN8ou6K1OxemowaKu6WX1vYvlt7gWIkoDHIGo7WCjbPP
-N7+kxv4sNjevQqyJ2fld0NOgWKJ1uC1g6yMtKRnGwyWZUWSEbzdNlxkywIlZSCd7
-oTVWXYtvVxsTM7FHX3uNpmH/JPmGn4NB0WUBb3IB0orDKT520SSjVXXatVfBQN36
-MG9rsCXhHHrLQ38hcZ5+mJzyy6Q2ibKuNALKXOh1plGFXDVWcSBHtp2YaOZarlsN
-rQQG6rllqhIDd7fEAZ6rbmWJVIYViA==
-=Srn3
------END PGP SIGNATURE-----
-
---Sig_/X4xRD2gfPK5/0=N=lZZ8RQa--
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
