@@ -1,93 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:44180 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:53884 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751046AbeFEAd1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 4 Jun 2018 20:33:27 -0400
-Date: Mon, 4 Jun 2018 20:33:26 -0400
+        id S1751046AbeFEAq3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 4 Jun 2018 20:46:29 -0400
+Date: Mon, 4 Jun 2018 20:46:28 -0400
 From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH v2 2/7] dax: change bdev_dax_supported() to support
- boolean returns
-Message-ID: <20180605003325.GA6898@redhat.com>
-References: <20180529220114.GA13948@linux.intel.com>
- <20180531191332.GB7825@magnolia>
- <20180601012657.GQ10363@dastard>
- <CAPcyv4g6dv9sG9dR-iY+aEfSi2r3ey1dXGbX-nexKsN72t0QMw@mail.gmail.com>
- <20180601022418.GR10363@dastard>
- <CAPcyv4iXTsxmQgjoLs2E_8QrLHrFOV_58T7UYf0zPJuB2744qQ@mail.gmail.com>
- <20180603222038.GS10363@dastard>
- <20180604002525.GI10363@dastard>
- <CAPcyv4jL5AKgP3io_hBZxkrKzBZq8wtuqk49L48v=XRiOHdoEw@mail.gmail.com>
- <CAPcyv4iVU3n3G3Vxf9e6cKuCtQtmrm6+R6vS379NyHX6eTZ5Lg@mail.gmail.com>
+Subject: Re: [PATCH v2 5/7] dm: remove DM_TYPE_DAX_BIO_BASED dm_queue_mode
+Message-ID: <20180605004558.GB6898@redhat.com>
+References: <20180529195106.14268-1-ross.zwisler@linux.intel.com>
+ <20180529195106.14268-6-ross.zwisler@linux.intel.com>
+ <20180601220443.GB18712@redhat.com>
+ <20180604232416.GB10666@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4iVU3n3G3Vxf9e6cKuCtQtmrm6+R6vS379NyHX6eTZ5Lg@mail.gmail.com>
+In-Reply-To: <20180604232416.GB10666@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, Dan Williams <dan.j.williams@intel.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-nvdimm <linux-nvdimm@lists.01.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Ross Zwisler <ross.zwisler@linux.intel.com>, Toshi Kani <toshi.kani@hpe.com>, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Mon, Jun 04 2018 at  7:40pm -0400,
-Dan Williams <dan.j.williams@intel.com> wrote:
+On Mon, Jun 04 2018 at  7:24pm -0400,
+Ross Zwisler <ross.zwisler@linux.intel.com> wrote:
 
-> On Sun, Jun 3, 2018 at 6:48 PM, Dan Williams <dan.j.williams@intel.com> wrote:
-> > On Sun, Jun 3, 2018 at 5:25 PM, Dave Chinner <david@fromorbit.com> wrote:
-> >> On Mon, Jun 04, 2018 at 08:20:38AM +1000, Dave Chinner wrote:
-> >>> On Thu, May 31, 2018 at 09:02:52PM -0700, Dan Williams wrote:
-> >>> > On Thu, May 31, 2018 at 7:24 PM, Dave Chinner <david@fromorbit.com> wrote:
-> >>> > > On Thu, May 31, 2018 at 06:57:33PM -0700, Dan Williams wrote:
-> >>> > >> > FWIW, XFS+DAX used to just work on this setup (I hadn't even
-> >>> > >> > installed ndctl until this morning!) but after changing the kernel
-> >>> > >> > it no longer works. That would make it a regression, yes?
-> >>>
-> >>> [....]
-> >>>
-> >>> > >> I suspect your kernel does not have CONFIG_ZONE_DEVICE enabled which
-> >>> > >> has the following dependencies:
-> >>> > >>
-> >>> > >>         depends on MEMORY_HOTPLUG
-> >>> > >>         depends on MEMORY_HOTREMOVE
-> >>> > >>         depends on SPARSEMEM_VMEMMAP
-> >>> > >
-> >>> > > Filesystem DAX now has a dependency on memory hotplug?
-> >>>
-> >>> [....]
-> >>>
-> >>> > > OK, works now I've found the magic config incantantions to turn
-> >>> > > everything I now need on.
-> >>>
-> >>> By enabling these options, my test VM now has a ~30s pause in the
-> >>> boot very soon after the nvdimm subsystem is initialised.
-> >>>
-> >>> [    1.523718] Serial: 8250/16550 driver, 4 ports, IRQ sharing enabled
-> >>> [    1.550353] 00:05: ttyS0 at I/O 0x3f8 (irq = 4, base_baud = 115200) is a 16550A
-> >>> [    1.552175] Non-volatile memory driver v1.3
-> >>> [    2.332045] tsc: Refined TSC clocksource calibration: 2199.909 MHz
-> >>> [    2.333280] clocksource: tsc: mask: 0xffffffffffffffff max_cycles: 0x1fb5dcd4620, max_idle_ns: 440795264143 ns
-> >>> [   37.217453] brd: module loaded
-> >>> [   37.225423] loop: module loaded
-> >>> [   37.228441] virtio_blk virtio2: [vda] 10485760 512-byte logical blocks (5.37 GB/5.00 GiB)
-> >>> [   37.245418] virtio_blk virtio3: [vdb] 146800640 512-byte logical blocks (75.2 GB/70.0 GiB)
-> >>> [   37.255794] virtio_blk virtio4: [vdc] 1073741824000 512-byte logical blocks (550 TB/500 TiB)
-> >>> [   37.265403] nd_pmem namespace1.0: unable to guarantee persistence of writes
-> >>> [   37.265618] nd_pmem namespace0.0: unable to guarantee persistence of writes
-> >>>
-> >>> The system does not appear to be consuming CPU, but it is blocking
-> >>> NMIs so I can't get a CPU trace. For a VM that I rely on booting in
-> >>> a few seconds because I reboot it tens of times a day, this is a
-> >>> problem....
-> >>
-> >> And when I turn on KASAN, the kernel fails to boot to a login prompt
-> >> because:
-> >
-> > What's your qemu and kernel command line? I'll take look at this first
-> > thing tomorrow.
+> On Fri, Jun 01, 2018 at 06:04:43PM -0400, Mike Snitzer wrote:
+> > On Tue, May 29 2018 at  3:51pm -0400,
+> > Ross Zwisler <ross.zwisler@linux.intel.com> wrote:
+> > 
+> > > The DM_TYPE_DAX_BIO_BASED dm_queue_mode was introduced to prevent DM
+> > > devices that could possibly support DAX from transitioning into DM devices
+> > > that cannot support DAX.
+> > > 
+> > > For example, the following transition will currently fail:
+> > > 
+> > >  dm-linear: [fsdax pmem][fsdax pmem] => [fsdax pmem][fsdax raw]
+> > > 	      DM_TYPE_DAX_BIO_BASED       DM_TYPE_BIO_BASED
+> > > 
+> > > but these will both succeed:
+> > > 
+> > >  dm-linear: [fsdax pmem][brd ramdisk] => [fsdax pmem][fsdax raw]
+> > >  	      DM_TYPE_DAX_BIO_BASED        DM_TYPE_BIO_BASED
+> > > 
+> > 
+> > I fail to see how this succeeds given
+> > drivers/md/dm-ioctl.c:is_valid_type() only allows transitions from:
+> > 
+> > DM_TYPE_BIO_BASED => DM_TYPE_DAX_BIO_BASED
 > 
-> I was able to reproduce this crash by just turning on KASAN...
-> investigating. It would still help to have your config for our own
-> regression testing purposes it makes sense for us to prioritize
-> "Dave's test config", similar to the priority of not breaking Linus'
-> laptop.
+> Right, sorry, that was a typo.  What I meant was:
+> 
+> > For example, the following transition will currently fail:
+> > 
+> >  dm-linear: [fsdax pmem][fsdax pmem] => [fsdax pmem][fsdax raw]
+> >               DM_TYPE_DAX_BIO_BASED       DM_TYPE_BIO_BASED
+> > 
+> > but these will both succeed:
+> > 
+> >  dm-linear: [fsdax pmem][brd ramdisk] => [fsdax pmem][fsdax raw]
+> >                 DM_TYPE_BIO_BASED        DM_TYPE_BIO_BASED
+> > 
+> >  dm-linear: [fsdax pmem][fsdax raw] => [fsdax pmem][fsdax pmem]
+> >                 DM_TYPE_BIO_BASED        DM_TYPE_DAX_BIO_BASED
+> 
+> So we allow 2 of the 3 transitions, but the reason that we disallow the third
+> isn't fully clear to me.
+> 
+> > >  dm-linear: [fsdax pmem][fsdax raw] => [fsdax pmem][fsdax pmem]
+> > >  		DM_TYPE_BIO_BASED        DM_TYPE_DAX_BIO_BASED
+> > > 
+> > > This seems arbitrary, as really the choice on whether to use DAX happens at
+> > > filesystem mount time.  There's no guarantee that the in the first case
+> > > (double fsdax pmem) we were using the dax mount option with our file
+> > > system.
+> > > 
+> > > Instead, get rid of DM_TYPE_DAX_BIO_BASED and all the special casing around
+> > > it, and instead make the request queue's QUEUE_FLAG_DAX be our one source
+> > > of truth.  If this is set, we can use DAX, and if not, not.  We keep this
+> > > up to date in table_load() as the table changes.  As with regular block
+> > > devices the filesystem will then know at mount time whether DAX is a
+> > > supported mount option or not.
+> > 
+> > If you don't think you need this specialization that is fine.. but DM
+> > devices supporting suspending (as part of table reloads) so is there any
+> > risk that there will be inflight IO (say if someone did 'dmsetup suspend
+> > --noflush').. and then upon reload the device type changed out from
+> > under us.. anyway, I don't have all the PMEM DAX stuff paged back into
+> > my head yet.
+> > 
+> > But this just seems like we really shouldn't be allowing the
+> > transition from what was DM_TYPE_DAX_BIO_BASED back to DM_TYPE_BIO_BASED
+> 
+> I admit I don't fully understand all the ways that DM supports suspending and
+> resuming devices.  Is there actually a case where we can change out the DM
+> devices while I/O is running, and somehow end up trying to issue a DAX I/O to
+> a device that doesn't support DAX?
 
-Dave, _this_ is when you know you've arrived! ;)
+Yes, provided root permissions, it's very easy to dmsetup suspend/load/resume
+to replace any portion of the DM device's logical address space to map to an
+entirely different DM target (with a different backing store).  It's
+pretty intrusive to do such things, but easily done and powerful.
+
+Mike
