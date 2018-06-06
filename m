@@ -1,339 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:49746 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751764AbeFERrU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jun 2018 13:47:20 -0400
-Date: Tue, 5 Jun 2018 10:47:16 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 4/6 v2] xfs: validate btree records on retreival
-Message-ID: <20180605174716.GM9437@magnolia>
-References: <20180605062423.4877-1-david@fromorbit.com>
- <20180605062423.4877-5-david@fromorbit.com>
- <20180605064043.GH10363@dastard>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:16035 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750785AbeFFEct (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Jun 2018 00:32:49 -0400
+Date: Wed, 6 Jun 2018 14:32:46 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 04/14] xfs: repair inode btrees
+Message-ID: <20180606043246.GP10363@dastard>
+References: <152770863951.11611.5866814627357136911.stgit@magnolia>
+ <152770866495.11611.1193477717645761767.stgit@magnolia>
+ <20180604034130.GM10363@dastard>
+ <20180606035528.GT9437@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180605064043.GH10363@dastard>
+In-Reply-To: <20180606035528.GT9437@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jun 05, 2018 at 04:40:43PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Tue, Jun 05, 2018 at 08:55:28PM -0700, Darrick J. Wong wrote:
+> On Mon, Jun 04, 2018 at 01:41:30PM +1000, Dave Chinner wrote:
+> > On Wed, May 30, 2018 at 12:31:04PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > Use the rmapbt to find inode chunks, query the chunks to compute
+> > > hole and free masks, and with that information rebuild the inobt
+> > > and finobt.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > [...]
+> > 
+> > > +xfs_repair_ialloc_check_free(
+> > > +	struct xfs_btree_cur	*cur,
+> > > +	struct xfs_buf		*bp,
+> > > +	xfs_ino_t		fsino,
+> > > +	xfs_agino_t		bpino,
+> > > +	bool			*inuse)
+> > > +{
+> > > +	struct xfs_mount	*mp = cur->bc_mp;
+> > > +	struct xfs_dinode	*dip;
+> > > +	int			error;
+> > > +
+> > > +	/* Will the in-core inode tell us if it's in use? */
+> > > +	error = xfs_icache_inode_is_allocated(mp, cur->bc_tp, fsino, inuse);
+> > > +	if (!error)
+> > > +		return 0;
+> > > +
+> > > +	/* Inode uncached or half assembled, read disk buffer */
+> > > +	dip = xfs_buf_offset(bp, bpino * mp->m_sb.sb_inodesize);
+> > > +	if (be16_to_cpu(dip->di_magic) != XFS_DINODE_MAGIC)
+> > > +		return -EFSCORRUPTED;
+> > 
+> > Do we hold the buffer locked here? i.e. can we race with someone
+> > else allocating/freeing/reading the inode?
 > 
-> So we don't check the validity of records as we walk the btree. When
-> there are corrupt records in the free space btree (e.g. zero
-> startblock/length or beyond EOAG) we just blindly use it and things
-> go bad from there. That leads to assert failures on debug kernels
-> like this:
-> 
-> XFS: Assertion failed: fs_is_ok, file: fs/xfs/libxfs/xfs_alloc.c, line: 450
-> ....
-> Call Trace:
->  xfs_alloc_fixup_trees+0x368/0x5c0
->  xfs_alloc_ag_vextent_near+0x79a/0xe20
->  xfs_alloc_ag_vextent+0x1d3/0x330
->  xfs_alloc_vextent+0x5e9/0x870
-> 
-> Or crashes like this:
-> 
-> XFS (loop0): xfs_buf_find: daddr 0x7fb28 out of range, EOFS 0x8000
-> .....
-> BUG: unable to handle kernel NULL pointer dereference at 00000000000000c8
-> ....
-> Call Trace:
->  xfs_bmap_add_extent_hole_real+0x67d/0x930
->  xfs_bmapi_write+0x934/0xc90
->  xfs_da_grow_inode_int+0x27e/0x2f0
->  xfs_dir2_grow_inode+0x55/0x130
->  xfs_dir2_sf_to_block+0x94/0x5d0
->  xfs_dir2_sf_addname+0xd0/0x590
->  xfs_dir_createname+0x168/0x1a0
->  xfs_rename+0x658/0x9b0
-> 
-> By checking that free space records pulled from the trees are 
-> within the valid range, we catch many of these corruptions before
-> they can do damage.
-> 
-> This is a generic btree record checking deficiency. We need to
-> validate the records we fetch from all the different btrees before
-> we use them to catch corruptions like this.
-> 
-> This patch results in a corrupt record emitting an error message and
-> returning -EFSCORRUPTED, and the higher layers catch that and abort:
-> 
->  XFS (loop0): Size Freespace BTree record corruption in AG 0 detected!
->  XFS (loop0): start block 0x0 block count 0x0
->  XFS (loop0): Internal error xfs_trans_cancel at line 1012 of file fs/xfs/xfs_trans.c.  Caller xfs_create+0x42a/0x670
->  .....
->  Call Trace:
->   dump_stack+0x85/0xcb
->   xfs_trans_cancel+0x19f/0x1c0
->   xfs_create+0x42a/0x670
->   xfs_generic_create+0x1f6/0x2c0
->   vfs_create+0xf9/0x180
->   do_mknodat+0x1f9/0x210
->   do_syscall_64+0x5a/0x180
->   entry_SYSCALL_64_after_hwframe+0x49/0xbe
-> .....
->  XFS (loop0): xfs_do_force_shutdown(0x8) called from line 1013 of file fs/xfs/xfs_trans.c.  Return address = ffffffff81500868
->  XFS (loop0): Corruption of in-memory data detected.  Shutting down filesystem
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> 
-> ---
-> V2:
-> - now with overflow checks
-> - slightly more robust rmap checks that validate AG header region
->   properly.
-> 
->  fs/xfs/libxfs/xfs_alloc.c    | 22 ++++++++++++++++++++--
->  fs/xfs/libxfs/xfs_ialloc.c   | 31 +++++++++++++++++++++++++++++-
->  fs/xfs/libxfs/xfs_refcount.c | 45 +++++++++++++++++++++++++++++++++++++++-----
->  fs/xfs/libxfs/xfs_rmap.c     | 40 ++++++++++++++++++++++++++++++++++++++-
->  4 files changed, 129 insertions(+), 9 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index a52ffb835b16..1db50cfc0212 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -215,6 +215,8 @@ xfs_alloc_get_rec(
->  	xfs_extlen_t		*len,	/* output: length of extent */
->  	int			*stat)	/* output: success/failure */
->  {
-> +	struct xfs_mount	*mp = cur->bc_mp;
-> +	xfs_agnumber_t		agno = cur->bc_private.a.agno;
->  	union xfs_btree_rec	*rec;
->  	int			error;
->  
-> @@ -222,12 +224,28 @@ xfs_alloc_get_rec(
->  	if (error || !(*stat))
->  		return error;
->  	if (rec->alloc.ar_blockcount == 0)
-> -		return -EFSCORRUPTED;
-> +		goto out_bad_rec;
->  
->  	*bno = be32_to_cpu(rec->alloc.ar_startblock);
->  	*len = be32_to_cpu(rec->alloc.ar_blockcount);
->  
-> -	return error;
-> +	/* check for valid extent range, including overflow */
-> +	if (!xfs_verify_agbno(mp, agno, *bno))
-> +		goto out_bad_rec;
-> +	if (*bno > *bno + *len)
-> +		goto out_bad_rec;
-> +	if (!xfs_verify_agbno(mp, agno, *bno + *len - 1))
-> +		goto out_bad_rec;
-> +
-> +	return 0;
-> +
-> +out_bad_rec:
-> +	xfs_warn(mp,
-> +		"%s Freespace BTree record corruption in AG %d detected!",
-> +		cur->bc_btnum == XFS_BTNUM_BNO ? "Block" : "Size", agno);
-> +	xfs_warn(mp,
-> +		"start block 0x%x block count 0x%x", *bno, *len);
-> +	return -EFSCORRUPTED;
->  }
->  
->  /*
-> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> index ec5ea02b5553..3f551eb29157 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc.c
-> +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> @@ -121,16 +121,45 @@ xfs_inobt_get_rec(
->  	struct xfs_inobt_rec_incore	*irec,
->  	int				*stat)
->  {
-> +	struct xfs_mount		*mp = cur->bc_mp;
-> +	xfs_agnumber_t			agno = cur->bc_private.a.agno;
->  	union xfs_btree_rec		*rec;
->  	int				error;
-> +	uint64_t			realfree;
->  
->  	error = xfs_btree_get_rec(cur, &rec, stat);
->  	if (error || *stat == 0)
->  		return error;
->  
-> -	xfs_inobt_btrec_to_irec(cur->bc_mp, rec, irec);
-> +	xfs_inobt_btrec_to_irec(mp, rec, irec);
-> +
-> +	if (!xfs_verify_agino(mp, agno, irec->ir_startino))
-> +		goto out_bad_rec;
-> +	if (irec->ir_count < XFS_INODES_PER_HOLEMASK_BIT ||
-> +	    irec->ir_count > XFS_INODES_PER_CHUNK)
-> +		goto out_bad_rec;
-> +	if (irec->ir_freecount > XFS_INODES_PER_CHUNK)
-> +		goto out_bad_rec;
-> +
-> +	/* if there are no holes, return the first available offset */
-> +	if (!xfs_inobt_issparse(irec->ir_holemask))
-> +		realfree = irec->ir_free;
-> +	else
-> +		realfree = irec->ir_free & xfs_inobt_irec_to_allocmask(irec);
-> +	if (hweight64(realfree) != irec->ir_freecount)
-> +		goto out_bad_rec;
->  
->  	return 0;
-> +
-> +out_bad_rec:
-> +	xfs_warn(mp,
-> +		"%s Inode BTree record corruption in AG %d detected!",
-> +		cur->bc_btnum == XFS_BTNUM_INO ? "Used" : "Free", agno);
-> +	xfs_warn(mp,
-> +"start inode 0x%x, count 0x%x, free 0x%x freemask 0x%llx, holemask 0x%x",
-> +		irec->ir_startino, irec->ir_count, irec->ir_freecount,
-> +		irec->ir_free, irec->ir_holemask);
-> +	return -EFSCORRUPTED;
->  }
->  
->  /*
-> diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-> index ed5704c7dcf5..9a2a2004af24 100644
-> --- a/fs/xfs/libxfs/xfs_refcount.c
-> +++ b/fs/xfs/libxfs/xfs_refcount.c
-> @@ -111,16 +111,51 @@ xfs_refcount_get_rec(
->  	struct xfs_refcount_irec	*irec,
->  	int				*stat)
->  {
-> +	struct xfs_mount		*mp = cur->bc_mp;
-> +	xfs_agnumber_t			agno = cur->bc_private.a.agno;
->  	union xfs_btree_rec		*rec;
->  	int				error;
-> +	xfs_agblock_t			realstart;
->  
->  	error = xfs_btree_get_rec(cur, &rec, stat);
-> -	if (!error && *stat == 1) {
-> -		xfs_refcount_btrec_to_irec(rec, irec);
-> -		trace_xfs_refcount_get(cur->bc_mp, cur->bc_private.a.agno,
-> -				irec);
-> +	if (error || !*stat)
-> +		return error;
-> +
-> +	xfs_refcount_btrec_to_irec(rec, irec);
-> +
-> +	agno = cur->bc_private.a.agno;
-> +	if (irec->rc_blockcount == 0 || irec->rc_blockcount > MAXREFCEXTLEN)
-> +		goto out_bad_rec;
-> +
-> +	/* handle special COW-staging state */
-> +	realstart = irec->rc_startblock;
-> +	if (realstart & XFS_REFC_COW_START) {
-> +		if (irec->rc_refcount != 1)
-> +			goto out_bad_rec;
-> +		realstart &= ~XFS_REFC_COW_START;
->  	}
+> I think repair should be ok from alloc/free because both of those paths
+> (xfs_dialloc/xfs_difree) will grab the AGI header, whereas repair locks
+> all three AG headers and keeps them locked until repairs are complete.
+> I don't think we have to worry about concurrent reads because the only
+> field we care about are di_mode/i_mode, which don't change outside of
+> inode allocation and freeing.
 
-If the record does not have the cow "flag" set then the refcount cannot
-be 1, so this needs an else clause:
+Comment please :P
 
-} else {
-	if (irec->rc_refcount == 1)
-		goto out_bad_rec;
-}
+And, to be technically correct - di_mode/i_mode can change outside
+of alloc/free. However, only the permission bits can change so it
+doesn't affect the test we are doing here.
 
-> -	return error;
-> +
-> +	/* check for valid extent range, including overflow */
-> +	if (!xfs_verify_agbno(mp, agno, realstart))
-> +		goto out_bad_rec;
-> +	if (realstart > realstart + irec->rc_blockcount)
-> +		goto out_bad_rec;
-> +	if (!xfs_verify_agbno(mp, agno, realstart + irec->rc_blockcount - 1))
-> +		goto out_bad_rec;
-> +
-> +	if (irec->rc_refcount == 0 || irec->rc_refcount > MAXREFCOUNT)
-> +		goto out_bad_rec;
-> +
-> +	trace_xfs_refcount_get(cur->bc_mp, cur->bc_private.a.agno, irec);
-> +	return 0;
-> +
-> +out_bad_rec:
-> +	xfs_warn(mp,
-> +		"Refcount BTree record corruption in AG %d detected!", agno);
-> +	xfs_warn(mp,
-> +		"Start block 0x%x, block count 0x%x, references 0x%x",
-> +		irec->rc_startblock, irec->rc_blockcount, irec->rc_refcount);
-> +	return -EFSCORRUPTED;
->  }
->  
->  /*
-> diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-> index 87711f9af625..e794bcd6591a 100644
-> --- a/fs/xfs/libxfs/xfs_rmap.c
-> +++ b/fs/xfs/libxfs/xfs_rmap.c
-> @@ -191,6 +191,8 @@ xfs_rmap_get_rec(
->  	struct xfs_rmap_irec	*irec,
->  	int			*stat)
->  {
-> +	struct xfs_mount	*mp = cur->bc_mp;
-> +	xfs_agnumber_t		agno = cur->bc_private.a.agno;
->  	union xfs_btree_rec	*rec;
->  	int			error;
->  
-> @@ -198,7 +200,43 @@ xfs_rmap_get_rec(
->  	if (error || !*stat)
->  		return error;
->  
-> -	return xfs_rmap_btrec_to_irec(rec, irec);
-> +	if (xfs_rmap_btrec_to_irec(rec, irec))
-> +		goto out_bad_rec;
-> +
-> +	if (irec->rm_blockcount == 0)
-> +		goto out_bad_rec;
-> +	if (irec->rm_startblock <= XFS_AGFL_BLOCK(mp)) {
-> +		if (irec->rm_owner != XFS_RMAP_OWN_FS)
-> +			goto out_bad_rec;
-> +		if (irec->rm_blockcount != XFS_AGFL_BLOCK(mp) + 1)
-> +			goto out_bad_rec;
-> +	} else {
-> +		/* check for valid extent range, including overflow */
-> +		if (!xfs_verify_agbno(mp, agno, irec->rm_startblock))
-> +			goto out_bad_rec;
-> +		if (irec->rm_startblock >
-> +				irec->rm_startblock + irec->rm_blockcount)
-> +			goto out_bad_rec;
-> +		if (!xfs_verify_agbno(mp, agno,
-> +				irec->rm_startblock + irec->rm_blockcount - 1))
-> +			goto out_bad_rec;
-> +	}
-> +
-> +	if (irec->rm_owner == 0)
-> +		goto out_bad_rec;
-> +	if (irec->rm_owner > XFS_MAXINUMBER &&
-> +	    irec->rm_owner <= XFS_RMAP_OWN_MIN)
+> > > +		/* The per-AG inum of this inode cluster. */
+> > > +		agino = XFS_OFFBNO_TO_AGINO(mp, agbno, 0);
+> > > +
+> > > +		/* The per-AG inum of the inobt record. */
+> > > +		startino = rmino +
+> > > +				rounddown(agino - rmino, XFS_INODES_PER_CHUNK);
+> > > +		cdist = agino - startino;
+> > 
+> > What's "cdist" mean? I can guess at it's meaning, but I don't recall
+> > seeing the inode number offset into a cluster been refered to as a
+> > distanced before....
+> 
+> cluster offset?
+>
+> I wasn't sure of the terminology for the offset of the cluster within a
+> chunk, in units of ag inodes.
 
-rm_owner should be (between XFS_RMAP_OWN_FS and XFS_RMAP_OWN_MIN) or
-(pass xfs_verify_fsino()) since we cannot have inodes between EOFS and
-MAXINUMBER.
+I'm not sure we have one. :/
 
-> +		goto out_bad_rec;
-> +
+But, yeah, going by the definition of inode offset from
+XFS_INO_TO_OFFSET() and XFS_AGINO_TO_OFFSET() - "offset" is the
+inode number index from the start of the block - cluster offset is
+probably the best name for it.
 
-Should we check the rmap flags here?
+Cheers,
 
-> +	return 0;
-> +out_bad_rec:
-> +	xfs_warn(mp,
-> +		"RMAP BTree record corruption in AG %d detected!", agno);
-
-"RMap" ?  Or "Reverse Mapping"?
-
-(Consistent capitalization blah blah...)
-
---D
-
-> +	xfs_warn(mp,
-> +		"Owner 0x%llx, flags 0x%x, start block 0x%x block count 0x%x",
-> +		irec->rm_owner, irec->rm_flags, irec->rm_startblock,
-> +		irec->rm_blockcount);
-> +	return -EFSCORRUPTED;
->  }
->  
->  struct xfs_find_left_neighbor_info {
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
