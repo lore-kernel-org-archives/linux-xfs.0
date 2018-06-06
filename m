@@ -1,69 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53470 "EHLO mx1.redhat.com"
+Received: from mga02.intel.com ([134.134.136.20]:43491 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932686AbeFUUVw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 21 Jun 2018 16:21:52 -0400
-Subject: Re: [PATCH] xfs_io: clarify -c from documentation
-References: <20180621201404.GI4838@magnolia>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <44478702-cca5-2356-ab4c-3bfa1e70103e@redhat.com>
-Date: Thu, 21 Jun 2018 15:21:51 -0500
+        id S1752520AbeFFBno (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 5 Jun 2018 21:43:44 -0400
+Date: Wed, 6 Jun 2018 09:40:28 +0800
+From: Ye Xiaolong <xiaolong.ye@intel.com>
+Subject: Re: [lkp-robot] [xfs]  b027d4c97b:  fio.latency_2ms% +7.1% regression
+Message-ID: <20180606014028.GQ16472@yexl-desktop>
+References: <20180605071657.GP16472@yexl-desktop>
+ <20180605223813.GI10363@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20180621201404.GI4838@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20180605223813.GI10363@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Dave Chinner <dchinner@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Carlos Maiolino <cmaiolino@redhat.com>, LKML <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, lkp@01.org
 
-On 6/21/18 3:14 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> The -c parameter displays the cow fork information for a file if the
-> kernel was built with CONFIG_XFS_DEBUG=y.  Since xfs_bmap doesn't
-> support it and it doesn't work generally, remove it from the manpages.
-> However, xfstests relies on the -c command to be documented in the help
-> screen so leave it there with a warning about its use.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On 06/06, Dave Chinner wrote:
+>On Tue, Jun 05, 2018 at 03:16:57PM +0800, kernel test robot wrote:
+>> 
+>> Greeting,
+>> 
+>> FYI, we noticed a +7.1%% regression of fio.latency_2ms% due to commit:
+>> 
+>> 
+>> commit: b027d4c97b9675c2ad75dec94be4e46dceb3ec74 ("xfs: don't retry xfs_buf_find on XBF_TRYLOCK failure")
+>> https://git.kernel.org/cgit/fs/xfs/xfs-linux.git xfs-4.18-merge
+>....
+>> 8925a3dc4771004b b027d4c97b9675c2ad75dec94b 
+>> ---------------- -------------------------- 
+>>          %stddev     %change         %stddev
+>>              \          |                \  
+>>      46.56 ±  3%      +7.1       53.61        fio.latency_2ms%
+>>       8.19            +0.2        8.40        fio.latency_100ms%
+>>       0.74 ±  3%      -0.1        0.68 ±  6%  fio.latency_250ms%
+>>      25.20 ±  6%      -7.3       17.86 ±  6%  fio.latency_4ms%
+>>       0.46 ±  9%      +0.2        0.69 ± 13%  fio.latency_750us%
+>
+>This is not a regression. The number of IOs in the 4ms IO latency
+>bin has reduced by 7%, and inumber in the 2ms IO latency bin has
+>increased by 7%. IOWs, there's a measurable improvement in IO
+>latency as a result of those patches, not a regression.
 
-I'm not sure xfstests actually cares (xfs/293?) but anyway, this
-works for me, thanks.
+Thanks for clarification.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Thanks,
+Xiaolong
 
-> ---
->  io/bmap.c         |    1 +
->  man/man8/xfs_io.8 |    2 +-
->  2 files changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/io/bmap.c b/io/bmap.c
-> index 2e4ff7b2..345f276e 100644
-> --- a/io/bmap.c
-> +++ b/io/bmap.c
-> @@ -43,6 +43,7 @@ bmap_help(void)
->  " All the file offsets and disk blocks are in units of 512-byte blocks.\n"
->  " -a -- prints the attribute fork map instead of the data fork.\n"
->  " -c -- prints the copy-on-write fork map instead of the data fork.\n"
-> +"       This works only if the kernel was compiled in debug mode.\n"
->  " -d -- suppresses a DMAPI read event, offline portions shown as holes.\n"
->  " -e -- print delayed allocation extents.\n"
->  " -l -- also displays the length of each extent in 512-byte blocks.\n"
-> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-> index 2bd77ee8..eb2b862e 100644
-> --- a/man/man8/xfs_io.8
-> +++ b/man/man8/xfs_io.8
-> @@ -315,7 +315,7 @@ See the
->  .B pwrite
->  command.
->  .TP
-> -.BI "bmap [ \-acdelpv ] [ \-n " nx " ]"
-> +.BI "bmap [ \-adelpv ] [ \-n " nx " ]"
->  Prints the block mapping for the current open file. Refer to the
->  .BR xfs_bmap (8)
->  manual page for complete documentation.
-> 
-
+>
+>Cheers,
+>
+>Dave.
+>-- 
+>Dave Chinner
+>david@fromorbit.com
