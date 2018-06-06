@@ -1,160 +1,227 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:56438 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752042AbeFFW3y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 6 Jun 2018 18:29:54 -0400
-Date: Wed, 6 Jun 2018 18:29:49 -0400
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH v2 5/7] dm: remove DM_TYPE_DAX_BIO_BASED dm_queue_mode
-Message-ID: <20180606222949.GA4465@redhat.com>
-References: <20180529195106.14268-1-ross.zwisler@linux.intel.com>
- <20180529195106.14268-6-ross.zwisler@linux.intel.com>
- <20180601220443.GB18712@redhat.com>
- <20180604232416.GB10666@linux.intel.com>
- <20180605004558.GB6898@redhat.com>
- <20180606172421.GA2208@linux.intel.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:42144 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751885AbeFFVNk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Jun 2018 17:13:40 -0400
+Date: Wed, 6 Jun 2018 14:13:34 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 05/14] xfs: repair the rmapbt
+Message-ID: <20180606211334.GA25007@magnolia>
+References: <152770863951.11611.5866814627357136911.stgit@magnolia>
+ <152770867125.11611.4326291112451031937.stgit@magnolia>
+ <CAOQ4uxhz5M_3iYgtdsD-t9PDTy3mGXYfSqy0iYHwujPw-5dbng@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180606172421.GA2208@linux.intel.com>
+In-Reply-To: <CAOQ4uxhz5M_3iYgtdsD-t9PDTy3mGXYfSqy0iYHwujPw-5dbng@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>, Toshi Kani <toshi.kani@hpe.com>, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Jun 06 2018 at  1:24P -0400,
-Ross Zwisler <ross.zwisler@linux.intel.com> wrote:
-
-> On Mon, Jun 04, 2018 at 08:46:28PM -0400, Mike Snitzer wrote:
-> > On Mon, Jun 04 2018 at  7:24pm -0400,
-> > Ross Zwisler <ross.zwisler@linux.intel.com> wrote:
-> > 
-> > > On Fri, Jun 01, 2018 at 06:04:43PM -0400, Mike Snitzer wrote:
-> > > > On Tue, May 29 2018 at  3:51pm -0400,
-> > > > Ross Zwisler <ross.zwisler@linux.intel.com> wrote:
-> > > > 
-> > > > > The DM_TYPE_DAX_BIO_BASED dm_queue_mode was introduced to prevent DM
-> > > > > devices that could possibly support DAX from transitioning into DM devices
-> > > > > that cannot support DAX.
-> > > > > 
-> > > > > For example, the following transition will currently fail:
-> > > > > 
-> > > > >  dm-linear: [fsdax pmem][fsdax pmem] => [fsdax pmem][fsdax raw]
-> > > > > 	      DM_TYPE_DAX_BIO_BASED       DM_TYPE_BIO_BASED
-> > > > > 
-> > > > > but these will both succeed:
-> > > > > 
-> > > > >  dm-linear: [fsdax pmem][brd ramdisk] => [fsdax pmem][fsdax raw]
-> > > > >  	      DM_TYPE_DAX_BIO_BASED        DM_TYPE_BIO_BASED
-> > > > > 
-> > > > 
-> > > > I fail to see how this succeeds given
-> > > > drivers/md/dm-ioctl.c:is_valid_type() only allows transitions from:
-> > > > 
-> > > > DM_TYPE_BIO_BASED => DM_TYPE_DAX_BIO_BASED
-> > > 
-> > > Right, sorry, that was a typo.  What I meant was:
-> > > 
-> > > > For example, the following transition will currently fail:
-> > > > 
-> > > >  dm-linear: [fsdax pmem][fsdax pmem] => [fsdax pmem][fsdax raw]
-> > > >               DM_TYPE_DAX_BIO_BASED       DM_TYPE_BIO_BASED
-> > > > 
-> > > > but these will both succeed:
-> > > > 
-> > > >  dm-linear: [fsdax pmem][brd ramdisk] => [fsdax pmem][fsdax raw]
-> > > >                 DM_TYPE_BIO_BASED        DM_TYPE_BIO_BASED
-> > > > 
-> > > >  dm-linear: [fsdax pmem][fsdax raw] => [fsdax pmem][fsdax pmem]
-> > > >                 DM_TYPE_BIO_BASED        DM_TYPE_DAX_BIO_BASED
-> > > 
-> > > So we allow 2 of the 3 transitions, but the reason that we disallow the third
-> > > isn't fully clear to me.
-> > > 
-> > > > >  dm-linear: [fsdax pmem][fsdax raw] => [fsdax pmem][fsdax pmem]
-> > > > >  		DM_TYPE_BIO_BASED        DM_TYPE_DAX_BIO_BASED
-> > > > > 
-> > > > > This seems arbitrary, as really the choice on whether to use DAX happens at
-> > > > > filesystem mount time.  There's no guarantee that the in the first case
-> > > > > (double fsdax pmem) we were using the dax mount option with our file
-> > > > > system.
-> > > > > 
-> > > > > Instead, get rid of DM_TYPE_DAX_BIO_BASED and all the special casing around
-> > > > > it, and instead make the request queue's QUEUE_FLAG_DAX be our one source
-> > > > > of truth.  If this is set, we can use DAX, and if not, not.  We keep this
-> > > > > up to date in table_load() as the table changes.  As with regular block
-> > > > > devices the filesystem will then know at mount time whether DAX is a
-> > > > > supported mount option or not.
-> > > > 
-> > > > If you don't think you need this specialization that is fine.. but DM
-> > > > devices supporting suspending (as part of table reloads) so is there any
-> > > > risk that there will be inflight IO (say if someone did 'dmsetup suspend
-> > > > --noflush').. and then upon reload the device type changed out from
-> > > > under us.. anyway, I don't have all the PMEM DAX stuff paged back into
-> > > > my head yet.
-> > > > 
-> > > > But this just seems like we really shouldn't be allowing the
-> > > > transition from what was DM_TYPE_DAX_BIO_BASED back to DM_TYPE_BIO_BASED
-> > > 
-> > > I admit I don't fully understand all the ways that DM supports suspending and
-> > > resuming devices.  Is there actually a case where we can change out the DM
-> > > devices while I/O is running, and somehow end up trying to issue a DAX I/O to
-> > > a device that doesn't support DAX?
-> > 
-> > Yes, provided root permissions, it's very easy to dmsetup suspend/load/resume
-> > to replace any portion of the DM device's logical address space to map to an
-> > entirely different DM target (with a different backing store).  It's
-> > pretty intrusive to do such things, but easily done and powerful.
-> > 
-> > Mike
+On Thu, May 31, 2018 at 08:42:06AM +0300, Amir Goldstein wrote:
+> On Wed, May 30, 2018 at 10:31 PM, Darrick J. Wong
+> <darrick.wong@oracle.com> wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> >
+> > Rebuild the reverse mapping btree from all primary metadata.
+> >
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/Makefile            |    1
+> >  fs/xfs/scrub/common.c      |    6
+> >  fs/xfs/scrub/repair.c      |  119 +++++++
+> >  fs/xfs/scrub/repair.h      |   27 +
+> >  fs/xfs/scrub/rmap.c        |    6
+> >  fs/xfs/scrub/rmap_repair.c |  796 ++++++++++++++++++++++++++++++++++++++++++++
+> >  fs/xfs/scrub/scrub.c       |   18 +
+> >  fs/xfs/scrub/scrub.h       |    2
+> >  fs/xfs/xfs_mount.h         |    1
+> >  fs/xfs/xfs_super.c         |   27 +
+> >  fs/xfs/xfs_trans.c         |    7
+> >  11 files changed, 1004 insertions(+), 6 deletions(-)
+> >  create mode 100644 fs/xfs/scrub/rmap_repair.c
+> >
+> >
+> > diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+> > index 7c442f83b179..b9bbac3d5075 100644
+> > --- a/fs/xfs/Makefile
+> > +++ b/fs/xfs/Makefile
+> > @@ -178,6 +178,7 @@ xfs-y                               += $(addprefix scrub/, \
+> >                                    alloc_repair.o \
+> >                                    ialloc_repair.o \
+> >                                    repair.o \
+> > +                                  rmap_repair.o \
+> >                                    )
+> >  endif
+> >  endif
+> > diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+> > index 89938b328954..f92994716522 100644
+> > --- a/fs/xfs/scrub/common.c
+> > +++ b/fs/xfs/scrub/common.c
+> > @@ -603,9 +603,13 @@ xfs_scrub_trans_alloc(
+> >         struct xfs_scrub_context        *sc,
+> >         uint                            resblks)
+> >  {
+> > +       uint                            flags = 0;
+> > +
+> > +       if (sc->fs_frozen)
+> > +               flags |= XFS_TRANS_NO_WRITECOUNT;
+> >         if (sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR)
+> >                 return xfs_trans_alloc(sc->mp, &M_RES(sc->mp)->tr_itruncate,
+> > -                               resblks, 0, 0, &sc->tp);
+> > +                               resblks, 0, flags, &sc->tp);
+> >
+> >         return xfs_trans_alloc_empty(sc->mp, &sc->tp);
+> >  }
+> > diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+> > index 45a91841c0ac..4b5d599d53b9 100644
+> > --- a/fs/xfs/scrub/repair.c
+> > +++ b/fs/xfs/scrub/repair.c
+> > @@ -43,6 +43,8 @@
+> >  #include "xfs_ag_resv.h"
+> >  #include "xfs_trans_space.h"
+> >  #include "xfs_quota.h"
+> > +#include "xfs_bmap.h"
+> > +#include "xfs_bmap_util.h"
+> >  #include "scrub/xfs_scrub.h"
+> >  #include "scrub/scrub.h"
+> >  #include "scrub/common.h"
+> > @@ -1146,3 +1148,120 @@ xfs_repair_mod_ino_counts(
+> >                                 (int64_t)freecount - old_freecount);
+> >         }
+> >  }
+> > +
+> > +/*
+> > + * Freeze the FS against all other activity so that we can avoid ABBA
+> > + * deadlocks while taking locks in unusual orders so that we can rebuild
+> > + * metadata structures such as the rmapbt.
+> > + */
+> > +int
+> > +xfs_repair_fs_freeze(
+> > +       struct xfs_scrub_context        *sc)
+> > +{
+> > +       int                             error;
+> > +
+> > +       error = freeze_super(sc->mp->m_super);
+> > +       if (error)
+> > +               return error;
+> > +       sc->fs_frozen = true;
+> > +       return 0;
+> > +}
+> > +
+> > +/* Unfreeze the FS. */
+> > +int
+> > +xfs_repair_fs_thaw(
+> > +       struct xfs_scrub_context        *sc)
+> > +{
+> > +       struct inode                    *inode, *o;
+> > +       int                             error;
+> > +
+> > +       sc->fs_frozen = false;
+> > +       error = thaw_super(sc->mp->m_super);
+> > +
+> > +       inode = sc->frozen_inode_list;
+> > +       while (inode) {
+> > +               o = inode->i_private;
+> > +               inode->i_private = NULL;
+> > +               iput(inode);
+> > +               inode = o;
+> > +       }
+> > +
+> > +       return error;
+> > +}
+> > +
 > 
-> Hmmm, I don't understand how you can do this if there is a filesystem built on
-> your DM device?  Say you have a DM device, either striped or linear, that is
-> made up of 2 devices, and then you use dmsetup to replace one of the DM member
-> devices with something else.  You've just swapped out half of your LBA space
-> with new data, right? 
 > 
-> I don't understand how you can expect a filesystem built on the old DM device
-> to still work?  You especially can't do this while the filesystem is mounted -
-> all the in-core filesystem metadata would be garbage because the on-media data
-> would have totally changed.
+> I think that new mechanism is worth a mention in the commit message,
+> if not a patch of its own with cc to fsdevel.
+> In a discussion on said patch I would ask: how does xfs_repair_fs_freeze()
+> work in collaboration with user initiated fsfreeze?
+> Is there a situation where LVM can be fooled to think that XFS is really
+> frozen, but it is actually "repair frozen"? and metadata can change while
+> taking a snapshot?
 
-Sure it can cause you to no longer have access to the original backing
-store (e.g. swapping in an "error" target instead of linear).
+Notice how xfs added a ->freeze_super handler to the superblock
+operations that prohibits userspace from initiating a freeze while any
+repair operations are running?  If userspace (lvm, etc.) try to initiate
+a freeze while repair is running, the freeze attempt is kicked back to
+userspace with -EBUSY.  Similarly, a new xfs ->thaw_super handler
+prevents userspace from unfreezing while repair is running.
 
-But this ability to suspend a DM device with a table that is using
-"linear", load a new table (that uses a different target) into the
-inactive table slot, and then resume to make the device active is how
-things like snapshot support are achieved.  The "linear" target gets
-replaced with "snapshot-origin', etc.
- 
-> So, when dealing with a filesystem, the flow must be:
+Granted, the current patch doesn't quite work right either; I've
+replaced m_scrubbers with a mutex that repair holds for the duration of
+the repair freeze; this way regular freeze/thaw requests will block
+until the repair is finished.
+
+> This is why I suggested to add a VFS freeze level, e.g.
+> SB_FREEZE_FS_MAINTAINANCE so that you don't publish XFS state
+> as SB_FREEZE_COMPLETE while you are modifying metadata on disk.
+> It might be sufficient to get XFS to state SB_FREEZE_COMPLETE and
+> then up only to SB_FREEZE_FS in xfs_repair_fs_freeze() without
+> adding any new states.
+
+I tried that, and it didn't work.  We actually /do/ want to be at
+SB_FREEZE_COMPLETE so that repair is the /only/ thread that can change
+any filesystem state.  Under normal circumstances, XFS transaction
+allocation will block until the SB_FREEZE_COMPLETE condition clears.
+This stops any background space reclamation from happening, at least if
+it requires a transaction.  Online repair of course grants itself the
+ability to run transactions even during FREEZE_COMPLETE.
+
+Will the following comment (to be embedded in the repair code) explain
+this all sufficiently?
+
+/*
+ * Freezing the Filesystem for a Repair
+ * ====================================
+ *
+ * While most repair activity can occur while the filesystem is live,
+ * there are certain scenarios where we cannot tolerate concurrent
+ * metadata updates.  We therefore must freeze the filesystem against
+ * all other changes.
+ *
+ * The typical scenarios envisioned for repair freezes are (a) to avoid
+ * ABBA deadlocks when need to take locks in an unusual order; or (b) to
+ * update global filesystem state.  For example, reconstruction of a
+ * damaged reverse mapping btree requires us to hold the AG header locks
+ * while scanning inodes, which goes against the usual inode -> AG
+ * header locking order.
+ *
+ * A note about inode reclaim: when we freeze the filesystem, users
+ * can't modify things and periodic background reclaim of speculative
+ * preallocations and copy-on-write staging extents is stopped.
+ * However, the repair thread must be careful about evicting an inode
+ * from memory -- if the eviction would require a transaction, we must
+ * defer the iput until after the repair freeze.  The reasons for this
+ * are twofold: first, repair already has a transaction and xfs can't
+ * nest transactions; and second, we froze the fs to prevent
+ * modifications that repair doesn't control directly.
+ *
+ * Userspace is prevented from freezing or thawing the filesystem during
+ * a repair freeze by the ->freeze_super and ->thaw_super superblock
+ * operations, which block any changes to the freeze state while a
+ * repair freeze is running through the use of the m_repair_freeze
+ * mutex.  It only makes sense to run one repair freeze at a time, so
+ * the mutex is fine.
+ *
+ * Repair freezes cannot be initiated during a regular freeze because
+ * freeze_super does not allow nested freeze.  Repair activity that does
+ * not require a repair freeze is also prevented from running during a
+ * regular freeze because transaction allocation blocks on the regular
+ * freeze.  We assume that the only other users of
+ * XFS_TRANS_NO_WRITECOUNT transactions either aren't modifying space
+ * metadata in a way that would affect repair, or that we can inhibit
+ * any of the ones that do.
+ */
+
+--D
+
 > 
-> unmount your filesystem
-> redo your DM device, changing out devices
-> reformat your filesystem on the new DM device
-> remount your filesystem
-> 
-> Right?
-
-No.
-
-> If so, then I don't see how a transition of the DM device from
-> supporting DAX to not supporting DAX or vice versa could harm us, as we can't
-> be doing filesystem I/O at the time when we change the composition of the DM
-> device.
-
-Yes you can.  That is the entire point.
-
-BTW, I'm not saying you have to change the backing store.  I'm saying
-you _can_ if you would like.  Obviously if you remove the backing store
-with the filesystem then you'll not be able to access the filesystem.
-
-The point of all this is to say, DM table swaps can be good and
-powerful.  But they can also be harmful.  The goal of preventing
-transitions from DM_TYPE_DAX_BIO_BASED to DM_TYPE_BIO_BASED was to
-shield users from doing obviously wrong things... things they might not
-realize are problematic because of the relatively opaque nature of "DAX"
-support.
-
-Mike
+> Thanks,
+> Amir.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
