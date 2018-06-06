@@ -1,129 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga18.intel.com ([134.134.136.126]:36107 "EHLO mga18.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752248AbeFFRYX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 6 Jun 2018 13:24:23 -0400
-Date: Wed, 6 Jun 2018 11:24:21 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH v2 5/7] dm: remove DM_TYPE_DAX_BIO_BASED dm_queue_mode
-Message-ID: <20180606172421.GA2208@linux.intel.com>
-References: <20180529195106.14268-1-ross.zwisler@linux.intel.com>
- <20180529195106.14268-6-ross.zwisler@linux.intel.com>
- <20180601220443.GB18712@redhat.com>
- <20180604232416.GB10666@linux.intel.com>
- <20180605004558.GB6898@redhat.com>
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:39584 "EHLO
+        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752538AbeFFPb1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Jun 2018 11:31:27 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180605004558.GB6898@redhat.com>
+In-Reply-To: <CAHc6FU458f9xkr2ru2B2L8_FC+=vm5CLDUixBjCZSq5YZZC8=w@mail.gmail.com>
+References: <20180606104033.4947-1-hch@lst.de> <CAHc6FU458f9xkr2ru2B2L8_FC+=vm5CLDUixBjCZSq5YZZC8=w@mail.gmail.com>
+From: =?UTF-8?Q?Andreas_Gr=C3=BCnbacher?= <andreas.gruenbacher@gmail.com>
+Date: Wed, 6 Jun 2018 17:31:25 +0200
+Message-ID: <CAHpGcMJC01-RVceZajprnLtFP7JS+SrUJ+N_RESgGJyAkj=KJA@mail.gmail.com>
+Subject: Re: iomap preparations for GFS2
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Toshi Kani <toshi.kani@hpe.com>, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, cluster-devel <cluster-devel@redhat.com>, linux-ext4 <linux-ext4@vger.kernel.org>
 
-On Mon, Jun 04, 2018 at 08:46:28PM -0400, Mike Snitzer wrote:
-> On Mon, Jun 04 2018 at  7:24pm -0400,
-> Ross Zwisler <ross.zwisler@linux.intel.com> wrote:
-> 
-> > On Fri, Jun 01, 2018 at 06:04:43PM -0400, Mike Snitzer wrote:
-> > > On Tue, May 29 2018 at  3:51pm -0400,
-> > > Ross Zwisler <ross.zwisler@linux.intel.com> wrote:
-> > > 
-> > > > The DM_TYPE_DAX_BIO_BASED dm_queue_mode was introduced to prevent DM
-> > > > devices that could possibly support DAX from transitioning into DM devices
-> > > > that cannot support DAX.
-> > > > 
-> > > > For example, the following transition will currently fail:
-> > > > 
-> > > >  dm-linear: [fsdax pmem][fsdax pmem] => [fsdax pmem][fsdax raw]
-> > > > 	      DM_TYPE_DAX_BIO_BASED       DM_TYPE_BIO_BASED
-> > > > 
-> > > > but these will both succeed:
-> > > > 
-> > > >  dm-linear: [fsdax pmem][brd ramdisk] => [fsdax pmem][fsdax raw]
-> > > >  	      DM_TYPE_DAX_BIO_BASED        DM_TYPE_BIO_BASED
-> > > > 
-> > > 
-> > > I fail to see how this succeeds given
-> > > drivers/md/dm-ioctl.c:is_valid_type() only allows transitions from:
-> > > 
-> > > DM_TYPE_BIO_BASED => DM_TYPE_DAX_BIO_BASED
-> > 
-> > Right, sorry, that was a typo.  What I meant was:
-> > 
-> > > For example, the following transition will currently fail:
-> > > 
-> > >  dm-linear: [fsdax pmem][fsdax pmem] => [fsdax pmem][fsdax raw]
-> > >               DM_TYPE_DAX_BIO_BASED       DM_TYPE_BIO_BASED
-> > > 
-> > > but these will both succeed:
-> > > 
-> > >  dm-linear: [fsdax pmem][brd ramdisk] => [fsdax pmem][fsdax raw]
-> > >                 DM_TYPE_BIO_BASED        DM_TYPE_BIO_BASED
-> > > 
-> > >  dm-linear: [fsdax pmem][fsdax raw] => [fsdax pmem][fsdax pmem]
-> > >                 DM_TYPE_BIO_BASED        DM_TYPE_DAX_BIO_BASED
-> > 
-> > So we allow 2 of the 3 transitions, but the reason that we disallow the third
-> > isn't fully clear to me.
-> > 
-> > > >  dm-linear: [fsdax pmem][fsdax raw] => [fsdax pmem][fsdax pmem]
-> > > >  		DM_TYPE_BIO_BASED        DM_TYPE_DAX_BIO_BASED
-> > > > 
-> > > > This seems arbitrary, as really the choice on whether to use DAX happens at
-> > > > filesystem mount time.  There's no guarantee that the in the first case
-> > > > (double fsdax pmem) we were using the dax mount option with our file
-> > > > system.
-> > > > 
-> > > > Instead, get rid of DM_TYPE_DAX_BIO_BASED and all the special casing around
-> > > > it, and instead make the request queue's QUEUE_FLAG_DAX be our one source
-> > > > of truth.  If this is set, we can use DAX, and if not, not.  We keep this
-> > > > up to date in table_load() as the table changes.  As with regular block
-> > > > devices the filesystem will then know at mount time whether DAX is a
-> > > > supported mount option or not.
-> > > 
-> > > If you don't think you need this specialization that is fine.. but DM
-> > > devices supporting suspending (as part of table reloads) so is there any
-> > > risk that there will be inflight IO (say if someone did 'dmsetup suspend
-> > > --noflush').. and then upon reload the device type changed out from
-> > > under us.. anyway, I don't have all the PMEM DAX stuff paged back into
-> > > my head yet.
-> > > 
-> > > But this just seems like we really shouldn't be allowing the
-> > > transition from what was DM_TYPE_DAX_BIO_BASED back to DM_TYPE_BIO_BASED
-> > 
-> > I admit I don't fully understand all the ways that DM supports suspending and
-> > resuming devices.  Is there actually a case where we can change out the DM
-> > devices while I/O is running, and somehow end up trying to issue a DAX I/O to
-> > a device that doesn't support DAX?
-> 
-> Yes, provided root permissions, it's very easy to dmsetup suspend/load/resume
-> to replace any portion of the DM device's logical address space to map to an
-> entirely different DM target (with a different backing store).  It's
-> pretty intrusive to do such things, but easily done and powerful.
-> 
-> Mike
+2018-06-06 13:38 GMT+02:00 Andreas Gruenbacher <agruenba@redhat.com>:
+> On 6 June 2018 at 12:40, Christoph Hellwig <hch@lst.de> wrote:
+>> Hi all,
+>>
+>> this is a slight rework of the patches from Andreas to prepare for gfs2
+>> using the iomap code.  I'd like to start with an immutable branch for
+>> iomap patches in either the XFS tree or a tree of mine own with something
+>> like this so that we can have a nice common base for both the major
+>> iomap changes for XFS and the GFS2 work.
 
-Hmmm, I don't understand how you can do this if there is a filesystem built on
-your DM device?  Say you have a DM device, either striped or linear, that is
-made up of 2 devices, and then you use dmsetup to replace one of the DM member
-devices with something else.  You've just swapped out half of your LBA space
-with new data, right? 
+When do you want to push this upstream? We've got the gfs2 patches
+that depend on it, and we cannot make progress with those before this
+set is pushed.
 
-I don't understand how you can expect a filesystem built on the old DM device
-to still work?  You especially can't do this while the filesystem is mounted -
-all the in-core filesystem metadata would be garbage because the on-media data
-would have totally changed.
-
-So, when dealing with a filesystem, the flow must be:
-
-unmount your filesystem
-redo your DM device, changing out devices
-reformat your filesystem on the new DM device
-remount your filesystem
-
-Right?  If so, then I don't see how a transition of the DM device from
-supporting DAX to not supporting DAX or vice versa could harm us, as we can't
-be doing filesystem I/O at the time when we change the composition of the DM
-device.
+Thanks,
+Andreas
