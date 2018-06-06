@@ -1,115 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:39424 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751035AbeFFE6o (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Jun 2018 00:58:44 -0400
-Date: Tue, 5 Jun 2018 21:58:40 -0700
+Received: from userp2120.oracle.com ([156.151.31.85]:50456 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752136AbeFFPJh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Jun 2018 11:09:37 -0400
+Date: Wed, 6 Jun 2018 08:09:05 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 04/14] xfs: repair inode btrees
-Message-ID: <20180606045840.GW9437@magnolia>
-References: <152770863951.11611.5866814627357136911.stgit@magnolia>
- <152770866495.11611.1193477717645761767.stgit@magnolia>
- <20180604034130.GM10363@dastard>
- <20180606035528.GT9437@magnolia>
- <20180606043246.GP10363@dastard>
+Subject: Re: [PATCH 01/39] vfs: dedpue: return loff_t
+Message-ID: <20180606150905.GC9426@magnolia>
+References: <20180529144339.16538-1-mszeredi@redhat.com>
+ <20180529144339.16538-2-mszeredi@redhat.com>
+ <20180604084336.GA11333@infradead.org>
+ <CAJfpegun8HyjODXguHstxYrGE2nuSoCCicaHT3yfYWMkxxmVWg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180606043246.GP10363@dastard>
+In-Reply-To: <CAJfpegun8HyjODXguHstxYrGE2nuSoCCicaHT3yfYWMkxxmVWg@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Miklos Szeredi <miklos@szeredi.hu>
+Cc: Christoph Hellwig <hch@infradead.org>, Miklos Szeredi <mszeredi@redhat.com>, overlayfs <linux-unionfs@vger.kernel.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-xfs <linux-xfs@vger.kernel.org>, ocfs2-devel@oss.oracle.com
 
-On Wed, Jun 06, 2018 at 02:32:46PM +1000, Dave Chinner wrote:
-> On Tue, Jun 05, 2018 at 08:55:28PM -0700, Darrick J. Wong wrote:
-> > On Mon, Jun 04, 2018 at 01:41:30PM +1000, Dave Chinner wrote:
-> > > On Wed, May 30, 2018 at 12:31:04PM -0700, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > 
-> > > > Use the rmapbt to find inode chunks, query the chunks to compute
-> > > > hole and free masks, and with that information rebuild the inobt
-> > > > and finobt.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > [...]
-> > > 
-> > > > +xfs_repair_ialloc_check_free(
-> > > > +	struct xfs_btree_cur	*cur,
-> > > > +	struct xfs_buf		*bp,
-> > > > +	xfs_ino_t		fsino,
-> > > > +	xfs_agino_t		bpino,
-> > > > +	bool			*inuse)
-> > > > +{
-> > > > +	struct xfs_mount	*mp = cur->bc_mp;
-> > > > +	struct xfs_dinode	*dip;
-> > > > +	int			error;
-> > > > +
-> > > > +	/* Will the in-core inode tell us if it's in use? */
-> > > > +	error = xfs_icache_inode_is_allocated(mp, cur->bc_tp, fsino, inuse);
-> > > > +	if (!error)
-> > > > +		return 0;
-> > > > +
-> > > > +	/* Inode uncached or half assembled, read disk buffer */
-> > > > +	dip = xfs_buf_offset(bp, bpino * mp->m_sb.sb_inodesize);
-> > > > +	if (be16_to_cpu(dip->di_magic) != XFS_DINODE_MAGIC)
-> > > > +		return -EFSCORRUPTED;
-> > > 
-> > > Do we hold the buffer locked here? i.e. can we race with someone
-> > > else allocating/freeing/reading the inode?
-> > 
-> > I think repair should be ok from alloc/free because both of those paths
-> > (xfs_dialloc/xfs_difree) will grab the AGI header, whereas repair locks
-> > all three AG headers and keeps them locked until repairs are complete.
-> > I don't think we have to worry about concurrent reads because the only
-> > field we care about are di_mode/i_mode, which don't change outside of
-> > inode allocation and freeing.
-> 
-> Comment please :P
-> 
-> And, to be technically correct - di_mode/i_mode can change outside
-> of alloc/free. However, only the permission bits can change so it
-> doesn't affect the test we are doing here.
-
-Done.
-
-> > > > +		/* The per-AG inum of this inode cluster. */
-> > > > +		agino = XFS_OFFBNO_TO_AGINO(mp, agbno, 0);
-> > > > +
-> > > > +		/* The per-AG inum of the inobt record. */
-> > > > +		startino = rmino +
-> > > > +				rounddown(agino - rmino, XFS_INODES_PER_CHUNK);
-> > > > +		cdist = agino - startino;
-> > > 
-> > > What's "cdist" mean? I can guess at it's meaning, but I don't recall
-> > > seeing the inode number offset into a cluster been refered to as a
-> > > distanced before....
-> > 
-> > cluster offset?
+On Tue, Jun 05, 2018 at 10:33:22AM +0200, Miklos Szeredi wrote:
+> On Mon, Jun 4, 2018 at 10:43 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> > On Tue, May 29, 2018 at 04:43:01PM +0200, Miklos Szeredi wrote:
+> >> f_op->dedupe_file_range() gets a u64 length to dedup and returns an ssize_t
+> >> actual length deduped.  This breaks badly on 32bit archs since the returned
+> >> length will be truncated and possibly overflow into the sign bit (xfs and
+> >> ocfs2 are affected, btrfs limits actual length to 16MiB).
 > >
-> > I wasn't sure of the terminology for the offset of the cluster within a
-> > chunk, in units of ag inodes.
+> > Can we just make it return 0 vs errno?  The only time we return
+> > a different length than the one passed in is due to the btrfs cap.
+> >
+> > Given that this API started out on btrfs we should just do the cap
+> > everywhere to not confuse userspace.
 > 
-> I'm not sure we have one. :/
+> And that's a completely arbitrary cap; sure btrfs started out with
+> that, but there's no fundamental reason for that becoming the global
+> limit.  Xfs now added a different, larger limit, so based on what
+> reason should that limit be reduced?
 > 
-> But, yeah, going by the definition of inode offset from
-> XFS_INO_TO_OFFSET() and XFS_AGINO_TO_OFFSET() - "offset" is the
-> inode number index from the start of the block - cluster offset is
-> probably the best name for it.
+> I don't care either way, but at this stage I'm not going to change
+> this patch, unless there's a very good reason to do so, because if I
+> do someone will come and suggest another improvement, ad-infinitum...
 
-Yeah, that's what I picked.
+I think we should hoist the MAX_RW_COUNT/2 limit to the VFS helpers
+since afaict we generally cap max IO per call at MAX_RW_COUNT.  (I
+probably should've capped ocfs2 back when I did xfs, but forgot).  If
+btrfs wants to keep their lower (16M) limit then they're free to do so;
+the interface documentation allows for this.  One of the btrfs
+developers seems to be working on a patch series to raise the limit[1]
+anyway.
 
 --D
 
-> Cheers,
+[1] https://www.spinics.net/lists/linux-btrfs/msg78392.html
+
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Thanks,
+> Miklos
