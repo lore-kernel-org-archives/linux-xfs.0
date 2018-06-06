@@ -1,68 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:44548 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:42082 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753898AbeFERKa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jun 2018 13:10:30 -0400
-Date: Tue, 5 Jun 2018 10:10:26 -0700
+        with ESMTP id S1752536AbeFFC7c (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jun 2018 22:59:32 -0400
+Date: Tue, 5 Jun 2018 19:59:08 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 5/6] xfs: verify root inode more thoroughly
-Message-ID: <20180605171026.GK9437@magnolia>
-References: <20180605062423.4877-1-david@fromorbit.com>
- <20180605062423.4877-6-david@fromorbit.com>
+Subject: Re: [PATCH V2] xfs: fix string handling in get/set functions
+Message-ID: <20180606025908.GR9437@magnolia>
+References: <20180525151421.2317292-1-arnd@arndb.de>
+ <7aad9fc3-ed65-a016-d477-5d830e31cb43@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180605062423.4877-6-david@fromorbit.com>
+In-Reply-To: <7aad9fc3-ed65-a016-d477-5d830e31cb43@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>, Martin Sebor <msebor@gmail.com>, Brian Foster <bfoster@redhat.com>, Dave Chinner <dchinner@redhat.com>, Dan Williams <dan.j.williams@intel.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-kernel@vger.kernel.org
 
-On Tue, Jun 05, 2018 at 04:24:22PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Tue, Jun 05, 2018 at 02:49:20PM -0500, Eric Sandeen wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
 > 
-> When looking up the root inode at mount time, we don't actually do
-> any verification to check that the inode is allocated and accounted
-> for correctly in the INOBT. Make the checks on the root inode more
-> robust by making it an untrusted lookup. This forces the inode
-> lookup to use the inode btree to verify the inode is allocated
-> and mapped correctly to disk. This will also have the effect of
-> catching a significant number of AGI/INOBT related corruptions in
-> AG 0 at mount time.
+> [sandeen: fix subject, avoid copy-out of uninit data in getlabel]
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> gcc-8 reports two warnings for the newly added getlabel/setlabel code:
+> 
+> fs/xfs/xfs_ioctl.c: In function 'xfs_ioc_getlabel':
+> fs/xfs/xfs_ioctl.c:1822:38: error: argument to 'sizeof' in 'strncpy' call is the same expression as the source; did you mean to use the size of the destination? [-Werror=sizeof-pointer-memaccess]
+>   strncpy(label, sbp->sb_fname, sizeof(sbp->sb_fname));
+>                                       ^
+> In function 'strncpy',
+>     inlined from 'xfs_ioc_setlabel' at /git/arm-soc/fs/xfs/xfs_ioctl.c:1863:2,
+>     inlined from 'xfs_file_ioctl' at /git/arm-soc/fs/xfs/xfs_ioctl.c:1918:10:
+> include/linux/string.h:254:9: error: '__builtin_strncpy' output may be truncated copying 12 bytes from a string of length 12 [-Werror=stringop-truncation]
+>   return __builtin_strncpy(p, q, size);
+> 
+> In both cases, part of the problem is that one of the strncpy()
+> arguments is a fixed-length character array with zero-padding rather
+> than a zero-terminated string. In the first one case, we also get an
+> odd warning about sizeof-pointer-memaccess, which doesn't seem right
+> (the sizeof is for an array that happens to be the same as the second
+> strncpy argument).
+> 
+> To work around the bogus warning, I use a plain 'XFSLABEL_MAX' for
+> the strncpy() length when copying the label in getlabel. For setlabel(),
+> using memcpy() with the correct length that is already known avoids
+> the second warning and is slightly simpler.
+> 
+> In a related issue, it appears that we accidentally skip the trailing
+> \0 when copying a 12-character label back to user space in getlabel().
+> Using the correct sizeof() argument here copies the extra character.
+> 
+> Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85602
+> Fixes: f7664b31975b ("xfs: implement online get/set fs label")
+> Cc: Eric Sandeen <sandeen@redhat.com>
+> Cc: Martin Sebor <msebor@gmail.com>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Looks ok,
+Working around strncpy warnings with memcpy?  I guess...
+
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
 > ---
->  fs/xfs/xfs_mount.c | 7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 189fa7b615d3..a3378252baa1 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -862,9 +862,12 @@ xfs_mountfs(
->  	 * Get and sanity-check the root inode.
->  	 * Save the pointer to it in the mount structure.
->  	 */
-> -	error = xfs_iget(mp, NULL, sbp->sb_rootino, 0, XFS_ILOCK_EXCL, &rip);
-> +	error = xfs_iget(mp, NULL, sbp->sb_rootino, XFS_IGET_UNTRUSTED,
-> +			 XFS_ILOCK_EXCL, &rip);
->  	if (error) {
-> -		xfs_warn(mp, "failed to read root inode");
-> +		xfs_warn(mp,
-> +			"Failed to read root inode 0x%llx, error %d",
-> +			sbp->sb_rootino, -error);
->  		goto out_log_dealloc;
->  	}
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 82f7c83c1dad..596e176c19a6 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1828,13 +1828,13 @@ xfs_ioc_getlabel(
+>  	/* Paranoia */
+>  	BUILD_BUG_ON(sizeof(sbp->sb_fname) > FSLABEL_MAX);
 >  
-> -- 
-> 2.17.0
+> +	/* 1 larger than sb_fname, so this ensures a trailing NUL char */
+> +	memset(label, 0, sizeof(label));
+>  	spin_lock(&mp->m_sb_lock);
+> -	strncpy(label, sbp->sb_fname, sizeof(sbp->sb_fname));
+> +	strncpy(label, sbp->sb_fname, XFSLABEL_MAX);
+>  	spin_unlock(&mp->m_sb_lock);
+>  
+> -	/* xfs on-disk label is 12 chars, be sure we send a null to user */
+> -	label[XFSLABEL_MAX] = '\0';
+> -	if (copy_to_user(user_label, label, sizeof(sbp->sb_fname)))
+> +	if (copy_to_user(user_label, label, sizeof(label)))
+>  		return -EFAULT;
+>  	return 0;
+>  }
+> @@ -1870,7 +1870,7 @@ xfs_ioc_setlabel(
+>  
+>  	spin_lock(&mp->m_sb_lock);
+>  	memset(sbp->sb_fname, 0, sizeof(sbp->sb_fname));
+> -	strncpy(sbp->sb_fname, label, sizeof(sbp->sb_fname));
+> +	memcpy(sbp->sb_fname, label, len);
+>  	spin_unlock(&mp->m_sb_lock);
+>  
+>  	/*
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
