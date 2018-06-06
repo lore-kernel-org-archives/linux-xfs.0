@@ -1,103 +1,164 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:47399 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752762AbeFFDel (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jun 2018 23:34:41 -0400
-Date: Wed, 6 Jun 2018 13:34:38 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 03/14] xfs: repair free space btrees
-Message-ID: <20180606033438.GN10363@dastard>
-References: <152770863951.11611.5866814627357136911.stgit@magnolia>
- <152770865831.11611.7628478596629227707.stgit@magnolia>
- <20180604021234.GL10363@dastard>
- <20180606015026.GQ9437@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180606015026.GQ9437@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:40868 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932525AbeFFKkv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Jun 2018 06:40:51 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 5/6] iomap: generic inline data handling
+Date: Wed,  6 Jun 2018 12:40:32 +0200
+Message-Id: <20180606104033.4947-6-hch@lst.de>
+In-Reply-To: <20180606104033.4947-1-hch@lst.de>
+References: <20180606104033.4947-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com, linux-ext4@vger.kernel.org
 
-On Tue, Jun 05, 2018 at 06:50:26PM -0700, Darrick J. Wong wrote:
-> On Mon, Jun 04, 2018 at 12:12:34PM +1000, Dave Chinner wrote:
-> > On Wed, May 30, 2018 at 12:30:58PM -0700, Darrick J. Wong wrote:
-> > > +
-> > > +/* Free space btree repair. */
-> > 
-> > Can you add a decription of the algorithm used here.
-> 
-> Ok.
-> 
-> /*
->  * Free Space Btree Repair
->  * =======================
->  *
->  * The reverse mappings are supposed to record all space usage for the
->  * entire AG.  Therefore, we can recalculate the free extents in an AG
->  * by looking for gaps in the physical extents recorded in the rmapbt.
->  * On a reflink filesystem this is a little more tricky in that we have
->  * to be aware that the rmap records are allowed to overlap.
->  *
->  * We derive which blocks belonged to the old bnobt/cntbt by recording
->  * all the OWN_AG extents and subtracting out the blocks owned by all
->  * other OWN_AG metadata: the rmapbt blocks visited while iterating the
->  * reverse mappings and the AGFL blocks.
->  *
->  * Once we have both of those pieces, we can reconstruct the bnobt and
->  * cntbt by blowing out the free block state and freeing all the extents
->  * that we found.  This adds the requirement that we can't have any busy
->  * extents in the AG because the busy code cannot handle duplicate
->  * records.
->  *
->  * Note that we can only rebuild both free space btrees at the same
->  * time.
+From: Andreas Gruenbacher <agruenba@redhat.com>
 
-Ok, so if I've got this right, the limitations indicated in the last
-two paragraphs are a result of makring space free by calling
-xfs_free_extent() on all the extents in the list? If so, can you
-mention that this is an implementation artifact, not a algorithmic
-limitation?
+Add generic inline data handling by adding a pointer to the inline data
+region to struct iomap.  When handling a buffered IOMAP_INLINE write,
+iomap_write_begin will copy the current inline data from the inline data
+region into the page cache, and iomap_write_end will copy the changes in
+the page cache back to the inline data region.
 
-> > > +/* Allocate a block from the (cached) longest extent in the AG. */
-> > > +STATIC xfs_fsblock_t
-> > > +xfs_repair_allocbt_alloc_from_longest(
-> > > +	struct xfs_repair_alloc		*ra,
-> > > +	struct xfs_repair_alloc_extent	**longest)
-> > > +{
-> > > +	xfs_fsblock_t			fsb;
-> > > +
-> > > +	if (*longest && (*longest)->len == 0) {
-> > > +		list_del(&(*longest)->list);
-> > > +		kmem_free(*longest);
-> > > +		*longest = NULL;
-> > > +	}
-> > > +
-> > > +	if (*longest == NULL) {
-> > > +		*longest = xfs_repair_allocbt_get_longest(ra);
-> > > +		if (*longest == NULL)
-> > > +			return NULLFSBLOCK;
-> > > +	}
-> > > +
-> > > +	fsb = XFS_AGB_TO_FSB(ra->sc->mp, ra->sc->sa.agno, (*longest)->bno);
-> > > +	(*longest)->bno++;
-> > > +	(*longest)->len--;
-> > 
-> > What if this makes the longest extent no longer the longest on the
-> > extent list?
-> 
-> It should be fine, since all we do later is zero out the free space
-> counters in the AG and start freeing extents.  The regular extent
-> freeing code takes care to update the agf/perag longest-free counter
-> appropriately.
+This doesn't cover inline data reads and direct I/O yet because so far,
+we have no users.
 
-Comment, please. :P
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+[hch: small cleanups to better fit in with other iomap work]
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/iomap.c            | 62 +++++++++++++++++++++++++++++++++++++++++++++------
+ include/linux/iomap.h |  1 +
+ 2 files changed, 56 insertions(+), 7 deletions(-)
 
-Cheers,
-
-Dave.
+diff --git a/fs/iomap.c b/fs/iomap.c
+index f428baa32185..f2a491b98b7c 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -116,6 +116,26 @@ iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
+ 		truncate_pagecache_range(inode, max(pos, i_size), pos + len);
+ }
+ 
++static void
++iomap_read_inline_data(struct inode *inode, struct page *page,
++		struct iomap *iomap)
++{
++	size_t size = i_size_read(inode);
++	void *addr;
++
++	if (PageUptodate(page))
++		return;
++
++	BUG_ON(page->index);
++	BUG_ON(size > PAGE_SIZE - offset_in_page(iomap->inline_data));
++
++	addr = kmap_atomic(page);
++	memcpy(addr, iomap->inline_data, size);
++	memset(addr + size, 0, PAGE_SIZE - size);
++	kunmap_atomic(addr);
++	SetPageUptodate(page);
++}
++
+ static int
+ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
+ 		struct page **pagep, struct iomap *iomap)
+@@ -133,7 +153,11 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
+ 	if (!page)
+ 		return -ENOMEM;
+ 
+-	status = __block_write_begin_int(page, pos, len, NULL, iomap);
++	if (iomap->type == IOMAP_INLINE)
++		iomap_read_inline_data(inode, page, iomap);
++	else
++		status = __block_write_begin_int(page, pos, len, NULL, iomap);
++
+ 	if (unlikely(status)) {
+ 		unlock_page(page);
+ 		put_page(page);
+@@ -146,14 +170,37 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
+ 	return status;
+ }
+ 
++static int
++iomap_write_end_inline(struct inode *inode, struct page *page,
++		struct iomap *iomap, loff_t pos, unsigned copied)
++{
++	void *addr;
++
++	WARN_ON_ONCE(!PageUptodate(page));
++	BUG_ON(pos + copied > PAGE_SIZE - offset_in_page(iomap->inline_data));
++
++	addr = kmap_atomic(page);
++	memcpy(iomap->inline_data + pos, addr + pos, copied);
++	kunmap_atomic(addr);
++
++	mark_inode_dirty(inode);
++	__generic_write_end(inode, pos, copied, page);
++	return copied;
++}
++
+ static int
+ iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
+-		unsigned copied, struct page *page)
++		unsigned copied, struct page *page, struct iomap *iomap)
+ {
+ 	int ret;
+ 
+-	ret = generic_write_end(NULL, inode->i_mapping, pos, len,
+-			copied, page, NULL);
++	if (iomap->type == IOMAP_INLINE) {
++		ret = iomap_write_end_inline(inode, page, iomap, pos, copied);
++	} else {
++		ret = generic_write_end(NULL, inode->i_mapping, pos, len,
++				copied, page, NULL);
++	}
++
+ 	if (ret < len)
+ 		iomap_write_failed(inode, pos, len);
+ 	return ret;
+@@ -208,7 +255,8 @@ iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 
+ 		flush_dcache_page(page);
+ 
+-		status = iomap_write_end(inode, pos, bytes, copied, page);
++		status = iomap_write_end(inode, pos, bytes, copied, page,
++				iomap);
+ 		if (unlikely(status < 0))
+ 			break;
+ 		copied = status;
+@@ -302,7 +350,7 @@ iomap_dirty_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 
+ 		WARN_ON_ONCE(!PageUptodate(page));
+ 
+-		status = iomap_write_end(inode, pos, bytes, bytes, page);
++		status = iomap_write_end(inode, pos, bytes, bytes, page, iomap);
+ 		if (unlikely(status <= 0)) {
+ 			if (WARN_ON_ONCE(status == 0))
+ 				return -EIO;
+@@ -354,7 +402,7 @@ static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
+ 	zero_user(page, offset, bytes);
+ 	mark_page_accessed(page);
+ 
+-	return iomap_write_end(inode, pos, bytes, bytes, page);
++	return iomap_write_end(inode, pos, bytes, bytes, page, iomap);
+ }
+ 
+ static int iomap_dax_zero(loff_t pos, unsigned offset, unsigned bytes,
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 212f4d59bcbf..69ef622f650e 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -56,6 +56,7 @@ struct iomap {
+ 	union {
+ 		struct block_device *bdev;
+ 		struct dax_device   *dax_dev;
++		void		    *inline_data;
+ 	};
+ };
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.14.2
+
