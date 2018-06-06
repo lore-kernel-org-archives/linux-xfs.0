@@ -1,44 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:45798 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751748AbeFEQnA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Jun 2018 12:43:00 -0400
-Subject: [PATCH 1/6] xfs/439: don't check filesystem afterwards
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 05 Jun 2018 09:42:56 -0700
-Message-ID: <152821697647.24976.16158232867443217035.stgit@magnolia>
-In-Reply-To: <152821697018.24976.12939094615403004592.stgit@magnolia>
-References: <152821697018.24976.12939094615403004592.stgit@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:44866 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752367AbeFFMnZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 6 Jun 2018 08:43:25 -0400
+Date: Wed, 6 Jun 2018 14:43:23 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v2] iomap: fsync swap files before iterating mappings
+Message-ID: <20180606124323.saxyqsr6g6rbtrwp@quack2.suse.cz>
+References: <20180605163304.GH9437@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180605163304.GH9437@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Omar Sandoval <osandov@osandov.com>, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>, Aleksei Besogonov <cyberax@amazon.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue 05-06-18 09:33:04, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Swap files require that all the file mapping metadata be stable on disk.
+> It is insufficient to flush dirty pages in the page cache because that
+> won't necessarily result in filesystems pushing all their metadata out
+> to disk.  Therefore, call fsync from iomap_swapfile_activate.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-We deliberately corrupted the scratch fs, so don't check it afterwards.
+Makes sense and the patch looks good to me. You can add:
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- tests/xfs/439 |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Reviewed-by: Jan Kara <jack@suse.cz>
 
+								Honza
 
-diff --git a/tests/xfs/439 b/tests/xfs/439
-index 215c4b90..4ab1c986 100755
---- a/tests/xfs/439
-+++ b/tests/xfs/439
-@@ -47,7 +47,7 @@ _cleanup()
- # real QA test starts here
- _supported_os Linux
- _supported_fs xfs
--_require_scratch
-+_require_scratch_nocheck
- # We corrupt XFS on purpose, and check if assert failures would crash system.
- _require_no_xfs_bug_on_assert
- 
-
+> ---
+> v2: fdatasync semantics, per hch feedback
+> ---
+>  fs/iomap.c |    6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index 206539d369a8..2bd04f0451f2 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -1387,7 +1387,11 @@ int iomap_swapfile_activate(struct swap_info_struct *sis,
+>  	loff_t len = ALIGN_DOWN(i_size_read(inode), PAGE_SIZE);
+>  	loff_t ret;
+>  
+> -	ret = filemap_write_and_wait(inode->i_mapping);
+> +	/*
+> +	 * Persist all file mapping metadata so that we won't have any
+> +	 * IOMAP_F_DIRTY iomaps.
+> +	 */
+> +	ret = vfs_fsync(swap_file, 1);
+>  	if (ret)
+>  		return ret;
+>  
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
