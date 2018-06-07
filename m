@@ -1,96 +1,188 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:36306 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750897AbeFGF45 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jun 2018 01:56:57 -0400
-Subject: Re: [PATCH 2/2] xfs: xfs_reflink_convert_cow() memory allocation
- deadlock
-References: <20180607052132.6207-1-david@fromorbit.com>
- <20180607052132.6207-3-david@fromorbit.com>
-From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <77a374f5-3d05-5d53-0253-265c801eb2f8@oracle.com>
-Date: Wed, 6 Jun 2018 22:56:50 -0700
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:38109 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932102AbeFGINj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jun 2018 04:13:39 -0400
+Date: Thu, 7 Jun 2018 16:13:32 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH 1/3] xfstests: dedupe a single big file and verify
+ integrity
+Message-ID: <20180607081332.GE2861@desktop>
+References: <20180601080733.20703-1-zlang@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20180607052132.6207-3-david@fromorbit.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180601080733.20703-1-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On 06/06/2018 10:21 PM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Fri, Jun 01, 2018 at 04:07:31PM +0800, Zorro Lang wrote:
+> Duperemove is a tool for finding duplicated extents and submitting
+> them for deduplication, and it supports XFS. This case trys to
+> verify the integrity of XFS after running duperemove.
 > 
-> xfs_reflink_convert_cow() manipulates the incore extent list
-> in GFP_KERNEL context in the IO submission path whilst holding
-> locked pages under writeback. This is a memory reclaim deadlock
-> vector. This code is not in a transaction, so any memory allocations
-> it makes aren't protected via the memalloc_nofs_save() context that
-> transactions carry.
-> 
-> Hence we need to run this call under memalloc_nofs_save() context to
-> prevent potential memory allocations from being run as GFP_KERNEL
-> and deadlocking.
-> 
-> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
 > ---
->   fs/xfs/xfs_aops.c  | 11 +++++++++++
->   fs/xfs/xfs_buf.c   |  1 -
->   fs/xfs/xfs_linux.h |  1 +
->   3 files changed, 12 insertions(+), 1 deletion(-)
+> Hi,
 > 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 767d53222f31..1eb625fdcb1e 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -531,8 +531,19 @@ xfs_submit_ioend(
->   {
->   	/* Convert CoW extents to regular */
->   	if (!status && ioend->io_type == XFS_IO_COW) {
-> +		/*
-> +		 * Yuk. This can do memory allocation, but is not a
-> +		 * transactional operation so everything is done in GFP_KERNEL
-> +		 * context. That can deadlock, because we hold pages in
-> +		 * writeback state and GFP_KERNEL allocations can block on them.
-> +		 * Hence we must operate in nofs conditions here.
-> +		 */
-> +		unsigned nofs_flag;
+> The V1 should be:
+> https://www.spinics.net/lists/linux-xfs/msg18982.html
+> 
+> This time I send 3 cases at same time.
+> 
+> Thanks,
+> Zorro
+> 
+>  common/config        |  1 +
+>  tests/shared/008     | 79 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/shared/008.out |  3 ++
+>  tests/shared/group   |  1 +
+>  4 files changed, 84 insertions(+)
+>  create mode 100755 tests/shared/008
+>  create mode 100644 tests/shared/008.out
+> 
+> diff --git a/common/config b/common/config
+> index 02c378a9..def559c1 100644
+> --- a/common/config
+> +++ b/common/config
+> @@ -207,6 +207,7 @@ export SQLITE3_PROG="`set_prog_path sqlite3`"
+>  export TIMEOUT_PROG="`set_prog_path timeout`"
+>  export SETCAP_PROG="`set_prog_path setcap`"
+>  export GETCAP_PROG="`set_prog_path getcap`"
+> +export DUPEREMOVE_PROG="`set_prog_path duperemove`"
+>  
+>  # use 'udevadm settle' or 'udevsettle' to wait for lv to be settled.
+>  # newer systems have udevadm command but older systems like RHEL5 don't.
+> diff --git a/tests/shared/008 b/tests/shared/008
+> new file mode 100755
+> index 00000000..74362807
+> --- /dev/null
+> +++ b/tests/shared/008
+> @@ -0,0 +1,79 @@
+> +#! /bin/bash
+> +# FS QA Test 008
+> +#
+> +# Dedupe a single big file and verify integrity
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2018 Red Hat Inc.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
 > +
-> +		nofs_flag = memalloc_nofs_save();
->   		status = xfs_reflink_convert_cow(XFS_I(ioend->io_inode),
->   				ioend->io_offset, ioend->io_size);
-> +		memalloc_nofs_restore(nofs_flag);
->   	}
->   
->   	/* Reserve log space if we might write beyond the on-disk inode size. */
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 980bc48979e9..e9c058e3761c 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -21,7 +21,6 @@
->   #include <linux/migrate.h>
->   #include <linux/backing-dev.h>
->   #include <linux/freezer.h>
-> -#include <linux/sched/mm.h>
->   
->   #include "xfs_format.h"
->   #include "xfs_log_format.h"
-> diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-> index ae1e66fa3f61..1631cf4546f2 100644
-> --- a/fs/xfs/xfs_linux.h
-> +++ b/fs/xfs/xfs_linux.h
-> @@ -26,6 +26,7 @@ typedef __u32			xfs_nlink_t;
->   
->   #include <linux/semaphore.h>
->   #include <linux/mm.h>
-> +#include <linux/sched/mm.h>
->   #include <linux/kernel.h>
->   #include <linux/blkdev.h>
->   #include <linux/slab.h>
-> 
-Looks, ok.  Was moving the header include intentional?  Just clean up 
-maybe?  Other than that, looks good.
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +. ./common/reflink
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +# duperemove only supports btrfs and xfs (with reflink feature).
+> +# Add other filesystems if it supports more later.
+> +_supported_fs xfs btrfs
 
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+I'm wondering if this could be moved to generic. duperemove only
+supports btrfs and xfs, is that because only btrfs and xfs support
+reflink, or is there some other reason in duperemove itself?
+
+If it's the former case, it's fine to move test to generic, as
+_require_scratch_dedupe serves as a guard; if it's the latter case, I
+think shared test is a good match.
+
+> +_supported_os Linux
+> +_require_scratch_dedupe
+> +_require_command "$DUPEREMOVE_PROG" duperemove
+> +
+> +fssize=$((2 * 1024 * 1024 * 1024))
+> +_scratch_mkfs_sized $fssize > $seqres.full 2>&1
+> +_scratch_mount >> $seqres.full 2>&1
+> +
+> +# fill the fs with a big file has same contents
+> +$XFS_IO_PROG -f -c "pwrite -S 0x55 0 $fssize" $SCRATCH_MNT/${seq}.file \
+> +	>> $seqres.full 2>&1
+> +md5sum $SCRATCH_MNT/${seq}.file > $TEST_DIR/${seq}md5.sum
+
+Dump md5sum to $tmp? e.g. $tmp.md5sum
+
+The other two tests have similar issues.
+
+Thanks,
+Eryu
+
+> +
+> +echo "= before cycle mount ="
+> +# Dedupe with 1M blocksize
+> +$DUPEREMOVE_PROG -dr --dedupe-options=same -b 1048576 $SCRATCH_MNT/ >>$seqres.full 2>&1
+> +# Verify integrity
+> +md5sum -c --quiet $TEST_DIR/${seq}md5.sum
+> +# Dedupe with 64k blocksize
+> +$DUPEREMOVE_PROG -dr --dedupe-options=same -b 65536 $SCRATCH_MNT/ >>$seqres.full 2>&1
+> +# Verify integrity again
+> +md5sum -c --quiet $TEST_DIR/${seq}md5.sum
+> +
+> +# umount and mount again, verify pagecache contents don't mutate
+> +_scratch_cycle_mount
+> +echo "= after cycle mount ="
+> +md5sum -c --quiet $TEST_DIR/${seq}md5.sum
+> +
+> +status=0
+> +exit
+> diff --git a/tests/shared/008.out b/tests/shared/008.out
+> new file mode 100644
+> index 00000000..f29d478f
+> --- /dev/null
+> +++ b/tests/shared/008.out
+> @@ -0,0 +1,3 @@
+> +QA output created by 008
+> += before cycle mount =
+> += after cycle mount =
+> diff --git a/tests/shared/group b/tests/shared/group
+> index b3663a03..de7fe79f 100644
+> --- a/tests/shared/group
+> +++ b/tests/shared/group
+> @@ -10,6 +10,7 @@
+>  005 dangerous_fuzzers
+>  006 auto enospc
+>  007 dangerous_fuzzers
+> +008 auto quick dedupe
+>  032 mkfs auto quick
+>  272 auto enospc rw
+>  289 auto quick
+> -- 
+> 2.14.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
