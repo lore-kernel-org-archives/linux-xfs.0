@@ -1,211 +1,216 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:45554 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932318AbeFGMl0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Jun 2018 08:41:26 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id B6179873C6
-        for <linux-xfs@vger.kernel.org>; Thu,  7 Jun 2018 12:41:25 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 9A1552026DEF
-        for <linux-xfs@vger.kernel.org>; Thu,  7 Jun 2018 12:41:25 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 2/2] xfs: allow delwri requeue of wait listed buffers
-Date: Thu,  7 Jun 2018 08:41:25 -0400
-Message-Id: <20180607124125.38700-3-bfoster@redhat.com>
-In-Reply-To: <20180607124125.38700-1-bfoster@redhat.com>
-References: <20180607124125.38700-1-bfoster@redhat.com>
+Received: from mail-pl0-f46.google.com ([209.85.160.46]:43975 "EHLO
+        mail-pl0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753120AbeFGMtA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jun 2018 08:49:00 -0400
+Date: Thu, 7 Jun 2018 20:48:53 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH 6/6] xfs: make sure pretty printed geometry output matches
+Message-ID: <20180607124853.GC1103@desktop>
+References: <152821697018.24976.12939094615403004592.stgit@magnolia>
+ <152821701376.24976.4940261016750526905.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <152821701376.24976.4940261016750526905.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-If a delwri queue occurs of a buffer that was previously submitted
-from a delwri queue but has not yet been removed from a wait list,
-the queue sets _XBF_DELWRI_Q without changing the state of ->b_list.
-This occurs, for example, if another thread beats the submitter
-thread to the buffer lock after I/O completion. Once the submitter
-acquires the lock, it removes the buffer from the wait list and
-leaves a buffer with _XBF_DELWRI_Q set but not populated on a list.
-This results in a lost buffer submission and in turn can result in
-assert failures due to _XBF_DELWRI_Q being set on buffer reclaim or
-filesystem lockups if the buffer happens to cover an item in the
-AIL.
+On Tue, Jun 05, 2018 at 09:43:33AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Make sure that all of our commands that can print geometry information
+> all print the /same/ information.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  common/xfs        |   41 +++++++++++++++++++++++++
+>  tests/xfs/710     |   88 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/710.out |    2 +
+>  tests/xfs/group   |    1 +
+>  4 files changed, 132 insertions(+)
+>  create mode 100755 tests/xfs/710
+>  create mode 100644 tests/xfs/710.out
+> 
+> 
+> diff --git a/common/xfs b/common/xfs
+> index 3e34b118..bc35cd87 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -710,3 +710,44 @@ _require_xfs_db_write_array()
+>  	rm -f $TEST_DIR/$seq.img
+>  	[ $supported -eq 0 ] && _notrun "xfs_db write can't support array"
+>  }
+> +
+> +_require_xfs_spaceman_command()
+> +{
+> +	if [ -z "$1" ]
+> +	then
+> +		echo "Usage: _require_xfs_spaceman_command command [switch]" 1>&2
+> +		exit 1
+> +	fi
+> +	local command=$1
+> +	shift
+> +	local param="$*"
+> +	local param_checked=0
+> +	local opts=""
+> +
+> +	_require_command "$XFS_SPACEMAN_PROG" "xfs_spaceman"
+> +
+> +	testfile=$TEST_DIR/$$.xfs_spaceman
+> +	case $command in
+> +	*)
+> +		testio=`$XFS_SPACEMAN_PROG -c "help $command" $TEST_DIR 2>&1`
+> +	esac
+> +
+> +	rm -f $testfile 2>&1 > /dev/null
+> +	echo $testio | grep -q "not found" && \
+> +		_notrun "xfs_spaceman $command support is missing"
+> +	echo $testio | grep -q "Operation not supported" && \
+> +		_notrun "xfs_spaceman $command failed (old kernel/wrong fs?)"
+> +	echo $testio | grep -q "Invalid" && \
+> +		_notrun "xfs_spaceman $command failed (old kernel/wrong fs/bad args?)"
+> +	echo $testio | grep -q "foreign file active" && \
+> +		_notrun "xfs_spaceman $command not supported on $FSTYP"
+> +	echo $testio | grep -q "Function not implemented" && \
+> +		_notrun "xfs_spaceman $command support is missing (missing syscall?)"
+> +
+> +	[ -n "$param" ] || return
+> +
+> +	if [ $param_checked -eq 0 ]; then
+> +		$XFS_IO_PROG -c "help $command" | grep -q "^ $param --" || \
+                 ^^^^^^^^^^^ XFS_SPACEMAN_PROG
 
-This problem has been reproduced by repeated iterations of xfs/305
-on high CPU count (28xcpu) systems with limited memory (~1GB). Dirty
-dquot reclaim races with an xfsaild push of a separate dquot backed
-by the same buffer such that the buffer sits on the reclaim wait
-list at the time xfsaild attempts to queue it. Since the latter
-dquot has been flush locked but the underlying buffer not submitted
-for I/O, the dquot pins the AIL and causes the filesystem to
-livelock.
+> +			_notrun "xfs_spaceman $command doesn't support $param"
+> +	fi
+> +}
+> diff --git a/tests/xfs/710 b/tests/xfs/710
+> new file mode 100755
+> index 00000000..b03d4836
+> --- /dev/null
+> +++ b/tests/xfs/710
+> @@ -0,0 +1,88 @@
+> +#! /bin/bash
+> +# FS QA Test No. 710
+> +#
+> +# Make sure pretty printed XFS geometry is the same across all programs.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2018 Oracle, Inc.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1
+> +trap "_cleanup; rm -f $tmp.*; exit \$status" 0 1 2 3 15
 
-To address this problem, allow a delwri queue of a wait listed
-buffer to steal the buffer from the wait list and add it to the
-associated delwri queue. This is fundamentally safe because the
-purpose of the wait list is to provide synchronous I/O. The buffer
-lock of each wait listed buffer is cycled to ensure that I/O has
-completed. If another thread acquires the buffer lock first, then
-the I/O has completed and the submitter lock cycle is a formality.
+"rm -f $tmp.*" is done in _cleanup()
 
-The tradeoff to this approach is that the submitter loses the
-ability to check error state of stolen buffers. This is technically
-already possible as once the lock is released there is no guarantee
-another thread has not interfered with the buffer error state by the
-time the submitter reacquires the lock. Further, most critical error
-handling occurs in the iodone callbacks in completion context of the
-specific buffer since the delwri submitter has no idea which buffer
-failed in the first place. Finally, the stolen buffer case should be
-relatively rare and limited to races when under the highly parallel
-and low memory conditions described above.
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +rm -f $seqres.full
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/xfs
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_buf.c | 78 +++++++++++++++++++++++++++++++-----------------
- 1 file changed, 50 insertions(+), 28 deletions(-)
+No need to source common/xfs, common/rc will source it automatically.
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 912cbbf44db7..ca0520b173c6 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1917,6 +1917,8 @@ xfs_buf_delwri_queue(
- 	struct xfs_buf		*bp,
- 	struct list_head	*list)
- {
-+	bool			wait = (bp->b_flags & _XBF_DELWRI_W);
-+
- 	ASSERT(xfs_buf_islocked(bp));
- 	ASSERT(!(bp->b_flags & XBF_READ));
- 
-@@ -1926,23 +1928,37 @@ xfs_buf_delwri_queue(
- 	 * case.
- 	 */
- 	if (bp->b_flags & _XBF_DELWRI_Q) {
-+		ASSERT(!wait);
- 		trace_xfs_buf_delwri_queued(bp, _RET_IP_);
- 		return false;
- 	}
- 
- 	trace_xfs_buf_delwri_queue(bp, _RET_IP_);
- 
-+	/*
-+	 * If the buffer is on a wait list, the I/O has completed and the
-+	 * current thread beat the waiter to the lock. Drop the buffer from the
-+	 * wait list and requeue it. The waiter will either see that DELWRI_W is
-+	 * cleared or skip waiting on the buffer. The wait list reference is
-+	 * reused for the delwri queue.
-+	 */
-+	if (wait) {
-+		bp->b_flags &= ~_XBF_DELWRI_W;
-+		list_del_init(&bp->b_list);
-+	}
-+
- 	/*
- 	 * If a buffer gets written out synchronously or marked stale while it
- 	 * is on a delwri list we lazily remove it. To do this, the other party
- 	 * clears the  _XBF_DELWRI_Q flag but otherwise leaves the buffer alone.
--	 * It remains referenced and on the list.  In a rare corner case it
--	 * might get readded to a delwri list after the synchronous writeout, in
--	 * which case we need just need to re-add the flag here.
-+	 * It remains referenced and on the list. In a rare corner case it might
-+	 * get readded to a delwri list after the synchronous writeout, in which
-+	 * case we need just need to re-add the flag here.
- 	 */
- 	bp->b_flags |= _XBF_DELWRI_Q;
- 	if (list_empty(&bp->b_list)) {
--		atomic_inc(&bp->b_hold);
-+		if (!wait)
-+			atomic_inc(&bp->b_hold);
- 		list_add_tail(&bp->b_list, list);
- 	}
- 
-@@ -2082,14 +2098,27 @@ xfs_buf_delwri_submit(
- 
- 	/* Wait for IO to complete. */
- 	while (!list_empty(&wait_list)) {
-+		bool release = false;
-+
- 		bp = list_first_entry(&wait_list, struct xfs_buf, b_list);
- 
--		/* locking the buffer will wait for async IO completion. */
-+		/*
-+		 * Lock the buffer to wait for async I/O completion. Note that
-+		 * somebody else could have requeued the buffer in the meantime.
-+		 * That means some buffers might drop from the wait list, but
-+		 * that requires the buffer lock and thus means the I/O had
-+		 * completed first.
-+		 */
- 		xfs_buf_lock(bp);
--		bp->b_flags &= ~_XBF_DELWRI_W;
--		list_del_init(&bp->b_list);
-+		if (bp->b_flags & _XBF_DELWRI_W) {
-+			bp->b_flags &= ~_XBF_DELWRI_W;
-+			list_del_init(&bp->b_list);
-+			release = true;
-+		}
- 		error2 = bp->b_error;
--		xfs_buf_relse(bp);
-+		xfs_buf_unlock(bp);
-+		if (release)
-+			xfs_buf_rele(bp);
- 		if (!error)
- 			error = error2;
- 	}
-@@ -2120,38 +2149,31 @@ xfs_buf_delwri_pushbuf(
- 	LIST_HEAD		(submit_list);
- 	int			error;
- 
--	ASSERT(bp->b_flags & _XBF_DELWRI_Q);
--
- 	trace_xfs_buf_delwri_pushbuf(bp, _RET_IP_);
- 
- 	/*
--	 * Isolate the buffer to a new local list so we can submit it for I/O
--	 * independently from the rest of the original list.
-+	 * Make sure the buffer sits on a queue and isolate it to a new local
-+	 * list so we can submit it independently from the original list.
- 	 */
- 	xfs_buf_lock(bp);
-+	if (!(bp->b_flags & _XBF_DELWRI_Q) || bp->b_flags & _XBF_DELWRI_W) {
-+		xfs_buf_unlock(bp);
-+		return 0;
-+	}
- 	list_move(&bp->b_list, &submit_list);
- 	xfs_buf_unlock(bp);
- 
- 	/*
--	 * Delwri submission clears the DELWRI_Q buffer flag and returns with
--	 * the buffer on the wait list with an associated reference. Rather than
--	 * bounce the buffer from a local wait list back to the original list
--	 * after I/O completion, reuse the original list as the wait list.
-+	 * Delwri submission moves the buffer over to the wait list. Reuse the
-+	 * original list so there's no need to declare a local wait list.
-+	 *
-+	 * The buffer most likely still resides on the wait list by the time the
-+	 * lock is reacquired. Requeue it just in case somebody else beat us to
-+	 * the lock and changed the state.
- 	 */
- 	xfs_buf_delwri_submit_buffers(&submit_list, buffer_list);
--
--	/*
--	 * The buffer is now under I/O and wait listed as during typical delwri
--	 * submission. Lock the buffer to wait for I/O completion. Rather than
--	 * remove the buffer from the wait list and release the reference, we
--	 * want to return with the buffer queued to the original list. The
--	 * buffer already sits on the original list with a wait list reference,
--	 * however. If we let the queue inherit that wait list reference, all we
--	 * need to do is reset the DELWRI_Q flag.
--	 */
- 	xfs_buf_lock(bp);
--	error = bp->b_error;
--	bp->b_flags |= _XBF_DELWRI_Q;
-+	xfs_buf_delwri_queue(bp, buffer_list);
- 	xfs_buf_unlock(bp);
- 
- 	return error;
--- 
-2.17.1
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +_supported_os Linux
+> +
+> +_require_scratch_nocheck
+> +
+> +# Geometry printing wasn't unified until xfs_spaceman grew an 'info'
+> +# command, so skip this test if there is no spaceman or it doesn't
+> +# know what 'info' is.
+> +_require_xfs_spaceman_command "info"
+> +_require_command "$XFS_DB_PROG" xfs_db
+> +_require_command "$XFS_GROWFS_PROG" xfs_growfs
+> +_require_command "$XFS_INFO_PROG" xfs_info
 
+xfs_db and xfs_info (I fixed that up on commit) have been checked in
+common/rc, just need to check xfs_growfs here.
+
+These are all trivial and easy to fix, I'll just fix them on commit too.
+
+Thanks,
+Eryu
+
+> +
+> +_scratch_mkfs > $tmp.mkfs
+> +echo MKFS >> $seqres.full
+> +cat $tmp.mkfs >> $seqres.full
+> +
+> +_scratch_xfs_db -c "info" > $tmp.dbinfo
+> +echo DB >> $seqres.full
+> +cat $tmp.dbinfo >> $seqres.full
+> +diff -u $tmp.mkfs $tmp.dbinfo
+> +
+> +_scratch_mount
+> +
+> +$XFS_SPACEMAN_PROG -c "info" $SCRATCH_MNT > $tmp.spaceman
+> +echo SPACEMAN >> $seqres.full
+> +cat $tmp.spaceman >> $seqres.full
+> +diff -u $tmp.mkfs $tmp.spaceman
+> +
+> +$XFS_GROWFS_PROG -n $SCRATCH_MNT > $tmp.growfs
+> +echo GROWFS >> $seqres.full
+> +cat $tmp.growfs >> $seqres.full
+> +diff -u $tmp.mkfs $tmp.growfs
+> +
+> +$XFS_INFO_PROG $SCRATCH_MNT > $tmp.info
+> +echo INFO >> $seqres.full
+> +cat $tmp.info >> $seqres.full
+> +diff -u $tmp.mkfs $tmp.info
+> +
+> +echo "Silence is golden."
+> +status=0
+> +exit 0
+> diff --git a/tests/xfs/710.out b/tests/xfs/710.out
+> new file mode 100644
+> index 00000000..ae2659d5
+> --- /dev/null
+> +++ b/tests/xfs/710.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 710
+> +Silence is golden.
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index 2319f58f..9dd30ae0 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -445,3 +445,4 @@
+>  445 auto quick filestreams
+>  446 auto quick
+>  447 auto mount
+> +710 auto quick
+> 
