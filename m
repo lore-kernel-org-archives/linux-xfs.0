@@ -1,137 +1,426 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:54622 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751630AbeFJFHY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Jun 2018 01:07:24 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5A57EbK071951
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:07:23 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp2130.oracle.com with ESMTP id 2jg6b19w5w-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:07:23 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w5A57MPO001970
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:07:22 GMT
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w5A57Lgg002694
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:07:22 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v7 00/23] Parent Pointers v7
-Date: Sat,  9 Jun 2018 22:04:45 -0700
-Message-Id: <1528607108-11059-1-git-send-email-allison.henderson@oracle.com>
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:41201 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753078AbeFGMeq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jun 2018 08:34:46 -0400
+Date: Thu, 7 Jun 2018 20:34:38 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH 4/6] generic: test swapfile creation, activation, and
+ deactivation
+Message-ID: <20180607123438.GB1103@desktop>
+References: <152821697018.24976.12939094615403004592.stgit@magnolia>
+ <152821700095.24976.18190247208329715145.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <152821700095.24976.18190247208329715145.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-Hi all,
+On Tue, Jun 05, 2018 at 09:43:20AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Test swapfile activation and deactivation.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  tests/generic/708     |  115 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/708.out |    8 +++
+>  tests/generic/709     |   91 +++++++++++++++++++++++++++++++++++++++
+>  tests/generic/709.out |    3 +
+>  tests/generic/710     |   94 ++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/710.out |    3 +
+>  tests/generic/group   |    3 +
+>  7 files changed, 317 insertions(+)
+>  create mode 100755 tests/generic/708
+>  create mode 100644 tests/generic/708.out
+>  create mode 100755 tests/generic/709
+>  create mode 100644 tests/generic/709.out
+>  create mode 100755 tests/generic/710
+>  create mode 100644 tests/generic/710.out
+> 
+> 
+> diff --git a/tests/generic/708 b/tests/generic/708
+> new file mode 100755
+> index 00000000..dc3c2924
+> --- /dev/null
+> +++ b/tests/generic/708
+> @@ -0,0 +1,115 @@
+> +#! /bin/bash
+> +# FS QA Test No. 708
+> +#
+> +# Test various swapfile activation oddities.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2018 Oracle.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#
+> +#-----------------------------------------------------------------------
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	swapoff $swapfile 2> /dev/null
+> +	rm -f $swapfile
 
-This is the 7th version of parent pointer attributes for xfs. The goal of
-this patch set is to add a parent pointer attribute to each inode.  The
-attribute name containing the parent inode, generation, and directory offset,
-while the  attribute value contains the file name.  This feature will enable
-future optimizations for online scrub, or any other feature that could make
-use of quickly deriving an inodes path from  the mount point.  This set also
-introduces deferred attribute operations, though it is currently only used by
- the new parent pointer code.
+No need to remove $swapfile which is on $SCRATCH_DEV, but need to remove
+$tmp.* :)
 
-Some points of interest since v6:
-I've integrated most of the feedback provided on v6, and addressed some bugs
-I found during the log replay in patch 6.  Patches 2, 7, and 21 are new, so
-I would appreciate some focus on those.  I'm still working on an alternate
-solution to patch 3, but wanted to give folks an update for where things
-are at the moment.
+(Same in other tests)
 
-As always, comments and feedback are appreciated.  Thank you!
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +# real QA test starts here
+> +_supported_fs generic
+> +_supported_os Linux
+> +_require_scratch_swapfile
+> +_require_test_program mkswap
+> +_require_test_program swapon
 
-Allison Henderson (14):
-  xfs: Move fs/xfs/xfs_attr.h to fs/xfs/libxfs/xfs_attr.h
-  xfs: Add helper function xfs_attr_try_sf_addname
-  xfs: Add trans toggle to attr routines
-  xfs: Add attibute set and helper functions
-  xfs: Add attibute remove and helper functions
-  xfs: Set up infastructure for deferred attribute operations
-  xfs: Add xfs_attr_set_deferred and xfs_attr_remove_deferred
-  xfs: Remove all strlen calls in all xfs_attr_* functions for attr
-    names.
-  xfs: Hold inode locks in xfs_ialloc
-  xfs: Add parent pointers to rename
-  xfs: Add the parent pointer support to the superblock version 5.
-  xfs: Add helper function xfs_attr_list_context_init
-  xfs: Add parent pointer ioctl
-  xfs: Add delayed attributes error tag
+Need _require_xfs_io_command "fcollapse" too, and add 'collapse' group.
 
-Dave Chinner (5):
-  xfs: define parent pointer xattr format
-  xfs: extent transaction reservations for parent attributes
-  xfs: parent pointer attribute creation
-  xfs: add parent attributes to link
-  xfs: remove parent pointers in unlink
+> +
+> +rm -f $seqres.full
+> +_scratch_mkfs >>$seqres.full 2>&1
+> +_scratch_mount >>$seqres.full 2>&1
+> +
+> +swapfile=$SCRATCH_MNT/swap
+> +len=$((2 * 1048576))
+> +page_size=$(get_page_size)
+> +
+> +swapfile_cycle() {
+> +	local swapfile="$1"
+> +
+> +	$CHATTR_PROG +C $swapfile >> $seqres.full 2>&1
+> +	"$here/src/mkswap" $swapfile >> $seqres.full
+> +	"$here/src/swapon" $swapfile 2>&1 | _filter_scratch
+> +	swapoff $swapfile 2>> $seeqres.full
+> +	rm -f $swapfile
+> +}
+> +
+> +# Create a regular swap file
+> +echo "regular swap" | tee -a $seqres.full
+> +_pwrite_byte 0x58 0 $len $swapfile >> $seqres.full
+> +swapfile_cycle $swapfile
+> +
+> +# Create a sparse swap file
+> +echo "sparse swap" | tee -a $seqres.full
+> +$XFS_IO_PROG -f -c "truncate $len" $swapfile >> $seqres.full
+> +swapfile_cycle $swapfile
 
-Mark Tinguely (4):
-  xfs: get directory offset when adding directory name
-  xfs: get directory offset when removing directory name
-  xfs: get directory offset when replacing a directory name
-  xfs: add parent pointer support to attribute code
+This is already covered by generic/495.
 
- fs/xfs/Makefile                |   4 +
- fs/xfs/libxfs/xfs_attr.c       | 504 +++++++++++++++++++++++++------------
- fs/xfs/libxfs/xfs_attr.h       | 199 +++++++++++++++
- fs/xfs/libxfs/xfs_attr_leaf.c  |  12 +-
- fs/xfs/libxfs/xfs_attr_leaf.h  |  10 +-
- fs/xfs/libxfs/xfs_bmap.c       |  49 ++--
- fs/xfs/libxfs/xfs_bmap.h       |   1 +
- fs/xfs/libxfs/xfs_da_btree.h   |   1 +
- fs/xfs/libxfs/xfs_da_format.h  |  37 ++-
- fs/xfs/libxfs/xfs_defer.h      |   1 +
- fs/xfs/libxfs/xfs_dir2.c       |  41 +--
- fs/xfs/libxfs/xfs_dir2.h       |  10 +-
- fs/xfs/libxfs/xfs_dir2_block.c |   9 +-
- fs/xfs/libxfs/xfs_dir2_leaf.c  |   8 +-
- fs/xfs/libxfs/xfs_dir2_node.c  |   8 +-
- fs/xfs/libxfs/xfs_dir2_sf.c    |   6 +
- fs/xfs/libxfs/xfs_errortag.h   |   4 +-
- fs/xfs/libxfs/xfs_format.h     |  10 +-
- fs/xfs/libxfs/xfs_fs.h         |  43 ++++
- fs/xfs/libxfs/xfs_log_format.h |  44 +++-
- fs/xfs/libxfs/xfs_parent.c     | 171 +++++++++++++
- fs/xfs/libxfs/xfs_parent.h     |  38 +++
- fs/xfs/libxfs/xfs_sb.c         |   2 +
- fs/xfs/libxfs/xfs_trans_resv.c | 111 ++++++--
- fs/xfs/libxfs/xfs_trans_resv.h |   1 +
- fs/xfs/libxfs/xfs_types.h      |   1 +
- fs/xfs/xfs_acl.c               |  12 +-
- fs/xfs/xfs_attr.h              | 160 ------------
- fs/xfs/xfs_attr_item.c         | 560 +++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_attr_item.h         | 120 +++++++++
- fs/xfs/xfs_attr_list.c         |  75 ++++--
- fs/xfs/xfs_error.c             |   3 +
- fs/xfs/xfs_inode.c             | 188 ++++++++++----
- fs/xfs/xfs_ioctl.c             |  99 +++++++-
- fs/xfs/xfs_iops.c              |   6 +-
- fs/xfs/xfs_log_recover.c       | 173 +++++++++++++
- fs/xfs/xfs_ondisk.h            |   6 +
- fs/xfs/xfs_parent_utils.c      | 150 +++++++++++
- fs/xfs/xfs_parent_utils.h      |  32 +++
- fs/xfs/xfs_qm.c                |   1 +
- fs/xfs/xfs_super.c             |   5 +
- fs/xfs/xfs_symlink.c           |   2 +-
- fs/xfs/xfs_trans.h             |  14 ++
- fs/xfs/xfs_trans_attr.c        | 293 +++++++++++++++++++++
- fs/xfs/xfs_xattr.c             |  10 +-
- 45 files changed, 2733 insertions(+), 501 deletions(-)
- create mode 100644 fs/xfs/libxfs/xfs_attr.h
- create mode 100644 fs/xfs/libxfs/xfs_parent.c
- create mode 100644 fs/xfs/libxfs/xfs_parent.h
- delete mode 100644 fs/xfs/xfs_attr.h
- create mode 100644 fs/xfs/xfs_attr_item.c
- create mode 100644 fs/xfs/xfs_attr_item.h
- create mode 100644 fs/xfs/xfs_parent_utils.c
- create mode 100644 fs/xfs/xfs_parent_utils.h
- create mode 100644 fs/xfs/xfs_trans_attr.c
+> +
+> +# Create a swap file with a little too much junk on the end
+> +echo "too long swap" | tee -a $seqres.full
+> +_pwrite_byte 0x58 0 $((len + 3)) $swapfile >> $seqres.full
+> +swapfile_cycle $swapfile
+> +
+> +# Create a swap file with a large discontiguous range(?)
+> +echo "large discontig swap" | tee -a $seqres.full
+> +_pwrite_byte 0x58 0 $((len * 2)) $swapfile >> $seqres.full
+> +old_sz="$(stat -c '%s' $swapfile)"
+> +$XFS_IO_PROG -c "fcollapse $((len / 2)) $len" $swapfile >> $seqres.full 2>&1
+> +new_sz="$(stat -c '%s' $swapfile)"
+> +if [ $old_sz -gt $new_sz ]; then
+> +	swapfile_cycle $swapfile
+> +fi
+> +rm -f $swapfile
+> +
+> +# Create a swap file with a small discontiguous range(?)
+> +echo "small discontig swap" | tee -a $seqres.full
+> +_pwrite_byte 0x58 0 $((len + 1024)) $swapfile >> $seqres.full
+> +old_sz="$(stat -c '%s' $swapfile)"
+> +$XFS_IO_PROG -c "fcollapse 66560 1024" $swapfile >> $seqres.full 2>&1
+> +new_sz="$(stat -c '%s' $swapfile)"
+> +if [ $old_sz -gt $new_sz ]; then
+> +	swapfile_cycle $swapfile
+> +fi
+> +rm -f $swapfile
 
--- 
-2.7.4
+Above two cases are duplicated in generic/710 below? Perhaps generic/710
+could be dropped.
 
+Thanks,
+Eryu
+
+> +
+> +# Create a ridiculously small swap file.  Each swap file must have at least
+> +# two pages after the header page.
+> +echo "tiny swap" | tee -a $seqres.full
+> +tiny_len=$((page_size * 3))
+> +_pwrite_byte 0x58 0 $tiny_len $swapfile >> $seqres.full
+> +swapfile_cycle $swapfile
+> +
+> +status=0
+> +exit
+> diff --git a/tests/generic/708.out b/tests/generic/708.out
+> new file mode 100644
+> index 00000000..d002974c
+> --- /dev/null
+> +++ b/tests/generic/708.out
+> @@ -0,0 +1,8 @@
+> +QA output created by 708
+> +regular swap
+> +sparse swap
+> +swapon: Invalid argument
+> +too long swap
+> +large discontig swap
+> +small discontig swap
+> +tiny swap
+> diff --git a/tests/generic/709 b/tests/generic/709
+> new file mode 100755
+> index 00000000..5e636305
+> --- /dev/null
+> +++ b/tests/generic/709
+> @@ -0,0 +1,91 @@
+> +#! /bin/bash
+> +# FS QA Test No. 709
+> +#
+> +# Test various swapfile activation oddities on filesystems that support
+> +# fallocated swapfiles.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2018 Oracle.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#
+> +#-----------------------------------------------------------------------
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	swapoff $swapfile 2> /dev/null
+> +	rm -f $swapfile
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +# real QA test starts here
+> +_supported_fs generic
+> +_supported_os Linux
+> +_require_scratch_swapfile
+> +_require_test_program mkswap
+> +_require_test_program swapon
+> +_require_xfs_io_command "falloc"
+> +
+> +rm -f $seqres.full
+> +_scratch_mkfs >>$seqres.full 2>&1
+> +_scratch_mount >>$seqres.full 2>&1
+> +
+> +swapfile=$SCRATCH_MNT/swap
+> +len=$((2 * 1048576))
+> +page_size=$(get_page_size)
+> +
+> +swapfile_cycle() {
+> +	local swapfile="$1"
+> +
+> +	$CHATTR_PROG +C $swapfile >> $seqres.full 2>&1
+> +	"$here/src/mkswap" $swapfile >> $seqres.full
+> +	"$here/src/swapon" $swapfile 2>&1 | _filter_scratch
+> +	swapoff $swapfile 2>> $seeqres.full
+> +	rm -f $swapfile
+> +}
+> +
+> +# Create a fallocated swap file
+> +echo "fallocate swap" | tee -a $seqres.full
+> +$XFS_IO_PROG -f -c "falloc 0 $len" $swapfile >> $seqres.full
+> +$CHATTR_PROG +C $swapfile >> $seqres.full 2>&1
+> +"$here/src/mkswap" $swapfile
+> +"$here/src/swapon" $swapfile >> $seqres.full 2>&1 || \
+> +	_notrun "fallocated swap not supported here"
+> +swapoff $swapfile
+> +
+> +# Create a fallocated swap file and touch every other $PAGE_SIZE to create
+> +# a mess of written/unwritten extent records
+> +echo "mixed swap" | tee -a $seqres.full
+> +$XFS_IO_PROG -f -c "falloc 0 $len" $swapfile >> $seqres.full
+> +seq $page_size $((page_size * 2)) $len | while read offset; do
+> +	_pwrite_byte 0x58 $offset 1 $swapfile >> $seqres.full
+> +done
+> +swapfile_cycle $swapfile
+> +
+> +status=0
+> +exit
+> diff --git a/tests/generic/709.out b/tests/generic/709.out
+> new file mode 100644
+> index 00000000..90ba38ae
+> --- /dev/null
+> +++ b/tests/generic/709.out
+> @@ -0,0 +1,3 @@
+> +QA output created by 709
+> +fallocate swap
+> +mixed swap
+> diff --git a/tests/generic/710 b/tests/generic/710
+> new file mode 100755
+> index 00000000..e9dc3f08
+> --- /dev/null
+> +++ b/tests/generic/710
+> @@ -0,0 +1,94 @@
+> +#! /bin/bash
+> +# FS QA Test No. 710
+> +#
+> +# Test various swapfile activation oddities, having used fcollapse to
+> +# create discontiguous ranges in the file.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2018 Oracle.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#
+> +#-----------------------------------------------------------------------
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	swapoff $swapfile 2> /dev/null
+> +	rm -f $swapfile
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +# real QA test starts here
+> +_supported_fs generic
+> +_supported_os Linux
+> +_require_scratch_swapfile
+> +_require_test_program mkswap
+> +_require_test_program swapon
+> +_require_xfs_io_command "fcollapse"
+> +
+> +rm -f $seqres.full
+> +_scratch_mkfs >>$seqres.full 2>&1
+> +_scratch_mount >>$seqres.full 2>&1
+> +
+> +swapfile=$SCRATCH_MNT/swap
+> +len=$((2 * 1048576))
+> +page_size=$(get_page_size)
+> +
+> +swapfile_cycle() {
+> +	local swapfile="$1"
+> +
+> +	"$here/src/mkswap" $swapfile >> $seqres.full
+> +	"$here/src/swapon" $swapfile 2>&1 | _filter_scratch
+> +	swapoff $swapfile 2>> $seeqres.full
+> +	rm -f $swapfile
+> +}
+> +
+> +# Create a swap file with a large discontiguous range(?)
+> +echo "large discontig swap" | tee -a $seqres.full
+> +_pwrite_byte 0x58 0 $((len * 2)) $swapfile >> $seqres.full
+> +old_sz="$(stat -c '%s' $swapfile)"
+> +$XFS_IO_PROG -c "fcollapse $((len / 2)) $len" $swapfile >> $seqres.full 2>&1
+> +new_sz="$(stat -c '%s' $swapfile)"
+> +if [ $old_sz -gt $new_sz ]; then
+> +	swapfile_cycle $swapfile
+> +fi
+> +rm -f $swapfile
+> +
+> +# Create a swap file with a small discontiguous range(?)
+> +echo "small discontig swap" | tee -a $seqres.full
+> +_pwrite_byte 0x58 0 $((len + 1024)) $swapfile >> $seqres.full
+> +old_sz="$(stat -c '%s' $swapfile)"
+> +$XFS_IO_PROG -c "fcollapse 66560 1024" $swapfile >> $seqres.full 2>&1
+> +new_sz="$(stat -c '%s' $swapfile)"
+> +if [ $old_sz -gt $new_sz ]; then
+> +	swapfile_cycle $swapfile
+> +fi
+> +rm -f $swapfile
+> +
+> +status=0
+> +exit
+> diff --git a/tests/generic/710.out b/tests/generic/710.out
+> new file mode 100644
+> index 00000000..ba1f8e40
+> --- /dev/null
+> +++ b/tests/generic/710.out
+> @@ -0,0 +1,3 @@
+> +QA output created by 710
+> +large discontig swap
+> +small discontig swap
+> diff --git a/tests/generic/group b/tests/generic/group
+> index 4339c64c..6d747450 100644
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -497,3 +497,6 @@
+>  493 auto quick swap
+>  494 auto quick swap punch
+>  495 auto quick swap
+> +708 auto quick swap
+> +709 auto quick swap
+> +710 auto quick swap collapse
+> 
