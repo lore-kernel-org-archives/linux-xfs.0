@@ -1,28 +1,25 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:16165 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752620AbeFGFci (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jun 2018 01:32:38 -0400
-Received: from dave by dastard with local (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1fQnXI-0004uH-5G
-        for linux-xfs@vger.kernel.org; Thu, 07 Jun 2018 15:32:36 +1000
-Date: Thu, 7 Jun 2018 15:32:36 +1000
-From: Dave Chinner <david@fromorbit.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:41556 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751428AbeFGFu3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jun 2018 01:50:29 -0400
 Subject: Re: [PATCH 1/2] xfs: setup VFS i_rwsem lockdep state correctly
-Message-ID: <20180607053236.GR10363@dastard>
 References: <20180607052132.6207-1-david@fromorbit.com>
  <20180607052132.6207-2-david@fromorbit.com>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <dbdac3b5-9918-cefa-efdc-fa0ab8b5646f@oracle.com>
+Date: Wed, 6 Jun 2018 22:50:23 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 In-Reply-To: <20180607052132.6207-2-david@fromorbit.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-On Thu, Jun 07, 2018 at 03:21:31PM +1000, Dave Chinner wrote:
+On 06/06/2018 10:21 PM, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
 > When lockdep is enabled, it changes the type of the inode i_rwsem
@@ -37,19 +34,29 @@ On Thu, Jun 07, 2018 at 03:21:31PM +1000, Dave Chinner wrote:
 > potentially unsafe.
 > 
 > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-
-I just realised that the VFS equivalent patch has made it upstream,
-too, which would help explain this a bit more. Darrick, can you add
-this to the commit message:
-
-"This change is necessary because the equivalent fixes to the VFS
-code made in commit 1e2e547a93a0 ("do d_instantiate/unlock_new_inode
-combinations safely") are not relevant to XFS as it has it's own
-internal inode cache lookup and instantiation routines."
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> ---
+>   fs/xfs/xfs_iops.c | 8 ++++++++
+>   1 file changed, 8 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 29484091c0d2..3020c57fc125 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -1258,6 +1258,14 @@ xfs_setup_inode(
+>   	xfs_diflags_to_iflags(inode, ip);
+>   
+>   	if (S_ISDIR(inode->i_mode)) {
+> +		/*
+> +		 * We set the i_rwsem class here to avoid potential races with
+> +		 * lockdep_annotate_inode_mutex_key() reinitialising the lock
+> +		 * after a filehandle lookup has already found the inode in
+> +		 * cache before it has been unlocked via unlock_new_inode().
+> +		 */
+> +		lockdep_set_class(&inode->i_rwsem,
+> +				  &inode->i_sb->s_type->i_mutex_dir_key);
+>   		lockdep_set_class(&ip->i_lock.mr_lock, &xfs_dir_ilock_class);
+>   		ip->d_ops = ip->i_mount->m_dir_inode_ops;
+>   	} else {
+> 
+Ok, you can add my review:
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
