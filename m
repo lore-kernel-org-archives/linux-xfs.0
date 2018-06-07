@@ -1,226 +1,507 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:55912 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932681AbeFGPNy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jun 2018 11:13:54 -0400
-Date: Thu, 7 Jun 2018 08:13:50 -0700
+Received: from aserp2120.oracle.com ([141.146.126.78]:33062 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933039AbeFGPXz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jun 2018 11:23:55 -0400
+Date: Thu, 7 Jun 2018 08:23:50 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 6/6] xfs: make sure pretty printed geometry output matches
-Message-ID: <20180607151350.GH25007@magnolia>
-References: <152821697018.24976.12939094615403004592.stgit@magnolia>
- <152821701376.24976.4940261016750526905.stgit@magnolia>
- <20180607124853.GC1103@desktop>
+Subject: Re: [PATCH 1/3] xfs: move various type verifiers to common file
+Message-ID: <20180607152350.GJ25007@magnolia>
+References: <20180607052751.6541-1-david@fromorbit.com>
+ <20180607052751.6541-2-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180607124853.GC1103@desktop>
+In-Reply-To: <20180607052751.6541-2-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jun 07, 2018 at 08:48:53PM +0800, Eryu Guan wrote:
-> On Tue, Jun 05, 2018 at 09:43:33AM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Make sure that all of our commands that can print geometry information
-> > all print the /same/ information.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  common/xfs        |   41 +++++++++++++++++++++++++
-> >  tests/xfs/710     |   88 +++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/xfs/710.out |    2 +
-> >  tests/xfs/group   |    1 +
-> >  4 files changed, 132 insertions(+)
-> >  create mode 100755 tests/xfs/710
-> >  create mode 100644 tests/xfs/710.out
-> > 
-> > 
-> > diff --git a/common/xfs b/common/xfs
-> > index 3e34b118..bc35cd87 100644
-> > --- a/common/xfs
-> > +++ b/common/xfs
-> > @@ -710,3 +710,44 @@ _require_xfs_db_write_array()
-> >  	rm -f $TEST_DIR/$seq.img
-> >  	[ $supported -eq 0 ] && _notrun "xfs_db write can't support array"
-> >  }
-> > +
-> > +_require_xfs_spaceman_command()
-> > +{
-> > +	if [ -z "$1" ]
-> > +	then
-> > +		echo "Usage: _require_xfs_spaceman_command command [switch]" 1>&2
-> > +		exit 1
-> > +	fi
-> > +	local command=$1
-> > +	shift
-> > +	local param="$*"
-> > +	local param_checked=0
-> > +	local opts=""
-> > +
-> > +	_require_command "$XFS_SPACEMAN_PROG" "xfs_spaceman"
-> > +
-> > +	testfile=$TEST_DIR/$$.xfs_spaceman
-> > +	case $command in
-> > +	*)
-> > +		testio=`$XFS_SPACEMAN_PROG -c "help $command" $TEST_DIR 2>&1`
-> > +	esac
-> > +
-> > +	rm -f $testfile 2>&1 > /dev/null
-> > +	echo $testio | grep -q "not found" && \
-> > +		_notrun "xfs_spaceman $command support is missing"
-> > +	echo $testio | grep -q "Operation not supported" && \
-> > +		_notrun "xfs_spaceman $command failed (old kernel/wrong fs?)"
-> > +	echo $testio | grep -q "Invalid" && \
-> > +		_notrun "xfs_spaceman $command failed (old kernel/wrong fs/bad args?)"
-> > +	echo $testio | grep -q "foreign file active" && \
-> > +		_notrun "xfs_spaceman $command not supported on $FSTYP"
-> > +	echo $testio | grep -q "Function not implemented" && \
-> > +		_notrun "xfs_spaceman $command support is missing (missing syscall?)"
-> > +
-> > +	[ -n "$param" ] || return
-> > +
-> > +	if [ $param_checked -eq 0 ]; then
-> > +		$XFS_IO_PROG -c "help $command" | grep -q "^ $param --" || \
->                  ^^^^^^^^^^^ XFS_SPACEMAN_PROG
+On Thu, Jun 07, 2018 at 03:27:49PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> > +			_notrun "xfs_spaceman $command doesn't support $param"
-> > +	fi
-> > +}
-> > diff --git a/tests/xfs/710 b/tests/xfs/710
-> > new file mode 100755
-> > index 00000000..b03d4836
-> > --- /dev/null
-> > +++ b/tests/xfs/710
-> > @@ -0,0 +1,88 @@
-> > +#! /bin/bash
-> > +# FS QA Test No. 710
-> > +#
-> > +# Make sure pretty printed XFS geometry is the same across all programs.
-> > +#
-> > +#-----------------------------------------------------------------------
-> > +# Copyright (c) 2018 Oracle, Inc.
-> > +#
-> > +# This program is free software; you can redistribute it and/or
-> > +# modify it under the terms of the GNU General Public License as
-> > +# published by the Free Software Foundation.
-> > +#
-> > +# This program is distributed in the hope that it would be useful,
-> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > +# GNU General Public License for more details.
-> > +#
-> > +# You should have received a copy of the GNU General Public License
-> > +# along with this program; if not, write the Free Software Foundation,
-> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> > +#
-> > +#-----------------------------------------------------------------------
-> > +#
-> > +
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +
-> > +here=`pwd`
-> > +tmp=/tmp/$$
-> > +status=1
-> > +trap "_cleanup; rm -f $tmp.*; exit \$status" 0 1 2 3 15
+> New verification functions like xfs_verify_fsbno() and
+> xfs_verify_agino() are spread across multiple files and different
+> header files. They really don't fit cleanly into the places they've
+> been put, and have wider scope than the current header includes.
 > 
-> "rm -f $tmp.*" is done in _cleanup()
+> Move the type verifiers to a new file in libxfs (xfs-types.c) and
+> the prototypes to xfs_types.h where they will be visible to all the
+> code that uses the types.
 > 
-> > +
-> > +_cleanup()
-> > +{
-> > +	cd /
-> > +	rm -f $tmp.*
-> > +}
-> > +
-> > +rm -f $seqres.full
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +. ./common/xfs
-> 
-> No need to source common/xfs, common/rc will source it automatically.
-> 
-> > +
-> > +# real QA test starts here
-> > +_supported_fs xfs
-> > +_supported_os Linux
-> > +
-> > +_require_scratch_nocheck
-> > +
-> > +# Geometry printing wasn't unified until xfs_spaceman grew an 'info'
-> > +# command, so skip this test if there is no spaceman or it doesn't
-> > +# know what 'info' is.
-> > +_require_xfs_spaceman_command "info"
-> > +_require_command "$XFS_DB_PROG" xfs_db
-> > +_require_command "$XFS_GROWFS_PROG" xfs_growfs
-> > +_require_command "$XFS_INFO_PROG" xfs_info
-> 
-> xfs_db and xfs_info (I fixed that up on commit) have been checked in
-> common/rc, just need to check xfs_growfs here.
-> 
-> These are all trivial and easy to fix, I'll just fix them on commit too.
+> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 
-Ok, thank you!
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
+> ---
+>  fs/xfs/Makefile              |   1 +
+>  fs/xfs/libxfs/xfs_alloc.c    |  49 ----------
+>  fs/xfs/libxfs/xfs_alloc.h    |   4 -
+>  fs/xfs/libxfs/xfs_ialloc.c   |  90 ------------------
+>  fs/xfs/libxfs/xfs_ialloc.h   |   7 --
+>  fs/xfs/libxfs/xfs_rtbitmap.c |  12 ---
+>  fs/xfs/libxfs/xfs_types.c    | 173 +++++++++++++++++++++++++++++++++++
+>  fs/xfs/libxfs/xfs_types.h    |  19 ++++
+>  fs/xfs/scrub/agheader.c      |   2 +-
+>  9 files changed, 194 insertions(+), 163 deletions(-)
+>  create mode 100644 fs/xfs/libxfs/xfs_types.c
 > 
-> Thanks,
-> Eryu
+> diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+> index 19a1f8064d8a..5333f7cbc95a 100644
+> --- a/fs/xfs/Makefile
+> +++ b/fs/xfs/Makefile
+> @@ -50,6 +50,7 @@ xfs-y				+= $(addprefix libxfs/, \
+>  				   xfs_sb.o \
+>  				   xfs_symlink_remote.o \
+>  				   xfs_trans_resv.o \
+> +				   xfs_types.o \
+>  				   )
+>  # xfs_rtbitmap is shared with libxfs
+>  xfs-$(CONFIG_XFS_RT)		+= $(addprefix libxfs/, \
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 1db50cfc0212..eef466260d43 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -3123,55 +3123,6 @@ xfs_alloc_query_all(
+>  	return xfs_btree_query_all(cur, xfs_alloc_query_range_helper, &query);
+>  }
+>  
+> -/* Find the size of the AG, in blocks. */
+> -xfs_agblock_t
+> -xfs_ag_block_count(
+> -	struct xfs_mount	*mp,
+> -	xfs_agnumber_t		agno)
+> -{
+> -	ASSERT(agno < mp->m_sb.sb_agcount);
+> -
+> -	if (agno < mp->m_sb.sb_agcount - 1)
+> -		return mp->m_sb.sb_agblocks;
+> -	return mp->m_sb.sb_dblocks - (agno * mp->m_sb.sb_agblocks);
+> -}
+> -
+> -/*
+> - * Verify that an AG block number pointer neither points outside the AG
+> - * nor points at static metadata.
+> - */
+> -bool
+> -xfs_verify_agbno(
+> -	struct xfs_mount	*mp,
+> -	xfs_agnumber_t		agno,
+> -	xfs_agblock_t		agbno)
+> -{
+> -	xfs_agblock_t		eoag;
+> -
+> -	eoag = xfs_ag_block_count(mp, agno);
+> -	if (agbno >= eoag)
+> -		return false;
+> -	if (agbno <= XFS_AGFL_BLOCK(mp))
+> -		return false;
+> -	return true;
+> -}
+> -
+> -/*
+> - * Verify that an FS block number pointer neither points outside the
+> - * filesystem nor points at static AG metadata.
+> - */
+> -bool
+> -xfs_verify_fsbno(
+> -	struct xfs_mount	*mp,
+> -	xfs_fsblock_t		fsbno)
+> -{
+> -	xfs_agnumber_t		agno = XFS_FSB_TO_AGNO(mp, fsbno);
+> -
+> -	if (agno >= mp->m_sb.sb_agcount)
+> -		return false;
+> -	return xfs_verify_agbno(mp, agno, XFS_FSB_TO_AGBNO(mp, fsbno));
+> -}
+> -
+>  /* Is there a record covering a given extent? */
+>  int
+>  xfs_alloc_has_record(
+> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+> index 1651d924aaf1..e716c993ac4c 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.h
+> +++ b/fs/xfs/libxfs/xfs_alloc.h
+> @@ -242,10 +242,6 @@ int xfs_alloc_query_range(struct xfs_btree_cur *cur,
+>  		xfs_alloc_query_range_fn fn, void *priv);
+>  int xfs_alloc_query_all(struct xfs_btree_cur *cur, xfs_alloc_query_range_fn fn,
+>  		void *priv);
+> -xfs_agblock_t xfs_ag_block_count(struct xfs_mount *mp, xfs_agnumber_t agno);
+> -bool xfs_verify_agbno(struct xfs_mount *mp, xfs_agnumber_t agno,
+> -		xfs_agblock_t agbno);
+> -bool xfs_verify_fsbno(struct xfs_mount *mp, xfs_fsblock_t fsbno);
+>  
+>  int xfs_alloc_has_record(struct xfs_btree_cur *cur, xfs_agblock_t bno,
+>  		xfs_extlen_t len, bool *exist);
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> index 3f551eb29157..8ec39dad62d7 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> @@ -2674,96 +2674,6 @@ xfs_ialloc_pagi_init(
+>  	return 0;
+>  }
+>  
+> -/* Calculate the first and last possible inode number in an AG. */
+> -void
+> -xfs_ialloc_agino_range(
+> -	struct xfs_mount	*mp,
+> -	xfs_agnumber_t		agno,
+> -	xfs_agino_t		*first,
+> -	xfs_agino_t		*last)
+> -{
+> -	xfs_agblock_t		bno;
+> -	xfs_agblock_t		eoag;
+> -
+> -	eoag = xfs_ag_block_count(mp, agno);
+> -
+> -	/*
+> -	 * Calculate the first inode, which will be in the first
+> -	 * cluster-aligned block after the AGFL.
+> -	 */
+> -	bno = round_up(XFS_AGFL_BLOCK(mp) + 1,
+> -			xfs_ialloc_cluster_alignment(mp));
+> -	*first = XFS_OFFBNO_TO_AGINO(mp, bno, 0);
+> -
+> -	/*
+> -	 * Calculate the last inode, which will be at the end of the
+> -	 * last (aligned) cluster that can be allocated in the AG.
+> -	 */
+> -	bno = round_down(eoag, xfs_ialloc_cluster_alignment(mp));
+> -	*last = XFS_OFFBNO_TO_AGINO(mp, bno, 0) - 1;
+> -}
+> -
+> -/*
+> - * Verify that an AG inode number pointer neither points outside the AG
+> - * nor points at static metadata.
+> - */
+> -bool
+> -xfs_verify_agino(
+> -	struct xfs_mount	*mp,
+> -	xfs_agnumber_t		agno,
+> -	xfs_agino_t		agino)
+> -{
+> -	xfs_agino_t		first;
+> -	xfs_agino_t		last;
+> -
+> -	xfs_ialloc_agino_range(mp, agno, &first, &last);
+> -	return agino >= first && agino <= last;
+> -}
+> -
+> -/*
+> - * Verify that an FS inode number pointer neither points outside the
+> - * filesystem nor points at static AG metadata.
+> - */
+> -bool
+> -xfs_verify_ino(
+> -	struct xfs_mount	*mp,
+> -	xfs_ino_t		ino)
+> -{
+> -	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, ino);
+> -	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ino);
+> -
+> -	if (agno >= mp->m_sb.sb_agcount)
+> -		return false;
+> -	if (XFS_AGINO_TO_INO(mp, agno, agino) != ino)
+> -		return false;
+> -	return xfs_verify_agino(mp, agno, agino);
+> -}
+> -
+> -/* Is this an internal inode number? */
+> -bool
+> -xfs_internal_inum(
+> -	struct xfs_mount	*mp,
+> -	xfs_ino_t		ino)
+> -{
+> -	return ino == mp->m_sb.sb_rbmino || ino == mp->m_sb.sb_rsumino ||
+> -		(xfs_sb_version_hasquota(&mp->m_sb) &&
+> -		 xfs_is_quota_inode(&mp->m_sb, ino));
+> -}
+> -
+> -/*
+> - * Verify that a directory entry's inode number doesn't point at an internal
+> - * inode, empty space, or static AG metadata.
+> - */
+> -bool
+> -xfs_verify_dir_ino(
+> -	struct xfs_mount	*mp,
+> -	xfs_ino_t		ino)
+> -{
+> -	if (xfs_internal_inum(mp, ino))
+> -		return false;
+> -	return xfs_verify_ino(mp, ino);
+> -}
+> -
+>  /* Is there an inode record covering a given range of inode numbers? */
+>  int
+>  xfs_ialloc_has_inode_record(
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
+> index 144f3eac9b93..90b09c5f163b 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.h
+> +++ b/fs/xfs/libxfs/xfs_ialloc.h
+> @@ -169,12 +169,5 @@ int xfs_inobt_insert_rec(struct xfs_btree_cur *cur, uint16_t holemask,
+>  		int *stat);
+>  
+>  int xfs_ialloc_cluster_alignment(struct xfs_mount *mp);
+> -void xfs_ialloc_agino_range(struct xfs_mount *mp, xfs_agnumber_t agno,
+> -		xfs_agino_t *first, xfs_agino_t *last);
+> -bool xfs_verify_agino(struct xfs_mount *mp, xfs_agnumber_t agno,
+> -		xfs_agino_t agino);
+> -bool xfs_verify_ino(struct xfs_mount *mp, xfs_ino_t ino);
+> -bool xfs_internal_inum(struct xfs_mount *mp, xfs_ino_t ino);
+> -bool xfs_verify_dir_ino(struct xfs_mount *mp, xfs_ino_t ino);
+>  
+>  #endif	/* __XFS_IALLOC_H__ */
+> diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
+> index ffc72075a44e..65fc4ed2e9a1 100644
+> --- a/fs/xfs/libxfs/xfs_rtbitmap.c
+> +++ b/fs/xfs/libxfs/xfs_rtbitmap.c
+> @@ -1080,18 +1080,6 @@ xfs_rtalloc_query_all(
+>  	return xfs_rtalloc_query_range(tp, &keys[0], &keys[1], fn, priv);
+>  }
+>  
+> -/*
+> - * Verify that an realtime block number pointer doesn't point off the
+> - * end of the realtime device.
+> - */
+> -bool
+> -xfs_verify_rtbno(
+> -	struct xfs_mount	*mp,
+> -	xfs_rtblock_t		rtbno)
+> -{
+> -	return rtbno < mp->m_sb.sb_rblocks;
+> -}
+> -
+>  /* Is the given extent all free? */
+>  int
+>  xfs_rtalloc_extent_is_free(
+> diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
+> new file mode 100644
+> index 000000000000..2e2a243cef2e
+> --- /dev/null
+> +++ b/fs/xfs/libxfs/xfs_types.c
+> @@ -0,0 +1,173 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.
+> + * Copyright (C) 2017 Oracle.
+> + * All Rights Reserved.
+> + */
+> +#include "xfs.h"
+> +#include "xfs_fs.h"
+> +#include "xfs_format.h"
+> +#include "xfs_log_format.h"
+> +#include "xfs_shared.h"
+> +#include "xfs_trans_resv.h"
+> +#include "xfs_bit.h"
+> +#include "xfs_sb.h"
+> +#include "xfs_mount.h"
+> +#include "xfs_defer.h"
+> +#include "xfs_inode.h"
+> +#include "xfs_btree.h"
+> +#include "xfs_rmap.h"
+> +#include "xfs_alloc_btree.h"
+> +#include "xfs_alloc.h"
+> +#include "xfs_ialloc.h"
+> +
+> +/* Find the size of the AG, in blocks. */
+> +xfs_agblock_t
+> +xfs_ag_block_count(
+> +	struct xfs_mount	*mp,
+> +	xfs_agnumber_t		agno)
+> +{
+> +	ASSERT(agno < mp->m_sb.sb_agcount);
+> +
+> +	if (agno < mp->m_sb.sb_agcount - 1)
+> +		return mp->m_sb.sb_agblocks;
+> +	return mp->m_sb.sb_dblocks - (agno * mp->m_sb.sb_agblocks);
+> +}
+> +
+> +/*
+> + * Verify that an AG block number pointer neither points outside the AG
+> + * nor points at static metadata.
+> + */
+> +bool
+> +xfs_verify_agbno(
+> +	struct xfs_mount	*mp,
+> +	xfs_agnumber_t		agno,
+> +	xfs_agblock_t		agbno)
+> +{
+> +	xfs_agblock_t		eoag;
+> +
+> +	eoag = xfs_ag_block_count(mp, agno);
+> +	if (agbno >= eoag)
+> +		return false;
+> +	if (agbno <= XFS_AGFL_BLOCK(mp))
+> +		return false;
+> +	return true;
+> +}
+> +
+> +/*
+> + * Verify that an FS block number pointer neither points outside the
+> + * filesystem nor points at static AG metadata.
+> + */
+> +bool
+> +xfs_verify_fsbno(
+> +	struct xfs_mount	*mp,
+> +	xfs_fsblock_t		fsbno)
+> +{
+> +	xfs_agnumber_t		agno = XFS_FSB_TO_AGNO(mp, fsbno);
+> +
+> +	if (agno >= mp->m_sb.sb_agcount)
+> +		return false;
+> +	return xfs_verify_agbno(mp, agno, XFS_FSB_TO_AGBNO(mp, fsbno));
+> +}
+> +
+> +/* Calculate the first and last possible inode number in an AG. */
+> +void
+> +xfs_agino_range(
+> +	struct xfs_mount	*mp,
+> +	xfs_agnumber_t		agno,
+> +	xfs_agino_t		*first,
+> +	xfs_agino_t		*last)
+> +{
+> +	xfs_agblock_t		bno;
+> +	xfs_agblock_t		eoag;
+> +
+> +	eoag = xfs_ag_block_count(mp, agno);
+> +
+> +	/*
+> +	 * Calculate the first inode, which will be in the first
+> +	 * cluster-aligned block after the AGFL.
+> +	 */
+> +	bno = round_up(XFS_AGFL_BLOCK(mp) + 1,
+> +			xfs_ialloc_cluster_alignment(mp));
+> +	*first = XFS_OFFBNO_TO_AGINO(mp, bno, 0);
+> +
+> +	/*
+> +	 * Calculate the last inode, which will be at the end of the
+> +	 * last (aligned) cluster that can be allocated in the AG.
+> +	 */
+> +	bno = round_down(eoag, xfs_ialloc_cluster_alignment(mp));
+> +	*last = XFS_OFFBNO_TO_AGINO(mp, bno, 0) - 1;
+> +}
+> +
+> +/*
+> + * Verify that an AG inode number pointer neither points outside the AG
+> + * nor points at static metadata.
+> + */
+> +bool
+> +xfs_verify_agino(
+> +	struct xfs_mount	*mp,
+> +	xfs_agnumber_t		agno,
+> +	xfs_agino_t		agino)
+> +{
+> +	xfs_agino_t		first;
+> +	xfs_agino_t		last;
+> +
+> +	xfs_agino_range(mp, agno, &first, &last);
+> +	return agino >= first && agino <= last;
+> +}
+> +
+> +/*
+> + * Verify that an FS inode number pointer neither points outside the
+> + * filesystem nor points at static AG metadata.
+> + */
+> +bool
+> +xfs_verify_ino(
+> +	struct xfs_mount	*mp,
+> +	xfs_ino_t		ino)
+> +{
+> +	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, ino);
+> +	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ino);
+> +
+> +	if (agno >= mp->m_sb.sb_agcount)
+> +		return false;
+> +	if (XFS_AGINO_TO_INO(mp, agno, agino) != ino)
+> +		return false;
+> +	return xfs_verify_agino(mp, agno, agino);
+> +}
+> +
+> +/* Is this an internal inode number? */
+> +bool
+> +xfs_internal_inum(
+> +	struct xfs_mount	*mp,
+> +	xfs_ino_t		ino)
+> +{
+> +	return ino == mp->m_sb.sb_rbmino || ino == mp->m_sb.sb_rsumino ||
+> +		(xfs_sb_version_hasquota(&mp->m_sb) &&
+> +		 xfs_is_quota_inode(&mp->m_sb, ino));
+> +}
+> +
+> +/*
+> + * Verify that a directory entry's inode number doesn't point at an internal
+> + * inode, empty space, or static AG metadata.
+> + */
+> +bool
+> +xfs_verify_dir_ino(
+> +	struct xfs_mount	*mp,
+> +	xfs_ino_t		ino)
+> +{
+> +	if (xfs_internal_inum(mp, ino))
+> +		return false;
+> +	return xfs_verify_ino(mp, ino);
+> +}
+> +
+> +/*
+> + * Verify that an realtime block number pointer doesn't point off the
+> + * end of the realtime device.
+> + */
+> +bool
+> +xfs_verify_rtbno(
+> +	struct xfs_mount	*mp,
+> +	xfs_rtblock_t		rtbno)
+> +{
+> +	return rtbno < mp->m_sb.sb_rblocks;
+> +}
+> diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+> index b72ae343140e..4055d62f690c 100644
+> --- a/fs/xfs/libxfs/xfs_types.h
+> +++ b/fs/xfs/libxfs/xfs_types.h
+> @@ -147,4 +147,23 @@ typedef struct xfs_bmbt_irec
+>  	xfs_exntst_t	br_state;	/* extent state */
+>  } xfs_bmbt_irec_t;
+>  
+> +/*
+> + * Type verifier functions
+> + */
+> +struct xfs_mount;
+> +
+> +xfs_agblock_t xfs_ag_block_count(struct xfs_mount *mp, xfs_agnumber_t agno);
+> +bool xfs_verify_agbno(struct xfs_mount *mp, xfs_agnumber_t agno,
+> +		xfs_agblock_t agbno);
+> +bool xfs_verify_fsbno(struct xfs_mount *mp, xfs_fsblock_t fsbno);
+> +
+> +void xfs_agino_range(struct xfs_mount *mp, xfs_agnumber_t agno,
+> +		xfs_agino_t *first, xfs_agino_t *last);
+> +bool xfs_verify_agino(struct xfs_mount *mp, xfs_agnumber_t agno,
+> +		xfs_agino_t agino);
+> +bool xfs_verify_ino(struct xfs_mount *mp, xfs_ino_t ino);
+> +bool xfs_internal_inum(struct xfs_mount *mp, xfs_ino_t ino);
+> +bool xfs_verify_dir_ino(struct xfs_mount *mp, xfs_ino_t ino);
+> +bool xfs_verify_rtbno(struct xfs_mount *mp, xfs_rtblock_t rtbno);
+> +
+>  #endif	/* __XFS_TYPES_H__ */
+> diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+> index fb9637ff4bde..9bb0745f1ad2 100644
+> --- a/fs/xfs/scrub/agheader.c
+> +++ b/fs/xfs/scrub/agheader.c
+> @@ -867,7 +867,7 @@ xfs_scrub_agi(
+>  	}
+>  
+>  	/* Check inode counters */
+> -	xfs_ialloc_agino_range(mp, agno, &first_agino, &last_agino);
+> +	xfs_agino_range(mp, agno, &first_agino, &last_agino);
+>  	icount = be32_to_cpu(agi->agi_count);
+>  	if (icount > last_agino - first_agino + 1 ||
+>  	    icount < be32_to_cpu(agi->agi_freecount))
+> -- 
+> 2.17.0
 > 
-> > +
-> > +_scratch_mkfs > $tmp.mkfs
-> > +echo MKFS >> $seqres.full
-> > +cat $tmp.mkfs >> $seqres.full
-> > +
-> > +_scratch_xfs_db -c "info" > $tmp.dbinfo
-> > +echo DB >> $seqres.full
-> > +cat $tmp.dbinfo >> $seqres.full
-> > +diff -u $tmp.mkfs $tmp.dbinfo
-> > +
-> > +_scratch_mount
-> > +
-> > +$XFS_SPACEMAN_PROG -c "info" $SCRATCH_MNT > $tmp.spaceman
-> > +echo SPACEMAN >> $seqres.full
-> > +cat $tmp.spaceman >> $seqres.full
-> > +diff -u $tmp.mkfs $tmp.spaceman
-> > +
-> > +$XFS_GROWFS_PROG -n $SCRATCH_MNT > $tmp.growfs
-> > +echo GROWFS >> $seqres.full
-> > +cat $tmp.growfs >> $seqres.full
-> > +diff -u $tmp.mkfs $tmp.growfs
-> > +
-> > +$XFS_INFO_PROG $SCRATCH_MNT > $tmp.info
-> > +echo INFO >> $seqres.full
-> > +cat $tmp.info >> $seqres.full
-> > +diff -u $tmp.mkfs $tmp.info
-> > +
-> > +echo "Silence is golden."
-> > +status=0
-> > +exit 0
-> > diff --git a/tests/xfs/710.out b/tests/xfs/710.out
-> > new file mode 100644
-> > index 00000000..ae2659d5
-> > --- /dev/null
-> > +++ b/tests/xfs/710.out
-> > @@ -0,0 +1,2 @@
-> > +QA output created by 710
-> > +Silence is golden.
-> > diff --git a/tests/xfs/group b/tests/xfs/group
-> > index 2319f58f..9dd30ae0 100644
-> > --- a/tests/xfs/group
-> > +++ b/tests/xfs/group
-> > @@ -445,3 +445,4 @@
-> >  445 auto quick filestreams
-> >  446 auto quick
-> >  447 auto mount
-> > +710 auto quick
-> > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
