@@ -1,35 +1,34 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38004 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932251AbeFGUpr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Jun 2018 16:45:47 -0400
-Date: Thu, 7 Jun 2018 22:45:44 +0200
-From: Mark Fasheh <mfasheh@suse.de>
-Subject: Re: [PATCH v3 1/2] vfs: allow dedupe of user owned read-only files
-Message-ID: <20180607204544.GB28053@wotan.suse.de>
-Reply-To: Mark Fasheh <mfasheh@suse.de>
-References: <20180607173854.15747-1-mfasheh@suse.de>
- <20180607173854.15747-2-mfasheh@suse.de>
- <20180607181751.GN25007@magnolia>
+Received: from mail-sn1nam02on0134.outbound.protection.outlook.com ([104.47.36.134]:28256
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751773AbeFGWZ6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 7 Jun 2018 18:25:58 -0400
+From: "Xu, Wen" <wen.xu@gatech.edu>
+Subject: Re: NULL pointer dereference in xfs_trans_binval() when mounting and
+ operating a crafted xfs image
+Date: Thu, 7 Jun 2018 22:25:56 +0000
+Message-ID: <5627CC54-D26D-4946-BEAD-6770E7D8A883@gatech.edu>
+References: <66348561-0B03-4CAE-893A-25161D66D6AF@gatech.edu>
+ <fff2a2c8-b607-05ea-e97e-f53f054fb428@sandeen.net>
+In-Reply-To: <fff2a2c8-b607-05ea-e97e-f53f054fb428@sandeen.net>
+Content-Language: en-US
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <393794DAA10E804387FA8B130D384F48@namprd07.prod.outlook.com>
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180607181751.GN25007@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Al Viro <viro@ZenIV.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, Adam Borowski <kilobyte@angband.pl>, David Sterba <dsterba@suse.cz>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-Hi Darrick,
-
-On Thu, Jun 07, 2018 at 11:17:51AM -0700, Darrick J. Wong wrote:
-> Looks ok, but could you please update the manpage for
-> ioctl_fideduperange to elaborate on when userspace can expect EPERM?
-> 
-> Acked-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Yes, good idea. I can handle that.
+I tested the patch that works.
 
 Thanks,
-	--Mark
+Wen
+
+> On Jun 7, 2018, at 6:01 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+> 
+> if (bp && (xfs_da_shrink_inode(args, 0, bp) != 0))
+
