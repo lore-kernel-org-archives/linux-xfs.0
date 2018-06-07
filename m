@@ -1,163 +1,164 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41906 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752156AbeFGXzf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Jun 2018 19:55:35 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v5 0/4] xfsprogs: add mkfs.xfs configuration file parsing support
-Date: Thu,  7 Jun 2018 16:55:29 -0700
-Message-Id: <20180607235533.20391-1-mcgrof@kernel.org>
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:47399 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751885AbeFGAbg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Jun 2018 20:31:36 -0400
+Date: Thu, 7 Jun 2018 10:31:32 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 01/14] xfs: repair the AGF and AGFL
+Message-ID: <20180607003132.GQ10363@dastard>
+References: <152770863951.11611.5866814627357136911.stgit@magnolia>
+ <152770864591.11611.5564813732568495676.stgit@magnolia>
+ <20180604015255.GJ10363@dastard>
+ <20180605231856.GO9437@magnolia>
+ <20180606040624.GO10363@dastard>
+ <20180606045603.GV9437@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180606045603.GV9437@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com, "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-This is v5 series addresses the feedback from the last v4 series. Biggest
-change is to drop the man pages for now and yield Sandeed to brush up
-the final wording.
+On Tue, Jun 05, 2018 at 09:56:03PM -0700, Darrick J. Wong wrote:
+> On Wed, Jun 06, 2018 at 02:06:24PM +1000, Dave Chinner wrote:
+> > On Tue, Jun 05, 2018 at 04:18:56PM -0700, Darrick J. Wong wrote:
+> > > On Mon, Jun 04, 2018 at 11:52:55AM +1000, Dave Chinner wrote:
+> > > > > +int
+> > > > > +xfs_repair_mod_fdblocks(
+> > > > > +	struct xfs_scrub_context	*sc,
+> > > > > +	int64_t				delta_fdblocks)
+> > > > > +{
+> > > > > +	int				error;
+> > > > > +
+> > > > > +	if (delta_fdblocks == 0)
+> > > > > +		return 0;
+> > > > > +
+> > > > > +	if (delta_fdblocks < 0) {
+> > > > > +		error = xfs_trans_reserve_more(sc->tp, -delta_fdblocks, 0);
+> > > > > +		if (error)
+> > > > > +			return error;
+> > > > > +	}
+> > > > > +
+> > > > > +	xfs_trans_mod_sb(sc->tp, XFS_TRANS_SB_FDBLOCKS, delta_fdblocks);
+> > > > 
+> > > > This seems a little hacky - it's working around a transaction
+> > > > reservation overflow warning, right?
+> > > 
+> > > More than that -- we're trying to avoid the situation where the incore
+> > > free block counter goes negative.
+> > 
+> > Which will only happen if we overflow the transaction reservation,
+> > yes?
+> > 
+> > > Things go south pretty quickly when
+> > > that happens because transaction reservations succeed when there's not
+> > > enough free space to accomodate them.  We'd rather error out to
+> > > userspace and have the admin unmount and xfs_repair than risk letting
+> > > the fs really blow up.
+> > 
+> > Sure, but I really don't like retrospective modification of
+> > transaction reservations.  The repair code is already supposed to
+> > have a reservation that is big enough to rebuild the AG trees, so
+> > why should we need to reserve more space while rebuilding the AG
+> > trees?
+> > 
+> > > Note that this function has to be called before repair dirties anything
+> > > in the repair transaction so we're still at a place where we could back
+> > > out with no harm done.
+> > 
+> > Still doesn't explain to me what the problem is that this code works
+> > around. And because I don't understand why it is necessary, this just
+> > seems like a hack....
+> 
+> It /is/ a hack while I figure out a sane strategy for checking the
+> summary counters that doesn't regularly shut down the filesystem.  I've
+> thought that perhaps we should leave the global counters alone.  If
+> something corrupts agf_flcount to 0x1000032 (when the real flcount is
+> 0x32) then we're going to subtract a huge quantity from the global
+> counter, which is totally stupid.
 
-I threw back the enum for the source since I really did not like the
-asprintf() approach to allocate a string for the source, the required
-extra error handling for that was just not appealing to me and I think
-the enum works much better for it. I also kept the enum work to ensure
-the compiler warns on missing subopt parsing.
+But that sort of thing is easy to deal with via bounding:
 
-You can also get the code from my kernel.org xfsprogs-dev 20180607-own-parser-v5
-branch [0].
+	min(agf_flcount, XFS_AGFL_SIZE(mp))
 
-Reviews, questions, or rants are greatly appreciated.
+I'd like to avoid hacks for the "near to ENOSPC" conditions for the
+moment. Repair being unreliable at ENOSPC, or even having repair
+shut down because of unexpected ENOSPC is fine for the initial
+commits. Document it as a problem that needs fixing and add it to
+the list of things hat need to be addressed before we can remove the
+EXPERIMENTAL tag.
 
-[0] https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/xfsprogs-dev.git/log/?h=20180607-own-parser-v5
+> I've been mulling over what to do here -- normally, repair always writes
+> out fresh AG headers and summary counters and under normal circumstance
+> we'll always keep the AG counts and the global counts in sync, right?
 
-Changes on v5:
+Userspace repair rebuilds the freespace and inode trees in each ag,
+and the rebuild keeps it's own count of the free space, used and
+free inodes tracked in the new versions of the trees.  Once all AGs
+have been rebuilt, it sums the counts gathered in memory from each
+AG, and then it calls sync_sb() to write those aggregated counters
+back into the global superblock.
 
-- We no force sysconfdir=/etc if not set so we also drop the last patch
-  for debian as its no longer needed
+IOWs, userspace repair doesn't rely on the existing counters (on
+disk or in memory) at all, nor does it try to keep them up to date
+as it goes. it keeps it's own state and assumes nothing else is
+modifying the filesystem so it's always going to be correct.
 
-- We use config_check_bool() as during review on the last series we
-  failed to pick up on the fact that we were *not* detecting if a value
-  for a field was greater than 1, so we were allowing for instance crc=1
-  although this was silently mapping to crc=1. Note that although this
-  issue was present, the check for conflicts is still in effect and
-  functional. The only reason the issue with bools existed is we cast
-  down the uint64_t to bool and that resolves the issue. For now all
-  subuopt parsers use config_check_bool(). When and if other values are
-  introduced they can change this.
+> The idea I have to solve all these problems is to add a superblock state
+> flag that we set whenever we think the global counters might be wrong.
+> We'd only do this if we had to fix the counters in an AGF, or if the
+> agfl padding fixer triggered, etc.
 
-- Use fstat() and openat() as requested instead of the odd checks for
-  first and second characters. This feels nicer.
+That's pretty much what I suggested via an "unclean unmount" state
+flag. That way a new mount would always trigger a resync.
 
-- Use negative return values and fixate errno in better locations.
+> Then we add a new FSSUMMARY scrubber that only does anything if the
+> 'counters might be wrong' flag is set.  When it does, we freeze the fs,
+> tally up all the counters and reservations, and fix the counters if we
+> can.  Then unfreeze and exit.  This way we're not locking the entire
+> filesystem every time scrub runs, but we have a way to fix the global
+> counters if we need to.  Granted, figuring out the total amount of
+> incore reservation might not be quick.
 
-- Drop the man pages and yield to Sandeed for that.
+Right - that's basically the problem doing it at mount time avoids -
+having to freeze the filesystem for an unknown amount of time to fix
+it up. I agree with you that "unmount/mount" is not really an option
+for fixing this up, and that freeze/fix/thaw is a much preferrable
+option. However, this really is something that needs to be scheduled
+for a maintenance period, not be done on a live production
+filesystem where a freeze will violate performance SLAs....
 
-- Re-introduce the source type enum
+IOWs, I think this "sync global counters" op needs to be a separate
+admin controlled repair operation, not something we do automatically
+as part of the normal scrub/repair process. i.e. when repair
+completes, it tells the admin that:
 
-- Dealing with a config file is now split into an open call and a
-  separate parse file. This does read much better now.
+**** IMPORTANT - Repair operations still pending ****
 
-- Fix a missing free(line) on the switch for parsing when we don't have
-  an error.
+There are pending repair operations that need a quiesced filesystem
+to perform. Quiescing the filesystem will block all access to the
+filesystem while the repair operation is being performed, so this
+should be performed only during a scheduled maintenance period.
 
-- Adjust random error messages to reflect a bit better what is issue
-  creeped up.
+To perform the pending repair operations, please run:
 
-Changes on v4:
+<repair prog> --quiesce --pending <mntpt>
 
-- Tons of man page documentation enhancements from Darrick.
+**** /IMPORTANT ****
 
-- Adjusted a few error code messages/ paths to make more sense as per
-  Darrick's feedback.
+> The other repair functions no longer need xfs_repair_mod_fdblocks; if
+> they has to make a correction to any of the per-ag free counters all
+> they do is set the "wrong counters" flag.
 
-Changes on v3:
+*nod*
 
-- Prefix errors on the configuration parsing with config file used and
-  exact line.
+Cheers,
 
-- Use uint64_t throughout all parsers as requested.
-
-- Parse the CLI early for -c as I originally had implemented this on v1
-  but now platform_getoptreset() to reset the opts.
-
-- Drop the enum for the source type for the configuration file type,
-  note that since we rely on the stack to set the variables we should
-  then always set the dft.src on main().
-
-- Use getline() for fetching lines as requested
-
-- Add a special iscomment() and isempty() to handle all space and
-  comment parsing. Now when PARSE_INVALID issued we really mean it.
-
-- Embrace latest bikeshed preferences:
-        config.c, config.h, random function names
-
-- Add man pages to be parsed via configure so that @sysconfigdir@ gets
-  properly parsed
-
-- get_confopts() now iterates over the known sections tab and gives you
-  the right struct right away.
-
-- Add respecification checks for a section.
-
-- Add respecification checks for -c, -c is only allowed once.
-
-- Add --sysconfigdir to debian/rules, note that if you *don't* set
-  --sysconfigdir your man pages will end up with ${prefix}. We could
-  add a secondary target parsing just in case, or we can do some hacks
-  with autoconf for this, but I don't think its worth it. Other packages
-  deal with this by having ./configure always run with --sysconfigdir
-  set (see systemd for instance).
-
-- Reduced the number of declared enums, only enums for the config
-  subparams which are currently supported for parsing are declared.
-
-- mkfs.xfs -c foo now will search for $PWD/foo and if that fails the
-  sysconfigdir/mkfs.xfs.d/foo.
-
-- mkfs.xfs -c ../foo works and so should ./foo, etc.
-
-- The MKFS_XFS_CONFIG variable support was dropped in favor or just
-  allowing the user to specify the full path now.
-
-- Embraces xfsprogs coding style, c'est la vie.
-
-Changes on v2:
-
-- Stayed with our own parser as its the smallest and we're willing to
-  maintain it as its simple and clear.
-
-- Use -c for the configuration file, and drop the "type" nomenclature to
-  avoid confusion on the interwebs.
-
-- Start to split files off
-
-- Duplicate a bit of items as suggested at LSFMM for the configuration
-  parser structures. We can later consolidate if we think its really
-  needed, however we want the freedom to change these as we see fit and
-  most importantly keep the code apart.
-
-- Conflict resolution and validation is managed now by piggy backing off
-  of the idea of using the defaults to instantiate CLI parameters. CLI
-  always overrides.
-
-
-Luis R. Rodriguez (4):
-  mkfs: distinguish between struct sb_feat_args and struct cli_params
-  mkfs: move shared config structs and into their own headers
-  mkfs: replace defaults source with an enum
-  mkfs.xfs: add configuration file parsing support using our own parser
-
- configure.ac         |   1 +
- include/builddefs.in |   2 +
- mkfs/Makefile        |   2 +-
- mkfs/config.c        | 664 +++++++++++++++++++++++++++++++++++++++++++++++++++
- mkfs/config.h        | 121 ++++++++++
- mkfs/xfs_mkfs.c      | 126 +++++-----
- 6 files changed, 855 insertions(+), 61 deletions(-)
- create mode 100644 mkfs/config.c
- create mode 100644 mkfs/config.h
-
+Dave.
 -- 
-2.16.3
-
+Dave Chinner
+david@fromorbit.com
