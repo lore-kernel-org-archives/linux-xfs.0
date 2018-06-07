@@ -1,194 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:36767 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932552AbeFGIja (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jun 2018 04:39:30 -0400
-Date: Thu, 7 Jun 2018 16:39:23 +0800
+Received: from mail-pl0-f65.google.com ([209.85.160.65]:44615 "EHLO
+        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932118AbeFGLhV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jun 2018 07:37:21 -0400
+Date: Thu, 7 Jun 2018 19:37:13 +0800
 From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH 3/3] xfstests: dedupe with random io race test
-Message-ID: <20180607083923.GG2861@desktop>
-References: <20180601080733.20703-1-zlang@redhat.com>
- <20180601080733.20703-3-zlang@redhat.com>
+Subject: Re: [PATCH 5/6] xfs: abstract xfs_info into $XFS_INFO_PROG
+Message-ID: <20180607113713.GA1103@desktop>
+References: <152821697018.24976.12939094615403004592.stgit@magnolia>
+ <152821700731.24976.1667061625518547754.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180601080733.20703-3-zlang@redhat.com>
+In-Reply-To: <152821700731.24976.1667061625518547754.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Zorro Lang <zlang@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Fri, Jun 01, 2018 at 04:07:33PM +0800, Zorro Lang wrote:
-> Run several duperemove processes with fsstress on same directory at
-> same time. Make sure the race won't break the fs or kernel.
+On Tue, Jun 05, 2018 at 09:43:27AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> Abstract calls to xfs_info into $XFS_INFO_PROG like we do for all other
+> xfs utilities.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  tests/shared/010     | 111 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/shared/010.out |   2 +
->  tests/shared/group   |   1 +
->  3 files changed, 114 insertions(+)
->  create mode 100755 tests/shared/010
->  create mode 100644 tests/shared/010.out
-> 
-> diff --git a/tests/shared/010 b/tests/shared/010
-> new file mode 100755
-> index 00000000..b9618ee6
-> --- /dev/null
-> +++ b/tests/shared/010
-> @@ -0,0 +1,111 @@
-> +#! /bin/bash
-> +# FS QA Test 010
-> +#
-> +# Dedup & random I/O race test, do multi-threads fsstress and dedupe on
-> +# same directory/files
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2018 Red Hat Inc.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +	kill_all_stress
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +. ./common/reflink
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# real QA test starts here
-> +
-> +# duperemove only supports btrfs and xfs (with reflink feature).
-> +# Add other filesystems if it supports more later.
-> +_supported_fs xfs btrfs
-> +_supported_os Linux
-> +_require_scratch_dedupe
-> +_require_command "$DUPEREMOVE_PROG" duperemove
-> +_require_command "$KILLALL_PROG" killall
-> +
-> +_scratch_mkfs > $seqres.full 2>&1
-> +_scratch_mount >> $seqres.full 2>&1
-> +
-> +function kill_all_stress()
-> +{
-> +	local f=1
-> +	local d=1
-> +
-> +	# kill the bash process which loop run duperemove
-> +	if [ -n "$loop_dedup_pid" ]; then
-> +		kill $loop_dedup_pid > /dev/null 2>&1
-> +		wait $loop_dedup_pid > /dev/null 2>&1
-> +		loop_dedup_pid=""
-> +	fi
-> +
-> +	# Make sure all fsstress and duperemove processes get killed
-> +	while [ $((f + d)) -ne 0 ]; do
-> +		$KILLALL_PROG -q $FSSTRESS_PROG > /dev/null 2>&1
-> +		$KILLALL_PROG -q $DUPEREMOVE_PROG > /dev/null 2>&1
+>  common/attr      |    2 +-
+>  common/config    |    1 +
+>  common/populate  |   18 +++++++++---------
+>  common/rc        |    2 +-
 
-"sleep 1" right after killall to give the processes to exit?
+Better to make xfs_info mandatory too when testing xfs, so I did the
+below diff on commit
 
-> +		f=`ps -eLf | grep $FSSTRESS_PROG | grep -v "grep" | wc -l`
-> +		d=`ps -eLf | grep $DUPEREMOVE_PROG | grep -v "grep" | wc -l`
-> +		sleep 2
+diff --git a/common/rc b/common/rc
+index f04c9ea2fd89..9d6665b6c4d7 100644
+--- a/common/rc
++++ b/common/rc
+@@ -136,6 +136,7 @@ case "$FSTYP" in
+         [ "$XFS_REPAIR_PROG" = "" ] && _fatal "xfs_repair not found"
+         [ "$XFS_DB_PROG" = "" ] && _fatal "xfs_db not found"
+         [ "$MKFS_XFS_PROG" = "" ] && _fatal "mkfs_xfs not found"
++        [ "$XFS_INFO_PROG" = "" ] && _fatal "xfs_info not found"
 
-So we don't waste another 2s here if fsstress and duperemove all died in
-this 2s.
-
-> +	done
-> +}
-> +
-> +SLEEP_TIME=$((50 * TIME_FACTOR))
-
-sleep_time, use lower case for local variables.
-
-> +
-> +# Start fsstress
-> +fsstress_opts="-r -n 1000 -p $((5 * LOAD_FACTOR))"
-> +$FSSTRESS_PROG $fsstress_opts -d $SCRATCH_MNT -l 0 >> $seqres.full 2>&1 &
-> +loop_dedup_pid=""
-> +# Start several dedupe processes on same directory
-> +for ((i = 0; i < $((2 * LOAD_FACTOR)); i++)); do
-> +	while true; do
-> +		$DUPEREMOVE_PROG -dr --dedupe-options=same $SCRATCH_MNT/ \
-> +			>>$seqres.full 2>&1
-> +	done &
-> +	loop_dedup_pid="$! $loop_dedup_pid"
-> +done
-> +
-> +# End the test after $SLEEP_TIME seconds
-> +sleep $SLEEP_TIME
-> +kill_all_stress
-> +
-> +# umount and mount again, verify pagecache contents don't mutate and a fresh
-> +# read from the disk also doesn't show mutations.
-> +find $testdir -type f -exec md5sum {} \; > $TEST_DIR/${seq}md5.sum
-> +_scratch_cycle_mount
-> +md5sum -c --quiet $TEST_DIR/${seq}md5.sum
-> +
-> +echo "Silence is golden"
-> +status=0
-> +exit
-> diff --git a/tests/shared/010.out b/tests/shared/010.out
-> new file mode 100644
-> index 00000000..1d83a8d6
-> --- /dev/null
-> +++ b/tests/shared/010.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 010
-> +Silence is golden
-> diff --git a/tests/shared/group b/tests/shared/group
-> index 2255844b..9ab88bac 100644
-> --- a/tests/shared/group
-> +++ b/tests/shared/group
-> @@ -12,6 +12,7 @@
->  007 dangerous_fuzzers
->  008 auto quick dedupe
->  009 auto dedupe
-> +010 auto dedupe
-
-Also add 'stress' group?
+         . ./common/xfs
+         ;;
 
 Thanks,
 Eryu
-
->  032 mkfs auto quick
->  272 auto enospc rw
->  289 auto quick
-> -- 
-> 2.14.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
