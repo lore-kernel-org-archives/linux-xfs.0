@@ -1,381 +1,361 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:42292 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933283AbeFGPRO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jun 2018 11:17:14 -0400
-Date: Thu, 7 Jun 2018 08:17:10 -0700
+Received: from aserp2130.oracle.com ([141.146.126.79]:57970 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933751AbeFGPyn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jun 2018 11:54:43 -0400
+Date: Thu, 7 Jun 2018 08:54:37 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 4/6] generic: test swapfile creation, activation, and
- deactivation
-Message-ID: <20180607151710.GI25007@magnolia>
-References: <152821697018.24976.12939094615403004592.stgit@magnolia>
- <152821700095.24976.18190247208329715145.stgit@magnolia>
+Subject: Re: [PATCH 2/3] xfs: replace do_mod with native operations
+Message-ID: <20180607155437.GK25007@magnolia>
+References: <20180607052751.6541-1-david@fromorbit.com>
+ <20180607052751.6541-3-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <152821700095.24976.18190247208329715145.stgit@magnolia>
+In-Reply-To: <20180607052751.6541-3-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Jun 07, 2018 at 03:27:50PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> do_mod() is a hold-over from when we have different sizes for file
+> offsets and and other internal values for 40 bit XFS filesystems.
+> Hence depending on build flags variables passed to do_mod() could
+> change size. We no longer support those small format filesystems and
+> hence everything is of fixed size theses days, even on 32 bit
+> platforms.
+> 
+> As such, we can convert all the do_mod() callers to platform
+> optimised modulus operations as defined by linux/math64.h.
+> Individual conversions depend on the types of variables being used.
+> 
+> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 37 +++++++++++++++++++++++--------------
+>  fs/xfs/xfs_bmap_util.c   | 14 +++++++++-----
+>  fs/xfs/xfs_inode.c       |  2 +-
+>  fs/xfs/xfs_iomap.h       |  4 ++--
+>  fs/xfs/xfs_linux.h       | 19 -------------------
+>  fs/xfs/xfs_log_recover.c | 32 +++++++++++++++++++++++++-------
+>  fs/xfs/xfs_rtalloc.c     | 15 +++++++++++----
+>  7 files changed, 71 insertions(+), 52 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 3de047eb8209..4d8fd37ec7ae 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -2923,7 +2923,7 @@ xfs_bmap_extsize_align(
+>  	 * perform this alignment, or if a truncate shot us in the
+>  	 * foot.
+>  	 */
+> -	temp = do_mod(orig_off, extsz);
+> +	div_u64_rem(orig_off, extsz, &temp);
+>  	if (temp) {
+>  		align_alen += temp;
+>  		align_off -= temp;
+> @@ -3497,15 +3497,17 @@ xfs_bmap_btalloc(
+>  	/* apply extent size hints if obtained earlier */
+>  	if (align) {
+>  		args.prod = align;
+> -		if ((args.mod = (xfs_extlen_t)do_mod(ap->offset, args.prod)))
+> -			args.mod = (xfs_extlen_t)(args.prod - args.mod);
+> +		div_u64_rem(ap->offset, args.prod, &args.mod);
+> +		if (args.mod)
+> +			args.mod = args.prod - args.mod;
+>  	} else if (mp->m_sb.sb_blocksize >= PAGE_SIZE) {
+>  		args.prod = 1;
+>  		args.mod = 0;
+>  	} else {
+>  		args.prod = PAGE_SIZE >> mp->m_sb.sb_blocklog;
+> -		if ((args.mod = (xfs_extlen_t)(do_mod(ap->offset, args.prod))))
+> -			args.mod = (xfs_extlen_t)(args.prod - args.mod);
+> +		div_u64_rem(ap->offset, args.prod, &args.mod);
+> +		if (args.mod)
+> +			args.mod = args.prod - args.mod;
+>  	}
+>  	/*
+>  	 * If we are not low on available data blocks, and the
+> @@ -4953,13 +4955,15 @@ xfs_bmap_del_extent_real(
+>  	if (whichfork == XFS_DATA_FORK && XFS_IS_REALTIME_INODE(ip)) {
+>  		xfs_fsblock_t	bno;
+>  		xfs_filblks_t	len;
+> +		xfs_extlen_t	mod;
+> +
+> +		bno = div_u64_rem(del->br_startblock, mp->m_sb.sb_rextsize,
+> +				  &mod);
+> +		ASSERT(mod == 0);
+> +		len = div_u64_rem(del->br_blockcount, mp->m_sb.sb_rextsize,
+> +				  &mod);
+> +		ASSERT(mod == 0);
+>  
+> -		ASSERT(do_mod(del->br_blockcount, mp->m_sb.sb_rextsize) == 0);
+> -		ASSERT(do_mod(del->br_startblock, mp->m_sb.sb_rextsize) == 0);
+> -		bno = del->br_startblock;
+> -		len = del->br_blockcount;
+> -		do_div(bno, mp->m_sb.sb_rextsize);
+> -		do_div(len, mp->m_sb.sb_rextsize);
+>  		error = xfs_rtfree_extent(tp, bno, (xfs_extlen_t)len);
+>  		if (error)
+>  			goto done;
+> @@ -5296,9 +5300,12 @@ __xfs_bunmapi(
+>  			del.br_blockcount = max_len;
+>  		}
+>  
+> +		if (!isrt)
+> +			goto delete;
+> +
+>  		sum = del.br_startblock + del.br_blockcount;
+> -		if (isrt &&
+> -		    (mod = do_mod(sum, mp->m_sb.sb_rextsize))) {
+> +		div_u64_rem(sum, mp->m_sb.sb_rextsize, &mod);
+> +		if (mod) {
+>  			/*
+>  			 * Realtime extent not lined up at the end.
+>  			 * The extent could have been split into written
+> @@ -5345,7 +5352,8 @@ __xfs_bunmapi(
+>  				goto error0;
+>  			goto nodelete;
+>  		}
+> -		if (isrt && (mod = do_mod(del.br_startblock, mp->m_sb.sb_rextsize))) {
+> +		div_u64_rem(del.br_startblock, mp->m_sb.sb_rextsize, &mod);
+> +		if (mod) {
+>  			/*
+>  			 * Realtime extent is lined up at the end but not
+>  			 * at the front.  We'll get rid of full extents if
+> @@ -5414,6 +5422,7 @@ __xfs_bunmapi(
+>  			}
+>  		}
+>  
+> +delete:
+>  		if (wasdel) {
+>  			error = xfs_bmap_del_extent_delay(ip, whichfork, &icur,
+>  					&got, &del);
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 7d26933a542f..13e6caf8b801 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -80,6 +80,7 @@ xfs_bmap_rtalloc(
+>  	int		error;		/* error return value */
+>  	xfs_mount_t	*mp;		/* mount point structure */
+>  	xfs_extlen_t	prod = 0;	/* product factor for allocators */
+> +	xfs_extlen_t	mod = 0;	/* product factor for allocators */
 
-Test swapfile activation and deactivation.
+I don't think we need the initial value or the comment.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v2: fix duplicated test hunks and other bugs
----
- tests/generic/708     |   90 ++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/708.out |    4 ++
- tests/generic/709     |   93 +++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/709.out |    3 ++
- tests/generic/710     |   96 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/710.out |    3 ++
- tests/generic/group   |    3 ++
- 7 files changed, 292 insertions(+)
- create mode 100755 tests/generic/708
- create mode 100644 tests/generic/708.out
- create mode 100755 tests/generic/709
- create mode 100644 tests/generic/709.out
- create mode 100755 tests/generic/710
- create mode 100644 tests/generic/710.out
+>  	xfs_extlen_t	ralen = 0;	/* realtime allocation length */
+>  	xfs_extlen_t	align;		/* minimum allocation alignment */
+>  	xfs_rtblock_t	rtb;
+> @@ -99,7 +100,8 @@ xfs_bmap_rtalloc(
+>  	 * If the offset & length are not perfectly aligned
+>  	 * then kill prod, it will just get us in trouble.
+>  	 */
+> -	if (do_mod(ap->offset, align) || ap->length % align)
+> +	div_u64_rem(ap->offset, align, &mod);
+> +	if (mod || ap->length % align)
+>  		prod = 1;
+>  	/*
+>  	 * Set ralen to be the actual requested length in rtextents.
+> @@ -936,9 +938,11 @@ xfs_alloc_file_space(
+>  			do_div(s, extsz);
+>  			s *= extsz;
+>  			e = startoffset_fsb + allocatesize_fsb;
+> -			if ((temp = do_mod(startoffset_fsb, extsz)))
+> +			div_u64_rem(startoffset_fsb, extsz, &temp);
+> +			if (temp)
+>  				e += temp;
+> -			if ((temp = do_mod(e, extsz)))
+> +			div_u64_rem(e, extsz, &temp);
+> +			if (temp)
+>  				e += extsz - temp;
+>  		} else {
+>  			s = 0;
+> @@ -1090,7 +1094,7 @@ xfs_adjust_extent_unmap_boundaries(
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  	struct xfs_bmbt_irec	imap;
+>  	int			nimap, error;
+> -	xfs_extlen_t		mod = 0;
+> +	xfs_rtblock_t		mod = 0;
+>  
+>  	nimap = 1;
+>  	error = xfs_bmapi_read(ip, *startoffset_fsb, 1, &imap, &nimap, 0);
+> @@ -1099,7 +1103,7 @@ xfs_adjust_extent_unmap_boundaries(
+>  
+>  	if (nimap && imap.br_startblock != HOLESTARTBLOCK) {
+>  		ASSERT(imap.br_startblock != DELAYSTARTBLOCK);
+> -		mod = do_mod(imap.br_startblock, mp->m_sb.sb_rextsize);
+> +		div64_u64_rem(imap.br_startblock, mp->m_sb.sb_rextsize, &mod);
 
-diff --git a/tests/generic/708 b/tests/generic/708
-new file mode 100755
-index 00000000..8018143e
---- /dev/null
-+++ b/tests/generic/708
-@@ -0,0 +1,90 @@
-+#! /bin/bash
-+# FS QA Test No. 708
-+#
-+# Test various swapfile activation oddities.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2018 Oracle.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	swapoff $swapfile 2> /dev/null
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch_swapfile
-+_require_test_program mkswap
-+_require_test_program swapon
-+
-+rm -f $seqres.full
-+_scratch_mkfs >>$seqres.full 2>&1
-+_scratch_mount >>$seqres.full 2>&1
-+
-+swapfile=$SCRATCH_MNT/swap
-+len=$((2 * 1048576))
-+page_size=$(get_page_size)
-+
-+swapfile_cycle() {
-+	local swapfile="$1"
-+
-+	$CHATTR_PROG +C $swapfile >> $seqres.full 2>&1
-+	"$here/src/mkswap" $swapfile >> $seqres.full
-+	"$here/src/swapon" $swapfile 2>&1 | _filter_scratch
-+	swapoff $swapfile 2>> $seeqres.full
-+	rm -f $swapfile
-+}
-+
-+# Create a regular swap file
-+echo "regular swap" | tee -a $seqres.full
-+_pwrite_byte 0x58 0 $len $swapfile >> $seqres.full
-+swapfile_cycle $swapfile
-+
-+# Create a swap file with a little too much junk on the end
-+echo "too long swap" | tee -a $seqres.full
-+_pwrite_byte 0x58 0 $((len + 3)) $swapfile >> $seqres.full
-+swapfile_cycle $swapfile
-+
-+# Create a ridiculously small swap file.  Each swap file must have at least
-+# two pages after the header page.
-+echo "tiny swap" | tee -a $seqres.full
-+tiny_len=$((page_size * 3))
-+_pwrite_byte 0x58 0 $tiny_len $swapfile >> $seqres.full
-+swapfile_cycle $swapfile
-+
-+status=0
-+exit
-diff --git a/tests/generic/708.out b/tests/generic/708.out
-new file mode 100644
-index 00000000..d68df3a2
---- /dev/null
-+++ b/tests/generic/708.out
-@@ -0,0 +1,4 @@
-+QA output created by 708
-+regular swap
-+too long swap
-+tiny swap
-diff --git a/tests/generic/709 b/tests/generic/709
-new file mode 100755
-index 00000000..27fb922c
---- /dev/null
-+++ b/tests/generic/709
-@@ -0,0 +1,93 @@
-+#! /bin/bash
-+# FS QA Test No. 709
-+#
-+# Test various swapfile activation oddities on filesystems that support
-+# fallocated swapfiles.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2018 Oracle.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	swapoff $swapfile 2> /dev/null
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch_swapfile
-+_require_test_program mkswap
-+_require_test_program swapon
-+_require_xfs_io_command "falloc"
-+
-+rm -f $seqres.full
-+_scratch_mkfs >>$seqres.full 2>&1
-+_scratch_mount >>$seqres.full 2>&1
-+
-+swapfile=$SCRATCH_MNT/swap
-+len=$((2 * 1048576))
-+page_size=$(get_page_size)
-+
-+swapfile_cycle() {
-+	local swapfile="$1"
-+
-+	$CHATTR_PROG +C $swapfile >> $seqres.full 2>&1
-+	"$here/src/mkswap" $swapfile >> $seqres.full
-+	"$here/src/swapon" $swapfile 2>&1 | _filter_scratch
-+	swapoff $swapfile 2>> $seeqres.full
-+	rm -f $swapfile
-+}
-+
-+# Create a fallocated swap file
-+echo "fallocate swap" | tee -a $seqres.full
-+$XFS_IO_PROG -f -c "falloc 0 $len" $swapfile >> $seqres.full
-+$CHATTR_PROG +C $swapfile >> $seqres.full 2>&1
-+"$here/src/mkswap" $swapfile
-+"$here/src/swapon" $swapfile >> $seqres.full 2>&1 || \
-+	_notrun "fallocated swap not supported here"
-+swapoff $swapfile
-+
-+# Create a fallocated swap file and touch every other $PAGE_SIZE to create
-+# a mess of written/unwritten extent records
-+echo "mixed swap" | tee -a $seqres.full
-+$XFS_IO_PROG -f -c "falloc 0 $len" $swapfile >> $seqres.full
-+seq $page_size $((page_size * 2)) $len | while read offset; do
-+	_pwrite_byte 0x58 $offset 1 $swapfile >> $seqres.full
-+done
-+swapfile_cycle $swapfile
-+
-+status=0
-+exit
-diff --git a/tests/generic/709.out b/tests/generic/709.out
-new file mode 100644
-index 00000000..90ba38ae
---- /dev/null
-+++ b/tests/generic/709.out
-@@ -0,0 +1,3 @@
-+QA output created by 709
-+fallocate swap
-+mixed swap
-diff --git a/tests/generic/710 b/tests/generic/710
-new file mode 100755
-index 00000000..782156e3
---- /dev/null
-+++ b/tests/generic/710
-@@ -0,0 +1,96 @@
-+#! /bin/bash
-+# FS QA Test No. 710
-+#
-+# Test various swapfile activation oddities, having used fcollapse to
-+# create discontiguous ranges in the file.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2018 Oracle.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	swapoff $swapfile 2> /dev/null
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch_swapfile
-+_require_test_program mkswap
-+_require_test_program swapon
-+_require_xfs_io_command "fcollapse"
-+
-+rm -f $seqres.full
-+_scratch_mkfs >>$seqres.full 2>&1
-+_scratch_mount >>$seqres.full 2>&1
-+
-+swapfile=$SCRATCH_MNT/swap
-+len=$((2 * 1048576))
-+page_size=$(get_page_size)
-+
-+swapfile_cycle() {
-+	local swapfile="$1"
-+
-+	"$here/src/mkswap" $swapfile >> $seqres.full
-+	"$here/src/swapon" $swapfile 2>&1 | _filter_scratch
-+	swapoff $swapfile 2>> $seeqres.full
-+	rm -f $swapfile
-+}
-+
-+# Create a swap file with a large discontiguous range(?)
-+echo "large discontig swap" | tee -a $seqres.full
-+_pwrite_byte 0x58 0 $((len * 2)) $swapfile >> $seqres.full
-+old_sz="$(stat -c '%s' $swapfile)"
-+$XFS_IO_PROG -c "fcollapse $((len / 2)) $len" $swapfile >> $seqres.full 2>&1
-+new_sz="$(stat -c '%s' $swapfile)"
-+if [ $old_sz -gt $new_sz ]; then
-+	swapfile_cycle $swapfile
-+fi
-+rm -f $swapfile
-+
-+# Create a swap file with a small discontiguous range(?)
-+echo "small discontig swap" | tee -a $seqres.full
-+_pwrite_byte 0x58 0 $((len + 1024)) $swapfile >> $seqres.full
-+old_sz="$(stat -c '%s' $swapfile)"
-+$XFS_IO_PROG -c "fcollapse 66560 1024" $swapfile >> $seqres.full 2>&1
-+new_sz="$(stat -c '%s' $swapfile)"
-+if [ $old_sz -gt $new_sz ]; then
-+	swapfile_cycle $swapfile
-+fi
-+rm -f $swapfile
-+
-+status=0
-+exit
-diff --git a/tests/generic/710.out b/tests/generic/710.out
-new file mode 100644
-index 00000000..ba1f8e40
---- /dev/null
-+++ b/tests/generic/710.out
-@@ -0,0 +1,3 @@
-+QA output created by 710
-+large discontig swap
-+small discontig swap
-diff --git a/tests/generic/group b/tests/generic/group
-index 4339c64c..6d747450 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -497,3 +497,6 @@
- 493 auto quick swap
- 494 auto quick swap punch
- 495 auto quick swap
-+708 auto quick swap
-+709 auto quick swap
-+710 auto quick swap collapse
+Why does this need to be a div64_u64_rem?  sb_rextsize is 32-bit, so the
+remainder won't exceed 2^32-1, right?
+
+>  		if (mod)
+>  			*startoffset_fsb += mp->m_sb.sb_rextsize - mod;
+
+Indeed if it ever did that would screw up this logic, wouldn't it?
+
+--D
+
+>  	}
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 6cda0f08b045..4a2e5e13c569 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -2258,7 +2258,7 @@ xfs_ifree_cluster(
+>  		 */
+>  		ioffset = inum - xic->first_ino;
+>  		if ((xic->alloc & XFS_INOBT_MASK(ioffset)) == 0) {
+> -			ASSERT(do_mod(ioffset, inodes_per_cluster) == 0);
+> +			ASSERT(ioffset % inodes_per_cluster == 0);
+>  			continue;
+>  		}
+>  
+> diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
+> index b0c98d4faa5b..83474c9cede9 100644
+> --- a/fs/xfs/xfs_iomap.h
+> +++ b/fs/xfs/xfs_iomap.h
+> @@ -30,10 +30,10 @@ xfs_aligned_fsb_count(
+>  	if (extsz) {
+>  		xfs_extlen_t	align;
+>  
+> -		align = do_mod(offset_fsb, extsz);
+> +		div_u64_rem(offset_fsb, extsz, &align);
+>  		if (align)
+>  			count_fsb += align;
+> -		align = do_mod(count_fsb, extsz);
+> +		div_u64_rem(count_fsb, extsz, &align);
+>  		if (align)
+>  			count_fsb += extsz - align;
+>  	}
+> diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+> index 1631cf4546f2..2c800ffbcffd 100644
+> --- a/fs/xfs/xfs_linux.h
+> +++ b/fs/xfs/xfs_linux.h
+> @@ -209,25 +209,6 @@ static inline xfs_dev_t linux_to_xfs_dev_t(dev_t dev)
+>  #define xfs_sort(a,n,s,fn)	sort(a,n,s,fn,NULL)
+>  #define xfs_stack_trace()	dump_stack()
+>  
+> -/* Side effect free 64 bit mod operation */
+> -static inline __u32 xfs_do_mod(void *a, __u32 b, int n)
+> -{
+> -	switch (n) {
+> -		case 4:
+> -			return *(__u32 *)a % b;
+> -		case 8:
+> -			{
+> -			__u64	c = *(__u64 *)a;
+> -			return do_div(c, b);
+> -			}
+> -	}
+> -
+> -	/* NOTREACHED */
+> -	return 0;
+> -}
+> -
+> -#define do_mod(a, b)	xfs_do_mod(&(a), (b), sizeof(a))
+> -
+>  static inline uint64_t roundup_64(uint64_t x, uint32_t y)
+>  {
+>  	x += y - 1;
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 7d897c58b0c8..4405ff21f9a9 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -1235,6 +1235,25 @@ xlog_verify_head(
+>  				be32_to_cpu((*rhead)->h_size));
+>  }
+>  
+> +/*
+> + * We need to make sure we handle log wrapping properly, so we can't use teh
+> + * calculated logbno directly. Make sure it wraps to teh correct bno inside teh
+> + * log.
+> + *
+> + * The log is limited to 32 bit sizes, so we use the appropriate modulus
+> + * operation here and cast it back to a 64 bit daddr on return.
+> + */
+> +static inline xfs_daddr_t
+> +xlog_wrap_logbno(
+> +	struct xlog		*log,
+> +	xfs_daddr_t		bno)
+> +{
+> +	int			mod;
+> +
+> +	div_s64_rem(bno, log->l_logBBsize, &mod);
+> +	return mod;
+> +}
+> +
+>  /*
+>   * Check whether the head of the log points to an unmount record. In other
+>   * words, determine whether the log is clean. If so, update the in-core state
+> @@ -1283,12 +1302,13 @@ xlog_check_unmount_rec(
+>  	} else {
+>  		hblks = 1;
+>  	}
+> -	after_umount_blk = rhead_blk + hblks + BTOBB(be32_to_cpu(rhead->h_len));
+> -	after_umount_blk = do_mod(after_umount_blk, log->l_logBBsize);
+> +
+> +	after_umount_blk = xlog_wrap_logbno(log,
+> +			rhead_blk + hblks + BTOBB(be32_to_cpu(rhead->h_len)));
+> +
+>  	if (*head_blk == after_umount_blk &&
+>  	    be32_to_cpu(rhead->h_num_logops) == 1) {
+> -		umount_data_blk = rhead_blk + hblks;
+> -		umount_data_blk = do_mod(umount_data_blk, log->l_logBBsize);
+> +		umount_data_blk = xlog_wrap_logbno(log, rhead_blk + hblks);
+>  		error = xlog_bread(log, umount_data_blk, 1, bp, &offset);
+>  		if (error)
+>  			return error;
+> @@ -5459,9 +5479,7 @@ xlog_do_recovery_pass(
+>  			 */
+>  			if (blk_no + bblks <= log->l_logBBsize ||
+>  			    blk_no >= log->l_logBBsize) {
+> -				/* mod blk_no in case the header wrapped and
+> -				 * pushed it beyond the end of the log */
+> -				rblk_no = do_mod(blk_no, log->l_logBBsize);
+> +				rblk_no = xlog_wrap_logbno(log, blk_no);
+>  				error = xlog_bread(log, rblk_no, bblks, dbp,
+>  						   &offset);
+>  				if (error)
+> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+> index 80bbfe604ce0..776502a5dcb7 100644
+> --- a/fs/xfs/xfs_rtalloc.c
+> +++ b/fs/xfs/xfs_rtalloc.c
+> @@ -301,8 +301,12 @@ xfs_rtallocate_extent_block(
+>  		/*
+>  		 * If size should be a multiple of prod, make that so.
+>  		 */
+> -		if (prod > 1 && (p = do_mod(bestlen, prod)))
+> -			bestlen -= p;
+> +		if (prod > 1) {
+> +			div_u64_rem(bestlen, prod, &p);
+> +			if (p)
+> +				bestlen -= p;
+> +		}
+> +
+>  		/*
+>  		 * Allocate besti for bestlen & return that.
+>  		 */
+> @@ -1262,8 +1266,11 @@ xfs_rtpick_extent(
+>  		resid = seq - (1ULL << log2);
+>  		b = (mp->m_sb.sb_rextents * ((resid << 1) + 1ULL)) >>
+>  		    (log2 + 1);
+> -		if (b >= mp->m_sb.sb_rextents)
+> -			b = do_mod(b, mp->m_sb.sb_rextents);
+> +		if (b >= mp->m_sb.sb_rextents) {
+> +			xfs_rtblock_t mod;
+> +			div64_u64_rem(b, mp->m_sb.sb_rextents, &mod);
+> +			b = mod;
+> +		}
+>  		if (b + len > mp->m_sb.sb_rextents)
+>  			b = mp->m_sb.sb_rextents - len;
+>  	}
+> -- 
+> 2.17.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
