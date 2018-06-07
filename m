@@ -1,216 +1,174 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl0-f46.google.com ([209.85.160.46]:43975 "EHLO
-        mail-pl0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753120AbeFGMtA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jun 2018 08:49:00 -0400
-Date: Thu, 7 Jun 2018 20:48:53 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH 6/6] xfs: make sure pretty printed geometry output matches
-Message-ID: <20180607124853.GC1103@desktop>
-References: <152821697018.24976.12939094615403004592.stgit@magnolia>
- <152821701376.24976.4940261016750526905.stgit@magnolia>
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:43150 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753165AbeFGNuF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jun 2018 09:50:05 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <152821701376.24976.4940261016750526905.stgit@magnolia>
+In-Reply-To: <20180606104033.4947-6-hch@lst.de>
+References: <20180606104033.4947-1-hch@lst.de> <20180606104033.4947-6-hch@lst.de>
+From: =?UTF-8?Q?Andreas_Gr=C3=BCnbacher?= <andreas.gruenbacher@gmail.com>
+Date: Thu, 7 Jun 2018 15:50:03 +0200
+Message-ID: <CAHpGcMJ5m-Mr4xJmDpzNnHZ3y_TQpVsL2WpMzs8na8hN=DYPeQ@mail.gmail.com>
+Subject: Re: [PATCH 5/6] iomap: generic inline data handling
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, cluster-devel <cluster-devel@redhat.com>, linux-ext4 <linux-ext4@vger.kernel.org>
 
-On Tue, Jun 05, 2018 at 09:43:33AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Make sure that all of our commands that can print geometry information
-> all print the /same/ information.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+2018-06-06 12:40 GMT+02:00 Christoph Hellwig <hch@lst.de>:
+> From: Andreas Gruenbacher <agruenba@redhat.com>
+>
+> Add generic inline data handling by adding a pointer to the inline data
+> region to struct iomap.  When handling a buffered IOMAP_INLINE write,
+> iomap_write_begin will copy the current inline data from the inline data
+> region into the page cache, and iomap_write_end will copy the changes in
+> the page cache back to the inline data region.
+>
+> This doesn't cover inline data reads and direct I/O yet because so far,
+> we have no users.
+>
+> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+> [hch: small cleanups to better fit in with other iomap work]
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  common/xfs        |   41 +++++++++++++++++++++++++
->  tests/xfs/710     |   88 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/710.out |    2 +
->  tests/xfs/group   |    1 +
->  4 files changed, 132 insertions(+)
->  create mode 100755 tests/xfs/710
->  create mode 100644 tests/xfs/710.out
-> 
-> 
-> diff --git a/common/xfs b/common/xfs
-> index 3e34b118..bc35cd87 100644
-> --- a/common/xfs
-> +++ b/common/xfs
-> @@ -710,3 +710,44 @@ _require_xfs_db_write_array()
->  	rm -f $TEST_DIR/$seq.img
->  	[ $supported -eq 0 ] && _notrun "xfs_db write can't support array"
+>  fs/iomap.c            | 62 +++++++++++++++++++++++++++++++++++++++++++++------
+>  include/linux/iomap.h |  1 +
+>  2 files changed, 56 insertions(+), 7 deletions(-)
+>
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index f428baa32185..f2a491b98b7c 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -116,6 +116,26 @@ iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
+>                 truncate_pagecache_range(inode, max(pos, i_size), pos + len);
 >  }
-> +
-> +_require_xfs_spaceman_command()
+>
+> +static void
+> +iomap_read_inline_data(struct inode *inode, struct page *page,
+> +               struct iomap *iomap)
 > +{
-> +	if [ -z "$1" ]
-> +	then
-> +		echo "Usage: _require_xfs_spaceman_command command [switch]" 1>&2
-> +		exit 1
-> +	fi
-> +	local command=$1
-> +	shift
-> +	local param="$*"
-> +	local param_checked=0
-> +	local opts=""
+> +       size_t size = i_size_read(inode);
+> +       void *addr;
 > +
-> +	_require_command "$XFS_SPACEMAN_PROG" "xfs_spaceman"
+> +       if (PageUptodate(page))
+> +               return;
 > +
-> +	testfile=$TEST_DIR/$$.xfs_spaceman
-> +	case $command in
-> +	*)
-> +		testio=`$XFS_SPACEMAN_PROG -c "help $command" $TEST_DIR 2>&1`
-> +	esac
+> +       BUG_ON(page->index);
+> +       BUG_ON(size > PAGE_SIZE - offset_in_page(iomap->inline_data));
 > +
-> +	rm -f $testfile 2>&1 > /dev/null
-> +	echo $testio | grep -q "not found" && \
-> +		_notrun "xfs_spaceman $command support is missing"
-> +	echo $testio | grep -q "Operation not supported" && \
-> +		_notrun "xfs_spaceman $command failed (old kernel/wrong fs?)"
-> +	echo $testio | grep -q "Invalid" && \
-> +		_notrun "xfs_spaceman $command failed (old kernel/wrong fs/bad args?)"
-> +	echo $testio | grep -q "foreign file active" && \
-> +		_notrun "xfs_spaceman $command not supported on $FSTYP"
-> +	echo $testio | grep -q "Function not implemented" && \
-> +		_notrun "xfs_spaceman $command support is missing (missing syscall?)"
-> +
-> +	[ -n "$param" ] || return
-> +
-> +	if [ $param_checked -eq 0 ]; then
-> +		$XFS_IO_PROG -c "help $command" | grep -q "^ $param --" || \
-                 ^^^^^^^^^^^ XFS_SPACEMAN_PROG
-
-> +			_notrun "xfs_spaceman $command doesn't support $param"
-> +	fi
+> +       addr = kmap_atomic(page);
+> +       memcpy(addr, iomap->inline_data, size);
+> +       memset(addr + size, 0, PAGE_SIZE - size);
+> +       kunmap_atomic(addr);
+> +       SetPageUptodate(page);
 > +}
-> diff --git a/tests/xfs/710 b/tests/xfs/710
-> new file mode 100755
-> index 00000000..b03d4836
-> --- /dev/null
-> +++ b/tests/xfs/710
-> @@ -0,0 +1,88 @@
-> +#! /bin/bash
-> +# FS QA Test No. 710
-> +#
-> +# Make sure pretty printed XFS geometry is the same across all programs.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2018 Oracle, Inc.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1
-> +trap "_cleanup; rm -f $tmp.*; exit \$status" 0 1 2 3 15
 
-"rm -f $tmp.*" is done in _cleanup()
+Can you please move iomap_read_inline_data above iomap_write_failed in
+fs/iomap.c so that it will end up above the readpage code? We'll need
+iomap_read_inline_data in the readpage code.
 
+>  static int
+>  iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
+>                 struct page **pagep, struct iomap *iomap)
+> @@ -133,7 +153,11 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
+>         if (!page)
+>                 return -ENOMEM;
+>
+> -       status = __block_write_begin_int(page, pos, len, NULL, iomap);
+> +       if (iomap->type == IOMAP_INLINE)
+> +               iomap_read_inline_data(inode, page, iomap);
+> +       else
+> +               status = __block_write_begin_int(page, pos, len, NULL, iomap);
 > +
-> +_cleanup()
+>         if (unlikely(status)) {
+>                 unlock_page(page);
+>                 put_page(page);
+> @@ -146,14 +170,37 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
+>         return status;
+>  }
+>
+> +static int
+> +iomap_write_end_inline(struct inode *inode, struct page *page,
+> +               struct iomap *iomap, loff_t pos, unsigned copied)
 > +{
-> +	cd /
-> +	rm -f $tmp.*
+> +       void *addr;
+> +
+> +       WARN_ON_ONCE(!PageUptodate(page));
+> +       BUG_ON(pos + copied > PAGE_SIZE - offset_in_page(iomap->inline_data));
+> +
+> +       addr = kmap_atomic(page);
+> +       memcpy(iomap->inline_data + pos, addr + pos, copied);
+> +       kunmap_atomic(addr);
+> +
+> +       mark_inode_dirty(inode);
+> +       __generic_write_end(inode, pos, copied, page);
+> +       return copied;
 > +}
 > +
-> +rm -f $seqres.full
+>  static int
+>  iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
+> -               unsigned copied, struct page *page)
+> +               unsigned copied, struct page *page, struct iomap *iomap)
+>  {
+>         int ret;
+>
+> -       ret = generic_write_end(NULL, inode->i_mapping, pos, len,
+> -                       copied, page, NULL);
+> +       if (iomap->type == IOMAP_INLINE) {
+> +               ret = iomap_write_end_inline(inode, page, iomap, pos, copied);
+> +       } else {
+> +               ret = generic_write_end(NULL, inode->i_mapping, pos, len,
+> +                               copied, page, NULL);
+> +       }
 > +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/xfs
-
-No need to source common/xfs, common/rc will source it automatically.
-
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_supported_os Linux
-> +
-> +_require_scratch_nocheck
-> +
-> +# Geometry printing wasn't unified until xfs_spaceman grew an 'info'
-> +# command, so skip this test if there is no spaceman or it doesn't
-> +# know what 'info' is.
-> +_require_xfs_spaceman_command "info"
-> +_require_command "$XFS_DB_PROG" xfs_db
-> +_require_command "$XFS_GROWFS_PROG" xfs_growfs
-> +_require_command "$XFS_INFO_PROG" xfs_info
-
-xfs_db and xfs_info (I fixed that up on commit) have been checked in
-common/rc, just need to check xfs_growfs here.
-
-These are all trivial and easy to fix, I'll just fix them on commit too.
+>         if (ret < len)
+>                 iomap_write_failed(inode, pos, len);
+>         return ret;
+> @@ -208,7 +255,8 @@ iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+>
+>                 flush_dcache_page(page);
+>
+> -               status = iomap_write_end(inode, pos, bytes, copied, page);
+> +               status = iomap_write_end(inode, pos, bytes, copied, page,
+> +                               iomap);
+>                 if (unlikely(status < 0))
+>                         break;
+>                 copied = status;
+> @@ -302,7 +350,7 @@ iomap_dirty_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+>
+>                 WARN_ON_ONCE(!PageUptodate(page));
+>
+> -               status = iomap_write_end(inode, pos, bytes, bytes, page);
+> +               status = iomap_write_end(inode, pos, bytes, bytes, page, iomap);
+>                 if (unlikely(status <= 0)) {
+>                         if (WARN_ON_ONCE(status == 0))
+>                                 return -EIO;
+> @@ -354,7 +402,7 @@ static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
+>         zero_user(page, offset, bytes);
+>         mark_page_accessed(page);
+>
+> -       return iomap_write_end(inode, pos, bytes, bytes, page);
+> +       return iomap_write_end(inode, pos, bytes, bytes, page, iomap);
+>  }
+>
+>  static int iomap_dax_zero(loff_t pos, unsigned offset, unsigned bytes,
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index 212f4d59bcbf..69ef622f650e 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -56,6 +56,7 @@ struct iomap {
+>         union {
+>                 struct block_device *bdev;
+>                 struct dax_device   *dax_dev;
+> +               void                *inline_data;
+>         };
+>  };
+>
+> --
+> 2.14.2
+>
 
 Thanks,
-Eryu
-
-> +
-> +_scratch_mkfs > $tmp.mkfs
-> +echo MKFS >> $seqres.full
-> +cat $tmp.mkfs >> $seqres.full
-> +
-> +_scratch_xfs_db -c "info" > $tmp.dbinfo
-> +echo DB >> $seqres.full
-> +cat $tmp.dbinfo >> $seqres.full
-> +diff -u $tmp.mkfs $tmp.dbinfo
-> +
-> +_scratch_mount
-> +
-> +$XFS_SPACEMAN_PROG -c "info" $SCRATCH_MNT > $tmp.spaceman
-> +echo SPACEMAN >> $seqres.full
-> +cat $tmp.spaceman >> $seqres.full
-> +diff -u $tmp.mkfs $tmp.spaceman
-> +
-> +$XFS_GROWFS_PROG -n $SCRATCH_MNT > $tmp.growfs
-> +echo GROWFS >> $seqres.full
-> +cat $tmp.growfs >> $seqres.full
-> +diff -u $tmp.mkfs $tmp.growfs
-> +
-> +$XFS_INFO_PROG $SCRATCH_MNT > $tmp.info
-> +echo INFO >> $seqres.full
-> +cat $tmp.info >> $seqres.full
-> +diff -u $tmp.mkfs $tmp.info
-> +
-> +echo "Silence is golden."
-> +status=0
-> +exit 0
-> diff --git a/tests/xfs/710.out b/tests/xfs/710.out
-> new file mode 100644
-> index 00000000..ae2659d5
-> --- /dev/null
-> +++ b/tests/xfs/710.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 710
-> +Silence is golden.
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index 2319f58f..9dd30ae0 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -445,3 +445,4 @@
->  445 auto quick filestreams
->  446 auto quick
->  447 auto mount
-> +710 auto quick
-> 
+Andreas
