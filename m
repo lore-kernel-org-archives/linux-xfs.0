@@ -1,128 +1,122 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:40790 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932398AbeFFKkl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Jun 2018 06:40:41 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/6] fs: factor out a __generic_write_end helper
-Date: Wed,  6 Jun 2018 12:40:28 +0200
-Message-Id: <20180606104033.4947-2-hch@lst.de>
-In-Reply-To: <20180606104033.4947-1-hch@lst.de>
-References: <20180606104033.4947-1-hch@lst.de>
+Received: from aserp2120.oracle.com ([141.146.126.78]:43276 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932902AbeFGQQi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jun 2018 12:16:38 -0400
+Date: Thu, 7 Jun 2018 09:16:31 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/6] xfs: verify extent size hint is valid in inode
+ verifier
+Message-ID: <20180607161631.GM25007@magnolia>
+References: <20180605062423.4877-1-david@fromorbit.com>
+ <20180605062423.4877-3-david@fromorbit.com>
+ <20180605171015.GJ9437@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180605171015.GJ9437@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com, linux-ext4@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-Bits of the buffer.c based write_end implementations that don't know
-about buffer_heads and can be reused by other implementations.
+On Tue, Jun 05, 2018 at 10:10:15AM -0700, Darrick J. Wong wrote:
+> On Tue, Jun 05, 2018 at 04:24:19PM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > There are rules for vald extent size hints. We enforce them when
+> > applications set them, but fuzzers violate those rules and that
+> > screws us over.
+> > 
+> > This results in alignment assertion failures when setting up
+> > allocations such as this in direct IO:
+> > 
+> > XFS: Assertion failed: ap->length, file: fs/xfs/libxfs/xfs_bmap.c, line: 3432
+> > ....
+> > Call Trace:
+> >  xfs_bmap_btalloc+0x415/0x910
+> >  xfs_bmapi_write+0x71c/0x12e0
+> >  xfs_iomap_write_direct+0x2a9/0x420
+> >  xfs_file_iomap_begin+0x4dc/0xa70
+> >  iomap_apply+0x43/0x100
+> >  iomap_file_buffered_write+0x62/0x90
+> >  xfs_file_buffered_aio_write+0xba/0x300
+> >  __vfs_write+0xd5/0x150
+> >  vfs_write+0xb6/0x180
+> >  ksys_write+0x45/0xa0
+> >  do_syscall_64+0x5a/0x180
+> >  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+> > 
+> > And from xfs_db:
+> > 
+> > core.extsize = 10380288
+> > 
+> > Which is not an integer multiple of the block size, and so violates
+> > Rule #7 for setting extent size hints. Validate extent size hint
+> > rules in the inode verifier to catch this.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> 
+> Looks ok modulo my comments in the next patch,
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/buffer.c   | 67 +++++++++++++++++++++++++++++++----------------------------
- fs/internal.h |  2 ++
- 2 files changed, 37 insertions(+), 32 deletions(-)
+FWIW when I applied this to xfsprogs I saw an xfs/033 regression:
 
-diff --git a/fs/buffer.c b/fs/buffer.c
-index cabc045f483d..aba2a948b235 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -2076,6 +2076,40 @@ int block_write_begin(struct address_space *mapping, loff_t pos, unsigned len,
- }
- EXPORT_SYMBOL(block_write_begin);
- 
-+int __generic_write_end(struct inode *inode, loff_t pos, unsigned copied,
-+		struct page *page)
-+{
-+	loff_t old_size = inode->i_size;
-+	bool i_size_changed = false;
-+
-+	/*
-+	 * No need to use i_size_read() here, the i_size cannot change under us
-+	 * because we hold i_rwsem.
-+	 *
-+	 * But it's important to update i_size while still holding page lock:
-+	 * page writeout could otherwise come in and zero beyond i_size.
-+	 */
-+	if (pos + copied > inode->i_size) {
-+		i_size_write(inode, pos + copied);
-+		i_size_changed = true;
-+	}
-+
-+	unlock_page(page);
-+	put_page(page);
-+
-+	if (old_size < pos)
-+		pagecache_isize_extended(inode, old_size, pos);
-+	/*
-+	 * Don't mark the inode dirty under page lock. First, it unnecessarily
-+	 * makes the holding time of page lock longer. Second, it forces lock
-+	 * ordering of page lock and transaction start for journaling
-+	 * filesystems.
-+	 */
-+	if (i_size_changed)
-+		mark_inode_dirty(inode);
-+	return copied;
-+}
-+
- int block_write_end(struct file *file, struct address_space *mapping,
- 			loff_t pos, unsigned len, unsigned copied,
- 			struct page *page, void *fsdata)
-@@ -2116,39 +2150,8 @@ int generic_write_end(struct file *file, struct address_space *mapping,
- 			loff_t pos, unsigned len, unsigned copied,
- 			struct page *page, void *fsdata)
- {
--	struct inode *inode = mapping->host;
--	loff_t old_size = inode->i_size;
--	int i_size_changed = 0;
--
- 	copied = block_write_end(file, mapping, pos, len, copied, page, fsdata);
--
--	/*
--	 * No need to use i_size_read() here, the i_size
--	 * cannot change under us because we hold i_mutex.
--	 *
--	 * But it's important to update i_size while still holding page lock:
--	 * page writeout could otherwise come in and zero beyond i_size.
--	 */
--	if (pos+copied > inode->i_size) {
--		i_size_write(inode, pos+copied);
--		i_size_changed = 1;
--	}
--
--	unlock_page(page);
--	put_page(page);
--
--	if (old_size < pos)
--		pagecache_isize_extended(inode, old_size, pos);
--	/*
--	 * Don't mark the inode dirty under page lock. First, it unnecessarily
--	 * makes the holding time of page lock longer. Second, it forces lock
--	 * ordering of page lock and transaction start for journaling
--	 * filesystems.
--	 */
--	if (i_size_changed)
--		mark_inode_dirty(inode);
--
--	return copied;
-+	return __generic_write_end(mapping->host, pos, copied, page);
- }
- EXPORT_SYMBOL(generic_write_end);
- 
-diff --git a/fs/internal.h b/fs/internal.h
-index 980d005b21b4..4a18bdbd2214 100644
---- a/fs/internal.h
-+++ b/fs/internal.h
-@@ -43,6 +43,8 @@ static inline int __sync_blockdev(struct block_device *bdev, int wait)
- extern void guard_bio_eod(int rw, struct bio *bio);
- extern int __block_write_begin_int(struct page *page, loff_t pos, unsigned len,
- 		get_block_t *get_block, struct iomap *iomap);
-+int __generic_write_end(struct inode *inode, loff_t pos, unsigned copied,
-+		struct page *page);
- 
- /*
-  * char_dev.c
--- 
-2.14.2
+Phase 6 - check inode connectivity...
+reinitializing root directory
+Metadata corruption detected at 0x5555555c60e0, inode 0x80 dinode
 
+fatal error -- could not iget root inode -- error - 117
+[Inferior 1 (process 1178) exited with code 01]
+(gdb) l *(0x5555555c60e0)
+0x5555555c60e0 is in libxfs_inode_validate_extsize (xfs_inode_buf.c:729).
+
+We fail the inode verifier while trying to _iget the root inode so that
+we can reinitialize it; I suspect phase 3 is going to need to check the
+extent size hints and clear them.
+
+--D
+
+> --D
+> 
+> > ---
+> >  fs/xfs/libxfs/xfs_inode_buf.c | 7 +++++++
+> >  1 file changed, 7 insertions(+)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> > index f5fff1ccb61d..be197c91307b 100644
+> > --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> > +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> > @@ -385,6 +385,7 @@ xfs_dinode_verify(
+> >  	xfs_ino_t		ino,
+> >  	struct xfs_dinode	*dip)
+> >  {
+> > +	xfs_failaddr_t		fa;
+> >  	uint16_t		mode;
+> >  	uint16_t		flags;
+> >  	uint64_t		flags2;
+> > @@ -501,6 +502,12 @@ xfs_dinode_verify(
+> >  			return __this_address;
+> >  	}
+> >  
+> > +	/* extent size hint validation */
+> > +	fa = xfs_inode_validate_extsize(mp, be32_to_cpu(dip->di_extsize),
+> > +					mode, be32_to_cpu(dip->di_flags));
+> > +	if (fa)
+> > +		return fa;
+> > +
+> >  	/* only version 3 or greater inodes are extensively verified here */
+> >  	if (dip->di_version < 3)
+> >  		return NULL;
+> > -- 
+> > 2.17.0
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
