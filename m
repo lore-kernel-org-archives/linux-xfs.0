@@ -1,204 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41930 "EHLO mail.kernel.org"
+Received: from mx2.suse.de ([195.135.220.15]:44522 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752296AbeFGXzg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Jun 2018 19:55:36 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v5 2/4] mkfs: move shared config structs and into their own headers
-Date: Thu,  7 Jun 2018 16:55:31 -0700
-Message-Id: <20180607235533.20391-3-mcgrof@kernel.org>
-In-Reply-To: <20180607235533.20391-1-mcgrof@kernel.org>
-References: <20180607235533.20391-1-mcgrof@kernel.org>
+        id S933021AbeFGRjQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 7 Jun 2018 13:39:16 -0400
+From: Mark Fasheh <mfasheh@suse.de>
+Subject: [PATCH v3 2/2] vfs: dedupe should return EPERM if permission is not granted
+Date: Thu,  7 Jun 2018 10:38:54 -0700
+Message-Id: <20180607173854.15747-3-mfasheh@suse.de>
+In-Reply-To: <20180607173854.15747-1-mfasheh@suse.de>
+References: <20180607173854.15747-1-mfasheh@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com, "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, Adam Borowski <kilobyte@angband.pl>, David Sterba <dsterba@suse.cz>, Mark Fasheh <mfasheh@suse.de>
 
-Both struct sb_feat_args and struct mkfs_default_params will be shared
-between CLI processing and the configuration file processing added later,
-so move these to their own header.
+Right now we return EINVAL if a process does not have permission to dedupe a
+file. This was an oversight on my part. EPERM gives a true description of
+the nature of our error, and EINVAL is already used for the case that the
+filesystem does not support dedupe.
 
-This will help ensure we split things neatly later and also will help
-ensure the configuration file processing code from the CLI code are kept
-separate and cannot touch each other's data structures. This also makes
-it clear what is actually shared between both.
-
-There are no introduced functional changes in this commit and no
-documentation changes, this is just code shuffling.
-
+Signed-off-by: Mark Fasheh <mfasheh@suse.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+Acked-by: David Sterba <dsterba@suse.com>
 ---
- mkfs/config.h   | 78 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- mkfs/xfs_mkfs.c | 55 +---------------------------------------
- 2 files changed, 79 insertions(+), 54 deletions(-)
- create mode 100644 mkfs/config.h
+ fs/read_write.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/mkfs/config.h b/mkfs/config.h
-new file mode 100644
-index 000000000000..e5ea968e2d65
---- /dev/null
-+++ b/mkfs/config.h
-@@ -0,0 +1,78 @@
-+/*
-+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.
-+ * Copyright (c) 2016-2017 Red Hat, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+#ifndef _XFS_MKFS_CONFIG_H
-+#define _XFS_MKFS_CONFIG_H
-+
-+struct fsxattr;
-+
-+/*
-+ * Shared superblock configuration options
-+ *
-+ * These options provide shared configuration tunables for the filesystem
-+ * superblock. There are three possible sources for these options set, each
-+ * source can overriding the later source:
-+ *
-+ * 	o built-in defaults
-+ * 	o configuration file (XXX)
-+ * 	o command line
-+ *
-+ * These values are not used directly - they are inputs into the mkfs geometry
-+ * validation.
-+ */
-+struct sb_feat_args {
-+	int	log_version;
-+	int	attr_version;
-+	int	dir_version;
-+	bool	inode_align;		/* XFS_SB_VERSION_ALIGNBIT */
-+	bool	nci;			/* XFS_SB_VERSION_BORGBIT */
-+	bool	lazy_sb_counters;	/* XFS_SB_VERSION2_LAZYSBCOUNTBIT */
-+	bool	parent_pointers;	/* XFS_SB_VERSION2_PARENTBIT */
-+	bool	projid32bit;		/* XFS_SB_VERSION2_PROJID32BIT */
-+	bool	crcs_enabled;		/* XFS_SB_VERSION2_CRCBIT */
-+	bool	dirftype;		/* XFS_SB_VERSION2_FTYPE */
-+	bool	finobt;			/* XFS_SB_FEAT_RO_COMPAT_FINOBT */
-+	bool	spinodes;		/* XFS_SB_FEAT_INCOMPAT_SPINODES */
-+	bool	rmapbt;			/* XFS_SB_FEAT_RO_COMPAT_RMAPBT */
-+	bool	reflink;		/* XFS_SB_FEAT_RO_COMPAT_REFLINK */
-+	bool	nodalign;
-+	bool	nortalign;
-+};
-+
-+/*
-+ * Default filesystem features and configuration values
-+ *
-+ * This structure contains the default mkfs values that are to be used when
-+ * a user does not specify the option on the command line. We do not use these
-+ * values directly - they are inputs to the mkfs geometry validation and
-+ * calculations.
-+ */
-+struct mkfs_default_params {
-+	char	*source;	/* where the defaults came from */
-+
-+	int	sectorsize;
-+	int	blocksize;
-+
-+	/* feature flags that are set */
-+	struct sb_feat_args	sb_feat;
-+
-+	/* root inode characteristics */
-+	struct fsxattr		fsx;
-+};
-+
-+#endif /* _XFS_MKFS_CONFIG_H */
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 227613ef77d5..56e869d666be 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -21,6 +21,7 @@
- #include "xfs_multidisk.h"
- #include "libxcmd.h"
- #include "fsgeom.h"
-+#include "config.h"
- 
- 
- #define TERABYTES(count, blog)	((uint64_t)(count) << (40 - (blog)))
-@@ -706,39 +707,6 @@ cli_opt_set(
- 	       opts->subopt_params[subopt].str_seen;
- }
- 
--/*
-- * Shared superblock configuration options
-- *
-- * These options provide shared configuration tunables for the filesystem
-- * superblock. There are three possible sources for these options set, each
-- * source can overriding the later source:
-- *
-- * 	o built-in defaults
-- * 	o configuration file (XXX)
-- * 	o command line
-- *
-- * These values are not used directly - they are inputs into the mkfs geometry
-- * validation.
-- */
--struct sb_feat_args {
--	int	log_version;
--	int	attr_version;
--	int	dir_version;
--	bool	inode_align;		/* XFS_SB_VERSION_ALIGNBIT */
--	bool	nci;			/* XFS_SB_VERSION_BORGBIT */
--	bool	lazy_sb_counters;	/* XFS_SB_VERSION2_LAZYSBCOUNTBIT */
--	bool	parent_pointers;	/* XFS_SB_VERSION2_PARENTBIT */
--	bool	projid32bit;		/* XFS_SB_VERSION2_PROJID32BIT */
--	bool	crcs_enabled;		/* XFS_SB_VERSION2_CRCBIT */
--	bool	dirftype;		/* XFS_SB_VERSION2_FTYPE */
--	bool	finobt;			/* XFS_SB_FEAT_RO_COMPAT_FINOBT */
--	bool	spinodes;		/* XFS_SB_FEAT_INCOMPAT_SPINODES */
--	bool	rmapbt;			/* XFS_SB_FEAT_RO_COMPAT_RMAPBT */
--	bool	reflink;		/* XFS_SB_FEAT_RO_COMPAT_REFLINK */
--	bool	nodalign;
--	bool	nortalign;
--};
--
- /*
-  * Options configured on the command line.
-  *
-@@ -850,27 +818,6 @@ struct mkfs_params {
- 	struct sb_feat_args	sb_feat;
- };
- 
--/*
-- * Default filesystem features and configuration values
-- *
-- * This structure contains the default mkfs values that are to be used when
-- * a user does not specify the option on the command line. We do not use these
-- * values directly - they are inputs to the mkfs geometry validation and
-- * calculations.
-- */
--struct mkfs_default_params {
--	char	*source;	/* where the defaults came from */
--
--	int	sectorsize;
--	int	blocksize;
--
--	/* feature flags that are set */
--	struct sb_feat_args	sb_feat;
--
--	/* root inode characteristics */
--	struct fsxattr		fsx;
--};
--
- static void __attribute__((noreturn))
- usage( void )
- {
+diff --git a/fs/read_write.c b/fs/read_write.c
+index 71e9077f8bc1..7188982e2733 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -2050,7 +2050,7 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
+ 		if (info->reserved) {
+ 			info->status = -EINVAL;
+ 		} else if (!allow_file_dedupe(dst_file)) {
+-			info->status = -EINVAL;
++			info->status = -EPERM;
+ 		} else if (file->f_path.mnt != dst_file->f_path.mnt) {
+ 			info->status = -EXDEV;
+ 		} else if (S_ISDIR(dst->i_mode)) {
 -- 
-2.16.3
+2.15.1
 
