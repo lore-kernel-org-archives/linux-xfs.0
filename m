@@ -1,78 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb0-f196.google.com ([209.85.213.196]:34112 "EHLO
-        mail-yb0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750796AbeFAIGF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Jun 2018 04:06:05 -0400
-MIME-Version: 1.0
-In-Reply-To: <20180601075702.12467-1-yosun@suse.com>
-References: <20180601075702.12467-1-yosun@suse.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Fri, 1 Jun 2018 11:06:04 +0300
-Message-ID: <CAOQ4uxhA31ZMvvUZetyV-EegaWs4w5-ibhen7fNrNFHa8=SW4Q@mail.gmail.com>
-Subject: Re: [PATCH] xfstests/btrfs: adapt ppc64le node size at least 65536
-Content-Type: text/plain; charset="UTF-8"
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:12652 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752963AbeFGFXt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jun 2018 01:23:49 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1fQnMd-0004sX-3W
+        for linux-xfs@vger.kernel.org; Thu, 07 Jun 2018 15:21:35 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1fQnMd-0001fI-2I
+        for linux-xfs@vger.kernel.org; Thu, 07 Jun 2018 15:21:35 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 1/2] xfs: setup VFS i_rwsem lockdep state correctly
+Date: Thu,  7 Jun 2018 15:21:31 +1000
+Message-Id: <20180607052132.6207-2-david@fromorbit.com>
+In-Reply-To: <20180607052132.6207-1-david@fromorbit.com>
+References: <20180607052132.6207-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Yong Sun <yosun@suse.com>
-Cc: fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-Wrong list. You were looking for <fstests@vger.kernel.org>
+From: Dave Chinner <dchinner@redhat.com>
 
-Thanks,
-Amir.
+When lockdep is enabled, it changes the type of the inode i_rwsem
+semaphore before unlocking a newly instantiated inode. THere is the
+possibility that there is already a waiter on that inode lock by the
+time we unlock the new inode, so having lockdep re-initialise the
+lock is a vector for trouble.
 
-On Fri, Jun 1, 2018 at 10:57 AM, Yong Sun <yosun@suse.com> wrote:
-> From: yosun <yosun@suse.com>
->
-> node size(leaf size) in ppc64le at least 65536, so mkfs with --nodesize smaller than that number will cause a fail on 057 and 122.
->
-> Signed-off-by: Yong Sun <yosun@suse.com>
-> ---
->  tests/btrfs/057 | 6 ++++++
->  tests/btrfs/122 | 8 +++++++-
->  2 files changed, 13 insertions(+), 1 deletion(-)
->
-> diff --git a/tests/btrfs/057 b/tests/btrfs/057
-> index a834b763..69d096fb 100755
-> --- a/tests/btrfs/057
-> +++ b/tests/btrfs/057
-> @@ -48,6 +48,12 @@ _require_scratch
->
->  rm -f $seqres.full
->
-> +# the nodesize in ppc64le is at least 65536, it will mismatch output
-> +HARDWARE_PLATFORM=`uname -i`
-> +if [ "$HARDWARE_PLATFORM" = "ppc64le" ]; then
-> +        _notrun "Not supported on ppc64le with nodesize > 4096"
-> +fi
-> +
->  # use small leaf size to get higher btree height.
->  run_check _scratch_mkfs "-b 1g --nodesize 4096"
->
-> diff --git a/tests/btrfs/122 b/tests/btrfs/122
-> index 213a27f8..50003ad0 100755
-> --- a/tests/btrfs/122
-> +++ b/tests/btrfs/122
-> @@ -55,7 +55,13 @@ rm -f $seqres.full
->
->  # Force a small leaf size to make it easier to blow out our root
->  # subvolume tree
-> -_scratch_mkfs "--nodesize 16384" >/dev/null
-> +# Exception: leaf size at least 65536 in ppc64le
-> +HARDWARE_PLATFORM=`uname -i`
-> +if [ "$HARDWARE_PLATFORM" = "ppc64le" ]; then
-> +        _scratch_mkfs "--nodesize 65536" >/dev/null
-> +else
-> +        _scratch_mkfs "--nodesize 16384" >/dev/null
-> +fi
->  _scratch_mount
->  _run_btrfs_util_prog quota enable $SCRATCH_MNT
->
-> --
-> 2.13.6
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Avoid this whole situation by setting up the i_rwsem lockdep class
+at the same time we set up the XFS inode i_ilock classes and so the
+VFS doesn't have to change the lock class itself when it is
+potentially unsafe.
+
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_iops.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 29484091c0d2..3020c57fc125 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -1258,6 +1258,14 @@ xfs_setup_inode(
+ 	xfs_diflags_to_iflags(inode, ip);
+ 
+ 	if (S_ISDIR(inode->i_mode)) {
++		/*
++		 * We set the i_rwsem class here to avoid potential races with
++		 * lockdep_annotate_inode_mutex_key() reinitialising the lock
++		 * after a filehandle lookup has already found the inode in
++		 * cache before it has been unlocked via unlock_new_inode().
++		 */
++		lockdep_set_class(&inode->i_rwsem,
++				  &inode->i_sb->s_type->i_mutex_dir_key);
+ 		lockdep_set_class(&ip->i_lock.mr_lock, &xfs_dir_ilock_class);
+ 		ip->d_ops = ip->i_mount->m_dir_inode_ops;
+ 	} else {
+-- 
+2.17.0
+
