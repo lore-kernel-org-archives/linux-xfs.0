@@ -1,62 +1,107 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:60730 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:53594 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932183AbeFGLle (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Jun 2018 07:41:34 -0400
-Date: Thu, 7 Jun 2018 07:41:32 -0400
+        id S932183AbeFGLlm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 7 Jun 2018 07:41:42 -0400
+Date: Thu, 7 Jun 2018 07:41:40 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/2] xfs: setup VFS i_rwsem lockdep state correctly
-Message-ID: <20180607114132.GA7798@bfoster>
+Subject: Re: [PATCH 2/2] xfs: xfs_reflink_convert_cow() memory allocation
+ deadlock
+Message-ID: <20180607114140.GB7798@bfoster>
 References: <20180607052132.6207-1-david@fromorbit.com>
- <20180607052132.6207-2-david@fromorbit.com>
- <20180607053236.GR10363@dastard>
+ <20180607052132.6207-3-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180607053236.GR10363@dastard>
+In-Reply-To: <20180607052132.6207-3-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jun 07, 2018 at 03:32:36PM +1000, Dave Chinner wrote:
-> On Thu, Jun 07, 2018 at 03:21:31PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > When lockdep is enabled, it changes the type of the inode i_rwsem
-> > semaphore before unlocking a newly instantiated inode. THere is the
-> > possibility that there is already a waiter on that inode lock by the
-> > time we unlock the new inode, so having lockdep re-initialise the
-> > lock is a vector for trouble.
-> > 
-> > Avoid this whole situation by setting up the i_rwsem lockdep class
-> > at the same time we set up the XFS inode i_ilock classes and so the
-> > VFS doesn't have to change the lock class itself when it is
-> > potentially unsafe.
-> > 
-> > Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+On Thu, Jun 07, 2018 at 03:21:32PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> I just realised that the VFS equivalent patch has made it upstream,
-> too, which would help explain this a bit more. Darrick, can you add
-> this to the commit message:
+> xfs_reflink_convert_cow() manipulates the incore extent list
+> in GFP_KERNEL context in the IO submission path whilst holding
+> locked pages under writeback. This is a memory reclaim deadlock
+> vector. This code is not in a transaction, so any memory allocations
+> it makes aren't protected via the memalloc_nofs_save() context that
+> transactions carry.
 > 
-> "This change is necessary because the equivalent fixes to the VFS
-> code made in commit 1e2e547a93a0 ("do d_instantiate/unlock_new_inode
-> combinations safely") are not relevant to XFS as it has it's own
-> internal inode cache lookup and instantiation routines."
+> Hence we need to run this call under memalloc_nofs_save() context to
+> prevent potential memory allocations from being run as GFP_KERNEL
+> and deadlocking.
 > 
+> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+> ---
 
-The reference definitely helps, thanks. With that added:
+Looks fine modulo the header thing Allison already pointed out:
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-> Cheers,
+BTW, shouldn't we also be using XFS_TRANS_NOFS in
+xfs_iomap_write_allocate()?
+
+Brian
+
+>  fs/xfs/xfs_aops.c  | 11 +++++++++++
+>  fs/xfs/xfs_buf.c   |  1 -
+>  fs/xfs/xfs_linux.h |  1 +
+>  3 files changed, 12 insertions(+), 1 deletion(-)
 > 
-> Dave.
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 767d53222f31..1eb625fdcb1e 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -531,8 +531,19 @@ xfs_submit_ioend(
+>  {
+>  	/* Convert CoW extents to regular */
+>  	if (!status && ioend->io_type == XFS_IO_COW) {
+> +		/*
+> +		 * Yuk. This can do memory allocation, but is not a
+> +		 * transactional operation so everything is done in GFP_KERNEL
+> +		 * context. That can deadlock, because we hold pages in
+> +		 * writeback state and GFP_KERNEL allocations can block on them.
+> +		 * Hence we must operate in nofs conditions here.
+> +		 */
+> +		unsigned nofs_flag;
+> +
+> +		nofs_flag = memalloc_nofs_save();
+>  		status = xfs_reflink_convert_cow(XFS_I(ioend->io_inode),
+>  				ioend->io_offset, ioend->io_size);
+> +		memalloc_nofs_restore(nofs_flag);
+>  	}
+>  
+>  	/* Reserve log space if we might write beyond the on-disk inode size. */
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 980bc48979e9..e9c058e3761c 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -21,7 +21,6 @@
+>  #include <linux/migrate.h>
+>  #include <linux/backing-dev.h>
+>  #include <linux/freezer.h>
+> -#include <linux/sched/mm.h>
+>  
+>  #include "xfs_format.h"
+>  #include "xfs_log_format.h"
+> diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+> index ae1e66fa3f61..1631cf4546f2 100644
+> --- a/fs/xfs/xfs_linux.h
+> +++ b/fs/xfs/xfs_linux.h
+> @@ -26,6 +26,7 @@ typedef __u32			xfs_nlink_t;
+>  
+>  #include <linux/semaphore.h>
+>  #include <linux/mm.h>
+> +#include <linux/sched/mm.h>
+>  #include <linux/kernel.h>
+>  #include <linux/blkdev.h>
+>  #include <linux/slab.h>
 > -- 
-> Dave Chinner
-> david@fromorbit.com
+> 2.17.0
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
