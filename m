@@ -1,327 +1,298 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:8866 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751631AbeFGX1c (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jun 2018 19:27:32 -0400
-Date: Fri, 8 Jun 2018 09:27:13 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfs: allow delwri requeue of wait listed buffers
-Message-ID: <20180607232713.GV10363@dastard>
-References: <20180607124125.38700-1-bfoster@redhat.com>
- <20180607124125.38700-3-bfoster@redhat.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:36690 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752411AbeFHQxp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jun 2018 12:53:45 -0400
+Date: Fri, 8 Jun 2018 09:53:29 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfsprogs: remove unused macros
+Message-ID: <20180608165329.GR25007@magnolia>
+References: <3793c1d5-6269-468b-f6f1-e50597879dcc@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180607124125.38700-3-bfoster@redhat.com>
+In-Reply-To: <3793c1d5-6269-468b-f6f1-e50597879dcc@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Jun 07, 2018 at 08:41:25AM -0400, Brian Foster wrote:
-> If a delwri queue occurs of a buffer that was previously submitted
-> from a delwri queue but has not yet been removed from a wait list,
-> the queue sets _XBF_DELWRI_Q without changing the state of ->b_list.
-> This occurs, for example, if another thread beats the submitter
-> thread to the buffer lock after I/O completion. Once the submitter
-> acquires the lock, it removes the buffer from the wait list and
-> leaves a buffer with _XBF_DELWRI_Q set but not populated on a list.
-> This results in a lost buffer submission and in turn can result in
-> assert failures due to _XBF_DELWRI_Q being set on buffer reclaim or
-> filesystem lockups if the buffer happens to cover an item in the
-> AIL.
-
-I just so happened to have this ASSERT happen over night on
-generic/232 testing some code I wrote yesterday. It never ceases to
-amaze me how bugs that have been around for ages always seem to be
-hit at the same time by different people in completely different
-contexts....
-
-> This problem has been reproduced by repeated iterations of xfs/305
-> on high CPU count (28xcpu) systems with limited memory (~1GB). Dirty
-> dquot reclaim races with an xfsaild push of a separate dquot backed
-> by the same buffer such that the buffer sits on the reclaim wait
-> list at the time xfsaild attempts to queue it. Since the latter
-> dquot has been flush locked but the underlying buffer not submitted
-> for I/O, the dquot pins the AIL and causes the filesystem to
-> livelock.
+On Fri, Jun 08, 2018 at 11:48:01AM -0500, Eric Sandeen wrote:
+> A lot of dead macros are lying around xfsprogs; some are just
+> ancient cruft while others are the result of shifting libxfs
+> interfaces, but we can remove them.
 > 
-> To address this problem, allow a delwri queue of a wait listed
-> buffer to steal the buffer from the wait list and add it to the
-> associated delwri queue. This is fundamentally safe because the
-> purpose of the wait list is to provide synchronous I/O. The buffer
-> lock of each wait listed buffer is cycled to ensure that I/O has
-> completed. If another thread acquires the buffer lock first, then
-> the I/O has completed and the submitter lock cycle is a formality.
+> (I've left a few unused macros in place where they exist with
+> other macros for symmetry or completeness.)
 > 
-> The tradeoff to this approach is that the submitter loses the
-> ability to check error state of stolen buffers. This is technically
-> already possible as once the lock is released there is no guarantee
-> another thread has not interfered with the buffer error state by the
-> time the submitter reacquires the lock. Further, most critical error
-> handling occurs in the iodone callbacks in completion context of the
-> specific buffer since the delwri submitter has no idea which buffer
-> failed in the first place. Finally, the stolen buffer case should be
-> relatively rare and limited to races when under the highly parallel
-> and low memory conditions described above.
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-This seems all a bit broken.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-The fundamental problem is that we are waiting on buffer locks for
-completion, assuming that nobody else can get the lock before we do
-to tell us that completion has occured. IMO, it's the way we are
-doing the bulk buffer IO submission and waiting that is broken, not
-the wait the delwri queues are handled.
+--D
 
-i.e. we need to take ownership of the buffer lock across
-xfs_buf_delwri_submit_buffers() and the wait loop in
-xfs_buf_delwri_submit() because we assume that the delwri code is
-the only context with access to the buffer while it is under IO. We
-already have an IO waiting mechanism that does this - it's used by
-xfs_buf_submit_wait().
-
-So what I think we really need to do is split xfs_buf_submit_wait()
-into two halves so we can separate the submission and waiting. TO
-save trying to explain it in great detail, I just wrote some
-(untested!) code below that makes delwri submission hold the lock
-itself until the IO has completed.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-xfs: fix races waiting for delwri buffers
-
-From: Dave Chinner <dchinner@redhat.com>
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-
----
- fs/xfs/xfs_buf.c | 147 +++++++++++++++++++++++++++----------------------------
- 1 file changed, 71 insertions(+), 76 deletions(-)
-
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index a9678c2f3810..40f441e96dc5 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1453,27 +1453,20 @@ _xfs_buf_ioapply(
- }
- 
- /*
-- * Asynchronous IO submission path. This transfers the buffer lock ownership and
-- * the current reference to the IO. It is not safe to reference the buffer after
-- * a call to this function unless the caller holds an additional reference
-- * itself.
-+ * Internal I/O submission helpers for split submission and waiting actions.
-  */
--void
--xfs_buf_submit(
-+static int
-+__xfs_buf_submit(
- 	struct xfs_buf	*bp)
- {
--	trace_xfs_buf_submit(bp, _RET_IP_);
--
- 	ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
--	ASSERT(bp->b_flags & XBF_ASYNC);
- 
- 	/* on shutdown we stale and complete the buffer immediately */
- 	if (XFS_FORCED_SHUTDOWN(bp->b_target->bt_mount)) {
- 		xfs_buf_ioerror(bp, -EIO);
- 		bp->b_flags &= ~XBF_DONE;
- 		xfs_buf_stale(bp);
--		xfs_buf_ioend(bp);
--		return;
-+		return -EIO;
- 	}
- 
- 	if (bp->b_flags & XBF_WRITE)
-@@ -1483,12 +1476,8 @@ xfs_buf_submit(
- 	bp->b_io_error = 0;
- 
- 	/*
--	 * The caller's reference is released during I/O completion.
--	 * This occurs some time after the last b_io_remaining reference is
--	 * released, so after we drop our Io reference we have to have some
--	 * other reference to ensure the buffer doesn't go away from underneath
--	 * us. Take a direct reference to ensure we have safe access to the
--	 * buffer until we are finished with it.
-+	 * I/O needs a reference, because the caller may go away before we are
-+	 * done with the IO. Completion will deal with it.
- 	 */
- 	xfs_buf_hold(bp);
- 
-@@ -1498,21 +1487,66 @@ xfs_buf_submit(
- 	 * xfs_buf_ioend too early.
- 	 */
- 	atomic_set(&bp->b_io_remaining, 1);
--	xfs_buf_ioacct_inc(bp);
-+	if (bp->b_flags & XBF_ASYNC)
-+		xfs_buf_ioacct_inc(bp);
- 	_xfs_buf_ioapply(bp);
-+	return 0;
-+}
-+
-+static int
-+__xfs_buf_iowait(
-+	struct xfs_buf	*bp)
-+{
-+	int		error;
-+
-+	/*
-+	 * make sure we run completion synchronously if it raced with us and is
-+	 * already complete.
-+	 */
-+	if (atomic_dec_and_test(&bp->b_io_remaining) == 1)
-+		xfs_buf_ioend(bp);
-+
-+	/* wait for completion before gathering the error from the buffer */
-+	trace_xfs_buf_iowait(bp, _RET_IP_);
-+	wait_for_completion(&bp->b_iowait);
-+	trace_xfs_buf_iowait_done(bp, _RET_IP_);
-+	error = bp->b_error;
-+
-+	/*
-+	 * all done now, we can release the hold that keeps the buffer
-+	 * referenced for the entire IO.
-+	 */
-+	xfs_buf_rele(bp);
-+	return error;
-+}
-+
-+/*
-+ * Asynchronous IO submission path. This transfers the buffer lock ownership and
-+ * the current reference to the IO. It is not safe to reference the buffer after
-+ * a call to this function unless the caller holds an additional reference
-+ * itself.
-+ */
-+void
-+xfs_buf_submit(
-+	struct xfs_buf	*bp)
-+{
-+	int		error;
-+
-+	trace_xfs_buf_submit(bp, _RET_IP_);
-+
-+	error = __xfs_buf_submit(bp);
- 
- 	/*
- 	 * If _xfs_buf_ioapply failed, we can get back here with only the IO
- 	 * reference we took above. If we drop it to zero, run completion so
- 	 * that we don't return to the caller with completion still pending.
- 	 */
--	if (atomic_dec_and_test(&bp->b_io_remaining) == 1) {
-+	if (error || atomic_dec_and_test(&bp->b_io_remaining) == 1) {
- 		if (bp->b_error)
- 			xfs_buf_ioend(bp);
- 		else
- 			xfs_buf_ioend_async(bp);
- 	}
--
- 	xfs_buf_rele(bp);
- 	/* Note: it is not safe to reference bp now we've dropped our ref */
- }
-@@ -1527,57 +1561,13 @@ xfs_buf_submit_wait(
- 	int		error;
- 
- 	trace_xfs_buf_submit_wait(bp, _RET_IP_);
-+	ASSERT(!(bp->b_flags & XBF_ASYNC));
- 
--	ASSERT(!(bp->b_flags & (_XBF_DELWRI_Q | XBF_ASYNC)));
--
--	if (XFS_FORCED_SHUTDOWN(bp->b_target->bt_mount)) {
--		xfs_buf_ioerror(bp, -EIO);
--		xfs_buf_stale(bp);
--		bp->b_flags &= ~XBF_DONE;
--		return -EIO;
--	}
--
--	if (bp->b_flags & XBF_WRITE)
--		xfs_buf_wait_unpin(bp);
--
--	/* clear the internal error state to avoid spurious errors */
--	bp->b_io_error = 0;
--
--	/*
--	 * For synchronous IO, the IO does not inherit the submitters reference
--	 * count, nor the buffer lock. Hence we cannot release the reference we
--	 * are about to take until we've waited for all IO completion to occur,
--	 * including any xfs_buf_ioend_async() work that may be pending.
--	 */
--	xfs_buf_hold(bp);
--
--	/*
--	 * Set the count to 1 initially, this will stop an I/O completion
--	 * callout which happens before we have started all the I/O from calling
--	 * xfs_buf_ioend too early.
--	 */
--	atomic_set(&bp->b_io_remaining, 1);
--	_xfs_buf_ioapply(bp);
--
--	/*
--	 * make sure we run completion synchronously if it raced with us and is
--	 * already complete.
--	 */
--	if (atomic_dec_and_test(&bp->b_io_remaining) == 1)
--		xfs_buf_ioend(bp);
--
--	/* wait for completion before gathering the error from the buffer */
--	trace_xfs_buf_iowait(bp, _RET_IP_);
--	wait_for_completion(&bp->b_iowait);
--	trace_xfs_buf_iowait_done(bp, _RET_IP_);
--	error = bp->b_error;
-+	error =  __xfs_buf_submit(bp);
-+	if (error)
-+		return error;
- 
--	/*
--	 * all done now, we can release the hold that keeps the buffer
--	 * referenced for the entire IO.
--	 */
--	xfs_buf_rele(bp);
--	return error;
-+	return  __xfs_buf_iowait(bp);
- }
- 
- void *
-@@ -2045,14 +2035,21 @@ xfs_buf_delwri_submit_buffers(
- 		 * at this point so the caller can still access it.
- 		 */
- 		bp->b_flags &= ~(_XBF_DELWRI_Q | XBF_WRITE_FAIL);
--		bp->b_flags |= XBF_WRITE | XBF_ASYNC;
-+		bp->b_flags |= XBF_WRITE;
- 		if (wait_list) {
-+			/*
-+			 * Split synchronous IO - we wait later, so we need ai
-+			 * reference until we run completion processing and drop
-+			 * the buffer lock ourselves
-+			 */
- 			xfs_buf_hold(bp);
- 			list_move_tail(&bp->b_list, wait_list);
--		} else
-+			__xfs_buf_submit(bp);
-+		} else {
- 			list_del_init(&bp->b_list);
--
--		xfs_buf_submit(bp);
-+			bp->b_flags |= XBF_ASYNC;
-+			xfs_buf_submit(bp);
-+		}
- 	}
- 	blk_finish_plug(&plug);
- 
-@@ -2099,9 +2096,7 @@ xfs_buf_delwri_submit(
- 
- 		list_del_init(&bp->b_list);
- 
--		/* locking the buffer will wait for async IO completion. */
--		xfs_buf_lock(bp);
--		error2 = bp->b_error;
-+		error2 = __xfs_buf_iowait(bp);
- 		xfs_buf_relse(bp);
- 		if (!error)
- 			error = error2;
+> ---
+> 
+>  db/btblock.c              |    5 -----
+>  db/metadump.c             |    8 --------
+>  db/symlink.c              |    1 -
+>  estimate/xfs_estimate.c   |    1 -
+>  fsr/xfs_fsr.c             |    4 ----
+>  include/xfs_trace.h       |    4 ----
+>  libxfs/libxfs_api_defs.h  |    2 --
+>  libxlog/xfs_log_recover.c |    2 --
+>  repair/attr_repair.c      |    1 -
+>  repair/incore.h           |    2 --
+>  repair/incore_ext.c       |    8 --------
+>  repair/scan.c             |    2 --
+>  repair/slab.c             |    1 -
+>  repair/xfs_repair.c       |    4 ----
+>  15 files changed, 46 deletions(-)
+> 
+> 
+> diff --git a/db/btblock.c b/db/btblock.c
+> index 9f506df..0c76394 100644
+> --- a/db/btblock.c
+> +++ b/db/btblock.c
+> @@ -728,8 +728,6 @@ const field_t	rmapbt_key_flds[] = {
+>  #undef HI_KOFF
+>  #undef KOFF
+>  
+> -#define	ROFF(f)	bitize(offsetof(struct xfs_rmap_rec, rm_ ## f))
+> -
+>  #define RMAPBT_STARTBLOCK_BITOFF	0
+>  #define RMAPBT_BLOCKCOUNT_BITOFF	(RMAPBT_STARTBLOCK_BITOFF + RMAPBT_STARTBLOCK_BITLEN)
+>  #define RMAPBT_OWNER_BITOFF		(RMAPBT_BLOCKCOUNT_BITOFF + RMAPBT_BLOCKCOUNT_BITLEN)
+> @@ -752,7 +750,6 @@ const field_t	rmapbt_rec_flds[] = {
+>  	  TYP_NONE },
+>  	{ NULL }
+>  };
+> -#undef ROFF
+>  
+>  /* refcount btree blocks */
+>  const field_t	refcbt_crc_hfld[] = {
+> @@ -785,13 +782,11 @@ const field_t	refcbt_crc_flds[] = {
+>  #define REFCNTBT_COWFLAG_BITOFF		0
+>  #define REFCNTBT_STARTBLOCK_BITOFF	(REFCNTBT_COWFLAG_BITOFF + REFCNTBT_COWFLAG_BITLEN)
+>  
+> -#define	KOFF(f)	bitize(offsetof(struct xfs_refcount_key, rc_ ## f))
+>  const field_t	refcbt_key_flds[] = {
+>  	{ "startblock", FLDT_CAGBLOCK, OI(REFCNTBT_STARTBLOCK_BITOFF), C1, 0, TYP_DATA },
+>  	{ "cowflag", FLDT_CCOWFLG, OI(REFCNTBT_COWFLAG_BITOFF), C1, 0, TYP_DATA },
+>  	{ NULL }
+>  };
+> -#undef KOFF
+>  
+>  #define	ROFF(f)	bitize(offsetof(struct xfs_refcount_rec, rc_ ## f))
+>  const field_t	refcbt_rec_flds[] = {
+> diff --git a/db/metadump.c b/db/metadump.c
+> index d33f901..d7613eb 100644
+> --- a/db/metadump.c
+> +++ b/db/metadump.c
+> @@ -34,14 +34,6 @@
+>  
+>  #define DEFAULT_MAX_EXT_SIZE	MAXEXTLEN
+>  
+> -/*
+> - * It's possible that multiple files in a directory (or attributes
+> - * in a file) produce the same obfuscated name.  If that happens, we
+> - * try to create another one.  After several rounds of this though,
+> - * we just give up and leave the original name as-is.
+> - */
+> -#define	DUP_MAX		5	/* Max duplicates before we give up */
+> -
+>  /* copy all metadata structures to/from a file */
+>  
+>  static int	metadump_f(int argc, char **argv);
+> diff --git a/db/symlink.c b/db/symlink.c
+> index c99b8ca..a81785c 100644
+> --- a/db/symlink.c
+> +++ b/db/symlink.c
+> @@ -64,7 +64,6 @@ const struct field	symlink_crc_hfld[] = {
+>  };
+>  
+>  #define	OFF(f)	bitize(offsetof(struct xfs_dsymlink_hdr, sl_ ## f))
+> -#define	SZOF(f)	bitize(sizeof(struct xfs_dsymlink_hdr))
+>  const struct field	symlink_crc_flds[] = {
+>  	{ "magic", FLDT_UINT32X, OI(OFF(magic)), C1, 0, TYP_NONE },
+>  	{ "offset", FLDT_UINT32D, OI(OFF(offset)), C1, 0, TYP_NONE },
+> diff --git a/estimate/xfs_estimate.c b/estimate/xfs_estimate.c
+> index 323137c..1e1e1e3 100644
+> --- a/estimate/xfs_estimate.c
+> +++ b/estimate/xfs_estimate.c
+> @@ -54,7 +54,6 @@ int ffn(const char *, const struct stat *, int, struct FTW *);
+>  #define LOGSIZE		1000
+>  
+>  #define FBLOCKS(n)	((n)/blocksize)
+> -#define RFBYTES(n)	((n) - (FBLOCKS(n) * blocksize))
+>  
+>  unsigned long long dirsize=0;		/* bytes */
+>  unsigned long long logsize=LOGSIZE*BLOCKSIZE;	/* bytes */
+> diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+> index b74a70b..11a7984 100644
+> --- a/fsr/xfs_fsr.c
+> +++ b/fsr/xfs_fsr.c
+> @@ -64,10 +64,6 @@ static int64_t		minimumfree = 2048;
+>  #define NULLFD		-1
+>  #define GRABSZ		64
+>  #define TARGETRANGE	10
+> -#define	V_NONE		0
+> -#define	V_OVERVIEW	1
+> -#define	V_ALL		2
+> -#define BUFFER_SIZE	(1<<16)
+>  #define BUFFER_MAX	(1<<24)
+>  
+>  static time_t howlong = 7200;		/* default seconds of reorganizing */
+> diff --git a/include/xfs_trace.h b/include/xfs_trace.h
+> index cfcd985..62c6839 100644
+> --- a/include/xfs_trace.h
+> +++ b/include/xfs_trace.h
+> @@ -21,7 +21,6 @@
+>  #define trace_xfs_alloc_exact_done(a)		((void) 0)
+>  #define trace_xfs_alloc_exact_notfound(a)	((void) 0)
+>  #define trace_xfs_alloc_exact_error(a)		((void) 0)
+> -#define trace_xfs_alloc_near_nominleft(a)	((void) 0)
+>  #define trace_xfs_alloc_near_first(a)		((void) 0)
+>  #define trace_xfs_alloc_near_greater(a)		((void) 0)
+>  #define trace_xfs_alloc_near_lesser(a)		((void) 0)
+> @@ -44,8 +43,6 @@
+>  #define trace_xfs_alloc_vextent_loopfailed(a)	((void) 0)
+>  #define trace_xfs_alloc_vextent_allfailed(a)	((void) 0)
+>  
+> -#define trace_xfs_log_recover_item_reorder_head(a,b,c,d)	((void) 0)
+> -#define trace_xfs_log_recover_item_reorder_tail(a,b,c,d)	((void) 0)
+>  #define trace_xfs_log_recover_item_add_cont(a,b,c,d)	((void) 0)
+>  #define trace_xfs_log_recover_item_add(a,b,c,d)	((void) 0)
+>  
+> @@ -273,7 +270,6 @@
+>  #define trace_xfs_refcount_find_shared_error(...)	((void) 0)
+>  
+>  #define trace_xfs_bmap_remap_alloc(...)		((void) 0)
+> -#define trace_xfs_bmap_remap_alloc_error(...)	((void) 0)
+>  #define trace_xfs_bmap_deferred(...)		((void) 0)
+>  #define trace_xfs_bmap_defer(...)		((void) 0)
+>  
+> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+> index 78daca0..75255a8 100644
+> --- a/libxfs/libxfs_api_defs.h
+> +++ b/libxfs/libxfs_api_defs.h
+> @@ -46,7 +46,6 @@
+>  #define xfs_trans_iget			libxfs_trans_iget
+>  #define xfs_trans_ichgtime		libxfs_trans_ichgtime
+>  #define xfs_trans_ijoin			libxfs_trans_ijoin
+> -#define xfs_trans_ijoin_ref		libxfs_trans_ijoin_ref
+>  #define xfs_trans_init			libxfs_trans_init
+>  #define xfs_trans_inode_alloc_buf	libxfs_trans_inode_alloc_buf
+>  #define xfs_trans_dirty_buf		libxfs_trans_dirty_buf
+> @@ -70,7 +69,6 @@
+>  #define xfs_alloc_min_freelist		libxfs_alloc_min_freelist
+>  #define xfs_alloc_read_agf		libxfs_alloc_read_agf
+>  #define xfs_bmap_last_offset		libxfs_bmap_last_offset
+> -#define xfs_bmap_search_extents		libxfs_bmap_search_extents
+>  #define xfs_iext_lookup_extent		libxfs_iext_lookup_extent
+>  #define xfs_bmapi_write			libxfs_bmapi_write
+>  #define xfs_bmapi_read			libxfs_bmapi_read
+> diff --git a/libxlog/xfs_log_recover.c b/libxlog/xfs_log_recover.c
+> index 58d9182..51dd97e 100644
+> --- a/libxlog/xfs_log_recover.c
+> +++ b/libxlog/xfs_log_recover.c
+> @@ -1035,8 +1035,6 @@ xlog_recover_add_item(
+>  	list_add_tail(&item->ri_list, head);
+>  }
+>  
+> -#define BLK_AVG(blk1, blk2)	((blk1+blk2) >> 1)
+> -
+>  STATIC int
+>  xlog_recover_add_to_cont_trans(
+>  	struct xlog		*log,
+> diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+> index 8b1b8a7..fe73fd6 100644
+> --- a/repair/attr_repair.c
+> +++ b/repair/attr_repair.c
+> @@ -35,7 +35,6 @@ static int xfs_mac_valid(xfs_mac_label_t *lp);
+>   * dir v1 code, but that format is no longer supported yb the userspace
+>   * utilities and hence is now specific to the attribute tree implementation.
+>   */
+> -#define XR_DA_LEAF_MAPSIZE	XFS_ATTR_LEAF_MAPSIZE
+>  
+>  typedef unsigned char	da_freemap_t;
+>  
+> diff --git a/repair/incore.h b/repair/incore.h
+> index fd66084..620ed61 100644
+> --- a/repair/incore.h
+> +++ b/repair/incore.h
+> @@ -113,8 +113,6 @@ typedef struct rt_extent_tree_node  {
+>  /* separate state bit, OR'ed into high (4th) bit of ex_state field */
+>  
+>  #define XR_E_WRITTEN	0x8	/* extent has been written out, can't reclaim */
+> -#define good_state(state)	(((state) & (~XR_E_WRITTEN)) >= XR_E_UNKNOWN && \
+> -				((state) & (~XR_E_WRITTEN) < XF_E_BAD_STATE))
+>  #define written(state)		((state) & XR_E_WRITTEN)
+>  #define set_written(state)	(state) &= XR_E_WRITTEN
+>  
+> diff --git a/repair/incore_ext.c b/repair/incore_ext.c
+> index 0a8138a..7ad883f 100644
+> --- a/repair/incore_ext.c
+> +++ b/repair/incore_ext.c
+> @@ -267,14 +267,6 @@ get_bno_extent(xfs_agnumber_t agno, extent_tree_node_t *ext)
+>  }
+>  
+>  /*
+> - * normalizing constant for bcnt size -> address conversion (see avl ops)
+> - * used by the AVL tree code to convert sizes and must be used when
+> - * doing an AVL search in the tree (e.g. avl_findrange(s))
+> - */
+> -#define MAXBCNT		0xFFFFFFFF
+> -#define BCNT_ADDR(cnt)	((unsigned int) MAXBCNT - (cnt))
+> -
+> -/*
+>   * the next 4 routines manage the trees of free extents -- 2 trees
+>   * per AG.  The first tree is sorted by block number.  The second
+>   * tree is sorted by extent size.  This is the bcnt tree.
+> diff --git a/repair/scan.c b/repair/scan.c
+> index 0fc41f2..d25b6bf 100644
+> --- a/repair/scan.c
+> +++ b/repair/scan.c
+> @@ -2498,8 +2498,6 @@ out_free_sb:
+>  		do_error(_("can't get %s for ag %d\n"), objname, agno);
+>  }
+>  
+> -#define SCAN_THREADS 32
+> -
+>  void
+>  scan_ags(
+>  	struct xfs_mount	*mp,
+> diff --git a/repair/slab.c b/repair/slab.c
+> index b04c3b8..cb4f403 100644
+> --- a/repair/slab.c
+> +++ b/repair/slab.c
+> @@ -101,7 +101,6 @@ struct xfs_bag {
+>  	size_t			bg_inuse;	/* number of slots in use */
+>  	void			**bg_ptrs;	/* pointers */
+>  };
+> -#define BAG_SIZE(nr)	(sizeof(struct xfs_bag) + ((nr) * sizeof(void *)))
+>  #define BAG_END(bag)	(&(bag)->bg_ptrs[(bag)->bg_nr])
+>  
+>  /*
+> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+> index ff6a738..ff0c4ff 100644
+> --- a/repair/xfs_repair.c
+> +++ b/repair/xfs_repair.c
+> @@ -35,10 +35,6 @@
+>  #include "slab.h"
+>  #include "rmap.h"
+>  
+> -#define	rounddown(x, y)	(((x)/(y))*(y))
+> -
+> -#define		XR_MAX_SECT_SIZE	(64 * 1024)
+> -
+>  /*
+>   * option tables for getsubopt calls
+>   */
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
