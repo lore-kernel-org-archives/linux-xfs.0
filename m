@@ -1,62 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:46160 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751384AbeFIC05 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jun 2018 22:26:57 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w592QUpb190056
-        for <linux-xfs@vger.kernel.org>; Sat, 9 Jun 2018 02:26:56 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp2120.oracle.com with ESMTP id 2jbvypye3h-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 09 Jun 2018 02:26:56 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w592Qsgc018895
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 9 Jun 2018 02:26:55 GMT
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w592QshQ020919
-        for <linux-xfs@vger.kernel.org>; Sat, 9 Jun 2018 02:26:54 GMT
-Date: Fri, 8 Jun 2018 19:26:53 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: update incore per-AG inode count
-Message-ID: <20180609022653.GS25007@magnolia>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:11627 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752139AbeFHAzT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jun 2018 20:55:19 -0400
+Date: Fri, 8 Jun 2018 10:55:17 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 01/14] xfs: repair the AGF and AGFL
+Message-ID: <20180608005517.GY10363@dastard>
+References: <152770863951.11611.5866814627357136911.stgit@magnolia>
+ <152770864591.11611.5564813732568495676.stgit@magnolia>
+ <20180604015255.GJ10363@dastard>
+ <20180605231856.GO9437@magnolia>
+ <20180606040624.GO10363@dastard>
+ <20180606045603.GV9437@magnolia>
+ <20180607003132.GQ10363@dastard>
+ <20180607044255.GB25007@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20180607044255.GB25007@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Jun 06, 2018 at 09:42:55PM -0700, Darrick J. Wong wrote:
+> On Thu, Jun 07, 2018 at 10:31:32AM +1000, Dave Chinner wrote:
+> > On Tue, Jun 05, 2018 at 09:56:03PM -0700, Darrick J. Wong wrote:
+> > > On Wed, Jun 06, 2018 at 02:06:24PM +1000, Dave Chinner wrote:
+> > > > On Tue, Jun 05, 2018 at 04:18:56PM -0700, Darrick J. Wong wrote:
+> > > > > On Mon, Jun 04, 2018 at 11:52:55AM +1000, Dave Chinner wrote:
 
-For whatever reason we never actually update pagi_count (the in-core
-perag inode count) when we allocate or free inode chunks.  Online scrub
-is going to use it, so we need to fix the accounting.
+[big snip]
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_ialloc.c |    2 ++
- 1 file changed, 2 insertions(+)
+I think we're in agreement with the direction we need to head, so
+rather than bikeshed it to death, I'll just say "yes, sounds like a
+good plan" and leave the rest to you, Darrick. :)
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 3f551eb29157..a64f71b614cc 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -897,6 +897,7 @@ xfs_ialloc_ag_alloc(
- 	be32_add_cpu(&agi->agi_freecount, newlen);
- 	pag = xfs_perag_get(args.mp, agno);
- 	pag->pagi_freecount += newlen;
-+	pag->pagi_count += newlen;
- 	xfs_perag_put(pag);
- 	agi->agi_newino = cpu_to_be32(newino);
- 
-@@ -1991,6 +1992,7 @@ xfs_difree_inobt(
- 		xfs_ialloc_log_agi(tp, agbp, XFS_AGI_COUNT | XFS_AGI_FREECOUNT);
- 		pag = xfs_perag_get(mp, agno);
- 		pag->pagi_freecount -= ilen - 1;
-+		pag->pagi_count -= ilen;
- 		xfs_perag_put(pag);
- 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_ICOUNT, -ilen);
- 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_IFREE, -(ilen - 1));
+> Ok, so two extra scrub ioctl flags, then:
+> 
+> _IFLAG_FREEZE_OK	/* userspace allows repair to freeze the fs */
+> _OFLAG_AVOIDED_FREEZE	/* would have done something but couldn't freeze */
+> 
+> I'll think about how to add a new scrubber to take care of the global
+> summary counters, and in the meantime I think I'll nominate online
+> rmapbt repair and online quotacheck for _IFLAG_FREEZE_OK.
+
+That's reasonable - I'm guessing the new global counter
+repair/scrubber will need this too?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
