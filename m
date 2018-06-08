@@ -1,58 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:11627 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752139AbeFHAzT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jun 2018 20:55:19 -0400
-Date: Fri, 8 Jun 2018 10:55:17 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 01/14] xfs: repair the AGF and AGFL
-Message-ID: <20180608005517.GY10363@dastard>
-References: <152770863951.11611.5866814627357136911.stgit@magnolia>
- <152770864591.11611.5564813732568495676.stgit@magnolia>
- <20180604015255.GJ10363@dastard>
- <20180605231856.GO9437@magnolia>
- <20180606040624.GO10363@dastard>
- <20180606045603.GV9437@magnolia>
- <20180607003132.GQ10363@dastard>
- <20180607044255.GB25007@magnolia>
+Received: from userp2120.oracle.com ([156.151.31.85]:53522 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752716AbeFHQtP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jun 2018 12:49:15 -0400
+Date: Fri, 8 Jun 2018 09:49:09 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: NULL pointer dereference in xfs_trans_binval() when mounting and
+ operating a crafted xfs image
+Message-ID: <20180608164909.GQ25007@magnolia>
+References: <66348561-0B03-4CAE-893A-25161D66D6AF@gatech.edu>
+ <fff2a2c8-b607-05ea-e97e-f53f054fb428@sandeen.net>
+ <5627CC54-D26D-4946-BEAD-6770E7D8A883@gatech.edu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180607044255.GB25007@magnolia>
+In-Reply-To: <5627CC54-D26D-4946-BEAD-6770E7D8A883@gatech.edu>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Xu, Wen" <wen.xu@gatech.edu>
+Cc: Eric Sandeen <sandeen@sandeen.net>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-On Wed, Jun 06, 2018 at 09:42:55PM -0700, Darrick J. Wong wrote:
-> On Thu, Jun 07, 2018 at 10:31:32AM +1000, Dave Chinner wrote:
-> > On Tue, Jun 05, 2018 at 09:56:03PM -0700, Darrick J. Wong wrote:
-> > > On Wed, Jun 06, 2018 at 02:06:24PM +1000, Dave Chinner wrote:
-> > > > On Tue, Jun 05, 2018 at 04:18:56PM -0700, Darrick J. Wong wrote:
-> > > > > On Mon, Jun 04, 2018 at 11:52:55AM +1000, Dave Chinner wrote:
+On Thu, Jun 07, 2018 at 10:25:56PM +0000, Xu, Wen wrote:
+> I tested the patch that works.
 
-[big snip]
+ok.  Eric, would you mind adding a tested-by to the patch and sending it
+with '[PATCH]' subject as a separate thread?
 
-I think we're in agreement with the direction we need to head, so
-rather than bikeshed it to death, I'll just say "yes, sounds like a
-good plan" and leave the rest to you, Darrick. :)
+--D
 
-> Ok, so two extra scrub ioctl flags, then:
+> Thanks,
+> Wen
 > 
-> _IFLAG_FREEZE_OK	/* userspace allows repair to freeze the fs */
-> _OFLAG_AVOIDED_FREEZE	/* would have done something but couldn't freeze */
+> > On Jun 7, 2018, at 6:01 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+> > 
+> > if (bp && (xfs_da_shrink_inode(args, 0, bp) != 0))
 > 
-> I'll think about how to add a new scrubber to take care of the global
-> summary counters, and in the meantime I think I'll nominate online
-> rmapbt repair and online quotacheck for _IFLAG_FREEZE_OK.
-
-That's reasonable - I'm guessing the new global counter
-repair/scrubber will need this too?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
