@@ -1,360 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:57970 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933751AbeFGPyn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jun 2018 11:54:43 -0400
-Date: Thu, 7 Jun 2018 08:54:37 -0700
+Received: from aserp2120.oracle.com ([141.146.126.78]:35118 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752285AbeFHBXG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jun 2018 21:23:06 -0400
+Date: Thu, 7 Jun 2018 18:23:03 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/3] xfs: replace do_mod with native operations
-Message-ID: <20180607155437.GK25007@magnolia>
-References: <20180607052751.6541-1-david@fromorbit.com>
- <20180607052751.6541-3-david@fromorbit.com>
+Subject: Re: [PATCH 2/6] xfs: verify extent size hint is valid in inode
+ verifier
+Message-ID: <20180608012303.GO25007@magnolia>
+References: <20180605062423.4877-1-david@fromorbit.com>
+ <20180605062423.4877-3-david@fromorbit.com>
+ <20180605171015.GJ9437@magnolia>
+ <20180607161631.GM25007@magnolia>
+ <20180608011039.GZ10363@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180607052751.6541-3-david@fromorbit.com>
+In-Reply-To: <20180608011039.GZ10363@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jun 07, 2018 at 03:27:50PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Fri, Jun 08, 2018 at 11:10:39AM +1000, Dave Chinner wrote:
+> On Thu, Jun 07, 2018 at 09:16:31AM -0700, Darrick J. Wong wrote:
+> > On Tue, Jun 05, 2018 at 10:10:15AM -0700, Darrick J. Wong wrote:
+> > > On Tue, Jun 05, 2018 at 04:24:19PM +1000, Dave Chinner wrote:
+> > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > 
+> > > > There are rules for vald extent size hints. We enforce them when
+> > > > applications set them, but fuzzers violate those rules and that
+> > > > screws us over.
+> > > > 
+> > > > This results in alignment assertion failures when setting up
+> > > > allocations such as this in direct IO:
+> > > > 
+> > > > XFS: Assertion failed: ap->length, file: fs/xfs/libxfs/xfs_bmap.c, line: 3432
+> > > > ....
+> > > > Call Trace:
+> > > >  xfs_bmap_btalloc+0x415/0x910
+> > > >  xfs_bmapi_write+0x71c/0x12e0
+> > > >  xfs_iomap_write_direct+0x2a9/0x420
+> > > >  xfs_file_iomap_begin+0x4dc/0xa70
+> > > >  iomap_apply+0x43/0x100
+> > > >  iomap_file_buffered_write+0x62/0x90
+> > > >  xfs_file_buffered_aio_write+0xba/0x300
+> > > >  __vfs_write+0xd5/0x150
+> > > >  vfs_write+0xb6/0x180
+> > > >  ksys_write+0x45/0xa0
+> > > >  do_syscall_64+0x5a/0x180
+> > > >  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+> > > > 
+> > > > And from xfs_db:
+> > > > 
+> > > > core.extsize = 10380288
+> > > > 
+> > > > Which is not an integer multiple of the block size, and so violates
+> > > > Rule #7 for setting extent size hints. Validate extent size hint
+> > > > rules in the inode verifier to catch this.
+> > > > 
+> > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > Looks ok modulo my comments in the next patch,
+> > > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > FWIW when I applied this to xfsprogs I saw an xfs/033 regression:
+> > 
+> > Phase 6 - check inode connectivity...
+> > reinitializing root directory
+> > Metadata corruption detected at 0x5555555c60e0, inode 0x80 dinode
+> > 
+> > fatal error -- could not iget root inode -- error - 117
+> > [Inferior 1 (process 1178) exited with code 01]
+> > (gdb) l *(0x5555555c60e0)
+> > 0x5555555c60e0 is in libxfs_inode_validate_extsize (xfs_inode_buf.c:729).
+> > 
+> > We fail the inode verifier while trying to _iget the root inode so that
+> > we can reinitialize it; I suspect phase 3 is going to need to check the
+> > extent size hints and clear them.
 > 
-> do_mod() is a hold-over from when we have different sizes for file
-> offsets and and other internal values for 40 bit XFS filesystems.
-> Hence depending on build flags variables passed to do_mod() could
-> change size. We no longer support those small format filesystems and
-> hence everything is of fixed size theses days, even on 32 bit
-> platforms.
+> I'm actually quite happy to see that the continual process of
+> hardening the kernel verifiers has got to the point where we are
+> starting to expose deficiencies in xfs_repair.
 > 
-> As such, we can convert all the do_mod() callers to platform
-> optimised modulus operations as defined by linux/math64.h.
-> Individual conversions depend on the types of variables being used.
-> 
-> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 37 +++++++++++++++++++++++--------------
->  fs/xfs/xfs_bmap_util.c   | 14 +++++++++-----
->  fs/xfs/xfs_inode.c       |  2 +-
->  fs/xfs/xfs_iomap.h       |  4 ++--
->  fs/xfs/xfs_linux.h       | 19 -------------------
->  fs/xfs/xfs_log_recover.c | 32 +++++++++++++++++++++++++-------
->  fs/xfs/xfs_rtalloc.c     | 15 +++++++++++----
->  7 files changed, 71 insertions(+), 52 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 3de047eb8209..4d8fd37ec7ae 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -2923,7 +2923,7 @@ xfs_bmap_extsize_align(
->  	 * perform this alignment, or if a truncate shot us in the
->  	 * foot.
->  	 */
-> -	temp = do_mod(orig_off, extsz);
-> +	div_u64_rem(orig_off, extsz, &temp);
->  	if (temp) {
->  		align_alen += temp;
->  		align_off -= temp;
-> @@ -3497,15 +3497,17 @@ xfs_bmap_btalloc(
->  	/* apply extent size hints if obtained earlier */
->  	if (align) {
->  		args.prod = align;
-> -		if ((args.mod = (xfs_extlen_t)do_mod(ap->offset, args.prod)))
-> -			args.mod = (xfs_extlen_t)(args.prod - args.mod);
-> +		div_u64_rem(ap->offset, args.prod, &args.mod);
-> +		if (args.mod)
-> +			args.mod = args.prod - args.mod;
->  	} else if (mp->m_sb.sb_blocksize >= PAGE_SIZE) {
->  		args.prod = 1;
->  		args.mod = 0;
->  	} else {
->  		args.prod = PAGE_SIZE >> mp->m_sb.sb_blocklog;
-> -		if ((args.mod = (xfs_extlen_t)(do_mod(ap->offset, args.prod))))
-> -			args.mod = (xfs_extlen_t)(args.prod - args.mod);
-> +		div_u64_rem(ap->offset, args.prod, &args.mod);
-> +		if (args.mod)
-> +			args.mod = args.prod - args.mod;
->  	}
->  	/*
->  	 * If we are not low on available data blocks, and the
-> @@ -4953,13 +4955,15 @@ xfs_bmap_del_extent_real(
->  	if (whichfork == XFS_DATA_FORK && XFS_IS_REALTIME_INODE(ip)) {
->  		xfs_fsblock_t	bno;
->  		xfs_filblks_t	len;
-> +		xfs_extlen_t	mod;
-> +
-> +		bno = div_u64_rem(del->br_startblock, mp->m_sb.sb_rextsize,
-> +				  &mod);
-> +		ASSERT(mod == 0);
-> +		len = div_u64_rem(del->br_blockcount, mp->m_sb.sb_rextsize,
-> +				  &mod);
-> +		ASSERT(mod == 0);
->  
-> -		ASSERT(do_mod(del->br_blockcount, mp->m_sb.sb_rextsize) == 0);
-> -		ASSERT(do_mod(del->br_startblock, mp->m_sb.sb_rextsize) == 0);
-> -		bno = del->br_startblock;
-> -		len = del->br_blockcount;
-> -		do_div(bno, mp->m_sb.sb_rextsize);
-> -		do_div(len, mp->m_sb.sb_rextsize);
->  		error = xfs_rtfree_extent(tp, bno, (xfs_extlen_t)len);
->  		if (error)
->  			goto done;
-> @@ -5296,9 +5300,12 @@ __xfs_bunmapi(
->  			del.br_blockcount = max_len;
->  		}
->  
-> +		if (!isrt)
-> +			goto delete;
-> +
->  		sum = del.br_startblock + del.br_blockcount;
-> -		if (isrt &&
-> -		    (mod = do_mod(sum, mp->m_sb.sb_rextsize))) {
-> +		div_u64_rem(sum, mp->m_sb.sb_rextsize, &mod);
-> +		if (mod) {
->  			/*
->  			 * Realtime extent not lined up at the end.
->  			 * The extent could have been split into written
-> @@ -5345,7 +5352,8 @@ __xfs_bunmapi(
->  				goto error0;
->  			goto nodelete;
->  		}
-> -		if (isrt && (mod = do_mod(del.br_startblock, mp->m_sb.sb_rextsize))) {
-> +		div_u64_rem(del.br_startblock, mp->m_sb.sb_rextsize, &mod);
-> +		if (mod) {
->  			/*
->  			 * Realtime extent is lined up at the end but not
->  			 * at the front.  We'll get rid of full extents if
-> @@ -5414,6 +5422,7 @@ __xfs_bunmapi(
->  			}
->  		}
->  
-> +delete:
->  		if (wasdel) {
->  			error = xfs_bmap_del_extent_delay(ip, whichfork, &icur,
->  					&got, &del);
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 7d26933a542f..13e6caf8b801 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -80,6 +80,7 @@ xfs_bmap_rtalloc(
->  	int		error;		/* error return value */
->  	xfs_mount_t	*mp;		/* mount point structure */
->  	xfs_extlen_t	prod = 0;	/* product factor for allocators */
-> +	xfs_extlen_t	mod = 0;	/* product factor for allocators */
+> Can I wait for the xfsprogs libxfs-4.18-sync branch to pick up these
+> verifier changes before looking at what repair needs to do to avoid
+> it? I don't want to do a forced context switch to
+> debugging/enhancing userspace code right at this moment....
 
-I don't think we need the initial value or the comment.
-
->  	xfs_extlen_t	ralen = 0;	/* realtime allocation length */
->  	xfs_extlen_t	align;		/* minimum allocation alignment */
->  	xfs_rtblock_t	rtb;
-> @@ -99,7 +100,8 @@ xfs_bmap_rtalloc(
->  	 * If the offset & length are not perfectly aligned
->  	 * then kill prod, it will just get us in trouble.
->  	 */
-> -	if (do_mod(ap->offset, align) || ap->length % align)
-> +	div_u64_rem(ap->offset, align, &mod);
-> +	if (mod || ap->length % align)
->  		prod = 1;
->  	/*
->  	 * Set ralen to be the actual requested length in rtextents.
-> @@ -936,9 +938,11 @@ xfs_alloc_file_space(
->  			do_div(s, extsz);
->  			s *= extsz;
->  			e = startoffset_fsb + allocatesize_fsb;
-> -			if ((temp = do_mod(startoffset_fsb, extsz)))
-> +			div_u64_rem(startoffset_fsb, extsz, &temp);
-> +			if (temp)
->  				e += temp;
-> -			if ((temp = do_mod(e, extsz)))
-> +			div_u64_rem(e, extsz, &temp);
-> +			if (temp)
->  				e += extsz - temp;
->  		} else {
->  			s = 0;
-> @@ -1090,7 +1094,7 @@ xfs_adjust_extent_unmap_boundaries(
->  	struct xfs_mount	*mp = ip->i_mount;
->  	struct xfs_bmbt_irec	imap;
->  	int			nimap, error;
-> -	xfs_extlen_t		mod = 0;
-> +	xfs_rtblock_t		mod = 0;
->  
->  	nimap = 1;
->  	error = xfs_bmapi_read(ip, *startoffset_fsb, 1, &imap, &nimap, 0);
-> @@ -1099,7 +1103,7 @@ xfs_adjust_extent_unmap_boundaries(
->  
->  	if (nimap && imap.br_startblock != HOLESTARTBLOCK) {
->  		ASSERT(imap.br_startblock != DELAYSTARTBLOCK);
-> -		mod = do_mod(imap.br_startblock, mp->m_sb.sb_rextsize);
-> +		div64_u64_rem(imap.br_startblock, mp->m_sb.sb_rextsize, &mod);
-
-Why does this need to be a div64_u64_rem?  sb_rextsize is 32-bit, so the
-remainder won't exceed 2^32-1, right?
-
->  		if (mod)
->  			*startoffset_fsb += mp->m_sb.sb_rextsize - mod;
-
-Indeed if it ever did that would screw up this logic, wouldn't it?
+That's ultimately up to Eric, but since fixing it is nontrivial surgery
+on xfs_repair (and the verifier update patch doesn't itself break the
+build) I'd be fine with fixing it after the 4.18 sync goes in.
 
 --D
 
->  	}
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 6cda0f08b045..4a2e5e13c569 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -2258,7 +2258,7 @@ xfs_ifree_cluster(
->  		 */
->  		ioffset = inum - xic->first_ino;
->  		if ((xic->alloc & XFS_INOBT_MASK(ioffset)) == 0) {
-> -			ASSERT(do_mod(ioffset, inodes_per_cluster) == 0);
-> +			ASSERT(ioffset % inodes_per_cluster == 0);
->  			continue;
->  		}
->  
-> diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
-> index b0c98d4faa5b..83474c9cede9 100644
-> --- a/fs/xfs/xfs_iomap.h
-> +++ b/fs/xfs/xfs_iomap.h
-> @@ -30,10 +30,10 @@ xfs_aligned_fsb_count(
->  	if (extsz) {
->  		xfs_extlen_t	align;
->  
-> -		align = do_mod(offset_fsb, extsz);
-> +		div_u64_rem(offset_fsb, extsz, &align);
->  		if (align)
->  			count_fsb += align;
-> -		align = do_mod(count_fsb, extsz);
-> +		div_u64_rem(count_fsb, extsz, &align);
->  		if (align)
->  			count_fsb += extsz - align;
->  	}
-> diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-> index 1631cf4546f2..2c800ffbcffd 100644
-> --- a/fs/xfs/xfs_linux.h
-> +++ b/fs/xfs/xfs_linux.h
-> @@ -209,25 +209,6 @@ static inline xfs_dev_t linux_to_xfs_dev_t(dev_t dev)
->  #define xfs_sort(a,n,s,fn)	sort(a,n,s,fn,NULL)
->  #define xfs_stack_trace()	dump_stack()
->  
-> -/* Side effect free 64 bit mod operation */
-> -static inline __u32 xfs_do_mod(void *a, __u32 b, int n)
-> -{
-> -	switch (n) {
-> -		case 4:
-> -			return *(__u32 *)a % b;
-> -		case 8:
-> -			{
-> -			__u64	c = *(__u64 *)a;
-> -			return do_div(c, b);
-> -			}
-> -	}
-> -
-> -	/* NOTREACHED */
-> -	return 0;
-> -}
-> -
-> -#define do_mod(a, b)	xfs_do_mod(&(a), (b), sizeof(a))
-> -
->  static inline uint64_t roundup_64(uint64_t x, uint32_t y)
->  {
->  	x += y - 1;
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 7d897c58b0c8..4405ff21f9a9 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -1235,6 +1235,25 @@ xlog_verify_head(
->  				be32_to_cpu((*rhead)->h_size));
->  }
->  
-> +/*
-> + * We need to make sure we handle log wrapping properly, so we can't use teh
-> + * calculated logbno directly. Make sure it wraps to teh correct bno inside teh
-> + * log.
-> + *
-> + * The log is limited to 32 bit sizes, so we use the appropriate modulus
-> + * operation here and cast it back to a 64 bit daddr on return.
-> + */
-> +static inline xfs_daddr_t
-> +xlog_wrap_logbno(
-> +	struct xlog		*log,
-> +	xfs_daddr_t		bno)
-> +{
-> +	int			mod;
-> +
-> +	div_s64_rem(bno, log->l_logBBsize, &mod);
-> +	return mod;
-> +}
-> +
->  /*
->   * Check whether the head of the log points to an unmount record. In other
->   * words, determine whether the log is clean. If so, update the in-core state
-> @@ -1283,12 +1302,13 @@ xlog_check_unmount_rec(
->  	} else {
->  		hblks = 1;
->  	}
-> -	after_umount_blk = rhead_blk + hblks + BTOBB(be32_to_cpu(rhead->h_len));
-> -	after_umount_blk = do_mod(after_umount_blk, log->l_logBBsize);
-> +
-> +	after_umount_blk = xlog_wrap_logbno(log,
-> +			rhead_blk + hblks + BTOBB(be32_to_cpu(rhead->h_len)));
-> +
->  	if (*head_blk == after_umount_blk &&
->  	    be32_to_cpu(rhead->h_num_logops) == 1) {
-> -		umount_data_blk = rhead_blk + hblks;
-> -		umount_data_blk = do_mod(umount_data_blk, log->l_logBBsize);
-> +		umount_data_blk = xlog_wrap_logbno(log, rhead_blk + hblks);
->  		error = xlog_bread(log, umount_data_blk, 1, bp, &offset);
->  		if (error)
->  			return error;
-> @@ -5459,9 +5479,7 @@ xlog_do_recovery_pass(
->  			 */
->  			if (blk_no + bblks <= log->l_logBBsize ||
->  			    blk_no >= log->l_logBBsize) {
-> -				/* mod blk_no in case the header wrapped and
-> -				 * pushed it beyond the end of the log */
-> -				rblk_no = do_mod(blk_no, log->l_logBBsize);
-> +				rblk_no = xlog_wrap_logbno(log, blk_no);
->  				error = xlog_bread(log, rblk_no, bblks, dbp,
->  						   &offset);
->  				if (error)
-> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-> index 80bbfe604ce0..776502a5dcb7 100644
-> --- a/fs/xfs/xfs_rtalloc.c
-> +++ b/fs/xfs/xfs_rtalloc.c
-> @@ -301,8 +301,12 @@ xfs_rtallocate_extent_block(
->  		/*
->  		 * If size should be a multiple of prod, make that so.
->  		 */
-> -		if (prod > 1 && (p = do_mod(bestlen, prod)))
-> -			bestlen -= p;
-> +		if (prod > 1) {
-> +			div_u64_rem(bestlen, prod, &p);
-> +			if (p)
-> +				bestlen -= p;
-> +		}
-> +
->  		/*
->  		 * Allocate besti for bestlen & return that.
->  		 */
-> @@ -1262,8 +1266,11 @@ xfs_rtpick_extent(
->  		resid = seq - (1ULL << log2);
->  		b = (mp->m_sb.sb_rextents * ((resid << 1) + 1ULL)) >>
->  		    (log2 + 1);
-> -		if (b >= mp->m_sb.sb_rextents)
-> -			b = do_mod(b, mp->m_sb.sb_rextents);
-> +		if (b >= mp->m_sb.sb_rextents) {
-> +			xfs_rtblock_t mod;
-> +			div64_u64_rem(b, mp->m_sb.sb_rextents, &mod);
-> +			b = mod;
-> +		}
->  		if (b + len > mp->m_sb.sb_rextents)
->  			b = mp->m_sb.sb_rextents - len;
->  	}
-> -- 
-> 2.17.0
+> Cheers,
 > 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
