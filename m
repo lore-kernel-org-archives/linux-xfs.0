@@ -1,294 +1,193 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:43802 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751021AbeFHGY4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jun 2018 02:24:56 -0400
-Date: Thu, 7 Jun 2018 23:24:55 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/3] xfs: move various type verifiers to common file
-Message-ID: <20180608062455.GB22309@infradead.org>
-References: <20180607052751.6541-1-david@fromorbit.com>
- <20180607052751.6541-2-david@fromorbit.com>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:59146 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753040AbeFHWtM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jun 2018 18:49:12 -0400
+Date: Sat, 9 Jun 2018 08:49:09 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/2] xfs: allow delwri requeue of wait listed buffers
+Message-ID: <20180608224909.GC10363@dastard>
+References: <20180607124125.38700-1-bfoster@redhat.com>
+ <20180607124125.38700-3-bfoster@redhat.com>
+ <20180607232713.GV10363@dastard>
+ <20180608120709.GA23628@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180607052751.6541-2-david@fromorbit.com>
+In-Reply-To: <20180608120709.GA23628@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jun 07, 2018 at 03:27:49PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Fri, Jun 08, 2018 at 08:07:09AM -0400, Brian Foster wrote:
+> On Fri, Jun 08, 2018 at 09:27:13AM +1000, Dave Chinner wrote:
+> > On Thu, Jun 07, 2018 at 08:41:25AM -0400, Brian Foster wrote:
+> > > If a delwri queue occurs of a buffer that was previously submitted
+> > > from a delwri queue but has not yet been removed from a wait list,
+> > > the queue sets _XBF_DELWRI_Q without changing the state of ->b_list.
+> > > This occurs, for example, if another thread beats the submitter
+> > > thread to the buffer lock after I/O completion. Once the submitter
+> > > acquires the lock, it removes the buffer from the wait list and
+> > > leaves a buffer with _XBF_DELWRI_Q set but not populated on a list.
+> > > This results in a lost buffer submission and in turn can result in
+> > > assert failures due to _XBF_DELWRI_Q being set on buffer reclaim or
+> > > filesystem lockups if the buffer happens to cover an item in the
+> > > AIL.
+> > 
+> > I just so happened to have this ASSERT happen over night on
+> > generic/232 testing some code I wrote yesterday. It never ceases to
+> > amaze me how bugs that have been around for ages always seem to be
+> > hit at the same time by different people in completely different
+> > contexts....
+> > 
 > 
-> New verification functions like xfs_verify_fsbno() and
-> xfs_verify_agino() are spread across multiple files and different
-> header files. They really don't fit cleanly into the places they've
-> been put, and have wider scope than the current header includes.
-> 
-> Move the type verifiers to a new file in libxfs (xfs-types.c) and
-> the prototypes to xfs_types.h where they will be visible to all the
-> code that uses the types.
-> 
-> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/Makefile              |   1 +
->  fs/xfs/libxfs/xfs_alloc.c    |  49 ----------
->  fs/xfs/libxfs/xfs_alloc.h    |   4 -
->  fs/xfs/libxfs/xfs_ialloc.c   |  90 ------------------
->  fs/xfs/libxfs/xfs_ialloc.h   |   7 --
->  fs/xfs/libxfs/xfs_rtbitmap.c |  12 ---
->  fs/xfs/libxfs/xfs_types.c    | 173 +++++++++++++++++++++++++++++++++++
->  fs/xfs/libxfs/xfs_types.h    |  19 ++++
->  fs/xfs/scrub/agheader.c      |   2 +-
->  9 files changed, 194 insertions(+), 163 deletions(-)
->  create mode 100644 fs/xfs/libxfs/xfs_types.c
-> 
-> diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-> index 19a1f8064d8a..5333f7cbc95a 100644
-> --- a/fs/xfs/Makefile
-> +++ b/fs/xfs/Makefile
-> @@ -50,6 +50,7 @@ xfs-y				+= $(addprefix libxfs/, \
->  				   xfs_sb.o \
->  				   xfs_symlink_remote.o \
->  				   xfs_trans_resv.o \
-> +				   xfs_types.o \
->  				   )
->  # xfs_rtbitmap is shared with libxfs
->  xfs-$(CONFIG_XFS_RT)		+= $(addprefix libxfs/, \
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 1db50cfc0212..eef466260d43 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -3123,55 +3123,6 @@ xfs_alloc_query_all(
->  	return xfs_btree_query_all(cur, xfs_alloc_query_range_helper, &query);
->  }
->  
-> -/* Find the size of the AG, in blocks. */
-> -xfs_agblock_t
-> -xfs_ag_block_count(
-> -	struct xfs_mount	*mp,
-> -	xfs_agnumber_t		agno)
-> -{
-> -	ASSERT(agno < mp->m_sb.sb_agcount);
-> -
-> -	if (agno < mp->m_sb.sb_agcount - 1)
-> -		return mp->m_sb.sb_agblocks;
-> -	return mp->m_sb.sb_dblocks - (agno * mp->m_sb.sb_agblocks);
-> -}
-> -
-> -/*
-> - * Verify that an AG block number pointer neither points outside the AG
-> - * nor points at static metadata.
-> - */
-> -bool
-> -xfs_verify_agbno(
-> -	struct xfs_mount	*mp,
-> -	xfs_agnumber_t		agno,
-> -	xfs_agblock_t		agbno)
-> -{
-> -	xfs_agblock_t		eoag;
-> -
-> -	eoag = xfs_ag_block_count(mp, agno);
-> -	if (agbno >= eoag)
-> -		return false;
-> -	if (agbno <= XFS_AGFL_BLOCK(mp))
-> -		return false;
-> -	return true;
-> -}
-> -
-> -/*
-> - * Verify that an FS block number pointer neither points outside the
-> - * filesystem nor points at static AG metadata.
-> - */
-> -bool
-> -xfs_verify_fsbno(
-> -	struct xfs_mount	*mp,
-> -	xfs_fsblock_t		fsbno)
-> -{
-> -	xfs_agnumber_t		agno = XFS_FSB_TO_AGNO(mp, fsbno);
-> -
-> -	if (agno >= mp->m_sb.sb_agcount)
-> -		return false;
-> -	return xfs_verify_agbno(mp, agno, XFS_FSB_TO_AGBNO(mp, fsbno));
-> -}
-> -
->  /* Is there a record covering a given extent? */
->  int
->  xfs_alloc_has_record(
-> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-> index 1651d924aaf1..e716c993ac4c 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.h
-> +++ b/fs/xfs/libxfs/xfs_alloc.h
-> @@ -242,10 +242,6 @@ int xfs_alloc_query_range(struct xfs_btree_cur *cur,
->  		xfs_alloc_query_range_fn fn, void *priv);
->  int xfs_alloc_query_all(struct xfs_btree_cur *cur, xfs_alloc_query_range_fn fn,
->  		void *priv);
-> -xfs_agblock_t xfs_ag_block_count(struct xfs_mount *mp, xfs_agnumber_t agno);
-> -bool xfs_verify_agbno(struct xfs_mount *mp, xfs_agnumber_t agno,
-> -		xfs_agblock_t agbno);
-> -bool xfs_verify_fsbno(struct xfs_mount *mp, xfs_fsblock_t fsbno);
->  
->  int xfs_alloc_has_record(struct xfs_btree_cur *cur, xfs_agblock_t bno,
->  		xfs_extlen_t len, bool *exist);
-> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> index 3f551eb29157..8ec39dad62d7 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc.c
-> +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> @@ -2674,96 +2674,6 @@ xfs_ialloc_pagi_init(
->  	return 0;
->  }
->  
-> -/* Calculate the first and last possible inode number in an AG. */
-> -void
-> -xfs_ialloc_agino_range(
-> -	struct xfs_mount	*mp,
-> -	xfs_agnumber_t		agno,
-> -	xfs_agino_t		*first,
-> -	xfs_agino_t		*last)
-> -{
-> -	xfs_agblock_t		bno;
-> -	xfs_agblock_t		eoag;
-> -
-> -	eoag = xfs_ag_block_count(mp, agno);
-> -
-> -	/*
-> -	 * Calculate the first inode, which will be in the first
-> -	 * cluster-aligned block after the AGFL.
-> -	 */
-> -	bno = round_up(XFS_AGFL_BLOCK(mp) + 1,
-> -			xfs_ialloc_cluster_alignment(mp));
-> -	*first = XFS_OFFBNO_TO_AGINO(mp, bno, 0);
-> -
-> -	/*
-> -	 * Calculate the last inode, which will be at the end of the
-> -	 * last (aligned) cluster that can be allocated in the AG.
-> -	 */
-> -	bno = round_down(eoag, xfs_ialloc_cluster_alignment(mp));
-> -	*last = XFS_OFFBNO_TO_AGINO(mp, bno, 0) - 1;
-> -}
-> -
-> -/*
-> - * Verify that an AG inode number pointer neither points outside the AG
-> - * nor points at static metadata.
-> - */
-> -bool
-> -xfs_verify_agino(
-> -	struct xfs_mount	*mp,
-> -	xfs_agnumber_t		agno,
-> -	xfs_agino_t		agino)
-> -{
-> -	xfs_agino_t		first;
-> -	xfs_agino_t		last;
-> -
-> -	xfs_ialloc_agino_range(mp, agno, &first, &last);
-> -	return agino >= first && agino <= last;
-> -}
-> -
-> -/*
-> - * Verify that an FS inode number pointer neither points outside the
-> - * filesystem nor points at static AG metadata.
-> - */
-> -bool
-> -xfs_verify_ino(
-> -	struct xfs_mount	*mp,
-> -	xfs_ino_t		ino)
-> -{
-> -	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, ino);
-> -	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ino);
-> -
-> -	if (agno >= mp->m_sb.sb_agcount)
-> -		return false;
-> -	if (XFS_AGINO_TO_INO(mp, agno, agino) != ino)
-> -		return false;
-> -	return xfs_verify_agino(mp, agno, agino);
-> -}
-> -
-> -/* Is this an internal inode number? */
-> -bool
-> -xfs_internal_inum(
-> -	struct xfs_mount	*mp,
-> -	xfs_ino_t		ino)
-> -{
-> -	return ino == mp->m_sb.sb_rbmino || ino == mp->m_sb.sb_rsumino ||
-> -		(xfs_sb_version_hasquota(&mp->m_sb) &&
-> -		 xfs_is_quota_inode(&mp->m_sb, ino));
-> -}
-> -
-> -/*
-> - * Verify that a directory entry's inode number doesn't point at an internal
-> - * inode, empty space, or static AG metadata.
-> - */
-> -bool
-> -xfs_verify_dir_ino(
-> -	struct xfs_mount	*mp,
-> -	xfs_ino_t		ino)
-> -{
-> -	if (xfs_internal_inum(mp, ino))
-> -		return false;
-> -	return xfs_verify_ino(mp, ino);
-> -}
-> -
->  /* Is there an inode record covering a given range of inode numbers? */
->  int
->  xfs_ialloc_has_inode_record(
-> diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
-> index 144f3eac9b93..90b09c5f163b 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc.h
-> +++ b/fs/xfs/libxfs/xfs_ialloc.h
-> @@ -169,12 +169,5 @@ int xfs_inobt_insert_rec(struct xfs_btree_cur *cur, uint16_t holemask,
->  		int *stat);
->  
->  int xfs_ialloc_cluster_alignment(struct xfs_mount *mp);
-> -void xfs_ialloc_agino_range(struct xfs_mount *mp, xfs_agnumber_t agno,
-> -		xfs_agino_t *first, xfs_agino_t *last);
-> -bool xfs_verify_agino(struct xfs_mount *mp, xfs_agnumber_t agno,
-> -		xfs_agino_t agino);
-> -bool xfs_verify_ino(struct xfs_mount *mp, xfs_ino_t ino);
-> -bool xfs_internal_inum(struct xfs_mount *mp, xfs_ino_t ino);
-> -bool xfs_verify_dir_ino(struct xfs_mount *mp, xfs_ino_t ino);
->  
->  #endif	/* __XFS_IALLOC_H__ */
-> diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
-> index ffc72075a44e..65fc4ed2e9a1 100644
-> --- a/fs/xfs/libxfs/xfs_rtbitmap.c
-> +++ b/fs/xfs/libxfs/xfs_rtbitmap.c
-> @@ -1080,18 +1080,6 @@ xfs_rtalloc_query_all(
->  	return xfs_rtalloc_query_range(tp, &keys[0], &keys[1], fn, priv);
->  }
->  
-> -/*
-> - * Verify that an realtime block number pointer doesn't point off the
-> - * end of the realtime device.
-> - */
-> -bool
-> -xfs_verify_rtbno(
-> -	struct xfs_mount	*mp,
-> -	xfs_rtblock_t		rtbno)
-> -{
-> -	return rtbno < mp->m_sb.sb_rblocks;
-> -}
-> -
->  /* Is the given extent all free? */
->  int
->  xfs_rtalloc_extent_is_free(
-> diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
-> new file mode 100644
-> index 000000000000..2e2a243cef2e
-> --- /dev/null
-> +++ b/fs/xfs/libxfs/xfs_types.c
-> @@ -0,0 +1,173 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.
-> + * Copyright (C) 2017 Oracle.
-> + * All Rights Reserved.
+> Interesting, out of curiosity was this in a memory limited environment?
 
-The all rights reserved statement doesn't relaly make sense with
-the SPDX header.  I guess this is copies from the exiasting code, but
-we'll need to eventually sort it out.
+No. had GBs of free RAM, but it's on a fakenuma setup so a node
+could have been low on free memory and hence running the quota
+shrinker....
 
-Otherwise looks fine:
+....
+> > This seems all a bit broken.
+> 
+> Yes, the premise of this was to do something that didn't break it
+> further. ;) I figured using sync I/O would also address the problem, but
+> would introduce terrible submission->completion serialization...
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+*nod*
+
+> So essentially take apart sync buffer I/O so we can do batched
+> submission/completion. That sounds like a nice idea to me.
+
+*nod*
+
+> Feedback on the code to follow. That aside, are you planning to turn
+> this into a real patch submission or would you like me to do it?
+
+I've got plenty of other things to do - if you want to take it an
+run I'm fine with that :P
+
+> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> > index a9678c2f3810..40f441e96dc5 100644
+> > --- a/fs/xfs/xfs_buf.c
+> > +++ b/fs/xfs/xfs_buf.c
+> > @@ -1453,27 +1453,20 @@ _xfs_buf_ioapply(
+> >  }
+> >  
+> >  /*
+> > - * Asynchronous IO submission path. This transfers the buffer lock ownership and
+> > - * the current reference to the IO. It is not safe to reference the buffer after
+> > - * a call to this function unless the caller holds an additional reference
+> > - * itself.
+> > + * Internal I/O submission helpers for split submission and waiting actions.
+> >   */
+> > -void
+> > -xfs_buf_submit(
+> > +static int
+> > +__xfs_buf_submit(
+> 
+> It looks like the buffer submission refactoring could be a separate
+> patch from the delwri queue race fix.
+
+Yup, it probably should be.
+
+> > @@ -1483,12 +1476,8 @@ xfs_buf_submit(
+> >  	bp->b_io_error = 0;
+> >  
+> >  	/*
+> > -	 * The caller's reference is released during I/O completion.
+> > -	 * This occurs some time after the last b_io_remaining reference is
+> > -	 * released, so after we drop our Io reference we have to have some
+> > -	 * other reference to ensure the buffer doesn't go away from underneath
+> > -	 * us. Take a direct reference to ensure we have safe access to the
+> > -	 * buffer until we are finished with it.
+> > +	 * I/O needs a reference, because the caller may go away before we are
+> > +	 * done with the IO. Completion will deal with it.
+> >  	 */
+> >  	xfs_buf_hold(bp);
+> 
+> I think this should be lifted in the callers. For one, it's confusing to
+> follow.
+
+Both paths take a reference here, both take it because the IO itself
+needs a reference. The only difference is when it is dropped.
+
+> Second, it looks like xfs_buf_submit() unconditionally drops a
+> reference whereas __xfs_buf_submit() may not acquire one (i.e. when we
+> return an error).
+>
+> ISTM that the buffer reference calls could be balanced in the top-level
+> submit functions rather than split between the common submission path
+> and unique sync completion path.
+
+Yes, that may end up being cleaner, because the delwri path has to
+take a reference across submit/complete anyway. I just chopped
+quickl away at the code without thinking about this stuff too
+deeply. I did say "untested", right? :P
+
+> >  void *
+> > @@ -2045,14 +2035,21 @@ xfs_buf_delwri_submit_buffers(
+> >  		 * at this point so the caller can still access it.
+> >  		 */
+> >  		bp->b_flags &= ~(_XBF_DELWRI_Q | XBF_WRITE_FAIL);
+> > -		bp->b_flags |= XBF_WRITE | XBF_ASYNC;
+> > +		bp->b_flags |= XBF_WRITE;
+> 
+> We set XBF_ASYNC below in the specific case, but this doesn't tell us
+> anything about whether it might have already been set on the buffer. Is
+> it not the responsibility of this function to set/clear XBF_ASYNC
+> appropriately?
+
+XBF_ASYNC should be clear (as the buffer is not under IO) buti, yes,
+I agree that it would be a good idea to clear it anyway.
+
+> >  		if (wait_list) {
+> > +			/*
+> > +			 * Split synchronous IO - we wait later, so we need ai
+> > +			 * reference until we run completion processing and drop
+> > +			 * the buffer lock ourselves
+> > +			 */
+> 
+> Might as well merge this with the comment above, which needs fixing
+> anyways since we no longer "do all IO submission async."
+> 
+> >  			xfs_buf_hold(bp);
+> 
+> I think the buffer reference counting is now broken here.
+
+More than likely. :P
+
+....
+> >  			list_move_tail(&bp->b_list, wait_list);
+> > -		} else
+> > +			__xfs_buf_submit(bp);
+> 
+> I suspect we need to handle submission errors here, otherwise we wait on
+> a buffer that was never submitted.
+
+Yup.
+
+> One final thought.. ISTM that the nature of batched sync buffer
+> submission means that once we wait on one or two of those buffers,
+> there's a good chance many of the remaining buffer physical I/Os will
+> have completed by the time we get to the associated iowait. That means
+> that the current behavior of large (sync) delwri buffer completions
+> running in the async completion workqueue most likely changes to running
+> from __xfs_buf_iowait()->xfs_buf_ioend() context. I'm not sure that
+> really matters, but just something to note.
+
+Yup, that's something that crossed my mind. But we only wait for
+buffers to complete in log recovery, quota check and the /quota
+shrinker/ (now the generic/232 failure makes sense, doesn't it? :).
+
+Hence I don't think there's a performance issue we need to worry
+about - correctness is more important...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
