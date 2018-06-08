@@ -1,298 +1,335 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:36690 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752411AbeFHQxp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jun 2018 12:53:45 -0400
-Date: Fri, 8 Jun 2018 09:53:29 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfsprogs: remove unused macros
-Message-ID: <20180608165329.GR25007@magnolia>
-References: <3793c1d5-6269-468b-f6f1-e50597879dcc@redhat.com>
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:54956 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752178AbeFHAoA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Jun 2018 20:44:00 -0400
+Received: from dave by dastard with local (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1fR5VV-00065N-HG
+        for linux-xfs@vger.kernel.org; Fri, 08 Jun 2018 10:43:57 +1000
+Date: Fri, 8 Jun 2018 10:43:57 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 2/3 V2] xfs: replace do_mod with native operations
+Message-ID: <20180608004357.GW10363@dastard>
+References: <20180607052751.6541-1-david@fromorbit.com>
+ <20180607052751.6541-3-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3793c1d5-6269-468b-f6f1-e50597879dcc@redhat.com>
+In-Reply-To: <20180607052751.6541-3-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Fri, Jun 08, 2018 at 11:48:01AM -0500, Eric Sandeen wrote:
-> A lot of dead macros are lying around xfsprogs; some are just
-> ancient cruft while others are the result of shifting libxfs
-> interfaces, but we can remove them.
-> 
-> (I've left a few unused macros in place where they exist with
-> other macros for symmetry or completeness.)
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+do_mod() is a hold-over from when we have different sizes for file
+offsets and and other internal values for 40 bit XFS filesystems.
+Hence depending on build flags variables passed to do_mod() could
+change size. We no longer support those small format filesystems and
+hence everything is of fixed size theses days, even on 32 bit
+platforms.
 
---D
+As such, we can convert all the do_mod() callers to platform
+optimised modulus operations as defined by linux/math64.h.
+Individual conversions depend on the types of variables being used.
 
-> ---
-> 
->  db/btblock.c              |    5 -----
->  db/metadump.c             |    8 --------
->  db/symlink.c              |    1 -
->  estimate/xfs_estimate.c   |    1 -
->  fsr/xfs_fsr.c             |    4 ----
->  include/xfs_trace.h       |    4 ----
->  libxfs/libxfs_api_defs.h  |    2 --
->  libxlog/xfs_log_recover.c |    2 --
->  repair/attr_repair.c      |    1 -
->  repair/incore.h           |    2 --
->  repair/incore_ext.c       |    8 --------
->  repair/scan.c             |    2 --
->  repair/slab.c             |    1 -
->  repair/xfs_repair.c       |    4 ----
->  15 files changed, 46 deletions(-)
-> 
-> 
-> diff --git a/db/btblock.c b/db/btblock.c
-> index 9f506df..0c76394 100644
-> --- a/db/btblock.c
-> +++ b/db/btblock.c
-> @@ -728,8 +728,6 @@ const field_t	rmapbt_key_flds[] = {
->  #undef HI_KOFF
->  #undef KOFF
->  
-> -#define	ROFF(f)	bitize(offsetof(struct xfs_rmap_rec, rm_ ## f))
-> -
->  #define RMAPBT_STARTBLOCK_BITOFF	0
->  #define RMAPBT_BLOCKCOUNT_BITOFF	(RMAPBT_STARTBLOCK_BITOFF + RMAPBT_STARTBLOCK_BITLEN)
->  #define RMAPBT_OWNER_BITOFF		(RMAPBT_BLOCKCOUNT_BITOFF + RMAPBT_BLOCKCOUNT_BITLEN)
-> @@ -752,7 +750,6 @@ const field_t	rmapbt_rec_flds[] = {
->  	  TYP_NONE },
->  	{ NULL }
->  };
-> -#undef ROFF
->  
->  /* refcount btree blocks */
->  const field_t	refcbt_crc_hfld[] = {
-> @@ -785,13 +782,11 @@ const field_t	refcbt_crc_flds[] = {
->  #define REFCNTBT_COWFLAG_BITOFF		0
->  #define REFCNTBT_STARTBLOCK_BITOFF	(REFCNTBT_COWFLAG_BITOFF + REFCNTBT_COWFLAG_BITLEN)
->  
-> -#define	KOFF(f)	bitize(offsetof(struct xfs_refcount_key, rc_ ## f))
->  const field_t	refcbt_key_flds[] = {
->  	{ "startblock", FLDT_CAGBLOCK, OI(REFCNTBT_STARTBLOCK_BITOFF), C1, 0, TYP_DATA },
->  	{ "cowflag", FLDT_CCOWFLG, OI(REFCNTBT_COWFLAG_BITOFF), C1, 0, TYP_DATA },
->  	{ NULL }
->  };
-> -#undef KOFF
->  
->  #define	ROFF(f)	bitize(offsetof(struct xfs_refcount_rec, rc_ ## f))
->  const field_t	refcbt_rec_flds[] = {
-> diff --git a/db/metadump.c b/db/metadump.c
-> index d33f901..d7613eb 100644
-> --- a/db/metadump.c
-> +++ b/db/metadump.c
-> @@ -34,14 +34,6 @@
->  
->  #define DEFAULT_MAX_EXT_SIZE	MAXEXTLEN
->  
-> -/*
-> - * It's possible that multiple files in a directory (or attributes
-> - * in a file) produce the same obfuscated name.  If that happens, we
-> - * try to create another one.  After several rounds of this though,
-> - * we just give up and leave the original name as-is.
-> - */
-> -#define	DUP_MAX		5	/* Max duplicates before we give up */
-> -
->  /* copy all metadata structures to/from a file */
->  
->  static int	metadump_f(int argc, char **argv);
-> diff --git a/db/symlink.c b/db/symlink.c
-> index c99b8ca..a81785c 100644
-> --- a/db/symlink.c
-> +++ b/db/symlink.c
-> @@ -64,7 +64,6 @@ const struct field	symlink_crc_hfld[] = {
->  };
->  
->  #define	OFF(f)	bitize(offsetof(struct xfs_dsymlink_hdr, sl_ ## f))
-> -#define	SZOF(f)	bitize(sizeof(struct xfs_dsymlink_hdr))
->  const struct field	symlink_crc_flds[] = {
->  	{ "magic", FLDT_UINT32X, OI(OFF(magic)), C1, 0, TYP_NONE },
->  	{ "offset", FLDT_UINT32D, OI(OFF(offset)), C1, 0, TYP_NONE },
-> diff --git a/estimate/xfs_estimate.c b/estimate/xfs_estimate.c
-> index 323137c..1e1e1e3 100644
-> --- a/estimate/xfs_estimate.c
-> +++ b/estimate/xfs_estimate.c
-> @@ -54,7 +54,6 @@ int ffn(const char *, const struct stat *, int, struct FTW *);
->  #define LOGSIZE		1000
->  
->  #define FBLOCKS(n)	((n)/blocksize)
-> -#define RFBYTES(n)	((n) - (FBLOCKS(n) * blocksize))
->  
->  unsigned long long dirsize=0;		/* bytes */
->  unsigned long long logsize=LOGSIZE*BLOCKSIZE;	/* bytes */
-> diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-> index b74a70b..11a7984 100644
-> --- a/fsr/xfs_fsr.c
-> +++ b/fsr/xfs_fsr.c
-> @@ -64,10 +64,6 @@ static int64_t		minimumfree = 2048;
->  #define NULLFD		-1
->  #define GRABSZ		64
->  #define TARGETRANGE	10
-> -#define	V_NONE		0
-> -#define	V_OVERVIEW	1
-> -#define	V_ALL		2
-> -#define BUFFER_SIZE	(1<<16)
->  #define BUFFER_MAX	(1<<24)
->  
->  static time_t howlong = 7200;		/* default seconds of reorganizing */
-> diff --git a/include/xfs_trace.h b/include/xfs_trace.h
-> index cfcd985..62c6839 100644
-> --- a/include/xfs_trace.h
-> +++ b/include/xfs_trace.h
-> @@ -21,7 +21,6 @@
->  #define trace_xfs_alloc_exact_done(a)		((void) 0)
->  #define trace_xfs_alloc_exact_notfound(a)	((void) 0)
->  #define trace_xfs_alloc_exact_error(a)		((void) 0)
-> -#define trace_xfs_alloc_near_nominleft(a)	((void) 0)
->  #define trace_xfs_alloc_near_first(a)		((void) 0)
->  #define trace_xfs_alloc_near_greater(a)		((void) 0)
->  #define trace_xfs_alloc_near_lesser(a)		((void) 0)
-> @@ -44,8 +43,6 @@
->  #define trace_xfs_alloc_vextent_loopfailed(a)	((void) 0)
->  #define trace_xfs_alloc_vextent_allfailed(a)	((void) 0)
->  
-> -#define trace_xfs_log_recover_item_reorder_head(a,b,c,d)	((void) 0)
-> -#define trace_xfs_log_recover_item_reorder_tail(a,b,c,d)	((void) 0)
->  #define trace_xfs_log_recover_item_add_cont(a,b,c,d)	((void) 0)
->  #define trace_xfs_log_recover_item_add(a,b,c,d)	((void) 0)
->  
-> @@ -273,7 +270,6 @@
->  #define trace_xfs_refcount_find_shared_error(...)	((void) 0)
->  
->  #define trace_xfs_bmap_remap_alloc(...)		((void) 0)
-> -#define trace_xfs_bmap_remap_alloc_error(...)	((void) 0)
->  #define trace_xfs_bmap_deferred(...)		((void) 0)
->  #define trace_xfs_bmap_defer(...)		((void) 0)
->  
-> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-> index 78daca0..75255a8 100644
-> --- a/libxfs/libxfs_api_defs.h
-> +++ b/libxfs/libxfs_api_defs.h
-> @@ -46,7 +46,6 @@
->  #define xfs_trans_iget			libxfs_trans_iget
->  #define xfs_trans_ichgtime		libxfs_trans_ichgtime
->  #define xfs_trans_ijoin			libxfs_trans_ijoin
-> -#define xfs_trans_ijoin_ref		libxfs_trans_ijoin_ref
->  #define xfs_trans_init			libxfs_trans_init
->  #define xfs_trans_inode_alloc_buf	libxfs_trans_inode_alloc_buf
->  #define xfs_trans_dirty_buf		libxfs_trans_dirty_buf
-> @@ -70,7 +69,6 @@
->  #define xfs_alloc_min_freelist		libxfs_alloc_min_freelist
->  #define xfs_alloc_read_agf		libxfs_alloc_read_agf
->  #define xfs_bmap_last_offset		libxfs_bmap_last_offset
-> -#define xfs_bmap_search_extents		libxfs_bmap_search_extents
->  #define xfs_iext_lookup_extent		libxfs_iext_lookup_extent
->  #define xfs_bmapi_write			libxfs_bmapi_write
->  #define xfs_bmapi_read			libxfs_bmapi_read
-> diff --git a/libxlog/xfs_log_recover.c b/libxlog/xfs_log_recover.c
-> index 58d9182..51dd97e 100644
-> --- a/libxlog/xfs_log_recover.c
-> +++ b/libxlog/xfs_log_recover.c
-> @@ -1035,8 +1035,6 @@ xlog_recover_add_item(
->  	list_add_tail(&item->ri_list, head);
->  }
->  
-> -#define BLK_AVG(blk1, blk2)	((blk1+blk2) >> 1)
-> -
->  STATIC int
->  xlog_recover_add_to_cont_trans(
->  	struct xlog		*log,
-> diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-> index 8b1b8a7..fe73fd6 100644
-> --- a/repair/attr_repair.c
-> +++ b/repair/attr_repair.c
-> @@ -35,7 +35,6 @@ static int xfs_mac_valid(xfs_mac_label_t *lp);
->   * dir v1 code, but that format is no longer supported yb the userspace
->   * utilities and hence is now specific to the attribute tree implementation.
->   */
-> -#define XR_DA_LEAF_MAPSIZE	XFS_ATTR_LEAF_MAPSIZE
->  
->  typedef unsigned char	da_freemap_t;
->  
-> diff --git a/repair/incore.h b/repair/incore.h
-> index fd66084..620ed61 100644
-> --- a/repair/incore.h
-> +++ b/repair/incore.h
-> @@ -113,8 +113,6 @@ typedef struct rt_extent_tree_node  {
->  /* separate state bit, OR'ed into high (4th) bit of ex_state field */
->  
->  #define XR_E_WRITTEN	0x8	/* extent has been written out, can't reclaim */
-> -#define good_state(state)	(((state) & (~XR_E_WRITTEN)) >= XR_E_UNKNOWN && \
-> -				((state) & (~XR_E_WRITTEN) < XF_E_BAD_STATE))
->  #define written(state)		((state) & XR_E_WRITTEN)
->  #define set_written(state)	(state) &= XR_E_WRITTEN
->  
-> diff --git a/repair/incore_ext.c b/repair/incore_ext.c
-> index 0a8138a..7ad883f 100644
-> --- a/repair/incore_ext.c
-> +++ b/repair/incore_ext.c
-> @@ -267,14 +267,6 @@ get_bno_extent(xfs_agnumber_t agno, extent_tree_node_t *ext)
->  }
->  
->  /*
-> - * normalizing constant for bcnt size -> address conversion (see avl ops)
-> - * used by the AVL tree code to convert sizes and must be used when
-> - * doing an AVL search in the tree (e.g. avl_findrange(s))
-> - */
-> -#define MAXBCNT		0xFFFFFFFF
-> -#define BCNT_ADDR(cnt)	((unsigned int) MAXBCNT - (cnt))
-> -
-> -/*
->   * the next 4 routines manage the trees of free extents -- 2 trees
->   * per AG.  The first tree is sorted by block number.  The second
->   * tree is sorted by extent size.  This is the bcnt tree.
-> diff --git a/repair/scan.c b/repair/scan.c
-> index 0fc41f2..d25b6bf 100644
-> --- a/repair/scan.c
-> +++ b/repair/scan.c
-> @@ -2498,8 +2498,6 @@ out_free_sb:
->  		do_error(_("can't get %s for ag %d\n"), objname, agno);
->  }
->  
-> -#define SCAN_THREADS 32
-> -
->  void
->  scan_ags(
->  	struct xfs_mount	*mp,
-> diff --git a/repair/slab.c b/repair/slab.c
-> index b04c3b8..cb4f403 100644
-> --- a/repair/slab.c
-> +++ b/repair/slab.c
-> @@ -101,7 +101,6 @@ struct xfs_bag {
->  	size_t			bg_inuse;	/* number of slots in use */
->  	void			**bg_ptrs;	/* pointers */
->  };
-> -#define BAG_SIZE(nr)	(sizeof(struct xfs_bag) + ((nr) * sizeof(void *)))
->  #define BAG_END(bag)	(&(bag)->bg_ptrs[(bag)->bg_nr])
->  
->  /*
-> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-> index ff6a738..ff0c4ff 100644
-> --- a/repair/xfs_repair.c
-> +++ b/repair/xfs_repair.c
-> @@ -35,10 +35,6 @@
->  #include "slab.h"
->  #include "rmap.h"
->  
-> -#define	rounddown(x, y)	(((x)/(y))*(y))
-> -
-> -#define		XR_MAX_SECT_SIZE	(64 * 1024)
-> -
->  /*
->   * option tables for getsubopt calls
->   */
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+---
+Version 2:
+- fix typos
+- remove unnecessary temp var from xfs_rtextent_pick
+- use div_u64_rem() in xfs_adjust_extent_unmap_boundaries()
+
+ fs/xfs/libxfs/xfs_bmap.c | 37 +++++++++++++++++++++++--------------
+ fs/xfs/xfs_bmap_util.c   | 12 ++++++++----
+ fs/xfs/xfs_inode.c       |  2 +-
+ fs/xfs/xfs_iomap.h       |  4 ++--
+ fs/xfs/xfs_linux.h       | 19 -------------------
+ fs/xfs/xfs_log_recover.c | 32 +++++++++++++++++++++++++-------
+ fs/xfs/xfs_rtalloc.c     | 10 +++++++---
+ 7 files changed, 66 insertions(+), 50 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 3de047eb8209..4d8fd37ec7ae 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -2923,7 +2923,7 @@ xfs_bmap_extsize_align(
+ 	 * perform this alignment, or if a truncate shot us in the
+ 	 * foot.
+ 	 */
+-	temp = do_mod(orig_off, extsz);
++	div_u64_rem(orig_off, extsz, &temp);
+ 	if (temp) {
+ 		align_alen += temp;
+ 		align_off -= temp;
+@@ -3497,15 +3497,17 @@ xfs_bmap_btalloc(
+ 	/* apply extent size hints if obtained earlier */
+ 	if (align) {
+ 		args.prod = align;
+-		if ((args.mod = (xfs_extlen_t)do_mod(ap->offset, args.prod)))
+-			args.mod = (xfs_extlen_t)(args.prod - args.mod);
++		div_u64_rem(ap->offset, args.prod, &args.mod);
++		if (args.mod)
++			args.mod = args.prod - args.mod;
+ 	} else if (mp->m_sb.sb_blocksize >= PAGE_SIZE) {
+ 		args.prod = 1;
+ 		args.mod = 0;
+ 	} else {
+ 		args.prod = PAGE_SIZE >> mp->m_sb.sb_blocklog;
+-		if ((args.mod = (xfs_extlen_t)(do_mod(ap->offset, args.prod))))
+-			args.mod = (xfs_extlen_t)(args.prod - args.mod);
++		div_u64_rem(ap->offset, args.prod, &args.mod);
++		if (args.mod)
++			args.mod = args.prod - args.mod;
+ 	}
+ 	/*
+ 	 * If we are not low on available data blocks, and the
+@@ -4953,13 +4955,15 @@ xfs_bmap_del_extent_real(
+ 	if (whichfork == XFS_DATA_FORK && XFS_IS_REALTIME_INODE(ip)) {
+ 		xfs_fsblock_t	bno;
+ 		xfs_filblks_t	len;
++		xfs_extlen_t	mod;
++
++		bno = div_u64_rem(del->br_startblock, mp->m_sb.sb_rextsize,
++				  &mod);
++		ASSERT(mod == 0);
++		len = div_u64_rem(del->br_blockcount, mp->m_sb.sb_rextsize,
++				  &mod);
++		ASSERT(mod == 0);
+ 
+-		ASSERT(do_mod(del->br_blockcount, mp->m_sb.sb_rextsize) == 0);
+-		ASSERT(do_mod(del->br_startblock, mp->m_sb.sb_rextsize) == 0);
+-		bno = del->br_startblock;
+-		len = del->br_blockcount;
+-		do_div(bno, mp->m_sb.sb_rextsize);
+-		do_div(len, mp->m_sb.sb_rextsize);
+ 		error = xfs_rtfree_extent(tp, bno, (xfs_extlen_t)len);
+ 		if (error)
+ 			goto done;
+@@ -5296,9 +5300,12 @@ __xfs_bunmapi(
+ 			del.br_blockcount = max_len;
+ 		}
+ 
++		if (!isrt)
++			goto delete;
++
+ 		sum = del.br_startblock + del.br_blockcount;
+-		if (isrt &&
+-		    (mod = do_mod(sum, mp->m_sb.sb_rextsize))) {
++		div_u64_rem(sum, mp->m_sb.sb_rextsize, &mod);
++		if (mod) {
+ 			/*
+ 			 * Realtime extent not lined up at the end.
+ 			 * The extent could have been split into written
+@@ -5345,7 +5352,8 @@ __xfs_bunmapi(
+ 				goto error0;
+ 			goto nodelete;
+ 		}
+-		if (isrt && (mod = do_mod(del.br_startblock, mp->m_sb.sb_rextsize))) {
++		div_u64_rem(del.br_startblock, mp->m_sb.sb_rextsize, &mod);
++		if (mod) {
+ 			/*
+ 			 * Realtime extent is lined up at the end but not
+ 			 * at the front.  We'll get rid of full extents if
+@@ -5414,6 +5422,7 @@ __xfs_bunmapi(
+ 			}
+ 		}
+ 
++delete:
+ 		if (wasdel) {
+ 			error = xfs_bmap_del_extent_delay(ip, whichfork, &icur,
+ 					&got, &del);
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 7d26933a542f..c35009a86699 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -80,6 +80,7 @@ xfs_bmap_rtalloc(
+ 	int		error;		/* error return value */
+ 	xfs_mount_t	*mp;		/* mount point structure */
+ 	xfs_extlen_t	prod = 0;	/* product factor for allocators */
++	xfs_extlen_t	mod = 0;	/* product factor for allocators */
+ 	xfs_extlen_t	ralen = 0;	/* realtime allocation length */
+ 	xfs_extlen_t	align;		/* minimum allocation alignment */
+ 	xfs_rtblock_t	rtb;
+@@ -99,7 +100,8 @@ xfs_bmap_rtalloc(
+ 	 * If the offset & length are not perfectly aligned
+ 	 * then kill prod, it will just get us in trouble.
+ 	 */
+-	if (do_mod(ap->offset, align) || ap->length % align)
++	div_u64_rem(ap->offset, align, &mod);
++	if (mod || ap->length % align)
+ 		prod = 1;
+ 	/*
+ 	 * Set ralen to be the actual requested length in rtextents.
+@@ -936,9 +938,11 @@ xfs_alloc_file_space(
+ 			do_div(s, extsz);
+ 			s *= extsz;
+ 			e = startoffset_fsb + allocatesize_fsb;
+-			if ((temp = do_mod(startoffset_fsb, extsz)))
++			div_u64_rem(startoffset_fsb, extsz, &temp);
++			if (temp)
+ 				e += temp;
+-			if ((temp = do_mod(e, extsz)))
++			div_u64_rem(e, extsz, &temp);
++			if (temp)
+ 				e += extsz - temp;
+ 		} else {
+ 			s = 0;
+@@ -1099,7 +1103,7 @@ xfs_adjust_extent_unmap_boundaries(
+ 
+ 	if (nimap && imap.br_startblock != HOLESTARTBLOCK) {
+ 		ASSERT(imap.br_startblock != DELAYSTARTBLOCK);
+-		mod = do_mod(imap.br_startblock, mp->m_sb.sb_rextsize);
++		div_u64_rem(imap.br_startblock, mp->m_sb.sb_rextsize, &mod);
+ 		if (mod)
+ 			*startoffset_fsb += mp->m_sb.sb_rextsize - mod;
+ 	}
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 6cda0f08b045..4a2e5e13c569 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2258,7 +2258,7 @@ xfs_ifree_cluster(
+ 		 */
+ 		ioffset = inum - xic->first_ino;
+ 		if ((xic->alloc & XFS_INOBT_MASK(ioffset)) == 0) {
+-			ASSERT(do_mod(ioffset, inodes_per_cluster) == 0);
++			ASSERT(ioffset % inodes_per_cluster == 0);
+ 			continue;
+ 		}
+ 
+diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
+index b0c98d4faa5b..83474c9cede9 100644
+--- a/fs/xfs/xfs_iomap.h
++++ b/fs/xfs/xfs_iomap.h
+@@ -30,10 +30,10 @@ xfs_aligned_fsb_count(
+ 	if (extsz) {
+ 		xfs_extlen_t	align;
+ 
+-		align = do_mod(offset_fsb, extsz);
++		div_u64_rem(offset_fsb, extsz, &align);
+ 		if (align)
+ 			count_fsb += align;
+-		align = do_mod(count_fsb, extsz);
++		div_u64_rem(count_fsb, extsz, &align);
+ 		if (align)
+ 			count_fsb += extsz - align;
+ 	}
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index 1631cf4546f2..2c800ffbcffd 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -209,25 +209,6 @@ static inline xfs_dev_t linux_to_xfs_dev_t(dev_t dev)
+ #define xfs_sort(a,n,s,fn)	sort(a,n,s,fn,NULL)
+ #define xfs_stack_trace()	dump_stack()
+ 
+-/* Side effect free 64 bit mod operation */
+-static inline __u32 xfs_do_mod(void *a, __u32 b, int n)
+-{
+-	switch (n) {
+-		case 4:
+-			return *(__u32 *)a % b;
+-		case 8:
+-			{
+-			__u64	c = *(__u64 *)a;
+-			return do_div(c, b);
+-			}
+-	}
+-
+-	/* NOTREACHED */
+-	return 0;
+-}
+-
+-#define do_mod(a, b)	xfs_do_mod(&(a), (b), sizeof(a))
+-
+ static inline uint64_t roundup_64(uint64_t x, uint32_t y)
+ {
+ 	x += y - 1;
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 7d897c58b0c8..22f546eb421a 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -1235,6 +1235,25 @@ xlog_verify_head(
+ 				be32_to_cpu((*rhead)->h_size));
+ }
+ 
++/*
++ * We need to make sure we handle log wrapping properly, so we can't use the
++ * calculated logbno directly. Make sure it wraps to the correct bno inside the
++ * log.
++ *
++ * The log is limited to 32 bit sizes, so we use the appropriate modulus
++ * operation here and cast it back to a 64 bit daddr on return.
++ */
++static inline xfs_daddr_t
++xlog_wrap_logbno(
++	struct xlog		*log,
++	xfs_daddr_t		bno)
++{
++	int			mod;
++
++	div_s64_rem(bno, log->l_logBBsize, &mod);
++	return mod;
++}
++
+ /*
+  * Check whether the head of the log points to an unmount record. In other
+  * words, determine whether the log is clean. If so, update the in-core state
+@@ -1283,12 +1302,13 @@ xlog_check_unmount_rec(
+ 	} else {
+ 		hblks = 1;
+ 	}
+-	after_umount_blk = rhead_blk + hblks + BTOBB(be32_to_cpu(rhead->h_len));
+-	after_umount_blk = do_mod(after_umount_blk, log->l_logBBsize);
++
++	after_umount_blk = xlog_wrap_logbno(log,
++			rhead_blk + hblks + BTOBB(be32_to_cpu(rhead->h_len)));
++
+ 	if (*head_blk == after_umount_blk &&
+ 	    be32_to_cpu(rhead->h_num_logops) == 1) {
+-		umount_data_blk = rhead_blk + hblks;
+-		umount_data_blk = do_mod(umount_data_blk, log->l_logBBsize);
++		umount_data_blk = xlog_wrap_logbno(log, rhead_blk + hblks);
+ 		error = xlog_bread(log, umount_data_blk, 1, bp, &offset);
+ 		if (error)
+ 			return error;
+@@ -5459,9 +5479,7 @@ xlog_do_recovery_pass(
+ 			 */
+ 			if (blk_no + bblks <= log->l_logBBsize ||
+ 			    blk_no >= log->l_logBBsize) {
+-				/* mod blk_no in case the header wrapped and
+-				 * pushed it beyond the end of the log */
+-				rblk_no = do_mod(blk_no, log->l_logBBsize);
++				rblk_no = xlog_wrap_logbno(log, blk_no);
+ 				error = xlog_bread(log, rblk_no, bblks, dbp,
+ 						   &offset);
+ 				if (error)
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 80bbfe604ce0..329d4d26c13e 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -301,8 +301,12 @@ xfs_rtallocate_extent_block(
+ 		/*
+ 		 * If size should be a multiple of prod, make that so.
+ 		 */
+-		if (prod > 1 && (p = do_mod(bestlen, prod)))
+-			bestlen -= p;
++		if (prod > 1) {
++			div_u64_rem(bestlen, prod, &p);
++			if (p)
++				bestlen -= p;
++		}
++
+ 		/*
+ 		 * Allocate besti for bestlen & return that.
+ 		 */
+@@ -1263,7 +1267,7 @@ xfs_rtpick_extent(
+ 		b = (mp->m_sb.sb_rextents * ((resid << 1) + 1ULL)) >>
+ 		    (log2 + 1);
+ 		if (b >= mp->m_sb.sb_rextents)
+-			b = do_mod(b, mp->m_sb.sb_rextents);
++			div64_u64_rem(b, mp->m_sb.sb_rextents, &b);
+ 		if (b + len > mp->m_sb.sb_rextents)
+ 			b = mp->m_sb.sb_rextents - len;
+ 	}
