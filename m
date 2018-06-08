@@ -1,35 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:39584 "EHLO
-        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752538AbeFFPb1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Jun 2018 11:31:27 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:39558 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751112AbeFHGTK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Jun 2018 02:19:10 -0400
+Date: Thu, 7 Jun 2018 23:19:09 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/3 V2] xfs: replace do_mod with native operations
+Message-ID: <20180608061909.GA12715@infradead.org>
+References: <20180607052751.6541-1-david@fromorbit.com>
+ <20180607052751.6541-3-david@fromorbit.com>
+ <20180608004357.GW10363@dastard>
 MIME-Version: 1.0
-In-Reply-To: <CAHc6FU458f9xkr2ru2B2L8_FC+=vm5CLDUixBjCZSq5YZZC8=w@mail.gmail.com>
-References: <20180606104033.4947-1-hch@lst.de> <CAHc6FU458f9xkr2ru2B2L8_FC+=vm5CLDUixBjCZSq5YZZC8=w@mail.gmail.com>
-From: =?UTF-8?Q?Andreas_Gr=C3=BCnbacher?= <andreas.gruenbacher@gmail.com>
-Date: Wed, 6 Jun 2018 17:31:25 +0200
-Message-ID: <CAHpGcMJC01-RVceZajprnLtFP7JS+SrUJ+N_RESgGJyAkj=KJA@mail.gmail.com>
-Subject: Re: iomap preparations for GFS2
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180608004357.GW10363@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andreas Gruenbacher <agruenba@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, cluster-devel <cluster-devel@redhat.com>, linux-ext4 <linux-ext4@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-2018-06-06 13:38 GMT+02:00 Andreas Gruenbacher <agruenba@redhat.com>:
-> On 6 June 2018 at 12:40, Christoph Hellwig <hch@lst.de> wrote:
->> Hi all,
->>
->> this is a slight rework of the patches from Andreas to prepare for gfs2
->> using the iomap code.  I'd like to start with an immutable branch for
->> iomap patches in either the XFS tree or a tree of mine own with something
->> like this so that we can have a nice common base for both the major
->> iomap changes for XFS and the GFS2 work.
+On Fri, Jun 08, 2018 at 10:43:57AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> do_mod() is a hold-over from when we have different sizes for file
+> offsets and and other internal values for 40 bit XFS filesystems.
+> Hence depending on build flags variables passed to do_mod() could
+> change size. We no longer support those small format filesystems and
+> hence everything is of fixed size theses days, even on 32 bit
+> platforms.
+> 
+> As such, we can convert all the do_mod() callers to platform
+> optimised modulus operations as defined by linux/math64.h.
+> Individual conversions depend on the types of variables being used.
 
-When do you want to push this upstream? We've got the gfs2 patches
-that depend on it, and we cannot make progress with those before this
-set is pushed.
+I have to admit the XFS helpers are much more intuitive.
 
-Thanks,
-Andreas
+>  7 files changed, 66 insertions(+), 50 deletions(-)
+
+And the diffstat agrees with me.
+
+I'd rather see the XFS helpers lifted to the kernel on an as-needed
+basis than making the code bigger and more hairy.
