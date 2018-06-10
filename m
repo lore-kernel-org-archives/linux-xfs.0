@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:55890 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753542AbeFJFKG (ORCPT
+Received: from aserp2130.oracle.com ([141.146.126.79]:47874 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753669AbeFJFKG (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Jun 2018 01:10:06 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5A56n2s071912
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5A56dbT006805
         for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:10:06 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2130.oracle.com with ESMTP id 2jg6b19w80-1
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp2130.oracle.com with ESMTP id 2jg4dkt26p-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:10:05 +0000
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:10:06 +0000
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w5A5A5IV024381
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w5A5A56U004084
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
         for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:10:05 GMT
 Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w5A5A4o9003677
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w5A5A5Yp003684
         for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:10:05 GMT
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v2 01/27] xfsprogs: Move xfs_attr.h to libxfs
-Date: Sat,  9 Jun 2018 22:07:26 -0700
-Message-Id: <1528607272-11122-2-git-send-email-allison.henderson@oracle.com>
+Subject: [PATCH v2 02/27] xfsprogs: Add helper function xfs_attr_try_sf_addname
+Date: Sat,  9 Jun 2018 22:07:27 -0700
+Message-Id: <1528607272-11122-3-git-send-email-allison.henderson@oracle.com>
 In-Reply-To: <1528607272-11122-1-git-send-email-allison.henderson@oracle.com>
 References: <1528607272-11122-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -28,191 +28,112 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-This patch moves fs/xfs/xfs_attr.h to fs/xfs/libxfs/xfs_attr.h
-since xfs_attr.c is in libxfs.  We will need these later in
-xfsprogs.
+This patch adds a subroutine xfs_attr_try_sf_addname
+used by xfs_attr_set.  This subrotine will attempt to
+add the attribute name specified in args in shortform,
+as well and perform error handling previously done in
+xfs_attr_set.
+
+This patch helps to pre-simplify xfs_attr_set for reviewing
+purposes and reduce indentation.  New function will be added
+in the next patch.
 
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- libxfs/Makefile   |   1 +
- libxfs/xfs_attr.h | 157 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 158 insertions(+)
+ libxfs/xfs_attr.c | 64 +++++++++++++++++++++++++++++++++++--------------------
+ 1 file changed, 41 insertions(+), 23 deletions(-)
 
-diff --git a/libxfs/Makefile b/libxfs/Makefile
-index 0470f5f..75ce980 100644
---- a/libxfs/Makefile
-+++ b/libxfs/Makefile
-@@ -21,6 +21,7 @@ HFILES = \
- 	xfs_ag_resv.h \
- 	xfs_alloc.h \
- 	xfs_alloc_btree.h \
-+	xfs_attr.h \
- 	xfs_attr_leaf.h \
- 	xfs_attr_sf.h \
- 	xfs_bit.h \
-diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
-new file mode 100644
-index 0000000..8abf398
---- /dev/null
-+++ b/libxfs/xfs_attr.h
-@@ -0,0 +1,157 @@
-+/*
-+ * Copyright (c) 2000,2002-2003,2005 Silicon Graphics, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+#ifndef __XFS_ATTR_H__
-+#define	__XFS_ATTR_H__
+diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
+index a4bde02..51b567d 100644
+--- a/libxfs/xfs_attr.c
++++ b/libxfs/xfs_attr.c
+@@ -198,6 +198,44 @@ xfs_attr_calc_size(
+ 	return nblks;
+ }
+ 
++STATIC int
++xfs_attr_try_sf_addname(
++	struct xfs_inode	*dp,
++	struct xfs_da_args	*args,
++	int			flags)
++{
 +
-+struct xfs_inode;
-+struct xfs_da_args;
-+struct xfs_attr_list_context;
++	struct xfs_mount	*mp = dp->i_mount;
++	int			error;
++	int			err2;
 +
-+/*
-+ * Large attribute lists are structured around Btrees where all the data
-+ * elements are in the leaf nodes.  Attribute names are hashed into an int,
-+ * then that int is used as the index into the Btree.  Since the hashval
-+ * of an attribute name may not be unique, we may have duplicate keys.
-+ * The internal links in the Btree are logical block offsets into the file.
-+ *
-+ * Small attribute lists use a different format and are packed as tightly
-+ * as possible so as to fit into the literal area of the inode.
-+ */
++	error = xfs_attr_shortform_addname(args);
++	if (error != -ENOSPC) {
++		/*
++		 * Commit the shortform mods, and we're done.
++		 * NOTE: this is also the error path
++		 * (EEXIST, etc).
++		 */
++		ASSERT(args->trans != NULL);
 +
-+/*========================================================================
-+ * External interfaces
-+ *========================================================================*/
++		/*
++		 * If this is a synchronous mount, make sure
++		 * that the transaction goes to disk before
++		 * returning to the user.
++		 */
++		if (mp->m_flags & XFS_MOUNT_WSYNC)
++			xfs_trans_set_sync(args->trans);
 +
++		if (!error && (flags & ATTR_KERNOTIME) == 0) {
++			xfs_trans_ichgtime(args->trans, dp,
++					XFS_ICHGTIME_CHG);
++		}
++		err2 = xfs_trans_commit(args->trans);
++		error = error ? error : err2;
++	}
++	return error;
++}
 +
-+#define ATTR_DONTFOLLOW	0x0001	/* -- unused, from IRIX -- */
-+#define ATTR_ROOT	0x0002	/* use attrs in root (trusted) namespace */
-+#define ATTR_TRUST	0x0004	/* -- unused, from IRIX -- */
-+#define ATTR_SECURE	0x0008	/* use attrs in security namespace */
-+#define ATTR_CREATE	0x0010	/* pure create: fail if attr already exists */
-+#define ATTR_REPLACE	0x0020	/* pure set: fail if attr does not exist */
-+
-+#define ATTR_INCOMPLETE	0x4000	/* [kernel] return INCOMPLETE attr keys */
-+
-+#define XFS_ATTR_FLAGS \
-+	{ ATTR_DONTFOLLOW, 	"DONTFOLLOW" }, \
-+	{ ATTR_ROOT,		"ROOT" }, \
-+	{ ATTR_TRUST,		"TRUST" }, \
-+	{ ATTR_SECURE,		"SECURE" }, \
-+	{ ATTR_CREATE,		"CREATE" }, \
-+	{ ATTR_REPLACE,		"REPLACE" }, \
-+	{ ATTR_KERNOTIME,	"KERNOTIME" }, \
-+	{ ATTR_KERNOVAL,	"KERNOVAL" }, \
-+	{ ATTR_INCOMPLETE,	"INCOMPLETE" }
-+
-+/*
-+ * The maximum size (into the kernel or returned from the kernel) of an
-+ * attribute value or the buffer used for an attr_list() call.  Larger
-+ * sizes will result in an ERANGE return code.
-+ */
-+#define	ATTR_MAX_VALUELEN	(64*1024)	/* max length of a value */
-+
-+/*
-+ * Define how lists of attribute names are returned to the user from
-+ * the attr_list() call.  A large, 32bit aligned, buffer is passed in
-+ * along with its size.  We put an array of offsets at the top that each
-+ * reference an attrlist_ent_t and pack the attrlist_ent_t's at the bottom.
-+ */
-+typedef struct attrlist {
-+	__s32	al_count;	/* number of entries in attrlist */
-+	__s32	al_more;	/* T/F: more attrs (do call again) */
-+	__s32	al_offset[1];	/* byte offsets of attrs [var-sized] */
-+} attrlist_t;
-+
-+/*
-+ * Show the interesting info about one attribute.  This is what the
-+ * al_offset[i] entry points to.
-+ */
-+typedef struct attrlist_ent {	/* data from attr_list() */
-+	__u32	a_valuelen;	/* number bytes in value of attr */
-+	char	a_name[1];	/* attr name (NULL terminated) */
-+} attrlist_ent_t;
-+
-+/*
-+ * Given a pointer to the (char*) buffer containing the attr_list() result,
-+ * and an index, return a pointer to the indicated attribute in the buffer.
-+ */
-+#define	ATTR_ENTRY(buffer, index)		\
-+	((attrlist_ent_t *)			\
-+	 &((char *)buffer)[ ((attrlist_t *)(buffer))->al_offset[index] ])
-+
-+/*
-+ * Kernel-internal version of the attrlist cursor.
-+ */
-+typedef struct attrlist_cursor_kern {
-+	__u32	hashval;	/* hash value of next entry to add */
-+	__u32	blkno;		/* block containing entry (suggestion) */
-+	__u32	offset;		/* offset in list of equal-hashvals */
-+	__u16	pad1;		/* padding to match user-level */
-+	__u8	pad2;		/* padding to match user-level */
-+	__u8	initted;	/* T/F: cursor has been initialized */
-+} attrlist_cursor_kern_t;
-+
-+
-+/*========================================================================
-+ * Structure used to pass context around among the routines.
-+ *========================================================================*/
-+
-+
-+/* void; state communicated via *context */
-+typedef void (*put_listent_func_t)(struct xfs_attr_list_context *, int,
-+			      unsigned char *, int, int);
-+
-+typedef struct xfs_attr_list_context {
-+	struct xfs_trans		*tp;
-+	struct xfs_inode		*dp;		/* inode */
-+	struct attrlist_cursor_kern	*cursor;	/* position in list */
-+	char				*alist;		/* output buffer */
-+	int				seen_enough;	/* T/F: seen enough of list? */
-+	ssize_t				count;		/* num used entries */
-+	int				dupcnt;		/* count dup hashvals seen */
-+	int				bufsize;	/* total buffer size */
-+	int				firstu;		/* first used byte in buffer */
-+	int				flags;		/* from VOP call */
-+	int				resynch;	/* T/F: resynch with cursor */
-+	put_listent_func_t		put_listent;	/* list output fmt function */
-+	int				index;		/* index into output buffer */
-+} xfs_attr_list_context_t;
-+
-+
-+/*========================================================================
-+ * Function prototypes for the kernel.
-+ *========================================================================*/
-+
-+/*
-+ * Overall external interface routines.
-+ */
-+int xfs_attr_inactive(struct xfs_inode *dp);
-+int xfs_attr_list_int_ilocked(struct xfs_attr_list_context *);
-+int xfs_attr_list_int(struct xfs_attr_list_context *);
-+int xfs_inode_hasattr(struct xfs_inode *ip);
-+int xfs_attr_get_ilocked(struct xfs_inode *ip, struct xfs_da_args *args);
-+int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
-+		 unsigned char *value, int *valuelenp, int flags);
-+int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
-+		 unsigned char *value, int valuelen, int flags);
-+int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
-+int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
-+		  int flags, struct attrlist_cursor_kern *cursor);
-+
-+
-+#endif	/* __XFS_ATTR_H__ */
+ int
+ xfs_attr_set(
+ 	struct xfs_inode	*dp,
+@@ -213,7 +251,7 @@ xfs_attr_set(
+ 	struct xfs_trans_res	tres;
+ 	xfs_fsblock_t		firstblock;
+ 	int			rsvd = (flags & ATTR_ROOT) != 0;
+-	int			error, err2, local;
++	int			error, local;
+ 
+ 	XFS_STATS_INC(mp, xs_attr_set);
+ 
+@@ -292,30 +330,10 @@ xfs_attr_set(
+ 		 * Try to add the attr to the attribute list in
+ 		 * the inode.
+ 		 */
+-		error = xfs_attr_shortform_addname(&args);
++		error = xfs_attr_try_sf_addname(dp, &args, flags);
+ 		if (error != -ENOSPC) {
+-			/*
+-			 * Commit the shortform mods, and we're done.
+-			 * NOTE: this is also the error path (EEXIST, etc).
+-			 */
+-			ASSERT(args.trans != NULL);
+-
+-			/*
+-			 * If this is a synchronous mount, make sure that
+-			 * the transaction goes to disk before returning
+-			 * to the user.
+-			 */
+-			if (mp->m_flags & XFS_MOUNT_WSYNC)
+-				xfs_trans_set_sync(args.trans);
+-
+-			if (!error && (flags & ATTR_KERNOTIME) == 0) {
+-				xfs_trans_ichgtime(args.trans, dp,
+-							XFS_ICHGTIME_CHG);
+-			}
+-			err2 = xfs_trans_commit(args.trans);
+ 			xfs_iunlock(dp, XFS_ILOCK_EXCL);
+-
+-			return error ? error : err2;
++			return error;
+ 		}
+ 
+ 		/*
 -- 
 2.7.4
 
