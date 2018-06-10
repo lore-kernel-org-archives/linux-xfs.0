@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:46730 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:46726 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932119AbeFJFHi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Jun 2018 01:07:38 -0400
+        with ESMTP id S932118AbeFJFHh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Jun 2018 01:07:37 -0400
 Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5A571Bv007079
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:07:38 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp2130.oracle.com with ESMTP id 2jg4dkt24e-1
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5A57bjb007133
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:07:37 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp2130.oracle.com with ESMTP id 2jg4dkt24d-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
         for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:07:37 +0000
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w5A57boR032662
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w5A57alV002195
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:07:37 GMT
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:07:36 GMT
 Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w5A57b8h000579
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:07:37 GMT
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w5A57ZSP000543
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:07:35 GMT
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v7 21/23] xfs: Add helper function xfs_attr_list_context_init
-Date: Sat,  9 Jun 2018 22:05:06 -0700
-Message-Id: <1528607108-11059-22-git-send-email-allison.henderson@oracle.com>
+Subject: [PATCH v7 18/23] xfs: remove parent pointers in unlink
+Date: Sat,  9 Jun 2018 22:05:03 -0700
+Message-Id: <1528607108-11059-19-git-send-email-allison.henderson@oracle.com>
 In-Reply-To: <1528607108-11059-1-git-send-email-allison.henderson@oracle.com>
 References: <1528607108-11059-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -28,128 +28,130 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-This patch adds a helper function xfs_attr_list_context_init
-used by xfs_attr_list.  This function initializes the
-xfs_attr_list_context structure passed to xfs_attr_list_int.
-We will need this later to call xfs_attr_list_int_ilocked when
-the node is already locked.
+From: Dave Chinner <dchinner@redhat.com>
 
+This patch removes the parent pointer attribute during unlink
+
+[bfoster: rebase, use VFS inode generation]
+[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t
+	   implemented xfs_attr_remove_parent]
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- fs/xfs/libxfs/xfs_attr.h |  3 ++
- fs/xfs/xfs_attr_list.c   | 72 +++++++++++++++++++++++++++++++-----------------
- 2 files changed, 50 insertions(+), 25 deletions(-)
+ fs/xfs/xfs_inode.c        | 23 ++++++++++++++++++-----
+ fs/xfs/xfs_parent_utils.c | 18 ++++++++++++++++++
+ fs/xfs/xfs_parent_utils.h |  4 ++++
+ 3 files changed, 40 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-index d041734..79c516b 100644
---- a/fs/xfs/libxfs/xfs_attr.h
-+++ b/fs/xfs/libxfs/xfs_attr.h
-@@ -184,6 +184,9 @@ int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name,
- int xfs_attr_remove_args(struct xfs_da_args *args, int flags, bool roll_trans);
- int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
- 		  int flags, struct attrlist_cursor_kern *cursor);
-+int xfs_attr_list_context_init(struct xfs_inode *dp, char *buffer, int bufsize,
-+		int flags, struct attrlist_cursor_kern *cursor,
-+		struct xfs_attr_list_context *context);
- int xfs_attr_args_init(struct xfs_da_args *args, struct xfs_inode *dp,
- 		       const unsigned char *name, size_t namelen, int flags);
- int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
-diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-index 3e59a34..df8faf5 100644
---- a/fs/xfs/xfs_attr_list.c
-+++ b/fs/xfs/xfs_attr_list.c
-@@ -603,23 +603,19 @@ xfs_attr_put_listent(
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 10f885b..aee05e5 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2605,6 +2605,7 @@ xfs_remove(
+ 	struct xfs_defer_ops	dfops;
+ 	xfs_fsblock_t           first_block;
+ 	uint			resblks;
++	xfs_dir2_dataptr_t	dir_offset;
+ 
+ 	trace_xfs_remove(dp, name);
+ 
+@@ -2642,8 +2643,8 @@ xfs_remove(
+ 
+ 	xfs_lock_two_inodes(dp, XFS_ILOCK_EXCL, ip, XFS_ILOCK_EXCL);
+ 
+-	xfs_trans_ijoin(tp, dp, XFS_ILOCK_EXCL);
+-	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
++	xfs_trans_ijoin(tp, dp, 0);
++	xfs_trans_ijoin(tp, ip, 0);
+ 
+ 	/*
+ 	 * If we're removing a directory perform some additional validation.
+@@ -2685,12 +2686,18 @@ xfs_remove(
+ 
+ 	xfs_defer_init(&dfops, &first_block);
+ 	error = xfs_dir_removename(tp, dp, name, ip->i_ino, &first_block,
+-				   &dfops, resblks, NULL);
++				   &dfops, resblks, &dir_offset);
+ 	if (error) {
+ 		ASSERT(error != -ENOENT);
+ 		goto out_bmap_cancel;
+ 	}
+ 
++	if (xfs_sb_version_hasparent(&mp->m_sb)) {
++		error = xfs_parent_remove_deferred(dp, ip, dir_offset, &dfops);
++		if (error)
++			goto out_bmap_cancel;
++	}
++
+ 	/*
+ 	 * If this is a synchronous mount, make sure that the
+ 	 * remove transaction goes to disk before returning to
+@@ -2705,17 +2712,23 @@ xfs_remove(
+ 
+ 	error = xfs_trans_commit(tp);
+ 	if (error)
+-		goto std_return;
++		goto out_unlock;
+ 
+ 	if (is_dir && xfs_inode_is_filestream(ip))
+ 		xfs_filestream_deassociate(ip);
+ 
+-	return 0;
++	error = 0;
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	xfs_iunlock(dp, XFS_ILOCK_EXCL);
++	return error;
+ 
+  out_bmap_cancel:
+ 	xfs_defer_cancel(&dfops);
+  out_trans_cancel:
+ 	xfs_trans_cancel(tp);
++out_unlock:
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+  std_return:
+ 	return error;
+ }
+diff --git a/fs/xfs/xfs_parent_utils.c b/fs/xfs/xfs_parent_utils.c
+index 31ff5fe..b89d4eb 100644
+--- a/fs/xfs/xfs_parent_utils.c
++++ b/fs/xfs/xfs_parent_utils.c
+@@ -48,3 +48,21 @@ xfs_parent_add_deferred(
+ 		(void *)child_name->name, child_name->len, ATTR_PARENT);
  }
  
- /*
-- * Generate a list of extended attribute names and optionally
-- * also value lengths.  Positive return value follows the XFS
-- * convention of being an error, zero or negative return code
-- * is the length of the buffer returned (negated), indicating
-- * success.
-+ * Initializes an xfs_attr_list_context suitable for
-+ * use by xfs_attr_list
-  */
- int
--xfs_attr_list(
--	xfs_inode_t	*dp,
--	char		*buffer,
--	int		bufsize,
--	int		flags,
--	attrlist_cursor_kern_t *cursor)
-+xfs_attr_list_context_init(
-+	xfs_inode_t			*dp,
-+	char				*buffer,
-+	int				bufsize,
-+	int				flags,
-+	struct attrlist_cursor_kern	*cursor,
-+	struct xfs_attr_list_context	*context)
- {
--	xfs_attr_list_context_t context;
- 	struct attrlist *alist;
--	int error;
- 
- 	/*
- 	 * Validate the cursor.
-@@ -645,20 +641,46 @@ xfs_attr_list(
- 	/*
- 	 * Initialize the output buffer.
- 	 */
--	memset(&context, 0, sizeof(context));
--	context.dp = dp;
--	context.cursor = cursor;
--	context.resynch = 1;
--	context.flags = flags;
--	context.alist = buffer;
--	context.bufsize = (bufsize & ~(sizeof(int)-1));  /* align */
--	context.firstu = context.bufsize;
--	context.put_listent = xfs_attr_put_listent;
--
--	alist = (struct attrlist *)context.alist;
-+	memset(context, 0, sizeof(xfs_attr_list_context_t));
-+	context->dp = dp;
-+	context->cursor = cursor;
-+	context->resynch = 1;
-+	context->flags = flags;
-+	context->alist = buffer;
-+	context->bufsize = (bufsize & ~(sizeof(int)-1));  /* align */
-+	context->firstu = context->bufsize;
-+	context->put_listent = xfs_attr_put_listent;
-+
-+	alist = (struct attrlist *)context->alist;
- 	alist->al_count = 0;
- 	alist->al_more = 0;
--	alist->al_offset[0] = context.bufsize;
-+	alist->al_offset[0] = context->bufsize;
-+
-+	return 0;
-+}
-+
 +/*
-+ * Generate a list of extended attribute names and optionally
-+ * also value lengths.  Positive return value follows the XFS
-+ * convention of being an error, zero or negative return code
-+ * is the length of the buffer returned (negated), indicating
-+ * success.
++ * Remove a parent record from a child inode.
 + */
 +int
-+xfs_attr_list(
-+	xfs_inode_t		*dp,
-+	char			*buffer,
-+	int			bufsize,
-+	int			flags,
-+	attrlist_cursor_kern_t	*cursor)
++xfs_parent_remove_deferred(
++	struct xfs_inode	*parent,
++	struct xfs_inode	*child,
++	xfs_dir2_dataptr_t	diroffset,
++	struct xfs_defer_ops	*dfops)
 +{
-+	xfs_attr_list_context_t context;
-+	int			error;
++	struct xfs_parent_name_rec rec;
 +
-+	error = xfs_attr_list_context_init(dp, buffer, bufsize, flags,
-+			cursor, &context);
-+	if (error)
-+		return error;
- 
- 	error = xfs_attr_list_int(&context);
- 	ASSERT(error <= 0);
++	xfs_init_parent_name_rec(&rec, parent, diroffset);
++
++	return xfs_attr_remove_deferred(child, dfops, &rec, sizeof(rec),
++		ATTR_PARENT);
++}
++
+diff --git a/fs/xfs/xfs_parent_utils.h b/fs/xfs/xfs_parent_utils.h
+index a667d1d..9e0ac13 100644
+--- a/fs/xfs/xfs_parent_utils.h
++++ b/fs/xfs/xfs_parent_utils.h
+@@ -23,4 +23,8 @@
+ int xfs_parent_add_deferred(struct xfs_inode *parent, struct xfs_inode *child,
+ 	       struct xfs_name *child_name, uint32_t diroffset,
+ 	       struct xfs_defer_ops *dfops);
++int xfs_parent_remove_deferred(struct xfs_inode *parent,
++			       struct xfs_inode *child,
++			       xfs_dir2_dataptr_t diroffset,
++			       struct xfs_defer_ops *dfops);
+ #endif	/* __XFS_PARENT_UTILS_H__ */
 -- 
 2.7.4
 
