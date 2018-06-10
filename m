@@ -1,370 +1,139 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:53602 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932183AbeFGLmN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 Jun 2018 07:42:13 -0400
-Date: Thu, 7 Jun 2018 07:42:11 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/3] xfs: clean up MIN/MAX
-Message-ID: <20180607114210.GE7798@bfoster>
-References: <20180607052751.6541-1-david@fromorbit.com>
- <20180607052751.6541-4-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180607052751.6541-4-david@fromorbit.com>
+Received: from aserp2130.oracle.com ([141.146.126.79]:46642 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751630AbeFJFHZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Jun 2018 01:07:25 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5A56Hm8006614
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:07:24 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp2130.oracle.com with ESMTP id 2jg4dkt242-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:07:24 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w5A57NOr032536
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:07:24 GMT
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w5A57NHU013169
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:07:23 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [PATCH v7 02/23] xfs: Add helper function xfs_attr_try_sf_addname
+Date: Sat,  9 Jun 2018 22:04:47 -0700
+Message-Id: <1528607108-11059-3-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1528607108-11059-1-git-send-email-allison.henderson@oracle.com>
+References: <1528607108-11059-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Thu, Jun 07, 2018 at 03:27:51PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Get rid of the MIN/MAX macros and just use the native min/max macros
-> directly in the XFS code.
-> 
-> Signed-Off-By: Dave Chinner <dchinner@redhat.com>
-> ---
+This patch adds a subroutine xfs_attr_try_sf_addname
+used by xfs_attr_set.  This subrotine will attempt to
+add the attribute name specified in args in shortform,
+as well and perform error handling previously done in
+xfs_attr_set.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+This patch helps to pre-simplify xfs_attr_set for reviewing
+purposes and reduce indentation.  New function will be added
+in the next patch.
 
->  fs/xfs/libxfs/xfs_attr_leaf.c  |  2 +-
->  fs/xfs/libxfs/xfs_bmap.c       |  2 +-
->  fs/xfs/libxfs/xfs_da_btree.c   |  2 +-
->  fs/xfs/libxfs/xfs_dir2_block.c |  8 ++++----
->  fs/xfs/libxfs/xfs_dir2_leaf.c  |  8 ++++----
->  fs/xfs/libxfs/xfs_sb.c         |  2 +-
->  fs/xfs/libxfs/xfs_trans_resv.c | 16 ++++++++--------
->  fs/xfs/xfs_buf_item.c          |  2 +-
->  fs/xfs/xfs_iomap.c             |  6 +++---
->  fs/xfs/xfs_itable.c            |  2 +-
->  fs/xfs/xfs_linux.h             |  2 --
->  fs/xfs/xfs_log.c               |  4 ++--
->  fs/xfs/xfs_log_recover.c       |  6 +++---
->  fs/xfs/xfs_mount.h             |  2 +-
->  fs/xfs/xfs_super.c             |  2 +-
->  15 files changed, 32 insertions(+), 34 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index cf1504208811..99e0f5749dba 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -465,7 +465,7 @@ xfs_attr_shortform_bytesfit(xfs_inode_t *dp, int bytes)
->  	 * A data fork btree root must have space for at least
->  	 * MINDBTPTRS key/ptr pairs if the data fork is small or empty.
->  	 */
-> -	minforkoff = MAX(dsize, XFS_BMDR_SPACE_CALC(MINDBTPTRS));
-> +	minforkoff = max(dsize, XFS_BMDR_SPACE_CALC(MINDBTPTRS));
->  	minforkoff = roundup(minforkoff, 8) >> 3;
->  
->  	/* attr fork btree root can have at least this many key/ptr pairs */
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 4d8fd37ec7ae..01628f0c9a0c 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -3467,7 +3467,7 @@ xfs_bmap_btalloc(
->  	xfs_rmap_skip_owner_update(&args.oinfo);
->  
->  	/* Trim the allocation back to the maximum an AG can fit. */
-> -	args.maxlen = MIN(ap->length, mp->m_ag_max_usable);
-> +	args.maxlen = min(ap->length, mp->m_ag_max_usable);
->  	args.firstblock = *ap->firstblock;
->  	blen = 0;
->  	if (nullfb) {
-> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-> index 5d5955d1f775..8a301402bbc4 100644
-> --- a/fs/xfs/libxfs/xfs_da_btree.c
-> +++ b/fs/xfs/libxfs/xfs_da_btree.c
-> @@ -2081,7 +2081,7 @@ xfs_da_grow_inode_int(
->  		 */
->  		mapp = kmem_alloc(sizeof(*mapp) * count, KM_SLEEP);
->  		for (b = *bno, mapi = 0; b < *bno + count; ) {
-> -			nmap = MIN(XFS_BMAP_MAX_NMAP, count);
-> +			nmap = min(XFS_BMAP_MAX_NMAP, count);
->  			c = (int)(*bno + count - b);
->  			error = xfs_bmapi_write(tp, dp, b, c,
->  					xfs_bmapi_aflag(w)|XFS_BMAPI_METADATA,
-> diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
-> index bac4c93e6381..30ed5919da72 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_block.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_block.c
-> @@ -502,8 +502,8 @@ xfs_dir2_block_addname(
->  			if (mid - lowstale)
->  				memmove(&blp[lowstale], &blp[lowstale + 1],
->  					(mid - lowstale) * sizeof(*blp));
-> -			lfloglow = MIN(lowstale, lfloglow);
-> -			lfloghigh = MAX(mid, lfloghigh);
-> +			lfloglow = min(lowstale, lfloglow);
-> +			lfloghigh = max(mid, lfloghigh);
->  		}
->  		/*
->  		 * Move entries toward the high-numbered stale entry.
-> @@ -514,8 +514,8 @@ xfs_dir2_block_addname(
->  			if (highstale - mid)
->  				memmove(&blp[mid + 1], &blp[mid],
->  					(highstale - mid) * sizeof(*blp));
-> -			lfloglow = MIN(mid, lfloglow);
-> -			lfloghigh = MAX(highstale, lfloghigh);
-> +			lfloglow = min(mid, lfloglow);
-> +			lfloghigh = max(highstale, lfloghigh);
->  		}
->  		be32_add_cpu(&btp->stale, -1);
->  	}
-> diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-> index 728c3428abe3..1728a3e6f5cf 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-> @@ -590,8 +590,8 @@ xfs_dir3_leaf_find_entry(
->  				(index - lowstale - 1) *
->  					sizeof(xfs_dir2_leaf_entry_t));
->  		}
-> -		*lfloglow = MIN(lowstale, *lfloglow);
-> -		*lfloghigh = MAX(index - 1, *lfloghigh);
-> +		*lfloglow = min(lowstale, *lfloglow);
-> +		*lfloghigh = max(index - 1, *lfloghigh);
->  		leafhdr->stale--;
->  		return &ents[index - 1];
->  	}
-> @@ -610,8 +610,8 @@ xfs_dir3_leaf_find_entry(
->  		memmove(&ents[index + 1], &ents[index],
->  			(highstale - index) * sizeof(xfs_dir2_leaf_entry_t));
->  	}
-> -	*lfloglow = MIN(index, *lfloglow);
-> -	*lfloghigh = MAX(highstale, *lfloghigh);
-> +	*lfloglow = min(index, *lfloglow);
-> +	*lfloghigh = max(highstale, *lfloghigh);
->  	leafhdr->stale--;
->  	return &ents[index];
->  }
-> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index a63788661a4c..350119eeaecb 100644
-> --- a/fs/xfs/libxfs/xfs_sb.c
-> +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -771,7 +771,7 @@ xfs_sb_mount_common(
->  	mp->m_refc_mnr[1] = mp->m_refc_mxr[1] / 2;
->  
->  	mp->m_bsize = XFS_FSB_TO_BB(mp, 1);
-> -	mp->m_ialloc_inos = (int)MAX((uint16_t)XFS_INODES_PER_CHUNK,
-> +	mp->m_ialloc_inos = max_t(uint16_t, XFS_INODES_PER_CHUNK,
->  					sbp->sb_inopblock);
->  	mp->m_ialloc_blks = mp->m_ialloc_inos >> sbp->sb_inopblog;
->  
-> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-> index 50c44e3c0bc5..f99a7aefe418 100644
-> --- a/fs/xfs/libxfs/xfs_trans_resv.c
-> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
-> @@ -236,7 +236,7 @@ xfs_calc_write_reservation(
->  	struct xfs_mount	*mp)
->  {
->  	return XFS_DQUOT_LOGRES(mp) +
-> -		MAX((xfs_calc_inode_res(mp, 1) +
-> +		max((xfs_calc_inode_res(mp, 1) +
->  		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK),
->  				      XFS_FSB_TO_B(mp, 1)) +
->  		     xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
-> @@ -263,7 +263,7 @@ xfs_calc_itruncate_reservation(
->  	struct xfs_mount	*mp)
->  {
->  	return XFS_DQUOT_LOGRES(mp) +
-> -		MAX((xfs_calc_inode_res(mp, 1) +
-> +		max((xfs_calc_inode_res(mp, 1) +
->  		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) + 1,
->  				      XFS_FSB_TO_B(mp, 1))),
->  		    (xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
-> @@ -288,7 +288,7 @@ xfs_calc_rename_reservation(
->  	struct xfs_mount	*mp)
->  {
->  	return XFS_DQUOT_LOGRES(mp) +
-> -		MAX((xfs_calc_inode_res(mp, 4) +
-> +		max((xfs_calc_inode_res(mp, 4) +
->  		     xfs_calc_buf_res(2 * XFS_DIROP_LOG_COUNT(mp),
->  				      XFS_FSB_TO_B(mp, 1))),
->  		    (xfs_calc_buf_res(7, mp->m_sb.sb_sectsize) +
-> @@ -328,7 +328,7 @@ xfs_calc_link_reservation(
->  {
->  	return XFS_DQUOT_LOGRES(mp) +
->  		xfs_calc_iunlink_remove_reservation(mp) +
-> -		MAX((xfs_calc_inode_res(mp, 2) +
-> +		max((xfs_calc_inode_res(mp, 2) +
->  		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
->  				      XFS_FSB_TO_B(mp, 1))),
->  		    (xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
-> @@ -366,7 +366,7 @@ xfs_calc_remove_reservation(
->  {
->  	return XFS_DQUOT_LOGRES(mp) +
->  		xfs_calc_iunlink_add_reservation(mp) +
-> -		MAX((xfs_calc_inode_res(mp, 1) +
-> +		max((xfs_calc_inode_res(mp, 1) +
->  		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
->  				      XFS_FSB_TO_B(mp, 1))),
->  		    (xfs_calc_buf_res(4, mp->m_sb.sb_sectsize) +
-> @@ -424,7 +424,7 @@ STATIC uint
->  xfs_calc_icreate_reservation(xfs_mount_t *mp)
->  {
->  	return XFS_DQUOT_LOGRES(mp) +
-> -		MAX(xfs_calc_icreate_resv_alloc(mp),
-> +		max(xfs_calc_icreate_resv_alloc(mp),
->  		    xfs_calc_create_resv_modify(mp));
->  }
->  
-> @@ -632,7 +632,7 @@ STATIC uint
->  xfs_calc_attrinval_reservation(
->  	struct xfs_mount	*mp)
->  {
-> -	return MAX((xfs_calc_inode_res(mp, 1) +
-> +	return max((xfs_calc_inode_res(mp, 1) +
->  		    xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK),
->  				     XFS_FSB_TO_B(mp, 1))),
->  		   (xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
-> @@ -696,7 +696,7 @@ xfs_calc_attrrm_reservation(
->  	struct xfs_mount	*mp)
->  {
->  	return XFS_DQUOT_LOGRES(mp) +
-> -		MAX((xfs_calc_inode_res(mp, 1) +
-> +		max((xfs_calc_inode_res(mp, 1) +
->  		     xfs_calc_buf_res(XFS_DA_NODE_MAXDEPTH,
->  				      XFS_FSB_TO_B(mp, 1)) +
->  		     (uint)XFS_FSB_TO_B(mp,
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index 5d18c8089499..1c9d1398980b 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -830,7 +830,7 @@ xfs_buf_item_log_segment(
->  	 * of the last bit to be set in this word plus one.
->  	 */
->  	if (bit) {
-> -		end_bit = MIN(bit + bits_to_set, (uint)NBWORD);
-> +		end_bit = min(bit + bits_to_set, (uint)NBWORD);
->  		mask = ((1U << (end_bit - bit)) - 1) << bit;
->  		*wordp |= mask;
->  		wordp++;
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 99a1a1052885..49f5492eed3b 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -188,7 +188,7 @@ xfs_iomap_write_direct(
->  			goto out_unlock;
->  	} else {
->  		if (nmaps && (imap->br_startblock == HOLESTARTBLOCK))
-> -			last_fsb = MIN(last_fsb, (xfs_fileoff_t)
-> +			last_fsb = min(last_fsb, (xfs_fileoff_t)
->  					imap->br_blockcount +
->  					imap->br_startoff);
->  	}
-> @@ -476,8 +476,8 @@ xfs_iomap_prealloc_size(
->  	 * The shift throttle value is set to the maximum value as determined by
->  	 * the global low free space values and per-quota low free space values.
->  	 */
-> -	alloc_blocks = MIN(alloc_blocks, qblocks);
-> -	shift = MAX(shift, qshift);
-> +	alloc_blocks = min(alloc_blocks, qblocks);
-> +	shift = max(shift, qshift);
->  
->  	if (shift)
->  		alloc_blocks >>= shift;
-> diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-> index fa405f3a00dc..24f4f1c555b5 100644
-> --- a/fs/xfs/xfs_itable.c
-> +++ b/fs/xfs/xfs_itable.c
-> @@ -559,7 +559,7 @@ xfs_inumbers(
->  	    *lastino != XFS_AGINO_TO_INO(mp, agno, agino))
->  		return error;
->  
-> -	bcount = MIN(left, (int)(PAGE_SIZE / sizeof(*buffer)));
-> +	bcount = min(left, (int)(PAGE_SIZE / sizeof(*buffer)));
->  	buffer = kmem_zalloc(bcount * sizeof(*buffer), KM_SLEEP);
->  	do {
->  		struct xfs_inobt_rec_incore	r;
-> diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-> index 2c800ffbcffd..edbd5a210df2 100644
-> --- a/fs/xfs/xfs_linux.h
-> +++ b/fs/xfs/xfs_linux.h
-> @@ -140,8 +140,6 @@ typedef __u32			xfs_nlink_t;
->  
->  #define XFS_PROJID_DEFAULT	0
->  
-> -#define MIN(a,b)	(min(a,b))
-> -#define MAX(a,b)	(max(a,b))
->  #define howmany(x, y)	(((x)+((y)-1))/(y))
->  
->  static inline void delay(long ticks)
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index e630778c08b6..5e56f3b93d4b 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -1629,8 +1629,8 @@ xlog_grant_push_ail(
->  	 * log, and 256 blocks.
->  	 */
->  	free_threshold = BTOBB(need_bytes);
-> -	free_threshold = MAX(free_threshold, (log->l_logBBsize >> 2));
-> -	free_threshold = MAX(free_threshold, 256);
-> +	free_threshold = max(free_threshold, (log->l_logBBsize >> 2));
-> +	free_threshold = max(free_threshold, 256);
->  	if (free_blocks >= free_threshold)
->  		return;
->  
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 4405ff21f9a9..8eda116e7812 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -1824,7 +1824,7 @@ xlog_clear_stale_blocks(
->  	 * we don't waste all day writing from the head to the tail
->  	 * for no reason.
->  	 */
-> -	max_distance = MIN(max_distance, tail_distance);
-> +	max_distance = min(max_distance, tail_distance);
->  
->  	if ((head_block + max_distance) <= log->l_logBBsize) {
->  		/*
-> @@ -2892,14 +2892,14 @@ xlog_recover_buffer_pass2(
->  	 * buffers in the log can be a different size if the log was generated
->  	 * by an older kernel using unclustered inode buffers or a newer kernel
->  	 * running with a different inode cluster size.  Regardless, if the
-> -	 * the inode buffer size isn't MAX(blocksize, mp->m_inode_cluster_size)
-> +	 * the inode buffer size isn't max(blocksize, mp->m_inode_cluster_size)
->  	 * for *our* value of mp->m_inode_cluster_size, then we need to keep
->  	 * the buffer out of the buffer cache so that the buffer won't
->  	 * overlap with future reads of those inodes.
->  	 */
->  	if (XFS_DINODE_MAGIC ==
->  	    be16_to_cpu(*((__be16 *)xfs_buf_offset(bp, 0))) &&
-> -	    (BBTOB(bp->b_io_length) != MAX(log->l_mp->m_sb.sb_blocksize,
-> +	    (BBTOB(bp->b_io_length) != max(log->l_mp->m_sb.sb_blocksize,
->  			(uint32_t)log->l_mp->m_inode_cluster_size))) {
->  		xfs_buf_stale(bp);
->  		error = xfs_bwrite(bp);
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 7f3d5e012ba3..245349d1e23f 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -271,7 +271,7 @@ xfs_preferred_iosize(xfs_mount_t *mp)
->  	return (mp->m_swidth ?
->  		(mp->m_swidth << mp->m_sb.sb_blocklog) :
->  		((mp->m_flags & XFS_MOUNT_DFLT_IOSIZE) ?
-> -			(1 << (int)MAX(mp->m_readio_log, mp->m_writeio_log)) :
-> +			(1 << (int)max(mp->m_readio_log, mp->m_writeio_log)) :
->  			PAGE_SIZE));
->  }
->  
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index d55435e94ea3..7c4813a4a9af 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1136,7 +1136,7 @@ xfs_fs_statfs(
->  	statp->f_bavail = statp->f_bfree;
->  
->  	fakeinos = statp->f_bfree << sbp->sb_inopblog;
-> -	statp->f_files = MIN(icount + fakeinos, (uint64_t)XFS_MAXINUMBER);
-> +	statp->f_files = min(icount + fakeinos, (uint64_t)XFS_MAXINUMBER);
->  	if (mp->m_maxicount)
->  		statp->f_files = min_t(typeof(statp->f_files),
->  					statp->f_files,
-> -- 
-> 2.17.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+---
+ fs/xfs/libxfs/xfs_attr.c | 64 +++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 41 insertions(+), 23 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index ce4a34a..1524197 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -203,6 +203,44 @@ xfs_attr_calc_size(
+ 	return nblks;
+ }
+ 
++STATIC int
++xfs_attr_try_sf_addname(
++	struct xfs_inode	*dp,
++	struct xfs_da_args	*args,
++	int			flags)
++{
++
++	struct xfs_mount	*mp = dp->i_mount;
++	int			error;
++	int			err2;
++
++	error = xfs_attr_shortform_addname(args);
++	if (error != -ENOSPC) {
++		/*
++		 * Commit the shortform mods, and we're done.
++		 * NOTE: this is also the error path
++		 * (EEXIST, etc).
++		 */
++		ASSERT(args->trans != NULL);
++
++		/*
++		 * If this is a synchronous mount, make sure
++		 * that the transaction goes to disk before
++		 * returning to the user.
++		 */
++		if (mp->m_flags & XFS_MOUNT_WSYNC)
++			xfs_trans_set_sync(args->trans);
++
++		if (!error && (flags & ATTR_KERNOTIME) == 0) {
++			xfs_trans_ichgtime(args->trans, dp,
++					XFS_ICHGTIME_CHG);
++		}
++		err2 = xfs_trans_commit(args->trans);
++		error = error ? error : err2;
++	}
++	return error;
++}
++
+ int
+ xfs_attr_set(
+ 	struct xfs_inode	*dp,
+@@ -218,7 +256,7 @@ xfs_attr_set(
+ 	struct xfs_trans_res	tres;
+ 	xfs_fsblock_t		firstblock;
+ 	int			rsvd = (flags & ATTR_ROOT) != 0;
+-	int			error, err2, local;
++	int			error, local;
+ 
+ 	XFS_STATS_INC(mp, xs_attr_set);
+ 
+@@ -297,30 +335,10 @@ xfs_attr_set(
+ 		 * Try to add the attr to the attribute list in
+ 		 * the inode.
+ 		 */
+-		error = xfs_attr_shortform_addname(&args);
++		error = xfs_attr_try_sf_addname(dp, &args, flags);
+ 		if (error != -ENOSPC) {
+-			/*
+-			 * Commit the shortform mods, and we're done.
+-			 * NOTE: this is also the error path (EEXIST, etc).
+-			 */
+-			ASSERT(args.trans != NULL);
+-
+-			/*
+-			 * If this is a synchronous mount, make sure that
+-			 * the transaction goes to disk before returning
+-			 * to the user.
+-			 */
+-			if (mp->m_flags & XFS_MOUNT_WSYNC)
+-				xfs_trans_set_sync(args.trans);
+-
+-			if (!error && (flags & ATTR_KERNOTIME) == 0) {
+-				xfs_trans_ichgtime(args.trans, dp,
+-							XFS_ICHGTIME_CHG);
+-			}
+-			err2 = xfs_trans_commit(args.trans);
+ 			xfs_iunlock(dp, XFS_ILOCK_EXCL);
+-
+-			return error ? error : err2;
++			return error;
+ 		}
+ 
+ 		/*
+-- 
+2.7.4
+
