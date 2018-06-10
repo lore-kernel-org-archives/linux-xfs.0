@@ -1,17 +1,17 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb0-f196.google.com ([209.85.213.196]:35959 "EHLO
-        mail-yb0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753868AbeFJLcQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Jun 2018 07:32:16 -0400
-Received: by mail-yb0-f196.google.com with SMTP id x128-v6so5567050ybg.3
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 04:32:16 -0700 (PDT)
+Received: from mail-yb0-f195.google.com ([209.85.213.195]:46905 "EHLO
+        mail-yb0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753904AbeFJMGK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Jun 2018 08:06:10 -0400
+Received: by mail-yb0-f195.google.com with SMTP id p22-v6so5811721yba.13
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:06:10 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1528607272-11122-26-git-send-email-allison.henderson@oracle.com>
-References: <1528607272-11122-1-git-send-email-allison.henderson@oracle.com> <1528607272-11122-26-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1528607272-11122-27-git-send-email-allison.henderson@oracle.com>
+References: <1528607272-11122-1-git-send-email-allison.henderson@oracle.com> <1528607272-11122-27-git-send-email-allison.henderson@oracle.com>
 From: Amir Goldstein <amir73il@gmail.com>
-Date: Sun, 10 Jun 2018 14:32:15 +0300
-Message-ID: <CAOQ4uxhxUZudsgeJJSnSQb4xwwkYW=_gsH=HM14fG4c25rY1PA@mail.gmail.com>
-Subject: Re: [PATCH v2 25/27] xfsprogs: Add parent pointers during protofile creation
+Date: Sun, 10 Jun 2018 15:06:09 +0300
+Message-ID: <CAOQ4uxgSg9FEmwZOTDj5L6DGQiCKXd+YphFMvTdfmLCryTdxHA@mail.gmail.com>
+Subject: Re: [PATCH v2 26/27] xfsprogs: implement the upper half of parent pointers
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
@@ -21,164 +21,56 @@ Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
 On Sun, Jun 10, 2018 at 8:07 AM, Allison Henderson
 <allison.henderson@oracle.com> wrote:
-> Inodes created from protofile parsing will also need to
-> add the appropriate parent pointers
+> From: "Darrick J. Wong" <darrick.wong@oracle.com>
 >
+> Add ioctl definitions to libxfs, build the necessary helpers into
+> libfrog and libhandle to iterate parents (and parent paths), then wire
+> up xfs_scrub to be able to query parent pointers from userspace.  The
+> goal of this patch is to exercise userspace, and is nowhere near a
+> complete solution.  A basic xfs_io parent command implementation
+> replaces ... whatever that is that's there now.
+>
+> Totally missing: actual support in libxfs for working with parent ptrs
+> straight off the disk (mkfs, xfs_db, xfs_repair).
+>
+> [achender: Minor syntax adjustments to sew solution in actual support
+>            in libxfs for working with parent ptrs]
+>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 > ---
->  mkfs/proto.c | 55 ++++++++++++++++++++++++++++++++++++-------------------
->  1 file changed, 36 insertions(+), 19 deletions(-)
->
-> diff --git a/mkfs/proto.c b/mkfs/proto.c
-> index 67c228a..222479f 100644
-> --- a/mkfs/proto.c
-> +++ b/mkfs/proto.c
-> @@ -19,6 +19,7 @@
->  #include "libxfs.h"
->  #include <sys/stat.h>
->  #include "xfs_multidisk.h"
-> +#include "xfs_parent.h"
->
->  /*
->   * Prototypes for internal functions.
-> @@ -318,23 +319,25 @@ newregfile(
->
->  static void
->  newdirent(
-> -       xfs_mount_t     *mp,
-> -       xfs_trans_t     *tp,
-> -       xfs_inode_t     *pip,
-> -       struct xfs_name *name,
-> -       xfs_ino_t       inum,
-> -       xfs_fsblock_t   *first,
-> -       struct xfs_defer_ops    *dfops)
-> +       struct xfs_mount        *mp,
-> +       struct xfs_trans        *tp,
-> +       struct xfs_inode        *pip,
-> +       struct xfs_name         *name,
 
-Here too. was there a reason to convert to the non typedef-ed
-types?
+While I'm going through unmodified code, a nit picking comment to
+Darrick:
 
-> +       struct xfs_inode        *ip,
-> +       xfs_fsblock_t           *first,
-> +       struct xfs_defer_ops    *dfops,
-> +       xfs_dir2_dataptr_t      *offset)
->  {
-> -       int     error;
-> -       int     rsv;
-> +       int                     error;
-> +       int                     rsv;
->
->         rsv = XFS_DIRENTER_SPACE_RES(mp, name->len);
->
-> -       error = -libxfs_dir_createname(tp, pip, name, inum, first, dfops, rsv,
-> -                                      NULL);
-> +       error = -libxfs_dir_createname(tp, pip, name, ip->i_ino, first, dfops, rsv,
-> +                                      offset);
->         if (error)
->                 fail(_("directory createname error"), error);
 > +
->  }
->
->  static void
-> @@ -387,6 +390,7 @@ parseproto(
->         cred_t          creds;
->         char            *value;
->         struct xfs_name xname;
-> +       xfs_dir2_dataptr_t offset;
->
->         memset(&creds, 0, sizeof(creds));
->         mstr = getstr(pp);
-> @@ -470,7 +474,7 @@ parseproto(
->                         free(buf);
->                 libxfs_trans_ijoin(tp, pip, 0);
->                 xname.type = XFS_DIR3_FT_REG_FILE;
-> -               newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &dfops);
-> +               newdirent(mp, tp, pip, &xname, ip, &first, &dfops, &offset);
->                 break;
->
->         case IF_RESERVED:                       /* pre-allocated space only */
-> @@ -493,7 +497,7 @@ parseproto(
->                 libxfs_trans_ijoin(tp, pip, 0);
->
->                 xname.type = XFS_DIR3_FT_REG_FILE;
-> -               newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &dfops);
-> +               newdirent(mp, tp, pip, &xname, ip, &first, &dfops, &offset);
->                 libxfs_trans_log_inode(tp, ip, flags);
->
->                 libxfs_defer_ijoin(&dfops, ip);
-> @@ -516,7 +520,7 @@ parseproto(
->                 }
->                 libxfs_trans_ijoin(tp, pip, 0);
->                 xname.type = XFS_DIR3_FT_BLKDEV;
-> -               newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &dfops);
-> +               newdirent(mp, tp, pip, &xname, ip, &first, &dfops, &offset);
->                 flags |= XFS_ILOG_DEV;
->                 break;
->
-> @@ -530,7 +534,7 @@ parseproto(
->                         fail(_("Inode allocation failed"), error);
->                 libxfs_trans_ijoin(tp, pip, 0);
->                 xname.type = XFS_DIR3_FT_CHRDEV;
-> -               newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &dfops);
-> +               newdirent(mp, tp, pip, &xname, ip, &first, &dfops, &offset);
->                 flags |= XFS_ILOG_DEV;
->                 break;
->
-> @@ -542,7 +546,7 @@ parseproto(
->                         fail(_("Inode allocation failed"), error);
->                 libxfs_trans_ijoin(tp, pip, 0);
->                 xname.type = XFS_DIR3_FT_FIFO;
-> -               newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &dfops);
-> +               newdirent(mp, tp, pip, &xname, ip, &first, &dfops, &offset);
->                 break;
->         case IF_SYMLINK:
->                 buf = getstr(pp);
-> @@ -555,7 +559,7 @@ parseproto(
->                 flags |= newfile(tp, ip, &dfops, &first, 1, 1, buf, len);
->                 libxfs_trans_ijoin(tp, pip, 0);
->                 xname.type = XFS_DIR3_FT_SYMLINK;
-> -               newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &dfops);
-> +               newdirent(mp, tp, pip, &xname, ip, &first, &dfops, &offset);
->                 break;
->         case IF_DIRECTORY:
->                 tp = getres(mp, 0);
-> @@ -572,8 +576,8 @@ parseproto(
->                 } else {
->                         libxfs_trans_ijoin(tp, pip, 0);
->                         xname.type = XFS_DIR3_FT_DIR;
-> -                       newdirent(mp, tp, pip, &xname, ip->i_ino,
-> -                                 &first, &dfops);
-> +                       newdirent(mp, tp, pip, &xname, ip,
-> +                                 &first, &dfops, &offset);
->                         inc_nlink(VFS_I(pip));
->                         libxfs_trans_log_inode(tp, pip, XFS_ILOG_CORE);
->                 }
-> @@ -612,6 +616,19 @@ parseproto(
->                 fail(_("Error encountered creating file from prototype file"),
->                         error);
->         }
+> +/* Construct a description for an inode. */
+> +void
+> +xfs_scrub_ino_descr(
+> +       struct scrub_ctx        *ctx,
+> +       struct xfs_handle       *handle,
+> +       char                    *buf,
+> +       size_t                  buflen)
+> +{
+> +       uint64_t                ino;
+> +       xfs_agnumber_t          agno;
+> +       xfs_agino_t             agino;
+> +       int                     ret;
 > +
-> +       if (xfs_sb_version_hasparent(&mp->m_sb)) {
-> +               error = xfs_parent_add(pip, ip, &xname, offset, &first, &dfops);
-> +               if (error)
-> +                       fail(_("Error creating parent pointer"), error);
+> +       ret = handle_to_path(handle, sizeof(struct xfs_handle), buf, buflen);
+> +       if (ret >= 0)
+> +               return;
 > +
-> +               libxfs_trans_log_inode(tp, ip, flags);
-> +               libxfs_defer_ijoin(&dfops, ip);
-> +               error = -libxfs_defer_finish(&tp, &dfops);
-> +               if (error)
-> +                       fail(_("Directory creation failed"), error);
-> +       }
+> +       ino = handle->ha_fid.fid_ino;
+> +       agno = ino / (1ULL << (ctx->inopblog + ctx->agblklog));
+> +       agino = ino % (1ULL << (ctx->inopblog + ctx->agblklog));
+> +       snprintf(buf, buflen, _("inode %"PRIu64" (%u/%u)"), ino, agno,
+> +                       agino);
+> +}
 > +
->         libxfs_trans_commit(tp);
->         IRELE(ip);
->  }
-> --
-> 2.7.4
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+If we are not using XFS_INO_ macros, at lease let's keep the aritmetic
+consistent with the arithmetic used by the macros?
+
+Thanks,
+Amir.
