@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:54724 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932124AbeFJFHi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Jun 2018 01:07:38 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5A56MEC071831
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:07:38 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp2130.oracle.com with ESMTP id 2jg6b19w63-1
+Received: from userp2120.oracle.com ([156.151.31.85]:60990 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932094AbeFJFHk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Jun 2018 01:07:40 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5A57dhK095349
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:07:39 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2120.oracle.com with ESMTP id 2jg7hwstas-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:07:37 +0000
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:07:39 +0000
 Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w5A57aGw032648
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w5A57cqE020260
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:07:37 GMT
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:07:38 GMT
 Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w5A57ag3029716
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:07:36 GMT
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w5A57cKK029723
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:07:38 GMT
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v7 19/23] xfs: Add parent pointers to rename
-Date: Sat,  9 Jun 2018 22:05:04 -0700
-Message-Id: <1528607108-11059-20-git-send-email-allison.henderson@oracle.com>
+Subject: [PATCH v7 23/23] xfs: Add delayed attributes error tag
+Date: Sat,  9 Jun 2018 22:05:08 -0700
+Message-Id: <1528607108-11059-24-git-send-email-allison.henderson@oracle.com>
 In-Reply-To: <1528607108-11059-1-git-send-email-allison.henderson@oracle.com>
 References: <1528607108-11059-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -28,180 +28,91 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-This patch removes the old parent pointer attribute during the
-rename operation, and re-adds the updated parent pointer
+This patch adds an error tag that we can use to test
+delayed attribute recovery and replay
 
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- fs/xfs/xfs_inode.c | 68 +++++++++++++++++++++++++++++++++++++++++-------------
- 1 file changed, 52 insertions(+), 16 deletions(-)
+ fs/xfs/libxfs/xfs_errortag.h | 4 +++-
+ fs/xfs/xfs_error.c           | 3 +++
+ fs/xfs/xfs_trans_attr.c      | 8 ++++++++
+ 3 files changed, 14 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index aee05e5..d93e387 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2987,6 +2987,8 @@ xfs_rename(
- 	bool			src_is_directory = S_ISDIR(VFS_I(src_ip)->i_mode);
- 	int			spaceres;
- 	int			error;
-+	xfs_dir2_dataptr_t	new_diroffset;
-+	xfs_dir2_dataptr_t	old_diroffset;
+diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
+index bc1789d..40aecb3 100644
+--- a/fs/xfs/libxfs/xfs_errortag.h
++++ b/fs/xfs/libxfs/xfs_errortag.h
+@@ -65,7 +65,8 @@
+ #define XFS_ERRTAG_LOG_BAD_CRC				29
+ #define XFS_ERRTAG_LOG_ITEM_PIN				30
+ #define XFS_ERRTAG_BUF_LRU_REF				31
+-#define XFS_ERRTAG_MAX					32
++#define XFS_ERRTAG_DELAYED_ATTR			32
++#define XFS_ERRTAG_MAX					33
  
- 	trace_xfs_rename(src_dp, target_dp, src_name, target_name);
+ /*
+  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+@@ -102,5 +103,6 @@
+ #define XFS_RANDOM_LOG_BAD_CRC				1
+ #define XFS_RANDOM_LOG_ITEM_PIN				1
+ #define XFS_RANDOM_BUF_LRU_REF				2
++#define XFS_RANDOM_DELAYED_ATTR			1
  
-@@ -3041,14 +3043,14 @@ xfs_rename(
- 	 * we can rely on either trans_commit or trans_cancel to unlock
- 	 * them.
- 	 */
--	xfs_trans_ijoin(tp, src_dp, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin(tp, src_dp, 0);
- 	if (new_parent)
--		xfs_trans_ijoin(tp, target_dp, XFS_ILOCK_EXCL);
--	xfs_trans_ijoin(tp, src_ip, XFS_ILOCK_EXCL);
-+		xfs_trans_ijoin(tp, target_dp, 0);
-+	xfs_trans_ijoin(tp, src_ip, 0);
- 	if (target_ip)
--		xfs_trans_ijoin(tp, target_ip, XFS_ILOCK_EXCL);
-+		xfs_trans_ijoin(tp, target_ip, 0);
- 	if (wip)
--		xfs_trans_ijoin(tp, wip, XFS_ILOCK_EXCL);
-+		xfs_trans_ijoin(tp, wip, 0);
+ #endif /* __XFS_ERRORTAG_H_ */
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index a63f508..0752f20 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -61,6 +61,7 @@ static unsigned int xfs_errortag_random_default[] = {
+ 	XFS_RANDOM_LOG_BAD_CRC,
+ 	XFS_RANDOM_LOG_ITEM_PIN,
+ 	XFS_RANDOM_BUF_LRU_REF,
++	XFS_RANDOM_DELAYED_ATTR,
+ };
  
- 	/*
- 	 * If we are using project inheritance, we only allow renames
-@@ -3058,17 +3060,18 @@ xfs_rename(
- 	if (unlikely((target_dp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) &&
- 		     (xfs_get_projid(target_dp) != xfs_get_projid(src_ip)))) {
- 		error = -EXDEV;
--		goto out_trans_cancel;
-+		goto out_unlock;
- 	}
+ struct xfs_errortag_attr {
+@@ -167,6 +168,7 @@ XFS_ERRORTAG_ATTR_RW(drop_writes,	XFS_ERRTAG_DROP_WRITES);
+ XFS_ERRORTAG_ATTR_RW(log_bad_crc,	XFS_ERRTAG_LOG_BAD_CRC);
+ XFS_ERRORTAG_ATTR_RW(log_item_pin,	XFS_ERRTAG_LOG_ITEM_PIN);
+ XFS_ERRORTAG_ATTR_RW(buf_lru_ref,	XFS_ERRTAG_BUF_LRU_REF);
++XFS_ERRORTAG_ATTR_RW(delayed_attr,	XFS_ERRTAG_DELAYED_ATTR);
  
- 	xfs_defer_init(&dfops, &first_block);
+ static struct attribute *xfs_errortag_attrs[] = {
+ 	XFS_ERRORTAG_ATTR_LIST(noerror),
+@@ -201,6 +203,7 @@ static struct attribute *xfs_errortag_attrs[] = {
+ 	XFS_ERRORTAG_ATTR_LIST(log_bad_crc),
+ 	XFS_ERRORTAG_ATTR_LIST(log_item_pin),
+ 	XFS_ERRORTAG_ATTR_LIST(buf_lru_ref),
++	XFS_ERRORTAG_ATTR_LIST(delayed_attr),
+ 	NULL,
+ };
  
- 	/* RENAME_EXCHANGE is unique from here on. */
--	if (flags & RENAME_EXCHANGE)
--		return xfs_cross_rename(tp, src_dp, src_name, src_ip,
-+	if (flags & RENAME_EXCHANGE) {
-+		error = xfs_cross_rename(tp, src_dp, src_name, src_ip,
- 					target_dp, target_name, target_ip,
- 					&dfops, &first_block, spaceres);
--
+diff --git a/fs/xfs/xfs_trans_attr.c b/fs/xfs/xfs_trans_attr.c
+index 848f086..06ed2576 100644
+--- a/fs/xfs/xfs_trans_attr.c
++++ b/fs/xfs/xfs_trans_attr.c
+@@ -35,6 +35,8 @@
+ #include "xfs_inode.h"
+ #include "xfs_icache.h"
+ #include "xfs_quota.h"
++#include "xfs_errortag.h"
++#include "xfs_error.h"
+ 
+ /*
+  * This routine is called to allocate an "extent free done"
+@@ -105,6 +107,12 @@ xfs_trans_attr(
+ 		return error;
+ 
+ 	xfs_trans_ijoin(args.trans, ip, 0);
++
++	if (XFS_TEST_ERROR(false, ip->i_mount, XFS_ERRTAG_DELAYED_ATTR)) {
++		error = -EIO;
 +		goto out;
 +	}
- 	/*
- 	 * Set up the target.
- 	 */
-@@ -3080,7 +3083,7 @@ xfs_rename(
- 		if (!spaceres) {
- 			error = xfs_dir_canenter(tp, target_dp, target_name);
- 			if (error)
--				goto out_trans_cancel;
-+				goto out_unlock;
- 		}
- 		/*
- 		 * If target does not exist and the rename crosses
-@@ -3089,7 +3092,7 @@ xfs_rename(
- 		 */
- 		error = xfs_dir_createname(tp, target_dp, target_name,
- 					   src_ip->i_ino, &first_block, &dfops,
--					   spaceres, NULL);
-+					   spaceres, &new_diroffset);
- 		if (error)
- 			goto out_bmap_cancel;
- 
-@@ -3114,7 +3117,7 @@ xfs_rename(
- 			if (!(xfs_dir_isempty(target_ip)) ||
- 			    (VFS_I(target_ip)->i_nlink > 2)) {
- 				error = -EEXIST;
--				goto out_trans_cancel;
-+				goto out_unlock;
- 			}
- 		}
- 
-@@ -3129,7 +3132,7 @@ xfs_rename(
- 		 */
- 		error = xfs_dir_replace(tp, target_dp, target_name,
- 					src_ip->i_ino, &first_block, &dfops,
--					spaceres, NULL);
-+					spaceres, &new_diroffset);
- 		if (error)
- 			goto out_bmap_cancel;
- 
-@@ -3164,7 +3167,7 @@ xfs_rename(
- 		 */
- 		error = xfs_dir_replace(tp, src_ip, &xfs_name_dotdot,
- 					target_dp->i_ino, &first_block, &dfops,
--					spaceres, NULL);
-+					spaceres, &new_diroffset);
- 		ASSERT(error != -EEXIST);
- 		if (error)
- 			goto out_bmap_cancel;
-@@ -3203,10 +3206,11 @@ xfs_rename(
- 	 */
- 	if (wip) {
- 		error = xfs_dir_replace(tp, src_dp, src_name, wip->i_ino,
--					&first_block, &dfops, spaceres, NULL);
-+					&first_block, &dfops, spaceres,
-+					&old_diroffset);
- 	} else
- 		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
--				&first_block, &dfops, spaceres, NULL);
-+				&first_block, &dfops, spaceres, &old_diroffset);
- 	if (error)
- 		goto out_bmap_cancel;
- 
-@@ -3236,18 +3240,50 @@ xfs_rename(
- 		VFS_I(wip)->i_state &= ~I_LINKABLE;
- 	}
- 
-+	if (xfs_sb_version_hasparent(&mp->m_sb)) {
-+		error = xfs_parent_add_deferred(target_dp, src_ip, target_name,
-+				new_diroffset, &dfops);
-+		if (error)
-+			goto out_bmap_cancel;
 +
-+		error = xfs_parent_remove_deferred(src_dp, src_ip,
-+						   old_diroffset, &dfops);
-+		if (error)
-+			goto out_bmap_cancel;
-+	}
-+
- 	xfs_trans_ichgtime(tp, src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
- 	xfs_trans_log_inode(tp, src_dp, XFS_ILOG_CORE);
- 	if (new_parent)
- 		xfs_trans_log_inode(tp, target_dp, XFS_ILOG_CORE);
- 
- 	error = xfs_finish_rename(tp, &dfops);
-+out:
- 	if (wip)
- 		IRELE(wip);
-+	if (wip)
-+		xfs_iunlock(wip, XFS_ILOCK_EXCL);
-+	if (target_ip)
-+		xfs_iunlock(target_ip, XFS_ILOCK_EXCL);
-+	xfs_iunlock(src_ip, XFS_ILOCK_EXCL);
-+	if (new_parent)
-+		xfs_iunlock(target_dp, XFS_ILOCK_EXCL);
-+	xfs_iunlock(src_dp, XFS_ILOCK_EXCL);
-+
- 	return error;
- 
- out_bmap_cancel:
- 	xfs_defer_cancel(&dfops);
-+out_unlock:
-+	if (wip)
-+		xfs_iunlock(wip, XFS_ILOCK_EXCL);
-+	if (target_ip)
-+		xfs_iunlock(target_ip, XFS_ILOCK_EXCL);
-+	xfs_iunlock(src_ip, XFS_ILOCK_EXCL);
-+	if (new_parent)
-+		xfs_iunlock(target_dp, XFS_ILOCK_EXCL);
-+	xfs_iunlock(src_dp, XFS_ILOCK_EXCL);
-+
- out_trans_cancel:
- 	xfs_trans_cancel(tp);
- out_release_wip:
+ 	switch (op_flags) {
+ 		case XFS_ATTR_OP_FLAGS_SET:
+ 			args.op_flags |= XFS_DA_OP_ADDNAME;
 -- 
 2.7.4
 
