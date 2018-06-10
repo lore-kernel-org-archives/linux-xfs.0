@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:49360 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932163AbeFJFKY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Jun 2018 01:10:24 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5A59wHP143264
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:10:24 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp2120.oracle.com with ESMTP id 2jgecx94pr-1
+Received: from userp2130.oracle.com ([156.151.31.86]:56052 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932158AbeFJFKU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Jun 2018 01:10:20 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5A56WE8071862
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:10:19 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2130.oracle.com with ESMTP id 2jg6b19w8b-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:10:23 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w5A5AMcq006244
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:10:19 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w5A5AIWN024630
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:10:23 GMT
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:10:19 GMT
 Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w5A5AMLZ030510
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:10:22 GMT
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w5A5AIVl001526
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:10:18 GMT
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v2 25/27] xfsprogs: Add parent pointers during protofile creation
-Date: Sat,  9 Jun 2018 22:07:50 -0700
-Message-Id: <1528607272-11122-26-git-send-email-allison.henderson@oracle.com>
+Subject: [PATCH v2 21/27] xfsprogs: Remove single byte array from struct parent
+Date: Sat,  9 Jun 2018 22:07:46 -0700
+Message-Id: <1528607272-11122-22-git-send-email-allison.henderson@oracle.com>
 In-Reply-To: <1528607272-11122-1-git-send-email-allison.henderson@oracle.com>
 References: <1528607272-11122-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -28,156 +28,56 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Inodes created from protofile parsing will also need to
-add the appropriate parent pointers
+Variable sized arrays implemented this way may cause
+corruptions depending on how different compilers pack
+the structure.
 
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- mkfs/proto.c | 55 ++++++++++++++++++++++++++++++++++++-------------------
- 1 file changed, 36 insertions(+), 19 deletions(-)
+ include/parent.h | 1 -
+ io/parent.c      | 9 ++++++---
+ 2 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/mkfs/proto.c b/mkfs/proto.c
-index 67c228a..222479f 100644
---- a/mkfs/proto.c
-+++ b/mkfs/proto.c
-@@ -19,6 +19,7 @@
- #include "libxfs.h"
- #include <sys/stat.h>
- #include "xfs_multidisk.h"
-+#include "xfs_parent.h"
+diff --git a/include/parent.h b/include/parent.h
+index f338f96..85cef85 100644
+--- a/include/parent.h
++++ b/include/parent.h
+@@ -22,7 +22,6 @@ typedef struct parent {
+ 	__u64	p_ino;
+ 	__u32	p_gen;
+ 	__u16	p_reclen;
+-	char	p_name[1];
+ } parent_t;
  
- /*
-  * Prototypes for internal functions.
-@@ -318,23 +319,25 @@ newregfile(
+ typedef struct parent_cursor {
+diff --git a/io/parent.c b/io/parent.c
+index 1968516..55b8b49 100644
+--- a/io/parent.c
++++ b/io/parent.c
+@@ -45,7 +45,8 @@ check_parent_entry(xfs_bstat_t *bstatp, parent_t *parent)
+ 	struct stat statbuf;
+ 	char *str;
  
- static void
- newdirent(
--	xfs_mount_t	*mp,
--	xfs_trans_t	*tp,
--	xfs_inode_t	*pip,
--	struct xfs_name	*name,
--	xfs_ino_t	inum,
--	xfs_fsblock_t	*first,
--	struct xfs_defer_ops	*dfops)
-+	struct xfs_mount	*mp,
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*pip,
-+	struct xfs_name		*name,
-+	struct xfs_inode	*ip,
-+	xfs_fsblock_t		*first,
-+	struct xfs_defer_ops	*dfops,
-+	xfs_dir2_dataptr_t      *offset)
- {
--	int	error;
--	int	rsv;
-+	int			error;
-+	int			rsv;
+-	sprintf(fullpath, _("%s%s"), mntpt, parent->p_name);
++	snprintf(fullpath, parent->p_reclen, _("%s%s"), mntpt,
++				((char*)parent)+sizeof(struct parent));
  
- 	rsv = XFS_DIRENTER_SPACE_RES(mp, name->len);
- 
--	error = -libxfs_dir_createname(tp, pip, name, inum, first, dfops, rsv,
--				       NULL);
-+	error = -libxfs_dir_createname(tp, pip, name, ip->i_ino, first, dfops, rsv,
-+				       offset);
- 	if (error)
- 		fail(_("directory createname error"), error);
-+
+ 	sts = lstat(fullpath, &statbuf);
+ 	if (sts != 0) {
+@@ -284,9 +285,11 @@ print_parent_entry(parent_t *parent, int fullpath)
+ 	printf(_("p_gen    = %u\n"),	parent->p_gen);
+ 	printf(_("p_reclen = %u\n"),	parent->p_reclen);
+ 	if (fullpath)
+-		printf(_("p_name   = \"%s%s\"\n"), mntpt, parent->p_name);
++		printf(_("p_name   = \"%s%s\"\n"), mntpt,
++					((char*)parent)+sizeof(struct parent));
+ 	else
+-		printf(_("p_name   = \"%s\"\n"), parent->p_name);
++		printf(_("p_name   = \"%s\"\n"),
++					((char*)parent)+sizeof(struct parent));
  }
  
- static void
-@@ -387,6 +390,7 @@ parseproto(
- 	cred_t		creds;
- 	char		*value;
- 	struct xfs_name	xname;
-+	xfs_dir2_dataptr_t offset;
- 
- 	memset(&creds, 0, sizeof(creds));
- 	mstr = getstr(pp);
-@@ -470,7 +474,7 @@ parseproto(
- 			free(buf);
- 		libxfs_trans_ijoin(tp, pip, 0);
- 		xname.type = XFS_DIR3_FT_REG_FILE;
--		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &dfops);
-+		newdirent(mp, tp, pip, &xname, ip, &first, &dfops, &offset);
- 		break;
- 
- 	case IF_RESERVED:			/* pre-allocated space only */
-@@ -493,7 +497,7 @@ parseproto(
- 		libxfs_trans_ijoin(tp, pip, 0);
- 
- 		xname.type = XFS_DIR3_FT_REG_FILE;
--		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &dfops);
-+		newdirent(mp, tp, pip, &xname, ip, &first, &dfops, &offset);
- 		libxfs_trans_log_inode(tp, ip, flags);
- 
- 		libxfs_defer_ijoin(&dfops, ip);
-@@ -516,7 +520,7 @@ parseproto(
- 		}
- 		libxfs_trans_ijoin(tp, pip, 0);
- 		xname.type = XFS_DIR3_FT_BLKDEV;
--		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &dfops);
-+		newdirent(mp, tp, pip, &xname, ip, &first, &dfops, &offset);
- 		flags |= XFS_ILOG_DEV;
- 		break;
- 
-@@ -530,7 +534,7 @@ parseproto(
- 			fail(_("Inode allocation failed"), error);
- 		libxfs_trans_ijoin(tp, pip, 0);
- 		xname.type = XFS_DIR3_FT_CHRDEV;
--		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &dfops);
-+		newdirent(mp, tp, pip, &xname, ip, &first, &dfops, &offset);
- 		flags |= XFS_ILOG_DEV;
- 		break;
- 
-@@ -542,7 +546,7 @@ parseproto(
- 			fail(_("Inode allocation failed"), error);
- 		libxfs_trans_ijoin(tp, pip, 0);
- 		xname.type = XFS_DIR3_FT_FIFO;
--		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &dfops);
-+		newdirent(mp, tp, pip, &xname, ip, &first, &dfops, &offset);
- 		break;
- 	case IF_SYMLINK:
- 		buf = getstr(pp);
-@@ -555,7 +559,7 @@ parseproto(
- 		flags |= newfile(tp, ip, &dfops, &first, 1, 1, buf, len);
- 		libxfs_trans_ijoin(tp, pip, 0);
- 		xname.type = XFS_DIR3_FT_SYMLINK;
--		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &dfops);
-+		newdirent(mp, tp, pip, &xname, ip, &first, &dfops, &offset);
- 		break;
- 	case IF_DIRECTORY:
- 		tp = getres(mp, 0);
-@@ -572,8 +576,8 @@ parseproto(
- 		} else {
- 			libxfs_trans_ijoin(tp, pip, 0);
- 			xname.type = XFS_DIR3_FT_DIR;
--			newdirent(mp, tp, pip, &xname, ip->i_ino,
--				  &first, &dfops);
-+			newdirent(mp, tp, pip, &xname, ip,
-+				  &first, &dfops, &offset);
- 			inc_nlink(VFS_I(pip));
- 			libxfs_trans_log_inode(tp, pip, XFS_ILOG_CORE);
- 		}
-@@ -612,6 +616,19 @@ parseproto(
- 		fail(_("Error encountered creating file from prototype file"),
- 			error);
- 	}
-+
-+	if (xfs_sb_version_hasparent(&mp->m_sb)) {
-+		error = xfs_parent_add(pip, ip, &xname, offset, &first, &dfops);
-+		if (error)
-+			fail(_("Error creating parent pointer"), error);
-+
-+		libxfs_trans_log_inode(tp, ip, flags);
-+		libxfs_defer_ijoin(&dfops, ip);
-+		error = -libxfs_defer_finish(&tp, &dfops);
-+		if (error)
-+			fail(_("Directory creation failed"), error);
-+	}
-+
- 	libxfs_trans_commit(tp);
- 	IRELE(ip);
- }
+ static int
 -- 
 2.7.4
 
