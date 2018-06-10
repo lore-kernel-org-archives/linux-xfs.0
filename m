@@ -1,300 +1,477 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:45748 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753662AbeFJDP0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 Jun 2018 23:15:26 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5A3AkHj078321
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 03:15:26 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp2120.oracle.com with ESMTP id 2jgecx90u5-1
+Received: from userp2120.oracle.com ([156.151.31.85]:60840 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753538AbeFJFH0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Jun 2018 01:07:26 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5A576oH095230
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:07:25 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2120.oracle.com with ESMTP id 2jg7hwstag-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 03:15:26 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w5A3FPrr011759
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:07:25 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w5A57OCI020035
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 03:15:25 GMT
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w5A3FPmF028362
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 03:15:25 GMT
-Date: Sat, 9 Jun 2018 20:15:25 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [ANNOUNCE] xfs-linux: for-next updated to ad2cd25e42b8
-Message-ID: <20180610031525.GT25007@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:07:24 GMT
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w5A57OVX002698
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Jun 2018 05:07:24 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [PATCH v7 03/23] xfs: Add trans toggle to attr routines
+Date: Sat,  9 Jun 2018 22:04:48 -0700
+Message-Id: <1528607108-11059-4-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1528607108-11059-1-git-send-email-allison.henderson@oracle.com>
+References: <1528607108-11059-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-Hi folks,
+This patch adds a roll_trans parameter to all attribute routines.
+Calling functions may pass true to roll transactions as normal,
+or false to hold them.  We will need this later for delayed
+attribute operations.
 
-The for-next branch of the xfs-linux repository at:
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+---
+ fs/xfs/libxfs/xfs_attr.c      | 165 ++++++++++++++++++++++++------------------
+ fs/xfs/libxfs/xfs_attr_leaf.c |  12 +--
+ fs/xfs/libxfs/xfs_attr_leaf.h |  10 ++-
+ 3 files changed, 108 insertions(+), 79 deletions(-)
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 1524197..e8cb369 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -55,21 +55,21 @@
+ /*
+  * Internal routines when attribute list fits inside the inode.
+  */
+-STATIC int xfs_attr_shortform_addname(xfs_da_args_t *args);
++STATIC int xfs_attr_shortform_addname(xfs_da_args_t *args, bool roll_trans);
+ 
+ /*
+  * Internal routines when attribute list is one block.
+  */
+ STATIC int xfs_attr_leaf_get(xfs_da_args_t *args);
+-STATIC int xfs_attr_leaf_addname(xfs_da_args_t *args);
+-STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args);
++STATIC int xfs_attr_leaf_addname(xfs_da_args_t *args, bool roll_trans);
++STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args, bool roll_trans);
+ 
+ /*
+  * Internal routines when attribute list is more than one block.
+  */
+ STATIC int xfs_attr_node_get(xfs_da_args_t *args);
+-STATIC int xfs_attr_node_addname(xfs_da_args_t *args);
+-STATIC int xfs_attr_node_removename(xfs_da_args_t *args);
++STATIC int xfs_attr_node_addname(xfs_da_args_t *args, bool roll_trans);
++STATIC int xfs_attr_node_removename(xfs_da_args_t *args, bool roll_trans);
+ STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
+ STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
+ 
+@@ -207,15 +207,16 @@ STATIC int
+ xfs_attr_try_sf_addname(
+ 	struct xfs_inode	*dp,
+ 	struct xfs_da_args	*args,
+-	int			flags)
++	int			flags,
++	bool			roll_trans)
+ {
+ 
+ 	struct xfs_mount	*mp = dp->i_mount;
+ 	int			error;
+ 	int			err2;
+ 
+-	error = xfs_attr_shortform_addname(args);
+-	if (error != -ENOSPC) {
++	error = xfs_attr_shortform_addname(args, roll_trans);
++	if (error != -ENOSPC && roll_trans) {
+ 		/*
+ 		 * Commit the shortform mods, and we're done.
+ 		 * NOTE: this is also the error path
+@@ -335,7 +336,7 @@ xfs_attr_set(
+ 		 * Try to add the attr to the attribute list in
+ 		 * the inode.
+ 		 */
+-		error = xfs_attr_try_sf_addname(dp, &args, flags);
++		error = xfs_attr_try_sf_addname(dp, &args, flags, true);
+ 		if (error != -ENOSPC) {
+ 			xfs_iunlock(dp, XFS_ILOCK_EXCL);
+ 			return error;
+@@ -374,9 +375,9 @@ xfs_attr_set(
+ 	}
+ 
+ 	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
+-		error = xfs_attr_leaf_addname(&args);
++		error = xfs_attr_leaf_addname(&args, true);
+ 	else
+-		error = xfs_attr_node_addname(&args);
++		error = xfs_attr_node_addname(&args, true);
+ 	if (error)
+ 		goto out;
+ 
+@@ -471,11 +472,11 @@ xfs_attr_remove(
+ 		error = -ENOATTR;
+ 	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
+ 		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
+-		error = xfs_attr_shortform_remove(&args);
++		error = xfs_attr_shortform_remove(&args, true);
+ 	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
+-		error = xfs_attr_leaf_removename(&args);
++		error = xfs_attr_leaf_removename(&args, true);
+ 	} else {
+-		error = xfs_attr_node_removename(&args);
++		error = xfs_attr_node_removename(&args, true);
+ 	}
+ 
+ 	if (error)
+@@ -516,7 +517,7 @@ xfs_attr_remove(
+  * This is the external routine.
+  */
+ STATIC int
+-xfs_attr_shortform_addname(xfs_da_args_t *args)
++xfs_attr_shortform_addname(xfs_da_args_t *args, bool roll_trans)
+ {
+ 	int newsize, forkoff, retval;
+ 
+@@ -528,7 +529,7 @@ xfs_attr_shortform_addname(xfs_da_args_t *args)
+ 	} else if (retval == -EEXIST) {
+ 		if (args->flags & ATTR_CREATE)
+ 			return retval;
+-		retval = xfs_attr_shortform_remove(args);
++		retval = xfs_attr_shortform_remove(args, roll_trans);
+ 		ASSERT(retval == 0);
+ 	}
+ 
+@@ -543,7 +544,7 @@ xfs_attr_shortform_addname(xfs_da_args_t *args)
+ 	if (!forkoff)
+ 		return -ENOSPC;
+ 
+-	xfs_attr_shortform_add(args, forkoff);
++	xfs_attr_shortform_add(args, forkoff, roll_trans);
+ 	return 0;
+ }
+ 
+@@ -559,7 +560,7 @@ xfs_attr_shortform_addname(xfs_da_args_t *args)
+  * if bmap_one_block() says there is only one block (ie: no remote blks).
+  */
+ STATIC int
+-xfs_attr_leaf_addname(xfs_da_args_t *args)
++xfs_attr_leaf_addname(xfs_da_args_t *args, bool roll_trans)
+ {
+ 	xfs_inode_t *dp;
+ 	struct xfs_buf *bp;
+@@ -622,36 +623,42 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
+ 		 * can manage its own transactions.
+ 		 */
+ 		xfs_defer_init(args->dfops, args->firstblock);
+-		error = xfs_attr3_leaf_to_node(args);
++		error = xfs_attr3_leaf_to_node(args, roll_trans);
+ 		if (error)
+ 			goto out_defer_cancel;
+ 		xfs_defer_ijoin(args->dfops, dp);
+-		error = xfs_defer_finish(&args->trans, args->dfops);
+-		if (error)
+-			goto out_defer_cancel;
++		if (roll_trans) {
++			error = xfs_defer_finish(&args->trans, args->dfops);
++			if (error)
++				goto out_defer_cancel;
+ 
+-		/*
+-		 * Commit the current trans (including the inode) and start
+-		 * a new one.
+-		 */
+-		error = xfs_trans_roll_inode(&args->trans, dp);
+-		if (error)
+-			return error;
++			/*
++			 * Commit the current trans (including the inode) and
++			 * start a new one.
++			 */
++			error = xfs_trans_roll_inode(&args->trans, dp);
++			if (error)
++				return error;
++		}
+ 
+ 		/*
+ 		 * Fob the whole rest of the problem off on the Btree code.
+ 		 */
+-		error = xfs_attr_node_addname(args);
++		error = xfs_attr_node_addname(args, roll_trans);
++
+ 		return error;
+ 	}
+ 
+-	/*
+-	 * Commit the transaction that added the attr name so that
+-	 * later routines can manage their own transactions.
+-	 */
+-	error = xfs_trans_roll_inode(&args->trans, dp);
+-	if (error)
+-		return error;
++
++	if (roll_trans) {
++		/*
++		 * Commit the transaction that added the attr name so that
++		 * later routines can manage their own transactions.
++		 */
++		error = xfs_trans_roll_inode(&args->trans, dp);
++		if (error)
++			return error;
++	}
+ 
+ 	/*
+ 	 * If there was an out-of-line value, allocate the blocks we
+@@ -709,9 +716,11 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
+ 		/*
+ 		 * If the result is small enough, shrink it all into the inode.
+ 		 */
+-		if ((forkoff = xfs_attr_shortform_allfit(bp, dp))) {
++		if ((forkoff = xfs_attr_shortform_allfit(bp, dp)) &&
++				roll_trans) {
+ 			xfs_defer_init(args->dfops, args->firstblock);
+-			error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
++			error = xfs_attr3_leaf_to_shortform(bp, args, forkoff,
++					roll_trans);
+ 			/* bp is gone due to xfs_da_shrink_inode */
+ 			if (error)
+ 				goto out_defer_cancel;
+@@ -745,7 +754,7 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
+  * if bmap_one_block() says there is only one block (ie: no remote blks).
+  */
+ STATIC int
+-xfs_attr_leaf_removename(xfs_da_args_t *args)
++xfs_attr_leaf_removename(xfs_da_args_t *args, bool roll_trans)
+ {
+ 	xfs_inode_t *dp;
+ 	struct xfs_buf *bp;
+@@ -774,15 +783,19 @@ xfs_attr_leaf_removename(xfs_da_args_t *args)
+ 	 * If the result is small enough, shrink it all into the inode.
+ 	 */
+ 	if ((forkoff = xfs_attr_shortform_allfit(bp, dp))) {
+-		xfs_defer_init(args->dfops, args->firstblock);
+-		error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
++		if (roll_trans)
++			xfs_defer_init(args->dfops, args->firstblock);
++		error = xfs_attr3_leaf_to_shortform(bp, args, forkoff,
++							roll_trans);
+ 		/* bp is gone due to xfs_da_shrink_inode */
+ 		if (error)
+ 			goto out_defer_cancel;
+ 		xfs_defer_ijoin(args->dfops, dp);
+-		error = xfs_defer_finish(&args->trans, args->dfops);
+-		if (error)
+-			goto out_defer_cancel;
++		if (roll_trans) {
++			error = xfs_defer_finish(&args->trans, args->dfops);
++			if (error)
++				goto out_defer_cancel;
++		}
+ 	}
+ 	return 0;
+ out_defer_cancel:
+@@ -837,7 +850,7 @@ xfs_attr_leaf_get(xfs_da_args_t *args)
+  * add a whole extra layer of confusion on top of that.
+  */
+ STATIC int
+-xfs_attr_node_addname(xfs_da_args_t *args)
++xfs_attr_node_addname(xfs_da_args_t *args, bool roll_trans)
+ {
+ 	xfs_da_state_t *state;
+ 	xfs_da_state_blk_t *blk;
+@@ -903,21 +916,24 @@ xfs_attr_node_addname(xfs_da_args_t *args)
+ 			xfs_da_state_free(state);
+ 			state = NULL;
+ 			xfs_defer_init(args->dfops, args->firstblock);
+-			error = xfs_attr3_leaf_to_node(args);
++			error = xfs_attr3_leaf_to_node(args, roll_trans);
+ 			if (error)
+ 				goto out_defer_cancel;
+ 			xfs_defer_ijoin(args->dfops, dp);
+-			error = xfs_defer_finish(&args->trans, args->dfops);
+-			if (error)
+-				goto out_defer_cancel;
+-
+-			/*
+-			 * Commit the node conversion and start the next
+-			 * trans in the chain.
+-			 */
+-			error = xfs_trans_roll_inode(&args->trans, dp);
+-			if (error)
+-				goto out;
++			if (roll_trans) {
++				error = xfs_defer_finish(&args->trans,
++						args->dfops);
++				if (error)
++					goto out_defer_cancel;
++
++				/*
++				 * Commit the node conversion and start the next
++				 * trans in the chain.
++				 */
++				error = xfs_trans_roll_inode(&args->trans, dp);
++				if (error)
++					goto out;
++			}
+ 
+ 			goto restart;
+ 		}
+@@ -933,9 +949,11 @@ xfs_attr_node_addname(xfs_da_args_t *args)
+ 		if (error)
+ 			goto out_defer_cancel;
+ 		xfs_defer_ijoin(args->dfops, dp);
+-		error = xfs_defer_finish(&args->trans, args->dfops);
+-		if (error)
+-			goto out_defer_cancel;
++		if (roll_trans) {
++			error = xfs_defer_finish(&args->trans, args->dfops);
++			if (error)
++				goto out_defer_cancel;
++		}
+ 	} else {
+ 		/*
+ 		 * Addition succeeded, update Btree hashvals.
+@@ -954,9 +972,11 @@ xfs_attr_node_addname(xfs_da_args_t *args)
+ 	 * Commit the leaf addition or btree split and start the next
+ 	 * trans in the chain.
+ 	 */
+-	error = xfs_trans_roll_inode(&args->trans, dp);
+-	if (error)
+-		goto out;
++	if (roll_trans) {
++		error = xfs_trans_roll_inode(&args->trans, dp);
++		if (error)
++			goto out;
++	}
+ 
+ 	/*
+ 	 * If there was an out-of-line value, allocate the blocks we
+@@ -1031,9 +1051,12 @@ xfs_attr_node_addname(xfs_da_args_t *args)
+ 			if (error)
+ 				goto out_defer_cancel;
+ 			xfs_defer_ijoin(args->dfops, dp);
+-			error = xfs_defer_finish(&args->trans, args->dfops);
+-			if (error)
+-				goto out_defer_cancel;
++			if (roll_trans) {
++				error = xfs_defer_finish(&args->trans,
++						args->dfops);
++				if (error)
++					goto out_defer_cancel;
++			}
+ 		}
+ 
+ 		/*
+@@ -1072,7 +1095,7 @@ xfs_attr_node_addname(xfs_da_args_t *args)
+  * the root node (a special case of an intermediate node).
+  */
+ STATIC int
+-xfs_attr_node_removename(xfs_da_args_t *args)
++xfs_attr_node_removename(xfs_da_args_t *args, bool roll_trans)
+ {
+ 	xfs_da_state_t *state;
+ 	xfs_da_state_blk_t *blk;
+@@ -1181,9 +1204,11 @@ xfs_attr_node_removename(xfs_da_args_t *args)
+ 		if (error)
+ 			goto out;
+ 
+-		if ((forkoff = xfs_attr_shortform_allfit(bp, dp))) {
++		if ((forkoff = xfs_attr_shortform_allfit(bp, dp)) &&
++					roll_trans) {
+ 			xfs_defer_init(args->dfops, args->firstblock);
+-			error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
++			error = xfs_attr3_leaf_to_shortform(bp, args, forkoff,
++					roll_trans);
+ 			/* bp is gone due to xfs_da_shrink_inode */
+ 			if (error)
+ 				goto out_defer_cancel;
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 2135b8e..01935fe 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -546,7 +546,7 @@ xfs_attr_shortform_create(xfs_da_args_t *args)
+  * Overflow from the inode has already been checked for.
+  */
+ void
+-xfs_attr_shortform_add(xfs_da_args_t *args, int forkoff)
++xfs_attr_shortform_add(xfs_da_args_t *args, int forkoff, bool roll_trans)
+ {
+ 	xfs_attr_shortform_t *sf;
+ 	xfs_attr_sf_entry_t *sfe;
+@@ -618,7 +618,7 @@ xfs_attr_fork_remove(
+  * Remove an attribute from the shortform attribute list structure.
+  */
+ int
+-xfs_attr_shortform_remove(xfs_da_args_t *args)
++xfs_attr_shortform_remove(xfs_da_args_t *args, bool roll_trans)
+ {
+ 	xfs_attr_shortform_t *sf;
+ 	xfs_attr_sf_entry_t *sfe;
+@@ -970,7 +970,8 @@ int
+ xfs_attr3_leaf_to_shortform(
+ 	struct xfs_buf		*bp,
+ 	struct xfs_da_args	*args,
+-	int			forkoff)
++	int			forkoff,
++	bool			roll_trans)
+ {
+ 	struct xfs_attr_leafblock *leaf;
+ 	struct xfs_attr3_icleaf_hdr ichdr;
+@@ -1039,7 +1040,7 @@ xfs_attr3_leaf_to_shortform(
+ 		nargs.valuelen = be16_to_cpu(name_loc->valuelen);
+ 		nargs.hashval = be32_to_cpu(entry->hashval);
+ 		nargs.flags = XFS_ATTR_NSP_ONDISK_TO_ARGS(entry->flags);
+-		xfs_attr_shortform_add(&nargs, forkoff);
++		xfs_attr_shortform_add(&nargs, forkoff, roll_trans);
+ 	}
+ 	error = 0;
+ 
+@@ -1053,7 +1054,8 @@ xfs_attr3_leaf_to_shortform(
+  */
+ int
+ xfs_attr3_leaf_to_node(
+-	struct xfs_da_args	*args)
++	struct xfs_da_args	*args,
++	bool			roll_trans)
+ {
+ 	struct xfs_attr_leafblock *leaf;
+ 	struct xfs_attr3_icleaf_hdr icleafhdr;
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
+index 4da08af..79c236c 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.h
++++ b/fs/xfs/libxfs/xfs_attr_leaf.h
+@@ -45,12 +45,13 @@ typedef struct xfs_attr_inactive_list {
+  * Internal routines when attribute fork size < XFS_LITINO(mp).
+  */
+ void	xfs_attr_shortform_create(struct xfs_da_args *args);
+-void	xfs_attr_shortform_add(struct xfs_da_args *args, int forkoff);
++void	xfs_attr_shortform_add(struct xfs_da_args *args, int forkoff,
++			bool roll_trans);
+ int	xfs_attr_shortform_lookup(struct xfs_da_args *args);
+ int	xfs_attr_shortform_getvalue(struct xfs_da_args *args);
+ int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args,
+ 			struct xfs_buf **leaf_bp);
+-int	xfs_attr_shortform_remove(struct xfs_da_args *args);
++int	xfs_attr_shortform_remove(struct xfs_da_args *args, bool roll_trans);
+ int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
+ int	xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
+ xfs_failaddr_t xfs_attr_shortform_verify(struct xfs_inode *ip);
+@@ -59,9 +60,10 @@ void	xfs_attr_fork_remove(struct xfs_inode *ip, struct xfs_trans *tp);
+ /*
+  * Internal routines when attribute fork size == XFS_LBSIZE(mp).
+  */
+-int	xfs_attr3_leaf_to_node(struct xfs_da_args *args);
++int	xfs_attr3_leaf_to_node(struct xfs_da_args *args, bool roll_trans);
+ int	xfs_attr3_leaf_to_shortform(struct xfs_buf *bp,
+-				   struct xfs_da_args *args, int forkoff);
++			struct xfs_da_args *args, int forkoff,
++			bool roll_trans);
+ int	xfs_attr3_leaf_clearflag(struct xfs_da_args *args);
+ int	xfs_attr3_leaf_setflag(struct xfs_da_args *args);
+ int	xfs_attr3_leaf_flipflags(struct xfs_da_args *args);
+-- 
+2.7.4
 
-has just been updated.
-
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
-
-The new head of the for-next branch is commit:
-
-0703a8e1c17e xfs: replace do_mod with native operations
-
-New Commits:
-
-Arnd Bergmann (1):
-      [4bb8b65a0427] xfs: fix string handling in label get/set functions
-
-Darrick J. Wong (14):
-      [aaacdd257fd0] xfs: don't forbid setting dax flag on directories if device doesn't dax
-      [17ba2cc7b5b9] xfs: don't assert when reporting on-disk corruption while loading btree
-      [b3986010cea5] xfs: remove redundant ASSERT on insufficient bestfree length in _leaf_addname
-      [a37f7b127ed3] xfs: xfs_alloc_get_rec should return EFSCORRUPTED for obvious bnobt corruption
-      [eeee0d6a9bc9] xfs: btree lookup shouldn't ASSERT on empty btree nodes
-      [1f5c071d19ae] xfs: don't ASSERT on short form btree root pointer of zero
-      [924cade4df49] xfs: don't return garbage buffers in xfs_da3_node_read
-      [e4f45eff86fd] xfs: check directory bestfree information in the verifier
-      [4cbae4b816fd] xfs: introduce xfs_btree_debug_check_ptr
-      [e63a1008ee08] xfs: strengthen btree pointer checks before use
-      [85ae01098c1a] xfs: don't assert when on-disk btree pointers are garbage
-      [2551a53053de] xfs: explicitly pass buffer size to xfs_corruption_error
-      [d2e736654247] xfs: don't assert on corrupted unlinked inode list
-      [117a148ffe00] iomap: fsync swap files before iterating mappings
-
-Dave Chinner (13):
-      [9f96cc958e8a] xfs: verify AGI unlinked list contains valid blocks
-      [fa4ca9c55746] xfs: catch bad stripe alignment configurations
-      [7d71a671a2d9] xfs: verify extent size hint is valid in inode verifier
-      [02a0fda875c8] xfs: verify COW extent size hint is valid in inode verifier
-      [541b5acc8591] xfs: verify root inode more thoroughly
-      [29cad0b3edaf] xfs: push corruption -> ESTALE conversion to xfs_nfs_get_inode()
-      [9e6c08d4a8fc] xfs: validate btree records on retrieval
-      [0b61f8a4079d] xfs: convert to SPDX license tags
-      [ef215e394eeb] xfs: setup VFS i_rwsem lockdep state correctly
-      [4a2d01b076d2] xfs: xfs_reflink_convert_cow() memory allocation deadlock
-      [86210fbebae6] xfs: move various type verifiers to common file
-      [9bb54cb56ae8] xfs: clean up MIN/MAX
-      [0703a8e1c17e] xfs: replace do_mod with native operations
-
-Eric Sandeen (2):
-      [89c2e71123ba] xfs: use xfs_trans_getsb in xfs_sync_sb_buf
-      [bb3d48dcf86a] xfs: don't call xfs_da_shrink_inode with NULL bp
-
-
-Code Diffstat:
-
- fs/iomap.c                         |   6 +-
- fs/xfs/Makefile                    |  15 +---
- fs/xfs/kmem.c                      |  14 +--
- fs/xfs/kmem.h                      |  14 +--
- fs/xfs/libxfs/xfs_ag_resv.c        |  16 +---
- fs/xfs/libxfs/xfs_ag_resv.h        |  16 +---
- fs/xfs/libxfs/xfs_alloc.c          |  95 ++++++--------------
- fs/xfs/libxfs/xfs_alloc.h          |  18 +---
- fs/xfs/libxfs/xfs_alloc_btree.c    |  15 +---
- fs/xfs/libxfs/xfs_alloc_btree.h    |  14 +--
- fs/xfs/libxfs/xfs_attr.c           |  14 +--
- fs/xfs/libxfs/xfs_attr_leaf.c      |  21 +----
- fs/xfs/libxfs/xfs_attr_leaf.h      |  14 +--
- fs/xfs/libxfs/xfs_attr_remote.c    |  14 +--
- fs/xfs/libxfs/xfs_attr_remote.h    |  14 +--
- fs/xfs/libxfs/xfs_attr_sf.h        |  14 +--
- fs/xfs/libxfs/xfs_bit.c            |  14 +--
- fs/xfs/libxfs/xfs_bit.h            |  14 +--
- fs/xfs/libxfs/xfs_bmap.c           |  54 ++++++------
- fs/xfs/libxfs/xfs_bmap.h           |  14 +--
- fs/xfs/libxfs/xfs_bmap_btree.c     |  14 +--
- fs/xfs/libxfs/xfs_bmap_btree.h     |  14 +--
- fs/xfs/libxfs/xfs_btree.c          | 171 ++++++++++++++++++------------------
- fs/xfs/libxfs/xfs_btree.h          |  14 +--
- fs/xfs/libxfs/xfs_da_btree.c       |  24 ++---
- fs/xfs/libxfs/xfs_da_btree.h       |  14 +--
- fs/xfs/libxfs/xfs_da_format.c      |  14 +--
- fs/xfs/libxfs/xfs_da_format.h      |  14 +--
- fs/xfs/libxfs/xfs_defer.c          |  16 +---
- fs/xfs/libxfs/xfs_defer.h          |  16 +---
- fs/xfs/libxfs/xfs_dir2.c           |  14 +--
- fs/xfs/libxfs/xfs_dir2.h           |  14 +--
- fs/xfs/libxfs/xfs_dir2_block.c     |  22 ++---
- fs/xfs/libxfs/xfs_dir2_data.c      | 122 +++++++++++++++-----------
- fs/xfs/libxfs/xfs_dir2_leaf.c      |  26 ++----
- fs/xfs/libxfs/xfs_dir2_node.c      |  17 +---
- fs/xfs/libxfs/xfs_dir2_priv.h      |  14 +--
- fs/xfs/libxfs/xfs_dir2_sf.c        |  14 +--
- fs/xfs/libxfs/xfs_dquot_buf.c      |  14 +--
- fs/xfs/libxfs/xfs_errortag.h       |  15 +---
- fs/xfs/libxfs/xfs_format.h         |  14 +--
- fs/xfs/libxfs/xfs_fs.h             |  14 +--
- fs/xfs/libxfs/xfs_ialloc.c         | 158 +++++++++------------------------
- fs/xfs/libxfs/xfs_ialloc.h         |  21 +----
- fs/xfs/libxfs/xfs_ialloc_btree.c   |  14 +--
- fs/xfs/libxfs/xfs_ialloc_btree.h   |  14 +--
- fs/xfs/libxfs/xfs_iext_tree.c      |  10 +--
- fs/xfs/libxfs/xfs_inode_buf.c      |  34 ++++----
- fs/xfs/libxfs/xfs_inode_buf.h      |  14 +--
- fs/xfs/libxfs/xfs_inode_fork.c     |  14 +--
- fs/xfs/libxfs/xfs_inode_fork.h     |  14 +--
- fs/xfs/libxfs/xfs_log_format.h     |  14 +--
- fs/xfs/libxfs/xfs_log_recover.h    |  14 +--
- fs/xfs/libxfs/xfs_log_rlimit.c     |  14 +--
- fs/xfs/libxfs/xfs_quota_defs.h     |  14 +--
- fs/xfs/libxfs/xfs_refcount.c       |  63 +++++++++-----
- fs/xfs/libxfs/xfs_refcount.h       |  16 +---
- fs/xfs/libxfs/xfs_refcount_btree.c |  17 +---
- fs/xfs/libxfs/xfs_refcount_btree.h |  16 +---
- fs/xfs/libxfs/xfs_rmap.c           |  55 +++++++++---
- fs/xfs/libxfs/xfs_rmap.h           |  16 +---
- fs/xfs/libxfs/xfs_rmap_btree.c     |  15 +---
- fs/xfs/libxfs/xfs_rmap_btree.h     |  14 +--
- fs/xfs/libxfs/xfs_rtbitmap.c       |  26 +-----
- fs/xfs/libxfs/xfs_sb.c             |  40 +++++----
- fs/xfs/libxfs/xfs_sb.h             |  14 +--
- fs/xfs/libxfs/xfs_shared.h         |  14 +--
- fs/xfs/libxfs/xfs_symlink_remote.c |  14 +--
- fs/xfs/libxfs/xfs_trans_resv.c     |  30 ++-----
- fs/xfs/libxfs/xfs_trans_resv.h     |  14 +--
- fs/xfs/libxfs/xfs_trans_space.h    |  14 +--
- fs/xfs/libxfs/xfs_types.c          | 173 +++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_types.h          |  33 ++++---
- fs/xfs/mrlock.h                    |  14 +--
- fs/xfs/scrub/agheader.c            |  18 +---
- fs/xfs/scrub/agheader_repair.c     |  16 +---
- fs/xfs/scrub/alloc.c               |  16 +---
- fs/xfs/scrub/attr.c                |  16 +---
- fs/xfs/scrub/bmap.c                |  16 +---
- fs/xfs/scrub/btree.c               |  16 +---
- fs/xfs/scrub/btree.h               |  16 +---
- fs/xfs/scrub/common.c              |  16 +---
- fs/xfs/scrub/common.h              |  16 +---
- fs/xfs/scrub/dabtree.c             |  16 +---
- fs/xfs/scrub/dabtree.h             |  16 +---
- fs/xfs/scrub/dir.c                 |  16 +---
- fs/xfs/scrub/ialloc.c              |  16 +---
- fs/xfs/scrub/inode.c               |  16 +---
- fs/xfs/scrub/parent.c              |  16 +---
- fs/xfs/scrub/quota.c               |  16 +---
- fs/xfs/scrub/refcount.c            |  16 +---
- fs/xfs/scrub/repair.c              |  16 +---
- fs/xfs/scrub/repair.h              |  16 +---
- fs/xfs/scrub/rmap.c                |  16 +---
- fs/xfs/scrub/rtbitmap.c            |  16 +---
- fs/xfs/scrub/scrub.c               |  16 +---
- fs/xfs/scrub/scrub.h               |  16 +---
- fs/xfs/scrub/symlink.c             |  16 +---
- fs/xfs/scrub/trace.c               |  16 +---
- fs/xfs/scrub/trace.h               |  16 +---
- fs/xfs/scrub/xfs_scrub.h           |  16 +---
- fs/xfs/xfs.h                       |  14 +--
- fs/xfs/xfs_acl.c                   |  14 +--
- fs/xfs/xfs_acl.h                   |  14 +--
- fs/xfs/xfs_aops.c                  |  25 +++---
- fs/xfs/xfs_aops.h                  |  14 +--
- fs/xfs/xfs_attr.h                  |  14 +--
- fs/xfs/xfs_attr_inactive.c         |  14 +--
- fs/xfs/xfs_attr_list.c             |  19 +---
- fs/xfs/xfs_bmap_item.c             |  16 +---
- fs/xfs/xfs_bmap_item.h             |  16 +---
- fs/xfs/xfs_bmap_util.c             |  26 ++----
- fs/xfs/xfs_bmap_util.h             |  14 +--
- fs/xfs/xfs_buf.c                   |  15 +---
- fs/xfs/xfs_buf.h                   |  14 +--
- fs/xfs/xfs_buf_item.c              |  16 +---
- fs/xfs/xfs_buf_item.h              |  14 +--
- fs/xfs/xfs_dir2_readdir.c          |  14 +--
- fs/xfs/xfs_discard.c               |  14 +--
- fs/xfs/xfs_dquot.c                 |  14 +--
- fs/xfs/xfs_dquot.h                 |  14 +--
- fs/xfs/xfs_dquot_item.c            |  14 +--
- fs/xfs/xfs_dquot_item.h            |  14 +--
- fs/xfs/xfs_error.c                 |  19 +---
- fs/xfs/xfs_error.h                 |  23 ++---
- fs/xfs/xfs_export.c                |  29 +++----
- fs/xfs/xfs_export.h                |  14 +--
- fs/xfs/xfs_extent_busy.c           |  14 +--
- fs/xfs/xfs_extent_busy.h           |  14 +--
- fs/xfs/xfs_extfree_item.c          |  14 +--
- fs/xfs/xfs_extfree_item.h          |  14 +--
- fs/xfs/xfs_file.c                  |  14 +--
- fs/xfs/xfs_filestream.c            |  14 +--
- fs/xfs/xfs_filestream.h            |  14 +--
- fs/xfs/xfs_fsmap.c                 |  16 +---
- fs/xfs/xfs_fsmap.h                 |  16 +---
- fs/xfs/xfs_fsops.c                 |  14 +--
- fs/xfs/xfs_fsops.h                 |  14 +--
- fs/xfs/xfs_globals.c               |  14 +--
- fs/xfs/xfs_icache.c                |  14 +--
- fs/xfs/xfs_icache.h                |  14 +--
- fs/xfs/xfs_icreate_item.c          |  14 +--
- fs/xfs/xfs_icreate_item.h          |  14 +--
- fs/xfs/xfs_inode.c                 |  35 ++++----
- fs/xfs/xfs_inode.h                 |  14 +--
- fs/xfs/xfs_inode_item.c            |  14 +--
- fs/xfs/xfs_inode_item.h            |  14 +--
- fs/xfs/xfs_ioctl.c                 |  33 +++----
- fs/xfs/xfs_ioctl.h                 |  14 +--
- fs/xfs/xfs_ioctl32.c               |  14 +--
- fs/xfs/xfs_ioctl32.h               |  14 +--
- fs/xfs/xfs_iomap.c                 |  20 +----
- fs/xfs/xfs_iomap.h                 |  18 +---
- fs/xfs/xfs_iops.c                  |  22 ++---
- fs/xfs/xfs_iops.h                  |  14 +--
- fs/xfs/xfs_itable.c                |  16 +---
- fs/xfs/xfs_itable.h                |  14 +--
- fs/xfs/xfs_linux.h                 |  36 +-------
- fs/xfs/xfs_log.c                   |  18 +---
- fs/xfs/xfs_log.h                   |  14 +--
- fs/xfs/xfs_log_cil.c               |  14 +--
- fs/xfs/xfs_log_priv.h              |  14 +--
- fs/xfs/xfs_log_recover.c           |  67 ++++++++------
- fs/xfs/xfs_message.c               |  14 +--
- fs/xfs/xfs_mount.c                 |  21 ++---
- fs/xfs/xfs_mount.h                 |  16 +---
- fs/xfs/xfs_mru_cache.c             |  14 +--
- fs/xfs/xfs_mru_cache.h             |  14 +--
- fs/xfs/xfs_ondisk.h                |  14 +--
- fs/xfs/xfs_qm.c                    |  14 +--
- fs/xfs/xfs_qm.h                    |  14 +--
- fs/xfs/xfs_qm_bhv.c                |  14 +--
- fs/xfs/xfs_qm_syscalls.c           |  14 +--
- fs/xfs/xfs_quota.h                 |  14 +--
- fs/xfs/xfs_quotaops.c              |  14 +--
- fs/xfs/xfs_refcount_item.c         |  16 +---
- fs/xfs/xfs_refcount_item.h         |  16 +---
- fs/xfs/xfs_reflink.c               |  16 +---
- fs/xfs/xfs_reflink.h               |  16 +---
- fs/xfs/xfs_rmap_item.c             |  16 +---
- fs/xfs/xfs_rmap_item.h             |  16 +---
- fs/xfs/xfs_rtalloc.c               |  24 ++---
- fs/xfs/xfs_rtalloc.h               |  14 +--
- fs/xfs/xfs_stats.c                 |  14 +--
- fs/xfs/xfs_stats.h                 |  14 +--
- fs/xfs/xfs_super.c                 |  16 +---
- fs/xfs/xfs_super.h                 |  14 +--
- fs/xfs/xfs_symlink.c               |  14 +--
- fs/xfs/xfs_symlink.h               |  14 +--
- fs/xfs/xfs_sysctl.c                |  14 +--
- fs/xfs/xfs_sysctl.h                |  14 +--
- fs/xfs/xfs_sysfs.c                 |  14 +--
- fs/xfs/xfs_sysfs.h                 |  14 +--
- fs/xfs/xfs_trace.c                 |  14 +--
- fs/xfs/xfs_trace.h                 |  14 +--
- fs/xfs/xfs_trans.c                 |  14 +--
- fs/xfs/xfs_trans.h                 |  14 +--
- fs/xfs/xfs_trans_ail.c             |  14 +--
- fs/xfs/xfs_trans_bmap.c            |  16 +---
- fs/xfs/xfs_trans_buf.c             |  14 +--
- fs/xfs/xfs_trans_dquot.c           |  14 +--
- fs/xfs/xfs_trans_extfree.c         |  14 +--
- fs/xfs/xfs_trans_inode.c           |  14 +--
- fs/xfs/xfs_trans_priv.h            |  14 +--
- fs/xfs/xfs_trans_refcount.c        |  16 +---
- fs/xfs/xfs_trans_rmap.c            |  16 +---
- fs/xfs/xfs_xattr.c                 |  14 +--
- 207 files changed, 937 insertions(+), 3195 deletions(-)
- create mode 100644 fs/xfs/libxfs/xfs_types.c
