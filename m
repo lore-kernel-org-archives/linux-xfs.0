@@ -1,77 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from imap.thunk.org ([74.207.234.97]:56218 "EHLO imap.thunk.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932945AbeFKNdx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 11 Jun 2018 09:33:53 -0400
-Date: Mon, 11 Jun 2018 09:33:45 -0400
-From: "Theodore Y. Ts'o" <tytso@mit.edu>
-Subject: Re: Bugs involving maliciously crafted file system
-Message-ID: <20180611133345.GE5020@thunk.org>
-References: <20180522123107.GC3751@bfoster.bfoster>
- <20180522222620.GW23861@dastard>
- <20180522225208.GB658@sol.localdomain>
- <20180523074425.GM14384@magnolia>
- <20180523162015.GA3684@sol.localdomain>
- <a52266f9-0096-b28c-c01c-046ababcfe3a@sandeen.net>
- <20180523234114.GA3434@thunk.org>
- <CACT4Y+YEpThQj=63F8CSHeWSZxbWJ1cTDB7ZvM8OYR921uXT2g@mail.gmail.com>
- <20180526202436.GC4613@thunk.org>
- <CACT4Y+YK9LzYuVSruimbgxSAoCt_UYbHwzhvDGCqZ7FuQLcUUA@mail.gmail.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:38106 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933183AbeFKR2Y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Jun 2018 13:28:24 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5BHQ2sr071567
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Jun 2018 17:28:24 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp2120.oracle.com with ESMTP id 2jg7hwxdae-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Jun 2018 17:28:23 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w5BHSN3b015508
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Jun 2018 17:28:23 GMT
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w5BHSNjq027841
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Jun 2018 17:28:23 GMT
+Date: Mon, 11 Jun 2018 10:28:22 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 19/27] xfsprogs: Add delayed attributes error tag
+Message-ID: <20180611172822.GB22045@magnolia>
+References: <1528607272-11122-1-git-send-email-allison.henderson@oracle.com>
+ <1528607272-11122-20-git-send-email-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CACT4Y+YK9LzYuVSruimbgxSAoCt_UYbHwzhvDGCqZ7FuQLcUUA@mail.gmail.com>
+In-Reply-To: <1528607272-11122-20-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dmitry Vyukov <dvyukov@google.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Eric Biggers <ebiggers3@gmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>, LKML <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, syzkaller-bugs <syzkaller-bugs@googlegroups.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, syzkaller <syzkaller@googlegroups.com>
+To: Allison Henderson <allison.henderson@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jun 11, 2018 at 03:07:24PM +0200, Dmitry Vyukov wrote:
+> Subject: [PATCH v2 19/27] xfsprogs: Add delayed attributes error tag
+
+Please identify the tool name in the subject when possible, e.g.
+
+[PATCH v2 19/27] xfs_io: Add delayed attributes error tag
+
+Otherwise looks ok, though in the end I suspect the xfs_errortag.h chunk
+will be ported in from the kernel patch and this will be a separate
+patch with just the xfs_io part.
+
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+
+On Sat, Jun 09, 2018 at 10:07:44PM -0700, Allison Henderson wrote:
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  io/inject.c           | 1 +
+>  libxfs/xfs_errortag.h | 5 ++++-
+>  2 files changed, 5 insertions(+), 1 deletion(-)
 > 
-> These can't be weaponized to execute code, but if a BUG_ON is
-> triggerable over a network, or from VM guest, then it's likely more
-> critical than a local code execution. That's why I am saying that
-> automated evaluation is infeasible.
-
-I can't imagine situations where a BUG_ON would be more critical than
-local code execution.  You can leverage local code execution to ah
-remote privilege escalation attack; and local code execution can (with
-less effort) be translated to a system crash.  Hence, local code
-execution is always more critical than a BUG_ON.
-
-> Anyway, bug type (UAF, BUG, task hung) is available in the bug title
-> on dashboard and on mailing lists, so you can just search/sort bugs on
-> the dashboard. What other interface you want on top of this?
-
-I also want to be able to search and filter based on subsystem, and
-whether or not there is a reproducer.  Sometimes you can't even figure
-out the subsytem from the limited string shown on the dashboard,
-because the original string didn't include the subsystem to begin
-with, or the the subsytem name was truncated and not included on the
-dashboard.
-
-> On a related note, perhaps kernel community needs to finally start
-> using bugzilla for real, like with priorities, assignees, up-to-date
-> statuses, no stale bugs, etc. All of this is available in bug tracking
-> systems for decades...
-
-I do use bugzilla and in fact if syzbot would automatically file a
-bugzilla.kernel.org report for things that are in the ext4 subsystem,
-that would be really helpful.
-
-As far as no stale bugs, etc., many companies (including Google)
-aren't capable of doing that with their own internal bug tracking
-systems, because management doesn't give them enough time to track and
-fix all stale bugs.  You seem to be assuming/demanding things of the
-kernel community that are at least partially constrained by resource
-availability --- and since you've used constrained resources as a
-reason why Syzbot can't be extended as we've requested to reduce
-developer toil and leverage our available resources, it would perhaps
-be respectful if you also accepted that resource constraints also
-exist in other areas, such as how much we can keep a fully groomed bug
-tracking system.
-
-Regards,
-
-						- Ted
+> diff --git a/io/inject.c b/io/inject.c
+> index fc3cf25..2d6cc9c 100644
+> --- a/io/inject.c
+> +++ b/io/inject.c
+> @@ -63,6 +63,7 @@ error_tag(char *name)
+>  		{ XFS_ERRTAG_LOG_BAD_CRC,		"log_bad_crc" },
+>  		{ XFS_ERRTAG_LOG_ITEM_PIN,		"log_item_pin" },
+>  		{ XFS_ERRTAG_BUF_LRU_REF,		"buf_lru_ref" },
+> +		{ XFS_ERRTAG_DELAYED_ATTR,		"delayed_attr" },
+>  		{ XFS_ERRTAG_MAX,			NULL }
+>  	};
+>  	int	count;
+> diff --git a/libxfs/xfs_errortag.h b/libxfs/xfs_errortag.h
+> index bc1789d..f606ab6 100644
+> --- a/libxfs/xfs_errortag.h
+> +++ b/libxfs/xfs_errortag.h
+> @@ -65,7 +65,8 @@
+>  #define XFS_ERRTAG_LOG_BAD_CRC				29
+>  #define XFS_ERRTAG_LOG_ITEM_PIN				30
+>  #define XFS_ERRTAG_BUF_LRU_REF				31
+> -#define XFS_ERRTAG_MAX					32
+> +#define XFS_ERRTAG_DELAYED_ATTR			32
+> +#define XFS_ERRTAG_MAX					33
+>  
+>  /*
+>   * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+> @@ -102,5 +103,7 @@
+>  #define XFS_RANDOM_LOG_BAD_CRC				1
+>  #define XFS_RANDOM_LOG_ITEM_PIN				1
+>  #define XFS_RANDOM_BUF_LRU_REF				2
+> +#define XFS_RANDOM_DELAYED_ATTR			1
+>  
+>  #endif /* __XFS_ERRORTAG_H_ */
+> +
+> -- 
+> 2.7.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
