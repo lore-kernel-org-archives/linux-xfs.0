@@ -1,30 +1,214 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-eopbgr720099.outbound.protection.outlook.com ([40.107.72.99]:57043
-        "EHLO NAM05-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S933159AbeFKTgv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 11 Jun 2018 15:36:51 -0400
-From: "Xu, Wen" <wen.xu@gatech.edu>
-Subject: Bug report: kernel hangs when mounting a crafted xfs image
-Date: Mon, 11 Jun 2018 19:36:48 +0000
-Message-ID: <5B6AC96A-7049-48D7-82A1-4AB42322D38B@gatech.edu>
-Content-Language: en-US
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <A5235CC1051D2D49B8E64C60131E0915@namprd07.prod.outlook.com>
-Content-Transfer-Encoding: 8BIT
+Received: from aserp2120.oracle.com ([141.146.126.78]:57662 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933650AbeFKT6y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Jun 2018 15:58:54 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5BJu1KK027769
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Jun 2018 19:58:54 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp2120.oracle.com with ESMTP id 2jgecxe7th-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Jun 2018 19:58:53 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w5BJwqvR023915
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Jun 2018 19:58:53 GMT
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w5BJwql5006466
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Jun 2018 19:58:52 GMT
+Subject: Re: [PATCH v2 25/27] xfsprogs: Add parent pointers during protofile
+ creation
+References: <1528607272-11122-1-git-send-email-allison.henderson@oracle.com>
+ <1528607272-11122-26-git-send-email-allison.henderson@oracle.com>
+ <20180611181529.GG22045@magnolia>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <b240d527-d721-1728-2c36-a43db4544dc5@oracle.com>
+Date: Mon, 11 Jun 2018 12:58:50 -0700
 MIME-Version: 1.0
+In-Reply-To: <20180611181529.GG22045@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-When mounting a crafted xfs v4 image, the kernel hangs and never returns for mount operation. Suspect potential deadlock in log recovery exists. Not sure it is considered as a bug or not.
+On 06/11/2018 11:15 AM, Darrick J. Wong wrote:
+> On Sat, Jun 09, 2018 at 10:07:50PM -0700, Allison Henderson wrote:
+>> Inodes created from protofile parsing will also need to
+>> add the appropriate parent pointers
+>>
+>> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+>> ---
+>>   mkfs/proto.c | 55 ++++++++++++++++++++++++++++++++++++-------------------
+>>   1 file changed, 36 insertions(+), 19 deletions(-)
+>>
+>> diff --git a/mkfs/proto.c b/mkfs/proto.c
+>> index 67c228a..222479f 100644
+>> --- a/mkfs/proto.c
+>> +++ b/mkfs/proto.c
+>> @@ -19,6 +19,7 @@
+>>   #include "libxfs.h"
+>>   #include <sys/stat.h>
+>>   #include "xfs_multidisk.h"
+>> +#include "xfs_parent.h"
+>>   
+>>   /*
+>>    * Prototypes for internal functions.
+>> @@ -318,23 +319,25 @@ newregfile(
+>>   
+>>   static void
+>>   newdirent(
+>> -	xfs_mount_t	*mp,
+>> -	xfs_trans_t	*tp,
+>> -	xfs_inode_t	*pip,
+>> -	struct xfs_name	*name,
+>> -	xfs_ino_t	inum,
+>> -	xfs_fsblock_t	*first,
+>> -	struct xfs_defer_ops	*dfops)
+>> +	struct xfs_mount	*mp,
+>> +	struct xfs_trans	*tp,
+>> +	struct xfs_inode	*pip,
+>> +	struct xfs_name		*name,
+>> +	struct xfs_inode	*ip,
+>> +	xfs_fsblock_t		*first,
+>> +	struct xfs_defer_ops	*dfops,
+>> +	xfs_dir2_dataptr_t      *offset)
+>>   {
+>> -	int	error;
+>> -	int	rsv;
+>> +	int			error;
+>> +	int			rsv;
+>>   
+>>   	rsv = XFS_DIRENTER_SPACE_RES(mp, name->len);
+>>   
+>> -	error = -libxfs_dir_createname(tp, pip, name, inum, first, dfops, rsv,
+>> -				       NULL);
+>> +	error = -libxfs_dir_createname(tp, pip, name, ip->i_ino, first, dfops, rsv,
+>> +				       offset);
+> 
+> This line is over 80 characters, please just rewrap the whole thing:
+> 
+> 	error = -libxfs_dir_createname(tp, pip, name, ip->i_ino, first, dfops,
+> 			rsv, offset);
+> 
+>>   	if (error)
+>>   		fail(_("directory createname error"), error);
+>> +
+>>   }
+>>   
+>>   static void
+>> @@ -387,6 +390,7 @@ parseproto(
+>>   	cred_t		creds;
+>>   	char		*value;
+>>   	struct xfs_name	xname;
+>> +	xfs_dir2_dataptr_t offset;
+>>   
+>>   	memset(&creds, 0, sizeof(creds));
+>>   	mstr = getstr(pp);
+>> @@ -470,7 +474,7 @@ parseproto(
+>>   			free(buf);
+>>   		libxfs_trans_ijoin(tp, pip, 0);
+>>   		xname.type = XFS_DIR3_FT_REG_FILE;
+>> -		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &dfops);
+>> +		newdirent(mp, tp, pip, &xname, ip, &first, &dfops, &offset);
+>>   		break;
+>>   
+>>   	case IF_RESERVED:			/* pre-allocated space only */
+>> @@ -493,7 +497,7 @@ parseproto(
+>>   		libxfs_trans_ijoin(tp, pip, 0);
+>>   
+>>   		xname.type = XFS_DIR3_FT_REG_FILE;
+>> -		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &dfops);
+>> +		newdirent(mp, tp, pip, &xname, ip, &first, &dfops, &offset);
+>>   		libxfs_trans_log_inode(tp, ip, flags);
+>>   
+>>   		libxfs_defer_ijoin(&dfops, ip);
+>> @@ -516,7 +520,7 @@ parseproto(
+>>   		}
+>>   		libxfs_trans_ijoin(tp, pip, 0);
+>>   		xname.type = XFS_DIR3_FT_BLKDEV;
+>> -		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &dfops);
+>> +		newdirent(mp, tp, pip, &xname, ip, &first, &dfops, &offset);
+>>   		flags |= XFS_ILOG_DEV;
+>>   		break;
+>>   
+>> @@ -530,7 +534,7 @@ parseproto(
+>>   			fail(_("Inode allocation failed"), error);
+>>   		libxfs_trans_ijoin(tp, pip, 0);
+>>   		xname.type = XFS_DIR3_FT_CHRDEV;
+>> -		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &dfops);
+>> +		newdirent(mp, tp, pip, &xname, ip, &first, &dfops, &offset);
+>>   		flags |= XFS_ILOG_DEV;
+>>   		break;
+>>   
+>> @@ -542,7 +546,7 @@ parseproto(
+>>   			fail(_("Inode allocation failed"), error);
+>>   		libxfs_trans_ijoin(tp, pip, 0);
+>>   		xname.type = XFS_DIR3_FT_FIFO;
+>> -		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &dfops);
+>> +		newdirent(mp, tp, pip, &xname, ip, &first, &dfops, &offset);
+>>   		break;
+>>   	case IF_SYMLINK:
+>>   		buf = getstr(pp);
+>> @@ -555,7 +559,7 @@ parseproto(
+>>   		flags |= newfile(tp, ip, &dfops, &first, 1, 1, buf, len);
+>>   		libxfs_trans_ijoin(tp, pip, 0);
+>>   		xname.type = XFS_DIR3_FT_SYMLINK;
+>> -		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &dfops);
+>> +		newdirent(mp, tp, pip, &xname, ip, &first, &dfops, &offset);
+>>   		break;
+>>   	case IF_DIRECTORY:
+>>   		tp = getres(mp, 0);
+>> @@ -572,8 +576,8 @@ parseproto(
+>>   		} else {
+>>   			libxfs_trans_ijoin(tp, pip, 0);
+>>   			xname.type = XFS_DIR3_FT_DIR;
+>> -			newdirent(mp, tp, pip, &xname, ip->i_ino,
+>> -				  &first, &dfops);
+>> +			newdirent(mp, tp, pip, &xname, ip,
+>> +				  &first, &dfops, &offset);
+>>   			inc_nlink(VFS_I(pip));
+>>   			libxfs_trans_log_inode(tp, pip, XFS_ILOG_CORE);
+>>   		}
+>> @@ -612,6 +616,19 @@ parseproto(
+>>   		fail(_("Error encountered creating file from prototype file"),
+>>   			error);
+>>   	}
+>> +
+>> +	if (xfs_sb_version_hasparent(&mp->m_sb)) {
+>> +		error = xfs_parent_add(pip, ip, &xname, offset, &first, &dfops);
+> 
+> Didn't we just _defer_finish(&dfops) in the hunk right above this?  Why
+> not add the deferred pptr before the first _defer_finish call?
+> 
+> --D
 
-- Reproduce (on 4.17 upstream kernel)
-# mkdir mnt
-# mount -t xfs 0.img mnt
+Oh ok, I'll see if I can move it up and get rid of the extra finish.  Thx!
 
-The image file (0.img.zip) is available here: https://bugzilla.kernel.org/attachment.cgi?id=276475
+Allison
 
-Thanks,
-Wen
+> 
+>> +		if (error)
+>> +			fail(_("Error creating parent pointer"), error);
+>> +
+>> +		libxfs_trans_log_inode(tp, ip, flags);
+>> +		libxfs_defer_ijoin(&dfops, ip);
+>> +		error = -libxfs_defer_finish(&tp, &dfops);
+>> +		if (error)
+>> +			fail(_("Directory creation failed"), error);
+>> +	}
+>> +
+>>   	libxfs_trans_commit(tp);
+>>   	IRELE(ip);
+>>   }
+>> -- 
+>> 2.7.4
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
