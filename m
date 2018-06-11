@@ -1,48 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:39951 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932516AbeFKNLi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Jun 2018 09:11:38 -0400
-Received: by mail-pf0-f194.google.com with SMTP id z24-v6so10213208pfe.7
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Jun 2018 06:11:38 -0700 (PDT)
+Received: from aserp2120.oracle.com ([141.146.126.78]:60136 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933267AbeFKQqw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Jun 2018 12:46:52 -0400
+Subject: Re: [PATCH v1 1/1] xfstests: Add parent pointer test
+References: <1528607439-11186-1-git-send-email-allison.henderson@oracle.com>
+ <1528607439-11186-2-git-send-email-allison.henderson@oracle.com>
+ <CAOQ4uxhxj3hmQsvLtTNKW-e4qvozT8WGoj0Z8v=c=D57FtKOXA@mail.gmail.com>
+ <CAOQ4uxgXa7wE42sWF8vTssgrHtq4MEqj-jxqJXtgNAZN4ha6VA@mail.gmail.com>
+ <b1ffc34b-b76b-7f19-daa5-9ad5597a83b3@oracle.com>
+ <CAOQ4uxhGYe8PhgmM4oJaJdEdK=12yEgCU2DtbR+ac2c2GsVpkg@mail.gmail.com>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <d6ed6a31-567d-b51a-31f8-7b856e942347@oracle.com>
+Date: Mon, 11 Jun 2018 09:46:49 -0700
 MIME-Version: 1.0
-In-Reply-To: <CACdnJutbRW4wV7QAwS9s-=p1dd7mYkHqEX1NBkEXiD+oBV3-xw@mail.gmail.com>
-References: <000000000000457b2d056cbb0044@google.com> <20180522123107.GC3751@bfoster.bfoster>
- <20180522222620.GW23861@dastard> <20180522225208.GB658@sol.localdomain>
- <20180523074425.GM14384@magnolia> <20180523162015.GA3684@sol.localdomain>
- <a52266f9-0096-b28c-c01c-046ababcfe3a@sandeen.net> <20180523234114.GA3434@thunk.org>
- <20180524004931.GB23861@dastard> <CACdnJutbRW4wV7QAwS9s-=p1dd7mYkHqEX1NBkEXiD+oBV3-xw@mail.gmail.com>
-From: Dmitry Vyukov <dvyukov@google.com>
-Date: Mon, 11 Jun 2018 15:11:17 +0200
-Message-ID: <CACT4Y+bnOt5pCv5BvQ_AQHdvLSNKZSrw+w4Aa5YJRFNy4o0jww@mail.gmail.com>
-Subject: Re: Bugs involving maliciously crafted file system
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <CAOQ4uxhGYe8PhgmM4oJaJdEdK=12yEgCU2DtbR+ac2c2GsVpkg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Matthew Garrett <mjg59@google.com>
-Cc: Dave Chinner <david@fromorbit.com>, Theodore Ts'o <tytso@mit.edu>, Eric Sandeen <sandeen@sandeen.net>, Eric Biggers <ebiggers3@gmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, syzkaller-bugs <syzkaller-bugs@googlegroups.com>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, May 30, 2018 at 10:51 PM, 'Matthew Garrett' via syzkaller-bugs
-<syzkaller-bugs@googlegroups.com> wrote:
-> On Wed, May 30, 2018 at 1:42 PM Dave Chinner <david@fromorbit.com> wrote:
->> We've learnt this lesson the hard way over and over again: don't
->> parse untrusted input in privileged contexts. How many times do we
->> have to make the same mistakes before people start to learn from
->> them?
->
-> You're not wrong, but we haven't considered root to be fundamentally
-> trustworthy for years - there are multiple kernel features that can be
-> configured such that root is no longer able to do certain things (the
-> one-way trap for requiring module signatures is the most obvious, but
-> IMA in appraisal mode will also restrict root), and as a result it's
-> not reasonable to be worried only about users - it's also necessary to
-> prevent root form being able to deliberately mount a filesystem that
-> results in arbitrary code execution in the kernel.
+On 06/10/2018 10:48 PM, Amir Goldstein wrote:
+>>>>> diff --git a/tests/xfs/group b/tests/xfs/group
+>>>>> index 2319f58..fb74e82 100644
+>>>>> --- a/tests/xfs/group
+>>>>> +++ b/tests/xfs/group
+>>>>> @@ -445,3 +445,4 @@
+>>>>>    445 auto quick filestreams
+>>>>>    446 auto quick
+>>>>>    447 auto mount
+>>>>> +448 auto
+>>>
+>>>
+>>> Isn't this test quick?
+>>>
+>>> Thanks,
+>>> Amir.
+>>
+>>
+>> It actually takes about a minute and a half for me, though I guess it would
+>> depend on how fast the host is.  Most of the time goes into the loop of 100:
+>> create a hard link, and then scan through all the entries to see if the new
+>> parent pointer is there.  This was mostly to make sure the attr tree was
+>> expanding correctly back when I was trying to get the transaction rolling
+>> straightened out.
+>>
+> 
+> That is still a bit surprising to me. I suspect the parent pointer parsing
+> code that invokes awk so many times may be the culprit. We soemtimes use
+> little C progs to assist in the test (see in src/) in cases where bash scripting
+> is insufficient or inefficient.
+> 
+> Perhaps if you use more bash array tricks instead of awk, parsing code
+> will be faster? assuming that parsing code is the slow down factor?
+> 
+> In any case, a "quick" test gets run more frequently by more people
+> so it would be a big benefit IMO if you are able to squeeze that test
+> runtime down to "quick".
+> 
+> Thanks,
+> Amir.
+Sure, I'll see if I can optimize it a bit and get it running faster.  Thx!
 
-FWIW, Android also does not consider root as trusted entity. It's
-limited by SELinux and maybe something else. Kernel becomes the main
-attack target on Android. Even if attackers get root, they still go
-for kernel execution or kernel data corruption to do anything harmful.
-And kernel is exploited with use-after-frees, out-of-bounds,
-double-frees, etc.
+Allison
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIBaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=vWiNIvBeBg202a7NN7X4n0WSHRr-Ei2L-R8EQOBB9VM&s=mzL-0eBB_n9b0bYDeVwM7Kol762OzPzbUbKNG4pT6QY&e=
+> 
