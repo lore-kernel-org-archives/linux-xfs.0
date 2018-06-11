@@ -1,144 +1,202 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:33432 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:39744 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933385AbeFKSGt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Jun 2018 14:06:49 -0400
+        with ESMTP id S933452AbeFKSPb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Jun 2018 14:15:31 -0400
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5BI5oxw144085
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Jun 2018 18:06:48 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp2120.oracle.com with ESMTP id 2jgecxdtq6-1
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5BIBZLe148224
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Jun 2018 18:15:31 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp2120.oracle.com with ESMTP id 2jgecxduvg-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Jun 2018 18:06:48 +0000
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Jun 2018 18:15:31 +0000
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w5BI6m3O017132
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w5BIFUuC013674
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Jun 2018 18:06:48 GMT
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w5BI6moj010053
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Jun 2018 18:06:48 GMT
-Date: Mon, 11 Jun 2018 11:06:47 -0700
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Jun 2018 18:15:30 GMT
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w5BIFUgI016669
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Jun 2018 18:15:30 GMT
+Date: Mon, 11 Jun 2018 11:15:29 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 24/27] xfsprogs: Add parent pointers to recreated
- inodes
-Message-ID: <20180611180647.GF22045@magnolia>
+Subject: Re: [PATCH v2 25/27] xfsprogs: Add parent pointers during protofile
+ creation
+Message-ID: <20180611181529.GG22045@magnolia>
 References: <1528607272-11122-1-git-send-email-allison.henderson@oracle.com>
- <1528607272-11122-25-git-send-email-allison.henderson@oracle.com>
+ <1528607272-11122-26-git-send-email-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1528607272-11122-25-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1528607272-11122-26-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Allison Henderson <allison.henderson@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Sat, Jun 09, 2018 at 10:07:49PM -0700, Allison Henderson wrote:
-> Inodes that are not recovered from the orphanage will
-> be recreated, so we will need to re-add the parent pointers
-> here too.
+On Sat, Jun 09, 2018 at 10:07:50PM -0700, Allison Henderson wrote:
+> Inodes created from protofile parsing will also need to
+> add the appropriate parent pointers
 > 
 > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 > ---
->  libxfs/libxfs_api_defs.h |  1 +
->  repair/phase6.c          | 40 +++++++++++++++++++++++++++-------------
->  2 files changed, 28 insertions(+), 13 deletions(-)
+>  mkfs/proto.c | 55 ++++++++++++++++++++++++++++++++++++-------------------
+>  1 file changed, 36 insertions(+), 19 deletions(-)
 > 
-> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-> index 78daca0..4b47479 100644
-> --- a/libxfs/libxfs_api_defs.h
-> +++ b/libxfs/libxfs_api_defs.h
-> @@ -152,5 +152,6 @@
->  #define xfs_rmap_compare		libxfs_rmap_compare
->  #define xfs_dir_get_ops			libxfs_dir_get_ops
->  #define xfs_default_ifork_ops		libxfs_default_ifork_ops
-> +#define xfs_parent_add    		libxfs_parent_add
->  
->  #endif /* __LIBXFS_API_DEFS_H__ */
-> diff --git a/repair/phase6.c b/repair/phase6.c
-> index 4fedb35..96ffade 100644
-> --- a/repair/phase6.c
-> +++ b/repair/phase6.c
-> @@ -29,6 +29,7 @@
->  #include "dinode.h"
->  #include "progress.h"
->  #include "versions.h"
+> diff --git a/mkfs/proto.c b/mkfs/proto.c
+> index 67c228a..222479f 100644
+> --- a/mkfs/proto.c
+> +++ b/mkfs/proto.c
+> @@ -19,6 +19,7 @@
+>  #include "libxfs.h"
+>  #include <sys/stat.h>
+>  #include "xfs_multidisk.h"
 > +#include "xfs_parent.h"
 >  
->  static struct cred		zerocr;
->  static struct fsxattr 		zerofsx;
-> @@ -962,19 +963,20 @@ mk_root_dir(xfs_mount_t *mp)
->  static xfs_ino_t
->  mk_orphanage(xfs_mount_t *mp)
+>  /*
+>   * Prototypes for internal functions.
+> @@ -318,23 +319,25 @@ newregfile(
+>  
+>  static void
+>  newdirent(
+> -	xfs_mount_t	*mp,
+> -	xfs_trans_t	*tp,
+> -	xfs_inode_t	*pip,
+> -	struct xfs_name	*name,
+> -	xfs_ino_t	inum,
+> -	xfs_fsblock_t	*first,
+> -	struct xfs_defer_ops	*dfops)
+> +	struct xfs_mount	*mp,
+> +	struct xfs_trans	*tp,
+> +	struct xfs_inode	*pip,
+> +	struct xfs_name		*name,
+> +	struct xfs_inode	*ip,
+> +	xfs_fsblock_t		*first,
+> +	struct xfs_defer_ops	*dfops,
+> +	xfs_dir2_dataptr_t      *offset)
 >  {
-> -	xfs_ino_t	ino;
-> -	xfs_trans_t	*tp;
-> -	xfs_inode_t	*ip;
-> -	xfs_inode_t	*pip;
-> -	xfs_fsblock_t	first;
-> -	ino_tree_node_t	*irec;
-> -	int		ino_offset = 0;
-> -	int		i;
-> -	int		error;
-> +	xfs_ino_t		ino;
-> +	struct xfs_trans	*tp;
-> +	struct xfs_inode	*ip;
-> +	struct xfs_inode	*pip;
-> +	xfs_fsblock_t		first;
-> +	struct ino_tree_node	*irec;
-> +	int			ino_offset = 0;
-> +	int			i;
+> -	int	error;
+> -	int	rsv;
 > +	int			error;
->  	struct xfs_defer_ops	dfops;
-> -	const int	mode = 0755;
-> -	int		nres;
-> -	struct xfs_name	xname;
-> +	const int		mode = 0755;
-> +	int			nres;
-> +	struct xfs_name		xname;
-> +	xfs_dir2_dataptr_t      offset;
+> +	int			rsv;
 >  
->  	/*
->  	 * check for an existing lost+found first, if it exists, return
-> @@ -1061,7 +1063,7 @@ mk_orphanage(xfs_mount_t *mp)
->  	 * create the actual entry
->  	 */
->  	error = -libxfs_dir_createname(tp, pip, &xname, ip->i_ino, &first,
-> -					&dfops, nres, NULL);
-> +					&dfops, nres, &offset);
+>  	rsv = XFS_DIRENTER_SPACE_RES(mp, name->len);
+>  
+> -	error = -libxfs_dir_createname(tp, pip, name, inum, first, dfops, rsv,
+> -				       NULL);
+> +	error = -libxfs_dir_createname(tp, pip, name, ip->i_ino, first, dfops, rsv,
+> +				       offset);
+
+This line is over 80 characters, please just rewrap the whole thing:
+
+	error = -libxfs_dir_createname(tp, pip, name, ip->i_ino, first, dfops,
+			rsv, offset);
+
 >  	if (error)
->  		do_error(
->  		_("can't make %s, createname error %d\n"),
-> @@ -1083,6 +1085,18 @@ mk_orphanage(xfs_mount_t *mp)
->  	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
->  
->  	libxfs_defer_ijoin(&dfops, ip);
+>  		fail(_("directory createname error"), error);
 > +
-> +        if (xfs_sb_version_hasparent(&mp->m_sb)) {
-> +                error = -libxfs_parent_add(pip, ip, &xname, offset,
+>  }
+>  
+>  static void
+> @@ -387,6 +390,7 @@ parseproto(
+>  	cred_t		creds;
+>  	char		*value;
+>  	struct xfs_name	xname;
+> +	xfs_dir2_dataptr_t offset;
+>  
+>  	memset(&creds, 0, sizeof(creds));
+>  	mstr = getstr(pp);
+> @@ -470,7 +474,7 @@ parseproto(
+>  			free(buf);
+>  		libxfs_trans_ijoin(tp, pip, 0);
+>  		xname.type = XFS_DIR3_FT_REG_FILE;
+> -		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &dfops);
+> +		newdirent(mp, tp, pip, &xname, ip, &first, &dfops, &offset);
+>  		break;
+>  
+>  	case IF_RESERVED:			/* pre-allocated space only */
+> @@ -493,7 +497,7 @@ parseproto(
+>  		libxfs_trans_ijoin(tp, pip, 0);
+>  
+>  		xname.type = XFS_DIR3_FT_REG_FILE;
+> -		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &dfops);
+> +		newdirent(mp, tp, pip, &xname, ip, &first, &dfops, &offset);
+>  		libxfs_trans_log_inode(tp, ip, flags);
+>  
+>  		libxfs_defer_ijoin(&dfops, ip);
+> @@ -516,7 +520,7 @@ parseproto(
+>  		}
+>  		libxfs_trans_ijoin(tp, pip, 0);
+>  		xname.type = XFS_DIR3_FT_BLKDEV;
+> -		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &dfops);
+> +		newdirent(mp, tp, pip, &xname, ip, &first, &dfops, &offset);
+>  		flags |= XFS_ILOG_DEV;
+>  		break;
+>  
+> @@ -530,7 +534,7 @@ parseproto(
+>  			fail(_("Inode allocation failed"), error);
+>  		libxfs_trans_ijoin(tp, pip, 0);
+>  		xname.type = XFS_DIR3_FT_CHRDEV;
+> -		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &dfops);
+> +		newdirent(mp, tp, pip, &xname, ip, &first, &dfops, &offset);
+>  		flags |= XFS_ILOG_DEV;
+>  		break;
+>  
+> @@ -542,7 +546,7 @@ parseproto(
+>  			fail(_("Inode allocation failed"), error);
+>  		libxfs_trans_ijoin(tp, pip, 0);
+>  		xname.type = XFS_DIR3_FT_FIFO;
+> -		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &dfops);
+> +		newdirent(mp, tp, pip, &xname, ip, &first, &dfops, &offset);
+>  		break;
+>  	case IF_SYMLINK:
+>  		buf = getstr(pp);
+> @@ -555,7 +559,7 @@ parseproto(
+>  		flags |= newfile(tp, ip, &dfops, &first, 1, 1, buf, len);
+>  		libxfs_trans_ijoin(tp, pip, 0);
+>  		xname.type = XFS_DIR3_FT_SYMLINK;
+> -		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &dfops);
+> +		newdirent(mp, tp, pip, &xname, ip, &first, &dfops, &offset);
+>  		break;
+>  	case IF_DIRECTORY:
+>  		tp = getres(mp, 0);
+> @@ -572,8 +576,8 @@ parseproto(
+>  		} else {
+>  			libxfs_trans_ijoin(tp, pip, 0);
+>  			xname.type = XFS_DIR3_FT_DIR;
+> -			newdirent(mp, tp, pip, &xname, ip->i_ino,
+> -				  &first, &dfops);
+> +			newdirent(mp, tp, pip, &xname, ip,
+> +				  &first, &dfops, &offset);
+>  			inc_nlink(VFS_I(pip));
+>  			libxfs_trans_log_inode(tp, pip, XFS_ILOG_CORE);
+>  		}
+> @@ -612,6 +616,19 @@ parseproto(
+>  		fail(_("Error encountered creating file from prototype file"),
+>  			error);
+>  	}
+> +
+> +	if (xfs_sb_version_hasparent(&mp->m_sb)) {
+> +		error = xfs_parent_add(pip, ip, &xname, offset, &first, &dfops);
 
-Tabs, not spaces for the indenting.
-
-> +				       &first, &dfops);
-> +                if (error)
-> +                        do_error(_("Error creating parent pointer: %d\n"),
-> +				 error);
-> +		libxfs_trans_log_inode(tp, pip, XFS_ILOG_CORE);
-> +		libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-> +		libxfs_defer_ijoin(&dfops, pip);
-
-/me wonders if it's really necessary to _defer_ijoin either of the
-inodes to the transaction since we commit and IRELE both of them
-immediately afterwards...
+Didn't we just _defer_finish(&dfops) in the hunk right above this?  Why
+not add the deferred pptr before the first _defer_finish call?
 
 --D
 
-> +        }
+> +		if (error)
+> +			fail(_("Error creating parent pointer"), error);
 > +
->  	error = -libxfs_defer_finish(&tp, &dfops);
->  	if (error) {
->  		do_error(_("%s directory creation failed -- bmapf error %d\n"),
+> +		libxfs_trans_log_inode(tp, ip, flags);
+> +		libxfs_defer_ijoin(&dfops, ip);
+> +		error = -libxfs_defer_finish(&tp, &dfops);
+> +		if (error)
+> +			fail(_("Directory creation failed"), error);
+> +	}
+> +
+>  	libxfs_trans_commit(tp);
+>  	IRELE(ip);
+>  }
 > -- 
 > 2.7.4
 > 
