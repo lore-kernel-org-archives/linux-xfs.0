@@ -1,75 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:60136 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933267AbeFKQqw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Jun 2018 12:46:52 -0400
-Subject: Re: [PATCH v1 1/1] xfstests: Add parent pointer test
-References: <1528607439-11186-1-git-send-email-allison.henderson@oracle.com>
- <1528607439-11186-2-git-send-email-allison.henderson@oracle.com>
- <CAOQ4uxhxj3hmQsvLtTNKW-e4qvozT8WGoj0Z8v=c=D57FtKOXA@mail.gmail.com>
- <CAOQ4uxgXa7wE42sWF8vTssgrHtq4MEqj-jxqJXtgNAZN4ha6VA@mail.gmail.com>
- <b1ffc34b-b76b-7f19-daa5-9ad5597a83b3@oracle.com>
- <CAOQ4uxhGYe8PhgmM4oJaJdEdK=12yEgCU2DtbR+ac2c2GsVpkg@mail.gmail.com>
-From: Allison Henderson <allison.henderson@oracle.com>
-Message-ID: <d6ed6a31-567d-b51a-31f8-7b856e942347@oracle.com>
-Date: Mon, 11 Jun 2018 09:46:49 -0700
+Received: from sandeen.net ([63.231.237.45]:37634 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932109AbeFKOfJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 11 Jun 2018 10:35:09 -0400
+Subject: Re: INFO: task hung in xlog_grant_head_check
+References: <000000000000457b2d056cbb0044@google.com>
+ <20180522123107.GC3751@bfoster.bfoster> <20180522222620.GW23861@dastard>
+ <20180522225208.GB658@sol.localdomain> <20180523074425.GM14384@magnolia>
+ <20180523162015.GA3684@sol.localdomain>
+ <a52266f9-0096-b28c-c01c-046ababcfe3a@sandeen.net>
+ <CACT4Y+b4+o86Aud9K3m1HWhqsbNoyvEfW+53R2WV=Redi6Cwew@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <46be4dcc-15e5-1482-042b-a0bcdb0fa56b@sandeen.net>
+Date: Mon, 11 Jun 2018 09:35:08 -0500
 MIME-Version: 1.0
-In-Reply-To: <CAOQ4uxhGYe8PhgmM4oJaJdEdK=12yEgCU2DtbR+ac2c2GsVpkg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <CACT4Y+b4+o86Aud9K3m1HWhqsbNoyvEfW+53R2WV=Redi6Cwew@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Dmitry Vyukov <dvyukov@google.com>
+Cc: Eric Biggers <ebiggers3@gmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>, syzbot <syzbot+568245b88fbaedcb1959@syzkaller.appspotmail.com>, LKML <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, syzkaller-bugs <syzkaller-bugs@googlegroups.com>
 
-On 06/10/2018 10:48 PM, Amir Goldstein wrote:
->>>>> diff --git a/tests/xfs/group b/tests/xfs/group
->>>>> index 2319f58..fb74e82 100644
->>>>> --- a/tests/xfs/group
->>>>> +++ b/tests/xfs/group
->>>>> @@ -445,3 +445,4 @@
->>>>>    445 auto quick filestreams
->>>>>    446 auto quick
->>>>>    447 auto mount
->>>>> +448 auto
->>>
->>>
->>> Isn't this test quick?
->>>
->>> Thanks,
->>> Amir.
->>
->>
->> It actually takes about a minute and a half for me, though I guess it would
->> depend on how fast the host is.  Most of the time goes into the loop of 100:
->> create a hard link, and then scan through all the entries to see if the new
->> parent pointer is there.  This was mostly to make sure the attr tree was
->> expanding correctly back when I was trying to get the transaction rolling
->> straightened out.
->>
-> 
-> That is still a bit surprising to me. I suspect the parent pointer parsing
-> code that invokes awk so many times may be the culprit. We soemtimes use
-> little C progs to assist in the test (see in src/) in cases where bash scripting
-> is insufficient or inefficient.
-> 
-> Perhaps if you use more bash array tricks instead of awk, parsing code
-> will be faster? assuming that parsing code is the slow down factor?
-> 
-> In any case, a "quick" test gets run more frequently by more people
-> so it would be a big benefit IMO if you are able to squeeze that test
-> runtime down to "quick".
-> 
-> Thanks,
-> Amir.
-Sure, I'll see if I can optimize it a bit and get it running faster.  Thx!
+On 6/11/18 8:20 AM, Dmitry Vyukov wrote:
+> On Wed, May 23, 2018 at 8:01 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
 
-Allison
+...
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwIBaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=vWiNIvBeBg202a7NN7X4n0WSHRr-Ei2L-R8EQOBB9VM&s=mzL-0eBB_n9b0bYDeVwM7Kol762OzPzbUbKNG4pT6QY&e=
+>> As an aside, I wonder how much coverage of the V5 format code syzkaller
+>> /has/
+>> achieved; that would be another useful datapoint google could provide - if
+>> syzkaller is in fact traversing the V5 codepaths and isn't turning anything
+>> up, that'd be pretty useful to know.
 > 
+> Hi Eric,
+> 
+> The current syzbot kernel code coverage is available here:
+> https://storage.googleapis.com/syzkaller/cover/upstream.html#9c73bb525fc1def86e67f5039ab97d8f48062621
+
+Here is an example of an informative, useful, and efficient presentation of
+code coverage:
+
+http://ltp.sourceforge.net/coverage/lcov/output/index.html
+
+Thanks,
+-Eric
