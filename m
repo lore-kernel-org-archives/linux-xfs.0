@@ -1,175 +1,167 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from www262.sakura.ne.jp ([202.181.97.72]:36843 "EHLO
-        www262.sakura.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932332AbeFKKdu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Jun 2018 06:33:50 -0400
-Subject: Re: WARNING in notify_change
-References: <94eb2c0ce3aa7551d30569658325@google.com>
-From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Message-ID: <96c750b3-fcb0-3d7f-45eb-45459078ef83@I-love.SAKURA.ne.jp>
-Date: Mon, 11 Jun 2018 19:33:36 +0900
+Received: from aserp2120.oracle.com ([141.146.126.78]:46966 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752696AbeFKUXm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Jun 2018 16:23:42 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5BKG9rp041804
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Jun 2018 20:23:42 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp2120.oracle.com with ESMTP id 2jgecxeaef-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Jun 2018 20:23:42 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w5BKNfgp011072
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Jun 2018 20:23:41 GMT
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w5BKNe5t017879
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Jun 2018 20:23:41 GMT
+Date: Mon, 11 Jun 2018 13:23:37 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 23/27] xfsprogs: Do not use namechecks on parent
+ pointers
+Message-ID: <20180611202337.GI22045@magnolia>
+References: <1528607272-11122-1-git-send-email-allison.henderson@oracle.com>
+ <1528607272-11122-24-git-send-email-allison.henderson@oracle.com>
+ <20180611180052.GE22045@magnolia>
+ <056e2e3c-7bd0-b289-9a83-2fa496fed829@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <94eb2c0ce3aa7551d30569658325@google.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <056e2e3c-7bd0-b289-9a83-2fa496fed829@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: syzbot <syzbot+2b74da47f048a5046135@syzkaller.appspotmail.com>, linux-fsdevel@vger.kernel.org, syzkaller-bugs@googlegroups.com, viro@zeniv.linux.org.uk
-Cc: linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Allison Henderson <allison.henderson@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-I haven't succeeded reproducing this bug using original C reproducer.
-Instead, I'm observing XFS warning using modified reproducer shown below.
+On Mon, Jun 11, 2018 at 01:00:45PM -0700, Allison Henderson wrote:
+> On 06/11/2018 11:00 AM, Darrick J. Wong wrote:
+> > On Sat, Jun 09, 2018 at 10:07:48PM -0700, Allison Henderson wrote:
+> > > Attribute names of parent pointers are not strings.  So
+> > > avoid doing namechecks for these attributes.
+> > > 
+> > > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> > > ---
+> > >   repair/attr_repair.c | 18 +++++++++++-------
+> > >   1 file changed, 11 insertions(+), 7 deletions(-)
+> > > 
+> > > diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+> > > index 8b1b8a7..b8b0768 100644
+> > > --- a/repair/attr_repair.c
+> > > +++ b/repair/attr_repair.c
+> > > @@ -308,8 +308,9 @@ process_shortform_attr(
+> > >   		/* namecheck checks for / and null terminated for file names.
+> > >   		 * attributes names currently follow the same rules.
+> > >   		*/
+> > > -		if (namecheck((char *)&currententry->nameval[0],
+> > > -						currententry->namelen))  {
+> > > +		if (!(currententry->flags & XFS_ATTR_PARENT) &&
+> > > +			namecheck((char *)&currententry->nameval[0],
+> > > +			currententry->namelen))  {
+> > >   			do_warn(
+> > 
+> > Please don't indent the condition tests to the same column as the code.
+> > Either line them up with the if parentheses or double-tab them.
+> > 
+> > if (!(currententry->flags & XFS_ATTR_PARENT) &&
+> >      namecheck((char *)&currententry->nameval[0],
+> > 		currententry->namelen)) {
+> > 	do_warn(...);
+> > }
+> > 
+> Alrighty, will fix
+> 
+> > >   	_("entry contains illegal character in shortform attribute name\n"));
+> > >   			junkit = 1;
+> > > @@ -470,8 +471,9 @@ process_leaf_attr_local(
+> > >   	xfs_attr_leaf_name_local_t *local;
+> > >   	local = xfs_attr3_leaf_name_local(leaf, i);
+> > > -	if (local->namelen == 0 || namecheck((char *)&local->nameval[0],
+> > > -							local->namelen)) {
+> > > +	if (!(entry->flags & XFS_ATTR_PARENT) &&
+> > > +		(local->namelen == 0 || namecheck((char *)&local->nameval[0],
+> > > +		local->namelen))) {
+> > 
+> > Why skip the namelen checks when it's a parent pointer?  Isn't the pptr
+> > corrupt if the (ino, gen, offset) data is length zero?
+> > 
+> Thats true, though I suppose in the case of parent pointers it should be the
+> size of the name record.  Would it maybe be cleaner to make a subroutine
+> that took local and entry and did the appropriate length checking there?  It
+> may make things simpler here and also in the case below?
 
-----------------------------------------
-// autogenerated by syzkaller (http://github.com/google/syzkaller)
+I probably wouldn't bother for the local entry because it's fairly
+short.  The remote format case below is sort of gnarly, maybe it'd be
+better refactored as a functi...
 
-#include <fcntl.h>
-#include <linux/futex.h>
-#include <pthread.h>
-#include <sys/stat.h>
-#include <sys/syscall.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <sys/xattr.h>
+...hmm, thinking further, in the (flags & PARENT) case, namelen should
+be exactly sizeof(struct xfs_parent_name_rec), right?
 
-struct thread_t {
-	int created, running, call;
-	pthread_t th;
-};
+So perhaps we just move the namelen == 0 check into namecheck and pass
+in the entry->flags so that we can do....
 
-static struct thread_t threads[16];
-static void execute_call(int call);
-static int running;
-static int collide;
+...thinking even further ahead, if there's some sort of verifier
+function for struct xfs_parent_name_rec then we should call that here
+too.  What do you think of this?
 
-static void* thr(void* arg)
+/* return true if attr name is garbage */
+bool namecheck(entry, nameptr, namelen)
 {
-	struct thread_t* th = (struct thread_t*)arg;
-	for (;;) {
-		while (!__atomic_load_n(&th->running, __ATOMIC_ACQUIRE))
-			syscall(SYS_futex, &th->running, FUTEX_WAIT, 0, 0);
-		execute_call(th->call);
-		__atomic_fetch_sub(&running, 1, __ATOMIC_RELAXED);
-		__atomic_store_n(&th->running, 0, __ATOMIC_RELEASE);
-		syscall(SYS_futex, &th->running, FUTEX_WAKE);
+	if (namelen == 0)
+		return true;
+	if (entry->flags & _ATTR_PARENT) {
+		xfs_failaddr_t	fa;
+
+		if (namelen != sizeof(struct xfs_parent_name_rec))
+			return true;
+
+		fa = xfs_verify_pptr(mp, (struct xfs_parent_name_rec *)nameptr);
+		return fa != NULL;
 	}
-	return 0;
+	/* do the other name checks */
 }
 
-static void execute(int num_calls)
-{
-	int call, thread;
-	running = 0;
-	for (call = 0; call < num_calls; call++) {
-		for (thread = 0; thread < sizeof(threads) / sizeof(threads[0]); thread++) {
-			struct thread_t* th = &threads[thread];
-			if (!th->created) {
-				th->created = 1;
-				pthread_attr_t attr;
-				pthread_attr_init(&attr);
-				pthread_attr_setstacksize(&attr, 128 << 10);
-				pthread_create(&th->th, &attr, thr, th);
-			}
-			if (!__atomic_load_n(&th->running, __ATOMIC_ACQUIRE)) {
-				th->call = call;
-				__atomic_fetch_add(&running, 1, __ATOMIC_RELAXED);
-				__atomic_store_n(&th->running, 1, __ATOMIC_RELEASE);
-				syscall(SYS_futex, &th->running, FUTEX_WAKE);
-				if (collide && call % 2)
-					break;
-				struct timespec ts;
-				ts.tv_sec = 0;
-				ts.tv_nsec = 20 * 1000 * 1000;
-				syscall(SYS_futex, &th->running, FUTEX_WAIT, 1, &ts);
-				if (running)
-					usleep((call == num_calls - 1) ? 10000 : 1000);
-				break;
-			}
-		}
-	}
-}
+--D
 
-static void execute_call(int call)
-{
-	switch (call) {
-	case 0:
-		creat("file0", 0x20000080);
-		break;
-	case 1:
-		lsetxattr("file0", "security.capability",
-			  "\x00\x00\x00\x02\x01\x00\x00\x00\x00\x00\x00\x01"
-			  "\x04\x00\x00\x00\x00\x00\x00\x00", 20, 0);
-		break;
-	}
-}
-
-int main(int argc, char *argv[])
-{
-	execute_call(0);
-	execute_call(1);
-	execute(2);
-	return 0;
-}
-----------------------------------------
-
-When lsetxattr() is called in parallel (with CONFIG_XFS_WARN=y),
-XFS emits below warning due to ATTR_KILL_PRIV not cleared yet.
-
-----------------------------------------
-[   33.347151] XFS: Assertion failed: (iattr->ia_valid & (ATTR_UID|ATTR_GID|ATTR_ATIME|ATTR_ATIME_SET| ATTR_MTIME_SET|ATTR_KILL_PRIV|ATTR_TIMES_SET)) == 0, file: fs/xfs/xfs_iops.c, line: 792
-[   33.353353] ------------[ cut here ]------------
-[   33.355376] WARNING: CPU: 0 PID: 5355 at fs/xfs/xfs_message.c:105 asswarn+0x2c/0x30 [xfs]
-[   33.358501] Modules linked in: ip6t_rpfilter ipt_REJECT nf_reject_ipv4 ip6t_REJECT nf_reject_ipv6 xt_conntrack ip_set nfnetlink ebtable_nat ebtable_broute bridge stp llc ip6table_nat nf_conntrack_ipv6 nf_defrag_ipv6 nf_nat_ipv6 ip6table_mangle ip6table_raw iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntrack iptable_mangle iptable_raw ebtable_filter ebtables ip6table_filter ip6_tables iptable_filter vmw_balloon intel_powerclamp pcspkr vmw_vmci i2c_piix4 sg ppdev parport_pc parport ip_tables xfs libcrc32c sd_mod sr_mod cdrom ata_generic pata_acpi serio_raw vmwgfx drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops mptspi e1000 ttm scsi_transport_spi ahci mptscsih libahci drm ata_piix mptbase i2c_core libata
-[   33.385636] CPU: 0 PID: 5355 Comm: a.out Not tainted 4.9.0-rc1+ #55
-[   33.389051] Hardware name: VMware, Inc. VMware Virtual Platform/440BX Desktop Reference Platform, BIOS 6.00 05/19/2017
-[   33.393952]  ffffae56d0dafb78 ffffffff8f30c3ed 0000000000000000 0000000000000000
-[   33.398032]  ffffae56d0dafbb8 ffffffff8f075431 00000069d0dafbd8 ffff9e5ca0ea1040
-[   33.401454]  ffffae56d0dafcd8 ffff9e5ca0e9f778 0000000000000000 ffff9e5ca0ea1318
-[   33.404603] Call Trace:
-[   33.406183]  [<ffffffff8f30c3ed>] dump_stack+0x8e/0xd1
-[   33.408541]  [<ffffffff8f075431>] __warn+0xc1/0xe0
-[   33.410781]  [<ffffffff8f075508>] warn_slowpath_null+0x18/0x20
-[   33.413358]  [<ffffffffc06ac33c>] asswarn+0x2c/0x30 [xfs]
-[   33.415856]  [<ffffffffc06a49b4>] xfs_setattr_size+0xc4/0x3a0 [xfs]
-[   33.418549]  [<ffffffffc06a4cb7>] xfs_vn_setattr_size+0x27/0x30 [xfs]
-[   33.421409]  [<ffffffffc06a4d18>] xfs_vn_setattr+0x58/0x80 [xfs]
-[   33.421413]  [<ffffffff8f203aa3>] notify_change+0x313/0x430
-[   33.421415]  [<ffffffff8f1dfc48>] do_truncate+0x58/0x90
-[   33.421417]  [<ffffffff8f1f2e33>] path_openat+0xbc3/0xd20
-[   33.421419]  [<ffffffff8f1f42eb>] do_filp_open+0x7b/0xd0
-[   33.421422]  [<ffffffff8f6aa162>] ? _raw_spin_unlock+0x22/0x30
-[   33.421424]  [<ffffffff8f204e13>] ? __alloc_fd+0xf3/0x200
-[   33.421425]  [<ffffffff8f1e11ad>] do_sys_open+0x19d/0x230
-[   33.421426]  [<ffffffff8f1e1299>] SyS_creat+0x19/0x20
-[   33.421429]  [<ffffffff8f0036a7>] do_syscall_64+0x67/0x1f0
-[   33.421430]  [<ffffffff8f6aa949>] entry_SYSCALL64_slow_path+0x25/0x25
-[   33.421481] ---[ end trace be3bb63a2a7fe0de ]---
-----------------------------------------
-
-Bisection reached commit 030b533c4fd4d2ec "fs: Avoid premature clearing of capabilities".
-Since that commit changed whether ATTR_KILL_PRIV is removed from attr->ia_valid,
-it is possible that ATTR_KILL_PRIV is delivered to xfs_setattr_size().
-And making below change solves the XFS warning.
-
-----------------------------------------
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 3b4be06..a67af5b 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -832,7 +832,7 @@
- 	ASSERT(xfs_isilocked(ip, XFS_MMAPLOCK_EXCL));
- 	ASSERT(S_ISREG(inode->i_mode));
- 	ASSERT((iattr->ia_valid & (ATTR_UID|ATTR_GID|ATTR_ATIME|ATTR_ATIME_SET|
--		ATTR_MTIME_SET|ATTR_KILL_PRIV|ATTR_TIMES_SET)) == 0);
-+		ATTR_MTIME_SET|ATTR_TIMES_SET)) == 0);
- 
- 	oldsize = inode->i_size;
- 	newsize = iattr->ia_size;
-----------------------------------------
-
-But I have no idea why executing in parallel makes such difference.
-Maybe parallel execution is something related to why syzbot is hitting
-WARN_ON_ONCE(!inode_is_locked(inode)) in notify_change()...
-
+> 
+> 
+> > >   		do_warn(
+> > >   	_("attribute entry %d in attr block %u, inode %" PRIu64 " has bad name (namelen = %d)\n"),
+> > >   			i, da_bno, ino, local->namelen);
+> > > @@ -525,13 +527,15 @@ process_leaf_attr_remote(
+> > >   	remotep = xfs_attr3_leaf_name_remote(leaf, i);
+> > > -	if (remotep->namelen == 0 || namecheck((char *)&remotep->name[0],
+> > > -						remotep->namelen) ||
+> > > +	if (!(entry->flags & XFS_ATTR_PARENT) &&
+> > > +			(remotep->namelen == 0 ||
+> > > +			namecheck((char *)&remotep->name[0],
+> > > +				remotep->namelen) ||
+> > >   			be32_to_cpu(entry->hashval) !=
+> > >   				libxfs_da_hashname((unsigned char *)&remotep->name[0],
+> > >   						remotep->namelen) ||
+> > >   			be32_to_cpu(entry->hashval) < last_hashval ||
+> > > -			be32_to_cpu(remotep->valueblk) == 0) {
+> > > +			be32_to_cpu(remotep->valueblk) == 0)) {
+> > 
+> > Do parent pointer attrs ever end up using a remote value block to store
+> > the name?  If so, I think you only want to skip the namecheck, not the
+> > namelen/hashval/valueblk checks, right?
+> > 
+> > --D
+> > 
+> > >   		do_warn(
+> > >   	_("inconsistent remote attribute entry %d in attr block %u, ino %" PRIu64 "\n"), i, da_bno, ino);
+> > >   		return -1;
+> > > -- 
+> > > 2.7.4
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
