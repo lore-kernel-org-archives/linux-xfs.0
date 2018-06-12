@@ -1,79 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:50331 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934377AbeFLWR3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jun 2018 18:17:29 -0400
-Received: by mail-wm0-f66.google.com with SMTP id e16-v6so1400059wmd.0
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Jun 2018 15:17:29 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20180612143608.ok3jqtl3l34vdlpy@odin.usersys.redhat.com>
-References: <CA+Xn3kwTnu8yd-DCy37323waPgNm0jNuL9NDhz8s8pY023COSw@mail.gmail.com>
- <20180612143608.ok3jqtl3l34vdlpy@odin.usersys.redhat.com>
-From: Ilya Pronin <ipronin@twitter.com>
-Date: Tue, 12 Jun 2018 15:17:27 -0700
-Message-ID: <CA+Xn3kyxiOj+irNiqKWQWfJ_aUv1RYFsH+UCnv3gnMuYJ=oUQw@mail.gmail.com>
-Subject: Re: Reading/changing projid of a symlink
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail.kernel.org ([198.145.29.99]:53910 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934006AbeFLAal (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 11 Jun 2018 20:30:41 -0400
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v6 1/5] mkfs: distinguish between struct sb_feat_args and struct cli_params
+Date: Mon, 11 Jun 2018 17:30:35 -0700
+Message-Id: <20180612003039.17154-2-mcgrof@kernel.org>
+In-Reply-To: <20180612003039.17154-1-mcgrof@kernel.org>
+References: <20180612003039.17154-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>
+To: sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com, "Luis R. Rodriguez" <mcgrof@kernel.org>
 
-So the only way to remove a symlink from a project is to remove it?
+The struct sb_feat_args will actually be shared between the code which
+processes command line options and the configuration file, as such we
+need to clarify and reflect this clearly in documentation.
 
-Here's my use case. In Apache Mesos we use XFS project quotas for disk
-space isolation. Every container sandbox is allocated its own project
-ID. When the container terminates its project ID is unset from the
-sandbox and files inside it, and can be used for other containers.
-Sandboxes of terminated containers stay on the host for some time for
-debugging, etc. With such approach the inability to remove projid from
-symlinks presents a small problem: when a project ID is reused for a
-new container, any lingering symlinks that still have that project ID
-will contribute to disk usage of the new container. Typically not
-much, but still that's inaccurate. I guess we'll need to change when
-we "deallocate" projids.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+---
+ mkfs/xfs_mkfs.c | 45 ++++++++++++++++++++++++++++-----------------
+ 1 file changed, 28 insertions(+), 17 deletions(-)
 
-On Tue, Jun 12, 2018 at 7:36 AM, Carlos Maiolino <cmaiolino@redhat.com> wrote:
-> On Wed, May 30, 2018 at 05:26:46PM -0700, Ilya Pronin wrote:
->> Hello,
->>
->> I am trying to recursively check/change projid on a directory that
->> contains symlinks among other files. The way I do it is like this
->> (attributes reading part as an example, modulo error handling):
->>
->> oflags = O_NOFOLLOW | O_RDONLY;
->> if (S_ISDIR(stat->st_mode))
->>         oflags |= O_DIRECTORY;
->> if (S_ISLNK(stat->st_mode))
->>         oflags |= O_PATH;
->> fd = open(path, oflags, 0);
->> xfsctl(NULL, fd, XFS_IOC_FSGETXATTR, &attr);
->>
->> The xfsctl() call fails with EBADF. Apparently this is because
->> xfsctl() is implemented as ioctl(), at least on Linux, which doesn't
->> work with file descriptors obtained with O_PATH. Is there any way to
->> manipulate projid on symlinks?
->>
->
-> Not sure if somebody already replied you, I couldn't find anything in my mbox,
-> but you can't.
->
-> Out of curiosity, why would you do that though?
->
->
->> Thanks!
->>
->> --
->> Ilya Pronin
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> --
-> Carlos
-
-
-
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index a135e06e7215..227613ef77d5 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -707,26 +707,18 @@ cli_opt_set(
+ }
+ 
+ /*
+- * Options configured on the command line.
+- *
+- * This stores all the specific config parameters the user sets on the command
+- * line. We do not use these values directly - they are inputs to the mkfs
+- * geometry validation and override any default configuration value we have.
++ * Shared superblock configuration options
+  *
+- * We don't keep flags to indicate what parameters are set - if we need to check
+- * if an option was set on the command line, we check the relevant entry in the
+- * option table which records whether it was specified in the .seen and
+- * .str_seen variables in the table.
++ * These options provide shared configuration tunables for the filesystem
++ * superblock. There are three possible sources for these options set, each
++ * source can overriding the later source:
+  *
+- * Some parameters are stored as strings for post-parsing after their dependent
+- * options have been resolved (e.g. block size and sector size have been parsed
+- * and validated).
++ * 	o built-in defaults
++ * 	o configuration file (XXX)
++ * 	o command line
+  *
+- * This allows us to check that values have been set without needing separate
+- * flags for each value, and hence avoids needing to record and check for each
+- * specific option that can set the value later on in the code. In the cases
+- * where we don't have a cli_params structure around, the above cli_opt_set()
+- * function can be used.
++ * These values are not used directly - they are inputs into the mkfs geometry
++ * validation.
+  */
+ struct sb_feat_args {
+ 	int	log_version;
+@@ -747,6 +739,25 @@ struct sb_feat_args {
+ 	bool	nortalign;
+ };
+ 
++/*
++ * Options configured on the command line.
++ *
++ * This stores all the specific config parameters the user sets on the command
++ * line.  We don't keep flags to indicate what parameters are set - if we need
++ * to check if an option was set on the command line, we check the relevant
++ * entry in the option table which records whether it was specified in the
++ * .seen and .str_seen variables in the table.
++ *
++ * Some parameters are stored as strings for post-parsing after their dependent
++ * options have been resolved (e.g. block size and sector size have been parsed
++ * and validated).
++ *
++ * This allows us to check that values have been set without needing separate
++ * flags for each value, and hence avoids needing to record and check for each
++ * specific option that can set the value later on in the code. In the cases
++ * where we don't have a cli_params structure around, the function cli_opt_set()
++ * function can be used.
++ */
+ struct cli_params {
+ 	int	sectorsize;
+ 	int	blocksize;
 -- 
-Ilya Pronin
+2.16.3
+
