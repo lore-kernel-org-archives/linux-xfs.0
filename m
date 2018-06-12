@@ -1,174 +1,259 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53890 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933673AbeFLAal (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 11 Jun 2018 20:30:41 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v6 0/5] xfsprogs: add mkfs.xfs configuration file parsing support
-Date: Mon, 11 Jun 2018 17:30:34 -0700
-Message-Id: <20180612003039.17154-1-mcgrof@kernel.org>
+Received: from userp2120.oracle.com ([156.151.31.85]:55208 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934806AbeFLWVT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jun 2018 18:21:19 -0400
+Date: Tue, 12 Jun 2018 15:21:16 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 6/7] mkfs: consolidate and streamline config opening
+ function
+Message-ID: <20180612222116.GR22045@magnolia>
+References: <1528831883-21879-1-git-send-email-sandeen@sandeen.net>
+ <1528831883-21879-7-git-send-email-sandeen@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1528831883-21879-7-git-send-email-sandeen@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com, "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-This is v6 series addresses the feedback from the last v5 series. The
-biggest change is for dumping the opterr reset onto the shared helper
-platform_getoptreset(), and addressing the TOCTOU race between stat-ing
-and opening. The rest of the changes are all things which were mentioned
-during review, the details listed below.
+On Tue, Jun 12, 2018 at 02:31:22PM -0500, Eric Sandeen wrote:
+> There was a lot of duplication between open_cli_config and open_config_file
+> which was unnecessary.  Collapse all the logic into one function.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+> ---
+>  mkfs/config.c   | 148 +++++++++++++++++++++-----------------------------------
+>  mkfs/xfs_mkfs.c |   1 -
+>  2 files changed, 56 insertions(+), 93 deletions(-)
+> 
+> diff --git a/mkfs/config.c b/mkfs/config.c
+> index 940a055..173ab9a 100644
+> --- a/mkfs/config.c
+> +++ b/mkfs/config.c
+> @@ -523,60 +523,6 @@ config_stat_check(
+>  	return 0;
+>  }
+>  
+> -/*
+> - * If the file is not found -1 is returned and errno set. Otherwise
+> - * the file descriptor is returned.
+> - */
+> -int
+> -open_cli_config(
+> -	int		dirfd,
+> -	const char	*cli_config_file,
+> -	char		**fpath)
+> -{
+> -	int		fd = -1, len, ret;
+> -	struct stat	st;
+> -
+> -	fd = openat(AT_FDCWD, cli_config_file, O_NOFOLLOW, O_RDONLY);
+> -	if (fd < 0) {
+> -		len = snprintf(*fpath, PATH_MAX, "%s/%s", MKFS_XFS_CONF_DIR,
+> -			       cli_config_file);
+> -		/* Indicates truncation */
+> -		if (len >= PATH_MAX) {
+> -			errno = ENAMETOOLONG;
+> -			goto out;
+> -		}
+> -
+> -		fd = openat(dirfd, cli_config_file, O_NOFOLLOW, O_RDONLY);
+> -		if (fd < 0)
+> -			goto out;
+> -
+> -		ret = fstat(fd, &st);
+> -		if (ret != 0)
+> -			goto err_out_close;
+> -
+> -		ret = config_stat_check(&st);
+> -		if (ret != 0)
+> -			goto err_out_close;
+> -
+> -		goto out;
+> -	}
+> -
+> -	memcpy(*fpath, cli_config_file, strlen(cli_config_file));
+> -
+> -	ret = fstat(fd, &st);
+> -	if (ret != 0)
+> -		goto err_out_close;
+> -
+> -	ret = config_stat_check(&st);
+> -	if (ret != 0)
+> -		goto err_out_close;
+> -out:
+> -	return fd;
+> -err_out_close:
+> -	close(fd);
+> -	return -1;
+> -}
+> -
+>  #ifndef O_PATH
+>  #if defined __alpha__
+>  #define O_PATH		040000000
+> @@ -589,13 +535,26 @@ err_out_close:
+>  #endif
+>  #endif /* O_PATH */
+>  
+> +/*
+> + * Try to open a config file, either cli-specified, or default.
+> + *
+> + * If specified on commandline, search relative to pwd or absolute path.
+> + * If not specified or if above fails, try either cli-spec'd file or "default"
+> + * in MKFS_XFS_CONF_DIR.
+> + *
+> + * If any config file is successfully opened, dft->type is set to reflect the
+> + * source.
+> + *
+> + * If a cli-specified file is not found -1 is returned and errno set. Otherwise
+> + * the file descriptor is returned.
+> + */
+>  int
+>  open_config_file(
+> -	const char			*cli_config_file,
+> +	const char			*config_file,
+>  	struct mkfs_default_params	*dft,
+> -	char				**fpath)	/* path where config is found */
+> +	char				**fpath)	/* path where we found config */
 
-You can also get the code from my kernel.org xfsprogs-dev 20180611-own-parser-v6
-branch [0].
+Move the comment to the pre-function comment and who is expected to get
+rid of it?
 
-Reviews, questions, or rants are greatly appreciated.
+"If a config file is found, its path is returned in **fpath.  This
+memory must be free()'d by the caller."
 
-[0] https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/xfsprogs-dev.git/log/?h=20180611-own-parser-v6
+Otherwise seems fine so far...
 
-Changes on v6:
+--D
 
-- Use -1 return value consistently when returning
-- Fix use of one errno use
-- Remove &confopts_tab[i] check which can never happen
-- Fixed uninitialized return value use on parse_config_stream()
-- Remove extra tag declaration on parse_config_stream()
-- Address the TOCTOU race
-- Move opterr to shorten the first parameter parsing on main(). We now
-  just use platform_getoptreset() to reset the settings so we can parse
-  more.
+>  {
+> -	int				dirfd, fd = -1, len, ret;
+> +	int				dirfd = -1, fd = -1, len, ret = 0;
+>  	struct stat			st;
+>  
+>  	*fpath = malloc(PATH_MAX);
+> @@ -604,57 +563,62 @@ open_config_file(
+>  
+>  	memset(*fpath, 0, PATH_MAX);
+>  
+> -	dirfd = open(MKFS_XFS_CONF_DIR, O_PATH|O_NOFOLLOW|O_DIRECTORY);
+> -
+> -	if (cli_config_file) {
+> -		if (strlen(cli_config_file) > PATH_MAX) {
+> +	/* first try relative to pwd or absolute path to cli configfile */
+> +	if (config_file) {
+> +		dft->type = DEFAULTS_CLI_CONFIG;
+> +		if (strlen(config_file) > PATH_MAX) {
+>  			errno = ENAMETOOLONG;
+>  			goto out;
+>  		}
+> -		fd = open_cli_config(dirfd, cli_config_file, fpath);
+> -		goto out;
+> +		memcpy(*fpath, config_file, strlen(config_file));
+> +		fd = openat(AT_FDCWD, config_file, O_NOFOLLOW, O_RDONLY);
+>  	}
+>  
+> -	fd = openat(dirfd, "default", O_NOFOLLOW, O_RDONLY);
+> -	if (fd < 0)
+> -		goto out;
+> -
+> -	dft->type = DEFAULTS_CONFIG;
+> -
+> -	len = snprintf(*fpath, PATH_MAX, "%s/%s", MKFS_XFS_CONF_DIR, "default");
+> -	/* Indicates truncation */
+> -	if (len >= PATH_MAX) {
+> -		errno = ENAMETOOLONG;
+> -		goto err_out_close;
+> +	/* on failure search for cli config or default file in sysconfdir */
+> +	if (fd < 0) {
+> +		if (!config_file)
+> +			config_file = "default";
 
-Changes on v5:
+Use a symbolic constant instead of "default" here (and elsewhere)?
 
-- We no force sysconfdir=/etc if not set so we also drop the last patch
-  for debian as its no longer needed
-
-- We use config_check_bool() as during review on the last series we
-  failed to pick up on the fact that we were *not* detecting if a value
-  for a field was greater than 1, so we were allowing for instance crc=1
-  although this was silently mapping to crc=1. Note that although this
-  issue was present, the check for conflicts is still in effect and
-  functional. The only reason the issue with bools existed is we cast
-  down the uint64_t to bool and that resolves the issue. For now all
-  subuopt parsers use config_check_bool(). When and if other values are
-  introduced they can change this.
-
-- Use fstat() and openat() as requested instead of the odd checks for
-  first and second characters. This feels nicer.
-
-- Use negative return values and fixate errno in better locations.
-
-- Drop the man pages and yield to Sandeed for that.
-
-- Re-introduce the source type enum
-
-- Dealing with a config file is now split into an open call and a
-  separate parse file. This does read much better now.
-
-- Fix a missing free(line) on the switch for parsing when we don't have
-  an error.
-
-- Adjust random error messages to reflect a bit better what is issue
-  creeped up.
-
-Changes on v4:
-
-- Tons of man page documentation enhancements from Darrick.
-
-- Adjusted a few error code messages/ paths to make more sense as per
-  Darrick's feedback.
-
-Changes on v3:
-
-- Prefix errors on the configuration parsing with config file used and
-  exact line.
-
-- Use uint64_t throughout all parsers as requested.
-
-- Parse the CLI early for -c as I originally had implemented this on v1
-  but now platform_getoptreset() to reset the opts.
-
-- Drop the enum for the source type for the configuration file type,
-  note that since we rely on the stack to set the variables we should
-  then always set the dft.src on main().
-
-- Use getline() for fetching lines as requested
-
-- Add a special iscomment() and isempty() to handle all space and
-  comment parsing. Now when PARSE_INVALID issued we really mean it.
-
-- Embrace latest bikeshed preferences:
-        config.c, config.h, random function names
-
-- Add man pages to be parsed via configure so that @sysconfigdir@ gets
-  properly parsed
-
-- get_confopts() now iterates over the known sections tab and gives you
-  the right struct right away.
-
-- Add respecification checks for a section.
-
-- Add respecification checks for -c, -c is only allowed once.
-
-- Add --sysconfigdir to debian/rules, note that if you *don't* set
-  --sysconfigdir your man pages will end up with ${prefix}. We could
-  add a secondary target parsing just in case, or we can do some hacks
-  with autoconf for this, but I don't think its worth it. Other packages
-  deal with this by having ./configure always run with --sysconfigdir
-  set (see systemd for instance).
-
-- Reduced the number of declared enums, only enums for the config
-  subparams which are currently supported for parsing are declared.
-
-- mkfs.xfs -c foo now will search for $PWD/foo and if that fails the
-  sysconfigdir/mkfs.xfs.d/foo.
-
-- mkfs.xfs -c ../foo works and so should ./foo, etc.
-
-- The MKFS_XFS_CONFIG variable support was dropped in favor or just
-  allowing the user to specify the full path now.
-
-- Embraces xfsprogs coding style, c'est la vie.
-
-Changes on v2:
-
-- Stayed with our own parser as its the smallest and we're willing to
-  maintain it as its simple and clear.
-
-- Use -c for the configuration file, and drop the "type" nomenclature to
-  avoid confusion on the interwebs.
-
-- Start to split files off
-
-- Duplicate a bit of items as suggested at LSFMM for the configuration
-  parser structures. We can later consolidate if we think its really
-  needed, however we want the freedom to change these as we see fit and
-  most importantly keep the code apart.
-
-- Conflict resolution and validation is managed now by piggy backing off
-  of the idea of using the defaults to instantiate CLI parameters. CLI
-  always overrides.
-
-Luis R. Rodriguez (5):
-  mkfs: distinguish between struct sb_feat_args and struct cli_params
-  mkfs: move shared config structs and into their own headers
-  mkfs: replace defaults source with an enum
-  xfsprogs: reset opterr on platform_getoptreset()
-  mkfs.xfs: add configuration file parsing support using our own parser
-
- configure.ac          |   1 +
- include/builddefs.in  |   2 +
- include/darwin.h      |   1 +
- include/gnukfreebsd.h |   1 +
- include/linux.h       |   1 +
- mkfs/Makefile         |   2 +-
- mkfs/config.c         | 670 ++++++++++++++++++++++++++++++++++++++++++++++++++
- mkfs/config.h         | 121 +++++++++
- mkfs/xfs_mkfs.c       | 127 +++++-----
- 9 files changed, 865 insertions(+), 61 deletions(-)
- create mode 100644 mkfs/config.c
- create mode 100644 mkfs/config.h
-
--- 
-2.16.3
-
+> +		len = snprintf(*fpath, PATH_MAX, "%s/%s", MKFS_XFS_CONF_DIR,
+> +				config_file);
+> +		/* Indicates truncation */
+> +		if (len >= PATH_MAX) {
+> +			errno = ENAMETOOLONG;
+> +			goto out;
+> +		}
+> +		dirfd = open(MKFS_XFS_CONF_DIR, O_PATH|O_NOFOLLOW|O_DIRECTORY);
+> +		if (dirfd < 0)
+> +			goto out;
+> +		fd = openat(dirfd, config_file, O_NOFOLLOW, O_RDONLY);
+> +		if (fd < 0)
+> +			goto out;
+> +		if (!strcmp(config_file, "default"))
+> +			dft->type = DEFAULTS_CONFIG;
+>  	}
+>  
+>  	ret = fstat(fd, &st);
+>  	if (ret != 0)
+> -		goto err_out_close;
+> -
+> +		goto out;
+>  	ret = config_stat_check(&st);
+>  	if (ret != 0)
+> -		goto err_out_close;
+> -
+> +		goto out;
+> +	
+>  out:
+> -	if (fd < 0) {
+> -		if (dft->type != DEFAULTS_BUILTIN) {
+> -			fprintf(stderr,
+> +	/* stat check is always fatal; missing is fatal only if cli-specified */
+> +	if (ret ||
+> +	    (fd < 0 && dft->type == DEFAULTS_CLI_CONFIG)) {
+> +		fprintf(stderr,
+>  _("Unable to open %s config file: %s : %s\n"),
+> -				default_type_str(dft->type), *fpath,
+> -				strerror(errno));
+> -			free(*fpath);
+> -			exit(1);
+> -		}
+> +			default_type_str(dft->type), *fpath,
+> +			strerror(errno));
+> +		free(*fpath);
+> +		exit(1);
+>  	}
+> +
+> +	if (ret && fd >= 0)
+> +		close(fd);
+>  	if (dirfd >= 0)
+>  		close(dirfd);
+> -	return fd;
+> -
+> -err_out_close:
+> -	close(fd);
+> -	fd = -1;
+> -	goto out;
+> +	return ret ? ret : fd;
+>  }
+>  
+>  /*
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index be3094b..acd98f6 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -3785,7 +3785,6 @@ _("respecification of configuration not allowed\n"));
+>  				exit(1);
+>  			}
+>  			cli_config_file = optarg;
+> -			dft.type = DEFAULTS_CLI_CONFIG;
+>  			break;
+>  		default:
+>  			continue;
+> -- 
+> 1.8.3.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
