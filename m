@@ -1,259 +1,137 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:49354 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:54610 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935777AbeFNDFS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 13 Jun 2018 23:05:18 -0400
-Subject: Re: [PATCH 4/5] mkfs: emit config file from builtin defaults
-References: <152891829964.3968.4760134019673731615.stgit@magnolia>
- <152891833127.3968.5527165230597489132.stgit@magnolia>
+        id S1753645AbeFLTbt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 12 Jun 2018 15:31:49 -0400
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <8d84e371-7a2d-ce5d-f158-2400fe757c50@sandeen.net>
-Date: Wed, 13 Jun 2018 22:05:17 -0500
-MIME-Version: 1.0
-In-Reply-To: <152891833127.3968.5527165230597489132.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Subject: [PATCH 1/7] mkfs: document the config file option
+Date: Tue, 12 Jun 2018 14:31:17 -0500
+Message-Id: <1528831883-21879-2-git-send-email-sandeen@sandeen.net>
+In-Reply-To: <1528831883-21879-1-git-send-email-sandeen@sandeen.net>
+References: <1528831883-21879-1-git-send-email-sandeen@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On 6/13/18 2:32 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Create a build-time helper program to generate a config file from the
-> built-in defaults.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
+ man/man8/mkfs.xfs.8 | 85 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 85 insertions(+)
 
-Ok.  This is good, but I think we are going ot have to find a way to collapse
-all these structures down, now we've replicated things 3 times (i.e. a new
-boolean/feature will now hit xfs_mkfs.c, config.c, and mkconfig.c ...)
+diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+index 4b8c78c..dcd95ad 100644
+--- a/man/man8/mkfs.xfs.8
++++ b/man/man8/mkfs.xfs.8
+@@ -4,6 +4,10 @@ mkfs.xfs \- construct an XFS filesystem
+ .SH SYNOPSIS
+ .B mkfs.xfs
+ [
++.B \-c
++.I configuration
++] [
++[
+ .B \-b
+ .I block_size_options
+ ] [
+@@ -121,8 +125,40 @@ when parameters are quantified in those units.
+ .PP
+ Many feature options allow an optional argument of 0 or 1, to explicitly
+ disable or enable the functionality.
++.SH DEFAULT VALUES
++.BR mkfs.xfs (8)
++contains built-in default values for every option as described in the sections
++below.
++These built-in defaults may evolve over time as new capabilities are added.
++If the file
++.B /etc/xfs/mkfs/defaults
++exists, it will be parsed to override built-in defaults, and the defaults
++described in sections below may no longer apply.
++.PP
++The
++.B \-c
++option may also be used to specify an alternate configuration file
++as described in the OPTIONS section.
+ .SH OPTIONS
+ .TP
++.BI \-c " configuration"
++This option may be used to specify a configuration file other than
++.B /etc/xfs/mkfs/defaults
++to override selected built-in parameter defaults.
++If
++.B configuration
++is a full pathname or a relative pathname starting with
++.BR \'./\' " or " \'../\'
++then that explicit path to the configuration file will be used.
++Otherwise,
++.BR mkfs.xfs (8)
++will search for
++.B configuration
++first in the current working directory, and then in the
++.B /etc/xfs/mkfs/
++directory.
++See also the CONFIGURATION FILE FORMAT section below.
++.TP
+ .BI \-b " block_size_options"
+ This option specifies the fundamental block size of the filesystem.
+ The valid
+@@ -920,6 +956,55 @@ Do not attempt to discard blocks at mkfs time.
+ .TP
+ .B \-V
+ Prints the version number and exits.
++.SH CONFIGURATION FILE FORMAT
++The optional default configuration file in
++.B /etc/xfs/mkfs/default
++as well as any alternate configuration file specified via the
++.B \-c
++option follow a simple ini-style format as shown below.
++Available options consist of a small subset of the parameters available
++via the
++.BR mkfs.xfs (8)
++command line.
++Currently all default parameters can only be either enabled or disabled,
++with a value of 1 to enable or 0 to disable.
++See below for a list of all supported configuration parameters and their
++current built-in default settings.
++.PP
++.BI [data]
++.br
++.BI noalign=0
++.PP
++.BI [inode]
++.br
++.BI align=1
++.br
++.BI projid32bit=1
++.br
++.BI sparse=0
++.PP
++.BI [log]
++.br
++.BI lazy-count=1
++.PP
++.BI [metadata]
++.br
++.BI crc=1
++.br
++.BI finobt=1
++.br
++.BI rmapbt=0
++.br
++.BI reflink=0
++.PP
++.BI [naming]
++.br
++.BI ftype=1
++.PP
++.BI [rtdev]
++.br
++.BI noalign=0
++.PP
+ .SH SEE ALSO
+ .BR xfs (5),
+ .BR mkfs (8),
+-- 
+1.8.3.1
 
-But this is a step forward for consistency w.r.t. manpage & template file,
-so:
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> ---
->  mkfs/Makefile   |   14 ++++-
->  mkfs/mkconfig.c |  163 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 176 insertions(+), 1 deletion(-)
->  create mode 100644 mkfs/mkconfig.c
-> 
-> 
-> diff --git a/mkfs/Makefile b/mkfs/Makefile
-> index 102f5214..44ddbd30 100644
-> --- a/mkfs/Makefile
-> +++ b/mkfs/Makefile
-> @@ -12,13 +12,24 @@ CFILES = proto.c xfs_mkfs.c config.c defaults.c
->  
->  CFGFILE_CFLAGS = -DMKFS_XFS_CONF_DIR=\"$(PKG_MKFS_CFG_DIR)\" \
->  		 -DMKFS_XFS_DEFAULT_CONFIG=\"$(PKG_MKFS_DEFAULT_CFGFILE)\"
-> +CFGFILE_TEMPLATE = $(PKG_MKFS_DEFAULT_CFGFILE).template
-> +
->  LCFLAGS += $(CFGFILE_CFLAGS)
->  LLDLIBS += $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBRT) $(LIBPTHREAD) $(LIBBLKID) \
->  	$(LIBUUID)
->  LTDEPENDENCIES += $(LIBXFS) $(LIBXCMD) $(LIBFROG)
->  LLDFLAGS = -static-libtool-libs
-> +LDIRT = $(CFGFILE_TEMPLATE)
-> +
-> +default: depend $(CFGFILE_TEMPLATE) $(LTCOMMAND)
-> +
-> +mkconfig: mkconfig.c defaults.c
-> +	@echo "    [CC]     mkconfig"
-> +	$(Q) $(BUILD_CC) $(BUILD_CFLAGS) $(CFGFILE_CFLAGS) -o $@ $^
->  
-> -default: depend $(LTCOMMAND)
-> +$(CFGFILE_TEMPLATE): mkconfig
-> +	@echo "    [GENERATE] $@"
-> +	$(Q) ./mkconfig > $@
->  
->  include $(BUILDRULES)
->  
-> @@ -27,6 +38,7 @@ install: default
->  	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_ROOT_SBIN_DIR)
->  	$(INSTALL) -m 755 -d $(PKG_CFG_DIR)
->  	$(INSTALL) -m 755 -d $(PKG_MKFS_CFG_DIR)
-> +	$(INSTALL) -m 644 $(CFGFILE_TEMPLATE) $(PKG_MKFS_CFG_DIR)
->  install-dev:
->  
->  -include .dep
-> diff --git a/mkfs/mkconfig.c b/mkfs/mkconfig.c
-> new file mode 100644
-> index 00000000..3826b0bf
-> --- /dev/null
-> +++ b/mkfs/mkconfig.c
-> @@ -0,0 +1,163 @@
-> +// SPDX-License-Identifier: GPL-2.0+
-> +/*
-> + * Copyright (C) 2018 Oracle.  All Rights Reserved.
-> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
-> + */
-> +#include "libxfs.h"
-> +#include "config.h"
-> +
-> +enum cfgfile_var_type {
-> +	FV_BOOL = 0
-> +};
-> +
-> +struct subopt_map {
-> +	const char		*suboptname;
-> +	const void		*ptr;
-> +	enum cfgfile_var_type	type;
-> +};
-> +
-> +/* Map all the config file options to their default_features equivalents. */
-> +struct confopts {
-> +	const char		*name;
-> +	struct subopt_map	subopts[CFG_MAX_SUBOPTS];
-> +} confopts_tab[] = {
-> +	{
-> +		.name = "data",
-> +		.subopts = {
-> +			[CFG_D_NOALIGN] = {
-> +				.suboptname	= "noalign",
-> +				.ptr		= &default_features.nodalign,
-> +				.type		= FV_BOOL,
-> +			},
-> +			{NULL}
-> +		},
-> +	},
-> +	{
-> +		.name = "inode",
-> +		.subopts = {
-> +			[CFG_I_ALIGN] = {
-> +				.suboptname	= "align",
-> +				.ptr		= &default_features.inode_align,
-> +				.type		= FV_BOOL,
-> +			},
-> +			[CFG_I_PROJID32BIT] = {
-> +				.suboptname	= "projid32bit",
-> +				.ptr		= &default_features.projid32bit,
-> +				.type		= FV_BOOL,
-> +			},
-> +			[CFG_I_SPINODES] = {
-> +				.suboptname	= "sparse",
-> +				.ptr		= &default_features.spinodes,
-> +				.type		= FV_BOOL,
-> +			},
-> +			{NULL}
-> +		},
-> +	},
-> +	{
-> +		.name = "log",
-> +		.subopts = {
-> +			[CFG_L_LAZYSBCNTR] = {
-> +				.suboptname	= "lazy-count",
-> +				.ptr		= &default_features.lazy_sb_counters,
-> +				.type		= FV_BOOL,
-> +			},
-> +			{NULL}
-> +		},
-> +	},
-> +	{
-> +		.name = "metadata",
-> +		.subopts = {
-> +			[CFG_M_CRC] = {
-> +				.suboptname	= "crc",
-> +				.ptr		= &default_features.crcs_enabled,
-> +				.type		= FV_BOOL,
-> +			},
-> +			[CFG_M_FINOBT] = {
-> +				.suboptname	= "finobt",
-> +				.ptr		= &default_features.finobt,
-> +				.type		= FV_BOOL,
-> +			},
-> +			[CFG_M_RMAPBT] = {
-> +				.suboptname	= "rmapbt",
-> +				.ptr		= &default_features.rmapbt,
-> +				.type		= FV_BOOL,
-> +			},
-> +			[CFG_M_REFLINK] = {
-> +				.suboptname	= "reflink",
-> +				.ptr		= &default_features.reflink,
-> +				.type		= FV_BOOL,
-> +			},
-> +			{NULL}
-> +		},
-> +	},
-> +	{
-> +		.name = "naming",
-> +		.subopts = {
-> +			[CFG_N_FTYPE] = {
-> +				.suboptname	= "ftype",
-> +				.ptr		= &default_features.dirftype,
-> +				.type		= FV_BOOL,
-> +			},
-> +			{NULL}
-> +		},
-> +	},
-> +	{
-> +		.name = "rtdev",
-> +		.subopts = {
-> +			[CFG_R_NOALIGN] = {
-> +				.suboptname	= "noalign",
-> +				.ptr		= &default_features.nortalign,
-> +				.type		= FV_BOOL,
-> +			},
-> +			{NULL}
-> +		},
-> +	},
-> +};
-> +
-> +/* Spit out a config file template. */
-> +int
-> +main(
-> +	int			argc,
-> +	char			*argv[])
-> +{
-> +	struct confopts		*opts = confopts_tab;
-> +	struct subopt_map	*submap;
-> +	int			c;
-> +	unsigned int		i, j;
-> +
-> +	while ((c = getopt(argc, argv, "")) != EOF) {
-> +		switch (c) {
-> +		case '?':
-> +			fprintf(stderr, "Unknown option %c.\n", optopt);
-> +			return 1;
-> +		}
-> +	}
-> +	if (argc - optind != 0) {
-> +		fprintf(stderr, "extra arguments\n");
-> +		return 1;
-> +	}
-> +
-> +	printf("# mkfs.xfs configuration file to collect settings.\n");
-> +	printf("# See the mkfs.xfs(8) manpage for details.\n");
-> +	printf("# Copy this file to %s/%s to override the built-in defaults.\n",
-> +			MKFS_XFS_CONF_DIR, MKFS_XFS_DEFAULT_CONFIG);
-> +
-> +	for (i = 0; i < ARRAY_SIZE(confopts_tab); i++, opts++) {
-> +		if (i > 0)
-> +			printf("\n");
-> +		printf("[%s]\n", opts->name);
-> +		submap = opts->subopts;
-> +		for (j = 0;
-> +		     j < ARRAY_SIZE(opts->subopts) && submap->suboptname;
-> +		     j++, submap++) {
-> +			printf("%s = ", submap->suboptname);
-> +			switch (submap->type) {
-> +			case FV_BOOL:
-> +				printf("%d\n", *((bool *)submap->ptr));
-> +				break;
-> +			}
-> +		}
-> +	}
-> +
-> +	return 0;
-> +}
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
