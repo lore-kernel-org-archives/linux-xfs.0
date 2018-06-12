@@ -1,106 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io0-f193.google.com ([209.85.223.193]:32869 "EHLO
-        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754047AbeFLTDc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jun 2018 15:03:32 -0400
+Received: from sandeen.net ([63.231.237.45]:51910 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753979AbeFLS4I (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 12 Jun 2018 14:56:08 -0400
+Subject: Re: Strange XFS problem
+References: <e462d333d2089a7c3c59e7584fa83f720365fa46.camel@quantentunnel.de>
+ <0ae6d0d5984dcd9c703720bdf41b6da1333267b0.camel@quantentunnel.de>
+ <20180605082917.azuql22j5wnb7wof@odin.usersys.redhat.com>
+ <CAAxjCEwS5mcEMPCqJmUiUParsaG7Fxzf0c0GxkJURv85fYuJyw@mail.gmail.com>
+ <a2dbfee3-f5dc-b4c3-24c9-153fe3304d10@sandeen.net>
+ <CAAxjCExfy6ysDCOPX7G9HNJvqojbgQHu54QwMrcGROhu1JnMLg@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <4cd7af90-6c71-fd1b-edcc-f026331b951c@sandeen.net>
+Date: Tue, 12 Jun 2018 13:56:06 -0500
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.20.1712282315030.1899@nanos>
-References: <20171228152710.891701433@linutronix.de> <20171228153308.286787253@linutronix.de>
- <alpine.DEB.2.20.1712282315030.1899@nanos>
-From: Yang Li <pku.leo@gmail.com>
-Date: Tue, 12 Jun 2018 14:03:31 -0500
-Message-ID: <CADRPPNTK1x_47fnk4Tor5QSPk2DEuEwNUQQ4dGu1P3QkQDyZeQ@mail.gmail.com>
-Subject: Re: [patch V5 01/11] Documentation: Add license-rules.rst to describe
- how to properly identify file licenses
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <CAAxjCExfy6ysDCOPX7G9HNJvqojbgQHu54QwMrcGROhu1JnMLg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Heiko Carstens <heiko.carstens@de.ibm.com>
-
-On Thu, Dec 28, 2017 at 4:17 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
-> On Thu, 28 Dec 2017, Thomas Gleixner wrote:
->
-> Sorry for the spam. I somehow missed to refresh the patch before generating
-> the mbox. Find below the correct version of that one which has ALL braces
-> removed which we don't need.
-
-Hi Thomas,
-
-I'm not sure how we reached the conclusion that we should remove ALL
-braces?  I cannot find related discussion in the archive except for
-the "WITH" case.
-
-This is conflicting with the current SPDX spec at
-https://spdx.org/spdx-specification-21-web-version quoted below and
-also the explenation in your own file.
-
-Quote from SPDX spec 2.1: More expressive composite license
-expressions can be constructed using "OR", "AND", and "WITH" operators
-similar to constructing mathematical expressions using arithmetic
-operators. For the Tag:value format, any license expression that
-consists of more than one license identifier and/or LicenseRef, should
-be encapsulated by parentheses: "( )".
+To: Stefan Ring <stefanrin@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
 
-> +
-> +   A <SPDX License Expression> is either an SPDX short form license
-> +   identifier found on the SPDX License List, or the combination of two
-> +   SPDX short form license identifiers separated by "WITH" when a license
-> +   exception applies. When multiple licenses apply, an expression consists
-> +   of keywords "AND", "OR" separating sub-expressions and surrounded by
-> +   "(", ")" .
 
-Conflicting with the example
+On 6/12/18 1:53 PM, Stefan Ring wrote:
+> On Tue, Jun 5, 2018 at 4:19 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>> In all seriousness, if you would like to update the translations that would
+>> be great.  The Polish translation is the only one that receives regular
+>> updates today.
+> 
+> I've looked into it, but this seems to me like a gargantuan task
+> because there is so much internal inconsistency that I wouldn't even
+> know where to start. "Extent" for example: sometimes this is
+> translated as "Erweiterung" (nonsense, that's extension). Sometimes
+> it's left verbatim. This is what I'd be leaning towards as well. Other
+> times, it got translated as "Ausmaß", which in another context is in
+> fact a translation for "extent" (as in: the extent of a catastrophy),
+> but makes no sense here. Also "Bereich" and "Umfang" are used
+> sometimes, of which only the former makes a slight bit of sense. That
+> in addition to my general under-appreciation of low-level technical
+> translation. They are usually much less comprehensible and the
+> gibberish needs to be translated back anyway in order to any sense of,
+> apart from the fact that the original text is searchable, in stark
+> contrast to the translation.
 
-> +
-> +   License identifiers for licenses like [L]GPL with the 'or later' option
-> +   are constructed by using a "+" for indicating the 'or later' option.::
-> +
-> +      // SPDX-License-Identifier: GPL-2.0+
-> +      // SPDX-License-Identifier: LGPL-2.1+
-> +
-> +   WITH should be used when there is a modifier to a license needed.
-> +   For example, the linux kernel UAPI files use the expression::
-> +
-> +      // SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note
-> +      // SPDX-License-Identifier: GPL-2.0+ WITH Linux-syscall-note
-> +
-> +   Other examples using WITH exceptions found in the kernel are::
-> +
-> +      // SPDX-License-Identifier: GPL-2.0 WITH mif-exception
-> +      // SPDX-License-Identifier: GPL-2.0+ WITH GCC-exception-2.0
-> +
-> +   Exceptions can only be used with particular License identifiers. The
-> +   valid License identifiers are listed in the tags of the exception text
-> +   file. For details see the point `Exceptions`_ in the chapter `License
-> +   identifiers`_.
-> +
-> +   OR should be used if the file is dual licensed and only one license is
-> +   to be selected.  For example, some dtsi files are available under dual
-> +   licenses::
-> +
-> +      // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
-> +
-> +   Examples from the kernel for license expressions in dual licensed files::
-> +
-> +      // SPDX-License-Identifier: GPL-2.0 OR MIT
-> +      // SPDX-License-Identifier: GPL-2.0 OR BSD-2-Clause
-> +      // SPDX-License-Identifier: GPL-2.0 OR Apache-2.0
-> +      // SPDX-License-Identifier: GPL-2.0 OR MPL-1.1
-> +      // SPDX-License-Identifier: (GPL-2.0 WITH Linux-syscall-note) OR MIT
-> +      // SPDX-License-Identifier: GPL-1.0+ OR BSD-3-Clause OR OpenSSL
-> +
-> +   AND should be used if the file has multiple licenses whose terms all
-> +   apply to use the file. For example, if code is inherited from another
-> +   project and permission has been given to put it in the kernel, but the
-> +   original license terms need to remain in effect::
-> +
-> +      // SPDX-License-Identifier: (GPL-2.0 WITH Linux-syscall-note) AND MIT
-> +
-> +   Another other example where both sets of license terms need to be
-> +   adhered to is::
-> +
-> +      // SPDX-License-Identifier: GPL-1.0+ AND LGPL-2.1+
-> +
+Thanks for looking.
+
+Is the German translation bad/embarrassing enough that it should just
+be removed?  Does it do more harm than good at this point?
+
+-Eric
