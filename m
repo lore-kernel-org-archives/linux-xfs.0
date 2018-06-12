@@ -1,68 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53950 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934597AbeFLAan (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 11 Jun 2018 20:30:43 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v6 4/5] xfsprogs: reset opterr on platform_getoptreset()
-Date: Mon, 11 Jun 2018 17:30:38 -0700
-Message-Id: <20180612003039.17154-5-mcgrof@kernel.org>
-In-Reply-To: <20180612003039.17154-1-mcgrof@kernel.org>
-References: <20180612003039.17154-1-mcgrof@kernel.org>
+Received: from userp2120.oracle.com ([156.151.31.85]:47814 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934514AbeFLWJQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jun 2018 18:09:16 -0400
+Date: Tue, 12 Jun 2018 15:09:12 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3/7] mkfs: parameterize sysconfdir in mkfs.xfs.8
+Message-ID: <20180612220912.GN22045@magnolia>
+References: <1528831883-21879-1-git-send-email-sandeen@sandeen.net>
+ <1528831883-21879-4-git-send-email-sandeen@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1528831883-21879-4-git-send-email-sandeen@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com, "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-Setting opterr = 0 is useful if you want to only parse a subset of
-paremeters first. Later you will have to set opterr = 1 again, but
-we already have a platform_getoptreset() and its expected to be used
-in these contexts so just sprinkle it there.
+On Tue, Jun 12, 2018 at 02:31:19PM -0500, Eric Sandeen wrote:
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
----
- include/darwin.h      | 1 +
- include/gnukfreebsd.h | 1 +
- include/linux.h       | 1 +
- 3 files changed, 3 insertions(+)
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-diff --git a/include/darwin.h b/include/darwin.h
-index 2632e1d6f08c..4c23a1a3f739 100644
---- a/include/darwin.h
-+++ b/include/darwin.h
-@@ -79,6 +79,7 @@ static __inline__ void platform_getoptreset(void)
- {
- 	extern int optreset;
- 	optreset = 0;
-+	opterr = 1;
- }
- 
- static __inline__ int platform_uuid_compare(uuid_t *uu1, uuid_t *uu2)
-diff --git a/include/gnukfreebsd.h b/include/gnukfreebsd.h
-index 1db3f4f010e3..26e5d9e08cd5 100644
---- a/include/gnukfreebsd.h
-+++ b/include/gnukfreebsd.h
-@@ -83,6 +83,7 @@ static __inline__ void platform_getoptreset(void)
- {
- 	extern int optind;
- 	optind = 0;
-+	opterr = 1;
- }
- 
- static __inline__ int platform_uuid_compare(uuid_t *uu1, uuid_t *uu2)
-diff --git a/include/linux.h b/include/linux.h
-index 1998941a6df5..a9273239c419 100644
---- a/include/linux.h
-+++ b/include/linux.h
-@@ -88,6 +88,7 @@ static __inline__ void platform_getoptreset(void)
- {
- 	extern int optind;
- 	optind = 0;
-+	opterr = 1;
- }
- 
- static __inline__ int platform_uuid_compare(uuid_t *uu1, uuid_t *uu2)
--- 
-2.16.3
+--D
 
+> ---
+>  man/man8/mkfs.xfs.8.in | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
+> index dcd95ad..8ea2fe9 100644
+> --- a/man/man8/mkfs.xfs.8.in
+> +++ b/man/man8/mkfs.xfs.8.in
+> @@ -131,7 +131,7 @@ contains built-in default values for every option as described in the sections
+>  below.
+>  These built-in defaults may evolve over time as new capabilities are added.
+>  If the file
+> -.B /etc/xfs/mkfs/defaults
+> +.B @sysconfdir@/xfs/mkfs/defaults
+>  exists, it will be parsed to override built-in defaults, and the defaults
+>  described in sections below may no longer apply.
+>  .PP
+> @@ -143,7 +143,7 @@ as described in the OPTIONS section.
+>  .TP
+>  .BI \-c " configuration"
+>  This option may be used to specify a configuration file other than
+> -.B /etc/xfs/mkfs/defaults
+> +.B @sysconfdir@/xfs/mkfs/defaults
+>  to override selected built-in parameter defaults.
+>  If
+>  .B configuration
+> @@ -155,7 +155,7 @@ Otherwise,
+>  will search for
+>  .B configuration
+>  first in the current working directory, and then in the
+> -.B /etc/xfs/mkfs/
+> +.B @sysconfdir@/xfs/mkfs/
+>  directory.
+>  See also the CONFIGURATION FILE FORMAT section below.
+>  .TP
+> @@ -958,7 +958,7 @@ Do not attempt to discard blocks at mkfs time.
+>  Prints the version number and exits.
+>  .SH CONFIGURATION FILE FORMAT
+>  The optional default configuration file in
+> -.B /etc/xfs/mkfs/default
+> +.B @sysconfdir@/xfs/mkfs/default
+>  as well as any alternate configuration file specified via the
+>  .B \-c
+>  option follow a simple ini-style format as shown below.
+> -- 
+> 1.8.3.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
