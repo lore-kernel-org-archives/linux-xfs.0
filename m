@@ -1,135 +1,32 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:38194 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754073AbeFKJKs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 11 Jun 2018 05:10:48 -0400
-From: Zorro Lang <zlang@redhat.com>
-Subject: [PATCH] xfs/170: increase agsize for bigger internal log size
-Date: Mon, 11 Jun 2018 17:10:40 +0800
-Message-Id: <20180611091040.31495-1-zlang@redhat.com>
+Received: from aserp2130.oracle.com ([141.146.126.79]:45830 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933988AbeFLW1M (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jun 2018 18:27:12 -0400
+Date: Tue, 12 Jun 2018 15:27:09 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 0/7] mkfs config support cleanups
+Message-ID: <20180612222709.GT22045@magnolia>
+References: <1528831883-21879-1-git-send-email-sandeen@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1528831883-21879-1-git-send-email-sandeen@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: linux-xfs@vger.kernel.org
 
-xfs/170 always fails on xfs with "-m rmapbt=1,reflink=1", because
-XFS need bigger internal log size if rmapbt and reflink are both
-enabled.
+On Tue, Jun 12, 2018 at 02:31:16PM -0500, Eric Sandeen wrote:
+> Various and sundry cleanups & docs for the mkfs-config branch.
 
-One line of xfs/170 as below:
+Is someone working on fstests for this?
 
-  _test_streams 8 16 4 8 3 0 0
+--D
 
-Refer to common/filestreams, we can see xfs/170 trys to create a
-128M XFS (agcount=8, agsize=16M), then each stream writes
-24M (8 * 3M files), and there're 4 streams.
-
-So the case expects each stream takes 2 AGs, 4 streams takes
-different 8 AGs just enough. But internal log will break this
-balance. For example:
-
-"mkfs.xfs -f -b size=4k -m rmapbt=1,reflink=1 $dev" will take 3075
-4k blocks (12M) by default:
-  meta-data=/dev/mapper/xxxx-xfscratch isize=512    agcount=8, agsize=4096 blks
-  ...
-  log      =internal               bsize=4096   blocks=3075, version=2
-           =                       sectsz=512   sunit=0 blks, lazy-count=1
-  ...
-
-And the internal log is in the 4th AG:
-  # xfs_logprint: /dev/mapper/xxxx-xfscratch
-  xfs_logprint:
-      data device: 0xfd03
-      log device: 0xfd03 daddr: 131120 length: 24600
-  # xfs_db -c "convert daddr 131120 agno" /dev/mapper/xxxx-xfscratch
-  0x4 (4)
-
-Then if one stream write data into AG-1 at first, then turn to AG-4
-after fill 16M agsize. But AG-4 has 12M space for log section, so
-only 4M free space for data. Then this stream have to turn to the
-next AG after fill the 4M space. All these as below:
-
-  # xfs_bmap -vp stream2-dir/*
-  stream2-dir/frame-1:
-   EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
-     0: [0..6143]:       32960..39103      1 (192..6335)       6144 000000
-  ...
-  ...
-  stream2-dir/frame-5:
-   EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
-     0: [0..6143]:       57536..63679      1 (24768..30911)    6144 000000
-  stream2-dir/frame-6:
-   EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
-     0: [0..6143]:       155776..161919    4 (24704..30847)    6144 000000
-  stream2-dir/frame-7:
-   EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
-     0: [0..6143]:       170088..176231    5 (6248..12391)     6144 000000
-  stream2-dir/frame-8:
-   EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
-     0: [0..6143]:       176232..182375    5 (12392..18535)    6144 000000
-
-Later _test_streams maybe takes AG-5 again, and cause two streams use
-AG-5. To avoid this failure, increase the agsize from 16M to 22M,
-others stay the same, each stream still writes 2 AGs. Even internal
-log takes some space from someone AG, left space should be enough to
-write (24 - 22)=2M data.
-
-Signed-off-by: Zorro Lang <zlang@redhat.com>
----
- tests/xfs/170     | 9 ++++-----
- tests/xfs/170.out | 8 ++++----
- 2 files changed, 8 insertions(+), 9 deletions(-)
-
-diff --git a/tests/xfs/170 b/tests/xfs/170
-index f82df69d..eb26764a 100755
---- a/tests/xfs/170
-+++ b/tests/xfs/170
-@@ -42,11 +42,10 @@ _check_filestreams_support || _notrun "filestreams not available"
- _set_stream_timeout_centisecs 3000
- 
- # test streams does a mkfs and mount
--_test_streams 8 16 4 8 3 0 0
--_test_streams 8 16 4 8 3 1 0
--_test_streams 8 16 4 8 3 0 1
--_test_streams 8 16 4 8 3 1 1
-+_test_streams 8 22 4 8 3 0 0
-+_test_streams 8 22 4 8 3 1 0
-+_test_streams 8 22 4 8 3 0 1
-+_test_streams 8 22 4 8 3 1 1
- 
- status=0
- exit
--
-diff --git a/tests/xfs/170.out b/tests/xfs/170.out
-index a1339cec..e71515e9 100644
---- a/tests/xfs/170.out
-+++ b/tests/xfs/170.out
-@@ -1,20 +1,20 @@
- QA output created by 170
--# testing 8 16 4 8 3 0 0 ....
-+# testing 8 22 4 8 3 0 0 ....
- # streaming
- # sync AGs...
- # checking stream AGs...
- + passed, streams are in seperate AGs
--# testing 8 16 4 8 3 1 0 ....
-+# testing 8 22 4 8 3 1 0 ....
- # streaming
- # sync AGs...
- # checking stream AGs...
- + passed, streams are in seperate AGs
--# testing 8 16 4 8 3 0 1 ....
-+# testing 8 22 4 8 3 0 1 ....
- # streaming
- # sync AGs...
- # checking stream AGs...
- + passed, streams are in seperate AGs
--# testing 8 16 4 8 3 1 1 ....
-+# testing 8 22 4 8 3 1 1 ....
- # streaming
- # sync AGs...
- # checking stream AGs...
--- 
-2.14.4
-
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
