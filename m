@@ -1,36 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:42446 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934018AbeFLXR6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 12 Jun 2018 19:17:58 -0400
-Subject: Re: [PATCH 0/7] mkfs config support cleanups
-References: <1528831883-21879-1-git-send-email-sandeen@sandeen.net>
- <20180612222709.GT22045@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <24776c2b-90c3-cffc-ab96-231e1d0ef876@sandeen.net>
-Date: Tue, 12 Jun 2018 18:17:56 -0500
-MIME-Version: 1.0
-In-Reply-To: <20180612222709.GT22045@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:54944 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933498AbeFMLFR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 13 Jun 2018 07:05:17 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id B404387A7C
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Jun 2018 11:05:16 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 9D7BC2026987
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Jun 2018 11:05:16 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2 0/2] xfs: fix buffer delwri queue state race
+Date: Wed, 13 Jun 2018 07:05:14 -0400
+Message-Id: <20180613110516.65494-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
+Hi all,
 
+Here's a v2 of the patches to fix the buffer delwri queue state race
+problem (documented in the patch 2 commit log). This takes a completely
+different approach from v1, as suggested by Dave during review of v1.
 
-On 6/12/18 5:27 PM, Darrick J. Wong wrote:
-> On Tue, Jun 12, 2018 at 02:31:16PM -0500, Eric Sandeen wrote:
->> Various and sundry cleanups & docs for the mkfs-config branch.
-> 
-> Is someone working on fstests for this?
-> 
-> --D
+Patch 1 refactors the buffer submission paths and patch 2 closes the
+race by using synchronous buffer I/O for synchronous delwri queues. This
+survives a full xfstests run as well as lowmem stress testing of
+xfs/305 [1].
 
-Luis said he'd write patches after they're merged which is IMHO
-backwards, but ... consider them merged, hint hint!  ;)
+Thoughts, reviews, flames appreciated.
 
--Eric
+Brian
+
+[1] If run long enough, I do eventually hit some presumably unrelated
+issues that are not currently reproducible simply due to the fact that
+the delwri queue issue is more prevalent.
+
+v2:
+- Implement sync buffer I/O for sync delwri queues instead of buffer
+  wait list stealing.
+v1: https://marc.info/?l=linux-xfs&m=152837528705511&w=2
+
+Brian Foster (2):
+  xfs: refactor buffer submission into a common helper
+  xfs: use sync buffer I/O for sync delwri queue submission
+
+ fs/xfs/xfs_buf.c | 164 +++++++++++++++++++++++------------------------
+ 1 file changed, 79 insertions(+), 85 deletions(-)
+
+-- 
+2.17.1
+
