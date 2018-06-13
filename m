@@ -1,159 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl0-f68.google.com ([209.85.160.68]:39294 "EHLO
-        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965015AbeFOCtJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jun 2018 22:49:09 -0400
-Date: Fri, 15 Jun 2018 10:49:01 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH] generic/223: port t_stripealign to FIEMAP
-Message-ID: <20180615024901.GF2780@desktop>
-References: <20180613225057.GB9432@magnolia>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:5787 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754526AbeFMWC1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jun 2018 18:02:27 -0400
+Date: Thu, 14 Jun 2018 08:02:11 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Strange XFS problem
+Message-ID: <20180613220211.GF10363@dastard>
+References: <e462d333d2089a7c3c59e7584fa83f720365fa46.camel@quantentunnel.de>
+ <0ae6d0d5984dcd9c703720bdf41b6da1333267b0.camel@quantentunnel.de>
+ <20180605082917.azuql22j5wnb7wof@odin.usersys.redhat.com>
+ <CAAxjCEwS5mcEMPCqJmUiUParsaG7Fxzf0c0GxkJURv85fYuJyw@mail.gmail.com>
+ <a2dbfee3-f5dc-b4c3-24c9-153fe3304d10@sandeen.net>
+ <CAAxjCExfy6ysDCOPX7G9HNJvqojbgQHu54QwMrcGROhu1JnMLg@mail.gmail.com>
+ <4cd7af90-6c71-fd1b-edcc-f026331b951c@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20180613225057.GB9432@magnolia>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <4cd7af90-6c71-fd1b-edcc-f026331b951c@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Stefan Ring <stefanrin@gmail.com>, linux-xfs@vger.kernel.org
 
-On Wed, Jun 13, 2018 at 03:50:57PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Jun 12, 2018 at 01:56:06PM -0500, Eric Sandeen wrote:
 > 
-> Since XFS has deprecated FIBMAP on FSDAX filesystems, we can't use
-> FIBMAP to verify stripe alignment anymore.  FIEMAP has existed for quite
-> some time now, so port it to use that instead, and only fall back to
-> FIBMAP if FIEMAP doesn't exist.
 > 
-> Tested-by: ross.zwisler@linux.intel.com
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  src/t_stripealign.c |   72 +++++++++++++++++++++++++++++++++++++++++++--------
->  1 file changed, 61 insertions(+), 11 deletions(-)
+> On 6/12/18 1:53 PM, Stefan Ring wrote:
+> > On Tue, Jun 5, 2018 at 4:19 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+> >> In all seriousness, if you would like to update the translations that would
+> >> be great.  The Polish translation is the only one that receives regular
+> >> updates today.
+> > 
+> > I've looked into it, but this seems to me like a gargantuan task
+> > because there is so much internal inconsistency that I wouldn't even
+> > know where to start. "Extent" for example: sometimes this is
+> > translated as "Erweiterung" (nonsense, that's extension). Sometimes
+> > it's left verbatim. This is what I'd be leaning towards as well. Other
+> > times, it got translated as "Ausmaß", which in another context is in
+> > fact a translation for "extent" (as in: the extent of a catastrophy),
+> > but makes no sense here. Also "Bereich" and "Umfang" are used
+> > sometimes, of which only the former makes a slight bit of sense. That
+> > in addition to my general under-appreciation of low-level technical
+> > translation. They are usually much less comprehensible and the
+> > gibberish needs to be translated back anyway in order to any sense of,
+> > apart from the fact that the original text is searchable, in stark
+> > contrast to the translation.
 > 
-> diff --git a/src/t_stripealign.c b/src/t_stripealign.c
-> index 05ed36b5..690f743a 100644
-> --- a/src/t_stripealign.c
-> +++ b/src/t_stripealign.c
-> @@ -17,8 +17,13 @@
->  #include <fcntl.h>
->  #include <stdio.h>
->  #include <sys/ioctl.h>
-> +#include <linux/fiemap.h>
-> +#include <linux/fs.h>
+> Thanks for looking.
+> 
+> Is the German translation bad/embarrassing enough that it should just
+> be removed?  Does it do more harm than good at this point?
 
-As it requires <linux/fiemap.h> now, looks like we should update
-src/Makefile too to only compile it when "HAVE_FIEMAP" is true.
+Don't distro's have internationalisation teams precisely for doing
+translations of packages? If so, shouldn't we be asking for those
+teams to do translation work?
 
-ifeq ($(HAVE_FIEMAP), true)
-LINUX_TARGETS += fiemap-tester t_stripealign
-endif
+Cheers,
 
-Thanks,
-Eryu
-
-P.S.
-
-LINUX_TARGETS could be cleaned up and merged with TARGETS, it's useless
-to have both TARGETS and LINUX_TARGETS defined now, as we only support
-Linux platform, but that's a different issue.
-
->  
-> -#define FIBMAP          _IO(0x00, 1)    /* bmap access */
-> +#define FIEMAP_EXTENT_ACCEPTABLE	(FIEMAP_EXTENT_LAST | \
-> +		FIEMAP_EXTENT_DATA_ENCRYPTED | FIEMAP_EXTENT_ENCODED | \
-> +		FIEMAP_EXTENT_UNWRITTEN | FIEMAP_EXTENT_MERGED | \
-> +		FIEMAP_EXTENT_SHARED)
->  
->  /*
->   * If only filename given, print first block.
-> @@ -28,11 +33,14 @@
->  
->  int main(int argc, char ** argv)
->  {
-> -	int	fd;
-> -	int	ret;
-> -	int	sunit = 0;	/* in blocks */
-> -	char	*filename;
-> -	unsigned int	block = 0;
-> +	struct stat		sb;
-> +	struct fiemap		*fie;
-> +	struct fiemap_extent	*fe;
-> +	int			fd;
-> +	int			ret;
-> +	int			sunit = 0;	/* in blocks */
-> +	char			*filename;
-> +	unsigned long long	block;
->  
->          if (argc < 3) {
->                  printf("Usage: %s <filename> <sunit in blocks>\n", argv[0]);
-> @@ -48,21 +56,63 @@ int main(int argc, char ** argv)
->                  return 1;
->          }
->  
-> -	ret = ioctl(fd, FIBMAP, &block);
-> -	if (ret < 0) {
-> +	ret = fstat(fd, &sb);
-> +	if (ret) {
-> +		perror(filename);
->  		close(fd);
-> -		perror("fibmap");
->  		return 1;
->  	}
->  
-> -	close(fd);
-> +	fie = calloc(1, sizeof(struct fiemap) + sizeof(struct fiemap_extent));
-> +	if (!fie) {
-> +		close(fd);
-> +		perror("malloc");
-> +		return 1;
-> +	}
-> +	fie->fm_length = 1;
-> +	fie->fm_flags = FIEMAP_FLAG_SYNC;
-> +	fie->fm_extent_count = 1;
-> +
-> +	ret = ioctl(fd, FS_IOC_FIEMAP, fie);
-> +	if (ret < 0) {
-> +		unsigned int	bmap = 0;
-> +
-> +		ret = ioctl(fd, FIBMAP, &bmap);
-> +		if (ret < 0) {
-> +			perror("fibmap");
-> +			free(fie);
-> +			close(fd);
-> +			return 1;
-> +		}
-> +		block = bmap;
-> +		goto check;
-> +	}
->  
-> +
-> +	if (fie->fm_mapped_extents != 1) {
-> +		printf("%s: no extents?\n", filename);
-> +		free(fie);
-> +		close(fd);
-> +		return 1;
-> +	}
-> +	fe = &fie->fm_extents[0];
-> +	if (fe->fe_flags & ~FIEMAP_EXTENT_ACCEPTABLE) {
-> +		printf("%s: bad flags 0x%x\n", filename, fe->fe_flags);
-> +		free(fie);
-> +		close(fd);
-> +		return 1;
-> +	}
-> +
-> +	block = fie->fm_extents[0].fe_physical / sb.st_blksize;
-> +check:
->  	if (block % sunit) {
-> -		printf("%s: Start block %u not multiple of sunit %u\n",
-> +		printf("%s: Start block %llu not multiple of sunit %u\n",
->  			filename, block, sunit);
->  		return 1;
->  	} else
->  		printf("%s: well-aligned\n", filename);
-> +	free(fie);
-> +	close(fd);
->  
->  	return 0;
->  }
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
