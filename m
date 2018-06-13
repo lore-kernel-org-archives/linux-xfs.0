@@ -1,48 +1,123 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:48760 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S935733AbeFNCbf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jun 2018 22:31:35 -0400
-Date: Thu, 14 Jun 2018 12:31:32 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Reading/changing projid of a symlink
-Message-ID: <20180614023132.GI10363@dastard>
-References: <CA+Xn3kwTnu8yd-DCy37323waPgNm0jNuL9NDhz8s8pY023COSw@mail.gmail.com>
- <20180612143608.ok3jqtl3l34vdlpy@odin.usersys.redhat.com>
- <CA+Xn3kyxiOj+irNiqKWQWfJ_aUv1RYFsH+UCnv3gnMuYJ=oUQw@mail.gmail.com>
+Received: from aserp2130.oracle.com ([141.146.126.79]:41524 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934978AbeFMTcH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jun 2018 15:32:07 -0400
+Subject: [PATCH 1/5] mkfs: move build-time defaults to a separate file
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 13 Jun 2018 12:31:52 -0700
+Message-ID: <152891831271.3968.10226627538379732223.stgit@magnolia>
+In-Reply-To: <152891829964.3968.4760134019673731615.stgit@magnolia>
+References: <152891829964.3968.4760134019673731615.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CA+Xn3kyxiOj+irNiqKWQWfJ_aUv1RYFsH+UCnv3gnMuYJ=oUQw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ilya Pronin <ipronin@twitter.com>
-Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jun 12, 2018 at 03:17:27PM -0700, Ilya Pronin wrote:
-> So the only way to remove a symlink from a project is to remove it?
-> 
-> Here's my use case. In Apache Mesos we use XFS project quotas for disk
-> space isolation. Every container sandbox is allocated its own project
-> ID. When the container terminates its project ID is unset from the
-> sandbox and files inside it, and can be used for other containers.
-> Sandboxes of terminated containers stay on the host for some time for
-> debugging, etc. With such approach the inability to remove projid from
-> symlinks presents a small problem: when a project ID is reused for a
-> new container, any lingering symlinks that still have that project ID
-> will contribute to disk usage of the new container. Typically not
-> much, but still that's inaccurate. I guess we'll need to change when
-> we "deallocate" projids.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-XFS has a 32bit project ID space, so you really don't need to reuse
-project IDs at all. Just keep incrementing the new container ID, and
-maybe after a couple of billion project IDs have been consumed you
-can look at reclaiming/recycling/resetting the new ID counter?
+Move the built-in defaults to a separate file so that we can generate
+config files and manpages from them.
 
-Cheers,
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ mkfs/Makefile   |    2 +-
+ mkfs/config.h   |    2 ++
+ mkfs/defaults.c |   27 +++++++++++++++++++++++++++
+ mkfs/xfs_mkfs.c |   19 +------------------
+ 4 files changed, 31 insertions(+), 19 deletions(-)
+ create mode 100644 mkfs/defaults.c
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+diff --git a/mkfs/Makefile b/mkfs/Makefile
+index c7815b3e..5af8a6cc 100644
+--- a/mkfs/Makefile
++++ b/mkfs/Makefile
+@@ -8,7 +8,7 @@ include $(TOPDIR)/include/builddefs
+ LTCOMMAND = mkfs.xfs
+ 
+ HFILES =
+-CFILES = proto.c xfs_mkfs.c config.c
++CFILES = proto.c xfs_mkfs.c config.c defaults.c
+ 
+ LLDLIBS += $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBRT) $(LIBPTHREAD) $(LIBBLKID) \
+ 	$(LIBUUID)
+diff --git a/mkfs/config.h b/mkfs/config.h
+index db22adec..544f8a6d 100644
+--- a/mkfs/config.h
++++ b/mkfs/config.h
+@@ -119,4 +119,6 @@ parse_defaults_file(
+ 	struct mkfs_default_params	*dft,
+ 	const char			*config_file);
+ 
++extern const struct sb_feat_args default_features;
++
+ #endif /* _XFS_MKFS_CONFIG_H */
+diff --git a/mkfs/defaults.c b/mkfs/defaults.c
+new file mode 100644
+index 00000000..6e35a4f9
+--- /dev/null
++++ b/mkfs/defaults.c
+@@ -0,0 +1,27 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Copyright (C) 2018 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ */
++#include "libxfs.h"
++#include "config.h"
++
++/* build time feature defaults */
++const struct sb_feat_args default_features = {
++	.log_version = 2,
++	.attr_version = 2,
++	.dir_version = 2,
++	.inode_align = true,
++	.nci = false,
++	.lazy_sb_counters = true,
++	.projid32bit = true,
++	.crcs_enabled = true,
++	.dirftype = true,
++	.finobt = true,
++	.spinodes = true,
++	.rmapbt = false,
++	.reflink = false,
++	.parent_pointers = false,
++	.nodalign = false,
++	.nortalign = false,
++};
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index d32c2c8e..40a5da12 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -3725,24 +3725,7 @@ main(
+ 		.type = DEFAULTS_BUILTIN,
+ 		.sectorsize = XFS_MIN_SECTORSIZE,
+ 		.blocksize = 1 << XFS_DFL_BLOCKSIZE_LOG,
+-		.sb_feat = {
+-			.log_version = 2,
+-			.attr_version = 2,
+-			.dir_version = 2,
+-			.inode_align = true,
+-			.nci = false,
+-			.lazy_sb_counters = true,
+-			.projid32bit = true,
+-			.crcs_enabled = true,
+-			.dirftype = true,
+-			.finobt = true,
+-			.spinodes = true,
+-			.rmapbt = false,
+-			.reflink = false,
+-			.parent_pointers = false,
+-			.nodalign = false,
+-			.nortalign = false,
+-		},
++		.sb_feat = default_features,
+ 	};
+ 	char			*cli_config_file = NULL;
+ 	char			*config_file = NULL;
+
