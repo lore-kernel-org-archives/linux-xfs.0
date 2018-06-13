@@ -1,139 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:56516 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935719AbeFMWvC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jun 2018 18:51:02 -0400
-Date: Wed, 13 Jun 2018 15:50:57 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] generic/223: port t_stripealign to FIEMAP
-Message-ID: <20180613225057.GB9432@magnolia>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:54894 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933698AbeFMX34 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 13 Jun 2018 19:29:56 -0400
+Date: Wed, 13 Jun 2018 19:29:54 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2 2/2] xfs: use sync buffer I/O for sync delwri queue
+ submission
+Message-ID: <20180613232954.GA4339@bfoster>
+References: <20180613110516.65494-1-bfoster@redhat.com>
+ <20180613110516.65494-3-bfoster@redhat.com>
+ <20180613220807.GG10363@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20180613220807.GG10363@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Jun 14, 2018 at 08:08:07AM +1000, Dave Chinner wrote:
+> On Wed, Jun 13, 2018 at 07:05:16AM -0400, Brian Foster wrote:
+> > If a delwri queue occurs of a buffer that sits on a delwri queue
+> > wait list, the queue sets _XBF_DELWRI_Q without changing the state
+> > of ->b_list. This occurs, for example, if another thread beats the
+> > current delwri waiter thread to the buffer lock after I/O
+> > completion. Once the waiter acquires the lock, it removes the buffer
+> > from the wait list and leaves a buffer with _XBF_DELWRI_Q set but
+> > not populated on a list. This results in a lost buffer submission
+> > and in turn can result in assert failures due to _XBF_DELWRI_Q being
+> > set on buffer reclaim or filesystem lockups if the buffer happens to
+> > cover an item in the AIL.
+> > 
+> > This problem has been reproduced by repeated iterations of xfs/305
+> > on high CPU count (28xcpu) systems with limited memory (~1GB). Dirty
+> > dquot reclaim races with an xfsaild push of a separate dquot backed
+> > by the same buffer such that the buffer sits on the reclaim wait
+> > list at the time xfsaild attempts to queue it. Since the latter
+> > dquot has been flush locked but the underlying buffer not submitted
+> > for I/O, the dquot pins the AIL and causes the filesystem to
+> > livelock.
+> > 
+> > This race is essentially made possible by the buffer lock cycle
+> > involved with waiting on a synchronous delwri queue submission.
+> > Close the race by using synchronous buffer I/O for respective delwri
+> > queue submission. This means the buffer remains locked across the
+> > I/O and so is inaccessible from other contexts while in the
+> > intermediate wait list state. The sync buffer I/O wait mechanism is
+> > factored into a helper such that sync delwri buffer submission and
+> > serialization are batched operations.
+> > 
+> > Designed-by: Dave Chinner <dchinner@redhat.com>
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> 
+> Just something I noticed on a initial brief scan:
+> 
+> > @@ -2013,21 +2017,22 @@ xfs_buf_delwri_submit_buffers(
+> >  		trace_xfs_buf_delwri_split(bp, _RET_IP_);
+> >  
+> >  		/*
+> > -		 * We do all IO submission async. This means if we need
+> > -		 * to wait for IO completion we need to take an extra
+> > -		 * reference so the buffer is still valid on the other
+> > -		 * side. We need to move the buffer onto the io_list
+> > -		 * at this point so the caller can still access it.
+> > +		 * If we have a wait list, each buffer (and associated delwri
+> > +		 * queue reference) transfers to it and is submitted
+> > +		 * synchronously. Otherwise, drop the buffer from the delwri
+> > +		 * queue and submit async.
+> >  		 */
+> >  		bp->b_flags &= ~(_XBF_DELWRI_Q | XBF_WRITE_FAIL);
+> > -		bp->b_flags |= XBF_WRITE | XBF_ASYNC;
+> > +		bp->b_flags |= XBF_WRITE;
+> >  		if (wait_list) {
+> > -			xfs_buf_hold(bp);
+> > +			bp->b_flags &= ~XBF_ASYNC;
+> >  			list_move_tail(&bp->b_list, wait_list);
+> > -		} else
+> > +			__xfs_buf_submit(bp);
+> 
+> We lose a buffer submission tracepoint here.
+> 
 
-Since XFS has deprecated FIBMAP on FSDAX filesystems, we can't use
-FIBMAP to verify stripe alignment anymore.  FIEMAP has existed for quite
-some time now, so port it to use that instead, and only fall back to
-FIBMAP if FIEMAP doesn't exist.
+Yeah, good catch. What do you think about just killing
+trace_xfs_buf_submit_wait() and pushing trace_xfs_buf_submit() down into
+the new helper? It looks like we can already distinguish the io type
+based on ->b_flags.
 
-Tested-by: ross.zwisler@linux.intel.com
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- src/t_stripealign.c |   72 +++++++++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 61 insertions(+), 11 deletions(-)
+Brian
 
-diff --git a/src/t_stripealign.c b/src/t_stripealign.c
-index 05ed36b5..690f743a 100644
---- a/src/t_stripealign.c
-+++ b/src/t_stripealign.c
-@@ -17,8 +17,13 @@
- #include <fcntl.h>
- #include <stdio.h>
- #include <sys/ioctl.h>
-+#include <linux/fiemap.h>
-+#include <linux/fs.h>
- 
--#define FIBMAP          _IO(0x00, 1)    /* bmap access */
-+#define FIEMAP_EXTENT_ACCEPTABLE	(FIEMAP_EXTENT_LAST | \
-+		FIEMAP_EXTENT_DATA_ENCRYPTED | FIEMAP_EXTENT_ENCODED | \
-+		FIEMAP_EXTENT_UNWRITTEN | FIEMAP_EXTENT_MERGED | \
-+		FIEMAP_EXTENT_SHARED)
- 
- /*
-  * If only filename given, print first block.
-@@ -28,11 +33,14 @@
- 
- int main(int argc, char ** argv)
- {
--	int	fd;
--	int	ret;
--	int	sunit = 0;	/* in blocks */
--	char	*filename;
--	unsigned int	block = 0;
-+	struct stat		sb;
-+	struct fiemap		*fie;
-+	struct fiemap_extent	*fe;
-+	int			fd;
-+	int			ret;
-+	int			sunit = 0;	/* in blocks */
-+	char			*filename;
-+	unsigned long long	block;
- 
-         if (argc < 3) {
-                 printf("Usage: %s <filename> <sunit in blocks>\n", argv[0]);
-@@ -48,21 +56,63 @@ int main(int argc, char ** argv)
-                 return 1;
-         }
- 
--	ret = ioctl(fd, FIBMAP, &block);
--	if (ret < 0) {
-+	ret = fstat(fd, &sb);
-+	if (ret) {
-+		perror(filename);
- 		close(fd);
--		perror("fibmap");
- 		return 1;
- 	}
- 
--	close(fd);
-+	fie = calloc(1, sizeof(struct fiemap) + sizeof(struct fiemap_extent));
-+	if (!fie) {
-+		close(fd);
-+		perror("malloc");
-+		return 1;
-+	}
-+	fie->fm_length = 1;
-+	fie->fm_flags = FIEMAP_FLAG_SYNC;
-+	fie->fm_extent_count = 1;
-+
-+	ret = ioctl(fd, FS_IOC_FIEMAP, fie);
-+	if (ret < 0) {
-+		unsigned int	bmap = 0;
-+
-+		ret = ioctl(fd, FIBMAP, &bmap);
-+		if (ret < 0) {
-+			perror("fibmap");
-+			free(fie);
-+			close(fd);
-+			return 1;
-+		}
-+		block = bmap;
-+		goto check;
-+	}
- 
-+
-+	if (fie->fm_mapped_extents != 1) {
-+		printf("%s: no extents?\n", filename);
-+		free(fie);
-+		close(fd);
-+		return 1;
-+	}
-+	fe = &fie->fm_extents[0];
-+	if (fe->fe_flags & ~FIEMAP_EXTENT_ACCEPTABLE) {
-+		printf("%s: bad flags 0x%x\n", filename, fe->fe_flags);
-+		free(fie);
-+		close(fd);
-+		return 1;
-+	}
-+
-+	block = fie->fm_extents[0].fe_physical / sb.st_blksize;
-+check:
- 	if (block % sunit) {
--		printf("%s: Start block %u not multiple of sunit %u\n",
-+		printf("%s: Start block %llu not multiple of sunit %u\n",
- 			filename, block, sunit);
- 		return 1;
- 	} else
- 		printf("%s: well-aligned\n", filename);
-+	free(fie);
-+	close(fd);
- 
- 	return 0;
- }
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
