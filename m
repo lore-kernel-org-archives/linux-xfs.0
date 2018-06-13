@@ -1,98 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53944 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934586AbeFLAam (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 11 Jun 2018 20:30:42 -0400
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v6 3/5] mkfs: replace defaults source with an enum
-Date: Mon, 11 Jun 2018 17:30:37 -0700
-Message-Id: <20180612003039.17154-4-mcgrof@kernel.org>
-In-Reply-To: <20180612003039.17154-1-mcgrof@kernel.org>
-References: <20180612003039.17154-1-mcgrof@kernel.org>
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:46033 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754096AbeFMLHF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jun 2018 07:07:05 -0400
+Received: by mail-wr0-f194.google.com with SMTP id o12-v6so2273508wrm.12
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Jun 2018 04:07:05 -0700 (PDT)
+Date: Wed, 13 Jun 2018 13:07:01 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] xfs: don't call xfs_da_shrink_inode with NULL bp
+Message-ID: <20180613110701.kdnhotwbkwywo5am@odin.usersys.redhat.com>
+References: <7e14237d-cd66-a6bf-7634-f120fcd782b3@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <7e14237d-cd66-a6bf-7634-f120fcd782b3@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Cc: darrick.wong@oracle.com, jack@suse.com, jeffm@suse.com, okurz@suse.com, lpechacek@suse.com, jtulak@redhat.com, "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, "Xu, Wen" <wen.xu@gatech.edu>
 
-Using an enum will let us later just use a switch statement to print
-out the source, this makes sources easier to document, update and
-manage.
+On Fri, Jun 08, 2018 at 11:52:13AM -0500, Eric Sandeen wrote:
+> xfs_attr3_leaf_create may have errored out before instantiating a buffer,
+> for example if the blkno is out of range.  In that case there is no work 
+> to do to remove it, and in fact xfs_da_shrink_inode will lead to an oops
+> if we try.
+> 
+> This also seems to fix a flaw where the original error from
+> xfs_attr3_leaf_create gets overwritten in the cleanup case, and it
+> removes a pointless assignment to bp which isn't used after this.
+> 
+> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=199969
+> Reported-by: Xu, Wen <wen.xu@gatech.edu>
+> Tested-by: Xu, Wen <wen.xu@gatech.edu>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
----
- mkfs/config.h   | 22 +++++++++++++++++++++-
- mkfs/xfs_mkfs.c |  5 +++--
- 2 files changed, 24 insertions(+), 3 deletions(-)
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-diff --git a/mkfs/config.h b/mkfs/config.h
-index e5ea968e2d65..a3c6c99c3064 100644
---- a/mkfs/config.h
-+++ b/mkfs/config.h
-@@ -54,6 +54,17 @@ struct sb_feat_args {
- 	bool	nortalign;
- };
- 
-+/*
-+ * File configuration type settings
-+ *
-+ * These are the different possibilities by which you can end up parsing
-+ * default settings with. DEFAULTS_BUILTIN indicates there was no configuration
-+ * file parsed and we are using the built-in defaults on this code.
-+ */
-+enum default_params_type {
-+	DEFAULTS_BUILTIN = 0,
-+};
-+
- /*
-  * Default filesystem features and configuration values
-  *
-@@ -63,7 +74,7 @@ struct sb_feat_args {
-  * calculations.
-  */
- struct mkfs_default_params {
--	char	*source;	/* where the defaults came from */
-+	enum default_params_type type; /* where the defaults came from */
- 
- 	int	sectorsize;
- 	int	blocksize;
-@@ -75,4 +86,13 @@ struct mkfs_default_params {
- 	struct fsxattr		fsx;
- };
- 
-+static inline const char *default_type_str(enum default_params_type type)
-+{
-+	switch (type) {
-+	case DEFAULTS_BUILTIN:
-+		return _("package built-in definitions");
-+	}
-+	return _("Unkown\n");
-+}
-+
- #endif /* _XFS_MKFS_CONFIG_H */
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 56e869d666be..2e344aa9dad1 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -3722,7 +3722,7 @@ main(
- 
- 	/* build time defaults */
- 	struct mkfs_default_params	dft = {
--		.source = _("package build definitions"),
-+		.type = DEFAULTS_BUILTIN,
- 		.sectorsize = XFS_MIN_SECTORSIZE,
- 		.blocksize = 1 << XFS_DFL_BLOCKSIZE_LOG,
- 		.sb_feat = {
-@@ -3762,7 +3762,8 @@ main(
- 	 * implemented, emit a message to indicate where the defaults being
- 	 * used came from.
- 	 *
--	 * printf(_("Default configuration sourced from %s\n"), dft.source);
-+	 * printf(_("Default configuration sourced from %s\n"),
-+	 *	  default_type_str(dft.type));
- 	 */
- 
- 	/* copy new defaults into CLI parsing structure */
+> 
+> NB: I've not regression tested this yet, just going on the reporter's
+> positive test result.
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index 2135b8e..397699d 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> @@ -803,9 +803,8 @@ STATIC void xfs_attr3_leaf_moveents(struct xfs_da_args *args,
+>  	ASSERT(blkno == 0);
+>  	error = xfs_attr3_leaf_create(args, blkno, &bp);
+>  	if (error) {
+> -		error = xfs_da_shrink_inode(args, 0, bp);
+> -		bp = NULL;
+> -		if (error)
+> +		/* xfs_attr3_leaf_create may not have instantiated a block */
+> +		if (bp && (xfs_da_shrink_inode(args, 0, bp) != 0))
+>  			goto out;
+>  		xfs_idata_realloc(dp, size, XFS_ATTR_FORK);	/* try to put */
+>  		memcpy(ifp->if_u1.if_data, tmpbuffer, size);	/* it back */
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 -- 
-2.16.3
-
+Carlos
