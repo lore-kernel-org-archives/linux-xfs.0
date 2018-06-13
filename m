@@ -1,92 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:51612 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S934675AbeFMAkj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jun 2018 20:40:39 -0400
-Date: Wed, 13 Jun 2018 10:40:36 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Bug report: kernel hangs when mounting a crafted xfs image
-Message-ID: <20180613004036.GE10363@dastard>
-References: <5B6AC96A-7049-48D7-82A1-4AB42322D38B@gatech.edu>
- <20180612224028.GD10363@dastard>
- <86416821-C693-4904-9A6E-E249722E0FA8@gatech.edu>
+Received: from userp2120.oracle.com ([156.151.31.85]:56734 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934978AbeFMTcU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jun 2018 15:32:20 -0400
+Subject: [PATCH 3/5] mkfs: hoist mkfs configfile dir string generation to
+ build system
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 13 Jun 2018 12:32:05 -0700
+Message-ID: <152891832515.3968.9067729692865604405.stgit@magnolia>
+In-Reply-To: <152891829964.3968.4760134019673731615.stgit@magnolia>
+References: <152891829964.3968.4760134019673731615.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <86416821-C693-4904-9A6E-E249722E0FA8@gatech.edu>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Xu, Wen" <wen.xu@gatech.edu>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jun 12, 2018 at 11:30:45PM +0000, Xu, Wen wrote:
-> Hi Dave,
-> 
-> I feel I can get your point a bit. Anyway recently I am fuzzing
-> log section of XFS.  I reported four new bugs to mail list today.
-> They are all memory corruption issues, and I think some of them
-> are enough to be used to perform controlled write and code
-> execution. And I feel these bugs are not complex ones but exist
-> there that cannot simply be covered by CRC protection?
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-If CRCs are enabled, then they fail when there are random bit
-corruptions in the journal. That stops these *storage errors* from
-causing further problems. Fuzzing filesystems was originally
-introduced to modelling storage errors and determine where the
-filesystem error handling was deficient.
+Move the generation of MKFS_XFS_CONF_DIR to the build system; in the
+next few patches we're going to use that to install a (disabled) default
+config file.
 
-However, since "fuzzing" was taken over by the security crowd yeas
-ago, it's all about malicious actors. I don't know how many times I
-have to say "we cannot defend against malicious actors" before that
-sinks in.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ include/builddefs.in |    4 +++-
+ mkfs/Makefile        |    5 +++++
+ mkfs/config.h        |    3 ---
+ 3 files changed, 8 insertions(+), 4 deletions(-)
 
-Again: CRCs are intended to mitigate the threat model of storage
-level errors causing problems, not to defeat /malicious attackers/.
-Modelling malicous users by random bit perturbation without CRC
-protection exposes fundamental architectural trust model
-deficiencies we cannot fix, and playing whack-a-mole with /malicious
-fuzzing/ does not change that. Existing filesystems cannot win that
-game, and it does nothing to protect users against emerging storage
-error models and trends. I care about data storage, not malicious
-actors.
 
-> In my
-> humble opinions, CRC protection mainly hardens the integrity of
-> the metadata instead of eliminating malicious metadata leading to
-> unexpected behaviors.
+diff --git a/include/builddefs.in b/include/builddefs.in
+index e1ee9f7b..06cb71a6 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -65,6 +65,9 @@ PKG_MAN_DIR	= @mandir@
+ PKG_ETC_DIR	= @sysconfdir@
+ PKG_DOC_DIR	= @datadir@/doc/@pkg_name@
+ PKG_LOCALE_DIR	= @datadir@/locale
++PKG_CFG_DIR	= $(PKG_ETC_DIR)/xfs
++PKG_MKFS_CFG_DIR = $(PKG_CFG_DIR)/mkfs
++PKG_MKFS_DEFAULT_CFGFILE = default
+ 
+ CC		= @cc@
+ BUILD_CC	= @BUILD_CC@
+@@ -197,7 +200,6 @@ endif
+ 
+ GCFLAGS = $(DEBUG) \
+ 	  -DVERSION=\"$(PKG_VERSION)\" -DLOCALEDIR=\"$(PKG_LOCALE_DIR)\"  \
+-	  -DROOT_SYSCONFDIR=\"$(PKG_ETC_DIR)\"  \
+ 	  -DPACKAGE=\"$(PKG_NAME)\" -I$(TOPDIR)/include -I$(TOPDIR)/libxfs
+ 
+ ifeq ($(ENABLE_GETTEXT),yes)
+diff --git a/mkfs/Makefile b/mkfs/Makefile
+index 5af8a6cc..102f5214 100644
+--- a/mkfs/Makefile
++++ b/mkfs/Makefile
+@@ -10,6 +10,9 @@ LTCOMMAND = mkfs.xfs
+ HFILES =
+ CFILES = proto.c xfs_mkfs.c config.c defaults.c
+ 
++CFGFILE_CFLAGS = -DMKFS_XFS_CONF_DIR=\"$(PKG_MKFS_CFG_DIR)\" \
++		 -DMKFS_XFS_DEFAULT_CONFIG=\"$(PKG_MKFS_DEFAULT_CFGFILE)\"
++LCFLAGS += $(CFGFILE_CFLAGS)
+ LLDLIBS += $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBRT) $(LIBPTHREAD) $(LIBBLKID) \
+ 	$(LIBUUID)
+ LTDEPENDENCIES += $(LIBXFS) $(LIBXCMD) $(LIBFROG)
+@@ -22,6 +25,8 @@ include $(BUILDRULES)
+ install: default
+ 	$(INSTALL) -m 755 -d $(PKG_ROOT_SBIN_DIR)
+ 	$(LTINSTALL) -m 755 $(LTCOMMAND) $(PKG_ROOT_SBIN_DIR)
++	$(INSTALL) -m 755 -d $(PKG_CFG_DIR)
++	$(INSTALL) -m 755 -d $(PKG_MKFS_CFG_DIR)
+ install-dev:
+ 
+ -include .dep
+diff --git a/mkfs/config.h b/mkfs/config.h
+index f00849e9..69f44405 100644
+--- a/mkfs/config.h
++++ b/mkfs/config.h
+@@ -19,9 +19,6 @@
+ #ifndef _XFS_MKFS_CONFIG_H
+ #define _XFS_MKFS_CONFIG_H
+ 
+-#define MKFS_XFS_CONF_DIR      	ROOT_SYSCONFDIR "/xfs/mkfs"
+-#define MKFS_XFS_DEFAULT_CONFIG	"default"
+-
+ struct fsxattr;
+ 
+ /*
 
-Key word in that statement: /malicious/
-
-> I am not very sure considering my limited
-> knowledge on XFS but you can take a look on them and see the
-> severity of these issues. 
-
-They are input checking problems, and log recovery does not have
-robust input checking. That's why it has CRC protection - so we can
-detect storage based errors to avoid parsing broken input.
-
-We really need to improve the log recovery input verification, but
-it's way more complex than any other subsystem we currently do
-verification on. Untangling that mess will take time, resources and
-careful planning. It's not a fast fix, but we'll get there. In the
-mean time, throwing large numbers of "malicious actor" fuzzer bugs at
-us doesn't help anyone.
-
-If you want to do really useful fuzzing, try finding problems that
-the v5 filesystem CRC checking doesn't detect and protect against.
-That's something directly useful to us and hence XFS users, because
-it indicates structures on disk we haven't fully protected from
-typical storage based bit corruptions.
-
-Put simply: I don't really care about bugs from "malicious image
-corruption". I care about bugs that arise from storage errors that
-we don't already catch, and that means v5 filesystems need to be the
-focus of filesystem fuzzing....
-
-I *really* don't want to have to say this again.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
