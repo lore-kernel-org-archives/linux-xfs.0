@@ -1,270 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:37580 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934625AbeFMABJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Jun 2018 20:01:09 -0400
-Date: Tue, 12 Jun 2018 17:01:05 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 6/7] mkfs: consolidate and streamline config opening
- function
-Message-ID: <20180613000105.GU22045@magnolia>
-References: <1528831883-21879-1-git-send-email-sandeen@sandeen.net>
- <1528831883-21879-7-git-send-email-sandeen@sandeen.net>
- <20180612222116.GR22045@magnolia>
+Received: from sandeen.net ([63.231.237.45]:59876 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933643AbeFMDaZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 12 Jun 2018 23:30:25 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id B4FEC450A83
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Jun 2018 22:30:01 -0500 (CDT)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs mkfs-config branch updated to e6e27ae
+Message-ID: <e59d0963-93ca-5c97-470d-5e137d5b2fba@sandeen.net>
+Date: Tue, 12 Jun 2018 22:30:23 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180612222116.GR22045@magnolia>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="gXrbZho42Gp7Nxifxu9TI0KVcLI7NFMmy"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Jun 12, 2018 at 03:21:16PM -0700, Darrick J. Wong wrote:
-> On Tue, Jun 12, 2018 at 02:31:22PM -0500, Eric Sandeen wrote:
-> > There was a lot of duplication between open_cli_config and open_config_file
-> > which was unnecessary.  Collapse all the logic into one function.
-> > 
-> > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> > Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-> > ---
-> >  mkfs/config.c   | 148 +++++++++++++++++++++-----------------------------------
-> >  mkfs/xfs_mkfs.c |   1 -
-> >  2 files changed, 56 insertions(+), 93 deletions(-)
-> > 
-> > diff --git a/mkfs/config.c b/mkfs/config.c
-> > index 940a055..173ab9a 100644
-> > --- a/mkfs/config.c
-> > +++ b/mkfs/config.c
-> > @@ -523,60 +523,6 @@ config_stat_check(
-> >  	return 0;
-> >  }
-> >  
-> > -/*
-> > - * If the file is not found -1 is returned and errno set. Otherwise
-> > - * the file descriptor is returned.
-> > - */
-> > -int
-> > -open_cli_config(
-> > -	int		dirfd,
-> > -	const char	*cli_config_file,
-> > -	char		**fpath)
-> > -{
-> > -	int		fd = -1, len, ret;
-> > -	struct stat	st;
-> > -
-> > -	fd = openat(AT_FDCWD, cli_config_file, O_NOFOLLOW, O_RDONLY);
-> > -	if (fd < 0) {
-> > -		len = snprintf(*fpath, PATH_MAX, "%s/%s", MKFS_XFS_CONF_DIR,
-> > -			       cli_config_file);
-> > -		/* Indicates truncation */
-> > -		if (len >= PATH_MAX) {
-> > -			errno = ENAMETOOLONG;
-> > -			goto out;
-> > -		}
-> > -
-> > -		fd = openat(dirfd, cli_config_file, O_NOFOLLOW, O_RDONLY);
-> > -		if (fd < 0)
-> > -			goto out;
-> > -
-> > -		ret = fstat(fd, &st);
-> > -		if (ret != 0)
-> > -			goto err_out_close;
-> > -
-> > -		ret = config_stat_check(&st);
-> > -		if (ret != 0)
-> > -			goto err_out_close;
-> > -
-> > -		goto out;
-> > -	}
-> > -
-> > -	memcpy(*fpath, cli_config_file, strlen(cli_config_file));
-> > -
-> > -	ret = fstat(fd, &st);
-> > -	if (ret != 0)
-> > -		goto err_out_close;
-> > -
-> > -	ret = config_stat_check(&st);
-> > -	if (ret != 0)
-> > -		goto err_out_close;
-> > -out:
-> > -	return fd;
-> > -err_out_close:
-> > -	close(fd);
-> > -	return -1;
-> > -}
-> > -
-> >  #ifndef O_PATH
-> >  #if defined __alpha__
-> >  #define O_PATH		040000000
-> > @@ -589,13 +535,26 @@ err_out_close:
-> >  #endif
-> >  #endif /* O_PATH */
-> >  
-> > +/*
-> > + * Try to open a config file, either cli-specified, or default.
-> > + *
-> > + * If specified on commandline, search relative to pwd or absolute path.
-> > + * If not specified or if above fails, try either cli-spec'd file or "default"
-> > + * in MKFS_XFS_CONF_DIR.
-> > + *
-> > + * If any config file is successfully opened, dft->type is set to reflect the
-> > + * source.
-> > + *
-> > + * If a cli-specified file is not found -1 is returned and errno set. Otherwise
-> > + * the file descriptor is returned.
-> > + */
-> >  int
-> >  open_config_file(
-> > -	const char			*cli_config_file,
-> > +	const char			*config_file,
-> >  	struct mkfs_default_params	*dft,
-> > -	char				**fpath)	/* path where config is found */
-> > +	char				**fpath)	/* path where we found config */
-> 
-> Move the comment to the pre-function comment and who is expected to get
-> rid of it?
-> 
-> "If a config file is found, its path is returned in **fpath.  This
-> memory must be free()'d by the caller."
-> 
-> Otherwise seems fine so far...
-> 
-> --D
-> 
-> >  {
-> > -	int				dirfd, fd = -1, len, ret;
-> > +	int				dirfd = -1, fd = -1, len, ret = 0;
-> >  	struct stat			st;
-> >  
-> >  	*fpath = malloc(PATH_MAX);
-> > @@ -604,57 +563,62 @@ open_config_file(
-> >  
-> >  	memset(*fpath, 0, PATH_MAX);
-> >  
-> > -	dirfd = open(MKFS_XFS_CONF_DIR, O_PATH|O_NOFOLLOW|O_DIRECTORY);
-> > -
-> > -	if (cli_config_file) {
-> > -		if (strlen(cli_config_file) > PATH_MAX) {
-> > +	/* first try relative to pwd or absolute path to cli configfile */
-> > +	if (config_file) {
-> > +		dft->type = DEFAULTS_CLI_CONFIG;
-> > +		if (strlen(config_file) > PATH_MAX) {
-> >  			errno = ENAMETOOLONG;
-> >  			goto out;
-> >  		}
-> > -		fd = open_cli_config(dirfd, cli_config_file, fpath);
-> > -		goto out;
-> > +		memcpy(*fpath, config_file, strlen(config_file));
-> > +		fd = openat(AT_FDCWD, config_file, O_NOFOLLOW, O_RDONLY);
-> >  	}
-> >  
-> > -	fd = openat(dirfd, "default", O_NOFOLLOW, O_RDONLY);
-> > -	if (fd < 0)
-> > -		goto out;
-> > -
-> > -	dft->type = DEFAULTS_CONFIG;
-> > -
-> > -	len = snprintf(*fpath, PATH_MAX, "%s/%s", MKFS_XFS_CONF_DIR, "default");
-> > -	/* Indicates truncation */
-> > -	if (len >= PATH_MAX) {
-> > -		errno = ENAMETOOLONG;
-> > -		goto err_out_close;
-> > +	/* on failure search for cli config or default file in sysconfdir */
-> > +	if (fd < 0) {
-> > +		if (!config_file)
-> > +			config_file = "default";
-> 
-> Use a symbolic constant instead of "default" here (and elsewhere)?
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--gXrbZho42Gp7Nxifxu9TI0KVcLI7NFMmy
+Content-Type: multipart/mixed; boundary="D9RPKLQt4To7G8VsVSBN7VyBFzhuvAfzz";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <e59d0963-93ca-5c97-470d-5e137d5b2fba@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs mkfs-config branch updated to e6e27ae
 
-Fix this up, and
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+--D9RPKLQt4To7G8VsVSBN7VyBFzhuvAfzz
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
---D
+Hi folks,
 
-> > +		len = snprintf(*fpath, PATH_MAX, "%s/%s", MKFS_XFS_CONF_DIR,
-> > +				config_file);
-> > +		/* Indicates truncation */
-> > +		if (len >= PATH_MAX) {
-> > +			errno = ENAMETOOLONG;
-> > +			goto out;
-> > +		}
-> > +		dirfd = open(MKFS_XFS_CONF_DIR, O_PATH|O_NOFOLLOW|O_DIRECTORY);
-> > +		if (dirfd < 0)
-> > +			goto out;
-> > +		fd = openat(dirfd, config_file, O_NOFOLLOW, O_RDONLY);
-> > +		if (fd < 0)
-> > +			goto out;
-> > +		if (!strcmp(config_file, "default"))
-> > +			dft->type = DEFAULTS_CONFIG;
-> >  	}
-> >  
-> >  	ret = fstat(fd, &st);
-> >  	if (ret != 0)
-> > -		goto err_out_close;
-> > -
-> > +		goto out;
-> >  	ret = config_stat_check(&st);
-> >  	if (ret != 0)
-> > -		goto err_out_close;
-> > -
-> > +		goto out;
-> > +	
-> >  out:
-> > -	if (fd < 0) {
-> > -		if (dft->type != DEFAULTS_BUILTIN) {
-> > -			fprintf(stderr,
-> > +	/* stat check is always fatal; missing is fatal only if cli-specified */
-> > +	if (ret ||
-> > +	    (fd < 0 && dft->type == DEFAULTS_CLI_CONFIG)) {
-> > +		fprintf(stderr,
-> >  _("Unable to open %s config file: %s : %s\n"),
-> > -				default_type_str(dft->type), *fpath,
-> > -				strerror(errno));
-> > -			free(*fpath);
-> > -			exit(1);
-> > -		}
-> > +			default_type_str(dft->type), *fpath,
-> > +			strerror(errno));
-> > +		free(*fpath);
-> > +		exit(1);
-> >  	}
-> > +
-> > +	if (ret && fd >= 0)
-> > +		close(fd);
-> >  	if (dirfd >= 0)
-> >  		close(dirfd);
-> > -	return fd;
-> > -
-> > -err_out_close:
-> > -	close(fd);
-> > -	fd = -1;
-> > -	goto out;
-> > +	return ret ? ret : fd;
-> >  }
-> >  
-> >  /*
-> > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> > index be3094b..acd98f6 100644
-> > --- a/mkfs/xfs_mkfs.c
-> > +++ b/mkfs/xfs_mkfs.c
-> > @@ -3785,7 +3785,6 @@ _("respecification of configuration not allowed\n"));
-> >  				exit(1);
-> >  			}
-> >  			cli_config_file = optarg;
-> > -			dft.type = DEFAULTS_CLI_CONFIG;
-> >  			break;
-> >  		default:
-> >  			continue;
-> > -- 
-> > 1.8.3.1
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The mkfs-config branch of the xfsprogs repository at:
+
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+
+has just been updated.
+
+This is part of a, uh, sprint(?) to see if we can get configfiles
+ready to go for the 4.17 release.
+
+The new head of the mkfs-config branch is commit:
+
+e6e27ae mkfs: remove gotos in parse_defaults_file
+
+New Commits:
+
+Eric Sandeen (7):
+      [b1bdd71] mkfs: document the config file option
+      [8d0747e] mkfs: move mkfs.xfs.8 to an .in file
+      [ef74ddd] mkfs: parameterize sysconfdir in mkfs.xfs.8
+      [62037d8] mkfs: tidy up whitespace in mkfs/config.c
+      [cf30510] mkfs: properly fix TOCTOU open/stat race in config file h=
+andling
+      [b70f08f] mkfs: consolidate and streamline config opening function
+      [e6e27ae] mkfs: remove gotos in parse_defaults_file
+
+
+Code Diffstat:
+
+ man/man8/Makefile                      |   8 +-
+ man/man8/{mkfs.xfs.8 =3D> mkfs.xfs.8.in} |  85 ++++++++++++
+ mkfs/config.c                          | 233 ++++++++++++++-------------=
+------
+ mkfs/config.h                          |   3 +-
+ mkfs/xfs_mkfs.c                        |  15 ++-
+ 5 files changed, 203 insertions(+), 141 deletions(-)
+ rename man/man8/{mkfs.xfs.8 =3D> mkfs.xfs.8.in} (93%)
+
+
+--D9RPKLQt4To7G8VsVSBN7VyBFzhuvAfzz--
+
+--gXrbZho42Gp7Nxifxu9TI0KVcLI7NFMmy
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAlsgj9AACgkQIK4WkuE9
+3uCyBw//RlivqZh+r8RiuUKkRHYSnHVeSzWd9mVW8ivZNBd71SfnSsVEeWBQInPF
+sY8uZFJL7PFundp0/1fRlpy2ya4IUM/bmOUo6TpBi8BVIj5MeDuiYpajTc1cqCYy
+pOtslaRWwBu19RWjOrpRDEj7azuIA2qUZibf4pmZundCtlE339CNfDdvGRaIQg10
+0pcvTADMJHZWYAdVgai/AdTyiqGsJzu6n5GiofvYulYCYv0vufjPrxmQYeJNrluv
+Hn2OGqMt5VcmSL0D9lnqZxEMEGMmKzriDruTE1lIgH7l7/PfwC9SECHDXHPJylnX
+Dj77nuYXTfxOrE4WFwrglggK3uJEVCwSyaDZYYcIryp/gaEp/1/WamyPIVLgXoAn
+el8gKZxJFr5eF2l1SFydumtL/OfhFrgGEJXmmxN2w9t2drXXBAZ7wOBt5iQWgv5H
+wUL8OHvoGACIzksNmGorWIuy9r/hEHKCwzNQsUgrQtNKPHPiDizUt8hnSZFbPF6C
++Aln5/6HkjY1vJSoi6dUEo75YedSe1zr8cFu7343JrNARtrfNEOK4OOfRJV+OwKE
+4W0MbslgE8M6/Qq/LHZHAir0aT11E8WhCN4RD3VRO6UsA9FM0WW2HP//eb5j2w+R
+KEy6b49tCf27uMLJyTE5QXs2HUPSIxlQWdcN19zerbXp9Ldf1wM=
+=GX2e
+-----END PGP SIGNATURE-----
+
+--gXrbZho42Gp7Nxifxu9TI0KVcLI7NFMmy--
