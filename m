@@ -1,102 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:49618 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965641AbeFOL2U (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 07:28:20 -0400
-Date: Fri, 15 Jun 2018 04:28:20 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 2/2] xfs: use sync buffer I/O for sync delwri queue
- submission
-Message-ID: <20180615112820.GB3230@infradead.org>
-References: <20180613110516.65494-1-bfoster@redhat.com>
- <20180613110516.65494-3-bfoster@redhat.com>
+Received: from mx2.suse.de ([195.135.220.15]:54613 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754713AbeFNSQD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 14 Jun 2018 14:16:03 -0400
+Date: Thu, 14 Jun 2018 20:16:02 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH 0/5] xfsprogs-4.17: mkfs config file enhancements
+Message-ID: <20180614181602.GL5527@wotan.suse.de>
+References: <152891829964.3968.4760134019673731615.stgit@magnolia>
+ <20180614040628.GJ10363@dastard>
+ <c4ae2aaf-ee28-5c35-b3f5-ffe8a57d3c01@sandeen.net>
+ <20180614050844.GK10363@dastard>
+ <20180614062949.GA6825@magnolia>
+ <20180614174640.GE7508@wotan.suse.de>
+ <20180614175909.GB8128@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180613110516.65494-3-bfoster@redhat.com>
+In-Reply-To: <20180614175909.GB8128@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@sandeen.net>, sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On Wed, Jun 13, 2018 at 07:05:16AM -0400, Brian Foster wrote:
-> If a delwri queue occurs of a buffer that sits on a delwri queue
-> wait list, the queue sets _XBF_DELWRI_Q without changing the state
-> of ->b_list. This occurs, for example, if another thread beats the
-> current delwri waiter thread to the buffer lock after I/O
-> completion. Once the waiter acquires the lock, it removes the buffer
-> from the wait list and leaves a buffer with _XBF_DELWRI_Q set but
-> not populated on a list. This results in a lost buffer submission
-> and in turn can result in assert failures due to _XBF_DELWRI_Q being
-> set on buffer reclaim or filesystem lockups if the buffer happens to
-> cover an item in the AIL.
+On Thu, Jun 14, 2018 at 10:59:09AM -0700, Darrick J. Wong wrote:
+> On Thu, Jun 14, 2018 at 07:46:40PM +0200, Luis R. Rodriguez wrote:
+> > a) a set of config files we know should work and ensure they produce the
+> >    same filesystem as if we had used CLI params. We can use xfs_db -c version
+> >    against both filesystems and check that each differences. Since this would
+> >    use the same xfsprogs for the results of a config based filesystem and
+> >    the CLI based filesystem the diff would only generate if there really
+> >    was a change between both runs, and you can use any xfsprogs version
+> >    for it.
 > 
-> This problem has been reproduced by repeated iterations of xfs/305
-> on high CPU count (28xcpu) systems with limited memory (~1GB). Dirty
-> dquot reclaim races with an xfsaild push of a separate dquot backed
-> by the same buffer such that the buffer sits on the reclaim wait
-> list at the time xfsaild attempts to queue it. Since the latter
-> dquot has been flush locked but the underlying buffer not submitted
-> for I/O, the dquot pins the AIL and causes the filesystem to
-> livelock.
-> 
-> This race is essentially made possible by the buffer lock cycle
-> involved with waiting on a synchronous delwri queue submission.
-> Close the race by using synchronous buffer I/O for respective delwri
-> queue submission. This means the buffer remains locked across the
-> I/O and so is inaccessible from other contexts while in the
-> intermediate wait list state. The sync buffer I/O wait mechanism is
-> factored into a helper such that sync delwri buffer submission and
-> serialization are batched operations.
-> 
-> Designed-by: Dave Chinner <dchinner@redhat.com>
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/xfs/xfs_buf.c | 78 +++++++++++++++++++++++++-----------------------
->  1 file changed, 41 insertions(+), 37 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 112999ddb75e..113ab6426a40 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -1530,6 +1530,21 @@ xfs_buf_submit(
->  	xfs_buf_rele(bp);
->  }
->  
-> +/*
-> + * Wait on a sync buffer.
-> + */
-> +static int
-> +xfs_buf_iowait(
-> +	struct xfs_buf	*bp)
-> +{
-> +	/* wait for completion before gathering the error from the buffer */
+> Hmm, just out of curiosity, are there any mkfs cli/config options that
+> do /not/ show up in the output of mkfs and/or 'xfs_db -c info'?
 
-That comments seems to state the obvious based on the function name
-and top of function comment.  I'd just remove it.
+A good question indeed. But more importantly, how could we verify that in
+the future automatically?
 
-> @@ -2013,21 +2017,22 @@ xfs_buf_delwri_submit_buffers(
->  		trace_xfs_buf_delwri_split(bp, _RET_IP_);
->  
->  		/*
-> +		 * If we have a wait list, each buffer (and associated delwri
-> +		 * queue reference) transfers to it and is submitted
-> +		 * synchronously. Otherwise, drop the buffer from the delwri
-> +		 * queue and submit async.
->  		 */
->  		bp->b_flags &= ~(_XBF_DELWRI_Q | XBF_WRITE_FAIL);
-> +		bp->b_flags |= XBF_WRITE;
->  		if (wait_list) {
-> +			bp->b_flags &= ~XBF_ASYNC;
->  			list_move_tail(&bp->b_list, wait_list);
-> +			__xfs_buf_submit(bp);
-> +		} else {
-> +			bp->b_flags |= XBF_ASYNC;
->  			list_del_init(&bp->b_list);
-> +			xfs_buf_submit(bp);
-> +		}
+> >    It does however leave actual expected results on the filesystem up to
+> >    a separate test, it assumes that xfs/191-input-validation is doing its
+> >    job, but word is that needs some love.
+> > 
+> > b) a set of invalid config files and ensure they never work
+> 
+> Agreed, I have some twisty ones of my own, 
 
-Ok, that breaks my idea of just checking XBF_ASYNC in the previous
-reply.  But we could still do that with an explicit flag instead of
-the duplication.
+Great!
+
+> though fixing them requires some amount of sscanf format string tweaking. :)
+
+Oh fun, so we can have the test fail for the get go. Note that at one point
+of parser evolution we may get to the point of actually reaching a point of
+it being more better to just embrace a library. But in terms of size and
+maintenance due to the simplicity of what we need to parse we were just not
+there yet.
+
+Let's recall that sharing the profile parser from e2fsprogs was the smallest,
+but libini_config the more generic one.
+
+If you want to experiment with them:
+
+https://gitlab.com/mcgrof/libini_config-demo.git
+https://gitlab.com/mcgrof/libekprofile.git
+
+> > c) test to ensure cli can override config params
+> 
+> <nod>
+> 
+> > To test that a self generated config file works would be a next step (d),
+> > and I think we can validate it by also making sure it yields the same
+> > filesystem as if we just ran mkfs.xfs with no options, so same strategy
+> > as in a).
+> 
+> Ok, good.  I'd also argue for a test that tries every file in
+> /etc/xfs/mkfs/* to see if mkfs will format the filesystem described in
+> the config file, that way we can pick up all the distro-packaged files.
+
+Works with me, so we have 3 tests in mind already.
+
+> > With proper testing in place for regular configs stuff (the tests
+> > I have to write) and this I see your changes as desirable but I'm
+> > wondering if this should just wait until the next cycle so we at
+> > least have some effort on the testing started already?
+> 
+> Agreed.  I'm scurrying back under the rocks so that Eric can get
+> xfsprogs 4.17 out the door.
+
+OK cool, I'll try to finish the discussed test soon.
+
+> (I'm actually going to go debug some hardware and see if I can get
+> fscounter scrub working.)
+
+:)
+
+  Luis
