@@ -1,51 +1,214 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it0-f65.google.com ([209.85.214.65]:38459 "EHLO
-        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755252AbeFNNEj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jun 2018 09:04:39 -0400
-Received: by mail-it0-f65.google.com with SMTP id v83-v6so8549428itc.3
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Jun 2018 06:04:39 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20180614120457.28285-1-hch@lst.de>
-References: <20180614120457.28285-1-hch@lst.de>
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Date: Thu, 14 Jun 2018 15:04:38 +0200
-Message-ID: <CAHc6FU4nQ562SxepV1=dqcuuuPBWOTXr4sAiY_5H-Z7uOaTNng@mail.gmail.com>
-Subject: Re: iomap preparations for GFS2 v2
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:53068 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1755252AbeFNNnI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 14 Jun 2018 09:43:08 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 77C1F738E7
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Jun 2018 13:43:07 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 617962023450
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Jun 2018 13:43:07 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v3 1/2] xfs: refactor buffer submission into a common helper
+Date: Thu, 14 Jun 2018 09:43:07 -0400
+Message-Id: <20180614134307.26868-1-bfoster@redhat.com>
+In-Reply-To: <20180613110516.65494-2-bfoster@redhat.com>
+References: <20180613110516.65494-2-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, cluster-devel <cluster-devel@redhat.com>, linux-ext4 <linux-ext4@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On 14 June 2018 at 14:04, Christoph Hellwig <hch@lst.de> wrote:
-> Hi all,
->
-> this is a slight rework of the patches from Andreas to prepare for gfs2
-> using the iomap code.
->
-> Note: I'd like to start with an immutable branch for iomap patches in either
-> the XFS tree or a tree of mine at the beginning of the merge window so that
-> we have a common base for the GFS2 and XFS iomap work.
->
-> Changes since v1:
->  - move code to a different spot in iomap.c to prefer for readpages
->    inline data support
->  - add a forward declaration for struct page to iomap.h
->  - fix a typo in the dax_dev/bdev unioning
->  - fix a comment typo
+Sync and async buffer submission both do generally similar things
+with a couple odd exceptions. Refactor the core buffer submission
+code into a common helper to isolate buffer submission from
+completion handling of synchronous buffer I/O.
 
-I saw that you've pushed this onto the gfs2-iomap branch in your xfs
-repository. I've rebased the gfs2 iomap-write branch onto that;
-there's a trivial patch for adding a private pointer to struct iomap
-at the head of that branch that would sense to move to the shared
-branch as well now.
+This patch does not change behavior. It is a step towards support
+for using synchronous buffer I/O via synchronous delwri queue
+submission.
 
-The next step would probably be to start using iomap_readpage /
-iomap_readpages in gfs2 for block size == page size. This requires
-adding inline data support to iomap_readpage which is trivial, but
-because of gfs2's reliance on buffer heads, that alone isn't enough.
+Designed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
 
-Thanks,
-Andreas
+v3:
+- Leave tracepoint in __xfs_buf_submit and kill
+  trace_xfs_buf_submit_wait().
+
+ fs/xfs/xfs_buf.c   | 85 ++++++++++++++++++++--------------------------
+ fs/xfs/xfs_trace.h |  1 -
+ 2 files changed, 37 insertions(+), 49 deletions(-)
+
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index e9c058e3761c..7b0f7c79cd62 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1458,22 +1458,20 @@ _xfs_buf_ioapply(
+  * a call to this function unless the caller holds an additional reference
+  * itself.
+  */
+-void
+-xfs_buf_submit(
++static int
++__xfs_buf_submit(
+ 	struct xfs_buf	*bp)
+ {
+ 	trace_xfs_buf_submit(bp, _RET_IP_);
+ 
+ 	ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
+-	ASSERT(bp->b_flags & XBF_ASYNC);
+ 
+ 	/* on shutdown we stale and complete the buffer immediately */
+ 	if (XFS_FORCED_SHUTDOWN(bp->b_target->bt_mount)) {
+ 		xfs_buf_ioerror(bp, -EIO);
+ 		bp->b_flags &= ~XBF_DONE;
+ 		xfs_buf_stale(bp);
+-		xfs_buf_ioend(bp);
+-		return;
++		return -EIO;
+ 	}
+ 
+ 	if (bp->b_flags & XBF_WRITE)
+@@ -1482,23 +1480,14 @@ xfs_buf_submit(
+ 	/* clear the internal error state to avoid spurious errors */
+ 	bp->b_io_error = 0;
+ 
+-	/*
+-	 * The caller's reference is released during I/O completion.
+-	 * This occurs some time after the last b_io_remaining reference is
+-	 * released, so after we drop our Io reference we have to have some
+-	 * other reference to ensure the buffer doesn't go away from underneath
+-	 * us. Take a direct reference to ensure we have safe access to the
+-	 * buffer until we are finished with it.
+-	 */
+-	xfs_buf_hold(bp);
+-
+ 	/*
+ 	 * Set the count to 1 initially, this will stop an I/O completion
+ 	 * callout which happens before we have started all the I/O from calling
+ 	 * xfs_buf_ioend too early.
+ 	 */
+ 	atomic_set(&bp->b_io_remaining, 1);
+-	xfs_buf_ioacct_inc(bp);
++	if (bp->b_flags & XBF_ASYNC)
++		xfs_buf_ioacct_inc(bp);
+ 	_xfs_buf_ioapply(bp);
+ 
+ 	/*
+@@ -1507,14 +1496,39 @@ xfs_buf_submit(
+ 	 * that we don't return to the caller with completion still pending.
+ 	 */
+ 	if (atomic_dec_and_test(&bp->b_io_remaining) == 1) {
+-		if (bp->b_error)
++		if (bp->b_error || !(bp->b_flags & XBF_ASYNC))
+ 			xfs_buf_ioend(bp);
+ 		else
+ 			xfs_buf_ioend_async(bp);
+ 	}
+ 
+-	xfs_buf_rele(bp);
++	return 0;
++}
++
++void
++xfs_buf_submit(
++	struct xfs_buf	*bp)
++{
++	int		error;
++
++	ASSERT(bp->b_flags & XBF_ASYNC);
++
++	/*
++	 * The caller's reference is released during I/O completion.
++	 * This occurs some time after the last b_io_remaining reference is
++	 * released, so after we drop our Io reference we have to have some
++	 * other reference to ensure the buffer doesn't go away from underneath
++	 * us. Take a direct reference to ensure we have safe access to the
++	 * buffer until we are finished with it.
++	 */
++	xfs_buf_hold(bp);
++
++	error = __xfs_buf_submit(bp);
++	if (error)
++		xfs_buf_ioend(bp);
++
+ 	/* Note: it is not safe to reference bp now we've dropped our ref */
++	xfs_buf_rele(bp);
+ }
+ 
+ /*
+@@ -1526,22 +1540,7 @@ xfs_buf_submit_wait(
+ {
+ 	int		error;
+ 
+-	trace_xfs_buf_submit_wait(bp, _RET_IP_);
+-
+-	ASSERT(!(bp->b_flags & (_XBF_DELWRI_Q | XBF_ASYNC)));
+-
+-	if (XFS_FORCED_SHUTDOWN(bp->b_target->bt_mount)) {
+-		xfs_buf_ioerror(bp, -EIO);
+-		xfs_buf_stale(bp);
+-		bp->b_flags &= ~XBF_DONE;
+-		return -EIO;
+-	}
+-
+-	if (bp->b_flags & XBF_WRITE)
+-		xfs_buf_wait_unpin(bp);
+-
+-	/* clear the internal error state to avoid spurious errors */
+-	bp->b_io_error = 0;
++	ASSERT(!(bp->b_flags & XBF_ASYNC));
+ 
+ 	/*
+ 	 * For synchronous IO, the IO does not inherit the submitters reference
+@@ -1551,20 +1550,9 @@ xfs_buf_submit_wait(
+ 	 */
+ 	xfs_buf_hold(bp);
+ 
+-	/*
+-	 * Set the count to 1 initially, this will stop an I/O completion
+-	 * callout which happens before we have started all the I/O from calling
+-	 * xfs_buf_ioend too early.
+-	 */
+-	atomic_set(&bp->b_io_remaining, 1);
+-	_xfs_buf_ioapply(bp);
+-
+-	/*
+-	 * make sure we run completion synchronously if it raced with us and is
+-	 * already complete.
+-	 */
+-	if (atomic_dec_and_test(&bp->b_io_remaining) == 1)
+-		xfs_buf_ioend(bp);
++	error = __xfs_buf_submit(bp);
++	if (error)
++		goto out;
+ 
+ 	/* wait for completion before gathering the error from the buffer */
+ 	trace_xfs_buf_iowait(bp, _RET_IP_);
+@@ -1572,6 +1560,7 @@ xfs_buf_submit_wait(
+ 	trace_xfs_buf_iowait_done(bp, _RET_IP_);
+ 	error = bp->b_error;
+ 
++out:
+ 	/*
+ 	 * all done now, we can release the hold that keeps the buffer
+ 	 * referenced for the entire IO.
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 972d45d28097..c2d2e513d722 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -310,7 +310,6 @@ DEFINE_BUF_EVENT(xfs_buf_hold);
+ DEFINE_BUF_EVENT(xfs_buf_rele);
+ DEFINE_BUF_EVENT(xfs_buf_iodone);
+ DEFINE_BUF_EVENT(xfs_buf_submit);
+-DEFINE_BUF_EVENT(xfs_buf_submit_wait);
+ DEFINE_BUF_EVENT(xfs_buf_lock);
+ DEFINE_BUF_EVENT(xfs_buf_lock_done);
+ DEFINE_BUF_EVENT(xfs_buf_trylock_fail);
+-- 
+2.17.1
+
