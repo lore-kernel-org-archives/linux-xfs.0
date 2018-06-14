@@ -1,56 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42573 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S964834AbeFNQTS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Jun 2018 12:19:18 -0400
-Date: Thu, 14 Jun 2018 18:19:17 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH 2/2] mkfs: remove notion of config "type"
-Message-ID: <20180614161917.GA7508@wotan.suse.de>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:34977 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752899AbeFNItA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jun 2018 04:49:00 -0400
+Received: by mail-wm0-f68.google.com with SMTP id j15-v6so10446249wme.0
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Jun 2018 01:48:59 -0700 (PDT)
+Date: Thu, 14 Jun 2018 10:48:56 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 1/2] mkfs: initialize return value of parse_config_stream
+ to success
+Message-ID: <20180614084856.fxan3qpyziy55ott@odin.usersys.redhat.com>
 References: <7a30c780-d69a-71d4-d0e6-a5fcefda08e6@sandeen.net>
- <8c2a5a07-5d47-48a1-1593-e93eb0fb883a@sandeen.net>
+ <8318bdfe-ff7b-02b9-414e-f63f9ccdbdbc@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <8c2a5a07-5d47-48a1-1593-e93eb0fb883a@sandeen.net>
+In-Reply-To: <8318bdfe-ff7b-02b9-414e-f63f9ccdbdbc@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <david@fromorbit.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Jun 13, 2018 at 02:37:01PM -0500, Eric Sandeen wrote:
-> -static inline const char *default_type_str(enum default_params_type type)
-> -{
-> -	switch (type) {
-> -	case DEFAULTS_BUILTIN:
-> -		return _("package built-in definitions");
-> -	case DEFAULTS_CONFIG:
-> -		return _("package default config file");
-> -	case DEFAULTS_CLI_CONFIG:
-> -		return _("CLI supplied file");
-> -	}
-> -	return _("Unkown\n");
-> -}
+On Wed, Jun 13, 2018 at 02:34:33PM -0500, Eric Sandeen wrote:
+> Right now the return value is initialized to -1 (failure) and set to zero
+> only if a valid token is found.  However, this means that i.e. a blank
+> or template config file containing only comments will yield failure on
+> parsing.
+>     
+> Initialize to success, and set to failure only if failure occurs.
+>     
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> diff --git a/mkfs/config.c b/mkfs/config.c
+> index 835adc4..1a2cd35 100644
+> --- a/mkfs/config.c
+> +++ b/mkfs/config.c
+> @@ -385,7 +385,7 @@ parse_config_stream(
+>  	const char 			*config_file,
 
->  
-> -	printf(_("Default configuration sourced from %s\n"),
-> -	       default_type_str(dft.type));
+Any chance you could fix this trailing whitespace here while you are touching
+it? :P
 
-The above is really the reason to the type stuff, and it was also why
-I added it, as otherwise we had to allocate a string for the old way of
-supplying that data. So really this is about the *source*, the type enum
-stuff is just a way to implement it without dealing with complexities
-on the string.
 
-So regardless of the type, the question is we are OK to loose the source
-of where the config file info came from. I think it is important information
-to get, but since it is not not information kept on the actual filesystem it is
-information lost, and so really only useful for deployment time. But since
-we are already printing the actual file used... it may suffice, and I do
-agree I this does simplify things more.
+>  	FILE				*fp)
+>  {
+> -	int				ret = -1;
 
-Chinner had added that print line, I just tried to keep it around, if he's cool
-with the removal of the source stuff now, then sure.
 
-  Luis
+Sounds fine
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+> +	int				ret = 0;
+>  	char				*line = NULL;
+>  	ssize_t				linelen;
+>  	size_t				len = 0, lineno = 0;
+> 
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Carlos
