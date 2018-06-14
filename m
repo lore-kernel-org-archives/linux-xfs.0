@@ -1,150 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:55444 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964820AbeFNPav (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jun 2018 11:30:51 -0400
-Date: Thu, 14 Jun 2018 08:30:36 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs/170: increase agsize for bigger internal log size
-Message-ID: <20180614153036.GD9432@magnolia>
-References: <20180611091040.31495-1-zlang@redhat.com>
+Received: from sandeen.net ([63.231.237.45]:41360 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S964834AbeFNWU5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 14 Jun 2018 18:20:57 -0400
+Subject: Re: [PATCH] xfs_repair: Fix root inode's parent when it's bogus for
+ sf directory
+References: <20180614221646.20017-1-mbenatto@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <1ddae533-b040-fdba-4350-01b59d5ddcba@sandeen.net>
+Date: Thu, 14 Jun 2018 17:20:56 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180611091040.31495-1-zlang@redhat.com>
+In-Reply-To: <20180614221646.20017-1-mbenatto@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Zorro Lang <zlang@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Marco Benatto <mbenatto@redhat.com>, linux-xfs@vger.kernel.org
+Cc: sandeen@redhat.com
 
-On Mon, Jun 11, 2018 at 05:10:40PM +0800, Zorro Lang wrote:
-> xfs/170 always fails on xfs with "-m rmapbt=1,reflink=1", because
-> XFS need bigger internal log size if rmapbt and reflink are both
-> enabled.
+On 6/14/18 5:16 PM, Marco Benatto wrote:
+> Currently when root inode is in short-form and its parent ino
+> has an invalid value, process_sf_dir2() ends up not fixing it,
+> because if verify_inum() fails we never get to the next case which
+> would fix the root inode's parent pointer.
 > 
-> One line of xfs/170 as below:
+> This behavior triggers the following assert on process_dir2():
 > 
->   _test_streams 8 16 4 8 3 0 0
+>    ASSERT((ino != mp->m_sb.sb_rootino && ino != *parent) ||
+>         (ino == mp->m_sb.sb_rootino &&
+>         (ino == *parent || need_root_dotdot == 1)));
 > 
-> Refer to common/filestreams, we can see xfs/170 trys to create a
-> 128M XFS (agcount=8, agsize=16M), then each stream writes
-> 24M (8 * 3M files), and there're 4 streams.
+> This patch fixes this behavior by making sure we always properly
+> handle rootino parent pointer in process_sf_dir2()
 > 
-> So the case expects each stream takes 2 AGs, 4 streams takes
-> different 8 AGs just enough. But internal log will break this
-> balance. For example:
-> 
-> "mkfs.xfs -f -b size=4k -m rmapbt=1,reflink=1 $dev" will take 3075
-> 4k blocks (12M) by default:
->   meta-data=/dev/mapper/xxxx-xfscratch isize=512    agcount=8, agsize=4096 blks
->   ...
->   log      =internal               bsize=4096   blocks=3075, version=2
->            =                       sectsz=512   sunit=0 blks, lazy-count=1
->   ...
-> 
-> And the internal log is in the 4th AG:
->   # xfs_logprint: /dev/mapper/xxxx-xfscratch
->   xfs_logprint:
->       data device: 0xfd03
->       log device: 0xfd03 daddr: 131120 length: 24600
->   # xfs_db -c "convert daddr 131120 agno" /dev/mapper/xxxx-xfscratch
->   0x4 (4)
-> 
-> Then if one stream write data into AG-1 at first, then turn to AG-4
-> after fill 16M agsize. But AG-4 has 12M space for log section, so
-> only 4M free space for data. Then this stream have to turn to the
-> next AG after fill the 4M space. All these as below:
-> 
->   # xfs_bmap -vp stream2-dir/*
->   stream2-dir/frame-1:
->    EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
->      0: [0..6143]:       32960..39103      1 (192..6335)       6144 000000
->   ...
->   ...
->   stream2-dir/frame-5:
->    EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
->      0: [0..6143]:       57536..63679      1 (24768..30911)    6144 000000
->   stream2-dir/frame-6:
->    EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
->      0: [0..6143]:       155776..161919    4 (24704..30847)    6144 000000
->   stream2-dir/frame-7:
->    EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
->      0: [0..6143]:       170088..176231    5 (6248..12391)     6144 000000
->   stream2-dir/frame-8:
->    EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
->      0: [0..6143]:       176232..182375    5 (12392..18535)    6144 000000
-> 
-> Later _test_streams maybe takes AG-5 again, and cause two streams use
-> AG-5. To avoid this failure, increase the agsize from 16M to 22M,
-> others stay the same, each stream still writes 2 AGs. Even internal
-> log takes some space from someone AG, left space should be enough to
-> write (24 - 22)=2M data.
+> Signed-off-by: Marco Benatto <mbenatto@redhat.com>
 
-Looks ok and seems to pass... at least until we bump log size again. :/
-Thank you for fixing this!
+This looks correct to me, thanks.
 
---D
+FWIW the problem can be demonstrated by setting the root inode's
+parent to 0 on a freshly made fs:
 
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
+# mkfs.xfs -f -dfile,name=fsfile,size=1g
+# xfs_db -x -c "sb 0" -c "addr rootino" -c "write u3.sfdir3.hdr.parent.i4 0" fsfile
+# xfs_repair fsfile
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+
 > ---
->  tests/xfs/170     | 9 ++++-----
->  tests/xfs/170.out | 8 ++++----
->  2 files changed, 8 insertions(+), 9 deletions(-)
+>  repair/dir2.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
 > 
-> diff --git a/tests/xfs/170 b/tests/xfs/170
-> index f82df69d..eb26764a 100755
-> --- a/tests/xfs/170
-> +++ b/tests/xfs/170
-> @@ -42,11 +42,10 @@ _check_filestreams_support || _notrun "filestreams not available"
->  _set_stream_timeout_centisecs 3000
+> diff --git a/repair/dir2.c b/repair/dir2.c
+> index e162d2b..225f926 100644
+> --- a/repair/dir2.c
+> +++ b/repair/dir2.c
+> @@ -495,8 +495,10 @@ _("corrected entry offsets in directory %" PRIu64 "\n"),
 >  
->  # test streams does a mkfs and mount
-> -_test_streams 8 16 4 8 3 0 0
-> -_test_streams 8 16 4 8 3 1 0
-> -_test_streams 8 16 4 8 3 0 1
-> -_test_streams 8 16 4 8 3 1 1
-> +_test_streams 8 22 4 8 3 0 0
-> +_test_streams 8 22 4 8 3 1 0
-> +_test_streams 8 22 4 8 3 0 1
-> +_test_streams 8 22 4 8 3 1 1
+>  	/*
+>  	 * if parent entry is bogus, null it out.  we'll fix it later .
+> +	 * If the validation fails for the root inode we fix it in
+> +	 * the next else case.
+>  	 */
+> -	if (verify_inum(mp, *parent))  {
+> +	if (verify_inum(mp, *parent) && ino != mp->m_sb.sb_rootino)  {
 >  
->  status=0
->  exit
-> -
-> diff --git a/tests/xfs/170.out b/tests/xfs/170.out
-> index a1339cec..e71515e9 100644
-> --- a/tests/xfs/170.out
-> +++ b/tests/xfs/170.out
-> @@ -1,20 +1,20 @@
->  QA output created by 170
-> -# testing 8 16 4 8 3 0 0 ....
-> +# testing 8 22 4 8 3 0 0 ....
->  # streaming
->  # sync AGs...
->  # checking stream AGs...
->  + passed, streams are in seperate AGs
-> -# testing 8 16 4 8 3 1 0 ....
-> +# testing 8 22 4 8 3 1 0 ....
->  # streaming
->  # sync AGs...
->  # checking stream AGs...
->  + passed, streams are in seperate AGs
-> -# testing 8 16 4 8 3 0 1 ....
-> +# testing 8 22 4 8 3 0 1 ....
->  # streaming
->  # sync AGs...
->  # checking stream AGs...
->  + passed, streams are in seperate AGs
-> -# testing 8 16 4 8 3 1 1 ....
-> +# testing 8 22 4 8 3 1 1 ....
->  # streaming
->  # sync AGs...
->  # checking stream AGs...
-> -- 
-> 2.14.4
+>  		do_warn(
+>  _("bogus .. inode number (%" PRIu64 ") in directory inode %" PRIu64 ", "),
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
