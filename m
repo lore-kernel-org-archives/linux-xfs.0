@@ -1,153 +1,210 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:46942 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965641AbeFOLYP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 07:24:15 -0400
-Date: Fri, 15 Jun 2018 04:24:14 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3 1/2] xfs: refactor buffer submission into a common
- helper
-Message-ID: <20180615112414.GA3230@infradead.org>
-References: <20180613110516.65494-2-bfoster@redhat.com>
- <20180614134307.26868-1-bfoster@redhat.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:34200 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934047AbeFNQlZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jun 2018 12:41:25 -0400
+Date: Thu, 14 Jun 2018 09:41:21 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/2] mkfs: remove notion of config "type"
+Message-ID: <20180614164121.GC6825@magnolia>
+References: <7a30c780-d69a-71d4-d0e6-a5fcefda08e6@sandeen.net>
+ <8c2a5a07-5d47-48a1-1593-e93eb0fb883a@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180614134307.26868-1-bfoster@redhat.com>
+In-Reply-To: <8c2a5a07-5d47-48a1-1593-e93eb0fb883a@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Jun 14, 2018 at 09:43:07AM -0400, Brian Foster wrote:
-> Sync and async buffer submission both do generally similar things
-> with a couple odd exceptions. Refactor the core buffer submission
-> code into a common helper to isolate buffer submission from
-> completion handling of synchronous buffer I/O.
+On Wed, Jun 13, 2018 at 02:37:01PM -0500, Eric Sandeen wrote:
+> The whole notion of a defaults "type" led to complications that
+> simply doesn't need to be there.  If a configuration file was
+> used for defaults, simply state that fact and carry on.
 > 
-> This patch does not change behavior. It is a step towards support
-> for using synchronous buffer I/O via synchronous delwri queue
-> submission.
+> This also removes ambiguity for config files specified as
+> a relative path by calling realpath.
 > 
-> Designed-by: Dave Chinner <dchinner@redhat.com>
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
 > 
-> v3:
-> - Leave tracepoint in __xfs_buf_submit and kill
->   trace_xfs_buf_submit_wait().
+>  config.c   |   20 ++++++++------------
+>  config.h   |   31 -------------------------------
+>  xfs_mkfs.c |    8 +++-----
+>  3 files changed, 11 insertions(+), 48 deletions(-)
 > 
->  fs/xfs/xfs_buf.c   | 85 ++++++++++++++++++++--------------------------
->  fs/xfs/xfs_trace.h |  1 -
->  2 files changed, 37 insertions(+), 49 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index e9c058e3761c..7b0f7c79cd62 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -1458,22 +1458,20 @@ _xfs_buf_ioapply(
->   * a call to this function unless the caller holds an additional reference
->   * itself.
->   */
-> -void
-> -xfs_buf_submit(
-> +static int
-> +__xfs_buf_submit(
->  	struct xfs_buf	*bp)
+> diff --git a/mkfs/config.c b/mkfs/config.c
+> index 1a2cd35..3a389ad 100644
+> --- a/mkfs/config.c
+> +++ b/mkfs/config.c
+> @@ -557,6 +557,7 @@ open_config_file(
 >  {
->  	trace_xfs_buf_submit(bp, _RET_IP_);
+>  	int				dirfd = -1, fd = -1, len, ret = 0;
+>  	struct stat			st;
+> +	bool				cli_specified = false;
 >  
->  	ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
-> -	ASSERT(bp->b_flags & XBF_ASYNC);
+>  	*fpath = malloc(PATH_MAX);
+>  	if (!*fpath)
+> @@ -566,18 +567,19 @@ open_config_file(
 >  
->  	/* on shutdown we stale and complete the buffer immediately */
->  	if (XFS_FORCED_SHUTDOWN(bp->b_target->bt_mount)) {
->  		xfs_buf_ioerror(bp, -EIO);
->  		bp->b_flags &= ~XBF_DONE;
->  		xfs_buf_stale(bp);
-> -		xfs_buf_ioend(bp);
-> -		return;
-> +		return -EIO;
+>  	/* first try relative to pwd or absolute path to cli configfile */
+>  	if (config_file) {
+> -		dft->type = DEFAULTS_CLI_CONFIG;
+> +		cli_specified = true;
+>  		if (strlen(config_file) > PATH_MAX) {
+>  			errno = ENAMETOOLONG;
+>  			goto out;
+>  		}
+> -		memcpy(*fpath, config_file, strlen(config_file));
+> +		/* Get absolute path to this file */
+> +		realpath(config_file, *fpath);
+>  		fd = openat(AT_FDCWD, config_file, O_NOFOLLOW, O_RDONLY);
 >  	}
 >  
->  	if (bp->b_flags & XBF_WRITE)
-> @@ -1482,23 +1480,14 @@ xfs_buf_submit(
->  	/* clear the internal error state to avoid spurious errors */
->  	bp->b_io_error = 0;
+>  	/* on failure search for cli config or default file in sysconfdir */
+>  	if (fd < 0) {
+> -		if (!config_file)
+> +		if (!cli_specified)
+>  			config_file = MKFS_XFS_DEFAULT_CONFIG;
+>  		len = snprintf(*fpath, PATH_MAX, "%s/%s", MKFS_XFS_CONF_DIR,
+>  				config_file);
+> @@ -592,8 +594,6 @@ open_config_file(
+>  		fd = openat(dirfd, config_file, O_NOFOLLOW, O_RDONLY);
+>  		if (fd < 0)
+>  			goto out;
+> -		if (!strcmp(config_file, MKFS_XFS_DEFAULT_CONFIG))
+> -			dft->type = DEFAULTS_CONFIG;
+>  	}
 >  
-> -	/*
-> -	 * The caller's reference is released during I/O completion.
-> -	 * This occurs some time after the last b_io_remaining reference is
-> -	 * released, so after we drop our Io reference we have to have some
-> -	 * other reference to ensure the buffer doesn't go away from underneath
-> -	 * us. Take a direct reference to ensure we have safe access to the
-> -	 * buffer until we are finished with it.
-> -	 */
-> -	xfs_buf_hold(bp);
+>  	ret = fstat(fd, &st);
+> @@ -606,11 +606,9 @@ open_config_file(
+>  out:
+>  	/* stat check is always fatal; missing is fatal only if cli-specified */
+>  	if (ret ||
+> -	    (fd < 0 && dft->type == DEFAULTS_CLI_CONFIG)) {
+> -		fprintf(stderr,
+> -_("Unable to open %s config file: %s : %s\n"),
+> -			default_type_str(dft->type), *fpath,
+> -			strerror(errno));
+> +	    (fd < 0 && cli_specified)) {
+> +		fprintf(stderr, _("Unable to open config file: %s : %s\n"),
+> +			*fpath, strerror(errno));
+>  		free(*fpath);
+>  		exit(1);
+>  	}
+> @@ -645,7 +643,5 @@ parse_defaults_file(
+>  		return -1;
+>  	}
+>  
+> -	printf(_("config-file=%s\n"), config_file);
 > -
->  	/*
->  	 * Set the count to 1 initially, this will stop an I/O completion
->  	 * callout which happens before we have started all the I/O from calling
->  	 * xfs_buf_ioend too early.
->  	 */
->  	atomic_set(&bp->b_io_remaining, 1);
-> -	xfs_buf_ioacct_inc(bp);
-> +	if (bp->b_flags & XBF_ASYNC)
-> +		xfs_buf_ioacct_inc(bp);
->  	_xfs_buf_ioapply(bp);
+>  	return 0;
+>  }
+> diff --git a/mkfs/config.h b/mkfs/config.h
+> index db22ade..f4af2c7 100644
+> --- a/mkfs/config.h
+> +++ b/mkfs/config.h
+> @@ -58,22 +58,6 @@ struct sb_feat_args {
+>  };
 >  
->  	/*
-> @@ -1507,14 +1496,39 @@ xfs_buf_submit(
->  	 * that we don't return to the caller with completion still pending.
->  	 */
->  	if (atomic_dec_and_test(&bp->b_io_remaining) == 1) {
-> -		if (bp->b_error)
-> +		if (bp->b_error || !(bp->b_flags & XBF_ASYNC))
->  			xfs_buf_ioend(bp);
->  		else
->  			xfs_buf_ioend_async(bp);
+>  /*
+> - * File configuration type settings
+> - *
+> - * These are the different possibilities by which you can end up parsing
+> - * default settings with. DEFAULTS_BUILTIN indicates there was no configuration
+> - * file parsed and we are using the built-in defaults on this code.
+> - * DEFAULTS_CONFIG means the default configuration file was found and used.
+> - * DEFAULTS_CLI_CONFIG means the user asked for a custom configuration type
+> - * through the command line interface and it was used.
+> - */
+> -enum default_params_type {
+> -	DEFAULTS_BUILTIN = 0,
+> -	DEFAULTS_CONFIG,
+> -	DEFAULTS_CLI_CONFIG,
+> -};
+> -
+> -/*
+>   * Default filesystem features and configuration values
+>   *
+>   * This structure contains the default mkfs values that are to be used when
+> @@ -82,8 +66,6 @@ enum default_params_type {
+>   * calculations.
+>   */
+>  struct mkfs_default_params {
+> -	enum default_params_type type; /* where the defaults came from */
+> -
+>  	int	sectorsize;
+>  	int	blocksize;
+>  
+> @@ -94,19 +76,6 @@ struct mkfs_default_params {
+>  	struct fsxattr		fsx;
+>  };
+>  
+> -static inline const char *default_type_str(enum default_params_type type)
+> -{
+> -	switch (type) {
+> -	case DEFAULTS_BUILTIN:
+> -		return _("package built-in definitions");
+> -	case DEFAULTS_CONFIG:
+> -		return _("package default config file");
+> -	case DEFAULTS_CLI_CONFIG:
+> -		return _("CLI supplied file");
+> -	}
+> -	return _("Unkown\n");
+> -}
+> -
+>  int
+>  open_config_file(
+>  	const char			*cli_config_file,
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index d32c2c8..56e5f03 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -3722,7 +3722,6 @@ main(
+>  
+>  	/* build time defaults */
+>  	struct mkfs_default_params	dft = {
+> -		.type = DEFAULTS_BUILTIN,
+>  		.sectorsize = XFS_MIN_SECTORSIZE,
+>  		.blocksize = 1 << XFS_DFL_BLOCKSIZE_LOG,
+>  		.sb_feat = {
+> @@ -3796,19 +3795,18 @@ _("respecification of configuration not allowed\n"));
+>  		ret = parse_defaults_file(fd, &dft, config_file);
+>  		if (ret) {
+>  			fprintf(stderr,
+> -_("Error parsing %s config file: %s : %s\n"),
+> -				default_type_str(dft.type),
+> +_("Error parsing config file: %s : %s\n"),
+>  				config_file, strerror(errno));
+>  			free(config_file);
+>  			close(fd);
+>  			exit(1);
+>  		}
+> +		printf(_("Configuration file used for defaults: %s\n"),
+
+_("EXPERIMENTAL configuration file used for defaults: %s\n")
+
+With that,
+
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+
+> +			config_file);
+>  		free(config_file);
+>  		close(fd);
 >  	}
 >  
-> -	xfs_buf_rele(bp);
-> +	return 0;
-> +}
-> +
-> +void
-> +xfs_buf_submit(
-> +	struct xfs_buf	*bp)
-> +{
-> +	int		error;
-> +
-> +	ASSERT(bp->b_flags & XBF_ASYNC);
-> +
-> +	/*
-> +	 * The caller's reference is released during I/O completion.
-> +	 * This occurs some time after the last b_io_remaining reference is
-> +	 * released, so after we drop our Io reference we have to have some
-> +	 * other reference to ensure the buffer doesn't go away from underneath
-> +	 * us. Take a direct reference to ensure we have safe access to the
-> +	 * buffer until we are finished with it.
-> +	 */
-> +	xfs_buf_hold(bp);
-> +
-> +	error = __xfs_buf_submit(bp);
-> +	if (error)
-> +		xfs_buf_ioend(bp);
-> +
-
-It seems like we could simple throw in a:
-
-	if (!(bp->b_flags & XBF_ASYNC)) {
-		trace_xfs_buf_iowait(bp, _RET_IP_);
-		wait_for_completion(&bp->b_iowait);
-		trace_xfs_buf_iowait_done(bp, _RET_IP_);
-		error = bp->b_error;;
-	}
-
-here and get ret rid of the separate xfs_buf_submit_wait function
-entirely.  Or even factor the above out into a nice little helper.
-
-Otherwise this looks fine to me:
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+> -	printf(_("Default configuration sourced from %s\n"),
+> -	       default_type_str(dft.type));
+>  
+>  	/*
+>  	 * Done parsing defaults now, so memcpy defaults into CLI
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
