@@ -1,52 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:36724 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936183AbeFOI52 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 04:57:28 -0400
-Received: by mail-wr0-f195.google.com with SMTP id f16-v6so9150483wrm.3
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Jun 2018 01:57:28 -0700 (PDT)
-Date: Fri, 15 Jun 2018 10:57:24 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: Reading/changing projid of a symlink
-Message-ID: <20180615085724.pkpfpmuas5ujmcbw@odin.usersys.redhat.com>
-References: <CA+Xn3kwTnu8yd-DCy37323waPgNm0jNuL9NDhz8s8pY023COSw@mail.gmail.com>
- <20180612143608.ok3jqtl3l34vdlpy@odin.usersys.redhat.com>
- <CA+Xn3kyxiOj+irNiqKWQWfJ_aUv1RYFsH+UCnv3gnMuYJ=oUQw@mail.gmail.com>
- <20180613094048.6becmt42cvdhvg66@odin.usersys.redhat.com>
- <CA+Xn3kzsrqjNH2yXdtfsRuiCBfvX2GSWOW2SaLPL4h1PmQsGBg@mail.gmail.com>
- <20180615070829.m5ligybzlods4l5r@odin.usersys.redhat.com>
- <20180615071236.GA17459@infradead.org>
+Received: from sandeen.net ([63.231.237.45]:54758 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751287AbeFNEXK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 14 Jun 2018 00:23:10 -0400
+Subject: Re: [PATCH 0/5] xfsprogs-4.17: mkfs config file enhancements
+References: <152891829964.3968.4760134019673731615.stgit@magnolia>
+ <20180614040628.GJ10363@dastard>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <c4ae2aaf-ee28-5c35-b3f5-ffe8a57d3c01@sandeen.net>
+Date: Wed, 13 Jun 2018 23:23:09 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180615071236.GA17459@infradead.org>
+In-Reply-To: <20180614040628.GJ10363@dastard>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Ilya Pronin <ipronin@twitter.com>, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On Fri, Jun 15, 2018 at 12:12:36AM -0700, Christoph Hellwig wrote:
-> On Fri, Jun 15, 2018 at 09:08:29AM +0200, Carlos Maiolino wrote:
-> > As I said before, IMHO, I believe the way you are using project quotas is wrong.
-> > Project quotas is supposed to be used on a sub-tree based granularity, not on a
-> > file based granularity. But again, that's just my opinion.
-> 
-> That is not true.  The per-file usage was indeed the original use
-> case.  The tree quoats implemented using the inheritance were added
-> much latter.  They are the common use case now, but that doesn't make
-> other use cases wrong.
+On 6/13/18 11:06 PM, Dave Chinner wrote:
+> With this change, we'll have code to maintain it to ensure that the
+> file gets updated properly, and it will probably take more time and
+> effort to validate that the generated file is correct (and debug if
+> it's not!) compared to the 30s it will take to hand edit the
+> template file to change or add a new default...
 
-Thanks for the info. I always thought project quotas were designed for
-directory-tree granularity, and user/group quotas as a file-based granularity.
-But, out of curiosity, if this is not a stupid question...
-If project quotas was initially designed as a per-file usage use case in mind,
-what would make it different from group quota for example?
+Well, yeah.  /if/ we need a template, as well as text in a man page,
+then this gets it down to editing 1 file instead of two, I guess.
+But it really seems like we need to rethink these structures to get it
+all tied together, not requiring 2 or 3 manual updates across several files.
+It's bound to get out of sync.  I guess that can wait, but right now this
+dispersal isn't good.
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I'm also not convinced we should ship a "default.template" file,
+> either.  I'd much prefer we ship a real config file with all the
+> options defined but commented out as a "start here template".
 
--- 
-Carlos
+As the code stands today, if a 100% commented-out config file
+exists, then mkfs will tell you that it's overriding built-in
+defaults with the config file which contains ... nothing.
+If we ship such a thing by default, that's what will happen by
+default.
+
+(Actually today it fails to parse and errors out but a patch
+to fix that is on the list).
+
+I guess we could behave as if "no config file" if a config file
+contained no parseable tokens ... but that gets weird too.
+
+Putting a blank config file in place to be parsed by default
+is messy, so a .template approach seems reasonable to me, if we
+need such a thing at all.
+
+-Eric
