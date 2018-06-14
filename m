@@ -1,72 +1,155 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:36344 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756127AbeFONCT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 09:02:19 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: stop using buffer heads in xfs v6
-Date: Fri, 15 Jun 2018 15:01:45 +0200
-Message-Id: <20180615130209.1970-1-hch@lst.de>
+Received: from mx2.suse.de ([195.135.220.15]:50537 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S964963AbeFNRqm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 14 Jun 2018 13:46:42 -0400
+Date: Thu, 14 Jun 2018 19:46:40 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH 0/5] xfsprogs-4.17: mkfs config file enhancements
+Message-ID: <20180614174640.GE7508@wotan.suse.de>
+References: <152891829964.3968.4760134019673731615.stgit@magnolia>
+ <20180614040628.GJ10363@dastard>
+ <c4ae2aaf-ee28-5c35-b3f5-ffe8a57d3c01@sandeen.net>
+ <20180614050844.GK10363@dastard>
+ <20180614062949.GA6825@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20180614062949.GA6825@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@sandeen.net>, sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-Hi all,
+On Wed, Jun 13, 2018 at 11:29:49PM -0700, Darrick J. Wong wrote:
+> On Thu, Jun 14, 2018 at 03:08:44PM +1000, Dave Chinner wrote:
+> > On Wed, Jun 13, 2018 at 11:23:09PM -0500, Eric Sandeen wrote:
+> > > On 6/13/18 11:06 PM, Dave Chinner wrote:
+> > > > With this change, we'll have code to maintain it to ensure that the
+> > > > file gets updated properly, and it will probably take more time and
+> > > > effort to validate that the generated file is correct (and debug if
+> > > > it's not!) compared to the 30s it will take to hand edit the
+> > > > template file to change or add a new default...
 
-this series adds support for buffered writes without buffer heads to
-the iomap and XFS code.
+If we had an xfstest to *test* that same generated file, this would not
+be an issue and from what I gather we need quite a bit of work to get there.
 
-Note: the iomap patches should go into a shared branch for the gfs2
-iomap work.
+I'm working on a test for config stuff but that will just test for now
+(and this reveals some future work needed):
 
-A git tree is available at:
+a) a set of config files we know should work and ensure they produce the
+   same filesystem as if we had used CLI params. We can use xfs_db -c version
+   against both filesystems and check that each differences. Since this would
+   use the same xfsprogs for the results of a config based filesystem and
+   the CLI based filesystem the diff would only generate if there really
+   was a change between both runs, and you can use any xfsprogs version
+   for it.
 
-    git://git.infradead.org/users/hch/xfs.git xfs-iomap-write.6
+   It does however leave actual expected results on the filesystem up to
+   a separate test, it assumes that xfs/191-input-validation is doing its
+   job, but word is that needs some love.
 
-Gitweb:
+b) a set of invalid config files and ensure they never work
 
-    http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-iomap-write.6
+c) test to ensure cli can override config params
 
-Changes since v5:
- - merged the leftovers of the previous series into one
- - rebased on top of the gfs2 iomap prep series
- - fixed the map_blocks map conditions
- - clean up a loop in __iomap_write_begin
+To test that a self generated config file works would be a next step (d),
+and I think we can validate it by also making sure it yields the same
+filesystem as if we just ran mkfs.xfs with no options, so same strategy
+as in a).
 
-Changes since v4:
- - make the logic more clear in xfs_bmap_punch_delalloc_range
- - fix a missing unlock in xfs_bmap_punch_delalloc_range
- - always look up COW extents to check for overlaps
- - lots of patch reshuffling and splitting without impact to the final
-   result
+> Counterpoint: the mkfs config file template in mkfs.xfs.8 is already
+> incorrect; sparse inodes was enabled by default in 4.16 but the manpage
+> cfg file says it isn't.  This is exactly what happens when we rely on
+> ourselves to hand edit the template file.
+> 
+> Put the defaults in *one* place in the source code tree and generate
+> everything else off of that, instead of keeping multiple copies that
+> will then get out of sync.  We clearly suck at this maintenance.
 
-Changes since v3:
- - iterate backwards in xfs_bmap_punch_delalloc_range
- - remove the cow_valid variable in xfs_reflink_trim_irec_to_next_cow
- - additional trivial xfs_map_blocks simplifications
- - split the read side into a separate prep series
- - moved the SEEK_HOLE/DATA patches not strictly required out of the
-   series
+I personally prefer this automation, so with this is mind I think this
+is a change in the right direction.
 
-Changes since v2:
- - minor page_seek_hole_data tweaks
- - don't read data entirely covered by the write operation in write_begin
- - fix zeroing on write_begin I/O failure
- - remove iomap_block_needs_zeroing to make the code more clear
- - update comments on __do_page_cache_readahead
+> > > Well, yeah.  /if/ we need a template, as well as text in a man page,
+> > > then this gets it down to editing 1 file instead of two, I guess.
+> > > But it really seems like we need to rethink these structures to get it
+> > > all tied together, not requiring 2 or 3 manual updates across several files.
+> > > It's bound to get out of sync.  I guess that can wait, but right now this
+> > > dispersal isn't good.
+> > 
+> > So let's get the basic conig file stuff in first, then cosolidate,
+> > then add all the bells and whistles.
+> 
+> That's where I started from -- fix the existing mess with the manpage,
 
-Changes since v1:
- - fix the iomap_readpages error handling
- - use unsigned file offsets in a few places to avoid arithmetic overflows
- - allocate a iomap_page in iomap_page_mkwrite to fix generic/095
- - improve a few comments
- - add more asserts
- - warn about truncated block numbers from ->bmap
- - new patch to change the __do_page_cache_readahead return value to
-   unsigned int
- - remove an incorrectly added empty line
- - make inline data an explicit iomap type instead of a flag
- - add a IOMAP_F_BUFFER_HEAD flag to force use of buffers heads for gfs2,
-   and keep the basic buffer head infrastructure around for now.
+That should be a separate patch first.
+
+> then fix the problems in the parsing code, then move all the CLI parsing and
+> validation code out of xfs_mkfs.c because it's just too long.
+
+Yay!
+
+> Granted, I haven't gotten all the way there yet, so perhaps it was a bad
+> idea to post just the first of those three parts.
+> 
+> > Too many cooks trying to add all their own bells and whistles before
+> > the core behaviour, infrastructure and implementation was nailed
+> > down was pretty much what lead all the tablised CLI option parsing
+> > code. And we're doing it again with this config file stuff...
+> 
+> Yeah.  TBH I feel at a loss for what exactly your vision is for how mkfs
+> option parsing is supposed to work in the end.  How close is this:
+
+BTW it seems we may need to document this vision as otherwise others may
+run into issues later as well.
+
+> 1. First we have the mkfs_default_params, which are the builtin
+> defaults.
+> 
+> 2. Configuration file parameters are supposed to change the
+> mkfs_default_params, yes?
+> 
+> 3. The mkfs_default_params are used to seed the cli_params.
+> 
+> 4. The getopt loop pulls the CLI option data into the cli_params.
+> 
+> 5. At this point we've melded together the builtin options
+> with whatever the config file told us about, then folded in the CLI
+> options, right?
+> 
+> 6. Now we start calling the validate_* and calculate_* functions.  These
+> functions check the full set of configuration data and copy them into
+> the mkfs_params; and they calculate whatever other bits are needed to
+> finish the mkfs_params.
+> 
+> 7. Finally the validated mkfs_params are fed to the initialisation
+> functions to set up the actual filesystem.
+
+FWIW this at least matches my own expectations so far.
+
+> So AFAICT what we have now is a big collection of ops_params that
+> contain all the cli parsing options and a bunch of functions that take
+> the cli strings and fill out the appropriate parts of cli_params.
+> 
+> Luis built a confopts_tab(le) that mapped cfgfile options to parsing
+> functions that know how to take the cfgfile strings and fill out the
+> appropriate parts of mkfs_default_params.  I understand now that from
+> these first five patches it sure looks like I'm building yet a third
+> structure, but this isn't the endgame -- I want a data structure that
+> maps cfgfile options directly to the mkfs default params.  I'm doing
+> this by building the new direct-mapped structure on the side and
+> migrating the parser code to use that.
+> 
+> Ås for "how do I check that the distro provided default template even
+> works?", I'm working on building an xfstest to make sure that the
+> default templates we ship (and whatever might be in
+> /etc/xfs/mkfs/default) actually produce a functioning filesystem.
+
+With proper testing in place for regular configs stuff (the tests
+I have to write) and this I see your changes as desirable but I'm
+wondering if this should just wait until the next cycle so we at
+least have some effort on the testing started already?
+
+  Luis
