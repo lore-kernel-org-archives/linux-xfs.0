@@ -1,204 +1,150 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:45642 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755650AbeFOMQD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 08:16:03 -0400
-Date: Fri, 15 Jun 2018 05:16:02 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 2/2] xfs: use sync buffer I/O for sync delwri queue
- submission
-Message-ID: <20180615121602.GA32099@infradead.org>
-References: <20180613110516.65494-1-bfoster@redhat.com>
- <20180613110516.65494-3-bfoster@redhat.com>
- <20180615112820.GB3230@infradead.org>
- <20180615115334.GC2857@bfoster>
+Received: from aserp2120.oracle.com ([141.146.126.78]:55444 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964820AbeFNPav (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jun 2018 11:30:51 -0400
+Date: Thu, 14 Jun 2018 08:30:36 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs/170: increase agsize for bigger internal log size
+Message-ID: <20180614153036.GD9432@magnolia>
+References: <20180611091040.31495-1-zlang@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180615115334.GC2857@bfoster>
+In-Reply-To: <20180611091040.31495-1-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Fri, Jun 15, 2018 at 07:53:35AM -0400, Brian Foster wrote:
-> Not totally sure I follow... do you essentially mean to rename
-> xfs_buf_submit_wait() -> xfs_buf_submit() and make the iowait
-> conditional on !XBF_ASYNC and absence of some new "sync_nowait"
-> parameter to the function? Could you clarify how you envision the
-> updated xfs_buf_submit() function signature to look?
+On Mon, Jun 11, 2018 at 05:10:40PM +0800, Zorro Lang wrote:
+> xfs/170 always fails on xfs with "-m rmapbt=1,reflink=1", because
+> XFS need bigger internal log size if rmapbt and reflink are both
+> enabled.
 > 
-> If I'm following correctly, that seems fairly reasonable at first
-> thought. This is a separate patch though (refactoring the interface vs.
-> refactoring the implementation to fix a bug).
+> One line of xfs/170 as below:
+> 
+>   _test_streams 8 16 4 8 3 0 0
+> 
+> Refer to common/filestreams, we can see xfs/170 trys to create a
+> 128M XFS (agcount=8, agsize=16M), then each stream writes
+> 24M (8 * 3M files), and there're 4 streams.
+> 
+> So the case expects each stream takes 2 AGs, 4 streams takes
+> different 8 AGs just enough. But internal log will break this
+> balance. For example:
+> 
+> "mkfs.xfs -f -b size=4k -m rmapbt=1,reflink=1 $dev" will take 3075
+> 4k blocks (12M) by default:
+>   meta-data=/dev/mapper/xxxx-xfscratch isize=512    agcount=8, agsize=4096 blks
+>   ...
+>   log      =internal               bsize=4096   blocks=3075, version=2
+>            =                       sectsz=512   sunit=0 blks, lazy-count=1
+>   ...
+> 
+> And the internal log is in the 4th AG:
+>   # xfs_logprint: /dev/mapper/xxxx-xfscratch
+>   xfs_logprint:
+>       data device: 0xfd03
+>       log device: 0xfd03 daddr: 131120 length: 24600
+>   # xfs_db -c "convert daddr 131120 agno" /dev/mapper/xxxx-xfscratch
+>   0x4 (4)
+> 
+> Then if one stream write data into AG-1 at first, then turn to AG-4
+> after fill 16M agsize. But AG-4 has 12M space for log section, so
+> only 4M free space for data. Then this stream have to turn to the
+> next AG after fill the 4M space. All these as below:
+> 
+>   # xfs_bmap -vp stream2-dir/*
+>   stream2-dir/frame-1:
+>    EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
+>      0: [0..6143]:       32960..39103      1 (192..6335)       6144 000000
+>   ...
+>   ...
+>   stream2-dir/frame-5:
+>    EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
+>      0: [0..6143]:       57536..63679      1 (24768..30911)    6144 000000
+>   stream2-dir/frame-6:
+>    EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
+>      0: [0..6143]:       155776..161919    4 (24704..30847)    6144 000000
+>   stream2-dir/frame-7:
+>    EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
+>      0: [0..6143]:       170088..176231    5 (6248..12391)     6144 000000
+>   stream2-dir/frame-8:
+>    EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
+>      0: [0..6143]:       176232..182375    5 (12392..18535)    6144 000000
+> 
+> Later _test_streams maybe takes AG-5 again, and cause two streams use
+> AG-5. To avoid this failure, increase the agsize from 16M to 22M,
+> others stay the same, each stream still writes 2 AGs. Even internal
+> log takes some space from someone AG, left space should be enough to
+> write (24 - 22)=2M data.
 
-Well.  I'd suggest something like the patch below for patch 1:
+Looks ok and seems to pass... at least until we bump log size again. :/
+Thank you for fixing this!
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 55661cbdb51b..5504525d345b 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1417,28 +1417,33 @@ _xfs_buf_ioapply(
- 	blk_finish_plug(&plug);
- }
- 
--/*
-- * Asynchronous IO submission path. This transfers the buffer lock ownership and
-- * the current reference to the IO. It is not safe to reference the buffer after
-- * a call to this function unless the caller holds an additional reference
-- * itself.
-- */
--void
--xfs_buf_submit(
-+static int
-+xfs_buf_iowait(
- 	struct xfs_buf	*bp)
-+{
-+	trace_xfs_buf_iowait(bp, _RET_IP_);
-+	wait_for_completion(&bp->b_iowait);
-+	trace_xfs_buf_iowait_done(bp, _RET_IP_);
-+	return bp->b_error;
-+}
-+
-+static int
-+__xfs_buf_submit(
-+	struct xfs_buf	*bp,
-+	bool		wait)
- {
- 	trace_xfs_buf_submit(bp, _RET_IP_);
- 
- 	ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
--	ASSERT(bp->b_flags & XBF_ASYNC);
- 
- 	/* on shutdown we stale and complete the buffer immediately */
- 	if (XFS_FORCED_SHUTDOWN(bp->b_target->bt_mount)) {
- 		xfs_buf_ioerror(bp, -EIO);
- 		bp->b_flags &= ~XBF_DONE;
- 		xfs_buf_stale(bp);
--		xfs_buf_ioend(bp);
--		return;
-+		if (!wait)
-+			xfs_buf_ioend(bp);
-+		return -EIO;
- 	}
- 
- 	if (bp->b_flags & XBF_WRITE)
-@@ -1463,7 +1468,8 @@ xfs_buf_submit(
- 	 * xfs_buf_ioend too early.
- 	 */
- 	atomic_set(&bp->b_io_remaining, 1);
--	xfs_buf_ioacct_inc(bp);
-+	if (bp->b_flags & XBF_ASYNC)
-+		xfs_buf_ioacct_inc(bp);
- 	_xfs_buf_ioapply(bp);
- 
- 	/*
-@@ -1472,14 +1478,31 @@ xfs_buf_submit(
- 	 * that we don't return to the caller with completion still pending.
- 	 */
- 	if (atomic_dec_and_test(&bp->b_io_remaining) == 1) {
--		if (bp->b_error)
-+		if (bp->b_error || !(bp->b_flags & XBF_ASYNC))
- 			xfs_buf_ioend(bp);
- 		else
- 			xfs_buf_ioend_async(bp);
- 	}
- 
-+	if (wait)
-+		xfs_buf_iowait(bp);
- 	xfs_buf_rele(bp);
- 	/* Note: it is not safe to reference bp now we've dropped our ref */
-+	return 0;
-+}
-+
-+/*
-+ * Asynchronous IO submission path. This transfers the buffer lock ownership and
-+ * the current reference to the IO. It is not safe to reference the buffer after
-+ * a call to this function unless the caller holds an additional reference
-+ * itself.
-+ */
-+void
-+xfs_buf_submit(
-+	struct xfs_buf	*bp)
-+{
-+	ASSERT(bp->b_flags & XBF_ASYNC);
-+	__xfs_buf_submit(bp, false);
- }
- 
- /*
-@@ -1489,60 +1512,8 @@ int
- xfs_buf_submit_wait(
- 	struct xfs_buf	*bp)
- {
--	int		error;
--
--	trace_xfs_buf_submit_wait(bp, _RET_IP_);
--
--	ASSERT(!(bp->b_flags & (_XBF_DELWRI_Q | XBF_ASYNC)));
--
--	if (XFS_FORCED_SHUTDOWN(bp->b_target->bt_mount)) {
--		xfs_buf_ioerror(bp, -EIO);
--		xfs_buf_stale(bp);
--		bp->b_flags &= ~XBF_DONE;
--		return -EIO;
--	}
--
--	if (bp->b_flags & XBF_WRITE)
--		xfs_buf_wait_unpin(bp);
--
--	/* clear the internal error state to avoid spurious errors */
--	bp->b_io_error = 0;
--
--	/*
--	 * For synchronous IO, the IO does not inherit the submitters reference
--	 * count, nor the buffer lock. Hence we cannot release the reference we
--	 * are about to take until we've waited for all IO completion to occur,
--	 * including any xfs_buf_ioend_async() work that may be pending.
--	 */
--	xfs_buf_hold(bp);
--
--	/*
--	 * Set the count to 1 initially, this will stop an I/O completion
--	 * callout which happens before we have started all the I/O from calling
--	 * xfs_buf_ioend too early.
--	 */
--	atomic_set(&bp->b_io_remaining, 1);
--	_xfs_buf_ioapply(bp);
--
--	/*
--	 * make sure we run completion synchronously if it raced with us and is
--	 * already complete.
--	 */
--	if (atomic_dec_and_test(&bp->b_io_remaining) == 1)
--		xfs_buf_ioend(bp);
--
--	/* wait for completion before gathering the error from the buffer */
--	trace_xfs_buf_iowait(bp, _RET_IP_);
--	wait_for_completion(&bp->b_iowait);
--	trace_xfs_buf_iowait_done(bp, _RET_IP_);
--	error = bp->b_error;
--
--	/*
--	 * all done now, we can release the hold that keeps the buffer
--	 * referenced for the entire IO.
--	 */
--	xfs_buf_rele(bp);
--	return error;
-+	ASSERT(!(bp->b_flags & XBF_ASYNC));
-+	return __xfs_buf_submit(bp, true);
- }
- 
- void *
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 8955254b900e..4d3a9adf0ce3 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -322,7 +322,6 @@ DEFINE_BUF_EVENT(xfs_buf_hold);
- DEFINE_BUF_EVENT(xfs_buf_rele);
- DEFINE_BUF_EVENT(xfs_buf_iodone);
- DEFINE_BUF_EVENT(xfs_buf_submit);
--DEFINE_BUF_EVENT(xfs_buf_submit_wait);
- DEFINE_BUF_EVENT(xfs_buf_lock);
- DEFINE_BUF_EVENT(xfs_buf_lock_done);
- DEFINE_BUF_EVENT(xfs_buf_trylock_fail);
+--D
+
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> ---
+>  tests/xfs/170     | 9 ++++-----
+>  tests/xfs/170.out | 8 ++++----
+>  2 files changed, 8 insertions(+), 9 deletions(-)
+> 
+> diff --git a/tests/xfs/170 b/tests/xfs/170
+> index f82df69d..eb26764a 100755
+> --- a/tests/xfs/170
+> +++ b/tests/xfs/170
+> @@ -42,11 +42,10 @@ _check_filestreams_support || _notrun "filestreams not available"
+>  _set_stream_timeout_centisecs 3000
+>  
+>  # test streams does a mkfs and mount
+> -_test_streams 8 16 4 8 3 0 0
+> -_test_streams 8 16 4 8 3 1 0
+> -_test_streams 8 16 4 8 3 0 1
+> -_test_streams 8 16 4 8 3 1 1
+> +_test_streams 8 22 4 8 3 0 0
+> +_test_streams 8 22 4 8 3 1 0
+> +_test_streams 8 22 4 8 3 0 1
+> +_test_streams 8 22 4 8 3 1 1
+>  
+>  status=0
+>  exit
+> -
+> diff --git a/tests/xfs/170.out b/tests/xfs/170.out
+> index a1339cec..e71515e9 100644
+> --- a/tests/xfs/170.out
+> +++ b/tests/xfs/170.out
+> @@ -1,20 +1,20 @@
+>  QA output created by 170
+> -# testing 8 16 4 8 3 0 0 ....
+> +# testing 8 22 4 8 3 0 0 ....
+>  # streaming
+>  # sync AGs...
+>  # checking stream AGs...
+>  + passed, streams are in seperate AGs
+> -# testing 8 16 4 8 3 1 0 ....
+> +# testing 8 22 4 8 3 1 0 ....
+>  # streaming
+>  # sync AGs...
+>  # checking stream AGs...
+>  + passed, streams are in seperate AGs
+> -# testing 8 16 4 8 3 0 1 ....
+> +# testing 8 22 4 8 3 0 1 ....
+>  # streaming
+>  # sync AGs...
+>  # checking stream AGs...
+>  + passed, streams are in seperate AGs
+> -# testing 8 16 4 8 3 1 1 ....
+> +# testing 8 22 4 8 3 1 1 ....
+>  # streaming
+>  # sync AGs...
+>  # checking stream AGs...
+> -- 
+> 2.14.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
