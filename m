@@ -1,96 +1,144 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47266 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753624AbeFPAFB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 15 Jun 2018 20:05:01 -0400
-Date: Sat, 16 Jun 2018 02:04:59 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH 0/5] xfsprogs-4.17: mkfs config file enhancements
-Message-ID: <20180616000459.GS5527@wotan.suse.de>
-References: <152891829964.3968.4760134019673731615.stgit@magnolia>
- <20180614040628.GJ10363@dastard>
- <c4ae2aaf-ee28-5c35-b3f5-ffe8a57d3c01@sandeen.net>
- <20180614050844.GK10363@dastard>
- <20180614062949.GA6825@magnolia>
- <20180614174640.GE7508@wotan.suse.de>
- <20180614175909.GB8128@magnolia>
- <20180614181602.GL5527@wotan.suse.de>
- <20180614183528.GC8128@magnolia>
+Received: from aserp2120.oracle.com ([141.146.126.78]:35784 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755071AbeFNQn2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jun 2018 12:43:28 -0400
+Date: Thu, 14 Jun 2018 09:43:25 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3/2] mkfs: manpage fixups in config file section
+Message-ID: <20180614164325.GA8128@magnolia>
+References: <7a30c780-d69a-71d4-d0e6-a5fcefda08e6@sandeen.net>
+ <bc2a4277-cbe2-c3e7-ad92-e2a67f9102cf@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180614183528.GC8128@magnolia>
+In-Reply-To: <bc2a4277-cbe2-c3e7-ad92-e2a67f9102cf@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@sandeen.net>, sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Jun 14, 2018 at 11:35:28AM -0700, Darrick J. Wong wrote:
-> Section headers:
-> n = sscanf(line, " [ %m[^] \f\n\r\t\v] %ms %m[^\n]", &tag, &cp, &junk);
+On Thu, Jun 14, 2018 at 10:43:37AM -0500, Eric Sandeen wrote:
+> A bit more clarification in the CONFIGURATION FILE FORMAT
+> section of the mkfs.xfs manpage.
 > 
-> We pick up the section name (in *tag) if cp == "]" and n == 2 (i.e.
-> there's no junk at the end of the line.
+> Primarily, map the commandline switches to the section names
+> explicitly.
 > 
-> "# some comment"
-> "[data]"
-> "[data] # some comment"
-> " [data]"
-> "[ data]"
-> "[data ]"
-> "[data] "
-> <repeat but with tabs instead of spaces>
+> "optional default" sounds pretty weird, so call it the
+> "defaults" configuration file instead.
 > 
-> "[data] noalign = 1"
-> "[data cow]"
-> "[data"
-> "data]"
-> " [data cow]"
-> "[ data cow]"
-> "[data cow]"
-> "[data cow ]"
-> "[data cow] "
-> "[data.cow]"
-> "[data noalign = 1]"
-> "[nonexistentsection]"
+> Document the comment format by example.
 > 
-> Key/value:
+> Fix the sparse inode default setting in the example.
 > 
-> n = sscanf(line, " %m[^][ \f\n\r\t\v=] %m[=] %m[^\n]", &key, &eq, &val);
+> Change the .BI tags to .B (there is no bold/italic switching).
 > 
-> We pick up the key/value pair if n == 3, eq == "]" and *key is found in
-> the current section header, and if *val can be stroull'd.
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 > 
-> Assuming a [data] section,
-> 
-> "# some comment"
-> "noalign=1"
-> "noalign=1 # some comment"
-> " noalign=1"
-> "noalign =1"
-> "noalign= 1"
-> "noalign=1 "
-> " noalign =1"
-> " noalign= 1"
-> " noalign=1 "
-> "noalign = 1"
-> "noalign =1 "
-> "noalign= 1 "
-> " noalign = 1"
-> " noalign= 1 "
-> "noalign = 1 "
-> <repeat with tabs>
-> 
-> "noalign moo = 1"
-> "noalign is 1"
-> "noalign = 10"
-> "noalign = 109825091285091825091285018250"
-> "noalign = [metadata]"
-> "moocow"
-> "moocow = 5"
+> diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
+> index cf4bdf8..9c0c1a8 100644
+> --- a/man/man8/mkfs.xfs.8.in
+> +++ b/man/man8/mkfs.xfs.8.in
+> @@ -957,53 +957,61 @@ Do not attempt to discard blocks at mkfs time.
+>  .B \-V
+>  Prints the version number and exits.
+>  .SH CONFIGURATION FILE FORMAT
+> -The optional default configuration file in
+> +The optional defaults configuration file in
+>  .B @sysconfdir@/xfs/mkfs/default
+>  as well as any alternate configuration file specified via the
+>  .B \-c
+> -option follow a simple ini-style format as shown below.
+> -Available options consist of a small subset of the parameters available
+> -via the
+> -.BR mkfs.xfs (8)
+> -command line.
+> -Currently all default parameters can only be either enabled or disabled,
+> +option follow a simple ini-style format as shown below, with section names
+> +corresponding to command-line options as follows:
+> +.BR "\-d [data]" ,
+> +.BR "\-i [inode]" ,
+> +.BR "\-l [log]" ,
+> +.BR "\-m [metadata]" ,
+> +.BR "\-n [naming]" ,
+> +.BR "\-r [rtdev]" .
+> +.br
+> +In each of these sections, a subset of the command-line suboptions may be
+> +specified to override built-in default settings.
+> +Currently all parameters can only be either enabled or disabled,
+>  with a value of 1 to enable or 0 to disable.
+>  See below for a list of all supported configuration parameters and their
+>  current built-in default settings.
+>  .PP
+> -.BI [data]
+> +.B # Comments and blank lines  are allowed
+> +.br
+> +.B [data]
+>  .br
+> -.BI noalign=0
+> +.B noalign=0
+>  .PP
+> -.BI [inode]
+> +.B [inode]
+>  .br
+> -.BI align=1
+> +.B align=1
+>  .br
+> -.BI projid32bit=1
+> +.B projid32bit=1
+>  .br
+> -.BI sparse=0
+> +.B sparse=1
+>  .PP
+> -.BI [log]
+> +.B [log]
+>  .br
+> -.BI lazy-count=1
+> +.B lazy-count=1
+>  .PP
+> -.BI [metadata]
+> +.B [metadata]
+>  .br
+> -.BI crc=1
+> +.B crc=1
+>  .br
+> -.BI finobt=1
+> +.B finobt=1
+>  .br
+> -.BI rmapbt=0
+> +.B rmapbt=0
+>  .br
+> -.BI reflink=0
+> +.B reflink=0
+>  .PP
+> -.BI [naming]
+> +.B [naming]
+>  .br
+> -.BI ftype=1
+> +.B ftype=1
+>  .PP
+> -.BI [rtdev]
+> +.B [rtdev]
+>  .br
+> -.BI noalign=0
+> +.B noalign=0
 
-I tried some stuff but I could not get it to barf. Can you send me some
-config file attachments which do make it puke? Or patches? :)
+I would add a note that configuration files are still considered an
+experimental feature.  With that,
 
-  Luis
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+>  .PP
+>  .SH SEE ALSO
+>  .BR xfs (5),
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
