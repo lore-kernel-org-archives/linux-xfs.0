@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:34020 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:33968 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936080AbeFNMFS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jun 2018 08:05:18 -0400
+        with ESMTP id S1755193AbeFNMFM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jun 2018 08:05:12 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 6/6] iomap: add a page_done callback
-Date: Thu, 14 Jun 2018 14:04:57 +0200
-Message-Id: <20180614120457.28285-7-hch@lst.de>
+Subject: [PATCH 4/6] iomap: complete partial direct I/O writes synchronously
+Date: Thu, 14 Jun 2018 14:04:55 +0200
+Message-Id: <20180614120457.28285-5-hch@lst.de>
 In-Reply-To: <20180614120457.28285-1-hch@lst.de>
 References: <20180614120457.28285-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,60 +15,100 @@ List-Id: xfs
 To: Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org
 Cc: Dan Williams <dan.j.williams@intel.com>, linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com, linux-ext4@vger.kernel.org
 
-This will be used by gfs2 to attach data to transactions for the journaled
-data mode.  But the concept is generic enough that we might be able to
-use it for other purposes like encryption/integrity post-processing in the
-future.
+From: Andreas Gruenbacher <agruenba@redhat.com>
 
-Based on a patch from Andreas Gruenbacher.
+According to xfstest generic/240, applications seem to expect direct I/O
+writes to either complete as a whole or to fail; short direct I/O writes
+are apparently not appreciated.  This means that when only part of an
+asynchronous direct I/O write succeeds, we can either fail the entire
+write, or we can wait for the partial write to complete and retry the
+remaining write as buffered I/O.  The old __blockdev_direct_IO helper
+has code for waiting for partial writes to complete; the new
+iomap_dio_rw iomap helper does not.
 
+The above mentioned fallback mode is needed for gfs2, which doesn't
+allow block allocations under direct I/O to avoid taking cluster-wide
+exclusive locks.  As a consequence, an asynchronous direct I/O write to
+a file range that contains a hole will result in a short write.  In that
+case, wait for the short write to complete to allow gfs2 to recover.
+
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/iomap.c            | 3 +++
- include/linux/iomap.h | 9 +++++++++
- 2 files changed, 12 insertions(+)
+ fs/iomap.c | 21 +++++++++++----------
+ 1 file changed, 11 insertions(+), 10 deletions(-)
 
 diff --git a/fs/iomap.c b/fs/iomap.c
-index 6d5a2ebe5dd8..9e265118e8b0 100644
+index 7d1e9f45f098..bf1e81b08962 100644
 --- a/fs/iomap.c
 +++ b/fs/iomap.c
-@@ -201,6 +201,9 @@ iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
- 				copied, page, NULL);
- 	}
+@@ -811,6 +811,7 @@ struct iomap_dio {
+ 	atomic_t		ref;
+ 	unsigned		flags;
+ 	int			error;
++	bool			wait_for_completion;
  
-+	if (iomap->page_done)
-+		iomap->page_done(inode, pos, copied, page, iomap);
-+
- 	if (ret < len)
- 		iomap_write_failed(inode, pos, len);
- 	return ret;
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 69ef622f650e..43cc9208599f 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -9,6 +9,7 @@ struct fiemap_extent_info;
- struct inode;
- struct iov_iter;
- struct kiocb;
-+struct page;
- struct vm_area_struct;
- struct vm_fault;
+ 	union {
+ 		/* used during submission and for synchronous completion: */
+@@ -914,9 +915,8 @@ static void iomap_dio_bio_end_io(struct bio *bio)
+ 		iomap_dio_set_error(dio, blk_status_to_errno(bio->bi_status));
  
-@@ -58,6 +59,14 @@ struct iomap {
- 		struct dax_device   *dax_dev;
- 		void		    *inline_data;
- 	};
-+
-+	/*
-+	 * Called when finished processing a page in the mapping returned in
-+	 * this iomap.  At least for now this is only supported in the buffered
-+	 * write path.
-+	 */
-+	void (*page_done)(struct inode *inode, loff_t pos, unsigned copied,
-+			struct page *page, struct iomap *iomap);
- };
+ 	if (atomic_dec_and_test(&dio->ref)) {
+-		if (is_sync_kiocb(dio->iocb)) {
++		if (dio->wait_for_completion) {
+ 			struct task_struct *waiter = dio->submit.waiter;
+-
+ 			WRITE_ONCE(dio->submit.waiter, NULL);
+ 			wake_up_process(waiter);
+ 		} else if (dio->flags & IOMAP_DIO_WRITE) {
+@@ -1131,13 +1131,12 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	dio->end_io = end_io;
+ 	dio->error = 0;
+ 	dio->flags = 0;
++	dio->wait_for_completion = is_sync_kiocb(iocb);
  
- /*
+ 	dio->submit.iter = iter;
+-	if (is_sync_kiocb(iocb)) {
+-		dio->submit.waiter = current;
+-		dio->submit.cookie = BLK_QC_T_NONE;
+-		dio->submit.last_queue = NULL;
+-	}
++	dio->submit.waiter = current;
++	dio->submit.cookie = BLK_QC_T_NONE;
++	dio->submit.last_queue = NULL;
+ 
+ 	if (iov_iter_rw(iter) == READ) {
+ 		if (pos >= dio->i_size)
+@@ -1187,7 +1186,7 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 		dio_warn_stale_pagecache(iocb->ki_filp);
+ 	ret = 0;
+ 
+-	if (iov_iter_rw(iter) == WRITE && !is_sync_kiocb(iocb) &&
++	if (iov_iter_rw(iter) == WRITE && !dio->wait_for_completion &&
+ 	    !inode->i_sb->s_dio_done_wq) {
+ 		ret = sb_init_dio_done_wq(inode->i_sb);
+ 		if (ret < 0)
+@@ -1202,8 +1201,10 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 				iomap_dio_actor);
+ 		if (ret <= 0) {
+ 			/* magic error code to fall back to buffered I/O */
+-			if (ret == -ENOTBLK)
++			if (ret == -ENOTBLK) {
++				dio->wait_for_completion = true;
+ 				ret = 0;
++			}
+ 			break;
+ 		}
+ 		pos += ret;
+@@ -1224,7 +1225,7 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 		dio->flags &= ~IOMAP_DIO_NEED_SYNC;
+ 
+ 	if (!atomic_dec_and_test(&dio->ref)) {
+-		if (!is_sync_kiocb(iocb))
++		if (!dio->wait_for_completion)
+ 			return -EIOCBQUEUED;
+ 
+ 		for (;;) {
 -- 
 2.17.1
 
