@@ -1,96 +1,209 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:40114 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965872AbeFNObk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Jun 2018 10:31:40 -0400
-Subject: Re: [PATCH 0/5] xfsprogs-4.17: mkfs config file enhancements
-References: <152891829964.3968.4760134019673731615.stgit@magnolia>
- <20180614040628.GJ10363@dastard>
- <c4ae2aaf-ee28-5c35-b3f5-ffe8a57d3c01@sandeen.net>
- <20180614050844.GK10363@dastard>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <6e259bf3-b85a-c506-7270-0458f3523cd0@sandeen.net>
-Date: Thu, 14 Jun 2018 09:31:39 -0500
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:36108 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754596AbeFNJqi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jun 2018 05:46:38 -0400
+Received: by mail-wr0-f196.google.com with SMTP id f16-v6so5710023wrm.3
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Jun 2018 02:46:37 -0700 (PDT)
+Date: Thu, 14 Jun 2018 11:46:34 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 2/2] mkfs: remove notion of config "type"
+Message-ID: <20180614094634.bwltpm5c3rgrl57j@odin.usersys.redhat.com>
+References: <7a30c780-d69a-71d4-d0e6-a5fcefda08e6@sandeen.net>
+ <8c2a5a07-5d47-48a1-1593-e93eb0fb883a@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20180614050844.GK10363@dastard>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <8c2a5a07-5d47-48a1-1593-e93eb0fb883a@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-
-
-On 6/14/18 12:08 AM, Dave Chinner wrote:
-> On Wed, Jun 13, 2018 at 11:23:09PM -0500, Eric Sandeen wrote:
->> On 6/13/18 11:06 PM, Dave Chinner wrote:
->>> With this change, we'll have code to maintain it to ensure that the
->>> file gets updated properly, and it will probably take more time and
->>> effort to validate that the generated file is correct (and debug if
->>> it's not!) compared to the 30s it will take to hand edit the
->>> template file to change or add a new default...
->>
->> Well, yeah.  /if/ we need a template, as well as text in a man page,
->> then this gets it down to editing 1 file instead of two, I guess.
->> But it really seems like we need to rethink these structures to get it
->> all tied together, not requiring 2 or 3 manual updates across several files.
->> It's bound to get out of sync.  I guess that can wait, but right now this
->> dispersal isn't good.
+On Wed, Jun 13, 2018 at 02:37:01PM -0500, Eric Sandeen wrote:
+> The whole notion of a defaults "type" led to complications that
+> simply doesn't need to be there.  If a configuration file was
+> used for defaults, simply state that fact and carry on.
 > 
-> So let's get the basic conig file stuff in first, then cosolidate,
-> then add all the bells and whistles.
+> This also removes ambiguity for config files specified as
+> a relative path by calling realpath.
 > 
-> Too many cooks trying to add all their own bells and whistles before
-> the core behaviour, infrastructure and implementation was nailed
-> down was pretty much what lead all the tablised CLI option parsing
-> code. And we're doing it again with this config file stuff...
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
 > 
->>> I'm also not convinced we should ship a "default.template" file,
->>> either.  I'd much prefer we ship a real config file with all the
->>> options defined but commented out as a "start here template".
->>
->> As the code stands today, if a 100% commented-out config file
->> exists, then mkfs will tell you that it's overriding built-in
->> defaults with the config file which contains ... nothing.
->> If we ship such a thing by default, that's what will happen by
->> default.
+>  config.c   |   20 ++++++++------------
+>  config.h   |   31 -------------------------------
+>  xfs_mkfs.c |    8 +++-----
+>  3 files changed, 11 insertions(+), 48 deletions(-)
 > 
-> Then that's a bug in the new parsing code and needs fixing. :)
-
-*shrug*  No, the parsing code is fine (in this respect), but I guess
-we can change verbiage to indicate that a config file was used
-without indicating that it actually /did/ anything....
- 
->> (Actually today it fails to parse and errors out but a patch
->> to fix that is on the list).
->>
->> I guess we could behave as if "no config file" if a config file
->> contained no parseable tokens ... but that gets weird too.
+> diff --git a/mkfs/config.c b/mkfs/config.c
+> index 1a2cd35..3a389ad 100644
+> --- a/mkfs/config.c
+> +++ b/mkfs/config.c
+> @@ -557,6 +557,7 @@ open_config_file(
+>  {
+>  	int				dirfd = -1, fd = -1, len, ret = 0;
+>  	struct stat			st;
+> +	bool				cli_specified = false;
+>  
+>  	*fpath = malloc(PATH_MAX);
+>  	if (!*fpath)
+> @@ -566,18 +567,19 @@ open_config_file(
+>  
+>  	/* first try relative to pwd or absolute path to cli configfile */
+>  	if (config_file) {
+> -		dft->type = DEFAULTS_CLI_CONFIG;
+> +		cli_specified = true;
+>  		if (strlen(config_file) > PATH_MAX) {
+>  			errno = ENAMETOOLONG;
+>  			goto out;
+>  		}
+> -		memcpy(*fpath, config_file, strlen(config_file));
+> +		/* Get absolute path to this file */
+> +		realpath(config_file, *fpath);
+>  		fd = openat(AT_FDCWD, config_file, O_NOFOLLOW, O_RDONLY);
+>  	}
+>  
+>  	/* on failure search for cli config or default file in sysconfdir */
+>  	if (fd < 0) {
+> -		if (!config_file)
+> +		if (!cli_specified)
+>  			config_file = MKFS_XFS_DEFAULT_CONFIG;
+>  		len = snprintf(*fpath, PATH_MAX, "%s/%s", MKFS_XFS_CONF_DIR,
+>  				config_file);
+> @@ -592,8 +594,6 @@ open_config_file(
+>  		fd = openat(dirfd, config_file, O_NOFOLLOW, O_RDONLY);
+>  		if (fd < 0)
+>  			goto out;
+> -		if (!strcmp(config_file, MKFS_XFS_DEFAULT_CONFIG))
+> -			dft->type = DEFAULTS_CONFIG;
+>  	}
+>  
+>  	ret = fstat(fd, &st);
+> @@ -606,11 +606,9 @@ open_config_file(
+>  out:
+>  	/* stat check is always fatal; missing is fatal only if cli-specified */
+>  	if (ret ||
+> -	    (fd < 0 && dft->type == DEFAULTS_CLI_CONFIG)) {
+> -		fprintf(stderr,
+> -_("Unable to open %s config file: %s : %s\n"),
+> -			default_type_str(dft->type), *fpath,
+> -			strerror(errno));
+> +	    (fd < 0 && cli_specified)) {
+> +		fprintf(stderr, _("Unable to open config file: %s : %s\n"),
+> +			*fpath, strerror(errno));
+>  		free(*fpath);
+>  		exit(1);
+>  	}
+> @@ -645,7 +643,5 @@ parse_defaults_file(
+>  		return -1;
+>  	}
+>  
+> -	printf(_("config-file=%s\n"), config_file);
+> -
+>  	return 0;
+>  }
+> diff --git a/mkfs/config.h b/mkfs/config.h
+> index db22ade..f4af2c7 100644
+> --- a/mkfs/config.h
+> +++ b/mkfs/config.h
+> @@ -58,22 +58,6 @@ struct sb_feat_args {
+>  };
+>  
+>  /*
+> - * File configuration type settings
+> - *
+> - * These are the different possibilities by which you can end up parsing
+> - * default settings with. DEFAULTS_BUILTIN indicates there was no configuration
+> - * file parsed and we are using the built-in defaults on this code.
+> - * DEFAULTS_CONFIG means the default configuration file was found and used.
+> - * DEFAULTS_CLI_CONFIG means the user asked for a custom configuration type
+> - * through the command line interface and it was used.
+> - */
+> -enum default_params_type {
+> -	DEFAULTS_BUILTIN = 0,
+> -	DEFAULTS_CONFIG,
+> -	DEFAULTS_CLI_CONFIG,
+> -};
+> -
+> -/*
+>   * Default filesystem features and configuration values
+>   *
+>   * This structure contains the default mkfs values that are to be used when
+> @@ -82,8 +66,6 @@ enum default_params_type {
+>   * calculations.
+>   */
+>  struct mkfs_default_params {
+> -	enum default_params_type type; /* where the defaults came from */
+> -
+>  	int	sectorsize;
+>  	int	blocksize;
+>  
+> @@ -94,19 +76,6 @@ struct mkfs_default_params {
+>  	struct fsxattr		fsx;
+>  };
+>  
+> -static inline const char *default_type_str(enum default_params_type type)
+> -{
+> -	switch (type) {
+> -	case DEFAULTS_BUILTIN:
+> -		return _("package built-in definitions");
+> -	case DEFAULTS_CONFIG:
+> -		return _("package default config file");
+> -	case DEFAULTS_CLI_CONFIG:
+> -		return _("CLI supplied file");
+> -	}
+> -	return _("Unkown\n");
+> -}
+> -
+>  int
+>  open_config_file(
+>  	const char			*cli_config_file,
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index d32c2c8..56e5f03 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -3722,7 +3722,6 @@ main(
+>  
+>  	/* build time defaults */
+>  	struct mkfs_default_params	dft = {
+> -		.type = DEFAULTS_BUILTIN,
+>  		.sectorsize = XFS_MIN_SECTORSIZE,
+>  		.blocksize = 1 << XFS_DFL_BLOCKSIZE_LOG,
+>  		.sb_feat = {
+> @@ -3796,19 +3795,18 @@ _("respecification of configuration not allowed\n"));
+>  		ret = parse_defaults_file(fd, &dft, config_file);
+>  		if (ret) {
+>  			fprintf(stderr,
+> -_("Error parsing %s config file: %s : %s\n"),
+> -				default_type_str(dft.type),
+> +_("Error parsing config file: %s : %s\n"),
+>  				config_file, strerror(errno));
+>  			free(config_file);
+>  			close(fd);
+>  			exit(1);
+>  		}
+> +		printf(_("Configuration file used for defaults: %s\n"),
+> +			config_file);
+>  		free(config_file);
+>  		close(fd);
+>  	}
+>  
+> -	printf(_("Default configuration sourced from %s\n"),
+> -	       default_type_str(dft.type));
+>  
+>  	/*
+>  	 * Done parsing defaults now, so memcpy defaults into CLI
 > 
-> Don't see why that is wierd, either - it's pretty common behaviour
-> for package shipped config files to have all options are present but
-> commented out.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Because most packages don't have this kinda weird behavior of telling
-you on stdout which config file they're operating from, if any...
-
->> Putting a blank config file in place to be parsed by default
->> is messy, so a .template approach seems reasonable to me, if we
->> need such a thing at all.
-> 
-> If we really need a separate template, then perhaps it should be in
-> the mkfs config file man page where we document all the supported
-> options?
-
-There is currently a "template" in the mkfs.xfs.8 manpage, insofar
-as a template can exist in a manpage, and that's exactly what Darrick's
-patch was autogenerating.
-
-(I'm realizing though that there's not great or explicit documentation
-of the mapping between commandline options and the allowable config
-options.)
-
--Eric
+-- 
+Carlos
