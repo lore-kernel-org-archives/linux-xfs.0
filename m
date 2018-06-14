@@ -1,135 +1,32 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:44732 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754965AbeFNPnj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Jun 2018 11:43:39 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id EB719450AB8
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Jun 2018 10:43:12 -0500 (CDT)
-Subject: [PATCH 3/2] mkfs: manpage fixups in config file section
-From: Eric Sandeen <sandeen@sandeen.net>
-References: <7a30c780-d69a-71d4-d0e6-a5fcefda08e6@sandeen.net>
-Message-ID: <bc2a4277-cbe2-c3e7-ad92-e2a67f9102cf@sandeen.net>
-Date: Thu, 14 Jun 2018 10:43:37 -0500
+Received: from mail-lf0-f45.google.com ([209.85.215.45]:42961 "EHLO
+        mail-lf0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755168AbeFNPrl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jun 2018 11:47:41 -0400
+Received: by mail-lf0-f45.google.com with SMTP id v135-v6so10149564lfa.9
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Jun 2018 08:47:40 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <7a30c780-d69a-71d4-d0e6-a5fcefda08e6@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <4cd7af90-6c71-fd1b-edcc-f026331b951c@sandeen.net>
+References: <e462d333d2089a7c3c59e7584fa83f720365fa46.camel@quantentunnel.de>
+ <0ae6d0d5984dcd9c703720bdf41b6da1333267b0.camel@quantentunnel.de>
+ <20180605082917.azuql22j5wnb7wof@odin.usersys.redhat.com> <CAAxjCEwS5mcEMPCqJmUiUParsaG7Fxzf0c0GxkJURv85fYuJyw@mail.gmail.com>
+ <a2dbfee3-f5dc-b4c3-24c9-153fe3304d10@sandeen.net> <CAAxjCExfy6ysDCOPX7G9HNJvqojbgQHu54QwMrcGROhu1JnMLg@mail.gmail.com>
+ <4cd7af90-6c71-fd1b-edcc-f026331b951c@sandeen.net>
+From: Stefan Ring <stefanrin@gmail.com>
+Date: Thu, 14 Jun 2018 17:47:39 +0200
+Message-ID: <CAAxjCEyifR6bQcX+V94h+AqGzUhjUBDScX9N30JV_M5hsvgqvQ@mail.gmail.com>
+Subject: Re: Strange XFS problem
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-A bit more clarification in the CONFIGURATION FILE FORMAT
-section of the mkfs.xfs manpage.
+On Tue, Jun 12, 2018 at 8:56 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>
+> Is the German translation bad/embarrassing enough that it should just
+> be removed?  Does it do more harm than good at this point?
 
-Primarily, map the commandline switches to the section names
-explicitly.
-
-"optional default" sounds pretty weird, so call it the
-"defaults" configuration file instead.
-
-Document the comment format by example.
-
-Fix the sparse inode default setting in the example.
-
-Change the .BI tags to .B (there is no bold/italic switching).
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
-index cf4bdf8..9c0c1a8 100644
---- a/man/man8/mkfs.xfs.8.in
-+++ b/man/man8/mkfs.xfs.8.in
-@@ -957,53 +957,61 @@ Do not attempt to discard blocks at mkfs time.
- .B \-V
- Prints the version number and exits.
- .SH CONFIGURATION FILE FORMAT
--The optional default configuration file in
-+The optional defaults configuration file in
- .B @sysconfdir@/xfs/mkfs/default
- as well as any alternate configuration file specified via the
- .B \-c
--option follow a simple ini-style format as shown below.
--Available options consist of a small subset of the parameters available
--via the
--.BR mkfs.xfs (8)
--command line.
--Currently all default parameters can only be either enabled or disabled,
-+option follow a simple ini-style format as shown below, with section names
-+corresponding to command-line options as follows:
-+.BR "\-d [data]" ,
-+.BR "\-i [inode]" ,
-+.BR "\-l [log]" ,
-+.BR "\-m [metadata]" ,
-+.BR "\-n [naming]" ,
-+.BR "\-r [rtdev]" .
-+.br
-+In each of these sections, a subset of the command-line suboptions may be
-+specified to override built-in default settings.
-+Currently all parameters can only be either enabled or disabled,
- with a value of 1 to enable or 0 to disable.
- See below for a list of all supported configuration parameters and their
- current built-in default settings.
- .PP
--.BI [data]
-+.B # Comments and blank lines  are allowed
-+.br
-+.B [data]
- .br
--.BI noalign=0
-+.B noalign=0
- .PP
--.BI [inode]
-+.B [inode]
- .br
--.BI align=1
-+.B align=1
- .br
--.BI projid32bit=1
-+.B projid32bit=1
- .br
--.BI sparse=0
-+.B sparse=1
- .PP
--.BI [log]
-+.B [log]
- .br
--.BI lazy-count=1
-+.B lazy-count=1
- .PP
--.BI [metadata]
-+.B [metadata]
- .br
--.BI crc=1
-+.B crc=1
- .br
--.BI finobt=1
-+.B finobt=1
- .br
--.BI rmapbt=0
-+.B rmapbt=0
- .br
--.BI reflink=0
-+.B reflink=0
- .PP
--.BI [naming]
-+.B [naming]
- .br
--.BI ftype=1
-+.B ftype=1
- .PP
--.BI [rtdev]
-+.B [rtdev]
- .br
--.BI noalign=0
-+.B noalign=0
- .PP
- .SH SEE ALSO
- .BR xfs (5),
-
-
+I would not want to make that call. Certainly parts of it are
+recyclable, so it would be wasteful to throw it all out.
