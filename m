@@ -1,39 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:49752 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755757AbeFOHzA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 15 Jun 2018 03:55:00 -0400
-Date: Fri, 15 Jun 2018 10:03:27 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: iomap preparations for GFS2 v2
-Message-ID: <20180615080326.GB19525@lst.de>
-References: <20180614120457.28285-1-hch@lst.de> <CAHc6FU4nQ562SxepV1=dqcuuuPBWOTXr4sAiY_5H-Z7uOaTNng@mail.gmail.com>
+Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:48760 "EHLO
+        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S935733AbeFNCbf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jun 2018 22:31:35 -0400
+Date: Thu, 14 Jun 2018 12:31:32 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Reading/changing projid of a symlink
+Message-ID: <20180614023132.GI10363@dastard>
+References: <CA+Xn3kwTnu8yd-DCy37323waPgNm0jNuL9NDhz8s8pY023COSw@mail.gmail.com>
+ <20180612143608.ok3jqtl3l34vdlpy@odin.usersys.redhat.com>
+ <CA+Xn3kyxiOj+irNiqKWQWfJ_aUv1RYFsH+UCnv3gnMuYJ=oUQw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAHc6FU4nQ562SxepV1=dqcuuuPBWOTXr4sAiY_5H-Z7uOaTNng@mail.gmail.com>
+In-Reply-To: <CA+Xn3kyxiOj+irNiqKWQWfJ_aUv1RYFsH+UCnv3gnMuYJ=oUQw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andreas Gruenbacher <agruenba@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, cluster-devel <cluster-devel@redhat.com>, linux-ext4 <linux-ext4@vger.kernel.org>
+To: Ilya Pronin <ipronin@twitter.com>
+Cc: linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>
 
-On Thu, Jun 14, 2018 at 03:04:38PM +0200, Andreas Gruenbacher wrote:
-> I saw that you've pushed this onto the gfs2-iomap branch in your xfs
-> repository. I've rebased the gfs2 iomap-write branch onto that;
-> there's a trivial patch for adding a private pointer to struct iomap
-> at the head of that branch that would sense to move to the shared
-> branch as well now.
+On Tue, Jun 12, 2018 at 03:17:27PM -0700, Ilya Pronin wrote:
+> So the only way to remove a symlink from a project is to remove it?
+> 
+> Here's my use case. In Apache Mesos we use XFS project quotas for disk
+> space isolation. Every container sandbox is allocated its own project
+> ID. When the container terminates its project ID is unset from the
+> sandbox and files inside it, and can be used for other containers.
+> Sandboxes of terminated containers stay on the host for some time for
+> debugging, etc. With such approach the inability to remove projid from
+> symlinks presents a small problem: when a project ID is reused for a
+> new container, any lingering symlinks that still have that project ID
+> will contribute to disk usage of the new container. Typically not
+> much, but still that's inaccurate. I guess we'll need to change when
+> we "deallocate" projids.
 
-Please send that patch out ASAP.
+XFS has a 32bit project ID space, so you really don't need to reuse
+project IDs at all. Just keep incrementing the new container ID, and
+maybe after a couple of billion project IDs have been consumed you
+can look at reclaiming/recycling/resetting the new ID counter?
 
-> The next step would probably be to start using iomap_readpage /
-> iomap_readpages in gfs2 for block size == page size. This requires
-> adding inline data support to iomap_readpage which is trivial, but
-> because of gfs2's reliance on buffer heads, that alone isn't enough.
+Cheers,
 
-Is it?  At least for block size == page size we will only call
-readpage on a pristine, newly allocated page.  So buffer heads won't
-be in the game at that point, and the iomap buffered write code will
-just allocate them for you once we start a write operation, or take
-a page fault that makes the page writable.
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
