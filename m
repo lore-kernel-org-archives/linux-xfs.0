@@ -1,62 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:5787 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754526AbeFMWC1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Jun 2018 18:02:27 -0400
-Date: Thu, 14 Jun 2018 08:02:11 +1000
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:44189 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S965001AbeFNXpH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jun 2018 19:45:07 -0400
+Date: Fri, 15 Jun 2018 09:42:39 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Strange XFS problem
-Message-ID: <20180613220211.GF10363@dastard>
-References: <e462d333d2089a7c3c59e7584fa83f720365fa46.camel@quantentunnel.de>
- <0ae6d0d5984dcd9c703720bdf41b6da1333267b0.camel@quantentunnel.de>
- <20180605082917.azuql22j5wnb7wof@odin.usersys.redhat.com>
- <CAAxjCEwS5mcEMPCqJmUiUParsaG7Fxzf0c0GxkJURv85fYuJyw@mail.gmail.com>
- <a2dbfee3-f5dc-b4c3-24c9-153fe3304d10@sandeen.net>
- <CAAxjCExfy6ysDCOPX7G9HNJvqojbgQHu54QwMrcGROhu1JnMLg@mail.gmail.com>
- <4cd7af90-6c71-fd1b-edcc-f026331b951c@sandeen.net>
+Subject: Re: [PATCH 2/2] mkfs: remove notion of config "type"
+Message-ID: <20180614234239.GO10363@dastard>
+References: <7a30c780-d69a-71d4-d0e6-a5fcefda08e6@sandeen.net>
+ <8c2a5a07-5d47-48a1-1593-e93eb0fb883a@sandeen.net>
+ <20180614164121.GC6825@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <4cd7af90-6c71-fd1b-edcc-f026331b951c@sandeen.net>
+In-Reply-To: <20180614164121.GC6825@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Stefan Ring <stefanrin@gmail.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Jun 12, 2018 at 01:56:06PM -0500, Eric Sandeen wrote:
+On Thu, Jun 14, 2018 at 09:41:21AM -0700, Darrick J. Wong wrote:
+> On Wed, Jun 13, 2018 at 02:37:01PM -0500, Eric Sandeen wrote:
+> > @@ -3796,19 +3795,18 @@ _("respecification of configuration not allowed\n"));
+> >  		ret = parse_defaults_file(fd, &dft, config_file);
+> >  		if (ret) {
+> >  			fprintf(stderr,
+> > -_("Error parsing %s config file: %s : %s\n"),
+> > -				default_type_str(dft.type),
+> > +_("Error parsing config file: %s : %s\n"),
+> >  				config_file, strerror(errno));
+> >  			free(config_file);
+> >  			close(fd);
+> >  			exit(1);
+> >  		}
+> > +		printf(_("Configuration file used for defaults: %s\n"),
 > 
-> 
-> On 6/12/18 1:53 PM, Stefan Ring wrote:
-> > On Tue, Jun 5, 2018 at 4:19 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
-> >> In all seriousness, if you would like to update the translations that would
-> >> be great.  The Polish translation is the only one that receives regular
-> >> updates today.
-> > 
-> > I've looked into it, but this seems to me like a gargantuan task
-> > because there is so much internal inconsistency that I wouldn't even
-> > know where to start. "Extent" for example: sometimes this is
-> > translated as "Erweiterung" (nonsense, that's extension). Sometimes
-> > it's left verbatim. This is what I'd be leaning towards as well. Other
-> > times, it got translated as "Ausmaß", which in another context is in
-> > fact a translation for "extent" (as in: the extent of a catastrophy),
-> > but makes no sense here. Also "Bereich" and "Umfang" are used
-> > sometimes, of which only the former makes a slight bit of sense. That
-> > in addition to my general under-appreciation of low-level technical
-> > translation. They are usually much less comprehensible and the
-> > gibberish needs to be translated back anyway in order to any sense of,
-> > apart from the fact that the original text is searchable, in stark
-> > contrast to the translation.
-> 
-> Thanks for looking.
-> 
-> Is the German translation bad/embarrassing enough that it should just
-> be removed?  Does it do more harm than good at this point?
+> _("EXPERIMENTAL configuration file used for defaults: %s\n")
 
-Don't distro's have internationalisation teams precisely for doing
-translations of packages? If so, shouldn't we be asking for those
-teams to do translation work?
+I don't see a reason for this to be experimental - we're not
+screwing with on-disk formats and there's no potential for data
+corruption or loss, so why do we need to mark this as "don't use
+this because it might screw up your data"?  I'd much prefer we spend
+the time now to get it right before before shipping it...
+
+Which then makes me ask: why don't we have a config file version
+identifier in the config file?
 
 Cheers,
 
