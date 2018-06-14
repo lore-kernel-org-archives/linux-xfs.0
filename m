@@ -1,124 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:53636 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755650AbeFOLxh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 15 Jun 2018 07:53:37 -0400
-Date: Fri, 15 Jun 2018 07:53:35 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2 2/2] xfs: use sync buffer I/O for sync delwri queue
- submission
-Message-ID: <20180615115334.GC2857@bfoster>
-References: <20180613110516.65494-1-bfoster@redhat.com>
- <20180613110516.65494-3-bfoster@redhat.com>
- <20180615112820.GB3230@infradead.org>
+Received: from sandeen.net ([63.231.237.45]:40114 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965872AbeFNObk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 14 Jun 2018 10:31:40 -0400
+Subject: Re: [PATCH 0/5] xfsprogs-4.17: mkfs config file enhancements
+References: <152891829964.3968.4760134019673731615.stgit@magnolia>
+ <20180614040628.GJ10363@dastard>
+ <c4ae2aaf-ee28-5c35-b3f5-ffe8a57d3c01@sandeen.net>
+ <20180614050844.GK10363@dastard>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <6e259bf3-b85a-c506-7270-0458f3523cd0@sandeen.net>
+Date: Thu, 14 Jun 2018 09:31:39 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180615112820.GB3230@infradead.org>
+In-Reply-To: <20180614050844.GK10363@dastard>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On Fri, Jun 15, 2018 at 04:28:20AM -0700, Christoph Hellwig wrote:
-> On Wed, Jun 13, 2018 at 07:05:16AM -0400, Brian Foster wrote:
-> > If a delwri queue occurs of a buffer that sits on a delwri queue
-> > wait list, the queue sets _XBF_DELWRI_Q without changing the state
-> > of ->b_list. This occurs, for example, if another thread beats the
-> > current delwri waiter thread to the buffer lock after I/O
-> > completion. Once the waiter acquires the lock, it removes the buffer
-> > from the wait list and leaves a buffer with _XBF_DELWRI_Q set but
-> > not populated on a list. This results in a lost buffer submission
-> > and in turn can result in assert failures due to _XBF_DELWRI_Q being
-> > set on buffer reclaim or filesystem lockups if the buffer happens to
-> > cover an item in the AIL.
-> > 
-> > This problem has been reproduced by repeated iterations of xfs/305
-> > on high CPU count (28xcpu) systems with limited memory (~1GB). Dirty
-> > dquot reclaim races with an xfsaild push of a separate dquot backed
-> > by the same buffer such that the buffer sits on the reclaim wait
-> > list at the time xfsaild attempts to queue it. Since the latter
-> > dquot has been flush locked but the underlying buffer not submitted
-> > for I/O, the dquot pins the AIL and causes the filesystem to
-> > livelock.
-> > 
-> > This race is essentially made possible by the buffer lock cycle
-> > involved with waiting on a synchronous delwri queue submission.
-> > Close the race by using synchronous buffer I/O for respective delwri
-> > queue submission. This means the buffer remains locked across the
-> > I/O and so is inaccessible from other contexts while in the
-> > intermediate wait list state. The sync buffer I/O wait mechanism is
-> > factored into a helper such that sync delwri buffer submission and
-> > serialization are batched operations.
-> > 
-> > Designed-by: Dave Chinner <dchinner@redhat.com>
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >  fs/xfs/xfs_buf.c | 78 +++++++++++++++++++++++++-----------------------
-> >  1 file changed, 41 insertions(+), 37 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > index 112999ddb75e..113ab6426a40 100644
-> > --- a/fs/xfs/xfs_buf.c
-> > +++ b/fs/xfs/xfs_buf.c
-> > @@ -1530,6 +1530,21 @@ xfs_buf_submit(
-> >  	xfs_buf_rele(bp);
-> >  }
-> >  
-> > +/*
-> > + * Wait on a sync buffer.
-> > + */
-> > +static int
-> > +xfs_buf_iowait(
-> > +	struct xfs_buf	*bp)
-> > +{
-> > +	/* wait for completion before gathering the error from the buffer */
+
+
+On 6/14/18 12:08 AM, Dave Chinner wrote:
+> On Wed, Jun 13, 2018 at 11:23:09PM -0500, Eric Sandeen wrote:
+>> On 6/13/18 11:06 PM, Dave Chinner wrote:
+>>> With this change, we'll have code to maintain it to ensure that the
+>>> file gets updated properly, and it will probably take more time and
+>>> effort to validate that the generated file is correct (and debug if
+>>> it's not!) compared to the 30s it will take to hand edit the
+>>> template file to change or add a new default...
+>>
+>> Well, yeah.  /if/ we need a template, as well as text in a man page,
+>> then this gets it down to editing 1 file instead of two, I guess.
+>> But it really seems like we need to rethink these structures to get it
+>> all tied together, not requiring 2 or 3 manual updates across several files.
+>> It's bound to get out of sync.  I guess that can wait, but right now this
+>> dispersal isn't good.
 > 
-> That comments seems to state the obvious based on the function name
-> and top of function comment.  I'd just remove it.
+> So let's get the basic conig file stuff in first, then cosolidate,
+> then add all the bells and whistles.
 > 
-
-Ok, I'll fold it into the above.
-
-> > @@ -2013,21 +2017,22 @@ xfs_buf_delwri_submit_buffers(
-> >  		trace_xfs_buf_delwri_split(bp, _RET_IP_);
-> >  
-> >  		/*
-> > +		 * If we have a wait list, each buffer (and associated delwri
-> > +		 * queue reference) transfers to it and is submitted
-> > +		 * synchronously. Otherwise, drop the buffer from the delwri
-> > +		 * queue and submit async.
-> >  		 */
-> >  		bp->b_flags &= ~(_XBF_DELWRI_Q | XBF_WRITE_FAIL);
-> > +		bp->b_flags |= XBF_WRITE;
-> >  		if (wait_list) {
-> > +			bp->b_flags &= ~XBF_ASYNC;
-> >  			list_move_tail(&bp->b_list, wait_list);
-> > +			__xfs_buf_submit(bp);
-> > +		} else {
-> > +			bp->b_flags |= XBF_ASYNC;
-> >  			list_del_init(&bp->b_list);
-> > +			xfs_buf_submit(bp);
-> > +		}
+> Too many cooks trying to add all their own bells and whistles before
+> the core behaviour, infrastructure and implementation was nailed
+> down was pretty much what lead all the tablised CLI option parsing
+> code. And we're doing it again with this config file stuff...
 > 
-> Ok, that breaks my idea of just checking XBF_ASYNC in the previous
-> reply.  But we could still do that with an explicit flag instead of
-> the duplication.
+>>> I'm also not convinced we should ship a "default.template" file,
+>>> either.  I'd much prefer we ship a real config file with all the
+>>> options defined but commented out as a "start here template".
+>>
+>> As the code stands today, if a 100% commented-out config file
+>> exists, then mkfs will tell you that it's overriding built-in
+>> defaults with the config file which contains ... nothing.
+>> If we ship such a thing by default, that's what will happen by
+>> default.
+> 
+> Then that's a bug in the new parsing code and needs fixing. :)
 
-Not totally sure I follow... do you essentially mean to rename
-xfs_buf_submit_wait() -> xfs_buf_submit() and make the iowait
-conditional on !XBF_ASYNC and absence of some new "sync_nowait"
-parameter to the function? Could you clarify how you envision the
-updated xfs_buf_submit() function signature to look?
+*shrug*  No, the parsing code is fine (in this respect), but I guess
+we can change verbiage to indicate that a config file was used
+without indicating that it actually /did/ anything....
+ 
+>> (Actually today it fails to parse and errors out but a patch
+>> to fix that is on the list).
+>>
+>> I guess we could behave as if "no config file" if a config file
+>> contained no parseable tokens ... but that gets weird too.
+> 
+> Don't see why that is wierd, either - it's pretty common behaviour
+> for package shipped config files to have all options are present but
+> commented out.
 
-If I'm following correctly, that seems fairly reasonable at first
-thought. This is a separate patch though (refactoring the interface vs.
-refactoring the implementation to fix a bug).
+Because most packages don't have this kinda weird behavior of telling
+you on stdout which config file they're operating from, if any...
 
-Brian
+>> Putting a blank config file in place to be parsed by default
+>> is messy, so a .template approach seems reasonable to me, if we
+>> need such a thing at all.
+> 
+> If we really need a separate template, then perhaps it should be in
+> the mkfs config file man page where we document all the supported
+> options?
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+There is currently a "template" in the mkfs.xfs.8 manpage, insofar
+as a template can exist in a manpage, and that's exactly what Darrick's
+patch was autogenerating.
+
+(I'm realizing though that there's not great or explicit documentation
+of the mapping between commandline options and the allowable config
+options.)
+
+-Eric
