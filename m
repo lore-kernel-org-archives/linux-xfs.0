@@ -1,247 +1,185 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:36634 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753242AbeFONCZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 09:02:25 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 03/24] iomap: add initial support for writes without buffer heads
-Date: Fri, 15 Jun 2018 15:01:48 +0200
-Message-Id: <20180615130209.1970-4-hch@lst.de>
-In-Reply-To: <20180615130209.1970-1-hch@lst.de>
-References: <20180615130209.1970-1-hch@lst.de>
+Received: from aserp2130.oracle.com ([141.146.126.79]:36898 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754526AbeFNR73 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jun 2018 13:59:29 -0400
+Date: Thu, 14 Jun 2018 10:59:09 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 0/5] xfsprogs-4.17: mkfs config file enhancements
+Message-ID: <20180614175909.GB8128@magnolia>
+References: <152891829964.3968.4760134019673731615.stgit@magnolia>
+ <20180614040628.GJ10363@dastard>
+ <c4ae2aaf-ee28-5c35-b3f5-ffe8a57d3c01@sandeen.net>
+ <20180614050844.GK10363@dastard>
+ <20180614062949.GA6825@magnolia>
+ <20180614174640.GE7508@wotan.suse.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20180614174640.GE7508@wotan.suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@sandeen.net>, sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-For now just limited to blocksize == PAGE_SIZE, where we can simply read
-in the full page in write begin, and just set the whole page dirty after
-copying data into it.  This code is enabled by default and XFS will now
-be feed pages without buffer heads in ->writepage and ->writepages.
+On Thu, Jun 14, 2018 at 07:46:40PM +0200, Luis R. Rodriguez wrote:
+> On Wed, Jun 13, 2018 at 11:29:49PM -0700, Darrick J. Wong wrote:
+> > On Thu, Jun 14, 2018 at 03:08:44PM +1000, Dave Chinner wrote:
+> > > On Wed, Jun 13, 2018 at 11:23:09PM -0500, Eric Sandeen wrote:
+> > > > On 6/13/18 11:06 PM, Dave Chinner wrote:
+> > > > > With this change, we'll have code to maintain it to ensure that the
+> > > > > file gets updated properly, and it will probably take more time and
+> > > > > effort to validate that the generated file is correct (and debug if
+> > > > > it's not!) compared to the 30s it will take to hand edit the
+> > > > > template file to change or add a new default...
+> 
+> If we had an xfstest to *test* that same generated file, this would not
+> be an issue and from what I gather we need quite a bit of work to get there.
+> 
+> I'm working on a test for config stuff but that will just test for now
+> (and this reveals some future work needed):
+> 
+> a) a set of config files we know should work and ensure they produce the
+>    same filesystem as if we had used CLI params. We can use xfs_db -c version
+>    against both filesystems and check that each differences. Since this would
+>    use the same xfsprogs for the results of a config based filesystem and
+>    the CLI based filesystem the diff would only generate if there really
+>    was a change between both runs, and you can use any xfsprogs version
+>    for it.
 
-If a file system sets the IOMAP_F_BUFFER_HEAD flag on the iomap the old
-path will still be used, this both helps the transition in XFS and
-prepares for the gfs2 migration to the iomap infrastructure.
+Hmm, just out of curiosity, are there any mkfs cli/config options that
+do /not/ show up in the output of mkfs and/or 'xfs_db -c info'?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/iomap.c            | 115 +++++++++++++++++++++++++++++++++++++++---
- fs/xfs/xfs_iomap.c    |   6 ++-
- include/linux/iomap.h |   2 +
- 3 files changed, 114 insertions(+), 9 deletions(-)
+>    It does however leave actual expected results on the filesystem up to
+>    a separate test, it assumes that xfs/191-input-validation is doing its
+>    job, but word is that needs some love.
+> 
+> b) a set of invalid config files and ensure they never work
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index e99e4fbc31f4..a504077bb38f 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -348,6 +348,48 @@ iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
- 		truncate_pagecache_range(inode, max(pos, i_size), pos + len);
- }
- 
-+static int
-+iomap_read_page_sync(struct inode *inode, loff_t block_start, struct page *page,
-+		unsigned poff, unsigned plen, unsigned from, unsigned to,
-+		struct iomap *iomap)
-+{
-+	struct bio_vec bvec;
-+	struct bio bio;
-+
-+	if (iomap->type != IOMAP_MAPPED || block_start >= i_size_read(inode)) {
-+		zero_user_segments(page, poff, from, to, poff + plen);
-+		return 0;
-+	}
-+
-+	bio_init(&bio, &bvec, 1);
-+	bio.bi_opf = REQ_OP_READ;
-+	bio.bi_iter.bi_sector = iomap_sector(iomap, block_start);
-+	bio_set_dev(&bio, iomap->bdev);
-+	__bio_add_page(&bio, page, plen, poff);
-+	return submit_bio_wait(&bio);
-+}
-+
-+static int
-+__iomap_write_begin(struct inode *inode, loff_t pos, unsigned len,
-+		struct page *page, struct iomap *iomap)
-+{
-+	loff_t block_size = i_blocksize(inode);
-+	loff_t block_start = pos & ~(block_size - 1);
-+	loff_t block_end = (pos + len + block_size - 1) & ~(block_size - 1);
-+	unsigned poff = block_start & (PAGE_SIZE - 1);
-+	unsigned plen = min_t(loff_t, PAGE_SIZE - poff, block_end - block_start);
-+	unsigned from = pos & (PAGE_SIZE - 1), to = from + len;
-+
-+	WARN_ON_ONCE(i_blocksize(inode) < PAGE_SIZE);
-+
-+	if (PageUptodate(page))
-+		return 0;
-+	if (from <= poff && to >= poff + plen)
-+		return 0;
-+	return iomap_read_page_sync(inode, block_start, page,
-+			poff, plen, from, to, iomap);
-+}
-+
- static int
- iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
- 		struct page **pagep, struct iomap *iomap)
-@@ -367,9 +409,10 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
- 
- 	if (iomap->type == IOMAP_INLINE)
- 		iomap_read_inline_data(inode, page, iomap);
--	else
-+	else if (iomap->flags & IOMAP_F_BUFFER_HEAD)
- 		status = __block_write_begin_int(page, pos, len, NULL, iomap);
--
-+	else
-+		status = __iomap_write_begin(inode, pos, len, page, iomap);
- 	if (unlikely(status)) {
- 		unlock_page(page);
- 		put_page(page);
-@@ -382,6 +425,57 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
- 	return status;
- }
- 
-+int
-+iomap_set_page_dirty(struct page *page)
-+{
-+	struct address_space *mapping = page_mapping(page);
-+	int newly_dirty;
-+
-+	if (unlikely(!mapping))
-+		return !TestSetPageDirty(page);
-+
-+	/*
-+	 * Lock out page->mem_cgroup migration to keep PageDirty
-+	 * synchronized with per-memcg dirty page counters.
-+	 */
-+	lock_page_memcg(page);
-+	newly_dirty = !TestSetPageDirty(page);
-+	if (newly_dirty)
-+		__set_page_dirty(page, mapping, 0);
-+	unlock_page_memcg(page);
-+
-+	if (newly_dirty)
-+		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
-+	return newly_dirty;
-+}
-+EXPORT_SYMBOL_GPL(iomap_set_page_dirty);
-+
-+static int
-+__iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
-+		unsigned copied, struct page *page, struct iomap *iomap)
-+{
-+	flush_dcache_page(page);
-+
-+	/*
-+	 * The blocks that were entirely written will now be uptodate, so we
-+	 * don't have to worry about a readpage reading them and overwriting a
-+	 * partial write.  However if we have encountered a short write and only
-+	 * partially written into a block, it will not be marked uptodate, so a
-+	 * readpage might come in and destroy our partial write.
-+	 *
-+	 * Do the simplest thing, and just treat any short write to a non
-+	 * uptodate page as a zero-length write, and force the caller to redo
-+	 * the whole thing.
-+	 */
-+	if (unlikely(copied < len && !PageUptodate(page))) {
-+		copied = 0;
-+	} else {
-+		SetPageUptodate(page);
-+		iomap_set_page_dirty(page);
-+	}
-+	return __generic_write_end(inode, pos, copied, page);
-+}
-+
- static int
- iomap_write_end_inline(struct inode *inode, struct page *page,
- 		struct iomap *iomap, loff_t pos, unsigned copied)
-@@ -408,9 +502,11 @@ iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
- 
- 	if (iomap->type == IOMAP_INLINE) {
- 		ret = iomap_write_end_inline(inode, page, iomap, pos, copied);
--	} else {
-+	} else if (iomap->flags & IOMAP_F_BUFFER_HEAD) {
- 		ret = generic_write_end(NULL, inode->i_mapping, pos, len,
- 				copied, page, NULL);
-+	} else {
-+		ret = __iomap_write_end(inode, pos, len, copied, page, iomap);
- 	}
- 
- 	if (iomap->page_done)
-@@ -703,11 +799,16 @@ iomap_page_mkwrite_actor(struct inode *inode, loff_t pos, loff_t length,
- 	struct page *page = data;
- 	int ret;
- 
--	ret = __block_write_begin_int(page, pos, length, NULL, iomap);
--	if (ret)
--		return ret;
-+	if (iomap->flags & IOMAP_F_BUFFER_HEAD) {
-+		ret = __block_write_begin_int(page, pos, length, NULL, iomap);
-+		if (ret)
-+			return ret;
-+		block_commit_write(page, 0, length);
-+	} else {
-+		WARN_ON_ONCE(!PageUptodate(page));
-+		WARN_ON_ONCE(i_blocksize(inode) < PAGE_SIZE);
-+	}
- 
--	block_commit_write(page, 0, length);
- 	return length;
- }
- 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index c9c3d0df5e4c..85c66e78f9e8 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -640,7 +640,7 @@ xfs_file_iomap_begin_delay(
- 	 * Flag newly allocated delalloc blocks with IOMAP_F_NEW so we punch
- 	 * them out if the write happens to fail.
- 	 */
--	iomap->flags = IOMAP_F_NEW;
-+	iomap->flags |= IOMAP_F_NEW;
- 	trace_xfs_iomap_alloc(ip, offset, count, 0, &got);
- done:
- 	if (isnullstartblock(got.br_startblock))
-@@ -1033,6 +1033,8 @@ xfs_file_iomap_begin(
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
- 
-+	iomap->flags |= IOMAP_F_BUFFER_HEAD;
-+
- 	if (((flags & (IOMAP_WRITE | IOMAP_DIRECT)) == IOMAP_WRITE) &&
- 			!IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
- 		/* Reserve delalloc blocks for regular writeback. */
-@@ -1133,7 +1135,7 @@ xfs_file_iomap_begin(
- 	if (error)
- 		return error;
- 
--	iomap->flags = IOMAP_F_NEW;
-+	iomap->flags |= IOMAP_F_NEW;
- 	trace_xfs_iomap_alloc(ip, offset, length, 0, &imap);
- 
- out_finish:
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index cfbc28b4005c..c2706cfb27c7 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -30,6 +30,7 @@ struct vm_fault;
-  */
- #define IOMAP_F_NEW		0x01	/* blocks have been newly allocated */
- #define IOMAP_F_DIRTY		0x02	/* uncommitted metadata */
-+#define IOMAP_F_BUFFER_HEAD	0x04	/* file system requires buffer heads */
- 
- /*
-  * Flags that only need to be reported for IOMAP_REPORT requests:
-@@ -103,6 +104,7 @@ ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
- int iomap_readpage(struct page *page, const struct iomap_ops *ops);
- int iomap_readpages(struct address_space *mapping, struct list_head *pages,
- 		unsigned nr_pages, const struct iomap_ops *ops);
-+int iomap_set_page_dirty(struct page *page);
- int iomap_file_dirty(struct inode *inode, loff_t pos, loff_t len,
- 		const struct iomap_ops *ops);
- int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
--- 
-2.17.1
+Agreed, I have some twisty ones of my own, though fixing them requires
+some amount of sscanf format string tweaking. :)
 
+> c) test to ensure cli can override config params
+
+<nod>
+
+> To test that a self generated config file works would be a next step (d),
+> and I think we can validate it by also making sure it yields the same
+> filesystem as if we just ran mkfs.xfs with no options, so same strategy
+> as in a).
+
+Ok, good.  I'd also argue for a test that tries every file in
+/etc/xfs/mkfs/* to see if mkfs will format the filesystem described in
+the config file, that way we can pick up all the distro-packaged files.
+
+> > Counterpoint: the mkfs config file template in mkfs.xfs.8 is already
+> > incorrect; sparse inodes was enabled by default in 4.16 but the manpage
+> > cfg file says it isn't.  This is exactly what happens when we rely on
+> > ourselves to hand edit the template file.
+> > 
+> > Put the defaults in *one* place in the source code tree and generate
+> > everything else off of that, instead of keeping multiple copies that
+> > will then get out of sync.  We clearly suck at this maintenance.
+> 
+> I personally prefer this automation, so with this is mind I think this
+> is a change in the right direction.
+
+:)
+
+> > > > Well, yeah.  /if/ we need a template, as well as text in a man page,
+> > > > then this gets it down to editing 1 file instead of two, I guess.
+> > > > But it really seems like we need to rethink these structures to get it
+> > > > all tied together, not requiring 2 or 3 manual updates across several files.
+> > > > It's bound to get out of sync.  I guess that can wait, but right now this
+> > > > dispersal isn't good.
+> > > 
+> > > So let's get the basic conig file stuff in first, then cosolidate,
+> > > then add all the bells and whistles.
+> > 
+> > That's where I started from -- fix the existing mess with the manpage,
+> 
+> That should be a separate patch first.
+
+> > then fix the problems in the parsing code, then move all the CLI parsing and
+> > validation code out of xfs_mkfs.c because it's just too long.
+> 
+> Yay!
+> 
+> > Granted, I haven't gotten all the way there yet, so perhaps it was a bad
+> > idea to post just the first of those three parts.
+> > 
+> > > Too many cooks trying to add all their own bells and whistles before
+> > > the core behaviour, infrastructure and implementation was nailed
+> > > down was pretty much what lead all the tablised CLI option parsing
+> > > code. And we're doing it again with this config file stuff...
+> > 
+> > Yeah.  TBH I feel at a loss for what exactly your vision is for how mkfs
+> > option parsing is supposed to work in the end.  How close is this:
+> 
+> BTW it seems we may need to document this vision as otherwise others may
+> run into issues later as well.
+
+Yes.  This should go in xfs_mkfs.c after moving all the other stuff out.
+
+> > 1. First we have the mkfs_default_params, which are the builtin
+> > defaults.
+> > 
+> > 2. Configuration file parameters are supposed to change the
+> > mkfs_default_params, yes?
+> > 
+> > 3. The mkfs_default_params are used to seed the cli_params.
+> > 
+> > 4. The getopt loop pulls the CLI option data into the cli_params.
+> > 
+> > 5. At this point we've melded together the builtin options
+> > with whatever the config file told us about, then folded in the CLI
+> > options, right?
+> > 
+> > 6. Now we start calling the validate_* and calculate_* functions.  These
+> > functions check the full set of configuration data and copy them into
+> > the mkfs_params; and they calculate whatever other bits are needed to
+> > finish the mkfs_params.
+> > 
+> > 7. Finally the validated mkfs_params are fed to the initialisation
+> > functions to set up the actual filesystem.
+> 
+> FWIW this at least matches my own expectations so far.
+> 
+> > So AFAICT what we have now is a big collection of ops_params that
+> > contain all the cli parsing options and a bunch of functions that take
+> > the cli strings and fill out the appropriate parts of cli_params.
+> > 
+> > Luis built a confopts_tab(le) that mapped cfgfile options to parsing
+> > functions that know how to take the cfgfile strings and fill out the
+> > appropriate parts of mkfs_default_params.  I understand now that from
+> > these first five patches it sure looks like I'm building yet a third
+> > structure, but this isn't the endgame -- I want a data structure that
+> > maps cfgfile options directly to the mkfs default params.  I'm doing
+> > this by building the new direct-mapped structure on the side and
+> > migrating the parser code to use that.
+> > 
+> > Ås for "how do I check that the distro provided default template even
+> > works?", I'm working on building an xfstest to make sure that the
+> > default templates we ship (and whatever might be in
+> > /etc/xfs/mkfs/default) actually produce a functioning filesystem.
+> 
+> With proper testing in place for regular configs stuff (the tests
+> I have to write) and this I see your changes as desirable but I'm
+> wondering if this should just wait until the next cycle so we at
+> least have some effort on the testing started already?
+
+Agreed.  I'm scurrying back under the rocks so that Eric can get
+xfsprogs 4.17 out the door.
+
+(I'm actually going to go debug some hardware and see if I can get
+fscounter scrub working.)
+
+--D
+
+>   Luis
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
