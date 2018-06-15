@@ -1,37 +1,149 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:44316 "EHLO sandeen.net"
+Received: from mail.kernel.org ([198.145.29.99]:37026 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756235AbeFOVsb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 15 Jun 2018 17:48:31 -0400
-Subject: Re: [PATCH] libxfs: detect zoned disks and prevent their raw use
-References: <20180615205011.7728-1-mcgrof@kernel.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5fbcde14-fdb8-9a4f-e578-4ad7c4ef6315@sandeen.net>
-Date: Fri, 15 Jun 2018 16:48:29 -0500
-MIME-Version: 1.0
-In-Reply-To: <20180615205011.7728-1-mcgrof@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+        id S1756266AbeFOVbP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 15 Jun 2018 17:31:15 -0400
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH v2] libxfs: detect host managed zoned disks and prevent their raw use
+Date: Fri, 15 Jun 2018 14:31:13 -0700
+Message-Id: <20180615213113.18597-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: linux-xfs@vger.kernel.org, snitzer@redhat.com, hare@suse.de, axboe@kernel.dk, mwilck@suse.com, Damien Le Moal <damien.lemoal@wdc.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
+To: sandeen@sandeen.net
+Cc: linux-xfs@vger.kernel.org, snitzer@redhat.com, hare@suse.de, axboe@kernel.dk, mwilck@suse.com, "Luis R. Rodriguez" <mcgrof@kernel.org>, Damien Le Moal <damien.lemoal@wdc.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
 
+Using raw host managed zoned disks by filesystems requires special handling,
+onlyf2fs currently supports this. No other filesystems supports dealing with
+host managed zoned disks directly.
 
+As such using host managed raw zoned disks is not supported by XFS, to use
+them you need to use dm-zoned-tools, format them with dzadm, set the scheduler
+to deadline, and then setup a dmsetup with zoned type, and somehow set
+this up on every boot to live a semi-happy life for now.
 
-On 6/15/18 3:50 PM, Luis R. Rodriguez wrote:
-> +	if (ret == 1) {
-> +		fprintf(stderr,
-> +_("%s: zoned disk detected, refer to dm-zoned-tools for how to use with XFS\n"),
-> +			path);
-> +		exit(1);
+Even if you use dmsetup on every boot, the host managed zoned disk is still
+exposed, and a user may still think they have to run mkfs.xfs on it instead
+of the /dev/mapper/ disk, and then mount it by mistake.
 
-Sorry for not sending this before V2, but is "dm-zoned-tools" established enough
-in the ecosystem at this point to embed it in help text of utilities like this?
+In either case you may seem to believe your disk works and only eventually
+end up with alignmet issues and perhaps lose you data. For instance:
 
-(It's not in debian or in fedora, so that message might lead to some head-scratching,
-I think)
+[10869.959501] device-mapper: zoned reclaim: (sda): Align zone 865 wp 28349 to 30842 (wp+2493) blocks failed -5
+[10870.014488] sd 0:0:0:0: [sda] tag#0 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+[10870.016137] sd 0:0:0:0: [sda] tag#0 Sense Key : Illegal Request [current]
+[10870.017696] sd 0:0:0:0: [sda] tag#0 Add. Sense: Unaligned write command
 
--Eric
+We have to prevent these mistakes by avoiding mkfs.xfs use on host managed
+zoned disks.
+
+Note that this not enough yet, if users are on old AHCI controllers,
+the disks may not be detected as zoned. More work through udev may be
+required to detect this situation old old parent PCI IDs for zoned
+host managed disks, and then prevent their use somehow.
+
+If you are stuck on using XFS there a udev rule out there [0], this is
+far from perfect, and not fully what we want done upstream on Linux
+distributions long term but it should at least help developers for now
+enjoy their shiny big fat zoned disks with XFS.
+
+This check should help avoid having folks shoot themselves in the foot
+for now with host managed zoned disks. If you make the mistake to use mkfs.xfs
+on a host managed zoned disk, you will now get:
+
+ # mkfs.xfs /dev/sda
+/dev/sda: host managed zoned disk detected, refer to dm-zoned-tools for how to use with XFS
+
+[0] https://lkml.kernel.org/r/20180614001147.1545-1-mcgrof@kernel.org
+
+Cc: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: Bart Van Assche <Bart.VanAssche@wdc.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+---
+ libxfs/init.c | 56 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 56 insertions(+)
+
+diff --git a/libxfs/init.c b/libxfs/init.c
+index a65c86c3..68e0864c 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -98,6 +98,47 @@ libxfs_device_to_fd(dev_t device)
+ 	/* NOTREACHED */
+ }
+ 
++static int
++is_zoned_host_managed(char *path)
++{
++	char str[PATH_MAX];
++	char *devname = basename(path);
++	FILE *file;
++	int len;
++	int ret;
++
++	len = snprintf(str, sizeof(str), "/sys/block/%s/queue/zoned", devname);
++
++	/* Indicates truncation */
++	if (len >= PATH_MAX) {
++		errno = ENAMETOOLONG;
++		return -1;
++	}
++
++	file = fopen(str, "r");
++	if (!file)
++		return 0;
++
++	memset(str, 0, sizeof(str));
++	ret = fscanf(file, "%s", str);
++	if (ret != 1) {
++		fclose(file);
++		errno = EINVAL;
++		return -1;
++        }
++
++	fclose(file);
++
++	/*
++	 * host-aware zone disks should be supported natively, but not
++	 * host-managed zone disks. They require dm-zoned-tools magic.
++	 */
++	if (strcmp(str, "host-managed") != 0)
++		return 0;
++
++	return 1;
++}
++
+ /* libxfs_device_open:
+  *     open a device and return its device number
+  */
+@@ -108,6 +149,7 @@ libxfs_device_open(char *path, int creat, int xflags, int setblksize)
+ 	int		fd, d, flags;
+ 	int		readonly, dio, excl;
+ 	struct stat	statb;
++	int ret;
+ 
+ 	readonly = (xflags & LIBXFS_ISREADONLY);
+ 	excl = (xflags & LIBXFS_EXCLUSIVELY) && !creat;
+@@ -119,6 +161,20 @@ retry:
+ 		(dio ? O_DIRECT : 0) | \
+ 		(excl ? O_EXCL : 0);
+ 
++	ret = is_zoned_host_managed(path);
++	if (ret < 0) {
++		fprintf(stderr, _("%s: error opening %s\n"),
++			path, strerror(errno));
++		exit(1);
++	}
++
++	if (ret == 1) {
++		fprintf(stderr,
++_("%s: host managed zoned disk detected, refer to dm-zoned-tools for how to use with XFS\n"),
++			path);
++		exit(1);
++	}
++
+ 	if ((fd = open(path, flags, 0666)) < 0) {
+ 		if (errno == EINVAL && --dio == 0)
+ 			goto retry;
+-- 
+2.17.1
+
