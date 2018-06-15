@@ -1,84 +1,153 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:48342 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755071AbeFNQk7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Jun 2018 12:40:59 -0400
-Subject: Re: [PATCH 2/2] mkfs: remove notion of config "type"
-References: <7a30c780-d69a-71d4-d0e6-a5fcefda08e6@sandeen.net>
- <8c2a5a07-5d47-48a1-1593-e93eb0fb883a@sandeen.net>
- <20180614161917.GA7508@wotan.suse.de>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <a327732b-b5ce-2fd2-0aa3-309d75c80675@sandeen.net>
-Date: Thu, 14 Jun 2018 11:40:57 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:46942 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965641AbeFOLYP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 07:24:15 -0400
+Date: Fri, 15 Jun 2018 04:24:14 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v3 1/2] xfs: refactor buffer submission into a common
+ helper
+Message-ID: <20180615112414.GA3230@infradead.org>
+References: <20180613110516.65494-2-bfoster@redhat.com>
+ <20180614134307.26868-1-bfoster@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20180614161917.GA7508@wotan.suse.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180614134307.26868-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>, Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 6/14/18 11:19 AM, Luis R. Rodriguez wrote:
-> On Wed, Jun 13, 2018 at 02:37:01PM -0500, Eric Sandeen wrote:
->> -static inline const char *default_type_str(enum default_params_type type)
->> -{
->> -	switch (type) {
->> -	case DEFAULTS_BUILTIN:
->> -		return _("package built-in definitions");
->> -	case DEFAULTS_CONFIG:
->> -		return _("package default config file");
->> -	case DEFAULTS_CLI_CONFIG:
->> -		return _("CLI supplied file");
->> -	}
->> -	return _("Unkown\n");
->> -}
+On Thu, Jun 14, 2018 at 09:43:07AM -0400, Brian Foster wrote:
+> Sync and async buffer submission both do generally similar things
+> with a couple odd exceptions. Refactor the core buffer submission
+> code into a common helper to isolate buffer submission from
+> completion handling of synchronous buffer I/O.
 > 
->>  
->> -	printf(_("Default configuration sourced from %s\n"),
->> -	       default_type_str(dft.type));
+> This patch does not change behavior. It is a step towards support
+> for using synchronous buffer I/O via synchronous delwri queue
+> submission.
 > 
-> The above is really the reason to the type stuff, and it was also why
-> I added it, as otherwise we had to allocate a string for the old way of
-> supplying that data. So really this is about the *source*, the type enum
-> stuff is just a way to implement it without dealing with complexities
-> on the string.
+> Designed-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
 > 
-> So regardless of the type, the question is we are OK to loose the source
-> of where the config file info came from.
-
-But we're not losing that; mkfs now says:
-
-# mkfs.xfs -f -c myconfig /dev/sdb1 
-Configuration file used for defaults: /etc/xfs/mkfs/myconfig
-...
-
-or
-
-# mkfs.xfs -f /dev/sdb1 
-Configuration file used for defaults: /etc/xfs/mkfs/default
-...
-
-so it explicitly tells the user what the source of defaults is.
-
-I didn't see the point to telling the user "you used a commandline option so we
-used your commandline option" after they typed a command line option.  ;)
-
-> I think it is important information
-> to get, but since it is not not information kept on the actual filesystem it is
-> information lost, and so really only useful for deployment time. But since
-> we are already printing the actual file used... it may suffice, and I do
-> agree I this does simplify things more.
+> v3:
+> - Leave tracepoint in __xfs_buf_submit and kill
+>   trace_xfs_buf_submit_wait().
 > 
-> Chinner had added that print line, I just tried to keep it around, if he's cool
-> with the removal of the source stuff now, then sure.
-
-ok.
-
-Thanks,
--Eric
- 
->   Luis
+>  fs/xfs/xfs_buf.c   | 85 ++++++++++++++++++++--------------------------
+>  fs/xfs/xfs_trace.h |  1 -
+>  2 files changed, 37 insertions(+), 49 deletions(-)
 > 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index e9c058e3761c..7b0f7c79cd62 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -1458,22 +1458,20 @@ _xfs_buf_ioapply(
+>   * a call to this function unless the caller holds an additional reference
+>   * itself.
+>   */
+> -void
+> -xfs_buf_submit(
+> +static int
+> +__xfs_buf_submit(
+>  	struct xfs_buf	*bp)
+>  {
+>  	trace_xfs_buf_submit(bp, _RET_IP_);
+>  
+>  	ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
+> -	ASSERT(bp->b_flags & XBF_ASYNC);
+>  
+>  	/* on shutdown we stale and complete the buffer immediately */
+>  	if (XFS_FORCED_SHUTDOWN(bp->b_target->bt_mount)) {
+>  		xfs_buf_ioerror(bp, -EIO);
+>  		bp->b_flags &= ~XBF_DONE;
+>  		xfs_buf_stale(bp);
+> -		xfs_buf_ioend(bp);
+> -		return;
+> +		return -EIO;
+>  	}
+>  
+>  	if (bp->b_flags & XBF_WRITE)
+> @@ -1482,23 +1480,14 @@ xfs_buf_submit(
+>  	/* clear the internal error state to avoid spurious errors */
+>  	bp->b_io_error = 0;
+>  
+> -	/*
+> -	 * The caller's reference is released during I/O completion.
+> -	 * This occurs some time after the last b_io_remaining reference is
+> -	 * released, so after we drop our Io reference we have to have some
+> -	 * other reference to ensure the buffer doesn't go away from underneath
+> -	 * us. Take a direct reference to ensure we have safe access to the
+> -	 * buffer until we are finished with it.
+> -	 */
+> -	xfs_buf_hold(bp);
+> -
+>  	/*
+>  	 * Set the count to 1 initially, this will stop an I/O completion
+>  	 * callout which happens before we have started all the I/O from calling
+>  	 * xfs_buf_ioend too early.
+>  	 */
+>  	atomic_set(&bp->b_io_remaining, 1);
+> -	xfs_buf_ioacct_inc(bp);
+> +	if (bp->b_flags & XBF_ASYNC)
+> +		xfs_buf_ioacct_inc(bp);
+>  	_xfs_buf_ioapply(bp);
+>  
+>  	/*
+> @@ -1507,14 +1496,39 @@ xfs_buf_submit(
+>  	 * that we don't return to the caller with completion still pending.
+>  	 */
+>  	if (atomic_dec_and_test(&bp->b_io_remaining) == 1) {
+> -		if (bp->b_error)
+> +		if (bp->b_error || !(bp->b_flags & XBF_ASYNC))
+>  			xfs_buf_ioend(bp);
+>  		else
+>  			xfs_buf_ioend_async(bp);
+>  	}
+>  
+> -	xfs_buf_rele(bp);
+> +	return 0;
+> +}
+> +
+> +void
+> +xfs_buf_submit(
+> +	struct xfs_buf	*bp)
+> +{
+> +	int		error;
+> +
+> +	ASSERT(bp->b_flags & XBF_ASYNC);
+> +
+> +	/*
+> +	 * The caller's reference is released during I/O completion.
+> +	 * This occurs some time after the last b_io_remaining reference is
+> +	 * released, so after we drop our Io reference we have to have some
+> +	 * other reference to ensure the buffer doesn't go away from underneath
+> +	 * us. Take a direct reference to ensure we have safe access to the
+> +	 * buffer until we are finished with it.
+> +	 */
+> +	xfs_buf_hold(bp);
+> +
+> +	error = __xfs_buf_submit(bp);
+> +	if (error)
+> +		xfs_buf_ioend(bp);
+> +
+
+It seems like we could simple throw in a:
+
+	if (!(bp->b_flags & XBF_ASYNC)) {
+		trace_xfs_buf_iowait(bp, _RET_IP_);
+		wait_for_completion(&bp->b_iowait);
+		trace_xfs_buf_iowait_done(bp, _RET_IP_);
+		error = bp->b_error;;
+	}
+
+here and get ret rid of the separate xfs_buf_submit_wait function
+entirely.  Or even factor the above out into a nice little helper.
+
+Otherwise this looks fine to me:
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
