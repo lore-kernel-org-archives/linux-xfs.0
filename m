@@ -1,43 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f44.google.com ([74.125.82.44]:36792 "EHLO
-        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965119AbeFOAOg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jun 2018 20:14:36 -0400
-Received: by mail-wm0-f44.google.com with SMTP id v131-v6so853278wma.1
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Jun 2018 17:14:35 -0700 (PDT)
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:36004 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1755964AbeFOIbb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 15 Jun 2018 04:31:31 -0400
+Subject: Re: [Cluster-devel] iomap preparations for GFS2 v2
+References: <20180614120457.28285-1-hch@lst.de>
+ <CAHc6FU4nQ562SxepV1=dqcuuuPBWOTXr4sAiY_5H-Z7uOaTNng@mail.gmail.com>
+ <20180615080326.GB19525@lst.de>
+From: Steven Whitehouse <swhiteho@redhat.com>
+Message-ID: <5a1e303b-e96e-7faf-1bcd-36d63a237514@redhat.com>
+Date: Fri, 15 Jun 2018 09:31:26 +0100
 MIME-Version: 1.0
-In-Reply-To: <20180613094048.6becmt42cvdhvg66@odin.usersys.redhat.com>
-References: <CA+Xn3kwTnu8yd-DCy37323waPgNm0jNuL9NDhz8s8pY023COSw@mail.gmail.com>
- <20180612143608.ok3jqtl3l34vdlpy@odin.usersys.redhat.com> <CA+Xn3kyxiOj+irNiqKWQWfJ_aUv1RYFsH+UCnv3gnMuYJ=oUQw@mail.gmail.com>
- <20180613094048.6becmt42cvdhvg66@odin.usersys.redhat.com>
-From: Ilya Pronin <ipronin@twitter.com>
-Date: Thu, 14 Jun 2018 17:14:34 -0700
-Message-ID: <CA+Xn3kzsrqjNH2yXdtfsRuiCBfvX2GSWOW2SaLPL4h1PmQsGBg@mail.gmail.com>
-Subject: Re: Reading/changing projid of a symlink
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20180615080326.GB19525@lst.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>
+To: Christoph Hellwig <hch@lst.de>, Andreas Gruenbacher <agruenba@redhat.com>
+Cc: cluster-devel <cluster-devel@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>, linux-ext4 <linux-ext4@vger.kernel.org>
 
-Thanks everyone for the answers!
+Hi,
 
-On Wed, Jun 13, 2018 at 2:40 AM, Carlos Maiolino <cmaiolino@redhat.com> wrote:
-> The symlink's project id, will always be related to the project id of its parent
-> directory.
+
+On 15/06/18 09:03, Christoph Hellwig wrote:
+> On Thu, Jun 14, 2018 at 03:04:38PM +0200, Andreas Gruenbacher wrote:
+>> I saw that you've pushed this onto the gfs2-iomap branch in your xfs
+>> repository. I've rebased the gfs2 iomap-write branch onto that;
+>> there's a trivial patch for adding a private pointer to struct iomap
+>> at the head of that branch that would sense to move to the shared
+>> branch as well now.
+> Please send that patch out ASAP.
 >
-> At the end, Project quota, is a way to create a directory tree based quota,
-> where all inodes corresponding to a single project id, should be under the same
-> subtree. If you are creating a new subtree, under an already existing project
-> id, IMHO, the right approach would be to remove the project id from the old
-> directory tree, and add it to the new tree, and use user/group quotas for any
-> quota accounting that should be done filesystem-wide (instead of directory tree
-> wise).
+>> The next step would probably be to start using iomap_readpage /
+>> iomap_readpages in gfs2 for block size == page size. This requires
+>> adding inline data support to iomap_readpage which is trivial, but
+>> because of gfs2's reliance on buffer heads, that alone isn't enough.
+> Is it?  At least for block size == page size we will only call
+> readpage on a pristine, newly allocated page.  So buffer heads won't
+> be in the game at that point, and the iomap buffered write code will
+> just allocate them for you once we start a write operation, or take
+> a page fault that makes the page writable.
+>
 
-It's a bit weird though that a symlink can inherit project ID from its
-parent directory, but then cannot get rid of it :) And thus doesn't
-allow to completely remove the project ID from the directory tree it's
-in.
+Yes, for block size == page size, it should not be an issue to drop the 
+use of buffer heads on reads in GFS2. I was fairly sure that we already 
+did that in ->readpages() anyway, but it is a while since I looked at 
+the code and my memory may be playing tricks on me,
 
--- 
-Ilya Pronin
+Steve.
+
