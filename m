@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:37418 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:37428 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936262AbeFONDH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 09:03:07 -0400
+        with ESMTP id S965597AbeFONDK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 09:03:10 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 19/24] xfs: move all writeback buffer_head manipulation into xfs_map_at_offset
-Date: Fri, 15 Jun 2018 15:02:04 +0200
-Message-Id: <20180615130209.1970-20-hch@lst.de>
+Subject: [PATCH 20/24] xfs: remove xfs_start_page_writeback
+Date: Fri, 15 Jun 2018 15:02:05 +0200
+Message-Id: <20180615130209.1970-21-hch@lst.de>
 In-Reply-To: <20180615130209.1970-1-hch@lst.de>
 References: <20180615130209.1970-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,70 +15,93 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org
 
-This keeps it in a single place so it can be made otional more easily.
+This helper only has two callers, one of them with a constant error
+argument.  Remove it to make pending changes to the code a little easier.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_aops.c | 22 +++++-----------------
- 1 file changed, 5 insertions(+), 17 deletions(-)
+ fs/xfs/xfs_aops.c | 47 +++++++++++++++++++++--------------------------
+ 1 file changed, 21 insertions(+), 26 deletions(-)
 
 diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index d6bd38d4243e..261fb011ef9d 100644
+index 261fb011ef9d..52d4f5503da7 100644
 --- a/fs/xfs/xfs_aops.c
 +++ b/fs/xfs/xfs_aops.c
-@@ -500,21 +500,6 @@ xfs_map_blocks(
+@@ -500,30 +500,6 @@ xfs_map_blocks(
  	return 0;
  }
  
 -STATIC void
--xfs_start_buffer_writeback(
--	struct buffer_head	*bh)
+-xfs_start_page_writeback(
+-	struct page		*page,
+-	int			clear_dirty)
 -{
--	ASSERT(buffer_mapped(bh));
--	ASSERT(buffer_locked(bh));
--	ASSERT(!buffer_delay(bh));
--	ASSERT(!buffer_unwritten(bh));
+-	ASSERT(PageLocked(page));
+-	ASSERT(!PageWriteback(page));
 -
--	bh->b_end_io = NULL;
--	set_buffer_async_write(bh);
--	set_buffer_uptodate(bh);
--	clear_buffer_dirty(bh);
+-	/*
+-	 * if the page was not fully cleaned, we need to ensure that the higher
+-	 * layers come back to it correctly. That means we need to keep the page
+-	 * dirty, and for WB_SYNC_ALL writeback we need to ensure the
+-	 * PAGECACHE_TAG_TOWRITE index mark is not removed so another attempt to
+-	 * write this page in this writeback sweep will be made.
+-	 */
+-	if (clear_dirty) {
+-		clear_page_dirty_for_io(page);
+-		set_page_writeback(page);
+-	} else
+-		set_page_writeback_keepwrite(page);
+-
+-	unlock_page(page);
 -}
 -
- STATIC void
- xfs_start_page_writeback(
- 	struct page		*page,
-@@ -723,6 +708,7 @@ xfs_map_at_offset(
- 	ASSERT(imap->br_startblock != HOLESTARTBLOCK);
- 	ASSERT(imap->br_startblock != DELAYSTARTBLOCK);
+ /*
+  * Submit the bio for an ioend. We are passed an ioend with a bio attached to
+  * it, and we submit that bio. The ioend may be used for multiple bio
+@@ -856,6 +832,9 @@ xfs_writepage_map(
  
-+	lock_buffer(bh);
- 	xfs_map_buffer(inode, bh, imap, offset);
- 	set_buffer_mapped(bh);
- 	clear_buffer_delay(bh);
-@@ -735,6 +721,10 @@ xfs_map_at_offset(
- 	 * set the bdev now.
+ 	ASSERT(wpc->ioend || list_empty(&submit_list));
+ out:
++	ASSERT(PageLocked(page));
++	ASSERT(!PageWriteback(page));
++
+ 	/*
+ 	 * On error, we have to fail the ioend here because we have locked
+ 	 * buffers in the ioend. If we don't do this, we'll deadlock
+@@ -874,7 +853,21 @@ xfs_writepage_map(
+ 	 * treated correctly on error.
  	 */
- 	bh->b_bdev = xfs_find_bdev_for_inode(inode);
-+	bh->b_end_io = NULL;
-+	set_buffer_async_write(bh);
-+	set_buffer_uptodate(bh);
-+	clear_buffer_dirty(bh);
- }
+ 	if (count) {
+-		xfs_start_page_writeback(page, !error);
++		/*
++		 * If the page was not fully cleaned, we need to ensure that the
++		 * higher layers come back to it correctly.  That means we need
++		 * to keep the page dirty, and for WB_SYNC_ALL writeback we need
++		 * to ensure the PAGECACHE_TAG_TOWRITE index mark is not removed
++		 * so another attempt to write this page in this writeback sweep
++		 * will be made.
++		 */
++		if (error) {
++			set_page_writeback_keepwrite(page);
++		} else {
++			clear_page_dirty_for_io(page);
++			set_page_writeback(page);
++		}
++		unlock_page(page);
  
- STATIC void
-@@ -858,11 +848,9 @@ xfs_writepage_map(
- 		if (wpc->io_type == XFS_IO_HOLE)
- 			continue;
- 
--		lock_buffer(bh);
- 		xfs_map_at_offset(inode, bh, &wpc->imap, file_offset);
- 		xfs_add_to_ioend(inode, file_offset, page, wpc, wbc,
- 				&submit_list);
--		xfs_start_buffer_writeback(bh);
- 		count++;
+ 		/*
+ 		 * Preserve the original error if there was one, otherwise catch
+@@ -899,7 +892,9 @@ xfs_writepage_map(
+ 		 * race with a partial page truncate on a sub-page block sized
+ 		 * filesystem. In that case we need to mark the page clean.
+ 		 */
+-		xfs_start_page_writeback(page, 1);
++		clear_page_dirty_for_io(page);
++		set_page_writeback(page);
++		unlock_page(page);
+ 		end_page_writeback(page);
  	}
  
 -- 
