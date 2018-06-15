@@ -1,95 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:41640 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755651AbeFOJce (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 05:32:34 -0400
-Received: by mail-pf0-f194.google.com with SMTP id a11-v6so4600646pff.8
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Jun 2018 02:32:34 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20180611133345.GE5020@thunk.org>
-References: <20180522123107.GC3751@bfoster.bfoster> <20180522222620.GW23861@dastard>
- <20180522225208.GB658@sol.localdomain> <20180523074425.GM14384@magnolia>
- <20180523162015.GA3684@sol.localdomain> <a52266f9-0096-b28c-c01c-046ababcfe3a@sandeen.net>
- <20180523234114.GA3434@thunk.org> <CACT4Y+YEpThQj=63F8CSHeWSZxbWJ1cTDB7ZvM8OYR921uXT2g@mail.gmail.com>
- <20180526202436.GC4613@thunk.org> <CACT4Y+YK9LzYuVSruimbgxSAoCt_UYbHwzhvDGCqZ7FuQLcUUA@mail.gmail.com>
- <20180611133345.GE5020@thunk.org>
-From: Dmitry Vyukov <dvyukov@google.com>
-Date: Fri, 15 Jun 2018 11:32:13 +0200
-Message-ID: <CACT4Y+bxcHSCsYR5uGFbvaJvRAkoA3-z3=B_1DQ+rvks4Q5KpQ@mail.gmail.com>
-Subject: Re: Bugs involving maliciously crafted file system
-Content-Type: text/plain; charset="UTF-8"
+Received: from bombadil.infradead.org ([198.137.202.133]:37000 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755897AbeFONCg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 09:02:36 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 08/24] xfs: don't clear imap_valid for a non-uptodate buffers
+Date: Fri, 15 Jun 2018 15:01:53 +0200
+Message-Id: <20180615130209.1970-9-hch@lst.de>
+In-Reply-To: <20180615130209.1970-1-hch@lst.de>
+References: <20180615130209.1970-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Theodore Y. Ts'o" <tytso@mit.edu>, Dmitry Vyukov <dvyukov@google.com>, Eric Sandeen <sandeen@sandeen.net>, Eric Biggers <ebiggers3@gmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>, LKML <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, syzkaller-bugs <syzkaller-bugs@googlegroups.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, syzkaller <syzkaller@googlegroups.com>
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org
 
-On Mon, Jun 11, 2018 at 3:33 PM, Theodore Y. Ts'o <tytso@mit.edu> wrote:
-> On Mon, Jun 11, 2018 at 03:07:24PM +0200, Dmitry Vyukov wrote:
->>
->> These can't be weaponized to execute code, but if a BUG_ON is
->> triggerable over a network, or from VM guest, then it's likely more
->> critical than a local code execution. That's why I am saying that
->> automated evaluation is infeasible.
->
-> I can't imagine situations where a BUG_ON would be more critical than
-> local code execution.  You can leverage local code execution to ah
-> remote privilege escalation attack; and local code execution can (with
-> less effort) be translated to a system crash.  Hence, local code
-> execution is always more critical than a BUG_ON.
+Finding a buffer that isn't uptodate doesn't invalidate the mapping for
+any given block.  The last_sector check will already take care of starting
+another ioend as soon as we find any non-update buffer, and if the current
+mapping doesn't include the next uptodate buffer the xfs_imap_valid check
+will take care of it.
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_aops.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
-Well, if one could bring all of Google servers remotely, lots of
-people would consider this as more critical as _anything_ local.
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 5c611c0784ca..307ca66879b3 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -864,10 +864,8 @@ xfs_writepage_map(
+ 		 * meaningless for holes (!mapped && uptodate), so skip
+ 		 * buffers covering holes here.
+ 		 */
+-		if (!buffer_mapped(bh) && buffer_uptodate(bh)) {
+-			wpc->imap_valid = false;
++		if (!buffer_mapped(bh) && buffer_uptodate(bh))
+ 			continue;
+-		}
+ 
+ 		if (buffer_unwritten(bh))
+ 			new_type = XFS_IO_UNWRITTEN;
+@@ -880,11 +878,8 @@ xfs_writepage_map(
+ 				ASSERT(buffer_mapped(bh));
+ 			/*
+ 			 * This buffer is not uptodate and will not be
+-			 * written to disk.  Ensure that we will put any
+-			 * subsequent writeable buffers into a new
+-			 * ioend.
++			 * written to disk.
+ 			 */
+-			wpc->imap_valid = false;
+ 			continue;
+ 		}
+ 
+-- 
+2.17.1
 
-
->> Anyway, bug type (UAF, BUG, task hung) is available in the bug title
->> on dashboard and on mailing lists, so you can just search/sort bugs on
->> the dashboard. What other interface you want on top of this?
->
-> I also want to be able to search and filter based on subsystem, and
-> whether or not there is a reproducer.  Sometimes you can't even figure
-> out the subsytem from the limited string shown on the dashboard,
-> because the original string didn't include the subsystem to begin
-> with, or the the subsytem name was truncated and not included on the
-> dashboard.
-
-How is this problem solved in kernel development for all other bug reports?
-
->> On a related note, perhaps kernel community needs to finally start
->> using bugzilla for real, like with priorities, assignees, up-to-date
->> statuses, no stale bugs, etc. All of this is available in bug tracking
->> systems for decades...
->
-> I do use bugzilla and in fact if syzbot would automatically file a
-> bugzilla.kernel.org report for things that are in the ext4 subsystem,
-> that would be really helpful.
->
-> As far as no stale bugs, etc., many companies (including Google)
-> aren't capable of doing that with their own internal bug tracking
-> systems, because management doesn't give them enough time to track and
-> fix all stale bugs.  You seem to be assuming/demanding things of the
-> kernel community that are at least partially constrained by resource
-> availability --- and since you've used constrained resources as a
-> reason why Syzbot can't be extended as we've requested to reduce
-> developer toil and leverage our available resources, it would perhaps
-> be respectful if you also accepted that resource constraints also
-> exist in other areas, such as how much we can keep a fully groomed bug
-> tracking system.
-
-I mentioned this only because you asked for this.
-Whatever tracking system and style we go with, bug states need to
-maintained and bugs need to be nursed. If we extend syzbot dashboard
-with more traditional bug tracking system capabilities, but then
-nobody cares to maintain order, it also won't be useful and nobody
-will be able to easily select the current tasks to work on.
-So that's a prerequisite for what you are asking for.
-
-Well, you use bugzilla, but somebody else uses something else. This
-fragmentation is kernel development practices does not allow to build
-further automation on top. We can't do a personal solution for each
-developer. For now the greatest common divisor seems to be freeform
-emails on mailing lists...
-
-A good example is "I submitted 7 kernel bugs to bugzilla, but nobody
-answered me" email thread from today:
-https://groups.google.com/forum/#!topic/syzkaller/OnbMQbbE4gQ
