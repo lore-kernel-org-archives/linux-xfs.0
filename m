@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:37296 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:37396 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965495AbeFONC4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 09:02:56 -0400
+        with ESMTP id S936263AbeFONDE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 09:03:04 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 15/24] xfs: remove xfs_reflink_find_cow_mapping
-Date: Fri, 15 Jun 2018 15:02:00 +0200
-Message-Id: <20180615130209.1970-16-hch@lst.de>
+Subject: [PATCH 18/24] xfs: don't look at buffer heads in xfs_add_to_ioend
+Date: Fri, 15 Jun 2018 15:02:03 +0200
+Message-Id: <20180615130209.1970-19-hch@lst.de>
 In-Reply-To: <20180615130209.1970-1-hch@lst.de>
 References: <20180615130209.1970-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,133 +15,162 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org
 
-We only have one caller left, and open coding the simple extent list
-lookup in it allows us to make the code both more understandable and
-reuse calculations and variables already present.
+Calculate all information for the bio based on the passed in information
+without requiring a buffer_head structure.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_aops.c    | 19 +++++++++++++------
- fs/xfs/xfs_reflink.c | 30 ------------------------------
- fs/xfs/xfs_reflink.h |  2 --
- fs/xfs/xfs_trace.h   |  1 -
- 4 files changed, 13 insertions(+), 39 deletions(-)
+ fs/xfs/xfs_aops.c | 68 ++++++++++++++++++++++-------------------------
+ 1 file changed, 32 insertions(+), 36 deletions(-)
 
 diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 165891ecb4ba..17aa9dc9a8c3 100644
+index 7da3fe49b4de..d6bd38d4243e 100644
 --- a/fs/xfs/xfs_aops.c
 +++ b/fs/xfs/xfs_aops.c
-@@ -382,9 +382,10 @@ xfs_map_blocks(
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
- 	ssize_t			count = i_blocksize(inode);
--	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset), end_fsb;
-+	xfs_fileoff_t		offset_fsb, end_fsb;
- 	struct xfs_bmbt_irec	imap;
- 	int			whichfork = XFS_DATA_FORK;
-+	struct xfs_iext_cursor	icur;
- 	int			error = 0;
- 	int			nimaps = 1;
+@@ -44,7 +44,6 @@ struct xfs_writepage_ctx {
+ 	struct xfs_bmbt_irec    imap;
+ 	unsigned int		io_type;
+ 	struct xfs_ioend	*ioend;
+-	sector_t		last_block;
+ };
  
-@@ -396,8 +397,18 @@ xfs_map_blocks(
- 	       (ip->i_df.if_flags & XFS_IFEXTENTS));
- 	ASSERT(offset <= mp->m_super->s_maxbytes);
- 
-+	if (offset > mp->m_super->s_maxbytes - count)
-+		count = mp->m_super->s_maxbytes - offset;
-+	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
-+	offset_fsb = XFS_B_TO_FSBT(mp, offset);
-+
-+	/*
-+	 * Check if this is offset is covered by a COW extents, and if yes use
-+	 * it directly instead of looking up anything in the data fork.
-+	 */
- 	if (xfs_is_reflink_inode(ip) &&
--	    xfs_reflink_find_cow_mapping(ip, offset, &imap)) {
-+	    xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &imap) &&
-+	    imap.br_startoff <= offset_fsb) {
- 		xfs_iunlock(ip, XFS_ILOCK_SHARED);
- 		/*
- 		 * Truncate can race with writeback since writeback doesn't
-@@ -432,10 +443,6 @@ xfs_map_blocks(
- 	 * offset.  This will convert delayed allocations (including COW ones)
- 	 * into real extents.
- 	 */
--	if (offset > mp->m_super->s_maxbytes - count)
--		count = mp->m_super->s_maxbytes - offset;
--	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
--	offset_fsb = XFS_B_TO_FSBT(mp, offset);
- 	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
- 				&imap, &nimaps, XFS_BMAPI_ENTIRE);
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index d0092c864458..ff76bc56ff3d 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -484,36 +484,6 @@ xfs_reflink_allocate_cow(
- 	return error;
+ void
+@@ -540,11 +539,6 @@ xfs_start_page_writeback(
+ 	unlock_page(page);
  }
  
--/*
-- * Find the CoW reservation for a given byte offset of a file.
-- */
--bool
--xfs_reflink_find_cow_mapping(
--	struct xfs_inode		*ip,
--	xfs_off_t			offset,
--	struct xfs_bmbt_irec		*imap)
+-static inline int xfs_bio_add_buffer(struct bio *bio, struct buffer_head *bh)
 -{
--	struct xfs_ifork		*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
--	xfs_fileoff_t			offset_fsb;
--	struct xfs_bmbt_irec		got;
--	struct xfs_iext_cursor		icur;
--
--	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
--
--	if (!xfs_is_reflink_inode(ip))
--		return false;
--	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
--	if (!xfs_iext_lookup_extent(ip, ifp, offset_fsb, &icur, &got))
--		return false;
--	if (got.br_startoff > offset_fsb)
--		return false;
--
--	trace_xfs_reflink_find_cow_mapping(ip, offset, 1, XFS_IO_OVERWRITE,
--			&got);
--	*imap = got;
--	return true;
+-	return bio_add_page(bio, bh->b_page, bh->b_size, bh_offset(bh));
 -}
 -
  /*
-  * Cancel CoW reservations for some block range of an inode.
-  *
-diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index c0a25609007b..e8d4d50c629f 100644
---- a/fs/xfs/xfs_reflink.h
-+++ b/fs/xfs/xfs_reflink.h
-@@ -32,8 +32,6 @@ extern int xfs_reflink_allocate_cow(struct xfs_inode *ip,
- 		struct xfs_bmbt_irec *imap, bool *shared, uint *lockmode);
- extern int xfs_reflink_convert_cow(struct xfs_inode *ip, xfs_off_t offset,
- 		xfs_off_t count);
--extern bool xfs_reflink_find_cow_mapping(struct xfs_inode *ip, xfs_off_t offset,
--		struct xfs_bmbt_irec *imap);
+  * Submit the bio for an ioend. We are passed an ioend with a bio attached to
+  * it, and we submit that bio. The ioend may be used for multiple bio
+@@ -599,27 +593,20 @@ xfs_submit_ioend(
+ 	return 0;
+ }
  
- extern int xfs_reflink_cancel_cow_blocks(struct xfs_inode *ip,
- 		struct xfs_trans **tpp, xfs_fileoff_t offset_fsb,
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 041045a8d65c..666844532030 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3227,7 +3227,6 @@ DEFINE_INODE_IREC_EVENT(xfs_reflink_convert_cow);
- DEFINE_RW_EVENT(xfs_reflink_reserve_cow);
+-static void
+-xfs_init_bio_from_bh(
+-	struct bio		*bio,
+-	struct buffer_head	*bh)
+-{
+-	bio->bi_iter.bi_sector = bh->b_blocknr * (bh->b_size >> 9);
+-	bio_set_dev(bio, bh->b_bdev);
+-}
+-
+ static struct xfs_ioend *
+ xfs_alloc_ioend(
+ 	struct inode		*inode,
+ 	unsigned int		type,
+ 	xfs_off_t		offset,
+-	struct buffer_head	*bh)
++	struct block_device	*bdev,
++	sector_t		sector)
+ {
+ 	struct xfs_ioend	*ioend;
+ 	struct bio		*bio;
  
- DEFINE_SIMPLE_IO_EVENT(xfs_reflink_bounce_dio_write);
--DEFINE_IOMAP_EVENT(xfs_reflink_find_cow_mapping);
+ 	bio = bio_alloc_bioset(GFP_NOFS, BIO_MAX_PAGES, &xfs_ioend_bioset);
+-	xfs_init_bio_from_bh(bio, bh);
++	bio_set_dev(bio, bdev);
++	bio->bi_iter.bi_sector = sector;
  
- DEFINE_SIMPLE_IO_EVENT(xfs_reflink_cancel_cow_range);
- DEFINE_SIMPLE_IO_EVENT(xfs_reflink_end_cow);
+ 	ioend = container_of(bio, struct xfs_ioend, io_inline_bio);
+ 	INIT_LIST_HEAD(&ioend->io_list);
+@@ -644,13 +631,14 @@ static void
+ xfs_chain_bio(
+ 	struct xfs_ioend	*ioend,
+ 	struct writeback_control *wbc,
+-	struct buffer_head	*bh)
++	struct block_device	*bdev,
++	sector_t		sector)
+ {
+ 	struct bio *new;
+ 
+ 	new = bio_alloc(GFP_NOFS, BIO_MAX_PAGES);
+-	xfs_init_bio_from_bh(new, bh);
+-
++	bio_set_dev(new, bdev);
++	new->bi_iter.bi_sector = sector;
+ 	bio_chain(ioend->io_bio, new);
+ 	bio_get(ioend->io_bio);		/* for xfs_destroy_ioend */
+ 	ioend->io_bio->bi_opf = REQ_OP_WRITE | wbc_to_write_flags(wbc);
+@@ -660,39 +648,45 @@ xfs_chain_bio(
+ }
+ 
+ /*
+- * Test to see if we've been building up a completion structure for
+- * earlier buffers -- if so, we try to append to this ioend if we
+- * can, otherwise we finish off any current ioend and start another.
+- * Return the ioend we finished off so that the caller can submit it
+- * once it has finished processing the dirty page.
++ * Test to see if we have an existing ioend structure that we could append to
++ * first, otherwise finish off the current ioend and start another.
+  */
+ STATIC void
+ xfs_add_to_ioend(
+ 	struct inode		*inode,
+-	struct buffer_head	*bh,
+ 	xfs_off_t		offset,
++	struct page		*page,
+ 	struct xfs_writepage_ctx *wpc,
+ 	struct writeback_control *wbc,
+ 	struct list_head	*iolist)
+ {
++	struct xfs_inode	*ip = XFS_I(inode);
++	struct xfs_mount	*mp = ip->i_mount;
++	struct block_device	*bdev = xfs_find_bdev_for_inode(inode);
++	unsigned		len = i_blocksize(inode);
++	unsigned		poff = offset & (PAGE_SIZE - 1);
++	sector_t		sector;
++
++	sector = xfs_fsb_to_db(ip, wpc->imap.br_startblock) +
++		((offset - XFS_FSB_TO_B(mp, wpc->imap.br_startoff)) >> 9);
++
+ 	if (!wpc->ioend || wpc->io_type != wpc->ioend->io_type ||
+-	    bh->b_blocknr != wpc->last_block + 1 ||
++	    sector != bio_end_sector(wpc->ioend->io_bio) ||
+ 	    offset != wpc->ioend->io_offset + wpc->ioend->io_size) {
+ 		if (wpc->ioend)
+ 			list_add(&wpc->ioend->io_list, iolist);
+-		wpc->ioend = xfs_alloc_ioend(inode, wpc->io_type, offset, bh);
++		wpc->ioend = xfs_alloc_ioend(inode, wpc->io_type, offset,
++				bdev, sector);
+ 	}
+ 
+ 	/*
+-	 * If the buffer doesn't fit into the bio we need to allocate a new
+-	 * one.  This shouldn't happen more than once for a given buffer.
++	 * If the block doesn't fit into the bio we need to allocate a new
++	 * one.  This shouldn't happen more than once for a given block.
+ 	 */
+-	while (xfs_bio_add_buffer(wpc->ioend->io_bio, bh) != bh->b_size)
+-		xfs_chain_bio(wpc->ioend, wbc, bh);
++	while (bio_add_page(wpc->ioend->io_bio, page, len, poff) != len)
++		xfs_chain_bio(wpc->ioend, wbc, bdev, sector);
+ 
+-	wpc->ioend->io_size += bh->b_size;
+-	wpc->last_block = bh->b_blocknr;
+-	xfs_start_buffer_writeback(bh);
++	wpc->ioend->io_size += len;
+ }
+ 
+ STATIC void
+@@ -866,7 +860,9 @@ xfs_writepage_map(
+ 
+ 		lock_buffer(bh);
+ 		xfs_map_at_offset(inode, bh, &wpc->imap, file_offset);
+-		xfs_add_to_ioend(inode, bh, file_offset, wpc, wbc, &submit_list);
++		xfs_add_to_ioend(inode, file_offset, page, wpc, wbc,
++				&submit_list);
++		xfs_start_buffer_writeback(bh);
+ 		count++;
+ 	}
+ 
 -- 
 2.17.1
 
