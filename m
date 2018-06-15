@@ -1,69 +1,123 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:32773 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936136AbeFORa3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 13:30:29 -0400
-Received: by mail-lf0-f66.google.com with SMTP id y20-v6so15751738lfy.0
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Jun 2018 10:30:29 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20180614233551.GN10363@dastard>
-References: <20180614221646.20017-1-mbenatto@redhat.com> <1ddae533-b040-fdba-4350-01b59d5ddcba@sandeen.net>
- <20180614233551.GN10363@dastard>
+Received: from mx1.redhat.com ([209.132.183.28]:51718 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756266AbeFOVOv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 15 Jun 2018 17:14:51 -0400
 From: Marco Benatto <mbenatto@redhat.com>
-Date: Fri, 15 Jun 2018 14:30:27 -0300
-Message-ID: <CAOGQQ28c_qfp6Mjt13v0jK7tYVuvL-1j+dbya6iRwUhqmfii8A@mail.gmail.com>
-Subject: Re: [PATCH] xfs_repair: Fix root inode's parent when it's bogus for
- sf directory
-Content-Type: text/plain; charset="UTF-8"
+Subject: [PATCH] xfstests: Teste root inode parent pointer repairing
+Date: Fri, 15 Jun 2018 18:14:48 -0300
+Message-Id: <20180615211448.7341-1-mbenatto@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, mbenatto@redhat.com
 
-On Thu, Jun 14, 2018 at 8:35 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Thu, Jun 14, 2018 at 05:20:56PM -0500, Eric Sandeen wrote:
->> On 6/14/18 5:16 PM, Marco Benatto wrote:
->> > Currently when root inode is in short-form and its parent ino
->> > has an invalid value, process_sf_dir2() ends up not fixing it,
->> > because if verify_inum() fails we never get to the next case which
->> > would fix the root inode's parent pointer.
->> >
->> > This behavior triggers the following assert on process_dir2():
->> >
->> >    ASSERT((ino != mp->m_sb.sb_rootino && ino != *parent) ||
->> >         (ino == mp->m_sb.sb_rootino &&
->> >         (ino == *parent || need_root_dotdot == 1)));
->> >
->> > This patch fixes this behavior by making sure we always properly
->> > handle rootino parent pointer in process_sf_dir2()
->> >
->> > Signed-off-by: Marco Benatto <mbenatto@redhat.com>
->>
->> This looks correct to me, thanks.
->>
->> FWIW the problem can be demonstrated by setting the root inode's
->> parent to 0 on a freshly made fs:
->>
->> # mkfs.xfs -f -dfile,name=fsfile,size=1g
->> # xfs_db -x -c "sb 0" -c "addr rootino" -c "write u3.sfdir3.hdr.parent.i4 0" fsfile
->> # xfs_repair fsfile
->
-> xfstest please (also to check that xfs_scrub detects it)?
+Recently we found out xfs_repair were not repairing
+root inode parent pointer when root inode is on short-form
+and parent points to an invalid inode number (refer to:
+"xfs_repair: Fix root inode's parent when it's bogus for sf
+directory" on xfs-devel list).
 
-Sure, working on this. I'll send you once it's done.
+This test checks if xfs_repair successfully repair the
+filesystem in the scenario mentioned before.
 
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+Signed-off-by: Marco Benatto <mbenatto@redhat.com>
+---
+ tests/xfs/450     | 65 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/450.out |  1 +
+ tests/xfs/group   |  1 +
+ 3 files changed, 67 insertions(+)
+ create mode 100755 tests/xfs/450
+ create mode 100644 tests/xfs/450.out
 
-
-
-Cheers,
-
+diff --git a/tests/xfs/450 b/tests/xfs/450
+new file mode 100755
+index 0000000..7e33431
+--- /dev/null
++++ b/tests/xfs/450
+@@ -0,0 +1,65 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2018 Red Hat Inc.  All Rights Reserved.
++#
++# FS QA Test 450
++#
++# Make sure xfs_repair can repair root inode parent's pointer
++# when it contains a bogus ino when it's using shot form directory
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++
++status=1	# failure is the default!
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs xfs
++_supported_os Linux
++_require_scratch
++
++
++_scratch_mkfs >> /dev/null 2>&1
++
++# Check on-disk format version
++ver=$($XFS_DB_PROG -c 'sb 0' -c 'addr rootino' -c 'p core.version' $SCRATCH_DEV |
++		awk '{print$3}')
++
++case $ver in
++	2)
++		prefix="u.sfdir2"
++		;;
++	3)
++		prefix="u3.sfdir3"
++		;;
++	*)
++		_notrun "can't modify this disk format"
++		;;
++esac
++
++_scratch_xfs_db -x -c 'sb 0' \
++					-c 'addr rootino' \
++					-c "write ${prefix}.hdr.parent.i4 0" >> /$seqres.full 2>&1 \
++				|| _fail "xfs_db command failed"
++
++_scratch_xfs_repair >> $seqres.full 2>&1
++
++_scratch_xfs_repair -n >> $seqres.full 2>&1
++
++if [ $? -eq 1 ]
++then
++	_fail "xfs_repair failed to repair filesystem"
++else
++	echo "OK"
++	status=0
++fi
++
++exit
+diff --git a/tests/xfs/450.out b/tests/xfs/450.out
+new file mode 100644
+index 0000000..d86bac9
+--- /dev/null
++++ b/tests/xfs/450.out
+@@ -0,0 +1 @@
++OK
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 932ab90..3a1db0b 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -447,3 +447,4 @@
+ 447 auto mount
+ 448 auto quick fuzzers
+ 449 auto quick
++450 auto quick
 -- 
-Marco Benatto
+2.9.5
+
