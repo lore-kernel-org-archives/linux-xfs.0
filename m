@@ -1,70 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:22540 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753724AbeFPAN1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 20:13:27 -0400
-Date: Sat, 16 Jun 2018 10:13:14 +1000
-From: Dave Chinner <david@fromorbit.com>
+Received: from mx2.suse.de ([195.135.220.15]:37605 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756235AbeFOVwB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 15 Jun 2018 17:52:01 -0400
+Date: Fri, 15 Jun 2018 23:52:00 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
 Subject: Re: [PATCH] libxfs: detect zoned disks and prevent their raw use
-Message-ID: <20180616001314.GS10363@dastard>
+Message-ID: <20180615215200.GR5527@wotan.suse.de>
 References: <20180615205011.7728-1-mcgrof@kernel.org>
+ <5fbcde14-fdb8-9a4f-e578-4ad7c4ef6315@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180615205011.7728-1-mcgrof@kernel.org>
+In-Reply-To: <5fbcde14-fdb8-9a4f-e578-4ad7c4ef6315@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: sandeen@sandeen.net, linux-xfs@vger.kernel.org, snitzer@redhat.com, hare@suse.de, axboe@kernel.dk, mwilck@suse.com, Damien Le Moal <damien.lemoal@wdc.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org, snitzer@redhat.com, hare@suse.de, axboe@kernel.dk, mwilck@suse.com, Damien Le Moal <damien.lemoal@wdc.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
 
-On Fri, Jun 15, 2018 at 01:50:11PM -0700, Luis R. Rodriguez wrote:
-> Using raw zoned disks by filesystems requires special handling, only
-> f2fs currently supports this. All other filesystems do not support
-> dealing with zoned disks directly.
+On Fri, Jun 15, 2018 at 04:48:29PM -0500, Eric Sandeen wrote:
 > 
-> As such using raw zoned disks is not supported by XFS, to use them you
-> need to use dm-zoned-tools, format them with dzadm, set the scheduler to
-> deadline, and then setup a dmsetup with zoned type, and somehow set
-> this up on every boot to live a semi-happy life for now.
 > 
-> Even if you use dmsetup on every boot, the zoned disk is still exposed,
-> and a user may still think they have to run mkfs.xfs on it instead
-> of the /dev/mapper/ disk, and then mount it by mistake.
+> On 6/15/18 3:50 PM, Luis R. Rodriguez wrote:
+> > +	if (ret == 1) {
+> > +		fprintf(stderr,
+> > +_("%s: zoned disk detected, refer to dm-zoned-tools for how to use with XFS\n"),
+> > +			path);
+> > +		exit(1);
 > 
-> In either case you may seem to believe your disk works and only eventually
-> end up with alignmet issues and perhaps lose you data. For instance:
+> Sorry for not sending this before V2, but is "dm-zoned-tools" established enough
+> in the ecosystem at this point to embed it in help text of utilities like this?
 > 
-> [10869.959501] device-mapper: zoned reclaim: (sda): Align zone 865 wp 28349 to 30842 (wp+2493) blocks failed -5
-> [10870.014488] sd 0:0:0:0: [sda] tag#0 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-> [10870.016137] sd 0:0:0:0: [sda] tag#0 Sense Key : Illegal Request [current]
-> [10870.017696] sd 0:0:0:0: [sda] tag#0 Add. Sense: Unaligned write command
-> 
-> We have to prevent these mistakes by avoiding mkfs.xfs use on zoned disks.
-> 
-> Note that this not enough yet, if users are on old AHCI controllers,
-> the disks may not be detected as zoned. More work through udev may be
-> required to detect this situation old old parent PCI IDs for zoned
-> disks, and then prevent their use somehow.
-> 
-> If you are stuck on using XFS there a udev rule out there [0], this is
-> far from perfect, and not fully what we want done upstream on Linux
-> distributions long term but it should at least help developers for now
-> enjoy their shiny big fat zoned disks with XFS.
-> 
-> This check should help avoid having folks shoot themselves in the foot
-> for now with zoned disks. If you make the mistake to use mkfs.xfs
-> on a zoned disk, you will now get:
-> 
->  # mkfs.xfs /dev/sda
-> /dev/sda: zoned disk detected, refer to dm-zoned-tools for how to use with XFS
+> (It's not in debian or in fedora, so that message might lead to some head-scratching,
+> I think)
 
-Shouldn't this code be put in libblkid() so it's available to all
-filesystem tools, not just XFS?
+It *should*, I'll help up clean that project up a bit now with some meta crap which
+Debian police may want, but yeah not sure. You're call. Whatever you wish to
+print I'm fine with.
 
-Cheers,
+AFAICT dmzadm *should* be packaged at least. Long term perhaps lvm2 may re-implement
+it, but I can't see why folks should wait for such lofty vaporware.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+  Luis
