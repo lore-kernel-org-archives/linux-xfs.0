@@ -1,128 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:34806 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935732AbeFRT0v (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jun 2018 15:26:51 -0400
-Date: Mon, 18 Jun 2018 12:26:35 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2] xfstests: Test root inode parent pointer repairing
-Message-ID: <20180618192635.GH8128@magnolia>
-References: <20180618174433.3069-1-mbenatto@redhat.com>
- <20180618174433.3069-2-mbenatto@redhat.com>
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:41640 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755651AbeFOJce (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 05:32:34 -0400
+Received: by mail-pf0-f194.google.com with SMTP id a11-v6so4600646pff.8
+        for <linux-xfs@vger.kernel.org>; Fri, 15 Jun 2018 02:32:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180618174433.3069-2-mbenatto@redhat.com>
+In-Reply-To: <20180611133345.GE5020@thunk.org>
+References: <20180522123107.GC3751@bfoster.bfoster> <20180522222620.GW23861@dastard>
+ <20180522225208.GB658@sol.localdomain> <20180523074425.GM14384@magnolia>
+ <20180523162015.GA3684@sol.localdomain> <a52266f9-0096-b28c-c01c-046ababcfe3a@sandeen.net>
+ <20180523234114.GA3434@thunk.org> <CACT4Y+YEpThQj=63F8CSHeWSZxbWJ1cTDB7ZvM8OYR921uXT2g@mail.gmail.com>
+ <20180526202436.GC4613@thunk.org> <CACT4Y+YK9LzYuVSruimbgxSAoCt_UYbHwzhvDGCqZ7FuQLcUUA@mail.gmail.com>
+ <20180611133345.GE5020@thunk.org>
+From: Dmitry Vyukov <dvyukov@google.com>
+Date: Fri, 15 Jun 2018 11:32:13 +0200
+Message-ID: <CACT4Y+bxcHSCsYR5uGFbvaJvRAkoA3-z3=B_1DQ+rvks4Q5KpQ@mail.gmail.com>
+Subject: Re: Bugs involving maliciously crafted file system
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Marco Benatto <mbenatto@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, sandeen@redhat.com
+To: "Theodore Y. Ts'o" <tytso@mit.edu>, Dmitry Vyukov <dvyukov@google.com>, Eric Sandeen <sandeen@sandeen.net>, Eric Biggers <ebiggers3@gmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>, LKML <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, syzkaller-bugs <syzkaller-bugs@googlegroups.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, syzkaller <syzkaller@googlegroups.com>
 
-On Mon, Jun 18, 2018 at 02:44:33PM -0300, Marco Benatto wrote:
-> Recently we found out xfs_repair were not repairing
-> root inode parent pointer when root inode is on short-form
-> and parent points to an invalid inode number (refer to:
-> "xfs_repair: Fix root inode's parent when it's bogus for sf
-> directory" on xfs-devel list).
-> 
-> This test checks if xfs_repair successfully repair the
-> filesystem in the scenario mentioned before.
-> 
-> Signed-off-by: Marco Benatto <mbenatto@redhat.com>
+On Mon, Jun 11, 2018 at 3:33 PM, Theodore Y. Ts'o <tytso@mit.edu> wrote:
+> On Mon, Jun 11, 2018 at 03:07:24PM +0200, Dmitry Vyukov wrote:
+>>
+>> These can't be weaponized to execute code, but if a BUG_ON is
+>> triggerable over a network, or from VM guest, then it's likely more
+>> critical than a local code execution. That's why I am saying that
+>> automated evaluation is infeasible.
+>
+> I can't imagine situations where a BUG_ON would be more critical than
+> local code execution.  You can leverage local code execution to ah
+> remote privilege escalation attack; and local code execution can (with
+> less effort) be translated to a system crash.  Hence, local code
+> execution is always more critical than a BUG_ON.
 
-Looks ok, I think...
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
---D
+Well, if one could bring all of Google servers remotely, lots of
+people would consider this as more critical as _anything_ local.
 
-> ---
->  tests/xfs/450     | 53 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/450.out |  1 +
->  tests/xfs/group   |  1 +
->  3 files changed, 55 insertions(+)
->  create mode 100755 tests/xfs/450
->  create mode 100644 tests/xfs/450.out
-> 
-> diff --git a/tests/xfs/450 b/tests/xfs/450
-> new file mode 100755
-> index 0000000..dc7f244
-> --- /dev/null
-> +++ b/tests/xfs/450
-> @@ -0,0 +1,53 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2018 Red Hat Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test 450
-> +#
-> +# Make sure xfs_repair can repair root inode parent's pointer
-> +# when it contains a bogus ino when it's using shot form directory
-> +#
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +
-> +status=1	# failure is the default!
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# real QA test starts here
-> +
-> +# Modify as appropriate.
-> +_supported_fs xfs
-> +_supported_os Linux
-> +_require_scratch
-> +
-> +
-> +_scratch_mkfs >> /dev/null 2>&1
-> +
-> +rootino=$(_scratch_xfs_get_metadata_field 'rootino' 'sb 0')
-> +
-> +prefix=$(_scratch_get_sfdir_prefix ${rootino} || \
-> +		_fail "Cannot determine sfdir prefix")
-> +
-> +
-> +# Corrupt root inode parent pointer
-> +_scratch_xfs_set_metadata_field "${prefix}.hdr.parent.i4" 0 "inode ${rootino}"\
-> +								>> $seqres.full
-> +
-> +_scratch_xfs_repair >> $seqres.full 2>&1
-> +
-> +_scratch_xfs_repair -n >> $seqres.full 2>&1
-> +
-> +if [ $? -eq 1 ]
-> +then
-> +	_fail "xfs_repair failed to repair filesystem"
-> +fi
-> +
-> +echo "OK"
-> +status=0
-> +exit
-> diff --git a/tests/xfs/450.out b/tests/xfs/450.out
-> new file mode 100644
-> index 0000000..d86bac9
-> --- /dev/null
-> +++ b/tests/xfs/450.out
-> @@ -0,0 +1 @@
-> +OK
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index 932ab90..3a1db0b 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -447,3 +447,4 @@
->  447 auto mount
->  448 auto quick fuzzers
->  449 auto quick
-> +450 auto quick
-> -- 
-> 2.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+>> Anyway, bug type (UAF, BUG, task hung) is available in the bug title
+>> on dashboard and on mailing lists, so you can just search/sort bugs on
+>> the dashboard. What other interface you want on top of this?
+>
+> I also want to be able to search and filter based on subsystem, and
+> whether or not there is a reproducer.  Sometimes you can't even figure
+> out the subsytem from the limited string shown on the dashboard,
+> because the original string didn't include the subsystem to begin
+> with, or the the subsytem name was truncated and not included on the
+> dashboard.
+
+How is this problem solved in kernel development for all other bug reports?
+
+>> On a related note, perhaps kernel community needs to finally start
+>> using bugzilla for real, like with priorities, assignees, up-to-date
+>> statuses, no stale bugs, etc. All of this is available in bug tracking
+>> systems for decades...
+>
+> I do use bugzilla and in fact if syzbot would automatically file a
+> bugzilla.kernel.org report for things that are in the ext4 subsystem,
+> that would be really helpful.
+>
+> As far as no stale bugs, etc., many companies (including Google)
+> aren't capable of doing that with their own internal bug tracking
+> systems, because management doesn't give them enough time to track and
+> fix all stale bugs.  You seem to be assuming/demanding things of the
+> kernel community that are at least partially constrained by resource
+> availability --- and since you've used constrained resources as a
+> reason why Syzbot can't be extended as we've requested to reduce
+> developer toil and leverage our available resources, it would perhaps
+> be respectful if you also accepted that resource constraints also
+> exist in other areas, such as how much we can keep a fully groomed bug
+> tracking system.
+
+I mentioned this only because you asked for this.
+Whatever tracking system and style we go with, bug states need to
+maintained and bugs need to be nursed. If we extend syzbot dashboard
+with more traditional bug tracking system capabilities, but then
+nobody cares to maintain order, it also won't be useful and nobody
+will be able to easily select the current tasks to work on.
+So that's a prerequisite for what you are asking for.
+
+Well, you use bugzilla, but somebody else uses something else. This
+fragmentation is kernel development practices does not allow to build
+further automation on top. We can't do a personal solution for each
+developer. For now the greatest common divisor seems to be freeform
+emails on mailing lists...
+
+A good example is "I submitted 7 kernel bugs to bugzilla, but nobody
+answered me" email thread from today:
+https://groups.google.com/forum/#!topic/syzkaller/OnbMQbbE4gQ
