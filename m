@@ -1,47 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:46164 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:55158 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965059AbeFNXio (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 Jun 2018 19:38:44 -0400
-Subject: Re: [PATCH 0/5] xfsprogs-4.17: mkfs config file enhancements
-References: <152891829964.3968.4760134019673731615.stgit@magnolia>
- <20180614040628.GJ10363@dastard>
- <c4ae2aaf-ee28-5c35-b3f5-ffe8a57d3c01@sandeen.net>
- <20180614050844.GK10363@dastard> <20180614062949.GA6825@magnolia>
- <20180614233350.GM10363@dastard>
+        id S965063AbeFOCCM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 14 Jun 2018 22:02:12 -0400
+Subject: Re: [PATCH] xfs: symlinks can be zero length during log recovery
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <28c144a2-2621-0e88-7c0c-245ac411ff14@sandeen.net>
-Date: Thu, 14 Jun 2018 18:38:43 -0500
+References: <20180615014314.27574-1-david@fromorbit.com>
+ <2a19410d-171e-37b0-c4d4-5ae427ee8901@sandeen.net>
+Message-ID: <596c6c42-371a-0a77-8dc6-6f34e7e6d897@sandeen.net>
+Date: Thu, 14 Jun 2018 21:02:11 -0500
 MIME-Version: 1.0
-In-Reply-To: <20180614233350.GM10363@dastard>
+In-Reply-To: <2a19410d-171e-37b0-c4d4-5ae427ee8901@sandeen.net>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
 
 
-On 6/14/18 6:33 PM, Dave Chinner wrote:
-> That's kinda what I'm getting at here - shipping config templates
-> in /etc seems to be quite unusual, and the location for example
-> config files is largely a distro packaging choice. i.e. the distro
-> package mantainer decides on whether a template is shipped and where
-> it is located, and that usually follows distro packaging guidelines.
+On 6/14/18 8:57 PM, Eric Sandeen wrote:
+> On 6/14/18 8:43 PM, Dave Chinner wrote:
+>> From: Dave Chinner <dchinner@redhat.com>
+>>
+>> A log recovery failure has been reproduced where a symlink inode has
+>> a zero length in extent form. It was caused by a shutdown during a
+>> combined fstress+fsmark workload.
+>>
+>> To fix it, we have to allow zero length symlink inodes through
+>> xfs_dinode_verify() during log recovery. We already specifically
+>> check and allow this case in the shortform symlink fork verifier,
+>> but in this case we don't get that far, and the inode is not in
+>> shortform format.
+>>
+>> Update the dinode verifier to handle this case, and change the
+>> symlink fork verifier to only allow this case to exist during log
+>> recovery.
+>>
+>> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > 
-> IOWs, for the debian package build we should probably be putting
-> mkfs config template file into
-> /usr/share/doc/xfsprogs/examples/mkfs.conf, not /etc/xfs/....
+> Looks reasonable.
+> 
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-So imho we should put an example in /doc, or a fully-commented-out
-config file in /etc (apache/dovecot/postfix do that, IIRC)
+Also probably worth tagging with
 
-It doesn't really matter to me which one we do, though because we
-decided to print the "defaults config file" source at mkfs time, printing
-that for a file which does nothing is a bit of a surprise.  From
-that perspective, I guess /doc sounds a little better to me.
-
--Eric
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=200063
