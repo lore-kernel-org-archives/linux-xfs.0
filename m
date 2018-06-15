@@ -1,181 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:37518 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754660AbeFNSft (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jun 2018 14:35:49 -0400
-Date: Thu, 14 Jun 2018 11:35:28 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 0/5] xfsprogs-4.17: mkfs config file enhancements
-Message-ID: <20180614183528.GC8128@magnolia>
-References: <152891829964.3968.4760134019673731615.stgit@magnolia>
- <20180614040628.GJ10363@dastard>
- <c4ae2aaf-ee28-5c35-b3f5-ffe8a57d3c01@sandeen.net>
- <20180614050844.GK10363@dastard>
- <20180614062949.GA6825@magnolia>
- <20180614174640.GE7508@wotan.suse.de>
- <20180614175909.GB8128@magnolia>
- <20180614181602.GL5527@wotan.suse.de>
+Received: from mail-wr0-f170.google.com ([209.85.128.170]:43619 "EHLO
+        mail-wr0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755566AbeFOHId (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 03:08:33 -0400
+Received: by mail-wr0-f170.google.com with SMTP id d2-v6so8802272wrm.10
+        for <linux-xfs@vger.kernel.org>; Fri, 15 Jun 2018 00:08:32 -0700 (PDT)
+Date: Fri, 15 Jun 2018 09:08:29 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: Reading/changing projid of a symlink
+Message-ID: <20180615070829.m5ligybzlods4l5r@odin.usersys.redhat.com>
+References: <CA+Xn3kwTnu8yd-DCy37323waPgNm0jNuL9NDhz8s8pY023COSw@mail.gmail.com>
+ <20180612143608.ok3jqtl3l34vdlpy@odin.usersys.redhat.com>
+ <CA+Xn3kyxiOj+irNiqKWQWfJ_aUv1RYFsH+UCnv3gnMuYJ=oUQw@mail.gmail.com>
+ <20180613094048.6becmt42cvdhvg66@odin.usersys.redhat.com>
+ <CA+Xn3kzsrqjNH2yXdtfsRuiCBfvX2GSWOW2SaLPL4h1PmQsGBg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180614181602.GL5527@wotan.suse.de>
+In-Reply-To: <CA+Xn3kzsrqjNH2yXdtfsRuiCBfvX2GSWOW2SaLPL4h1PmQsGBg@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@sandeen.net>, sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: Ilya Pronin <ipronin@twitter.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jun 14, 2018 at 08:16:02PM +0200, Luis R. Rodriguez wrote:
-> On Thu, Jun 14, 2018 at 10:59:09AM -0700, Darrick J. Wong wrote:
-> > On Thu, Jun 14, 2018 at 07:46:40PM +0200, Luis R. Rodriguez wrote:
-> > > a) a set of config files we know should work and ensure they produce the
-> > >    same filesystem as if we had used CLI params. We can use xfs_db -c version
-> > >    against both filesystems and check that each differences. Since this would
-> > >    use the same xfsprogs for the results of a config based filesystem and
-> > >    the CLI based filesystem the diff would only generate if there really
-> > >    was a change between both runs, and you can use any xfsprogs version
-> > >    for it.
-> > 
-> > Hmm, just out of curiosity, are there any mkfs cli/config options that
-> > do /not/ show up in the output of mkfs and/or 'xfs_db -c info'?
+On Thu, Jun 14, 2018 at 05:14:34PM -0700, Ilya Pronin wrote:
+> Thanks everyone for the answers!
 > 
-> A good question indeed. But more importantly, how could we verify that in
-> the future automatically?
+> On Wed, Jun 13, 2018 at 2:40 AM, Carlos Maiolino <cmaiolino@redhat.com> wrote:
+> > The symlink's project id, will always be related to the project id of its parent
+> > directory.
+> >
+> > At the end, Project quota, is a way to create a directory tree based quota,
+> > where all inodes corresponding to a single project id, should be under the same
+> > subtree. If you are creating a new subtree, under an already existing project
+> > id, IMHO, the right approach would be to remove the project id from the old
+> > directory tree, and add it to the new tree, and use user/group quotas for any
+> > quota accounting that should be done filesystem-wide (instead of directory tree
+> > wise).
 > 
-> > >    It does however leave actual expected results on the filesystem up to
-> > >    a separate test, it assumes that xfs/191-input-validation is doing its
-> > >    job, but word is that needs some love.
-> > > 
-> > > b) a set of invalid config files and ensure they never work
-> > 
-> > Agreed, I have some twisty ones of my own, 
+> It's a bit weird though that a symlink can inherit project ID from its
+> parent directory,
+
+Well, yes, a symlink occupy an inode, and so, we need to account for it, in case
+for example, you limit inode creation in the project id.
+
+> but then cannot get rid of it :) And thus doesn't
+> allow to completely remove the project ID from the directory tree it's
+> in.
+
+Once you move the symlink out of the project subtree, the project id will be
+removed or updated to the new project id (in case its new place belongs to
+another project id).
+
+As I said before, IMHO, I believe the way you are using project quotas is wrong.
+Project quotas is supposed to be used on a sub-tree based granularity, not on a
+file based granularity. But again, that's just my opinion.
+
 > 
-> Great!
-> 
-> > though fixing them requires some amount of sscanf format string tweaking. :)
-> 
-> Oh fun, so we can have the test fail for the get go. Note that at one point
-> of parser evolution we may get to the point of actually reaching a point of
-> it being more better to just embrace a library. But in terms of size and
-> maintenance due to the simplicity of what we need to parse we were just not
-> there yet.
+> -- 
+> Ilya Pronin
 
-[future babble]
-
-It's not /that/ much tweaking.  First a function that trims leading and
-trailing whitespace, then cuts off the string at the first '#' (so we
-can have eol-comments anywhere).
-
-Section headers:
-n = sscanf(line, " [ %m[^] \f\n\r\t\v] %ms %m[^\n]", &tag, &cp, &junk);
-
-We pick up the section name (in *tag) if cp == "]" and n == 2 (i.e.
-there's no junk at the end of the line.
-
-"# some comment"
-"[data]"
-"[data] # some comment"
-" [data]"
-"[ data]"
-"[data ]"
-"[data] "
-<repeat but with tabs instead of spaces>
-
-"[data] noalign = 1"
-"[data cow]"
-"[data"
-"data]"
-" [data cow]"
-"[ data cow]"
-"[data cow]"
-"[data cow ]"
-"[data cow] "
-"[data.cow]"
-"[data noalign = 1]"
-"[nonexistentsection]"
-
-Key/value:
-
-n = sscanf(line, " %m[^][ \f\n\r\t\v=] %m[=] %m[^\n]", &key, &eq, &val);
-
-We pick up the key/value pair if n == 3, eq == "]" and *key is found in
-the current section header, and if *val can be stroull'd.
-
-Assuming a [data] section,
-
-"# some comment"
-"noalign=1"
-"noalign=1 # some comment"
-" noalign=1"
-"noalign =1"
-"noalign= 1"
-"noalign=1 "
-" noalign =1"
-" noalign= 1"
-" noalign=1 "
-"noalign = 1"
-"noalign =1 "
-"noalign= 1 "
-" noalign = 1"
-" noalign= 1 "
-"noalign = 1 "
-<repeat with tabs>
-
-"noalign moo = 1"
-"noalign is 1"
-"noalign = 10"
-"noalign = 109825091285091825091285018250"
-"noalign = [metadata]"
-"moocow"
-"moocow = 5"
-
-etc.  So long as we tag it EXPERIMENTAL I don't have a problem with
-landing the current code as-is for 4.17.
-
-> Let's recall that sharing the profile parser from e2fsprogs was the smallest,
-> but libini_config the more generic one.
-> 
-> If you want to experiment with them:
-> 
-> https://gitlab.com/mcgrof/libini_config-demo.git
-> https://gitlab.com/mcgrof/libekprofile.git
-> 
-> > > c) test to ensure cli can override config params
-> > 
-> > <nod>
-> > 
-> > > To test that a self generated config file works would be a next step (d),
-> > > and I think we can validate it by also making sure it yields the same
-> > > filesystem as if we just ran mkfs.xfs with no options, so same strategy
-> > > as in a).
-> > 
-> > Ok, good.  I'd also argue for a test that tries every file in
-> > /etc/xfs/mkfs/* to see if mkfs will format the filesystem described in
-> > the config file, that way we can pick up all the distro-packaged files.
-> 
-> Works with me, so we have 3 tests in mind already.
-> 
-> > > With proper testing in place for regular configs stuff (the tests
-> > > I have to write) and this I see your changes as desirable but I'm
-> > > wondering if this should just wait until the next cycle so we at
-> > > least have some effort on the testing started already?
-> > 
-> > Agreed.  I'm scurrying back under the rocks so that Eric can get
-> > xfsprogs 4.17 out the door.
-> 
-> OK cool, I'll try to finish the discussed test soon.
-
-Looking forward to it!
-
---D
-
-> > (I'm actually going to go debug some hardware and see if I can get
-> > fscounter scrub working.)
-> 
-> :)
-> 
->   Luis
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Carlos
