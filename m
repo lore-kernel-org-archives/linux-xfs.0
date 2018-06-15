@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:37000 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:37060 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755897AbeFONCg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 09:02:36 -0400
+        with ESMTP id S1756221AbeFONCi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 09:02:38 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 08/24] xfs: don't clear imap_valid for a non-uptodate buffers
-Date: Fri, 15 Jun 2018 15:01:53 +0200
-Message-Id: <20180615130209.1970-9-hch@lst.de>
+Subject: [PATCH 09/24] xfs: don't use XFS_BMAPI_IGSTATE in xfs_map_blocks
+Date: Fri, 15 Jun 2018 15:01:54 +0200
+Message-Id: <20180615130209.1970-10-hch@lst.de>
 In-Reply-To: <20180615130209.1970-1-hch@lst.de>
 References: <20180615130209.1970-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,48 +15,49 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org
 
-Finding a buffer that isn't uptodate doesn't invalidate the mapping for
-any given block.  The last_sector check will already take care of starting
-another ioend as soon as we find any non-update buffer, and if the current
-mapping doesn't include the next uptodate buffer the xfs_imap_valid check
-will take care of it.
+We want to be able to use the extent state as a reliably indicator for
+the type of I/O, and stop using the buffer head state.  For this we
+need to stop using the XFS_BMAPI_IGSTATE so that we don't see merged
+extents of different types.
+
+Based on a patch from Dave Chinner.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_aops.c | 9 ++-------
- 1 file changed, 2 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_aops.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
 diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 5c611c0784ca..307ca66879b3 100644
+index 307ca66879b3..39b933e17192 100644
 --- a/fs/xfs/xfs_aops.c
 +++ b/fs/xfs/xfs_aops.c
-@@ -864,10 +864,8 @@ xfs_writepage_map(
- 		 * meaningless for holes (!mapped && uptodate), so skip
- 		 * buffers covering holes here.
- 		 */
--		if (!buffer_mapped(bh) && buffer_uptodate(bh)) {
--			wpc->imap_valid = false;
-+		if (!buffer_mapped(bh) && buffer_uptodate(bh))
- 			continue;
--		}
+@@ -385,7 +385,6 @@ xfs_map_blocks(
+ 	ssize_t			count = i_blocksize(inode);
+ 	xfs_fileoff_t		offset_fsb, end_fsb;
+ 	int			error = 0;
+-	int			bmapi_flags = XFS_BMAPI_ENTIRE;
+ 	int			nimaps = 1;
  
- 		if (buffer_unwritten(bh))
- 			new_type = XFS_IO_UNWRITTEN;
-@@ -880,11 +878,8 @@ xfs_writepage_map(
- 				ASSERT(buffer_mapped(bh));
- 			/*
- 			 * This buffer is not uptodate and will not be
--			 * written to disk.  Ensure that we will put any
--			 * subsequent writeable buffers into a new
--			 * ioend.
-+			 * written to disk.
- 			 */
--			wpc->imap_valid = false;
- 			continue;
- 		}
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+@@ -405,8 +404,6 @@ xfs_map_blocks(
+ 		return 0;
  
+ 	ASSERT(type != XFS_IO_COW);
+-	if (type == XFS_IO_UNWRITTEN)
+-		bmapi_flags |= XFS_BMAPI_IGSTATE;
+ 
+ 	xfs_ilock(ip, XFS_ILOCK_SHARED);
+ 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
+@@ -418,7 +415,7 @@ xfs_map_blocks(
+ 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
+ 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
+ 	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
+-				imap, &nimaps, bmapi_flags);
++				imap, &nimaps, XFS_BMAPI_ENTIRE);
+ 	/*
+ 	 * Truncate an overwrite extent if there's a pending CoW
+ 	 * reservation before the end of this extent.  This forces us
 -- 
 2.17.1
 
