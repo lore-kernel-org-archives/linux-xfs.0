@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:37280 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:36576 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936193AbeFONCx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 09:02:53 -0400
+        with ESMTP id S1756218AbeFONCX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 09:02:23 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 14/24] xfs: remove the now unused XFS_BMAPI_IGSTATE flag
-Date: Fri, 15 Jun 2018 15:01:59 +0200
-Message-Id: <20180615130209.1970-15-hch@lst.de>
+Subject: [PATCH 02/24] xfs: use iomap for blocksize == PAGE_SIZE readpage and readpages
+Date: Fri, 15 Jun 2018 15:01:47 +0200
+Message-Id: <20180615130209.1970-3-hch@lst.de>
 In-Reply-To: <20180615130209.1970-1-hch@lst.de>
 References: <20180615130209.1970-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,66 +15,40 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org
 
+For file systems with a block size that equals the page size we never do
+partial reads, so we can use the buffer_head-less iomap versions of
+readpage and readpages without conflicting with the buffer_head structures
+create later in write_begin.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 6 ++----
- fs/xfs/libxfs/xfs_bmap.h | 3 ---
- 2 files changed, 2 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_aops.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 7b0e2b551e23..4b5e014417d2 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3799,8 +3799,7 @@ xfs_bmapi_update_map(
- 		   mval[-1].br_startblock != HOLESTARTBLOCK &&
- 		   mval->br_startblock == mval[-1].br_startblock +
- 					  mval[-1].br_blockcount &&
--		   ((flags & XFS_BMAPI_IGSTATE) ||
--			mval[-1].br_state == mval->br_state)) {
-+		   mval[-1].br_state == mval->br_state) {
- 		ASSERT(mval->br_startoff ==
- 		       mval[-1].br_startoff + mval[-1].br_blockcount);
- 		mval[-1].br_blockcount += mval->br_blockcount;
-@@ -3845,7 +3844,7 @@ xfs_bmapi_read(
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index ca6903726689..dba439ebfe4c 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1402,6 +1402,8 @@ xfs_vm_readpage(
+ 	struct page		*page)
+ {
+ 	trace_xfs_vm_readpage(page->mapping->host, 1);
++	if (i_blocksize(page->mapping->host) == PAGE_SIZE)
++		return iomap_readpage(page, &xfs_iomap_ops);
+ 	return mpage_readpage(page, xfs_get_blocks);
+ }
  
- 	ASSERT(*nmap >= 1);
- 	ASSERT(!(flags & ~(XFS_BMAPI_ATTRFORK|XFS_BMAPI_ENTIRE|
--			   XFS_BMAPI_IGSTATE|XFS_BMAPI_COWFORK)));
-+			   XFS_BMAPI_COWFORK)));
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_SHARED|XFS_ILOCK_EXCL));
+@@ -1413,6 +1415,8 @@ xfs_vm_readpages(
+ 	unsigned		nr_pages)
+ {
+ 	trace_xfs_vm_readpages(mapping->host, nr_pages);
++	if (i_blocksize(mapping->host) == PAGE_SIZE)
++		return iomap_readpages(mapping, pages, nr_pages, &xfs_iomap_ops);
+ 	return mpage_readpages(mapping, pages, nr_pages, xfs_get_blocks);
+ }
  
- 	if (unlikely(XFS_TEST_ERROR(
-@@ -4290,7 +4289,6 @@ xfs_bmapi_write(
- 
- 	ASSERT(*nmap >= 1);
- 	ASSERT(*nmap <= XFS_BMAP_MAX_NMAP);
--	ASSERT(!(flags & XFS_BMAPI_IGSTATE));
- 	ASSERT(tp != NULL ||
- 	       (flags & (XFS_BMAPI_CONVERT | XFS_BMAPI_COWFORK)) ==
- 			(XFS_BMAPI_CONVERT | XFS_BMAPI_COWFORK));
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index 2c233f9f1a26..a845fe57d1b5 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -80,8 +80,6 @@ struct xfs_extent_free_item
- #define XFS_BMAPI_METADATA	0x002	/* mapping metadata not user data */
- #define XFS_BMAPI_ATTRFORK	0x004	/* use attribute fork not data */
- #define XFS_BMAPI_PREALLOC	0x008	/* preallocation op: unwritten space */
--#define XFS_BMAPI_IGSTATE	0x010	/* Ignore state - */
--					/* combine contig. space */
- #define XFS_BMAPI_CONTIG	0x020	/* must allocate only one extent */
- /*
-  * unwritten extent conversion - this needs write cache flushing and no additional
-@@ -128,7 +126,6 @@ struct xfs_extent_free_item
- 	{ XFS_BMAPI_METADATA,	"METADATA" }, \
- 	{ XFS_BMAPI_ATTRFORK,	"ATTRFORK" }, \
- 	{ XFS_BMAPI_PREALLOC,	"PREALLOC" }, \
--	{ XFS_BMAPI_IGSTATE,	"IGSTATE" }, \
- 	{ XFS_BMAPI_CONTIG,	"CONTIG" }, \
- 	{ XFS_BMAPI_CONVERT,	"CONVERT" }, \
- 	{ XFS_BMAPI_ZERO,	"ZERO" }, \
 -- 
 2.17.1
 
