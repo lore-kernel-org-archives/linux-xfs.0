@@ -1,61 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:19681 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932466AbeFUXXP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jun 2018 19:23:15 -0400
-Date: Fri, 22 Jun 2018 09:23:12 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2] xfs: transactionless xfs_bunmapi shouldn't do format
- conversion
-Message-ID: <20180621232312.GX19934@dastard>
-References: <20180619024128.22669-1-david@fromorbit.com>
- <20180619024128.22669-2-david@fromorbit.com>
- <20180619045405.GI8128@magnolia>
- <20180620073142.GA5257@infradead.org>
- <20180621223406.GV19934@dastard>
- <20180621225508.GL4838@magnolia>
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:32773 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936136AbeFORa3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 13:30:29 -0400
+Received: by mail-lf0-f66.google.com with SMTP id y20-v6so15751738lfy.0
+        for <linux-xfs@vger.kernel.org>; Fri, 15 Jun 2018 10:30:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180621225508.GL4838@magnolia>
+In-Reply-To: <20180614233551.GN10363@dastard>
+References: <20180614221646.20017-1-mbenatto@redhat.com> <1ddae533-b040-fdba-4350-01b59d5ddcba@sandeen.net>
+ <20180614233551.GN10363@dastard>
+From: Marco Benatto <mbenatto@redhat.com>
+Date: Fri, 15 Jun 2018 14:30:27 -0300
+Message-ID: <CAOGQQ28c_qfp6Mjt13v0jK7tYVuvL-1j+dbya6iRwUhqmfii8A@mail.gmail.com>
+Subject: Re: [PATCH] xfs_repair: Fix root inode's parent when it's bogus for
+ sf directory
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
 
-On Thu, Jun 21, 2018 at 03:55:08PM -0700, Darrick J. Wong wrote:
-> On Fri, Jun 22, 2018 at 08:34:06AM +1000, Dave Chinner wrote:
-> > On Wed, Jun 20, 2018 at 12:31:42AM -0700, Christoph Hellwig wrote:
-> > > On Mon, Jun 18, 2018 at 09:54:05PM -0700, Darrick J. Wong wrote:
-> > > > ...it's also weird that xfs_bmap_punch_delalloc_range calls xfs_bunmapi
-> > > > with no transaction and a xfs_defer that we dump on the ground.
-> > > > 
-> > > > So yes, I think the patch does fix the crash, but it's kinda gross.
-> > > > 
-> > > > Thoughts?
-> > > 
-> > > I've got an alternative solution:
-> > > 
-> > > http://git.infradead.org/users/hch/xfs.git/commitdiff/a1c0685b2085b448cbe02f0f9ff0c8771e3f4496
-> > > 
-> > > The only bit that is missing is removing the now unused support for
-> > > a NULL tp in __xfs_bunmapi..
-> > 
-> > Ah, I forgot about that patch. Thanks for the reminder, Christoph!
-> > 
-> > Darrick, can we get Christoph's patch in as a standalone bug fix
-> > rather than wait for the bufferhead removal to be merged?
-> 
-> Ok, will do.  AFAICT if I merge that patch then I can drop this one,
-> right?
+On Thu, Jun 14, 2018 at 8:35 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Thu, Jun 14, 2018 at 05:20:56PM -0500, Eric Sandeen wrote:
+>> On 6/14/18 5:16 PM, Marco Benatto wrote:
+>> > Currently when root inode is in short-form and its parent ino
+>> > has an invalid value, process_sf_dir2() ends up not fixing it,
+>> > because if verify_inum() fails we never get to the next case which
+>> > would fix the root inode's parent pointer.
+>> >
+>> > This behavior triggers the following assert on process_dir2():
+>> >
+>> >    ASSERT((ino != mp->m_sb.sb_rootino && ino != *parent) ||
+>> >         (ino == mp->m_sb.sb_rootino &&
+>> >         (ino == *parent || need_root_dotdot == 1)));
+>> >
+>> > This patch fixes this behavior by making sure we always properly
+>> > handle rootino parent pointer in process_sf_dir2()
+>> >
+>> > Signed-off-by: Marco Benatto <mbenatto@redhat.com>
+>>
+>> This looks correct to me, thanks.
+>>
+>> FWIW the problem can be demonstrated by setting the root inode's
+>> parent to 0 on a freshly made fs:
+>>
+>> # mkfs.xfs -f -dfile,name=fsfile,size=1g
+>> # xfs_db -x -c "sb 0" -c "addr rootino" -c "write u3.sfdir3.hdr.parent.i4 0" fsfile
+>> # xfs_repair fsfile
+>
+> xfstest please (also to check that xfs_scrub detects it)?
 
-Yup, should be able to, as this is the only vector into the problem
-code.
+Sure, working on this. I'll send you once it's done.
+
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+
+
 
 Cheers,
 
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Marco Benatto
