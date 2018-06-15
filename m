@@ -1,38 +1,154 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:34070 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753735AbeFOU5C (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 16:57:02 -0400
-From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:50426 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932264AbeFOU7i (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 16:59:38 -0400
+Date: Fri, 15 Jun 2018 13:59:14 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 Subject: Re: [PATCH] libxfs: detect zoned disks and prevent their raw use
-Date: Fri, 15 Jun 2018 20:56:57 +0000
-Message-ID: <7c229a7179312855f0a29a0ae71cf4a03382cd35.camel@wdc.com>
+Message-ID: <20180615205914.GF8128@magnolia>
 References: <20180615205011.7728-1-mcgrof@kernel.org>
-In-Reply-To: <20180615205011.7728-1-mcgrof@kernel.org>
-Content-Language: en-US
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <0015EB15783BDE42ADEC129A2C6DD48E@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180615205011.7728-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "sandeen@sandeen.net" <sandeen@sandeen.net>, "mcgrof@kernel.org" <mcgrof@kernel.org>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "hare@suse.de" <hare@suse.de>, "mwilck@suse.com" <mwilck@suse.com>, Damien Le Moal <Damien.LeMoal@wdc.com>, "snitzer@redhat.com" <snitzer@redhat.com>, "axboe@kernel.dk" <axboe@kernel.dk>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: sandeen@sandeen.net, linux-xfs@vger.kernel.org, snitzer@redhat.com, hare@suse.de, axboe@kernel.dk, mwilck@suse.com, Damien Le Moal <damien.lemoal@wdc.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
 
-T24gRnJpLCAyMDE4LTA2LTE1IGF0IDEzOjUwIC0wNzAwLCBMdWlzIFIuIFJvZHJpZ3VleiB3cm90
-ZToNCj4gK3N0YXRpYyBpbnQNCj4gK2lzX3pvbmVkX2Rpc2soY2hhciAqcGF0aCkNCj4gK3sNCj4g
-KwljaGFyIHN0cltQQVRIX01BWF07DQo+ICsJY2hhciAqZGV2bmFtZSA9IGJhc2VuYW1lKHBhdGgp
-Ow0KPiArCUZJTEUgKmZpbGU7DQo+ICsJaW50IGxlbjsNCj4gKw0KPiArDQo+ICsJbGVuID0gc25w
-cmludGYoc3RyLCBzaXplb2Yoc3RyKSwgIi9zeXMvYmxvY2svJXMvcXVldWUvem9uZWQiLCBkZXZu
-YW1lKTsNCg0KSGF2ZSB5b3UgY29uc2lkZXJlZCB0byB1c2UgYXNwcmludGYoKSBpbnN0ZWFkIG9m
-IHVzaW5nIHNucHJpbnRmKCkgYW5kIGEgZml4ZWQNCnNpemUgYnVmZmVyPw0KDQo+ICsNCj4gKwkv
-KiBJbmRpY2F0ZXMgdHJ1bmNhdGlvbiAqLw0KPiArCWlmIChsZW4gPj0gUEFUSF9NQVgpIHsNCj4g
-KwkJZXJybm8gPSBFTkFNRVRPT0xPTkc7DQo+ICsJCXJldHVybiAtMTsNCj4gKwl9DQo+ICsNCj4g
-KwlmaWxlID0gZm9wZW4oc3RyLCAiciIpOw0KPiArCWlmICghZmlsZSkNCj4gKwkJcmV0dXJuIDA7
-DQo+ICsNCj4gKwlmY2xvc2UoZmlsZSk7DQo+ICsNCj4gKwlyZXR1cm4gMTsNCj4gK30NCg0KSSB0
-aGluayB0aGF0IHlvdSBoYXZlIHRvIHJlYWQgdGhlIHN5c2ZzIGZpbGUgYW5kIG9ubHkgcmV0dXJu
-IDEgZm9yIGhvc3QtbWFuYWdlZA0KZHJpdmVzLiBDcmVhdGluZyBhIGZpbGVzeXN0ZW0gb24gdG9w
-IG9mIGEgaG9zdC1hd2FyZSBkcml2ZSBzaG91bGQgbm90IGJlIGZvcmJpZGRlbi4NClBsZWFzZSBh
-bHNvIHJlbmFtZSAiaXNfem9uZWRfZGlzaygpIiBpbnRvICJpc19ob3N0X21hbmFnZWQoKSIgb3Ig
-c28uDQoNClRoYW5rcywNCg0KQmFydC4NCg0KDQoNCg0K
+On Fri, Jun 15, 2018 at 01:50:11PM -0700, Luis R. Rodriguez wrote:
+> Using raw zoned disks by filesystems requires special handling, only
+> f2fs currently supports this. All other filesystems do not support
+> dealing with zoned disks directly.
+> 
+> As such using raw zoned disks is not supported by XFS, to use them you
+> need to use dm-zoned-tools, format them with dzadm, set the scheduler to
+> deadline, and then setup a dmsetup with zoned type, and somehow set
+> this up on every boot to live a semi-happy life for now.
+> 
+> Even if you use dmsetup on every boot, the zoned disk is still exposed,
+> and a user may still think they have to run mkfs.xfs on it instead
+> of the /dev/mapper/ disk, and then mount it by mistake.
+> 
+> In either case you may seem to believe your disk works and only eventually
+> end up with alignmet issues and perhaps lose you data. For instance:
+> 
+> [10869.959501] device-mapper: zoned reclaim: (sda): Align zone 865 wp 28349 to 30842 (wp+2493) blocks failed -5
+> [10870.014488] sd 0:0:0:0: [sda] tag#0 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+> [10870.016137] sd 0:0:0:0: [sda] tag#0 Sense Key : Illegal Request [current]
+> [10870.017696] sd 0:0:0:0: [sda] tag#0 Add. Sense: Unaligned write command
+> 
+> We have to prevent these mistakes by avoiding mkfs.xfs use on zoned disks.
+> 
+> Note that this not enough yet, if users are on old AHCI controllers,
+> the disks may not be detected as zoned. More work through udev may be
+> required to detect this situation old old parent PCI IDs for zoned
+> disks, and then prevent their use somehow.
+> 
+> If you are stuck on using XFS there a udev rule out there [0], this is
+> far from perfect, and not fully what we want done upstream on Linux
+> distributions long term but it should at least help developers for now
+> enjoy their shiny big fat zoned disks with XFS.
+> 
+> This check should help avoid having folks shoot themselves in the foot
+> for now with zoned disks. If you make the mistake to use mkfs.xfs
+> on a zoned disk, you will now get:
+> 
+>  # mkfs.xfs /dev/sda
+> /dev/sda: zoned disk detected, refer to dm-zoned-tools for how to use with XFS
+> 
+> [0] https://lkml.kernel.org/r/20180614001147.1545-1-mcgrof@kernel.org
+> 
+> Cc: Damien Le Moal <damien.lemoal@wdc.com>
+> Cc: Bart Van Assche <Bart.VanAssche@wdc.com>
+> Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+> ---
+>  libxfs/init.c | 41 +++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 41 insertions(+)
+> 
+> diff --git a/libxfs/init.c b/libxfs/init.c
+> index a65c86c3..cca33ec7 100644
+> --- a/libxfs/init.c
+> +++ b/libxfs/init.c
+> @@ -98,6 +98,32 @@ libxfs_device_to_fd(dev_t device)
+>  	/* NOTREACHED */
+>  }
+>  
+> +static int
+> +is_zoned_disk(char *path)
+> +{
+> +	char str[PATH_MAX];
+> +	char *devname = basename(path);
+> +	FILE *file;
+> +	int len;
+> +
+> +
+> +	len = snprintf(str, sizeof(str), "/sys/block/%s/queue/zoned", devname);
+> +
+> +	/* Indicates truncation */
+> +	if (len >= PATH_MAX) {
+> +		errno = ENAMETOOLONG;
+> +		return -1;
+> +	}
+> +
+> +	file = fopen(str, "r");
+> +	if (!file)
+> +		return 0;
+> +
+
+Shouldn't we read the *file contents and return 0 if the contents
+are 'none'?
+
+$ lsscsi
+[0:0:0:0]    disk    ATA      Samsung SSD 850  1B6Q  /dev/sda
+$ cat /sys/block/sda/queue/zoned
+none
+
+--D
+
+> +	fclose(file);
+> +
+> +	return 1;
+> +}
+> +
+>  /* libxfs_device_open:
+>   *     open a device and return its device number
+>   */
+> @@ -108,6 +134,7 @@ libxfs_device_open(char *path, int creat, int xflags, int setblksize)
+>  	int		fd, d, flags;
+>  	int		readonly, dio, excl;
+>  	struct stat	statb;
+> +	int ret;
+>  
+>  	readonly = (xflags & LIBXFS_ISREADONLY);
+>  	excl = (xflags & LIBXFS_EXCLUSIVELY) && !creat;
+> @@ -119,6 +146,20 @@ retry:
+>  		(dio ? O_DIRECT : 0) | \
+>  		(excl ? O_EXCL : 0);
+>  
+> +	ret = is_zoned_disk(path);
+> +	if (ret < 0) {
+> +		fprintf(stderr, _("%s: error opening %s\n"),
+> +			path, strerror(errno));
+> +		exit(1);
+> +	}
+> +
+> +	if (ret == 1) {
+> +		fprintf(stderr,
+> +_("%s: zoned disk detected, refer to dm-zoned-tools for how to use with XFS\n"),
+> +			path);
+> +		exit(1);
+> +	}
+> +
+>  	if ((fd = open(path, flags, 0666)) < 0) {
+>  		if (errno == EINVAL && --dio == 0)
+>  			goto retry;
+> -- 
+> 2.17.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
