@@ -1,75 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:11151 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S964876AbeFNWWv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jun 2018 18:22:51 -0400
-Date: Fri, 15 Jun 2018 08:22:48 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/5] xfsprogs-4.17: mkfs config file enhancements
-Message-ID: <20180614222248.GL10363@dastard>
-References: <152891829964.3968.4760134019673731615.stgit@magnolia>
- <20180614040628.GJ10363@dastard>
- <c4ae2aaf-ee28-5c35-b3f5-ffe8a57d3c01@sandeen.net>
- <20180614050844.GK10363@dastard>
- <20180614062949.GA6825@magnolia>
- <20180614174640.GE7508@wotan.suse.de>
- <20180614175909.GB8128@magnolia>
- <3c6ec372-3941-386c-37b5-3e7415cf8b67@sandeen.net>
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:36792 "EHLO
+        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965119AbeFOAOg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jun 2018 20:14:36 -0400
+Received: by mail-wm0-f44.google.com with SMTP id v131-v6so853278wma.1
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Jun 2018 17:14:35 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <3c6ec372-3941-386c-37b5-3e7415cf8b67@sandeen.net>
+In-Reply-To: <20180613094048.6becmt42cvdhvg66@odin.usersys.redhat.com>
+References: <CA+Xn3kwTnu8yd-DCy37323waPgNm0jNuL9NDhz8s8pY023COSw@mail.gmail.com>
+ <20180612143608.ok3jqtl3l34vdlpy@odin.usersys.redhat.com> <CA+Xn3kyxiOj+irNiqKWQWfJ_aUv1RYFsH+UCnv3gnMuYJ=oUQw@mail.gmail.com>
+ <20180613094048.6becmt42cvdhvg66@odin.usersys.redhat.com>
+From: Ilya Pronin <ipronin@twitter.com>
+Date: Thu, 14 Jun 2018 17:14:34 -0700
+Message-ID: <CA+Xn3kzsrqjNH2yXdtfsRuiCBfvX2GSWOW2SaLPL4h1PmQsGBg@mail.gmail.com>
+Subject: Re: Reading/changing projid of a symlink
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, "Luis R. Rodriguez" <mcgrof@kernel.org>, sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>
 
-On Thu, Jun 14, 2018 at 02:05:02PM -0500, Eric Sandeen wrote:
-> 
-> 
-> On 6/14/18 12:59 PM, Darrick J. Wong wrote:
-> > On Thu, Jun 14, 2018 at 07:46:40PM +0200, Luis R. Rodriguez wrote:
-> >> On Wed, Jun 13, 2018 at 11:29:49PM -0700, Darrick J. Wong wrote:
-> >>> On Thu, Jun 14, 2018 at 03:08:44PM +1000, Dave Chinner wrote:
-> >>>> On Wed, Jun 13, 2018 at 11:23:09PM -0500, Eric Sandeen wrote:
-> >>>>> On 6/13/18 11:06 PM, Dave Chinner wrote:
-> >>>>>> With this change, we'll have code to maintain it to ensure that the
-> >>>>>> file gets updated properly, and it will probably take more time and
-> >>>>>> effort to validate that the generated file is correct (and debug if
-> >>>>>> it's not!) compared to the 30s it will take to hand edit the
-> >>>>>> template file to change or add a new default...
-> >>
-> >> If we had an xfstest to *test* that same generated file, this would not
-> >> be an issue and from what I gather we need quite a bit of work to get there.
-> >>
-> >> I'm working on a test for config stuff but that will just test for now
-> >> (and this reveals some future work needed):
-> >>
-> >> a) a set of config files we know should work and ensure they produce the
-> >>    same filesystem as if we had used CLI params. We can use xfs_db -c version
-> >>    against both filesystems and check that each differences. Since this would
-> >>    use the same xfsprogs for the results of a config based filesystem and
-> >>    the CLI based filesystem the diff would only generate if there really
-> >>    was a change between both runs, and you can use any xfsprogs version
-> >>    for it.
-> > 
-> > Hmm, just out of curiosity, are there any mkfs cli/config options that
-> > do /not/ show up in the output of mkfs and/or 'xfs_db -c info'?
-> 
-> Of the options that actually write [meta]data to disk, these don't show
-> up in the info output:
-> 
-> -m uuid=
-> -l agnum=
-> -L <label>
+Thanks everyone for the answers!
 
-And the extent size hints and other attributes written to the root
-inode. And anything in the protofile.
+On Wed, Jun 13, 2018 at 2:40 AM, Carlos Maiolino <cmaiolino@redhat.com> wrote:
+> The symlink's project id, will always be related to the project id of its parent
+> directory.
+>
+> At the end, Project quota, is a way to create a directory tree based quota,
+> where all inodes corresponding to a single project id, should be under the same
+> subtree. If you are creating a new subtree, under an already existing project
+> id, IMHO, the right approach would be to remove the project id from the old
+> directory tree, and add it to the new tree, and use user/group quotas for any
+> quota accounting that should be done filesystem-wide (instead of directory tree
+> wise).
 
-Cheers,
+It's a bit weird though that a symlink can inherit project ID from its
+parent directory, but then cannot get rid of it :) And thus doesn't
+allow to completely remove the project ID from the directory tree it's
+in.
 
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Ilya Pronin
