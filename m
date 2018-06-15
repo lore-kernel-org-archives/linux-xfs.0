@@ -1,65 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f170.google.com ([209.85.128.170]:43619 "EHLO
-        mail-wr0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755566AbeFOHId (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 03:08:33 -0400
-Received: by mail-wr0-f170.google.com with SMTP id d2-v6so8802272wrm.10
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Jun 2018 00:08:32 -0700 (PDT)
-Date: Fri, 15 Jun 2018 09:08:29 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: Reading/changing projid of a symlink
-Message-ID: <20180615070829.m5ligybzlods4l5r@odin.usersys.redhat.com>
-References: <CA+Xn3kwTnu8yd-DCy37323waPgNm0jNuL9NDhz8s8pY023COSw@mail.gmail.com>
- <20180612143608.ok3jqtl3l34vdlpy@odin.usersys.redhat.com>
- <CA+Xn3kyxiOj+irNiqKWQWfJ_aUv1RYFsH+UCnv3gnMuYJ=oUQw@mail.gmail.com>
- <20180613094048.6becmt42cvdhvg66@odin.usersys.redhat.com>
- <CA+Xn3kzsrqjNH2yXdtfsRuiCBfvX2GSWOW2SaLPL4h1PmQsGBg@mail.gmail.com>
+Received: from sandeen.net ([63.231.237.45]:57878 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965174AbeFOCpv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 14 Jun 2018 22:45:51 -0400
+Subject: Re: [PATCH 2/2] mkfs: remove notion of config "type"
+References: <7a30c780-d69a-71d4-d0e6-a5fcefda08e6@sandeen.net>
+ <8c2a5a07-5d47-48a1-1593-e93eb0fb883a@sandeen.net>
+ <20180614164121.GC6825@magnolia> <20180614234239.GO10363@dastard>
+ <CAB=NE6V7JmsPpkCB1zp0CuY5YTJvMonG7UJPjScKYVJZLWb3xg@mail.gmail.com>
+ <20180615023304.GP10363@dastard>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <235ac120-5a94-0207-da54-badaa307502e@sandeen.net>
+Date: Thu, 14 Jun 2018 21:45:49 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CA+Xn3kzsrqjNH2yXdtfsRuiCBfvX2GSWOW2SaLPL4h1PmQsGBg@mail.gmail.com>
+In-Reply-To: <20180615023304.GP10363@dastard>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ilya Pronin <ipronin@twitter.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>, "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Jun 14, 2018 at 05:14:34PM -0700, Ilya Pronin wrote:
-> Thanks everyone for the answers!
+
+
+On 6/14/18 9:33 PM, Dave Chinner wrote:
+> On Thu, Jun 14, 2018 at 07:10:09PM -0700, Luis R. Rodriguez wrote:
+>> Silly mobile gmail interface not letting me bottom-post... What if we treat
+>> no version being present as version 0?
 > 
-> On Wed, Jun 13, 2018 at 2:40 AM, Carlos Maiolino <cmaiolino@redhat.com> wrote:
-> > The symlink's project id, will always be related to the project id of its parent
-> > directory.
-> >
-> > At the end, Project quota, is a way to create a directory tree based quota,
-> > where all inodes corresponding to a single project id, should be under the same
-> > subtree. If you are creating a new subtree, under an already existing project
-> > id, IMHO, the right approach would be to remove the project id from the old
-> > directory tree, and add it to the new tree, and use user/group quotas for any
-> > quota accounting that should be done filesystem-wide (instead of directory tree
-> > wise).
-> 
-> It's a bit weird though that a symlink can inherit project ID from its
-> parent directory,
+> We haven't released anything yet so we should put it in there from
+> the start rather than having to work around the lack of a version
+> field later.
 
-Well, yes, a symlink occupy an inode, and so, we need to account for it, in case
-for example, you limit inode creation in the project id.
+So, pretend I'm dumb ('cause I often am) and spell it out for me, what would
+we do with a version?
 
-> but then cannot get rid of it :) And thus doesn't
-> allow to completely remove the project ID from the directory tree it's
-> in.
+If a config file contains a section or token that some version of mkfs doesn't
+understand, it'll fail.
 
-Once you move the symlink out of the project subtree, the project id will be
-removed or updated to the new project id (in case its new place belongs to
-another project id).
+If we try to read a config file with a too-new version, we'd ... fail?
 
-As I said before, IMHO, I believe the way you are using project quotas is wrong.
-Project quotas is supposed to be used on a sub-tree based granularity, not on a
-file based granularity. But again, that's just my opinion.
+What does this gain us?
 
-> 
-> -- 
-> Ilya Pronin
-
--- 
-Carlos
+-Eric
