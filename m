@@ -1,71 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:2877 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753723AbeFPAKj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 20:10:39 -0400
-Date: Sat, 16 Jun 2018 10:10:34 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: symlinks can be zero length during log recovery
-Message-ID: <20180616001034.GR10363@dastard>
-References: <20180615014314.27574-1-david@fromorbit.com>
- <20180615113126.GA2857@bfoster>
+Received: from bombadil.infradead.org ([198.137.202.133]:49618 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965641AbeFOL2U (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 07:28:20 -0400
+Date: Fri, 15 Jun 2018 04:28:20 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 2/2] xfs: use sync buffer I/O for sync delwri queue
+ submission
+Message-ID: <20180615112820.GB3230@infradead.org>
+References: <20180613110516.65494-1-bfoster@redhat.com>
+ <20180613110516.65494-3-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180615113126.GA2857@bfoster>
+In-Reply-To: <20180613110516.65494-3-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Jun 15, 2018 at 07:31:26AM -0400, Brian Foster wrote:
-> On Fri, Jun 15, 2018 at 11:43:14AM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > A log recovery failure has been reproduced where a symlink inode has
-> > a zero length in extent form. It was caused by a shutdown during a
-> > combined fstress+fsmark workload.
-> > 
-> > To fix it, we have to allow zero length symlink inodes through
-> > xfs_dinode_verify() during log recovery. We already specifically
-> > check and allow this case in the shortform symlink fork verifier,
-> > but in this case we don't get that far, and the inode is not in
-> > shortform format.
-> > 
-> > Update the dinode verifier to handle this case, and change the
-> > symlink fork verifier to only allow this case to exist during log
-> > recovery.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
+On Wed, Jun 13, 2018 at 07:05:16AM -0400, Brian Foster wrote:
+> If a delwri queue occurs of a buffer that sits on a delwri queue
+> wait list, the queue sets _XBF_DELWRI_Q without changing the state
+> of ->b_list. This occurs, for example, if another thread beats the
+> current delwri waiter thread to the buffer lock after I/O
+> completion. Once the waiter acquires the lock, it removes the buffer
+> from the wait list and leaves a buffer with _XBF_DELWRI_Q set but
+> not populated on a list. This results in a lost buffer submission
+> and in turn can result in assert failures due to _XBF_DELWRI_Q being
+> set on buffer reclaim or filesystem lockups if the buffer happens to
+> cover an item in the AIL.
 > 
-> Seems Ok to me, but before we restrict some of the existing checks to
-> log recovery I am curious about one thing. xfs_inactive_symlink() has
-> this:
+> This problem has been reproduced by repeated iterations of xfs/305
+> on high CPU count (28xcpu) systems with limited memory (~1GB). Dirty
+> dquot reclaim races with an xfsaild push of a separate dquot backed
+> by the same buffer such that the buffer sits on the reclaim wait
+> list at the time xfsaild attempts to queue it. Since the latter
+> dquot has been flush locked but the underlying buffer not submitted
+> for I/O, the dquot pins the AIL and causes the filesystem to
+> livelock.
 > 
->         /*
->          * Zero length symlinks _can_ exist.
->          */
->         pathlen = (int)ip->i_d.di_size;
->         if (!pathlen) {
->                 xfs_iunlock(ip, XFS_ILOCK_EXCL);
->                 return 0;
->         }
+> This race is essentially made possible by the buffer lock cycle
+> involved with waiting on a synchronous delwri queue submission.
+> Close the race by using synchronous buffer I/O for respective delwri
+> queue submission. This means the buffer remains locked across the
+> I/O and so is inaccessible from other contexts while in the
+> intermediate wait list state. The sync buffer I/O wait mechanism is
+> factored into a helper such that sync delwri buffer submission and
+> serialization are batched operations.
 > 
-> I'm not quite sure what case that covers, but it seems slightly
-> inconsistent with the fork verifer change (simply because that path is
-> not exclusive to the read from disk case), at least. Any idea?
+> Designed-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/xfs_buf.c | 78 +++++++++++++++++++++++++-----------------------
+>  1 file changed, 41 insertions(+), 37 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 112999ddb75e..113ab6426a40 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -1530,6 +1530,21 @@ xfs_buf_submit(
+>  	xfs_buf_rele(bp);
+>  }
+>  
+> +/*
+> + * Wait on a sync buffer.
+> + */
+> +static int
+> +xfs_buf_iowait(
+> +	struct xfs_buf	*bp)
+> +{
+> +	/* wait for completion before gathering the error from the buffer */
 
-Yeah, that's what I'm trying to chase down right now. I had the
-verifier fire on inode writeback during generic/269. I don't know
-yet where these zero length symlinks are coming from, and none of
-the comments (there's a couple that say the above)
-actually give any hint to their source.
+That comments seems to state the obvious based on the function name
+and top of function comment.  I'd just remove it.
 
-Cheers,
+> @@ -2013,21 +2017,22 @@ xfs_buf_delwri_submit_buffers(
+>  		trace_xfs_buf_delwri_split(bp, _RET_IP_);
+>  
+>  		/*
+> +		 * If we have a wait list, each buffer (and associated delwri
+> +		 * queue reference) transfers to it and is submitted
+> +		 * synchronously. Otherwise, drop the buffer from the delwri
+> +		 * queue and submit async.
+>  		 */
+>  		bp->b_flags &= ~(_XBF_DELWRI_Q | XBF_WRITE_FAIL);
+> +		bp->b_flags |= XBF_WRITE;
+>  		if (wait_list) {
+> +			bp->b_flags &= ~XBF_ASYNC;
+>  			list_move_tail(&bp->b_list, wait_list);
+> +			__xfs_buf_submit(bp);
+> +		} else {
+> +			bp->b_flags |= XBF_ASYNC;
+>  			list_del_init(&bp->b_list);
+> +			xfs_buf_submit(bp);
+> +		}
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Ok, that breaks my idea of just checking XBF_ASYNC in the previous
+reply.  But we could still do that with an explicit flag instead of
+the duplication.
