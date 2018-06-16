@@ -1,99 +1,153 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:34836 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966480AbeFSQTM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 12:19:12 -0400
-Date: Tue, 19 Jun 2018 09:18:19 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: Mounting xfs filesystem takes long time
-Message-ID: <20180619161819.GD21698@magnolia>
-References: <2a9a023d-fa37-59dc-caf2-c7c4167d3c75@levigo.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2a9a023d-fa37-59dc-caf2-c7c4167d3c75@levigo.de>
+Received: from mail.kernel.org ([198.145.29.99]:34658 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753624AbeFPADa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 15 Jun 2018 20:03:30 -0400
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: [PATCH] mkfs: add mkfs_config_version specifier for the config file
+Date: Fri, 15 Jun 2018 17:03:28 -0700
+Message-Id: <20180616000328.22304-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "swadmin - levigo.de" <swadmin@levigo.de>
-Cc: linux-xfs@vger.kernel.org
+To: sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Cc: darrick.wong@oracle.com, david@fromorbit.com, "Luis R. Rodriguez" <mcgrof@kernel.org>
 
-On Tue, Jun 19, 2018 at 02:27:29PM +0200, swadmin - levigo.de wrote:
-> Hi @all
-> I have a problem with mounting a large XFS filesystem which takes about
-> 8-10 minutes.
-> 
-> 
-> 
-> :~# df -h /graylog_data
-> Filesystem                       Size  Used Avail Use% Mounted on
-> /dev/mapper/vgdata-graylog_data   11T  5.0T  5.1T  50% /graylog_data
-> 
-> ----
-> 
-> :~# xfs_info /dev/mapper/vgdata-graylog_data
-> meta-data=/dev/mapper/vgdata-graylog_data isize=512    agcount=40805,
-> agsize=65792 blks
+We may opt later to bump this and add new features which we
+don't want a v1 parser to use. So peg a version number. We use
+mkfs_config_version as special token as other sections may use
+'version' already, such is the case for log.
 
-41,000 AGs is a lot of metadata to load.  Did someone growfs a 1G fs
-into a 11T fs?
+Suggested-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
+---
+ man/man8/mkfs.xfs.8.in |  7 ++++++-
+ mkfs/config.c          | 55 +++++++++++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 60 insertions(+), 2 deletions(-)
 
---D
+diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
+index cf4bdf827d9c..71573daec718 100644
+--- a/man/man8/mkfs.xfs.8.in
++++ b/man/man8/mkfs.xfs.8.in
+@@ -965,12 +965,17 @@ option follow a simple ini-style format as shown below.
+ Available options consist of a small subset of the parameters available
+ via the
+ .BR mkfs.xfs (8)
+-command line.
++command line. All configuration files must start with an annotation of
++the configuration file format, specified with the keyword
++.B mkfs_config_version
++and the only supported version format is 1.
+ Currently all default parameters can only be either enabled or disabled,
+ with a value of 1 to enable or 0 to disable.
+ See below for a list of all supported configuration parameters and their
+ current built-in default settings.
+ .PP
++.BI mkfs_config_version=1
++.br
+ .BI [data]
+ .br
+ .BI noalign=0
+diff --git a/mkfs/config.c b/mkfs/config.c
+index 835adc45f02d..072ac16ab796 100644
+--- a/mkfs/config.c
++++ b/mkfs/config.c
+@@ -379,6 +379,31 @@ parse_get_line_type(
+ 	return PARSE_INVALID;
+ }
+ 
++static bool
++check_version_supported(
++		uint64_t		version,
++		bool			version_set)
++{
++	if (!version_set) {
++		fprintf(stderr,
++_("Version for configuration file not specified\n"));
++		goto out;
++	}
++
++	if (version != 1) {
++		errno = EOPNOTSUPP;
++		fprintf(stderr,
++_("Only version 1 supported, you specified version %lu\n"), version);
++		goto out;
++	}
++
++	return true;
++
++out:
++	errno = EOPNOTSUPP;
++	return false;
++}
++
+ static int
+ parse_config_stream(
+ 	struct mkfs_default_params	*dft,
+@@ -389,7 +414,8 @@ parse_config_stream(
+ 	char				*line = NULL;
+ 	ssize_t				linelen;
+ 	size_t				len = 0, lineno = 0;
+-	uint64_t			value;
++	uint64_t			value, version = 0;
++	bool				version_set = false;
+ 	enum parse_line_type		parse_type;
+ 	struct confopts			*confopt = NULL;
+ 	int				subopt;
+@@ -400,6 +426,7 @@ parse_config_stream(
+ 		char	*p;
+ 
+ 		lineno++;
++		value = 0;
+ 
+ 		/*
+ 		 * tag is allocated for us by scanf(), it must freed only on
+@@ -420,6 +447,9 @@ parse_config_stream(
+ 					  config_file, lineno, line);
+ 			goto out;
+ 		case PARSE_SECTION:
++			if (!check_version_supported(version, version_set))
++				goto out_free_tag;
++
+ 			confopt = get_confopts(tag);
+ 			if (!confopt) {
+ 				fprintf(stderr,
+@@ -445,12 +475,35 @@ _("Section '%s' respecified\n"),
+ 			break;
+ 		case PARSE_TAG_VALUE:
+ 			if (!confopt) {
++				if (strcmp("mkfs_config_version", tag) == 0) {
++					if (!version_set) {
++						free(tag);
++						version = value;
++						version_set = true;
++					} else {
++						fprintf(stderr,
++_("Version respecified on line %s:%zu : %s\n"),
++							config_file, lineno,
++							line);
++						goto out_free_tag;
++					}
++
++					break;
++				}
++
++				if (!check_version_supported(version,
++							     version_set))
++					goto out_free_tag;
++
+ 				fprintf(stderr,
+ _("No section specified yet on line %s:%zu : %s\n"),
+ 					config_file, lineno, line);
+ 				goto out_free_tag;
+ 			}
+ 
++			if (!check_version_supported(version, version_set))
++				goto out_free_tag;
++
+ 			/*
+ 			 * We re-use the line buffer allocated by getline(),
+ 			 * however line must be kept pointing to its original
+-- 
+2.16.3
 
->          =                       sectsz=512   attr=2, projid32bit=1
->          =                       crc=1        finobt=1 spinodes=0 rmapbt=0
->          =                       reflink=0
-> data     =                       bsize=4096   blocks=2684612608, imaxpct=25
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-> log      =internal               bsize=4096   blocks=2560, version=2
->          =                       sectsz=512   sunit=0 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> 
-> ----
-> 
-> :~# strace -f mount /dev/mapper/vgdata-graylog_data /graylog_data >
-> /root/mount 2>&1
-> 
-> [...]
-> 
-> stat("/sbin/mount.xfs", 0x7ffe36bcfe80) = -1 ENOENT (No such file or
-> directory)
-> stat("/sbin/fs.d/mount.xfs", 0x7ffe36bcfe80) = -1 ENOENT (No such file
-> or directory)
-> stat("/sbin/fs/mount.xfs", 0x7ffe36bcfe80) = -1 ENOENT (No such file or
-> directory)
-> getuid()                                = 0
-> geteuid()                               = 0
-> getgid()                                = 0
-> getegid()                               = 0
-> prctl(PR_GET_DUMPABLE)                  = 1
-> stat("/run", {st_mode=S_IFDIR|0755, st_size=720, ...}) = 0
-> lstat("/run/mount/utab", {st_mode=S_IFREG|0644, st_size=0, ...}) = 0
-> open("/run/mount/utab", O_RDWR|O_CREAT|O_CLOEXEC, 0644) = 3
-> close(3)                                = 0
-> mount("/dev/mapper/vgdata-graylog_data", "/graylog_data", "xfs",
-> MS_MGC_VAL, NULL
-> 
-> 
-> [here is where the 10 minutes happen]
-> 
-> 
-> ) = 0
-> --- SIGWINCH {si_signo=SIGWINCH, si_code=SI_KERNEL} ---
-> close(1)                                = 0
-> close(2)                                = 0
-> exit_group(0)                           = ?
-> +++ exited with 0 +++
-> 
-> [Now the mount is ok]
-> 
-> 
-> can anyone help me or know a kind of these problem. What else to try out?
-> 
-> BR
-> Sascha
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
