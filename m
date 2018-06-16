@@ -1,185 +1,175 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:36898 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754526AbeFNR73 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Jun 2018 13:59:29 -0400
-Date: Thu, 14 Jun 2018 10:59:09 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 0/5] xfsprogs-4.17: mkfs config file enhancements
-Message-ID: <20180614175909.GB8128@magnolia>
-References: <152891829964.3968.4760134019673731615.stgit@magnolia>
- <20180614040628.GJ10363@dastard>
- <c4ae2aaf-ee28-5c35-b3f5-ffe8a57d3c01@sandeen.net>
- <20180614050844.GK10363@dastard>
- <20180614062949.GA6825@magnolia>
- <20180614174640.GE7508@wotan.suse.de>
+Received: from sandeen.net ([63.231.237.45]:41434 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751407AbeFPEfj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 16 Jun 2018 00:35:39 -0400
+Subject: Re: cfg file versioning (was: [PATCH 2/2] mkfs: remove notion of
+ config "type")
+References: <7a30c780-d69a-71d4-d0e6-a5fcefda08e6@sandeen.net>
+ <8c2a5a07-5d47-48a1-1593-e93eb0fb883a@sandeen.net>
+ <20180614164121.GC6825@magnolia> <20180614234239.GO10363@dastard>
+ <CAB=NE6V7JmsPpkCB1zp0CuY5YTJvMonG7UJPjScKYVJZLWb3xg@mail.gmail.com>
+ <20180615023304.GP10363@dastard>
+ <235ac120-5a94-0207-da54-badaa307502e@sandeen.net>
+ <20180616001743.GT10363@dastard>
+ <558124ff-bc3f-f969-072c-3db8c9493bfd@sandeen.net>
+ <20180616024422.GB19934@dastard>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <ac11ec46-688b-0692-948d-c90efd61076b@sandeen.net>
+Date: Fri, 15 Jun 2018 23:35:37 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
+In-Reply-To: <20180616024422.GB19934@dastard>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20180614174640.GE7508@wotan.suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@sandeen.net>, sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Jun 14, 2018 at 07:46:40PM +0200, Luis R. Rodriguez wrote:
-> On Wed, Jun 13, 2018 at 11:29:49PM -0700, Darrick J. Wong wrote:
-> > On Thu, Jun 14, 2018 at 03:08:44PM +1000, Dave Chinner wrote:
-> > > On Wed, Jun 13, 2018 at 11:23:09PM -0500, Eric Sandeen wrote:
-> > > > On 6/13/18 11:06 PM, Dave Chinner wrote:
-> > > > > With this change, we'll have code to maintain it to ensure that the
-> > > > > file gets updated properly, and it will probably take more time and
-> > > > > effort to validate that the generated file is correct (and debug if
-> > > > > it's not!) compared to the 30s it will take to hand edit the
-> > > > > template file to change or add a new default...
+On 6/15/18 9:44 PM, Dave Chinner wrote:
+> On Fri, Jun 15, 2018 at 07:55:02PM -0500, Eric Sandeen wrote:
+>> t
+>>
+>> On 6/15/18 7:17 PM, Dave Chinner wrote:
+>>> On Thu, Jun 14, 2018 at 09:45:49PM -0500, Eric Sandeen wrote:
+>>>>
+
+...
+
+>>>> So, pretend I'm dumb ('cause I often am) and spell it out for me, what would
+>>>> we do with a version?
+>>>>
+>>>> If a config file contains a section or token that some version of mkfs doesn't
+>>>> understand, it'll fail.
+>>>>
+>>>> If we try to read a config file with a too-new version, we'd ... fail?
+>>>
+>>> Fail with a useful error message, rather than do something
+>>> unexpected or incorrect.
+>>
+>> like "section 'foo' uknown" or "token 'bar' unknown?"
+>> We'd do that today...
 > 
-> If we had an xfstest to *test* that same generated file, this would not
-> be an issue and from what I gather we need quite a bit of work to get there.
-> 
-> I'm working on a test for config stuff but that will just test for now
-> (and this reveals some future work needed):
-> 
-> a) a set of config files we know should work and ensure they produce the
->    same filesystem as if we had used CLI params. We can use xfs_db -c version
->    against both filesystems and check that each differences. Since this would
->    use the same xfsprogs for the results of a config based filesystem and
->    the CLI based filesystem the diff would only generate if there really
->    was a change between both runs, and you can use any xfsprogs version
->    for it.
+> User upgrades xfsprogs version (e.g. has built a git version to sort
+> a problem with repair. Days later, runs mkfs, it throws "unknown
+> foo" errors. User has no idea why, nor how to remedy the problem.
 
-Hmm, just out of curiosity, are there any mkfs cli/config options that
-do /not/ show up in the output of mkfs and/or 'xfs_db -c info'?
+> As opposed to an error that says "Config file version too old -
+> please update", which tells them exactly what the problem is, and
+> it's easy to understand that it's a result of using the git version
+> rather than the distro packaged version.
 
->    It does however leave actual expected results on the filesystem up to
->    a separate test, it assumes that xfs/191-input-validation is doing its
->    job, but word is that needs some love.
-> 
-> b) a set of invalid config files and ensure they never work
+So the thing I'm still working out is what, exactly, would necessitate
+a newer version stamped into a config file.
 
-Agreed, I have some twisty ones of my own, though fixing them requires
-some amount of sscanf format string tweaking. :)
+I'm being pedantic for two reasons; I don't want to add complexity we
+don't need, and I don't want to implement versioning that doesn't
+actually solve the future problem because we failed to clearly define
+what the versioning means.  So bear with me, I guess, while I
+look at actual concrete examples to be sure we've really defined what
+versioning would actually mean, and make sure we're explicit about what
+would require a version bump.
 
-> c) test to ensure cli can override config params
+There are 2 things I can think of which could cause a config file
+to become incompatible in some way with a future or past mkfs version;
+I think these are the same two you alluded to.
 
-<nod>
+1) We add or remove a section or token from mkfs's parsing abilities,
+   within the current file format.
 
-> To test that a self generated config file works would be a next step (d),
-> and I think we can validate it by also making sure it yields the same
-> filesystem as if we just ran mkfs.xfs with no options, so same strategy
-> as in a).
+tl;dr: This should not change the version.  Read on if interested,
+or skip down to 2)
 
-Ok, good.  I'd also argue for a test that tries every file in
-/etc/xfs/mkfs/* to see if mkfs will format the filesystem described in
-the config file, that way we can pick up all the distro-packaged files.
+Added/removed directives are indistinguishable, IMHO, from adding or
+removing a command line option or suboption.  Say we remove -n ftype
+some day, because by now everyone should be using it, or whatever.
+Or maybe we add -m encryption=1
 
-> > Counterpoint: the mkfs config file template in mkfs.xfs.8 is already
-> > incorrect; sparse inodes was enabled by default in 4.16 but the manpage
-> > cfg file says it isn't.  This is exactly what happens when we rely on
-> > ourselves to hand edit the template file.
-> > 
-> > Put the defaults in *one* place in the source code tree and generate
-> > everything else off of that, instead of keeping multiple copies that
-> > will then get out of sync.  We clearly suck at this maintenance.
-> 
-> I personally prefer this automation, so with this is mind I think this
-> is a change in the right direction.
+An older mkfs looking at a newer config file w/ new tokens would simply
+reject them in the same way as it would reject an unknown commandline option.
+I don't think we need to rev the version when we add new tokens, we just state
+that it's unknown, as we do on the commandline:
 
-:)
+# mkfs.xfs -m encryption=1/dev/blah
+unknown option -m encryption=1
 
-> > > > Well, yeah.  /if/ we need a template, as well as text in a man page,
-> > > > then this gets it down to editing 1 file instead of two, I guess.
-> > > > But it really seems like we need to rethink these structures to get it
-> > > > all tied together, not requiring 2 or 3 manual updates across several files.
-> > > > It's bound to get out of sync.  I guess that can wait, but right now this
-> > > > dispersal isn't good.
-> > > 
-> > > So let's get the basic conig file stuff in first, then cosolidate,
-> > > then add all the bells and whistles.
-> > 
-> > That's where I started from -- fix the existing mess with the manpage,
-> 
-> That should be a separate patch first.
+and with:
 
-> > then fix the problems in the parsing code, then move all the CLI parsing and
-> > validation code out of xfs_mkfs.c because it's just too long.
-> 
-> Yay!
-> 
-> > Granted, I haven't gotten all the way there yet, so perhaps it was a bad
-> > idea to post just the first of those three parts.
-> > 
-> > > Too many cooks trying to add all their own bells and whistles before
-> > > the core behaviour, infrastructure and implementation was nailed
-> > > down was pretty much what lead all the tablised CLI option parsing
-> > > code. And we're doing it again with this config file stuff...
-> > 
-> > Yeah.  TBH I feel at a loss for what exactly your vision is for how mkfs
-> > option parsing is supposed to work in the end.  How close is this:
-> 
-> BTW it seems we may need to document this vision as otherwise others may
-> run into issues later as well.
+[metadata]
+encryption=1
 
-Yes.  This should go in xfs_mkfs.c after moving all the other stuff out.
+# mkfs.xfs /dev/blah
+Unknown token at /etc/xfs/mkfs/default:5 : encryption=1 [*]
 
-> > 1. First we have the mkfs_default_params, which are the builtin
-> > defaults.
-> > 
-> > 2. Configuration file parameters are supposed to change the
-> > mkfs_default_params, yes?
-> > 
-> > 3. The mkfs_default_params are used to seed the cli_params.
-> > 
-> > 4. The getopt loop pulls the CLI option data into the cli_params.
-> > 
-> > 5. At this point we've melded together the builtin options
-> > with whatever the config file told us about, then folded in the CLI
-> > options, right?
-> > 
-> > 6. Now we start calling the validate_* and calculate_* functions.  These
-> > functions check the full set of configuration data and copy them into
-> > the mkfs_params; and they calculate whatever other bits are needed to
-> > finish the mkfs_params.
-> > 
-> > 7. Finally the validated mkfs_params are fed to the initialisation
-> > functions to set up the actual filesystem.
-> 
-> FWIW this at least matches my own expectations so far.
-> 
-> > So AFAICT what we have now is a big collection of ops_params that
-> > contain all the cli parsing options and a bunch of functions that take
-> > the cli strings and fill out the appropriate parts of cli_params.
-> > 
-> > Luis built a confopts_tab(le) that mapped cfgfile options to parsing
-> > functions that know how to take the cfgfile strings and fill out the
-> > appropriate parts of mkfs_default_params.  I understand now that from
-> > these first five patches it sure looks like I'm building yet a third
-> > structure, but this isn't the endgame -- I want a data structure that
-> > maps cfgfile options directly to the mkfs default params.  I'm doing
-> > this by building the new direct-mapped structure on the side and
-> > migrating the parser code to use that.
-> > 
-> > Ås for "how do I check that the distro provided default template even
-> > works?", I'm working on building an xfstest to make sure that the
-> > default templates we ship (and whatever might be in
-> > /etc/xfs/mkfs/default) actually produce a functioning filesystem.
-> 
-> With proper testing in place for regular configs stuff (the tests
-> I have to write) and this I see your changes as desirable but I'm
-> wondering if this should just wait until the next cycle so we at
-> least have some effort on the testing started already?
+seems equally clear.  Same goes for any option that we deprecate and remove.
 
-Agreed.  I'm scurrying back under the rocks so that Eric can get
-xfsprogs 4.17 out the door.
+And further, an older or newer config file may not even /contain/ the added
+or removed directive, so a file cannot be rejected based on version for that
+reason alone; it can only be accepted or rejected based on the tokens actually
+found within it - just like on the commandline.
 
-(I'm actually going to go debug some hardware and see if I can get
-fscounter scrub working.)
+So I really don't think adding or removing tokens from the parser for the current
+cfg file format can possibly require a version change.
 
---D
+2) So maybe we'll change the config file format itself?
 
->   Luis
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+If we change it to a completely new format like xml or json, we'd be
+validating the format, not testing a version.  We can't just slap
+"cfg_file_version=2" at the top of an xml or json file and expect it to
+parse, because... that's not xml or json.  So I don't think we can really drop
+a version directive in today's cfg file and hope it'd be parseable in some new
+future format's parser.
+
+(if we /did/ change to xml we'd have a dtd version...!)
+
+So I think the only case I see for bumping the version is if we change
+some internal parsing detail of the current home-grown file format.
+(INI is pretty standard and time tested so this seems unlikely, but ok...)
+
+Maybe we'll do nested sections, or something, if this has some use
+in your new subvolume work.  Maybe we have a new hierarchy in some
+weird variant of an ini format?
+
+[[foo]]
+[bar]
+baz=1
+
+[wut]
+urk=0
+
+[[zap]]
+...
+
+I guess this is the only case where I can really see the value.  We'd
+still need to make assumptions about differing binaries being able
+parse out the version /itself/ (seem xml comment above).  So we'd need to
+assume that we're still in an ini-like world, I guess, or at least not in
+some other new, well-defined format..  It seems like the
+safest way to do this would be to require a version number on the first
+line as a comment, because the "# comment" syntax seems unlikely to
+change?  So something like:
+
+# mkfs-xfs-cfg-version-1
+
+which is outside of the normal token parsing, because the whole /point/
+of versioning in this case is that the parsing mechanism itself might change,
+right?  So version /must/ be parsed independently from anything else.
+
+So in this case we'd reject any newer version than we understand, and if
+future mkfs ever drops old parsers, those would reject versions older than
+what it supports.
+
+So I've talked myself into needing a version, now to see if you agree
+with me about which circumstances would actually trigger a version
+change, and whether the version parsing itself needs to be separate from the
+standard parsing, because it indicates the required parsing mechanism required
+for the /rest/ of the file...
+
+Thanks,
+-Eric
+
+[*] It doesn't say this today, but we should fix it to distinguish parsing
+errors from unknown sections and tokens, then we can say "Unknown or
+unsupported token ..."  etc.
