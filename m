@@ -1,113 +1,203 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0100.outbound.protection.outlook.com ([104.47.41.100]:53414
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:50938 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754620AbeFRDtx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 17 Jun 2018 23:49:53 -0400
-From: "Xu, Wen" <wen.xu@gatech.edu>
-Subject: Kernel oops at NULL pointer when performing readlink on a fuzzed v5
- image
-Date: Mon, 18 Jun 2018 03:49:52 +0000
-Message-ID: <15FCAC1E-1320-4122-8768-A45FFCFD1AC2@gatech.edu>
-Content-Language: en-US
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <27D5DB2BF729B648BDBDDAB870D9594F@namprd07.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        id S933596AbeFRNYN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 18 Jun 2018 09:24:13 -0400
+Date: Mon, 18 Jun 2018 09:24:11 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/2] xfs: zero length symlinks are not valid
+Message-ID: <20180618132411.GB28320@bfoster>
+References: <20180618055711.23391-1-david@fromorbit.com>
+ <20180618055711.23391-2-david@fromorbit.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180618055711.23391-2-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-SGksDQoNCkhlcmUgaXMgYW4gaXNzdWUgSSBmb3VuZCB3aGVuIGZ1enppbmcgVjUgZmlsZXN5c3Rl
-bSByZWxhdGVkIHdpdGggc29mdGxpbmsuDQoNCi0gUmVwcm9kdWNlICg0LjE3L2Zvci1uZXh0IGJy
-YW5jaCkNCiMgbWtkaXIgbW50DQojIG1vdW50IC10IHhmcyBmaW5hbC5pbWcgbW50DQojIGdjYyAt
-byBwb2MgcG9jLmMNCiMgLi9wb2MgLi9tbnQNCg0KLSBQT0MgKHBvYy5jKQ0KI2RlZmluZSBfR05V
-X1NPVVJDRQ0KI2luY2x1ZGUgPHN5cy90eXBlcy5oPg0KI2luY2x1ZGUgPHN5cy9tb3VudC5oPg0K
-I2luY2x1ZGUgPHN5cy9tbWFuLmg+DQojaW5jbHVkZSA8c3lzL3N0YXQuaD4NCiNpbmNsdWRlIDxz
-eXMveGF0dHIuaD4NCg0KI2luY2x1ZGUgPGRpcmVudC5oPg0KI2luY2x1ZGUgPGVycm5vLmg+DQoj
-aW5jbHVkZSA8ZXJyb3IuaD4NCiNpbmNsdWRlIDxmY250bC5oPg0KI2luY2x1ZGUgPHN0ZGlvLmg+
-DQojaW5jbHVkZSA8c3RkbGliLmg+DQojaW5jbHVkZSA8c3RyaW5nLmg+DQojaW5jbHVkZSA8dW5p
-c3RkLmg+DQoNCiNpbmNsdWRlIDxsaW51eC9mYWxsb2MuaD4NCiNpbmNsdWRlIDxsaW51eC9sb29w
-Lmg+DQoNCi8vIGRlcml2ZWQgZnJvbSBodHRwczovL2dpdGh1Yi5jb20vb3JhY2xlL2tlcm5lbC1m
-dXp6aW5nL2Jsb2IvbWFzdGVyL2luY2x1ZGUvbW91bnQuaGgNCnN0YXRpYyB2b2lkIGFjdGl2aXR5
-KGNoYXIgKm1wb2ludCkgew0KDQogIGNoYXIgKmZvb19iYXJfYmF6Ow0KICBjaGFyICpzbG47DQog
-IGludCBlcnI7DQoNCiAgc3RhdGljIGludCBidWZbODE5Ml07DQogIG1lbXNldChidWYsIDAsIHNp
-emVvZihidWYpKTsNCg0KICBlcnIgPSBhc3ByaW50ZigmZm9vX2Jhcl9iYXosICIlcy9mb28vYmFy
-L2JheiIsIG1wb2ludCk7DQogIGVyciA9IGFzcHJpbnRmKCZzbG4sICIlcy9mb28vYmFyL3NsbiIs
-IG1wb2ludCk7DQoNCiAgaW50IGZkID0gb3Blbihmb29fYmFyX2JheiwgT19SRFdSIHwgT19UUlVO
-QywgMDc3Nyk7DQogIGlmIChmZCA+PSAwKSB7DQogICAgd3JpdGUoZmQsIChjaGFyICopYnVmLCA1
-MTcpOw0KICAgIHdyaXRlKGZkLCAoY2hhciAqKWJ1Ziwgc2l6ZW9mKGJ1ZikpOw0KICAgIGNsb3Nl
-KGZkKTsNCiAgfQ0KDQogIHVubGluayhmb29fYmFyX2Jheik7DQoNCiAgY2hhciBidWYyWzExM107
-DQogIG1lbXNldChidWYyLCAwLCBzaXplb2YoYnVmMikpOw0KICByZWFkbGluayhzbG4sIGJ1ZjIs
-IHNpemVvZihidWYyKSk7DQoNCn0NCg0KaW50IG1haW4oaW50IGFyZ2MsIGNoYXIgKmFyZ3ZbXSkg
-ew0KICBhY3Rpdml0eShhcmd2WzFdKTsNCiAgcmV0dXJuIDA7DQp9DQoNCi0gS2VybmVsIG1lc3Nh
-Z2UNClsgIDMxNS4yMDc5NTZdIFhGUyAobG9vcDApOiBNb3VudGluZyBWNSBGaWxlc3lzdGVtDQpb
-ICAzMTUuMjE0ODUxXSBYRlMgKGxvb3AwKTogRW5kaW5nIGNsZWFuIG1vdW50DQpbICAzMTUuMjE0
-OTc2XSBGaWxlc3lzdGVtICJsb29wMCI6IHJlc2VydmUgYmxvY2tzIGRlcGxldGVkISBDb25zaWRl
-ciBpbmNyZWFzaW5nIHJlc2VydmUgcG9vbCBzaXplLg0KWyAgMzE1LjIxNDk3OV0gWEZTIChsb29w
-MCk6IFBlci1BRyByZXNlcnZhdGlvbiBmb3IgQUcgMCBmYWlsZWQuICBGaWxlc3lzdGVtIG1heSBy
-dW4gb3V0IG9mIHNwYWNlLg0KWyAgMzE1LjIxNDk4MV0gWEZTIChsb29wMCk6IFBlci1BRyByZXNl
-cnZhdGlvbiBmb3IgQUcgMCBmYWlsZWQuICBGaWxlc3lzdGVtIG1heSBydW4gb3V0IG9mIHNwYWNl
-Lg0KWyAgMzI2LjA0MTcyOF0gWEZTIChsb29wMCk6IEZhaWxlZCB0byByZW1vdmUgaW5vZGUocykg
-ZnJvbSB1bmxpbmtlZCBsaXN0LiBQbGVhc2UgZnJlZSBzcGFjZSwgdW5tb3VudCBhbmQgcnVuIHhm
-c19yZXBhaXIuDQpbICAzMjYuMDQxODc3XSBCVUc6IHVuYWJsZSB0byBoYW5kbGUga2VybmVsIE5V
-TEwgcG9pbnRlciBkZXJlZmVyZW5jZSBhdCAwMDAwMDAwMDAwMDAwMDAwDQpbICAzMjYuMDQzNDc5
-XSBQR0QgODAwMDAwMDIzMzc2YjA2NyBQNEQgODAwMDAwMDIzMzc2YjA2NyBQVUQgMjJkMzdjMDY3
-IFBNRCAwDQpbICAzMjYuMDQ0ODY0XSBPb3BzOiAwMDAwIFsjMV0gU01QIFBUSQ0KWyAgMzI2LjA0
-NTU4Ml0gTW9kdWxlcyBsaW5rZWQgaW46IHNuZF9oZGFfY29kZWNfZ2VuZXJpYyBzbmRfaGRhX2lu
-dGVsIHNuZF9oZGFfY29kZWMgc25kX2h3ZGVwIHNuZF9oZGFfY29yZSBzbmRfcGNtIHNuZF90aW1l
-ciBzbmQgc291bmRjb3JlIGkyY19waWl4NCBtYWNfaGlkIGliX2lzZXIgcmRtYV9jbSBpd19jbSBp
-Yl9jbSBpYl9jb3JlIGlzY3NpX3RjcCBsaWJpc2NzaV90Y3AgbGliaXNjc2kgc2NzaV90cmFuc3Bv
-cnRfaXNjc2kgYXV0b2ZzNCByYWlkMTAgcmFpZDQ1NiBhc3luY19yYWlkNl9yZWNvdiBhc3luY19t
-ZW1jcHkgYXN5bmNfcHEgYXN5bmNfeG9yIGFzeW5jX3R4IHJhaWQxIHJhaWQwIG11bHRpcGF0aCBs
-aW5lYXIgcXhsIGRybV9rbXNfaGVscGVyIHN5c2NvcHlhcmVhIHN5c2ZpbGxyZWN0IHN5c2ltZ2Js
-dCBmYl9zeXNfZm9wcyB0dG0gZHJtIGNyY3QxMGRpZl9wY2xtdWwgY3JjMzJfcGNsbXVsIDgxMzl0
-b28gYWVzbmlfaW50ZWwgYWVzX3g4Nl82NCBjcnlwdG9fc2ltZCBjcnlwdGQgZ2x1ZV9oZWxwZXIg
-ZmxvcHB5IHBhdGFfYWNwaSA4MTM5Y3AgbWlpDQpbICAzMjYuMDU1MDg0XSBDUFU6IDEgUElEOiAx
-MzI5IENvbW06IHBvYyBOb3QgdGFpbnRlZCA0LjE3LjAtcmM3LW5vLWthc2FuKyAjMQ0KWyAgMzI2
-LjA1NjQ0OF0gSGFyZHdhcmUgbmFtZTogUUVNVSBTdGFuZGFyZCBQQyAoaTQ0MEZYICsgUElJWCwg
-MTk5NiksIEJJT1MgVWJ1bnR1LTEuOC4yLTF1YnVudHUxIDA0LzAxLzIwMTQNClsgIDMyNi4wNTgz
-NjNdIFJJUDogMDAxMDpzdHJsZW4rMHgwLzB4MjANClsgIDMyNi4wNTkwOThdIFJTUDogMDAxODpm
-ZmZmYTExNzgwYzdmZTQ4IEVGTEFHUzogMDAwMTAyMDcNClsgIDMyNi4wNjAxNDJdIFJBWDogMDAw
-MDAwMDAwMDAwMDAwMCBSQlg6IDAwMDAwMDAwMDAwMDAwNzEgUkNYOiAwMDAwMDAwMDAwMDAwMDE3
-DQpbICAzMjYuMDYxNTM4XSBSRFg6IDAwMDAwMDAwMDAwMDAwMDAgUlNJOiAwMDAwMDAwMDAwMDAw
-MDcxIFJESTogMDAwMDAwMDAwMDAwMDAwMA0KWyAgMzI2LjA2Mjk0MV0gUkJQOiBmZmZmYTExNzgw
-YzdmZTY4IFIwODogMDAwMDAwMDAwMDAyNmNlMCBSMDk6IGZmZmZmZmZmOTYyN2ExZDQNClsgIDMy
-Ni4wNjQzNzBdIFIxMDogZmZmZmExMTc4MGM3ZmVhMCBSMTE6IGZmZmY4ZDllMmZjNGEyMDAgUjEy
-OiAwMDAwMDAwMDAwMDAwMDAwDQpbICAzMjYuMDY1NzgxXSBSMTM6IDAwMDA3ZmZlNjNiZDM0YjAg
-UjE0OiAwMDAwN2ZmZTYzYmQzNGIwIFIxNTogMDAwMDAwMDAwMDAwMDA3MQ0KWyAgMzI2LjA2NzE4
-NV0gRlM6ICAwMDAwN2Y2MGQ0OGI0NzAwKDAwMDApIEdTOmZmZmY4ZDllM2ZkMDAwMDAoMDAwMCkg
-a25sR1M6MDAwMDAwMDAwMDAwMDAwMA0KWyAgMzI2LjA2ODc4Nl0gQ1M6ICAwMDEwIERTOiAwMDAw
-IEVTOiAwMDAwIENSMDogMDAwMDAwMDA4MDA1MDAzMw0KWyAgMzI2LjA2OTkyMl0gQ1IyOiAwMDAw
-MDAwMDAwMDAwMDAwIENSMzogMDAwMDAwMDIzMDBlNjAwMCBDUjQ6IDAwMDAwMDAwMDAwMDA2ZTAN
-ClsgIDMyNi4wNzE2NDNdIENhbGwgVHJhY2U6DQpbICAzMjYuMDcyMjE3XSAgPyByZWFkbGlua19j
-b3B5KzB4MjkvMHg1MA0KWyAgMzI2LjA3Mjk4OF0gIHZmc19yZWFkbGluaysweDY2LzB4MTMwDQpb
-ICAzMjYuMDczNzA5XSAgZG9fcmVhZGxpbmthdCsweGZhLzB4MTIwDQpbICAzMjYuMDc0NDQzXSAg
-X194NjRfc3lzX3JlYWRsaW5rKzB4MWYvMHgzMA0KWyAgMzI2LjA3NTI2NF0gIGRvX3N5c2NhbGxf
-NjQrMHg1YS8weDExMA0KWyAgMzI2LjA3NjAxOF0gIGVudHJ5X1NZU0NBTExfNjRfYWZ0ZXJfaHdm
-cmFtZSsweDQ0LzB4YTkNClsgIDMyNi4wNzcwMjZdIFJJUDogMDAzMzoweDdmNjBkNDNjN2EzNw0K
-WyAgMzI2LjA3NzczNV0gUlNQOiAwMDJiOjAwMDA3ZmZlNjNiZDMzYzggRUZMQUdTOiAwMDAwMDIw
-MiBPUklHX1JBWDogMDAwMDAwMDAwMDAwMDA1OQ0KWyAgMzI2LjA3OTIwNV0gUkFYOiBmZmZmZmZm
-ZmZmZmZmZmRhIFJCWDogMDAwMDAwMDAwMDAwMDAwMCBSQ1g6IDAwMDA3ZjYwZDQzYzdhMzcNClsg
-IDMyNi4wODA2MDddIFJEWDogMDAwMDAwMDAwMDAwMDA3MSBSU0k6IDAwMDA3ZmZlNjNiZDM0YjAg
-UkRJOiAwMDAwMDAwMDAxYzQyMTAwDQpbICAzMjYuMDgxOTk1XSBSQlA6IDAwMDA3ZmZlNjNiZDM1
-MzAgUjA4OiAwMDAwMDAwMDAwMDAwMDAyIFIwOTogMDAwMDAwMDAwMDAwMDAwMQ0KWyAgMzI2LjA4
-MzM4NV0gUjEwOiAwMDAwMDAwMDAwMDAwNThiIFIxMTogMDAwMDAwMDAwMDAwMDIwMiBSMTI6IDAw
-MDAwMDAwMDA0MDBjMjANClsgIDMyNi4wODQ3ODRdIFIxMzogMDAwMDdmZmU2M2JkMzYzMCBSMTQ6
-IDAwMDAwMDAwMDAwMDAwMDAgUjE1OiAwMDAwMDAwMDAwMDAwMDAwDQpbICAzMjYuMDg2MTcyXSBD
-b2RlOiA4OSBmOCA0OCA4OSBlNSBmNiA4MiBjMCBjZSAxMCA5NyAyMCA3NCAxMCA0OCA4MyBjMCAw
-MSAwZiBiNiAxMCBmNiA4MiBjMCBjZSAxMCA5NyAyMCA3NSBmMCA1ZCBjMyA5MCA2NiAyZSAwZiAx
-ZiA4NCAwMCAwMCAwMCAwMCAwMCA8ODA+IDNmIDAwIDU1IDQ4IDg5IGU1IDc0IDExIDQ4IDg5IGY4
-IDQ4IDgzIGMwIDAxIDgwIDM4IDAwIDc1IGY3DQpbICAzMjYuMDg5ODM0XSBSSVA6IHN0cmxlbisw
-eDAvMHgyMCBSU1A6IGZmZmZhMTE3ODBjN2ZlNDgNClsgIDMyNi4wOTA4MzhdIENSMjogMDAwMDAw
-MDAwMDAwMDAwMA0KWyAgMzI2LjA5MTU2Nl0gLS0tWyBlbmQgdHJhY2UgYzUwZWFlNzNiNzFiYTQ1
-ZSBd4oCUDQoNCkZpbGVzOg0KZmluYWwuaW1nLnppcDogaHR0cHM6Ly9idWd6aWxsYS5rZXJuZWwu
-b3JnL2F0dGFjaG1lbnQuY2dpP2lkPTI3NjYzOQ0KDQpGb3IgZGVidWdnaW5nIGNvbnZlbmllbmNl
-LCBoZXJlIGFyZSB0aGUgYnl0ZXMgbXV0YXRlZCBmcm9tIHRoZSBvcmlnaW5hbCBzZWVkIGltYWdl
-Lg0KJCBjbXAgLWwgZmluYWwuaW1nIHhmcy0xYWctY3JjLmltZyB8IGdhd2sgJ3twcmludGYgIiUw
-OFggJTAyWCAlMDJYXG4iLCAkMSwgc3RydG9udW0oMCQyKSwgc3RydG9udW0oMCQzKX0nDQowMDAw
-MDA5NyAwMCAwMQ0KMDAwMDAwOTggMDAgMzQNCjAwMDAwMEUxIDVGIEU1DQowMDAwMDBFMiAyOSBD
-Rg0KMDAwMDAwRTMgNzUgQkINCjAwMDAwMEU0IDQyIDE1DQowMEVCQzg2NSAzOCA1OQ0KMDBFQkM4
-NjYgNTggODQNCjAwRUJDODY3IEZDIDQxDQowMEVCQzg2OCBFMCA2RA0KMDBFQkM4QzEgRTkgRTUN
-Cg0KLVdlbiANCg0K
+On Mon, Jun 18, 2018 at 03:57:10PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> A log recovery failure has been reproduced where a symlink inode has
+> a zero length in extent form. It was caused by a shutdown during a
+> combined fstress+fsmark workload.
+> 
+> The underlying problem is the issue in xfs_inactive_symlink(): the
+> inode is unlocked between the symlink inactivation/truncation and
+> the inode being freed. This opens a window for the inode to be
+> written to disk before it xfs_ifree() removes it from the unlinked
+> list, marks it free in the inobt and zeros the mode.
+> 
+> For shortform inodes, the fix is simple. xfs_ifree() clears the data
+> fork state, so there's no need to do it in xfs_inactive_symlink().
+> This means the shortform fork verifier will not see a zero length
+> data fork as it mirrors the inode size through to xfs_ifree()), and
+> hence if the inode gets written back and the fork verifiers are run
+> they will still see a fork that matches the on-disk inode size.
+> 
+> For extent form (remote) symlinks, it is a little more tricky. Here
+> we explicitly set the inode size to zero, so the above race can lead
+> to zero length symlinks on disk. Because the inode is unlinked at
+> this point (i.e. on the unlinked list) and unreferenced, it can
+> never be seen again by a user. Hence when we set the inode size to
+
+Perhaps we don't care, but what about bulkstat? The inode free is
+imminent, so it probably doesn't matter that much.
+
+> zeor, also change the type to S_IFREG. xfs_ifree() expects S_IFREG
+> inodes to be of zero length, and so this avoids all the problems of
+> zero length symlinks ever hitting the disk. It also avoids the
+> problem of needing to handle zero length symlink inodes in log
+> recovery to replay the extent free intents and the remaining
+> deferops to free the extents the symlink used.
+> 
+> Also add a couple of asserts to warn us if zero length symlinks end
+> up in either the symlink create or inactivation paths.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_symlink_remote.c | 14 +++++++++----
+>  fs/xfs/xfs_symlink.c               | 33 +++++++++++++++---------------
+>  2 files changed, 27 insertions(+), 20 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_symlink_remote.c b/fs/xfs/libxfs/xfs_symlink_remote.c
+> index 95374ab2dee7..77d80106f989 100644
+> --- a/fs/xfs/libxfs/xfs_symlink_remote.c
+> +++ b/fs/xfs/libxfs/xfs_symlink_remote.c
+> @@ -199,7 +199,10 @@ xfs_symlink_local_to_remote(
+>  					ifp->if_bytes - 1);
+>  }
+>  
+> -/* Verify the consistency of an inline symlink. */
+> +/*
+> + * Verify the in-memory consistency of an inline symlink data fork. This
+> + * does not do on-disk format checks.
+> + */
+>  xfs_failaddr_t
+>  xfs_symlink_shortform_verify(
+>  	struct xfs_inode	*ip)
+> @@ -215,9 +218,12 @@ xfs_symlink_shortform_verify(
+>  	size = ifp->if_bytes;
+>  	endp = sfp + size;
+>  
+> -	/* Zero length symlinks can exist while we're deleting a remote one. */
+> -	if (size == 0)
+> -		return NULL;
+> +	/*
+> +	 * Zero length symlinks should never occur in memory as they are
+> +	 * never alllowed to exist on disk.
+> +	 */
+> +	if (!size)
+> +		return __this_address;
+>  
+>  	/* No negative sizes or overly long symlink targets. */
+>  	if (size < 0 || size > XFS_SYMLINK_MAXLEN)
+> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+> index 3783afcb68d2..e0c2d460ba67 100644
+> --- a/fs/xfs/xfs_symlink.c
+> +++ b/fs/xfs/xfs_symlink.c
+> @@ -194,6 +194,7 @@ xfs_symlink(
+>  	pathlen = strlen(target_path);
+>  	if (pathlen >= XFS_SYMLINK_MAXLEN)      /* total string too long */
+>  		return -ENAMETOOLONG;
+> +	ASSERT(pathlen > 0);
+>  
+>  	udqp = gdqp = NULL;
+>  	prid = xfs_get_initial_prid(dp);
+> @@ -395,6 +396,12 @@ xfs_symlink(
+>  
+>  /*
+>   * Free a symlink that has blocks associated with it.
+> + *
+> + * Note: zero length symlinks are not allowed to exist. When we set the size to
+> + * zero, also change it to a regular file so that it does not get written to
+> + * disk as a zero length symlink. The inode is on the unlinked list already, so
+> + * userspace cannot find this inode anymore, so this change is not user visible
+> + * but allows us to catch corrupt zero-length symlinks in the verifiers.
+>   */
+>  STATIC int
+>  xfs_inactive_symlink_rmt(
+> @@ -431,13 +438,14 @@ xfs_inactive_symlink_rmt(
+>  	xfs_trans_ijoin(tp, ip, 0);
+>  
+>  	/*
+> -	 * Lock the inode, fix the size, and join it to the transaction.
+> -	 * Hold it so in the normal path, we still have it locked for
+> -	 * the second transaction.  In the error paths we need it
+> +	 * Lock the inode, fix the size, turn it into a regular file and join it
+> +	 * to the transaction.  Hold it so in the normal path, we still have it
+> +	 * locked for the second transaction.  In the error paths we need it
+>  	 * held so the cancel won't rele it, see below.
+>  	 */
+>  	size = (int)ip->i_d.di_size;
+>  	ip->i_d.di_size = 0;
+> +	VFS_I(ip)->i_mode = (VFS_I(ip)->i_mode & ~S_IFMT) | S_IFREG;
+>  	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+>  	/*
+>  	 * Find the block(s) so we can inval and unmap them.
+> @@ -523,17 +531,10 @@ xfs_inactive_symlink(
+>  		return -EIO;
+>  
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> -
+> -	/*
+> -	 * Zero length symlinks _can_ exist.
+> -	 */
+>  	pathlen = (int)ip->i_d.di_size;
+> -	if (!pathlen) {
+> -		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> -		return 0;
+> -	}
+> +	ASSERT(pathlen);
+
+Ok, but I still feel like I'm missing something here. The commit log
+explains how symlink inode inactivation creates this transient zero-size
+symlink state. That's fine, but why do we have code to check for such
+symlinks _in_ the symlink activation path?
+
+Is the assumption that this is just an overzealous/unnecessary check, or
+am I missing something? If the former, an extra sentence in the last
+paragraph or so of the commit log to explain why we remove this would be
+nice.
+
+>  
+> -	if (pathlen < 0 || pathlen > XFS_SYMLINK_MAXLEN) {
+> +	if (pathlen <= 0 || pathlen > XFS_SYMLINK_MAXLEN) {
+>  		xfs_alert(mp, "%s: inode (0x%llx) bad symlink length (%d)",
+>  			 __func__, (unsigned long long)ip->i_ino, pathlen);
+>  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> @@ -541,12 +542,12 @@ xfs_inactive_symlink(
+>  		return -EFSCORRUPTED;
+>  	}
+>  
+> +	/*
+> +	 * Inline fork state gets removed by xfs_difree() so we have nothing to
+> +	 * do here in that case.
+> +	 */
+
+It looks like that actually happens in xfs_ifree() (not xfs_difree()).
+
+Otherwise this seems a reasonable approach to me.
+
+Brian
+
+>  	if (ip->i_df.if_flags & XFS_IFINLINE) {
+> -		if (ip->i_df.if_bytes > 0) 
+> -			xfs_idata_realloc(ip, -(ip->i_df.if_bytes),
+> -					  XFS_DATA_FORK);
+>  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> -		ASSERT(ip->i_df.if_bytes == 0);
+>  		return 0;
+>  	}
+>  
+> -- 
+> 2.17.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
