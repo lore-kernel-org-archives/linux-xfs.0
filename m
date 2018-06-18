@@ -1,198 +1,121 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:50944 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S933381AbeFRNYW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 18 Jun 2018 09:24:22 -0400
-Date: Mon, 18 Jun 2018 09:24:20 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/2] xfs: xfs_iflush_abort() can be called twice on
- cluster writeback failure
-Message-ID: <20180618132419.GC28320@bfoster>
-References: <20180618055711.23391-1-david@fromorbit.com>
- <20180618055711.23391-3-david@fromorbit.com>
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:41217 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935323AbeFRRpu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jun 2018 13:45:50 -0400
+Received: by mail-lf0-f68.google.com with SMTP id d24-v6so25965023lfa.8
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Jun 2018 10:45:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180618055711.23391-3-david@fromorbit.com>
+In-Reply-To: <20180615212140.GE9432@magnolia>
+References: <20180615211448.7341-1-mbenatto@redhat.com> <20180615212140.GE9432@magnolia>
+From: Marco Benatto <mbenatto@redhat.com>
+Date: Mon, 18 Jun 2018 14:45:47 -0300
+Message-ID: <CAOGQQ2_DZC809Zffv=nfKTp1cS=o8ADn80-=tcazKQqX-EHA8w@mail.gmail.com>
+Subject: Re: [PATCH] xfstests: Teste root inode parent pointer repairing
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Mon, Jun 18, 2018 at 03:57:11PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> When a corrupt inode is detected during xfs_iflush_cluster, we can
-> get a shutdown ASSERT failure like this:
-> 
-> XFS (pmem1): Metadata corruption detected at xfs_symlink_shortform_verify+0x5c/0xa0, inode 0x86627 data fork
-> XFS (pmem1): Unmount and run xfs_repair
-> XFS (pmem1): xfs_do_force_shutdown(0x8) called from line 3372 of file fs/xfs/xfs_inode.c.  Return address = ffffffff814f4116
-> XFS (pmem1): Corruption of in-memory data detected.  Shutting down filesystem
-> XFS (pmem1): xfs_do_force_shutdown(0x1) called from line 222 of file fs/xfs/libxfs/xfs_defer.c.  Return address = ffffffff814a8a88
-> XFS (pmem1): xfs_do_force_shutdown(0x1) called from line 222 of file fs/xfs/libxfs/xfs_defer.c.  Return address = ffffffff814a8ef9
-> XFS (pmem1): Please umount the filesystem and rectify the problem(s)
-> XFS: Assertion failed: xfs_isiflocked(ip), file: fs/xfs/xfs_inode.h, line: 258
-> .....
-> Call Trace:
->  xfs_iflush_abort+0x10a/0x110
->  xfs_iflush+0xf3/0x390
->  xfs_inode_item_push+0x126/0x1e0
->  xfsaild+0x2c5/0x890
->  kthread+0x11c/0x140
->  ret_from_fork+0x24/0x30
-> 
-> Essentially, xfs_iflush_abort() has been called twice on the
-> original inode that that was flushed. This happens because the
-> inode has been flushed to teh buffer successfully via
-> xfs_iflush_int(), and so when another inode is detected as corrupt
-> in xfs_iflush_cluster, the buffer is marked stale and EIO, and
-> iodone callbacks are run on it.
-> 
-> Running the iodone callbacks walks across the original inode and
-> calls xfs_iflush_abort() on it. When xfs_iflush_cluster() returns
-> to xfs_iflush(), it runs the error path for that function, and that
-> calls xfs_iflush_abort() on the inode a second time, leading to the
-> above assert failure as the inode is not flush locked anymore.
-> 
-> This bug has been there a long time.
-> 
-> The simple fix would be to just avoid calling xfs_iflush_abort() in
-> xfs_iflush() if we've got a failure from xfs_iflush_cluster().
-> However, xfs_iflush_cluster() has magic delwri buffer handling that
-> means it may or may not have run IO completion on the buffer, and
-> hence sometimes we have to call xfs_iflush_abort() from
-> xfs_iflush(), and sometimes we shouldn't.
-> 
-> After reading through all the error paths and the delwri buffer
-> code, it's clear that the error handling in xfs_iflush_cluster() is
-> unnecessary. If the buffer is delwri, it leaves it on the delwri
-> list so that when the delwri list is submitted it sees a shutdown
-> fliesystem in xfs_buf_submit() and that marks the buffer stale, EIO
-> and runs IO completion. i.e. exactly what xfs+iflush_cluster() does
-> when it's not a delwri buffer. Further, marking a buffer stale
-> clears the _XBF_DELWRI_Q flag on the buffer, which means when
-> submission of the buffer occurs, it just skips over it and releases
-> it.
-> 
-> IOWs, the error handling in xfs_iflush_cluster doesn't need to care
-> if the buffer is already on a the delwri queue or not - it just
-> needs to mark the buffer stale, EIO and run completions. That means
-> we can just use the easy fix for xfs_iflush() to avoid the double
-> abort.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
+On Fri, Jun 15, 2018 at 6:21 PM, Darrick J. Wong
+<darrick.wong@oracle.com> wrote:
+> On Fri, Jun 15, 2018 at 06:14:48PM -0300, Marco Benatto wrote:
+>> Recently we found out xfs_repair were not repairing
+>> root inode parent pointer when root inode is on short-form
+>> and parent points to an invalid inode number (refer to:
+>> "xfs_repair: Fix root inode's parent when it's bogus for sf
+>> directory" on xfs-devel list).
+>>
+>> This test checks if xfs_repair successfully repair the
+>> filesystem in the scenario mentioned before.
+>>
+>> Signed-off-by: Marco Benatto <mbenatto@redhat.com>
+>> ---
+>>  tests/xfs/450     | 65 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>>  tests/xfs/450.out |  1 +
+>>  tests/xfs/group   |  1 +
+>>  3 files changed, 67 insertions(+)
+>>  create mode 100755 tests/xfs/450
+>>  create mode 100644 tests/xfs/450.out
+>>
+>> diff --git a/tests/xfs/450 b/tests/xfs/450
+>> new file mode 100755
+>> index 0000000..7e33431
+>> --- /dev/null
+>> +++ b/tests/xfs/450
+>> @@ -0,0 +1,65 @@
+>> +#! /bin/bash
+>> +# SPDX-License-Identifier: GPL-2.0
+>> +# Copyright (c) 2018 Red Hat Inc.  All Rights Reserved.
+>> +#
+>> +# FS QA Test 450
+>> +#
+>> +# Make sure xfs_repair can repair root inode parent's pointer
+>> +# when it contains a bogus ino when it's using shot form directory
+>> +#
+>> +seq=`basename $0`
+>> +seqres=$RESULT_DIR/$seq
+>> +
+>> +status=1     # failure is the default!
+>> +
+>> +# get standard environment, filters and checks
+>> +. ./common/rc
+>> +. ./common/filter
+>> +
+>> +# remove previous $seqres.full before test
+>> +rm -f $seqres.full
+>> +
+>> +# real QA test starts here
+>> +
+>> +# Modify as appropriate.
+>> +_supported_fs xfs
+>> +_supported_os Linux
+>> +_require_scratch
+>> +
+>> +
+>> +_scratch_mkfs >> /dev/null 2>&1
+>> +
+>> +# Check on-disk format version
+>> +ver=$($XFS_DB_PROG -c 'sb 0' -c 'addr rootino' -c 'p core.version' $SCRATCH_DEV |
+>> +             awk '{print$3}')
+>> +
+>> +case $ver in
+>> +     2)
+>> +             prefix="u.sfdir2"
+>> +             ;;
+>> +     3)
+>> +             prefix="u3.sfdir3"
+>> +             ;;
+>> +     *)
+>> +             _notrun "can't modify this disk format"
+>> +             ;;
+>> +esac
+>
+> Please hoist get_sfdir_prefix out of xfs/278...
+>
+>> +
+>> +_scratch_xfs_db -x -c 'sb 0' \
+>> +                                     -c 'addr rootino' \
+>> +                                     -c "write ${prefix}.hdr.parent.i4 0" >> /$seqres.full 2>&1 \
+>> +                             || _fail "xfs_db command failed"
+>
+> _scratch_xfs_set_metadata_field
+>
+>> +
+>> +_scratch_xfs_repair >> $seqres.full 2>&1
+>> +
+>> +_scratch_xfs_repair -n >> $seqres.full 2>&1
+>> +
+>> +if [ $? -eq 1 ]
+>> +then
+>> +     _fail "xfs_repair failed to repair filesystem"
+>> +else
+>
+> No need for the 'else'; _fail will exit the test.
+>
+> --D
+>
 
-Looks good to me:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/xfs_inode.c | 57 +++++++++++++++++-----------------------------
->  1 file changed, 21 insertions(+), 36 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 4a2e5e13c569..4a9b90cfb8c3 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -3236,7 +3236,6 @@ xfs_iflush_cluster(
->  	struct xfs_inode	*cip;
->  	int			nr_found;
->  	int			clcount = 0;
-> -	int			bufwasdelwri;
->  	int			i;
->  
->  	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
-> @@ -3360,37 +3359,22 @@ xfs_iflush_cluster(
->  	 * inode buffer and shut down the filesystem.
->  	 */
->  	rcu_read_unlock();
-> -	/*
-> -	 * Clean up the buffer.  If it was delwri, just release it --
-> -	 * brelse can handle it with no problems.  If not, shut down the
-> -	 * filesystem before releasing the buffer.
-> -	 */
-> -	bufwasdelwri = (bp->b_flags & _XBF_DELWRI_Q);
-> -	if (bufwasdelwri)
-> -		xfs_buf_relse(bp);
-> -
->  	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
->  
-> -	if (!bufwasdelwri) {
-> -		/*
-> -		 * Just like incore_relse: if we have b_iodone functions,
-> -		 * mark the buffer as an error and call them.  Otherwise
-> -		 * mark it as stale and brelse.
-> -		 */
-> -		if (bp->b_iodone) {
-> -			bp->b_flags &= ~XBF_DONE;
-> -			xfs_buf_stale(bp);
-> -			xfs_buf_ioerror(bp, -EIO);
-> -			xfs_buf_ioend(bp);
-> -		} else {
-> -			xfs_buf_stale(bp);
-> -			xfs_buf_relse(bp);
-> -		}
-> -	}
-> -
->  	/*
-> -	 * Unlocks the flush lock
-> +	 * We'll always have an inode attached to the buffer for completion
-> +	 * process by the time we are called from xfs_iflush(). Hence we have
-> +	 * always need to do IO completion processing to abort the inodes
-> +	 * attached to the buffer.  handle them just like the shutdown case in
-> +	 * xfs_buf_submit().
->  	 */
-> +	ASSERT(bp->b_iodone);
-> +	bp->b_flags &= ~XBF_DONE;
-> +	xfs_buf_stale(bp);
-> +	xfs_buf_ioerror(bp, -EIO);
-> +	xfs_buf_ioend(bp);
-> +
-> +	/* abort the corrupt inode, as it was not attached to the buffer */
->  	xfs_iflush_abort(cip, false);
->  	kmem_free(cilist);
->  	xfs_perag_put(pag);
-> @@ -3486,12 +3470,17 @@ xfs_iflush(
->  		xfs_log_force(mp, 0);
->  
->  	/*
-> -	 * inode clustering:
-> -	 * see if other inodes can be gathered into this write
-> +	 * inode clustering: try to gather other inodes into this write
-> +	 *
-> +	 * Note: Any error during clustering will result in the filesystem
-> +	 * being shut down and completion callbacks run on the cluster buffer.
-> +	 * As we have already flushed and attached this inode to the buffer,
-> +	 * it has already been aborted and released by xfs_iflush_cluster() and
-> +	 * so we have no further error handling to do here.
->  	 */
->  	error = xfs_iflush_cluster(ip, bp);
->  	if (error)
-> -		goto cluster_corrupt_out;
-> +		return error;
->  
->  	*bpp = bp;
->  	return 0;
-> @@ -3500,12 +3489,8 @@ xfs_iflush(
->  	if (bp)
->  		xfs_buf_relse(bp);
->  	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-> -cluster_corrupt_out:
-> -	error = -EFSCORRUPTED;
->  abort_out:
-> -	/*
-> -	 * Unlocks the flush lock
-> -	 */
-> +	/* abort the corrupt inode, as it was not attached to the buffer */
->  	xfs_iflush_abort(ip, false);
->  	return error;
->  }
-> -- 
-> 2.17.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks for this review. I just sent out new patches covering this points
