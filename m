@@ -1,191 +1,229 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:7552 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752868AbeFRF5R (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jun 2018 01:57:17 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1fUnA9-0003hf-9X
-        for linux-xfs@vger.kernel.org; Mon, 18 Jun 2018 15:57:13 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.91)
-        (envelope-from <david@fromorbit.com>)
-        id 1fUnA9-0006F6-8H
-        for linux-xfs@vger.kernel.org; Mon, 18 Jun 2018 15:57:13 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/2] xfs: xfs_iflush_abort() can be called twice on cluster writeback failure
-Date: Mon, 18 Jun 2018 15:57:11 +1000
-Message-Id: <20180618055711.23391-3-david@fromorbit.com>
-In-Reply-To: <20180618055711.23391-1-david@fromorbit.com>
-References: <20180618055711.23391-1-david@fromorbit.com>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:50854 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S934773AbeFROwp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 18 Jun 2018 10:52:45 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 1/2] xfs: combine [a]sync buffer submission apis
+Date: Mon, 18 Jun 2018 10:52:43 -0400
+Message-Id: <20180618145244.30393-2-bfoster@redhat.com>
+In-Reply-To: <20180618145244.30393-1-bfoster@redhat.com>
+References: <20180618145244.30393-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
+Cc: Christoph Hellwig <hch@infradead.org>
 
-From: Dave Chinner <dchinner@redhat.com>
+The buffer I/O submission path consists of separate function calls
+per type. The buffer I/O type is already controlled via buffer
+state (XBF_ASYNC), however, so there is no real need for separate
+submission functions.
 
-When a corrupt inode is detected during xfs_iflush_cluster, we can
-get a shutdown ASSERT failure like this:
+Combine the buffer submission functions into a single function that
+processes the buffer appropriately based on XBF_ASYNC. Retain an
+internal helper with a conditional wait parameter to continue to
+support batched !XBF_ASYNC submission/completion required by delwri
+queues.
 
-XFS (pmem1): Metadata corruption detected at xfs_symlink_shortform_verify+0x5c/0xa0, inode 0x86627 data fork
-XFS (pmem1): Unmount and run xfs_repair
-XFS (pmem1): xfs_do_force_shutdown(0x8) called from line 3372 of file fs/xfs/xfs_inode.c.  Return address = ffffffff814f4116
-XFS (pmem1): Corruption of in-memory data detected.  Shutting down filesystem
-XFS (pmem1): xfs_do_force_shutdown(0x1) called from line 222 of file fs/xfs/libxfs/xfs_defer.c.  Return address = ffffffff814a8a88
-XFS (pmem1): xfs_do_force_shutdown(0x1) called from line 222 of file fs/xfs/libxfs/xfs_defer.c.  Return address = ffffffff814a8ef9
-XFS (pmem1): Please umount the filesystem and rectify the problem(s)
-XFS: Assertion failed: xfs_isiflocked(ip), file: fs/xfs/xfs_inode.h, line: 258
-.....
-Call Trace:
- xfs_iflush_abort+0x10a/0x110
- xfs_iflush+0xf3/0x390
- xfs_inode_item_push+0x126/0x1e0
- xfsaild+0x2c5/0x890
- kthread+0x11c/0x140
- ret_from_fork+0x24/0x30
-
-Essentially, xfs_iflush_abort() has been called twice on the
-original inode that that was flushed. This happens because the
-inode has been flushed to teh buffer successfully via
-xfs_iflush_int(), and so when another inode is detected as corrupt
-in xfs_iflush_cluster, the buffer is marked stale and EIO, and
-iodone callbacks are run on it.
-
-Running the iodone callbacks walks across the original inode and
-calls xfs_iflush_abort() on it. When xfs_iflush_cluster() returns
-to xfs_iflush(), it runs the error path for that function, and that
-calls xfs_iflush_abort() on the inode a second time, leading to the
-above assert failure as the inode is not flush locked anymore.
-
-This bug has been there a long time.
-
-The simple fix would be to just avoid calling xfs_iflush_abort() in
-xfs_iflush() if we've got a failure from xfs_iflush_cluster().
-However, xfs_iflush_cluster() has magic delwri buffer handling that
-means it may or may not have run IO completion on the buffer, and
-hence sometimes we have to call xfs_iflush_abort() from
-xfs_iflush(), and sometimes we shouldn't.
-
-After reading through all the error paths and the delwri buffer
-code, it's clear that the error handling in xfs_iflush_cluster() is
-unnecessary. If the buffer is delwri, it leaves it on the delwri
-list so that when the delwri list is submitted it sees a shutdown
-fliesystem in xfs_buf_submit() and that marks the buffer stale, EIO
-and runs IO completion. i.e. exactly what xfs+iflush_cluster() does
-when it's not a delwri buffer. Further, marking a buffer stale
-clears the _XBF_DELWRI_Q flag on the buffer, which means when
-submission of the buffer occurs, it just skips over it and releases
-it.
-
-IOWs, the error handling in xfs_iflush_cluster doesn't need to care
-if the buffer is already on a the delwri queue or not - it just
-needs to mark the buffer stale, EIO and run completions. That means
-we can just use the easy fix for xfs_iflush() to avoid the double
-abort.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Suggested-by: Christoph Hellwig <hch@infradead.org>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_inode.c | 57 +++++++++++++++++-----------------------------
- 1 file changed, 21 insertions(+), 36 deletions(-)
+ fs/xfs/xfs_buf.c         | 72 +++++++++++++---------------------------
+ fs/xfs/xfs_buf.h         | 10 ++++--
+ fs/xfs/xfs_log_recover.c |  4 +--
+ 3 files changed, 33 insertions(+), 53 deletions(-)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 4a2e5e13c569..4a9b90cfb8c3 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -3236,7 +3236,6 @@ xfs_iflush_cluster(
- 	struct xfs_inode	*cip;
- 	int			nr_found;
- 	int			clcount = 0;
--	int			bufwasdelwri;
- 	int			i;
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index b5c0f6949b30..64a9a09013e3 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -757,11 +757,7 @@ _xfs_buf_read(
+ 	bp->b_flags &= ~(XBF_WRITE | XBF_ASYNC | XBF_READ_AHEAD);
+ 	bp->b_flags |= flags & (XBF_READ | XBF_ASYNC | XBF_READ_AHEAD);
  
- 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
-@@ -3360,37 +3359,22 @@ xfs_iflush_cluster(
- 	 * inode buffer and shut down the filesystem.
- 	 */
- 	rcu_read_unlock();
--	/*
--	 * Clean up the buffer.  If it was delwri, just release it --
--	 * brelse can handle it with no problems.  If not, shut down the
--	 * filesystem before releasing the buffer.
--	 */
--	bufwasdelwri = (bp->b_flags & _XBF_DELWRI_Q);
--	if (bufwasdelwri)
--		xfs_buf_relse(bp);
--
- 	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
- 
--	if (!bufwasdelwri) {
--		/*
--		 * Just like incore_relse: if we have b_iodone functions,
--		 * mark the buffer as an error and call them.  Otherwise
--		 * mark it as stale and brelse.
--		 */
--		if (bp->b_iodone) {
--			bp->b_flags &= ~XBF_DONE;
--			xfs_buf_stale(bp);
--			xfs_buf_ioerror(bp, -EIO);
--			xfs_buf_ioend(bp);
--		} else {
--			xfs_buf_stale(bp);
--			xfs_buf_relse(bp);
--		}
+-	if (flags & XBF_ASYNC) {
+-		xfs_buf_submit(bp);
+-		return 0;
 -	}
+-	return xfs_buf_submit_wait(bp);
++	return xfs_buf_submit(bp);
+ }
+ 
+ xfs_buf_t *
+@@ -846,7 +842,7 @@ xfs_buf_read_uncached(
+ 	bp->b_flags |= XBF_READ;
+ 	bp->b_ops = ops;
+ 
+-	xfs_buf_submit_wait(bp);
++	xfs_buf_submit(bp);
+ 	if (bp->b_error) {
+ 		int	error = bp->b_error;
+ 		xfs_buf_relse(bp);
+@@ -1249,7 +1245,7 @@ xfs_bwrite(
+ 	bp->b_flags &= ~(XBF_ASYNC | XBF_READ | _XBF_DELWRI_Q |
+ 			 XBF_WRITE_FAIL | XBF_DONE);
+ 
+-	error = xfs_buf_submit_wait(bp);
++	error = xfs_buf_submit(bp);
+ 	if (error) {
+ 		xfs_force_shutdown(bp->b_target->bt_mount,
+ 				   SHUTDOWN_META_IO_ERROR);
+@@ -1459,7 +1455,7 @@ _xfs_buf_ioapply(
+  * itself.
+  */
+ static int
+-__xfs_buf_submit(
++__xfs_buf_submit_common(
+ 	struct xfs_buf	*bp)
+ {
+ 	trace_xfs_buf_submit(bp, _RET_IP_);
+@@ -1505,32 +1501,6 @@ __xfs_buf_submit(
+ 	return 0;
+ }
+ 
+-void
+-xfs_buf_submit(
+-	struct xfs_buf	*bp)
+-{
+-	int		error;
+-
+-	ASSERT(bp->b_flags & XBF_ASYNC);
+-
+-	/*
+-	 * The caller's reference is released during I/O completion.
+-	 * This occurs some time after the last b_io_remaining reference is
+-	 * released, so after we drop our Io reference we have to have some
+-	 * other reference to ensure the buffer doesn't go away from underneath
+-	 * us. Take a direct reference to ensure we have safe access to the
+-	 * buffer until we are finished with it.
+-	 */
+-	xfs_buf_hold(bp);
+-
+-	error = __xfs_buf_submit(bp);
+-	if (error)
+-		xfs_buf_ioend(bp);
+-
+-	/* Note: it is not safe to reference bp now we've dropped our ref */
+-	xfs_buf_rele(bp);
+-}
+-
+ /*
+  * Wait for I/O completion of a sync buffer and return the I/O error code.
+  */
+@@ -1538,6 +1508,8 @@ static int
+ xfs_buf_iowait(
+ 	struct xfs_buf	*bp)
+ {
++	ASSERT(!(bp->b_flags & XBF_ASYNC));
++
+ 	trace_xfs_buf_iowait(bp, _RET_IP_);
+ 	wait_for_completion(&bp->b_iowait);
+ 	trace_xfs_buf_iowait_done(bp, _RET_IP_);
+@@ -1549,30 +1521,33 @@ xfs_buf_iowait(
+  * Synchronous buffer IO submission path, read or write.
+  */
+ int
+-xfs_buf_submit_wait(
+-	struct xfs_buf	*bp)
++__xfs_buf_submit(
++	struct xfs_buf	*bp,
++	bool		wait)
+ {
+ 	int		error;
+ 
+-	ASSERT(!(bp->b_flags & XBF_ASYNC));
 -
  	/*
--	 * Unlocks the flush lock
-+	 * We'll always have an inode attached to the buffer for completion
-+	 * process by the time we are called from xfs_iflush(). Hence we have
-+	 * always need to do IO completion processing to abort the inodes
-+	 * attached to the buffer.  handle them just like the shutdown case in
-+	 * xfs_buf_submit().
+-	 * For synchronous IO, the IO does not inherit the submitters reference
+-	 * count, nor the buffer lock. Hence we cannot release the reference we
+-	 * are about to take until we've waited for all IO completion to occur,
+-	 * including any xfs_buf_ioend_async() work that may be pending.
++	 * Grab a reference so the buffer does not go away underneath us. For
++	 * async buffers, I/O completion drops the callers reference, which
++	 * could occur before submission returns.
  	 */
-+	ASSERT(bp->b_iodone);
-+	bp->b_flags &= ~XBF_DONE;
-+	xfs_buf_stale(bp);
-+	xfs_buf_ioerror(bp, -EIO);
-+	xfs_buf_ioend(bp);
-+
-+	/* abort the corrupt inode, as it was not attached to the buffer */
- 	xfs_iflush_abort(cip, false);
- 	kmem_free(cilist);
- 	xfs_perag_put(pag);
-@@ -3486,12 +3470,17 @@ xfs_iflush(
- 		xfs_log_force(mp, 0);
+ 	xfs_buf_hold(bp);
  
+-	error = __xfs_buf_submit(bp);
+-	if (error)
++	error = __xfs_buf_submit_common(bp);
++	if (error) {
++		if (bp->b_flags & XBF_ASYNC)
++			xfs_buf_ioend(bp);
+ 		goto out;
+-	error = xfs_buf_iowait(bp);
++	}
+ 
++	if (wait)
++		error = xfs_buf_iowait(bp);
+ out:
  	/*
--	 * inode clustering:
--	 * see if other inodes can be gathered into this write
-+	 * inode clustering: try to gather other inodes into this write
-+	 *
-+	 * Note: Any error during clustering will result in the filesystem
-+	 * being shut down and completion callbacks run on the cluster buffer.
-+	 * As we have already flushed and attached this inode to the buffer,
-+	 * it has already been aborted and released by xfs_iflush_cluster() and
-+	 * so we have no further error handling to do here.
+-	 * all done now, we can release the hold that keeps the buffer
+-	 * referenced for the entire IO.
++	 * Release the hold that keeps the buffer referenced for the entire
++	 * I/O. Note that if the buffer is async, it is not safe to reference
++	 * after this release.
  	 */
- 	error = xfs_iflush_cluster(ip, bp);
- 	if (error)
--		goto cluster_corrupt_out;
-+		return error;
- 
- 	*bpp = bp;
- 	return 0;
-@@ -3500,12 +3489,8 @@ xfs_iflush(
- 	if (bp)
- 		xfs_buf_relse(bp);
- 	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
--cluster_corrupt_out:
--	error = -EFSCORRUPTED;
- abort_out:
--	/*
--	 * Unlocks the flush lock
--	 */
-+	/* abort the corrupt inode, as it was not attached to the buffer */
- 	xfs_iflush_abort(ip, false);
+ 	xfs_buf_rele(bp);
  	return error;
- }
+@@ -2026,12 +2001,11 @@ xfs_buf_delwri_submit_buffers(
+ 		if (wait_list) {
+ 			bp->b_flags &= ~XBF_ASYNC;
+ 			list_move_tail(&bp->b_list, wait_list);
+-			__xfs_buf_submit(bp);
+ 		} else {
+ 			bp->b_flags |= XBF_ASYNC;
+ 			list_del_init(&bp->b_list);
+-			xfs_buf_submit(bp);
+ 		}
++		__xfs_buf_submit(bp, false);
+ 	}
+ 	blk_finish_plug(&plug);
+ 
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index d24dbd4dac39..a57693a5cdd7 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -298,8 +298,14 @@ extern void __xfs_buf_ioerror(struct xfs_buf *bp, int error,
+ 		xfs_failaddr_t failaddr);
+ #define xfs_buf_ioerror(bp, err) __xfs_buf_ioerror((bp), (err), __this_address)
+ extern void xfs_buf_ioerror_alert(struct xfs_buf *, const char *func);
+-extern void xfs_buf_submit(struct xfs_buf *bp);
+-extern int xfs_buf_submit_wait(struct xfs_buf *bp);
++
++extern int __xfs_buf_submit(struct xfs_buf *bp, bool);
++static inline int xfs_buf_submit(struct xfs_buf *bp)
++{
++	bool wait = bp->b_flags & XBF_ASYNC ? false : true;
++	return __xfs_buf_submit(bp, wait);
++}
++
+ extern void xfs_buf_iomove(xfs_buf_t *, size_t, size_t, void *,
+ 				xfs_buf_rw_t);
+ #define xfs_buf_zero(bp, off, len) \
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index b181b5f57a19..724a76d87564 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -196,7 +196,7 @@ xlog_bread_noalign(
+ 	bp->b_io_length = nbblks;
+ 	bp->b_error = 0;
+ 
+-	error = xfs_buf_submit_wait(bp);
++	error = xfs_buf_submit(bp);
+ 	if (error && !XFS_FORCED_SHUTDOWN(log->l_mp))
+ 		xfs_buf_ioerror_alert(bp, __func__);
+ 	return error;
+@@ -5707,7 +5707,7 @@ xlog_do_recover(
+ 	bp->b_flags |= XBF_READ;
+ 	bp->b_ops = &xfs_sb_buf_ops;
+ 
+-	error = xfs_buf_submit_wait(bp);
++	error = xfs_buf_submit(bp);
+ 	if (error) {
+ 		if (!XFS_FORCED_SHUTDOWN(mp)) {
+ 			xfs_buf_ioerror_alert(bp, __func__);
 -- 
-2.17.0
+2.17.1
 
