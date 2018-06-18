@@ -1,84 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:45935 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756331AbeFOVPV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 17:15:21 -0400
-Received: by mail-lf0-f68.google.com with SMTP id n3-v6so16491370lfe.12
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Jun 2018 14:15:20 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAOGQQ28c_qfp6Mjt13v0jK7tYVuvL-1j+dbya6iRwUhqmfii8A@mail.gmail.com>
-References: <20180614221646.20017-1-mbenatto@redhat.com> <1ddae533-b040-fdba-4350-01b59d5ddcba@sandeen.net>
- <20180614233551.GN10363@dastard> <CAOGQQ28c_qfp6Mjt13v0jK7tYVuvL-1j+dbya6iRwUhqmfii8A@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:54938 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934957AbeFRRoj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 18 Jun 2018 13:44:39 -0400
 From: Marco Benatto <mbenatto@redhat.com>
-Date: Fri, 15 Jun 2018 18:15:19 -0300
-Message-ID: <CAOGQQ2_LzWpCEHQ0qGreN-wOd2ccHiToeiXU3-a_08ps1FXiRg@mail.gmail.com>
-Subject: Re: [PATCH] xfs_repair: Fix root inode's parent when it's bogus for
- sf directory
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Subject: [PATCH 1/2] common/xfs: Add _scratch_get_sfdir_prefix function
+Date: Mon, 18 Jun 2018 14:44:32 -0300
+Message-Id: <20180618174433.3069-1-mbenatto@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, mbenatto@redhat.com, darrick.wong@oracle.com, sandeen@redhat.com
 
-FYI,
+Move get_sfdir_prefix function from xfs/278 to commom/xfs
+and rename it to _scratch_get_sfdir_prefix so it can be
+used in other xfs tests.
 
-just sent out "[PATCH] xfstests: Teste root inode parent pointer repairing"
+This commit also changes xfs/278 to make use of
+_scratch_get_sfdir_prefix instead previous one.
 
-On Fri, Jun 15, 2018 at 2:30 PM, Marco Benatto <mbenatto@redhat.com> wrote:
-> On Thu, Jun 14, 2018 at 8:35 PM, Dave Chinner <david@fromorbit.com> wrote:
->> On Thu, Jun 14, 2018 at 05:20:56PM -0500, Eric Sandeen wrote:
->>> On 6/14/18 5:16 PM, Marco Benatto wrote:
->>> > Currently when root inode is in short-form and its parent ino
->>> > has an invalid value, process_sf_dir2() ends up not fixing it,
->>> > because if verify_inum() fails we never get to the next case which
->>> > would fix the root inode's parent pointer.
->>> >
->>> > This behavior triggers the following assert on process_dir2():
->>> >
->>> >    ASSERT((ino != mp->m_sb.sb_rootino && ino != *parent) ||
->>> >         (ino == mp->m_sb.sb_rootino &&
->>> >         (ino == *parent || need_root_dotdot == 1)));
->>> >
->>> > This patch fixes this behavior by making sure we always properly
->>> > handle rootino parent pointer in process_sf_dir2()
->>> >
->>> > Signed-off-by: Marco Benatto <mbenatto@redhat.com>
->>>
->>> This looks correct to me, thanks.
->>>
->>> FWIW the problem can be demonstrated by setting the root inode's
->>> parent to 0 on a freshly made fs:
->>>
->>> # mkfs.xfs -f -dfile,name=fsfile,size=1g
->>> # xfs_db -x -c "sb 0" -c "addr rootino" -c "write u3.sfdir3.hdr.parent.i4 0" fsfile
->>> # xfs_repair fsfile
->>
->> xfstest please (also to check that xfs_scrub detects it)?
->
-> Sure, working on this. I'll send you once it's done.
->
->>
->> Cheers,
->>
->> Dave.
->> --
->> Dave Chinner
->> david@fromorbit.com
->
->
->
-> Cheers,
->
-> --
-> Marco Benatto
+Signed-off-by: Marco Benatto <mbenatto@redhat.com>
+---
+ common/xfs    | 15 +++++++++++++++
+ tests/xfs/278 | 16 +---------------
+ 2 files changed, 16 insertions(+), 15 deletions(-)
 
-
-
+diff --git a/common/xfs b/common/xfs
+index 55cfa94..ecf54bb 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -760,3 +760,18 @@ _require_xfs_spaceman_command()
+ 			_notrun "xfs_spaceman $command doesn't support $param"
+ 	fi
+ }
++
++_scratch_get_sfdir_prefix() {
++	local dir_ino="$1"
++
++	for prefix in "u.sfdir3" "u.sfdir2" "u3.sfdir3"; do
++		if [ -n "$(_scratch_xfs_get_metadata_field \
++				"${prefix}.hdr.parent.i4" \
++				"inode ${dir_ino}")" ]; then
++			echo "${prefix}"
++			return 0
++		fi
++	done
++	_scratch_xfs_db -c "inode ${dir_ino}" -c 'p' >> $seqres.full
++	return 1
++}
+diff --git a/tests/xfs/278 b/tests/xfs/278
+index 3d2a846..c208e61 100755
+--- a/tests/xfs/278
++++ b/tests/xfs/278
+@@ -46,25 +46,11 @@ _scratch_unmount
+ 
+ echo "Silence is goodness..."
+ 
+-get_sfdir_prefix() {
+-	local dir_ino="$1"
+-
+-	for prefix in "u.sfdir3" "u.sfdir2" "u3.sfdir3"; do
+-		if [ -n "$(_scratch_xfs_get_metadata_field \
+-				"${prefix}.hdr.parent.i4" \
+-				"inode ${dir_ino}")" ]; then
+-			echo "${prefix}"
+-			return 0
+-		fi
+-	done
+-	_scratch_xfs_db -c "inode ${dir_ino}" -c 'p' >> $seqres.full
+-	return 1
+-}
+ set_ifield() {
+ 	_scratch_xfs_set_metadata_field "$1" 0 "inode $2" >> $seqres.full
+ }
+ 
+-sfdir_prefix="$(get_sfdir_prefix "$DIR_INO" || \
++sfdir_prefix="$(_scratch_get_sfdir_prefix "$DIR_INO" || \
+ 	_fail "Cannot determine sfdir prefix")"
+ 
+ # Corrupt DIR
 -- 
-Marco Benatto
-Senior Software Maintenance Engineer | Red Hat Brasil
-T: +55 11 35246161 | M: +55 41 9 88504051
-Av. Brigadeiro Faria Lima 3900, 8° Andar. São Paulo, Brasil. RED HAT |
-TRIED. TESTED. TRUSTED. Saiba porque em redhat.com
+2.9.5
+
