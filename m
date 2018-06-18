@@ -1,58 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:33164 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752077AbeFQOjH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Jun 2018 10:39:07 -0400
-Date: Sun, 17 Jun 2018 22:39:00 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH] generic/223: port t_stripealign to FIEMAP
-Message-ID: <20180617143900.GH2780@desktop>
-References: <20180613225057.GB9432@magnolia>
- <20180615024901.GF2780@desktop>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:48384 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933134AbeFRLrr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 18 Jun 2018 07:47:47 -0400
+Date: Mon, 18 Jun 2018 07:47:45 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2 2/2] xfs: use sync buffer I/O for sync delwri queue
+ submission
+Message-ID: <20180618114744.GA28320@bfoster>
+References: <20180613110516.65494-1-bfoster@redhat.com>
+ <20180613110516.65494-3-bfoster@redhat.com>
+ <20180615112820.GB3230@infradead.org>
+ <20180615115334.GC2857@bfoster>
+ <20180615121602.GA32099@infradead.org>
+ <20180615123956.GD2857@bfoster>
+ <20180618112130.GA24243@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180615024901.GF2780@desktop>
+In-Reply-To: <20180618112130.GA24243@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, Ross Zwisler <ross.zwisler@linux.intel.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Jun 15, 2018 at 10:49:01AM +0800, Eryu Guan wrote:
-> On Wed, Jun 13, 2018 at 03:50:57PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Since XFS has deprecated FIBMAP on FSDAX filesystems, we can't use
-> > FIBMAP to verify stripe alignment anymore.  FIEMAP has existed for quite
-> > some time now, so port it to use that instead, and only fall back to
-> > FIBMAP if FIEMAP doesn't exist.
-> > 
-> > Tested-by: ross.zwisler@linux.intel.com
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  src/t_stripealign.c |   72 +++++++++++++++++++++++++++++++++++++++++++--------
-> >  1 file changed, 61 insertions(+), 11 deletions(-)
-> > 
-> > diff --git a/src/t_stripealign.c b/src/t_stripealign.c
-> > index 05ed36b5..690f743a 100644
-> > --- a/src/t_stripealign.c
-> > +++ b/src/t_stripealign.c
-> > @@ -17,8 +17,13 @@
-> >  #include <fcntl.h>
-> >  #include <stdio.h>
-> >  #include <sys/ioctl.h>
-> > +#include <linux/fiemap.h>
-> > +#include <linux/fs.h>
+On Mon, Jun 18, 2018 at 04:21:30AM -0700, Christoph Hellwig wrote:
+> On Fri, Jun 15, 2018 at 08:39:56AM -0400, Brian Foster wrote:
+> > Ok, codewise I don't have much of a preference, but I don't think it's
+> > worth redoing the regression testing and lowmem testing and whatnot just
+> > to change how the guts are refactored here. What's the endgame?
 > 
-> As it requires <linux/fiemap.h> now, looks like we should update
-> src/Makefile too to only compile it when "HAVE_FIEMAP" is true.
+> Avoid the nasty duplication as much as possible.  I think your patch
+> already goes a long way towards that, but I'd rather go all the way.
 > 
-> ifeq ($(HAVE_FIEMAP), true)
-> LINUX_TARGETS += fiemap-tester t_stripealign
-> endif
 
-JFYI, I fixed it on commit (also remove t_stripealign from TARGETS).
+That's what I figured, thanks.
 
-Thanks,
-Eryu
+> > I came
+> > up with the following on top of patch 2. Compile tested only, and I can
+> > refold the _common() helper back into the caller and invert the
+> > nowait logic or whatnot..
+> 
+> Mostly looks fine, except that it seems pointless to have
+> __xfs_buf_submit_common around instead of merging it into the only
+> caller.
+> 
+
+Yes..
+
+> > +	if (!(bp->b_flags & XBF_ASYNC) && !sync_nowait)
+> 
+> Also I'd rather pass in a
+> 
+> 	'bool wait' parameter.
+> 
+> xfs_buf_submit() would set it based on XBF_ASYNC, and the delwri
+> code would just set it to false explicitly.
+
+A patch with the above changes is essentially what I put through some
+testing over the weekend. It doesn't look like anything exploded, so
+I'll try to get it cleaned up and posted later today.
+
+Brian
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
