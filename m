@@ -1,75 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:37338 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965572AbeFONC6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 09:02:58 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 16/24] xfs: simplify xfs_map_blocks by using xfs_iext_lookup_extent directly
-Date: Fri, 15 Jun 2018 15:02:01 +0200
-Message-Id: <20180615130209.1970-17-hch@lst.de>
-In-Reply-To: <20180615130209.1970-1-hch@lst.de>
-References: <20180615130209.1970-1-hch@lst.de>
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:53356 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752361AbeFRFVN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jun 2018 01:21:13 -0400
+Date: Mon, 18 Jun 2018 15:21:10 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Kernel oops at NULL pointer when performing readlink on a fuzzed
+ v5 image
+Message-ID: <20180618052110.GE19934@dastard>
+References: <15FCAC1E-1320-4122-8768-A45FFCFD1AC2@gatech.edu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <15FCAC1E-1320-4122-8768-A45FFCFD1AC2@gatech.edu>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
+To: "Xu, Wen" <wen.xu@gatech.edu>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-xfs_bmapi_read adds zero value in xfs_map_blocks.  Replace it with a
-direct call to the low-level extent lookup function.
+On Mon, Jun 18, 2018 at 03:49:52AM +0000, Xu, Wen wrote:
+> Hi,
+> 
+> Here is an issue I found when fuzzing V5 filesystem related with softlink.
+> 
+> - Reproduce (4.17/for-next branch)
+> # mkdir mnt
+> # mount -t xfs final.img mnt
+> # gcc -o poc poc.c
+> # ./poc ./mnt
 
-Note that we now always pass a 0 length to the trace points as we ask
-for an unspecified len.
+This does not reproduce on my local dev tree.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_aops.c | 19 +++++--------------
- 1 file changed, 5 insertions(+), 14 deletions(-)
+This is as much output as I get:
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 17aa9dc9a8c3..25239bc189d4 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -387,7 +387,6 @@ xfs_map_blocks(
- 	int			whichfork = XFS_DATA_FORK;
- 	struct xfs_iext_cursor	icur;
- 	int			error = 0;
--	int			nimaps = 1;
- 
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
-@@ -443,24 +442,16 @@ xfs_map_blocks(
- 	 * offset.  This will convert delayed allocations (including COW ones)
- 	 * into real extents.
- 	 */
--	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
--				&imap, &nimaps, XFS_BMAPI_ENTIRE);
-+	if (!xfs_iext_lookup_extent(ip, &ip->i_df, offset_fsb, &icur, &imap))
-+		imap.br_startoff = end_fsb;	/* fake a hole past EOF */
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
--	if (error)
--		return error;
- 
--	if (!nimaps) {
--		/*
--		 * Lookup returns no match? Beyond eof? regardless,
--		 * return it as a hole so we don't write it
--		 */
-+	if (imap.br_startoff > offset_fsb) {
-+		/* landed in a hole or beyond EOF */
-+		imap.br_blockcount = imap.br_startoff - offset_fsb;
- 		imap.br_startoff = offset_fsb;
--		imap.br_blockcount = end_fsb - offset_fsb;
- 		imap.br_startblock = HOLESTARTBLOCK;
- 		wpc->io_type = XFS_IO_HOLE;
--	} else if (imap.br_startblock == HOLESTARTBLOCK) {
--		/* landed in a hole */
--		wpc->io_type = XFS_IO_HOLE;
- 	} else {
- 		if (isnullstartblock(imap.br_startblock)) {
- 			/* got a delalloc extent */
+> [  315.207956] XFS (loop0): Mounting V5 Filesystem
+> [  315.214851] XFS (loop0): Ending clean mount
+> [  315.214976] Filesystem "loop0": reserve blocks depleted! Consider increasing reserve pool size.
+> [  315.214979] XFS (loop0): Per-AG reservation for AG 0 failed.  Filesystem may run out of space.
+> [  315.214981] XFS (loop0): Per-AG reservation for AG 0 failed.  Filesystem may run out of space.
+> [  326.041728] XFS (loop0): Failed to remove inode(s) from unlinked list. Please free space, unmount and run xfs_repair.
+
+i.e. Nothing unexpected fails, I get ENOENT as expected once the baz
+-> ./baz symlink loop has been removed.
+
+Ok, now I'm betting that this has something to do with zero length
+symlinks not being caught correctly, given that a) we identified
+this flaw a few days ago, b) strlen(symlink_data_ptr) gets a
+null dereference indicating an empty symlink is being read, and c)
+there's a warning about failing to remove an inode from the unlinked
+list and that can leave symlinks with a zeroed in-memory data fork.
+
+Ok, so lets try a plain 4.17 + xfs/for-next. Yup, that does indeed
+fail.
+
+IOWs, the patch I wrote a few hours ago to prevent zero length
+symlinks from hitting the disk by not screwing with the inline inode
+data fork until the inode has been pulled from the unlinked list
+prevents the crash from occurring.
+
+Cheers,
+
+Dave.
 -- 
-2.17.1
-
+Dave Chinner
+david@fromorbit.com
