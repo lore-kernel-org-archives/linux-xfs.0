@@ -1,198 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:41530 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1756345AbeFOSFh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 15 Jun 2018 14:05:37 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 560E7402312B
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Jun 2018 18:05:37 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 408E42166BB2
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Jun 2018 18:05:37 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 2/2] xfs: use sync buffer I/O for sync delwri queue submission
-Date: Fri, 15 Jun 2018 14:05:36 -0400
-Message-Id: <20180615180536.17282-3-bfoster@redhat.com>
-In-Reply-To: <20180615180536.17282-1-bfoster@redhat.com>
-References: <20180615180536.17282-1-bfoster@redhat.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:27719 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752868AbeFRF5P (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jun 2018 01:57:15 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1fUnA9-0003hd-7F
+        for linux-xfs@vger.kernel.org; Mon, 18 Jun 2018 15:57:13 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1fUnA9-0006F1-3o
+        for linux-xfs@vger.kernel.org; Mon, 18 Jun 2018 15:57:13 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 0/2] xfs: symlink and inode writeback issues
+Date: Mon, 18 Jun 2018 15:57:09 +1000
+Message-Id: <20180618055711.23391-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-If a delwri queue occurs of a buffer that sits on a delwri queue
-wait list, the queue sets _XBF_DELWRI_Q without changing the state
-of ->b_list. This occurs, for example, if another thread beats the
-current delwri waiter thread to the buffer lock after I/O
-completion. Once the waiter acquires the lock, it removes the buffer
-from the wait list and leaves a buffer with _XBF_DELWRI_Q set but
-not populated on a list. This results in a lost buffer submission
-and in turn can result in assert failures due to _XBF_DELWRI_Q being
-set on buffer reclaim or filesystem lockups if the buffer happens to
-cover an item in the AIL.
+Hi folks,
 
-This problem has been reproduced by repeated iterations of xfs/305
-on high CPU count (28xcpu) systems with limited memory (~1GB). Dirty
-dquot reclaim races with an xfsaild push of a separate dquot backed
-by the same buffer such that the buffer sits on the reclaim wait
-list at the time xfsaild attempts to queue it. Since the latter
-dquot has been flush locked but the underlying buffer not submitted
-for I/O, the dquot pins the AIL and causes the filesystem to
-livelock.
+The first patch is the replacement fix for the symlink verification
+problem I originally posted as "xfs: symlinks can be zero length
+during log recovery" a few days ago. This caused the symlink data
+fork verifier to fire during inode writeback, and in tracking that
+down it became clear that zero length symlinks are not valid,
+despite repeated comments in the code that "they can happen". This
+new patch prevents zero length symlink inodes from ever getting to
+disk, and prevents transient states in memory where the symlink data
+fork is zero length.
 
-This race is essentially made possible by the buffer lock cycle
-involved with waiting on a synchronous delwri queue submission.
-Close the race by using synchronous buffer I/O for respective delwri
-queue submission. This means the buffer remains locked across the
-I/O and so is inaccessible from other contexts while in the
-intermediate wait list state. The sync buffer I/O wait mechanism is
-factored into a helper such that sync delwri buffer submission and
-serialization are batched operations.
+The second patch is a fix for a problem discovered by the original
+symlink verifier patch - when it fired in inode writeback it would
+do a double flush lock release on the inode, triggering an assert.
+nothing good can come from that, so I tracked down the dark, dusty
+origins of the crappy error handling in the inode writeback code and
+fixed it, too.
 
-Designed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_buf.c | 78 +++++++++++++++++++++++++-----------------------
- 1 file changed, 41 insertions(+), 37 deletions(-)
+Comments, thoughts?
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 7b0f7c79cd62..b5c0f6949b30 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1531,6 +1531,20 @@ xfs_buf_submit(
- 	xfs_buf_rele(bp);
- }
- 
-+/*
-+ * Wait for I/O completion of a sync buffer and return the I/O error code.
-+ */
-+static int
-+xfs_buf_iowait(
-+	struct xfs_buf	*bp)
-+{
-+	trace_xfs_buf_iowait(bp, _RET_IP_);
-+	wait_for_completion(&bp->b_iowait);
-+	trace_xfs_buf_iowait_done(bp, _RET_IP_);
-+
-+	return bp->b_error;
-+}
-+
- /*
-  * Synchronous buffer IO submission path, read or write.
-  */
-@@ -1553,12 +1567,7 @@ xfs_buf_submit_wait(
- 	error = __xfs_buf_submit(bp);
- 	if (error)
- 		goto out;
--
--	/* wait for completion before gathering the error from the buffer */
--	trace_xfs_buf_iowait(bp, _RET_IP_);
--	wait_for_completion(&bp->b_iowait);
--	trace_xfs_buf_iowait_done(bp, _RET_IP_);
--	error = bp->b_error;
-+	error = xfs_buf_iowait(bp);
- 
- out:
- 	/*
-@@ -1961,16 +1970,11 @@ xfs_buf_cmp(
- }
- 
- /*
-- * submit buffers for write.
-- *
-- * When we have a large buffer list, we do not want to hold all the buffers
-- * locked while we block on the request queue waiting for IO dispatch. To avoid
-- * this problem, we lock and submit buffers in groups of 50, thereby minimising
-- * the lock hold times for lists which may contain thousands of objects.
-- *
-- * To do this, we sort the buffer list before we walk the list to lock and
-- * submit buffers, and we plug and unplug around each group of buffers we
-- * submit.
-+ * Submit buffers for write. If wait_list is specified, the buffers are
-+ * submitted using sync I/O and placed on the wait list such that the caller can
-+ * iowait each buffer. Otherwise async I/O is used and the buffers are released
-+ * at I/O completion time. In either case, buffers remain locked until I/O
-+ * completes and the buffer is released from the queue.
-  */
- static int
- xfs_buf_delwri_submit_buffers(
-@@ -2012,21 +2016,22 @@ xfs_buf_delwri_submit_buffers(
- 		trace_xfs_buf_delwri_split(bp, _RET_IP_);
- 
- 		/*
--		 * We do all IO submission async. This means if we need
--		 * to wait for IO completion we need to take an extra
--		 * reference so the buffer is still valid on the other
--		 * side. We need to move the buffer onto the io_list
--		 * at this point so the caller can still access it.
-+		 * If we have a wait list, each buffer (and associated delwri
-+		 * queue reference) transfers to it and is submitted
-+		 * synchronously. Otherwise, drop the buffer from the delwri
-+		 * queue and submit async.
- 		 */
- 		bp->b_flags &= ~(_XBF_DELWRI_Q | XBF_WRITE_FAIL);
--		bp->b_flags |= XBF_WRITE | XBF_ASYNC;
-+		bp->b_flags |= XBF_WRITE;
- 		if (wait_list) {
--			xfs_buf_hold(bp);
-+			bp->b_flags &= ~XBF_ASYNC;
- 			list_move_tail(&bp->b_list, wait_list);
--		} else
-+			__xfs_buf_submit(bp);
-+		} else {
-+			bp->b_flags |= XBF_ASYNC;
- 			list_del_init(&bp->b_list);
--
--		xfs_buf_submit(bp);
-+			xfs_buf_submit(bp);
-+		}
- 	}
- 	blk_finish_plug(&plug);
- 
-@@ -2073,8 +2078,11 @@ xfs_buf_delwri_submit(
- 
- 		list_del_init(&bp->b_list);
- 
--		/* locking the buffer will wait for async IO completion. */
--		xfs_buf_lock(bp);
-+		/*
-+		 * Wait on the locked buffer, check for errors and unlock and
-+		 * release the delwri queue reference.
-+		 */
-+		xfs_buf_iowait(bp);
- 		error2 = bp->b_error;
- 		xfs_buf_relse(bp);
- 		if (!error)
-@@ -2121,22 +2129,18 @@ xfs_buf_delwri_pushbuf(
- 
- 	/*
- 	 * Delwri submission clears the DELWRI_Q buffer flag and returns with
--	 * the buffer on the wait list with an associated reference. Rather than
-+	 * the buffer on the wait list with the original reference. Rather than
- 	 * bounce the buffer from a local wait list back to the original list
- 	 * after I/O completion, reuse the original list as the wait list.
- 	 */
- 	xfs_buf_delwri_submit_buffers(&submit_list, buffer_list);
- 
- 	/*
--	 * The buffer is now under I/O and wait listed as during typical delwri
--	 * submission. Lock the buffer to wait for I/O completion. Rather than
--	 * remove the buffer from the wait list and release the reference, we
--	 * want to return with the buffer queued to the original list. The
--	 * buffer already sits on the original list with a wait list reference,
--	 * however. If we let the queue inherit that wait list reference, all we
--	 * need to do is reset the DELWRI_Q flag.
-+	 * The buffer is now locked, under I/O and wait listed on the original
-+	 * delwri queue. Wait for I/O completion, restore the DELWRI_Q flag and
-+	 * return with the buffer unlocked and on the original queue.
- 	 */
--	xfs_buf_lock(bp);
-+	xfs_buf_iowait(bp);
- 	error = bp->b_error;
- 	bp->b_flags |= _XBF_DELWRI_Q;
- 	xfs_buf_unlock(bp);
--- 
-2.17.1
+Cheers,
+
+Dave.
 
