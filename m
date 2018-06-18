@@ -1,128 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it0-f67.google.com ([209.85.214.67]:40285 "EHLO
-        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755310AbeFOQzV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Jun 2018 12:55:21 -0400
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:43374 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934676AbeFRUIz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jun 2018 16:08:55 -0400
+Received: by mail-ot0-f193.google.com with SMTP id i19-v6so19935173otk.10
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Jun 2018 13:08:55 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.21.1806122111400.1592@nanos.tec.linutronix.de>
-References: <20171228152710.891701433@linutronix.de> <20171228153308.286787253@linutronix.de>
- <alpine.DEB.2.20.1712282315030.1899@nanos> <CADRPPNTK1x_47fnk4Tor5QSPk2DEuEwNUQQ4dGu1P3QkQDyZeQ@mail.gmail.com>
- <alpine.DEB.2.21.1806122111400.1592@nanos.tec.linutronix.de>
-From: Yang Li <pku.leo@gmail.com>
-Date: Fri, 15 Jun 2018 11:55:20 -0500
-Message-ID: <CADRPPNQzy+v8wqGJj=yhTDT2gCWiSmbs=VTfin_mwby-wJoF7A@mail.gmail.com>
-Subject: Re: [patch V5 01/11] Documentation: Add license-rules.rst to describe
- how to properly identify file licenses
+In-Reply-To: <20180606150905.GC9426@magnolia>
+References: <20180529144339.16538-1-mszeredi@redhat.com> <20180529144339.16538-2-mszeredi@redhat.com>
+ <20180604084336.GA11333@infradead.org> <CAJfpegun8HyjODXguHstxYrGE2nuSoCCicaHT3yfYWMkxxmVWg@mail.gmail.com>
+ <20180606150905.GC9426@magnolia>
+From: Miklos Szeredi <miklos@szeredi.hu>
+Date: Mon, 18 Jun 2018 22:08:54 +0200
+Message-ID: <CAJfpeguMN4t80cUCxyTxeHW9_Hb61DzDRPzTa371dc2YQRHuZQ@mail.gmail.com>
+Subject: Re: [PATCH 01/39] vfs: dedpue: return loff_t
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linuxfoundation.org>, Andrew Morton <akpm@linuxfoundation.org>, Jonathan Corbet <corbet@lwn.net>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Christoph Hellwig <hch@lst.de>, Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <rob.herring@linaro.org>, Jonas Oberg <jonas@fsfe.org>, Joe Perches <joe@perches.com>, linux-xfs@vger.kernel.org, Charlemagne Lasse <charlemagnelasse@gmail.com>, Carmen Bianca Bakker <carmenbianca@fsfe.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Heiko Carstens <heiko.carstens@de.ibm.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Miklos Szeredi <mszeredi@redhat.com>, overlayfs <linux-unionfs@vger.kernel.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-xfs <linux-xfs@vger.kernel.org>, ocfs2-devel@oss.oracle.com
 
-On Tue, Jun 12, 2018 at 2:27 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
-> Yang,
->
-> On Tue, 12 Jun 2018, Yang Li wrote:
->> On Thu, Dec 28, 2017 at 4:17 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
->> > On Thu, 28 Dec 2017, Thomas Gleixner wrote:
+On Wed, Jun 6, 2018 at 5:09 PM, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> On Tue, Jun 05, 2018 at 10:33:22AM +0200, Miklos Szeredi wrote:
+>> On Mon, Jun 4, 2018 at 10:43 AM, Christoph Hellwig <hch@infradead.org> wrote:
+>> > On Tue, May 29, 2018 at 04:43:01PM +0200, Miklos Szeredi wrote:
+>> >> f_op->dedupe_file_range() gets a u64 length to dedup and returns an ssize_t
+>> >> actual length deduped.  This breaks badly on 32bit archs since the returned
+>> >> length will be truncated and possibly overflow into the sign bit (xfs and
+>> >> ocfs2 are affected, btrfs limits actual length to 16MiB).
 >> >
->> > Sorry for the spam. I somehow missed to refresh the patch before generating
->> > the mbox. Find below the correct version of that one which has ALL braces
->> > removed which we don't need.
->
->> I'm not sure how we reached the conclusion that we should remove ALL
->> braces?  I cannot find related discussion in the archive except for
->> the "WITH" case.
->
-> https://lkml.kernel.org/r/CAOFm3uEpM_tBErkOvqghcy+wbw0i4mSnafPBRC3HYZVQjsSyMw@mail.gmail.com
-
-Thanks Thomas,  But this email is mostly discussing the "WITH" case as
-I said, and it does mentioned that braces is (weakly) needed for other
-cases.
-
->
->> This is conflicting with the current SPDX spec at
->> https://spdx.org/spdx-specification-21-web-version quoted below and
->> also the explenation in your own file.
+>> > Can we just make it return 0 vs errno?  The only time we return
+>> > a different length than the one passed in is due to the btrfs cap.
+>> >
+>> > Given that this API started out on btrfs we should just do the cap
+>> > everywhere to not confuse userspace.
 >>
->> Quote from SPDX spec 2.1: More expressive composite license
->> expressions can be constructed using "OR", "AND", and "WITH" operators
->> similar to constructing mathematical expressions using arithmetic
->> operators. For the Tag:value format, any license expression that
->> consists of more than one license identifier and/or LicenseRef, should
->> be encapsulated by parentheses: "( )".
->
-> This is not relevant here:
->
->    For the Tag:value format, .....
->
-> The kernel does not generate SPDX files in Tag:value format. The kernel
-> uses SPDX license identifiers to reflect the actual license of a file.
-
-I'm not sure if I understood the Tag:value term correctly.  But it
-looks like to me that the "SPDX-License-Identifier: <SPDX License
-Expression>" is a tag:value in the SPDX spec.
-
-"The tag should appear on its own line in the source file, generally
-as part of a comment.
-
-SPDX-License-Identifier: <SPDX License Expression>"
-
-
->
->> > +   A <SPDX License Expression> is either an SPDX short form license
->> > +   identifier found on the SPDX License List, or the combination of two
->> > +   SPDX short form license identifiers separated by "WITH" when a license
->> > +   exception applies. When multiple licenses apply, an expression consists
->> > +   of keywords "AND", "OR" separating sub-expressions and surrounded by
->> > +   "(", ")" .
+>> And that's a completely arbitrary cap; sure btrfs started out with
+>> that, but there's no fundamental reason for that becoming the global
+>> limit.  Xfs now added a different, larger limit, so based on what
+>> reason should that limit be reduced?
 >>
->> Conflicting with the example
+>> I don't care either way, but at this stage I'm not going to change
+>> this patch, unless there's a very good reason to do so, because if I
+>> do someone will come and suggest another improvement, ad-infinitum...
 >
-> No, The keyword is 'separating sub-expressions'. It does not say license
-> identifiers.
+> I think we should hoist the MAX_RW_COUNT/2 limit to the VFS helpers
+> since afaict we generally cap max IO per call at MAX_RW_COUNT.
 
-But the first sentense declared that an expression can just be a short
-form license identifier.
+I don't quite get it.   That MAX_RW_COUNT is to protect against
+overflows in signed int.
 
-And the examples provided in the spec also proves it:
+Here we have a 64bit interface, so that's irrelevant, we can invent
+any cap we want.  Lets choose our favorite bike shed size.  Mine is
+1G.  But if that turns out too limiting it can be raised arbitrarily
+later.
 
-"Examples:
+>  (I
+> probably should've capped ocfs2 back when I did xfs, but forgot).  If
+> btrfs wants to keep their lower (16M) limit then they're free to do so;
+> the interface documentation allows for this.  One of the btrfs
+> developers seems to be working on a patch series to raise the limit[1]
+> anyway.
 
-SPDX-License-Identifier: (GPL-2.0 OR MIT)
-SPDX-License-Identifier: (LGPL-2.1 AND BSD-2-CLAUSE)
-SPDX-License-Identifier: (GPL-2.0+ WITH Bison-exception-2.2)"
+Yep, that got upstreamed now.  Which is good, we can just return zero
+or error from ->dedupe_file_range() and be done with that.
 
-
->
-> So these examples are completely compliant with the documentation:
->
->> > +      // SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note
->> > +      // SPDX-License-Identifier: GPL-2.0+ WITH Linux-syscall-note
->> > +      // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
->
-> Two license (exception) identifiers plus a operator. That's perfectly well
-> defined.
->
->> > +      // SPDX-License-Identifier: (GPL-2.0 WITH Linux-syscall-note) OR MIT
->
-> This is actually a case where you need parentheses and they separate the
-> sub-expression 'ID with EXC'.
->
-> Adding extra parentheses around any simple 'ID operator [ID|EXC]'
-> expression is really overkill and does not make stuff more
-> readable. Likewise in programming languages. Why would anyone write:
->
-> C et al.:       a = (b || c);
-> Pyhton:         a = (b and c)
-
-I think I agree with you that not having parentheses in these cases
-probably make more sense.  But I think we are having a conflict with
-the spec now, probably we should update the SPDX spec to be aligned?
-Actually a lot of the current SPDX tags in kernel tree are following
-the spec to use the parentheses.  We should do something to avoid the
-confusion in the future IMO.
-
-Regards,
-Leo
+Thanks,
+Miklos
