@@ -1,278 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:38864 "EHLO mx1.redhat.com"
+Received: from mail-dm3nam03on0100.outbound.protection.outlook.com ([104.47.41.100]:53414
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S966407AbeFORnn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 15 Jun 2018 13:43:43 -0400
-Date: Fri, 15 Jun 2018 13:43:41 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2 2/2] xfs: use sync buffer I/O for sync delwri queue
- submission
-Message-ID: <20180615174341.GA16456@bfoster>
-References: <20180613110516.65494-1-bfoster@redhat.com>
- <20180613110516.65494-3-bfoster@redhat.com>
- <20180615112820.GB3230@infradead.org>
- <20180615115334.GC2857@bfoster>
- <20180615121602.GA32099@infradead.org>
- <20180615123956.GD2857@bfoster>
- <20180615163138.GE8128@magnolia>
+        id S1754620AbeFRDtx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 17 Jun 2018 23:49:53 -0400
+From: "Xu, Wen" <wen.xu@gatech.edu>
+Subject: Kernel oops at NULL pointer when performing readlink on a fuzzed v5
+ image
+Date: Mon, 18 Jun 2018 03:49:52 +0000
+Message-ID: <15FCAC1E-1320-4122-8768-A45FFCFD1AC2@gatech.edu>
+Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <27D5DB2BF729B648BDBDDAB870D9594F@namprd07.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180615163138.GE8128@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-On Fri, Jun 15, 2018 at 09:31:38AM -0700, Darrick J. Wong wrote:
-> On Fri, Jun 15, 2018 at 08:39:56AM -0400, Brian Foster wrote:
-> > On Fri, Jun 15, 2018 at 05:16:02AM -0700, Christoph Hellwig wrote:
-> > > On Fri, Jun 15, 2018 at 07:53:35AM -0400, Brian Foster wrote:
-> > > > Not totally sure I follow... do you essentially mean to rename
-> > > > xfs_buf_submit_wait() -> xfs_buf_submit() and make the iowait
-> > > > conditional on !XBF_ASYNC and absence of some new "sync_nowait"
-> > > > parameter to the function? Could you clarify how you envision the
-> > > > updated xfs_buf_submit() function signature to look?
-> > > > 
-> > > > If I'm following correctly, that seems fairly reasonable at first
-> > > > thought. This is a separate patch though (refactoring the interface vs.
-> > > > refactoring the implementation to fix a bug).
-> > > 
-> > > Well.  I'd suggest something like the patch below for patch 1:
-> > > 
-> > 
-> > Ok, codewise I don't have much of a preference, but I don't think it's
-> > worth redoing the regression testing and lowmem testing and whatnot just
-> > to change how the guts are refactored here. What's the endgame? I came
-> > up with the following on top of patch 2. Compile tested only, and I can
-> > refold the _common() helper back into the caller and invert the
-> > nowait logic or whatnot..
-> 
-> Whatever you all decide, would you mind adding a comment to xfs_buf.c
-> describing how delwri buffers are supposed to work, particularly with
-> regard to what are the buffer states specific to delwri lists, and how
-> the wait list that gets passed around works?  I need to check my
-> assumptions about how this mechanism functions. :)
-> 
-
-It's really just the DELWRI_Q flag and the list itself, which I think is
-covered in the comments in _delwri_queue() (the bit around the buffer
-being lazily removed from the queue in some cases).
-
-Otherwise, the fact the buffer could be DELWRI_Q while on the wait list
-is the problem this is trying to resolve... that's an invalid state. The
-change this makes is to essentially make sure that once submitted, the
-buffer remains locked until it is fully released from the delwri queue.
-
-The wait list is really just a local thing to xfs_buf_delwri_submit()
-and shouldn't be relevant external to the mechanism itself. I've updated
-the comment above xfs_buf_delwri_submit_buffers() to reflect that. I'm
-not quite sure if you're looking for more than that..? Perhaps I'll just
-post the v3 with comment tweaks and go from there..
-
-Brian
-
-> (AKA I looked at both versions, thought 'this delwri queue list stuff
-> looks rather clever...' and then promptly got distracted by mkfs-config
-> and other stuff. :/)
-> 
-> --D
-> 
-> > Brian
-> > 
-> > --- 8< ---
-> > 
-> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > index 311ca301b7fd..89d8cedf2828 100644
-> > --- a/fs/xfs/xfs_buf.c
-> > +++ b/fs/xfs/xfs_buf.c
-> > @@ -757,11 +757,7 @@ _xfs_buf_read(
-> >  	bp->b_flags &= ~(XBF_WRITE | XBF_ASYNC | XBF_READ_AHEAD);
-> >  	bp->b_flags |= flags & (XBF_READ | XBF_ASYNC | XBF_READ_AHEAD);
-> >  
-> > -	if (flags & XBF_ASYNC) {
-> > -		xfs_buf_submit(bp);
-> > -		return 0;
-> > -	}
-> > -	return xfs_buf_submit_wait(bp);
-> > +	return xfs_buf_submit(bp);
-> >  }
-> >  
-> >  xfs_buf_t *
-> > @@ -846,7 +842,7 @@ xfs_buf_read_uncached(
-> >  	bp->b_flags |= XBF_READ;
-> >  	bp->b_ops = ops;
-> >  
-> > -	xfs_buf_submit_wait(bp);
-> > +	xfs_buf_submit(bp);
-> >  	if (bp->b_error) {
-> >  		int	error = bp->b_error;
-> >  		xfs_buf_relse(bp);
-> > @@ -1249,7 +1245,7 @@ xfs_bwrite(
-> >  	bp->b_flags &= ~(XBF_ASYNC | XBF_READ | _XBF_DELWRI_Q |
-> >  			 XBF_WRITE_FAIL | XBF_DONE);
-> >  
-> > -	error = xfs_buf_submit_wait(bp);
-> > +	error = xfs_buf_submit(bp);
-> >  	if (error) {
-> >  		xfs_force_shutdown(bp->b_target->bt_mount,
-> >  				   SHUTDOWN_META_IO_ERROR);
-> > @@ -1459,7 +1455,7 @@ _xfs_buf_ioapply(
-> >   * itself.
-> >   */
-> >  static int
-> > -__xfs_buf_submit(
-> > +__xfs_buf_submit_common(
-> >  	struct xfs_buf	*bp)
-> >  {
-> >  	trace_xfs_buf_submit(bp, _RET_IP_);
-> > @@ -1505,32 +1501,6 @@ __xfs_buf_submit(
-> >  	return 0;
-> >  }
-> >  
-> > -void
-> > -xfs_buf_submit(
-> > -	struct xfs_buf	*bp)
-> > -{
-> > -	int		error;
-> > -
-> > -	ASSERT(bp->b_flags & XBF_ASYNC);
-> > -
-> > -	/*
-> > -	 * The caller's reference is released during I/O completion.
-> > -	 * This occurs some time after the last b_io_remaining reference is
-> > -	 * released, so after we drop our Io reference we have to have some
-> > -	 * other reference to ensure the buffer doesn't go away from underneath
-> > -	 * us. Take a direct reference to ensure we have safe access to the
-> > -	 * buffer until we are finished with it.
-> > -	 */
-> > -	xfs_buf_hold(bp);
-> > -
-> > -	error = __xfs_buf_submit(bp);
-> > -	if (error)
-> > -		xfs_buf_ioend(bp);
-> > -
-> > -	/* Note: it is not safe to reference bp now we've dropped our ref */
-> > -	xfs_buf_rele(bp);
-> > -}
-> > -
-> >  /*
-> >   * Wait for I/O completion of a sync buffer and return the I/O error code.
-> >   */
-> > @@ -1549,30 +1519,33 @@ xfs_buf_iowait(
-> >   * Synchronous buffer IO submission path, read or write.
-> >   */
-> >  int
-> > -xfs_buf_submit_wait(
-> > -	struct xfs_buf	*bp)
-> > +__xfs_buf_submit(
-> > +	struct xfs_buf	*bp,
-> > +	bool		sync_nowait)
-> >  {
-> >  	int		error;
-> >  
-> > -	ASSERT(!(bp->b_flags & XBF_ASYNC));
-> > -
-> >  	/*
-> > -	 * For synchronous IO, the IO does not inherit the submitters reference
-> > -	 * count, nor the buffer lock. Hence we cannot release the reference we
-> > -	 * are about to take until we've waited for all IO completion to occur,
-> > -	 * including any xfs_buf_ioend_async() work that may be pending.
-> > +	 * Grab a reference so the buffer does not go away underneath us. For
-> > +	 * async buffers, I/O completion drops the callers reference, which
-> > +	 * could occur before submission returns.
-> >  	 */
-> >  	xfs_buf_hold(bp);
-> >  
-> > -	error = __xfs_buf_submit(bp);
-> > -	if (error)
-> > +	error = __xfs_buf_submit_common(bp);
-> > +	if (error) {
-> > +		if (bp->b_flags & XBF_ASYNC)
-> > +			xfs_buf_ioend(bp);
-> >  		goto out;
-> > -	error = xfs_buf_iowait(bp);
-> > +	}
-> >  
-> > +	if (!(bp->b_flags & XBF_ASYNC) && !sync_nowait)
-> > +		error = xfs_buf_iowait(bp);
-> >  out:
-> >  	/*
-> > -	 * all done now, we can release the hold that keeps the buffer
-> > -	 * referenced for the entire IO.
-> > +	 * Release the hold that keeps the buffer referenced for the entire
-> > +	 * I/O. Note that if the buffer is async, it is not safe to reference
-> > +	 * after this release.
-> >  	 */
-> >  	xfs_buf_rele(bp);
-> >  	return error;
-> > @@ -1984,6 +1957,7 @@ xfs_buf_delwri_submit_buffers(
-> >  	LIST_HEAD		(submit_list);
-> >  	int			pinned = 0;
-> >  	struct blk_plug		plug;
-> > +	bool			nowait = false;
-> >  
-> >  	list_sort(NULL, buffer_list, xfs_buf_cmp);
-> >  
-> > @@ -2025,12 +1999,12 @@ xfs_buf_delwri_submit_buffers(
-> >  		if (wait_list) {
-> >  			bp->b_flags &= ~XBF_ASYNC;
-> >  			list_move_tail(&bp->b_list, wait_list);
-> > -			__xfs_buf_submit(bp);
-> > +			nowait = true;
-> >  		} else {
-> >  			bp->b_flags |= XBF_ASYNC;
-> >  			list_del_init(&bp->b_list);
-> > -			xfs_buf_submit(bp);
-> >  		}
-> > +		__xfs_buf_submit(bp, nowait);
-> >  	}
-> >  	blk_finish_plug(&plug);
-> >  
-> > diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> > index d24dbd4dac39..9bae5c201003 100644
-> > --- a/fs/xfs/xfs_buf.h
-> > +++ b/fs/xfs/xfs_buf.h
-> > @@ -298,8 +298,13 @@ extern void __xfs_buf_ioerror(struct xfs_buf *bp, int error,
-> >  		xfs_failaddr_t failaddr);
-> >  #define xfs_buf_ioerror(bp, err) __xfs_buf_ioerror((bp), (err), __this_address)
-> >  extern void xfs_buf_ioerror_alert(struct xfs_buf *, const char *func);
-> > -extern void xfs_buf_submit(struct xfs_buf *bp);
-> > -extern int xfs_buf_submit_wait(struct xfs_buf *bp);
-> > +
-> > +extern int __xfs_buf_submit(struct xfs_buf *bp, bool);
-> > +static inline int xfs_buf_submit(struct xfs_buf *bp)
-> > +{
-> > +	return __xfs_buf_submit(bp, false);
-> > +}
-> > +
-> >  extern void xfs_buf_iomove(xfs_buf_t *, size_t, size_t, void *,
-> >  				xfs_buf_rw_t);
-> >  #define xfs_buf_zero(bp, off, len) \
-> > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> > index b181b5f57a19..724a76d87564 100644
-> > --- a/fs/xfs/xfs_log_recover.c
-> > +++ b/fs/xfs/xfs_log_recover.c
-> > @@ -196,7 +196,7 @@ xlog_bread_noalign(
-> >  	bp->b_io_length = nbblks;
-> >  	bp->b_error = 0;
-> >  
-> > -	error = xfs_buf_submit_wait(bp);
-> > +	error = xfs_buf_submit(bp);
-> >  	if (error && !XFS_FORCED_SHUTDOWN(log->l_mp))
-> >  		xfs_buf_ioerror_alert(bp, __func__);
-> >  	return error;
-> > @@ -5707,7 +5707,7 @@ xlog_do_recover(
-> >  	bp->b_flags |= XBF_READ;
-> >  	bp->b_ops = &xfs_sb_buf_ops;
-> >  
-> > -	error = xfs_buf_submit_wait(bp);
-> > +	error = xfs_buf_submit(bp);
-> >  	if (error) {
-> >  		if (!XFS_FORCED_SHUTDOWN(mp)) {
-> >  			xfs_buf_ioerror_alert(bp, __func__);
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+SGksDQoNCkhlcmUgaXMgYW4gaXNzdWUgSSBmb3VuZCB3aGVuIGZ1enppbmcgVjUgZmlsZXN5c3Rl
+bSByZWxhdGVkIHdpdGggc29mdGxpbmsuDQoNCi0gUmVwcm9kdWNlICg0LjE3L2Zvci1uZXh0IGJy
+YW5jaCkNCiMgbWtkaXIgbW50DQojIG1vdW50IC10IHhmcyBmaW5hbC5pbWcgbW50DQojIGdjYyAt
+byBwb2MgcG9jLmMNCiMgLi9wb2MgLi9tbnQNCg0KLSBQT0MgKHBvYy5jKQ0KI2RlZmluZSBfR05V
+X1NPVVJDRQ0KI2luY2x1ZGUgPHN5cy90eXBlcy5oPg0KI2luY2x1ZGUgPHN5cy9tb3VudC5oPg0K
+I2luY2x1ZGUgPHN5cy9tbWFuLmg+DQojaW5jbHVkZSA8c3lzL3N0YXQuaD4NCiNpbmNsdWRlIDxz
+eXMveGF0dHIuaD4NCg0KI2luY2x1ZGUgPGRpcmVudC5oPg0KI2luY2x1ZGUgPGVycm5vLmg+DQoj
+aW5jbHVkZSA8ZXJyb3IuaD4NCiNpbmNsdWRlIDxmY250bC5oPg0KI2luY2x1ZGUgPHN0ZGlvLmg+
+DQojaW5jbHVkZSA8c3RkbGliLmg+DQojaW5jbHVkZSA8c3RyaW5nLmg+DQojaW5jbHVkZSA8dW5p
+c3RkLmg+DQoNCiNpbmNsdWRlIDxsaW51eC9mYWxsb2MuaD4NCiNpbmNsdWRlIDxsaW51eC9sb29w
+Lmg+DQoNCi8vIGRlcml2ZWQgZnJvbSBodHRwczovL2dpdGh1Yi5jb20vb3JhY2xlL2tlcm5lbC1m
+dXp6aW5nL2Jsb2IvbWFzdGVyL2luY2x1ZGUvbW91bnQuaGgNCnN0YXRpYyB2b2lkIGFjdGl2aXR5
+KGNoYXIgKm1wb2ludCkgew0KDQogIGNoYXIgKmZvb19iYXJfYmF6Ow0KICBjaGFyICpzbG47DQog
+IGludCBlcnI7DQoNCiAgc3RhdGljIGludCBidWZbODE5Ml07DQogIG1lbXNldChidWYsIDAsIHNp
+emVvZihidWYpKTsNCg0KICBlcnIgPSBhc3ByaW50ZigmZm9vX2Jhcl9iYXosICIlcy9mb28vYmFy
+L2JheiIsIG1wb2ludCk7DQogIGVyciA9IGFzcHJpbnRmKCZzbG4sICIlcy9mb28vYmFyL3NsbiIs
+IG1wb2ludCk7DQoNCiAgaW50IGZkID0gb3Blbihmb29fYmFyX2JheiwgT19SRFdSIHwgT19UUlVO
+QywgMDc3Nyk7DQogIGlmIChmZCA+PSAwKSB7DQogICAgd3JpdGUoZmQsIChjaGFyICopYnVmLCA1
+MTcpOw0KICAgIHdyaXRlKGZkLCAoY2hhciAqKWJ1Ziwgc2l6ZW9mKGJ1ZikpOw0KICAgIGNsb3Nl
+KGZkKTsNCiAgfQ0KDQogIHVubGluayhmb29fYmFyX2Jheik7DQoNCiAgY2hhciBidWYyWzExM107
+DQogIG1lbXNldChidWYyLCAwLCBzaXplb2YoYnVmMikpOw0KICByZWFkbGluayhzbG4sIGJ1ZjIs
+IHNpemVvZihidWYyKSk7DQoNCn0NCg0KaW50IG1haW4oaW50IGFyZ2MsIGNoYXIgKmFyZ3ZbXSkg
+ew0KICBhY3Rpdml0eShhcmd2WzFdKTsNCiAgcmV0dXJuIDA7DQp9DQoNCi0gS2VybmVsIG1lc3Nh
+Z2UNClsgIDMxNS4yMDc5NTZdIFhGUyAobG9vcDApOiBNb3VudGluZyBWNSBGaWxlc3lzdGVtDQpb
+ICAzMTUuMjE0ODUxXSBYRlMgKGxvb3AwKTogRW5kaW5nIGNsZWFuIG1vdW50DQpbICAzMTUuMjE0
+OTc2XSBGaWxlc3lzdGVtICJsb29wMCI6IHJlc2VydmUgYmxvY2tzIGRlcGxldGVkISBDb25zaWRl
+ciBpbmNyZWFzaW5nIHJlc2VydmUgcG9vbCBzaXplLg0KWyAgMzE1LjIxNDk3OV0gWEZTIChsb29w
+MCk6IFBlci1BRyByZXNlcnZhdGlvbiBmb3IgQUcgMCBmYWlsZWQuICBGaWxlc3lzdGVtIG1heSBy
+dW4gb3V0IG9mIHNwYWNlLg0KWyAgMzE1LjIxNDk4MV0gWEZTIChsb29wMCk6IFBlci1BRyByZXNl
+cnZhdGlvbiBmb3IgQUcgMCBmYWlsZWQuICBGaWxlc3lzdGVtIG1heSBydW4gb3V0IG9mIHNwYWNl
+Lg0KWyAgMzI2LjA0MTcyOF0gWEZTIChsb29wMCk6IEZhaWxlZCB0byByZW1vdmUgaW5vZGUocykg
+ZnJvbSB1bmxpbmtlZCBsaXN0LiBQbGVhc2UgZnJlZSBzcGFjZSwgdW5tb3VudCBhbmQgcnVuIHhm
+c19yZXBhaXIuDQpbICAzMjYuMDQxODc3XSBCVUc6IHVuYWJsZSB0byBoYW5kbGUga2VybmVsIE5V
+TEwgcG9pbnRlciBkZXJlZmVyZW5jZSBhdCAwMDAwMDAwMDAwMDAwMDAwDQpbICAzMjYuMDQzNDc5
+XSBQR0QgODAwMDAwMDIzMzc2YjA2NyBQNEQgODAwMDAwMDIzMzc2YjA2NyBQVUQgMjJkMzdjMDY3
+IFBNRCAwDQpbICAzMjYuMDQ0ODY0XSBPb3BzOiAwMDAwIFsjMV0gU01QIFBUSQ0KWyAgMzI2LjA0
+NTU4Ml0gTW9kdWxlcyBsaW5rZWQgaW46IHNuZF9oZGFfY29kZWNfZ2VuZXJpYyBzbmRfaGRhX2lu
+dGVsIHNuZF9oZGFfY29kZWMgc25kX2h3ZGVwIHNuZF9oZGFfY29yZSBzbmRfcGNtIHNuZF90aW1l
+ciBzbmQgc291bmRjb3JlIGkyY19waWl4NCBtYWNfaGlkIGliX2lzZXIgcmRtYV9jbSBpd19jbSBp
+Yl9jbSBpYl9jb3JlIGlzY3NpX3RjcCBsaWJpc2NzaV90Y3AgbGliaXNjc2kgc2NzaV90cmFuc3Bv
+cnRfaXNjc2kgYXV0b2ZzNCByYWlkMTAgcmFpZDQ1NiBhc3luY19yYWlkNl9yZWNvdiBhc3luY19t
+ZW1jcHkgYXN5bmNfcHEgYXN5bmNfeG9yIGFzeW5jX3R4IHJhaWQxIHJhaWQwIG11bHRpcGF0aCBs
+aW5lYXIgcXhsIGRybV9rbXNfaGVscGVyIHN5c2NvcHlhcmVhIHN5c2ZpbGxyZWN0IHN5c2ltZ2Js
+dCBmYl9zeXNfZm9wcyB0dG0gZHJtIGNyY3QxMGRpZl9wY2xtdWwgY3JjMzJfcGNsbXVsIDgxMzl0
+b28gYWVzbmlfaW50ZWwgYWVzX3g4Nl82NCBjcnlwdG9fc2ltZCBjcnlwdGQgZ2x1ZV9oZWxwZXIg
+ZmxvcHB5IHBhdGFfYWNwaSA4MTM5Y3AgbWlpDQpbICAzMjYuMDU1MDg0XSBDUFU6IDEgUElEOiAx
+MzI5IENvbW06IHBvYyBOb3QgdGFpbnRlZCA0LjE3LjAtcmM3LW5vLWthc2FuKyAjMQ0KWyAgMzI2
+LjA1NjQ0OF0gSGFyZHdhcmUgbmFtZTogUUVNVSBTdGFuZGFyZCBQQyAoaTQ0MEZYICsgUElJWCwg
+MTk5NiksIEJJT1MgVWJ1bnR1LTEuOC4yLTF1YnVudHUxIDA0LzAxLzIwMTQNClsgIDMyNi4wNTgz
+NjNdIFJJUDogMDAxMDpzdHJsZW4rMHgwLzB4MjANClsgIDMyNi4wNTkwOThdIFJTUDogMDAxODpm
+ZmZmYTExNzgwYzdmZTQ4IEVGTEFHUzogMDAwMTAyMDcNClsgIDMyNi4wNjAxNDJdIFJBWDogMDAw
+MDAwMDAwMDAwMDAwMCBSQlg6IDAwMDAwMDAwMDAwMDAwNzEgUkNYOiAwMDAwMDAwMDAwMDAwMDE3
+DQpbICAzMjYuMDYxNTM4XSBSRFg6IDAwMDAwMDAwMDAwMDAwMDAgUlNJOiAwMDAwMDAwMDAwMDAw
+MDcxIFJESTogMDAwMDAwMDAwMDAwMDAwMA0KWyAgMzI2LjA2Mjk0MV0gUkJQOiBmZmZmYTExNzgw
+YzdmZTY4IFIwODogMDAwMDAwMDAwMDAyNmNlMCBSMDk6IGZmZmZmZmZmOTYyN2ExZDQNClsgIDMy
+Ni4wNjQzNzBdIFIxMDogZmZmZmExMTc4MGM3ZmVhMCBSMTE6IGZmZmY4ZDllMmZjNGEyMDAgUjEy
+OiAwMDAwMDAwMDAwMDAwMDAwDQpbICAzMjYuMDY1NzgxXSBSMTM6IDAwMDA3ZmZlNjNiZDM0YjAg
+UjE0OiAwMDAwN2ZmZTYzYmQzNGIwIFIxNTogMDAwMDAwMDAwMDAwMDA3MQ0KWyAgMzI2LjA2NzE4
+NV0gRlM6ICAwMDAwN2Y2MGQ0OGI0NzAwKDAwMDApIEdTOmZmZmY4ZDllM2ZkMDAwMDAoMDAwMCkg
+a25sR1M6MDAwMDAwMDAwMDAwMDAwMA0KWyAgMzI2LjA2ODc4Nl0gQ1M6ICAwMDEwIERTOiAwMDAw
+IEVTOiAwMDAwIENSMDogMDAwMDAwMDA4MDA1MDAzMw0KWyAgMzI2LjA2OTkyMl0gQ1IyOiAwMDAw
+MDAwMDAwMDAwMDAwIENSMzogMDAwMDAwMDIzMDBlNjAwMCBDUjQ6IDAwMDAwMDAwMDAwMDA2ZTAN
+ClsgIDMyNi4wNzE2NDNdIENhbGwgVHJhY2U6DQpbICAzMjYuMDcyMjE3XSAgPyByZWFkbGlua19j
+b3B5KzB4MjkvMHg1MA0KWyAgMzI2LjA3Mjk4OF0gIHZmc19yZWFkbGluaysweDY2LzB4MTMwDQpb
+ICAzMjYuMDczNzA5XSAgZG9fcmVhZGxpbmthdCsweGZhLzB4MTIwDQpbICAzMjYuMDc0NDQzXSAg
+X194NjRfc3lzX3JlYWRsaW5rKzB4MWYvMHgzMA0KWyAgMzI2LjA3NTI2NF0gIGRvX3N5c2NhbGxf
+NjQrMHg1YS8weDExMA0KWyAgMzI2LjA3NjAxOF0gIGVudHJ5X1NZU0NBTExfNjRfYWZ0ZXJfaHdm
+cmFtZSsweDQ0LzB4YTkNClsgIDMyNi4wNzcwMjZdIFJJUDogMDAzMzoweDdmNjBkNDNjN2EzNw0K
+WyAgMzI2LjA3NzczNV0gUlNQOiAwMDJiOjAwMDA3ZmZlNjNiZDMzYzggRUZMQUdTOiAwMDAwMDIw
+MiBPUklHX1JBWDogMDAwMDAwMDAwMDAwMDA1OQ0KWyAgMzI2LjA3OTIwNV0gUkFYOiBmZmZmZmZm
+ZmZmZmZmZmRhIFJCWDogMDAwMDAwMDAwMDAwMDAwMCBSQ1g6IDAwMDA3ZjYwZDQzYzdhMzcNClsg
+IDMyNi4wODA2MDddIFJEWDogMDAwMDAwMDAwMDAwMDA3MSBSU0k6IDAwMDA3ZmZlNjNiZDM0YjAg
+UkRJOiAwMDAwMDAwMDAxYzQyMTAwDQpbICAzMjYuMDgxOTk1XSBSQlA6IDAwMDA3ZmZlNjNiZDM1
+MzAgUjA4OiAwMDAwMDAwMDAwMDAwMDAyIFIwOTogMDAwMDAwMDAwMDAwMDAwMQ0KWyAgMzI2LjA4
+MzM4NV0gUjEwOiAwMDAwMDAwMDAwMDAwNThiIFIxMTogMDAwMDAwMDAwMDAwMDIwMiBSMTI6IDAw
+MDAwMDAwMDA0MDBjMjANClsgIDMyNi4wODQ3ODRdIFIxMzogMDAwMDdmZmU2M2JkMzYzMCBSMTQ6
+IDAwMDAwMDAwMDAwMDAwMDAgUjE1OiAwMDAwMDAwMDAwMDAwMDAwDQpbICAzMjYuMDg2MTcyXSBD
+b2RlOiA4OSBmOCA0OCA4OSBlNSBmNiA4MiBjMCBjZSAxMCA5NyAyMCA3NCAxMCA0OCA4MyBjMCAw
+MSAwZiBiNiAxMCBmNiA4MiBjMCBjZSAxMCA5NyAyMCA3NSBmMCA1ZCBjMyA5MCA2NiAyZSAwZiAx
+ZiA4NCAwMCAwMCAwMCAwMCAwMCA8ODA+IDNmIDAwIDU1IDQ4IDg5IGU1IDc0IDExIDQ4IDg5IGY4
+IDQ4IDgzIGMwIDAxIDgwIDM4IDAwIDc1IGY3DQpbICAzMjYuMDg5ODM0XSBSSVA6IHN0cmxlbisw
+eDAvMHgyMCBSU1A6IGZmZmZhMTE3ODBjN2ZlNDgNClsgIDMyNi4wOTA4MzhdIENSMjogMDAwMDAw
+MDAwMDAwMDAwMA0KWyAgMzI2LjA5MTU2Nl0gLS0tWyBlbmQgdHJhY2UgYzUwZWFlNzNiNzFiYTQ1
+ZSBd4oCUDQoNCkZpbGVzOg0KZmluYWwuaW1nLnppcDogaHR0cHM6Ly9idWd6aWxsYS5rZXJuZWwu
+b3JnL2F0dGFjaG1lbnQuY2dpP2lkPTI3NjYzOQ0KDQpGb3IgZGVidWdnaW5nIGNvbnZlbmllbmNl
+LCBoZXJlIGFyZSB0aGUgYnl0ZXMgbXV0YXRlZCBmcm9tIHRoZSBvcmlnaW5hbCBzZWVkIGltYWdl
+Lg0KJCBjbXAgLWwgZmluYWwuaW1nIHhmcy0xYWctY3JjLmltZyB8IGdhd2sgJ3twcmludGYgIiUw
+OFggJTAyWCAlMDJYXG4iLCAkMSwgc3RydG9udW0oMCQyKSwgc3RydG9udW0oMCQzKX0nDQowMDAw
+MDA5NyAwMCAwMQ0KMDAwMDAwOTggMDAgMzQNCjAwMDAwMEUxIDVGIEU1DQowMDAwMDBFMiAyOSBD
+Rg0KMDAwMDAwRTMgNzUgQkINCjAwMDAwMEU0IDQyIDE1DQowMEVCQzg2NSAzOCA1OQ0KMDBFQkM4
+NjYgNTggODQNCjAwRUJDODY3IEZDIDQxDQowMEVCQzg2OCBFMCA2RA0KMDBFQkM4QzEgRTkgRTUN
+Cg0KLVdlbiANCg0K
