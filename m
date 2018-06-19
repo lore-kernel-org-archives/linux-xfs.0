@@ -1,143 +1,252 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:59610 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753202AbeFTPRu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 20 Jun 2018 11:17:50 -0400
-Date: Wed, 20 Jun 2018 11:17:49 -0400
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH v2 4/7] dm: prevent DAX mounts if not supported
-Message-ID: <20180620151748.GA4847@redhat.com>
-References: <20180529195106.14268-1-ross.zwisler@linux.intel.com>
- <20180529195106.14268-5-ross.zwisler@linux.intel.com>
- <20180601215513.GA18712@redhat.com>
- <20180604231508.GA10666@linux.intel.com>
+Received: from aserp2130.oracle.com ([141.146.126.79]:38222 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751602AbeFSFDs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 01:03:48 -0400
+Date: Mon, 18 Jun 2018 22:03:13 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [RFC PATCH 0/5] kbuild: build modules from code in multiple
+ directories.
+Message-ID: <20180619050313.GK8128@magnolia>
+References: <152929708853.17463.17302660556961083137.stgit@noble>
+ <20180618082017.GA4752@infradead.org>
+ <87po0ne7zw.fsf@notabene.neil.brown.name>
+ <20180619044748.GA18671@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180604231508.GA10666@linux.intel.com>
+In-Reply-To: <20180619044748.GA18671@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>, Toshi Kani <toshi.kani@hpe.com>, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: NeilBrown <neilb@suse.com>, Masahiro Yamada <yamada.masahiro@socionext.com>, Michal Marek <michal.lkml@markovi.net>, linux-kernel@vger.kernel.org, linux-kbuild@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Mon, Jun 04 2018 at  7:15pm -0400,
-Ross Zwisler <ross.zwisler@linux.intel.com> wrote:
-
-> On Fri, Jun 01, 2018 at 05:55:13PM -0400, Mike Snitzer wrote:
-> > On Tue, May 29 2018 at  3:51pm -0400,
-> > Ross Zwisler <ross.zwisler@linux.intel.com> wrote:
+On Mon, Jun 18, 2018 at 09:47:48PM -0700, Christoph Hellwig wrote:
+> On Tue, Jun 19, 2018 at 02:05:23PM +1000, NeilBrown wrote:
+> > From: NeilBrown <neilb@suse.com>
+> > Date: Tue, 19 Jun 2018 13:59:16 +1000
+> > Subject: [PATCH] kbuild/xfs: example modobj-m conversion
 > > 
-> > > Currently the code in dm_dax_direct_access() only checks whether the target
-> > > type has a direct_access() operation defined, not whether the underlying
-> > > block devices all support DAX.  This latter property can be seen by looking
-> > > at whether we set the QUEUE_FLAG_DAX request queue flag when creating the
-> > > DM device.
-> > 
-> > Wait... I thought DAX support was all or nothing?
+> > This is a demonstration patch to show how
+> > xfs can be changed to make use of the proposed modobj-m=
+> > functionality, should the xfs developers want that.
 > 
-> Right, it is, and that's what I'm trying to capture.  The point of this series
-> is to make sure that we don't use DAX thru DM if one of the DM members doesn't
-> support DAX.
+> Well, IFF we go with this new functionality I think everyone should
+> be using it instead of the current hacks.
 > 
-> This is a bit tricky, though, because as you've pointed out there are a lot of
-> elements that go into a block device actually supporting DAX.  
+> So text like the above should be in the series cover letter, and this
+> patch should have an actual description..
 > 
-> First, the block device has to have a direct_access() operation defined in its
-> struct dax_operations table.  This is a static definition in the drivers,
-> though, so it's necessary but not sufficient.  For example, the PMEM driver
-> always defines a direct_access() operation, but depending on the mode of the
-> namespace (raw, fsdax or sector) it may or may not support DAX.
-> 
-> The next step is that a driver needs to say that he block queue supports
-> QUEUE_FLAG_DAX.  This again is necessary but not sufficient.  The PMEM driver
-> currently sets this for all namespace modes, but I agree that this should be
-> restricted to modes that support DAX.  Even once we do that, though, for the
-> block driver this isn't fully sufficient.  We'd really like users to call
-> bdev_dax_supported() so it can run some additional tests to make sure that DAX
-> will work.
-> 
-> So, the real test that filesystems rely on is bdev_dax_suppported().
-> 
-> The trick is that with DM we need to verify each block device via
-> bdev_dax_supported() just like a filesystem would, and then have some way of
-> communicating the result of all those checks to the filesystem which is
-> eventually mounted on the DM device.  At DAX mount time the filesystem will
-> call bdev_dax_supported() on the DM device, but it'll really only check the
-> first device.  
-> 
-> So, the strategy is to have DM manually check each member device via
-> bdev_dax_supported() then if they all pass set QUEUE_FLAG_DAX.  This then
-> becomes our one source of truth on whether or not a DM device supports DAX.
-> When the filesystem mounts with DAX support it'll also run
-> bdev_dax_supported(), but if we have QUEUE_FLAG_DAX set on the DM device, we
-> know that this check will pass.
-> 
-> > > This is problematic if we have, for example, a dm-linear device made up of
-> > > a PMEM namespace in fsdax mode followed by a ramdisk from BRD.
-> > > QUEUE_FLAG_DAX won't be set on the dm-linear device's request queue, but
-> > > we have a working direct_access() entry point and the first member of the
-> > > dm-linear set *does* support DAX.
-> > 
-> > If you don't have a uniformly capable device then it is very dangerous
-> > to advertise that the entire device has a certain capability.  That
-> > completely bit me in the past with discard (because for every IO I
-> > wasn't then checking if the destination device supported discards).
-> >
-> > It is all well and good that you're adding that check here.  But what I
-> > don't like is how you're saying QUEUE_FLAG_DAX implies direct_access()
-> > operation exists.. yet for raw PMEM namespaces we just discussed how
-> > that is a lie.
-> 
-> QUEUE_FLAG_DAX does imply that direct_access() exits.  However, as discussed
-> above for a given bdev we really do need to check bdev_dax_supported().
-> 
-> > SO this type of change showcases how the QUEUE_FLAG_DAX doesn't _really_
-> > imply direct_access() exists.
-> > 
-> > > This allows the user to create a filesystem on the dm-linear device, and
-> > > then mount it with DAX.  The filesystem's bdev_dax_supported() test will
-> > > pass because it'll operate on the first member of the dm-linear device,
-> > > which happens to be a fsdax PMEM namespace.
-> > > 
-> > > All DAX I/O will then fail to that dm-linear device because the lack of
-> > > QUEUE_FLAG_DAX prevents fs_dax_get_by_bdev() from working.  This means that
-> > > the struct dax_device isn't ever set in the filesystem, so
-> > > dax_direct_access() will always return -EOPNOTSUPP.
-> > 
-> > Now you've lost me... these past 2 paragraphs.  Why can a user mount it
-> > is DAX mode?  Because bdev_dax_supported() only accesses the first
-> > portion (which happens to have DAX capabilities?)
-> 
-> Right.  bdev_dax_supported() runs all of its checks, and because they are
-> running against the first block device in the dm set, they all pass.  But the
-> overall DM device does not actually support DAX.
-> 
-> > Isn't this exactly why you should be checking for QUEUE_FLAG_DAX in the
-> > caller (bdev_dax_supported)?  Why not use bdev_get_queue() and verify
-> > QUEUE_FLAG_DAX is set in there?
-> 
-> I'll look into that for the next revision, thanks.
+> I see no argument against these changes, but I've also added the XFS
+> list.
 
-Have you made any progress on a new revision?
+Yes, please send the entire series to the xfs list in the future.
 
-> > > By failing out of dm_dax_direct_access() if QUEUE_FLAG_DAX isn't set we let
-> > > the filesystem know we don't support DAX at mount time.  The filesystem
-> > > will then silently fall back and remove the dax mount option, causing it to
-> > > work properly.
+It looks like a reasonable reorganization of makefile goop. :)
+
+(Will dig for the rest of the series on lkml tomorrow I guess.)
+
 > > 
-> > This shouldn't be needed.  Again, QUEUE_FLAG_DAX wasn't set.. so don't
-> > allow code to falsely try operations that should've been gated by the
-> > fact it wasn't set.
+> > Signed-off-by: NeilBrown <neilb@suse.com>
+> > ---
+> >  fs/xfs/Makefile        | 78 ++------------------------------------------------
+> >  fs/xfs/libxfs/Makefile | 43 ++++++++++++++++++++++++++++
+> >  fs/xfs/scrub/Makefile  | 29 +++++++++++++++++++
+> >  3 files changed, 74 insertions(+), 76 deletions(-)
+> >  create mode 100644 fs/xfs/libxfs/Makefile
+> >  create mode 100644 fs/xfs/scrub/Makefile
+> > 
+> > diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+> > index 2f3f75a7f180..0ba854045fe9 100644
+> > --- a/fs/xfs/Makefile
+> > +++ b/fs/xfs/Makefile
+> > @@ -15,47 +15,7 @@ obj-$(CONFIG_XFS_FS)		+= xfs.o
+> >  xfs-y				+= xfs_trace.o
+> >  
+> >  # build the libxfs code first
+> > -xfs-y				+= $(addprefix libxfs/, \
+> > -				   xfs_ag.o \
+> > -				   xfs_alloc.o \
+> > -				   xfs_alloc_btree.o \
+> > -				   xfs_attr.o \
+> > -				   xfs_attr_leaf.o \
+> > -				   xfs_attr_remote.o \
+> > -				   xfs_bit.o \
+> > -				   xfs_bmap.o \
+> > -				   xfs_bmap_btree.o \
+> > -				   xfs_btree.o \
+> > -				   xfs_da_btree.o \
+> > -				   xfs_da_format.o \
+> > -				   xfs_defer.o \
+> > -				   xfs_dir2.o \
+> > -				   xfs_dir2_block.o \
+> > -				   xfs_dir2_data.o \
+> > -				   xfs_dir2_leaf.o \
+> > -				   xfs_dir2_node.o \
+> > -				   xfs_dir2_sf.o \
+> > -				   xfs_dquot_buf.o \
+> > -				   xfs_ialloc.o \
+> > -				   xfs_ialloc_btree.o \
+> > -				   xfs_iext_tree.o \
+> > -				   xfs_inode_fork.o \
+> > -				   xfs_inode_buf.o \
+> > -				   xfs_log_rlimit.o \
+> > -				   xfs_ag_resv.o \
+> > -				   xfs_rmap.o \
+> > -				   xfs_rmap_btree.o \
+> > -				   xfs_refcount.o \
+> > -				   xfs_refcount_btree.o \
+> > -				   xfs_sb.o \
+> > -				   xfs_symlink_remote.o \
+> > -				   xfs_trans_resv.o \
+> > -				   xfs_types.o \
+> > -				   )
+> > -# xfs_rtbitmap is shared with libxfs
+> > -xfs-$(CONFIG_XFS_RT)		+= $(addprefix libxfs/, \
+> > -				   xfs_rtbitmap.o \
+> > -				   )
+> > +xfs-y				+= libxfs/
+> >  
+> >  # highlevel code
+> >  xfs-y				+= xfs_aops.o \
+> > @@ -127,38 +87,4 @@ xfs-$(CONFIG_SYSCTL)		+= xfs_sysctl.o
+> >  xfs-$(CONFIG_COMPAT)		+= xfs_ioctl32.o
+> >  xfs-$(CONFIG_EXPORTFS_BLOCK_OPS)	+= xfs_pnfs.o
+> >  
+> > -# online scrub/repair
+> > -ifeq ($(CONFIG_XFS_ONLINE_SCRUB),y)
+> > -
+> > -# Tracepoints like to blow up, so build that before everything else
+> > -
+> > -xfs-y				+= $(addprefix scrub/, \
+> > -				   trace.o \
+> > -				   agheader.o \
+> > -				   alloc.o \
+> > -				   attr.o \
+> > -				   bmap.o \
+> > -				   btree.o \
+> > -				   common.o \
+> > -				   dabtree.o \
+> > -				   dir.o \
+> > -				   ialloc.o \
+> > -				   inode.o \
+> > -				   parent.o \
+> > -				   refcount.o \
+> > -				   rmap.o \
+> > -				   scrub.o \
+> > -				   symlink.o \
+> > -				   )
+> > -
+> > -xfs-$(CONFIG_XFS_RT)		+= scrub/rtbitmap.o
+> > -xfs-$(CONFIG_XFS_QUOTA)		+= scrub/quota.o
+> > -
+> > -# online repair
+> > -ifeq ($(CONFIG_XFS_ONLINE_REPAIR),y)
+> > -xfs-y				+= $(addprefix scrub/, \
+> > -				   agheader_repair.o \
+> > -				   repair.o \
+> > -				   )
+> > -endif
+> > -endif
+> > +xfs-$(CONFIG_XFS_ONLINE_SCRUB)	+= scrub/
+> > diff --git a/fs/xfs/libxfs/Makefile b/fs/xfs/libxfs/Makefile
+> > new file mode 100644
+> > index 000000000000..9b90c289bdda
+> > --- /dev/null
+> > +++ b/fs/xfs/libxfs/Makefile
+> > @@ -0,0 +1,43 @@
+> > +# SPDX-License-Identifier: GPL-2.0
+> > +
+> > +ccflags-y += -I$(src)/..
+> > +
+> > +# xfs_rtbitmap is shared with libxfs
+> > +xobj-$(CONFIG_XFS_RT)		+= xfs_rtbitmap.o
+> > +
+> > +modobj-$(CONFIG_XFS_FS) +=	   xfs_ag.o \
+> > +				   xfs_alloc.o \
+> > +				   xfs_alloc_btree.o \
+> > +				   xfs_attr.o \
+> > +				   xfs_attr_leaf.o \
+> > +				   xfs_attr_remote.o \
+> > +				   xfs_bit.o \
+> > +				   xfs_bmap.o \
+> > +				   xfs_bmap_btree.o \
+> > +				   xfs_btree.o \
+> > +				   xfs_da_btree.o \
+> > +				   xfs_da_format.o \
+> > +				   xfs_defer.o \
+> > +				   xfs_dir2.o \
+> > +				   xfs_dir2_block.o \
+> > +				   xfs_dir2_data.o \
+> > +				   xfs_dir2_leaf.o \
+> > +				   xfs_dir2_node.o \
+> > +				   xfs_dir2_sf.o \
+> > +				   xfs_dquot_buf.o \
+> > +				   xfs_ialloc.o \
+> > +				   xfs_ialloc_btree.o \
+> > +				   xfs_iext_tree.o \
+> > +				   xfs_inode_fork.o \
+> > +				   xfs_inode_buf.o \
+> > +				   xfs_log_rlimit.o \
+> > +				   xfs_ag_resv.o \
+> > +				   xfs_rmap.o \
+> > +				   xfs_rmap_btree.o \
+> > +				   xfs_refcount.o \
+> > +				   xfs_refcount_btree.o \
+> > +				   xfs_sb.o \
+> > +				   xfs_symlink_remote.o \
+> > +				   xfs_trans_resv.o \
+> > +				   xfs_types.o \
+> > +				   $(xobj-y)
+> > diff --git a/fs/xfs/scrub/Makefile b/fs/xfs/scrub/Makefile
+> > new file mode 100644
+> > index 000000000000..f91818a0e6ee
+> > --- /dev/null
+> > +++ b/fs/xfs/scrub/Makefile
+> > @@ -0,0 +1,29 @@
+> > +# SPDX-License-Identifier: GPL-2.0
+> > +
+> > +# Tracepoints like to blow up, so build that before everything else
+
+This comment ought to stay with trace.o below because that's what it
+applies to.
+
+--D
+
+> > +
+> > +ccflags-y += -I$(src)/..
+> > +ccflags-y += -I$(src)/../libxfs
+> > +
+> > +xobj-$(CONFIG_XFS_RT)		+= rtbitmap.o
+> > +xobj-$(CONFIG_XFS_QUOTA)	+= quota.o
+> > +xobj-$(CONFIG_XFS_ONLINE_REPAIR)+= agheader_repair.o \
+> > +				   repair.o
+> > +
+> > +modobj-$(CONFIG_XFS_FS) +=	   trace.o \
+> > +				   agheader.o \
+> > +				   alloc.o \
+> > +				   attr.o \
+> > +				   bmap.o \
+> > +				   btree.o \
+> > +				   common.o \
+> > +				   dabtree.o \
+> > +				   dir.o \
+> > +				   ialloc.o \
+> > +				   inode.o \
+> > +				   parent.o \
+> > +				   refcount.o \
+> > +				   rmap.o \
+> > +				   scrub.o \
+> > +				   symlink.o \
+> > +				   $(xobj-y)
+> > -- 
+> > 2.14.0.rc0.dirty
+> > 
 > 
-> Right, the goal is to make QUEUE_FLAG_DAX our one source of truth for whether
-> DM devices support DAX, and not have it half defined by that and half by the
-> DM_TYPE_DAX_BIO_BASED.
-
-My hope is that you can ignore the DM-internal book-keeping
-(DM_TYPE_DAX_BIO_BASED) for now and just focus on fixing the real issue
-of needing proper checking (as well as properly _not_ setting
-QUEUE_FLAG_DAX in the case of pmem "raw").
-
-Please advise, thanks Ross!
-
-Mike
+> 
+> ---end quoted text---
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
