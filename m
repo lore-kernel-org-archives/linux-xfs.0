@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:55694 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:55468 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1030233AbeFSQlv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 12:41:51 -0400
+        with ESMTP id S1030233AbeFSQlq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 12:41:46 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 3/6] iomap: complete partial direct I/O writes synchronously
-Date: Tue, 19 Jun 2018 18:41:33 +0200
-Message-Id: <20180619164137.13720-4-hch@lst.de>
+Subject: [PATCH 1/6] fs: factor out a __generic_write_end helper
+Date: Tue, 19 Jun 2018 18:41:31 +0200
+Message-Id: <20180619164137.13720-2-hch@lst.de>
 In-Reply-To: <20180619164137.13720-1-hch@lst.de>
 References: <20180619164137.13720-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,100 +15,117 @@ List-Id: xfs
 To: Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org
 Cc: Dan Williams <dan.j.williams@intel.com>, linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com, linux-ext4@vger.kernel.org
 
-From: Andreas Gruenbacher <agruenba@redhat.com>
+Bits of the buffer.c based write_end implementations that don't know
+about buffer_heads and can be reused by other implementations.
 
-According to xfstest generic/240, applications seem to expect direct I/O
-writes to either complete as a whole or to fail; short direct I/O writes
-are apparently not appreciated.  This means that when only part of an
-asynchronous direct I/O write succeeds, we can either fail the entire
-write, or we can wait for the partial write to complete and retry the
-remaining write as buffered I/O.  The old __blockdev_direct_IO helper
-has code for waiting for partial writes to complete; the new
-iomap_dio_rw iomap helper does not.
-
-The above mentioned fallback mode is needed for gfs2, which doesn't
-allow block allocations under direct I/O to avoid taking cluster-wide
-exclusive locks.  As a consequence, an asynchronous direct I/O write to
-a file range that contains a hole will result in a short write.  In that
-case, wait for the short write to complete to allow gfs2 to recover.
-
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Andreas Gruenbacher <agruenba@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/iomap.c | 21 +++++++++++----------
- 1 file changed, 11 insertions(+), 10 deletions(-)
+ fs/buffer.c   | 67 +++++++++++++++++++++++++++------------------------
+ fs/internal.h |  2 ++
+ 2 files changed, 37 insertions(+), 32 deletions(-)
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 77397b5a96ef..9c454459a1e9 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -811,6 +811,7 @@ struct iomap_dio {
- 	atomic_t		ref;
- 	unsigned		flags;
- 	int			error;
-+	bool			wait_for_completion;
+diff --git a/fs/buffer.c b/fs/buffer.c
+index cabc045f483d..aba2a948b235 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -2076,6 +2076,40 @@ int block_write_begin(struct address_space *mapping, loff_t pos, unsigned len,
+ }
+ EXPORT_SYMBOL(block_write_begin);
  
- 	union {
- 		/* used during submission and for synchronous completion: */
-@@ -914,9 +915,8 @@ static void iomap_dio_bio_end_io(struct bio *bio)
- 		iomap_dio_set_error(dio, blk_status_to_errno(bio->bi_status));
- 
- 	if (atomic_dec_and_test(&dio->ref)) {
--		if (is_sync_kiocb(dio->iocb)) {
-+		if (dio->wait_for_completion) {
- 			struct task_struct *waiter = dio->submit.waiter;
++int __generic_write_end(struct inode *inode, loff_t pos, unsigned copied,
++		struct page *page)
++{
++	loff_t old_size = inode->i_size;
++	bool i_size_changed = false;
++
++	/*
++	 * No need to use i_size_read() here, the i_size cannot change under us
++	 * because we hold i_rwsem.
++	 *
++	 * But it's important to update i_size while still holding page lock:
++	 * page writeout could otherwise come in and zero beyond i_size.
++	 */
++	if (pos + copied > inode->i_size) {
++		i_size_write(inode, pos + copied);
++		i_size_changed = true;
++	}
++
++	unlock_page(page);
++	put_page(page);
++
++	if (old_size < pos)
++		pagecache_isize_extended(inode, old_size, pos);
++	/*
++	 * Don't mark the inode dirty under page lock. First, it unnecessarily
++	 * makes the holding time of page lock longer. Second, it forces lock
++	 * ordering of page lock and transaction start for journaling
++	 * filesystems.
++	 */
++	if (i_size_changed)
++		mark_inode_dirty(inode);
++	return copied;
++}
++
+ int block_write_end(struct file *file, struct address_space *mapping,
+ 			loff_t pos, unsigned len, unsigned copied,
+ 			struct page *page, void *fsdata)
+@@ -2116,39 +2150,8 @@ int generic_write_end(struct file *file, struct address_space *mapping,
+ 			loff_t pos, unsigned len, unsigned copied,
+ 			struct page *page, void *fsdata)
+ {
+-	struct inode *inode = mapping->host;
+-	loff_t old_size = inode->i_size;
+-	int i_size_changed = 0;
 -
- 			WRITE_ONCE(dio->submit.waiter, NULL);
- 			wake_up_process(waiter);
- 		} else if (dio->flags & IOMAP_DIO_WRITE) {
-@@ -1131,13 +1131,12 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	dio->end_io = end_io;
- 	dio->error = 0;
- 	dio->flags = 0;
-+	dio->wait_for_completion = is_sync_kiocb(iocb);
- 
- 	dio->submit.iter = iter;
--	if (is_sync_kiocb(iocb)) {
--		dio->submit.waiter = current;
--		dio->submit.cookie = BLK_QC_T_NONE;
--		dio->submit.last_queue = NULL;
+ 	copied = block_write_end(file, mapping, pos, len, copied, page, fsdata);
+-
+-	/*
+-	 * No need to use i_size_read() here, the i_size
+-	 * cannot change under us because we hold i_mutex.
+-	 *
+-	 * But it's important to update i_size while still holding page lock:
+-	 * page writeout could otherwise come in and zero beyond i_size.
+-	 */
+-	if (pos+copied > inode->i_size) {
+-		i_size_write(inode, pos+copied);
+-		i_size_changed = 1;
 -	}
-+	dio->submit.waiter = current;
-+	dio->submit.cookie = BLK_QC_T_NONE;
-+	dio->submit.last_queue = NULL;
+-
+-	unlock_page(page);
+-	put_page(page);
+-
+-	if (old_size < pos)
+-		pagecache_isize_extended(inode, old_size, pos);
+-	/*
+-	 * Don't mark the inode dirty under page lock. First, it unnecessarily
+-	 * makes the holding time of page lock longer. Second, it forces lock
+-	 * ordering of page lock and transaction start for journaling
+-	 * filesystems.
+-	 */
+-	if (i_size_changed)
+-		mark_inode_dirty(inode);
+-
+-	return copied;
++	return __generic_write_end(mapping->host, pos, copied, page);
+ }
+ EXPORT_SYMBOL(generic_write_end);
  
- 	if (iov_iter_rw(iter) == READ) {
- 		if (pos >= dio->i_size)
-@@ -1187,7 +1186,7 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 		dio_warn_stale_pagecache(iocb->ki_filp);
- 	ret = 0;
+diff --git a/fs/internal.h b/fs/internal.h
+index 980d005b21b4..4a18bdbd2214 100644
+--- a/fs/internal.h
++++ b/fs/internal.h
+@@ -43,6 +43,8 @@ static inline int __sync_blockdev(struct block_device *bdev, int wait)
+ extern void guard_bio_eod(int rw, struct bio *bio);
+ extern int __block_write_begin_int(struct page *page, loff_t pos, unsigned len,
+ 		get_block_t *get_block, struct iomap *iomap);
++int __generic_write_end(struct inode *inode, loff_t pos, unsigned copied,
++		struct page *page);
  
--	if (iov_iter_rw(iter) == WRITE && !is_sync_kiocb(iocb) &&
-+	if (iov_iter_rw(iter) == WRITE && !dio->wait_for_completion &&
- 	    !inode->i_sb->s_dio_done_wq) {
- 		ret = sb_init_dio_done_wq(inode->i_sb);
- 		if (ret < 0)
-@@ -1202,8 +1201,10 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 				iomap_dio_actor);
- 		if (ret <= 0) {
- 			/* magic error code to fall back to buffered I/O */
--			if (ret == -ENOTBLK)
-+			if (ret == -ENOTBLK) {
-+				dio->wait_for_completion = true;
- 				ret = 0;
-+			}
- 			break;
- 		}
- 		pos += ret;
-@@ -1224,7 +1225,7 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 		dio->flags &= ~IOMAP_DIO_NEED_SYNC;
- 
- 	if (!atomic_dec_and_test(&dio->ref)) {
--		if (!is_sync_kiocb(iocb))
-+		if (!dio->wait_for_completion)
- 			return -EIOCBQUEUED;
- 
- 		for (;;) {
+ /*
+  * char_dev.c
 -- 
 2.17.1
 
