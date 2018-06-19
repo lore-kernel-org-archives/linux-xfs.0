@@ -1,78 +1,109 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:35722 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755920AbeFSF1b (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 01:27:31 -0400
-Date: Mon, 18 Jun 2018 22:27:26 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 09/24] xfs: don't use XFS_BMAPI_IGSTATE in xfs_map_blocks
-Message-ID: <20180619052726.GR8128@magnolia>
-References: <20180615130209.1970-1-hch@lst.de>
- <20180615130209.1970-10-hch@lst.de>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:53006 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755715AbeFSF2G (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 01:28:06 -0400
+Date: Tue, 19 Jun 2018 15:27:59 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/2] xfs: transactionless xfs_bunmapi shouldn't do format
+ conversion
+Message-ID: <20180619052759.GH19934@dastard>
+References: <20180619024128.22669-1-david@fromorbit.com>
+ <20180619024128.22669-2-david@fromorbit.com>
+ <20180619045405.GI8128@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180615130209.1970-10-hch@lst.de>
+In-Reply-To: <20180619045405.GI8128@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Jun 15, 2018 at 03:01:54PM +0200, Christoph Hellwig wrote:
-> We want to be able to use the extent state as a reliably indicator for
-> the type of I/O, and stop using the buffer head state.  For this we
-> need to stop using the XFS_BMAPI_IGSTATE so that we don't see merged
-> extents of different types.
+On Mon, Jun 18, 2018 at 09:54:05PM -0700, Darrick J. Wong wrote:
+> On Tue, Jun 19, 2018 at 12:41:27PM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > If we are punching out a delalloc extent, xfs_bunmapi() does not
+> > have a transaction context and should not ever need to convert the
+> > on-disk extent format. If such a thing is attempted (e.g. via a
+> > corrupt inode extent count in extent format) then we should abort
+> > with an EFSCORRUPTED error. Unfortunately, we don't do that and
+> > crash instead:
+> > 
+> >  XFS (loop0): page discard on page 0000000005fd24f3, inode 0x75e5, offset 0.
+> >  ==================================================================
+> >  BUG: KASAN: null-ptr-deref in xfs_alloc_get_freelist+0x115/0x350
+> >  Read of size 8 at addr 0000000000000028 by task a.out/1406
+> >  CPU: 0 PID: 1406 Comm: a.out Not tainted 4.17.0-rc4-kasan #2
+> >  Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Ubuntu-1.8.2-1ubuntu1 04/01/2014
+> >  Call Trace:
+> >   dump_stack+0x7b/0xb5
+> >   kasan_report+0x10c/0x390
+> >   __asan_load8+0x54/0x90
+> >   xfs_alloc_get_freelist+0x115/0x350
+> >   xfs_alloc_fix_freelist+0x35b/0x830
+> >   xfs_alloc_vextent+0x215/0x990
+> >   xfs_bmap_extents_to_btree+0x30d/0x940
+> > .....
+> > 
+> > By returning an error here, we avoid such crashes when punching out
+> > a delalloc page because we don't try to fix up an AG freelist
+> > without a transaction. Hence we get an error like so:
 > 
-> Based on a patch from Dave Chinner.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> Um, isn't erroring out here leaving a dirty bomb in the in-core metadata?
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Not that I can tell. We've already trashed the dirty page state by
+this point, so the page cache can safely reclaim the page and the
+delalloc range over it will never get written.  And the XFS inode
+cleanup code didn't have any issues with the way the error was
+handled, either, because the delalloc range was actually removed
+before the fork format error was triggered.
 
---D
+IOWs, there is no dirty, stale page state or delalloc extents
+hanging around if this error fires.
 
-> ---
->  fs/xfs/xfs_aops.c | 5 +----
->  1 file changed, 1 insertion(+), 4 deletions(-)
+> Like you say:
 > 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 307ca66879b3..39b933e17192 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -385,7 +385,6 @@ xfs_map_blocks(
->  	ssize_t			count = i_blocksize(inode);
->  	xfs_fileoff_t		offset_fsb, end_fsb;
->  	int			error = 0;
-> -	int			bmapi_flags = XFS_BMAPI_ENTIRE;
->  	int			nimaps = 1;
->  
->  	if (XFS_FORCED_SHUTDOWN(mp))
-> @@ -405,8 +404,6 @@ xfs_map_blocks(
->  		return 0;
->  
->  	ASSERT(type != XFS_IO_COW);
-> -	if (type == XFS_IO_UNWRITTEN)
-> -		bmapi_flags |= XFS_BMAPI_IGSTATE;
->  
->  	xfs_ilock(ip, XFS_ILOCK_SHARED);
->  	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
-> @@ -418,7 +415,7 @@ xfs_map_blocks(
->  	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
->  	offset_fsb = XFS_B_TO_FSBT(mp, offset);
->  	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
-> -				imap, &nimaps, bmapi_flags);
-> +				imap, &nimaps, XFS_BMAPI_ENTIRE);
->  	/*
->  	 * Truncate an overwrite extent if there's a pending CoW
->  	 * reservation before the end of this extent.  This forces us
-> -- 
-> 2.17.1
+> > XFS (loop0): page discard on page ffffea00040ae640, inode 0x75e5, offset 0.
+> > XFS (loop0): page discard unable to remove delalloc mapping.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> We know the fs is corrupt, we might as well shut down now rather than
+> let this burp out later.
+
+xfs_bunmapi() doesn't do shutdowns - the higher level code does a
+shutdown on error if it is necessary, otherwise it just propagates
+the error. In this case it has cleaned up correctly, propagates the
+error and it gets back to userspace on the next fsync, and we're
+fine to continue onwards as there was no unrecoverable error....
+
+> I get that people don't want to touch well seasoned code, but
+> xfs_bunmapi is this big unwieldly function that's crying out for a
+> refactor.  It's 330 lines long and can be called from various contexts
+> (data/attr fork, punch delalloc, etc.)...
+>
+> ...it's also weird that xfs_bmap_punch_delalloc_range calls xfs_bunmapi
+> with no transaction and a xfs_defer that we dump on the ground.
+
+Yes, and yes.
+
+> So yes, I think the patch does fix the crash, but it's kinda gross.
+
+Yes, it is.
+
+But OTOH, I don't want to risk a bunch of filesystem corrupting
+regressions across the entire XFS userbase just to fix a trivially
+simple crash that requires an extremely unlikely co-ordinated
+corruption of an inode data fork and an AGFL, and to simultaneously
+have ENOSPC in every other AGF in the filesystem.
+
+Put "refactor xfs_bunmapi()" on the list of "things to do when
+there's nothing else to do"...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
