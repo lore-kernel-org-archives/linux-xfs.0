@@ -1,197 +1,211 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:54042 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755913AbeFSFFq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 01:05:46 -0400
-Date: Mon, 18 Jun 2018 22:05:38 -0700
+Received: from aserp2130.oracle.com ([141.146.126.79]:46526 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750941AbeFSFVj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 01:21:39 -0400
+Date: Mon, 18 Jun 2018 22:21:22 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2] xfs: xfs_iflush_abort() can be called twice on
- cluster writeback failure
-Message-ID: <20180619050538.GL8128@magnolia>
-References: <20180618055711.23391-1-david@fromorbit.com>
- <20180618055711.23391-3-david@fromorbit.com>
+Subject: Re: [PATCH v3 2/2] xfs: use sync buffer I/O for sync delwri queue
+ submission
+Message-ID: <20180619052122.GM8128@magnolia>
+References: <20180615180536.17282-1-bfoster@redhat.com>
+ <20180615180536.17282-3-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180618055711.23391-3-david@fromorbit.com>
+In-Reply-To: <20180615180536.17282-3-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jun 18, 2018 at 03:57:11PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Fri, Jun 15, 2018 at 02:05:36PM -0400, Brian Foster wrote:
+> If a delwri queue occurs of a buffer that sits on a delwri queue
+> wait list, the queue sets _XBF_DELWRI_Q without changing the state
+> of ->b_list. This occurs, for example, if another thread beats the
+> current delwri waiter thread to the buffer lock after I/O
+> completion. Once the waiter acquires the lock, it removes the buffer
+> from the wait list and leaves a buffer with _XBF_DELWRI_Q set but
+> not populated on a list. This results in a lost buffer submission
+> and in turn can result in assert failures due to _XBF_DELWRI_Q being
+> set on buffer reclaim or filesystem lockups if the buffer happens to
+> cover an item in the AIL.
 > 
-> When a corrupt inode is detected during xfs_iflush_cluster, we can
-> get a shutdown ASSERT failure like this:
+> This problem has been reproduced by repeated iterations of xfs/305
+> on high CPU count (28xcpu) systems with limited memory (~1GB). Dirty
+> dquot reclaim races with an xfsaild push of a separate dquot backed
+> by the same buffer such that the buffer sits on the reclaim wait
+> list at the time xfsaild attempts to queue it. Since the latter
+> dquot has been flush locked but the underlying buffer not submitted
+> for I/O, the dquot pins the AIL and causes the filesystem to
+> livelock.
 > 
-> XFS (pmem1): Metadata corruption detected at xfs_symlink_shortform_verify+0x5c/0xa0, inode 0x86627 data fork
-> XFS (pmem1): Unmount and run xfs_repair
-> XFS (pmem1): xfs_do_force_shutdown(0x8) called from line 3372 of file fs/xfs/xfs_inode.c.  Return address = ffffffff814f4116
-> XFS (pmem1): Corruption of in-memory data detected.  Shutting down filesystem
-> XFS (pmem1): xfs_do_force_shutdown(0x1) called from line 222 of file fs/xfs/libxfs/xfs_defer.c.  Return address = ffffffff814a8a88
-> XFS (pmem1): xfs_do_force_shutdown(0x1) called from line 222 of file fs/xfs/libxfs/xfs_defer.c.  Return address = ffffffff814a8ef9
-> XFS (pmem1): Please umount the filesystem and rectify the problem(s)
-> XFS: Assertion failed: xfs_isiflocked(ip), file: fs/xfs/xfs_inode.h, line: 258
-> .....
-> Call Trace:
->  xfs_iflush_abort+0x10a/0x110
->  xfs_iflush+0xf3/0x390
->  xfs_inode_item_push+0x126/0x1e0
->  xfsaild+0x2c5/0x890
->  kthread+0x11c/0x140
->  ret_from_fork+0x24/0x30
+> This race is essentially made possible by the buffer lock cycle
+> involved with waiting on a synchronous delwri queue submission.
+> Close the race by using synchronous buffer I/O for respective delwri
+> queue submission. This means the buffer remains locked across the
+> I/O and so is inaccessible from other contexts while in the
+> intermediate wait list state. The sync buffer I/O wait mechanism is
+> factored into a helper such that sync delwri buffer submission and
+> serialization are batched operations.
 > 
-> Essentially, xfs_iflush_abort() has been called twice on the
-> original inode that that was flushed. This happens because the
-> inode has been flushed to teh buffer successfully via
-> xfs_iflush_int(), and so when another inode is detected as corrupt
-> in xfs_iflush_cluster, the buffer is marked stale and EIO, and
-> iodone callbacks are run on it.
+> Designed-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/xfs_buf.c | 78 +++++++++++++++++++++++++-----------------------
+>  1 file changed, 41 insertions(+), 37 deletions(-)
 > 
-> Running the iodone callbacks walks across the original inode and
-> calls xfs_iflush_abort() on it. When xfs_iflush_cluster() returns
-> to xfs_iflush(), it runs the error path for that function, and that
-> calls xfs_iflush_abort() on the inode a second time, leading to the
-> above assert failure as the inode is not flush locked anymore.
-> 
-> This bug has been there a long time.
-> 
-> The simple fix would be to just avoid calling xfs_iflush_abort() in
-> xfs_iflush() if we've got a failure from xfs_iflush_cluster().
-> However, xfs_iflush_cluster() has magic delwri buffer handling that
-> means it may or may not have run IO completion on the buffer, and
-> hence sometimes we have to call xfs_iflush_abort() from
-> xfs_iflush(), and sometimes we shouldn't.
-> 
-> After reading through all the error paths and the delwri buffer
-> code, it's clear that the error handling in xfs_iflush_cluster() is
-> unnecessary. If the buffer is delwri, it leaves it on the delwri
-> list so that when the delwri list is submitted it sees a shutdown
-> fliesystem in xfs_buf_submit() and that marks the buffer stale, EIO
-> and runs IO completion. i.e. exactly what xfs+iflush_cluster() does
-> when it's not a delwri buffer. Further, marking a buffer stale
-> clears the _XBF_DELWRI_Q flag on the buffer, which means when
-> submission of the buffer occurs, it just skips over it and releases
-> it.
-> 
-> IOWs, the error handling in xfs_iflush_cluster doesn't need to care
-> if the buffer is already on a the delwri queue or not - it just
-> needs to mark the buffer stale, EIO and run completions. That means
-> we can just use the easy fix for xfs_iflush() to avoid the double
-> abort.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 7b0f7c79cd62..b5c0f6949b30 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -1531,6 +1531,20 @@ xfs_buf_submit(
+>  	xfs_buf_rele(bp);
+>  }
+>  
+> +/*
+> + * Wait for I/O completion of a sync buffer and return the I/O error code.
+> + */
+> +static int
+> +xfs_buf_iowait(
+> +	struct xfs_buf	*bp)
+> +{
+> +	trace_xfs_buf_iowait(bp, _RET_IP_);
+> +	wait_for_completion(&bp->b_iowait);
+> +	trace_xfs_buf_iowait_done(bp, _RET_IP_);
+> +
+> +	return bp->b_error;
+> +}
+> +
+>  /*
+>   * Synchronous buffer IO submission path, read or write.
+>   */
+> @@ -1553,12 +1567,7 @@ xfs_buf_submit_wait(
+>  	error = __xfs_buf_submit(bp);
+>  	if (error)
+>  		goto out;
+> -
+> -	/* wait for completion before gathering the error from the buffer */
+> -	trace_xfs_buf_iowait(bp, _RET_IP_);
+> -	wait_for_completion(&bp->b_iowait);
+> -	trace_xfs_buf_iowait_done(bp, _RET_IP_);
+> -	error = bp->b_error;
+> +	error = xfs_buf_iowait(bp);
+>  
+>  out:
+>  	/*
+> @@ -1961,16 +1970,11 @@ xfs_buf_cmp(
+>  }
+>  
+>  /*
+> - * submit buffers for write.
+> - *
+> - * When we have a large buffer list, we do not want to hold all the buffers
+> - * locked while we block on the request queue waiting for IO dispatch. To avoid
+> - * this problem, we lock and submit buffers in groups of 50, thereby minimising
+> - * the lock hold times for lists which may contain thousands of objects.
+> - *
+> - * To do this, we sort the buffer list before we walk the list to lock and
+> - * submit buffers, and we plug and unplug around each group of buffers we
+> - * submit.
+> + * Submit buffers for write. If wait_list is specified, the buffers are
+> + * submitted using sync I/O and placed on the wait list such that the caller can
+> + * iowait each buffer. Otherwise async I/O is used and the buffers are released
+> + * at I/O completion time. In either case, buffers remain locked until I/O
+> + * completes and the buffer is released from the queue.
+>   */
+>  static int
+>  xfs_buf_delwri_submit_buffers(
+> @@ -2012,21 +2016,22 @@ xfs_buf_delwri_submit_buffers(
+>  		trace_xfs_buf_delwri_split(bp, _RET_IP_);
+>  
+>  		/*
+> -		 * We do all IO submission async. This means if we need
+> -		 * to wait for IO completion we need to take an extra
+> -		 * reference so the buffer is still valid on the other
+> -		 * side. We need to move the buffer onto the io_list
+> -		 * at this point so the caller can still access it.
+> +		 * If we have a wait list, each buffer (and associated delwri
+> +		 * queue reference) transfers to it and is submitted
+> +		 * synchronously. Otherwise, drop the buffer from the delwri
+> +		 * queue and submit async.
+>  		 */
+>  		bp->b_flags &= ~(_XBF_DELWRI_Q | XBF_WRITE_FAIL);
+> -		bp->b_flags |= XBF_WRITE | XBF_ASYNC;
+> +		bp->b_flags |= XBF_WRITE;
+>  		if (wait_list) {
+> -			xfs_buf_hold(bp);
+> +			bp->b_flags &= ~XBF_ASYNC;
+>  			list_move_tail(&bp->b_list, wait_list);
+> -		} else
+> +			__xfs_buf_submit(bp);
+> +		} else {
+> +			bp->b_flags |= XBF_ASYNC;
+>  			list_del_init(&bp->b_list);
+> -
+> -		xfs_buf_submit(bp);
+> +			xfs_buf_submit(bp);
+> +		}
+>  	}
+>  	blk_finish_plug(&plug);
+>  
+> @@ -2073,8 +2078,11 @@ xfs_buf_delwri_submit(
+>  
+>  		list_del_init(&bp->b_list);
+>  
+> -		/* locking the buffer will wait for async IO completion. */
+> -		xfs_buf_lock(bp);
+> +		/*
+> +		 * Wait on the locked buffer, check for errors and unlock and
+> +		 * release the delwri queue reference.
+> +		 */
+> +		xfs_buf_iowait(bp);
+>  		error2 = bp->b_error;
 
-Looks ok, will start working on a -fixes branch...
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+error2 = xfs_buf_iowait()?
+
+>  		xfs_buf_relse(bp);
+>  		if (!error)
+> @@ -2121,22 +2129,18 @@ xfs_buf_delwri_pushbuf(
+>  
+>  	/*
+>  	 * Delwri submission clears the DELWRI_Q buffer flag and returns with
+> -	 * the buffer on the wait list with an associated reference. Rather than
+> +	 * the buffer on the wait list with the original reference. Rather than
+>  	 * bounce the buffer from a local wait list back to the original list
+>  	 * after I/O completion, reuse the original list as the wait list.
+>  	 */
+>  	xfs_buf_delwri_submit_buffers(&submit_list, buffer_list);
+>  
+>  	/*
+> -	 * The buffer is now under I/O and wait listed as during typical delwri
+> -	 * submission. Lock the buffer to wait for I/O completion. Rather than
+> -	 * remove the buffer from the wait list and release the reference, we
+> -	 * want to return with the buffer queued to the original list. The
+> -	 * buffer already sits on the original list with a wait list reference,
+> -	 * however. If we let the queue inherit that wait list reference, all we
+> -	 * need to do is reset the DELWRI_Q flag.
+> +	 * The buffer is now locked, under I/O and wait listed on the original
+> +	 * delwri queue. Wait for I/O completion, restore the DELWRI_Q flag and
+> +	 * return with the buffer unlocked and on the original queue.
+>  	 */
+> -	xfs_buf_lock(bp);
+> +	xfs_buf_iowait(bp);
+>  	error = bp->b_error;
+
+error = xfs_buf_iowait()?
+
+Or is there a specific reason you collected the error separately?
+
+Looks reasonable and I could follow along this time. :)
 
 --D
 
-> ---
->  fs/xfs/xfs_inode.c | 57 +++++++++++++++++-----------------------------
->  1 file changed, 21 insertions(+), 36 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 4a2e5e13c569..4a9b90cfb8c3 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -3236,7 +3236,6 @@ xfs_iflush_cluster(
->  	struct xfs_inode	*cip;
->  	int			nr_found;
->  	int			clcount = 0;
-> -	int			bufwasdelwri;
->  	int			i;
->  
->  	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
-> @@ -3360,37 +3359,22 @@ xfs_iflush_cluster(
->  	 * inode buffer and shut down the filesystem.
->  	 */
->  	rcu_read_unlock();
-> -	/*
-> -	 * Clean up the buffer.  If it was delwri, just release it --
-> -	 * brelse can handle it with no problems.  If not, shut down the
-> -	 * filesystem before releasing the buffer.
-> -	 */
-> -	bufwasdelwri = (bp->b_flags & _XBF_DELWRI_Q);
-> -	if (bufwasdelwri)
-> -		xfs_buf_relse(bp);
-> -
->  	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
->  
-> -	if (!bufwasdelwri) {
-> -		/*
-> -		 * Just like incore_relse: if we have b_iodone functions,
-> -		 * mark the buffer as an error and call them.  Otherwise
-> -		 * mark it as stale and brelse.
-> -		 */
-> -		if (bp->b_iodone) {
-> -			bp->b_flags &= ~XBF_DONE;
-> -			xfs_buf_stale(bp);
-> -			xfs_buf_ioerror(bp, -EIO);
-> -			xfs_buf_ioend(bp);
-> -		} else {
-> -			xfs_buf_stale(bp);
-> -			xfs_buf_relse(bp);
-> -		}
-> -	}
-> -
->  	/*
-> -	 * Unlocks the flush lock
-> +	 * We'll always have an inode attached to the buffer for completion
-> +	 * process by the time we are called from xfs_iflush(). Hence we have
-> +	 * always need to do IO completion processing to abort the inodes
-> +	 * attached to the buffer.  handle them just like the shutdown case in
-> +	 * xfs_buf_submit().
->  	 */
-> +	ASSERT(bp->b_iodone);
-> +	bp->b_flags &= ~XBF_DONE;
-> +	xfs_buf_stale(bp);
-> +	xfs_buf_ioerror(bp, -EIO);
-> +	xfs_buf_ioend(bp);
-> +
-> +	/* abort the corrupt inode, as it was not attached to the buffer */
->  	xfs_iflush_abort(cip, false);
->  	kmem_free(cilist);
->  	xfs_perag_put(pag);
-> @@ -3486,12 +3470,17 @@ xfs_iflush(
->  		xfs_log_force(mp, 0);
->  
->  	/*
-> -	 * inode clustering:
-> -	 * see if other inodes can be gathered into this write
-> +	 * inode clustering: try to gather other inodes into this write
-> +	 *
-> +	 * Note: Any error during clustering will result in the filesystem
-> +	 * being shut down and completion callbacks run on the cluster buffer.
-> +	 * As we have already flushed and attached this inode to the buffer,
-> +	 * it has already been aborted and released by xfs_iflush_cluster() and
-> +	 * so we have no further error handling to do here.
->  	 */
->  	error = xfs_iflush_cluster(ip, bp);
->  	if (error)
-> -		goto cluster_corrupt_out;
-> +		return error;
->  
->  	*bpp = bp;
->  	return 0;
-> @@ -3500,12 +3489,8 @@ xfs_iflush(
->  	if (bp)
->  		xfs_buf_relse(bp);
->  	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-> -cluster_corrupt_out:
-> -	error = -EFSCORRUPTED;
->  abort_out:
-> -	/*
-> -	 * Unlocks the flush lock
-> -	 */
-> +	/* abort the corrupt inode, as it was not attached to the buffer */
->  	xfs_iflush_abort(ip, false);
->  	return error;
->  }
+>  	bp->b_flags |= _XBF_DELWRI_Q;
+>  	xfs_buf_unlock(bp);
 > -- 
-> 2.17.0
+> 2.17.1
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
