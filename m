@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:55588 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:55694 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1030234AbeFSQls (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 12:41:48 -0400
+        with ESMTP id S1030233AbeFSQlv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 12:41:51 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/6] iomap: mark newly allocated buffer heads as new
-Date: Tue, 19 Jun 2018 18:41:32 +0200
-Message-Id: <20180619164137.13720-3-hch@lst.de>
+Subject: [PATCH 3/6] iomap: complete partial direct I/O writes synchronously
+Date: Tue, 19 Jun 2018 18:41:33 +0200
+Message-Id: <20180619164137.13720-4-hch@lst.de>
 In-Reply-To: <20180619164137.13720-1-hch@lst.de>
 References: <20180619164137.13720-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -17,44 +17,98 @@ Cc: Dan Williams <dan.j.williams@intel.com>, linux-fsdevel@vger.kernel.org, clus
 
 From: Andreas Gruenbacher <agruenba@redhat.com>
 
-In iomap_to_bh, not only mark buffer heads in IOMAP_UNWRITTEN maps as
-new, but also buffer heads in IOMAP_MAPPED maps with the IOMAP_F_NEW
-flag set.  This will be used by filesystems like gfs2, which allocate
-blocks in iomap->begin.
+According to xfstest generic/240, applications seem to expect direct I/O
+writes to either complete as a whole or to fail; short direct I/O writes
+are apparently not appreciated.  This means that when only part of an
+asynchronous direct I/O write succeeds, we can either fail the entire
+write, or we can wait for the partial write to complete and retry the
+remaining write as buffered I/O.  The old __blockdev_direct_IO helper
+has code for waiting for partial writes to complete; the new
+iomap_dio_rw iomap helper does not.
 
-Minor corrections to the comment for IOMAP_UNWRITTEN maps.
+The above mentioned fallback mode is needed for gfs2, which doesn't
+allow block allocations under direct I/O to avoid taking cluster-wide
+exclusive locks.  As a consequence, an asynchronous direct I/O write to
+a file range that contains a hole will result in a short write.  In that
+case, wait for the short write to complete to allow gfs2 to recover.
 
 Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/buffer.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ fs/iomap.c | 21 +++++++++++----------
+ 1 file changed, 11 insertions(+), 10 deletions(-)
 
-diff --git a/fs/buffer.c b/fs/buffer.c
-index aba2a948b235..c8c2b7d8b8d6 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -1900,15 +1900,16 @@ iomap_to_bh(struct inode *inode, sector_t block, struct buffer_head *bh,
- 		break;
- 	case IOMAP_UNWRITTEN:
- 		/*
--		 * For unwritten regions, we always need to ensure that
--		 * sub-block writes cause the regions in the block we are not
--		 * writing to are zeroed. Set the buffer as new to ensure this.
-+		 * For unwritten regions, we always need to ensure that regions
-+		 * in the block we are not writing to are zeroed. Mark the
-+		 * buffer as new to ensure this.
- 		 */
- 		set_buffer_new(bh);
- 		set_buffer_unwritten(bh);
- 		/* FALLTHRU */
- 	case IOMAP_MAPPED:
--		if (offset >= i_size_read(inode))
-+		if ((iomap->flags & IOMAP_F_NEW) ||
-+		    offset >= i_size_read(inode))
- 			set_buffer_new(bh);
- 		bh->b_blocknr = (iomap->addr + offset - iomap->offset) >>
- 				inode->i_blkbits;
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 77397b5a96ef..9c454459a1e9 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -811,6 +811,7 @@ struct iomap_dio {
+ 	atomic_t		ref;
+ 	unsigned		flags;
+ 	int			error;
++	bool			wait_for_completion;
+ 
+ 	union {
+ 		/* used during submission and for synchronous completion: */
+@@ -914,9 +915,8 @@ static void iomap_dio_bio_end_io(struct bio *bio)
+ 		iomap_dio_set_error(dio, blk_status_to_errno(bio->bi_status));
+ 
+ 	if (atomic_dec_and_test(&dio->ref)) {
+-		if (is_sync_kiocb(dio->iocb)) {
++		if (dio->wait_for_completion) {
+ 			struct task_struct *waiter = dio->submit.waiter;
+-
+ 			WRITE_ONCE(dio->submit.waiter, NULL);
+ 			wake_up_process(waiter);
+ 		} else if (dio->flags & IOMAP_DIO_WRITE) {
+@@ -1131,13 +1131,12 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	dio->end_io = end_io;
+ 	dio->error = 0;
+ 	dio->flags = 0;
++	dio->wait_for_completion = is_sync_kiocb(iocb);
+ 
+ 	dio->submit.iter = iter;
+-	if (is_sync_kiocb(iocb)) {
+-		dio->submit.waiter = current;
+-		dio->submit.cookie = BLK_QC_T_NONE;
+-		dio->submit.last_queue = NULL;
+-	}
++	dio->submit.waiter = current;
++	dio->submit.cookie = BLK_QC_T_NONE;
++	dio->submit.last_queue = NULL;
+ 
+ 	if (iov_iter_rw(iter) == READ) {
+ 		if (pos >= dio->i_size)
+@@ -1187,7 +1186,7 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 		dio_warn_stale_pagecache(iocb->ki_filp);
+ 	ret = 0;
+ 
+-	if (iov_iter_rw(iter) == WRITE && !is_sync_kiocb(iocb) &&
++	if (iov_iter_rw(iter) == WRITE && !dio->wait_for_completion &&
+ 	    !inode->i_sb->s_dio_done_wq) {
+ 		ret = sb_init_dio_done_wq(inode->i_sb);
+ 		if (ret < 0)
+@@ -1202,8 +1201,10 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 				iomap_dio_actor);
+ 		if (ret <= 0) {
+ 			/* magic error code to fall back to buffered I/O */
+-			if (ret == -ENOTBLK)
++			if (ret == -ENOTBLK) {
++				dio->wait_for_completion = true;
+ 				ret = 0;
++			}
+ 			break;
+ 		}
+ 		pos += ret;
+@@ -1224,7 +1225,7 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 		dio->flags &= ~IOMAP_DIO_NEED_SYNC;
+ 
+ 	if (!atomic_dec_and_test(&dio->ref)) {
+-		if (!is_sync_kiocb(iocb))
++		if (!dio->wait_for_completion)
+ 			return -EIOCBQUEUED;
+ 
+ 		for (;;) {
 -- 
 2.17.1
 
