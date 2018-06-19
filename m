@@ -1,105 +1,135 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:47324 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752468AbeFSF3e (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 01:29:34 -0400
-Date: Tue, 19 Jun 2018 15:29:31 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfs: More robust inode extent count validation
-Message-ID: <20180619052931.GI19934@dastard>
-References: <20180619024128.22669-1-david@fromorbit.com>
- <20180619024128.22669-3-david@fromorbit.com>
- <20180619045725.GJ8128@magnolia>
+Received: from userp2130.oracle.com ([156.151.31.86]:58290 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752308AbeFSFak (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 01:30:40 -0400
+Date: Mon, 18 Jun 2018 22:30:35 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 10/24] xfs: remove xfs_reflink_trim_irec_to_next_cow
+Message-ID: <20180619053035.GS8128@magnolia>
+References: <20180615130209.1970-1-hch@lst.de>
+ <20180615130209.1970-11-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180619045725.GJ8128@magnolia>
+In-Reply-To: <20180615130209.1970-11-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Mon, Jun 18, 2018 at 09:57:25PM -0700, Darrick J. Wong wrote:
-> On Tue, Jun 19, 2018 at 12:41:28PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > When the inode is in extent format, it can't have more extents that
-> > fit in the inode fork. We don't currenty check this, and so this
-> > corruption goes unnoticed by the inode verifiers. This can lead to
-> > crashes operating on invalid in-memory structures.
-> > 
-> > Attempts to access such a inode will now error out in the verifier
-> > rather than allowing modification operations to proceed.
-> > 
-> > Reported-by: Wen Xu <wen.xu@gatech.edu>
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_format.h    |  3 ++
-> >  fs/xfs/libxfs/xfs_inode_buf.c | 74 +++++++++++++++++++++--------------
-> >  2 files changed, 48 insertions(+), 29 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> > index 1c5a8aaf2bfc..1cb298fec274 100644
-> > --- a/fs/xfs/libxfs/xfs_format.h
-> > +++ b/fs/xfs/libxfs/xfs_format.h
-> > @@ -962,6 +962,9 @@ typedef enum xfs_dinode_fmt {
-> >  		XFS_DFORK_DSIZE(dip, mp) : \
-> >  		XFS_DFORK_ASIZE(dip, mp))
-> >  
-> > +#define XFS_DFORK_MAXEXT(dip, mp, w) \
-> > +	(XFS_DFORK_SIZE(dip, mp, w) / sizeof(xfs_bmbt_rec_t))
-> > +
-> >  /*
-> >   * Return pointers to the data or attribute forks.
-> >   */
-> > diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> > index d38d724534c4..a41b6e5519e0 100644
-> > --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> > +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> > @@ -374,6 +374,45 @@ xfs_log_dinode_to_disk(
-> >  	}
-> >  }
-> >  
-> > +static xfs_failaddr_t
-> > +xfs_dinode_verify_fork(
-> > +	struct xfs_dinode	*dip,
-> > +	struct xfs_mount	*mp,
-> > +	int			whichfork)
-> > +{
-> > +	uint32_t		di_nextents = XFS_DFORK_NEXTENTS(dip, whichfork);
-> > +
-> > +	switch (XFS_DFORK_FORMAT(dip, whichfork)) {
-> > +	case XFS_DINODE_FMT_LOCAL:
-> > +		/*
-> > +		 * no local regular files yet
-> > +		 */
-> > +		if (whichfork == XFS_DATA_FORK) {
-> > +			if (S_ISREG(be16_to_cpu(dip->di_mode)))
-> > +				return __this_address;
-> > +			if (be64_to_cpu(dip->di_size) >
-> > +					XFS_DFORK_SIZE(dip, mp, whichfork))
-> > +				return __this_address;
-> > +		}
-> > +		if (di_nextents)
-> > +			return __this_address;
-> > +		/* fall through */
+On Fri, Jun 15, 2018 at 03:01:55PM +0200, Christoph Hellwig wrote:
+> We already have to check for overlapping COW extents everytime we
+> come back to a page in xfs_writepage_map / xfs_map_cow, so this
+> additional trim is not required.
 > 
-> We could break here too, right?  There's no point in further checks of
-> di_nextents for local format forks.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> ---
+>  fs/xfs/xfs_aops.c    |  7 -------
+>  fs/xfs/xfs_reflink.c | 33 ---------------------------------
+>  fs/xfs/xfs_reflink.h |  2 --
+>  fs/xfs/xfs_trace.h   |  1 -
+>  4 files changed, 43 deletions(-)
 > 
-> > +	case XFS_DINODE_FMT_EXTENTS:
-> > +		if (di_nextents > XFS_DFORK_MAXEXT(dip, mp, whichfork))
-> > +			return __this_address;
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 39b933e17192..c8fc6786b06c 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -416,13 +416,6 @@ xfs_map_blocks(
+>  	offset_fsb = XFS_B_TO_FSBT(mp, offset);
+>  	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
+>  				imap, &nimaps, XFS_BMAPI_ENTIRE);
+> -	/*
+> -	 * Truncate an overwrite extent if there's a pending CoW
+> -	 * reservation before the end of this extent.  This forces us
+> -	 * to come back to writepage to take care of the CoW.
+> -	 */
+> -	if (nimaps && type == XFS_IO_OVERWRITE)
+> -		xfs_reflink_trim_irec_to_next_cow(ip, offset_fsb, imap);
+>  	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+>  
+>  	if (error)
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index 713e857d9ffa..d0092c864458 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -514,39 +514,6 @@ xfs_reflink_find_cow_mapping(
+>  	return true;
+>  }
+>  
+> -/*
+> - * Trim an extent to end at the next CoW reservation past offset_fsb.
+> - */
+> -void
+> -xfs_reflink_trim_irec_to_next_cow(
+> -	struct xfs_inode		*ip,
+> -	xfs_fileoff_t			offset_fsb,
+> -	struct xfs_bmbt_irec		*imap)
+> -{
+> -	struct xfs_ifork		*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
+> -	struct xfs_bmbt_irec		got;
+> -	struct xfs_iext_cursor		icur;
+> -
+> -	if (!xfs_is_reflink_inode(ip))
+> -		return;
+> -
+> -	/* Find the extent in the CoW fork. */
+> -	if (!xfs_iext_lookup_extent(ip, ifp, offset_fsb, &icur, &got))
+> -		return;
+> -
+> -	/* This is the extent before; try sliding up one. */
+> -	if (got.br_startoff < offset_fsb) {
+> -		if (!xfs_iext_next_extent(ifp, &icur, &got))
+> -			return;
+> -	}
+> -
+> -	if (got.br_startoff >= imap->br_startoff + imap->br_blockcount)
+> -		return;
+> -
+> -	imap->br_blockcount = got.br_startoff - imap->br_startoff;
+> -	trace_xfs_reflink_trim_irec(ip, imap);
+> -}
+> -
+>  /*
+>   * Cancel CoW reservations for some block range of an inode.
+>   *
+> diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+> index 701487bab468..c0a25609007b 100644
+> --- a/fs/xfs/xfs_reflink.h
+> +++ b/fs/xfs/xfs_reflink.h
+> @@ -34,8 +34,6 @@ extern int xfs_reflink_convert_cow(struct xfs_inode *ip, xfs_off_t offset,
+>  		xfs_off_t count);
+>  extern bool xfs_reflink_find_cow_mapping(struct xfs_inode *ip, xfs_off_t offset,
+>  		struct xfs_bmbt_irec *imap);
+> -extern void xfs_reflink_trim_irec_to_next_cow(struct xfs_inode *ip,
+> -		xfs_fileoff_t offset_fsb, struct xfs_bmbt_irec *imap);
+>  
+>  extern int xfs_reflink_cancel_cow_blocks(struct xfs_inode *ip,
+>  		struct xfs_trans **tpp, xfs_fileoff_t offset_fsb,
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 9d4c4ca24fe6..041045a8d65c 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -3228,7 +3228,6 @@ DEFINE_RW_EVENT(xfs_reflink_reserve_cow);
+>  
+>  DEFINE_SIMPLE_IO_EVENT(xfs_reflink_bounce_dio_write);
+>  DEFINE_IOMAP_EVENT(xfs_reflink_find_cow_mapping);
+> -DEFINE_INODE_IREC_EVENT(xfs_reflink_trim_irec);
+>  
+>  DEFINE_SIMPLE_IO_EVENT(xfs_reflink_cancel_cow_range);
+>  DEFINE_SIMPLE_IO_EVENT(xfs_reflink_end_cow);
+> -- 
+> 2.17.1
 > 
-> Are we supposed to break here?
-
-They all fall through like they used to, but they could break, too.
-The behaviour will be the same now.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
