@@ -1,87 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:47994 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755460AbeFSUlN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 16:41:13 -0400
-Date: Tue, 19 Jun 2018 13:40:57 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] mkfs: removed unused dft var from open_config_file
-Message-ID: <20180619204057.GE21698@magnolia>
-References: <b437d75c-7226-19bc-c709-9b706ef853eb@redhat.com>
+Received: from mx2.suse.de ([195.135.220.15]:53645 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755460AbeFSU5M (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 19 Jun 2018 16:57:12 -0400
+Date: Tue, 19 Jun 2018 22:57:10 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH v2] mkfs: add mkfs config version specifier for the
+ config file
+Message-ID: <20180619205710.GH7508@wotan.suse.de>
+References: <20180618180520.22146-1-mcgrof@kernel.org>
+ <e09a067d-5412-e0c7-f854-a0c5af1c6828@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <b437d75c-7226-19bc-c709-9b706ef853eb@redhat.com>
+In-Reply-To: <e09a067d-5412-e0c7-f854-a0c5af1c6828@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com
 
-On Tue, Jun 19, 2018 at 03:07:01PM -0500, Eric Sandeen wrote:
-> This should have been removed when I removed the dft->type
-> tracking.
+On Tue, Jun 19, 2018 at 02:53:28PM -0500, Eric Sandeen wrote:
+> Soo.... 
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> I'm really on the fence about versioning at all, because we have yet to
+> identify any concrete scenario in which we'd need to bump the version;
+> we haven't even defined what exactly the "version" implies.
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Right.
 
---D
+> So unless anyone has a concrete example of how a version would be needed,
+> functional, reliably-parsed, and well-defined I'm inclined to leave this out.
 
-> ---
-> 
-> diff --git a/mkfs/config.c b/mkfs/config.c
-> index 70d752c..e4534c3 100644
-> --- a/mkfs/config.c
-> +++ b/mkfs/config.c
-> @@ -549,9 +549,8 @@ config_stat_check(
->   * If not specified or if above fails, try either cli-spec'd file or "default"
->   * in MKFS_XFS_CONF_DIR.
->   *
-> - * If any config file is successfully opened, dft->type is set to reflect the
-> - * source, an fd is returned, and the absolute path is returned in **fpath,
-> - * which must be free()'d by the caller.
-> + * If any config file is successfully opened, an fd is returned, and the
-> + * absolute path is returned in **fpath, which must be free()'d by the caller.
->   *
->   * If a cli-specified file is not found -1 is returned and errno set. Otherwise
->   * the file descriptor is returned.
-> @@ -559,7 +558,6 @@ config_stat_check(
->  int
->  open_config_file(
->  	const char			*config_file,
-> -	struct mkfs_default_params	*dft,
->  	char				**fpath)
->  {
->  	int				dirfd = -1, fd = -1, len, ret = 0;
-> diff --git a/mkfs/config.h b/mkfs/config.h
-> index f4af2c7..d338347 100644
-> --- a/mkfs/config.h
-> +++ b/mkfs/config.h
-> @@ -79,7 +79,6 @@ struct mkfs_default_params {
->  int
->  open_config_file(
->  	const char			*cli_config_file,
-> -	struct mkfs_default_params	*dft,
->  	char				**fpath);
->  
->  int
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 9d85eab..9802150 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -3791,7 +3791,7 @@ _("respecification of configuration not allowed\n"));
->  		}
->  	}
->  
-> -	fd = open_config_file(cli_config_file, &dft, &config_file);
-> +	fd = open_config_file(cli_config_file, &config_file);
->  	if (fd >= 0) {
->  		ret = parse_defaults_file(fd, &dft, config_file);
->  		if (ret) {
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dave asked for it, so I would imagine he could make a better case for it.
+
+But from a generic file format point of view, a version typically does
+make sense for a slew of reasons, but it is typically the not known, the
+unexpected, for which it can be a life saver.
+
+Things that I can mention other than what you mentioned (whether or not
+they are good, this is just a list of crazy things):
+
+ 1) We move from using our own parser to e2fsprogs profile parser (recall
+    that my studies revealed it was the smallest) or lib_iniconfig (more
+    robust, and widely used, however a kitchen sink compared to e2fsprogs
+    profile parser)
+
+    Both however support the INI format we are using.
+
+    The version however may help to make the old parser not barf if
+    say we added some magic in the future which would make the old
+    parser barf.
+
+ 2) Data type change for an existing token. Say crc=2 was invented
+    (again just an example), it would barf on the old parser, but with
+    the version check it would immediately tell you a more meaningful
+    message.
+
+Perhaps the biggest advantage I can think of then then is a better error
+message for a set of supported features, starting with what we have today
+reflected as parsed as version 1. This does differ from what we do with
+the CLI, however as with the respecification simplifcation done on
+config.c in contrast to the CLI respecification checks, I would see
+this as a win for users, and yet keeps things simple.
+
+If this seems acceptable and reasonable, then version would be a reflection
+of supporting the format and layout of the file, as well was indicative
+of supporting only a specific feature set.
+
+Thoughts?
+
+  Luis
