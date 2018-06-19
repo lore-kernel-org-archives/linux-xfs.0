@@ -1,157 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:48504 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935908AbeFSFZ6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 01:25:58 -0400
-Date: Mon, 18 Jun 2018 22:25:30 -0700
+Received: from userp2120.oracle.com ([156.151.31.85]:35452 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750941AbeFSF05 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 01:26:57 -0400
+Date: Mon, 18 Jun 2018 22:26:51 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2] xfs: kill __xfs_buf_submit_common()
-Message-ID: <20180619052530.GP8128@magnolia>
-References: <20180618145244.30393-1-bfoster@redhat.com>
- <20180618145244.30393-3-bfoster@redhat.com>
+Subject: Re: [PATCH 06/24] xfs: move locking into
+ xfs_bmap_punch_delalloc_range
+Message-ID: <20180619052651.GQ8128@magnolia>
+References: <20180615130209.1970-1-hch@lst.de>
+ <20180615130209.1970-7-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180618145244.30393-3-bfoster@redhat.com>
+In-Reply-To: <20180615130209.1970-7-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Mon, Jun 18, 2018 at 10:52:44AM -0400, Brian Foster wrote:
-> Now that there is only one caller, fold the common submission helper
-> into __xfs_buf_submit().
+On Fri, Jun 15, 2018 at 03:01:51PM +0200, Christoph Hellwig wrote:
+> Both callers want the same looking, so do it only once.
 > 
-> Suggested-by: Christoph Hellwig <hch@infradead.org>
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Looks ok enough to test,
+Looks ok,
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
 > ---
->  fs/xfs/xfs_buf.c | 83 ++++++++++++++++++++----------------------------
->  1 file changed, 34 insertions(+), 49 deletions(-)
+>  fs/xfs/xfs_aops.c      | 2 --
+>  fs/xfs/xfs_bmap_util.c | 9 +++++----
+>  fs/xfs/xfs_iomap.c     | 3 ---
+>  3 files changed, 5 insertions(+), 9 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 64a9a09013e3..f747792038dc 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -1449,15 +1449,34 @@ _xfs_buf_ioapply(
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index d94dd6fe5127..026721c4991e 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -761,10 +761,8 @@ xfs_aops_discard_page(
+>  		"page discard on page "PTR_FMT", inode 0x%llx, offset %llu.",
+>  			page, ip->i_ino, offset);
+>  
+> -	xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  	error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
+>  			PAGE_SIZE / i_blocksize(inode));
+> -	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>  	if (error && !XFS_FORCED_SHUTDOWN(mp))
+>  		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
+>  out_invalidate:
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 0070b877ed94..6690a038892d 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -712,16 +712,15 @@ xfs_bmap_punch_delalloc_range(
+>  	struct xfs_iext_cursor	icur;
+>  	int			error = 0;
+>  
+> -	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+> -
+> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+>  		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
+>  		if (error)
+> -			return error;
+> +			goto out_unlock;
+>  	}
+>  
+>  	if (!xfs_iext_lookup_extent_before(ip, ifp, &end_fsb, &icur, &got))
+> -		return 0;
+> +		goto out_unlock;
+>  
+>  	while (got.br_startoff + got.br_blockcount > start_fsb) {
+>  		del = got;
+> @@ -745,6 +744,8 @@ xfs_bmap_punch_delalloc_range(
+>  			break;
+>  	}
+>  
+> +out_unlock:
+> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>  	return error;
 >  }
 >  
->  /*
-> - * Asynchronous IO submission path. This transfers the buffer lock ownership and
-> - * the current reference to the IO. It is not safe to reference the buffer after
-> - * a call to this function unless the caller holds an additional reference
-> - * itself.
-> + * Wait for I/O completion of a sync buffer and return the I/O error code.
->   */
->  static int
-> -__xfs_buf_submit_common(
-> +xfs_buf_iowait(
->  	struct xfs_buf	*bp)
->  {
-> +	ASSERT(!(bp->b_flags & XBF_ASYNC));
-> +
-> +	trace_xfs_buf_iowait(bp, _RET_IP_);
-> +	wait_for_completion(&bp->b_iowait);
-> +	trace_xfs_buf_iowait_done(bp, _RET_IP_);
-> +
-> +	return bp->b_error;
-> +}
-> +
-> +/*
-> + * Buffer I/O submission path, read or write. Asynchronous submission transfers
-> + * the buffer lock ownership and the current reference to the IO. It is not
-> + * safe to reference the buffer after a call to this function unless the caller
-> + * holds an additional reference itself.
-> + */
-> +int
-> +__xfs_buf_submit(
-> +	struct xfs_buf	*bp,
-> +	bool		wait)
-> +{
-> +	int		error = 0;
-> +
->  	trace_xfs_buf_submit(bp, _RET_IP_);
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 85c66e78f9e8..758ad9572d04 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -1205,11 +1205,8 @@ xfs_file_iomap_end_delalloc(
+>  		truncate_pagecache_range(VFS_I(ip), XFS_FSB_TO_B(mp, start_fsb),
+>  					 XFS_FSB_TO_B(mp, end_fsb) - 1);
 >  
->  	ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
-> @@ -1467,9 +1486,18 @@ __xfs_buf_submit_common(
->  		xfs_buf_ioerror(bp, -EIO);
->  		bp->b_flags &= ~XBF_DONE;
->  		xfs_buf_stale(bp);
-> +		if (bp->b_flags & XBF_ASYNC)
-> +			xfs_buf_ioend(bp);
->  		return -EIO;
->  	}
->  
-> +	/*
-> +	 * Grab a reference so the buffer does not go away underneath us. For
-> +	 * async buffers, I/O completion drops the callers reference, which
-> +	 * could occur before submission returns.
-> +	 */
-> +	xfs_buf_hold(bp);
-> +
->  	if (bp->b_flags & XBF_WRITE)
->  		xfs_buf_wait_unpin(bp);
->  
-> @@ -1498,52 +1526,9 @@ __xfs_buf_submit_common(
->  			xfs_buf_ioend_async(bp);
->  	}
->  
-> -	return 0;
-> -}
+> -		xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  		error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
+>  					       end_fsb - start_fsb);
+> -		xfs_iunlock(ip, XFS_ILOCK_EXCL);
 > -
-> -/*
-> - * Wait for I/O completion of a sync buffer and return the I/O error code.
-> - */
-> -static int
-> -xfs_buf_iowait(
-> -	struct xfs_buf	*bp)
-> -{
-> -	ASSERT(!(bp->b_flags & XBF_ASYNC));
-> -
-> -	trace_xfs_buf_iowait(bp, _RET_IP_);
-> -	wait_for_completion(&bp->b_iowait);
-> -	trace_xfs_buf_iowait_done(bp, _RET_IP_);
-> -
-> -	return bp->b_error;
-> -}
-> -
-> -/*
-> - * Synchronous buffer IO submission path, read or write.
-> - */
-> -int
-> -__xfs_buf_submit(
-> -	struct xfs_buf	*bp,
-> -	bool		wait)
-> -{
-> -	int		error;
-> -
-> -	/*
-> -	 * Grab a reference so the buffer does not go away underneath us. For
-> -	 * async buffers, I/O completion drops the callers reference, which
-> -	 * could occur before submission returns.
-> -	 */
-> -	xfs_buf_hold(bp);
-> -
-> -	error = __xfs_buf_submit_common(bp);
-> -	if (error) {
-> -		if (bp->b_flags & XBF_ASYNC)
-> -			xfs_buf_ioend(bp);
-> -		goto out;
-> -	}
-> -
->  	if (wait)
->  		error = xfs_buf_iowait(bp);
-> -out:
-> +
->  	/*
->  	 * Release the hold that keeps the buffer referenced for the entire
->  	 * I/O. Note that if the buffer is async, it is not safe to reference
+>  		if (error && !XFS_FORCED_SHUTDOWN(mp)) {
+>  			xfs_alert(mp, "%s: unable to clean up ino %lld",
+>  				__func__, ip->i_ino);
 > -- 
 > 2.17.1
 > 
