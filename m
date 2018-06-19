@@ -1,229 +1,234 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:50854 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S934773AbeFROwp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 18 Jun 2018 10:52:45 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 1/2] xfs: combine [a]sync buffer submission apis
-Date: Mon, 18 Jun 2018 10:52:43 -0400
-Message-Id: <20180618145244.30393-2-bfoster@redhat.com>
-In-Reply-To: <20180618145244.30393-1-bfoster@redhat.com>
-References: <20180618145244.30393-1-bfoster@redhat.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:40416 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750961AbeFSEr4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 00:47:56 -0400
+Date: Mon, 18 Jun 2018 21:47:48 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [RFC PATCH 0/5] kbuild: build modules from code in multiple
+ directories.
+Message-ID: <20180619044748.GA18671@infradead.org>
+References: <152929708853.17463.17302660556961083137.stgit@noble>
+ <20180618082017.GA4752@infradead.org>
+ <87po0ne7zw.fsf@notabene.neil.brown.name>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87po0ne7zw.fsf@notabene.neil.brown.name>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Christoph Hellwig <hch@infradead.org>
+To: NeilBrown <neilb@suse.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Masahiro Yamada <yamada.masahiro@socionext.com>, Michal Marek <michal.lkml@markovi.net>, linux-kernel@vger.kernel.org, linux-kbuild@vger.kernel.org, linux-xfs@vger.kernel.org
 
-The buffer I/O submission path consists of separate function calls
-per type. The buffer I/O type is already controlled via buffer
-state (XBF_ASYNC), however, so there is no real need for separate
-submission functions.
+On Tue, Jun 19, 2018 at 02:05:23PM +1000, NeilBrown wrote:
+> From: NeilBrown <neilb@suse.com>
+> Date: Tue, 19 Jun 2018 13:59:16 +1000
+> Subject: [PATCH] kbuild/xfs: example modobj-m conversion
+> 
+> This is a demonstration patch to show how
+> xfs can be changed to make use of the proposed modobj-m=
+> functionality, should the xfs developers want that.
 
-Combine the buffer submission functions into a single function that
-processes the buffer appropriately based on XBF_ASYNC. Retain an
-internal helper with a conditional wait parameter to continue to
-support batched !XBF_ASYNC submission/completion required by delwri
-queues.
+Well, IFF we go with this new functionality I think everyone should
+be using it instead of the current hacks.
 
-Suggested-by: Christoph Hellwig <hch@infradead.org>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_buf.c         | 72 +++++++++++++---------------------------
- fs/xfs/xfs_buf.h         | 10 ++++--
- fs/xfs/xfs_log_recover.c |  4 +--
- 3 files changed, 33 insertions(+), 53 deletions(-)
+So text like the above should be in the series cover letter, and this
+patch should have an actual description..
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index b5c0f6949b30..64a9a09013e3 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -757,11 +757,7 @@ _xfs_buf_read(
- 	bp->b_flags &= ~(XBF_WRITE | XBF_ASYNC | XBF_READ_AHEAD);
- 	bp->b_flags |= flags & (XBF_READ | XBF_ASYNC | XBF_READ_AHEAD);
- 
--	if (flags & XBF_ASYNC) {
--		xfs_buf_submit(bp);
--		return 0;
--	}
--	return xfs_buf_submit_wait(bp);
-+	return xfs_buf_submit(bp);
- }
- 
- xfs_buf_t *
-@@ -846,7 +842,7 @@ xfs_buf_read_uncached(
- 	bp->b_flags |= XBF_READ;
- 	bp->b_ops = ops;
- 
--	xfs_buf_submit_wait(bp);
-+	xfs_buf_submit(bp);
- 	if (bp->b_error) {
- 		int	error = bp->b_error;
- 		xfs_buf_relse(bp);
-@@ -1249,7 +1245,7 @@ xfs_bwrite(
- 	bp->b_flags &= ~(XBF_ASYNC | XBF_READ | _XBF_DELWRI_Q |
- 			 XBF_WRITE_FAIL | XBF_DONE);
- 
--	error = xfs_buf_submit_wait(bp);
-+	error = xfs_buf_submit(bp);
- 	if (error) {
- 		xfs_force_shutdown(bp->b_target->bt_mount,
- 				   SHUTDOWN_META_IO_ERROR);
-@@ -1459,7 +1455,7 @@ _xfs_buf_ioapply(
-  * itself.
-  */
- static int
--__xfs_buf_submit(
-+__xfs_buf_submit_common(
- 	struct xfs_buf	*bp)
- {
- 	trace_xfs_buf_submit(bp, _RET_IP_);
-@@ -1505,32 +1501,6 @@ __xfs_buf_submit(
- 	return 0;
- }
- 
--void
--xfs_buf_submit(
--	struct xfs_buf	*bp)
--{
--	int		error;
--
--	ASSERT(bp->b_flags & XBF_ASYNC);
--
--	/*
--	 * The caller's reference is released during I/O completion.
--	 * This occurs some time after the last b_io_remaining reference is
--	 * released, so after we drop our Io reference we have to have some
--	 * other reference to ensure the buffer doesn't go away from underneath
--	 * us. Take a direct reference to ensure we have safe access to the
--	 * buffer until we are finished with it.
--	 */
--	xfs_buf_hold(bp);
--
--	error = __xfs_buf_submit(bp);
--	if (error)
--		xfs_buf_ioend(bp);
--
--	/* Note: it is not safe to reference bp now we've dropped our ref */
--	xfs_buf_rele(bp);
--}
--
- /*
-  * Wait for I/O completion of a sync buffer and return the I/O error code.
-  */
-@@ -1538,6 +1508,8 @@ static int
- xfs_buf_iowait(
- 	struct xfs_buf	*bp)
- {
-+	ASSERT(!(bp->b_flags & XBF_ASYNC));
-+
- 	trace_xfs_buf_iowait(bp, _RET_IP_);
- 	wait_for_completion(&bp->b_iowait);
- 	trace_xfs_buf_iowait_done(bp, _RET_IP_);
-@@ -1549,30 +1521,33 @@ xfs_buf_iowait(
-  * Synchronous buffer IO submission path, read or write.
-  */
- int
--xfs_buf_submit_wait(
--	struct xfs_buf	*bp)
-+__xfs_buf_submit(
-+	struct xfs_buf	*bp,
-+	bool		wait)
- {
- 	int		error;
- 
--	ASSERT(!(bp->b_flags & XBF_ASYNC));
--
- 	/*
--	 * For synchronous IO, the IO does not inherit the submitters reference
--	 * count, nor the buffer lock. Hence we cannot release the reference we
--	 * are about to take until we've waited for all IO completion to occur,
--	 * including any xfs_buf_ioend_async() work that may be pending.
-+	 * Grab a reference so the buffer does not go away underneath us. For
-+	 * async buffers, I/O completion drops the callers reference, which
-+	 * could occur before submission returns.
- 	 */
- 	xfs_buf_hold(bp);
- 
--	error = __xfs_buf_submit(bp);
--	if (error)
-+	error = __xfs_buf_submit_common(bp);
-+	if (error) {
-+		if (bp->b_flags & XBF_ASYNC)
-+			xfs_buf_ioend(bp);
- 		goto out;
--	error = xfs_buf_iowait(bp);
-+	}
- 
-+	if (wait)
-+		error = xfs_buf_iowait(bp);
- out:
- 	/*
--	 * all done now, we can release the hold that keeps the buffer
--	 * referenced for the entire IO.
-+	 * Release the hold that keeps the buffer referenced for the entire
-+	 * I/O. Note that if the buffer is async, it is not safe to reference
-+	 * after this release.
- 	 */
- 	xfs_buf_rele(bp);
- 	return error;
-@@ -2026,12 +2001,11 @@ xfs_buf_delwri_submit_buffers(
- 		if (wait_list) {
- 			bp->b_flags &= ~XBF_ASYNC;
- 			list_move_tail(&bp->b_list, wait_list);
--			__xfs_buf_submit(bp);
- 		} else {
- 			bp->b_flags |= XBF_ASYNC;
- 			list_del_init(&bp->b_list);
--			xfs_buf_submit(bp);
- 		}
-+		__xfs_buf_submit(bp, false);
- 	}
- 	blk_finish_plug(&plug);
- 
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index d24dbd4dac39..a57693a5cdd7 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -298,8 +298,14 @@ extern void __xfs_buf_ioerror(struct xfs_buf *bp, int error,
- 		xfs_failaddr_t failaddr);
- #define xfs_buf_ioerror(bp, err) __xfs_buf_ioerror((bp), (err), __this_address)
- extern void xfs_buf_ioerror_alert(struct xfs_buf *, const char *func);
--extern void xfs_buf_submit(struct xfs_buf *bp);
--extern int xfs_buf_submit_wait(struct xfs_buf *bp);
-+
-+extern int __xfs_buf_submit(struct xfs_buf *bp, bool);
-+static inline int xfs_buf_submit(struct xfs_buf *bp)
-+{
-+	bool wait = bp->b_flags & XBF_ASYNC ? false : true;
-+	return __xfs_buf_submit(bp, wait);
-+}
-+
- extern void xfs_buf_iomove(xfs_buf_t *, size_t, size_t, void *,
- 				xfs_buf_rw_t);
- #define xfs_buf_zero(bp, off, len) \
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index b181b5f57a19..724a76d87564 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -196,7 +196,7 @@ xlog_bread_noalign(
- 	bp->b_io_length = nbblks;
- 	bp->b_error = 0;
- 
--	error = xfs_buf_submit_wait(bp);
-+	error = xfs_buf_submit(bp);
- 	if (error && !XFS_FORCED_SHUTDOWN(log->l_mp))
- 		xfs_buf_ioerror_alert(bp, __func__);
- 	return error;
-@@ -5707,7 +5707,7 @@ xlog_do_recover(
- 	bp->b_flags |= XBF_READ;
- 	bp->b_ops = &xfs_sb_buf_ops;
- 
--	error = xfs_buf_submit_wait(bp);
-+	error = xfs_buf_submit(bp);
- 	if (error) {
- 		if (!XFS_FORCED_SHUTDOWN(mp)) {
- 			xfs_buf_ioerror_alert(bp, __func__);
--- 
-2.17.1
+I see no argument against these changes, but I've also added the XFS
+list.
 
+> 
+> Signed-off-by: NeilBrown <neilb@suse.com>
+> ---
+>  fs/xfs/Makefile        | 78 ++------------------------------------------------
+>  fs/xfs/libxfs/Makefile | 43 ++++++++++++++++++++++++++++
+>  fs/xfs/scrub/Makefile  | 29 +++++++++++++++++++
+>  3 files changed, 74 insertions(+), 76 deletions(-)
+>  create mode 100644 fs/xfs/libxfs/Makefile
+>  create mode 100644 fs/xfs/scrub/Makefile
+> 
+> diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+> index 2f3f75a7f180..0ba854045fe9 100644
+> --- a/fs/xfs/Makefile
+> +++ b/fs/xfs/Makefile
+> @@ -15,47 +15,7 @@ obj-$(CONFIG_XFS_FS)		+= xfs.o
+>  xfs-y				+= xfs_trace.o
+>  
+>  # build the libxfs code first
+> -xfs-y				+= $(addprefix libxfs/, \
+> -				   xfs_ag.o \
+> -				   xfs_alloc.o \
+> -				   xfs_alloc_btree.o \
+> -				   xfs_attr.o \
+> -				   xfs_attr_leaf.o \
+> -				   xfs_attr_remote.o \
+> -				   xfs_bit.o \
+> -				   xfs_bmap.o \
+> -				   xfs_bmap_btree.o \
+> -				   xfs_btree.o \
+> -				   xfs_da_btree.o \
+> -				   xfs_da_format.o \
+> -				   xfs_defer.o \
+> -				   xfs_dir2.o \
+> -				   xfs_dir2_block.o \
+> -				   xfs_dir2_data.o \
+> -				   xfs_dir2_leaf.o \
+> -				   xfs_dir2_node.o \
+> -				   xfs_dir2_sf.o \
+> -				   xfs_dquot_buf.o \
+> -				   xfs_ialloc.o \
+> -				   xfs_ialloc_btree.o \
+> -				   xfs_iext_tree.o \
+> -				   xfs_inode_fork.o \
+> -				   xfs_inode_buf.o \
+> -				   xfs_log_rlimit.o \
+> -				   xfs_ag_resv.o \
+> -				   xfs_rmap.o \
+> -				   xfs_rmap_btree.o \
+> -				   xfs_refcount.o \
+> -				   xfs_refcount_btree.o \
+> -				   xfs_sb.o \
+> -				   xfs_symlink_remote.o \
+> -				   xfs_trans_resv.o \
+> -				   xfs_types.o \
+> -				   )
+> -# xfs_rtbitmap is shared with libxfs
+> -xfs-$(CONFIG_XFS_RT)		+= $(addprefix libxfs/, \
+> -				   xfs_rtbitmap.o \
+> -				   )
+> +xfs-y				+= libxfs/
+>  
+>  # highlevel code
+>  xfs-y				+= xfs_aops.o \
+> @@ -127,38 +87,4 @@ xfs-$(CONFIG_SYSCTL)		+= xfs_sysctl.o
+>  xfs-$(CONFIG_COMPAT)		+= xfs_ioctl32.o
+>  xfs-$(CONFIG_EXPORTFS_BLOCK_OPS)	+= xfs_pnfs.o
+>  
+> -# online scrub/repair
+> -ifeq ($(CONFIG_XFS_ONLINE_SCRUB),y)
+> -
+> -# Tracepoints like to blow up, so build that before everything else
+> -
+> -xfs-y				+= $(addprefix scrub/, \
+> -				   trace.o \
+> -				   agheader.o \
+> -				   alloc.o \
+> -				   attr.o \
+> -				   bmap.o \
+> -				   btree.o \
+> -				   common.o \
+> -				   dabtree.o \
+> -				   dir.o \
+> -				   ialloc.o \
+> -				   inode.o \
+> -				   parent.o \
+> -				   refcount.o \
+> -				   rmap.o \
+> -				   scrub.o \
+> -				   symlink.o \
+> -				   )
+> -
+> -xfs-$(CONFIG_XFS_RT)		+= scrub/rtbitmap.o
+> -xfs-$(CONFIG_XFS_QUOTA)		+= scrub/quota.o
+> -
+> -# online repair
+> -ifeq ($(CONFIG_XFS_ONLINE_REPAIR),y)
+> -xfs-y				+= $(addprefix scrub/, \
+> -				   agheader_repair.o \
+> -				   repair.o \
+> -				   )
+> -endif
+> -endif
+> +xfs-$(CONFIG_XFS_ONLINE_SCRUB)	+= scrub/
+> diff --git a/fs/xfs/libxfs/Makefile b/fs/xfs/libxfs/Makefile
+> new file mode 100644
+> index 000000000000..9b90c289bdda
+> --- /dev/null
+> +++ b/fs/xfs/libxfs/Makefile
+> @@ -0,0 +1,43 @@
+> +# SPDX-License-Identifier: GPL-2.0
+> +
+> +ccflags-y += -I$(src)/..
+> +
+> +# xfs_rtbitmap is shared with libxfs
+> +xobj-$(CONFIG_XFS_RT)		+= xfs_rtbitmap.o
+> +
+> +modobj-$(CONFIG_XFS_FS) +=	   xfs_ag.o \
+> +				   xfs_alloc.o \
+> +				   xfs_alloc_btree.o \
+> +				   xfs_attr.o \
+> +				   xfs_attr_leaf.o \
+> +				   xfs_attr_remote.o \
+> +				   xfs_bit.o \
+> +				   xfs_bmap.o \
+> +				   xfs_bmap_btree.o \
+> +				   xfs_btree.o \
+> +				   xfs_da_btree.o \
+> +				   xfs_da_format.o \
+> +				   xfs_defer.o \
+> +				   xfs_dir2.o \
+> +				   xfs_dir2_block.o \
+> +				   xfs_dir2_data.o \
+> +				   xfs_dir2_leaf.o \
+> +				   xfs_dir2_node.o \
+> +				   xfs_dir2_sf.o \
+> +				   xfs_dquot_buf.o \
+> +				   xfs_ialloc.o \
+> +				   xfs_ialloc_btree.o \
+> +				   xfs_iext_tree.o \
+> +				   xfs_inode_fork.o \
+> +				   xfs_inode_buf.o \
+> +				   xfs_log_rlimit.o \
+> +				   xfs_ag_resv.o \
+> +				   xfs_rmap.o \
+> +				   xfs_rmap_btree.o \
+> +				   xfs_refcount.o \
+> +				   xfs_refcount_btree.o \
+> +				   xfs_sb.o \
+> +				   xfs_symlink_remote.o \
+> +				   xfs_trans_resv.o \
+> +				   xfs_types.o \
+> +				   $(xobj-y)
+> diff --git a/fs/xfs/scrub/Makefile b/fs/xfs/scrub/Makefile
+> new file mode 100644
+> index 000000000000..f91818a0e6ee
+> --- /dev/null
+> +++ b/fs/xfs/scrub/Makefile
+> @@ -0,0 +1,29 @@
+> +# SPDX-License-Identifier: GPL-2.0
+> +
+> +# Tracepoints like to blow up, so build that before everything else
+> +
+> +ccflags-y += -I$(src)/..
+> +ccflags-y += -I$(src)/../libxfs
+> +
+> +xobj-$(CONFIG_XFS_RT)		+= rtbitmap.o
+> +xobj-$(CONFIG_XFS_QUOTA)	+= quota.o
+> +xobj-$(CONFIG_XFS_ONLINE_REPAIR)+= agheader_repair.o \
+> +				   repair.o
+> +
+> +modobj-$(CONFIG_XFS_FS) +=	   trace.o \
+> +				   agheader.o \
+> +				   alloc.o \
+> +				   attr.o \
+> +				   bmap.o \
+> +				   btree.o \
+> +				   common.o \
+> +				   dabtree.o \
+> +				   dir.o \
+> +				   ialloc.o \
+> +				   inode.o \
+> +				   parent.o \
+> +				   refcount.o \
+> +				   rmap.o \
+> +				   scrub.o \
+> +				   symlink.o \
+> +				   $(xobj-y)
+> -- 
+> 2.14.0.rc0.dirty
+> 
+
+
+---end quoted text---
