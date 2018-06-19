@@ -1,99 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:22729
-        "EHLO ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750917AbeFSXdT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 19:33:19 -0400
-Date: Wed, 20 Jun 2018 09:33:17 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2] xfs: transactionless xfs_bunmapi shouldn't do format
- conversion
-Message-ID: <20180619233317.GL19934@dastard>
-References: <20180619024128.22669-1-david@fromorbit.com>
- <20180619024128.22669-2-david@fromorbit.com>
- <20180619045405.GI8128@magnolia>
- <20180619052759.GH19934@dastard>
- <20180619060652.GW8128@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:34610 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752699AbeFSXwq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 19 Jun 2018 19:52:46 -0400
+Date: Wed, 20 Jun 2018 01:52:44 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH v2] mkfs: add mkfs config version specifier for the
+ config file
+Message-ID: <20180619235244.GA5527@wotan.suse.de>
+References: <20180618180520.22146-1-mcgrof@kernel.org>
+ <e09a067d-5412-e0c7-f854-a0c5af1c6828@sandeen.net>
+ <20180619205710.GH7508@wotan.suse.de>
+ <26e331b2-182b-d928-cb94-8bb9b836ae5c@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180619060652.GW8128@magnolia>
+In-Reply-To: <26e331b2-182b-d928-cb94-8bb9b836ae5c@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com
 
-On Mon, Jun 18, 2018 at 11:06:52PM -0700, Darrick J. Wong wrote:
-> On Tue, Jun 19, 2018 at 03:27:59PM +1000, Dave Chinner wrote:
-> > On Mon, Jun 18, 2018 at 09:54:05PM -0700, Darrick J. Wong wrote:
-> > > On Tue, Jun 19, 2018 at 12:41:27PM +1000, Dave Chinner wrote:
-> > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > 
-> > > > If we are punching out a delalloc extent, xfs_bunmapi() does not
-> > > > have a transaction context and should not ever need to convert the
-> > > > on-disk extent format. If such a thing is attempted (e.g. via a
-> > > > corrupt inode extent count in extent format) then we should abort
-> > > > with an EFSCORRUPTED error. Unfortunately, we don't do that and
-> > > > crash instead:
-> > > > 
-> > > >  XFS (loop0): page discard on page 0000000005fd24f3, inode 0x75e5, offset 0.
-> > > >  ==================================================================
-> > > >  BUG: KASAN: null-ptr-deref in xfs_alloc_get_freelist+0x115/0x350
-> > > >  Read of size 8 at addr 0000000000000028 by task a.out/1406
-> > > >  CPU: 0 PID: 1406 Comm: a.out Not tainted 4.17.0-rc4-kasan #2
-> > > >  Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Ubuntu-1.8.2-1ubuntu1 04/01/2014
-> > > >  Call Trace:
-> > > >   dump_stack+0x7b/0xb5
-> > > >   kasan_report+0x10c/0x390
-> > > >   __asan_load8+0x54/0x90
-> > > >   xfs_alloc_get_freelist+0x115/0x350
-> > > >   xfs_alloc_fix_freelist+0x35b/0x830
-> > > >   xfs_alloc_vextent+0x215/0x990
-> > > >   xfs_bmap_extents_to_btree+0x30d/0x940
-> > > > .....
-> > > > 
-> > > > By returning an error here, we avoid such crashes when punching out
-> > > > a delalloc page because we don't try to fix up an AG freelist
-> > > > without a transaction. Hence we get an error like so:
-> > > 
-> > > Um, isn't erroring out here leaving a dirty bomb in the in-core metadata?
+On Tue, Jun 19, 2018 at 04:21:25PM -0500, Eric Sandeen wrote:
+> On 6/19/18 3:57 PM, Luis R. Rodriguez wrote:
+> > But from a generic file format point of view, a version typically does
+> > make sense for a slew of reasons, but it is typically the not known, the
+> > unexpected, for which it can be a life saver.
 > > 
-> > Not that I can tell. We've already trashed the dirty page state by
-> > this point, so the page cache can safely reclaim the page and the
-> > delalloc range over it will never get written.  And the XFS inode
-> > cleanup code didn't have any issues with the way the error was
-> > handled, either, because the delalloc range was actually removed
-> > before the fork format error was triggered.
+> > Things that I can mention other than what you mentioned (whether or not
+> > they are good, this is just a list of crazy things):
 > > 
-> > IOWs, there is no dirty, stale page state or delalloc extents
-> > hanging around if this error fires.
-> 
-> Hmmm, well I guess I'll pull this one in and look for problems.
-> 
-> I wonder, is there a <cough> testcase for this?  Or a fuzz-o-matic to
-> turn all these things into regression tests?
-
-No test case. Should be able to create one easily enough with
-xfs_db, though I haven't tried. Do the inode fuzzer tests screw with
-the extent count?
-
-> > But OTOH, I don't want to risk a bunch of filesystem corrupting
-> > regressions across the entire XFS userbase just to fix a trivially
-> > simple crash that requires an extremely unlikely co-ordinated
-> > corruption of an inode data fork and an AGFL, and to simultaneously
-> > have ENOSPC in every other AGF in the filesystem.
+> >  1) We move from using our own parser to e2fsprogs profile parser (recall
+> >     that my studies revealed it was the smallest) or lib_iniconfig (more
+> >     robust, and widely used, however a kitchen sink compared to e2fsprogs
+> >     profile parser)
 > > 
-> > Put "refactor xfs_bunmapi()" on the list of "things to do when
-> > there's nothing else to do"...
+> >     Both however support the INI format we are using.
+> > 
+> >     The version however may help to make the old parser not barf if
+> >     say we added some magic in the future which would make the old
+> >     parser barf.
 > 
-> So in 2066 after the polar ice caps melt after the XFS LOGHAMMER attack
-> has finally been put down?  Ok. :)
+> ... if the file format does not change, a parser change doesn't matter, and
+> a version change would be pointless.
 
-I'm sure someone will have reason to factor it before then :P
+It can. Consider support for different comment styles.
 
-Cheers,
+> >  2) Data type change for an existing token. Say crc=2 was invented
+> >     (again just an example), it would barf on the old parser, but with
+> >     the version check it would immediately tell you a more meaningful
+> >     message.
+> 
+> But how is that any different from what it would do on the command line for
+> a similar change?
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+So long as we remain forward compatible its a non-issue. If we say decide
+to make a unit not compatible with old values then surely that's a format
+change which would break old configs.
+
+We should keep the config file parser ompatible with old config files produced.
+That means anything and everything we allow today should keep working in the
+future, and one way to sanely break that compatibility would be a version bump.
+
+> "Invalid value 2 for token crc=2 on line XYZ" is completely reasonable, and
+> does not require any version information.
+> 
+> In fact, what you are suggesting here means we'd bump the version if and only
+> if the config file contained "crc=2" which makes little sense.
+
+For example, a config file in the future with format 2 with crc=2 would not
+work with and older xfsprog which only supports format version 1. Saying
+that your xfsprogs does not support version 2 is IMHO clearer what the
+issue may be.
+
+> > message for a set of supported features, starting with what we have today
+> > reflected as parsed as version 1. This does differ from what we do with
+> > the CLI, however as with the respecification simplifcation done on
+> > config.c in contrast to the CLI respecification checks, I would see
+> > this as a win for users, and yet keeps things simple.
+> 
+> See my earlier email for why versioning cannot depend on the presence or
+> absence of any parseable tokens ... stating "token XYZ not supported"
+> should suffice IMHO.
+
+It can. And ultimately its up to you to pick and choose.
+
+> (now, it's true that today we don't distinguish between unknown vs.
+> unsupported tokens, I don't know if I should try to fix that before 4.17
+> or not; again, though,
+
+I don't think its worth to say something is unsupported vs unknown given
+we don't know what options will be supported, as some config file entries
+are expected to differ from CLI.
+
+> that is on the parser side, not the config file side.)
+> 
+> > If this seems acceptable and reasonable, then version would be a reflection
+> > of supporting the format and layout of the file, as well was indicative
+> > of supporting only a specific feature set.
+> 
+> What is or is not a supported token is wholly a function of the mkfs/parser
+> version, not the config file version, right?
+
+Yes.
+
+> So, not to be argumentative ... but I remain unconvinced of the need for
+> config file versioning.
+
+Your call :)
+
+  Luis
