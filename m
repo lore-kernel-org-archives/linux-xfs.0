@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:55468 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:55750 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1030233AbeFSQlq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 12:41:46 -0400
+        with ESMTP id S1030250AbeFSQly (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 12:41:54 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/6] fs: factor out a __generic_write_end helper
-Date: Tue, 19 Jun 2018 18:41:31 +0200
-Message-Id: <20180619164137.13720-2-hch@lst.de>
+Subject: [PATCH 4/6] iomap: generic inline data handling
+Date: Tue, 19 Jun 2018 18:41:34 +0200
+Message-Id: <20180619164137.13720-5-hch@lst.de>
 In-Reply-To: <20180619164137.13720-1-hch@lst.de>
 References: <20180619164137.13720-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,117 +15,150 @@ List-Id: xfs
 To: Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org
 Cc: Dan Williams <dan.j.williams@intel.com>, linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com, linux-ext4@vger.kernel.org
 
-Bits of the buffer.c based write_end implementations that don't know
-about buffer_heads and can be reused by other implementations.
+From: Andreas Gruenbacher <agruenba@redhat.com>
 
+Add generic inline data handling by adding a pointer to the inline data
+region to struct iomap.  When handling a buffered IOMAP_INLINE write,
+iomap_write_begin will copy the current inline data from the inline data
+region into the page cache, and iomap_write_end will copy the changes in
+the page cache back to the inline data region.
+
+This doesn't cover inline data reads and direct I/O yet because so far,
+we have no users.
+
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+[hch: small cleanups to better fit in with other iomap work]
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Andreas Gruenbacher <agruenba@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/buffer.c   | 67 +++++++++++++++++++++++++++------------------------
- fs/internal.h |  2 ++
- 2 files changed, 37 insertions(+), 32 deletions(-)
+ fs/iomap.c            | 62 ++++++++++++++++++++++++++++++++++++++-----
+ include/linux/iomap.h |  1 +
+ 2 files changed, 56 insertions(+), 7 deletions(-)
 
-diff --git a/fs/buffer.c b/fs/buffer.c
-index cabc045f483d..aba2a948b235 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -2076,6 +2076,40 @@ int block_write_begin(struct address_space *mapping, loff_t pos, unsigned len,
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 9c454459a1e9..4aecd7c5dbd8 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -103,6 +103,26 @@ iomap_sector(struct iomap *iomap, loff_t pos)
+ 	return (iomap->addr + pos - iomap->offset) >> SECTOR_SHIFT;
  }
- EXPORT_SYMBOL(block_write_begin);
  
-+int __generic_write_end(struct inode *inode, loff_t pos, unsigned copied,
-+		struct page *page)
++static void
++iomap_read_inline_data(struct inode *inode, struct page *page,
++		struct iomap *iomap)
 +{
-+	loff_t old_size = inode->i_size;
-+	bool i_size_changed = false;
++	size_t size = i_size_read(inode);
++	void *addr;
 +
-+	/*
-+	 * No need to use i_size_read() here, the i_size cannot change under us
-+	 * because we hold i_rwsem.
-+	 *
-+	 * But it's important to update i_size while still holding page lock:
-+	 * page writeout could otherwise come in and zero beyond i_size.
-+	 */
-+	if (pos + copied > inode->i_size) {
-+		i_size_write(inode, pos + copied);
-+		i_size_changed = true;
-+	}
++	if (PageUptodate(page))
++		return;
 +
-+	unlock_page(page);
-+	put_page(page);
++	BUG_ON(page->index);
++	BUG_ON(size > PAGE_SIZE - offset_in_page(iomap->inline_data));
 +
-+	if (old_size < pos)
-+		pagecache_isize_extended(inode, old_size, pos);
-+	/*
-+	 * Don't mark the inode dirty under page lock. First, it unnecessarily
-+	 * makes the holding time of page lock longer. Second, it forces lock
-+	 * ordering of page lock and transaction start for journaling
-+	 * filesystems.
-+	 */
-+	if (i_size_changed)
-+		mark_inode_dirty(inode);
++	addr = kmap_atomic(page);
++	memcpy(addr, iomap->inline_data, size);
++	memset(addr + size, 0, PAGE_SIZE - size);
++	kunmap_atomic(addr);
++	SetPageUptodate(page);
++}
++
+ static void
+ iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
+ {
+@@ -133,7 +153,11 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
+ 	if (!page)
+ 		return -ENOMEM;
+ 
+-	status = __block_write_begin_int(page, pos, len, NULL, iomap);
++	if (iomap->type == IOMAP_INLINE)
++		iomap_read_inline_data(inode, page, iomap);
++	else
++		status = __block_write_begin_int(page, pos, len, NULL, iomap);
++
+ 	if (unlikely(status)) {
+ 		unlock_page(page);
+ 		put_page(page);
+@@ -146,14 +170,37 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
+ 	return status;
+ }
+ 
++static int
++iomap_write_end_inline(struct inode *inode, struct page *page,
++		struct iomap *iomap, loff_t pos, unsigned copied)
++{
++	void *addr;
++
++	WARN_ON_ONCE(!PageUptodate(page));
++	BUG_ON(pos + copied > PAGE_SIZE - offset_in_page(iomap->inline_data));
++
++	addr = kmap_atomic(page);
++	memcpy(iomap->inline_data + pos, addr + pos, copied);
++	kunmap_atomic(addr);
++
++	mark_inode_dirty(inode);
++	__generic_write_end(inode, pos, copied, page);
 +	return copied;
 +}
 +
- int block_write_end(struct file *file, struct address_space *mapping,
- 			loff_t pos, unsigned len, unsigned copied,
- 			struct page *page, void *fsdata)
-@@ -2116,39 +2150,8 @@ int generic_write_end(struct file *file, struct address_space *mapping,
- 			loff_t pos, unsigned len, unsigned copied,
- 			struct page *page, void *fsdata)
+ static int
+ iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
+-		unsigned copied, struct page *page)
++		unsigned copied, struct page *page, struct iomap *iomap)
  {
--	struct inode *inode = mapping->host;
--	loff_t old_size = inode->i_size;
--	int i_size_changed = 0;
--
- 	copied = block_write_end(file, mapping, pos, len, copied, page, fsdata);
--
--	/*
--	 * No need to use i_size_read() here, the i_size
--	 * cannot change under us because we hold i_mutex.
--	 *
--	 * But it's important to update i_size while still holding page lock:
--	 * page writeout could otherwise come in and zero beyond i_size.
--	 */
--	if (pos+copied > inode->i_size) {
--		i_size_write(inode, pos+copied);
--		i_size_changed = 1;
--	}
--
--	unlock_page(page);
--	put_page(page);
--
--	if (old_size < pos)
--		pagecache_isize_extended(inode, old_size, pos);
--	/*
--	 * Don't mark the inode dirty under page lock. First, it unnecessarily
--	 * makes the holding time of page lock longer. Second, it forces lock
--	 * ordering of page lock and transaction start for journaling
--	 * filesystems.
--	 */
--	if (i_size_changed)
--		mark_inode_dirty(inode);
--
--	return copied;
-+	return __generic_write_end(mapping->host, pos, copied, page);
- }
- EXPORT_SYMBOL(generic_write_end);
+ 	int ret;
  
-diff --git a/fs/internal.h b/fs/internal.h
-index 980d005b21b4..4a18bdbd2214 100644
---- a/fs/internal.h
-+++ b/fs/internal.h
-@@ -43,6 +43,8 @@ static inline int __sync_blockdev(struct block_device *bdev, int wait)
- extern void guard_bio_eod(int rw, struct bio *bio);
- extern int __block_write_begin_int(struct page *page, loff_t pos, unsigned len,
- 		get_block_t *get_block, struct iomap *iomap);
-+int __generic_write_end(struct inode *inode, loff_t pos, unsigned copied,
-+		struct page *page);
+-	ret = generic_write_end(NULL, inode->i_mapping, pos, len,
+-			copied, page, NULL);
++	if (iomap->type == IOMAP_INLINE) {
++		ret = iomap_write_end_inline(inode, page, iomap, pos, copied);
++	} else {
++		ret = generic_write_end(NULL, inode->i_mapping, pos, len,
++				copied, page, NULL);
++	}
++
+ 	if (ret < len)
+ 		iomap_write_failed(inode, pos, len);
+ 	return ret;
+@@ -208,7 +255,8 @@ iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 
+ 		flush_dcache_page(page);
+ 
+-		status = iomap_write_end(inode, pos, bytes, copied, page);
++		status = iomap_write_end(inode, pos, bytes, copied, page,
++				iomap);
+ 		if (unlikely(status < 0))
+ 			break;
+ 		copied = status;
+@@ -302,7 +350,7 @@ iomap_dirty_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 
+ 		WARN_ON_ONCE(!PageUptodate(page));
+ 
+-		status = iomap_write_end(inode, pos, bytes, bytes, page);
++		status = iomap_write_end(inode, pos, bytes, bytes, page, iomap);
+ 		if (unlikely(status <= 0)) {
+ 			if (WARN_ON_ONCE(status == 0))
+ 				return -EIO;
+@@ -354,7 +402,7 @@ static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
+ 	zero_user(page, offset, bytes);
+ 	mark_page_accessed(page);
+ 
+-	return iomap_write_end(inode, pos, bytes, bytes, page);
++	return iomap_write_end(inode, pos, bytes, bytes, page, iomap);
+ }
+ 
+ static int iomap_dax_zero(loff_t pos, unsigned offset, unsigned bytes,
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index a044a824da85..10d6cff7f69a 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -55,6 +55,7 @@ struct iomap {
+ 	u16			flags;	/* flags for mapping */
+ 	struct block_device	*bdev;	/* block device for I/O */
+ 	struct dax_device	*dax_dev; /* dax_dev for dax operations */
++	void			*inline_data;
+ };
  
  /*
-  * char_dev.c
 -- 
 2.17.1
 
