@@ -1,51 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:43055 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S937124AbeFSCdU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jun 2018 22:33:20 -0400
-Date: Tue, 19 Jun 2018 12:32:46 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS: Assertion failed: !rwsem_is_locked(&inode->i_rwsem)
-Message-ID: <20180619023246.GG19934@dastard>
-References: <20180619021746.GA6652@linux.intel.com>
+Received: from mail1.g1.pair.com ([66.39.3.162]:46118 "EHLO mail1.g1.pair.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S966087AbeFSQGg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 19 Jun 2018 12:06:36 -0400
+Date: Tue, 19 Jun 2018 18:00:27 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: Mounting xfs filesystem takes long time
+Message-ID: <20180619180027.723d1779@harpe.intellique.com>
+In-Reply-To: <2a9a023d-fa37-59dc-caf2-c7c4167d3c75@levigo.de>
+References: <2a9a023d-fa37-59dc-caf2-c7c4167d3c75@levigo.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180619021746.GA6652@linux.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/OT8FEjY=1mPg4cpLGXlWI1M"; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <ross.zwisler@linux.intel.com>
+To: "swadmin - levigo.de" <swadmin@levigo.de>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jun 18, 2018 at 08:17:46PM -0600, Ross Zwisler wrote:
-> During some xfstest runs on next-20180615 I hit the following with DAX +
-> generic/388:
-> 
-> ================================================
-> WARNING: lock held when returning to user space!
-> 4.17.0-next-20180615-00001-gf09d99951966 #2 Not tainted
-> ------------------------------------------------
-> fsstress/6598 is leaving the kernel with locks still held!
-> 2 locks held by fsstress/6598:
->  #0: 00000000d8f89e14 (&sb->s_type->i_mutex_key#13){++++}, at: xfs_ilock+0x211/0x310
->  #1: 000000005cc93137 (&(&ip->i_mmaplock)->mr_lock){++++}, at: xfs_ilock+0x1eb/0x310
+--Sig_/OT8FEjY=1mPg4cpLGXlWI1M
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-What errors occurred before this? generic/388 is testing all sorts
-of error paths by randomly shutting down the filesystem, so it'e
-entirely possible that we've leaked those locks (XFS_IOLOCK and
-XFS_MMAPLOCK) on some rarely travelled error path. The prior errors
-might help identify that path.
+Le Tue, 19 Jun 2018 14:27:29 +0200
+"swadmin - levigo.de" <swadmin@levigo.de> =C3=A9crivait:
 
-> XFS: Assertion failed: !rwsem_is_locked(&inode->i_rwsem), file: fs/xfs/xfs_super.c, line: 966
+> can anyone help me or know a kind of these problem. What else to try
+> out?
+>=20
 
-As this is just a follow on issue at unmount where we expect the
-inode to be unlocked before tearing it down - it's just a messenger,
-not the smoking gun...
+Maybe you have very high IO pressure on the underlying devices? Try
+this:
 
-Cheers,
+in a window, run "iostat -x 2" Look at the numbers for the device
+you'll be using. Particularly look at the "% use" and "IO wait" values.
+They should be at zero, or close.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Now in another window mount the volume. See what happens in the output
+of iostat. Do you see any change? Aren't some devices receiving an high
+load? is the IO wait value up?
+
+--=20
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
+
+--Sig_/OT8FEjY=1mPg4cpLGXlWI1M
+Content-Type: application/pgp-signature
+Content-Description: Signature digitale OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iEYEARECAAYFAlspKJwACgkQX3jQXNUicVZSTwCg8FRCRk1MvdhhoZaXZBoDVXX6
+SyoAnRKZuYp50PNiD/ivkwUXxsq43QSr
+=u5hg
+-----END PGP SIGNATURE-----
+
+--Sig_/OT8FEjY=1mPg4cpLGXlWI1M--
