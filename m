@@ -1,95 +1,178 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it0-f68.google.com ([209.85.214.68]:52520 "EHLO
-        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S937707AbeFSPOc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 11:14:32 -0400
-Received: by mail-it0-f68.google.com with SMTP id m194-v6so877597itg.2
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Jun 2018 08:14:32 -0700 (PDT)
+Received: from aserp2130.oracle.com ([141.146.126.79]:39212 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966916AbeFSPs0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 11:48:26 -0400
+Date: Tue, 19 Jun 2018 08:48:10 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/2] xfs: zero length symlinks are not valid
+Message-ID: <20180619154810.GC21698@magnolia>
+References: <20180618055711.23391-1-david@fromorbit.com>
+ <20180618055711.23391-2-david@fromorbit.com>
+ <20180618132411.GB28320@bfoster>
+ <20180618224259.GF19934@dastard>
+ <20180619115434.GB2806@bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20180619143550.GA15162@lst.de>
-References: <20180614120457.28285-1-hch@lst.de> <CAHc6FU4nQ562SxepV1=dqcuuuPBWOTXr4sAiY_5H-Z7uOaTNng@mail.gmail.com>
- <20180615080326.GB19525@lst.de> <5a1e303b-e96e-7faf-1bcd-36d63a237514@redhat.com>
- <CAHc6FU79WMraW95k-p_2x8GF_dtmDBST50D=3joYAua2KBtOqw@mail.gmail.com> <20180619143550.GA15162@lst.de>
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Date: Tue, 19 Jun 2018 17:14:31 +0200
-Message-ID: <CAHc6FU4DWqFVpJE9SJvPbABgbH0goSG9ByFRD2YA1ydLF8_wYA@mail.gmail.com>
-Subject: Re: [Cluster-devel] iomap preparations for GFS2 v2
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180619115434.GB2806@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Steven Whitehouse <swhiteho@redhat.com>, cluster-devel <cluster-devel@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Dan Williams <dan.j.williams@intel.com>, linux-ext4 <linux-ext4@vger.kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-On 19 June 2018 at 16:35, Christoph Hellwig <hch@lst.de> wrote:
-> On Tue, Jun 19, 2018 at 01:08:12PM +0200, Andreas Gruenbacher wrote:
->> What I'm seeing in the readpage address space operation is pages which
->> are not PageUptodate(), with a page-size buffer head that is
->> buffer_uptodate(). The filesystem doesn't bother keeping the page
->> flags in sync with the buffer head flags, nothing unusual.
->
-> It is in fact highly unusual, as all the generic routines do set
-> the page uptodate once all buffers are uptodate.
->
->> When
->> iomap_readpage is called on such a page, it will replace the current
->> contents with what's on disk, losing the changes in memory. So we
->> cannot just call iomap_readpages, we need to check the buffer head
->> flags as well. Or, since the old code is still needed for page size !=
->> block size anyway, we can fall back to that for pages that have
->> buffers for now.
->
-> I'd like to understand where that buffer_head comes from, something
-> seems fishy here.
+On Tue, Jun 19, 2018 at 07:54:34AM -0400, Brian Foster wrote:
+> On Tue, Jun 19, 2018 at 08:42:59AM +1000, Dave Chinner wrote:
+> > On Mon, Jun 18, 2018 at 09:24:11AM -0400, Brian Foster wrote:
+> > > On Mon, Jun 18, 2018 at 03:57:10PM +1000, Dave Chinner wrote:
+> > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > 
+> > > > A log recovery failure has been reproduced where a symlink inode has
+> > > > a zero length in extent form. It was caused by a shutdown during a
+> > > > combined fstress+fsmark workload.
+> > > > 
+> > > > The underlying problem is the issue in xfs_inactive_symlink(): the
+> > > > inode is unlocked between the symlink inactivation/truncation and
+> > > > the inode being freed. This opens a window for the inode to be
+> > > > written to disk before it xfs_ifree() removes it from the unlinked
+> > > > list, marks it free in the inobt and zeros the mode.
+> > > > 
+> > > > For shortform inodes, the fix is simple. xfs_ifree() clears the data
+> > > > fork state, so there's no need to do it in xfs_inactive_symlink().
+> > > > This means the shortform fork verifier will not see a zero length
+> > > > data fork as it mirrors the inode size through to xfs_ifree()), and
+> > > > hence if the inode gets written back and the fork verifiers are run
+> > > > they will still see a fork that matches the on-disk inode size.
+> > > > 
+> > > > For extent form (remote) symlinks, it is a little more tricky. Here
+> > > > we explicitly set the inode size to zero, so the above race can lead
+> > > > to zero length symlinks on disk. Because the inode is unlinked at
+> > > > this point (i.e. on the unlinked list) and unreferenced, it can
+> > > > never be seen again by a user. Hence when we set the inode size to
+> > > 
+> > > Perhaps we don't care, but what about bulkstat? The inode free is
+> > > imminent, so it probably doesn't matter that much.
+> > 
+> > Bulkstat users have to deal with all sorts of TOCTOU races because
+> > we do the inode lookup after unlocking the AGI. Hence the inodes
+> > returned are not guaranteed to be allocated or even accessible,
+> > especially if they return nlink == 0...
+> > 
+> > So, yeah, I don't think it matters for bulkstat.
+> > 
+> 
+> Ack.
+> 
+> > > > @@ -523,17 +531,10 @@ xfs_inactive_symlink(
+> > > >  		return -EIO;
+> > > >  
+> > > >  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> > > > -
+> > > > -	/*
+> > > > -	 * Zero length symlinks _can_ exist.
+> > > > -	 */
+> > > >  	pathlen = (int)ip->i_d.di_size;
+> > > > -	if (!pathlen) {
+> > > > -		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > > > -		return 0;
+> > > > -	}
+> > > > +	ASSERT(pathlen);
+> > > 
+> > > Ok, but I still feel like I'm missing something here. The commit log
+> > > explains how symlink inode inactivation creates this transient zero-size
+> > > symlink state. That's fine, but why do we have code to check for such
+> > > symlinks _in_ the symlink activation path?
+> > 
+> > Ah, I put that in the cover letter - the VFS is supposed to ensure
+> > we don't get zero length symlinks passed to us, and the verifiers
+> > are supposed to catch it coming off disk. This is mostly just a
+> > bounds check to document that we don't expect zero length symlinks
+> > at any time, especially in the unlink path. I put the same assert
+> > check in the xfs_symlink() create path, too, to ensure we don't get
+> > passed a zero length from the VFS...
+> > 
+> 
+> Oh, I'm not referring to the ASSERT() here. That all seems fine...
+> 
+> > > Is the assumption that this is just an overzealous/unnecessary check, or
+> > > am I missing something? If the former, an extra sentence in the last
+> > > paragraph or so of the commit log to explain why we remove this would be
+> > > nice.
+> > 
+> > It's a "should never occur" situation but, well, paranoia seeing as
+> > we've got this wrong for so long...
+> > 
+> 
+> Rather, I'm asking about the pre-existing code that we remove. The hunk
+> just above from xfs_inactive_symlink():
+> 
+> -	/*
+> -	 * Zero length symlinks _can_ exist.
+> -	 */
+> -	if (!pathlen) {
+> -		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> -		return 0;
+> -	}
+> 
+> ... obviously suggests that there could have been a situation where we'd
+> see a zero-length symlink on entry to xfs_inactive_symlink(). This
+> patch, however, focuses on fixing the transient zero-length symlink
+> caused by xfs_inactive_symlink_rmt() (which comes after the above
+> check).
+> 
+> The latter implies we'd never enter the symlink inactivate path with a
+> zero-length symlink, since this is the path that causes it (until the
+> inode is ultimately freed). So my question essentially is do we have any
+> idea why this code exists in the first place? Is it just bogus given
+> there's no other clear vector to a zero-length symlink before the inode
+> is inactivated?
 
-Ok, here is one test case that triggered the problem for me.
+I think that vector is log recovery.  Say we have a filesystem running
+on an old kernel, and the fs goes down immediately after the transaction
+commit in xfs_inactive_symlink_rmt.  At that exact moment we have a
+zero-size extents format symlink on the unlinked list, and if we boot up
+with a new kernel and go through log recovery we'll try to free this
+inode in xlog_recover_process_one_iunlink.
 
-Starting from commit bd926eb58b13 on the iomap-readpage branch,
+The new code that switches i_mode prevents us from dropping more of
+these onto the disk, but we still have old filesystems to deal with.
+FWIW every now and then generic/475 complains in xfs_repair -n about
+such a symlink (dfork format 2 and size 0).
 
-  https://git.kernel.org/pub/scm/linux/kernel/git/gfs2/linux-gfs2.git/log/?h=iomap-readpage
+--D
 
-with this patch on top which causes iomap_readpage to be called even
-for pages with buffers:
-
---- a/fs/gfs2/aops.c
-+++ b/fs/gfs2/aops.c
-@@ -511,8 +511,7 @@ static int __gfs2_readpage(void *file, struct page *page)
-
-        int error;
-
--       if (i_blocksize(page->mapping->host) == PAGE_SIZE &&
--           !page_has_buffers(page)) {
-+       if (i_blocksize(page->mapping->host) == PAGE_SIZE) {
-                error = iomap_readpage(page, &gfs2_iomap_ops);
-        } else if (gfs2_is_stuffed(ip)) {
-                error = stuffed_readpage(ip, page);
-
-The following fsx operations, stored as junk.fsxops:
-
-  write 0x11400 0x1800 0x6e6d4 *
-  punch_hole 0xfa7a 0x2410 0x0 *
-  mapread 0xd000 0x78ea 0x34200 *
-
-Can be replayed as:
-
-  # mkfs.gfs2 -O -b 4096 -p lock_nolock $DEV
-  # mount $DEV $MNT
-  # ltp/fsx -N 10000 -o 32768 -l 500000 -r 4096 -t 512 -w 512 -Z -W
---replay-ops junk.fsxops $MNT/junk
-
-(Most of the above fsx options could probably be removed ...)
-
-The hole in this example is unaligned, so punch_hole will zero the end
-of the first as well as the beginning of the last page of the hole.
-This will leave at least the last page of the hole as not
-PageUptodate(), with a buffer_uptodate() buffer head. The mapread will
-call into iomap_readpage. Because the page has buffers, the
-WARN_ON_ONCE(page_has_buffers(page)) in iomap_readpage will trigger.
-And iomap_readpage will reread the page from disk, overwriting the
-zeroes written by punch_hole. This will cause fsx to complain because
-it doesn't see the zeroes it expects.
-
-This could be a bug in __gfs2_punch_hole => gfs2_block_zero_range as
-well, but it's not clear to me how.
-
-Andreas
+> Brian
+> 
+> > > > -	if (pathlen < 0 || pathlen > XFS_SYMLINK_MAXLEN) {
+> > > > +	if (pathlen <= 0 || pathlen > XFS_SYMLINK_MAXLEN) {
+> > > >  		xfs_alert(mp, "%s: inode (0x%llx) bad symlink length (%d)",
+> > > >  			 __func__, (unsigned long long)ip->i_ino, pathlen);
+> > > >  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > > > @@ -541,12 +542,12 @@ xfs_inactive_symlink(
+> > > >  		return -EFSCORRUPTED;
+> > > >  	}
+> > > >  
+> > > > +	/*
+> > > > +	 * Inline fork state gets removed by xfs_difree() so we have nothing to
+> > > > +	 * do here in that case.
+> > > > +	 */
+> > > 
+> > > It looks like that actually happens in xfs_ifree() (not xfs_difree()).
+> > 
+> > Yup, will fix.
+> > 
+> > Cheers,
+> > 
+> > Dave.
+> > -- 
+> > Dave Chinner
+> > david@fromorbit.com
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
