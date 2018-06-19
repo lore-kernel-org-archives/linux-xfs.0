@@ -1,203 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:50938 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S933596AbeFRNYN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 18 Jun 2018 09:24:13 -0400
-Date: Mon, 18 Jun 2018 09:24:11 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/2] xfs: zero length symlinks are not valid
-Message-ID: <20180618132411.GB28320@bfoster>
-References: <20180618055711.23391-1-david@fromorbit.com>
- <20180618055711.23391-2-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180618055711.23391-2-david@fromorbit.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:38839 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S936965AbeFSCli (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jun 2018 22:41:38 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1fV6aI-0004vb-Fo
+        for linux-xfs@vger.kernel.org; Tue, 19 Jun 2018 12:41:30 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1fV6aI-0005wH-EY
+        for linux-xfs@vger.kernel.org; Tue, 19 Jun 2018 12:41:30 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 1/2] xfs: transactionless xfs_bunmapi shouldn't do format conversion
+Date: Tue, 19 Jun 2018 12:41:27 +1000
+Message-Id: <20180619024128.22669-2-david@fromorbit.com>
+In-Reply-To: <20180619024128.22669-1-david@fromorbit.com>
+References: <20180619024128.22669-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Mon, Jun 18, 2018 at 03:57:10PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> A log recovery failure has been reproduced where a symlink inode has
-> a zero length in extent form. It was caused by a shutdown during a
-> combined fstress+fsmark workload.
-> 
-> The underlying problem is the issue in xfs_inactive_symlink(): the
-> inode is unlocked between the symlink inactivation/truncation and
-> the inode being freed. This opens a window for the inode to be
-> written to disk before it xfs_ifree() removes it from the unlinked
-> list, marks it free in the inobt and zeros the mode.
-> 
-> For shortform inodes, the fix is simple. xfs_ifree() clears the data
-> fork state, so there's no need to do it in xfs_inactive_symlink().
-> This means the shortform fork verifier will not see a zero length
-> data fork as it mirrors the inode size through to xfs_ifree()), and
-> hence if the inode gets written back and the fork verifiers are run
-> they will still see a fork that matches the on-disk inode size.
-> 
-> For extent form (remote) symlinks, it is a little more tricky. Here
-> we explicitly set the inode size to zero, so the above race can lead
-> to zero length symlinks on disk. Because the inode is unlinked at
-> this point (i.e. on the unlinked list) and unreferenced, it can
-> never be seen again by a user. Hence when we set the inode size to
+From: Dave Chinner <dchinner@redhat.com>
 
-Perhaps we don't care, but what about bulkstat? The inode free is
-imminent, so it probably doesn't matter that much.
+If we are punching out a delalloc extent, xfs_bunmapi() does not
+have a transaction context and should not ever need to convert the
+on-disk extent format. If such a thing is attempted (e.g. via a
+corrupt inode extent count in extent format) then we should abort
+with an EFSCORRUPTED error. Unfortunately, we don't do that and
+crash instead:
 
-> zeor, also change the type to S_IFREG. xfs_ifree() expects S_IFREG
-> inodes to be of zero length, and so this avoids all the problems of
-> zero length symlinks ever hitting the disk. It also avoids the
-> problem of needing to handle zero length symlink inodes in log
-> recovery to replay the extent free intents and the remaining
-> deferops to free the extents the symlink used.
-> 
-> Also add a couple of asserts to warn us if zero length symlinks end
-> up in either the symlink create or inactivation paths.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_symlink_remote.c | 14 +++++++++----
->  fs/xfs/xfs_symlink.c               | 33 +++++++++++++++---------------
->  2 files changed, 27 insertions(+), 20 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_symlink_remote.c b/fs/xfs/libxfs/xfs_symlink_remote.c
-> index 95374ab2dee7..77d80106f989 100644
-> --- a/fs/xfs/libxfs/xfs_symlink_remote.c
-> +++ b/fs/xfs/libxfs/xfs_symlink_remote.c
-> @@ -199,7 +199,10 @@ xfs_symlink_local_to_remote(
->  					ifp->if_bytes - 1);
->  }
->  
-> -/* Verify the consistency of an inline symlink. */
-> +/*
-> + * Verify the in-memory consistency of an inline symlink data fork. This
-> + * does not do on-disk format checks.
-> + */
->  xfs_failaddr_t
->  xfs_symlink_shortform_verify(
->  	struct xfs_inode	*ip)
-> @@ -215,9 +218,12 @@ xfs_symlink_shortform_verify(
->  	size = ifp->if_bytes;
->  	endp = sfp + size;
->  
-> -	/* Zero length symlinks can exist while we're deleting a remote one. */
-> -	if (size == 0)
-> -		return NULL;
-> +	/*
-> +	 * Zero length symlinks should never occur in memory as they are
-> +	 * never alllowed to exist on disk.
-> +	 */
-> +	if (!size)
-> +		return __this_address;
->  
->  	/* No negative sizes or overly long symlink targets. */
->  	if (size < 0 || size > XFS_SYMLINK_MAXLEN)
-> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-> index 3783afcb68d2..e0c2d460ba67 100644
-> --- a/fs/xfs/xfs_symlink.c
-> +++ b/fs/xfs/xfs_symlink.c
-> @@ -194,6 +194,7 @@ xfs_symlink(
->  	pathlen = strlen(target_path);
->  	if (pathlen >= XFS_SYMLINK_MAXLEN)      /* total string too long */
->  		return -ENAMETOOLONG;
-> +	ASSERT(pathlen > 0);
->  
->  	udqp = gdqp = NULL;
->  	prid = xfs_get_initial_prid(dp);
-> @@ -395,6 +396,12 @@ xfs_symlink(
->  
->  /*
->   * Free a symlink that has blocks associated with it.
-> + *
-> + * Note: zero length symlinks are not allowed to exist. When we set the size to
-> + * zero, also change it to a regular file so that it does not get written to
-> + * disk as a zero length symlink. The inode is on the unlinked list already, so
-> + * userspace cannot find this inode anymore, so this change is not user visible
-> + * but allows us to catch corrupt zero-length symlinks in the verifiers.
->   */
->  STATIC int
->  xfs_inactive_symlink_rmt(
-> @@ -431,13 +438,14 @@ xfs_inactive_symlink_rmt(
->  	xfs_trans_ijoin(tp, ip, 0);
->  
->  	/*
-> -	 * Lock the inode, fix the size, and join it to the transaction.
-> -	 * Hold it so in the normal path, we still have it locked for
-> -	 * the second transaction.  In the error paths we need it
-> +	 * Lock the inode, fix the size, turn it into a regular file and join it
-> +	 * to the transaction.  Hold it so in the normal path, we still have it
-> +	 * locked for the second transaction.  In the error paths we need it
->  	 * held so the cancel won't rele it, see below.
->  	 */
->  	size = (int)ip->i_d.di_size;
->  	ip->i_d.di_size = 0;
-> +	VFS_I(ip)->i_mode = (VFS_I(ip)->i_mode & ~S_IFMT) | S_IFREG;
->  	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
->  	/*
->  	 * Find the block(s) so we can inval and unmap them.
-> @@ -523,17 +531,10 @@ xfs_inactive_symlink(
->  		return -EIO;
->  
->  	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> -
-> -	/*
-> -	 * Zero length symlinks _can_ exist.
-> -	 */
->  	pathlen = (int)ip->i_d.di_size;
-> -	if (!pathlen) {
-> -		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> -		return 0;
-> -	}
-> +	ASSERT(pathlen);
+ XFS (loop0): page discard on page 0000000005fd24f3, inode 0x75e5, offset 0.
+ ==================================================================
+ BUG: KASAN: null-ptr-deref in xfs_alloc_get_freelist+0x115/0x350
+ Read of size 8 at addr 0000000000000028 by task a.out/1406
+ CPU: 0 PID: 1406 Comm: a.out Not tainted 4.17.0-rc4-kasan #2
+ Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Ubuntu-1.8.2-1ubuntu1 04/01/2014
+ Call Trace:
+  dump_stack+0x7b/0xb5
+  kasan_report+0x10c/0x390
+  __asan_load8+0x54/0x90
+  xfs_alloc_get_freelist+0x115/0x350
+  xfs_alloc_fix_freelist+0x35b/0x830
+  xfs_alloc_vextent+0x215/0x990
+  xfs_bmap_extents_to_btree+0x30d/0x940
+.....
 
-Ok, but I still feel like I'm missing something here. The commit log
-explains how symlink inode inactivation creates this transient zero-size
-symlink state. That's fine, but why do we have code to check for such
-symlinks _in_ the symlink activation path?
+By returning an error here, we avoid such crashes when punching out
+a delalloc page because we don't try to fix up an AG freelist
+without a transaction. Hence we get an error like so:
 
-Is the assumption that this is just an overzealous/unnecessary check, or
-am I missing something? If the former, an extra sentence in the last
-paragraph or so of the commit log to explain why we remove this would be
-nice.
+XFS (loop0): page discard on page ffffea00040ae640, inode 0x75e5, offset 0.
+XFS (loop0): page discard unable to remove delalloc mapping.
 
->  
-> -	if (pathlen < 0 || pathlen > XFS_SYMLINK_MAXLEN) {
-> +	if (pathlen <= 0 || pathlen > XFS_SYMLINK_MAXLEN) {
->  		xfs_alert(mp, "%s: inode (0x%llx) bad symlink length (%d)",
->  			 __func__, (unsigned long long)ip->i_ino, pathlen);
->  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> @@ -541,12 +542,12 @@ xfs_inactive_symlink(
->  		return -EFSCORRUPTED;
->  	}
->  
-> +	/*
-> +	 * Inline fork state gets removed by xfs_difree() so we have nothing to
-> +	 * do here in that case.
-> +	 */
+And the filesystem continues to operate and the stale mapping is
+cleaned up when the inode is reclaimed.
 
-It looks like that actually happens in xfs_ifree() (not xfs_difree()).
+Reported-by: Wen Xu <wen.xu@gatech.edu>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
 
-Otherwise this seems a reasonable approach to me.
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 01628f0c9a0c..6967ce8088d2 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -5458,10 +5458,18 @@ __xfs_bunmapi(
+ 		*rlen = end - start + 1;
+ 
+ 	/*
+-	 * Convert to a btree if necessary.
++	 * Convert the BMBT root format if necessary. This should only occur in
++	 * transaction contexts and not when removing delalloc extents from
++	 * the in-core extent tree. If we don't have a transaction, then we've
++	 * got some form of corruption somewhere, so return an error
++	 * immediately.
+ 	 */
+ 	if (xfs_bmap_needs_btree(ip, whichfork)) {
+ 		ASSERT(cur == NULL);
++		if (!tp) {
++			error = -EFSCORRUPTED;
++			goto error0;
++		}
+ 		error = xfs_bmap_extents_to_btree(tp, ip, firstblock, dfops,
+ 			&cur, 0, &tmp_logflags, whichfork);
+ 		logflags |= tmp_logflags;
+@@ -5473,6 +5481,10 @@ __xfs_bunmapi(
+ 	 */
+ 	else if (xfs_bmap_wants_extents(ip, whichfork)) {
+ 		ASSERT(cur != NULL);
++		if (!tp) {
++			error = -EFSCORRUPTED;
++			goto error0;
++		}
+ 		error = xfs_bmap_btree_to_extents(tp, ip, cur, &tmp_logflags,
+ 			whichfork);
+ 		logflags |= tmp_logflags;
+-- 
+2.17.0
 
-Brian
-
->  	if (ip->i_df.if_flags & XFS_IFINLINE) {
-> -		if (ip->i_df.if_bytes > 0) 
-> -			xfs_idata_realloc(ip, -(ip->i_df.if_bytes),
-> -					  XFS_DATA_FORK);
->  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> -		ASSERT(ip->i_df.if_bytes == 0);
->  		return 0;
->  	}
->  
-> -- 
-> 2.17.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
