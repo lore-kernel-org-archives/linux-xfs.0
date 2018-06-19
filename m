@@ -1,205 +1,158 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:34576 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:56834 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S937703AbeFSLmz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 19 Jun 2018 07:42:55 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 98370401EF00
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Jun 2018 11:42:54 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 800212156880
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Jun 2018 11:42:54 +0000 (UTC)
+        id S1757212AbeFSLyg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 19 Jun 2018 07:54:36 -0400
+Date: Tue, 19 Jun 2018 07:54:34 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v4] xfs: use sync buffer I/O for sync delwri queue submission
-Date: Tue, 19 Jun 2018 07:42:54 -0400
-Message-Id: <20180619114254.6059-1-bfoster@redhat.com>
-In-Reply-To: <20180615180536.17282-3-bfoster@redhat.com>
-References: <20180615180536.17282-3-bfoster@redhat.com>
+Subject: Re: [PATCH 1/2] xfs: zero length symlinks are not valid
+Message-ID: <20180619115434.GB2806@bfoster>
+References: <20180618055711.23391-1-david@fromorbit.com>
+ <20180618055711.23391-2-david@fromorbit.com>
+ <20180618132411.GB28320@bfoster>
+ <20180618224259.GF19934@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180618224259.GF19934@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-If a delwri queue occurs of a buffer that sits on a delwri queue
-wait list, the queue sets _XBF_DELWRI_Q without changing the state
-of ->b_list. This occurs, for example, if another thread beats the
-current delwri waiter thread to the buffer lock after I/O
-completion. Once the waiter acquires the lock, it removes the buffer
-from the wait list and leaves a buffer with _XBF_DELWRI_Q set but
-not populated on a list. This results in a lost buffer submission
-and in turn can result in assert failures due to _XBF_DELWRI_Q being
-set on buffer reclaim or filesystem lockups if the buffer happens to
-cover an item in the AIL.
+On Tue, Jun 19, 2018 at 08:42:59AM +1000, Dave Chinner wrote:
+> On Mon, Jun 18, 2018 at 09:24:11AM -0400, Brian Foster wrote:
+> > On Mon, Jun 18, 2018 at 03:57:10PM +1000, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > A log recovery failure has been reproduced where a symlink inode has
+> > > a zero length in extent form. It was caused by a shutdown during a
+> > > combined fstress+fsmark workload.
+> > > 
+> > > The underlying problem is the issue in xfs_inactive_symlink(): the
+> > > inode is unlocked between the symlink inactivation/truncation and
+> > > the inode being freed. This opens a window for the inode to be
+> > > written to disk before it xfs_ifree() removes it from the unlinked
+> > > list, marks it free in the inobt and zeros the mode.
+> > > 
+> > > For shortform inodes, the fix is simple. xfs_ifree() clears the data
+> > > fork state, so there's no need to do it in xfs_inactive_symlink().
+> > > This means the shortform fork verifier will not see a zero length
+> > > data fork as it mirrors the inode size through to xfs_ifree()), and
+> > > hence if the inode gets written back and the fork verifiers are run
+> > > they will still see a fork that matches the on-disk inode size.
+> > > 
+> > > For extent form (remote) symlinks, it is a little more tricky. Here
+> > > we explicitly set the inode size to zero, so the above race can lead
+> > > to zero length symlinks on disk. Because the inode is unlinked at
+> > > this point (i.e. on the unlinked list) and unreferenced, it can
+> > > never be seen again by a user. Hence when we set the inode size to
+> > 
+> > Perhaps we don't care, but what about bulkstat? The inode free is
+> > imminent, so it probably doesn't matter that much.
+> 
+> Bulkstat users have to deal with all sorts of TOCTOU races because
+> we do the inode lookup after unlocking the AGI. Hence the inodes
+> returned are not guaranteed to be allocated or even accessible,
+> especially if they return nlink == 0...
+> 
+> So, yeah, I don't think it matters for bulkstat.
+> 
 
-This problem has been reproduced by repeated iterations of xfs/305
-on high CPU count (28xcpu) systems with limited memory (~1GB). Dirty
-dquot reclaim races with an xfsaild push of a separate dquot backed
-by the same buffer such that the buffer sits on the reclaim wait
-list at the time xfsaild attempts to queue it. Since the latter
-dquot has been flush locked but the underlying buffer not submitted
-for I/O, the dquot pins the AIL and causes the filesystem to
-livelock.
+Ack.
 
-This race is essentially made possible by the buffer lock cycle
-involved with waiting on a synchronous delwri queue submission.
-Close the race by using synchronous buffer I/O for respective delwri
-queue submission. This means the buffer remains locked across the
-I/O and so is inaccessible from other contexts while in the
-intermediate wait list state. The sync buffer I/O wait mechanism is
-factored into a helper such that sync delwri buffer submission and
-serialization are batched operations.
+> > > @@ -523,17 +531,10 @@ xfs_inactive_symlink(
+> > >  		return -EIO;
+> > >  
+> > >  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> > > -
+> > > -	/*
+> > > -	 * Zero length symlinks _can_ exist.
+> > > -	 */
+> > >  	pathlen = (int)ip->i_d.di_size;
+> > > -	if (!pathlen) {
+> > > -		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > > -		return 0;
+> > > -	}
+> > > +	ASSERT(pathlen);
+> > 
+> > Ok, but I still feel like I'm missing something here. The commit log
+> > explains how symlink inode inactivation creates this transient zero-size
+> > symlink state. That's fine, but why do we have code to check for such
+> > symlinks _in_ the symlink activation path?
+> 
+> Ah, I put that in the cover letter - the VFS is supposed to ensure
+> we don't get zero length symlinks passed to us, and the verifiers
+> are supposed to catch it coming off disk. This is mostly just a
+> bounds check to document that we don't expect zero length symlinks
+> at any time, especially in the unlink path. I put the same assert
+> check in the xfs_symlink() create path, too, to ensure we don't get
+> passed a zero length from the VFS...
+> 
 
-Designed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+Oh, I'm not referring to the ASSERT() here. That all seems fine...
 
-v4:
-- Condense a couple buffer error checks to use the xfs_buf_iowait()
-  return value.
+> > Is the assumption that this is just an overzealous/unnecessary check, or
+> > am I missing something? If the former, an extra sentence in the last
+> > paragraph or so of the commit log to explain why we remove this would be
+> > nice.
+> 
+> It's a "should never occur" situation but, well, paranoia seeing as
+> we've got this wrong for so long...
+> 
 
- fs/xfs/xfs_buf.c | 80 +++++++++++++++++++++++++-----------------------
- 1 file changed, 41 insertions(+), 39 deletions(-)
+Rather, I'm asking about the pre-existing code that we remove. The hunk
+just above from xfs_inactive_symlink():
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 7b0f7c79cd62..ef234847b4e6 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1531,6 +1531,20 @@ xfs_buf_submit(
- 	xfs_buf_rele(bp);
- }
- 
-+/*
-+ * Wait for I/O completion of a sync buffer and return the I/O error code.
-+ */
-+static int
-+xfs_buf_iowait(
-+	struct xfs_buf	*bp)
-+{
-+	trace_xfs_buf_iowait(bp, _RET_IP_);
-+	wait_for_completion(&bp->b_iowait);
-+	trace_xfs_buf_iowait_done(bp, _RET_IP_);
-+
-+	return bp->b_error;
-+}
-+
- /*
-  * Synchronous buffer IO submission path, read or write.
-  */
-@@ -1553,12 +1567,7 @@ xfs_buf_submit_wait(
- 	error = __xfs_buf_submit(bp);
- 	if (error)
- 		goto out;
--
--	/* wait for completion before gathering the error from the buffer */
--	trace_xfs_buf_iowait(bp, _RET_IP_);
--	wait_for_completion(&bp->b_iowait);
--	trace_xfs_buf_iowait_done(bp, _RET_IP_);
--	error = bp->b_error;
-+	error = xfs_buf_iowait(bp);
- 
- out:
- 	/*
-@@ -1961,16 +1970,11 @@ xfs_buf_cmp(
- }
- 
- /*
-- * submit buffers for write.
-- *
-- * When we have a large buffer list, we do not want to hold all the buffers
-- * locked while we block on the request queue waiting for IO dispatch. To avoid
-- * this problem, we lock and submit buffers in groups of 50, thereby minimising
-- * the lock hold times for lists which may contain thousands of objects.
-- *
-- * To do this, we sort the buffer list before we walk the list to lock and
-- * submit buffers, and we plug and unplug around each group of buffers we
-- * submit.
-+ * Submit buffers for write. If wait_list is specified, the buffers are
-+ * submitted using sync I/O and placed on the wait list such that the caller can
-+ * iowait each buffer. Otherwise async I/O is used and the buffers are released
-+ * at I/O completion time. In either case, buffers remain locked until I/O
-+ * completes and the buffer is released from the queue.
-  */
- static int
- xfs_buf_delwri_submit_buffers(
-@@ -2012,21 +2016,22 @@ xfs_buf_delwri_submit_buffers(
- 		trace_xfs_buf_delwri_split(bp, _RET_IP_);
- 
- 		/*
--		 * We do all IO submission async. This means if we need
--		 * to wait for IO completion we need to take an extra
--		 * reference so the buffer is still valid on the other
--		 * side. We need to move the buffer onto the io_list
--		 * at this point so the caller can still access it.
-+		 * If we have a wait list, each buffer (and associated delwri
-+		 * queue reference) transfers to it and is submitted
-+		 * synchronously. Otherwise, drop the buffer from the delwri
-+		 * queue and submit async.
- 		 */
- 		bp->b_flags &= ~(_XBF_DELWRI_Q | XBF_WRITE_FAIL);
--		bp->b_flags |= XBF_WRITE | XBF_ASYNC;
-+		bp->b_flags |= XBF_WRITE;
- 		if (wait_list) {
--			xfs_buf_hold(bp);
-+			bp->b_flags &= ~XBF_ASYNC;
- 			list_move_tail(&bp->b_list, wait_list);
--		} else
-+			__xfs_buf_submit(bp);
-+		} else {
-+			bp->b_flags |= XBF_ASYNC;
- 			list_del_init(&bp->b_list);
--
--		xfs_buf_submit(bp);
-+			xfs_buf_submit(bp);
-+		}
- 	}
- 	blk_finish_plug(&plug);
- 
-@@ -2073,9 +2078,11 @@ xfs_buf_delwri_submit(
- 
- 		list_del_init(&bp->b_list);
- 
--		/* locking the buffer will wait for async IO completion. */
--		xfs_buf_lock(bp);
--		error2 = bp->b_error;
-+		/*
-+		 * Wait on the locked buffer, check for errors and unlock and
-+		 * release the delwri queue reference.
-+		 */
-+		error2 = xfs_buf_iowait(bp);
- 		xfs_buf_relse(bp);
- 		if (!error)
- 			error = error2;
-@@ -2121,23 +2128,18 @@ xfs_buf_delwri_pushbuf(
- 
- 	/*
- 	 * Delwri submission clears the DELWRI_Q buffer flag and returns with
--	 * the buffer on the wait list with an associated reference. Rather than
-+	 * the buffer on the wait list with the original reference. Rather than
- 	 * bounce the buffer from a local wait list back to the original list
- 	 * after I/O completion, reuse the original list as the wait list.
- 	 */
- 	xfs_buf_delwri_submit_buffers(&submit_list, buffer_list);
- 
- 	/*
--	 * The buffer is now under I/O and wait listed as during typical delwri
--	 * submission. Lock the buffer to wait for I/O completion. Rather than
--	 * remove the buffer from the wait list and release the reference, we
--	 * want to return with the buffer queued to the original list. The
--	 * buffer already sits on the original list with a wait list reference,
--	 * however. If we let the queue inherit that wait list reference, all we
--	 * need to do is reset the DELWRI_Q flag.
-+	 * The buffer is now locked, under I/O and wait listed on the original
-+	 * delwri queue. Wait for I/O completion, restore the DELWRI_Q flag and
-+	 * return with the buffer unlocked and on the original queue.
- 	 */
--	xfs_buf_lock(bp);
--	error = bp->b_error;
-+	error = xfs_buf_iowait(bp);
- 	bp->b_flags |= _XBF_DELWRI_Q;
- 	xfs_buf_unlock(bp);
- 
--- 
-2.17.1
+-	/*
+-	 * Zero length symlinks _can_ exist.
+-	 */
+-	if (!pathlen) {
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-		return 0;
+-	}
 
+... obviously suggests that there could have been a situation where we'd
+see a zero-length symlink on entry to xfs_inactive_symlink(). This
+patch, however, focuses on fixing the transient zero-length symlink
+caused by xfs_inactive_symlink_rmt() (which comes after the above
+check).
+
+The latter implies we'd never enter the symlink inactivate path with a
+zero-length symlink, since this is the path that causes it (until the
+inode is ultimately freed). So my question essentially is do we have any
+idea why this code exists in the first place? Is it just bogus given
+there's no other clear vector to a zero-length symlink before the inode
+is inactivated?
+
+Brian
+
+> > > -	if (pathlen < 0 || pathlen > XFS_SYMLINK_MAXLEN) {
+> > > +	if (pathlen <= 0 || pathlen > XFS_SYMLINK_MAXLEN) {
+> > >  		xfs_alert(mp, "%s: inode (0x%llx) bad symlink length (%d)",
+> > >  			 __func__, (unsigned long long)ip->i_ino, pathlen);
+> > >  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > > @@ -541,12 +542,12 @@ xfs_inactive_symlink(
+> > >  		return -EFSCORRUPTED;
+> > >  	}
+> > >  
+> > > +	/*
+> > > +	 * Inline fork state gets removed by xfs_difree() so we have nothing to
+> > > +	 * do here in that case.
+> > > +	 */
+> > 
+> > It looks like that actually happens in xfs_ifree() (not xfs_difree()).
+> 
+> Yup, will fix.
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
