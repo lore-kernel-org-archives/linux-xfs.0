@@ -1,27 +1,31 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:35452 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:35722 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750941AbeFSF05 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 01:26:57 -0400
-Date: Mon, 18 Jun 2018 22:26:51 -0700
+        with ESMTP id S1755920AbeFSF1b (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 01:27:31 -0400
+Date: Mon, 18 Jun 2018 22:27:26 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 06/24] xfs: move locking into
- xfs_bmap_punch_delalloc_range
-Message-ID: <20180619052651.GQ8128@magnolia>
+Subject: Re: [PATCH 09/24] xfs: don't use XFS_BMAPI_IGSTATE in xfs_map_blocks
+Message-ID: <20180619052726.GR8128@magnolia>
 References: <20180615130209.1970-1-hch@lst.de>
- <20180615130209.1970-7-hch@lst.de>
+ <20180615130209.1970-10-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180615130209.1970-7-hch@lst.de>
+In-Reply-To: <20180615130209.1970-10-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Fri, Jun 15, 2018 at 03:01:51PM +0200, Christoph Hellwig wrote:
-> Both callers want the same looking, so do it only once.
+On Fri, Jun 15, 2018 at 03:01:54PM +0200, Christoph Hellwig wrote:
+> We want to be able to use the extent state as a reliably indicator for
+> the type of I/O, and stop using the buffer head state.  For this we
+> need to stop using the XFS_BMAPI_IGSTATE so that we don't see merged
+> extents of different types.
+> 
+> Based on a patch from Dave Chinner.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > Reviewed-by: Brian Foster <bfoster@redhat.com>
@@ -32,75 +36,39 @@ Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 --D
 
 > ---
->  fs/xfs/xfs_aops.c      | 2 --
->  fs/xfs/xfs_bmap_util.c | 9 +++++----
->  fs/xfs/xfs_iomap.c     | 3 ---
->  3 files changed, 5 insertions(+), 9 deletions(-)
+>  fs/xfs/xfs_aops.c | 5 +----
+>  1 file changed, 1 insertion(+), 4 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index d94dd6fe5127..026721c4991e 100644
+> index 307ca66879b3..39b933e17192 100644
 > --- a/fs/xfs/xfs_aops.c
 > +++ b/fs/xfs/xfs_aops.c
-> @@ -761,10 +761,8 @@ xfs_aops_discard_page(
->  		"page discard on page "PTR_FMT", inode 0x%llx, offset %llu.",
->  			page, ip->i_ino, offset);
->  
-> -	xfs_ilock(ip, XFS_ILOCK_EXCL);
->  	error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
->  			PAGE_SIZE / i_blocksize(inode));
-> -	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  	if (error && !XFS_FORCED_SHUTDOWN(mp))
->  		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
->  out_invalidate:
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 0070b877ed94..6690a038892d 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -712,16 +712,15 @@ xfs_bmap_punch_delalloc_range(
->  	struct xfs_iext_cursor	icur;
+> @@ -385,7 +385,6 @@ xfs_map_blocks(
+>  	ssize_t			count = i_blocksize(inode);
+>  	xfs_fileoff_t		offset_fsb, end_fsb;
 >  	int			error = 0;
+> -	int			bmapi_flags = XFS_BMAPI_ENTIRE;
+>  	int			nimaps = 1;
 >  
-> -	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> -
-> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
->  	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
->  		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
->  		if (error)
-> -			return error;
-> +			goto out_unlock;
->  	}
+>  	if (XFS_FORCED_SHUTDOWN(mp))
+> @@ -405,8 +404,6 @@ xfs_map_blocks(
+>  		return 0;
 >  
->  	if (!xfs_iext_lookup_extent_before(ip, ifp, &end_fsb, &icur, &got))
-> -		return 0;
-> +		goto out_unlock;
+>  	ASSERT(type != XFS_IO_COW);
+> -	if (type == XFS_IO_UNWRITTEN)
+> -		bmapi_flags |= XFS_BMAPI_IGSTATE;
 >  
->  	while (got.br_startoff + got.br_blockcount > start_fsb) {
->  		del = got;
-> @@ -745,6 +744,8 @@ xfs_bmap_punch_delalloc_range(
->  			break;
->  	}
->  
-> +out_unlock:
-> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  	return error;
->  }
->  
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 85c66e78f9e8..758ad9572d04 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -1205,11 +1205,8 @@ xfs_file_iomap_end_delalloc(
->  		truncate_pagecache_range(VFS_I(ip), XFS_FSB_TO_B(mp, start_fsb),
->  					 XFS_FSB_TO_B(mp, end_fsb) - 1);
->  
-> -		xfs_ilock(ip, XFS_ILOCK_EXCL);
->  		error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
->  					       end_fsb - start_fsb);
-> -		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> -
->  		if (error && !XFS_FORCED_SHUTDOWN(mp)) {
->  			xfs_alert(mp, "%s: unable to clean up ino %lld",
->  				__func__, ip->i_ino);
+>  	xfs_ilock(ip, XFS_ILOCK_SHARED);
+>  	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
+> @@ -418,7 +415,7 @@ xfs_map_blocks(
+>  	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
+>  	offset_fsb = XFS_B_TO_FSBT(mp, offset);
+>  	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
+> -				imap, &nimaps, bmapi_flags);
+> +				imap, &nimaps, XFS_BMAPI_ENTIRE);
+>  	/*
+>  	 * Truncate an overwrite extent if there's a pending CoW
+>  	 * reservation before the end of this extent.  This forces us
 > -- 
 > 2.17.1
 > 
