@@ -1,65 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:41938 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1030305AbeFSSql (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 14:46:41 -0400
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 4230328A1D
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Jun 2018 18:46:41 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 200137] [xfstests generic/485] XFS: Assertion failed:
- (irec->br_startoff & ~XFS_IEXT_STARTOFF_MASK) == 0, file:
- fs/xfs/libxfs/xfs_iext_tree.c, line: 68
-Date: Tue, 19 Jun 2018 18:46:40 +0000
-Message-ID: <bug-200137-201763-y9BdpFPj5J@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-200137-201763@https.bugzilla.kernel.org/>
-References: <bug-200137-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:43055 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S937124AbeFSCdU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jun 2018 22:33:20 -0400
+Date: Tue, 19 Jun 2018 12:32:46 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS: Assertion failed: !rwsem_is_locked(&inode->i_rwsem)
+Message-ID: <20180619023246.GG19934@dastard>
+References: <20180619021746.GA6652@linux.intel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180619021746.GA6652@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@kernel.org
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=200137
-
---- Comment #2 from Zorro Lang (zlang@redhat.com) ---
-(In reply to Darrick J. Wong from comment #1)
-> Created attachment 276691 [details]
-> proposed fix
+On Mon, Jun 18, 2018 at 08:17:46PM -0600, Ross Zwisler wrote:
+> During some xfstest runs on next-20180615 I hit the following with DAX +
+> generic/388:
 > 
-> Zoro: does the attached patch fix the problem?
+> ================================================
+> WARNING: lock held when returning to user space!
+> 4.17.0-next-20180615-00001-gf09d99951966 #2 Not tainted
+> ------------------------------------------------
+> fsstress/6598 is leaving the kernel with locks still held!
+> 2 locks held by fsstress/6598:
+>  #0: 00000000d8f89e14 (&sb->s_type->i_mutex_key#13){++++}, at: xfs_ilock+0x211/0x310
+>  #1: 000000005cc93137 (&(&ip->i_mmaplock)->mr_lock){++++}, at: xfs_ilock+0x1eb/0x310
 
-Hi Darrick,
+What errors occurred before this? generic/388 is testing all sorts
+of error paths by randomly shutting down the filesystem, so it'e
+entirely possible that we've leaked those locks (XFS_IOLOCK and
+XFS_MMAPLOCK) on some rarely travelled error path. The prior errors
+might help identify that path.
 
-Yes, I can't reproduce this bug again after merged your patch:
+> XFS: Assertion failed: !rwsem_is_locked(&inode->i_rwsem), file: fs/xfs/xfs_super.c, line: 966
 
-# mkfs.xfs -f -m crc=0 -b size=512 /dev/mapper/xxxx-xfstest
-meta-data=/dev/mapper/xxxx-xfstest isize=256    agcount=4, agsize=10485760 blks
-         =                       sectsz=512   attr=2, projid32bit=1
-         =                       crc=0        finobt=0, sparse=0, rmapbt=0
-         =                       reflink=0
-data     =                       bsize=512    blocks=41943040, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-log      =internal log           bsize=512    blocks=20480, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-# ./check generic/485
-FSTYP         -- xfs (debug)
-PLATFORM      -- Linux/x86_64 xxx.xxx.xxx 4.17.0+
-MKFS_OPTIONS  -- -f -m crc=0 -b size=512 /dev/mapper/xxxx-xfscratch
-MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0
-/dev/mapper/xxxx-xfscratch /mnt/scratch
+As this is just a follow on issue at unmount where we expect the
+inode to be unlocked before tearing it down - it's just a messenger,
+not the smoking gun...
 
-generic/485      2s
-Ran: generic/485
-Passed all 1 tests
+Cheers,
 
-Thanks,
-Zorro
-
+Dave.
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Dave Chinner
+david@fromorbit.com
