@@ -1,251 +1,198 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:38222 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751602AbeFSFDs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 01:03:48 -0400
-Date: Mon, 18 Jun 2018 22:03:13 -0700
+Received: from userp2120.oracle.com ([156.151.31.85]:54042 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755913AbeFSFFq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 01:05:46 -0400
+Date: Mon, 18 Jun 2018 22:05:38 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RFC PATCH 0/5] kbuild: build modules from code in multiple
- directories.
-Message-ID: <20180619050313.GK8128@magnolia>
-References: <152929708853.17463.17302660556961083137.stgit@noble>
- <20180618082017.GA4752@infradead.org>
- <87po0ne7zw.fsf@notabene.neil.brown.name>
- <20180619044748.GA18671@infradead.org>
+Subject: Re: [PATCH 2/2] xfs: xfs_iflush_abort() can be called twice on
+ cluster writeback failure
+Message-ID: <20180619050538.GL8128@magnolia>
+References: <20180618055711.23391-1-david@fromorbit.com>
+ <20180618055711.23391-3-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180619044748.GA18671@infradead.org>
+In-Reply-To: <20180618055711.23391-3-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: NeilBrown <neilb@suse.com>, Masahiro Yamada <yamada.masahiro@socionext.com>, Michal Marek <michal.lkml@markovi.net>, linux-kernel@vger.kernel.org, linux-kbuild@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jun 18, 2018 at 09:47:48PM -0700, Christoph Hellwig wrote:
-> On Tue, Jun 19, 2018 at 02:05:23PM +1000, NeilBrown wrote:
-> > From: NeilBrown <neilb@suse.com>
-> > Date: Tue, 19 Jun 2018 13:59:16 +1000
-> > Subject: [PATCH] kbuild/xfs: example modobj-m conversion
-> > 
-> > This is a demonstration patch to show how
-> > xfs can be changed to make use of the proposed modobj-m=
-> > functionality, should the xfs developers want that.
+On Mon, Jun 18, 2018 at 03:57:11PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Well, IFF we go with this new functionality I think everyone should
-> be using it instead of the current hacks.
+> When a corrupt inode is detected during xfs_iflush_cluster, we can
+> get a shutdown ASSERT failure like this:
 > 
-> So text like the above should be in the series cover letter, and this
-> patch should have an actual description..
+> XFS (pmem1): Metadata corruption detected at xfs_symlink_shortform_verify+0x5c/0xa0, inode 0x86627 data fork
+> XFS (pmem1): Unmount and run xfs_repair
+> XFS (pmem1): xfs_do_force_shutdown(0x8) called from line 3372 of file fs/xfs/xfs_inode.c.  Return address = ffffffff814f4116
+> XFS (pmem1): Corruption of in-memory data detected.  Shutting down filesystem
+> XFS (pmem1): xfs_do_force_shutdown(0x1) called from line 222 of file fs/xfs/libxfs/xfs_defer.c.  Return address = ffffffff814a8a88
+> XFS (pmem1): xfs_do_force_shutdown(0x1) called from line 222 of file fs/xfs/libxfs/xfs_defer.c.  Return address = ffffffff814a8ef9
+> XFS (pmem1): Please umount the filesystem and rectify the problem(s)
+> XFS: Assertion failed: xfs_isiflocked(ip), file: fs/xfs/xfs_inode.h, line: 258
+> .....
+> Call Trace:
+>  xfs_iflush_abort+0x10a/0x110
+>  xfs_iflush+0xf3/0x390
+>  xfs_inode_item_push+0x126/0x1e0
+>  xfsaild+0x2c5/0x890
+>  kthread+0x11c/0x140
+>  ret_from_fork+0x24/0x30
 > 
-> I see no argument against these changes, but I've also added the XFS
-> list.
+> Essentially, xfs_iflush_abort() has been called twice on the
+> original inode that that was flushed. This happens because the
+> inode has been flushed to teh buffer successfully via
+> xfs_iflush_int(), and so when another inode is detected as corrupt
+> in xfs_iflush_cluster, the buffer is marked stale and EIO, and
+> iodone callbacks are run on it.
+> 
+> Running the iodone callbacks walks across the original inode and
+> calls xfs_iflush_abort() on it. When xfs_iflush_cluster() returns
+> to xfs_iflush(), it runs the error path for that function, and that
+> calls xfs_iflush_abort() on the inode a second time, leading to the
+> above assert failure as the inode is not flush locked anymore.
+> 
+> This bug has been there a long time.
+> 
+> The simple fix would be to just avoid calling xfs_iflush_abort() in
+> xfs_iflush() if we've got a failure from xfs_iflush_cluster().
+> However, xfs_iflush_cluster() has magic delwri buffer handling that
+> means it may or may not have run IO completion on the buffer, and
+> hence sometimes we have to call xfs_iflush_abort() from
+> xfs_iflush(), and sometimes we shouldn't.
+> 
+> After reading through all the error paths and the delwri buffer
+> code, it's clear that the error handling in xfs_iflush_cluster() is
+> unnecessary. If the buffer is delwri, it leaves it on the delwri
+> list so that when the delwri list is submitted it sees a shutdown
+> fliesystem in xfs_buf_submit() and that marks the buffer stale, EIO
+> and runs IO completion. i.e. exactly what xfs+iflush_cluster() does
+> when it's not a delwri buffer. Further, marking a buffer stale
+> clears the _XBF_DELWRI_Q flag on the buffer, which means when
+> submission of the buffer occurs, it just skips over it and releases
+> it.
+> 
+> IOWs, the error handling in xfs_iflush_cluster doesn't need to care
+> if the buffer is already on a the delwri queue or not - it just
+> needs to mark the buffer stale, EIO and run completions. That means
+> we can just use the easy fix for xfs_iflush() to avoid the double
+> abort.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Yes, please send the entire series to the xfs list in the future.
-
-It looks like a reasonable reorganization of makefile goop. :)
-
-(Will dig for the rest of the series on lkml tomorrow I guess.)
-
-> > 
-> > Signed-off-by: NeilBrown <neilb@suse.com>
-> > ---
-> >  fs/xfs/Makefile        | 78 ++------------------------------------------------
-> >  fs/xfs/libxfs/Makefile | 43 ++++++++++++++++++++++++++++
-> >  fs/xfs/scrub/Makefile  | 29 +++++++++++++++++++
-> >  3 files changed, 74 insertions(+), 76 deletions(-)
-> >  create mode 100644 fs/xfs/libxfs/Makefile
-> >  create mode 100644 fs/xfs/scrub/Makefile
-> > 
-> > diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-> > index 2f3f75a7f180..0ba854045fe9 100644
-> > --- a/fs/xfs/Makefile
-> > +++ b/fs/xfs/Makefile
-> > @@ -15,47 +15,7 @@ obj-$(CONFIG_XFS_FS)		+= xfs.o
-> >  xfs-y				+= xfs_trace.o
-> >  
-> >  # build the libxfs code first
-> > -xfs-y				+= $(addprefix libxfs/, \
-> > -				   xfs_ag.o \
-> > -				   xfs_alloc.o \
-> > -				   xfs_alloc_btree.o \
-> > -				   xfs_attr.o \
-> > -				   xfs_attr_leaf.o \
-> > -				   xfs_attr_remote.o \
-> > -				   xfs_bit.o \
-> > -				   xfs_bmap.o \
-> > -				   xfs_bmap_btree.o \
-> > -				   xfs_btree.o \
-> > -				   xfs_da_btree.o \
-> > -				   xfs_da_format.o \
-> > -				   xfs_defer.o \
-> > -				   xfs_dir2.o \
-> > -				   xfs_dir2_block.o \
-> > -				   xfs_dir2_data.o \
-> > -				   xfs_dir2_leaf.o \
-> > -				   xfs_dir2_node.o \
-> > -				   xfs_dir2_sf.o \
-> > -				   xfs_dquot_buf.o \
-> > -				   xfs_ialloc.o \
-> > -				   xfs_ialloc_btree.o \
-> > -				   xfs_iext_tree.o \
-> > -				   xfs_inode_fork.o \
-> > -				   xfs_inode_buf.o \
-> > -				   xfs_log_rlimit.o \
-> > -				   xfs_ag_resv.o \
-> > -				   xfs_rmap.o \
-> > -				   xfs_rmap_btree.o \
-> > -				   xfs_refcount.o \
-> > -				   xfs_refcount_btree.o \
-> > -				   xfs_sb.o \
-> > -				   xfs_symlink_remote.o \
-> > -				   xfs_trans_resv.o \
-> > -				   xfs_types.o \
-> > -				   )
-> > -# xfs_rtbitmap is shared with libxfs
-> > -xfs-$(CONFIG_XFS_RT)		+= $(addprefix libxfs/, \
-> > -				   xfs_rtbitmap.o \
-> > -				   )
-> > +xfs-y				+= libxfs/
-> >  
-> >  # highlevel code
-> >  xfs-y				+= xfs_aops.o \
-> > @@ -127,38 +87,4 @@ xfs-$(CONFIG_SYSCTL)		+= xfs_sysctl.o
-> >  xfs-$(CONFIG_COMPAT)		+= xfs_ioctl32.o
-> >  xfs-$(CONFIG_EXPORTFS_BLOCK_OPS)	+= xfs_pnfs.o
-> >  
-> > -# online scrub/repair
-> > -ifeq ($(CONFIG_XFS_ONLINE_SCRUB),y)
-> > -
-> > -# Tracepoints like to blow up, so build that before everything else
-> > -
-> > -xfs-y				+= $(addprefix scrub/, \
-> > -				   trace.o \
-> > -				   agheader.o \
-> > -				   alloc.o \
-> > -				   attr.o \
-> > -				   bmap.o \
-> > -				   btree.o \
-> > -				   common.o \
-> > -				   dabtree.o \
-> > -				   dir.o \
-> > -				   ialloc.o \
-> > -				   inode.o \
-> > -				   parent.o \
-> > -				   refcount.o \
-> > -				   rmap.o \
-> > -				   scrub.o \
-> > -				   symlink.o \
-> > -				   )
-> > -
-> > -xfs-$(CONFIG_XFS_RT)		+= scrub/rtbitmap.o
-> > -xfs-$(CONFIG_XFS_QUOTA)		+= scrub/quota.o
-> > -
-> > -# online repair
-> > -ifeq ($(CONFIG_XFS_ONLINE_REPAIR),y)
-> > -xfs-y				+= $(addprefix scrub/, \
-> > -				   agheader_repair.o \
-> > -				   repair.o \
-> > -				   )
-> > -endif
-> > -endif
-> > +xfs-$(CONFIG_XFS_ONLINE_SCRUB)	+= scrub/
-> > diff --git a/fs/xfs/libxfs/Makefile b/fs/xfs/libxfs/Makefile
-> > new file mode 100644
-> > index 000000000000..9b90c289bdda
-> > --- /dev/null
-> > +++ b/fs/xfs/libxfs/Makefile
-> > @@ -0,0 +1,43 @@
-> > +# SPDX-License-Identifier: GPL-2.0
-> > +
-> > +ccflags-y += -I$(src)/..
-> > +
-> > +# xfs_rtbitmap is shared with libxfs
-> > +xobj-$(CONFIG_XFS_RT)		+= xfs_rtbitmap.o
-> > +
-> > +modobj-$(CONFIG_XFS_FS) +=	   xfs_ag.o \
-> > +				   xfs_alloc.o \
-> > +				   xfs_alloc_btree.o \
-> > +				   xfs_attr.o \
-> > +				   xfs_attr_leaf.o \
-> > +				   xfs_attr_remote.o \
-> > +				   xfs_bit.o \
-> > +				   xfs_bmap.o \
-> > +				   xfs_bmap_btree.o \
-> > +				   xfs_btree.o \
-> > +				   xfs_da_btree.o \
-> > +				   xfs_da_format.o \
-> > +				   xfs_defer.o \
-> > +				   xfs_dir2.o \
-> > +				   xfs_dir2_block.o \
-> > +				   xfs_dir2_data.o \
-> > +				   xfs_dir2_leaf.o \
-> > +				   xfs_dir2_node.o \
-> > +				   xfs_dir2_sf.o \
-> > +				   xfs_dquot_buf.o \
-> > +				   xfs_ialloc.o \
-> > +				   xfs_ialloc_btree.o \
-> > +				   xfs_iext_tree.o \
-> > +				   xfs_inode_fork.o \
-> > +				   xfs_inode_buf.o \
-> > +				   xfs_log_rlimit.o \
-> > +				   xfs_ag_resv.o \
-> > +				   xfs_rmap.o \
-> > +				   xfs_rmap_btree.o \
-> > +				   xfs_refcount.o \
-> > +				   xfs_refcount_btree.o \
-> > +				   xfs_sb.o \
-> > +				   xfs_symlink_remote.o \
-> > +				   xfs_trans_resv.o \
-> > +				   xfs_types.o \
-> > +				   $(xobj-y)
-> > diff --git a/fs/xfs/scrub/Makefile b/fs/xfs/scrub/Makefile
-> > new file mode 100644
-> > index 000000000000..f91818a0e6ee
-> > --- /dev/null
-> > +++ b/fs/xfs/scrub/Makefile
-> > @@ -0,0 +1,29 @@
-> > +# SPDX-License-Identifier: GPL-2.0
-> > +
-> > +# Tracepoints like to blow up, so build that before everything else
-
-This comment ought to stay with trace.o below because that's what it
-applies to.
+Looks ok, will start working on a -fixes branch...
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
-> > +
-> > +ccflags-y += -I$(src)/..
-> > +ccflags-y += -I$(src)/../libxfs
-> > +
-> > +xobj-$(CONFIG_XFS_RT)		+= rtbitmap.o
-> > +xobj-$(CONFIG_XFS_QUOTA)	+= quota.o
-> > +xobj-$(CONFIG_XFS_ONLINE_REPAIR)+= agheader_repair.o \
-> > +				   repair.o
-> > +
-> > +modobj-$(CONFIG_XFS_FS) +=	   trace.o \
-> > +				   agheader.o \
-> > +				   alloc.o \
-> > +				   attr.o \
-> > +				   bmap.o \
-> > +				   btree.o \
-> > +				   common.o \
-> > +				   dabtree.o \
-> > +				   dir.o \
-> > +				   ialloc.o \
-> > +				   inode.o \
-> > +				   parent.o \
-> > +				   refcount.o \
-> > +				   rmap.o \
-> > +				   scrub.o \
-> > +				   symlink.o \
-> > +				   $(xobj-y)
-> > -- 
-> > 2.14.0.rc0.dirty
-> > 
+> ---
+>  fs/xfs/xfs_inode.c | 57 +++++++++++++++++-----------------------------
+>  1 file changed, 21 insertions(+), 36 deletions(-)
 > 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 4a2e5e13c569..4a9b90cfb8c3 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -3236,7 +3236,6 @@ xfs_iflush_cluster(
+>  	struct xfs_inode	*cip;
+>  	int			nr_found;
+>  	int			clcount = 0;
+> -	int			bufwasdelwri;
+>  	int			i;
+>  
+>  	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
+> @@ -3360,37 +3359,22 @@ xfs_iflush_cluster(
+>  	 * inode buffer and shut down the filesystem.
+>  	 */
+>  	rcu_read_unlock();
+> -	/*
+> -	 * Clean up the buffer.  If it was delwri, just release it --
+> -	 * brelse can handle it with no problems.  If not, shut down the
+> -	 * filesystem before releasing the buffer.
+> -	 */
+> -	bufwasdelwri = (bp->b_flags & _XBF_DELWRI_Q);
+> -	if (bufwasdelwri)
+> -		xfs_buf_relse(bp);
+> -
+>  	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+>  
+> -	if (!bufwasdelwri) {
+> -		/*
+> -		 * Just like incore_relse: if we have b_iodone functions,
+> -		 * mark the buffer as an error and call them.  Otherwise
+> -		 * mark it as stale and brelse.
+> -		 */
+> -		if (bp->b_iodone) {
+> -			bp->b_flags &= ~XBF_DONE;
+> -			xfs_buf_stale(bp);
+> -			xfs_buf_ioerror(bp, -EIO);
+> -			xfs_buf_ioend(bp);
+> -		} else {
+> -			xfs_buf_stale(bp);
+> -			xfs_buf_relse(bp);
+> -		}
+> -	}
+> -
+>  	/*
+> -	 * Unlocks the flush lock
+> +	 * We'll always have an inode attached to the buffer for completion
+> +	 * process by the time we are called from xfs_iflush(). Hence we have
+> +	 * always need to do IO completion processing to abort the inodes
+> +	 * attached to the buffer.  handle them just like the shutdown case in
+> +	 * xfs_buf_submit().
+>  	 */
+> +	ASSERT(bp->b_iodone);
+> +	bp->b_flags &= ~XBF_DONE;
+> +	xfs_buf_stale(bp);
+> +	xfs_buf_ioerror(bp, -EIO);
+> +	xfs_buf_ioend(bp);
+> +
+> +	/* abort the corrupt inode, as it was not attached to the buffer */
+>  	xfs_iflush_abort(cip, false);
+>  	kmem_free(cilist);
+>  	xfs_perag_put(pag);
+> @@ -3486,12 +3470,17 @@ xfs_iflush(
+>  		xfs_log_force(mp, 0);
+>  
+>  	/*
+> -	 * inode clustering:
+> -	 * see if other inodes can be gathered into this write
+> +	 * inode clustering: try to gather other inodes into this write
+> +	 *
+> +	 * Note: Any error during clustering will result in the filesystem
+> +	 * being shut down and completion callbacks run on the cluster buffer.
+> +	 * As we have already flushed and attached this inode to the buffer,
+> +	 * it has already been aborted and released by xfs_iflush_cluster() and
+> +	 * so we have no further error handling to do here.
+>  	 */
+>  	error = xfs_iflush_cluster(ip, bp);
+>  	if (error)
+> -		goto cluster_corrupt_out;
+> +		return error;
+>  
+>  	*bpp = bp;
+>  	return 0;
+> @@ -3500,12 +3489,8 @@ xfs_iflush(
+>  	if (bp)
+>  		xfs_buf_relse(bp);
+>  	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+> -cluster_corrupt_out:
+> -	error = -EFSCORRUPTED;
+>  abort_out:
+> -	/*
+> -	 * Unlocks the flush lock
+> -	 */
+> +	/* abort the corrupt inode, as it was not attached to the buffer */
+>  	xfs_iflush_abort(ip, false);
+>  	return error;
+>  }
+> -- 
+> 2.17.0
 > 
-> ---end quoted text---
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
