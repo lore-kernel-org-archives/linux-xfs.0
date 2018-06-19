@@ -1,97 +1,200 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from www262.sakura.ne.jp ([202.181.97.72]:22212 "EHLO
-        www262.sakura.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752747AbeFTL0P (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Jun 2018 07:26:15 -0400
-From: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
-Subject: xfs: circular locking dependency between fs_reclaim and sb_internal
- [kernel 4.18]
-Message-ID: <8fda53b0-9d86-943b-e8b4-fd9d6553f010@i-love.sakura.ne.jp>
-Date: Wed, 20 Jun 2018 20:25:51 +0900
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:51240 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S966578AbeFSQ2m (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 19 Jun 2018 12:28:42 -0400
+Date: Tue, 19 Jun 2018 12:28:40 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/2] xfs: zero length symlinks are not valid
+Message-ID: <20180619162839.GC2806@bfoster>
+References: <20180618055711.23391-1-david@fromorbit.com>
+ <20180618055711.23391-2-david@fromorbit.com>
+ <20180618132411.GB28320@bfoster>
+ <20180618224259.GF19934@dastard>
+ <20180619115434.GB2806@bfoster>
+ <20180619154810.GC21698@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180619154810.GC21698@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <dchinner@redhat.com>
-Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org, Omar Sandoval <osandov@fb.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-I'm hitting below lockdep warning (essentially same with
-http://lkml.kernel.org/r/1518666178.6070.25.camel@gmail.com ) as of commit
-ba4dbdedd3edc279 ("Merge tag 'jfs-4.18' of git://github.com/kleikamp/linux-shaggy")
-on linux.git . I think that this became visible by commit 93781325da6e07af
-("lockdep: fix fs_reclaim annotation") which went to 4.18-rc1. What should we do?
+On Tue, Jun 19, 2018 at 08:48:10AM -0700, Darrick J. Wong wrote:
+> On Tue, Jun 19, 2018 at 07:54:34AM -0400, Brian Foster wrote:
+> > On Tue, Jun 19, 2018 at 08:42:59AM +1000, Dave Chinner wrote:
+> > > On Mon, Jun 18, 2018 at 09:24:11AM -0400, Brian Foster wrote:
+> > > > On Mon, Jun 18, 2018 at 03:57:10PM +1000, Dave Chinner wrote:
+> > > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > > 
+> > > > > A log recovery failure has been reproduced where a symlink inode has
+> > > > > a zero length in extent form. It was caused by a shutdown during a
+> > > > > combined fstress+fsmark workload.
+> > > > > 
+> > > > > The underlying problem is the issue in xfs_inactive_symlink(): the
+> > > > > inode is unlocked between the symlink inactivation/truncation and
+> > > > > the inode being freed. This opens a window for the inode to be
+> > > > > written to disk before it xfs_ifree() removes it from the unlinked
+> > > > > list, marks it free in the inobt and zeros the mode.
+> > > > > 
+> > > > > For shortform inodes, the fix is simple. xfs_ifree() clears the data
+> > > > > fork state, so there's no need to do it in xfs_inactive_symlink().
+> > > > > This means the shortform fork verifier will not see a zero length
+> > > > > data fork as it mirrors the inode size through to xfs_ifree()), and
+> > > > > hence if the inode gets written back and the fork verifiers are run
+> > > > > they will still see a fork that matches the on-disk inode size.
+> > > > > 
+> > > > > For extent form (remote) symlinks, it is a little more tricky. Here
+> > > > > we explicitly set the inode size to zero, so the above race can lead
+> > > > > to zero length symlinks on disk. Because the inode is unlinked at
+> > > > > this point (i.e. on the unlinked list) and unreferenced, it can
+> > > > > never be seen again by a user. Hence when we set the inode size to
+> > > > 
+> > > > Perhaps we don't care, but what about bulkstat? The inode free is
+> > > > imminent, so it probably doesn't matter that much.
+> > > 
+> > > Bulkstat users have to deal with all sorts of TOCTOU races because
+> > > we do the inode lookup after unlocking the AGI. Hence the inodes
+> > > returned are not guaranteed to be allocated or even accessible,
+> > > especially if they return nlink == 0...
+> > > 
+> > > So, yeah, I don't think it matters for bulkstat.
+> > > 
+> > 
+> > Ack.
+> > 
+> > > > > @@ -523,17 +531,10 @@ xfs_inactive_symlink(
+> > > > >  		return -EIO;
+> > > > >  
+> > > > >  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> > > > > -
+> > > > > -	/*
+> > > > > -	 * Zero length symlinks _can_ exist.
+> > > > > -	 */
+> > > > >  	pathlen = (int)ip->i_d.di_size;
+> > > > > -	if (!pathlen) {
+> > > > > -		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > > > > -		return 0;
+> > > > > -	}
+> > > > > +	ASSERT(pathlen);
+> > > > 
+> > > > Ok, but I still feel like I'm missing something here. The commit log
+> > > > explains how symlink inode inactivation creates this transient zero-size
+> > > > symlink state. That's fine, but why do we have code to check for such
+> > > > symlinks _in_ the symlink activation path?
+> > > 
+> > > Ah, I put that in the cover letter - the VFS is supposed to ensure
+> > > we don't get zero length symlinks passed to us, and the verifiers
+> > > are supposed to catch it coming off disk. This is mostly just a
+> > > bounds check to document that we don't expect zero length symlinks
+> > > at any time, especially in the unlink path. I put the same assert
+> > > check in the xfs_symlink() create path, too, to ensure we don't get
+> > > passed a zero length from the VFS...
+> > > 
+> > 
+> > Oh, I'm not referring to the ASSERT() here. That all seems fine...
+> > 
+> > > > Is the assumption that this is just an overzealous/unnecessary check, or
+> > > > am I missing something? If the former, an extra sentence in the last
+> > > > paragraph or so of the commit log to explain why we remove this would be
+> > > > nice.
+> > > 
+> > > It's a "should never occur" situation but, well, paranoia seeing as
+> > > we've got this wrong for so long...
+> > > 
+> > 
+> > Rather, I'm asking about the pre-existing code that we remove. The hunk
+> > just above from xfs_inactive_symlink():
+> > 
+> > -	/*
+> > -	 * Zero length symlinks _can_ exist.
+> > -	 */
+> > -	if (!pathlen) {
+> > -		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > -		return 0;
+> > -	}
+> > 
+> > ... obviously suggests that there could have been a situation where we'd
+> > see a zero-length symlink on entry to xfs_inactive_symlink(). This
+> > patch, however, focuses on fixing the transient zero-length symlink
+> > caused by xfs_inactive_symlink_rmt() (which comes after the above
+> > check).
+> > 
+> > The latter implies we'd never enter the symlink inactivate path with a
+> > zero-length symlink, since this is the path that causes it (until the
+> > inode is ultimately freed). So my question essentially is do we have any
+> > idea why this code exists in the first place? Is it just bogus given
+> > there's no other clear vector to a zero-length symlink before the inode
+> > is inactivated?
+> 
+> I think that vector is log recovery.  Say we have a filesystem running
+> on an old kernel, and the fs goes down immediately after the transaction
+> commit in xfs_inactive_symlink_rmt.  At that exact moment we have a
+> zero-size extents format symlink on the unlinked list, and if we boot up
+> with a new kernel and go through log recovery we'll try to free this
+> inode in xlog_recover_process_one_iunlink.
+> 
 
-[   63.207781] 
-[   63.471926] ======================================================
-[   64.432812] WARNING: possible circular locking dependency detected
-[   64.948272] 4.18.0-rc1+ #594 Tainted: G                T
-[   65.512546] ------------------------------------------------------
-[   65.519722] kswapd0/79 is trying to acquire lock:
-[   65.525792] 00000000f3581fab (sb_internal){.+.+}, at: xfs_trans_alloc+0xe0/0x120 [xfs]
-[   66.034497] 
-[   66.034497] but task is already holding lock:
-[   66.661024] 00000000c7665973 (fs_reclaim){+.+.}, at: __fs_reclaim_acquire+0x0/0x30
-[   67.554480] 
-[   67.554480] which lock already depends on the new lock.
-[   67.554480] 
-[   68.760085] 
-[   68.760085] the existing dependency chain (in reverse order) is:
-[   69.258520] 
-[   69.258520] -> #1 (fs_reclaim){+.+.}:
-[   69.623516] 
-[   69.623516] -> #0 (sb_internal){.+.+}:
-[   70.152322] 
-[   70.152322] other info that might help us debug this:
-[   70.152322] 
-[   70.164923]  Possible unsafe locking scenario:
-[   70.164923] 
-[   70.168174]        CPU0                    CPU1
-[   70.170441]        ----                    ----
-[   70.171827]   lock(fs_reclaim);
-[   70.172771]                                lock(sb_internal);
-[   70.174447]                                lock(fs_reclaim);
-[   70.176104]   lock(sb_internal);
-[   70.177062] 
-[   70.177062]  *** DEADLOCK ***
-[   70.177062] 
-[   70.178789] 1 lock held by kswapd0/79:
-[   70.179893]  #0: 00000000c7665973 (fs_reclaim){+.+.}, at: __fs_reclaim_acquire+0x0/0x30
-[   70.182213] 
-[   70.182213] stack backtrace:
-[   70.184100] CPU: 2 PID: 79 Comm: kswapd0 Kdump: loaded Tainted: G                T 4.18.0-rc1+ #594
-[   70.187320] Hardware name: VMware, Inc. VMware Virtual Platform/440BX Desktop Reference Platform, BIOS 6.00 05/19/2017
-[   70.191064] Call Trace:
-[   70.192487]  ? dump_stack+0x85/0xcb
-[   70.194186]  ? print_circular_bug.isra.37+0x1d7/0x1e4
-[   70.196343]  ? __lock_acquire+0x126e/0x1330
-[   70.198232]  ? lock_acquire+0x51/0x70
-[   70.199964]  ? lock_acquire+0x51/0x70
-[   70.201735]  ? xfs_trans_alloc+0xe0/0x120 [xfs]
-[   70.203727]  ? __sb_start_write+0x126/0x1a0       /* __preempt_count_add at ./arch/x86/include/asm/preempt.h:76 (inlined by) percpu_down_read_preempt_disable at ./include/linux/percpu-rwsem.h:38 (inlined by) percpu_down_read at ./include/linux/percpu-rwsem.h:59 (inlined by) __sb_start_write at fs/super.c:1403 */
-[   70.205618]  ? xfs_trans_alloc+0xe0/0x120 [xfs]
-[   70.207624]  ? xfs_trans_alloc+0xe0/0x120 [xfs]   /* sb_start_intwrite at ./include/linux/fs.h:1601 (inlined by) xfs_trans_alloc at fs/xfs/xfs_trans.c:259 */
-[   70.209599]  ? xfs_iomap_write_allocate+0x1df/0x360 [xfs] /* xfs_iomap_write_allocate at fs/xfs/xfs_iomap.c:713 */
-[   70.211801]  ? xfs_iunlock+0x6f/0x180 [xfs]
-[   70.213657]  ? xfs_map_blocks+0x1c6/0x240 [xfs]   /* xfs_map_blocks at fs/xfs/xfs_aops.c:424 */
-[   70.215602]  ? xfs_do_writepage+0x16d/0x7c0 [xfs] /* xfs_writepage_map at fs/xfs/xfs_aops.c:979 (inlined by) xfs_do_writepage at fs/xfs/xfs_aops.c:1162 */
-[   70.217585]  ? find_held_lock+0x2d/0x90
-[   70.219308]  ? clear_page_dirty_for_io+0x19d/0x470
-[   70.221291]  ? xfs_vm_writepage+0x31/0x60 [xfs]   /* xfs_vm_writepage at fs/xfs/xfs_aops.c:1181 */
-[   70.223201]  ? pageout.isra.53+0x122/0x4f0        /* pageout at mm/vmscan.c:683 */
-[   70.224967]  ? shrink_page_list+0xcc4/0x18f0      /* shrink_page_list at mm/vmscan.c:1200 */
-[   70.226771]  ? shrink_inactive_list+0x2e8/0x5b0   /* spin_lock_irq at ./include/linux/spinlock.h:335 (inlined by) shrink_inactive_list at mm/vmscan.c:1787 */
-[   70.228624]  ? shrink_node_memcg+0x367/0x780      /* shrink_list at mm/vmscan.c:2095 (inlined by) shrink_node_memcg at mm/vmscan.c:2358 */
-[   70.230433]  ? __lock_is_held+0x55/0x90
-[   70.232167]  ? shrink_node+0xc9/0x470
-[   70.233792]  ? shrink_node+0xc9/0x470             /* shrink_node at mm/vmscan.c:2576 */
-[   70.235395]  ? balance_pgdat+0x154/0x3a0          /* kswapd_shrink_node at mm/vmscan.c:3304 (inlined by) balance_pgdat at mm/vmscan.c:3405 */
-[   70.237070]  ? finish_task_switch+0x93/0x290
-[   70.238861]  ? kswapd+0x151/0x370
-[   70.240464]  ? wait_woken+0xa0/0xa0
-[   70.242069]  ? balance_pgdat+0x3a0/0x3a0
-[   70.243746]  ? kthread+0x112/0x130
-[   70.245294]  ? kthread_create_worker_on_cpu+0x70/0x70
-[   70.247281]  ? ret_from_fork+0x24/0x30
+Ah, Ok. So log recovery will look up the inode and run it through
+the inactive sequence again. We presumably remove this code because with
+this patch that should no longer happen. Keeping it around doesn't help
+us because presumably the verifier would fail before we get to this
+point anyways. Makes sense, thanks Darrick.
+
+> The new code that switches i_mode prevents us from dropping more of
+> these onto the disk, but we still have old filesystems to deal with.
+> FWIW every now and then generic/475 complains in xfs_repair -n about
+> such a symlink (dfork format 2 and size 0).
+> 
+
+So it sounds like the caveat with this approach then is that we haven't
+necessarily provided a recovery path for somebody stuck in this
+particular failed recovery state, outside of 'xfs_repair -L'. :/ Unless
+I'm misunderstanding the error, that does seem a bit unfortunate given
+that otherwise recovery should complete.
+
+Brian
+
+> --D
+> 
+> > Brian
+> > 
+> > > > > -	if (pathlen < 0 || pathlen > XFS_SYMLINK_MAXLEN) {
+> > > > > +	if (pathlen <= 0 || pathlen > XFS_SYMLINK_MAXLEN) {
+> > > > >  		xfs_alert(mp, "%s: inode (0x%llx) bad symlink length (%d)",
+> > > > >  			 __func__, (unsigned long long)ip->i_ino, pathlen);
+> > > > >  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > > > > @@ -541,12 +542,12 @@ xfs_inactive_symlink(
+> > > > >  		return -EFSCORRUPTED;
+> > > > >  	}
+> > > > >  
+> > > > > +	/*
+> > > > > +	 * Inline fork state gets removed by xfs_difree() so we have nothing to
+> > > > > +	 * do here in that case.
+> > > > > +	 */
+> > > > 
+> > > > It looks like that actually happens in xfs_ifree() (not xfs_difree()).
+> > > 
+> > > Yup, will fix.
+> > > 
+> > > Cheers,
+> > > 
+> > > Dave.
+> > > -- 
+> > > Dave Chinner
+> > > david@fromorbit.com
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
