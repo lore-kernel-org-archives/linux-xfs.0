@@ -1,83 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:53962 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:55756 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750941AbeFSFVt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 01:21:49 -0400
-Date: Mon, 18 Jun 2018 22:21:33 -0700
+        with ESMTP id S1751602AbeFSFZv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 01:25:51 -0400
+Date: Mon, 18 Jun 2018 22:25:19 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3 1/2] xfs: refactor buffer submission into a common
- helper
-Message-ID: <20180619052133.GN8128@magnolia>
-References: <20180615180536.17282-1-bfoster@redhat.com>
- <20180615180536.17282-2-bfoster@redhat.com>
+Subject: Re: [PATCH 1/2] xfs: combine [a]sync buffer submission apis
+Message-ID: <20180619052519.GO8128@magnolia>
+References: <20180618145244.30393-1-bfoster@redhat.com>
+ <20180618145244.30393-2-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180615180536.17282-2-bfoster@redhat.com>
+In-Reply-To: <20180618145244.30393-2-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 
-On Fri, Jun 15, 2018 at 02:05:35PM -0400, Brian Foster wrote:
-> Sync and async buffer submission both do generally similar things
-> with a couple odd exceptions. Refactor the core buffer submission
-> code into a common helper to isolate buffer submission from
-> completion handling of synchronous buffer I/O.
+On Mon, Jun 18, 2018 at 10:52:43AM -0400, Brian Foster wrote:
+> The buffer I/O submission path consists of separate function calls
+> per type. The buffer I/O type is already controlled via buffer
+> state (XBF_ASYNC), however, so there is no real need for separate
+> submission functions.
 > 
-> This patch does not change behavior. It is a step towards support
-> for using synchronous buffer I/O via synchronous delwri queue
-> submission.
+> Combine the buffer submission functions into a single function that
+> processes the buffer appropriately based on XBF_ASYNC. Retain an
+> internal helper with a conditional wait parameter to continue to
+> support batched !XBF_ASYNC submission/completion required by delwri
+> queues.
 > 
-> Designed-by: Dave Chinner <dchinner@redhat.com>
+> Suggested-by: Christoph Hellwig <hch@infradead.org>
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Looks ok,
+Looks straightforward enough to test,
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
 > ---
->  fs/xfs/xfs_buf.c   | 85 ++++++++++++++++++++--------------------------
->  fs/xfs/xfs_trace.h |  1 -
->  2 files changed, 37 insertions(+), 49 deletions(-)
+>  fs/xfs/xfs_buf.c         | 72 +++++++++++++---------------------------
+>  fs/xfs/xfs_buf.h         | 10 ++++--
+>  fs/xfs/xfs_log_recover.c |  4 +--
+>  3 files changed, 33 insertions(+), 53 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index e9c058e3761c..7b0f7c79cd62 100644
+> index b5c0f6949b30..64a9a09013e3 100644
 > --- a/fs/xfs/xfs_buf.c
 > +++ b/fs/xfs/xfs_buf.c
-> @@ -1458,22 +1458,20 @@ _xfs_buf_ioapply(
->   * a call to this function unless the caller holds an additional reference
+> @@ -757,11 +757,7 @@ _xfs_buf_read(
+>  	bp->b_flags &= ~(XBF_WRITE | XBF_ASYNC | XBF_READ_AHEAD);
+>  	bp->b_flags |= flags & (XBF_READ | XBF_ASYNC | XBF_READ_AHEAD);
+>  
+> -	if (flags & XBF_ASYNC) {
+> -		xfs_buf_submit(bp);
+> -		return 0;
+> -	}
+> -	return xfs_buf_submit_wait(bp);
+> +	return xfs_buf_submit(bp);
+>  }
+>  
+>  xfs_buf_t *
+> @@ -846,7 +842,7 @@ xfs_buf_read_uncached(
+>  	bp->b_flags |= XBF_READ;
+>  	bp->b_ops = ops;
+>  
+> -	xfs_buf_submit_wait(bp);
+> +	xfs_buf_submit(bp);
+>  	if (bp->b_error) {
+>  		int	error = bp->b_error;
+>  		xfs_buf_relse(bp);
+> @@ -1249,7 +1245,7 @@ xfs_bwrite(
+>  	bp->b_flags &= ~(XBF_ASYNC | XBF_READ | _XBF_DELWRI_Q |
+>  			 XBF_WRITE_FAIL | XBF_DONE);
+>  
+> -	error = xfs_buf_submit_wait(bp);
+> +	error = xfs_buf_submit(bp);
+>  	if (error) {
+>  		xfs_force_shutdown(bp->b_target->bt_mount,
+>  				   SHUTDOWN_META_IO_ERROR);
+> @@ -1459,7 +1455,7 @@ _xfs_buf_ioapply(
 >   * itself.
 >   */
-> -void
-> -xfs_buf_submit(
-> +static int
-> +__xfs_buf_submit(
+>  static int
+> -__xfs_buf_submit(
+> +__xfs_buf_submit_common(
 >  	struct xfs_buf	*bp)
 >  {
 >  	trace_xfs_buf_submit(bp, _RET_IP_);
+> @@ -1505,32 +1501,6 @@ __xfs_buf_submit(
+>  	return 0;
+>  }
 >  
->  	ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
+> -void
+> -xfs_buf_submit(
+> -	struct xfs_buf	*bp)
+> -{
+> -	int		error;
+> -
 > -	ASSERT(bp->b_flags & XBF_ASYNC);
->  
->  	/* on shutdown we stale and complete the buffer immediately */
->  	if (XFS_FORCED_SHUTDOWN(bp->b_target->bt_mount)) {
->  		xfs_buf_ioerror(bp, -EIO);
->  		bp->b_flags &= ~XBF_DONE;
->  		xfs_buf_stale(bp);
-> -		xfs_buf_ioend(bp);
-> -		return;
-> +		return -EIO;
->  	}
->  
->  	if (bp->b_flags & XBF_WRITE)
-> @@ -1482,23 +1480,14 @@ xfs_buf_submit(
->  	/* clear the internal error state to avoid spurious errors */
->  	bp->b_io_error = 0;
->  
+> -
 > -	/*
 > -	 * The caller's reference is released during I/O completion.
 > -	 * This occurs some time after the last b_io_remaining reference is
@@ -88,128 +111,130 @@ Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 > -	 */
 > -	xfs_buf_hold(bp);
 > -
->  	/*
->  	 * Set the count to 1 initially, this will stop an I/O completion
->  	 * callout which happens before we have started all the I/O from calling
->  	 * xfs_buf_ioend too early.
->  	 */
->  	atomic_set(&bp->b_io_remaining, 1);
-> -	xfs_buf_ioacct_inc(bp);
-> +	if (bp->b_flags & XBF_ASYNC)
-> +		xfs_buf_ioacct_inc(bp);
->  	_xfs_buf_ioapply(bp);
->  
->  	/*
-> @@ -1507,14 +1496,39 @@ xfs_buf_submit(
->  	 * that we don't return to the caller with completion still pending.
->  	 */
->  	if (atomic_dec_and_test(&bp->b_io_remaining) == 1) {
-> -		if (bp->b_error)
-> +		if (bp->b_error || !(bp->b_flags & XBF_ASYNC))
->  			xfs_buf_ioend(bp);
->  		else
->  			xfs_buf_ioend_async(bp);
->  	}
->  
+> -	error = __xfs_buf_submit(bp);
+> -	if (error)
+> -		xfs_buf_ioend(bp);
+> -
+> -	/* Note: it is not safe to reference bp now we've dropped our ref */
 > -	xfs_buf_rele(bp);
-> +	return 0;
-> +}
-> +
-> +void
-> +xfs_buf_submit(
-> +	struct xfs_buf	*bp)
-> +{
-> +	int		error;
-> +
-> +	ASSERT(bp->b_flags & XBF_ASYNC);
-> +
-> +	/*
-> +	 * The caller's reference is released during I/O completion.
-> +	 * This occurs some time after the last b_io_remaining reference is
-> +	 * released, so after we drop our Io reference we have to have some
-> +	 * other reference to ensure the buffer doesn't go away from underneath
-> +	 * us. Take a direct reference to ensure we have safe access to the
-> +	 * buffer until we are finished with it.
-> +	 */
-> +	xfs_buf_hold(bp);
-> +
-> +	error = __xfs_buf_submit(bp);
-> +	if (error)
-> +		xfs_buf_ioend(bp);
-> +
->  	/* Note: it is not safe to reference bp now we've dropped our ref */
-> +	xfs_buf_rele(bp);
->  }
->  
+> -}
+> -
 >  /*
-> @@ -1526,22 +1540,7 @@ xfs_buf_submit_wait(
+>   * Wait for I/O completion of a sync buffer and return the I/O error code.
+>   */
+> @@ -1538,6 +1508,8 @@ static int
+>  xfs_buf_iowait(
+>  	struct xfs_buf	*bp)
+>  {
+> +	ASSERT(!(bp->b_flags & XBF_ASYNC));
+> +
+>  	trace_xfs_buf_iowait(bp, _RET_IP_);
+>  	wait_for_completion(&bp->b_iowait);
+>  	trace_xfs_buf_iowait_done(bp, _RET_IP_);
+> @@ -1549,30 +1521,33 @@ xfs_buf_iowait(
+>   * Synchronous buffer IO submission path, read or write.
+>   */
+>  int
+> -xfs_buf_submit_wait(
+> -	struct xfs_buf	*bp)
+> +__xfs_buf_submit(
+> +	struct xfs_buf	*bp,
+> +	bool		wait)
 >  {
 >  	int		error;
 >  
-> -	trace_xfs_buf_submit_wait(bp, _RET_IP_);
+> -	ASSERT(!(bp->b_flags & XBF_ASYNC));
 > -
-> -	ASSERT(!(bp->b_flags & (_XBF_DELWRI_Q | XBF_ASYNC)));
-> -
-> -	if (XFS_FORCED_SHUTDOWN(bp->b_target->bt_mount)) {
-> -		xfs_buf_ioerror(bp, -EIO);
-> -		xfs_buf_stale(bp);
-> -		bp->b_flags &= ~XBF_DONE;
-> -		return -EIO;
-> -	}
-> -
-> -	if (bp->b_flags & XBF_WRITE)
-> -		xfs_buf_wait_unpin(bp);
-> -
-> -	/* clear the internal error state to avoid spurious errors */
-> -	bp->b_io_error = 0;
-> +	ASSERT(!(bp->b_flags & XBF_ASYNC));
->  
 >  	/*
->  	 * For synchronous IO, the IO does not inherit the submitters reference
-> @@ -1551,20 +1550,9 @@ xfs_buf_submit_wait(
+> -	 * For synchronous IO, the IO does not inherit the submitters reference
+> -	 * count, nor the buffer lock. Hence we cannot release the reference we
+> -	 * are about to take until we've waited for all IO completion to occur,
+> -	 * including any xfs_buf_ioend_async() work that may be pending.
+> +	 * Grab a reference so the buffer does not go away underneath us. For
+> +	 * async buffers, I/O completion drops the callers reference, which
+> +	 * could occur before submission returns.
 >  	 */
 >  	xfs_buf_hold(bp);
 >  
-> -	/*
-> -	 * Set the count to 1 initially, this will stop an I/O completion
-> -	 * callout which happens before we have started all the I/O from calling
-> -	 * xfs_buf_ioend too early.
-> -	 */
-> -	atomic_set(&bp->b_io_remaining, 1);
-> -	_xfs_buf_ioapply(bp);
-> -
-> -	/*
-> -	 * make sure we run completion synchronously if it raced with us and is
-> -	 * already complete.
-> -	 */
-> -	if (atomic_dec_and_test(&bp->b_io_remaining) == 1)
-> -		xfs_buf_ioend(bp);
-> +	error = __xfs_buf_submit(bp);
-> +	if (error)
-> +		goto out;
+> -	error = __xfs_buf_submit(bp);
+> -	if (error)
+> +	error = __xfs_buf_submit_common(bp);
+> +	if (error) {
+> +		if (bp->b_flags & XBF_ASYNC)
+> +			xfs_buf_ioend(bp);
+>  		goto out;
+> -	error = xfs_buf_iowait(bp);
+> +	}
 >  
->  	/* wait for completion before gathering the error from the buffer */
->  	trace_xfs_buf_iowait(bp, _RET_IP_);
-> @@ -1572,6 +1560,7 @@ xfs_buf_submit_wait(
->  	trace_xfs_buf_iowait_done(bp, _RET_IP_);
->  	error = bp->b_error;
->  
-> +out:
+> +	if (wait)
+> +		error = xfs_buf_iowait(bp);
+>  out:
 >  	/*
->  	 * all done now, we can release the hold that keeps the buffer
->  	 * referenced for the entire IO.
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 972d45d28097..c2d2e513d722 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -310,7 +310,6 @@ DEFINE_BUF_EVENT(xfs_buf_hold);
->  DEFINE_BUF_EVENT(xfs_buf_rele);
->  DEFINE_BUF_EVENT(xfs_buf_iodone);
->  DEFINE_BUF_EVENT(xfs_buf_submit);
-> -DEFINE_BUF_EVENT(xfs_buf_submit_wait);
->  DEFINE_BUF_EVENT(xfs_buf_lock);
->  DEFINE_BUF_EVENT(xfs_buf_lock_done);
->  DEFINE_BUF_EVENT(xfs_buf_trylock_fail);
+> -	 * all done now, we can release the hold that keeps the buffer
+> -	 * referenced for the entire IO.
+> +	 * Release the hold that keeps the buffer referenced for the entire
+> +	 * I/O. Note that if the buffer is async, it is not safe to reference
+> +	 * after this release.
+>  	 */
+>  	xfs_buf_rele(bp);
+>  	return error;
+> @@ -2026,12 +2001,11 @@ xfs_buf_delwri_submit_buffers(
+>  		if (wait_list) {
+>  			bp->b_flags &= ~XBF_ASYNC;
+>  			list_move_tail(&bp->b_list, wait_list);
+> -			__xfs_buf_submit(bp);
+>  		} else {
+>  			bp->b_flags |= XBF_ASYNC;
+>  			list_del_init(&bp->b_list);
+> -			xfs_buf_submit(bp);
+>  		}
+> +		__xfs_buf_submit(bp, false);
+>  	}
+>  	blk_finish_plug(&plug);
+>  
+> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> index d24dbd4dac39..a57693a5cdd7 100644
+> --- a/fs/xfs/xfs_buf.h
+> +++ b/fs/xfs/xfs_buf.h
+> @@ -298,8 +298,14 @@ extern void __xfs_buf_ioerror(struct xfs_buf *bp, int error,
+>  		xfs_failaddr_t failaddr);
+>  #define xfs_buf_ioerror(bp, err) __xfs_buf_ioerror((bp), (err), __this_address)
+>  extern void xfs_buf_ioerror_alert(struct xfs_buf *, const char *func);
+> -extern void xfs_buf_submit(struct xfs_buf *bp);
+> -extern int xfs_buf_submit_wait(struct xfs_buf *bp);
+> +
+> +extern int __xfs_buf_submit(struct xfs_buf *bp, bool);
+> +static inline int xfs_buf_submit(struct xfs_buf *bp)
+> +{
+> +	bool wait = bp->b_flags & XBF_ASYNC ? false : true;
+> +	return __xfs_buf_submit(bp, wait);
+> +}
+> +
+>  extern void xfs_buf_iomove(xfs_buf_t *, size_t, size_t, void *,
+>  				xfs_buf_rw_t);
+>  #define xfs_buf_zero(bp, off, len) \
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index b181b5f57a19..724a76d87564 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -196,7 +196,7 @@ xlog_bread_noalign(
+>  	bp->b_io_length = nbblks;
+>  	bp->b_error = 0;
+>  
+> -	error = xfs_buf_submit_wait(bp);
+> +	error = xfs_buf_submit(bp);
+>  	if (error && !XFS_FORCED_SHUTDOWN(log->l_mp))
+>  		xfs_buf_ioerror_alert(bp, __func__);
+>  	return error;
+> @@ -5707,7 +5707,7 @@ xlog_do_recover(
+>  	bp->b_flags |= XBF_READ;
+>  	bp->b_ops = &xfs_sb_buf_ops;
+>  
+> -	error = xfs_buf_submit_wait(bp);
+> +	error = xfs_buf_submit(bp);
+>  	if (error) {
+>  		if (!XFS_FORCED_SHUTDOWN(mp)) {
+>  			xfs_buf_ioerror_alert(bp, __func__);
 > -- 
 > 2.17.1
 > 
