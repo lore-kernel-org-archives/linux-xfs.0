@@ -1,158 +1,178 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:56834 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:34068 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1757212AbeFSLyg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 19 Jun 2018 07:54:36 -0400
-Date: Tue, 19 Jun 2018 07:54:34 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/2] xfs: zero length symlinks are not valid
-Message-ID: <20180619115434.GB2806@bfoster>
-References: <20180618055711.23391-1-david@fromorbit.com>
- <20180618055711.23391-2-david@fromorbit.com>
- <20180618132411.GB28320@bfoster>
- <20180618224259.GF19934@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180618224259.GF19934@dastard>
+        id S1754050AbeFTIle (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 20 Jun 2018 04:41:34 -0400
+From: Zorro Lang <zlang@redhat.com>
+Subject: [PATCH v2 3/3] xfstests: dedupe with random io race test
+Date: Wed, 20 Jun 2018 16:41:14 +0800
+Message-Id: <20180620084114.25648-3-zlang@redhat.com>
+In-Reply-To: <20180620084114.25648-1-zlang@redhat.com>
+References: <20180620084114.25648-1-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: fstests@vger.kernel.org
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jun 19, 2018 at 08:42:59AM +1000, Dave Chinner wrote:
-> On Mon, Jun 18, 2018 at 09:24:11AM -0400, Brian Foster wrote:
-> > On Mon, Jun 18, 2018 at 03:57:10PM +1000, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > A log recovery failure has been reproduced where a symlink inode has
-> > > a zero length in extent form. It was caused by a shutdown during a
-> > > combined fstress+fsmark workload.
-> > > 
-> > > The underlying problem is the issue in xfs_inactive_symlink(): the
-> > > inode is unlocked between the symlink inactivation/truncation and
-> > > the inode being freed. This opens a window for the inode to be
-> > > written to disk before it xfs_ifree() removes it from the unlinked
-> > > list, marks it free in the inobt and zeros the mode.
-> > > 
-> > > For shortform inodes, the fix is simple. xfs_ifree() clears the data
-> > > fork state, so there's no need to do it in xfs_inactive_symlink().
-> > > This means the shortform fork verifier will not see a zero length
-> > > data fork as it mirrors the inode size through to xfs_ifree()), and
-> > > hence if the inode gets written back and the fork verifiers are run
-> > > they will still see a fork that matches the on-disk inode size.
-> > > 
-> > > For extent form (remote) symlinks, it is a little more tricky. Here
-> > > we explicitly set the inode size to zero, so the above race can lead
-> > > to zero length symlinks on disk. Because the inode is unlinked at
-> > > this point (i.e. on the unlinked list) and unreferenced, it can
-> > > never be seen again by a user. Hence when we set the inode size to
-> > 
-> > Perhaps we don't care, but what about bulkstat? The inode free is
-> > imminent, so it probably doesn't matter that much.
-> 
-> Bulkstat users have to deal with all sorts of TOCTOU races because
-> we do the inode lookup after unlocking the AGI. Hence the inodes
-> returned are not guaranteed to be allocated or even accessible,
-> especially if they return nlink == 0...
-> 
-> So, yeah, I don't think it matters for bulkstat.
-> 
+Run several duperemove processes with fsstress on same directory at
+same time. Make sure the race won't break the fs or kernel.
 
-Ack.
+Signed-off-by: Zorro Lang <zlang@redhat.com>
+---
 
-> > > @@ -523,17 +531,10 @@ xfs_inactive_symlink(
-> > >  		return -EIO;
-> > >  
-> > >  	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> > > -
-> > > -	/*
-> > > -	 * Zero length symlinks _can_ exist.
-> > > -	 */
-> > >  	pathlen = (int)ip->i_d.di_size;
-> > > -	if (!pathlen) {
-> > > -		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > > -		return 0;
-> > > -	}
-> > > +	ASSERT(pathlen);
-> > 
-> > Ok, but I still feel like I'm missing something here. The commit log
-> > explains how symlink inode inactivation creates this transient zero-size
-> > symlink state. That's fine, but why do we have code to check for such
-> > symlinks _in_ the symlink activation path?
-> 
-> Ah, I put that in the cover letter - the VFS is supposed to ensure
-> we don't get zero length symlinks passed to us, and the verifiers
-> are supposed to catch it coming off disk. This is mostly just a
-> bounds check to document that we don't expect zero length symlinks
-> at any time, especially in the unlink path. I put the same assert
-> check in the xfs_symlink() create path, too, to ensure we don't get
-> passed a zero length from the VFS...
-> 
+V2 did below changes:
+1) do sleep 1 after kill processes
+2) change SLEEP_TIME to sleep_time
+3) add the case to stress group
 
-Oh, I'm not referring to the ASSERT() here. That all seems fine...
+Thanks,
+Zorro
 
-> > Is the assumption that this is just an overzealous/unnecessary check, or
-> > am I missing something? If the former, an extra sentence in the last
-> > paragraph or so of the commit log to explain why we remove this would be
-> > nice.
-> 
-> It's a "should never occur" situation but, well, paranoia seeing as
-> we've got this wrong for so long...
-> 
+ tests/shared/010     | 111 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/shared/010.out |   2 +
+ tests/shared/group   |   1 +
+ 3 files changed, 114 insertions(+)
+ create mode 100755 tests/shared/010
+ create mode 100644 tests/shared/010.out
 
-Rather, I'm asking about the pre-existing code that we remove. The hunk
-just above from xfs_inactive_symlink():
+diff --git a/tests/shared/010 b/tests/shared/010
+new file mode 100755
+index 00000000..c449c247
+--- /dev/null
++++ b/tests/shared/010
+@@ -0,0 +1,111 @@
++#! /bin/bash
++# FS QA Test 010
++#
++# Dedup & random I/O race test, do multi-threads fsstress and dedupe on
++# same directory/files
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2018 Red Hat Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++	kill_all_stress
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/reflink
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# real QA test starts here
++
++# duperemove only supports btrfs and xfs (with reflink feature).
++# Add other filesystems if it supports more later.
++_supported_fs xfs btrfs
++_supported_os Linux
++_require_scratch_dedupe
++_require_command "$DUPEREMOVE_PROG" duperemove
++_require_command "$KILLALL_PROG" killall
++
++_scratch_mkfs > $seqres.full 2>&1
++_scratch_mount >> $seqres.full 2>&1
++
++function kill_all_stress()
++{
++	local f=1
++	local d=1
++
++	# kill the bash process which loop run duperemove
++	if [ -n "$loop_dedup_pid" ]; then
++		kill $loop_dedup_pid > /dev/null 2>&1
++		wait $loop_dedup_pid > /dev/null 2>&1
++		loop_dedup_pid=""
++	fi
++
++	# Make sure all fsstress and duperemove processes get killed
++	while [ $((f + d)) -ne 0 ]; do
++		$KILLALL_PROG -q $FSSTRESS_PROG > /dev/null 2>&1
++		$KILLALL_PROG -q $DUPEREMOVE_PROG > /dev/null 2>&1
++		sleep 1
++		f=`ps -eLf | grep $FSSTRESS_PROG | grep -v "grep" | wc -l`
++		d=`ps -eLf | grep $DUPEREMOVE_PROG | grep -v "grep" | wc -l`
++	done
++}
++
++sleep_time=$((50 * TIME_FACTOR))
++
++# Start fsstress
++fsstress_opts="-r -n 1000 -p $((5 * LOAD_FACTOR))"
++$FSSTRESS_PROG $fsstress_opts -d $SCRATCH_MNT -l 0 >> $seqres.full 2>&1 &
++loop_dedup_pid=""
++# Start several dedupe processes on same directory
++for ((i = 0; i < $((2 * LOAD_FACTOR)); i++)); do
++	while true; do
++		$DUPEREMOVE_PROG -dr --dedupe-options=same $SCRATCH_MNT/ \
++			>>$seqres.full 2>&1
++	done &
++	loop_dedup_pid="$! $loop_dedup_pid"
++done
++
++# End the test after $sleep_time seconds
++sleep $sleep_time
++kill_all_stress
++
++# umount and mount again, verify pagecache contents don't mutate and a fresh
++# read from the disk also doesn't show mutations.
++find $testdir -type f -exec md5sum {} \; > $TEST_DIR/${seq}md5.sum
++_scratch_cycle_mount
++md5sum -c --quiet $TEST_DIR/${seq}md5.sum
++
++echo "Silence is golden"
++status=0
++exit
+diff --git a/tests/shared/010.out b/tests/shared/010.out
+new file mode 100644
+index 00000000..1d83a8d6
+--- /dev/null
++++ b/tests/shared/010.out
+@@ -0,0 +1,2 @@
++QA output created by 010
++Silence is golden
+diff --git a/tests/shared/group b/tests/shared/group
+index 9c484794..094da27d 100644
+--- a/tests/shared/group
++++ b/tests/shared/group
+@@ -12,6 +12,7 @@
+ 007 dangerous_fuzzers
+ 008 auto stress dedupe
+ 009 auto stress dedupe
++010 auto stress dedupe
+ 032 mkfs auto quick
+ 272 auto enospc rw
+ 289 auto quick
+-- 
+2.14.4
 
--	/*
--	 * Zero length symlinks _can_ exist.
--	 */
--	if (!pathlen) {
--		xfs_iunlock(ip, XFS_ILOCK_EXCL);
--		return 0;
--	}
-
-... obviously suggests that there could have been a situation where we'd
-see a zero-length symlink on entry to xfs_inactive_symlink(). This
-patch, however, focuses on fixing the transient zero-length symlink
-caused by xfs_inactive_symlink_rmt() (which comes after the above
-check).
-
-The latter implies we'd never enter the symlink inactivate path with a
-zero-length symlink, since this is the path that causes it (until the
-inode is ultimately freed). So my question essentially is do we have any
-idea why this code exists in the first place? Is it just bogus given
-there's no other clear vector to a zero-length symlink before the inode
-is inactivated?
-
-Brian
-
-> > > -	if (pathlen < 0 || pathlen > XFS_SYMLINK_MAXLEN) {
-> > > +	if (pathlen <= 0 || pathlen > XFS_SYMLINK_MAXLEN) {
-> > >  		xfs_alert(mp, "%s: inode (0x%llx) bad symlink length (%d)",
-> > >  			 __func__, (unsigned long long)ip->i_ino, pathlen);
-> > >  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > > @@ -541,12 +542,12 @@ xfs_inactive_symlink(
-> > >  		return -EFSCORRUPTED;
-> > >  	}
-> > >  
-> > > +	/*
-> > > +	 * Inline fork state gets removed by xfs_difree() so we have nothing to
-> > > +	 * do here in that case.
-> > > +	 */
-> > 
-> > It looks like that actually happens in xfs_ifree() (not xfs_difree()).
-> 
-> Yup, will fix.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
