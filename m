@@ -1,113 +1,162 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34610 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752699AbeFSXwq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 19 Jun 2018 19:52:46 -0400
-Date: Wed, 20 Jun 2018 01:52:44 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH v2] mkfs: add mkfs config version specifier for the
- config file
-Message-ID: <20180619235244.GA5527@wotan.suse.de>
-References: <20180618180520.22146-1-mcgrof@kernel.org>
- <e09a067d-5412-e0c7-f854-a0c5af1c6828@sandeen.net>
- <20180619205710.GH7508@wotan.suse.de>
- <26e331b2-182b-d928-cb94-8bb9b836ae5c@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <26e331b2-182b-d928-cb94-8bb9b836ae5c@sandeen.net>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:48002 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753906AbeFTIlX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 20 Jun 2018 04:41:23 -0400
+From: Zorro Lang <zlang@redhat.com>
+Subject: [PATCH v2 1/3] xfstests: dedupe a single big file and verify integrity
+Date: Wed, 20 Jun 2018 16:41:12 +0800
+Message-Id: <20180620084114.25648-1-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, david@fromorbit.com
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jun 19, 2018 at 04:21:25PM -0500, Eric Sandeen wrote:
-> On 6/19/18 3:57 PM, Luis R. Rodriguez wrote:
-> > But from a generic file format point of view, a version typically does
-> > make sense for a slew of reasons, but it is typically the not known, the
-> > unexpected, for which it can be a life saver.
-> > 
-> > Things that I can mention other than what you mentioned (whether or not
-> > they are good, this is just a list of crazy things):
-> > 
-> >  1) We move from using our own parser to e2fsprogs profile parser (recall
-> >     that my studies revealed it was the smallest) or lib_iniconfig (more
-> >     robust, and widely used, however a kitchen sink compared to e2fsprogs
-> >     profile parser)
-> > 
-> >     Both however support the INI format we are using.
-> > 
-> >     The version however may help to make the old parser not barf if
-> >     say we added some magic in the future which would make the old
-> >     parser barf.
-> 
-> ... if the file format does not change, a parser change doesn't matter, and
-> a version change would be pointless.
+Duperemove is a tool for finding duplicated extents and submitting
+them for deduplication, and it supports XFS. This case trys to
+verify the integrity of XFS after running duperemove.
 
-It can. Consider support for different comment styles.
+Signed-off-by: Zorro Lang <zlang@redhat.com>
+---
 
-> >  2) Data type change for an existing token. Say crc=2 was invented
-> >     (again just an example), it would barf on the old parser, but with
-> >     the version check it would immediately tell you a more meaningful
-> >     message.
-> 
-> But how is that any different from what it would do on the command line for
-> a similar change?
+Thanks for Eryu's review.
 
-So long as we remain forward compatible its a non-issue. If we say decide
-to make a unit not compatible with old values then surely that's a format
-change which would break old configs.
+V2 changed $TEST_DIR/${seq}md5.sum to $tmp.md5sum.
 
-We should keep the config file parser ompatible with old config files produced.
-That means anything and everything we allow today should keep working in the
-future, and one way to sanely break that compatibility would be a version bump.
+I didn't move this case to generic, due to duperemove tool only supports
+Btrfs and XFS for now.
 
-> "Invalid value 2 for token crc=2 on line XYZ" is completely reasonable, and
-> does not require any version information.
-> 
-> In fact, what you are suggesting here means we'd bump the version if and only
-> if the config file contained "crc=2" which makes little sense.
+Thanks,
+Zorro
 
-For example, a config file in the future with format 2 with crc=2 would not
-work with and older xfsprog which only supports format version 1. Saying
-that your xfsprogs does not support version 2 is IMHO clearer what the
-issue may be.
 
-> > message for a set of supported features, starting with what we have today
-> > reflected as parsed as version 1. This does differ from what we do with
-> > the CLI, however as with the respecification simplifcation done on
-> > config.c in contrast to the CLI respecification checks, I would see
-> > this as a win for users, and yet keeps things simple.
-> 
-> See my earlier email for why versioning cannot depend on the presence or
-> absence of any parseable tokens ... stating "token XYZ not supported"
-> should suffice IMHO.
+ common/config        |  1 +
+ tests/shared/008     | 79 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/shared/008.out |  3 ++
+ tests/shared/group   |  1 +
+ 4 files changed, 84 insertions(+)
+ create mode 100755 tests/shared/008
+ create mode 100644 tests/shared/008.out
 
-It can. And ultimately its up to you to pick and choose.
+diff --git a/common/config b/common/config
+index 09e7ffee..d02d6ed5 100644
+--- a/common/config
++++ b/common/config
+@@ -192,6 +192,7 @@ export SETCAP_PROG="$(type -P setcap)"
+ export GETCAP_PROG="$(type -P getcap)"
+ export CHECKBASHISMS_PROG="$(type -P checkbashisms)"
+ export XFS_INFO_PROG="$(type -P xfs_info)"
++export DUPEREMOVE_PROG="$(type -P duperemove)"
+ 
+ # use 'udevadm settle' or 'udevsettle' to wait for lv to be settled.
+ # newer systems have udevadm command but older systems like RHEL5 don't.
+diff --git a/tests/shared/008 b/tests/shared/008
+new file mode 100755
+index 00000000..a28f5cc1
+--- /dev/null
++++ b/tests/shared/008
+@@ -0,0 +1,79 @@
++#! /bin/bash
++# FS QA Test 008
++#
++# Dedupe a single big file and verify integrity
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2018 Red Hat Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/reflink
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# duperemove only supports btrfs and xfs (with reflink feature).
++# Add other filesystems if it supports more later.
++_supported_fs xfs btrfs
++_supported_os Linux
++_require_scratch_dedupe
++_require_command "$DUPEREMOVE_PROG" duperemove
++
++fssize=$((2 * 1024 * 1024 * 1024))
++_scratch_mkfs_sized $fssize > $seqres.full 2>&1
++_scratch_mount >> $seqres.full 2>&1
++
++# fill the fs with a big file has same contents
++$XFS_IO_PROG -f -c "pwrite -S 0x55 0 $fssize" $SCRATCH_MNT/${seq}.file \
++	>> $seqres.full 2>&1
++md5sum $SCRATCH_MNT/${seq}.file > ${tmp}.md5sum
++
++echo "= before cycle mount ="
++# Dedupe with 1M blocksize
++$DUPEREMOVE_PROG -dr --dedupe-options=same -b 1048576 $SCRATCH_MNT/ >>$seqres.full 2>&1
++# Verify integrity
++md5sum -c --quiet ${tmp}.md5sum
++# Dedupe with 64k blocksize
++$DUPEREMOVE_PROG -dr --dedupe-options=same -b 65536 $SCRATCH_MNT/ >>$seqres.full 2>&1
++# Verify integrity again
++md5sum -c --quiet ${tmp}.md5sum
++
++# umount and mount again, verify pagecache contents don't mutate
++_scratch_cycle_mount
++echo "= after cycle mount ="
++md5sum -c --quiet ${tmp}.md5sum
++
++status=0
++exit
+diff --git a/tests/shared/008.out b/tests/shared/008.out
+new file mode 100644
+index 00000000..f29d478f
+--- /dev/null
++++ b/tests/shared/008.out
+@@ -0,0 +1,3 @@
++QA output created by 008
++= before cycle mount =
++= after cycle mount =
+diff --git a/tests/shared/group b/tests/shared/group
+index b3663a03..49ffa8dd 100644
+--- a/tests/shared/group
++++ b/tests/shared/group
+@@ -10,6 +10,7 @@
+ 005 dangerous_fuzzers
+ 006 auto enospc
+ 007 dangerous_fuzzers
++008 auto stress dedupe
+ 032 mkfs auto quick
+ 272 auto enospc rw
+ 289 auto quick
+-- 
+2.14.4
 
-> (now, it's true that today we don't distinguish between unknown vs.
-> unsupported tokens, I don't know if I should try to fix that before 4.17
-> or not; again, though,
-
-I don't think its worth to say something is unsupported vs unknown given
-we don't know what options will be supported, as some config file entries
-are expected to differ from CLI.
-
-> that is on the parser side, not the config file side.)
-> 
-> > If this seems acceptable and reasonable, then version would be a reflection
-> > of supporting the format and layout of the file, as well was indicative
-> > of supporting only a specific feature set.
-> 
-> What is or is not a supported token is wholly a function of the mkfs/parser
-> version, not the config file version, right?
-
-Yes.
-
-> So, not to be argumentative ... but I remain unconvinced of the need for
-> config file versioning.
-
-Your call :)
-
-  Luis
