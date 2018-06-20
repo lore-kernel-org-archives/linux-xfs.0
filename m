@@ -1,86 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:7492 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S934362AbeFVDy2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jun 2018 23:54:28 -0400
-Date: Fri, 22 Jun 2018 13:54:24 +1000
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:47062 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754385AbeFTXSw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Jun 2018 19:18:52 -0400
+Date: Thu, 21 Jun 2018 09:18:50 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfstests: Test root inode parent pointer repairing
-Message-ID: <20180622035424.GD13748@dastard>
-References: <20180618174433.3069-1-mbenatto@redhat.com>
- <20180618174433.3069-2-mbenatto@redhat.com>
- <20180622023735.GN2780@desktop>
- <9b44c744-6abd-35d2-e3ec-1f8a1a8ea710@redhat.com>
+Subject: Re: [PATCH v2] mkfs: add mkfs config version specifier for the
+ config file
+Message-ID: <20180620231850.GO19934@dastard>
+References: <20180618180520.22146-1-mcgrof@kernel.org>
+ <e09a067d-5412-e0c7-f854-a0c5af1c6828@sandeen.net>
+ <20180619205710.GH7508@wotan.suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <9b44c744-6abd-35d2-e3ec-1f8a1a8ea710@redhat.com>
+In-Reply-To: <20180619205710.GH7508@wotan.suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Eryu Guan <guaneryu@gmail.com>, Marco Benatto <mbenatto@redhat.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-On Thu, Jun 21, 2018 at 09:58:25PM -0500, Eric Sandeen wrote:
-> On 6/21/18 9:37 PM, Eryu Guan wrote:
-> > On Mon, Jun 18, 2018 at 02:44:33PM -0300, Marco Benatto wrote:
-> >> Recently we found out xfs_repair were not repairing
-> >> root inode parent pointer when root inode is on short-form
-> >> and parent points to an invalid inode number (refer to:
-> >> "xfs_repair: Fix root inode's parent when it's bogus for sf
-> >> directory" on xfs-devel list).
-> >>
-> >> This test checks if xfs_repair successfully repair the
-> >> filesystem in the scenario mentioned before.
-> >>
-> >> Signed-off-by: Marco Benatto <mbenatto@redhat.com>
-> >> ---
-> >>  tests/xfs/450     | 53 +++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >>  tests/xfs/450.out |  1 +
-> >>  tests/xfs/group   |  1 +
-> >>  3 files changed, 55 insertions(+)
-> >>  create mode 100755 tests/xfs/450
-> >>  create mode 100644 tests/xfs/450.out
-> >>
-> >> diff --git a/tests/xfs/450 b/tests/xfs/450
-> >> new file mode 100755
-> >> index 0000000..dc7f244
-> >> --- /dev/null
-> >> +++ b/tests/xfs/450
-> >> @@ -0,0 +1,53 @@
-> >> +#! /bin/bash
-> >> +# SPDX-License-Identifier: GPL-2.0
-> >> +# Copyright (c) 2018 Red Hat Inc.  All Rights Reserved.
-> >> +#
-> >> +# FS QA Test 450
-> >> +#
-> >> +# Make sure xfs_repair can repair root inode parent's pointer
-> >> +# when it contains a bogus ino when it's using shot form directory
-> >> +#
-> >> +seq=`basename $0`
-> >> +seqres=$RESULT_DIR/$seq
-> >> +
-> >> +status=1	# failure is the default!
+On Tue, Jun 19, 2018 at 10:57:10PM +0200, Luis R. Rodriguez wrote:
+> On Tue, Jun 19, 2018 at 02:53:28PM -0500, Eric Sandeen wrote:
+> > Soo.... 
 > > 
-> > Apart from Dave's comments, there're some common definitions missing
-> > too, e.g. 'tmp' and 'here', please use './new xfs' to generate new test
-> > template.
+> > I'm really on the fence about versioning at all, because we have yet to
+> > identify any concrete scenario in which we'd need to bump the version;
+> > we haven't even defined what exactly the "version" implies.
 > 
-> Eryu, I think I suggested that Marco could remove the "tmp" definition
-> because it's not used in the script.  Is there some reason to keep it?
-> The script did start out with a "./new xfs" generation template.
+> Right.
 > 
-> Oh, I bet some helpers depend on it... sorry, my mistake.  Oops.
+> > So unless anyone has a concrete example of how a version would be needed,
+> > functional, reliably-parsed, and well-defined I'm inclined to leave this out.
 > 
-> (though maybe tmp should just get hoisted to the harness and
-> not be required in every script, but I digress ...)
+> Dave asked for it, so I would imagine he could make a better case for it.
 
-You mean like I proposed a couple of weeks ago along with the
-spdx license tag updates?
+I ask for things so that people think about the problem, not
+necessarily because I want something to be done. Please don't
+conflate "Dave says X" with "we must implement X" because I am often
+wrong and/or playing the Devil's Advocate role.
 
-https://www.spinics.net/lists/fstests/msg09849.html
+I try to look outside the box for potential issues, so if I see a
+potential issue I'll say /something/ just to get people to discuss
+that aspect of the problem and come up with a reasonable solution. I
+don't have the time to solve every problem we have, I don't
+/want/ to solve every problem, but I want to make sure we solve
+the problems we have in the right way the first time.
 
-that's next on my list of "Big cleanups for fstests To Do" list.
+In reality, I don't care either way if we have a version symbol in
+the config file, and if it is decided that it is a good thing how it
+will be implemented. What I care about is that we've thought about
+supporting config files over their entire lifetime, not just
+considered what is needed in the near term to solve the immediate
+problem.
+
+IOWs, my comments about treating a config file like any other
+long term persistent structure were intended to shift the focus of
+the discussion from implementation minutae to the bigger, long term
+picture details that needed to be thrashed out. Work out the big
+picture first, the small details will fall naturally from that...
 
 Cheers,
 
