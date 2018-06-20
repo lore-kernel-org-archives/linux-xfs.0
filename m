@@ -1,79 +1,202 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:43938 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:50146 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750759AbeFVGVK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Jun 2018 02:21:10 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5M6JDPq056209
-        for <linux-xfs@vger.kernel.org>; Fri, 22 Jun 2018 06:21:09 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp2120.oracle.com with ESMTP id 2jrp8hrmdc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 22 Jun 2018 06:21:09 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w5M6L9Qk013391
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 22 Jun 2018 06:21:09 GMT
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w5M6L8bP023672
-        for <linux-xfs@vger.kernel.org>; Fri, 22 Jun 2018 06:21:08 GMT
-Date: Thu, 21 Jun 2018 23:21:03 -0700
+        with ESMTP id S1754161AbeFTQaU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Jun 2018 12:30:20 -0400
+Date: Wed, 20 Jun 2018 09:30:01 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 9/8] xfs: check leaf attribute block freemap in verifier
-Message-ID: <20180622062103.GM4838@magnolia>
-References: <152960586416.26246.8634761888260524091.stgit@magnolia>
+Subject: Re: [PATCH v2 3/3] xfstests: dedupe with random io race test
+Message-ID: <20180620163001.GC4841@magnolia>
+References: <20180620084114.25648-1-zlang@redhat.com>
+ <20180620084114.25648-3-zlang@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <152960586416.26246.8634761888260524091.stgit@magnolia>
+In-Reply-To: <20180620084114.25648-3-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Jun 20, 2018 at 04:41:14PM +0800, Zorro Lang wrote:
+> Run several duperemove processes with fsstress on same directory at
+> same time. Make sure the race won't break the fs or kernel.
+> 
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> ---
+> 
+> V2 did below changes:
+> 1) do sleep 1 after kill processes
+> 2) change SLEEP_TIME to sleep_time
+> 3) add the case to stress group
+> 
+> Thanks,
+> Zorro
+> 
+>  tests/shared/010     | 111 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/shared/010.out |   2 +
+>  tests/shared/group   |   1 +
+>  3 files changed, 114 insertions(+)
+>  create mode 100755 tests/shared/010
+>  create mode 100644 tests/shared/010.out
+> 
+> diff --git a/tests/shared/010 b/tests/shared/010
+> new file mode 100755
+> index 00000000..c449c247
+> --- /dev/null
+> +++ b/tests/shared/010
+> @@ -0,0 +1,111 @@
+> +#! /bin/bash
+> +# FS QA Test 010
+> +#
+> +# Dedup & random I/O race test, do multi-threads fsstress and dedupe on
+> +# same directory/files
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2018 Red Hat Inc.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +	kill_all_stress
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +. ./common/reflink
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +# real QA test starts here
+> +
+> +# duperemove only supports btrfs and xfs (with reflink feature).
+> +# Add other filesystems if it supports more later.
+> +_supported_fs xfs btrfs
+> +_supported_os Linux
+> +_require_scratch_dedupe
+> +_require_command "$DUPEREMOVE_PROG" duperemove
+> +_require_command "$KILLALL_PROG" killall
+> +
+> +_scratch_mkfs > $seqres.full 2>&1
+> +_scratch_mount >> $seqres.full 2>&1
+> +
+> +function kill_all_stress()
+> +{
+> +	local f=1
+> +	local d=1
+> +
+> +	# kill the bash process which loop run duperemove
+> +	if [ -n "$loop_dedup_pid" ]; then
+> +		kill $loop_dedup_pid > /dev/null 2>&1
+> +		wait $loop_dedup_pid > /dev/null 2>&1
+> +		loop_dedup_pid=""
+> +	fi
+> +
+> +	# Make sure all fsstress and duperemove processes get killed
+> +	while [ $((f + d)) -ne 0 ]; do
+> +		$KILLALL_PROG -q $FSSTRESS_PROG > /dev/null 2>&1
+> +		$KILLALL_PROG -q $DUPEREMOVE_PROG > /dev/null 2>&1
+> +		sleep 1
+> +		f=`ps -eLf | grep $FSSTRESS_PROG | grep -v "grep" | wc -l`
+> +		d=`ps -eLf | grep $DUPEREMOVE_PROG | grep -v "grep" | wc -l`
+> +	done
+> +}
+> +
+> +sleep_time=$((50 * TIME_FACTOR))
+> +
+> +# Start fsstress
+> +fsstress_opts="-r -n 1000 -p $((5 * LOAD_FACTOR))"
+> +$FSSTRESS_PROG $fsstress_opts -d $SCRATCH_MNT -l 0 >> $seqres.full 2>&1 &
+> +loop_dedup_pid=""
+> +# Start several dedupe processes on same directory
+> +for ((i = 0; i < $((2 * LOAD_FACTOR)); i++)); do
+> +	while true; do
+> +		$DUPEREMOVE_PROG -dr --dedupe-options=same $SCRATCH_MNT/ \
+> +			>>$seqres.full 2>&1
 
-Check the leaf attribute freemap when we we're verifying the block.
-Found via generic/070.
+/me wonders why not just touch $TEST_DIR/run, have this loop do:
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_attr_leaf.c |   18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+while test -e $TEST_DIR/run; do
+	duperemove...
+done
 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index 76e90046731c..b3c19339e1b5 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -244,6 +244,8 @@ xfs_attr3_leaf_verify(
- 	struct xfs_attr_leafblock	*leaf = bp->b_addr;
- 	struct xfs_perag		*pag = bp->b_pag;
- 	struct xfs_attr_leaf_entry	*entries;
-+	uint16_t			end;
-+	int				i;
- 
- 	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &ichdr, leaf);
- 
-@@ -289,6 +291,22 @@ xfs_attr3_leaf_verify(
- 	/* XXX: need to range check rest of attr header values */
- 	/* XXX: hash order check? */
- 
-+	for (i = 0; i < XFS_ATTR_LEAF_MAPSIZE; i++) {
-+		if (ichdr.freemap[i].base > mp->m_attr_geo->blksize)
-+			return __this_address;
-+		if (ichdr.freemap[i].base & 0x3)
-+			return __this_address;
-+		if (ichdr.freemap[i].size > mp->m_attr_geo->blksize)
-+			return __this_address;
-+		if (ichdr.freemap[i].size & 0x3)
-+			return __this_address;
-+		end = ichdr.freemap[i].base + ichdr.freemap[i].size;
-+		if (end < ichdr.freemap[i].base)
-+			return __this_address;
-+		if (end > mp->m_attr_geo->blksize)
-+			return __this_address;
-+	}
-+
- 	return NULL;
- }
- 
+and then rm -f $TEST_DIR/run to end the loop?  Then you don't need the
+complex machinery to shut down the bash loop and kill the fsstress and
+duperemove processes.
+
+Otherwise looks decent,
+
+--D
+
+> +	done &
+> +	loop_dedup_pid="$! $loop_dedup_pid"
+> +done
+> +
+> +# End the test after $sleep_time seconds
+> +sleep $sleep_time
+> +kill_all_stress
+> +
+> +# umount and mount again, verify pagecache contents don't mutate and a fresh
+> +# read from the disk also doesn't show mutations.
+> +find $testdir -type f -exec md5sum {} \; > $TEST_DIR/${seq}md5.sum
+> +_scratch_cycle_mount
+> +md5sum -c --quiet $TEST_DIR/${seq}md5.sum
+> +
+> +echo "Silence is golden"
+> +status=0
+> +exit
+> diff --git a/tests/shared/010.out b/tests/shared/010.out
+> new file mode 100644
+> index 00000000..1d83a8d6
+> --- /dev/null
+> +++ b/tests/shared/010.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 010
+> +Silence is golden
+> diff --git a/tests/shared/group b/tests/shared/group
+> index 9c484794..094da27d 100644
+> --- a/tests/shared/group
+> +++ b/tests/shared/group
+> @@ -12,6 +12,7 @@
+>  007 dangerous_fuzzers
+>  008 auto stress dedupe
+>  009 auto stress dedupe
+> +010 auto stress dedupe
+>  032 mkfs auto quick
+>  272 auto enospc rw
+>  289 auto quick
+> -- 
+> 2.14.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
