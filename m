@@ -1,53 +1,126 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:33198 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751337AbeFTAhz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 20:37:55 -0400
-Date: Tue, 19 Jun 2018 17:37:36 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 11/24] xfs: remove xfs_map_cow
-Message-ID: <20180620003736.GE9426@magnolia>
-References: <20180615130209.1970-1-hch@lst.de>
- <20180615130209.1970-12-hch@lst.de>
- <20180618173837.GA40796@bfoster>
- <20180619053537.GT8128@magnolia>
- <20180619165303.GB18348@lst.de>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:23397 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752784AbeFTBsz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 21:48:55 -0400
+Date: Wed, 20 Jun 2018 11:48:52 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/2] xfstests: Test root inode parent pointer repairing
+Message-ID: <20180620014852.GA13748@dastard>
+References: <20180618174433.3069-1-mbenatto@redhat.com>
+ <20180618174433.3069-2-mbenatto@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180619165303.GB18348@lst.de>
+In-Reply-To: <20180618174433.3069-2-mbenatto@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Marco Benatto <mbenatto@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, sandeen@redhat.com
 
-On Tue, Jun 19, 2018 at 06:53:03PM +0200, Christoph Hellwig wrote:
-> On Mon, Jun 18, 2018 at 10:35:37PM -0700, Darrick J. Wong wrote:
-> > > A comment would be nice here just so the purpose of the logic is clear
-> > > at a glance. E.g:
-> > > 
-> > >                 /*
-> > >                  * COW fork blocks can overlap data fork blocks even if the
-> > >                  * blocks aren't shared. COW I/O always takes precedent, so we
-> > >                  * must always check for overlap on reflink inodes unless the
-> > >                  * mapping is already COW.
-> > >                  */
-> > > 
-> > > With something like that, this now looks pretty good to me:
-> > > 
-> > > Reviewed-by: Brian Foster <bfoster@redhat.com>
-> > 
-> > I concur, it would help to have a comment to remind everyone that we
-> > sometimes upgrade to a cow write even when it's not strictly required.
-> > :)
-> > 
-> > With that comment added in,
+On Mon, Jun 18, 2018 at 02:44:33PM -0300, Marco Benatto wrote:
+> Recently we found out xfs_repair were not repairing
+> root inode parent pointer when root inode is on short-form
+> and parent points to an invalid inode number (refer to:
+> "xfs_repair: Fix root inode's parent when it's bogus for sf
+> directory" on xfs-devel list).
 > 
-> Do you just want to throw it after the series?  Or should I or Brian
-> resend it on top of the series?
+> This test checks if xfs_repair successfully repair the
+> filesystem in the scenario mentioned before.
+> 
+> Signed-off-by: Marco Benatto <mbenatto@redhat.com>
+> ---
+>  tests/xfs/450     | 53 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/450.out |  1 +
+>  tests/xfs/group   |  1 +
+>  3 files changed, 55 insertions(+)
+>  create mode 100755 tests/xfs/450
+>  create mode 100644 tests/xfs/450.out
+> 
+> diff --git a/tests/xfs/450 b/tests/xfs/450
+> new file mode 100755
+> index 0000000..dc7f244
+> --- /dev/null
+> +++ b/tests/xfs/450
+> @@ -0,0 +1,53 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2018 Red Hat Inc.  All Rights Reserved.
+> +#
+> +# FS QA Test 450
+> +#
+> +# Make sure xfs_repair can repair root inode parent's pointer
+> +# when it contains a bogus ino when it's using shot form directory
+> +#
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +
+> +status=1	# failure is the default!
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +# real QA test starts here
+> +
+> +# Modify as appropriate.
+> +_supported_fs xfs
+> +_supported_os Linux
+> +_require_scratch
+> +
+> +
+> +_scratch_mkfs >> /dev/null 2>&1
+> +
+> +rootino=$(_scratch_xfs_get_metadata_field 'rootino' 'sb 0')
+> +
+> +prefix=$(_scratch_get_sfdir_prefix ${rootino} || \
+> +		_fail "Cannot determine sfdir prefix")
+> +
+> +
+> +# Corrupt root inode parent pointer
+> +_scratch_xfs_set_metadata_field "${prefix}.hdr.parent.i4" 0 "inode ${rootino}"\
+> +								>> $seqres.full
+> +
+> +_scratch_xfs_repair >> $seqres.full 2>&1
+> +
+> +_scratch_xfs_repair -n >> $seqres.full 2>&1
+> +
+> +if [ $? -eq 1 ]
+> +then
+> +	_fail "xfs_repair failed to repair filesystem"
+> +fi
 
-I just stuck it in the patch and had it follow the code in the
-subsequent reorganizations.  Testing is running now...
+Isn't this last "filesystem is not corrupt" check run by the harness
+via _check_scratch_fs()?
 
---D
+(Also, "if [ .. ]; then" is the preferred fstests style)
+
+> +
+> +echo "OK"
+
+There's no test output, so the normal thing to do is this after
+setting up the test:
+
+echo "Silence is golden"
+
+We do that early on so that when something goes wrong the bad output
+file immediately tells you that no output was expected.
+
+> @@ -447,3 +447,4 @@
+>  447 auto mount
+>  448 auto quick fuzzers
+>  449 auto quick
+> +450 auto quick
+
+also  the metadata and repair groups should be added here.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
