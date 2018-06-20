@@ -1,162 +1,142 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:48002 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:56264 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753906AbeFTIlX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 20 Jun 2018 04:41:23 -0400
-From: Zorro Lang <zlang@redhat.com>
-Subject: [PATCH v2 1/3] xfstests: dedupe a single big file and verify integrity
-Date: Wed, 20 Jun 2018 16:41:12 +0800
-Message-Id: <20180620084114.25648-1-zlang@redhat.com>
+        id S1754230AbeFTSNB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 20 Jun 2018 14:13:01 -0400
+Date: Wed, 20 Jun 2018 14:12:59 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 23/24] iomap: add support for sub-pagesize buffered I/O
+ without buffer heads
+Message-ID: <20180620181259.GD4493@bfoster>
+References: <20180615130209.1970-1-hch@lst.de>
+ <20180615130209.1970-24-hch@lst.de>
+ <20180619165211.GD2806@bfoster>
+ <20180620075655.GA2668@lst.de>
+ <20180620143252.GE3241@bfoster>
+ <20180620160803.GA4838@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180620160803.GA4838@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-Duperemove is a tool for finding duplicated extents and submitting
-them for deduplication, and it supports XFS. This case trys to
-verify the integrity of XFS after running duperemove.
+On Wed, Jun 20, 2018 at 09:08:03AM -0700, Darrick J. Wong wrote:
+> On Wed, Jun 20, 2018 at 10:32:53AM -0400, Brian Foster wrote:
+> > Sending again without the attachment... Christoph, let me know if it
+> > didn't hit your mbox at least.
+> > 
+> > On Wed, Jun 20, 2018 at 09:56:55AM +0200, Christoph Hellwig wrote:
+> > > On Tue, Jun 19, 2018 at 12:52:11PM -0400, Brian Foster wrote:
+> > > > > +	/*
+> > > > > +	 * Move the caller beyond our range so that it keeps making progress.
+> > > > > +	 * For that we have to include any leading non-uptodate ranges, but
+> > > > 
+> > > > Do you mean "leading uptodate ranges" here? E.g., pos is pushed forward
+> > > > past those ranges we don't have to read, so (pos - orig_pos) reflects
+> > > > the initial uptodate range while plen reflects the length we have to
+> > > > read..?
+> > > 
+> > > Yes.
+> > > 
+> > > > > +
+> > > > > +	do {
+> > > > 
+> > > > Kind of a nit, but this catches my eye and manages to confuse me every
+> > > > time I look at it. A comment along the lines of:
+> > > > 
+> > > >                 /*
+> > > > 		 * Pass in the block aligned start/end so we get back block
+> > > > 		 * aligned/adjusted poff/plen and can compare with unaligned
+> > > > 		 * from/to below.
+> > > >                  */
+> > > > 
+> > > > ... would be nice here, IMO.
+> > > 
+> > > Fine with me.
+> > > 
+> > > > > +		iomap_adjust_read_range(inode, iop, &block_start,
+> > > > > +				block_end - block_start, &poff, &plen);
+> > > > > +		if (plen == 0)
+> > > > > +			break;
+> > > > > +
+> > > > > +		if ((from > poff && from < poff + plen) ||
+> > > > > +		    (to > poff && to < poff + plen)) {
+> > > > > +			status = iomap_read_page_sync(inode, block_start, page,
+> > > > > +					poff, plen, from, to, iomap);
+> > > > 
+> > > > After taking another look at the buffer head path, it does look like we
+> > > > have slightly different behavior here. IIUC, the former reads only the
+> > > > !uptodate blocks that fall along the from/to boundaries. Here, if say
+> > > > from = 1, to = PAGE_SIZE and the page is fully !uptodate, it looks like
+> > > > we'd read the entire page worth of blocks (assuming contiguous 512b
+> > > > blocks, for example). Intentional? Doesn't seem like a big deal, but
+> > > > could be worth a followup fix.
+> > > 
+> > > It wasn't actuall intentional, but I actually think it is the right thing
+> > > in then end, as it means we'll often do a single read instead of two
+> > > separate ones.
+> > 
+> > Ok, but if that's the argument, then shouldn't we not be doing two
+> > separate I/Os if the middle range of a write happens to be already
+> > uptodate? Or more for that matter, if the page happens to be sparsely
+> > uptodate for whatever reason..?
+> > 
+> > OTOH, I also do wonder a bit whether that may always be the right thing
+> > if we consider cases like 64k page size arches and whatnot. It seems
+> > like we could end up consuming more bandwidth for reads than we
+> > typically have in the past. That said, unless there's a functional
+> > reason to change this I think it's fine to optimize this path for these
+> > kinds of corner cases in follow on patches.
+> > 
+> > Finally, this survived xfstests on a sub-page block size fs but I
+> > managed to hit an fsx error:
+> > 
+> > Mapped Read: non-zero data past EOF (0x21a1f) page offset 0xc00 is
+> > 0xc769
+> > 
+> > It repeats 100% of the time for me using the attached fsxops file (with
+> > --replay-ops) on XFS w/ -bsize=1k. It doesn't occur without the final
+> > patch to enable sub-page block iomap on XFS.
+> 
+> Funny, because I saw the exact same complaint from generic/127 last
+> night on my development tree that doesn't include hch's patches and was
+> going to see if I could figure out what's going on.
+> 
+> FWIW it's been happening sporadically for a few weeks now but every time
+> I've tried to analyze it I (of course) couldn't get it to reproduce. :)
+> 
+> I also ran this series (all of it, including the subpagesize config)
+> last night and aside from it stumbling over an unrelated locking problem
+> seemed fine....
+> 
 
-Signed-off-by: Zorro Lang <zlang@redhat.com>
----
+That's interesting. Perhaps it's a pre-existing issue in that case and
+the iomap stuff just changes the timing to make it reliably reproducible
+on this particular system.
 
-Thanks for Eryu's review.
+I only ran it a handful of times in both cases and now have lost access
+to the server. Once I regain access, I'll try running for longer on
+for-next to see if the same thing eventually triggers.
 
-V2 changed $TEST_DIR/${seq}md5.sum to $tmp.md5sum.
+Brian
 
-I didn't move this case to generic, due to duperemove tool only supports
-Btrfs and XFS for now.
-
-Thanks,
-Zorro
-
-
- common/config        |  1 +
- tests/shared/008     | 79 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/shared/008.out |  3 ++
- tests/shared/group   |  1 +
- 4 files changed, 84 insertions(+)
- create mode 100755 tests/shared/008
- create mode 100644 tests/shared/008.out
-
-diff --git a/common/config b/common/config
-index 09e7ffee..d02d6ed5 100644
---- a/common/config
-+++ b/common/config
-@@ -192,6 +192,7 @@ export SETCAP_PROG="$(type -P setcap)"
- export GETCAP_PROG="$(type -P getcap)"
- export CHECKBASHISMS_PROG="$(type -P checkbashisms)"
- export XFS_INFO_PROG="$(type -P xfs_info)"
-+export DUPEREMOVE_PROG="$(type -P duperemove)"
- 
- # use 'udevadm settle' or 'udevsettle' to wait for lv to be settled.
- # newer systems have udevadm command but older systems like RHEL5 don't.
-diff --git a/tests/shared/008 b/tests/shared/008
-new file mode 100755
-index 00000000..a28f5cc1
---- /dev/null
-+++ b/tests/shared/008
-@@ -0,0 +1,79 @@
-+#! /bin/bash
-+# FS QA Test 008
-+#
-+# Dedupe a single big file and verify integrity
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2018 Red Hat Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/reflink
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# duperemove only supports btrfs and xfs (with reflink feature).
-+# Add other filesystems if it supports more later.
-+_supported_fs xfs btrfs
-+_supported_os Linux
-+_require_scratch_dedupe
-+_require_command "$DUPEREMOVE_PROG" duperemove
-+
-+fssize=$((2 * 1024 * 1024 * 1024))
-+_scratch_mkfs_sized $fssize > $seqres.full 2>&1
-+_scratch_mount >> $seqres.full 2>&1
-+
-+# fill the fs with a big file has same contents
-+$XFS_IO_PROG -f -c "pwrite -S 0x55 0 $fssize" $SCRATCH_MNT/${seq}.file \
-+	>> $seqres.full 2>&1
-+md5sum $SCRATCH_MNT/${seq}.file > ${tmp}.md5sum
-+
-+echo "= before cycle mount ="
-+# Dedupe with 1M blocksize
-+$DUPEREMOVE_PROG -dr --dedupe-options=same -b 1048576 $SCRATCH_MNT/ >>$seqres.full 2>&1
-+# Verify integrity
-+md5sum -c --quiet ${tmp}.md5sum
-+# Dedupe with 64k blocksize
-+$DUPEREMOVE_PROG -dr --dedupe-options=same -b 65536 $SCRATCH_MNT/ >>$seqres.full 2>&1
-+# Verify integrity again
-+md5sum -c --quiet ${tmp}.md5sum
-+
-+# umount and mount again, verify pagecache contents don't mutate
-+_scratch_cycle_mount
-+echo "= after cycle mount ="
-+md5sum -c --quiet ${tmp}.md5sum
-+
-+status=0
-+exit
-diff --git a/tests/shared/008.out b/tests/shared/008.out
-new file mode 100644
-index 00000000..f29d478f
---- /dev/null
-+++ b/tests/shared/008.out
-@@ -0,0 +1,3 @@
-+QA output created by 008
-+= before cycle mount =
-+= after cycle mount =
-diff --git a/tests/shared/group b/tests/shared/group
-index b3663a03..49ffa8dd 100644
---- a/tests/shared/group
-+++ b/tests/shared/group
-@@ -10,6 +10,7 @@
- 005 dangerous_fuzzers
- 006 auto enospc
- 007 dangerous_fuzzers
-+008 auto stress dedupe
- 032 mkfs auto quick
- 272 auto enospc rw
- 289 auto quick
--- 
-2.14.4
-
+> --D
+> 
+> > Brian
+> > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
