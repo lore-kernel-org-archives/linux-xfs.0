@@ -1,68 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl0-f68.google.com ([209.85.160.68]:39701 "EHLO
-        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933905AbeFVChl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jun 2018 22:37:41 -0400
-Date: Fri, 22 Jun 2018 10:37:35 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH 2/2] xfstests: Test root inode parent pointer repairing
-Message-ID: <20180622023735.GN2780@desktop>
-References: <20180618174433.3069-1-mbenatto@redhat.com>
- <20180618174433.3069-2-mbenatto@redhat.com>
+Received: from verein.lst.de ([213.95.11.211]:45373 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753774AbeFTI0w (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 20 Jun 2018 04:26:52 -0400
+Date: Wed, 20 Jun 2018 09:56:55 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 23/24] iomap: add support for sub-pagesize buffered I/O
+        without buffer heads
+Message-ID: <20180620075655.GA2668@lst.de>
+References: <20180615130209.1970-1-hch@lst.de> <20180615130209.1970-24-hch@lst.de> <20180619165211.GD2806@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180618174433.3069-2-mbenatto@redhat.com>
+In-Reply-To: <20180619165211.GD2806@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Marco Benatto <mbenatto@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, sandeen@redhat.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Mon, Jun 18, 2018 at 02:44:33PM -0300, Marco Benatto wrote:
-> Recently we found out xfs_repair were not repairing
-> root inode parent pointer when root inode is on short-form
-> and parent points to an invalid inode number (refer to:
-> "xfs_repair: Fix root inode's parent when it's bogus for sf
-> directory" on xfs-devel list).
+On Tue, Jun 19, 2018 at 12:52:11PM -0400, Brian Foster wrote:
+> > +	/*
+> > +	 * Move the caller beyond our range so that it keeps making progress.
+> > +	 * For that we have to include any leading non-uptodate ranges, but
 > 
-> This test checks if xfs_repair successfully repair the
-> filesystem in the scenario mentioned before.
+> Do you mean "leading uptodate ranges" here? E.g., pos is pushed forward
+> past those ranges we don't have to read, so (pos - orig_pos) reflects
+> the initial uptodate range while plen reflects the length we have to
+> read..?
+
+Yes.
+
+> > +
+> > +	do {
 > 
-> Signed-off-by: Marco Benatto <mbenatto@redhat.com>
-> ---
->  tests/xfs/450     | 53 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/450.out |  1 +
->  tests/xfs/group   |  1 +
->  3 files changed, 55 insertions(+)
->  create mode 100755 tests/xfs/450
->  create mode 100644 tests/xfs/450.out
+> Kind of a nit, but this catches my eye and manages to confuse me every
+> time I look at it. A comment along the lines of:
 > 
-> diff --git a/tests/xfs/450 b/tests/xfs/450
-> new file mode 100755
-> index 0000000..dc7f244
-> --- /dev/null
-> +++ b/tests/xfs/450
-> @@ -0,0 +1,53 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2018 Red Hat Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test 450
-> +#
-> +# Make sure xfs_repair can repair root inode parent's pointer
-> +# when it contains a bogus ino when it's using shot form directory
-> +#
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +
-> +status=1	# failure is the default!
+>                 /*
+> 		 * Pass in the block aligned start/end so we get back block
+> 		 * aligned/adjusted poff/plen and can compare with unaligned
+> 		 * from/to below.
+>                  */
+> 
+> ... would be nice here, IMO.
 
-Apart from Dave's comments, there're some common definitions missing
-too, e.g. 'tmp' and 'here', please use './new xfs' to generate new test
-template.
+Fine with me.
 
-BTW, I've applied the first patch, no need to resend it in v2.
+> > +		iomap_adjust_read_range(inode, iop, &block_start,
+> > +				block_end - block_start, &poff, &plen);
+> > +		if (plen == 0)
+> > +			break;
+> > +
+> > +		if ((from > poff && from < poff + plen) ||
+> > +		    (to > poff && to < poff + plen)) {
+> > +			status = iomap_read_page_sync(inode, block_start, page,
+> > +					poff, plen, from, to, iomap);
+> 
+> After taking another look at the buffer head path, it does look like we
+> have slightly different behavior here. IIUC, the former reads only the
+> !uptodate blocks that fall along the from/to boundaries. Here, if say
+> from = 1, to = PAGE_SIZE and the page is fully !uptodate, it looks like
+> we'd read the entire page worth of blocks (assuming contiguous 512b
+> blocks, for example). Intentional? Doesn't seem like a big deal, but
+> could be worth a followup fix.
 
-Thanks,
-Eryu
+It wasn't actuall intentional, but I actually think it is the right thing
+in then end, as it means we'll often do a single read instead of two
+separate ones.
