@@ -1,126 +1,125 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:23397 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752784AbeFTBsz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 21:48:55 -0400
-Date: Wed, 20 Jun 2018 11:48:52 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfstests: Test root inode parent pointer repairing
-Message-ID: <20180620014852.GA13748@dastard>
-References: <20180618174433.3069-1-mbenatto@redhat.com>
- <20180618174433.3069-2-mbenatto@redhat.com>
+Received: from aserp2130.oracle.com ([141.146.126.79]:59612 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754012AbeFTQIV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Jun 2018 12:08:21 -0400
+Date: Wed, 20 Jun 2018 09:08:03 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 23/24] iomap: add support for sub-pagesize buffered I/O
+ without buffer heads
+Message-ID: <20180620160803.GA4838@magnolia>
+References: <20180615130209.1970-1-hch@lst.de>
+ <20180615130209.1970-24-hch@lst.de>
+ <20180619165211.GD2806@bfoster>
+ <20180620075655.GA2668@lst.de>
+ <20180620143252.GE3241@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180618174433.3069-2-mbenatto@redhat.com>
+In-Reply-To: <20180620143252.GE3241@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Marco Benatto <mbenatto@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, darrick.wong@oracle.com, sandeen@redhat.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Mon, Jun 18, 2018 at 02:44:33PM -0300, Marco Benatto wrote:
-> Recently we found out xfs_repair were not repairing
-> root inode parent pointer when root inode is on short-form
-> and parent points to an invalid inode number (refer to:
-> "xfs_repair: Fix root inode's parent when it's bogus for sf
-> directory" on xfs-devel list).
+On Wed, Jun 20, 2018 at 10:32:53AM -0400, Brian Foster wrote:
+> Sending again without the attachment... Christoph, let me know if it
+> didn't hit your mbox at least.
 > 
-> This test checks if xfs_repair successfully repair the
-> filesystem in the scenario mentioned before.
+> On Wed, Jun 20, 2018 at 09:56:55AM +0200, Christoph Hellwig wrote:
+> > On Tue, Jun 19, 2018 at 12:52:11PM -0400, Brian Foster wrote:
+> > > > +	/*
+> > > > +	 * Move the caller beyond our range so that it keeps making progress.
+> > > > +	 * For that we have to include any leading non-uptodate ranges, but
+> > > 
+> > > Do you mean "leading uptodate ranges" here? E.g., pos is pushed forward
+> > > past those ranges we don't have to read, so (pos - orig_pos) reflects
+> > > the initial uptodate range while plen reflects the length we have to
+> > > read..?
+> > 
+> > Yes.
+> > 
+> > > > +
+> > > > +	do {
+> > > 
+> > > Kind of a nit, but this catches my eye and manages to confuse me every
+> > > time I look at it. A comment along the lines of:
+> > > 
+> > >                 /*
+> > > 		 * Pass in the block aligned start/end so we get back block
+> > > 		 * aligned/adjusted poff/plen and can compare with unaligned
+> > > 		 * from/to below.
+> > >                  */
+> > > 
+> > > ... would be nice here, IMO.
+> > 
+> > Fine with me.
+> > 
+> > > > +		iomap_adjust_read_range(inode, iop, &block_start,
+> > > > +				block_end - block_start, &poff, &plen);
+> > > > +		if (plen == 0)
+> > > > +			break;
+> > > > +
+> > > > +		if ((from > poff && from < poff + plen) ||
+> > > > +		    (to > poff && to < poff + plen)) {
+> > > > +			status = iomap_read_page_sync(inode, block_start, page,
+> > > > +					poff, plen, from, to, iomap);
+> > > 
+> > > After taking another look at the buffer head path, it does look like we
+> > > have slightly different behavior here. IIUC, the former reads only the
+> > > !uptodate blocks that fall along the from/to boundaries. Here, if say
+> > > from = 1, to = PAGE_SIZE and the page is fully !uptodate, it looks like
+> > > we'd read the entire page worth of blocks (assuming contiguous 512b
+> > > blocks, for example). Intentional? Doesn't seem like a big deal, but
+> > > could be worth a followup fix.
+> > 
+> > It wasn't actuall intentional, but I actually think it is the right thing
+> > in then end, as it means we'll often do a single read instead of two
+> > separate ones.
 > 
-> Signed-off-by: Marco Benatto <mbenatto@redhat.com>
-> ---
->  tests/xfs/450     | 53 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/450.out |  1 +
->  tests/xfs/group   |  1 +
->  3 files changed, 55 insertions(+)
->  create mode 100755 tests/xfs/450
->  create mode 100644 tests/xfs/450.out
+> Ok, but if that's the argument, then shouldn't we not be doing two
+> separate I/Os if the middle range of a write happens to be already
+> uptodate? Or more for that matter, if the page happens to be sparsely
+> uptodate for whatever reason..?
 > 
-> diff --git a/tests/xfs/450 b/tests/xfs/450
-> new file mode 100755
-> index 0000000..dc7f244
-> --- /dev/null
-> +++ b/tests/xfs/450
-> @@ -0,0 +1,53 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2018 Red Hat Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test 450
-> +#
-> +# Make sure xfs_repair can repair root inode parent's pointer
-> +# when it contains a bogus ino when it's using shot form directory
-> +#
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +
-> +status=1	# failure is the default!
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# real QA test starts here
-> +
-> +# Modify as appropriate.
-> +_supported_fs xfs
-> +_supported_os Linux
-> +_require_scratch
-> +
-> +
-> +_scratch_mkfs >> /dev/null 2>&1
-> +
-> +rootino=$(_scratch_xfs_get_metadata_field 'rootino' 'sb 0')
-> +
-> +prefix=$(_scratch_get_sfdir_prefix ${rootino} || \
-> +		_fail "Cannot determine sfdir prefix")
-> +
-> +
-> +# Corrupt root inode parent pointer
-> +_scratch_xfs_set_metadata_field "${prefix}.hdr.parent.i4" 0 "inode ${rootino}"\
-> +								>> $seqres.full
-> +
-> +_scratch_xfs_repair >> $seqres.full 2>&1
-> +
-> +_scratch_xfs_repair -n >> $seqres.full 2>&1
-> +
-> +if [ $? -eq 1 ]
-> +then
-> +	_fail "xfs_repair failed to repair filesystem"
-> +fi
+> OTOH, I also do wonder a bit whether that may always be the right thing
+> if we consider cases like 64k page size arches and whatnot. It seems
+> like we could end up consuming more bandwidth for reads than we
+> typically have in the past. That said, unless there's a functional
+> reason to change this I think it's fine to optimize this path for these
+> kinds of corner cases in follow on patches.
+> 
+> Finally, this survived xfstests on a sub-page block size fs but I
+> managed to hit an fsx error:
+> 
+> Mapped Read: non-zero data past EOF (0x21a1f) page offset 0xc00 is
+> 0xc769
+> 
+> It repeats 100% of the time for me using the attached fsxops file (with
+> --replay-ops) on XFS w/ -bsize=1k. It doesn't occur without the final
+> patch to enable sub-page block iomap on XFS.
 
-Isn't this last "filesystem is not corrupt" check run by the harness
-via _check_scratch_fs()?
+Funny, because I saw the exact same complaint from generic/127 last
+night on my development tree that doesn't include hch's patches and was
+going to see if I could figure out what's going on.
 
-(Also, "if [ .. ]; then" is the preferred fstests style)
+FWIW it's been happening sporadically for a few weeks now but every time
+I've tried to analyze it I (of course) couldn't get it to reproduce. :)
 
-> +
-> +echo "OK"
+I also ran this series (all of it, including the subpagesize config)
+last night and aside from it stumbling over an unrelated locking problem
+seemed fine....
 
-There's no test output, so the normal thing to do is this after
-setting up the test:
+--D
 
-echo "Silence is golden"
-
-We do that early on so that when something goes wrong the bad output
-file immediately tells you that no output was expected.
-
-> @@ -447,3 +447,4 @@
->  447 auto mount
->  448 auto quick fuzzers
->  449 auto quick
-> +450 auto quick
-
-also  the metadata and repair groups should be added here.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Brian
+> 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
