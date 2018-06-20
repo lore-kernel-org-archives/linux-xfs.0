@@ -1,89 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:4536 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750726AbeFSXWp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Jun 2018 19:22:45 -0400
-Date: Wed, 20 Jun 2018 09:22:42 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2] xfs: zero length symlinks are not valid
-Message-ID: <20180619232242.GJ19934@dastard>
-References: <20180618055711.23391-1-david@fromorbit.com>
- <20180618055711.23391-2-david@fromorbit.com>
- <20180618132411.GB28320@bfoster>
- <20180618224259.GF19934@dastard>
- <20180619115434.GB2806@bfoster>
- <20180619154810.GC21698@magnolia>
- <20180619162839.GC2806@bfoster>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:57916 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753651AbeFTOcy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 20 Jun 2018 10:32:54 -0400
+Date: Wed, 20 Jun 2018 10:32:53 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 23/24] iomap: add support for sub-pagesize buffered I/O
+ without buffer heads
+Message-ID: <20180620143252.GE3241@bfoster>
+References: <20180615130209.1970-1-hch@lst.de>
+ <20180615130209.1970-24-hch@lst.de>
+ <20180619165211.GD2806@bfoster>
+ <20180620075655.GA2668@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180619162839.GC2806@bfoster>
+In-Reply-To: <20180620075655.GA2668@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Tue, Jun 19, 2018 at 12:28:40PM -0400, Brian Foster wrote:
-> On Tue, Jun 19, 2018 at 08:48:10AM -0700, Darrick J. Wong wrote:
-> > On Tue, Jun 19, 2018 at 07:54:34AM -0400, Brian Foster wrote:
-> > > On Tue, Jun 19, 2018 at 08:42:59AM +1000, Dave Chinner wrote:
-> > > Rather, I'm asking about the pre-existing code that we remove. The hunk
-> > > just above from xfs_inactive_symlink():
-> > > 
-> > > -	/*
-> > > -	 * Zero length symlinks _can_ exist.
-> > > -	 */
-> > > -	if (!pathlen) {
-> > > -		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > > -		return 0;
-> > > -	}
-> > > 
-> > > ... obviously suggests that there could have been a situation where we'd
-> > > see a zero-length symlink on entry to xfs_inactive_symlink(). This
-> > > patch, however, focuses on fixing the transient zero-length symlink
-> > > caused by xfs_inactive_symlink_rmt() (which comes after the above
-> > > check).
+Sending again without the attachment... Christoph, let me know if it
+didn't hit your mbox at least.
 
-It can't happen through normal VFS paths, and I don't think it can
-happen through log recovery. That's why I replaced this with an ASSERT.
+On Wed, Jun 20, 2018 at 09:56:55AM +0200, Christoph Hellwig wrote:
+> On Tue, Jun 19, 2018 at 12:52:11PM -0400, Brian Foster wrote:
+> > > +	/*
+> > > +	 * Move the caller beyond our range so that it keeps making progress.
+> > > +	 * For that we have to include any leading non-uptodate ranges, but
+> > 
+> > Do you mean "leading uptodate ranges" here? E.g., pos is pushed forward
+> > past those ranges we don't have to read, so (pos - orig_pos) reflects
+> > the initial uptodate range while plen reflects the length we have to
+> > read..?
+> 
+> Yes.
+> 
+> > > +
+> > > +	do {
+> > 
+> > Kind of a nit, but this catches my eye and manages to confuse me every
+> > time I look at it. A comment along the lines of:
+> > 
+> >                 /*
+> > 		 * Pass in the block aligned start/end so we get back block
+> > 		 * aligned/adjusted poff/plen and can compare with unaligned
+> > 		 * from/to below.
+> >                  */
+> > 
+> > ... would be nice here, IMO.
+> 
+> Fine with me.
+> 
+> > > +		iomap_adjust_read_range(inode, iop, &block_start,
+> > > +				block_end - block_start, &poff, &plen);
+> > > +		if (plen == 0)
+> > > +			break;
+> > > +
+> > > +		if ((from > poff && from < poff + plen) ||
+> > > +		    (to > poff && to < poff + plen)) {
+> > > +			status = iomap_read_page_sync(inode, block_start, page,
+> > > +					poff, plen, from, to, iomap);
+> > 
+> > After taking another look at the buffer head path, it does look like we
+> > have slightly different behavior here. IIUC, the former reads only the
+> > !uptodate blocks that fall along the from/to boundaries. Here, if say
+> > from = 1, to = PAGE_SIZE and the page is fully !uptodate, it looks like
+> > we'd read the entire page worth of blocks (assuming contiguous 512b
+> > blocks, for example). Intentional? Doesn't seem like a big deal, but
+> > could be worth a followup fix.
+> 
+> It wasn't actuall intentional, but I actually think it is the right thing
+> in then end, as it means we'll often do a single read instead of two
+> separate ones.
 
-In the normal behaviour case, zero length symlinks were created
-/after/ this point in time, and we've always been unable to read
-such inodes because xfs_dinode_verify() has always rejected zero
-length symlink inodes.
+Ok, but if that's the argument, then shouldn't we not be doing two
+separate I/Os if the middle range of a write happens to be already
+uptodate? Or more for that matter, if the page happens to be sparsely
+uptodate for whatever reason..?
 
-However, log recovery doesn't trip over the transient inode state
-because it does not use xfs_dinode_verify() for inode recovery - it
-reads the buffer with xfs_inode_buf_ops, and that just checks the
-inode numbers and then recovers whatever is in the log over the top.
-It never checks for zero length symlinks on recovery, and it never
-goes through the dinode verifier (on read or write!) to catch this.
+OTOH, I also do wonder a bit whether that may always be the right thing
+if we consider cases like 64k page size arches and whatnot. It seems
+like we could end up consuming more bandwidth for reads than we
+typically have in the past. That said, unless there's a functional
+reason to change this I think it's fine to optimize this path for these
+kinds of corner cases in follow on patches.
 
-It's not until we then recover the remaining intent chain that we go
-through xfs_iget/xfs_iread/xfs_inactive/xfs_ifree, and that
-xfs_iget() call runs xfs_dinode_verify(). If we've already recovered
-any part of the remote symlink removal intent chain (and we must
-have to be replaying EFIs!) this should see a zero length symlink
-inode. AIUI, we have no evidence that the verifier has ever fired at
-this point in time, even when recovering known transient zero length
-states.
+Finally, this survived xfstests on a sub-page block size fs but I
+managed to hit an fsx error:
 
-i.e all the cases I've seen where repair complains about symlinks
-with "dfork format 2 and size 0" it is because the log is dirty and
-hasn't been replayed. Mounting the filesystem and running log
-recovery makes the problem go away, and this is what lead to me
-removing the zeor length handling - the verifier should already
-be firing if it is recovering an intent on a zero length symlink
-inode...
+Mapped Read: non-zero data past EOF (0x21a1f) page offset 0xc00 is
+0xc769
 
-That said, I'll try some more focussed testing with intentional
-corruption to see if it's just a case of my testing being (un)lucky
-and not triggering this issue...
+It repeats 100% of the time for me using the attached fsxops file (with
+--replay-ops) on XFS w/ -bsize=1k. It doesn't occur without the final
+patch to enable sub-page block iomap on XFS.
 
-Cheers,
+Brian
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
