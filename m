@@ -1,281 +1,161 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:50786 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751903AbeFVOlL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 22 Jun 2018 10:41:11 -0400
-Date: Fri, 22 Jun 2018 10:41:10 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] [RFC] writeback: fix range_cyclic writeback vs
- writepages deadlock
-Message-ID: <20180622144109.GA9935@bfoster>
-References: <20180622030941.25544-1-david@fromorbit.com>
+Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:56558 "EHLO
+        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752829AbeFTW7W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Jun 2018 18:59:22 -0400
+Date: Thu, 21 Jun 2018 08:59:18 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/2] xfs: zero length symlinks are not valid
+Message-ID: <20180620225918.GN19934@dastard>
+References: <20180618055711.23391-1-david@fromorbit.com>
+ <20180618055711.23391-2-david@fromorbit.com>
+ <20180618132411.GB28320@bfoster>
+ <20180618224259.GF19934@dastard>
+ <20180619115434.GB2806@bfoster>
+ <20180619154810.GC21698@magnolia>
+ <20180619162839.GC2806@bfoster>
+ <20180619232242.GJ19934@dastard>
+ <20180620115048.GA3241@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180622030941.25544-1-david@fromorbit.com>
+In-Reply-To: <20180620115048.GA3241@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Fri, Jun 22, 2018 at 01:09:41PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Wed, Jun 20, 2018 at 07:50:48AM -0400, Brian Foster wrote:
+> On Wed, Jun 20, 2018 at 09:22:42AM +1000, Dave Chinner wrote:
+> > On Tue, Jun 19, 2018 at 12:28:40PM -0400, Brian Foster wrote:
+> > > On Tue, Jun 19, 2018 at 08:48:10AM -0700, Darrick J. Wong wrote:
+> > > > On Tue, Jun 19, 2018 at 07:54:34AM -0400, Brian Foster wrote:
+> > > > > On Tue, Jun 19, 2018 at 08:42:59AM +1000, Dave Chinner wrote:
+> > > > > Rather, I'm asking about the pre-existing code that we remove. The hunk
+> > > > > just above from xfs_inactive_symlink():
+> > > > > 
+> > > > > -	/*
+> > > > > -	 * Zero length symlinks _can_ exist.
+> > > > > -	 */
+> > > > > -	if (!pathlen) {
+> > > > > -		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > > > > -		return 0;
+> > > > > -	}
+> > > > > 
+> > > > > ... obviously suggests that there could have been a situation where we'd
+> > > > > see a zero-length symlink on entry to xfs_inactive_symlink(). This
+> > > > > patch, however, focuses on fixing the transient zero-length symlink
+> > > > > caused by xfs_inactive_symlink_rmt() (which comes after the above
+> > > > > check).
+> > 
+> > It can't happen through normal VFS paths, and I don't think it can
+> > happen through log recovery. That's why I replaced this with an ASSERT.
+> > 
+> > In the normal behaviour case, zero length symlinks were created
+> > /after/ this point in time, and we've always been unable to read
+> > such inodes because xfs_dinode_verify() has always rejected zero
+> > length symlink inodes.
+> > 
 > 
-> We've recently seen a workload on XFS filesystems with a repeatable
-> deadlock between background writeback and a multi-process
-> application doing concurrent writes and fsyncs to a small range of a
-> file.
+> That was my initial understanding as well..
 > 
-> range_cyclic
-> writeback		Process 1		Process 2
+> > However, log recovery doesn't trip over the transient inode state
+> > because it does not use xfs_dinode_verify() for inode recovery - it
+> > reads the buffer with xfs_inode_buf_ops, and that just checks the
+> > inode numbers and then recovers whatever is in the log over the top.
+> > It never checks for zero length symlinks on recovery, and it never
+> > goes through the dinode verifier (on read or write!) to catch this.
+> > 
+> > It's not until we then recover the remaining intent chain that we go
+> > through xfs_iget/xfs_iread/xfs_inactive/xfs_ifree, and that
+> > xfs_iget() call runs xfs_dinode_verify(). If we've already recovered
+> > any part of the remote symlink removal intent chain (and we must
+> > have to be replaying EFIs!) this should see a zero length symlink
+> > inode. AIUI, we have no evidence that the verifier has ever fired at
+> > this point in time, even when recovering known transient zero length
+> > states.
+> > 
 > 
-> xfs_vm_writepages
->   write_cache_pages
->     writeback_index = 2
->     cycled = 0
->     ....
->     find page 2 dirty
->     lock Page 2
->     ->writepage
->       page 2 writeback
->       page 2 clean
->       page 2 added to bio
->     no more pages
-> 			write()
-> 			locks page 1
-> 			dirties page 1
-> 			locks page 2
-> 			dirties page 1
-> 			fsync()
-> 			....
-> 			xfs_vm_writepages
-> 			write_cache_pages
-> 			  start index 0
-> 			  find page 1 towrite
-> 			  lock Page 1
-> 			  ->writepage
-> 			    page 1 writeback
-> 			    page 1 clean
-> 			    page 1 added to bio
-> 			  find page 2 towrite
-> 			  lock Page 2
-> 			  page 2 is writeback
-> 			  <blocks>
-> 						write()
-> 						locks page 1
-> 						dirties page 1
-> 						fsync()
-> 						....
-> 						xfs_vm_writepages
-> 						write_cache_pages
-> 						  start index 0
+> Hmm, not sure we're talking about the same thing. I ran a quick
+> experiment to try and clear up my confusion here, at least. I injected a
+> shutdown at the point inactive creates the zero sized symlink and
+> created/removed a remote symlink. On a remount, I hit the following
+> during log recovery:
 > 
->     !done && !cycled
->       sets index to 0, restarts lookup
->     find page 1 dirty
-> 						  find page 1 towrite
-> 						  lock Page 1
-> 						  page 1 is writeback
-> 						  <blocks>
+> [  685.931834] XFS (dm-3): Starting recovery (logdev: internal)
+> [  685.993014] XFS (dm-3): Metadata corruption detected at xfs_dinode_verify+0x331/0x490 [xfs], inode 0x85 dinode
+> [  685.996287] XFS (dm-3): Unmount and run xfs_repair
+> [  685.996911] XFS (dm-3): First 128 bytes of corrupted metadata buffer:
+> ...
+> [  686.006647] Call Trace:
+> [  686.006922]  dump_stack+0x85/0xcb
+> [  686.007338]  xfs_iread+0xeb/0x220 [xfs]
+> [  686.007820]  xfs_iget+0x4bd/0x1100 [xfs]
+> [  686.008344]  xlog_recover_process_one_iunlink+0x4d/0x3c0 [xfs]
+> ...
 > 
->     lock Page 1
->     <blocks>
-> 
-> DEADLOCK because:
-> 
-> 	- process 1 needs page 2 writeback to complete to make
-> 	  enough progress to issue IO pending for page 1
-> 	- writeback needs page 1 writeback to complete so process 2
-> 	  can progress and unlock the page it is blocked on, then it
-> 	  can issue the IO pending for page 2
-> 	- process 2 can't make progress until process 1 issues IO
-> 	  for page 1
-> 
-> The underlying cause of the problem here is that range_cyclic
-> writeback is processing pages in descending index order as we
-> hold higher index pages in a structure controlled from above
-> write_cache_pages(). The write_cache_pages() caller needs to
-> be able to submit these pages for IO before write_cache_pages
-> restarts writeback at mapping index 0 to avoid wcp inverting the
-> page lock/writeback wait order.
-> 
-> generic_writepages() is not susceptible to this bug as it has no
-> private context held across write_cache_pages() - filesystems using
-> this infrastructure always submit pages in ->writepage immediately
-> and so there is no problem with range_cyclic going back to mapping
-> index 0.
-> 
-> However:
-> 	mpage_writepages() has a private bio context,
-> 	exofs_writepages() has page_collect
-> 	fuse_writepages() has fuse_fill_wb_data
-> 	nfs_writepages() has nfs_pageio_descriptor
-> 	xfs_vm_writepages() has xfs_writepage_ctx
-> 
-> All of these ->writepages implementations can hold pages under
-> writeback in their private structures until write_cache_pages()
-> returns, and hence they are all susceptible to this deadlock.
-> 
-> Also worth noting is that ext4 has it's own bastardised version of
-> write_cache_pages() and so it /may/ have an equivalent deadlock. I
-> looked at the code long enough to understand that it has a similar
-> retry loop for range_cyclic writeback reaching the end of the file
-> and then promptly ran away before my eyes bled too much.  I'll leave
-> it for the ext4 developers to determine if their code is actually
-> has this deadlock and how to fix it if it has.
-> 
-> There's a few ways I can see avoid this deadlock. There's probably
-> more, but these are the first I've though of:
-> 
-> 1. get rid of range_cyclic altogether
-> 
-> 2. range_cyclic always stops at EOF, and we start again from
-> writeback index 0 on the next call into write_cache_pages()
-> 
-> 2a. wcp also returns EAGAIN to ->writepages implementations to
-> indicate range cyclic has hit EOF. writepages implementations can
-> then flush the current context and call wpc again to continue. i.e.
-> lift the retry into the ->writepages implementation
-> 
-> 3. range_cyclic uses trylock_page() rather than lock_page(), and it
-> skips pages it can't lock without blocking. It will already do this
-> for pages under writeback, so this seems like a no-brainer
-> 
-> 3a. all non-WB_SYNC_ALL writeback uses trylock_page() to avoid
-> blocking as per pages under writeback.
-> 
-> I don't think #1 is an option - range_cyclic prevents frequently
-> dirtied lower file offset from starving background writeback of rarely
-> touched higher file offsets.
-> 
-> #2 is simple, and I don't think it will have any impact on
-> performance as going back to the start of the file implies an
-> immediate seek. We'll have exactly the same number of seeks if we
-> switch writeback to another inode, and then come back to this one
-> later and restart from index 0.
-> 
-> #2a is pretty much "status quo without the deadlock". Moving the
-> retry loop up into the wcp caller means we can issue IO on the
-> pending pages before calling wcp again, and so avoid locking or
-> waiting on pages in the wrong order. I'm not convinced we need to do
-> this given that we get the same thing from #2 on the next writeback
-> call from the writeback infrastructure.
-> 
-> #3 is really just a band-aid - it doesn't fix the access/wait inversion
-> problem, just prevents it from becoming a deadlock situation. I'd
-> prefer we fix the inversion, not sweep it under the carpet like
-> this.
-> 
-> #3a is really an optimisation that just so happens to include the
-> band-aid fix of #3.
-> 
-> So I'm really tending towards #2 as the simplest way to fix this,
-> and that's what's the patch below implements.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
+> That seems to show that the verifier can impede unlinked list processing
+> if the change is at least present in the log.
 
-FWIW, this seems like a reasonable approach to me. One thing I'm not
-sure about is whether the higher level plug in wb_writeback() could
-cause the same problem even with the lower level cycle restart out of
-the picture.
+Which happens after we process intents - ah, the bmap intents only
+occur from swap extents, so the inode is not read via xfs_iget()
+in this case until unlinked list processing.
 
-It looks to me that if the inode still has dirty pages after the
-write_cache_pages(), it ends up on wb->b_more_io via
-writeback_sb_inodes() -> requeue_inode(). The caller (wb_writeback())
-repopulates ->b_io from ->b_more_io (via queue_io()) if the former is
-empty (and we haven't otherwise stopped) before finishing the plug.
-There is a blk_flush_plug() in writeback_sb_inodes(), but that appears
-to be non-deterministic. That call aside, could that plug effectively
-hold the page in writeback long enough for background writeback to spin
-around and sit on the page 1 lock?
+So, yeah, we are talking about the same thing - it's the second
+phase of recovery that reads inodes through xfs_iget() (for whatever
+reason) that will trip over the xfs_dinode_verifier.
 
-Brian
-
->  mm/page-writeback.c | 33 +++++++++++++++------------------
->  1 file changed, 15 insertions(+), 18 deletions(-)
+> If I recreate that same dirty log state and mount with this patch
+> applied (note that the fs is created without this patch to simulate an
+> old kernel that has not changed i_mode in the same transaction that sets
+> di_size = 0) along with a hack to avoid the check in
+> xfs_dinode_verify(), I now hit the new assert and corruption error
+> that's been placed in xfs_inactive_symlink().
 > 
-> diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-> index 337c6afb3345..c10e70ed3515 100644
-> --- a/mm/page-writeback.c
-> +++ b/mm/page-writeback.c
-> @@ -2150,6 +2150,13 @@ EXPORT_SYMBOL(tag_pages_for_writeback);
->   * not miss some pages (e.g., because some other process has cleared TOWRITE
->   * tag we set). The rule we follow is that TOWRITE tag can be cleared only
->   * by the process clearing the DIRTY tag (and submitting the page for IO).
-> + *
-> + * To avoid deadlocks between range_cyclic writeback and callers that hold
-> + * pages in PageWriteback to aggregate IO until write_cache_pages() returns,
-> + * we do not loop back to the start of the file. Doing so causes a page
-> + * lock/page writeback access order inversion - we should only ever lock
-> + * multiple pages in ascending page->index order, and looping back to the start
-> + * of the file violates that rule and causes deadlocks.
->   */
->  int write_cache_pages(struct address_space *mapping,
->  		      struct writeback_control *wbc, writepage_t writepage,
-> @@ -2163,7 +2170,6 @@ int write_cache_pages(struct address_space *mapping,
->  	pgoff_t index;
->  	pgoff_t end;		/* Inclusive */
->  	pgoff_t done_index;
-> -	int cycled;
->  	int range_whole = 0;
->  	int tag;
->  
-> @@ -2171,23 +2177,17 @@ int write_cache_pages(struct address_space *mapping,
->  	if (wbc->range_cyclic) {
->  		writeback_index = mapping->writeback_index; /* prev offset */
->  		index = writeback_index;
-> -		if (index == 0)
-> -			cycled = 1;
-> -		else
-> -			cycled = 0;
->  		end = -1;
->  	} else {
->  		index = wbc->range_start >> PAGE_SHIFT;
->  		end = wbc->range_end >> PAGE_SHIFT;
->  		if (wbc->range_start == 0 && wbc->range_end == LLONG_MAX)
->  			range_whole = 1;
-> -		cycled = 1; /* ignore range_cyclic tests */
->  	}
->  	if (wbc->sync_mode == WB_SYNC_ALL || wbc->tagged_writepages)
->  		tag = PAGECACHE_TAG_TOWRITE;
->  	else
->  		tag = PAGECACHE_TAG_DIRTY;
-> -retry:
->  	if (wbc->sync_mode == WB_SYNC_ALL || wbc->tagged_writepages)
->  		tag_pages_for_writeback(mapping, index, end);
->  	done_index = index;
-> @@ -2273,17 +2273,14 @@ int write_cache_pages(struct address_space *mapping,
->  		pagevec_release(&pvec);
->  		cond_resched();
->  	}
-> -	if (!cycled && !done) {
-> -		/*
-> -		 * range_cyclic:
-> -		 * We hit the last page and there is more work to be done: wrap
-> -		 * back to the start of the file
-> -		 */
-> -		cycled = 1;
-> -		index = 0;
-> -		end = writeback_index - 1;
-> -		goto retry;
-> -	}
-> +
-> +	/*
-> +	 * If we hit the last page and there is more work to be done: wrap
-> +	 * back the index back to the start of the file for the next
-> +	 * time we are called.
-> +	 */
-> +	if (wbc->range_cyclic && !done)
-> +		done_index = 0;
->  	if (wbc->range_cyclic || (range_whole && wbc->nr_to_write > 0))
->  		mapping->writeback_index = done_index;
->  
-> -- 
-> 2.17.0
+> So to Darrick's point, that seems to show that this is a vector to the
+> pre-existing len == 0 check in xfs_inactive_symlink(). Given that, it
+> seems to me that if we want to handle recovery from this state, we'd
+> still need to work around the verifier check and retain the initial
+> di_size == 0 check in xfs_inactive_symlink().
+
+I think we should get rid of the transient state, not continue to
+work around it. Because the transient state only exists in a log
+recovery context, we can change the behaviour and not care about
+older kernels still having the problem because all that is needed to
+avoid the issue is a clean log when upgrading the kernel.
+
+> > i.e all the cases I've seen where repair complains about symlinks
+> > with "dfork format 2 and size 0" it is because the log is dirty and
+> > hasn't been replayed. Mounting the filesystem and running log
+> > recovery makes the problem go away, and this is what lead to me
+> > removing the zeor length handling - the verifier should already
+> > be firing if it is recovering an intent on a zero length symlink
+> > inode...
+> > 
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I haven't grokked all the details here, but the behavior you describe
+> does sound like this might be a different scenario from the above.
+
+No, we are talking about the same thing. The only difference is that
+I've been working from a bug report and corrupted fuzzer image, not
+a real world corruption vector. Hence I'm trying to work backwards
+from "here's a corrupt image that crashed" to "this is all the paths
+that can lead to that on disk state".
+
+While writing my last reply, I suspected you were correct about the
+log recovery state, which is why I said:
+
+> > That said, I'll try some more focussed testing with intentional
+> > corruption to see if it's just a case of my testing being (un)lucky
+> > and not triggering this issue...
+
+As you've shown, I was being (un)lucky, so more work is needed on
+this one.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
