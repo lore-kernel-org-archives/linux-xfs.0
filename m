@@ -1,81 +1,176 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:38998 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753906AbeFTIlb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 20 Jun 2018 04:41:31 -0400
-From: Zorro Lang <zlang@redhat.com>
-Subject: [PATCH v2 2/3] xfstests: iterate dedupe integrity test
-Date: Wed, 20 Jun 2018 16:41:13 +0800
-Message-Id: <20180620084114.25648-2-zlang@redhat.com>
-In-Reply-To: <20180620084114.25648-1-zlang@redhat.com>
-References: <20180620084114.25648-1-zlang@redhat.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:53916 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754521AbeFTTCv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Jun 2018 15:02:51 -0400
+Date: Wed, 20 Jun 2018 12:02:30 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 23/24] iomap: add support for sub-pagesize buffered I/O
+ without buffer heads
+Message-ID: <20180620190230.GB4838@magnolia>
+References: <20180615130209.1970-1-hch@lst.de>
+ <20180615130209.1970-24-hch@lst.de>
+ <20180619165211.GD2806@bfoster>
+ <20180620075655.GA2668@lst.de>
+ <20180620143252.GE3241@bfoster>
+ <20180620160803.GA4838@magnolia>
+ <20180620181259.GD4493@bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180620181259.GD4493@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-This case does dedupe on a dir, then copy the dir to next dir. Dedupe
-the next dir again, then copy this dir to next again, and dedupe
-again ... At the end, verify the data in the last dir is still same
-with the first one.
+On Wed, Jun 20, 2018 at 02:12:59PM -0400, Brian Foster wrote:
+> On Wed, Jun 20, 2018 at 09:08:03AM -0700, Darrick J. Wong wrote:
+> > On Wed, Jun 20, 2018 at 10:32:53AM -0400, Brian Foster wrote:
+> > > Sending again without the attachment... Christoph, let me know if it
+> > > didn't hit your mbox at least.
+> > > 
+> > > On Wed, Jun 20, 2018 at 09:56:55AM +0200, Christoph Hellwig wrote:
+> > > > On Tue, Jun 19, 2018 at 12:52:11PM -0400, Brian Foster wrote:
+> > > > > > +	/*
+> > > > > > +	 * Move the caller beyond our range so that it keeps making progress.
+> > > > > > +	 * For that we have to include any leading non-uptodate ranges, but
+> > > > > 
+> > > > > Do you mean "leading uptodate ranges" here? E.g., pos is pushed forward
+> > > > > past those ranges we don't have to read, so (pos - orig_pos) reflects
+> > > > > the initial uptodate range while plen reflects the length we have to
+> > > > > read..?
+> > > > 
+> > > > Yes.
+> > > > 
+> > > > > > +
+> > > > > > +	do {
+> > > > > 
+> > > > > Kind of a nit, but this catches my eye and manages to confuse me every
+> > > > > time I look at it. A comment along the lines of:
+> > > > > 
+> > > > >                 /*
+> > > > > 		 * Pass in the block aligned start/end so we get back block
+> > > > > 		 * aligned/adjusted poff/plen and can compare with unaligned
+> > > > > 		 * from/to below.
+> > > > >                  */
+> > > > > 
+> > > > > ... would be nice here, IMO.
+> > > > 
+> > > > Fine with me.
+> > > > 
+> > > > > > +		iomap_adjust_read_range(inode, iop, &block_start,
+> > > > > > +				block_end - block_start, &poff, &plen);
+> > > > > > +		if (plen == 0)
+> > > > > > +			break;
+> > > > > > +
+> > > > > > +		if ((from > poff && from < poff + plen) ||
+> > > > > > +		    (to > poff && to < poff + plen)) {
+> > > > > > +			status = iomap_read_page_sync(inode, block_start, page,
+> > > > > > +					poff, plen, from, to, iomap);
+> > > > > 
+> > > > > After taking another look at the buffer head path, it does look like we
+> > > > > have slightly different behavior here. IIUC, the former reads only the
+> > > > > !uptodate blocks that fall along the from/to boundaries. Here, if say
+> > > > > from = 1, to = PAGE_SIZE and the page is fully !uptodate, it looks like
+> > > > > we'd read the entire page worth of blocks (assuming contiguous 512b
+> > > > > blocks, for example). Intentional? Doesn't seem like a big deal, but
+> > > > > could be worth a followup fix.
+> > > > 
+> > > > It wasn't actuall intentional, but I actually think it is the right thing
+> > > > in then end, as it means we'll often do a single read instead of two
+> > > > separate ones.
+> > > 
+> > > Ok, but if that's the argument, then shouldn't we not be doing two
+> > > separate I/Os if the middle range of a write happens to be already
+> > > uptodate? Or more for that matter, if the page happens to be sparsely
+> > > uptodate for whatever reason..?
+> > > 
+> > > OTOH, I also do wonder a bit whether that may always be the right thing
+> > > if we consider cases like 64k page size arches and whatnot. It seems
+> > > like we could end up consuming more bandwidth for reads than we
+> > > typically have in the past. That said, unless there's a functional
+> > > reason to change this I think it's fine to optimize this path for these
+> > > kinds of corner cases in follow on patches.
+> > > 
+> > > Finally, this survived xfstests on a sub-page block size fs but I
+> > > managed to hit an fsx error:
+> > > 
+> > > Mapped Read: non-zero data past EOF (0x21a1f) page offset 0xc00 is
+> > > 0xc769
+> > > 
+> > > It repeats 100% of the time for me using the attached fsxops file (with
+> > > --replay-ops) on XFS w/ -bsize=1k. It doesn't occur without the final
+> > > patch to enable sub-page block iomap on XFS.
+> > 
+> > Funny, because I saw the exact same complaint from generic/127 last
+> > night on my development tree that doesn't include hch's patches and was
+> > going to see if I could figure out what's going on.
+> > 
+> > FWIW it's been happening sporadically for a few weeks now but every time
+> > I've tried to analyze it I (of course) couldn't get it to reproduce. :)
+> > 
+> > I also ran this series (all of it, including the subpagesize config)
+> > last night and aside from it stumbling over an unrelated locking problem
+> > seemed fine....
+> > 
+> 
+> That's interesting. Perhaps it's a pre-existing issue in that case and
+> the iomap stuff just changes the timing to make it reliably reproducible
+> on this particular system.
+> 
+> I only ran it a handful of times in both cases and now have lost access
+> to the server. Once I regain access, I'll try running for longer on
+> for-next to see if the same thing eventually triggers.
 
-Signed-off-by: Zorro Lang <zlang@redhat.com>
+I managed to cut the testcase down to a nine-line fsx script and so
+turned it into a fstests regression case.  It seems to reproduce 100% on
+scsi disks and doesn't at all on pmem.
+
+Note that changing the second to last line of the fsxops script to call
+punch_hole instead of zero_range triggers it too.
+
+I've also narrowed it down to something going wrong w.r.t. handling the
+page cache somewhere under xfs_free_file_space.
+
+(See attached diff...)
+
+--D
+
+generic: mread past eof shows nonzero contents
+
+Certain sequences of generic/127 invocations complain about being able
+to mread nonzero contents past eof.  Replicate that here as a regression
+test.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
+ tests/generic/708     |   54 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/708.out |    2 ++
+ tests/generic/group   |    1 +
+ 3 files changed, 57 insertions(+)
+ create mode 100755 tests/generic/708
+ create mode 100644 tests/generic/708.out
 
-V2 did below changes:
-1) Added more description at the case beginning
-2) Changed $TEST_DIR/${seq}md5.sum to $tmp.md5sum
-3) Changed for ...;do format
-4) Remove "-f mknod=0" fsstress option
-5) Added some noise (by fsstress) in each test round.
-
-Thanks,
-Zorro
-
- tests/shared/009     | 119 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/shared/009.out |   4 ++
- tests/shared/group   |   1 +
- 3 files changed, 124 insertions(+)
- create mode 100755 tests/shared/009
- create mode 100644 tests/shared/009.out
-
-diff --git a/tests/shared/009 b/tests/shared/009
+diff --git a/tests/generic/708 b/tests/generic/708
 new file mode 100755
-index 00000000..5ed9faee
+index 00000000..fa5584f5
 --- /dev/null
-+++ b/tests/shared/009
-@@ -0,0 +1,119 @@
++++ b/tests/generic/708
+@@ -0,0 +1,54 @@
 +#! /bin/bash
-+# FS QA Test 009
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2018 Oracle.  All Rights Reserved.
 +#
-+# Iterate dedupe integrity test. Copy an original data0 several
-+# times (d0 -> d1, d1 -> d2, ... dn-1 -> dn), dedupe dataN everytime
-+# before copy. At last, verify dataN same with data0.
++# FS QA Test No. 708
 +#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2018 Red Hat Inc.  All Rights Reserved.
++# Test a specific sequence of fsx operations that causes an mmap read past
++# eof to return nonzero contents.
 +#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
 +seq=`basename $0`
 +seqres=$RESULT_DIR/$seq
 +echo "QA output created by $seq"
-+
-+here=`pwd`
 +tmp=/tmp/$$
 +status=1	# failure is the default!
 +trap "_cleanup; exit \$status" 0 1 2 3 15
@@ -88,105 +183,50 @@ index 00000000..5ed9faee
 +
 +# get standard environment, filters and checks
 +. ./common/rc
-+. ./common/filter
-+. ./common/reflink
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
 +
 +# real QA test starts here
-+
-+# duperemove only supports btrfs and xfs (with reflink feature).
-+# Add other filesystems if it supports more later.
-+_supported_fs xfs btrfs
++_supported_fs generic
 +_supported_os Linux
-+_require_scratch_dedupe
-+_require_command "$DUPEREMOVE_PROG" duperemove
++_require_scratch
 +
-+_scratch_mkfs > $seqres.full 2>&1
-+_scratch_mount >> $seqres.full 2>&1
++rm -f $seqres.full
 +
-+function iterate_dedup_verify()
-+{
-+	local src=$srcdir
-+	local dest=$dupdir/1
++_scratch_mkfs >>$seqres.full 2>&1
++_scratch_mount
 +
-+	for ((index = 1; index <= times; index++)); do
-+		cp -a $src $dest
-+		find $dest -type f -exec md5sum {} \; \
-+			> $md5file$index
-+		# Make some noise
-+		$FSSTRESS_PROG $fsstress_opts -d $noisedir \
-+			       -n 200 -p $((5 * LOAD_FACTOR)) >/dev/null 2>&1
-+		# Too many output, so only save error output
-+		$DUPEREMOVE_PROG -dr --dedupe-options=same $dupdir \
-+			>/dev/null 2>$seqres.full
-+		md5sum -c --quiet $md5file$index
-+		src=$dest
-+		dest=$dupdir/$((index + 1))
-+	done
-+}
++cat >> $tmp.fsxops << ENDL
++fallocate 0x77e2 0x5f06 0x269a2 keep_size
++mapwrite 0x2e7fc 0x42ba 0x3f989
++write 0x67a9 0x714e 0x3f989
++write 0x39f96 0x185a 0x3f989
++collapse_range 0x36000 0x8000 0x3f989
++mapread 0x74c0 0x1bb3 0x3e2d0
++truncate 0x0 0x8aa2 0x3e2d0
++zero_range 0x1265 0x783d 0x8aa2
++mapread 0x7bd8 0xeca 0x8aa2
++ENDL
 +
-+srcdir=$SCRATCH_MNT/src
-+dupdir=$SCRATCH_MNT/dup
-+noisedir=$dupdir/noise
-+mkdir $srcdir $dupdir
-+mkdir $dupdir/noise
++victim=$SCRATCH_MNT/a
++touch $victim
++$here/ltp/fsx --replay-ops $tmp.fsxops $victim > $tmp.output || cat $tmp.output
 +
-+md5file=${tmp}.md5sum
-+
-+fsstress_opts="-w -r"
-+# Create some files to be original data
-+$FSSTRESS_PROG $fsstress_opts -d $srcdir \
-+	       -n 500 -p $((5 * LOAD_FACTOR)) >/dev/null 2>&1
-+
-+# Calculate how many test cycles will be run
-+src_size=`du -ks $srcdir | awk '{print $1}'`
-+free_size=`df -kP $SCRATCH_MNT | grep -v Filesystem | awk '{print $4}'`
-+times=$((free_size / src_size))
-+if [ $times -gt $((4 * TIME_FACTOR)) ]; then
-+	times=$((4 * TIME_FACTOR))
-+fi
-+
-+echo "= Do dedup and verify ="
-+iterate_dedup_verify
-+
-+# Use the last checksum file to verify the original data
-+sed -e s#dup/$times#src#g $md5file$times > $md5file
-+echo "= Backwords verify ="
-+md5sum -c --quiet $md5file
-+
-+# read from the disk also doesn't show mutations.
-+_scratch_cycle_mount
-+echo "= Verify after cycle mount ="
-+for ((index = 1; index <= times; index++)); do
-+	md5sum -c --quiet $md5file$index
-+done
-+
++echo "Silence is golden"
 +status=0
 +exit
-diff --git a/tests/shared/009.out b/tests/shared/009.out
+diff --git a/tests/generic/708.out b/tests/generic/708.out
 new file mode 100644
-index 00000000..44a78ba3
+index 00000000..33c478ad
 --- /dev/null
-+++ b/tests/shared/009.out
-@@ -0,0 +1,4 @@
-+QA output created by 009
-+= Do dedup and verify =
-+= Backwords verify =
-+= Verify after cycle mount =
-diff --git a/tests/shared/group b/tests/shared/group
-index 49ffa8dd..9c484794 100644
---- a/tests/shared/group
-+++ b/tests/shared/group
-@@ -11,6 +11,7 @@
- 006 auto enospc
- 007 dangerous_fuzzers
- 008 auto stress dedupe
-+009 auto stress dedupe
- 032 mkfs auto quick
- 272 auto enospc rw
- 289 auto quick
--- 
-2.14.4
-
++++ b/tests/generic/708.out
+@@ -0,0 +1,2 @@
++QA output created by 708
++Silence is golden
+diff --git a/tests/generic/group b/tests/generic/group
+index 83a6fdab..1a1a0a6e 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -501,3 +501,4 @@
+ 496 auto quick swap
+ 497 auto quick swap collapse
+ 498 auto quick log
++708 auto quick rw collapse
