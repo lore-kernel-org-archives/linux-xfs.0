@@ -1,42 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:53508 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932922AbeFUTzj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jun 2018 15:55:39 -0400
-Date: Thu, 21 Jun 2018 12:55:24 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs_bmap: remove -c from manpage
-Message-ID: <20180621195524.GH4838@magnolia>
+Received: from mail.kernel.org ([198.145.29.99]:50654 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933164AbeFUVaa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 21 Jun 2018 17:30:30 -0400
+Date: Thu, 21 Jun 2018 17:30:27 -0400
+From: Steven Rostedt <rostedt@goodmis.org>
+Subject: Re: [PATCH] Makefile: Fix backtrace breakage
+Message-ID: <20180621173027.26155d5c@gandalf.local.home>
+In-Reply-To: <20180621204834.GU30690@tassilo.jf.intel.com>
+References: <8fda53b0-9d86-943b-e8b4-fd9d6553f010@i-love.sakura.ne.jp>
+        <20180621001509.GQ19934@dastard>
+        <201806210547.w5L5l5Mh029257@www262.sakura.ne.jp>
+        <20180621204834.GU30690@tassilo.jf.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Andi Kleen <ak@linux.intel.com>
+Cc: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Dave Chinner <david@fromorbit.com>, Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Omar Sandoval <osandov@fb.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, 21 Jun 2018 13:48:34 -0700
+Andi Kleen <ak@linux.intel.com> wrote:
 
-There is no -c switch so remove the documentation.
+> On Thu, Jun 21, 2018 at 02:47:05PM +0900, Tetsuo Handa wrote:
+> > From 7208bf13827fa7c7d6196ee20f7678eff0d29b36 Mon Sep 17 00:00:00 2001
+> > From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+> > Date: Thu, 21 Jun 2018 14:15:10 +0900
+> > Subject: [PATCH] Makefile: Fix backtrace breakage
+> > 
+> > Dave Chinner noticed that backtrace part is missing in a lockdep report.
+> > 
+> >   [   68.760085] the existing dependency chain (in reverse order) is:
+> >   [   69.258520]
+> >   [   69.258520] -> #1 (fs_reclaim){+.+.}:
+> >   [   69.623516]
+> >   [   69.623516] -> #0 (sb_internal){.+.+}:
+> >   [   70.152322]
+> >   [   70.152322] other info that might help us debug this:  
+> 
+> Thanks. Was already fixed earlier I believe.
+> 
+> 
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- man/man8/xfs_bmap.8 |    4 ----
- 1 file changed, 4 deletions(-)
+I actually just pulled the patch in an hour ago, and I'm currently
+testing it along with other patches.
 
-diff --git a/man/man8/xfs_bmap.8 b/man/man8/xfs_bmap.8
-index ae923481..dd925b12 100644
---- a/man/man8/xfs_bmap.8
-+++ b/man/man8/xfs_bmap.8
-@@ -36,10 +36,6 @@ no matter what the filesystem's block size is.
- If this option is specified, information about the file's
- attribute fork is printed instead of the default data fork.
- .TP
--.B \-c
--If this option is specified, information about the file's
--copy on write fork is printed instead of the default data fork.
--.TP
- .B \-d
- If portions of the file have been migrated offline by
- a DMAPI application, a DMAPI read event will be generated to
+Thanks!
+
+-- Steve
