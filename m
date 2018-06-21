@@ -1,130 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:50070 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751210AbeFVGkq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Jun 2018 02:40:46 -0400
-Date: Thu, 21 Jun 2018 23:40:42 -0700
+Received: from aserp2120.oracle.com ([141.146.126.78]:46504 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753725AbeFUSbH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jun 2018 14:31:07 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5LITQ4M014268
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Jun 2018 18:31:06 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp2120.oracle.com with ESMTP id 2jmtgx35gf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Jun 2018 18:31:06 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w5LIV59N024657
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Jun 2018 18:31:06 GMT
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w5LIV5aV030688
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Jun 2018 18:31:05 GMT
+Subject: [PATCH 0/8] xfs-4.18: various fixes
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 2/4] xfs: regression test for rmapbt fdblocks accounting
- problems
-Message-ID: <20180622064042.GO4838@magnolia>
-References: <152960594943.26479.1457883867468749220.stgit@magnolia>
- <152960596196.26479.13083497192197135552.stgit@magnolia>
+Date: Thu, 21 Jun 2018 11:31:04 -0700
+Message-ID: <152960586416.26246.8634761888260524091.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <152960596196.26479.13083497192197135552.stgit@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Hi all,
 
-In "xfs: fix fdblocks accounting w/ RMAPBT per-AG reservation", we fixed
-the per-ag reservation code so that we always decrease fdblocks by the
-reserved size because rmapbt blocks are counted as free space.
+Here's a series of patches to fix some problems I noticed in 4.18.
 
-The primary symptom of this bug is that if the rmapbt has expanded since
-mount time, the disk block counters reported via statfs will change
-across a remount.  Therefore, we exercise this as a regression test.
+The first patch fixes a problem where we WARN_ON if someone tries to
+create an empty transaction while the fs is frozen.  Since these
+transactions can't modify anything, it seems unnecessary to warn about
+them.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v2: add silence is golden message
----
- tests/xfs/712     |   64 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/712.out |    2 ++
- tests/xfs/group   |    1 +
- 3 files changed, 67 insertions(+)
- create mode 100755 tests/xfs/712
- create mode 100644 tests/xfs/712.out
+The second patch fixes per-ag rmapbt reservation accounting problems.
+The on-disk fdblocks counter is not decremented for rmapbt blocks, so
+the incore reservation should always decrement the incore fdblocks by
+the entire reservation regardless of rmapbt use.  This fixes the problem
+where b_avail as reported by statfs changes across an unmount/mount
+cycle if the rmapbt had grown prior to the unmount, even though the
+number of blocks in use has not changed at all.
 
-diff --git a/tests/xfs/712 b/tests/xfs/712
-new file mode 100755
-index 00000000..ab2342ef
---- /dev/null
-+++ b/tests/xfs/712
-@@ -0,0 +1,64 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2018 Oracle, Inc.  All rights reserved.
-+#
-+# FS QA Test No. 712
-+#
-+# Make sure that the statfs b_avail counter doesn't change across remount
-+# after the rmapbt has grown in size.
-+#
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# remove previous \$seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs xfs
-+_require_test_program "punch-alternating"
-+_require_xfs_scratch_rmapbt
-+
-+_scratch_mkfs >> $seqres.full
-+_scratch_mount
-+
-+# Make sure we allocate a big enough file such that punching out every other
-+# block will cause the rmapbt to expand by at least one block.
-+blksz=$(_get_file_block_size $SCRATCH_MNT)
-+nr_rmap_per_rmapbt=$(( (blksz - 56) / 24))
-+blks=$(( (nr_rmap_per_rmapbt + 2) * 2))
-+$XFS_IO_PROG -f -c "falloc 0 $((blks * blksz))" $SCRATCH_MNT/a >> $seqres.full
-+./src/punch-alternating $SCRATCH_MNT/a
-+
-+# Do the stat counters change across the remount?
-+before=$(stat -f -c '%b %f' $SCRATCH_MNT)
-+_scratch_cycle_mount
-+after=$(stat -f -c '%b %f' $SCRATCH_MNT)
-+
-+if [ "${before}" != "${after}" ]; then
-+	echo "counters changed: ${before} ${after}"
-+	echo "before: ${before}" >> $seqres.full
-+	echo "after: ${after}" >> $seqres.full
-+fi
-+
-+echo "Silence is golden."
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/712.out b/tests/xfs/712.out
-new file mode 100644
-index 00000000..33a76b21
---- /dev/null
-+++ b/tests/xfs/712.out
-@@ -0,0 +1,2 @@
-+QA output created by 712
-+Silence is golden.
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 932ab909..2f1c8467 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -447,3 +447,4 @@
- 447 auto mount
- 448 auto quick fuzzers
- 449 auto quick
-+712 auto quick rmap
+The third patch fixes the userspace-configurable default reserved
+blocks calculation when there are fewer fdblocks than what we set aside
+to avoid deadlocks.
+
+The fourth patch fixes a problem Zorro Lang found where on a 512b
+block filesystem we can cause an extent at s_maxbytes to be right
+shifted to the point that it block offset exceeds the field size of 54
+bytes.  generic/485 is the regression test.
+
+The fifth patch fixes a hard to trigger TOCTOU bug in generic/166 where
+we take ILOCK_SHARED in preparation for a directio write but by the time
+we get the lock a second thread has set the reflink flag on the file and
+shared the extent we're trying to write but we proceed into the COW
+allocation paths without the required ILOCK_EXCL.
+
+The sixth patch fixes an uninitialized field in the rtbitmap fsmap code.
+
+The seventh pach fixes an off-by-one error in the rtbitmap range query
+function (which fortunately only affects the rtbitmap fsmap results).
+
+The eighth patch fixes a bug reported by fsx in generic/127 wherein if
+we write a file to a non-page-aligned length, mmap read the EOF page,
+truncate the file to a smaller non-page-aligned length, run zero_range
+out to EOF, and then mmap read the EOF page a second time, we briefly
+see non-zero bytes after EOF.
+
+Comments and questions are, as always, welcome.
+
+--D
