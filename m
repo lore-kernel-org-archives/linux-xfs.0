@@ -1,123 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:58368 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933415AbeFUQmJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jun 2018 12:42:09 -0400
-Date: Thu, 21 Jun 2018 09:42:05 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:41168 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754012AbeFUScx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jun 2018 14:32:53 -0400
+Subject: [PATCH 3/4] generic: mread past eof shows nonzero contents
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/2] xfs: transactionless xfs_bunmapi shouldn't do format
- conversion
-Message-ID: <20180621164205.GD4838@magnolia>
-References: <20180619024128.22669-1-david@fromorbit.com>
- <20180619024128.22669-2-david@fromorbit.com>
- <20180619045405.GI8128@magnolia>
- <20180619052759.GH19934@dastard>
- <20180619060652.GW8128@magnolia>
- <20180619233317.GL19934@dastard>
+Date: Thu, 21 Jun 2018 11:32:49 -0700
+Message-ID: <152960596951.26479.121617216998011751.stgit@magnolia>
+In-Reply-To: <152960594943.26479.1457883867468749220.stgit@magnolia>
+References: <152960594943.26479.1457883867468749220.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180619233317.GL19934@dastard>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: guaneryu@gmail.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Wed, Jun 20, 2018 at 09:33:17AM +1000, Dave Chinner wrote:
-> On Mon, Jun 18, 2018 at 11:06:52PM -0700, Darrick J. Wong wrote:
-> > On Tue, Jun 19, 2018 at 03:27:59PM +1000, Dave Chinner wrote:
-> > > On Mon, Jun 18, 2018 at 09:54:05PM -0700, Darrick J. Wong wrote:
-> > > > On Tue, Jun 19, 2018 at 12:41:27PM +1000, Dave Chinner wrote:
-> > > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > > 
-> > > > > If we are punching out a delalloc extent, xfs_bunmapi() does not
-> > > > > have a transaction context and should not ever need to convert the
-> > > > > on-disk extent format. If such a thing is attempted (e.g. via a
-> > > > > corrupt inode extent count in extent format) then we should abort
-> > > > > with an EFSCORRUPTED error. Unfortunately, we don't do that and
-> > > > > crash instead:
-> > > > > 
-> > > > >  XFS (loop0): page discard on page 0000000005fd24f3, inode 0x75e5, offset 0.
-> > > > >  ==================================================================
-> > > > >  BUG: KASAN: null-ptr-deref in xfs_alloc_get_freelist+0x115/0x350
-> > > > >  Read of size 8 at addr 0000000000000028 by task a.out/1406
-> > > > >  CPU: 0 PID: 1406 Comm: a.out Not tainted 4.17.0-rc4-kasan #2
-> > > > >  Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Ubuntu-1.8.2-1ubuntu1 04/01/2014
-> > > > >  Call Trace:
-> > > > >   dump_stack+0x7b/0xb5
-> > > > >   kasan_report+0x10c/0x390
-> > > > >   __asan_load8+0x54/0x90
-> > > > >   xfs_alloc_get_freelist+0x115/0x350
-> > > > >   xfs_alloc_fix_freelist+0x35b/0x830
-> > > > >   xfs_alloc_vextent+0x215/0x990
-> > > > >   xfs_bmap_extents_to_btree+0x30d/0x940
-> > > > > .....
-> > > > > 
-> > > > > By returning an error here, we avoid such crashes when punching out
-> > > > > a delalloc page because we don't try to fix up an AG freelist
-> > > > > without a transaction. Hence we get an error like so:
-> > > > 
-> > > > Um, isn't erroring out here leaving a dirty bomb in the in-core metadata?
-> > > 
-> > > Not that I can tell. We've already trashed the dirty page state by
-> > > this point, so the page cache can safely reclaim the page and the
-> > > delalloc range over it will never get written.  And the XFS inode
-> > > cleanup code didn't have any issues with the way the error was
-> > > handled, either, because the delalloc range was actually removed
-> > > before the fork format error was triggered.
-> > > 
-> > > IOWs, there is no dirty, stale page state or delalloc extents
-> > > hanging around if this error fires.
-> > 
-> > Hmmm, well I guess I'll pull this one in and look for problems.
-> > 
-> > I wonder, is there a <cough> testcase for this?  Or a fuzz-o-matic to
-> > turn all these things into regression tests?
-> 
-> No test case. Should be able to create one easily enough with
-> xfs_db, though I haven't tried. Do the inode fuzzer tests screw with
-> the extent count?
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-The existing set of fuzz tests won't catch this because they go straight
-into repair attempts to see if scrub/repair will deal with bad nextents.
-They don't try to modify the corrupted fs.
+Certain sequences of generic/127 invocations complain about being able
+to mread nonzero contents past eof.  Replicate that here as a regression
+test.
 
-They also do it slowly because fuzzing nextents is simply a part of
-fuzzing every field in a extents-format file inode, and I suspect that
-we don't really want to make fuzz testing a regular part of xfstests
-because that immediately triples the auto group runtime. :)
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ tests/generic/708     |   54 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/708.out |    2 ++
+ tests/generic/group   |    1 +
+ 3 files changed, 57 insertions(+)
+ create mode 100755 tests/generic/708
+ create mode 100644 tests/generic/708.out
 
-So, targeted test please? :)
 
-I will also work on a fuzz series that skips scrub/repair and goes
-straight to writing to the corrupted fs to see what happens.
+diff --git a/tests/generic/708 b/tests/generic/708
+new file mode 100755
+index 00000000..d380053f
+--- /dev/null
++++ b/tests/generic/708
+@@ -0,0 +1,54 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2018 Oracle, Inc.  All Rights Reserved.
++#
++# FS QA Test No. 708
++#
++# Test a specific sequence of fsx operations that causes an mmap read past
++# eof to return nonzero contents.
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++_require_scratch
++
++rm -f $seqres.full
++
++_scratch_mkfs >>$seqres.full 2>&1
++_scratch_mount
++
++cat >> $tmp.fsxops << ENDL
++fallocate 0x77e2 0x5f06 0x269a2 keep_size
++mapwrite 0x2e7fc 0x42ba 0x3f989
++write 0x67a9 0x714e 0x3f989
++write 0x39f96 0x185a 0x3f989
++collapse_range 0x36000 0x8000 0x3f989
++mapread 0x74c0 0x1bb3 0x3e2d0
++truncate 0x0 0x8aa2 0x3e2d0
++zero_range 0x1265 0x783d 0x8aa2
++mapread 0x7bd8 0xeca 0x8aa2
++ENDL
++
++victim=$SCRATCH_MNT/a
++touch $victim
++$here/ltp/fsx --replay-ops $tmp.fsxops $victim > $tmp.output || cat $tmp.output
++
++echo "Silence is golden"
++status=0
++exit
+diff --git a/tests/generic/708.out b/tests/generic/708.out
+new file mode 100644
+index 00000000..33c478ad
+--- /dev/null
++++ b/tests/generic/708.out
+@@ -0,0 +1,2 @@
++QA output created by 708
++Silence is golden
+diff --git a/tests/generic/group b/tests/generic/group
+index 83a6fdab..1a1a0a6e 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -501,3 +501,4 @@
+ 496 auto quick swap
+ 497 auto quick swap collapse
+ 498 auto quick log
++708 auto quick rw collapse
 
-> > > But OTOH, I don't want to risk a bunch of filesystem corrupting
-> > > regressions across the entire XFS userbase just to fix a trivially
-> > > simple crash that requires an extremely unlikely co-ordinated
-> > > corruption of an inode data fork and an AGFL, and to simultaneously
-> > > have ENOSPC in every other AGF in the filesystem.
-> > > 
-> > > Put "refactor xfs_bunmapi()" on the list of "things to do when
-> > > there's nothing else to do"...
-> > 
-> > So in 2066 after the polar ice caps melt after the XFS LOGHAMMER attack
-> > has finally been put down?  Ok. :)
-> 
-> I'm sure someone will have reason to factor it before then :P
-
-I ... forgot that hch already did. :/
-
---D
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
