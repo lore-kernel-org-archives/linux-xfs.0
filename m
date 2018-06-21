@@ -1,13 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:48760 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932264AbeFTXfE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Jun 2018 19:35:04 -0400
-Date: Thu, 21 Jun 2018 09:35:02 +1000
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:55512 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932552AbeFUAPO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Jun 2018 20:15:14 -0400
+Date: Thu, 21 Jun 2018 10:15:09 +1000
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: xfs: circular locking dependency between fs_reclaim and
  sb_internal [kernel 4.18]
-Message-ID: <20180620233502.GP19934@dastard>
+Message-ID: <20180621001509.GQ19934@dastard>
 References: <8fda53b0-9d86-943b-e8b4-fd9d6553f010@i-love.sakura.ne.jp>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -25,17 +25,32 @@ On Wed, Jun 20, 2018 at 08:25:51PM +0900, Tetsuo Handa wrote:
 > ba4dbdedd3edc279 ("Merge tag 'jfs-4.18' of git://github.com/kleikamp/linux-shaggy")
 > on linux.git . I think that this became visible by commit 93781325da6e07af
 > ("lockdep: fix fs_reclaim annotation") which went to 4.18-rc1. What should we do?
+> 
+> [   63.207781] 
+> [   63.471926] ======================================================
+> [   64.432812] WARNING: possible circular locking dependency detected
+> [   64.948272] 4.18.0-rc1+ #594 Tainted: G                T
+> [   65.512546] ------------------------------------------------------
+> [   65.519722] kswapd0/79 is trying to acquire lock:
+> [   65.525792] 00000000f3581fab (sb_internal){.+.+}, at: xfs_trans_alloc+0xe0/0x120 [xfs]
+> [   66.034497] 
+> [   66.034497] but task is already holding lock:
+> [   66.661024] 00000000c7665973 (fs_reclaim){+.+.}, at: __fs_reclaim_acquire+0x0/0x30
+> [   67.554480] 
+> [   67.554480] which lock already depends on the new lock.
+> [   67.554480] 
+> [   68.760085] 
+> [   68.760085] the existing dependency chain (in reverse order) is:
+> [   69.258520] 
+> [   69.258520] -> #1 (fs_reclaim){+.+.}:
+> [   69.623516] 
+> [   69.623516] -> #0 (sb_internal){.+.+}:
 
-Fix the broken lockdep code?
-
-Superblock freeze level accounting is not a lock. By the time a
-freeze has got to the state where xfs_trans_alloc() would block,
-we've already frozen new data writes and drained all the dirty
-pages.  Hence if the filesystem is frozen down to the transaction
-level, kswapd will never enter this path on the filesystem because
-there will be no dirty pages to write back.
-
-So this is a false positive.
+BTW, where's the stack trace that was recorded when this ordering
+was seen? Normally lockdep gives us all the relevant stack traces in
+a report, and without this trace to tell us where it saw this order,
+this bug report is mostly useless because we don't know what
+inversion it has recorded and is complaining about.
 
 Cheers,
 
