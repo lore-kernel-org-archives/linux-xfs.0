@@ -1,79 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:34752 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750779AbeFVGcJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Jun 2018 02:32:09 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5M6VYAW025593
-        for <linux-xfs@vger.kernel.org>; Fri, 22 Jun 2018 06:32:08 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp2120.oracle.com with ESMTP id 2jrp8hrnfc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 22 Jun 2018 06:32:08 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w5M6W7Np025521
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 22 Jun 2018 06:32:07 GMT
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w5M6W7aJ025290
-        for <linux-xfs@vger.kernel.org>; Fri, 22 Jun 2018 06:32:07 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: Re: [PATCH 3/8] xfs: don't trip over negative free space in
- xfs_reserve_blocks
-References: <152960586416.26246.8634761888260524091.stgit@magnolia>
- <152960588253.26246.18220681679037001885.stgit@magnolia>
-Message-ID: <dd3a9703-e602-9b21-5f63-600a2ded076c@oracle.com>
-Date: Thu, 21 Jun 2018 23:32:04 -0700
+Received: from www262.sakura.ne.jp ([202.181.97.72]:53540 "EHLO
+        www262.sakura.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932633AbeFUFrV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jun 2018 01:47:21 -0400
+Message-Id: <201806210547.w5L5l5Mh029257@www262.sakura.ne.jp>
+Subject: [PATCH] Makefile: Fix backtrace breakage
+From: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
 MIME-Version: 1.0
-In-Reply-To: <152960588253.26246.18220681679037001885.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+Date: Thu, 21 Jun 2018 14:47:05 +0900
+References: <8fda53b0-9d86-943b-e8b4-fd9d6553f010@i-love.sakura.ne.jp> <20180621001509.GQ19934@dastard>
+In-Reply-To: <20180621001509.GQ19934@dastard>
+Content-Type: text/plain; charset="ISO-2022-JP"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Andi Kleen <ak@linux.intel.com>, "Steven Rostedt (VMware)" <rostedt@goodmis.org>
+Cc: Dave Chinner <david@fromorbit.com>, Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Omar Sandoval <osandov@fb.com>
 
-Looks ok, thx!
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+>From 7208bf13827fa7c7d6196ee20f7678eff0d29b36 Mon Sep 17 00:00:00 2001
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Date: Thu, 21 Jun 2018 14:15:10 +0900
+Subject: [PATCH] Makefile: Fix backtrace breakage
 
-On 06/21/2018 11:31 AM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> If we somehow end up with a filesystem that has fewer free blocks than
-> the blocks set aside to avoid ENOSPC deadlocks, it's possible that the
-> free space calculation in xfs_reserve_blocks will spit out a negative
-> number (because percpu_counter_sum returns s64).  We fail to notice
-> this negative number and set fdblks_delta to it.  Now we increment
-> fdblocks(!) and the unsigned type of m_resblks means that we end up
-> setting a ridiculously huge m_resblks reservation.
-> 
-> Avoid this comedy of errors by detecting the negative free space and
-> returning -ENOSPC.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->   fs/xfs/xfs_fsops.c |    2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> 
-> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> index a7afcad6b711..3f2bd6032cf8 100644
-> --- a/fs/xfs/xfs_fsops.c
-> +++ b/fs/xfs/xfs_fsops.c
-> @@ -387,7 +387,7 @@ xfs_reserve_blocks(
->   	do {
->   		free = percpu_counter_sum(&mp->m_fdblocks) -
->   						mp->m_alloc_set_aside;
-> -		if (!free)
-> +		if (free <= 0)
->   			break;
->   
->   		delta = request - mp->m_resblks;
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwICaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=N6x3Cwn-CGLBE6LOOAbcetDshZ_SB_Mnv0Jn2FdPq38&s=CizYCC09hHj0NL-62QgWA-Tla03lpYgbx5ytFsHSFx0&e=
-> 
+Dave Chinner noticed that backtrace part is missing in a lockdep report.
+
+  [   68.760085] the existing dependency chain (in reverse order) is:
+  [   69.258520]
+  [   69.258520] -> #1 (fs_reclaim){+.+.}:
+  [   69.623516]
+  [   69.623516] -> #0 (sb_internal){.+.+}:
+  [   70.152322]
+  [   70.152322] other info that might help us debug this:
+
+Since the kernel was using CONFIG_FTRACE_MCOUNT_RECORD=n &&
+CONFIG_FRAME_POINTER=n, objtool_args was not properly calculated
+due to incorrectly placed "endif" in commit 96f60dfa5819a065 ("trace:
+Use -mcount-record for dynamic ftrace").
+
+Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Cc: Dave Chinner <david@fromorbit.com>
+Cc: Andi Kleen <ak@linux.intel.com>
+Cc: Steven Rostedt (VMware) <rostedt@goodmis.org>
+---
+ scripts/Makefile.build | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/scripts/Makefile.build b/scripts/Makefile.build
+index 34d9e9c..55f22f4 100644
+--- a/scripts/Makefile.build
++++ b/scripts/Makefile.build
+@@ -239,6 +239,7 @@ cmd_record_mcount =						\
+ 	     "$(CC_FLAGS_FTRACE)" ]; then			\
+ 		$(sub_cmd_record_mcount)			\
+ 	fi;
++endif
+ endif # CONFIG_FTRACE_MCOUNT_RECORD
+ 
+ ifdef CONFIG_STACK_VALIDATION
+@@ -263,7 +264,6 @@ ifneq ($(RETPOLINE_CFLAGS),)
+   objtool_args += --retpoline
+ endif
+ endif
+-endif
+ 
+ 
+ ifdef CONFIG_MODVERSIONS
+-- 
+1.8.3.1
