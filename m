@@ -1,34 +1,208 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:50655 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751150AbeFUIha (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 21 Jun 2018 04:37:30 -0400
-Date: Thu, 21 Jun 2018 10:46:46 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 23/24] iomap: add support for sub-pagesize buffered I/O
-        without buffer heads
-Message-ID: <20180621084646.GA5764@lst.de>
-References: <20180615130209.1970-1-hch@lst.de> <20180615130209.1970-24-hch@lst.de> <20180619165211.GD2806@bfoster> <20180620075655.GA2668@lst.de> <20180620143252.GE3241@bfoster> <20180620160803.GA4838@magnolia> <20180620181259.GD4493@bfoster> <20180620190230.GB4838@magnolia>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:57510 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933014AbeFULqU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 21 Jun 2018 07:46:20 -0400
+Date: Thu, 21 Jun 2018 07:46:18 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/2] xfs: zero length symlinks are not valid
+Message-ID: <20180621114618.GA2834@bfoster>
+References: <20180618055711.23391-1-david@fromorbit.com>
+ <20180618055711.23391-2-david@fromorbit.com>
+ <20180618132411.GB28320@bfoster>
+ <20180618224259.GF19934@dastard>
+ <20180619115434.GB2806@bfoster>
+ <20180619154810.GC21698@magnolia>
+ <20180619162839.GC2806@bfoster>
+ <20180619232242.GJ19934@dastard>
+ <20180620115048.GA3241@bfoster>
+ <20180620225918.GN19934@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180620190230.GB4838@magnolia>
+In-Reply-To: <20180620225918.GN19934@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Wed, Jun 20, 2018 at 12:02:30PM -0700, Darrick J. Wong wrote:
-> I managed to cut the testcase down to a nine-line fsx script and so
-> turned it into a fstests regression case.  It seems to reproduce 100% on
-> scsi disks and doesn't at all on pmem.
+On Thu, Jun 21, 2018 at 08:59:18AM +1000, Dave Chinner wrote:
+> On Wed, Jun 20, 2018 at 07:50:48AM -0400, Brian Foster wrote:
+> > On Wed, Jun 20, 2018 at 09:22:42AM +1000, Dave Chinner wrote:
+> > > On Tue, Jun 19, 2018 at 12:28:40PM -0400, Brian Foster wrote:
+> > > > On Tue, Jun 19, 2018 at 08:48:10AM -0700, Darrick J. Wong wrote:
+> > > > > On Tue, Jun 19, 2018 at 07:54:34AM -0400, Brian Foster wrote:
+> > > > > > On Tue, Jun 19, 2018 at 08:42:59AM +1000, Dave Chinner wrote:
+> > > > > > Rather, I'm asking about the pre-existing code that we remove. The hunk
+> > > > > > just above from xfs_inactive_symlink():
+> > > > > > 
+> > > > > > -	/*
+> > > > > > -	 * Zero length symlinks _can_ exist.
+> > > > > > -	 */
+> > > > > > -	if (!pathlen) {
+> > > > > > -		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > > > > > -		return 0;
+> > > > > > -	}
+> > > > > > 
+> > > > > > ... obviously suggests that there could have been a situation where we'd
+> > > > > > see a zero-length symlink on entry to xfs_inactive_symlink(). This
+> > > > > > patch, however, focuses on fixing the transient zero-length symlink
+> > > > > > caused by xfs_inactive_symlink_rmt() (which comes after the above
+> > > > > > check).
+> > > 
+> > > It can't happen through normal VFS paths, and I don't think it can
+> > > happen through log recovery. That's why I replaced this with an ASSERT.
+> > > 
+> > > In the normal behaviour case, zero length symlinks were created
+> > > /after/ this point in time, and we've always been unable to read
+> > > such inodes because xfs_dinode_verify() has always rejected zero
+> > > length symlink inodes.
+> > > 
+> > 
+> > That was my initial understanding as well..
+> > 
+> > > However, log recovery doesn't trip over the transient inode state
+> > > because it does not use xfs_dinode_verify() for inode recovery - it
+> > > reads the buffer with xfs_inode_buf_ops, and that just checks the
+> > > inode numbers and then recovers whatever is in the log over the top.
+> > > It never checks for zero length symlinks on recovery, and it never
+> > > goes through the dinode verifier (on read or write!) to catch this.
+> > > 
+> > > It's not until we then recover the remaining intent chain that we go
+> > > through xfs_iget/xfs_iread/xfs_inactive/xfs_ifree, and that
+> > > xfs_iget() call runs xfs_dinode_verify(). If we've already recovered
+> > > any part of the remote symlink removal intent chain (and we must
+> > > have to be replaying EFIs!) this should see a zero length symlink
+> > > inode. AIUI, we have no evidence that the verifier has ever fired at
+> > > this point in time, even when recovering known transient zero length
+> > > states.
+> > > 
+> > 
+> > Hmm, not sure we're talking about the same thing. I ran a quick
+> > experiment to try and clear up my confusion here, at least. I injected a
+> > shutdown at the point inactive creates the zero sized symlink and
+> > created/removed a remote symlink. On a remount, I hit the following
+> > during log recovery:
+> > 
+> > [  685.931834] XFS (dm-3): Starting recovery (logdev: internal)
+> > [  685.993014] XFS (dm-3): Metadata corruption detected at xfs_dinode_verify+0x331/0x490 [xfs], inode 0x85 dinode
+> > [  685.996287] XFS (dm-3): Unmount and run xfs_repair
+> > [  685.996911] XFS (dm-3): First 128 bytes of corrupted metadata buffer:
+> > ...
+> > [  686.006647] Call Trace:
+> > [  686.006922]  dump_stack+0x85/0xcb
+> > [  686.007338]  xfs_iread+0xeb/0x220 [xfs]
+> > [  686.007820]  xfs_iget+0x4bd/0x1100 [xfs]
+> > [  686.008344]  xlog_recover_process_one_iunlink+0x4d/0x3c0 [xfs]
+> > ...
+> > 
+> > That seems to show that the verifier can impede unlinked list processing
+> > if the change is at least present in the log.
 > 
-> Note that changing the second to last line of the fsxops script to call
-> punch_hole instead of zero_range triggers it too.
+> Which happens after we process intents - ah, the bmap intents only
+> occur from swap extents, so the inode is not read via xfs_iget()
+> in this case until unlinked list processing.
 > 
-> I've also narrowed it down to something going wrong w.r.t. handling the
-> page cache somewhere under xfs_free_file_space.
+> So, yeah, we are talking about the same thing - it's the second
+> phase of recovery that reads inodes through xfs_iget() (for whatever
+> reason) that will trip over the xfs_dinode_verifier.
+> 
+> > If I recreate that same dirty log state and mount with this patch
+> > applied (note that the fs is created without this patch to simulate an
+> > old kernel that has not changed i_mode in the same transaction that sets
+> > di_size = 0) along with a hack to avoid the check in
+> > xfs_dinode_verify(), I now hit the new assert and corruption error
+> > that's been placed in xfs_inactive_symlink().
+> > 
+> > So to Darrick's point, that seems to show that this is a vector to the
+> > pre-existing len == 0 check in xfs_inactive_symlink(). Given that, it
+> > seems to me that if we want to handle recovery from this state, we'd
+> > still need to work around the verifier check and retain the initial
+> > di_size == 0 check in xfs_inactive_symlink().
+> 
+> I think we should get rid of the transient state, not continue to
+> work around it. Because the transient state only exists in a log
+> recovery context, we can change the behaviour and not care about
+> older kernels still having the problem because all that is needed to
+> avoid the issue is a clean log when upgrading the kernel.
+> 
 
-So far this doesn't reproduce for me with or without the iomap code.
-But I've only run it a few times in a VM on my laptop.
+Right... that sounds reasonable to me, but we still need to consider how
+we handle a filesystem already in this state. BTW, was this a user
+report or a manufactured corruption due to fuzzing/shutdown testing or
+something?
+
+It's probably an extremely rare real-world situation to encounter so
+perhaps this approach is good enough on its own and we just punt. I
+think we at least need to document that in the commit log, however.
+IIRC, the filesystem still actually mounted during the test I ran the
+other day, despite the verifier failure. Taking a look at that codepath,
+we have this:
+
+       /*
+         * We can't read in the inode this bucket points to, or this inode
+         * is messed up.  Just ditch this bucket of inodes.  We will lose
+         * some inodes and space, but at least we won't hang.
+         *
+         * Call xlog_recover_clear_agi_bucket() to perform a transaction to
+         * clear the inode pointer in the bucket.
+         */
+        xlog_recover_clear_agi_bucket(mp, agno, bucket);
+
+... which explains why that occurs: we just nuke the AGI unlinked list
+bucket after failing to read an inode from it. I guess that means we
+leak some inodes, but those were already freed so that's not really a
+data loss vector. This otherwise doesn't seem to affect the recovery or
+mount sequence. The leaked inodes can be recovered by a repair at a
+later point. Is that overall behavior consistent with what you've seen
+on the corrupted image?
+
+Given that additional context, I don't feel too strongly about needing
+to specially handle the "zero length symlink already exists in the dirty
+log due to xfs_inactive_symlink_rmt()" case. Chances are the mount that
+reported the error already nuked the state in the first place, so users
+shouldn't really end up "stuck" somewhere between needing a kernel fix
+or an 'xfs_repair -L' run (but if that's the approach we take, please
+just note the tradeoff in the commit log). Just my .02.
+
+Brian
+
+> > > i.e all the cases I've seen where repair complains about symlinks
+> > > with "dfork format 2 and size 0" it is because the log is dirty and
+> > > hasn't been replayed. Mounting the filesystem and running log
+> > > recovery makes the problem go away, and this is what lead to me
+> > > removing the zeor length handling - the verifier should already
+> > > be firing if it is recovering an intent on a zero length symlink
+> > > inode...
+> > > 
+> > 
+> > I haven't grokked all the details here, but the behavior you describe
+> > does sound like this might be a different scenario from the above.
+> 
+> No, we are talking about the same thing. The only difference is that
+> I've been working from a bug report and corrupted fuzzer image, not
+> a real world corruption vector. Hence I'm trying to work backwards
+> from "here's a corrupt image that crashed" to "this is all the paths
+> that can lead to that on disk state".
+> 
+> While writing my last reply, I suspected you were correct about the
+> log recovery state, which is why I said:
+> 
+> > > That said, I'll try some more focussed testing with intentional
+> > > corruption to see if it's just a case of my testing being (un)lucky
+> > > and not triggering this issue...
+> 
+> As you've shown, I was being (un)lucky, so more work is needed on
+> this one.
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
