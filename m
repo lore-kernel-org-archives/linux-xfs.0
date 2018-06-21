@@ -1,226 +1,134 @@
-Return-Path: linux-xfs-owner@vger.kernel.org
-Received: from sandeen.net ([63.231.237.45]:47090 "EHLO sandeen.net"
+Return-Path: <linux-xfs-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:57949 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751543AbeEQPa6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 May 2018 11:30:58 -0400
-Subject: [PATCH V3] test online label ioctl
-References: <2a743318-585d-9eb1-5430-2b07246348ab@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <c8da61a1-a13f-8f72-5b4c-9baf390c04b5@sandeen.net>
-Date: Thu, 17 May 2018 10:23:54 -0500
+        id S933521AbeFUVcC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 21 Jun 2018 17:32:02 -0400
+Subject: Re: [PATCH] mkfs: fix divide-by-zero in align_ag_geometry
+References: <20180621025520.9115-1-jeffm@suse.com>
+ <20180621035749.GR19934@dastard>
+ <85feed9e-c347-5559-59cc-9f4e035324e5@suse.com>
+ <342f7e6a-83f6-e887-b24f-b9a628f790e2@sandeen.net>
+ <20180621194936.GS19934@dastard>
+From: Jeff Mahoney <jeffm@suse.com>
+Message-ID: <919ce2d0-b560-3fe6-f16c-503f57e3157c@suse.com>
+Date: Thu, 21 Jun 2018 17:31:58 -0400
 MIME-Version: 1.0
-In-Reply-To: <2a743318-585d-9eb1-5430-2b07246348ab@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20180621194936.GS19934@dastard>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="p0XDbWFVOloch1Gj6nTcrkunPFgNAmTAe"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
-To: Eric Sandeen <sandeen@redhat.com>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
+List-Id: xfs
+To: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-This tests the online label ioctl that btrfs has, which has been
-recently proposed for XFS.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--p0XDbWFVOloch1Gj6nTcrkunPFgNAmTAe
+Content-Type: multipart/mixed; boundary="DC43YZvhsHhDuGXfg2gcQzu9TRWYgl4q6";
+ protected-headers="v1"
+From: Jeff Mahoney <jeffm@suse.com>
+To: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
+Message-ID: <919ce2d0-b560-3fe6-f16c-503f57e3157c@suse.com>
+Subject: Re: [PATCH] mkfs: fix divide-by-zero in align_ag_geometry
+References: <20180621025520.9115-1-jeffm@suse.com>
+ <20180621035749.GR19934@dastard>
+ <85feed9e-c347-5559-59cc-9f4e035324e5@suse.com>
+ <342f7e6a-83f6-e887-b24f-b9a628f790e2@sandeen.net>
+ <20180621194936.GS19934@dastard>
+In-Reply-To: <20180621194936.GS19934@dastard>
 
-To run, it requires an updated xfs_io with the label command and a
-filesystem that supports it
+--DC43YZvhsHhDuGXfg2gcQzu9TRWYgl4q6
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-A slight change here to _require_xfs_io_command as well, so that tests
-which simply fail with "Inappropriate ioctl" can be caught in the
-common case.
+On 6/21/18 3:49 PM, Dave Chinner wrote:
+> On Thu, Jun 21, 2018 at 02:26:45PM -0500, Eric Sandeen wrote:
+>> On 6/21/18 2:15 PM, Jeff Mahoney wrote:
+>>> On 6/20/18 11:57 PM, Dave Chinner wrote:
+>>>> On Wed, Jun 20, 2018 at 10:55:20PM -0400, jeffm@suse.com wrote:
+>>>>> From: Jeff Mahoney <jeffm@suse.com>
+>>>>>
+>>>>> Commit 051b4e37f5e (mkfs: factor AG alignment) factored out the
+>>>>> AG alignment code into a separate function.  It got rid of
+>>>>> redundant checks for dswidth !=3D 0 but did too good a job since no=
+w
+>>>>> it doesn't check at all.
+>>>>
+>>>> Of course they got removed - we've already validated the CLI input
+>>>> and guaranteed that cfg->dswidth can only be zero iff cfg->dsunit is=
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+>>>> zero in calc_stripe_factors().
+>>>>
+>>>> i.e. We do input validation of CLI paramters before anything else so=
 
-This passes on btrfs, _notruns on xfs/ext4 of yore, and passes
-on xfs w/ my online label patchset (as long as xfs_io has the new
-capability)
+>>>> that later users (like align_ag_geometry()) can assume the
+>>>> parameters they are using are valid. In this case, the assumption is=
 
-V2: Add a max label length helper
-     Set the proper btrfs max label length o_O oops
-     Filter trailing whitespace from blkid output
+>>>> that either both dsunit and dswidth are zero or that both are
+>>>> non-zero and dswidth an integer multple of dsunit.
+>>>
+>>> It's not coming from the CLI parameters.  It's coming from the topolo=
+gy.
+>>>  The blkid topology stuff is returning 8k for minimal i/o and 0 for
+>>> optimal.  Without a CLI config, we have dunit=3D0 in calc_stripe_fact=
+ors,
+>>> which takes it from the device.  We set cfg->dsunit=3D16 and
+>>> cfg->dswidth=3D0, and then head down to align_ag_geometry.
+>>>
+>>> The topology on this system looks like:
+>>>
+>>> ft =3D {dsunit =3D 16, dswidth =3D 0, rtswidth =3D 0, lsectorsize =3D=
+ 512,
+>>>
+>>> psectorsize =3D 512}
+>>> That matches with a few of the dm targets I see reported on this syst=
+em.
+>=20
+> Exactly what kind of dm device does that - we've never had anyone
+> report this before? Also, if it's a dm device, shouldn't it
+> also be fixed to output a sane set of IO characteristics in /sys?
 
-V3: use/test new -s / -c options to set and clear
+It's multipath, so it just follows the stacking rules.  The underlying
+SCSI devices report the same numbers.  The optimal io number is
+documented as being optional, at least for the kernel, so we need to
+handle it being 0 anyway.  I'm not sure if the device specifying a
+minimum i/o size larger than the sector size and also not specifying an
+optimal i/o size is valid SCSI.  I'll ask for more information since now
+I'm also curious.
+
+-Jeff
 
 
-diff --git a/common/rc b/common/rc
-index ffe53236..333cfb82 100644
---- a/common/rc
-+++ b/common/rc
-@@ -2144,6 +2144,9 @@ _require_xfs_io_command()
-  		echo $testio | grep -q "Inappropriate ioctl" && \
-  			_notrun "xfs_io $command support is missing"
-  		;;
-+	"label")
-+		testio=`$XFS_IO_PROG -c "label" $TEST_DIR 2>&1`
-+		;;
-  	"open")
-  		# -c "open $f" is broken in xfs_io <= 4.8. Along with the fix,
-  		# a new -C flag was introduced to execute one shot commands.
-@@ -2182,7 +2185,7 @@ _require_xfs_io_command()
-  	rm -f $testfile 2>&1 > /dev/null
-  	echo $testio | grep -q "not found" && \
-  		_notrun "xfs_io $command support is missing"
--	echo $testio | grep -q "Operation not supported" && \
-+	echo $testio | grep -q "Operation not supported\|Inappropriate ioctl" && \
-  		_notrun "xfs_io $command failed (old kernel/wrong fs?)"
-  	echo $testio | grep -q "Invalid" && \
-  		_notrun "xfs_io $command failed (old kernel/wrong fs/bad args?)"
-@@ -3788,6 +3791,29 @@ _require_scratch_feature()
-  	esac
-  }
-  
-+# The maximum filesystem label length, /not/ including terminating NULL
-+_label_get_max()
-+{
-+	case $FSTYP in
-+	xfs)
-+		echo 12
-+		;;
-+	btrfs)
-+		echo 255
-+		;;
-+	*)
-+		_notrun "$FSTYP does not define maximum label length"
-+		;;
-+	esac
-+}
-+
-+# Helper to check above early in a script
-+_require_label_get_max()
-+{
-+	# Just call _label_get_max which will notrun if appropriate
-+	dummy=$(_label_get_max)
-+}
-+
-  init_rc
-  
-  ################################################################################
-diff --git a/tests/generic/488 b/tests/generic/488
-new file mode 100755
-index 00000000..3616522d
---- /dev/null
-+++ b/tests/generic/488
-@@ -0,0 +1,95 @@
-+#! /bin/bash
-+# FS QA Test 488
-+#
-+# Test the online filesystem label set/get ioctls
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2018 Red Hat, Inc.  All Rights Reserved.
-+# Author: Eric Sandeen <sandeen@redhat.com>
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch
-+_require_xfs_io_command "label"
-+_require_label_get_max
-+
-+_scratch_mkfs > $seqres.full 2>&1
-+_scratch_mount
-+
-+# Make sure we can set & clear the label
-+$XFS_IO_PROG -c "label -s label.$seq" $SCRATCH_MNT
-+$XFS_IO_PROG -c "label" $SCRATCH_MNT
-+
-+$XFS_IO_PROG -c "label -c" $SCRATCH_MNT
-+$XFS_IO_PROG -c "label" $SCRATCH_MNT
-+
-+# And that userspace can see it now, while mounted
-+# NB: some blkid has trailing whitespace, filter it out here
-+$XFS_IO_PROG -c "label -s label.$seq" $SCRATCH_MNT
-+$XFS_IO_PROG -c "label" $SCRATCH_MNT
-+blkid -s LABEL $SCRATCH_DEV | _filter_scratch | sed -e "s/ $//g"
-+
-+# And that the it is still there when it's unmounted
-+_scratch_unmount
-+blkid -s LABEL $SCRATCH_DEV | _filter_scratch | sed -e "s/ $//g"
-+
-+# And that it persists after a remount
-+_scratch_mount
-+$XFS_IO_PROG -c "label" $SCRATCH_MNT
-+
-+# And that a too-long label is rejected, beyond the interface max:
-+fs_label=$(perl -e "print 'l' x 257;")
-+$XFS_IO_PROG -c "label -s $fs_label" $SCRATCH_MNT
-+
-+# And it succeeds right at the filesystem max:
-+max_label_len=$(_label_get_max)
-+fs_label=$(perl -e "print 'o' x $max_label_len;")
-+$XFS_IO_PROG -c "label -s $fs_label" $SCRATCH_MNT | sed -e 's/o\+/MAXLABEL/'
-+
-+# And that it fails past the filesystem max:
-+let toolong_label_len=max_label_len+1
-+fs_label=$(perl -e "print 'o' x $toolong_label_len;")
-+$XFS_IO_PROG -c "label -s $fs_label " $SCRATCH_MNT
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/488.out b/tests/generic/488.out
-new file mode 100644
-index 00000000..70691af4
---- /dev/null
-+++ b/tests/generic/488.out
-@@ -0,0 +1,13 @@
-+QA output created by 488
-+label = "label.488"
-+label = "label.488"
-+label = ""
-+label = ""
-+label = "label.488"
-+label = "label.488"
-+SCRATCH_DEV: LABEL="label.488"
-+SCRATCH_DEV: LABEL="label.488"
-+label = "label.488"
-+label: Invalid argument
-+label = "MAXLABEL"
-+label: Invalid argument
-diff --git a/tests/generic/group b/tests/generic/group
-index dc637c96..6266213e 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -490,3 +490,4 @@
-  485 auto quick insert
-  486 auto quick attr
-  487 auto quick
-+488 auto quick
+--=20
+Jeff Mahoney
+SUSE Labs
 
+
+--DC43YZvhsHhDuGXfg2gcQzu9TRWYgl4q6--
+
+--p0XDbWFVOloch1Gj6nTcrkunPFgNAmTAe
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEE8wzgbmZ74SnKPwtDHntLYyF55bIFAlssGU4ACgkQHntLYyF5
+5bLMXQ/+PHrf/3oFnV9PsPTZCdXhzyNKm1jL2gRAzWeRQbfJ0k1VQfNXbH2eLan4
+087as3TgnJNCtGpAT3s136AL/WrWvUztVQ7cQIi3EfBxZzSQKW0ClZCiw0xPkIo3
+RxHU7rs5i8aW8r1+fwY4Qvv2H7O8OmQdoa6YbF5docguuNyMbTnyOeHwqNQXUwsT
+SUytMZKaGqDLY66aJldtJphQqdbMF1aviYYQP+zuEw6YpnilG016V5DmHBeJJyP2
+RtwCH8f0Od9p4HLasJfQovDE2B+ytbbd1lwHKAmgxU/0qVy77wmovlb3p3WhJpQm
+XlU7/InoLG4dcSllVcINTxIrIpeuBv5KaxDaqU8h77vaB39AB5sTujVgFaWQenhU
+xWRjSpK4n3oM+KeD6gn8XpH+txacHKYlp1FbrGgHmxSr7w7fHcyb6uG6xv2mbkRs
+X4VNYknwPd2gJoyWkqTocw5O9/m0NiRCAtVVPyu8pqzgZC4aZBazNnCyZf9zP/4E
+FGwd5cYI4LcyFaqYd/sJVf0XSv7r3V00NImzhnnsOLZscFCQurHqGr2KyJfiPwHi
+nZcFMODHv0lWvosW6IVzN2Unv4GS3SSD82I5Y9YxXhKS95JThYMfU12Eitm3tCWf
+iD7aBoFRWl9QNGYSZyijkmw7SHviciOrM/4+15MO0tM3umnMPeY=
+=XTXP
+-----END PGP SIGNATURE-----
+
+--p0XDbWFVOloch1Gj6nTcrkunPFgNAmTAe--
