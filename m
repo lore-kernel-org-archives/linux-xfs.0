@@ -1,80 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:45232 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750826AbeFVGje (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Jun 2018 02:39:34 -0400
-Date: Thu, 21 Jun 2018 23:39:34 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/8] xfs: don't allow insert-range to shift extents past
- the maximum offset
-Message-ID: <20180622063934.GD27254@infradead.org>
-References: <152960586416.26246.8634761888260524091.stgit@magnolia>
- <152960588873.26246.17582272219031862067.stgit@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:42629 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753972AbeFUTPh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 21 Jun 2018 15:15:37 -0400
+Date: Thu, 21 Jun 2018 21:15:35 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: Mounting xfs filesystem takes long time
+Message-ID: <20180621191535.GI7508@wotan.suse.de>
+References: <2a9a023d-fa37-59dc-caf2-c7c4167d3c75@levigo.de>
+ <20180619161819.GD21698@magnolia>
+ <e9a7c539-1dea-1050-19bc-b0eb7e788b33@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <152960588873.26246.17582272219031862067.stgit@magnolia>
+In-Reply-To: <e9a7c539-1dea-1050-19bc-b0eb7e788b33@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, zlang@redhat.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, "swadmin - levigo.de" <swadmin@levigo.de>, linux-xfs@vger.kernel.org
 
-> +#define BMBT_STARTOFF_MASK	((1ULL << BMBT_STARTOFF_BITLEN) - 1)
+On Tue, Jun 19, 2018 at 02:21:15PM -0500, Eric Sandeen wrote:
+> On 6/19/18 11:18 AM, Darrick J. Wong wrote:
+> > On Tue, Jun 19, 2018 at 02:27:29PM +0200, swadmin - levigo.de wrote:
+> >> Hi @all
+> >> I have a problem with mounting a large XFS filesystem which takes about
+> >> 8-10 minutes.
+> >>
+> >>
+> >>
+> >> :~# df -h /graylog_data
+> >> Filesystem                       Size  Used Avail Use% Mounted on
+> >> /dev/mapper/vgdata-graylog_data   11T  5.0T  5.1T  50% /graylog_data
+> >>
+> >> ----
+> >>
+> >> :~# xfs_info /dev/mapper/vgdata-graylog_data
+> >> meta-data=/dev/mapper/vgdata-graylog_data isize=512    agcount=40805,
+> >> agsize=65792 blks
+> > 
+> > 41,000 AGs is a lot of metadata to load.  Did someone growfs a 1G fs
+> > into a 11T fs?
+> 
+> <answer: yes, they did>
+> 
+> Let me state that a little more clearly: this is a badly mis-administered
+> filesystem; 40805 x 256MB AGs is nearly unusable, as you've seen.
+> 
+> If at all possible I would start over with a rationally-created filesystem
+> and migrate the data.
 
-Please move this next to BMBT_STARTOFF_BITLEN.
+Considering *a lot* of folks may typically follow the above "trap", wouldn't it
+be wise for userspace to complain or warn when the user may want to do
+something stupid like this? Otherwise I cannot see how we could possibly
+conceive that this is badly administered filesystem.
 
-For brownie points also use this new defined instead of
-XFS_IEXT_STARTOFF_MASK in the extent tree code.
-
-
-> +/* Make sure we won't be right-shifting an extent past the maximum bound. */
-> +int
-> +xfs_bmap_can_insert_extents(
-> +	struct xfs_inode	*ip,
-> +	xfs_fileoff_t		off,
-> +	xfs_fileoff_t		shift)
-> +{
-> +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-> +	struct xfs_bmbt_irec	got;
-> +	struct xfs_iext_cursor	icur;
-> +	xfs_fileoff_t		new_off;
-> +	int			error = 0;
-> +
-> +	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
-> +		return -EIO;
-> +
-> +	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
-> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> +
-> +	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> +		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
-> +		if (error)
-> +			goto out;
-> +	}
-> +
-> +	xfs_iext_last(ifp, &icur);
-> +	if (!xfs_iext_get_extent(ifp, &icur, &got) || off > got.br_startoff)
-> +		goto out;
-
-This largely duplicates xfs_bmap_last_extent.  The function body could
-probably be written as:
-
-{
-	struct xfs_bmbt_irec	got;
-	int			error = 0;
-
-	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
-
-	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
-		return -EIO;
-
-	xfs_ilock(ip, XFS_ILOCK_EXCL);
-	error = xfs_bmap_last_extent(NULL, ip, XFS_DATA_FORK, &got,
-			&is_empty)
-	if (!error && !is_empty && got.br_startoff >= off &&
-	    got.br_startoff + shift) & BMBT_STARTOFF_MASK < got.br_startoff)
-		error = -EINVAL;
-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-
-	return error;
+  Luis
