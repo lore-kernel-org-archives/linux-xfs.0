@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:49194 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:53508 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932845AbeFUTsj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jun 2018 15:48:39 -0400
-Date: Thu, 21 Jun 2018 12:48:25 -0700
+        with ESMTP id S932922AbeFUTzj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jun 2018 15:55:39 -0400
+Date: Thu, 21 Jun 2018 12:55:24 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2] xfs_bmap: don't reject -e
-Message-ID: <20180621194825.GG4838@magnolia>
+Subject: [PATCH] xfs_bmap: remove -c from manpage
+Message-ID: <20180621195524.GH4838@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -18,53 +18,25 @@ Cc: xfs <linux-xfs@vger.kernel.org>
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-The xfs_io bmap command has an -e switch that prints delalloc extents
-without fsync'ing the file first.  The xfs_bmap manpage says it'll pass
--e through, but it doesn't.  Fix the script and fix the weird manpage
-discrepancy where it doesn't list -e in the available options but
-discusses it anyway.
+There is no -c switch so remove the documentation.
 
-Fixes: 7536ce44f6 ("xfs_io: bmap should support querying CoW fork, shared blocks")
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
-v2: add Fixes:
----
- io/xfs_bmap.sh      |    5 +++--
- man/man8/xfs_bmap.8 |    2 +-
- 2 files changed, 4 insertions(+), 3 deletions(-)
+ man/man8/xfs_bmap.8 |    4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/io/xfs_bmap.sh b/io/xfs_bmap.sh
-index b4e7992b..753d57cb 100755
---- a/io/xfs_bmap.sh
-+++ b/io/xfs_bmap.sh
-@@ -5,14 +5,15 @@
- 
- OPTS=""
- VERSION=false
--USAGE="Usage: xfs_bmap [-adlpvV] [-n nx] file..."
-+USAGE="Usage: xfs_bmap [-adelpvV] [-n nx] file..."
- DIRNAME=`dirname $0`
- 
--while getopts "adln:pvV" c
-+while getopts "adeln:pvV" c
- do
- 	case $c in
- 	a)	OPTS=$OPTS" -a";;
- 	d)	OPTS=$OPTS" -d";;
-+	e)	OPTS=$OPTS" -e";;
- 	l)	OPTS=$OPTS" -l";;
- 	n)	OPTS=$OPTS" -n "$OPTARG;;
- 	p)	OPTS=$OPTS" -p";;
 diff --git a/man/man8/xfs_bmap.8 b/man/man8/xfs_bmap.8
-index c7255192..ae923481 100644
+index ae923481..dd925b12 100644
 --- a/man/man8/xfs_bmap.8
 +++ b/man/man8/xfs_bmap.8
-@@ -4,7 +4,7 @@ xfs_bmap \- print block mapping for an XFS file
- .SH SYNOPSIS
- .B xfs_bmap
- [
--.B \-adlpv
-+.B \-adelpv
- ] [
- .B \-n
- .I num_extents
+@@ -36,10 +36,6 @@ no matter what the filesystem's block size is.
+ If this option is specified, information about the file's
+ attribute fork is printed instead of the default data fork.
+ .TP
+-.B \-c
+-If this option is specified, information about the file's
+-copy on write fork is printed instead of the default data fork.
+-.TP
+ .B \-d
+ If portions of the file have been migrated offline by
+ a DMAPI application, a DMAPI read event will be generated to
