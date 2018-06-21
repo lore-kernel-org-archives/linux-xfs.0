@@ -1,26 +1,28 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:46504 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:46716 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753725AbeFUSbH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jun 2018 14:31:07 -0400
+        with ESMTP id S1753725AbeFUSbN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jun 2018 14:31:13 -0400
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5LITQ4M014268
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Jun 2018 18:31:06 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp2120.oracle.com with ESMTP id 2jmtgx35gf-1
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5LITGnD013647
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Jun 2018 18:31:12 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp2120.oracle.com with ESMTP id 2jmtgx35hw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Jun 2018 18:31:06 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w5LIV59N024657
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Jun 2018 18:31:12 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w5LIVBCj015627
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Jun 2018 18:31:06 GMT
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Jun 2018 18:31:11 GMT
 Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w5LIV5aV030688
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Jun 2018 18:31:05 GMT
-Subject: [PATCH 0/8] xfs-4.18: various fixes
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w5LIVBbA030951
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Jun 2018 18:31:11 GMT
+Subject: [PATCH 1/8] xfs: allow empty transactions while frozen
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 21 Jun 2018 11:31:04 -0700
-Message-ID: <152960586416.26246.8634761888260524091.stgit@magnolia>
+Date: Thu, 21 Jun 2018 11:31:10 -0700
+Message-ID: <152960587035.26246.9220199251468325711.stgit@magnolia>
+In-Reply-To: <152960586416.26246.8634761888260524091.stgit@magnolia>
+References: <152960586416.26246.8634761888260524091.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -30,49 +32,36 @@ List-Id: xfs
 To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Here's a series of patches to fix some problems I noticed in 4.18.
+In commit e89c041338ed6ef ("xfs: implement the GETFSMAP ioctl") we
+created the ability to obtain empty transactions.  These transactions
+have no log or block reservations and therefore can't modify anything.
+Since they're also NO_WRITECOUNT they can run while the fs is frozen,
+so we don't need to WARN_ON about that usage.
 
-The first patch fixes a problem where we WARN_ON if someone tries to
-create an empty transaction while the fs is frozen.  Since these
-transactions can't modify anything, it seems unnecessary to warn about
-them.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_trans.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-The second patch fixes per-ag rmapbt reservation accounting problems.
-The on-disk fdblocks counter is not decremented for rmapbt blocks, so
-the incore reservation should always decrement the incore fdblocks by
-the entire reservation regardless of rmapbt use.  This fixes the problem
-where b_avail as reported by statfs changes across an unmount/mount
-cycle if the rmapbt had grown prior to the unmount, even though the
-number of blocks in use has not changed at all.
 
-The third patch fixes the userspace-configurable default reserved
-blocks calculation when there are fewer fdblocks than what we set aside
-to avoid deadlocks.
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index e040af120b69..524f543c5b82 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -258,7 +258,12 @@ xfs_trans_alloc(
+ 	if (!(flags & XFS_TRANS_NO_WRITECOUNT))
+ 		sb_start_intwrite(mp->m_super);
+ 
+-	WARN_ON(mp->m_super->s_writers.frozen == SB_FREEZE_COMPLETE);
++	/*
++	 * Zero-reservation ("empty") transactions can't modify anything, so
++	 * they're allowed to run while we're frozen.
++	 */
++	WARN_ON(resp->tr_logres > 0 &&
++		mp->m_super->s_writers.frozen == SB_FREEZE_COMPLETE);
+ 	atomic_inc(&mp->m_active_trans);
+ 
+ 	tp = kmem_zone_zalloc(xfs_trans_zone,
 
-The fourth patch fixes a problem Zorro Lang found where on a 512b
-block filesystem we can cause an extent at s_maxbytes to be right
-shifted to the point that it block offset exceeds the field size of 54
-bytes.  generic/485 is the regression test.
-
-The fifth patch fixes a hard to trigger TOCTOU bug in generic/166 where
-we take ILOCK_SHARED in preparation for a directio write but by the time
-we get the lock a second thread has set the reflink flag on the file and
-shared the extent we're trying to write but we proceed into the COW
-allocation paths without the required ILOCK_EXCL.
-
-The sixth patch fixes an uninitialized field in the rtbitmap fsmap code.
-
-The seventh pach fixes an off-by-one error in the rtbitmap range query
-function (which fortunately only affects the rtbitmap fsmap results).
-
-The eighth patch fixes a bug reported by fsx in generic/127 wherein if
-we write a file to a non-page-aligned length, mmap read the EOF page,
-truncate the file to a smaller non-page-aligned length, run zero_range
-out to EOF, and then mmap read the EOF page a second time, we briefly
-see non-zero bytes after EOF.
-
-Comments and questions are, as always, welcome.
-
---D
