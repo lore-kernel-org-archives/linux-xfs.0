@@ -1,52 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot0-f172.google.com ([74.125.82.172]:37038 "EHLO
-        mail-ot0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934153AbeFVDT4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jun 2018 23:19:56 -0400
-Received: by mail-ot0-f172.google.com with SMTP id 101-v6so5974796oth.4
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Jun 2018 20:19:56 -0700 (PDT)
+Received: from aserp2120.oracle.com ([141.146.126.78]:53436 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933393AbeFUWzd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jun 2018 18:55:33 -0400
+Date: Thu, 21 Jun 2018 15:55:08 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/2] xfs: transactionless xfs_bunmapi shouldn't do format
+ conversion
+Message-ID: <20180621225508.GL4838@magnolia>
+References: <20180619024128.22669-1-david@fromorbit.com>
+ <20180619024128.22669-2-david@fromorbit.com>
+ <20180619045405.GI8128@magnolia>
+ <20180620073142.GA5257@infradead.org>
+ <20180621223406.GV19934@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20180621221911.GT19934@dastard>
-References: <2a9a023d-fa37-59dc-caf2-c7c4167d3c75@levigo.de>
- <20180619161819.GD21698@magnolia> <e9a7c539-1dea-1050-19bc-b0eb7e788b33@sandeen.net>
- <20180621191535.GI7508@wotan.suse.de> <89d39e37-3944-f58d-018c-d36bdc9f870c@sandeen.net>
- <CAJCQCtSHT7fcHHxBaTESq5cdQQnYH95maNHby4MULCkar6mfeg@mail.gmail.com> <20180621221911.GT19934@dastard>
-From: Chris Murphy <lists@colorremedies.com>
-Date: Thu, 21 Jun 2018 21:19:54 -0600
-Message-ID: <CAJCQCtSzsYSyCD2eEvdgpKJ8ZFShsJrV2FxKZ4bv=-S6gpx2fw@mail.gmail.com>
-Subject: Re: Mounting xfs filesystem takes long time
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180621223406.GV19934@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: Chris Murphy <lists@colorremedies.com>, Eric Sandeen <sandeen@sandeen.net>, "Luis R. Rodriguez" <mcgrof@kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, "swadmin - levigo.de" <swadmin@levigo.de>, xfs list <linux-xfs@vger.kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
 
-On Thu, Jun 21, 2018 at 4:19 PM, Dave Chinner <david@fromorbit.com> wrote:
+On Fri, Jun 22, 2018 at 08:34:06AM +1000, Dave Chinner wrote:
+> On Wed, Jun 20, 2018 at 12:31:42AM -0700, Christoph Hellwig wrote:
+> > On Mon, Jun 18, 2018 at 09:54:05PM -0700, Darrick J. Wong wrote:
+> > > ...it's also weird that xfs_bmap_punch_delalloc_range calls xfs_bunmapi
+> > > with no transaction and a xfs_defer that we dump on the ground.
+> > > 
+> > > So yes, I think the patch does fix the crash, but it's kinda gross.
+> > > 
+> > > Thoughts?
+> > 
+> > I've got an alternative solution:
+> > 
+> > http://git.infradead.org/users/hch/xfs.git/commitdiff/a1c0685b2085b448cbe02f0f9ff0c8771e3f4496
+> > 
+> > The only bit that is missing is removing the now unused support for
+> > a NULL tp in __xfs_bunmapi..
+> 
+> Ah, I forgot about that patch. Thanks for the reminder, Christoph!
+> 
+> Darrick, can we get Christoph's patch in as a standalone bug fix
+> rather than wait for the bufferhead removal to be merged?
 
-> The mkfs ratios are about as optimal as we can get for the
-> information we have about the storage - growing by
-> 10x (i.e.  increaseing the number of AGs by 10x) puts us at the
-> outside edge of the acceptible filesystem performance and longevity
-> charcteristics. Growing by 100x puts us way outside the window,
-> and examples like this where we are taking about growing by 10000x
-> is just way beyond anything the static AG layout architecture was
-> ever intended to support....
+Ok, will do.  AFAICT if I merge that patch then I can drop this one,
+right?
 
-OK that's useful information, thanks.
+--D
 
-What about from the other direction; is it possible to make an XFS
-file system too big, on an LVM thin volume?
-
-For example a 1TB drive, and I'm scratching my head at mkfs.xfs time
-and think maaaybe one day it could end up 25TB at the top end? So I
-figure do mkfs.xfs on a virtual LV of 5TB now and that gives me a 5x
-growfs if I really do hit 25TB one day. But for now, it's a 5TB XFS
-file system on a 1TB drive. Is there any negative performance effect
-if it turns out I never end up growing this file system (it lives
-forever on a 1TB drive as a 5TB virtual volume and file system)?
-
-
-
--- 
-Chris Murphy
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
