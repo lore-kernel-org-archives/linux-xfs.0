@@ -1,35 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50980 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933782AbeFUVbs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 21 Jun 2018 17:31:48 -0400
-Date: Thu, 21 Jun 2018 17:31:45 -0400
-From: Steven Rostedt <rostedt@goodmis.org>
-Subject: Re: [PATCH] Makefile: Fix backtrace breakage
-Message-ID: <20180621173145.19b8fa4a@gandalf.local.home>
-In-Reply-To: <20180621173027.26155d5c@gandalf.local.home>
-References: <8fda53b0-9d86-943b-e8b4-fd9d6553f010@i-love.sakura.ne.jp>
-        <20180621001509.GQ19934@dastard>
-        <201806210547.w5L5l5Mh029257@www262.sakura.ne.jp>
-        <20180621204834.GU30690@tassilo.jf.intel.com>
-        <20180621173027.26155d5c@gandalf.local.home>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:37351 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S933873AbeFUWeJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jun 2018 18:34:09 -0400
+Date: Fri, 22 Jun 2018 08:34:06 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/2] xfs: transactionless xfs_bunmapi shouldn't do format
+ conversion
+Message-ID: <20180621223406.GV19934@dastard>
+References: <20180619024128.22669-1-david@fromorbit.com>
+ <20180619024128.22669-2-david@fromorbit.com>
+ <20180619045405.GI8128@magnolia>
+ <20180620073142.GA5257@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180620073142.GA5257@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andi Kleen <ak@linux.intel.com>
-Cc: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Dave Chinner <david@fromorbit.com>, Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org, linux-mm@kvack.org, Omar Sandoval <osandov@fb.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Thu, 21 Jun 2018 17:30:27 -0400
-Steven Rostedt <rostedt@goodmis.org> wrote:
+On Wed, Jun 20, 2018 at 12:31:42AM -0700, Christoph Hellwig wrote:
+> On Mon, Jun 18, 2018 at 09:54:05PM -0700, Darrick J. Wong wrote:
+> > ...it's also weird that xfs_bmap_punch_delalloc_range calls xfs_bunmapi
+> > with no transaction and a xfs_defer that we dump on the ground.
+> > 
+> > So yes, I think the patch does fix the crash, but it's kinda gross.
+> > 
+> > Thoughts?
+> 
+> I've got an alternative solution:
+> 
+> http://git.infradead.org/users/hch/xfs.git/commitdiff/a1c0685b2085b448cbe02f0f9ff0c8771e3f4496
+> 
+> The only bit that is missing is removing the now unused support for
+> a NULL tp in __xfs_bunmapi..
 
-> I actually just pulled the patch in an hour ago, and I'm currently
-> testing it along with other patches.
+Ah, I forgot about that patch. Thanks for the reminder, Christoph!
 
-To clear up any ambiguity, this is the patch I pulled in:
+Darrick, can we get Christoph's patch in as a standalone bug fix
+rather than wait for the bufferhead removal to be merged?
 
- http://lkml.kernel.org/r/20180608214746.136554-1-gthelen@google.com
+Cheers,
 
--- Steve
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
