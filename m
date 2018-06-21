@@ -1,12 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:55120 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754012AbeFUScd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jun 2018 14:32:33 -0400
-Subject: [PATCH 0/4] fstests: fixes and new tests
+Received: from aserp2130.oracle.com ([141.146.126.79]:51740 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754012AbeFUScj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jun 2018 14:32:39 -0400
+Subject: [PATCH 1/4] xfs/365: fuzz inobt in ag 1
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 21 Jun 2018 11:32:29 -0700
-Message-ID: <152960594943.26479.1457883867468749220.stgit@magnolia>
+Date: Thu, 21 Jun 2018 11:32:35 -0700
+Message-ID: <152960595573.26479.7571844369482432726.stgit@magnolia>
+In-Reply-To: <152960594943.26479.1457883867468749220.stgit@magnolia>
+References: <152960594943.26479.1457883867468749220.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -16,22 +18,31 @@ List-Id: xfs
 To: guaneryu@gmail.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-The first patch fixes xfs/365 to fuzz the AG1 inobt since as of 4.18 XFS
-requires an intact AG0 inobt even to mount.
+In kernel patch "xfs: verify root inode more thoroughly", we strengthen
+the root inode mount checks to make sure that the inobt agrees that the
+root inode exists and is in use.  Unfortunately, that makes this whole
+test useless because we can't even mount the filesystem to run scrub.
+So, redirect it to AG1's inobt.
 
-The second patch provides a regression test for "xfs: fix fdblocks
-accounting w/ RMAPBT per-AG reservation".
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ tests/xfs/365 |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-The third patch provides a regression test for a condition where mmap
-read of a file's EOF page shows nonzero bytes after EOF if the
-previous operation was a zero_range all the way to EOF.  This bug only
-seems to manifest on XFS, but it uses generic APIs and so is a generic
-test.  The patch concerned here is "xfs: ensure post-EOF zeroing happens
-after zeroing part of a file".
 
-The fourth patch adds a variant to the xfs fuzz tests where we fuzz the
-metadata fields and immediately try to write to the filesystem.
+diff --git a/tests/xfs/365 b/tests/xfs/365
+index 64e910ed..bd29b2a3 100755
+--- a/tests/xfs/365
++++ b/tests/xfs/365
+@@ -37,7 +37,7 @@ echo "Format and populate"
+ _scratch_populate_cached nofill > $seqres.full 2>&1
+ 
+ echo "Fuzz inobt"
+-_scratch_xfs_fuzz_metadata '' 'online'  'agi 0' 'addr root' >> $seqres.full
++_scratch_xfs_fuzz_metadata '' 'online'  'agi 1' 'addr root' >> $seqres.full
+ echo "Done fuzzing inobt"
+ 
+ # success, all done
 
---D
