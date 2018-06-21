@@ -1,133 +1,126 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:51118 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750865AbeFVGd6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Jun 2018 02:33:58 -0400
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: Re: [PATCH 4/8] xfs: don't allow insert-range to shift extents past
- the maximum offset
-References: <152960586416.26246.8634761888260524091.stgit@magnolia>
- <152960588873.26246.17582272219031862067.stgit@magnolia>
-Message-ID: <4126b4b1-e789-1bcc-d8bf-51a44399c18f@oracle.com>
-Date: Thu, 21 Jun 2018 23:33:36 -0700
-MIME-Version: 1.0
-In-Reply-To: <152960588873.26246.17582272219031862067.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:39840 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933388AbeFUMfc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 21 Jun 2018 08:35:32 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id EB1274059FEC
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Jun 2018 12:35:31 +0000 (UTC)
+Received: from odin.usersys.redhat.com (unknown [10.40.205.45])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 4E3B116877
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Jun 2018 12:35:31 +0000 (UTC)
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH] Fix coverity scan reports
+Date: Thu, 21 Jun 2018 14:35:25 +0200
+Message-Id: <20180621123525.5365-1-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, zlang@redhat.com
+To: linux-xfs@vger.kernel.org
 
-Ok, you can add my review
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+Initialize a few variables before pass them by reference in other
+functions.
 
-On 06/21/2018 11:31 AM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Zorro Lang reports that generic/485 blows an assert on a filesystem with
-> 512 byte blocks.  The test tries to fallocate a post-eof extent at the
-> maximum file size and calls insert range to shift the extents right by
-> two blocks.  On a 512b block filesystem this causes startoff to overflow
-> the 54-bit startoff field, leading to the assert.
-> 
-> Therefore, always check the rightmost extent to see if it would overflow
-> prior to invoking the insert range machinery.
-> 
-> Reported-by: zlang@redhat.com
-> Bugzilla: https://urldefense.proofpoint.com/v2/url?u=https-3A__bugzilla.kernel.org_show-5Fbug.cgi-3Fid-3D200137&d=DwICaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=YCaDC-F1dLxMWur8rwN6LkUZEkB0mCLT1kaX18afe3Y&s=21OAUtb7E_eZcNMI0iepr7J9fg90RHPo0hUJBgJxDrI&e=
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->   fs/xfs/libxfs/xfs_bmap.c |   40 ++++++++++++++++++++++++++++++++++++++++
->   fs/xfs/libxfs/xfs_bmap.h |    2 ++
->   fs/xfs/xfs_bmap_util.c   |    4 ++++
->   3 files changed, 46 insertions(+)
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 01628f0c9a0c..b7f094e19bab 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -5780,6 +5780,46 @@ xfs_bmap_collapse_extents(
->   	return error;
->   }
->   
-> +#define BMBT_STARTOFF_MASK	((1ULL << BMBT_STARTOFF_BITLEN) - 1)
-> +/* Make sure we won't be right-shifting an extent past the maximum bound. */
-> +int
-> +xfs_bmap_can_insert_extents(
-> +	struct xfs_inode	*ip,
-> +	xfs_fileoff_t		off,
-> +	xfs_fileoff_t		shift)
-> +{
-> +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-> +	struct xfs_bmbt_irec	got;
-> +	struct xfs_iext_cursor	icur;
-> +	xfs_fileoff_t		new_off;
-> +	int			error = 0;
-> +
-> +	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
-> +		return -EIO;
-> +
-> +	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
-> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> +
-> +	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> +		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
-> +		if (error)
-> +			goto out;
-> +	}
-> +
-> +	xfs_iext_last(ifp, &icur);
-> +	if (!xfs_iext_get_extent(ifp, &icur, &got) || off > got.br_startoff)
-> +		goto out;
-> +
-> +	/* Make sure we can't overflow the 54-bit offset field. */
-> +	new_off = (got.br_startoff + shift) & BMBT_STARTOFF_MASK;
-> +	if (new_off < got.br_startoff)
-> +		error = -EINVAL;
-> +
-> +out:
-> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> +	return error;
-> +}
-> +
->   int
->   xfs_bmap_insert_extents(
->   	struct xfs_trans	*tp,
-> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-> index 99dddbd0fcc6..9b49ddf99c41 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.h
-> +++ b/fs/xfs/libxfs/xfs_bmap.h
-> @@ -227,6 +227,8 @@ int	xfs_bmap_collapse_extents(struct xfs_trans *tp, struct xfs_inode *ip,
->   		xfs_fileoff_t *next_fsb, xfs_fileoff_t offset_shift_fsb,
->   		bool *done, xfs_fsblock_t *firstblock,
->   		struct xfs_defer_ops *dfops);
-> +int	xfs_bmap_can_insert_extents(struct xfs_inode *ip, xfs_fileoff_t off,
-> +		xfs_fileoff_t shift);
->   int	xfs_bmap_insert_extents(struct xfs_trans *tp, struct xfs_inode *ip,
->   		xfs_fileoff_t *next_fsb, xfs_fileoff_t offset_shift_fsb,
->   		bool *done, xfs_fileoff_t stop_fsb, xfs_fsblock_t *firstblock,
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index c35009a86699..abc37b0899c0 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -1404,6 +1404,10 @@ xfs_insert_file_space(
->   
->   	trace_xfs_insert_file_space(ip);
->   
-> +	error = xfs_bmap_can_insert_extents(ip, stop_fsb, shift_fsb);
-> +	if (error)
-> +		return error;
-> +
->   	error = xfs_prepare_shift(ip, offset);
->   	if (error)
->   		return error;
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwICaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=YCaDC-F1dLxMWur8rwN6LkUZEkB0mCLT1kaX18afe3Y&s=RhleurH5wYku58VywlbdBFmjaXSEGIfX7SCThJq1clE&e=
-> 
+This quiets the following Coverity reports:
+
+CID 100898
+CID 1437081
+CID 1437129
+CID 1437191
+CID 1437201
+CID 1437212
+CID 1437341
+
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+
+There is another coverity issue (CID 1437358), which actually looks more
+important, which really looks to pass an uninitialized value to
+xfs_getfsmap_rtdev_rtbitmap_helper(), where such looks to expect the variable to
+be already initialized. I'm familiar with RT code, so looking into it yet, but
+I think this one deservers a separated patch if that can really trigger a bug.
+
+ fs/xfs/libxfs/xfs_alloc.c | 14 +++++++-------
+ fs/xfs/scrub/agheader.c   |  4 ++--
+ fs/xfs/scrub/alloc.c      |  2 +-
+ 3 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index eef466260d43..ffdd50f5af32 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -421,8 +421,8 @@ xfs_alloc_fixup_trees(
+ {
+ 	int		error;		/* error code */
+ 	int		i;		/* operation results */
+-	xfs_agblock_t	nfbno1;		/* first new free startblock */
+-	xfs_agblock_t	nfbno2;		/* second new free startblock */
++	xfs_agblock_t	nfbno1=0;	/* first new free startblock */
++	xfs_agblock_t	nfbno2=0;	/* second new free startblock */
+ 	xfs_extlen_t	nflen1=0;	/* first new free length */
+ 	xfs_extlen_t	nflen2=0;	/* second new free length */
+ 	struct xfs_mount *mp;
+@@ -783,8 +783,8 @@ xfs_alloc_ag_vextent_exact(
+ 	xfs_btree_cur_t	*bno_cur;/* by block-number btree cursor */
+ 	xfs_btree_cur_t	*cnt_cur;/* by count btree cursor */
+ 	int		error;
+-	xfs_agblock_t	fbno;	/* start block of found extent */
+-	xfs_extlen_t	flen;	/* length of found extent */
++	xfs_agblock_t	fbno=0;	/* start block of found extent */
++	xfs_extlen_t	flen=0;	/* length of found extent */
+ 	xfs_agblock_t	tbno;	/* start block of busy extent */
+ 	xfs_extlen_t	tlen;	/* length of busy extent */
+ 	xfs_agblock_t	tend;	/* end block of busy extent */
+@@ -1597,7 +1597,7 @@ xfs_alloc_ag_vextent_small(
+ 	int		error;
+ 	xfs_agblock_t	fbno;
+ 	xfs_extlen_t	flen;
+-	int		i;
++	int		i = 0;
+ 
+ 	if ((error = xfs_btree_decrement(ccur, 0, &i)))
+ 		goto error0;
+@@ -1704,8 +1704,8 @@ xfs_free_ag_extent(
+ 	xfs_btree_cur_t	*bno_cur;	/* cursor for by-block btree */
+ 	xfs_btree_cur_t	*cnt_cur;	/* cursor for by-size btree */
+ 	int		error;		/* error return value */
+-	xfs_agblock_t	gtbno;		/* start of right neighbor block */
+-	xfs_extlen_t	gtlen;		/* length of right neighbor block */
++	xfs_agblock_t	gtbno=0;	/* start of right neighbor block */
++	xfs_extlen_t	gtlen=0;	/* length of right neighbor block */
+ 	int		haveleft;	/* have a left neighbor block */
+ 	int		haveright;	/* have a right neighbor block */
+ 	int		i;		/* temp, result code */
+diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+index 9bb0745f1ad2..78a7381d6ca0 100644
+--- a/fs/xfs/scrub/agheader.c
++++ b/fs/xfs/scrub/agheader.c
+@@ -388,8 +388,8 @@ xfs_scrub_agf_xref_cntbt(
+ 	struct xfs_scrub_context	*sc)
+ {
+ 	struct xfs_agf			*agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
+-	xfs_agblock_t			agbno;
+-	xfs_extlen_t			blocks;
++	xfs_agblock_t			agbno = 0;
++	xfs_extlen_t			blocks = 0;
+ 	int				have;
+ 	int				error;
+ 
+diff --git a/fs/xfs/scrub/alloc.c b/fs/xfs/scrub/alloc.c
+index 50e4f7fa06f0..c82347da400f 100644
+--- a/fs/xfs/scrub/alloc.c
++++ b/fs/xfs/scrub/alloc.c
+@@ -47,7 +47,7 @@ xfs_scrub_allocbt_xref_other(
+ 	xfs_extlen_t			len)
+ {
+ 	struct xfs_btree_cur		**pcur;
+-	xfs_agblock_t			fbno;
++	xfs_agblock_t			fbno = 0;
+ 	xfs_extlen_t			flen;
+ 	int				has_otherrec;
+ 	int				error;
+-- 
+2.14.3
+
