@@ -1,77 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:35752 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750779AbeFVG3J (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Jun 2018 02:29:09 -0400
-Date: Thu, 21 Jun 2018 23:29:07 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 8/8] xfs: ensure post-EOF zeroing happens after zeroing
- part of a file
-Message-ID: <20180622062907.GA27254@infradead.org>
-References: <152960586416.26246.8634761888260524091.stgit@magnolia>
- <152960591330.26246.305971181988789033.stgit@magnolia>
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:43961 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754206AbeFUD5x (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Jun 2018 23:57:53 -0400
+Date: Thu, 21 Jun 2018 13:57:49 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] mkfs: fix divide-by-zero in align_ag_geometry
+Message-ID: <20180621035749.GR19934@dastard>
+References: <20180621025520.9115-1-jeffm@suse.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <152960591330.26246.305971181988789033.stgit@magnolia>
+In-Reply-To: <20180621025520.9115-1-jeffm@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: jeffm@suse.com
+Cc: linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>
 
-On Thu, Jun 21, 2018 at 11:31:53AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Jun 20, 2018 at 10:55:20PM -0400, jeffm@suse.com wrote:
+> From: Jeff Mahoney <jeffm@suse.com>
 > 
-> If a user asks us to zero_range part of a file, the end of the range is
-> EOF, and not aligned to a page boundary, invoke writeback of the EOF
-> page to ensure that the post-EOF part of the page is zeroed.  This
-> ensures that we don't expose stale memory contents via mmap, if in a
-> clumsy manner.
-> 
-> Found by running generic/127 when it runs zero_range and mapread at EOF
-> one after the other.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_bmap_util.c |   15 ++++++++++++++-
->  1 file changed, 14 insertions(+), 1 deletion(-)
-> 
-> 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index abc37b0899c0..c94d376e4152 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -1208,7 +1208,20 @@ xfs_free_file_space(
->  		return 0;
->  	if (offset + len > XFS_ISIZE(ip))
->  		len = XFS_ISIZE(ip) - offset;
-> -	return iomap_zero_range(VFS_I(ip), offset, len, NULL, &xfs_iomap_ops);
-> +	error = iomap_zero_range(VFS_I(ip), offset, len, NULL, &xfs_iomap_ops);
-> +	if (error)
-> +		return error;
-> +
-> +	/*
-> +	 * If we zeroed right up to EOF and EOF straddles a page boundary we
-> +	 * must make sure that the post-EOF area is also zeroed because the
-> +	 * page could be mmap'd and iomap_zero_range doesn't do that for us.
-> +	 * Writeback of the eof page will do this, albeit clumsily.
-> +	 */
-> +	if (offset + len < XFS_ISIZE(ip) || ((offset + len) & PAGE_MASK) == 0)
-> +		return 0;
-> +	return filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
-> +			(offset + len) & ~PAGE_MASK, LLONG_MAX);
+> Commit 051b4e37f5e (mkfs: factor AG alignment) factored out the
+> AG alignment code into a separate function.  It got rid of
+> redundant checks for dswidth != 0 but did too good a job since now
+> it doesn't check at all.
 
-Total nitpick, but between the kernel logic flow and comment I'd invert
-the check:
+Of course they got removed - we've already validated the CLI input
+and guaranteed that cfg->dswidth can only be zero iff cfg->dsunit is
+zero in calc_stripe_factors().
 
-	if (offset + len >= XFS_ISIZE(ip) && (offset + len) & PAGE_MASK) {
-		error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
-			(offset + len) & ~PAGE_MASK, LLONG_MAX);
-	}
+i.e. We do input validation of CLI paramters before anything else so
+that later users (like align_ag_geometry()) can assume the
+parameters they are using are valid. In this case, the assumption is
+that either both dsunit and dswidth are zero or that both are
+non-zero and dswidth an integer multple of dsunit.
 
-	return error;
+> When we hit the check to see if agsize
+> is a multiple of stripe width: (cfg->agsize % cfg->dswidth), we crash
+> on a divide by zero.
 
-Otherwise looks good:
+What CLI config did you use to hit this? I'd like to reproduce it so
+I can see where calc_stripe_factors() is going wrong....
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
