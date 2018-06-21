@@ -1,54 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52492 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932670AbeFUUKF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 21 Jun 2018 16:10:05 -0400
-Subject: Re: [PATCH] xfs_bmap: remove -c from manpage
-References: <20180621195524.GH4838@magnolia>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <86b4d1ed-716f-f485-a2d1-a28d1d1f9dac@redhat.com>
-Date: Thu, 21 Jun 2018 15:10:03 -0500
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:30606 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S933662AbeFUWgr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jun 2018 18:36:47 -0400
+Date: Fri, 22 Jun 2018 08:36:44 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] mkfs: fix divide-by-zero in align_ag_geometry
+Message-ID: <20180621223644.GW19934@dastard>
+References: <20180621025520.9115-1-jeffm@suse.com>
+ <20180621035749.GR19934@dastard>
+ <85feed9e-c347-5559-59cc-9f4e035324e5@suse.com>
+ <342f7e6a-83f6-e887-b24f-b9a628f790e2@sandeen.net>
+ <20180621194936.GS19934@dastard>
+ <919ce2d0-b560-3fe6-f16c-503f57e3157c@suse.com>
 MIME-Version: 1.0
-In-Reply-To: <20180621195524.GH4838@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <919ce2d0-b560-3fe6-f16c-503f57e3157c@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Jeff Mahoney <jeffm@suse.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
 
-On 6/21/18 2:55 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Jun 21, 2018 at 05:31:58PM -0400, Jeff Mahoney wrote:
+> On 6/21/18 3:49 PM, Dave Chinner wrote:
+> > On Thu, Jun 21, 2018 at 02:26:45PM -0500, Eric Sandeen wrote:
+> >> On 6/21/18 2:15 PM, Jeff Mahoney wrote:
+> >>> On 6/20/18 11:57 PM, Dave Chinner wrote:
+> >>>> On Wed, Jun 20, 2018 at 10:55:20PM -0400, jeffm@suse.com wrote:
+> >>>>> From: Jeff Mahoney <jeffm@suse.com>
+> >>>>>
+> >>>>> Commit 051b4e37f5e (mkfs: factor AG alignment) factored out the
+> >>>>> AG alignment code into a separate function.  It got rid of
+> >>>>> redundant checks for dswidth != 0 but did too good a job since now
+> >>>>> it doesn't check at all.
+> >>>>
+> >>>> Of course they got removed - we've already validated the CLI input
+> >>>> and guaranteed that cfg->dswidth can only be zero iff cfg->dsunit is
+> >>>> zero in calc_stripe_factors().
+> >>>>
+> >>>> i.e. We do input validation of CLI paramters before anything else so
+> >>>> that later users (like align_ag_geometry()) can assume the
+> >>>> parameters they are using are valid. In this case, the assumption is
+> >>>> that either both dsunit and dswidth are zero or that both are
+> >>>> non-zero and dswidth an integer multple of dsunit.
+> >>>
+> >>> It's not coming from the CLI parameters.  It's coming from the topology.
+> >>>  The blkid topology stuff is returning 8k for minimal i/o and 0 for
+> >>> optimal.  Without a CLI config, we have dunit=0 in calc_stripe_factors,
+> >>> which takes it from the device.  We set cfg->dsunit=16 and
+> >>> cfg->dswidth=0, and then head down to align_ag_geometry.
+> >>>
+> >>> The topology on this system looks like:
+> >>>
+> >>> ft = {dsunit = 16, dswidth = 0, rtswidth = 0, lsectorsize = 512,
+> >>>
+> >>> psectorsize = 512}
+> >>> That matches with a few of the dm targets I see reported on this system.
+> > 
+> > Exactly what kind of dm device does that - we've never had anyone
+> > report this before? Also, if it's a dm device, shouldn't it
+> > also be fixed to output a sane set of IO characteristics in /sys?
 > 
-> There is no -c switch so remove the documentation.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> It's multipath, so it just follows the stacking rules.  The underlying
+> SCSI devices report the same numbers.  The optimal io number is
+> documented as being optional, at least for the kernel, so we need to
+> handle it being 0 anyway.  I'm not sure if the device specifying a
+> minimum i/o size larger than the sector size and also not specifying an
+> optimal i/o size is valid SCSI.  I'll ask for more information since now
+> I'm also curious.
 
-Ok, it still lives and is advertised in xfs_io, but *shrug*
-that's ok, that can be patch 3 if we care.
+Ah, so it came from the hardware? In that case, we probably
+shouldn't zero sunit when blkid reports this whacky case. i.e. I
+think we should set swidth = sunit so that we retain allocation
+alignment to the minimum IO size the device specified.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Cheers,
 
-> ---
->  man/man8/xfs_bmap.8 |    4 ----
->  1 file changed, 4 deletions(-)
-> 
-> diff --git a/man/man8/xfs_bmap.8 b/man/man8/xfs_bmap.8
-> index ae923481..dd925b12 100644
-> --- a/man/man8/xfs_bmap.8
-> +++ b/man/man8/xfs_bmap.8
-> @@ -36,10 +36,6 @@ no matter what the filesystem's block size is.
->  If this option is specified, information about the file's
->  attribute fork is printed instead of the default data fork.
->  .TP
-> -.B \-c
-> -If this option is specified, information about the file's
-> -copy on write fork is printed instead of the default data fork.
-> -.TP
->  .B \-d
->  If portions of the file have been migrated offline by
->  a DMAPI application, a DMAPI read event will be generated to
-> 
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
