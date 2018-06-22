@@ -1,183 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:39130 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754318AbeFTQVc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Jun 2018 12:21:32 -0400
-Date: Wed, 20 Jun 2018 09:21:17 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 1/3] xfstests: dedupe a single big file and verify
- integrity
-Message-ID: <20180620162117.GA4841@magnolia>
-References: <20180620084114.25648-1-zlang@redhat.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:55320 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750899AbeFVGTZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Jun 2018 02:19:25 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5M6IqHh016906
+        for <linux-xfs@vger.kernel.org>; Fri, 22 Jun 2018 06:19:24 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2120.oracle.com with ESMTP id 2jrp8hrm9x-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 22 Jun 2018 06:19:24 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w5M6JNtx018863
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 22 Jun 2018 06:19:24 GMT
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w5M6JNr2027939
+        for <linux-xfs@vger.kernel.org>; Fri, 22 Jun 2018 06:19:23 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: Re: [PATCH 1/8] xfs: allow empty transactions while frozen
+References: <152960586416.26246.8634761888260524091.stgit@magnolia>
+ <152960587035.26246.9220199251468325711.stgit@magnolia>
+Message-ID: <d76b0bef-f2ab-2a02-4a7d-9458948b405f@oracle.com>
+Date: Thu, 21 Jun 2018 23:18:58 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180620084114.25648-1-zlang@redhat.com>
+In-Reply-To: <152960587035.26246.9220199251468325711.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Zorro Lang <zlang@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Jun 20, 2018 at 04:41:12PM +0800, Zorro Lang wrote:
-> Duperemove is a tool for finding duplicated extents and submitting
-> them for deduplication, and it supports XFS. This case trys to
-> verify the integrity of XFS after running duperemove.
+Looks fine
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+
+On 06/21/2018 11:31 AM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> In commit e89c041338ed6ef ("xfs: implement the GETFSMAP ioctl") we
+> created the ability to obtain empty transactions.  These transactions
+> have no log or block reservations and therefore can't modify anything.
+> Since they're also NO_WRITECOUNT they can run while the fs is frozen,
+> so we don't need to WARN_ON about that usage.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
-> 
-> Thanks for Eryu's review.
-> 
-> V2 changed $TEST_DIR/${seq}md5.sum to $tmp.md5sum.
-> 
-> I didn't move this case to generic, due to duperemove tool only supports
-> Btrfs and XFS for now.
-> 
-> Thanks,
-> Zorro
+>   fs/xfs/xfs_trans.c |    7 ++++++-
+>   1 file changed, 6 insertions(+), 1 deletion(-)
 > 
 > 
->  common/config        |  1 +
->  tests/shared/008     | 79 ++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/shared/008.out |  3 ++
->  tests/shared/group   |  1 +
->  4 files changed, 84 insertions(+)
->  create mode 100755 tests/shared/008
->  create mode 100644 tests/shared/008.out
-> 
-> diff --git a/common/config b/common/config
-> index 09e7ffee..d02d6ed5 100644
-> --- a/common/config
-> +++ b/common/config
-> @@ -192,6 +192,7 @@ export SETCAP_PROG="$(type -P setcap)"
->  export GETCAP_PROG="$(type -P getcap)"
->  export CHECKBASHISMS_PROG="$(type -P checkbashisms)"
->  export XFS_INFO_PROG="$(type -P xfs_info)"
-> +export DUPEREMOVE_PROG="$(type -P duperemove)"
->  
->  # use 'udevadm settle' or 'udevsettle' to wait for lv to be settled.
->  # newer systems have udevadm command but older systems like RHEL5 don't.
-> diff --git a/tests/shared/008 b/tests/shared/008
-> new file mode 100755
-> index 00000000..a28f5cc1
-> --- /dev/null
-> +++ b/tests/shared/008
-> @@ -0,0 +1,79 @@
-> +#! /bin/bash
-> +# FS QA Test 008
-> +#
-> +# Dedupe a single big file and verify integrity
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2018 Red Hat Inc.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-This probably could be converted to SPDX, though Eryu will be the
-decider <cough> about if/when that goes in.
-
-Otherwise looks decent.
-
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +. ./common/reflink
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# duperemove only supports btrfs and xfs (with reflink feature).
-> +# Add other filesystems if it supports more later.
-> +_supported_fs xfs btrfs
-> +_supported_os Linux
-> +_require_scratch_dedupe
-> +_require_command "$DUPEREMOVE_PROG" duperemove
-> +
-> +fssize=$((2 * 1024 * 1024 * 1024))
-> +_scratch_mkfs_sized $fssize > $seqres.full 2>&1
-> +_scratch_mount >> $seqres.full 2>&1
-> +
-> +# fill the fs with a big file has same contents
-> +$XFS_IO_PROG -f -c "pwrite -S 0x55 0 $fssize" $SCRATCH_MNT/${seq}.file \
-> +	>> $seqres.full 2>&1
-> +md5sum $SCRATCH_MNT/${seq}.file > ${tmp}.md5sum
-> +
-> +echo "= before cycle mount ="
-> +# Dedupe with 1M blocksize
-> +$DUPEREMOVE_PROG -dr --dedupe-options=same -b 1048576 $SCRATCH_MNT/ >>$seqres.full 2>&1
-> +# Verify integrity
-> +md5sum -c --quiet ${tmp}.md5sum
-> +# Dedupe with 64k blocksize
-> +$DUPEREMOVE_PROG -dr --dedupe-options=same -b 65536 $SCRATCH_MNT/ >>$seqres.full 2>&1
-> +# Verify integrity again
-> +md5sum -c --quiet ${tmp}.md5sum
-> +
-> +# umount and mount again, verify pagecache contents don't mutate
-> +_scratch_cycle_mount
-> +echo "= after cycle mount ="
-> +md5sum -c --quiet ${tmp}.md5sum
-> +
-> +status=0
-> +exit
-> diff --git a/tests/shared/008.out b/tests/shared/008.out
-> new file mode 100644
-> index 00000000..f29d478f
-> --- /dev/null
-> +++ b/tests/shared/008.out
-> @@ -0,0 +1,3 @@
-> +QA output created by 008
-> += before cycle mount =
-> += after cycle mount =
-> diff --git a/tests/shared/group b/tests/shared/group
-> index b3663a03..49ffa8dd 100644
-> --- a/tests/shared/group
-> +++ b/tests/shared/group
-> @@ -10,6 +10,7 @@
->  005 dangerous_fuzzers
->  006 auto enospc
->  007 dangerous_fuzzers
-> +008 auto stress dedupe
->  032 mkfs auto quick
->  272 auto enospc rw
->  289 auto quick
-> -- 
-> 2.14.4
+> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> index e040af120b69..524f543c5b82 100644
+> --- a/fs/xfs/xfs_trans.c
+> +++ b/fs/xfs/xfs_trans.c
+> @@ -258,7 +258,12 @@ xfs_trans_alloc(
+>   	if (!(flags & XFS_TRANS_NO_WRITECOUNT))
+>   		sb_start_intwrite(mp->m_super);
+>   
+> -	WARN_ON(mp->m_super->s_writers.frozen == SB_FREEZE_COMPLETE);
+> +	/*
+> +	 * Zero-reservation ("empty") transactions can't modify anything, so
+> +	 * they're allowed to run while we're frozen.
+> +	 */
+> +	WARN_ON(resp->tr_logres > 0 &&
+> +		mp->m_super->s_writers.frozen == SB_FREEZE_COMPLETE);
+>   	atomic_inc(&mp->m_active_trans);
+>   
+>   	tp = kmem_zone_zalloc(xfs_trans_zone,
 > 
 > --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwICaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=jfRT1oYtPVNVBt-lMSR8ZrPgEPjfv7foQ0meuw0oGxM&s=GsacuLUdUkUoZWMAAmlRTyyR7FByN9OA43H6dYDIK6Q&e=
+> 
