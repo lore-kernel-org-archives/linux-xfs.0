@@ -1,62 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:49654 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:50074 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750866AbeFVGrT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Jun 2018 02:47:19 -0400
-Date: Thu, 21 Jun 2018 23:47:01 -0700
+        with ESMTP id S1750866AbeFVGsC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Jun 2018 02:48:02 -0400
+Date: Thu, 21 Jun 2018 23:47:33 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 6/8] xfs: fix uninitialized field in rtbitmap fsmap
- backend
-Message-ID: <20180622064701.GP4838@magnolia>
+Subject: Re: [PATCH 4/8] xfs: don't allow insert-range to shift extents past
+ the maximum offset
+Message-ID: <20180622064733.GQ4838@magnolia>
 References: <152960586416.26246.8634761888260524091.stgit@magnolia>
- <152960590105.26246.13020311829179912536.stgit@magnolia>
- <20180622064118.GF27254@infradead.org>
+ <152960588873.26246.17582272219031862067.stgit@magnolia>
+ <20180622063934.GD27254@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180622064118.GF27254@infradead.org>
+In-Reply-To: <20180622063934.GD27254@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, zlang@redhat.com
 
-On Thu, Jun 21, 2018 at 11:41:18PM -0700, Christoph Hellwig wrote:
-> On Thu, Jun 21, 2018 at 11:31:41AM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Initialize the extent count field of the high key so that when we use
-> > the high key to synthesize an 'unknown owner' record (i.e. used space
-> > record) at the end of the queried range we have a field with which to
-> > compute rm_blockcount.  This is not strictly necessary because the
-> > synthesizer never uses the rm_blockcount field, but we can shut up the
-> > static code analysis anyway.
-> > 
-> > Coverity-id: 1437358
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Jun 21, 2018 at 11:39:34PM -0700, Christoph Hellwig wrote:
+> > +#define BMBT_STARTOFF_MASK	((1ULL << BMBT_STARTOFF_BITLEN) - 1)
 > 
-> I'd rather ensure the structs are entirely zeroed to start with, e.g.:
+> Please move this next to BMBT_STARTOFF_BITLEN.
 > 
-> diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-> index 0299febece9c..21bbdee451a6 100644
-> --- a/fs/xfs/xfs_fsmap.c
-> +++ b/fs/xfs/xfs_fsmap.c
-> @@ -527,8 +527,8 @@ xfs_getfsmap_rtdev_rtbitmap_query(
->  	struct xfs_trans		*tp,
->  	struct xfs_getfsmap_info	*info)
->  {
-> -	struct xfs_rtalloc_rec		alow;
-> -	struct xfs_rtalloc_rec		ahigh;
-> +	struct xfs_rtalloc_rec		alow = { 0, };
-> +	struct xfs_rtalloc_rec		ahigh = { 0, };
+> For brownie points also use this new defined instead of
+> XFS_IEXT_STARTOFF_MASK in the extent tree code.
 
-Looks reasonable, I'll give it a spin overnight.
+Separate cleanup patch, but ok.
+
+> 
+> > +/* Make sure we won't be right-shifting an extent past the maximum bound. */
+> > +int
+> > +xfs_bmap_can_insert_extents(
+> > +	struct xfs_inode	*ip,
+> > +	xfs_fileoff_t		off,
+> > +	xfs_fileoff_t		shift)
+> > +{
+> > +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+> > +	struct xfs_bmbt_irec	got;
+> > +	struct xfs_iext_cursor	icur;
+> > +	xfs_fileoff_t		new_off;
+> > +	int			error = 0;
+> > +
+> > +	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+> > +		return -EIO;
+> > +
+> > +	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
+> > +	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> > +
+> > +	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+> > +		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
+> > +		if (error)
+> > +			goto out;
+> > +	}
+> > +
+> > +	xfs_iext_last(ifp, &icur);
+> > +	if (!xfs_iext_get_extent(ifp, &icur, &got) || off > got.br_startoff)
+> > +		goto out;
+> 
+> This largely duplicates xfs_bmap_last_extent.  The function body could
+> probably be written as:
+> 
+> {
+> 	struct xfs_bmbt_irec	got;
+> 	int			error = 0;
+> 
+> 	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
+> 
+> 	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+> 		return -EIO;
+> 
+> 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> 	error = xfs_bmap_last_extent(NULL, ip, XFS_DATA_FORK, &got,
+> 			&is_empty)
+> 	if (!error && !is_empty && got.br_startoff >= off &&
+> 	    got.br_startoff + shift) & BMBT_STARTOFF_MASK < got.br_startoff)
+> 		error = -EINVAL;
+> 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> 
+> 	return error;
+
+I'll give this a test run over night.
 
 --D
 
->  	int				error;
->  
->  	xfs_ilock(tp->t_mountp->m_rbmip, XFS_ILOCK_SHARED);
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
