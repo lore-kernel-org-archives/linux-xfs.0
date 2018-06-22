@@ -1,84 +1,25 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:30606 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S933662AbeFUWgr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jun 2018 18:36:47 -0400
-Date: Fri, 22 Jun 2018 08:36:44 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] mkfs: fix divide-by-zero in align_ag_geometry
-Message-ID: <20180621223644.GW19934@dastard>
-References: <20180621025520.9115-1-jeffm@suse.com>
- <20180621035749.GR19934@dastard>
- <85feed9e-c347-5559-59cc-9f4e035324e5@suse.com>
- <342f7e6a-83f6-e887-b24f-b9a628f790e2@sandeen.net>
- <20180621194936.GS19934@dastard>
- <919ce2d0-b560-3fe6-f16c-503f57e3157c@suse.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:45246 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750915AbeFVGkO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Jun 2018 02:40:14 -0400
+Date: Thu, 21 Jun 2018 23:40:13 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 5/8] xfs: recheck reflink state after grabbing
+ ILOCK_SHARED for a write
+Message-ID: <20180622064013.GE27254@infradead.org>
+References: <152960586416.26246.8634761888260524091.stgit@magnolia>
+ <152960589497.26246.2694743986896972501.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <919ce2d0-b560-3fe6-f16c-503f57e3157c@suse.com>
+In-Reply-To: <152960589497.26246.2694743986896972501.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Mahoney <jeffm@suse.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jun 21, 2018 at 05:31:58PM -0400, Jeff Mahoney wrote:
-> On 6/21/18 3:49 PM, Dave Chinner wrote:
-> > On Thu, Jun 21, 2018 at 02:26:45PM -0500, Eric Sandeen wrote:
-> >> On 6/21/18 2:15 PM, Jeff Mahoney wrote:
-> >>> On 6/20/18 11:57 PM, Dave Chinner wrote:
-> >>>> On Wed, Jun 20, 2018 at 10:55:20PM -0400, jeffm@suse.com wrote:
-> >>>>> From: Jeff Mahoney <jeffm@suse.com>
-> >>>>>
-> >>>>> Commit 051b4e37f5e (mkfs: factor AG alignment) factored out the
-> >>>>> AG alignment code into a separate function.  It got rid of
-> >>>>> redundant checks for dswidth != 0 but did too good a job since now
-> >>>>> it doesn't check at all.
-> >>>>
-> >>>> Of course they got removed - we've already validated the CLI input
-> >>>> and guaranteed that cfg->dswidth can only be zero iff cfg->dsunit is
-> >>>> zero in calc_stripe_factors().
-> >>>>
-> >>>> i.e. We do input validation of CLI paramters before anything else so
-> >>>> that later users (like align_ag_geometry()) can assume the
-> >>>> parameters they are using are valid. In this case, the assumption is
-> >>>> that either both dsunit and dswidth are zero or that both are
-> >>>> non-zero and dswidth an integer multple of dsunit.
-> >>>
-> >>> It's not coming from the CLI parameters.  It's coming from the topology.
-> >>>  The blkid topology stuff is returning 8k for minimal i/o and 0 for
-> >>> optimal.  Without a CLI config, we have dunit=0 in calc_stripe_factors,
-> >>> which takes it from the device.  We set cfg->dsunit=16 and
-> >>> cfg->dswidth=0, and then head down to align_ag_geometry.
-> >>>
-> >>> The topology on this system looks like:
-> >>>
-> >>> ft = {dsunit = 16, dswidth = 0, rtswidth = 0, lsectorsize = 512,
-> >>>
-> >>> psectorsize = 512}
-> >>> That matches with a few of the dm targets I see reported on this system.
-> > 
-> > Exactly what kind of dm device does that - we've never had anyone
-> > report this before? Also, if it's a dm device, shouldn't it
-> > also be fixed to output a sane set of IO characteristics in /sys?
-> 
-> It's multipath, so it just follows the stacking rules.  The underlying
-> SCSI devices report the same numbers.  The optimal io number is
-> documented as being optional, at least for the kernel, so we need to
-> handle it being 0 anyway.  I'm not sure if the device specifying a
-> minimum i/o size larger than the sector size and also not specifying an
-> optimal i/o size is valid SCSI.  I'll ask for more information since now
-> I'm also curious.
+Looks good,
 
-Ah, so it came from the hardware? In that case, we probably
-shouldn't zero sunit when blkid reports this whacky case. i.e. I
-think we should set swidth = sunit so that we retain allocation
-alignment to the minimum IO size the device specified.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Reviewed-by: Christoph Hellwig <hch@lst.de>
