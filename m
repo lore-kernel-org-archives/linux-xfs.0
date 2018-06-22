@@ -1,167 +1,252 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:35096 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935341AbeFZOcv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Jun 2018 10:32:51 -0400
-Date: Tue, 26 Jun 2018 07:32:35 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 4.19 V2] xfs: remove deprecated barrier/nobarrier mount
- options
-Message-ID: <20180626143235.GC5711@magnolia>
-References: <56f0a68c-9c1b-712a-a0e8-e596f8272561@redhat.com>
- <819f15b2-ab0d-2f91-559f-08b558e06e25@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <819f15b2-ab0d-2f91-559f-08b558e06e25@sandeen.net>
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:42250 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S934007AbeFVDJp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jun 2018 23:09:45 -0400
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] [RFC] writeback: fix range_cyclic writeback vs writepages deadlock
+Date: Fri, 22 Jun 2018 13:09:41 +1000
+Message-Id: <20180622030941.25544-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jun 25, 2018 at 07:43:36PM -0500, Eric Sandeen wrote:
-> The barrier mount options have been no-ops and deprecated since
-> 
-> 4cf4573 xfs: deprecate barrier/nobarrier mount option
-> 
-> i.e. kernel 4.10 / December 2016, with a stated deprecation schedule
-> after v4.15.  Should be fair game to remove them now.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+We've recently seen a workload on XFS filesystems with a repeatable
+deadlock between background writeback and a multi-process
+application doing concurrent writes and fsyncs to a small range of a
+file.
 
---D
+range_cyclic
+writeback		Process 1		Process 2
 
-> ---
-> 
-> V2: plan for 4.19.
-> (now wait, it'll be 5.0)
-> 
->  Documentation/filesystems/xfs.txt |    4 ++--
->  fs/xfs/xfs_mount.h                |    1 -
->  fs/xfs/xfs_super.c                |   34 ++++------------------------------
->  3 files changed, 6 insertions(+), 33 deletions(-)
-> 
-> diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
-> index 4d9ff0a..07dbd4e 100644
-> --- a/Documentation/filesystems/xfs.txt
-> +++ b/Documentation/filesystems/xfs.txt
-> @@ -223,8 +223,6 @@ Deprecated Mount Options
->  
->    Name				Removal Schedule
->    ----				----------------
-> -  barrier			no earlier than v4.15
-> -  nobarrier			no earlier than v4.15
->  
->  
->  Removed Mount Options
-> @@ -236,6 +234,8 @@ Removed Mount Options
->    ihashsize			v4.0
->    irixsgid			v4.0
->    osyncisdsync/osyncisosync	v4.0
-> +  barrier			v4.19
-> +  nobarrier			v4.19
->  
->  
->  sysctls
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 245349d..0f9115c 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -216,7 +216,6 @@ struct xfs_error_cfg {
->  #define XFS_MOUNT_SMALL_INUMS	(1ULL << 14)	/* user wants 32bit inodes */
->  #define XFS_MOUNT_32BITINODES	(1ULL << 15)	/* inode32 allocator active */
->  #define XFS_MOUNT_NOUUID	(1ULL << 16)	/* ignore uuid during mount */
-> -#define XFS_MOUNT_BARRIER	(1ULL << 17)
->  #define XFS_MOUNT_IKEEP		(1ULL << 18)	/* keep empty inode clusters*/
->  #define XFS_MOUNT_SWALLOC	(1ULL << 19)	/* turn on stripe width
->  						 * allocation */
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 9d791f1..03c5677 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -65,11 +65,10 @@ enum {
->  	Opt_logbufs, Opt_logbsize, Opt_logdev, Opt_rtdev, Opt_biosize,
->  	Opt_wsync, Opt_noalign, Opt_swalloc, Opt_sunit, Opt_swidth, Opt_nouuid,
->  	Opt_mtpt, Opt_grpid, Opt_nogrpid, Opt_bsdgroups, Opt_sysvgroups,
-> -	Opt_allocsize, Opt_norecovery, Opt_barrier, Opt_nobarrier,
-> -	Opt_inode64, Opt_inode32, Opt_ikeep, Opt_noikeep,
-> -	Opt_largeio, Opt_nolargeio, Opt_attr2, Opt_noattr2, Opt_filestreams,
-> -	Opt_quota, Opt_noquota, Opt_usrquota, Opt_grpquota, Opt_prjquota,
-> -	Opt_uquota, Opt_gquota, Opt_pquota,
-> +	Opt_allocsize, Opt_norecovery, Opt_inode64, Opt_inode32, Opt_ikeep,
-> +	Opt_noikeep, Opt_largeio, Opt_nolargeio, Opt_attr2, Opt_noattr2,
-> +	Opt_filestreams, Opt_quota, Opt_noquota, Opt_usrquota, Opt_grpquota,
-> +	Opt_prjquota, Opt_uquota, Opt_gquota, Opt_pquota,
->  	Opt_uqnoenforce, Opt_gqnoenforce, Opt_pqnoenforce, Opt_qnoenforce,
->  	Opt_discard, Opt_nodiscard, Opt_dax, Opt_err,
->  };
-> @@ -118,14 +117,7 @@ enum {
->  	{Opt_qnoenforce, "qnoenforce"},	/* same as uqnoenforce */
->  	{Opt_discard,	"discard"},	/* Discard unused blocks */
->  	{Opt_nodiscard,	"nodiscard"},	/* Do not discard unused blocks */
-> -
->  	{Opt_dax,	"dax"},		/* Enable direct access to bdev pages */
-> -
-> -	/* Deprecated mount options scheduled for removal */
-> -	{Opt_barrier,	"barrier"},	/* use writer barriers for log write and
-> -					 * unwritten extent conversion */
-> -	{Opt_nobarrier,	"nobarrier"},	/* .. disable */
-> -
->  	{Opt_err,	NULL},
->  };
->  
-> @@ -209,7 +201,6 @@ enum {
->  	 * Set some default flags that could be cleared by the mount option
->  	 * parsing.
->  	 */
-> -	mp->m_flags |= XFS_MOUNT_BARRIER;
->  	mp->m_flags |= XFS_MOUNT_COMPAT_IOSIZE;
->  
->  	/*
-> @@ -362,14 +353,6 @@ enum {
->  			mp->m_flags |= XFS_MOUNT_DAX;
->  			break;
->  #endif
-> -		case Opt_barrier:
-> -			xfs_warn(mp, "%s option is deprecated, ignoring.", p);
-> -			mp->m_flags |= XFS_MOUNT_BARRIER;
-> -			break;
-> -		case Opt_nobarrier:
-> -			xfs_warn(mp, "%s option is deprecated, ignoring.", p);
-> -			mp->m_flags &= ~XFS_MOUNT_BARRIER;
-> -			break;
->  		default:
->  			xfs_warn(mp, "unknown mount option [%s].", p);
->  			return -EINVAL;
-> @@ -487,7 +470,6 @@ struct proc_xfs_info {
->  	static struct proc_xfs_info xfs_info_unset[] = {
->  		/* the few simple ones we can get from the mount struct */
->  		{ XFS_MOUNT_COMPAT_IOSIZE,	",largeio" },
-> -		{ XFS_MOUNT_BARRIER,		",nobarrier" },
->  		{ XFS_MOUNT_SMALL_INUMS,	",inode64" },
->  		{ 0, NULL }
->  	};
-> @@ -1278,14 +1260,6 @@ struct proc_xfs_info {
->  
->  		token = match_token(p, tokens, args);
->  		switch (token) {
-> -		case Opt_barrier:
-> -			xfs_warn(mp, "%s option is deprecated, ignoring.", p);
-> -			mp->m_flags |= XFS_MOUNT_BARRIER;
-> -			break;
-> -		case Opt_nobarrier:
-> -			xfs_warn(mp, "%s option is deprecated, ignoring.", p);
-> -			mp->m_flags &= ~XFS_MOUNT_BARRIER;
-> -			break;
->  		case Opt_inode64:
->  			mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
->  			mp->m_maxagi = xfs_set_inode_alloc(mp, sbp->sb_agcount);
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+xfs_vm_writepages
+  write_cache_pages
+    writeback_index = 2
+    cycled = 0
+    ....
+    find page 2 dirty
+    lock Page 2
+    ->writepage
+      page 2 writeback
+      page 2 clean
+      page 2 added to bio
+    no more pages
+			write()
+			locks page 1
+			dirties page 1
+			locks page 2
+			dirties page 1
+			fsync()
+			....
+			xfs_vm_writepages
+			write_cache_pages
+			  start index 0
+			  find page 1 towrite
+			  lock Page 1
+			  ->writepage
+			    page 1 writeback
+			    page 1 clean
+			    page 1 added to bio
+			  find page 2 towrite
+			  lock Page 2
+			  page 2 is writeback
+			  <blocks>
+						write()
+						locks page 1
+						dirties page 1
+						fsync()
+						....
+						xfs_vm_writepages
+						write_cache_pages
+						  start index 0
+
+    !done && !cycled
+      sets index to 0, restarts lookup
+    find page 1 dirty
+						  find page 1 towrite
+						  lock Page 1
+						  page 1 is writeback
+						  <blocks>
+
+    lock Page 1
+    <blocks>
+
+DEADLOCK because:
+
+	- process 1 needs page 2 writeback to complete to make
+	  enough progress to issue IO pending for page 1
+	- writeback needs page 1 writeback to complete so process 2
+	  can progress and unlock the page it is blocked on, then it
+	  can issue the IO pending for page 2
+	- process 2 can't make progress until process 1 issues IO
+	  for page 1
+
+The underlying cause of the problem here is that range_cyclic
+writeback is processing pages in descending index order as we
+hold higher index pages in a structure controlled from above
+write_cache_pages(). The write_cache_pages() caller needs to
+be able to submit these pages for IO before write_cache_pages
+restarts writeback at mapping index 0 to avoid wcp inverting the
+page lock/writeback wait order.
+
+generic_writepages() is not susceptible to this bug as it has no
+private context held across write_cache_pages() - filesystems using
+this infrastructure always submit pages in ->writepage immediately
+and so there is no problem with range_cyclic going back to mapping
+index 0.
+
+However:
+	mpage_writepages() has a private bio context,
+	exofs_writepages() has page_collect
+	fuse_writepages() has fuse_fill_wb_data
+	nfs_writepages() has nfs_pageio_descriptor
+	xfs_vm_writepages() has xfs_writepage_ctx
+
+All of these ->writepages implementations can hold pages under
+writeback in their private structures until write_cache_pages()
+returns, and hence they are all susceptible to this deadlock.
+
+Also worth noting is that ext4 has it's own bastardised version of
+write_cache_pages() and so it /may/ have an equivalent deadlock. I
+looked at the code long enough to understand that it has a similar
+retry loop for range_cyclic writeback reaching the end of the file
+and then promptly ran away before my eyes bled too much.  I'll leave
+it for the ext4 developers to determine if their code is actually
+has this deadlock and how to fix it if it has.
+
+There's a few ways I can see avoid this deadlock. There's probably
+more, but these are the first I've though of:
+
+1. get rid of range_cyclic altogether
+
+2. range_cyclic always stops at EOF, and we start again from
+writeback index 0 on the next call into write_cache_pages()
+
+2a. wcp also returns EAGAIN to ->writepages implementations to
+indicate range cyclic has hit EOF. writepages implementations can
+then flush the current context and call wpc again to continue. i.e.
+lift the retry into the ->writepages implementation
+
+3. range_cyclic uses trylock_page() rather than lock_page(), and it
+skips pages it can't lock without blocking. It will already do this
+for pages under writeback, so this seems like a no-brainer
+
+3a. all non-WB_SYNC_ALL writeback uses trylock_page() to avoid
+blocking as per pages under writeback.
+
+I don't think #1 is an option - range_cyclic prevents frequently
+dirtied lower file offset from starving background writeback of rarely
+touched higher file offsets.
+
+#2 is simple, and I don't think it will have any impact on
+performance as going back to the start of the file implies an
+immediate seek. We'll have exactly the same number of seeks if we
+switch writeback to another inode, and then come back to this one
+later and restart from index 0.
+
+#2a is pretty much "status quo without the deadlock". Moving the
+retry loop up into the wcp caller means we can issue IO on the
+pending pages before calling wcp again, and so avoid locking or
+waiting on pages in the wrong order. I'm not convinced we need to do
+this given that we get the same thing from #2 on the next writeback
+call from the writeback infrastructure.
+
+#3 is really just a band-aid - it doesn't fix the access/wait inversion
+problem, just prevents it from becoming a deadlock situation. I'd
+prefer we fix the inversion, not sweep it under the carpet like
+this.
+
+#3a is really an optimisation that just so happens to include the
+band-aid fix of #3.
+
+So I'm really tending towards #2 as the simplest way to fix this,
+and that's what's the patch below implements.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ mm/page-writeback.c | 33 +++++++++++++++------------------
+ 1 file changed, 15 insertions(+), 18 deletions(-)
+
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index 337c6afb3345..c10e70ed3515 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -2150,6 +2150,13 @@ EXPORT_SYMBOL(tag_pages_for_writeback);
+  * not miss some pages (e.g., because some other process has cleared TOWRITE
+  * tag we set). The rule we follow is that TOWRITE tag can be cleared only
+  * by the process clearing the DIRTY tag (and submitting the page for IO).
++ *
++ * To avoid deadlocks between range_cyclic writeback and callers that hold
++ * pages in PageWriteback to aggregate IO until write_cache_pages() returns,
++ * we do not loop back to the start of the file. Doing so causes a page
++ * lock/page writeback access order inversion - we should only ever lock
++ * multiple pages in ascending page->index order, and looping back to the start
++ * of the file violates that rule and causes deadlocks.
+  */
+ int write_cache_pages(struct address_space *mapping,
+ 		      struct writeback_control *wbc, writepage_t writepage,
+@@ -2163,7 +2170,6 @@ int write_cache_pages(struct address_space *mapping,
+ 	pgoff_t index;
+ 	pgoff_t end;		/* Inclusive */
+ 	pgoff_t done_index;
+-	int cycled;
+ 	int range_whole = 0;
+ 	int tag;
+ 
+@@ -2171,23 +2177,17 @@ int write_cache_pages(struct address_space *mapping,
+ 	if (wbc->range_cyclic) {
+ 		writeback_index = mapping->writeback_index; /* prev offset */
+ 		index = writeback_index;
+-		if (index == 0)
+-			cycled = 1;
+-		else
+-			cycled = 0;
+ 		end = -1;
+ 	} else {
+ 		index = wbc->range_start >> PAGE_SHIFT;
+ 		end = wbc->range_end >> PAGE_SHIFT;
+ 		if (wbc->range_start == 0 && wbc->range_end == LLONG_MAX)
+ 			range_whole = 1;
+-		cycled = 1; /* ignore range_cyclic tests */
+ 	}
+ 	if (wbc->sync_mode == WB_SYNC_ALL || wbc->tagged_writepages)
+ 		tag = PAGECACHE_TAG_TOWRITE;
+ 	else
+ 		tag = PAGECACHE_TAG_DIRTY;
+-retry:
+ 	if (wbc->sync_mode == WB_SYNC_ALL || wbc->tagged_writepages)
+ 		tag_pages_for_writeback(mapping, index, end);
+ 	done_index = index;
+@@ -2273,17 +2273,14 @@ int write_cache_pages(struct address_space *mapping,
+ 		pagevec_release(&pvec);
+ 		cond_resched();
+ 	}
+-	if (!cycled && !done) {
+-		/*
+-		 * range_cyclic:
+-		 * We hit the last page and there is more work to be done: wrap
+-		 * back to the start of the file
+-		 */
+-		cycled = 1;
+-		index = 0;
+-		end = writeback_index - 1;
+-		goto retry;
+-	}
++
++	/*
++	 * If we hit the last page and there is more work to be done: wrap
++	 * back the index back to the start of the file for the next
++	 * time we are called.
++	 */
++	if (wbc->range_cyclic && !done)
++		done_index = 0;
+ 	if (wbc->range_cyclic || (range_whole && wbc->nr_to_write > 0))
+ 		mapping->writeback_index = done_index;
+ 
+-- 
+2.17.0
+
