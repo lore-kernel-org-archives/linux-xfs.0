@@ -1,67 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:56332 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932792AbeFUSuB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jun 2018 14:50:01 -0400
-Date: Thu, 21 Jun 2018 11:49:45 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs_bmap: don't reject -e
-Message-ID: <20180621184945.GE4838@magnolia>
+Received: from sandeen.net ([63.231.237.45]:46848 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934042AbeFVBeu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 21 Jun 2018 21:34:50 -0400
+Subject: Re: [PATCH] mkfs: fix divide-by-zero in align_ag_geometry
+From: Eric Sandeen <sandeen@sandeen.net>
+References: <20180621025520.9115-1-jeffm@suse.com>
+ <20180621035749.GR19934@dastard>
+ <85feed9e-c347-5559-59cc-9f4e035324e5@suse.com>
+ <342f7e6a-83f6-e887-b24f-b9a628f790e2@sandeen.net>
+ <20180621194936.GS19934@dastard>
+ <919ce2d0-b560-3fe6-f16c-503f57e3157c@suse.com>
+ <20180621223644.GW19934@dastard>
+ <1c60e3f5-3d2f-d739-cc1d-e23919f6c585@sandeen.net>
+Message-ID: <c78886ab-c334-a96f-795e-ea1985a1a8f3@sandeen.net>
+Date: Thu, 21 Jun 2018 20:34:48 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <1c60e3f5-3d2f-d739-cc1d-e23919f6c585@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>, Jeff Mahoney <jeffm@suse.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 6/21/18 6:16 PM, Eric Sandeen wrote:
+>> Ah, so it came from the hardware? In that case, we probably
+>> shouldn't zero sunit when blkid reports this whacky case. i.e. I
+>> think we should set swidth = sunit so that we retain allocation
+>> alignment to the minimum IO size the device specified.
+> Hrmph.
+> 
+> yeah, I'd really like to see 
+> 
+> # blockdev --getiomin --getioopt --getss --getpbsz
+> 
+> for all the devices in the stack, I guess...
 
-The xfs_io bmap command has an -e switch that prints delalloc extents
-without fsync'ing the file first.  The xfs_bmap manpage says it'll pass
--e through, but it doesn't.  Fix the script and fix the weird manpage
-discrepancy where it doesn't list -e in the available options but
-discusses it anyway.
+Ok, so Jeff shared the lsblk output with me; the underlying
+device and the mpath device are both:
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- io/xfs_bmap.sh      |    5 +++--
- man/man8/xfs_bmap.8 |    2 +-
- 2 files changed, 4 insertions(+), 3 deletions(-)
+MIN-IO OPT-IO PHY-SEC LOG-SEC
+8192      0     512     512
 
-diff --git a/io/xfs_bmap.sh b/io/xfs_bmap.sh
-index b4e7992b..753d57cb 100755
---- a/io/xfs_bmap.sh
-+++ b/io/xfs_bmap.sh
-@@ -5,14 +5,15 @@
- 
- OPTS=""
- VERSION=false
--USAGE="Usage: xfs_bmap [-adlpvV] [-n nx] file..."
-+USAGE="Usage: xfs_bmap [-adelpvV] [-n nx] file..."
- DIRNAME=`dirname $0`
- 
--while getopts "adln:pvV" c
-+while getopts "adeln:pvV" c
- do
- 	case $c in
- 	a)	OPTS=$OPTS" -a";;
- 	d)	OPTS=$OPTS" -d";;
-+	e)	OPTS=$OPTS" -e";;
- 	l)	OPTS=$OPTS" -l";;
- 	n)	OPTS=$OPTS" -n "$OPTARG;;
- 	p)	OPTS=$OPTS" -p";;
-diff --git a/man/man8/xfs_bmap.8 b/man/man8/xfs_bmap.8
-index c7255192..ae923481 100644
---- a/man/man8/xfs_bmap.8
-+++ b/man/man8/xfs_bmap.8
-@@ -4,7 +4,7 @@ xfs_bmap \- print block mapping for an XFS file
- .SH SYNOPSIS
- .B xfs_bmap
- [
--.B \-adlpv
-+.B \-adelpv
- ] [
- .B \-n
- .I num_extents
+so logical/physical 512, with minimum io 8192 and optimal io 0.
+On further inspection Jeff says this may be because an optimal
+size is reported as greater than the maximum size, so we get 0
+due to the inconsistency.
+
+Ok, well, I guess I see your point that we should probably set
+sunit=swidth=8192 here.  I was thinking that conflicted with
+how we process it on the commandline but no, it doesn't; if you're
+going to manually specify you can't set one to 0 and not the other,
+but we have to make the best of what the hardware tells us.
+
+So we could do:
+
+        /*
+         * Some odd hardware sets minimum IO but not optimal; assume
+         * minimal is the smallest preferred IO size, and set optimal
+	 * to the same value, i.e. a stripe of 1 disk.
+         */
+        if (*sunit && *swidth == 0)
+                *swidth = *sunit;
+
+But it's clearly buggy hardware.  How are we to know which values 
+are accurate and which are not?  It still may be better to just set
+to no stripe geometry if we've gotten nonsense from libblockdev,
+if the device wants better performance it needs to have rational
+firmware... trying to 2nd guess bad values is just a crapshoot.
+I guess we could issue a warning ...
+
+-Eric
