@@ -1,163 +1,133 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:44642 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754128AbeFUT0s (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 21 Jun 2018 15:26:48 -0400
-Subject: Re: [PATCH] mkfs: fix divide-by-zero in align_ag_geometry
-References: <20180621025520.9115-1-jeffm@suse.com>
- <20180621035749.GR19934@dastard>
- <85feed9e-c347-5559-59cc-9f4e035324e5@suse.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <342f7e6a-83f6-e887-b24f-b9a628f790e2@sandeen.net>
-Date: Thu, 21 Jun 2018 14:26:45 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:51118 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750865AbeFVGd6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Jun 2018 02:33:58 -0400
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: Re: [PATCH 4/8] xfs: don't allow insert-range to shift extents past
+ the maximum offset
+References: <152960586416.26246.8634761888260524091.stgit@magnolia>
+ <152960588873.26246.17582272219031862067.stgit@magnolia>
+Message-ID: <4126b4b1-e789-1bcc-d8bf-51a44399c18f@oracle.com>
+Date: Thu, 21 Jun 2018 23:33:36 -0700
 MIME-Version: 1.0
-In-Reply-To: <85feed9e-c347-5559-59cc-9f4e035324e5@suse.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="KS5Ggq9Se9fY48ute53pby8qr2WSyFabg"
+In-Reply-To: <152960588873.26246.17582272219031862067.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Mahoney <jeffm@suse.com>, Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, zlang@redhat.com
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---KS5Ggq9Se9fY48ute53pby8qr2WSyFabg
-Content-Type: multipart/mixed; boundary="LZRqFchAeqWNCeUMlavREO5ONAxc6KNie";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: Jeff Mahoney <jeffm@suse.com>, Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
-Message-ID: <342f7e6a-83f6-e887-b24f-b9a628f790e2@sandeen.net>
-Subject: Re: [PATCH] mkfs: fix divide-by-zero in align_ag_geometry
-References: <20180621025520.9115-1-jeffm@suse.com>
- <20180621035749.GR19934@dastard>
- <85feed9e-c347-5559-59cc-9f4e035324e5@suse.com>
-In-Reply-To: <85feed9e-c347-5559-59cc-9f4e035324e5@suse.com>
+Ok, you can add my review
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 
---LZRqFchAeqWNCeUMlavREO5ONAxc6KNie
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
-
-On 6/21/18 2:15 PM, Jeff Mahoney wrote:
-> On 6/20/18 11:57 PM, Dave Chinner wrote:
->> On Wed, Jun 20, 2018 at 10:55:20PM -0400, jeffm@suse.com wrote:
->>> From: Jeff Mahoney <jeffm@suse.com>
->>>
->>> Commit 051b4e37f5e (mkfs: factor AG alignment) factored out the
->>> AG alignment code into a separate function.  It got rid of
->>> redundant checks for dswidth !=3D 0 but did too good a job since now
->>> it doesn't check at all.
->>
->> Of course they got removed - we've already validated the CLI input
->> and guaranteed that cfg->dswidth can only be zero iff cfg->dsunit is
->> zero in calc_stripe_factors().
->>
->> i.e. We do input validation of CLI paramters before anything else so
->> that later users (like align_ag_geometry()) can assume the
->> parameters they are using are valid. In this case, the assumption is
->> that either both dsunit and dswidth are zero or that both are
->> non-zero and dswidth an integer multple of dsunit.
->=20
-> It's not coming from the CLI parameters.  It's coming from the topology=
-=2E
->  The blkid topology stuff is returning 8k for minimal i/o and 0 for
-> optimal.  Without a CLI config, we have dunit=3D0 in calc_stripe_factor=
-s,
-> which takes it from the device.  We set cfg->dsunit=3D16 and
-> cfg->dswidth=3D0, and then head down to align_ag_geometry.
->=20
-> The topology on this system looks like:
->=20
-> ft =3D {dsunit =3D 16, dswidth =3D 0, rtswidth =3D 0, lsectorsize =3D 5=
-12,
-> psectorsize =3D 512}
->=20
-> That matches with a few of the dm targets I see reported on this system=
-=2E
->=20
-> Since minimal io size isn't sector size, we don't clear it.  Talking
-> with Eric, we should probably just extent that check in
-> blkid_get_topology to cover that case since it's not like we can just
-> reject what blkid gives us.
->=20
->>> When we hit the check to see if agsize
->>> is a multiple of stripe width: (cfg->agsize % cfg->dswidth), we crash=
-
->>> on a divide by zero.
->>
->> What CLI config did you use to hit this? I'd like to reproduce it so
->> I can see where calc_stripe_factors() is going wrong....
->=20
-> It was just "mkfs.xfs <path-to-mpath-device>"
-
-yeah, so in blkid_get_topology we have:
-
-        /*
-         * If the reported values are the same as the physical sector siz=
-e
-         * do not bother to report anything.  It will only cause warnings=
-
-         * if people specify larger stripe units or widths manually.
-         */
-        if (*sunit =3D=3D *psectorsize || *swidth =3D=3D *psectorsize) {
-                *sunit =3D 0;
-                *swidth =3D 0;
-        }
-
-as a sanity check.  We should probably extend that (or add a similar test=
-)
-which sets both to zero if either is zero, for the same reason as the CLI=
-
-validation does it.  Comments should explain why....
-
-        /*
-         * Ensure that if either sunit or stripe width is zero, the other=
-
-         * is as well.  Having only one set is not valid stripe geometry.=
-
-         */
-        if (*sunit =3D=3D 0 || *swidth =3D=3D 0) {
-                *sunit =3D 0;
-                *swidth =3D 0;
-        }
-
-FWIW if I set=20
-
-        *sunit =3D 8192;
-        *swidth =3D 0;
-
-manually in blkid_get_topology I do get the same floating point exception=
-;
-if that's what we get from libblkid for some weird device, we'd go boom.
-
--Eric
-
-
---LZRqFchAeqWNCeUMlavREO5ONAxc6KNie--
-
---KS5Ggq9Se9fY48ute53pby8qr2WSyFabg
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAlsr+/YACgkQIK4WkuE9
-3uBTvg/9HXnkBfCduDpTNQ3F22bOasrEdOfafy/EkERksCPl8sRS/T17OeZSCk5V
-a9+D/lL7SUYO2NfdTkASQQ5zc2UcB0XNG5LIH/DPWR7qH9IHhmzakwWCd1aelVGe
-BNd17n/fJuFB0ACNdTp9/fbP2jikix5dQK5kP1G5Y6pd8ZVEFaRe5EJ5hi7HnI+8
-w9EZhkSBRrdSTMiyOaL3N1yPI399C2433kr7qe8uR8WFo9YMJedE2g4kGPF7fc3D
-g1jX7czSTj1EcBH/cnOWF/MXu8qA/HiNtdU7+MP/IBEj/A2aytZwE6/if2reO0c4
-hHKj3Dt7tfVGmOkeUwtNF6kcQSMG9DJ/geHb/KEL/3ioPa5b0OEgSPoZxnbAF6Ip
-py5ommkzLPEcYQhWLbu2U5Q3HziRl93PzOxMHbhn0Ju26UWwMr5KMwmyAVcR/X2R
-yS2KJ1zJPSfz69f1ZTwfEQ5GGJ4wzeESiC44CnO0KgJCk9G4HR1S37BIlgODoz4i
-LQhjZnKTqwormp7ogewiPyMlVoTqss90y4bVb+YyYwO/xYaq8AMNxUxLH4dTS2ed
-mBVcd6BPlxW+PWttVQ44b738C8x7kxsgmoevr6vzYJOJG/oJZOazbt6AmBWvsrW2
-xgjEuv1ZHaqr+1W/wTrCE6lvDUhOIZSdYmhDpyHFJUX9csP/RgY=
-=lUHK
------END PGP SIGNATURE-----
-
---KS5Ggq9Se9fY48ute53pby8qr2WSyFabg--
+On 06/21/2018 11:31 AM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Zorro Lang reports that generic/485 blows an assert on a filesystem with
+> 512 byte blocks.  The test tries to fallocate a post-eof extent at the
+> maximum file size and calls insert range to shift the extents right by
+> two blocks.  On a 512b block filesystem this causes startoff to overflow
+> the 54-bit startoff field, leading to the assert.
+> 
+> Therefore, always check the rightmost extent to see if it would overflow
+> prior to invoking the insert range machinery.
+> 
+> Reported-by: zlang@redhat.com
+> Bugzilla: https://urldefense.proofpoint.com/v2/url?u=https-3A__bugzilla.kernel.org_show-5Fbug.cgi-3Fid-3D200137&d=DwICaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=YCaDC-F1dLxMWur8rwN6LkUZEkB0mCLT1kaX18afe3Y&s=21OAUtb7E_eZcNMI0iepr7J9fg90RHPo0hUJBgJxDrI&e=
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>   fs/xfs/libxfs/xfs_bmap.c |   40 ++++++++++++++++++++++++++++++++++++++++
+>   fs/xfs/libxfs/xfs_bmap.h |    2 ++
+>   fs/xfs/xfs_bmap_util.c   |    4 ++++
+>   3 files changed, 46 insertions(+)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 01628f0c9a0c..b7f094e19bab 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -5780,6 +5780,46 @@ xfs_bmap_collapse_extents(
+>   	return error;
+>   }
+>   
+> +#define BMBT_STARTOFF_MASK	((1ULL << BMBT_STARTOFF_BITLEN) - 1)
+> +/* Make sure we won't be right-shifting an extent past the maximum bound. */
+> +int
+> +xfs_bmap_can_insert_extents(
+> +	struct xfs_inode	*ip,
+> +	xfs_fileoff_t		off,
+> +	xfs_fileoff_t		shift)
+> +{
+> +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+> +	struct xfs_bmbt_irec	got;
+> +	struct xfs_iext_cursor	icur;
+> +	xfs_fileoff_t		new_off;
+> +	int			error = 0;
+> +
+> +	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+> +		return -EIO;
+> +
+> +	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
+> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> +
+> +	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+> +		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
+> +		if (error)
+> +			goto out;
+> +	}
+> +
+> +	xfs_iext_last(ifp, &icur);
+> +	if (!xfs_iext_get_extent(ifp, &icur, &got) || off > got.br_startoff)
+> +		goto out;
+> +
+> +	/* Make sure we can't overflow the 54-bit offset field. */
+> +	new_off = (got.br_startoff + shift) & BMBT_STARTOFF_MASK;
+> +	if (new_off < got.br_startoff)
+> +		error = -EINVAL;
+> +
+> +out:
+> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +	return error;
+> +}
+> +
+>   int
+>   xfs_bmap_insert_extents(
+>   	struct xfs_trans	*tp,
+> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+> index 99dddbd0fcc6..9b49ddf99c41 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.h
+> +++ b/fs/xfs/libxfs/xfs_bmap.h
+> @@ -227,6 +227,8 @@ int	xfs_bmap_collapse_extents(struct xfs_trans *tp, struct xfs_inode *ip,
+>   		xfs_fileoff_t *next_fsb, xfs_fileoff_t offset_shift_fsb,
+>   		bool *done, xfs_fsblock_t *firstblock,
+>   		struct xfs_defer_ops *dfops);
+> +int	xfs_bmap_can_insert_extents(struct xfs_inode *ip, xfs_fileoff_t off,
+> +		xfs_fileoff_t shift);
+>   int	xfs_bmap_insert_extents(struct xfs_trans *tp, struct xfs_inode *ip,
+>   		xfs_fileoff_t *next_fsb, xfs_fileoff_t offset_shift_fsb,
+>   		bool *done, xfs_fileoff_t stop_fsb, xfs_fsblock_t *firstblock,
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index c35009a86699..abc37b0899c0 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -1404,6 +1404,10 @@ xfs_insert_file_space(
+>   
+>   	trace_xfs_insert_file_space(ip);
+>   
+> +	error = xfs_bmap_can_insert_extents(ip, stop_fsb, shift_fsb);
+> +	if (error)
+> +		return error;
+> +
+>   	error = xfs_prepare_shift(ip, offset);
+>   	if (error)
+>   		return error;
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwICaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=YCaDC-F1dLxMWur8rwN6LkUZEkB0mCLT1kaX18afe3Y&s=RhleurH5wYku58VywlbdBFmjaXSEGIfX7SCThJq1clE&e=
+> 
