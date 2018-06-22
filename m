@@ -1,83 +1,119 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga12.intel.com ([192.55.52.136]:31782 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751101AbeFZTBf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 26 Jun 2018 15:01:35 -0400
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: [PATCH v4 3/3] dm: prevent DAX mounts if not supported
-Date: Tue, 26 Jun 2018 13:01:29 -0600
-Message-Id: <20180626190129.18112-1-ross.zwisler@linux.intel.com>
-In-reply-to: <20180626175932.8899-4-ross.zwisler@linux.intel.com>
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:38591 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753944AbeFVPR6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Jun 2018 11:17:58 -0400
+Received: by mail-lf0-f66.google.com with SMTP id i83-v6so9256017lfh.5
+        for <linux-xfs@vger.kernel.org>; Fri, 22 Jun 2018 08:17:57 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20180622035424.GD13748@dastard>
+References: <20180618174433.3069-1-mbenatto@redhat.com> <20180618174433.3069-2-mbenatto@redhat.com>
+ <20180622023735.GN2780@desktop> <9b44c744-6abd-35d2-e3ec-1f8a1a8ea710@redhat.com>
+ <20180622035424.GD13748@dastard>
+From: Marco Benatto <mbenatto@redhat.com>
+Date: Fri, 22 Jun 2018 12:17:56 -0300
+Message-ID: <CAOGQQ2-_pgiPKPRoxHudZaoyAngd8+NW17oJDG+5N-e2R51m2g@mail.gmail.com>
+Subject: Re: [PATCH 2/2] xfstests: Test root inode parent pointer repairing
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Toshi Kani <toshi.kani@hpe.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, stable@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, Eryu Guan <guaneryu@gmail.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-Currently device_supports_dax() just checks to see if the QUEUE_FLAG_DAX
-flag is set on the device's request queue to decide whether or not the
-device supports filesystem DAX.  Really we should be using
-bdev_dax_supported() like filesystems do at mount time.  This performs
-other tests like checking to make sure the dax_direct_access() path works.
+Hi Eryuy et al,
 
-Conditionally set QUEUE_FLAG_DAX on the DM device's request queue based on
-whether all underlying devices support DAX.  Now that bdev_dax_supported()
-explicitly checks for this flag, this will ensure that filesystems built
-upon DM devices will only be able to mount with DAX if all underlying
-devices also support DAX.
+firstly thanks for the reviews.
 
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Fixes: commit 545ed20e6df6 ("dm: add infrastructure for DAX support")
-Cc: stable@vger.kernel.org
+OK, I'll resend just the test itself (without the one which hoist the
+helper function for sfdir format).
 
----
 
-Changes in v4:
- * Set/clear QUEUE_FLAG_DAX in dm_table_set_restrictions(). (Mike)
----
- drivers/md/dm-table.c | 7 ++++---
- drivers/md/dm.c       | 3 +--
- 2 files changed, 5 insertions(+), 5 deletions(-)
+Given Eric's and Dave's updates, should I re-include the common
+definitions even those being unused within
+this test scope?
 
-diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
-index 938766794c2e..3d0e2c198f06 100644
---- a/drivers/md/dm-table.c
-+++ b/drivers/md/dm-table.c
-@@ -885,9 +885,7 @@ EXPORT_SYMBOL_GPL(dm_table_set_type);
- static int device_supports_dax(struct dm_target *ti, struct dm_dev *dev,
- 			       sector_t start, sector_t len, void *data)
- {
--	struct request_queue *q = bdev_get_queue(dev->bdev);
--
--	return q && blk_queue_dax(q);
-+	return bdev_dax_supported(dev->bdev, PAGE_SIZE);
- }
- 
- static bool dm_table_supports_dax(struct dm_table *t)
-@@ -1907,6 +1905,9 @@ void dm_table_set_restrictions(struct dm_table *t, struct request_queue *q,
- 
- 	if (dm_table_supports_dax(t))
- 		blk_queue_flag_set(QUEUE_FLAG_DAX, q);
-+	else
-+		blk_queue_flag_clear(QUEUE_FLAG_DAX, q);
-+
- 	if (dm_table_supports_dax_write_cache(t))
- 		dax_write_cache(t->md->dax_dev, true);
- 
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index e65429a29c06..bef5a3f243ed 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -1056,8 +1056,7 @@ static long dm_dax_direct_access(struct dax_device *dax_dev, pgoff_t pgoff,
- 	if (len < 1)
- 		goto out;
- 	nr_pages = min(len, nr_pages);
--	if (ti->type->direct_access)
--		ret = ti->type->direct_access(ti, pgoff, nr_pages, kaddr, pfn);
-+	ret = ti->type->direct_access(ti, pgoff, nr_pages, kaddr, pfn);
- 
-  out:
- 	dm_put_live_table(md, srcu_idx);
+If those are used by helpers or any other flow on xfstest I do agree
+with Eric and Dave about hoist it.
+
+Thanks,
+
+
+On Fri, Jun 22, 2018 at 12:54 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Thu, Jun 21, 2018 at 09:58:25PM -0500, Eric Sandeen wrote:
+>> On 6/21/18 9:37 PM, Eryu Guan wrote:
+>> > On Mon, Jun 18, 2018 at 02:44:33PM -0300, Marco Benatto wrote:
+>> >> Recently we found out xfs_repair were not repairing
+>> >> root inode parent pointer when root inode is on short-form
+>> >> and parent points to an invalid inode number (refer to:
+>> >> "xfs_repair: Fix root inode's parent when it's bogus for sf
+>> >> directory" on xfs-devel list).
+>> >>
+>> >> This test checks if xfs_repair successfully repair the
+>> >> filesystem in the scenario mentioned before.
+>> >>
+>> >> Signed-off-by: Marco Benatto <mbenatto@redhat.com>
+>> >> ---
+>> >>  tests/xfs/450     | 53 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>> >>  tests/xfs/450.out |  1 +
+>> >>  tests/xfs/group   |  1 +
+>> >>  3 files changed, 55 insertions(+)
+>> >>  create mode 100755 tests/xfs/450
+>> >>  create mode 100644 tests/xfs/450.out
+>> >>
+>> >> diff --git a/tests/xfs/450 b/tests/xfs/450
+>> >> new file mode 100755
+>> >> index 0000000..dc7f244
+>> >> --- /dev/null
+>> >> +++ b/tests/xfs/450
+>> >> @@ -0,0 +1,53 @@
+>> >> +#! /bin/bash
+>> >> +# SPDX-License-Identifier: GPL-2.0
+>> >> +# Copyright (c) 2018 Red Hat Inc.  All Rights Reserved.
+>> >> +#
+>> >> +# FS QA Test 450
+>> >> +#
+>> >> +# Make sure xfs_repair can repair root inode parent's pointer
+>> >> +# when it contains a bogus ino when it's using shot form directory
+>> >> +#
+>> >> +seq=`basename $0`
+>> >> +seqres=$RESULT_DIR/$seq
+>> >> +
+>> >> +status=1  # failure is the default!
+>> >
+>> > Apart from Dave's comments, there're some common definitions missing
+>> > too, e.g. 'tmp' and 'here', please use './new xfs' to generate new test
+>> > template.
+>>
+>> Eryu, I think I suggested that Marco could remove the "tmp" definition
+>> because it's not used in the script.  Is there some reason to keep it?
+>> The script did start out with a "./new xfs" generation template.
+>>
+>> Oh, I bet some helpers depend on it... sorry, my mistake.  Oops.
+>>
+>> (though maybe tmp should just get hoisted to the harness and
+>> not be required in every script, but I digress ...)
+>
+> You mean like I proposed a couple of weeks ago along with the
+> spdx license tag updates?
+>
+> https://www.spinics.net/lists/fstests/msg09849.html
+>
+> that's next on my list of "Big cleanups for fstests To Do" list.
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+
+
+
 -- 
-2.14.4
-
+Marco Benatto
+Senior Software Maintenance Engineer | Red Hat Brasil
+T: +55 11 35246161 | M: +55 41 9 88504051
+Av. Brigadeiro Faria Lima 3900, 8° Andar. São Paulo, Brasil. RED HAT |
+TRIED. TESTED. TRUSTED. Saiba porque em redhat.com
