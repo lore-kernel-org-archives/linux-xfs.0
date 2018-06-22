@@ -1,138 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:37938 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:48324 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933384AbeFUQ1A (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jun 2018 12:27:00 -0400
-Date: Thu, 21 Jun 2018 09:26:43 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] Fix coverity scan reports
-Message-ID: <20180621162643.GC4838@magnolia>
-References: <20180621123525.5365-1-cmaiolino@redhat.com>
+        with ESMTP id S1750779AbeFVGhr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Jun 2018 02:37:47 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5M6Yc7b003300
+        for <linux-xfs@vger.kernel.org>; Fri, 22 Jun 2018 06:37:47 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2130.oracle.com with ESMTP id 2jrp8hrnn1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 22 Jun 2018 06:37:47 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w5M6bj8x009359
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 22 Jun 2018 06:37:46 GMT
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w5M6bjSh030901
+        for <linux-xfs@vger.kernel.org>; Fri, 22 Jun 2018 06:37:45 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: Re: [PATCH 6/8] xfs: fix uninitialized field in rtbitmap fsmap
+ backend
+References: <152960586416.26246.8634761888260524091.stgit@magnolia>
+ <152960590105.26246.13020311829179912536.stgit@magnolia>
+Message-ID: <24367f21-b71c-4410-0741-582efe99ab3d@oracle.com>
+Date: Thu, 21 Jun 2018 23:37:38 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180621123525.5365-1-cmaiolino@redhat.com>
+In-Reply-To: <152960590105.26246.13020311829179912536.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Carlos Maiolino <cmaiolino@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jun 21, 2018 at 02:35:25PM +0200, Carlos Maiolino wrote:
-> Initialize a few variables before pass them by reference in other
-> functions.
+Looks ok:
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+
+On 06/21/2018 11:31 AM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> This quiets the following Coverity reports:
+> Initialize the extent count field of the high key so that when we use
+> the high key to synthesize an 'unknown owner' record (i.e. used space
+> record) at the end of the queried range we have a field with which to
+> compute rm_blockcount.  This is not strictly necessary because the
+> synthesizer never uses the rm_blockcount field, but we can shut up the
+> static code analysis anyway.
 > 
-> CID 100898
-> CID 1437081
-> CID 1437129
-> CID 1437191
-> CID 1437201
-> CID 1437212
-> CID 1437341
-
-These all have to do with the xfs_warn() at the bottom of
-xfs_alloc_get_rec() referencing *bno before we set it but after we've
-decided that the record is bad.  Why not just fix by changing it to:
-
-xfs_warn(mp, "start block 0x%x block count 0x%x",
-		rec->alloc.ar_startblock, rec->alloc.ar_blockcount);
-
---D
-
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> Coverity-id: 1437358
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
+>   fs/xfs/xfs_fsmap.c |    1 +
+>   1 file changed, 1 insertion(+)
 > 
-> There is another coverity issue (CID 1437358), which actually looks more
-> important, which really looks to pass an uninitialized value to
-> xfs_getfsmap_rtdev_rtbitmap_helper(), where such looks to expect the variable to
-> be already initialized. I'm familiar with RT code, so looking into it yet, but
-> I think this one deservers a separated patch if that can really trigger a bug.
 > 
->  fs/xfs/libxfs/xfs_alloc.c | 14 +++++++-------
->  fs/xfs/scrub/agheader.c   |  4 ++--
->  fs/xfs/scrub/alloc.c      |  2 +-
->  3 files changed, 10 insertions(+), 10 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index eef466260d43..ffdd50f5af32 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -421,8 +421,8 @@ xfs_alloc_fixup_trees(
->  {
->  	int		error;		/* error code */
->  	int		i;		/* operation results */
-> -	xfs_agblock_t	nfbno1;		/* first new free startblock */
-> -	xfs_agblock_t	nfbno2;		/* second new free startblock */
-> +	xfs_agblock_t	nfbno1=0;	/* first new free startblock */
-> +	xfs_agblock_t	nfbno2=0;	/* second new free startblock */
->  	xfs_extlen_t	nflen1=0;	/* first new free length */
->  	xfs_extlen_t	nflen2=0;	/* second new free length */
->  	struct xfs_mount *mp;
-> @@ -783,8 +783,8 @@ xfs_alloc_ag_vextent_exact(
->  	xfs_btree_cur_t	*bno_cur;/* by block-number btree cursor */
->  	xfs_btree_cur_t	*cnt_cur;/* by count btree cursor */
->  	int		error;
-> -	xfs_agblock_t	fbno;	/* start block of found extent */
-> -	xfs_extlen_t	flen;	/* length of found extent */
-> +	xfs_agblock_t	fbno=0;	/* start block of found extent */
-> +	xfs_extlen_t	flen=0;	/* length of found extent */
->  	xfs_agblock_t	tbno;	/* start block of busy extent */
->  	xfs_extlen_t	tlen;	/* length of busy extent */
->  	xfs_agblock_t	tend;	/* end block of busy extent */
-> @@ -1597,7 +1597,7 @@ xfs_alloc_ag_vextent_small(
->  	int		error;
->  	xfs_agblock_t	fbno;
->  	xfs_extlen_t	flen;
-> -	int		i;
-> +	int		i = 0;
->  
->  	if ((error = xfs_btree_decrement(ccur, 0, &i)))
->  		goto error0;
-> @@ -1704,8 +1704,8 @@ xfs_free_ag_extent(
->  	xfs_btree_cur_t	*bno_cur;	/* cursor for by-block btree */
->  	xfs_btree_cur_t	*cnt_cur;	/* cursor for by-size btree */
->  	int		error;		/* error return value */
-> -	xfs_agblock_t	gtbno;		/* start of right neighbor block */
-> -	xfs_extlen_t	gtlen;		/* length of right neighbor block */
-> +	xfs_agblock_t	gtbno=0;	/* start of right neighbor block */
-> +	xfs_extlen_t	gtlen=0;	/* length of right neighbor block */
->  	int		haveleft;	/* have a left neighbor block */
->  	int		haveright;	/* have a right neighbor block */
->  	int		i;		/* temp, result code */
-> diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-> index 9bb0745f1ad2..78a7381d6ca0 100644
-> --- a/fs/xfs/scrub/agheader.c
-> +++ b/fs/xfs/scrub/agheader.c
-> @@ -388,8 +388,8 @@ xfs_scrub_agf_xref_cntbt(
->  	struct xfs_scrub_context	*sc)
->  {
->  	struct xfs_agf			*agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
-> -	xfs_agblock_t			agbno;
-> -	xfs_extlen_t			blocks;
-> +	xfs_agblock_t			agbno = 0;
-> +	xfs_extlen_t			blocks = 0;
->  	int				have;
->  	int				error;
->  
-> diff --git a/fs/xfs/scrub/alloc.c b/fs/xfs/scrub/alloc.c
-> index 50e4f7fa06f0..c82347da400f 100644
-> --- a/fs/xfs/scrub/alloc.c
-> +++ b/fs/xfs/scrub/alloc.c
-> @@ -47,7 +47,7 @@ xfs_scrub_allocbt_xref_other(
->  	xfs_extlen_t			len)
->  {
->  	struct xfs_btree_cur		**pcur;
-> -	xfs_agblock_t			fbno;
-> +	xfs_agblock_t			fbno = 0;
->  	xfs_extlen_t			flen;
->  	int				has_otherrec;
->  	int				error;
-> -- 
-> 2.14.3
+> diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+> index c34fa9c342f2..2be795b01ce0 100644
+> --- a/fs/xfs/xfs_fsmap.c
+> +++ b/fs/xfs/xfs_fsmap.c
+> @@ -531,6 +531,7 @@ xfs_getfsmap_rtdev_rtbitmap_query(
+>   
+>   	/* Report any gaps at the end of the rtbitmap */
+>   	info->last = true;
+> +	ahigh.ar_extcount = 0;
+>   	error = xfs_getfsmap_rtdev_rtbitmap_helper(tp, &ahigh, info);
+>   	if (error)
+>   		goto err;
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwICaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=kG0q-nvJIi8c2zctskm0vTRxZIBqEK8mud41-TvKgAI&s=c2QBy7jBkpo_q56thW4Lrp4PTZl40Ulep8xufwE5NVc&e=
+> 
