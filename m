@@ -1,51 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:37351 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S933873AbeFUWeJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jun 2018 18:34:09 -0400
-Date: Fri, 22 Jun 2018 08:34:06 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2] xfs: transactionless xfs_bunmapi shouldn't do format
- conversion
-Message-ID: <20180621223406.GV19934@dastard>
-References: <20180619024128.22669-1-david@fromorbit.com>
- <20180619024128.22669-2-david@fromorbit.com>
- <20180619045405.GI8128@magnolia>
- <20180620073142.GA5257@infradead.org>
+Received: from mx1.redhat.com ([209.132.183.28]:38852 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934071AbeFVC61 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 21 Jun 2018 22:58:27 -0400
+Subject: Re: [PATCH 2/2] xfstests: Test root inode parent pointer repairing
+References: <20180618174433.3069-1-mbenatto@redhat.com>
+ <20180618174433.3069-2-mbenatto@redhat.com> <20180622023735.GN2780@desktop>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <9b44c744-6abd-35d2-e3ec-1f8a1a8ea710@redhat.com>
+Date: Thu, 21 Jun 2018 21:58:25 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180620073142.GA5257@infradead.org>
+In-Reply-To: <20180622023735.GN2780@desktop>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: Eryu Guan <guaneryu@gmail.com>, Marco Benatto <mbenatto@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-On Wed, Jun 20, 2018 at 12:31:42AM -0700, Christoph Hellwig wrote:
-> On Mon, Jun 18, 2018 at 09:54:05PM -0700, Darrick J. Wong wrote:
-> > ...it's also weird that xfs_bmap_punch_delalloc_range calls xfs_bunmapi
-> > with no transaction and a xfs_defer that we dump on the ground.
-> > 
-> > So yes, I think the patch does fix the crash, but it's kinda gross.
-> > 
-> > Thoughts?
+On 6/21/18 9:37 PM, Eryu Guan wrote:
+> On Mon, Jun 18, 2018 at 02:44:33PM -0300, Marco Benatto wrote:
+>> Recently we found out xfs_repair were not repairing
+>> root inode parent pointer when root inode is on short-form
+>> and parent points to an invalid inode number (refer to:
+>> "xfs_repair: Fix root inode's parent when it's bogus for sf
+>> directory" on xfs-devel list).
+>>
+>> This test checks if xfs_repair successfully repair the
+>> filesystem in the scenario mentioned before.
+>>
+>> Signed-off-by: Marco Benatto <mbenatto@redhat.com>
+>> ---
+>>  tests/xfs/450     | 53 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>>  tests/xfs/450.out |  1 +
+>>  tests/xfs/group   |  1 +
+>>  3 files changed, 55 insertions(+)
+>>  create mode 100755 tests/xfs/450
+>>  create mode 100644 tests/xfs/450.out
+>>
+>> diff --git a/tests/xfs/450 b/tests/xfs/450
+>> new file mode 100755
+>> index 0000000..dc7f244
+>> --- /dev/null
+>> +++ b/tests/xfs/450
+>> @@ -0,0 +1,53 @@
+>> +#! /bin/bash
+>> +# SPDX-License-Identifier: GPL-2.0
+>> +# Copyright (c) 2018 Red Hat Inc.  All Rights Reserved.
+>> +#
+>> +# FS QA Test 450
+>> +#
+>> +# Make sure xfs_repair can repair root inode parent's pointer
+>> +# when it contains a bogus ino when it's using shot form directory
+>> +#
+>> +seq=`basename $0`
+>> +seqres=$RESULT_DIR/$seq
+>> +
+>> +status=1	# failure is the default!
 > 
-> I've got an alternative solution:
+> Apart from Dave's comments, there're some common definitions missing
+> too, e.g. 'tmp' and 'here', please use './new xfs' to generate new test
+> template.
+
+Eryu, I think I suggested that Marco could remove the "tmp" definition
+because it's not used in the script.  Is there some reason to keep it?
+The script did start out with a "./new xfs" generation template.
+
+Oh, I bet some helpers depend on it... sorry, my mistake.  Oops.
+
+(though maybe tmp should just get hoisted to the harness and
+not be required in every script, but I digress ...)
+
+Thanks,
+-Eric
+
+> BTW, I've applied the first patch, no need to resend it in v2.
 > 
-> http://git.infradead.org/users/hch/xfs.git/commitdiff/a1c0685b2085b448cbe02f0f9ff0c8771e3f4496
+> Thanks,
+> Eryu
 > 
-> The only bit that is missing is removing the now unused support for
-> a NULL tp in __xfs_bunmapi..
 
-Ah, I forgot about that patch. Thanks for the reminder, Christoph!
-
-Darrick, can we get Christoph's patch in as a standalone bug fix
-rather than wait for the bufferhead removal to be merged?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
