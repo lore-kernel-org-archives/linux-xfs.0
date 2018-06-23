@@ -1,107 +1,132 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:55502 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751787AbeFWNG1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 23 Jun 2018 09:06:27 -0400
-Date: Sat, 23 Jun 2018 09:06:24 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 23/24] iomap: add support for sub-pagesize buffered I/O
- without buffer heads
-Message-ID: <20180623130624.GA16691@bfoster>
-References: <20180615130209.1970-1-hch@lst.de>
- <20180615130209.1970-24-hch@lst.de>
- <20180619165211.GD2806@bfoster>
- <20180620075655.GA2668@lst.de>
- <20180620143252.GE3241@bfoster>
- <20180620160803.GA4838@magnolia>
- <20180620181259.GD4493@bfoster>
- <20180620190230.GB4838@magnolia>
- <20180621084646.GA5764@lst.de>
+Received: from userp2130.oracle.com ([156.151.31.86]:37020 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751530AbeFWRiR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 23 Jun 2018 13:38:17 -0400
+Date: Sat, 23 Jun 2018 10:38:01 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/2] xfs: zero length symlinks are not valid
+Message-ID: <20180623173801.GV4838@magnolia>
+References: <20180619115434.GB2806@bfoster>
+ <20180619154810.GC21698@magnolia>
+ <20180619162839.GC2806@bfoster>
+ <20180619232242.GJ19934@dastard>
+ <20180620115048.GA3241@bfoster>
+ <20180620225918.GN19934@dastard>
+ <20180621114618.GA2834@bfoster>
+ <20180621223140.GU19934@dastard>
+ <20180621225346.GK4838@magnolia>
+ <20180622104448.GA9644@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180621084646.GA5764@lst.de>
+In-Reply-To: <20180622104448.GA9644@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-On Thu, Jun 21, 2018 at 10:46:46AM +0200, Christoph Hellwig wrote:
-> On Wed, Jun 20, 2018 at 12:02:30PM -0700, Darrick J. Wong wrote:
-> > I managed to cut the testcase down to a nine-line fsx script and so
-> > turned it into a fstests regression case.  It seems to reproduce 100% on
-> > scsi disks and doesn't at all on pmem.
+On Fri, Jun 22, 2018 at 06:44:48AM -0400, Brian Foster wrote:
+> On Thu, Jun 21, 2018 at 03:53:46PM -0700, Darrick J. Wong wrote:
+> > On Fri, Jun 22, 2018 at 08:31:41AM +1000, Dave Chinner wrote:
+> > > On Thu, Jun 21, 2018 at 07:46:18AM -0400, Brian Foster wrote:
+> > > > On Thu, Jun 21, 2018 at 08:59:18AM +1000, Dave Chinner wrote:
+> > > > > On Wed, Jun 20, 2018 at 07:50:48AM -0400, Brian Foster wrote:
+> > > > > > If I recreate that same dirty log state and mount with this patch
+> > > > > > applied (note that the fs is created without this patch to simulate an
+> > > > > > old kernel that has not changed i_mode in the same transaction that sets
+> > > > > > di_size = 0) along with a hack to avoid the check in
+> > > > > > xfs_dinode_verify(), I now hit the new assert and corruption error
+> > > > > > that's been placed in xfs_inactive_symlink().
+> > > > > > 
+> > > > > > So to Darrick's point, that seems to show that this is a vector to the
+> > > > > > pre-existing len == 0 check in xfs_inactive_symlink(). Given that, it
+> > > > > > seems to me that if we want to handle recovery from this state, we'd
+> > > > > > still need to work around the verifier check and retain the initial
+> > > > > > di_size == 0 check in xfs_inactive_symlink().
+> > > > > 
+> > > > > I think we should get rid of the transient state, not continue to
+> > > > > work around it. Because the transient state only exists in a log
+> > > > > recovery context, we can change the behaviour and not care about
+> > > > > older kernels still having the problem because all that is needed to
+> > > > > avoid the issue is a clean log when upgrading the kernel.
+> > > > > 
+> > > > 
+> > > > Right... that sounds reasonable to me, but we still need to consider how
+> > > > we handle a filesystem already in this state. BTW, was this a user
+> > > > report or a manufactured corruption due to fuzzing/shutdown testing or
+> > > > something?
+> > > 
+> > > It was shutdown testing. The report was that xfs_repair -n failed
+> > > with a zero length symlink, not that log recovery failed. I assumed
+> > > that log recovery worked fine before xfs_repair -n was run because
+> > > it didn't warn about a dirty log. However, now that you point out
+> > > that we just toss unlink list recovery failures (which I'd forgotten
+> > > about!), I'm guessing that happened and then repair tripped over
+> > > the leaked symlink inode.
+> > > 
+> > > > Given that additional context, I don't feel too strongly about needing
+> > > > to specially handle the "zero length symlink already exists in the dirty
+> > > > log due to xfs_inactive_symlink_rmt()" case. Chances are the mount that
+> > > > reported the error already nuked the state in the first place, so users
+> > > > shouldn't really end up "stuck" somewhere between needing a kernel fix
+> > > > or an 'xfs_repair -L' run (but if that's the approach we take, please
+> > > > just note the tradeoff in the commit log). Just my .02.
+> > > 
+> > > Yup, that seems reasonable to me - leaking the inode until repair is
+> > > done has no user impact.  It will do the same thing for any inode it
+> > > finds on the unlinked list that is corrupted, so my thoughts are
+> > > that if we want to improve corruption handling we need to address
+> > > the general unlinked list corruption issue rather than just this
+> > > specific inode corruption case.
 > > 
-> > Note that changing the second to last line of the fsxops script to call
-> > punch_hole instead of zero_range triggers it too.
+> > FWIW I saw generic/475 trip over this last night and judging from the
+> > logs I saw that behavior -- first we shut down right committing the
+> > zero-length symlink, then recovery makes it as far as iunlink processing
+> > where it blows up, tosses out that failure, and then the next time we
+> > hit that inode we'd trip over it all over again.
 > > 
-> > I've also narrowed it down to something going wrong w.r.t. handling the
-> > page cache somewhere under xfs_free_file_space.
 > 
-> So far this doesn't reproduce for me with or without the iomap code.
-> But I've only run it a few times in a VM on my laptop.
+> What do you mean by "the next time we hit that inode?" IIUC, iunlink
+> processing nukes the entire AGI unlinked list bucket in response to the
+> read error. Given the inode was unlinked, shouldn't it no longer be
+> accessible after that point? Are you hitting some other path that
+> attempts to read the inode?
 
-After playing around a bit more, I observed that this became much harder
-to reproduce after creating a new fs or using a largish fs. I think it's
-hit or miss based on the content of free space in the filesystem. The
-appended diff applied on top of Darrick's recent xfstests test[1] makes
-this reproduce reliably for me (with -bsize=1k).
+Aha, xfs_scrub finds the busted inaccessible inode when it scans the
+filesystem, though frustratingly the fs shuts down because xfs_inactive
+gets called on the corrupted symlink when xfs_fs_destroy_inode ->
+xfs_inactive -> xfs_inactive_symlink... will have to review scrub's
+iget use.
 
-The problem, I think, is essentially that readpage doesn't zero out
-real/allocated post-eof blocks on the current page. For example, once
-this test runs at least once, the following command is all that is
-required to observe the difference in behavior between the buffer head
-path and the new iomap path:
+--D
 
-  xfs_io -c "mmap 0x21000 0x1000" -c "mread -v 0x21c00 0x100" <scratch_mnt>/a
-
-The former returns zeroes for the post-eof (i_size == 0x21a20) portion
-of the page due to the (iblock < lblock) check in
-block_read_full_page(). If the block is post eof, get_block() isn't
-called, the bh is left unmapped and the portion of the page is
-explicitly zeroed in the same loop. The iomap code appears to read and
-expose whatever is on disk if the block is allocated. I'm guessing we at
-least need to consider doing something similar in iomap_readpage_actor()
-(or perhaps somewhere in that path that also covers the write path)..?
-I'm not sure it's sufficient to rely on writeback to zero the page and
-otherwise let it expose garbage until that point.
-
-Brian
-
-[1] https://marc.info/?l=linux-xfs&m=152960597620340&w=2
-
---- 8< ---
-
-diff --git a/tests/generic/708 b/tests/generic/708
-index d380053f..355cc6b1 100755
---- a/tests/generic/708
-+++ b/tests/generic/708
-@@ -30,19 +30,17 @@ _require_scratch
- 
- rm -f $seqres.full
- 
--_scratch_mkfs >>$seqres.full 2>&1
-+_scratch_mkfs_sized $((1024 * 1024 * 100)) >>$seqres.full 2>&1
- _scratch_mount
- 
-+$XFS_IO_PROG -fc "pwrite 0 100m" -c fsync $SCRATCH_MNT/file >>$seqres.full 2>&1
-+rm -f $SCRATCH_MNT/file
-+
- cat >> $tmp.fsxops << ENDL
--fallocate 0x77e2 0x5f06 0x269a2 keep_size
--mapwrite 0x2e7fc 0x42ba 0x3f989
--write 0x67a9 0x714e 0x3f989
--write 0x39f96 0x185a 0x3f989
--collapse_range 0x36000 0x8000 0x3f989
--mapread 0x74c0 0x1bb3 0x3e2d0
--truncate 0x0 0x8aa2 0x3e2d0
--zero_range 0x1265 0x783d 0x8aa2
--mapread 0x7bd8 0xeca 0x8aa2
-+truncate 0x0 0x1f0d6 0x380e1
-+write 0x1ad87 0x6c99 0x180d6
-+zero_range 0x14426 0xd3aa 0x21a20 keep_size
-+mapread 0x1f69a 0x2386 0x21a20
- ENDL
- 
- victim=$SCRATCH_MNT/a
+> Brian
+> 
+> > --D
+> > 
+> > > Alright - I'll clean up the patch, make notes of all this in the
+> > > commit message and repost.
+> > > 
+> > > Thanks, Brian!
+> > > 
+> > > Cheers,
+> > > 
+> > > Dave.
+> > > 
+> > > -- 
+> > > Dave Chinner
+> > > david@fromorbit.com
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
