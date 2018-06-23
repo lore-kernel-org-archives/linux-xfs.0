@@ -1,53 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:37422 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752116AbeFZTHl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Jun 2018 15:07:41 -0400
-Received: by mail-oi0-f67.google.com with SMTP id k81-v6so2993698oib.4
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Jun 2018 12:07:41 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.133]:46926 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751399AbeFWGrD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 23 Jun 2018 02:47:03 -0400
+Date: Fri, 22 Jun 2018 23:47:02 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 4/8] xfs: don't allow insert-range to shift extents
+ past the maximum offset
+Message-ID: <20180623064702.GA9497@infradead.org>
+References: <152960586416.26246.8634761888260524091.stgit@magnolia>
+ <152960588873.26246.17582272219031862067.stgit@magnolia>
+ <20180622212104.GT4838@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20180626185830.GA7171@redhat.com>
-References: <20180626175932.8899-1-ross.zwisler@linux.intel.com>
- <20180626175932.8899-2-ross.zwisler@linux.intel.com> <CAPcyv4iWgPnHmBKhUvhManC6UL9CkLqN_d8vBo6KmcPJdPzuUw@mail.gmail.com>
- <20180626185830.GA7171@redhat.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 26 Jun 2018 12:07:40 -0700
-Message-ID: <CAPcyv4h6HO6fs6k7QMD77jkz2djCeWCtWomCdNb0-1Q4VKanqw@mail.gmail.com>
-Subject: Re: [PATCH v3 1/3] pmem: only set QUEUE_FLAG_DAX for fsdax mode
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180622212104.GT4838@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Toshi Kani <toshi.kani@hpe.com>, device-mapper development <dm-devel@redhat.com>, linux-nvdimm <linux-nvdimm@lists.01.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, stable <stable@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, zlang@redhat.com, Christoph Hellwig <hch@infradead.org>, Allison Henderson <allison.henderson@oracle.com>
 
-On Tue, Jun 26, 2018 at 11:58 AM, Mike Snitzer <snitzer@redhat.com> wrote:
-> On Tue, Jun 26 2018 at  2:52pm -0400,
-> Dan Williams <dan.j.williams@intel.com> wrote:
->
->> On Tue, Jun 26, 2018 at 10:59 AM, Ross Zwisler
->> <ross.zwisler@linux.intel.com> wrote:
->> > QUEUE_FLAG_DAX is an indication that a given block device supports
->> > filesystem DAX and should not be set for PMEM namespaces which are in "raw"
->> > or "sector" modes.  These namespaces lack struct page and are prevented
->> > from participating in filesystem DAX.
->> >
->> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
->> > Suggested-by: Mike Snitzer <snitzer@redhat.com>
->> > Cc: stable@vger.kernel.org
->>
->> Why is this cc: stable? What is the user visible impact of this change
->> especially given the requirement to validate QUEUE_FLAG_DAX with
->> bdev_dax_supported()? Patch looks good, but it's just a cosmetic fixup
->> afaics.
->
-> This isn't cosmetic when you consider that stacking up a DM device is
-> looking at this flag to determine whether a table does or does _not_
-> support DAX.
->
-> So this patch, in conjunction with the other changes in the series, is
-> certainly something I'd consider appropriate for stable.
+On Fri, Jun 22, 2018 at 02:21:04PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Zorro Lang reports that generic/485 blows an assert on a filesystem with
+> 512 byte blocks.  The test tries to fallocate a post-eof extent at the
+> maximum file size and calls insert range to shift the extents right by
+> two blocks.  On a 512b block filesystem this causes startoff to overflow
+> the 54-bit startoff field, leading to the assert.
+> 
+> Therefore, always check the rightmost extent to see if it would overflow
+> prior to invoking the insert range machinery.
+> 
+> Reported-by: zlang@redhat.com
+> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=200137
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 
-I think this classifies as something that never worked correctly and
-is not a regression. It does not identify which commit it is repairing
-or the user visible failure mode.
+Looks good,
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
