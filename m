@@ -1,132 +1,141 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:37020 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751530AbeFWRiR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 23 Jun 2018 13:38:17 -0400
-Date: Sat, 23 Jun 2018 10:38:01 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/2] xfs: zero length symlinks are not valid
-Message-ID: <20180623173801.GV4838@magnolia>
-References: <20180619115434.GB2806@bfoster>
- <20180619154810.GC21698@magnolia>
- <20180619162839.GC2806@bfoster>
- <20180619232242.GJ19934@dastard>
- <20180620115048.GA3241@bfoster>
- <20180620225918.GN19934@dastard>
- <20180621114618.GA2834@bfoster>
- <20180621223140.GU19934@dastard>
- <20180621225346.GK4838@magnolia>
- <20180622104448.GA9644@bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180622104448.GA9644@bfoster>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:33162 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751652AbeFWSAh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 23 Jun 2018 14:00:37 -0400
+From: Zorro Lang <zlang@redhat.com>
+Subject: [PATCH v3 1/3] xfstests: dedupe a single big file and verify integrity
+Date: Sun, 24 Jun 2018 02:00:27 +0800
+Message-Id: <20180623180029.24497-1-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Jun 22, 2018 at 06:44:48AM -0400, Brian Foster wrote:
-> On Thu, Jun 21, 2018 at 03:53:46PM -0700, Darrick J. Wong wrote:
-> > On Fri, Jun 22, 2018 at 08:31:41AM +1000, Dave Chinner wrote:
-> > > On Thu, Jun 21, 2018 at 07:46:18AM -0400, Brian Foster wrote:
-> > > > On Thu, Jun 21, 2018 at 08:59:18AM +1000, Dave Chinner wrote:
-> > > > > On Wed, Jun 20, 2018 at 07:50:48AM -0400, Brian Foster wrote:
-> > > > > > If I recreate that same dirty log state and mount with this patch
-> > > > > > applied (note that the fs is created without this patch to simulate an
-> > > > > > old kernel that has not changed i_mode in the same transaction that sets
-> > > > > > di_size = 0) along with a hack to avoid the check in
-> > > > > > xfs_dinode_verify(), I now hit the new assert and corruption error
-> > > > > > that's been placed in xfs_inactive_symlink().
-> > > > > > 
-> > > > > > So to Darrick's point, that seems to show that this is a vector to the
-> > > > > > pre-existing len == 0 check in xfs_inactive_symlink(). Given that, it
-> > > > > > seems to me that if we want to handle recovery from this state, we'd
-> > > > > > still need to work around the verifier check and retain the initial
-> > > > > > di_size == 0 check in xfs_inactive_symlink().
-> > > > > 
-> > > > > I think we should get rid of the transient state, not continue to
-> > > > > work around it. Because the transient state only exists in a log
-> > > > > recovery context, we can change the behaviour and not care about
-> > > > > older kernels still having the problem because all that is needed to
-> > > > > avoid the issue is a clean log when upgrading the kernel.
-> > > > > 
-> > > > 
-> > > > Right... that sounds reasonable to me, but we still need to consider how
-> > > > we handle a filesystem already in this state. BTW, was this a user
-> > > > report or a manufactured corruption due to fuzzing/shutdown testing or
-> > > > something?
-> > > 
-> > > It was shutdown testing. The report was that xfs_repair -n failed
-> > > with a zero length symlink, not that log recovery failed. I assumed
-> > > that log recovery worked fine before xfs_repair -n was run because
-> > > it didn't warn about a dirty log. However, now that you point out
-> > > that we just toss unlink list recovery failures (which I'd forgotten
-> > > about!), I'm guessing that happened and then repair tripped over
-> > > the leaked symlink inode.
-> > > 
-> > > > Given that additional context, I don't feel too strongly about needing
-> > > > to specially handle the "zero length symlink already exists in the dirty
-> > > > log due to xfs_inactive_symlink_rmt()" case. Chances are the mount that
-> > > > reported the error already nuked the state in the first place, so users
-> > > > shouldn't really end up "stuck" somewhere between needing a kernel fix
-> > > > or an 'xfs_repair -L' run (but if that's the approach we take, please
-> > > > just note the tradeoff in the commit log). Just my .02.
-> > > 
-> > > Yup, that seems reasonable to me - leaking the inode until repair is
-> > > done has no user impact.  It will do the same thing for any inode it
-> > > finds on the unlinked list that is corrupted, so my thoughts are
-> > > that if we want to improve corruption handling we need to address
-> > > the general unlinked list corruption issue rather than just this
-> > > specific inode corruption case.
-> > 
-> > FWIW I saw generic/475 trip over this last night and judging from the
-> > logs I saw that behavior -- first we shut down right committing the
-> > zero-length symlink, then recovery makes it as far as iunlink processing
-> > where it blows up, tosses out that failure, and then the next time we
-> > hit that inode we'd trip over it all over again.
-> > 
-> 
-> What do you mean by "the next time we hit that inode?" IIUC, iunlink
-> processing nukes the entire AGI unlinked list bucket in response to the
-> read error. Given the inode was unlinked, shouldn't it no longer be
-> accessible after that point? Are you hitting some other path that
-> attempts to read the inode?
+Duperemove is a tool for finding duplicated extents and submitting
+them for deduplication, and it supports XFS. This case trys to
+verify the integrity of XFS after running duperemove.
 
-Aha, xfs_scrub finds the busted inaccessible inode when it scans the
-filesystem, though frustratingly the fs shuts down because xfs_inactive
-gets called on the corrupted symlink when xfs_fs_destroy_inode ->
-xfs_inactive -> xfs_inactive_symlink... will have to review scrub's
-iget use.
+Signed-off-by: Zorro Lang <zlang@redhat.com>
+---
 
---D
+V3 update description about SPDX-License.
 
-> Brian
-> 
-> > --D
-> > 
-> > > Alright - I'll clean up the patch, make notes of all this in the
-> > > commit message and repost.
-> > > 
-> > > Thanks, Brian!
-> > > 
-> > > Cheers,
-> > > 
-> > > Dave.
-> > > 
-> > > -- 
-> > > Dave Chinner
-> > > david@fromorbit.com
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Zorro
+
+ common/config        |  1 +
+ tests/shared/008     | 64 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/shared/008.out |  3 +++
+ tests/shared/group   |  1 +
+ 4 files changed, 69 insertions(+)
+ create mode 100755 tests/shared/008
+ create mode 100644 tests/shared/008.out
+
+diff --git a/common/config b/common/config
+index 09e7ffee..d02d6ed5 100644
+--- a/common/config
++++ b/common/config
+@@ -192,6 +192,7 @@ export SETCAP_PROG="$(type -P setcap)"
+ export GETCAP_PROG="$(type -P getcap)"
+ export CHECKBASHISMS_PROG="$(type -P checkbashisms)"
+ export XFS_INFO_PROG="$(type -P xfs_info)"
++export DUPEREMOVE_PROG="$(type -P duperemove)"
+ 
+ # use 'udevadm settle' or 'udevsettle' to wait for lv to be settled.
+ # newer systems have udevadm command but older systems like RHEL5 don't.
+diff --git a/tests/shared/008 b/tests/shared/008
+new file mode 100755
+index 00000000..a7d76083
+--- /dev/null
++++ b/tests/shared/008
+@@ -0,0 +1,64 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2018 Red Hat Inc.  All Rights Reserved.
++#
++# FS QA Test 008
++#
++# Dedupe a single big file and verify integrity
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/reflink
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# duperemove only supports btrfs and xfs (with reflink feature).
++# Add other filesystems if it supports more later.
++_supported_fs xfs btrfs
++_supported_os Linux
++_require_scratch_dedupe
++_require_command "$DUPEREMOVE_PROG" duperemove
++
++fssize=$((2 * 1024 * 1024 * 1024))
++_scratch_mkfs_sized $fssize > $seqres.full 2>&1
++_scratch_mount >> $seqres.full 2>&1
++
++# fill the fs with a big file has same contents
++$XFS_IO_PROG -f -c "pwrite -S 0x55 0 $fssize" $SCRATCH_MNT/${seq}.file \
++	>> $seqres.full 2>&1
++md5sum $SCRATCH_MNT/${seq}.file > ${tmp}.md5sum
++
++echo "= before cycle mount ="
++# Dedupe with 1M blocksize
++$DUPEREMOVE_PROG -dr --dedupe-options=same -b 1048576 $SCRATCH_MNT/ >>$seqres.full 2>&1
++# Verify integrity
++md5sum -c --quiet ${tmp}.md5sum
++# Dedupe with 64k blocksize
++$DUPEREMOVE_PROG -dr --dedupe-options=same -b 65536 $SCRATCH_MNT/ >>$seqres.full 2>&1
++# Verify integrity again
++md5sum -c --quiet ${tmp}.md5sum
++
++# umount and mount again, verify pagecache contents don't mutate
++_scratch_cycle_mount
++echo "= after cycle mount ="
++md5sum -c --quiet ${tmp}.md5sum
++
++status=0
++exit
+diff --git a/tests/shared/008.out b/tests/shared/008.out
+new file mode 100644
+index 00000000..f29d478f
+--- /dev/null
++++ b/tests/shared/008.out
+@@ -0,0 +1,3 @@
++QA output created by 008
++= before cycle mount =
++= after cycle mount =
+diff --git a/tests/shared/group b/tests/shared/group
+index b3663a03..49ffa8dd 100644
+--- a/tests/shared/group
++++ b/tests/shared/group
+@@ -10,6 +10,7 @@
+ 005 dangerous_fuzzers
+ 006 auto enospc
+ 007 dangerous_fuzzers
++008 auto stress dedupe
+ 032 mkfs auto quick
+ 272 auto enospc rw
+ 289 auto quick
+-- 
+2.14.4
+
