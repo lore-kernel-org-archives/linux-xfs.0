@@ -1,172 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:47596 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751721AbeFWSAl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 23 Jun 2018 14:00:41 -0400
-From: Zorro Lang <zlang@redhat.com>
-Subject: [PATCH v3 2/3] xfstests: iterate dedupe integrity test
-Date: Sun, 24 Jun 2018 02:00:28 +0800
-Message-Id: <20180623180029.24497-2-zlang@redhat.com>
-In-Reply-To: <20180623180029.24497-1-zlang@redhat.com>
-References: <20180623180029.24497-1-zlang@redhat.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:57292 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752063AbeFXTXd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 24 Jun 2018 15:23:33 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5OJFbJ1115147
+        for <linux-xfs@vger.kernel.org>; Sun, 24 Jun 2018 19:23:32 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp2120.oracle.com with ESMTP id 2jt7mp8hnb-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 24 Jun 2018 19:23:32 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w5OJNV1q024895
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 24 Jun 2018 19:23:32 GMT
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w5OJNVaS020321
+        for <linux-xfs@vger.kernel.org>; Sun, 24 Jun 2018 19:23:31 GMT
+Subject: [PATCH v16 00/21] xfs-4.19: online repair support
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Sun, 24 Jun 2018 12:23:30 -0700
+Message-ID: <152986820984.3155.16417868536016544528.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
+To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-This case does dedupe on a dir, then copy the dir to next dir. Dedupe
-the next dir again, then copy this dir to next again, and dedupe
-again ... At the end, verify the data in the last dir is still same
-with the first one.
+Hi all,
 
-Signed-off-by: Zorro Lang <zlang@redhat.com>
----
+This is the sixteenth revision of a patchset that adds to XFS kernel
+support for online metadata scrubbing and repair.  There aren't any
+on-disk format changes.
 
-V3 update description about SPDX-License
+New for this version of the patch series are: a renaming of the 'repair
+freeze' code into the 'scrub freeze' code so that scrubbers can freeze
+the filesystem to check or repair metadata; a new ioctl flag for
+userspace to grant the kernel permission to freeze the filesystem to do
+work; a centralized iput helper that delays iput processing until after
+the scrub freeze is lifted; and a new fs summary counter scrub/repair
+function that can check the global icount/ifree/fdblock counters.
 
-Thanks,
-Zorro
+The first patch fixes a soon-to-be-invalid assumption in the rmap code
+that the rmapbt can never be empty.  This won't be true at all for
+realtime rmap and is briefly untrue for rmap repairs, so we might as
+well restructure that assumption out of the code.
 
- tests/shared/009     | 104 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/shared/009.out |   4 ++
- tests/shared/group   |   1 +
- 3 files changed, 109 insertions(+)
- create mode 100755 tests/shared/009
- create mode 100644 tests/shared/009.out
+The next two patches create two predicates that decide if an inode has
+CoW staging blocks that need to be freed or post-eof blocks that need to
+be freed.
 
-diff --git a/tests/shared/009 b/tests/shared/009
-new file mode 100755
-index 00000000..933d3098
---- /dev/null
-+++ b/tests/shared/009
-@@ -0,0 +1,104 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2018 Red Hat Inc.  All Rights Reserved.
-+#
-+# FS QA Test 009
-+#
-+# Iterate dedupe integrity test. Copy an original data0 several
-+# times (d0 -> d1, d1 -> d2, ... dn-1 -> dn), dedupe dataN everytime
-+# before copy. At last, verify dataN same with data0.
-+#
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/reflink
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+
-+# duperemove only supports btrfs and xfs (with reflink feature).
-+# Add other filesystems if it supports more later.
-+_supported_fs xfs btrfs
-+_supported_os Linux
-+_require_scratch_dedupe
-+_require_command "$DUPEREMOVE_PROG" duperemove
-+
-+_scratch_mkfs > $seqres.full 2>&1
-+_scratch_mount >> $seqres.full 2>&1
-+
-+function iterate_dedup_verify()
-+{
-+	local src=$srcdir
-+	local dest=$dupdir/1
-+
-+	for ((index = 1; index <= times; index++)); do
-+		cp -a $src $dest
-+		find $dest -type f -exec md5sum {} \; \
-+			> $md5file$index
-+		# Make some noise
-+		$FSSTRESS_PROG $fsstress_opts -d $noisedir \
-+			       -n 200 -p $((5 * LOAD_FACTOR)) >/dev/null 2>&1
-+		# Too many output, so only save error output
-+		$DUPEREMOVE_PROG -dr --dedupe-options=same $dupdir \
-+			>/dev/null 2>$seqres.full
-+		md5sum -c --quiet $md5file$index
-+		src=$dest
-+		dest=$dupdir/$((index + 1))
-+	done
-+}
-+
-+srcdir=$SCRATCH_MNT/src
-+dupdir=$SCRATCH_MNT/dup
-+noisedir=$dupdir/noise
-+mkdir $srcdir $dupdir
-+mkdir $dupdir/noise
-+
-+md5file=${tmp}.md5sum
-+
-+fsstress_opts="-w -r"
-+# Create some files to be original data
-+$FSSTRESS_PROG $fsstress_opts -d $srcdir \
-+	       -n 500 -p $((5 * LOAD_FACTOR)) >/dev/null 2>&1
-+
-+# Calculate how many test cycles will be run
-+src_size=`du -ks $srcdir | awk '{print $1}'`
-+free_size=`df -kP $SCRATCH_MNT | grep -v Filesystem | awk '{print $4}'`
-+times=$((free_size / src_size))
-+if [ $times -gt $((4 * TIME_FACTOR)) ]; then
-+	times=$((4 * TIME_FACTOR))
-+fi
-+
-+echo "= Do dedup and verify ="
-+iterate_dedup_verify
-+
-+# Use the last checksum file to verify the original data
-+sed -e s#dup/$times#src#g $md5file$times > $md5file
-+echo "= Backwords verify ="
-+md5sum -c --quiet $md5file
-+
-+# read from the disk also doesn't show mutations.
-+_scratch_cycle_mount
-+echo "= Verify after cycle mount ="
-+for ((index = 1; index <= times; index++)); do
-+	md5sum -c --quiet $md5file$index
-+done
-+
-+status=0
-+exit
-diff --git a/tests/shared/009.out b/tests/shared/009.out
-new file mode 100644
-index 00000000..44a78ba3
---- /dev/null
-+++ b/tests/shared/009.out
-@@ -0,0 +1,4 @@
-+QA output created by 009
-+= Do dedup and verify =
-+= Backwords verify =
-+= Verify after cycle mount =
-diff --git a/tests/shared/group b/tests/shared/group
-index 49ffa8dd..9c484794 100644
---- a/tests/shared/group
-+++ b/tests/shared/group
-@@ -11,6 +11,7 @@
- 006 auto enospc
- 007 dangerous_fuzzers
- 008 auto stress dedupe
-+009 auto stress dedupe
- 032 mkfs auto quick
- 272 auto enospc rw
- 289 auto quick
--- 
-2.14.4
+Patches 4-7 implement reconstruction of the AGF/AGI/AGFL headers, the
+free space btrees, and the inode btrees.  These are the same patches as
+v15.
 
+Patches 8-9 implement the deferred iput code -- first the scrub-specific
+iput helper that enables us delay iputting of inodes that have post-eof
+or CoW blocks that need to be freed until we no longer have a
+transaction and can let the iput work proceed.  The second patch fleshes
+out the scrub iget/iput tracepoints for easier debugging.
+
+Next comes the scrub freeze code which enables us to pause all other
+work in the filesystem and introduces the FREEZE_OK ioctl flag for
+userspace to control freeze policy.
+
+Patch 11-19 implement online rmap, refcount, inode, ifork, bmap,
+symlink, extended attribute, and quota repairs.  Patch 20 implements
+online quotacheck via the scrub freezer.
+
+Patch 21 implements the filesystem summary counter check and repair
+code.  This turned out to be easier to implement than I had thought --
+we gather the icount, ifree, and fdblocks counts from each of the AGs.
+Next we adjust fdblocks by all the in-core reservations: resblks, per-AG
+reservations, and all delayed allocation blocks of all in-core inodes.
+Then we can compare our counts against the superblock's counts and
+adjust accordingly.
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees.  The kernel patches[1] should apply against
+4.18-rc2.  xfsprogs[2] and xfstests[3] can be found in their usual
+places.  The git trees contain all four series' worth of changes.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
+[2] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
+[3] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=djwong-devel
