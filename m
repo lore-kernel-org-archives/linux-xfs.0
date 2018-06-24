@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:46034 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751730AbeFXTXw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 24 Jun 2018 15:23:52 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5OJHN83092255
-        for <linux-xfs@vger.kernel.org>; Sun, 24 Jun 2018 19:23:51 GMT
+Received: from aserp2120.oracle.com ([141.146.126.78]:57520 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752228AbeFXTYE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 24 Jun 2018 15:24:04 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5OJE1Ew114359
+        for <linux-xfs@vger.kernel.org>; Sun, 24 Jun 2018 19:24:03 GMT
 Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp2130.oracle.com with ESMTP id 2jt7vm0h4w-1
+        by aserp2120.oracle.com with ESMTP id 2jt7mp8hny-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 24 Jun 2018 19:23:51 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w5OJNopR025251
+        for <linux-xfs@vger.kernel.org>; Sun, 24 Jun 2018 19:24:03 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w5OJO2rM025748
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 24 Jun 2018 19:23:50 GMT
+        for <linux-xfs@vger.kernel.org>; Sun, 24 Jun 2018 19:24:03 GMT
 Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w5OJNnNl020363
-        for <linux-xfs@vger.kernel.org>; Sun, 24 Jun 2018 19:23:50 GMT
-Subject: [PATCH 03/21] xfs: refactor part of xfs_free_eofblocks
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w5OJO2NZ013008
+        for <linux-xfs@vger.kernel.org>; Sun, 24 Jun 2018 19:24:02 GMT
+Subject: [PATCH 05/21] xfs: repair the AGI
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sun, 24 Jun 2018 12:23:48 -0700
-Message-ID: <152986822862.3155.14863319177548687309.stgit@magnolia>
+Date: Sun, 24 Jun 2018 12:24:01 -0700
+Message-ID: <152986824119.3155.17444896035154098752.stgit@magnolia>
 In-Reply-To: <152986820984.3155.16417868536016544528.stgit@magnolia>
 References: <152986820984.3155.16417868536016544528.stgit@magnolia>
 MIME-Version: 1.0
@@ -34,194 +34,266 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Refactor the part of _free_eofblocks that decides if it's really going
-to truncate post-EOF blocks into a separate helper function.  The
-upcoming repair freeze patch requires us to defer iput of an inode if
-disposing of that inode would have to start another transaction to
-unwind incore state.  No functionality changes.
+Rebuild the AGI header items with some help from the rmapbt.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_bmap_util.c |  101 ++++++++++++++++++++----------------------------
- fs/xfs/xfs_inode.c     |   32 +++++++++++++++
- fs/xfs/xfs_inode.h     |    1 
- 3 files changed, 75 insertions(+), 59 deletions(-)
+ fs/xfs/scrub/agheader_repair.c |  211 ++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/repair.h          |    2 
+ fs/xfs/scrub/scrub.c           |    2 
+ 3 files changed, 214 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index c94d376e4152..0f38acbb200f 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -805,78 +805,61 @@ xfs_free_eofblocks(
- 	struct xfs_inode	*ip)
- {
- 	struct xfs_trans	*tp;
--	int			error;
--	xfs_fileoff_t		end_fsb;
--	xfs_fileoff_t		last_fsb;
--	xfs_filblks_t		map_len;
--	int			nimaps;
--	struct xfs_bmbt_irec	imap;
- 	struct xfs_mount	*mp = ip->i_mount;
-+	int			error;
- 
- 	/*
--	 * Figure out if there are any blocks beyond the end
--	 * of the file.  If not, then there is nothing to do.
-+	 * If there are blocks after the end of file, truncate the file to its
-+	 * current size to free them up.
- 	 */
--	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
--	last_fsb = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
--	if (last_fsb <= end_fsb)
-+	if (!xfs_inode_has_posteof_blocks(ip))
- 		return 0;
--	map_len = last_fsb - end_fsb;
--
--	nimaps = 1;
--	xfs_ilock(ip, XFS_ILOCK_SHARED);
--	error = xfs_bmapi_read(ip, end_fsb, map_len, &imap, &nimaps, 0);
--	xfs_iunlock(ip, XFS_ILOCK_SHARED);
- 
- 	/*
--	 * If there are blocks after the end of file, truncate the file to its
--	 * current size to free them up.
-+	 * Attach the dquots to the inode up front.
- 	 */
--	if (!error && (nimaps != 0) &&
--	    (imap.br_startblock != HOLESTARTBLOCK ||
--	     ip->i_delayed_blks)) {
--		/*
--		 * Attach the dquots to the inode up front.
--		 */
--		error = xfs_qm_dqattach(ip);
--		if (error)
--			return error;
-+	error = xfs_qm_dqattach(ip);
-+	if (error)
-+		return error;
- 
--		/* wait on dio to ensure i_size has settled */
--		inode_dio_wait(VFS_I(ip));
-+	/* wait on dio to ensure i_size has settled */
-+	inode_dio_wait(VFS_I(ip));
- 
--		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0,
--				&tp);
--		if (error) {
--			ASSERT(XFS_FORCED_SHUTDOWN(mp));
--			return error;
--		}
-+	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
-+	if (error) {
-+		ASSERT(XFS_FORCED_SHUTDOWN(mp));
-+		return error;
-+	}
- 
--		xfs_ilock(ip, XFS_ILOCK_EXCL);
--		xfs_trans_ijoin(tp, ip, 0);
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin(tp, ip, 0);
- 
--		/*
--		 * Do not update the on-disk file size.  If we update the
--		 * on-disk file size and then the system crashes before the
--		 * contents of the file are flushed to disk then the files
--		 * may be full of holes (ie NULL files bug).
--		 */
--		error = xfs_itruncate_extents_flags(&tp, ip, XFS_DATA_FORK,
--					XFS_ISIZE(ip), XFS_BMAPI_NODISCARD);
--		if (error) {
--			/*
--			 * If we get an error at this point we simply don't
--			 * bother truncating the file.
--			 */
--			xfs_trans_cancel(tp);
--		} else {
--			error = xfs_trans_commit(tp);
--			if (!error)
--				xfs_inode_clear_eofblocks_tag(ip);
--		}
-+	/*
-+	 * Do not update the on-disk file size.  If we update the
-+	 * on-disk file size and then the system crashes before the
-+	 * contents of the file are flushed to disk then the files
-+	 * may be full of holes (ie NULL files bug).
-+	 */
-+	error = xfs_itruncate_extents_flags(&tp, ip, XFS_DATA_FORK,
-+				XFS_ISIZE(ip), XFS_BMAPI_NODISCARD);
-+	if (error)
-+		goto err_cancel;
- 
--		xfs_iunlock(ip, XFS_ILOCK_EXCL);
--	}
-+	error = xfs_trans_commit(tp);
-+	if (error)
-+		goto out_unlock;
-+
-+	xfs_inode_clear_eofblocks_tag(ip);
-+	goto out_unlock;
-+
-+err_cancel:
-+	/*
-+	 * If we get an error at this point we simply don't
-+	 * bother truncating the file.
-+	 */
-+	xfs_trans_cancel(tp);
-+out_unlock:
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
+index 90e5e6cbc911..61e0134f6f9f 100644
+--- a/fs/xfs/scrub/agheader_repair.c
++++ b/fs/xfs/scrub/agheader_repair.c
+@@ -698,3 +698,214 @@ xfs_repair_agfl(
+ 	xfs_repair_cancel_btree_extents(sc, &agfl_extents);
  	return error;
  }
- 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index e6859dfc29af..368ac0528727 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -3708,3 +3708,35 @@ xfs_inode_has_cow_blocks(
- 	}
- 	return false;
- }
++
++/* AGI */
++
++enum {
++	REPAIR_AGI_INOBT = 0,
++	REPAIR_AGI_FINOBT,
++	REPAIR_AGI_END,
++	REPAIR_AGI_MAX
++};
++
++static const struct xfs_repair_find_ag_btree repair_agi[] = {
++	[REPAIR_AGI_INOBT] = {
++		.rmap_owner = XFS_RMAP_OWN_INOBT,
++		.buf_ops = &xfs_inobt_buf_ops,
++		.magic = XFS_IBT_CRC_MAGIC,
++	},
++	[REPAIR_AGI_FINOBT] = {
++		.rmap_owner = XFS_RMAP_OWN_INOBT,
++		.buf_ops = &xfs_inobt_buf_ops,
++		.magic = XFS_FIBT_CRC_MAGIC,
++	},
++	[REPAIR_AGI_END] = {
++		.buf_ops = NULL
++	},
++};
++
++/* Find the inode btree roots from the rmap data. */
++STATIC int
++xfs_repair_agi_find_btrees(
++	struct xfs_scrub_context	*sc,
++	struct xfs_repair_find_ag_btree	*fab)
++{
++	struct xfs_buf			*agf_bp;
++	struct xfs_mount		*mp = sc->mp;
++	int				error;
++
++	memcpy(fab, repair_agi, sizeof(repair_agi));
++
++	/* Read the AGF. */
++	error = xfs_alloc_read_agf(mp, sc->tp, sc->sa.agno, 0, &agf_bp);
++	if (error)
++		return error;
++	if (!agf_bp)
++		return -ENOMEM;
++
++	/* Find the btree roots. */
++	error = xfs_repair_find_ag_btree_roots(sc, agf_bp, fab, NULL);
++	if (error)
++		return error;
++
++	/* We must find the inobt root. */
++	if (fab[REPAIR_AGI_INOBT].root == NULLAGBLOCK ||
++	    fab[REPAIR_AGI_INOBT].height > XFS_BTREE_MAXLEVELS)
++		return -EFSCORRUPTED;
++
++	/* We must find the finobt root if that feature is enabled. */
++	if (xfs_sb_version_hasfinobt(&mp->m_sb) &&
++	    (fab[REPAIR_AGI_FINOBT].root == NULLAGBLOCK ||
++	     fab[REPAIR_AGI_FINOBT].height > XFS_BTREE_MAXLEVELS))
++		return -EFSCORRUPTED;
++
++	return 0;
++}
 +
 +/*
-+ * Decide if this inode have post-EOF blocks.  The caller is responsible
-+ * for knowing / caring about the PREALLOC/APPEND flags.
++ * Reinitialize the AGI header, making an in-core copy of the old contents so
++ * that we know which in-core state needs to be reinitialized.
 + */
-+bool
-+xfs_inode_has_posteof_blocks(
-+	struct xfs_inode	*ip)
++STATIC void
++xfs_repair_agi_init_header(
++	struct xfs_scrub_context	*sc,
++	struct xfs_buf			*agi_bp,
++	struct xfs_agi			*old_agi)
 +{
-+	struct xfs_bmbt_irec	imap;
-+	struct xfs_mount	*mp = ip->i_mount;
-+	xfs_fileoff_t		end_fsb;
-+	xfs_fileoff_t		last_fsb;
-+	xfs_filblks_t		map_len;
-+	int			nimaps;
-+	int			error;
++	struct xfs_agi			*agi = XFS_BUF_TO_AGI(agi_bp);
++	struct xfs_mount		*mp = sc->mp;
 +
-+	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
-+	last_fsb = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
-+	if (last_fsb <= end_fsb)
-+		return false;
-+	map_len = last_fsb - end_fsb;
++	memcpy(old_agi, agi, sizeof(*old_agi));
++	memset(agi, 0, BBTOB(agi_bp->b_length));
++	agi->agi_magicnum = cpu_to_be32(XFS_AGI_MAGIC);
++	agi->agi_versionnum = cpu_to_be32(XFS_AGI_VERSION);
++	agi->agi_seqno = cpu_to_be32(sc->sa.agno);
++	agi->agi_length = cpu_to_be32(xfs_ag_block_count(mp, sc->sa.agno));
++	agi->agi_newino = cpu_to_be32(NULLAGINO);
++	agi->agi_dirino = cpu_to_be32(NULLAGINO);
++	if (xfs_sb_version_hascrc(&mp->m_sb))
++		uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_meta_uuid);
 +
-+	nimaps = 1;
-+	xfs_ilock(ip, XFS_ILOCK_SHARED);
-+	error = xfs_bmapi_read(ip, end_fsb, map_len, &imap, &nimaps, 0);
-+	xfs_iunlock(ip, XFS_ILOCK_SHARED);
-+
-+	return !error && (nimaps != 0) &&
-+	       (imap.br_startblock != HOLESTARTBLOCK ||
-+	        ip->i_delayed_blks);
++	/* We don't know how to fix the unlinked list yet. */
++	memcpy(&agi->agi_unlinked, &old_agi->agi_unlinked,
++			sizeof(agi->agi_unlinked));
 +}
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 735d0788bfdb..a041fffa1b33 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -504,5 +504,6 @@ extern struct kmem_zone	*xfs_inode_zone;
++
++/* Set btree root information in an AGI. */
++STATIC void
++xfs_repair_agi_set_roots(
++	struct xfs_scrub_context	*sc,
++	struct xfs_agi			*agi,
++	struct xfs_repair_find_ag_btree	*fab)
++{
++	agi->agi_root = cpu_to_be32(fab[REPAIR_AGI_INOBT].root);
++	agi->agi_level = cpu_to_be32(fab[REPAIR_AGI_INOBT].height);
++
++	if (xfs_sb_version_hasfinobt(&sc->mp->m_sb)) {
++		agi->agi_free_root = cpu_to_be32(fab[REPAIR_AGI_FINOBT].root);
++		agi->agi_free_level =
++				cpu_to_be32(fab[REPAIR_AGI_FINOBT].height);
++	}
++}
++
++/* Update the AGI counters. */
++STATIC int
++xfs_repair_agi_update_btree_counters(
++	struct xfs_scrub_context	*sc,
++	struct xfs_buf			*agi_bp)
++{
++	struct xfs_btree_cur		*cur;
++	struct xfs_agi			*agi = XFS_BUF_TO_AGI(agi_bp);
++	struct xfs_mount		*mp = sc->mp;
++	xfs_agino_t			count;
++	xfs_agino_t			freecount;
++	int				error;
++
++	cur = xfs_inobt_init_cursor(mp, sc->tp, agi_bp, sc->sa.agno,
++			XFS_BTNUM_INO);
++	error = xfs_ialloc_count_inodes(cur, &count, &freecount);
++	if (error)
++		goto err;
++	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++
++	agi->agi_count = cpu_to_be32(count);
++	agi->agi_freecount = cpu_to_be32(freecount);
++	return 0;
++err:
++	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
++	return error;
++}
++
++/* Trigger reinitialization of the in-core data. */
++STATIC int
++xfs_repair_agi_reinit_incore(
++	struct xfs_scrub_context	*sc,
++	struct xfs_agi			*agi,
++	const struct xfs_agi		*old_agi)
++{
++	struct xfs_perag		*pag;
++
++	/* XXX: trigger inode count recalculation */
++
++	/* Now reinitialize the in-core counters if necessary. */
++	pag = sc->sa.pag;
++	if (!pag->pagf_init)
++		return 0;
++
++	sc->sa.pag->pagi_count = be32_to_cpu(agi->agi_count);
++	sc->sa.pag->pagi_freecount = be32_to_cpu(agi->agi_freecount);
++
++	return 0;
++}
++
++/* Repair the AGI. */
++int
++xfs_repair_agi(
++	struct xfs_scrub_context	*sc)
++{
++	struct xfs_repair_find_ag_btree	fab[REPAIR_AGI_MAX];
++	struct xfs_agi			old_agi;
++	struct xfs_mount		*mp = sc->mp;
++	struct xfs_buf			*agi_bp;
++	struct xfs_agi			*agi;
++	int				error;
++
++	/* We require the rmapbt to rebuild anything. */
++	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
++		return -EOPNOTSUPP;
++
++	xfs_scrub_perag_get(sc->mp, &sc->sa);
++	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
++			XFS_AG_DADDR(mp, sc->sa.agno, XFS_AGI_DADDR(mp)),
++			XFS_FSS_TO_BB(mp, 1), 0, &agi_bp, NULL);
++	if (error)
++		return error;
++	agi_bp->b_ops = &xfs_agi_buf_ops;
++	agi = XFS_BUF_TO_AGI(agi_bp);
++
++	/* Find the AGI btree roots. */
++	error = xfs_repair_agi_find_btrees(sc, fab);
++	if (error)
++		return error;
++
++	/* Start rewriting the header and implant the btrees we found. */
++	xfs_repair_agi_init_header(sc, agi_bp, &old_agi);
++	xfs_repair_agi_set_roots(sc, agi, fab);
++	error = xfs_repair_agi_update_btree_counters(sc, agi_bp);
++	if (error)
++		goto out_revert;
++
++	/* Reinitialize in-core state. */
++	error = xfs_repair_agi_reinit_incore(sc, agi, &old_agi);
++	if (error)
++		goto out_revert;
++
++	/* Write this to disk. */
++	xfs_trans_buf_set_type(sc->tp, agi_bp, XFS_BLFT_AGI_BUF);
++	xfs_trans_log_buf(sc->tp, agi_bp, 0, BBTOB(agi_bp->b_length) - 1);
++	return error;
++
++out_revert:
++	memcpy(agi, &old_agi, sizeof(old_agi));
++	return error;
++}
+diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+index f2af5923aa75..d541c1586d0a 100644
+--- a/fs/xfs/scrub/repair.h
++++ b/fs/xfs/scrub/repair.h
+@@ -102,6 +102,7 @@ int xfs_repair_probe(struct xfs_scrub_context *sc);
+ int xfs_repair_superblock(struct xfs_scrub_context *sc);
+ int xfs_repair_agf(struct xfs_scrub_context *sc);
+ int xfs_repair_agfl(struct xfs_scrub_context *sc);
++int xfs_repair_agi(struct xfs_scrub_context *sc);
  
- bool xfs_inode_verify_forks(struct xfs_inode *ip);
- bool xfs_inode_has_cow_blocks(struct xfs_inode *ip);
-+bool xfs_inode_has_posteof_blocks(struct xfs_inode *ip);
+ #else
  
- #endif	/* __XFS_INODE_H__ */
+@@ -127,6 +128,7 @@ xfs_repair_calc_ag_resblks(
+ #define xfs_repair_superblock		xfs_repair_notsupported
+ #define xfs_repair_agf			xfs_repair_notsupported
+ #define xfs_repair_agfl			xfs_repair_notsupported
++#define xfs_repair_agi			xfs_repair_notsupported
+ 
+ #endif /* CONFIG_XFS_ONLINE_REPAIR */
+ 
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 8e11c3c699fb..0f036aab2551 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -220,7 +220,7 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
+ 		.type	= ST_PERAG,
+ 		.setup	= xfs_scrub_setup_fs,
+ 		.scrub	= xfs_scrub_agi,
+-		.repair	= xfs_repair_notsupported,
++		.repair	= xfs_repair_agi,
+ 	},
+ 	[XFS_SCRUB_TYPE_BNOBT] = {	/* bnobt */
+ 		.type	= ST_PERAG,
 
