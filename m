@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:58260 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752282AbeFXTZi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 24 Jun 2018 15:25:38 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5OJOXsB119926
-        for <linux-xfs@vger.kernel.org>; Sun, 24 Jun 2018 19:25:38 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp2120.oracle.com with ESMTP id 2jt7mp8hq2-1
+Received: from userp2120.oracle.com ([156.151.31.85]:59048 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751619AbeFXTZo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 24 Jun 2018 15:25:44 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5OJOfFx077601
+        for <linux-xfs@vger.kernel.org>; Sun, 24 Jun 2018 19:25:43 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2120.oracle.com with ESMTP id 2jt8a7gesq-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 24 Jun 2018 19:25:37 +0000
+        for <linux-xfs@vger.kernel.org>; Sun, 24 Jun 2018 19:25:43 +0000
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w5OJPb0I021478
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w5OJPhnm031124
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 24 Jun 2018 19:25:37 GMT
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w5OJPaEh013591
-        for <linux-xfs@vger.kernel.org>; Sun, 24 Jun 2018 19:25:36 GMT
-Subject: [PATCH 19/21] xfs: repair quotas
+        for <linux-xfs@vger.kernel.org>; Sun, 24 Jun 2018 19:25:43 GMT
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w5OJPhgg013612
+        for <linux-xfs@vger.kernel.org>; Sun, 24 Jun 2018 19:25:43 GMT
+Subject: [PATCH 20/21] xfs: implement live quotacheck as part of quota repair
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sun, 24 Jun 2018 12:25:35 -0700
-Message-ID: <152986833543.3155.2878459585391745135.stgit@magnolia>
+Date: Sun, 24 Jun 2018 12:25:41 -0700
+Message-ID: <152986834172.3155.11512872634877810623.stgit@magnolia>
 In-Reply-To: <152986820984.3155.16417868536016544528.stgit@magnolia>
 References: <152986820984.3155.16417868536016544528.stgit@magnolia>
 MIME-Version: 1.0
@@ -34,230 +34,294 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Fix anything that causes the quota verifiers to fail.
+Use the fs freezing mechanism we developed for the rmapbt repair to
+freeze the fs, this time to scan the fs for a live quotacheck.  We add a
+new dqget variant to use the existing scrub transaction to allocate an
+on-disk dquot block if it is missing.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/Makefile             |    1 
- fs/xfs/scrub/attr_repair.c  |    2 
- fs/xfs/scrub/common.h       |    8 +
- fs/xfs/scrub/quota.c        |    2 
- fs/xfs/scrub/quota_repair.c |  365 +++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/repair.c       |   58 +++++++
- fs/xfs/scrub/repair.h       |    8 +
- fs/xfs/scrub/scrub.c        |   11 +
- fs/xfs/scrub/scrub.h        |    1 
- 9 files changed, 448 insertions(+), 8 deletions(-)
- create mode 100644 fs/xfs/scrub/quota_repair.c
+ fs/xfs/scrub/quota.c        |   20 +++
+ fs/xfs/scrub/quota_repair.c |  296 +++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_dquot.c          |   59 ++++++++-
+ fs/xfs/xfs_dquot.h          |    3 
+ 4 files changed, 370 insertions(+), 8 deletions(-)
 
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 24d8b19a837b..0392bca6f5fe 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -174,5 +174,6 @@ xfs-y				+= $(addprefix scrub/, \
- 				   rmap_repair.o \
- 				   symlink_repair.o \
- 				   )
-+xfs-$(CONFIG_XFS_QUOTA)		+= scrub/quota_repair.o
- endif
- endif
-diff --git a/fs/xfs/scrub/attr_repair.c b/fs/xfs/scrub/attr_repair.c
-index 5f2e4dad92b7..aba5ac671a28 100644
---- a/fs/xfs/scrub/attr_repair.c
-+++ b/fs/xfs/scrub/attr_repair.c
-@@ -355,7 +355,7 @@ xfs_repair_xattr_recover(
- }
- 
- /* Free all the attribute fork blocks and delete the fork. */
--STATIC int
-+int
- xfs_repair_xattr_reset_btree(
- 	struct xfs_scrub_context	*sc)
- {
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index e8c4e41139ca..b0cca36de2de 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -138,6 +138,14 @@ static inline bool xfs_scrub_skip_xref(struct xfs_scrub_metadata *sm)
- 			       XFS_SCRUB_OFLAG_XCORRUPT);
- }
- 
-+/* Do we need to invoke the repair tool? */
-+static inline bool xfs_scrub_needs_repair(struct xfs_scrub_metadata *sm)
-+{
-+	return sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
-+			       XFS_SCRUB_OFLAG_XCORRUPT |
-+			       XFS_SCRUB_OFLAG_PREEN);
-+}
-+
- int xfs_scrub_metadata_inode_forks(struct xfs_scrub_context *sc);
- int xfs_scrub_ilock_inverted(struct xfs_inode *ip, uint lock_mode);
- void xfs_scrub_iput(struct xfs_scrub_context *sc, struct xfs_inode *ip);
 diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
-index 6ff906aa0a3b..ab0f0f7fde2d 100644
+index ab0f0f7fde2d..34a6dfffbbc2 100644
 --- a/fs/xfs/scrub/quota.c
 +++ b/fs/xfs/scrub/quota.c
-@@ -29,7 +29,7 @@
+@@ -27,6 +27,7 @@
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
  #include "scrub/trace.h"
++#include "scrub/repair.h"
  
  /* Convert a scrub type code to a DQ flag, or return 0 if error. */
--static inline uint
-+uint
- xfs_scrub_quota_to_dqtype(
- 	struct xfs_scrub_context	*sc)
- {
+ uint
+@@ -64,12 +65,29 @@ xfs_scrub_setup_quota(
+ 	mutex_lock(&sc->mp->m_quotainfo->qi_quotaofflock);
+ 	if (!xfs_this_quota_on(sc->mp, dqtype))
+ 		return -ENOENT;
++	/*
++	 * Freeze out anything that can alter an inode because we reconstruct
++	 * the quota counts by iterating all the inodes in the system.
++	 */
++	if ((sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) &&
++	    (sc->try_harder || XFS_QM_NEED_QUOTACHECK(sc->mp))) {
++		error = xfs_scrub_fs_freeze(sc);
++		if (error)
++			return error;
++	}
+ 	error = xfs_scrub_setup_fs(sc, ip);
+ 	if (error)
+ 		return error;
+ 	sc->ip = xfs_quota_inode(sc->mp, dqtype);
+-	xfs_ilock(sc->ip, XFS_ILOCK_EXCL);
+ 	sc->ilock_flags = XFS_ILOCK_EXCL;
++	/*
++	 * Pretend to be an ILOCK parent to shut up lockdep if we're going to
++	 * do a full inode scan of the fs.  Quota inodes do not count towards
++	 * quota accounting, so we shouldn't deadlock on ourselves.
++	 */
++	if (sc->fs_frozen)
++		sc->ilock_flags |= XFS_ILOCK_PARENT;
++	xfs_ilock(sc->ip, sc->ilock_flags);
+ 	return 0;
+ }
+ 
 diff --git a/fs/xfs/scrub/quota_repair.c b/fs/xfs/scrub/quota_repair.c
-new file mode 100644
-index 000000000000..4e7af44a2ba1
---- /dev/null
+index 4e7af44a2ba1..efdbe14a7ecb 100644
+--- a/fs/xfs/scrub/quota_repair.c
 +++ b/fs/xfs/scrub/quota_repair.c
-@@ -0,0 +1,365 @@
-+// SPDX-License-Identifier: GPL-2.0+
-+/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_btree.h"
-+#include "xfs_bit.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_sb.h"
-+#include "xfs_inode.h"
-+#include "xfs_inode_fork.h"
-+#include "xfs_alloc.h"
-+#include "xfs_bmap.h"
-+#include "xfs_quota.h"
-+#include "xfs_qm.h"
-+#include "xfs_dquot.h"
-+#include "xfs_dquot_item.h"
-+#include "scrub/xfs_scrub.h"
-+#include "scrub/scrub.h"
-+#include "scrub/common.h"
-+#include "scrub/trace.h"
-+#include "scrub/repair.h"
-+
-+/*
-+ * Quota Repair
-+ * ============
+@@ -16,13 +16,20 @@
+ #include "xfs_trans.h"
+ #include "xfs_sb.h"
+ #include "xfs_inode.h"
++#include "xfs_icache.h"
+ #include "xfs_inode_fork.h"
+ #include "xfs_alloc.h"
+ #include "xfs_bmap.h"
++#include "xfs_bmap_util.h"
++#include "xfs_ialloc.h"
++#include "xfs_ialloc_btree.h"
+ #include "xfs_quota.h"
+ #include "xfs_qm.h"
+ #include "xfs_dquot.h"
+ #include "xfs_dquot_item.h"
++#include "xfs_trans_space.h"
++#include "xfs_error.h"
++#include "xfs_errortag.h"
+ #include "scrub/xfs_scrub.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+@@ -37,6 +44,11 @@
+  * verifiers complain about, cap any counters or limits that make no sense,
+  * and schedule a quotacheck if we had to fix anything.  We also repair any
+  * data fork extent records that don't apply to metadata files.
 + *
-+ * Quota repairs are fairly simplistic; we fix everything that the dquot
-+ * verifiers complain about, cap any counters or limits that make no sense,
-+ * and schedule a quotacheck if we had to fix anything.  We also repair any
-+ * data fork extent records that don't apply to metadata files.
-+ */
++ * Online quotacheck is fairly straightforward.  We engage a repair freeze,
++ * zero all the dquots, and scan every inode in the system to recalculate the
++ * appropriate quota charges.  Finally, we log all the dquots to disk and
++ * set the _CHKD flags.
+  */
+ 
+ struct xfs_repair_quota_info {
+@@ -314,6 +326,272 @@ xfs_repair_quota_data_fork(
+ 	return error;
+ }
+ 
++/* Online Quotacheck */
 +
-+struct xfs_repair_quota_info {
++/*
++ * Add this inode's resource usage to the dquot.  We adjust the in-core and
++ * the (cached) on-disk copies of the counters and leave the dquot dirty.  A
++ * subsequent pass through the dquots logs them all to disk.  Fortunately we
++ * froze the filesystem before starting so at least we don't have to deal
++ * with chown/chproj races.
++ */
++STATIC int
++xfs_repair_quotacheck_dqadjust(
++	struct xfs_scrub_context	*sc,
++	struct xfs_inode		*ip,
++	uint				type,
++	xfs_qcnt_t			nblks,
++	xfs_qcnt_t			rtblks)
++{
++	struct xfs_mount		*mp = sc->mp;
++	struct xfs_dquot		*dqp;
++	xfs_dqid_t			id;
++	int				error;
++
++	/* Try to read in the dquot. */
++	id = xfs_qm_id_for_quotatype(ip, type);
++	error = xfs_qm_dqget(mp, id, type, false, &dqp);
++	if (error == -ENOENT) {
++		/* Allocate a dquot using our special transaction. */
++		error = xfs_qm_dqget_alloc(&sc->tp, id, type, &dqp);
++		if (error)
++			return error;
++		error = xfs_trans_roll_inode(&sc->tp, sc->ip);
++	}
++	if (error) {
++		/*
++		 * Shouldn't be able to turn off quotas here.
++		 */
++		ASSERT(error != -ESRCH);
++		ASSERT(error != -ENOENT);
++		return error;
++	}
++
++	/*
++	 * Adjust the inode count and the block count to reflect this inode's
++	 * resource usage.
++	 */
++	be64_add_cpu(&dqp->q_core.d_icount, 1);
++	dqp->q_res_icount++;
++	if (nblks) {
++		be64_add_cpu(&dqp->q_core.d_bcount, nblks);
++		dqp->q_res_bcount += nblks;
++	}
++	if (rtblks) {
++		be64_add_cpu(&dqp->q_core.d_rtbcount, rtblks);
++		dqp->q_res_rtbcount += rtblks;
++	}
++
++	/*
++	 * Set default limits, adjust timers (since we changed usages)
++	 *
++	 * There are no timers for the default values set in the root dquot.
++	 */
++	if (dqp->q_core.d_id) {
++		xfs_qm_adjust_dqlimits(mp, dqp);
++		xfs_qm_adjust_dqtimers(mp, &dqp->q_core);
++	}
++
++	dqp->dq_flags |= XFS_DQ_DIRTY;
++	xfs_qm_dqput(dqp);
++	return 0;
++}
++
++/* Record this inode's quota use. */
++STATIC int
++xfs_repair_quotacheck_inode(
++	struct xfs_scrub_context	*sc,
++	uint				dqtype,
++	struct xfs_inode		*ip)
++{
++	struct xfs_ifork		*ifp;
++	xfs_filblks_t			rtblks = 0;	/* total rt blks */
++	xfs_qcnt_t			nblks;
++	int				error;
++
++	/* Count the realtime blocks. */
++	if (XFS_IS_REALTIME_INODE(ip)) {
++		ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
++
++		if (!(ifp->if_flags & XFS_IFEXTENTS)) {
++			error = xfs_iread_extents(sc->tp, ip, XFS_DATA_FORK);
++			if (error)
++				return error;
++		}
++
++		xfs_bmap_count_leaves(ifp, &rtblks);
++	}
++
++	nblks = (xfs_qcnt_t)ip->i_d.di_nblocks - rtblks;
++
++	/* Adjust the dquot. */
++	return xfs_repair_quotacheck_dqadjust(sc, ip, dqtype, nblks, rtblks);
++}
++
++struct xfs_repair_quotacheck {
 +	struct xfs_scrub_context	*sc;
-+	bool				need_quotacheck;
++	uint				dqtype;
 +};
 +
-+/* Scrub the fields in an individual quota item. */
++/* Iterate all the inodes in an AG group. */
 +STATIC int
-+xfs_repair_quota_item(
++xfs_repair_quotacheck_inobt(
++	struct xfs_btree_cur		*cur,
++	union xfs_btree_rec		*rec,
++	void				*priv)
++{
++	struct xfs_inobt_rec_incore	irec;
++	struct xfs_mount		*mp = cur->bc_mp;
++	struct xfs_inode		*ip = NULL;
++	struct xfs_repair_quotacheck	*rq = priv;
++	xfs_ino_t			ino;
++	xfs_agino_t			agino;
++	int				chunkidx;
++	int				error = 0;
++
++	xfs_inobt_btrec_to_irec(mp, rec, &irec);
++
++	for (chunkidx = 0, agino = irec.ir_startino;
++	     chunkidx < XFS_INODES_PER_CHUNK;
++	     chunkidx++, agino++) {
++		bool	inuse;
++
++		/* Skip if this inode is free */
++		if (XFS_INOBT_MASK(chunkidx) & irec.ir_free)
++			continue;
++		ino = XFS_AGINO_TO_INO(mp, cur->bc_private.a.agno, agino);
++		if (xfs_is_quota_inode(&mp->m_sb, ino))
++			continue;
++
++		/* Back off and try again if an inode is being reclaimed */
++		error = xfs_icache_inode_is_allocated(mp, NULL, ino, &inuse);
++		if (error == -EAGAIN)
++			return -EDEADLOCK;
++
++		/*
++		 * Grab inode for scanning.  We cannot use DONTCACHE here
++		 * because we already have a transaction so the iput must not
++		 * trigger inode reclaim (which might allocate a transaction
++		 * to clean up posteof blocks).
++		 */
++		error = xfs_iget(mp, NULL, ino, 0, XFS_ILOCK_EXCL, &ip);
++		if (error)
++			return error;
++		trace_xfs_scrub_iget(ip, __this_address);
++
++		error = xfs_repair_quotacheck_inode(rq->sc, rq->dqtype, ip);
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
++		xfs_scrub_iput(rq->sc, ip);
++		if (error)
++			return error;
++	}
++
++	return 0;
++}
++
++/* Zero a dquot prior to regenerating the counts. */
++static int
++xfs_repair_quotacheck_zero_dquot(
 +	struct xfs_dquot		*dq,
 +	uint				dqtype,
 +	void				*priv)
 +{
-+	struct xfs_repair_quota_info	*rqi = priv;
-+	struct xfs_scrub_context	*sc = rqi->sc;
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_disk_dquot		*d = &dq->q_core;
-+	unsigned long long		bsoft;
-+	unsigned long long		isoft;
-+	unsigned long long		rsoft;
-+	unsigned long long		bhard;
-+	unsigned long long		ihard;
-+	unsigned long long		rhard;
-+	unsigned long long		bcount;
-+	unsigned long long		icount;
-+	unsigned long long		rcount;
-+	xfs_ino_t			fs_icount;
-+	bool				dirty = false;
++	dq->q_res_bcount -= be64_to_cpu(dq->q_core.d_bcount);
++	dq->q_core.d_bcount = 0;
++	dq->q_res_icount -= be64_to_cpu(dq->q_core.d_icount);
++	dq->q_core.d_icount = 0;
++	dq->q_res_rtbcount -= be64_to_cpu(dq->q_core.d_rtbcount);
++	dq->q_core.d_rtbcount = 0;
++	dq->dq_flags |= XFS_DQ_DIRTY;
++	return 0;
++}
++
++/* Log a dirty dquot after we regenerated the counters. */
++static int
++xfs_repair_quotacheck_log_dquot(
++	struct xfs_dquot		*dq,
++	uint				dqtype,
++	void				*priv)
++{
++	struct xfs_scrub_context	*sc = priv;
 +	int				error;
 +
-+	/* Did we get the dquot type we wanted? */
-+	if (dqtype != (d->d_flags & XFS_DQ_ALLTYPES)) {
-+		d->d_flags = dqtype;
-+		dirty = true;
-+	}
-+
-+	if (d->d_pad0 || d->d_pad) {
-+		d->d_pad0 = 0;
-+		d->d_pad = 0;
-+		dirty = true;
-+	}
-+
-+	/* Check the limits. */
-+	bhard = be64_to_cpu(d->d_blk_hardlimit);
-+	ihard = be64_to_cpu(d->d_ino_hardlimit);
-+	rhard = be64_to_cpu(d->d_rtb_hardlimit);
-+
-+	bsoft = be64_to_cpu(d->d_blk_softlimit);
-+	isoft = be64_to_cpu(d->d_ino_softlimit);
-+	rsoft = be64_to_cpu(d->d_rtb_softlimit);
-+
-+	if (bsoft > bhard) {
-+		d->d_blk_softlimit = d->d_blk_hardlimit;
-+		dirty = true;
-+	}
-+
-+	if (isoft > ihard) {
-+		d->d_ino_softlimit = d->d_ino_hardlimit;
-+		dirty = true;
-+	}
-+
-+	if (rsoft > rhard) {
-+		d->d_rtb_softlimit = d->d_rtb_hardlimit;
-+		dirty = true;
-+	}
-+
-+	/* Check the resource counts. */
-+	bcount = be64_to_cpu(d->d_bcount);
-+	icount = be64_to_cpu(d->d_icount);
-+	rcount = be64_to_cpu(d->d_rtbcount);
-+	fs_icount = percpu_counter_sum(&mp->m_icount);
-+
-+	/*
-+	 * Check that usage doesn't exceed physical limits.  However, on
-+	 * a reflink filesystem we're allowed to exceed physical space
-+	 * if there are no quota limits.  We don't know what the real number
-+	 * is, but we can make quotacheck find out for us.
-+	 */
-+	if (!xfs_sb_version_hasreflink(&mp->m_sb) &&
-+	    mp->m_sb.sb_dblocks < bcount) {
-+		dq->q_res_bcount -= be64_to_cpu(dq->q_core.d_bcount);
-+		dq->q_res_bcount += mp->m_sb.sb_dblocks;
-+		d->d_bcount = cpu_to_be64(mp->m_sb.sb_dblocks);
-+		rqi->need_quotacheck = true;
-+		dirty = true;
-+	}
-+	if (icount > fs_icount) {
-+		dq->q_res_icount -= be64_to_cpu(dq->q_core.d_icount);
-+		dq->q_res_icount += fs_icount;
-+		d->d_icount = cpu_to_be64(fs_icount);
-+		rqi->need_quotacheck = true;
-+		dirty = true;
-+	}
-+	if (rcount > mp->m_sb.sb_rblocks) {
-+		dq->q_res_rtbcount -= be64_to_cpu(dq->q_core.d_rtbcount);
-+		dq->q_res_rtbcount += mp->m_sb.sb_rblocks;
-+		d->d_rtbcount = cpu_to_be64(mp->m_sb.sb_rblocks);
-+		rqi->need_quotacheck = true;
-+		dirty = true;
-+	}
-+
-+	if (!dirty)
-+		return 0;
-+
-+	dq->dq_flags |= XFS_DQ_DIRTY;
 +	xfs_trans_dqjoin(sc->tp, dq);
 +	xfs_trans_log_dquot(sc->tp, dq);
 +	error = xfs_trans_roll(&sc->tp);
@@ -265,373 +329,249 @@ index 000000000000..4e7af44a2ba1
 +	return error;
 +}
 +
-+/* Fix a quota timer so that we can pass the verifier. */
-+STATIC void
-+xfs_repair_quota_fix_timer(
-+	__be64			softlimit,
-+	__be64			countnow,
-+	__be32			*timer,
-+	time_t			timelimit)
-+{
-+	uint64_t		soft = be64_to_cpu(softlimit);
-+	uint64_t		count = be64_to_cpu(countnow);
-+
-+	if (soft && count > soft && *timer == 0)
-+		*timer = cpu_to_be32(get_seconds() + timelimit);
-+}
-+
-+/* Fix anything the verifiers complain about. */
++/* Execute an online quotacheck. */
 +STATIC int
-+xfs_repair_quota_block(
-+	struct xfs_scrub_context	*sc,
-+	struct xfs_buf			*bp,
-+	uint				dqtype,
-+	xfs_dqid_t			id)
-+{
-+	struct xfs_dqblk		*d = (struct xfs_dqblk *)bp->b_addr;
-+	struct xfs_disk_dquot		*ddq;
-+	struct xfs_quotainfo		*qi = sc->mp->m_quotainfo;
-+	enum xfs_blft			buftype = 0;
-+	int				i;
-+
-+	bp->b_ops = &xfs_dquot_buf_ops;
-+	for (i = 0; i < qi->qi_dqperchunk; i++) {
-+		ddq = &d[i].dd_diskdq;
-+
-+		ddq->d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
-+		ddq->d_version = XFS_DQUOT_VERSION;
-+		ddq->d_flags = dqtype;
-+		ddq->d_id = cpu_to_be32(id + i);
-+
-+		xfs_repair_quota_fix_timer(ddq->d_blk_softlimit,
-+				ddq->d_bcount, &ddq->d_btimer,
-+				qi->qi_btimelimit);
-+		xfs_repair_quota_fix_timer(ddq->d_ino_softlimit,
-+				ddq->d_icount, &ddq->d_itimer,
-+				qi->qi_itimelimit);
-+		xfs_repair_quota_fix_timer(ddq->d_rtb_softlimit,
-+				ddq->d_rtbcount, &ddq->d_rtbtimer,
-+				qi->qi_rtbtimelimit);
-+
-+		if (xfs_sb_version_hascrc(&sc->mp->m_sb)) {
-+			uuid_copy(&d->dd_uuid, &sc->mp->m_sb.sb_meta_uuid);
-+			xfs_update_cksum((char *)d, sizeof(struct xfs_dqblk),
-+					 XFS_DQUOT_CRC_OFF);
-+		} else {
-+			memset(&d->dd_uuid, 0, sizeof(d->dd_uuid));
-+			d->dd_lsn = 0;
-+			d->dd_crc = 0;
-+		}
-+	}
-+	switch (dqtype) {
-+	case XFS_DQ_USER:
-+		buftype = XFS_BLFT_UDQUOT_BUF;
-+		break;
-+	case XFS_DQ_GROUP:
-+		buftype = XFS_BLFT_GDQUOT_BUF;
-+		break;
-+	case XFS_DQ_PROJ:
-+		buftype = XFS_BLFT_PDQUOT_BUF;
-+		break;
-+	}
-+	xfs_trans_buf_set_type(sc->tp, bp, buftype);
-+	xfs_trans_log_buf(sc->tp, bp, 0, BBTOB(bp->b_length) - 1);
-+	return xfs_trans_roll(&sc->tp);
-+}
-+
-+/* Repair quota's data fork. */
-+STATIC int
-+xfs_repair_quota_data_fork(
++xfs_repair_quotacheck(
 +	struct xfs_scrub_context	*sc,
 +	uint				dqtype)
 +{
-+	struct xfs_bmbt_irec		irec = { 0 };
-+	struct xfs_iext_cursor		icur;
-+	struct xfs_quotainfo		*qi = sc->mp->m_quotainfo;
-+	struct xfs_ifork		*ifp;
++	struct xfs_repair_quotacheck	rq;
++	struct xfs_mount		*mp = sc->mp;
 +	struct xfs_buf			*bp;
-+	struct xfs_dqblk		*d;
-+	xfs_dqid_t			id;
-+	xfs_fileoff_t			max_dqid_off;
-+	xfs_fileoff_t			off;
-+	xfs_fsblock_t			fsbno;
-+	bool				truncate = false;
-+	int				error = 0;
-+
-+	error = xfs_repair_metadata_inode_forks(sc);
-+	if (error)
-+		goto out;
-+
-+	/* Check for data fork problems that apply only to quota files. */
-+	max_dqid_off = ((xfs_dqid_t)-1) / qi->qi_dqperchunk;
-+	ifp = XFS_IFORK_PTR(sc->ip, XFS_DATA_FORK);
-+	for_each_xfs_iext(ifp, &icur, &irec) {
-+		if (isnullstartblock(irec.br_startblock)) {
-+			error = -EFSCORRUPTED;
-+			goto out;
-+		}
-+
-+		if (irec.br_startoff > max_dqid_off ||
-+		    irec.br_startoff + irec.br_blockcount - 1 > max_dqid_off) {
-+			truncate = true;
-+			break;
-+		}
-+	}
-+	if (truncate) {
-+		error = xfs_itruncate_extents(&sc->tp, sc->ip, XFS_DATA_FORK,
-+				max_dqid_off * sc->mp->m_sb.sb_blocksize);
-+		if (error)
-+			goto out;
-+	}
-+
-+	/* Now go fix anything that fails the verifiers. */
-+	for_each_xfs_iext(ifp, &icur, &irec) {
-+		for (fsbno = irec.br_startblock, off = irec.br_startoff;
-+		     fsbno < irec.br_startblock + irec.br_blockcount;
-+		     fsbno += XFS_DQUOT_CLUSTER_SIZE_FSB,
-+				off += XFS_DQUOT_CLUSTER_SIZE_FSB) {
-+			id = off * qi->qi_dqperchunk;
-+			error = xfs_trans_read_buf(sc->mp, sc->tp,
-+					sc->mp->m_ddev_targp,
-+					XFS_FSB_TO_DADDR(sc->mp, fsbno),
-+					qi->qi_dqchunklen,
-+					0, &bp, &xfs_dquot_buf_ops);
-+			if (error == 0) {
-+				d = (struct xfs_dqblk *)bp->b_addr;
-+				if (id == be32_to_cpu(d->dd_diskdq.d_id))
-+					continue;
-+				error = -EFSCORRUPTED;
-+			}
-+			if (error != -EFSBADCRC && error != -EFSCORRUPTED)
-+				goto out;
-+
-+			/* Failed verifier, try again. */
-+			error = xfs_trans_read_buf(sc->mp, sc->tp,
-+					sc->mp->m_ddev_targp,
-+					XFS_FSB_TO_DADDR(sc->mp, fsbno),
-+					qi->qi_dqchunklen,
-+					0, &bp, NULL);
-+			if (error)
-+				goto out;
-+			error = xfs_repair_quota_block(sc, bp, dqtype, id);
-+		}
-+	}
-+
-+	/*
-+	 * Roll the transaction so that we unlock all of the buffers we
-+	 * touched while doing raw dquot buffer checks.  Subsequent parts of
-+	 * quota repair will use the regular dquot APIs, which re-read the
-+	 * dquot buffers to construct in-core dquots without a transaction.
-+	 * This causes deadlocks if we haven't released the dquot buffers.
-+	 */
-+	error = xfs_trans_roll(&sc->tp);
-+out:
-+	return error;
-+}
-+
-+/*
-+ * Go fix anything in the quota items that we could have been mad about.  Now
-+ * that we've checked the quota inode data fork we have to drop ILOCK_EXCL to
-+ * use the regular dquot functions.
-+ */
-+STATIC int
-+xfs_repair_quota_problems(
-+	struct xfs_scrub_context	*sc,
-+	uint				dqtype)
-+{
-+	struct xfs_repair_quota_info	rqi;
++	struct xfs_btree_cur		*cur;
++	xfs_agnumber_t			ag;
++	uint				flag;
 +	int				error;
 +
-+	rqi.sc = sc;
-+	rqi.need_quotacheck = false;
-+	error = xfs_qm_dqiterate(sc->mp, dqtype, xfs_repair_quota_item, &rqi);
++	/*
++	 * Commit the transaction so that we can allocate new quota ip
++	 * mappings if we have to.  If we crash after this point, the sb
++	 * still has the CHKD flags cleared, so mount quotacheck will fix
++	 * all of this up.
++	 */
++	error = xfs_trans_commit(sc->tp);
++	sc->tp = NULL;
 +	if (error)
 +		return error;
 +
-+	/* Make a quotacheck happen. */
-+	if (rqi.need_quotacheck)
-+		xfs_repair_force_quotacheck(sc, dqtype);
-+	return 0;
-+}
-+
-+/* Repair all of a quota type's items. */
-+int
-+xfs_repair_quota(
-+	struct xfs_scrub_context	*sc)
-+{
-+	uint				dqtype;
-+	int				error;
-+
-+	dqtype = xfs_scrub_quota_to_dqtype(sc);
-+
-+	/* Fix problematic data fork mappings. */
-+	error = xfs_repair_quota_data_fork(sc, dqtype);
++	/* Zero all the quota items. */
++	error = xfs_qm_dqiterate(mp, dqtype, xfs_repair_quotacheck_zero_dquot,
++			sc);
 +	if (error)
 +		goto out;
 +
-+	/* Unlock quota inode; we play only with dquots from now on. */
-+	xfs_iunlock(sc->ip, sc->ilock_flags);
-+	sc->ilock_flags = 0;
++	rq.sc = sc;
++	rq.dqtype = dqtype;
 +
-+	/* Fix anything the dquot verifiers complain about. */
-+	error = xfs_repair_quota_problems(sc, dqtype);
++	/* Iterate all AGs for inodes. */
++	for (ag = 0; ag < mp->m_sb.sb_agcount; ag++) {
++		error = xfs_ialloc_read_agi(mp, NULL, ag, &bp);
++		if (error)
++			goto out;
++		cur = xfs_inobt_init_cursor(mp, NULL, bp, ag, XFS_BTNUM_INO);
++		error = xfs_btree_query_all(cur, xfs_repair_quotacheck_inobt,
++				&rq);
++		xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR :
++						  XFS_BTREE_NOERROR);
++		xfs_buf_relse(bp);
++		if (error)
++			goto out;
++	}
++
++	/* Log dquots. */
++	error = xfs_scrub_trans_alloc(sc, 0);
++	if (error)
++		goto out;
++	error = xfs_qm_dqiterate(mp, dqtype, xfs_repair_quotacheck_log_dquot,
++			sc);
++	if (error)
++		goto out;
++
++	/* Set quotachecked flag. */
++	flag = xfs_quota_chkd_flag(dqtype);
++	sc->mp->m_qflags |= flag;
++	spin_lock(&sc->mp->m_sb_lock);
++	sc->mp->m_sb.sb_qflags |= flag;
++	spin_unlock(&sc->mp->m_sb_lock);
++	xfs_log_sb(sc->tp);
 +out:
 +	return error;
 +}
-diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index 85ec872093e6..399a98e1d8f7 100644
---- a/fs/xfs/scrub/repair.c
-+++ b/fs/xfs/scrub/repair.c
-@@ -29,6 +29,8 @@
- #include "xfs_ag_resv.h"
- #include "xfs_trans_space.h"
- #include "xfs_quota.h"
-+#include "xfs_attr.h"
-+#include "xfs_reflink.h"
- #include "scrub/xfs_scrub.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
-@@ -1182,3 +1184,59 @@ xfs_repair_grab_all_ag_headers(
++
+ /*
+  * Go fix anything in the quota items that we could have been mad about.  Now
+  * that we've checked the quota inode data fork we have to drop ILOCK_EXCL to
+@@ -334,7 +612,8 @@ xfs_repair_quota_problems(
+ 		return error;
  
+ 	/* Make a quotacheck happen. */
+-	if (rqi.need_quotacheck)
++	if (rqi.need_quotacheck ||
++	    XFS_TEST_ERROR(false, sc->mp, XFS_ERRTAG_FORCE_SCRUB_REPAIR))
+ 		xfs_repair_force_quotacheck(sc, dqtype);
+ 	return 0;
+ }
+@@ -345,6 +624,7 @@ xfs_repair_quota(
+ 	struct xfs_scrub_context	*sc)
+ {
+ 	uint				dqtype;
++	uint				flag;
+ 	int				error;
+ 
+ 	dqtype = xfs_scrub_quota_to_dqtype(sc);
+@@ -360,6 +640,20 @@ xfs_repair_quota(
+ 
+ 	/* Fix anything the dquot verifiers complain about. */
+ 	error = xfs_repair_quota_problems(sc, dqtype);
++	if (error)
++		goto out;
++
++	/* Do we need a quotacheck?  Did we need one? */
++	flag = xfs_quota_chkd_flag(dqtype);
++	if (!(flag & sc->mp->m_qflags)) {
++		/* We need to freeze the fs before we can scan inodes. */
++		if (!sc->fs_frozen) {
++			error = -EDEADLOCK;
++			goto out;
++		}
++
++		error = xfs_repair_quotacheck(sc, dqtype);
++	}
+ out:
  	return error;
  }
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 0973a0423bed..709f4c70916b 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -534,6 +534,7 @@ xfs_dquot_from_disk(
+ static int
+ xfs_qm_dqread_alloc(
+ 	struct xfs_mount	*mp,
++	struct xfs_trans	**tpp,
+ 	struct xfs_dquot	*dqp,
+ 	struct xfs_buf		**bpp)
+ {
+@@ -541,6 +542,18 @@ xfs_qm_dqread_alloc(
+ 	struct xfs_buf		*bp;
+ 	int			error;
+ 
++	/*
++	 * The caller passed in a transaction which we don't control, so
++	 * release the hold before passing back the buffer.
++	 */
++	if (tpp) {
++		error = xfs_dquot_disk_alloc(tpp, dqp, &bp);
++		if (error)
++			return error;
++		xfs_trans_bhold_release(*tpp, bp);
++		return 0;
++	}
++
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_dqalloc,
+ 			XFS_QM_DQALLOC_SPACE_RES(mp), 0, 0, &tp);
+ 	if (error)
+@@ -576,6 +589,7 @@ xfs_qm_dqread_alloc(
+ static int
+ xfs_qm_dqread(
+ 	struct xfs_mount	*mp,
++	struct xfs_trans	**tpp,
+ 	xfs_dqid_t		id,
+ 	uint			type,
+ 	bool			can_alloc,
+@@ -591,7 +605,7 @@ xfs_qm_dqread(
+ 	/* Try to read the buffer, allocating if necessary. */
+ 	error = xfs_dquot_disk_read(mp, dqp, &bp);
+ 	if (error == -ENOENT && can_alloc)
+-		error = xfs_qm_dqread_alloc(mp, dqp, &bp);
++		error = xfs_qm_dqread_alloc(mp, tpp, dqp, &bp);
+ 	if (error)
+ 		goto err;
+ 
+@@ -775,9 +789,10 @@ xfs_qm_dqget_checks(
+  * Given the file system, id, and type (UDQUOT/GDQUOT), return a a locked
+  * dquot, doing an allocation (if requested) as needed.
+  */
+-int
+-xfs_qm_dqget(
++static int
++__xfs_qm_dqget(
+ 	struct xfs_mount	*mp,
++	struct xfs_trans	**tpp,
+ 	xfs_dqid_t		id,
+ 	uint			type,
+ 	bool			can_alloc,
+@@ -799,7 +814,7 @@ xfs_qm_dqget(
+ 		return 0;
+ 	}
+ 
+-	error = xfs_qm_dqread(mp, id, type, can_alloc, &dqp);
++	error = xfs_qm_dqread(mp, NULL, id, type, can_alloc, &dqp);
+ 	if (error)
+ 		return error;
+ 
+@@ -838,7 +853,39 @@ xfs_qm_dqget_uncached(
+ 	if (error)
+ 		return error;
+ 
+-	return xfs_qm_dqread(mp, id, type, 0, dqpp);
++	return xfs_qm_dqread(mp, NULL, id, type, 0, dqpp);
++}
 +
 +/*
-+ * Repair the attr/data forks of a metadata inode.  The metadata inode must be
-+ * pointed to by sc->ip and the ILOCK must be held.
++ * Given the file system, id, and type (UDQUOT/GDQUOT), return a a locked
++ * dquot, doing an allocation (if requested) as needed.
 + */
 +int
-+xfs_repair_metadata_inode_forks(
-+	struct xfs_scrub_context	*sc)
++xfs_qm_dqget(
++	struct xfs_mount	*mp,
++	xfs_dqid_t		id,
++	uint			type,
++	bool			can_alloc,
++	struct xfs_dquot	**O_dqpp)
 +{
-+	__u32				smtype;
-+	__u32				smflags;
-+	int				error;
-+
-+	smtype = sc->sm->sm_type;
-+	smflags = sc->sm->sm_flags;
-+
-+	/* Let's see if the forks need repair. */
-+	sc->sm->sm_flags &= ~XFS_SCRUB_FLAGS_OUT;
-+	error = xfs_scrub_metadata_inode_forks(sc);
-+	if (error || !xfs_scrub_needs_repair(sc->sm))
-+		goto out;
-+
-+	xfs_trans_ijoin(sc->tp, sc->ip, 0);
-+
-+	/* Clear the reflink flag & attr forks that we shouldn't have. */
-+	if (xfs_is_reflink_inode(sc->ip)) {
-+		error = xfs_reflink_clear_inode_flag(sc->ip, &sc->tp);
-+		if (error)
-+			goto out;
-+	}
-+
-+	if (xfs_inode_hasattr(sc->ip)) {
-+		error = xfs_repair_xattr_reset_btree(sc);
-+		if (error)
-+			goto out;
-+	}
-+
-+	/* Repair the data fork. */
-+	sc->sm->sm_type = XFS_SCRUB_TYPE_BMBTD;
-+	error = xfs_repair_bmap_data(sc);
-+	sc->sm->sm_type = smtype;
-+	if (error)
-+		goto out;
-+
-+	/* Bail out if we still need repairs. */
-+	sc->sm->sm_flags &= ~XFS_SCRUB_FLAGS_OUT;
-+	error = xfs_scrub_metadata_inode_forks(sc);
-+	if (error)
-+		goto out;
-+	if (xfs_scrub_needs_repair(sc->sm))
-+		error = -EFSCORRUPTED;
-+out:
-+	sc->sm->sm_type = smtype;
-+	sc->sm->sm_flags = smflags;
-+	return error;
++	return __xfs_qm_dqget(mp, NULL, id, type, can_alloc, O_dqpp);
 +}
-diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-index 05a63fcc2364..083ab63624eb 100644
---- a/fs/xfs/scrub/repair.h
-+++ b/fs/xfs/scrub/repair.h
-@@ -97,6 +97,8 @@ void xfs_repair_force_quotacheck(struct xfs_scrub_context *sc, uint dqtype);
- int xfs_repair_ino_dqattach(struct xfs_scrub_context *sc);
- int xfs_repair_grab_all_ag_headers(struct xfs_scrub_context *sc);
- int xfs_repair_rmapbt_setup(struct xfs_scrub_context *sc, struct xfs_inode *ip);
-+int xfs_repair_xattr_reset_btree(struct xfs_scrub_context *sc);
-+int xfs_repair_metadata_inode_forks(struct xfs_scrub_context *sc);
- 
- /* Metadata repairers */
- 
-@@ -114,6 +116,11 @@ int xfs_repair_bmap_data(struct xfs_scrub_context *sc);
- int xfs_repair_bmap_attr(struct xfs_scrub_context *sc);
- int xfs_repair_symlink(struct xfs_scrub_context *sc);
- int xfs_repair_xattr(struct xfs_scrub_context *sc);
-+#ifdef CONFIG_XFS_QUOTA
-+int xfs_repair_quota(struct xfs_scrub_context *sc);
-+#else
-+# define xfs_repair_quota		xfs_repair_notsupported
-+#endif /* CONFIG_XFS_QUOTA */
- 
- #else
- 
-@@ -157,6 +164,7 @@ static inline int xfs_repair_rmapbt_setup(
- #define xfs_repair_bmap_attr		xfs_repair_notsupported
- #define xfs_repair_symlink		xfs_repair_notsupported
- #define xfs_repair_xattr		xfs_repair_notsupported
-+#define xfs_repair_quota		xfs_repair_notsupported
- 
- #endif /* CONFIG_XFS_ONLINE_REPAIR */
- 
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 857197c89729..f57ec412a617 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -355,19 +355,19 @@ static const struct xfs_scrub_meta_ops meta_scrub_ops[] = {
- 		.type	= ST_FS,
- 		.setup	= xfs_scrub_setup_quota,
- 		.scrub	= xfs_scrub_quota,
--		.repair	= xfs_repair_notsupported,
-+		.repair	= xfs_repair_quota,
- 	},
- 	[XFS_SCRUB_TYPE_GQUOTA] = {	/* group quota */
- 		.type	= ST_FS,
- 		.setup	= xfs_scrub_setup_quota,
- 		.scrub	= xfs_scrub_quota,
--		.repair	= xfs_repair_notsupported,
-+		.repair	= xfs_repair_quota,
- 	},
- 	[XFS_SCRUB_TYPE_PQUOTA] = {	/* project quota */
- 		.type	= ST_FS,
- 		.setup	= xfs_scrub_setup_quota,
- 		.scrub	= xfs_scrub_quota,
--		.repair	= xfs_repair_notsupported,
-+		.repair	= xfs_repair_quota,
- 	},
- };
- 
-@@ -562,9 +562,8 @@ xfs_scrub_metadata(
- 		if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_FORCE_SCRUB_REPAIR))
- 			sc.sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
- 
--		needs_fix = (sc.sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
--						XFS_SCRUB_OFLAG_XCORRUPT |
--						XFS_SCRUB_OFLAG_PREEN));
-+		needs_fix = xfs_scrub_needs_repair(sc.sm);
 +
- 		/*
- 		 * If userspace asked for a repair but it wasn't necessary,
- 		 * report that back to userspace.
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index 270098bb3225..43c4189ea549 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -157,5 +157,6 @@ void xfs_scrub_xref_is_used_rt_space(struct xfs_scrub_context *sc,
++/*
++ * Given the file system, id, and type (UDQUOT/GDQUOT) and a hole in the quota
++ * data where the on-disk dquot is supposed to live, return a locked dquot
++ * having allocated blocks with the transaction.  This is a corner case
++ * required by online repair, which already has a transaction and has to pass
++ * that into dquot_setup.
++ */
++int
++xfs_qm_dqget_alloc(
++	struct xfs_trans	**tpp,
++	xfs_dqid_t		id,
++	uint			type,
++	struct xfs_dquot	**dqpp)
++{
++	return __xfs_qm_dqget((*tpp)->t_mountp, tpp, id, type, true, dqpp);
+ }
  
- bool xfs_scrub_xattr_set_map(struct xfs_scrub_context *sc, unsigned long *map,
- 		unsigned int start, unsigned int len);
-+uint xfs_scrub_quota_to_dqtype(struct xfs_scrub_context *sc);
+ /* Return the quota id for a given inode and type. */
+@@ -902,7 +949,7 @@ xfs_qm_dqget_inode(
+ 	 * we re-acquire the lock.
+ 	 */
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-	error = xfs_qm_dqread(mp, id, type, can_alloc, &dqp);
++	error = xfs_qm_dqread(mp, NULL, id, type, can_alloc, &dqp);
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	if (error)
+ 		return error;
+diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
+index 64bd8640f6e8..a25d98d2d1c8 100644
+--- a/fs/xfs/xfs_dquot.h
++++ b/fs/xfs/xfs_dquot.h
+@@ -168,6 +168,9 @@ extern int		xfs_qm_dqget_next(struct xfs_mount *mp, xfs_dqid_t id,
+ extern int		xfs_qm_dqget_uncached(struct xfs_mount *mp,
+ 					xfs_dqid_t id, uint type,
+ 					struct xfs_dquot **dqpp);
++extern int		xfs_qm_dqget_alloc(struct xfs_trans **tpp,
++					xfs_dqid_t id, uint type,
++					struct xfs_dquot **dqpp);
+ extern void		xfs_qm_dqput(xfs_dquot_t *);
  
- #endif	/* __XFS_SCRUB_SCRUB_H__ */
+ extern void		xfs_dqlock2(struct xfs_dquot *, struct xfs_dquot *);
 
