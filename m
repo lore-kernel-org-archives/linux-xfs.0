@@ -1,124 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:40758 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:57328 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751551AbeFVVVd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Jun 2018 17:21:33 -0400
-Date: Fri, 22 Jun 2018 14:21:04 -0700
+        with ESMTP id S1752063AbeFXTXj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 24 Jun 2018 15:23:39 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5OJJCCi117036
+        for <linux-xfs@vger.kernel.org>; Sun, 24 Jun 2018 19:23:38 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp2120.oracle.com with ESMTP id 2jt7mp8hne-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 24 Jun 2018 19:23:38 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w5OJNbsh019091
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 24 Jun 2018 19:23:37 GMT
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w5OJNbBX012934
+        for <linux-xfs@vger.kernel.org>; Sun, 24 Jun 2018 19:23:37 GMT
+Subject: [PATCH 01/21] xfs: don't assume a left rmap when allocating a new
+ rmap
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 4/8] xfs: don't allow insert-range to shift extents past
- the maximum offset
-Message-ID: <20180622212104.GT4838@magnolia>
-References: <152960586416.26246.8634761888260524091.stgit@magnolia>
- <152960588873.26246.17582272219031862067.stgit@magnolia>
+Date: Sun, 24 Jun 2018 12:23:36 -0700
+Message-ID: <152986821631.3155.13981921703707802906.stgit@magnolia>
+In-Reply-To: <152986820984.3155.16417868536016544528.stgit@magnolia>
+References: <152986820984.3155.16417868536016544528.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <152960588873.26246.17582272219031862067.stgit@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, zlang@redhat.com
-Cc: Christoph Hellwig <hch@infradead.org>, Allison Henderson <allison.henderson@oracle.com>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Zorro Lang reports that generic/485 blows an assert on a filesystem with
-512 byte blocks.  The test tries to fallocate a post-eof extent at the
-maximum file size and calls insert range to shift the extents right by
-two blocks.  On a 512b block filesystem this causes startoff to overflow
-the 54-bit startoff field, leading to the assert.
+The original rmap code assumed that there would always be at least one
+rmap in the rmapbt (the AG sb/agf/agi) and so errored out if it didn't
+find one.  This assumption isn't true for the rmapbt repair function
+(and it won't be true for realtime rmap either), so remove the check and
+just deal with the situation.
 
-Therefore, always check the rightmost extent to see if it would overflow
-prior to invoking the insert range machinery.
-
-Reported-by: zlang@redhat.com
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=200137
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 ---
-v2: use xfs_bmap_last_extent, move macro defs to headers
----
- fs/xfs/libxfs/xfs_bmap.c   |   26 ++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_bmap.h   |    2 ++
- fs/xfs/libxfs/xfs_format.h |    2 ++
- fs/xfs/xfs_bmap_util.c     |    4 ++++
- 4 files changed, 34 insertions(+)
+ fs/xfs/libxfs/xfs_rmap.c |   24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 01628f0c9a0c..7205268b30bc 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -5780,6 +5780,32 @@ xfs_bmap_collapse_extents(
- 	return error;
- }
- 
-+/* Make sure we won't be right-shifting an extent past the maximum bound. */
-+int
-+xfs_bmap_can_insert_extents(
-+	struct xfs_inode	*ip,
-+	xfs_fileoff_t		off,
-+	xfs_fileoff_t		shift)
-+{
-+	struct xfs_bmbt_irec	got;
-+	int			is_empty;
-+	int			error = 0;
-+
-+	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
-+
-+	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
-+		return -EIO;
-+
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	error = xfs_bmap_last_extent(NULL, ip, XFS_DATA_FORK, &got, &is_empty);
-+	if (!error && !is_empty && got.br_startoff >= off &&
-+	    ((got.br_startoff + shift) & BMBT_STARTOFF_MASK) < got.br_startoff)
-+		error = -EINVAL;
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+
-+	return error;
-+}
-+
- int
- xfs_bmap_insert_extents(
- 	struct xfs_trans	*tp,
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index 99dddbd0fcc6..9b49ddf99c41 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -227,6 +227,8 @@ int	xfs_bmap_collapse_extents(struct xfs_trans *tp, struct xfs_inode *ip,
- 		xfs_fileoff_t *next_fsb, xfs_fileoff_t offset_shift_fsb,
- 		bool *done, xfs_fsblock_t *firstblock,
- 		struct xfs_defer_ops *dfops);
-+int	xfs_bmap_can_insert_extents(struct xfs_inode *ip, xfs_fileoff_t off,
-+		xfs_fileoff_t shift);
- int	xfs_bmap_insert_extents(struct xfs_trans *tp, struct xfs_inode *ip,
- 		xfs_fileoff_t *next_fsb, xfs_fileoff_t offset_shift_fsb,
- 		bool *done, xfs_fileoff_t stop_fsb, xfs_fsblock_t *firstblock,
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 7b4a43deb83e..059bc44c27e8 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -1529,6 +1529,8 @@ typedef struct xfs_bmdr_block {
- #define BMBT_STARTBLOCK_BITLEN	52
- #define BMBT_BLOCKCOUNT_BITLEN	21
- 
-+#define BMBT_STARTOFF_MASK	((1ULL << BMBT_STARTOFF_BITLEN) - 1)
-+
- typedef struct xfs_bmbt_rec {
- 	__be64			l0, l1;
- } xfs_bmbt_rec_t;
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index c195b9d857af..bb417156e3bf 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1383,6 +1383,10 @@ xfs_insert_file_space(
- 
- 	trace_xfs_insert_file_space(ip);
- 
-+	error = xfs_bmap_can_insert_extents(ip, stop_fsb, shift_fsb);
-+	if (error)
-+		return error;
-+
- 	error = xfs_prepare_shift(ip, offset);
+
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index d4460b0d2d81..8b2a2f81d110 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -753,19 +753,19 @@ xfs_rmap_map(
+ 			&have_lt);
  	if (error)
- 		return error;
+ 		goto out_error;
+-	XFS_WANT_CORRUPTED_GOTO(mp, have_lt == 1, out_error);
+-
+-	error = xfs_rmap_get_rec(cur, &ltrec, &have_lt);
+-	if (error)
+-		goto out_error;
+-	XFS_WANT_CORRUPTED_GOTO(mp, have_lt == 1, out_error);
+-	trace_xfs_rmap_lookup_le_range_result(cur->bc_mp,
+-			cur->bc_private.a.agno, ltrec.rm_startblock,
+-			ltrec.rm_blockcount, ltrec.rm_owner,
+-			ltrec.rm_offset, ltrec.rm_flags);
++	if (have_lt) {
++		error = xfs_rmap_get_rec(cur, &ltrec, &have_lt);
++		if (error)
++			goto out_error;
++		XFS_WANT_CORRUPTED_GOTO(mp, have_lt == 1, out_error);
++		trace_xfs_rmap_lookup_le_range_result(cur->bc_mp,
++				cur->bc_private.a.agno, ltrec.rm_startblock,
++				ltrec.rm_blockcount, ltrec.rm_owner,
++				ltrec.rm_offset, ltrec.rm_flags);
+ 
+-	if (!xfs_rmap_is_mergeable(&ltrec, owner, flags))
+-		have_lt = 0;
++		if (!xfs_rmap_is_mergeable(&ltrec, owner, flags))
++			have_lt = 0;
++	}
+ 
+ 	XFS_WANT_CORRUPTED_GOTO(mp,
+ 		have_lt == 0 ||
+
