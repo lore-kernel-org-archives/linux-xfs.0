@@ -1,78 +1,125 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:45796 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754827AbeFZAkz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Jun 2018 20:40:55 -0400
-Date: Mon, 25 Jun 2018 17:40:38 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: remove deprecated barrier/nobarrier mount options
-Message-ID: <20180626004038.GB5711@magnolia>
-References: <56f0a68c-9c1b-712a-a0e8-e596f8272561@redhat.com>
- <20180626001620.GA5711@magnolia>
- <77374aad-a84d-9cd0-7a41-f5e8e0595dd2@sandeen.net>
+Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:40895
+        "EHLO ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753199AbeFYWhi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Jun 2018 18:37:38 -0400
+Date: Tue, 26 Jun 2018 08:37:34 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] [RFC] writeback: fix range_cyclic writeback vs
+ writepages deadlock
+Message-ID: <20180625223734.GA19934@dastard>
+References: <20180622030941.25544-1-david@fromorbit.com>
+ <984063CF-92B5-40CF-AFA6-96398D8692BF@fb.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <77374aad-a84d-9cd0-7a41-f5e8e0595dd2@sandeen.net>
+In-Reply-To: <984063CF-92B5-40CF-AFA6-96398D8692BF@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Chris Mason <clm@fb.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Mon, Jun 25, 2018 at 07:34:20PM -0500, Eric Sandeen wrote:
-> On 6/25/18 7:16 PM, Darrick J. Wong wrote:
-> > On Mon, Jun 25, 2018 at 07:03:57PM -0500, Eric Sandeen wrote:
-> >> The barrier mount options have been no-ops and deprecated since
-> >>
-> >> 4cf4573 xfs: deprecate barrier/nobarrier mount option
-> >>
-> >> i.e. kernel 4.10 / December 2016, with a stated deprecation schedule
-> >> after v4.15.  Should be fair game to remove them now.
-> >>
-> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> >> ---
-> >>  Documentation/filesystems/xfs.txt |    4 ++--
-> >>  fs/xfs/xfs_mount.h                |    1 -
-> >>  fs/xfs/xfs_super.c                |   34 ++++------------------------------
-> >>  3 files changed, 6 insertions(+), 33 deletions(-)
-> >>
-> >>
-> >> diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
-> >> index 4d9ff0a..07dbd4e 100644
-> >> --- a/Documentation/filesystems/xfs.txt
-> >> +++ b/Documentation/filesystems/xfs.txt
-> >> @@ -223,8 +223,6 @@ Deprecated Mount Options
-> >>  
-> >>    Name				Removal Schedule
-> >>    ----				----------------
-> >> -  barrier			no earlier than v4.15
-> >> -  nobarrier			no earlier than v4.15
-> >>  
-> >>  
-> >>  Removed Mount Options
-> >> @@ -236,6 +234,8 @@ Removed Mount Options
-> >>    ihashsize			v4.0
-> >>    irixsgid			v4.0
-> >>    osyncisdsync/osyncisosync	v4.0
-> >> +  barrier			v4.18
-> >> +  nobarrier			v4.18
-> > 
-> > I'm not removing mount options this far into the 4.18 cycle. ;)
-> > 
-> > 4.19, perhaps?
+On Fri, Jun 22, 2018 at 11:14:20AM -0400, Chris Mason wrote:
+> On 21 Jun 2018, at 23:09, Dave Chinner wrote:
 > 
-> Yeah I kinda figured.  Resend V2 later?  Edit on the way in and stash it
-> for a while?  V2 now?
-
-v2 now, I'll stuff it in the 4.19 branch when I get around to creating
-it......
-
---D
-
+> >From: Dave Chinner <dchinner@redhat.com>
+> >
+> >We've recently seen a workload on XFS filesystems with a repeatable
+> >deadlock between background writeback and a multi-process
+> >application doing concurrent writes and fsyncs to a small range of a
+> >file.
+> >
+> >
+> >The underlying cause of the problem here is that range_cyclic
+> >writeback is processing pages in descending index order as we
+> >hold higher index pages in a structure controlled from above
+> >write_cache_pages(). The write_cache_pages() caller needs to
+> >be able to submit these pages for IO before write_cache_pages
+> >restarts writeback at mapping index 0 to avoid wcp inverting the
+> >page lock/writeback wait order.
+> >
+> >generic_writepages() is not susceptible to this bug as it has no
+> >private context held across write_cache_pages() - filesystems using
+> >this infrastructure always submit pages in ->writepage immediately
+> >and so there is no problem with range_cyclic going back to mapping
+> >index 0.
+> >
+> >However:
+> >	mpage_writepages() has a private bio context,
+> >	exofs_writepages() has page_collect
+> >	fuse_writepages() has fuse_fill_wb_data
+> >	nfs_writepages() has nfs_pageio_descriptor
+> >	xfs_vm_writepages() has xfs_writepage_ctx
+> >
+> >All of these ->writepages implementations can hold pages under
+> >writeback in their private structures until write_cache_pages()
+> >returns, and hence they are all susceptible to this deadlock.
+> >
+> >Also worth noting is that ext4 has it's own bastardised version of
+> >write_cache_pages() and so it /may/ have an equivalent deadlock. I
+> >looked at the code long enough to understand that it has a similar
+> >retry loop for range_cyclic writeback reaching the end of the file
+> >and then promptly ran away before my eyes bled too much.  I'll leave
+> >it for the ext4 developers to determine if their code is actually
+> >has this deadlock and how to fix it if it has.
+> >
+> >There's a few ways I can see avoid this deadlock. There's probably
+> >more, but these are the first I've though of:
+> >
+> >1. get rid of range_cyclic altogether
+> >
+> >2. range_cyclic always stops at EOF, and we start again from
+> >writeback index 0 on the next call into write_cache_pages()
+> >
+> >2a. wcp also returns EAGAIN to ->writepages implementations to
+> >indicate range cyclic has hit EOF. write-pages implementations can
+> >then flush the current context and call wpc again to continue. i.e.
+> >lift the retry into the ->writepages implementation
 > 
-> -Eric
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Btrfs has a variation of 2a in our bastardized copy of
+> write_cache_pages(), it has a call to flush the bios we've built up
+> before doing operations that might deadlock, including waiting for
+> writeback, locking pages etc:
+> 
+>                         if (wbc->sync_mode != WB_SYNC_NONE) {
+>                                 if (PageWriteback(page))
+>                                         flush_write_bio(epd);
+>                                 wait_on_page_writeback(page);
+>                         }
+
+Yeah, that's essentially what I was thinking, but it's complicated
+by the fact we don't know what the private data contains in wcp.
+Seems like a reasonable thing to do if you have all the ducks in a
+row.
+
+> I don't see any problems with the solution you picked instead, but
+> if we run into more complex variations of this we can just pass a
+> callback and a flushing cookie to generic_writepages().
+> 
+> Open question on the perf benefits of staring IO early while we wait
+> for writeback on page X or letting our bio build bigger.
+
+It's async background writeback. IO latency doesn't matter - it's
+likely to get throttled anyway - so really the optimisations should
+focus around building the most well formed bios we can....
+
+> Open question #2, at least for btrfs we're building a single fat bio
+> by adding pages to it along the way.  This is a small variation on
+> plugging...we could just pull the last bio off the plug stack and
+> stuff the pages in.  Then we'd get all the deadlock prevent implicit
+> in plugging for free.
+
+The problem is that there's a lot of context around the bio that the
+filesystem has to maintain as well, and we can't put that on the
+plug list. I'd prefer that we don't make a simple one-way IO
+aggregation mechanism (the plug list) much more complicated by
+allowing tasks to use it as a per-task "almost but not quite
+submitted bio" stack without a lot more thought about it.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
