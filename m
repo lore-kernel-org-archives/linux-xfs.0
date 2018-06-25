@@ -1,252 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:42250 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S934007AbeFVDJp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Jun 2018 23:09:45 -0400
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:51785 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752618AbeFYW10 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Jun 2018 18:27:26 -0400
+Date: Tue, 26 Jun 2018 08:27:23 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] [RFC] writeback: fix range_cyclic writeback vs writepages deadlock
-Date: Fri, 22 Jun 2018 13:09:41 +1000
-Message-Id: <20180622030941.25544-1-david@fromorbit.com>
+Subject: Re: [PATCH] [RFC] writeback: fix range_cyclic writeback vs
+ writepages deadlock
+Message-ID: <20180625222723.GZ19934@dastard>
+References: <20180622030941.25544-1-david@fromorbit.com>
+ <20180622144109.GA9935@bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180622144109.GA9935@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Fri, Jun 22, 2018 at 10:41:10AM -0400, Brian Foster wrote:
+> On Fri, Jun 22, 2018 at 01:09:41PM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > We've recently seen a workload on XFS filesystems with a repeatable
+> > deadlock between background writeback and a multi-process
+> > application doing concurrent writes and fsyncs to a small range of a
+> > file.
 
-We've recently seen a workload on XFS filesystems with a repeatable
-deadlock between background writeback and a multi-process
-application doing concurrent writes and fsyncs to a small range of a
-file.
+[...]
 
-range_cyclic
-writeback		Process 1		Process 2
+> > #2 is simple, and I don't think it will have any impact on
+> > performance as going back to the start of the file implies an
+> > immediate seek. We'll have exactly the same number of seeks if we
+> > switch writeback to another inode, and then come back to this one
+> > later and restart from index 0.
+> > 
+> > #2a is pretty much "status quo without the deadlock". Moving the
+> > retry loop up into the wcp caller means we can issue IO on the
+> > pending pages before calling wcp again, and so avoid locking or
+> > waiting on pages in the wrong order. I'm not convinced we need to do
+> > this given that we get the same thing from #2 on the next writeback
+> > call from the writeback infrastructure.
+> > 
+> > #3 is really just a band-aid - it doesn't fix the access/wait inversion
+> > problem, just prevents it from becoming a deadlock situation. I'd
+> > prefer we fix the inversion, not sweep it under the carpet like
+> > this.
+> > 
+> > #3a is really an optimisation that just so happens to include the
+> > band-aid fix of #3.
+> > 
+> > So I'm really tending towards #2 as the simplest way to fix this,
+> > and that's what's the patch below implements.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> 
+> FWIW, this seems like a reasonable approach to me. One thing I'm not
+> sure about is whether the higher level plug in wb_writeback() could
+> cause the same problem even with the lower level cycle restart out of
+> the picture.
 
-xfs_vm_writepages
-  write_cache_pages
-    writeback_index = 2
-    cycled = 0
-    ....
-    find page 2 dirty
-    lock Page 2
-    ->writepage
-      page 2 writeback
-      page 2 clean
-      page 2 added to bio
-    no more pages
-			write()
-			locks page 1
-			dirties page 1
-			locks page 2
-			dirties page 1
-			fsync()
-			....
-			xfs_vm_writepages
-			write_cache_pages
-			  start index 0
-			  find page 1 towrite
-			  lock Page 1
-			  ->writepage
-			    page 1 writeback
-			    page 1 clean
-			    page 1 added to bio
-			  find page 2 towrite
-			  lock Page 2
-			  page 2 is writeback
-			  <blocks>
-						write()
-						locks page 1
-						dirties page 1
-						fsync()
-						....
-						xfs_vm_writepages
-						write_cache_pages
-						  start index 0
+Plugging can't cause this because it captures bios that have
+been released from the caller context vi submit_bio(). The plug list
+has hooks in the scheduler that flush it on context switch precisely
+so that we don't get deadlock problems with bios being stuck on the
+plug list when we block for some reason.
 
-    !done && !cycled
-      sets index to 0, restarts lookup
-    find page 1 dirty
-						  find page 1 towrite
-						  lock Page 1
-						  page 1 is writeback
-						  <blocks>
+> It looks to me that if the inode still has dirty pages after the
+> write_cache_pages(), it ends up on wb->b_more_io via
+> writeback_sb_inodes() -> requeue_inode(). The caller (wb_writeback())
+> repopulates ->b_io from ->b_more_io (via queue_io()) if the former is
+> empty (and we haven't otherwise stopped) before finishing the plug.
+> There is a blk_flush_plug() in writeback_sb_inodes(), but that appears
+> to be non-deterministic. That call aside, could that plug effectively
+> hold the page in writeback long enough for background writeback to spin
+> around and sit on the page 1 lock?
 
-    lock Page 1
-    <blocks>
+Right, that could happen, but the plug list will be flushed before
+we context switch away and sleep after failng to get the page lock,
+so there's no problem here.
 
-DEADLOCK because:
+Cheers,
 
-	- process 1 needs page 2 writeback to complete to make
-	  enough progress to issue IO pending for page 1
-	- writeback needs page 1 writeback to complete so process 2
-	  can progress and unlock the page it is blocked on, then it
-	  can issue the IO pending for page 2
-	- process 2 can't make progress until process 1 issues IO
-	  for page 1
-
-The underlying cause of the problem here is that range_cyclic
-writeback is processing pages in descending index order as we
-hold higher index pages in a structure controlled from above
-write_cache_pages(). The write_cache_pages() caller needs to
-be able to submit these pages for IO before write_cache_pages
-restarts writeback at mapping index 0 to avoid wcp inverting the
-page lock/writeback wait order.
-
-generic_writepages() is not susceptible to this bug as it has no
-private context held across write_cache_pages() - filesystems using
-this infrastructure always submit pages in ->writepage immediately
-and so there is no problem with range_cyclic going back to mapping
-index 0.
-
-However:
-	mpage_writepages() has a private bio context,
-	exofs_writepages() has page_collect
-	fuse_writepages() has fuse_fill_wb_data
-	nfs_writepages() has nfs_pageio_descriptor
-	xfs_vm_writepages() has xfs_writepage_ctx
-
-All of these ->writepages implementations can hold pages under
-writeback in their private structures until write_cache_pages()
-returns, and hence they are all susceptible to this deadlock.
-
-Also worth noting is that ext4 has it's own bastardised version of
-write_cache_pages() and so it /may/ have an equivalent deadlock. I
-looked at the code long enough to understand that it has a similar
-retry loop for range_cyclic writeback reaching the end of the file
-and then promptly ran away before my eyes bled too much.  I'll leave
-it for the ext4 developers to determine if their code is actually
-has this deadlock and how to fix it if it has.
-
-There's a few ways I can see avoid this deadlock. There's probably
-more, but these are the first I've though of:
-
-1. get rid of range_cyclic altogether
-
-2. range_cyclic always stops at EOF, and we start again from
-writeback index 0 on the next call into write_cache_pages()
-
-2a. wcp also returns EAGAIN to ->writepages implementations to
-indicate range cyclic has hit EOF. writepages implementations can
-then flush the current context and call wpc again to continue. i.e.
-lift the retry into the ->writepages implementation
-
-3. range_cyclic uses trylock_page() rather than lock_page(), and it
-skips pages it can't lock without blocking. It will already do this
-for pages under writeback, so this seems like a no-brainer
-
-3a. all non-WB_SYNC_ALL writeback uses trylock_page() to avoid
-blocking as per pages under writeback.
-
-I don't think #1 is an option - range_cyclic prevents frequently
-dirtied lower file offset from starving background writeback of rarely
-touched higher file offsets.
-
-#2 is simple, and I don't think it will have any impact on
-performance as going back to the start of the file implies an
-immediate seek. We'll have exactly the same number of seeks if we
-switch writeback to another inode, and then come back to this one
-later and restart from index 0.
-
-#2a is pretty much "status quo without the deadlock". Moving the
-retry loop up into the wcp caller means we can issue IO on the
-pending pages before calling wcp again, and so avoid locking or
-waiting on pages in the wrong order. I'm not convinced we need to do
-this given that we get the same thing from #2 on the next writeback
-call from the writeback infrastructure.
-
-#3 is really just a band-aid - it doesn't fix the access/wait inversion
-problem, just prevents it from becoming a deadlock situation. I'd
-prefer we fix the inversion, not sweep it under the carpet like
-this.
-
-#3a is really an optimisation that just so happens to include the
-band-aid fix of #3.
-
-So I'm really tending towards #2 as the simplest way to fix this,
-and that's what's the patch below implements.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- mm/page-writeback.c | 33 +++++++++++++++------------------
- 1 file changed, 15 insertions(+), 18 deletions(-)
-
-diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 337c6afb3345..c10e70ed3515 100644
---- a/mm/page-writeback.c
-+++ b/mm/page-writeback.c
-@@ -2150,6 +2150,13 @@ EXPORT_SYMBOL(tag_pages_for_writeback);
-  * not miss some pages (e.g., because some other process has cleared TOWRITE
-  * tag we set). The rule we follow is that TOWRITE tag can be cleared only
-  * by the process clearing the DIRTY tag (and submitting the page for IO).
-+ *
-+ * To avoid deadlocks between range_cyclic writeback and callers that hold
-+ * pages in PageWriteback to aggregate IO until write_cache_pages() returns,
-+ * we do not loop back to the start of the file. Doing so causes a page
-+ * lock/page writeback access order inversion - we should only ever lock
-+ * multiple pages in ascending page->index order, and looping back to the start
-+ * of the file violates that rule and causes deadlocks.
-  */
- int write_cache_pages(struct address_space *mapping,
- 		      struct writeback_control *wbc, writepage_t writepage,
-@@ -2163,7 +2170,6 @@ int write_cache_pages(struct address_space *mapping,
- 	pgoff_t index;
- 	pgoff_t end;		/* Inclusive */
- 	pgoff_t done_index;
--	int cycled;
- 	int range_whole = 0;
- 	int tag;
- 
-@@ -2171,23 +2177,17 @@ int write_cache_pages(struct address_space *mapping,
- 	if (wbc->range_cyclic) {
- 		writeback_index = mapping->writeback_index; /* prev offset */
- 		index = writeback_index;
--		if (index == 0)
--			cycled = 1;
--		else
--			cycled = 0;
- 		end = -1;
- 	} else {
- 		index = wbc->range_start >> PAGE_SHIFT;
- 		end = wbc->range_end >> PAGE_SHIFT;
- 		if (wbc->range_start == 0 && wbc->range_end == LLONG_MAX)
- 			range_whole = 1;
--		cycled = 1; /* ignore range_cyclic tests */
- 	}
- 	if (wbc->sync_mode == WB_SYNC_ALL || wbc->tagged_writepages)
- 		tag = PAGECACHE_TAG_TOWRITE;
- 	else
- 		tag = PAGECACHE_TAG_DIRTY;
--retry:
- 	if (wbc->sync_mode == WB_SYNC_ALL || wbc->tagged_writepages)
- 		tag_pages_for_writeback(mapping, index, end);
- 	done_index = index;
-@@ -2273,17 +2273,14 @@ int write_cache_pages(struct address_space *mapping,
- 		pagevec_release(&pvec);
- 		cond_resched();
- 	}
--	if (!cycled && !done) {
--		/*
--		 * range_cyclic:
--		 * We hit the last page and there is more work to be done: wrap
--		 * back to the start of the file
--		 */
--		cycled = 1;
--		index = 0;
--		end = writeback_index - 1;
--		goto retry;
--	}
-+
-+	/*
-+	 * If we hit the last page and there is more work to be done: wrap
-+	 * back the index back to the start of the file for the next
-+	 * time we are called.
-+	 */
-+	if (wbc->range_cyclic && !done)
-+		done_index = 0;
- 	if (wbc->range_cyclic || (range_whole && wbc->nr_to_write > 0))
- 		mapping->writeback_index = done_index;
- 
+Dave.
 -- 
-2.17.0
-
+Dave Chinner
+david@fromorbit.com
