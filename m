@@ -1,148 +1,147 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:43656 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751798AbeFYPeZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Jun 2018 11:34:25 -0400
-Date: Mon, 25 Jun 2018 08:34:23 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/4] generic: mread past eof shows nonzero contents
-Message-ID: <20180625153423.GW4838@magnolia>
-References: <152960594943.26479.1457883867468749220.stgit@magnolia>
- <152960596951.26479.121617216998011751.stgit@magnolia>
- <20180625040054.GO2780@desktop>
+Received: from mga03.intel.com ([134.134.136.65]:22466 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755595AbeFYTUh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 25 Jun 2018 15:20:37 -0400
+Date: Mon, 25 Jun 2018 13:20:36 -0600
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: Re: [PATCH v2 4/7] dm: prevent DAX mounts if not supported
+Message-ID: <20180625192036.GA11672@linux.intel.com>
+References: <20180529195106.14268-1-ross.zwisler@linux.intel.com>
+ <20180529195106.14268-5-ross.zwisler@linux.intel.com>
+ <20180601215513.GA18712@redhat.com>
+ <20180604231508.GA10666@linux.intel.com>
+ <20180620151748.GA4847@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180625040054.GO2780@desktop>
+In-Reply-To: <20180620151748.GA4847@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Toshi Kani <toshi.kani@hpe.com>, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Mon, Jun 25, 2018 at 12:00:54PM +0800, Eryu Guan wrote:
-> On Thu, Jun 21, 2018 at 11:32:49AM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Certain sequences of generic/127 invocations complain about being able
-> > to mread nonzero contents past eof.  Replicate that here as a regression
-> > test.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  tests/generic/708     |   54 +++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/generic/708.out |    2 ++
-> >  tests/generic/group   |    1 +
-> >  3 files changed, 57 insertions(+)
-> >  create mode 100755 tests/generic/708
-> >  create mode 100644 tests/generic/708.out
-> > 
-> > 
-> > diff --git a/tests/generic/708 b/tests/generic/708
-> > new file mode 100755
-> > index 00000000..d380053f
-> > --- /dev/null
-> > +++ b/tests/generic/708
-> > @@ -0,0 +1,54 @@
-> > +#! /bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0
-> > +# Copyright (c) 2018 Oracle, Inc.  All Rights Reserved.
-> > +#
-> > +# FS QA Test No. 708
-> > +#
-> > +# Test a specific sequence of fsx operations that causes an mmap read past
-> > +# eof to return nonzero contents.
-> > +#
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +tmp=/tmp/$$
-> > +status=1	# failure is the default!
-> > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > +
-> > +_cleanup()
-> > +{
-> > +	cd /
-> > +	rm -f $tmp.*
-> > +}
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +
-> > +# real QA test starts here
-> > +_supported_fs generic
-> > +_supported_os Linux
-> > +_require_scratch
-> > +
-> > +rm -f $seqres.full
-> > +
-> > +_scratch_mkfs >>$seqres.full 2>&1
-> > +_scratch_mount
-> > +
-> > +cat >> $tmp.fsxops << ENDL
-> > +fallocate 0x77e2 0x5f06 0x269a2 keep_size
-> > +mapwrite 0x2e7fc 0x42ba 0x3f989
-> > +write 0x67a9 0x714e 0x3f989
-> > +write 0x39f96 0x185a 0x3f989
-> > +collapse_range 0x36000 0x8000 0x3f989
-> > +mapread 0x74c0 0x1bb3 0x3e2d0
-> > +truncate 0x0 0x8aa2 0x3e2d0
-> > +zero_range 0x1265 0x783d 0x8aa2
-> > +mapread 0x7bd8 0xeca 0x8aa2
-> > +ENDL
-> > +
-> > +victim=$SCRATCH_MNT/a
-> > +touch $victim
-> > +$here/ltp/fsx --replay-ops $tmp.fsxops $victim > $tmp.output || cat $tmp.output
+On Wed, Jun 20, 2018 at 11:17:49AM -0400, Mike Snitzer wrote:
+> On Mon, Jun 04 2018 at  7:15pm -0400,
+> Ross Zwisler <ross.zwisler@linux.intel.com> wrote:
 > 
-> This fails when $FSTYP doesn't support fallocate and the related flags,
-> e.g. ext2 fails as
+> > On Fri, Jun 01, 2018 at 05:55:13PM -0400, Mike Snitzer wrote:
+> > > On Tue, May 29 2018 at  3:51pm -0400,
+> > > Ross Zwisler <ross.zwisler@linux.intel.com> wrote:
+> > > 
+> > > > Currently the code in dm_dax_direct_access() only checks whether the target
+> > > > type has a direct_access() operation defined, not whether the underlying
+> > > > block devices all support DAX.  This latter property can be seen by looking
+> > > > at whether we set the QUEUE_FLAG_DAX request queue flag when creating the
+> > > > DM device.
+> > > 
+> > > Wait... I thought DAX support was all or nothing?
+> > 
+> > Right, it is, and that's what I'm trying to capture.  The point of this series
+> > is to make sure that we don't use DAX thru DM if one of the DM members doesn't
+> > support DAX.
+> > 
+> > This is a bit tricky, though, because as you've pointed out there are a lot of
+> > elements that go into a block device actually supporting DAX.  
+> > 
+> > First, the block device has to have a direct_access() operation defined in its
+> > struct dax_operations table.  This is a static definition in the drivers,
+> > though, so it's necessary but not sufficient.  For example, the PMEM driver
+> > always defines a direct_access() operation, but depending on the mode of the
+> > namespace (raw, fsdax or sector) it may or may not support DAX.
+> > 
+> > The next step is that a driver needs to say that he block queue supports
+> > QUEUE_FLAG_DAX.  This again is necessary but not sufficient.  The PMEM driver
+> > currently sets this for all namespace modes, but I agree that this should be
+> > restricted to modes that support DAX.  Even once we do that, though, for the
+> > block driver this isn't fully sufficient.  We'd really like users to call
+> > bdev_dax_supported() so it can run some additional tests to make sure that DAX
+> > will work.
+> > 
+> > So, the real test that filesystems rely on is bdev_dax_suppported().
+> > 
+> > The trick is that with DM we need to verify each block device via
+> > bdev_dax_supported() just like a filesystem would, and then have some way of
+> > communicating the result of all those checks to the filesystem which is
+> > eventually mounted on the DM device.  At DAX mount time the filesystem will
+> > call bdev_dax_supported() on the DM device, but it'll really only check the
+> > first device.  
+> > 
+> > So, the strategy is to have DM manually check each member device via
+> > bdev_dax_supported() then if they all pass set QUEUE_FLAG_DAX.  This then
+> > becomes our one source of truth on whether or not a DM device supports DAX.
+> > When the filesystem mounts with DAX support it'll also run
+> > bdev_dax_supported(), but if we have QUEUE_FLAG_DAX set on the DM device, we
+> > know that this check will pass.
+> > 
+> > > > This is problematic if we have, for example, a dm-linear device made up of
+> > > > a PMEM namespace in fsdax mode followed by a ramdisk from BRD.
+> > > > QUEUE_FLAG_DAX won't be set on the dm-linear device's request queue, but
+> > > > we have a working direct_access() entry point and the first member of the
+> > > > dm-linear set *does* support DAX.
+> > > 
+> > > If you don't have a uniformly capable device then it is very dangerous
+> > > to advertise that the entire device has a certain capability.  That
+> > > completely bit me in the past with discard (because for every IO I
+> > > wasn't then checking if the destination device supported discards).
+> > >
+> > > It is all well and good that you're adding that check here.  But what I
+> > > don't like is how you're saying QUEUE_FLAG_DAX implies direct_access()
+> > > operation exists.. yet for raw PMEM namespaces we just discussed how
+> > > that is a lie.
+> > 
+> > QUEUE_FLAG_DAX does imply that direct_access() exits.  However, as discussed
+> > above for a given bdev we really do need to check bdev_dax_supported().
+> > 
+> > > SO this type of change showcases how the QUEUE_FLAG_DAX doesn't _really_
+> > > imply direct_access() exists.
+> > > 
+> > > > This allows the user to create a filesystem on the dm-linear device, and
+> > > > then mount it with DAX.  The filesystem's bdev_dax_supported() test will
+> > > > pass because it'll operate on the first member of the dm-linear device,
+> > > > which happens to be a fsdax PMEM namespace.
+> > > > 
+> > > > All DAX I/O will then fail to that dm-linear device because the lack of
+> > > > QUEUE_FLAG_DAX prevents fs_dax_get_by_bdev() from working.  This means that
+> > > > the struct dax_device isn't ever set in the filesystem, so
+> > > > dax_direct_access() will always return -EOPNOTSUPP.
+> > > 
+> > > Now you've lost me... these past 2 paragraphs.  Why can a user mount it
+> > > is DAX mode?  Because bdev_dax_supported() only accesses the first
+> > > portion (which happens to have DAX capabilities?)
+> > 
+> > Right.  bdev_dax_supported() runs all of its checks, and because they are
+> > running against the first block device in the dm set, they all pass.  But the
+> > overall DM device does not actually support DAX.
+> > 
+> > > Isn't this exactly why you should be checking for QUEUE_FLAG_DAX in the
+> > > caller (bdev_dax_supported)?  Why not use bdev_get_queue() and verify
+> > > QUEUE_FLAG_DAX is set in there?
+> > 
+> > I'll look into that for the next revision, thanks.
 > 
->  QA output created by 708
->  +main: filesystem does not support fallocate mode 0, disabling!
->  +main: filesystem does not support fallocate mode FALLOC_FL_KEEP_SIZE, disabling!
->  +main: filesystem does not support fallocate mode FALLOC_FL_ZERO_RANGE, disabling!
->  +main: filesystem does not support fallocate mode FALLOC_FL_COLLAPSE_RANGE, disabling!
->  +main: filesystem does not support fallocate mode FALLOC_FL_INSERT_RANGE, disabling!
+> Have you made any progress on a new revision?
+> 
+> > > > By failing out of dm_dax_direct_access() if QUEUE_FLAG_DAX isn't set we let
+> > > > the filesystem know we don't support DAX at mount time.  The filesystem
+> > > > will then silently fall back and remove the dax mount option, causing it to
+> > > > work properly.
+> > > 
+> > > This shouldn't be needed.  Again, QUEUE_FLAG_DAX wasn't set.. so don't
+> > > allow code to falsely try operations that should've been gated by the
+> > > fact it wasn't set.
+> > 
+> > Right, the goal is to make QUEUE_FLAG_DAX our one source of truth for whether
+> > DM devices support DAX, and not have it half defined by that and half by the
+> > DM_TYPE_DAX_BIO_BASED.
+> 
+> My hope is that you can ignore the DM-internal book-keeping
+> (DM_TYPE_DAX_BIO_BASED) for now and just focus on fixing the real issue
+> of needing proper checking (as well as properly _not_ setting
+> QUEUE_FLAG_DAX in the case of pmem "raw").
+> 
+> Please advise, thanks Ross!
 
-Uhoh, the collapse/zero/insert checks got committed to the wrong patch.
-:(
-
-Will clean this up and resubmit.
-
---D
-
->   Silence is golden
-> 
-> The messages are just informative, I throw stderr to $tmp.output too on
-> commit.
-> 
-> Thanks,
-> Eryu
-> 
-> > +
-> > +echo "Silence is golden"
-> > +status=0
-> > +exit
-> > diff --git a/tests/generic/708.out b/tests/generic/708.out
-> > new file mode 100644
-> > index 00000000..33c478ad
-> > --- /dev/null
-> > +++ b/tests/generic/708.out
-> > @@ -0,0 +1,2 @@
-> > +QA output created by 708
-> > +Silence is golden
-> > diff --git a/tests/generic/group b/tests/generic/group
-> > index 83a6fdab..1a1a0a6e 100644
-> > --- a/tests/generic/group
-> > +++ b/tests/generic/group
-> > @@ -501,3 +501,4 @@
-> >  496 auto quick swap
-> >  497 auto quick swap collapse
-> >  498 auto quick log
-> > +708 auto quick rw collapse
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'm back working on this, and will send out another revision in the next day
+or so.
