@@ -1,71 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:33093 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752730AbeFZLVA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Jun 2018 07:21:00 -0400
-Received: by mail-wr0-f193.google.com with SMTP id k16-v6so16862903wro.0
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Jun 2018 04:20:59 -0700 (PDT)
-Date: Tue, 26 Jun 2018 13:20:56 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH] xfsprogs: Remove barrier/nobarrier mount options from
- xfs.5
-Message-ID: <20180626112056.k6pwswz3bhkwlbrv@odin.usersys.redhat.com>
-References: <7105a6a3-bd16-53be-2e4f-d1ec8a491d20@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <7105a6a3-bd16-53be-2e4f-d1ec8a491d20@sandeen.net>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:34628 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S935152AbeFZMPC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 26 Jun 2018 08:15:02 -0400
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 6EF687A7ED
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Jun 2018 12:15:02 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 59D4A2166B5D
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Jun 2018 12:15:02 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: cow unwritten conversion uses uninitialized dfops
+Date: Tue, 26 Jun 2018 08:15:02 -0400
+Message-Id: <20180626121502.41354-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Mon, Jun 25, 2018 at 07:06:51PM -0500, Eric Sandeen wrote:
-> Remove the now-removed barrier/nobarrier mount options from
-> the xfs.5 manpage.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+A couple COW fork unwritten extent conversion helpers pass an
+uninitialized dfops pointer to xfs_bmapi_write(). This does not
+cause problems because conversion does not use a transaction or the
+dfops structure for the COW fork.  Drop the uninitialized usage of
+dfops in these codepaths and pass NULL along to xfs_bmapi_write()
+instead.
 
-Although the option is scheduled to be removed in 4.19, I think it's worth to
-remove it from xfsprogs before the mount option removal patch lands in kernel,
-so:
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_reflink.c | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-
-
-> ---
-> 
-> diff --git a/man/man5/xfs.5 b/man/man5/xfs.5
-> index 745dad4..628bfc3 100644
-> --- a/man/man5/xfs.5
-> +++ b/man/man5/xfs.5
-> @@ -132,20 +132,6 @@ by the filesystem.
->  CRC enabled filesystems always use the attr2 format, and so
->  will reject the noattr2 mount option if it is set.
->  .TP
-> -.BR barrier | nobarrier
-> -Note: This option has been
-> -.B deprecated
-> -as of kernel v4.10; in that version, integrity operations are
-> -always performed and the mount option is ignored.  These mount
-> -options will be removed no earlier than kernel v4.15.
-> -.sp
-> -Enables/disables the use of block layer write barriers for
-> -writes into the journal and for data integrity operations.
-> -This allows for drive level write caching to be enabled, for
-> -devices that support write barriers.
-> -.sp
-> -Barriers are enabled by default.
-> -.TP
->  .BR discard | nodiscard
->  Enable/disable the issuing of commands to let the block
->  device reclaim space freed by the filesystem.  This is
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 592fb2071a03..ff10b5e70029 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -312,8 +312,7 @@ xfs_reflink_convert_cow_extent(
+ 	struct xfs_inode		*ip,
+ 	struct xfs_bmbt_irec		*imap,
+ 	xfs_fileoff_t			offset_fsb,
+-	xfs_filblks_t			count_fsb,
+-	struct xfs_defer_ops		*dfops)
++	xfs_filblks_t			count_fsb)
+ {
+ 	xfs_fsblock_t			first_block = NULLFSBLOCK;
+ 	int				nimaps = 1;
+@@ -327,7 +326,7 @@ xfs_reflink_convert_cow_extent(
+ 		return 0;
+ 	return xfs_bmapi_write(NULL, ip, imap->br_startoff, imap->br_blockcount,
+ 			XFS_BMAPI_COWFORK | XFS_BMAPI_CONVERT, &first_block,
+-			0, imap, &nimaps, dfops);
++			0, imap, &nimaps, NULL);
+ }
+ 
+ /* Convert all of the unwritten CoW extents in a file's range to real ones. */
+@@ -342,7 +341,6 @@ xfs_reflink_convert_cow(
+ 	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + count);
+ 	xfs_filblks_t		count_fsb = end_fsb - offset_fsb;
+ 	struct xfs_bmbt_irec	imap;
+-	struct xfs_defer_ops	dfops;
+ 	xfs_fsblock_t		first_block = NULLFSBLOCK;
+ 	int			nimaps = 1, error = 0;
+ 
+@@ -352,7 +350,7 @@ xfs_reflink_convert_cow(
+ 	error = xfs_bmapi_write(NULL, ip, offset_fsb, count_fsb,
+ 			XFS_BMAPI_COWFORK | XFS_BMAPI_CONVERT |
+ 			XFS_BMAPI_CONVERT_ONLY, &first_block, 0, &imap, &nimaps,
+-			&dfops);
++			NULL);
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	return error;
+ }
+@@ -458,8 +456,7 @@ xfs_reflink_allocate_cow(
+ 	if (nimaps == 0)
+ 		return -ENOSPC;
+ convert:
+-	return xfs_reflink_convert_cow_extent(ip, imap, offset_fsb, count_fsb,
+-			&dfops);
++	return xfs_reflink_convert_cow_extent(ip, imap, offset_fsb, count_fsb);
+ out_bmap_cancel:
+ 	xfs_defer_cancel(&dfops);
+ 	xfs_trans_unreserve_quota_nblks(tp, ip, (long)resblks, 0,
 -- 
-Carlos
+2.17.1
+
