@@ -1,171 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:60112 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S933996AbeF1Qgl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 28 Jun 2018 12:36:41 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 110D5AB409
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 16:36:39 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id F012F111CA17
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 16:36:38 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 20/24] xfs: remove unused btree cursor bc_private.a.dfops field
-Date: Thu, 28 Jun 2018 12:36:32 -0400
-Message-Id: <20180628163636.52564-21-bfoster@redhat.com>
-In-Reply-To: <20180628163636.52564-1-bfoster@redhat.com>
-References: <20180628163636.52564-1-bfoster@redhat.com>
+Received: from g9t1613g.houston.hpe.com ([15.241.32.99]:39096 "EHLO
+        g9t1613g.houston.hpe.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751989AbeFZUy2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Jun 2018 16:54:28 -0400
+From: "Kani, Toshi" <toshi.kani@hpe.com>
+Subject: Re: [PATCH v3 1/3] pmem: only set QUEUE_FLAG_DAX for fsdax mode
+Date: Tue, 26 Jun 2018 20:54:03 +0000
+Message-ID: <1530046327.14039.273.camel@hpe.com>
+References: <20180626175932.8899-1-ross.zwisler@linux.intel.com>
+         <20180626175932.8899-2-ross.zwisler@linux.intel.com>
+         <CAPcyv4iWgPnHmBKhUvhManC6UL9CkLqN_d8vBo6KmcPJdPzuUw@mail.gmail.com>
+         <20180626185830.GA7171@redhat.com>
+         <CAPcyv4h6HO6fs6k7QMD77jkz2djCeWCtWomCdNb0-1Q4VKanqw@mail.gmail.com>
+         <20180626191346.GA7233@redhat.com>
+In-Reply-To: <20180626191346.GA7233@redhat.com>
+Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <3D1889CB4901114A9FD8D1212F7DAD23@NAMPRD84.PROD.OUTLOOK.COM>
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "snitzer@redhat.com" <snitzer@redhat.com>
+Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-The xfs_btree_cur.bc_private.a.dfops field is only ever initialized
-by the refcountbt cursor init function. The only caller of that
-function with a non-NULL dfops is from deferred completion context,
-which already has attached to ->t_dfops.
-
-In addition to that, the only actual reference of a.dfops is the
-cursor duplication function, which means the field is effectively
-unused.
-
-Remove the dfops field from the bc_private.a union. Any future users
-can acquire the dfops from the transaction. This patch does not
-change behavior.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_btree.h          | 1 -
- fs/xfs/libxfs/xfs_refcount.c       | 4 ++--
- fs/xfs/libxfs/xfs_refcount_btree.c | 7 ++-----
- fs/xfs/libxfs/xfs_refcount_btree.h | 4 ++--
- fs/xfs/scrub/common.c              | 2 +-
- fs/xfs/xfs_fsmap.c                 | 2 +-
- fs/xfs/xfs_reflink.c               | 2 +-
- 7 files changed, 9 insertions(+), 13 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index cc94ac765dec..b986a8fc8d40 100644
---- a/fs/xfs/libxfs/xfs_btree.h
-+++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -209,7 +209,6 @@ typedef struct xfs_btree_cur
- 	union {
- 		struct {			/* needed for BNO, CNT, INO */
- 			struct xfs_buf	*agbp;	/* agf/agi buffer pointer */
--			struct xfs_defer_ops *dfops;	/* deferred updates */
- 			xfs_agnumber_t	agno;	/* ag number */
- 			union xfs_btree_cur_private	priv;
- 		} a;
-diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index 9dda6fd0bb13..8e330a196060 100644
---- a/fs/xfs/libxfs/xfs_refcount.c
-+++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -1132,7 +1132,7 @@ xfs_refcount_finish_one(
- 		if (!agbp)
- 			return -EFSCORRUPTED;
- 
--		rcur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno, dfops);
-+		rcur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno);
- 		if (!rcur) {
- 			error = -ENOMEM;
- 			goto out_cur;
-@@ -1666,7 +1666,7 @@ xfs_refcount_recover_cow_leftovers(
- 		error = -ENOMEM;
- 		goto out_trans;
- 	}
--	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno, NULL);
-+	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno);
- 
- 	/* Find all the leftover CoW staging extents. */
- 	memset(&low, 0, sizeof(low));
-diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
-index b71937982c5b..393aa88f93db 100644
---- a/fs/xfs/libxfs/xfs_refcount_btree.c
-+++ b/fs/xfs/libxfs/xfs_refcount_btree.c
-@@ -27,8 +27,7 @@ xfs_refcountbt_dup_cursor(
- 	struct xfs_btree_cur	*cur)
- {
- 	return xfs_refcountbt_init_cursor(cur->bc_mp, cur->bc_tp,
--			cur->bc_private.a.agbp, cur->bc_private.a.agno,
--			cur->bc_private.a.dfops);
-+			cur->bc_private.a.agbp, cur->bc_private.a.agno);
- }
- 
- STATIC void
-@@ -323,8 +322,7 @@ xfs_refcountbt_init_cursor(
- 	struct xfs_mount	*mp,
- 	struct xfs_trans	*tp,
- 	struct xfs_buf		*agbp,
--	xfs_agnumber_t		agno,
--	struct xfs_defer_ops	*dfops)
-+	xfs_agnumber_t		agno)
- {
- 	struct xfs_agf		*agf = XFS_BUF_TO_AGF(agbp);
- 	struct xfs_btree_cur	*cur;
-@@ -344,7 +342,6 @@ xfs_refcountbt_init_cursor(
- 
- 	cur->bc_private.a.agbp = agbp;
- 	cur->bc_private.a.agno = agno;
--	cur->bc_private.a.dfops = dfops;
- 	cur->bc_flags |= XFS_BTREE_CRC_BLOCKS;
- 
- 	cur->bc_private.a.priv.refc.nr_ops = 0;
-diff --git a/fs/xfs/libxfs/xfs_refcount_btree.h b/fs/xfs/libxfs/xfs_refcount_btree.h
-index d2852b6e1fa8..801c2c7732fd 100644
---- a/fs/xfs/libxfs/xfs_refcount_btree.h
-+++ b/fs/xfs/libxfs/xfs_refcount_btree.h
-@@ -44,8 +44,8 @@ struct xfs_mount;
- 		 ((index) - 1) * sizeof(xfs_refcount_ptr_t)))
- 
- extern struct xfs_btree_cur *xfs_refcountbt_init_cursor(struct xfs_mount *mp,
--		struct xfs_trans *tp, struct xfs_buf *agbp, xfs_agnumber_t agno,
--		struct xfs_defer_ops *dfops);
-+		struct xfs_trans *tp, struct xfs_buf *agbp,
-+		xfs_agnumber_t agno);
- extern int xfs_refcountbt_maxrecs(int blocklen, bool leaf);
- extern void xfs_refcountbt_compute_maxlevels(struct xfs_mount *mp);
- 
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 70e70c69f83f..385fa5b9c878 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -499,7 +499,7 @@ xfs_scrub_ag_btcur_init(
- 	/* Set up a refcountbt cursor for cross-referencing. */
- 	if (sa->agf_bp && xfs_sb_version_hasreflink(&mp->m_sb)) {
- 		sa->refc_cur = xfs_refcountbt_init_cursor(mp, sc->tp,
--				sa->agf_bp, agno, NULL);
-+				sa->agf_bp, agno);
- 		if (!sa->refc_cur)
- 			goto err;
- 	}
-diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-index c7157bc48bd1..297d7ce2901e 100644
---- a/fs/xfs/xfs_fsmap.c
-+++ b/fs/xfs/xfs_fsmap.c
-@@ -214,7 +214,7 @@ xfs_getfsmap_is_shared(
- 	/* Are there any shared blocks here? */
- 	flen = 0;
- 	cur = xfs_refcountbt_init_cursor(mp, tp, info->agf_bp,
--			info->agno, NULL);
-+			info->agno);
- 
- 	error = xfs_refcount_find_shared(cur, rec->rm_startblock,
- 			rec->rm_blockcount, &fbno, &flen, false);
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 2221c6c6a5d3..7cfe74d1514e 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -157,7 +157,7 @@ xfs_reflink_find_shared(
- 	if (!agbp)
- 		return -ENOMEM;
- 
--	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno, NULL);
-+	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno);
- 
- 	error = xfs_refcount_find_shared(cur, agbno, aglen, fbno, flen,
- 			find_end_of_shared);
--- 
-2.17.1
-
+T24gVHVlLCAyMDE4LTA2LTI2IGF0IDE1OjEzIC0wNDAwLCBNaWtlIFNuaXR6ZXIgd3JvdGU6DQo+
+IE9uIFR1ZSwgSnVuIDI2IDIwMTggYXQgIDM6MDdwbSAtMDQwMCwNCj4gRGFuIFdpbGxpYW1zIDxk
+YW4uai53aWxsaWFtc0BpbnRlbC5jb20+IHdyb3RlOg0KPiANCj4gPiBPbiBUdWUsIEp1biAyNiwg
+MjAxOCBhdCAxMTo1OCBBTSwgTWlrZSBTbml0emVyIDxzbml0emVyQHJlZGhhdC5jb20+IHdyb3Rl
+Og0KPiA+ID4gT24gVHVlLCBKdW4gMjYgMjAxOCBhdCAgMjo1MnBtIC0wNDAwLA0KPiA+ID4gRGFu
+IFdpbGxpYW1zIDxkYW4uai53aWxsaWFtc0BpbnRlbC5jb20+IHdyb3RlOg0KPiA+ID4gDQo+ID4g
+PiA+IE9uIFR1ZSwgSnVuIDI2LCAyMDE4IGF0IDEwOjU5IEFNLCBSb3NzIFp3aXNsZXINCj4gPiA+
+ID4gPHJvc3Muendpc2xlckBsaW51eC5pbnRlbC5jb20+IHdyb3RlOg0KPiA+ID4gPiA+IFFVRVVF
+X0ZMQUdfREFYIGlzIGFuIGluZGljYXRpb24gdGhhdCBhIGdpdmVuIGJsb2NrIGRldmljZSBzdXBw
+b3J0cw0KPiA+ID4gPiA+IGZpbGVzeXN0ZW0gREFYIGFuZCBzaG91bGQgbm90IGJlIHNldCBmb3Ig
+UE1FTSBuYW1lc3BhY2VzIHdoaWNoIGFyZSBpbiAicmF3Ig0KPiA+ID4gPiA+IG9yICJzZWN0b3Ii
+IG1vZGVzLiAgVGhlc2UgbmFtZXNwYWNlcyBsYWNrIHN0cnVjdCBwYWdlIGFuZCBhcmUgcHJldmVu
+dGVkDQo+ID4gPiA+ID4gZnJvbSBwYXJ0aWNpcGF0aW5nIGluIGZpbGVzeXN0ZW0gREFYLg0KPiA+
+ID4gPiA+IA0KPiA+ID4gPiA+IFNpZ25lZC1vZmYtYnk6IFJvc3MgWndpc2xlciA8cm9zcy56d2lz
+bGVyQGxpbnV4LmludGVsLmNvbT4NCj4gPiA+ID4gPiBTdWdnZXN0ZWQtYnk6IE1pa2UgU25pdHpl
+ciA8c25pdHplckByZWRoYXQuY29tPg0KPiA+ID4gPiA+IENjOiBzdGFibGVAdmdlci5rZXJuZWwu
+b3JnDQo+ID4gPiA+IA0KPiA+ID4gPiBXaHkgaXMgdGhpcyBjYzogc3RhYmxlPyBXaGF0IGlzIHRo
+ZSB1c2VyIHZpc2libGUgaW1wYWN0IG9mIHRoaXMgY2hhbmdlDQo+ID4gPiA+IGVzcGVjaWFsbHkg
+Z2l2ZW4gdGhlIHJlcXVpcmVtZW50IHRvIHZhbGlkYXRlIFFVRVVFX0ZMQUdfREFYIHdpdGgNCj4g
+PiA+ID4gYmRldl9kYXhfc3VwcG9ydGVkKCk/IFBhdGNoIGxvb2tzIGdvb2QsIGJ1dCBpdCdzIGp1
+c3QgYSBjb3NtZXRpYyBmaXh1cA0KPiA+ID4gPiBhZmFpY3MuDQo+ID4gPiANCj4gPiA+IFRoaXMg
+aXNuJ3QgY29zbWV0aWMgd2hlbiB5b3UgY29uc2lkZXIgdGhhdCBzdGFja2luZyB1cCBhIERNIGRl
+dmljZSBpcw0KPiA+ID4gbG9va2luZyBhdCB0aGlzIGZsYWcgdG8gZGV0ZXJtaW5lIHdoZXRoZXIg
+YSB0YWJsZSBkb2VzIG9yIGRvZXMgX25vdF8NCj4gPiA+IHN1cHBvcnQgREFYLg0KPiA+ID4gDQo+
+ID4gPiBTbyB0aGlzIHBhdGNoLCBpbiBjb25qdW5jdGlvbiB3aXRoIHRoZSBvdGhlciBjaGFuZ2Vz
+IGluIHRoZSBzZXJpZXMsIGlzDQo+ID4gPiBjZXJ0YWlubHkgc29tZXRoaW5nIEknZCBjb25zaWRl
+ciBhcHByb3ByaWF0ZSBmb3Igc3RhYmxlLg0KPiA+IA0KPiA+IEkgdGhpbmsgdGhpcyBjbGFzc2lm
+aWVzIGFzIHNvbWV0aGluZyB0aGF0IG5ldmVyIHdvcmtlZCBjb3JyZWN0bHkgYW5kDQo+ID4gaXMg
+bm90IGEgcmVncmVzc2lvbi4gSXQgZG9lcyBub3QgaWRlbnRpZnkgd2hpY2ggY29tbWl0IGl0IGlz
+IHJlcGFpcmluZw0KPiA+IG9yIHRoZSB1c2VyIHZpc2libGUgZmFpbHVyZSBtb2RlLg0KPiANCj4g
+U28geW91J3JlIHRha2luZyBpc3N1ZSB3aXRoIG1ha2luZyBzdGFja2VkIGRheCBjb25maWdzIHdv
+cmsgaW4gb2xkZXINCj4ga2VybmVscz8gIFRoYXQncyBmaW5lLiAgV2UgY2FuIGRyb3AgdGhlIHN0
+YWJsZSBjYyBpZiB5b3UgbGlrZS4NCj4gDQo+IEJ1dCBJIG1lYW4gd2UgaW50ZW5kZWQgZm9yIHRo
+aXMgdG8gd29yay4uIHNvIHRoZSBGaXhlcyBjb21taXQgcmVmZXJlbmNlcw0KPiBjYW4gZWFzaWx5
+IGJlIGFkZGVkLCBlLmcuOiA1NDVlZDIwZTZkZjY4YTRkMjU4NGEyOWEyYTI4ZWU4YjJmN2U5NTQ3
+DQo+ICgiZG06IGFkZCBpbmZyYXN0cnVjdHVyZSBmb3IgREFYIHN1cHBvcnQiKQ0KDQpXaGVuIHRo
+aXMgZG0gY2hhbmdlIHdhcyBtYWRlLCB0aGUgcG1lbSBkcml2ZXIgc3VwcG9ydGVkIERBWCBmb3Ig
+Ym90aCByYXcNCmFuZCBtZW1vcnkgbW9kZXMgKG5vdGU6IHNlY3RvciBtb2RlIGRvZXMgbm90IHVz
+ZSB0aGUgcG1lbSBkcml2ZXIpLiAgSQ0KdGhpbmsgdGhlIGlzc3VlIHdhcyBpbnRyb2R1Y2VkIHdo
+ZW4gd2UgZHJvcHBlZCBEQVggc3VwcG9ydCBmcm9tIHJhdw0KbW9kZS4NCg0KVGhhbmtzLA0KLVRv
+c2hpDQoNCg==
