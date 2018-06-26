@@ -1,86 +1,115 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from g9t5008.houston.hpe.com ([15.241.48.72]:59362 "EHLO
-        g9t5008.houston.hpe.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751413AbeFZVXd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Jun 2018 17:23:33 -0400
-From: "Kani, Toshi" <toshi.kani@hpe.com>
-Subject: Re: [PATCH v3 1/3] pmem: only set QUEUE_FLAG_DAX for fsdax mode
-Date: Tue, 26 Jun 2018 21:23:29 +0000
-Message-ID: <1530048093.14039.286.camel@hpe.com>
+Received: from mga07.intel.com ([134.134.136.100]:23715 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754820AbeFZR7g (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 26 Jun 2018 13:59:36 -0400
+From: Ross Zwisler <ross.zwisler@linux.intel.com>
+Subject: [PATCH v3 3/3] dm: prevent DAX mounts if not supported
+Date: Tue, 26 Jun 2018 11:59:32 -0600
+Message-Id: <20180626175932.8899-4-ross.zwisler@linux.intel.com>
+In-Reply-To: <20180626175932.8899-1-ross.zwisler@linux.intel.com>
 References: <20180626175932.8899-1-ross.zwisler@linux.intel.com>
-         <20180626175932.8899-2-ross.zwisler@linux.intel.com>
-         <CAPcyv4iWgPnHmBKhUvhManC6UL9CkLqN_d8vBo6KmcPJdPzuUw@mail.gmail.com>
-         <20180626185830.GA7171@redhat.com>
-         <CAPcyv4h6HO6fs6k7QMD77jkz2djCeWCtWomCdNb0-1Q4VKanqw@mail.gmail.com>
-         <20180626191346.GA7233@redhat.com> <1530046327.14039.273.camel@hpe.com>
-         <CAPcyv4hP_Y3xdyCa-UkYCMJ5OtnjnkwPZDS2Z2Ge8+5ymBONwQ@mail.gmail.com>
-In-Reply-To: <CAPcyv4hP_Y3xdyCa-UkYCMJ5OtnjnkwPZDS2Z2Ge8+5ymBONwQ@mail.gmail.com>
-Content-Language: en-US
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <75043E6597155E4E8B827A7631A8CDEC@NAMPRD84.PROD.OUTLOOK.COM>
-Content-Transfer-Encoding: base64
-MIME-Version: 1.0
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "dan.j.williams@intel.com" <dan.j.williams@intel.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "snitzer@redhat.com" <snitzer@redhat.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
+To: Toshi Kani <toshi.kani@hpe.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com
+Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org, stable@vger.kernel.org
 
-T24gVHVlLCAyMDE4LTA2LTI2IGF0IDE0OjAyIC0wNzAwLCBEYW4gV2lsbGlhbXMgd3JvdGU6DQo+
-IE9uIFR1ZSwgSnVuIDI2LCAyMDE4IGF0IDE6NTQgUE0sIEthbmksIFRvc2hpIDx0b3NoaS5rYW5p
-QGhwZS5jb20+IHdyb3RlOg0KPiA+IE9uIFR1ZSwgMjAxOC0wNi0yNiBhdCAxNToxMyAtMDQwMCwg
-TWlrZSBTbml0emVyIHdyb3RlOg0KPiA+ID4gT24gVHVlLCBKdW4gMjYgMjAxOCBhdCAgMzowN3Bt
-IC0wNDAwLA0KPiA+ID4gRGFuIFdpbGxpYW1zIDxkYW4uai53aWxsaWFtc0BpbnRlbC5jb20+IHdy
-b3RlOg0KPiA+ID4gDQo+ID4gPiA+IE9uIFR1ZSwgSnVuIDI2LCAyMDE4IGF0IDExOjU4IEFNLCBN
-aWtlIFNuaXR6ZXIgPHNuaXR6ZXJAcmVkaGF0LmNvbT4gd3JvdGU6DQo+ID4gPiA+ID4gT24gVHVl
-LCBKdW4gMjYgMjAxOCBhdCAgMjo1MnBtIC0wNDAwLA0KPiA+ID4gPiA+IERhbiBXaWxsaWFtcyA8
-ZGFuLmoud2lsbGlhbXNAaW50ZWwuY29tPiB3cm90ZToNCj4gPiA+ID4gPiANCj4gPiA+ID4gPiA+
-IE9uIFR1ZSwgSnVuIDI2LCAyMDE4IGF0IDEwOjU5IEFNLCBSb3NzIFp3aXNsZXINCj4gPiA+ID4g
-PiA+IDxyb3NzLnp3aXNsZXJAbGludXguaW50ZWwuY29tPiB3cm90ZToNCj4gPiA+ID4gPiA+ID4g
-UVVFVUVfRkxBR19EQVggaXMgYW4gaW5kaWNhdGlvbiB0aGF0IGEgZ2l2ZW4gYmxvY2sgZGV2aWNl
-IHN1cHBvcnRzDQo+ID4gPiA+ID4gPiA+IGZpbGVzeXN0ZW0gREFYIGFuZCBzaG91bGQgbm90IGJl
-IHNldCBmb3IgUE1FTSBuYW1lc3BhY2VzIHdoaWNoIGFyZSBpbiAicmF3Ig0KPiA+ID4gPiA+ID4g
-PiBvciAic2VjdG9yIiBtb2Rlcy4gIFRoZXNlIG5hbWVzcGFjZXMgbGFjayBzdHJ1Y3QgcGFnZSBh
-bmQgYXJlIHByZXZlbnRlZA0KPiA+ID4gPiA+ID4gPiBmcm9tIHBhcnRpY2lwYXRpbmcgaW4gZmls
-ZXN5c3RlbSBEQVguDQo+ID4gPiA+ID4gPiA+IA0KPiA+ID4gPiA+ID4gPiBTaWduZWQtb2ZmLWJ5
-OiBSb3NzIFp3aXNsZXIgPHJvc3Muendpc2xlckBsaW51eC5pbnRlbC5jb20+DQo+ID4gPiA+ID4g
-PiA+IFN1Z2dlc3RlZC1ieTogTWlrZSBTbml0emVyIDxzbml0emVyQHJlZGhhdC5jb20+DQo+ID4g
-PiA+ID4gPiA+IENjOiBzdGFibGVAdmdlci5rZXJuZWwub3JnDQo+ID4gPiA+ID4gPiANCj4gPiA+
-ID4gPiA+IFdoeSBpcyB0aGlzIGNjOiBzdGFibGU/IFdoYXQgaXMgdGhlIHVzZXIgdmlzaWJsZSBp
-bXBhY3Qgb2YgdGhpcyBjaGFuZ2UNCj4gPiA+ID4gPiA+IGVzcGVjaWFsbHkgZ2l2ZW4gdGhlIHJl
-cXVpcmVtZW50IHRvIHZhbGlkYXRlIFFVRVVFX0ZMQUdfREFYIHdpdGgNCj4gPiA+ID4gPiA+IGJk
-ZXZfZGF4X3N1cHBvcnRlZCgpPyBQYXRjaCBsb29rcyBnb29kLCBidXQgaXQncyBqdXN0IGEgY29z
-bWV0aWMgZml4dXANCj4gPiA+ID4gPiA+IGFmYWljcy4NCj4gPiA+ID4gPiANCj4gPiA+ID4gPiBU
-aGlzIGlzbid0IGNvc21ldGljIHdoZW4geW91IGNvbnNpZGVyIHRoYXQgc3RhY2tpbmcgdXAgYSBE
-TSBkZXZpY2UgaXMNCj4gPiA+ID4gPiBsb29raW5nIGF0IHRoaXMgZmxhZyB0byBkZXRlcm1pbmUg
-d2hldGhlciBhIHRhYmxlIGRvZXMgb3IgZG9lcyBfbm90Xw0KPiA+ID4gPiA+IHN1cHBvcnQgREFY
-Lg0KPiA+ID4gPiA+IA0KPiA+ID4gPiA+IFNvIHRoaXMgcGF0Y2gsIGluIGNvbmp1bmN0aW9uIHdp
-dGggdGhlIG90aGVyIGNoYW5nZXMgaW4gdGhlIHNlcmllcywgaXMNCj4gPiA+ID4gPiBjZXJ0YWlu
-bHkgc29tZXRoaW5nIEknZCBjb25zaWRlciBhcHByb3ByaWF0ZSBmb3Igc3RhYmxlLg0KPiA+ID4g
-PiANCj4gPiA+ID4gSSB0aGluayB0aGlzIGNsYXNzaWZpZXMgYXMgc29tZXRoaW5nIHRoYXQgbmV2
-ZXIgd29ya2VkIGNvcnJlY3RseSBhbmQNCj4gPiA+ID4gaXMgbm90IGEgcmVncmVzc2lvbi4gSXQg
-ZG9lcyBub3QgaWRlbnRpZnkgd2hpY2ggY29tbWl0IGl0IGlzIHJlcGFpcmluZw0KPiA+ID4gPiBv
-ciB0aGUgdXNlciB2aXNpYmxlIGZhaWx1cmUgbW9kZS4NCj4gPiA+IA0KPiA+ID4gU28geW91J3Jl
-IHRha2luZyBpc3N1ZSB3aXRoIG1ha2luZyBzdGFja2VkIGRheCBjb25maWdzIHdvcmsgaW4gb2xk
-ZXINCj4gPiA+IGtlcm5lbHM/ICBUaGF0J3MgZmluZS4gIFdlIGNhbiBkcm9wIHRoZSBzdGFibGUg
-Y2MgaWYgeW91IGxpa2UuDQo+ID4gPiANCj4gPiA+IEJ1dCBJIG1lYW4gd2UgaW50ZW5kZWQgZm9y
-IHRoaXMgdG8gd29yay4uIHNvIHRoZSBGaXhlcyBjb21taXQgcmVmZXJlbmNlcw0KPiA+ID4gY2Fu
-IGVhc2lseSBiZSBhZGRlZCwgZS5nLjogNTQ1ZWQyMGU2ZGY2OGE0ZDI1ODRhMjlhMmEyOGVlOGIy
-ZjdlOTU0Nw0KPiA+ID4gKCJkbTogYWRkIGluZnJhc3RydWN0dXJlIGZvciBEQVggc3VwcG9ydCIp
-DQo+ID4gDQo+ID4gV2hlbiB0aGlzIGRtIGNoYW5nZSB3YXMgbWFkZSwgdGhlIHBtZW0gZHJpdmVy
-IHN1cHBvcnRlZCBEQVggZm9yIGJvdGggcmF3DQo+ID4gYW5kIG1lbW9yeSBtb2RlcyAobm90ZTog
-c2VjdG9yIG1vZGUgZG9lcyBub3QgdXNlIHRoZSBwbWVtIGRyaXZlcikuICBJDQo+ID4gdGhpbmsg
-dGhlIGlzc3VlIHdhcyBpbnRyb2R1Y2VkIHdoZW4gd2UgZHJvcHBlZCBEQVggc3VwcG9ydCBmcm9t
-IHJhdw0KPiA+IG1vZGUuDQo+IA0KPiBTdGlsbCBEQVggd2l0aCByYXcgbW9kZSBuZXZlciByZWFs
-bHkgd29ya2VkIGFueSB3YXkuIEl0IHdhcyBhbHNvDQo+IHNvbWV0aGluZyB0aGF0IHdhcyBicm9r
-ZW4gZnJvbSBkYXkgb25lLiBTbyB3aGF0IGhhcHBlbnMgdG8gc29tZW9uZSB3aG8NCj4gaGFwcGVu
-ZWQgdG8gYXZvaWQgYWxsIHRoZSBwcm9ibGVtcyB3aXRoIHBhZ2UtbGVzcyBEQVggYW5kIGVuYWJs
-ZWQNCj4gZGV2aWNlLW1hcHBlciBvbiB0b3A/IFRoYXQgZmFpbHVyZSBtb2RlIGRldGFpbCBuZWVk
-cyB0byBiZSBhZGRlZCB0bw0KPiB0aGlzIGNoYW5nZWxvZyBpZiB3ZSB3YW50IHRvIHByb3Bvc2Ug
-dGhpcyBmb3IgLXN0YWJsZS4NCg0KTXkgcG9pbnQgaXMgdGhhdCB0aGUgYmVoYXZpb3Igc2hvdWxk
-IGJlIGNvbnNpc3RlbnQgYmV0d2VlbiBwbWVtIGFuZA0KZGV2aWNlLW1hcHBlci4gIFdoZW4gLW8g
-ZGF4IHN1Y2NlZWRzIG9uIGEgcG1lbSwgdGhlbiBpdCBzaG91bGQgc3VjY2VlZA0Kb24gYSBkZXZp
-Y2UtbWFwcGVyIG9uIHRvcCBvZiB0aGF0IHBtZW0uDQoNCkhhcyB0aGUgZHJvcCBvZiBkYXggc3Vw
-cG9ydCBmcm9tIHJhdyBtb2RlIG1hZGUgdG8gLXN0YWJsZSBiYWNrIHRvIHRoZQ0KYmFzZWxpbmUg
-YWNjZXB0ZWQgNTQ1ZWQyMGU2ZGY2PyAgSXQgd2lsbCBpbnRyb2R1Y2UgaW5jb25zaXN0ZW5jeSwN
-Cm90aGVyd2lzZS4NCg0KVGhhbmtzLA0KLVRvc2hpDQoNCg0KIA0KDQoNCg==
+Currently device_supports_dax() just checks to see if the QUEUE_FLAG_DAX
+flag is set on the device's request queue to decide whether or not the
+device supports filesystem DAX.  Really we should be using
+bdev_dax_supported() like filesystems do at mount time.  This performs
+other tests like checking to make sure the dax_direct_access() path works.
+
+Conditionally set QUEUE_FLAG_DAX on the DM device's request queue based on
+whether all underlying devices support DAX.  Now that bdev_dax_supported()
+explicitly checks for this flag, this will ensure that filesystems built
+upon DM devices will only be able to mount with DAX if all underlying
+devices also support DAX.
+
+Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+Fixes: commit 545ed20e6df6 ("dm: add infrastructure for DAX support")
+Cc: stable@vger.kernel.org
+---
+ drivers/md/dm-ioctl.c         | 5 +++++
+ drivers/md/dm-table.c         | 7 +++----
+ drivers/md/dm.c               | 3 +--
+ include/linux/device-mapper.h | 5 +++++
+ 4 files changed, 14 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/md/dm-ioctl.c b/drivers/md/dm-ioctl.c
+index b810ea77e6b1..0055bdbee5b1 100644
+--- a/drivers/md/dm-ioctl.c
++++ b/drivers/md/dm-ioctl.c
+@@ -1350,6 +1350,11 @@ static int table_load(struct file *filp, struct dm_ioctl *param, size_t param_si
+ 		goto err_unlock_md_type;
+ 	}
+ 
++	if (dm_table_supports_dax(t))
++		blk_queue_flag_set(QUEUE_FLAG_DAX, md->queue);
++	else
++		blk_queue_flag_clear(QUEUE_FLAG_DAX, md->queue);
++
+ 	dm_unlock_md_type(md);
+ 
+ 	/* stage inactive table */
+diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
+index 938766794c2e..c673b4a51fb2 100644
+--- a/drivers/md/dm-table.c
++++ b/drivers/md/dm-table.c
+@@ -885,12 +885,10 @@ EXPORT_SYMBOL_GPL(dm_table_set_type);
+ static int device_supports_dax(struct dm_target *ti, struct dm_dev *dev,
+ 			       sector_t start, sector_t len, void *data)
+ {
+-	struct request_queue *q = bdev_get_queue(dev->bdev);
+-
+-	return q && blk_queue_dax(q);
++	return bdev_dax_supported(dev->bdev, PAGE_SIZE);
+ }
+ 
+-static bool dm_table_supports_dax(struct dm_table *t)
++bool dm_table_supports_dax(struct dm_table *t)
+ {
+ 	struct dm_target *ti;
+ 	unsigned i;
+@@ -909,6 +907,7 @@ static bool dm_table_supports_dax(struct dm_table *t)
+ 
+ 	return true;
+ }
++EXPORT_SYMBOL_GPL(dm_table_supports_dax);
+ 
+ static bool dm_table_does_not_support_partial_completion(struct dm_table *t);
+ 
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index e65429a29c06..bef5a3f243ed 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -1056,8 +1056,7 @@ static long dm_dax_direct_access(struct dax_device *dax_dev, pgoff_t pgoff,
+ 	if (len < 1)
+ 		goto out;
+ 	nr_pages = min(len, nr_pages);
+-	if (ti->type->direct_access)
+-		ret = ti->type->direct_access(ti, pgoff, nr_pages, kaddr, pfn);
++	ret = ti->type->direct_access(ti, pgoff, nr_pages, kaddr, pfn);
+ 
+  out:
+ 	dm_put_live_table(md, srcu_idx);
+diff --git a/include/linux/device-mapper.h b/include/linux/device-mapper.h
+index 6fb0808e87c8..45ea9e1f9af9 100644
+--- a/include/linux/device-mapper.h
++++ b/include/linux/device-mapper.h
+@@ -461,6 +461,11 @@ void dm_table_add_target_callbacks(struct dm_table *t, struct dm_target_callback
+  */
+ void dm_table_set_type(struct dm_table *t, enum dm_queue_mode type);
+ 
++/*
++ * Check to see if this target type and all table devices support DAX.
++ */
++bool dm_table_supports_dax(struct dm_table *t);
++
+ /*
+  * Finally call this to make the table ready for use.
+  */
+-- 
+2.14.4
+
