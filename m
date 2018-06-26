@@ -1,94 +1,163 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:57292 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752063AbeFXTXd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 24 Jun 2018 15:23:33 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5OJFbJ1115147
-        for <linux-xfs@vger.kernel.org>; Sun, 24 Jun 2018 19:23:32 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp2120.oracle.com with ESMTP id 2jt7mp8hnb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 24 Jun 2018 19:23:32 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w5OJNV1q024895
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 24 Jun 2018 19:23:32 GMT
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w5OJNVaS020321
-        for <linux-xfs@vger.kernel.org>; Sun, 24 Jun 2018 19:23:31 GMT
-Subject: [PATCH v16 00/21] xfs-4.19: online repair support
+Received: from aserp2130.oracle.com ([141.146.126.79]:33426 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934731AbeFZAQf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Jun 2018 20:16:35 -0400
+Date: Mon, 25 Jun 2018 17:16:20 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sun, 24 Jun 2018 12:23:30 -0700
-Message-ID: <152986820984.3155.16417868536016544528.stgit@magnolia>
+Subject: Re: [PATCH] xfs: remove deprecated barrier/nobarrier mount options
+Message-ID: <20180626001620.GA5711@magnolia>
+References: <56f0a68c-9c1b-712a-a0e8-e596f8272561@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <56f0a68c-9c1b-712a-a0e8-e596f8272561@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-Hi all,
+On Mon, Jun 25, 2018 at 07:03:57PM -0500, Eric Sandeen wrote:
+> The barrier mount options have been no-ops and deprecated since
+> 
+> 4cf4573 xfs: deprecate barrier/nobarrier mount option
+> 
+> i.e. kernel 4.10 / December 2016, with a stated deprecation schedule
+> after v4.15.  Should be fair game to remove them now.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+>  Documentation/filesystems/xfs.txt |    4 ++--
+>  fs/xfs/xfs_mount.h                |    1 -
+>  fs/xfs/xfs_super.c                |   34 ++++------------------------------
+>  3 files changed, 6 insertions(+), 33 deletions(-)
+> 
+> 
+> diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
+> index 4d9ff0a..07dbd4e 100644
+> --- a/Documentation/filesystems/xfs.txt
+> +++ b/Documentation/filesystems/xfs.txt
+> @@ -223,8 +223,6 @@ Deprecated Mount Options
+>  
+>    Name				Removal Schedule
+>    ----				----------------
+> -  barrier			no earlier than v4.15
+> -  nobarrier			no earlier than v4.15
+>  
+>  
+>  Removed Mount Options
+> @@ -236,6 +234,8 @@ Removed Mount Options
+>    ihashsize			v4.0
+>    irixsgid			v4.0
+>    osyncisdsync/osyncisosync	v4.0
+> +  barrier			v4.18
+> +  nobarrier			v4.18
 
-This is the sixteenth revision of a patchset that adds to XFS kernel
-support for online metadata scrubbing and repair.  There aren't any
-on-disk format changes.
+I'm not removing mount options this far into the 4.18 cycle. ;)
 
-New for this version of the patch series are: a renaming of the 'repair
-freeze' code into the 'scrub freeze' code so that scrubbers can freeze
-the filesystem to check or repair metadata; a new ioctl flag for
-userspace to grant the kernel permission to freeze the filesystem to do
-work; a centralized iput helper that delays iput processing until after
-the scrub freeze is lifted; and a new fs summary counter scrub/repair
-function that can check the global icount/ifree/fdblock counters.
-
-The first patch fixes a soon-to-be-invalid assumption in the rmap code
-that the rmapbt can never be empty.  This won't be true at all for
-realtime rmap and is briefly untrue for rmap repairs, so we might as
-well restructure that assumption out of the code.
-
-The next two patches create two predicates that decide if an inode has
-CoW staging blocks that need to be freed or post-eof blocks that need to
-be freed.
-
-Patches 4-7 implement reconstruction of the AGF/AGI/AGFL headers, the
-free space btrees, and the inode btrees.  These are the same patches as
-v15.
-
-Patches 8-9 implement the deferred iput code -- first the scrub-specific
-iput helper that enables us delay iputting of inodes that have post-eof
-or CoW blocks that need to be freed until we no longer have a
-transaction and can let the iput work proceed.  The second patch fleshes
-out the scrub iget/iput tracepoints for easier debugging.
-
-Next comes the scrub freeze code which enables us to pause all other
-work in the filesystem and introduces the FREEZE_OK ioctl flag for
-userspace to control freeze policy.
-
-Patch 11-19 implement online rmap, refcount, inode, ifork, bmap,
-symlink, extended attribute, and quota repairs.  Patch 20 implements
-online quotacheck via the scrub freezer.
-
-Patch 21 implements the filesystem summary counter check and repair
-code.  This turned out to be easier to implement than I had thought --
-we gather the icount, ifree, and fdblocks counts from each of the AGs.
-Next we adjust fdblocks by all the in-core reservations: resblks, per-AG
-reservations, and all delayed allocation blocks of all in-core inodes.
-Then we can compare our counts against the superblock's counts and
-adjust accordingly.
-
-If you're going to start using this mess, you probably ought to just
-pull from my git trees.  The kernel patches[1] should apply against
-4.18-rc2.  xfsprogs[2] and xfstests[3] can be found in their usual
-places.  The git trees contain all four series' worth of changes.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
+4.19, perhaps?
 
 --D
 
-[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
-[2] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
-[3] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=djwong-devel
+>  
+>  
+>  sysctls
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index 245349d..0f9115c 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -216,7 +216,6 @@ struct xfs_error_cfg {
+>  #define XFS_MOUNT_SMALL_INUMS	(1ULL << 14)	/* user wants 32bit inodes */
+>  #define XFS_MOUNT_32BITINODES	(1ULL << 15)	/* inode32 allocator active */
+>  #define XFS_MOUNT_NOUUID	(1ULL << 16)	/* ignore uuid during mount */
+> -#define XFS_MOUNT_BARRIER	(1ULL << 17)
+>  #define XFS_MOUNT_IKEEP		(1ULL << 18)	/* keep empty inode clusters*/
+>  #define XFS_MOUNT_SWALLOC	(1ULL << 19)	/* turn on stripe width
+>  						 * allocation */
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 9d791f1..03c5677 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -65,11 +65,10 @@ enum {
+>  	Opt_logbufs, Opt_logbsize, Opt_logdev, Opt_rtdev, Opt_biosize,
+>  	Opt_wsync, Opt_noalign, Opt_swalloc, Opt_sunit, Opt_swidth, Opt_nouuid,
+>  	Opt_mtpt, Opt_grpid, Opt_nogrpid, Opt_bsdgroups, Opt_sysvgroups,
+> -	Opt_allocsize, Opt_norecovery, Opt_barrier, Opt_nobarrier,
+> -	Opt_inode64, Opt_inode32, Opt_ikeep, Opt_noikeep,
+> -	Opt_largeio, Opt_nolargeio, Opt_attr2, Opt_noattr2, Opt_filestreams,
+> -	Opt_quota, Opt_noquota, Opt_usrquota, Opt_grpquota, Opt_prjquota,
+> -	Opt_uquota, Opt_gquota, Opt_pquota,
+> +	Opt_allocsize, Opt_norecovery, Opt_inode64, Opt_inode32, Opt_ikeep,
+> +	Opt_noikeep, Opt_largeio, Opt_nolargeio, Opt_attr2, Opt_noattr2,
+> +	Opt_filestreams, Opt_quota, Opt_noquota, Opt_usrquota, Opt_grpquota,
+> +	Opt_prjquota, Opt_uquota, Opt_gquota, Opt_pquota,
+>  	Opt_uqnoenforce, Opt_gqnoenforce, Opt_pqnoenforce, Opt_qnoenforce,
+>  	Opt_discard, Opt_nodiscard, Opt_dax, Opt_err,
+>  };
+> @@ -118,14 +117,7 @@ enum {
+>  	{Opt_qnoenforce, "qnoenforce"},	/* same as uqnoenforce */
+>  	{Opt_discard,	"discard"},	/* Discard unused blocks */
+>  	{Opt_nodiscard,	"nodiscard"},	/* Do not discard unused blocks */
+> -
+>  	{Opt_dax,	"dax"},		/* Enable direct access to bdev pages */
+> -
+> -	/* Deprecated mount options scheduled for removal */
+> -	{Opt_barrier,	"barrier"},	/* use writer barriers for log write and
+> -					 * unwritten extent conversion */
+> -	{Opt_nobarrier,	"nobarrier"},	/* .. disable */
+> -
+>  	{Opt_err,	NULL},
+>  };
+>  
+> @@ -209,7 +201,6 @@ enum {
+>  	 * Set some default flags that could be cleared by the mount option
+>  	 * parsing.
+>  	 */
+> -	mp->m_flags |= XFS_MOUNT_BARRIER;
+>  	mp->m_flags |= XFS_MOUNT_COMPAT_IOSIZE;
+>  
+>  	/*
+> @@ -362,14 +353,6 @@ enum {
+>  			mp->m_flags |= XFS_MOUNT_DAX;
+>  			break;
+>  #endif
+> -		case Opt_barrier:
+> -			xfs_warn(mp, "%s option is deprecated, ignoring.", p);
+> -			mp->m_flags |= XFS_MOUNT_BARRIER;
+> -			break;
+> -		case Opt_nobarrier:
+> -			xfs_warn(mp, "%s option is deprecated, ignoring.", p);
+> -			mp->m_flags &= ~XFS_MOUNT_BARRIER;
+> -			break;
+>  		default:
+>  			xfs_warn(mp, "unknown mount option [%s].", p);
+>  			return -EINVAL;
+> @@ -487,7 +470,6 @@ struct proc_xfs_info {
+>  	static struct proc_xfs_info xfs_info_unset[] = {
+>  		/* the few simple ones we can get from the mount struct */
+>  		{ XFS_MOUNT_COMPAT_IOSIZE,	",largeio" },
+> -		{ XFS_MOUNT_BARRIER,		",nobarrier" },
+>  		{ XFS_MOUNT_SMALL_INUMS,	",inode64" },
+>  		{ 0, NULL }
+>  	};
+> @@ -1278,14 +1260,6 @@ struct proc_xfs_info {
+>  
+>  		token = match_token(p, tokens, args);
+>  		switch (token) {
+> -		case Opt_barrier:
+> -			xfs_warn(mp, "%s option is deprecated, ignoring.", p);
+> -			mp->m_flags |= XFS_MOUNT_BARRIER;
+> -			break;
+> -		case Opt_nobarrier:
+> -			xfs_warn(mp, "%s option is deprecated, ignoring.", p);
+> -			mp->m_flags &= ~XFS_MOUNT_BARRIER;
+> -			break;
+>  		case Opt_inode64:
+>  			mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
+>  			mp->m_maxagi = xfs_set_inode_alloc(mp, sbp->sb_agcount);
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
