@@ -1,91 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:51785 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752618AbeFYW10 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Jun 2018 18:27:26 -0400
-Date: Tue, 26 Jun 2018 08:27:23 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] [RFC] writeback: fix range_cyclic writeback vs
- writepages deadlock
-Message-ID: <20180625222723.GZ19934@dastard>
-References: <20180622030941.25544-1-david@fromorbit.com>
- <20180622144109.GA9935@bfoster>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:39088 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751901AbeFZSs2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 26 Jun 2018 14:48:28 -0400
+Date: Tue, 26 Jun 2018 14:48:25 -0400
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH v3 0/3] Fix DM DAX handling
+Message-ID: <20180626184824.GA7114@redhat.com>
+References: <20180626175932.8899-1-ross.zwisler@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180622144109.GA9935@bfoster>
+In-Reply-To: <20180626175932.8899-1-ross.zwisler@linux.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Ross Zwisler <ross.zwisler@linux.intel.com>
+Cc: Toshi Kani <toshi.kani@hpe.com>, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
 
-On Fri, Jun 22, 2018 at 10:41:10AM -0400, Brian Foster wrote:
-> On Fri, Jun 22, 2018 at 01:09:41PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > We've recently seen a workload on XFS filesystems with a repeatable
-> > deadlock between background writeback and a multi-process
-> > application doing concurrent writes and fsyncs to a small range of a
-> > file.
+On Tue, Jun 26 2018 at  1:59pm -0400,
+Ross Zwisler <ross.zwisler@linux.intel.com> wrote:
 
-[...]
-
-> > #2 is simple, and I don't think it will have any impact on
-> > performance as going back to the start of the file implies an
-> > immediate seek. We'll have exactly the same number of seeks if we
-> > switch writeback to another inode, and then come back to this one
-> > later and restart from index 0.
-> > 
-> > #2a is pretty much "status quo without the deadlock". Moving the
-> > retry loop up into the wcp caller means we can issue IO on the
-> > pending pages before calling wcp again, and so avoid locking or
-> > waiting on pages in the wrong order. I'm not convinced we need to do
-> > this given that we get the same thing from #2 on the next writeback
-> > call from the writeback infrastructure.
-> > 
-> > #3 is really just a band-aid - it doesn't fix the access/wait inversion
-> > problem, just prevents it from becoming a deadlock situation. I'd
-> > prefer we fix the inversion, not sweep it under the carpet like
-> > this.
-> > 
-> > #3a is really an optimisation that just so happens to include the
-> > band-aid fix of #3.
-> > 
-> > So I'm really tending towards #2 as the simplest way to fix this,
-> > and that's what's the patch below implements.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
+> This series fixes a few issues that I found with DM's handling of DAX
+> devices.  Here are some of the issues I found:
 > 
-> FWIW, this seems like a reasonable approach to me. One thing I'm not
-> sure about is whether the higher level plug in wb_writeback() could
-> cause the same problem even with the lower level cycle restart out of
-> the picture.
+>  * We can create a dm-stripe or dm-linear device which is made up of an
+>    fsdax PMEM namespace and a raw PMEM namespace but which can hold a
+>    filesystem mounted with the -o dax mount option.  DAX operations to
+>    the raw PMEM namespace part lack struct page and can fail in
+>    interesting/unexpected ways when doing things like fork(), examining
+>    memory with gdb, etc.
+> 
+>  * We can create a dm-stripe or dm-linear device which is made up of an
+>    fsdax PMEM namespace and a BRD ramdisk which can hold a filesystem
+>    mounted with the -o dax mount option.  All I/O to this filesystem
+>    will fail.
+> 
+> ---
+> 
+> Changes since v2:
+>   * Only set QUEUE_FLAG_DAX for fsdax mode PMEM namespaces. (Mike)
+>   * Check for QUEUE_FLAG_DAX in __bdev_dax_supported(). (Mike)
+>   * Get rid of DM_TYPE_DAX_BIO_BASED reworks. (Mike)
+>   * Dropped the first 2 prep patches of v2 since they were merged for
+>     v4.18-rc1.  (Thanks, Darrick!)
+> 
+> ---
+> 
+> Mike, can you take this series through your tree?
+> 
+> Personally I think this should be treated as a bug fix and merged in the
+> v4.18-rc* series.
 
-Plugging can't cause this because it captures bios that have
-been released from the caller context vi submit_bio(). The plug list
-has hooks in the scheduler that flush it on context switch precisely
-so that we don't get deadlock problems with bios being stuck on the
-plug list when we block for some reason.
+I'd be fine with staging it for 4.18.  Only question is whether others
+are fine with the dax patch (and me being the one to get it to Linus)?
 
-> It looks to me that if the inode still has dirty pages after the
-> write_cache_pages(), it ends up on wb->b_more_io via
-> writeback_sb_inodes() -> requeue_inode(). The caller (wb_writeback())
-> repopulates ->b_io from ->b_more_io (via queue_io()) if the former is
-> empty (and we haven't otherwise stopped) before finishing the plug.
-> There is a blk_flush_plug() in writeback_sb_inodes(), but that appears
-> to be non-deterministic. That call aside, could that plug effectively
-> hold the page in writeback long enough for background writeback to spin
-> around and sit on the page 1 lock?
+I already replied to the 3rd patch with some feedback for v4 (but I can
+also take care of those changes if I'm the one to stage these changes).
 
-Right, that could happen, but the plug list will be flushed before
-we context switch away and sleep after failng to get the page lock,
-so there's no problem here.
+Maybe if Dan and/or others could provide their review for both the dax
+and pmem patches?  If I can get review on those I'll get the series
+staged for Linus to pull this week.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Mike
