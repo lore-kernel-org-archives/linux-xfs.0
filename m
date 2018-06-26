@@ -1,163 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:33426 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934731AbeFZAQf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Jun 2018 20:16:35 -0400
-Date: Mon, 25 Jun 2018 17:16:20 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: remove deprecated barrier/nobarrier mount options
-Message-ID: <20180626001620.GA5711@magnolia>
-References: <56f0a68c-9c1b-712a-a0e8-e596f8272561@redhat.com>
+Received: from sandeen.net ([63.231.237.45]:50054 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754827AbeFZAGx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 25 Jun 2018 20:06:53 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 8558E8A
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Jun 2018 19:06:42 -0500 (CDT)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [PATCH] xfsprogs: Remove barrier/nobarrier mount options from xfs.5
+Message-ID: <7105a6a3-bd16-53be-2e4f-d1ec8a491d20@sandeen.net>
+Date: Mon, 25 Jun 2018 19:06:51 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <56f0a68c-9c1b-712a-a0e8-e596f8272561@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Jun 25, 2018 at 07:03:57PM -0500, Eric Sandeen wrote:
-> The barrier mount options have been no-ops and deprecated since
-> 
-> 4cf4573 xfs: deprecate barrier/nobarrier mount option
-> 
-> i.e. kernel 4.10 / December 2016, with a stated deprecation schedule
-> after v4.15.  Should be fair game to remove them now.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
->  Documentation/filesystems/xfs.txt |    4 ++--
->  fs/xfs/xfs_mount.h                |    1 -
->  fs/xfs/xfs_super.c                |   34 ++++------------------------------
->  3 files changed, 6 insertions(+), 33 deletions(-)
-> 
-> 
-> diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
-> index 4d9ff0a..07dbd4e 100644
-> --- a/Documentation/filesystems/xfs.txt
-> +++ b/Documentation/filesystems/xfs.txt
-> @@ -223,8 +223,6 @@ Deprecated Mount Options
->  
->    Name				Removal Schedule
->    ----				----------------
-> -  barrier			no earlier than v4.15
-> -  nobarrier			no earlier than v4.15
->  
->  
->  Removed Mount Options
-> @@ -236,6 +234,8 @@ Removed Mount Options
->    ihashsize			v4.0
->    irixsgid			v4.0
->    osyncisdsync/osyncisosync	v4.0
-> +  barrier			v4.18
-> +  nobarrier			v4.18
+Remove the now-removed barrier/nobarrier mount options from
+the xfs.5 manpage.
 
-I'm not removing mount options this far into the 4.18 cycle. ;)
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-4.19, perhaps?
+diff --git a/man/man5/xfs.5 b/man/man5/xfs.5
+index 745dad4..628bfc3 100644
+--- a/man/man5/xfs.5
++++ b/man/man5/xfs.5
+@@ -132,20 +132,6 @@ by the filesystem.
+ CRC enabled filesystems always use the attr2 format, and so
+ will reject the noattr2 mount option if it is set.
+ .TP
+-.BR barrier | nobarrier
+-Note: This option has been
+-.B deprecated
+-as of kernel v4.10; in that version, integrity operations are
+-always performed and the mount option is ignored.  These mount
+-options will be removed no earlier than kernel v4.15.
+-.sp
+-Enables/disables the use of block layer write barriers for
+-writes into the journal and for data integrity operations.
+-This allows for drive level write caching to be enabled, for
+-devices that support write barriers.
+-.sp
+-Barriers are enabled by default.
+-.TP
+ .BR discard | nodiscard
+ Enable/disable the issuing of commands to let the block
+ device reclaim space freed by the filesystem.  This is
 
---D
-
->  
->  
->  sysctls
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index 245349d..0f9115c 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -216,7 +216,6 @@ struct xfs_error_cfg {
->  #define XFS_MOUNT_SMALL_INUMS	(1ULL << 14)	/* user wants 32bit inodes */
->  #define XFS_MOUNT_32BITINODES	(1ULL << 15)	/* inode32 allocator active */
->  #define XFS_MOUNT_NOUUID	(1ULL << 16)	/* ignore uuid during mount */
-> -#define XFS_MOUNT_BARRIER	(1ULL << 17)
->  #define XFS_MOUNT_IKEEP		(1ULL << 18)	/* keep empty inode clusters*/
->  #define XFS_MOUNT_SWALLOC	(1ULL << 19)	/* turn on stripe width
->  						 * allocation */
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 9d791f1..03c5677 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -65,11 +65,10 @@ enum {
->  	Opt_logbufs, Opt_logbsize, Opt_logdev, Opt_rtdev, Opt_biosize,
->  	Opt_wsync, Opt_noalign, Opt_swalloc, Opt_sunit, Opt_swidth, Opt_nouuid,
->  	Opt_mtpt, Opt_grpid, Opt_nogrpid, Opt_bsdgroups, Opt_sysvgroups,
-> -	Opt_allocsize, Opt_norecovery, Opt_barrier, Opt_nobarrier,
-> -	Opt_inode64, Opt_inode32, Opt_ikeep, Opt_noikeep,
-> -	Opt_largeio, Opt_nolargeio, Opt_attr2, Opt_noattr2, Opt_filestreams,
-> -	Opt_quota, Opt_noquota, Opt_usrquota, Opt_grpquota, Opt_prjquota,
-> -	Opt_uquota, Opt_gquota, Opt_pquota,
-> +	Opt_allocsize, Opt_norecovery, Opt_inode64, Opt_inode32, Opt_ikeep,
-> +	Opt_noikeep, Opt_largeio, Opt_nolargeio, Opt_attr2, Opt_noattr2,
-> +	Opt_filestreams, Opt_quota, Opt_noquota, Opt_usrquota, Opt_grpquota,
-> +	Opt_prjquota, Opt_uquota, Opt_gquota, Opt_pquota,
->  	Opt_uqnoenforce, Opt_gqnoenforce, Opt_pqnoenforce, Opt_qnoenforce,
->  	Opt_discard, Opt_nodiscard, Opt_dax, Opt_err,
->  };
-> @@ -118,14 +117,7 @@ enum {
->  	{Opt_qnoenforce, "qnoenforce"},	/* same as uqnoenforce */
->  	{Opt_discard,	"discard"},	/* Discard unused blocks */
->  	{Opt_nodiscard,	"nodiscard"},	/* Do not discard unused blocks */
-> -
->  	{Opt_dax,	"dax"},		/* Enable direct access to bdev pages */
-> -
-> -	/* Deprecated mount options scheduled for removal */
-> -	{Opt_barrier,	"barrier"},	/* use writer barriers for log write and
-> -					 * unwritten extent conversion */
-> -	{Opt_nobarrier,	"nobarrier"},	/* .. disable */
-> -
->  	{Opt_err,	NULL},
->  };
->  
-> @@ -209,7 +201,6 @@ enum {
->  	 * Set some default flags that could be cleared by the mount option
->  	 * parsing.
->  	 */
-> -	mp->m_flags |= XFS_MOUNT_BARRIER;
->  	mp->m_flags |= XFS_MOUNT_COMPAT_IOSIZE;
->  
->  	/*
-> @@ -362,14 +353,6 @@ enum {
->  			mp->m_flags |= XFS_MOUNT_DAX;
->  			break;
->  #endif
-> -		case Opt_barrier:
-> -			xfs_warn(mp, "%s option is deprecated, ignoring.", p);
-> -			mp->m_flags |= XFS_MOUNT_BARRIER;
-> -			break;
-> -		case Opt_nobarrier:
-> -			xfs_warn(mp, "%s option is deprecated, ignoring.", p);
-> -			mp->m_flags &= ~XFS_MOUNT_BARRIER;
-> -			break;
->  		default:
->  			xfs_warn(mp, "unknown mount option [%s].", p);
->  			return -EINVAL;
-> @@ -487,7 +470,6 @@ struct proc_xfs_info {
->  	static struct proc_xfs_info xfs_info_unset[] = {
->  		/* the few simple ones we can get from the mount struct */
->  		{ XFS_MOUNT_COMPAT_IOSIZE,	",largeio" },
-> -		{ XFS_MOUNT_BARRIER,		",nobarrier" },
->  		{ XFS_MOUNT_SMALL_INUMS,	",inode64" },
->  		{ 0, NULL }
->  	};
-> @@ -1278,14 +1260,6 @@ struct proc_xfs_info {
->  
->  		token = match_token(p, tokens, args);
->  		switch (token) {
-> -		case Opt_barrier:
-> -			xfs_warn(mp, "%s option is deprecated, ignoring.", p);
-> -			mp->m_flags |= XFS_MOUNT_BARRIER;
-> -			break;
-> -		case Opt_nobarrier:
-> -			xfs_warn(mp, "%s option is deprecated, ignoring.", p);
-> -			mp->m_flags &= ~XFS_MOUNT_BARRIER;
-> -			break;
->  		case Opt_inode64:
->  			mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
->  			mp->m_maxagi = xfs_set_inode_alloc(mp, sbp->sb_agcount);
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
