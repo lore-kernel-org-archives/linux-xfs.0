@@ -1,147 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:22466 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755595AbeFYTUh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 25 Jun 2018 15:20:37 -0400
-Date: Mon, 25 Jun 2018 13:20:36 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH v2 4/7] dm: prevent DAX mounts if not supported
-Message-ID: <20180625192036.GA11672@linux.intel.com>
-References: <20180529195106.14268-1-ross.zwisler@linux.intel.com>
- <20180529195106.14268-5-ross.zwisler@linux.intel.com>
- <20180601215513.GA18712@redhat.com>
- <20180604231508.GA10666@linux.intel.com>
- <20180620151748.GA4847@redhat.com>
+Received: from g9t5008.houston.hpe.com ([15.241.48.72]:59362 "EHLO
+        g9t5008.houston.hpe.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751413AbeFZVXd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Jun 2018 17:23:33 -0400
+From: "Kani, Toshi" <toshi.kani@hpe.com>
+Subject: Re: [PATCH v3 1/3] pmem: only set QUEUE_FLAG_DAX for fsdax mode
+Date: Tue, 26 Jun 2018 21:23:29 +0000
+Message-ID: <1530048093.14039.286.camel@hpe.com>
+References: <20180626175932.8899-1-ross.zwisler@linux.intel.com>
+         <20180626175932.8899-2-ross.zwisler@linux.intel.com>
+         <CAPcyv4iWgPnHmBKhUvhManC6UL9CkLqN_d8vBo6KmcPJdPzuUw@mail.gmail.com>
+         <20180626185830.GA7171@redhat.com>
+         <CAPcyv4h6HO6fs6k7QMD77jkz2djCeWCtWomCdNb0-1Q4VKanqw@mail.gmail.com>
+         <20180626191346.GA7233@redhat.com> <1530046327.14039.273.camel@hpe.com>
+         <CAPcyv4hP_Y3xdyCa-UkYCMJ5OtnjnkwPZDS2Z2Ge8+5ymBONwQ@mail.gmail.com>
+In-Reply-To: <CAPcyv4hP_Y3xdyCa-UkYCMJ5OtnjnkwPZDS2Z2Ge8+5ymBONwQ@mail.gmail.com>
+Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <75043E6597155E4E8B827A7631A8CDEC@NAMPRD84.PROD.OUTLOOK.COM>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180620151748.GA4847@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Ross Zwisler <ross.zwisler@linux.intel.com>, Toshi Kani <toshi.kani@hpe.com>, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-xfs@vger.kernel.org
+To: "dan.j.williams@intel.com" <dan.j.williams@intel.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "snitzer@redhat.com" <snitzer@redhat.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
 
-On Wed, Jun 20, 2018 at 11:17:49AM -0400, Mike Snitzer wrote:
-> On Mon, Jun 04 2018 at  7:15pm -0400,
-> Ross Zwisler <ross.zwisler@linux.intel.com> wrote:
-> 
-> > On Fri, Jun 01, 2018 at 05:55:13PM -0400, Mike Snitzer wrote:
-> > > On Tue, May 29 2018 at  3:51pm -0400,
-> > > Ross Zwisler <ross.zwisler@linux.intel.com> wrote:
-> > > 
-> > > > Currently the code in dm_dax_direct_access() only checks whether the target
-> > > > type has a direct_access() operation defined, not whether the underlying
-> > > > block devices all support DAX.  This latter property can be seen by looking
-> > > > at whether we set the QUEUE_FLAG_DAX request queue flag when creating the
-> > > > DM device.
-> > > 
-> > > Wait... I thought DAX support was all or nothing?
-> > 
-> > Right, it is, and that's what I'm trying to capture.  The point of this series
-> > is to make sure that we don't use DAX thru DM if one of the DM members doesn't
-> > support DAX.
-> > 
-> > This is a bit tricky, though, because as you've pointed out there are a lot of
-> > elements that go into a block device actually supporting DAX.  
-> > 
-> > First, the block device has to have a direct_access() operation defined in its
-> > struct dax_operations table.  This is a static definition in the drivers,
-> > though, so it's necessary but not sufficient.  For example, the PMEM driver
-> > always defines a direct_access() operation, but depending on the mode of the
-> > namespace (raw, fsdax or sector) it may or may not support DAX.
-> > 
-> > The next step is that a driver needs to say that he block queue supports
-> > QUEUE_FLAG_DAX.  This again is necessary but not sufficient.  The PMEM driver
-> > currently sets this for all namespace modes, but I agree that this should be
-> > restricted to modes that support DAX.  Even once we do that, though, for the
-> > block driver this isn't fully sufficient.  We'd really like users to call
-> > bdev_dax_supported() so it can run some additional tests to make sure that DAX
-> > will work.
-> > 
-> > So, the real test that filesystems rely on is bdev_dax_suppported().
-> > 
-> > The trick is that with DM we need to verify each block device via
-> > bdev_dax_supported() just like a filesystem would, and then have some way of
-> > communicating the result of all those checks to the filesystem which is
-> > eventually mounted on the DM device.  At DAX mount time the filesystem will
-> > call bdev_dax_supported() on the DM device, but it'll really only check the
-> > first device.  
-> > 
-> > So, the strategy is to have DM manually check each member device via
-> > bdev_dax_supported() then if they all pass set QUEUE_FLAG_DAX.  This then
-> > becomes our one source of truth on whether or not a DM device supports DAX.
-> > When the filesystem mounts with DAX support it'll also run
-> > bdev_dax_supported(), but if we have QUEUE_FLAG_DAX set on the DM device, we
-> > know that this check will pass.
-> > 
-> > > > This is problematic if we have, for example, a dm-linear device made up of
-> > > > a PMEM namespace in fsdax mode followed by a ramdisk from BRD.
-> > > > QUEUE_FLAG_DAX won't be set on the dm-linear device's request queue, but
-> > > > we have a working direct_access() entry point and the first member of the
-> > > > dm-linear set *does* support DAX.
-> > > 
-> > > If you don't have a uniformly capable device then it is very dangerous
-> > > to advertise that the entire device has a certain capability.  That
-> > > completely bit me in the past with discard (because for every IO I
-> > > wasn't then checking if the destination device supported discards).
-> > >
-> > > It is all well and good that you're adding that check here.  But what I
-> > > don't like is how you're saying QUEUE_FLAG_DAX implies direct_access()
-> > > operation exists.. yet for raw PMEM namespaces we just discussed how
-> > > that is a lie.
-> > 
-> > QUEUE_FLAG_DAX does imply that direct_access() exits.  However, as discussed
-> > above for a given bdev we really do need to check bdev_dax_supported().
-> > 
-> > > SO this type of change showcases how the QUEUE_FLAG_DAX doesn't _really_
-> > > imply direct_access() exists.
-> > > 
-> > > > This allows the user to create a filesystem on the dm-linear device, and
-> > > > then mount it with DAX.  The filesystem's bdev_dax_supported() test will
-> > > > pass because it'll operate on the first member of the dm-linear device,
-> > > > which happens to be a fsdax PMEM namespace.
-> > > > 
-> > > > All DAX I/O will then fail to that dm-linear device because the lack of
-> > > > QUEUE_FLAG_DAX prevents fs_dax_get_by_bdev() from working.  This means that
-> > > > the struct dax_device isn't ever set in the filesystem, so
-> > > > dax_direct_access() will always return -EOPNOTSUPP.
-> > > 
-> > > Now you've lost me... these past 2 paragraphs.  Why can a user mount it
-> > > is DAX mode?  Because bdev_dax_supported() only accesses the first
-> > > portion (which happens to have DAX capabilities?)
-> > 
-> > Right.  bdev_dax_supported() runs all of its checks, and because they are
-> > running against the first block device in the dm set, they all pass.  But the
-> > overall DM device does not actually support DAX.
-> > 
-> > > Isn't this exactly why you should be checking for QUEUE_FLAG_DAX in the
-> > > caller (bdev_dax_supported)?  Why not use bdev_get_queue() and verify
-> > > QUEUE_FLAG_DAX is set in there?
-> > 
-> > I'll look into that for the next revision, thanks.
-> 
-> Have you made any progress on a new revision?
-> 
-> > > > By failing out of dm_dax_direct_access() if QUEUE_FLAG_DAX isn't set we let
-> > > > the filesystem know we don't support DAX at mount time.  The filesystem
-> > > > will then silently fall back and remove the dax mount option, causing it to
-> > > > work properly.
-> > > 
-> > > This shouldn't be needed.  Again, QUEUE_FLAG_DAX wasn't set.. so don't
-> > > allow code to falsely try operations that should've been gated by the
-> > > fact it wasn't set.
-> > 
-> > Right, the goal is to make QUEUE_FLAG_DAX our one source of truth for whether
-> > DM devices support DAX, and not have it half defined by that and half by the
-> > DM_TYPE_DAX_BIO_BASED.
-> 
-> My hope is that you can ignore the DM-internal book-keeping
-> (DM_TYPE_DAX_BIO_BASED) for now and just focus on fixing the real issue
-> of needing proper checking (as well as properly _not_ setting
-> QUEUE_FLAG_DAX in the case of pmem "raw").
-> 
-> Please advise, thanks Ross!
-
-I'm back working on this, and will send out another revision in the next day
-or so.
+T24gVHVlLCAyMDE4LTA2LTI2IGF0IDE0OjAyIC0wNzAwLCBEYW4gV2lsbGlhbXMgd3JvdGU6DQo+
+IE9uIFR1ZSwgSnVuIDI2LCAyMDE4IGF0IDE6NTQgUE0sIEthbmksIFRvc2hpIDx0b3NoaS5rYW5p
+QGhwZS5jb20+IHdyb3RlOg0KPiA+IE9uIFR1ZSwgMjAxOC0wNi0yNiBhdCAxNToxMyAtMDQwMCwg
+TWlrZSBTbml0emVyIHdyb3RlOg0KPiA+ID4gT24gVHVlLCBKdW4gMjYgMjAxOCBhdCAgMzowN3Bt
+IC0wNDAwLA0KPiA+ID4gRGFuIFdpbGxpYW1zIDxkYW4uai53aWxsaWFtc0BpbnRlbC5jb20+IHdy
+b3RlOg0KPiA+ID4gDQo+ID4gPiA+IE9uIFR1ZSwgSnVuIDI2LCAyMDE4IGF0IDExOjU4IEFNLCBN
+aWtlIFNuaXR6ZXIgPHNuaXR6ZXJAcmVkaGF0LmNvbT4gd3JvdGU6DQo+ID4gPiA+ID4gT24gVHVl
+LCBKdW4gMjYgMjAxOCBhdCAgMjo1MnBtIC0wNDAwLA0KPiA+ID4gPiA+IERhbiBXaWxsaWFtcyA8
+ZGFuLmoud2lsbGlhbXNAaW50ZWwuY29tPiB3cm90ZToNCj4gPiA+ID4gPiANCj4gPiA+ID4gPiA+
+IE9uIFR1ZSwgSnVuIDI2LCAyMDE4IGF0IDEwOjU5IEFNLCBSb3NzIFp3aXNsZXINCj4gPiA+ID4g
+PiA+IDxyb3NzLnp3aXNsZXJAbGludXguaW50ZWwuY29tPiB3cm90ZToNCj4gPiA+ID4gPiA+ID4g
+UVVFVUVfRkxBR19EQVggaXMgYW4gaW5kaWNhdGlvbiB0aGF0IGEgZ2l2ZW4gYmxvY2sgZGV2aWNl
+IHN1cHBvcnRzDQo+ID4gPiA+ID4gPiA+IGZpbGVzeXN0ZW0gREFYIGFuZCBzaG91bGQgbm90IGJl
+IHNldCBmb3IgUE1FTSBuYW1lc3BhY2VzIHdoaWNoIGFyZSBpbiAicmF3Ig0KPiA+ID4gPiA+ID4g
+PiBvciAic2VjdG9yIiBtb2Rlcy4gIFRoZXNlIG5hbWVzcGFjZXMgbGFjayBzdHJ1Y3QgcGFnZSBh
+bmQgYXJlIHByZXZlbnRlZA0KPiA+ID4gPiA+ID4gPiBmcm9tIHBhcnRpY2lwYXRpbmcgaW4gZmls
+ZXN5c3RlbSBEQVguDQo+ID4gPiA+ID4gPiA+IA0KPiA+ID4gPiA+ID4gPiBTaWduZWQtb2ZmLWJ5
+OiBSb3NzIFp3aXNsZXIgPHJvc3Muendpc2xlckBsaW51eC5pbnRlbC5jb20+DQo+ID4gPiA+ID4g
+PiA+IFN1Z2dlc3RlZC1ieTogTWlrZSBTbml0emVyIDxzbml0emVyQHJlZGhhdC5jb20+DQo+ID4g
+PiA+ID4gPiA+IENjOiBzdGFibGVAdmdlci5rZXJuZWwub3JnDQo+ID4gPiA+ID4gPiANCj4gPiA+
+ID4gPiA+IFdoeSBpcyB0aGlzIGNjOiBzdGFibGU/IFdoYXQgaXMgdGhlIHVzZXIgdmlzaWJsZSBp
+bXBhY3Qgb2YgdGhpcyBjaGFuZ2UNCj4gPiA+ID4gPiA+IGVzcGVjaWFsbHkgZ2l2ZW4gdGhlIHJl
+cXVpcmVtZW50IHRvIHZhbGlkYXRlIFFVRVVFX0ZMQUdfREFYIHdpdGgNCj4gPiA+ID4gPiA+IGJk
+ZXZfZGF4X3N1cHBvcnRlZCgpPyBQYXRjaCBsb29rcyBnb29kLCBidXQgaXQncyBqdXN0IGEgY29z
+bWV0aWMgZml4dXANCj4gPiA+ID4gPiA+IGFmYWljcy4NCj4gPiA+ID4gPiANCj4gPiA+ID4gPiBU
+aGlzIGlzbid0IGNvc21ldGljIHdoZW4geW91IGNvbnNpZGVyIHRoYXQgc3RhY2tpbmcgdXAgYSBE
+TSBkZXZpY2UgaXMNCj4gPiA+ID4gPiBsb29raW5nIGF0IHRoaXMgZmxhZyB0byBkZXRlcm1pbmUg
+d2hldGhlciBhIHRhYmxlIGRvZXMgb3IgZG9lcyBfbm90Xw0KPiA+ID4gPiA+IHN1cHBvcnQgREFY
+Lg0KPiA+ID4gPiA+IA0KPiA+ID4gPiA+IFNvIHRoaXMgcGF0Y2gsIGluIGNvbmp1bmN0aW9uIHdp
+dGggdGhlIG90aGVyIGNoYW5nZXMgaW4gdGhlIHNlcmllcywgaXMNCj4gPiA+ID4gPiBjZXJ0YWlu
+bHkgc29tZXRoaW5nIEknZCBjb25zaWRlciBhcHByb3ByaWF0ZSBmb3Igc3RhYmxlLg0KPiA+ID4g
+PiANCj4gPiA+ID4gSSB0aGluayB0aGlzIGNsYXNzaWZpZXMgYXMgc29tZXRoaW5nIHRoYXQgbmV2
+ZXIgd29ya2VkIGNvcnJlY3RseSBhbmQNCj4gPiA+ID4gaXMgbm90IGEgcmVncmVzc2lvbi4gSXQg
+ZG9lcyBub3QgaWRlbnRpZnkgd2hpY2ggY29tbWl0IGl0IGlzIHJlcGFpcmluZw0KPiA+ID4gPiBv
+ciB0aGUgdXNlciB2aXNpYmxlIGZhaWx1cmUgbW9kZS4NCj4gPiA+IA0KPiA+ID4gU28geW91J3Jl
+IHRha2luZyBpc3N1ZSB3aXRoIG1ha2luZyBzdGFja2VkIGRheCBjb25maWdzIHdvcmsgaW4gb2xk
+ZXINCj4gPiA+IGtlcm5lbHM/ICBUaGF0J3MgZmluZS4gIFdlIGNhbiBkcm9wIHRoZSBzdGFibGUg
+Y2MgaWYgeW91IGxpa2UuDQo+ID4gPiANCj4gPiA+IEJ1dCBJIG1lYW4gd2UgaW50ZW5kZWQgZm9y
+IHRoaXMgdG8gd29yay4uIHNvIHRoZSBGaXhlcyBjb21taXQgcmVmZXJlbmNlcw0KPiA+ID4gY2Fu
+IGVhc2lseSBiZSBhZGRlZCwgZS5nLjogNTQ1ZWQyMGU2ZGY2OGE0ZDI1ODRhMjlhMmEyOGVlOGIy
+ZjdlOTU0Nw0KPiA+ID4gKCJkbTogYWRkIGluZnJhc3RydWN0dXJlIGZvciBEQVggc3VwcG9ydCIp
+DQo+ID4gDQo+ID4gV2hlbiB0aGlzIGRtIGNoYW5nZSB3YXMgbWFkZSwgdGhlIHBtZW0gZHJpdmVy
+IHN1cHBvcnRlZCBEQVggZm9yIGJvdGggcmF3DQo+ID4gYW5kIG1lbW9yeSBtb2RlcyAobm90ZTog
+c2VjdG9yIG1vZGUgZG9lcyBub3QgdXNlIHRoZSBwbWVtIGRyaXZlcikuICBJDQo+ID4gdGhpbmsg
+dGhlIGlzc3VlIHdhcyBpbnRyb2R1Y2VkIHdoZW4gd2UgZHJvcHBlZCBEQVggc3VwcG9ydCBmcm9t
+IHJhdw0KPiA+IG1vZGUuDQo+IA0KPiBTdGlsbCBEQVggd2l0aCByYXcgbW9kZSBuZXZlciByZWFs
+bHkgd29ya2VkIGFueSB3YXkuIEl0IHdhcyBhbHNvDQo+IHNvbWV0aGluZyB0aGF0IHdhcyBicm9r
+ZW4gZnJvbSBkYXkgb25lLiBTbyB3aGF0IGhhcHBlbnMgdG8gc29tZW9uZSB3aG8NCj4gaGFwcGVu
+ZWQgdG8gYXZvaWQgYWxsIHRoZSBwcm9ibGVtcyB3aXRoIHBhZ2UtbGVzcyBEQVggYW5kIGVuYWJs
+ZWQNCj4gZGV2aWNlLW1hcHBlciBvbiB0b3A/IFRoYXQgZmFpbHVyZSBtb2RlIGRldGFpbCBuZWVk
+cyB0byBiZSBhZGRlZCB0bw0KPiB0aGlzIGNoYW5nZWxvZyBpZiB3ZSB3YW50IHRvIHByb3Bvc2Ug
+dGhpcyBmb3IgLXN0YWJsZS4NCg0KTXkgcG9pbnQgaXMgdGhhdCB0aGUgYmVoYXZpb3Igc2hvdWxk
+IGJlIGNvbnNpc3RlbnQgYmV0d2VlbiBwbWVtIGFuZA0KZGV2aWNlLW1hcHBlci4gIFdoZW4gLW8g
+ZGF4IHN1Y2NlZWRzIG9uIGEgcG1lbSwgdGhlbiBpdCBzaG91bGQgc3VjY2VlZA0Kb24gYSBkZXZp
+Y2UtbWFwcGVyIG9uIHRvcCBvZiB0aGF0IHBtZW0uDQoNCkhhcyB0aGUgZHJvcCBvZiBkYXggc3Vw
+cG9ydCBmcm9tIHJhdyBtb2RlIG1hZGUgdG8gLXN0YWJsZSBiYWNrIHRvIHRoZQ0KYmFzZWxpbmUg
+YWNjZXB0ZWQgNTQ1ZWQyMGU2ZGY2PyAgSXQgd2lsbCBpbnRyb2R1Y2UgaW5jb25zaXN0ZW5jeSwN
+Cm90aGVyd2lzZS4NCg0KVGhhbmtzLA0KLVRvc2hpDQoNCg0KIA0KDQoNCg==
