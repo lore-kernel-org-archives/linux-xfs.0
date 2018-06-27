@@ -1,104 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:53232 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S966022AbeF1RsQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 28 Jun 2018 13:48:16 -0400
-Date: Thu, 28 Jun 2018 13:48:15 -0400
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH v3 1/3] pmem: only set QUEUE_FLAG_DAX for fsdax mode
-Message-ID: <20180628174815.GA18768@redhat.com>
-References: <CAPcyv4h6HO6fs6k7QMD77jkz2djCeWCtWomCdNb0-1Q4VKanqw@mail.gmail.com>
- <20180626191346.GA7233@redhat.com>
- <1530046327.14039.273.camel@hpe.com>
- <CAPcyv4hP_Y3xdyCa-UkYCMJ5OtnjnkwPZDS2Z2Ge8+5ymBONwQ@mail.gmail.com>
- <1530048093.14039.286.camel@hpe.com>
- <CAPcyv4gXAC7imJs5qfsDNLeN545Rqyd2b1M9s5kr4f9y48LXgQ@mail.gmail.com>
- <1530048545.14039.288.camel@hpe.com>
- <CAPcyv4ifHX95fCM9Xj87CugwNWzgq=y-4LxPQ5L6RdjX0jdctQ@mail.gmail.com>
- <20180626220430.GA4269@linux.intel.com>
- <1530207635.14039.308.camel@hpe.com>
+Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:27234
+        "EHLO ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752210AbeF0Xhs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Jun 2018 19:37:48 -0400
+Date: Thu, 28 Jun 2018 09:37:20 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 04/21] xfs: repair the AGF and AGFL
+Message-ID: <20180627233720.GA2234@dastard>
+References: <152986820984.3155.16417868536016544528.stgit@magnolia>
+ <152986823481.3155.13034509035761369722.stgit@magnolia>
+ <20180627021908.GD19934@dastard>
+ <e2261ffd-1d03-b205-1375-25bef625c3f6@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1530207635.14039.308.camel@hpe.com>
+In-Reply-To: <e2261ffd-1d03-b205-1375-25bef625c3f6@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Kani, Toshi" <toshi.kani@hpe.com>
-Cc: "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
+To: Allison Henderson <allison.henderson@oracle.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Thu, Jun 28 2018 at  1:42pm -0400,
-Kani, Toshi <toshi.kani@hpe.com> wrote:
+On Wed, Jun 27, 2018 at 09:44:53AM -0700, Allison Henderson wrote:
+> On 06/26/2018 07:19 PM, Dave Chinner wrote:
+> >On Sun, Jun 24, 2018 at 12:23:54PM -0700, Darrick J. Wong wrote:
+> >>From: Darrick J. Wong <darrick.wong@oracle.com>
+> >>
+> >>Regenerate the AGF and AGFL from the rmap data.
+> >>
+> >>Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> >
+> >[...]
 
-> On Tue, 2018-06-26 at 16:04 -0600, Ross Zwisler wrote:
-> > On Tue, Jun 26, 2018 at 02:51:52PM -0700, Dan Williams wrote:
-> > > On Tue, Jun 26, 2018 at 2:31 PM, Kani, Toshi <toshi.kani@hpe.com> wrote:
-> > > > On Tue, 2018-06-26 at 14:28 -0700, Dan Williams wrote:
-> > > > > On Tue, Jun 26, 2018 at 2:23 PM, Kani, Toshi <toshi.kani@hpe.com> wrote:
-> > > > > > On Tue, 2018-06-26 at 14:02 -0700, Dan Williams wrote:
-> > > > > > > On Tue, Jun 26, 2018 at 1:54 PM, Kani, Toshi <toshi.kani@hpe.com> wrote:
-> > > > > 
-> > > > > [..]
-> > > > > > > > When this dm change was made, the pmem driver supported DAX for both raw
-> > > > > > > > and memory modes (note: sector mode does not use the pmem driver).  I
-> > > > > > > > think the issue was introduced when we dropped DAX support from raw
-> > > > > > > > mode.
-> > > > > > > 
-> > > > > > > Still DAX with raw mode never really worked any way. It was also
-> > > > > > > something that was broken from day one. So what happens to someone who
-> > > > > > > happened to avoid all the problems with page-less DAX and enabled
-> > > > > > > device-mapper on top? That failure mode detail needs to be added to
-> > > > > > > this changelog if we want to propose this for -stable.
-> > > > > > 
-> > > > > > My point is that the behavior should be consistent between pmem and
-> > > > > > device-mapper.  When -o dax succeeds on a pmem, then it should succeed
-> > > > > > on a device-mapper on top of that pmem.
-> > > > > > 
-> > > > > > Has the drop of dax support from raw mode made to -stable back to the
-> > > > > > baseline accepted 545ed20e6df6?  It will introduce inconsistency,
-> > > > > > otherwise.
-> > > > > 
-> > > > > That commit, 569d0365f571 "dax: require 'struct page' by default for
-> > > > > filesystem dax", has not been tagged for -stable.
-> > > > 
-> > > > Then, Fixes tag should be set to 569d0365f571 to keep the behavior
-> > > > consistent.
-> > > 
-> > > Sure, and the failure mode is...? I'm thinking the commit log should say:
-> > > 
-> > > "Starting with commit 569d0365f571 "dax: require 'struct page' by
-> > > default for filesystem dax", dax is no longer supported for page-less
-> > > configurations. However, device-mapper sees the QUEUE_FLAG_DAX still
-> > > being set and falsely assumes that DAX is enabled, this leads to
-> > > <insert user visible failure mode details here>"
-> > 
-> > Dan is correct that there is no user visible change for this.  It is the right
-> > thing to do for consistency and sanity, but it doesn't actually have user
-> > visible behavior that needs to be backported to stable.
-> > 
-> > Toshi is correct that this change is only for raw mode namespaces, not btt
-> > namespaces.
-> > 
-> > I'll adjust the changelog and remove the stable flag for v5, and I'll add a
-> > Fixes: tag for patch 2.
-> 
-> Hi Ross,
-> 
-> Your patches look good.  But I am still not clear about the Fixes &
-> stable handling.  Talking about user visible behavior, I do not think we
-> had any issue until dax support was dropped from raw mode.  Until then,
-> the pmem driver supported dax for all modes, and the check for
-> direct_access worked.    
+> >>+	/* Record all the OWN_AG blocks. */
+> >>+	if (rec->rm_owner == XFS_RMAP_OWN_AG) {
+> >>+		fsb = XFS_AGB_TO_FSB(cur->bc_mp, cur->bc_private.a.agno,
+> >>+				rec->rm_startblock);
+> >>+		error = xfs_repair_collect_btree_extent(ra->sc,
+> >>+				ra->freesp_list, fsb, rec->rm_blockcount);
+> >>+		if (error)
+> >>+			return error;
+> >>+	}
+> >>+
+> >>+	return xfs_repair_collect_btree_cur_blocks(ra->sc, cur,
+> >>+			xfs_repair_collect_btree_cur_blocks_in_extent_list,
+> >
+> >Urk. The function name lengths is getting out of hand. I'm very
+> >tempted to suggest we should shorten the namespace of all this
+> >like s/xfs_repair_/xr_/ and s/xfs_scrub_/xs_/, etc just to make them
+> >shorter and easier to read.
+> >
+> >Oh, wait, did I say that out loud? :P
+> >
+> >Something to think about, anyway.
+> >
+> Well they are sort of long, but TBH I think i still kind of
+> appreciate the extra verbiage.  I have seen other projects do things
+> like adopt a sort of 3 or 4 letter abbreviation (like maybe xfs_scrb
+> or xfs_repr). Helps to cut down on the verbosity while still not
+> loosing too much of what it is supposed to mean.  Just another idea
+> to consider. :-)
 
-I've staged the changes to send to Linus shortly.
+We've got that in places, too, like "xlog_" prefixes for all the log
+code, so that's not an unreasonable thing to suggest. After all, in
+many cases we're talking about a tradeoff between readabilty and the
+amount of typing necessary.
 
-The first patch has:
+However, IMO, function names so long they need a line of their own
+indicates we have a structural problem in our code, not a
+readability problem. We should not need names that long to document
+what the function does - it should be obvious from the context, the
+abstraction that is being used and a short name....
 
-Fixes: 569d0365f571 ("dax: require 'struct page' by default for filesystem dax")
-Cc: stable@vger.kernel.org
+e.g. how many of these different "collect extent" operations could
+be abstracted into a common extent list structure and generic
+callbacks? It seems there's a lot of similarity in them, and we're
+really only differentiating them by adding more namespace and
+context specific information into the structure and function names.
 
-As that is the right thing to do given the other 2 patches are marked
-for stable.  We don't want to have a stable kernel with the last 2
-patches but not the first.
+Cheers,
 
-Mike
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
