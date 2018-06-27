@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:32982 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752106AbeF0CtB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Jun 2018 22:49:01 -0400
-Subject: [PATCH 09/10] xfs_io: wire up repair ioctl stuff
+Received: from aserp2130.oracle.com ([141.146.126.79]:56244 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751251AbeF0Cs4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Jun 2018 22:48:56 -0400
+Subject: [PATCH 08/10] xfs_scrub: only retry non-permanent repair failures
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 26 Jun 2018 19:48:47 -0700
-Message-ID: <153006772758.20121.12001635681077633355.stgit@magnolia>
+Date: Tue, 26 Jun 2018 19:48:41 -0700
+Message-ID: <153006772140.20121.17551661183487526760.stgit@magnolia>
 In-Reply-To: <153006766483.20121.9285982017465570544.stgit@magnolia>
 References: <153006766483.20121.9285982017465570544.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,168 +20,84 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Wire up the repair ioctl (which is really the scrub ioctl with special
-flags) and the force-repair error injection point.
+If a repair fails, we want to retry the repair if the error was a
+transient one, such as ENOMEM.  For "permanent" ones (shutdown fs,
+repair not supported by kernel, readonly fs) there's no point to
+retrying them so just error out immediately.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- io/init.c         |    1 +
- io/io.h           |    1 +
- io/scrub.c        |   97 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- man/man8/xfs_io.8 |    8 ++++
- 4 files changed, 107 insertions(+)
+ scrub/scrub.c |   37 ++++++++++++++++++++++++++-----------
+ 1 file changed, 26 insertions(+), 11 deletions(-)
 
 
-diff --git a/io/init.c b/io/init.c
-index 3f637e5a..a65f81d6 100644
---- a/io/init.c
-+++ b/io/init.c
-@@ -85,6 +85,7 @@ init_commands(void)
- 	quit_init();
- 	readdir_init();
- 	reflink_init();
-+	repair_init();
- 	resblks_init();
- 	scrub_init();
- 	seek_init();
-diff --git a/io/io.h b/io/io.h
-index fa0cdff7..ab217789 100644
---- a/io/io.h
-+++ b/io/io.h
-@@ -198,3 +198,4 @@ extern void		log_writes_init(void);
- #endif
+diff --git a/scrub/scrub.c b/scrub/scrub.c
+index 2ac146a9..b20c1cbe 100644
+--- a/scrub/scrub.c
++++ b/scrub/scrub.c
+@@ -758,13 +758,6 @@ xfs_repair_metadata(
+ 		str_info(ctx, buf, _("Attempting optimization."));
  
- extern void		scrub_init(void);
-+extern void		repair_init(void);
-diff --git a/io/scrub.c b/io/scrub.c
-index 75a8ff15..c2c08e6b 100644
---- a/io/scrub.c
-+++ b/io/scrub.c
-@@ -26,6 +26,7 @@
- #include "io.h"
- 
- static struct cmdinfo scrub_cmd;
-+static struct cmdinfo repair_cmd;
- 
- /* Type info and names for the scrub types. */
- enum scrub_type {
-@@ -249,3 +250,99 @@ scrub_init(void)
- 
- 	add_command(&scrub_cmd);
- }
-+
-+static void
-+repair_help(void)
-+{
-+	const struct scrub_descr	*d;
-+	int				i;
-+
-+	printf(_(
-+"\n"
-+" Repairs a piece of XFS filesystem metadata.  The first argument is the type\n"
-+" of metadata to examine.  Allocation group metadata types take one AG number\n"
-+" as the second parameter.  Inode metadata types act on the currently open file\n"
-+" or (optionally) take an inode number and generation number to act upon as\n"
-+" the second and third parameters.\n"
-+"\n"
-+" Example:\n"
-+" 'repair inobt 3' - repairs the inode btree in AG 3.\n"
-+" 'repair bmapbtd 128 13525' - repairs the extent map of inode 128 gen 13525.\n"
-+"\n"
-+" Known metadata repairs types are:"));
-+	for (i = 0, d = scrubbers; i < XFS_SCRUB_TYPE_NR; i++, d++)
-+		printf(" %s", d->name);
-+	printf("\n");
-+}
-+
-+static void
-+repair_ioctl(
-+	int				fd,
-+	int				type,
-+	uint64_t			control,
-+	uint32_t			control2)
-+{
-+	struct xfs_scrub_metadata	meta;
-+	const struct scrub_descr	*sc;
-+	int				error;
-+
-+	sc = &scrubbers[type];
-+	memset(&meta, 0, sizeof(meta));
-+	meta.sm_type = type;
-+	switch (sc->type) {
-+	case ST_PERAG:
-+		meta.sm_agno = control;
-+		break;
-+	case ST_INODE:
-+		meta.sm_ino = control;
-+		meta.sm_gen = control2;
-+		break;
-+	case ST_NONE:
-+	case ST_FS:
-+		/* no control parameters */
-+		break;
-+	}
-+	meta.sm_flags = XFS_SCRUB_IFLAG_REPAIR;
-+
-+	error = ioctl(fd, XFS_IOC_SCRUB_METADATA, &meta);
-+	if (error)
-+		perror("scrub");
-+	if (meta.sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		printf(_("Corruption remains.\n"));
-+	if (meta.sm_flags & XFS_SCRUB_OFLAG_PREEN)
-+		printf(_("Optimization possible.\n"));
-+	if (meta.sm_flags & XFS_SCRUB_OFLAG_XFAIL)
-+		printf(_("Cross-referencing failed.\n"));
-+	if (meta.sm_flags & XFS_SCRUB_OFLAG_XCORRUPT)
-+		printf(_("Corruption still detected during cross-referencing.\n"));
-+	if (meta.sm_flags & XFS_SCRUB_OFLAG_INCOMPLETE)
-+		printf(_("Repair was not complete.\n"));
-+	if (meta.sm_flags & XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED)
-+		printf(_("Metadata did not need repair or optimization.\n"));
-+}
-+
-+static int
-+repair_f(
-+	int				argc,
-+	char				**argv)
-+{
-+	return parse_args(argc, argv, &repair_cmd, repair_ioctl);
-+}
-+
-+void
-+repair_init(void)
-+{
-+	if (!expert)
-+		return;
-+	repair_cmd.name = "repair";
-+	repair_cmd.altname = "fix";
-+	repair_cmd.cfunc = repair_f;
-+	repair_cmd.argmin = 1;
-+	repair_cmd.argmax = -1;
-+	repair_cmd.flags = CMD_NOMAP_OK;
-+	repair_cmd.args = _("type [agno|ino gen]");
-+	repair_cmd.oneline = _("repairs filesystem metadata");
-+	repair_cmd.help = repair_help;
-+
-+	add_command(&repair_cmd);
-+}
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index dd91589b..60f7a21c 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -1167,6 +1167,14 @@ inode number and generation number are specified.
- .RE
- .PD
- .TP
-+.BI "repair " type " [ " agnumber " | " "ino" " " "gen" " ]"
-+Repair internal XFS filesystem metadata.  The
-+.BI type
-+parameter specifies which type of metadata to repair.
-+For AG metadata, one AG number must be specified.
-+For file metadata, the repair is applied to the open file unless the
-+inode number and generation number are specified.
-+.TP
- .BI "log_writes \-d " device " \-m "  mark
- Create a mark named
- .I mark
+ 	error = ioctl(fd, XFS_IOC_SCRUB_METADATA, &meta);
+-	/*
+-	 * If the caller doesn't want us to complain, tell the caller to
+-	 * requeue the repair for later and don't say a thing.
+-	 */
+-	if (!(repair_flags & XRM_COMPLAIN_IF_UNFIXED) &&
+-	    (error || needs_repair(&meta)))
+-		return CHECK_RETRY;
+ 	if (error) {
+ 		switch (errno) {
+ 		case EDEADLOCK:
+@@ -781,6 +774,16 @@ _("Filesystem is shut down, aborting."));
+ 			return CHECK_ABORT;
+ 		case ENOTTY:
+ 		case EOPNOTSUPP:
++			/*
++			 * If we're in no-complain mode, requeue the check for
++			 * later.  It's possible that an error in another
++			 * component caused us to flag an error in this
++			 * component.  Even if the kernel didn't think it
++			 * could fix this, it's at least worth trying the scan
++			 * again to see if another repair fixed it.
++			 */
++			if (!(repair_flags & XRM_COMPLAIN_IF_UNFIXED))
++				return CHECK_RETRY;
+ 			/*
+ 			 * If we forced repairs or this is a preen, don't
+ 			 * error out if the kernel doesn't know how to fix.
+@@ -810,7 +813,14 @@ _("Read-only filesystem; cannot make changes."));
+ 				return CHECK_DONE;
+ 			/* fall through */
+ 		default:
+-			/* Operational error. */
++			/*
++			 * Operational error.  If the caller doesn't want us
++			 * to complain about repair failures, tell the caller
++			 * to requeue the repair for later and don't say a
++			 * thing.  Otherwise, print error and bail out.
++			 */
++			if (!(repair_flags & XRM_COMPLAIN_IF_UNFIXED))
++				return CHECK_RETRY;
+ 			str_errno(ctx, buf);
+ 			return CHECK_DONE;
+ 		}
+@@ -818,9 +828,14 @@ _("Read-only filesystem; cannot make changes."));
+ 	if (repair_flags & XRM_COMPLAIN_IF_UNFIXED)
+ 		xfs_scrub_warn_incomplete_scrub(ctx, buf, &meta);
+ 	if (needs_repair(&meta)) {
+-		/* Still broken, try again or fix offline. */
+-		if ((repair_flags & XRM_COMPLAIN_IF_UNFIXED) || debug)
+-			str_error(ctx, buf,
++		/*
++		 * Still broken; if we've been told not to complain then we
++		 * just requeue this and try again later.  Otherwise we
++		 * log the error loudly and don't try again.
++		 */
++		if (!(repair_flags & XRM_COMPLAIN_IF_UNFIXED))
++			return CHECK_RETRY;
++		str_error(ctx, buf,
+ _("Repair unsuccessful; offline repair required."));
+ 	} else {
+ 		/* Clean metadata, no corruption remains. */
 
