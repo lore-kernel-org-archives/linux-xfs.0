@@ -1,348 +1,206 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:34332 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:60930 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752704AbeF1ROE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 28 Jun 2018 13:14:04 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 5F22E8D
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 12:13:49 -0500 (CDT)
+        id S1751014AbeF0DZ4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 26 Jun 2018 23:25:56 -0400
+Subject: Re: [PATCH 10/10] xfs_repair: use libxfs extsize/cowextsize
+ validation helpers
+References: <153006766483.20121.9285982017465570544.stgit@magnolia>
+ <153006773373.20121.9221765170427426584.stgit@magnolia>
 From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs-4.17.0 released
-Message-ID: <360853ac-8eea-1a0a-e3dc-5e55d9de4ae1@sandeen.net>
-Date: Thu, 28 Jun 2018 12:14:02 -0500
+Message-ID: <2b1b768b-2b32-2f1a-fa4d-f3e4372c84c7@sandeen.net>
+Date: Tue, 26 Jun 2018 22:25:54 -0500
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="kyrOgqalVbEuMFSEYQx1kzIXd307TvCNC"
+In-Reply-To: <153006773373.20121.9221765170427426584.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---kyrOgqalVbEuMFSEYQx1kzIXd307TvCNC
-Content-Type: multipart/mixed; boundary="UFisuGIuFCh1XyggRBE9UoPo7LkojHigS";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Message-ID: <360853ac-8eea-1a0a-e3dc-5e55d9de4ae1@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs-4.17.0 released
+On 6/26/18 9:48 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Now that we've ported the extent size hint verifiers to libxfs, call
 
---UFisuGIuFCh1XyggRBE9UoPo7LkojHigS
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+*almost* ;)
 
-Hi folks,
+> them from xfs_repair instead of open-coding the checks.
 
-The master branch of the xfsprogs repository at:
+*nod*
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+> Tweak the
+> repair message slightly to reflect the fact that we zero the field and
+> clear the inode flag if the hint is garbage or is inconsistent with the
+> inode flags.  Also clear the extent size hints when we're zapping the
+> inode core since we clear the associated flags.
 
-has just been updated and tagged with v4.17.0, with tarballs
-available at:
+So for that last clause, the fix to clear_dinode_core, I wonder if it should
+be a separate patch, possibly even merged before the libxfs changes.
 
-https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-4.17.0.ta=
-r.gz
-https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-4.17.0.ta=
-r.xz
-https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-4.17.0.ta=
-r.sign
+I guess I can't prove that it's an existing bug prior to adding the extent
+size hints to the verifier, but it seems weird for clear_dinode_core to
+/not/ clear the extent size hint, doesn't it?
 
-There are no changes since -rc1.
+The only advantage is we could avoid any regression point for xfs/033
+(which is how I found this) if we fixed up clear_dinode_core, then
+added the extent size hint validation to the verifier, and then taught
+xfs_repair to use the new extent size hint validation function.
 
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update^Wrelease cycle.
+Does that seem worth it?
 
-The new head of the master branch is commit:
+The patch all looks fine, just wondering if we should structure/sequence
+the changes more nicely.
 
-0821de4 xfsprogs: Release v4.17.0
+-Eric
 
-Abbreviated changelog follows with full changelog since v4.16.1
-after that.
-
-Note that mkfs config files didn't make it in - I can't merge a new
-feature at least without any regression testing, and 4.17 is late enough
-as it is, sadly.
-
-CHANGELOG:
-
-xfsprogs-4.17.0 (28 Jun 2018)
-        - No further changes
-
-xfsprogs-4.17.0-rc1 (22 Jun 2018)
-        - mkfs.xfs: only stat block devices during mkfs init (Eric Sandee=
-n)
-        - xfs_repair: multiple fixes and improvements (Darrick Wong)
-        - xfs_repair: check and repair quota metadata (Eric Sandeen)
-        - xfs_repair: fix shortform root inode parent (Marco Benatto)
-        - xfs_db: don't ASSERT on unrecognized metadata (Carlos Maiolino)=
-
-        - xfs_db: add superblock info command ala xfs_info (Darrick Wong)=
-
-        - xfs_spaceman: add superblock info command ala xfs_info (Darrick=
- Wong)
-        - xfs_info: call xfs_db for unmounted devices (Darrick Wong)
-        - xfs_io: add online label command (Eric Sandeen)
-        - xfs_io: add O_PATH and O_NOFOLLOW options (David Howells)
-        - xfs_io: recognize *iB units in copy_range (Goldwyn Rodrigues)
-
-New Commits:
-
-Brian Foster (4):
-      [65a15e0] xfs: rename agfl perag res type to rmapbt
-      [9760cac] xfs: account only rmapbt-used blocks against rmapbt perag=
- res
-      [8dbee8f] xfs: detect agfl count corruption and reset agfl
-      [19fbb9d] xfs: clean up xfs_mount allocation and dynamic initialize=
-rs
-
-Carlos Maiolino (2):
-      [97b3ffd] Cleanup old XFS_BTREE_* traces
-      [a023e1a] xfs_db: Don't ASSERT on unrecognized metadata
-
-Darrick J. Wong (40):
-      [6da71a8] xfs: convert a few more directory asserts to corruption
-      [15348e0] xfs: sanity-check the unused space before trying to use i=
-t
-      [0cf6a3a] xfs: refactor bmap record validation
-      [b02a2c9] xfs: refactor inode verifier error logging
-      [43f7ceb] xfs: refactor inode buffer verifier error logging
-      [fd0c360] xfs: move inode extent size hint validation to libxfs
-      [2949b46] xfs: don't accept inode buffers with suspicious unlinked =
-chains
-      [dee7606] xfs: don't fail when converting shortform attr to long fo=
-rm duri
-      [930af86] xfs_repair: examine all remote attribute blocks
-      [41b465f] xfs_repair: don't leak buffer on xattr remote buf verifie=
-r  erro
-      [eb9cee6] xfs_repair: validate some of the log space information
-      [d2be29d] xfs_repair: zap corrupt remote symlink
-      [67a79e2] xfs_repair: treat zero da btree pointers as corruption
-      [f9c559f] xfs_repair: invalidate dirty dir buffers when we zap a  d=
-irector
-      [bf67850] xfs_repair: only update in-core extent state after scanni=
-ng full
-      [3cc93dd] xfs_repair: don't crash if da btree is corrupt
-      [7554707] xfs_repair: actually fix .. entries that point to inode z=
-ero
-      [8fec4f7] xfs_repair: check inode nsec for obviously garbage values=
-
-      [369c0b5] xfs_repair: don't assert on bad '.' entry in no-modify mo=
-de
-      [fe08f67] libfrog: move platform specific runtime support code out =
-of libx
-      [96aaf9b] libfrog: refactor fs geometry printing function
-      [ebc2e79] mkfs: use geometry generation / helper functions
-      [172793e] xfs_db: add a superblock info command
-      [6fb7087] xfs_spaceman: print a nicer message when file path isn't =
-on xfs
-      [6719d62] xfs_spaceman: add a superblock info command
-      [3fda24e] xfs_info: move to xfs_spaceman
-      [6750f2b] xfs_info: call xfs_db for offline filesystems
-      [35f7c5b] xfs_growfs: refactor geometry reporting
-      [7931f86] xfs_repair: fix integer handling issues
-      [c2b571f] xfs_buflock: ignore if buffer already locked
-      [ece9fa6] xfs_buflock: record line number of trace where we locked =
-the buf
-      [184798f] xfs_buflock: record buffer initialization
-      [e3f20e6] fsck: fix more bashisms
-      [6c05cc5] xfs_scrub: actually check for errors coming from close()
-      [7856ed0] xfs_io: fix null pointer deref when complaining about scr=
-ub comm
-      [87a271c] xfs_db: handle realtime bitmap / summary files as text
-      [cb1b013] xfs_io: fix signed comparison problem in copy_file_range
-      [5480678] xfs_bmap: don't reject -e
-      [27915b8] xfs_bmap: remove -c from manpage
-      [c9a048f] xfs_io: clarify -c in bmap documentation
-
-Dave Chinner (2):
-      [b816550] xfs: convert XFS_AGFL_SIZE to a helper function
-      [d206fcb] xfs: remove dead inode version setting code
-
-David Howells (1):
-      [fc52865] xfs_io: Allow -P and -L to be given to open for O_PATH an=
-d  O_NO
-
-Eric Sandeen (11):
-      [1421de3] xfs: non-scrub - remove unused function parameters
-      [4152dae] Merge branch 'libxfs-4.17-sync' into for-next
-      [3060f26] xfs: enhance dinode verifier
-      [7c4d311] xfs: set format back to extents if xfs_bmap_extents_to_bt=
-ree
-      [73b28e5] Merge branch 'libxfs-4.17-sync' into for-next
-      [98c4a01] xfsprogs: be careful about what we stat in platform_check=
-_mount
-      [5857dce] xfs_repair: check and repair quota metadata
-      [cfa10b0] xfs_io: add label command
-      [585acbe] xfs_repair: fix libxfs api violations in quota repair cod=
-e
-      [14c57d5] mkfs.xfs: if either sunit or swidth is nonzero,  the othe=
-r must=20
-      [803503c] xfsprogs: Release v4.17.0-rc1
-      [0821de4] xfsprogs: Release v4.17.0
-
-Goldwyn Rodrigues (1):
-      [25b4549] xfs_io: Make copy_range arguments understand *iB values
-
-Jeff Layton (1):
-      [7c4889e] xfs_io: syncfs can fail
-
-Marco Benatto (1):
-      [77b3425] xfs_repair: Fix root inode's parent when it's bogus for s=
-f direc
-
-
-Code Diffstat:
-
- VERSION                          |   4 +-
- configure.ac                     |   2 +-
- db/Makefile                      |   2 +-
- db/agfl.c                        |   2 +-
- db/check.c                       |   6 +-
- db/command.c                     |   1 +
- db/command.h                     |   1 +
- db/freesp.c                      |   6 +-
- db/info.c                        |  74 +++++++++++++
- db/metadump.c                    |   2 +-
- db/print.c                       |   5 +-
- db/type.c                        |  12 +--
- debian/changelog                 |   6 ++
- doc/CHANGES                      |  13 +++
- fsck/xfs_fsck.sh                 |  12 +--
- growfs/Makefile                  |   2 -
- growfs/xfs_growfs.c              |  88 +---------------
- include/fsgeom.h                 |  24 +++++
- include/libxfs.h                 |   1 +
- include/xfs_mount.h              |  10 +-
- include/xfs_trace.h              |   2 +
- io/Makefile                      |   6 +-
- io/bmap.c                        |   1 +
- io/copy_file_range.c             |  30 +++---
- io/file.c                        |   6 +-
- io/init.c                        |   9 +-
- io/io.h                          |   3 +
- io/label.c                       | 108 +++++++++++++++++++
- io/open.c                        |  41 +++++++-
- io/scrub.c                       |   3 +-
- io/sync.c                        |   6 +-
- io/xfs_bmap.sh                   |   5 +-
- libfrog/Makefile                 |   5 +
- {libxfs =3D> libfrog}/darwin.c     |   0
- {libxfs =3D> libfrog}/freebsd.c    |   0
- libfrog/fsgeom.c                 |  82 +++++++++++++++
- {libxfs =3D> libfrog}/irix.c       |   0
- {libxfs =3D> libfrog}/linux.c      |  10 ++
- libxfs/Makefile                  |   3 -
- libxfs/libxfs_api_defs.h         |   9 ++
- libxfs/libxfs_priv.h             |  13 ++-
- libxfs/xfs_ag_resv.c             |  39 ++++---
- libxfs/xfs_ag_resv.h             |  31 ++++++
- libxfs/xfs_alloc.c               | 145 ++++++++++++++++++++++----
- libxfs/xfs_alloc.h               |   7 +-
- libxfs/xfs_alloc_btree.c         |   8 +-
- libxfs/xfs_attr.c                |   9 +-
- libxfs/xfs_bmap.c                |  58 +++++++++--
- libxfs/xfs_bmap.h                |   5 +-
- libxfs/xfs_bmap_btree.c          |   4 +-
- libxfs/xfs_bmap_btree.h          |  14 ---
- libxfs/xfs_btree.c               | 127 ++---------------------
- libxfs/xfs_btree.h               |  25 +----
- libxfs/xfs_dir2.h                |   2 +-
- libxfs/xfs_dir2_block.c          |  59 ++++++-----
- libxfs/xfs_dir2_data.c           |  78 ++++++++++----
- libxfs/xfs_dir2_leaf.c           |  13 ++-
- libxfs/xfs_dir2_node.c           |  16 ++-
- libxfs/xfs_format.h              |  13 +--
- libxfs/xfs_ialloc.c              |   2 +-
- libxfs/xfs_ialloc_btree.c        |  11 +-
- libxfs/xfs_inode_buf.c           | 145 ++++++++++++++++++++++++--
- libxfs/xfs_inode_buf.h           |   5 +
- libxfs/xfs_inode_fork.c          |  27 +++--
- libxfs/xfs_quota_defs.h          |   2 +
- libxfs/xfs_refcount.c            |  22 ++--
- libxfs/xfs_refcount_btree.c      |  10 +-
- libxfs/xfs_refcount_btree.h      |   3 +-
- libxfs/xfs_rmap.c                |   3 +-
- libxfs/xfs_rmap_btree.c          |  17 ++-
- libxfs/xfs_rmap_btree.h          |   2 +-
- libxfs/xfs_sb.c                  |  11 +-
- libxfs/xfs_trans_resv.c          |  10 +-
- man/man8/xfs_bmap.8              |   6 +-
- man/man8/xfs_db.8                |   8 ++
- man/man8/xfs_growfs.8            |  47 +--------
- man/man8/xfs_info.8              |  97 +++++++++++++++++
- man/man8/xfs_io.8                |  27 ++++-
- man/man8/xfs_spaceman.8          |   7 ++
- mkfs/xfs_mkfs.c                  |  61 ++++-------
- repair/agheader.c                |  12 +--
- repair/attr_repair.c             |   7 +-
- repair/da_util.c                 |   8 ++
- repair/dinode.c                  | 217 +++++++++++++++++++++++++++++++++=
-++++--
- repair/dir2.c                    |  27 ++++-
- repair/globals.h                 |   3 +-
- repair/incore.h                  |   3 +
- repair/phase5.c                  |  20 ++--
- repair/phase6.c                  |  49 ++++++++-
- repair/rmap.c                    |   2 +-
- repair/sb.c                      |  28 +++++
- repair/scan.c                    |   6 +-
- repair/xfs_repair.c              |   2 +
- scrub/phase1.c                   |   6 +-
- scrub/phase3.c                   |  27 ++++-
- scrub/phase5.c                   |   8 +-
- scrub/phase6.c                   |  10 +-
- scrub/vfs.c                      |   4 +-
- spaceman/Makefile                |   4 +-
- spaceman/file.c                  |   7 +-
- spaceman/info.c                  |  96 +++++++++++++++++
- spaceman/init.c                  |   6 +-
- spaceman/space.h                 |   1 +
- {growfs =3D> spaceman}/xfs_info.sh |  14 ++-
- tools/xfsbuflock.py              |  22 +++-
- 105 files changed, 1724 insertions(+), 656 deletions(-)
- create mode 100644 db/info.c
- create mode 100644 include/fsgeom.h
- create mode 100644 io/label.c
- rename {libxfs =3D> libfrog}/darwin.c (100%)
- rename {libxfs =3D> libfrog}/freebsd.c (100%)
- create mode 100644 libfrog/fsgeom.c
- rename {libxfs =3D> libfrog}/irix.c (100%)
- rename {libxfs =3D> libfrog}/linux.c (93%)
- create mode 100644 man/man8/xfs_info.8
- create mode 100644 spaceman/info.c
- rename {growfs =3D> spaceman}/xfs_info.sh (55%)
-
-
-
---UFisuGIuFCh1XyggRBE9UoPo7LkojHigS--
-
---kyrOgqalVbEuMFSEYQx1kzIXd307TvCNC
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAls1F1sACgkQIK4WkuE9
-3uAzqRAAkXLmpLbN5BrJnudu/YMlUoVn1xydJmnoeG3amyLSm8/OK4epnDhpq0xG
-yOMuB1v3zvlKgtaQmgwoYoH2QrHkBGH1A8sZwIDcB7tbqpEhIiEqFAQX9crLCGvZ
-RBHZvslf7d5WobORg8eljQb2a7EMQzNM2Cj62kVqYZgeS4ALVwxpiavHQP78cbch
-nFwyIF+6G5vdI1Vr954UUcqAdkpMW8ktiqd/u9CxN6Ui6HkFUHleZ26ecPl+rqP6
-CeoHyZbs92QaH8tS6l07UWDMPwlwDnvyC1+p8G2t3sx547YE5hZCEjbxkdiKVqFe
-oL5lcMNzuc5K9CHAIhu0LdqMwwlvQW+anfyk28zY6+hITMdFox3bxDa3Ijdf+Fbo
-RzetafuPr5WmtY+yWbyD9kI542CwzLd8wYhX2Hr4SamsnshKNYosu24cljFV9u/D
-oXWKfrYaP6z5j8OTFMuFuZZHY8wMI7Xy65XJeVboQFPyBNVB6Y+onjRCtDHOfB3x
-J5Zg6W4CYomKXUziwUfxPVtfRR65/YkIYpY5rGgs4OvFCPg7pVxUzUytYiGjdYvo
-CF4BSBjN5xcDdsrOZladOHy+Xu85PUdZ4N4Fx/1OE1EtfJVeUSWqeeFDpo3R4PBr
-Ow4YXlE1237jHmwMPrQ1YiRKnw8rU7dlMNaKePWvMBbY5Nozcis=
-=T2ZL
------END PGP SIGNATURE-----
-
---kyrOgqalVbEuMFSEYQx1kzIXd307TvCNC--
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  libxfs/libxfs_api_defs.h |    2 +
+>  repair/dinode.c          |   85 +++++++++++++++++++---------------------------
+>  2 files changed, 38 insertions(+), 49 deletions(-)
+> 
+> 
+> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+> index e5cf1554..fe8336ab 100644
+> --- a/libxfs/libxfs_api_defs.h
+> +++ b/libxfs/libxfs_api_defs.h
+> @@ -98,6 +98,8 @@
+>  #define xfs_dinode_calc_crc		libxfs_dinode_calc_crc
+>  #define xfs_idata_realloc		libxfs_idata_realloc
+>  #define xfs_idestroy_fork		libxfs_idestroy_fork
+> +#define xfs_inode_validate_extsize	libxfs_inode_validate_extsize
+> +#define xfs_inode_validate_cowextsize	libxfs_inode_validate_cowextsize
+>  
+>  #define xfs_rmap_ag_owner		libxfs_rmap_ag_owner
+>  #define xfs_rmap_alloc			libxfs_rmap_alloc
+> diff --git a/repair/dinode.c b/repair/dinode.c
+> index f9b2bac0..14c055bd 100644
+> --- a/repair/dinode.c
+> +++ b/repair/dinode.c
+> @@ -194,6 +194,11 @@ clear_dinode_core(struct xfs_mount *mp, xfs_dinode_t *dinoc, xfs_ino_t ino_num)
+>  		dinoc->di_anextents = 0;
+>  	}
+>  
+> +	if (be32_to_cpu(dinoc->di_extsize) != 0)  {
+> +		__dirty_no_modify_ret(dirty);
+> +		dinoc->di_extsize = 0;
+> +	}
+> +
+>  	if (dinoc->di_version > 1 &&
+>  			be32_to_cpu(dinoc->di_nlink) != 0)  {
+>  		__dirty_no_modify_ret(dirty);
+> @@ -237,6 +242,11 @@ clear_dinode_core(struct xfs_mount *mp, xfs_dinode_t *dinoc, xfs_ino_t ino_num)
+>  		dinoc->di_changecount = 0;
+>  	}
+>  
+> +	if (be32_to_cpu(dinoc->di_cowextsize) != 0)  {
+> +		__dirty_no_modify_ret(dirty);
+> +		dinoc->di_cowextsize = 0;
+> +	}
+> +
+>  	return dirty;
+>  }
+>  
+> @@ -2843,24 +2853,21 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
+>  	 * only regular files with REALTIME or EXTSIZE flags set can have
+>  	 * extsize set, or directories with EXTSZINHERIT.
+>  	 */
+> -	if (be32_to_cpu(dino->di_extsize) != 0) {
+> -		if ((type == XR_INO_RTDATA) ||
+> -		    (type == XR_INO_DIR && (be16_to_cpu(dino->di_flags) &
+> -					XFS_DIFLAG_EXTSZINHERIT)) ||
+> -		    (type == XR_INO_DATA && (be16_to_cpu(dino->di_flags) &
+> -				 XFS_DIFLAG_EXTSIZE)))  {
+> -			/* s'okay */ ;
+> -		} else {
+> -			do_warn(
+> -_("bad non-zero extent size %u for non-realtime/extsize inode %" PRIu64 ", "),
+> -					be32_to_cpu(dino->di_extsize), lino);
+> -			if (!no_modify)  {
+> -				do_warn(_("resetting to zero\n"));
+> -				dino->di_extsize = 0;
+> -				*dirty = 1;
+> -			} else
+> -				do_warn(_("would reset to zero\n"));
+> -		}
+> +	if (libxfs_inode_validate_extsize(mp,
+> +			be32_to_cpu(dino->di_extsize),
+> +			be16_to_cpu(dino->di_mode),
+> +			be16_to_cpu(dino->di_flags)) != NULL) {
+> +		do_warn(
+> +_("Bad extent size %u for non-realtime/extsize inode %" PRIu64 ", "),
+> +				be32_to_cpu(dino->di_extsize), lino);
+> +		if (!no_modify)  {
+> +			do_warn(_("resetting to zero\n"));
+> +			dino->di_extsize = 0;
+> +			dino->di_flags &= ~cpu_to_be16(XFS_DIFLAG_EXTSIZE |
+> +						       XFS_DIFLAG_EXTSZINHERIT);
+> +			*dirty = 1;
+> +		} else
+> +			do_warn(_("would reset to zero\n"));
+>  	}
+>  
+>  	/*
+> @@ -2868,41 +2875,21 @@ _("bad non-zero extent size %u for non-realtime/extsize inode %" PRIu64 ", "),
+>  	 * set can have extsize set.
+>  	 */
+>  	if (dino->di_version >= 3 &&
+> -	    be32_to_cpu(dino->di_cowextsize) != 0) {
+> -		if ((type == XR_INO_DIR || type == XR_INO_DATA) &&
+> -		    (be64_to_cpu(dino->di_flags2) &
+> -					XFS_DIFLAG2_COWEXTSIZE)) {
+> -			/* s'okay */ ;
+> -		} else {
+> -			do_warn(
+> -_("Cannot have non-zero CoW extent size %u on non-cowextsize inode %" PRIu64 ", "),
+> -					be32_to_cpu(dino->di_cowextsize), lino);
+> -			if (!no_modify)  {
+> -				do_warn(_("resetting to zero\n"));
+> -				dino->di_flags2 &= ~cpu_to_be64(XFS_DIFLAG2_COWEXTSIZE);
+> -				dino->di_cowextsize = 0;
+> -				*dirty = 1;
+> -			} else
+> -				do_warn(_("would reset to zero\n"));
+> -		}
+> -	}
+> -
+> -	/*
+> -	 * Can't have the COWEXTSIZE flag set with no hint.
+> -	 */
+> -	if (dino->di_version >= 3 &&
+> -	    be32_to_cpu(dino->di_cowextsize) == 0 &&
+> -	    (be64_to_cpu(dino->di_flags2) & XFS_DIFLAG2_COWEXTSIZE)) {
+> +	    libxfs_inode_validate_cowextsize(mp,
+> +			be32_to_cpu(dino->di_cowextsize),
+> +			be16_to_cpu(dino->di_mode),
+> +			be16_to_cpu(dino->di_flags),
+> +			be64_to_cpu(dino->di_flags2)) != NULL) {
+>  		do_warn(
+> -_("Cannot have CoW extent size of zero on cowextsize inode %" PRIu64 ", "),
+> -				lino);
+> +_("Bad CoW extent size %u on non-cowextsize inode %" PRIu64 ", "),
+> +				be32_to_cpu(dino->di_cowextsize), lino);
+>  		if (!no_modify)  {
+> -			do_warn(_("clearing cowextsize flag\n"));
+> +			do_warn(_("resetting to zero\n"));
+>  			dino->di_flags2 &= ~cpu_to_be64(XFS_DIFLAG2_COWEXTSIZE);
+> +			dino->di_cowextsize = 0;
+>  			*dirty = 1;
+> -		} else {
+> -			do_warn(_("would clear cowextsize flag\n"));
+> -		}
+> +		} else
+> +			do_warn(_("would reset to zero\n"));
+>  	}
+>  
+>  	/* nsec fields cannot be larger than 1 billion */
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
