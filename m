@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:56350 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752358AbeF0CtH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Jun 2018 22:49:07 -0400
-Subject: [PATCH 10/10] xfs_repair: use libxfs extsize/cowextsize validation
- helpers
+Received: from userp2130.oracle.com ([156.151.31.86]:32982 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752106AbeF0CtB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Jun 2018 22:49:01 -0400
+Subject: [PATCH 09/10] xfs_io: wire up repair ioctl stuff
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 26 Jun 2018 19:48:53 -0700
-Message-ID: <153006773373.20121.9221765170427426584.stgit@magnolia>
+Date: Tue, 26 Jun 2018 19:48:47 -0700
+Message-ID: <153006772758.20121.12001635681077633355.stgit@magnolia>
 In-Reply-To: <153006766483.20121.9285982017465570544.stgit@magnolia>
 References: <153006766483.20121.9285982017465570544.stgit@magnolia>
 MIME-Version: 1.0
@@ -21,152 +20,168 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Now that we've ported the extent size hint verifiers to libxfs, call
-them from xfs_repair instead of open-coding the checks.  Tweak the
-repair message slightly to reflect the fact that we zero the field and
-clear the inode flag if the hint is garbage or is inconsistent with the
-inode flags.  Also clear the extent size hints when we're zapping the
-inode core since we clear the associated flags.
+Wire up the repair ioctl (which is really the scrub ioctl with special
+flags) and the force-repair error injection point.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/libxfs_api_defs.h |    2 +
- repair/dinode.c          |   85 +++++++++++++++++++---------------------------
- 2 files changed, 38 insertions(+), 49 deletions(-)
+ io/init.c         |    1 +
+ io/io.h           |    1 +
+ io/scrub.c        |   97 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ man/man8/xfs_io.8 |    8 ++++
+ 4 files changed, 107 insertions(+)
 
 
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index e5cf1554..fe8336ab 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -98,6 +98,8 @@
- #define xfs_dinode_calc_crc		libxfs_dinode_calc_crc
- #define xfs_idata_realloc		libxfs_idata_realloc
- #define xfs_idestroy_fork		libxfs_idestroy_fork
-+#define xfs_inode_validate_extsize	libxfs_inode_validate_extsize
-+#define xfs_inode_validate_cowextsize	libxfs_inode_validate_cowextsize
+diff --git a/io/init.c b/io/init.c
+index 3f637e5a..a65f81d6 100644
+--- a/io/init.c
++++ b/io/init.c
+@@ -85,6 +85,7 @@ init_commands(void)
+ 	quit_init();
+ 	readdir_init();
+ 	reflink_init();
++	repair_init();
+ 	resblks_init();
+ 	scrub_init();
+ 	seek_init();
+diff --git a/io/io.h b/io/io.h
+index fa0cdff7..ab217789 100644
+--- a/io/io.h
++++ b/io/io.h
+@@ -198,3 +198,4 @@ extern void		log_writes_init(void);
+ #endif
  
- #define xfs_rmap_ag_owner		libxfs_rmap_ag_owner
- #define xfs_rmap_alloc			libxfs_rmap_alloc
-diff --git a/repair/dinode.c b/repair/dinode.c
-index f9b2bac0..14c055bd 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -194,6 +194,11 @@ clear_dinode_core(struct xfs_mount *mp, xfs_dinode_t *dinoc, xfs_ino_t ino_num)
- 		dinoc->di_anextents = 0;
- 	}
+ extern void		scrub_init(void);
++extern void		repair_init(void);
+diff --git a/io/scrub.c b/io/scrub.c
+index 75a8ff15..c2c08e6b 100644
+--- a/io/scrub.c
++++ b/io/scrub.c
+@@ -26,6 +26,7 @@
+ #include "io.h"
  
-+	if (be32_to_cpu(dinoc->di_extsize) != 0)  {
-+		__dirty_no_modify_ret(dirty);
-+		dinoc->di_extsize = 0;
-+	}
-+
- 	if (dinoc->di_version > 1 &&
- 			be32_to_cpu(dinoc->di_nlink) != 0)  {
- 		__dirty_no_modify_ret(dirty);
-@@ -237,6 +242,11 @@ clear_dinode_core(struct xfs_mount *mp, xfs_dinode_t *dinoc, xfs_ino_t ino_num)
- 		dinoc->di_changecount = 0;
- 	}
+ static struct cmdinfo scrub_cmd;
++static struct cmdinfo repair_cmd;
  
-+	if (be32_to_cpu(dinoc->di_cowextsize) != 0)  {
-+		__dirty_no_modify_ret(dirty);
-+		dinoc->di_cowextsize = 0;
-+	}
-+
- 	return dirty;
+ /* Type info and names for the scrub types. */
+ enum scrub_type {
+@@ -249,3 +250,99 @@ scrub_init(void)
+ 
+ 	add_command(&scrub_cmd);
  }
- 
-@@ -2843,24 +2853,21 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
- 	 * only regular files with REALTIME or EXTSIZE flags set can have
- 	 * extsize set, or directories with EXTSZINHERIT.
- 	 */
--	if (be32_to_cpu(dino->di_extsize) != 0) {
--		if ((type == XR_INO_RTDATA) ||
--		    (type == XR_INO_DIR && (be16_to_cpu(dino->di_flags) &
--					XFS_DIFLAG_EXTSZINHERIT)) ||
--		    (type == XR_INO_DATA && (be16_to_cpu(dino->di_flags) &
--				 XFS_DIFLAG_EXTSIZE)))  {
--			/* s'okay */ ;
--		} else {
--			do_warn(
--_("bad non-zero extent size %u for non-realtime/extsize inode %" PRIu64 ", "),
--					be32_to_cpu(dino->di_extsize), lino);
--			if (!no_modify)  {
--				do_warn(_("resetting to zero\n"));
--				dino->di_extsize = 0;
--				*dirty = 1;
--			} else
--				do_warn(_("would reset to zero\n"));
--		}
-+	if (libxfs_inode_validate_extsize(mp,
-+			be32_to_cpu(dino->di_extsize),
-+			be16_to_cpu(dino->di_mode),
-+			be16_to_cpu(dino->di_flags)) != NULL) {
-+		do_warn(
-+_("Bad extent size %u for non-realtime/extsize inode %" PRIu64 ", "),
-+				be32_to_cpu(dino->di_extsize), lino);
-+		if (!no_modify)  {
-+			do_warn(_("resetting to zero\n"));
-+			dino->di_extsize = 0;
-+			dino->di_flags &= ~cpu_to_be16(XFS_DIFLAG_EXTSIZE |
-+						       XFS_DIFLAG_EXTSZINHERIT);
-+			*dirty = 1;
-+		} else
-+			do_warn(_("would reset to zero\n"));
- 	}
- 
- 	/*
-@@ -2868,41 +2875,21 @@ _("bad non-zero extent size %u for non-realtime/extsize inode %" PRIu64 ", "),
- 	 * set can have extsize set.
- 	 */
- 	if (dino->di_version >= 3 &&
--	    be32_to_cpu(dino->di_cowextsize) != 0) {
--		if ((type == XR_INO_DIR || type == XR_INO_DATA) &&
--		    (be64_to_cpu(dino->di_flags2) &
--					XFS_DIFLAG2_COWEXTSIZE)) {
--			/* s'okay */ ;
--		} else {
--			do_warn(
--_("Cannot have non-zero CoW extent size %u on non-cowextsize inode %" PRIu64 ", "),
--					be32_to_cpu(dino->di_cowextsize), lino);
--			if (!no_modify)  {
--				do_warn(_("resetting to zero\n"));
--				dino->di_flags2 &= ~cpu_to_be64(XFS_DIFLAG2_COWEXTSIZE);
--				dino->di_cowextsize = 0;
--				*dirty = 1;
--			} else
--				do_warn(_("would reset to zero\n"));
--		}
--	}
--
--	/*
--	 * Can't have the COWEXTSIZE flag set with no hint.
--	 */
--	if (dino->di_version >= 3 &&
--	    be32_to_cpu(dino->di_cowextsize) == 0 &&
--	    (be64_to_cpu(dino->di_flags2) & XFS_DIFLAG2_COWEXTSIZE)) {
-+	    libxfs_inode_validate_cowextsize(mp,
-+			be32_to_cpu(dino->di_cowextsize),
-+			be16_to_cpu(dino->di_mode),
-+			be16_to_cpu(dino->di_flags),
-+			be64_to_cpu(dino->di_flags2)) != NULL) {
- 		do_warn(
--_("Cannot have CoW extent size of zero on cowextsize inode %" PRIu64 ", "),
--				lino);
-+_("Bad CoW extent size %u on non-cowextsize inode %" PRIu64 ", "),
-+				be32_to_cpu(dino->di_cowextsize), lino);
- 		if (!no_modify)  {
--			do_warn(_("clearing cowextsize flag\n"));
-+			do_warn(_("resetting to zero\n"));
- 			dino->di_flags2 &= ~cpu_to_be64(XFS_DIFLAG2_COWEXTSIZE);
-+			dino->di_cowextsize = 0;
- 			*dirty = 1;
--		} else {
--			do_warn(_("would clear cowextsize flag\n"));
--		}
-+		} else
-+			do_warn(_("would reset to zero\n"));
- 	}
- 
- 	/* nsec fields cannot be larger than 1 billion */
++
++static void
++repair_help(void)
++{
++	const struct scrub_descr	*d;
++	int				i;
++
++	printf(_(
++"\n"
++" Repairs a piece of XFS filesystem metadata.  The first argument is the type\n"
++" of metadata to examine.  Allocation group metadata types take one AG number\n"
++" as the second parameter.  Inode metadata types act on the currently open file\n"
++" or (optionally) take an inode number and generation number to act upon as\n"
++" the second and third parameters.\n"
++"\n"
++" Example:\n"
++" 'repair inobt 3' - repairs the inode btree in AG 3.\n"
++" 'repair bmapbtd 128 13525' - repairs the extent map of inode 128 gen 13525.\n"
++"\n"
++" Known metadata repairs types are:"));
++	for (i = 0, d = scrubbers; i < XFS_SCRUB_TYPE_NR; i++, d++)
++		printf(" %s", d->name);
++	printf("\n");
++}
++
++static void
++repair_ioctl(
++	int				fd,
++	int				type,
++	uint64_t			control,
++	uint32_t			control2)
++{
++	struct xfs_scrub_metadata	meta;
++	const struct scrub_descr	*sc;
++	int				error;
++
++	sc = &scrubbers[type];
++	memset(&meta, 0, sizeof(meta));
++	meta.sm_type = type;
++	switch (sc->type) {
++	case ST_PERAG:
++		meta.sm_agno = control;
++		break;
++	case ST_INODE:
++		meta.sm_ino = control;
++		meta.sm_gen = control2;
++		break;
++	case ST_NONE:
++	case ST_FS:
++		/* no control parameters */
++		break;
++	}
++	meta.sm_flags = XFS_SCRUB_IFLAG_REPAIR;
++
++	error = ioctl(fd, XFS_IOC_SCRUB_METADATA, &meta);
++	if (error)
++		perror("scrub");
++	if (meta.sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
++		printf(_("Corruption remains.\n"));
++	if (meta.sm_flags & XFS_SCRUB_OFLAG_PREEN)
++		printf(_("Optimization possible.\n"));
++	if (meta.sm_flags & XFS_SCRUB_OFLAG_XFAIL)
++		printf(_("Cross-referencing failed.\n"));
++	if (meta.sm_flags & XFS_SCRUB_OFLAG_XCORRUPT)
++		printf(_("Corruption still detected during cross-referencing.\n"));
++	if (meta.sm_flags & XFS_SCRUB_OFLAG_INCOMPLETE)
++		printf(_("Repair was not complete.\n"));
++	if (meta.sm_flags & XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED)
++		printf(_("Metadata did not need repair or optimization.\n"));
++}
++
++static int
++repair_f(
++	int				argc,
++	char				**argv)
++{
++	return parse_args(argc, argv, &repair_cmd, repair_ioctl);
++}
++
++void
++repair_init(void)
++{
++	if (!expert)
++		return;
++	repair_cmd.name = "repair";
++	repair_cmd.altname = "fix";
++	repair_cmd.cfunc = repair_f;
++	repair_cmd.argmin = 1;
++	repair_cmd.argmax = -1;
++	repair_cmd.flags = CMD_NOMAP_OK;
++	repair_cmd.args = _("type [agno|ino gen]");
++	repair_cmd.oneline = _("repairs filesystem metadata");
++	repair_cmd.help = repair_help;
++
++	add_command(&repair_cmd);
++}
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index dd91589b..60f7a21c 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -1167,6 +1167,14 @@ inode number and generation number are specified.
+ .RE
+ .PD
+ .TP
++.BI "repair " type " [ " agnumber " | " "ino" " " "gen" " ]"
++Repair internal XFS filesystem metadata.  The
++.BI type
++parameter specifies which type of metadata to repair.
++For AG metadata, one AG number must be specified.
++For file metadata, the repair is applied to the open file unless the
++inode number and generation number are specified.
++.TP
+ .BI "log_writes \-d " device " \-m "  mark
+ Create a mark named
+ .I mark
 
