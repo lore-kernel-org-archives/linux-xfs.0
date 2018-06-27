@@ -1,322 +1,133 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:60110 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932280AbeF1Qgk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 28 Jun 2018 12:36:40 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id CCB78AB407
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 16:36:38 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id B7000111CA17
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 16:36:38 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 18/24] xfs: remove dfops param from internal bmap extent helpers
-Date: Thu, 28 Jun 2018 12:36:30 -0400
-Message-Id: <20180628163636.52564-19-bfoster@redhat.com>
-In-Reply-To: <20180628163636.52564-1-bfoster@redhat.com>
-References: <20180628163636.52564-1-bfoster@redhat.com>
+Received: from sandeen.net ([63.231.237.45]:39434 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752210AbeF0Xhd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 27 Jun 2018 19:37:33 -0400
+Subject: Re: Mounting xfs filesystem takes long time
+References: <2a9a023d-fa37-59dc-caf2-c7c4167d3c75@levigo.de>
+ <20180619161819.GD21698@magnolia>
+ <e9a7c539-1dea-1050-19bc-b0eb7e788b33@sandeen.net>
+ <20180621191535.GI7508@wotan.suse.de>
+ <89d39e37-3944-f58d-018c-d36bdc9f870c@sandeen.net>
+ <CAJCQCtSHT7fcHHxBaTESq5cdQQnYH95maNHby4MULCkar6mfeg@mail.gmail.com>
+ <20180621221911.GT19934@dastard>
+ <CAJCQCtSzsYSyCD2eEvdgpKJ8ZFShsJrV2FxKZ4bv=-S6gpx2fw@mail.gmail.com>
+ <20180622040221.GY19934@dastard> <20180627232333.GB21242@wotan.suse.de>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <98c71f4a-94e5-00e8-46af-a4c3ca4e520b@sandeen.net>
+Date: Wed, 27 Jun 2018 18:37:31 -0500
+MIME-Version: 1.0
+In-Reply-To: <20180627232333.GB21242@wotan.suse.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>, Dave Chinner <david@fromorbit.com>
+Cc: Chris Murphy <lists@colorremedies.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, "swadmin - levigo.de" <swadmin@levigo.de>, xfs list <linux-xfs@vger.kernel.org>
 
-All callers of the various bmap extent helpers now use ->t_dfops.
-Remove the unnecessary dfops params and access ->t_dfops directly.
-This patch does not change behavior.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_bmap.c | 92 +++++++++++++++++++---------------------
- 1 file changed, 44 insertions(+), 48 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 1ce1d10a4140..710e7d0bbf6a 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -644,25 +644,24 @@ xfs_bmap_btree_to_extents(
-  */
- STATIC int					/* error */
- xfs_bmap_extents_to_btree(
--	xfs_trans_t		*tp,		/* transaction pointer */
--	xfs_inode_t		*ip,		/* incore inode pointer */
-+	struct xfs_trans	*tp,		/* transaction pointer */
-+	struct xfs_inode	*ip,		/* incore inode pointer */
- 	xfs_fsblock_t		*firstblock,	/* first-block-allocated */
--	struct xfs_defer_ops	*dfops,		/* blocks freed in xaction */
--	xfs_btree_cur_t		**curp,		/* cursor returned to caller */
-+	struct xfs_btree_cur	**curp,		/* cursor returned to caller */
- 	int			wasdel,		/* converting a delayed alloc */
- 	int			*logflagsp,	/* inode logging flags */
- 	int			whichfork)	/* data or attr fork */
- {
- 	struct xfs_btree_block	*ablock;	/* allocated (child) bt block */
--	xfs_buf_t		*abp;		/* buffer for ablock */
--	xfs_alloc_arg_t		args;		/* allocation arguments */
--	xfs_bmbt_rec_t		*arp;		/* child record pointer */
-+	struct xfs_buf		*abp;		/* buffer for ablock */
-+	struct xfs_alloc_arg	args;		/* allocation arguments */
-+	struct xfs_bmbt_rec	*arp;		/* child record pointer */
- 	struct xfs_btree_block	*block;		/* btree root block */
--	xfs_btree_cur_t		*cur;		/* bmap btree cursor */
-+	struct xfs_btree_cur	*cur;		/* bmap btree cursor */
- 	int			error;		/* error return value */
--	xfs_ifork_t		*ifp;		/* inode fork pointer */
--	xfs_bmbt_key_t		*kp;		/* root block key pointer */
--	xfs_mount_t		*mp;		/* mount structure */
-+	struct xfs_ifork	*ifp;		/* inode fork pointer */
-+	struct xfs_bmbt_key	*kp;		/* root block key pointer */
-+	struct xfs_mount	*mp;		/* mount structure */
- 	xfs_bmbt_ptr_t		*pp;		/* root block address pointer */
- 	struct xfs_iext_cursor	icur;
- 	struct xfs_bmbt_irec	rec;
-@@ -691,7 +690,7 @@ xfs_bmap_extents_to_btree(
- 	 */
- 	cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
- 	cur->bc_private.b.firstblock = *firstblock;
--	cur->bc_private.b.dfops = dfops;
-+	cur->bc_private.b.dfops = tp->t_dfops;
- 	cur->bc_private.b.flags = wasdel ? XFS_BTCUR_BPRV_WASDEL : 0;
- 	/*
- 	 * Convert to a btree with two levels, one record in root.
-@@ -705,7 +704,7 @@ xfs_bmap_extents_to_btree(
- 	if (*firstblock == NULLFSBLOCK) {
- 		args.type = XFS_ALLOCTYPE_START_BNO;
- 		args.fsbno = XFS_INO_TO_FSB(mp, ip->i_ino);
--	} else if (dfops->dop_low) {
-+	} else if (tp->t_dfops->dop_low) {
- 		args.type = XFS_ALLOCTYPE_START_BNO;
- 		args.fsbno = *firstblock;
- 	} else {
-@@ -958,8 +957,8 @@ xfs_bmap_add_attrfork_btree(
-  */
- STATIC int					/* error */
- xfs_bmap_add_attrfork_extents(
--	xfs_trans_t		*tp,		/* transaction pointer */
--	xfs_inode_t		*ip,		/* incore inode pointer */
-+	struct xfs_trans	*tp,		/* transaction pointer */
-+	struct xfs_inode	*ip,		/* incore inode pointer */
- 	xfs_fsblock_t		*firstblock,	/* first block allocated */
- 	int			*flags)		/* inode logging flags */
- {
-@@ -969,8 +968,8 @@ xfs_bmap_add_attrfork_extents(
- 	if (ip->i_d.di_nextents * sizeof(xfs_bmbt_rec_t) <= XFS_IFORK_DSIZE(ip))
- 		return 0;
- 	cur = NULL;
--	error = xfs_bmap_extents_to_btree(tp, ip, firstblock, tp->t_dfops, &cur, 0,
--		flags, XFS_DATA_FORK);
-+	error = xfs_bmap_extents_to_btree(tp, ip, firstblock, &cur, 0, flags,
-+					  XFS_DATA_FORK);
- 	if (cur) {
- 		cur->bc_private.b.allocated = 0;
- 		xfs_btree_del_cursor(cur,
-@@ -1806,8 +1805,8 @@ xfs_bmap_add_extent_delay_real(
- 
- 		if (xfs_bmap_needs_btree(bma->ip, whichfork)) {
- 			error = xfs_bmap_extents_to_btree(bma->tp, bma->ip,
--					bma->firstblock, bma->tp->t_dfops,
--					&bma->cur, 1, &tmp_rval, whichfork);
-+					bma->firstblock, &bma->cur, 1,
-+					&tmp_rval, whichfork);
- 			rval |= tmp_rval;
- 			if (error)
- 				goto done;
-@@ -1884,8 +1883,8 @@ xfs_bmap_add_extent_delay_real(
- 
- 		if (xfs_bmap_needs_btree(bma->ip, whichfork)) {
- 			error = xfs_bmap_extents_to_btree(bma->tp, bma->ip,
--				bma->firstblock, bma->tp->t_dfops, &bma->cur, 1,
--				&tmp_rval, whichfork);
-+				bma->firstblock, &bma->cur, 1, &tmp_rval,
-+				whichfork);
- 			rval |= tmp_rval;
- 			if (error)
- 				goto done;
-@@ -1965,8 +1964,8 @@ xfs_bmap_add_extent_delay_real(
- 
- 		if (xfs_bmap_needs_btree(bma->ip, whichfork)) {
- 			error = xfs_bmap_extents_to_btree(bma->tp, bma->ip,
--					bma->firstblock, bma->tp->t_dfops,
--					&bma->cur, 1, &tmp_rval, whichfork);
-+					bma->firstblock, &bma->cur, 1,
-+					&tmp_rval, whichfork);
- 			rval |= tmp_rval;
- 			if (error)
- 				goto done;
-@@ -2003,8 +2002,8 @@ xfs_bmap_add_extent_delay_real(
- 
- 		ASSERT(bma->cur == NULL);
- 		error = xfs_bmap_extents_to_btree(bma->tp, bma->ip,
--				bma->firstblock, bma->tp->t_dfops, &bma->cur,
--				da_old > 0, &tmp_logflags, whichfork);
-+				bma->firstblock, &bma->cur, da_old > 0,
-+				&tmp_logflags, whichfork);
- 		bma->logflags |= tmp_logflags;
- 		if (error)
- 			goto done;
-@@ -2044,7 +2043,6 @@ xfs_bmap_add_extent_unwritten_real(
- 	xfs_btree_cur_t		**curp,	/* if *curp is null, not a btree */
- 	xfs_bmbt_irec_t		*new,	/* new data to add to file extents */
- 	xfs_fsblock_t		*first,	/* pointer to firstblock variable */
--	struct xfs_defer_ops	*dfops,	/* list of extents to be freed */
- 	int			*logflagsp) /* inode logging flags */
- {
- 	xfs_btree_cur_t		*cur;	/* btree cursor */
-@@ -2058,6 +2056,7 @@ xfs_bmap_add_extent_unwritten_real(
- 	int			state = xfs_bmap_fork_to_state(whichfork);
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_bmbt_irec	old;
-+	struct xfs_defer_ops	*dfops = tp ? tp->t_dfops : NULL;
- 
- 	*logflagsp = 0;
- 
-@@ -2485,8 +2484,8 @@ xfs_bmap_add_extent_unwritten_real(
- 		int	tmp_logflags;	/* partial log flag return val */
- 
- 		ASSERT(cur == NULL);
--		error = xfs_bmap_extents_to_btree(tp, ip, first, dfops, &cur,
--				0, &tmp_logflags, whichfork);
-+		error = xfs_bmap_extents_to_btree(tp, ip, first, &cur, 0,
-+				&tmp_logflags, whichfork);
- 		*logflagsp |= tmp_logflags;
- 		if (error)
- 			goto done;
-@@ -2658,7 +2657,6 @@ xfs_bmap_add_extent_hole_real(
- 	struct xfs_btree_cur	**curp,
- 	struct xfs_bmbt_irec	*new,
- 	xfs_fsblock_t		*first,
--	struct xfs_defer_ops	*dfops,
- 	int			*logflagsp,
- 	int			flags)
- {
-@@ -2839,7 +2837,8 @@ xfs_bmap_add_extent_hole_real(
- 
- 	/* add reverse mapping unless caller opted out */
- 	if (!(flags & XFS_BMAPI_NORMAP)) {
--		error = xfs_rmap_map_extent(mp, dfops, ip, whichfork, new);
-+		error = xfs_rmap_map_extent(mp, tp->t_dfops, ip, whichfork,
-+				new);
- 		if (error)
- 			goto done;
- 	}
-@@ -2849,8 +2848,8 @@ xfs_bmap_add_extent_hole_real(
- 		int	tmp_logflags;	/* partial log flag return val */
- 
- 		ASSERT(cur == NULL);
--		error = xfs_bmap_extents_to_btree(tp, ip, first, dfops, curp,
--				0, &tmp_logflags, whichfork);
-+		error = xfs_bmap_extents_to_btree(tp, ip, first, curp, 0,
-+				&tmp_logflags, whichfork);
- 		*logflagsp |= tmp_logflags;
- 		cur = *curp;
- 		if (error)
-@@ -4119,8 +4118,7 @@ xfs_bmapi_allocate(
- 	else
- 		error = xfs_bmap_add_extent_hole_real(bma->tp, bma->ip,
- 				whichfork, &bma->icur, &bma->cur, &bma->got,
--				bma->firstblock, bma->tp->t_dfops,
--				&bma->logflags, bma->flags);
-+				bma->firstblock, &bma->logflags, bma->flags);
- 
- 	bma->logflags |= tmp_logflags;
- 	if (error)
-@@ -4190,7 +4188,7 @@ xfs_bmapi_convert_unwritten(
- 
- 	error = xfs_bmap_add_extent_unwritten_real(bma->tp, bma->ip, whichfork,
- 			&bma->icur, &bma->cur, mval, bma->firstblock,
--			bma->tp->t_dfops, &tmp_logflags);
-+			&tmp_logflags);
- 	/*
- 	 * Log the inode core unconditionally in the unwritten extent conversion
- 	 * path because the conversion might not have done so (e.g., if the
-@@ -4575,7 +4573,7 @@ xfs_bmapi_remap(
- 		got.br_state = XFS_EXT_NORM;
- 
- 	error = xfs_bmap_add_extent_hole_real(tp, ip, whichfork, &icur,
--			&cur, &got, &firstblock, tp->t_dfops, &logflags, flags);
-+			&cur, &got, &firstblock, &logflags, flags);
- 	if (error)
- 		goto error0;
- 
-@@ -4894,7 +4892,6 @@ xfs_bmap_del_extent_real(
- 	xfs_inode_t		*ip,	/* incore inode pointer */
- 	xfs_trans_t		*tp,	/* current transaction pointer */
- 	struct xfs_iext_cursor	*icur,
--	struct xfs_defer_ops	*dfops,	/* list of extents to be freed */
- 	xfs_btree_cur_t		*cur,	/* if null, not a btree */
- 	xfs_bmbt_irec_t		*del,	/* data to remove from extents */
- 	int			*logflagsp, /* inode logging flags */
-@@ -4917,6 +4914,7 @@ xfs_bmap_del_extent_real(
- 	uint			qfield;	/* quota field to update */
- 	int			state = xfs_bmap_fork_to_state(whichfork);
- 	struct xfs_bmbt_irec	old;
-+	struct xfs_defer_ops	*dfops = tp ? tp->t_dfops : NULL;
- 
- 	mp = ip->i_mount;
- 	XFS_STATS_INC(mp, xs_del_exlist);
-@@ -5343,7 +5341,7 @@ __xfs_bunmapi(
- 			del.br_state = XFS_EXT_UNWRITTEN;
- 			error = xfs_bmap_add_extent_unwritten_real(tp, ip,
- 					whichfork, &icur, &cur, &del,
--					firstblock, dfops, &logflags);
-+					firstblock, &logflags);
- 			if (error)
- 				goto error0;
- 			goto nodelete;
-@@ -5400,8 +5398,7 @@ __xfs_bunmapi(
- 				prev.br_state = XFS_EXT_UNWRITTEN;
- 				error = xfs_bmap_add_extent_unwritten_real(tp,
- 						ip, whichfork, &icur, &cur,
--						&prev, firstblock, dfops,
--						&logflags);
-+						&prev, firstblock, &logflags);
- 				if (error)
- 					goto error0;
- 				goto nodelete;
-@@ -5410,8 +5407,7 @@ __xfs_bunmapi(
- 				del.br_state = XFS_EXT_UNWRITTEN;
- 				error = xfs_bmap_add_extent_unwritten_real(tp,
- 						ip, whichfork, &icur, &cur,
--						&del, firstblock, dfops,
--						&logflags);
-+						&del, firstblock, &logflags);
- 				if (error)
- 					goto error0;
- 				goto nodelete;
-@@ -5423,8 +5419,8 @@ __xfs_bunmapi(
- 			error = xfs_bmap_del_extent_delay(ip, whichfork, &icur,
- 					&got, &del);
- 		} else {
--			error = xfs_bmap_del_extent_real(ip, tp, &icur, dfops,
--					cur, &del, &tmp_logflags, whichfork,
-+			error = xfs_bmap_del_extent_real(ip, tp, &icur, cur,
-+					&del, &tmp_logflags, whichfork,
- 					flags);
- 			logflags |= tmp_logflags;
- 		}
-@@ -5458,8 +5454,8 @@ __xfs_bunmapi(
- 	 */
- 	if (xfs_bmap_needs_btree(ip, whichfork)) {
- 		ASSERT(cur == NULL);
--		error = xfs_bmap_extents_to_btree(tp, ip, firstblock, dfops,
--			&cur, 0, &tmp_logflags, whichfork);
-+		error = xfs_bmap_extents_to_btree(tp, ip, firstblock, &cur, 0,
-+				&tmp_logflags, whichfork);
- 		logflags |= tmp_logflags;
- 		if (error)
- 			goto error0;
-@@ -6009,8 +6005,8 @@ xfs_bmap_split_extent_at(
- 		int tmp_logflags; /* partial log flag return val */
- 
- 		ASSERT(cur == NULL);
--		error = xfs_bmap_extents_to_btree(tp, ip, firstfsb, tp->t_dfops,
--				&cur, 0, &tmp_logflags, whichfork);
-+		error = xfs_bmap_extents_to_btree(tp, ip, firstfsb, &cur, 0,
-+				&tmp_logflags, whichfork);
- 		logflags |= tmp_logflags;
- 	}
- 
--- 
-2.17.1
+On 6/27/18 6:23 PM, Luis R. Rodriguez wrote:
+> On Fri, Jun 22, 2018 at 02:02:21PM +1000, Dave Chinner wrote:
+>> On Thu, Jun 21, 2018 at 09:19:54PM -0600, Chris Murphy wrote:
+>>> On Thu, Jun 21, 2018 at 4:19 PM, Dave Chinner <david@fromorbit.com> wrote:
+>>>
+>>>> The mkfs ratios are about as optimal as we can get for the
+>>>> information we have about the storage - growing by
+>>>> 10x (i.e.  increaseing the number of AGs by 10x) puts us at the
+>>>> outside edge of the acceptible filesystem performance and longevity
+>>>> charcteristics. Growing by 100x puts us way outside the window,
+>>>> and examples like this where we are taking about growing by 10000x
+>>>> is just way beyond anything the static AG layout architecture was
+>>>> ever intended to support....
+> 
+> I don't  have time to test this but I can probably do so after my vacation
+> (now). Would it be best to just codify this eventually instead of having
+> this as tribal knowledge?
 
+Honestly, if we wanted something like this I think it'd be based on terminal
+AG count, not growfs multiplier for a specific instance.
+
+Otherwise 100 consecutive 4x growfs's would yield the same problems without
+tripping any of these tests.
+
+-Eric
+
+> diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
+> index 8ec445afb74b..14f4b6dce08f 100644
+> --- a/growfs/xfs_growfs.c
+> +++ b/growfs/xfs_growfs.c
+> @@ -75,6 +75,9 @@ main(int argc, char **argv)
+>  	fs_path_t		*fs;	/* mount point information */
+>  	libxfs_init_t		xi;	/* libxfs structure */
+>  	char			rpath[PATH_MAX];
+> +	int			fflag;	/* -f flag */
+> +	long long		dsize_max_suggested; /* max suggested size */
+> +	long long		dsize_max_arch; /* max design over flow */
+>  
+>  	progname = basename(argv[0]);
+>  	setlocale(LC_ALL, "");
+> @@ -93,6 +96,8 @@ main(int argc, char **argv)
+>  		case 'd':
+>  			dflag = 1;
+>  			break;
+> +		case 'f':
+> +			fflag = 1;
+>  		case 'e':
+>  			esize = atol(optarg);
+>  			rflag = 1;
+> @@ -249,6 +254,24 @@ main(int argc, char **argv)
+>  	if (dflag | mflag | aflag) {
+>  		xfs_growfs_data_t	in;
+>  
+> +		/*
+> +		 * Growing the filesyste by 10x increases the AG size by 10 as
+> +		 * well, and this puts us outside edge of the acceptible
+> +		 * filesystem performance and longevity charcteristics.
+> +		 *
+> +		 * Growing by 100x puts us way outside the window...
+> +		 *
+> +		 * Growing by 10000x is just way beyond anything the static AG
+> +		 * layout architecture was ever intended to support, so unless
+> +		 * you use -f, we won't allow in between 10x-1000x.
+> +		 */
+> +		dsize_max_suggested = ddsize * 10 / (geo.blocksize / BBSIZE);
+> +		if (dsize_max_suggested < ddsize)
+> +			dsize_max_suggested = ULLONG_MAX;
+> +		dsize_max_arch = ddsize * 1000 / (geo.blocksize / BBSIZE);
+> +		if (dsize_max_arch < ddsize)
+> +			dsize_max_arch = ULLONG_MAX;
+> +
+>  		if (!mflag)
+>  			maxpct = geo.imaxpct;
+>  		if (!dflag && !aflag)	/* Only mflag, no data size change */
+> @@ -261,6 +284,26 @@ main(int argc, char **argv)
+>  				(long long)dsize,
+>  				(long long)(ddsize/(geo.blocksize/BBSIZE)));
+>  			error = 1;
+> +		} else if (!fflag &&
+> +			   dsize > dsize_max_arch) {
+> +			fprintf(stderr, _(
+> +				"data size %lld beyond what XFS recomends for "
+> +				"this fs, max should be %lld but if used you "
+> +				"will suffer. Max suggested is %lld or use "
+> +				"-f to override.\n"),
+> +				(long long)dsize,
+> +				dsize_max_arch,
+> +				dsize_max_suggested);
+> +			error = 1;
+> +		} else if (!fflag &&
+> +			   dsize > dsize_max_suggested) {
+> +			fprintf(stderr, _(
+> +				"data size %lld beyond what XFS recomends for "
+> +				"this fs, max suggested is %lld or use "
+> +				"-f to override.\n"),
+> +				(long long)dsize,
+> +				dsize_max_suggested);
+> +			error = 1;
+>  		}
+>  
+>  		if (!error && dsize < geo.datablocks) {
+> 
