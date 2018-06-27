@@ -1,22 +1,22 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:47240 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:56350 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933596AbeF1RaX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Jun 2018 13:30:23 -0400
-Date: Thu, 28 Jun 2018 10:30:08 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 12/10] xfs_repair: use libxfs extsize/cowextsize validation
+        with ESMTP id S1752358AbeF0CtH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Jun 2018 22:49:07 -0400
+Subject: [PATCH 10/10] xfs_repair: use libxfs extsize/cowextsize validation
  helpers
-Message-ID: <20180628173008.GJ5711@magnolia>
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 26 Jun 2018 19:48:53 -0700
+Message-ID: <153006773373.20121.9221765170427426584.stgit@magnolia>
+In-Reply-To: <153006766483.20121.9285982017465570544.stgit@magnolia>
 References: <153006766483.20121.9285982017465570544.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <153006766483.20121.9285982017465570544.stgit@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com
+To: sandeen@redhat.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
@@ -25,13 +25,15 @@ Now that we've ported the extent size hint verifiers to libxfs, call
 them from xfs_repair instead of open-coding the checks.  Tweak the
 repair message slightly to reflect the fact that we zero the field and
 clear the inode flag if the hint is garbage or is inconsistent with the
-inode flags.
+inode flags.  Also clear the extent size hints when we're zapping the
+inode core since we clear the associated flags.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
  libxfs/libxfs_api_defs.h |    2 +
- repair/dinode.c          |   75 ++++++++++++++++------------------------------
- 2 files changed, 28 insertions(+), 49 deletions(-)
+ repair/dinode.c          |   85 +++++++++++++++++++---------------------------
+ 2 files changed, 38 insertions(+), 49 deletions(-)
+
 
 diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
 index e5cf1554..fe8336ab 100644
@@ -47,10 +49,34 @@ index e5cf1554..fe8336ab 100644
  #define xfs_rmap_ag_owner		libxfs_rmap_ag_owner
  #define xfs_rmap_alloc			libxfs_rmap_alloc
 diff --git a/repair/dinode.c b/repair/dinode.c
-index 4118db7c..14c055bd 100644
+index f9b2bac0..14c055bd 100644
 --- a/repair/dinode.c
 +++ b/repair/dinode.c
-@@ -2853,24 +2853,21 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
+@@ -194,6 +194,11 @@ clear_dinode_core(struct xfs_mount *mp, xfs_dinode_t *dinoc, xfs_ino_t ino_num)
+ 		dinoc->di_anextents = 0;
+ 	}
+ 
++	if (be32_to_cpu(dinoc->di_extsize) != 0)  {
++		__dirty_no_modify_ret(dirty);
++		dinoc->di_extsize = 0;
++	}
++
+ 	if (dinoc->di_version > 1 &&
+ 			be32_to_cpu(dinoc->di_nlink) != 0)  {
+ 		__dirty_no_modify_ret(dirty);
+@@ -237,6 +242,11 @@ clear_dinode_core(struct xfs_mount *mp, xfs_dinode_t *dinoc, xfs_ino_t ino_num)
+ 		dinoc->di_changecount = 0;
+ 	}
+ 
++	if (be32_to_cpu(dinoc->di_cowextsize) != 0)  {
++		__dirty_no_modify_ret(dirty);
++		dinoc->di_cowextsize = 0;
++	}
++
+ 	return dirty;
+ }
+ 
+@@ -2843,24 +2853,21 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
  	 * only regular files with REALTIME or EXTSIZE flags set can have
  	 * extsize set, or directories with EXTSZINHERIT.
  	 */
@@ -90,7 +116,7 @@ index 4118db7c..14c055bd 100644
  	}
  
  	/*
-@@ -2878,41 +2875,21 @@ _("bad non-zero extent size %u for non-realtime/extsize inode %" PRIu64 ", "),
+@@ -2868,41 +2875,21 @@ _("bad non-zero extent size %u for non-realtime/extsize inode %" PRIu64 ", "),
  	 * set can have extsize set.
  	 */
  	if (dino->di_version >= 3 &&
@@ -143,3 +169,4 @@ index 4118db7c..14c055bd 100644
  	}
  
  	/* nsec fields cannot be larger than 1 billion */
+
