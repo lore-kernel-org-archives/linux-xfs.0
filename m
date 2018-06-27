@@ -1,85 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:60456 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S964840AbeF0SYW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 27 Jun 2018 14:24:22 -0400
-Date: Wed, 27 Jun 2018 11:24:21 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-Subject: [GIT PULL] xfs: 4.18 fixes, part 1
-Message-ID: <20180627182421.GE5711@magnolia>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:57944 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S965598AbeF0U3U (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Jun 2018 16:29:20 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 103B829DAD
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Jun 2018 20:29:20 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 200311] New: xfsprogs fails to install when user group has
+ space
+Date: Wed, 27 Jun 2018 20:29:17 +0000
+Message-ID: <bug-200311-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs@kernel.org
 
-Hi Linus,
+https://bugzilla.kernel.org/show_bug.cgi?id=200311
 
-Here are some patches for 4.18 to fix regressions, accounting problems,
-overflow problems, and to strengthen metadata validation to prevent
-corruption.
+            Bug ID: 200311
+           Summary: xfsprogs fails to install when user group has space
+           Product: File System
+           Version: 2.5
+    Kernel Version: 4.14.37
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: XFS
+          Assignee: filesystem_xfs@kernel-bugs.kernel.org
+          Reporter: luizluca@gmail.com
+        Regression: No
 
-This series has been run through a full xfstests run over the weekend
-and through a quick xfstests run against this morning's master, with no
-major failures reported.
+While compiling xfsprogs-4.11.0, install failed because my group has a space
+("domain users")
 
---D
+Installing libxfs-install
+/usr/bin/gmake --no-print-directory Q= -C libxfs install
+i486-openwrt-linux-musl-gcc -MM -Os -pipe -march=pentium4 -fno-caller-saves
+-fno-plt -fhonour-copts -Wno-error=unused-but-set-variable
+-Wno-error=unused-result
+-iremap/home/REDETRESC/luizluca/prog-local/openwrt/18.06/build_dir/target-i386_pentium4_musl/xfsprogs-4.11.0:xfsprogs-4.11.0
+-Wformat -Werror=format-security -fstack-protector -D_FORTIFY_SOURCE=1
+-Wl,-z,now -Wl,-z,relro
+-I/home/REDETRESC/luizluca/prog-local/openwrt/18.06/staging_dir/target-i386_pentium4_musl/usr/include
+-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE 
+-D_FILE_OFFSET_BITS=64 -I. -g -O2  -DVERSION=\"4.11.0\"
+-DLOCALEDIR=\"/usr/share/locale\" -DPACKAGE=\"xfsprogs\" -I../include
+-I../libxfs -Wall  cache.c crc32.c defer_item.c init.c kmem.c list_sort.c
+logitem.c radix-tree.c rdwr.c trans.c util.c xfs_ag_resv.c xfs_alloc.c
+xfs_alloc_btree.c xfs_attr.c xfs_attr_leaf.c xfs_attr_remote.c xfs_bit.c
+xfs_bmap.c xfs_bmap_btree.c xfs_btree.c xfs_da_btree.c xfs_da_format.c
+xfs_defer.c xfs_dir2.c xfs_dir2_block.c xfs_dir2_data.c xfs_dir2_leaf.c
+xfs_dir2_node.c xfs_dir2_sf.c xfs_dquot_buf.c xfs_ialloc.c xfs_inode_buf.c
+xfs_inode_fork.c xfs_ialloc_btree.c xfs_log_rlimit.c xfs_refcount.c
+xfs_refcount_btree.c xfs_rmap.c xfs_rmap_btree.c xfs_rtbitmap.c xfs_sb.c
+xfs_symlink_remote.c xfs_trans_resv.c linux.c |
+/home/REDETRESC/luizluca/prog-local/openwrt/18.06/staging_dir/host/bin/sed -e
+'s,^\([^:]*\)\.o,\1.lo,' > .ltdep
+rm -f .ltdep
+../install-sh -o luizluca -g domain users -m 755 -d /usr/include/xfs
+cp: cannot stat 'users': No such file or directory
+gmake[5]: *** [Makefile:145: install] Error 1
+make[4]: *** [Makefile:127: libxfs-install] Error 2
 
-The following changes since commit ce397d215ccd07b8ae3f71db689aedb85d56ab40:
+The fix is quite simple:
 
-  Linux 4.18-rc1 (2018-06-17 08:04:49 +0900)
+include/buildmacros:
+-INSTALL        = $(TOPDIR)/install-sh -o $(PKG_USER) -g $(PKG_GROUP)
++INSTALL        = $(TOPDIR)/install-sh -o $(PKG_USER) -g "$(PKG_GROUP)"
 
-are available in the Git repository at:
+install-sh:
+-while getopts "Dcm:d:S:o:g:T:" c $*
++while getopts "Dcm:d:S:o:g:T:" c "$@"
 
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.18-fixes-2
-
-for you to fetch changes up to d8cb5e42378918e00eda58792f3ab86dd1e7d214:
-
-  xfs: fix fdblocks accounting w/ RMAPBT per-AG reservation (2018-06-24 12:00:12 -0700)
-
-----------------------------------------------------------------
-Changes since last update:
-- More metadata validation strengthening to prevent crashes.
-- Fix extent offset overflow problem when insert_range on a 512b block fs
-- Fix some off-by-one errors in the realtime fsmap code
-- Fix some math errors in the default resblks calculation when free space
-  is low
-- Fix a problem where stale page contents are exposed via mmap read
-  after a zero_range at eof
-- Fix accounting problems with per-ag reservations causing statfs
-  reports to vary incorrectly
-
-----------------------------------------------------------------
-Christoph Hellwig (1):
-      xfs: simplify xfs_bmap_punch_delalloc_range
-
-Darrick J. Wong (8):
-      xfs: allow empty transactions while frozen
-      xfs: don't trip over negative free space in xfs_reserve_blocks
-      xfs: don't allow insert-range to shift extents past the maximum offset
-      xfs: recheck reflink state after grabbing ILOCK_SHARED for a write
-      xfs: fix uninitialized field in rtbitmap fsmap backend
-      xfs: fix off-by-one error in xfs_rtalloc_query_range
-      xfs: ensure post-EOF zeroing happens after zeroing part of a file
-      xfs: fix fdblocks accounting w/ RMAPBT per-AG reservation
-
-Dave Chinner (2):
-      xfs: More robust inode extent count validation
-      xfs: xfs_iflush_abort() can be called twice on cluster writeback failure
-
- fs/xfs/libxfs/xfs_ag_resv.c   |  31 ++++++++++--
- fs/xfs/libxfs/xfs_bmap.c      |  26 +++++++++++
- fs/xfs/libxfs/xfs_bmap.h      |   2 +
- fs/xfs/libxfs/xfs_format.h    |   5 ++
- fs/xfs/libxfs/xfs_inode_buf.c |  76 ++++++++++++++++++------------
- fs/xfs/libxfs/xfs_rtbitmap.c  |   4 +-
- fs/xfs/xfs_bmap_util.c        | 106 +++++++++++++++++++++---------------------
- fs/xfs/xfs_fsmap.c            |   4 +-
- fs/xfs/xfs_fsops.c            |   2 +-
- fs/xfs/xfs_inode.c            |  57 +++++++++--------------
- fs/xfs/xfs_iomap.c            |  15 +++++-
- fs/xfs/xfs_trans.c            |   7 ++-
- 12 files changed, 205 insertions(+), 130 deletions(-)
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
