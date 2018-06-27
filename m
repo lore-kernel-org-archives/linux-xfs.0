@@ -1,97 +1,120 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:26857 "EHLO mga09.intel.com"
+Received: from mx2.suse.de ([195.135.220.15]:38727 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752637AbeF1TE0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 28 Jun 2018 15:04:26 -0400
-Date: Thu, 28 Jun 2018 13:04:24 -0600
-From: Ross Zwisler <ross.zwisler@linux.intel.com>
-Subject: Re: [PATCH v3 1/3] pmem: only set QUEUE_FLAG_DAX for fsdax mode
-Message-ID: <20180628190424.GC17758@linux.intel.com>
-References: <CAPcyv4h6HO6fs6k7QMD77jkz2djCeWCtWomCdNb0-1Q4VKanqw@mail.gmail.com>
- <20180626191346.GA7233@redhat.com>
- <1530046327.14039.273.camel@hpe.com>
- <CAPcyv4hP_Y3xdyCa-UkYCMJ5OtnjnkwPZDS2Z2Ge8+5ymBONwQ@mail.gmail.com>
- <1530048093.14039.286.camel@hpe.com>
- <CAPcyv4gXAC7imJs5qfsDNLeN545Rqyd2b1M9s5kr4f9y48LXgQ@mail.gmail.com>
- <1530048545.14039.288.camel@hpe.com>
- <CAPcyv4ifHX95fCM9Xj87CugwNWzgq=y-4LxPQ5L6RdjX0jdctQ@mail.gmail.com>
- <20180626220430.GA4269@linux.intel.com>
- <1530207635.14039.308.camel@hpe.com>
+        id S1752348AbeF0XXf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 27 Jun 2018 19:23:35 -0400
+Date: Thu, 28 Jun 2018 01:23:33 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: Mounting xfs filesystem takes long time
+Message-ID: <20180627232333.GB21242@wotan.suse.de>
+References: <2a9a023d-fa37-59dc-caf2-c7c4167d3c75@levigo.de>
+ <20180619161819.GD21698@magnolia>
+ <e9a7c539-1dea-1050-19bc-b0eb7e788b33@sandeen.net>
+ <20180621191535.GI7508@wotan.suse.de>
+ <89d39e37-3944-f58d-018c-d36bdc9f870c@sandeen.net>
+ <CAJCQCtSHT7fcHHxBaTESq5cdQQnYH95maNHby4MULCkar6mfeg@mail.gmail.com>
+ <20180621221911.GT19934@dastard>
+ <CAJCQCtSzsYSyCD2eEvdgpKJ8ZFShsJrV2FxKZ4bv=-S6gpx2fw@mail.gmail.com>
+ <20180622040221.GY19934@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1530207635.14039.308.camel@hpe.com>
+In-Reply-To: <20180622040221.GY19934@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Kani, Toshi" <toshi.kani@hpe.com>
-Cc: "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "snitzer@redhat.com" <snitzer@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Chris Murphy <lists@colorremedies.com>, Eric Sandeen <sandeen@sandeen.net>, "Luis R. Rodriguez" <mcgrof@kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, "swadmin - levigo.de" <swadmin@levigo.de>, xfs list <linux-xfs@vger.kernel.org>
 
-On Thu, Jun 28, 2018 at 05:42:34PM +0000, Kani, Toshi wrote:
-> On Tue, 2018-06-26 at 16:04 -0600, Ross Zwisler wrote:
-> > On Tue, Jun 26, 2018 at 02:51:52PM -0700, Dan Williams wrote:
-> > > On Tue, Jun 26, 2018 at 2:31 PM, Kani, Toshi <toshi.kani@hpe.com> wrote:
-> > > > On Tue, 2018-06-26 at 14:28 -0700, Dan Williams wrote:
-> > > > > On Tue, Jun 26, 2018 at 2:23 PM, Kani, Toshi <toshi.kani@hpe.com> wrote:
-> > > > > > On Tue, 2018-06-26 at 14:02 -0700, Dan Williams wrote:
-> > > > > > > On Tue, Jun 26, 2018 at 1:54 PM, Kani, Toshi <toshi.kani@hpe.com> wrote:
-> > > > > 
-> > > > > [..]
-> > > > > > > > When this dm change was made, the pmem driver supported DAX for both raw
-> > > > > > > > and memory modes (note: sector mode does not use the pmem driver).  I
-> > > > > > > > think the issue was introduced when we dropped DAX support from raw
-> > > > > > > > mode.
-> > > > > > > 
-> > > > > > > Still DAX with raw mode never really worked any way. It was also
-> > > > > > > something that was broken from day one. So what happens to someone who
-> > > > > > > happened to avoid all the problems with page-less DAX and enabled
-> > > > > > > device-mapper on top? That failure mode detail needs to be added to
-> > > > > > > this changelog if we want to propose this for -stable.
-> > > > > > 
-> > > > > > My point is that the behavior should be consistent between pmem and
-> > > > > > device-mapper.  When -o dax succeeds on a pmem, then it should succeed
-> > > > > > on a device-mapper on top of that pmem.
-> > > > > > 
-> > > > > > Has the drop of dax support from raw mode made to -stable back to the
-> > > > > > baseline accepted 545ed20e6df6?  It will introduce inconsistency,
-> > > > > > otherwise.
-> > > > > 
-> > > > > That commit, 569d0365f571 "dax: require 'struct page' by default for
-> > > > > filesystem dax", has not been tagged for -stable.
-> > > > 
-> > > > Then, Fixes tag should be set to 569d0365f571 to keep the behavior
-> > > > consistent.
-> > > 
-> > > Sure, and the failure mode is...? I'm thinking the commit log should say:
-> > > 
-> > > "Starting with commit 569d0365f571 "dax: require 'struct page' by
-> > > default for filesystem dax", dax is no longer supported for page-less
-> > > configurations. However, device-mapper sees the QUEUE_FLAG_DAX still
-> > > being set and falsely assumes that DAX is enabled, this leads to
-> > > <insert user visible failure mode details here>"
+On Fri, Jun 22, 2018 at 02:02:21PM +1000, Dave Chinner wrote:
+> On Thu, Jun 21, 2018 at 09:19:54PM -0600, Chris Murphy wrote:
+> > On Thu, Jun 21, 2018 at 4:19 PM, Dave Chinner <david@fromorbit.com> wrote:
 > > 
-> > Dan is correct that there is no user visible change for this.  It is the right
-> > thing to do for consistency and sanity, but it doesn't actually have user
-> > visible behavior that needs to be backported to stable.
-> > 
-> > Toshi is correct that this change is only for raw mode namespaces, not btt
-> > namespaces.
-> > 
-> > I'll adjust the changelog and remove the stable flag for v5, and I'll add a
-> > Fixes: tag for patch 2.
-> 
-> Hi Ross,
-> 
-> Your patches look good.  But I am still not clear about the Fixes &
-> stable handling.  Talking about user visible behavior, I do not think we
-> had any issue until dax support was dropped from raw mode.  Until then,
-> the pmem driver supported dax for all modes, and the check for
-> direct_access worked.    
+> > > The mkfs ratios are about as optimal as we can get for the
+> > > information we have about the storage - growing by
+> > > 10x (i.e.  increaseing the number of AGs by 10x) puts us at the
+> > > outside edge of the acceptible filesystem performance and longevity
+> > > charcteristics. Growing by 100x puts us way outside the window,
+> > > and examples like this where we are taking about growing by 10000x
+> > > is just way beyond anything the static AG layout architecture was
+> > > ever intended to support....
 
-I agree that the fsdax + raw mode failure mode I mentioned in my cover letter
-only started when we restricted filesystem DAX to having struct page, but I
-think that the other failure mode, fsdax + some random block driver (I used
-brd) was present in DM from the beginning.
+I don't  have time to test this but I can probably do so after my vacation
+(now). Would it be best to just codify this eventually instead of having
+this as tribal knowledge?
 
-In any case, I think both are fixed with the patches, and I think it's fine
-that all 3 get thrown at stable.  Thanks, Mike, for the help.
+diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
+index 8ec445afb74b..14f4b6dce08f 100644
+--- a/growfs/xfs_growfs.c
++++ b/growfs/xfs_growfs.c
+@@ -75,6 +75,9 @@ main(int argc, char **argv)
+ 	fs_path_t		*fs;	/* mount point information */
+ 	libxfs_init_t		xi;	/* libxfs structure */
+ 	char			rpath[PATH_MAX];
++	int			fflag;	/* -f flag */
++	long long		dsize_max_suggested; /* max suggested size */
++	long long		dsize_max_arch; /* max design over flow */
+ 
+ 	progname = basename(argv[0]);
+ 	setlocale(LC_ALL, "");
+@@ -93,6 +96,8 @@ main(int argc, char **argv)
+ 		case 'd':
+ 			dflag = 1;
+ 			break;
++		case 'f':
++			fflag = 1;
+ 		case 'e':
+ 			esize = atol(optarg);
+ 			rflag = 1;
+@@ -249,6 +254,24 @@ main(int argc, char **argv)
+ 	if (dflag | mflag | aflag) {
+ 		xfs_growfs_data_t	in;
+ 
++		/*
++		 * Growing the filesyste by 10x increases the AG size by 10 as
++		 * well, and this puts us outside edge of the acceptible
++		 * filesystem performance and longevity charcteristics.
++		 *
++		 * Growing by 100x puts us way outside the window...
++		 *
++		 * Growing by 10000x is just way beyond anything the static AG
++		 * layout architecture was ever intended to support, so unless
++		 * you use -f, we won't allow in between 10x-1000x.
++		 */
++		dsize_max_suggested = ddsize * 10 / (geo.blocksize / BBSIZE);
++		if (dsize_max_suggested < ddsize)
++			dsize_max_suggested = ULLONG_MAX;
++		dsize_max_arch = ddsize * 1000 / (geo.blocksize / BBSIZE);
++		if (dsize_max_arch < ddsize)
++			dsize_max_arch = ULLONG_MAX;
++
+ 		if (!mflag)
+ 			maxpct = geo.imaxpct;
+ 		if (!dflag && !aflag)	/* Only mflag, no data size change */
+@@ -261,6 +284,26 @@ main(int argc, char **argv)
+ 				(long long)dsize,
+ 				(long long)(ddsize/(geo.blocksize/BBSIZE)));
+ 			error = 1;
++		} else if (!fflag &&
++			   dsize > dsize_max_arch) {
++			fprintf(stderr, _(
++				"data size %lld beyond what XFS recomends for "
++				"this fs, max should be %lld but if used you "
++				"will suffer. Max suggested is %lld or use "
++				"-f to override.\n"),
++				(long long)dsize,
++				dsize_max_arch,
++				dsize_max_suggested);
++			error = 1;
++		} else if (!fflag &&
++			   dsize > dsize_max_suggested) {
++			fprintf(stderr, _(
++				"data size %lld beyond what XFS recomends for "
++				"this fs, max suggested is %lld or use "
++				"-f to override.\n"),
++				(long long)dsize,
++				dsize_max_suggested);
++			error = 1;
+ 		}
+ 
+ 		if (!error && dsize < geo.datablocks) {
