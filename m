@@ -1,102 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from g4t3426.houston.hpe.com ([15.241.140.75]:30785 "EHLO
-        g4t3426.houston.hpe.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965829AbeF1SBD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Jun 2018 14:01:03 -0400
-From: "Kani, Toshi" <toshi.kani@hpe.com>
-Subject: Re: [PATCH v3 1/3] pmem: only set QUEUE_FLAG_DAX for fsdax mode
-Date: Thu, 28 Jun 2018 18:01:00 +0000
-Message-ID: <1530208741.14039.314.camel@hpe.com>
-References: <CAPcyv4h6HO6fs6k7QMD77jkz2djCeWCtWomCdNb0-1Q4VKanqw@mail.gmail.com>
-         <20180626191346.GA7233@redhat.com> <1530046327.14039.273.camel@hpe.com>
-         <CAPcyv4hP_Y3xdyCa-UkYCMJ5OtnjnkwPZDS2Z2Ge8+5ymBONwQ@mail.gmail.com>
-         <1530048093.14039.286.camel@hpe.com>
-         <CAPcyv4gXAC7imJs5qfsDNLeN545Rqyd2b1M9s5kr4f9y48LXgQ@mail.gmail.com>
-         <1530048545.14039.288.camel@hpe.com>
-         <CAPcyv4ifHX95fCM9Xj87CugwNWzgq=y-4LxPQ5L6RdjX0jdctQ@mail.gmail.com>
-         <20180626220430.GA4269@linux.intel.com>
-         <1530207635.14039.308.camel@hpe.com> <20180628174815.GA18768@redhat.com>
-In-Reply-To: <20180628174815.GA18768@redhat.com>
-Content-Language: en-US
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <44A85094F25DD14AA2EB648AA51D10FF@NAMPRD84.PROD.OUTLOOK.COM>
-Content-Transfer-Encoding: base64
+Received: from mail.kernel.org ([198.145.29.99]:60456 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S964840AbeF0SYW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 27 Jun 2018 14:24:22 -0400
+Date: Wed, 27 Jun 2018 11:24:21 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+Subject: [GIT PULL] xfs: 4.18 fixes, part 1
+Message-ID: <20180627182421.GE5711@magnolia>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "snitzer@redhat.com" <snitzer@redhat.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
 
-T24gVGh1LCAyMDE4LTA2LTI4IGF0IDEzOjQ4IC0wNDAwLCBNaWtlIFNuaXR6ZXIgd3JvdGU6DQo+
-IE9uIFRodSwgSnVuIDI4IDIwMTggYXQgIDE6NDJwbSAtMDQwMCwNCj4gS2FuaSwgVG9zaGkgPHRv
-c2hpLmthbmlAaHBlLmNvbT4gd3JvdGU6DQo+IA0KPiA+IE9uIFR1ZSwgMjAxOC0wNi0yNiBhdCAx
-NjowNCAtMDYwMCwgUm9zcyBad2lzbGVyIHdyb3RlOg0KPiA+ID4gT24gVHVlLCBKdW4gMjYsIDIw
-MTggYXQgMDI6NTE6NTJQTSAtMDcwMCwgRGFuIFdpbGxpYW1zIHdyb3RlOg0KPiA+ID4gPiBPbiBU
-dWUsIEp1biAyNiwgMjAxOCBhdCAyOjMxIFBNLCBLYW5pLCBUb3NoaSA8dG9zaGkua2FuaUBocGUu
-Y29tPiB3cm90ZToNCj4gPiA+ID4gPiBPbiBUdWUsIDIwMTgtMDYtMjYgYXQgMTQ6MjggLTA3MDAs
-IERhbiBXaWxsaWFtcyB3cm90ZToNCj4gPiA+ID4gPiA+IE9uIFR1ZSwgSnVuIDI2LCAyMDE4IGF0
-IDI6MjMgUE0sIEthbmksIFRvc2hpIDx0b3NoaS5rYW5pQGhwZS5jb20+IHdyb3RlOg0KPiA+ID4g
-PiA+ID4gPiBPbiBUdWUsIDIwMTgtMDYtMjYgYXQgMTQ6MDIgLTA3MDAsIERhbiBXaWxsaWFtcyB3
-cm90ZToNCj4gPiA+ID4gPiA+ID4gPiBPbiBUdWUsIEp1biAyNiwgMjAxOCBhdCAxOjU0IFBNLCBL
-YW5pLCBUb3NoaSA8dG9zaGkua2FuaUBocGUuY29tPiB3cm90ZToNCj4gPiA+ID4gPiA+IA0KPiA+
-ID4gPiA+ID4gWy4uXQ0KPiA+ID4gPiA+ID4gPiA+ID4gV2hlbiB0aGlzIGRtIGNoYW5nZSB3YXMg
-bWFkZSwgdGhlIHBtZW0gZHJpdmVyIHN1cHBvcnRlZCBEQVggZm9yIGJvdGggcmF3DQo+ID4gPiA+
-ID4gPiA+ID4gPiBhbmQgbWVtb3J5IG1vZGVzIChub3RlOiBzZWN0b3IgbW9kZSBkb2VzIG5vdCB1
-c2UgdGhlIHBtZW0gZHJpdmVyKS4gIEkNCj4gPiA+ID4gPiA+ID4gPiA+IHRoaW5rIHRoZSBpc3N1
-ZSB3YXMgaW50cm9kdWNlZCB3aGVuIHdlIGRyb3BwZWQgREFYIHN1cHBvcnQgZnJvbSByYXcNCj4g
-PiA+ID4gPiA+ID4gPiA+IG1vZGUuDQo+ID4gPiA+ID4gPiA+ID4gDQo+ID4gPiA+ID4gPiA+ID4g
-U3RpbGwgREFYIHdpdGggcmF3IG1vZGUgbmV2ZXIgcmVhbGx5IHdvcmtlZCBhbnkgd2F5LiBJdCB3
-YXMgYWxzbw0KPiA+ID4gPiA+ID4gPiA+IHNvbWV0aGluZyB0aGF0IHdhcyBicm9rZW4gZnJvbSBk
-YXkgb25lLiBTbyB3aGF0IGhhcHBlbnMgdG8gc29tZW9uZSB3aG8NCj4gPiA+ID4gPiA+ID4gPiBo
-YXBwZW5lZCB0byBhdm9pZCBhbGwgdGhlIHByb2JsZW1zIHdpdGggcGFnZS1sZXNzIERBWCBhbmQg
-ZW5hYmxlZA0KPiA+ID4gPiA+ID4gPiA+IGRldmljZS1tYXBwZXIgb24gdG9wPyBUaGF0IGZhaWx1
-cmUgbW9kZSBkZXRhaWwgbmVlZHMgdG8gYmUgYWRkZWQgdG8NCj4gPiA+ID4gPiA+ID4gPiB0aGlz
-IGNoYW5nZWxvZyBpZiB3ZSB3YW50IHRvIHByb3Bvc2UgdGhpcyBmb3IgLXN0YWJsZS4NCj4gPiA+
-ID4gPiA+ID4gDQo+ID4gPiA+ID4gPiA+IE15IHBvaW50IGlzIHRoYXQgdGhlIGJlaGF2aW9yIHNo
-b3VsZCBiZSBjb25zaXN0ZW50IGJldHdlZW4gcG1lbSBhbmQNCj4gPiA+ID4gPiA+ID4gZGV2aWNl
-LW1hcHBlci4gIFdoZW4gLW8gZGF4IHN1Y2NlZWRzIG9uIGEgcG1lbSwgdGhlbiBpdCBzaG91bGQg
-c3VjY2VlZA0KPiA+ID4gPiA+ID4gPiBvbiBhIGRldmljZS1tYXBwZXIgb24gdG9wIG9mIHRoYXQg
-cG1lbS4NCj4gPiA+ID4gPiA+ID4gDQo+ID4gPiA+ID4gPiA+IEhhcyB0aGUgZHJvcCBvZiBkYXgg
-c3VwcG9ydCBmcm9tIHJhdyBtb2RlIG1hZGUgdG8gLXN0YWJsZSBiYWNrIHRvIHRoZQ0KPiA+ID4g
-PiA+ID4gPiBiYXNlbGluZSBhY2NlcHRlZCA1NDVlZDIwZTZkZjY/ICBJdCB3aWxsIGludHJvZHVj
-ZSBpbmNvbnNpc3RlbmN5LA0KPiA+ID4gPiA+ID4gPiBvdGhlcndpc2UuDQo+ID4gPiA+ID4gPiAN
-Cj4gPiA+ID4gPiA+IFRoYXQgY29tbWl0LCA1NjlkMDM2NWY1NzEgImRheDogcmVxdWlyZSAnc3Ry
-dWN0IHBhZ2UnIGJ5IGRlZmF1bHQgZm9yDQo+ID4gPiA+ID4gPiBmaWxlc3lzdGVtIGRheCIsIGhh
-cyBub3QgYmVlbiB0YWdnZWQgZm9yIC1zdGFibGUuDQo+ID4gPiA+ID4gDQo+ID4gPiA+ID4gVGhl
-biwgRml4ZXMgdGFnIHNob3VsZCBiZSBzZXQgdG8gNTY5ZDAzNjVmNTcxIHRvIGtlZXAgdGhlIGJl
-aGF2aW9yDQo+ID4gPiA+ID4gY29uc2lzdGVudC4NCj4gPiA+ID4gDQo+ID4gPiA+IFN1cmUsIGFu
-ZCB0aGUgZmFpbHVyZSBtb2RlIGlzLi4uPyBJJ20gdGhpbmtpbmcgdGhlIGNvbW1pdCBsb2cgc2hv
-dWxkIHNheToNCj4gPiA+ID4gDQo+ID4gPiA+ICJTdGFydGluZyB3aXRoIGNvbW1pdCA1NjlkMDM2
-NWY1NzEgImRheDogcmVxdWlyZSAnc3RydWN0IHBhZ2UnIGJ5DQo+ID4gPiA+IGRlZmF1bHQgZm9y
-IGZpbGVzeXN0ZW0gZGF4IiwgZGF4IGlzIG5vIGxvbmdlciBzdXBwb3J0ZWQgZm9yIHBhZ2UtbGVz
-cw0KPiA+ID4gPiBjb25maWd1cmF0aW9ucy4gSG93ZXZlciwgZGV2aWNlLW1hcHBlciBzZWVzIHRo
-ZSBRVUVVRV9GTEFHX0RBWCBzdGlsbA0KPiA+ID4gPiBiZWluZyBzZXQgYW5kIGZhbHNlbHkgYXNz
-dW1lcyB0aGF0IERBWCBpcyBlbmFibGVkLCB0aGlzIGxlYWRzIHRvDQo+ID4gPiA+IDxpbnNlcnQg
-dXNlciB2aXNpYmxlIGZhaWx1cmUgbW9kZSBkZXRhaWxzIGhlcmU+Ig0KPiA+ID4gDQo+ID4gPiBE
-YW4gaXMgY29ycmVjdCB0aGF0IHRoZXJlIGlzIG5vIHVzZXIgdmlzaWJsZSBjaGFuZ2UgZm9yIHRo
-aXMuICBJdCBpcyB0aGUgcmlnaHQNCj4gPiA+IHRoaW5nIHRvIGRvIGZvciBjb25zaXN0ZW5jeSBh
-bmQgc2FuaXR5LCBidXQgaXQgZG9lc24ndCBhY3R1YWxseSBoYXZlIHVzZXINCj4gPiA+IHZpc2li
-bGUgYmVoYXZpb3IgdGhhdCBuZWVkcyB0byBiZSBiYWNrcG9ydGVkIHRvIHN0YWJsZS4NCj4gPiA+
-IA0KPiA+ID4gVG9zaGkgaXMgY29ycmVjdCB0aGF0IHRoaXMgY2hhbmdlIGlzIG9ubHkgZm9yIHJh
-dyBtb2RlIG5hbWVzcGFjZXMsIG5vdCBidHQNCj4gPiA+IG5hbWVzcGFjZXMuDQo+ID4gPiANCj4g
-PiA+IEknbGwgYWRqdXN0IHRoZSBjaGFuZ2Vsb2cgYW5kIHJlbW92ZSB0aGUgc3RhYmxlIGZsYWcg
-Zm9yIHY1LCBhbmQgSSdsbCBhZGQgYQ0KPiA+ID4gRml4ZXM6IHRhZyBmb3IgcGF0Y2ggMi4NCj4g
-PiANCj4gPiBIaSBSb3NzLA0KPiA+IA0KPiA+IFlvdXIgcGF0Y2hlcyBsb29rIGdvb2QuICBCdXQg
-SSBhbSBzdGlsbCBub3QgY2xlYXIgYWJvdXQgdGhlIEZpeGVzICYNCj4gPiBzdGFibGUgaGFuZGxp
-bmcuICBUYWxraW5nIGFib3V0IHVzZXIgdmlzaWJsZSBiZWhhdmlvciwgSSBkbyBub3QgdGhpbmsg
-d2UNCj4gPiBoYWQgYW55IGlzc3VlIHVudGlsIGRheCBzdXBwb3J0IHdhcyBkcm9wcGVkIGZyb20g
-cmF3IG1vZGUuICBVbnRpbCB0aGVuLA0KPiA+IHRoZSBwbWVtIGRyaXZlciBzdXBwb3J0ZWQgZGF4
-IGZvciBhbGwgbW9kZXMsIGFuZCB0aGUgY2hlY2sgZm9yDQo+ID4gZGlyZWN0X2FjY2VzcyB3b3Jr
-ZWQuICAgIA0KPiANCj4gSSd2ZSBzdGFnZWQgdGhlIGNoYW5nZXMgdG8gc2VuZCB0byBMaW51cyBz
-aG9ydGx5Lg0KPiANCj4gVGhlIGZpcnN0IHBhdGNoIGhhczoNCj4gDQo+IEZpeGVzOiA1NjlkMDM2
-NWY1NzEgKCJkYXg6IHJlcXVpcmUgJ3N0cnVjdCBwYWdlJyBieSBkZWZhdWx0IGZvciBmaWxlc3lz
-dGVtIGRheCIpDQo+IENjOiBzdGFibGVAdmdlci5rZXJuZWwub3JnDQo+IA0KPiBBcyB0aGF0IGlz
-IHRoZSByaWdodCB0aGluZyB0byBkbyBnaXZlbiB0aGUgb3RoZXIgMiBwYXRjaGVzIGFyZSBtYXJr
-ZWQNCj4gZm9yIHN0YWJsZS4gIFdlIGRvbid0IHdhbnQgdG8gaGF2ZSBhIHN0YWJsZSBrZXJuZWwg
-d2l0aCB0aGUgbGFzdCAyDQo+IHBhdGNoZXMgYnV0IG5vdCB0aGUgZmlyc3QuDQoNCkFncmVlZC4N
-Cg0KVGVjaG5pY2FsbHksIGFsbCAzIHBhdGNoZXMgbWF5IGhhdmUgIkZpeGVzOiA1NjlkMDM2NWY1
-NzEgZGF4Li4iLCBidXQgSQ0KdGhpbmsgaGF2aW5nICJGaXhlcyA1NDVlZDIwZTZkZjYgZG0uLiIg
-Zm9yIHBhdGNoIDIgJiAzIHByb3ZpZGUgYQ0KcHJvdGVjdGlvbiBpbiBjYXNlIDU2OWQwMzY1ZjU3
-MSBnZXRzIGJhY2twb3J0ZWQgaW4gZnV0dXJlLg0KDQpGb3IgdGhlIHNlcmllczoNClJldmlld2Vk
-LWJ5OiBUb3NoaSBLYW5pIDx0b3NoaS5rYW5pQGhwZS5jb20+DQoNClRoYW5rcywNCi1Ub3NoaQ0K
+Hi Linus,
+
+Here are some patches for 4.18 to fix regressions, accounting problems,
+overflow problems, and to strengthen metadata validation to prevent
+corruption.
+
+This series has been run through a full xfstests run over the weekend
+and through a quick xfstests run against this morning's master, with no
+major failures reported.
+
+--D
+
+The following changes since commit ce397d215ccd07b8ae3f71db689aedb85d56ab40:
+
+  Linux 4.18-rc1 (2018-06-17 08:04:49 +0900)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.18-fixes-2
+
+for you to fetch changes up to d8cb5e42378918e00eda58792f3ab86dd1e7d214:
+
+  xfs: fix fdblocks accounting w/ RMAPBT per-AG reservation (2018-06-24 12:00:12 -0700)
+
+----------------------------------------------------------------
+Changes since last update:
+- More metadata validation strengthening to prevent crashes.
+- Fix extent offset overflow problem when insert_range on a 512b block fs
+- Fix some off-by-one errors in the realtime fsmap code
+- Fix some math errors in the default resblks calculation when free space
+  is low
+- Fix a problem where stale page contents are exposed via mmap read
+  after a zero_range at eof
+- Fix accounting problems with per-ag reservations causing statfs
+  reports to vary incorrectly
+
+----------------------------------------------------------------
+Christoph Hellwig (1):
+      xfs: simplify xfs_bmap_punch_delalloc_range
+
+Darrick J. Wong (8):
+      xfs: allow empty transactions while frozen
+      xfs: don't trip over negative free space in xfs_reserve_blocks
+      xfs: don't allow insert-range to shift extents past the maximum offset
+      xfs: recheck reflink state after grabbing ILOCK_SHARED for a write
+      xfs: fix uninitialized field in rtbitmap fsmap backend
+      xfs: fix off-by-one error in xfs_rtalloc_query_range
+      xfs: ensure post-EOF zeroing happens after zeroing part of a file
+      xfs: fix fdblocks accounting w/ RMAPBT per-AG reservation
+
+Dave Chinner (2):
+      xfs: More robust inode extent count validation
+      xfs: xfs_iflush_abort() can be called twice on cluster writeback failure
+
+ fs/xfs/libxfs/xfs_ag_resv.c   |  31 ++++++++++--
+ fs/xfs/libxfs/xfs_bmap.c      |  26 +++++++++++
+ fs/xfs/libxfs/xfs_bmap.h      |   2 +
+ fs/xfs/libxfs/xfs_format.h    |   5 ++
+ fs/xfs/libxfs/xfs_inode_buf.c |  76 ++++++++++++++++++------------
+ fs/xfs/libxfs/xfs_rtbitmap.c  |   4 +-
+ fs/xfs/xfs_bmap_util.c        | 106 +++++++++++++++++++++---------------------
+ fs/xfs/xfs_fsmap.c            |   4 +-
+ fs/xfs/xfs_fsops.c            |   2 +-
+ fs/xfs/xfs_inode.c            |  57 +++++++++--------------
+ fs/xfs/xfs_iomap.c            |  15 +++++-
+ fs/xfs/xfs_trans.c            |   7 ++-
+ 12 files changed, 205 insertions(+), 130 deletions(-)
