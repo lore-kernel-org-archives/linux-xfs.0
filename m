@@ -1,268 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:60108 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S935549AbeF1Qgk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 28 Jun 2018 12:36:40 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 06C3DA5031
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 16:36:38 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id E65FB111CA17
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 16:36:37 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 11/24] xfs: use ->t_dfops for all xfs_bmapi_write() callers
-Date: Thu, 28 Jun 2018 12:36:23 -0400
-Message-Id: <20180628163636.52564-12-bfoster@redhat.com>
-In-Reply-To: <20180628163636.52564-1-bfoster@redhat.com>
-References: <20180628163636.52564-1-bfoster@redhat.com>
+Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:34522 "EHLO
+        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751706AbeF0CW2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Jun 2018 22:22:28 -0400
+Date: Wed, 27 Jun 2018 12:22:09 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 05/21] xfs: repair the AGI
+Message-ID: <20180627022209.GE19934@dastard>
+References: <152986820984.3155.16417868536016544528.stgit@magnolia>
+ <152986824119.3155.17444896035154098752.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <152986824119.3155.17444896035154098752.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-Attach ->t_dfops for all remaining callers of xfs_bmapi_write().
-This prepares the latter to no longer require a separate dfops
-parameter.
+On Sun, Jun 24, 2018 at 12:24:01PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Rebuild the AGI header items with some help from the rmapbt.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/scrub/agheader_repair.c |  211 ++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/scrub/repair.h          |    2 
+>  fs/xfs/scrub/scrub.c           |    2 
+>  3 files changed, 214 insertions(+), 1 deletion(-)
+> 
+> 
+> diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
+> index 90e5e6cbc911..61e0134f6f9f 100644
+> --- a/fs/xfs/scrub/agheader_repair.c
+> +++ b/fs/xfs/scrub/agheader_repair.c
+> @@ -698,3 +698,214 @@ xfs_repair_agfl(
+>  	xfs_repair_cancel_btree_extents(sc, &agfl_extents);
+>  	return error;
+>  }
+> +
+> +/* AGI */
+> +
+> +enum {
+> +	REPAIR_AGI_INOBT = 0,
+> +	REPAIR_AGI_FINOBT,
+> +	REPAIR_AGI_END,
+> +	REPAIR_AGI_MAX
+> +};
 
-Note that xfs_symlink() already uses ->t_dfops. Fix up the local
-references for consistency.
+XFS_BTNUM_INOBT?
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_bmap_util.c |  5 +++--
- fs/xfs/xfs_iomap.c     | 21 ++++++++++++---------
- fs/xfs/xfs_reflink.c   |  7 ++++---
- fs/xfs/xfs_rtalloc.c   |  7 ++++---
- fs/xfs/xfs_symlink.c   |  6 +++---
- 5 files changed, 26 insertions(+), 20 deletions(-)
+Basically same infrastructure questions as last patch.
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 83b1e8c6c18f..e6036f56241c 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -972,16 +972,17 @@ xfs_alloc_file_space(
- 		xfs_trans_ijoin(tp, ip, 0);
- 
- 		xfs_defer_init(&dfops, &firstfsb);
-+		tp->t_dfops = &dfops;
- 		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
- 					allocatesize_fsb, alloc_type, &firstfsb,
--					resblks, imapp, &nimaps, &dfops);
-+					resblks, imapp, &nimaps, tp->t_dfops);
- 		if (error)
- 			goto error0;
- 
- 		/*
- 		 * Complete the transaction
- 		 */
--		error = xfs_defer_finish(&tp, &dfops);
-+		error = xfs_defer_finish(&tp, tp->t_dfops);
- 		if (error)
- 			goto error0;
- 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 55876dd02f0c..8e1f3b451ee4 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -255,17 +255,18 @@ xfs_iomap_write_direct(
- 	 * caller gave to us.
- 	 */
- 	xfs_defer_init(&dfops, &firstfsb);
-+	tp->t_dfops = &dfops;
- 	nimaps = 1;
- 	error = xfs_bmapi_write(tp, ip, offset_fsb, count_fsb,
- 				bmapi_flags, &firstfsb, resblks, imap,
--				&nimaps, &dfops);
-+				&nimaps, tp->t_dfops);
- 	if (error)
- 		goto out_bmap_cancel;
- 
- 	/*
- 	 * Complete the transaction
- 	 */
--	error = xfs_defer_finish(&tp, &dfops);
-+	error = xfs_defer_finish(&tp, tp->t_dfops);
- 	if (error)
- 		goto out_bmap_cancel;
- 
-@@ -289,7 +290,7 @@ xfs_iomap_write_direct(
- 	return error;
- 
- out_bmap_cancel:
--	xfs_defer_cancel(&dfops);
-+	xfs_defer_cancel(tp->t_dfops);
- 	xfs_trans_unreserve_quota_nblks(tp, ip, (long)qblocks, 0, quota_flag);
- out_trans_cancel:
- 	xfs_trans_cancel(tp);
-@@ -717,6 +718,7 @@ xfs_iomap_write_allocate(
- 			xfs_trans_ijoin(tp, ip, 0);
- 
- 			xfs_defer_init(&dfops, &first_block);
-+			tp->t_dfops = &dfops;
- 
- 			/*
- 			 * it is possible that the extents have changed since
-@@ -772,11 +774,11 @@ xfs_iomap_write_allocate(
- 			error = xfs_bmapi_write(tp, ip, map_start_fsb,
- 						count_fsb, flags, &first_block,
- 						nres, imap, &nimaps,
--						&dfops);
-+						tp->t_dfops);
- 			if (error)
- 				goto trans_cancel;
- 
--			error = xfs_defer_finish(&tp, &dfops);
-+			error = xfs_defer_finish(&tp, tp->t_dfops);
- 			if (error)
- 				goto trans_cancel;
- 
-@@ -810,7 +812,7 @@ xfs_iomap_write_allocate(
- 	}
- 
- trans_cancel:
--	xfs_defer_cancel(&dfops);
-+	xfs_defer_cancel(tp->t_dfops);
- 	xfs_trans_cancel(tp);
- error0:
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-@@ -878,10 +880,11 @@ xfs_iomap_write_unwritten(
- 		 * Modify the unwritten extent state of the buffer.
- 		 */
- 		xfs_defer_init(&dfops, &firstfsb);
-+		tp->t_dfops = &dfops;
- 		nimaps = 1;
- 		error = xfs_bmapi_write(tp, ip, offset_fsb, count_fsb,
- 					XFS_BMAPI_CONVERT, &firstfsb, resblks,
--					&imap, &nimaps, &dfops);
-+					&imap, &nimaps, tp->t_dfops);
- 		if (error)
- 			goto error_on_bmapi_transaction;
- 
-@@ -901,7 +904,7 @@ xfs_iomap_write_unwritten(
- 			xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 		}
- 
--		error = xfs_defer_finish(&tp, &dfops);
-+		error = xfs_defer_finish(&tp, tp->t_dfops);
- 		if (error)
- 			goto error_on_bmapi_transaction;
- 
-@@ -928,7 +931,7 @@ xfs_iomap_write_unwritten(
- 	return 0;
- 
- error_on_bmapi_transaction:
--	xfs_defer_cancel(&dfops);
-+	xfs_defer_cancel(tp->t_dfops);
- 	xfs_trans_cancel(tp);
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	return error;
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index ff10b5e70029..1ff9ef1d65ba 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -429,19 +429,20 @@ xfs_reflink_allocate_cow(
- 	xfs_trans_ijoin(tp, ip, 0);
- 
- 	xfs_defer_init(&dfops, &first_block);
-+	tp->t_dfops = &dfops;
- 	nimaps = 1;
- 
- 	/* Allocate the entire reservation as unwritten blocks. */
- 	error = xfs_bmapi_write(tp, ip, imap->br_startoff, imap->br_blockcount,
- 			XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC, &first_block,
--			resblks, imap, &nimaps, &dfops);
-+			resblks, imap, &nimaps, tp->t_dfops);
- 	if (error)
- 		goto out_bmap_cancel;
- 
- 	xfs_inode_set_cowblocks_tag(ip);
- 
- 	/* Finish up. */
--	error = xfs_defer_finish(&tp, &dfops);
-+	error = xfs_defer_finish(&tp, tp->t_dfops);
- 	if (error)
- 		goto out_bmap_cancel;
- 
-@@ -458,7 +459,7 @@ xfs_reflink_allocate_cow(
- convert:
- 	return xfs_reflink_convert_cow_extent(ip, imap, offset_fsb, count_fsb);
- out_bmap_cancel:
--	xfs_defer_cancel(&dfops);
-+	xfs_defer_cancel(tp->t_dfops);
- 	xfs_trans_unreserve_quota_nblks(tp, ip, (long)resblks, 0,
- 			XFS_QMOPT_RES_REGBLKS);
- out:
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 329d4d26c13e..312d410d91fb 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -788,13 +788,14 @@ xfs_growfs_rt_alloc(
- 		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
- 
- 		xfs_defer_init(&dfops, &firstblock);
-+		tp->t_dfops = &dfops;
- 		/*
- 		 * Allocate blocks to the bitmap file.
- 		 */
- 		nmap = 1;
- 		error = xfs_bmapi_write(tp, ip, oblocks, nblocks - oblocks,
- 					XFS_BMAPI_METADATA, &firstblock,
--					resblks, &map, &nmap, &dfops);
-+					resblks, &map, &nmap, tp->t_dfops);
- 		if (!error && nmap < 1)
- 			error = -ENOSPC;
- 		if (error)
-@@ -802,7 +803,7 @@ xfs_growfs_rt_alloc(
- 		/*
- 		 * Free any blocks freed up in the transaction, then commit.
- 		 */
--		error = xfs_defer_finish(&tp, &dfops);
-+		error = xfs_defer_finish(&tp, tp->t_dfops);
- 		if (error)
- 			goto out_bmap_cancel;
- 		error = xfs_trans_commit(tp);
-@@ -855,7 +856,7 @@ xfs_growfs_rt_alloc(
- 	return 0;
- 
- out_bmap_cancel:
--	xfs_defer_cancel(&dfops);
-+	xfs_defer_cancel(tp->t_dfops);
- out_trans_cancel:
- 	xfs_trans_cancel(tp);
- 	return error;
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index e347a3db018f..6825a31727d1 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -291,7 +291,7 @@ xfs_symlink(
- 
- 		error = xfs_bmapi_write(tp, ip, first_fsb, fs_blocks,
- 				  XFS_BMAPI_METADATA, &first_block, resblks,
--				  mval, &nmaps, &dfops);
-+				  mval, &nmaps, tp->t_dfops);
- 		if (error)
- 			goto out_bmap_cancel;
- 
-@@ -354,7 +354,7 @@ xfs_symlink(
- 		xfs_trans_set_sync(tp);
- 	}
- 
--	error = xfs_defer_finish(&tp, &dfops);
-+	error = xfs_defer_finish(&tp, tp->t_dfops);
- 	if (error)
- 		goto out_bmap_cancel;
- 
-@@ -370,7 +370,7 @@ xfs_symlink(
- 	return 0;
- 
- out_bmap_cancel:
--	xfs_defer_cancel(&dfops);
-+	xfs_defer_cancel(tp->t_dfops);
- out_trans_cancel:
- 	xfs_trans_cancel(tp);
- out_release_inode:
+.....
+> +/*
+> + * Reinitialize the AGI header, making an in-core copy of the old contents so
+> + * that we know which in-core state needs to be reinitialized.
+> + */
+> +STATIC void
+> +xfs_repair_agi_init_header(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_buf			*agi_bp,
+> +	struct xfs_agi			*old_agi)
+> +{
+> +	struct xfs_agi			*agi = XFS_BUF_TO_AGI(agi_bp);
+> +	struct xfs_mount		*mp = sc->mp;
+> +
+> +	memcpy(old_agi, agi, sizeof(*old_agi));
+> +	memset(agi, 0, BBTOB(agi_bp->b_length));
+> +	agi->agi_magicnum = cpu_to_be32(XFS_AGI_MAGIC);
+> +	agi->agi_versionnum = cpu_to_be32(XFS_AGI_VERSION);
+> +	agi->agi_seqno = cpu_to_be32(sc->sa.agno);
+> +	agi->agi_length = cpu_to_be32(xfs_ag_block_count(mp, sc->sa.agno));
+> +	agi->agi_newino = cpu_to_be32(NULLAGINO);
+> +	agi->agi_dirino = cpu_to_be32(NULLAGINO);
+> +	if (xfs_sb_version_hascrc(&mp->m_sb))
+> +		uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_meta_uuid);
+> +
+> +	/* We don't know how to fix the unlinked list yet. */
+> +	memcpy(&agi->agi_unlinked, &old_agi->agi_unlinked,
+> +			sizeof(agi->agi_unlinked));
+> +}
+
+and clear pagi_init?
+
+> +/* Update the AGI counters. */
+> +STATIC int
+> +xfs_repair_agi_update_btree_counters(
+
+_update_counts
+
+Cheers,
+
+Dave.
 -- 
-2.17.1
-
+Dave Chinner
+david@fromorbit.com
