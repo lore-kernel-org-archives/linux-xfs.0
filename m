@@ -1,352 +1,140 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:7521 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752118AbeF0DV0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Jun 2018 23:21:26 -0400
-Date: Wed, 27 Jun 2018 13:21:23 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 06/21] xfs: repair free space btrees
-Message-ID: <20180627032123.GF19934@dastard>
-References: <152986820984.3155.16417868536016544528.stgit@magnolia>
- <152986824747.3155.3861118263934672652.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <152986824747.3155.3861118263934672652.stgit@magnolia>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:60096 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932793AbeF1Qgh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 28 Jun 2018 12:36:37 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 1899EA2E56
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 16:36:37 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 02E26111CA17
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 16:36:36 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 03/24] xfs: remove dfops parameter from ifree call stack
+Date: Thu, 28 Jun 2018 12:36:15 -0400
+Message-Id: <20180628163636.52564-4-bfoster@redhat.com>
+In-Reply-To: <20180628163636.52564-1-bfoster@redhat.com>
+References: <20180628163636.52564-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Sun, Jun 24, 2018 at 12:24:07PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Rebuild the free space btrees from the gaps in the rmap btree.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-......
-> +
-> +/* Collect an AGFL block for the not-to-release list. */
-> +static int
-> +xfs_repair_collect_agfl_block(
-> +	struct xfs_mount		*mp,
-> +	xfs_agblock_t			bno,
-> +	void				*priv)
+The inode free callchain starting in xfs_inactive_ifree() already
+associates its dfops with the transaction. It still passes the dfops
+on the stack down through xfs_difree_inobt(), however.
 
-/me now gets confused by agfl code (xfs_repair_agfl_...) collecting btree
-blocks, and now the btree code (xfs_repair_collect_agfl... )
-collecting agfl blocks.
+Clean up the call stack and reference dfops directly from the
+transaction. This patch does not change behavior.
 
-The naming/namespace collisions is not that nice. I think this needs
-to be xr_allocbt_collect_agfl_blocks().
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_ialloc.c | 6 ++----
+ fs/xfs/libxfs/xfs_ialloc.h | 1 -
+ fs/xfs/xfs_inode.c         | 9 ++++-----
+ fs/xfs/xfs_inode.h         | 3 +--
+ 4 files changed, 7 insertions(+), 12 deletions(-)
 
-/me idly wonders about consistently renaming everything abt, bnbt, cnbt,
-fibt, ibt, rmbt and rcbt...
-
-> +/*
-> + * Iterate all reverse mappings to find (1) the free extents, (2) the OWN_AG
-> + * extents, (3) the rmapbt blocks, and (4) the AGFL blocks.  The free space is
-> + * (1) + (2) - (3) - (4).  Figure out if we have enough free space to
-> + * reconstruct the free space btrees.  Caller must clean up the input lists
-> + * if something goes wrong.
-> + */
-> +STATIC int
-> +xfs_repair_allocbt_find_freespace(
-> +	struct xfs_scrub_context	*sc,
-> +	struct list_head		*free_extents,
-> +	struct xfs_repair_extent_list	*old_allocbt_blocks)
-> +{
-> +	struct xfs_repair_alloc		ra;
-> +	struct xfs_repair_alloc_extent	*rae;
-> +	struct xfs_btree_cur		*cur;
-> +	struct xfs_mount		*mp = sc->mp;
-> +	xfs_agblock_t			agend;
-> +	xfs_agblock_t			nr_blocks;
-> +	int				error;
-> +
-> +	ra.extlist = free_extents;
-> +	ra.btlist = old_allocbt_blocks;
-> +	xfs_repair_init_extent_list(&ra.nobtlist);
-> +	ra.next_bno = 0;
-> +	ra.nr_records = 0;
-> +	ra.nr_blocks = 0;
-> +	ra.sc = sc;
-> +
-> +	/*
-> +	 * Iterate all the reverse mappings to find gaps in the physical
-> +	 * mappings, all the OWN_AG blocks, and all the rmapbt extents.
-> +	 */
-> +	cur = xfs_rmapbt_init_cursor(mp, sc->tp, sc->sa.agf_bp, sc->sa.agno);
-> +	error = xfs_rmap_query_all(cur, xfs_repair_alloc_extent_fn, &ra);
-> +	if (error)
-> +		goto err;
-> +	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-> +	cur = NULL;
-> +
-> +	/* Insert a record for space between the last rmap and EOAG. */
-> +	agend = be32_to_cpu(XFS_BUF_TO_AGF(sc->sa.agf_bp)->agf_length);
-> +	if (ra.next_bno < agend) {
-> +		rae = kmem_alloc(sizeof(struct xfs_repair_alloc_extent),
-> +				KM_MAYFAIL);
-> +		if (!rae) {
-> +			error = -ENOMEM;
-> +			goto err;
-> +		}
-> +		INIT_LIST_HEAD(&rae->list);
-> +		rae->bno = ra.next_bno;
-> +		rae->len = agend - ra.next_bno;
-> +		list_add_tail(&rae->list, free_extents);
-> +		ra.nr_records++;
-> +	}
-> +
-> +	/* Collect all the AGFL blocks. */
-> +	error = xfs_agfl_walk(mp, XFS_BUF_TO_AGF(sc->sa.agf_bp),
-> +			sc->sa.agfl_bp, xfs_repair_collect_agfl_block, &ra);
-> +	if (error)
-> +		goto err;
-> +
-> +	/* Do we actually have enough space to do this? */
-> +	nr_blocks = 2 * xfs_allocbt_calc_size(mp, ra.nr_records);
-
-	/* Do we have enough space to rebuild both freespace trees? */
-
-(explains the multiplication by 2)
-
-> +	if (!xfs_repair_ag_has_space(sc->sa.pag, nr_blocks, XFS_AG_RESV_NONE) ||
-> +	    ra.nr_blocks < nr_blocks) {
-> +		error = -ENOSPC;
-> +		goto err;
-> +	}
-> +
-> +	/* Compute the old bnobt/cntbt blocks. */
-> +	error = xfs_repair_subtract_extents(sc, old_allocbt_blocks,
-> +			&ra.nobtlist);
-> +	if (error)
-> +		goto err;
-> +	xfs_repair_cancel_btree_extents(sc, &ra.nobtlist);
-> +	return 0;
-> +
-> +err:
-> +	xfs_repair_cancel_btree_extents(sc, &ra.nobtlist);
-> +	if (cur)
-> +		xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-> +	return error;
-
-Error stacking here can be cleaned up - we don't need an extra stack
-as the cursor is NULL when finished with. Hence it could just be:
-
-	/* Compute the old bnobt/cntbt blocks. */
-	error = xfs_repair_subtract_extents(sc, old_allocbt_blocks,
-			&ra.nobtlist);
-err:
-	xfs_repair_cancel_btree_extents(sc, &ra.nobtlist);
-	if (cur)
-		xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-	return error;
-}
-
-
-> +}
-> +
-> +/*
-> + * Reset the global free block counter and the per-AG counters to make it look
-> + * like this AG has no free space.
-> + */
-> +STATIC int
-> +xfs_repair_allocbt_reset_counters(
-> +	struct xfs_scrub_context	*sc,
-> +	int				*log_flags)
-> +{
-> +	struct xfs_perag		*pag = sc->sa.pag;
-> +	struct xfs_agf			*agf;
-> +	xfs_extlen_t			oldf;
-> +	xfs_agblock_t			rmap_blocks;
-> +	int				error;
-> +
-> +	/*
-> +	 * Since we're abandoning the old bnobt/cntbt, we have to
-> +	 * decrease fdblocks by the # of blocks in those trees.
-> +	 * btreeblks counts the non-root blocks of the free space
-> +	 * and rmap btrees.  Do this before resetting the AGF counters.
-
-Comment can use 80 columns.
-
-> +	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
-> +	rmap_blocks = be32_to_cpu(agf->agf_rmap_blocks) - 1;
-> +	oldf = pag->pagf_btreeblks + 2;
-> +	oldf -= rmap_blocks;
-
-Convoluted. The comment really didn't help me understand what oldf
-is accounting.
-
-Ah, rmap_blocks is actually the new btreeblks count. OK.
-
-	/*
-	 * Since we're abandoning the old bnobt/cntbt, we have to decrease
-	 * fdblocks by the # of blocks in those trees.  btreeblks counts the
-	 * non-root blocks of the free space and rmap btrees.  Do this before
-	 * resetting the AGF counters.
-	 */
-
-	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
-
-	/* rmap_blocks accounts root block, btreeblks doesn't */
-	new_btblks = be32_to_cpu(agf->agf_rmap_blocks) - 1;
-
-	/* btreeblks doesn't account bno/cnt root blocks */
-	to_free = pag->pagf_btreeblks + 2;
-
-	/* and don't account for the blocks we aren't freeing */
-	to_free -= new_btblks;
-
-
-> +	error = xfs_mod_fdblocks(sc->mp, -(int64_t)oldf, false);
-> +	if (error)
-> +		return error;
-> +
-> +	/* Reset the per-AG info, both incore and ondisk. */
-> +	pag->pagf_btreeblks = rmap_blocks;
-> +	pag->pagf_freeblks = 0;
-> +	pag->pagf_longest = 0;
-> +
-> +	agf->agf_btreeblks = cpu_to_be32(pag->pagf_btreeblks);
-
-I'd prefer that you use new_btblks here, too. Easier to see at a
-glance that the on-disk agf is being set to the new value....
-
-
-> +	agf->agf_freeblks = 0;
-> +	agf->agf_longest = 0;
-> +	*log_flags |= XFS_AGF_BTREEBLKS | XFS_AGF_LONGEST | XFS_AGF_FREEBLKS;
-> +
-> +	return 0;
-> +}
-> +
-> +/* Initialize new bnobt/cntbt roots and implant them into the AGF. */
-> +STATIC int
-> +xfs_repair_allocbt_reset_btrees(
-> +	struct xfs_scrub_context	*sc,
-> +	struct list_head		*free_extents,
-> +	int				*log_flags)
-> +{
-> +	struct xfs_owner_info		oinfo;
-> +	struct xfs_repair_alloc_extent	*cached = NULL;
-> +	struct xfs_buf			*bp;
-> +	struct xfs_perag		*pag = sc->sa.pag;
-> +	struct xfs_mount		*mp = sc->mp;
-> +	struct xfs_agf			*agf;
-> +	xfs_fsblock_t			bnofsb;
-> +	xfs_fsblock_t			cntfsb;
-> +	int				error;
-> +
-> +	/* Allocate new bnobt root. */
-> +	bnofsb = xfs_repair_allocbt_alloc_block(sc, free_extents, &cached);
-> +	if (bnofsb == NULLFSBLOCK)
-> +		return -ENOSPC;
-
-Does this happen after the free extent list has been sorted by bno
-order? It really should, that way the new root is as close to the
-the AGF as possible, and the new btree blocks will also tend to
-cluster towards the lower AG offsets.
-
-> +	/* Allocate new cntbt root. */
-> +	cntfsb = xfs_repair_allocbt_alloc_block(sc, free_extents, &cached);
-> +	if (cntfsb == NULLFSBLOCK)
-> +		return -ENOSPC;
-> +
-> +	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
-> +	/* Initialize new bnobt root. */
-> +	error = xfs_repair_init_btblock(sc, bnofsb, &bp, XFS_BTNUM_BNO,
-> +			&xfs_allocbt_buf_ops);
-> +	if (error)
-> +		return error;
-> +	agf->agf_roots[XFS_BTNUM_BNOi] =
-> +			cpu_to_be32(XFS_FSB_TO_AGBNO(mp, bnofsb));
-> +	agf->agf_levels[XFS_BTNUM_BNOi] = cpu_to_be32(1);
-> +
-> +	/* Initialize new cntbt root. */
-> +	error = xfs_repair_init_btblock(sc, cntfsb, &bp, XFS_BTNUM_CNT,
-> +			&xfs_allocbt_buf_ops);
-> +	if (error)
-> +		return error;
-> +	agf->agf_roots[XFS_BTNUM_CNTi] =
-> +			cpu_to_be32(XFS_FSB_TO_AGBNO(mp, cntfsb));
-> +	agf->agf_levels[XFS_BTNUM_CNTi] = cpu_to_be32(1);
-> +
-> +	/* Add rmap records for the btree roots */
-> +	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_AG);
-> +	error = xfs_rmap_alloc(sc->tp, sc->sa.agf_bp, sc->sa.agno,
-> +			XFS_FSB_TO_AGBNO(mp, bnofsb), 1, &oinfo);
-> +	if (error)
-> +		return error;
-> +	error = xfs_rmap_alloc(sc->tp, sc->sa.agf_bp, sc->sa.agno,
-> +			XFS_FSB_TO_AGBNO(mp, cntfsb), 1, &oinfo);
-> +	if (error)
-> +		return error;
-> +
-> +	/* Reset the incore state. */
-> +	pag->pagf_levels[XFS_BTNUM_BNOi] = 1;
-> +	pag->pagf_levels[XFS_BTNUM_CNTi] = 1;
-> +
-> +	*log_flags |=  XFS_AGF_ROOTS | XFS_AGF_LEVELS;
-> +	return 0;
-
-Rather than duplicating all this init code twice, would factoring it
-make sense? The only difference between the alloc/init of the two
-btrees is the array index that info is stored in....
-
-> +}
-> +
-> +/* Build new free space btrees and dispose of the old one. */
-> +STATIC int
-> +xfs_repair_allocbt_rebuild_trees(
-> +	struct xfs_scrub_context	*sc,
-> +	struct list_head		*free_extents,
-> +	struct xfs_repair_extent_list	*old_allocbt_blocks)
-> +{
-> +	struct xfs_owner_info		oinfo;
-> +	struct xfs_repair_alloc_extent	*rae;
-> +	struct xfs_repair_alloc_extent	*n;
-> +	struct xfs_repair_alloc_extent	*longest;
-> +	int				error;
-> +
-> +	xfs_rmap_skip_owner_update(&oinfo);
-> +
-> +	/*
-> +	 * Insert the longest free extent in case it's necessary to
-> +	 * refresh the AGFL with multiple blocks.  If there is no longest
-> +	 * extent, we had exactly the free space we needed; we're done.
-> +	 */
-> +	longest = xfs_repair_allocbt_get_longest(free_extents);
-> +	if (!longest)
-> +		goto done;
-> +	error = xfs_repair_allocbt_free_extent(sc,
-> +			XFS_AGB_TO_FSB(sc->mp, sc->sa.agno, longest->bno),
-> +			longest->len, &oinfo);
-> +	list_del(&longest->list);
-> +	kmem_free(longest);
-> +	if (error)
-> +		return error;
-> +
-> +	/* Insert records into the new btrees. */
-> +	list_sort(NULL, free_extents, xfs_repair_allocbt_extent_cmp);
-
-Hmmm. I guess list sorting doesn't occur before allocating new root
-blocks. Can this get moved?
-
-....
-
-> +bool
-> +xfs_extent_busy_list_empty(
-> +	struct xfs_perag	*pag);
-
-One line form for header prototypes, please.
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index 0d968e8143aa..c38d14106b53 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -1915,7 +1915,6 @@ xfs_difree_inobt(
+ 	struct xfs_trans		*tp,
+ 	struct xfs_buf			*agbp,
+ 	xfs_agino_t			agino,
+-	struct xfs_defer_ops		*dfops,
+ 	struct xfs_icluster		*xic,
+ 	struct xfs_inobt_rec_incore	*orec)
+ {
+@@ -2003,7 +2002,7 @@ xfs_difree_inobt(
+ 			goto error0;
+ 		}
+ 
+-		xfs_difree_inode_chunk(mp, agno, &rec, dfops);
++		xfs_difree_inode_chunk(mp, agno, &rec, tp->t_dfops);
+ 	} else {
+ 		xic->deleted = false;
+ 
+@@ -2148,7 +2147,6 @@ int
+ xfs_difree(
+ 	struct xfs_trans	*tp,		/* transaction pointer */
+ 	xfs_ino_t		inode,		/* inode to be freed */
+-	struct xfs_defer_ops	*dfops,		/* extents to free */
+ 	struct xfs_icluster	*xic)	/* cluster info if deleted */
+ {
+ 	/* REFERENCED */
+@@ -2200,7 +2198,7 @@ xfs_difree(
+ 	/*
+ 	 * Fix up the inode allocation btree.
+ 	 */
+-	error = xfs_difree_inobt(mp, tp, agbp, agino, dfops, xic, &rec);
++	error = xfs_difree_inobt(mp, tp, agbp, agino, xic, &rec);
+ 	if (error)
+ 		goto error0;
+ 
+diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
+index 90b09c5f163b..e936b7cc9389 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.h
++++ b/fs/xfs/libxfs/xfs_ialloc.h
+@@ -82,7 +82,6 @@ int					/* error */
+ xfs_difree(
+ 	struct xfs_trans *tp,		/* transaction pointer */
+ 	xfs_ino_t	inode,		/* inode to be freed */
+-	struct xfs_defer_ops *dfops,	/* extents to free */
+ 	struct xfs_icluster *ifree);	/* cluster info if deleted */
+ 
+ /*
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 9c5fbc94cf14..f5649a023d46 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1814,7 +1814,7 @@ xfs_inactive_ifree(
+ 
+ 	xfs_defer_init(&dfops, &first_block);
+ 	tp->t_dfops = &dfops;
+-	error = xfs_ifree(tp, ip, &dfops);
++	error = xfs_ifree(tp, ip);
+ 	if (error) {
+ 		/*
+ 		 * If we fail to free the inode, shut down.  The cancel
+@@ -2445,9 +2445,8 @@ xfs_ifree_local_data(
+  */
+ int
+ xfs_ifree(
+-	xfs_trans_t	*tp,
+-	xfs_inode_t	*ip,
+-	struct xfs_defer_ops	*dfops)
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip)
+ {
+ 	int			error;
+ 	struct xfs_icluster	xic = { 0 };
+@@ -2466,7 +2465,7 @@ xfs_ifree(
+ 	if (error)
+ 		return error;
+ 
+-	error = xfs_difree(tp, ip->i_ino, dfops, &xic);
++	error = xfs_difree(tp, ip->i_ino, &xic);
+ 	if (error)
+ 		return error;
+ 
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 2ed63a49e890..b1f0e8394f3b 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -415,8 +415,7 @@ uint		xfs_ilock_data_map_shared(struct xfs_inode *);
+ uint		xfs_ilock_attr_map_shared(struct xfs_inode *);
+ 
+ uint		xfs_ip2xflags(struct xfs_inode *);
+-int		xfs_ifree(struct xfs_trans *, xfs_inode_t *,
+-			   struct xfs_defer_ops *);
++int		xfs_ifree(struct xfs_trans *, struct xfs_inode *);
+ int		xfs_itruncate_extents_flags(struct xfs_trans **,
+ 				struct xfs_inode *, int, xfs_fsize_t, int);
+ void		xfs_iext_realloc(xfs_inode_t *, int, int);
 -- 
-Dave Chinner
-david@fromorbit.com
+2.17.1
+
