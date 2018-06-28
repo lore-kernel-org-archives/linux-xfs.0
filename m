@@ -1,75 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:44132 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753165AbeF1TYf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 28 Jun 2018 15:24:35 -0400
-Subject: Re: [PATCH 11/10] xfs_repair: clear extent size hints when clearing
- inode core
-References: <153006766483.20121.9285982017465570544.stgit@magnolia>
- <20180628172937.GI5711@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <07330d87-0cd4-0d37-9c77-0e2b1f66f67d@sandeen.net>
-Date: Thu, 28 Jun 2018 14:24:33 -0500
-MIME-Version: 1.0
-In-Reply-To: <20180628172937.GI5711@magnolia>
-Content-Type: text/plain; charset=utf-8
+Received: from g2t2353.austin.hpe.com ([15.233.44.26]:51127 "EHLO
+        g2t2353.austin.hpe.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752170AbeF1TkW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Jun 2018 15:40:22 -0400
+From: "Kani, Toshi" <toshi.kani@hpe.com>
+Subject: Re: [PATCH v3 1/3] pmem: only set QUEUE_FLAG_DAX for fsdax mode
+Date: Thu, 28 Jun 2018 19:40:14 +0000
+Message-ID: <1530214695.14039.316.camel@hpe.com>
+References: <CAPcyv4h6HO6fs6k7QMD77jkz2djCeWCtWomCdNb0-1Q4VKanqw@mail.gmail.com>
+         <20180626191346.GA7233@redhat.com> <1530046327.14039.273.camel@hpe.com>
+         <CAPcyv4hP_Y3xdyCa-UkYCMJ5OtnjnkwPZDS2Z2Ge8+5ymBONwQ@mail.gmail.com>
+         <1530048093.14039.286.camel@hpe.com>
+         <CAPcyv4gXAC7imJs5qfsDNLeN545Rqyd2b1M9s5kr4f9y48LXgQ@mail.gmail.com>
+         <1530048545.14039.288.camel@hpe.com>
+         <CAPcyv4ifHX95fCM9Xj87CugwNWzgq=y-4LxPQ5L6RdjX0jdctQ@mail.gmail.com>
+         <20180626220430.GA4269@linux.intel.com>
+         <1530207635.14039.308.camel@hpe.com>
+         <20180628190424.GC17758@linux.intel.com>
+In-Reply-To: <20180628190424.GC17758@linux.intel.com>
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <BD982B3FCD049F479B5BFD2D4008C2C0@NAMPRD84.PROD.OUTLOOK.COM>
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "snitzer@redhat.com" <snitzer@redhat.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>
 
-On 6/28/18 12:29 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> In kernel 4.18 we become more strict about what can be in the extent
-> size hint fields, even for freed inodes.  Therefore, if repair decides
-> to clear out an inode core, zero the hint fields and clear the flags so
-> that the kernel won't trip over the cleared inode if and when it tries
-> to read the chunk.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Looks good, I'll merge this before the libxfs sync.  Thanks!
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> ---
->  repair/dinode.c |   10 ++++++++++
->  1 file changed, 10 insertions(+)
-> 
-> diff --git a/repair/dinode.c b/repair/dinode.c
-> index f9b2bac0..4118db7c 100644
-> --- a/repair/dinode.c
-> +++ b/repair/dinode.c
-> @@ -194,6 +194,11 @@ clear_dinode_core(struct xfs_mount *mp, xfs_dinode_t *dinoc, xfs_ino_t ino_num)
->  		dinoc->di_anextents = 0;
->  	}
->  
-> +	if (be32_to_cpu(dinoc->di_extsize) != 0)  {
-> +		__dirty_no_modify_ret(dirty);
-> +		dinoc->di_extsize = 0;
-> +	}
-> +
->  	if (dinoc->di_version > 1 &&
->  			be32_to_cpu(dinoc->di_nlink) != 0)  {
->  		__dirty_no_modify_ret(dirty);
-> @@ -237,6 +242,11 @@ clear_dinode_core(struct xfs_mount *mp, xfs_dinode_t *dinoc, xfs_ino_t ino_num)
->  		dinoc->di_changecount = 0;
->  	}
->  
-> +	if (be32_to_cpu(dinoc->di_cowextsize) != 0)  {
-> +		__dirty_no_modify_ret(dirty);
-> +		dinoc->di_cowextsize = 0;
-> +	}
-> +
->  	return dirty;
->  }
->  
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+T24gVGh1LCAyMDE4LTA2LTI4IGF0IDEzOjA0IC0wNjAwLCBSb3NzIFp3aXNsZXIgd3JvdGU6DQo+
+IE9uIFRodSwgSnVuIDI4LCAyMDE4IGF0IDA1OjQyOjM0UE0gKzAwMDAsIEthbmksIFRvc2hpIHdy
+b3RlOg0KPiA+IE9uIFR1ZSwgMjAxOC0wNi0yNiBhdCAxNjowNCAtMDYwMCwgUm9zcyBad2lzbGVy
+IHdyb3RlOg0KPiA+ID4gT24gVHVlLCBKdW4gMjYsIDIwMTggYXQgMDI6NTE6NTJQTSAtMDcwMCwg
+RGFuIFdpbGxpYW1zIHdyb3RlOg0KPiA+ID4gPiBPbiBUdWUsIEp1biAyNiwgMjAxOCBhdCAyOjMx
+IFBNLCBLYW5pLCBUb3NoaSA8dG9zaGkua2FuaUBocGUuY29tPiB3cm90ZToNCiA6DQo+ID4gWW91
+ciBwYXRjaGVzIGxvb2sgZ29vZC4gIEJ1dCBJIGFtIHN0aWxsIG5vdCBjbGVhciBhYm91dCB0aGUg
+Rml4ZXMgJg0KPiA+IHN0YWJsZSBoYW5kbGluZy4gIFRhbGtpbmcgYWJvdXQgdXNlciB2aXNpYmxl
+IGJlaGF2aW9yLCBJIGRvIG5vdCB0aGluayB3ZQ0KPiA+IGhhZCBhbnkgaXNzdWUgdW50aWwgZGF4
+IHN1cHBvcnQgd2FzIGRyb3BwZWQgZnJvbSByYXcgbW9kZS4gIFVudGlsIHRoZW4sDQo+ID4gdGhl
+IHBtZW0gZHJpdmVyIHN1cHBvcnRlZCBkYXggZm9yIGFsbCBtb2RlcywgYW5kIHRoZSBjaGVjayBm
+b3INCj4gPiBkaXJlY3RfYWNjZXNzIHdvcmtlZC4gICAgDQo+IA0KPiBJIGFncmVlIHRoYXQgdGhl
+IGZzZGF4ICsgcmF3IG1vZGUgZmFpbHVyZSBtb2RlIEkgbWVudGlvbmVkIGluIG15IGNvdmVyIGxl
+dHRlcg0KPiBvbmx5IHN0YXJ0ZWQgd2hlbiB3ZSByZXN0cmljdGVkIGZpbGVzeXN0ZW0gREFYIHRv
+IGhhdmluZyBzdHJ1Y3QgcGFnZSwgYnV0IEkNCj4gdGhpbmsgdGhhdCB0aGUgb3RoZXIgZmFpbHVy
+ZSBtb2RlLCBmc2RheCArIHNvbWUgcmFuZG9tIGJsb2NrIGRyaXZlciAoSSB1c2VkDQo+IGJyZCkg
+d2FzIHByZXNlbnQgaW4gRE0gZnJvbSB0aGUgYmVnaW5uaW5nLg0KDQpBaCwgSSBzZWUuDQoNCj4g
+SW4gYW55IGNhc2UsIEkgdGhpbmsgYm90aCBhcmUgZml4ZWQgd2l0aCB0aGUgcGF0Y2hlcywgYW5k
+IEkgdGhpbmsgaXQncyBmaW5lDQo+IHRoYXQgYWxsIDMgZ2V0IHRocm93biBhdCBzdGFibGUuICBU
+aGFua3MsIE1pa2UsIGZvciB0aGUgaGVscC4NCg0KWXVwLCBhZ3JlZWQuIA0KDQpUaGFua3MhDQot
+VG9zaGk=
