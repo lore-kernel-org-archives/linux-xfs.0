@@ -1,127 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:45642 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965894AbeF1OMQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Jun 2018 10:12:16 -0400
-Date: Thu, 28 Jun 2018 07:12:01 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: test bad character in xfs_db field list selector
- string
-Message-ID: <20180628141201.GA5703@magnolia>
-References: <20180627165957.12892-1-zlang@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180627165957.12892-1-zlang@redhat.com>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:60100 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S935587AbeF1Qgi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 28 Jun 2018 12:36:38 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 6AF06A2E5B
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 16:36:37 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 56E7E111CA17
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 16:36:37 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 06/24] xfs: use ->t_dfops for attr set/remove operations
+Date: Thu, 28 Jun 2018 12:36:18 -0400
+Message-Id: <20180628163636.52564-7-bfoster@redhat.com>
+In-Reply-To: <20180628163636.52564-1-bfoster@redhat.com>
+References: <20180628163636.52564-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Zorro Lang <zlang@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Thu, Jun 28, 2018 at 12:59:57AM +0800, Zorro Lang wrote:
-> Bad characters likes tailing asterisk, slash or quote in xfs_db
-> field string can trigger a xfs_db crash. This bug has been fixed
-> by xfsprogs "945e47e2 xfs_db: fix crash when field list selector
-> string has trailing slash".
-> 
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
+Attach the local dfops to the transaction allocated for xattr add
+and remove operations. Add an earlier initialization in
+xfs_attr_remove() to ensure the structure is valid if it remains
+unused at transaction commit time.
 
-Could've sworn I had a test that did this, but ... clearly not. :)
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_attr.c | 11 +++++++----
+ fs/xfs/libxfs/xfs_bmap.c |  3 ++-
+ 2 files changed, 9 insertions(+), 5 deletions(-)
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 99590f61d624..cc23c269f2bf 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -254,6 +254,8 @@ xfs_attr_set(
+ 			rsvd ? XFS_TRANS_RESERVE : 0, &args.trans);
+ 	if (error)
+ 		return error;
++	xfs_defer_init(&dfops, &firstblock);
++	args.trans->t_dfops = &dfops;
+ 
+ 	xfs_ilock(dp, XFS_ILOCK_EXCL);
+ 	error = xfs_trans_reserve_quota_nblks(args.trans, dp, args.total, 0,
+@@ -315,7 +317,6 @@ xfs_attr_set(
+ 		 * It won't fit in the shortform, transform to a leaf block.
+ 		 * GROT: another possible req'mt for a double-split btree op.
+ 		 */
+-		xfs_defer_init(args.dfops, args.firstblock);
+ 		error = xfs_attr_shortform_to_leaf(&args, &leaf_bp);
+ 		if (error)
+ 			goto out_defer_cancel;
+@@ -325,9 +326,9 @@ xfs_attr_set(
+ 		 * buffer and run into problems with the write verifier.
+ 		 */
+ 		xfs_trans_bhold(args.trans, leaf_bp);
+-		xfs_defer_bjoin(args.dfops, leaf_bp);
+-		xfs_defer_ijoin(args.dfops, dp);
+-		error = xfs_defer_finish(&args.trans, args.dfops);
++		xfs_defer_bjoin(&dfops, leaf_bp);
++		xfs_defer_ijoin(&dfops, dp);
++		error = xfs_defer_finish(&args.trans, &dfops);
+ 		if (error)
+ 			goto out_defer_cancel;
+ 
+@@ -429,6 +430,8 @@ xfs_attr_remove(
+ 			&args.trans);
+ 	if (error)
+ 		return error;
++	xfs_defer_init(&dfops, &firstblock);
++	args.trans->t_dfops = &dfops;
+ 
+ 	xfs_ilock(dp, XFS_ILOCK_EXCL);
+ 	/*
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 7205268b30bc..16bbc8114d62 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1057,6 +1057,8 @@ xfs_bmap_add_attrfork(
+ 			rsvd ? XFS_TRANS_RESERVE : 0, &tp);
+ 	if (error)
+ 		return error;
++	xfs_defer_init(&dfops, &firstblock);
++	tp->t_dfops = &dfops;
+ 
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	error = xfs_trans_reserve_quota_nblks(tp, ip, blks, 0, rsvd ?
+@@ -1104,7 +1106,6 @@ xfs_bmap_add_attrfork(
+ 	ip->i_afp = kmem_zone_zalloc(xfs_ifork_zone, KM_SLEEP);
+ 	ip->i_afp->if_flags = XFS_IFEXTENTS;
+ 	logflags = 0;
+-	xfs_defer_init(&dfops, &firstblock);
+ 	switch (ip->i_d.di_format) {
+ 	case XFS_DINODE_FMT_LOCAL:
+ 		error = xfs_bmap_add_attrfork_local(tp, ip, &firstblock, &dfops,
+-- 
+2.17.1
 
---D
-
-> ---
->  tests/xfs/450     | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/450.out |  7 +++++++
->  tests/xfs/group   |  1 +
->  3 files changed, 57 insertions(+)
->  create mode 100755 tests/xfs/450
->  create mode 100644 tests/xfs/450.out
-> 
-> diff --git a/tests/xfs/450 b/tests/xfs/450
-> new file mode 100755
-> index 00000000..73b0cad8
-> --- /dev/null
-> +++ b/tests/xfs/450
-> @@ -0,0 +1,49 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2018 Red Hat Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test 450
-> +#
-> +# Test xfs_db by bad character in field list selector string. The issue
-> +# has been fixed by xfsprogs 945e47e2.
-> +#
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# Modify as appropriate.
-> +_supported_fs xfs
-> +_supported_os Linux
-> +_require_scratch
-> +
-> +_scratch_mkfs_xfs >> $seqres.full 2>&1
-> +inum=`_scratch_xfs_get_metadata_field rootino "sb 0"`
-> +
-> +echo "= check bad character * ="
-> +_scratch_xfs_db -c "inode $inum" -c "print core.*"
-> +echo "= check bad character trailing slash ="
-> +_scratch_xfs_db -c "inode $inum" -c "print core.\\"
-> +echo "= check missing closing quote ="
-> +_scratch_xfs_db -c "inode $inum" -c "print core.\""
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/450.out b/tests/xfs/450.out
-> new file mode 100644
-> index 00000000..dab51786
-> --- /dev/null
-> +++ b/tests/xfs/450.out
-> @@ -0,0 +1,7 @@
-> +QA output created by 450
-> += check bad character * =
-> +bad character in field *
-> += check bad character trailing slash =
-> +bad character in field \
-> += check missing closing quote =
-> +missing closing quote 
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index 932ab909..4d8e0b30 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -447,3 +447,4 @@
->  447 auto mount
->  448 auto quick fuzzers
->  449 auto quick
-> +450 auto db
-> -- 
-> 2.14.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe fstests" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
