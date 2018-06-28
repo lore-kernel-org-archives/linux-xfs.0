@@ -1,20 +1,20 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:60100 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:50924 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S935587AbeF1Qgi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S935604AbeF1Qgi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Thu, 28 Jun 2018 12:36:38 -0400
 Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 6AF06A2E5B
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 16:36:37 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 765AE401DEB0
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 16:36:38 +0000 (UTC)
 Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 56E7E111CA17
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 16:36:37 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 61F70111CA17
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 16:36:38 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 06/24] xfs: use ->t_dfops for attr set/remove operations
-Date: Thu, 28 Jun 2018 12:36:18 -0400
-Message-Id: <20180628163636.52564-7-bfoster@redhat.com>
+Subject: [PATCH 15/24] xfs: remove xfs_bmapi_remap() dfops param
+Date: Thu, 28 Jun 2018 12:36:27 -0400
+Message-Id: <20180628163636.52564-16-bfoster@redhat.com>
 In-Reply-To: <20180628163636.52564-1-bfoster@redhat.com>
 References: <20180628163636.52564-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -22,81 +22,70 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Attach the local dfops to the transaction allocated for xattr add
-and remove operations. Add an earlier initialization in
-xfs_attr_remove() to ensure the structure is valid if it remains
-unused at transaction commit time.
+All xfs_bmapi_remap() callers already use ->t_dfops. Note that
+deferred completion context unconditionally sets ->t_dfops if it
+hasn't already been set by the caller. Remove the unnecessary
+parameter and access ->t_dfops directly.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_attr.c | 11 +++++++----
- fs/xfs/libxfs/xfs_bmap.c |  3 ++-
- 2 files changed, 9 insertions(+), 5 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 8 ++++----
+ fs/xfs/libxfs/xfs_bmap.h | 2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 99590f61d624..cc23c269f2bf 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -254,6 +254,8 @@ xfs_attr_set(
- 			rsvd ? XFS_TRANS_RESERVE : 0, &args.trans);
- 	if (error)
- 		return error;
-+	xfs_defer_init(&dfops, &firstblock);
-+	args.trans->t_dfops = &dfops;
- 
- 	xfs_ilock(dp, XFS_ILOCK_EXCL);
- 	error = xfs_trans_reserve_quota_nblks(args.trans, dp, args.total, 0,
-@@ -315,7 +317,6 @@ xfs_attr_set(
- 		 * It won't fit in the shortform, transform to a leaf block.
- 		 * GROT: another possible req'mt for a double-split btree op.
- 		 */
--		xfs_defer_init(args.dfops, args.firstblock);
- 		error = xfs_attr_shortform_to_leaf(&args, &leaf_bp);
- 		if (error)
- 			goto out_defer_cancel;
-@@ -325,9 +326,9 @@ xfs_attr_set(
- 		 * buffer and run into problems with the write verifier.
- 		 */
- 		xfs_trans_bhold(args.trans, leaf_bp);
--		xfs_defer_bjoin(args.dfops, leaf_bp);
--		xfs_defer_ijoin(args.dfops, dp);
--		error = xfs_defer_finish(&args.trans, args.dfops);
-+		xfs_defer_bjoin(&dfops, leaf_bp);
-+		xfs_defer_ijoin(&dfops, dp);
-+		error = xfs_defer_finish(&args.trans, &dfops);
- 		if (error)
- 			goto out_defer_cancel;
- 
-@@ -429,6 +430,8 @@ xfs_attr_remove(
- 			&args.trans);
- 	if (error)
- 		return error;
-+	xfs_defer_init(&dfops, &firstblock);
-+	args.trans->t_dfops = &dfops;
- 
- 	xfs_ilock(dp, XFS_ILOCK_EXCL);
- 	/*
 diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 7205268b30bc..16bbc8114d62 100644
+index 25769e4f424c..2bbeccad1e90 100644
 --- a/fs/xfs/libxfs/xfs_bmap.c
 +++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1057,6 +1057,8 @@ xfs_bmap_add_attrfork(
- 			rsvd ? XFS_TRANS_RESERVE : 0, &tp);
- 	if (error)
- 		return error;
-+	xfs_defer_init(&dfops, &firstblock);
-+	tp->t_dfops = &dfops;
+@@ -4513,7 +4513,6 @@ xfs_bmapi_remap(
+ 	xfs_fileoff_t		bno,
+ 	xfs_filblks_t		len,
+ 	xfs_fsblock_t		startblock,
+-	struct xfs_defer_ops	*dfops,
+ 	int			flags)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+@@ -4563,7 +4562,7 @@ xfs_bmapi_remap(
+ 	if (ifp->if_flags & XFS_IFBROOT) {
+ 		cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
+ 		cur->bc_private.b.firstblock = firstblock;
+-		cur->bc_private.b.dfops = dfops;
++		cur->bc_private.b.dfops = tp->t_dfops;
+ 		cur->bc_private.b.flags = 0;
+ 	}
  
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	error = xfs_trans_reserve_quota_nblks(tp, ip, blks, 0, rsvd ?
-@@ -1104,7 +1106,6 @@ xfs_bmap_add_attrfork(
- 	ip->i_afp = kmem_zone_zalloc(xfs_ifork_zone, KM_SLEEP);
- 	ip->i_afp->if_flags = XFS_IFEXTENTS;
- 	logflags = 0;
--	xfs_defer_init(&dfops, &firstblock);
- 	switch (ip->i_d.di_format) {
- 	case XFS_DINODE_FMT_LOCAL:
- 		error = xfs_bmap_add_attrfork_local(tp, ip, &firstblock, &dfops,
+@@ -4576,7 +4575,7 @@ xfs_bmapi_remap(
+ 		got.br_state = XFS_EXT_NORM;
+ 
+ 	error = xfs_bmap_add_extent_hole_real(tp, ip, whichfork, &icur,
+-			&cur, &got, &firstblock, dfops, &logflags, flags);
++			&cur, &got, &firstblock, tp->t_dfops, &logflags, flags);
+ 	if (error)
+ 		goto error0;
+ 
+@@ -6187,8 +6186,9 @@ xfs_bmap_finish_one(
+ 
+ 	switch (type) {
+ 	case XFS_BMAP_MAP:
++		ASSERT(dfops == tp->t_dfops);
+ 		error = xfs_bmapi_remap(tp, ip, startoff, *blockcount,
+-				startblock, dfops, 0);
++				startblock, 0);
+ 		*blockcount = 0;
+ 		break;
+ 	case XFS_BMAP_UNMAP:
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index 4ff56f55f2bb..1e2694adb9c7 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -287,6 +287,6 @@ xfs_failaddr_t xfs_bmap_validate_extent(struct xfs_inode *ip, int whichfork,
+ 
+ int	xfs_bmapi_remap(struct xfs_trans *tp, struct xfs_inode *ip,
+ 		xfs_fileoff_t bno, xfs_filblks_t len, xfs_fsblock_t startblock,
+-		struct xfs_defer_ops *dfops, int flags);
++		int flags);
+ 
+ #endif	/* __XFS_BMAP_H__ */
 -- 
 2.17.1
 
