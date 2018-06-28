@@ -1,20 +1,20 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:50920 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:60112 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932350AbeF1Qgh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 28 Jun 2018 12:36:37 -0400
+        id S933996AbeF1Qgl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 28 Jun 2018 12:36:41 -0400
 Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id D2A4D40255D7
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 16:36:36 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 110D5AB409
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 16:36:39 +0000 (UTC)
 Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id BE06E111CA17
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 16:36:36 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id F012F111CA17
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 16:36:38 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 01/24] xfs: cow unwritten conversion uses uninitialized dfops
-Date: Thu, 28 Jun 2018 12:36:13 -0400
-Message-Id: <20180628163636.52564-2-bfoster@redhat.com>
+Subject: [PATCH 20/24] xfs: remove unused btree cursor bc_private.a.dfops field
+Date: Thu, 28 Jun 2018 12:36:32 -0400
+Message-Id: <20180628163636.52564-21-bfoster@redhat.com>
 In-Reply-To: <20180628163636.52564-1-bfoster@redhat.com>
 References: <20180628163636.52564-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -22,70 +22,150 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-A couple COW fork unwritten extent conversion helpers pass an
-uninitialized dfops pointer to xfs_bmapi_write(). This does not
-cause problems because conversion does not use a transaction or the
-dfops structure for the COW fork.  Drop the uninitialized usage of
-dfops in these codepaths and pass NULL along to xfs_bmapi_write()
-instead.
+The xfs_btree_cur.bc_private.a.dfops field is only ever initialized
+by the refcountbt cursor init function. The only caller of that
+function with a non-NULL dfops is from deferred completion context,
+which already has attached to ->t_dfops.
+
+In addition to that, the only actual reference of a.dfops is the
+cursor duplication function, which means the field is effectively
+unused.
+
+Remove the dfops field from the bc_private.a union. Any future users
+can acquire the dfops from the transaction. This patch does not
+change behavior.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- fs/xfs/xfs_reflink.c | 11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
+ fs/xfs/libxfs/xfs_btree.h          | 1 -
+ fs/xfs/libxfs/xfs_refcount.c       | 4 ++--
+ fs/xfs/libxfs/xfs_refcount_btree.c | 7 ++-----
+ fs/xfs/libxfs/xfs_refcount_btree.h | 4 ++--
+ fs/xfs/scrub/common.c              | 2 +-
+ fs/xfs/xfs_fsmap.c                 | 2 +-
+ fs/xfs/xfs_reflink.c               | 2 +-
+ 7 files changed, 9 insertions(+), 13 deletions(-)
 
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index cc94ac765dec..b986a8fc8d40 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -209,7 +209,6 @@ typedef struct xfs_btree_cur
+ 	union {
+ 		struct {			/* needed for BNO, CNT, INO */
+ 			struct xfs_buf	*agbp;	/* agf/agi buffer pointer */
+-			struct xfs_defer_ops *dfops;	/* deferred updates */
+ 			xfs_agnumber_t	agno;	/* ag number */
+ 			union xfs_btree_cur_private	priv;
+ 		} a;
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index 9dda6fd0bb13..8e330a196060 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -1132,7 +1132,7 @@ xfs_refcount_finish_one(
+ 		if (!agbp)
+ 			return -EFSCORRUPTED;
+ 
+-		rcur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno, dfops);
++		rcur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno);
+ 		if (!rcur) {
+ 			error = -ENOMEM;
+ 			goto out_cur;
+@@ -1666,7 +1666,7 @@ xfs_refcount_recover_cow_leftovers(
+ 		error = -ENOMEM;
+ 		goto out_trans;
+ 	}
+-	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno, NULL);
++	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno);
+ 
+ 	/* Find all the leftover CoW staging extents. */
+ 	memset(&low, 0, sizeof(low));
+diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
+index b71937982c5b..393aa88f93db 100644
+--- a/fs/xfs/libxfs/xfs_refcount_btree.c
++++ b/fs/xfs/libxfs/xfs_refcount_btree.c
+@@ -27,8 +27,7 @@ xfs_refcountbt_dup_cursor(
+ 	struct xfs_btree_cur	*cur)
+ {
+ 	return xfs_refcountbt_init_cursor(cur->bc_mp, cur->bc_tp,
+-			cur->bc_private.a.agbp, cur->bc_private.a.agno,
+-			cur->bc_private.a.dfops);
++			cur->bc_private.a.agbp, cur->bc_private.a.agno);
+ }
+ 
+ STATIC void
+@@ -323,8 +322,7 @@ xfs_refcountbt_init_cursor(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_trans	*tp,
+ 	struct xfs_buf		*agbp,
+-	xfs_agnumber_t		agno,
+-	struct xfs_defer_ops	*dfops)
++	xfs_agnumber_t		agno)
+ {
+ 	struct xfs_agf		*agf = XFS_BUF_TO_AGF(agbp);
+ 	struct xfs_btree_cur	*cur;
+@@ -344,7 +342,6 @@ xfs_refcountbt_init_cursor(
+ 
+ 	cur->bc_private.a.agbp = agbp;
+ 	cur->bc_private.a.agno = agno;
+-	cur->bc_private.a.dfops = dfops;
+ 	cur->bc_flags |= XFS_BTREE_CRC_BLOCKS;
+ 
+ 	cur->bc_private.a.priv.refc.nr_ops = 0;
+diff --git a/fs/xfs/libxfs/xfs_refcount_btree.h b/fs/xfs/libxfs/xfs_refcount_btree.h
+index d2852b6e1fa8..801c2c7732fd 100644
+--- a/fs/xfs/libxfs/xfs_refcount_btree.h
++++ b/fs/xfs/libxfs/xfs_refcount_btree.h
+@@ -44,8 +44,8 @@ struct xfs_mount;
+ 		 ((index) - 1) * sizeof(xfs_refcount_ptr_t)))
+ 
+ extern struct xfs_btree_cur *xfs_refcountbt_init_cursor(struct xfs_mount *mp,
+-		struct xfs_trans *tp, struct xfs_buf *agbp, xfs_agnumber_t agno,
+-		struct xfs_defer_ops *dfops);
++		struct xfs_trans *tp, struct xfs_buf *agbp,
++		xfs_agnumber_t agno);
+ extern int xfs_refcountbt_maxrecs(int blocklen, bool leaf);
+ extern void xfs_refcountbt_compute_maxlevels(struct xfs_mount *mp);
+ 
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index 70e70c69f83f..385fa5b9c878 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -499,7 +499,7 @@ xfs_scrub_ag_btcur_init(
+ 	/* Set up a refcountbt cursor for cross-referencing. */
+ 	if (sa->agf_bp && xfs_sb_version_hasreflink(&mp->m_sb)) {
+ 		sa->refc_cur = xfs_refcountbt_init_cursor(mp, sc->tp,
+-				sa->agf_bp, agno, NULL);
++				sa->agf_bp, agno);
+ 		if (!sa->refc_cur)
+ 			goto err;
+ 	}
+diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+index c7157bc48bd1..297d7ce2901e 100644
+--- a/fs/xfs/xfs_fsmap.c
++++ b/fs/xfs/xfs_fsmap.c
+@@ -214,7 +214,7 @@ xfs_getfsmap_is_shared(
+ 	/* Are there any shared blocks here? */
+ 	flen = 0;
+ 	cur = xfs_refcountbt_init_cursor(mp, tp, info->agf_bp,
+-			info->agno, NULL);
++			info->agno);
+ 
+ 	error = xfs_refcount_find_shared(cur, rec->rm_startblock,
+ 			rec->rm_blockcount, &fbno, &flen, false);
 diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 592fb2071a03..ff10b5e70029 100644
+index 2221c6c6a5d3..7cfe74d1514e 100644
 --- a/fs/xfs/xfs_reflink.c
 +++ b/fs/xfs/xfs_reflink.c
-@@ -312,8 +312,7 @@ xfs_reflink_convert_cow_extent(
- 	struct xfs_inode		*ip,
- 	struct xfs_bmbt_irec		*imap,
- 	xfs_fileoff_t			offset_fsb,
--	xfs_filblks_t			count_fsb,
--	struct xfs_defer_ops		*dfops)
-+	xfs_filblks_t			count_fsb)
- {
- 	xfs_fsblock_t			first_block = NULLFSBLOCK;
- 	int				nimaps = 1;
-@@ -327,7 +326,7 @@ xfs_reflink_convert_cow_extent(
- 		return 0;
- 	return xfs_bmapi_write(NULL, ip, imap->br_startoff, imap->br_blockcount,
- 			XFS_BMAPI_COWFORK | XFS_BMAPI_CONVERT, &first_block,
--			0, imap, &nimaps, dfops);
-+			0, imap, &nimaps, NULL);
- }
+@@ -157,7 +157,7 @@ xfs_reflink_find_shared(
+ 	if (!agbp)
+ 		return -ENOMEM;
  
- /* Convert all of the unwritten CoW extents in a file's range to real ones. */
-@@ -342,7 +341,6 @@ xfs_reflink_convert_cow(
- 	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + count);
- 	xfs_filblks_t		count_fsb = end_fsb - offset_fsb;
- 	struct xfs_bmbt_irec	imap;
--	struct xfs_defer_ops	dfops;
- 	xfs_fsblock_t		first_block = NULLFSBLOCK;
- 	int			nimaps = 1, error = 0;
+-	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno, NULL);
++	cur = xfs_refcountbt_init_cursor(mp, tp, agbp, agno);
  
-@@ -352,7 +350,7 @@ xfs_reflink_convert_cow(
- 	error = xfs_bmapi_write(NULL, ip, offset_fsb, count_fsb,
- 			XFS_BMAPI_COWFORK | XFS_BMAPI_CONVERT |
- 			XFS_BMAPI_CONVERT_ONLY, &first_block, 0, &imap, &nimaps,
--			&dfops);
-+			NULL);
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	return error;
- }
-@@ -458,8 +456,7 @@ xfs_reflink_allocate_cow(
- 	if (nimaps == 0)
- 		return -ENOSPC;
- convert:
--	return xfs_reflink_convert_cow_extent(ip, imap, offset_fsb, count_fsb,
--			&dfops);
-+	return xfs_reflink_convert_cow_extent(ip, imap, offset_fsb, count_fsb);
- out_bmap_cancel:
- 	xfs_defer_cancel(&dfops);
- 	xfs_trans_unreserve_quota_nblks(tp, ip, (long)resblks, 0,
+ 	error = xfs_refcount_find_shared(cur, agbno, aglen, fbno, flen,
+ 			find_end_of_shared);
 -- 
 2.17.1
 
