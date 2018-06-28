@@ -1,56 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:51638 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752191AbeF1CR5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 27 Jun 2018 22:17:57 -0400
-Subject: Re: [PATCH] mm: reject MAP_SHARED_VALIDATE without new flags
-References: <60052659-7b37-cb69-bf9f-1683caa46219@redhat.com>
- <CA+55aFzeA7N3evSF2jKHu8JoTQuKDLCMKx7RiPhmym97-8HY7A@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <1e2ad827-6ff4-4b1e-c4d9-79ca4e432a6c@sandeen.net>
-Date: Wed, 27 Jun 2018 21:17:55 -0500
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:35671 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751065AbeF1DKc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Jun 2018 23:10:32 -0400
+Date: Thu, 28 Jun 2018 11:10:27 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH 4/4] xfs: fuzz every field of every structure and test
+ kernel crashes
+Message-ID: <20180628031027.GR2780@desktop>
+References: <152960594943.26479.1457883867468749220.stgit@magnolia>
+ <152960597579.26479.1694478608504574104.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <CA+55aFzeA7N3evSF2jKHu8JoTQuKDLCMKx7RiPhmym97-8HY7A@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <152960597579.26479.1694478608504574104.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>, Eric Sandeen <sandeen@redhat.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Linux API <linux-api@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-ext4@vger.kernel.org, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>, zhibli@redhat.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On 6/27/18 9:10 PM, Linus Torvalds wrote:
-> On Wed, Jun 27, 2018 at 6:45 PM Eric Sandeen <sandeen@redhat.com> wrote:
->>
->> Thus the invalid flag combination of (MAP_SHARED|MAP_PRIVATE) now
->> passes without error, which is a regression.
+On Thu, Jun 21, 2018 at 11:32:55AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> It's not a regression, it's just new behavior.
+> Fuzz every field of every structure and then try to write the
+> filesystem, to see how many of these writes can crash the kernel.
 > 
-> "regression" doesn't mean "things changed". It means "something broke".
-> 
-> What broke?
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-My commit log perhaps was not clear enough.
+Almost all the tests here are failing in similar ways with v4.18-rc1
+kernel and latest xfsprogs from for-next branch, e.g. xfs/1423 fails as
 
-What broke is that mmap(MAP_SHARED|MAP_PRIVATE) now succeeds without error,
-whereas before it rightly returned -EINVAL.
+    +re-repair failed (1) with diskdq.magic = zeroes.
+    +re-repair failed (1) with diskdq.magic = ones.
+    +re-repair failed (1) with diskdq.magic = firstbit.
+    +re-repair failed (1) with diskdq.magic = middlebit.
 
-What behavior should a user expect from a successful mmap(MAP_SHARED|MAP_PRIVATE)?
+Seems like we should skip re-repair in the "none" repair mode too in
+__scratch_xfs_fuzz_field_test?
 
--Eric
-
-> Because if it's some manual page breakage, just fix the manual. That's
-> what "new behavior" is all about.
-> 
-> There is nothing that says that "MAP_SHARED_VALIDATE" can't work with
-> just the legacy flags.
-> 
-> Because I'd be worried about your patch breaking some actual new user
-> of MAP_SHARED_VALIDATE.
-> 
-> Because it's actual *users* of behavior we care about, not some
-> test-suite or manual pages.
-> 
->               Linus
+Thanks,
+Eryu
