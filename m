@@ -1,133 +1,139 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:39434 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752210AbeF0Xhd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 27 Jun 2018 19:37:33 -0400
-Subject: Re: Mounting xfs filesystem takes long time
-References: <2a9a023d-fa37-59dc-caf2-c7c4167d3c75@levigo.de>
- <20180619161819.GD21698@magnolia>
- <e9a7c539-1dea-1050-19bc-b0eb7e788b33@sandeen.net>
- <20180621191535.GI7508@wotan.suse.de>
- <89d39e37-3944-f58d-018c-d36bdc9f870c@sandeen.net>
- <CAJCQCtSHT7fcHHxBaTESq5cdQQnYH95maNHby4MULCkar6mfeg@mail.gmail.com>
- <20180621221911.GT19934@dastard>
- <CAJCQCtSzsYSyCD2eEvdgpKJ8ZFShsJrV2FxKZ4bv=-S6gpx2fw@mail.gmail.com>
- <20180622040221.GY19934@dastard> <20180627232333.GB21242@wotan.suse.de>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <98c71f4a-94e5-00e8-46af-a4c3ca4e520b@sandeen.net>
-Date: Wed, 27 Jun 2018 18:37:31 -0500
+Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:1092 "EHLO
+        ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750936AbeF1A4M (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Jun 2018 20:56:12 -0400
+Date: Thu, 28 Jun 2018 10:55:16 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 07/21] xfs: repair inode btrees
+Message-ID: <20180628005516.GB2234@dastard>
+References: <152986820984.3155.16417868536016544528.stgit@magnolia>
+ <152986825387.3155.16901181422449777127.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20180627232333.GB21242@wotan.suse.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <152986825387.3155.16901181422449777127.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>, Dave Chinner <david@fromorbit.com>
-Cc: Chris Murphy <lists@colorremedies.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, "swadmin - levigo.de" <swadmin@levigo.de>, xfs list <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-
-
-On 6/27/18 6:23 PM, Luis R. Rodriguez wrote:
-> On Fri, Jun 22, 2018 at 02:02:21PM +1000, Dave Chinner wrote:
->> On Thu, Jun 21, 2018 at 09:19:54PM -0600, Chris Murphy wrote:
->>> On Thu, Jun 21, 2018 at 4:19 PM, Dave Chinner <david@fromorbit.com> wrote:
->>>
->>>> The mkfs ratios are about as optimal as we can get for the
->>>> information we have about the storage - growing by
->>>> 10x (i.e.  increaseing the number of AGs by 10x) puts us at the
->>>> outside edge of the acceptible filesystem performance and longevity
->>>> charcteristics. Growing by 100x puts us way outside the window,
->>>> and examples like this where we are taking about growing by 10000x
->>>> is just way beyond anything the static AG layout architecture was
->>>> ever intended to support....
+On Sun, Jun 24, 2018 at 12:24:13PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> I don't  have time to test this but I can probably do so after my vacation
-> (now). Would it be best to just codify this eventually instead of having
-> this as tribal knowledge?
+> Use the rmapbt to find inode chunks, query the chunks to compute
+> hole and free masks, and with that information rebuild the inobt
+> and finobt.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Honestly, if we wanted something like this I think it'd be based on terminal
-AG count, not growfs multiplier for a specific instance.
+[....]
 
-Otherwise 100 consecutive 4x growfs's would yield the same problems without
-tripping any of these tests.
-
--Eric
-
-> diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
-> index 8ec445afb74b..14f4b6dce08f 100644
-> --- a/growfs/xfs_growfs.c
-> +++ b/growfs/xfs_growfs.c
-> @@ -75,6 +75,9 @@ main(int argc, char **argv)
->  	fs_path_t		*fs;	/* mount point information */
->  	libxfs_init_t		xi;	/* libxfs structure */
->  	char			rpath[PATH_MAX];
-> +	int			fflag;	/* -f flag */
-> +	long long		dsize_max_suggested; /* max suggested size */
-> +	long long		dsize_max_arch; /* max design over flow */
->  
->  	progname = basename(argv[0]);
->  	setlocale(LC_ALL, "");
-> @@ -93,6 +96,8 @@ main(int argc, char **argv)
->  		case 'd':
->  			dflag = 1;
->  			break;
-> +		case 'f':
-> +			fflag = 1;
->  		case 'e':
->  			esize = atol(optarg);
->  			rflag = 1;
-> @@ -249,6 +254,24 @@ main(int argc, char **argv)
->  	if (dflag | mflag | aflag) {
->  		xfs_growfs_data_t	in;
->  
-> +		/*
-> +		 * Growing the filesyste by 10x increases the AG size by 10 as
-> +		 * well, and this puts us outside edge of the acceptible
-> +		 * filesystem performance and longevity charcteristics.
-> +		 *
-> +		 * Growing by 100x puts us way outside the window...
-> +		 *
-> +		 * Growing by 10000x is just way beyond anything the static AG
-> +		 * layout architecture was ever intended to support, so unless
-> +		 * you use -f, we won't allow in between 10x-1000x.
-> +		 */
-> +		dsize_max_suggested = ddsize * 10 / (geo.blocksize / BBSIZE);
-> +		if (dsize_max_suggested < ddsize)
-> +			dsize_max_suggested = ULLONG_MAX;
-> +		dsize_max_arch = ddsize * 1000 / (geo.blocksize / BBSIZE);
-> +		if (dsize_max_arch < ddsize)
-> +			dsize_max_arch = ULLONG_MAX;
+> +/*
+> + * For each cluster in this blob of inode, we must calculate the
+> + * properly aligned startino of that cluster, then iterate each
+> + * cluster to fill in used and filled masks appropriately.  We
+> + * then use the (startino, used, filled) information to construct
+> + * the appropriate inode records.
+> + */
+> +STATIC int
+> +xfs_repair_ialloc_process_cluster(
+> +	struct xfs_repair_ialloc	*ri,
+> +	xfs_agblock_t			agbno,
+> +	int				blks_per_cluster,
+> +	xfs_agino_t			rec_agino)
+> +{
+> +	struct xfs_imap			imap;
+> +	struct xfs_repair_ialloc_extent	*rie;
+> +	struct xfs_dinode		*dip;
+> +	struct xfs_buf			*bp;
+> +	struct xfs_scrub_context	*sc = ri->sc;
+> +	struct xfs_mount		*mp = sc->mp;
+> +	xfs_ino_t			fsino;
+> +	xfs_inofree_t			usedmask;
+> +	xfs_agino_t			nr_inodes;
+> +	xfs_agino_t			startino;
+> +	xfs_agino_t			clusterino;
+> +	xfs_agino_t			clusteroff;
+> +	xfs_agino_t			agino;
+> +	uint16_t			fillmask;
+> +	bool				inuse;
+> +	int				usedcount;
+> +	int				error;
 > +
->  		if (!mflag)
->  			maxpct = geo.imaxpct;
->  		if (!dflag && !aflag)	/* Only mflag, no data size change */
-> @@ -261,6 +284,26 @@ main(int argc, char **argv)
->  				(long long)dsize,
->  				(long long)(ddsize/(geo.blocksize/BBSIZE)));
->  			error = 1;
-> +		} else if (!fflag &&
-> +			   dsize > dsize_max_arch) {
-> +			fprintf(stderr, _(
-> +				"data size %lld beyond what XFS recomends for "
-> +				"this fs, max should be %lld but if used you "
-> +				"will suffer. Max suggested is %lld or use "
-> +				"-f to override.\n"),
-> +				(long long)dsize,
-> +				dsize_max_arch,
-> +				dsize_max_suggested);
-> +			error = 1;
-> +		} else if (!fflag &&
-> +			   dsize > dsize_max_suggested) {
-> +			fprintf(stderr, _(
-> +				"data size %lld beyond what XFS recomends for "
-> +				"this fs, max suggested is %lld or use "
-> +				"-f to override.\n"),
-> +				(long long)dsize,
-> +				dsize_max_suggested);
-> +			error = 1;
->  		}
->  
->  		if (!error && dsize < geo.datablocks) {
-> 
+> +	/* The per-AG inum of this inode cluster. */
+> +	agino = XFS_OFFBNO_TO_AGINO(mp, agbno, 0);
+> +
+> +	/* The per-AG inum of the inobt record. */
+> +	startino = rec_agino + rounddown(agino - rec_agino,
+> +			XFS_INODES_PER_CHUNK);
+> +
+> +	/* The per-AG inum of the cluster within the inobt record. */
+> +	clusteroff = agino - startino;
+> +
+> +	/* Every inode in this holemask slot is filled. */
+> +	nr_inodes = XFS_OFFBNO_TO_AGINO(mp, blks_per_cluster, 0);
+> +	fillmask = xfs_inobt_maskn(clusteroff / XFS_INODES_PER_HOLEMASK_BIT,
+> +			nr_inodes / XFS_INODES_PER_HOLEMASK_BIT);
+> +
+> +	/* Grab the inode cluster buffer. */
+> +	imap.im_blkno = XFS_AGB_TO_DADDR(mp, sc->sa.agno, agbno);
+> +	imap.im_len = XFS_FSB_TO_BB(mp, blks_per_cluster);
+> +	imap.im_boffset = 0;
+> +
+> +	error = xfs_imap_to_bp(mp, sc->tp, &imap, &dip, &bp, 0,
+> +			XFS_IGET_UNTRUSTED);
+
+This is going to error out if the cluster we are asking to be mapped
+has no record in the inobt. Aren't we trying to rebuild the inobt
+here from the rmap's idea of on-disk clusters? So how do we rebuild
+the inobt record if we can't already find the chunk record in the
+inobt?
+
+At minimum, this needs a comment explaining why it works.
+
+> +/* Initialize new inobt/finobt roots and implant them into the AGI. */
+> +STATIC int
+> +xfs_repair_iallocbt_reset_btrees(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_owner_info		*oinfo,
+> +	int				*log_flags)
+> +{
+> +	struct xfs_agi			*agi;
+> +	struct xfs_buf			*bp;
+> +	struct xfs_mount		*mp = sc->mp;
+> +	xfs_fsblock_t			inofsb;
+> +	xfs_fsblock_t			finofsb;
+> +	enum xfs_ag_resv_type		resv;
+> +	int				error;
+> +
+> +	agi = XFS_BUF_TO_AGI(sc->sa.agi_bp);
+> +
+> +	/* Initialize new inobt root. */
+> +	resv = XFS_AG_RESV_NONE;
+> +	error = xfs_repair_alloc_ag_block(sc, oinfo, &inofsb, resv);
+> +	if (error)
+> +		return error;
+> +	error = xfs_repair_init_btblock(sc, inofsb, &bp, XFS_BTNUM_INO,
+> +			&xfs_inobt_buf_ops);
+> +	if (error)
+> +		return error;
+> +	agi->agi_root = cpu_to_be32(XFS_FSB_TO_AGBNO(mp, inofsb));
+> +	agi->agi_level = cpu_to_be32(1);
+> +	*log_flags |= XFS_AGI_ROOT | XFS_AGI_LEVEL;
+> +
+> +	/* Initialize new finobt root. */
+> +	if (!xfs_sb_version_hasfinobt(&mp->m_sb))
+> +		return 0;
+> +
+> +	resv = mp->m_inotbt_nores ? XFS_AG_RESV_NONE : XFS_AG_RESV_METADATA;
+
+Comment explaining this?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
