@@ -1,120 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38727 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752348AbeF0XXf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 27 Jun 2018 19:23:35 -0400
-Date: Thu, 28 Jun 2018 01:23:33 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: Mounting xfs filesystem takes long time
-Message-ID: <20180627232333.GB21242@wotan.suse.de>
-References: <2a9a023d-fa37-59dc-caf2-c7c4167d3c75@levigo.de>
- <20180619161819.GD21698@magnolia>
- <e9a7c539-1dea-1050-19bc-b0eb7e788b33@sandeen.net>
- <20180621191535.GI7508@wotan.suse.de>
- <89d39e37-3944-f58d-018c-d36bdc9f870c@sandeen.net>
- <CAJCQCtSHT7fcHHxBaTESq5cdQQnYH95maNHby4MULCkar6mfeg@mail.gmail.com>
- <20180621221911.GT19934@dastard>
- <CAJCQCtSzsYSyCD2eEvdgpKJ8ZFShsJrV2FxKZ4bv=-S6gpx2fw@mail.gmail.com>
- <20180622040221.GY19934@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180622040221.GY19934@dastard>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:60102 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S935588AbeF1Qgi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 28 Jun 2018 12:36:38 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 87648A5002
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 16:36:37 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 72A53111CA17
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 16:36:37 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 07/24] xfs: remove dfops param in attr fork add path
+Date: Thu, 28 Jun 2018 12:36:19 -0400
+Message-Id: <20180628163636.52564-8-bfoster@redhat.com>
+In-Reply-To: <20180628163636.52564-1-bfoster@redhat.com>
+References: <20180628163636.52564-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Chris Murphy <lists@colorremedies.com>, Eric Sandeen <sandeen@sandeen.net>, "Luis R. Rodriguez" <mcgrof@kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, "swadmin - levigo.de" <swadmin@levigo.de>, xfs list <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Fri, Jun 22, 2018 at 02:02:21PM +1000, Dave Chinner wrote:
-> On Thu, Jun 21, 2018 at 09:19:54PM -0600, Chris Murphy wrote:
-> > On Thu, Jun 21, 2018 at 4:19 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > 
-> > > The mkfs ratios are about as optimal as we can get for the
-> > > information we have about the storage - growing by
-> > > 10x (i.e.  increaseing the number of AGs by 10x) puts us at the
-> > > outside edge of the acceptible filesystem performance and longevity
-> > > charcteristics. Growing by 100x puts us way outside the window,
-> > > and examples like this where we are taking about growing by 10000x
-> > > is just way beyond anything the static AG layout architecture was
-> > > ever intended to support....
+Now that the attribute fork add tx carries dfops along with the
+transaction, it is unnecessary to pass it down the stack. Remove the
+dfops parameter and access ->t_dfops directly where necessary. This
+patch does not change behavior.
 
-I don't  have time to test this but I can probably do so after my vacation
-(now). Would it be best to just codify this eventually instead of having
-this as tribal knowledge?
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 19 ++++++++-----------
+ 1 file changed, 8 insertions(+), 11 deletions(-)
 
-diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
-index 8ec445afb74b..14f4b6dce08f 100644
---- a/growfs/xfs_growfs.c
-+++ b/growfs/xfs_growfs.c
-@@ -75,6 +75,9 @@ main(int argc, char **argv)
- 	fs_path_t		*fs;	/* mount point information */
- 	libxfs_init_t		xi;	/* libxfs structure */
- 	char			rpath[PATH_MAX];
-+	int			fflag;	/* -f flag */
-+	long long		dsize_max_suggested; /* max suggested size */
-+	long long		dsize_max_arch; /* max design over flow */
- 
- 	progname = basename(argv[0]);
- 	setlocale(LC_ALL, "");
-@@ -93,6 +96,8 @@ main(int argc, char **argv)
- 		case 'd':
- 			dflag = 1;
- 			break;
-+		case 'f':
-+			fflag = 1;
- 		case 'e':
- 			esize = atol(optarg);
- 			rflag = 1;
-@@ -249,6 +254,24 @@ main(int argc, char **argv)
- 	if (dflag | mflag | aflag) {
- 		xfs_growfs_data_t	in;
- 
-+		/*
-+		 * Growing the filesyste by 10x increases the AG size by 10 as
-+		 * well, and this puts us outside edge of the acceptible
-+		 * filesystem performance and longevity charcteristics.
-+		 *
-+		 * Growing by 100x puts us way outside the window...
-+		 *
-+		 * Growing by 10000x is just way beyond anything the static AG
-+		 * layout architecture was ever intended to support, so unless
-+		 * you use -f, we won't allow in between 10x-1000x.
-+		 */
-+		dsize_max_suggested = ddsize * 10 / (geo.blocksize / BBSIZE);
-+		if (dsize_max_suggested < ddsize)
-+			dsize_max_suggested = ULLONG_MAX;
-+		dsize_max_arch = ddsize * 1000 / (geo.blocksize / BBSIZE);
-+		if (dsize_max_arch < ddsize)
-+			dsize_max_arch = ULLONG_MAX;
-+
- 		if (!mflag)
- 			maxpct = geo.imaxpct;
- 		if (!dflag && !aflag)	/* Only mflag, no data size change */
-@@ -261,6 +284,26 @@ main(int argc, char **argv)
- 				(long long)dsize,
- 				(long long)(ddsize/(geo.blocksize/BBSIZE)));
- 			error = 1;
-+		} else if (!fflag &&
-+			   dsize > dsize_max_arch) {
-+			fprintf(stderr, _(
-+				"data size %lld beyond what XFS recomends for "
-+				"this fs, max should be %lld but if used you "
-+				"will suffer. Max suggested is %lld or use "
-+				"-f to override.\n"),
-+				(long long)dsize,
-+				dsize_max_arch,
-+				dsize_max_suggested);
-+			error = 1;
-+		} else if (!fflag &&
-+			   dsize > dsize_max_suggested) {
-+			fprintf(stderr, _(
-+				"data size %lld beyond what XFS recomends for "
-+				"this fs, max suggested is %lld or use "
-+				"-f to override.\n"),
-+				(long long)dsize,
-+				dsize_max_suggested);
-+			error = 1;
- 		}
- 
- 		if (!error && dsize < geo.datablocks) {
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 16bbc8114d62..c4b81fee2dee 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -918,7 +918,6 @@ xfs_bmap_add_attrfork_btree(
+ 	xfs_trans_t		*tp,		/* transaction pointer */
+ 	xfs_inode_t		*ip,		/* incore inode pointer */
+ 	xfs_fsblock_t		*firstblock,	/* first block allocated */
+-	struct xfs_defer_ops	*dfops,		/* blocks to free at commit */
+ 	int			*flags)		/* inode logging flags */
+ {
+ 	xfs_btree_cur_t		*cur;		/* btree cursor */
+@@ -931,7 +930,7 @@ xfs_bmap_add_attrfork_btree(
+ 		*flags |= XFS_ILOG_DBROOT;
+ 	else {
+ 		cur = xfs_bmbt_init_cursor(mp, tp, ip, XFS_DATA_FORK);
+-		cur->bc_private.b.dfops = dfops;
++		cur->bc_private.b.dfops = tp->t_dfops;
+ 		cur->bc_private.b.firstblock = *firstblock;
+ 		error = xfs_bmbt_lookup_first(cur, &stat);
+ 		if (error)
+@@ -962,7 +961,6 @@ xfs_bmap_add_attrfork_extents(
+ 	xfs_trans_t		*tp,		/* transaction pointer */
+ 	xfs_inode_t		*ip,		/* incore inode pointer */
+ 	xfs_fsblock_t		*firstblock,	/* first block allocated */
+-	struct xfs_defer_ops	*dfops,		/* blocks to free at commit */
+ 	int			*flags)		/* inode logging flags */
+ {
+ 	xfs_btree_cur_t		*cur;		/* bmap btree cursor */
+@@ -971,7 +969,7 @@ xfs_bmap_add_attrfork_extents(
+ 	if (ip->i_d.di_nextents * sizeof(xfs_bmbt_rec_t) <= XFS_IFORK_DSIZE(ip))
+ 		return 0;
+ 	cur = NULL;
+-	error = xfs_bmap_extents_to_btree(tp, ip, firstblock, dfops, &cur, 0,
++	error = xfs_bmap_extents_to_btree(tp, ip, firstblock, tp->t_dfops, &cur, 0,
+ 		flags, XFS_DATA_FORK);
+ 	if (cur) {
+ 		cur->bc_private.b.allocated = 0;
+@@ -997,7 +995,6 @@ xfs_bmap_add_attrfork_local(
+ 	xfs_trans_t		*tp,		/* transaction pointer */
+ 	xfs_inode_t		*ip,		/* incore inode pointer */
+ 	xfs_fsblock_t		*firstblock,	/* first block allocated */
+-	struct xfs_defer_ops	*dfops,		/* blocks to free at commit */
+ 	int			*flags)		/* inode logging flags */
+ {
+ 	xfs_da_args_t		dargs;		/* args for dir/attr code */
+@@ -1010,7 +1007,7 @@ xfs_bmap_add_attrfork_local(
+ 		dargs.geo = ip->i_mount->m_dir_geo;
+ 		dargs.dp = ip;
+ 		dargs.firstblock = firstblock;
+-		dargs.dfops = dfops;
++		dargs.dfops = tp->t_dfops;
+ 		dargs.total = dargs.geo->fsbcount;
+ 		dargs.whichfork = XFS_DATA_FORK;
+ 		dargs.trans = tp;
+@@ -1108,16 +1105,16 @@ xfs_bmap_add_attrfork(
+ 	logflags = 0;
+ 	switch (ip->i_d.di_format) {
+ 	case XFS_DINODE_FMT_LOCAL:
+-		error = xfs_bmap_add_attrfork_local(tp, ip, &firstblock, &dfops,
+-			&logflags);
++		error = xfs_bmap_add_attrfork_local(tp, ip, &firstblock,
++						    &logflags);
+ 		break;
+ 	case XFS_DINODE_FMT_EXTENTS:
+ 		error = xfs_bmap_add_attrfork_extents(tp, ip, &firstblock,
+-			&dfops, &logflags);
++						      &logflags);
+ 		break;
+ 	case XFS_DINODE_FMT_BTREE:
+-		error = xfs_bmap_add_attrfork_btree(tp, ip, &firstblock, &dfops,
+-			&logflags);
++		error = xfs_bmap_add_attrfork_btree(tp, ip, &firstblock,
++						    &logflags);
+ 		break;
+ 	default:
+ 		error = 0;
+-- 
+2.17.1
+
