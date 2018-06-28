@@ -1,35 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:60804 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752035AbeF0CsA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Jun 2018 22:48:00 -0400
-Subject: [PATCH 00/10] xfsprogs-4.18: mostly scrub/repair stuff
+Received: from aserp2120.oracle.com ([141.146.126.78]:45156 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933925AbeF1R3v (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Jun 2018 13:29:51 -0400
+Date: Thu, 28 Jun 2018 10:29:37 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 26 Jun 2018 19:47:44 -0700
-Message-ID: <153006766483.20121.9285982017465570544.stgit@magnolia>
+Subject: [PATCH 11/10] xfs_repair: clear extent size hints when clearing
+ inode core
+Message-ID: <20180628172937.GI5711@magnolia>
+References: <153006766483.20121.9285982017465570544.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <153006766483.20121.9285982017465570544.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
+To: sandeen@redhat.com
 Cc: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Here's a bunch of patches for xfsprogs 4.18.  The first two patches
-remove unused crc32 implementations (XFS only uses crc32c) then moves it
-to libfrog so all the programs can take advantage of that runtime support
-code.  End result is that the binaries shrink by 8k.
+In kernel 4.18 we become more strict about what can be in the extent
+size hint fields, even for freed inodes.  Therefore, if repair decides
+to clear out an inode core, zero the hint fields and clear the flags so
+that the kernel won't trip over the cleared inode if and when it tries
+to read the chunk.
 
-Patches 3-8 fix various bugs in xfs_scrub and implement the ability to
-schedule and issue online repairs.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ repair/dinode.c |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-Patch 9 wires up xfs_io to be able to call the repair ioctl on behalf of
-xfstests.
-
-Patch 10 fixes a regression in xfs_repair that was introduced by other
-libxfs metadata verifier strengthening checks.
-
---D
+diff --git a/repair/dinode.c b/repair/dinode.c
+index f9b2bac0..4118db7c 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -194,6 +194,11 @@ clear_dinode_core(struct xfs_mount *mp, xfs_dinode_t *dinoc, xfs_ino_t ino_num)
+ 		dinoc->di_anextents = 0;
+ 	}
+ 
++	if (be32_to_cpu(dinoc->di_extsize) != 0)  {
++		__dirty_no_modify_ret(dirty);
++		dinoc->di_extsize = 0;
++	}
++
+ 	if (dinoc->di_version > 1 &&
+ 			be32_to_cpu(dinoc->di_nlink) != 0)  {
+ 		__dirty_no_modify_ret(dirty);
+@@ -237,6 +242,11 @@ clear_dinode_core(struct xfs_mount *mp, xfs_dinode_t *dinoc, xfs_ino_t ino_num)
+ 		dinoc->di_changecount = 0;
+ 	}
+ 
++	if (be32_to_cpu(dinoc->di_cowextsize) != 0)  {
++		__dirty_no_modify_ret(dirty);
++		dinoc->di_cowextsize = 0;
++	}
++
+ 	return dirty;
+ }
+ 
