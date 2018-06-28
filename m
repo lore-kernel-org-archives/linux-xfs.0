@@ -1,90 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:38471 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932350AbeF1ITn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Jun 2018 04:19:43 -0400
-Received: by mail-wm0-f65.google.com with SMTP id 69-v6so7977715wmf.3
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 01:19:43 -0700 (PDT)
-Date: Thu, 28 Jun 2018 10:19:39 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: Mounting xfs filesystem takes long time
-Message-ID: <20180628081939.ryjsimtzqo2ig5sf@odin.usersys.redhat.com>
-References: <e9a7c539-1dea-1050-19bc-b0eb7e788b33@sandeen.net>
- <20180621191535.GI7508@wotan.suse.de>
- <89d39e37-3944-f58d-018c-d36bdc9f870c@sandeen.net>
- <CAJCQCtSHT7fcHHxBaTESq5cdQQnYH95maNHby4MULCkar6mfeg@mail.gmail.com>
- <20180621221911.GT19934@dastard>
- <CAJCQCtSzsYSyCD2eEvdgpKJ8ZFShsJrV2FxKZ4bv=-S6gpx2fw@mail.gmail.com>
- <20180622040221.GY19934@dastard>
- <20180627232333.GB21242@wotan.suse.de>
- <98c71f4a-94e5-00e8-46af-a4c3ca4e520b@sandeen.net>
- <20180628020504.GC2234@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180628020504.GC2234@dastard>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:50920 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932350AbeF1Qgh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 28 Jun 2018 12:36:37 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id D2A4D40255D7
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 16:36:36 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id BE06E111CA17
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 16:36:36 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 01/24] xfs: cow unwritten conversion uses uninitialized dfops
+Date: Thu, 28 Jun 2018 12:36:13 -0400
+Message-Id: <20180628163636.52564-2-bfoster@redhat.com>
+In-Reply-To: <20180628163636.52564-1-bfoster@redhat.com>
+References: <20180628163636.52564-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, "Luis R. Rodriguez" <mcgrof@kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, xfs list <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Thu, Jun 28, 2018 at 12:05:04PM +1000, Dave Chinner wrote:
-> On Wed, Jun 27, 2018 at 06:37:31PM -0500, Eric Sandeen wrote:
-> > 
-> > 
-> > On 6/27/18 6:23 PM, Luis R. Rodriguez wrote:
-> > > On Fri, Jun 22, 2018 at 02:02:21PM +1000, Dave Chinner wrote:
-> > >> On Thu, Jun 21, 2018 at 09:19:54PM -0600, Chris Murphy wrote:
-> > >>> On Thu, Jun 21, 2018 at 4:19 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > >>>
-> > >>>> The mkfs ratios are about as optimal as we can get for the
-> > >>>> information we have about the storage - growing by
-> > >>>> 10x (i.e.  increaseing the number of AGs by 10x) puts us at the
-> > >>>> outside edge of the acceptible filesystem performance and longevity
-> > >>>> charcteristics. Growing by 100x puts us way outside the window,
-> > >>>> and examples like this where we are taking about growing by 10000x
-> > >>>> is just way beyond anything the static AG layout architecture was
-> > >>>> ever intended to support....
-> > > 
-> > > I don't  have time to test this but I can probably do so after my vacation
-> > > (now). Would it be best to just codify this eventually instead of having
-> > > this as tribal knowledge?
-> > 
-> > Honestly, if we wanted something like this I think it'd be based on terminal
-> > AG count, not growfs multiplier for a specific instance.
-> 
+A couple COW fork unwritten extent conversion helpers pass an
+uninitialized dfops pointer to xfs_bmapi_write(). This does not
+cause problems because conversion does not use a transaction or the
+dfops structure for the COW fork.  Drop the uninitialized usage of
+dfops in these codepaths and pass NULL along to xfs_bmapi_write()
+instead.
 
-Agreed. The biggest issue here is the amount of AGs, not the filesystem size
-directly, which, for this to work in a reliable way, we'd need to store the
-'original' AG count from when the FS was created, otherwise, as Eric stated,
-nothing prevents somebody to use growfs several times, instead of growing the FS
-in a single time.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+ fs/xfs/xfs_reflink.c | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
 
-Although, this makes me wonder if we somehow couldn't make it a bit more
-flexible in the future, but I think that's where Dave's subvolume work comes in?
-
-
-> IMO, this belongs in the admin documentation (e.g. the growfs man
-> page), not the code. The people writing apps and automated
-> deployment scripts that grow filesystems need to know about this,
-> not the end users who simply use these pre-canned
-> apps/environments...
-> 
-
-+1, most people who will look into the code already know this, users of grow FS
-doesn't, so this belongs to the man page IMHO.
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 592fb2071a03..ff10b5e70029 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -312,8 +312,7 @@ xfs_reflink_convert_cow_extent(
+ 	struct xfs_inode		*ip,
+ 	struct xfs_bmbt_irec		*imap,
+ 	xfs_fileoff_t			offset_fsb,
+-	xfs_filblks_t			count_fsb,
+-	struct xfs_defer_ops		*dfops)
++	xfs_filblks_t			count_fsb)
+ {
+ 	xfs_fsblock_t			first_block = NULLFSBLOCK;
+ 	int				nimaps = 1;
+@@ -327,7 +326,7 @@ xfs_reflink_convert_cow_extent(
+ 		return 0;
+ 	return xfs_bmapi_write(NULL, ip, imap->br_startoff, imap->br_blockcount,
+ 			XFS_BMAPI_COWFORK | XFS_BMAPI_CONVERT, &first_block,
+-			0, imap, &nimaps, dfops);
++			0, imap, &nimaps, NULL);
+ }
+ 
+ /* Convert all of the unwritten CoW extents in a file's range to real ones. */
+@@ -342,7 +341,6 @@ xfs_reflink_convert_cow(
+ 	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + count);
+ 	xfs_filblks_t		count_fsb = end_fsb - offset_fsb;
+ 	struct xfs_bmbt_irec	imap;
+-	struct xfs_defer_ops	dfops;
+ 	xfs_fsblock_t		first_block = NULLFSBLOCK;
+ 	int			nimaps = 1, error = 0;
+ 
+@@ -352,7 +350,7 @@ xfs_reflink_convert_cow(
+ 	error = xfs_bmapi_write(NULL, ip, offset_fsb, count_fsb,
+ 			XFS_BMAPI_COWFORK | XFS_BMAPI_CONVERT |
+ 			XFS_BMAPI_CONVERT_ONLY, &first_block, 0, &imap, &nimaps,
+-			&dfops);
++			NULL);
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	return error;
+ }
+@@ -458,8 +456,7 @@ xfs_reflink_allocate_cow(
+ 	if (nimaps == 0)
+ 		return -ENOSPC;
+ convert:
+-	return xfs_reflink_convert_cow_extent(ip, imap, offset_fsb, count_fsb,
+-			&dfops);
++	return xfs_reflink_convert_cow_extent(ip, imap, offset_fsb, count_fsb);
+ out_bmap_cancel:
+ 	xfs_defer_cancel(&dfops);
+ 	xfs_trans_unreserve_quota_nblks(tp, ip, (long)resblks, 0,
 -- 
-Carlos
+2.17.1
+
