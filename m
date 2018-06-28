@@ -1,139 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:1092 "EHLO
-        ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750936AbeF1A4M (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Jun 2018 20:56:12 -0400
-Date: Thu, 28 Jun 2018 10:55:16 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 07/21] xfs: repair inode btrees
-Message-ID: <20180628005516.GB2234@dastard>
-References: <152986820984.3155.16417868536016544528.stgit@magnolia>
- <152986825387.3155.16901181422449777127.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:41656 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751958AbeF1BpI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 27 Jun 2018 21:45:08 -0400
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] mm: reject MAP_SHARED_VALIDATE without new flags
+Message-ID: <60052659-7b37-cb69-bf9f-1683caa46219@redhat.com>
+Date: Wed, 27 Jun 2018 20:45:00 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <152986825387.3155.16901181422449777127.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: fsdevel <linux-fsdevel@vger.kernel.org>, linux-mm@kvack.org, Linux API <linux-api@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>
+Cc: Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>, Linus Torvalds <torvalds@linux-foundation.org>, Zhibin Li <zhibli@redhat.com>
 
-On Sun, Jun 24, 2018 at 12:24:13PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Use the rmapbt to find inode chunks, query the chunks to compute
-> hole and free masks, and with that information rebuild the inobt
-> and finobt.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+mmap(2) says the syscall will return EINVAL if "flags contained neither
+MAP_PRIVATE or MAP_SHARED, or contained both of these values."
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+However, commit 
+1c972597 ("mm: introduce MAP_SHARED_VALIDATE ...")
+introduced a new flag, MAP_SHARED_VALIDATE, with a value of 0x3,
+which is indistinguishable from (MAP_SHARED|MAP_PRIVATE).
 
-[....]
+Thus the invalid flag combination of (MAP_SHARED|MAP_PRIVATE) now
+passes without error, which is a regression.
 
-> +/*
-> + * For each cluster in this blob of inode, we must calculate the
-> + * properly aligned startino of that cluster, then iterate each
-> + * cluster to fill in used and filled masks appropriately.  We
-> + * then use the (startino, used, filled) information to construct
-> + * the appropriate inode records.
-> + */
-> +STATIC int
-> +xfs_repair_ialloc_process_cluster(
-> +	struct xfs_repair_ialloc	*ri,
-> +	xfs_agblock_t			agbno,
-> +	int				blks_per_cluster,
-> +	xfs_agino_t			rec_agino)
-> +{
-> +	struct xfs_imap			imap;
-> +	struct xfs_repair_ialloc_extent	*rie;
-> +	struct xfs_dinode		*dip;
-> +	struct xfs_buf			*bp;
-> +	struct xfs_scrub_context	*sc = ri->sc;
-> +	struct xfs_mount		*mp = sc->mp;
-> +	xfs_ino_t			fsino;
-> +	xfs_inofree_t			usedmask;
-> +	xfs_agino_t			nr_inodes;
-> +	xfs_agino_t			startino;
-> +	xfs_agino_t			clusterino;
-> +	xfs_agino_t			clusteroff;
-> +	xfs_agino_t			agino;
-> +	uint16_t			fillmask;
-> +	bool				inuse;
-> +	int				usedcount;
-> +	int				error;
-> +
-> +	/* The per-AG inum of this inode cluster. */
-> +	agino = XFS_OFFBNO_TO_AGINO(mp, agbno, 0);
-> +
-> +	/* The per-AG inum of the inobt record. */
-> +	startino = rec_agino + rounddown(agino - rec_agino,
-> +			XFS_INODES_PER_CHUNK);
-> +
-> +	/* The per-AG inum of the cluster within the inobt record. */
-> +	clusteroff = agino - startino;
-> +
-> +	/* Every inode in this holemask slot is filled. */
-> +	nr_inodes = XFS_OFFBNO_TO_AGINO(mp, blks_per_cluster, 0);
-> +	fillmask = xfs_inobt_maskn(clusteroff / XFS_INODES_PER_HOLEMASK_BIT,
-> +			nr_inodes / XFS_INODES_PER_HOLEMASK_BIT);
-> +
-> +	/* Grab the inode cluster buffer. */
-> +	imap.im_blkno = XFS_AGB_TO_DADDR(mp, sc->sa.agno, agbno);
-> +	imap.im_len = XFS_FSB_TO_BB(mp, blks_per_cluster);
-> +	imap.im_boffset = 0;
-> +
-> +	error = xfs_imap_to_bp(mp, sc->tp, &imap, &dip, &bp, 0,
-> +			XFS_IGET_UNTRUSTED);
+I'm not sure of the best way out of this, other than to change the
+API description to say that MAP_SHARED_VALIDATE is only allowed in
+combination with "new" flags, and reject it if it's used only with
+flags contained in LEGACY_MAP_MASK.
 
-This is going to error out if the cluster we are asking to be mapped
-has no record in the inobt. Aren't we trying to rebuild the inobt
-here from the rmap's idea of on-disk clusters? So how do we rebuild
-the inobt record if we can't already find the chunk record in the
-inobt?
+This will require the mmap(2) manpage to enumerate which flags don't
+require validation, as well, so the user knows when to use the
+VALIDATE flag.
 
-At minimum, this needs a comment explaining why it works.
+I'm not super happy with this, because it also means that code
+which explicitly asks for mmap(MAP_SHARED|MAP_PRIVATE|MAP_SYNC) will
+also pass, but I'm not sure there's anything to do about that.
 
-> +/* Initialize new inobt/finobt roots and implant them into the AGI. */
-> +STATIC int
-> +xfs_repair_iallocbt_reset_btrees(
-> +	struct xfs_scrub_context	*sc,
-> +	struct xfs_owner_info		*oinfo,
-> +	int				*log_flags)
-> +{
-> +	struct xfs_agi			*agi;
-> +	struct xfs_buf			*bp;
-> +	struct xfs_mount		*mp = sc->mp;
-> +	xfs_fsblock_t			inofsb;
-> +	xfs_fsblock_t			finofsb;
-> +	enum xfs_ag_resv_type		resv;
-> +	int				error;
-> +
-> +	agi = XFS_BUF_TO_AGI(sc->sa.agi_bp);
-> +
-> +	/* Initialize new inobt root. */
-> +	resv = XFS_AG_RESV_NONE;
-> +	error = xfs_repair_alloc_ag_block(sc, oinfo, &inofsb, resv);
-> +	if (error)
-> +		return error;
-> +	error = xfs_repair_init_btblock(sc, inofsb, &bp, XFS_BTNUM_INO,
-> +			&xfs_inobt_buf_ops);
-> +	if (error)
-> +		return error;
-> +	agi->agi_root = cpu_to_be32(XFS_FSB_TO_AGBNO(mp, inofsb));
-> +	agi->agi_level = cpu_to_be32(1);
-> +	*log_flags |= XFS_AGI_ROOT | XFS_AGI_LEVEL;
-> +
-> +	/* Initialize new finobt root. */
-> +	if (!xfs_sb_version_hasfinobt(&mp->m_sb))
-> +		return 0;
-> +
-> +	resv = mp->m_inotbt_nores ? XFS_AG_RESV_NONE : XFS_AG_RESV_METADATA;
+Reported-by: Zhibin Li <zhibli@redhat.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Comment explaining this?
+diff --git a/mm/mmap.c b/mm/mmap.c
+index d1eb87ef4b1a..b1dc84466365 100644
+--- a/mm/mmap.c
++++ b/mm/mmap.c
+@@ -1440,6 +1440,16 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
+ 
+ 		if (!file_mmap_ok(file, inode, pgoff, len))
+ 			return -EOVERFLOW;
++		/*
++		 * MAP_SHARED_VALIDATE is indistinguishable from
++		 * (MAP_SHARED|MAP_PRIVATE) which must return -EINVAL.
++		 * If the flags contain MAP_SHARED_VALIDATE and none of the
++		 * non-legacy flags, the user gets EINVAL.
++		 */
++		if (((flags & MAP_SHARED_VALIDATE) == MAP_SHARED_VALIDATE) &&
++		    !(flags & ~LEGACY_MAP_MASK)) {
++			return -EINVAL;
++		}
+ 
+ 		flags_mask = LEGACY_MAP_MASK | file->f_op->mmap_supported_flags;
+ 
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
