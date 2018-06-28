@@ -1,103 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot0-f195.google.com ([74.125.82.195]:40969 "EHLO
-        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966174AbeF1R7d (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Jun 2018 13:59:33 -0400
-Received: by mail-ot0-f195.google.com with SMTP id d19-v6so7105003oti.8
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 10:59:33 -0700 (PDT)
+Received: from sandeen.net ([63.231.237.45]:44132 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753165AbeF1TYf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 28 Jun 2018 15:24:35 -0400
+Subject: Re: [PATCH 11/10] xfs_repair: clear extent size hints when clearing
+ inode core
+References: <153006766483.20121.9285982017465570544.stgit@magnolia>
+ <20180628172937.GI5711@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <07330d87-0cd4-0d37-9c77-0e2b1f66f67d@sandeen.net>
+Date: Thu, 28 Jun 2018 14:24:33 -0500
 MIME-Version: 1.0
-In-Reply-To: <20180628174815.GA18768@redhat.com>
-References: <CAPcyv4h6HO6fs6k7QMD77jkz2djCeWCtWomCdNb0-1Q4VKanqw@mail.gmail.com>
- <20180626191346.GA7233@redhat.com> <1530046327.14039.273.camel@hpe.com>
- <CAPcyv4hP_Y3xdyCa-UkYCMJ5OtnjnkwPZDS2Z2Ge8+5ymBONwQ@mail.gmail.com>
- <1530048093.14039.286.camel@hpe.com> <CAPcyv4gXAC7imJs5qfsDNLeN545Rqyd2b1M9s5kr4f9y48LXgQ@mail.gmail.com>
- <1530048545.14039.288.camel@hpe.com> <CAPcyv4ifHX95fCM9Xj87CugwNWzgq=y-4LxPQ5L6RdjX0jdctQ@mail.gmail.com>
- <20180626220430.GA4269@linux.intel.com> <1530207635.14039.308.camel@hpe.com> <20180628174815.GA18768@redhat.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 28 Jun 2018 10:59:31 -0700
-Message-ID: <CAPcyv4grHpyihujqxvaPe4=E-43L2Yvp+dNyX6bx+B06mNwsPA@mail.gmail.com>
-Subject: Re: [PATCH v3 1/3] pmem: only set QUEUE_FLAG_DAX for fsdax mode
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20180628172937.GI5711@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: "Kani, Toshi" <toshi.kani@hpe.com>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jun 28, 2018 at 10:48 AM, Mike Snitzer <snitzer@redhat.com> wrote:
-> On Thu, Jun 28 2018 at  1:42pm -0400,
-> Kani, Toshi <toshi.kani@hpe.com> wrote:
->
->> On Tue, 2018-06-26 at 16:04 -0600, Ross Zwisler wrote:
->> > On Tue, Jun 26, 2018 at 02:51:52PM -0700, Dan Williams wrote:
->> > > On Tue, Jun 26, 2018 at 2:31 PM, Kani, Toshi <toshi.kani@hpe.com> wrote:
->> > > > On Tue, 2018-06-26 at 14:28 -0700, Dan Williams wrote:
->> > > > > On Tue, Jun 26, 2018 at 2:23 PM, Kani, Toshi <toshi.kani@hpe.com> wrote:
->> > > > > > On Tue, 2018-06-26 at 14:02 -0700, Dan Williams wrote:
->> > > > > > > On Tue, Jun 26, 2018 at 1:54 PM, Kani, Toshi <toshi.kani@hpe.com> wrote:
->> > > > >
->> > > > > [..]
->> > > > > > > > When this dm change was made, the pmem driver supported DAX for both raw
->> > > > > > > > and memory modes (note: sector mode does not use the pmem driver).  I
->> > > > > > > > think the issue was introduced when we dropped DAX support from raw
->> > > > > > > > mode.
->> > > > > > >
->> > > > > > > Still DAX with raw mode never really worked any way. It was also
->> > > > > > > something that was broken from day one. So what happens to someone who
->> > > > > > > happened to avoid all the problems with page-less DAX and enabled
->> > > > > > > device-mapper on top? That failure mode detail needs to be added to
->> > > > > > > this changelog if we want to propose this for -stable.
->> > > > > >
->> > > > > > My point is that the behavior should be consistent between pmem and
->> > > > > > device-mapper.  When -o dax succeeds on a pmem, then it should succeed
->> > > > > > on a device-mapper on top of that pmem.
->> > > > > >
->> > > > > > Has the drop of dax support from raw mode made to -stable back to the
->> > > > > > baseline accepted 545ed20e6df6?  It will introduce inconsistency,
->> > > > > > otherwise.
->> > > > >
->> > > > > That commit, 569d0365f571 "dax: require 'struct page' by default for
->> > > > > filesystem dax", has not been tagged for -stable.
->> > > >
->> > > > Then, Fixes tag should be set to 569d0365f571 to keep the behavior
->> > > > consistent.
->> > >
->> > > Sure, and the failure mode is...? I'm thinking the commit log should say:
->> > >
->> > > "Starting with commit 569d0365f571 "dax: require 'struct page' by
->> > > default for filesystem dax", dax is no longer supported for page-less
->> > > configurations. However, device-mapper sees the QUEUE_FLAG_DAX still
->> > > being set and falsely assumes that DAX is enabled, this leads to
->> > > <insert user visible failure mode details here>"
->> >
->> > Dan is correct that there is no user visible change for this.  It is the right
->> > thing to do for consistency and sanity, but it doesn't actually have user
->> > visible behavior that needs to be backported to stable.
->> >
->> > Toshi is correct that this change is only for raw mode namespaces, not btt
->> > namespaces.
->> >
->> > I'll adjust the changelog and remove the stable flag for v5, and I'll add a
->> > Fixes: tag for patch 2.
->>
->> Hi Ross,
->>
->> Your patches look good.  But I am still not clear about the Fixes &
->> stable handling.  Talking about user visible behavior, I do not think we
->> had any issue until dax support was dropped from raw mode.  Until then,
->> the pmem driver supported dax for all modes, and the check for
->> direct_access worked.
->
-> I've staged the changes to send to Linus shortly.
->
-> The first patch has:
->
-> Fixes: 569d0365f571 ("dax: require 'struct page' by default for filesystem dax")
-> Cc: stable@vger.kernel.org
->
-> As that is the right thing to do given the other 2 patches are marked
-> for stable.  We don't want to have a stable kernel with the last 2
-> patches but not the first.
+On 6/28/18 12:29 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> In kernel 4.18 we become more strict about what can be in the extent
+> size hint fields, even for freed inodes.  Therefore, if repair decides
+> to clear out an inode core, zero the hint fields and clear the flags so
+> that the kernel won't trip over the cleared inode if and when it tries
+> to read the chunk.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Ok, I'm still grumbling about the changelog being more clear about
-what the problem was, but let's just go with what you got.
+Looks good, I'll merge this before the libxfs sync.  Thanks!
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+> ---
+>  repair/dinode.c |   10 ++++++++++
+>  1 file changed, 10 insertions(+)
+> 
+> diff --git a/repair/dinode.c b/repair/dinode.c
+> index f9b2bac0..4118db7c 100644
+> --- a/repair/dinode.c
+> +++ b/repair/dinode.c
+> @@ -194,6 +194,11 @@ clear_dinode_core(struct xfs_mount *mp, xfs_dinode_t *dinoc, xfs_ino_t ino_num)
+>  		dinoc->di_anextents = 0;
+>  	}
+>  
+> +	if (be32_to_cpu(dinoc->di_extsize) != 0)  {
+> +		__dirty_no_modify_ret(dirty);
+> +		dinoc->di_extsize = 0;
+> +	}
+> +
+>  	if (dinoc->di_version > 1 &&
+>  			be32_to_cpu(dinoc->di_nlink) != 0)  {
+>  		__dirty_no_modify_ret(dirty);
+> @@ -237,6 +242,11 @@ clear_dinode_core(struct xfs_mount *mp, xfs_dinode_t *dinoc, xfs_ino_t ino_num)
+>  		dinoc->di_changecount = 0;
+>  	}
+>  
+> +	if (be32_to_cpu(dinoc->di_cowextsize) != 0)  {
+> +		__dirty_no_modify_ret(dirty);
+> +		dinoc->di_cowextsize = 0;
+> +	}
+> +
+>  	return dirty;
+>  }
+>  
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
