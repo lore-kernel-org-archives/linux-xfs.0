@@ -1,52 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:50866 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751316AbeF1EbU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Jun 2018 00:31:20 -0400
-Date: Wed, 27 Jun 2018 21:31:16 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 4/4] xfs: fuzz every field of every structure and test
- kernel crashes
-Message-ID: <20180628043116.GF5711@magnolia>
-References: <152960594943.26479.1457883867468749220.stgit@magnolia>
- <152960597579.26479.1694478608504574104.stgit@magnolia>
- <20180628031027.GR2780@desktop>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:40928 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932118AbeF1LmN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 28 Jun 2018 07:42:13 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id EB41540131AB
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 11:42:12 +0000 (UTC)
+Date: Thu, 28 Jun 2018 07:42:09 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH V2] xfs: Initialize variables in xfs_alloc_get_rec before
+ using them
+Message-ID: <20180628114209.GA50785@bfoster>
+References: <20180628092835.25879-1-cmaiolino@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180628031027.GR2780@desktop>
+In-Reply-To: <20180628092835.25879-1-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jun 28, 2018 at 11:10:27AM +0800, Eryu Guan wrote:
-> On Thu, Jun 21, 2018 at 11:32:55AM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Fuzz every field of every structure and then try to write the
-> > filesystem, to see how many of these writes can crash the kernel.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Jun 28, 2018 at 11:28:35AM +0200, Carlos Maiolino wrote:
+> Make sure we initialize *bno and *len, before jumping to out_bad_rec
+> label, and risk calling xfs_warn() with uninitialized variables.
 > 
-> Almost all the tests here are failing in similar ways with v4.18-rc1
-> kernel and latest xfsprogs from for-next branch, e.g. xfs/1423 fails as
+> Coverity: 100898
+> Coverity: 1437081
+> Coverity: 1437129
+> Coverity: 1437191
+> Coverity: 1437201
+> Coverity: 1437212
+> Coverity: 1437341
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> ---
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
 > 
->     +re-repair failed (1) with diskdq.magic = zeroes.
->     +re-repair failed (1) with diskdq.magic = ones.
->     +re-repair failed (1) with diskdq.magic = firstbit.
->     +re-repair failed (1) with diskdq.magic = middlebit.
+> This is based on Darrick's suggestion, although, I believe initializing *bno and
+> *len before testing if *len is empty or not is a bit more clear than changing
+> xfs_warn() to use rec->alloc.ar_startblock and rec->alloc.ar_blockcount
+> directly.
 > 
-> Seems like we should skip re-repair in the "none" repair mode too in
-> __scratch_xfs_fuzz_field_test?
-
-Err, yep.  I'll go fix that up too. :)
-
---D
-
-> Thanks,
-> Eryu
+>  fs/xfs/libxfs/xfs_alloc.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index eef466260d43..75dbdc14c45f 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -223,12 +223,13 @@ xfs_alloc_get_rec(
+>  	error = xfs_btree_get_rec(cur, &rec, stat);
+>  	if (error || !(*stat))
+>  		return error;
+> -	if (rec->alloc.ar_blockcount == 0)
+> -		goto out_bad_rec;
+>  
+>  	*bno = be32_to_cpu(rec->alloc.ar_startblock);
+>  	*len = be32_to_cpu(rec->alloc.ar_blockcount);
+>  
+> +	if (*len == 0)
+> +		goto out_bad_rec;
+> +
+>  	/* check for valid extent range, including overflow */
+>  	if (!xfs_verify_agbno(mp, agno, *bno))
+>  		goto out_bad_rec;
+> -- 
+> 2.14.3
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
