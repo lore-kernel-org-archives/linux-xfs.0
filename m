@@ -1,182 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:33802 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S935603AbeF1Qgj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 28 Jun 2018 12:36:39 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id AF46640122CB
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 16:36:38 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 9A278111CA17
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 16:36:38 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 17/24] xfs: use ->t_dfops for collapse/insert range operations
-Date: Thu, 28 Jun 2018 12:36:29 -0400
-Message-Id: <20180628163636.52564-18-bfoster@redhat.com>
-In-Reply-To: <20180628163636.52564-1-bfoster@redhat.com>
-References: <20180628163636.52564-1-bfoster@redhat.com>
+Received: from g2t1383g.austin.hpe.com ([15.233.16.89]:7226 "EHLO
+        g2t1383g.austin.hpe.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935186AbeF1Rmv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Jun 2018 13:42:51 -0400
+From: "Kani, Toshi" <toshi.kani@hpe.com>
+Subject: Re: [PATCH v3 1/3] pmem: only set QUEUE_FLAG_DAX for fsdax mode
+Date: Thu, 28 Jun 2018 17:42:34 +0000
+Message-ID: <1530207635.14039.308.camel@hpe.com>
+References: <CAPcyv4iWgPnHmBKhUvhManC6UL9CkLqN_d8vBo6KmcPJdPzuUw@mail.gmail.com>
+         <20180626185830.GA7171@redhat.com>
+         <CAPcyv4h6HO6fs6k7QMD77jkz2djCeWCtWomCdNb0-1Q4VKanqw@mail.gmail.com>
+         <20180626191346.GA7233@redhat.com> <1530046327.14039.273.camel@hpe.com>
+         <CAPcyv4hP_Y3xdyCa-UkYCMJ5OtnjnkwPZDS2Z2Ge8+5ymBONwQ@mail.gmail.com>
+         <1530048093.14039.286.camel@hpe.com>
+         <CAPcyv4gXAC7imJs5qfsDNLeN545Rqyd2b1M9s5kr4f9y48LXgQ@mail.gmail.com>
+         <1530048545.14039.288.camel@hpe.com>
+         <CAPcyv4ifHX95fCM9Xj87CugwNWzgq=y-4LxPQ5L6RdjX0jdctQ@mail.gmail.com>
+         <20180626220430.GA4269@linux.intel.com>
+In-Reply-To: <20180626220430.GA4269@linux.intel.com>
+Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <21D4734DB95C3E49B2DAE47C2C3EA83D@NAMPRD84.PROD.OUTLOOK.COM>
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "ross.zwisler@linux.intel.com" <ross.zwisler@linux.intel.com>
+Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "snitzer@redhat.com" <snitzer@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
 
-Use ->t_dfops for the collapse and insert range transactions. These
-are the only callers of the respective bmap helpers, so replace the
-unnecessary dfops parameters with direct accesses to ->t_dfops.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_bmap.c | 16 +++++++---------
- fs/xfs/libxfs/xfs_bmap.h |  6 ++----
- fs/xfs/xfs_bmap_util.c   | 14 ++++++++------
- 3 files changed, 17 insertions(+), 19 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 17b0b22a1edf..1ce1d10a4140 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -5685,8 +5685,7 @@ xfs_bmap_collapse_extents(
- 	xfs_fileoff_t		*next_fsb,
- 	xfs_fileoff_t		offset_shift_fsb,
- 	bool			*done,
--	xfs_fsblock_t		*firstblock,
--	struct xfs_defer_ops	*dfops)
-+	xfs_fsblock_t		*firstblock)
- {
- 	int			whichfork = XFS_DATA_FORK;
- 	struct xfs_mount	*mp = ip->i_mount;
-@@ -5720,7 +5719,7 @@ xfs_bmap_collapse_extents(
- 	if (ifp->if_flags & XFS_IFBROOT) {
- 		cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
- 		cur->bc_private.b.firstblock = *firstblock;
--		cur->bc_private.b.dfops = dfops;
-+		cur->bc_private.b.dfops = tp->t_dfops;
- 		cur->bc_private.b.flags = 0;
- 	}
- 
-@@ -5741,7 +5740,7 @@ xfs_bmap_collapse_extents(
- 		if (xfs_bmse_can_merge(&prev, &got, offset_shift_fsb)) {
- 			error = xfs_bmse_merge(ip, whichfork, offset_shift_fsb,
- 					&icur, &got, &prev, cur, &logflags,
--					dfops);
-+					tp->t_dfops);
- 			if (error)
- 				goto del_cursor;
- 			goto done;
-@@ -5754,7 +5753,7 @@ xfs_bmap_collapse_extents(
- 	}
- 
- 	error = xfs_bmap_shift_update_extent(ip, whichfork, &icur, &got, cur,
--			&logflags, dfops, new_startoff);
-+			&logflags, tp->t_dfops, new_startoff);
- 	if (error)
- 		goto del_cursor;
- 
-@@ -5808,8 +5807,7 @@ xfs_bmap_insert_extents(
- 	xfs_fileoff_t		offset_shift_fsb,
- 	bool			*done,
- 	xfs_fileoff_t		stop_fsb,
--	xfs_fsblock_t		*firstblock,
--	struct xfs_defer_ops	*dfops)
-+	xfs_fsblock_t		*firstblock)
- {
- 	int			whichfork = XFS_DATA_FORK;
- 	struct xfs_mount	*mp = ip->i_mount;
-@@ -5843,7 +5841,7 @@ xfs_bmap_insert_extents(
- 	if (ifp->if_flags & XFS_IFBROOT) {
- 		cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
- 		cur->bc_private.b.firstblock = *firstblock;
--		cur->bc_private.b.dfops = dfops;
-+		cur->bc_private.b.dfops = tp->t_dfops;
- 		cur->bc_private.b.flags = 0;
- 	}
- 
-@@ -5886,7 +5884,7 @@ xfs_bmap_insert_extents(
- 	}
- 
- 	error = xfs_bmap_shift_update_extent(ip, whichfork, &icur, &got, cur,
--			&logflags, dfops, new_startoff);
-+			&logflags, tp->t_dfops, new_startoff);
- 	if (error)
- 		goto del_cursor;
- 
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index 02811cd31153..2da6c6daada8 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -222,14 +222,12 @@ void	xfs_bmap_del_extent_cow(struct xfs_inode *ip,
- uint	xfs_default_attroffset(struct xfs_inode *ip);
- int	xfs_bmap_collapse_extents(struct xfs_trans *tp, struct xfs_inode *ip,
- 		xfs_fileoff_t *next_fsb, xfs_fileoff_t offset_shift_fsb,
--		bool *done, xfs_fsblock_t *firstblock,
--		struct xfs_defer_ops *dfops);
-+		bool *done, xfs_fsblock_t *firstblock);
- int	xfs_bmap_can_insert_extents(struct xfs_inode *ip, xfs_fileoff_t off,
- 		xfs_fileoff_t shift);
- int	xfs_bmap_insert_extents(struct xfs_trans *tp, struct xfs_inode *ip,
- 		xfs_fileoff_t *next_fsb, xfs_fileoff_t offset_shift_fsb,
--		bool *done, xfs_fileoff_t stop_fsb, xfs_fsblock_t *firstblock,
--		struct xfs_defer_ops *dfops);
-+		bool *done, xfs_fileoff_t stop_fsb, xfs_fsblock_t *firstblock);
- int	xfs_bmap_split_extent(struct xfs_inode *ip, xfs_fileoff_t split_offset);
- int	xfs_bmapi_reserve_delalloc(struct xfs_inode *ip, int whichfork,
- 		xfs_fileoff_t off, xfs_filblks_t len, xfs_filblks_t prealloc,
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 58b51648240d..2c0c9534941c 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1347,12 +1347,13 @@ xfs_collapse_file_space(
- 		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
- 
- 		xfs_defer_init(&dfops, &first_block);
-+		tp->t_dfops = &dfops;
- 		error = xfs_bmap_collapse_extents(tp, ip, &next_fsb, shift_fsb,
--				&done, &first_block, &dfops);
-+				&done, &first_block);
- 		if (error)
- 			goto out_bmap_cancel;
- 
--		error = xfs_defer_finish(&tp, &dfops);
-+		error = xfs_defer_finish(&tp, tp->t_dfops);
- 		if (error)
- 			goto out_bmap_cancel;
- 		error = xfs_trans_commit(tp);
-@@ -1361,7 +1362,7 @@ xfs_collapse_file_space(
- 	return error;
- 
- out_bmap_cancel:
--	xfs_defer_cancel(&dfops);
-+	xfs_defer_cancel(tp->t_dfops);
- out_trans_cancel:
- 	xfs_trans_cancel(tp);
- 	return error;
-@@ -1426,12 +1427,13 @@ xfs_insert_file_space(
- 		xfs_ilock(ip, XFS_ILOCK_EXCL);
- 		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
- 		xfs_defer_init(&dfops, &first_block);
-+		tp->t_dfops = &dfops;
- 		error = xfs_bmap_insert_extents(tp, ip, &next_fsb, shift_fsb,
--				&done, stop_fsb, &first_block, &dfops);
-+				&done, stop_fsb, &first_block);
- 		if (error)
- 			goto out_bmap_cancel;
- 
--		error = xfs_defer_finish(&tp, &dfops);
-+		error = xfs_defer_finish(&tp, tp->t_dfops);
- 		if (error)
- 			goto out_bmap_cancel;
- 		error = xfs_trans_commit(tp);
-@@ -1440,7 +1442,7 @@ xfs_insert_file_space(
- 	return error;
- 
- out_bmap_cancel:
--	xfs_defer_cancel(&dfops);
-+	xfs_defer_cancel(tp->t_dfops);
- 	xfs_trans_cancel(tp);
- 	return error;
- }
--- 
-2.17.1
-
+T24gVHVlLCAyMDE4LTA2LTI2IGF0IDE2OjA0IC0wNjAwLCBSb3NzIFp3aXNsZXIgd3JvdGU6DQo+
+IE9uIFR1ZSwgSnVuIDI2LCAyMDE4IGF0IDAyOjUxOjUyUE0gLTA3MDAsIERhbiBXaWxsaWFtcyB3
+cm90ZToNCj4gPiBPbiBUdWUsIEp1biAyNiwgMjAxOCBhdCAyOjMxIFBNLCBLYW5pLCBUb3NoaSA8
+dG9zaGkua2FuaUBocGUuY29tPiB3cm90ZToNCj4gPiA+IE9uIFR1ZSwgMjAxOC0wNi0yNiBhdCAx
+NDoyOCAtMDcwMCwgRGFuIFdpbGxpYW1zIHdyb3RlOg0KPiA+ID4gPiBPbiBUdWUsIEp1biAyNiwg
+MjAxOCBhdCAyOjIzIFBNLCBLYW5pLCBUb3NoaSA8dG9zaGkua2FuaUBocGUuY29tPiB3cm90ZToN
+Cj4gPiA+ID4gPiBPbiBUdWUsIDIwMTgtMDYtMjYgYXQgMTQ6MDIgLTA3MDAsIERhbiBXaWxsaWFt
+cyB3cm90ZToNCj4gPiA+ID4gPiA+IE9uIFR1ZSwgSnVuIDI2LCAyMDE4IGF0IDE6NTQgUE0sIEth
+bmksIFRvc2hpIDx0b3NoaS5rYW5pQGhwZS5jb20+IHdyb3RlOg0KPiA+ID4gPiANCj4gPiA+ID4g
+Wy4uXQ0KPiA+ID4gPiA+ID4gPiBXaGVuIHRoaXMgZG0gY2hhbmdlIHdhcyBtYWRlLCB0aGUgcG1l
+bSBkcml2ZXIgc3VwcG9ydGVkIERBWCBmb3IgYm90aCByYXcNCj4gPiA+ID4gPiA+ID4gYW5kIG1l
+bW9yeSBtb2RlcyAobm90ZTogc2VjdG9yIG1vZGUgZG9lcyBub3QgdXNlIHRoZSBwbWVtIGRyaXZl
+cikuICBJDQo+ID4gPiA+ID4gPiA+IHRoaW5rIHRoZSBpc3N1ZSB3YXMgaW50cm9kdWNlZCB3aGVu
+IHdlIGRyb3BwZWQgREFYIHN1cHBvcnQgZnJvbSByYXcNCj4gPiA+ID4gPiA+ID4gbW9kZS4NCj4g
+PiA+ID4gPiA+IA0KPiA+ID4gPiA+ID4gU3RpbGwgREFYIHdpdGggcmF3IG1vZGUgbmV2ZXIgcmVh
+bGx5IHdvcmtlZCBhbnkgd2F5LiBJdCB3YXMgYWxzbw0KPiA+ID4gPiA+ID4gc29tZXRoaW5nIHRo
+YXQgd2FzIGJyb2tlbiBmcm9tIGRheSBvbmUuIFNvIHdoYXQgaGFwcGVucyB0byBzb21lb25lIHdo
+bw0KPiA+ID4gPiA+ID4gaGFwcGVuZWQgdG8gYXZvaWQgYWxsIHRoZSBwcm9ibGVtcyB3aXRoIHBh
+Z2UtbGVzcyBEQVggYW5kIGVuYWJsZWQNCj4gPiA+ID4gPiA+IGRldmljZS1tYXBwZXIgb24gdG9w
+PyBUaGF0IGZhaWx1cmUgbW9kZSBkZXRhaWwgbmVlZHMgdG8gYmUgYWRkZWQgdG8NCj4gPiA+ID4g
+PiA+IHRoaXMgY2hhbmdlbG9nIGlmIHdlIHdhbnQgdG8gcHJvcG9zZSB0aGlzIGZvciAtc3RhYmxl
+Lg0KPiA+ID4gPiA+IA0KPiA+ID4gPiA+IE15IHBvaW50IGlzIHRoYXQgdGhlIGJlaGF2aW9yIHNo
+b3VsZCBiZSBjb25zaXN0ZW50IGJldHdlZW4gcG1lbSBhbmQNCj4gPiA+ID4gPiBkZXZpY2UtbWFw
+cGVyLiAgV2hlbiAtbyBkYXggc3VjY2VlZHMgb24gYSBwbWVtLCB0aGVuIGl0IHNob3VsZCBzdWNj
+ZWVkDQo+ID4gPiA+ID4gb24gYSBkZXZpY2UtbWFwcGVyIG9uIHRvcCBvZiB0aGF0IHBtZW0uDQo+
+ID4gPiA+ID4gDQo+ID4gPiA+ID4gSGFzIHRoZSBkcm9wIG9mIGRheCBzdXBwb3J0IGZyb20gcmF3
+IG1vZGUgbWFkZSB0byAtc3RhYmxlIGJhY2sgdG8gdGhlDQo+ID4gPiA+ID4gYmFzZWxpbmUgYWNj
+ZXB0ZWQgNTQ1ZWQyMGU2ZGY2PyAgSXQgd2lsbCBpbnRyb2R1Y2UgaW5jb25zaXN0ZW5jeSwNCj4g
+PiA+ID4gPiBvdGhlcndpc2UuDQo+ID4gPiA+IA0KPiA+ID4gPiBUaGF0IGNvbW1pdCwgNTY5ZDAz
+NjVmNTcxICJkYXg6IHJlcXVpcmUgJ3N0cnVjdCBwYWdlJyBieSBkZWZhdWx0IGZvcg0KPiA+ID4g
+PiBmaWxlc3lzdGVtIGRheCIsIGhhcyBub3QgYmVlbiB0YWdnZWQgZm9yIC1zdGFibGUuDQo+ID4g
+PiANCj4gPiA+IFRoZW4sIEZpeGVzIHRhZyBzaG91bGQgYmUgc2V0IHRvIDU2OWQwMzY1ZjU3MSB0
+byBrZWVwIHRoZSBiZWhhdmlvcg0KPiA+ID4gY29uc2lzdGVudC4NCj4gPiANCj4gPiBTdXJlLCBh
+bmQgdGhlIGZhaWx1cmUgbW9kZSBpcy4uLj8gSSdtIHRoaW5raW5nIHRoZSBjb21taXQgbG9nIHNo
+b3VsZCBzYXk6DQo+ID4gDQo+ID4gIlN0YXJ0aW5nIHdpdGggY29tbWl0IDU2OWQwMzY1ZjU3MSAi
+ZGF4OiByZXF1aXJlICdzdHJ1Y3QgcGFnZScgYnkNCj4gPiBkZWZhdWx0IGZvciBmaWxlc3lzdGVt
+IGRheCIsIGRheCBpcyBubyBsb25nZXIgc3VwcG9ydGVkIGZvciBwYWdlLWxlc3MNCj4gPiBjb25m
+aWd1cmF0aW9ucy4gSG93ZXZlciwgZGV2aWNlLW1hcHBlciBzZWVzIHRoZSBRVUVVRV9GTEFHX0RB
+WCBzdGlsbA0KPiA+IGJlaW5nIHNldCBhbmQgZmFsc2VseSBhc3N1bWVzIHRoYXQgREFYIGlzIGVu
+YWJsZWQsIHRoaXMgbGVhZHMgdG8NCj4gPiA8aW5zZXJ0IHVzZXIgdmlzaWJsZSBmYWlsdXJlIG1v
+ZGUgZGV0YWlscyBoZXJlPiINCj4gDQo+IERhbiBpcyBjb3JyZWN0IHRoYXQgdGhlcmUgaXMgbm8g
+dXNlciB2aXNpYmxlIGNoYW5nZSBmb3IgdGhpcy4gIEl0IGlzIHRoZSByaWdodA0KPiB0aGluZyB0
+byBkbyBmb3IgY29uc2lzdGVuY3kgYW5kIHNhbml0eSwgYnV0IGl0IGRvZXNuJ3QgYWN0dWFsbHkg
+aGF2ZSB1c2VyDQo+IHZpc2libGUgYmVoYXZpb3IgdGhhdCBuZWVkcyB0byBiZSBiYWNrcG9ydGVk
+IHRvIHN0YWJsZS4NCj4gDQo+IFRvc2hpIGlzIGNvcnJlY3QgdGhhdCB0aGlzIGNoYW5nZSBpcyBv
+bmx5IGZvciByYXcgbW9kZSBuYW1lc3BhY2VzLCBub3QgYnR0DQo+IG5hbWVzcGFjZXMuDQo+IA0K
+PiBJJ2xsIGFkanVzdCB0aGUgY2hhbmdlbG9nIGFuZCByZW1vdmUgdGhlIHN0YWJsZSBmbGFnIGZv
+ciB2NSwgYW5kIEknbGwgYWRkIGENCj4gRml4ZXM6IHRhZyBmb3IgcGF0Y2ggMi4NCg0KSGkgUm9z
+cywNCg0KWW91ciBwYXRjaGVzIGxvb2sgZ29vZC4gIEJ1dCBJIGFtIHN0aWxsIG5vdCBjbGVhciBh
+Ym91dCB0aGUgRml4ZXMgJg0Kc3RhYmxlIGhhbmRsaW5nLiAgVGFsa2luZyBhYm91dCB1c2VyIHZp
+c2libGUgYmVoYXZpb3IsIEkgZG8gbm90IHRoaW5rIHdlDQpoYWQgYW55IGlzc3VlIHVudGlsIGRh
+eCBzdXBwb3J0IHdhcyBkcm9wcGVkIGZyb20gcmF3IG1vZGUuICBVbnRpbCB0aGVuLA0KdGhlIHBt
+ZW0gZHJpdmVyIHN1cHBvcnRlZCBkYXggZm9yIGFsbCBtb2RlcywgYW5kIHRoZSBjaGVjayBmb3IN
+CmRpcmVjdF9hY2Nlc3Mgd29ya2VkLiAgICANCg0KVGhhbmtzLA0KLVRvc2hpDQoNCg==
