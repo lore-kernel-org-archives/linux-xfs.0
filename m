@@ -1,31 +1,31 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:56784 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:57134 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935443AbeF1VLr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Jun 2018 17:11:47 -0400
+        with ESMTP id S933219AbeF1VMJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Jun 2018 17:12:09 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5SL9Ngt181050
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 21:11:46 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp2120.oracle.com with ESMTP id 2jum0abyme-1
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5SLC91H182826
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 21:12:09 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2120.oracle.com with ESMTP id 2jum0abync-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 21:11:46 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w5SLBjUc022506
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 21:12:09 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w5SLC5aD025199
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 21:11:46 GMT
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w5SLBj3a002064
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 21:11:45 GMT
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 21:12:05 GMT
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w5SLC5CG021944
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Jun 2018 21:12:05 GMT
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: Re: [PATCH 01/21] xfs: don't assume a left rmap when allocating a new
- rmap
+Subject: Re: [PATCH 02/21] xfs: add helper to decide if an inode has allocated
+ cow blocks
 References: <152986820984.3155.16417868536016544528.stgit@magnolia>
- <152986821631.3155.13981921703707802906.stgit@magnolia>
-Message-ID: <d811feb2-e614-f69b-ff23-d02c83bf04f7@oracle.com>
-Date: Thu, 28 Jun 2018 14:11:38 -0700
+ <152986822251.3155.14348466047540978889.stgit@magnolia>
+Message-ID: <fa81b552-6c3b-165b-2eac-5898e6366782@oracle.com>
+Date: Thu, 28 Jun 2018 14:12:03 -0700
 MIME-Version: 1.0
-In-Reply-To: <152986821631.3155.13981921703707802906.stgit@magnolia>
+In-Reply-To: <152986822251.3155.14348466047540978889.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -38,66 +38,65 @@ Cc: linux-xfs@vger.kernel.org
 On 06/24/2018 12:23 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> The original rmap code assumed that there would always be at least one
-> rmap in the rmapbt (the AG sb/agf/agi) and so errored out if it didn't
-> find one.  This assumption isn't true for the rmapbt repair function
-> (and it won't be true for realtime rmap either), so remove the check and
-> just deal with the situation.
+> Add a helper to decide if an inode has real or unwritten extents in the
+> CoW fork.  The upcoming repair freeze functionality will have to know if
+> it's safe to iput an inode -- if the inode has incore any state that
+> would require a transaction to unwind during iput, we'll have to defer
+> the iput.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->   fs/xfs/libxfs/xfs_rmap.c |   24 ++++++++++++------------
->   1 file changed, 12 insertions(+), 12 deletions(-)
+>   fs/xfs/xfs_inode.c |   19 +++++++++++++++++++
+>   fs/xfs/xfs_inode.h |    1 +
+>   2 files changed, 20 insertions(+)
 > 
 > 
-> diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-> index d4460b0d2d81..8b2a2f81d110 100644
-> --- a/fs/xfs/libxfs/xfs_rmap.c
-> +++ b/fs/xfs/libxfs/xfs_rmap.c
-> @@ -753,19 +753,19 @@ xfs_rmap_map(
->   			&have_lt);
->   	if (error)
->   		goto out_error;
-> -	XFS_WANT_CORRUPTED_GOTO(mp, have_lt == 1, out_error);
-> -
-> -	error = xfs_rmap_get_rec(cur, &ltrec, &have_lt);
-> -	if (error)
-> -		goto out_error;
-> -	XFS_WANT_CORRUPTED_GOTO(mp, have_lt == 1, out_error);
-> -	trace_xfs_rmap_lookup_le_range_result(cur->bc_mp,
-> -			cur->bc_private.a.agno, ltrec.rm_startblock,
-> -			ltrec.rm_blockcount, ltrec.rm_owner,
-> -			ltrec.rm_offset, ltrec.rm_flags);
-> +	if (have_lt) {
-> +		error = xfs_rmap_get_rec(cur, &ltrec, &have_lt);
-> +		if (error)
-> +			goto out_error;
-> +		XFS_WANT_CORRUPTED_GOTO(mp, have_lt == 1, out_error);
-> +		trace_xfs_rmap_lookup_le_range_result(cur->bc_mp,
-> +				cur->bc_private.a.agno, ltrec.rm_startblock,
-> +				ltrec.rm_blockcount, ltrec.rm_owner,
-> +				ltrec.rm_offset, ltrec.rm_flags);
->   
-> -	if (!xfs_rmap_is_mergeable(&ltrec, owner, flags))
-> -		have_lt = 0;
-> +		if (!xfs_rmap_is_mergeable(&ltrec, owner, flags))
-> +			have_lt = 0;
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 7a96c4e0ab5c..e6859dfc29af 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -3689,3 +3689,22 @@ xfs_iflush_int(
+>   corrupt_out:
+>   	return -EFSCORRUPTED;
+>   }
+> +
+> +/* Decide if there are real or unwritten extents in the CoW fork. */
+> +bool
+> +xfs_inode_has_cow_blocks(
+> +	struct xfs_inode		*ip)
+> +{
+> +	struct xfs_iext_cursor		icur;
+> +	struct xfs_bmbt_irec		irec;
+> +	struct xfs_ifork		*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
+> +
+> +	if (!ifp)
+> +		return false;
+> +
+> +	for_each_xfs_iext(ifp, &icur, &irec) {
+> +		if (!isnullstartblock(irec.br_startblock))
+> +			return true;
 > +	}
+> +	return false;
+> +}
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index 2ed63a49e890..735d0788bfdb 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -503,5 +503,6 @@ extern struct kmem_zone	*xfs_inode_zone;
+>   #define XFS_DEFAULT_COWEXTSZ_HINT 32
 >   
->   	XFS_WANT_CORRUPTED_GOTO(mp,
->   		have_lt == 0 ||
+>   bool xfs_inode_verify_forks(struct xfs_inode *ip);
+> +bool xfs_inode_has_cow_blocks(struct xfs_inode *ip);
+>   
+>   #endif	/* __XFS_INODE_H__ */
 > 
 
-Alrighty, looks ok after some digging around. I'm still a little puzzled 
-as to why the original code raised the assert without checking to see 
-whats on the other side of the cursor?  Assuming the error condition
-was supposed to be the case when the tree was empty.  In any case, it 
-looks correct now.
+Ok, this one looks pretty straight forward.
 
 Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwICaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=Q2PdVMOGp7_huNLFbP6xty0mgocZk65leUyLVRvSsSY&s=6-FSoklyIhTEtg811gAG43N9-7Z-sYFsm7zv33EadgQ&e=
+> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwICaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=gITPMUadlG9a62qcCKtadzb41y_zIzqRNXMCANKITeM&s=hmiK2_87KL5oO6gl-LQ00avYqc5HcijzCgyErYAM1Cc&e=
 > 
