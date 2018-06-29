@@ -1,104 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:50352 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752332AbeF2POc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Jun 2018 11:14:32 -0400
-Date: Fri, 29 Jun 2018 08:14:27 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 04/21] xfs: repair the AGF and AGFL
-Message-ID: <20180629151427.GO5711@magnolia>
-References: <152986820984.3155.16417868536016544528.stgit@magnolia>
- <152986823481.3155.13034509035761369722.stgit@magnolia>
- <20180627021908.GD19934@dastard>
- <e2261ffd-1d03-b205-1375-25bef625c3f6@oracle.com>
- <20180627233720.GA2234@dastard>
+Received: from verein.lst.de ([213.95.11.211]:55004 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S966726AbeF2P7N (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 29 Jun 2018 11:59:13 -0400
+Date: Fri, 29 Jun 2018 17:59:20 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 23/24] iomap: add support for sub-pagesize buffered I/O
+        without buffer heads
+Message-ID: <20180629155920.GA9777@lst.de>
+References: <20180615130209.1970-1-hch@lst.de> <20180615130209.1970-24-hch@lst.de> <20180619165211.GD2806@bfoster> <20180620075655.GA2668@lst.de> <20180620143252.GE3241@bfoster> <20180620160803.GA4838@magnolia> <20180620181259.GD4493@bfoster> <20180620190230.GB4838@magnolia> <20180621084646.GA5764@lst.de> <20180623130624.GA16691@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180627233720.GA2234@dastard>
+In-Reply-To: <20180623130624.GA16691@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Allison Henderson <allison.henderson@oracle.com>, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Thu, Jun 28, 2018 at 09:37:20AM +1000, Dave Chinner wrote:
-> On Wed, Jun 27, 2018 at 09:44:53AM -0700, Allison Henderson wrote:
-> > On 06/26/2018 07:19 PM, Dave Chinner wrote:
-> > >On Sun, Jun 24, 2018 at 12:23:54PM -0700, Darrick J. Wong wrote:
-> > >>From: Darrick J. Wong <darrick.wong@oracle.com>
-> > >>
-> > >>Regenerate the AGF and AGFL from the rmap data.
-> > >>
-> > >>Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > >
-> > >[...]
-> 
-> > >>+	/* Record all the OWN_AG blocks. */
-> > >>+	if (rec->rm_owner == XFS_RMAP_OWN_AG) {
-> > >>+		fsb = XFS_AGB_TO_FSB(cur->bc_mp, cur->bc_private.a.agno,
-> > >>+				rec->rm_startblock);
-> > >>+		error = xfs_repair_collect_btree_extent(ra->sc,
-> > >>+				ra->freesp_list, fsb, rec->rm_blockcount);
-> > >>+		if (error)
-> > >>+			return error;
-> > >>+	}
-> > >>+
-> > >>+	return xfs_repair_collect_btree_cur_blocks(ra->sc, cur,
-> > >>+			xfs_repair_collect_btree_cur_blocks_in_extent_list,
-> > >
-> > >Urk. The function name lengths is getting out of hand. I'm very
-> > >tempted to suggest we should shorten the namespace of all this
-> > >like s/xfs_repair_/xr_/ and s/xfs_scrub_/xs_/, etc just to make them
-> > >shorter and easier to read.
-> > >
-> > >Oh, wait, did I say that out loud? :P
-> > >
-> > >Something to think about, anyway.
-> > >
-> > Well they are sort of long, but TBH I think i still kind of
-> > appreciate the extra verbiage.  I have seen other projects do things
-> > like adopt a sort of 3 or 4 letter abbreviation (like maybe xfs_scrb
-> > or xfs_repr). Helps to cut down on the verbosity while still not
-> > loosing too much of what it is supposed to mean.  Just another idea
-> > to consider. :-)
-> 
-> We've got that in places, too, like "xlog_" prefixes for all the log
-> code, so that's not an unreasonable thing to suggest. After all, in
-> many cases we're talking about a tradeoff between readabilty and the
-> amount of typing necessary.
+On Sat, Jun 23, 2018 at 09:06:24AM -0400, Brian Foster wrote:
+> to reproduce after creating a new fs or using a largish fs. I think it's
+> hit or miss based on the content of free space in the filesystem. The
+> appended diff applied on top of Darrick's recent xfstests test[1] makes
+> this reproduce reliably for me (with -bsize=1k).
 
-I propose(d on IRC) to shorten the prefixes to xrep_ and xchk_.
+Yes, I can reproduce the issue with that patch.
 
-I'll also take a look at condensing the non-prefix parts of the names.
-Agreed that they're too long now.
+> The former returns zeroes for the post-eof (i_size == 0x21a20) portion
+> of the page due to the (iblock < lblock) check in
+> block_read_full_page(). If the block is post eof, get_block() isn't
+> called, the bh is left unmapped and the portion of the page is
+> explicitly zeroed in the same loop. The iomap code appears to read and
+> expose whatever is on disk if the block is allocated. I'm guessing we at
+> least need to consider doing something similar in iomap_readpage_actor()
+> (or perhaps somewhere in that path that also covers the write path)..?
+> I'm not sure it's sufficient to rely on writeback to zero the page and
+> otherwise let it expose garbage until that point.
 
-> However, IMO, function names so long they need a line of their own
-> indicates we have a structural problem in our code, not a
-> readability problem. We should not need names that long to document
-> what the function does - it should be obvious from the context, the
-> abstraction that is being used and a short name....
-> 
-> e.g. how many of these different "collect extent" operations could
-> be abstracted into a common extent list structure and generic
-> callbacks? It seems there's a lot of similarity in them, and we're
-> really only differentiating them by adding more namespace and
-> context specific information into the structure and function names.
+This:
 
-I'd /really/ like to convert this into a proper incore bitmap and then
-turn the operations into proper bitmasking operations, since
-collect_btree_extents is merely setting ranges of bits in two bitmaps
-and subtract_extents takes the union of them both.
+	if (iomap->type != IOMAP_MAPPED || pos >= i_size_read(inode)) {
+		zero_user(page, poff, plen);
+		iomap_set_range_uptodate(page, poff, plen);
+		goto done;
+	}
 
---D
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+is supposed to do the equivalent zeroing code.  I put a little tracing
+code in and we get back a mapped extent from 0x21400:0x22000, which
+makes sense.  It seems like we have an actual problem with the
+zero_page_rage code somehow.  I'll need some more time to investigate
+that.
