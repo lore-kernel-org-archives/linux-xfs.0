@@ -1,80 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:37373 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755019AbeF1XhY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Jun 2018 19:37:24 -0400
-Date: Fri, 29 Jun 2018 09:37:21 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 08/21] xfs: defer iput on certain inodes while scrub /
- repair are running
-Message-ID: <20180628233721.GE2234@dastard>
+Received: from aserp2120.oracle.com ([141.146.126.78]:39090 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932852AbeF2BfO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Jun 2018 21:35:14 -0400
+Subject: Re: [PATCH 04/21] xfs: repair the AGF and AGFL
 References: <152986820984.3155.16417868536016544528.stgit@magnolia>
- <152986826018.3155.9241833069276452949.stgit@magnolia>
+ <152986823481.3155.13034509035761369722.stgit@magnolia>
+ <824fc014-2af0-dcad-6bd1-d765f6cb2be9@oracle.com>
+ <20180628232115.GD2234@dastard>
+From: Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <ef551764-f911-bbfe-0be5-a60d1d679326@oracle.com>
+Date: Thu, 28 Jun 2018 18:35:06 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <152986826018.3155.9241833069276452949.stgit@magnolia>
+In-Reply-To: <20180628232115.GD2234@dastard>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Sun, Jun 24, 2018 at 12:24:20PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On 06/28/2018 04:21 PM, Dave Chinner wrote:
+> On Thu, Jun 28, 2018 at 02:14:51PM -0700, Allison Henderson wrote:
+>> On 06/24/2018 12:23 PM, Darrick J. Wong wrote:
+>>> +static const struct xfs_repair_find_ag_btree repair_agf[] = {
+>>> +	[REPAIR_AGF_BNOBT] = {
+>>> +		.rmap_owner = XFS_RMAP_OWN_AG,
+>>> +		.buf_ops = &xfs_allocbt_buf_ops,
+>>> +		.magic = XFS_ABTB_CRC_MAGIC,
+>>> +	},
+>>> +	[REPAIR_AGF_CNTBT] = {
+>>> +		.rmap_owner = XFS_RMAP_OWN_AG,
+>>> +		.buf_ops = &xfs_allocbt_buf_ops,
+>>> +		.magic = XFS_ABTC_CRC_MAGIC,
+>>> +	},
+>>> +	[REPAIR_AGF_RMAPBT] = {
+>>> +		.rmap_owner = XFS_RMAP_OWN_AG,
+>>> +		.buf_ops = &xfs_rmapbt_buf_ops,
+>>> +		.magic = XFS_RMAP_CRC_MAGIC,
+>>> +	},
+>>> +	[REPAIR_AGF_REFCOUNTBT] = {
+>>> +		.rmap_owner = XFS_RMAP_OWN_REFC,
+>>> +		.buf_ops = &xfs_refcountbt_buf_ops,
+>>> +		.magic = XFS_REFC_CRC_MAGIC,
+>>> +	},
+>>> +	[REPAIR_AGF_END] = {
+>>> +		.buf_ops = NULL,
+>>> +	},
+>>> +};
+>>> +
+>>> +/*
+>>> + * Find the btree roots.  This is /also/ a chicken and egg problem because we
+>>> + * have to use the rmapbt (rooted in the AGF) to find the btrees rooted in the
+>>> + * AGF.  We also have no idea if the btrees make any sense.  If we hit obvious
+>>> + * corruptions in those btrees we'll bail out.
+>>> + */
+>> It would help if maybe we could put the /*IN*/ or /*OUT*/ on the
+>> parameters here?  And maybe a blurb about their usage.  From looking
+>> at how their used in the memcpy, I'm guessing that agf_bp is IN and
+>> fab is OUT.  But it's otherwise its not really clear on how they're
+>> meant to be used with out going the function to see how it handles
+>> them.
 > 
-> Destroying an incore inode sometimes requires some work to be done on
-> the inode.  For example, post-EOF blocks on a non-PREALLOC inode are
-> trimmed, and copy-on-write staging extents are freed.  This work is done
-> in separate transactions, which is bad for scrub and repair because (a)
-> we already have a transaction and can't nest them, and (b) if we've
-> frozen the filesystem for scrub/repair work, that (regular) transaction
-> allocation will block on the freeze.
+> IMO, that's what kerneldoc format comments are for. I'd much prefer
+> we use kerneldoc format than go back to the bad old terse 3-4 word
+> post-variable declaration comments that we used to have.
 > 
-> Therefore, if we detect that work has to be done to destroy the incore
-> inode, we'll just hang on to the reference until after the scrub is
-> finished.
+> Cheers,
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Dave.
+> 
 
-Darrick, I'll just repeat what we discussed on #xfs here so we have
-in it the archive and everyone else knows why this is probably going
-to be done differently.
+Sure, that sounds like it would be fine too :-)
 
-I think we should move deferred inode inactivation processing into
-the background reclaim radix tree walker rather than introduce a
-special new "don't iput this inode yet" state. We're really only
-trying to prevent the transactions that xfs_inactive() may run
-throught iput() when the filesystem is frozen, and we already stop
-background reclaim processing when the fs is frozen.
-
-I've always intended that xfs_fs_destroy_inode() basically becomes a
-no-op that just queues the inode for final inactivation, freeing and
-reclaim - right now it ony does the reclaim work in the background.
-I first proposed this back in ~2008 here:
-
-http://xfs.org/index.php/Improving_inode_Caching#Inode_Unlink
-
-At this point, it really only requires a new inode flag to indicate
-that it has an inactivation pending - we set that if xfs_inactive
-needs to do work before the inode can be reclaimed, and have a
-separate per-ag work queue that walks the inode radix tree finding
-reclaimable inodes that have the NEED_INACTIVATION inode flag set.
-This way background reclaim doesn't get stuck on them.
-
-This has benefits for many operations e.g. bulk processing of
-inode inactivation and freeing either concurrently or after rm -rf
-rather than at unlink syscall exit, VFS inode cache shrinker never
-blocks on inactivation needing to run transactions, etc.
-
-It also allows us to turn off inactivation on a per-AG basis,
-meaning that when we are rebuilding an AG structure in repair (e.g.
-the rmap btree) we can turn off inode inactivation and reclaim for
-that AG rather than needing to freeze the entire filesystem....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Allison
