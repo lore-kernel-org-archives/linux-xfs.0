@@ -1,115 +1,119 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:60056 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:38950 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932131AbeF2OkA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Jun 2018 10:40:00 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w5TESTYi143334
-        for <linux-xfs@vger.kernel.org>; Fri, 29 Jun 2018 14:39:58 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp2130.oracle.com with ESMTP id 2jukmu6v2n-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 29 Jun 2018 14:39:58 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w5TEdvsO008176
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 29 Jun 2018 14:39:58 GMT
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w5TEdvZV008265
-        for <linux-xfs@vger.kernel.org>; Fri, 29 Jun 2018 14:39:57 GMT
-Date: Fri, 29 Jun 2018 07:39:56 -0700
+        with ESMTP id S1751358AbeF2Otr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Jun 2018 10:49:47 -0400
+Date: Fri, 29 Jun 2018 07:49:43 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 01/21] xfs: don't assume a left rmap when allocating a
- new rmap
-Message-ID: <20180629143956.GK5711@magnolia>
+Subject: Re: [PATCH 08/21] xfs: defer iput on certain inodes while scrub /
+ repair are running
+Message-ID: <20180629144943.GL5711@magnolia>
 References: <152986820984.3155.16417868536016544528.stgit@magnolia>
- <152986821631.3155.13981921703707802906.stgit@magnolia>
- <d811feb2-e614-f69b-ff23-d02c83bf04f7@oracle.com>
+ <152986826018.3155.9241833069276452949.stgit@magnolia>
+ <20180628233721.GE2234@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <d811feb2-e614-f69b-ff23-d02c83bf04f7@oracle.com>
+In-Reply-To: <20180628233721.GE2234@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Allison Henderson <allison.henderson@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jun 28, 2018 at 02:11:38PM -0700, Allison Henderson wrote:
-> On 06/24/2018 12:23 PM, Darrick J. Wong wrote:
+On Fri, Jun 29, 2018 at 09:37:21AM +1000, Dave Chinner wrote:
+> On Sun, Jun 24, 2018 at 12:24:20PM -0700, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > The original rmap code assumed that there would always be at least one
-> > rmap in the rmapbt (the AG sb/agf/agi) and so errored out if it didn't
-> > find one.  This assumption isn't true for the rmapbt repair function
-> > (and it won't be true for realtime rmap either), so remove the check and
-> > just deal with the situation.
+> > Destroying an incore inode sometimes requires some work to be done on
+> > the inode.  For example, post-EOF blocks on a non-PREALLOC inode are
+> > trimmed, and copy-on-write staging extents are freed.  This work is done
+> > in separate transactions, which is bad for scrub and repair because (a)
+> > we already have a transaction and can't nest them, and (b) if we've
+> > frozen the filesystem for scrub/repair work, that (regular) transaction
+> > allocation will block on the freeze.
+> > 
+> > Therefore, if we detect that work has to be done to destroy the incore
+> > inode, we'll just hang on to the reference until after the scrub is
+> > finished.
 > > 
 > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >   fs/xfs/libxfs/xfs_rmap.c |   24 ++++++++++++------------
-> >   1 file changed, 12 insertions(+), 12 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
-> > index d4460b0d2d81..8b2a2f81d110 100644
-> > --- a/fs/xfs/libxfs/xfs_rmap.c
-> > +++ b/fs/xfs/libxfs/xfs_rmap.c
-> > @@ -753,19 +753,19 @@ xfs_rmap_map(
-> >   			&have_lt);
-> >   	if (error)
-> >   		goto out_error;
-> > -	XFS_WANT_CORRUPTED_GOTO(mp, have_lt == 1, out_error);
-> > -
-> > -	error = xfs_rmap_get_rec(cur, &ltrec, &have_lt);
-> > -	if (error)
-> > -		goto out_error;
-> > -	XFS_WANT_CORRUPTED_GOTO(mp, have_lt == 1, out_error);
-> > -	trace_xfs_rmap_lookup_le_range_result(cur->bc_mp,
-> > -			cur->bc_private.a.agno, ltrec.rm_startblock,
-> > -			ltrec.rm_blockcount, ltrec.rm_owner,
-> > -			ltrec.rm_offset, ltrec.rm_flags);
-> > +	if (have_lt) {
-> > +		error = xfs_rmap_get_rec(cur, &ltrec, &have_lt);
-> > +		if (error)
-> > +			goto out_error;
-> > +		XFS_WANT_CORRUPTED_GOTO(mp, have_lt == 1, out_error);
-> > +		trace_xfs_rmap_lookup_le_range_result(cur->bc_mp,
-> > +				cur->bc_private.a.agno, ltrec.rm_startblock,
-> > +				ltrec.rm_blockcount, ltrec.rm_owner,
-> > +				ltrec.rm_offset, ltrec.rm_flags);
-> > -	if (!xfs_rmap_is_mergeable(&ltrec, owner, flags))
-> > -		have_lt = 0;
-> > +		if (!xfs_rmap_is_mergeable(&ltrec, owner, flags))
-> > +			have_lt = 0;
-> > +	}
-> >   	XFS_WANT_CORRUPTED_GOTO(mp,
-> >   		have_lt == 0 ||
-> > 
 > 
-> Alrighty, looks ok after some digging around. I'm still a little puzzled as
-> to why the original code raised the assert without checking to see whats on
-> the other side of the cursor?  Assuming the error condition
-> was supposed to be the case when the tree was empty.  In any case, it looks
-> correct now.
+> Darrick, I'll just repeat what we discussed on #xfs here so we have
+> in it the archive and everyone else knows why this is probably going
+> to be done differently.
+> 
+> I think we should move deferred inode inactivation processing into
+> the background reclaim radix tree walker rather than introduce a
+> special new "don't iput this inode yet" state. We're really only
+> trying to prevent the transactions that xfs_inactive() may run
+> throught iput() when the filesystem is frozen, and we already stop
+> background reclaim processing when the fs is frozen.
+> 
+> I've always intended that xfs_fs_destroy_inode() basically becomes a
+> no-op that just queues the inode for final inactivation, freeing and
+> reclaim - right now it ony does the reclaim work in the background.
+> I first proposed this back in ~2008 here:
+> 
+> http://xfs.org/index.php/Improving_inode_Caching#Inode_Unlink
+> 
+> At this point, it really only requires a new inode flag to indicate
+> that it has an inactivation pending - we set that if xfs_inactive
+> needs to do work before the inode can be reclaimed, and have a
+> separate per-ag work queue that walks the inode radix tree finding
+> reclaimable inodes that have the NEED_INACTIVATION inode flag set.
+> This way background reclaim doesn't get stuck on them.
+> 
+> This has benefits for many operations e.g. bulk processing of
+> inode inactivation and freeing either concurrently or after rm -rf
+> rather than at unlink syscall exit, VFS inode cache shrinker never
+> blocks on inactivation needing to run transactions, etc.
+> 
+> It also allows us to turn off inactivation on a per-AG basis,
+> meaning that when we are rebuilding an AG structure in repair (e.g.
+> the rmap btree) we can turn off inode inactivation and reclaim for
+> that AG rather than needing to freeze the entire filesystem....
 
-At the time (~2014?) I don't think either Dave or I were thinking about
-rmapbt being extended into the realtime device, so we thought that
-assumption was a reasonable one to make.  That was, of course, long
-before I got far enough along in designing online check to realize that
-"hey, maybe we should be able to rebuild things from scratch too"... :)
+So although I've been off playing a JavaScript monkey this week, I should
+note that the past few months I've also been slowly combing through all
+the past online repair fuzz test output to see what's still majorly
+broken.  I've noticed that the bmbt fuzzers have a particular failure
+pattern that leads to shutdown, which is:
 
-Anyway, thank you both for the review.
+1) Fuzz a bmbt.br_blockcount value to a large enough value that we now
+have a giant post-eof extent.
+
+2) Mount filesystem.
+
+3) Run xfs_scrub, which loads said inode, checks the bad bmbt, and tells
+userspace it's broken...
+
+4) ...and releases the inode.
+
+5) Memory reclaim or someone comes along and calls xfs_inactive, which
+says "Hey, nice post-EOF extent, let's trim that off!"  The extent free
+code then freaks out "ZOMG, that extent is already free!"
+
+6) Bam, filesystem shuts down.
+
+7) xfs_scrub retries the bmbt scrub, but this time with IFLAG_REPAIR
+set, but by now the fs has already gone down, and sadness.
+
+I've had a thought lurking around in my head for a while that perhaps we
+should have a second SKIP_INACTIVATION iflag that indicates that the
+inode is corrupt and we should skip post-eof inactivation to avoid fs
+shutdowns.  We'd still have to take the risk of cleaning out the cow
+fork (because that metadata are never persisted) but we could at least
+avoid a shutdown.
 
 --D
 
-> Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+> Cheers,
 > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=DwICaQ&c=RoP1YumCXCgaWHvlZYR8PZh8Bv7qIrMUB65eapI_JnE&r=LHZQ8fHvy6wDKXGTWcm97burZH5sQKHRDMaY1UthQxc&m=Q2PdVMOGp7_huNLFbP6xty0mgocZk65leUyLVRvSsSY&s=6-FSoklyIhTEtg811gAG43N9-7Z-sYFsm7zv33EadgQ&e=
-> > 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
