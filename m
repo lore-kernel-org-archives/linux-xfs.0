@@ -1,154 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:32892 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752383AbeGBO6R (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Jul 2018 10:58:17 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 02/22] xfs: simplify xfs_aops_discard_page
-Date: Mon,  2 Jul 2018 08:57:53 -0600
-Message-Id: <20180702145813.22496-3-hch@lst.de>
-In-Reply-To: <20180702145813.22496-1-hch@lst.de>
-References: <20180702145813.22496-1-hch@lst.de>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:56174 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751523AbeGAJ2Q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 1 Jul 2018 05:28:16 -0400
+Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w619Ns2G142029
+        for <linux-xfs@vger.kernel.org>; Sun, 1 Jul 2018 05:28:15 -0400
+Received: from e06smtp01.uk.ibm.com (e06smtp01.uk.ibm.com [195.75.94.97])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2jxqcpeqjy-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Sun, 01 Jul 2018 05:28:15 -0400
+Received: from localhost
+        by e06smtp01.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Sun, 1 Jul 2018 10:28:13 +0100
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: Re: xfs: Deadlock between fs_reclaim and sb_internal
+Date: Sun, 01 Jul 2018 15:00:01 +0530
+In-Reply-To: <1583499.AKrs7invYa@localhost.localdomain>
+References: <ee795573-6ab3-361a-d076-b464293bdcc4@linux.ibm.com> <1583499.AKrs7invYa@localhost.localdomain>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+Message-Id: <1635784.85vFEPy9OU@localhost.localdomain>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
+To: Ravi Bangoria <ravi.bangoria@linux.ibm.com>
+Cc: darrick.wong@oracle.com, lkml <linux-kernel@vger.kernel.org>, allison.henderson@oracle.com, hch@lst.de, Michael Ellerman <mpe@ellerman.id.au>, linux-xfs@vger.kernel.org
 
-Instead of looking at the buffer heads to see if a block is delalloc just
-call xfs_bmap_punch_delalloc_range on the whole page - this will leave
-any non-delalloc block intact and handle the iteration for us.  As a side
-effect one more place stops caring about buffer heads and we can remove the
-xfs_check_page_type function entirely.
+On Friday, June 29, 2018 11:48:39 AM IST Chandan Rajendra wrote:
+> On Thursday, June 28, 2018 9:31:32 AM IST Ravi Bangoria wrote:
+> > Hello Darrick,
+> > 
+> > Lockdep is reporting a deadlock with following trace. Saw this on my
+> > powerpc vm with 4GB of ram, running Linus/master kernel. Though, I
+> > don't have exact testcase to reproduce it. Is this something known?
+> 
+> I am able to recreate this issue on a ppc64le guest. I will debug this
+> and provide updates.
+> 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_aops.c | 85 +++++------------------------------------------
- 1 file changed, 9 insertions(+), 76 deletions(-)
+Ravi,
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 85e1a625d42a..9b1a17b4cacb 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -710,49 +710,6 @@ xfs_map_at_offset(
- 	clear_buffer_unwritten(bh);
- }
- 
--/*
-- * Test if a given page contains at least one buffer of a given @type.
-- * If @check_all_buffers is true, then we walk all the buffers in the page to
-- * try to find one of the type passed in. If it is not set, then the caller only
-- * needs to check the first buffer on the page for a match.
-- */
--STATIC bool
--xfs_check_page_type(
--	struct page		*page,
--	unsigned int		type,
--	bool			check_all_buffers)
--{
--	struct buffer_head	*bh;
--	struct buffer_head	*head;
--
--	if (PageWriteback(page))
--		return false;
--	if (!page->mapping)
--		return false;
--	if (!page_has_buffers(page))
--		return false;
--
--	bh = head = page_buffers(page);
--	do {
--		if (buffer_unwritten(bh)) {
--			if (type == XFS_IO_UNWRITTEN)
--				return true;
--		} else if (buffer_delay(bh)) {
--			if (type == XFS_IO_DELALLOC)
--				return true;
--		} else if (buffer_dirty(bh) && buffer_mapped(bh)) {
--			if (type == XFS_IO_OVERWRITE)
--				return true;
--		}
--
--		/* If we are only checking the first buffer, we are done now. */
--		if (!check_all_buffers)
--			break;
--	} while ((bh = bh->b_this_page) != head);
--
--	return false;
--}
--
- STATIC void
- xfs_vm_invalidatepage(
- 	struct page		*page,
-@@ -784,9 +741,6 @@ xfs_vm_invalidatepage(
-  * transaction. Indeed - if we get ENOSPC errors, we have to be able to do this
-  * truncation without a transaction as there is no space left for block
-  * reservation (typically why we see a ENOSPC in writeback).
-- *
-- * This is not a performance critical path, so for now just do the punching a
-- * buffer head at a time.
-  */
- STATIC void
- xfs_aops_discard_page(
-@@ -794,47 +748,26 @@ xfs_aops_discard_page(
- {
- 	struct inode		*inode = page->mapping->host;
- 	struct xfs_inode	*ip = XFS_I(inode);
--	struct buffer_head	*bh, *head;
-+	struct xfs_mount	*mp = ip->i_mount;
- 	loff_t			offset = page_offset(page);
-+	xfs_fileoff_t		start_fsb = XFS_B_TO_FSBT(mp, offset);
-+	int			error;
- 
--	if (!xfs_check_page_type(page, XFS_IO_DELALLOC, true))
--		goto out_invalidate;
--
--	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
-+	if (XFS_FORCED_SHUTDOWN(mp))
- 		goto out_invalidate;
- 
--	xfs_alert(ip->i_mount,
-+	xfs_alert(mp,
- 		"page discard on page "PTR_FMT", inode 0x%llx, offset %llu.",
- 			page, ip->i_ino, offset);
- 
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	bh = head = page_buffers(page);
--	do {
--		int		error;
--		xfs_fileoff_t	start_fsb;
--
--		if (!buffer_delay(bh))
--			goto next_buffer;
--
--		start_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
--		error = xfs_bmap_punch_delalloc_range(ip, start_fsb, 1);
--		if (error) {
--			/* something screwed, just bail */
--			if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
--				xfs_alert(ip->i_mount,
--			"page discard unable to remove delalloc mapping.");
--			}
--			break;
--		}
--next_buffer:
--		offset += i_blocksize(inode);
--
--	} while ((bh = bh->b_this_page) != head);
--
-+	error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
-+			PAGE_SIZE / i_blocksize(inode));
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	if (error && !XFS_FORCED_SHUTDOWN(mp))
-+		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
- out_invalidate:
- 	xfs_vm_invalidatepage(page, 0, PAGE_SIZE);
--	return;
- }
- 
- static int
+The issue has already been reported earlier. See 
+https://www.spinics.net/lists/linux-xfs/msg20036.html.
+I am not familiar with Lockdep code and hence won't be able to help here.
+
 -- 
-2.18.0
+chandan
 
