@@ -1,52 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:56174 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751523AbeGAJ2Q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 1 Jul 2018 05:28:16 -0400
-Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w619Ns2G142029
-        for <linux-xfs@vger.kernel.org>; Sun, 1 Jul 2018 05:28:15 -0400
-Received: from e06smtp01.uk.ibm.com (e06smtp01.uk.ibm.com [195.75.94.97])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2jxqcpeqjy-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Sun, 01 Jul 2018 05:28:15 -0400
-Received: from localhost
-        by e06smtp01.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Sun, 1 Jul 2018 10:28:13 +0100
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: Re: xfs: Deadlock between fs_reclaim and sb_internal
-Date: Sun, 01 Jul 2018 15:00:01 +0530
-In-Reply-To: <1583499.AKrs7invYa@localhost.localdomain>
-References: <ee795573-6ab3-361a-d076-b464293bdcc4@linux.ibm.com> <1583499.AKrs7invYa@localhost.localdomain>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-Message-Id: <1635784.85vFEPy9OU@localhost.localdomain>
+Received: from bombadil.infradead.org ([198.137.202.133]:32936 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752152AbeGBO6S (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Jul 2018 10:58:18 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 04/22] xfs: do not set the page uptodate in xfs_writepage_map
+Date: Mon,  2 Jul 2018 08:57:55 -0600
+Message-Id: <20180702145813.22496-5-hch@lst.de>
+In-Reply-To: <20180702145813.22496-1-hch@lst.de>
+References: <20180702145813.22496-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ravi Bangoria <ravi.bangoria@linux.ibm.com>
-Cc: darrick.wong@oracle.com, lkml <linux-kernel@vger.kernel.org>, allison.henderson@oracle.com, hch@lst.de, Michael Ellerman <mpe@ellerman.id.au>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org
 
-On Friday, June 29, 2018 11:48:39 AM IST Chandan Rajendra wrote:
-> On Thursday, June 28, 2018 9:31:32 AM IST Ravi Bangoria wrote:
-> > Hello Darrick,
-> > 
-> > Lockdep is reporting a deadlock with following trace. Saw this on my
-> > powerpc vm with 4GB of ram, running Linus/master kernel. Though, I
-> > don't have exact testcase to reproduce it. Is this something known?
-> 
-> I am able to recreate this issue on a ppc64le guest. I will debug this
-> and provide updates.
-> 
+We already track the page uptodate status based on the buffer uptodate
+status, which is updated whenever reading or zeroing blocks.
 
-Ravi,
+This code has been there since commit a ptool commit in 2002, which
+claims to:
 
-The issue has already been reported earlier. See 
-https://www.spinics.net/lists/linux-xfs/msg20036.html.
-I am not familiar with Lockdep code and hence won't be able to help here.
+    "merge" the 2.4 fsx fix for block size < page size to 2.5.  This needed
+    major changes to actually fit.
 
+and isn't present in other writepage implementations.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_aops.c | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 5c549e983d69..df80a383ccd8 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -849,7 +849,6 @@ xfs_writepage_map(
+ 	uint64_t		offset;
+ 	int			error = 0;
+ 	int			count = 0;
+-	int			uptodate = 1;
+ 	unsigned int		new_type;
+ 
+ 	bh = head = page_buffers(page);
+@@ -857,8 +856,6 @@ xfs_writepage_map(
+ 	do {
+ 		if (offset >= end_offset)
+ 			break;
+-		if (!buffer_uptodate(bh))
+-			uptodate = 0;
+ 
+ 		/*
+ 		 * set_page_dirty dirties all buffers in a page, independent
+@@ -922,9 +919,6 @@ xfs_writepage_map(
+ 
+ 	} while (offset += len, ((bh = bh->b_this_page) != head));
+ 
+-	if (uptodate && bh == head)
+-		SetPageUptodate(page);
+-
+ 	ASSERT(wpc->ioend || list_empty(&submit_list));
+ 
+ out:
 -- 
-chandan
+2.18.0
 
