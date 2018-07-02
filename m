@@ -1,32 +1,30 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:39966 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:42410 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751581AbeGBNtl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Jul 2018 09:49:41 -0400
-Date: Mon, 2 Jul 2018 06:49:41 -0700
+        with ESMTP id S1752562AbeGBNu1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Jul 2018 09:50:27 -0400
+Date: Mon, 2 Jul 2018 06:50:21 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 11/24] xfs: use ->t_dfops for all xfs_bmapi_write()
- callers
-Message-ID: <20180702134941.GK19162@infradead.org>
+Subject: Re: [PATCH 12/24] xfs: remove xfs_bmapi_write() dfops param
+Message-ID: <20180702135021.GL19162@infradead.org>
 References: <20180628163636.52564-1-bfoster@redhat.com>
- <20180628163636.52564-12-bfoster@redhat.com>
+ <20180628163636.52564-13-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180628163636.52564-12-bfoster@redhat.com>
+In-Reply-To: <20180628163636.52564-13-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jun 28, 2018 at 12:36:23PM -0400, Brian Foster wrote:
-> Attach ->t_dfops for all remaining callers of xfs_bmapi_write().
-> This prepares the latter to no longer require a separate dfops
-> parameter.
+On Thu, Jun 28, 2018 at 12:36:24PM -0400, Brian Foster wrote:
+> Now that all callers use ->t_dfops, the xfs_bmapi_write() dfops
+> parameter is no longer necessary. Remove it and access ->t_dfops
+> directly. This patch does not change behavior.
 > 
-> Note that xfs_symlink() already uses ->t_dfops. Fix up the local
-> references for consistency.
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
 Looks good,
 
