@@ -1,108 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from gateway32.websitewelcome.com ([192.185.145.1]:30171 "EHLO
-        gateway32.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932980AbeGIVZc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jul 2018 17:25:32 -0400
-Received: from cm14.websitewelcome.com (cm14.websitewelcome.com [100.42.49.7])
-        by gateway32.websitewelcome.com (Postfix) with ESMTP id F066C74B6BB
-        for <linux-xfs@vger.kernel.org>; Mon,  9 Jul 2018 16:03:00 -0500 (CDT)
-Date: Mon, 9 Jul 2018 16:02:59 -0500
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH v2] xfs_bmap_util: use swap macro
-Message-ID: <20180709210259.GA18992@embeddedor.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Received: from bombadil.infradead.org ([198.137.202.133]:32796 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752318AbeGBO6P (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Jul 2018 10:58:15 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: stop using buffer heads in xfs v7
+Date: Mon,  2 Jul 2018 08:57:51 -0600
+Message-Id: <20180702145813.22496-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org
 
-Make use of the swap macro and remove some unnecessary variables.
-This makes the code easier to read and maintain. Also, reduces the
-stack usage.
+Hi all,
 
-This code was detected with the help of Coccinelle.
+this series adds support for buffered writes without buffer heads to
+the iomap and XFS code.
 
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
----
-Changes in v2
- - Use swap in a couple more of places.
+A git tree is available at:
 
- fs/xfs/xfs_bmap_util.c | 28 +++++-----------------------
- 1 file changed, 5 insertions(+), 23 deletions(-)
+    git://git.infradead.org/users/hch/xfs.git xfs-iomap-write.7
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 83b1e8c..a657d0a 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1691,7 +1691,6 @@ xfs_swap_extent_forks(
- 	int			*src_log_flags,
- 	int			*target_log_flags)
- {
--	struct xfs_ifork	tempifp, *ifp, *tifp;
- 	xfs_filblks_t		aforkblks = 0;
- 	xfs_filblks_t		taforkblks = 0;
- 	xfs_extnum_t		junk;
-@@ -1733,11 +1732,7 @@ xfs_swap_extent_forks(
- 	/*
- 	 * Swap the data forks of the inodes
- 	 */
--	ifp = &ip->i_df;
--	tifp = &tip->i_df;
--	tempifp = *ifp;		/* struct copy */
--	*ifp = *tifp;		/* struct copy */
--	*tifp = tempifp;	/* struct copy */
-+	swap(ip->i_df, tip->i_df);
- 
- 	/*
- 	 * Fix the on-disk inode values
-@@ -1746,13 +1741,8 @@ xfs_swap_extent_forks(
- 	ip->i_d.di_nblocks = tip->i_d.di_nblocks - taforkblks + aforkblks;
- 	tip->i_d.di_nblocks = tmp + taforkblks - aforkblks;
- 
--	tmp = (uint64_t) ip->i_d.di_nextents;
--	ip->i_d.di_nextents = tip->i_d.di_nextents;
--	tip->i_d.di_nextents = tmp;
--
--	tmp = (uint64_t) ip->i_d.di_format;
--	ip->i_d.di_format = tip->i_d.di_format;
--	tip->i_d.di_format = tmp;
-+	swap(ip->i_d.di_nextents, tip->i_d.di_nextents);
-+	swap(ip->i_d.di_format, tip->i_d.di_format);
- 
- 	/*
- 	 * The extents in the source inode could still contain speculative
-@@ -1846,7 +1836,6 @@ xfs_swap_extents(
- 	int			src_log_flags, target_log_flags;
- 	int			error = 0;
- 	int			lock_flags;
--	struct xfs_ifork	*cowfp;
- 	uint64_t		f;
- 	int			resblks = 0;
- 
-@@ -1987,18 +1976,11 @@ xfs_swap_extents(
- 
- 	/* Swap the cow forks. */
- 	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
--		xfs_extnum_t	extnum;
--
- 		ASSERT(ip->i_cformat == XFS_DINODE_FMT_EXTENTS);
- 		ASSERT(tip->i_cformat == XFS_DINODE_FMT_EXTENTS);
- 
--		extnum = ip->i_cnextents;
--		ip->i_cnextents = tip->i_cnextents;
--		tip->i_cnextents = extnum;
--
--		cowfp = ip->i_cowfp;
--		ip->i_cowfp = tip->i_cowfp;
--		tip->i_cowfp = cowfp;
-+		swap(ip->i_cnextents, tip->i_cnextents);
-+		swap(ip->i_cowfp, tip->i_cowfp);
- 
- 		if (ip->i_cowfp && ip->i_cowfp->if_bytes)
- 			xfs_inode_set_cowblocks_tag(ip);
--- 
-2.7.4
+Gitweb:
+
+    http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-iomap-write.7
+
+Changes since v6:
+ - fixe EOF zeroing for small blocksizes
+ - various comment updates
+ - new patch to update copyrights
+
+Changes since v5:
+ - merged the leftovers of the previous series into one
+ - rebased on top of the gfs2 iomap prep series
+ - fixed the map_blocks map conditions
+ - clean up a loop in __iomap_write_begin
+
+Changes since v4:
+ - make the logic more clear in xfs_bmap_punch_delalloc_range
+ - fix a missing unlock in xfs_bmap_punch_delalloc_range
+ - always look up COW extents to check for overlaps
+ - lots of patch reshuffling and splitting without impact to the final
+   result
+
+Changes since v3:
+ - iterate backwards in xfs_bmap_punch_delalloc_range
+ - remove the cow_valid variable in xfs_reflink_trim_irec_to_next_cow
+ - additional trivial xfs_map_blocks simplifications
+ - split the read side into a separate prep series
+ - moved the SEEK_HOLE/DATA patches not strictly required out of the
+   series
+
+Changes since v2:
+ - minor page_seek_hole_data tweaks
+ - don't read data entirely covered by the write operation in write_begin
+ - fix zeroing on write_begin I/O failure
+ - remove iomap_block_needs_zeroing to make the code more clear
+ - update comments on __do_page_cache_readahead
+
+Changes since v1:
+ - fix the iomap_readpages error handling
+ - use unsigned file offsets in a few places to avoid arithmetic overflows
+ - allocate a iomap_page in iomap_page_mkwrite to fix generic/095
+ - improve a few comments
+ - add more asserts
+ - warn about truncated block numbers from ->bmap
+ - new patch to change the __do_page_cache_readahead return value to
+   unsigned int
+ - remove an incorrectly added empty line
+ - make inline data an explicit iomap type instead of a flag
+ - add a IOMAP_F_BUFFER_HEAD flag to force use of buffers heads for gfs2,
+   and keep the basic buffer head infrastructure around for now.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
