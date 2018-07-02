@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:33026 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:32988 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752456AbeGBO6V (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Jul 2018 10:58:21 -0400
+        with ESMTP id S1752431AbeGBO6T (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Jul 2018 10:58:19 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 09/22] xfs: rename the offset variable in xfs_writepage_map
-Date: Mon,  2 Jul 2018 08:58:00 -0600
-Message-Id: <20180702145813.22496-10-hch@lst.de>
+Subject: [PATCH 06/22] xfs: don't use XFS_BMAPI_IGSTATE in xfs_map_blocks
+Date: Mon,  2 Jul 2018 08:57:57 -0600
+Message-Id: <20180702145813.22496-7-hch@lst.de>
 In-Reply-To: <20180702145813.22496-1-hch@lst.de>
 References: <20180702145813.22496-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,86 +15,50 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org
 
-Calling it file_offset makes the usage more clear, especially with
-a new poffset variable that will be added soon for the offset inside
-the page.
+We want to be able to use the extent state as a reliably indicator for
+the type of I/O, and stop using the buffer head state.  For this we
+need to stop using the XFS_BMAPI_IGSTATE so that we don't see merged
+extents of different types.
+
+Based on a patch from Dave Chinner.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_aops.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+ fs/xfs/xfs_aops.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
 diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 65454a4f4d93..4dc5fcff226e 100644
+index 1d1cb917cc6e..6b6150683343 100644
 --- a/fs/xfs/xfs_aops.c
 +++ b/fs/xfs/xfs_aops.c
-@@ -823,15 +823,15 @@ xfs_writepage_map(
- 	struct xfs_ioend	*ioend, *next;
- 	struct buffer_head	*bh, *head;
- 	ssize_t			len = i_blocksize(inode);
--	uint64_t		offset;	/* file offset of page */
-+	uint64_t		file_offset;	/* file offset of page */
+@@ -373,7 +373,6 @@ xfs_map_blocks(
+ 	ssize_t			count = i_blocksize(inode);
+ 	xfs_fileoff_t		offset_fsb, end_fsb;
  	int			error = 0;
- 	int			count = 0;
- 	unsigned int		new_type;
+-	int			bmapi_flags = XFS_BMAPI_ENTIRE;
+ 	int			nimaps = 1;
  
- 	bh = head = page_buffers(page);
--	offset = page_offset(page);
-+	file_offset = page_offset(page);
- 	do {
--		if (offset >= end_offset)
-+		if (file_offset >= end_offset)
- 			break;
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+@@ -393,8 +392,6 @@ xfs_map_blocks(
+ 		return 0;
  
- 		/*
-@@ -863,7 +863,7 @@ xfs_writepage_map(
- 		 * If we already have a valid COW mapping keep using it.
- 		 */
- 		if (wpc->io_type == XFS_IO_COW &&
--		    xfs_imap_valid(inode, &wpc->imap, offset)) {
-+		    xfs_imap_valid(inode, &wpc->imap, file_offset)) {
- 			wpc->imap_valid = true;
- 			new_type = XFS_IO_COW;
- 		}
-@@ -875,7 +875,7 @@ xfs_writepage_map(
+ 	ASSERT(type != XFS_IO_COW);
+-	if (type == XFS_IO_UNWRITTEN)
+-		bmapi_flags |= XFS_BMAPI_IGSTATE;
  
- 		if (wpc->imap_valid)
- 			wpc->imap_valid = xfs_imap_valid(inode, &wpc->imap,
--							 offset);
-+							 file_offset);
- 
- 		/*
- 		 * COW fork blocks can overlap data fork blocks even if the
-@@ -886,11 +886,11 @@ xfs_writepage_map(
- 		if (!wpc->imap_valid ||
- 		    (xfs_is_reflink_inode(XFS_I(inode)) &&
- 		     wpc->io_type != XFS_IO_COW)) {
--			error = xfs_map_blocks(wpc, inode, offset);
-+			error = xfs_map_blocks(wpc, inode, file_offset);
- 			if (error)
- 				goto out;
- 			wpc->imap_valid = xfs_imap_valid(inode, &wpc->imap,
--							 offset);
-+							 file_offset);
- 		}
- 
- 		if (!wpc->imap_valid || wpc->io_type == XFS_IO_HOLE)
-@@ -898,10 +898,10 @@ xfs_writepage_map(
- 
- 		lock_buffer(bh);
- 		if (wpc->io_type != XFS_IO_OVERWRITE)
--			xfs_map_at_offset(inode, bh, &wpc->imap, offset);
--		xfs_add_to_ioend(inode, bh, offset, wpc, wbc, &submit_list);
-+			xfs_map_at_offset(inode, bh, &wpc->imap, file_offset);
-+		xfs_add_to_ioend(inode, bh, file_offset, wpc, wbc, &submit_list);
- 		count++;
--	} while (offset += len, ((bh = bh->b_this_page) != head));
-+	} while (file_offset += len, ((bh = bh->b_this_page) != head));
- 
- 	ASSERT(wpc->ioend || list_empty(&submit_list));
- 
+ 	xfs_ilock(ip, XFS_ILOCK_SHARED);
+ 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
+@@ -406,7 +403,7 @@ xfs_map_blocks(
+ 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
+ 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
+ 	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
+-				imap, &nimaps, bmapi_flags);
++				imap, &nimaps, XFS_BMAPI_ENTIRE);
+ 	/*
+ 	 * Truncate an overwrite extent if there's a pending CoW
+ 	 * reservation before the end of this extent.  This forces us
 -- 
 2.18.0
 
