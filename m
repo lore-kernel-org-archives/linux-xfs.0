@@ -1,81 +1,119 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:55250 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:33186 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752556AbeGBOzA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Jul 2018 10:55:00 -0400
+        with ESMTP id S1752282AbeGBO62 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Jul 2018 10:58:28 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/3] iomap: support direct I/O to inline data
-Date: Mon,  2 Jul 2018 08:54:57 -0600
-Message-Id: <20180702145458.22330-3-hch@lst.de>
-In-Reply-To: <20180702145458.22330-1-hch@lst.de>
-References: <20180702145458.22330-1-hch@lst.de>
+Subject: [PATCH 18/22] xfs: refactor the tail of xfs_writepage_map
+Date: Mon,  2 Jul 2018 08:58:09 -0600
+Message-Id: <20180702145813.22496-19-hch@lst.de>
+In-Reply-To: <20180702145813.22496-1-hch@lst.de>
+References: <20180702145813.22496-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
-Cc: Andreas Gruenbacher <agruenba@redhat.com>, cluster-devel@redhat.com, linux-fsdevel@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org
 
-From: Andreas Gruenbacher <agruenba@redhat.com>
+Rejuggle how we deal with the different error vs non-error and have
+ioends vs not have ioend cases to keep the fast path streamlined, and
+the duplicate code at a minimum.
 
-Add support for reading from and writing to inline data to iomap_dio_rw.
-This saves filesystems from having to implement fallback code for this
-case.
-
-The inline data is actually cached in the inode, so the I/O is only
-direct in the sense that it doesn't go through the page cache.
-
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/iomap.c | 29 +++++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
+ fs/xfs/xfs_aops.c | 65 +++++++++++++++++++++++------------------------
+ 1 file changed, 32 insertions(+), 33 deletions(-)
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 4d8ff0f5ecc9..98a1fdd5c091 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -1450,6 +1450,33 @@ iomap_dio_hole_actor(loff_t length, struct iomap_dio *dio)
- 	return length;
- }
- 
-+static loff_t
-+iomap_dio_inline_actor(struct inode *inode, loff_t pos, loff_t length,
-+		struct iomap_dio *dio, struct iomap *iomap)
-+{
-+	struct iov_iter *iter = dio->submit.iter;
-+	size_t copied;
-+
-+	BUG_ON(pos + length > PAGE_SIZE - offset_in_page(iomap->inline_data));
-+
-+	if (dio->flags & IOMAP_DIO_WRITE) {
-+		loff_t size = inode->i_size;
-+
-+		if (pos > size)
-+			memset(iomap->inline_data + size, 0, pos - size);
-+		copied = copy_from_iter(iomap->inline_data + pos, length, iter);
-+		if (copied) {
-+			if (pos + copied > size)
-+				i_size_write(inode, pos + copied);
-+			mark_inode_dirty(inode);
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index af9224ea4ebf..c8e0d3055153 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -854,7 +854,14 @@ xfs_writepage_map(
+ 	 * submission of outstanding ioends on the writepage context so they are
+ 	 * treated correctly on error.
+ 	 */
+-	if (count) {
++	if (unlikely(error)) {
++		if (!count) {
++			xfs_aops_discard_page(page);
++			ClearPageUptodate(page);
++			unlock_page(page);
++			goto done;
 +		}
-+	} else {
-+		copied = copy_to_iter(iomap->inline_data + pos, length, iter);
-+	}
-+	dio->size += copied;
-+	return copied;
-+}
 +
- static loff_t
- iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
- 		void *data, struct iomap *iomap)
-@@ -1467,6 +1494,8 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
- 		return iomap_dio_bio_actor(inode, pos, length, dio, iomap);
- 	case IOMAP_MAPPED:
- 		return iomap_dio_bio_actor(inode, pos, length, dio, iomap);
-+	case IOMAP_INLINE:
-+		return iomap_dio_inline_actor(inode, pos, length, dio, iomap);
- 	default:
- 		WARN_ON_ONCE(1);
- 		return -EIO;
+ 		/*
+ 		 * If the page was not fully cleaned, we need to ensure that the
+ 		 * higher layers come back to it correctly.  That means we need
+@@ -863,43 +870,35 @@ xfs_writepage_map(
+ 		 * so another attempt to write this page in this writeback sweep
+ 		 * will be made.
+ 		 */
+-		if (error) {
+-			set_page_writeback_keepwrite(page);
+-		} else {
+-			clear_page_dirty_for_io(page);
+-			set_page_writeback(page);
+-		}
+-		unlock_page(page);
+-
+-		/*
+-		 * Preserve the original error if there was one, otherwise catch
+-		 * submission errors here and propagate into subsequent ioend
+-		 * submissions.
+-		 */
+-		list_for_each_entry_safe(ioend, next, &submit_list, io_list) {
+-			int error2;
+-
+-			list_del_init(&ioend->io_list);
+-			error2 = xfs_submit_ioend(wbc, ioend, error);
+-			if (error2 && !error)
+-				error = error2;
+-		}
+-	} else if (error) {
+-		xfs_aops_discard_page(page);
+-		ClearPageUptodate(page);
+-		unlock_page(page);
++		set_page_writeback_keepwrite(page);
+ 	} else {
+-		/*
+-		 * We can end up here with no error and nothing to write if we
+-		 * race with a partial page truncate on a sub-page block sized
+-		 * filesystem. In that case we need to mark the page clean.
+-		 */
+ 		clear_page_dirty_for_io(page);
+ 		set_page_writeback(page);
+-		unlock_page(page);
+-		end_page_writeback(page);
+ 	}
+ 
++	unlock_page(page);
++
++	/*
++	 * Preserve the original error if there was one, otherwise catch
++	 * submission errors here and propagate into subsequent ioend
++	 * submissions.
++	 */
++	list_for_each_entry_safe(ioend, next, &submit_list, io_list) {
++		int error2;
++
++		list_del_init(&ioend->io_list);
++		error2 = xfs_submit_ioend(wbc, ioend, error);
++		if (error2 && !error)
++			error = error2;
++	}
++
++	/*
++	 * We can end up here with no error and nothing to write if we race with
++	 * a partial page truncate on a sub-page block sized filesystem.
++	 */
++	if (!count)
++		end_page_writeback(page);
++done:
+ 	mapping_set_error(page->mapping, error);
+ 	return error;
+ }
 -- 
 2.18.0
 
