@@ -1,143 +1,489 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:48558 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388527AbeG1BiD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 27 Jul 2018 21:38:03 -0400
-Subject: Re: [PATCH] xfs: add debian initramfs hook to package
-References: <20180726215154.GI30972@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <f2b317ec-3541-4441-cf11-58602eb8de4f@sandeen.net>
-Date: Fri, 27 Jul 2018 17:13:42 -0700
-MIME-Version: 1.0
-In-Reply-To: <20180726215154.GI30972@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Received: from bombadil.infradead.org ([198.137.202.133]:33208 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752451AbeGBO63 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Jul 2018 10:58:29 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 20/22] iomap: add support for sub-pagesize buffered I/O without buffer heads
+Date: Mon,  2 Jul 2018 08:58:11 -0600
+Message-Id: <20180702145813.22496-21-hch@lst.de>
+In-Reply-To: <20180702145813.22496-1-hch@lst.de>
+References: <20180702145813.22496-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org
 
+After already supporting a simple implementation of buffered writes for
+the blocksize == PAGE_SIZE case in the last commit this adds full support
+even for smaller block sizes.   There are three bits of per-block
+information in the buffer_head structure that really matter for the iomap
+read and write path:
 
+ - uptodate status (BH_uptodate)
+ - marked as currently under read I/O (BH_Async_Read)
+ - marked as currently under write I/O (BH_Async_Write)
 
-On 7/26/18 2:51 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> In Debian bug 904086, the reporter complained that xfs_repair wasn't
-> present in the initramfs, which prevented him from using shutdown -F to
-> force a filesystem fsck after a reboot.  Add a hook to put the xfs
-> utilities in the initramfs if xfs is the root filesystem.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  debian/local/initramfs.hook |   47 +++++++++++++++++++++++++++++++++++++++++++
->  debian/rules                |    1 +
->  2 files changed, 48 insertions(+)
->  create mode 100644 debian/local/initramfs.hook
-> 
-> diff --git a/debian/local/initramfs.hook b/debian/local/initramfs.hook
-> new file mode 100644
-> index 00000000..20df5d69
-> --- /dev/null
-> +++ b/debian/local/initramfs.hook
-> @@ -0,0 +1,47 @@
-> +#!/bin/sh
-> +
-> +# Put XFS utilities in initramfs if the root fs is XFS.
-> +
-> +PREREQ=""
-> +
-> +prereqs()
-> +{
-> +	echo "$PREREQ"
-> +}
-> +
-> +case $1 in
-> +prereqs)
-> +	prereqs
-> +	exit 0
-> +	;;
-> +esac
-> +
-> +fstab_files()
-> +{
-> +	echo /etc/fstab
-> +	if [ -d /etc/fstab.d ]; then
-> +		ls -1 /etc/fstab.d | grep '\.fstab$' | sed -e 's;^;/etc/fstab.d/;'
+Instead of having new per-block structures this now adds a per-page
+structure called struct iomap_page to track this information in a slightly
+different form:
 
-Is this just a fancy 
+ - a bitmap for the per-block uptodate status.  For worst case of a 64k
+   page size system this bitmap needs to contain 128 bits.  For the
+   typical 4k page size case it only needs 8 bits, although we still
+   need a full unsigned long due to the way the atomic bitmap API works.
+ - two atomic_t counters are used to track the outstanding read and write
+   counts
 
-ls -1 /etc/fstab.d/*.fstab 2>/dev/null
+There is quite a bit of boilerplate code as the buffered I/O path uses
+various helper methods, but the actual code is very straight forward.
 
-?  *shrug* ok :)
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/iomap.c            | 279 ++++++++++++++++++++++++++++++++++++++----
+ include/linux/iomap.h |  31 +++++
+ 2 files changed, 289 insertions(+), 21 deletions(-)
 
-> +	fi
-> +}
-> +
-> +rootfs_type() {
-> +	fstab_files | while read file; do
-> +		test ! -f "$file" && continue
-> +
-> +		while read MNT_FSNAME MNT_DIR MNT_TYPE MNT_OPTS MNT_FREQ MNT_PASS MNT_JUNK; do
-> +			test "$MNT_DIR" != "/" && continue
-> +			echo "$MNT_TYPE"
-> +			break;
-> +		done < "$file"
-> +	done
-> +}
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 13cdcf33e6c0..ea1b1ba61ba3 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -17,6 +17,7 @@
+ #include <linux/iomap.h>
+ #include <linux/uaccess.h>
+ #include <linux/gfp.h>
++#include <linux/migrate.h>
+ #include <linux/mm.h>
+ #include <linux/mm_inline.h>
+ #include <linux/swap.h>
+@@ -104,6 +105,138 @@ iomap_sector(struct iomap *iomap, loff_t pos)
+ 	return (iomap->addr + pos - iomap->offset) >> SECTOR_SHIFT;
+ }
+ 
++static struct iomap_page *
++iomap_page_create(struct inode *inode, struct page *page)
++{
++	struct iomap_page *iop = to_iomap_page(page);
++
++	if (iop || i_blocksize(inode) == PAGE_SIZE)
++		return iop;
++
++	iop = kmalloc(sizeof(*iop), GFP_NOFS | __GFP_NOFAIL);
++	atomic_set(&iop->read_count, 0);
++	atomic_set(&iop->write_count, 0);
++	bitmap_zero(iop->uptodate, PAGE_SIZE / SECTOR_SIZE);
++	set_page_private(page, (unsigned long)iop);
++	SetPagePrivate(page);
++	return iop;
++}
++
++static void
++iomap_page_release(struct page *page)
++{
++	struct iomap_page *iop = to_iomap_page(page);
++
++	if (!iop)
++		return;
++	WARN_ON_ONCE(atomic_read(&iop->read_count));
++	WARN_ON_ONCE(atomic_read(&iop->write_count));
++	ClearPagePrivate(page);
++	set_page_private(page, 0);
++	kfree(iop);
++}
++
++/*
++ * Calculate the range inside the page that we actually need to read.
++ */
++static void
++iomap_adjust_read_range(struct inode *inode, struct iomap_page *iop,
++		loff_t *pos, loff_t length, unsigned *offp, unsigned *lenp)
++{
++	unsigned block_bits = inode->i_blkbits;
++	unsigned block_size = (1 << block_bits);
++	unsigned poff = *pos & (PAGE_SIZE - 1);
++	unsigned plen = min_t(loff_t, PAGE_SIZE - poff, length);
++	unsigned first = poff >> block_bits;
++	unsigned last = (poff + plen - 1) >> block_bits;
++	unsigned end = (i_size_read(inode) & (PAGE_SIZE - 1)) >> block_bits;
++
++	/*
++	 * If the block size is smaller than the page size we need to check the
++	 * per-block uptodate status and adjust the offset and length if needed
++	 * to avoid reading in already uptodate ranges.
++	 */
++	if (iop) {
++		unsigned int i;
++
++		/* move forward for each leading block marked uptodate */
++		for (i = first; i <= last; i++) {
++			if (!test_bit(i, iop->uptodate))
++				break;
++			*pos += block_size;
++			poff += block_size;
++			plen -= block_size;
++			first++;
++		}
++
++		/* truncate len if we find any trailing uptodate block(s) */
++		for ( ; i <= last; i++) {
++			if (test_bit(i, iop->uptodate)) {
++				plen -= (last - i + 1) * block_size;
++				last = i - 1;
++				break;
++			}
++		}
++	}
++
++	/*
++	 * If the extent spans the block that contains the i_size we need to
++	 * handle both halves separately so that we properly zero data in the
++	 * page cache for blocks that are entirely outside of i_size.
++	 */
++	if (first <= end && last > end)
++		plen -= (last - end) * block_size;
++
++	*offp = poff;
++	*lenp = plen;
++}
++
++static void
++iomap_set_range_uptodate(struct page *page, unsigned off, unsigned len)
++{
++	struct iomap_page *iop = to_iomap_page(page);
++	struct inode *inode = page->mapping->host;
++	unsigned first = off >> inode->i_blkbits;
++	unsigned last = (off + len - 1) >> inode->i_blkbits;
++	unsigned int i;
++	bool uptodate = true;
++
++	if (iop) {
++		for (i = 0; i < PAGE_SIZE / i_blocksize(inode); i++) {
++			if (i >= first && i <= last)
++				set_bit(i, iop->uptodate);
++			else if (!test_bit(i, iop->uptodate))
++				uptodate = false;
++		}
++	}
++
++	if (uptodate && !PageError(page))
++		SetPageUptodate(page);
++}
++
++static void
++iomap_read_finish(struct iomap_page *iop, struct page *page)
++{
++	if (!iop || atomic_dec_and_test(&iop->read_count))
++		unlock_page(page);
++}
++
++static void
++iomap_read_page_end_io(struct bio_vec *bvec, int error)
++{
++	struct page *page = bvec->bv_page;
++	struct iomap_page *iop = to_iomap_page(page);
++
++	if (unlikely(error)) {
++		ClearPageUptodate(page);
++		SetPageError(page);
++	} else {
++		iomap_set_range_uptodate(page, bvec->bv_offset, bvec->bv_len);
++	}
++
++	iomap_read_finish(iop, page);
++}
++
+ static void
+ iomap_read_inline_data(struct inode *inode, struct page *page,
+ 		struct iomap *iomap)
+@@ -132,7 +265,7 @@ iomap_read_end_io(struct bio *bio)
+ 	int i;
+ 
+ 	bio_for_each_segment_all(bvec, bio, i)
+-		page_endio(bvec->bv_page, false, error);
++		iomap_read_page_end_io(bvec, error);
+ 	bio_put(bio);
+ }
+ 
+@@ -150,9 +283,10 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ {
+ 	struct iomap_readpage_ctx *ctx = data;
+ 	struct page *page = ctx->cur_page;
+-	unsigned poff = pos & (PAGE_SIZE - 1);
+-	unsigned plen = min_t(loff_t, PAGE_SIZE - poff, length);
++	struct iomap_page *iop = iomap_page_create(inode, page);
+ 	bool is_contig = false;
++	loff_t orig_pos = pos;
++	unsigned poff, plen;
+ 	sector_t sector;
+ 
+ 	if (iomap->type == IOMAP_INLINE) {
+@@ -161,13 +295,13 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 		return PAGE_SIZE;
+ 	}
+ 
+-	/* we don't support blocksize < PAGE_SIZE quite yet. */
+-	WARN_ON_ONCE(pos != page_offset(page));
+-	WARN_ON_ONCE(plen != PAGE_SIZE);
++	iomap_adjust_read_range(inode, iop, &pos, length, &poff, &plen);
++	if (plen == 0)
++		goto done;
+ 
+ 	if (iomap->type != IOMAP_MAPPED || pos >= i_size_read(inode)) {
+ 		zero_user(page, poff, plen);
+-		SetPageUptodate(page);
++		iomap_set_range_uptodate(page, poff, plen);
+ 		goto done;
+ 	}
+ 
+@@ -183,6 +317,14 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 		is_contig = true;
+ 	}
+ 
++	/*
++	 * If we start a new segment we need to increase the read count, and we
++	 * need to do so before submitting any previous full bio to make sure
++	 * that we don't prematurely unlock the page.
++	 */
++	if (iop)
++		atomic_inc(&iop->read_count);
++
+ 	if (!ctx->bio || !is_contig || bio_full(ctx->bio)) {
+ 		gfp_t gfp = mapping_gfp_constraint(page->mapping, GFP_KERNEL);
+ 		int nr_vecs = (length + PAGE_SIZE - 1) >> PAGE_SHIFT;
+@@ -203,7 +345,13 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 
+ 	__bio_add_page(ctx->bio, page, plen, poff);
+ done:
+-	return plen;
++	/*
++	 * Move the caller beyond our range so that it keeps making progress.
++	 * For that we have to include any leading non-uptodate ranges, but
++	 * we can skip trailing ones as they will be handled in the next
++	 * iteration.
++	 */
++	return pos - orig_pos + plen;
+ }
+ 
+ int
+@@ -214,8 +362,6 @@ iomap_readpage(struct page *page, const struct iomap_ops *ops)
+ 	unsigned poff;
+ 	loff_t ret;
+ 
+-	WARN_ON_ONCE(page_has_buffers(page));
+-
+ 	for (poff = 0; poff < PAGE_SIZE; poff += ret) {
+ 		ret = iomap_apply(inode, page_offset(page) + poff,
+ 				PAGE_SIZE - poff, 0, ops, &ctx,
+@@ -341,6 +487,84 @@ iomap_readpages(struct address_space *mapping, struct list_head *pages,
+ }
+ EXPORT_SYMBOL_GPL(iomap_readpages);
+ 
++int
++iomap_is_partially_uptodate(struct page *page, unsigned long from,
++		unsigned long count)
++{
++	struct iomap_page *iop = to_iomap_page(page);
++	struct inode *inode = page->mapping->host;
++	unsigned first = from >> inode->i_blkbits;
++	unsigned last = (from + count - 1) >> inode->i_blkbits;
++	unsigned i;
++
++	if (iop) {
++		for (i = first; i <= last; i++)
++			if (!test_bit(i, iop->uptodate))
++				return 0;
++		return 1;
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(iomap_is_partially_uptodate);
++
++int
++iomap_releasepage(struct page *page, gfp_t gfp_mask)
++{
++	/*
++	 * mm accommodates an old ext3 case where clean pages might not have had
++	 * the dirty bit cleared. Thus, it can send actual dirty pages to
++	 * ->releasepage() via shrink_active_list(), skip those here.
++	 */
++	if (PageDirty(page) || PageWriteback(page))
++		return 0;
++	iomap_page_release(page);
++	return 1;
++}
++EXPORT_SYMBOL_GPL(iomap_releasepage);
++
++void
++iomap_invalidatepage(struct page *page, unsigned int offset, unsigned int len)
++{
++	/*
++	 * If we are invalidating the entire page, clear the dirty state from it
++	 * and release it to avoid unnecessary buildup of the LRU.
++	 */
++	if (offset == 0 && len == PAGE_SIZE) {
++		WARN_ON_ONCE(PageWriteback(page));
++		cancel_dirty_page(page);
++		iomap_page_release(page);
++	}
++}
++EXPORT_SYMBOL_GPL(iomap_invalidatepage);
++
++#ifdef CONFIG_MIGRATION
++int
++iomap_migrate_page(struct address_space *mapping, struct page *newpage,
++		struct page *page, enum migrate_mode mode)
++{
++	int ret;
++
++	ret = migrate_page_move_mapping(mapping, newpage, page, NULL, mode, 0);
++	if (ret != MIGRATEPAGE_SUCCESS)
++		return ret;
++
++	if (page_has_private(page)) {
++		ClearPagePrivate(page);
++		set_page_private(newpage, page_private(page));
++		set_page_private(page, 0);
++		SetPagePrivate(newpage);
++	}
++
++	if (mode != MIGRATE_SYNC_NO_COPY)
++		migrate_page_copy(newpage, page);
++	else
++		migrate_page_states(newpage, page);
++	return MIGRATEPAGE_SUCCESS;
++}
++EXPORT_SYMBOL_GPL(iomap_migrate_page);
++#endif /* CONFIG_MIGRATION */
++
+ static void
+ iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
+ {
+@@ -364,6 +588,7 @@ iomap_read_page_sync(struct inode *inode, loff_t block_start, struct page *page,
+ 
+ 	if (iomap->type != IOMAP_MAPPED || block_start >= i_size_read(inode)) {
+ 		zero_user_segments(page, poff, from, to, poff + plen);
++		iomap_set_range_uptodate(page, poff, plen);
+ 		return 0;
+ 	}
+ 
+@@ -379,21 +604,33 @@ static int
+ __iomap_write_begin(struct inode *inode, loff_t pos, unsigned len,
+ 		struct page *page, struct iomap *iomap)
+ {
++	struct iomap_page *iop = iomap_page_create(inode, page);
+ 	loff_t block_size = i_blocksize(inode);
+ 	loff_t block_start = pos & ~(block_size - 1);
+ 	loff_t block_end = (pos + len + block_size - 1) & ~(block_size - 1);
+-	unsigned poff = block_start & (PAGE_SIZE - 1);
+-	unsigned plen = min_t(loff_t, PAGE_SIZE - poff, block_end - block_start);
+-	unsigned from = pos & (PAGE_SIZE - 1), to = from + len;
+-
+-	WARN_ON_ONCE(i_blocksize(inode) < PAGE_SIZE);
++	unsigned from = pos & (PAGE_SIZE - 1), to = from + len, poff, plen;
++	int status = 0;
+ 
+ 	if (PageUptodate(page))
+ 		return 0;
+-	if (from <= poff && to >= poff + plen)
+-		return 0;
+-	return iomap_read_page_sync(inode, block_start, page,
+-			poff, plen, from, to, iomap);
++
++	do {
++		iomap_adjust_read_range(inode, iop, &block_start,
++				block_end - block_start, &poff, &plen);
++		if (plen == 0)
++			break;
++
++		if ((from > poff && from < poff + plen) ||
++		    (to > poff && to < poff + plen)) {
++			status = iomap_read_page_sync(inode, block_start, page,
++					poff, plen, from, to, iomap);
++			if (status)
++				break;
++		}
++
++	} while ((block_start += plen) < block_end);
++
++	return status;
+ }
+ 
+ static int
+@@ -476,7 +713,7 @@ __iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
+ 	if (unlikely(copied < len && !PageUptodate(page))) {
+ 		copied = 0;
+ 	} else {
+-		SetPageUptodate(page);
++		iomap_set_range_uptodate(page, pos & (PAGE_SIZE - 1), len);
+ 		iomap_set_page_dirty(page);
+ 	}
+ 	return __generic_write_end(inode, pos, copied, page);
+@@ -812,7 +1049,7 @@ iomap_page_mkwrite_actor(struct inode *inode, loff_t pos, loff_t length,
+ 		block_commit_write(page, 0, length);
+ 	} else {
+ 		WARN_ON_ONCE(!PageUptodate(page));
+-		WARN_ON_ONCE(i_blocksize(inode) < PAGE_SIZE);
++		iomap_page_create(inode, page);
+ 	}
+ 
+ 	return length;
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 5eb9ca8d7ce5..3555d54bf79a 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -2,6 +2,9 @@
+ #ifndef LINUX_IOMAP_H
+ #define LINUX_IOMAP_H 1
+ 
++#include <linux/atomic.h>
++#include <linux/bitmap.h>
++#include <linux/mm.h>
+ #include <linux/types.h>
+ 
+ struct address_space;
+@@ -98,12 +101,40 @@ struct iomap_ops {
+ 			ssize_t written, unsigned flags, struct iomap *iomap);
+ };
+ 
++/*
++ * Structure allocate for each page when block size < PAGE_SIZE to track
++ * sub-page uptodate status and I/O completions.
++ */
++struct iomap_page {
++	atomic_t		read_count;
++	atomic_t		write_count;
++	DECLARE_BITMAP(uptodate, PAGE_SIZE / 512);
++};
++
++static inline struct iomap_page *to_iomap_page(struct page *page)
++{
++	if (page_has_private(page))
++		return (struct iomap_page *)page_private(page);
++	return NULL;
++}
++
+ ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
+ 		const struct iomap_ops *ops);
+ int iomap_readpage(struct page *page, const struct iomap_ops *ops);
+ int iomap_readpages(struct address_space *mapping, struct list_head *pages,
+ 		unsigned nr_pages, const struct iomap_ops *ops);
+ int iomap_set_page_dirty(struct page *page);
++int iomap_is_partially_uptodate(struct page *page, unsigned long from,
++		unsigned long count);
++int iomap_releasepage(struct page *page, gfp_t gfp_mask);
++void iomap_invalidatepage(struct page *page, unsigned int offset,
++		unsigned int len);
++#ifdef CONFIG_MIGRATION
++int iomap_migrate_page(struct address_space *mapping, struct page *newpage,
++		struct page *page, enum migrate_mode mode);
++#else
++#define iomap_migrate_page NULL
++#endif
+ int iomap_file_dirty(struct inode *inode, loff_t pos, loff_t len,
+ 		const struct iomap_ops *ops);
+ int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
+-- 
+2.18.0
 
-ok, I was scheming up something, uh, more obtuse,
-
-awk '$2 == "/" {print $3}' $(fstab_files)
-
-but *shrug* :)
-
-Actually... this sort of fstqab poses a problem for your function and mine:
-
-#/dev/mapper/vg-lv_root /                      xfs    defaults        1 1
-/dev/mapper/vg-lv_root /                       ext4    defaults        1 1
-
-because it'll happily pick xfs.  Need to exclude comment lines, so exclude
-MNT_FSNAME starting with # - 
-
-test ${MNT_FSNAME::1} == "#" && continue
-
-or in my fancy world could do:
-
-awk '(!/^#/) && ($2 == "/") {print $3}' $(fstab_files)
-
-tho I guess mine assumes only one matching line... | head -n 1 ;)
-
-
-> +. /usr/share/initramfs-tools/scripts/functions
-> +. /usr/share/initramfs-tools/hook-functions
-> +
-> +if [ "$(rootfs_type)" = "xfs" ]; then
-> +	copy_exec /sbin/xfs_repair
-> +	copy_exec /usr/sbin/xfs_db
-> +	copy_exec /usr/sbin/xfs_metadump
-
-Just to be sure, it gets fsck.xfs already?  or does it need to?
-
--Eric
-
-> +fi
-> +exit 0
-> diff --git a/debian/rules b/debian/rules
-> index cb4fa22c..4c50654c 100755
-> --- a/debian/rules
-> +++ b/debian/rules
-> @@ -77,6 +77,7 @@ binary-arch: checkroot built
->  	$(pkgdev) $(MAKE) -C . install-dev
->  	$(pkgdi)  $(MAKE) -C debian install-d-i
->  	$(pkgme)  $(MAKE) dist
-> +	install -D -m 0755 debian/local/initramfs.hook debian/xfsprogs/usr/share/initramfs-tools/hooks/xfs
->  	rmdir debian/xfslibs-dev/usr/share/doc/xfsprogs
->  	rm -f debian/xfslibs-dev/lib/libhandle.la
->  	rm -fr debian/xfslibs-dev/usr/lib
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
