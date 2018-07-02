@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:32988 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:33162 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752431AbeGBO6T (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Jul 2018 10:58:19 -0400
+        with ESMTP id S1752496AbeGBO60 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Jul 2018 10:58:26 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 06/22] xfs: don't use XFS_BMAPI_IGSTATE in xfs_map_blocks
-Date: Mon,  2 Jul 2018 08:57:57 -0600
-Message-Id: <20180702145813.22496-7-hch@lst.de>
+Subject: [PATCH 16/22] xfs: move all writeback buffer_head manipulation into xfs_map_at_offset
+Date: Mon,  2 Jul 2018 08:58:07 -0600
+Message-Id: <20180702145813.22496-17-hch@lst.de>
 In-Reply-To: <20180702145813.22496-1-hch@lst.de>
 References: <20180702145813.22496-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,50 +15,72 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org
 
-We want to be able to use the extent state as a reliably indicator for
-the type of I/O, and stop using the buffer head state.  For this we
-need to stop using the XFS_BMAPI_IGSTATE so that we don't see merged
-extents of different types.
-
-Based on a patch from Dave Chinner.
+This keeps it in a single place so it can be made otional more easily.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_aops.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ fs/xfs/xfs_aops.c | 22 +++++-----------------
+ 1 file changed, 5 insertions(+), 17 deletions(-)
 
 diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 1d1cb917cc6e..6b6150683343 100644
+index 6402e4323031..71b4ca60ff40 100644
 --- a/fs/xfs/xfs_aops.c
 +++ b/fs/xfs/xfs_aops.c
-@@ -373,7 +373,6 @@ xfs_map_blocks(
- 	ssize_t			count = i_blocksize(inode);
- 	xfs_fileoff_t		offset_fsb, end_fsb;
- 	int			error = 0;
--	int			bmapi_flags = XFS_BMAPI_ENTIRE;
- 	int			nimaps = 1;
+@@ -494,21 +494,6 @@ xfs_map_blocks(
+ 	return 0;
+ }
  
- 	if (XFS_FORCED_SHUTDOWN(mp))
-@@ -393,8 +392,6 @@ xfs_map_blocks(
- 		return 0;
+-STATIC void
+-xfs_start_buffer_writeback(
+-	struct buffer_head	*bh)
+-{
+-	ASSERT(buffer_mapped(bh));
+-	ASSERT(buffer_locked(bh));
+-	ASSERT(!buffer_delay(bh));
+-	ASSERT(!buffer_unwritten(bh));
+-
+-	bh->b_end_io = NULL;
+-	set_buffer_async_write(bh);
+-	set_buffer_uptodate(bh);
+-	clear_buffer_dirty(bh);
+-}
+-
+ STATIC void
+ xfs_start_page_writeback(
+ 	struct page		*page,
+@@ -728,6 +713,7 @@ xfs_map_at_offset(
+ 	ASSERT(imap->br_startblock != HOLESTARTBLOCK);
+ 	ASSERT(imap->br_startblock != DELAYSTARTBLOCK);
  
- 	ASSERT(type != XFS_IO_COW);
--	if (type == XFS_IO_UNWRITTEN)
--		bmapi_flags |= XFS_BMAPI_IGSTATE;
++	lock_buffer(bh);
+ 	xfs_map_buffer(inode, bh, imap, offset);
+ 	set_buffer_mapped(bh);
+ 	clear_buffer_delay(bh);
+@@ -740,6 +726,10 @@ xfs_map_at_offset(
+ 	 * set the bdev now.
+ 	 */
+ 	bh->b_bdev = xfs_find_bdev_for_inode(inode);
++	bh->b_end_io = NULL;
++	set_buffer_async_write(bh);
++	set_buffer_uptodate(bh);
++	clear_buffer_dirty(bh);
+ }
  
- 	xfs_ilock(ip, XFS_ILOCK_SHARED);
- 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
-@@ -406,7 +403,7 @@ xfs_map_blocks(
- 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
- 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
- 	error = xfs_bmapi_read(ip, offset_fsb, end_fsb - offset_fsb,
--				imap, &nimaps, bmapi_flags);
-+				imap, &nimaps, XFS_BMAPI_ENTIRE);
- 	/*
- 	 * Truncate an overwrite extent if there's a pending CoW
- 	 * reservation before the end of this extent.  This forces us
+ STATIC void
+@@ -861,11 +851,9 @@ xfs_writepage_map(
+ 		if (wpc->io_type == XFS_IO_HOLE)
+ 			continue;
+ 
+-		lock_buffer(bh);
+ 		xfs_map_at_offset(inode, bh, &wpc->imap, file_offset);
+ 		xfs_add_to_ioend(inode, file_offset, page, wpc, wbc,
+ 				&submit_list);
+-		xfs_start_buffer_writeback(bh);
+ 		count++;
+ 	}
+ 
 -- 
 2.18.0
 
