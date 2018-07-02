@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:32916 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:33144 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752388AbeGBO6R (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Jul 2018 10:58:17 -0400
+        with ESMTP id S1752451AbeGBO60 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Jul 2018 10:58:26 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 03/22] xfs: move locking into xfs_bmap_punch_delalloc_range
-Date: Mon,  2 Jul 2018 08:57:54 -0600
-Message-Id: <20180702145813.22496-4-hch@lst.de>
+Subject: [PATCH 15/22] xfs: don't look at buffer heads in xfs_add_to_ioend
+Date: Mon,  2 Jul 2018 08:58:06 -0600
+Message-Id: <20180702145813.22496-16-hch@lst.de>
 In-Reply-To: <20180702145813.22496-1-hch@lst.de>
 References: <20180702145813.22496-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,81 +15,162 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org
 
-Both callers want the same looking, so do it only once.
+Calculate all information for the bio based on the passed in information
+without requiring a buffer_head structure.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_aops.c      | 2 --
- fs/xfs/xfs_bmap_util.c | 9 +++++----
- fs/xfs/xfs_iomap.c     | 3 ---
- 3 files changed, 5 insertions(+), 9 deletions(-)
+ fs/xfs/xfs_aops.c | 68 ++++++++++++++++++++++-------------------------
+ 1 file changed, 32 insertions(+), 36 deletions(-)
 
 diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 9b1a17b4cacb..5c549e983d69 100644
+index 09092f10cff3..6402e4323031 100644
 --- a/fs/xfs/xfs_aops.c
 +++ b/fs/xfs/xfs_aops.c
-@@ -760,10 +760,8 @@ xfs_aops_discard_page(
- 		"page discard on page "PTR_FMT", inode 0x%llx, offset %llu.",
- 			page, ip->i_ino, offset);
+@@ -32,7 +32,6 @@ struct xfs_writepage_ctx {
+ 	struct xfs_bmbt_irec    imap;
+ 	unsigned int		io_type;
+ 	struct xfs_ioend	*ioend;
+-	sector_t		last_block;
+ };
  
--	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
- 			PAGE_SIZE / i_blocksize(inode));
--	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	if (error && !XFS_FORCED_SHUTDOWN(mp))
- 		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
- out_invalidate:
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 83b1e8c6c18f..da561882c349 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -702,16 +702,15 @@ xfs_bmap_punch_delalloc_range(
- 	struct xfs_iext_cursor	icur;
- 	int			error = 0;
- 
--	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
--
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
- 		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
- 		if (error)
--			return error;
-+			goto out_unlock;
- 	}
- 
- 	if (!xfs_iext_lookup_extent_before(ip, ifp, &end_fsb, &icur, &got))
--		return 0;
-+		goto out_unlock;
- 
- 	while (got.br_startoff + got.br_blockcount > start_fsb) {
- 		del = got;
-@@ -735,6 +734,8 @@ xfs_bmap_punch_delalloc_range(
- 			break;
- 	}
- 
-+out_unlock:
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	return error;
+ void
+@@ -534,11 +533,6 @@ xfs_start_page_writeback(
+ 	unlock_page(page);
  }
  
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index e08a84d9ee72..10c54fc7d1b4 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1204,11 +1204,8 @@ xfs_file_iomap_end_delalloc(
- 		truncate_pagecache_range(VFS_I(ip), XFS_FSB_TO_B(mp, start_fsb),
- 					 XFS_FSB_TO_B(mp, end_fsb) - 1);
- 
--		xfs_ilock(ip, XFS_ILOCK_EXCL);
- 		error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
- 					       end_fsb - start_fsb);
--		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-static inline int xfs_bio_add_buffer(struct bio *bio, struct buffer_head *bh)
+-{
+-	return bio_add_page(bio, bh->b_page, bh->b_size, bh_offset(bh));
+-}
 -
- 		if (error && !XFS_FORCED_SHUTDOWN(mp)) {
- 			xfs_alert(mp, "%s: unable to clean up ino %lld",
- 				__func__, ip->i_ino);
+ /*
+  * Submit the bio for an ioend. We are passed an ioend with a bio attached to
+  * it, and we submit that bio. The ioend may be used for multiple bio
+@@ -604,27 +598,20 @@ xfs_submit_ioend(
+ 	return 0;
+ }
+ 
+-static void
+-xfs_init_bio_from_bh(
+-	struct bio		*bio,
+-	struct buffer_head	*bh)
+-{
+-	bio->bi_iter.bi_sector = bh->b_blocknr * (bh->b_size >> 9);
+-	bio_set_dev(bio, bh->b_bdev);
+-}
+-
+ static struct xfs_ioend *
+ xfs_alloc_ioend(
+ 	struct inode		*inode,
+ 	unsigned int		type,
+ 	xfs_off_t		offset,
+-	struct buffer_head	*bh)
++	struct block_device	*bdev,
++	sector_t		sector)
+ {
+ 	struct xfs_ioend	*ioend;
+ 	struct bio		*bio;
+ 
+ 	bio = bio_alloc_bioset(GFP_NOFS, BIO_MAX_PAGES, &xfs_ioend_bioset);
+-	xfs_init_bio_from_bh(bio, bh);
++	bio_set_dev(bio, bdev);
++	bio->bi_iter.bi_sector = sector;
+ 
+ 	ioend = container_of(bio, struct xfs_ioend, io_inline_bio);
+ 	INIT_LIST_HEAD(&ioend->io_list);
+@@ -649,13 +636,14 @@ static void
+ xfs_chain_bio(
+ 	struct xfs_ioend	*ioend,
+ 	struct writeback_control *wbc,
+-	struct buffer_head	*bh)
++	struct block_device	*bdev,
++	sector_t		sector)
+ {
+ 	struct bio *new;
+ 
+ 	new = bio_alloc(GFP_NOFS, BIO_MAX_PAGES);
+-	xfs_init_bio_from_bh(new, bh);
+-
++	bio_set_dev(new, bdev);
++	new->bi_iter.bi_sector = sector;
+ 	bio_chain(ioend->io_bio, new);
+ 	bio_get(ioend->io_bio);		/* for xfs_destroy_ioend */
+ 	ioend->io_bio->bi_opf = REQ_OP_WRITE | wbc_to_write_flags(wbc);
+@@ -665,39 +653,45 @@ xfs_chain_bio(
+ }
+ 
+ /*
+- * Test to see if we've been building up a completion structure for
+- * earlier buffers -- if so, we try to append to this ioend if we
+- * can, otherwise we finish off any current ioend and start another.
+- * Return the ioend we finished off so that the caller can submit it
+- * once it has finished processing the dirty page.
++ * Test to see if we have an existing ioend structure that we could append to
++ * first, otherwise finish off the current ioend and start another.
+  */
+ STATIC void
+ xfs_add_to_ioend(
+ 	struct inode		*inode,
+-	struct buffer_head	*bh,
+ 	xfs_off_t		offset,
++	struct page		*page,
+ 	struct xfs_writepage_ctx *wpc,
+ 	struct writeback_control *wbc,
+ 	struct list_head	*iolist)
+ {
++	struct xfs_inode	*ip = XFS_I(inode);
++	struct xfs_mount	*mp = ip->i_mount;
++	struct block_device	*bdev = xfs_find_bdev_for_inode(inode);
++	unsigned		len = i_blocksize(inode);
++	unsigned		poff = offset & (PAGE_SIZE - 1);
++	sector_t		sector;
++
++	sector = xfs_fsb_to_db(ip, wpc->imap.br_startblock) +
++		((offset - XFS_FSB_TO_B(mp, wpc->imap.br_startoff)) >> 9);
++
+ 	if (!wpc->ioend || wpc->io_type != wpc->ioend->io_type ||
+-	    bh->b_blocknr != wpc->last_block + 1 ||
++	    sector != bio_end_sector(wpc->ioend->io_bio) ||
+ 	    offset != wpc->ioend->io_offset + wpc->ioend->io_size) {
+ 		if (wpc->ioend)
+ 			list_add(&wpc->ioend->io_list, iolist);
+-		wpc->ioend = xfs_alloc_ioend(inode, wpc->io_type, offset, bh);
++		wpc->ioend = xfs_alloc_ioend(inode, wpc->io_type, offset,
++				bdev, sector);
+ 	}
+ 
+ 	/*
+-	 * If the buffer doesn't fit into the bio we need to allocate a new
+-	 * one.  This shouldn't happen more than once for a given buffer.
++	 * If the block doesn't fit into the bio we need to allocate a new
++	 * one.  This shouldn't happen more than once for a given block.
+ 	 */
+-	while (xfs_bio_add_buffer(wpc->ioend->io_bio, bh) != bh->b_size)
+-		xfs_chain_bio(wpc->ioend, wbc, bh);
++	while (bio_add_page(wpc->ioend->io_bio, page, len, poff) != len)
++		xfs_chain_bio(wpc->ioend, wbc, bdev, sector);
+ 
+-	wpc->ioend->io_size += bh->b_size;
+-	wpc->last_block = bh->b_blocknr;
+-	xfs_start_buffer_writeback(bh);
++	wpc->ioend->io_size += len;
+ }
+ 
+ STATIC void
+@@ -869,7 +863,9 @@ xfs_writepage_map(
+ 
+ 		lock_buffer(bh);
+ 		xfs_map_at_offset(inode, bh, &wpc->imap, file_offset);
+-		xfs_add_to_ioend(inode, bh, file_offset, wpc, wbc, &submit_list);
++		xfs_add_to_ioend(inode, file_offset, page, wpc, wbc,
++				&submit_list);
++		xfs_start_buffer_writeback(bh);
+ 		count++;
+ 	}
+ 
 -- 
 2.18.0
 
