@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:33162 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:33132 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752496AbeGBO60 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Jul 2018 10:58:26 -0400
+        with ESMTP id S1752555AbeGBO6Z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Jul 2018 10:58:25 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 16/22] xfs: move all writeback buffer_head manipulation into xfs_map_at_offset
-Date: Mon,  2 Jul 2018 08:58:07 -0600
-Message-Id: <20180702145813.22496-17-hch@lst.de>
+Subject: [PATCH 14/22] xfs: remove the imap_valid flag
+Date: Mon,  2 Jul 2018 08:58:05 -0600
+Message-Id: <20180702145813.22496-15-hch@lst.de>
 In-Reply-To: <20180702145813.22496-1-hch@lst.de>
 References: <20180702145813.22496-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,72 +15,171 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: linux-fsdevel@vger.kernel.org
 
-This keeps it in a single place so it can be made otional more easily.
+Simplify the way we check for a valid imap - we know we have a valid
+mapping after xfs_map_blocks returned successfully, and we know we can
+call xfs_imap_valid on any imap, as it will always fail on a
+zero-initialized map.
+
+We can also remove the xfs_imap_valid function and fold it into
+xfs_map_blocks now.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_aops.c | 22 +++++-----------------
- 1 file changed, 5 insertions(+), 17 deletions(-)
+ fs/xfs/xfs_aops.c | 89 ++++++++++++++++++++---------------------------
+ 1 file changed, 38 insertions(+), 51 deletions(-)
 
 diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 6402e4323031..71b4ca60ff40 100644
+index 0bfcc2d06658..09092f10cff3 100644
 --- a/fs/xfs/xfs_aops.c
 +++ b/fs/xfs/xfs_aops.c
-@@ -494,21 +494,6 @@ xfs_map_blocks(
+@@ -30,7 +30,6 @@
+  */
+ struct xfs_writepage_ctx {
+ 	struct xfs_bmbt_irec    imap;
+-	bool			imap_valid;
+ 	unsigned int		io_type;
+ 	struct xfs_ioend	*ioend;
+ 	sector_t		last_block;
+@@ -370,15 +369,47 @@ xfs_map_blocks(
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	ssize_t			count = i_blocksize(inode);
+-	xfs_fileoff_t		offset_fsb, end_fsb;
++	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset), end_fsb;
+ 	struct xfs_bmbt_irec	imap;
+ 	int			whichfork = XFS_DATA_FORK;
+ 	struct xfs_iext_cursor	icur;
++	bool			imap_valid;
+ 	int			error = 0;
+ 
++	/*
++	 * We have to make sure the cached mapping is within EOF to protect
++	 * against eofblocks trimming on file release leaving us with a stale
++	 * mapping. Otherwise, a page for a subsequent file extending buffered
++	 * write could get picked up by this writeback cycle and written to the
++	 * wrong blocks.
++	 *
++	 * Note that what we really want here is a generic mapping invalidation
++	 * mechanism to protect us from arbitrary extent modifying contexts, not
++	 * just eofblocks.
++	 */
++	xfs_trim_extent_eof(&wpc->imap, ip);
++
++	/*
++	 * COW fork blocks can overlap data fork blocks even if the blocks
++	 * aren't shared.  COW I/O always takes precedent, so we must always
++	 * check for overlap on reflink inodes unless the mapping is already a
++	 * COW one.
++	 */
++	imap_valid = offset_fsb >= wpc->imap.br_startoff &&
++		     offset_fsb < wpc->imap.br_startoff + wpc->imap.br_blockcount;
++	if (imap_valid &&
++	    (!xfs_is_reflink_inode(ip) || wpc->io_type == XFS_IO_COW))
++		return 0;
++
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+ 
++	/*
++	 * If we don't have a valid map, now it's time to get a new one for this
++	 * offset.  This will convert delayed allocations (including COW ones)
++	 * into real extents.  If we return without a valid map, it means we
++	 * landed in a hole and we skip the block.
++	 */
+ 	xfs_ilock(ip, XFS_ILOCK_SHARED);
+ 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
+ 	       (ip->i_df.if_flags & XFS_IFEXTENTS));
+@@ -387,7 +418,6 @@ xfs_map_blocks(
+ 	if (offset > mp->m_super->s_maxbytes - count)
+ 		count = mp->m_super->s_maxbytes - offset;
+ 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
+-	offset_fsb = XFS_B_TO_FSBT(mp, offset);
+ 
+ 	/*
+ 	 * Check if this is offset is covered by a COW extents, and if yes use
+@@ -420,7 +450,7 @@ xfs_map_blocks(
+ 	/*
+ 	 * Map valid and no COW extent in the way?  We're done.
+ 	 */
+-	if (wpc->imap_valid) {
++	if (imap_valid) {
+ 		xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ 		return 0;
+ 	}
+@@ -465,31 +495,6 @@ xfs_map_blocks(
  	return 0;
  }
  
--STATIC void
--xfs_start_buffer_writeback(
--	struct buffer_head	*bh)
+-STATIC bool
+-xfs_imap_valid(
+-	struct inode		*inode,
+-	struct xfs_bmbt_irec	*imap,
+-	xfs_off_t		offset)
 -{
--	ASSERT(buffer_mapped(bh));
--	ASSERT(buffer_locked(bh));
--	ASSERT(!buffer_delay(bh));
--	ASSERT(!buffer_unwritten(bh));
+-	offset >>= inode->i_blkbits;
 -
--	bh->b_end_io = NULL;
--	set_buffer_async_write(bh);
--	set_buffer_uptodate(bh);
--	clear_buffer_dirty(bh);
+-	/*
+-	 * We have to make sure the cached mapping is within EOF to protect
+-	 * against eofblocks trimming on file release leaving us with a stale
+-	 * mapping. Otherwise, a page for a subsequent file extending buffered
+-	 * write could get picked up by this writeback cycle and written to the
+-	 * wrong blocks.
+-	 *
+-	 * Note that what we really want here is a generic mapping invalidation
+-	 * mechanism to protect us from arbitrary extent modifying contexts, not
+-	 * just eofblocks.
+-	 */
+-	xfs_trim_extent_eof(imap, XFS_I(inode));
+-
+-	return offset >= imap->br_startoff &&
+-		offset < imap->br_startoff + imap->br_blockcount;
 -}
 -
  STATIC void
- xfs_start_page_writeback(
- 	struct page		*page,
-@@ -728,6 +713,7 @@ xfs_map_at_offset(
- 	ASSERT(imap->br_startblock != HOLESTARTBLOCK);
- 	ASSERT(imap->br_startblock != DELAYSTARTBLOCK);
+ xfs_start_buffer_writeback(
+ 	struct buffer_head	*bh)
+@@ -856,27 +861,10 @@ xfs_writepage_map(
+ 			continue;
+ 		}
  
-+	lock_buffer(bh);
- 	xfs_map_buffer(inode, bh, imap, offset);
- 	set_buffer_mapped(bh);
- 	clear_buffer_delay(bh);
-@@ -740,6 +726,10 @@ xfs_map_at_offset(
- 	 * set the bdev now.
- 	 */
- 	bh->b_bdev = xfs_find_bdev_for_inode(inode);
-+	bh->b_end_io = NULL;
-+	set_buffer_async_write(bh);
-+	set_buffer_uptodate(bh);
-+	clear_buffer_dirty(bh);
- }
- 
- STATIC void
-@@ -861,11 +851,9 @@ xfs_writepage_map(
- 		if (wpc->io_type == XFS_IO_HOLE)
+-		if (wpc->imap_valid)
+-			wpc->imap_valid = xfs_imap_valid(inode, &wpc->imap,
+-							 file_offset);
+-
+-		/*
+-		 * COW fork blocks can overlap data fork blocks even if the
+-		 * blocks aren't shared. COW I/O always takes precedent, so we
+-		 * must always check for overlap on reflink inodes unless the
+-		 * mapping is already a COW one.
+-		 */
+-		if (!wpc->imap_valid ||
+-		    (xfs_is_reflink_inode(XFS_I(inode)) &&
+-		     wpc->io_type != XFS_IO_COW)) {
+-			error = xfs_map_blocks(wpc, inode, file_offset);
+-			if (error)
+-				goto out;
+-			wpc->imap_valid = xfs_imap_valid(inode, &wpc->imap,
+-							 file_offset);
+-		}
+-
+-		if (!wpc->imap_valid || wpc->io_type == XFS_IO_HOLE)
++		error = xfs_map_blocks(wpc, inode, file_offset);
++		if (error)
++			break;
++		if (wpc->io_type == XFS_IO_HOLE)
  			continue;
  
--		lock_buffer(bh);
- 		xfs_map_at_offset(inode, bh, &wpc->imap, file_offset);
- 		xfs_add_to_ioend(inode, file_offset, page, wpc, wbc,
- 				&submit_list);
--		xfs_start_buffer_writeback(bh);
- 		count++;
- 	}
+ 		lock_buffer(bh);
+@@ -887,7 +875,6 @@ xfs_writepage_map(
  
+ 	ASSERT(wpc->ioend || list_empty(&submit_list));
+ 
+-out:
+ 	/*
+ 	 * On error, we have to fail the ioend here because we have locked
+ 	 * buffers in the ioend. If we don't do this, we'll deadlock
 -- 
 2.18.0
 
