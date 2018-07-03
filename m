@@ -1,29 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:51226 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752898AbeGCU1A (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Jul 2018 16:27:00 -0400
-Date: Tue, 3 Jul 2018 13:26:45 -0700
+Received: from aserp2120.oracle.com ([141.146.126.78]:54932 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752292AbeGCU2I (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Jul 2018 16:28:08 -0400
+Date: Tue, 3 Jul 2018 13:27:53 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 06/24] xfs: use ->t_dfops for attr set/remove operations
-Message-ID: <20180703202645.GC32415@magnolia>
+Subject: Re: [PATCH 07/24] xfs: remove dfops param in attr fork add path
+Message-ID: <20180703202753.GD32415@magnolia>
 References: <20180628163636.52564-1-bfoster@redhat.com>
- <20180628163636.52564-7-bfoster@redhat.com>
+ <20180628163636.52564-8-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180628163636.52564-7-bfoster@redhat.com>
+In-Reply-To: <20180628163636.52564-8-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jun 28, 2018 at 12:36:18PM -0400, Brian Foster wrote:
-> Attach the local dfops to the transaction allocated for xattr add
-> and remove operations. Add an earlier initialization in
-> xfs_attr_remove() to ensure the structure is valid if it remains
-> unused at transaction commit time.
+On Thu, Jun 28, 2018 at 12:36:19PM -0400, Brian Foster wrote:
+> Now that the attribute fork add tx carries dfops along with the
+> transaction, it is unnecessary to pass it down the stack. Remove the
+> dfops parameter and access ->t_dfops directly where necessary. This
+> patch does not change behavior.
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
 
@@ -33,74 +33,86 @@ Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_attr.c | 11 +++++++----
->  fs/xfs/libxfs/xfs_bmap.c |  3 ++-
->  2 files changed, 9 insertions(+), 5 deletions(-)
+>  fs/xfs/libxfs/xfs_bmap.c | 19 ++++++++-----------
+>  1 file changed, 8 insertions(+), 11 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 99590f61d624..cc23c269f2bf 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -254,6 +254,8 @@ xfs_attr_set(
->  			rsvd ? XFS_TRANS_RESERVE : 0, &args.trans);
->  	if (error)
->  		return error;
-> +	xfs_defer_init(&dfops, &firstblock);
-> +	args.trans->t_dfops = &dfops;
->  
->  	xfs_ilock(dp, XFS_ILOCK_EXCL);
->  	error = xfs_trans_reserve_quota_nblks(args.trans, dp, args.total, 0,
-> @@ -315,7 +317,6 @@ xfs_attr_set(
->  		 * It won't fit in the shortform, transform to a leaf block.
->  		 * GROT: another possible req'mt for a double-split btree op.
->  		 */
-> -		xfs_defer_init(args.dfops, args.firstblock);
->  		error = xfs_attr_shortform_to_leaf(&args, &leaf_bp);
->  		if (error)
->  			goto out_defer_cancel;
-> @@ -325,9 +326,9 @@ xfs_attr_set(
->  		 * buffer and run into problems with the write verifier.
->  		 */
->  		xfs_trans_bhold(args.trans, leaf_bp);
-> -		xfs_defer_bjoin(args.dfops, leaf_bp);
-> -		xfs_defer_ijoin(args.dfops, dp);
-> -		error = xfs_defer_finish(&args.trans, args.dfops);
-> +		xfs_defer_bjoin(&dfops, leaf_bp);
-> +		xfs_defer_ijoin(&dfops, dp);
-> +		error = xfs_defer_finish(&args.trans, &dfops);
->  		if (error)
->  			goto out_defer_cancel;
->  
-> @@ -429,6 +430,8 @@ xfs_attr_remove(
->  			&args.trans);
->  	if (error)
->  		return error;
-> +	xfs_defer_init(&dfops, &firstblock);
-> +	args.trans->t_dfops = &dfops;
->  
->  	xfs_ilock(dp, XFS_ILOCK_EXCL);
->  	/*
 > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 7205268b30bc..16bbc8114d62 100644
+> index 16bbc8114d62..c4b81fee2dee 100644
 > --- a/fs/xfs/libxfs/xfs_bmap.c
 > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -1057,6 +1057,8 @@ xfs_bmap_add_attrfork(
->  			rsvd ? XFS_TRANS_RESERVE : 0, &tp);
->  	if (error)
->  		return error;
-> +	xfs_defer_init(&dfops, &firstblock);
-> +	tp->t_dfops = &dfops;
->  
->  	xfs_ilock(ip, XFS_ILOCK_EXCL);
->  	error = xfs_trans_reserve_quota_nblks(tp, ip, blks, 0, rsvd ?
-> @@ -1104,7 +1106,6 @@ xfs_bmap_add_attrfork(
->  	ip->i_afp = kmem_zone_zalloc(xfs_ifork_zone, KM_SLEEP);
->  	ip->i_afp->if_flags = XFS_IFEXTENTS;
+> @@ -918,7 +918,6 @@ xfs_bmap_add_attrfork_btree(
+>  	xfs_trans_t		*tp,		/* transaction pointer */
+>  	xfs_inode_t		*ip,		/* incore inode pointer */
+>  	xfs_fsblock_t		*firstblock,	/* first block allocated */
+> -	struct xfs_defer_ops	*dfops,		/* blocks to free at commit */
+>  	int			*flags)		/* inode logging flags */
+>  {
+>  	xfs_btree_cur_t		*cur;		/* btree cursor */
+> @@ -931,7 +930,7 @@ xfs_bmap_add_attrfork_btree(
+>  		*flags |= XFS_ILOG_DBROOT;
+>  	else {
+>  		cur = xfs_bmbt_init_cursor(mp, tp, ip, XFS_DATA_FORK);
+> -		cur->bc_private.b.dfops = dfops;
+> +		cur->bc_private.b.dfops = tp->t_dfops;
+>  		cur->bc_private.b.firstblock = *firstblock;
+>  		error = xfs_bmbt_lookup_first(cur, &stat);
+>  		if (error)
+> @@ -962,7 +961,6 @@ xfs_bmap_add_attrfork_extents(
+>  	xfs_trans_t		*tp,		/* transaction pointer */
+>  	xfs_inode_t		*ip,		/* incore inode pointer */
+>  	xfs_fsblock_t		*firstblock,	/* first block allocated */
+> -	struct xfs_defer_ops	*dfops,		/* blocks to free at commit */
+>  	int			*flags)		/* inode logging flags */
+>  {
+>  	xfs_btree_cur_t		*cur;		/* bmap btree cursor */
+> @@ -971,7 +969,7 @@ xfs_bmap_add_attrfork_extents(
+>  	if (ip->i_d.di_nextents * sizeof(xfs_bmbt_rec_t) <= XFS_IFORK_DSIZE(ip))
+>  		return 0;
+>  	cur = NULL;
+> -	error = xfs_bmap_extents_to_btree(tp, ip, firstblock, dfops, &cur, 0,
+> +	error = xfs_bmap_extents_to_btree(tp, ip, firstblock, tp->t_dfops, &cur, 0,
+>  		flags, XFS_DATA_FORK);
+>  	if (cur) {
+>  		cur->bc_private.b.allocated = 0;
+> @@ -997,7 +995,6 @@ xfs_bmap_add_attrfork_local(
+>  	xfs_trans_t		*tp,		/* transaction pointer */
+>  	xfs_inode_t		*ip,		/* incore inode pointer */
+>  	xfs_fsblock_t		*firstblock,	/* first block allocated */
+> -	struct xfs_defer_ops	*dfops,		/* blocks to free at commit */
+>  	int			*flags)		/* inode logging flags */
+>  {
+>  	xfs_da_args_t		dargs;		/* args for dir/attr code */
+> @@ -1010,7 +1007,7 @@ xfs_bmap_add_attrfork_local(
+>  		dargs.geo = ip->i_mount->m_dir_geo;
+>  		dargs.dp = ip;
+>  		dargs.firstblock = firstblock;
+> -		dargs.dfops = dfops;
+> +		dargs.dfops = tp->t_dfops;
+>  		dargs.total = dargs.geo->fsbcount;
+>  		dargs.whichfork = XFS_DATA_FORK;
+>  		dargs.trans = tp;
+> @@ -1108,16 +1105,16 @@ xfs_bmap_add_attrfork(
 >  	logflags = 0;
-> -	xfs_defer_init(&dfops, &firstblock);
 >  	switch (ip->i_d.di_format) {
 >  	case XFS_DINODE_FMT_LOCAL:
->  		error = xfs_bmap_add_attrfork_local(tp, ip, &firstblock, &dfops,
+> -		error = xfs_bmap_add_attrfork_local(tp, ip, &firstblock, &dfops,
+> -			&logflags);
+> +		error = xfs_bmap_add_attrfork_local(tp, ip, &firstblock,
+> +						    &logflags);
+>  		break;
+>  	case XFS_DINODE_FMT_EXTENTS:
+>  		error = xfs_bmap_add_attrfork_extents(tp, ip, &firstblock,
+> -			&dfops, &logflags);
+> +						      &logflags);
+>  		break;
+>  	case XFS_DINODE_FMT_BTREE:
+> -		error = xfs_bmap_add_attrfork_btree(tp, ip, &firstblock, &dfops,
+> -			&logflags);
+> +		error = xfs_bmap_add_attrfork_btree(tp, ip, &firstblock,
+> +						    &logflags);
+>  		break;
+>  	default:
+>  		error = 0;
 > -- 
 > 2.17.1
 > 
