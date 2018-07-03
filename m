@@ -1,354 +1,203 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:40092 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753179AbeGCVwu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Jul 2018 17:52:50 -0400
-Date: Tue, 3 Jul 2018 14:52:32 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 20/22] iomap: add support for sub-pagesize buffered I/O
- without buffer heads
-Message-ID: <20180703215232.GW32415@magnolia>
-References: <20180702145813.22496-1-hch@lst.de>
- <20180702145813.22496-21-hch@lst.de>
- <20180703123127.GA22789@bfoster>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:45462 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753105AbeGCV4r (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 3 Jul 2018 17:56:47 -0400
+Date: Tue, 3 Jul 2018 17:56:46 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 21/24] xfs: use ->t_dfops for rmap extent swap operations
+Message-ID: <20180703215645.GK22789@bfoster>
+References: <20180628163636.52564-1-bfoster@redhat.com>
+ <20180628163636.52564-22-bfoster@redhat.com>
+ <20180703212229.GQ32415@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180703123127.GA22789@bfoster>
+In-Reply-To: <20180703212229.GQ32415@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jul 03, 2018 at 08:31:27AM -0400, Brian Foster wrote:
-> On Mon, Jul 02, 2018 at 08:58:11AM -0600, Christoph Hellwig wrote:
-> > After already supporting a simple implementation of buffered writes for
-> > the blocksize == PAGE_SIZE case in the last commit this adds full support
-> > even for smaller block sizes.   There are three bits of per-block
-> > information in the buffer_head structure that really matter for the iomap
-> > read and write path:
+On Tue, Jul 03, 2018 at 02:22:29PM -0700, Darrick J. Wong wrote:
+> On Thu, Jun 28, 2018 at 12:36:33PM -0400, Brian Foster wrote:
+> > xfs_swap_extent_rmap() uses a local dfops instance with a
+> > transaction from the caller. Since there is only one caller, pull
+> > the dfops structure into the caller and attach it to the
+> > transaction. This avoids the need to clear ->t_dfops to prevent
+> > invalid stack memory access.
 > > 
-> >  - uptodate status (BH_uptodate)
-> >  - marked as currently under read I/O (BH_Async_Read)
-> >  - marked as currently under write I/O (BH_Async_Write)
-> > 
-> > Instead of having new per-block structures this now adds a per-page
-> > structure called struct iomap_page to track this information in a slightly
-> > different form:
-> > 
-> >  - a bitmap for the per-block uptodate status.  For worst case of a 64k
-> >    page size system this bitmap needs to contain 128 bits.  For the
-> >    typical 4k page size case it only needs 8 bits, although we still
-> >    need a full unsigned long due to the way the atomic bitmap API works.
-> >  - two atomic_t counters are used to track the outstanding read and write
-> >    counts
-> > 
-> > There is quite a bit of boilerplate code as the buffered I/O path uses
-> > various helper methods, but the actual code is very straight forward.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
 > > ---
-> >  fs/iomap.c            | 279 ++++++++++++++++++++++++++++++++++++++----
-> >  include/linux/iomap.h |  31 +++++
-> >  2 files changed, 289 insertions(+), 21 deletions(-)
+> >  fs/xfs/xfs_bmap_util.c | 32 +++++++++++++++++++-------------
+> >  1 file changed, 19 insertions(+), 13 deletions(-)
 > > 
-> > diff --git a/fs/iomap.c b/fs/iomap.c
-> > index 13cdcf33e6c0..ea1b1ba61ba3 100644
-> > --- a/fs/iomap.c
-> > +++ b/fs/iomap.c
-> ...
-> > @@ -161,13 +295,13 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
-> >  		return PAGE_SIZE;
-> >  	}
-> >  
-> > -	/* we don't support blocksize < PAGE_SIZE quite yet. */
-> > -	WARN_ON_ONCE(pos != page_offset(page));
-> > -	WARN_ON_ONCE(plen != PAGE_SIZE);
-> > +	iomap_adjust_read_range(inode, iop, &pos, length, &poff, &plen);
-> > +	if (plen == 0)
-> > +		goto done;
-> >  
-> 
-> I think the i_size check confused me in the previous go around. It's
-> obviously clear to me now after the iomap zeroing issue and fix, but a
-> one-liner comment couldn't hurt for future reference:
-> 
-> 	/* zero post-eof blocks as the page may be mapped */
-> 
-> That nit aside, this looks good to me and survives my tests:
-> 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-Looks ok, will insert the comment on its way in.  Will test (again)...
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> 
-> >  	if (iomap->type != IOMAP_MAPPED || pos >= i_size_read(inode)) {
-> >  		zero_user(page, poff, plen);
-> > -		SetPageUptodate(page);
-> > +		iomap_set_range_uptodate(page, poff, plen);
-> >  		goto done;
-> >  	}
-> >  
-> > @@ -183,6 +317,14 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
-> >  		is_contig = true;
-> >  	}
-> >  
-> > +	/*
-> > +	 * If we start a new segment we need to increase the read count, and we
-> > +	 * need to do so before submitting any previous full bio to make sure
-> > +	 * that we don't prematurely unlock the page.
-> > +	 */
-> > +	if (iop)
-> > +		atomic_inc(&iop->read_count);
-> > +
-> >  	if (!ctx->bio || !is_contig || bio_full(ctx->bio)) {
-> >  		gfp_t gfp = mapping_gfp_constraint(page->mapping, GFP_KERNEL);
-> >  		int nr_vecs = (length + PAGE_SIZE - 1) >> PAGE_SHIFT;
-> > @@ -203,7 +345,13 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
-> >  
-> >  	__bio_add_page(ctx->bio, page, plen, poff);
-> >  done:
-> > -	return plen;
-> > +	/*
-> > +	 * Move the caller beyond our range so that it keeps making progress.
-> > +	 * For that we have to include any leading non-uptodate ranges, but
-> > +	 * we can skip trailing ones as they will be handled in the next
-> > +	 * iteration.
-> > +	 */
-> > +	return pos - orig_pos + plen;
-> >  }
-> >  
-> >  int
-> > @@ -214,8 +362,6 @@ iomap_readpage(struct page *page, const struct iomap_ops *ops)
-> >  	unsigned poff;
-> >  	loff_t ret;
-> >  
-> > -	WARN_ON_ONCE(page_has_buffers(page));
-> > -
-> >  	for (poff = 0; poff < PAGE_SIZE; poff += ret) {
-> >  		ret = iomap_apply(inode, page_offset(page) + poff,
-> >  				PAGE_SIZE - poff, 0, ops, &ctx,
-> > @@ -341,6 +487,84 @@ iomap_readpages(struct address_space *mapping, struct list_head *pages,
-> >  }
-> >  EXPORT_SYMBOL_GPL(iomap_readpages);
-> >  
-> > +int
-> > +iomap_is_partially_uptodate(struct page *page, unsigned long from,
-> > +		unsigned long count)
-> > +{
-> > +	struct iomap_page *iop = to_iomap_page(page);
-> > +	struct inode *inode = page->mapping->host;
-> > +	unsigned first = from >> inode->i_blkbits;
-> > +	unsigned last = (from + count - 1) >> inode->i_blkbits;
-> > +	unsigned i;
-> > +
-> > +	if (iop) {
-> > +		for (i = first; i <= last; i++)
-> > +			if (!test_bit(i, iop->uptodate))
-> > +				return 0;
-> > +		return 1;
-> > +	}
-> > +
-> > +	return 0;
-> > +}
-> > +EXPORT_SYMBOL_GPL(iomap_is_partially_uptodate);
-> > +
-> > +int
-> > +iomap_releasepage(struct page *page, gfp_t gfp_mask)
-> > +{
-> > +	/*
-> > +	 * mm accommodates an old ext3 case where clean pages might not have had
-> > +	 * the dirty bit cleared. Thus, it can send actual dirty pages to
-> > +	 * ->releasepage() via shrink_active_list(), skip those here.
-> > +	 */
-> > +	if (PageDirty(page) || PageWriteback(page))
-> > +		return 0;
-> > +	iomap_page_release(page);
-> > +	return 1;
-> > +}
-> > +EXPORT_SYMBOL_GPL(iomap_releasepage);
-> > +
-> > +void
-> > +iomap_invalidatepage(struct page *page, unsigned int offset, unsigned int len)
-> > +{
-> > +	/*
-> > +	 * If we are invalidating the entire page, clear the dirty state from it
-> > +	 * and release it to avoid unnecessary buildup of the LRU.
-> > +	 */
-> > +	if (offset == 0 && len == PAGE_SIZE) {
-> > +		WARN_ON_ONCE(PageWriteback(page));
-> > +		cancel_dirty_page(page);
-> > +		iomap_page_release(page);
-> > +	}
-> > +}
-> > +EXPORT_SYMBOL_GPL(iomap_invalidatepage);
-> > +
-> > +#ifdef CONFIG_MIGRATION
-> > +int
-> > +iomap_migrate_page(struct address_space *mapping, struct page *newpage,
-> > +		struct page *page, enum migrate_mode mode)
-> > +{
-> > +	int ret;
-> > +
-> > +	ret = migrate_page_move_mapping(mapping, newpage, page, NULL, mode, 0);
-> > +	if (ret != MIGRATEPAGE_SUCCESS)
-> > +		return ret;
-> > +
-> > +	if (page_has_private(page)) {
-> > +		ClearPagePrivate(page);
-> > +		set_page_private(newpage, page_private(page));
-> > +		set_page_private(page, 0);
-> > +		SetPagePrivate(newpage);
-> > +	}
-> > +
-> > +	if (mode != MIGRATE_SYNC_NO_COPY)
-> > +		migrate_page_copy(newpage, page);
-> > +	else
-> > +		migrate_page_states(newpage, page);
-> > +	return MIGRATEPAGE_SUCCESS;
-> > +}
-> > +EXPORT_SYMBOL_GPL(iomap_migrate_page);
-> > +#endif /* CONFIG_MIGRATION */
-> > +
-> >  static void
-> >  iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
+> > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> > index 2c0c9534941c..4fdf013603ab 100644
+> > --- a/fs/xfs/xfs_bmap_util.c
+> > +++ b/fs/xfs/xfs_bmap_util.c
+> > @@ -1570,6 +1570,8 @@ xfs_swap_extent_rmap(
+> >  	struct xfs_inode		*ip,
+> >  	struct xfs_inode		*tip)
 > >  {
-> > @@ -364,6 +588,7 @@ iomap_read_page_sync(struct inode *inode, loff_t block_start, struct page *page,
+> > +	struct xfs_trans		*tp = *tpp;
+> > +	struct xfs_mount		*mp = tp->t_mountp;
+> >  	struct xfs_bmbt_irec		irec;
+> >  	struct xfs_bmbt_irec		uirec;
+> >  	struct xfs_bmbt_irec		tirec;
+> > @@ -1577,7 +1579,6 @@ xfs_swap_extent_rmap(
+> >  	xfs_fileoff_t			end_fsb;
+> >  	xfs_filblks_t			count_fsb;
+> >  	xfs_fsblock_t			firstfsb;
+> > -	struct xfs_defer_ops		dfops;
+> >  	int				error;
+> >  	xfs_filblks_t			ilen;
+> >  	xfs_filblks_t			rlen;
+> > @@ -1613,7 +1614,7 @@ xfs_swap_extent_rmap(
 > >  
-> >  	if (iomap->type != IOMAP_MAPPED || block_start >= i_size_read(inode)) {
-> >  		zero_user_segments(page, poff, from, to, poff + plen);
-> > +		iomap_set_range_uptodate(page, poff, plen);
-> >  		return 0;
-> >  	}
+> >  		/* Unmap the old blocks in the source file. */
+> >  		while (tirec.br_blockcount) {
+> > -			xfs_defer_init(&dfops, &firstfsb);
+> > +			xfs_defer_init(tp->t_dfops, &firstfsb);
+> >  			trace_xfs_swap_extent_rmap_remap_piece(tip, &tirec);
 > >  
-> > @@ -379,21 +604,33 @@ static int
-> >  __iomap_write_begin(struct inode *inode, loff_t pos, unsigned len,
-> >  		struct page *page, struct iomap *iomap)
+> >  			/* Read extent from the source file */
+> > @@ -1635,31 +1636,32 @@ xfs_swap_extent_rmap(
+> >  			trace_xfs_swap_extent_rmap_remap_piece(tip, &uirec);
+> >  
+> >  			/* Remove the mapping from the donor file. */
+> > -			error = xfs_bmap_unmap_extent((*tpp)->t_mountp, &dfops,
+> > -					tip, &uirec);
+> > +			error = xfs_bmap_unmap_extent(mp, tp->t_dfops, tip,
+> > +					&uirec);
+> >  			if (error)
+> >  				goto out_defer;
+> >  
+> >  			/* Remove the mapping from the source file. */
+> > -			error = xfs_bmap_unmap_extent((*tpp)->t_mountp, &dfops,
+> > -					ip, &irec);
+> > +			error = xfs_bmap_unmap_extent(mp, tp->t_dfops, ip,
+> > +					&irec);
+> >  			if (error)
+> >  				goto out_defer;
+> >  
+> >  			/* Map the donor file's blocks into the source file. */
+> > -			error = xfs_bmap_map_extent((*tpp)->t_mountp, &dfops,
+> > -					ip, &uirec);
+> > +			error = xfs_bmap_map_extent(mp, tp->t_dfops, ip,
+> > +					&uirec);
+> >  			if (error)
+> >  				goto out_defer;
+> >  
+> >  			/* Map the source file's blocks into the donor file. */
+> > -			error = xfs_bmap_map_extent((*tpp)->t_mountp, &dfops,
+> > -					tip, &irec);
+> > +			error = xfs_bmap_map_extent(mp, tp->t_dfops, tip,
+> > +					&irec);
+> >  			if (error)
+> >  				goto out_defer;
+> >  
+> > -			xfs_defer_ijoin(&dfops, ip);
+> > -			error = xfs_defer_finish(tpp, &dfops);
+> > +			xfs_defer_ijoin(tp->t_dfops, ip);
+> > +			error = xfs_defer_finish(tpp, tp->t_dfops);
+> > +			tp = *tpp;
+> >  			if (error)
+> >  				goto out_defer;
+> >  
+> > @@ -1679,7 +1681,7 @@ xfs_swap_extent_rmap(
+> >  	return 0;
+> >  
+> >  out_defer:
+> > -	xfs_defer_cancel(&dfops);
+> > +	xfs_defer_cancel(tp->t_dfops);
+> >  out:
+> >  	trace_xfs_swap_extent_rmap_error(ip, error, _RET_IP_);
+> >  	tip->i_d.di_flags2 = tip_flags2;
+> > @@ -1846,6 +1848,7 @@ xfs_swap_extents(
 > >  {
-> > +	struct iomap_page *iop = iomap_page_create(inode, page);
-> >  	loff_t block_size = i_blocksize(inode);
-> >  	loff_t block_start = pos & ~(block_size - 1);
-> >  	loff_t block_end = (pos + len + block_size - 1) & ~(block_size - 1);
-> > -	unsigned poff = block_start & (PAGE_SIZE - 1);
-> > -	unsigned plen = min_t(loff_t, PAGE_SIZE - poff, block_end - block_start);
-> > -	unsigned from = pos & (PAGE_SIZE - 1), to = from + len;
-> > -
-> > -	WARN_ON_ONCE(i_blocksize(inode) < PAGE_SIZE);
-> > +	unsigned from = pos & (PAGE_SIZE - 1), to = from + len, poff, plen;
-> > +	int status = 0;
+> >  	struct xfs_mount	*mp = ip->i_mount;
+> >  	struct xfs_trans	*tp;
+> > +	struct xfs_defer_ops	dfops;
+> >  	struct xfs_bstat	*sbp = &sxp->sx_stat;
+> >  	int			src_log_flags, target_log_flags;
+> >  	int			error = 0;
+> > @@ -1853,6 +1856,7 @@ xfs_swap_extents(
+> >  	struct xfs_ifork	*cowfp;
+> >  	uint64_t		f;
+> >  	int			resblks = 0;
+> > +	xfs_fsblock_t		firstfsb;
 > >  
-> >  	if (PageUptodate(page))
-> >  		return 0;
-> > -	if (from <= poff && to >= poff + plen)
-> > -		return 0;
-> > -	return iomap_read_page_sync(inode, block_start, page,
-> > -			poff, plen, from, to, iomap);
-> > +
-> > +	do {
-> > +		iomap_adjust_read_range(inode, iop, &block_start,
-> > +				block_end - block_start, &poff, &plen);
-> > +		if (plen == 0)
-> > +			break;
-> > +
-> > +		if ((from > poff && from < poff + plen) ||
-> > +		    (to > poff && to < poff + plen)) {
-> > +			status = iomap_read_page_sync(inode, block_start, page,
-> > +					poff, plen, from, to, iomap);
-> > +			if (status)
-> > +				break;
-> > +		}
-> > +
-> > +	} while ((block_start += plen) < block_end);
-> > +
-> > +	return status;
-> >  }
+> >  	/*
+> >  	 * Lock the inodes against other IO, page faults and truncate to
+> > @@ -1915,6 +1919,8 @@ xfs_swap_extents(
+> >  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0, &tp);
+> >  	if (error)
+> >  		goto out_unlock;
+> > +	xfs_defer_init(&dfops, &firstfsb);
+> > +	tp->t_dfops = &dfops;
+> 
+> Hmm... another redundant initialization here, and extra stack usage too.
+> 
+
+Similar to the last one, the initial init is to facilitate the future
+change where dfops may be initted by the transaction allocation. Not
+quite as similar to the last one, this path already does repeated inits
+because dfops/firstblock is reused in the associated loop. So
+technically I don't see how this changes much (aside from the dummy
+firstfsb in the caller, which could just be replaced with 'f' or
+something if we care that much about it).
+
+Since dfops should be empty/initted after a finish anyways, this defer
+init could probably go away in the firstblock series once the latter is
+automatically reinitialized on tx roll (though the v1 I posted doesn't
+remove it).
+
+> If we're going to move the dfops into struct xfs_trans I don't want this
+> series and that series to be split across a release with all these bits
+> scattered everywhere for a single release.
+> 
+> It's at this point I'm tempted to suggest starting this series over with
+> adding a new dfops to the transaction and then converting the
+> t_agfl_dfops and the open-coded/stack-allocated dfops to use the one
+> embedded in the transaction, if nothing else to avoid all this scattered
+> churn.
+> 
+
+I think that just changes the order and manner of the churn. Regardless,
+it's fine with me if we want to hold merging any of it until the whole
+thing is posted. I may still have posted these bits regardless as
+review/rfc checkpoints.
+
+> OTOH I also see that you already moved firstblock into the transaction.
+> I'll keep my mouth shut until I get to the end of that series because I
+> sense there's a lot of changes captured in those two series that would
+> happen even if you'd started with putting the dfops in the transaction.
+> Maybe you're really close to mailing out that last piece anyway.
+> 
+
+Not really, I'm just starting to look at the last bit. I don't think it
+will be that difficult once the core bits are worked out, however, so I
+could just incorporate the current feedback and post the whole thing as
+one big series rather than worry about v2 of each of the series' posted
+so far. Doing it incrementally seemed safer and easier to me, but either
+way is fine with me.
+
+Brian
+
+> Code otherwise looks ok, if a bit messy:
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> --D
+> 
 > >  
-> >  static int
-> > @@ -476,7 +713,7 @@ __iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
-> >  	if (unlikely(copied < len && !PageUptodate(page))) {
-> >  		copied = 0;
-> >  	} else {
-> > -		SetPageUptodate(page);
-> > +		iomap_set_range_uptodate(page, pos & (PAGE_SIZE - 1), len);
-> >  		iomap_set_page_dirty(page);
-> >  	}
-> >  	return __generic_write_end(inode, pos, copied, page);
-> > @@ -812,7 +1049,7 @@ iomap_page_mkwrite_actor(struct inode *inode, loff_t pos, loff_t length,
-> >  		block_commit_write(page, 0, length);
-> >  	} else {
-> >  		WARN_ON_ONCE(!PageUptodate(page));
-> > -		WARN_ON_ONCE(i_blocksize(inode) < PAGE_SIZE);
-> > +		iomap_page_create(inode, page);
-> >  	}
-> >  
-> >  	return length;
-> > diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> > index 5eb9ca8d7ce5..3555d54bf79a 100644
-> > --- a/include/linux/iomap.h
-> > +++ b/include/linux/iomap.h
-> > @@ -2,6 +2,9 @@
-> >  #ifndef LINUX_IOMAP_H
-> >  #define LINUX_IOMAP_H 1
-> >  
-> > +#include <linux/atomic.h>
-> > +#include <linux/bitmap.h>
-> > +#include <linux/mm.h>
-> >  #include <linux/types.h>
-> >  
-> >  struct address_space;
-> > @@ -98,12 +101,40 @@ struct iomap_ops {
-> >  			ssize_t written, unsigned flags, struct iomap *iomap);
-> >  };
-> >  
-> > +/*
-> > + * Structure allocate for each page when block size < PAGE_SIZE to track
-> > + * sub-page uptodate status and I/O completions.
-> > + */
-> > +struct iomap_page {
-> > +	atomic_t		read_count;
-> > +	atomic_t		write_count;
-> > +	DECLARE_BITMAP(uptodate, PAGE_SIZE / 512);
-> > +};
-> > +
-> > +static inline struct iomap_page *to_iomap_page(struct page *page)
-> > +{
-> > +	if (page_has_private(page))
-> > +		return (struct iomap_page *)page_private(page);
-> > +	return NULL;
-> > +}
-> > +
-> >  ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
-> >  		const struct iomap_ops *ops);
-> >  int iomap_readpage(struct page *page, const struct iomap_ops *ops);
-> >  int iomap_readpages(struct address_space *mapping, struct list_head *pages,
-> >  		unsigned nr_pages, const struct iomap_ops *ops);
-> >  int iomap_set_page_dirty(struct page *page);
-> > +int iomap_is_partially_uptodate(struct page *page, unsigned long from,
-> > +		unsigned long count);
-> > +int iomap_releasepage(struct page *page, gfp_t gfp_mask);
-> > +void iomap_invalidatepage(struct page *page, unsigned int offset,
-> > +		unsigned int len);
-> > +#ifdef CONFIG_MIGRATION
-> > +int iomap_migrate_page(struct address_space *mapping, struct page *newpage,
-> > +		struct page *page, enum migrate_mode mode);
-> > +#else
-> > +#define iomap_migrate_page NULL
-> > +#endif
-> >  int iomap_file_dirty(struct inode *inode, loff_t pos, loff_t len,
-> >  		const struct iomap_ops *ops);
-> >  int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
+> >  	/*
+> >  	 * Lock and join the inodes to the tansaction so that transaction commit
 > > -- 
-> > 2.18.0
+> > 2.17.1
 > > 
 > > --
 > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > > the body of a message to majordomo@vger.kernel.org
 > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
