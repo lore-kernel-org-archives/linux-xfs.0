@@ -1,54 +1,172 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:32882 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752152AbeGBO6Q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Jul 2018 10:58:16 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 01/22] xfs: use iomap for blocksize == PAGE_SIZE readpage and readpages
-Date: Mon,  2 Jul 2018 08:57:52 -0600
-Message-Id: <20180702145813.22496-2-hch@lst.de>
-In-Reply-To: <20180702145813.22496-1-hch@lst.de>
-References: <20180702145813.22496-1-hch@lst.de>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:37714 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752145AbeGCUrz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 3 Jul 2018 16:47:55 -0400
+Date: Tue, 3 Jul 2018 16:47:53 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 10/24] xfs: use ->t_dfops in dqalloc transaction
+Message-ID: <20180703204753.GH22789@bfoster>
+References: <20180628163636.52564-1-bfoster@redhat.com>
+ <20180628163636.52564-11-bfoster@redhat.com>
+ <20180703195933.GB32415@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180703195933.GB32415@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-For file systems with a block size that equals the page size we never do
-partial reads, so we can use the buffer_head-less iomap versions of
-readpage and readpages without conflicting with the buffer_head structures
-create later in write_begin.
+On Tue, Jul 03, 2018 at 12:59:33PM -0700, Darrick J. Wong wrote:
+> On Thu, Jun 28, 2018 at 12:36:22PM -0400, Brian Foster wrote:
+> > xfs_dquot_disk_alloc() receives a transaction from the caller and
+> > passes a local dfops along to xfs_bmapi_write(). If we attach this
+> > dfops to the transaction, we have to make sure to clear it before
+> > returning to avoid invalid access of stack memory.
+> > 
+> > Since xfs_qm_dqread_alloc() is the only caller, pull dfops into the
+> > caller and attach it to the transaction to eliminate this pattern
+> > entirely.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> >  fs/xfs/xfs_dquot.c | 34 ++++++++++++++++++++--------------
+> >  1 file changed, 20 insertions(+), 14 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> > index 0973a0423bed..aa62f8b17376 100644
+> > --- a/fs/xfs/xfs_dquot.c
+> > +++ b/fs/xfs/xfs_dquot.c
+> > @@ -286,8 +286,8 @@ xfs_dquot_disk_alloc(
+> >  	struct xfs_buf		**bpp)
+> >  {
+> >  	struct xfs_bmbt_irec	map;
+> > -	struct xfs_defer_ops	dfops;
+> > -	struct xfs_mount	*mp = (*tpp)->t_mountp;
+> > +	struct xfs_trans	*tp = *tpp;
+> > +	struct xfs_mount	*mp = tp->t_mountp;
+> >  	struct xfs_buf		*bp;
+> >  	struct xfs_inode	*quotip = xfs_quota_inode(mp, dqp->dq_flags);
+> >  	xfs_fsblock_t		firstblock;
+> > @@ -296,7 +296,8 @@ xfs_dquot_disk_alloc(
+> >  
+> >  	trace_xfs_dqalloc(dqp);
+> >  
+> > -	xfs_defer_init(&dfops, &firstblock);
+> > +	xfs_defer_init(tp->t_dfops, &firstblock);
+> 
+> Initializing a pointed-to dfops is a little eyebrow-raising because...
+> 
+> > +
+> >  	xfs_ilock(quotip, XFS_ILOCK_EXCL);
+> >  	if (!xfs_this_quota_on(dqp->q_mount, dqp->dq_flags)) {
+> >  		/*
+> > @@ -308,11 +309,11 @@ xfs_dquot_disk_alloc(
+> >  	}
+> >  
+> >  	/* Create the block mapping. */
+> > -	xfs_trans_ijoin(*tpp, quotip, XFS_ILOCK_EXCL);
+> > -	error = xfs_bmapi_write(*tpp, quotip, dqp->q_fileoffset,
+> > +	xfs_trans_ijoin(tp, quotip, XFS_ILOCK_EXCL);
+> > +	error = xfs_bmapi_write(tp, quotip, dqp->q_fileoffset,
+> >  			XFS_DQUOT_CLUSTER_SIZE_FSB, XFS_BMAPI_METADATA,
+> >  			&firstblock, XFS_QM_DQALLOC_SPACE_RES(mp),
+> > -			&map, &nmaps, &dfops);
+> > +			&map, &nmaps, tp->t_dfops);
+> >  	if (error)
+> >  		goto error0;
+> >  	ASSERT(map.br_blockcount == XFS_DQUOT_CLUSTER_SIZE_FSB);
+> > @@ -326,7 +327,7 @@ xfs_dquot_disk_alloc(
+> >  	dqp->q_blkno = XFS_FSB_TO_DADDR(mp, map.br_startblock);
+> >  
+> >  	/* now we can just get the buffer (there's nothing to read yet) */
+> > -	bp = xfs_trans_get_buf(*tpp, mp->m_ddev_targp, dqp->q_blkno,
+> > +	bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, dqp->q_blkno,
+> >  			mp->m_quotainfo->qi_dqchunklen, 0);
+> >  	if (!bp) {
+> >  		error = -ENOMEM;
+> > @@ -338,7 +339,7 @@ xfs_dquot_disk_alloc(
+> >  	 * Make a chunk of dquots out of this buffer and log
+> >  	 * the entire thing.
+> >  	 */
+> > -	xfs_qm_init_dquot_blk(*tpp, mp, be32_to_cpu(dqp->q_core.d_id),
+> > +	xfs_qm_init_dquot_blk(tp, mp, be32_to_cpu(dqp->q_core.d_id),
+> >  			      dqp->dq_flags & XFS_DQ_ALLTYPES, bp);
+> >  	xfs_buf_set_ref(bp, XFS_DQUOT_REF);
+> >  
+> > @@ -364,14 +365,15 @@ xfs_dquot_disk_alloc(
+> >  	 * is responsible for unlocking any buffer passed back, either
+> >  	 * manually or by committing the transaction.
+> >  	 */
+> > -	xfs_trans_bhold(*tpp, bp);
+> > -	error = xfs_defer_bjoin(&dfops, bp);
+> > +	xfs_trans_bhold(tp, bp);
+> > +	error = xfs_defer_bjoin(tp->t_dfops, bp);
+> >  	if (error) {
+> > -		xfs_trans_bhold_release(*tpp, bp);
+> > -		xfs_trans_brelse(*tpp, bp);
+> > +		xfs_trans_bhold_release(tp, bp);
+> > +		xfs_trans_brelse(tp, bp);
+> >  		goto error1;
+> >  	}
+> > -	error = xfs_defer_finish(tpp, &dfops);
+> > +	error = xfs_defer_finish(tpp, tp->t_dfops);
+> > +	tp = *tpp;
+> >  	if (error) {
+> >  		xfs_buf_relse(bp);
+> >  		goto error1;
+> > @@ -380,7 +382,7 @@ xfs_dquot_disk_alloc(
+> >  	return 0;
+> >  
+> >  error1:
+> > -	xfs_defer_cancel(&dfops);
+> > +	xfs_defer_cancel(tp->t_dfops);
+> >  error0:
+> >  	return error;
+> >  }
+> > @@ -538,13 +540,17 @@ xfs_qm_dqread_alloc(
+> >  	struct xfs_buf		**bpp)
+> >  {
+> >  	struct xfs_trans	*tp;
+> > +	struct xfs_defer_ops	dfops;
+> >  	struct xfs_buf		*bp;
+> > +	xfs_fsblock_t		firstblock;
+> >  	int			error;
+> >  
+> >  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_dqalloc,
+> >  			XFS_QM_DQALLOC_SPACE_RES(mp), 0, 0, &tp);
+> >  	if (error)
+> >  		goto err;
+> > +	xfs_defer_init(&dfops, &firstblock);
+> > +	tp->t_dfops = &dfops;
+> 
+> ...this introduces a double-initialization of dfops since
+> xfs_dquot_disk_alloc now calls xfs_defer_init on tp->t_dfops == dfops.
+> 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_aops.c | 4 ++++
- 1 file changed, 4 insertions(+)
+Yeah, I noticed that when I added the earlier init. IIRC, I moved the
+defer_init because wanted to have the dfops init as close to the
+transaction as possible to facilitate the future changes, but firstblock
+still lives in this function and requires initialization. I left it as
+is because it seemed harmless for the time being (I think both calls
+will ultimately go away). Looking at it again, we could just drop the
+second defer init and initialize firstblock to NULLFSBLOCK where it's
+declared.
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 8eb3ba3d4d00..85e1a625d42a 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1401,6 +1401,8 @@ xfs_vm_readpage(
- 	struct page		*page)
- {
- 	trace_xfs_vm_readpage(page->mapping->host, 1);
-+	if (i_blocksize(page->mapping->host) == PAGE_SIZE)
-+		return iomap_readpage(page, &xfs_iomap_ops);
- 	return mpage_readpage(page, xfs_get_blocks);
- }
- 
-@@ -1412,6 +1414,8 @@ xfs_vm_readpages(
- 	unsigned		nr_pages)
- {
- 	trace_xfs_vm_readpages(mapping->host, nr_pages);
-+	if (i_blocksize(mapping->host) == PAGE_SIZE)
-+		return iomap_readpages(mapping, pages, nr_pages, &xfs_iomap_ops);
- 	return mpage_readpages(mapping, pages, nr_pages, xfs_get_blocks);
- }
- 
--- 
-2.18.0
+Brian
 
+> --D
+> 
+> >  
+> >  	error = xfs_dquot_disk_alloc(&tp, dqp, &bp);
+> >  	if (error)
+> > -- 
+> > 2.17.1
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
