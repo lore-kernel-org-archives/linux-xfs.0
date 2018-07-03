@@ -1,154 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:37788 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752620AbeGCT7s (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Jul 2018 15:59:48 -0400
-Date: Tue, 3 Jul 2018 12:59:33 -0700
+Received: from aserp2130.oracle.com ([141.146.126.79]:51226 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752898AbeGCU1A (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Jul 2018 16:27:00 -0400
+Date: Tue, 3 Jul 2018 13:26:45 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 10/24] xfs: use ->t_dfops in dqalloc transaction
-Message-ID: <20180703195933.GB32415@magnolia>
+Subject: Re: [PATCH 06/24] xfs: use ->t_dfops for attr set/remove operations
+Message-ID: <20180703202645.GC32415@magnolia>
 References: <20180628163636.52564-1-bfoster@redhat.com>
- <20180628163636.52564-11-bfoster@redhat.com>
+ <20180628163636.52564-7-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180628163636.52564-11-bfoster@redhat.com>
+In-Reply-To: <20180628163636.52564-7-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jun 28, 2018 at 12:36:22PM -0400, Brian Foster wrote:
-> xfs_dquot_disk_alloc() receives a transaction from the caller and
-> passes a local dfops along to xfs_bmapi_write(). If we attach this
-> dfops to the transaction, we have to make sure to clear it before
-> returning to avoid invalid access of stack memory.
-> 
-> Since xfs_qm_dqread_alloc() is the only caller, pull dfops into the
-> caller and attach it to the transaction to eliminate this pattern
-> entirely.
+On Thu, Jun 28, 2018 at 12:36:18PM -0400, Brian Foster wrote:
+> Attach the local dfops to the transaction allocated for xattr add
+> and remove operations. Add an earlier initialization in
+> xfs_attr_remove() to ensure the structure is valid if it remains
+> unused at transaction commit time.
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/xfs/xfs_dquot.c | 34 ++++++++++++++++++++--------------
->  1 file changed, 20 insertions(+), 14 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> index 0973a0423bed..aa62f8b17376 100644
-> --- a/fs/xfs/xfs_dquot.c
-> +++ b/fs/xfs/xfs_dquot.c
-> @@ -286,8 +286,8 @@ xfs_dquot_disk_alloc(
->  	struct xfs_buf		**bpp)
->  {
->  	struct xfs_bmbt_irec	map;
-> -	struct xfs_defer_ops	dfops;
-> -	struct xfs_mount	*mp = (*tpp)->t_mountp;
-> +	struct xfs_trans	*tp = *tpp;
-> +	struct xfs_mount	*mp = tp->t_mountp;
->  	struct xfs_buf		*bp;
->  	struct xfs_inode	*quotip = xfs_quota_inode(mp, dqp->dq_flags);
->  	xfs_fsblock_t		firstblock;
-> @@ -296,7 +296,8 @@ xfs_dquot_disk_alloc(
->  
->  	trace_xfs_dqalloc(dqp);
->  
-> -	xfs_defer_init(&dfops, &firstblock);
-> +	xfs_defer_init(tp->t_dfops, &firstblock);
 
-Initializing a pointed-to dfops is a little eyebrow-raising because...
-
-> +
->  	xfs_ilock(quotip, XFS_ILOCK_EXCL);
->  	if (!xfs_this_quota_on(dqp->q_mount, dqp->dq_flags)) {
->  		/*
-> @@ -308,11 +309,11 @@ xfs_dquot_disk_alloc(
->  	}
->  
->  	/* Create the block mapping. */
-> -	xfs_trans_ijoin(*tpp, quotip, XFS_ILOCK_EXCL);
-> -	error = xfs_bmapi_write(*tpp, quotip, dqp->q_fileoffset,
-> +	xfs_trans_ijoin(tp, quotip, XFS_ILOCK_EXCL);
-> +	error = xfs_bmapi_write(tp, quotip, dqp->q_fileoffset,
->  			XFS_DQUOT_CLUSTER_SIZE_FSB, XFS_BMAPI_METADATA,
->  			&firstblock, XFS_QM_DQALLOC_SPACE_RES(mp),
-> -			&map, &nmaps, &dfops);
-> +			&map, &nmaps, tp->t_dfops);
->  	if (error)
->  		goto error0;
->  	ASSERT(map.br_blockcount == XFS_DQUOT_CLUSTER_SIZE_FSB);
-> @@ -326,7 +327,7 @@ xfs_dquot_disk_alloc(
->  	dqp->q_blkno = XFS_FSB_TO_DADDR(mp, map.br_startblock);
->  
->  	/* now we can just get the buffer (there's nothing to read yet) */
-> -	bp = xfs_trans_get_buf(*tpp, mp->m_ddev_targp, dqp->q_blkno,
-> +	bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, dqp->q_blkno,
->  			mp->m_quotainfo->qi_dqchunklen, 0);
->  	if (!bp) {
->  		error = -ENOMEM;
-> @@ -338,7 +339,7 @@ xfs_dquot_disk_alloc(
->  	 * Make a chunk of dquots out of this buffer and log
->  	 * the entire thing.
->  	 */
-> -	xfs_qm_init_dquot_blk(*tpp, mp, be32_to_cpu(dqp->q_core.d_id),
-> +	xfs_qm_init_dquot_blk(tp, mp, be32_to_cpu(dqp->q_core.d_id),
->  			      dqp->dq_flags & XFS_DQ_ALLTYPES, bp);
->  	xfs_buf_set_ref(bp, XFS_DQUOT_REF);
->  
-> @@ -364,14 +365,15 @@ xfs_dquot_disk_alloc(
->  	 * is responsible for unlocking any buffer passed back, either
->  	 * manually or by committing the transaction.
->  	 */
-> -	xfs_trans_bhold(*tpp, bp);
-> -	error = xfs_defer_bjoin(&dfops, bp);
-> +	xfs_trans_bhold(tp, bp);
-> +	error = xfs_defer_bjoin(tp->t_dfops, bp);
->  	if (error) {
-> -		xfs_trans_bhold_release(*tpp, bp);
-> -		xfs_trans_brelse(*tpp, bp);
-> +		xfs_trans_bhold_release(tp, bp);
-> +		xfs_trans_brelse(tp, bp);
->  		goto error1;
->  	}
-> -	error = xfs_defer_finish(tpp, &dfops);
-> +	error = xfs_defer_finish(tpp, tp->t_dfops);
-> +	tp = *tpp;
->  	if (error) {
->  		xfs_buf_relse(bp);
->  		goto error1;
-> @@ -380,7 +382,7 @@ xfs_dquot_disk_alloc(
->  	return 0;
->  
->  error1:
-> -	xfs_defer_cancel(&dfops);
-> +	xfs_defer_cancel(tp->t_dfops);
->  error0:
->  	return error;
->  }
-> @@ -538,13 +540,17 @@ xfs_qm_dqread_alloc(
->  	struct xfs_buf		**bpp)
->  {
->  	struct xfs_trans	*tp;
-> +	struct xfs_defer_ops	dfops;
->  	struct xfs_buf		*bp;
-> +	xfs_fsblock_t		firstblock;
->  	int			error;
->  
->  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_dqalloc,
->  			XFS_QM_DQALLOC_SPACE_RES(mp), 0, 0, &tp);
->  	if (error)
->  		goto err;
-> +	xfs_defer_init(&dfops, &firstblock);
-> +	tp->t_dfops = &dfops;
-
-...this introduces a double-initialization of dfops since
-xfs_dquot_disk_alloc now calls xfs_defer_init on tp->t_dfops == dfops.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
->  
->  	error = xfs_dquot_disk_alloc(&tp, dqp, &bp);
+> ---
+>  fs/xfs/libxfs/xfs_attr.c | 11 +++++++----
+>  fs/xfs/libxfs/xfs_bmap.c |  3 ++-
+>  2 files changed, 9 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index 99590f61d624..cc23c269f2bf 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -254,6 +254,8 @@ xfs_attr_set(
+>  			rsvd ? XFS_TRANS_RESERVE : 0, &args.trans);
 >  	if (error)
+>  		return error;
+> +	xfs_defer_init(&dfops, &firstblock);
+> +	args.trans->t_dfops = &dfops;
+>  
+>  	xfs_ilock(dp, XFS_ILOCK_EXCL);
+>  	error = xfs_trans_reserve_quota_nblks(args.trans, dp, args.total, 0,
+> @@ -315,7 +317,6 @@ xfs_attr_set(
+>  		 * It won't fit in the shortform, transform to a leaf block.
+>  		 * GROT: another possible req'mt for a double-split btree op.
+>  		 */
+> -		xfs_defer_init(args.dfops, args.firstblock);
+>  		error = xfs_attr_shortform_to_leaf(&args, &leaf_bp);
+>  		if (error)
+>  			goto out_defer_cancel;
+> @@ -325,9 +326,9 @@ xfs_attr_set(
+>  		 * buffer and run into problems with the write verifier.
+>  		 */
+>  		xfs_trans_bhold(args.trans, leaf_bp);
+> -		xfs_defer_bjoin(args.dfops, leaf_bp);
+> -		xfs_defer_ijoin(args.dfops, dp);
+> -		error = xfs_defer_finish(&args.trans, args.dfops);
+> +		xfs_defer_bjoin(&dfops, leaf_bp);
+> +		xfs_defer_ijoin(&dfops, dp);
+> +		error = xfs_defer_finish(&args.trans, &dfops);
+>  		if (error)
+>  			goto out_defer_cancel;
+>  
+> @@ -429,6 +430,8 @@ xfs_attr_remove(
+>  			&args.trans);
+>  	if (error)
+>  		return error;
+> +	xfs_defer_init(&dfops, &firstblock);
+> +	args.trans->t_dfops = &dfops;
+>  
+>  	xfs_ilock(dp, XFS_ILOCK_EXCL);
+>  	/*
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 7205268b30bc..16bbc8114d62 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -1057,6 +1057,8 @@ xfs_bmap_add_attrfork(
+>  			rsvd ? XFS_TRANS_RESERVE : 0, &tp);
+>  	if (error)
+>  		return error;
+> +	xfs_defer_init(&dfops, &firstblock);
+> +	tp->t_dfops = &dfops;
+>  
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  	error = xfs_trans_reserve_quota_nblks(tp, ip, blks, 0, rsvd ?
+> @@ -1104,7 +1106,6 @@ xfs_bmap_add_attrfork(
+>  	ip->i_afp = kmem_zone_zalloc(xfs_ifork_zone, KM_SLEEP);
+>  	ip->i_afp->if_flags = XFS_IFEXTENTS;
+>  	logflags = 0;
+> -	xfs_defer_init(&dfops, &firstblock);
+>  	switch (ip->i_d.di_format) {
+>  	case XFS_DINODE_FMT_LOCAL:
+>  		error = xfs_bmap_add_attrfork_local(tp, ip, &firstblock, &dfops,
 > -- 
 > 2.17.1
 > 
