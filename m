@@ -1,161 +1,152 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:56934 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932409AbeGCQHR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Jul 2018 12:07:17 -0400
-Date: Tue, 3 Jul 2018 09:07:00 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/3] iomap: refactor iomap_dio_actor
-Message-ID: <20180703160700.GZ5711@magnolia>
-References: <20180702145458.22330-1-hch@lst.de>
- <20180702145458.22330-2-hch@lst.de>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:55008 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932209AbeGCQLO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 3 Jul 2018 12:11:14 -0400
+Date: Tue, 3 Jul 2018 12:11:12 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2] xfs: use ->t_dfops for recovery of [b|c]ui log items
+Message-ID: <20180703161112.GE22789@bfoster>
+References: <20180628163636.52564-6-bfoster@redhat.com>
+ <20180702173836.9533-1-bfoster@redhat.com>
+ <20180703151535.GT5711@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180702145458.22330-2-hch@lst.de>
+In-Reply-To: <20180703151535.GT5711@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, Andreas Gruenbacher <agruenba@redhat.com>, cluster-devel@redhat.com, linux-fsdevel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jul 02, 2018 at 08:54:56AM -0600, Christoph Hellwig wrote:
-> Split the function up into two helpers for the bio based I/O and hole
-> case, and a small helper to call the two.  This separates the code a
-> little better in preparation for supporting I/O to inline data.
+On Tue, Jul 03, 2018 at 08:15:35AM -0700, Darrick J. Wong wrote:
+> On Mon, Jul 02, 2018 at 01:38:36PM -0400, Brian Foster wrote:
+> > Log recovery passes down a central dfops structure to recovery
+> > handlers for bui and cui log items. Each of these handlers allocates
+> > and commits a transaction and defers any remaining operations to be
+> > completed by the main recovery sequence.
+> > 
+> > Since dfops outlives the transaction in this context, set and clear
+> > ->t_dfops appropriately such that the *_finish_item() paths and
+> > below (i.e., xfs_bmapi*()) can expect to find the dfops in the
+> > transaction without it being committed with the dfops attached. This
+> > is required because transaction commit expects that an associated
+> > dfops is finished and in this context the dfops may be populated at
+> > commit time.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> > 
+> > v2:
+> > - Add comments to explain unique ->t_dfops usage in bui/cui log item
+> >   recovery.
+> > 
+> >  fs/xfs/xfs_bmap_item.c     | 8 ++++++++
+> >  fs/xfs/xfs_refcount_item.c | 8 ++++++++
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Andreas Gruenbacher <agruenba@redhat.com>
-
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> ---
->  fs/iomap.c | 88 ++++++++++++++++++++++++++++++++----------------------
->  1 file changed, 52 insertions(+), 36 deletions(-)
+> General note: realtime rmap (being rooted in an inode) log item replay
+> can generate further dfops, so I'll have to wire that up when I pass the
+> log recovery dfops collector into xfs_rui_recover, and I'll have to
+> remember to attach it to the transaction when I do that.
 > 
-> diff --git a/fs/iomap.c b/fs/iomap.c
-> index 2ebff76039b5..4d8ff0f5ecc9 100644
-> --- a/fs/iomap.c
-> +++ b/fs/iomap.c
-> @@ -1327,10 +1327,9 @@ iomap_dio_zero(struct iomap_dio *dio, struct iomap *iomap, loff_t pos,
->  }
->  
->  static loff_t
-> -iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
-> -		void *data, struct iomap *iomap)
-> +iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
-> +		struct iomap_dio *dio, struct iomap *iomap)
->  {
-> -	struct iomap_dio *dio = data;
->  	unsigned int blkbits = blksize_bits(bdev_logical_block_size(iomap->bdev));
->  	unsigned int fs_block_size = i_blocksize(inode), pad;
->  	unsigned int align = iov_iter_alignment(dio->submit.iter);
-> @@ -1344,41 +1343,27 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
->  	if ((pos | length | align) & ((1 << blkbits) - 1))
->  		return -EINVAL;
->  
-> -	switch (iomap->type) {
-> -	case IOMAP_HOLE:
-> -		if (WARN_ON_ONCE(dio->flags & IOMAP_DIO_WRITE))
-> -			return -EIO;
-> -		/*FALLTHRU*/
-> -	case IOMAP_UNWRITTEN:
-> -		if (!(dio->flags & IOMAP_DIO_WRITE)) {
-> -			length = iov_iter_zero(length, dio->submit.iter);
-> -			dio->size += length;
-> -			return length;
-> -		}
-> +	if (iomap->type == IOMAP_UNWRITTEN) {
->  		dio->flags |= IOMAP_DIO_UNWRITTEN;
->  		need_zeroout = true;
-> -		break;
-> -	case IOMAP_MAPPED:
-> -		if (iomap->flags & IOMAP_F_SHARED)
-> -			dio->flags |= IOMAP_DIO_COW;
-> -		if (iomap->flags & IOMAP_F_NEW) {
-> -			need_zeroout = true;
-> -		} else {
-> -			/*
-> -			 * Use a FUA write if we need datasync semantics, this
-> -			 * is a pure data IO that doesn't require any metadata
-> -			 * updates and the underlying device supports FUA. This
-> -			 * allows us to avoid cache flushes on IO completion.
-> -			 */
-> -			if (!(iomap->flags & (IOMAP_F_SHARED|IOMAP_F_DIRTY)) &&
-> -			    (dio->flags & IOMAP_DIO_WRITE_FUA) &&
-> -			    blk_queue_fua(bdev_get_queue(iomap->bdev)))
-> -				use_fua = true;
-> -		}
-> -		break;
-> -	default:
-> -		WARN_ON_ONCE(1);
-> -		return -EIO;
-> +	}
-> +
-> +	if (iomap->flags & IOMAP_F_SHARED)
-> +		dio->flags |= IOMAP_DIO_COW;
-> +
-> +	if (iomap->flags & IOMAP_F_NEW) {
-> +		need_zeroout = true;
-> +	} else {
-> +		/*
-> +		 * Use a FUA write if we need datasync semantics, this
-> +		 * is a pure data IO that doesn't require any metadata
-> +		 * updates and the underlying device supports FUA. This
-> +		 * allows us to avoid cache flushes on IO completion.
-> +		 */
-> +		if (!(iomap->flags & (IOMAP_F_SHARED|IOMAP_F_DIRTY)) &&
-> +		    (dio->flags & IOMAP_DIO_WRITE_FUA) &&
-> +		    blk_queue_fua(bdev_get_queue(iomap->bdev)))
-> +			use_fua = true;
->  	}
->  
->  	/*
-> @@ -1457,6 +1442,37 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
->  	return copied;
->  }
->  
-> +static loff_t
-> +iomap_dio_hole_actor(loff_t length, struct iomap_dio *dio)
-> +{
-> +	length = iov_iter_zero(length, dio->submit.iter);
-> +	dio->size += length;
-> +	return length;
-> +}
-> +
-> +static loff_t
-> +iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
-> +		void *data, struct iomap *iomap)
-> +{
-> +	struct iomap_dio *dio = data;
-> +
-> +	switch (iomap->type) {
-> +	case IOMAP_HOLE:
-> +		if (WARN_ON_ONCE(dio->flags & IOMAP_DIO_WRITE))
-> +			return -EIO;
-> +		return iomap_dio_hole_actor(length, dio);
-> +	case IOMAP_UNWRITTEN:
-> +		if (!(dio->flags & IOMAP_DIO_WRITE))
-> +			return iomap_dio_hole_actor(length, dio);
-> +		return iomap_dio_bio_actor(inode, pos, length, dio, iomap);
-> +	case IOMAP_MAPPED:
-> +		return iomap_dio_bio_actor(inode, pos, length, dio, iomap);
-> +	default:
-> +		WARN_ON_ONCE(1);
-> +		return -EIO;
-> +	}
-> +}
-> +
->  /*
->   * iomap_dio_rw() always completes O_[D]SYNC writes regardless of whether the IO
->   * is being issued as AIO or not.  This allows us to optimise pure data writes
-> -- 
-> 2.18.0
+
+Ok. I'm hoping that a last step to embed ->t_dfops directly in the
+transaction may clean up this ugly set/unset pattern a bit. What I'm
+thinking is that a transaction roll would end up having to transfer
+(splice) the pending dfops items from the current ->t_dfops to the new
+one rather than simply copy the pointer. Some of the dfops code has to
+become a bit more transaction centric to make sure we don't lose the
+dfops pointer, but otherwise if we factor that into a little helper I
+think that means these recovery functions would just have to do
+something like:
+
+	xfs_defer_move(&tp->t_dfops, dfops);
+
+... before committing tp to collect all the deferred items in the dfops
+from the caller. Otherwise, the transaction commit would actually run
+xfs_defer_finish() itself if the associated dfops has pending work. I
+haven't really dug into that yet, though, so there may be more issues to
+consider (thoughts appreciated, if that triggers any for you).
+
+Brian
+
+> Otherwise I think this is fine,
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --D
+> 
+> >  2 files changed, 16 insertions(+)
+> > 
+> > diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+> > index 956ebd583e27..478bfc798861 100644
+> > --- a/fs/xfs/xfs_bmap_item.c
+> > +++ b/fs/xfs/xfs_bmap_item.c
+> > @@ -441,6 +441,7 @@ xfs_bui_recover(
+> >  			XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK), 0, 0, &tp);
+> >  	if (error)
+> >  		return error;
+> > +	tp->t_dfops = dfops;
+> >  	budp = xfs_trans_get_bud(tp, buip);
+> >  
+> >  	/* Grab the inode. */
+> > @@ -487,6 +488,12 @@ xfs_bui_recover(
+> >  	}
+> >  
+> >  	set_bit(XFS_BUI_RECOVERED, &buip->bui_flags);
+> > +	/*
+> > +	 * Recovery finishes all deferred ops once intent processing is
+> > +	 * complete. Reset the trans reference because commit expects a finished
+> > +	 * dfops or none at all.
+> > +	 */
+> > +	tp->t_dfops = NULL;
+> >  	error = xfs_trans_commit(tp);
+> >  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> >  	IRELE(ip);
+> > @@ -494,6 +501,7 @@ xfs_bui_recover(
+> >  	return error;
+> >  
+> >  err_inode:
+> > +	tp->t_dfops = NULL;
+> >  	xfs_trans_cancel(tp);
+> >  	if (ip) {
+> >  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
+> > index 472a73e9d331..2064c689bc72 100644
+> > --- a/fs/xfs/xfs_refcount_item.c
+> > +++ b/fs/xfs/xfs_refcount_item.c
+> > @@ -452,6 +452,7 @@ xfs_cui_recover(
+> >  			mp->m_refc_maxlevels * 2, 0, XFS_TRANS_RESERVE, &tp);
+> >  	if (error)
+> >  		return error;
+> > +	tp->t_dfops = dfops;
+> >  	cudp = xfs_trans_get_cud(tp, cuip);
+> >  
+> >  	for (i = 0; i < cuip->cui_format.cui_nextents; i++) {
+> > @@ -514,11 +515,18 @@ xfs_cui_recover(
+> >  
+> >  	xfs_refcount_finish_one_cleanup(tp, rcur, error);
+> >  	set_bit(XFS_CUI_RECOVERED, &cuip->cui_flags);
+> > +	/*
+> > +	 * Recovery finishes all deferred ops once intent processing is
+> > +	 * complete. Reset the trans reference because commit expects a finished
+> > +	 * dfops or none at all.
+> > +	 */
+> > +	tp->t_dfops = NULL;
+> >  	error = xfs_trans_commit(tp);
+> >  	return error;
+> >  
+> >  abort_error:
+> >  	xfs_refcount_finish_one_cleanup(tp, rcur, error);
+> > +	tp->t_dfops = NULL;
+> >  	xfs_trans_cancel(tp);
+> >  	return error;
+> >  }
+> > -- 
+> > 2.17.1
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
