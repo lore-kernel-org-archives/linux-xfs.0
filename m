@@ -1,101 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:34794 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753132AbeGBSQC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 2 Jul 2018 14:16:02 -0400
-Date: Mon, 2 Jul 2018 14:16:00 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 23/24] iomap: add support for sub-pagesize buffered I/O
- without buffer heads
-Message-ID: <20180702181600.GA9759@bfoster>
-References: <20180615130209.1970-24-hch@lst.de>
- <20180619165211.GD2806@bfoster>
- <20180620075655.GA2668@lst.de>
- <20180620143252.GE3241@bfoster>
- <20180620160803.GA4838@magnolia>
- <20180620181259.GD4493@bfoster>
- <20180620190230.GB4838@magnolia>
- <20180621084646.GA5764@lst.de>
- <20180623130624.GA16691@bfoster>
- <20180702125036.GA3366@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180702125036.GA3366@lst.de>
+Received: from out30-131.freemail.mail.aliyun.com ([115.124.30.131]:50649 "EHLO
+        out30-131.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751237AbeGCELi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Jul 2018 00:11:38 -0400
+From: Yang Shi <yang.shi@linux.alibaba.com>
+Subject: [PATCH 1/2] fs: ext4: use BUG_ON if writepage call comes from direct reclaim
+Date: Tue,  3 Jul 2018 12:11:18 +0800
+Message-Id: <1530591079-33813-1-git-send-email-yang.shi@linux.alibaba.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: mgorman@techsingularity.net, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, dchinner@redhat.com, akpm@linux-foundation.org
+Cc: yang.shi@linux.alibaba.com, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Mon, Jul 02, 2018 at 02:50:36PM +0200, Christoph Hellwig wrote:
-> The problem is that we need to split extents at the eof block
-> so that the existing zeroing actually takes effect.  The patch below
-> fixes the test case for me:
-> 
+direct reclaim doesn't write out filesystem page, only kswapd could do
+it. So, if the call comes from direct reclaim, it is definitely a bug.
 
-Looks sane at a glance. I'll take a closer look at v7 and run some more
-testing..
+And, Mel Gormane also mentioned "Ultimately, this will be a BUG_ON." In
+commit 94054fa3fca1fd78db02cb3d68d5627120f0a1d4 ("xfs: warn if direct
+reclaim tries to writeback pages").
 
-Brian
+Although it is for xfs, ext4 has the similar behavior, so elevate
+WARN_ON to BUG_ON.
 
-> diff --git a/fs/iomap.c b/fs/iomap.c
-> index e8f1bcdc95cf..9c88b8736de0 100644
-> --- a/fs/iomap.c
-> +++ b/fs/iomap.c
-> @@ -143,13 +143,20 @@ static void
->  iomap_adjust_read_range(struct inode *inode, struct iomap_page *iop,
->  		loff_t *pos, loff_t length, unsigned *offp, unsigned *lenp)
->  {
-> +	unsigned block_bits = inode->i_blkbits;
-> +	unsigned block_size = (1 << block_bits);
->  	unsigned poff = *pos & (PAGE_SIZE - 1);
->  	unsigned plen = min_t(loff_t, PAGE_SIZE - poff, length);
-> +	unsigned first = poff >> block_bits;
-> +	unsigned last = (poff + plen - 1) >> block_bits;
-> +	unsigned end = (i_size_read(inode) & (PAGE_SIZE - 1)) >> block_bits;
->  
-> +	/*
-> +	 * If the block size is smaller than the page size we need to check the
-> +	 * per-block uptodate status and adjust the offset and length if needed
-> +	 * to avoid reading in already uptodate ranges.
-> +	 */
->  	if (iop) {
-> -		unsigned block_size = i_blocksize(inode);
-> -		unsigned first = poff >> inode->i_blkbits;
-> -		unsigned last = (poff + plen - 1) >> inode->i_blkbits;
->  		unsigned int i;
->  
->  		/* move forward for each leading block marked uptodate */
-> @@ -159,17 +166,27 @@ iomap_adjust_read_range(struct inode *inode, struct iomap_page *iop,
->  			*pos += block_size;
->  			poff += block_size;
->  			plen -= block_size;
-> +			first++;
->  		}
->  
->  		/* truncate len if we find any trailing uptodate block(s) */
->  		for ( ; i <= last; i++) {
->  			if (test_bit(i, iop->uptodate)) {
->  				plen -= (last - i + 1) * block_size;
-> +				last = i - 1;
->  				break;
->  			}
->  		}
->  	}
->  
-> +	/*
-> +	 * If the extent spans the block that contains the i_size we need to
-> +	 * handle both halves separately so that we properly zero data in the
-> +	 * page cache for blocks that are entirely outside of i_size.
-> +	 */
-> +	if (first <= end && last > end)
-> +		plen -= (last - end) * block_size;
-> +
->  	*offp = poff;
->  	*lenp = plen;
->  }
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+And, correct the comment accordingly.
+
+Cc: Mel Gorman <mgorman@techsingularity.net>
+Cc: "Theodore Ts'o" <tytso@mit.edu>
+Cc: Andreas Dilger <adilger.kernel@dilger.ca>
+Signed-off-by: Yang Shi <yang.shi@linux.alibaba.com>
+---
+ fs/ext4/inode.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index 2ea07ef..089e388 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -2071,7 +2071,7 @@ static int __ext4_journalled_writepage(struct page *page,
+  * This function can get called via...
+  *   - ext4_writepages after taking page lock (have journal handle)
+  *   - journal_submit_inode_data_buffers (no journal handle)
+- *   - shrink_page_list via the kswapd/direct reclaim (no journal handle)
++ *   - shrink_page_list via the kswapd (no journal handle)
+  *   - grab_page_cache when doing write_begin (have journal handle)
+  *
+  * We don't do any block allocation in this function. If we have page with
+@@ -2148,10 +2148,10 @@ static int ext4_writepage(struct page *page,
+ 		    (inode->i_sb->s_blocksize == PAGE_SIZE)) {
+ 			/*
+ 			 * For memory cleaning there's no point in writing only
+-			 * some buffers. So just bail out. Warn if we came here
+-			 * from direct reclaim.
++			 * some buffers. So just bail out. It is a bug if we
++			 * came here from direct reclaim.
+ 			 */
+-			WARN_ON_ONCE((current->flags & (PF_MEMALLOC|PF_KSWAPD))
++			BUG_ON((current->flags & (PF_MEMALLOC|PF_KSWAPD))
+ 							== PF_MEMALLOC);
+ 			unlock_page(page);
+ 			return 0;
+-- 
+1.8.3.1
+
