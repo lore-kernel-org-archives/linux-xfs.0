@@ -1,28 +1,28 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:45974 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752960AbeGCU7u (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Jul 2018 16:59:50 -0400
-Date: Tue, 3 Jul 2018 13:59:35 -0700
+Received: from aserp2120.oracle.com ([141.146.126.78]:46478 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752898AbeGCVDH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Jul 2018 17:03:07 -0400
+Date: Tue, 3 Jul 2018 14:02:52 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 14/24] xfs: remove xfs_bunmapi() dfops param
-Message-ID: <20180703205935.GJ32415@magnolia>
+Subject: Re: [PATCH 16/24] xfs: remove struct xfs_bmalloca dfops field
+Message-ID: <20180703210252.GL32415@magnolia>
 References: <20180628163636.52564-1-bfoster@redhat.com>
- <20180628163636.52564-15-bfoster@redhat.com>
+ <20180628163636.52564-17-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180628163636.52564-15-bfoster@redhat.com>
+In-Reply-To: <20180628163636.52564-17-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jun 28, 2018 at 12:36:26PM -0400, Brian Foster wrote:
-> Now that all xfs_bunmapi() callers use ->t_dfops, remove the
-> unnecessary parameter and access ->t_dfops directly. This patch does
-> not change behavior.
+On Thu, Jun 28, 2018 at 12:36:28PM -0400, Brian Foster wrote:
+> Now that bma.dfops is only assigned from ->t_dfops, replace all
+> accesses to the former with the latter and remove the unnecessary
+> field. This patch does not change behavior.
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
 
@@ -32,200 +32,170 @@ Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_attr_remote.c |  2 +-
->  fs/xfs/libxfs/xfs_bmap.c        | 20 +++++++++-----------
->  fs/xfs/libxfs/xfs_bmap.h        |  5 ++---
->  fs/xfs/libxfs/xfs_da_btree.c    |  2 +-
->  fs/xfs/libxfs/xfs_dir2.c        |  2 +-
->  fs/xfs/xfs_bmap_util.c          |  2 +-
->  fs/xfs/xfs_inode.c              |  2 +-
->  fs/xfs/xfs_reflink.c            |  5 ++---
->  fs/xfs/xfs_symlink.c            |  3 +--
->  9 files changed, 19 insertions(+), 24 deletions(-)
+>  fs/xfs/libxfs/xfs_bmap.c | 30 +++++++++++++++---------------
+>  fs/xfs/libxfs/xfs_bmap.h |  1 -
+>  fs/xfs/xfs_filestream.c  |  3 ++-
+>  3 files changed, 17 insertions(+), 17 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
-> index 1f2bc86a28ed..179259fd1b5e 100644
-> --- a/fs/xfs/libxfs/xfs_attr_remote.c
-> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
-> @@ -629,7 +629,7 @@ xfs_attr_rmtval_remove(
->  		xfs_defer_init(args->trans->t_dfops, args->firstblock);
->  		error = xfs_bunmapi(args->trans, args->dp, lblkno, blkcnt,
->  				    XFS_BMAPI_ATTRFORK, 1, args->firstblock,
-> -				    args->trans->t_dfops, &done);
-> +				    &done);
->  		if (error)
->  			goto out_defer_cancel;
->  		xfs_defer_ijoin(args->trans->t_dfops, args->dp);
 > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index eabf9a151d6d..25769e4f424c 100644
+> index 2bbeccad1e90..17b0b22a1edf 100644
 > --- a/fs/xfs/libxfs/xfs_bmap.c
 > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -5145,26 +5145,26 @@ xfs_bmap_del_extent_real(
->   */
->  int						/* error */
->  __xfs_bunmapi(
-> -	xfs_trans_t		*tp,		/* transaction pointer */
-> +	struct xfs_trans	*tp,		/* transaction pointer */
->  	struct xfs_inode	*ip,		/* incore inode */
->  	xfs_fileoff_t		start,		/* first file offset deleted */
->  	xfs_filblks_t		*rlen,		/* i/o: amount remaining */
->  	int			flags,		/* misc flags */
->  	xfs_extnum_t		nexts,		/* number of extents max */
-> -	xfs_fsblock_t		*firstblock,	/* first allocated block
-> +	xfs_fsblock_t		*firstblock)	/* first allocated block
->  						   controls a.g. for allocs */
-> -	struct xfs_defer_ops	*dfops)		/* i/o: deferred updates */
->  {
-> -	xfs_btree_cur_t		*cur;		/* bmap btree cursor */
-> -	xfs_bmbt_irec_t		del;		/* extent being deleted */
-> +	struct xfs_defer_ops	*dfops = tp ? tp->t_dfops : NULL;
-> +	struct xfs_btree_cur	*cur;		/* bmap btree cursor */
-> +	struct xfs_bmbt_irec	del;		/* extent being deleted */
->  	int			error;		/* error return value */
->  	xfs_extnum_t		extno;		/* extent number in list */
-> -	xfs_bmbt_irec_t		got;		/* current extent record */
-> +	struct xfs_bmbt_irec	got;		/* current extent record */
->  	xfs_ifork_t		*ifp;		/* inode fork pointer */
->  	int			isrt;		/* freeing in rt area */
->  	int			logflags;	/* transaction logging flags */
->  	xfs_extlen_t		mod;		/* rt extent offset */
-> -	xfs_mount_t		*mp;		/* mount structure */
-> +	struct xfs_mount	*mp;		/* mount structure */
->  	int			tmp_logflags;	/* partial logging flags */
->  	int			wasdel;		/* was a delayed alloc extent */
->  	int			whichfork;	/* data or attribute fork */
-> @@ -5518,13 +5518,11 @@ xfs_bunmapi(
->  	int			flags,
->  	xfs_extnum_t		nexts,
->  	xfs_fsblock_t		*firstblock,
-> -	struct xfs_defer_ops	*dfops,
->  	int			*done)
->  {
->  	int			error;
+> @@ -1806,7 +1806,7 @@ xfs_bmap_add_extent_delay_real(
 >  
-> -	error = __xfs_bunmapi(tp, ip, bno, &len, flags, nexts, firstblock,
-> -			dfops);
-> +	error = __xfs_bunmapi(tp, ip, bno, &len, flags, nexts, firstblock);
->  	*done = (len == 0);
->  	return error;
->  }
-> @@ -6195,7 +6193,7 @@ xfs_bmap_finish_one(
->  		break;
->  	case XFS_BMAP_UNMAP:
->  		error = __xfs_bunmapi(tp, ip, startoff, blockcount,
-> -				XFS_BMAPI_REMAP, 1, &firstfsb, dfops);
-> +				XFS_BMAPI_REMAP, 1, &firstfsb);
->  		break;
->  	default:
->  		ASSERT(0);
+>  		if (xfs_bmap_needs_btree(bma->ip, whichfork)) {
+>  			error = xfs_bmap_extents_to_btree(bma->tp, bma->ip,
+> -					bma->firstblock, bma->dfops,
+> +					bma->firstblock, bma->tp->t_dfops,
+>  					&bma->cur, 1, &tmp_rval, whichfork);
+>  			rval |= tmp_rval;
+>  			if (error)
+> @@ -1884,7 +1884,7 @@ xfs_bmap_add_extent_delay_real(
+>  
+>  		if (xfs_bmap_needs_btree(bma->ip, whichfork)) {
+>  			error = xfs_bmap_extents_to_btree(bma->tp, bma->ip,
+> -				bma->firstblock, bma->dfops, &bma->cur, 1,
+> +				bma->firstblock, bma->tp->t_dfops, &bma->cur, 1,
+>  				&tmp_rval, whichfork);
+>  			rval |= tmp_rval;
+>  			if (error)
+> @@ -1965,8 +1965,8 @@ xfs_bmap_add_extent_delay_real(
+>  
+>  		if (xfs_bmap_needs_btree(bma->ip, whichfork)) {
+>  			error = xfs_bmap_extents_to_btree(bma->tp, bma->ip,
+> -					bma->firstblock, bma->dfops, &bma->cur,
+> -					1, &tmp_rval, whichfork);
+> +					bma->firstblock, bma->tp->t_dfops,
+> +					&bma->cur, 1, &tmp_rval, whichfork);
+>  			rval |= tmp_rval;
+>  			if (error)
+>  				goto done;
+> @@ -1991,7 +1991,7 @@ xfs_bmap_add_extent_delay_real(
+>  
+>  	/* add reverse mapping unless caller opted out */
+>  	if (!(bma->flags & XFS_BMAPI_NORMAP)) {
+> -		error = xfs_rmap_map_extent(mp, bma->dfops, bma->ip,
+> +		error = xfs_rmap_map_extent(mp, bma->tp->t_dfops, bma->ip,
+>  				whichfork, new);
+>  		if (error)
+>  			goto done;
+> @@ -2003,7 +2003,7 @@ xfs_bmap_add_extent_delay_real(
+>  
+>  		ASSERT(bma->cur == NULL);
+>  		error = xfs_bmap_extents_to_btree(bma->tp, bma->ip,
+> -				bma->firstblock, bma->dfops, &bma->cur,
+> +				bma->firstblock, bma->tp->t_dfops, &bma->cur,
+>  				da_old > 0, &tmp_logflags, whichfork);
+>  		bma->logflags |= tmp_logflags;
+>  		if (error)
+> @@ -3480,7 +3480,7 @@ xfs_bmap_btalloc(
+>  			error = xfs_bmap_btalloc_nullfb(ap, &args, &blen);
+>  		if (error)
+>  			return error;
+> -	} else if (ap->dfops->dop_low) {
+> +	} else if (ap->tp->t_dfops->dop_low) {
+>  		if (xfs_inode_is_filestream(ap->ip))
+>  			args.type = XFS_ALLOCTYPE_FIRST_AG;
+>  		else
+> @@ -3515,7 +3515,7 @@ xfs_bmap_btalloc(
+>  	 * is >= the stripe unit and the allocation offset is
+>  	 * at the end of file.
+>  	 */
+> -	if (!ap->dfops->dop_low && ap->aeof) {
+> +	if (!ap->tp->t_dfops->dop_low && ap->aeof) {
+>  		if (!ap->offset) {
+>  			args.alignment = stripe_align;
+>  			atype = args.type;
+> @@ -3607,7 +3607,7 @@ xfs_bmap_btalloc(
+>  		args.total = ap->minlen;
+>  		if ((error = xfs_alloc_vextent(&args)))
+>  			return error;
+> -		ap->dfops->dop_low = true;
+> +		ap->tp->t_dfops->dop_low = true;
+>  	}
+>  	if (args.fsbno != NULLFSBLOCK) {
+>  		/*
+> @@ -4083,7 +4083,7 @@ xfs_bmapi_allocate(
+>  	if ((ifp->if_flags & XFS_IFBROOT) && !bma->cur) {
+>  		bma->cur = xfs_bmbt_init_cursor(mp, bma->tp, bma->ip, whichfork);
+>  		bma->cur->bc_private.b.firstblock = *bma->firstblock;
+> -		bma->cur->bc_private.b.dfops = bma->dfops;
+> +		bma->cur->bc_private.b.dfops = bma->tp->t_dfops;
+>  	}
+>  	/*
+>  	 * Bump the number of extents we've allocated
+> @@ -4119,8 +4119,8 @@ xfs_bmapi_allocate(
+>  	else
+>  		error = xfs_bmap_add_extent_hole_real(bma->tp, bma->ip,
+>  				whichfork, &bma->icur, &bma->cur, &bma->got,
+> -				bma->firstblock, bma->dfops, &bma->logflags,
+> -				bma->flags);
+> +				bma->firstblock, bma->tp->t_dfops,
+> +				&bma->logflags, bma->flags);
+>  
+>  	bma->logflags |= tmp_logflags;
+>  	if (error)
+> @@ -4172,7 +4172,7 @@ xfs_bmapi_convert_unwritten(
+>  		bma->cur = xfs_bmbt_init_cursor(bma->ip->i_mount, bma->tp,
+>  					bma->ip, whichfork);
+>  		bma->cur->bc_private.b.firstblock = *bma->firstblock;
+> -		bma->cur->bc_private.b.dfops = bma->dfops;
+> +		bma->cur->bc_private.b.dfops = bma->tp->t_dfops;
+>  	}
+>  	mval->br_state = (mval->br_state == XFS_EXT_UNWRITTEN)
+>  				? XFS_EXT_NORM : XFS_EXT_UNWRITTEN;
+> @@ -4190,7 +4190,7 @@ xfs_bmapi_convert_unwritten(
+>  
+>  	error = xfs_bmap_add_extent_unwritten_real(bma->tp, bma->ip, whichfork,
+>  			&bma->icur, &bma->cur, mval, bma->firstblock,
+> -			bma->dfops, &tmp_logflags);
+> +			bma->tp->t_dfops, &tmp_logflags);
+>  	/*
+>  	 * Log the inode core unconditionally in the unwritten extent conversion
+>  	 * path because the conversion might not have done so (e.g., if the
+> @@ -4338,8 +4338,8 @@ xfs_bmapi_write(
+>  	bma.ip = ip;
+>  	bma.total = total;
+>  	bma.datatype = 0;
+> -	bma.dfops = tp ? tp->t_dfops : NULL;
+>  	bma.firstblock = firstblock;
+> +	ASSERT(!tp || tp->t_dfops);
+>  
+>  	while (bno < end && n < *nmap) {
+>  		bool			need_alloc = false, wasdelay = false;
 > diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-> index 4bd7eeebb6d9..4ff56f55f2bb 100644
+> index 1e2694adb9c7..02811cd31153 100644
 > --- a/fs/xfs/libxfs/xfs_bmap.h
 > +++ b/fs/xfs/libxfs/xfs_bmap.h
-> @@ -209,12 +209,11 @@ int	xfs_bmapi_write(struct xfs_trans *tp, struct xfs_inode *ip,
->  		struct xfs_bmbt_irec *mval, int *nmap);
->  int	__xfs_bunmapi(struct xfs_trans *tp, struct xfs_inode *ip,
->  		xfs_fileoff_t bno, xfs_filblks_t *rlen, int flags,
-> -		xfs_extnum_t nexts, xfs_fsblock_t *firstblock,
-> -		struct xfs_defer_ops *dfops);
-> +		xfs_extnum_t nexts, xfs_fsblock_t *firstblock);
->  int	xfs_bunmapi(struct xfs_trans *tp, struct xfs_inode *ip,
->  		xfs_fileoff_t bno, xfs_filblks_t len, int flags,
->  		xfs_extnum_t nexts, xfs_fsblock_t *firstblock,
-> -		struct xfs_defer_ops *dfops, int *done);
-> +		int *done);
->  int	xfs_bmap_del_extent_delay(struct xfs_inode *ip, int whichfork,
->  		struct xfs_iext_cursor *cur, struct xfs_bmbt_irec *got,
->  		struct xfs_bmbt_irec *del);
-> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-> index e43f1dda02e4..68a72e3d9f53 100644
-> --- a/fs/xfs/libxfs/xfs_da_btree.c
-> +++ b/fs/xfs/libxfs/xfs_da_btree.c
-> @@ -2395,7 +2395,7 @@ xfs_da_shrink_inode(
->  		 */
->  		error = xfs_bunmapi(tp, dp, dead_blkno, count,
->  				    xfs_bmapi_aflag(w), 0, args->firstblock,
-> -				    args->trans->t_dfops, &done);
-> +				    &done);
->  		if (error == -ENOSPC) {
->  			if (w != XFS_DATA_FORK)
->  				break;
-> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-> index ffa288c37da0..26918c5bd819 100644
-> --- a/fs/xfs/libxfs/xfs_dir2.c
-> +++ b/fs/xfs/libxfs/xfs_dir2.c
-> @@ -663,7 +663,7 @@ xfs_dir2_shrink_inode(
+> @@ -20,7 +20,6 @@ extern kmem_zone_t	*xfs_bmap_free_item_zone;
+>   */
+>  struct xfs_bmalloca {
+>  	xfs_fsblock_t		*firstblock; /* i/o first block allocated */
+> -	struct xfs_defer_ops	*dfops;	/* bmap freelist */
+>  	struct xfs_trans	*tp;	/* transaction pointer */
+>  	struct xfs_inode	*ip;	/* incore inode pointer */
+>  	struct xfs_bmbt_irec	prev;	/* extent before the new one */
+> diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
+> index 2d2c5ab9143c..56a3999cefae 100644
+> --- a/fs/xfs/xfs_filestream.c
+> +++ b/fs/xfs/xfs_filestream.c
+> @@ -19,6 +19,7 @@
+>  #include "xfs_filestream.h"
+>  #include "xfs_trace.h"
+>  #include "xfs_ag_resv.h"
+> +#include "xfs_trans.h"
 >  
->  	/* Unmap the fsblock(s). */
->  	error = xfs_bunmapi(tp, dp, da, args->geo->fsbcount, 0, 0,
-> -			    args->firstblock, args->trans->t_dfops, &done);
-> +			    args->firstblock, &done);
->  	if (error) {
->  		/*
->  		 * ENOSPC actually can happen if we're in a removename with no
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 78189cf385f2..58b51648240d 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -1045,7 +1045,7 @@ xfs_unmap_extent(
->  	xfs_defer_init(&dfops, &firstfsb);
->  	tp->t_dfops = &dfops;
->  	error = xfs_bunmapi(tp, ip, startoffset_fsb, len_fsb, 0, 2, &firstfsb,
-> -			tp->t_dfops, done);
-> +			    done);
->  	if (error)
->  		goto out_bmap_cancel;
+>  struct xfs_fstrm_item {
+>  	struct xfs_mru_cache_elem	mru;
+> @@ -377,7 +378,7 @@ xfs_filestream_new_ag(
 >  
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 539d96201666..f456df2e1394 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -1588,7 +1588,7 @@ xfs_itruncate_extents_flags(
->  		tp->t_dfops = &dfops;
->  		error = xfs_bunmapi(tp, ip, first_unmap_block, unmap_len, flags,
->  				    XFS_ITRUNC_MAX_EXTENTS, &first_block,
-> -				    tp->t_dfops, &done);
-> +				    &done);
->  		if (error)
->  			goto out_bmap_cancel;
+>  	if (xfs_alloc_is_userdata(ap->datatype))
+>  		flags |= XFS_PICK_USERDATA;
+> -	if (ap->dfops->dop_low)
+> +	if (ap->tp->t_dfops->dop_low)
+>  		flags |= XFS_PICK_LOWSPACE;
 >  
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index bb22a17fbca8..2221c6c6a5d3 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -766,7 +766,7 @@ xfs_reflink_end_cow(
->  		tp->t_dfops = &dfops;
->  		rlen = del.br_blockcount;
->  		error = __xfs_bunmapi(tp, ip, del.br_startoff, &rlen, 0, 1,
-> -				&firstfsb, tp->t_dfops);
-> +				&firstfsb);
->  		if (error)
->  			goto out_defer;
->  
-> @@ -1115,8 +1115,7 @@ xfs_reflink_remap_extent(
->  	while (rlen) {
->  		xfs_defer_init(&dfops, &firstfsb);
->  		tp->t_dfops = &dfops;
-> -		error = __xfs_bunmapi(tp, ip, destoff, &rlen, 0, 1,
-> -				&firstfsb, tp->t_dfops);
-> +		error = __xfs_bunmapi(tp, ip, destoff, &rlen, 0, 1, &firstfsb);
->  		if (error)
->  			goto out_defer;
->  
-> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-> index 290ae13d4673..a54f095c1409 100644
-> --- a/fs/xfs/xfs_symlink.c
-> +++ b/fs/xfs/xfs_symlink.c
-> @@ -466,8 +466,7 @@ xfs_inactive_symlink_rmt(
->  	/*
->  	 * Unmap the dead block(s) to the dfops.
->  	 */
-> -	error = xfs_bunmapi(tp, ip, 0, size, 0, nmaps,
-> -			    &first_block, tp->t_dfops, &done);
-> +	error = xfs_bunmapi(tp, ip, 0, size, 0, nmaps, &first_block, &done);
->  	if (error)
->  		goto error_bmap_cancel;
->  	ASSERT(done);
+>  	err = xfs_filestream_pick_ag(pip, startag, agp, flags, minlen);
 > -- 
 > 2.17.1
 > 
