@@ -1,287 +1,235 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:43514 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752466AbeGCUsC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 3 Jul 2018 16:48:02 -0400
-Date: Tue, 3 Jul 2018 16:48:00 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 11/24] xfs: use ->t_dfops for all xfs_bmapi_write()
- callers
-Message-ID: <20180703204800.GI22789@bfoster>
+Received: from userp2130.oracle.com ([156.151.31.86]:45974 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752960AbeGCU7u (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Jul 2018 16:59:50 -0400
+Date: Tue, 3 Jul 2018 13:59:35 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 14/24] xfs: remove xfs_bunmapi() dfops param
+Message-ID: <20180703205935.GJ32415@magnolia>
 References: <20180628163636.52564-1-bfoster@redhat.com>
- <20180628163636.52564-12-bfoster@redhat.com>
- <20180703204257.GG32415@magnolia>
+ <20180628163636.52564-15-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180703204257.GG32415@magnolia>
+In-Reply-To: <20180628163636.52564-15-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jul 03, 2018 at 01:42:57PM -0700, Darrick J. Wong wrote:
-> On Thu, Jun 28, 2018 at 12:36:23PM -0400, Brian Foster wrote:
-> > Attach ->t_dfops for all remaining callers of xfs_bmapi_write().
-> > This prepares the latter to no longer require a separate dfops
-> > parameter.
-> > 
-> > Note that xfs_symlink() already uses ->t_dfops. Fix up the local
-> > references for consistency.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+On Thu, Jun 28, 2018 at 12:36:26PM -0400, Brian Foster wrote:
+> Now that all xfs_bunmapi() callers use ->t_dfops, remove the
+> unnecessary parameter and access ->t_dfops directly. This patch does
+> not change behavior.
 > 
-> Looks ok, though I'm starting to itch for moving all these
-> _defer_{init,finish,cancel} calls into _trans_{alloc,commit,cancel} so
-> that we can get rid of all the boilerplate code everywhere.
-> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-That's the next step after the firstblock fixups. :)
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Brian
+--D
 
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr_remote.c |  2 +-
+>  fs/xfs/libxfs/xfs_bmap.c        | 20 +++++++++-----------
+>  fs/xfs/libxfs/xfs_bmap.h        |  5 ++---
+>  fs/xfs/libxfs/xfs_da_btree.c    |  2 +-
+>  fs/xfs/libxfs/xfs_dir2.c        |  2 +-
+>  fs/xfs/xfs_bmap_util.c          |  2 +-
+>  fs/xfs/xfs_inode.c              |  2 +-
+>  fs/xfs/xfs_reflink.c            |  5 ++---
+>  fs/xfs/xfs_symlink.c            |  3 +--
+>  9 files changed, 19 insertions(+), 24 deletions(-)
 > 
-> --D
+> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+> index 1f2bc86a28ed..179259fd1b5e 100644
+> --- a/fs/xfs/libxfs/xfs_attr_remote.c
+> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
+> @@ -629,7 +629,7 @@ xfs_attr_rmtval_remove(
+>  		xfs_defer_init(args->trans->t_dfops, args->firstblock);
+>  		error = xfs_bunmapi(args->trans, args->dp, lblkno, blkcnt,
+>  				    XFS_BMAPI_ATTRFORK, 1, args->firstblock,
+> -				    args->trans->t_dfops, &done);
+> +				    &done);
+>  		if (error)
+>  			goto out_defer_cancel;
+>  		xfs_defer_ijoin(args->trans->t_dfops, args->dp);
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index eabf9a151d6d..25769e4f424c 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -5145,26 +5145,26 @@ xfs_bmap_del_extent_real(
+>   */
+>  int						/* error */
+>  __xfs_bunmapi(
+> -	xfs_trans_t		*tp,		/* transaction pointer */
+> +	struct xfs_trans	*tp,		/* transaction pointer */
+>  	struct xfs_inode	*ip,		/* incore inode */
+>  	xfs_fileoff_t		start,		/* first file offset deleted */
+>  	xfs_filblks_t		*rlen,		/* i/o: amount remaining */
+>  	int			flags,		/* misc flags */
+>  	xfs_extnum_t		nexts,		/* number of extents max */
+> -	xfs_fsblock_t		*firstblock,	/* first allocated block
+> +	xfs_fsblock_t		*firstblock)	/* first allocated block
+>  						   controls a.g. for allocs */
+> -	struct xfs_defer_ops	*dfops)		/* i/o: deferred updates */
+>  {
+> -	xfs_btree_cur_t		*cur;		/* bmap btree cursor */
+> -	xfs_bmbt_irec_t		del;		/* extent being deleted */
+> +	struct xfs_defer_ops	*dfops = tp ? tp->t_dfops : NULL;
+> +	struct xfs_btree_cur	*cur;		/* bmap btree cursor */
+> +	struct xfs_bmbt_irec	del;		/* extent being deleted */
+>  	int			error;		/* error return value */
+>  	xfs_extnum_t		extno;		/* extent number in list */
+> -	xfs_bmbt_irec_t		got;		/* current extent record */
+> +	struct xfs_bmbt_irec	got;		/* current extent record */
+>  	xfs_ifork_t		*ifp;		/* inode fork pointer */
+>  	int			isrt;		/* freeing in rt area */
+>  	int			logflags;	/* transaction logging flags */
+>  	xfs_extlen_t		mod;		/* rt extent offset */
+> -	xfs_mount_t		*mp;		/* mount structure */
+> +	struct xfs_mount	*mp;		/* mount structure */
+>  	int			tmp_logflags;	/* partial logging flags */
+>  	int			wasdel;		/* was a delayed alloc extent */
+>  	int			whichfork;	/* data or attribute fork */
+> @@ -5518,13 +5518,11 @@ xfs_bunmapi(
+>  	int			flags,
+>  	xfs_extnum_t		nexts,
+>  	xfs_fsblock_t		*firstblock,
+> -	struct xfs_defer_ops	*dfops,
+>  	int			*done)
+>  {
+>  	int			error;
+>  
+> -	error = __xfs_bunmapi(tp, ip, bno, &len, flags, nexts, firstblock,
+> -			dfops);
+> +	error = __xfs_bunmapi(tp, ip, bno, &len, flags, nexts, firstblock);
+>  	*done = (len == 0);
+>  	return error;
+>  }
+> @@ -6195,7 +6193,7 @@ xfs_bmap_finish_one(
+>  		break;
+>  	case XFS_BMAP_UNMAP:
+>  		error = __xfs_bunmapi(tp, ip, startoff, blockcount,
+> -				XFS_BMAPI_REMAP, 1, &firstfsb, dfops);
+> +				XFS_BMAPI_REMAP, 1, &firstfsb);
+>  		break;
+>  	default:
+>  		ASSERT(0);
+> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+> index 4bd7eeebb6d9..4ff56f55f2bb 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.h
+> +++ b/fs/xfs/libxfs/xfs_bmap.h
+> @@ -209,12 +209,11 @@ int	xfs_bmapi_write(struct xfs_trans *tp, struct xfs_inode *ip,
+>  		struct xfs_bmbt_irec *mval, int *nmap);
+>  int	__xfs_bunmapi(struct xfs_trans *tp, struct xfs_inode *ip,
+>  		xfs_fileoff_t bno, xfs_filblks_t *rlen, int flags,
+> -		xfs_extnum_t nexts, xfs_fsblock_t *firstblock,
+> -		struct xfs_defer_ops *dfops);
+> +		xfs_extnum_t nexts, xfs_fsblock_t *firstblock);
+>  int	xfs_bunmapi(struct xfs_trans *tp, struct xfs_inode *ip,
+>  		xfs_fileoff_t bno, xfs_filblks_t len, int flags,
+>  		xfs_extnum_t nexts, xfs_fsblock_t *firstblock,
+> -		struct xfs_defer_ops *dfops, int *done);
+> +		int *done);
+>  int	xfs_bmap_del_extent_delay(struct xfs_inode *ip, int whichfork,
+>  		struct xfs_iext_cursor *cur, struct xfs_bmbt_irec *got,
+>  		struct xfs_bmbt_irec *del);
+> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+> index e43f1dda02e4..68a72e3d9f53 100644
+> --- a/fs/xfs/libxfs/xfs_da_btree.c
+> +++ b/fs/xfs/libxfs/xfs_da_btree.c
+> @@ -2395,7 +2395,7 @@ xfs_da_shrink_inode(
+>  		 */
+>  		error = xfs_bunmapi(tp, dp, dead_blkno, count,
+>  				    xfs_bmapi_aflag(w), 0, args->firstblock,
+> -				    args->trans->t_dfops, &done);
+> +				    &done);
+>  		if (error == -ENOSPC) {
+>  			if (w != XFS_DATA_FORK)
+>  				break;
+> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+> index ffa288c37da0..26918c5bd819 100644
+> --- a/fs/xfs/libxfs/xfs_dir2.c
+> +++ b/fs/xfs/libxfs/xfs_dir2.c
+> @@ -663,7 +663,7 @@ xfs_dir2_shrink_inode(
+>  
+>  	/* Unmap the fsblock(s). */
+>  	error = xfs_bunmapi(tp, dp, da, args->geo->fsbcount, 0, 0,
+> -			    args->firstblock, args->trans->t_dfops, &done);
+> +			    args->firstblock, &done);
+>  	if (error) {
+>  		/*
+>  		 * ENOSPC actually can happen if we're in a removename with no
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 78189cf385f2..58b51648240d 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -1045,7 +1045,7 @@ xfs_unmap_extent(
+>  	xfs_defer_init(&dfops, &firstfsb);
+>  	tp->t_dfops = &dfops;
+>  	error = xfs_bunmapi(tp, ip, startoffset_fsb, len_fsb, 0, 2, &firstfsb,
+> -			tp->t_dfops, done);
+> +			    done);
+>  	if (error)
+>  		goto out_bmap_cancel;
+>  
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 539d96201666..f456df2e1394 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -1588,7 +1588,7 @@ xfs_itruncate_extents_flags(
+>  		tp->t_dfops = &dfops;
+>  		error = xfs_bunmapi(tp, ip, first_unmap_block, unmap_len, flags,
+>  				    XFS_ITRUNC_MAX_EXTENTS, &first_block,
+> -				    tp->t_dfops, &done);
+> +				    &done);
+>  		if (error)
+>  			goto out_bmap_cancel;
+>  
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index bb22a17fbca8..2221c6c6a5d3 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -766,7 +766,7 @@ xfs_reflink_end_cow(
+>  		tp->t_dfops = &dfops;
+>  		rlen = del.br_blockcount;
+>  		error = __xfs_bunmapi(tp, ip, del.br_startoff, &rlen, 0, 1,
+> -				&firstfsb, tp->t_dfops);
+> +				&firstfsb);
+>  		if (error)
+>  			goto out_defer;
+>  
+> @@ -1115,8 +1115,7 @@ xfs_reflink_remap_extent(
+>  	while (rlen) {
+>  		xfs_defer_init(&dfops, &firstfsb);
+>  		tp->t_dfops = &dfops;
+> -		error = __xfs_bunmapi(tp, ip, destoff, &rlen, 0, 1,
+> -				&firstfsb, tp->t_dfops);
+> +		error = __xfs_bunmapi(tp, ip, destoff, &rlen, 0, 1, &firstfsb);
+>  		if (error)
+>  			goto out_defer;
+>  
+> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+> index 290ae13d4673..a54f095c1409 100644
+> --- a/fs/xfs/xfs_symlink.c
+> +++ b/fs/xfs/xfs_symlink.c
+> @@ -466,8 +466,7 @@ xfs_inactive_symlink_rmt(
+>  	/*
+>  	 * Unmap the dead block(s) to the dfops.
+>  	 */
+> -	error = xfs_bunmapi(tp, ip, 0, size, 0, nmaps,
+> -			    &first_block, tp->t_dfops, &done);
+> +	error = xfs_bunmapi(tp, ip, 0, size, 0, nmaps, &first_block, &done);
+>  	if (error)
+>  		goto error_bmap_cancel;
+>  	ASSERT(done);
+> -- 
+> 2.17.1
 > 
-> > ---
-> >  fs/xfs/xfs_bmap_util.c |  5 +++--
-> >  fs/xfs/xfs_iomap.c     | 21 ++++++++++++---------
-> >  fs/xfs/xfs_reflink.c   |  7 ++++---
-> >  fs/xfs/xfs_rtalloc.c   |  7 ++++---
-> >  fs/xfs/xfs_symlink.c   |  6 +++---
-> >  5 files changed, 26 insertions(+), 20 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> > index 83b1e8c6c18f..e6036f56241c 100644
-> > --- a/fs/xfs/xfs_bmap_util.c
-> > +++ b/fs/xfs/xfs_bmap_util.c
-> > @@ -972,16 +972,17 @@ xfs_alloc_file_space(
-> >  		xfs_trans_ijoin(tp, ip, 0);
-> >  
-> >  		xfs_defer_init(&dfops, &firstfsb);
-> > +		tp->t_dfops = &dfops;
-> >  		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
-> >  					allocatesize_fsb, alloc_type, &firstfsb,
-> > -					resblks, imapp, &nimaps, &dfops);
-> > +					resblks, imapp, &nimaps, tp->t_dfops);
-> >  		if (error)
-> >  			goto error0;
-> >  
-> >  		/*
-> >  		 * Complete the transaction
-> >  		 */
-> > -		error = xfs_defer_finish(&tp, &dfops);
-> > +		error = xfs_defer_finish(&tp, tp->t_dfops);
-> >  		if (error)
-> >  			goto error0;
-> >  
-> > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> > index 55876dd02f0c..8e1f3b451ee4 100644
-> > --- a/fs/xfs/xfs_iomap.c
-> > +++ b/fs/xfs/xfs_iomap.c
-> > @@ -255,17 +255,18 @@ xfs_iomap_write_direct(
-> >  	 * caller gave to us.
-> >  	 */
-> >  	xfs_defer_init(&dfops, &firstfsb);
-> > +	tp->t_dfops = &dfops;
-> >  	nimaps = 1;
-> >  	error = xfs_bmapi_write(tp, ip, offset_fsb, count_fsb,
-> >  				bmapi_flags, &firstfsb, resblks, imap,
-> > -				&nimaps, &dfops);
-> > +				&nimaps, tp->t_dfops);
-> >  	if (error)
-> >  		goto out_bmap_cancel;
-> >  
-> >  	/*
-> >  	 * Complete the transaction
-> >  	 */
-> > -	error = xfs_defer_finish(&tp, &dfops);
-> > +	error = xfs_defer_finish(&tp, tp->t_dfops);
-> >  	if (error)
-> >  		goto out_bmap_cancel;
-> >  
-> > @@ -289,7 +290,7 @@ xfs_iomap_write_direct(
-> >  	return error;
-> >  
-> >  out_bmap_cancel:
-> > -	xfs_defer_cancel(&dfops);
-> > +	xfs_defer_cancel(tp->t_dfops);
-> >  	xfs_trans_unreserve_quota_nblks(tp, ip, (long)qblocks, 0, quota_flag);
-> >  out_trans_cancel:
-> >  	xfs_trans_cancel(tp);
-> > @@ -717,6 +718,7 @@ xfs_iomap_write_allocate(
-> >  			xfs_trans_ijoin(tp, ip, 0);
-> >  
-> >  			xfs_defer_init(&dfops, &first_block);
-> > +			tp->t_dfops = &dfops;
-> >  
-> >  			/*
-> >  			 * it is possible that the extents have changed since
-> > @@ -772,11 +774,11 @@ xfs_iomap_write_allocate(
-> >  			error = xfs_bmapi_write(tp, ip, map_start_fsb,
-> >  						count_fsb, flags, &first_block,
-> >  						nres, imap, &nimaps,
-> > -						&dfops);
-> > +						tp->t_dfops);
-> >  			if (error)
-> >  				goto trans_cancel;
-> >  
-> > -			error = xfs_defer_finish(&tp, &dfops);
-> > +			error = xfs_defer_finish(&tp, tp->t_dfops);
-> >  			if (error)
-> >  				goto trans_cancel;
-> >  
-> > @@ -810,7 +812,7 @@ xfs_iomap_write_allocate(
-> >  	}
-> >  
-> >  trans_cancel:
-> > -	xfs_defer_cancel(&dfops);
-> > +	xfs_defer_cancel(tp->t_dfops);
-> >  	xfs_trans_cancel(tp);
-> >  error0:
-> >  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > @@ -878,10 +880,11 @@ xfs_iomap_write_unwritten(
-> >  		 * Modify the unwritten extent state of the buffer.
-> >  		 */
-> >  		xfs_defer_init(&dfops, &firstfsb);
-> > +		tp->t_dfops = &dfops;
-> >  		nimaps = 1;
-> >  		error = xfs_bmapi_write(tp, ip, offset_fsb, count_fsb,
-> >  					XFS_BMAPI_CONVERT, &firstfsb, resblks,
-> > -					&imap, &nimaps, &dfops);
-> > +					&imap, &nimaps, tp->t_dfops);
-> >  		if (error)
-> >  			goto error_on_bmapi_transaction;
-> >  
-> > @@ -901,7 +904,7 @@ xfs_iomap_write_unwritten(
-> >  			xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-> >  		}
-> >  
-> > -		error = xfs_defer_finish(&tp, &dfops);
-> > +		error = xfs_defer_finish(&tp, tp->t_dfops);
-> >  		if (error)
-> >  			goto error_on_bmapi_transaction;
-> >  
-> > @@ -928,7 +931,7 @@ xfs_iomap_write_unwritten(
-> >  	return 0;
-> >  
-> >  error_on_bmapi_transaction:
-> > -	xfs_defer_cancel(&dfops);
-> > +	xfs_defer_cancel(tp->t_dfops);
-> >  	xfs_trans_cancel(tp);
-> >  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> >  	return error;
-> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > index ff10b5e70029..1ff9ef1d65ba 100644
-> > --- a/fs/xfs/xfs_reflink.c
-> > +++ b/fs/xfs/xfs_reflink.c
-> > @@ -429,19 +429,20 @@ xfs_reflink_allocate_cow(
-> >  	xfs_trans_ijoin(tp, ip, 0);
-> >  
-> >  	xfs_defer_init(&dfops, &first_block);
-> > +	tp->t_dfops = &dfops;
-> >  	nimaps = 1;
-> >  
-> >  	/* Allocate the entire reservation as unwritten blocks. */
-> >  	error = xfs_bmapi_write(tp, ip, imap->br_startoff, imap->br_blockcount,
-> >  			XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC, &first_block,
-> > -			resblks, imap, &nimaps, &dfops);
-> > +			resblks, imap, &nimaps, tp->t_dfops);
-> >  	if (error)
-> >  		goto out_bmap_cancel;
-> >  
-> >  	xfs_inode_set_cowblocks_tag(ip);
-> >  
-> >  	/* Finish up. */
-> > -	error = xfs_defer_finish(&tp, &dfops);
-> > +	error = xfs_defer_finish(&tp, tp->t_dfops);
-> >  	if (error)
-> >  		goto out_bmap_cancel;
-> >  
-> > @@ -458,7 +459,7 @@ xfs_reflink_allocate_cow(
-> >  convert:
-> >  	return xfs_reflink_convert_cow_extent(ip, imap, offset_fsb, count_fsb);
-> >  out_bmap_cancel:
-> > -	xfs_defer_cancel(&dfops);
-> > +	xfs_defer_cancel(tp->t_dfops);
-> >  	xfs_trans_unreserve_quota_nblks(tp, ip, (long)resblks, 0,
-> >  			XFS_QMOPT_RES_REGBLKS);
-> >  out:
-> > diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-> > index 329d4d26c13e..312d410d91fb 100644
-> > --- a/fs/xfs/xfs_rtalloc.c
-> > +++ b/fs/xfs/xfs_rtalloc.c
-> > @@ -788,13 +788,14 @@ xfs_growfs_rt_alloc(
-> >  		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
-> >  
-> >  		xfs_defer_init(&dfops, &firstblock);
-> > +		tp->t_dfops = &dfops;
-> >  		/*
-> >  		 * Allocate blocks to the bitmap file.
-> >  		 */
-> >  		nmap = 1;
-> >  		error = xfs_bmapi_write(tp, ip, oblocks, nblocks - oblocks,
-> >  					XFS_BMAPI_METADATA, &firstblock,
-> > -					resblks, &map, &nmap, &dfops);
-> > +					resblks, &map, &nmap, tp->t_dfops);
-> >  		if (!error && nmap < 1)
-> >  			error = -ENOSPC;
-> >  		if (error)
-> > @@ -802,7 +803,7 @@ xfs_growfs_rt_alloc(
-> >  		/*
-> >  		 * Free any blocks freed up in the transaction, then commit.
-> >  		 */
-> > -		error = xfs_defer_finish(&tp, &dfops);
-> > +		error = xfs_defer_finish(&tp, tp->t_dfops);
-> >  		if (error)
-> >  			goto out_bmap_cancel;
-> >  		error = xfs_trans_commit(tp);
-> > @@ -855,7 +856,7 @@ xfs_growfs_rt_alloc(
-> >  	return 0;
-> >  
-> >  out_bmap_cancel:
-> > -	xfs_defer_cancel(&dfops);
-> > +	xfs_defer_cancel(tp->t_dfops);
-> >  out_trans_cancel:
-> >  	xfs_trans_cancel(tp);
-> >  	return error;
-> > diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-> > index e347a3db018f..6825a31727d1 100644
-> > --- a/fs/xfs/xfs_symlink.c
-> > +++ b/fs/xfs/xfs_symlink.c
-> > @@ -291,7 +291,7 @@ xfs_symlink(
-> >  
-> >  		error = xfs_bmapi_write(tp, ip, first_fsb, fs_blocks,
-> >  				  XFS_BMAPI_METADATA, &first_block, resblks,
-> > -				  mval, &nmaps, &dfops);
-> > +				  mval, &nmaps, tp->t_dfops);
-> >  		if (error)
-> >  			goto out_bmap_cancel;
-> >  
-> > @@ -354,7 +354,7 @@ xfs_symlink(
-> >  		xfs_trans_set_sync(tp);
-> >  	}
-> >  
-> > -	error = xfs_defer_finish(&tp, &dfops);
-> > +	error = xfs_defer_finish(&tp, tp->t_dfops);
-> >  	if (error)
-> >  		goto out_bmap_cancel;
-> >  
-> > @@ -370,7 +370,7 @@ xfs_symlink(
-> >  	return 0;
-> >  
-> >  out_bmap_cancel:
-> > -	xfs_defer_cancel(&dfops);
-> > +	xfs_defer_cancel(tp->t_dfops);
-> >  out_trans_cancel:
-> >  	xfs_trans_cancel(tp);
-> >  out_release_inode:
-> > -- 
-> > 2.17.1
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
