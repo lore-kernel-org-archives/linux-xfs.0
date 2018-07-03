@@ -1,300 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:37862 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752775AbeGCVQJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 3 Jul 2018 17:16:09 -0400
-Date: Tue, 3 Jul 2018 17:16:07 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 13/24] xfs: use ->t_dfops for all xfs_bunmapi() callers
-Message-ID: <20180703211607.GJ22789@bfoster>
+Received: from aserp2130.oracle.com ([141.146.126.79]:55380 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752862AbeGCVZ1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Jul 2018 17:25:27 -0400
+Date: Tue, 3 Jul 2018 14:25:13 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 22/24] xfs: use ->t_dfops in cancel cow blocks operation
+Message-ID: <20180703212513.GR32415@magnolia>
 References: <20180628163636.52564-1-bfoster@redhat.com>
- <20180628163636.52564-14-bfoster@redhat.com>
- <20180703205516.GI32415@magnolia>
+ <20180628163636.52564-23-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180703205516.GI32415@magnolia>
+In-Reply-To: <20180628163636.52564-23-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jul 03, 2018 at 01:55:16PM -0700, Darrick J. Wong wrote:
-> On Thu, Jun 28, 2018 at 12:36:25PM -0400, Brian Foster wrote:
-> > Use ->t_dfops for all remaining xfs_bunmapi() callers. This prepares
-> > the latter to no longer require a dfops parameter.
-> > 
-> > Note that xfs_itruncate_extents_flags() associates a local dfops
-> > with a transaction provided from the caller. Since there are
-> > multiple callers, set and reset ->t_dfops before the function
-> > returns to avoid exposure of stack memory to the caller.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >  fs/xfs/xfs_bmap_util.c |  9 +++++----
-> >  fs/xfs/xfs_inode.c     | 12 ++++++++----
-> >  fs/xfs/xfs_reflink.c   | 27 +++++++++++++++------------
-> >  fs/xfs/xfs_symlink.c   |  9 +++++----
-> >  4 files changed, 33 insertions(+), 24 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> > index c40cb711447f..78189cf385f2 100644
-> > --- a/fs/xfs/xfs_bmap_util.c
-> > +++ b/fs/xfs/xfs_bmap_util.c
-> > @@ -1043,13 +1043,14 @@ xfs_unmap_extent(
-> >  	xfs_trans_ijoin(tp, ip, 0);
-> >  
-> >  	xfs_defer_init(&dfops, &firstfsb);
-> > +	tp->t_dfops = &dfops;
-> >  	error = xfs_bunmapi(tp, ip, startoffset_fsb, len_fsb, 0, 2, &firstfsb,
-> > -			&dfops, done);
-> > +			tp->t_dfops, done);
-> >  	if (error)
-> >  		goto out_bmap_cancel;
-> >  
-> > -	xfs_defer_ijoin(&dfops, ip);
-> > -	error = xfs_defer_finish(&tp, &dfops);
-> > +	xfs_defer_ijoin(tp->t_dfops, ip);
-> > +	error = xfs_defer_finish(&tp, tp->t_dfops);
-> >  	if (error)
-> >  		goto out_bmap_cancel;
-> >  
-> > @@ -1059,7 +1060,7 @@ xfs_unmap_extent(
-> >  	return error;
-> >  
-> >  out_bmap_cancel:
-> > -	xfs_defer_cancel(&dfops);
-> > +	xfs_defer_cancel(tp->t_dfops);
-> >  out_trans_cancel:
-> >  	xfs_trans_cancel(tp);
-> >  	goto out_unlock;
-> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > index e1bc686b70b4..539d96201666 100644
-> > --- a/fs/xfs/xfs_inode.c
-> > +++ b/fs/xfs/xfs_inode.c
-> > @@ -1545,6 +1545,7 @@ xfs_itruncate_extents_flags(
-> >  {
-> >  	struct xfs_mount	*mp = ip->i_mount;
-> >  	struct xfs_trans	*tp = *tpp;
-> > +	struct xfs_defer_ops	*odfops = tp->t_dfops;
+On Thu, Jun 28, 2018 at 12:36:34PM -0400, Brian Foster wrote:
+> Use ->t_dfops of the transaction from the caller. Reset it before we
+> return to avoid leaks of local stack memory.
 > 
-> old_dfops?
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> ---
+>  fs/xfs/xfs_reflink.c | 14 ++++++++------
+>  1 file changed, 8 insertions(+), 6 deletions(-)
 > 
-> >  	struct xfs_defer_ops	dfops;
-> >  	xfs_fsblock_t		first_block;
-> >  	xfs_fileoff_t		first_unmap_block;
-> > @@ -1584,9 +1585,10 @@ xfs_itruncate_extents_flags(
-> >  	unmap_len = last_block - first_unmap_block + 1;
-> >  	while (!done) {
-> >  		xfs_defer_init(&dfops, &first_block);
-> > +		tp->t_dfops = &dfops;
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index 7cfe74d1514e..75a99bb020e4 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -553,6 +553,7 @@ xfs_reflink_cancel_cow_blocks(
+>  	struct xfs_iext_cursor		icur;
+>  	xfs_fsblock_t			firstfsb;
+>  	struct xfs_defer_ops		dfops;
+> +	struct xfs_defer_ops		*odfops = (*tpp)->t_dfops;
+>  	int				error = 0;
+>  
+>  	if (!xfs_is_reflink_inode(ip))
+> @@ -580,23 +581,24 @@ xfs_reflink_cancel_cow_blocks(
+>  				break;
+>  		} else if (del.br_state == XFS_EXT_UNWRITTEN || cancel_real) {
+>  			xfs_defer_init(&dfops, &firstfsb);
+> +			(*tpp)->t_dfops = &dfops;
+>  
+>  			/* Free the CoW orphan record. */
+>  			error = xfs_refcount_free_cow_extent(ip->i_mount,
+> -					&dfops, del.br_startblock,
+> +					(*tpp)->t_dfops, del.br_startblock,
+>  					del.br_blockcount);
+>  			if (error)
+>  				break;
+>  
+> -			xfs_bmap_add_free(ip->i_mount, &dfops,
+> +			xfs_bmap_add_free(ip->i_mount, (*tpp)->t_dfops,
+>  					del.br_startblock, del.br_blockcount,
+>  					NULL);
+>  
+>  			/* Roll the transaction */
+> -			xfs_defer_ijoin(&dfops, ip);
+> -			error = xfs_defer_finish(tpp, &dfops);
+> +			xfs_defer_ijoin((*tpp)->t_dfops, ip);
+> +			error = xfs_defer_finish(tpp, (*tpp)->t_dfops);
+>  			if (error) {
+> -				xfs_defer_cancel(&dfops);
+> +				xfs_defer_cancel((*tpp)->t_dfops);
+>  				break;
+>  			}
+>  
+> @@ -621,7 +623,7 @@ xfs_reflink_cancel_cow_blocks(
+>  	/* clear tag if cow fork is emptied */
+>  	if (!ifp->if_bytes)
+>  		xfs_inode_clear_cowblocks_tag(ip);
+> -
+> +	(*tpp)->t_dfops = odfops;
+>  	return error;
+>  }
+>  
+> -- 
+> 2.17.1
 > 
-> Why can't we attach the dfops generated by the bunmapi call onto the
-> original t_dfops?  I guess it's so that we can drop the defer_ijoin from
-> dfops?  It seems odd to be nesting the dfops, since we're no longer
-> completing them in order of oldest to newest.
-> 
-
-Hmm, I see what you mean. If we had a populated dfops on entry, we'd
-skip over those items and leave them for the caller as if nothing
-happened.
-
-I used this pattern here partly so this change would be transparent to
-the multiple callers with respect to ->t_dfops and partly because I was
-too lazy to pull it into the callers. ;) I don't think any of the
-callers currently set ->t_dfops anyways, so this logic is probably
-unnecessary.
-
-I could just replace it with an assert that ->t_dfops == NULL on entry
-(and reset it back to NULL similar to the recovery changes) since that
-is unlikely to change before this is all fixed up. Alternatively, just
-pulling dfops up into the callers probably mirrors the end goal where
-->t_dfops is internal to the caller's transaction anyways. Preference?
-
-Brian
-
-> --D
-> 
-> >  		error = xfs_bunmapi(tp, ip, first_unmap_block, unmap_len, flags,
-> >  				    XFS_ITRUNC_MAX_EXTENTS, &first_block,
-> > -				    &dfops, &done);
-> > +				    tp->t_dfops, &done);
-> >  		if (error)
-> >  			goto out_bmap_cancel;
-> >  
-> > @@ -1594,8 +1596,8 @@ xfs_itruncate_extents_flags(
-> >  		 * Duplicate the transaction that has the permanent
-> >  		 * reservation and commit the old transaction.
-> >  		 */
-> > -		xfs_defer_ijoin(&dfops, ip);
-> > -		error = xfs_defer_finish(&tp, &dfops);
-> > +		xfs_defer_ijoin(tp->t_dfops, ip);
-> > +		error = xfs_defer_finish(&tp, tp->t_dfops);
-> >  		if (error)
-> >  			goto out_bmap_cancel;
-> >  
-> > @@ -1623,6 +1625,8 @@ xfs_itruncate_extents_flags(
-> >  	trace_xfs_itruncate_extents_end(ip, new_size);
-> >  
-> >  out:
-> > +	/* ->t_dfops points to local stack, don't leak it! */
-> > +	tp->t_dfops = odfops;
-> >  	*tpp = tp;
-> >  	return error;
-> >  out_bmap_cancel:
-> > @@ -1631,7 +1635,7 @@ xfs_itruncate_extents_flags(
-> >  	 * the transaction can be properly aborted.  We just need to make sure
-> >  	 * we're not holding any resources that we were not when we came in.
-> >  	 */
-> > -	xfs_defer_cancel(&dfops);
-> > +	xfs_defer_cancel(tp->t_dfops);
-> >  	goto out;
-> >  }
-> >  
-> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > index 3b2b8f5851c0..bb22a17fbca8 100644
-> > --- a/fs/xfs/xfs_reflink.c
-> > +++ b/fs/xfs/xfs_reflink.c
-> > @@ -763,9 +763,10 @@ xfs_reflink_end_cow(
-> >  
-> >  		/* Unmap the old blocks in the data fork. */
-> >  		xfs_defer_init(&dfops, &firstfsb);
-> > +		tp->t_dfops = &dfops;
-> >  		rlen = del.br_blockcount;
-> >  		error = __xfs_bunmapi(tp, ip, del.br_startoff, &rlen, 0, 1,
-> > -				&firstfsb, &dfops);
-> > +				&firstfsb, tp->t_dfops);
-> >  		if (error)
-> >  			goto out_defer;
-> >  
-> > @@ -777,13 +778,14 @@ xfs_reflink_end_cow(
-> >  		trace_xfs_reflink_cow_remap(ip, &del);
-> >  
-> >  		/* Free the CoW orphan record. */
-> > -		error = xfs_refcount_free_cow_extent(tp->t_mountp, &dfops,
-> > +		error = xfs_refcount_free_cow_extent(tp->t_mountp, tp->t_dfops,
-> >  				del.br_startblock, del.br_blockcount);
-> >  		if (error)
-> >  			goto out_defer;
-> >  
-> >  		/* Map the new blocks into the data fork. */
-> > -		error = xfs_bmap_map_extent(tp->t_mountp, &dfops, ip, &del);
-> > +		error = xfs_bmap_map_extent(tp->t_mountp, tp->t_dfops, ip,
-> > +					    &del);
-> >  		if (error)
-> >  			goto out_defer;
-> >  
-> > @@ -794,8 +796,8 @@ xfs_reflink_end_cow(
-> >  		/* Remove the mapping from the CoW fork. */
-> >  		xfs_bmap_del_extent_cow(ip, &icur, &got, &del);
-> >  
-> > -		xfs_defer_ijoin(&dfops, ip);
-> > -		error = xfs_defer_finish(&tp, &dfops);
-> > +		xfs_defer_ijoin(tp->t_dfops, ip);
-> > +		error = xfs_defer_finish(&tp, tp->t_dfops);
-> >  		if (error)
-> >  			goto out_defer;
-> >  		if (!xfs_iext_get_extent(ifp, &icur, &got))
-> > @@ -813,7 +815,7 @@ xfs_reflink_end_cow(
-> >  	return 0;
-> >  
-> >  out_defer:
-> > -	xfs_defer_cancel(&dfops);
-> > +	xfs_defer_cancel(tp->t_dfops);
-> >  out_cancel:
-> >  	xfs_trans_cancel(tp);
-> >  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > @@ -1112,8 +1114,9 @@ xfs_reflink_remap_extent(
-> >  	rlen = unmap_len;
-> >  	while (rlen) {
-> >  		xfs_defer_init(&dfops, &firstfsb);
-> > +		tp->t_dfops = &dfops;
-> >  		error = __xfs_bunmapi(tp, ip, destoff, &rlen, 0, 1,
-> > -				&firstfsb, &dfops);
-> > +				&firstfsb, tp->t_dfops);
-> >  		if (error)
-> >  			goto out_defer;
-> >  
-> > @@ -1134,12 +1137,12 @@ xfs_reflink_remap_extent(
-> >  				uirec.br_blockcount, uirec.br_startblock);
-> >  
-> >  		/* Update the refcount tree */
-> > -		error = xfs_refcount_increase_extent(mp, &dfops, &uirec);
-> > +		error = xfs_refcount_increase_extent(mp, tp->t_dfops, &uirec);
-> >  		if (error)
-> >  			goto out_defer;
-> >  
-> >  		/* Map the new blocks into the data fork. */
-> > -		error = xfs_bmap_map_extent(mp, &dfops, ip, &uirec);
-> > +		error = xfs_bmap_map_extent(mp, tp->t_dfops, ip, &uirec);
-> >  		if (error)
-> >  			goto out_defer;
-> >  
-> > @@ -1160,8 +1163,8 @@ xfs_reflink_remap_extent(
-> >  
-> >  next_extent:
-> >  		/* Process all the deferred stuff. */
-> > -		xfs_defer_ijoin(&dfops, ip);
-> > -		error = xfs_defer_finish(&tp, &dfops);
-> > +		xfs_defer_ijoin(tp->t_dfops, ip);
-> > +		error = xfs_defer_finish(&tp, tp->t_dfops);
-> >  		if (error)
-> >  			goto out_defer;
-> >  	}
-> > @@ -1173,7 +1176,7 @@ xfs_reflink_remap_extent(
-> >  	return 0;
-> >  
-> >  out_defer:
-> > -	xfs_defer_cancel(&dfops);
-> > +	xfs_defer_cancel(tp->t_dfops);
-> >  out_cancel:
-> >  	xfs_trans_cancel(tp);
-> >  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-> > index 2b6bcfd39c14..290ae13d4673 100644
-> > --- a/fs/xfs/xfs_symlink.c
-> > +++ b/fs/xfs/xfs_symlink.c
-> > @@ -444,6 +444,7 @@ xfs_inactive_symlink_rmt(
-> >  	 */
-> >  	done = 0;
-> >  	xfs_defer_init(&dfops, &first_block);
-> > +	tp->t_dfops = &dfops;
-> >  	nmaps = ARRAY_SIZE(mval);
-> >  	error = xfs_bmapi_read(ip, 0, xfs_symlink_blocks(mp, size),
-> >  				mval, &nmaps, 0);
-> > @@ -466,15 +467,15 @@ xfs_inactive_symlink_rmt(
-> >  	 * Unmap the dead block(s) to the dfops.
-> >  	 */
-> >  	error = xfs_bunmapi(tp, ip, 0, size, 0, nmaps,
-> > -			    &first_block, &dfops, &done);
-> > +			    &first_block, tp->t_dfops, &done);
-> >  	if (error)
-> >  		goto error_bmap_cancel;
-> >  	ASSERT(done);
-> >  	/*
-> >  	 * Commit the first transaction.  This logs the EFI and the inode.
-> >  	 */
-> > -	xfs_defer_ijoin(&dfops, ip);
-> > -	error = xfs_defer_finish(&tp, &dfops);
-> > +	xfs_defer_ijoin(tp->t_dfops, ip);
-> > +	error = xfs_defer_finish(&tp, tp->t_dfops);
-> >  	if (error)
-> >  		goto error_bmap_cancel;
-> >  
-> > @@ -499,7 +500,7 @@ xfs_inactive_symlink_rmt(
-> >  	return 0;
-> >  
-> >  error_bmap_cancel:
-> > -	xfs_defer_cancel(&dfops);
-> > +	xfs_defer_cancel(tp->t_dfops);
-> >  error_trans_cancel:
-> >  	xfs_trans_cancel(tp);
-> >  error_unlock:
-> > -- 
-> > 2.17.1
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
