@@ -1,361 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:51464 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933702AbeGCPTr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Jul 2018 11:19:47 -0400
-Date: Tue, 3 Jul 2018 08:19:35 -0700
+Received: from aserp2120.oracle.com ([141.146.126.78]:49582 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752905AbeGCPWW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Jul 2018 11:22:22 -0400
+Date: Tue, 3 Jul 2018 08:21:53 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] xfs: remove dfops param from high level dirname calls
-Message-ID: <20180703151935.GU5711@magnolia>
-References: <20180628163636.52564-5-bfoster@redhat.com>
- <20180702173738.9431-1-bfoster@redhat.com>
+Subject: Re: [PATCH 01/24] xfs: cow unwritten conversion uses uninitialized
+ dfops
+Message-ID: <20180703152153.GC5724@magnolia>
+References: <20180628163636.52564-1-bfoster@redhat.com>
+ <20180628163636.52564-2-bfoster@redhat.com>
+ <20180702134304.GA19162@infradead.org>
+ <20180702173241.GA4775@bfoster>
+ <20180703145938.GS5711@magnolia>
+ <20180703151025.GD22789@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180702173738.9431-1-bfoster@redhat.com>
+In-Reply-To: <20180703151025.GD22789@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
 
-On Mon, Jul 02, 2018 at 01:37:38PM -0400, Brian Foster wrote:
-> All callers of the directory create, rename and remove interfaces
-> already associate the dfops with the transaction. Drop the dfops
-> parameters in these calls in preparation for further cleanups in the
-> layers below. This patch does not change behavior.
+On Tue, Jul 03, 2018 at 11:10:26AM -0400, Brian Foster wrote:
+> On Tue, Jul 03, 2018 at 07:59:38AM -0700, Darrick J. Wong wrote:
+> > On Mon, Jul 02, 2018 at 01:32:41PM -0400, Brian Foster wrote:
+> > > On Mon, Jul 02, 2018 at 06:43:04AM -0700, Christoph Hellwig wrote:
+> > > > On Thu, Jun 28, 2018 at 12:36:13PM -0400, Brian Foster wrote:
+> > > > > A couple COW fork unwritten extent conversion helpers pass an
+> > > > > uninitialized dfops pointer to xfs_bmapi_write(). This does not
+> > > > > cause problems because conversion does not use a transaction or the
+> > > > > dfops structure for the COW fork.  Drop the uninitialized usage of
+> > > > > dfops in these codepaths and pass NULL along to xfs_bmapi_write()
+> > > > > instead.
+> > > > 
+> > > > Looks good.
+> > > > 
+> > > > Is this something we should maybe queue up for 4.18?
+> > > > 
+> > > 
+> > > That might make sense because of all the refactoring, but otherwise I
+> > > don't have a strong opinion. Let's see what Darrick wants to do...
+> > 
+> > AFAICT this only eliminates the passing around of an unus{ed,able} dfops
+> > parameter, right?  We're not fixing a regression or some other breakage,
+> > just eliminating cpu cycle waste, so I think this can soak (along with
+> > everything else) until 4.19.
+> > 
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Works for me. This does have the side effect of enabling the deferred
+> AGFL block free behavior wherever dfops is used, but that is a not a
+> critical change/fix. The problem that inspired the behavior in the first
+> place was resolved by the more targeted changes in the first series.
+> The goals of this (and the series or two to follow) are primarily follow
+> up refactoring and to provide more consistent behavior fs-wide.
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Follow-up question, then: are there situations where we defered agfl
+freeing is /not/ desirable?  I couldn't think of any, but my head (and
+shop vac) are full of sawdust. :)
 
 --D
 
-> ---
+> Brian
 > 
-> v2:
-> - Move asserts to function start.
-> 
->  fs/xfs/libxfs/xfs_dir2.c | 17 +++++++-------
->  fs/xfs/libxfs/xfs_dir2.h |  9 +++-----
->  fs/xfs/xfs_inode.c       | 50 ++++++++++++++++++----------------------
->  fs/xfs/xfs_symlink.c     |  2 +-
->  4 files changed, 36 insertions(+), 42 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-> index 59169aff30fe..c98250f0de50 100644
-> --- a/fs/xfs/libxfs/xfs_dir2.c
-> +++ b/fs/xfs/libxfs/xfs_dir2.c
-> @@ -244,7 +244,6 @@ xfs_dir_createname(
->  	struct xfs_name		*name,
->  	xfs_ino_t		inum,		/* new entry inode number */
->  	xfs_fsblock_t		*first,		/* bmap's firstblock */
-> -	struct xfs_defer_ops	*dfops,		/* bmap's freeblock list */
->  	xfs_extlen_t		total)		/* bmap's total block count */
->  {
->  	struct xfs_da_args	*args;
-> @@ -252,6 +251,8 @@ xfs_dir_createname(
->  	int			v;		/* type-checking value */
->  
->  	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
-> +	ASSERT(tp->t_dfops || !first);
-> +
->  	if (inum) {
->  		rval = xfs_dir_ino_validate(tp->t_mountp, inum);
->  		if (rval)
-> @@ -270,11 +271,11 @@ xfs_dir_createname(
->  	args->hashval = dp->i_mount->m_dirnameops->hashname(name);
->  	args->inumber = inum;
->  	args->dp = dp;
-> -	args->firstblock = first;
-> -	args->dfops = dfops;
->  	args->total = total;
->  	args->whichfork = XFS_DATA_FORK;
->  	args->trans = tp;
-> +	args->dfops = tp->t_dfops;
-> +	args->firstblock = first;
->  	args->op_flags = XFS_DA_OP_ADDNAME | XFS_DA_OP_OKNOENT;
->  	if (!inum)
->  		args->op_flags |= XFS_DA_OP_JUSTCHECK;
-> @@ -421,7 +422,6 @@ xfs_dir_removename(
->  	struct xfs_name	*name,
->  	xfs_ino_t	ino,
->  	xfs_fsblock_t	*first,		/* bmap's firstblock */
-> -	struct xfs_defer_ops	*dfops,		/* bmap's freeblock list */
->  	xfs_extlen_t	total)		/* bmap's total block count */
->  {
->  	struct xfs_da_args *args;
-> @@ -429,6 +429,7 @@ xfs_dir_removename(
->  	int		v;		/* type-checking value */
->  
->  	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
-> +	ASSERT(tp->t_dfops);
->  	XFS_STATS_INC(dp->i_mount, xs_dir_remove);
->  
->  	args = kmem_zalloc(sizeof(*args), KM_SLEEP | KM_NOFS);
-> @@ -443,10 +444,10 @@ xfs_dir_removename(
->  	args->inumber = ino;
->  	args->dp = dp;
->  	args->firstblock = first;
-> -	args->dfops = dfops;
->  	args->total = total;
->  	args->whichfork = XFS_DATA_FORK;
->  	args->trans = tp;
-> +	args->dfops = tp->t_dfops;
->  
->  	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
->  		rval = xfs_dir2_sf_removename(args);
-> @@ -483,7 +484,6 @@ xfs_dir_replace(
->  	struct xfs_name	*name,		/* name of entry to replace */
->  	xfs_ino_t	inum,		/* new inode number */
->  	xfs_fsblock_t	*first,		/* bmap's firstblock */
-> -	struct xfs_defer_ops	*dfops,		/* bmap's freeblock list */
->  	xfs_extlen_t	total)		/* bmap's total block count */
->  {
->  	struct xfs_da_args *args;
-> @@ -491,6 +491,7 @@ xfs_dir_replace(
->  	int		v;		/* type-checking value */
->  
->  	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
-> +	ASSERT(tp->t_dfops);
->  
->  	rval = xfs_dir_ino_validate(tp->t_mountp, inum);
->  	if (rval)
-> @@ -508,10 +509,10 @@ xfs_dir_replace(
->  	args->inumber = inum;
->  	args->dp = dp;
->  	args->firstblock = first;
-> -	args->dfops = dfops;
->  	args->total = total;
->  	args->whichfork = XFS_DATA_FORK;
->  	args->trans = tp;
-> +	args->dfops = tp->t_dfops;
->  
->  	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
->  		rval = xfs_dir2_sf_replace(args);
-> @@ -547,7 +548,7 @@ xfs_dir_canenter(
->  	xfs_inode_t	*dp,
->  	struct xfs_name	*name)		/* name of entry to add */
->  {
-> -	return xfs_dir_createname(tp, dp, name, 0, NULL, NULL, 0);
-> +	return xfs_dir_createname(tp, dp, name, 0, NULL, 0);
->  }
->  
->  /*
-> diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
-> index ed385316c7dc..f203aebc07ed 100644
-> --- a/fs/xfs/libxfs/xfs_dir2.h
-> +++ b/fs/xfs/libxfs/xfs_dir2.h
-> @@ -118,19 +118,16 @@ extern int xfs_dir_init(struct xfs_trans *tp, struct xfs_inode *dp,
->  				struct xfs_inode *pdp);
->  extern int xfs_dir_createname(struct xfs_trans *tp, struct xfs_inode *dp,
->  				struct xfs_name *name, xfs_ino_t inum,
-> -				xfs_fsblock_t *first,
-> -				struct xfs_defer_ops *dfops, xfs_extlen_t tot);
-> +				xfs_fsblock_t *first, xfs_extlen_t tot);
->  extern int xfs_dir_lookup(struct xfs_trans *tp, struct xfs_inode *dp,
->  				struct xfs_name *name, xfs_ino_t *inum,
->  				struct xfs_name *ci_name);
->  extern int xfs_dir_removename(struct xfs_trans *tp, struct xfs_inode *dp,
->  				struct xfs_name *name, xfs_ino_t ino,
-> -				xfs_fsblock_t *first,
-> -				struct xfs_defer_ops *dfops, xfs_extlen_t tot);
-> +				xfs_fsblock_t *first, xfs_extlen_t tot);
->  extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
->  				struct xfs_name *name, xfs_ino_t inum,
-> -				xfs_fsblock_t *first,
-> -				struct xfs_defer_ops *dfops, xfs_extlen_t tot);
-> +				xfs_fsblock_t *first, xfs_extlen_t tot);
->  extern int xfs_dir_canenter(struct xfs_trans *tp, struct xfs_inode *dp,
->  				struct xfs_name *name);
->  
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index f5649a023d46..e1bc686b70b4 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -1225,8 +1225,8 @@ xfs_create(
->  	xfs_trans_ijoin(tp, dp, XFS_ILOCK_EXCL);
->  	unlock_dp_on_error = false;
->  
-> -	error = xfs_dir_createname(tp, dp, name, ip->i_ino,
-> -					&first_block, &dfops, resblks ?
-> +	error = xfs_dir_createname(tp, dp, name, ip->i_ino, &first_block,
-> +				   resblks ?
->  					resblks - XFS_IALLOC_SPACE_RES(mp) : 0);
->  	if (error) {
->  		ASSERT(error != -ENOSPC);
-> @@ -1464,7 +1464,7 @@ xfs_link(
->  	}
->  
->  	error = xfs_dir_createname(tp, tdp, target_name, sip->i_ino,
-> -					&first_block, &dfops, resblks);
-> +				   &first_block, resblks);
->  	if (error)
->  		goto error_return;
->  	xfs_trans_ichgtime(tp, tdp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-> @@ -2659,8 +2659,8 @@ xfs_remove(
->  
->  	xfs_defer_init(&dfops, &first_block);
->  	tp->t_dfops = &dfops;
-> -	error = xfs_dir_removename(tp, dp, name, ip->i_ino,
-> -					&first_block, &dfops, resblks);
-> +	error = xfs_dir_removename(tp, dp, name, ip->i_ino, &first_block,
-> +				   resblks);
->  	if (error) {
->  		ASSERT(error != -ENOENT);
->  		goto out_bmap_cancel;
-> @@ -2748,9 +2748,9 @@ xfs_sort_for_rename(
->  
->  static int
->  xfs_finish_rename(
-> -	struct xfs_trans	*tp,
-> -	struct xfs_defer_ops	*dfops)
-> +	struct xfs_trans	*tp)
->  {
-> +	struct xfs_defer_ops	*dfops = tp->t_dfops;
->  	int			error;
->  
->  	/*
-> @@ -2784,7 +2784,6 @@ xfs_cross_rename(
->  	struct xfs_inode	*dp2,
->  	struct xfs_name		*name2,
->  	struct xfs_inode	*ip2,
-> -	struct xfs_defer_ops	*dfops,
->  	xfs_fsblock_t		*first_block,
->  	int			spaceres)
->  {
-> @@ -2794,16 +2793,14 @@ xfs_cross_rename(
->  	int		dp2_flags = 0;
->  
->  	/* Swap inode number for dirent in first parent */
-> -	error = xfs_dir_replace(tp, dp1, name1,
-> -				ip2->i_ino,
-> -				first_block, dfops, spaceres);
-> +	error = xfs_dir_replace(tp, dp1, name1, ip2->i_ino, first_block,
-> +				spaceres);
->  	if (error)
->  		goto out_trans_abort;
->  
->  	/* Swap inode number for dirent in second parent */
-> -	error = xfs_dir_replace(tp, dp2, name2,
-> -				ip1->i_ino,
-> -				first_block, dfops, spaceres);
-> +	error = xfs_dir_replace(tp, dp2, name2, ip1->i_ino, first_block,
-> +				spaceres);
->  	if (error)
->  		goto out_trans_abort;
->  
-> @@ -2818,7 +2815,7 @@ xfs_cross_rename(
->  		if (S_ISDIR(VFS_I(ip2)->i_mode)) {
->  			error = xfs_dir_replace(tp, ip2, &xfs_name_dotdot,
->  						dp1->i_ino, first_block,
-> -						dfops, spaceres);
-> +						spaceres);
->  			if (error)
->  				goto out_trans_abort;
->  
-> @@ -2845,7 +2842,7 @@ xfs_cross_rename(
->  		if (S_ISDIR(VFS_I(ip1)->i_mode)) {
->  			error = xfs_dir_replace(tp, ip1, &xfs_name_dotdot,
->  						dp2->i_ino, first_block,
-> -						dfops, spaceres);
-> +						spaceres);
->  			if (error)
->  				goto out_trans_abort;
->  
-> @@ -2884,10 +2881,10 @@ xfs_cross_rename(
->  	}
->  	xfs_trans_ichgtime(tp, dp1, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
->  	xfs_trans_log_inode(tp, dp1, XFS_ILOG_CORE);
-> -	return xfs_finish_rename(tp, dfops);
-> +	return xfs_finish_rename(tp);
->  
->  out_trans_abort:
-> -	xfs_defer_cancel(dfops);
-> +	xfs_defer_cancel(tp->t_dfops);
->  	xfs_trans_cancel(tp);
->  	return error;
->  }
-> @@ -3032,7 +3029,7 @@ xfs_rename(
->  	if (flags & RENAME_EXCHANGE)
->  		return xfs_cross_rename(tp, src_dp, src_name, src_ip,
->  					target_dp, target_name, target_ip,
-> -					&dfops, &first_block, spaceres);
-> +					&first_block, spaceres);
->  
->  	/*
->  	 * Set up the target.
-> @@ -3054,7 +3051,7 @@ xfs_rename(
->  		 */
->  		error = xfs_dir_createname(tp, target_dp, target_name,
->  						src_ip->i_ino, &first_block,
-> -						&dfops, spaceres);
-> +						spaceres);
->  		if (error)
->  			goto out_bmap_cancel;
->  
-> @@ -3093,8 +3090,7 @@ xfs_rename(
->  		 * name at the destination directory, remove it first.
->  		 */
->  		error = xfs_dir_replace(tp, target_dp, target_name,
-> -					src_ip->i_ino,
-> -					&first_block, &dfops, spaceres);
-> +					src_ip->i_ino, &first_block, spaceres);
->  		if (error)
->  			goto out_bmap_cancel;
->  
-> @@ -3128,8 +3124,8 @@ xfs_rename(
->  		 * directory.
->  		 */
->  		error = xfs_dir_replace(tp, src_ip, &xfs_name_dotdot,
-> -					target_dp->i_ino,
-> -					&first_block, &dfops, spaceres);
-> +					target_dp->i_ino, &first_block,
-> +					spaceres);
->  		ASSERT(error != -EEXIST);
->  		if (error)
->  			goto out_bmap_cancel;
-> @@ -3168,10 +3164,10 @@ xfs_rename(
->  	 */
->  	if (wip) {
->  		error = xfs_dir_replace(tp, src_dp, src_name, wip->i_ino,
-> -					&first_block, &dfops, spaceres);
-> +					&first_block, spaceres);
->  	} else
->  		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
-> -					   &first_block, &dfops, spaceres);
-> +					   &first_block, spaceres);
->  	if (error)
->  		goto out_bmap_cancel;
->  
-> @@ -3206,7 +3202,7 @@ xfs_rename(
->  	if (new_parent)
->  		xfs_trans_log_inode(tp, target_dp, XFS_ILOG_CORE);
->  
-> -	error = xfs_finish_rename(tp, &dfops);
-> +	error = xfs_finish_rename(tp);
->  	if (wip)
->  		IRELE(wip);
->  	return error;
-> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-> index 44335bdebea2..e347a3db018f 100644
-> --- a/fs/xfs/xfs_symlink.c
-> +++ b/fs/xfs/xfs_symlink.c
-> @@ -339,7 +339,7 @@ xfs_symlink(
->  	 * Create the directory entry for the symlink.
->  	 */
->  	error = xfs_dir_createname(tp, dp, link_name, ip->i_ino,
-> -					&first_block, &dfops, resblks);
-> +				   &first_block, resblks);
->  	if (error)
->  		goto out_bmap_cancel;
->  	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-> -- 
-> 2.17.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --D
+> > 
+> > > Brian
+> > > 
+> > > > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > > > --
+> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
