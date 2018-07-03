@@ -1,20 +1,20 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:54056 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:37422 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932834AbeGCRXU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S933568AbeGCRXU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Tue, 3 Jul 2018 13:23:20 -0400
 Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 4370BDFDB
-        for <linux-xfs@vger.kernel.org>; Tue,  3 Jul 2018 17:23:20 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id C282781A6D23
+        for <linux-xfs@vger.kernel.org>; Tue,  3 Jul 2018 17:23:19 +0000 (UTC)
 Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 295131117629
-        for <linux-xfs@vger.kernel.org>; Tue,  3 Jul 2018 17:23:20 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id ADA971117629
+        for <linux-xfs@vger.kernel.org>; Tue,  3 Jul 2018 17:23:19 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 07/25] xfs: use ->t_firstblock for all xfs_bmapi_write() callers
-Date: Tue,  3 Jul 2018 13:23:01 -0400
-Message-Id: <20180703172319.24509-8-bfoster@redhat.com>
+Subject: [PATCH 03/25] xfs: use ->t_firstblock in dir ops
+Date: Tue,  3 Jul 2018 13:22:57 -0400
+Message-Id: <20180703172319.24509-4-bfoster@redhat.com>
 In-Reply-To: <20180703172319.24509-1-bfoster@redhat.com>
 References: <20180703172319.24509-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -22,206 +22,245 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Convert all xfs_bmapi_write() users to ->t_firstblock.
+Callers of the xfs_dir_*() functions currently pass an on-stack
+firstblock variable. While the dirops infrastructure carries a
+pointer to this variable, it never rolls the transaction and so it
+is safe to use ->t_firstblock instead.
+
+Fix up the various xfs_dir_*() callers to use ->t_firstblock. Also
+remove the unnecessary parameter for xfs_cross_rename().
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_bmap_util.c |  8 ++++----
- fs/xfs/xfs_dquot.c     |  5 ++---
- fs/xfs/xfs_iomap.c     | 20 +++++++++-----------
- fs/xfs/xfs_reflink.c   |  7 +++----
- fs/xfs/xfs_rtalloc.c   |  5 ++---
- 5 files changed, 20 insertions(+), 25 deletions(-)
+ fs/xfs/xfs_inode.c   | 42 +++++++++++++++++++-----------------------
+ fs/xfs/xfs_symlink.c |  9 ++++-----
+ 2 files changed, 23 insertions(+), 28 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index aea33d526db2..f9a0957343ea 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -872,7 +872,6 @@ xfs_alloc_file_space(
- 	xfs_filblks_t		allocatesize_fsb;
- 	xfs_extlen_t		extsz, temp;
- 	xfs_fileoff_t		startoffset_fsb;
--	xfs_fsblock_t		firstfsb;
- 	int			nimaps;
- 	int			quota_flag;
- 	int			rt;
-@@ -971,10 +970,11 @@ xfs_alloc_file_space(
- 
- 		xfs_trans_ijoin(tp, ip, 0);
- 
--		xfs_defer_init(tp, &dfops, &firstfsb);
-+		xfs_defer_init(tp, &dfops, &tp->t_firstblock);
- 		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
--					allocatesize_fsb, alloc_type, &firstfsb,
--					resblks, imapp, &nimaps);
-+					allocatesize_fsb, alloc_type,
-+					&tp->t_firstblock, resblks, imapp,
-+					&nimaps);
- 		if (error)
- 			goto error0;
- 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index c698e7f6f744..2fc5e21373be 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -290,13 +290,12 @@ xfs_dquot_disk_alloc(
- 	struct xfs_mount	*mp = tp->t_mountp;
- 	struct xfs_buf		*bp;
- 	struct xfs_inode	*quotip = xfs_quota_inode(mp, dqp->dq_flags);
--	xfs_fsblock_t		firstblock;
- 	int			nmaps = 1;
- 	int			error;
- 
- 	trace_xfs_dqalloc(dqp);
- 
--	xfs_defer_init(tp, tp->t_dfops, &firstblock);
-+	xfs_defer_init(tp, tp->t_dfops, &tp->t_firstblock);
- 
- 	xfs_ilock(quotip, XFS_ILOCK_EXCL);
- 	if (!xfs_this_quota_on(dqp->q_mount, dqp->dq_flags)) {
-@@ -312,7 +311,7 @@ xfs_dquot_disk_alloc(
- 	xfs_trans_ijoin(tp, quotip, XFS_ILOCK_EXCL);
- 	error = xfs_bmapi_write(tp, quotip, dqp->q_fileoffset,
- 			XFS_DQUOT_CLUSTER_SIZE_FSB, XFS_BMAPI_METADATA,
--			&firstblock, XFS_QM_DQALLOC_SPACE_RES(mp),
-+			&tp->t_firstblock, XFS_QM_DQALLOC_SPACE_RES(mp),
- 			&map, &nmaps);
- 	if (error)
- 		goto error0;
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index c9b9c7984f95..4a8a85b0fad2 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -152,7 +152,6 @@ xfs_iomap_write_direct(
- 	xfs_fileoff_t	offset_fsb;
- 	xfs_fileoff_t	last_fsb;
- 	xfs_filblks_t	count_fsb, resaligned;
--	xfs_fsblock_t	firstfsb;
- 	xfs_extlen_t	extsz;
- 	int		nimaps;
- 	int		quota_flag;
-@@ -254,10 +253,10 @@ xfs_iomap_write_direct(
- 	 * From this point onwards we overwrite the imap pointer that the
- 	 * caller gave to us.
- 	 */
--	xfs_defer_init(tp, &dfops, &firstfsb);
-+	xfs_defer_init(tp, &dfops, &tp->t_firstblock);
- 	nimaps = 1;
- 	error = xfs_bmapi_write(tp, ip, offset_fsb, count_fsb,
--				bmapi_flags, &firstfsb, resblks, imap,
-+				bmapi_flags, &tp->t_firstblock, resblks, imap,
- 				&nimaps);
- 	if (error)
- 		goto out_bmap_cancel;
-@@ -665,7 +664,6 @@ xfs_iomap_write_allocate(
- 	xfs_mount_t	*mp = ip->i_mount;
- 	xfs_fileoff_t	offset_fsb, last_block;
- 	xfs_fileoff_t	end_fsb, map_start_fsb;
--	xfs_fsblock_t	first_block;
- 	struct xfs_defer_ops	dfops;
- 	xfs_filblks_t	count_fsb;
- 	xfs_trans_t	*tp;
-@@ -716,7 +714,7 @@ xfs_iomap_write_allocate(
- 			xfs_ilock(ip, XFS_ILOCK_EXCL);
- 			xfs_trans_ijoin(tp, ip, 0);
- 
--			xfs_defer_init(tp, &dfops, &first_block);
-+			xfs_defer_init(tp, &dfops, &tp->t_firstblock);
- 
- 			/*
- 			 * it is possible that the extents have changed since
-@@ -770,8 +768,9 @@ xfs_iomap_write_allocate(
- 			 * pointer that the caller gave to us.
- 			 */
- 			error = xfs_bmapi_write(tp, ip, map_start_fsb,
--						count_fsb, flags, &first_block,
--						nres, imap, &nimaps);
-+						count_fsb, flags,
-+						&tp->t_firstblock, nres, imap,
-+						&nimaps);
- 			if (error)
- 				goto trans_cancel;
- 
-@@ -827,7 +826,6 @@ xfs_iomap_write_unwritten(
- 	xfs_fileoff_t	offset_fsb;
- 	xfs_filblks_t	count_fsb;
- 	xfs_filblks_t	numblks_fsb;
--	xfs_fsblock_t	firstfsb;
- 	int		nimaps;
- 	xfs_trans_t	*tp;
- 	xfs_bmbt_irec_t imap;
-@@ -876,11 +874,11 @@ xfs_iomap_write_unwritten(
- 		/*
- 		 * Modify the unwritten extent state of the buffer.
- 		 */
--		xfs_defer_init(tp, &dfops, &firstfsb);
-+		xfs_defer_init(tp, &dfops, &tp->t_firstblock);
- 		nimaps = 1;
- 		error = xfs_bmapi_write(tp, ip, offset_fsb, count_fsb,
--					XFS_BMAPI_CONVERT, &firstfsb, resblks,
--					&imap, &nimaps);
-+					XFS_BMAPI_CONVERT, &tp->t_firstblock,
-+					resblks, &imap, &nimaps);
- 		if (error)
- 			goto error_on_bmapi_transaction;
- 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 92b6e1b5d33c..f0486b748376 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -366,7 +366,6 @@ xfs_reflink_allocate_cow(
- 	struct xfs_bmbt_irec	got;
- 	struct xfs_defer_ops	dfops;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 04e17234e5d7..6a3fe2d3df6c 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1143,7 +1143,6 @@ xfs_create(
  	struct xfs_trans	*tp = NULL;
+ 	int			error;
+ 	struct xfs_defer_ops	dfops;
 -	xfs_fsblock_t		first_block;
- 	int			nimaps, error = 0;
- 	bool			trimmed;
- 	xfs_filblks_t		resaligned;
-@@ -425,13 +424,13 @@ xfs_reflink_allocate_cow(
- 
- 	xfs_trans_ijoin(tp, ip, 0);
+ 	bool                    unlock_dp_on_error = false;
+ 	prid_t			prid;
+ 	struct xfs_dquot	*udqp = NULL;
+@@ -1195,7 +1194,7 @@ xfs_create(
+ 	xfs_ilock(dp, XFS_ILOCK_EXCL | XFS_ILOCK_PARENT);
+ 	unlock_dp_on_error = true;
  
 -	xfs_defer_init(tp, &dfops, &first_block);
 +	xfs_defer_init(tp, &dfops, &tp->t_firstblock);
- 	nimaps = 1;
  
- 	/* Allocate the entire reservation as unwritten blocks. */
- 	error = xfs_bmapi_write(tp, ip, imap->br_startoff, imap->br_blockcount,
--			XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC, &first_block,
--			resblks, imap, &nimaps);
-+			XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC,
-+			&tp->t_firstblock, resblks, imap, &nimaps);
+ 	/*
+ 	 * Reserve disk quota and the inode.
+@@ -1224,7 +1223,7 @@ xfs_create(
+ 	xfs_trans_ijoin(tp, dp, XFS_ILOCK_EXCL);
+ 	unlock_dp_on_error = false;
+ 
+-	error = xfs_dir_createname(tp, dp, name, ip->i_ino, &first_block,
++	error = xfs_dir_createname(tp, dp, name, ip->i_ino, &tp->t_firstblock,
+ 				   resblks ?
+ 					resblks - XFS_IALLOC_SPACE_RES(mp) : 0);
+ 	if (error) {
+@@ -1401,7 +1400,6 @@ xfs_link(
+ 	xfs_trans_t		*tp;
+ 	int			error;
+ 	struct xfs_defer_ops	dfops;
+-	xfs_fsblock_t           first_block;
+ 	int			resblks;
+ 
+ 	trace_xfs_link(tdp, target_name);
+@@ -1450,7 +1448,7 @@ xfs_link(
+ 			goto error_return;
+ 	}
+ 
+-	xfs_defer_init(tp, &dfops, &first_block);
++	xfs_defer_init(tp, &dfops, &tp->t_firstblock);
+ 
+ 	/*
+ 	 * Handle initial link state of O_TMPFILE inode
+@@ -1462,7 +1460,7 @@ xfs_link(
+ 	}
+ 
+ 	error = xfs_dir_createname(tp, tdp, target_name, sip->i_ino,
+-				   &first_block, resblks);
++				   &tp->t_firstblock, resblks);
+ 	if (error)
+ 		goto error_return;
+ 	xfs_trans_ichgtime(tp, tdp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+@@ -2577,7 +2575,6 @@ xfs_remove(
+ 	int			is_dir = S_ISDIR(VFS_I(ip)->i_mode);
+ 	int                     error = 0;
+ 	struct xfs_defer_ops	dfops;
+-	xfs_fsblock_t           first_block;
+ 	uint			resblks;
+ 
+ 	trace_xfs_remove(dp, name);
+@@ -2657,8 +2654,8 @@ xfs_remove(
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
+-	xfs_defer_init(tp, &dfops, &first_block);
+-	error = xfs_dir_removename(tp, dp, name, ip->i_ino, &first_block,
++	xfs_defer_init(tp, &dfops, &tp->t_firstblock);
++	error = xfs_dir_removename(tp, dp, name, ip->i_ino, &tp->t_firstblock,
+ 				   resblks);
+ 	if (error) {
+ 		ASSERT(error != -ENOENT);
+@@ -2783,7 +2780,6 @@ xfs_cross_rename(
+ 	struct xfs_inode	*dp2,
+ 	struct xfs_name		*name2,
+ 	struct xfs_inode	*ip2,
+-	xfs_fsblock_t		*first_block,
+ 	int			spaceres)
+ {
+ 	int		error = 0;
+@@ -2792,13 +2788,13 @@ xfs_cross_rename(
+ 	int		dp2_flags = 0;
+ 
+ 	/* Swap inode number for dirent in first parent */
+-	error = xfs_dir_replace(tp, dp1, name1, ip2->i_ino, first_block,
++	error = xfs_dir_replace(tp, dp1, name1, ip2->i_ino, &tp->t_firstblock,
+ 				spaceres);
+ 	if (error)
+ 		goto out_trans_abort;
+ 
+ 	/* Swap inode number for dirent in second parent */
+-	error = xfs_dir_replace(tp, dp2, name2, ip1->i_ino, first_block,
++	error = xfs_dir_replace(tp, dp2, name2, ip1->i_ino, &tp->t_firstblock,
+ 				spaceres);
+ 	if (error)
+ 		goto out_trans_abort;
+@@ -2813,7 +2809,7 @@ xfs_cross_rename(
+ 
+ 		if (S_ISDIR(VFS_I(ip2)->i_mode)) {
+ 			error = xfs_dir_replace(tp, ip2, &xfs_name_dotdot,
+-						dp1->i_ino, first_block,
++						dp1->i_ino, &tp->t_firstblock,
+ 						spaceres);
+ 			if (error)
+ 				goto out_trans_abort;
+@@ -2840,7 +2836,7 @@ xfs_cross_rename(
+ 
+ 		if (S_ISDIR(VFS_I(ip1)->i_mode)) {
+ 			error = xfs_dir_replace(tp, ip1, &xfs_name_dotdot,
+-						dp2->i_ino, first_block,
++						dp2->i_ino, &tp->t_firstblock,
+ 						spaceres);
+ 			if (error)
+ 				goto out_trans_abort;
+@@ -2939,7 +2935,6 @@ xfs_rename(
+ 	struct xfs_mount	*mp = src_dp->i_mount;
+ 	struct xfs_trans	*tp;
+ 	struct xfs_defer_ops	dfops;
+-	xfs_fsblock_t		first_block;
+ 	struct xfs_inode	*wip = NULL;		/* whiteout inode */
+ 	struct xfs_inode	*inodes[__XFS_SORT_INODES];
+ 	int			num_inodes = __XFS_SORT_INODES;
+@@ -3021,13 +3016,13 @@ xfs_rename(
+ 		goto out_trans_cancel;
+ 	}
+ 
+-	xfs_defer_init(tp, &dfops, &first_block);
++	xfs_defer_init(tp, &dfops, &tp->t_firstblock);
+ 
+ 	/* RENAME_EXCHANGE is unique from here on. */
+ 	if (flags & RENAME_EXCHANGE)
+ 		return xfs_cross_rename(tp, src_dp, src_name, src_ip,
+ 					target_dp, target_name, target_ip,
+-					&first_block, spaceres);
++					spaceres);
+ 
+ 	/*
+ 	 * Set up the target.
+@@ -3048,8 +3043,8 @@ xfs_rename(
+ 		 * to account for the ".." reference from the new entry.
+ 		 */
+ 		error = xfs_dir_createname(tp, target_dp, target_name,
+-						src_ip->i_ino, &first_block,
+-						spaceres);
++					   src_ip->i_ino, &tp->t_firstblock,
++					   spaceres);
+ 		if (error)
+ 			goto out_bmap_cancel;
+ 
+@@ -3088,7 +3083,8 @@ xfs_rename(
+ 		 * name at the destination directory, remove it first.
+ 		 */
+ 		error = xfs_dir_replace(tp, target_dp, target_name,
+-					src_ip->i_ino, &first_block, spaceres);
++					src_ip->i_ino, &tp->t_firstblock,
++					spaceres);
+ 		if (error)
+ 			goto out_bmap_cancel;
+ 
+@@ -3122,7 +3118,7 @@ xfs_rename(
+ 		 * directory.
+ 		 */
+ 		error = xfs_dir_replace(tp, src_ip, &xfs_name_dotdot,
+-					target_dp->i_ino, &first_block,
++					target_dp->i_ino, &tp->t_firstblock,
+ 					spaceres);
+ 		ASSERT(error != -EEXIST);
+ 		if (error)
+@@ -3162,10 +3158,10 @@ xfs_rename(
+ 	 */
+ 	if (wip) {
+ 		error = xfs_dir_replace(tp, src_dp, src_name, wip->i_ino,
+-					&first_block, spaceres);
++					&tp->t_firstblock, spaceres);
+ 	} else
+ 		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
+-					   &first_block, spaceres);
++					   &tp->t_firstblock, spaceres);
  	if (error)
  		goto out_bmap_cancel;
  
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index c102b0d26bc1..1c894ea2abca 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -761,7 +761,6 @@ xfs_growfs_rt_alloc(
- 	struct xfs_buf		*bp;	/* temporary buffer for zeroing */
- 	xfs_daddr_t		d;		/* disk block address */
- 	int			error;		/* error return value */
--	xfs_fsblock_t		firstblock;/* first block allocated in xaction */
- 	struct xfs_defer_ops	dfops;		/* list of freed blocks */
- 	xfs_fsblock_t		fsbno;		/* filesystem block for bno */
- 	struct xfs_bmbt_irec	map;		/* block map output */
-@@ -787,13 +786,13 @@ xfs_growfs_rt_alloc(
- 		xfs_ilock(ip, XFS_ILOCK_EXCL);
- 		xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index e50e97308f81..8ddc7f1147dc 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -164,7 +164,6 @@ xfs_symlink(
+ 	int			error = 0;
+ 	int			pathlen;
+ 	struct xfs_defer_ops	dfops;
+-	xfs_fsblock_t		first_block;
+ 	bool                    unlock_dp_on_error = false;
+ 	xfs_fileoff_t		first_fsb;
+ 	xfs_filblks_t		fs_blocks;
+@@ -246,7 +245,7 @@ xfs_symlink(
+ 	 * Initialize the bmap freelist prior to calling either
+ 	 * bmapi or the directory create code.
+ 	 */
+-	xfs_defer_init(tp, &dfops, &first_block);
++	xfs_defer_init(tp, &dfops, &tp->t_firstblock);
  
--		xfs_defer_init(tp, &dfops, &firstblock);
-+		xfs_defer_init(tp, &dfops, &tp->t_firstblock);
- 		/*
- 		 * Allocate blocks to the bitmap file.
- 		 */
- 		nmap = 1;
- 		error = xfs_bmapi_write(tp, ip, oblocks, nblocks - oblocks,
--					XFS_BMAPI_METADATA, &firstblock,
-+					XFS_BMAPI_METADATA, &tp->t_firstblock,
- 					resblks, &map, &nmap);
- 		if (!error && nmap < 1)
- 			error = -ENOSPC;
+ 	/*
+ 	 * Allocate an inode for the symlink.
+@@ -289,8 +288,8 @@ xfs_symlink(
+ 		nmaps = XFS_SYMLINK_MAPS;
+ 
+ 		error = xfs_bmapi_write(tp, ip, first_fsb, fs_blocks,
+-				  XFS_BMAPI_METADATA, &first_block, resblks,
+-				  mval, &nmaps);
++				  XFS_BMAPI_METADATA, &tp->t_firstblock,
++				  resblks, mval, &nmaps);
+ 		if (error)
+ 			goto out_bmap_cancel;
+ 
+@@ -338,7 +337,7 @@ xfs_symlink(
+ 	 * Create the directory entry for the symlink.
+ 	 */
+ 	error = xfs_dir_createname(tp, dp, link_name, ip->i_ino,
+-				   &first_block, resblks);
++				   &tp->t_firstblock, resblks);
+ 	if (error)
+ 		goto out_bmap_cancel;
+ 	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
 -- 
 2.17.1
 
