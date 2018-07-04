@@ -1,164 +1,436 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:33782 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932361AbeGDBaJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Jul 2018 21:30:09 -0400
-Date: Tue, 3 Jul 2018 18:30:05 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 13/21] xfs: repair inode records
-Message-ID: <20180704013005.GZ32415@magnolia>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:59811 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932489AbeGDCHK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Jul 2018 22:07:10 -0400
+Date: Wed, 4 Jul 2018 12:07:06 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 14/21] xfs: zap broken inode forks
+Message-ID: <20180704020706.GL2234@dastard>
 References: <152986820984.3155.16417868536016544528.stgit@magnolia>
- <152986829144.3155.13577483407162701849.stgit@magnolia>
- <20180703061718.GJ2234@dastard>
- <20180704001612.GZ32415@magnolia>
- <20180704010344.GK2234@dastard>
+ <152986829769.3155.762174417583296955.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180704010344.GK2234@dastard>
+In-Reply-To: <152986829769.3155.762174417583296955.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Jul 04, 2018 at 11:03:44AM +1000, Dave Chinner wrote:
-> On Tue, Jul 03, 2018 at 05:16:12PM -0700, Darrick J. Wong wrote:
-> > On Tue, Jul 03, 2018 at 04:17:18PM +1000, Dave Chinner wrote:
-> > > On Sun, Jun 24, 2018 at 12:24:51PM -0700, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > 
-> > > > Try to reinitialize corrupt inodes, or clear the reflink flag
-> > > > if it's not needed.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > A comment somewhere that this is only attmepting to repair inodes
-> > > that have failed verifier checks on read would be good.
-> > 
-> > There are a few comments in the callers, e.g.
-> > 
-> > "Repair all the things that the inode verifiers care about"
-> > 
-> > "Fix everything xfs_dinode_verify cares about."
-> > 
-> > "Make sure we can pass the inode buffer verifier."
-> > 
-> > Hmm, I think maybe you meant that I need to make it more obvious which
-> > functions exist to make the verifiers happy (and so there won't be any
-> > in-core inodes while they run) vs. which ones fix irregularities that
-> > aren't caught as a condition for setting up in-core inodes?
+On Sun, Jun 24, 2018 at 12:24:57PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Well, that too. My main point is that various one-liners don't
-> explain the overall picture of what, why and how the repair is being
-> done....
-
-Ok.
-
-> > xrep_inode_unchecked_* are the ones that run on in-core inodes; the rest
-> > run on inodes so damaged they can't be _iget'd.
+> Determine if inode fork damage is responsible for the inode being unable
+> to pass the ifork verifiers in xfs_iget and zap the fork contents if
+> this is true.  Once this is done the fork will be empty but we'll be
+> able to construct an in-core inode, and a subsequent call to the inode
+> fork repair ioctl will search the rmapbt to rebuild the records that
+> were in the fork.
 > 
-> It's completely ambiguous, though: "unchecked" by what, exactly? :P
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr_leaf.c |   32 ++-
+>  fs/xfs/libxfs/xfs_attr_leaf.h |    2 
+>  fs/xfs/libxfs/xfs_bmap.c      |   21 ++
+>  fs/xfs/libxfs/xfs_bmap.h      |    2 
+>  fs/xfs/scrub/inode_repair.c   |  399 +++++++++++++++++++++++++++++++++++++++++
+>  5 files changed, 437 insertions(+), 19 deletions(-)
 > 
-> > > Also, is there a need to check the inode CRC here?
-> > 
-> > We already know the inode core is bad, so why not just reset it?
 > 
-> But you don't recalculate it if di_ok and unlinked_ok are true. It
-> only gets recalc'd if when changes need to be made. hence an inode
-> that failed the verifier because of a CRC error still won't pass the
-> verifier after going through this function.
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index b3c19339e1b5..f6c458104934 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> @@ -894,23 +894,16 @@ xfs_attr_shortform_allfit(
+>  	return xfs_attr_shortform_bytesfit(dp, bytes);
+>  }
+>  
+> -/* Verify the consistency of an inline attribute fork. */
+> +/* Verify the consistency of a raw inline attribute fork. */
+>  xfs_failaddr_t
+> -xfs_attr_shortform_verify(
+> -	struct xfs_inode		*ip)
+> +xfs_attr_shortform_verify_struct(
+> +	struct xfs_attr_shortform	*sfp,
+> +	size_t				size)
 
-D'oh.  Thank you for catching that. :)
+The internal structure checking functions in the directory code
+use the naming convention xfs_dir3_<type>_check(). I think we should use
+the same here. i.e. xfs_attr_sf_check().
 
-> > > > +		dip->di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
-> > > > +		dip->di_version = 3;
-> > > > +		if (!unlinked_ok)
-> > > > +			dip->di_next_unlinked = cpu_to_be32(NULLAGINO);
-> > > > +		xfs_dinode_calc_crc(mp, dip);
-> > > > +		xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DINO_BUF);
-> > > > +		xfs_trans_log_buf(tp, bp, ioff, ioff + sizeof(*dip) - 1);
-> > > 
-> > > Hmmmm. how does this interact with other transactions in repair that
-> > > might have logged changes to the same in-core inode? If it was just
-> > > changing the unlinked pointer, then that would be ok, but
-> > > magic/version are overwritten by the inode item recovery...
-> > 
-> > There shouldn't be an in-core inode; this function should only get
-> > called if we failed to _iget the inode, which implies that nobody else
-> > has an in-core inode.
-> 
-> OK - so we've held the buffer locked across a check for in-core
-> inodes we are trying to repair?
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index b7f094e19bab..b1254e6c17b5 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -6223,18 +6223,16 @@ xfs_bmap_finish_one(
+>  	return error;
+>  }
+>  
+> -/* Check that an inode's extent does not have invalid flags or bad ranges. */
+> +/* Check that an extent does not have invalid flags or bad ranges. */
+>  xfs_failaddr_t
+> -xfs_bmap_validate_extent(
+> -	struct xfs_inode	*ip,
+> +xfs_bmbt_validate_extent(
 
-That's the intent, anyway. :)
+xfs_bmbt_ prefixes should only appear in xfs_bmap_btree.c, not
+xfs_bmap.c....
 
-> > > > +	switch (mode & S_IFMT) {
-> > > > +	case S_IFIFO:
-> > > > +	case S_IFCHR:
-> > > > +	case S_IFBLK:
-> > > > +	case S_IFSOCK:
-> > > > +		/* di_size can't be nonzero for special files */
-> > > > +		dip->di_size = 0;
-> > > > +		break;
-> > > > +	case S_IFREG:
-> > > > +		/* Regular files can't be larger than 2^63-1 bytes. */
-> > > > +		dip->di_size = cpu_to_be64(size & ~(1ULL << 63));
-> > > > +		break;
-> > > > +	case S_IFLNK:
-> > > > +		/* Catch over- or under-sized symlinks. */
-> > > > +		if (size > XFS_SYMLINK_MAXLEN)
-> > > > +			dip->di_size = cpu_to_be64(XFS_SYMLINK_MAXLEN);
-> > > > +		else if (size == 0)
-> > > > +			dip->di_size = cpu_to_be64(1);
-> > > 
-> > > Not sure this is valid - if the inode is in extent format then a
-> > > size of 1 is invalid and means the symlink will point to the
-> > > first byte in the data fork, and that could be anything....
-> > 
-> > I picked these wonky looking formats so that we'd always trigger the
-> > higher level repair functions to have a look at the link/dir without
-> > blowing up elsewhere in the code if we tried to use them.  Not that we
-> > can do much for broken symlinks, but directories could be rebuilt.
-> 
-> Change the symlink to an inline symlink that points to "zero length
-> symlink repaired by online repair" and set the c/mtimes to the
-> current time?
+So either it needs to get moved or renamed to something like
+xfs_bmap_validate_irec()?
 
-Ok.
 
-> > But maybe directories should simply be reset to an empty inline
-> > directory, and eventually grow an iflag that will always trigger
-> > directory reconstruction (when parent pointers become a thing).
-> 
-> Yeah, I think if we are going to do anything here we should be
-> setting the inodes to valid "empty" state. Or at least comment that
-> it's being set to a state that will detected and rebuilt by the
-> upcoming fork repair pass.
+> diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
+> index 4ac43c1b1eb0..b941f21d7667 100644
+> --- a/fs/xfs/scrub/inode_repair.c
+> +++ b/fs/xfs/scrub/inode_repair.c
+> @@ -22,11 +22,15 @@
+>  #include "xfs_ialloc.h"
+>  #include "xfs_da_format.h"
+>  #include "xfs_reflink.h"
+> +#include "xfs_alloc.h"
+>  #include "xfs_rmap.h"
+> +#include "xfs_rmap_btree.h"
+>  #include "xfs_bmap.h"
+> +#include "xfs_bmap_btree.h"
+>  #include "xfs_bmap_util.h"
+>  #include "xfs_dir2.h"
+>  #include "xfs_quota_defs.h"
+> +#include "xfs_attr_leaf.h"
+>  #include "scrub/xfs_scrub.h"
+>  #include "scrub/scrub.h"
+>  #include "scrub/common.h"
+> @@ -113,7 +117,8 @@ xfs_repair_inode_mode(
+>  STATIC void
+>  xfs_repair_inode_flags(
+>  	struct xfs_scrub_context	*sc,
+> -	struct xfs_dinode		*dip)
+> +	struct xfs_dinode		*dip,
+> +	bool				is_rt_file)
+>  {
+>  	struct xfs_mount		*mp = sc->mp;
+>  	uint64_t			flags2;
+> @@ -132,6 +137,10 @@ xfs_repair_inode_flags(
+>  		flags2 &= ~XFS_DIFLAG2_REFLINK;
+>  	if (flags2 & XFS_DIFLAG2_REFLINK)
+>  		flags2 &= ~XFS_DIFLAG2_DAX;
+> +	if (is_rt_file)
+> +		flags |= XFS_DIFLAG_REALTIME;
+> +	else
+> +		flags &= ~XFS_DIFLAG_REALTIME;
 
-Ok.
+This needs to be done first. i.e. before we check things like rt vs
+reflink flags.
 
-> > > what if the inode failed the fork verifiers rather than the dinode
-> > > verifier?
-> > 
-> > That's coming up in the next patch.  Want me to put in an XXX comment to
-> > that effect?
-> 
-> Not if all you do is remove it in the next patch - better to
-> document where we are making changes that the fork rebuild will
-> detect and fix up. :P
+> @@ -210,17 +219,402 @@ xfs_repair_inode_extsize_hints(
+>  	}
+>  }
+>  
+> +struct xfs_repair_inode_fork_counters {
+> +	struct xfs_scrub_context	*sc;
+> +	xfs_rfsblock_t			data_blocks;
+> +	xfs_rfsblock_t			rt_blocks;
 
-<nod>
+inode is either data or rt, not both. Why do you need two separate
+counters? Oh, bmbt blocks are always data, right? Coment, perhaps?
 
---D
+> +	xfs_rfsblock_t			attr_blocks;
+> +	xfs_extnum_t			data_extents;
+> +	xfs_extnum_t			rt_extents;
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+but bmbt blocks are not data extents, so only one counter here?
+
+> +/* Count extents and blocks for a given inode from all rmap data. */
+> +STATIC int
+> +xfs_repair_inode_count_rmaps(
+> +	struct xfs_repair_inode_fork_counters	*rifc)
+> +{
+> +	xfs_agnumber_t			agno;
+> +	int				error;
+> +
+> +	if (!xfs_sb_version_hasrmapbt(&rifc->sc->mp->m_sb) ||
+> +	    xfs_sb_version_hasrealtime(&rifc->sc->mp->m_sb))
+> +		return -EOPNOTSUPP;
+> +
+> +	/* XXX: find rt blocks too */
+
+Ok, needs a comment up front that realtime repair isn't supported,
+rather than hiding it down here.
+
+> +	for (agno = 0; agno < rifc->sc->mp->m_sb.sb_agcount; agno++) {
+> +		error = xfs_repair_inode_count_ag_rmaps(rifc, agno);
+> +		if (error)
+> +			return error;
+> +	}
+
+	/* rt not supported yet */
+	ASSERT(rifc->rt_extents == 0);
+
+> +	/* Can't have extents on both the rt and the data device. */
+> +	if (rifc->data_extents && rifc->rt_extents)
+> +		return -EFSCORRUPTED;
+> +
+> +	return 0;
+> +}
+> +
+> +/* Figure out if we need to zap this extents format fork. */
+> +STATIC bool
+> +xfs_repair_inode_core_check_extents_fork(
+
+
+Urk. Not sure what this function is supposed to be doing from the
+name. xrep_ifork_extent_check()? And then the next function
+becomes xrep_ifork_btree_check()?
+
+Also document the return values.
+
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_dinode		*dip,
+> +	int				dfork_size,
+> +	int				whichfork)
+> +{
+> +	struct xfs_bmbt_irec		new;
+> +	struct xfs_bmbt_rec		*dp;
+> +	bool				isrt;
+> +	int				i;
+> +	int				nex;
+> +	int				fork_size;
+> +
+> +	nex = XFS_DFORK_NEXTENTS(dip, whichfork);
+> +	fork_size = nex * sizeof(struct xfs_bmbt_rec);
+> +	if (fork_size < 0 || fork_size > dfork_size)
+> +		return true;
+
+Check nex against dip->di_nextents?
+
+> +	dp = (struct xfs_bmbt_rec *)XFS_DFORK_PTR(dip, whichfork);
+> +
+> +	isrt = dip->di_flags & cpu_to_be16(XFS_DIFLAG_REALTIME);
+> +	for (i = 0; i < nex; i++, dp++) {
+> +		xfs_failaddr_t	fa;
+> +
+> +		xfs_bmbt_disk_get_all(dp, &new);
+> +		fa = xfs_bmbt_validate_extent(sc->mp, isrt, whichfork, &new);
+> +		if (fa)
+> +			return true;
+> +	}
+> +
+> +	return false;
+> +}
+> +
+> +/* Figure out if we need to zap this btree format fork. */
+> +STATIC bool
+> +xfs_repair_inode_core_check_btree_fork(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_dinode		*dip,
+> +	int				dfork_size,
+> +	int				whichfork)
+> +{
+> +	struct xfs_bmdr_block		*dfp;
+> +	int				nrecs;
+> +	int				level;
+> +
+> +	if (XFS_DFORK_NEXTENTS(dip, whichfork) <=
+> +			dfork_size / sizeof(struct xfs_bmbt_irec))
+> +		return true;
+
+check against dip->di_nextents?
+
+> +	dfp = (struct xfs_bmdr_block *)XFS_DFORK_PTR(dip, whichfork);
+> +	nrecs = be16_to_cpu(dfp->bb_numrecs);
+> +	level = be16_to_cpu(dfp->bb_level);
+> +
+> +	if (nrecs == 0 || XFS_BMDR_SPACE_CALC(nrecs) > dfork_size)
+> +		return true;
+> +	if (level == 0 || level > XFS_BTREE_MAXLEVELS)
+> +		return true;
+
+Should this visit the bmbt blocks to check the level is actually
+correct?
+
+> +	return false;
+> +}
+> +
+> +/*
+> + * Check the data fork for things that will fail the ifork verifiers or the
+> + * ifork formatters.
+> + */
+> +STATIC bool
+> +xfs_repair_inode_core_check_data_fork(
+
+xrep_ifork_check_data()
+
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_dinode		*dip,
+> +	uint16_t			mode)
+> +{
+> +	uint64_t			size;
+> +	int				dfork_size;
+> +
+> +	size = be64_to_cpu(dip->di_size);
+> +	switch (mode & S_IFMT) {
+> +	case S_IFIFO:
+> +	case S_IFCHR:
+> +	case S_IFBLK:
+> +	case S_IFSOCK:
+> +		if (XFS_DFORK_FORMAT(dip, XFS_DATA_FORK) != XFS_DINODE_FMT_DEV)
+> +			return true;
+> +		break;
+> +	case S_IFREG:
+> +	case S_IFLNK:
+> +	case S_IFDIR:
+> +		switch (XFS_DFORK_FORMAT(dip, XFS_DATA_FORK)) {
+> +		case XFS_DINODE_FMT_LOCAL:
+
+local format is not valid for S_IFREG.
+
+> +		case XFS_DINODE_FMT_EXTENTS:
+> +		case XFS_DINODE_FMT_BTREE:
+> +			break;
+> +		default:
+> +			return true;
+> +		}
+> +		break;
+> +	default:
+> +		return true;
+> +	}
+> +	dfork_size = XFS_DFORK_SIZE(dip, sc->mp, XFS_DATA_FORK);
+> +	switch (XFS_DFORK_FORMAT(dip, XFS_DATA_FORK)) {
+> +	case XFS_DINODE_FMT_DEV:
+> +		break;
+> +	case XFS_DINODE_FMT_LOCAL:
+> +		if (size > dfork_size)
+> +			return true;
+> +		break;
+> +	case XFS_DINODE_FMT_EXTENTS:
+> +		if (xfs_repair_inode_core_check_extents_fork(sc, dip,
+> +				dfork_size, XFS_DATA_FORK))
+> +			return true;
+> +		break;
+> +	case XFS_DINODE_FMT_BTREE:
+> +		if (xfs_repair_inode_core_check_btree_fork(sc, dip,
+> +				dfork_size, XFS_DATA_FORK))
+> +			return true;
+> +		break;
+> +	default:
+> +		return true;
+> +	}
+> +
+> +	return false;
+> +}
+> +
+> +/* Reset the data fork to something sane. */
+> +STATIC void
+> +xfs_repair_inode_core_zap_data_fork(
+
+xrep_ifork_zap_data()
+
+(you get the idea :P)
+
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_dinode		*dip,
+> +	uint16_t			mode,
+> +	struct xfs_repair_inode_fork_counters	*rifc)
+
+(structure names can change, too :)
+
+> +{
+> +	char				*p;
+> +	const struct xfs_dir_ops	*ops;
+> +	struct xfs_dir2_sf_hdr		*sfp;
+> +	int				i8count;
+> +
+> +	/* Special files always get reset to DEV */
+> +	switch (mode & S_IFMT) {
+> +	case S_IFIFO:
+> +	case S_IFCHR:
+> +	case S_IFBLK:
+> +	case S_IFSOCK:
+> +		dip->di_format = XFS_DINODE_FMT_DEV;
+> +		dip->di_size = 0;
+> +		return;
+> +	}
+> +
+> +	/*
+> +	 * If we have data extents, reset to an empty map and hope the user
+> +	 * will run the bmapbtd checker next.
+> +	 */
+> +	if (rifc->data_extents || rifc->rt_extents || S_ISREG(mode)) {
+> +		dip->di_format = XFS_DINODE_FMT_EXTENTS;
+> +		dip->di_nextents = 0;
+> +		return;
+> +	}
+
+Does the userspace tool run the bmapbtd checker next?
+
+> +	/* Otherwise, reset the local format to the minimum. */
+> +	switch (mode & S_IFMT) {
+> +	case S_IFLNK:
+> +		/* Blow out symlink; now it points to root dir */
+> +		dip->di_format = XFS_DINODE_FMT_LOCAL;
+> +		dip->di_size = cpu_to_be64(1);
+> +		p = XFS_DFORK_PTR(dip, XFS_DATA_FORK);
+> +		*p = '/';
+
+Maybe factor this so zero length symlinks can be set directly to the
+same thing? FWIW, would making it point at '.' be better than '/' so
+it always points within the same filesystem?
+
+> +		break;
+> +	case S_IFDIR:
+> +		/*
+> +		 * Blow out dir, make it point to the root.  In the
+> +		 * future the direction repair will reconstruct this
+> +		 * dir for us.
+> +		 */
+
+s/the direction//
+
+> +		dip->di_format = XFS_DINODE_FMT_LOCAL;
+> +		i8count = sc->mp->m_sb.sb_rootino > XFS_DIR2_MAX_SHORT_INUM;
+> +		ops = xfs_dir_get_ops(sc->mp, NULL);
+> +		sfp = (struct xfs_dir2_sf_hdr *)XFS_DFORK_PTR(dip,
+> +				XFS_DATA_FORK);
+> +		sfp->count = 0;
+> +		sfp->i8count = i8count;
+> +		ops->sf_put_parent_ino(sfp, sc->mp->m_sb.sb_rootino);
+> +		dip->di_size = cpu_to_be64(xfs_dir2_sf_hdr_size(i8count));
+
+What happens now if this dir has an ancestor still pointing at it?
+Haven't we just screwed the directory structure? How does this
+interact with the dentry cache, esp. w.r.t. disconnected dentries
+(filehandle lookups)?
+
+> +/*
+> + * Check the attr fork for things that will fail the ifork verifiers or the
+> + * ifork formatters.
+> + */
+> +STATIC bool
+> +xfs_repair_inode_core_check_attr_fork(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_dinode		*dip)
+> +{
+> +	struct xfs_attr_shortform	*sfp;
+> +	int				size;
+> +
+> +	if (XFS_DFORK_BOFF(dip) == 0)
+> +		return dip->di_aformat != XFS_DINODE_FMT_EXTENTS ||
+> +		       dip->di_anextents != 0;
+> +
+> +	size = XFS_DFORK_SIZE(dip, sc->mp, XFS_ATTR_FORK);
+> +	switch (XFS_DFORK_FORMAT(dip, XFS_ATTR_FORK)) {
+> +	case XFS_DINODE_FMT_LOCAL:
+> +		sfp = (struct xfs_attr_shortform *)XFS_DFORK_PTR(dip,
+> +				XFS_ATTR_FORK);
+
+As a side note, we should make XFS_DFORK_PTR() return a void * so we
+don't need casts like this.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
