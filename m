@@ -1,109 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:33394 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:41464 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752691AbeGDAYa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Jul 2018 20:24:30 -0400
-Date: Tue, 3 Jul 2018 17:24:15 -0700
+        with ESMTP id S1752197AbeGDAl1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Jul 2018 20:41:27 -0400
+Date: Tue, 3 Jul 2018 17:41:11 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 01/25] xfs: allow null firstblock in xfs_bmapi_write()
- when tp is null
-Message-ID: <20180704002415.GA32415@magnolia>
+Subject: Re: [PATCH 02/25] xfs: add firstblock field to xfs_trans
+Message-ID: <20180704004111.GC32415@magnolia>
 References: <20180703172319.24509-1-bfoster@redhat.com>
- <20180703172319.24509-2-bfoster@redhat.com>
+ <20180703172319.24509-3-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180703172319.24509-2-bfoster@redhat.com>
+In-Reply-To: <20180703172319.24509-3-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jul 03, 2018 at 01:22:55PM -0400, Brian Foster wrote:
-> xfs_bmapi_write() always expects a valid firstblock pointer. It
-> immediately dereferences the pointer to help determine how to
-> initialize the bma.minleft field. The remaining accesses are
-> related to modifying btree format forks, which is only relevant for
-> !COW fork callers.
+On Tue, Jul 03, 2018 at 01:22:56PM -0400, Brian Foster wrote:
+> A firstblock var is typically allocated and initialized along with
+> xfs_defer_ops structures and passed around independent from the
+> associated transaction. To facilitate combining the two, add an
+> optional ->t_firstblock field to xfs_trans that can be used in place
+> of an on-stack variable.
 > 
-> The reflink code passes a NULL transaction to xfs_bmapi_write() in a
-> couple places that do COW fork unwritten conversion. The purpose of
-> the firstblock field is to track the first block allocation in the
-> current transaction, so technically firstblock should not be
-> required for these callers either.
-> 
-> Tweak xfs_bmapi_write() to initialize the bma correctly without
-> accessing the firstblock pointer if no transaction is provided in
-> the first place. Update the reflink callers to pass NULL instead of
-> otherwise unused firstblock references.
+> The firstblock value follows the lifetime of the transaction, so
+> initialize it on allocation and when a transaction rolls.
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-Looks ok,
+Seems ok so far,
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_bmap.c | 2 +-
->  fs/xfs/xfs_reflink.c     | 9 +++------
->  2 files changed, 4 insertions(+), 7 deletions(-)
+>  fs/xfs/xfs_trans.c | 2 ++
+>  fs/xfs/xfs_trans.h | 1 +
+>  2 files changed, 3 insertions(+)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 2e2a9661600b..c6a5a957674d 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -4304,7 +4304,7 @@ xfs_bmapi_write(
+> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> index 630993387517..de00f79ff698 100644
+> --- a/fs/xfs/xfs_trans.c
+> +++ b/fs/xfs/xfs_trans.c
+> @@ -100,6 +100,7 @@ xfs_trans_dup(
+>  	ntp->t_mountp = tp->t_mountp;
+>  	INIT_LIST_HEAD(&ntp->t_items);
+>  	INIT_LIST_HEAD(&ntp->t_busy);
+> +	ntp->t_firstblock = NULLFSBLOCK;
 >  
->  	XFS_STATS_INC(mp, xs_blk_mapw);
+>  	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
+>  	ASSERT(tp->t_ticket != NULL);
+> @@ -273,6 +274,7 @@ xfs_trans_alloc(
+>  	tp->t_mountp = mp;
+>  	INIT_LIST_HEAD(&tp->t_items);
+>  	INIT_LIST_HEAD(&tp->t_busy);
+> +	tp->t_firstblock = NULLFSBLOCK;
 >  
-> -	if (*firstblock == NULLFSBLOCK) {
-> +	if (!tp || *firstblock == NULLFSBLOCK) {
->  		if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE)
->  			bma.minleft = be16_to_cpu(ifp->if_broot->bb_level) + 1;
->  		else
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 8496312dde6a..92b6e1b5d33c 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -314,7 +314,6 @@ xfs_reflink_convert_cow_extent(
->  	xfs_fileoff_t			offset_fsb,
->  	xfs_filblks_t			count_fsb)
->  {
-> -	xfs_fsblock_t			first_block = NULLFSBLOCK;
->  	int				nimaps = 1;
->  
->  	if (imap->br_state == XFS_EXT_NORM)
-> @@ -325,8 +324,8 @@ xfs_reflink_convert_cow_extent(
->  	if (imap->br_blockcount == 0)
->  		return 0;
->  	return xfs_bmapi_write(NULL, ip, imap->br_startoff, imap->br_blockcount,
-> -			XFS_BMAPI_COWFORK | XFS_BMAPI_CONVERT, &first_block,
-> -			0, imap, &nimaps);
-> +			XFS_BMAPI_COWFORK | XFS_BMAPI_CONVERT, NULL, 0, imap,
-> +			&nimaps);
->  }
->  
->  /* Convert all of the unwritten CoW extents in a file's range to real ones. */
-> @@ -341,7 +340,6 @@ xfs_reflink_convert_cow(
->  	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + count);
->  	xfs_filblks_t		count_fsb = end_fsb - offset_fsb;
->  	struct xfs_bmbt_irec	imap;
-> -	xfs_fsblock_t		first_block = NULLFSBLOCK;
->  	int			nimaps = 1, error = 0;
->  
->  	ASSERT(count != 0);
-> @@ -349,8 +347,7 @@ xfs_reflink_convert_cow(
->  	xfs_ilock(ip, XFS_ILOCK_EXCL);
->  	error = xfs_bmapi_write(NULL, ip, offset_fsb, count_fsb,
->  			XFS_BMAPI_COWFORK | XFS_BMAPI_CONVERT |
-> -			XFS_BMAPI_CONVERT_ONLY, &first_block, 0, &imap,
-> -			&nimaps);
-> +			XFS_BMAPI_CONVERT_ONLY, NULL, 0, &imap, &nimaps);
->  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  	return error;
->  }
+>  	error = xfs_trans_reserve(tp, resp, blocks, rtextents);
+>  	if (error) {
+> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> index d8a695c57103..37fdacc690c7 100644
+> --- a/fs/xfs/xfs_trans.h
+> +++ b/fs/xfs/xfs_trans.h
+> @@ -102,6 +102,7 @@ typedef struct xfs_trans {
+>  	unsigned int		t_blk_res_used;	/* # of resvd blocks used */
+>  	unsigned int		t_rtx_res;	/* # of rt extents resvd */
+>  	unsigned int		t_rtx_res_used;	/* # of resvd rt extents used */
+> +	xfs_fsblock_t		t_firstblock;	/* first block allocated */
+>  	struct xlog_ticket	*t_ticket;	/* log mgr ticket */
+>  	struct xfs_mount	*t_mountp;	/* ptr to fs mount struct */
+>  	struct xfs_dquot_acct   *t_dqinfo;	/* acctg info for dquots */
 > -- 
 > 2.17.1
 > 
