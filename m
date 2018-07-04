@@ -1,436 +1,395 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:59811 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932489AbeGDCHK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Jul 2018 22:07:10 -0400
-Date: Wed, 4 Jul 2018 12:07:06 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 14/21] xfs: zap broken inode forks
-Message-ID: <20180704020706.GL2234@dastard>
+Received: from aserp2120.oracle.com ([141.146.126.78]:59670 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932739AbeGDCPK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Jul 2018 22:15:10 -0400
+Date: Tue, 3 Jul 2018 19:15:04 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 06/21] xfs: repair free space btrees
+Message-ID: <20180704021504.GA32415@magnolia>
 References: <152986820984.3155.16417868536016544528.stgit@magnolia>
- <152986829769.3155.762174417583296955.stgit@magnolia>
+ <152986824747.3155.3861118263934672652.stgit@magnolia>
+ <20180627032123.GF19934@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <152986829769.3155.762174417583296955.stgit@magnolia>
+In-Reply-To: <20180627032123.GF19934@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Sun, Jun 24, 2018 at 12:24:57PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Jun 27, 2018 at 01:21:23PM +1000, Dave Chinner wrote:
+> On Sun, Jun 24, 2018 at 12:24:07PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Rebuild the free space btrees from the gaps in the rmap btree.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> ......
+> > +
+> > +/* Collect an AGFL block for the not-to-release list. */
+> > +static int
+> > +xfs_repair_collect_agfl_block(
+> > +	struct xfs_mount		*mp,
+> > +	xfs_agblock_t			bno,
+> > +	void				*priv)
+
+Whoah, I never replied to this.  Oops. :(
+
+> /me now gets confused by agfl code (xfs_repair_agfl_...) collecting btree
+> blocks, and now the btree code (xfs_repair_collect_agfl... )
+> collecting agfl blocks.
 > 
-> Determine if inode fork damage is responsible for the inode being unable
-> to pass the ifork verifiers in xfs_iget and zap the fork contents if
-> this is true.  Once this is done the fork will be empty but we'll be
-> able to construct an in-core inode, and a subsequent call to the inode
-> fork repair ioctl will search the rmapbt to rebuild the records that
-> were in the fork.
+> The naming/namespace collisions is not that nice. I think this needs
+> to be xr_allocbt_collect_agfl_blocks().
+
+> /me idly wonders about consistently renaming everything abt, bnbt, cnbt,
+> fibt, ibt, rmbt and rcbt...
+
+Hmm, I'll think about a mass rename. :)
+
+xfs_repair_refcountbt_fiddle_faddle(...);
+
+xrep_rcbt_fiddle_faddle(...);
+
+xrpr_rcbt_fiddle_faddle(...);
+
+xrprrcbt_fiddle_faddle(...);
+
+Yeah, maybe that third one.
+
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_attr_leaf.c |   32 ++-
->  fs/xfs/libxfs/xfs_attr_leaf.h |    2 
->  fs/xfs/libxfs/xfs_bmap.c      |   21 ++
->  fs/xfs/libxfs/xfs_bmap.h      |    2 
->  fs/xfs/scrub/inode_repair.c   |  399 +++++++++++++++++++++++++++++++++++++++++
->  5 files changed, 437 insertions(+), 19 deletions(-)
+> > +/*
+> > + * Iterate all reverse mappings to find (1) the free extents, (2) the OWN_AG
+> > + * extents, (3) the rmapbt blocks, and (4) the AGFL blocks.  The free space is
+> > + * (1) + (2) - (3) - (4).  Figure out if we have enough free space to
+> > + * reconstruct the free space btrees.  Caller must clean up the input lists
+> > + * if something goes wrong.
+> > + */
+> > +STATIC int
+> > +xfs_repair_allocbt_find_freespace(
+> > +	struct xfs_scrub_context	*sc,
+> > +	struct list_head		*free_extents,
+> > +	struct xfs_repair_extent_list	*old_allocbt_blocks)
+> > +{
+> > +	struct xfs_repair_alloc		ra;
+> > +	struct xfs_repair_alloc_extent	*rae;
+> > +	struct xfs_btree_cur		*cur;
+> > +	struct xfs_mount		*mp = sc->mp;
+> > +	xfs_agblock_t			agend;
+> > +	xfs_agblock_t			nr_blocks;
+> > +	int				error;
+> > +
+> > +	ra.extlist = free_extents;
+> > +	ra.btlist = old_allocbt_blocks;
+> > +	xfs_repair_init_extent_list(&ra.nobtlist);
+> > +	ra.next_bno = 0;
+> > +	ra.nr_records = 0;
+> > +	ra.nr_blocks = 0;
+> > +	ra.sc = sc;
+> > +
+> > +	/*
+> > +	 * Iterate all the reverse mappings to find gaps in the physical
+> > +	 * mappings, all the OWN_AG blocks, and all the rmapbt extents.
+> > +	 */
+> > +	cur = xfs_rmapbt_init_cursor(mp, sc->tp, sc->sa.agf_bp, sc->sa.agno);
+> > +	error = xfs_rmap_query_all(cur, xfs_repair_alloc_extent_fn, &ra);
+> > +	if (error)
+> > +		goto err;
+> > +	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+> > +	cur = NULL;
+> > +
+> > +	/* Insert a record for space between the last rmap and EOAG. */
+> > +	agend = be32_to_cpu(XFS_BUF_TO_AGF(sc->sa.agf_bp)->agf_length);
+> > +	if (ra.next_bno < agend) {
+> > +		rae = kmem_alloc(sizeof(struct xfs_repair_alloc_extent),
+> > +				KM_MAYFAIL);
+> > +		if (!rae) {
+> > +			error = -ENOMEM;
+> > +			goto err;
+> > +		}
+> > +		INIT_LIST_HEAD(&rae->list);
+> > +		rae->bno = ra.next_bno;
+> > +		rae->len = agend - ra.next_bno;
+> > +		list_add_tail(&rae->list, free_extents);
+> > +		ra.nr_records++;
+> > +	}
+> > +
+> > +	/* Collect all the AGFL blocks. */
+> > +	error = xfs_agfl_walk(mp, XFS_BUF_TO_AGF(sc->sa.agf_bp),
+> > +			sc->sa.agfl_bp, xfs_repair_collect_agfl_block, &ra);
+> > +	if (error)
+> > +		goto err;
+> > +
+> > +	/* Do we actually have enough space to do this? */
+> > +	nr_blocks = 2 * xfs_allocbt_calc_size(mp, ra.nr_records);
+> 
+> 	/* Do we have enough space to rebuild both freespace trees? */
+> 
+> (explains the multiplication by 2)
+
+Yep, will fix.
+
+> > +	if (!xfs_repair_ag_has_space(sc->sa.pag, nr_blocks, XFS_AG_RESV_NONE) ||
+> > +	    ra.nr_blocks < nr_blocks) {
+> > +		error = -ENOSPC;
+> > +		goto err;
+> > +	}
+> > +
+> > +	/* Compute the old bnobt/cntbt blocks. */
+> > +	error = xfs_repair_subtract_extents(sc, old_allocbt_blocks,
+> > +			&ra.nobtlist);
+> > +	if (error)
+> > +		goto err;
+> > +	xfs_repair_cancel_btree_extents(sc, &ra.nobtlist);
+> > +	return 0;
+> > +
+> > +err:
+> > +	xfs_repair_cancel_btree_extents(sc, &ra.nobtlist);
+> > +	if (cur)
+> > +		xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+> > +	return error;
+> 
+> Error stacking here can be cleaned up - we don't need an extra stack
+> as the cursor is NULL when finished with. Hence it could just be:
+> 
+> 	/* Compute the old bnobt/cntbt blocks. */
+> 	error = xfs_repair_subtract_extents(sc, old_allocbt_blocks,
+> 			&ra.nobtlist);
+> err:
+> 	xfs_repair_cancel_btree_extents(sc, &ra.nobtlist);
+> 	if (cur)
+> 		xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+
+TBH I've been tempted for years to refactor this thing to take error
+directly rather than require this XFS_BTREE_{NO,}ERROR business.
+There's only two choices, and we nearly always decide using error == 0.
+
+> 	return error;
+> }
 > 
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index b3c19339e1b5..f6c458104934 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -894,23 +894,16 @@ xfs_attr_shortform_allfit(
->  	return xfs_attr_shortform_bytesfit(dp, bytes);
->  }
->  
-> -/* Verify the consistency of an inline attribute fork. */
-> +/* Verify the consistency of a raw inline attribute fork. */
->  xfs_failaddr_t
-> -xfs_attr_shortform_verify(
-> -	struct xfs_inode		*ip)
-> +xfs_attr_shortform_verify_struct(
-> +	struct xfs_attr_shortform	*sfp,
-> +	size_t				size)
+> > +}
+> > +
+> > +/*
+> > + * Reset the global free block counter and the per-AG counters to make it look
+> > + * like this AG has no free space.
+> > + */
+> > +STATIC int
+> > +xfs_repair_allocbt_reset_counters(
+> > +	struct xfs_scrub_context	*sc,
+> > +	int				*log_flags)
+> > +{
+> > +	struct xfs_perag		*pag = sc->sa.pag;
+> > +	struct xfs_agf			*agf;
+> > +	xfs_extlen_t			oldf;
+> > +	xfs_agblock_t			rmap_blocks;
+> > +	int				error;
+> > +
+> > +	/*
+> > +	 * Since we're abandoning the old bnobt/cntbt, we have to
+> > +	 * decrease fdblocks by the # of blocks in those trees.
+> > +	 * btreeblks counts the non-root blocks of the free space
+> > +	 * and rmap btrees.  Do this before resetting the AGF counters.
+> 
+> Comment can use 80 columns.
+> 
+> > +	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
+> > +	rmap_blocks = be32_to_cpu(agf->agf_rmap_blocks) - 1;
+> > +	oldf = pag->pagf_btreeblks + 2;
+> > +	oldf -= rmap_blocks;
+> 
+> Convoluted. The comment really didn't help me understand what oldf
+> is accounting.
+> 
+> Ah, rmap_blocks is actually the new btreeblks count. OK.
+> 
+> 	/*
+> 	 * Since we're abandoning the old bnobt/cntbt, we have to decrease
+> 	 * fdblocks by the # of blocks in those trees.  btreeblks counts the
+> 	 * non-root blocks of the free space and rmap btrees.  Do this before
+> 	 * resetting the AGF counters.
+> 	 */
+> 
+> 	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
+> 
+> 	/* rmap_blocks accounts root block, btreeblks doesn't */
+> 	new_btblks = be32_to_cpu(agf->agf_rmap_blocks) - 1;
+> 
+> 	/* btreeblks doesn't account bno/cnt root blocks */
+> 	to_free = pag->pagf_btreeblks + 2;
+> 
+> 	/* and don't account for the blocks we aren't freeing */
+> 	to_free -= new_btblks;
 
-The internal structure checking functions in the directory code
-use the naming convention xfs_dir3_<type>_check(). I think we should use
-the same here. i.e. xfs_attr_sf_check().
+Ok, I'll do that.
 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index b7f094e19bab..b1254e6c17b5 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -6223,18 +6223,16 @@ xfs_bmap_finish_one(
->  	return error;
->  }
->  
-> -/* Check that an inode's extent does not have invalid flags or bad ranges. */
-> +/* Check that an extent does not have invalid flags or bad ranges. */
->  xfs_failaddr_t
-> -xfs_bmap_validate_extent(
-> -	struct xfs_inode	*ip,
-> +xfs_bmbt_validate_extent(
+> 
+> > +	error = xfs_mod_fdblocks(sc->mp, -(int64_t)oldf, false);
+> > +	if (error)
+> > +		return error;
+> > +
+> > +	/* Reset the per-AG info, both incore and ondisk. */
+> > +	pag->pagf_btreeblks = rmap_blocks;
+> > +	pag->pagf_freeblks = 0;
+> > +	pag->pagf_longest = 0;
+> > +
+> > +	agf->agf_btreeblks = cpu_to_be32(pag->pagf_btreeblks);
+> 
+> I'd prefer that you use new_btblks here, too. Easier to see at a
+> glance that the on-disk agf is being set to the new value....
 
-xfs_bmbt_ prefixes should only appear in xfs_bmap_btree.c, not
-xfs_bmap.c....
+Ok.
 
-So either it needs to get moved or renamed to something like
-xfs_bmap_validate_irec()?
+> 
+> 
+> > +	agf->agf_freeblks = 0;
+> > +	agf->agf_longest = 0;
+> > +	*log_flags |= XFS_AGF_BTREEBLKS | XFS_AGF_LONGEST | XFS_AGF_FREEBLKS;
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +/* Initialize new bnobt/cntbt roots and implant them into the AGF. */
+> > +STATIC int
+> > +xfs_repair_allocbt_reset_btrees(
+> > +	struct xfs_scrub_context	*sc,
+> > +	struct list_head		*free_extents,
+> > +	int				*log_flags)
+> > +{
+> > +	struct xfs_owner_info		oinfo;
+> > +	struct xfs_repair_alloc_extent	*cached = NULL;
+> > +	struct xfs_buf			*bp;
+> > +	struct xfs_perag		*pag = sc->sa.pag;
+> > +	struct xfs_mount		*mp = sc->mp;
+> > +	struct xfs_agf			*agf;
+> > +	xfs_fsblock_t			bnofsb;
+> > +	xfs_fsblock_t			cntfsb;
+> > +	int				error;
+> > +
+> > +	/* Allocate new bnobt root. */
+> > +	bnofsb = xfs_repair_allocbt_alloc_block(sc, free_extents, &cached);
+> > +	if (bnofsb == NULLFSBLOCK)
+> > +		return -ENOSPC;
+> 
+> Does this happen after the free extent list has been sorted by bno
+> order? It really should, that way the new root is as close to the
+> the AGF as possible, and the new btree blocks will also tend to
+> cluster towards the lower AG offsets.
 
+Will do.
 
-> diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
-> index 4ac43c1b1eb0..b941f21d7667 100644
-> --- a/fs/xfs/scrub/inode_repair.c
-> +++ b/fs/xfs/scrub/inode_repair.c
-> @@ -22,11 +22,15 @@
->  #include "xfs_ialloc.h"
->  #include "xfs_da_format.h"
->  #include "xfs_reflink.h"
-> +#include "xfs_alloc.h"
->  #include "xfs_rmap.h"
-> +#include "xfs_rmap_btree.h"
->  #include "xfs_bmap.h"
-> +#include "xfs_bmap_btree.h"
->  #include "xfs_bmap_util.h"
->  #include "xfs_dir2.h"
->  #include "xfs_quota_defs.h"
-> +#include "xfs_attr_leaf.h"
->  #include "scrub/xfs_scrub.h"
->  #include "scrub/scrub.h"
->  #include "scrub/common.h"
-> @@ -113,7 +117,8 @@ xfs_repair_inode_mode(
->  STATIC void
->  xfs_repair_inode_flags(
->  	struct xfs_scrub_context	*sc,
-> -	struct xfs_dinode		*dip)
-> +	struct xfs_dinode		*dip,
-> +	bool				is_rt_file)
->  {
->  	struct xfs_mount		*mp = sc->mp;
->  	uint64_t			flags2;
-> @@ -132,6 +137,10 @@ xfs_repair_inode_flags(
->  		flags2 &= ~XFS_DIFLAG2_REFLINK;
->  	if (flags2 & XFS_DIFLAG2_REFLINK)
->  		flags2 &= ~XFS_DIFLAG2_DAX;
-> +	if (is_rt_file)
-> +		flags |= XFS_DIFLAG_REALTIME;
-> +	else
-> +		flags &= ~XFS_DIFLAG_REALTIME;
+> > +	/* Allocate new cntbt root. */
+> > +	cntfsb = xfs_repair_allocbt_alloc_block(sc, free_extents, &cached);
+> > +	if (cntfsb == NULLFSBLOCK)
+> > +		return -ENOSPC;
+> > +
+> > +	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
+> > +	/* Initialize new bnobt root. */
+> > +	error = xfs_repair_init_btblock(sc, bnofsb, &bp, XFS_BTNUM_BNO,
+> > +			&xfs_allocbt_buf_ops);
+> > +	if (error)
+> > +		return error;
+> > +	agf->agf_roots[XFS_BTNUM_BNOi] =
+> > +			cpu_to_be32(XFS_FSB_TO_AGBNO(mp, bnofsb));
+> > +	agf->agf_levels[XFS_BTNUM_BNOi] = cpu_to_be32(1);
+> > +
+> > +	/* Initialize new cntbt root. */
+> > +	error = xfs_repair_init_btblock(sc, cntfsb, &bp, XFS_BTNUM_CNT,
+> > +			&xfs_allocbt_buf_ops);
+> > +	if (error)
+> > +		return error;
+> > +	agf->agf_roots[XFS_BTNUM_CNTi] =
+> > +			cpu_to_be32(XFS_FSB_TO_AGBNO(mp, cntfsb));
+> > +	agf->agf_levels[XFS_BTNUM_CNTi] = cpu_to_be32(1);
+> > +
+> > +	/* Add rmap records for the btree roots */
+> > +	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_AG);
+> > +	error = xfs_rmap_alloc(sc->tp, sc->sa.agf_bp, sc->sa.agno,
+> > +			XFS_FSB_TO_AGBNO(mp, bnofsb), 1, &oinfo);
+> > +	if (error)
+> > +		return error;
+> > +	error = xfs_rmap_alloc(sc->tp, sc->sa.agf_bp, sc->sa.agno,
+> > +			XFS_FSB_TO_AGBNO(mp, cntfsb), 1, &oinfo);
+> > +	if (error)
+> > +		return error;
+> > +
+> > +	/* Reset the incore state. */
+> > +	pag->pagf_levels[XFS_BTNUM_BNOi] = 1;
+> > +	pag->pagf_levels[XFS_BTNUM_CNTi] = 1;
+> > +
+> > +	*log_flags |=  XFS_AGF_ROOTS | XFS_AGF_LEVELS;
+> > +	return 0;
+> 
+> Rather than duplicating all this init code twice, would factoring it
+> make sense? The only difference between the alloc/init of the two
+> btrees is the array index that info is stored in....
 
-This needs to be done first. i.e. before we check things like rt vs
-reflink flags.
+Yeah, it would.
 
-> @@ -210,17 +219,402 @@ xfs_repair_inode_extsize_hints(
->  	}
->  }
->  
-> +struct xfs_repair_inode_fork_counters {
-> +	struct xfs_scrub_context	*sc;
-> +	xfs_rfsblock_t			data_blocks;
-> +	xfs_rfsblock_t			rt_blocks;
+> > +}
+> > +
+> > +/* Build new free space btrees and dispose of the old one. */
+> > +STATIC int
+> > +xfs_repair_allocbt_rebuild_trees(
+> > +	struct xfs_scrub_context	*sc,
+> > +	struct list_head		*free_extents,
+> > +	struct xfs_repair_extent_list	*old_allocbt_blocks)
+> > +{
+> > +	struct xfs_owner_info		oinfo;
+> > +	struct xfs_repair_alloc_extent	*rae;
+> > +	struct xfs_repair_alloc_extent	*n;
+> > +	struct xfs_repair_alloc_extent	*longest;
+> > +	int				error;
+> > +
+> > +	xfs_rmap_skip_owner_update(&oinfo);
+> > +
+> > +	/*
+> > +	 * Insert the longest free extent in case it's necessary to
+> > +	 * refresh the AGFL with multiple blocks.  If there is no longest
+> > +	 * extent, we had exactly the free space we needed; we're done.
+> > +	 */
+> > +	longest = xfs_repair_allocbt_get_longest(free_extents);
+> > +	if (!longest)
+> > +		goto done;
+> > +	error = xfs_repair_allocbt_free_extent(sc,
+> > +			XFS_AGB_TO_FSB(sc->mp, sc->sa.agno, longest->bno),
+> > +			longest->len, &oinfo);
+> > +	list_del(&longest->list);
+> > +	kmem_free(longest);
+> > +	if (error)
+> > +		return error;
+> > +
+> > +	/* Insert records into the new btrees. */
+> > +	list_sort(NULL, free_extents, xfs_repair_allocbt_extent_cmp);
+> 
+> Hmmm. I guess list sorting doesn't occur before allocating new root
+> blocks. Can this get moved?
 
-inode is either data or rt, not both. Why do you need two separate
-counters? Oh, bmbt blocks are always data, right? Coment, perhaps?
+Certainly.
 
-> +	xfs_rfsblock_t			attr_blocks;
-> +	xfs_extnum_t			data_extents;
-> +	xfs_extnum_t			rt_extents;
+> ....
+> 
+> > +bool
+> > +xfs_extent_busy_list_empty(
+> > +	struct xfs_perag	*pag);
+> 
+> One line form for header prototypes, please.
 
-but bmbt blocks are not data extents, so only one counter here?
+Ok.
 
-> +/* Count extents and blocks for a given inode from all rmap data. */
-> +STATIC int
-> +xfs_repair_inode_count_rmaps(
-> +	struct xfs_repair_inode_fork_counters	*rifc)
-> +{
-> +	xfs_agnumber_t			agno;
-> +	int				error;
-> +
-> +	if (!xfs_sb_version_hasrmapbt(&rifc->sc->mp->m_sb) ||
-> +	    xfs_sb_version_hasrealtime(&rifc->sc->mp->m_sb))
-> +		return -EOPNOTSUPP;
-> +
-> +	/* XXX: find rt blocks too */
+--D
 
-Ok, needs a comment up front that realtime repair isn't supported,
-rather than hiding it down here.
-
-> +	for (agno = 0; agno < rifc->sc->mp->m_sb.sb_agcount; agno++) {
-> +		error = xfs_repair_inode_count_ag_rmaps(rifc, agno);
-> +		if (error)
-> +			return error;
-> +	}
-
-	/* rt not supported yet */
-	ASSERT(rifc->rt_extents == 0);
-
-> +	/* Can't have extents on both the rt and the data device. */
-> +	if (rifc->data_extents && rifc->rt_extents)
-> +		return -EFSCORRUPTED;
-> +
-> +	return 0;
-> +}
-> +
-> +/* Figure out if we need to zap this extents format fork. */
-> +STATIC bool
-> +xfs_repair_inode_core_check_extents_fork(
-
-
-Urk. Not sure what this function is supposed to be doing from the
-name. xrep_ifork_extent_check()? And then the next function
-becomes xrep_ifork_btree_check()?
-
-Also document the return values.
-
-> +	struct xfs_scrub_context	*sc,
-> +	struct xfs_dinode		*dip,
-> +	int				dfork_size,
-> +	int				whichfork)
-> +{
-> +	struct xfs_bmbt_irec		new;
-> +	struct xfs_bmbt_rec		*dp;
-> +	bool				isrt;
-> +	int				i;
-> +	int				nex;
-> +	int				fork_size;
-> +
-> +	nex = XFS_DFORK_NEXTENTS(dip, whichfork);
-> +	fork_size = nex * sizeof(struct xfs_bmbt_rec);
-> +	if (fork_size < 0 || fork_size > dfork_size)
-> +		return true;
-
-Check nex against dip->di_nextents?
-
-> +	dp = (struct xfs_bmbt_rec *)XFS_DFORK_PTR(dip, whichfork);
-> +
-> +	isrt = dip->di_flags & cpu_to_be16(XFS_DIFLAG_REALTIME);
-> +	for (i = 0; i < nex; i++, dp++) {
-> +		xfs_failaddr_t	fa;
-> +
-> +		xfs_bmbt_disk_get_all(dp, &new);
-> +		fa = xfs_bmbt_validate_extent(sc->mp, isrt, whichfork, &new);
-> +		if (fa)
-> +			return true;
-> +	}
-> +
-> +	return false;
-> +}
-> +
-> +/* Figure out if we need to zap this btree format fork. */
-> +STATIC bool
-> +xfs_repair_inode_core_check_btree_fork(
-> +	struct xfs_scrub_context	*sc,
-> +	struct xfs_dinode		*dip,
-> +	int				dfork_size,
-> +	int				whichfork)
-> +{
-> +	struct xfs_bmdr_block		*dfp;
-> +	int				nrecs;
-> +	int				level;
-> +
-> +	if (XFS_DFORK_NEXTENTS(dip, whichfork) <=
-> +			dfork_size / sizeof(struct xfs_bmbt_irec))
-> +		return true;
-
-check against dip->di_nextents?
-
-> +	dfp = (struct xfs_bmdr_block *)XFS_DFORK_PTR(dip, whichfork);
-> +	nrecs = be16_to_cpu(dfp->bb_numrecs);
-> +	level = be16_to_cpu(dfp->bb_level);
-> +
-> +	if (nrecs == 0 || XFS_BMDR_SPACE_CALC(nrecs) > dfork_size)
-> +		return true;
-> +	if (level == 0 || level > XFS_BTREE_MAXLEVELS)
-> +		return true;
-
-Should this visit the bmbt blocks to check the level is actually
-correct?
-
-> +	return false;
-> +}
-> +
-> +/*
-> + * Check the data fork for things that will fail the ifork verifiers or the
-> + * ifork formatters.
-> + */
-> +STATIC bool
-> +xfs_repair_inode_core_check_data_fork(
-
-xrep_ifork_check_data()
-
-> +	struct xfs_scrub_context	*sc,
-> +	struct xfs_dinode		*dip,
-> +	uint16_t			mode)
-> +{
-> +	uint64_t			size;
-> +	int				dfork_size;
-> +
-> +	size = be64_to_cpu(dip->di_size);
-> +	switch (mode & S_IFMT) {
-> +	case S_IFIFO:
-> +	case S_IFCHR:
-> +	case S_IFBLK:
-> +	case S_IFSOCK:
-> +		if (XFS_DFORK_FORMAT(dip, XFS_DATA_FORK) != XFS_DINODE_FMT_DEV)
-> +			return true;
-> +		break;
-> +	case S_IFREG:
-> +	case S_IFLNK:
-> +	case S_IFDIR:
-> +		switch (XFS_DFORK_FORMAT(dip, XFS_DATA_FORK)) {
-> +		case XFS_DINODE_FMT_LOCAL:
-
-local format is not valid for S_IFREG.
-
-> +		case XFS_DINODE_FMT_EXTENTS:
-> +		case XFS_DINODE_FMT_BTREE:
-> +			break;
-> +		default:
-> +			return true;
-> +		}
-> +		break;
-> +	default:
-> +		return true;
-> +	}
-> +	dfork_size = XFS_DFORK_SIZE(dip, sc->mp, XFS_DATA_FORK);
-> +	switch (XFS_DFORK_FORMAT(dip, XFS_DATA_FORK)) {
-> +	case XFS_DINODE_FMT_DEV:
-> +		break;
-> +	case XFS_DINODE_FMT_LOCAL:
-> +		if (size > dfork_size)
-> +			return true;
-> +		break;
-> +	case XFS_DINODE_FMT_EXTENTS:
-> +		if (xfs_repair_inode_core_check_extents_fork(sc, dip,
-> +				dfork_size, XFS_DATA_FORK))
-> +			return true;
-> +		break;
-> +	case XFS_DINODE_FMT_BTREE:
-> +		if (xfs_repair_inode_core_check_btree_fork(sc, dip,
-> +				dfork_size, XFS_DATA_FORK))
-> +			return true;
-> +		break;
-> +	default:
-> +		return true;
-> +	}
-> +
-> +	return false;
-> +}
-> +
-> +/* Reset the data fork to something sane. */
-> +STATIC void
-> +xfs_repair_inode_core_zap_data_fork(
-
-xrep_ifork_zap_data()
-
-(you get the idea :P)
-
-> +	struct xfs_scrub_context	*sc,
-> +	struct xfs_dinode		*dip,
-> +	uint16_t			mode,
-> +	struct xfs_repair_inode_fork_counters	*rifc)
-
-(structure names can change, too :)
-
-> +{
-> +	char				*p;
-> +	const struct xfs_dir_ops	*ops;
-> +	struct xfs_dir2_sf_hdr		*sfp;
-> +	int				i8count;
-> +
-> +	/* Special files always get reset to DEV */
-> +	switch (mode & S_IFMT) {
-> +	case S_IFIFO:
-> +	case S_IFCHR:
-> +	case S_IFBLK:
-> +	case S_IFSOCK:
-> +		dip->di_format = XFS_DINODE_FMT_DEV;
-> +		dip->di_size = 0;
-> +		return;
-> +	}
-> +
-> +	/*
-> +	 * If we have data extents, reset to an empty map and hope the user
-> +	 * will run the bmapbtd checker next.
-> +	 */
-> +	if (rifc->data_extents || rifc->rt_extents || S_ISREG(mode)) {
-> +		dip->di_format = XFS_DINODE_FMT_EXTENTS;
-> +		dip->di_nextents = 0;
-> +		return;
-> +	}
-
-Does the userspace tool run the bmapbtd checker next?
-
-> +	/* Otherwise, reset the local format to the minimum. */
-> +	switch (mode & S_IFMT) {
-> +	case S_IFLNK:
-> +		/* Blow out symlink; now it points to root dir */
-> +		dip->di_format = XFS_DINODE_FMT_LOCAL;
-> +		dip->di_size = cpu_to_be64(1);
-> +		p = XFS_DFORK_PTR(dip, XFS_DATA_FORK);
-> +		*p = '/';
-
-Maybe factor this so zero length symlinks can be set directly to the
-same thing? FWIW, would making it point at '.' be better than '/' so
-it always points within the same filesystem?
-
-> +		break;
-> +	case S_IFDIR:
-> +		/*
-> +		 * Blow out dir, make it point to the root.  In the
-> +		 * future the direction repair will reconstruct this
-> +		 * dir for us.
-> +		 */
-
-s/the direction//
-
-> +		dip->di_format = XFS_DINODE_FMT_LOCAL;
-> +		i8count = sc->mp->m_sb.sb_rootino > XFS_DIR2_MAX_SHORT_INUM;
-> +		ops = xfs_dir_get_ops(sc->mp, NULL);
-> +		sfp = (struct xfs_dir2_sf_hdr *)XFS_DFORK_PTR(dip,
-> +				XFS_DATA_FORK);
-> +		sfp->count = 0;
-> +		sfp->i8count = i8count;
-> +		ops->sf_put_parent_ino(sfp, sc->mp->m_sb.sb_rootino);
-> +		dip->di_size = cpu_to_be64(xfs_dir2_sf_hdr_size(i8count));
-
-What happens now if this dir has an ancestor still pointing at it?
-Haven't we just screwed the directory structure? How does this
-interact with the dentry cache, esp. w.r.t. disconnected dentries
-(filehandle lookups)?
-
-> +/*
-> + * Check the attr fork for things that will fail the ifork verifiers or the
-> + * ifork formatters.
-> + */
-> +STATIC bool
-> +xfs_repair_inode_core_check_attr_fork(
-> +	struct xfs_scrub_context	*sc,
-> +	struct xfs_dinode		*dip)
-> +{
-> +	struct xfs_attr_shortform	*sfp;
-> +	int				size;
-> +
-> +	if (XFS_DFORK_BOFF(dip) == 0)
-> +		return dip->di_aformat != XFS_DINODE_FMT_EXTENTS ||
-> +		       dip->di_anextents != 0;
-> +
-> +	size = XFS_DFORK_SIZE(dip, sc->mp, XFS_ATTR_FORK);
-> +	switch (XFS_DFORK_FORMAT(dip, XFS_ATTR_FORK)) {
-> +	case XFS_DINODE_FMT_LOCAL:
-> +		sfp = (struct xfs_attr_shortform *)XFS_DFORK_PTR(dip,
-> +				XFS_ATTR_FORK);
-
-As a side note, we should make XFS_DFORK_PTR() return a void * so we
-don't need casts like this.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
