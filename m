@@ -1,37 +1,31 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:48550 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753119AbeGDAyX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Jul 2018 20:54:23 -0400
-Date: Tue, 3 Jul 2018 17:54:09 -0700
+Received: from aserp2120.oracle.com ([141.146.126.78]:47606 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753119AbeGDAyw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Jul 2018 20:54:52 -0400
+Date: Tue, 3 Jul 2018 17:54:37 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 18/25] xfs: remove xfs_btree_cur private firstblock field
-Message-ID: <20180704005409.GR32415@magnolia>
+Subject: Re: [PATCH 19/25] xfs: remove xfs_alloc_arg firstblock field
+Message-ID: <20180704005437.GS32415@magnolia>
 References: <20180703172319.24509-1-bfoster@redhat.com>
- <20180703172319.24509-19-bfoster@redhat.com>
+ <20180703172319.24509-20-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180703172319.24509-19-bfoster@redhat.com>
+In-Reply-To: <20180703172319.24509-20-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jul 03, 2018 at 01:23:12PM -0400, Brian Foster wrote:
-> The bmbt cursor private structure has a firstblock field that is
-> used to maintain locking order on bmbt allocations. The field holds
-> an actual firstblock value (as opposed to a pointer), so it is
-> initialized on cursor creation, updated on allocation and then the
-> value is transferred back to the source before the cursor is
-> destroyed.
+On Tue, Jul 03, 2018 at 01:23:13PM -0400, Brian Foster wrote:
+> The xfs_alloc_arg.firstblock field is used to control the starting
+> agno for an allocation. The structure already carries a pointer to
+> the transaction, which carries the current firstblock value.
 > 
-> This value is always transferred from and back to the ->t_firstblock
-> field. Since xfs_btree_cur already carries a reference to the
-> transaction, we can remove this field from xfs_btree_cur and the
-> associated copying. The bmbt allocations will update the value in
-> the transaction directly.
+> Remove the field and access ->t_firstblock directly in the
+> allocation code.
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
 
@@ -41,202 +35,130 @@ Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_bmap.c       | 28 +++-------------------------
->  fs/xfs/libxfs/xfs_bmap_btree.c | 10 ++++------
->  fs/xfs/libxfs/xfs_btree.h      |  1 -
->  3 files changed, 7 insertions(+), 32 deletions(-)
+>  fs/xfs/libxfs/xfs_alloc.c          | 20 ++++++++++----------
+>  fs/xfs/libxfs/xfs_alloc.h          |  1 -
+>  fs/xfs/libxfs/xfs_bmap.c           |  3 ---
+>  fs/xfs/libxfs/xfs_bmap_btree.c     |  1 -
+>  fs/xfs/libxfs/xfs_refcount_btree.c |  1 -
+>  fs/xfs/xfs_trace.h                 |  2 +-
+>  6 files changed, 11 insertions(+), 17 deletions(-)
 > 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 5b1607d76fe9..bd6d8aeea825 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -2783,16 +2783,16 @@ xfs_alloc_read_agf(
+>   */
+>  int				/* error */
+>  xfs_alloc_vextent(
+> -	xfs_alloc_arg_t	*args)	/* allocation argument structure */
+> +	struct xfs_alloc_arg	*args)	/* allocation argument structure */
+>  {
+> -	xfs_agblock_t	agsize;	/* allocation group size */
+> -	int		error;
+> -	int		flags;	/* XFS_ALLOC_FLAG_... locking flags */
+> -	xfs_mount_t	*mp;	/* mount structure pointer */
+> -	xfs_agnumber_t	sagno;	/* starting allocation group number */
+> -	xfs_alloctype_t	type;	/* input allocation type */
+> -	int		bump_rotor = 0;
+> -	xfs_agnumber_t	rotorstep = xfs_rotorstep; /* inode32 agf stepper */
+> +	xfs_agblock_t		agsize;	/* allocation group size */
+> +	int			error;
+> +	int			flags;	/* XFS_ALLOC_FLAG_... locking flags */
+> +	struct xfs_mount	*mp;	/* mount structure pointer */
+> +	xfs_agnumber_t		sagno;	/* starting allocation group number */
+> +	xfs_alloctype_t		type;	/* input allocation type */
+> +	int			bump_rotor = 0;
+> +	xfs_agnumber_t		rotorstep = xfs_rotorstep; /* inode32 agf stepper */
+>  
+>  	mp = args->mp;
+>  	type = args->otype = args->type;
+> @@ -2913,7 +2913,7 @@ xfs_alloc_vextent(
+>  			* locking of AGF, which might cause deadlock.
+>  			*/
+>  			if (++(args->agno) == mp->m_sb.sb_agcount) {
+> -				if (args->firstblock != NULLFSBLOCK)
+> +				if (args->tp->t_firstblock != NULLFSBLOCK)
+>  					args->agno = sagno;
+>  				else
+>  					args->agno = 0;
+> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+> index e716c993ac4c..00cd5ec4cb6b 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.h
+> +++ b/fs/xfs/libxfs/xfs_alloc.h
+> @@ -74,7 +74,6 @@ typedef struct xfs_alloc_arg {
+>  	int		datatype;	/* mask defining data type treatment */
+>  	char		wasdel;		/* set if allocation was prev delayed */
+>  	char		wasfromfl;	/* set if allocation is from freelist */
+> -	xfs_fsblock_t	firstblock;	/* io first block allocated */
+>  	struct xfs_owner_info	oinfo;	/* owner of blocks being allocated */
+>  	enum xfs_ag_resv_type	resv;	/* block reservation to use */
+>  } xfs_alloc_arg_t;
 > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 016712434aa5..c83add15233b 100644
+> index c83add15233b..1955b8410410 100644
 > --- a/fs/xfs/libxfs/xfs_bmap.c
 > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -688,7 +688,6 @@ xfs_bmap_extents_to_btree(
->  	 * Need a cursor.  Can't allocate until bb_level is filled in.
->  	 */
->  	cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
-> -	cur->bc_private.b.firstblock = tp->t_firstblock;
->  	cur->bc_private.b.flags = wasdel ? XFS_BTCUR_BPRV_WASDEL : 0;
+> @@ -697,7 +697,6 @@ xfs_bmap_extents_to_btree(
+>  	args.tp = tp;
+>  	args.mp = mp;
+>  	xfs_rmap_ino_bmbt_owner(&args.oinfo, ip->i_ino, whichfork);
+> -	args.firstblock = tp->t_firstblock;
+>  	if (tp->t_firstblock == NULLFSBLOCK) {
+>  		args.type = XFS_ALLOCTYPE_START_BNO;
+>  		args.fsbno = XFS_INO_TO_FSB(mp, ip->i_ino);
+> @@ -845,7 +844,6 @@ xfs_bmap_local_to_extents(
+>  	args.tp = tp;
+>  	args.mp = ip->i_mount;
+>  	xfs_rmap_ino_owner(&args.oinfo, ip->i_ino, whichfork, 0);
+> -	args.firstblock = tp->t_firstblock;
 >  	/*
->  	 * Convert to a btree with two levels, one record in root.
-> @@ -732,7 +731,7 @@ xfs_bmap_extents_to_btree(
->  	 */
->  	ASSERT(tp->t_firstblock == NULLFSBLOCK ||
->  	       args.agno >= XFS_FSB_TO_AGNO(mp, tp->t_firstblock));
-> -	tp->t_firstblock = cur->bc_private.b.firstblock = args.fsbno;
-> +	tp->t_firstblock = args.fsbno;
->  	cur->bc_private.b.allocated++;
->  	ip->i_d.di_nblocks++;
->  	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, 1L);
-> @@ -925,7 +924,6 @@ xfs_bmap_add_attrfork_btree(
->  		*flags |= XFS_ILOG_DBROOT;
->  	else {
->  		cur = xfs_bmbt_init_cursor(mp, tp, ip, XFS_DATA_FORK);
-> -		cur->bc_private.b.firstblock = tp->t_firstblock;
->  		error = xfs_bmbt_lookup_first(cur, &stat);
->  		if (error)
->  			goto error0;
-> @@ -937,7 +935,6 @@ xfs_bmap_add_attrfork_btree(
->  			xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
->  			return -ENOSPC;
->  		}
-> -		tp->t_firstblock = cur->bc_private.b.firstblock;
->  		cur->bc_private.b.allocated = 0;
->  		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
->  	}
-> @@ -4059,14 +4056,10 @@ xfs_bmapi_allocate(
->  	if (error)
->  		return error;
+>  	 * Allocate a block.  We know we need only one, since the
+>  	 * file currently fits in an inode.
+> @@ -3445,7 +3443,6 @@ xfs_bmap_btalloc(
 >  
-> -	if (bma->cur)
-> -		bma->cur->bc_private.b.firstblock = bma->tp->t_firstblock;
->  	if (bma->blkno == NULLFSBLOCK)
->  		return 0;
-> -	if ((ifp->if_flags & XFS_IFBROOT) && !bma->cur) {
-> +	if ((ifp->if_flags & XFS_IFBROOT) && !bma->cur)
->  		bma->cur = xfs_bmbt_init_cursor(mp, bma->tp, bma->ip, whichfork);
-> -		bma->cur->bc_private.b.firstblock = bma->tp->t_firstblock;
-> -	}
->  	/*
->  	 * Bump the number of extents we've allocated
->  	 * in this call.
-> @@ -4152,7 +4145,6 @@ xfs_bmapi_convert_unwritten(
->  	if ((ifp->if_flags & XFS_IFBROOT) && !bma->cur) {
->  		bma->cur = xfs_bmbt_init_cursor(bma->ip->i_mount, bma->tp,
->  					bma->ip, whichfork);
-> -		bma->cur->bc_private.b.firstblock = bma->tp->t_firstblock;
->  	}
->  	mval->br_state = (mval->br_state == XFS_EXT_UNWRITTEN)
->  				? XFS_EXT_NORM : XFS_EXT_UNWRITTEN;
-> @@ -4460,13 +4452,6 @@ xfs_bmapi_write(
->  		xfs_trans_log_inode(tp, ip, bma.logflags);
->  
->  	if (bma.cur) {
-> -		if (!error) {
-> -			ASSERT(tp->t_firstblock == NULLFSBLOCK ||
-> -			       XFS_FSB_TO_AGNO(mp, tp->t_firstblock) <=
-> -			       XFS_FSB_TO_AGNO(mp,
-> -				       bma.cur->bc_private.b.firstblock));
-> -			tp->t_firstblock = bma.cur->bc_private.b.firstblock;
-> -		}
->  		xfs_btree_del_cursor(bma.cur,
->  			error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
->  	}
-> @@ -4530,7 +4515,6 @@ xfs_bmapi_remap(
->  
->  	if (ifp->if_flags & XFS_IFBROOT) {
->  		cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
-> -		cur->bc_private.b.firstblock = tp->t_firstblock;
->  		cur->bc_private.b.flags = 0;
->  	}
->  
-> @@ -5191,7 +5175,6 @@ __xfs_bunmapi(
->  	if (ifp->if_flags & XFS_IFBROOT) {
->  		ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE);
->  		cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
-> -		cur->bc_private.b.firstblock = tp->t_firstblock;
->  		cur->bc_private.b.flags = 0;
->  	} else
->  		cur = NULL;
-> @@ -5459,10 +5442,8 @@ __xfs_bunmapi(
->  	if (logflags)
->  		xfs_trans_log_inode(tp, ip, logflags);
->  	if (cur) {
-> -		if (!error) {
-> -			tp->t_firstblock = cur->bc_private.b.firstblock;
-> +		if (!error)
->  			cur->bc_private.b.allocated = 0;
-> -		}
->  		xfs_btree_del_cursor(cur,
->  			error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
->  	}
-> @@ -5678,7 +5659,6 @@ xfs_bmap_collapse_extents(
->  
->  	if (ifp->if_flags & XFS_IFBROOT) {
->  		cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
-> -		cur->bc_private.b.firstblock = tp->t_firstblock;
->  		cur->bc_private.b.flags = 0;
->  	}
->  
-> @@ -5798,7 +5778,6 @@ xfs_bmap_insert_extents(
->  
->  	if (ifp->if_flags & XFS_IFBROOT) {
->  		cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
-> -		cur->bc_private.b.firstblock = tp->t_firstblock;
->  		cur->bc_private.b.flags = 0;
->  	}
->  
-> @@ -5920,7 +5899,6 @@ xfs_bmap_split_extent_at(
->  
->  	if (ifp->if_flags & XFS_IFBROOT) {
->  		cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
-> -		cur->bc_private.b.firstblock = tp->t_firstblock;
->  		cur->bc_private.b.flags = 0;
->  		error = xfs_bmbt_lookup_eq(cur, &got, &i);
->  		if (error)
+>  	/* Trim the allocation back to the maximum an AG can fit. */
+>  	args.maxlen = min(ap->length, mp->m_ag_max_usable);
+> -	args.firstblock = ap->tp->t_firstblock;
+>  	blen = 0;
+>  	if (nullfb) {
+>  		/*
 > diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-> index e8b01af09db5..8a9b98b11e34 100644
+> index 8a9b98b11e34..628ed82ca286 100644
 > --- a/fs/xfs/libxfs/xfs_bmap_btree.c
 > +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-> @@ -175,7 +175,6 @@ xfs_bmbt_dup_cursor(
->  	 * Copy the firstblock, dfops, and flags values,
->  	 * since init cursor doesn't get them.
->  	 */
-> -	new->bc_private.b.firstblock = cur->bc_private.b.firstblock;
->  	new->bc_private.b.flags = cur->bc_private.b.flags;
->  
->  	return new;
-> @@ -186,11 +185,11 @@ xfs_bmbt_update_cursor(
->  	struct xfs_btree_cur	*src,
->  	struct xfs_btree_cur	*dst)
->  {
-> -	ASSERT((dst->bc_private.b.firstblock != NULLFSBLOCK) ||
-> +	ASSERT((dst->bc_tp->t_firstblock != NULLFSBLOCK) ||
->  	       (dst->bc_private.b.ip->i_d.di_flags & XFS_DIFLAG_REALTIME));
->  
->  	dst->bc_private.b.allocated += src->bc_private.b.allocated;
-> -	dst->bc_private.b.firstblock = src->bc_private.b.firstblock;
-> +	dst->bc_tp->t_firstblock = src->bc_tp->t_firstblock;
->  
->  	src->bc_private.b.allocated = 0;
->  }
-> @@ -208,7 +207,7 @@ xfs_bmbt_alloc_block(
->  	memset(&args, 0, sizeof(args));
+> @@ -208,7 +208,6 @@ xfs_bmbt_alloc_block(
 >  	args.tp = cur->bc_tp;
 >  	args.mp = cur->bc_mp;
-> -	args.fsbno = cur->bc_private.b.firstblock;
-> +	args.fsbno = cur->bc_tp->t_firstblock;
->  	args.firstblock = args.fsbno;
+>  	args.fsbno = cur->bc_tp->t_firstblock;
+> -	args.firstblock = args.fsbno;
 >  	xfs_rmap_ino_bmbt_owner(&args.oinfo, cur->bc_private.b.ip->i_ino,
 >  			cur->bc_private.b.whichfork);
-> @@ -263,7 +262,7 @@ xfs_bmbt_alloc_block(
->  	}
 >  
->  	ASSERT(args.len == 1);
-> -	cur->bc_private.b.firstblock = args.fsbno;
-> +	cur->bc_tp->t_firstblock = args.fsbno;
->  	cur->bc_private.b.allocated++;
->  	cur->bc_private.b.ip->i_d.di_nblocks++;
->  	xfs_trans_log_inode(args.tp, cur->bc_private.b.ip, XFS_ILOG_CORE);
-> @@ -562,7 +561,6 @@ xfs_bmbt_init_cursor(
->  
->  	cur->bc_private.b.forksize = XFS_IFORK_SIZE(ip, whichfork);
->  	cur->bc_private.b.ip = ip;
-> -	cur->bc_private.b.firstblock = NULLFSBLOCK;
->  	cur->bc_private.b.allocated = 0;
->  	cur->bc_private.b.flags = 0;
->  	cur->bc_private.b.whichfork = whichfork;
-> diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-> index b986a8fc8d40..503615f4d729 100644
-> --- a/fs/xfs/libxfs/xfs_btree.h
-> +++ b/fs/xfs/libxfs/xfs_btree.h
-> @@ -214,7 +214,6 @@ typedef struct xfs_btree_cur
->  		} a;
->  		struct {			/* needed for BMAP */
->  			struct xfs_inode *ip;	/* pointer to our inode */
-> -			xfs_fsblock_t	firstblock;	/* 1st blk allocated */
->  			int		allocated;	/* count of alloced */
->  			short		forksize;	/* fork's inode space */
->  			char		whichfork;	/* data or attr fork */
+> diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
+> index 393aa88f93db..26d2300ed865 100644
+> --- a/fs/xfs/libxfs/xfs_refcount_btree.c
+> +++ b/fs/xfs/libxfs/xfs_refcount_btree.c
+> @@ -70,7 +70,6 @@ xfs_refcountbt_alloc_block(
+>  	args.type = XFS_ALLOCTYPE_NEAR_BNO;
+>  	args.fsbno = XFS_AGB_TO_FSB(cur->bc_mp, cur->bc_private.a.agno,
+>  			xfs_refc_block(args.mp));
+> -	args.firstblock = args.fsbno;
+>  	xfs_rmap_ag_owner(&args.oinfo, XFS_RMAP_OWN_REFC);
+>  	args.minlen = args.maxlen = args.prod = 1;
+>  	args.resv = XFS_AG_RESV_METADATA;
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 972d45d28097..392e026bea79 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -1604,7 +1604,7 @@ DECLARE_EVENT_CLASS(xfs_alloc_class,
+>  		__entry->wasfromfl = args->wasfromfl;
+>  		__entry->resv = args->resv;
+>  		__entry->datatype = args->datatype;
+> -		__entry->firstblock = args->firstblock;
+> +		__entry->firstblock = args->tp->t_firstblock;
+>  	),
+>  	TP_printk("dev %d:%d agno %u agbno %u minlen %u maxlen %u mod %u "
+>  		  "prod %u minleft %u total %u alignment %u minalignslop %u "
 > -- 
 > 2.17.1
 > 
