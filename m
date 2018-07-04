@@ -1,477 +1,327 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:50258 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932109AbeGCX7F (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Jul 2018 19:59:05 -0400
-Date: Tue, 3 Jul 2018 16:59:01 -0700
+Received: from aserp2130.oracle.com ([141.146.126.79]:58600 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752049AbeGDAQR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Jul 2018 20:16:17 -0400
+Date: Tue, 3 Jul 2018 17:16:12 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 11/21] xfs: repair the rmapbt
-Message-ID: <20180703235901.GY32415@magnolia>
+Subject: Re: [PATCH 13/21] xfs: repair inode records
+Message-ID: <20180704001612.GZ32415@magnolia>
 References: <152986820984.3155.16417868536016544528.stgit@magnolia>
- <152986827881.3155.10096839660329617215.stgit@magnolia>
- <20180703053200.GH2234@dastard>
+ <152986829144.3155.13577483407162701849.stgit@magnolia>
+ <20180703061718.GJ2234@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180703053200.GH2234@dastard>
+In-Reply-To: <20180703061718.GJ2234@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jul 03, 2018 at 03:32:00PM +1000, Dave Chinner wrote:
-> On Sun, Jun 24, 2018 at 12:24:38PM -0700, Darrick J. Wong wrote:
+On Tue, Jul 03, 2018 at 04:17:18PM +1000, Dave Chinner wrote:
+> On Sun, Jun 24, 2018 at 12:24:51PM -0700, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > Rebuild the reverse mapping btree from all primary metadata.
+> > Try to reinitialize corrupt inodes, or clear the reflink flag
+> > if it's not needed.
 > > 
 > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> ....
-> 
-> > +static inline int xfs_repair_rmapbt_setup(
+> A comment somewhere that this is only attmepting to repair inodes
+> that have failed verifier checks on read would be good.
+
+There are a few comments in the callers, e.g.
+
+"Repair all the things that the inode verifiers care about"
+
+"Fix everything xfs_dinode_verify cares about."
+
+"Make sure we can pass the inode buffer verifier."
+
+Hmm, I think maybe you meant that I need to make it more obvious which
+functions exist to make the verifiers happy (and so there won't be any
+in-core inodes while they run) vs. which ones fix irregularities that
+aren't caught as a condition for setting up in-core inodes?
+
+xrep_inode_unchecked_* are the ones that run on in-core inodes; the rest
+run on inodes so damaged they can't be _iget'd.
+
+> ......
+> > +/* Make sure this buffer can pass the inode buffer verifier. */
+> > +STATIC void
+> > +xfs_repair_inode_buf(
 > > +	struct xfs_scrub_context	*sc,
-> > +	struct xfs_inode		*ip)
+> > +	struct xfs_buf			*bp)
 > > +{
-> > +	/* We don't support rmap repair, but we can still do a scan. */
-> > +	return xfs_scrub_setup_ag_btree(sc, ip, false);
-> > +}
-> 
-> This comment seems at odds with the commit message....
-
-This is the Kconfig shim needed if CONFIG_XFS_ONLINE_REPAIR=n.
-
-> 
-> ....
-> 
-> > +/*
-> > + * Reverse Mapping Btree Repair
-> > + * ============================
-> > + *
-> > + * This is the most involved of all the AG space btree rebuilds.  Everywhere
-> > + * else in XFS we lock inodes and then AG data structures, but generating the
-> > + * list of rmap records requires that we be able to scan both block mapping
-> > + * btrees of every inode in the filesystem to see if it owns any extents in
-> > + * this AG.  We can't tolerate any inode updates while we do this, so we
-> > + * freeze the filesystem to lock everyone else out, and grant ourselves
-> > + * special privileges to run transactions with regular background reclamation
-> > + * turned off.
-> 
-> Hmmm. This implies we are going to scan the entire filesystem for
-> every AG we need to rebuild the rmap tree in. That seems like an
-> awful lot of work if there's more than one rmap btree that needs
-> rebuild.
-
-[some of this Dave and I discussed on IRC, so I'll summarize for
-everyone else here...]
-
-For this initial v0 iteration of the rmap repair code, yes, we have to
-freeze the fs and iterate everything.  However, unless your computer and
-storage are particularly untrustworthy, rmapbt reconstruction should be
-a very infrequent thing.  Now that we have a FREEZE_OK flag, userspace
-has to opt-in to slow repairs, and presumably it could choose instead to
-unmount and run xfs_repair if that's too dear or there are too many
-broken AGs, etc.  More on that later.
-
-In the long run I don't see a need to freeze the filesystem to scan
-every inode for bmbt entries in the damaged AG.  In fact, we can improve
-the performance of all the AG repair functions in general with the
-scheme I'm about to outline:
-
-Create a "shut down this AG" primitive.  Once set, block and inode
-allocation routines will bypass this AG.  Unlinked inodes are moved to
-the unlinked list to avoid touching as much of the AGI as we practically
-can.  Unmapped/freed blocks can be moved to a hidden inode (in another
-AG) to be freed later.  Growfs operation in that AG can be rejected.
-
-With AG shutdown in place, we no longer need to freeze the whole
-filesystem.  Instead we traverse the live fs looking for mappings into
-the afflicted AG, and when we're done rebuilding the rmapbt we can then
-clean out the unlinked inodes and blocks, which catches us up to the
-rest of the system.
-
-(It would be awesome if we could capture the log intent items for the
-removals until we're done rebuilding the rmapbt, but I suspect that
-could fatally pin the log on us.)
-
-However, given that adding AG shutdowns would be a lot of work I'd
-prefer to get this launched even if it's reasonably likely early
-versions will fail due to ENOMEM.  I tried to structure the rmapbt
-repair so that we collect all the records and touch all the inodes
-before we start writing anything so that if we run out of memory or
-encounter a locked/reclaimable/whatever inode we'll just free all the
-memory and bail out.  After that, the admin can take the fs offline and
-run xfs_repair, so it shouldn't be much worse than today.
-
-> > + * We also have to be very careful not to allow inode reclaim to start a
-> > + * transaction because all transactions (other than our own) will block.
-> 
-> What happens when we run out of memory? Inode reclaim will need to
-> run at that point, right?
-
-Yes.
-
-> > + * So basically we scan all primary per-AG metadata and all block maps of all
-> > + * inodes to generate a huge list of reverse map records.  Next we look for
-> > + * gaps in the rmap records to calculate all the unclaimed free space (1).
-> > + * Next, we scan all other OWN_AG metadata (bnobt, cntbt, agfl) and subtract
-> > + * the space used by those btrees from (1), and also subtract the free space
-> > + * listed in the bnobt from (1).  What's left are the gaps in assigned space
-> > + * that the new rmapbt knows about but the existing bnobt doesn't; these are
-> > + * the blocks from the old rmapbt and they can be freed.
-> 
-> THis looks like a lot of repeated work. We've already scanned a
-> bunch of these trees to repair them, then thrown away the scan
-> results. Now we do another scan of what we've rebuilt.....
-> 
-> ... hold on. Chicken and egg.
-> 
-> We verify and rebuild all the other trees from the rmap information
-> - how do we do determine that the rmap needs to rebuilt and that the
-> metadata it's being rebuilt from is valid?
-
-Userspace should invoke the other scrubbers for the AG before deciding
-to re-run the rmap scrubber with IFLAG_REPAIR set.  xfs_scrub won't try
-to repair rmap btrees until after it's already checked everything else
-in the filesystem.  Currently xfs_scrub will complain if it finds
-corruption in the primary data & the rmapbt; as the code matures I will
-probably change it to error out when this happens.
-
-> Given that we've effetively got to shut down access to the
-> filesystem for the entire rmap rebuild while we do an entire
-> filesystem scan, why would we do this online? It's going to be
-> faster to do this rebuild offline (because of all the prefetching,
-> rebuilding all AG trees from the state gathered in the full
-> filesystem passes, etc) and we don't have to hack around potential
-> transaction and memory reclaim deadlock situations, either?
-> 
-> So why do rmap rebuilds online at all?
-
-The thing is, xfs_scrub will warm the xfs_buf cache during phases 2 and
-3 while it checks everything.  By the time it gets to rmapbt repairs
-towards the end of phase 4 (if there's enough memory) those blocks will
-still be in cache and online repair doesn't have to wait for the disk.
-
-If instead you unmount and run xfs_repair then xfs_repair has to reload
-all that metadata and recheck it, all of which happens with the fs
-offline.
-
-So except for the extra complexity of avoiding deadlocks (which I
-readily admit is not a small task) I at least don't think it's a
-clear-cut downtime win to rely on xfs_repair.
-
-> > + */
-> > +
-> > +/* Set us up to repair reverse mapping btrees. */
-> > +int
-> > +xfs_repair_rmapbt_setup(
-> > +	struct xfs_scrub_context	*sc,
-> > +	struct xfs_inode		*ip)
-> > +{
-> > +	int				error;
-> > +
-> > +	/*
-> > +	 * Freeze out anything that can lock an inode.  We reconstruct
-> > +	 * the rmapbt by reading inode bmaps with the AGF held, which is
-> > +	 * only safe w.r.t. ABBA deadlocks if we're the only ones locking
-> > +	 * inodes.
-> > +	 */
-> > +	error = xfs_scrub_fs_freeze(sc);
-> > +	if (error)
-> > +		return error;
-> > +
-> > +	/* Check the AG number and set up the scrub context. */
-> > +	error = xfs_scrub_setup_fs(sc, ip);
-> > +	if (error)
-> > +		return error;
-> > +
-> > +	/*
-> > +	 * Lock all the AG header buffers so that we can read all the
-> > +	 * per-AG metadata too.
-> > +	 */
-> > +	error = xfs_repair_grab_all_ag_headers(sc);
-> > +	if (error)
-> > +		return error;
-> 
-> So if we have thousands of AGs (think PB scale filesystems) then
-> we're going hold many thousands of locked buffers here? Just so we
-> can rebuild the rmapbt in one AG?
-> 
-> What does holding these buffers locked protect us against that
-> an active freeze doesn't?
-
-Nothing, since we're frozen.  I think that's been around since before
-rmapbt repair learned to freeze the fs.
-
-> > +xfs_repair_rmapbt_new_rmap(
-> > +	struct xfs_repair_rmapbt	*rr,
-> > +	xfs_agblock_t			startblock,
-> > +	xfs_extlen_t			blockcount,
-> > +	uint64_t			owner,
-> > +	uint64_t			offset,
-> > +	unsigned int			flags)
-> > +{
-> > +	struct xfs_repair_rmapbt_extent	*rre;
-> > +	int				error = 0;
-> > +
-> > +	trace_xfs_repair_rmap_extent_fn(rr->sc->mp, rr->sc->sa.agno,
-> > +			startblock, blockcount, owner, offset, flags);
-> > +
-> > +	if (xfs_scrub_should_terminate(rr->sc, &error))
-> > +		return error;
-> > +
-> > +	rre = kmem_alloc(sizeof(struct xfs_repair_rmapbt_extent), KM_MAYFAIL);
-> > +	if (!rre)
-> > +		return -ENOMEM;
-> 
-> This seems like a likely thing to happen given the "no reclaim"
-> state of the filesystem and the memory demand a rmapbt rebuild
-> can have. If we've got GBs of rmap info in the AG that needs to be
-> rebuilt, how much RAM are we going to need to index it all as we
-> scan the filesystem?
-
-More than I'd like -- at least 24 bytes per record (which at least is no
-larger than the size of the on-disk btree) plus a list_head until I can
-move the repairers away from creating huge lists.
-
-> > +xfs_repair_rmapbt_scan_ifork(
-> > +	struct xfs_repair_rmapbt	*rr,
-> > +	struct xfs_inode		*ip,
-> > +	int				whichfork)
-> > +{
-> > +	struct xfs_bmbt_irec		rec;
-> > +	struct xfs_iext_cursor		icur;
-> > +	struct xfs_mount		*mp = rr->sc->mp;
-> > +	struct xfs_btree_cur		*cur = NULL;
-> > +	struct xfs_ifork		*ifp;
-> > +	unsigned int			rflags;
-> > +	int				fmt;
-> > +	int				error = 0;
-> > +
-> > +	/* Do we even have data mapping extents? */
-> > +	fmt = XFS_IFORK_FORMAT(ip, whichfork);
-> > +	ifp = XFS_IFORK_PTR(ip, whichfork);
-> > +	switch (fmt) {
-> > +	case XFS_DINODE_FMT_BTREE:
-> > +		if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> > +			error = xfs_iread_extents(rr->sc->tp, ip, whichfork);
-> > +			if (error)
-> > +				return error;
-> > +		}
-> 
-> Ok, so we need inodes locked to do this....
-> 
-> ....
-> > +/* Iterate all the inodes in an AG group. */
-> > +STATIC int
-> > +xfs_repair_rmapbt_scan_inobt(
-> > +	struct xfs_btree_cur		*cur,
-> > +	union xfs_btree_rec		*rec,
-> > +	void				*priv)
-> > +{
-> > +	struct xfs_inobt_rec_incore	irec;
-> > +	struct xfs_repair_rmapbt	*rr = priv;
-> > +	struct xfs_mount		*mp = cur->bc_mp;
-> > +	struct xfs_inode		*ip = NULL;
-> > +	xfs_ino_t			ino;
-> > +	xfs_agino_t			agino;
-> > +	int				chunkidx;
-> > +	int				lock_mode = 0;
-> > +	int				error = 0;
-> > +
-> > +	xfs_inobt_btrec_to_irec(mp, rec, &irec);
-> > +
-> > +	for (chunkidx = 0, agino = irec.ir_startino;
-> > +	     chunkidx < XFS_INODES_PER_CHUNK;
-> > +	     chunkidx++, agino++) {
-> > +		bool	inuse;
-> > +
-> > +		/* Skip if this inode is free */
-> > +		if (XFS_INOBT_MASK(chunkidx) & irec.ir_free)
-> > +			continue;
-> > +		ino = XFS_AGINO_TO_INO(mp, cur->bc_private.a.agno, agino);
-> > +
-> > +		/* Back off and try again if an inode is being reclaimed */
-> > +		error = xfs_icache_inode_is_allocated(mp, cur->bc_tp, ino,
-> > +				&inuse);
-> > +		if (error == -EAGAIN)
-> > +			return -EDEADLOCK;
-> 
-> And we can get inode access errors here.....
-> 
-> FWIW, how is the inode being reclaimed if the filesystem is frozen?
-
-Memory reclaim from some other process?  Maybe? :)
-
-I'll do some research to learn if other processes can get into inode
-reclaim on our frozen fs.
-
-> > +
-> > +		/*
-> > +		 * Grab inode for scanning.  We cannot use DONTCACHE here
-> > +		 * because we already have a transaction so the iput must not
-> > +		 * trigger inode reclaim (which might allocate a transaction
-> > +		 * to clean up posteof blocks).
-> > +		 */
-> > +		error = xfs_iget(mp, cur->bc_tp, ino, 0, 0, &ip);
-> 
-> So if there are enough inodes in the AG, we'll run out of memory
-> here because we aren't reclaiming inodes from the cache but instead
-> putting them all on the defferred iput list?
-
-Enough inodes in the AG that also have post-eof blocks or cow blocks to
-free.  If we don't have to do any inactive work then they just go away.
-
-> > +		if (error)
-> > +			return error;
-> > +		trace_xfs_scrub_iget(ip, __this_address);
-> > +
-> > +		if ((ip->i_d.di_format == XFS_DINODE_FMT_BTREE &&
-> > +		     !(ip->i_df.if_flags & XFS_IFEXTENTS)) ||
-> > +		    (ip->i_d.di_aformat == XFS_DINODE_FMT_BTREE &&
-> > +		     !(ip->i_afp->if_flags & XFS_IFEXTENTS)))
-> > +			lock_mode = XFS_ILOCK_EXCL;
-> > +		else
-> > +			lock_mode = XFS_ILOCK_SHARED;
-> > +		if (!xfs_ilock_nowait(ip, lock_mode)) {
-> > +			error = -EBUSY;
-> > +			goto out_rele;
-> > +		}
-> 
-> And in what situation do we get inodes stuck with the ilock held on
-> frozen filesysetms?
-
-I think we do not, and that this is a relic of pre-freeze rmap repair.
-
-> ....
-> 
-> > +out_unlock:
-> > +	xfs_iunlock(ip, lock_mode);
-> > +out_rele:
-> > +	iput(VFS_I(ip));
-> > +	return error;
-> 
-> calling iput in the error path is a bug - it will trigger all the
-> paths you're trying to avoid by using te deferred iput list.
-
-Oops, that should be our xfs_scrub_repair_iput.
-
-> ....
-> 
-> 
-> > +/* Collect rmaps for all block mappings for every inode in this AG. */
-> > +STATIC int
-> > +xfs_repair_rmapbt_generate_aginode_rmaps(
-> > +	struct xfs_repair_rmapbt	*rr,
-> > +	xfs_agnumber_t			agno)
-> > +{
-> > +	struct xfs_scrub_context	*sc = rr->sc;
 > > +	struct xfs_mount		*mp = sc->mp;
-> > +	struct xfs_btree_cur		*cur;
-> > +	struct xfs_buf			*agi_bp;
-> > +	int				error;
+> > +	struct xfs_trans		*tp = sc->tp;
+> > +	struct xfs_dinode		*dip;
+> > +	xfs_agnumber_t			agno;
+> > +	xfs_agino_t			agino;
+> > +	int				ioff;
+> > +	int				i;
+> > +	int				ni;
+> > +	int				di_ok;
+> > +	bool				unlinked_ok;
 > > +
-> > +	error = xfs_ialloc_read_agi(mp, sc->tp, agno, &agi_bp);
-> > +	if (error)
-> > +		return error;
-> > +	cur = xfs_inobt_init_cursor(mp, sc->tp, agi_bp, agno, XFS_BTNUM_INO);
-> > +	error = xfs_btree_query_all(cur, xfs_repair_rmapbt_scan_inobt, rr);
+> > +	ni = XFS_BB_TO_FSB(mp, bp->b_length) * mp->m_sb.sb_inopblock;
+> > +	agno = xfs_daddr_to_agno(mp, XFS_BUF_ADDR(bp));
+> > +	for (i = 0; i < ni; i++) {
+> > +		ioff = i << mp->m_sb.sb_inodelog;
+> > +		dip = xfs_buf_offset(bp, ioff);
+> > +		agino = be32_to_cpu(dip->di_next_unlinked);
+> > +		unlinked_ok = (agino == NULLAGINO ||
+> > +			       xfs_verify_agino(sc->mp, agno, agino));
+> > +		di_ok = dip->di_magic == cpu_to_be16(XFS_DINODE_MAGIC) &&
+> > +			xfs_dinode_good_version(mp, dip->di_version);
+> > +		if (di_ok && unlinked_ok)
+> > +			continue;
 > 
-> So if we get a locked or reclaiming inode anywhere in the
-> filesystem we see EDEADLOCK/EBUSY here without having scanned all
-> the inodes in the AG, right?
+> Readability woul dbe better with:
+> 
+> 		unlinked_ok = false;
+> 		if (agino == NULLAGINO || xfs_verify_agino(sc->mp, agno, agino))
+> 			unlinked_ok = true;
+> 
+> 		di_ok = false;
+> 		if (dip->di_magic == cpu_to_be16(XFS_DINODE_MAGIC) &&
+> 		    xfs_dinode_good_version(mp, dip->di_version))
+> 			di_ok = true;
+> 
+> 		if (di_ok && unlinked_ok)
+> 			continue;
+> 
 
-Right.
+Ok.
 
-> > +	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
-> > +	xfs_trans_brelse(sc->tp, agi_bp);
-> > +	return error;
+> Also, is there a need to check the inode CRC here?
+
+We already know the inode core is bad, so why not just reset it?
+
+> > +		dip->di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
+> > +		dip->di_version = 3;
+> > +		if (!unlinked_ok)
+> > +			dip->di_next_unlinked = cpu_to_be32(NULLAGINO);
+> > +		xfs_dinode_calc_crc(mp, dip);
+> > +		xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DINO_BUF);
+> > +		xfs_trans_log_buf(tp, bp, ioff, ioff + sizeof(*dip) - 1);
+> 
+> Hmmmm. how does this interact with other transactions in repair that
+> might have logged changes to the same in-core inode? If it was just
+> changing the unlinked pointer, then that would be ok, but
+> magic/version are overwritten by the inode item recovery...
+
+There shouldn't be an in-core inode; this function should only get
+called if we failed to _iget the inode, which implies that nobody else
+has an in-core inode.
+
+> 
+> > +/* Reinitialize things that never change in an inode. */
+> > +STATIC void
+> > +xfs_repair_inode_header(
+> > +	struct xfs_scrub_context	*sc,
+> > +	struct xfs_dinode		*dip)
+> > +{
+> > +	dip->di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
+> > +	if (!xfs_dinode_good_version(sc->mp, dip->di_version))
+> > +		dip->di_version = 3;
+> > +	dip->di_ino = cpu_to_be64(sc->sm->sm_ino);
+> > +	uuid_copy(&dip->di_uuid, &sc->mp->m_sb.sb_meta_uuid);
+> > +	dip->di_gen = cpu_to_be32(sc->sm->sm_gen);
 > > +}
 > > +
 > > +/*
-> > + * Generate all the reverse-mappings for this AG, a list of the old rmapbt
-> > + * blocks, and the new btreeblks count.  Figure out if we have enough free
-> > + * space to reconstruct the inode btrees.  The caller must clean up the lists
-> > + * if anything goes wrong.
+> > + * Turn di_mode into /something/ recognizable.
+> > + *
+> > + * XXX: Ideally we'd try to read data block 0 to see if it's a directory.
 > > + */
-> > +STATIC int
-> > +xfs_repair_rmapbt_find_rmaps(
-> > +	struct xfs_scrub_context	*sc,
-> > +	struct list_head		*rmap_records,
-> > +	xfs_agblock_t			*new_btreeblks)
+> > +STATIC void
+> > +xfs_repair_inode_mode(
+> > +	struct xfs_dinode	*dip)
 > > +{
-> > +	struct xfs_repair_rmapbt	rr;
-> > +	xfs_agnumber_t			agno;
-> > +	int				error;
+> > +	uint16_t		mode;
 > > +
-> > +	rr.rmaplist = rmap_records;
-> > +	rr.sc = sc;
-> > +	rr.nr_records = 0;
+> > +	mode = be16_to_cpu(dip->di_mode);
+> > +	if (mode == 0 || xfs_mode_to_ftype(mode) != XFS_DIR3_FT_UNKNOWN)
+> > +		return;
 > > +
-> > +	/* Generate rmaps for AG space metadata */
-> > +	error = xfs_repair_rmapbt_generate_agheader_rmaps(&rr);
-> > +	if (error)
-> > +		return error;
-> > +	error = xfs_repair_rmapbt_generate_log_rmaps(&rr);
-> > +	if (error)
-> > +		return error;
-> > +	error = xfs_repair_rmapbt_generate_freesp_rmaps(&rr, new_btreeblks);
-> > +	if (error)
-> > +		return error;
-> > +	error = xfs_repair_rmapbt_generate_inobt_rmaps(&rr);
-> > +	if (error)
-> > +		return error;
-> > +	error = xfs_repair_rmapbt_generate_refcountbt_rmaps(&rr);
-> > +	if (error)
-> > +		return error;
-> > +
-> > +	/* Iterate all AGs for inodes rmaps. */
-> > +	for (agno = 0; agno < sc->mp->m_sb.sb_agcount; agno++) {
-> > +		error = xfs_repair_rmapbt_generate_aginode_rmaps(&rr, agno);
-> > +		if (error)
-> > +			return error;
+> > +	/* bad mode, so we set it to a file that only root can read */
+> > +	mode = S_IFREG;
+> > +	dip->di_mode = cpu_to_be16(mode);
+> > +	dip->di_uid = 0;
+> > +	dip->di_gid = 0;
 > 
-> And that means we abort here....
+> Not sure that's a good idea - if the mode is bad I don't think we
+> should expose it to anyone. Perhaps we need an orphan type
+
+Agreed.
+
+> > +}
+> > +
+> > +/* Fix any conflicting flags that the verifiers complain about. */
+> > +STATIC void
+> > +xfs_repair_inode_flags(
+> > +	struct xfs_scrub_context	*sc,
+> > +	struct xfs_dinode		*dip)
+> > +{
+> > +	struct xfs_mount		*mp = sc->mp;
+> > +	uint64_t			flags2;
+> > +	uint16_t			mode;
+> > +	uint16_t			flags;
+> > +
+> > +	mode = be16_to_cpu(dip->di_mode);
+> > +	flags = be16_to_cpu(dip->di_flags);
+> > +	flags2 = be64_to_cpu(dip->di_flags2);
+> > +
+> > +	if (xfs_sb_version_hasreflink(&mp->m_sb) && S_ISREG(mode))
+> > +		flags2 |= XFS_DIFLAG2_REFLINK;
+> > +	else
+> > +		flags2 &= ~(XFS_DIFLAG2_REFLINK | XFS_DIFLAG2_COWEXTSIZE);
+> > +	if (flags & XFS_DIFLAG_REALTIME)
+> > +		flags2 &= ~XFS_DIFLAG2_REFLINK;
+> > +	if (flags2 & XFS_DIFLAG2_REFLINK)
+> > +		flags2 &= ~XFS_DIFLAG2_DAX;
+> > +	dip->di_flags = cpu_to_be16(flags);
+> > +	dip->di_flags2 = cpu_to_be64(flags2);
+> > +}
+> > +
+> > +/* Make sure we don't have a garbage file size. */
+> > +STATIC void
+> > +xfs_repair_inode_size(
+> > +	struct xfs_dinode	*dip)
+> > +{
+> > +	uint64_t		size;
+> > +	uint16_t		mode;
+> > +
+> > +	mode = be16_to_cpu(dip->di_mode);
+> > +	size = be64_to_cpu(dip->di_size);
+> > +	switch (mode & S_IFMT) {
+> > +	case S_IFIFO:
+> > +	case S_IFCHR:
+> > +	case S_IFBLK:
+> > +	case S_IFSOCK:
+> > +		/* di_size can't be nonzero for special files */
+> > +		dip->di_size = 0;
+> > +		break;
+> > +	case S_IFREG:
+> > +		/* Regular files can't be larger than 2^63-1 bytes. */
+> > +		dip->di_size = cpu_to_be64(size & ~(1ULL << 63));
+> > +		break;
+> > +	case S_IFLNK:
+> > +		/* Catch over- or under-sized symlinks. */
+> > +		if (size > XFS_SYMLINK_MAXLEN)
+> > +			dip->di_size = cpu_to_be64(XFS_SYMLINK_MAXLEN);
+> > +		else if (size == 0)
+> > +			dip->di_size = cpu_to_be64(1);
 > 
-> > +/* Repair the rmap btree for some AG. */
-> > +int
-> > +xfs_repair_rmapbt(
+> Not sure this is valid - if the inode is in extent format then a
+> size of 1 is invalid and means the symlink will point to the
+> first byte in the data fork, and that could be anything....
+
+I picked these wonky looking formats so that we'd always trigger the
+higher level repair functions to have a look at the link/dir without
+blowing up elsewhere in the code if we tried to use them.  Not that we
+can do much for broken symlinks, but directories could be rebuilt.
+
+But maybe directories should simply be reset to an empty inline
+directory, and eventually grow an iflag that will always trigger
+directory reconstruction (when parent pointers become a thing).
+
+> > +		break;
+> > +	case S_IFDIR:
+> > +		/* Directories can't have a size larger than 32G. */
+> > +		if (size > XFS_DIR2_SPACE_SIZE)
+> > +			dip->di_size = cpu_to_be64(XFS_DIR2_SPACE_SIZE);
+> > +		else if (size == 0)
+> > +			dip->di_size = cpu_to_be64(1);
+> 
+> Similar. A size of 1 is not valid for a directory.
+> 
+> > +		break;
+> > +	}
+> > +}
+> .....
+> > +
+> > +/* Inode didn't pass verifiers, so fix the raw buffer and retry iget. */
+> > +STATIC int
+> > +xfs_repair_inode_core(
 > > +	struct xfs_scrub_context	*sc)
 > > +{
-> > +	struct xfs_owner_info		oinfo;
-> > +	struct list_head		rmap_records;
-> > +	xfs_extlen_t			new_btreeblks;
-> > +	int				log_flags = 0;
+> > +	struct xfs_imap			imap;
+> > +	struct xfs_buf			*bp;
+> > +	struct xfs_dinode		*dip;
+> > +	xfs_ino_t			ino;
 > > +	int				error;
 > > +
-> > +	xfs_scrub_perag_get(sc->mp, &sc->sa);
-> > +
-> > +	/* Collect rmaps for all AG headers. */
-> > +	INIT_LIST_HEAD(&rmap_records);
-> > +	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_UNKNOWN);
-> > +	error = xfs_repair_rmapbt_find_rmaps(sc, &rmap_records, &new_btreeblks);
+> > +	/* Map & read inode. */
+> > +	ino = sc->sm->sm_ino;
+> > +	error = xfs_imap(sc->mp, sc->tp, ino, &imap, XFS_IGET_UNTRUSTED);
 > > +	if (error)
-> > +		goto out;
+> > +		return error;
+> > +
+> > +	error = xfs_trans_read_buf(sc->mp, sc->tp, sc->mp->m_ddev_targp,
+> > +			imap.im_blkno, imap.im_len, XBF_UNMAPPED, &bp, NULL);
+> > +	if (error)
+> > +		return error;
 > 
-> And we drop out here. So, essentially, any ENOMEM, locked inode or
-> inode in reclaim anywhere in the filesystem will prevent rmap
-> rebuild. Which says to me that rebuilding the rmap on
-> on any substantial filesystem is likely to fail.
-> 
-> Which brings me back to my original question: why attempt to do
-> rmap rebuild online given how complex it is, the performance
-> implications of a full filesystem scan per AG that needs rebuild,
-> and all the ways it could easily fail?
+> I'd like to see this check the inode isn't in-core after we've read
+> and locked the inode buffer, just to ensure we haven't raced with
+> another access.
 
-Right.  If we run out of memory or hit a locked/in-reclaim inode we'll
-bounce back out to userspace having not touched anything.  Userspace can
-decide if it wants to migrate or shut down other services and retry the
-online scrub, or if it wants to unmount and run xfs_repair instead.
-My mid-term goals for the repair patchset is to minimize the memory use
-and minimize the amount of time we spend in the freezer, but for that I
-need to add a few more (largeish) tools to XFS and an trying to avoid
-snowballing a ton of code in front of repair. :)
+Ok.
+
+> > +
+> > +	/* Make sure we can pass the inode buffer verifier. */
+> > +	xfs_repair_inode_buf(sc, bp);
+> > +	bp->b_ops = &xfs_inode_buf_ops;
+> > +
+> > +	/* Fix everything the verifier will complain about. */
+> > +	dip = xfs_buf_offset(bp, imap.im_boffset);
+> > +	xfs_repair_inode_header(sc, dip);
+> > +	xfs_repair_inode_mode(dip);
+> > +	xfs_repair_inode_flags(sc, dip);
+> > +	xfs_repair_inode_size(dip);
+> > +	xfs_repair_inode_extsize_hints(sc, dip);
+> 
+> what if the inode failed the fork verifiers rather than the dinode
+> verifier?
+
+That's coming up in the next patch.  Want me to put in an XXX comment to
+that effect?
+
+> > + * Fix problems that the verifiers don't care about.  In general these are
+> > + * errors that don't cause problems elsewhere in the kernel that we can easily
+> > + * detect, so we don't check them all that rigorously.
+> > + */
+> > +
+> > +/* Make sure block and extent counts are ok. */
+> > +STATIC int
+> > +xfs_repair_inode_unchecked_blockcounts(
+> > +	struct xfs_scrub_context	*sc)
+> > +{
+> > +	xfs_filblks_t			count;
+> > +	xfs_filblks_t			acount;
+> > +	xfs_extnum_t			nextents;
+> > +	int				error;
+> > +
+> > +	/* di_nblocks/di_nextents/di_anextents don't match up? */
+> > +	error = xfs_bmap_count_blocks(sc->tp, sc->ip, XFS_DATA_FORK,
+> > +			&nextents, &count);
+> > +	if (error)
+> > +		return error;
+> > +	sc->ip->i_d.di_nextents = nextents;
+> > +
+> > +	error = xfs_bmap_count_blocks(sc->tp, sc->ip, XFS_ATTR_FORK,
+> > +			&nextents, &acount);
+> > +	if (error)
+> > +		return error;
+> > +	sc->ip->i_d.di_anextents = nextents;
+> 
+> Should the returned extent/block counts be validity checked?
+
+Er... yes.  Good catch. :)
 
 --D
 
