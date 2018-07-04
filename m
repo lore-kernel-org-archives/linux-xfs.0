@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:42536 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932346AbeGDEu5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Jul 2018 00:50:57 -0400
-Subject: [PATCH 1/7] generic/{279,
- 28[1-3]}: hide SIGBUS reporting from golden output
+Received: from userp2130.oracle.com ([156.151.31.86]:49386 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932439AbeGDEvD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Jul 2018 00:51:03 -0400
+Subject: [PATCH 2/7] misc: force the exact quota options coded into the test
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 03 Jul 2018 21:50:53 -0700
-Message-ID: <153067985383.28393.15559670747546571392.stgit@magnolia>
+Date: Tue, 03 Jul 2018 21:51:00 -0700
+Message-ID: <153067986006.28393.12507727179398690195.stgit@magnolia>
 In-Reply-To: <153067984748.28393.1595618163831671652.stgit@magnolia>
 References: <153067984748.28393.1595618163831671652.stgit@magnolia>
 MIME-Version: 1.0
@@ -21,102 +20,110 @@ Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-These four tests check that mmap'd cow writes fail when the filesystem
-goes down.  For regular filesystems the msync reports EIO, but if quotas
-are enabled on xfs the write itself terminates xfs_io with a SIGBUS.  We
-don't care how the write fails, so don't let the SIGBUS report escape to
-the golden output.
+Several tests require setting exactly the quota mount options that are
+encoded in the test.  Unfortunately, quota mount options set by the user
+in MOUNT_OPTIONS can turn on other quota types, which causes the golden
+outputs to be off for various reasons (quota report output, behavior
+changes, etc.)
+
+So use _qmount_option to delete all the quota mount options in these
+tests so that the test itself can run with exactly the config for which
+it was written.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tests/generic/279 |    6 ++++++
- tests/generic/281 |    6 ++++++
- tests/generic/282 |    9 ++++++++-
- tests/generic/283 |   14 ++++++++++----
- 4 files changed, 30 insertions(+), 5 deletions(-)
+ tests/generic/230 |    3 +++
+ tests/xfs/075     |    4 ++++
+ tests/xfs/116     |    3 +++
+ tests/xfs/132     |    5 +++++
+ tests/xfs/220     |    3 +++
+ 5 files changed, 18 insertions(+)
 
 
-diff --git a/tests/generic/279 b/tests/generic/279
-index 1355c641..af699144 100755
---- a/tests/generic/279
-+++ b/tests/generic/279
-@@ -66,8 +66,14 @@ md5sum $testdir/file2 | _filter_scratch
- echo "CoW and unmount"
- sync
- _dmerror_load_error_table
-+# Insulate ourselves against bash reporting the SIGBUS when we try to modify
-+# the metadata.
-+cat > $tmp.run << ENDL
-+ulimit -c 0
- $XFS_IO_PROG -f -c "mmap -rw 0 $filesize" -c "mwrite -S 0x63 0 $filesize" \
- 	-c "msync -s 0 $filesize" $testdir/file2 >> $seqres.full 2>&1
-+ENDL
-+bash $tmp.run 2> /dev/null
- _dmerror_load_working_table
- _dmerror_unmount
- _dmerror_mount
-diff --git a/tests/generic/281 b/tests/generic/281
-index 75c4b39a..75deab7c 100755
---- a/tests/generic/281
-+++ b/tests/generic/281
-@@ -66,8 +66,14 @@ md5sum $testdir/file2 | _filter_scratch
- echo "CoW and unmount"
- sync
- _dmerror_load_error_table
-+# Insulate ourselves against bash reporting the SIGBUS when we try to modify
-+# the metadata.
-+cat > $tmp.run << ENDL
-+ulimit -c 0
- $XFS_IO_PROG -f -c "mmap -rw 0 $filesize" -c "mwrite -S 0x63 0 $filesize" \
- 	-c "msync -s 0 $filesize" $testdir/file2 >> $seqres.full 2>&1
-+ENDL
-+bash $tmp.run 2> /dev/null
+diff --git a/tests/generic/230 b/tests/generic/230
+index bc8c1ad0..a7ab67f7 100755
+--- a/tests/generic/230
++++ b/tests/generic/230
+@@ -99,6 +99,9 @@ rm -f $seqres.full
  
- echo "Clean up the mess"
- _dmerror_unmount
-diff --git a/tests/generic/282 b/tests/generic/282
-index aea7ce58..44ffe278 100755
---- a/tests/generic/282
-+++ b/tests/generic/282
-@@ -66,7 +66,14 @@ md5sum $testdir/file2 | _filter_scratch
- echo "CoW and unmount"
- sync
- _dmerror_load_error_table
--$XFS_IO_PROG -f -c "mmap -rw 0 $filesize" -c "mwrite -S 0x63 0 $filesize" $testdir/file2 >> $seqres.full 2>&1
-+# Insulate ourselves against bash reporting the SIGBUS when we try to modify
-+# the metadata.
-+cat > $tmp.run << ENDL
-+ulimit -c 0
-+$XFS_IO_PROG -f -c "mmap -rw 0 $filesize" \
-+	-c "mwrite -S 0x63 0 $filesize" $testdir/file2 >> $seqres.full 2>&1
-+ENDL
-+bash $tmp.run 2> /dev/null
- _dmerror_load_working_table
- rm -rf $testdir/file2 >> $seqres.full 2>&1
- _dmerror_unmount
-diff --git a/tests/generic/283 b/tests/generic/283
-index 79caddb5..84a1666a 100755
---- a/tests/generic/283
-+++ b/tests/generic/283
-@@ -67,10 +67,16 @@ md5sum $testdir/file2 | _filter_scratch
- echo "CoW and unmount"
- sync
- _dmerror_load_error_table
--urk=$($XFS_IO_PROG -f -c "mmap -rw 0 $filesize" -c "mwrite -S 0x63 0 $filesize" \
--	-c "msync -s 0 $filesize" $testdir/file2 2>&1)
--echo $urk >> $seqres.full
--echo "$urk" | grep -q "error" || _fail "mwrite did not fail"
-+# Insulate ourselves against bash reporting the SIGBUS when we try to modify
-+# the metadata.
-+cat > $tmp.run << ENDL
-+ulimit -c 0
-+$XFS_IO_PROG -f -c "mmap -rw 0 $filesize" -c "mwrite -S 0x63 0 $filesize" \
-+	-c "msync -s 0 $filesize" $testdir/file2 2>&1
-+ENDL
-+bash $tmp.run > $tmp.output 2>&1
-+cat $tmp.output >> $seqres.full
-+grep -q error $tmp.output || _fail "mwrite did not fail"
- _dmerror_load_working_table
+ grace=2
  
- echo "Rewrite"
++# Test only the quota type specified in each _scratch_mount clause below.
++_qmount_option 'defaults'
++
+ _scratch_mkfs >> $seqres.full 2>&1
+ _scratch_mount "-o usrquota,grpquota"
+ quotacheck -u -g $SCRATCH_MNT 2>/dev/null
+diff --git a/tests/xfs/075 b/tests/xfs/075
+index caf612bb..dee01462 100755
+--- a/tests/xfs/075
++++ b/tests/xfs/075
+@@ -25,12 +25,16 @@ _cleanup()
+ # get standard environment, filters and checks
+ . ./common/rc
+ . ./common/filter
++. ./common/quota
+ 
+ # real QA test starts here
+ _supported_fs xfs
+ _supported_os Linux
+ _require_scratch
+ 
++# norecovery mounts do not succeed with quotas eanbled, so shut them off
++_qmount_option "defaults"
++
+ echo "Silence is golden"
+ _scratch_mkfs_sized $((512 * 1024 * 1024)) >$seqres.full
+ 
+diff --git a/tests/xfs/116 b/tests/xfs/116
+index 6887d7e5..4422eb50 100755
+--- a/tests/xfs/116
++++ b/tests/xfs/116
+@@ -36,6 +36,9 @@ _supported_os Linux
+ _require_scratch
+ _require_xfs_quota
+ 
++# Only mount with the quota options we specify below
++_qmount_option "defaults"
++
+ _scratch_mkfs >/dev/null 2>&1
+ _scratch_mount "-o uquota"
+ _scratch_unmount
+diff --git a/tests/xfs/132 b/tests/xfs/132
+index c5fe8b5a..a421f727 100755
+--- a/tests/xfs/132
++++ b/tests/xfs/132
+@@ -24,6 +24,7 @@ _cleanup()
+ # get standard environment, filters and checks
+ . ./common/rc
+ . ./common/filter
++. ./common/quota
+ 
+ # remove previous $seqres.full before test
+ rm -f $seqres.full
+@@ -43,6 +44,10 @@ _disable_dmesg_check
+ _require_xfs_mkfs_crc
+ _scratch_mkfs -m crc=0 > $seqres.full 2>&1
+ 
++# The files that EIO in the golden output changes if we have quotas enabled
++# so leave it off.
++_qmount_option "defaults"
++
+ # corrupt an inode in the root inode chunk
+ root_ino=$(_scratch_xfs_get_metadata_field 'rootino' 'sb 0')
+ corrupt_ino=$((root_ino + 15))
+diff --git a/tests/xfs/220 b/tests/xfs/220
+index 227d5452..61319c9d 100755
+--- a/tests/xfs/220
++++ b/tests/xfs/220
+@@ -36,6 +36,9 @@ _supported_os Linux
+ _require_scratch
+ _require_quota
+ 
++# Only mount with the specific quota options mentioned below
++_qmount_option "defaults"
++
+ echo "Silence is golden."
+ 
+ # create scratch filesystem
 
