@@ -1,164 +1,147 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:43442 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752480AbeGDAoF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Jul 2018 20:44:05 -0400
-Date: Tue, 3 Jul 2018 17:43:50 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 05/25] xfs: use ->t_firstblock in attrfork add
-Message-ID: <20180704004350.GE32415@magnolia>
-References: <20180703172319.24509-1-bfoster@redhat.com>
- <20180703172319.24509-6-bfoster@redhat.com>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:13687 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753070AbeGEHD2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Jul 2018 03:03:28 -0400
+Date: Thu, 5 Jul 2018 17:03:24 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 11/21] xfs: repair the rmapbt
+Message-ID: <20180705070324.GQ2234@dastard>
+References: <152986820984.3155.16417868536016544528.stgit@magnolia>
+ <152986827881.3155.10096839660329617215.stgit@magnolia>
+ <20180703053200.GH2234@dastard>
+ <20180703235901.GY32415@magnolia>
+ <20180704232115.GP2234@dastard>
+ <20180705034858.GH32415@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180703172319.24509-6-bfoster@redhat.com>
+In-Reply-To: <20180705034858.GH32415@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jul 03, 2018 at 01:22:59PM -0400, Brian Foster wrote:
-> Note that this codepath is a user of struct xfs_da_args. Switch it
-> over to ->t_firstblock in preparation to remove
-> xfs_da_args.firstblock.
+On Wed, Jul 04, 2018 at 08:48:58PM -0700, Darrick J. Wong wrote:
+> On Thu, Jul 05, 2018 at 09:21:15AM +1000, Dave Chinner wrote:
+> > On Tue, Jul 03, 2018 at 04:59:01PM -0700, Darrick J. Wong wrote:
+> > > On Tue, Jul 03, 2018 at 03:32:00PM +1000, Dave Chinner wrote:
+> > Keep in mind that online repair will never guarantee that it can fix
+> > all problems, so we're always going to have to offline repair. iWhat
+> > we want to achieve is minimising downtime for users when a repair is
+> > required. With the above IO limitations in mind, I've always
+> > considered that online repair would just be for all the simple,
+> > quick, easy to fix stuff, because complex stuff that required huge
+> > amounts of RAM and full filesystem scans to resolve would always be
+> > done faster offline.
+> >
+> > That's why I think that offline repair will be a better choice for
+> > users for the forseeable future if repairing the damage requires
+> > full filesystem metadata scans.
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> That might be, but how else can we determine that than to merge it under
+> an experimental banner, iterate it for a while, and try to persuade a
+> wider band of users than ourselves to try it on a non-production system
+> to see if it better solves their problems? :)
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+I think "deploy and idea to users and see if they have problems" is
+a horrible development model. That's where btrfs went off the rails
+almost 10 years ago....
 
---D
+That aside, I'd like to make sure we're on the same page - we don't
+need online repair to fix /everything/ before it gets merged. Even
+without rmap rebuild, it will still be usable and useful to the vast
+majority of users wanting the filesystem to self repair the typical
+one-off corruption problems filesystems encounter during their
+typical production life.
 
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 33 +++++++++++++--------------------
->  1 file changed, 13 insertions(+), 20 deletions(-)
+What I'm worried about is that the online repair algorithms have a
+fundmental dependence on rmap lookups to avoid the need to build the
+global cross-references needed to isolate and repair corruptions.
+This use of rmap, from one angle, can be seen as a performance
+optimisation, but as I've come understand more of the algorithms the
+online repair code uses, it looks more like an intractable problem
+than one of performance optimisation.
+
+That is, if the rmap is corrupt, or we even suspect that it's
+corrupt, then we cannot use it to validate the state and contents of
+the other on-disk structures. We could propagate rmap corruptions to
+those other structures and it would go undetected. And because we
+can't determine the validity of all the other structures, the only
+way we can correctly repair the filesystem is to build a global
+cross-reference, resolve all the inconsistencies, and then rewrite
+all the structures. i.e. we need to do what xfs_repair does in phase
+3, 4 and 5.
+
+IOWs, ISTM that the online scrub/repair algorithms break down in the
+face of rmap corruption and it is correctable only by building a
+global cross-reference which we can then reconcile and use to
+rebuild all the per-AG metadata btrees in the filesystem. Trying to
+do it online via scanning of unverifiable structures risks making
+the problem worse and there is a good possibility that we can't
+repair the inconsistencies in a single pass.
+
+So at this point, I'd prefer that we stop, discuss and work out a
+solution to the rmap rebuild problem rather than merge a rmap
+rebuild algorithm prematurely. This doesn't need to hold up any of
+the other online repair functionality - none of that is dependent on
+this particular piece of the puzzle being implemented.
+
+> At worst, if future us decide that we will never figure out how to make
+> online rmapbt repair robust I'm fully prepared to withdraw it.
+
+Merging new features before sorting out the fundamental principles,
+behaviours and algorithms of those features is how btrfs ended up
+with a pile of stuff that doesn't quite work which no-one
+understands quite well enough to fix.
+
+> > > > This seems like a likely thing to happen given the "no reclaim"
+> > > > state of the filesystem and the memory demand a rmapbt rebuild
+> > > > can have. If we've got GBs of rmap info in the AG that needs to be
+> > > > rebuilt, how much RAM are we going to need to index it all as we
+> > > > scan the filesystem?
+> > > 
+> > > More than I'd like -- at least 24 bytes per record (which at least is no
+> > > larger than the size of the on-disk btree) plus a list_head until I can
+> > > move the repairers away from creating huge lists.
+> > 
+> > Ok, it kinda sounds a bit like we need to be able to create the new
+> > btree on the fly, rather than as a single operation at the end. e.g.
+> > if the list builds up to, say, 100k records, we push them into the
+> > new tree and can free them. e.g. can we iteratively build the new
+> > tree on disk as we go, then do a root block swap at the end to
+> > switch from the old tree to the new tree?
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index c6a5a957674d..fcd10b47044a 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -915,7 +915,6 @@ STATIC int					/* error */
->  xfs_bmap_add_attrfork_btree(
->  	xfs_trans_t		*tp,		/* transaction pointer */
->  	xfs_inode_t		*ip,		/* incore inode pointer */
-> -	xfs_fsblock_t		*firstblock,	/* first block allocated */
->  	int			*flags)		/* inode logging flags */
->  {
->  	xfs_btree_cur_t		*cur;		/* btree cursor */
-> @@ -928,7 +927,7 @@ xfs_bmap_add_attrfork_btree(
->  		*flags |= XFS_ILOG_DBROOT;
->  	else {
->  		cur = xfs_bmbt_init_cursor(mp, tp, ip, XFS_DATA_FORK);
-> -		cur->bc_private.b.firstblock = *firstblock;
-> +		cur->bc_private.b.firstblock = tp->t_firstblock;
->  		error = xfs_bmbt_lookup_first(cur, &stat);
->  		if (error)
->  			goto error0;
-> @@ -940,7 +939,7 @@ xfs_bmap_add_attrfork_btree(
->  			xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
->  			return -ENOSPC;
->  		}
-> -		*firstblock = cur->bc_private.b.firstblock;
-> +		tp->t_firstblock = cur->bc_private.b.firstblock;
->  		cur->bc_private.b.allocated = 0;
->  		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
->  	}
-> @@ -957,7 +956,6 @@ STATIC int					/* error */
->  xfs_bmap_add_attrfork_extents(
->  	struct xfs_trans	*tp,		/* transaction pointer */
->  	struct xfs_inode	*ip,		/* incore inode pointer */
-> -	xfs_fsblock_t		*firstblock,	/* first block allocated */
->  	int			*flags)		/* inode logging flags */
->  {
->  	xfs_btree_cur_t		*cur;		/* bmap btree cursor */
-> @@ -966,8 +964,8 @@ xfs_bmap_add_attrfork_extents(
->  	if (ip->i_d.di_nextents * sizeof(xfs_bmbt_rec_t) <= XFS_IFORK_DSIZE(ip))
->  		return 0;
->  	cur = NULL;
-> -	error = xfs_bmap_extents_to_btree(tp, ip, firstblock, &cur, 0, flags,
-> -					  XFS_DATA_FORK);
-> +	error = xfs_bmap_extents_to_btree(tp, ip, &tp->t_firstblock, &cur, 0,
-> +					  flags, XFS_DATA_FORK);
->  	if (cur) {
->  		cur->bc_private.b.allocated = 0;
->  		xfs_btree_del_cursor(cur,
-> @@ -989,12 +987,11 @@ xfs_bmap_add_attrfork_extents(
->   */
->  STATIC int					/* error */
->  xfs_bmap_add_attrfork_local(
-> -	xfs_trans_t		*tp,		/* transaction pointer */
-> -	xfs_inode_t		*ip,		/* incore inode pointer */
-> -	xfs_fsblock_t		*firstblock,	/* first block allocated */
-> +	struct xfs_trans	*tp,		/* transaction pointer */
-> +	struct xfs_inode	*ip,		/* incore inode pointer */
->  	int			*flags)		/* inode logging flags */
->  {
-> -	xfs_da_args_t		dargs;		/* args for dir/attr code */
-> +	struct xfs_da_args	dargs;		/* args for dir/attr code */
->  
->  	if (ip->i_df.if_bytes <= XFS_IFORK_DSIZE(ip))
->  		return 0;
-> @@ -1003,7 +1000,7 @@ xfs_bmap_add_attrfork_local(
->  		memset(&dargs, 0, sizeof(dargs));
->  		dargs.geo = ip->i_mount->m_dir_geo;
->  		dargs.dp = ip;
-> -		dargs.firstblock = firstblock;
-> +		dargs.firstblock = &tp->t_firstblock;
->  		dargs.total = dargs.geo->fsbcount;
->  		dargs.whichfork = XFS_DATA_FORK;
->  		dargs.trans = tp;
-> @@ -1011,7 +1008,7 @@ xfs_bmap_add_attrfork_local(
->  	}
->  
->  	if (S_ISLNK(VFS_I(ip)->i_mode))
-> -		return xfs_bmap_local_to_extents(tp, ip, firstblock, 1,
-> +		return xfs_bmap_local_to_extents(tp, ip, &tp->t_firstblock, 1,
->  						 flags, XFS_DATA_FORK,
->  						 xfs_symlink_local_to_remote);
->  
-> @@ -1030,7 +1027,6 @@ xfs_bmap_add_attrfork(
->  	int			size,		/* space new attribute needs */
->  	int			rsvd)		/* xact may use reserved blks */
->  {
-> -	xfs_fsblock_t		firstblock;	/* 1st block/ag allocated */
->  	struct xfs_defer_ops	dfops;		/* freed extent records */
->  	xfs_mount_t		*mp;		/* mount structure */
->  	xfs_trans_t		*tp;		/* transaction pointer */
-> @@ -1050,7 +1046,7 @@ xfs_bmap_add_attrfork(
->  			rsvd ? XFS_TRANS_RESERVE : 0, &tp);
->  	if (error)
->  		return error;
-> -	xfs_defer_init(tp, &dfops, &firstblock);
-> +	xfs_defer_init(tp, &dfops, &tp->t_firstblock);
->  
->  	xfs_ilock(ip, XFS_ILOCK_EXCL);
->  	error = xfs_trans_reserve_quota_nblks(tp, ip, blks, 0, rsvd ?
-> @@ -1100,16 +1096,13 @@ xfs_bmap_add_attrfork(
->  	logflags = 0;
->  	switch (ip->i_d.di_format) {
->  	case XFS_DINODE_FMT_LOCAL:
-> -		error = xfs_bmap_add_attrfork_local(tp, ip, &firstblock,
-> -						    &logflags);
-> +		error = xfs_bmap_add_attrfork_local(tp, ip, &logflags);
->  		break;
->  	case XFS_DINODE_FMT_EXTENTS:
-> -		error = xfs_bmap_add_attrfork_extents(tp, ip, &firstblock,
-> -						      &logflags);
-> +		error = xfs_bmap_add_attrfork_extents(tp, ip, &logflags);
->  		break;
->  	case XFS_DINODE_FMT_BTREE:
-> -		error = xfs_bmap_add_attrfork_btree(tp, ip, &firstblock,
-> -						    &logflags);
-> +		error = xfs_bmap_add_attrfork_btree(tp, ip, &logflags);
->  		break;
->  	default:
->  		error = 0;
-> -- 
-> 2.17.1
+> Seeing as we have a bunch of storage at our disposal, I think we could
+> push the records out to disk (or just write them straight into a new
+> btree) when we detect low memory conditions or consume more than some
+> threshold of memory. i
+
+*nod* That's kinda along the lines of what I was thinking of.
+
+> For v0 I was focusing on getting it to work at all
+> even with a largeish memory cost. :)
+
+Right, I'm not suggesting that this needs to be done before the
+initial merge - I just want to make sure we don't back ourselves
+into a corner we can't get out of.
+
+> > If that's a potential direction, then maybe we can look at this as a
+> > future direction? It also leads to the posibility of
+> > pausing/continuing repair from where the last chunk of records were
+> > processed, so if we do run out of memory we don't have to start from
+> > the beginning again?
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> That could be difficult to do in practice -- we'll continue to
+> accumulate deferred frees for that AG in the meantime.
+
+I think it depends on the way we record deferred frees, but it's a
+bit premature to be discussing this right now :P
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
