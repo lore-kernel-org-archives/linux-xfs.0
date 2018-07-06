@@ -1,65 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail02.adl2.internode.on.net ([150.101.137.139]:44953 "EHLO
-        ipmail02.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753451AbeGFBIz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Jul 2018 21:08:55 -0400
-Date: Fri, 6 Jul 2018 11:08:41 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 11/21] xfs: repair the rmapbt
-Message-ID: <20180706010841.GS2234@dastard>
-References: <152986820984.3155.16417868536016544528.stgit@magnolia>
- <152986827881.3155.10096839660329617215.stgit@magnolia>
- <20180703053200.GH2234@dastard>
- <20180703235901.GY32415@magnolia>
- <20180704232115.GP2234@dastard>
- <20180705034858.GH32415@magnolia>
- <20180705070324.GQ2234@dastard>
- <20180706004637.GI32415@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180706004637.GI32415@magnolia>
+Received: from aserp2130.oracle.com ([141.146.126.79]:40766 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753870AbeGFDMx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Jul 2018 23:12:53 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w6638vKf176363
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 03:12:52 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp2130.oracle.com with ESMTP id 2k0dnjg050-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 06 Jul 2018 03:12:52 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w663Cq9B006502
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 03:12:52 GMT
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w663Cq5d006336
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 03:12:52 GMT
+From: Shan Hai <shan.hai@oracle.com>
+Subject: [PATCH RFC 8/8] xfs: skip local format inode for reflinking
+Date: Fri,  6 Jul 2018 11:12:29 +0800
+Message-Id: <1530846750-6686-9-git-send-email-shan.hai@oracle.com>
+In-Reply-To: <1530846750-6686-1-git-send-email-shan.hai@oracle.com>
+References: <1530846750-6686-1-git-send-email-shan.hai@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Thu, Jul 05, 2018 at 05:47:48PM -0700, Darrick J. Wong wrote:
-> On Thu, Jul 05, 2018 at 05:03:24PM +1000, Dave Chinner wrote:
-> > IOWs, ISTM that the online scrub/repair algorithms break down in the
-> > face of rmap corruption and it is correctable only by building a
-> > global cross-reference which we can then reconcile and use to
-> > rebuild all the per-AG metadata btrees in the filesystem. Trying to
-> > do it online via scanning of unverifiable structures risks making
-> > the problem worse and there is a good possibility that we can't
-> > repair the inconsistencies in a single pass.
-> 
-> Yeah.  I've pondered whether or not the primary repairers ought to
-> require at least a quick rmap scan before they touch anything, but up
-> till now I've preferred to keep that knowledge in xfs_scrub.
+The local format inode holds the data inline in its data fork and
+has no extents at all, so skip the inode for reflinking.
 
-I think that's fine - scrub is most likely going to be the trigger
-to run online repair, anyway.
+Signed-off-by: Shan Hai <shan.hai@oracle.com>
+---
+ fs/xfs/xfs_reflink.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-> > So at this point, I'd prefer that we stop, discuss and work out a
-> > solution to the rmap rebuild problem rather than merge a rmap
-> > rebuild algorithm prematurely. This doesn't need to hold up any of
-> > the other online repair functionality - none of that is dependent on
-> > this particular piece of the puzzle being implemented.
-> 
-> I didn't think it would hold up the others repairers.  I always knew
-> that the rmapbt repair was going to be a tough project. :)
-> 
-> So, seeing as you're about to head off on vacation, let's set a rough
-> time to discuss the rmap rebuild problem in detail once you're back.
-> Does that sound good?
-
-Yes. Gives us some thinking time, too :P
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 592fb2071a03..dfb3a85ec0e6 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -1507,6 +1507,12 @@ xfs_reflink_inode_has_shared_extents(
+ 	int				error;
+ 
+ 	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
++
++	if (ifp->if_flags & XFS_IFINLINE) {
++		*has_shared = false;
++		return 0;
++	}
++
+ 	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+ 		error = xfs_iread_extents(tp, ip, XFS_DATA_FORK);
+ 		if (error)
 -- 
-Dave Chinner
-david@fromorbit.com
+2.11.0
+
