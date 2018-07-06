@@ -1,159 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:45492 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753823AbeGFDQd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Jul 2018 23:16:33 -0400
-Date: Thu, 5 Jul 2018 20:16:29 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 19/21] xfs: repair quotas
-Message-ID: <20180706031629.GK32415@magnolia>
-References: <152986820984.3155.16417868536016544528.stgit@magnolia>
- <152986833543.3155.2878459585391745135.stgit@magnolia>
- <20180706015025.GT2234@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180706015025.GT2234@dastard>
+Received: from userp2120.oracle.com ([156.151.31.85]:40434 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753806AbeGFDMp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Jul 2018 23:12:45 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w663A7Mb148868
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 03:12:44 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2120.oracle.com with ESMTP id 2k0dnjqyky-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 06 Jul 2018 03:12:44 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w663ChrY011926
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 03:12:43 GMT
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w663Cgv0003801
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 03:12:43 GMT
+From: Shan Hai <shan.hai@oracle.com>
+Subject: [PATCH RFC 0/8] xfs: introduce inode data inline feature
+Date: Fri,  6 Jul 2018 11:12:21 +0800
+Message-Id: <1530846750-6686-1-git-send-email-shan.hai@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Fri, Jul 06, 2018 at 11:50:25AM +1000, Dave Chinner wrote:
-> On Sun, Jun 24, 2018 at 12:25:35PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Fix anything that causes the quota verifiers to fail.
-> > +/* Fix anything the verifiers complain about. */
-> > +STATIC int
-> > +xfs_repair_quota_block(
-> > +	struct xfs_scrub_context	*sc,
-> > +	struct xfs_buf			*bp,
-> > +	uint				dqtype,
-> > +	xfs_dqid_t			id)
-> > +{
-> > +	struct xfs_dqblk		*d = (struct xfs_dqblk *)bp->b_addr;
-> > +	struct xfs_disk_dquot		*ddq;
-> > +	struct xfs_quotainfo		*qi = sc->mp->m_quotainfo;
-> > +	enum xfs_blft			buftype = 0;
-> > +	int				i;
-> > +
-> > +	bp->b_ops = &xfs_dquot_buf_ops;
-> > +	for (i = 0; i < qi->qi_dqperchunk; i++) {
-> > +		ddq = &d[i].dd_diskdq;
-> > +
-> > +		ddq->d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
-> > +		ddq->d_version = XFS_DQUOT_VERSION;
-> > +		ddq->d_flags = dqtype;
-> > +		ddq->d_id = cpu_to_be32(id + i);
-> > +
-> > +		xfs_repair_quota_fix_timer(ddq->d_blk_softlimit,
-> > +				ddq->d_bcount, &ddq->d_btimer,
-> > +				qi->qi_btimelimit);
-> > +		xfs_repair_quota_fix_timer(ddq->d_ino_softlimit,
-> > +				ddq->d_icount, &ddq->d_itimer,
-> > +				qi->qi_itimelimit);
-> > +		xfs_repair_quota_fix_timer(ddq->d_rtb_softlimit,
-> > +				ddq->d_rtbcount, &ddq->d_rtbtimer,
-> > +				qi->qi_rtbtimelimit);
-> > +
-> > +		if (xfs_sb_version_hascrc(&sc->mp->m_sb)) {
-> > +			uuid_copy(&d->dd_uuid, &sc->mp->m_sb.sb_meta_uuid);
-> > +			xfs_update_cksum((char *)d, sizeof(struct xfs_dqblk),
-> > +					 XFS_DQUOT_CRC_OFF);
-> 
-> Hmmm - Do we need to reset the lsn here, too? 
 
-Probably, but...
+This series implements xfs inode data inlining feature.
 
-> What makes me think - do we check that the lsn is valid in verifiers
-> and so catch/fix problems where the lsn is outside the valid range
-> of the current log LSNs?
+Refered below link during development:
+https://marc.info/?l=linux-xfs&m=120493585731509&w=2
 
-...while we use them to skip old dquot logs during log recovery, we
-don't check them otherwise AFAICT.
 
-> > +STATIC int
-> > +xfs_repair_quota_data_fork(
-> > +	struct xfs_scrub_context	*sc,
-> > +	uint				dqtype)
-> > +{
-> > +	struct xfs_bmbt_irec		irec = { 0 };
-> > +	struct xfs_iext_cursor		icur;
-> > +	struct xfs_quotainfo		*qi = sc->mp->m_quotainfo;
-> > +	struct xfs_ifork		*ifp;
-> > +	struct xfs_buf			*bp;
-> > +	struct xfs_dqblk		*d;
-> > +	xfs_dqid_t			id;
-> > +	xfs_fileoff_t			max_dqid_off;
-> > +	xfs_fileoff_t			off;
-> > +	xfs_fsblock_t			fsbno;
-> > +	bool				truncate = false;
-> > +	int				error = 0;
-> > +
-> > +	error = xfs_repair_metadata_inode_forks(sc);
-> > +	if (error)
-> > +		goto out;
-> > +
-> > +	/* Check for data fork problems that apply only to quota files. */
-> > +	max_dqid_off = ((xfs_dqid_t)-1) / qi->qi_dqperchunk;
-> > +	ifp = XFS_IFORK_PTR(sc->ip, XFS_DATA_FORK);
-> > +	for_each_xfs_iext(ifp, &icur, &irec) {
-> > +		if (isnullstartblock(irec.br_startblock)) {
-> > +			error = -EFSCORRUPTED;
-> > +			goto out;
-> > +		}
-> > +
-> > +		if (irec.br_startoff > max_dqid_off ||
-> > +		    irec.br_startoff + irec.br_blockcount - 1 > max_dqid_off) {
-> > +			truncate = true;
-> > +			break;
-> > +		}
-> > +	}
-> > +	if (truncate) {
-> > +		error = xfs_itruncate_extents(&sc->tp, sc->ip, XFS_DATA_FORK,
-> > +				max_dqid_off * sc->mp->m_sb.sb_blocksize);
-> > +		if (error)
-> > +			goto out;
-> > +	}
-> > +
-> > +	/* Now go fix anything that fails the verifiers. */
-> > +	for_each_xfs_iext(ifp, &icur, &irec) {
-> > +		for (fsbno = irec.br_startblock, off = irec.br_startoff;
-> > +		     fsbno < irec.br_startblock + irec.br_blockcount;
-> > +		     fsbno += XFS_DQUOT_CLUSTER_SIZE_FSB,
-> > +				off += XFS_DQUOT_CLUSTER_SIZE_FSB) {
-> > +			id = off * qi->qi_dqperchunk;
-> > +			error = xfs_trans_read_buf(sc->mp, sc->tp,
-> > +					sc->mp->m_ddev_targp,
-> > +					XFS_FSB_TO_DADDR(sc->mp, fsbno),
-> > +					qi->qi_dqchunklen,
-> > +					0, &bp, &xfs_dquot_buf_ops);
-> > +			if (error == 0) {
-> > +				d = (struct xfs_dqblk *)bp->b_addr;
-> > +				if (id == be32_to_cpu(d->dd_diskdq.d_id))
-> > +					continue;
-> 
-> Need to release the buffer here - it's clean and passes the
-> verifier, so no need to hold on to them as we may have thousands of
-> them to walk here.
+How it works:
+- the data inlining happens at:
+  write_iter: for DIO/DAX write
+  writeback: for buffered write
+- extents to local format conversion is done in writeback but not in write_iter
+- local to extents format conversion is done in the write_iter and writeback
+- log the whole inode (core/data) on extents to local conversion
+- add a new mkfs.xfs option to enable data inline feature
 
-Ok.
+How to test:
+mkfs.xfs -f -i size=2048,inline=1 -m crc=1,finobt=1,rmapbt=1,reflink=1 /dev/sdX
+mount /dev/sdX mnt_pnt
 
-> Otherwise looks ok.
+Test results:
+mkfs.xfs -f -i size=2048,inline=1 -m crc=1,finobt=1,rmapbt=1,reflink=1 /dev/sdb
+mkfs.xfs -f -i size=2048          -m crc=1,finobt=1,rmapbt=1,reflink=1 /dev/sdd
+mount /dev/sdb /mnt/sdb
+mount /dev/sdd /mnt/sdd
 
-Thank you for the review!
+Copy the linux v4.18-rc3 source code to /mnt/sdb and /mnt/sdd respectively:
+Filesystem                        Size  Used Avail Use% Mounted on
+/dev/sdb                           10G  2.4G  7.7G  24% /mnt/sdb
+/dev/sdd                           10G  3.1G  6.9G  31% /mnt/sdd
 
---D
+mkfs.xfs -f -i size=2048,inline=1 -m crc=1,finobt=1,rmapbt=1,reflink=1 /dev/sdc
+mkfs.xfs -f -i size=2048          -m crc=1,finobt=1,rmapbt=1,reflink=1 /dev/sde
+mount /dev/sdc /mnt/sdc
+mount /dev/sde /mnt/sde
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Build the v4.18-rc3 kernel on /dev/sdc and /dev/sde respectively:
+make x86_64_defconfig
+
+Filesystem                        Size  Used Avail Use% Mounted on
+/dev/sdc                           10G  689M  9.4G   7% /mnt/sdc
+/dev/sde                           10G  694M  9.4G   7% /mnt/sde
+
+Kernel part:
+0001-xfs-introduce-inline-data-superblock-feature-bit.patch
+0002-xfs-introduce-extents-to-local-conversion-helper.patch
+0003-xfs-convert-inode-from-extents-to-local-format.patch
+0004-xfs-implement-inline-data-read-write-code.patch
+0005-xfs-consider-the-local-format-inode-in-misc-operatio.patch
+0006-xfs-fix-imbalanced-locking.patch
+0007-xfs-return-non-zero-blocks-for-inline-data.patch
+0008-xfs-skip-local-format-inode-for-reflinking.patch
+
+ fs/xfs/libxfs/xfs_bmap.c      |  78 +++++++++++++++++++++++++++++++-----
+ fs/xfs/libxfs/xfs_bmap.h      |   4 ++
+ fs/xfs/libxfs/xfs_format.h    |  10 ++++-
+ fs/xfs/libxfs/xfs_fs.h        |   1 +
+ fs/xfs/libxfs/xfs_inode_buf.c |   6 ---
+ fs/xfs/libxfs/xfs_sb.c        |   2 +
+ fs/xfs/scrub/inode.c          |   2 +-
+ fs/xfs/xfs_aops.c             |  60 ++++++++++++++++++++++++++++
+ fs/xfs/xfs_bmap_util.c        |  11 +++++-
+ fs/xfs/xfs_file.c             | 244 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_inode.c            |  20 +++++++---
+ fs/xfs/xfs_inode_item.c       |   5 ++-
+ fs/xfs/xfs_ioctl.c            |   5 ++-
+ fs/xfs/xfs_iomap.c            |   5 ++-
+ fs/xfs/xfs_iops.c             |   8 +++-
+ fs/xfs/xfs_log_recover.c      |   3 +-
+ fs/xfs/xfs_reflink.c          |   6 +++
+ 17 files changed, 437 insertions(+), 33 deletions(-)
+
+xfsprogs part:
+0001-xfsprogs-add-inode-inline-data-support.patch 
+
+ growfs/xfs_growfs.c | 14 +++++++++-----
+ libxfs/xfs_format.h |  4 +++-
+ libxfs/xfs_fs.h     |  1 +
+ mkfs/xfs_mkfs.c     | 20 +++++++++++++++++---
+ 4 files changed, 30 insertions(+), 9 deletions(-)
+
+
+Thanks
+Shan Hai
