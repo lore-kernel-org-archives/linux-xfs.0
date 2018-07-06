@@ -1,147 +1,337 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:13687 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753070AbeGEHD2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Jul 2018 03:03:28 -0400
-Date: Thu, 5 Jul 2018 17:03:24 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 11/21] xfs: repair the rmapbt
-Message-ID: <20180705070324.GQ2234@dastard>
-References: <152986820984.3155.16417868536016544528.stgit@magnolia>
- <152986827881.3155.10096839660329617215.stgit@magnolia>
- <20180703053200.GH2234@dastard>
- <20180703235901.GY32415@magnolia>
- <20180704232115.GP2234@dastard>
- <20180705034858.GH32415@magnolia>
+Received: from userp2120.oracle.com ([156.151.31.85]:56184 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753943AbeGFDk4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Jul 2018 23:40:56 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w663cxsC165858
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 03:40:55 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2120.oracle.com with ESMTP id 2k0dnjr0yt-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 06 Jul 2018 03:40:55 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w663esOO003963
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 03:40:55 GMT
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w663espK023670
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 03:40:54 GMT
+Date: Thu, 5 Jul 2018 20:40:53 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH RFC 5/8] xfs: consider the local format inode in misc
+ operations
+Message-ID: <20180706034053.GP32415@magnolia>
+References: <1530846750-6686-1-git-send-email-shan.hai@oracle.com>
+ <1530846750-6686-6-git-send-email-shan.hai@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180705034858.GH32415@magnolia>
+In-Reply-To: <1530846750-6686-6-git-send-email-shan.hai@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Shan Hai <shan.hai@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Jul 04, 2018 at 08:48:58PM -0700, Darrick J. Wong wrote:
-> On Thu, Jul 05, 2018 at 09:21:15AM +1000, Dave Chinner wrote:
-> > On Tue, Jul 03, 2018 at 04:59:01PM -0700, Darrick J. Wong wrote:
-> > > On Tue, Jul 03, 2018 at 03:32:00PM +1000, Dave Chinner wrote:
-> > Keep in mind that online repair will never guarantee that it can fix
-> > all problems, so we're always going to have to offline repair. iWhat
-> > we want to achieve is minimising downtime for users when a repair is
-> > required. With the above IO limitations in mind, I've always
-> > considered that online repair would just be for all the simple,
-> > quick, easy to fix stuff, because complex stuff that required huge
-> > amounts of RAM and full filesystem scans to resolve would always be
-> > done faster offline.
-> >
-> > That's why I think that offline repair will be a better choice for
-> > users for the forseeable future if repairing the damage requires
-> > full filesystem metadata scans.
+On Fri, Jul 06, 2018 at 11:12:26AM +0800, Shan Hai wrote:
+> The local format inode is a legal citizen from now on and consider
+> it in misc operations.
 > 
-> That might be, but how else can we determine that than to merge it under
-> an experimental banner, iterate it for a while, and try to persuade a
-> wider band of users than ourselves to try it on a non-production system
-> to see if it better solves their problems? :)
-
-I think "deploy and idea to users and see if they have problems" is
-a horrible development model. That's where btrfs went off the rails
-almost 10 years ago....
-
-That aside, I'd like to make sure we're on the same page - we don't
-need online repair to fix /everything/ before it gets merged. Even
-without rmap rebuild, it will still be usable and useful to the vast
-majority of users wanting the filesystem to self repair the typical
-one-off corruption problems filesystems encounter during their
-typical production life.
-
-What I'm worried about is that the online repair algorithms have a
-fundmental dependence on rmap lookups to avoid the need to build the
-global cross-references needed to isolate and repair corruptions.
-This use of rmap, from one angle, can be seen as a performance
-optimisation, but as I've come understand more of the algorithms the
-online repair code uses, it looks more like an intractable problem
-than one of performance optimisation.
-
-That is, if the rmap is corrupt, or we even suspect that it's
-corrupt, then we cannot use it to validate the state and contents of
-the other on-disk structures. We could propagate rmap corruptions to
-those other structures and it would go undetected. And because we
-can't determine the validity of all the other structures, the only
-way we can correctly repair the filesystem is to build a global
-cross-reference, resolve all the inconsistencies, and then rewrite
-all the structures. i.e. we need to do what xfs_repair does in phase
-3, 4 and 5.
-
-IOWs, ISTM that the online scrub/repair algorithms break down in the
-face of rmap corruption and it is correctable only by building a
-global cross-reference which we can then reconcile and use to
-rebuild all the per-AG metadata btrees in the filesystem. Trying to
-do it online via scanning of unverifiable structures risks making
-the problem worse and there is a good possibility that we can't
-repair the inconsistencies in a single pass.
-
-So at this point, I'd prefer that we stop, discuss and work out a
-solution to the rmap rebuild problem rather than merge a rmap
-rebuild algorithm prematurely. This doesn't need to hold up any of
-the other online repair functionality - none of that is dependent on
-this particular piece of the puzzle being implemented.
-
-> At worst, if future us decide that we will never figure out how to make
-> online rmapbt repair robust I'm fully prepared to withdraw it.
-
-Merging new features before sorting out the fundamental principles,
-behaviours and algorithms of those features is how btrfs ended up
-with a pile of stuff that doesn't quite work which no-one
-understands quite well enough to fix.
-
-> > > > This seems like a likely thing to happen given the "no reclaim"
-> > > > state of the filesystem and the memory demand a rmapbt rebuild
-> > > > can have. If we've got GBs of rmap info in the AG that needs to be
-> > > > rebuilt, how much RAM are we going to need to index it all as we
-> > > > scan the filesystem?
-> > > 
-> > > More than I'd like -- at least 24 bytes per record (which at least is no
-> > > larger than the size of the on-disk btree) plus a list_head until I can
-> > > move the repairers away from creating huge lists.
-> > 
-> > Ok, it kinda sounds a bit like we need to be able to create the new
-> > btree on the fly, rather than as a single operation at the end. e.g.
-> > if the list builds up to, say, 100k records, we push them into the
-> > new tree and can free them. e.g. can we iteratively build the new
-> > tree on disk as we go, then do a root block swap at the end to
-> > switch from the old tree to the new tree?
+> Signed-off-by: Shan Hai <shan.hai@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c      | 18 ++++++++++--------
+>  fs/xfs/libxfs/xfs_inode_buf.c |  6 ------
+>  fs/xfs/scrub/inode.c          |  2 +-
+>  fs/xfs/xfs_bmap_util.c        | 11 +++++++++--
+>  fs/xfs/xfs_inode.c            | 20 ++++++++++++++------
+>  fs/xfs/xfs_inode_item.c       |  5 ++++-
+>  fs/xfs/xfs_iomap.c            |  5 +++--
+>  fs/xfs/xfs_log_recover.c      |  3 ++-
+>  8 files changed, 43 insertions(+), 27 deletions(-)
 > 
-> Seeing as we have a bunch of storage at our disposal, I think we could
-> push the records out to disk (or just write them straight into a new
-> btree) when we detect low memory conditions or consume more than some
-> threshold of memory. i
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index bea6dc254a7d..6b151bd15da7 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -830,11 +830,6 @@ xfs_bmap_local_to_extents(
+>  	struct xfs_bmbt_irec rec;
+>  	struct xfs_iext_cursor icur;
+>  
+> -	/*
+> -	 * We don't want to deal with the case of keeping inode data inline yet.
+> -	 * So sending the data fork of a regular inode is invalid.
+> -	 */
+> -	ASSERT(!(S_ISREG(VFS_I(ip)->i_mode) && whichfork == XFS_DATA_FORK));
+>  	ifp = XFS_IFORK_PTR(ip, whichfork);
+>  	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL);
+>  
+> @@ -3840,7 +3835,8 @@ xfs_bmapi_read(
+>  
+>  	if (unlikely(XFS_TEST_ERROR(
+>  	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
+> -	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE),
+> +	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE &&
+> +	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL),
+>  	     mp, XFS_ERRTAG_BMAPIFORMAT))) {
+>  		XFS_ERROR_REPORT("xfs_bmapi_read", XFS_ERRLEVEL_LOW, mp);
+>  		return -EFSCORRUPTED;
+> @@ -3863,7 +3859,7 @@ xfs_bmapi_read(
+>  		return 0;
+>  	}
+>  
+> -	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+> +	if (!(ifp->if_flags & (XFS_IFINLINE | XFS_IFEXTENTS))) {
+>  		error = xfs_iread_extents(NULL, ip, whichfork);
+>  		if (error)
+>  			return error;
+> @@ -4285,7 +4281,6 @@ xfs_bmapi_write(
+>  	       (flags & (XFS_BMAPI_CONVERT | XFS_BMAPI_COWFORK)) ==
+>  			(XFS_BMAPI_CONVERT | XFS_BMAPI_COWFORK));
+>  	ASSERT(len > 0);
+> -	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL);
+>  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+>  	ASSERT(!(flags & XFS_BMAPI_REMAP));
+>  
+> @@ -5244,11 +5239,18 @@ __xfs_bunmapi(
+>  	ifp = XFS_IFORK_PTR(ip, whichfork);
+>  	if (unlikely(
+>  	    XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
+> +	    XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL &&
+>  	    XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE)) {
+>  		XFS_ERROR_REPORT("xfs_bunmapi", XFS_ERRLEVEL_LOW,
+>  				 ip->i_mount);
+>  		return -EFSCORRUPTED;
+>  	}
+> +
+> +	if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL) {
+> +		*rlen = 0;
+> +		return 0;
+> +	}
+> +
+>  	mp = ip->i_mount;
+>  	if (XFS_FORCED_SHUTDOWN(mp))
+>  		return -EIO;
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index 33dc34655ac3..cb3c4b308137 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -157,7 +157,6 @@ const struct xfs_buf_ops xfs_inode_buf_ra_ops = {
+>  	.verify_write = xfs_inode_buf_write_verify,
+>  };
+>  
+> -
+>  /*
+>   * This routine is called to map an inode to the buffer containing the on-disk
+>   * version of the inode.  It returns a pointer to the buffer containing the
+> @@ -384,12 +383,7 @@ xfs_dinode_verify_fork(
+>  
+>  	switch (XFS_DFORK_FORMAT(dip, whichfork)) {
+>  	case XFS_DINODE_FMT_LOCAL:
+> -		/*
+> -		 * no local regular files yet
+> -		 */
+>  		if (whichfork == XFS_DATA_FORK) {
+> -			if (S_ISREG(be16_to_cpu(dip->di_mode)))
+> -				return __this_address;
+>  			if (be64_to_cpu(dip->di_size) >
+>  					XFS_DFORK_SIZE(dip, mp, whichfork))
+>  				return __this_address;
+> diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+> index 7a6208505980..1501983dd7aa 100644
+> --- a/fs/xfs/scrub/inode.c
+> +++ b/fs/xfs/scrub/inode.c
+> @@ -283,7 +283,7 @@ xfs_scrub_dinode(
+>  			xfs_scrub_ino_set_corrupt(sc, ino);
+>  		break;
+>  	case XFS_DINODE_FMT_LOCAL:
+> -		if (!S_ISDIR(mode) && !S_ISLNK(mode))
+> +		if (!S_ISREG(mode) && !S_ISDIR(mode) && !S_ISLNK(mode))
+>  			xfs_scrub_ino_set_corrupt(sc, ino);
+>  		break;
+>  	case XFS_DINODE_FMT_EXTENTS:
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 83b1e8c6c18f..46f718177fd7 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -760,7 +760,8 @@ xfs_can_free_eofblocks(struct xfs_inode *ip, bool force)
+>  		return false;
+>  
+>  	/* If we haven't read in the extent list, then don't do it now. */
+> -	if (!(ip->i_df.if_flags & XFS_IFEXTENTS))
+> +	if (ip->i_d.di_format != XFS_DINODE_FMT_LOCAL &&
+> +		!(ip->i_df.if_flags & XFS_IFEXTENTS))
+>  		return false;
+>  
+>  	/*
+> @@ -768,7 +769,8 @@ xfs_can_free_eofblocks(struct xfs_inode *ip, bool force)
+>  	 * has delalloc blocks and we are forced to remove them.
+>  	 */
+>  	if (ip->i_d.di_flags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND))
+> -		if (!force || ip->i_delayed_blks == 0)
+> +		if ((ip->i_d.di_format != XFS_DINODE_FMT_LOCAL) &&
+> +			(!force || ip->i_delayed_blks == 0))
+>  			return false;
+>  
+>  	return true;
+> @@ -792,6 +794,11 @@ xfs_free_eofblocks(
+>  	struct xfs_bmbt_irec	imap;
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  
+> +	if (xfs_sb_version_hasinlinedata(&mp->m_sb) &&
+> +		ip->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
 
-*nod* That's kinda along the lines of what I was thinking of.
+Bleh, this indentation is confusing me.
 
-> For v0 I was focusing on getting it to work at all
-> even with a largeish memory cost. :)
+if (foobarblahblabhlbahlabhlabh... &&
+    bazcow...)
+	dostuff();
 
-Right, I'm not suggesting that this needs to be done before the
-initial merge - I just want to make sure we don't back ourselves
-into a corner we can't get out of.
+or:
 
-> > If that's a potential direction, then maybe we can look at this as a
-> > future direction? It also leads to the posibility of
-> > pausing/continuing repair from where the last chunk of records were
-> > processed, so if we do run out of memory we don't have to start from
-> > the beginning again?
+if (foobarblahblabhlabhalbhba.. &&
+		bazcow...)
+	dostuff();
+
+> +		ip->i_delayed_blks = 0;
+> +		return 0;
+> +	}
+>  	/*
+>  	 * Figure out if there are any blocks beyond the end
+>  	 * of the file.  If not, then there is nothing to do.
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 5df4de666cc1..78b9790a7cd4 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -1563,7 +1563,6 @@ xfs_itruncate_extents_flags(
+>  	ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
+>  
+>  	trace_xfs_itruncate_extents_start(ip, new_size);
+> -
+>  	flags |= xfs_bmapi_aflag(whichfork);
+>  
+>  	/*
+> @@ -1745,9 +1744,15 @@ xfs_inactive_truncate(
+>  	ip->i_d.di_size = 0;
+>  	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+>  
+> -	error = xfs_itruncate_extents(&tp, ip, XFS_DATA_FORK, 0);
+> -	if (error)
+> -		goto error_trans_cancel;
+> +	if (xfs_sb_version_hasinlinedata(&mp->m_sb) &&
+> +		ip->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
+> +		ASSERT(ip->i_d.di_nextents == 0);
+> +		ip->i_delayed_blks = 0;
+> +	} else {
+> +		error = xfs_itruncate_extents(&tp, ip, XFS_DATA_FORK, 0);
+> +		if (error)
+> +			goto error_trans_cancel;
+> +	}
+>  
+>  	ASSERT(ip->i_d.di_nextents == 0);
+>  
+> @@ -1879,6 +1884,7 @@ xfs_inactive(
+>  	if (VFS_I(ip)->i_mode == 0) {
+>  		ASSERT(ip->i_df.if_real_bytes == 0);
+>  		ASSERT(ip->i_df.if_broot_bytes == 0);
+> +		ASSERT(ip->i_delayed_blks == 0);
+
+Why?
+
+>  		return;
+>  	}
+>  
+> @@ -1911,8 +1917,9 @@ xfs_inactive(
+>  
+>  	if (S_ISREG(VFS_I(ip)->i_mode) &&
+>  	    (ip->i_d.di_size != 0 || XFS_ISIZE(ip) != 0 ||
+> -	     ip->i_d.di_nextents > 0 || ip->i_delayed_blks > 0))
+> +	     ip->i_d.di_nextents >= 0 || ip->i_delayed_blks >= 0)) {
+
+Why does the test change from > to >= ?
+
+>  		truncate = 1;
+> +	}
+>  
+>  	error = xfs_qm_dqattach(ip);
+>  	if (error)
+> @@ -3554,7 +3561,8 @@ xfs_iflush_int(
+>  	if (S_ISREG(VFS_I(ip)->i_mode)) {
+>  		if (XFS_TEST_ERROR(
+>  		    (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS) &&
+> -		    (ip->i_d.di_format != XFS_DINODE_FMT_BTREE),
+> +		    (ip->i_d.di_format != XFS_DINODE_FMT_BTREE) &&
+> +		    (ip->i_d.di_format != XFS_DINODE_FMT_LOCAL),
+>  		    mp, XFS_ERRTAG_IFLUSH_3)) {
+>  			xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
+>  				"%s: Bad regular inode %Lu, ptr "PTR_FMT,
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index 2389c34c172d..52b297987a75 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -139,6 +139,7 @@ xfs_inode_item_format_data_fork(
+>  	struct xfs_log_iovec	**vecp)
+>  {
+>  	struct xfs_inode	*ip = iip->ili_inode;
+> +	struct xfs_mount	*mp = ip->i_mount;
+>  	size_t			data_bytes;
+>  
+>  	switch (ip->i_d.di_format) {
+> @@ -197,7 +198,9 @@ xfs_inode_item_format_data_fork(
+>  			ASSERT(ip->i_df.if_real_bytes == 0 ||
+>  			       ip->i_df.if_real_bytes >= data_bytes);
+>  			ASSERT(ip->i_df.if_u1.if_data != NULL);
+> -			ASSERT(ip->i_d.di_size > 0);
+> +			if (!xfs_sb_version_hasinlinedata(&mp->m_sb)) {
+> +				ASSERT(ip->i_d.di_size > 0);
+
+ASSERT(di_size > 0 || hasinlinedata); ??
+
+> +			}
+>  			xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_ILOCAL,
+>  					ip->i_df.if_u1.if_data, data_bytes);
+>  			ilf->ilf_dsize = (unsigned)data_bytes;
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 55876dd02f0c..aa72966081c5 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -532,7 +532,8 @@ xfs_file_iomap_begin_delay(
+>  
+>  	if (unlikely(XFS_TEST_ERROR(
+>  	    (XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_EXTENTS &&
+> -	     XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_BTREE),
+> +	     XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_BTREE &&
+> +	     XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_LOCAL),
+>  	     mp, XFS_ERRTAG_BMAPIFORMAT))) {
+>  		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
+>  		error = -EFSCORRUPTED;
+> @@ -541,7 +542,7 @@ xfs_file_iomap_begin_delay(
+>  
+>  	XFS_STATS_INC(mp, xs_blk_mapw);
+>  
+> -	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+> +	if (!(ifp->if_flags & (XFS_IFINLINE |XFS_IFEXTENTS))) {
+>  		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
+>  		if (error)
+>  			goto out_unlock;
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index b181b5f57a19..d8828f275d9a 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -3121,7 +3121,8 @@ xlog_recover_inode_pass2(
+>  
+>  	if (unlikely(S_ISREG(ldip->di_mode))) {
+>  		if ((ldip->di_format != XFS_DINODE_FMT_EXTENTS) &&
+> -		    (ldip->di_format != XFS_DINODE_FMT_BTREE)) {
+> +		    (ldip->di_format != XFS_DINODE_FMT_BTREE) &&
+> +		    (ldip->di_format != XFS_DINODE_FMT_LOCAL)) {
+>  			XFS_CORRUPTION_ERROR("xlog_recover_inode_pass2(3)",
+>  					 XFS_ERRLEVEL_LOW, mp, ldip,
+>  					 sizeof(*ldip));
+> -- 
+> 2.11.0
 > 
-> That could be difficult to do in practice -- we'll continue to
-> accumulate deferred frees for that AG in the meantime.
-
-I think it depends on the way we record deferred frees, but it's a
-bit premature to be discussing this right now :P
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
