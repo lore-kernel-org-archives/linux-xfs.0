@@ -1,181 +1,387 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:44150 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732562AbeGKQ3p (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jul 2018 12:29:45 -0400
-Date: Wed, 11 Jul 2018 09:24:34 -0700
+Received: from aserp2130.oracle.com ([141.146.126.79]:52870 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753818AbeGFDdb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Jul 2018 23:33:31 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w663XVnB192014
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 03:33:31 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp2130.oracle.com with ESMTP id 2k0dnjg17x-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 06 Jul 2018 03:33:30 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w663XTkx023211
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 03:33:30 GMT
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w663XTnc027949
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 03:33:29 GMT
+Date: Thu, 5 Jul 2018 20:33:28 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 4/6] xfs: introduce a new xfs_inode_has_cow_data helper
-Message-ID: <20180711162434.GD32415@magnolia>
-References: <20180710060528.4071-1-hch@lst.de>
- <20180710060528.4071-5-hch@lst.de>
+Subject: Re: [PATCH RFC 4/8] xfs: implement inline data read write code
+Message-ID: <20180706033328.GM32415@magnolia>
+References: <1530846750-6686-1-git-send-email-shan.hai@oracle.com>
+ <1530846750-6686-5-git-send-email-shan.hai@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180710060528.4071-5-hch@lst.de>
+In-Reply-To: <1530846750-6686-5-git-send-email-shan.hai@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
+To: Shan Hai <shan.hai@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jul 10, 2018 at 08:05:26AM +0200, Christoph Hellwig wrote:
-> We have a few places that already check if an inode has actual data in
-> the COW fork to avoid work on reflink inodes that do not actually have
-> outstanding COW blocks.  There are a few more places that can avoid
-> working if doing the same check, so add a documented helper for this
-> condition and use it in all places where it makes sense.
+On Fri, Jul 06, 2018 at 11:12:25AM +0800, Shan Hai wrote:
+> Implement read/write functions for inline data access and use them
+> for buffered/DIO/DAX operations.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Looks ok, I think.
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
+> Signed-off-by: Shan Hai <shan.hai@oracle.com>
 > ---
->  fs/xfs/xfs_aops.c      |  4 ++--
->  fs/xfs/xfs_bmap_util.c |  2 +-
->  fs/xfs/xfs_icache.c    | 10 ++++------
->  fs/xfs/xfs_inode.c     |  3 +--
->  fs/xfs/xfs_inode.h     |  9 +++++++++
->  fs/xfs/xfs_reflink.c   |  2 +-
->  6 files changed, 18 insertions(+), 12 deletions(-)
+>  fs/xfs/xfs_file.c | 244 +++++++++++++++++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 242 insertions(+), 2 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index f4d3252236c1..814100d27343 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -338,7 +338,7 @@ xfs_map_blocks(
->  	imap_valid = offset_fsb >= wpc->imap.br_startoff &&
->  		     offset_fsb < wpc->imap.br_startoff + wpc->imap.br_blockcount;
->  	if (imap_valid &&
-> -	    (!xfs_is_reflink_inode(ip) || wpc->io_type == XFS_IO_COW))
-> +	    (!xfs_inode_has_cow_data(ip) || wpc->io_type == XFS_IO_COW))
->  		return 0;
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index a3e7767a5715..55047928b720 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -27,6 +27,7 @@
+>  #include "xfs_pnfs.h"
+>  #include "xfs_iomap.h"
+>  #include "xfs_reflink.h"
+> +#include "xfs_defer.h"
 >  
->  	if (XFS_FORCED_SHUTDOWN(mp))
-> @@ -363,7 +363,7 @@ xfs_map_blocks(
->  	 * Check if this is offset is covered by a COW extents, and if yes use
->  	 * it directly instead of looking up anything in the data fork.
->  	 */
-> -	if (xfs_is_reflink_inode(ip) &&
-> +	if (xfs_inode_has_cow_data(ip) &&
->  	    xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &imap) &&
->  	    imap.br_startoff <= offset_fsb) {
->  		xfs_iunlock(ip, XFS_ILOCK_SHARED);
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index da561882c349..d78f8300607f 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -1280,7 +1280,7 @@ xfs_prepare_shift(
->  	 * we've flushed all the dirty data out to disk to avoid having
->  	 * CoW extents at the wrong offsets.
->  	 */
-> -	if (xfs_is_reflink_inode(ip)) {
-> +	if (xfs_inode_has_cow_data(ip)) {
->  		error = xfs_reflink_cancel_cow_range(ip, offset, NULLFILEOFF,
->  				true);
->  		if (error)
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 79f344fa8b14..fdae4c2d461e 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -1697,14 +1697,13 @@ xfs_inode_clear_eofblocks_tag(
->   */
->  static bool
->  xfs_prep_free_cowblocks(
-> -	struct xfs_inode	*ip,
-> -	struct xfs_ifork	*ifp)
-> +	struct xfs_inode	*ip)
->  {
->  	/*
->  	 * Just clear the tag if we have an empty cow fork or none at all. It's
->  	 * possible the inode was fully unshared since it was originally tagged.
->  	 */
-> -	if (!xfs_is_reflink_inode(ip) || !ifp->if_bytes) {
-> +	if (!xfs_inode_has_cow_data(ip)) {
->  		trace_xfs_inode_free_cowblocks_invalid(ip);
->  		xfs_inode_clear_cowblocks_tag(ip);
->  		return false;
-> @@ -1742,11 +1741,10 @@ xfs_inode_free_cowblocks(
->  	void			*args)
->  {
->  	struct xfs_eofblocks	*eofb = args;
-> -	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
->  	int			match;
->  	int			ret = 0;
->  
-> -	if (!xfs_prep_free_cowblocks(ip, ifp))
-> +	if (!xfs_prep_free_cowblocks(ip))
->  		return 0;
->  
->  	if (eofb) {
-> @@ -1771,7 +1769,7 @@ xfs_inode_free_cowblocks(
->  	 * Check again, nobody else should be able to dirty blocks or change
->  	 * the reflink iflag now that we have the first two locks held.
->  	 */
-> -	if (xfs_prep_free_cowblocks(ip, ifp))
-> +	if (xfs_prep_free_cowblocks(ip))
->  		ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, false);
->  
->  	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index b6da446ae946..2036e49f7e15 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -1868,7 +1868,6 @@ xfs_inactive(
->  	xfs_inode_t	*ip)
->  {
->  	struct xfs_mount	*mp;
-> -	struct xfs_ifork	*cow_ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
->  	int			error;
->  	int			truncate = 0;
->  
-> @@ -1889,7 +1888,7 @@ xfs_inactive(
->  		return;
->  
->  	/* Try to clean out the cow blocks if there are any. */
-> -	if (xfs_is_reflink_inode(ip) && cow_ifp->if_bytes > 0)
-> +	if (xfs_inode_has_cow_data(ip))
->  		xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, true);
->  
->  	if (VFS_I(ip)->i_nlink != 0) {
-> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> index 1f910d2ae73a..82d27a295336 100644
-> --- a/fs/xfs/xfs_inode.h
-> +++ b/fs/xfs/xfs_inode.h
-> @@ -198,6 +198,15 @@ static inline bool xfs_is_reflink_inode(struct xfs_inode *ip)
->  	return ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK;
+>  #include <linux/dcache.h>
+>  #include <linux/falloc.h>
+> @@ -175,6 +176,185 @@ xfs_file_fsync(
+>  	return error;
 >  }
 >  
 > +/*
-> + * Check if an inode has any data in the COW fork.  This might be often false
-> + * even for inodes with the reflink flag when there is no pending COW operation.
+> + * Read the inline data of a local format file.
 > + */
-> +static inline bool xfs_inode_has_cow_data(struct xfs_inode *ip)
+> +STATIC ssize_t
+> +xfs_file_inline_data_read(
+> +	struct xfs_inode	*ip,
+> +	int			whichfork,
+> +	struct kiocb		*iocb,
+> +	struct iov_iter		*to)
 > +{
-> +	return ip->i_cowfp && ip->i_cowfp->if_bytes;
+> +	xfs_ifork_t		*ifp = XFS_IFORK_PTR(ip, whichfork);
+> +	struct inode		*inode = VFS_I(ip);
+> +	loff_t			isize = i_size_read(inode);
+> +	loff_t			*ppos = &iocb->ki_pos;
+> +	size_t			count = iov_iter_count(to);
+> +	ssize_t			ret = 0;
+> +
+> +	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS ||
+> +	       XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL);
+> +
+> +	if (!count)
+> +		return 0;
+> +
+> +	if (unlikely(*ppos >= inode->i_sb->s_maxbytes))
+> +		return 0;
+> +
+> +	if (*ppos > isize)
+> +		return 0;
+> +
+> +	iov_iter_truncate(to, inode->i_sb->s_maxbytes);
+> +	count = (*ppos + count > isize) ? isize - *ppos : count;
+> +	ret = copy_to_iter(ifp->if_u1.if_data + *ppos, count, to);
+> +	*ppos += ret;
+> +
+> +	return ret;
 > +}
 > +
->  /*
->   * In-core inode flags.
->   */
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 49e4913fa779..789310c547e6 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -494,7 +494,7 @@ xfs_reflink_cancel_cow_blocks(
->  	struct xfs_defer_ops		dfops;
->  	int				error = 0;
+> +/*
+> + * Try to inline the data into the xfs inode data fork when it has enough
+> + * space to hold it. The data inlining happens at below points:
+> + *
+> + * - writeback: for buffered writes
+> + * - write_iter: for dax/dio writes
+> + *
+> + * The extents to local format conversion is done here for DAX/DIO write,
+> + * while the same conversion is done in the writeback path for buffered write.
+> + * This function also converts inode from local to extents when the data
+> + * fork could not hold the data inline anymore.
+> + */
+> +STATIC ssize_t
+> +xfs_file_inline_data_write(
+> +	struct xfs_inode	*ip,
+> +	int			whichfork,
+> +	struct kiocb		*iocb,
+> +	struct iov_iter		*from)
+> +{
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	xfs_ifork_t		*ifp = XFS_IFORK_PTR(ip, whichfork);
+> +	struct inode		*inode = VFS_I(ip);
+> +	struct address_space	*mapping = inode->i_mapping;
+> +	loff_t			pos = iocb->ki_pos;
+> +	size_t			count = iov_iter_count(from);
+> +	struct xfs_trans	*tp;
+> +	struct xfs_defer_ops	dfops;
+> +	xfs_fsblock_t		first_block;
+> +	int			ret;
+> +	int			error = 0;
+> +	int			logflags = 0;
+> +	loff_t			written = 0;
+> +	xfs_fileoff_t		bno = 0;
+> +	struct xfs_bmbt_irec	map;
+> +	int			nmap;
+> +	struct page		*page;
+> +	char			*kaddr;
+> +
+> +	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS ||
+> +	       XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL);
+> +
+> +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, 1, 0, 0, &tp);
+> +	if (error) {
+> +		ASSERT(error == -ENOSPC || XFS_FORCED_SHUTDOWN(mp));
+> +		return error;
+> +	}
+> +
+> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> +	xfs_trans_ijoin(tp, ip, 0);
+> +	xfs_defer_init(&dfops, &first_block);
+> +
+> +	if (pos + count > XFS_IFORK_DSIZE(ip)) {
+> +		if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS) {
+> +			error = 0;
+> +			goto trans_cancel;
+> +		}
+> +
+> +		page = find_or_create_page(mapping, pos >> PAGE_SHIFT, GFP_NOFS);
+> +		if (!page) {
+> +			error = -ENOMEM;
+> +			goto trans_cancel;
+> +		}
+> +		kaddr = kmap_atomic(page);
+> +		memcpy(kaddr, ifp->if_u1.if_data, ifp->if_bytes);
+> +		kunmap_atomic(kaddr);
+> +		SetPageUptodate(page);
+> +		unlock_page(page);
+> +		put_page(page);
+> +
+> +		xfs_bmap_forkoff_reset(ip, whichfork);
+> +		ifp->if_flags &= ~XFS_IFINLINE;
+> +		ifp->if_flags |= XFS_IFEXTENTS;
+> +		ifp->if_u1.if_root = NULL;
+> +		ifp->if_height = 0;
+> +		ifp->if_bytes = 0;
+> +		XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_EXTENTS);
+> +
+> +		written = ifp->if_bytes;
+> +		error = xfs_bmap_first_unused(tp, ip, 1, &bno, whichfork);
+> +		if (error)
+> +			goto trans_cancel;
+> +		nmap = 1;
+> +		error = xfs_bmapi_write(tp, ip, bno, 1, XFS_BMAPI_ENTIRE,
+> +				&first_block, 1, &map, &nmap, &dfops);
+> +		if (error)
+> +			goto trans_cancel;
+> +
+> +		goto out_local_to_extents;
+> +	}
+> +
+> +	if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL) {
+> +		xfs_idata_realloc(ip, (pos + count) - ifp->if_bytes, whichfork);
+> +		ret = copy_from_iter(ifp->if_u1.if_data + pos, count, from);
+> +		written = ret;
+> +		goto out;
+> +	}
+> +
+> +	if (IS_DAX(inode) || iocb->ki_flags & IOCB_DIRECT) {
+> +		struct page	*page = alloc_page(GFP_KERNEL | GFP_NOFS);
+> +		if (!page) {
+> +			error = -ENOMEM;
+> +			goto trans_cancel;
+> +		}
+> +
+> +		kaddr = kmap_atomic(page);
+> +		ret = copy_from_iter(kaddr + pos, count, from);
+> +		kunmap_atomic(kaddr);
+> +		written = ret;
+> +		error = xfs_bmap_extents_to_local(tp, ip, &dfops, &logflags,
+> +							XFS_DATA_FORK, page);
+> +		if (error) {
+> +			__free_page(page);
+> +			goto trans_cancel;
+> +		}
+> +
+> +		__free_page(page);
+> +		goto out;
+> +	}
+> +trans_cancel:
+> +	xfs_defer_cancel(&dfops);
+> +	xfs_trans_cancel(tp);
+> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +	return error;
+> +out:
+> +	if (pos + written > i_size_read(inode))
+> +		i_size_write(inode, pos + written);
+> +	ip->i_d.di_size = pos + written;
+> +
+> +out_local_to_extents:
+> +	logflags |= (XFS_ILOG_DDATA | XFS_ILOG_CORE);
+> +	xfs_trans_log_inode(tp, ip, logflags);
+> +
+> +	error = xfs_defer_finish(&tp, &dfops);
+> +	if (error)
+> +		goto trans_cancel;
+> +	error = xfs_trans_commit(tp);
+> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +
+> +	return written > 0 ? written : error;
+> +}
+> +
+> +
+>  STATIC ssize_t
+>  xfs_file_dio_aio_read(
+>  	struct kiocb		*iocb,
+> @@ -192,7 +372,12 @@ xfs_file_dio_aio_read(
+>  	file_accessed(iocb->ki_filp);
 >  
-> -	if (!xfs_is_reflink_inode(ip))
-> +	if (!xfs_inode_has_cow_data(ip))
->  		return 0;
->  	if (!xfs_iext_lookup_extent_before(ip, ifp, &end_fsb, &icur, &got))
->  		return 0;
+>  	xfs_ilock(ip, XFS_IOLOCK_SHARED);
+> -	ret = iomap_dio_rw(iocb, to, &xfs_iomap_ops, NULL);
+> +	if (xfs_sb_version_hasinlinedata(&ip->i_mount->m_sb) &&
+> +	    XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) == XFS_DINODE_FMT_LOCAL) {
+> +		ret = xfs_file_inline_data_read(ip, XFS_DATA_FORK, iocb, to);
+
+I thought iomap was growing the ability to handle inline data?  At least
+for gfs2?
+
+Hmm, you might ask Christoph about how to support that... also these
+read/write paths are about to get a lot of rip/smash this cycle.
+
+> +	} else {
+> +		ret = iomap_dio_rw(iocb, to, &xfs_iomap_ops, NULL);
+> +	}
+>  	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+>  
+>  	return ret;
+> @@ -219,6 +404,13 @@ xfs_file_dax_read(
+>  		xfs_ilock(ip, XFS_IOLOCK_SHARED);
+>  	}
+>  
+> +	if (xfs_sb_version_hasinlinedata(&ip->i_mount->m_sb) &&
+> +	    XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) == XFS_DINODE_FMT_LOCAL) {
+> +		ret = xfs_file_inline_data_read(ip, XFS_DATA_FORK, iocb, to);
+> +	} else {
+> +		ret = dax_iomap_rw(iocb, to, &xfs_iomap_ops);
+> +	}
+> +
+>  	ret = dax_iomap_rw(iocb, to, &xfs_iomap_ops);
+>  	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+>  
+> @@ -242,7 +434,12 @@ xfs_file_buffered_aio_read(
+>  	} else {
+>  		xfs_ilock(ip, XFS_IOLOCK_SHARED);
+>  	}
+> -	ret = generic_file_read_iter(iocb, to);
+> +
+> +	if (XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) == XFS_DINODE_FMT_LOCAL) {
+> +		ret = xfs_file_inline_data_read(ip, XFS_DATA_FORK, iocb, to);
+> +	} else {
+> +		ret = generic_file_read_iter(iocb, to);
+> +	}
+>  	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+>  
+>  	return ret;
+> @@ -487,6 +684,7 @@ xfs_file_dio_aio_write(
+>  	size_t			count = iov_iter_count(from);
+>  	struct xfs_buftarg      *target = XFS_IS_REALTIME_INODE(ip) ?
+>  					mp->m_rtdev_targp : mp->m_ddev_targp;
+> +	int			error;
+>  
+>  	/* DIO must be aligned to device logical sector size */
+>  	if ((iocb->ki_pos | count) & target->bt_logical_sectormask)
+> @@ -547,6 +745,22 @@ xfs_file_dio_aio_write(
+>  	}
+>  
+>  	trace_xfs_file_direct_write(ip, count, iocb->ki_pos);
+> +
+> +	if (xfs_sb_version_hasinlinedata(&mp->m_sb) &&
+> +		XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_BTREE &&
+
+!= BTREE? Why not == INLINE?
+
+> +		S_ISREG(inode->i_mode)) {
+> +		error = xfs_file_inline_data_write(ip, XFS_DATA_FORK, iocb,
+> +							from);
+
+int != ssize_t... also, if we decided we needed extents format but the
+file turned out to be extents format already then did we lose the write
+here?
+
+> +		if (error) {
+> +			ret = error;
+> +			goto out;
+> +		}
+> +		if (ip->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
+> +			ret = count;
+> +			goto out;
+> +		}
+> +	}
+> +
+>  	ret = iomap_dio_rw(iocb, from, &xfs_iomap_ops, xfs_dio_write_end_io);
+>  out:
+>  	xfs_iunlock(ip, iolock);
+> @@ -586,6 +800,20 @@ xfs_file_dax_write(
+>  	count = iov_iter_count(from);
+>  
+>  	trace_xfs_file_dax_write(ip, count, pos);
+> +
+> +	if (xfs_sb_version_hasinlinedata(&ip->i_mount->m_sb) &&
+> +		ip->i_d.di_format != XFS_DINODE_FMT_BTREE &&
+> +		S_ISREG(inode->i_mode)) {
+> +		error = xfs_file_inline_data_write(ip, XFS_DATA_FORK,
+> +							iocb, from);
+> +		if (error)
+> +			goto out;
+> +		if (ip->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
+> +			ret = count;
+> +			goto out;
+> +		}
+> +	}
+> +
+>  	ret = dax_iomap_rw(iocb, from, &xfs_iomap_ops);
+>  	if (ret > 0 && iocb->ki_pos > i_size_read(inode)) {
+>  		i_size_write(inode, iocb->ki_pos);
+> @@ -614,6 +842,7 @@ xfs_file_buffered_aio_write(
+>  	struct address_space	*mapping = file->f_mapping;
+>  	struct inode		*inode = mapping->host;
+>  	struct xfs_inode	*ip = XFS_I(inode);
+> +	struct xfs_mount	*mp = ip->i_mount;
+>  	ssize_t			ret;
+>  	int			enospc = 0;
+>  	int			iolock;
+> @@ -629,6 +858,17 @@ xfs_file_buffered_aio_write(
+>  	if (ret)
+>  		goto out;
+>  
+> +	if (xfs_sb_version_hasinlinedata(&mp->m_sb) &&
+> +		XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_BTREE) {
+> +		ret = xfs_file_inline_data_write(ip, XFS_DATA_FORK, iocb, from);
+> +		if (XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) ==
+> +							XFS_DINODE_FMT_LOCAL){
+
+What's going on with the indenting here?
+
+--D
+
+> +			if (likely(ret >= 0))
+> +				iocb->ki_pos += ret;
+> +			goto out;
+> +		}
+> +	}
+> +
+>  	/* We can write back this queue in page reclaim */
+>  	current->backing_dev_info = inode_to_bdi(inode);
+>  
 > -- 
-> 2.18.0
+> 2.11.0
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
