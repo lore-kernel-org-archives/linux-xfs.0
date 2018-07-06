@@ -1,226 +1,164 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:56988 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753870AbeGFDMy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Jul 2018 23:12:54 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w6638uNJ140322
-        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 03:12:54 GMT
+Received: from aserp2130.oracle.com ([141.146.126.79]:59702 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753924AbeGFDpq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Jul 2018 23:45:46 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w663iTHe002462
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 03:45:46 GMT
 Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2130.oracle.com with ESMTP id 2k0dnjr0vc-1
+        by aserp2130.oracle.com with ESMTP id 2k0dnjg1rh-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 06 Jul 2018 03:12:53 +0000
+        for <linux-xfs@vger.kernel.org>; Fri, 06 Jul 2018 03:45:46 +0000
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w663CrSb014247
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w663jidH012275
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 03:12:53 GMT
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w663Cr8e017537
-        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 03:12:53 GMT
-From: Shan Hai <shan.hai@oracle.com>
-Subject: [PATCH RFC 1/1] xfsprogs: add inode inline data support
-Date: Fri,  6 Jul 2018 11:12:30 +0800
-Message-Id: <1530846750-6686-10-git-send-email-shan.hai@oracle.com>
-In-Reply-To: <1530846750-6686-1-git-send-email-shan.hai@oracle.com>
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 03:45:45 GMT
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w663jigg001560
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 03:45:44 GMT
+Date: Thu, 5 Jul 2018 20:45:37 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH RFC 2/8] xfs: introduce extents to local conversion helper
+Message-ID: <20180706034537.GQ32415@magnolia>
 References: <1530846750-6686-1-git-send-email-shan.hai@oracle.com>
+ <1530846750-6686-3-git-send-email-shan.hai@oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1530846750-6686-3-git-send-email-shan.hai@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Shan Hai <shan.hai@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-Add a new mkfs command line option to enable the inode inline data
-feature. The mkfs set a bit in the superblock to notify the kernel
-that the data inlining is enabled, there is no extra options for
-mount.
+On Fri, Jul 06, 2018 at 11:12:23AM +0800, Shan Hai wrote:
+> Delete the extents from xfs inode, copy the data into the data fork,
+> convert the inode from extents to local format and specify log the
+> core and data fork of the inode.
+> 
+> Signed-off-by: Shan Hai <shan.hai@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 60 +++++++++++++++++++++++++++++++++++++++++++++++-
+>  fs/xfs/libxfs/xfs_bmap.h |  4 ++++
+>  2 files changed, 63 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 7205268b30bc..bea6dc254a7d 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -1,6 +1,7 @@
+>  // SPDX-License-Identifier: GPL-2.0
+>  /*
+>   * Copyright (c) 2000-2006 Silicon Graphics, Inc.
+> + * Copyright (c) 2018 Oracle.
+>   * All Rights Reserved.
+>   */
+>  #include "xfs.h"
+> @@ -213,7 +214,7 @@ xfs_default_attroffset(
+>   * attribute fork from local to extent format - we reset it where
+>   * possible to make space available for inline data fork extents.
+>   */
+> -STATIC void
+> +void
+>  xfs_bmap_forkoff_reset(
 
-Signed-off-by: Shan Hai <shan.hai@oracle.com>
----
- growfs/xfs_growfs.c | 14 +++++++++-----
- libxfs/xfs_format.h |  4 +++-
- libxfs/xfs_fs.h     |  1 +
- mkfs/xfs_mkfs.c     | 20 +++++++++++++++++---
- 4 files changed, 30 insertions(+), 9 deletions(-)
+Unrelated change in this patch?
 
-diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
-index 366176b7..a370bf9d 100644
---- a/growfs/xfs_growfs.c
-+++ b/growfs/xfs_growfs.c
-@@ -60,13 +60,14 @@ report_info(
- 	int		finobt_enabled,
- 	int		spinodes,
- 	int		rmapbt_enabled,
--	int		reflink_enabled)
-+	int		reflink_enabled,
-+	int		inlinedata_enabled)
- {
- 	printf(_(
- 	    "meta-data=%-22s isize=%-6u agcount=%u, agsize=%u blks\n"
- 	    "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
- 	    "         =%-22s crc=%-8u finobt=%u spinodes=%u rmapbt=%u\n"
--	    "         =%-22s reflink=%u\n"
-+	    "         =%-22s reflink=%u inline=%u\n"
- 	    "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
- 	    "         =%-22s sunit=%-6u swidth=%u blks\n"
- 	    "naming   =version %-14u bsize=%-6u ascii-ci=%d ftype=%d\n"
-@@ -77,7 +78,7 @@ report_info(
- 		mntpoint, geo.inodesize, geo.agcount, geo.agblocks,
- 		"", geo.sectsize, attrversion, projid32bit,
- 		"", crcs_enabled, finobt_enabled, spinodes, rmapbt_enabled,
--		"", reflink_enabled,
-+		"", reflink_enabled, inlinedata_enabled,
- 		"", geo.blocksize, (unsigned long long)geo.datablocks,
- 			geo.imaxpct,
- 		"", geo.sunit, geo.swidth,
-@@ -133,6 +134,7 @@ main(int argc, char **argv)
- 	int			spinodes;
- 	int			rmapbt_enabled;
- 	int			reflink_enabled;
-+	int			inlinedata_enabled;
- 	char			rpath[PATH_MAX];
- 
- 	progname = basename(argv[0]);
-@@ -266,12 +268,14 @@ main(int argc, char **argv)
- 	spinodes = geo.flags & XFS_FSOP_GEOM_FLAGS_SPINODES ? 1 : 0;
- 	rmapbt_enabled = geo.flags & XFS_FSOP_GEOM_FLAGS_RMAPBT ? 1 : 0;
- 	reflink_enabled = geo.flags & XFS_FSOP_GEOM_FLAGS_REFLINK ? 1 : 0;
-+	inlinedata_enabled = geo.flags & XFS_FSOP_GEOM_FLAGS_INLINE ? 1 : 0;
- 	if (nflag) {
- 		report_info(geo, datadev, isint, logdev, rtdev,
- 				lazycount, dirversion, logversion,
- 				attrversion, projid32bit, crcs_enabled, ci,
- 				ftype_enabled, finobt_enabled, spinodes,
--				rmapbt_enabled, reflink_enabled);
-+				rmapbt_enabled, reflink_enabled,
-+				inlinedata_enabled);
- 		exit(0);
- 	}
- 
-@@ -310,7 +314,7 @@ main(int argc, char **argv)
- 			lazycount, dirversion, logversion,
- 			attrversion, projid32bit, crcs_enabled, ci, ftype_enabled,
- 			finobt_enabled, spinodes, rmapbt_enabled,
--			reflink_enabled);
-+			reflink_enabled, inlinedata_enabled);
- 
- 	ddsize = xi.dsize;
- 	dlsize = ( xi.logBBsize? xi.logBBsize :
-diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
-index 48548933..2a765d12 100644
---- a/libxfs/xfs_format.h
-+++ b/libxfs/xfs_format.h
-@@ -478,10 +478,12 @@ xfs_sb_has_ro_compat_feature(
- #define XFS_SB_FEAT_INCOMPAT_FTYPE	(1 << 0)	/* filetype in dirent */
- #define XFS_SB_FEAT_INCOMPAT_SPINODES	(1 << 1)	/* sparse inode chunks */
- #define XFS_SB_FEAT_INCOMPAT_META_UUID	(1 << 2)	/* metadata UUID */
-+#define XFS_SB_FEAT_INCOMPAT_INLINEDATA	(1 << 3)	/* inline inode data */
- #define XFS_SB_FEAT_INCOMPAT_ALL \
- 		(XFS_SB_FEAT_INCOMPAT_FTYPE|	\
- 		 XFS_SB_FEAT_INCOMPAT_SPINODES|	\
--		 XFS_SB_FEAT_INCOMPAT_META_UUID)
-+		 XFS_SB_FEAT_INCOMPAT_META_UUID| \
-+		 XFS_SB_FEAT_INCOMPAT_INLINEDATA)
- 
- #define XFS_SB_FEAT_INCOMPAT_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_ALL
- static inline bool
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index 86a379f6..40737fb9 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -243,6 +243,7 @@ typedef struct xfs_fsop_resblks {
- #define XFS_FSOP_GEOM_FLAGS_SPINODES	0x40000	/* sparse inode chunks	*/
- #define XFS_FSOP_GEOM_FLAGS_RMAPBT	0x80000	/* reverse mapping btree */
- #define XFS_FSOP_GEOM_FLAGS_REFLINK	0x100000 /* files can share blocks */
-+#define XFS_FSOP_GEOM_FLAGS_INLINE	0x200000 /* inline data into inode */
- 
- /*
-  * Minimum and maximum sizes need for growth checks.
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 78d0ce5d..b321761b 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -82,6 +82,7 @@ enum {
- 	I_ATTR,
- 	I_PROJID32BIT,
- 	I_SPINODES,
-+	I_INLINE,
- 	I_MAX_OPTS,
- };
- 
-@@ -394,6 +395,7 @@ struct opt_params iopts = {
- 		[I_ATTR] = "attr",
- 		[I_PROJID32BIT] = "projid32bit",
- 		[I_SPINODES] = "sparse",
-+		[I_INLINE] = "inline",
- 	},
- 	.subopt_params = {
- 		{ .index = I_ALIGN,
-@@ -442,6 +444,12 @@ struct opt_params iopts = {
- 		  .maxval = 1,
- 		  .defaultval = 1,
- 		},
-+		{ .index = I_INLINE,
-+		  .conflicts = { { NULL, LAST_CONFLICT } },
-+		  .minval = 0,
-+		  .maxval = 1,
-+		  .defaultval = 0,
-+		},
- 	},
- };
- 
-@@ -743,6 +751,7 @@ struct sb_feat_args {
- 	bool	spinodes;		/* XFS_SB_FEAT_INCOMPAT_SPINODES */
- 	bool	rmapbt;			/* XFS_SB_FEAT_RO_COMPAT_RMAPBT */
- 	bool	reflink;		/* XFS_SB_FEAT_RO_COMPAT_REFLINK */
-+	bool	inlinedata;		/* XFS_SB_FEAT_INCOMPAT_INLINEDATA */
- 	bool	nodalign;
- 	bool	nortalign;
- };
-@@ -871,7 +880,7 @@ usage( void )
- 			    sectsize=num\n\
- /* force overwrite */	[-f]\n\
- /* inode size */	[-i log=n|perblock=n|size=num,maxpct=n,attr=0|1|2,\n\
--			    projid32bit=0|1,sparse=0|1]\n\
-+			    projid32bit=0|1,sparse=0|1,inline=0|1]\n\
- /* no discard */	[-K]\n\
- /* log subvol */	[-l agnum=n,internal,size=num,logdev=xxx,version=n\n\
- 			    sunit=value|su=num,sectsize=num,lazy-count=0|1]\n\
-@@ -1506,6 +1515,9 @@ inode_opts_parser(
- 	case I_SPINODES:
- 		cli->sb_feat.spinodes = getnum(value, opts, subopt);
- 		break;
-+	case I_INLINE:
-+		cli->sb_feat.inlinedata = getnum(value, opts, subopt);
-+		break;
- 	default:
- 		return -EINVAL;
- 	}
-@@ -2903,6 +2915,8 @@ sb_set_features(
- 		sbp->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_SPINODES;
- 	}
- 
-+	if (fp->inlinedata)
-+		sbp->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_INLINEDATA;
- }
- 
- /*
-@@ -3184,7 +3198,7 @@ print_mkfs_cfg(
- 	printf(_(
- "meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
- "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
--"         =%-22s crc=%-8u finobt=%u, sparse=%u, rmapbt=%u, reflink=%u\n"
-+"         =%-22s crc=%-8u finobt=%u, sparse=%u, rmapbt=%u, reflink=%u, inline=%u\n"
- "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
- "         =%-22s sunit=%-6u swidth=%u blks\n"
- "naming   =version %-14u bsize=%-6u ascii-ci=%d ftype=%d\n"
-@@ -3195,7 +3209,7 @@ print_mkfs_cfg(
- 			(long long)cfg->agsize,
- 		"", cfg->sectorsize, fp->attr_version, fp->projid32bit,
- 		"", fp->crcs_enabled, fp->finobt, fp->spinodes, fp->rmapbt,
--			fp->reflink,
-+			fp->reflink, fp->inlinedata,
- 		"", cfg->blocksize, (long long)cfg->dblocks, cfg->imaxpct,
- 		"", cfg->dsunit, cfg->dswidth,
- 		fp->dir_version, cfg->dirblocksize, fp->nci, fp->dirftype,
--- 
-2.11.0
+Also, is it safe to reset forkoff when converting the data fork to
+extents?  Does doing so mes up the attr fork?
 
+>  	xfs_inode_t	*ip,
+>  	int		whichfork)
+> @@ -5141,6 +5142,63 @@ xfs_bmap_del_extent_real(
+>  }
+>  
+>  /*
+> + * Convert an inode from extents to the local format.
+> + * Free all the extents of the inode and reset it to the local
+> + * format. Copy the contents of the inode's blocks to the inode's
+> + * literal area.
+> + */
+> +int
+> +xfs_bmap_extents_to_local(
+> +	xfs_trans_t		*tp,
+> +	xfs_inode_t		*ip,
+
+No typedefs, please.
+
+	struct xfs_inode	*ip,
+
+> +	struct xfs_defer_ops	*dfops,
+> +	int			*logflagsp,
+> +	int			whichfork,
+> +	struct page		*page)
+> +{
+> +	xfs_ifork_t		*ifp = XFS_IFORK_PTR(ip, whichfork);
+> +	xfs_fileoff_t		isize = i_size_read(VFS_I(ip));
+> +	struct xfs_bmbt_irec	got, del;
+> +	struct xfs_iext_cursor	icur;
+> +	int			error = 0;
+> +	int			tmp_logflags;
+> +	char			*kaddr = NULL;
+> +
+> +	ASSERT(whichfork != XFS_COW_FORK);
+> +	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS);
+> +
+> +	if (xfs_iext_count(ifp) == 0)
+> +		goto init_local_fork;
+> +
+> +	for_each_xfs_iext(ifp, &icur, &got) {
+> +		del = got;
+> +		if (isnullstartblock(got.br_startblock)) {
+> +			error = xfs_bmap_del_extent_delay(ip,
+> +					whichfork, &icur, &got, &del);
+> +			if (error)
+> +				goto out;
+> +		} else {
+> +			error = xfs_bmap_del_extent_real(ip, tp, &icur, dfops,
+> +					NULL, &del, &tmp_logflags, whichfork, 0);
+> +			if (error)
+> +				goto out;
+> +			*logflagsp |= tmp_logflags;
+> +		}
+> +	}
+> +init_local_fork:
+> +	kaddr = kmap_atomic(page);
+> +	xfs_init_local_fork(ip, whichfork, kaddr, isize);
+> +	kunmap_atomic(kaddr);
+> +	ip->i_d.di_format = XFS_DINODE_FMT_LOCAL;
+> +	XFS_IFORK_NEXT_SET(ip, whichfork, 0);
+> +	ip->i_d.di_size = isize;
+> +	*logflagsp |= (XFS_ILOG_DDATA | XFS_ILOG_CORE);
+> +out:
+> +	return error;
+> +}
+> +
+> +
+> +/*
+>   * Unmap (remove) blocks from a file.
+>   * If nexts is nonzero then the number of extents to remove is limited to
+>   * that value.  If not all extents in the block range can be removed then
+> diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+> index 9b49ddf99c41..22cd2642f1cd 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.h
+> +++ b/fs/xfs/libxfs/xfs_bmap.h
+> @@ -271,6 +271,10 @@ int	xfs_bmap_map_extent(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
+>  		struct xfs_inode *ip, struct xfs_bmbt_irec *imap);
+>  int	xfs_bmap_unmap_extent(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
+>  		struct xfs_inode *ip, struct xfs_bmbt_irec *imap);
+> +int	xfs_bmap_extents_to_local(struct xfs_trans *tp, struct xfs_inode *ip,
+> +		struct xfs_defer_ops *dfops, int *flags, int whichfork,
+> +		struct page *page);
+> +void	xfs_bmap_forkoff_reset(struct xfs_inode *ip, int whichfork);
+>  
+>  static inline int xfs_bmap_fork_to_state(int whichfork)
+>  {
+> -- 
+> 2.11.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
