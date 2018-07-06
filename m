@@ -1,169 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:53820 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752941AbeGFEZF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jul 2018 00:25:05 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w664JjV3023850
-        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 04:25:05 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp2130.oracle.com with ESMTP id 2k0dnjg3f4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 06 Jul 2018 04:25:04 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w664P3hM004152
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 04:25:04 GMT
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w664P26p006020
-        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 04:25:03 GMT
-Subject: Re: [PATCH RFC 3/8] xfs: convert inode from extents to local format
-References: <1530846750-6686-1-git-send-email-shan.hai@oracle.com>
- <1530846750-6686-4-git-send-email-shan.hai@oracle.com>
- <20180706034737.GR32415@magnolia>
-From: Shan Hai <shan.hai@oracle.com>
-Message-ID: <48428b90-ff95-3a33-85ee-2e86c839b355@oracle.com>
-Date: Fri, 6 Jul 2018 12:24:56 +0800
+Received: from mail-pl0-f68.google.com ([209.85.160.68]:42427 "EHLO
+        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753941AbeGFEbO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jul 2018 00:31:14 -0400
+Date: Fri, 6 Jul 2018 12:31:09 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH 2/2] xfs: fuzz every field of every structure and test
+ kernel crashes
+Message-ID: <20180706043109.GC2780@desktop>
+References: <153067982461.28315.11621030236927888645.stgit@magnolia>
+ <153067983717.28315.16483133462251633709.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20180706034737.GR32415@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <153067983717.28315.16483133462251633709.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
+On Tue, Jul 03, 2018 at 09:50:37PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Fuzz every field of every structure and then try to write the
+> filesystem, to see how many of these writes can crash the kernel.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
+The "re-repair" failures are gone, but I still see some test failures
+like (xfs/1398 for example)
 
-On 2018年07月06日 11:47, Darrick J. Wong wrote:
-> On Fri, Jul 06, 2018 at 11:12:24AM +0800, Shan Hai wrote:
->> Introduce a function to convert an inode from extents to local
->> format. The conversion happens at writeback time, this avoids
->> interfering with the delayed allocation and page cache vs
->> xfs_buf operations, the will be inlined data is directly got
->> from the page which was read and modified by the iomap write actor.
->>
->> Signed-off-by: Shan Hai <shan.hai@oracle.com>
->> ---
->>   fs/xfs/xfs_aops.c | 60 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
->>   1 file changed, 60 insertions(+)
->>
->> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
->> index 8eb3ba3d4d00..ac5a7695f363 100644
->> --- a/fs/xfs/xfs_aops.c
->> +++ b/fs/xfs/xfs_aops.c
->> @@ -9,6 +9,7 @@
->>   #include "xfs_log_format.h"
->>   #include "xfs_trans_resv.h"
->>   #include "xfs_mount.h"
->> +#include "xfs_defer.h"
->>   #include "xfs_inode.h"
->>   #include "xfs_trans.h"
->>   #include "xfs_inode_item.h"
->> @@ -887,6 +888,55 @@ xfs_map_cow(
->>   	return 0;
->>   }
->>   
->> +static int
->> +xfs_inode_extents_to_local(
->> +	xfs_inode_t		*ip,
->> +	int			whichfork,
->> +	struct page		*page)
->> +{
->> +	struct xfs_mount	*mp = ip->i_mount;
->> +	struct xfs_trans	*tp;
->> +	struct xfs_defer_ops	dfops;
->> +	xfs_fsblock_t		first_block;
->> +	int			logflags;
->> +	int			error = 0;
->> +
->> +	if (i_size_read(VFS_I(ip)) > XFS_IFORK_DSIZE(ip))
->> +		return 0;
-> If it's too big to fit in local format, then isn't this an error?
++re-mount failed (32) with magic = zeroes.
++re-mount failed (32) with magic = ones.
+...
 
-No, it's not, because the written data travels to writeback means that 
-the inode is
-still in extents format since the higher level write_iter ends the write 
-process by
-copying the data to the data fork when the inode is in local format, it 
-never let the
-local format inode to go down the writeback path.
+Looks like the re-mount is expected to fail as we skipped all the repair work.
 
-The xfs_writepage_map will continue as if nothing happens when 
-xfs_inode_extents_to_local
-returns 0.
+Also, there're _check_dmesg failures too (they were buried among other
+failures so I didn't notice them in last review), like this "Internal
+error" from xfs/1397
 
-Thanks
-Shan Hai
-> --D
->
->> +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
->> +	if (error)
->> +		return error;
->> +
->> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
->> +	xfs_trans_ijoin(tp, ip, 0);
->> +
->> +	xfs_defer_init(&dfops, &first_block);
->> +
->> +	logflags = 0;
->> +	error = xfs_bmap_extents_to_local(tp, ip, &dfops, &logflags,
->> +			XFS_DATA_FORK, page);
->> +	if (error)
->> +		goto trans_cancel;
->> +
->> +	xfs_trans_log_inode(tp, ip, logflags);
->> +	error = xfs_defer_finish(&tp, &dfops);
->> +	if (error)
->> +		goto trans_cancel;
->> +	error = xfs_trans_commit(tp);
->> +	if (error)
->> +		goto error0;
->> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->> +
->> +	return 0;
->> +
->> +trans_cancel:
->> +	xfs_defer_cancel(&dfops);
->> +	xfs_trans_cancel(tp);
->> +error0:
->> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->> +	return error;
->> +}
->>   /*
->>    * We implement an immediate ioend submission policy here to avoid needing to
->>    * chain multiple ioends and hence nest mempool allocations which can violate
->> @@ -920,6 +970,8 @@ xfs_writepage_map(
->>   	int			count = 0;
->>   	int			uptodate = 1;
->>   	unsigned int		new_type;
->> +	xfs_inode_t		*ip = XFS_I(inode);
->> +	struct xfs_mount	*mp = ip->i_mount;
->>   
->>   	bh = head = page_buffers(page);
->>   	offset = page_offset(page);
->> @@ -1044,6 +1096,14 @@ xfs_writepage_map(
->>   		end_page_writeback(page);
->>   	}
->>   
->> +	if (!error) {
->> +		if (xfs_sb_version_hasinlinedata(&mp->m_sb) &&
->> +				i_size_read(inode) <= XFS_IFORK_DSIZE(ip)) {
->> +			error = xfs_inode_extents_to_local(ip, XFS_DATA_FORK,
->> +								page);
->> +		}
->> +	}
->> +
->>   	mapping_set_error(page->mapping, error);
->>   	return error;
->>   }
->> -- 
->> 2.11.0
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+[1513573.879719] [U] ++ Try to write filesystem again
+[1513574.092652] XFS (dm-1): Internal error XFS_WANT_CORRUPTED_GOTO at line 756 of file fs/xfs/libxfs/xfs_rmap.c.  Caller xfs_rmap_finish_one+0x206/0x2b0 [xfs]
+[1513574.094001] CPU: 1 PID: 7087 Comm: kworker/u4:2 Tainted: G        W  OE     4.18.0-rc1 #1
+[1513574.094839] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.11.0-2.fc28 04/01/2014
+[1513574.095650] Workqueue: writeback wb_workfn (flush-253:1)
+[1513574.096145] Call Trace:
+[1513574.096390]  dump_stack+0x5c/0x80
+[1513574.096719]  xfs_rmap_map+0x18c/0x8d0 [xfs]
+[1513574.097138]  ? xfs_free_extent_fix_freelist+0x7d/0xb0 [xfs]
+[1513574.097662]  ? _cond_resched+0x15/0x30
+[1513574.098021]  ? kmem_cache_alloc+0x16a/0x1d0
+[1513574.098435]  ? kmem_zone_alloc+0x61/0xe0 [xfs]
+[1513574.098877]  xfs_rmap_finish_one+0x206/0x2b0 [xfs]
+[1513574.099355]  ? xfs_trans_free+0x55/0xc0 [xfs]
+[1513574.099788]  xfs_trans_log_finish_rmap_update+0x2f/0x40 [xfs]
+[1513574.100346]  xfs_rmap_update_finish_item+0x2d/0x40 [xfs]
+[1513574.100865]  xfs_defer_finish+0x164/0x470 [xfs]
+[1513574.101318]  ? xfs_rmap_update_cancel_item+0x10/0x10 [xfs]
+[1513574.101852]  xfs_iomap_write_allocate+0x182/0x370 [xfs]
+[1513574.102371]  xfs_map_blocks+0x209/0x290 [xfs]
+[1513574.102819]  xfs_do_writepage+0x147/0x690 [xfs]
+[1513574.103265]  ? clear_page_dirty_for_io+0x224/0x290
+[1513574.103718]  write_cache_pages+0x1dc/0x450
+[1513574.104141]  ? xfs_vm_readpage+0x70/0x70 [xfs]
+[1513574.104594]  ? btrfs_wq_submit_bio+0xc9/0xf0 [btrfs]
+[1513574.105098]  xfs_vm_writepages+0x59/0x90 [xfs]
+[1513574.105534]  do_writepages+0x41/0xd0
+[1513574.105886]  ? __switch_to_asm+0x40/0x70
+[1513574.106281]  ? __switch_to_asm+0x34/0x70
+[1513574.106673]  ? __switch_to_asm+0x40/0x70
+[1513574.107067]  ? __switch_to_asm+0x34/0x70
+[1513574.107453]  ? __switch_to_asm+0x40/0x70
+[1513574.107843]  ? __switch_to_asm+0x34/0x70
+[1513574.108235]  ? __switch_to_asm+0x40/0x70
+[1513574.108623]  ? __switch_to_asm+0x34/0x70
+[1513574.109016]  ? __switch_to_asm+0x40/0x70
+[1513574.109406]  ? __switch_to_asm+0x40/0x70
+[1513574.109790]  __writeback_single_inode+0x3d/0x350
+[1513574.110247]  writeback_sb_inodes+0x1d0/0x460
+[1513574.110669]  __writeback_inodes_wb+0x5d/0xb0
+[1513574.111172]  wb_writeback+0x255/0x2f0
+[1513574.111535]  ? get_nr_inodes+0x35/0x50
+[1513574.111904]  ? cpumask_next+0x16/0x20
+[1513574.112273]  wb_workfn+0x186/0x400
+[1513574.112608]  ? sched_clock+0x5/0x10
+[1513574.112955]  process_one_work+0x1a1/0x350
+[1513574.113343]  worker_thread+0x30/0x380
+[1513574.113702]  ? wq_update_unbound_numa+0x1a0/0x1a0
+[1513574.114158]  kthread+0x112/0x130
+[1513574.114484]  ? kthread_create_worker_on_cpu+0x70/0x70
+[1513574.114980]  ret_from_fork+0x35/0x40
+[1513574.115352] XFS (dm-1): xfs_do_force_shutdown(0x8) called from line 222 of file fs/xfs/libxfs/xfs_defer.c.  Return address = 0000000000b9898a
+[1513574.309527] XFS (dm-1): Corruption of in-memory data detected.  Shutting down filesystem
+[1513574.313154] XFS (dm-1): Please umount the filesystem and rectify the problem(s)
 
+Should the dmesg check be disabled as well?
+
+Thanks,
+Eryu
+
+P.S.
+BTW, patch 1/1 looks fine, I'll take it for this week's update.
