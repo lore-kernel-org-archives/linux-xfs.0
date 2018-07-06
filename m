@@ -1,164 +1,144 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:45146 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388712AbeGKRVR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jul 2018 13:21:17 -0400
-Date: Wed, 11 Jul 2018 10:15:51 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 6/6] xfs: avoid COW fork extent lookups in writeback if
- the fork didn't change
-Message-ID: <20180711171551.GE32415@magnolia>
-References: <20180710060528.4071-1-hch@lst.de>
- <20180710060528.4071-7-hch@lst.de>
+Received: from aserp2130.oracle.com ([141.146.126.79]:45090 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752705AbeGFEKE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jul 2018 00:10:04 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w6649d8N017866
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 04:10:03 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp2130.oracle.com with ESMTP id 2k0dnjg2u1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 06 Jul 2018 04:10:03 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w664A2du003946
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 04:10:02 GMT
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w664A1uF009116
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 04:10:02 GMT
+Subject: Re: [PATCH RFC 0/8] xfs: introduce inode data inline feature
+References: <1530846750-6686-1-git-send-email-shan.hai@oracle.com>
+ <20180706035110.GS32415@magnolia>
+From: Shan Hai <shan.hai@oracle.com>
+Message-ID: <ad334d43-dd45-50ea-4817-016fa6bd5c9a@oracle.com>
+Date: Fri, 6 Jul 2018 12:09:58 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180710060528.4071-7-hch@lst.de>
+In-Reply-To: <20180706035110.GS32415@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jul 10, 2018 at 08:05:28AM +0200, Christoph Hellwig wrote:
-> Used the per-fork sequence counter to avoid lookups in the writeback code
-> unless the COW fork actually changed.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_aops.c  | 28 +++++++++++++++++++++++-----
->  fs/xfs/xfs_iomap.c |  4 +++-
->  fs/xfs/xfs_iomap.h |  2 +-
->  3 files changed, 27 insertions(+), 7 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 814100d27343..495d5e74fd00 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -29,6 +29,7 @@
->  struct xfs_writepage_ctx {
->  	struct xfs_bmbt_irec    imap;
->  	unsigned int		io_type;
-> +	unsigned int		cow_seq;
->  	struct xfs_ioend	*ioend;
->  };
->  
-> @@ -310,6 +311,7 @@ xfs_map_blocks(
->  	struct xfs_mount	*mp = ip->i_mount;
->  	ssize_t			count = i_blocksize(inode);
->  	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset), end_fsb;
-> +	xfs_fileoff_t		cow_fsb = NULLFILEOFF;
->  	struct xfs_bmbt_irec	imap;
->  	int			whichfork = XFS_DATA_FORK;
->  	struct xfs_iext_cursor	icur;
-> @@ -333,12 +335,15 @@ xfs_map_blocks(
->  	 * COW fork blocks can overlap data fork blocks even if the blocks
->  	 * aren't shared.  COW I/O always takes precedent, so we must always
->  	 * check for overlap on reflink inodes unless the mapping is already a
-> -	 * COW one.
-> +	 * COW one, or the COW fork hasn't changed from the last time we looked
-> +	 * at it.
->  	 */
->  	imap_valid = offset_fsb >= wpc->imap.br_startoff &&
->  		     offset_fsb < wpc->imap.br_startoff + wpc->imap.br_blockcount;
->  	if (imap_valid &&
-> -	    (!xfs_inode_has_cow_data(ip) || wpc->io_type == XFS_IO_COW))
-> +	    (!xfs_inode_has_cow_data(ip) ||
-> +	     wpc->io_type == XFS_IO_COW ||
-> +	     wpc->cow_seq == ip->i_cowfp->if_seq))
->  		return 0;
->  
->  	if (XFS_FORCED_SHUTDOWN(mp))
-> @@ -364,8 +369,10 @@ xfs_map_blocks(
->  	 * it directly instead of looking up anything in the data fork.
->  	 */
->  	if (xfs_inode_has_cow_data(ip) &&
-> -	    xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &imap) &&
-> -	    imap.br_startoff <= offset_fsb) {
-> +	    xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &imap))
-> +		cow_fsb = imap.br_startoff;
-> +	if (cow_fsb != NULLFILEOFF && cow_fsb <= offset_fsb) {
-> +		wpc->cow_seq = ip->i_cowfp->if_seq;
->  		xfs_iunlock(ip, XFS_ILOCK_SHARED);
->  		/*
->  		 * Truncate can race with writeback since writeback doesn't
-> @@ -411,6 +418,14 @@ xfs_map_blocks(
->  		imap.br_startblock = HOLESTARTBLOCK;
->  		wpc->io_type = XFS_IO_HOLE;
->  	} else {
-> +		/*
-> +		 * Truncate to the next COW extent if there is one.  We'll
-> +		 * need to treat the COW range separately.
-> +		 */
-> +		if (cow_fsb != NULLFILEOFF &&
-> +		    cow_fsb < imap.br_startoff + imap.br_blockcount)
-> +			imap.br_blockcount = cow_fsb - imap.br_startoff;
 
-Hmm, this troubles me slightly -- a short time ago you removed the "trim
-this data fork mapping to the first overlap with a cow fork mapping"
-(i.e. xfs_reflink_trim_irec_to_next_cow) behavior on the grounds that
-_writepage_map calls _map_blocks for every block in the page and so it
-was unnecessary.  But this seems to put that back.  Why is that?
 
---D
+On 2018年07月06日 11:51, Darrick J. Wong wrote:
+> On Fri, Jul 06, 2018 at 11:12:21AM +0800, Shan Hai wrote:
+>> This series implements xfs inode data inlining feature.
+>>
+>> Refered below link during development:
+>> https://marc.info/?l=linux-xfs&m=120493585731509&w=2
+>>
+>>
+>> How it works:
+>> - the data inlining happens at:
+>>    write_iter: for DIO/DAX write
+>>    writeback: for buffered write
+>> - extents to local format conversion is done in writeback but not in write_iter
+>> - local to extents format conversion is done in the write_iter and writeback
+>> - log the whole inode (core/data) on extents to local conversion
+>> - add a new mkfs.xfs option to enable data inline feature
+>>
+>> How to test:
+>> mkfs.xfs -f -i size=2048,inline=1 -m crc=1,finobt=1,rmapbt=1,reflink=1 /dev/sdX
+>> mount /dev/sdX mnt_pnt
+>>
+>> Test results:
+>> mkfs.xfs -f -i size=2048,inline=1 -m crc=1,finobt=1,rmapbt=1,reflink=1 /dev/sdb
+>> mkfs.xfs -f -i size=2048          -m crc=1,finobt=1,rmapbt=1,reflink=1 /dev/sdd
+>> mount /dev/sdb /mnt/sdb
+>> mount /dev/sdd /mnt/sdd
+>>
+>> Copy the linux v4.18-rc3 source code to /mnt/sdb and /mnt/sdd respectively:
+>> Filesystem                        Size  Used Avail Use% Mounted on
+>> /dev/sdb                           10G  2.4G  7.7G  24% /mnt/sdb
+>> /dev/sdd                           10G  3.1G  6.9G  31% /mnt/sdd
 
-> +
->  		if (isnullstartblock(imap.br_startblock)) {
->  			/* got a delalloc extent */
->  			wpc->io_type = XFS_IO_DELALLOC;
-> @@ -427,9 +442,12 @@ xfs_map_blocks(
->  	trace_xfs_map_blocks_found(ip, offset, count, wpc->io_type, &imap);
->  	return 0;
->  allocate_blocks:
-> -	error = xfs_iomap_write_allocate(ip, whichfork, offset, &imap);
-> +	error = xfs_iomap_write_allocate(ip, whichfork, offset, &imap,
-> +			&wpc->cow_seq);
->  	if (error)
->  		return error;
-> +	ASSERT(whichfork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
-> +	       imap.br_startoff + imap.br_blockcount <= cow_fsb);
->  	wpc->imap = imap;
->  	trace_xfs_map_blocks_alloc(ip, offset, count, wpc->io_type, &imap);
->  	return 0;
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index fb9746cc7338..a843766bf7c5 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -660,7 +660,8 @@ xfs_iomap_write_allocate(
->  	xfs_inode_t	*ip,
->  	int		whichfork,
->  	xfs_off_t	offset,
-> -	xfs_bmbt_irec_t *imap)
-> +	xfs_bmbt_irec_t *imap,
-> +	unsigned int	*cow_seq)
->  {
->  	xfs_mount_t	*mp = ip->i_mount;
->  	xfs_fileoff_t	offset_fsb, last_block;
-> @@ -784,6 +785,7 @@ xfs_iomap_write_allocate(
->  			if (error)
->  				goto error0;
->  
-> +			*cow_seq = XFS_IFORK_PTR(ip, whichfork)->if_seq;
->  			xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  		}
->  
-> diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
-> index 83474c9cede9..c6170548831b 100644
-> --- a/fs/xfs/xfs_iomap.h
-> +++ b/fs/xfs/xfs_iomap.h
-> @@ -14,7 +14,7 @@ struct xfs_bmbt_irec;
->  int xfs_iomap_write_direct(struct xfs_inode *, xfs_off_t, size_t,
->  			struct xfs_bmbt_irec *, int);
->  int xfs_iomap_write_allocate(struct xfs_inode *, int, xfs_off_t,
-> -			struct xfs_bmbt_irec *);
-> +			struct xfs_bmbt_irec *, unsigned int *);
->  int xfs_iomap_write_unwritten(struct xfs_inode *, xfs_off_t, xfs_off_t, bool);
->  
->  void xfs_bmbt_to_iomap(struct xfs_inode *, struct iomap *,
-> -- 
-> 2.18.0
-> 
+An observable savings here.
+
+>> mkfs.xfs -f -i size=2048,inline=1 -m crc=1,finobt=1,rmapbt=1,reflink=1 /dev/sdc
+>> mkfs.xfs -f -i size=2048          -m crc=1,finobt=1,rmapbt=1,reflink=1 /dev/sde
+>> mount /dev/sdc /mnt/sdc
+>> mount /dev/sde /mnt/sde
+>>
+>> Build the v4.18-rc3 kernel on /dev/sdc and /dev/sde respectively:
+>> make x86_64_defconfig
+>>
+>> Filesystem                        Size  Used Avail Use% Mounted on
+>> /dev/sdc                           10G  689M  9.4G   7% /mnt/sdc
+>> /dev/sde                           10G  694M  9.4G   7% /mnt/sde
+> Not much of a savings... but I'll give this a preliminary review anyway.
+>
+> Also, I am probably going to merge hch's bufferhead killing series for
+> 4.19, which will rip right through a lot of this. :)
+
+That would be fine, thanks in advance for the review anyway :)
+
+Thanks
+Shan Hai
+> --D
+>
+>> Kernel part:
+>> 0001-xfs-introduce-inline-data-superblock-feature-bit.patch
+>> 0002-xfs-introduce-extents-to-local-conversion-helper.patch
+>> 0003-xfs-convert-inode-from-extents-to-local-format.patch
+>> 0004-xfs-implement-inline-data-read-write-code.patch
+>> 0005-xfs-consider-the-local-format-inode-in-misc-operatio.patch
+>> 0006-xfs-fix-imbalanced-locking.patch
+>> 0007-xfs-return-non-zero-blocks-for-inline-data.patch
+>> 0008-xfs-skip-local-format-inode-for-reflinking.patch
+>>
+>>   fs/xfs/libxfs/xfs_bmap.c      |  78 +++++++++++++++++++++++++++++++-----
+>>   fs/xfs/libxfs/xfs_bmap.h      |   4 ++
+>>   fs/xfs/libxfs/xfs_format.h    |  10 ++++-
+>>   fs/xfs/libxfs/xfs_fs.h        |   1 +
+>>   fs/xfs/libxfs/xfs_inode_buf.c |   6 ---
+>>   fs/xfs/libxfs/xfs_sb.c        |   2 +
+>>   fs/xfs/scrub/inode.c          |   2 +-
+>>   fs/xfs/xfs_aops.c             |  60 ++++++++++++++++++++++++++++
+>>   fs/xfs/xfs_bmap_util.c        |  11 +++++-
+>>   fs/xfs/xfs_file.c             | 244 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+>>   fs/xfs/xfs_inode.c            |  20 +++++++---
+>>   fs/xfs/xfs_inode_item.c       |   5 ++-
+>>   fs/xfs/xfs_ioctl.c            |   5 ++-
+>>   fs/xfs/xfs_iomap.c            |   5 ++-
+>>   fs/xfs/xfs_iops.c             |   8 +++-
+>>   fs/xfs/xfs_log_recover.c      |   3 +-
+>>   fs/xfs/xfs_reflink.c          |   6 +++
+>>   17 files changed, 437 insertions(+), 33 deletions(-)
+>>
+>> xfsprogs part:
+>> 0001-xfsprogs-add-inode-inline-data-support.patch
+>>
+>>   growfs/xfs_growfs.c | 14 +++++++++-----
+>>   libxfs/xfs_format.h |  4 +++-
+>>   libxfs/xfs_fs.h     |  1 +
+>>   mkfs/xfs_mkfs.c     | 20 +++++++++++++++++---
+>>   4 files changed, 30 insertions(+), 9 deletions(-)
+>>
+>>
+>> Thanks
+>> Shan Hai
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
