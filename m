@@ -1,368 +1,149 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:55906 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753779AbeGFDK5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Jul 2018 23:10:57 -0400
-Date: Thu, 5 Jul 2018 20:10:52 -0700
+Received: from aserp2120.oracle.com ([141.146.126.78]:45492 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753823AbeGFDQd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Jul 2018 23:16:33 -0400
+Date: Thu, 5 Jul 2018 20:16:29 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 17/21] xfs: repair extended attributes
-Message-ID: <20180706031052.GJ32415@magnolia>
+Subject: Re: [PATCH 19/21] xfs: repair quotas
+Message-ID: <20180706031629.GK32415@magnolia>
 References: <152986820984.3155.16417868536016544528.stgit@magnolia>
- <152986832301.3155.2967196267590663478.stgit@magnolia>
- <20180706010324.GR2234@dastard>
+ <152986833543.3155.2878459585391745135.stgit@magnolia>
+ <20180706015025.GT2234@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180706010324.GR2234@dastard>
+In-Reply-To: <20180706015025.GT2234@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Jul 06, 2018 at 11:03:24AM +1000, Dave Chinner wrote:
-> On Sun, Jun 24, 2018 at 12:25:23PM -0700, Darrick J. Wong wrote:
+On Fri, Jul 06, 2018 at 11:50:25AM +1000, Dave Chinner wrote:
+> On Sun, Jun 24, 2018 at 12:25:35PM -0700, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > If the extended attributes look bad, try to sift through the rubble to
-> > find whatever keys/values we can, zap the attr tree, and re-add the
-> > values.
-> .....
-> > 
-> > +/*
-> > + * Extended Attribute Repair
-> > + * =========================
-> > + *
-> > + * We repair extended attributes by reading the attribute fork blocks looking
-> > + * for keys and values, then truncate the entire attr fork and reinsert all
-> > + * the attributes.  Unfortunately, there's no secondary copy of most extended
-> > + * attribute data, which means that if we blow up midway through there's
-> > + * little we can do.
-> > + */
-> > +
-> > +struct xfs_attr_key {
-> > +	struct list_head		list;
-> > +	unsigned char			*value;
-> > +	int				valuelen;
-> > +	int				flags;
-> > +	int				namelen;
-> > +	unsigned char			name[0];
-> > +};
-> > +
-> > +#define XFS_ATTR_KEY_LEN(namelen) (sizeof(struct xfs_attr_key) + (namelen) + 1)
-> > +
-> > +struct xfs_repair_xattr {
-> > +	struct list_head		*attrlist;
-> > +	struct xfs_scrub_context	*sc;
-> > +};
-> > +
-> > +/* Iterate each block in an attr fork extent */
-> > +#define for_each_xfs_attr_block(mp, irec, dabno) \
-> > +	for ((dabno) = roundup((xfs_dablk_t)(irec)->br_startoff, \
-> > +			(mp)->m_attr_geo->fsbcount); \
-> > +	     (dabno) < (irec)->br_startoff + (irec)->br_blockcount; \
-> > +	     (dabno) += (mp)->m_attr_geo->fsbcount)
-> 
-> What's the roundup() for? The attribute fsbcount is only ever going
-> to be 1 (single block), so it's not obvious what this is doing...
-
-I was trying to write defensively in case the attribute fsbcount ever
-/does/ become larger than 1.
-
-> > +/*
-> > + * Record an extended attribute key & value for later reinsertion into the
-> > + * inode.  Use the helpers below, don't call this directly.
-> > + */
+> > Fix anything that causes the quota verifiers to fail.
+> > +/* Fix anything the verifiers complain about. */
 > > +STATIC int
-> > +__xfs_repair_xattr_salvage_attr(
-> > +	struct xfs_repair_xattr		*rx,
+> > +xfs_repair_quota_block(
+> > +	struct xfs_scrub_context	*sc,
 > > +	struct xfs_buf			*bp,
-> > +	int				flags,
-> > +	int				idx,
-> > +	unsigned char			*name,
-> > +	int				namelen,
-> > +	unsigned char			*value,
-> > +	int				valuelen)
+> > +	uint				dqtype,
+> > +	xfs_dqid_t			id)
 > > +{
-> > +	struct xfs_attr_key		*key;
-> > +	struct xfs_da_args		args;
-> > +	int				error = -ENOMEM;
+> > +	struct xfs_dqblk		*d = (struct xfs_dqblk *)bp->b_addr;
+> > +	struct xfs_disk_dquot		*ddq;
+> > +	struct xfs_quotainfo		*qi = sc->mp->m_quotainfo;
+> > +	enum xfs_blft			buftype = 0;
+> > +	int				i;
 > > +
-> > +	/* Ignore incomplete or oversized attributes. */
-> > +	if ((flags & XFS_ATTR_INCOMPLETE) ||
-> > +	    namelen > XATTR_NAME_MAX || namelen < 0 ||
-> > +	    valuelen > XATTR_SIZE_MAX || valuelen < 0)
-> > +		return 0;
+> > +	bp->b_ops = &xfs_dquot_buf_ops;
+> > +	for (i = 0; i < qi->qi_dqperchunk; i++) {
+> > +		ddq = &d[i].dd_diskdq;
 > > +
-> > +	/* Store attr key. */
-> > +	key = kmem_alloc(XFS_ATTR_KEY_LEN(namelen), KM_MAYFAIL);
-> > +	if (!key)
-> > +		goto err;
-> > +	INIT_LIST_HEAD(&key->list);
-> > +	key->value = kmem_zalloc_large(valuelen, KM_MAYFAIL);
+> > +		ddq->d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
+> > +		ddq->d_version = XFS_DQUOT_VERSION;
+> > +		ddq->d_flags = dqtype;
+> > +		ddq->d_id = cpu_to_be32(id + i);
+> > +
+> > +		xfs_repair_quota_fix_timer(ddq->d_blk_softlimit,
+> > +				ddq->d_bcount, &ddq->d_btimer,
+> > +				qi->qi_btimelimit);
+> > +		xfs_repair_quota_fix_timer(ddq->d_ino_softlimit,
+> > +				ddq->d_icount, &ddq->d_itimer,
+> > +				qi->qi_itimelimit);
+> > +		xfs_repair_quota_fix_timer(ddq->d_rtb_softlimit,
+> > +				ddq->d_rtbcount, &ddq->d_rtbtimer,
+> > +				qi->qi_rtbtimelimit);
+> > +
+> > +		if (xfs_sb_version_hascrc(&sc->mp->m_sb)) {
+> > +			uuid_copy(&d->dd_uuid, &sc->mp->m_sb.sb_meta_uuid);
+> > +			xfs_update_cksum((char *)d, sizeof(struct xfs_dqblk),
+> > +					 XFS_DQUOT_CRC_OFF);
 > 
-> Why zero this? Also, it looks like valuelen can be zero? Should be
-> we be allocating a buffer in that case?
+> Hmmm - Do we need to reset the lsn here, too? 
 
-Good point, we don't need to zero it and this does need to handle the
-zero-length attr value case.
+Probably, but...
 
-> > +	if (!key->value)
-> > +		goto err_key;
-> > +	key->valuelen = valuelen;
-> > +	key->flags = flags & (ATTR_ROOT | ATTR_SECURE);
-> > +	key->namelen = namelen;
-> > +	key->name[namelen] = 0;
-> > +	memcpy(key->name, name, namelen);
+> What makes me think - do we check that the lsn is valid in verifiers
+> and so catch/fix problems where the lsn is outside the valid range
+> of the current log LSNs?
+
+...while we use them to skip old dquot logs during log recovery, we
+don't check them otherwise AFAICT.
+
+> > +STATIC int
+> > +xfs_repair_quota_data_fork(
+> > +	struct xfs_scrub_context	*sc,
+> > +	uint				dqtype)
+> > +{
+> > +	struct xfs_bmbt_irec		irec = { 0 };
+> > +	struct xfs_iext_cursor		icur;
+> > +	struct xfs_quotainfo		*qi = sc->mp->m_quotainfo;
+> > +	struct xfs_ifork		*ifp;
+> > +	struct xfs_buf			*bp;
+> > +	struct xfs_dqblk		*d;
+> > +	xfs_dqid_t			id;
+> > +	xfs_fileoff_t			max_dqid_off;
+> > +	xfs_fileoff_t			off;
+> > +	xfs_fsblock_t			fsbno;
+> > +	bool				truncate = false;
+> > +	int				error = 0;
 > > +
-> > +	/* Caller already had the value, so copy it and exit. */
-> > +	if (value) {
-> > +		memcpy(key->value, value, valuelen);
-> > +		goto out_ok;
-> 
-> memcpy of a zero length buffer into a zero length pointer does what?
-> 
+> > +	error = xfs_repair_metadata_inode_forks(sc);
+> > +	if (error)
+> > +		goto out;
+> > +
+> > +	/* Check for data fork problems that apply only to quota files. */
+> > +	max_dqid_off = ((xfs_dqid_t)-1) / qi->qi_dqperchunk;
+> > +	ifp = XFS_IFORK_PTR(sc->ip, XFS_DATA_FORK);
+> > +	for_each_xfs_iext(ifp, &icur, &irec) {
+> > +		if (isnullstartblock(irec.br_startblock)) {
+> > +			error = -EFSCORRUPTED;
+> > +			goto out;
+> > +		}
+> > +
+> > +		if (irec.br_startoff > max_dqid_off ||
+> > +		    irec.br_startoff + irec.br_blockcount - 1 > max_dqid_off) {
+> > +			truncate = true;
+> > +			break;
+> > +		}
+> > +	}
+> > +	if (truncate) {
+> > +		error = xfs_itruncate_extents(&sc->tp, sc->ip, XFS_DATA_FORK,
+> > +				max_dqid_off * sc->mp->m_sb.sb_blocksize);
+> > +		if (error)
+> > +			goto out;
 > > +	}
 > > +
-> > +	/* Otherwise look up the remote value directly. */
+> > +	/* Now go fix anything that fails the verifiers. */
+> > +	for_each_xfs_iext(ifp, &icur, &irec) {
+> > +		for (fsbno = irec.br_startblock, off = irec.br_startoff;
+> > +		     fsbno < irec.br_startblock + irec.br_blockcount;
+> > +		     fsbno += XFS_DQUOT_CLUSTER_SIZE_FSB,
+> > +				off += XFS_DQUOT_CLUSTER_SIZE_FSB) {
+> > +			id = off * qi->qi_dqperchunk;
+> > +			error = xfs_trans_read_buf(sc->mp, sc->tp,
+> > +					sc->mp->m_ddev_targp,
+> > +					XFS_FSB_TO_DADDR(sc->mp, fsbno),
+> > +					qi->qi_dqchunklen,
+> > +					0, &bp, &xfs_dquot_buf_ops);
+> > +			if (error == 0) {
+> > +				d = (struct xfs_dqblk *)bp->b_addr;
+> > +				if (id == be32_to_cpu(d->dd_diskdq.d_id))
+> > +					continue;
 > 
-> It's not at all obvious why we are looking up a remote xattr at this
-> point in the function.
-
-We're iterating the attr leaves looking for key/values that can be
-stashed in memory while we reset the attr fork and re-add the
-salvageable key/value pairs.
-
-Sooooo, reword comment as such:
-
-/*
- * This attribute has a remote value.  Look up the remote value so that
- * we can stash it for later reconstruction.
- */
-
-> > +	memset(&args, 0, sizeof(args));
-> > +	args.geo = rx->sc->mp->m_attr_geo;
-> > +	args.index = idx;
-> > +	args.namelen = namelen;
-> > +	args.name = key->name;
-> > +	args.valuelen = valuelen;
-> > +	args.value = key->value;
-> > +	args.dp = rx->sc->ip;
-> > +	args.trans = rx->sc->tp;
-> > +	error = xfs_attr3_leaf_getvalue(bp, &args);
-> > +	if (error || args.rmtblkno == 0)
-> > +		goto err_value;
-> > +
-> > +	error = xfs_attr_rmtval_get(&args);
-> > +	switch (error) {
-> > +	case 0:
-> > +		break;
-> > +	case -EFSBADCRC:
-> > +	case -EFSCORRUPTED:
-> > +		error = 0;
-> > +		/* fall through */
-> > +	default:
-> > +		goto err_value;
-> 
-> So here we can return with error = 0, but no actual extended
-> attribute. Isn't this a silent failure?
-
-We're trying to salvage whatever attributes are readable in the attr
-fork, so if we can't retrieve a remote value then we don't bother
-reconstructing it later.
-
-Granted there ought to be /some/ notification, maybe it's time for a new
-OFLAG that says we couldn't recover everything(?)
-
-> > +	}
-> > +
-> > +out_ok:
-> > +	list_add_tail(&key->list, rx->attrlist);
-> > +	return 0;
-> > +
-> > +err_value:
-> > +	kmem_free(key->value);
-> > +err_key:
-> > +	kmem_free(key);
-> > +err:
-> > +	return error;
-> > +}
-> > +
-> > +/*
-> > + * Record a local format extended attribute key & value for later reinsertion
-> > + * into the inode.
-> > + */
-> > +static inline int
-> > +xfs_repair_xattr_salvage_local_attr(
-> > +	struct xfs_repair_xattr		*rx,
-> > +	int				flags,
-> > +	unsigned char			*name,
-> > +	int				namelen,
-> > +	unsigned char			*value,
-> > +	int				valuelen)
-> > +{
-> > +	return __xfs_repair_xattr_salvage_attr(rx, NULL, flags, 0, name,
-> > +			namelen, value, valuelen);
-> > +}
-> > +
-> > +/*
-> > + * Record a remote format extended attribute key & value for later reinsertion
-> > + * into the inode.
-> > + */
-> > +static inline int
-> > +xfs_repair_xattr_salvage_remote_attr(
-> > +	struct xfs_repair_xattr		*rx,
-> > +	int				flags,
-> > +	unsigned char			*name,
-> > +	int				namelen,
-> > +	struct xfs_buf			*leaf_bp,
-> > +	int				idx,
-> > +	int				valuelen)
-> > +{
-> > +	return __xfs_repair_xattr_salvage_attr(rx, leaf_bp, flags, idx,
-> > +			name, namelen, NULL, valuelen);
-> > +}
-> 
-> Oh, this is why __xfs_repair_xattr_salvage_attr() has two completely
-> separate sets of code in it. Can we factor this differently? i.e a
-> helper function to do all the validity checking and key allocation,
-> and then leave the local versus remote attr handling in these
-> functions?
+> Need to release the buffer here - it's clean and passes the
+> verifier, so no need to hold on to them as we may have thousands of
+> them to walk here.
 
 Ok.
 
-> > +
-> > +/* Extract every xattr key that we can from this attr fork block. */
-> > +STATIC int
-> > +xfs_repair_xattr_recover_leaf(
-> > +	struct xfs_repair_xattr		*rx,
-> > +	struct xfs_buf			*bp)
-> > +{
-> > +	struct xfs_attr3_icleaf_hdr	leafhdr;
-> > +	struct xfs_scrub_context	*sc = rx->sc;
-> > +	struct xfs_mount		*mp = sc->mp;
-> > +	struct xfs_attr_leafblock	*leaf;
-> > +	unsigned long			*usedmap = sc->buf;
-> > +	struct xfs_attr_leaf_name_local	*lentry;
-> > +	struct xfs_attr_leaf_name_remote *rentry;
-> > +	struct xfs_attr_leaf_entry	*ent;
-> > +	struct xfs_attr_leaf_entry	*entries;
-> > +	char				*buf_end;
-> > +	char				*name;
-> > +	char				*name_end;
-> > +	char				*value;
-> > +	size_t				off;
-> > +	unsigned int			nameidx;
-> > +	unsigned int			namesize;
-> > +	unsigned int			hdrsize;
-> > +	unsigned int			namelen;
-> > +	unsigned int			valuelen;
-> > +	int				i;
-> > +	int				error;
-> 
-> Can we scope all these variables inside the blocks that use them?
+> Otherwise looks ok.
 
-I'll see if I can split this function up too.
-
-> > +
-> > +	bitmap_zero(usedmap, mp->m_attr_geo->blksize);
-> > +
-> > +	/* Check the leaf header */
-> > +	leaf = bp->b_addr;
-> > +	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, leaf);
-> > +	hdrsize = xfs_attr3_leaf_hdr_size(leaf);
-> > +	xfs_scrub_xattr_set_map(sc, usedmap, 0, hdrsize);
-> > +	entries = xfs_attr3_leaf_entryp(leaf);
-> > +
-> > +	buf_end = (char *)bp->b_addr + mp->m_attr_geo->blksize;
-> > +	for (i = 0, ent = entries; i < leafhdr.count; ent++, i++) {
-> > +		/* Skip key if it conflicts with something else? */
-> > +		off = (char *)ent - (char *)leaf;
-> > +		if (!xfs_scrub_xattr_set_map(sc, usedmap, off,
-> > +				sizeof(xfs_attr_leaf_entry_t)))
-> > +			continue;
-> > +
-> > +		/* Check the name information. */
-> > +		nameidx = be16_to_cpu(ent->nameidx);
-> > +		if (nameidx < leafhdr.firstused ||
-> > +		    nameidx >= mp->m_attr_geo->blksize)
-> > +			continue;
-> > +
-> > +		if (ent->flags & XFS_ATTR_LOCAL) {
-> > +			lentry = xfs_attr3_leaf_name_local(leaf, i);
-> > +			namesize = xfs_attr_leaf_entsize_local(lentry->namelen,
-> > +					be16_to_cpu(lentry->valuelen));
-> > +			name_end = (char *)lentry + namesize;
-> > +			if (lentry->namelen == 0)
-> > +				continue;
-> > +			name = lentry->nameval;
-> > +			namelen = lentry->namelen;
-> > +			valuelen = be16_to_cpu(lentry->valuelen);
-> > +			value = &name[namelen];
-> 
-> It seems cumbersome to do a bunch of special local/remote attr
-> decoding into a set of semi-common variables, only to then pass the
-> specific local/remote variables back to specific local/remote
-> processing functions.
-> 
-> i.e. I'd prefer to see the attr decoding done inside the salvage
-> function so this looks something like:
-> 
-> 	if (ent->flags & XFS_ATTR_LOCAL) {
-> 		lentry = xfs_attr3_leaf_name_local(leaf, i);
-> 		error = xfs_repair_xattr_salvage_local_attr(rx,
-> 					lentry, ...);
-> 	} else {
-> 		rentry = xfs_attr3_leaf_name_remote(leaf, i);
-> 		error = xfs_repair_xattr_salvage_local_attr(rx,
-> 					rentry, ....);
-> 	}
-> 
-> ......
-
-Seems like it'd be better than the current mess. :0
-
-> > +
-> > +/* Try to recover shortform attrs. */
-> > +STATIC int
-> > +xfs_repair_xattr_recover_sf(
-> > +	struct xfs_repair_xattr		*rx)
-> > +{
-> > +	struct xfs_attr_shortform	*sf;
-> > +	struct xfs_attr_sf_entry	*sfe;
-> > +	struct xfs_attr_sf_entry	*next;
-> > +	struct xfs_ifork		*ifp;
-> > +	unsigned char			*end;
-> > +	int				i;
-> > +	int				error;
-> > +
-> > +	ifp = XFS_IFORK_PTR(rx->sc->ip, XFS_ATTR_FORK);
-> > +	sf = (struct xfs_attr_shortform *)rx->sc->ip->i_afp->if_u1.if_data;
-> 
-> 	sf = (struct xfs_attr_shortform *)ifp->if_u1.if_data;
-> 
-> ....
-> > +/*
-> > + * Repair the extended attribute metadata.
-> > + *
-> > + * XXX: Remote attribute value buffers encompass the entire (up to 64k) buffer
-> > + * and we can't handle those 100% until the buffer cache learns how to deal
-> > + * with that.
-> 
-> I'm not sure what this comment means/implies.
-
-It's another manifestation of the problem that the xfs_buf cache doesn't
-do a very good job of handling multiblock xfs_bufs that alias another
-xfs_buf that's already in the cache.  If the attr fork is crosslinked
-with something else we'll have problems, but that's not fixed so
-easily...
-
-/*
- * XXX: Remote attribute value buffers encompass the entire (up to 64k)
- * buffer.  The buffer cache in XFS can't handle aliased multiblock
- * buffers, so this might misbehave if the attr fork is crosslinked with
- * other filesystem metadata.
- */
+Thank you for the review!
 
 --D
 
