@@ -1,304 +1,143 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:40748 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753827AbeGFDMu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Jul 2018 23:12:50 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w6639C5Q176751
-        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 03:12:49 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp2130.oracle.com with ESMTP id 2k0dnjg04x-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 06 Jul 2018 03:12:49 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w663Cm8l014084
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 03:12:48 GMT
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w663CmMd003837
-        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 03:12:48 GMT
-From: Shan Hai <shan.hai@oracle.com>
-Subject: [PATCH RFC 5/8] xfs: consider the local format inode in misc operations
-Date: Fri,  6 Jul 2018 11:12:26 +0800
-Message-Id: <1530846750-6686-6-git-send-email-shan.hai@oracle.com>
-In-Reply-To: <1530846750-6686-1-git-send-email-shan.hai@oracle.com>
-References: <1530846750-6686-1-git-send-email-shan.hai@oracle.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:47364 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753483AbeGFBu2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Jul 2018 21:50:28 -0400
+Date: Fri, 6 Jul 2018 11:50:25 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 19/21] xfs: repair quotas
+Message-ID: <20180706015025.GT2234@dastard>
+References: <152986820984.3155.16417868536016544528.stgit@magnolia>
+ <152986833543.3155.2878459585391745135.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <152986833543.3155.2878459585391745135.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-The local format inode is a legal citizen from now on and consider
-it in misc operations.
+On Sun, Jun 24, 2018 at 12:25:35PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Fix anything that causes the quota verifiers to fail.
+> +/* Fix anything the verifiers complain about. */
+> +STATIC int
+> +xfs_repair_quota_block(
+> +	struct xfs_scrub_context	*sc,
+> +	struct xfs_buf			*bp,
+> +	uint				dqtype,
+> +	xfs_dqid_t			id)
+> +{
+> +	struct xfs_dqblk		*d = (struct xfs_dqblk *)bp->b_addr;
+> +	struct xfs_disk_dquot		*ddq;
+> +	struct xfs_quotainfo		*qi = sc->mp->m_quotainfo;
+> +	enum xfs_blft			buftype = 0;
+> +	int				i;
+> +
+> +	bp->b_ops = &xfs_dquot_buf_ops;
+> +	for (i = 0; i < qi->qi_dqperchunk; i++) {
+> +		ddq = &d[i].dd_diskdq;
+> +
+> +		ddq->d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
+> +		ddq->d_version = XFS_DQUOT_VERSION;
+> +		ddq->d_flags = dqtype;
+> +		ddq->d_id = cpu_to_be32(id + i);
+> +
+> +		xfs_repair_quota_fix_timer(ddq->d_blk_softlimit,
+> +				ddq->d_bcount, &ddq->d_btimer,
+> +				qi->qi_btimelimit);
+> +		xfs_repair_quota_fix_timer(ddq->d_ino_softlimit,
+> +				ddq->d_icount, &ddq->d_itimer,
+> +				qi->qi_itimelimit);
+> +		xfs_repair_quota_fix_timer(ddq->d_rtb_softlimit,
+> +				ddq->d_rtbcount, &ddq->d_rtbtimer,
+> +				qi->qi_rtbtimelimit);
+> +
+> +		if (xfs_sb_version_hascrc(&sc->mp->m_sb)) {
+> +			uuid_copy(&d->dd_uuid, &sc->mp->m_sb.sb_meta_uuid);
+> +			xfs_update_cksum((char *)d, sizeof(struct xfs_dqblk),
+> +					 XFS_DQUOT_CRC_OFF);
 
-Signed-off-by: Shan Hai <shan.hai@oracle.com>
----
- fs/xfs/libxfs/xfs_bmap.c      | 18 ++++++++++--------
- fs/xfs/libxfs/xfs_inode_buf.c |  6 ------
- fs/xfs/scrub/inode.c          |  2 +-
- fs/xfs/xfs_bmap_util.c        | 11 +++++++++--
- fs/xfs/xfs_inode.c            | 20 ++++++++++++++------
- fs/xfs/xfs_inode_item.c       |  5 ++++-
- fs/xfs/xfs_iomap.c            |  5 +++--
- fs/xfs/xfs_log_recover.c      |  3 ++-
- 8 files changed, 43 insertions(+), 27 deletions(-)
+Hmmm - Do we need to reset the lsn here, too? 
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index bea6dc254a7d..6b151bd15da7 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -830,11 +830,6 @@ xfs_bmap_local_to_extents(
- 	struct xfs_bmbt_irec rec;
- 	struct xfs_iext_cursor icur;
- 
--	/*
--	 * We don't want to deal with the case of keeping inode data inline yet.
--	 * So sending the data fork of a regular inode is invalid.
--	 */
--	ASSERT(!(S_ISREG(VFS_I(ip)->i_mode) && whichfork == XFS_DATA_FORK));
- 	ifp = XFS_IFORK_PTR(ip, whichfork);
- 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL);
- 
-@@ -3840,7 +3835,8 @@ xfs_bmapi_read(
- 
- 	if (unlikely(XFS_TEST_ERROR(
- 	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
--	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE),
-+	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE &&
-+	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL),
- 	     mp, XFS_ERRTAG_BMAPIFORMAT))) {
- 		XFS_ERROR_REPORT("xfs_bmapi_read", XFS_ERRLEVEL_LOW, mp);
- 		return -EFSCORRUPTED;
-@@ -3863,7 +3859,7 @@ xfs_bmapi_read(
- 		return 0;
- 	}
- 
--	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-+	if (!(ifp->if_flags & (XFS_IFINLINE | XFS_IFEXTENTS))) {
- 		error = xfs_iread_extents(NULL, ip, whichfork);
- 		if (error)
- 			return error;
-@@ -4285,7 +4281,6 @@ xfs_bmapi_write(
- 	       (flags & (XFS_BMAPI_CONVERT | XFS_BMAPI_COWFORK)) ==
- 			(XFS_BMAPI_CONVERT | XFS_BMAPI_COWFORK));
- 	ASSERT(len > 0);
--	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL);
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
- 	ASSERT(!(flags & XFS_BMAPI_REMAP));
- 
-@@ -5244,11 +5239,18 @@ __xfs_bunmapi(
- 	ifp = XFS_IFORK_PTR(ip, whichfork);
- 	if (unlikely(
- 	    XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
-+	    XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL &&
- 	    XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE)) {
- 		XFS_ERROR_REPORT("xfs_bunmapi", XFS_ERRLEVEL_LOW,
- 				 ip->i_mount);
- 		return -EFSCORRUPTED;
- 	}
-+
-+	if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL) {
-+		*rlen = 0;
-+		return 0;
-+	}
-+
- 	mp = ip->i_mount;
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 33dc34655ac3..cb3c4b308137 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -157,7 +157,6 @@ const struct xfs_buf_ops xfs_inode_buf_ra_ops = {
- 	.verify_write = xfs_inode_buf_write_verify,
- };
- 
--
- /*
-  * This routine is called to map an inode to the buffer containing the on-disk
-  * version of the inode.  It returns a pointer to the buffer containing the
-@@ -384,12 +383,7 @@ xfs_dinode_verify_fork(
- 
- 	switch (XFS_DFORK_FORMAT(dip, whichfork)) {
- 	case XFS_DINODE_FMT_LOCAL:
--		/*
--		 * no local regular files yet
--		 */
- 		if (whichfork == XFS_DATA_FORK) {
--			if (S_ISREG(be16_to_cpu(dip->di_mode)))
--				return __this_address;
- 			if (be64_to_cpu(dip->di_size) >
- 					XFS_DFORK_SIZE(dip, mp, whichfork))
- 				return __this_address;
-diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
-index 7a6208505980..1501983dd7aa 100644
---- a/fs/xfs/scrub/inode.c
-+++ b/fs/xfs/scrub/inode.c
-@@ -283,7 +283,7 @@ xfs_scrub_dinode(
- 			xfs_scrub_ino_set_corrupt(sc, ino);
- 		break;
- 	case XFS_DINODE_FMT_LOCAL:
--		if (!S_ISDIR(mode) && !S_ISLNK(mode))
-+		if (!S_ISREG(mode) && !S_ISDIR(mode) && !S_ISLNK(mode))
- 			xfs_scrub_ino_set_corrupt(sc, ino);
- 		break;
- 	case XFS_DINODE_FMT_EXTENTS:
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 83b1e8c6c18f..46f718177fd7 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -760,7 +760,8 @@ xfs_can_free_eofblocks(struct xfs_inode *ip, bool force)
- 		return false;
- 
- 	/* If we haven't read in the extent list, then don't do it now. */
--	if (!(ip->i_df.if_flags & XFS_IFEXTENTS))
-+	if (ip->i_d.di_format != XFS_DINODE_FMT_LOCAL &&
-+		!(ip->i_df.if_flags & XFS_IFEXTENTS))
- 		return false;
- 
- 	/*
-@@ -768,7 +769,8 @@ xfs_can_free_eofblocks(struct xfs_inode *ip, bool force)
- 	 * has delalloc blocks and we are forced to remove them.
- 	 */
- 	if (ip->i_d.di_flags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND))
--		if (!force || ip->i_delayed_blks == 0)
-+		if ((ip->i_d.di_format != XFS_DINODE_FMT_LOCAL) &&
-+			(!force || ip->i_delayed_blks == 0))
- 			return false;
- 
- 	return true;
-@@ -792,6 +794,11 @@ xfs_free_eofblocks(
- 	struct xfs_bmbt_irec	imap;
- 	struct xfs_mount	*mp = ip->i_mount;
- 
-+	if (xfs_sb_version_hasinlinedata(&mp->m_sb) &&
-+		ip->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
-+		ip->i_delayed_blks = 0;
-+		return 0;
-+	}
- 	/*
- 	 * Figure out if there are any blocks beyond the end
- 	 * of the file.  If not, then there is nothing to do.
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 5df4de666cc1..78b9790a7cd4 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1563,7 +1563,6 @@ xfs_itruncate_extents_flags(
- 	ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
- 
- 	trace_xfs_itruncate_extents_start(ip, new_size);
--
- 	flags |= xfs_bmapi_aflag(whichfork);
- 
- 	/*
-@@ -1745,9 +1744,15 @@ xfs_inactive_truncate(
- 	ip->i_d.di_size = 0;
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 
--	error = xfs_itruncate_extents(&tp, ip, XFS_DATA_FORK, 0);
--	if (error)
--		goto error_trans_cancel;
-+	if (xfs_sb_version_hasinlinedata(&mp->m_sb) &&
-+		ip->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
-+		ASSERT(ip->i_d.di_nextents == 0);
-+		ip->i_delayed_blks = 0;
-+	} else {
-+		error = xfs_itruncate_extents(&tp, ip, XFS_DATA_FORK, 0);
-+		if (error)
-+			goto error_trans_cancel;
-+	}
- 
- 	ASSERT(ip->i_d.di_nextents == 0);
- 
-@@ -1879,6 +1884,7 @@ xfs_inactive(
- 	if (VFS_I(ip)->i_mode == 0) {
- 		ASSERT(ip->i_df.if_real_bytes == 0);
- 		ASSERT(ip->i_df.if_broot_bytes == 0);
-+		ASSERT(ip->i_delayed_blks == 0);
- 		return;
- 	}
- 
-@@ -1911,8 +1917,9 @@ xfs_inactive(
- 
- 	if (S_ISREG(VFS_I(ip)->i_mode) &&
- 	    (ip->i_d.di_size != 0 || XFS_ISIZE(ip) != 0 ||
--	     ip->i_d.di_nextents > 0 || ip->i_delayed_blks > 0))
-+	     ip->i_d.di_nextents >= 0 || ip->i_delayed_blks >= 0)) {
- 		truncate = 1;
-+	}
- 
- 	error = xfs_qm_dqattach(ip);
- 	if (error)
-@@ -3554,7 +3561,8 @@ xfs_iflush_int(
- 	if (S_ISREG(VFS_I(ip)->i_mode)) {
- 		if (XFS_TEST_ERROR(
- 		    (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS) &&
--		    (ip->i_d.di_format != XFS_DINODE_FMT_BTREE),
-+		    (ip->i_d.di_format != XFS_DINODE_FMT_BTREE) &&
-+		    (ip->i_d.di_format != XFS_DINODE_FMT_LOCAL),
- 		    mp, XFS_ERRTAG_IFLUSH_3)) {
- 			xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
- 				"%s: Bad regular inode %Lu, ptr "PTR_FMT,
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 2389c34c172d..52b297987a75 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -139,6 +139,7 @@ xfs_inode_item_format_data_fork(
- 	struct xfs_log_iovec	**vecp)
- {
- 	struct xfs_inode	*ip = iip->ili_inode;
-+	struct xfs_mount	*mp = ip->i_mount;
- 	size_t			data_bytes;
- 
- 	switch (ip->i_d.di_format) {
-@@ -197,7 +198,9 @@ xfs_inode_item_format_data_fork(
- 			ASSERT(ip->i_df.if_real_bytes == 0 ||
- 			       ip->i_df.if_real_bytes >= data_bytes);
- 			ASSERT(ip->i_df.if_u1.if_data != NULL);
--			ASSERT(ip->i_d.di_size > 0);
-+			if (!xfs_sb_version_hasinlinedata(&mp->m_sb)) {
-+				ASSERT(ip->i_d.di_size > 0);
-+			}
- 			xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_ILOCAL,
- 					ip->i_df.if_u1.if_data, data_bytes);
- 			ilf->ilf_dsize = (unsigned)data_bytes;
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 55876dd02f0c..aa72966081c5 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -532,7 +532,8 @@ xfs_file_iomap_begin_delay(
- 
- 	if (unlikely(XFS_TEST_ERROR(
- 	    (XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_EXTENTS &&
--	     XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_BTREE),
-+	     XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_BTREE &&
-+	     XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) != XFS_DINODE_FMT_LOCAL),
- 	     mp, XFS_ERRTAG_BMAPIFORMAT))) {
- 		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
- 		error = -EFSCORRUPTED;
-@@ -541,7 +542,7 @@ xfs_file_iomap_begin_delay(
- 
- 	XFS_STATS_INC(mp, xs_blk_mapw);
- 
--	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-+	if (!(ifp->if_flags & (XFS_IFINLINE |XFS_IFEXTENTS))) {
- 		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
- 		if (error)
- 			goto out_unlock;
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index b181b5f57a19..d8828f275d9a 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3121,7 +3121,8 @@ xlog_recover_inode_pass2(
- 
- 	if (unlikely(S_ISREG(ldip->di_mode))) {
- 		if ((ldip->di_format != XFS_DINODE_FMT_EXTENTS) &&
--		    (ldip->di_format != XFS_DINODE_FMT_BTREE)) {
-+		    (ldip->di_format != XFS_DINODE_FMT_BTREE) &&
-+		    (ldip->di_format != XFS_DINODE_FMT_LOCAL)) {
- 			XFS_CORRUPTION_ERROR("xlog_recover_inode_pass2(3)",
- 					 XFS_ERRLEVEL_LOW, mp, ldip,
- 					 sizeof(*ldip));
+What makes me think - do we check that the lsn is valid in verifiers
+and so catch/fix problems where the lsn is outside the valid range
+of the current log LSNs?
+
+> +STATIC int
+> +xfs_repair_quota_data_fork(
+> +	struct xfs_scrub_context	*sc,
+> +	uint				dqtype)
+> +{
+> +	struct xfs_bmbt_irec		irec = { 0 };
+> +	struct xfs_iext_cursor		icur;
+> +	struct xfs_quotainfo		*qi = sc->mp->m_quotainfo;
+> +	struct xfs_ifork		*ifp;
+> +	struct xfs_buf			*bp;
+> +	struct xfs_dqblk		*d;
+> +	xfs_dqid_t			id;
+> +	xfs_fileoff_t			max_dqid_off;
+> +	xfs_fileoff_t			off;
+> +	xfs_fsblock_t			fsbno;
+> +	bool				truncate = false;
+> +	int				error = 0;
+> +
+> +	error = xfs_repair_metadata_inode_forks(sc);
+> +	if (error)
+> +		goto out;
+> +
+> +	/* Check for data fork problems that apply only to quota files. */
+> +	max_dqid_off = ((xfs_dqid_t)-1) / qi->qi_dqperchunk;
+> +	ifp = XFS_IFORK_PTR(sc->ip, XFS_DATA_FORK);
+> +	for_each_xfs_iext(ifp, &icur, &irec) {
+> +		if (isnullstartblock(irec.br_startblock)) {
+> +			error = -EFSCORRUPTED;
+> +			goto out;
+> +		}
+> +
+> +		if (irec.br_startoff > max_dqid_off ||
+> +		    irec.br_startoff + irec.br_blockcount - 1 > max_dqid_off) {
+> +			truncate = true;
+> +			break;
+> +		}
+> +	}
+> +	if (truncate) {
+> +		error = xfs_itruncate_extents(&sc->tp, sc->ip, XFS_DATA_FORK,
+> +				max_dqid_off * sc->mp->m_sb.sb_blocksize);
+> +		if (error)
+> +			goto out;
+> +	}
+> +
+> +	/* Now go fix anything that fails the verifiers. */
+> +	for_each_xfs_iext(ifp, &icur, &irec) {
+> +		for (fsbno = irec.br_startblock, off = irec.br_startoff;
+> +		     fsbno < irec.br_startblock + irec.br_blockcount;
+> +		     fsbno += XFS_DQUOT_CLUSTER_SIZE_FSB,
+> +				off += XFS_DQUOT_CLUSTER_SIZE_FSB) {
+> +			id = off * qi->qi_dqperchunk;
+> +			error = xfs_trans_read_buf(sc->mp, sc->tp,
+> +					sc->mp->m_ddev_targp,
+> +					XFS_FSB_TO_DADDR(sc->mp, fsbno),
+> +					qi->qi_dqchunklen,
+> +					0, &bp, &xfs_dquot_buf_ops);
+> +			if (error == 0) {
+> +				d = (struct xfs_dqblk *)bp->b_addr;
+> +				if (id == be32_to_cpu(d->dd_diskdq.d_id))
+> +					continue;
+
+Need to release the buffer here - it's clean and passes the
+verifier, so no need to hold on to them as we may have thousands of
+them to walk here.
+
+
+Otherwise looks ok.
+
+Cheers,
+
+Dave.
 -- 
-2.11.0
-
+Dave Chinner
+david@fromorbit.com
