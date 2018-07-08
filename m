@@ -1,49 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:38824 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753619AbeGHPOz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 8 Jul 2018 11:14:55 -0400
-Date: Sun, 8 Jul 2018 17:16:15 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 21/22] xfs: add support for sub-pagesize writeback
-        without buffer_heads
-Message-ID: <20180708151615.GC14418@lst.de>
-References: <20180702145813.22496-1-hch@lst.de> <20180702145813.22496-22-hch@lst.de> <20180703123603.GB22789@bfoster> <20180703220501.GX32415@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:54498 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752901AbeGHP0B (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Jul 2018 11:26:01 -0400
+Date: Sun, 8 Jul 2018 08:26:01 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 01/25] xfs: allow null firstblock in xfs_bmapi_write()
+ when tp is null
+Message-ID: <20180708152601.GA14847@infradead.org>
+References: <20180703172319.24509-1-bfoster@redhat.com>
+ <20180703172319.24509-2-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180703220501.GX32415@magnolia>
+In-Reply-To: <20180703172319.24509-2-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jul 03, 2018 at 03:05:01PM -0700, Darrick J. Wong wrote:
-> > So the buffer completion code clears the uptodate status of the buffer
-> > on error. I assume that means the next read would replace the data we
-> > failed to write with whatever was previously on disk.
+On Tue, Jul 03, 2018 at 01:22:55PM -0400, Brian Foster wrote:
+> xfs_bmapi_write() always expects a valid firstblock pointer. It
+> immediately dereferences the pointer to help determine how to
+> initialize the bma.minleft field. The remaining accesses are
+> related to modifying btree format forks, which is only relevant for
+> !COW fork callers.
 > 
-> I've always found it a little weird that we basically throw away the
-> newer page contents on error, but we shouldn't be changing the behavior
-> in quite so subtle a way.
+> The reflink code passes a NULL transaction to xfs_bmapi_write() in a
+> couple places that do COW fork unwritten conversion. The purpose of
+> the firstblock field is to track the first block allocation in the
+> current transaction, so technically firstblock should not be
+> required for these callers either.
 > 
-> Also, since we clear uptodate the next (buffered) write will reread the
-> page contents.
+> Tweak xfs_bmapi_write() to initialize the bma correctly without
+> accessing the firstblock pointer if no transaction is provided in
+> the first place. Update the reflink callers to pass NULL instead of
+> otherwise unused firstblock references.
 > 
-> > I guess it's debatable whether that is the right thing to do in
-> > general, but that seems like a higher level issue nonetheless (i.e., I
-> > don't think we'd ever retry the writepage either?).
-> 
-> AFAIK we don't retry failed writes unless userspace dirties the page.
-> 
-> > So is there any reason not to do the analogous in the iomap completion
-> > code?
-> 
-> Will let Christoph answer that one.
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-As far as I can tell the write path should never even touch the
-uptodate bit, and the buffer head path is only doing so for very
-old legacy reasons.  I'd rather keep the iomap write path out of
-the update bit manipulation business from the very beginning instead
-of carry junk like this over.
+Looks good,
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
