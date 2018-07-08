@@ -1,42 +1,33 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:54498 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:54668 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752901AbeGHP0B (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Jul 2018 11:26:01 -0400
-Date: Sun, 8 Jul 2018 08:26:01 -0700
+        with ESMTP id S1752901AbeGHP0T (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Jul 2018 11:26:19 -0400
+Date: Sun, 8 Jul 2018 08:26:19 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 01/25] xfs: allow null firstblock in xfs_bmapi_write()
- when tp is null
-Message-ID: <20180708152601.GA14847@infradead.org>
+Subject: Re: [PATCH 02/25] xfs: add firstblock field to xfs_trans
+Message-ID: <20180708152619.GB14847@infradead.org>
 References: <20180703172319.24509-1-bfoster@redhat.com>
- <20180703172319.24509-2-bfoster@redhat.com>
+ <20180703172319.24509-3-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180703172319.24509-2-bfoster@redhat.com>
+In-Reply-To: <20180703172319.24509-3-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jul 03, 2018 at 01:22:55PM -0400, Brian Foster wrote:
-> xfs_bmapi_write() always expects a valid firstblock pointer. It
-> immediately dereferences the pointer to help determine how to
-> initialize the bma.minleft field. The remaining accesses are
-> related to modifying btree format forks, which is only relevant for
-> !COW fork callers.
+On Tue, Jul 03, 2018 at 01:22:56PM -0400, Brian Foster wrote:
+> A firstblock var is typically allocated and initialized along with
+> xfs_defer_ops structures and passed around independent from the
+> associated transaction. To facilitate combining the two, add an
+> optional ->t_firstblock field to xfs_trans that can be used in place
+> of an on-stack variable.
 > 
-> The reflink code passes a NULL transaction to xfs_bmapi_write() in a
-> couple places that do COW fork unwritten conversion. The purpose of
-> the firstblock field is to track the first block allocation in the
-> current transaction, so technically firstblock should not be
-> required for these callers either.
-> 
-> Tweak xfs_bmapi_write() to initialize the bma correctly without
-> accessing the firstblock pointer if no transaction is provided in
-> the first place. Update the reflink callers to pass NULL instead of
-> otherwise unused firstblock references.
+> The firstblock value follows the lifetime of the transaction, so
+> initialize it on allocation and when a transaction rolls.
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
 
