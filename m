@@ -1,17 +1,18 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:50446 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754317AbeGICIy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Jul 2018 22:08:54 -0400
-Subject: Re: [PATCH RFC 4/8] xfs: implement inline data read write code
+Received: from aserp2130.oracle.com ([141.146.126.79]:38390 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754394AbeGIDGo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Jul 2018 23:06:44 -0400
+Subject: Re: [PATCH RFC 5/8] xfs: consider the local format inode in misc
+ operations
 References: <1530846750-6686-1-git-send-email-shan.hai@oracle.com>
- <1530846750-6686-5-git-send-email-shan.hai@oracle.com>
- <20180708154520.GB8625@infradead.org>
+ <1530846750-6686-6-git-send-email-shan.hai@oracle.com>
+ <20180708155114.GC8625@infradead.org>
 From: Shan Hai <shan.hai@oracle.com>
-Message-ID: <84b33ebf-041a-643d-befb-bcc867b18b93@oracle.com>
-Date: Mon, 9 Jul 2018 10:08:34 +0800
+Message-ID: <4164089a-8717-41d4-342f-482810d98a93@oracle.com>
+Date: Mon, 9 Jul 2018 11:06:23 +0800
 MIME-Version: 1.0
-In-Reply-To: <20180708154520.GB8625@infradead.org>
+In-Reply-To: <20180708155114.GC8625@infradead.org>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Content-Language: en-US
@@ -23,27 +24,95 @@ Cc: linux-xfs@vger.kernel.org
 
 
 
-On 2018年07月08日 23:45, Christoph Hellwig wrote:
-> On Fri, Jul 06, 2018 at 11:12:25AM +0800, Shan Hai wrote:
->> Implement read/write functions for inline data access and use them
->> for buffered/DIO/DAX operations.
-> Please use the iomap inline handling in this branch instead of
-> implementing it in XFS:
+On 2018年07月08日 23:51, Christoph Hellwig wrote:
+> On Fri, Jul 06, 2018 at 11:12:26AM +0800, Shan Hai wrote:
+>> The local format inode is a legal citizen from now on and consider
+>> it in misc operations.
+> This probably wants to go towards the front of the series, and split
+> into multiple patches with better changelogs for each.
 >
-> https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git/log/?h=iomap-4.19-merge
+>>   
+>>   	if (unlikely(XFS_TEST_ERROR(
+>>   	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
+>> -	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE),
+>> +	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE &&
+>> +	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL),
+> This are all the three possible values.  It is kinda confusing to read
+> the checks this way as we alreayd checked for a valid fork type in
+> the inode read verifies.
+>
+> Also this seems to be in xfs_bmapi_read, for which reading allowing
+> inline format forks seems wrong to me.
 
-OK, I will base the patches on the iomap inline handling code.
+Agreed.
 
-> It seems like your code doesn't use the page cache for inline data
-> at the moment, which means you'd want to always use the direct I/O
-> version of the code as-is.
+>> -	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+>> +	if (!(ifp->if_flags & (XFS_IFINLINE | XFS_IFEXTENTS))) {
+>>   		error = xfs_iread_extents(NULL, ip, whichfork);
+>>   		if (error)
+>>   			return error;
+> I think we need to clean this up better.  We probably want an
+> xfs_inode_has_extents helper, or even hide the check inside
+> xfs_iread_extents itself.  Also I wonder if the above is read, the
+> XFS_IFEXTENTS flag has always meant that we have the current extent list
+> in memory, which should always be the case for a fork in inline format.
+>
 
-Yes, the read path uses direct I/O version while the write is not.
+Yes, you are right, seems the above 2 checks are left over from my code 
+cleanup before
+sending it out, my apology for wasting your time like this,  really sorry.
 
-> Althought that makes me wonder how you handle memory mapped I/O, but
-> I guess I'll find out later.
+>> @@ -5244,11 +5239,18 @@ __xfs_bunmapi(
+>>   	ifp = XFS_IFORK_PTR(ip, whichfork);
+>>   	if (unlikely(
+>>   	    XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
+>> +	    XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL &&
+>>   	    XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE)) {
+>>   		XFS_ERROR_REPORT("xfs_bunmapi", XFS_ERRLEVEL_LOW,
+>>   				 ip->i_mount);
+>>   		return -EFSCORRUPTED;
+>>   	}
+>> +
+>> +	if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL) {
+>> +		*rlen = 0;
+>> +		return 0;
+>> +	}
+> I don't think we should ever call bunmapi for an inline format fork.
+>
+>>   };
+>>   
+>> -
+>>   /*
+> Spurious whitespace change.
+>
+>>    * This routine is called to map an inode to the buffer containing the on-disk
+>>    * version of the inode.  It returns a pointer to the buffer containing the
+>> @@ -384,12 +383,7 @@ xfs_dinode_verify_fork(
+>>   
+>>   	switch (XFS_DFORK_FORMAT(dip, whichfork)) {
+>>   	case XFS_DINODE_FMT_LOCAL:
+>> -		/*
+>> -		 * no local regular files yet
+>> -		 */
+>>   		if (whichfork == XFS_DATA_FORK) {
+>> -			if (S_ISREG(be16_to_cpu(dip->di_mode)))
+>> -				return __this_address;
+> I think you need to check the new feature bit here and only allow the
+> inline regular case if the feature bit it set.
 
-I will use page cache to handle the mmap case, thanks for the review.
+OK, I will do that.
+
+>> @@ -283,7 +283,7 @@ xfs_scrub_dinode(
+>>   			xfs_scrub_ino_set_corrupt(sc, ino);
+>>   		break;
+>>   	case XFS_DINODE_FMT_LOCAL:
+>> -		if (!S_ISDIR(mode) && !S_ISLNK(mode))
+>> +		if (!S_ISREG(mode) && !S_ISDIR(mode) && !S_ISLNK(mode))
+>>   			xfs_scrub_ino_set_corrupt(sc, ino);
+>>   		break;
+> Same here.
+
+Ditto.
 
 Thanks
 Shan Hai
