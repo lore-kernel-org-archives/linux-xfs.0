@@ -1,18 +1,17 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:38390 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754394AbeGIDGo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Jul 2018 23:06:44 -0400
-Subject: Re: [PATCH RFC 5/8] xfs: consider the local format inode in misc
- operations
+Received: from userp2120.oracle.com ([156.151.31.85]:56120 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754395AbeGIDHu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Jul 2018 23:07:50 -0400
+Subject: Re: [PATCH RFC 6/8] xfs: fix imbalanced locking
 References: <1530846750-6686-1-git-send-email-shan.hai@oracle.com>
- <1530846750-6686-6-git-send-email-shan.hai@oracle.com>
- <20180708155114.GC8625@infradead.org>
+ <1530846750-6686-7-git-send-email-shan.hai@oracle.com>
+ <20180708155344.GD8625@infradead.org>
 From: Shan Hai <shan.hai@oracle.com>
-Message-ID: <4164089a-8717-41d4-342f-482810d98a93@oracle.com>
-Date: Mon, 9 Jul 2018 11:06:23 +0800
+Message-ID: <5bd22e0a-14a5-b172-a5dc-d4b7c70d963a@oracle.com>
+Date: Mon, 9 Jul 2018 11:07:30 +0800
 MIME-Version: 1.0
-In-Reply-To: <20180708155114.GC8625@infradead.org>
+In-Reply-To: <20180708155344.GD8625@infradead.org>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Content-Language: en-US
@@ -24,95 +23,47 @@ Cc: linux-xfs@vger.kernel.org
 
 
 
-On 2018年07月08日 23:51, Christoph Hellwig wrote:
-> On Fri, Jul 06, 2018 at 11:12:26AM +0800, Shan Hai wrote:
->> The local format inode is a legal citizen from now on and consider
->> it in misc operations.
-> This probably wants to go towards the front of the series, and split
-> into multiple patches with better changelogs for each.
->
->>   
->>   	if (unlikely(XFS_TEST_ERROR(
->>   	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
->> -	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE),
->> +	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE &&
->> +	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL),
-> This are all the three possible values.  It is kinda confusing to read
-> the checks this way as we alreayd checked for a valid fork type in
-> the inode read verifies.
->
-> Also this seems to be in xfs_bmapi_read, for which reading allowing
-> inline format forks seems wrong to me.
-
-Agreed.
-
->> -	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
->> +	if (!(ifp->if_flags & (XFS_IFINLINE | XFS_IFEXTENTS))) {
->>   		error = xfs_iread_extents(NULL, ip, whichfork);
->>   		if (error)
->>   			return error;
-> I think we need to clean this up better.  We probably want an
-> xfs_inode_has_extents helper, or even hide the check inside
-> xfs_iread_extents itself.  Also I wonder if the above is read, the
-> XFS_IFEXTENTS flag has always meant that we have the current extent list
-> in memory, which should always be the case for a fork in inline format.
->
-
-Yes, you are right, seems the above 2 checks are left over from my code 
-cleanup before
-sending it out, my apology for wasting your time like this,  really sorry.
-
->> @@ -5244,11 +5239,18 @@ __xfs_bunmapi(
->>   	ifp = XFS_IFORK_PTR(ip, whichfork);
->>   	if (unlikely(
->>   	    XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
->> +	    XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL &&
->>   	    XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE)) {
->>   		XFS_ERROR_REPORT("xfs_bunmapi", XFS_ERRLEVEL_LOW,
->>   				 ip->i_mount);
->>   		return -EFSCORRUPTED;
+On 2018年07月08日 23:53, Christoph Hellwig wrote:
+> On Fri, Jul 06, 2018 at 11:12:27AM +0800, Shan Hai wrote:
+>> The XFS_ILOCK_SHARED type lock is held in the xfs_ioc_fsgetxattr
+>> but does not released when the inode is in local format, fix it by
+>> eleasing the lock on the local format inode.
+>>
+>> Signed-off-by: Shan Hai <shan.hai@oracle.com>
+>> ---
+>>   fs/xfs/xfs_ioctl.c | 5 ++++-
+>>   1 file changed, 4 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+>> index 0ef5ece5634c..246562615ccd 100644
+>> --- a/fs/xfs/xfs_ioctl.c
+>> +++ b/fs/xfs/xfs_ioctl.c
+>> @@ -907,7 +907,10 @@ xfs_ioc_fsgetxattr(
+>>   	} else {
+>>   		if (ip->i_df.if_flags & XFS_IFEXTENTS)
+>>   			fa.fsx_nextents = xfs_iext_count(&ip->i_df);
+>> -		else
+>> +		else if (ip->i_df.if_flags & XFS_IFINLINE) {
+>> +			xfs_iunlock(ip, XFS_ILOCK_SHARED);
+>> +			return 0;
+>> +		} else
+>>   			fa.fsx_nextents = ip->i_d.di_nextents;
 >>   	}
->> +
->> +	if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL) {
->> +		*rlen = 0;
->> +		return 0;
->> +	}
-> I don't think we should ever call bunmapi for an inline format fork.
+>>   	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+> This looks odd, and the changelog confuses even more.
 >
->>   };
->>   
->> -
->>   /*
-> Spurious whitespace change.
+> Please avoid the early return, which means we miss the copy_to_user
+> of the fa struct.  It seems to me like this should be something like:
 >
->>    * This routine is called to map an inode to the buffer containing the on-disk
->>    * version of the inode.  It returns a pointer to the buffer containing the
->> @@ -384,12 +383,7 @@ xfs_dinode_verify_fork(
->>   
->>   	switch (XFS_DFORK_FORMAT(dip, whichfork)) {
->>   	case XFS_DINODE_FMT_LOCAL:
->> -		/*
->> -		 * no local regular files yet
->> -		 */
->>   		if (whichfork == XFS_DATA_FORK) {
->> -			if (S_ISREG(be16_to_cpu(dip->di_mode)))
->> -				return __this_address;
-> I think you need to check the new feature bit here and only allow the
-> inline regular case if the feature bit it set.
+> 		if (ip->i_df.if_flags & XFS_IFEXTENTS)
+>                          fa.fsx_nextents = xfs_iext_count(&ip->i_df);
+> 		esle if (ip->i_df.if_flags & XFS_IFINLINE)
+> 			fa.fsx_nextents = 0;
+>                  else
+> 			fa.fsx_nextents = ip->i_d.di_nextents;
 
-OK, I will do that.
 
->> @@ -283,7 +283,7 @@ xfs_scrub_dinode(
->>   			xfs_scrub_ino_set_corrupt(sc, ino);
->>   		break;
->>   	case XFS_DINODE_FMT_LOCAL:
->> -		if (!S_ISDIR(mode) && !S_ISLNK(mode))
->> +		if (!S_ISREG(mode) && !S_ISDIR(mode) && !S_ISLNK(mode))
->>   			xfs_scrub_ino_set_corrupt(sc, ino);
->>   		break;
-> Same here.
-
-Ditto.
+Agreed, I will double check this, thanks for the review.
 
 Thanks
 Shan Hai
