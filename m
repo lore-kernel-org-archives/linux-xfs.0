@@ -1,158 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:48469 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S936965AbeFSClg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Jun 2018 22:41:36 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1fV6aI-0004vc-Gu
-        for linux-xfs@vger.kernel.org; Tue, 19 Jun 2018 12:41:30 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.91)
-        (envelope-from <david@fromorbit.com>)
-        id 1fV6aI-0005wK-Fb
-        for linux-xfs@vger.kernel.org; Tue, 19 Jun 2018 12:41:30 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/2] xfs: More robust inode extent count validation
-Date: Tue, 19 Jun 2018 12:41:28 +1000
-Message-Id: <20180619024128.22669-3-david@fromorbit.com>
-In-Reply-To: <20180619024128.22669-1-david@fromorbit.com>
-References: <20180619024128.22669-1-david@fromorbit.com>
+Received: from gateway32.websitewelcome.com ([192.185.145.1]:30171 "EHLO
+        gateway32.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932980AbeGIVZc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jul 2018 17:25:32 -0400
+Received: from cm14.websitewelcome.com (cm14.websitewelcome.com [100.42.49.7])
+        by gateway32.websitewelcome.com (Postfix) with ESMTP id F066C74B6BB
+        for <linux-xfs@vger.kernel.org>; Mon,  9 Jul 2018 16:03:00 -0500 (CDT)
+Date: Mon, 9 Jul 2018 16:02:59 -0500
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH v2] xfs_bmap_util: use swap macro
+Message-ID: <20180709210259.GA18992@embeddedor.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 
-From: Dave Chinner <dchinner@redhat.com>
+Make use of the swap macro and remove some unnecessary variables.
+This makes the code easier to read and maintain. Also, reduces the
+stack usage.
 
-When the inode is in extent format, it can't have more extents that
-fit in the inode fork. We don't currenty check this, and so this
-corruption goes unnoticed by the inode verifiers. This can lead to
-crashes operating on invalid in-memory structures.
+This code was detected with the help of Coccinelle.
 
-Attempts to access such a inode will now error out in the verifier
-rather than allowing modification operations to proceed.
-
-Reported-by: Wen Xu <wen.xu@gatech.edu>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 ---
- fs/xfs/libxfs/xfs_format.h    |  3 ++
- fs/xfs/libxfs/xfs_inode_buf.c | 74 +++++++++++++++++++++--------------
- 2 files changed, 48 insertions(+), 29 deletions(-)
+Changes in v2
+ - Use swap in a couple more of places.
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 1c5a8aaf2bfc..1cb298fec274 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -962,6 +962,9 @@ typedef enum xfs_dinode_fmt {
- 		XFS_DFORK_DSIZE(dip, mp) : \
- 		XFS_DFORK_ASIZE(dip, mp))
+ fs/xfs/xfs_bmap_util.c | 28 +++++-----------------------
+ 1 file changed, 5 insertions(+), 23 deletions(-)
+
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 83b1e8c..a657d0a 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1691,7 +1691,6 @@ xfs_swap_extent_forks(
+ 	int			*src_log_flags,
+ 	int			*target_log_flags)
+ {
+-	struct xfs_ifork	tempifp, *ifp, *tifp;
+ 	xfs_filblks_t		aforkblks = 0;
+ 	xfs_filblks_t		taforkblks = 0;
+ 	xfs_extnum_t		junk;
+@@ -1733,11 +1732,7 @@ xfs_swap_extent_forks(
+ 	/*
+ 	 * Swap the data forks of the inodes
+ 	 */
+-	ifp = &ip->i_df;
+-	tifp = &tip->i_df;
+-	tempifp = *ifp;		/* struct copy */
+-	*ifp = *tifp;		/* struct copy */
+-	*tifp = tempifp;	/* struct copy */
++	swap(ip->i_df, tip->i_df);
  
-+#define XFS_DFORK_MAXEXT(dip, mp, w) \
-+	(XFS_DFORK_SIZE(dip, mp, w) / sizeof(xfs_bmbt_rec_t))
-+
- /*
-  * Return pointers to the data or attribute forks.
-  */
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index d38d724534c4..a41b6e5519e0 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -374,6 +374,45 @@ xfs_log_dinode_to_disk(
- 	}
- }
+ 	/*
+ 	 * Fix the on-disk inode values
+@@ -1746,13 +1741,8 @@ xfs_swap_extent_forks(
+ 	ip->i_d.di_nblocks = tip->i_d.di_nblocks - taforkblks + aforkblks;
+ 	tip->i_d.di_nblocks = tmp + taforkblks - aforkblks;
  
-+static xfs_failaddr_t
-+xfs_dinode_verify_fork(
-+	struct xfs_dinode	*dip,
-+	struct xfs_mount	*mp,
-+	int			whichfork)
-+{
-+	uint32_t		di_nextents = XFS_DFORK_NEXTENTS(dip, whichfork);
-+
-+	switch (XFS_DFORK_FORMAT(dip, whichfork)) {
-+	case XFS_DINODE_FMT_LOCAL:
-+		/*
-+		 * no local regular files yet
-+		 */
-+		if (whichfork == XFS_DATA_FORK) {
-+			if (S_ISREG(be16_to_cpu(dip->di_mode)))
-+				return __this_address;
-+			if (be64_to_cpu(dip->di_size) >
-+					XFS_DFORK_SIZE(dip, mp, whichfork))
-+				return __this_address;
-+		}
-+		if (di_nextents)
-+			return __this_address;
-+		/* fall through */
-+	case XFS_DINODE_FMT_EXTENTS:
-+		if (di_nextents > XFS_DFORK_MAXEXT(dip, mp, whichfork))
-+			return __this_address;
-+	case XFS_DINODE_FMT_BTREE:
-+		if (whichfork == XFS_ATTR_FORK)
-+			if (di_nextents > MAXAEXTNUM)
-+				return __this_address;
-+		else if (di_nextents > MAXEXTNUM)
-+			return __this_address;
-+		break;
-+	default:
-+		return __this_address;
-+	}
-+	return NULL;
-+}
-+
- xfs_failaddr_t
- xfs_dinode_verify(
- 	struct xfs_mount	*mp,
-@@ -441,24 +480,9 @@ xfs_dinode_verify(
- 	case S_IFREG:
- 	case S_IFLNK:
- 	case S_IFDIR:
--		switch (dip->di_format) {
--		case XFS_DINODE_FMT_LOCAL:
--			/*
--			 * no local regular files yet
--			 */
--			if (S_ISREG(mode))
--				return __this_address;
--			if (di_size > XFS_DFORK_DSIZE(dip, mp))
--				return __this_address;
--			if (dip->di_nextents)
--				return __this_address;
--			/* fall through */
--		case XFS_DINODE_FMT_EXTENTS:
--		case XFS_DINODE_FMT_BTREE:
--			break;
--		default:
--			return __this_address;
--		}
-+		fa = xfs_dinode_verify_fork(dip, mp, XFS_DATA_FORK);
-+		if (fa)
-+			return fa;
- 		break;
- 	case 0:
- 		/* Uninitialized inode ok. */
-@@ -468,17 +492,9 @@ xfs_dinode_verify(
- 	}
+-	tmp = (uint64_t) ip->i_d.di_nextents;
+-	ip->i_d.di_nextents = tip->i_d.di_nextents;
+-	tip->i_d.di_nextents = tmp;
+-
+-	tmp = (uint64_t) ip->i_d.di_format;
+-	ip->i_d.di_format = tip->i_d.di_format;
+-	tip->i_d.di_format = tmp;
++	swap(ip->i_d.di_nextents, tip->i_d.di_nextents);
++	swap(ip->i_d.di_format, tip->i_d.di_format);
  
- 	if (XFS_DFORK_Q(dip)) {
--		switch (dip->di_aformat) {
--		case XFS_DINODE_FMT_LOCAL:
--			if (dip->di_anextents)
--				return __this_address;
--		/* fall through */
--		case XFS_DINODE_FMT_EXTENTS:
--		case XFS_DINODE_FMT_BTREE:
--			break;
--		default:
--			return __this_address;
--		}
-+		fa = xfs_dinode_verify_fork(dip, mp, XFS_ATTR_FORK);
-+		if (fa)
-+			return fa;
- 	} else {
- 		/*
- 		 * If there is no fork offset, this may be a freshly-made inode
+ 	/*
+ 	 * The extents in the source inode could still contain speculative
+@@ -1846,7 +1836,6 @@ xfs_swap_extents(
+ 	int			src_log_flags, target_log_flags;
+ 	int			error = 0;
+ 	int			lock_flags;
+-	struct xfs_ifork	*cowfp;
+ 	uint64_t		f;
+ 	int			resblks = 0;
+ 
+@@ -1987,18 +1976,11 @@ xfs_swap_extents(
+ 
+ 	/* Swap the cow forks. */
+ 	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+-		xfs_extnum_t	extnum;
+-
+ 		ASSERT(ip->i_cformat == XFS_DINODE_FMT_EXTENTS);
+ 		ASSERT(tip->i_cformat == XFS_DINODE_FMT_EXTENTS);
+ 
+-		extnum = ip->i_cnextents;
+-		ip->i_cnextents = tip->i_cnextents;
+-		tip->i_cnextents = extnum;
+-
+-		cowfp = ip->i_cowfp;
+-		ip->i_cowfp = tip->i_cowfp;
+-		tip->i_cowfp = cowfp;
++		swap(ip->i_cnextents, tip->i_cnextents);
++		swap(ip->i_cowfp, tip->i_cowfp);
+ 
+ 		if (ip->i_cowfp && ip->i_cowfp->if_bytes)
+ 			xfs_inode_set_cowblocks_tag(ip);
 -- 
-2.17.0
+2.7.4
 
