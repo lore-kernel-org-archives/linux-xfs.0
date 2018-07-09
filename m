@@ -1,17 +1,17 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:54784 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754239AbeGIB6e (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Jul 2018 21:58:34 -0400
-Subject: Re: [PATCH RFC 2/8] xfs: introduce extents to local conversion helper
+Received: from userp2130.oracle.com ([156.151.31.86]:50446 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754317AbeGICIy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Jul 2018 22:08:54 -0400
+Subject: Re: [PATCH RFC 4/8] xfs: implement inline data read write code
 References: <1530846750-6686-1-git-send-email-shan.hai@oracle.com>
- <1530846750-6686-3-git-send-email-shan.hai@oracle.com>
- <20180708154226.GA8625@infradead.org>
+ <1530846750-6686-5-git-send-email-shan.hai@oracle.com>
+ <20180708154520.GB8625@infradead.org>
 From: Shan Hai <shan.hai@oracle.com>
-Message-ID: <734657eb-621e-7e3d-4f19-96c2e1a64625@oracle.com>
-Date: Mon, 9 Jul 2018 09:58:01 +0800
+Message-ID: <84b33ebf-041a-643d-befb-bcc867b18b93@oracle.com>
+Date: Mon, 9 Jul 2018 10:08:34 +0800
 MIME-Version: 1.0
-In-Reply-To: <20180708154226.GA8625@infradead.org>
+In-Reply-To: <20180708154520.GB8625@infradead.org>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Content-Language: en-US
@@ -23,40 +23,27 @@ Cc: linux-xfs@vger.kernel.org
 
 
 
-On 2018年07月08日 23:42, Christoph Hellwig wrote:
->>   /*
->> + * Convert an inode from extents to the local format.
->> + * Free all the extents of the inode and reset it to the local
->> + * format. Copy the contents of the inode's blocks to the inode's
->> + * literal area.
->> + */
-> Please use up all 80 chars for your comments (and code)
+On 2018年07月08日 23:45, Christoph Hellwig wrote:
+> On Fri, Jul 06, 2018 at 11:12:25AM +0800, Shan Hai wrote:
+>> Implement read/write functions for inline data access and use them
+>> for buffered/DIO/DAX operations.
+> Please use the iomap inline handling in this branch instead of
+> implementing it in XFS:
 >
->> +int
->> +xfs_bmap_extents_to_local(
->> +	xfs_trans_t		*tp,
->> +	xfs_inode_t		*ip,
-> Please use the struct types instead of the typedefs wherever possible.
->
->> +	if (xfs_iext_count(ifp) == 0)
->> +		goto init_local_fork;
->> +
->> +	for_each_xfs_iext(ifp, &icur, &got) {
-> for_each_xfs_iext should do the right thing for an empty fork.
->
->> +out:
->> +	return error;
-> Just return errors directly instead of going to a label that returns
-> the error.
->
->> +}
->> +
->> +
->> +/*
-> One blank line after a function body is enough.
->
+> https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git/log/?h=iomap-4.19-merge
 
-OK, I will fix all of the above, thanks for the review.
+OK, I will base the patches on the iomap inline handling code.
+
+> It seems like your code doesn't use the page cache for inline data
+> at the moment, which means you'd want to always use the direct I/O
+> version of the code as-is.
+
+Yes, the read path uses direct I/O version while the write is not.
+
+> Althought that makes me wonder how you handle memory mapped I/O, but
+> I guess I'll find out later.
+
+I will use page cache to handle the mmap case, thanks for the review.
 
 Thanks
 Shan Hai
