@@ -1,69 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:56120 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754395AbeGIDHu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Jul 2018 23:07:50 -0400
-Subject: Re: [PATCH RFC 6/8] xfs: fix imbalanced locking
-References: <1530846750-6686-1-git-send-email-shan.hai@oracle.com>
- <1530846750-6686-7-git-send-email-shan.hai@oracle.com>
- <20180708155344.GD8625@infradead.org>
-From: Shan Hai <shan.hai@oracle.com>
-Message-ID: <5bd22e0a-14a5-b172-a5dc-d4b7c70d963a@oracle.com>
-Date: Mon, 9 Jul 2018 11:07:30 +0800
+Received: from gateway30.websitewelcome.com ([192.185.147.85]:34309 "EHLO
+        gateway30.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932654AbeGIOzz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jul 2018 10:55:55 -0400
+Received: from cm11.websitewelcome.com (cm11.websitewelcome.com [100.42.49.5])
+        by gateway30.websitewelcome.com (Postfix) with ESMTP id 4FC4312D03
+        for <linux-xfs@vger.kernel.org>; Mon,  9 Jul 2018 09:06:11 -0500 (CDT)
+Date: Mon, 9 Jul 2018 09:05:39 -0500
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH] xfs_bmap_util: use swap macro
+Message-ID: <20180709140539.GA17517@embeddedor.com>
 MIME-Version: 1.0
-In-Reply-To: <20180708155344.GD8625@infradead.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 
+Make use of the swap macro and remove some unnecessary variables.
+This makes the code easier to read and maintain. Also, reduces the
+stack usage.
 
+This code was detected with the help of Coccinelle.
 
-On 2018年07月08日 23:53, Christoph Hellwig wrote:
-> On Fri, Jul 06, 2018 at 11:12:27AM +0800, Shan Hai wrote:
->> The XFS_ILOCK_SHARED type lock is held in the xfs_ioc_fsgetxattr
->> but does not released when the inode is in local format, fix it by
->> eleasing the lock on the local format inode.
->>
->> Signed-off-by: Shan Hai <shan.hai@oracle.com>
->> ---
->>   fs/xfs/xfs_ioctl.c | 5 ++++-
->>   1 file changed, 4 insertions(+), 1 deletion(-)
->>
->> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
->> index 0ef5ece5634c..246562615ccd 100644
->> --- a/fs/xfs/xfs_ioctl.c
->> +++ b/fs/xfs/xfs_ioctl.c
->> @@ -907,7 +907,10 @@ xfs_ioc_fsgetxattr(
->>   	} else {
->>   		if (ip->i_df.if_flags & XFS_IFEXTENTS)
->>   			fa.fsx_nextents = xfs_iext_count(&ip->i_df);
->> -		else
->> +		else if (ip->i_df.if_flags & XFS_IFINLINE) {
->> +			xfs_iunlock(ip, XFS_ILOCK_SHARED);
->> +			return 0;
->> +		} else
->>   			fa.fsx_nextents = ip->i_d.di_nextents;
->>   	}
->>   	xfs_iunlock(ip, XFS_ILOCK_SHARED);
-> This looks odd, and the changelog confuses even more.
->
-> Please avoid the early return, which means we miss the copy_to_user
-> of the fa struct.  It seems to me like this should be something like:
->
-> 		if (ip->i_df.if_flags & XFS_IFEXTENTS)
->                          fa.fsx_nextents = xfs_iext_count(&ip->i_df);
-> 		esle if (ip->i_df.if_flags & XFS_IFINLINE)
-> 			fa.fsx_nextents = 0;
->                  else
-> 			fa.fsx_nextents = ip->i_d.di_nextents;
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+---
+ fs/xfs/xfs_bmap_util.c | 13 ++-----------
+ 1 file changed, 2 insertions(+), 11 deletions(-)
 
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 83b1e8c..4b0b16f 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1691,7 +1691,6 @@ xfs_swap_extent_forks(
+ 	int			*src_log_flags,
+ 	int			*target_log_flags)
+ {
+-	struct xfs_ifork	tempifp, *ifp, *tifp;
+ 	xfs_filblks_t		aforkblks = 0;
+ 	xfs_filblks_t		taforkblks = 0;
+ 	xfs_extnum_t		junk;
+@@ -1733,11 +1732,7 @@ xfs_swap_extent_forks(
+ 	/*
+ 	 * Swap the data forks of the inodes
+ 	 */
+-	ifp = &ip->i_df;
+-	tifp = &tip->i_df;
+-	tempifp = *ifp;		/* struct copy */
+-	*ifp = *tifp;		/* struct copy */
+-	*tifp = tempifp;	/* struct copy */
++	swap(ip->i_df, tip->i_df);
+ 
+ 	/*
+ 	 * Fix the on-disk inode values
+@@ -1987,14 +1982,10 @@ xfs_swap_extents(
+ 
+ 	/* Swap the cow forks. */
+ 	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+-		xfs_extnum_t	extnum;
+-
+ 		ASSERT(ip->i_cformat == XFS_DINODE_FMT_EXTENTS);
+ 		ASSERT(tip->i_cformat == XFS_DINODE_FMT_EXTENTS);
+ 
+-		extnum = ip->i_cnextents;
+-		ip->i_cnextents = tip->i_cnextents;
+-		tip->i_cnextents = extnum;
++		swap(ip->i_cnextents, tip->i_cnextents);
+ 
+ 		cowfp = ip->i_cowfp;
+ 		ip->i_cowfp = tip->i_cowfp;
+-- 
+2.7.4
 
-Agreed, I will double check this, thanks for the review.
-
-Thanks
-Shan Hai
