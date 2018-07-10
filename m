@@ -1,70 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:43974 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388924AbeGKRt6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jul 2018 13:49:58 -0400
-Date: Wed, 11 Jul 2018 10:44:21 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs_attr_leaf: use swap macro in xfs_attr3_leaf_rebalance
-Message-ID: <20180711174421.GH32415@magnolia>
-References: <20180709161247.GA4746@embeddedor.com>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:57942 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933129AbeGJBHb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 9 Jul 2018 21:07:31 -0400
+Date: Mon, 9 Jul 2018 21:07:29 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 25/25] xfs: remove xfs_defer_init() firstblock param
+Message-ID: <20180710010729.GB5835@killians.ges.redhat.com>
+References: <20180703172319.24509-1-bfoster@redhat.com>
+ <20180703172319.24509-26-bfoster@redhat.com>
+ <20180704012743.GY32415@magnolia>
+ <20180708153708.GC14847@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180709161247.GA4746@embeddedor.com>
+In-Reply-To: <20180708153708.GC14847@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Allison Henderson <allison.henderson@oracle.com>
 
-On Mon, Jul 09, 2018 at 11:12:47AM -0500, Gustavo A. R. Silva wrote:
-> Make use of the swap macro and remove some unnecessary variables.
-> This makes the code easier to read and maintain. Also, reduces the
-> stack usage.
+On Sun, Jul 08, 2018 at 08:37:08AM -0700, Christoph Hellwig wrote:
+> On Tue, Jul 03, 2018 at 06:27:43PM -0700, Darrick J. Wong wrote:
+> > Moving on to the question of whether or not to embed a struct
+> > xfs_defer_ops into struct xfs_trans instead of just a pointer, it looks
+> > to me like that should be a pretty straightforward conversion.  Most of
+> > the defer_ops users keep it within the scope of a single
+> > xfs_trans_{alloc,commit} pair so we can pass *tp instead of *dfops into
+> > the helpers.
 > 
-> This code was detected with the help of Coccinelle.
+> I'd like to see that happen eventually, probably rather sooner than
+> later.
 > 
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+> > The one big exception to that of course is the log item replay where we
+> > don't want to finish any of the new defer_ops until we're done with
+> > replay, for which we'll need to have a xfs_defer_move to transfer all
+> > the items and [bi]join'd state from one dfops to another.  This is
+> > probably the same mechanism that you'd have to use to preserve dfops
+> > state in xfs_defer_trans_roll.
+> 
+> Yes.  As far as I can tell we can just list_split_init the two lists
+> over, copy over the inodes and bufs arrays (at least if we are rolling
+> the transaction) and mostly ignore dop_low and dop_commited.
+> 
 
-Looks ok, will test...
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+I have a series in progress that takes care of most of this. It has some
+details left to work out and needs cleanup, but survived an initial
+round of tests. Unfortunately I won't have much time to get to it this
+week, but hopefully I'll have it cleaned up enough to post something
+next week.
 
---D
+Brian
 
-> ---
->  fs/xfs/libxfs/xfs_attr_leaf.c | 13 +++----------
->  1 file changed, 3 insertions(+), 10 deletions(-)
+> Now the transaction itself actually already has a list of items joined
+> to them, which must include dop_inodes and dop_bufs, and I suspect
+> we should just look at the items and rejoin all inodes and bufs instead
+> of separately keeping track of them for the normal roll case.  We'd
+> just need some special outside storage for the log recovery case.
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index 76e9004..ec0bf96 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -1570,17 +1570,10 @@ xfs_attr3_leaf_rebalance(
->  	 */
->  	swap = 0;
->  	if (xfs_attr3_leaf_order(blk1->bp, &ichdr1, blk2->bp, &ichdr2)) {
-> -		struct xfs_da_state_blk	*tmp_blk;
-> -		struct xfs_attr3_icleaf_hdr tmp_ichdr;
-> +		swap(blk1, blk2);
->  
-> -		tmp_blk = blk1;
-> -		blk1 = blk2;
-> -		blk2 = tmp_blk;
-> -
-> -		/* struct copies to swap them rather than reconverting */
-> -		tmp_ichdr = ichdr1;
-> -		ichdr1 = ichdr2;
-> -		ichdr2 = tmp_ichdr;
-> +		/* swap structures rather than reconverting them */
-> +		swap(ichdr1, ichdr2);
->  
->  		leaf1 = blk1->bp->b_addr;
->  		leaf2 = blk2->bp->b_addr;
-> -- 
-> 2.7.4
+> > The other area of trickiness I anticipate is Allison's reworking of the
+> > xattr code's usage of defer_ops to eliminate the repeated creation and
+> > finishing of defer ops.  Even if attribute operations can still allocate
+> > and commit multiple transactions, we'll have to find a way to carry the
+> > defer_ops state (the attr intent item and presumably a _defer_ijoin'd
+> > inode) across every one of those transactions.  I'm not sure how far
+> > she's gotten with that, but some coordination is needed.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> In general attribute operations should be rolling transactions, and
+> if they aren't we probably found a bug.  Once it is a rolling
+> transaction we've already got all the state coverted by the
+> xfs_defer_trans_roll equivalent case.
