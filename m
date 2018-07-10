@@ -1,178 +1,276 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:60034 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732870AbeGLAcl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jul 2018 20:32:41 -0400
-Date: Wed, 11 Jul 2018 17:25:34 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: t_firstblock assert triggered from dedup in generic/051
-Message-ID: <20180712002534.GJ32415@magnolia>
-References: <20180711184241.GA4949@lst.de>
- <20180711190925.GI32415@magnolia>
- <20180711193821.GA6841@killians.ges.redhat.com>
- <20180711194321.GJ5724@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180711194321.GJ5724@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:58212 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751033AbeGJGFr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jul 2018 02:05:47 -0400
+Received: from 213-225-34-75.nat.highway.a1.net ([213.225.34.75] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1fclmU-00056t-SL
+        for linux-xfs@vger.kernel.org; Tue, 10 Jul 2018 06:05:47 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 3/6] xfs: remove the xfs_ifork_t typedef
+Date: Tue, 10 Jul 2018 08:05:25 +0200
+Message-Id: <20180710060528.4071-4-hch@lst.de>
+In-Reply-To: <20180710060528.4071-1-hch@lst.de>
+References: <20180710060528.4071-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Wed, Jul 11, 2018 at 12:43:21PM -0700, Darrick J. Wong wrote:
-> On Wed, Jul 11, 2018 at 03:38:21PM -0400, Brian Foster wrote:
-> > On Wed, Jul 11, 2018 at 12:09:25PM -0700, Darrick J. Wong wrote:
-> > > On Wed, Jul 11, 2018 at 08:42:41PM +0200, Christoph Hellwig wrote:
-> > > > I ran into this when testing the rebase of my cow optimization
-> > > > series to the 4.19-merge branch, but from a quick glance it really
-> > > > looks like the t_firstblock series might be at faul.  Feel free
-> > > > to discard if you think it is not, I will retest with my patches
-> > > > tomorrow.
-> > > > 
-> > > > [  635.600041] run fstests generic/051 at 2018-07-11 18:25:22
-> > > > [  635.802443] XFS (vdb): Mounting V5 Filesystem
-> > > > [  635.814103] XFS (vdb): Ending clean mount
-> > > > [  635.992757] XFS (vdc): Mounting V5 Filesystem
-> > > > [  636.000955] XFS (vdc): Ending clean mount
-> > > > [  636.031583] XFS (vdc): Unmounting Filesystem
-> > > > [  636.115131] XFS (vdc): Mounting V5 Filesystem
-> > > > [  636.123271] XFS (vdc): Ending clean mount
-> > > > [  639.538434] XFS: Assertion failed: tp->t_firstblock == NULLFSBLOCK, file: fs/xfs/libxfs5
-> > > > [  639.539893] ------------[ cut here ]------------
-> > > > [  639.540516] kernel BUG at fs/xfs/xfs_message.c:102!
-> > > > [  639.541168] invalid opcode: 0000 [#1] SMP PTI
-> > > > [  639.541814] CPU: 2 PID: 20757 Comm: fsstress Not tainted 4.18.0-rc4+ #3969
-> > > > [  639.542744] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.11.1-1 04/01/4
-> > > > [  639.543848] RIP: 0010:assfail+0x23/0x30
-> > > > [  639.544470] Code: c3 66 0f 1f 44 00 00 48 89 f1 41 89 d0 48 c7 c6 88 e0 8c 82 48 89 fa  
-> > > > [  639.546396] RSP: 0018:ffff88012dc43c08 EFLAGS: 00010202
-> > > > [  639.546899] RAX: 0000000000000000 RBX: ffff88012dc43ca0 RCX: 0000000000000000
-> > > > [  639.547582] RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffff828480eb
-> > > > [  639.548273] RBP: ffff88012aa92758 R08: 0000000000000000 R09: 0000000000000000
-> > > > [  639.548954] R10: 0000000000000000 R11: f000000000000000 R12: 0000000000000000
-> > > > [  639.549704] R13: ffff88012dc43d48 R14: ffff88013092e7e8 R15: 0000000000000014
-> > > > [  639.550397] FS:  00007f8d689b8e80(0000) GS:ffff88013fd00000(0000) knlGS:0000000000000000
-> > > > [  639.551166] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > > > [  639.551795] CR2: 00007f8d689c7000 CR3: 000000012ba6a000 CR4: 00000000000006e0
-> > > > [  639.552604] Call Trace:
-> > > > [  639.552896]  xfs_defer_init+0xff/0x160
-> > > > [  639.553331]  xfs_reflink_remap_extent+0x31b/0xa00
-> > > 
-> > > Hmmm, this is one of those functions that does:
-> > > 
-> > > xfs_trans_alloc
-> > > while(...)
-> > > 	xfs_defer_init
-> > > 	...
-> > > 	xfs_defer_finish
-> > > xfs_trans_commit
-> > > 
-> > > Hmm, we set t_firstblock to NULLFSBLOCK in _trans_alloc and _trans_dup,
-> > > which should take care of the preconditions and the defer_finis...
-> > > 
-> > > ...oh, you know what I think it is?  We don't roll the transaction after
-> > > successfully finishing the while (xfs_defer_has_unfinished_work) loop in
-> > > _defer_finish, which means that t_firstblock can be non-null at the
-> > > bottom of that loop, which means that we then trip the assert at the top
-> > > of the loop, just like you saw.
-> > > 
-> > > An extra downside is that _defer_finish returns with a dirty transaction,
-> > > which means that whatever happens afterwards can (in theory) exceed the
-> > > transaction reservation and blow up.  Yikes.
-> > > 
-> > 
-> > My first thought was whether we could get through that loop with an
-> > allocation or something but without deferring anything, but what you
-> > describe above seems much more likely. Given the next series of
-> > refactoring buries the final defer_finish() in trans_commit(), I'm
-> > wondering if we should just have a defer_finish() wrapper that rolls the
-> > tx a final time, which we can bypass in the trans_commit() case because
-> > we aren't making any more changes to the transaction. Hm?
-> 
-> That sounds like a reasonable approach.  In the meantime I'm testing a
-> patch (below) to fix(?) the problem on 4.9 - current kernels.  If it
-> tests ok I'll send it for reals to the list.
-> 
-> Christoph Hellwig reported seeing the following assertion in
-> generic/051:
-> 
-> XFS: Assertion failed: tp->t_firstblock == NULLFSBLOCK, file: fs/xfs/libxfs5
-> ------------[ cut here ]------------
-> kernel BUG at fs/xfs/xfs_message.c:102!
-> invalid opcode: 0000 [#1] SMP PTI
-> CPU: 2 PID: 20757 Comm: fsstress Not tainted 4.18.0-rc4+ #3969
-> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.11.1-1 04/01/4
-> RIP: 0010:assfail+0x23/0x30
-> Code: c3 66 0f 1f 44 00 00 48 89 f1 41 89 d0 48 c7 c6 88 e0 8c 82 48 89 fa  
-> RSP: 0018:ffff88012dc43c08 EFLAGS: 00010202
-> RAX: 0000000000000000 RBX: ffff88012dc43ca0 RCX: 0000000000000000
-> RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffff828480eb
-> RBP: ffff88012aa92758 R08: 0000000000000000 R09: 0000000000000000
-> R10: 0000000000000000 R11: f000000000000000 R12: 0000000000000000
-> R13: ffff88012dc43d48 R14: ffff88013092e7e8 R15: 0000000000000014
-> FS:  00007f8d689b8e80(0000) GS:ffff88013fd00000(0000) knlGS:0000000000000000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> CR2: 00007f8d689c7000 CR3: 000000012ba6a000 CR4: 00000000000006e0
-> Call Trace:
->  xfs_defer_init+0xff/0x160
->  xfs_reflink_remap_extent+0x31b/0xa00
->  xfs_reflink_remap_blocks+0xec/0x4a0
->  xfs_reflink_remap_range+0x3a1/0x650
->  xfs_file_dedupe_range+0x39/0x50
->  vfs_dedupe_file_range+0x218/0x260
->  do_vfs_ioctl+0x262/0x6a0
->  ? __se_sys_newfstat+0x3c/0x60
->  ksys_ioctl+0x35/0x60
->  __x64_sys_ioctl+0x11/0x20
->  do_syscall_64+0x4b/0x190
->  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-> 
-> The root cause of the assertion failure is that xfs_defer_finish doesn't
-> roll the transaction after processing all the deferred items.  Therefore
-> it returns a dirty transaction to the caller, which leaves the caller at
-> risk of exceeding the transaction reservation if it logs more items.
-> 
-> Brian Foster's patchset to move the defer_ops firstblock into the
-> transaction requires t_firstblock == NULLFSBLOCK upon defer_ops
-> initialization, which is how this was noticed at all.
-> 
-> Reported-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_defer.c |    5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-> index 2713e2d808a7..9bab0fb23761 100644
-> --- a/fs/xfs/libxfs/xfs_defer.c
-> +++ b/fs/xfs/libxfs/xfs_defer.c
-> @@ -424,6 +424,11 @@ xfs_defer_finish(
->  			cleanup_fn(*tp, state, error);
->  	}
->  
-> +	/*
-> +	 * Roll the transaction once more to avoid returning to the caller
-> +	 * with a dirty transaction.
-> +	 */
-> +	error = xfs_defer_trans_roll(tp, dop);
+We only have a few more callers left, so seize the opportunity and kill
+it off.
 
-Heh, it doesn't test ok; back to the drawing board...
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_attr_leaf.c  |  8 ++++----
+ fs/xfs/libxfs/xfs_bmap.c       | 20 ++++++++++----------
+ fs/xfs/libxfs/xfs_inode_fork.c |  8 ++++----
+ fs/xfs/libxfs/xfs_inode_fork.h |  4 ++--
+ fs/xfs/xfs_icache.c            |  2 +-
+ fs/xfs/xfs_inode.h             |  6 +++---
+ fs/xfs/xfs_super.c             |  2 +-
+ 7 files changed, 25 insertions(+), 25 deletions(-)
 
-XFS: Assertion failed: !test_bit(XFS_LI_DIRTY, &lip->li_flags), file: fs/xfs/xfs_trans.c, line: 740
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 76e90046731c..3030fba4785c 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -506,7 +506,7 @@ xfs_attr_shortform_create(xfs_da_args_t *args)
+ {
+ 	xfs_attr_sf_hdr_t *hdr;
+ 	xfs_inode_t *dp;
+-	xfs_ifork_t *ifp;
++	struct xfs_ifork *ifp;
+ 
+ 	trace_xfs_attr_sf_create(args);
+ 
+@@ -541,7 +541,7 @@ xfs_attr_shortform_add(xfs_da_args_t *args, int forkoff)
+ 	int i, offset, size;
+ 	xfs_mount_t *mp;
+ 	xfs_inode_t *dp;
+-	xfs_ifork_t *ifp;
++	struct xfs_ifork *ifp;
+ 
+ 	trace_xfs_attr_sf_add(args);
+ 
+@@ -682,7 +682,7 @@ xfs_attr_shortform_lookup(xfs_da_args_t *args)
+ 	xfs_attr_shortform_t *sf;
+ 	xfs_attr_sf_entry_t *sfe;
+ 	int i;
+-	xfs_ifork_t *ifp;
++	struct xfs_ifork *ifp;
+ 
+ 	trace_xfs_attr_sf_lookup(args);
+ 
+@@ -758,7 +758,7 @@ xfs_attr_shortform_to_leaf(
+ 	int error, i, size;
+ 	xfs_dablk_t blkno;
+ 	struct xfs_buf *bp;
+-	xfs_ifork_t *ifp;
++	struct xfs_ifork *ifp;
+ 
+ 	trace_xfs_attr_sf_to_leaf(args);
+ 
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 68ea1f4b9c3f..7ac8f90bd218 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -326,7 +326,7 @@ xfs_bmap_check_leaf_extents(
+ 	xfs_buf_t		*bp;	/* buffer for "block" */
+ 	int			error;	/* error return value */
+ 	xfs_extnum_t		i=0, j;	/* index into the extents list */
+-	xfs_ifork_t		*ifp;	/* fork structure */
++	struct xfs_ifork	*ifp;	/* fork structure */
+ 	int			level;	/* btree level, for checking */
+ 	xfs_mount_t		*mp;	/* file system mount structure */
+ 	__be64			*pp;	/* pointer to block address */
+@@ -594,7 +594,7 @@ xfs_bmap_btree_to_extents(
+ 	xfs_fsblock_t		cbno;	/* child block number */
+ 	xfs_buf_t		*cbp;	/* child block's buffer */
+ 	int			error;	/* error return value */
+-	xfs_ifork_t		*ifp;	/* inode fork data */
++	struct xfs_ifork	*ifp;	/* inode fork data */
+ 	xfs_mount_t		*mp;	/* mount point structure */
+ 	__be64			*pp;	/* ptr to block address */
+ 	struct xfs_btree_block	*rblock;/* root btree block */
+@@ -660,7 +660,7 @@ xfs_bmap_extents_to_btree(
+ 	struct xfs_btree_block	*block;		/* btree root block */
+ 	xfs_btree_cur_t		*cur;		/* bmap btree cursor */
+ 	int			error;		/* error return value */
+-	xfs_ifork_t		*ifp;		/* inode fork pointer */
++	struct xfs_ifork	*ifp;		/* inode fork pointer */
+ 	xfs_bmbt_key_t		*kp;		/* root block key pointer */
+ 	xfs_mount_t		*mp;		/* mount structure */
+ 	xfs_bmbt_ptr_t		*pp;		/* root block address pointer */
+@@ -823,7 +823,7 @@ xfs_bmap_local_to_extents(
+ {
+ 	int		error = 0;
+ 	int		flags;		/* logging flags returned */
+-	xfs_ifork_t	*ifp;		/* inode fork pointer */
++	struct xfs_ifork *ifp;		/* inode fork pointer */
+ 	xfs_alloc_arg_t	args;		/* allocation arguments */
+ 	xfs_buf_t	*bp;		/* buffer for extent block */
+ 	struct xfs_bmbt_irec rec;
+@@ -1501,7 +1501,7 @@ xfs_bmap_one_block(
+ 	xfs_inode_t	*ip,		/* incore inode */
+ 	int		whichfork)	/* data or attr fork */
+ {
+-	xfs_ifork_t	*ifp;		/* inode fork pointer */
++	struct xfs_ifork *ifp;		/* inode fork pointer */
+ 	int		rval;		/* return value */
+ 	xfs_bmbt_irec_t	s;		/* internal version of extent */
+ 	struct xfs_iext_cursor icur;
+@@ -1539,7 +1539,7 @@ xfs_bmap_add_extent_delay_real(
+ 	struct xfs_bmbt_irec	*new = &bma->got;
+ 	int			error;	/* error return value */
+ 	int			i;	/* temp state */
+-	xfs_ifork_t		*ifp;	/* inode fork pointer */
++	struct xfs_ifork	*ifp;	/* inode fork pointer */
+ 	xfs_fileoff_t		new_endoff;	/* end offset of new entry */
+ 	xfs_bmbt_irec_t		r[3];	/* neighbor extent entries */
+ 					/* left is 0, right is 1, prev is 2 */
+@@ -2053,7 +2053,7 @@ xfs_bmap_add_extent_unwritten_real(
+ 	xfs_btree_cur_t		*cur;	/* btree cursor */
+ 	int			error;	/* error return value */
+ 	int			i;	/* temp state */
+-	xfs_ifork_t		*ifp;	/* inode fork pointer */
++	struct xfs_ifork	*ifp;	/* inode fork pointer */
+ 	xfs_fileoff_t		new_endoff;	/* end offset of new entry */
+ 	xfs_bmbt_irec_t		r[3];	/* neighbor extent entries */
+ 					/* left is 0, right is 1, prev is 2 */
+@@ -2520,7 +2520,7 @@ xfs_bmap_add_extent_hole_delay(
+ 	struct xfs_iext_cursor	*icur,
+ 	xfs_bmbt_irec_t		*new)	/* new data to add to file extents */
+ {
+-	xfs_ifork_t		*ifp;	/* inode fork pointer */
++	struct xfs_ifork	*ifp;	/* inode fork pointer */
+ 	xfs_bmbt_irec_t		left;	/* left neighbor extent entry */
+ 	xfs_filblks_t		newlen=0;	/* new indirect size */
+ 	xfs_filblks_t		oldlen=0;	/* old indirect size */
+@@ -4911,7 +4911,7 @@ xfs_bmap_del_extent_real(
+ 	struct xfs_bmbt_irec	got;	/* current extent entry */
+ 	xfs_fileoff_t		got_endoff;	/* first offset past got */
+ 	int			i;	/* temp state */
+-	xfs_ifork_t		*ifp;	/* inode fork pointer */
++	struct xfs_ifork	*ifp;	/* inode fork pointer */
+ 	xfs_mount_t		*mp;	/* mount structure */
+ 	xfs_filblks_t		nblks;	/* quota/sb block count */
+ 	xfs_bmbt_irec_t		new;	/* new record to be inserted */
+@@ -5161,7 +5161,7 @@ __xfs_bunmapi(
+ 	int			error;		/* error return value */
+ 	xfs_extnum_t		extno;		/* extent number in list */
+ 	xfs_bmbt_irec_t		got;		/* current extent record */
+-	xfs_ifork_t		*ifp;		/* inode fork pointer */
++	struct xfs_ifork	*ifp;		/* inode fork pointer */
+ 	int			isrt;		/* freeing in rt area */
+ 	int			logflags;	/* transaction logging flags */
+ 	xfs_extlen_t		mod;		/* rt extent offset */
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index a0e3fb804605..f9acf1d436f6 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -269,7 +269,7 @@ xfs_iformat_btree(
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	xfs_bmdr_block_t	*dfp;
+-	xfs_ifork_t		*ifp;
++	struct xfs_ifork	*ifp;
+ 	/* REFERENCED */
+ 	int			nrecs;
+ 	int			size;
+@@ -347,7 +347,7 @@ xfs_iroot_realloc(
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	int			cur_max;
+-	xfs_ifork_t		*ifp;
++	struct xfs_ifork	*ifp;
+ 	struct xfs_btree_block	*new_broot;
+ 	int			new_max;
+ 	size_t			new_size;
+@@ -503,7 +503,7 @@ xfs_idestroy_fork(
+ 	xfs_inode_t	*ip,
+ 	int		whichfork)
+ {
+-	xfs_ifork_t	*ifp;
++	struct xfs_ifork	*ifp;
+ 
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	if (ifp->if_broot != NULL) {
+@@ -592,7 +592,7 @@ xfs_iflush_fork(
+ 	int			whichfork)
+ {
+ 	char			*cp;
+-	xfs_ifork_t		*ifp;
++	struct xfs_ifork	*ifp;
+ 	xfs_mount_t		*mp;
+ 	static const short	brootflag[2] =
+ 		{ XFS_ILOG_DBROOT, XFS_ILOG_ABROOT };
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+index 46242052aad0..1492143371f3 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.h
++++ b/fs/xfs/libxfs/xfs_inode_fork.h
+@@ -12,7 +12,7 @@ struct xfs_dinode;
+ /*
+  * File incore extent information, present for each of data & attr forks.
+  */
+-typedef struct xfs_ifork {
++struct xfs_ifork {
+ 	int			if_bytes;	/* bytes in if_u1 */
+ 	struct xfs_btree_block	*if_broot;	/* file's incore btree root */
+ 	short			if_broot_bytes;	/* bytes allocated for root */
+@@ -22,7 +22,7 @@ typedef struct xfs_ifork {
+ 		void		*if_root;	/* extent tree root */
+ 		char		*if_data;	/* inline file data */
+ 	} if_u1;
+-} xfs_ifork_t;
++};
+ 
+ /*
+  * Per-fork incore inode flags.
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 47f417d20a30..79f344fa8b14 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -66,7 +66,7 @@ xfs_inode_alloc(
+ 	ip->i_cowfp = NULL;
+ 	ip->i_cnextents = 0;
+ 	ip->i_cformat = XFS_DINODE_FMT_EXTENTS;
+-	memset(&ip->i_df, 0, sizeof(xfs_ifork_t));
++	memset(&ip->i_df, 0, sizeof(ip->i_df));
+ 	ip->i_flags = 0;
+ 	ip->i_delayed_blks = 0;
+ 	memset(&ip->i_d, 0, sizeof(ip->i_d));
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 2ed63a49e890..1f910d2ae73a 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -34,9 +34,9 @@ typedef struct xfs_inode {
+ 	struct xfs_imap		i_imap;		/* location for xfs_imap() */
+ 
+ 	/* Extent information. */
+-	xfs_ifork_t		*i_afp;		/* attribute fork pointer */
+-	xfs_ifork_t		*i_cowfp;	/* copy on write extents */
+-	xfs_ifork_t		i_df;		/* data fork */
++	struct xfs_ifork	*i_afp;		/* attribute fork pointer */
++	struct xfs_ifork	*i_cowfp;	/* copy on write extents */
++	struct xfs_ifork	i_df;		/* data fork */
+ 
+ 	/* operations vectors */
+ 	const struct xfs_dir_ops *d_ops;		/* directory ops vector */
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index f9f8dc490d3d..62312b4cef64 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1886,7 +1886,7 @@ xfs_init_zones(void)
+ 	if (!xfs_da_state_zone)
+ 		goto out_destroy_btree_cur_zone;
+ 
+-	xfs_ifork_zone = kmem_zone_init(sizeof(xfs_ifork_t), "xfs_ifork");
++	xfs_ifork_zone = kmem_zone_init(sizeof(struct xfs_ifork), "xfs_ifork");
+ 	if (!xfs_ifork_zone)
+ 		goto out_destroy_da_state_zone;
+ 
+-- 
+2.18.0
 
-I think we only need to roll if the transaction is actually dirty, i.e.
-
-	if ((*tp)->t_flags & XFS_TRANS_DIRTY)
-		error = xfs_defer_trans_roll(tp, dop);
-
---D
-
->  out:
->  	(*tp)->t_dfops = orig_dop;
->  	if (error)
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
