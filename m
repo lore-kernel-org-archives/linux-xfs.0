@@ -1,86 +1,107 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:39448 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933631AbeGJOnr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Jul 2018 10:43:47 -0400
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [PATCH] common/xfs: remove bad xfs_repair -t option
-References: <20180710094129.1052-1-zlang@redhat.com>
-Message-ID: <57d1a12b-dfaf-834a-a74e-3654624af336@sandeen.net>
-Date: Tue, 10 Jul 2018 09:43:46 -0500
-MIME-Version: 1.0
-In-Reply-To: <20180710094129.1052-1-zlang@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Received: from bombadil.infradead.org ([198.137.202.133]:58190 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751007AbeGJGFn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jul 2018 02:05:43 -0400
+Received: from 213-225-34-75.nat.highway.a1.net ([213.225.34.75] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1fclmQ-00056Z-FS
+        for linux-xfs@vger.kernel.org; Tue, 10 Jul 2018 06:05:43 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 2/6] xfs: simplify xfs_idata_realloc
+Date: Tue, 10 Jul 2018 08:05:24 +0200
+Message-Id: <20180710060528.4071-3-hch@lst.de>
+In-Reply-To: <20180710060528.4071-1-hch@lst.de>
+References: <20180710060528.4071-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
+Streamline the code and take advantage of the fact that kmem_realloc
+through krealloc will be have like a normal allocation if passing in a
+NULL old pointer.
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_inode_fork.c | 55 ++++++++++++----------------------
+ 1 file changed, 19 insertions(+), 36 deletions(-)
 
-On 7/10/18 4:41 AM, Zorro Lang wrote:
-> The xfs_repair "-t" option shouldn't be used alone. An interval must
-> follow the -t option, or xfs_repair will report errors. And only
-> modify reporting interval is useless, if we don't enable ag_stride.
-> 
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
-> ---
-
-I agree, -t looks like it should only have been used for xfs_check.
-This seems to go back a long way in history [1], but I think it has always
-been broken.
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-
-[1] commit 6c6ba523c29d78a009d237e2a019d65beb5fced8
-Author: fsgqa <fsgqa>
-Date:   Fri Aug 29 06:04:54 2003 +0000
-
-    QA updates to enable simplified large filesystem testing
-
-> Hi,
-> 
-> I don't know why we must need the -t option for xfs_repair, I can't
-> find any description to explain it. But I can find an explanation
-> about why we use "-t" for _xfs_check.
-> 
->   # xfs_check runs out of memory on large files, so even providing the test
->   # option (-t) to avoid indexing the free space trees doesn't make it pass on
->   # large filesystems. Avoid it.
-> 
-> The -t option for xfs_repair is totally different with it for
-> xfs_check, maybe -m option is more useful if we think about the
-> memory size.
-> 
-> And the -t option need to work with -o ag_stride together. I'd like
-> to remove the "-t" option directly, due to I really don't know why
-> we need it, or how to give it a proper number.
-> 
-> If the original author knows why we need it, and can give me some
-> suggestions, please help.
-> 
-> Thanks,
-> Zorro
-> 
->  common/xfs | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/common/xfs b/common/xfs
-> index ecf54bbf..61a3c2d9 100644
-> --- a/common/xfs
-> +++ b/common/xfs
-> @@ -193,7 +193,6 @@ _scratch_xfs_repair()
->  		SCRATCH_OPTIONS="-l$SCRATCH_LOGDEV"
->  	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ] && \
->  		SCRATCH_OPTIONS=$SCRATCH_OPTIONS" -r$SCRATCH_RTDEV"
-> -	[ "$LARGE_SCRATCH_DEV" = yes ] && SCRATCH_OPTIONS=$SCRATCH_OPTIONS" -t"
->  	$XFS_REPAIR_PROG $SCRATCH_OPTIONS $* $SCRATCH_DEV
->  }
->  
-> 
-
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index dee85b0f8846..a0e3fb804605 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -468,51 +468,34 @@ xfs_iroot_realloc(
+  */
+ void
+ xfs_idata_realloc(
+-	xfs_inode_t	*ip,
+-	int		byte_diff,
+-	int		whichfork)
++	struct xfs_inode	*ip,
++	int			byte_diff,
++	int			whichfork)
+ {
+-	xfs_ifork_t	*ifp;
+-	int		new_size;
+-	int		real_size;
+-
+-	if (byte_diff == 0) {
+-		return;
+-	}
++	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
++	int			new_size = (int)ifp->if_bytes + byte_diff;
+ 
+-	ifp = XFS_IFORK_PTR(ip, whichfork);
+-	new_size = (int)ifp->if_bytes + byte_diff;
+ 	ASSERT(new_size >= 0);
++	ASSERT(new_size <= XFS_IFORK_SIZE(ip, whichfork));
++
++	if (byte_diff == 0)
++		return;
+ 
+ 	if (new_size == 0) {
+ 		kmem_free(ifp->if_u1.if_data);
+ 		ifp->if_u1.if_data = NULL;
+-		real_size = 0;
+-	} else {
+-		/*
+-		 * Stuck with malloc/realloc.
+-		 * For inline data, the underlying buffer must be
+-		 * a multiple of 4 bytes in size so that it can be
+-		 * logged and stay on word boundaries.  We enforce
+-		 * that here.
+-		 */
+-		real_size = roundup(new_size, 4);
+-		if (ifp->if_u1.if_data == NULL) {
+-			ifp->if_u1.if_data = kmem_alloc(real_size,
+-							KM_SLEEP | KM_NOFS);
+-		} else {
+-			/*
+-			 * Only do the realloc if the underlying size
+-			 * is really changing.
+-			 */
+-			ifp->if_u1.if_data =
+-				kmem_realloc(ifp->if_u1.if_data,
+-						real_size,
+-						KM_SLEEP | KM_NOFS);
+-		}
++		ifp->if_bytes = 0;
++		return;
+ 	}
++
++	/*
++	 * For inline data, the underlying buffer must be a multiple of 4 bytes
++	 * in size so that it can be logged and stay on word boundaries.
++	 * We enforce that here.
++	 */
++	ifp->if_u1.if_data = kmem_realloc(ifp->if_u1.if_data,
++			roundup(new_size, 4), KM_SLEEP | KM_NOFS);
+ 	ifp->if_bytes = new_size;
+-	ASSERT(ifp->if_bytes <= XFS_IFORK_SIZE(ip, whichfork));
+ }
+ 
+ void
+-- 
+2.18.0
 
