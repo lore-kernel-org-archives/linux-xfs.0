@@ -1,117 +1,171 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:45824 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387760AbeGLBUv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jul 2018 21:20:51 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w6C1DoIY032618
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Jul 2018 01:13:50 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp2120.oracle.com with ESMTP id 2k2p7e0cw2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Jul 2018 01:13:50 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w6C1DnlT015057
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Jul 2018 01:13:50 GMT
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w6C1DncN007298
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Jul 2018 01:13:49 GMT
-Subject: Re: [PATCH RFC 7/8] xfs: return non-zero blocks for inline data
-From: Shan Hai <shan.hai@oracle.com>
-References: <1530846750-6686-1-git-send-email-shan.hai@oracle.com>
- <1530846750-6686-8-git-send-email-shan.hai@oracle.com>
- <20180711130825.dkreolul3mlvtf3b@odin.usersys.redhat.com>
- <2e421e56-7463-3ac1-2eac-fa72ee8cd3eb@oracle.com>
-Message-ID: <fd877bb3-641f-b70c-a40e-e4287339ed53@oracle.com>
-Date: Thu, 12 Jul 2018 09:13:46 +0800
-MIME-Version: 1.0
-In-Reply-To: <2e421e56-7463-3ac1-2eac-fa72ee8cd3eb@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Received: from bombadil.infradead.org ([198.137.202.133]:58228 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751033AbeGJGFw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jul 2018 02:05:52 -0400
+Received: from 213-225-34-75.nat.highway.a1.net ([213.225.34.75] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1fclmZ-00057c-9e
+        for linux-xfs@vger.kernel.org; Tue, 10 Jul 2018 06:05:51 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 4/6] xfs: introduce a new xfs_inode_has_cow_data helper
+Date: Tue, 10 Jul 2018 08:05:26 +0200
+Message-Id: <20180710060528.4071-5-hch@lst.de>
+In-Reply-To: <20180710060528.4071-1-hch@lst.de>
+References: <20180710060528.4071-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
+We have a few places that already check if an inode has actual data in
+the COW fork to avoid work on reflink inodes that do not actually have
+outstanding COW blocks.  There are a few more places that can avoid
+working if doing the same check, so add a documented helper for this
+condition and use it in all places where it makes sense.
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_aops.c      |  4 ++--
+ fs/xfs/xfs_bmap_util.c |  2 +-
+ fs/xfs/xfs_icache.c    | 10 ++++------
+ fs/xfs/xfs_inode.c     |  3 +--
+ fs/xfs/xfs_inode.h     |  9 +++++++++
+ fs/xfs/xfs_reflink.c   |  2 +-
+ 6 files changed, 18 insertions(+), 12 deletions(-)
 
-On 2018年07月12日 09:03, Shan Hai wrote:
->
->
-> On 2018年07月11日 21:08, Carlos Maiolino wrote:
->> On Fri, Jul 06, 2018 at 11:12:28AM +0800, Shan Hai wrote:
->>> Return non-zero blocks for inline data even though the inode has
->>> no external blocks, otherwise the "ls -ls" would show zero blocks
->>> occupied by the file.
->>>
->> Is there any issue you ran into while leaving inodes with zero blocks 
->> allocated?
->> Inodes should actually report the real amount of allocated blocks, 
->> not fake it.
->> Inodes with inlined data should actually report 0 blocks, otherwise, 
->> many
->> applications which actually relies on the amount of allocated blocks 
->> for each
->> file will misbehave.
->>
->
-> Man ls(1) reads:
->
-> -s, --size
->     print the allocated size of each file, in blocks
->
-> So the 'ls -ls' would report 0 blocks when the data is inlined, a file 
-> holds data
-> but it consumes 0 blocks, how is it possible :), this patch fixes this 
-> problem.
->
-
-This patch is inspired by the
-upstream commit 9206c561554c9 (ext4: return non-zero st_blocks for 
-inline data),
-please refer it for details.
-
-Thanks
-Shan Hai
-
-> Thanks
-> Shan Hai
->>> Signed-off-by: Shan Hai <shan.hai@oracle.com>
->>> ---
->>>   fs/xfs/xfs_iops.c | 8 +++++++-
->>>   1 file changed, 7 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
->>> index 0fa29f39d658..63be1355a473 100644
->>> --- a/fs/xfs/xfs_iops.c
->>> +++ b/fs/xfs/xfs_iops.c
->>> @@ -500,8 +500,14 @@ xfs_vn_getattr(
->>>       stat->atime = inode->i_atime;
->>>       stat->mtime = inode->i_mtime;
->>>       stat->ctime = inode->i_ctime;
->>> -    stat->blocks =
->>> +
->>> +    if (xfs_sb_version_hasinlinedata(&mp->m_sb) &&
->>> +        XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) == XFS_DINODE_FMT_LOCAL) {
->>> +            stat->blocks = BTOBB(XFS_ISIZE(ip));
->>> +    } else {
->>> +        stat->blocks =
->>>           XFS_FSB_TO_BB(mp, ip->i_d.di_nblocks + ip->i_delayed_blks);
->>> +    }
->>>         if (ip->i_d.di_version == 3) {
->>>           if (request_mask & STATX_BTIME) {
->>> -- 
->>> 2.11.0
->>>
->>> -- 
->>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at http://vger.kernel.org/majordomo-info.html
->
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index f4d3252236c1..814100d27343 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -338,7 +338,7 @@ xfs_map_blocks(
+ 	imap_valid = offset_fsb >= wpc->imap.br_startoff &&
+ 		     offset_fsb < wpc->imap.br_startoff + wpc->imap.br_blockcount;
+ 	if (imap_valid &&
+-	    (!xfs_is_reflink_inode(ip) || wpc->io_type == XFS_IO_COW))
++	    (!xfs_inode_has_cow_data(ip) || wpc->io_type == XFS_IO_COW))
+ 		return 0;
+ 
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+@@ -363,7 +363,7 @@ xfs_map_blocks(
+ 	 * Check if this is offset is covered by a COW extents, and if yes use
+ 	 * it directly instead of looking up anything in the data fork.
+ 	 */
+-	if (xfs_is_reflink_inode(ip) &&
++	if (xfs_inode_has_cow_data(ip) &&
+ 	    xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &imap) &&
+ 	    imap.br_startoff <= offset_fsb) {
+ 		xfs_iunlock(ip, XFS_ILOCK_SHARED);
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index da561882c349..d78f8300607f 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1280,7 +1280,7 @@ xfs_prepare_shift(
+ 	 * we've flushed all the dirty data out to disk to avoid having
+ 	 * CoW extents at the wrong offsets.
+ 	 */
+-	if (xfs_is_reflink_inode(ip)) {
++	if (xfs_inode_has_cow_data(ip)) {
+ 		error = xfs_reflink_cancel_cow_range(ip, offset, NULLFILEOFF,
+ 				true);
+ 		if (error)
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 79f344fa8b14..fdae4c2d461e 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1697,14 +1697,13 @@ xfs_inode_clear_eofblocks_tag(
+  */
+ static bool
+ xfs_prep_free_cowblocks(
+-	struct xfs_inode	*ip,
+-	struct xfs_ifork	*ifp)
++	struct xfs_inode	*ip)
+ {
+ 	/*
+ 	 * Just clear the tag if we have an empty cow fork or none at all. It's
+ 	 * possible the inode was fully unshared since it was originally tagged.
+ 	 */
+-	if (!xfs_is_reflink_inode(ip) || !ifp->if_bytes) {
++	if (!xfs_inode_has_cow_data(ip)) {
+ 		trace_xfs_inode_free_cowblocks_invalid(ip);
+ 		xfs_inode_clear_cowblocks_tag(ip);
+ 		return false;
+@@ -1742,11 +1741,10 @@ xfs_inode_free_cowblocks(
+ 	void			*args)
+ {
+ 	struct xfs_eofblocks	*eofb = args;
+-	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
+ 	int			match;
+ 	int			ret = 0;
+ 
+-	if (!xfs_prep_free_cowblocks(ip, ifp))
++	if (!xfs_prep_free_cowblocks(ip))
+ 		return 0;
+ 
+ 	if (eofb) {
+@@ -1771,7 +1769,7 @@ xfs_inode_free_cowblocks(
+ 	 * Check again, nobody else should be able to dirty blocks or change
+ 	 * the reflink iflag now that we have the first two locks held.
+ 	 */
+-	if (xfs_prep_free_cowblocks(ip, ifp))
++	if (xfs_prep_free_cowblocks(ip))
+ 		ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, false);
+ 
+ 	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index b6da446ae946..2036e49f7e15 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1868,7 +1868,6 @@ xfs_inactive(
+ 	xfs_inode_t	*ip)
+ {
+ 	struct xfs_mount	*mp;
+-	struct xfs_ifork	*cow_ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
+ 	int			error;
+ 	int			truncate = 0;
+ 
+@@ -1889,7 +1888,7 @@ xfs_inactive(
+ 		return;
+ 
+ 	/* Try to clean out the cow blocks if there are any. */
+-	if (xfs_is_reflink_inode(ip) && cow_ifp->if_bytes > 0)
++	if (xfs_inode_has_cow_data(ip))
+ 		xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, true);
+ 
+ 	if (VFS_I(ip)->i_nlink != 0) {
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 1f910d2ae73a..82d27a295336 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -198,6 +198,15 @@ static inline bool xfs_is_reflink_inode(struct xfs_inode *ip)
+ 	return ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK;
+ }
+ 
++/*
++ * Check if an inode has any data in the COW fork.  This might be often false
++ * even for inodes with the reflink flag when there is no pending COW operation.
++ */
++static inline bool xfs_inode_has_cow_data(struct xfs_inode *ip)
++{
++	return ip->i_cowfp && ip->i_cowfp->if_bytes;
++}
++
+ /*
+  * In-core inode flags.
+  */
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 49e4913fa779..789310c547e6 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -494,7 +494,7 @@ xfs_reflink_cancel_cow_blocks(
+ 	struct xfs_defer_ops		dfops;
+ 	int				error = 0;
+ 
+-	if (!xfs_is_reflink_inode(ip))
++	if (!xfs_inode_has_cow_data(ip))
+ 		return 0;
+ 	if (!xfs_iext_lookup_extent_before(ip, ifp, &end_fsb, &icur, &got))
+ 		return 0;
+-- 
+2.18.0
 
