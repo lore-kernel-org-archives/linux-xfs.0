@@ -1,56 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:38638 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732668AbeGKRhS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jul 2018 13:37:18 -0400
-Date: Wed, 11 Jul 2018 10:31:52 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:45668 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933353AbeGJOn1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jul 2018 10:43:27 -0400
+Date: Tue, 10 Jul 2018 07:43:11 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 6/6] xfs: avoid COW fork extent lookups in writeback if
- the fork didn't change
-Message-ID: <20180711173152.GF32415@magnolia>
-References: <20180710060528.4071-1-hch@lst.de>
- <20180710060528.4071-7-hch@lst.de>
- <20180711171551.GE32415@magnolia>
- <20180711172032.GA3738@lst.de>
+Subject: Re: [PATCH] common/xfs: remove bad xfs_repair -t option
+Message-ID: <20180710144311.GY32415@magnolia>
+References: <20180710094129.1052-1-zlang@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180711172032.GA3738@lst.de>
+In-Reply-To: <20180710094129.1052-1-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Wed, Jul 11, 2018 at 07:20:32PM +0200, Christoph Hellwig wrote:
-> On Wed, Jul 11, 2018 at 10:15:51AM -0700, Darrick J. Wong wrote:
-> > Hmm, this troubles me slightly -- a short time ago you removed the "trim
-> > this data fork mapping to the first overlap with a cow fork mapping"
-> > (i.e. xfs_reflink_trim_irec_to_next_cow) behavior on the grounds that
-> > _writepage_map calls _map_blocks for every block in the page and so it
-> > was unnecessary.  But this seems to put that back.  Why is that?
+On Tue, Jul 10, 2018 at 05:41:29PM +0800, Zorro Lang wrote:
+> The xfs_repair "-t" option shouldn't be used alone. An interval must
+> follow the -t option, or xfs_repair will report errors. And only
+> modify reporting interval is useless, if we don't enable ag_stride.
 > 
-> Because back then map_blocks did a lookup in the COW fork everytime
-> (unless we are already on a COW mapping), and this patch wants to
-> only look it up when the COW fork actually changed, so the trim is
-> required now.
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
 
-Ah, ok.   Mind if I change the comment to:
+Makes sense to me, at least given the getopt arg ("t:") in xfs_repair.c.
 
-/*
- * Truncate to the next COW extent if there is one.  This is the only
- * opportunity to do this because we can skip COW fork lookups for the
- * subsequent blocks in the mapping; however, the requirement to treat
- * the COW range separately remains.
- */
-
-I also wonder why we don't need to do the same for holes, but I think
-the answer is that any dirty page with a cow fork mapping must also have
-a data fork mapping (even if it's merely a delalloc reservation) and so
-a hole will never overlap with a cow fork mapping.
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
+> ---
+> 
+> Hi,
+> 
+> I don't know why we must need the -t option for xfs_repair, I can't
+> find any description to explain it. But I can find an explanation
+> about why we use "-t" for _xfs_check.
+> 
+>   # xfs_check runs out of memory on large files, so even providing the test
+>   # option (-t) to avoid indexing the free space trees doesn't make it pass on
+>   # large filesystems. Avoid it.
+> 
+> The -t option for xfs_repair is totally different with it for
+> xfs_check, maybe -m option is more useful if we think about the
+> memory size.
+> 
+> And the -t option need to work with -o ag_stride together. I'd like
+> to remove the "-t" option directly, due to I really don't know why
+> we need it, or how to give it a proper number.
+> 
+> If the original author knows why we need it, and can give me some
+> suggestions, please help.
+> 
+> Thanks,
+> Zorro
+> 
+>  common/xfs | 1 -
+>  1 file changed, 1 deletion(-)
+> 
+> diff --git a/common/xfs b/common/xfs
+> index ecf54bbf..61a3c2d9 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -193,7 +193,6 @@ _scratch_xfs_repair()
+>  		SCRATCH_OPTIONS="-l$SCRATCH_LOGDEV"
+>  	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ] && \
+>  		SCRATCH_OPTIONS=$SCRATCH_OPTIONS" -r$SCRATCH_RTDEV"
+> -	[ "$LARGE_SCRATCH_DEV" = yes ] && SCRATCH_OPTIONS=$SCRATCH_OPTIONS" -t"
+>  	$XFS_REPAIR_PROG $SCRATCH_OPTIONS $* $SCRATCH_DEV
+>  }
+>  
+> -- 
+> 2.14.4
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
