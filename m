@@ -1,150 +1,148 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:34898 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753924AbeGFDrk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Jul 2018 23:47:40 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w663iAL4006243
-        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 03:47:40 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp2120.oracle.com with ESMTP id 2k0dnt8200-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 06 Jul 2018 03:47:40 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w663ldkf016033
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 03:47:39 GMT
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w663ldRs020200
-        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 03:47:39 GMT
-Date: Thu, 5 Jul 2018 20:47:37 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH RFC 3/8] xfs: convert inode from extents to local format
-Message-ID: <20180706034737.GR32415@magnolia>
-References: <1530846750-6686-1-git-send-email-shan.hai@oracle.com>
- <1530846750-6686-4-git-send-email-shan.hai@oracle.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1530846750-6686-4-git-send-email-shan.hai@oracle.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:58250 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751033AbeGJGGB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jul 2018 02:06:01 -0400
+Received: from 213-225-34-75.nat.highway.a1.net ([213.225.34.75] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1fclmi-0005Ip-9d
+        for linux-xfs@vger.kernel.org; Tue, 10 Jul 2018 06:06:00 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 6/6] xfs: avoid COW fork extent lookups in writeback if the fork didn't change
+Date: Tue, 10 Jul 2018 08:05:28 +0200
+Message-Id: <20180710060528.4071-7-hch@lst.de>
+In-Reply-To: <20180710060528.4071-1-hch@lst.de>
+References: <20180710060528.4071-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Shan Hai <shan.hai@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Fri, Jul 06, 2018 at 11:12:24AM +0800, Shan Hai wrote:
-> Introduce a function to convert an inode from extents to local
-> format. The conversion happens at writeback time, this avoids
-> interfering with the delayed allocation and page cache vs
-> xfs_buf operations, the will be inlined data is directly got
-> from the page which was read and modified by the iomap write actor.
-> 
-> Signed-off-by: Shan Hai <shan.hai@oracle.com>
-> ---
->  fs/xfs/xfs_aops.c | 60 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 60 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 8eb3ba3d4d00..ac5a7695f363 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -9,6 +9,7 @@
->  #include "xfs_log_format.h"
->  #include "xfs_trans_resv.h"
->  #include "xfs_mount.h"
-> +#include "xfs_defer.h"
->  #include "xfs_inode.h"
->  #include "xfs_trans.h"
->  #include "xfs_inode_item.h"
-> @@ -887,6 +888,55 @@ xfs_map_cow(
->  	return 0;
->  }
->  
-> +static int
-> +xfs_inode_extents_to_local(
-> +	xfs_inode_t		*ip,
-> +	int			whichfork,
-> +	struct page		*page)
-> +{
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	struct xfs_trans	*tp;
-> +	struct xfs_defer_ops	dfops;
-> +	xfs_fsblock_t		first_block;
-> +	int			logflags;
-> +	int			error = 0;
-> +
-> +	if (i_size_read(VFS_I(ip)) > XFS_IFORK_DSIZE(ip))
-> +		return 0;
+Used the per-fork sequence counter to avoid lookups in the writeback code
+unless the COW fork actually changed.
 
-If it's too big to fit in local format, then isn't this an error?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_aops.c  | 28 +++++++++++++++++++++++-----
+ fs/xfs/xfs_iomap.c |  4 +++-
+ fs/xfs/xfs_iomap.h |  2 +-
+ 3 files changed, 27 insertions(+), 7 deletions(-)
 
---D
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 814100d27343..495d5e74fd00 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -29,6 +29,7 @@
+ struct xfs_writepage_ctx {
+ 	struct xfs_bmbt_irec    imap;
+ 	unsigned int		io_type;
++	unsigned int		cow_seq;
+ 	struct xfs_ioend	*ioend;
+ };
+ 
+@@ -310,6 +311,7 @@ xfs_map_blocks(
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	ssize_t			count = i_blocksize(inode);
+ 	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset), end_fsb;
++	xfs_fileoff_t		cow_fsb = NULLFILEOFF;
+ 	struct xfs_bmbt_irec	imap;
+ 	int			whichfork = XFS_DATA_FORK;
+ 	struct xfs_iext_cursor	icur;
+@@ -333,12 +335,15 @@ xfs_map_blocks(
+ 	 * COW fork blocks can overlap data fork blocks even if the blocks
+ 	 * aren't shared.  COW I/O always takes precedent, so we must always
+ 	 * check for overlap on reflink inodes unless the mapping is already a
+-	 * COW one.
++	 * COW one, or the COW fork hasn't changed from the last time we looked
++	 * at it.
+ 	 */
+ 	imap_valid = offset_fsb >= wpc->imap.br_startoff &&
+ 		     offset_fsb < wpc->imap.br_startoff + wpc->imap.br_blockcount;
+ 	if (imap_valid &&
+-	    (!xfs_inode_has_cow_data(ip) || wpc->io_type == XFS_IO_COW))
++	    (!xfs_inode_has_cow_data(ip) ||
++	     wpc->io_type == XFS_IO_COW ||
++	     wpc->cow_seq == ip->i_cowfp->if_seq))
+ 		return 0;
+ 
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+@@ -364,8 +369,10 @@ xfs_map_blocks(
+ 	 * it directly instead of looking up anything in the data fork.
+ 	 */
+ 	if (xfs_inode_has_cow_data(ip) &&
+-	    xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &imap) &&
+-	    imap.br_startoff <= offset_fsb) {
++	    xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &imap))
++		cow_fsb = imap.br_startoff;
++	if (cow_fsb != NULLFILEOFF && cow_fsb <= offset_fsb) {
++		wpc->cow_seq = ip->i_cowfp->if_seq;
+ 		xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ 		/*
+ 		 * Truncate can race with writeback since writeback doesn't
+@@ -411,6 +418,14 @@ xfs_map_blocks(
+ 		imap.br_startblock = HOLESTARTBLOCK;
+ 		wpc->io_type = XFS_IO_HOLE;
+ 	} else {
++		/*
++		 * Truncate to the next COW extent if there is one.  We'll
++		 * need to treat the COW range separately.
++		 */
++		if (cow_fsb != NULLFILEOFF &&
++		    cow_fsb < imap.br_startoff + imap.br_blockcount)
++			imap.br_blockcount = cow_fsb - imap.br_startoff;
++
+ 		if (isnullstartblock(imap.br_startblock)) {
+ 			/* got a delalloc extent */
+ 			wpc->io_type = XFS_IO_DELALLOC;
+@@ -427,9 +442,12 @@ xfs_map_blocks(
+ 	trace_xfs_map_blocks_found(ip, offset, count, wpc->io_type, &imap);
+ 	return 0;
+ allocate_blocks:
+-	error = xfs_iomap_write_allocate(ip, whichfork, offset, &imap);
++	error = xfs_iomap_write_allocate(ip, whichfork, offset, &imap,
++			&wpc->cow_seq);
+ 	if (error)
+ 		return error;
++	ASSERT(whichfork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
++	       imap.br_startoff + imap.br_blockcount <= cow_fsb);
+ 	wpc->imap = imap;
+ 	trace_xfs_map_blocks_alloc(ip, offset, count, wpc->io_type, &imap);
+ 	return 0;
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index fb9746cc7338..a843766bf7c5 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -660,7 +660,8 @@ xfs_iomap_write_allocate(
+ 	xfs_inode_t	*ip,
+ 	int		whichfork,
+ 	xfs_off_t	offset,
+-	xfs_bmbt_irec_t *imap)
++	xfs_bmbt_irec_t *imap,
++	unsigned int	*cow_seq)
+ {
+ 	xfs_mount_t	*mp = ip->i_mount;
+ 	xfs_fileoff_t	offset_fsb, last_block;
+@@ -784,6 +785,7 @@ xfs_iomap_write_allocate(
+ 			if (error)
+ 				goto error0;
+ 
++			*cow_seq = XFS_IFORK_PTR(ip, whichfork)->if_seq;
+ 			xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 		}
+ 
+diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
+index 83474c9cede9..c6170548831b 100644
+--- a/fs/xfs/xfs_iomap.h
++++ b/fs/xfs/xfs_iomap.h
+@@ -14,7 +14,7 @@ struct xfs_bmbt_irec;
+ int xfs_iomap_write_direct(struct xfs_inode *, xfs_off_t, size_t,
+ 			struct xfs_bmbt_irec *, int);
+ int xfs_iomap_write_allocate(struct xfs_inode *, int, xfs_off_t,
+-			struct xfs_bmbt_irec *);
++			struct xfs_bmbt_irec *, unsigned int *);
+ int xfs_iomap_write_unwritten(struct xfs_inode *, xfs_off_t, xfs_off_t, bool);
+ 
+ void xfs_bmbt_to_iomap(struct xfs_inode *, struct iomap *,
+-- 
+2.18.0
 
-> +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
-> +	if (error)
-> +		return error;
-> +
-> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> +	xfs_trans_ijoin(tp, ip, 0);
-> +
-> +	xfs_defer_init(&dfops, &first_block);
-> +
-> +	logflags = 0;
-> +	error = xfs_bmap_extents_to_local(tp, ip, &dfops, &logflags,
-> +			XFS_DATA_FORK, page);
-> +	if (error)
-> +		goto trans_cancel;
-> +
-> +	xfs_trans_log_inode(tp, ip, logflags);
-> +	error = xfs_defer_finish(&tp, &dfops);
-> +	if (error)
-> +		goto trans_cancel;
-> +	error = xfs_trans_commit(tp);
-> +	if (error)
-> +		goto error0;
-> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> +
-> +	return 0;
-> +
-> +trans_cancel:
-> +	xfs_defer_cancel(&dfops);
-> +	xfs_trans_cancel(tp);
-> +error0:
-> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> +	return error;
-> +}
->  /*
->   * We implement an immediate ioend submission policy here to avoid needing to
->   * chain multiple ioends and hence nest mempool allocations which can violate
-> @@ -920,6 +970,8 @@ xfs_writepage_map(
->  	int			count = 0;
->  	int			uptodate = 1;
->  	unsigned int		new_type;
-> +	xfs_inode_t		*ip = XFS_I(inode);
-> +	struct xfs_mount	*mp = ip->i_mount;
->  
->  	bh = head = page_buffers(page);
->  	offset = page_offset(page);
-> @@ -1044,6 +1096,14 @@ xfs_writepage_map(
->  		end_page_writeback(page);
->  	}
->  
-> +	if (!error) {
-> +		if (xfs_sb_version_hasinlinedata(&mp->m_sb) &&
-> +				i_size_read(inode) <= XFS_IFORK_DSIZE(ip)) {
-> +			error = xfs_inode_extents_to_local(ip, XFS_DATA_FORK,
-> +								page);
-> +		}
-> +	}
-> +
->  	mapping_set_error(page->mapping, error);
->  	return error;
->  }
-> -- 
-> 2.11.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
