@@ -1,66 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:41408 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388110AbeGXBJr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 23 Jul 2018 21:09:47 -0400
-Subject: Re: [PATCH 0/4 V2] Remove a few macros
-References: <20180307090506.30199-1-cmaiolino@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <76bd325f-4a65-e09c-fde5-a41dcff56d97@sandeen.net>
-Date: Mon, 23 Jul 2018 17:06:04 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:60242 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933796AbeGJQGJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jul 2018 12:06:09 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w6AG4hS9153496
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Jul 2018 16:06:08 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2130.oracle.com with ESMTP id 2k2p762nyt-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Jul 2018 16:06:08 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w6AG67QB017155
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Jul 2018 16:06:07 GMT
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w6AG67h1025332
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Jul 2018 16:06:07 GMT
+Date: Tue, 10 Jul 2018 09:06:06 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [ANNOUNCE] xfs-documentation: master updated to af93ba0
+Message-ID: <20180710160606.GZ32415@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20180307090506.30199-1-cmaiolino@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Carlos Maiolino <cmaiolino@redhat.com>, linux-xfs@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>
 
-On 3/7/18 1:05 AM, Carlos Maiolino wrote:
-> Hi,
-> 
-> this is a second version of the patchset aimed to clean up some old macros from
-> xfsprogs, as the objective to bring xfs_buf handling code closer to kernel code.
-> 
-> It fixes some pointer castings Dave mentioned on the V1 patch, also, it removes
-> a few unneeded castings I spotted while reviewing the ones Dave mentioned.
-> 
-> Cheers
+Hi folks,
 
-Ok, I'll take this, with the explicit char * casts (seems to be the popular
-vote, and TBH I guess I prefer the explicit nature of that approach).
+The master branch of the xfs-documentation repository at:
 
-There are a couple of extra ones now in your first patch though,
-i.e.
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-documentation.git
 
-ptr = (char *)bp->b_addr;
+has just been updated.
 
-is not needed.
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
 
-I fixed up minor conflicts, no need to resend.
+The new head of the master branch is commit:
 
--Eric
- 
-> Carlos Maiolino (4):
->   Get rid of XFS_BUF_PTR() macro
->   Get rid of XFS_BUF_TARGET() macro
->   get rid of XFS_BUF_COUNT() macro
->   Get rid of XFS_BUF_SET_COUNT() macro
-> 
->  libxfs/libxfs_io.h        |  6 +-----
->  libxfs/logitem.c          |  2 +-
->  libxfs/rdwr.c             | 10 +++++-----
->  libxfs/trans.c            |  2 +-
->  libxlog/xfs_log_recover.c |  2 +-
->  logprint/log_print_all.c  |  4 ++--
->  mkfs/proto.c              |  8 ++++----
->  mkfs/xfs_mkfs.c           | 14 +++++++-------
->  repair/agheader.c         |  8 ++++----
->  repair/attr_repair.c      |  4 ++--
->  repair/dino_chunks.c      |  2 +-
->  repair/phase6.c           |  4 ++--
->  repair/prefetch.c         |  4 ++--
->  13 files changed, 33 insertions(+), 37 deletions(-)
-> 
+d19d47c design: merge both metadata integrity chapters
+
+New Commits:
+
+Darrick J. Wong (4):
+      [947b5d7] design: rename disk structures book
+      [1a7aece] design: incorporate the delayed logging design doc
+      [0d75e28] design: incorporate self-describing metadata design doc
+      [d19d47c] design: merge both metadata integrity chapters
+
+
+Code Diffstat:
+
+ .../delayed_logging.asciidoc}                      |  4 +--
+ design/XFS_Filesystem_Structure/docinfo.xml        | 15 +++++++++
+ .../metadata_integrity.asciidoc                    | 36 ----------------------
+ .../self_describing_metadata.asciidoc}             | 29 +++++++++++++++--
+ .../xfs_filesystem_structure.asciidoc              |  8 +++--
+ 5 files changed, 47 insertions(+), 45 deletions(-)
+ rename design/{xfs-delayed-logging-design.asciidoc => XFS_Filesystem_Structure/delayed_logging.asciidoc} (99%)
+ delete mode 100644 design/XFS_Filesystem_Structure/metadata_integrity.asciidoc
+ rename design/{xfs-self-describing-metadata.asciidoc => XFS_Filesystem_Structure/self_describing_metadata.asciidoc} (91%)
