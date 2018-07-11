@@ -1,73 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:57942 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S933129AbeGJBHb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 9 Jul 2018 21:07:31 -0400
-Date: Mon, 9 Jul 2018 21:07:29 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 25/25] xfs: remove xfs_defer_init() firstblock param
-Message-ID: <20180710010729.GB5835@killians.ges.redhat.com>
-References: <20180703172319.24509-1-bfoster@redhat.com>
- <20180703172319.24509-26-bfoster@redhat.com>
- <20180704012743.GY32415@magnolia>
- <20180708153708.GC14847@infradead.org>
+Received: from aserp2130.oracle.com ([141.146.126.79]:38638 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732668AbeGKRhS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jul 2018 13:37:18 -0400
+Date: Wed, 11 Jul 2018 10:31:52 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 6/6] xfs: avoid COW fork extent lookups in writeback if
+ the fork didn't change
+Message-ID: <20180711173152.GF32415@magnolia>
+References: <20180710060528.4071-1-hch@lst.de>
+ <20180710060528.4071-7-hch@lst.de>
+ <20180711171551.GE32415@magnolia>
+ <20180711172032.GA3738@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180708153708.GC14847@infradead.org>
+In-Reply-To: <20180711172032.GA3738@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Allison Henderson <allison.henderson@oracle.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Sun, Jul 08, 2018 at 08:37:08AM -0700, Christoph Hellwig wrote:
-> On Tue, Jul 03, 2018 at 06:27:43PM -0700, Darrick J. Wong wrote:
-> > Moving on to the question of whether or not to embed a struct
-> > xfs_defer_ops into struct xfs_trans instead of just a pointer, it looks
-> > to me like that should be a pretty straightforward conversion.  Most of
-> > the defer_ops users keep it within the scope of a single
-> > xfs_trans_{alloc,commit} pair so we can pass *tp instead of *dfops into
-> > the helpers.
+On Wed, Jul 11, 2018 at 07:20:32PM +0200, Christoph Hellwig wrote:
+> On Wed, Jul 11, 2018 at 10:15:51AM -0700, Darrick J. Wong wrote:
+> > Hmm, this troubles me slightly -- a short time ago you removed the "trim
+> > this data fork mapping to the first overlap with a cow fork mapping"
+> > (i.e. xfs_reflink_trim_irec_to_next_cow) behavior on the grounds that
+> > _writepage_map calls _map_blocks for every block in the page and so it
+> > was unnecessary.  But this seems to put that back.  Why is that?
 > 
-> I'd like to see that happen eventually, probably rather sooner than
-> later.
-> 
-> > The one big exception to that of course is the log item replay where we
-> > don't want to finish any of the new defer_ops until we're done with
-> > replay, for which we'll need to have a xfs_defer_move to transfer all
-> > the items and [bi]join'd state from one dfops to another.  This is
-> > probably the same mechanism that you'd have to use to preserve dfops
-> > state in xfs_defer_trans_roll.
-> 
-> Yes.  As far as I can tell we can just list_split_init the two lists
-> over, copy over the inodes and bufs arrays (at least if we are rolling
-> the transaction) and mostly ignore dop_low and dop_commited.
-> 
+> Because back then map_blocks did a lookup in the COW fork everytime
+> (unless we are already on a COW mapping), and this patch wants to
+> only look it up when the COW fork actually changed, so the trim is
+> required now.
 
-I have a series in progress that takes care of most of this. It has some
-details left to work out and needs cleanup, but survived an initial
-round of tests. Unfortunately I won't have much time to get to it this
-week, but hopefully I'll have it cleaned up enough to post something
-next week.
+Ah, ok.   Mind if I change the comment to:
 
-Brian
+/*
+ * Truncate to the next COW extent if there is one.  This is the only
+ * opportunity to do this because we can skip COW fork lookups for the
+ * subsequent blocks in the mapping; however, the requirement to treat
+ * the COW range separately remains.
+ */
 
-> Now the transaction itself actually already has a list of items joined
-> to them, which must include dop_inodes and dop_bufs, and I suspect
-> we should just look at the items and rejoin all inodes and bufs instead
-> of separately keeping track of them for the normal roll case.  We'd
-> just need some special outside storage for the log recovery case.
-> 
-> > The other area of trickiness I anticipate is Allison's reworking of the
-> > xattr code's usage of defer_ops to eliminate the repeated creation and
-> > finishing of defer ops.  Even if attribute operations can still allocate
-> > and commit multiple transactions, we'll have to find a way to carry the
-> > defer_ops state (the attr intent item and presumably a _defer_ijoin'd
-> > inode) across every one of those transactions.  I'm not sure how far
-> > she's gotten with that, but some coordination is needed.
-> 
-> In general attribute operations should be rolling transactions, and
-> if they aren't we probably found a bug.  Once it is a rolling
-> transaction we've already got all the state coverted by the
-> xfs_defer_trans_roll equivalent case.
+I also wonder why we don't need to do the same for holes, but I think
+the answer is that any dirty page with a cow fork mapping must also have
+a data fork mapping (even if it's merely a delalloc reservation) and so
+a hole will never overlap with a cow fork mapping.
+
+--D
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
