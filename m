@@ -1,171 +1,180 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:58228 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751033AbeGJGFw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jul 2018 02:05:52 -0400
-Received: from 213-225-34-75.nat.highway.a1.net ([213.225.34.75] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1fclmZ-00057c-9e
-        for linux-xfs@vger.kernel.org; Tue, 10 Jul 2018 06:05:51 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 4/6] xfs: introduce a new xfs_inode_has_cow_data helper
-Date: Tue, 10 Jul 2018 08:05:26 +0200
-Message-Id: <20180710060528.4071-5-hch@lst.de>
-In-Reply-To: <20180710060528.4071-1-hch@lst.de>
+Received: from aserp2130.oracle.com ([141.146.126.79]:46078 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388110AbeGKQ2A (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jul 2018 12:28:00 -0400
+Date: Wed, 11 Jul 2018 09:22:50 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/6] xfs: remove if_real_bytes
+Message-ID: <20180711162250.GA32415@magnolia>
 References: <20180710060528.4071-1-hch@lst.de>
+ <20180710060528.4071-2-hch@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180710060528.4071-2-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-We have a few places that already check if an inode has actual data in
-the COW fork to avoid work on reflink inodes that do not actually have
-outstanding COW blocks.  There are a few more places that can avoid
-working if doing the same check, so add a documented helper for this
-condition and use it in all places where it makes sense.
+On Tue, Jul 10, 2018 at 08:05:23AM +0200, Christoph Hellwig wrote:
+> The field is only used for asserts, and to track if we really need to do
+> realloc when growing the inode fork data.  But the krealloc function
+> already performs this check internally, so there is no need to keep track
+> of the real allocation size.
+> 
+> This will free space in the inode fork for keeping a sequence counter of
+> changes to the extent list.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_aops.c      |  4 ++--
- fs/xfs/xfs_bmap_util.c |  2 +-
- fs/xfs/xfs_icache.c    | 10 ++++------
- fs/xfs/xfs_inode.c     |  3 +--
- fs/xfs/xfs_inode.h     |  9 +++++++++
- fs/xfs/xfs_reflink.c   |  2 +-
- 6 files changed, 18 insertions(+), 12 deletions(-)
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index f4d3252236c1..814100d27343 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -338,7 +338,7 @@ xfs_map_blocks(
- 	imap_valid = offset_fsb >= wpc->imap.br_startoff &&
- 		     offset_fsb < wpc->imap.br_startoff + wpc->imap.br_blockcount;
- 	if (imap_valid &&
--	    (!xfs_is_reflink_inode(ip) || wpc->io_type == XFS_IO_COW))
-+	    (!xfs_inode_has_cow_data(ip) || wpc->io_type == XFS_IO_COW))
- 		return 0;
- 
- 	if (XFS_FORCED_SHUTDOWN(mp))
-@@ -363,7 +363,7 @@ xfs_map_blocks(
- 	 * Check if this is offset is covered by a COW extents, and if yes use
- 	 * it directly instead of looking up anything in the data fork.
- 	 */
--	if (xfs_is_reflink_inode(ip) &&
-+	if (xfs_inode_has_cow_data(ip) &&
- 	    xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &imap) &&
- 	    imap.br_startoff <= offset_fsb) {
- 		xfs_iunlock(ip, XFS_ILOCK_SHARED);
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index da561882c349..d78f8300607f 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1280,7 +1280,7 @@ xfs_prepare_shift(
- 	 * we've flushed all the dirty data out to disk to avoid having
- 	 * CoW extents at the wrong offsets.
- 	 */
--	if (xfs_is_reflink_inode(ip)) {
-+	if (xfs_inode_has_cow_data(ip)) {
- 		error = xfs_reflink_cancel_cow_range(ip, offset, NULLFILEOFF,
- 				true);
- 		if (error)
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 79f344fa8b14..fdae4c2d461e 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1697,14 +1697,13 @@ xfs_inode_clear_eofblocks_tag(
-  */
- static bool
- xfs_prep_free_cowblocks(
--	struct xfs_inode	*ip,
--	struct xfs_ifork	*ifp)
-+	struct xfs_inode	*ip)
- {
- 	/*
- 	 * Just clear the tag if we have an empty cow fork or none at all. It's
- 	 * possible the inode was fully unshared since it was originally tagged.
- 	 */
--	if (!xfs_is_reflink_inode(ip) || !ifp->if_bytes) {
-+	if (!xfs_inode_has_cow_data(ip)) {
- 		trace_xfs_inode_free_cowblocks_invalid(ip);
- 		xfs_inode_clear_cowblocks_tag(ip);
- 		return false;
-@@ -1742,11 +1741,10 @@ xfs_inode_free_cowblocks(
- 	void			*args)
- {
- 	struct xfs_eofblocks	*eofb = args;
--	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
- 	int			match;
- 	int			ret = 0;
- 
--	if (!xfs_prep_free_cowblocks(ip, ifp))
-+	if (!xfs_prep_free_cowblocks(ip))
- 		return 0;
- 
- 	if (eofb) {
-@@ -1771,7 +1769,7 @@ xfs_inode_free_cowblocks(
- 	 * Check again, nobody else should be able to dirty blocks or change
- 	 * the reflink iflag now that we have the first two locks held.
- 	 */
--	if (xfs_prep_free_cowblocks(ip, ifp))
-+	if (xfs_prep_free_cowblocks(ip))
- 		ret = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, false);
- 
- 	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index b6da446ae946..2036e49f7e15 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1868,7 +1868,6 @@ xfs_inactive(
- 	xfs_inode_t	*ip)
- {
- 	struct xfs_mount	*mp;
--	struct xfs_ifork	*cow_ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
- 	int			error;
- 	int			truncate = 0;
- 
-@@ -1889,7 +1888,7 @@ xfs_inactive(
- 		return;
- 
- 	/* Try to clean out the cow blocks if there are any. */
--	if (xfs_is_reflink_inode(ip) && cow_ifp->if_bytes > 0)
-+	if (xfs_inode_has_cow_data(ip))
- 		xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, true);
- 
- 	if (VFS_I(ip)->i_nlink != 0) {
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 1f910d2ae73a..82d27a295336 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -198,6 +198,15 @@ static inline bool xfs_is_reflink_inode(struct xfs_inode *ip)
- 	return ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK;
- }
- 
-+/*
-+ * Check if an inode has any data in the COW fork.  This might be often false
-+ * even for inodes with the reflink flag when there is no pending COW operation.
-+ */
-+static inline bool xfs_inode_has_cow_data(struct xfs_inode *ip)
-+{
-+	return ip->i_cowfp && ip->i_cowfp->if_bytes;
-+}
-+
- /*
-  * In-core inode flags.
-  */
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 49e4913fa779..789310c547e6 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -494,7 +494,7 @@ xfs_reflink_cancel_cow_blocks(
- 	struct xfs_defer_ops		dfops;
- 	int				error = 0;
- 
--	if (!xfs_is_reflink_inode(ip))
-+	if (!xfs_inode_has_cow_data(ip))
- 		return 0;
- 	if (!xfs_iext_lookup_extent_before(ip, ifp, &end_fsb, &icur, &got))
- 		return 0;
--- 
-2.18.0
+--D
 
+> ---
+>  fs/xfs/libxfs/xfs_inode_fork.c | 19 ++++---------------
+>  fs/xfs/libxfs/xfs_inode_fork.h |  1 -
+>  fs/xfs/xfs_inode.c             |  3 +--
+>  fs/xfs/xfs_inode_item.c        |  4 ----
+>  4 files changed, 5 insertions(+), 22 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> index 183ec0cb8921..dee85b0f8846 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> @@ -158,7 +158,6 @@ xfs_init_local_fork(
+>  	}
+>  
+>  	ifp->if_bytes = size;
+> -	ifp->if_real_bytes = real_size;
+>  	ifp->if_flags &= ~(XFS_IFEXTENTS | XFS_IFBROOT);
+>  	ifp->if_flags |= XFS_IFINLINE;
+>  }
+> @@ -226,7 +225,6 @@ xfs_iformat_extents(
+>  		return -EFSCORRUPTED;
+>  	}
+>  
+> -	ifp->if_real_bytes = 0;
+>  	ifp->if_bytes = 0;
+>  	ifp->if_u1.if_root = NULL;
+>  	ifp->if_height = 0;
+> @@ -317,7 +315,6 @@ xfs_iformat_btree(
+>  	ifp->if_flags &= ~XFS_IFEXTENTS;
+>  	ifp->if_flags |= XFS_IFBROOT;
+>  
+> -	ifp->if_real_bytes = 0;
+>  	ifp->if_bytes = 0;
+>  	ifp->if_u1.if_root = NULL;
+>  	ifp->if_height = 0;
+> @@ -501,7 +498,6 @@ xfs_idata_realloc(
+>  		 */
+>  		real_size = roundup(new_size, 4);
+>  		if (ifp->if_u1.if_data == NULL) {
+> -			ASSERT(ifp->if_real_bytes == 0);
+>  			ifp->if_u1.if_data = kmem_alloc(real_size,
+>  							KM_SLEEP | KM_NOFS);
+>  		} else {
+> @@ -509,15 +505,12 @@ xfs_idata_realloc(
+>  			 * Only do the realloc if the underlying size
+>  			 * is really changing.
+>  			 */
+> -			if (ifp->if_real_bytes != real_size) {
+> -				ifp->if_u1.if_data =
+> -					kmem_realloc(ifp->if_u1.if_data,
+> -							real_size,
+> -							KM_SLEEP | KM_NOFS);
+> -			}
+> +			ifp->if_u1.if_data =
+> +				kmem_realloc(ifp->if_u1.if_data,
+> +						real_size,
+> +						KM_SLEEP | KM_NOFS);
+>  		}
+>  	}
+> -	ifp->if_real_bytes = real_size;
+>  	ifp->if_bytes = new_size;
+>  	ASSERT(ifp->if_bytes <= XFS_IFORK_SIZE(ip, whichfork));
+>  }
+> @@ -543,17 +536,13 @@ xfs_idestroy_fork(
+>  	 */
+>  	if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL) {
+>  		if (ifp->if_u1.if_data != NULL) {
+> -			ASSERT(ifp->if_real_bytes != 0);
+>  			kmem_free(ifp->if_u1.if_data);
+>  			ifp->if_u1.if_data = NULL;
+> -			ifp->if_real_bytes = 0;
+>  		}
+>  	} else if ((ifp->if_flags & XFS_IFEXTENTS) && ifp->if_height) {
+>  		xfs_iext_destroy(ifp);
+>  	}
+>  
+> -	ASSERT(ifp->if_real_bytes == 0);
+> -
+>  	if (whichfork == XFS_ATTR_FORK) {
+>  		kmem_zone_free(xfs_ifork_zone, ip->i_afp);
+>  		ip->i_afp = NULL;
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+> index 781b1603df5e..46242052aad0 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.h
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.h
+> @@ -14,7 +14,6 @@ struct xfs_dinode;
+>   */
+>  typedef struct xfs_ifork {
+>  	int			if_bytes;	/* bytes in if_u1 */
+> -	int			if_real_bytes;	/* bytes allocated in if_u1 */
+>  	struct xfs_btree_block	*if_broot;	/* file's incore btree root */
+>  	short			if_broot_bytes;	/* bytes allocated for root */
+>  	unsigned char		if_flags;	/* per-fork flags */
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 5df4de666cc1..b6da446ae946 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -927,7 +927,7 @@ xfs_ialloc(
+>  	case S_IFLNK:
+>  		ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
+>  		ip->i_df.if_flags = XFS_IFEXTENTS;
+> -		ip->i_df.if_bytes = ip->i_df.if_real_bytes = 0;
+> +		ip->i_df.if_bytes = 0;
+>  		ip->i_df.if_u1.if_root = NULL;
+>  		break;
+>  	default:
+> @@ -1877,7 +1877,6 @@ xfs_inactive(
+>  	 * to clean up here.
+>  	 */
+>  	if (VFS_I(ip)->i_mode == 0) {
+> -		ASSERT(ip->i_df.if_real_bytes == 0);
+>  		ASSERT(ip->i_df.if_broot_bytes == 0);
+>  		return;
+>  	}
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index 2389c34c172d..fa1c4fe2ffbf 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -194,8 +194,6 @@ xfs_inode_item_format_data_fork(
+>  			 * to be there by xfs_idata_realloc().
+>  			 */
+>  			data_bytes = roundup(ip->i_df.if_bytes, 4);
+> -			ASSERT(ip->i_df.if_real_bytes == 0 ||
+> -			       ip->i_df.if_real_bytes >= data_bytes);
+>  			ASSERT(ip->i_df.if_u1.if_data != NULL);
+>  			ASSERT(ip->i_d.di_size > 0);
+>  			xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_ILOCAL,
+> @@ -280,8 +278,6 @@ xfs_inode_item_format_attr_fork(
+>  			 * to be there by xfs_idata_realloc().
+>  			 */
+>  			data_bytes = roundup(ip->i_afp->if_bytes, 4);
+> -			ASSERT(ip->i_afp->if_real_bytes == 0 ||
+> -			       ip->i_afp->if_real_bytes >= data_bytes);
+>  			ASSERT(ip->i_afp->if_u1.if_data != NULL);
+>  			xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_IATTR_LOCAL,
+>  					ip->i_afp->if_u1.if_data,
+> -- 
+> 2.18.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
