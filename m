@@ -1,124 +1,164 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:60190 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751893AbeGFEGe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jul 2018 00:06:34 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w6643rIC174082
-        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 04:06:34 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp2130.oracle.com with ESMTP id 2k0dnjr3he-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 06 Jul 2018 04:06:34 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w6646Xqi009842
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 04:06:33 GMT
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w6646XEW012784
-        for <linux-xfs@vger.kernel.org>; Fri, 6 Jul 2018 04:06:33 GMT
-Subject: Re: [PATCH RFC 1/8] xfs: introduce inline data superblock feature bit
-References: <1530846750-6686-1-git-send-email-shan.hai@oracle.com>
- <1530846750-6686-2-git-send-email-shan.hai@oracle.com>
- <20180706033416.GN32415@magnolia>
-From: Shan Hai <shan.hai@oracle.com>
-Message-ID: <ef36eaaa-5090-a6b2-2eba-5c684be3e62a@oracle.com>
-Date: Fri, 6 Jul 2018 12:06:29 +0800
+Received: from aserp2120.oracle.com ([141.146.126.78]:45146 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388712AbeGKRVR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jul 2018 13:21:17 -0400
+Date: Wed, 11 Jul 2018 10:15:51 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 6/6] xfs: avoid COW fork extent lookups in writeback if
+ the fork didn't change
+Message-ID: <20180711171551.GE32415@magnolia>
+References: <20180710060528.4071-1-hch@lst.de>
+ <20180710060528.4071-7-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20180706033416.GN32415@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180710060528.4071-7-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
 
+On Tue, Jul 10, 2018 at 08:05:28AM +0200, Christoph Hellwig wrote:
+> Used the per-fork sequence counter to avoid lookups in the writeback code
+> unless the COW fork actually changed.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_aops.c  | 28 +++++++++++++++++++++++-----
+>  fs/xfs/xfs_iomap.c |  4 +++-
+>  fs/xfs/xfs_iomap.h |  2 +-
+>  3 files changed, 27 insertions(+), 7 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 814100d27343..495d5e74fd00 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -29,6 +29,7 @@
+>  struct xfs_writepage_ctx {
+>  	struct xfs_bmbt_irec    imap;
+>  	unsigned int		io_type;
+> +	unsigned int		cow_seq;
+>  	struct xfs_ioend	*ioend;
+>  };
+>  
+> @@ -310,6 +311,7 @@ xfs_map_blocks(
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  	ssize_t			count = i_blocksize(inode);
+>  	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset), end_fsb;
+> +	xfs_fileoff_t		cow_fsb = NULLFILEOFF;
+>  	struct xfs_bmbt_irec	imap;
+>  	int			whichfork = XFS_DATA_FORK;
+>  	struct xfs_iext_cursor	icur;
+> @@ -333,12 +335,15 @@ xfs_map_blocks(
+>  	 * COW fork blocks can overlap data fork blocks even if the blocks
+>  	 * aren't shared.  COW I/O always takes precedent, so we must always
+>  	 * check for overlap on reflink inodes unless the mapping is already a
+> -	 * COW one.
+> +	 * COW one, or the COW fork hasn't changed from the last time we looked
+> +	 * at it.
+>  	 */
+>  	imap_valid = offset_fsb >= wpc->imap.br_startoff &&
+>  		     offset_fsb < wpc->imap.br_startoff + wpc->imap.br_blockcount;
+>  	if (imap_valid &&
+> -	    (!xfs_inode_has_cow_data(ip) || wpc->io_type == XFS_IO_COW))
+> +	    (!xfs_inode_has_cow_data(ip) ||
+> +	     wpc->io_type == XFS_IO_COW ||
+> +	     wpc->cow_seq == ip->i_cowfp->if_seq))
+>  		return 0;
+>  
+>  	if (XFS_FORCED_SHUTDOWN(mp))
+> @@ -364,8 +369,10 @@ xfs_map_blocks(
+>  	 * it directly instead of looking up anything in the data fork.
+>  	 */
+>  	if (xfs_inode_has_cow_data(ip) &&
+> -	    xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &imap) &&
+> -	    imap.br_startoff <= offset_fsb) {
+> +	    xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &imap))
+> +		cow_fsb = imap.br_startoff;
+> +	if (cow_fsb != NULLFILEOFF && cow_fsb <= offset_fsb) {
+> +		wpc->cow_seq = ip->i_cowfp->if_seq;
+>  		xfs_iunlock(ip, XFS_ILOCK_SHARED);
+>  		/*
+>  		 * Truncate can race with writeback since writeback doesn't
+> @@ -411,6 +418,14 @@ xfs_map_blocks(
+>  		imap.br_startblock = HOLESTARTBLOCK;
+>  		wpc->io_type = XFS_IO_HOLE;
+>  	} else {
+> +		/*
+> +		 * Truncate to the next COW extent if there is one.  We'll
+> +		 * need to treat the COW range separately.
+> +		 */
+> +		if (cow_fsb != NULLFILEOFF &&
+> +		    cow_fsb < imap.br_startoff + imap.br_blockcount)
+> +			imap.br_blockcount = cow_fsb - imap.br_startoff;
 
+Hmm, this troubles me slightly -- a short time ago you removed the "trim
+this data fork mapping to the first overlap with a cow fork mapping"
+(i.e. xfs_reflink_trim_irec_to_next_cow) behavior on the grounds that
+_writepage_map calls _map_blocks for every block in the page and so it
+was unnecessary.  But this seems to put that back.  Why is that?
 
-On 2018年07月06日 11:34, Darrick J. Wong wrote:
-> On Fri, Jul 06, 2018 at 11:12:22AM +0800, Shan Hai wrote:
->> The data inlining is an on-disk format change, so introduce a new
->> superblock feature bit to work with the mkfs tool to handle the
->> inline data, the feature bit is set at mkfs time.
->>
->> Signed-off-by: Shan Hai <shan.hai@oracle.com>
->> ---
->>   fs/xfs/libxfs/xfs_format.h | 10 +++++++++-
->>   fs/xfs/libxfs/xfs_fs.h     |  1 +
->>   fs/xfs/libxfs/xfs_sb.c     |  2 ++
->>   3 files changed, 12 insertions(+), 1 deletion(-)
->>
->> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
->> index 059bc44c27e8..6066ba7fdaf7 100644
->> --- a/fs/xfs/libxfs/xfs_format.h
->> +++ b/fs/xfs/libxfs/xfs_format.h
->> @@ -469,10 +469,12 @@ xfs_sb_has_ro_compat_feature(
->>   #define XFS_SB_FEAT_INCOMPAT_FTYPE	(1 << 0)	/* filetype in dirent */
->>   #define XFS_SB_FEAT_INCOMPAT_SPINODES	(1 << 1)	/* sparse inode chunks */
->>   #define XFS_SB_FEAT_INCOMPAT_META_UUID	(1 << 2)	/* metadata UUID */
->> +#define XFS_SB_FEAT_INCOMPAT_INLINEDATA (1 << 3)	/* inline inode data */
->>   #define XFS_SB_FEAT_INCOMPAT_ALL \
->>   		(XFS_SB_FEAT_INCOMPAT_FTYPE|	\
->>   		 XFS_SB_FEAT_INCOMPAT_SPINODES|	\
->> -		 XFS_SB_FEAT_INCOMPAT_META_UUID)
->> +		 XFS_SB_FEAT_INCOMPAT_META_UUID|\
->> +		 XFS_SB_FEAT_INCOMPAT_INLINEDATA)
-> Uh... don't go enabling this feature in the _ALL flags until you've
-> finished putting all the code in...
->
+--D
 
-Agreed, will fix it, thanks for the suggestion.
-
-Thanks
-Shan Hai
->>   
->>   #define XFS_SB_FEAT_INCOMPAT_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_ALL
->>   static inline bool
->> @@ -550,6 +552,12 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
->>   		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_REFLINK);
->>   }
->>   
->> +static inline bool xfs_sb_version_hasinlinedata(struct xfs_sb *sbp)
->> +{
->> +	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) &&
->> +		(sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_INLINEDATA);
->> +}
->> +
->>   /*
->>    * end of superblock version macros
->>    */
->> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
->> index f3aa59302fef..ee1f7621c0e4 100644
->> --- a/fs/xfs/libxfs/xfs_fs.h
->> +++ b/fs/xfs/libxfs/xfs_fs.h
->> @@ -210,6 +210,7 @@ typedef struct xfs_fsop_resblks {
->>   #define XFS_FSOP_GEOM_FLAGS_SPINODES	0x40000	/* sparse inode chunks	*/
->>   #define XFS_FSOP_GEOM_FLAGS_RMAPBT	0x80000	/* reverse mapping btree */
->>   #define XFS_FSOP_GEOM_FLAGS_REFLINK	0x100000 /* files can share blocks */
->> +#define XFS_FSOP_GEOM_FLAGS_INLINEDATA	0x200000 /* inline data into inode */
->>   
->>   /*
->>    * Minimum and maximum sizes need for growth checks.
->> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
->> index 350119eeaecb..4002ed105b6b 100644
->> --- a/fs/xfs/libxfs/xfs_sb.c
->> +++ b/fs/xfs/libxfs/xfs_sb.c
->> @@ -1068,6 +1068,8 @@ xfs_fs_geometry(
->>   		geo->logsectsize = sbp->sb_logsectsize;
->>   	else
->>   		geo->logsectsize = BBSIZE;
->> +	if (xfs_sb_version_hasinlinedata(sbp))
->> +		geo->flags |= XFS_FSOP_GEOM_FLAGS_INLINEDATA;
->>   	geo->rtsectsize = sbp->sb_blocksize;
->>   	geo->dirblocksize = xfs_dir2_dirblock_bytes(sbp);
->>   
->> -- 
->> 2.11.0
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+> +
+>  		if (isnullstartblock(imap.br_startblock)) {
+>  			/* got a delalloc extent */
+>  			wpc->io_type = XFS_IO_DELALLOC;
+> @@ -427,9 +442,12 @@ xfs_map_blocks(
+>  	trace_xfs_map_blocks_found(ip, offset, count, wpc->io_type, &imap);
+>  	return 0;
+>  allocate_blocks:
+> -	error = xfs_iomap_write_allocate(ip, whichfork, offset, &imap);
+> +	error = xfs_iomap_write_allocate(ip, whichfork, offset, &imap,
+> +			&wpc->cow_seq);
+>  	if (error)
+>  		return error;
+> +	ASSERT(whichfork == XFS_COW_FORK || cow_fsb == NULLFILEOFF ||
+> +	       imap.br_startoff + imap.br_blockcount <= cow_fsb);
+>  	wpc->imap = imap;
+>  	trace_xfs_map_blocks_alloc(ip, offset, count, wpc->io_type, &imap);
+>  	return 0;
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index fb9746cc7338..a843766bf7c5 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -660,7 +660,8 @@ xfs_iomap_write_allocate(
+>  	xfs_inode_t	*ip,
+>  	int		whichfork,
+>  	xfs_off_t	offset,
+> -	xfs_bmbt_irec_t *imap)
+> +	xfs_bmbt_irec_t *imap,
+> +	unsigned int	*cow_seq)
+>  {
+>  	xfs_mount_t	*mp = ip->i_mount;
+>  	xfs_fileoff_t	offset_fsb, last_block;
+> @@ -784,6 +785,7 @@ xfs_iomap_write_allocate(
+>  			if (error)
+>  				goto error0;
+>  
+> +			*cow_seq = XFS_IFORK_PTR(ip, whichfork)->if_seq;
+>  			xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>  		}
+>  
+> diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
+> index 83474c9cede9..c6170548831b 100644
+> --- a/fs/xfs/xfs_iomap.h
+> +++ b/fs/xfs/xfs_iomap.h
+> @@ -14,7 +14,7 @@ struct xfs_bmbt_irec;
+>  int xfs_iomap_write_direct(struct xfs_inode *, xfs_off_t, size_t,
+>  			struct xfs_bmbt_irec *, int);
+>  int xfs_iomap_write_allocate(struct xfs_inode *, int, xfs_off_t,
+> -			struct xfs_bmbt_irec *);
+> +			struct xfs_bmbt_irec *, unsigned int *);
+>  int xfs_iomap_write_unwritten(struct xfs_inode *, xfs_off_t, xfs_off_t, bool);
+>  
+>  void xfs_bmbt_to_iomap(struct xfs_inode *, struct iomap *,
+> -- 
+> 2.18.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
