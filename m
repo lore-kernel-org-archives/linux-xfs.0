@@ -1,41 +1,119 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:47683 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932752AbeGJMNz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Jul 2018 08:13:55 -0400
-Date: Tue, 10 Jul 2018 14:15:30 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 21/22] xfs: add support for sub-pagesize writeback
-        without buffer_heads
-Message-ID: <20180710121530.GA765@lst.de>
-References: <20180702145813.22496-1-hch@lst.de> <20180702145813.22496-22-hch@lst.de> <20180703123603.GB22789@bfoster> <20180703220501.GX32415@magnolia> <20180708151615.GC14418@lst.de> <20180710010202.GA5835@killians.ges.redhat.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:43164 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732562AbeGKQ2W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jul 2018 12:28:22 -0400
+Date: Wed, 11 Jul 2018 09:23:11 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/6] xfs: simplify xfs_idata_realloc
+Message-ID: <20180711162311.GB32415@magnolia>
+References: <20180710060528.4071-1-hch@lst.de>
+ <20180710060528.4071-3-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180710010202.GA5835@killians.ges.redhat.com>
+In-Reply-To: <20180710060528.4071-3-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jul 09, 2018 at 09:02:02PM -0400, Brian Foster wrote:
-> It looks to me that if the page itself isn't uptodate, we
-> overwrite a block of that page and then the writepage fails, clearing
-> the buffer uptodate status means that the next read would return what is
-> on disk (not what was just written to the page).
+On Tue, Jul 10, 2018 at 08:05:24AM +0200, Christoph Hellwig wrote:
+> Streamline the code and take advantage of the fact that kmem_realloc
+> through krealloc will be have like a normal allocation if passing in a
+> NULL old pointer.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-With iomap we never clear the uptodate bit, and we only set it when
-the part of the page contains valid data.  With buffer heads we might
-indeed clear the uptodate bit after a write error.  Now if the whole
-page is set uptodate we won't re-read it, but if the whole page wasn't
-uptodate it seems like the buffer head code will lose data in that
-case, which looks wrong to me.
+Looks good to me,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-> I'm not sure that's
-> what happens if the page was already uptodate before the
-> overwrite/writepage, however, I didn't notice anything that cleared page
-> uptodate status on a writepage I/O error..?
+--D
 
-Yes, the buffer head code seems inconsistent in how it treats the buffer
-vs page uptodate bits.
+> ---
+>  fs/xfs/libxfs/xfs_inode_fork.c | 55 ++++++++++++----------------------
+>  1 file changed, 19 insertions(+), 36 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> index dee85b0f8846..a0e3fb804605 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> @@ -468,51 +468,34 @@ xfs_iroot_realloc(
+>   */
+>  void
+>  xfs_idata_realloc(
+> -	xfs_inode_t	*ip,
+> -	int		byte_diff,
+> -	int		whichfork)
+> +	struct xfs_inode	*ip,
+> +	int			byte_diff,
+> +	int			whichfork)
+>  {
+> -	xfs_ifork_t	*ifp;
+> -	int		new_size;
+> -	int		real_size;
+> -
+> -	if (byte_diff == 0) {
+> -		return;
+> -	}
+> +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+> +	int			new_size = (int)ifp->if_bytes + byte_diff;
+>  
+> -	ifp = XFS_IFORK_PTR(ip, whichfork);
+> -	new_size = (int)ifp->if_bytes + byte_diff;
+>  	ASSERT(new_size >= 0);
+> +	ASSERT(new_size <= XFS_IFORK_SIZE(ip, whichfork));
+> +
+> +	if (byte_diff == 0)
+> +		return;
+>  
+>  	if (new_size == 0) {
+>  		kmem_free(ifp->if_u1.if_data);
+>  		ifp->if_u1.if_data = NULL;
+> -		real_size = 0;
+> -	} else {
+> -		/*
+> -		 * Stuck with malloc/realloc.
+> -		 * For inline data, the underlying buffer must be
+> -		 * a multiple of 4 bytes in size so that it can be
+> -		 * logged and stay on word boundaries.  We enforce
+> -		 * that here.
+> -		 */
+> -		real_size = roundup(new_size, 4);
+> -		if (ifp->if_u1.if_data == NULL) {
+> -			ifp->if_u1.if_data = kmem_alloc(real_size,
+> -							KM_SLEEP | KM_NOFS);
+> -		} else {
+> -			/*
+> -			 * Only do the realloc if the underlying size
+> -			 * is really changing.
+> -			 */
+> -			ifp->if_u1.if_data =
+> -				kmem_realloc(ifp->if_u1.if_data,
+> -						real_size,
+> -						KM_SLEEP | KM_NOFS);
+> -		}
+> +		ifp->if_bytes = 0;
+> +		return;
+>  	}
+> +
+> +	/*
+> +	 * For inline data, the underlying buffer must be a multiple of 4 bytes
+> +	 * in size so that it can be logged and stay on word boundaries.
+> +	 * We enforce that here.
+> +	 */
+> +	ifp->if_u1.if_data = kmem_realloc(ifp->if_u1.if_data,
+> +			roundup(new_size, 4), KM_SLEEP | KM_NOFS);
+>  	ifp->if_bytes = new_size;
+> -	ASSERT(ifp->if_bytes <= XFS_IFORK_SIZE(ip, whichfork));
+>  }
+>  
+>  void
+> -- 
+> 2.18.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
