@@ -1,75 +1,196 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:33355 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726394AbeGLCyY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jul 2018 22:54:24 -0400
-Date: Thu, 12 Jul 2018 10:47:01 +0800
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:39432 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726692AbeGLDB4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jul 2018 23:01:56 -0400
+Date: Thu, 12 Jul 2018 10:54:30 +0800
 From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH] generic/499: add bfoster's alternate reproducer
-Message-ID: <20180712024701.GJ2780@desktop>
-References: <20180711164919.GD5703@magnolia>
+Subject: Re: [PATCH v2] generic: test dm-thin running out of data space vs
+ concurrent discard
+Message-ID: <20180712025430.GK2780@desktop>
+References: <20180707165957.14734-1-zlang@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180711164919.GD5703@magnolia>
+In-Reply-To: <20180707165957.14734-1-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Wed, Jul 11, 2018 at 09:49:19AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Sun, Jul 08, 2018 at 12:59:57AM +0800, Zorro Lang wrote:
+> If a user constructs a test that loops repeatedly over below steps
+> on dm-thin, block allocation can fail due to discards not having
+> completed yet (Fixed by a685557 dm thin: handle running out of data
+> space vs concurrent discard):
+> 1) fill thin device via filesystem file
+> 2) remove file
+> 3) fstrim
 > 
-> Add Brian Foster's alternate reproducer code for this problem so that we
-> increase the chances that one of them will reproduce the race problem.
+> And this maybe cause a deadlock (fast device likes ramdisk can help
+> a lot) when racing a fstrim with a filesystem (XFS) shutdown. (Fixed
+> by 8c81dd46ef3c Force log to disk before reading the AGF during a
+> fstrim)
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> This case can reproduce both two bugs if they're not fixed. If only
+> the dm-thin bug is fixed, then the test will pass. If only the fs
+> bug is fixed, then the test will fail. If both of bugs aren't fixed,
+> the test will hang.
+> 
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
 > ---
->  tests/generic/499 |   19 +++++++++++++++++++
->  1 file changed, 19 insertions(+)
+> 
+> Hi,
+> 
+> V1 as below:
+> https://marc.info/?l=linux-xfs&m=153070947925942&w=2
+> 
+> V2 did below changes:
+> 1) Use _require_batched_discard to check $FSTRIM_PROG is exist,
+>    and SCRATCH_DEV supports discard.
+> 2) Reduce the looping times from 100 to 20.
+> 
+> Thanks,
+> Zorro
+> 
+>  tests/generic/499     | 91 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/499.out |  2 ++
+>  tests/generic/group   |  1 +
+>  3 files changed, 94 insertions(+)
+>  create mode 100755 tests/generic/499
+>  create mode 100644 tests/generic/499.out
 > 
 > diff --git a/tests/generic/499 b/tests/generic/499
-> index 99d6d308..e0b95871 100755
-> --- a/tests/generic/499
+> new file mode 100755
+> index 00000000..6075509f
+> --- /dev/null
 > +++ b/tests/generic/499
-> @@ -33,6 +33,7 @@ _require_xfs_io_command "fzero"
->  
->  rm -f $seqres.full
->  
-> +# djwong's reproducer
->  _scratch_mkfs >>$seqres.full 2>&1
->  _scratch_mount
->  
-> @@ -52,6 +53,24 @@ victim=$SCRATCH_MNT/a
->  touch $victim
->  $here/ltp/fsx --replay-ops $tmp.fsxops $victim > $tmp.output || cat $tmp.output
->  
-> +# bfoster/hch reproducer
-> +_scratch_unmount
-> +_scratch_mkfs_sized $((1024 * 1024 * 100)) >>$seqres.full 2>&1
-> +_scratch_mount
+> @@ -0,0 +1,91 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2018 Red Hat Inc.  All Rights Reserved.
+> +#
+> +# FS QA Test 499
+> +#
+> +# Race test running out of data space with concurrent discard operation on
+> +# dm-thin.
+> +#
+> +# If a user constructs a test that loops repeatedly over below steps on
+> +# dm-thin, block allocation can fail due to discards not having completed
+> +# yet (Fixed by a685557 dm thin: handle running out of data space vs
+                   ^^^^^^^ better to use 12-digits commit id
+> +# concurrent discard):
+> +# 1) fill thin device via filesystem file
+> +# 2) remove file
+> +# 3) fstrim
+> +#
+> +# And this maybe cause a deadlock when racing a fstrim with a filesystem
+> +# (XFS) shutdown. (Fixed by 8c81dd46ef3c Force log to disk before reading
+> +# the AGF during a fstrim)
+> +#
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +	_dmthin_cleanup
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/dmthin
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +# real QA test starts here
+> +_supported_fs generic
+> +_supported_os Linux
+> +_require_scratch_nocheck
+> +_require_dm_target thin-pool
+> +
+> +# Require underlying device support discard
+> +_scratch_mkfs
 
-This test uses a different fs setup (_scratch_mkfs_sized), and adds new
-sub-test to an existing case, I think it really deserves a new test.
+mkfs output breaks the test here.
+
+> +_scratch_mount
+> +_require_batched_discard $SCRATCH_MNT
+> +_scratch_unmount
+> +
+> +# Create a thin pool and a *slightly smaller* thin volume, it's helpful
+> +# to reproduce the bug
+> +BACKING_SIZE=$((50 * 1024 * 1024 / 512))	# 50M
+> +VIRTUAL_SIZE=$((BACKING_SIZE + 1024))		# 50M + 1k
+
+virtual size is too small for btrfs, and _mkfs_dev fails.
+
+Otherwise looks fine to me.
 
 Thanks,
 Eryu
 
+> +CLUSTER_SIZE=$((64 * 1024 / 512))		# 64K
 > +
-> +$XFS_IO_PROG -fc "pwrite 0 100m" -c fsync $SCRATCH_MNT/file >>$seqres.full 2>&1
-> +rm -f $SCRATCH_MNT/file
+> +_dmthin_init $BACKING_SIZE $VIRTUAL_SIZE $CLUSTER_SIZE 0
+> +_dmthin_set_fail
+> +_mkfs_dev $DMTHIN_VOL_DEV
+> +_dmthin_mount
 > +
-> +cat >> $tmp.fsxops << ENDL
-> +truncate 0x0 0x1f0d6 0x380e1
-> +write 0x1ad87 0x6c99 0x180d6
-> +zero_range 0x14426 0xd3aa 0x21a20 keep_size
-> +mapread 0x1f69a 0x2386 0x21a20
-> +ENDL
+> +# There're two bugs at here, one is dm-thin bug, the other is filesystem
+> +# (XFS especially) bug. The dm-thin bug can't handle running out of data
+> +# space with concurrent discard well. Then the dm-thin bug cause fs unmount
+> +# hang when racing a fstrim with a filesystem shutdown.
+> +#
+> +# If both of two bugs haven't been fixed, below test maybe cause deadlock.
+> +# Else if the fs bug has been fixed, but the dm-thin bug hasn't. below test
+> +# will cause the test fail (no deadlock).
+> +# Else the test will pass.
+> +for ((i=0; i<20; i++)); do
+> +	$XFS_IO_PROG -f -c "pwrite -b 64k 0 100M" \
+> +		$SCRATCH_MNT/testfile &>/dev/null
+> +	rm -f $SCRATCH_MNT/testfile
+> +	$FSTRIM_PROG $SCRATCH_MNT
+> +done
 > +
-> +touch $victim
-> +$here/ltp/fsx --replay-ops $tmp.fsxops $victim > $tmp.output || cat $tmp.output
+> +_dmthin_check_fs
+> +_dmthin_cleanup
 > +
->  echo "Silence is golden"
->  status=0
->  exit
+> +echo "Silence is golden"
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/generic/499.out b/tests/generic/499.out
+> new file mode 100644
+> index 00000000..c363e684
+> --- /dev/null
+> +++ b/tests/generic/499.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 499
+> +Silence is golden
+> diff --git a/tests/generic/group b/tests/generic/group
+> index 83a6fdab..bbeac4af 100644
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -501,3 +501,4 @@
+>  496 auto quick swap
+>  497 auto quick swap collapse
+>  498 auto quick log
+> +499 auto thin trim
+> -- 
+> 2.14.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
