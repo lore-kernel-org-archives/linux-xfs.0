@@ -1,131 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:42142 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387807AbeGLBxa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jul 2018 21:53:30 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w6C1ieMO012582
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Jul 2018 01:46:24 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2130.oracle.com with ESMTP id 2k2p768f4x-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Jul 2018 01:46:24 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w6C1kNNe017765
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Jul 2018 01:46:23 GMT
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w6C1kNRq024561
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Jul 2018 01:46:23 GMT
-Subject: Re: [PATCH RFC 7/8] xfs: return non-zero blocks for inline data
-References: <1530846750-6686-1-git-send-email-shan.hai@oracle.com>
- <1530846750-6686-8-git-send-email-shan.hai@oracle.com>
- <20180711130825.dkreolul3mlvtf3b@odin.usersys.redhat.com>
- <2e421e56-7463-3ac1-2eac-fa72ee8cd3eb@oracle.com>
- <fd877bb3-641f-b70c-a40e-e4287339ed53@oracle.com>
- <20180712013147.GK32415@magnolia>
-From: Shan Hai <shan.hai@oracle.com>
-Message-ID: <e70ed6e4-a889-87ac-d25c-db2abc0e61a1@oracle.com>
-Date: Thu, 12 Jul 2018 09:46:20 +0800
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:33355 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726394AbeGLCyY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jul 2018 22:54:24 -0400
+Date: Thu, 12 Jul 2018 10:47:01 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH] generic/499: add bfoster's alternate reproducer
+Message-ID: <20180712024701.GJ2780@desktop>
+References: <20180711164919.GD5703@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20180712013147.GK32415@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180711164919.GD5703@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
 
+On Wed, Jul 11, 2018 at 09:49:19AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Add Brian Foster's alternate reproducer code for this problem so that we
+> increase the chances that one of them will reproduce the race problem.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  tests/generic/499 |   19 +++++++++++++++++++
+>  1 file changed, 19 insertions(+)
+> 
+> diff --git a/tests/generic/499 b/tests/generic/499
+> index 99d6d308..e0b95871 100755
+> --- a/tests/generic/499
+> +++ b/tests/generic/499
+> @@ -33,6 +33,7 @@ _require_xfs_io_command "fzero"
+>  
+>  rm -f $seqres.full
+>  
+> +# djwong's reproducer
+>  _scratch_mkfs >>$seqres.full 2>&1
+>  _scratch_mount
+>  
+> @@ -52,6 +53,24 @@ victim=$SCRATCH_MNT/a
+>  touch $victim
+>  $here/ltp/fsx --replay-ops $tmp.fsxops $victim > $tmp.output || cat $tmp.output
+>  
+> +# bfoster/hch reproducer
+> +_scratch_unmount
+> +_scratch_mkfs_sized $((1024 * 1024 * 100)) >>$seqres.full 2>&1
+> +_scratch_mount
 
+This test uses a different fs setup (_scratch_mkfs_sized), and adds new
+sub-test to an existing case, I think it really deserves a new test.
 
-On 2018年07月12日 09:31, Darrick J. Wong wrote:
-> On Thu, Jul 12, 2018 at 09:13:46AM +0800, Shan Hai wrote:
->>
->> On 2018年07月12日 09:03, Shan Hai wrote:
->>>
->>> On 2018年07月11日 21:08, Carlos Maiolino wrote:
->>>> On Fri, Jul 06, 2018 at 11:12:28AM +0800, Shan Hai wrote:
->>>>> Return non-zero blocks for inline data even though the inode has
->>>>> no external blocks, otherwise the "ls -ls" would show zero blocks
->>>>> occupied by the file.
->>>>>
->>>> Is there any issue you ran into while leaving inodes with zero
->>>> blocks allocated?
->>>> Inodes should actually report the real amount of allocated blocks,
->>>> not fake it.
->>>> Inodes with inlined data should actually report 0 blocks, otherwise,
->>>> many
->>>> applications which actually relies on the amount of allocated blocks
->>>> for each
->>>> file will misbehave.
->>>>
->>> Man ls(1) reads:
->>>
->>> -s, --size
->>>      print the allocated size of each file, in blocks
->>>
->>> So the 'ls -ls' would report 0 blocks when the data is inlined, a file
->>> holds data
->>> but it consumes 0 blocks, how is it possible :), this patch fixes this
->>> problem.
->>>
->> This patch is inspired by the
->> upstream commit 9206c561554c9 (ext4: return non-zero st_blocks for inline
->> data),
->> please refer it for details.
-> The fact that we're following precedent set by ext4 is worth mentioning
-> in the commit message.
+Thanks,
+Eryu
 
-OK, I will include it in the next version of the patch.
-
-Thanks
-Shan Hai
-> --D
->
->> Thanks
->> Shan Hai
->>
->>> Thanks
->>> Shan Hai
->>>>> Signed-off-by: Shan Hai <shan.hai@oracle.com>
->>>>> ---
->>>>>    fs/xfs/xfs_iops.c | 8 +++++++-
->>>>>    1 file changed, 7 insertions(+), 1 deletion(-)
->>>>>
->>>>> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
->>>>> index 0fa29f39d658..63be1355a473 100644
->>>>> --- a/fs/xfs/xfs_iops.c
->>>>> +++ b/fs/xfs/xfs_iops.c
->>>>> @@ -500,8 +500,14 @@ xfs_vn_getattr(
->>>>>        stat->atime = inode->i_atime;
->>>>>        stat->mtime = inode->i_mtime;
->>>>>        stat->ctime = inode->i_ctime;
->>>>> -    stat->blocks =
->>>>> +
->>>>> +    if (xfs_sb_version_hasinlinedata(&mp->m_sb) &&
->>>>> +        XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) == XFS_DINODE_FMT_LOCAL) {
->>>>> +            stat->blocks = BTOBB(XFS_ISIZE(ip));
->>>>> +    } else {
->>>>> +        stat->blocks =
->>>>>            XFS_FSB_TO_BB(mp, ip->i_d.di_nblocks + ip->i_delayed_blks);
->>>>> +    }
->>>>>          if (ip->i_d.di_version == 3) {
->>>>>            if (request_mask & STATX_BTIME) {
->>>>> -- 
->>>>> 2.11.0
->>>>>
->>>>> -- 
->>>>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->>>>> the body of a message to majordomo@vger.kernel.org
->>>>> More majordomo info at http://vger.kernel.org/majordomo-info.html
->>> -- 
->>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+> +
+> +$XFS_IO_PROG -fc "pwrite 0 100m" -c fsync $SCRATCH_MNT/file >>$seqres.full 2>&1
+> +rm -f $SCRATCH_MNT/file
+> +
+> +cat >> $tmp.fsxops << ENDL
+> +truncate 0x0 0x1f0d6 0x380e1
+> +write 0x1ad87 0x6c99 0x180d6
+> +zero_range 0x14426 0xd3aa 0x21a20 keep_size
+> +mapread 0x1f69a 0x2386 0x21a20
+> +ENDL
+> +
+> +touch $victim
+> +$here/ltp/fsx --replay-ops $tmp.fsxops $victim > $tmp.output || cat $tmp.output
+> +
+>  echo "Silence is golden"
+>  status=0
+>  exit
