@@ -1,64 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:45342 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751194AbeGJJlf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Jul 2018 05:41:35 -0400
-From: Zorro Lang <zlang@redhat.com>
-Subject: [PATCH] common/xfs: remove bad xfs_repair -t option
-Date: Tue, 10 Jul 2018 17:41:29 +0800
-Message-Id: <20180710094129.1052-1-zlang@redhat.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:59228 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1733236AbeGLBKi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jul 2018 21:10:38 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w6C13dNx182832
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Jul 2018 01:03:39 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2120.oracle.com with ESMTP id 2k2p7vgakn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Jul 2018 01:03:39 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w6C13Ziv023840
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Jul 2018 01:03:35 GMT
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w6C13Z22006915
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Jul 2018 01:03:35 GMT
+Subject: Re: [PATCH RFC 7/8] xfs: return non-zero blocks for inline data
+References: <1530846750-6686-1-git-send-email-shan.hai@oracle.com>
+ <1530846750-6686-8-git-send-email-shan.hai@oracle.com>
+ <20180711130825.dkreolul3mlvtf3b@odin.usersys.redhat.com>
+From: Shan Hai <shan.hai@oracle.com>
+Message-ID: <2e421e56-7463-3ac1-2eac-fa72ee8cd3eb@oracle.com>
+Date: Thu, 12 Jul 2018 09:03:25 +0800
+MIME-Version: 1.0
+In-Reply-To: <20180711130825.dkreolul3mlvtf3b@odin.usersys.redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-The xfs_repair "-t" option shouldn't be used alone. An interval must
-follow the -t option, or xfs_repair will report errors. And only
-modify reporting interval is useless, if we don't enable ag_stride.
 
-Signed-off-by: Zorro Lang <zlang@redhat.com>
----
 
-Hi,
+On 2018年07月11日 21:08, Carlos Maiolino wrote:
+> On Fri, Jul 06, 2018 at 11:12:28AM +0800, Shan Hai wrote:
+>> Return non-zero blocks for inline data even though the inode has
+>> no external blocks, otherwise the "ls -ls" would show zero blocks
+>> occupied by the file.
+>>
+> Is there any issue you ran into while leaving inodes with zero blocks allocated?
+> Inodes should actually report the real amount of allocated blocks, not fake it.
+> Inodes with inlined data should actually report 0 blocks, otherwise, many
+> applications which actually relies on the amount of allocated blocks for each
+> file will misbehave.
+>
 
-I don't know why we must need the -t option for xfs_repair, I can't
-find any description to explain it. But I can find an explanation
-about why we use "-t" for _xfs_check.
+Man ls(1) reads:
 
-  # xfs_check runs out of memory on large files, so even providing the test
-  # option (-t) to avoid indexing the free space trees doesn't make it pass on
-  # large filesystems. Avoid it.
+-s, --size
+     print the allocated size of each file, in blocks
 
-The -t option for xfs_repair is totally different with it for
-xfs_check, maybe -m option is more useful if we think about the
-memory size.
+So the 'ls -ls' would report 0 blocks when the data is inlined, a file 
+holds data
+but it consumes 0 blocks, how is it possible :), this patch fixes this 
+problem.
 
-And the -t option need to work with -o ag_stride together. I'd like
-to remove the "-t" option directly, due to I really don't know why
-we need it, or how to give it a proper number.
-
-If the original author knows why we need it, and can give me some
-suggestions, please help.
-
-Thanks,
-Zorro
-
- common/xfs | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/common/xfs b/common/xfs
-index ecf54bbf..61a3c2d9 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -193,7 +193,6 @@ _scratch_xfs_repair()
- 		SCRATCH_OPTIONS="-l$SCRATCH_LOGDEV"
- 	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ] && \
- 		SCRATCH_OPTIONS=$SCRATCH_OPTIONS" -r$SCRATCH_RTDEV"
--	[ "$LARGE_SCRATCH_DEV" = yes ] && SCRATCH_OPTIONS=$SCRATCH_OPTIONS" -t"
- 	$XFS_REPAIR_PROG $SCRATCH_OPTIONS $* $SCRATCH_DEV
- }
- 
--- 
-2.14.4
+Thanks
+Shan Hai
+>> Signed-off-by: Shan Hai <shan.hai@oracle.com>
+>> ---
+>>   fs/xfs/xfs_iops.c | 8 +++++++-
+>>   1 file changed, 7 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+>> index 0fa29f39d658..63be1355a473 100644
+>> --- a/fs/xfs/xfs_iops.c
+>> +++ b/fs/xfs/xfs_iops.c
+>> @@ -500,8 +500,14 @@ xfs_vn_getattr(
+>>   	stat->atime = inode->i_atime;
+>>   	stat->mtime = inode->i_mtime;
+>>   	stat->ctime = inode->i_ctime;
+>> -	stat->blocks =
+>> +
+>> +	if (xfs_sb_version_hasinlinedata(&mp->m_sb) &&
+>> +		XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) == XFS_DINODE_FMT_LOCAL) {
+>> +			stat->blocks = BTOBB(XFS_ISIZE(ip));
+>> +	} else {
+>> +		stat->blocks =
+>>   		XFS_FSB_TO_BB(mp, ip->i_d.di_nblocks + ip->i_delayed_blks);
+>> +	}
+>>   
+>>   	if (ip->i_d.di_version == 3) {
+>>   		if (request_mask & STATX_BTIME) {
+>> -- 
+>> 2.11.0
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
