@@ -1,84 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48392 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2387696AbeGMDL1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Jul 2018 23:11:27 -0400
-Date: Thu, 12 Jul 2018 21:58:53 -0500
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: Re: [PATCH 5/6] iomap: add a page_done callback
-Message-ID: <20180713025853.xugxx6zte3kvvqjy@merlin>
-References: <20180619164137.13720-1-hch@lst.de>
- <20180619164137.13720-6-hch@lst.de>
+Received: from mail-yb0-f196.google.com ([209.85.213.196]:34017 "EHLO
+        mail-yb0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725908AbeGMIxf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Jul 2018 04:53:35 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180619164137.13720-6-hch@lst.de>
+In-Reply-To: <CAB=NE6UjcBgQhoQvZoWKXnPWoHVNMbeYdyGfYsHdgeA=L1M4wQ@mail.gmail.com>
+References: <CAB=NE6UjcBgQhoQvZoWKXnPWoHVNMbeYdyGfYsHdgeA=L1M4wQ@mail.gmail.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Fri, 13 Jul 2018 11:39:55 +0300
+Message-ID: <CAOQ4uxgd+Z2ADUXdLk3odP9F6KOsrE4HfRpg-1dpP9HS-zbi=Q@mail.gmail.com>
+Subject: Re: [ANN] oscheck: wrapper for fstests check.sh - tracking and
+ working with baselines
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com, linux-ext4@vger.kernel.org
+To: "Luis R. Chamberlain" <mcgrof@kernel.org>
+Cc: Linux FS Devel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>, Sasha Levin <Alexander.Levin@microsoft.com>, Sasha Levin <levinsasha928@gmail.com>, Valentin Rothberg <valentinrothberg@gmail.com>
 
-On 18:41 19/06, Christoph Hellwig wrote:
-> This will be used by gfs2 to attach data to transactions for the journaled
-> data mode.  But the concept is generic enough that we might be able to
-> use it for other purposes like encryption/integrity post-processing in the
-> future.
-> 
-> Based on a patch from Andreas Gruenbacher.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/iomap.c            | 3 +++
->  include/linux/iomap.h | 9 +++++++++
->  2 files changed, 12 insertions(+)
-> 
-> diff --git a/fs/iomap.c b/fs/iomap.c
-> index 4aecd7c5dbd8..a1f71e64ea49 100644
-> --- a/fs/iomap.c
-> +++ b/fs/iomap.c
-> @@ -201,6 +201,9 @@ iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
->  				copied, page, NULL);
->  	}
->  
-> +	if (iomap->page_done)
-> +		iomap->page_done(inode, pos, copied, page, iomap);
-> +
->  	if (ret < len)
->  		iomap_write_failed(inode, pos, len);
->  	return ret;
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index 10d6cff7f69a..45f43865b0f0 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -9,6 +9,7 @@ struct fiemap_extent_info;
->  struct inode;
->  struct iov_iter;
->  struct kiocb;
-> +struct page;
->  struct vm_area_struct;
->  struct vm_fault;
->  
-> @@ -56,6 +57,14 @@ struct iomap {
->  	struct block_device	*bdev;	/* block device for I/O */
->  	struct dax_device	*dax_dev; /* dax_dev for dax operations */
->  	void			*inline_data;
-> +
-> +	/*
-> +	 * Called when finished processing a page in the mapping returned in
-> +	 * this iomap.  At least for now this is only supported in the buffered
-> +	 * write path.
-> +	 */
-> +	void (*page_done)(struct inode *inode, loff_t pos, unsigned copied,
-> +			struct page *page, struct iomap *iomap);
->  };
->  
+On Fri, Jul 13, 2018 at 5:43 AM, Luis R. Chamberlain <mcgrof@kernel.org> wrote:
+> I had volunteered at the last LSF/MM to help with the stable work for
+> XFS. To help with this, as part of this year's SUSE Hackweek, I've
+> first generalized my own set of scripts to help track a baseline of
+> results from fstests [0], and extended it to be able to easily ramp up
+> with fstests on different distributions, and I've also created a
+> respective baseline of results against these distributions as a
+> further example of how these scripts and wrapper framework can be used
 
-Would it be better if we keep this function as a part of iomap_ops? I
-know gfs2 sets this conditionally, but we can always check the condition
-in the function assigned to page_done(). It would keep all the functions
-in one place.
+Hi Luis!
 
--- 
-Goldwyn
+Thanks a lot for doing this work!
 
+Will take me some time to try it out, but see some questions below...
+
+> [1]. The distributions currently supported are:
+>
+>   * Debian testing
+>   * OpenSUSE Leap 15.0
+>   * Fedora 28
+>
+> The stable work starts with creating a baseline for v4.17.3. The
+> results are visible as a result of expunge files which categorize the
+> failures for the different sections tested.
+
+So the only "bad" indication is a test failure?
+How about indication about a test that started to pass since baseline?
+Tested that started to notrun since baseline?
+Are we interested in those?
+
+> Other than careful manual
+> inspection of each stable candidate patch, one of the goals will also
+> be to ensure such stable patches do not regress the baseline. Work is
+> currently underway to review the first set of stable candidate patches
+> for v4.17.3, if they both pass review and do not regress the
+> established baseline, I'll proceed to post the patches for further
+> evaluation from the community.
+>
+> Note that while I used this for XFS, it should be easy to add support
+> for other filesystems, should folks wish to do something similar for
+> their filesystems. The current XFS sections being tested are as
+> follows, please let me know if we should consider extending this
+> further:
+>
+> # Matches what we expect to be default on the latests xfsprogs
+> [xfs]
+> MKFS_OPTIONS='-f -m crc=1,reflink=0,rmapbt=0, -i sparse=0'
+> USE_EXTERNAL=no
+> FSTYP=xfs
+
+Please add a LOGWRITES_DEV to all "internal log" configs.
+This is needed to utilize the (relatively) new crash consistency tests
+(a.k.a. generic/replay) which caught a few nasty bugs.
+Fun fact: the fix for stable 4.4 almost got missed, because your system
+was not around ;-)
+https://marc.info/?l=linux-xfs&m=152852844615666&w=2
+
+I've used a 10GB LOGWRITES_DEV, which seems to be enough
+for the current tests.
+I don't think that the dmlogwrite tests play well with external logdev,
+so we could probably reuse the same device for LOGWRITES_DEV
+for configs that don't use SCRATCH_LOGDEV.
+
+Thanks,
+Amir.
