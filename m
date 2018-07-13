@@ -1,41 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lj1-f195.google.com ([209.85.208.195]:36844 "EHLO
-        mail-lj1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730552AbeGPKih (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Jul 2018 06:38:37 -0400
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:47600 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727455AbeGMSAN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 13 Jul 2018 14:00:13 -0400
+Date: Fri, 13 Jul 2018 12:44:33 -0500
+From: Bill O'Donnell <billodo@redhat.com>
+Subject: Re: Recently-formatted XFS filesystems reporting negative used space
+Message-ID: <20180713174433.GA22284@redhat.com>
+References: <CAKAc_Gwh-KMdnK6LqX3kE9jTmSHsg8_kzQE5fPsnL3xETD1O+w@mail.gmail.com>
+ <3895eebe-3fa2-a977-4021-3bd6ef645fdd@sandeen.net>
+ <20180710224026.GV2234@dastard>
 MIME-Version: 1.0
-In-Reply-To: <CABeXuvphoYM+KOGPgtsuxzS1_XDSOO0Ta5hr3sA7gYtt-78wtQ@mail.gmail.com>
-References: <20180713133204.3123939-1-arnd@arndb.de> <CABeXuvphoYM+KOGPgtsuxzS1_XDSOO0Ta5hr3sA7gYtt-78wtQ@mail.gmail.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Mon, 16 Jul 2018 12:11:53 +0200
-Message-ID: <CAK8P3a2xu4KGVM1BvTjtXKHfXpBQ2PMynAPybW4cRt7FB8ktwg@mail.gmail.com>
-Subject: Re: [PATCH] [RFC] y2038: globally rename compat_time to old_time32
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180710224026.GV2234@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Deepa Dinamani <deepa.kernel@gmail.com>
-Cc: y2038 Mailman List <y2038@lists.linaro.org>, Thomas Gleixner <tglx@linutronix.de>, Geert Uytterhoeven <geert@linux-m68k.org>, Christoph Hellwig <hch@infradead.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux ARM <linux-arm-kernel@lists.infradead.org>, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>, alsa-devel@alsa-project.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Filippo Giunchedi <fgiunchedi@wikimedia.org>, linux-xfs@vger.kernel.org
 
-On Sat, Jul 14, 2018 at 5:54 PM, Deepa Dinamani <deepa.kernel@gmail.com> wrote:
-> Right now we only have compat syscalls and native syscalls.
-> Until we transition all the architectures to use the new syscalls,
-> wouldn't it be the same sort of confusion as exists today?
-> These structures today are still used by compat entry points.
-> I'm trying to understand why such a cleanup would make sense today
-> rather than at the end of the transition.
+On Wed, Jul 11, 2018 at 08:40:26AM +1000, Dave Chinner wrote:
+> On Tue, Jul 10, 2018 at 04:39:26PM -0500, Eric Sandeen wrote:
+> > On 7/10/18 8:43 AM, Filippo Giunchedi wrote:
+> > > Hello,
+> > > a little background: at Wikimedia Foundation we are running a 30-hosts
+> > > Openstack Swift cluster to host user media uploads, each host has 12
+> > > spinning disks formatted individually with xfs.
+> > > 
+> > > Some of the recently-formatted filesystems have started reporting
+> > > negative usage upon hitting around 70% usage, though some filesystems
+> > > on the same host kept reporting as expected:
+> > > 
+> > > /dev/sdn1       3.7T  -14T   17T    - /srv/swift-storage/sdn1
+> > > /dev/sdh1       3.7T  -13T   17T    - /srv/swift-storage/sdh1
+> > > /dev/sdc1       3.7T  3.0T  670G  83% /srv/swift-storage/sdc1
+> > > /dev/sdk1       3.7T  3.1T  643G  83% /srv/swift-storage/sdk1
+> > > 
+> > > We have experienced this bug only on the last four machines to be put
+> > > in service and formatted with xfsprogs 4.9.0+nmu1 from Debian Stretch.
+> > > The remaining hosts were formatted in the past with xfsprogs 3.2.1 or
+> > > older.
+> > > We have also a standby cluster in another datacenter with similar
+> > > configuration and hosts that received write traffic only but not read
+> > > traffic; the standby cluster hasn't experienced the bug and all
+> > > filesystems report the correct usage.
+> > > As far as I can tell the difference in xfsprogs version used for
+> > > formatting means defaults have changed, (e.g. crc is enabled on the
+> > > affected filesystems). Have you seen this issue before and do you know
+> > > how to fix it?
+> > > 
+> > > I would love to help debugging this issue, we've been detailing the
+> > > work done so far at https://phabricator.wikimedia.org/T199198
+> > 
+> > What kernel are the problematic nodes running?
+> > 
+> > From your repair output:
+> > 
+> > root@ms-be1040:~# xfs_repair -n /dev/sde1
+> > Phase 1 - find and verify superblock...
+> > Phase 2 - using internal log
+> >         - zero log...
+> >         - scan filesystem freespace and inode maps...
+> > sb_fdblocks 4461713825, counted 166746529
+> >         - found root inode chunk
+> > 
+> > that sb_fdblocks really is ~17T which indicates the problem
+> > really is on disk.
+> > 
+> > 4461713825
+> > 100001001111100000101100110100001
+> > 166746529
+> >      1001111100000101100110100001
+> > 
+> > you have a bit flipped in the problematic value... but you're running
+> > with CRCs so it seems unlikely to have been some sort of bit-rot (that,
+> > and the fact that you're hitting the same problem on multiple nodes).
+> > 
+> > Soooo not sure what to say right now other than "your bad value has an
+> > extra bit set for some reason."
+> 
+> Looks like the superblock verifier doesn't bounds check free block
+> or free/used inode counts.  Perhaps we should be checking this in
+> the verifier so in-memory corruption like this never makes it to
+> disk?
 
-I don't think it makes a big difference whether we change it now or later,
-but if Christoph feels that it addresses his concern about the compat_
-namespace being reused during the transition, doing it earlier would
-enable us to finish the remaining syscalls.
+A proposed patch and discussion thread is on the list:
+https://www.spinics.net/lists/linux-xfs/msg20645.html
 
-We are running a little late with the remaining syscalls for 4.19 as we
-now have an rc5. At this point we probably won't have time to finish
-the discussion about all of clock_adjtime, getrusage/waitid and getitimer(),
-but I'd really like to get utimensat, futex, sched_rr_get_interval,
-recvmmsg, sys_io_getevents, rt_sigtimedwait, ppoll and pselect6
-done for 4.19 so we can finalize the ABI for 4.20 along with doing
-the actual conversion.
+Thanks-
+Bill
 
-      Arnd
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
