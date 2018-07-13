@@ -1,49 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl0-f51.google.com ([209.85.160.51]:34804 "EHLO
-        mail-pl0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727455AbeGMSCB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Jul 2018 14:02:01 -0400
-Date: Fri, 13 Jul 2018 10:46:20 -0700
-From: "Luis R. Chamberlain" <mcgrof@kernel.org>
-Subject: Re: [ANN] oscheck: wrapper for fstests check.sh - tracking and
- working with baselines
-Message-ID: <20180713174620.GA12723@garbanzo.do-not-panic.com>
-References: <CAB=NE6UjcBgQhoQvZoWKXnPWoHVNMbeYdyGfYsHdgeA=L1M4wQ@mail.gmail.com>
- <CAOQ4uxgd+Z2ADUXdLk3odP9F6KOsrE4HfRpg-1dpP9HS-zbi=Q@mail.gmail.com>
- <20180713164420.GA3620@garbanzo.do-not-panic.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:58462 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729548AbeGMXHT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Jul 2018 19:07:19 -0400
+Date: Fri, 13 Jul 2018 15:50:33 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 5/6] xfs: maintain a sequence count for inode fork
+ manipulations
+Message-ID: <20180713225033.GO32415@magnolia>
+References: <20180712134910.30298-1-hch@lst.de>
+ <20180712134910.30298-6-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180713164420.GA3620@garbanzo.do-not-panic.com>
+In-Reply-To: <20180712134910.30298-6-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Chamberlain" <mcgrof@kernel.org>
-Cc: Amir Goldstein <amir73il@gmail.com>, Jeff Mahoney <jeffm@suse.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>, Sasha Levin <Alexander.Levin@microsoft.com>, Sasha Levin <levinsasha928@gmail.com>, Valentin Rothberg <valentinrothberg@gmail.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-The other thing I forgot to mention is annotations for failure rates.
+On Thu, Jul 12, 2018 at 03:49:09PM +0200, Christoph Hellwig wrote:
+> Add a simple 32-bit unsigned integer as the sequence count for
+> modifications to the extent list in the inode fork.  This will be
+> used to optimize away extent list lookups in the writeback code.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-For now I'll just indicate it as a ratio ratio as as part of the ending
-comment for an expunge entry. For instance I just ran into a failure
-with a set of stable patches for generic/475, however after re-running
-the test it succeeded. So the test does not fail always. I'd like to
-annotate this.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-I now have to go and re-test with the oscheck/naggy-check.sh a few
-times as follows:
+--D
 
-./naggy-check.sh -s xfs_nocrc_512 -f generic/475
-
-This will run the test in a loop until it fails, and I can use this
-as an initial failure rate hint to the tester. If I wanted to get
-more accurate I could use an average of few runs with naggy-check.sh.
-
-In practice I typically am only sure a test succeeds if it passes at
-least 1000 times (one can use -c 1000 on naggy-check.sh).
-
-I will also then have to go back to the stable kernel without patches
-and verify at least one failure was visible before. This will confirm
-this is indeed not a regression. Likewise I'll have to test this also
-with the other sections and see if this is also observed there.
-
-  Luis
+> ---
+>  fs/xfs/libxfs/xfs_iext_tree.c  | 4 ++++
+>  fs/xfs/libxfs/xfs_inode_fork.h | 1 +
+>  2 files changed, 5 insertions(+)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_iext_tree.c b/fs/xfs/libxfs/xfs_iext_tree.c
+> index b80c63faace2..cce7e8024f46 100644
+> --- a/fs/xfs/libxfs/xfs_iext_tree.c
+> +++ b/fs/xfs/libxfs/xfs_iext_tree.c
+> @@ -650,6 +650,7 @@ xfs_iext_insert(
+>  		cur->leaf->recs[i] = cur->leaf->recs[i - 1];
+>  	xfs_iext_set(cur_rec(cur), irec);
+>  	ifp->if_bytes += sizeof(struct xfs_iext_rec);
+> +	ifp->if_seq++;
+>  
+>  	trace_xfs_iext_insert(ip, cur, state, _RET_IP_);
+>  
+> @@ -869,6 +870,7 @@ xfs_iext_remove(
+>  		leaf->recs[i] = leaf->recs[i + 1];
+>  	xfs_iext_rec_clear(&leaf->recs[nr_entries]);
+>  	ifp->if_bytes -= sizeof(struct xfs_iext_rec);
+> +	ifp->if_seq++;
+>  
+>  	if (cur->pos == 0 && nr_entries > 0) {
+>  		xfs_iext_update_node(ifp, offset, xfs_iext_leaf_key(leaf, 0), 1,
+> @@ -983,6 +985,8 @@ xfs_iext_update_extent(
+>  	trace_xfs_bmap_pre_update(ip, cur, state, _RET_IP_);
+>  	xfs_iext_set(cur_rec(cur), new);
+>  	trace_xfs_bmap_post_update(ip, cur, state, _RET_IP_);
+> +
+> +	ifp->if_seq++;
+>  }
+>  
+>  /*
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+> index 1492143371f3..f20b2468ca35 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.h
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.h
+> @@ -14,6 +14,7 @@ struct xfs_dinode;
+>   */
+>  struct xfs_ifork {
+>  	int			if_bytes;	/* bytes in if_u1 */
+> +	unsigned int		if_seq;
+>  	struct xfs_btree_block	*if_broot;	/* file's incore btree root */
+>  	short			if_broot_bytes;	/* bytes allocated for root */
+>  	unsigned char		if_flags;	/* per-fork flags */
+> -- 
+> 2.18.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
