@@ -1,48 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:33732 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728140AbeGMNYj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 13 Jul 2018 09:24:39 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id CD014818F71A
-        for <linux-xfs@vger.kernel.org>; Fri, 13 Jul 2018 13:10:03 +0000 (UTC)
-Received: from localhost.localdomain.com (ovpn-121-59.rdu2.redhat.com [10.10.121.59])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id AC6FD2026D6B
-        for <linux-xfs@vger.kernel.org>; Fri, 13 Jul 2018 13:10:03 +0000 (UTC)
-From: Bill O'Donnell <billodo@redhat.com>
-Subject: [PATCH] libxfs: add more bounds checking to sb sanity checks
-Date: Fri, 13 Jul 2018 08:10:03 -0500
-Message-Id: <20180713131003.31121-1-billodo@redhat.com>
+Received: from mail-pl0-f51.google.com ([209.85.160.51]:34804 "EHLO
+        mail-pl0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727455AbeGMSCB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Jul 2018 14:02:01 -0400
+Date: Fri, 13 Jul 2018 10:46:20 -0700
+From: "Luis R. Chamberlain" <mcgrof@kernel.org>
+Subject: Re: [ANN] oscheck: wrapper for fstests check.sh - tracking and
+ working with baselines
+Message-ID: <20180713174620.GA12723@garbanzo.do-not-panic.com>
+References: <CAB=NE6UjcBgQhoQvZoWKXnPWoHVNMbeYdyGfYsHdgeA=L1M4wQ@mail.gmail.com>
+ <CAOQ4uxgd+Z2ADUXdLk3odP9F6KOsrE4HfRpg-1dpP9HS-zbi=Q@mail.gmail.com>
+ <20180713164420.GA3620@garbanzo.do-not-panic.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180713164420.GA3620@garbanzo.do-not-panic.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Luis R. Chamberlain" <mcgrof@kernel.org>
+Cc: Amir Goldstein <amir73il@gmail.com>, Jeff Mahoney <jeffm@suse.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>, Sasha Levin <Alexander.Levin@microsoft.com>, Sasha Levin <levinsasha928@gmail.com>, Valentin Rothberg <valentinrothberg@gmail.com>
 
-Current sb verifier doesn't check bounds on sb_fdblocks and sb_ifree.
-Add sanity checks for these parameters.
+The other thing I forgot to mention is annotations for failure rates.
 
-Signed-off-by: Bill O'Donnell <billodo@redhat.com>
----
- fs/xfs/libxfs/xfs_sb.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+For now I'll just indicate it as a ratio ratio as as part of the ending
+comment for an expunge entry. For instance I just ran into a failure
+with a set of stable patches for generic/475, however after re-running
+the test it succeeded. So the test does not fail always. I'd like to
+annotate this.
 
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index 350119eeaecb..cdede769ab88 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -261,7 +261,9 @@ xfs_mount_validate_sb(
- 	    sbp->sb_dblocks == 0					||
- 	    sbp->sb_dblocks > XFS_MAX_DBLOCKS(sbp)			||
- 	    sbp->sb_dblocks < XFS_MIN_DBLOCKS(sbp)			||
--	    sbp->sb_shared_vn != 0)) {
-+	    sbp->sb_shared_vn != 0					||
-+	    sbp->sb_fdblocks > sbp->sb_dblocks				||
-+	    sbp->sb_ifree > sbp->sb_icount)) {
- 		xfs_notice(mp, "SB sanity check failed");
- 		return -EFSCORRUPTED;
- 	}
--- 
-2.17.1
+I now have to go and re-test with the oscheck/naggy-check.sh a few
+times as follows:
 
+./naggy-check.sh -s xfs_nocrc_512 -f generic/475
+
+This will run the test in a loop until it fails, and I can use this
+as an initial failure rate hint to the tester. If I wanted to get
+more accurate I could use an average of few runs with naggy-check.sh.
+
+In practice I typically am only sure a test succeeds if it passes at
+least 1000 times (one can use -c 1000 on naggy-check.sh).
+
+I will also then have to go back to the stable kernel without patches
+and verify at least one failure was visible before. This will confirm
+this is indeed not a regression. Likewise I'll have to test this also
+with the other sections and see if this is also observed there.
+
+  Luis
