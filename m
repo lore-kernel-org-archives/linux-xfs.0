@@ -1,169 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:38534 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729973AbeGQX7D (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Jul 2018 19:59:03 -0400
-Received: from sjc00ib2.hgst.com ([199.255.44.5] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1ffZKB-0001Db-Jt
-        for linux-xfs@vger.kernel.org; Tue, 17 Jul 2018 23:24:07 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/6] xfs: remove if_real_bytes
-Date: Tue, 17 Jul 2018 16:24:00 -0700
-Message-Id: <20180717232405.18511-2-hch@lst.de>
-In-Reply-To: <20180717232405.18511-1-hch@lst.de>
-References: <20180717232405.18511-1-hch@lst.de>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:54749 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727999AbeGMMy3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Jul 2018 08:54:29 -0400
+Received: by mail-wm0-f66.google.com with SMTP id i139-v6so8658323wmf.4
+        for <linux-xfs@vger.kernel.org>; Fri, 13 Jul 2018 05:39:58 -0700 (PDT)
+Date: Fri, 13 Jul 2018 14:39:55 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH RFC 7/8] xfs: return non-zero blocks for inline data
+Message-ID: <20180713123955.xbdleb3crazkjnt3@odin.usersys.redhat.com>
+References: <1530846750-6686-1-git-send-email-shan.hai@oracle.com>
+ <1530846750-6686-8-git-send-email-shan.hai@oracle.com>
+ <20180711130825.dkreolul3mlvtf3b@odin.usersys.redhat.com>
+ <2e421e56-7463-3ac1-2eac-fa72ee8cd3eb@oracle.com>
+ <fd877bb3-641f-b70c-a40e-e4287339ed53@oracle.com>
+ <20180712013147.GK32415@magnolia>
+ <e70ed6e4-a889-87ac-d25c-db2abc0e61a1@oracle.com>
+ <20180712090858.u4aodoaf7nmhe3dt@odin.usersys.redhat.com>
+ <3ed378e1-8ef3-ddff-7d5f-adf3be6abda8@oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <3ed378e1-8ef3-ddff-7d5f-adf3be6abda8@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Shan Hai <shan.hai@oracle.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-The field is only used for asserts, and to track if we really need to do
-realloc when growing the inode fork data.  But the krealloc function
-already performs this check internally, so there is no need to keep track
-of the real allocation size.
+> > > > > > > Inodes with inlined data should actually report 0 blocks, otherwise,
+> > > > > > > many
+> > > > > > > applications which actually relies on the amount of allocated blocks
+> > > > > > > for each
+> > > > > > > file will misbehave.
+> > > > > > > 
+> > > > > > Man ls(1) reads:
+> > > > > > 
+> > > > > > -s, --size
+> > > > > >       print the allocated size of each file, in blocks
+> > > > > > 
+> > > > > > So the 'ls -ls' would report 0 blocks when the data is inlined, a file
+> > > > > > holds data
+> > > > > > but it consumes 0 blocks, how is it possible :),
+> > It is possible because the file doesn't consume data blocks at all.
+> > 
+> > > > > This patch is inspired by the
+> > > > > upstream commit 9206c561554c9 (ext4: return non-zero st_blocks for inline
+> > > > > data),
+> > > > > please refer it for details.
+> > > > The fact that we're following precedent set by ext4 is worth mentioning
+> > > > in the commit message.
+> > The fact another filesystem use this trick, doesn't necessarily means it's
+> > correct. Ext4 added it to workaround a issue with tar, which actually skip zero
+> > blocks files. I honestly think it is wrong, we are working around a user space
+> > problem, which is wrongly assuming a 0-block file is empty.
+> 
+> The assumption which deemed 0 block files as empty holds true until the
+> kernel broke the
+> rules and introduced inline data feature, so the user space should not be
+> blamed in my opinion.
 
-This will free space in the inode fork for keeping a sequence counter of
-changes to the extent list.
+Did we? I couldn't find any interface, design, or whatever saying that userspace
+can safely assume a zero block file don't have data there and can be ignored,
+in fact, the link I posted previously already shows how tar people were not sure
+if they should assume a zero block file could be ignored. So, in fact, we didn't
+break anything, because as far as I know, nobody and no standard said an
+existing zero block file could be safely ignored, assuming it contains no data
+at all. Such thing might exist, but I'm not aware of.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_inode_fork.c | 19 ++++---------------
- fs/xfs/libxfs/xfs_inode_fork.h |  1 -
- fs/xfs/xfs_inode.c             |  3 +--
- fs/xfs/xfs_inode_item.c        |  4 ----
- 4 files changed, 5 insertions(+), 22 deletions(-)
+> 
+> > A quick search led me to this thread from tar project:
+> > 
+> > http://www.mail-archive.com/bug-tar@gnu.org/msg04209.html
+> > 
+> > 
+> > Anyway, as I said, my opinion only, I do really think reporting a single block
+> > used by inlined files is wrong, and if we are going to do that, we should at
+> > least properly document this is being done to workaround user space issues,
+> > while, in the meantime, it might create others.
+> 
+> Faking block usage count is not quite correct one but the sad fact is that
+> there are applications
+> out there which are designed and implemented on the assumption that non-zero
+> length files
+> consume at least a block, so I don't think breaking the user space suddenly
+> by reporting 0 blocks
+> for inline data is not a correct solution either.
+> 
 
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index 183ec0cb8921..dee85b0f8846 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -158,7 +158,6 @@ xfs_init_local_fork(
- 	}
- 
- 	ifp->if_bytes = size;
--	ifp->if_real_bytes = real_size;
- 	ifp->if_flags &= ~(XFS_IFEXTENTS | XFS_IFBROOT);
- 	ifp->if_flags |= XFS_IFINLINE;
- }
-@@ -226,7 +225,6 @@ xfs_iformat_extents(
- 		return -EFSCORRUPTED;
- 	}
- 
--	ifp->if_real_bytes = 0;
- 	ifp->if_bytes = 0;
- 	ifp->if_u1.if_root = NULL;
- 	ifp->if_height = 0;
-@@ -317,7 +315,6 @@ xfs_iformat_btree(
- 	ifp->if_flags &= ~XFS_IFEXTENTS;
- 	ifp->if_flags |= XFS_IFBROOT;
- 
--	ifp->if_real_bytes = 0;
- 	ifp->if_bytes = 0;
- 	ifp->if_u1.if_root = NULL;
- 	ifp->if_height = 0;
-@@ -501,7 +498,6 @@ xfs_idata_realloc(
- 		 */
- 		real_size = roundup(new_size, 4);
- 		if (ifp->if_u1.if_data == NULL) {
--			ASSERT(ifp->if_real_bytes == 0);
- 			ifp->if_u1.if_data = kmem_alloc(real_size,
- 							KM_SLEEP | KM_NOFS);
- 		} else {
-@@ -509,15 +505,12 @@ xfs_idata_realloc(
- 			 * Only do the realloc if the underlying size
- 			 * is really changing.
- 			 */
--			if (ifp->if_real_bytes != real_size) {
--				ifp->if_u1.if_data =
--					kmem_realloc(ifp->if_u1.if_data,
--							real_size,
--							KM_SLEEP | KM_NOFS);
--			}
-+			ifp->if_u1.if_data =
-+				kmem_realloc(ifp->if_u1.if_data,
-+						real_size,
-+						KM_SLEEP | KM_NOFS);
- 		}
- 	}
--	ifp->if_real_bytes = real_size;
- 	ifp->if_bytes = new_size;
- 	ASSERT(ifp->if_bytes <= XFS_IFORK_SIZE(ip, whichfork));
- }
-@@ -543,17 +536,13 @@ xfs_idestroy_fork(
- 	 */
- 	if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL) {
- 		if (ifp->if_u1.if_data != NULL) {
--			ASSERT(ifp->if_real_bytes != 0);
- 			kmem_free(ifp->if_u1.if_data);
- 			ifp->if_u1.if_data = NULL;
--			ifp->if_real_bytes = 0;
- 		}
- 	} else if ((ifp->if_flags & XFS_IFEXTENTS) && ifp->if_height) {
- 		xfs_iext_destroy(ifp);
- 	}
- 
--	ASSERT(ifp->if_real_bytes == 0);
--
- 	if (whichfork == XFS_ATTR_FORK) {
- 		kmem_zone_free(xfs_ifork_zone, ip->i_afp);
- 		ip->i_afp = NULL;
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-index 781b1603df5e..46242052aad0 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.h
-+++ b/fs/xfs/libxfs/xfs_inode_fork.h
-@@ -14,7 +14,6 @@ struct xfs_dinode;
-  */
- typedef struct xfs_ifork {
- 	int			if_bytes;	/* bytes in if_u1 */
--	int			if_real_bytes;	/* bytes allocated in if_u1 */
- 	struct xfs_btree_block	*if_broot;	/* file's incore btree root */
- 	short			if_broot_bytes;	/* bytes allocated for root */
- 	unsigned char		if_flags;	/* per-fork flags */
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 7b2694d3901a..d6cd545f5d1d 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -927,7 +927,7 @@ xfs_ialloc(
- 	case S_IFLNK:
- 		ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
- 		ip->i_df.if_flags = XFS_IFEXTENTS;
--		ip->i_df.if_bytes = ip->i_df.if_real_bytes = 0;
-+		ip->i_df.if_bytes = 0;
- 		ip->i_df.if_u1.if_root = NULL;
- 		break;
- 	default:
-@@ -1872,7 +1872,6 @@ xfs_inactive(
- 	 * to clean up here.
- 	 */
- 	if (VFS_I(ip)->i_mode == 0) {
--		ASSERT(ip->i_df.if_real_bytes == 0);
- 		ASSERT(ip->i_df.if_broot_bytes == 0);
- 		return;
- 	}
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 2389c34c172d..fa1c4fe2ffbf 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -194,8 +194,6 @@ xfs_inode_item_format_data_fork(
- 			 * to be there by xfs_idata_realloc().
- 			 */
- 			data_bytes = roundup(ip->i_df.if_bytes, 4);
--			ASSERT(ip->i_df.if_real_bytes == 0 ||
--			       ip->i_df.if_real_bytes >= data_bytes);
- 			ASSERT(ip->i_df.if_u1.if_data != NULL);
- 			ASSERT(ip->i_d.di_size > 0);
- 			xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_ILOCAL,
-@@ -280,8 +278,6 @@ xfs_inode_item_format_attr_fork(
- 			 * to be there by xfs_idata_realloc().
- 			 */
- 			data_bytes = roundup(ip->i_afp->if_bytes, 4);
--			ASSERT(ip->i_afp->if_real_bytes == 0 ||
--			       ip->i_afp->if_real_bytes >= data_bytes);
- 			ASSERT(ip->i_afp->if_u1.if_data != NULL);
- 			xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_IATTR_LOCAL,
- 					ip->i_afp->if_u1.if_data,
+I understand, and yeah, we fell into some kind of chicken-egg problem, I still
+do think though there are not that much applications out there assuming
+zero block files are empty, and working around bad coded application which make
+assumptions they are not supposed to make, is as bad as breaking applications
+for not following standards, which will end up punishing applications which do
+not make assumptions they should.
+
+The biggest drawback I can see by reporting 0 blocks allocated for inline files,
+might be while estimating space needed for a copy, or a backup for example,
+where, if the target filesystem does not support inlined data, 0 blocks files
+will occupy at least a block on the target filesystem, but the same holds true
+when source and target filesystems have different block sizes.
+
+Anyway, that's all the arguments I have against faking block usage for inlined
+files, but the final decision is not mine :)
+
+Cheers
+
 -- 
-2.18.0
-
+Carlos
