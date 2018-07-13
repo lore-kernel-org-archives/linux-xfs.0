@@ -1,131 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:6482 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730758AbeGRABR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Jul 2018 20:01:17 -0400
-Date: Wed, 18 Jul 2018 09:26:16 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] libxfs: add more bounds checking to sb sanity checks
-Message-ID: <20180717232616.GC19934@dastard>
-References: <20180713131003.31121-1-billodo@redhat.com>
- <20180716192655.27792-1-billodo@redhat.com>
- <20180717170654.GR32415@magnolia>
- <20180717171714.GA13114@redhat.com>
- <20180717191253.GA26736@redhat.com>
- <20180717203301.GW32415@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:48392 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2387696AbeGMDL1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 12 Jul 2018 23:11:27 -0400
+Date: Thu, 12 Jul 2018 21:58:53 -0500
+From: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: Re: [PATCH 5/6] iomap: add a page_done callback
+Message-ID: <20180713025853.xugxx6zte3kvvqjy@merlin>
+References: <20180619164137.13720-1-hch@lst.de>
+ <20180619164137.13720-6-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180717203301.GW32415@magnolia>
+In-Reply-To: <20180619164137.13720-6-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Bill O'Donnell <billodo@redhat.com>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com, linux-ext4@vger.kernel.org
 
-On Tue, Jul 17, 2018 at 01:33:01PM -0700, Darrick J. Wong wrote:
-> On Tue, Jul 17, 2018 at 02:12:53PM -0500, Bill O'Donnell wrote:
-> > On Tue, Jul 17, 2018 at 12:17:14PM -0500, Bill O'Donnell wrote:
-> > > On Tue, Jul 17, 2018 at 10:06:54AM -0700, Darrick J. Wong wrote:
-> > > > On Mon, Jul 16, 2018 at 02:26:55PM -0500, Bill O'Donnell wrote:
-> > > > > Current sb verifier doesn't check bounds on sb_fdblocks and sb_ifree.
-> > > > > Add sanity checks for these parameters.
-> > > > > 
-> > > > > Signed-off-by: Bill O'Donnell <billodo@redhat.com>
-> > > > > ---
-> > > > > v2: make extra sanity checks exclusive to writes (allow read)
-> > > > > 
-> > > > >  fs/xfs/libxfs/xfs_sb.c | 22 +++++++++++++++++-----
-> > > > >  1 file changed, 17 insertions(+), 5 deletions(-)
-> > > > > 
-> > > > > diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> > > > > index 350119eeaecb..6a98ec68e8ad 100644
-> > > > > --- a/fs/xfs/libxfs/xfs_sb.c
-> > > > > +++ b/fs/xfs/libxfs/xfs_sb.c
-> > > > > @@ -104,7 +104,8 @@ xfs_mount_validate_sb(
-> > > > >  	xfs_mount_t	*mp,
-> > > > >  	xfs_sb_t	*sbp,
-> > > > >  	bool		check_inprogress,
-> > > > > -	bool		check_version)
-> > > > > +	bool		check_version,
-> > > > > +	bool		write_flag)
-> > > > 
-> > > > I notice that check_version and write_flag are always xor -- either
-> > > > we're reading the sb and set check_version, or we're writing the sb and
-> > > > set write_flag.  Perhaps we can combine these two as write_flag?
-> > > > 
-> > > > if (check_version)
-> > > > 	check version stuff...
-> > > > 
-> > > > becomes:
-> > > > 
-> > > > if (!write_flag)
-> > > > 	check version stuff...
-> > > > 
-> > > > and we only have to pass around one flag.
-> > > 
-> > > I suppose that makes sense, but my notion is that 2 unique flags
-> > > is preferable for clarity and mutual exclusiveness for anyone doing
-> > > subsequent patches.
-> > 
-> > I'm all for simplifying and saving stack space, but is it ok
-> > to turn a single purpose flag into a dual purpose one?
+On 18:41 19/06, Christoph Hellwig wrote:
+> This will be used by gfs2 to attach data to transactions for the journaled
+> data mode.  But the concept is generic enough that we might be able to
+> use it for other purposes like encryption/integrity post-processing in the
+> future.
 > 
-> That depends on the flag involved -- if they're mutually exclusive, then
-> I think it's ok to do that, so long as there's a comment nearby to
-> document the argument semantics.
+> Based on a patch from Andreas Gruenbacher.
 > 
-> In the case of this particular flag (check_version) it is set by the
-> read verifier so that we reject versions that we don't recognize; it is
-> not set by the write verifier because we don't change the v5 feature
-> masks at runtime* and we never write anything if the fs won't mount.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/iomap.c            | 3 +++
+>  include/linux/iomap.h | 9 +++++++++
+>  2 files changed, 12 insertions(+)
 > 
-> For write_flag, the read verifier never sets it because we have to be
-> able to mount the fs in case the log contains an sb with an updated set
-> of summary counters or for lazysbcount filesystems we'll recalculate the
-> counter after recovery; and we set write_flag at write time, obviously.
-> 
-> So having come this far, you could meld them into a single parameter so
-> long as you note that write_flag == true means that we're writing the fs
-> and write_flag == false means we want to check the v5 feature flags at
-> mount time to reject features bits that we don't recognize.
-> 
-> * Oh, but what about that pesky asterisk?  My sense of paranoia wonders
-> why we don't check the v5 feature flags on write too, just in case
-> memory gets corrupted.  I think the reason is that we don't allow
-> feature flag changes at runtime, we'll check the changes at ioctl time
-> if we ever do support runtime feature flag updates, and we implicitly
-> trust memory not to corrupt memory on us (ha ha ha).
-> 
-> At this point my tldr opinion is "seems fine to me, let's see if any of
-> the lurking vacationers have anything to say?  We're still ~3 weeks to
-> the next merge window.
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index 4aecd7c5dbd8..a1f71e64ea49 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -201,6 +201,9 @@ iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
+>  				copied, page, NULL);
+>  	}
+>  
+> +	if (iomap->page_done)
+> +		iomap->page_done(inode, pos, copied, page, iomap);
+> +
+>  	if (ret < len)
+>  		iomap_write_failed(inode, pos, len);
+>  	return ret;
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index 10d6cff7f69a..45f43865b0f0 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -9,6 +9,7 @@ struct fiemap_extent_info;
+>  struct inode;
+>  struct iov_iter;
+>  struct kiocb;
+> +struct page;
+>  struct vm_area_struct;
+>  struct vm_fault;
+>  
+> @@ -56,6 +57,14 @@ struct iomap {
+>  	struct block_device	*bdev;	/* block device for I/O */
+>  	struct dax_device	*dax_dev; /* dax_dev for dax operations */
+>  	void			*inline_data;
+> +
+> +	/*
+> +	 * Called when finished processing a page in the mapping returned in
+> +	 * this iomap.  At least for now this is only supported in the buffered
+> +	 * write path.
+> +	 */
+> +	void (*page_done)(struct inode *inode, loff_t pos, unsigned copied,
+> +			struct page *page, struct iomap *iomap);
+>  };
+>  
 
-My initial reaction was "urk!". I think we should consider putting
-this check in xfs_sb_verify_write(), not xfs_mount_validate_sb().
-We've kinda taken all the mount time checks (which have to be
-liberal because we can a) be handed non-XFS filesystems, and b)
-handed filesystems that need recovery) and applied them at write
-time, too, then special cased the read side primary superblock stuff
-with a flag.
+Would it be better if we keep this function as a part of iomap_ops? I
+know gfs2 sets this conditionally, but we can always check the condition
+in the function assigned to page_done(). It would keep all the functions
+in one place.
 
-The thing is, write time checks (obviously) need to be stricter than
-the mount time checks, and we have to check different things. Hence
-I think we need to do slightly more work here to clean this up. i.e.
-stop calling xfs_sb_verify() in xfs_sb_write_verify() and open code
-it instead, then add all these write-only verifier cases into
-xfs_sb_write_verify().
-
-Similarly, open code xfs_sb_verify() and move all the read-side
-checks into xfs_sb_read_verify().
-
-Then rename xfs_mount_validate_sb() to xfs_sb_verify_common(), as it
-only contains the checks that both the read and write side do, and
-it doesn't need any extra parameters at all...
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Goldwyn
+
