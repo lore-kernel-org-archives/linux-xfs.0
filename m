@@ -1,161 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:38732 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729720AbeGQUWp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Jul 2018 16:22:45 -0400
-Date: Tue, 17 Jul 2018 12:48:18 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [RESEND][PATCH v4 0/2] vfs: better dedupe permission check
-Message-ID: <20180717194818.GV32415@magnolia>
-References: <20180717190906.31073-1-mfasheh@suse.de>
+Received: from mail-pf0-f177.google.com ([209.85.192.177]:41514 "EHLO
+        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731342AbeGMVG7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Jul 2018 17:06:59 -0400
+Date: Fri, 13 Jul 2018 13:50:38 -0700
+From: "Luis R. Chamberlain" <mcgrof@kernel.org>
+Subject: Re: [ANN] oscheck: wrapper for fstests check.sh - tracking and
+ working with baselines
+Message-ID: <20180713205038.GB3620@garbanzo.do-not-panic.com>
+References: <CAB=NE6UjcBgQhoQvZoWKXnPWoHVNMbeYdyGfYsHdgeA=L1M4wQ@mail.gmail.com>
+ <CAOQ4uxgd+Z2ADUXdLk3odP9F6KOsrE4HfRpg-1dpP9HS-zbi=Q@mail.gmail.com>
+ <20180713164420.GA3620@garbanzo.do-not-panic.com>
+ <e4485816-9c42-c798-0a80-ece79948ae0c@suse.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180717190906.31073-1-mfasheh@suse.de>
+In-Reply-To: <e4485816-9c42-c798-0a80-ece79948ae0c@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Mark Fasheh <mfasheh@suse.de>
-Cc: Al Viro <viro@ZenIV.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, Adam Borowski <kilobyte@angband.pl>, David Sterba <dsterba@suse.cz>
+To: Jeff Mahoney <jeffm@suse.com>
+Cc: "Luis R. Chamberlain" <mcgrof@kernel.org>, Amir Goldstein <amir73il@gmail.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>, Sasha Levin <Alexander.Levin@microsoft.com>, Sasha Levin <levinsasha928@gmail.com>, Valentin Rothberg <valentinrothberg@gmail.com>
 
-On Tue, Jul 17, 2018 at 12:09:04PM -0700, Mark Fasheh wrote:
-> Hi Al,
+On Fri, Jul 13, 2018 at 04:40:39PM -0400, Jeff Mahoney wrote:
+> On 7/13/18 12:44 PM, Luis R. Chamberlain wrote:
+> > On Fri, Jul 13, 2018 at 11:39:55AM +0300, Amir Goldstein wrote:
+> >> On Fri, Jul 13, 2018 at 5:43 AM, Luis R. Chamberlain <mcgrof@kernel.org> wrote:
+> >>> I had volunteered at the last LSF/MM to help with the stable work for
+> >>> XFS. To help with this, as part of this year's SUSE Hackweek, I've
+> >>> first generalized my own set of scripts to help track a baseline of
+> >>> results from fstests [0], and extended it to be able to easily ramp up
+> >>> with fstests on different distributions, and I've also created a
+> >>> respective baseline of results against these distributions as a
+> >>> further example of how these scripts and wrapper framework can be used
+> >>
+> >> Hi Luis!
+> >>
+> >> Thanks a lot for doing this work!
+> >>
+> >> Will take me some time to try it out, but see some questions below...
+> >>
+> >>> [1]. The distributions currently supported are:
+> >>>
+> >>>   * Debian testing
+> >>>   * OpenSUSE Leap 15.0
+> >>>   * Fedora 28
+> >>>
+> >>> The stable work starts with creating a baseline for v4.17.3. The
+> >>> results are visible as a result of expunge files which categorize the
+> >>> failures for the different sections tested.
+> >>
+> >> So the only "bad" indication is a test failure?
+> > 
+> > That is correct to a certain degree, ie, if xfsprogs / the kernel
+> > config could run it we can assume it passed.
+> > 
+> >> How about indication about a test that started to pass since baseline?
+> > 
+> > Indeed, that is desirable.
+> > 
+> > We have a few options. One is share the entire results directory for
+> > a release / section, however this is rather big. For instance for a
+> > full v4.17.3 run this is about 292 MiB alone. I don't think this
+> > scales. IMHO lgogs should only be supplied onto bug reports, not this
+> > framework.
+> > 
+> > The other option is to use -R xunit to generate the report in the
+> > specified unit. I have not yet run this, or tried it, however IIRC
+> > it does record success runs? Does it also keep logs? Hopefully not.  I'm
+> > assuming it does not as of yet. I should note if one hits CTRL-C in the
+> > middle one does not get the results. An alternative was being worked on
+> > by Jeff which would sprinkle IIRC .ok files for tests which succeed,
+> > then you could just scrape the results directory to determine which
+> > tests did pass -- but you run into the same size problem as above.
 > 
-> The following patches fix a couple of issues with the permission check
-> we do in vfs_dedupe_file_range(). I sent them out for a few times now,
-> a changelog is attached. If they look ok to you, I'd appreciate them
-> being pushed upstream.
+> Eryu didn't like that idea, so I abandoned it.  What I have now is a -R
+> files mode that creates a bunch of files with the goal of just archiving
+> the results for later comparison or import into a results db.
 > 
-> You can get them from git if you like:
-> 
-> git pull https://github.com/markfasheh/linux dedupe-perms
-> 
-> I also have a set of patches against 4.17 if you prefer. The code and
-> testing are identical:
-> 
-> git pull https://github.com/markfasheh/linux dedupe-perms-v4.17
-> 
-> 
-> The first patch expands our check to allow dedupe of a file if the
-> user owns it or otherwise would be allowed to write to it.
-> 
-> Current behavior is that we'll allow dedupe only if:
-> 
-> - the user is an admin (root)
-> - the user has the file open for write
-> 
-> This makes it impossible for a user to dedupe their own file set
-> unless they do it as root, or ensure that all files have write
-> permission. There's a couple of duperemove bugs open for this:
-> 
-> https://github.com/markfasheh/duperemove/issues/129
-> https://github.com/markfasheh/duperemove/issues/86
-> 
-> The other problem we have is also related to forcing the user to open
-> target files for write - A process trying to exec a file currently
-> being deduped gets ETXTBUSY. The answer (as above) is to allow them to
-> open the targets ro - root can already do this. There was a patch from
-> Adam Borowski to fix this back in 2016:
-> 
-> https://lkml.org/lkml/2016/7/17/130
-> 
-> which I have incorporated into my changes.
-> 
-> 
-> The 2nd patch fixes our return code for permission denied to be
-> EPERM. For some reason we're returning EINVAL - I think that's
-> probably my fault. At any rate, we need to be returning something
-> descriptive of the actual problem, otherwise callers see EINVAL and
-> can't really make a valid determination of what's gone wrong.
-> 
-> This has also popped up in duperemove, mostly in the form of cryptic
-> error messages. Because this is a code returned to userspace, I did
-> check the other users of extent-same that I could find. Both 'bees'
-> and 'rust-btrfs' do the same as duperemove and simply report the error
-> (as they should).
-> 
-> Please apply.
-> 
-> Thanks,
->   --Mark
-> 
-> Changes from V3 to V4:
-> - Add a patch (below) to ioctl_fideduperange.2 explaining our
->   changes. I will send this patch once the kernel update is
->   accepted. Thanks to Darrick Wong for this suggestion.
-> - V3 discussion: https://www.spinics.net/lists/linux-btrfs/msg79135.html
-> 
-> Changes from V2 to V3:
-> - Return bool from allow_file_dedupe
-> - V2 discussion: https://www.spinics.net/lists/linux-btrfs/msg78421.html
-> 
-> Changes from V1 to V2:
-> - Add inode_permission check as suggested by Adam Borowski
-> - V1 discussion: https://marc.info/?l=linux-xfs&m=152606684017965&w=2
-> 
-> 
-> From: Mark Fasheh <mfasheh@suse.de>
-> 
-> [PATCH] ioctl_fideduperange.2: clarify permission requirements
-> 
-> dedupe permission checks were recently relaxed - update our man page to
-> reflect those changes.
-> 
-> Signed-off-by: Mark Fasheh <mfasheh@suse.de>
-> ---
->  man2/ioctl_fideduperange.2 | 8 +++++---
+> For each test, there are:
+> $seq.result.start.txt - start timestamp
+> $seq.result.stop.txt - stop timestamp
+> $seq.result.result.txt - simple result: pass/fail/expunged/notrun
+> $seq.result.detail.txt - contains the contents of $seq.notrun/$seq.expunged
+> $seq.result.{dmesg,kmemleak,full,check}.txt - contains the contents of
+> the corresponding files
 
-Mmm, man page update, thank you for editing the documentation too!
+This is sexy, it also gives the person interpretting the results to
+opt-in or not for the actuall full log of the output. You pick and
+choose what info you want.
 
-Please cc linux-api and Michael Kerrisk so this can go upstream.
+This is indeed nice.
 
->  1 file changed, 5 insertions(+), 3 deletions(-)
-> 
-> diff --git a/man2/ioctl_fideduperange.2 b/man2/ioctl_fideduperange.2
-> index 84d20a276..7dea0323d 100644
-> --- a/man2/ioctl_fideduperange.2
-> +++ b/man2/ioctl_fideduperange.2
-> @@ -105,9 +105,11 @@ The field
->  must be zero.
->  During the call,
->  .IR src_fd
-> -must be open for reading and
-> +must be open for reading.
->  .IR dest_fd
-> -must be open for writing.
-> +can be open for writing, or reading. If
+> As an aside, IIRC, -R xunit doesn't catch all kinds of failures.  Also,
+> as you mentioned, if it's interrupted, all results are lost.  This makes
+> it difficult to identify test failures that crashed or hung the test system.
 
-Manpages usually start each new sentence on its own line (though I defer
-to mkerrisk on that).
+OK so indeed not my preference.
 
-> +.IR dest_fd
-> +is open for reading, the user should be have write access to the file.
+> I have some basic scripts that parse the output and generate an HTML
+> report/table (and it does do what Amir asks WRT tests that started passing).
 
-"...the user must have write access..."
+These scripts, are they for parsing your new -R files output?
 
->  The combined size of the struct
->  .IR file_dedupe_range
->  and the struct
-> @@ -185,8 +187,8 @@ This can appear if the filesystem does not support deduplicating either file
->  descriptor, or if either file descriptor refers to special inodes.
->  .TP
->  .B EPERM
-> +This will be returned if the user lacks permission to dedupe the file referenced by
->  .IR dest_fd
-> -is immutable.
+I take it the patches are still being worked on?
 
-(Did the period fall off the end of the sentence here?  I am bad at
-reading manpage markup...)
-
---D
-
->  .TP
->  .B ETXTBSY
->  One of the files is a swap file.
-> -- 
-> 2.15.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+  Luis
