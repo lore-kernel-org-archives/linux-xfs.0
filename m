@@ -1,69 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:53916 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726412AbeGNKgB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 14 Jul 2018 06:36:01 -0400
-Received: by mail-wm0-f67.google.com with SMTP id s9-v6so3535805wmh.3
-        for <linux-xfs@vger.kernel.org>; Sat, 14 Jul 2018 03:17:25 -0700 (PDT)
-Date: Sat, 14 Jul 2018 12:17:22 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH] libxfs: Fix a couple of sparse complaints
-Message-ID: <20180714101722.3u2sjlhybfe5b7gl@odin.usersys.redhat.com>
-References: <20180713091831.30250-1-cmaiolino@redhat.com>
- <CAOQ4uxjUGAGhPAL6EOZ_SmpfKyTL8Sty2Yd7NdAEBM-PQPP1tQ@mail.gmail.com>
+Received: from mail-pl0-f67.google.com ([209.85.160.67]:45531 "EHLO
+        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725978AbeGNMI3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 14 Jul 2018 08:08:29 -0400
+Date: Sat, 14 Jul 2018 19:49:35 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH 0/7] fstests: fix quota failures on xfs
+Message-ID: <20180714114935.GE2830@desktop>
+References: <153067984748.28393.1595618163831671652.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxjUGAGhPAL6EOZ_SmpfKyTL8Sty2Yd7NdAEBM-PQPP1tQ@mail.gmail.com>
+In-Reply-To: <153067984748.28393.1595618163831671652.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Fri, Jul 13, 2018 at 01:02:24PM +0300, Amir Goldstein wrote:
-> On Fri, Jul 13, 2018 at 12:18 PM, Carlos Maiolino <cmaiolino@redhat.com> wrote:
-> > No significant changes, just silence a couple of sparse errors.
-> >
-> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_ag_resv.h | 2 +-
-> >  fs/xfs/libxfs/xfs_ialloc.c  | 2 +-
-> >  2 files changed, 2 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/fs/xfs/libxfs/xfs_ag_resv.h b/fs/xfs/libxfs/xfs_ag_resv.h
-> > index 4619b554ee90..dc953fc84b2f 100644
-> > --- a/fs/xfs/libxfs/xfs_ag_resv.h
-> > +++ b/fs/xfs/libxfs/xfs_ag_resv.h
-> > @@ -28,7 +28,7 @@ xfs_ag_resv_rmapbt_alloc(
-> >         struct xfs_mount        *mp,
-> >         xfs_agnumber_t          agno)
-> >  {
-> > -       struct xfs_alloc_arg    args = {0};
-> > +       struct xfs_alloc_arg    args = { NULL };
+On Tue, Jul 03, 2018 at 09:50:47PM -0700, Darrick J. Wong wrote:
+> Hi all,
 > 
-> Could you use args = {} instead.
-> 
-> There was a bunch of conversions for such initializes with:
-> https://lwn.net/Articles/723997/
->
+> Several months ago I tried testing xfs with quotas enabled and was
+> surprised at the number of failures.  Since then I've been on a bug hunt
+> to triage the mess, and the following series fixes some of the low
+> hanging fruit.  Some of these are minor behavioral variations when quota
+> are enabled, and other fixes upgrade old v4 tests to work on v5
+> filesystems.
 
-I honestly don't see a reason to use these annotations here.
+(Sorry for the late review..)
 
-> But regardless, NULL adds no information for compiler.
+I take parts of the patchset (patch 1 3 5-7) for this week's update, as
+the patches don't have hard dependencies. I dropped patch 2 and 4 for
+now.
 
-args = { NULL }; just looks more clear to me than
-
-args = {};
-
-and anyway, the idea here was just to shut up sparse complains, not to do
-anything better than args = {0} or pass any extra information to the compiler.
-
-
+Thanks,
+Eryu
 
 > 
-> Thanks,
-> Amir.
-
--- 
-Carlos
+> To reproduce the results, run xfstests with
+> 'MOUNT_OPTIONS="-o usrquota,grpquota,prjquota"' on a v5 filesystem.
+> Strike the ',grpquota' on a v4 filesystem.
+> 
+> The first patch fixes differences in the golden output when quotas are
+> enabled on xfs -- mmap writes (intentionally) crashing with SIGBUS when
+> quota updates fail vs. msync failing with EIO.
+> 
+> The second patch fixes all the tests that require a specific quota mount
+> option configuration to filter out any quota options present in
+> MOUNT_OPTIONS.
+> 
+> The third patch updates xfs/001 to work with XFS v5 filesystems since
+> there was nothing particularly v4 specific about it.
+> 
+> The fourth patch enables tests that require a v4 format to filter out v5
+> mount options (such as grpquota) so that they can run.
+> 
+> Patch #5 upgrades xfs/288 to support XFS v5 since there was nothing
+> particular to v4 about that test.
+> 
+> Patch #6 fixes a problem in generic/338 where switching the disk backend
+> to dm-error on a xfs with quotas enabled causes the fs to go down with a
+> dirty log which is not recovered prior to the end of the test.  This was
+> originally a regression test for a NULL pointer dereference after the fs
+> shuts down, so we can skip the post-test fsck.
+> 
+> Patch #7 filters 'quota info will be regenerated on next quota mount'
+> messages from the xfs_repair golden output.
+> 
+> --D
