@@ -1,81 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:36776 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731088AbeGRQ3I (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Jul 2018 12:29:08 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w6IFnQBx167409
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Jul 2018 15:50:36 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp2120.oracle.com with ESMTP id 2k9yjx28ss-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Jul 2018 15:50:36 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w6IFoZDa021686
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Jul 2018 15:50:36 GMT
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w6IFoZQM031603
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Jul 2018 15:50:35 GMT
-Subject: [PATCH 1/8] xfs: check leaf attribute block freemap in verifier
-From: "Darrick J. Wong" <djwong@maple.djwong.org>
-Date: Wed, 18 Jul 2018 08:50:34 -0700
-Message-ID: <153192903434.31685.282625226695514597.stgit@magnolia>
-In-Reply-To: <153192902811.31685.11590100183112248407.stgit@magnolia>
-References: <153192902811.31685.11590100183112248407.stgit@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:34240 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731182AbeGNWls (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 14 Jul 2018 18:41:48 -0400
+Date: Sat, 14 Jul 2018 15:21:15 -0700
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [ANN] oscheck: wrapper for fstests check.sh - tracking and
+ working with baselines
+Message-ID: <20180714222115.GA13230@bombadil.infradead.org>
+References: <CAB=NE6UjcBgQhoQvZoWKXnPWoHVNMbeYdyGfYsHdgeA=L1M4wQ@mail.gmail.com>
+ <20180713205154.GA8782@bombadil.infradead.org>
+ <20180713205931.GC3620@garbanzo.do-not-panic.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180713205931.GC3620@garbanzo.do-not-panic.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: "Luis R. Chamberlain" <mcgrof@kernel.org>
+Cc: Linux FS Devel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, fstests@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, Sasha Levin <Alexander.Levin@microsoft.com>, Sasha Levin <levinsasha928@gmail.com>, Valentin Rothberg <valentinrothberg@gmail.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Kent Overstreet <kent.overstreet@gmail.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Jul 13, 2018 at 01:59:31PM -0700, Luis R. Chamberlain wrote:
+> > It's still ridiculously hard
+> > to set up a DAX test environment though. 
+> 
+> I was under the impression we actually need real hardware for that,
+> if you git grep for XXX you will see a section to add DAX is there
+> but I skipped those tests as I thought we needed real hardware
+> for it.
 
-Check the leaf attribute freemap when we we're verifying the block.
+qemu has the ability to emulate having real hardware ;-)  Here's
+the patch that sets that up in ktest:
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_attr_leaf.c |   18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+https://github.com/koverstreet/ktest/commit/16aa8b2cb68ad152ddebd66e40d633fc675d9796
 
+> > The best I've been able to
+> > do is now merged into Kent's ktest -- but you're not based on that,
+> > so I'll try and get your ostest set up to work with DAX.  Or maybe Ross
+> > can do it since he's actually been able to get 2MB pages working and I
+> > still haven't :-(
+> 
+> Patches and new sections to cover more ground indeed are appreciated!
 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index 76e90046731c..b3c19339e1b5 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -244,6 +244,8 @@ xfs_attr3_leaf_verify(
- 	struct xfs_attr_leafblock	*leaf = bp->b_addr;
- 	struct xfs_perag		*pag = bp->b_pag;
- 	struct xfs_attr_leaf_entry	*entries;
-+	uint16_t			end;
-+	int				i;
- 
- 	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &ichdr, leaf);
- 
-@@ -289,6 +291,22 @@ xfs_attr3_leaf_verify(
- 	/* XXX: need to range check rest of attr header values */
- 	/* XXX: hash order check? */
- 
-+	for (i = 0; i < XFS_ATTR_LEAF_MAPSIZE; i++) {
-+		if (ichdr.freemap[i].base > mp->m_attr_geo->blksize)
-+			return __this_address;
-+		if (ichdr.freemap[i].base & 0x3)
-+			return __this_address;
-+		if (ichdr.freemap[i].size > mp->m_attr_geo->blksize)
-+			return __this_address;
-+		if (ichdr.freemap[i].size & 0x3)
-+			return __this_address;
-+		end = ichdr.freemap[i].base + ichdr.freemap[i].size;
-+		if (end < ichdr.freemap[i].base)
-+			return __this_address;
-+		if (end > mp->m_attr_geo->blksize)
-+			return __this_address;
-+	}
-+
- 	return NULL;
- }
- 
-
+I feel like we need to merge ktest and oscheck.  oscheck assumes that you
+know how to set up qemu, and ktest takes care of setting up qemu for you.
+I don't think it's possible to set up DAX testing in the current oscheck
+framework ... but I think it might be possible to turn oscheck into a
+set of ktest tests.
