@@ -1,71 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:45531 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725978AbeGNMI3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 14 Jul 2018 08:08:29 -0400
-Date: Sat, 14 Jul 2018 19:49:35 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH 0/7] fstests: fix quota failures on xfs
-Message-ID: <20180714114935.GE2830@desktop>
-References: <153067984748.28393.1595618163831671652.stgit@magnolia>
+Received: from mail-lj1-f195.google.com ([209.85.208.195]:36844 "EHLO
+        mail-lj1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730552AbeGPKih (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Jul 2018 06:38:37 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <153067984748.28393.1595618163831671652.stgit@magnolia>
+In-Reply-To: <CABeXuvphoYM+KOGPgtsuxzS1_XDSOO0Ta5hr3sA7gYtt-78wtQ@mail.gmail.com>
+References: <20180713133204.3123939-1-arnd@arndb.de> <CABeXuvphoYM+KOGPgtsuxzS1_XDSOO0Ta5hr3sA7gYtt-78wtQ@mail.gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Mon, 16 Jul 2018 12:11:53 +0200
+Message-ID: <CAK8P3a2xu4KGVM1BvTjtXKHfXpBQ2PMynAPybW4cRt7FB8ktwg@mail.gmail.com>
+Subject: Re: [PATCH] [RFC] y2038: globally rename compat_time to old_time32
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Deepa Dinamani <deepa.kernel@gmail.com>
+Cc: y2038 Mailman List <y2038@lists.linaro.org>, Thomas Gleixner <tglx@linutronix.de>, Geert Uytterhoeven <geert@linux-m68k.org>, Christoph Hellwig <hch@infradead.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux ARM <linux-arm-kernel@lists.infradead.org>, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>, alsa-devel@alsa-project.org
 
-On Tue, Jul 03, 2018 at 09:50:47PM -0700, Darrick J. Wong wrote:
-> Hi all,
-> 
-> Several months ago I tried testing xfs with quotas enabled and was
-> surprised at the number of failures.  Since then I've been on a bug hunt
-> to triage the mess, and the following series fixes some of the low
-> hanging fruit.  Some of these are minor behavioral variations when quota
-> are enabled, and other fixes upgrade old v4 tests to work on v5
-> filesystems.
+On Sat, Jul 14, 2018 at 5:54 PM, Deepa Dinamani <deepa.kernel@gmail.com> wrote:
+> Right now we only have compat syscalls and native syscalls.
+> Until we transition all the architectures to use the new syscalls,
+> wouldn't it be the same sort of confusion as exists today?
+> These structures today are still used by compat entry points.
+> I'm trying to understand why such a cleanup would make sense today
+> rather than at the end of the transition.
 
-(Sorry for the late review..)
+I don't think it makes a big difference whether we change it now or later,
+but if Christoph feels that it addresses his concern about the compat_
+namespace being reused during the transition, doing it earlier would
+enable us to finish the remaining syscalls.
 
-I take parts of the patchset (patch 1 3 5-7) for this week's update, as
-the patches don't have hard dependencies. I dropped patch 2 and 4 for
-now.
+We are running a little late with the remaining syscalls for 4.19 as we
+now have an rc5. At this point we probably won't have time to finish
+the discussion about all of clock_adjtime, getrusage/waitid and getitimer(),
+but I'd really like to get utimensat, futex, sched_rr_get_interval,
+recvmmsg, sys_io_getevents, rt_sigtimedwait, ppoll and pselect6
+done for 4.19 so we can finalize the ABI for 4.20 along with doing
+the actual conversion.
 
-Thanks,
-Eryu
-
-> 
-> To reproduce the results, run xfstests with
-> 'MOUNT_OPTIONS="-o usrquota,grpquota,prjquota"' on a v5 filesystem.
-> Strike the ',grpquota' on a v4 filesystem.
-> 
-> The first patch fixes differences in the golden output when quotas are
-> enabled on xfs -- mmap writes (intentionally) crashing with SIGBUS when
-> quota updates fail vs. msync failing with EIO.
-> 
-> The second patch fixes all the tests that require a specific quota mount
-> option configuration to filter out any quota options present in
-> MOUNT_OPTIONS.
-> 
-> The third patch updates xfs/001 to work with XFS v5 filesystems since
-> there was nothing particularly v4 specific about it.
-> 
-> The fourth patch enables tests that require a v4 format to filter out v5
-> mount options (such as grpquota) so that they can run.
-> 
-> Patch #5 upgrades xfs/288 to support XFS v5 since there was nothing
-> particular to v4 about that test.
-> 
-> Patch #6 fixes a problem in generic/338 where switching the disk backend
-> to dm-error on a xfs with quotas enabled causes the fs to go down with a
-> dirty log which is not recovered prior to the end of the test.  This was
-> originally a regression test for a NULL pointer dereference after the fs
-> shuts down, so we can skip the post-test fsck.
-> 
-> Patch #7 filters 'quota info will be regenerated on next quota mount'
-> messages from the xfs_repair golden output.
-> 
-> --D
+      Arnd
