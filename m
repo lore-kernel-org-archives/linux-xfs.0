@@ -1,67 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:47932 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729704AbeGQKRf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 17 Jul 2018 06:17:35 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 07D7E4062231
-        for <linux-xfs@vger.kernel.org>; Tue, 17 Jul 2018 09:45:50 +0000 (UTC)
-Received: from odin.usersys.redhat.com (unknown [10.40.205.45])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 60157111CB9A
-        for <linux-xfs@vger.kernel.org>; Tue, 17 Jul 2018 09:45:49 +0000 (UTC)
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH V2] libxfs: Fix a couple of sparse complaintis
-Date: Tue, 17 Jul 2018 11:45:44 +0200
-Message-Id: <20180717094544.24144-1-cmaiolino@redhat.com>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:22935 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729759AbeGQXsf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Jul 2018 19:48:35 -0400
+Date: Wed, 18 Jul 2018 09:13:38 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 6/6] xfs: avoid COW fork extent lookups in writeback if
+ the fork didn't change
+Message-ID: <20180717231338.GB19934@dastard>
+References: <20180712134910.30298-1-hch@lst.de>
+ <20180712134910.30298-7-hch@lst.de>
+ <20180714000301.GY19934@dastard>
+ <20180717133710.GA15892@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180717133710.GA15892@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-No significant changes, just silence a couple of sparse errors.
+On Tue, Jul 17, 2018 at 03:37:10PM +0200, Christoph Hellwig wrote:
+> On Sat, Jul 14, 2018 at 10:03:01AM +1000, Dave Chinner wrote:
+> > >  	if (imap_valid &&
+> > > -	    (!xfs_inode_has_cow_data(ip) || wpc->io_type == XFS_IO_COW))
+> > > +	    (!xfs_inode_has_cow_data(ip) ||
+> > > +	     wpc->io_type == XFS_IO_COW ||
+> > > +	     wpc->cow_seq == ip->i_cowfp->if_seq))
+> > >  		return 0;
+> > 
+> > Isn't this racy? It's not an atomic variable, we hold no locks,
+> > there are no memory barriers, etc. Hence we can miss changes made by
+> > concurrent mapping changes...
+> > 
+> > Which makes me ask - is the sequence number bumped before or after
+> > we modify the extent map? It seems to me that it needs to be done
+> > before we make a modification so that we invalidate the current map
+> > before we change the extent map to avoid issuing IO to an extent map
+> > we are know we changing, right?
+> 
+> Right now they are bumped later, but they really should be first.
+> 
+> I've got a series that bumps them first now.
 
-Using cpu_to_be32(NULLAGINO), the NULLAGINO constant will be encoded in
-BE as a constant, avoiding a BE -> CPU conversion every iteraction of
-the loop, if be32_to_cpu(agi->agi_unlinked[i]) was used instead.
+Cool.
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
+> That being said at least for the COW fork I don't think we care
+> about the races too much.  All the actual updates to the COW fork
+> are under the page lock, so for a given page we are synchronized
+> already.  And for the bigger picture we either convert a COW
+> fork to a real fork, in which case the change doesn't matter, or
+> we drop it, in which case we already have higher level synchronization.
 
-V2:
-	Convert NULLAGINO to BE32 instead of converting agi_unlinked[i] to cpu
+Ok.
 
- fs/xfs/libxfs/xfs_ag_resv.h | 2 +-
- fs/xfs/libxfs/xfs_ialloc.c  | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> For the data fork things might be more nasty, and that could explain
+> why my trivial extension to that just didn't work at all..
 
-diff --git a/fs/xfs/libxfs/xfs_ag_resv.h b/fs/xfs/libxfs/xfs_ag_resv.h
-index 4619b554ee90..dc953fc84b2f 100644
---- a/fs/xfs/libxfs/xfs_ag_resv.h
-+++ b/fs/xfs/libxfs/xfs_ag_resv.h
-@@ -28,7 +28,7 @@ xfs_ag_resv_rmapbt_alloc(
- 	struct xfs_mount	*mp,
- 	xfs_agnumber_t		agno)
- {
--	struct xfs_alloc_arg	args = {0};
-+	struct xfs_alloc_arg	args = { NULL };
- 	struct xfs_perag	*pag;
- 
- 	args.len = 1;
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 0d968e8143aa..9a6bada8a919 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -2539,7 +2539,7 @@ xfs_agi_verify(
- 		return __this_address;
- 
- 	for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++) {
--		if (agi->agi_unlinked[i] == NULLAGINO)
-+		if (agi->agi_unlinked[i] == cpu_to_be32(NULLAGINO))
- 			continue;
- 		if (!xfs_verify_ino(mp, be32_to_cpu(agi->agi_unlinked[i])))
- 			return __this_address;
+Yeah, my patch was catching data fork modifications as well.
+IIRC I ended up putting the seqno bump and checks under the
+ip->i_flags_lock as a quick method of serialising updates, and that
+made the update vs check races go away. It didn't make all the
+problems go away - just the ones that were easy to reproduce - but
+those remaining bugs may have been in other parts of the patchset
+that I never got to the bottom of...
+
+Cheers,
+
+Dave.
 -- 
-2.14.3
-
+Dave Chinner
+david@fromorbit.com
