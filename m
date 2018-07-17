@@ -1,97 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:44472 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728119AbeGZBVX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 25 Jul 2018 21:21:23 -0400
-Subject: [PATCH V3] xfs_io: Document shutdown -f
-References: <20180510091030.15619-1-cmaiolino@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <b83b3da7-2549-0778-580e-2decbefbe790@sandeen.net>
-Date: Wed, 25 Jul 2018 17:07:13 -0700
+Received: from aserp2130.oracle.com ([141.146.126.79]:44702 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729717AbeGQRro (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Jul 2018 13:47:44 -0400
+Date: Tue, 17 Jul 2018 10:13:52 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH V2] libxfs: Fix a couple of sparse complaintis
+Message-ID: <20180717171352.GT32415@magnolia>
+References: <20180717094544.24144-1-cmaiolino@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20180510091030.15619-1-cmaiolino@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180717094544.24144-1-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Carlos Maiolino <cmaiolino@redhat.com>, linux-xfs@vger.kernel.org
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Carlos Maiolino <cmaiolino@redhat.com>
+On Tue, Jul 17, 2018 at 11:45:44AM +0200, Carlos Maiolino wrote:
+> No significant changes, just silence a couple of sparse errors.
+> 
+> Using cpu_to_be32(NULLAGINO), the NULLAGINO constant will be encoded in
+> BE as a constant, avoiding a BE -> CPU conversion every iteraction of
+> the loop, if be32_to_cpu(agi->agi_unlinked[i]) was used instead.
+> 
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-Add help and manpage information for xfs_io shutdown -f
-[sandeen: more editing for clarity]
+Looks ok, will test...
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+--D
 
-V2: Add more detailed information about what shutdown command does
-V3: more editing
-
-diff --git a/io/shutdown.c b/io/shutdown.c
-index 7ceed7a..052d3de 100644
---- a/io/shutdown.c
-+++ b/io/shutdown.c
-@@ -35,6 +35,22 @@ shutdown_f(
- 	return 0;
- }
- 
-+static void
-+shutdown_help(void)
-+{
-+	printf(_(
-+"\n"
-+" Shuts down the filesystem and prevents any further IO from occurring.\n"
-+"\n"
-+" By default, shutdown will not flush completed transactions to disk\n"
-+" before shutting the filesystem down, simulating a disk failure or crash.\n"
-+" With -f, the log will be flushed to disk, matching XFS behavior when\n"
-+" metadata corruption is encountered.\n"
-+"\n"
-+" -f -- Flush completed transactions to disk before shut down.\n"
-+"\n"));
-+}
-+
- void
- shutdown_init(void)
- {
-@@ -44,6 +60,7 @@ shutdown_init(void)
- 	shutdown_cmd.argmax = 1;
- 	shutdown_cmd.flags = CMD_NOMAP_OK | CMD_FLAG_ONESHOT | CMD_FLAG_FOREIGN_OK;
- 	shutdown_cmd.args = _("[-f]");
-+	shutdown_cmd.help = shutdown_help;
- 	shutdown_cmd.oneline =
- 		_("shuts down the filesystem where the current file resides");
- 
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index dd91589..54a077c 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -1017,8 +1017,23 @@ Note \-\- this can be useful for exercising out of space behavior.
- Only available in expert mode and requires privileges.
- .TP
- .BR shutdown " [ " \-f " ]"
--Force the filesystem to shutdown (with or without flushing the log).
-+Force the filesystem to shut down, preventing any further IO.
-+XFS and other filesystems implement this functionality, although implementation
-+details may differ slightly.
- Only available in expert mode and requires privileges.
-+.PP
-+.RS
-+By default, XFS will not attempt to flush completed transactions to disk before
-+shutting down the filesystem.  This simulates a disk failure or crash.
-+.RE
-+.RS 1.0i
-+.PD 0
-+.TP 0.4i
-+.B \-f
-+Force XFS to flush all completed transactions to disk before shutting down,
-+matching XFS behavior when critical corruption is encountered.
-+.PD
-+.RE
- .TP
- .BR stat " [ " \-v "|" \-r " ]"
- Selected statistics from
-
+> ---
+> 
+> V2:
+> 	Convert NULLAGINO to BE32 instead of converting agi_unlinked[i] to cpu
+> 
+>  fs/xfs/libxfs/xfs_ag_resv.h | 2 +-
+>  fs/xfs/libxfs/xfs_ialloc.c  | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_ag_resv.h b/fs/xfs/libxfs/xfs_ag_resv.h
+> index 4619b554ee90..dc953fc84b2f 100644
+> --- a/fs/xfs/libxfs/xfs_ag_resv.h
+> +++ b/fs/xfs/libxfs/xfs_ag_resv.h
+> @@ -28,7 +28,7 @@ xfs_ag_resv_rmapbt_alloc(
+>  	struct xfs_mount	*mp,
+>  	xfs_agnumber_t		agno)
+>  {
+> -	struct xfs_alloc_arg	args = {0};
+> +	struct xfs_alloc_arg	args = { NULL };
+>  	struct xfs_perag	*pag;
+>  
+>  	args.len = 1;
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> index 0d968e8143aa..9a6bada8a919 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> @@ -2539,7 +2539,7 @@ xfs_agi_verify(
+>  		return __this_address;
+>  
+>  	for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++) {
+> -		if (agi->agi_unlinked[i] == NULLAGINO)
+> +		if (agi->agi_unlinked[i] == cpu_to_be32(NULLAGINO))
+>  			continue;
+>  		if (!xfs_verify_ino(mp, be32_to_cpu(agi->agi_unlinked[i])))
+>  			return __this_address;
+> -- 
+> 2.14.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
