@@ -1,80 +1,126 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:55334 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727329AbeGPO4c (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Jul 2018 10:56:32 -0400
-Date: Mon, 16 Jul 2018 07:28:47 -0700
+Received: from userp2120.oracle.com ([156.151.31.85]:56868 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729717AbeGQRrX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Jul 2018 13:47:23 -0400
+Date: Tue, 17 Jul 2018 10:13:28 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 0/7] fstests: fix quota failures on xfs
-Message-ID: <20180716142847.GQ32415@magnolia>
-References: <153067984748.28393.1595618163831671652.stgit@magnolia>
- <20180714114935.GE2830@desktop>
+Subject: Re: [PATCH] libxfs: add more bounds checking to sb sanity checks
+Message-ID: <20180717171328.GS32415@magnolia>
+References: <20180713131003.31121-1-billodo@redhat.com>
+ <20180713164153.GM32415@magnolia>
+ <20180713234341.GX19934@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180714114935.GE2830@desktop>
+In-Reply-To: <20180713234341.GX19934@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Bill O'Donnell <billodo@redhat.com>, linux-xfs@vger.kernel.org
 
-On Sat, Jul 14, 2018 at 07:49:35PM +0800, Eryu Guan wrote:
-> On Tue, Jul 03, 2018 at 09:50:47PM -0700, Darrick J. Wong wrote:
-> > Hi all,
+On Sat, Jul 14, 2018 at 09:43:41AM +1000, Dave Chinner wrote:
+> On Fri, Jul 13, 2018 at 09:41:53AM -0700, Darrick J. Wong wrote:
+> > On Fri, Jul 13, 2018 at 08:10:03AM -0500, Bill O'Donnell wrote:
+> > > Current sb verifier doesn't check bounds on sb_fdblocks and sb_ifree.
+> > > Add sanity checks for these parameters.
+> > > 
+> > > Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+> > > ---
+> > >  fs/xfs/libxfs/xfs_sb.c | 4 +++-
+> > >  1 file changed, 3 insertions(+), 1 deletion(-)
+> > > 
+> > > diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> > > index 350119eeaecb..cdede769ab88 100644
+> > > --- a/fs/xfs/libxfs/xfs_sb.c
+> > > +++ b/fs/xfs/libxfs/xfs_sb.c
+> > > @@ -261,7 +261,9 @@ xfs_mount_validate_sb(
+> > >  	    sbp->sb_dblocks == 0					||
+> > >  	    sbp->sb_dblocks > XFS_MAX_DBLOCKS(sbp)			||
+> > >  	    sbp->sb_dblocks < XFS_MIN_DBLOCKS(sbp)			||
+> > > -	    sbp->sb_shared_vn != 0)) {
+> > > +	    sbp->sb_shared_vn != 0					||
+> > > +	    sbp->sb_fdblocks > sbp->sb_dblocks				||
+> > > +	    sbp->sb_ifree > sbp->sb_icount)) {
 > > 
-> > Several months ago I tried testing xfs with quotas enabled and was
-> > surprised at the number of failures.  Since then I've been on a bug hunt
-> > to triage the mess, and the following series fixes some of the low
-> > hanging fruit.  Some of these are minor behavioral variations when quota
-> > are enabled, and other fixes upgrade old v4 tests to work on v5
-> > filesystems.
+> > Hmm.  On its face this seems reasonable for the superblock verifier, but
+> > then I started wondering, since these are /summary/ counters.
+> > 
+> > If the free counts are off by this much, the admin won't be able to
+> > mount the fs, and xfs_repair is the only other tool that can fix the
+> > summary counts.  However, if the log is dirty, the mount won't succeed
+> > to recover the fs, which is too bad since we can reinitialize the
+> > summary counts after log recovery.  xfs_repair -L will be the only way
+> > out, which will wreak havoc on the filesystem from discarding the log
+> > contents.
 > 
-> (Sorry for the late review..)
+> Yup, that's why I said "catch this on /write/", not "always reject
+> bad counter values".
 > 
-> I take parts of the patchset (patch 1 3 5-7) for this week's update, as
-> the patches don't have hard dependencies. I dropped patch 2 and 4 for
-> now.
+> i.e. we should never be writing a bad value, but we most definitely
+> need to be able to mount the filesystem to reconstruct them.
+> 
+> > So, would it be preferable to split this into two parts?  For example,
+> > have this as a corruption check in _sb_write_verify to prevent us from
+> > writing out garbage counters
+> 
+> yes.
+> 
+> > and a clamp in _reinit_percpu_counters so
+> > that we never present ridiculous free counts to users?
+> 
+> percpu_counter_{read,sum}_positive() should be used for anything that is
+> userspace facing. xfs_fs_counts() gets this right, but
+> xfs_fs_statfs() doesn't - it should use
+> percpu_counter_sum_positive().
 
-Ok, thank you!  I'll work on 2 and 4 for next time. :)
+I don't think that will solve this problem -- although sb_fdblocks is
+larger than sb_dblocks, sd_fdblocks is not so insanely large that
+percpu_counter_{read,sum} return negative values; returning to Eric's
+analysis of the original complaint:
+
+> sb_fdblocks 4461713825, counted 166746529
+>         - found root inode chunk
+> 
+> that sb_fdblocks really is ~17T which indicates the problem
+> really is on disk.
+> 
+> 4461713825
+> 100001001111100000101100110100001
+
+  ^-- bit 32 of a signed 64-bit quantity
+
+> 166746529
+>      1001111100000101100110100001
+
+So we still need a separate sb_fdblocks <= sb_dblocks clamp and/or
+forced recalculation somewhere.
+
+I agree that _fs_statfs should only return positive free blocks to avoid
+reporting total garbage to userspace, but that's not the problme here.
+I'll toss that onto my pile for 4.19 stuff.
+
+> > (Does any of this make sense with !haslazysbcount filesystems?)
+> 
+> Same thing - we can't verify the counters on read until after log
+> recovery as all the changes are journalled.
+> 
+> > Bonus question: What about checking frextents/rextents?
+> 
+> Same as !lazycount - all changes are journalled.
+
+Ok.
 
 --D
 
-> Thanks,
-> Eryu
+> Cheers,
 > 
-> > 
-> > To reproduce the results, run xfstests with
-> > 'MOUNT_OPTIONS="-o usrquota,grpquota,prjquota"' on a v5 filesystem.
-> > Strike the ',grpquota' on a v4 filesystem.
-> > 
-> > The first patch fixes differences in the golden output when quotas are
-> > enabled on xfs -- mmap writes (intentionally) crashing with SIGBUS when
-> > quota updates fail vs. msync failing with EIO.
-> > 
-> > The second patch fixes all the tests that require a specific quota mount
-> > option configuration to filter out any quota options present in
-> > MOUNT_OPTIONS.
-> > 
-> > The third patch updates xfs/001 to work with XFS v5 filesystems since
-> > there was nothing particularly v4 specific about it.
-> > 
-> > The fourth patch enables tests that require a v4 format to filter out v5
-> > mount options (such as grpquota) so that they can run.
-> > 
-> > Patch #5 upgrades xfs/288 to support XFS v5 since there was nothing
-> > particular to v4 about that test.
-> > 
-> > Patch #6 fixes a problem in generic/338 where switching the disk backend
-> > to dm-error on a xfs with quotas enabled causes the fs to go down with a
-> > dirty log which is not recovered prior to the end of the test.  This was
-> > originally a regression test for a NULL pointer dereference after the fs
-> > shuts down, so we can skip the post-test fsck.
-> > 
-> > Patch #7 filters 'quota info will be regenerated on next quota mount'
-> > messages from the xfs_repair golden output.
-> > 
-> > --D
+> Dave.
+> 
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
