@@ -1,29 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:51562 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731497AbeGQOdP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 17 Jul 2018 10:33:15 -0400
-Date: Tue, 17 Jul 2018 16:02:58 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 5/6] iomap: add a page_done callback
-Message-ID: <20180717140258.GA18365@lst.de>
-References: <20180619164137.13720-1-hch@lst.de> <20180619164137.13720-6-hch@lst.de> <20180713025853.xugxx6zte3kvvqjy@merlin>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180713025853.xugxx6zte3kvvqjy@merlin>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:47932 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1729704AbeGQKRf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 17 Jul 2018 06:17:35 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 07D7E4062231
+        for <linux-xfs@vger.kernel.org>; Tue, 17 Jul 2018 09:45:50 +0000 (UTC)
+Received: from odin.usersys.redhat.com (unknown [10.40.205.45])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 60157111CB9A
+        for <linux-xfs@vger.kernel.org>; Tue, 17 Jul 2018 09:45:49 +0000 (UTC)
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH V2] libxfs: Fix a couple of sparse complaintis
+Date: Tue, 17 Jul 2018 11:45:44 +0200
+Message-Id: <20180717094544.24144-1-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com, linux-ext4@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Thu, Jul 12, 2018 at 09:58:53PM -0500, Goldwyn Rodrigues wrote:
-> Would it be better if we keep this function as a part of iomap_ops? I
-> know gfs2 sets this conditionally, but we can always check the condition
-> in the function assigned to page_done(). It would keep all the functions
-> in one place.
+No significant changes, just silence a couple of sparse errors.
 
-It works at a very different level than the other iomap ops.  We had
-extensive discussions on previous versions, it should all be on
-the list.
+Using cpu_to_be32(NULLAGINO), the NULLAGINO constant will be encoded in
+BE as a constant, avoiding a BE -> CPU conversion every iteraction of
+the loop, if be32_to_cpu(agi->agi_unlinked[i]) was used instead.
+
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+
+V2:
+	Convert NULLAGINO to BE32 instead of converting agi_unlinked[i] to cpu
+
+ fs/xfs/libxfs/xfs_ag_resv.h | 2 +-
+ fs/xfs/libxfs/xfs_ialloc.c  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.h b/fs/xfs/libxfs/xfs_ag_resv.h
+index 4619b554ee90..dc953fc84b2f 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.h
++++ b/fs/xfs/libxfs/xfs_ag_resv.h
+@@ -28,7 +28,7 @@ xfs_ag_resv_rmapbt_alloc(
+ 	struct xfs_mount	*mp,
+ 	xfs_agnumber_t		agno)
+ {
+-	struct xfs_alloc_arg	args = {0};
++	struct xfs_alloc_arg	args = { NULL };
+ 	struct xfs_perag	*pag;
+ 
+ 	args.len = 1;
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index 0d968e8143aa..9a6bada8a919 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -2539,7 +2539,7 @@ xfs_agi_verify(
+ 		return __this_address;
+ 
+ 	for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++) {
+-		if (agi->agi_unlinked[i] == NULLAGINO)
++		if (agi->agi_unlinked[i] == cpu_to_be32(NULLAGINO))
+ 			continue;
+ 		if (!xfs_verify_ino(mp, be32_to_cpu(agi->agi_unlinked[i])))
+ 			return __this_address;
+-- 
+2.14.3
+
