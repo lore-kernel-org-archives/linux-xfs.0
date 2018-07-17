@@ -1,85 +1,169 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb0-f196.google.com ([209.85.213.196]:34017 "EHLO
-        mail-yb0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725908AbeGMIxf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Jul 2018 04:53:35 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAB=NE6UjcBgQhoQvZoWKXnPWoHVNMbeYdyGfYsHdgeA=L1M4wQ@mail.gmail.com>
-References: <CAB=NE6UjcBgQhoQvZoWKXnPWoHVNMbeYdyGfYsHdgeA=L1M4wQ@mail.gmail.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Fri, 13 Jul 2018 11:39:55 +0300
-Message-ID: <CAOQ4uxgd+Z2ADUXdLk3odP9F6KOsrE4HfRpg-1dpP9HS-zbi=Q@mail.gmail.com>
-Subject: Re: [ANN] oscheck: wrapper for fstests check.sh - tracking and
- working with baselines
-Content-Type: text/plain; charset="UTF-8"
+Received: from bombadil.infradead.org ([198.137.202.133]:38534 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729973AbeGQX7D (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Jul 2018 19:59:03 -0400
+Received: from sjc00ib2.hgst.com ([199.255.44.5] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1ffZKB-0001Db-Jt
+        for linux-xfs@vger.kernel.org; Tue, 17 Jul 2018 23:24:07 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 1/6] xfs: remove if_real_bytes
+Date: Tue, 17 Jul 2018 16:24:00 -0700
+Message-Id: <20180717232405.18511-2-hch@lst.de>
+In-Reply-To: <20180717232405.18511-1-hch@lst.de>
+References: <20180717232405.18511-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Chamberlain" <mcgrof@kernel.org>
-Cc: Linux FS Devel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>, Sasha Levin <Alexander.Levin@microsoft.com>, Sasha Levin <levinsasha928@gmail.com>, Valentin Rothberg <valentinrothberg@gmail.com>
+To: linux-xfs@vger.kernel.org
 
-On Fri, Jul 13, 2018 at 5:43 AM, Luis R. Chamberlain <mcgrof@kernel.org> wrote:
-> I had volunteered at the last LSF/MM to help with the stable work for
-> XFS. To help with this, as part of this year's SUSE Hackweek, I've
-> first generalized my own set of scripts to help track a baseline of
-> results from fstests [0], and extended it to be able to easily ramp up
-> with fstests on different distributions, and I've also created a
-> respective baseline of results against these distributions as a
-> further example of how these scripts and wrapper framework can be used
+The field is only used for asserts, and to track if we really need to do
+realloc when growing the inode fork data.  But the krealloc function
+already performs this check internally, so there is no need to keep track
+of the real allocation size.
 
-Hi Luis!
+This will free space in the inode fork for keeping a sequence counter of
+changes to the extent list.
 
-Thanks a lot for doing this work!
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_inode_fork.c | 19 ++++---------------
+ fs/xfs/libxfs/xfs_inode_fork.h |  1 -
+ fs/xfs/xfs_inode.c             |  3 +--
+ fs/xfs/xfs_inode_item.c        |  4 ----
+ 4 files changed, 5 insertions(+), 22 deletions(-)
 
-Will take me some time to try it out, but see some questions below...
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index 183ec0cb8921..dee85b0f8846 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -158,7 +158,6 @@ xfs_init_local_fork(
+ 	}
+ 
+ 	ifp->if_bytes = size;
+-	ifp->if_real_bytes = real_size;
+ 	ifp->if_flags &= ~(XFS_IFEXTENTS | XFS_IFBROOT);
+ 	ifp->if_flags |= XFS_IFINLINE;
+ }
+@@ -226,7 +225,6 @@ xfs_iformat_extents(
+ 		return -EFSCORRUPTED;
+ 	}
+ 
+-	ifp->if_real_bytes = 0;
+ 	ifp->if_bytes = 0;
+ 	ifp->if_u1.if_root = NULL;
+ 	ifp->if_height = 0;
+@@ -317,7 +315,6 @@ xfs_iformat_btree(
+ 	ifp->if_flags &= ~XFS_IFEXTENTS;
+ 	ifp->if_flags |= XFS_IFBROOT;
+ 
+-	ifp->if_real_bytes = 0;
+ 	ifp->if_bytes = 0;
+ 	ifp->if_u1.if_root = NULL;
+ 	ifp->if_height = 0;
+@@ -501,7 +498,6 @@ xfs_idata_realloc(
+ 		 */
+ 		real_size = roundup(new_size, 4);
+ 		if (ifp->if_u1.if_data == NULL) {
+-			ASSERT(ifp->if_real_bytes == 0);
+ 			ifp->if_u1.if_data = kmem_alloc(real_size,
+ 							KM_SLEEP | KM_NOFS);
+ 		} else {
+@@ -509,15 +505,12 @@ xfs_idata_realloc(
+ 			 * Only do the realloc if the underlying size
+ 			 * is really changing.
+ 			 */
+-			if (ifp->if_real_bytes != real_size) {
+-				ifp->if_u1.if_data =
+-					kmem_realloc(ifp->if_u1.if_data,
+-							real_size,
+-							KM_SLEEP | KM_NOFS);
+-			}
++			ifp->if_u1.if_data =
++				kmem_realloc(ifp->if_u1.if_data,
++						real_size,
++						KM_SLEEP | KM_NOFS);
+ 		}
+ 	}
+-	ifp->if_real_bytes = real_size;
+ 	ifp->if_bytes = new_size;
+ 	ASSERT(ifp->if_bytes <= XFS_IFORK_SIZE(ip, whichfork));
+ }
+@@ -543,17 +536,13 @@ xfs_idestroy_fork(
+ 	 */
+ 	if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL) {
+ 		if (ifp->if_u1.if_data != NULL) {
+-			ASSERT(ifp->if_real_bytes != 0);
+ 			kmem_free(ifp->if_u1.if_data);
+ 			ifp->if_u1.if_data = NULL;
+-			ifp->if_real_bytes = 0;
+ 		}
+ 	} else if ((ifp->if_flags & XFS_IFEXTENTS) && ifp->if_height) {
+ 		xfs_iext_destroy(ifp);
+ 	}
+ 
+-	ASSERT(ifp->if_real_bytes == 0);
+-
+ 	if (whichfork == XFS_ATTR_FORK) {
+ 		kmem_zone_free(xfs_ifork_zone, ip->i_afp);
+ 		ip->i_afp = NULL;
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+index 781b1603df5e..46242052aad0 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.h
++++ b/fs/xfs/libxfs/xfs_inode_fork.h
+@@ -14,7 +14,6 @@ struct xfs_dinode;
+  */
+ typedef struct xfs_ifork {
+ 	int			if_bytes;	/* bytes in if_u1 */
+-	int			if_real_bytes;	/* bytes allocated in if_u1 */
+ 	struct xfs_btree_block	*if_broot;	/* file's incore btree root */
+ 	short			if_broot_bytes;	/* bytes allocated for root */
+ 	unsigned char		if_flags;	/* per-fork flags */
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 7b2694d3901a..d6cd545f5d1d 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -927,7 +927,7 @@ xfs_ialloc(
+ 	case S_IFLNK:
+ 		ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
+ 		ip->i_df.if_flags = XFS_IFEXTENTS;
+-		ip->i_df.if_bytes = ip->i_df.if_real_bytes = 0;
++		ip->i_df.if_bytes = 0;
+ 		ip->i_df.if_u1.if_root = NULL;
+ 		break;
+ 	default:
+@@ -1872,7 +1872,6 @@ xfs_inactive(
+ 	 * to clean up here.
+ 	 */
+ 	if (VFS_I(ip)->i_mode == 0) {
+-		ASSERT(ip->i_df.if_real_bytes == 0);
+ 		ASSERT(ip->i_df.if_broot_bytes == 0);
+ 		return;
+ 	}
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 2389c34c172d..fa1c4fe2ffbf 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -194,8 +194,6 @@ xfs_inode_item_format_data_fork(
+ 			 * to be there by xfs_idata_realloc().
+ 			 */
+ 			data_bytes = roundup(ip->i_df.if_bytes, 4);
+-			ASSERT(ip->i_df.if_real_bytes == 0 ||
+-			       ip->i_df.if_real_bytes >= data_bytes);
+ 			ASSERT(ip->i_df.if_u1.if_data != NULL);
+ 			ASSERT(ip->i_d.di_size > 0);
+ 			xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_ILOCAL,
+@@ -280,8 +278,6 @@ xfs_inode_item_format_attr_fork(
+ 			 * to be there by xfs_idata_realloc().
+ 			 */
+ 			data_bytes = roundup(ip->i_afp->if_bytes, 4);
+-			ASSERT(ip->i_afp->if_real_bytes == 0 ||
+-			       ip->i_afp->if_real_bytes >= data_bytes);
+ 			ASSERT(ip->i_afp->if_u1.if_data != NULL);
+ 			xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_IATTR_LOCAL,
+ 					ip->i_afp->if_u1.if_data,
+-- 
+2.18.0
 
-> [1]. The distributions currently supported are:
->
->   * Debian testing
->   * OpenSUSE Leap 15.0
->   * Fedora 28
->
-> The stable work starts with creating a baseline for v4.17.3. The
-> results are visible as a result of expunge files which categorize the
-> failures for the different sections tested.
-
-So the only "bad" indication is a test failure?
-How about indication about a test that started to pass since baseline?
-Tested that started to notrun since baseline?
-Are we interested in those?
-
-> Other than careful manual
-> inspection of each stable candidate patch, one of the goals will also
-> be to ensure such stable patches do not regress the baseline. Work is
-> currently underway to review the first set of stable candidate patches
-> for v4.17.3, if they both pass review and do not regress the
-> established baseline, I'll proceed to post the patches for further
-> evaluation from the community.
->
-> Note that while I used this for XFS, it should be easy to add support
-> for other filesystems, should folks wish to do something similar for
-> their filesystems. The current XFS sections being tested are as
-> follows, please let me know if we should consider extending this
-> further:
->
-> # Matches what we expect to be default on the latests xfsprogs
-> [xfs]
-> MKFS_OPTIONS='-f -m crc=1,reflink=0,rmapbt=0, -i sparse=0'
-> USE_EXTERNAL=no
-> FSTYP=xfs
-
-Please add a LOGWRITES_DEV to all "internal log" configs.
-This is needed to utilize the (relatively) new crash consistency tests
-(a.k.a. generic/replay) which caught a few nasty bugs.
-Fun fact: the fix for stable 4.4 almost got missed, because your system
-was not around ;-)
-https://marc.info/?l=linux-xfs&m=152852844615666&w=2
-
-I've used a 10GB LOGWRITES_DEV, which seems to be enough
-for the current tests.
-I don't think that the dmlogwrite tests play well with external logdev,
-so we could probably reuse the same device for LOGWRITES_DEV
-for configs that don't use SCRATCH_LOGDEV.
-
-Thanks,
-Amir.
