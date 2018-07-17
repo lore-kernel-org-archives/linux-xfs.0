@@ -1,125 +1,259 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from imap.thunk.org ([74.207.234.97]:40964 "EHLO imap.thunk.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729787AbeGNBJP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 13 Jul 2018 21:09:15 -0400
-Date: Fri, 13 Jul 2018 20:52:07 -0400
-From: "Theodore Y. Ts'o" <tytso@mit.edu>
-Subject: Re: [ANN] oscheck: wrapper for fstests check.sh - tracking and
- working with baselines
-Message-ID: <20180714005207.GF28610@thunk.org>
-References: <CAB=NE6UjcBgQhoQvZoWKXnPWoHVNMbeYdyGfYsHdgeA=L1M4wQ@mail.gmail.com>
- <CAOQ4uxgd+Z2ADUXdLk3odP9F6KOsrE4HfRpg-1dpP9HS-zbi=Q@mail.gmail.com>
- <20180713164420.GA3620@garbanzo.do-not-panic.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180713164420.GA3620@garbanzo.do-not-panic.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:38538 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729759AbeGQX7D (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Jul 2018 19:59:03 -0400
+Received: from sjc00ib2.hgst.com ([199.255.44.5] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1ffZKC-0001Dl-32
+        for linux-xfs@vger.kernel.org; Tue, 17 Jul 2018 23:24:08 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 3/6] xfs: remove the xfs_ifork_t typedef
+Date: Tue, 17 Jul 2018 16:24:02 -0700
+Message-Id: <20180717232405.18511-4-hch@lst.de>
+In-Reply-To: <20180717232405.18511-1-hch@lst.de>
+References: <20180717232405.18511-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Luis R. Chamberlain" <mcgrof@kernel.org>
-Cc: Amir Goldstein <amir73il@gmail.com>, Jeff Mahoney <jeffm@suse.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>, Sasha Levin <Alexander.Levin@microsoft.com>, Sasha Levin <levinsasha928@gmail.com>, Valentin Rothberg <valentinrothberg@gmail.com>
+To: linux-xfs@vger.kernel.org
 
-On Fri, Jul 13, 2018 at 09:44:20AM -0700, Luis R. Chamberlain wrote:
-> 
-> We have a few options. One is share the entire results directory for
-> a release / section, however this is rather big. For instance for a
-> full v4.17.3 run this is about 292 MiB alone. I don't think this
-> scales. IMHO lgogs should only be supplied onto bug reports, not this
-> framework.
+We only have a few more callers left, so seize the opportunity and kill
+it off.
 
-The results directory compress fairly well.  A complete ext4 run (with
-the configurations defined for gce-xfstests) is 101MB uncompressed,
-and 2.3 MB as a tar.xz file.  That's only 6 cents a month in Google
-Cloud Storage, and for me it's worth it to keep them; it's
-occasionally been interesting.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_attr_leaf.c  |  6 +++---
+ fs/xfs/libxfs/xfs_bmap.c       | 18 +++++++++---------
+ fs/xfs/libxfs/xfs_inode_fork.c |  8 ++++----
+ fs/xfs/libxfs/xfs_inode_fork.h |  4 ++--
+ fs/xfs/xfs_icache.c            |  2 +-
+ fs/xfs/xfs_inode.h             |  6 +++---
+ fs/xfs/xfs_super.c             |  2 +-
+ 7 files changed, 23 insertions(+), 23 deletions(-)
 
-> The other option is to use -R xunit to generate the report in the
-> specified unit. I have not yet run this, or tried it, however IIRC
-> it does record success runs?
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 251304f3bc5d..bdf971c1fd77 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -506,7 +506,7 @@ xfs_attr_shortform_create(xfs_da_args_t *args)
+ {
+ 	xfs_attr_sf_hdr_t *hdr;
+ 	xfs_inode_t *dp;
+-	xfs_ifork_t *ifp;
++	struct xfs_ifork *ifp;
+ 
+ 	trace_xfs_attr_sf_create(args);
+ 
+@@ -541,7 +541,7 @@ xfs_attr_shortform_add(xfs_da_args_t *args, int forkoff)
+ 	int i, offset, size;
+ 	xfs_mount_t *mp;
+ 	xfs_inode_t *dp;
+-	xfs_ifork_t *ifp;
++	struct xfs_ifork *ifp;
+ 
+ 	trace_xfs_attr_sf_add(args);
+ 
+@@ -682,7 +682,7 @@ xfs_attr_shortform_lookup(xfs_da_args_t *args)
+ 	xfs_attr_shortform_t *sf;
+ 	xfs_attr_sf_entry_t *sfe;
+ 	int i;
+-	xfs_ifork_t *ifp;
++	struct xfs_ifork *ifp;
+ 
+ 	trace_xfs_attr_sf_lookup(args);
+ 
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 7b93b1e16ad9..fa6a704ac1c0 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -326,7 +326,7 @@ xfs_bmap_check_leaf_extents(
+ 	xfs_buf_t		*bp;	/* buffer for "block" */
+ 	int			error;	/* error return value */
+ 	xfs_extnum_t		i=0, j;	/* index into the extents list */
+-	xfs_ifork_t		*ifp;	/* fork structure */
++	struct xfs_ifork	*ifp;	/* fork structure */
+ 	int			level;	/* btree level, for checking */
+ 	xfs_mount_t		*mp;	/* file system mount structure */
+ 	__be64			*pp;	/* pointer to block address */
+@@ -594,7 +594,7 @@ xfs_bmap_btree_to_extents(
+ 	xfs_fsblock_t		cbno;	/* child block number */
+ 	xfs_buf_t		*cbp;	/* child block's buffer */
+ 	int			error;	/* error return value */
+-	xfs_ifork_t		*ifp;	/* inode fork data */
++	struct xfs_ifork	*ifp;	/* inode fork data */
+ 	xfs_mount_t		*mp;	/* mount point structure */
+ 	__be64			*pp;	/* ptr to block address */
+ 	struct xfs_btree_block	*rblock;/* root btree block */
+@@ -817,7 +817,7 @@ xfs_bmap_local_to_extents(
+ {
+ 	int		error = 0;
+ 	int		flags;		/* logging flags returned */
+-	xfs_ifork_t	*ifp;		/* inode fork pointer */
++	struct xfs_ifork *ifp;		/* inode fork pointer */
+ 	xfs_alloc_arg_t	args;		/* allocation arguments */
+ 	xfs_buf_t	*bp;		/* buffer for extent block */
+ 	struct xfs_bmbt_irec rec;
+@@ -1479,7 +1479,7 @@ xfs_bmap_one_block(
+ 	xfs_inode_t	*ip,		/* incore inode */
+ 	int		whichfork)	/* data or attr fork */
+ {
+-	xfs_ifork_t	*ifp;		/* inode fork pointer */
++	struct xfs_ifork *ifp;		/* inode fork pointer */
+ 	int		rval;		/* return value */
+ 	xfs_bmbt_irec_t	s;		/* internal version of extent */
+ 	struct xfs_iext_cursor icur;
+@@ -1517,7 +1517,7 @@ xfs_bmap_add_extent_delay_real(
+ 	struct xfs_bmbt_irec	*new = &bma->got;
+ 	int			error;	/* error return value */
+ 	int			i;	/* temp state */
+-	xfs_ifork_t		*ifp;	/* inode fork pointer */
++	struct xfs_ifork	*ifp;	/* inode fork pointer */
+ 	xfs_fileoff_t		new_endoff;	/* end offset of new entry */
+ 	xfs_bmbt_irec_t		r[3];	/* neighbor extent entries */
+ 					/* left is 0, right is 1, prev is 2 */
+@@ -2026,7 +2026,7 @@ xfs_bmap_add_extent_unwritten_real(
+ 	xfs_btree_cur_t		*cur;	/* btree cursor */
+ 	int			error;	/* error return value */
+ 	int			i;	/* temp state */
+-	xfs_ifork_t		*ifp;	/* inode fork pointer */
++	struct xfs_ifork	*ifp;	/* inode fork pointer */
+ 	xfs_fileoff_t		new_endoff;	/* end offset of new entry */
+ 	xfs_bmbt_irec_t		r[3];	/* neighbor extent entries */
+ 					/* left is 0, right is 1, prev is 2 */
+@@ -2494,7 +2494,7 @@ xfs_bmap_add_extent_hole_delay(
+ 	struct xfs_iext_cursor	*icur,
+ 	xfs_bmbt_irec_t		*new)	/* new data to add to file extents */
+ {
+-	xfs_ifork_t		*ifp;	/* inode fork pointer */
++	struct xfs_ifork	*ifp;	/* inode fork pointer */
+ 	xfs_bmbt_irec_t		left;	/* left neighbor extent entry */
+ 	xfs_filblks_t		newlen=0;	/* new indirect size */
+ 	xfs_filblks_t		oldlen=0;	/* old indirect size */
+@@ -4855,7 +4855,7 @@ xfs_bmap_del_extent_real(
+ 	struct xfs_bmbt_irec	got;	/* current extent entry */
+ 	xfs_fileoff_t		got_endoff;	/* first offset past got */
+ 	int			i;	/* temp state */
+-	xfs_ifork_t		*ifp;	/* inode fork pointer */
++	struct xfs_ifork	*ifp;	/* inode fork pointer */
+ 	xfs_mount_t		*mp;	/* mount structure */
+ 	xfs_filblks_t		nblks;	/* quota/sb block count */
+ 	xfs_bmbt_irec_t		new;	/* new record to be inserted */
+@@ -5103,7 +5103,7 @@ __xfs_bunmapi(
+ 	int			error;		/* error return value */
+ 	xfs_extnum_t		extno;		/* extent number in list */
+ 	struct xfs_bmbt_irec	got;		/* current extent record */
+-	xfs_ifork_t		*ifp;		/* inode fork pointer */
++	struct xfs_ifork	*ifp;		/* inode fork pointer */
+ 	int			isrt;		/* freeing in rt area */
+ 	int			logflags;	/* transaction logging flags */
+ 	xfs_extlen_t		mod;		/* rt extent offset */
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index a0e3fb804605..f9acf1d436f6 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -269,7 +269,7 @@ xfs_iformat_btree(
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	xfs_bmdr_block_t	*dfp;
+-	xfs_ifork_t		*ifp;
++	struct xfs_ifork	*ifp;
+ 	/* REFERENCED */
+ 	int			nrecs;
+ 	int			size;
+@@ -347,7 +347,7 @@ xfs_iroot_realloc(
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	int			cur_max;
+-	xfs_ifork_t		*ifp;
++	struct xfs_ifork	*ifp;
+ 	struct xfs_btree_block	*new_broot;
+ 	int			new_max;
+ 	size_t			new_size;
+@@ -503,7 +503,7 @@ xfs_idestroy_fork(
+ 	xfs_inode_t	*ip,
+ 	int		whichfork)
+ {
+-	xfs_ifork_t	*ifp;
++	struct xfs_ifork	*ifp;
+ 
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	if (ifp->if_broot != NULL) {
+@@ -592,7 +592,7 @@ xfs_iflush_fork(
+ 	int			whichfork)
+ {
+ 	char			*cp;
+-	xfs_ifork_t		*ifp;
++	struct xfs_ifork	*ifp;
+ 	xfs_mount_t		*mp;
+ 	static const short	brootflag[2] =
+ 		{ XFS_ILOG_DBROOT, XFS_ILOG_ABROOT };
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+index 46242052aad0..1492143371f3 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.h
++++ b/fs/xfs/libxfs/xfs_inode_fork.h
+@@ -12,7 +12,7 @@ struct xfs_dinode;
+ /*
+  * File incore extent information, present for each of data & attr forks.
+  */
+-typedef struct xfs_ifork {
++struct xfs_ifork {
+ 	int			if_bytes;	/* bytes in if_u1 */
+ 	struct xfs_btree_block	*if_broot;	/* file's incore btree root */
+ 	short			if_broot_bytes;	/* bytes allocated for root */
+@@ -22,7 +22,7 @@ typedef struct xfs_ifork {
+ 		void		*if_root;	/* extent tree root */
+ 		char		*if_data;	/* inline file data */
+ 	} if_u1;
+-} xfs_ifork_t;
++};
+ 
+ /*
+  * Per-fork incore inode flags.
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 47f417d20a30..79f344fa8b14 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -66,7 +66,7 @@ xfs_inode_alloc(
+ 	ip->i_cowfp = NULL;
+ 	ip->i_cnextents = 0;
+ 	ip->i_cformat = XFS_DINODE_FMT_EXTENTS;
+-	memset(&ip->i_df, 0, sizeof(xfs_ifork_t));
++	memset(&ip->i_df, 0, sizeof(ip->i_df));
+ 	ip->i_flags = 0;
+ 	ip->i_delayed_blks = 0;
+ 	memset(&ip->i_d, 0, sizeof(ip->i_d));
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index b1f0e8394f3b..51ae5d79de0d 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -34,9 +34,9 @@ typedef struct xfs_inode {
+ 	struct xfs_imap		i_imap;		/* location for xfs_imap() */
+ 
+ 	/* Extent information. */
+-	xfs_ifork_t		*i_afp;		/* attribute fork pointer */
+-	xfs_ifork_t		*i_cowfp;	/* copy on write extents */
+-	xfs_ifork_t		i_df;		/* data fork */
++	struct xfs_ifork	*i_afp;		/* attribute fork pointer */
++	struct xfs_ifork	*i_cowfp;	/* copy on write extents */
++	struct xfs_ifork	i_df;		/* data fork */
+ 
+ 	/* operations vectors */
+ 	const struct xfs_dir_ops *d_ops;		/* directory ops vector */
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index f9f8dc490d3d..62312b4cef64 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1886,7 +1886,7 @@ xfs_init_zones(void)
+ 	if (!xfs_da_state_zone)
+ 		goto out_destroy_btree_cur_zone;
+ 
+-	xfs_ifork_zone = kmem_zone_init(sizeof(xfs_ifork_t), "xfs_ifork");
++	xfs_ifork_zone = kmem_zone_init(sizeof(struct xfs_ifork), "xfs_ifork");
+ 	if (!xfs_ifork_zone)
+ 		goto out_destroy_da_state_zone;
+ 
+-- 
+2.18.0
 
-Yes, it does.
-
-> Does it also keep logs? Hopefully not.
-
-It does include some information, but not all of the information that
-might be in the results directory.
-
-    % ls /tmp/results-ltm-20180709000722/ab/ext4/results-1k/results.xml 
-    108 /tmp/results-ltm-20180709000722/ab/ext4/results-1k/results.xml
-
-    vs
-
-    % du -sh /tmp/results-ltm-20180709000722/ab/ext4/results-1k
-    3.0M	/tmp/results-ltm-20180709000722/ab/ext4/results-1k
-
-> Having the expunge files separately helps as we can annotate bug URLs to
-> them optionally. Ie, we should be able to process both expunge lists
-> and xunit file to construct a nice db schema to process results
-> in a more easily viewable manner in the future.
-
-I do this.  You can see an example here with my annotations:
-
-https://github.com/tytso/xfstests-bld/blob/master/kvm-xfstests/test-appliance/files/root/fs/ext4/exclude
-
-> So to establish a baseline, one first manually contstructs the expunge
-> files needed to run a full test. In the future hopefully we can have
-> a set of scripts to do all this for us.
-
-Yep, I do this by using a command-line option when I run gce-xfstests
-or kvm-xfstests to skip using the exclude files.  It's definitely
-useful.
-
-> We'd have to then process that file to scrape out which tests were
-> passed, if a user wanted that. Do we have scripts for processing
-> xunit files?
-
-I have some scripts which you may find useful.   They can be found here:
-
-https://github.com/tytso/xfstests-bld/tree/master/kvm-xfstests/test-appliance/files/usr/local/bin
-https://github.com/tytso/xfstests-bld/tree/master/kvm-xfstests/test-appliance/files/usr/lib/python2.7
-
-This is what I use to parse through the xunit xml files to generate
-summaries like this:
-
-ext4/4k: 430 tests, 1 failures, 43 skipped, 6565 seconds
-  Failures: generic/388 
-ext4/1k: 441 tests, 7 failures, 55 skipped, 7985 seconds
-  Failures: ext4/033 generic/018 generic/383 generic/388 generic/454 
-    generic/475 generic/476 
-ext4/encrypt: 495 tests, 121 skipped, 4081 seconds
-ext4/nojournal: 472 tests, 1 failures, 88 skipped, 4700 seconds
-  Failures: ext4/301 
-ext4/ext3conv: 429 tests, 1 failures, 43 skipped, 5965 seconds
-  Failures: generic/388 
-ext4/adv: 434 tests, 2 failures, 49 skipped, 5142 seconds
-  Failures: generic/399 generic/477 
-ext4/dioread_nolock: 429 tests, 1 failures, 43 skipped, 5870 seconds
-  Failures: generic/388 
-ext4/data_journal: 476 tests, 2 failures, 91 skipped, 6832 seconds
-  Failures: generic/388 generic/475 
-ext4/bigalloc: 414 tests, 11 failures, 50 skipped, 6963 seconds
-  Failures: ext4/033 generic/204 generic/219 generic/235 generic/273 
-    generic/388 generic/456 generic/472 generic/494 generic/495 
-    generic/496 
-ext4/bigalloc_1k: 428 tests, 11 failures, 64 skipped, 5458 seconds
-  Failures: ext4/033 generic/204 generic/235 generic/273 generic/383 
-    generic/388 generic/454 generic/472 generic/494 generic/495 
-    generic/496 
-Totals: 3801 tests, 647 skipped, 37 failures, 0 errors, 59147s
-
-> > Tested that started to notrun since baseline?
-> 
-> Its unclear if xunit captures this. Otherwise we have some work to do.
-
-There are software packages that will process xunit XML files, store
-them into a database and then generate reports against a defined
-baseline.  They'll also do fancy graphs, and some of them will show
-flakey tests, etc.  I haven't had time to investigate them, though,
-but if you do find some cool tools to process the xunit files, I'd
-definitely be interested.
-
-Cheers,
-
-						- Ted
