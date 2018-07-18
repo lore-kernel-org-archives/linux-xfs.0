@@ -1,12 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:36934 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:36970 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731046AbeGRQ3W (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Jul 2018 12:29:22 -0400
-Subject: [PATCH 2/8] xfs: return from _defer_finish with a clean transaction
+        with ESMTP id S1731046AbeGRQ30 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Jul 2018 12:29:26 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w6IFnETJ167322
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Jul 2018 15:50:54 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by userp2120.oracle.com with ESMTP id 2k9yjx28uf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Jul 2018 15:50:53 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w6IForRF022693
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Jul 2018 15:50:53 GMT
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w6IFoqk3031759
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Jul 2018 15:50:53 GMT
+Subject: [PATCH 3/8] xfs: trivial xfs_btree_del_cursor cleanups
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 18 Jul 2018 08:50:40 -0700
-Message-ID: <153192904042.31685.60438652773989931.stgit@magnolia>
+Date: Wed, 18 Jul 2018 08:50:51 -0700
+Message-ID: <153192905163.31685.17441257298247003323.stgit@magnolia>
 In-Reply-To: <153192902811.31685.11590100183112248407.stgit@magnolia>
 References: <153192902811.31685.11590100183112248407.stgit@magnolia>
 MIME-Version: 1.0
@@ -16,75 +30,302 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Christoph Hellwig reported seeing the following assertion in
-generic/051:
+The error argument to xfs_btree_del_cursor already understands the
+"nonzero for error" semantics, so remove pointless error testing in the
+callers and pass it directly.
 
-XFS: Assertion failed: tp->t_firstblock == NULLFSBLOCK, file: fs/xfs/libxfs5
-------------[ cut here ]------------
-kernel BUG at fs/xfs/xfs_message.c:102!
-invalid opcode: 0000 [#1] SMP PTI
-CPU: 2 PID: 20757 Comm: fsstress Not tainted 4.18.0-rc4+ #3969
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.11.1-1 04/01/4
-RIP: 0010:assfail+0x23/0x30
-Code: c3 66 0f 1f 44 00 00 48 89 f1 41 89 d0 48 c7 c6 88 e0 8c 82 48 89 fa
-RSP: 0018:ffff88012dc43c08 EFLAGS: 00010202
-RAX: 0000000000000000 RBX: ffff88012dc43ca0 RCX: 0000000000000000
-RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffff828480eb
-RBP: ffff88012aa92758 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: f000000000000000 R12: 0000000000000000
-R13: ffff88012dc43d48 R14: ffff88013092e7e8 R15: 0000000000000014
-FS:  00007f8d689b8e80(0000) GS:ffff88013fd00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007f8d689c7000 CR3: 000000012ba6a000 CR4: 00000000000006e0
-Call Trace:
- xfs_defer_init+0xff/0x160
- xfs_reflink_remap_extent+0x31b/0xa00
- xfs_reflink_remap_blocks+0xec/0x4a0
- xfs_reflink_remap_range+0x3a1/0x650
- xfs_file_dedupe_range+0x39/0x50
- vfs_dedupe_file_range+0x218/0x260
- do_vfs_ioctl+0x262/0x6a0
- ? __se_sys_newfstat+0x3c/0x60
- ksys_ioctl+0x35/0x60
- __x64_sys_ioctl+0x11/0x20
- do_syscall_64+0x4b/0x190
- entry_SYSCALL_64_after_hwframe+0x49/0xbe
-
-The root cause of the assertion failure is that xfs_defer_finish doesn't
-roll the transaction after processing all the deferred items.  Therefore
-it returns a dirty transaction to the caller, which leaves the caller at
-risk of exceeding the transaction reservation if it logs more items.
-
-Brian Foster's patchset to move the defer_ops firstblock into the
-transaction requires t_firstblock == NULLFSBLOCK upon defer_ops
-initialization, which is how this was noticed at all.
-
-Reported-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_defer.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+ fs/xfs/libxfs/xfs_bmap.c         |   24 ++++++++----------------
+ fs/xfs/libxfs/xfs_bmap_btree.c   |    2 +-
+ fs/xfs/libxfs/xfs_ialloc.c       |    2 +-
+ fs/xfs/libxfs/xfs_ialloc_btree.c |    2 +-
+ fs/xfs/libxfs/xfs_refcount.c     |    2 +-
+ fs/xfs/libxfs/xfs_rmap.c         |   18 +++---------------
+ fs/xfs/scrub/bmap.c              |    5 ++---
+ fs/xfs/scrub/repair.c            |    2 +-
+ fs/xfs/xfs_discard.c             |    2 +-
+ fs/xfs/xfs_fsmap.c               |    2 +-
+ fs/xfs/xfs_itable.c              |    6 ++----
+ fs/xfs/xfs_reflink.c             |    2 +-
+ 12 files changed, 23 insertions(+), 46 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index c3e5bffda4f5..3ba8bb308c3c 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -424,6 +424,12 @@ xfs_defer_finish(
- 			cleanup_fn(*tp, state, error);
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 7205268b30bc..50119b54a2b5 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -975,8 +975,7 @@ xfs_bmap_add_attrfork_extents(
+ 		flags, XFS_DATA_FORK);
+ 	if (cur) {
+ 		cur->bc_private.b.allocated = 0;
+-		xfs_btree_del_cursor(cur,
+-			error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
++		xfs_btree_del_cursor(cur, error);
+ 	}
+ 	return error;
+ }
+@@ -4500,8 +4499,7 @@ xfs_bmapi_write(
+ 				       bma.cur->bc_private.b.firstblock));
+ 			*firstblock = bma.cur->bc_private.b.firstblock;
+ 		}
+-		xfs_btree_del_cursor(bma.cur,
+-			error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
++		xfs_btree_del_cursor(bma.cur, error);
+ 	}
+ 	if (!error)
+ 		xfs_bmap_validate_ret(orig_bno, orig_len, orig_flags, orig_mval,
+@@ -4599,10 +4597,8 @@ xfs_bmapi_remap(
+ 
+ 	if (logflags)
+ 		xfs_trans_log_inode(tp, ip, logflags);
+-	if (cur) {
+-		xfs_btree_del_cursor(cur,
+-				error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
+-	}
++	if (cur)
++		xfs_btree_del_cursor(cur, error);
+ 	return error;
+ }
+ 
+@@ -5505,8 +5501,7 @@ __xfs_bunmapi(
+ 			*firstblock = cur->bc_private.b.firstblock;
+ 			cur->bc_private.b.allocated = 0;
+ 		}
+-		xfs_btree_del_cursor(cur,
+-			error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
++		xfs_btree_del_cursor(cur, error);
+ 	}
+ 	return error;
+ }
+@@ -5773,8 +5768,7 @@ xfs_bmap_collapse_extents(
+ 	*next_fsb = got.br_startoff;
+ del_cursor:
+ 	if (cur)
+-		xfs_btree_del_cursor(cur,
+-			error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
++		xfs_btree_del_cursor(cur, error);
+ 	if (logflags)
+ 		xfs_trans_log_inode(tp, ip, logflags);
+ 	return error;
+@@ -5905,8 +5899,7 @@ xfs_bmap_insert_extents(
+ 	*next_fsb = got.br_startoff;
+ del_cursor:
+ 	if (cur)
+-		xfs_btree_del_cursor(cur,
+-			error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
++		xfs_btree_del_cursor(cur, error);
+ 	if (logflags)
+ 		xfs_trans_log_inode(tp, ip, logflags);
+ 	return error;
+@@ -6026,8 +6019,7 @@ xfs_bmap_split_extent_at(
+ del_cursor:
+ 	if (cur) {
+ 		cur->bc_private.b.allocated = 0;
+-		xfs_btree_del_cursor(cur,
+-				error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
++		xfs_btree_del_cursor(cur, error);
  	}
  
-+	/*
-+	 * Roll the transaction once more to avoid returning to the caller
-+	 * with a dirty transaction.
-+	 */
-+	if ((*tp)->t_flags & XFS_TRANS_DIRTY)
-+		error = xfs_defer_trans_roll(tp, dop);
- out:
- 	(*tp)->t_agfl_dfops = orig_dop;
+ 	if (logflags)
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index e1a2d9ceb615..cd2da4ef614f 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -645,7 +645,7 @@ xfs_bmbt_change_owner(
+ 	cur->bc_private.b.flags |= XFS_BTCUR_BPRV_INVALID_OWNER;
+ 
+ 	error = xfs_btree_change_owner(cur, new_owner, buffer_list);
+-	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
++	xfs_btree_del_cursor(cur, error);
+ 	return error;
+ }
+ 
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index 0d968e8143aa..dd0a0fb0abc8 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -2260,7 +2260,7 @@ xfs_imap_lookup(
+ 	}
+ 
+ 	xfs_trans_brelse(tp, agbp);
+-	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
++	xfs_btree_del_cursor(cur, error);
  	if (error)
+ 		return error;
+ 
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index a5237afec5ab..735a33252eb2 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -566,7 +566,7 @@ xfs_inobt_count_blocks(
+ 
+ 	cur = xfs_inobt_init_cursor(mp, NULL, agbp, agno, btnum);
+ 	error = xfs_btree_count_blocks(cur, tree_blocks);
+-	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
++	xfs_btree_del_cursor(cur, error);
+ 	xfs_buf_relse(agbp);
+ 
+ 	return error;
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index 9dda6fd0bb13..240a32984d13 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -1067,7 +1067,7 @@ xfs_refcount_finish_one_cleanup(
+ 	if (rcur == NULL)
+ 		return;
+ 	agbp = rcur->bc_private.a.agbp;
+-	xfs_btree_del_cursor(rcur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
++	xfs_btree_del_cursor(rcur, error);
+ 	if (error)
+ 		xfs_trans_brelse(tp, agbp);
+ }
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index 8b2a2f81d110..fb266fa2cc45 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -670,14 +670,8 @@ xfs_rmap_free(
+ 	cur = xfs_rmapbt_init_cursor(mp, tp, agbp, agno);
+ 
+ 	error = xfs_rmap_unmap(cur, bno, len, false, oinfo);
+-	if (error)
+-		goto out_error;
+ 
+-	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+-	return 0;
+-
+-out_error:
+-	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
++	xfs_btree_del_cursor(cur, error);
+ 	return error;
+ }
+ 
+@@ -912,14 +906,8 @@ xfs_rmap_alloc(
+ 
+ 	cur = xfs_rmapbt_init_cursor(mp, tp, agbp, agno);
+ 	error = xfs_rmap_map(cur, bno, len, false, oinfo);
+-	if (error)
+-		goto out_error;
+ 
+-	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+-	return 0;
+-
+-out_error:
+-	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
++	xfs_btree_del_cursor(cur, error);
+ 	return error;
+ }
+ 
+@@ -2156,7 +2144,7 @@ xfs_rmap_finish_one_cleanup(
+ 	if (rcur == NULL)
+ 		return;
+ 	agbp = rcur->bc_private.a.agbp;
+-	xfs_btree_del_cursor(rcur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
++	xfs_btree_del_cursor(rcur, error);
+ 	if (error)
+ 		xfs_trans_brelse(tp, agbp);
+ }
+diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+index 3d08589f5c60..ebbfab173e97 100644
+--- a/fs/xfs/scrub/bmap.c
++++ b/fs/xfs/scrub/bmap.c
+@@ -404,8 +404,7 @@ xfs_scrub_bmap_btree(
+ 	cur = xfs_bmbt_init_cursor(mp, sc->tp, ip, whichfork);
+ 	xfs_rmap_ino_bmbt_owner(&oinfo, ip->i_ino, whichfork);
+ 	error = xfs_scrub_btree(sc, cur, xfs_scrub_bmapbt_rec, &oinfo, info);
+-	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR :
+-					  XFS_BTREE_NOERROR);
++	xfs_btree_del_cursor(cur, error);
+ 	return error;
+ }
+ 
+@@ -514,7 +513,7 @@ xfs_scrub_bmap_check_ag_rmaps(
+ 	if (error == XFS_BTREE_QUERY_RANGE_ABORT)
+ 		error = 0;
+ 
+-	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
++	xfs_btree_del_cursor(cur, error);
+ out_agf:
+ 	xfs_trans_brelse(sc->tp, agf);
+ 	return error;
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index 326be4e8b71e..35c589a04fac 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -1009,7 +1009,7 @@ xfs_repair_find_ag_btree_roots(
+ 
+ 	cur = xfs_rmapbt_init_cursor(mp, sc->tp, agf_bp, sc->sa.agno);
+ 	error = xfs_rmap_query_all(cur, xfs_repair_findroot_rmap, &ri);
+-	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
++	xfs_btree_del_cursor(cur, error);
+ 
+ 	return error;
+ }
+diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
+index 678a5fcd7576..93f07edafd81 100644
+--- a/fs/xfs/xfs_discard.c
++++ b/fs/xfs/xfs_discard.c
+@@ -128,7 +128,7 @@ xfs_trim_extents(
+ 	}
+ 
+ out_del_cursor:
+-	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
++	xfs_btree_del_cursor(cur, error);
+ 	xfs_buf_relse(agbp);
+ out_put_perag:
+ 	xfs_perag_put(pag);
+diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+index c7157bc48bd1..f7e00e42f360 100644
+--- a/fs/xfs/xfs_fsmap.c
++++ b/fs/xfs/xfs_fsmap.c
+@@ -219,7 +219,7 @@ xfs_getfsmap_is_shared(
+ 	error = xfs_refcount_find_shared(cur, rec->rm_startblock,
+ 			rec->rm_blockcount, &fbno, &flen, false);
+ 
+-	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
++	xfs_btree_del_cursor(cur, error);
+ 	if (error)
+ 		return error;
+ 
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index 24f4f1c555b5..65810827a8d0 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -458,8 +458,7 @@ xfs_bulkstat(
+ 		 * pending error, then we are done.
+ 		 */
+ del_cursor:
+-		xfs_btree_del_cursor(cur, error ?
+-					  XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
++		xfs_btree_del_cursor(cur, error);
+ 		xfs_buf_relse(agbp);
+ 		if (error)
+ 			break;
+@@ -632,8 +631,7 @@ xfs_inumbers(
+ 
+ 	kmem_free(buffer);
+ 	if (cur)
+-		xfs_btree_del_cursor(cur, (error ? XFS_BTREE_ERROR :
+-					   XFS_BTREE_NOERROR));
++		xfs_btree_del_cursor(cur, error);
+ 	if (agbp)
+ 		xfs_buf_relse(agbp);
+ 
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 592fb2071a03..268d51e35812 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -162,7 +162,7 @@ xfs_reflink_find_shared(
+ 	error = xfs_refcount_find_shared(cur, agbno, aglen, fbno, flen,
+ 			find_end_of_shared);
+ 
+-	xfs_btree_del_cursor(cur, error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
++	xfs_btree_del_cursor(cur, error);
+ 
+ 	xfs_trans_brelse(tp, agbp);
+ 	return error;
 
