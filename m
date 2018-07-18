@@ -1,49 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:33447 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726613AbeGRPmI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Jul 2018 11:42:08 -0400
-Received: by mail-wr1-f68.google.com with SMTP id g6-v6so5043753wrp.0
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Jul 2018 08:03:49 -0700 (PDT)
-Date: Wed, 18 Jul 2018 17:03:44 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH RFC 7/8] xfs: return non-zero blocks for inline data
-Message-ID: <20180718150344.4dula4vwedoe2ide@odin.usersys.redhat.com>
-References: <1530846750-6686-8-git-send-email-shan.hai@oracle.com>
- <20180711130825.dkreolul3mlvtf3b@odin.usersys.redhat.com>
- <2e421e56-7463-3ac1-2eac-fa72ee8cd3eb@oracle.com>
- <fd877bb3-641f-b70c-a40e-e4287339ed53@oracle.com>
- <20180712013147.GK32415@magnolia>
- <e70ed6e4-a889-87ac-d25c-db2abc0e61a1@oracle.com>
- <20180712090858.u4aodoaf7nmhe3dt@odin.usersys.redhat.com>
- <3ed378e1-8ef3-ddff-7d5f-adf3be6abda8@oracle.com>
- <20180713123955.xbdleb3crazkjnt3@odin.usersys.redhat.com>
- <20180717135741.GA9086@infradead.org>
+Received: from userp2120.oracle.com ([156.151.31.85]:36934 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731046AbeGRQ3W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Jul 2018 12:29:22 -0400
+Subject: [PATCH 2/8] xfs: return from _defer_finish with a clean transaction
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 18 Jul 2018 08:50:40 -0700
+Message-ID: <153192904042.31685.60438652773989931.stgit@magnolia>
+In-Reply-To: <153192902811.31685.11590100183112248407.stgit@magnolia>
+References: <153192902811.31685.11590100183112248407.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180717135741.GA9086@infradead.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Shan Hai <shan.hai@oracle.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-On Tue, Jul 17, 2018 at 06:57:41AM -0700, Christoph Hellwig wrote:
-> On Fri, Jul 13, 2018 at 02:39:55PM +0200, Carlos Maiolino wrote:
-> > Did we? I couldn't find any interface, design, or whatever saying that userspace
-> > can safely assume a zero block file don't have data there and can be ignored,
-> > in fact, the link I posted previously already shows how tar people were not sure
-> > if they should assume a zero block file could be ignored. So, in fact, we didn't
-> > break anything, because as far as I know, nobody and no standard said an
-> > existing zero block file could be safely ignored, assuming it contains no data
-> > at all. Such thing might exist, but I'm not aware of.
-> 
-> You are right that there is no interface.  But breaking existing
-> userspace simply isn't an option either, especially when it could
-> lead to data loss and corruption.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Fair enough.
+Christoph Hellwig reported seeing the following assertion in
+generic/051:
 
--- 
-Carlos
+XFS: Assertion failed: tp->t_firstblock == NULLFSBLOCK, file: fs/xfs/libxfs5
+------------[ cut here ]------------
+kernel BUG at fs/xfs/xfs_message.c:102!
+invalid opcode: 0000 [#1] SMP PTI
+CPU: 2 PID: 20757 Comm: fsstress Not tainted 4.18.0-rc4+ #3969
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.11.1-1 04/01/4
+RIP: 0010:assfail+0x23/0x30
+Code: c3 66 0f 1f 44 00 00 48 89 f1 41 89 d0 48 c7 c6 88 e0 8c 82 48 89 fa
+RSP: 0018:ffff88012dc43c08 EFLAGS: 00010202
+RAX: 0000000000000000 RBX: ffff88012dc43ca0 RCX: 0000000000000000
+RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffff828480eb
+RBP: ffff88012aa92758 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: f000000000000000 R12: 0000000000000000
+R13: ffff88012dc43d48 R14: ffff88013092e7e8 R15: 0000000000000014
+FS:  00007f8d689b8e80(0000) GS:ffff88013fd00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f8d689c7000 CR3: 000000012ba6a000 CR4: 00000000000006e0
+Call Trace:
+ xfs_defer_init+0xff/0x160
+ xfs_reflink_remap_extent+0x31b/0xa00
+ xfs_reflink_remap_blocks+0xec/0x4a0
+ xfs_reflink_remap_range+0x3a1/0x650
+ xfs_file_dedupe_range+0x39/0x50
+ vfs_dedupe_file_range+0x218/0x260
+ do_vfs_ioctl+0x262/0x6a0
+ ? __se_sys_newfstat+0x3c/0x60
+ ksys_ioctl+0x35/0x60
+ __x64_sys_ioctl+0x11/0x20
+ do_syscall_64+0x4b/0x190
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
+
+The root cause of the assertion failure is that xfs_defer_finish doesn't
+roll the transaction after processing all the deferred items.  Therefore
+it returns a dirty transaction to the caller, which leaves the caller at
+risk of exceeding the transaction reservation if it logs more items.
+
+Brian Foster's patchset to move the defer_ops firstblock into the
+transaction requires t_firstblock == NULLFSBLOCK upon defer_ops
+initialization, which is how this was noticed at all.
+
+Reported-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_defer.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
+
+
+diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+index c3e5bffda4f5..3ba8bb308c3c 100644
+--- a/fs/xfs/libxfs/xfs_defer.c
++++ b/fs/xfs/libxfs/xfs_defer.c
+@@ -424,6 +424,12 @@ xfs_defer_finish(
+ 			cleanup_fn(*tp, state, error);
+ 	}
+ 
++	/*
++	 * Roll the transaction once more to avoid returning to the caller
++	 * with a dirty transaction.
++	 */
++	if ((*tp)->t_flags & XFS_TRANS_DIRTY)
++		error = xfs_defer_trans_roll(tp, dop);
+ out:
+ 	(*tp)->t_agfl_dfops = orig_dop;
+ 	if (error)
+
