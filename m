@@ -1,75 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:58322 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731887AbeGSSYp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Jul 2018 14:24:45 -0400
-Date: Thu, 19 Jul 2018 10:40:17 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/3] xfs: refactor unmount record write
-Message-ID: <20180719174017.GJ4813@magnolia>
-References: <153195715716.16758.18150859087945516040.stgit@magnolia>
- <153195716953.16758.3719225666646928225.stgit@magnolia>
- <20180719163947.GB10151@infradead.org>
+Received: from one.firstfloor.org ([193.170.194.197]:50122 "EHLO
+        one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729126AbeGRWMW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Jul 2018 18:12:22 -0400
+Date: Wed, 18 Jul 2018 14:22:40 -0700
+From: Andi Kleen <andi@firstfloor.org>
+Subject: XFS long delays on disk full
+Message-ID: <20180718212240.vxl33543lrh7vgzz@two.firstfloor.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180719163947.GB10151@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-On Thu, Jul 19, 2018 at 09:39:47AM -0700, Christoph Hellwig wrote:
-> Looks generally fine, but some tiny nitpicks:
-> 
-> > +	/* the data section must be 32 bit size aligned */
-> > +	struct {
-> > +		uint16_t magic;
-> > +		uint16_t pad1;
-> > +		uint32_t pad2; /* may as well make it 64 bits */
-> > +	} magic = {
-> > +		.magic = XLOG_UNMOUNT_TYPE,
-> > +	};
-> 
-> Can we please give this structure type a name and move it to
-> xfs_log_format.h?  They way this had been done always irked me.
+Hi,
 
-Ok.  It gets written to disk, so that makes sense.
+I was doing some testing on a 4.18-rc1 kernel, and a single threaded
+test wrote a fairly large file to a XFS file system, causing it to
+fill up.
 
-> > +	/*
-> > +	 * At this point, we're umounting anyway,
-> > +	 * so there's no point in transitioning log state
-> > +	 * to IOERROR. Just continue...
-> > +	 */
-> 
-> Use up all 80 lines, please.
-> 
-> > +	if (!(iclog->ic_state == XLOG_STATE_ACTIVE ||
-> > +	      iclog->ic_state == XLOG_STATE_DIRTY) &&
-> > +	    !XLOG_FORCED_SHUTDOWN(log))
-> > +		xlog_wait(&iclog->ic_force_wait, &log->l_icloglock);
-> > +	else
-> > +		spin_unlock(&log->l_icloglock);
-> 
-> 	switch (iclog->ic_state) {
-> 	default:
-> 		if (!XLOG_FORCED_SHUTDOWN(log)) {
-> 			xlog_wait(&iclog->ic_force_wait, &log->l_icloglock);
-> 			break;
-> 		}
-> 		/*FALLHRU*/
-> 	case XLOG_STATE_ACTIVE:
-> 	case XLOG_STATE_DIRTY:
-> 		spin_unlock(&log->l_icloglock);
-> 		break;
+After that the process hung in D state for a long time, and only
+recovered after several minutes. Here's the backtrace during
+the hang:
 
-<nod>
+[<0>] wb_wait_for_completion+0x5e/0x90
+[<0>] sync_inodes_sb+0xc9/0x290
+[<0>] xfs_flush_inodes+0x25/0x30 [xfs]
+[<0>] xfs_file_buffered_aio_write+0x2be/0x300 [xfs]
+[<0>] __vfs_write+0x114/0x1a0
+[<0>] vfs_write+0xad/0x1a0
+[<0>] ksys_write+0x52/0xc0
+[<0>] do_syscall_64+0x5b/0x160
+[<0>] entry_SYSCALL_64_after_hwframe+0x44/0xa9
+[<0>] 0xffffffffffffffff
 
---D
+There were no IO errors or similar.
 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Expected? Already fixed?
+
+Thanks,
+-Andi
+
