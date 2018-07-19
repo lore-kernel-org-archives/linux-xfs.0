@@ -1,20 +1,20 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:32934 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:32938 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1731236AbeGSOcg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1731724AbeGSOcg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Thu, 19 Jul 2018 10:32:36 -0400
 Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id A173C401CE8B
-        for <linux-xfs@vger.kernel.org>; Thu, 19 Jul 2018 13:49:19 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 1956840122A2
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Jul 2018 13:49:20 +0000 (UTC)
 Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 8CF171C5B0
-        for <linux-xfs@vger.kernel.org>; Thu, 19 Jul 2018 13:49:19 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 057201C5B0
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Jul 2018 13:49:20 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 01/14] xfs: pull up dfops from xfs_itruncate_extents()
-Date: Thu, 19 Jul 2018 09:49:06 -0400
-Message-Id: <20180719134919.29939-2-bfoster@redhat.com>
+Subject: [PATCH 05/14] xfs: remove unused deferred ops committed field
+Date: Thu, 19 Jul 2018 09:49:10 -0400
+Message-Id: <20180719134919.29939-6-bfoster@redhat.com>
 In-Reply-To: <20180719134919.29939-1-bfoster@redhat.com>
 References: <20180719134919.29939-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -22,181 +22,78 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-xfs_itruncate_extents[_flags]() uses a local dfops with a
-transaction provided by the caller. It uses hacky ->t_dfops
-replacement logic to avoid stomping over an already populated
-->t_dfops.
-
-The latter never occurs for current callers and the logic itself is
-not really appropriate. Clean this up by updating all callers to
-initialize a dfops and to use that down in xfs_itruncate_extents().
-This more closely resembles the upcoming logic where dfops will be
-embedded within the transaction. We can also replace the
-xfs_defer_init() in the xfs_itruncate_extents_flags() loop with an
-assert. Both dfops and firstblock should be in a valid state
-after xfs_defer_finish() and the inode joined to the dfops is fixed
-throughout the loop.
+dop_committed is set when deferred item processing rolls the
+transaction at least once, but is only ever accessed in tracepoints.
+The transaction roll/commit events are already available via
+independent tracepoints, so remove the otherwise unused field.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_attr_inactive.c | 3 +++
- fs/xfs/xfs_bmap_util.c     | 2 ++
- fs/xfs/xfs_inode.c         | 8 +++-----
- fs/xfs/xfs_iops.c          | 3 +++
- fs/xfs/xfs_qm_syscalls.c   | 3 +++
- 5 files changed, 14 insertions(+), 5 deletions(-)
+ fs/xfs/libxfs/xfs_defer.c | 1 -
+ fs/xfs/libxfs/xfs_defer.h | 1 -
+ fs/xfs/xfs_trace.h        | 8 ++------
+ 3 files changed, 2 insertions(+), 8 deletions(-)
 
-diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
-index 7ce10055f275..d3055972d3a6 100644
---- a/fs/xfs/xfs_attr_inactive.c
-+++ b/fs/xfs/xfs_attr_inactive.c
-@@ -26,6 +26,7 @@
- #include "xfs_quota.h"
- #include "xfs_trace.h"
- #include "xfs_dir2.h"
-+#include "xfs_defer.h"
- 
- /*
-  * Look at all the extents for this logical region,
-@@ -381,6 +382,7 @@ xfs_attr_inactive(
- {
- 	struct xfs_trans	*trans;
- 	struct xfs_mount	*mp;
-+	struct xfs_defer_ops	dfops;
- 	int			lock_mode = XFS_ILOCK_SHARED;
- 	int			error = 0;
- 
-@@ -397,6 +399,7 @@ xfs_attr_inactive(
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_attrinval, 0, 0, 0, &trans);
- 	if (error)
- 		goto out_destroy_fork;
-+	xfs_defer_init(trans, &dfops);
- 
- 	lock_mode = XFS_ILOCK_EXCL;
- 	xfs_ilock(dp, lock_mode);
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index d3a314fd721f..ee9481b142f0 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -792,6 +792,7 @@ xfs_free_eofblocks(
- 	int			nimaps;
- 	struct xfs_bmbt_irec	imap;
- 	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_defer_ops	dfops;
- 
- 	/*
- 	 * Figure out if there are any blocks beyond the end
-@@ -831,6 +832,7 @@ xfs_free_eofblocks(
- 			ASSERT(XFS_FORCED_SHUTDOWN(mp));
- 			return error;
- 		}
-+		xfs_defer_init(tp, &dfops);
- 
- 		xfs_ilock(ip, XFS_ILOCK_EXCL);
- 		xfs_trans_ijoin(tp, ip, 0);
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 7b2694d3901a..7d7d7e95fa17 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1541,8 +1541,6 @@ xfs_itruncate_extents_flags(
- {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_trans	*tp = *tpp;
--	struct xfs_defer_ops	*odfops = tp->t_dfops;
--	struct xfs_defer_ops	dfops;
- 	xfs_fileoff_t		first_unmap_block;
- 	xfs_fileoff_t		last_block;
- 	xfs_filblks_t		unmap_len;
-@@ -1579,7 +1577,7 @@ xfs_itruncate_extents_flags(
- 	ASSERT(first_unmap_block < last_block);
- 	unmap_len = last_block - first_unmap_block + 1;
- 	while (!done) {
--		xfs_defer_init(tp, &dfops);
-+		ASSERT(tp->t_firstblock == NULLFSBLOCK);
- 		error = xfs_bunmapi(tp, ip, first_unmap_block, unmap_len, flags,
- 				    XFS_ITRUNC_MAX_EXTENTS, &done);
- 		if (error)
-@@ -1618,8 +1616,6 @@ xfs_itruncate_extents_flags(
- 	trace_xfs_itruncate_extents_end(ip, new_size);
- 
- out:
--	/* ->t_dfops points to local stack, don't leak it! */
--	tp->t_dfops = odfops;
- 	*tpp = tp;
- 	return error;
- out_bmap_cancel:
-@@ -1723,6 +1719,7 @@ xfs_inactive_truncate(
- {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_trans	*tp;
-+	struct xfs_defer_ops	dfops;
- 	int			error;
- 
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
-@@ -1730,6 +1727,7 @@ xfs_inactive_truncate(
- 		ASSERT(XFS_FORCED_SHUTDOWN(mp));
+diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+index ef1535ceb5e7..d3466087db16 100644
+--- a/fs/xfs/libxfs/xfs_defer.c
++++ b/fs/xfs/libxfs/xfs_defer.c
+@@ -249,7 +249,6 @@ xfs_defer_trans_roll(
+ 		xfs_defer_trans_abort(*tp, dop, error);
  		return error;
  	}
-+	xfs_defer_init(tp, &dfops);
+-	dop->dop_committed = true;
  
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	xfs_trans_ijoin(tp, ip, 0);
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 0fa29f39d658..704b57a8b99e 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -26,6 +26,7 @@
- #include "xfs_dir2.h"
- #include "xfs_trans_space.h"
- #include "xfs_iomap.h"
-+#include "xfs_defer.h"
+ 	/* Rejoin the joined inodes. */
+ 	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++)
+diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
+index c17c9deda995..58c979c9f3fa 100644
+--- a/fs/xfs/libxfs/xfs_defer.h
++++ b/fs/xfs/libxfs/xfs_defer.h
+@@ -49,7 +49,6 @@ enum xfs_defer_ops_type {
+ #define XFS_DEFER_OPS_NR_BUFS	2	/* join up to two buffers */
  
- #include <linux/capability.h>
- #include <linux/xattr.h>
-@@ -812,6 +813,7 @@ xfs_setattr_size(
- 	struct inode		*inode = VFS_I(ip);
- 	xfs_off_t		oldsize, newsize;
- 	struct xfs_trans	*tp;
-+	struct xfs_defer_ops	dfops;
- 	int			error;
- 	uint			lock_flags = 0;
- 	bool			did_zeroing = false;
-@@ -915,6 +917,7 @@ xfs_setattr_size(
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
- 	if (error)
- 		return error;
-+	xfs_defer_init(tp, &dfops);
- 
- 	lock_flags |= XFS_ILOCK_EXCL;
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index abc8a21e3a82..df0783303887 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -22,6 +22,7 @@
- #include "xfs_qm.h"
- #include "xfs_trace.h"
- #include "xfs_icache.h"
-+#include "xfs_defer.h"
- 
- STATIC int	xfs_qm_log_quotaoff(xfs_mount_t *, xfs_qoff_logitem_t **, uint);
- STATIC int	xfs_qm_log_quotaoff_end(xfs_mount_t *, xfs_qoff_logitem_t *,
-@@ -213,6 +214,7 @@ xfs_qm_scall_trunc_qfile(
- {
- 	struct xfs_inode	*ip;
- 	struct xfs_trans	*tp;
-+	struct xfs_defer_ops	dfops;
- 	int			error;
- 
- 	if (ino == NULLFSINO)
-@@ -229,6 +231,7 @@ xfs_qm_scall_trunc_qfile(
- 		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
- 		goto out_put;
- 	}
-+	xfs_defer_init(tp, &dfops);
- 
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	xfs_trans_ijoin(tp, ip, 0);
+ struct xfs_defer_ops {
+-	bool			dop_committed;	/* did any trans commit? */
+ 	bool			dop_low;	/* alloc in low mode */
+ 	struct list_head	dop_intake;	/* unlogged pending work */
+ 	struct list_head	dop_pending;	/* logged pending work */
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index b668fc127aa7..cc6995cfce66 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -2229,14 +2229,12 @@ DECLARE_EVENT_CLASS(xfs_defer_class,
+ 	TP_fast_assign(
+ 		__entry->dev = mp ? mp->m_super->s_dev : 0;
+ 		__entry->dop = dop;
+-		__entry->committed = dop->dop_committed;
+ 		__entry->low = dop->dop_low;
+ 		__entry->caller_ip = caller_ip;
+ 	),
+-	TP_printk("dev %d:%d ops %p committed %d low %d, caller %pS",
++	TP_printk("dev %d:%d ops %p low %d, caller %pS",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->dop,
+-		  __entry->committed,
+ 		  __entry->low,
+ 		  (char *)__entry->caller_ip)
+ )
+@@ -2259,14 +2257,12 @@ DECLARE_EVENT_CLASS(xfs_defer_error_class,
+ 	TP_fast_assign(
+ 		__entry->dev = mp ? mp->m_super->s_dev : 0;
+ 		__entry->dop = dop;
+-		__entry->committed = dop->dop_committed;
+ 		__entry->low = dop->dop_low;
+ 		__entry->error = error;
+ 	),
+-	TP_printk("dev %d:%d ops %p committed %d low %d err %d",
++	TP_printk("dev %d:%d ops %p low %d err %d",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->dop,
+-		  __entry->committed,
+ 		  __entry->low,
+ 		  __entry->error)
+ )
 -- 
 2.17.1
 
