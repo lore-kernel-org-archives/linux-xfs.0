@@ -1,12 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:45276 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1730053AbeGSNHp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 19 Jul 2018 09:07:45 -0400
-Date: Thu, 19 Jul 2018 08:24:48 -0400
-From: Brian Foster <bfoster@redhat.com>
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:40332 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730195AbeGSNLo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Jul 2018 09:11:44 -0400
+Received: by mail-wr1-f68.google.com with SMTP id t6-v6so7882315wrn.7
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Jul 2018 05:28:48 -0700 (PDT)
+Date: Thu, 19 Jul 2018 14:28:45 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
 Subject: Re: [PATCH 4/8] xfs: clean up xfs_btree_del_cursor callers
-Message-ID: <20180719122448.GF25672@bfoster>
+Message-ID: <20180719122845.t56jxc4cmjd7l3xp@odin.usersys.redhat.com>
 References: <153192902811.31685.11590100183112248407.stgit@magnolia>
  <153192905779.31685.9007503975897283723.stgit@magnolia>
 MIME-Version: 1.0
@@ -26,10 +28,10 @@ On Wed, Jul 18, 2018 at 08:50:57AM -0700, Darrick J. Wong wrote:
 > these require some minor code refactoring.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
 >  fs/xfs/libxfs/xfs_refcount.c |   11 +++--------
 >  fs/xfs/scrub/repair.c        |    7 +++----
 >  2 files changed, 6 insertions(+), 12 deletions(-)
@@ -97,3 +99,6 @@ Reviewed-by: Brian Foster <bfoster@redhat.com>
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Carlos
