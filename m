@@ -1,20 +1,20 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:47904 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:43712 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1731477AbeGSOcg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 19 Jul 2018 10:32:36 -0400
+        id S1731769AbeGSOch (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 19 Jul 2018 10:32:37 -0400
 Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 4F86F40201CA
-        for <linux-xfs@vger.kernel.org>; Thu, 19 Jul 2018 13:49:20 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 0DC7A72622
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Jul 2018 13:49:21 +0000 (UTC)
 Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 3B7B21C5B0
+        by smtp.corp.redhat.com (Postfix) with ESMTP id EDE121C5B0
         for <linux-xfs@vger.kernel.org>; Thu, 19 Jul 2018 13:49:20 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 07/14] xfs: pack holes in xfs_defer_ops and xfs_trans
-Date: Thu, 19 Jul 2018 09:49:12 -0400
-Message-Id: <20180719134919.29939-8-bfoster@redhat.com>
+Subject: [PATCH 13/14] xfs: remove unnecessary dfops init calls in xattr code
+Date: Thu, 19 Jul 2018 09:49:18 -0400
+Message-Id: <20180719134919.29939-14-bfoster@redhat.com>
 In-Reply-To: <20180719134919.29939-1-bfoster@redhat.com>
 References: <20180719134919.29939-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -22,54 +22,120 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Both structures have holes due to member alignment. Move dop_low to
-the end of xfs_defer ops to sanitize the cache line alignment and
-move t_flags to save 8 bytes in xfs_trans.
+Each xfs_defer_init() call in the xattr code uses the internal dfops
+reference. In addition, a successful xfs_defer_finish() always
+returns with a reset xfs_defer_ops structure.
+
+Given that along with the fact that every xfs_defer_init() call in
+the xattr code is followed up by an xfs_defer_finish(), the former
+calls are no longer necessary and can be removed.
+
+Note that the xfs_defer_init() call in the remote value copy loop of
+xfs_attr_rmtval_set() is not followed by a finish, but the dfops is
+unused in this instance.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_defer.h | 3 ++-
- fs/xfs/xfs_trans.h        | 2 +-
- 2 files changed, 3 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_attr.c        | 8 --------
+ fs/xfs/libxfs/xfs_attr_remote.c | 3 ---
+ 2 files changed, 11 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-index 58c979c9f3fa..8f58f217fdff 100644
---- a/fs/xfs/libxfs/xfs_defer.h
-+++ b/fs/xfs/libxfs/xfs_defer.h
-@@ -49,13 +49,14 @@ enum xfs_defer_ops_type {
- #define XFS_DEFER_OPS_NR_BUFS	2	/* join up to two buffers */
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 66a22c80a0db..3e98f0af389c 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -587,7 +587,6 @@ xfs_attr_leaf_addname(
+ 		 * Commit that transaction so that the node_addname() call
+ 		 * can manage its own transactions.
+ 		 */
+-		xfs_defer_init(args->trans, args->trans->t_dfops);
+ 		error = xfs_attr3_leaf_to_node(args);
+ 		if (error)
+ 			goto out_defer_cancel;
+@@ -676,7 +675,6 @@ xfs_attr_leaf_addname(
+ 		 * If the result is small enough, shrink it all into the inode.
+ 		 */
+ 		if ((forkoff = xfs_attr_shortform_allfit(bp, dp))) {
+-			xfs_defer_init(args->trans, args->trans->t_dfops);
+ 			error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
+ 			/* bp is gone due to xfs_da_shrink_inode */
+ 			if (error)
+@@ -741,7 +739,6 @@ xfs_attr_leaf_removename(
+ 	 * If the result is small enough, shrink it all into the inode.
+ 	 */
+ 	if ((forkoff = xfs_attr_shortform_allfit(bp, dp))) {
+-		xfs_defer_init(args->trans, args->trans->t_dfops);
+ 		error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
+ 		/* bp is gone due to xfs_da_shrink_inode */
+ 		if (error)
+@@ -870,7 +867,6 @@ xfs_attr_node_addname(
+ 			 */
+ 			xfs_da_state_free(state);
+ 			state = NULL;
+-			xfs_defer_init(args->trans, args->trans->t_dfops);
+ 			error = xfs_attr3_leaf_to_node(args);
+ 			if (error)
+ 				goto out_defer_cancel;
+@@ -897,7 +893,6 @@ xfs_attr_node_addname(
+ 		 * in the index/blkno/rmtblkno/rmtblkcnt fields and
+ 		 * in the index2/blkno2/rmtblkno2/rmtblkcnt2 fields.
+ 		 */
+-		xfs_defer_init(args->trans, args->trans->t_dfops);
+ 		error = xfs_da3_split(state);
+ 		if (error)
+ 			goto out_defer_cancel;
+@@ -995,7 +990,6 @@ xfs_attr_node_addname(
+ 		 * Check to see if the tree needs to be collapsed.
+ 		 */
+ 		if (retval && (state->path.active > 1)) {
+-			xfs_defer_init(args->trans, args->trans->t_dfops);
+ 			error = xfs_da3_join(state);
+ 			if (error)
+ 				goto out_defer_cancel;
+@@ -1120,7 +1114,6 @@ xfs_attr_node_removename(
+ 	 * Check to see if the tree needs to be collapsed.
+ 	 */
+ 	if (retval && (state->path.active > 1)) {
+-		xfs_defer_init(args->trans, args->trans->t_dfops);
+ 		error = xfs_da3_join(state);
+ 		if (error)
+ 			goto out_defer_cancel;
+@@ -1152,7 +1145,6 @@ xfs_attr_node_removename(
+ 			goto out;
  
- struct xfs_defer_ops {
--	bool			dop_low;	/* alloc in low mode */
- 	struct list_head	dop_intake;	/* unlogged pending work */
- 	struct list_head	dop_pending;	/* logged pending work */
+ 		if ((forkoff = xfs_attr_shortform_allfit(bp, dp))) {
+-			xfs_defer_init(args->trans, args->trans->t_dfops);
+ 			error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
+ 			/* bp is gone due to xfs_da_shrink_inode */
+ 			if (error)
+diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+index 829ab20f0cd7..0fbfb740949e 100644
+--- a/fs/xfs/libxfs/xfs_attr_remote.c
++++ b/fs/xfs/libxfs/xfs_attr_remote.c
+@@ -480,7 +480,6 @@ xfs_attr_rmtval_set(
+ 		 * extent and then crash then the block may not contain the
+ 		 * correct metadata after log recovery occurs.
+ 		 */
+-		xfs_defer_init(args->trans, args->trans->t_dfops);
+ 		nmap = 1;
+ 		error = xfs_bmapi_write(args->trans, dp, (xfs_fileoff_t)lblkno,
+ 				  blkcnt, XFS_BMAPI_ATTRFORK, args->total, &map,
+@@ -522,7 +521,6 @@ xfs_attr_rmtval_set(
  
- 	/* relog these with each roll */
- 	struct xfs_inode	*dop_inodes[XFS_DEFER_OPS_NR_INODES];
- 	struct xfs_buf		*dop_bufs[XFS_DEFER_OPS_NR_BUFS];
-+
-+	bool			dop_low;	/* alloc in low mode */
- };
+ 		ASSERT(blkcnt > 0);
  
- void xfs_defer_add(struct xfs_defer_ops *dop, enum xfs_defer_ops_type type,
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 37fdacc690c7..6f857af61455 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -102,12 +102,12 @@ typedef struct xfs_trans {
- 	unsigned int		t_blk_res_used;	/* # of resvd blocks used */
- 	unsigned int		t_rtx_res;	/* # of rt extents resvd */
- 	unsigned int		t_rtx_res_used;	/* # of resvd rt extents used */
-+	unsigned int		t_flags;	/* misc flags */
- 	xfs_fsblock_t		t_firstblock;	/* first block allocated */
- 	struct xlog_ticket	*t_ticket;	/* log mgr ticket */
- 	struct xfs_mount	*t_mountp;	/* ptr to fs mount struct */
- 	struct xfs_dquot_acct   *t_dqinfo;	/* acctg info for dquots */
- 	struct xfs_defer_ops	*t_dfops;	/* dfops reference */
--	unsigned int		t_flags;	/* misc flags */
- 	int64_t			t_icount_delta;	/* superblock icount change */
- 	int64_t			t_ifree_delta;	/* superblock ifree change */
- 	int64_t			t_fdblocks_delta; /* superblock fdblocks chg */
+-		xfs_defer_init(args->trans, args->trans->t_dfops);
+ 		nmap = 1;
+ 		error = xfs_bmapi_read(dp, (xfs_fileoff_t)lblkno,
+ 				       blkcnt, &map, &nmap,
+@@ -625,7 +623,6 @@ xfs_attr_rmtval_remove(
+ 	blkcnt = args->rmtblkcnt;
+ 	done = 0;
+ 	while (!done) {
+-		xfs_defer_init(args->trans, args->trans->t_dfops);
+ 		error = xfs_bunmapi(args->trans, args->dp, lblkno, blkcnt,
+ 				    XFS_BMAPI_ATTRFORK, 1, &done);
+ 		if (error)
 -- 
 2.17.1
 
