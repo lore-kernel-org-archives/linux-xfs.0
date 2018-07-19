@@ -1,45 +1,214 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([193.170.194.197]:50122 "EHLO
-        one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729126AbeGRWMW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Jul 2018 18:12:22 -0400
-Date: Wed, 18 Jul 2018 14:22:40 -0700
-From: Andi Kleen <andi@firstfloor.org>
-Subject: XFS long delays on disk full
-Message-ID: <20180718212240.vxl33543lrh7vgzz@two.firstfloor.org>
+Received: from aserp2130.oracle.com ([141.146.126.79]:37868 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731940AbeGSSZ5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Jul 2018 14:25:57 -0400
+Date: Thu, 19 Jul 2018 10:41:30 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 2/3] xfs: refactor unmount record write
+Message-ID: <20180719174130.GK4813@magnolia>
+References: <153195715716.16758.18150859087945516040.stgit@magnolia>
+ <153195716953.16758.3719225666646928225.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <153195716953.16758.3719225666646928225.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: linux-xfs@vger.kernel.org
+Cc: Christoph Hellwig <hch@infradead.org>
 
-Hi,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I was doing some testing on a 4.18-rc1 kernel, and a single threaded
-test wrote a fairly large file to a XFS file system, causing it to
-fill up.
+Refactor the writing of the unmount record into a separate helper.  No
+functionality changes.
 
-After that the process hung in D state for a long time, and only
-recovered after several minutes. Here's the backtrace during
-the hang:
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: various code cleanups and move the structure header definition
+---
+ fs/xfs/libxfs/xfs_log_format.h |   13 ++++
+ fs/xfs/xfs_log.c               |  131 +++++++++++++++++++++-------------------
+ 2 files changed, 82 insertions(+), 62 deletions(-)
 
-[<0>] wb_wait_for_completion+0x5e/0x90
-[<0>] sync_inodes_sb+0xc9/0x290
-[<0>] xfs_flush_inodes+0x25/0x30 [xfs]
-[<0>] xfs_file_buffered_aio_write+0x2be/0x300 [xfs]
-[<0>] __vfs_write+0x114/0x1a0
-[<0>] vfs_write+0xad/0x1a0
-[<0>] ksys_write+0x52/0xc0
-[<0>] do_syscall_64+0x5b/0x160
-[<0>] entry_SYSCALL_64_after_hwframe+0x44/0xa9
-[<0>] 0xffffffffffffffff
-
-There were no IO errors or similar.
-
-Expected? Already fixed?
-
-Thanks,
--Andi
-
+diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+index 79bb79853c9f..e5f97c69b320 100644
+--- a/fs/xfs/libxfs/xfs_log_format.h
++++ b/fs/xfs/libxfs/xfs_log_format.h
+@@ -77,6 +77,19 @@ static inline uint xlog_get_cycle(char *ptr)
+ 
+ #define XLOG_UNMOUNT_TYPE	0x556e	/* Un for Unmount */
+ 
++/*
++ * Log item for unmount records.
++ *
++ * The unmount record used to have a string "Unmount filesystem--" in the
++ * data section where the "Un" was really a magic number (XLOG_UNMOUNT_TYPE).
++ * We just write the magic number now; see xfs_log_unmount_write.
++ */
++struct xfs_unmount_log_format {
++	uint16_t	magic;	/* XLOG_UNMOUNT_TYPE */
++	uint16_t	pad1;
++	uint32_t	pad2;	/* may as well make it 64 bits */
++};
++
+ /* Region types for iovec's i_type */
+ #define XLOG_REG_TYPE_BFORMAT		1
+ #define XLOG_REG_TYPE_BCHUNK		2
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 5e56f3b93d4b..bac586cbc54e 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -826,6 +826,74 @@ xfs_log_mount_cancel(
+  * deallocation must not be done until source-end.
+  */
+ 
++/* Actually write the unmount record to disk. */
++static void
++xfs_log_write_unmount_record(
++	struct xfs_mount	*mp)
++{
++	/* the data section must be 32 bit size aligned */
++	struct xfs_unmount_log_format magic = {
++		.magic = XLOG_UNMOUNT_TYPE,
++	};
++	struct xfs_log_iovec reg = {
++		.i_addr = &magic,
++		.i_len = sizeof(magic),
++		.i_type = XLOG_REG_TYPE_UNMOUNT,
++	};
++	struct xfs_log_vec vec = {
++		.lv_niovecs = 1,
++		.lv_iovecp = &reg,
++	};
++	struct xlog		*log = mp->m_log;
++	struct xlog_in_core	*iclog;
++	struct xlog_ticket	*tic = NULL;
++	xfs_lsn_t		lsn;
++	int			error;
++
++	error = xfs_log_reserve(mp, 600, 1, &tic, XFS_LOG, 0);
++	if (error)
++		goto out_err;
++
++	/* remove inited flag, and account for space used */
++	tic->t_flags = 0;
++	tic->t_curr_res -= sizeof(magic);
++	error = xlog_write(log, &vec, tic, &lsn, NULL, XLOG_UNMOUNT_TRANS);
++	/*
++	 * At this point, we're umounting anyway, so there's no point in
++	 * transitioning log state to IOERROR. Just continue...
++	 */
++out_err:
++	if (error)
++		xfs_alert(mp, "%s: unmount record failed", __func__);
++
++	spin_lock(&log->l_icloglock);
++	iclog = log->l_iclog;
++	atomic_inc(&iclog->ic_refcnt);
++	xlog_state_want_sync(log, iclog);
++	spin_unlock(&log->l_icloglock);
++	error = xlog_state_release_iclog(log, iclog);
++
++	spin_lock(&log->l_icloglock);
++	switch (iclog->ic_state) {
++	default:
++		if (!XLOG_FORCED_SHUTDOWN(log)) {
++			xlog_wait(&iclog->ic_force_wait, &log->l_icloglock);
++			break;
++		}
++		/* fall through */
++	case XLOG_STATE_ACTIVE:
++	case XLOG_STATE_DIRTY:
++		spin_unlock(&log->l_icloglock);
++		break;
++	}
++
++	if (tic) {
++		trace_xfs_log_umount_write(log, tic);
++		xlog_ungrant_log_space(log, tic);
++		xfs_log_ticket_put(tic);
++	}
++}
++
+ /*
+  * Unmount record used to have a string "Unmount filesystem--" in the
+  * data section where the "Un" was really a magic number (XLOG_UNMOUNT_TYPE).
+@@ -842,8 +910,6 @@ xfs_log_unmount_write(xfs_mount_t *mp)
+ #ifdef DEBUG
+ 	xlog_in_core_t	 *first_iclog;
+ #endif
+-	xlog_ticket_t	*tic = NULL;
+-	xfs_lsn_t	 lsn;
+ 	int		 error;
+ 
+ 	/*
+@@ -870,66 +936,7 @@ xfs_log_unmount_write(xfs_mount_t *mp)
+ 	} while (iclog != first_iclog);
+ #endif
+ 	if (! (XLOG_FORCED_SHUTDOWN(log))) {
+-		error = xfs_log_reserve(mp, 600, 1, &tic, XFS_LOG, 0);
+-		if (!error) {
+-			/* the data section must be 32 bit size aligned */
+-			struct {
+-			    uint16_t magic;
+-			    uint16_t pad1;
+-			    uint32_t pad2; /* may as well make it 64 bits */
+-			} magic = {
+-				.magic = XLOG_UNMOUNT_TYPE,
+-			};
+-			struct xfs_log_iovec reg = {
+-				.i_addr = &magic,
+-				.i_len = sizeof(magic),
+-				.i_type = XLOG_REG_TYPE_UNMOUNT,
+-			};
+-			struct xfs_log_vec vec = {
+-				.lv_niovecs = 1,
+-				.lv_iovecp = &reg,
+-			};
+-
+-			/* remove inited flag, and account for space used */
+-			tic->t_flags = 0;
+-			tic->t_curr_res -= sizeof(magic);
+-			error = xlog_write(log, &vec, tic, &lsn,
+-					   NULL, XLOG_UNMOUNT_TRANS);
+-			/*
+-			 * At this point, we're umounting anyway,
+-			 * so there's no point in transitioning log state
+-			 * to IOERROR. Just continue...
+-			 */
+-		}
+-
+-		if (error)
+-			xfs_alert(mp, "%s: unmount record failed", __func__);
+-
+-
+-		spin_lock(&log->l_icloglock);
+-		iclog = log->l_iclog;
+-		atomic_inc(&iclog->ic_refcnt);
+-		xlog_state_want_sync(log, iclog);
+-		spin_unlock(&log->l_icloglock);
+-		error = xlog_state_release_iclog(log, iclog);
+-
+-		spin_lock(&log->l_icloglock);
+-		if (!(iclog->ic_state == XLOG_STATE_ACTIVE ||
+-		      iclog->ic_state == XLOG_STATE_DIRTY)) {
+-			if (!XLOG_FORCED_SHUTDOWN(log)) {
+-				xlog_wait(&iclog->ic_force_wait,
+-							&log->l_icloglock);
+-			} else {
+-				spin_unlock(&log->l_icloglock);
+-			}
+-		} else {
+-			spin_unlock(&log->l_icloglock);
+-		}
+-		if (tic) {
+-			trace_xfs_log_umount_write(log, tic);
+-			xlog_ungrant_log_space(log, tic);
+-			xfs_log_ticket_put(tic);
+-		}
++		xfs_log_write_unmount_record(mp);
+ 	} else {
+ 		/*
+ 		 * We're already in forced_shutdown mode, couldn't
