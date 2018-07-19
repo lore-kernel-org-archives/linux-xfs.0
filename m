@@ -1,20 +1,20 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:47902 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:32936 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1731643AbeGSOcf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1731477AbeGSOcf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Thu, 19 Jul 2018 10:32:35 -0400
 Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id D73D9402243B
+        by mx1.redhat.com (Postfix) with ESMTPS id BC5EF4002592
         for <linux-xfs@vger.kernel.org>; Thu, 19 Jul 2018 13:49:19 +0000 (UTC)
 Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id C35391C5B0
+        by smtp.corp.redhat.com (Postfix) with ESMTP id A88421C5B0
         for <linux-xfs@vger.kernel.org>; Thu, 19 Jul 2018 13:49:19 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 03/14] xfs: fix transaction leak on remote attr set/remove failure
-Date: Thu, 19 Jul 2018 09:49:08 -0400
-Message-Id: <20180719134919.29939-4-bfoster@redhat.com>
+Subject: [PATCH 02/14] xfs: use ->t_dfops in log recovery intent processing
+Date: Thu, 19 Jul 2018 09:49:07 -0400
+Message-Id: <20180719134919.29939-3-bfoster@redhat.com>
 In-Reply-To: <20180719134919.29939-1-bfoster@redhat.com>
 References: <20180719134919.29939-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -22,40 +22,30 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-The xattr remote value set/remove handlers both clear args.trans in
-the error path without having cancelled the transaction. This leaks
-the transaction, causes warnings around returning to userspace with
-locks held and leads to system lockups or other general problems.
-
-The higher level xfs_attr_[set|remove]() functions already detect
-and cancel args.trans when set in the error path. Drop the NULL
-assignments from the rmtval handlers and allow the callers to clean
-up the transaction correctly.
+xlog_finish_defer_ops() processes the deferred operations collected
+over the entire intent recovery sequence. We can't xfs_defer_init()
+here because the dfops is already populated. Attach it manually and
+eliminate the last caller of xfs_defer_finish() that doesn't pass
+->t_dfops.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_attr_remote.c | 2 --
- 1 file changed, 2 deletions(-)
+ fs/xfs/xfs_log_recover.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
-index 7841e6255129..829ab20f0cd7 100644
---- a/fs/xfs/libxfs/xfs_attr_remote.c
-+++ b/fs/xfs/libxfs/xfs_attr_remote.c
-@@ -558,7 +558,6 @@ xfs_attr_rmtval_set(
- 	return 0;
- out_defer_cancel:
- 	xfs_defer_cancel(args->trans->t_dfops);
--	args->trans = NULL;
- 	return error;
- }
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index cbac943896f4..3289811eb076 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -4854,6 +4854,8 @@ xlog_finish_defer_ops(
+ 			0, XFS_TRANS_RESERVE, &tp);
+ 	if (error)
+ 		return error;
++	/* dfops is already populated so assign it manually */
++	tp->t_dfops = dfops;
  
-@@ -646,6 +645,5 @@ xfs_attr_rmtval_remove(
- 	return 0;
- out_defer_cancel:
- 	xfs_defer_cancel(args->trans->t_dfops);
--	args->trans = NULL;
- 	return error;
- }
+ 	error = xfs_defer_finish(&tp, dfops);
+ 	if (error)
 -- 
 2.17.1
 
