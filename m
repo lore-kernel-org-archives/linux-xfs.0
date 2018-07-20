@@ -1,129 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:39778 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729648AbeGQRko (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Jul 2018 13:40:44 -0400
-Date: Tue, 17 Jul 2018 10:06:54 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:55596 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387900AbeGTRIa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Jul 2018 13:08:30 -0400
+Date: Fri, 20 Jul 2018 09:19:23 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] libxfs: add more bounds checking to sb sanity checks
-Message-ID: <20180717170654.GR32415@magnolia>
-References: <20180713131003.31121-1-billodo@redhat.com>
- <20180716192655.27792-1-billodo@redhat.com>
+Subject: Re: [PATCH] mkfs: avoid divide-by-zero when hardware reports optimal
+ i/o size as 0
+Message-ID: <20180720161923.GO4813@magnolia>
+References: <6f62dbc6-f516-e8b5-1f08-6be227a61219@suse.com>
+ <20180720155529.qw7nthesfu6xu7ie@odin.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180716192655.27792-1-billodo@redhat.com>
+In-Reply-To: <20180720155529.qw7nthesfu6xu7ie@odin.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Bill O'Donnell <billodo@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Jeff Mahoney <jeffm@suse.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <david@fromorbit.com>
 
-On Mon, Jul 16, 2018 at 02:26:55PM -0500, Bill O'Donnell wrote:
-> Current sb verifier doesn't check bounds on sb_fdblocks and sb_ifree.
-> Add sanity checks for these parameters.
+On Fri, Jul 20, 2018 at 05:55:29PM +0200, Carlos Maiolino wrote:
+> On Thu, Jul 19, 2018 at 05:23:22PM -0400, Jeff Mahoney wrote:
+> > Commit 051b4e37f5e (mkfs: factor AG alignment) factored out the
+> > AG alignment code into a separate function.  It got rid of
+> > redundant checks for dswidth != 0 since calc_stripe_factors was
+> > supposed to guarantee that if dsunit is non-zero dswidth will be
+> > as well.  Unfortunately, there's hardware out there that reports its
+> > optimal i/o size as larger than the maximum i/o size, which the kernel
+> > treats as broken and zeros out the optimal i/o size.  We'll accept
+> > the multi-sector dsunit but have a zero dswidth and hit a divide-by-zero
+> > in align_ag_geometry.
+> > 
+> > To resolve this we can check the topology before consuming it, default
+> > to using the stripe unit as the stripe width, and warn the user about it.
+> > 
 > 
-> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
-> ---
-> v2: make extra sanity checks exclusive to writes (allow read)
-> 
->  fs/xfs/libxfs/xfs_sb.c | 22 +++++++++++++++++-----
->  1 file changed, 17 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index 350119eeaecb..6a98ec68e8ad 100644
-> --- a/fs/xfs/libxfs/xfs_sb.c
-> +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -104,7 +104,8 @@ xfs_mount_validate_sb(
->  	xfs_mount_t	*mp,
->  	xfs_sb_t	*sbp,
->  	bool		check_inprogress,
-> -	bool		check_version)
-> +	bool		check_version,
-> +	bool		write_flag)
+> I wonder if this shouldn't go into blkid_get_topology since something is wrong
+> with the information reported by the storage.
 
-I notice that check_version and write_flag are always xor -- either
-we're reading the sb and set check_version, or we're writing the sb and
-set write_flag.  Perhaps we can combine these two as write_flag?
+If the storage gives us crap geometry information we don't have to use
+it.  Keep the message that we autodetected nonsense and are dropping it;
+the sysadmin can always re-run mkfs with sensible dsunit/dswidth.
 
-if (check_version)
-	check version stuff...
+> And require a force_overwrite to continue, at this point, something looks quite
+> wrong in the storage, and I think this is the last 'resource' a sysadmin will
+> have to notice this before making the FS, and start using it, so, maybe requiring
+> force_overwrite would bring more attention.
 
-becomes:
-
-if (!write_flag)
-	check version stuff...
-
-and we only have to pass around one flag.
-
->  {
->  	uint32_t	agcount = 0;
->  	uint32_t	rem;
-> @@ -266,6 +267,15 @@ xfs_mount_validate_sb(
->  		return -EFSCORRUPTED;
->  	}
->  
-> +	/* Additional sb sanity checks for writes */
-> +	if (write_flag) {
-> +		if (sbp->sb_fdblocks > sbp->sb_dblocks ||
-> +		    sbp->sb_ifree > sbp->sb_icount) {
-
-Hmm, we still need something that will detect this on read and set a
-flag to force recalculation of the summary counters... though since a
-patch to implement that flag is sitting in my tree I'll take care of
-that part separately.
+I prefer reserving -f for "This is about to destroy something and can't
+be undone", not "This auto-optimization is screwed up, continue? (y/N)"
 
 --D
 
-> +			    xfs_notice(mp, "SB sanity check failed");
-> +			    return -EFSCORRUPTED;
-> +		}
-> +	}
-> +
->  	if (sbp->sb_unit) {
->  		if (!xfs_sb_version_hasdalign(sbp) ||
->  		    sbp->sb_unit > sbp->sb_width ||
-> @@ -599,7 +609,9 @@ xfs_sb_to_disk(
->  static int
->  xfs_sb_verify(
->  	struct xfs_buf	*bp,
-> -	bool		check_version)
-> +	bool		check_version,
-> +	bool		write_flag)
-> +
->  {
->  	struct xfs_mount *mp = bp->b_target->bt_mount;
->  	struct xfs_sb	sb;
-> @@ -616,7 +628,7 @@ xfs_sb_verify(
->  	 */
->  	return xfs_mount_validate_sb(mp, &sb,
->  				     bp->b_maps[0].bm_bn == XFS_SB_DADDR,
-> -				     check_version);
-> +				     check_version, write_flag);
->  }
->  
->  /*
-> @@ -657,7 +669,7 @@ xfs_sb_read_verify(
->  			}
->  		}
->  	}
-> -	error = xfs_sb_verify(bp, true);
-> +	error = xfs_sb_verify(bp, true, false);
->  
->  out_error:
->  	if (error == -EFSCORRUPTED || error == -EFSBADCRC)
-> @@ -695,7 +707,7 @@ xfs_sb_write_verify(
->  	struct xfs_buf_log_item	*bip = bp->b_log_item;
->  	int			error;
->  
-> -	error = xfs_sb_verify(bp, false);
-> +	error = xfs_sb_verify(bp, false, true);
->  	if (error) {
->  		xfs_verifier_error(bp, error, __this_address);
->  		return;
-> -- 
-> 2.17.1
+> > Fixes: 051b4e37f5e (mkfs: factor AG alignment)
+> > Signed-off-by: Jeff Mahoney <jeffm@suse.com>
+> > ---
+> >  mkfs/xfs_mkfs.c | 6 ++++++
+> >  1 file changed, 6 insertions(+)
+> > 
+> > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> > index a135e06e..35542e57 100644
+> > --- a/mkfs/xfs_mkfs.c
+> > +++ b/mkfs/xfs_mkfs.c
+> > @@ -2295,6 +2295,12 @@ _("data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"),
+> >  	if (!dsunit) {
+> >  		dsunit = ft->dsunit;
+> >  		dswidth = ft->dswidth;
+> > +		if (dsunit && dswidth == 0) {
+> > +			fprintf(stderr,
+> > +_("%s: Volume reports stripe unit of %d bytes but stripe width of 0.  Using stripe width of %d bytes, which may not be optimal.\n"),
+> > +				progname, dsunit << 9, dsunit << 9);
+> > +			dswidth = dsunit;
+> > +		}
+> >  		use_dev = true;
+> >  	} else {
+> >  		/* check and warn is alignment is sub-optimal */
+> > -- 
+> > 2.16.4
+> > 
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
+> -- 
+> Carlos
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
