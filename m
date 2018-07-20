@@ -1,91 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:60302 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388090AbeGXFkI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Jul 2018 01:40:08 -0400
-Subject: Re: [PATCH 1/2 V3] xfs_repair: notify user if free inodes contain
- errors
-From: Eric Sandeen <sandeen@sandeen.net>
-References: <b6f745ab-3016-9a95-3085-8584f7200b64@redhat.com>
- <75f628bc-e8e7-b4fd-0bbb-fb3ca0fabac8@sandeen.net>
-Message-ID: <3a14c161-a476-58a9-1a13-c2225f5bbb51@sandeen.net>
-Date: Mon, 23 Jul 2018 21:35:35 -0700
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:56279 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731203AbeGTQo2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Jul 2018 12:44:28 -0400
+Received: by mail-wm0-f68.google.com with SMTP id f21-v6so9959066wmc.5
+        for <linux-xfs@vger.kernel.org>; Fri, 20 Jul 2018 08:55:33 -0700 (PDT)
+Date: Fri, 20 Jul 2018 17:55:29 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] mkfs: avoid divide-by-zero when hardware reports optimal
+ i/o size as 0
+Message-ID: <20180720155529.qw7nthesfu6xu7ie@odin.usersys.redhat.com>
+References: <6f62dbc6-f516-e8b5-1f08-6be227a61219@suse.com>
 MIME-Version: 1.0
-In-Reply-To: <75f628bc-e8e7-b4fd-0bbb-fb3ca0fabac8@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <6f62dbc6-f516-e8b5-1f08-6be227a61219@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Jeff Mahoney <jeffm@suse.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <david@fromorbit.com>
 
-On 7/23/18 7:34 PM, Eric Sandeen wrote:
-> xfs_repair checks allocated but unused (free) inodes in on-disk clusters,
-> and up until now silently repairs any errors, and as a result does not
-> alter exit status if errors are found.
->     
-> The in-kernel verifiers will be noisy about these errors and instruct
-> the user to run repair, so it's best if repair is explicit about any
-> fixes it makes as a result.
+On Thu, Jul 19, 2018 at 05:23:22PM -0400, Jeff Mahoney wrote:
+> Commit 051b4e37f5e (mkfs: factor AG alignment) factored out the
+> AG alignment code into a separate function.  It got rid of
+> redundant checks for dswidth != 0 since calc_stripe_factors was
+> supposed to guarantee that if dsunit is non-zero dswidth will be
+> as well.  Unfortunately, there's hardware out there that reports its
+> optimal i/o size as larger than the maximum i/o size, which the kernel
+> treats as broken and zeros out the optimal i/o size.  We'll accept
+> the multi-sector dsunit but have a zero dswidth and hit a divide-by-zero
+> in align_ag_geometry.
 > 
-> To ensure we catch anything the kernel would complain about, re-use
-> xfs_dinode_verify to determine whether we must clear a free inode.
+> To resolve this we can check the topology before consuming it, default
+> to using the stripe unit as the stripe width, and warn the user about it.
 > 
-> Note, however, that the verifier contains only a subset of the checks
-> currently in clear_dinode.  This should be ok; if it's not, the checks
-> should be added to the verifier in any case.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Ugh, dammit, pulled the trigger too soon, tests were looking fine until
-the last few.  Need to look at this more.
+I wonder if this shouldn't go into blkid_get_topology since something is wrong
+with the information reported by the storage.
+And require a force_overwrite to continue, at this point, something looks quite
+wrong in the storage, and I think this is the last 'resource' a sysadmin will
+have to notice this before making the FS, and start using it, so, maybe requiring
+force_overwrite would bring more attention.
 
+> Fixes: 051b4e37f5e (mkfs: factor AG alignment)
+> Signed-off-by: Jeff Mahoney <jeffm@suse.com>
 > ---
+>  mkfs/xfs_mkfs.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
 > 
-> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-> index a98483b..05c06a7 100644
-> --- a/libxfs/libxfs_api_defs.h
-> +++ b/libxfs/libxfs_api_defs.h
-> @@ -134,6 +134,7 @@
->  #define xfs_symlink_hdr_ok		libxfs_symlink_hdr_ok
->  
->  #define xfs_verify_cksum		libxfs_verify_cksum
-> +#define xfs_dinode_verify		libxfs_dinode_verify
->  
->  #define xfs_alloc_ag_max_usable		libxfs_alloc_ag_max_usable
->  #define xfs_allocbt_maxrecs		libxfs_allocbt_maxrecs
-> diff --git a/repair/dinode.c b/repair/dinode.c
-> index d36338f..c0db15a 100644
-> --- a/repair/dinode.c
-> +++ b/repair/dinode.c
-> @@ -2560,12 +2560,20 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
->  		 */
->  		if (was_free) {
->  			/*
-> -			 * easy case, inode free -- inode and map agree, clear
-> +			 * easy case, inode free -- inode and map agree, check
->  			 * it just in case to ensure that format, etc. are
->  			 * set correctly
->  			 */
-> -			if (!no_modify)
-> -				*dirty += clear_dinode(mp, dino, lino);
-> +			if (libxfs_dinode_verify(mp, lino, dino) != NULL) {
-> +				do_warn(
-> + _("free inode %" PRIu64 " contains errors, "), lino);
-> +				if (!no_modify) {
-> +					*dirty += clear_dinode(mp, dino, lino);
-> +					do_warn(_("corrected\n"));
-> +				} else {
-> +					do_warn(_("would correct\n"));
-> +				}
-> +			}
->  			*used = is_free;
->  			return 0;
->  		}
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index a135e06e..35542e57 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -2295,6 +2295,12 @@ _("data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"),
+>  	if (!dsunit) {
+>  		dsunit = ft->dsunit;
+>  		dswidth = ft->dswidth;
+> +		if (dsunit && dswidth == 0) {
+> +			fprintf(stderr,
+> +_("%s: Volume reports stripe unit of %d bytes but stripe width of 0.  Using stripe width of %d bytes, which may not be optimal.\n"),
+> +				progname, dsunit << 9, dsunit << 9);
+> +			dswidth = dsunit;
+> +		}
+>  		use_dev = true;
+>  	} else {
+>  		/* check and warn is alignment is sub-optimal */
+> -- 
+> 2.16.4
+> 
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+
+-- 
+Carlos
