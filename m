@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:33154 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:48840 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1731000AbeGTOyu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 20 Jul 2018 10:54:50 -0400
-Date: Fri, 20 Jul 2018 10:06:21 -0400
+        id S1731251AbeGTP3q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 20 Jul 2018 11:29:46 -0400
+Date: Fri, 20 Jul 2018 10:41:07 -0400
 From: Brian Foster <bfoster@redhat.com>
 Subject: Re: [PATCH 00/14] xfs: embed dfops in the transaction
-Message-ID: <20180720140621.GA34727@bfoster>
+Message-ID: <20180720144106.GB34727@bfoster>
 References: <20180719134919.29939-1-bfoster@redhat.com>
  <20180719200557.GK6558@infradead.org>
  <20180719203643.GJ29404@bfoster>
@@ -62,65 +62,106 @@ On Thu, Jul 19, 2018 at 02:36:34PM -0700, Darrick J. Wong wrote:
 > 
 > <nod>
 > 
-> > > > I have yet to think
-> > > > about that one, but I do have an RFC quality patch laying around that
-> > > > replaces the ->dop_low flag with a transaction flag (->t_flags),
-> > > > eliminating the need for that extra byte in xfs_defer_ops. The one quirk
-> > > > associated with that is the question of whether we want to preserve the
-> > > > behavior where low mode remains active across the series of transactions
-> > > > associated with the traditional (on-stack) dfops or is reset on
-> > > > transaction roll (a la firstblock). I'll post that RFC separately for a
-> > > > more proper discussion..
-> > > 
-> > > That sounds like a good enough start.  For now I'd keep the existing
-> > > behavior because it really is deep magic and needs a deep audit.  I
-> > > had started on that a long time ago but dropped the ball, but mixing
-> > > it with this work is probably not helpful.
-> > 
-> > That sounds reasonable to me. We can always change behavior in a
-> > subsequent patch. IIRC the only issue is that intent recovery code has
-> > no way to carry dop_low mode around without a transaction. It currently
-> > passes around a dfops for each intent. Hmm, perhaps we can have the
-> > caller just allocate a transaction, pass it to the recovery helpers for
-> > reservation and then just keep rolling it rather than have each helper
-> > allocate a transaction anew. I'll look into it, or let me know if you
-> > have any other thoughts/ideas.
-> 
-> That could get tricky, since each log intent item type allocates its own
-> transaction with some context-dependent reservation and resblks. Rolling
-> our way through the intent items would require us to calculate the max
-> reservation size and resblks for all the items beforehand for the
-> initial _trans_alloc, which would be kinda messy to avoid having a flags
-> field.
-> 
 
-Yeah, I was more thinking of creating a zero reservation transaction in
-the caller and (re)exporting xfs_trans_reserve() so each helper could
-reserve commit/roll.
+Ok.. on this one, running some tests shows that pretty much all dfops
+joined bufs/inodes are essentially held in the transaction (which would
+probably be a bug if that were not the case). The opposite is also true
+for buffers, because a held buffers must also be held in subsequent
+transactions to ensure the caller still has a reference after dfops
+completion. OTOH, there are some places where inodes are joined to a
+transaction with lock_flags == 0 and dfops are run without the inode
+joined to the dfops. I don't necessarily think this is a bug for the
+inode case because the caller still owns the inode lock, we just don't
+relog it across the series of transactions required for dfops
+completion.
 
-Taking a look at the code, I wonder if the simplest thing is to allocate
-an empty transaction in the caller (so nesting shouldn't be an issue, I
-think, and since we already have that mechanism for scrub) instead of a
-raw dfops, pass that new tp around and then open-code the transfer of
-low mode back and forth the same way dfops are moved back and forth
-until intent recovery completion. In fact, we could probably create a
-little xlog_recover_tp_move() wrapper to do both and (more importantly)
-document the hackery in one place until we determine whether to kill the
-multi transaction low mode behavior. A bit ugly, but probably simpler
-than trying to bake this one-off corner case (that can hopefully be
-killed off) into the core transaction infrastructure via trans dups and
-reservation games. Thoughts?
+I don't think it would necessarily be a problem if we did relog the
+inode in these cases, however. In fact I think the argument has been
+made in the past to do that explicitly (with xfs_defer_[i|b]join()) in
+one or two cases. So given that, the overall approach still seems
+reasonable enough to me. FWIW, the appended patch shows the cases I've
+caught on a quick xfstests run that would be affected (i.e., where we
+don't currently defer_ijoin() but implicitly would with an "automatic"
+relog mechanism). I'm running a longer test to try and catch any others,
+but let me know if anybody sees problems with this or has other ideas...
 
 Brian
 
-> --D
-> 
-> > Brian
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--- 8< ---
+
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 60138514ea86..c3cbe05cdb1b 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1120,6 +1120,7 @@ xfs_bmap_add_attrfork(
+ 			xfs_log_sb(tp);
+ 	}
+ 
++	xfs_defer_ijoin(tp->t_dfops, ip);
+ 	error = xfs_trans_commit(tp);
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	return error;
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 7b40e9fef381..e63712e67fd8 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -979,6 +979,7 @@ xfs_alloc_file_space(
+ 		/*
+ 		 * Complete the transaction
+ 		 */
++		xfs_defer_ijoin(tp->t_dfops, ip);
+ 		error = xfs_trans_commit(tp);
+ 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 		if (error)
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 0e4bd559a6a7..24fdca90b588 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1810,6 +1810,7 @@ xfs_inactive_ifree(
+ 	 * Just ignore errors at this point.  There is nothing we can do except
+ 	 * to try to keep going. Make sure it's not a silent error.
+ 	 */
++	xfs_defer_ijoin(tp->t_dfops, ip);
+ 	error = xfs_trans_commit(tp);
+ 	if (error)
+ 		xfs_notice(mp, "%s: xfs_trans_commit returned error %d",
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 8e8ca9f03f0e..464b4b3225bb 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -261,6 +261,7 @@ xfs_iomap_write_direct(
+ 	/*
+ 	 * Complete the transaction
+ 	 */
++	xfs_defer_ijoin(tp->t_dfops, ip);
+ 	error = xfs_trans_commit(tp);
+ 	if (error)
+ 		goto out_unlock;
+@@ -762,6 +763,7 @@ xfs_iomap_write_allocate(
+ 			if (error)
+ 				goto trans_cancel;
+ 
++			xfs_defer_ijoin(tp->t_dfops, ip);
+ 			error = xfs_trans_commit(tp);
+ 			if (error)
+ 				goto error0;
+@@ -879,6 +881,7 @@ xfs_iomap_write_unwritten(
+ 			xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 		}
+ 
++		xfs_defer_ijoin(tp->t_dfops, ip);
+ 		error = xfs_trans_commit(tp);
+ 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 		if (error)
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index cddde219630a..8984f283da7b 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -435,6 +435,7 @@ xfs_reflink_allocate_cow(
+ 	xfs_inode_set_cowblocks_tag(ip);
+ 
+ 	/* Finish up. */
++	xfs_defer_ijoin(tp->t_dfops, ip);
+ 	error = xfs_trans_commit(tp);
+ 	if (error)
+ 		return error;
