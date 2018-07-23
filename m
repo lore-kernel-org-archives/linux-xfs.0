@@ -1,44 +1,107 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:44992 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2387937AbeGWNdk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 23 Jul 2018 09:33:40 -0400
-Date: Mon, 23 Jul 2018 08:32:39 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: Query about the handling of a bug reported before
-Message-ID: <20180723123239.GA46987@bfoster>
-References: <21AA8603-85D9-429A-A713-8B86F341FFC4@gatech.edu>
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:44227 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387975AbeGWNWZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Jul 2018 09:22:25 -0400
+Received: by mail-wr1-f68.google.com with SMTP id r16-v6so479450wrt.11
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Jul 2018 05:21:29 -0700 (PDT)
+Date: Mon, 23 Jul 2018 14:21:25 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] mkfs: avoid divide-by-zero when hardware reports optimal
+ i/o size as 0
+Message-ID: <20180723122125.jsm3mp55trwuevyw@odin.usersys.redhat.com>
+References: <6f62dbc6-f516-e8b5-1f08-6be227a61219@suse.com>
+ <20180720155529.qw7nthesfu6xu7ie@odin.usersys.redhat.com>
+ <20180720161923.GO4813@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <21AA8603-85D9-429A-A713-8B86F341FFC4@gatech.edu>
+In-Reply-To: <20180720161923.GO4813@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Xu, Wen" <wen.xu@gatech.edu>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Jeff Mahoney <jeffm@suse.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <david@fromorbit.com>
 
-On Sun, Jul 22, 2018 at 06:30:03AM +0000, Xu, Wen wrote:
-> Hi XFS developers,
+On Fri, Jul 20, 2018 at 09:19:23AM -0700, Darrick J. Wong wrote:
+> On Fri, Jul 20, 2018 at 05:55:29PM +0200, Carlos Maiolino wrote:
+> > On Thu, Jul 19, 2018 at 05:23:22PM -0400, Jeff Mahoney wrote:
+> > > Commit 051b4e37f5e (mkfs: factor AG alignment) factored out the
+> > > AG alignment code into a separate function.  It got rid of
+> > > redundant checks for dswidth != 0 since calc_stripe_factors was
+> > > supposed to guarantee that if dsunit is non-zero dswidth will be
+> > > as well.  Unfortunately, there's hardware out there that reports its
+> > > optimal i/o size as larger than the maximum i/o size, which the kernel
+> > > treats as broken and zeros out the optimal i/o size.  We'll accept
+> > > the multi-sector dsunit but have a zero dswidth and hit a divide-by-zero
+> > > in align_ag_geometry.
+> > > 
+> > > To resolve this we can check the topology before consuming it, default
+> > > to using the stripe unit as the stripe width, and warn the user about it.
+> > > 
+> > 
+> > I wonder if this shouldn't go into blkid_get_topology since something is wrong
+> > with the information reported by the storage.
 > 
-> I wonder if this bug
+> If the storage gives us crap geometry information we don't have to use
+> it.  Keep the message that we autodetected nonsense and are dropping it;
+> the sysadmin can always re-run mkfs with sensible dsunit/dswidth.
 > 
-> https://bugzilla.kernel.org/show_bug.cgi?id=200127
+> > And require a force_overwrite to continue, at this point, something looks quite
+> > wrong in the storage, and I think this is the last 'resource' a sysadmin will
+> > have to notice this before making the FS, and start using it, so, maybe requiring
+> > force_overwrite would bring more attention.
 > 
-> has already been resolved by any patch.
-> 
+> I prefer reserving -f for "This is about to destroy something and can't
+> be undone", not "This auto-optimization is screwed up, continue? (y/N)"
 
-It looks like you're on a kernel that already has the agfl reset
-mechanism. I'm not aware of anything else in that area off the top of my
-head, but FWIW, I don't see the KASAN error with a quick check on a
-KASAN-enabled latest for-next (4.18.0-rc4) kernel. Have you given that a
-try?
+Yeah, I agree, forget everything I said here :P
 
-Brian
-
-> Thanks,
-> Wen
+> 
+> --D
+> 
+> > > Fixes: 051b4e37f5e (mkfs: factor AG alignment)
+> > > Signed-off-by: Jeff Mahoney <jeffm@suse.com>
+> > > ---
+> > >  mkfs/xfs_mkfs.c | 6 ++++++
+> > >  1 file changed, 6 insertions(+)
+> > > 
+> > > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> > > index a135e06e..35542e57 100644
+> > > --- a/mkfs/xfs_mkfs.c
+> > > +++ b/mkfs/xfs_mkfs.c
+> > > @@ -2295,6 +2295,12 @@ _("data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"),
+> > >  	if (!dsunit) {
+> > >  		dsunit = ft->dsunit;
+> > >  		dswidth = ft->dswidth;
+> > > +		if (dsunit && dswidth == 0) {
+> > > +			fprintf(stderr,
+> > > +_("%s: Volume reports stripe unit of %d bytes but stripe width of 0.  Using stripe width of %d bytes, which may not be optimal.\n"),
+> > > +				progname, dsunit << 9, dsunit << 9);
+> > > +			dswidth = dsunit;
+> > > +		}
+> > >  		use_dev = true;
+> > >  	} else {
+> > >  		/* check and warn is alignment is sub-optimal */
+> > > -- 
+> > > 2.16.4
+> > > 
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> > -- 
+> > Carlos
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Carlos
