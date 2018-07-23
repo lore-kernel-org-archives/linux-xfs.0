@@ -1,47 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:57288 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732677AbeGTRAg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Jul 2018 13:00:36 -0400
-Date: Fri, 20 Jul 2018 09:11:37 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 00/14] xfs: embed dfops in the transaction
-Message-ID: <20180720161137.GG12054@infradead.org>
-References: <20180719134919.29939-1-bfoster@redhat.com>
- <20180719200557.GK6558@infradead.org>
- <20180719203643.GJ29404@bfoster>
- <20180719213634.GN4813@magnolia>
- <20180720144106.GB34727@bfoster>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:36158 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728369AbeGWVtk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 23 Jul 2018 17:49:40 -0400
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 745014023444
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Jul 2018 20:46:42 +0000 (UTC)
+Date: Mon, 23 Jul 2018 15:46:40 -0500
+From: Bill O'Donnell <billodo@redhat.com>
+Subject: Re: [PATCH v2 05/15] xfs: remove unused deferred ops committed field
+Message-ID: <20180723204640.GE18737@redhat.com>
+References: <20180723130414.47980-1-bfoster@redhat.com>
+ <20180723130414.47980-6-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180720144106.GB34727@bfoster>
+In-Reply-To: <20180723130414.47980-6-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Jul 20, 2018 at 10:41:07AM -0400, Brian Foster wrote:
-> Ok.. on this one, running some tests shows that pretty much all dfops
-> joined bufs/inodes are essentially held in the transaction (which would
-> probably be a bug if that were not the case).
+On Mon, Jul 23, 2018 at 09:04:04AM -0400, Brian Foster wrote:
+> dop_committed is set when deferred item processing rolls the
+> transaction at least once, but is only ever accessed in tracepoints.
+> The transaction roll/commit events are already available via
+> independent tracepoints, so remove the otherwise unused field.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-That's what I'd expect.
+Looks good.
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
 
-> The opposite is also true
-> for buffers, because a held buffers must also be held in subsequent
-> transactions to ensure the caller still has a reference after dfops
-> completion. OTOH, there are some places where inodes are joined to a
-> transaction with lock_flags == 0 and dfops are run without the inode
-> joined to the dfops. I don't necessarily think this is a bug for the
-> inode case because the caller still owns the inode lock, we just don't
-> relog it across the series of transactions required for dfops
-> completion.
-
-I suspect many of those are a bug.  Yes, we could have deferred ops
-that don't need the inode, but in general we'd want the same objects
-for the deferred inode.
-
-That being said we could always have an indicator for that case, but
-I'd rather make it opt-in than opt-out.
+> ---
+>  fs/xfs/libxfs/xfs_defer.c | 1 -
+>  fs/xfs/libxfs/xfs_defer.h | 1 -
+>  fs/xfs/xfs_trace.h        | 8 ++------
+>  3 files changed, 2 insertions(+), 8 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+> index ee734a8b3fa9..0df09c094e42 100644
+> --- a/fs/xfs/libxfs/xfs_defer.c
+> +++ b/fs/xfs/libxfs/xfs_defer.c
+> @@ -249,7 +249,6 @@ xfs_defer_trans_roll(
+>  		xfs_defer_trans_abort(*tp, dop, error);
+>  		return error;
+>  	}
+> -	dop->dop_committed = true;
+>  
+>  	/* Rejoin the joined inodes. */
+>  	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++)
+> diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
+> index c17c9deda995..58c979c9f3fa 100644
+> --- a/fs/xfs/libxfs/xfs_defer.h
+> +++ b/fs/xfs/libxfs/xfs_defer.h
+> @@ -49,7 +49,6 @@ enum xfs_defer_ops_type {
+>  #define XFS_DEFER_OPS_NR_BUFS	2	/* join up to two buffers */
+>  
+>  struct xfs_defer_ops {
+> -	bool			dop_committed;	/* did any trans commit? */
+>  	bool			dop_low;	/* alloc in low mode */
+>  	struct list_head	dop_intake;	/* unlogged pending work */
+>  	struct list_head	dop_pending;	/* logged pending work */
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index b668fc127aa7..cc6995cfce66 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -2229,14 +2229,12 @@ DECLARE_EVENT_CLASS(xfs_defer_class,
+>  	TP_fast_assign(
+>  		__entry->dev = mp ? mp->m_super->s_dev : 0;
+>  		__entry->dop = dop;
+> -		__entry->committed = dop->dop_committed;
+>  		__entry->low = dop->dop_low;
+>  		__entry->caller_ip = caller_ip;
+>  	),
+> -	TP_printk("dev %d:%d ops %p committed %d low %d, caller %pS",
+> +	TP_printk("dev %d:%d ops %p low %d, caller %pS",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+>  		  __entry->dop,
+> -		  __entry->committed,
+>  		  __entry->low,
+>  		  (char *)__entry->caller_ip)
+>  )
+> @@ -2259,14 +2257,12 @@ DECLARE_EVENT_CLASS(xfs_defer_error_class,
+>  	TP_fast_assign(
+>  		__entry->dev = mp ? mp->m_super->s_dev : 0;
+>  		__entry->dop = dop;
+> -		__entry->committed = dop->dop_committed;
+>  		__entry->low = dop->dop_low;
+>  		__entry->error = error;
+>  	),
+> -	TP_printk("dev %d:%d ops %p committed %d low %d err %d",
+> +	TP_printk("dev %d:%d ops %p low %d err %d",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+>  		  __entry->dop,
+> -		  __entry->committed,
+>  		  __entry->low,
+>  		  __entry->error)
+>  )
+> -- 
+> 2.17.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
