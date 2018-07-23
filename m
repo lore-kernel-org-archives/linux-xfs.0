@@ -1,73 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:40330 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388241AbeGXHhj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Jul 2018 03:37:39 -0400
-Subject: Re: xfsprogs-dev failing to build
-References: <20180724040944.GH27624@mayhem.atnf.CSIRO.AU>
- <20180724042738.GS4813@magnolia>
- <20180724043734.GI27624@mayhem.atnf.CSIRO.AU>
- <20180724062200.GT4813@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <dff339d2-9241-87b1-16f6-88608461129d@sandeen.net>
-Date: Mon, 23 Jul 2018 23:32:43 -0700
-MIME-Version: 1.0
-In-Reply-To: <20180724062200.GT4813@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:43424 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2388017AbeGWOFX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 23 Jul 2018 10:05:23 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 7CF9D81A4EA0
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Jul 2018 13:04:14 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 685E3111AF23
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Jul 2018 13:04:14 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2 02/15] xfs: use ->t_dfops in log recovery intent processing
+Date: Mon, 23 Jul 2018 09:04:01 -0400
+Message-Id: <20180723130414.47980-3-bfoster@redhat.com>
+In-Reply-To: <20180723130414.47980-1-bfoster@redhat.com>
+References: <20180723130414.47980-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Vincent McIntyre <vincent.mcintyre@csiro.au>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
+xlog_finish_defer_ops() processes the deferred operations collected
+over the entire intent recovery sequence. We can't xfs_defer_init()
+here because the dfops is already populated. Attach it manually and
+eliminate the last caller of xfs_defer_finish() that doesn't pass
+->t_dfops.
 
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_log_recover.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-On 7/23/18 11:22 PM, Darrick J. Wong wrote:
-> On Tue, Jul 24, 2018 at 02:37:34PM +1000, Vincent McIntyre wrote:
->> On Mon, Jul 23, 2018 at 09:27:38PM -0700, Darrick J. Wong wrote:
->>> On Tue, Jul 24, 2018 at 02:09:44PM +1000, Vincent McIntyre wrote:
->>>> Hi
->>>>
->>>> I am trying to build the latest xfsprogs on an older system,
->>>> details below. The configure script is failing on what appears
->>>> to be an unexpanded m4 macro,
->>>>
->>>>   PKG_CHECK_MODULES(libicu, icu-i18n, have_libicu=yes, have_libicu=no)
->>>
->>> Hmmm, I thought that pkg.m4 would be pulled in via aclocal
->>> automatically, but I could be wrong. :/
->>>
->>> What version of pkg-config (or I guess pkgconf?) is on the system?
->>>
->>
->> It was not actually installed, and that was the problem.
->> The tree builds ok now, and xfs_repair -n works ok.
->>
->> A bit odd pkg-config was not installed, I had installed the
->> 'build-essential' metapackage but I guess it didn't pull in.
->>
->>>> I'm not quite sure how to work around this or if it is a bug.
->>>> Any advice would be appreciated.
->>>
->>> Definitely some sort of bug...
->>
->> I think the only fix needed is for the xfs.org faq page
->>
->> - apt-get install libtool automake gettext libblkid-dev uuid-dev
->> + apt-get install libtool automake gettext libblkid-dev uuid-dev pkg-config
->>
->> Possibly libicu-dev should be added to the list also.
-> 
-> FWIW they're both listed in debian/control as build dependencies...
-> 
-> Does anyone out there have the connections to the xfs.org maintainers to
-> fix that...?
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index cbac943896f4..3289811eb076 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -4854,6 +4854,8 @@ xlog_finish_defer_ops(
+ 			0, XFS_TRANS_RESERVE, &tp);
+ 	if (error)
+ 		return error;
++	/* dfops is already populated so assign it manually */
++	tp->t_dfops = dfops;
+ 
+ 	error = xfs_defer_finish(&tp, dfops);
+ 	if (error)
+-- 
+2.17.1
 
-I ... guess I still have a wiki login.  I added it.
-
-Another reason why wikis actually suck, and we should keep all documentation
-under SCM control.  :/
-
--Eric
