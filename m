@@ -1,64 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:34624 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2387941AbeGWVlf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 23 Jul 2018 17:41:35 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 250B17DAC6
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Jul 2018 20:38:40 +0000 (UTC)
-Date: Mon, 23 Jul 2018 15:38:38 -0500
-From: Bill O'Donnell <billodo@redhat.com>
-Subject: Re: [PATCH v2 02/15] xfs: use ->t_dfops in log recovery intent
- processing
-Message-ID: <20180723203838.GB18737@redhat.com>
-References: <20180723130414.47980-1-bfoster@redhat.com>
- <20180723130414.47980-3-bfoster@redhat.com>
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:38680 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387801AbeGWNMj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Jul 2018 09:12:39 -0400
+Received: by mail-wr1-f68.google.com with SMTP id v14-v6so470755wro.5
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Jul 2018 05:11:44 -0700 (PDT)
+Date: Mon, 23 Jul 2018 14:11:40 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 5/6] xfs: maintain a sequence count for inode fork
+ manipulations
+Message-ID: <20180723121140.lpcjgdpyasop2744@odin.usersys.redhat.com>
+References: <20180717232405.18511-1-hch@lst.de>
+ <20180717232405.18511-6-hch@lst.de>
+ <20180718144004.bvvrssvtcpd2b2uw@odin.usersys.redhat.com>
+ <20180719163233.GA24047@lst.de>
+ <20180719182715.GL4813@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180723130414.47980-3-bfoster@redhat.com>
+In-Reply-To: <20180719182715.GL4813@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Mon, Jul 23, 2018 at 09:04:01AM -0400, Brian Foster wrote:
-> xlog_finish_defer_ops() processes the deferred operations collected
-> over the entire intent recovery sequence. We can't xfs_defer_init()
-> here because the dfops is already populated. Attach it manually and
-> eliminate the last caller of xfs_defer_finish() that doesn't pass
-> ->t_dfops.
+On Thu, Jul 19, 2018 at 11:27:16AM -0700, Darrick J. Wong wrote:
+> On Thu, Jul 19, 2018 at 06:32:33PM +0200, Christoph Hellwig wrote:
+> > On Wed, Jul 18, 2018 at 04:40:04PM +0200, Carlos Maiolino wrote:
+> > > 
+> > > 
+> > > >  struct xfs_ifork {
+> > > >  	int			if_bytes;	/* bytes in if_u1 */
+> > > > +	unsigned int		if_seq;
+> > > 
+> > > I wonder if a comment here wouldn't be helpful in the future, like: /* ext list modification counter */
+> > 
+> > Does that really add more value?  If so I'm happy having it added
+> > when applying.
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Looks good.
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+For me at least it adds, IMHO, it's simpler to see a small comment in the struct
+definition other than search what exactly it's supposed to mean in the
+implementation, but well, this is my view.
 
-> ---
->  fs/xfs/xfs_log_recover.c | 2 ++
->  1 file changed, 2 insertions(+)
+> Seeing as we have anecdotal evidence that more work will be needed if we
+> ever want to use it to track change count in the data fork, I think I'll
+> add the following comment:
 > 
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index cbac943896f4..3289811eb076 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -4854,6 +4854,8 @@ xlog_finish_defer_ops(
->  			0, XFS_TRANS_RESERVE, &tp);
->  	if (error)
->  		return error;
-> +	/* dfops is already populated so assign it manually */
-> +	tp->t_dfops = dfops;
->  
->  	error = xfs_defer_finish(&tp, dfops);
->  	if (error)
-> -- 
-> 2.17.1
+> 	unsigned int		if_seq;		/* cow fork mod count */
+>
+
+/me didn't understand, but *shurg*
+ 
+> --D
 > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Carlos
