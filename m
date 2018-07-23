@@ -1,68 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:38680 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387801AbeGWNMj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Jul 2018 09:12:39 -0400
-Received: by mail-wr1-f68.google.com with SMTP id v14-v6so470755wro.5
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Jul 2018 05:11:44 -0700 (PDT)
-Date: Mon, 23 Jul 2018 14:11:40 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 5/6] xfs: maintain a sequence count for inode fork
- manipulations
-Message-ID: <20180723121140.lpcjgdpyasop2744@odin.usersys.redhat.com>
-References: <20180717232405.18511-1-hch@lst.de>
- <20180717232405.18511-6-hch@lst.de>
- <20180718144004.bvvrssvtcpd2b2uw@odin.usersys.redhat.com>
- <20180719163233.GA24047@lst.de>
- <20180719182715.GL4813@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180719182715.GL4813@magnolia>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:49706 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2388105AbeGWOFX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 23 Jul 2018 10:05:23 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 9AD9E4059FF8
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Jul 2018 13:04:14 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 84948111AF23
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Jul 2018 13:04:14 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2 03/15] xfs: fix transaction leak on remote attr set/remove failure
+Date: Mon, 23 Jul 2018 09:04:02 -0400
+Message-Id: <20180723130414.47980-4-bfoster@redhat.com>
+In-Reply-To: <20180723130414.47980-1-bfoster@redhat.com>
+References: <20180723130414.47980-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Thu, Jul 19, 2018 at 11:27:16AM -0700, Darrick J. Wong wrote:
-> On Thu, Jul 19, 2018 at 06:32:33PM +0200, Christoph Hellwig wrote:
-> > On Wed, Jul 18, 2018 at 04:40:04PM +0200, Carlos Maiolino wrote:
-> > > 
-> > > 
-> > > >  struct xfs_ifork {
-> > > >  	int			if_bytes;	/* bytes in if_u1 */
-> > > > +	unsigned int		if_seq;
-> > > 
-> > > I wonder if a comment here wouldn't be helpful in the future, like: /* ext list modification counter */
-> > 
-> > Does that really add more value?  If so I'm happy having it added
-> > when applying.
-> 
+The xattr remote value set/remove handlers both clear args.trans in
+the error path without having cancelled the transaction. This leaks
+the transaction, causes warnings around returning to userspace with
+locks held and leads to system lockups or other general problems.
 
-For me at least it adds, IMHO, it's simpler to see a small comment in the struct
-definition other than search what exactly it's supposed to mean in the
-implementation, but well, this is my view.
+The higher level xfs_attr_[set|remove]() functions already detect
+and cancel args.trans when set in the error path. Drop the NULL
+assignments from the rmtval handlers and allow the callers to clean
+up the transaction correctly.
 
-> Seeing as we have anecdotal evidence that more work will be needed if we
-> ever want to use it to track change count in the data fork, I think I'll
-> add the following comment:
-> 
-> 	unsigned int		if_seq;		/* cow fork mod count */
->
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_attr_remote.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-/me didn't understand, but *shurg*
+diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+index 7841e6255129..829ab20f0cd7 100644
+--- a/fs/xfs/libxfs/xfs_attr_remote.c
++++ b/fs/xfs/libxfs/xfs_attr_remote.c
+@@ -558,7 +558,6 @@ xfs_attr_rmtval_set(
+ 	return 0;
+ out_defer_cancel:
+ 	xfs_defer_cancel(args->trans->t_dfops);
+-	args->trans = NULL;
+ 	return error;
+ }
  
-> --D
-> 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+@@ -646,6 +645,5 @@ xfs_attr_rmtval_remove(
+ 	return 0;
+ out_defer_cancel:
+ 	xfs_defer_cancel(args->trans->t_dfops);
+-	args->trans = NULL;
+ 	return error;
+ }
 -- 
-Carlos
+2.17.1
+
