@@ -1,305 +1,133 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:50576 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730850AbeG0XsP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Jul 2018 19:48:15 -0400
-Subject: [PATCH 1/2] misc: use xfs_agfl_walk where appropriate
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 27 Jul 2018 15:24:13 -0700
-Message-ID: <153273025311.29060.14065633572750924491.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:49708 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2388106AbeGWOFY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 23 Jul 2018 10:05:24 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id B70FB4059FF9
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Jul 2018 13:04:14 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id A0DB1111AF23
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Jul 2018 13:04:14 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2 04/15] xfs: make deferred processing safe for embedded dfops
+Date: Mon, 23 Jul 2018 09:04:03 -0400
+Message-Id: <20180723130414.47980-5-bfoster@redhat.com>
+In-Reply-To: <20180723130414.47980-1-bfoster@redhat.com>
+References: <20180723130414.47980-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+xfs_defer_finish() has a couple quirks that are not safe with
+respect to the upcoming internal dfops functionality. First,
+xfs_defer_finish() attaches the passed in dfops structure to
+->t_dfops and caches and restores the original value. Second, it
+continues to use the initial dfops reference before and after the
+transaction roll.
 
-Use the xfs_agfl_walk function to iterate every block in the AGFL,
-instead of open-coding it db and repair.
+These behaviors assume that dop is an independent memory allocation
+from the transaction itself, which may not always be true once
+transactions begin to use an embedded dfops structure. In the latter
+model, dfops processing creates a new xfs_defer_ops structure with
+each transaction and the associated state is migrated across to the
+new transaction.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Fix up xfs_defer_finish() to handle the possibility of the current
+dfops changing after a transaction roll. Since ->t_dfops is used
+unconditionally in this path, it is no longer necessary to
+attach/restore ->t_dfops and pass it explicitly down to
+xfs_defer_trans_roll(). Update dop in the latter function and the
+caller to ensure that it always refers to the current dfops
+structure.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- db/check.c               |   60 ++++++++++++++++++++++--------------------
- db/freesp.c              |   31 ++++++++--------------
- libxfs/libxfs_api_defs.h |    1 +
- repair/scan.c            |   66 +++++++++++++++++++++++++---------------------
- 4 files changed, 81 insertions(+), 77 deletions(-)
+ fs/xfs/libxfs/xfs_defer.c | 32 ++++++++++++++------------------
+ 1 file changed, 14 insertions(+), 18 deletions(-)
 
-
-diff --git a/db/check.c b/db/check.c
-index 9846d672..76c28d49 100644
---- a/db/check.c
-+++ b/db/check.c
-@@ -4010,16 +4010,30 @@ scan_ag(
- 	pop_cur();
- }
- 
-+struct agfl_state {
-+	xfs_agnumber_t	agno;
-+	unsigned int	count;
-+};
-+
-+static int
-+scan_agfl(
-+	struct xfs_mount	*mp,
-+	xfs_agblock_t		bno,
-+	void			*priv)
-+{
-+	struct agfl_state	*as = priv;
-+
-+	set_dbmap(as->agno, bno, 1, DBM_FREELIST, as->agno, XFS_AGFL_BLOCK(mp));
-+	as->count++;
-+	return 0;
-+}
-+
- static void
- scan_freelist(
--	xfs_agf_t	*agf)
-+	xfs_agf_t		*agf)
+diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+index c4b0eaeb5190..ee734a8b3fa9 100644
+--- a/fs/xfs/libxfs/xfs_defer.c
++++ b/fs/xfs/libxfs/xfs_defer.c
+@@ -225,9 +225,9 @@ xfs_defer_trans_abort(
+ /* Roll a transaction so we can do some deferred op processing. */
+ STATIC int
+ xfs_defer_trans_roll(
+-	struct xfs_trans		**tp,
+-	struct xfs_defer_ops		*dop)
++	struct xfs_trans		**tp)
  {
--	xfs_agnumber_t	seqno = be32_to_cpu(agf->agf_seqno);
--	xfs_agfl_t	*agfl;
--	xfs_agblock_t	bno;
--	uint		count;
--	int		i;
--	__be32		*freelist;
-+	xfs_agnumber_t		seqno = be32_to_cpu(agf->agf_seqno);
-+	struct agfl_state	state;
++	struct xfs_defer_ops		*dop = (*tp)->t_dfops;
+ 	int				i;
+ 	int				error;
  
- 	if (XFS_SB_BLOCK(mp) != XFS_AGFL_BLOCK(mp) &&
- 	    XFS_AGF_BLOCK(mp) != XFS_AGFL_BLOCK(mp) &&
-@@ -4032,46 +4046,36 @@ scan_freelist(
- 	set_cur(&typtab[TYP_AGFL],
- 		XFS_AG_DADDR(mp, seqno, XFS_AGFL_DADDR(mp)),
- 		XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
--	if ((agfl = iocur_top->data) == NULL) {
-+	if (iocur_top->data == NULL) {
- 		dbprintf(_("can't read agfl block for ag %u\n"), seqno);
- 		serious_error++;
- 		pop_cur();
- 		return;
- 	}
--	i = be32_to_cpu(agf->agf_flfirst);
+@@ -243,6 +243,7 @@ xfs_defer_trans_roll(
  
- 	/* verify agf values before proceeding */
- 	if (be32_to_cpu(agf->agf_flfirst) >= libxfs_agfl_size(mp) ||
- 	    be32_to_cpu(agf->agf_fllast) >= libxfs_agfl_size(mp)) {
- 		dbprintf(_("agf %d freelist blocks bad, skipping "
--			  "freelist scan\n"), i);
-+			  "freelist scan\n"), seqno);
- 		pop_cur();
- 		return;
- 	}
+ 	/* Roll the transaction. */
+ 	error = xfs_trans_roll(tp);
++	dop = (*tp)->t_dfops;
+ 	if (error) {
+ 		trace_xfs_defer_trans_roll_error((*tp)->t_mountp, dop, error);
+ 		xfs_defer_trans_abort(*tp, dop, error);
+@@ -338,31 +339,25 @@ xfs_defer_finish(
+ 	void				*state;
+ 	int				error = 0;
+ 	void				(*cleanup_fn)(struct xfs_trans *, void *, int);
+-	struct xfs_defer_ops		*orig_dop;
  
- 	/* open coded XFS_BUF_TO_AGFL_BNO */
--	freelist = xfs_sb_version_hascrc(&((mp)->m_sb)) ? &agfl->agfl_bno[0]
--							: (__be32 *)agfl;
--	count = 0;
--	for (;;) {
--		bno = be32_to_cpu(freelist[i]);
--		set_dbmap(seqno, bno, 1, DBM_FREELIST, seqno,
--			XFS_AGFL_BLOCK(mp));
--		count++;
--		if (i == be32_to_cpu(agf->agf_fllast))
--			break;
--		if (++i == libxfs_agfl_size(mp))
--			i = 0;
--	}
--	if (count != be32_to_cpu(agf->agf_flcount)) {
-+	state.count = 0;
-+	state.agno = seqno;
-+	libxfs_agfl_walk(mp, agf, iocur_top->bp, scan_agfl, &state);
-+	if (state.count != be32_to_cpu(agf->agf_flcount)) {
- 		if (!sflag)
- 			dbprintf(_("freeblk count %u != flcount %u in ag %u\n"),
--				count, be32_to_cpu(agf->agf_flcount),
--				seqno);
-+					state.count,
-+					be32_to_cpu(agf->agf_flcount),
-+					seqno);
- 		error++;
- 	}
--	fdblocks += count;
--	agf_aggr_freeblks += count;
-+	fdblocks += state.count;
-+	agf_aggr_freeblks += state.count;
- 	pop_cur();
- }
+ 	ASSERT((*tp)->t_flags & XFS_TRANS_PERM_LOG_RES);
++	ASSERT((*tp)->t_dfops == dop);
  
-diff --git a/db/freesp.c b/db/freesp.c
-index de0d5e10..903c60d7 100644
---- a/db/freesp.c
-+++ b/db/freesp.c
-@@ -219,45 +219,38 @@ scan_ag(
- 	pop_cur();
- }
+ 	trace_xfs_defer_finish((*tp)->t_mountp, dop, _RET_IP_);
  
-+static int
-+scan_agfl(
-+	struct xfs_mount	*mp,
-+	xfs_agblock_t		bno,
-+	void			*priv)
-+{
-+	addtohist(*(xfs_agnumber_t *)priv, bno, 1);
-+	return 0;
-+}
-+
- static void
- scan_freelist(
- 	xfs_agf_t	*agf)
- {
- 	xfs_agnumber_t	seqno = be32_to_cpu(agf->agf_seqno);
--	xfs_agfl_t	*agfl;
--	xfs_agblock_t	bno;
--	int		i;
--	__be32		*agfl_bno;
- 
- 	if (be32_to_cpu(agf->agf_flcount) == 0)
- 		return;
- 	push_cur();
- 	set_cur(&typtab[TYP_AGFL], XFS_AG_DADDR(mp, seqno, XFS_AGFL_DADDR(mp)),
- 				XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
--	agfl = iocur_top->data;
--	i = be32_to_cpu(agf->agf_flfirst);
+-	/*
+-	 * Attach dfops to the transaction during deferred ops processing. This
+-	 * explicitly causes calls into the allocator to defer AGFL block frees.
+-	 * Note that this code can go away once all dfops users attach to the
+-	 * associated tp.
+-	 */
+-	ASSERT(!(*tp)->t_dfops || ((*tp)->t_dfops == dop));
+-	orig_dop = (*tp)->t_dfops;
+-	(*tp)->t_dfops = dop;
 -
--	/* open coded XFS_BUF_TO_AGFL_BNO */
--	agfl_bno = xfs_sb_version_hascrc(&mp->m_sb) ? &agfl->agfl_bno[0]
--						   : (__be32 *)agfl;
+ 	/* Until we run out of pending work to finish... */
+ 	while (xfs_defer_has_unfinished_work(dop)) {
+ 		/* Log intents for work items sitting in the intake. */
+ 		xfs_defer_intake_work(*tp, dop);
  
- 	/* verify agf values before proceeding */
- 	if (be32_to_cpu(agf->agf_flfirst) >= libxfs_agfl_size(mp) ||
- 	    be32_to_cpu(agf->agf_fllast) >= libxfs_agfl_size(mp)) {
- 		dbprintf(_("agf %d freelist blocks bad, skipping "
--			  "freelist scan\n"), i);
-+			  "freelist scan\n"), seqno);
- 		pop_cur();
- 		return;
- 	}
+-		/* Roll the transaction. */
+-		error = xfs_defer_trans_roll(tp, dop);
++		/*
++		 * Roll the transaction and update dop in case dfops was
++		 * embedded in the transaction.
++		 */
++		error = xfs_defer_trans_roll(tp);
+ 		if (error)
+ 			goto out;
++		dop = (*tp)->t_dfops;
  
--	for (;;) {
--		bno = be32_to_cpu(agfl_bno[i]);
--		addtohist(seqno, bno, 1);
--		if (i == be32_to_cpu(agf->agf_fllast))
--			break;
--		if (++i == libxfs_agfl_size(mp))
--			i = 0;
--	}
-+	libxfs_agfl_walk(mp, agf, iocur_top->bp, scan_agfl, &seqno);
- 	pop_cur();
- }
- 
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index 74a5af16..e5cf1554 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -54,6 +54,7 @@
- #define xfs_attr_remove			libxfs_attr_remove
- #define xfs_attr_leaf_newentsize	libxfs_attr_leaf_newentsize
- 
-+#define xfs_agfl_walk			libxfs_agfl_walk
- #define xfs_alloc_fix_freelist		libxfs_alloc_fix_freelist
- #define xfs_alloc_min_freelist		libxfs_alloc_min_freelist
- #define xfs_alloc_read_agf		libxfs_alloc_read_agf
-diff --git a/repair/scan.c b/repair/scan.c
-index 7b671123..63d20071 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -2095,17 +2095,36 @@ _("inode btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
- 	}
- }
- 
-+struct agfl_state {
-+	unsigned int	count;
-+	xfs_agnumber_t	agno;
-+};
-+
-+static int
-+scan_agfl(
-+	struct xfs_mount	*mp,
-+	xfs_agblock_t		bno,
-+	void			*priv)
-+{
-+	struct agfl_state	*as = priv;
-+
-+	if (verify_agbno(mp, as->agno, bno))
-+		set_bmap(as->agno, bno, XR_E_FREE);
-+	else
-+		do_warn(_("bad agbno %u in agfl, agno %d\n"),
-+			bno, as->agno);
-+	as->count++;
-+	return 0;
-+}
-+
- static void
- scan_freelist(
--	xfs_agf_t	*agf,
--	struct aghdr_cnts *agcnts)
-+	xfs_agf_t		*agf,
-+	struct aghdr_cnts	*agcnts)
- {
--	xfs_buf_t	*agflbuf;
--	xfs_agnumber_t	agno;
--	xfs_agblock_t	bno;
--	int		count;
--	int		i;
--	__be32		*freelist;
-+	xfs_buf_t		*agflbuf;
-+	xfs_agnumber_t		agno;
-+	struct agfl_state	state;
- 
- 	agno = be32_to_cpu(agf->agf_seqno);
- 
-@@ -2127,39 +2146,26 @@ scan_freelist(
- 	if (agflbuf->b_error == -EFSBADCRC)
- 		do_warn(_("agfl has bad CRC for ag %d\n"), agno);
- 
--	freelist = XFS_BUF_TO_AGFL_BNO(mp, agflbuf);
--	i = be32_to_cpu(agf->agf_flfirst);
--
- 	if (no_modify) {
- 		/* agf values not fixed in verify_set_agf, so recheck */
- 		if (be32_to_cpu(agf->agf_flfirst) >= libxfs_agfl_size(mp) ||
- 		    be32_to_cpu(agf->agf_fllast) >= libxfs_agfl_size(mp)) {
- 			do_warn(_("agf %d freelist blocks bad, skipping "
--				  "freelist scan\n"), i);
-+				  "freelist scan\n"), agno);
- 			return;
- 		}
- 	}
- 
--	count = 0;
--	for (;;) {
--		bno = be32_to_cpu(freelist[i]);
--		if (verify_agbno(mp, agno, bno))
--			set_bmap(agno, bno, XR_E_FREE);
--		else
--			do_warn(_("bad agbno %u in agfl, agno %d\n"),
--				bno, agno);
--		count++;
--		if (i == be32_to_cpu(agf->agf_fllast))
--			break;
--		if (++i == libxfs_agfl_size(mp))
--			i = 0;
--	}
--	if (count != be32_to_cpu(agf->agf_flcount)) {
--		do_warn(_("freeblk count %d != flcount %d in ag %d\n"), count,
--			be32_to_cpu(agf->agf_flcount), agno);
-+	state.count = 0;
-+	state.agno = agno;
-+	libxfs_agfl_walk(mp, agf, agflbuf, scan_agfl, &state);
-+	if (state.count != be32_to_cpu(agf->agf_flcount)) {
-+		do_warn(_("freeblk count %d != flcount %d in ag %d\n"),
-+				state.count, be32_to_cpu(agf->agf_flcount),
-+				agno);
- 	}
- 
--	agcnts->fdblocks += count;
-+	agcnts->fdblocks += state.count;
- 
- 	libxfs_putbuf(agflbuf);
- }
+ 		/* Log an intent-done item for the first pending item. */
+ 		dfp = list_first_entry(&dop->dop_pending,
+@@ -428,10 +423,11 @@ xfs_defer_finish(
+ 	 * Roll the transaction once more to avoid returning to the caller
+ 	 * with a dirty transaction.
+ 	 */
+-	if ((*tp)->t_flags & XFS_TRANS_DIRTY)
+-		error = xfs_defer_trans_roll(tp, dop);
++	if ((*tp)->t_flags & XFS_TRANS_DIRTY) {
++		error = xfs_defer_trans_roll(tp);
++		dop = (*tp)->t_dfops;
++	}
+ out:
+-	(*tp)->t_dfops = orig_dop;
+ 	if (error)
+ 		trace_xfs_defer_finish_error((*tp)->t_mountp, dop, error);
+ 	else
+-- 
+2.17.1
 
