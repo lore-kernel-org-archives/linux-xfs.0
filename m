@@ -1,66 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:44180 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2388399AbeGXR56 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Jul 2018 13:57:58 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 8856F407577D
-        for <linux-xfs@vger.kernel.org>; Tue, 24 Jul 2018 16:50:37 +0000 (UTC)
-Date: Tue, 24 Jul 2018 11:50:34 -0500
-From: Bill O'Donnell <billodo@redhat.com>
-Subject: Re: [PATCH] xfs_db: add -d to short help for write command
-Message-ID: <20180724165034.GA4083@redhat.com>
-References: <fba33a51-50c1-ade6-79d2-f7ceaceb372f@redhat.com>
+Received: from sandeen.net ([63.231.237.45]:36486 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388109AbeGWX7Q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 23 Jul 2018 19:59:16 -0400
+Subject: Re: [PATCH 7/7] libxfs: remove crc32 functions
+References: <152728629694.22515.17699396814561914788.stgit@magnolia>
+ <152728634020.22515.16684194597988861920.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <29c32d83-dfe8-8780-1808-f2c019a78fc5@sandeen.net>
+Date: Mon, 23 Jul 2018 15:55:46 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <fba33a51-50c1-ade6-79d2-f7ceaceb372f@redhat.com>
+In-Reply-To: <152728634020.22515.16684194597988861920.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jul 23, 2018 at 06:25:27PM -0700, Eric Sandeen wrote:
-> And note in the man page that -c and -d are exclusive.
+On 5/25/18 3:12 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> XFS uses crc32c, not crc32.  Remove the unnecessary crc32 code, which
+> decreases binary size by the 8K crc32 table.
 
-Looks good.
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+Getting back to this ...
 
+The files have diverged a bit since the initial lift from the kernel.
+Commenting out to keep things diffable is a bit pointless now, due
+to that divergence (for example, the crc32test stuff has been moved
+out to its own file, a big swath of code.)
+
+So, I think we should make a decision about whether we want to try
+to keep this in sync with the kernel, or just let it drift.
+
+If the former, I'd go with an #if 0 but only after syncing things
+up again.
+
+If the latter, just nuke the unused code, if we ever need the crc32c
+variants we can re-lift them from the kernel.  I'd still take a brief
+look at whether there's anything that needs to be synced in an ad-hoc
+fashion.
+
+I guess right now I'm feeling inclined to go with the former, and
+even add the crc32 file(s) to the libxfs-diff and/or libxfs-apply
+scripts, if we plan to keep them more in sync.
+
+I'd accept either plan, really - but there's no reason to comment
+out or #ifdef code to keep it around if it doesn't even necessarily
+match kernelspace anymore.
+
+-Eric
+
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
+>  include/libxfs.h        |    3 ---
+>  libxfs/crc32.c          |   16 ++++++++++------
+>  libxfs/gen_crc32table.c |    8 +++++++-
+>  libxfs/libxfs_priv.h    |    3 ---
+>  4 files changed, 17 insertions(+), 13 deletions(-)
 > 
-> diff --git a/db/write.c b/db/write.c
-> index 5ef76bcd..bbaa609d 100644
-> --- a/db/write.c
-> +++ b/db/write.c
-> @@ -38,7 +38,7 @@ static int	write_f(int argc, char **argv);
->  static void     write_help(void);
->  
->  static const cmdinfo_t	write_cmd =
-> -	{ "write", NULL, write_f, 0, -1, 0, N_("[-c] [field or value]..."),
-> +	{ "write", NULL, write_f, 0, -1, 0, N_("[-c|-d] [field or value]..."),
->  	  N_("write value to disk"), write_help };
->  
->  void
-> diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-> index 10f2beb9..a1ee3514 100644
-> --- a/man/man8/xfs_db.8
-> +++ b/man/man8/xfs_db.8
-> @@ -837,7 +837,7 @@ and
->  bits respectively, and their string equivalent reported
->  (but no modifications are made).
->  .TP
-> -.BI "write [\-c] [\-d] [" "field value" "] ..."
-> +.BI "write [\-c|\-d] [" "field value" "] ..."
->  Write a value to disk.
->  Specific fields can be set in structures (struct mode),
->  or a block can be set to data values (data mode),
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> diff --git a/include/libxfs.h b/include/libxfs.h
+> index fbaae089..109866de 100644
+> --- a/include/libxfs.h
+> +++ b/include/libxfs.h
+> @@ -43,10 +43,7 @@
+>  
+>  
+>  /* CRC stuff, buffer API dependent on it */
+> -extern uint32_t crc32_le(uint32_t crc, unsigned char const *p, size_t len);
+>  extern uint32_t crc32c_le(uint32_t crc, unsigned char const *p, size_t len);
+> -
+> -#define crc32(c,p,l)	crc32_le((c),(unsigned char const *)(p),(l))
+>  #define crc32c(c,p,l)	crc32c_le((c),(unsigned char const *)(p),(l))
+>  
+>  #include "xfs_cksum.h"
+> diff --git a/libxfs/crc32.c b/libxfs/crc32.c
+> index 783d62e9..8fe5c42c 100644
+> --- a/libxfs/crc32.c
+> +++ b/libxfs/crc32.c
+> @@ -176,20 +176,26 @@ static inline u32 __pure crc32_le_generic(u32 crc, unsigned char const *p,
+>  }
+>  
+>  #if CRC_LE_BITS == 1
+> +/*
+> + * not used by xfs.
+>  u32 __pure crc32_le(u32 crc, unsigned char const *p, size_t len)
+>  {
+>  	return crc32_le_generic(crc, p, len, NULL, CRCPOLY_LE);
+>  }
+> + */
+
+...
