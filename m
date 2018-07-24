@@ -1,168 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:58186 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750985AbeGJGFj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jul 2018 02:05:39 -0400
-Received: from 213-225-34-75.nat.highway.a1.net ([213.225.34.75] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1fclmM-000560-IP
-        for linux-xfs@vger.kernel.org; Tue, 10 Jul 2018 06:05:39 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/6] xfs: remove if_real_bytes
-Date: Tue, 10 Jul 2018 08:05:23 +0200
-Message-Id: <20180710060528.4071-2-hch@lst.de>
-In-Reply-To: <20180710060528.4071-1-hch@lst.de>
-References: <20180710060528.4071-1-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:57632 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388263AbeGXC3X (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 23 Jul 2018 22:29:23 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 1A69085547
+        for <linux-xfs@vger.kernel.org>; Tue, 24 Jul 2018 01:25:29 +0000 (UTC)
+Received: from Liberator-5.local (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id DF0B660BE7
+        for <linux-xfs@vger.kernel.org>; Tue, 24 Jul 2018 01:25:28 +0000 (UTC)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs_db: add -d to short help for write command
+Message-ID: <fba33a51-50c1-ade6-79d2-f7ceaceb372f@redhat.com>
+Date: Mon, 23 Jul 2018 18:25:27 -0700
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-The field is only used for asserts, and to track if we really need to do
-realloc when growing the inode fork data.  But the krealloc function
-already performs this check internally, so there is no need to keep track
-of the real allocation size.
+And note in the man page that -c and -d are exclusive.
 
-This will free space in the inode fork for keeping a sequence counter of
-changes to the extent list.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/xfs/libxfs/xfs_inode_fork.c | 19 ++++---------------
- fs/xfs/libxfs/xfs_inode_fork.h |  1 -
- fs/xfs/xfs_inode.c             |  3 +--
- fs/xfs/xfs_inode_item.c        |  4 ----
- 4 files changed, 5 insertions(+), 22 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index 183ec0cb8921..dee85b0f8846 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -158,7 +158,6 @@ xfs_init_local_fork(
- 	}
+diff --git a/db/write.c b/db/write.c
+index 5ef76bcd..bbaa609d 100644
+--- a/db/write.c
++++ b/db/write.c
+@@ -38,7 +38,7 @@ static int	write_f(int argc, char **argv);
+ static void     write_help(void);
  
- 	ifp->if_bytes = size;
--	ifp->if_real_bytes = real_size;
- 	ifp->if_flags &= ~(XFS_IFEXTENTS | XFS_IFBROOT);
- 	ifp->if_flags |= XFS_IFINLINE;
- }
-@@ -226,7 +225,6 @@ xfs_iformat_extents(
- 		return -EFSCORRUPTED;
- 	}
+ static const cmdinfo_t	write_cmd =
+-	{ "write", NULL, write_f, 0, -1, 0, N_("[-c] [field or value]..."),
++	{ "write", NULL, write_f, 0, -1, 0, N_("[-c|-d] [field or value]..."),
+ 	  N_("write value to disk"), write_help };
  
--	ifp->if_real_bytes = 0;
- 	ifp->if_bytes = 0;
- 	ifp->if_u1.if_root = NULL;
- 	ifp->if_height = 0;
-@@ -317,7 +315,6 @@ xfs_iformat_btree(
- 	ifp->if_flags &= ~XFS_IFEXTENTS;
- 	ifp->if_flags |= XFS_IFBROOT;
- 
--	ifp->if_real_bytes = 0;
- 	ifp->if_bytes = 0;
- 	ifp->if_u1.if_root = NULL;
- 	ifp->if_height = 0;
-@@ -501,7 +498,6 @@ xfs_idata_realloc(
- 		 */
- 		real_size = roundup(new_size, 4);
- 		if (ifp->if_u1.if_data == NULL) {
--			ASSERT(ifp->if_real_bytes == 0);
- 			ifp->if_u1.if_data = kmem_alloc(real_size,
- 							KM_SLEEP | KM_NOFS);
- 		} else {
-@@ -509,15 +505,12 @@ xfs_idata_realloc(
- 			 * Only do the realloc if the underlying size
- 			 * is really changing.
- 			 */
--			if (ifp->if_real_bytes != real_size) {
--				ifp->if_u1.if_data =
--					kmem_realloc(ifp->if_u1.if_data,
--							real_size,
--							KM_SLEEP | KM_NOFS);
--			}
-+			ifp->if_u1.if_data =
-+				kmem_realloc(ifp->if_u1.if_data,
-+						real_size,
-+						KM_SLEEP | KM_NOFS);
- 		}
- 	}
--	ifp->if_real_bytes = real_size;
- 	ifp->if_bytes = new_size;
- 	ASSERT(ifp->if_bytes <= XFS_IFORK_SIZE(ip, whichfork));
- }
-@@ -543,17 +536,13 @@ xfs_idestroy_fork(
- 	 */
- 	if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL) {
- 		if (ifp->if_u1.if_data != NULL) {
--			ASSERT(ifp->if_real_bytes != 0);
- 			kmem_free(ifp->if_u1.if_data);
- 			ifp->if_u1.if_data = NULL;
--			ifp->if_real_bytes = 0;
- 		}
- 	} else if ((ifp->if_flags & XFS_IFEXTENTS) && ifp->if_height) {
- 		xfs_iext_destroy(ifp);
- 	}
- 
--	ASSERT(ifp->if_real_bytes == 0);
--
- 	if (whichfork == XFS_ATTR_FORK) {
- 		kmem_zone_free(xfs_ifork_zone, ip->i_afp);
- 		ip->i_afp = NULL;
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-index 781b1603df5e..46242052aad0 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.h
-+++ b/fs/xfs/libxfs/xfs_inode_fork.h
-@@ -14,7 +14,6 @@ struct xfs_dinode;
-  */
- typedef struct xfs_ifork {
- 	int			if_bytes;	/* bytes in if_u1 */
--	int			if_real_bytes;	/* bytes allocated in if_u1 */
- 	struct xfs_btree_block	*if_broot;	/* file's incore btree root */
- 	short			if_broot_bytes;	/* bytes allocated for root */
- 	unsigned char		if_flags;	/* per-fork flags */
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 5df4de666cc1..b6da446ae946 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -927,7 +927,7 @@ xfs_ialloc(
- 	case S_IFLNK:
- 		ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
- 		ip->i_df.if_flags = XFS_IFEXTENTS;
--		ip->i_df.if_bytes = ip->i_df.if_real_bytes = 0;
-+		ip->i_df.if_bytes = 0;
- 		ip->i_df.if_u1.if_root = NULL;
- 		break;
- 	default:
-@@ -1877,7 +1877,6 @@ xfs_inactive(
- 	 * to clean up here.
- 	 */
- 	if (VFS_I(ip)->i_mode == 0) {
--		ASSERT(ip->i_df.if_real_bytes == 0);
- 		ASSERT(ip->i_df.if_broot_bytes == 0);
- 		return;
- 	}
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 2389c34c172d..fa1c4fe2ffbf 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -194,8 +194,6 @@ xfs_inode_item_format_data_fork(
- 			 * to be there by xfs_idata_realloc().
- 			 */
- 			data_bytes = roundup(ip->i_df.if_bytes, 4);
--			ASSERT(ip->i_df.if_real_bytes == 0 ||
--			       ip->i_df.if_real_bytes >= data_bytes);
- 			ASSERT(ip->i_df.if_u1.if_data != NULL);
- 			ASSERT(ip->i_d.di_size > 0);
- 			xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_ILOCAL,
-@@ -280,8 +278,6 @@ xfs_inode_item_format_attr_fork(
- 			 * to be there by xfs_idata_realloc().
- 			 */
- 			data_bytes = roundup(ip->i_afp->if_bytes, 4);
--			ASSERT(ip->i_afp->if_real_bytes == 0 ||
--			       ip->i_afp->if_real_bytes >= data_bytes);
- 			ASSERT(ip->i_afp->if_u1.if_data != NULL);
- 			xlog_copy_iovec(lv, vecp, XLOG_REG_TYPE_IATTR_LOCAL,
- 					ip->i_afp->if_u1.if_data,
--- 
-2.18.0
+ void
+diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+index 10f2beb9..a1ee3514 100644
+--- a/man/man8/xfs_db.8
++++ b/man/man8/xfs_db.8
+@@ -837,7 +837,7 @@ and
+ bits respectively, and their string equivalent reported
+ (but no modifications are made).
+ .TP
+-.BI "write [\-c] [\-d] [" "field value" "] ..."
++.BI "write [\-c|\-d] [" "field value" "] ..."
+ Write a value to disk.
+ Specific fields can be set in structures (struct mode),
+ or a block can be set to data values (data mode),
 
