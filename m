@@ -1,65 +1,210 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:37334 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731442AbeGZAJZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Jul 2018 20:09:25 -0400
-Date: Wed, 25 Jul 2018 15:55:26 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:47482 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388640AbeGXVfq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Jul 2018 17:35:46 -0400
+Date: Tue, 24 Jul 2018 13:27:24 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3] libxfs: add more bounds checking to sb sanity checks
-Message-ID: <20180725225526.GC4218@magnolia>
-References: <20180713131003.31121-1-billodo@redhat.com>
- <20180725213336.16263-1-billodo@redhat.com>
- <bee8d307-e372-2b67-e46e-f54b6dd81379@sandeen.net>
+Subject: Re: [PATCH v2 01/15] xfs: pull up dfops from xfs_itruncate_extents()
+Message-ID: <20180724202724.GZ4813@magnolia>
+References: <20180723130414.47980-1-bfoster@redhat.com>
+ <20180723130414.47980-2-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <bee8d307-e372-2b67-e46e-f54b6dd81379@sandeen.net>
+In-Reply-To: <20180723130414.47980-2-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Bill O'Donnell <billodo@redhat.com>, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Jul 25, 2018 at 03:48:51PM -0700, Eric Sandeen wrote:
+On Mon, Jul 23, 2018 at 09:04:00AM -0400, Brian Foster wrote:
+> xfs_itruncate_extents[_flags]() uses a local dfops with a
+> transaction provided by the caller. It uses hacky ->t_dfops
+> replacement logic to avoid stomping over an already populated
+> ->t_dfops.
 > 
+> The latter never occurs for current callers and the logic itself is
+> not really appropriate. Clean this up by updating all callers to
+> initialize a dfops and to use that down in xfs_itruncate_extents().
+> This more closely resembles the upcoming logic where dfops will be
+> embedded within the transaction. We can also replace the
+> xfs_defer_init() in the xfs_itruncate_extents_flags() loop with an
+> assert. Both dfops and firstblock should be in a valid state
+> after xfs_defer_finish() and the inode joined to the dfops is fixed
+> throughout the loop.
 > 
-> On 7/25/18 2:33 PM, Bill O'Donnell wrote:
-> > +	/* Additional sb sanity checks for writes */
-> > +	if (!error) {
-> > +		if (sb.sb_fdblocks > sb.sb_dblocks ||
-> > +		    sb.sb_ifree > sb.sb_icount) {
-> > +			    xfs_notice(mp, "SB sanity check failed");
-> > +			    error = -EFSCORRUPTED;
-> > +		}
-> > +	}
-> 
-> I had kind of had it in my head that Dave suggested testing not
-> only sb_fdblocks & sb_ifree but also validating sb_icount against
-> sb_dblocks ... would that make sense?  something like:
-> 
-> +		if (sb.sb_fdblocks > sb.sb_dblocks ||
-> +		    sb.sb_icount / sb.sb_inopblock > sb.sb_dblocks) ||
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-That would make sense, but perhaps we should have a xfs_verify_icount
-instead of open-coding a 64-bit division? :)
-
-Granted, I /was/ planning to add all that as part of fs summary counter
-scrubbing next cycle.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
-> +		    sb.sb_ifree > sb.sb_icount) {
-> +			    xfs_notice(mp, "SB sanity check failed");
+> ---
+>  fs/xfs/xfs_attr_inactive.c | 3 +++
+>  fs/xfs/xfs_bmap_util.c     | 2 ++
+>  fs/xfs/xfs_inode.c         | 8 +++-----
+>  fs/xfs/xfs_iops.c          | 3 +++
+>  fs/xfs/xfs_qm_syscalls.c   | 3 +++
+>  5 files changed, 14 insertions(+), 5 deletions(-)
 > 
-> because all 3 go into the statfs calculations which went wonky
-> in the original report?  (xfs_sb_verify has done some sanity
-> checks on sb_inopblock by the time we get here.)
+> diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
+> index 7ce10055f275..d3055972d3a6 100644
+> --- a/fs/xfs/xfs_attr_inactive.c
+> +++ b/fs/xfs/xfs_attr_inactive.c
+> @@ -26,6 +26,7 @@
+>  #include "xfs_quota.h"
+>  #include "xfs_trace.h"
+>  #include "xfs_dir2.h"
+> +#include "xfs_defer.h"
+>  
+>  /*
+>   * Look at all the extents for this logical region,
+> @@ -381,6 +382,7 @@ xfs_attr_inactive(
+>  {
+>  	struct xfs_trans	*trans;
+>  	struct xfs_mount	*mp;
+> +	struct xfs_defer_ops	dfops;
+>  	int			lock_mode = XFS_ILOCK_SHARED;
+>  	int			error = 0;
+>  
+> @@ -397,6 +399,7 @@ xfs_attr_inactive(
+>  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_attrinval, 0, 0, 0, &trans);
+>  	if (error)
+>  		goto out_destroy_fork;
+> +	xfs_defer_init(trans, &dfops);
+>  
+>  	lock_mode = XFS_ILOCK_EXCL;
+>  	xfs_ilock(dp, lock_mode);
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index d3a314fd721f..ee9481b142f0 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -792,6 +792,7 @@ xfs_free_eofblocks(
+>  	int			nimaps;
+>  	struct xfs_bmbt_irec	imap;
+>  	struct xfs_mount	*mp = ip->i_mount;
+> +	struct xfs_defer_ops	dfops;
+>  
+>  	/*
+>  	 * Figure out if there are any blocks beyond the end
+> @@ -831,6 +832,7 @@ xfs_free_eofblocks(
+>  			ASSERT(XFS_FORCED_SHUTDOWN(mp));
+>  			return error;
+>  		}
+> +		xfs_defer_init(tp, &dfops);
+>  
+>  		xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  		xfs_trans_ijoin(tp, ip, 0);
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 7b2694d3901a..7d7d7e95fa17 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -1541,8 +1541,6 @@ xfs_itruncate_extents_flags(
+>  {
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  	struct xfs_trans	*tp = *tpp;
+> -	struct xfs_defer_ops	*odfops = tp->t_dfops;
+> -	struct xfs_defer_ops	dfops;
+>  	xfs_fileoff_t		first_unmap_block;
+>  	xfs_fileoff_t		last_block;
+>  	xfs_filblks_t		unmap_len;
+> @@ -1579,7 +1577,7 @@ xfs_itruncate_extents_flags(
+>  	ASSERT(first_unmap_block < last_block);
+>  	unmap_len = last_block - first_unmap_block + 1;
+>  	while (!done) {
+> -		xfs_defer_init(tp, &dfops);
+> +		ASSERT(tp->t_firstblock == NULLFSBLOCK);
+>  		error = xfs_bunmapi(tp, ip, first_unmap_block, unmap_len, flags,
+>  				    XFS_ITRUNC_MAX_EXTENTS, &done);
+>  		if (error)
+> @@ -1618,8 +1616,6 @@ xfs_itruncate_extents_flags(
+>  	trace_xfs_itruncate_extents_end(ip, new_size);
+>  
+>  out:
+> -	/* ->t_dfops points to local stack, don't leak it! */
+> -	tp->t_dfops = odfops;
+>  	*tpp = tp;
+>  	return error;
+>  out_bmap_cancel:
+> @@ -1723,6 +1719,7 @@ xfs_inactive_truncate(
+>  {
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  	struct xfs_trans	*tp;
+> +	struct xfs_defer_ops	dfops;
+>  	int			error;
+>  
+>  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
+> @@ -1730,6 +1727,7 @@ xfs_inactive_truncate(
+>  		ASSERT(XFS_FORCED_SHUTDOWN(mp));
+>  		return error;
+>  	}
+> +	xfs_defer_init(tp, &dfops);
+>  
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  	xfs_trans_ijoin(tp, ip, 0);
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 0fa29f39d658..704b57a8b99e 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -26,6 +26,7 @@
+>  #include "xfs_dir2.h"
+>  #include "xfs_trans_space.h"
+>  #include "xfs_iomap.h"
+> +#include "xfs_defer.h"
+>  
+>  #include <linux/capability.h>
+>  #include <linux/xattr.h>
+> @@ -812,6 +813,7 @@ xfs_setattr_size(
+>  	struct inode		*inode = VFS_I(ip);
+>  	xfs_off_t		oldsize, newsize;
+>  	struct xfs_trans	*tp;
+> +	struct xfs_defer_ops	dfops;
+>  	int			error;
+>  	uint			lock_flags = 0;
+>  	bool			did_zeroing = false;
+> @@ -915,6 +917,7 @@ xfs_setattr_size(
+>  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
+>  	if (error)
+>  		return error;
+> +	xfs_defer_init(tp, &dfops);
+>  
+>  	lock_flags |= XFS_ILOCK_EXCL;
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+> index abc8a21e3a82..df0783303887 100644
+> --- a/fs/xfs/xfs_qm_syscalls.c
+> +++ b/fs/xfs/xfs_qm_syscalls.c
+> @@ -22,6 +22,7 @@
+>  #include "xfs_qm.h"
+>  #include "xfs_trace.h"
+>  #include "xfs_icache.h"
+> +#include "xfs_defer.h"
+>  
+>  STATIC int	xfs_qm_log_quotaoff(xfs_mount_t *, xfs_qoff_logitem_t **, uint);
+>  STATIC int	xfs_qm_log_quotaoff_end(xfs_mount_t *, xfs_qoff_logitem_t *,
+> @@ -213,6 +214,7 @@ xfs_qm_scall_trunc_qfile(
+>  {
+>  	struct xfs_inode	*ip;
+>  	struct xfs_trans	*tp;
+> +	struct xfs_defer_ops	dfops;
+>  	int			error;
+>  
+>  	if (ino == NULLFSINO)
+> @@ -229,6 +231,7 @@ xfs_qm_scall_trunc_qfile(
+>  		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+>  		goto out_put;
+>  	}
+> +	xfs_defer_init(tp, &dfops);
+>  
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  	xfs_trans_ijoin(tp, ip, 0);
+> -- 
+> 2.17.1
 > 
-> Also, a comment about why these checks are only for write, and are not
-> simply in xfs_mount_validate_sb() would be good, since that obviously
-> wasn't obvious to me at first.  o_O :)
-> 
-> -Eric
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
