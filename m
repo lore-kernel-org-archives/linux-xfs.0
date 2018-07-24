@@ -1,43 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:39156 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388543AbeGXWZd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Jul 2018 18:25:33 -0400
-Date: Tue, 24 Jul 2018 13:46:24 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:48030 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388476AbeGXVge (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Jul 2018 17:36:34 -0400
+Date: Tue, 24 Jul 2018 13:28:13 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 06/15] xfs: reset dfops to initial state after finish
-Message-ID: <20180724204624.GE4813@magnolia>
+Subject: Re: [PATCH v2 05/15] xfs: remove unused deferred ops committed field
+Message-ID: <20180724202813.GC4813@magnolia>
 References: <20180723130414.47980-1-bfoster@redhat.com>
- <20180723130414.47980-7-bfoster@redhat.com>
+ <20180723130414.47980-6-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180723130414.47980-7-bfoster@redhat.com>
+In-Reply-To: <20180723130414.47980-6-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jul 23, 2018 at 09:04:05AM -0400, Brian Foster wrote:
-> xfs_defer_init() is currently used in two particular situations. The
-> first and most obvious case is raw initialization of an
-> xfs_defer_ops struct. The other case is partial reinit of
-> xfs_defer_ops on reuse due to iteration.
-> 
-> Most instances of the first case will be replaced by a single init
-> of a dfops embedded in the transaction. Init calls are still
-> technically required for the second case because the dfops may have
-> low space mode enabled or have joined items that need to be reset
-> before the dfops should be reused.
-> 
-> Since the current dfops usage expects either a final transaction
-> commit after xfs_defer_finish() or xfs_defer_init() if dfops is to
-> be reused, we can shift some of the init logic into
-> xfs_defer_finish() such that the latter returns with a reinitialized
-> dfops. This eliminates the second dependency noted above such that a
-> dfops is immediately ready for reuse after an xfs_defer_finish()
-> without the need to change any calling code.
+On Mon, Jul 23, 2018 at 09:04:04AM -0400, Brian Foster wrote:
+> dop_committed is set when deferred item processing rolls the
+> transaction at least once, but is only ever accessed in tracepoints.
+> The transaction roll/commit events are already available via
+> independent tracepoints, so remove the otherwise unused field.
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
@@ -48,49 +34,71 @@ Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_defer.c | 20 ++++++++++++++++++--
->  1 file changed, 18 insertions(+), 2 deletions(-)
+>  fs/xfs/libxfs/xfs_defer.c | 1 -
+>  fs/xfs/libxfs/xfs_defer.h | 1 -
+>  fs/xfs/xfs_trace.h        | 8 ++------
+>  3 files changed, 2 insertions(+), 8 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-> index 0df09c094e42..23f2a52b088e 100644
+> index ee734a8b3fa9..0df09c094e42 100644
 > --- a/fs/xfs/libxfs/xfs_defer.c
 > +++ b/fs/xfs/libxfs/xfs_defer.c
-> @@ -319,6 +319,19 @@ xfs_defer_bjoin(
->  	return -EFSCORRUPTED;
->  }
->  
-> +/*
-> + * Reset an already used dfops after finish.
-> + */
-> +static void
-> +xfs_defer_reset(
-> +	struct xfs_defer_ops	*dop)
-> +{
-> +	ASSERT(!xfs_defer_has_unfinished_work(dop));
-> +	dop->dop_low = false;
-> +	memset(dop->dop_inodes, 0, sizeof(dop->dop_inodes));
-> +	memset(dop->dop_bufs, 0, sizeof(dop->dop_bufs));
-> +}
-> +
->  /*
->   * Finish all the pending work.  This involves logging intent items for
->   * any work items that wandered in since the last transaction roll (if
-> @@ -427,10 +440,13 @@ xfs_defer_finish(
->  		dop = (*tp)->t_dfops;
+> @@ -249,7 +249,6 @@ xfs_defer_trans_roll(
+>  		xfs_defer_trans_abort(*tp, dop, error);
+>  		return error;
 >  	}
->  out:
-> -	if (error)
-> +	if (error) {
->  		trace_xfs_defer_finish_error((*tp)->t_mountp, dop, error);
-> -	else
-> +	} else {
->  		trace_xfs_defer_finish_done((*tp)->t_mountp, dop, _RET_IP_);
-> +		xfs_defer_reset(dop);
-> +	}
-> +
->  	return error;
->  }
+> -	dop->dop_committed = true;
 >  
+>  	/* Rejoin the joined inodes. */
+>  	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++)
+> diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
+> index c17c9deda995..58c979c9f3fa 100644
+> --- a/fs/xfs/libxfs/xfs_defer.h
+> +++ b/fs/xfs/libxfs/xfs_defer.h
+> @@ -49,7 +49,6 @@ enum xfs_defer_ops_type {
+>  #define XFS_DEFER_OPS_NR_BUFS	2	/* join up to two buffers */
+>  
+>  struct xfs_defer_ops {
+> -	bool			dop_committed;	/* did any trans commit? */
+>  	bool			dop_low;	/* alloc in low mode */
+>  	struct list_head	dop_intake;	/* unlogged pending work */
+>  	struct list_head	dop_pending;	/* logged pending work */
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index b668fc127aa7..cc6995cfce66 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -2229,14 +2229,12 @@ DECLARE_EVENT_CLASS(xfs_defer_class,
+>  	TP_fast_assign(
+>  		__entry->dev = mp ? mp->m_super->s_dev : 0;
+>  		__entry->dop = dop;
+> -		__entry->committed = dop->dop_committed;
+>  		__entry->low = dop->dop_low;
+>  		__entry->caller_ip = caller_ip;
+>  	),
+> -	TP_printk("dev %d:%d ops %p committed %d low %d, caller %pS",
+> +	TP_printk("dev %d:%d ops %p low %d, caller %pS",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+>  		  __entry->dop,
+> -		  __entry->committed,
+>  		  __entry->low,
+>  		  (char *)__entry->caller_ip)
+>  )
+> @@ -2259,14 +2257,12 @@ DECLARE_EVENT_CLASS(xfs_defer_error_class,
+>  	TP_fast_assign(
+>  		__entry->dev = mp ? mp->m_super->s_dev : 0;
+>  		__entry->dop = dop;
+> -		__entry->committed = dop->dop_committed;
+>  		__entry->low = dop->dop_low;
+>  		__entry->error = error;
+>  	),
+> -	TP_printk("dev %d:%d ops %p committed %d low %d err %d",
+> +	TP_printk("dev %d:%d ops %p low %d err %d",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+>  		  __entry->dop,
+> -		  __entry->committed,
+>  		  __entry->low,
+>  		  __entry->error)
+>  )
 > -- 
 > 2.17.1
 > 
