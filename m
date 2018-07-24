@@ -1,29 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:48030 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388476AbeGXVge (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Jul 2018 17:36:34 -0400
-Date: Tue, 24 Jul 2018 13:28:13 -0700
+Received: from userp2120.oracle.com ([156.151.31.85]:35668 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388604AbeGXVyF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Jul 2018 17:54:05 -0400
+Date: Tue, 24 Jul 2018 13:45:40 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 05/15] xfs: remove unused deferred ops committed field
-Message-ID: <20180724202813.GC4813@magnolia>
+Subject: Re: [PATCH v2 04/15] xfs: make deferred processing safe for embedded
+ dfops
+Message-ID: <20180724204540.GD4813@magnolia>
 References: <20180723130414.47980-1-bfoster@redhat.com>
- <20180723130414.47980-6-bfoster@redhat.com>
+ <20180723130414.47980-5-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180723130414.47980-6-bfoster@redhat.com>
+In-Reply-To: <20180723130414.47980-5-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jul 23, 2018 at 09:04:04AM -0400, Brian Foster wrote:
-> dop_committed is set when deferred item processing rolls the
-> transaction at least once, but is only ever accessed in tracepoints.
-> The transaction roll/commit events are already available via
-> independent tracepoints, so remove the otherwise unused field.
+On Mon, Jul 23, 2018 at 09:04:03AM -0400, Brian Foster wrote:
+> xfs_defer_finish() has a couple quirks that are not safe with
+> respect to the upcoming internal dfops functionality. First,
+> xfs_defer_finish() attaches the passed in dfops structure to
+> ->t_dfops and caches and restores the original value. Second, it
+> continues to use the initial dfops reference before and after the
+> transaction roll.
+> 
+> These behaviors assume that dop is an independent memory allocation
+> from the transaction itself, which may not always be true once
+> transactions begin to use an embedded dfops structure. In the latter
+> model, dfops processing creates a new xfs_defer_ops structure with
+> each transaction and the associated state is migrated across to the
+> new transaction.
+> 
+> Fix up xfs_defer_finish() to handle the possibility of the current
+> dfops changing after a transaction roll. Since ->t_dfops is used
+> unconditionally in this path, it is no longer necessary to
+> attach/restore ->t_dfops and pass it explicitly down to
+> xfs_defer_trans_roll(). Update dop in the latter function and the
+> caller to ensure that it always refers to the current dfops
+> structure.
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
@@ -34,71 +52,87 @@ Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_defer.c | 1 -
->  fs/xfs/libxfs/xfs_defer.h | 1 -
->  fs/xfs/xfs_trace.h        | 8 ++------
->  3 files changed, 2 insertions(+), 8 deletions(-)
+>  fs/xfs/libxfs/xfs_defer.c | 32 ++++++++++++++------------------
+>  1 file changed, 14 insertions(+), 18 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-> index ee734a8b3fa9..0df09c094e42 100644
+> index c4b0eaeb5190..ee734a8b3fa9 100644
 > --- a/fs/xfs/libxfs/xfs_defer.c
 > +++ b/fs/xfs/libxfs/xfs_defer.c
-> @@ -249,7 +249,6 @@ xfs_defer_trans_roll(
+> @@ -225,9 +225,9 @@ xfs_defer_trans_abort(
+>  /* Roll a transaction so we can do some deferred op processing. */
+>  STATIC int
+>  xfs_defer_trans_roll(
+> -	struct xfs_trans		**tp,
+> -	struct xfs_defer_ops		*dop)
+> +	struct xfs_trans		**tp)
+>  {
+> +	struct xfs_defer_ops		*dop = (*tp)->t_dfops;
+>  	int				i;
+>  	int				error;
+>  
+> @@ -243,6 +243,7 @@ xfs_defer_trans_roll(
+>  
+>  	/* Roll the transaction. */
+>  	error = xfs_trans_roll(tp);
+> +	dop = (*tp)->t_dfops;
+>  	if (error) {
+>  		trace_xfs_defer_trans_roll_error((*tp)->t_mountp, dop, error);
 >  		xfs_defer_trans_abort(*tp, dop, error);
->  		return error;
->  	}
-> -	dop->dop_committed = true;
+> @@ -338,31 +339,25 @@ xfs_defer_finish(
+>  	void				*state;
+>  	int				error = 0;
+>  	void				(*cleanup_fn)(struct xfs_trans *, void *, int);
+> -	struct xfs_defer_ops		*orig_dop;
 >  
->  	/* Rejoin the joined inodes. */
->  	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++)
-> diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-> index c17c9deda995..58c979c9f3fa 100644
-> --- a/fs/xfs/libxfs/xfs_defer.h
-> +++ b/fs/xfs/libxfs/xfs_defer.h
-> @@ -49,7 +49,6 @@ enum xfs_defer_ops_type {
->  #define XFS_DEFER_OPS_NR_BUFS	2	/* join up to two buffers */
+>  	ASSERT((*tp)->t_flags & XFS_TRANS_PERM_LOG_RES);
+> +	ASSERT((*tp)->t_dfops == dop);
 >  
->  struct xfs_defer_ops {
-> -	bool			dop_committed;	/* did any trans commit? */
->  	bool			dop_low;	/* alloc in low mode */
->  	struct list_head	dop_intake;	/* unlogged pending work */
->  	struct list_head	dop_pending;	/* logged pending work */
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index b668fc127aa7..cc6995cfce66 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -2229,14 +2229,12 @@ DECLARE_EVENT_CLASS(xfs_defer_class,
->  	TP_fast_assign(
->  		__entry->dev = mp ? mp->m_super->s_dev : 0;
->  		__entry->dop = dop;
-> -		__entry->committed = dop->dop_committed;
->  		__entry->low = dop->dop_low;
->  		__entry->caller_ip = caller_ip;
->  	),
-> -	TP_printk("dev %d:%d ops %p committed %d low %d, caller %pS",
-> +	TP_printk("dev %d:%d ops %p low %d, caller %pS",
->  		  MAJOR(__entry->dev), MINOR(__entry->dev),
->  		  __entry->dop,
-> -		  __entry->committed,
->  		  __entry->low,
->  		  (char *)__entry->caller_ip)
->  )
-> @@ -2259,14 +2257,12 @@ DECLARE_EVENT_CLASS(xfs_defer_error_class,
->  	TP_fast_assign(
->  		__entry->dev = mp ? mp->m_super->s_dev : 0;
->  		__entry->dop = dop;
-> -		__entry->committed = dop->dop_committed;
->  		__entry->low = dop->dop_low;
->  		__entry->error = error;
->  	),
-> -	TP_printk("dev %d:%d ops %p committed %d low %d err %d",
-> +	TP_printk("dev %d:%d ops %p low %d err %d",
->  		  MAJOR(__entry->dev), MINOR(__entry->dev),
->  		  __entry->dop,
-> -		  __entry->committed,
->  		  __entry->low,
->  		  __entry->error)
->  )
+>  	trace_xfs_defer_finish((*tp)->t_mountp, dop, _RET_IP_);
+>  
+> -	/*
+> -	 * Attach dfops to the transaction during deferred ops processing. This
+> -	 * explicitly causes calls into the allocator to defer AGFL block frees.
+> -	 * Note that this code can go away once all dfops users attach to the
+> -	 * associated tp.
+> -	 */
+> -	ASSERT(!(*tp)->t_dfops || ((*tp)->t_dfops == dop));
+> -	orig_dop = (*tp)->t_dfops;
+> -	(*tp)->t_dfops = dop;
+> -
+>  	/* Until we run out of pending work to finish... */
+>  	while (xfs_defer_has_unfinished_work(dop)) {
+>  		/* Log intents for work items sitting in the intake. */
+>  		xfs_defer_intake_work(*tp, dop);
+>  
+> -		/* Roll the transaction. */
+> -		error = xfs_defer_trans_roll(tp, dop);
+> +		/*
+> +		 * Roll the transaction and update dop in case dfops was
+> +		 * embedded in the transaction.
+> +		 */
+> +		error = xfs_defer_trans_roll(tp);
+>  		if (error)
+>  			goto out;
+> +		dop = (*tp)->t_dfops;
+>  
+>  		/* Log an intent-done item for the first pending item. */
+>  		dfp = list_first_entry(&dop->dop_pending,
+> @@ -428,10 +423,11 @@ xfs_defer_finish(
+>  	 * Roll the transaction once more to avoid returning to the caller
+>  	 * with a dirty transaction.
+>  	 */
+> -	if ((*tp)->t_flags & XFS_TRANS_DIRTY)
+> -		error = xfs_defer_trans_roll(tp, dop);
+> +	if ((*tp)->t_flags & XFS_TRANS_DIRTY) {
+> +		error = xfs_defer_trans_roll(tp);
+> +		dop = (*tp)->t_dfops;
+> +	}
+>  out:
+> -	(*tp)->t_dfops = orig_dop;
+>  	if (error)
+>  		trace_xfs_defer_finish_error((*tp)->t_mountp, dop, error);
+>  	else
 > -- 
 > 2.17.1
 > 
