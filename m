@@ -1,493 +1,260 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:60484 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388090AbeGXFnF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Jul 2018 01:43:05 -0400
-Received: from Liberator-5.local (75-139-212-147.dhcp.knwc.wa.charter.com [75.139.212.147])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 6032C9C
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Jul 2018 23:37:39 -0500 (CDT)
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs for-next updated to d73a5b9
-Message-ID: <473dda88-b9be-0260-8a10-67e7943bdf8b@sandeen.net>
-Date: Mon, 23 Jul 2018 21:38:31 -0700
+Received: from vic-mtaout3.csiro.au ([150.229.64.39]:15119 "EHLO
+        vic-MTAout3.csiro.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388219AbeGXFYR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Jul 2018 01:24:17 -0400
+Received: from mayhem.atnf.CSIRO.AU (mayhem.atnf.csiro.au [130.155.194.144])
+        by crux.atnf.csiro.au (Postfix) with ESMTP id 9318B199F7
+        for <linux-xfs@vger.kernel.org>; Tue, 24 Jul 2018 14:09:44 +1000 (AEST)
+Received: from mci156 by mayhem.atnf.CSIRO.AU with local (Exim 4.84_2)
+        (envelope-from <mci156@mayhem.atnf.csiro.au>)
+        id 1fhods-0008IH-DK
+        for linux-xfs@vger.kernel.org; Tue, 24 Jul 2018 14:09:44 +1000
+Date: Tue, 24 Jul 2018 14:09:44 +1000
+From: Vincent McIntyre <vincent.mcintyre@csiro.au>
+Subject: xfsprogs-dev failing to build
+Message-ID: <20180724040944.GH27624@mayhem.atnf.CSIRO.AU>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="bdu4fGSlyffTzbCZn2JQJAMWgEIDMnAy9"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---bdu4fGSlyffTzbCZn2JQJAMWgEIDMnAy9
-Content-Type: multipart/mixed; boundary="VzkDP0M6yOo5jTdgi1LocT9vdNvVlgRCB";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Message-ID: <473dda88-b9be-0260-8a10-67e7943bdf8b@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs for-next updated to d73a5b9
+Hi
 
---VzkDP0M6yOo5jTdgi1LocT9vdNvVlgRCB
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+I am trying to build the latest xfsprogs on an older system,
+details below. The configure script is failing on what appears
+to be an unexpanded m4 macro,
 
-Hi folks,
+  PKG_CHECK_MODULES(libicu, icu-i18n, have_libicu=yes, have_libicu=no)
 
-The for-next branch of the xfsprogs repository at:
+I'm not quite sure how to work around this or if it is a bug.
+Any advice would be appreciated.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+Kind regards
+Vince
 
-has just been updated.
+System details:
 
-I know there are more patches on the list.  ;)
-No need to resend at this point.
+% cat /etc/os-release 
+PRETTY_NAME="Debian GNU/Linux 8 (jessie)"
+NAME="Debian GNU/Linux"
+VERSION_ID="8"
+VERSION="8 (jessie)"
+ID=debian
+HOME_URL="http://www.debian.org/"
+SUPPORT_URL="http://www.debian.org/support"
+BUG_REPORT_URL="https://bugs.debian.org/"
 
-The new head of the for-next branch is commit:
+% git remote -v
+origin  git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git (fetch)
+origin  git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git (push)
 
-d73a5b9 Get rid of XFS_BUF_SET_COUNT() macro
+% git log -1
+commit 0821de47b419e6a2ed0e8a2c64fd26a93c398093
+Author: Eric Sandeen <sandeen@redhat.com>
+Date:   Fri Jun 29 02:52:21 2018
 
-New Commits:
+    xfsprogs: Release v4.17.0
+    
+    Update all the necessary files for a 4.17.0 release.
+    
+    Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-Carlos Maiolino (4):
-      [0433861] Get rid of XFS_BUF_PTR() macro
-      [69ac495] Get rid of XFS_BUF_TARGET() macro
-      [135e4bf] Get rid of XFS_BUF_COUNT() macro
-      [d73a5b9] Get rid of XFS_BUF_SET_COUNT() macro
+Problem demonstration:
 
-Dave Chinner (1):
-      [959ef98] xfsprogs: convert to SPDX license tags
+% make
+libtoolize -c `libtoolize -n -i >/dev/null 2>/dev/null && echo -i` -f
+libtoolize: putting auxiliary files in AC_CONFIG_AUX_DIR, `.'.
+libtoolize: copying file `./config.guess'
+libtoolize: copying file `./config.sub'
+libtoolize: copying file `./install-sh'
+libtoolize: copying file `./ltmain.sh'
+libtoolize: putting macros in AC_CONFIG_MACRO_DIR, `m4'.
+libtoolize: copying file `m4/libtool.m4'
+libtoolize: copying file `m4/ltoptions.m4'
+libtoolize: copying file `m4/ltsugar.m4'
+libtoolize: copying file `m4/ltversion.m4'
+libtoolize: copying file `m4/lt~obsolete.m4'
+libtoolize: Consider adding `-I m4' to ACLOCAL_AMFLAGS in Makefile.am.
+cp include/install-sh .
+aclocal -I m4
+configure.ac:191: warning: PKG_PROG_PKG_CONFIG is m4_require'd but not m4_defun'd
+m4/package_services.m4:4: AC_CONFIG_SYSTEMD_SYSTEM_UNIT_DIR is expanded from...
+configure.ac:191: the top level
+configure.ac:191: warning: PKG_PROG_PKG_CONFIG is m4_require'd but not m4_defun'd
+m4/package_services.m4:4: AC_CONFIG_SYSTEMD_SYSTEM_UNIT_DIR is expanded from...
+configure.ac:191: the top level
+autoconf
+configure.ac:191: warning: PKG_PROG_PKG_CONFIG is m4_require'd but not m4_defun'd
+m4/package_services.m4:4: AC_CONFIG_SYSTEMD_SYSTEM_UNIT_DIR is expanded from...
+configure.ac:191: the top level
+./configure $LOCAL_CONFIGURE_OPTIONS
+checking for a BSD-compatible install... /usr/bin/install -c
+checking build system type... x86_64-unknown-linux-gnu
+checking host system type... x86_64-unknown-linux-gnu
+checking how to print strings... printf
+checking for gcc... gcc
+checking whether the C compiler works... yes
+checking for C compiler default output file name... a.out
+checking for suffix of executables... 
+checking whether we are cross compiling... no
+checking for suffix of object files... o
+checking whether we are using the GNU C compiler... yes
+checking whether gcc accepts -g... yes
+checking for gcc option to accept ISO C89... none needed
+checking for a sed that does not truncate output... /bin/sed
+checking for grep that handles long lines and -e... /bin/grep
+checking for egrep... /bin/grep -E
+checking for fgrep... /bin/grep -F
+checking for ld used by gcc... /usr/bin/ld
+checking if the linker (/usr/bin/ld) is GNU ld... yes
+checking for BSD- or MS-compatible name lister (nm)... /usr/bin/nm -B
+checking the name lister (/usr/bin/nm -B) interface... BSD nm
+checking whether ln -s works... yes
+checking the maximum length of command line arguments... 1572864
+checking whether the shell understands some XSI constructs... yes
+checking whether the shell understands "+="... yes
+checking how to convert x86_64-unknown-linux-gnu file names to x86_64-unknown-linux-gnu format... func_convert_file_noop
+checking how to convert x86_64-unknown-linux-gnu file names to toolchain format... func_convert_file_noop
+checking for /usr/bin/ld option to reload object files... -r
+checking for objdump... objdump
+checking how to recognize dependent libraries... pass_all
+checking for dlltool... no
+checking how to associate runtime and link libraries... printf %s\n
+checking for ar... ar
+checking for archiver @FILE support... @
+checking for strip... strip
+checking for ranlib... ranlib
+checking for gawk... gawk
+checking command to parse /usr/bin/nm -B output from gcc object... ok
+checking for sysroot... no
+checking for mt... mt
+checking if mt is a manifest tool... no
+checking how to run the C preprocessor... gcc -E
+checking for ANSI C header files... yes
+checking for sys/types.h... yes
+checking for sys/stat.h... yes
+checking for stdlib.h... yes
+checking for string.h... yes
+checking for memory.h... yes
+checking for strings.h... yes
+checking for inttypes.h... yes
+checking for stdint.h... yes
+checking for unistd.h... yes
+checking for dlfcn.h... yes
+checking for objdir... .libs
+checking if gcc supports -fno-rtti -fno-exceptions... no
+checking for gcc option to produce PIC... -fPIC -DPIC
+checking if gcc PIC flag -fPIC -DPIC works... yes
+checking if gcc static flag -static works... yes
+checking if gcc supports -c -o file.o... yes
+checking if gcc supports -c -o file.o... (cached) yes
+checking whether the gcc linker (/usr/bin/ld -m elf_x86_64) supports shared libraries... yes
+checking whether -lc should be explicitly linked in... no
+checking dynamic linker characteristics... GNU/Linux ld.so
+checking how to hardcode library paths into programs... immediate
+checking whether stripping libraries is possible... yes
+checking if libtool supports shared libraries... yes
+checking whether to build shared libraries... yes
+checking whether to build static libraries... yes
+checking for gcc... (cached) gcc
+checking whether we are using the GNU C compiler... (cached) yes
+checking whether gcc accepts -g... (cached) yes
+checking for gcc option to accept ISO C89... (cached) none needed
+checking for gcc... (cached) gcc
+checking whether we are using the GNU C compiler... (cached) yes
+checking whether gcc accepts -g... (cached) yes
+checking for gcc option to accept ISO C89... (cached) none needed
+checking for gcc... (cached) gcc
+checking whether we are using the GNU C compiler... (cached) yes
+checking whether gcc accepts -g... (cached) yes
+checking for gcc option to accept ISO C89... (cached) none needed
+checking for gmake... no
+checking for make... /usr/bin/make
+checking for tar... /bin/tar
+checking for gzip... /bin/gzip
+checking whether gcc -MM is supported... yes
+checking for sort... /usr/bin/sort
+checking whether ln -s works... yes
+checking for msgfmt... /usr/bin/msgfmt
+checking for msgmerge... /usr/bin/msgmerge
+checking for xgettext... /usr/bin/xgettext
+checking for rpm... no
+checking uuid.h usability... no
+checking uuid.h presence... no
+checking for uuid.h... no
+checking sys/uuid.h usability... no
+checking sys/uuid.h presence... no
+checking for sys/uuid.h... no
+checking uuid/uuid.h usability... yes
+checking uuid/uuid.h presence... yes
+checking for uuid/uuid.h... yes
+checking for uuid_compare... no
+checking for uuid_compare in -luuid... yes
+checking pthread.h usability... yes
+checking pthread.h presence... yes
+checking for pthread.h... yes
+checking for pthread_mutex_init in -lpthread... yes
+checking for fadvise ... yes
+checking for madvise ... yes
+checking for mincore ... yes
+checking for sendfile ... yes
+checking for getmntent ... yes
+checking for getmntinfo ... no
+checking for fallocate... yes
+checking for fiemap... yes
+checking for pwritev2... no
+checking for preadv... yes
+checking for copy_file_range... no
+checking for sync_file_range... yes
+checking for syncfs... yes
+checking mntent.h usability... yes
+checking mntent.h presence... yes
+checking for mntent.h... yes
+checking whether fls is declared... no
+checking for readdir... yes
+checking whether fsetxattr is declared... no
+checking whether mremap is declared... yes
+checking for struct fsxattr... no
+checking for GETFSMAP... no
+checking for struct statfs... yes
+checking for struct statfs.f_flags... yes
+checking for MAP_SYNC... no
+checking for library containing dm_task_create... no
+checking for mallinfo ... yes
+checking attr/attributes.h usability... no
+checking attr/attributes.h presence... no
+checking for attr/attributes.h... no
+checking for struct attrlist_cursor... no
+./configure: line 14661: syntax error near unexpected token `libicu,'
+./configure: line 14661: `       PKG_CHECK_MODULES(libicu, icu-i18n, have_libicu=yes, have_libicu=no)'
+Makefile:115: recipe for target 'include/builddefs' failed
+make: *** [include/builddefs] Error 2
 
+% less -N configure
+...
+  14660 if test "$enable_libicu" = "yes" || test "$enable_libicu" = "probe"; then
+  14661          PKG_CHECK_MODULES(libicu, icu-i18n, have_libicu=yes, have_libicu=no)
+  14662 
+  14663 
+  14664 
+  14665 
+  14666 fi
 
-Code Diffstat:
+Package versions:
 
- LICENSES/GPL-2.0                    | 353 +++++++++++++++
- LICENSES/LGPL-2.1                   | 503 +++++++++++++++++++++
- Makefile                            |   1 +
- copy/Makefile                       |   2 +-
- copy/xfs_copy.c                     |  14 +-
- copy/xfs_copy.h                     |  14 +-
- db/Makefile                         |   2 +-
- db/addr.c                           |  14 +-
- db/addr.h                           |  14 +-
- db/agf.c                            |  14 +-
- db/agf.h                            |  14 +-
- db/agfl.c                           |  14 +-
- db/agfl.h                           |  14 +-
- db/agi.c                            |  14 +-
- db/agi.h                            |  14 +-
- db/attr.c                           |  14 +-
- db/attr.h                           |  14 +-
- db/attrset.c                        |  14 +-
- db/attrset.h                        |  14 +-
- db/attrshort.c                      |  14 +-
- db/attrshort.h                      |  14 +-
- db/bit.c                            |  14 +-
- db/bit.h                            |  14 +-
- db/block.c                          |  14 +-
- db/block.h                          |  14 +-
- db/bmap.c                           |  14 +-
- db/bmap.h                           |  14 +-
- db/bmroot.c                         |  14 +-
- db/bmroot.h                         |  14 +-
- db/btblock.c                        |  14 +-
- db/btblock.h                        |  14 +-
- db/btdump.c                         |  16 +-
- db/check.c                          |  14 +-
- db/check.h                          |  14 +-
- db/command.c                        |  14 +-
- db/command.h                        |  14 +-
- db/convert.c                        |  14 +-
- db/convert.h                        |  14 +-
- db/crc.c                            |  13 +-
- db/crc.h                            |  13 +-
- db/debug.c                          |  14 +-
- db/debug.h                          |  14 +-
- db/dir2.c                           |  14 +-
- db/dir2.h                           |  14 +-
- db/dir2sf.c                         |  14 +-
- db/dir2sf.h                         |  14 +-
- db/dquot.c                          |  14 +-
- db/dquot.h                          |  14 +-
- db/echo.c                           |  14 +-
- db/echo.h                           |  14 +-
- db/faddr.c                          |  14 +-
- db/faddr.h                          |  14 +-
- db/field.c                          |  14 +-
- db/field.h                          |  14 +-
- db/flist.c                          |  14 +-
- db/flist.h                          |   1 +
- db/fprint.c                         |  14 +-
- db/fprint.h                         |  14 +-
- db/frag.c                           |  14 +-
- db/frag.h                           |  14 +-
- db/freesp.c                         |  14 +-
- db/freesp.h                         |  14 +-
- db/fsmap.c                          |  16 +-
- db/fsmap.h                          |  16 +-
- db/fuzz.c                           |  14 +-
- db/fuzz.h                           |  16 +-
- db/hash.c                           |  14 +-
- db/hash.h                           |  14 +-
- db/help.c                           |  14 +-
- db/help.h                           |  14 +-
- db/info.c                           |  16 +-
- db/init.c                           |  14 +-
- db/init.h                           |  14 +-
- db/inode.c                          |  14 +-
- db/inode.h                          |  14 +-
- db/input.c                          |  14 +-
- db/input.h                          |  14 +-
- db/io.c                             |  14 +-
- db/io.h                             |  14 +-
- db/logformat.c                      |  14 +-
- db/logformat.h                      |  14 +-
- db/malloc.c                         |  14 +-
- db/malloc.h                         |  14 +-
- db/metadump.c                       |  14 +-
- db/metadump.h                       |  14 +-
- db/output.c                         |  14 +-
- db/output.h                         |  14 +-
- db/print.c                          |  14 +-
- db/print.h                          |  14 +-
- db/quit.c                           |  14 +-
- db/quit.h                           |  14 +-
- db/sb.c                             |  14 +-
- db/sb.h                             |  14 +-
- db/sig.c                            |  14 +-
- db/sig.h                            |  14 +-
- db/strvec.c                         |  14 +-
- db/strvec.h                         |  14 +-
- db/symlink.c                        |  14 +-
- db/symlink.h                        |  14 +-
- db/text.c                           |  14 +-
- db/text.h                           |  14 +-
- db/type.c                           |  14 +-
- db/type.h                           |  14 +-
- db/write.c                          |  14 +-
- db/write.h                          |  14 +-
- db/xfs_admin.sh                     |   1 +
- db/xfs_metadump.sh                  |   1 +
- db/xfs_ncheck.sh                    |   1 +
- debian/Makefile                     |   2 +-
- doc/COPYING                         | 854 ------------------------------=
-------
- doc/Makefile                        |   2 +-
- estimate/Makefile                   |   2 +-
- estimate/xfs_estimate.c             |  14 +-
- fsck/Makefile                       |   2 +-
- fsr/Makefile                        |   2 +-
- fsr/xfs_fsr.c                       |  14 +-
- growfs/Makefile                     |   2 +-
- growfs/xfs_growfs.c                 |  14 +-
- include/Makefile                    |  14 +-
- include/atomic.h                    |  14 +-
- include/avl64.h                     |  14 +-
- include/bitops.h                    |   1 +
- include/builddefs.in                |  14 +-
- include/buildmacros                 |   2 +-
- include/buildrules                  |   2 +-
- include/cache.h                     |  14 +-
- include/command.h                   |  14 +-
- include/convert.h                   |  14 +-
- include/darwin.h                    |  14 +-
- include/freebsd.h                   |  14 +-
- include/fsgeom.h                    |  17 +-
- include/gnukfreebsd.h               |  14 +-
- include/handle.h                    |  14 +-
- include/hlist.h                     |  14 +-
- include/input.h                     |  14 +-
- include/install-sh                  |   2 +-
- include/jdm.h                       |  14 +-
- include/kmem.h                      |  14 +-
- include/libfrog.h                   |  14 +-
- include/libxcmd.h                   |  14 +-
- include/libxfs.h                    |  14 +-
- include/libxlog.h                   |  14 +-
- include/linux.h                     |  14 +-
- include/list.h                      |  14 +-
- include/parent.h                    |  14 +-
- include/path.h                      |  14 +-
- include/platform_defs.h.in          |  16 +-
- include/project.h                   |  14 +-
- include/ptvar.h                     |  16 +-
- include/radix-tree.h                |  15 +-
- include/workqueue.h                 |  18 +-
- include/xfs.h                       |  30 +-
- include/xfs_arch.h                  |  14 +-
- include/xfs_btree_trace.h           |  14 +-
- include/xfs_inode.h                 |  14 +-
- include/xfs_log_recover.h           |  14 +-
- include/xfs_metadump.h              |  14 +-
- include/xfs_mount.h                 |  14 +-
- include/xfs_multidisk.h             |  14 +-
- include/xfs_trace.h                 |  14 +-
- include/xfs_trans.h                 |  14 +-
- include/xqm.h                       |  14 +-
- io/Makefile                         |   2 +-
- io/attr.c                           |  14 +-
- io/bmap.c                           |  14 +-
- io/copy_file_range.c                |  15 +-
- io/cowextsize.c                     |  16 +-
- io/encrypt.c                        |  15 +-
- io/fadvise.c                        |  14 +-
- io/fiemap.c                         |  14 +-
- io/file.c                           |  14 +-
- io/freeze.c                         |  14 +-
- io/fsmap.c                          |  16 +-
- io/fsync.c                          |  14 +-
- io/getrusage.c                      |  14 +-
- io/imap.c                           |  14 +-
- io/init.c                           |  14 +-
- io/init.h                           |  14 +-
- io/inject.c                         |  14 +-
- io/io.h                             |  14 +-
- io/label.c                          |  17 +-
- io/link.c                           |  14 +-
- io/log_writes.c                     |  14 +-
- io/madvise.c                        |  14 +-
- io/mincore.c                        |  14 +-
- io/mmap.c                           |  14 +-
- io/open.c                           |  14 +-
- io/parent.c                         |  14 +-
- io/pread.c                          |  14 +-
- io/prealloc.c                       |  14 +-
- io/pwrite.c                         |  14 +-
- io/readdir.c                        |  14 +-
- io/reflink.c                        |  14 +-
- io/resblks.c                        |  14 +-
- io/scrub.c                          |  15 +-
- io/seek.c                           |  14 +-
- io/sendfile.c                       |  14 +-
- io/shutdown.c                       |  14 +-
- io/stat.c                           |  15 +-
- io/statx.h                          |   2 +
- io/swapext.c                        |  14 +-
- io/sync.c                           |  14 +-
- io/sync_file_range.c                |  14 +-
- io/truncate.c                       |  14 +-
- io/utimes.c                         |  14 +-
- io/xfs_bmap.sh                      |   2 +-
- io/xfs_freeze.sh                    |   2 +-
- io/xfs_mkfile.sh                    |   2 +-
- libfrog/Makefile                    |   2 +-
- libfrog/avl64.c                     |  14 +-
- libfrog/convert.c                   |  14 +-
- libfrog/darwin.c                    |  14 +-
- libfrog/freebsd.c                   |  14 +-
- libfrog/fsgeom.c                    |  17 +-
- libfrog/irix.c                      |  14 +-
- libfrog/linux.c                     |  14 +-
- libfrog/paths.c                     |  14 +-
- libfrog/projects.c                  |  14 +-
- libfrog/ptvar.c                     |  16 +-
- libfrog/radix-tree.c                |  15 +-
- libfrog/topology.c                  |  14 +-
- libfrog/util.c                      |  14 +-
- libfrog/workqueue.c                 |  19 +-
- libhandle/Makefile                  |   2 +-
- libhandle/handle.c                  |  14 +-
- libhandle/jdm.c                     |  14 +-
- libxcmd/Makefile                    |   2 +-
- libxcmd/command.c                   |  14 +-
- libxcmd/help.c                      |  14 +-
- libxcmd/input.c                     |  14 +-
- libxcmd/quit.c                      |  14 +-
- libxfs/Makefile                     |   2 +-
- libxfs/cache.c                      |  14 +-
- libxfs/crc32.c                      |   6 +-
- libxfs/crc32defs.h                  |   1 +
- libxfs/defer_item.c                 |  16 +-
- libxfs/gen_crc32table.c             |   1 +
- libxfs/init.c                       |  14 +-
- libxfs/init.h                       |  14 +-
- libxfs/kmem.c                       |   1 +
- libxfs/libxfs_api_defs.h            |  14 +-
- libxfs/libxfs_io.h                  |  18 +-
- libxfs/libxfs_priv.h                |  14 +-
- libxfs/logitem.c                    |  16 +-
- libxfs/rdwr.c                       |  24 +-
- libxfs/trans.c                      |  16 +-
- libxfs/util.c                       |  14 +-
- libxfs/xfs_cksum.h                  |   1 +
- libxlog/Makefile                    |   2 +-
- libxlog/util.c                      |  14 +-
- libxlog/xfs_log_recover.c           |  16 +-
- logprint/Makefile                   |   2 +-
- logprint/log_copy.c                 |  14 +-
- logprint/log_dump.c                 |  14 +-
- logprint/log_misc.c                 |  14 +-
- logprint/log_print_all.c            |  18 +-
- logprint/log_print_trans.c          |  14 +-
- logprint/log_redo.c                 |  14 +-
- logprint/logprint.c                 |  14 +-
- logprint/logprint.h                 |  14 +-
- m4/Makefile                         |   2 +-
- man/Makefile                        |   2 +-
- man/man2/ioctl_xfs_scrub_metadata.2 |  19 +-
- mdrestore/Makefile                  |   2 +-
- mdrestore/xfs_mdrestore.c           |  14 +-
- mkfs/Makefile                       |   2 +-
- mkfs/proto.c                        |  22 +-
- mkfs/xfs_mkfs.c                     |  28 +-
- po/Makefile                         |   2 +-
- quota/Makefile                      |   2 +-
- quota/darwin.c                      |  14 +-
- quota/edit.c                        |  14 +-
- quota/free.c                        |  14 +-
- quota/freebsd.c                     |  14 +-
- quota/init.c                        |  14 +-
- quota/init.h                        |  14 +-
- quota/irix.c                        |  14 +-
- quota/linux.c                       |  14 +-
- quota/path.c                        |  14 +-
- quota/project.c                     |  14 +-
- quota/quot.c                        |  14 +-
- quota/quota.c                       |  14 +-
- quota/quota.h                       |  14 +-
- quota/report.c                      |  14 +-
- quota/state.c                       |  14 +-
- quota/util.c                        |  14 +-
- repair/Makefile                     |   2 +-
- repair/README                       |   2 +
- repair/agheader.c                   |  20 +-
- repair/agheader.h                   |  14 +-
- repair/attr_repair.c                |  18 +-
- repair/attr_repair.h                |  14 +-
- repair/avl.c                        |  14 +-
- repair/avl.h                        |  14 +-
- repair/bmap.c                       |  14 +-
- repair/bmap.h                       |  14 +-
- repair/btree.c                      |  14 +-
- repair/btree.h                      |  14 +-
- repair/da_util.c                    |  13 +-
- repair/da_util.h                    |  14 +-
- repair/dino_chunks.c                |  16 +-
- repair/dinode.c                     |  14 +-
- repair/dinode.h                     |  14 +-
- repair/dir2.c                       |  14 +-
- repair/dir2.h                       |  14 +-
- repair/err_protos.h                 |  14 +-
- repair/globals.c                    |  14 +-
- repair/globals.h                    |  14 +-
- repair/incore.c                     |  14 +-
- repair/incore.h                     |  14 +-
- repair/incore_bmc.c                 |  14 +-
- repair/incore_ext.c                 |  14 +-
- repair/incore_ino.c                 |  14 +-
- repair/init.c                       |  14 +-
- repair/phase1.c                     |  14 +-
- repair/phase2.c                     |  14 +-
- repair/phase3.c                     |  14 +-
- repair/phase4.c                     |  14 +-
- repair/phase5.c                     |  14 +-
- repair/phase6.c                     |  18 +-
- repair/phase7.c                     |  14 +-
- repair/prefetch.c                   |   6 +-
- repair/prefetch.h                   |   2 +
- repair/progress.c                   |   1 +
- repair/progress.h                   |   2 +
- repair/protos.h                     |  14 +-
- repair/rmap.c                       |  16 +-
- repair/rmap.h                       |  16 +-
- repair/rt.c                         |  14 +-
- repair/rt.h                         |  14 +-
- repair/sb.c                         |  14 +-
- repair/scan.c                       |  14 +-
- repair/scan.h                       |  14 +-
- repair/slab.c                       |  16 +-
- repair/slab.h                       |  16 +-
- repair/threads.c                    |   2 +
- repair/threads.h                    |   2 +
- repair/versions.c                   |  14 +-
- repair/versions.h                   |  14 +-
- repair/xfs_repair.c                 |  14 +-
- rtcp/Makefile                       |   2 +-
- rtcp/xfs_rtcp.c                     |  14 +-
- scrub/Makefile                      |   2 +-
- scrub/bitmap.c                      |  16 +-
- scrub/bitmap.h                      |  16 +-
- scrub/common.c                      |  16 +-
- scrub/common.h                      |  16 +-
- scrub/counter.c                     |  16 +-
- scrub/counter.h                     |  16 +-
- scrub/disk.c                        |  16 +-
- scrub/disk.h                        |  16 +-
- scrub/filemap.c                     |  16 +-
- scrub/filemap.h                     |  16 +-
- scrub/fscounters.c                  |  16 +-
- scrub/fscounters.h                  |  16 +-
- scrub/inodes.c                      |  16 +-
- scrub/inodes.h                      |  16 +-
- scrub/phase1.c                      |  16 +-
- scrub/phase2.c                      |  16 +-
- scrub/phase3.c                      |  16 +-
- scrub/phase4.c                      |  16 +-
- scrub/phase5.c                      |  16 +-
- scrub/phase6.c                      |  16 +-
- scrub/phase7.c                      |  16 +-
- scrub/progress.c                    |  16 +-
- scrub/progress.h                    |  16 +-
- scrub/read_verify.c                 |  16 +-
- scrub/read_verify.h                 |  16 +-
- scrub/scrub.c                       |  16 +-
- scrub/scrub.h                       |  16 +-
- scrub/spacemap.c                    |  16 +-
- scrub/spacemap.h                    |  16 +-
- scrub/unicrash.c                    |  16 +-
- scrub/unicrash.h                    |  16 +-
- scrub/vfs.c                         |  16 +-
- scrub/vfs.h                         |  16 +-
- scrub/xfs_scrub.c                   |  16 +-
- scrub/xfs_scrub.h                   |  16 +-
- scrub/xfs_scrub_all.in              |  19 +-
- spaceman/Makefile                   |   2 +-
- spaceman/file.c                     |  14 +-
- spaceman/freesp.c                   |  14 +-
- spaceman/info.c                     |  16 +-
- spaceman/init.c                     |  14 +-
- spaceman/init.h                     |  14 +-
- spaceman/prealloc.c                 |  14 +-
- spaceman/space.h                    |  14 +-
- spaceman/trim.c                     |  14 +-
- spaceman/xfs_info.sh                |   1 +
- tools/find-api-violations.sh        |   1 +
- tools/libxfs-apply                  |   1 +
- tools/libxfs-diff                   |   1 +
- tools/xfsbuflock.py                 |  19 +-
- 393 files changed, 1291 insertions(+), 5440 deletions(-)
- create mode 100644 LICENSES/GPL-2.0
- create mode 100644 LICENSES/LGPL-2.1
- delete mode 100644 doc/COPYING
- mode change 100755 =3D> 100644 io/utimes.c
+% dpkg -l|grep icu
+ii  icu-devtools                        52.1-8+deb8u7                      amd64        Development utilities for International Components for Unicode
+ii  libicu-dev:amd64                    52.1-8+deb8u7                      amd64        Development files for International Components for Unicode
+ii  libicu52:amd64                      52.1-8+deb8u7                      amd64        International Components for Unicode
 
+% dpkg -l | grep -w m4
+ii  m4                                  1.4.17-4                           amd64        macro processing language
 
---VzkDP0M6yOo5jTdgi1LocT9vdNvVlgRCB--
+% dpkg -l | grep libtool
+ii  libltdl7:amd64                      2.4.2-1.11+b1                      amd64        System independent dlopen wrapper for GNU libtool
+ii  libtool                             2.4.2-1.11                         all          Generic library support script
 
---bdu4fGSlyffTzbCZn2JQJAMWgEIDMnAy9
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAltWrUgACgkQIK4WkuE9
-3uBH3xAAitoF6r5d1SSjXldqYTn+9o0J6hcTh6mUaDATxE8zIFxdW8+9GZEa21Us
-iDsQYXhY5QUQgpFAqPbRyi1+VeOvau2e+u5LYAvIMVtWA9IceufBKCXCrpYJznDG
-94zJoF9B4kg1CFizy1aB93FKJTtpLPJ+Y7p9+GDFL+6/7ChjiMMVr4ErrWq1O2dN
-5xAgmzCyeuAv+LyXAWQMAFEa5rlk2dayzbtrknIFGBsTlwhOTJKQofpvop+8pbWk
-7tlzu+UfRsqM4RD6e+EfXRx6I/f3/FIjTvFR4YgzS+LR7L4yzj67c6gN8VRIQXj4
-24WQDOmnSipfOJdeM5D+iwCVxMnni5MsbR4N01jQMtgcyWbiHhrHlCWcr+GyKvMn
-GEcOMfU+ccRETlGFy+A0FSfBDcHP3Gwzwq85IRrIeCf2VxBJqP+OAeroGTTBYxbD
-n/zpvL8/t+Vo0SPGG07Mp2mroXVmNwY8uRz2cpZXZVbkH91T0W99V7WFsmfVJmwF
-OfBWRH3V3UovwMiihf54ahV9OpSTw3r5k5Sw1BDMADqPbm6DOIOil6LSZFH/lRnG
-zzXE3Kr4N0gt3QGbnaDHRj0xipWArQUVUeB0wxVvS0rRO6XF86GKJs0yBrmtYKu1
-giIs4G0/maJm8R2ex1ZCVHFDXdFr0Myv8xesoMw5AJ87scwaVOc=
-=ez83
------END PGP SIGNATURE-----
-
---bdu4fGSlyffTzbCZn2JQJAMWgEIDMnAy9--
