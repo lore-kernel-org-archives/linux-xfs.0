@@ -1,148 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:42760 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730533AbeGZV4x (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Jul 2018 17:56:53 -0400
-Date: Thu, 26 Jul 2018 13:38:14 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 12/10] xfs_repair: use libxfs extsize/cowextsize
- validation helpers
-Message-ID: <20180726203814.GH30972@magnolia>
-References: <153006766483.20121.9285982017465570544.stgit@magnolia>
- <20180628173008.GJ5711@magnolia>
+Received: from sandeen.net ([63.231.237.45]:51750 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388201AbeGXDiY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 23 Jul 2018 23:38:24 -0400
+Subject: [PATCH 1/2 V3] xfs_repair: notify user if free inodes contain errors
+References: <b6f745ab-3016-9a95-3085-8584f7200b64@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <75f628bc-e8e7-b4fd-0bbb-fb3ca0fabac8@sandeen.net>
+Date: Mon, 23 Jul 2018 19:34:13 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180628173008.GJ5711@magnolia>
+In-Reply-To: <b6f745ab-3016-9a95-3085-8584f7200b64@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+xfs_repair checks allocated but unused (free) inodes in on-disk clusters,
+and up until now silently repairs any errors, and as a result does not
+alter exit status if errors are found.
+    
+The in-kernel verifiers will be noisy about these errors and instruct
+the user to run repair, so it's best if repair is explicit about any
+fixes it makes as a result.
 
-Now that we've ported the extent size hint verifiers to libxfs, call
-them from xfs_repair instead of open-coding the checks.  Tweak the
-repair message slightly to reflect the fact that we zero the field and
-clear the inode flag if the hint is garbage or is inconsistent with the
-inode flags.
+To ensure we catch anything the kernel would complain about, re-use
+xfs_dinode_verify to determine whether we must clear a free inode.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Note, however, that the verifier contains only a subset of the checks
+currently in clear_dinode.  This should be ok; if it's not, the checks
+should be added to the verifier in any case.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
-v2: fix error message to reflect what actually happened
----
- libxfs/libxfs_api_defs.h |    2 +
- repair/dinode.c          |   75 ++++++++++++++++------------------------------
- 2 files changed, 28 insertions(+), 49 deletions(-)
 
 diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index e5cf1554..fe8336ab 100644
+index a98483b..05c06a7 100644
 --- a/libxfs/libxfs_api_defs.h
 +++ b/libxfs/libxfs_api_defs.h
-@@ -98,6 +98,8 @@
- #define xfs_dinode_calc_crc		libxfs_dinode_calc_crc
- #define xfs_idata_realloc		libxfs_idata_realloc
- #define xfs_idestroy_fork		libxfs_idestroy_fork
-+#define xfs_inode_validate_extsize	libxfs_inode_validate_extsize
-+#define xfs_inode_validate_cowextsize	libxfs_inode_validate_cowextsize
+@@ -134,6 +134,7 @@
+ #define xfs_symlink_hdr_ok		libxfs_symlink_hdr_ok
  
- #define xfs_rmap_ag_owner		libxfs_rmap_ag_owner
- #define xfs_rmap_alloc			libxfs_rmap_alloc
+ #define xfs_verify_cksum		libxfs_verify_cksum
++#define xfs_dinode_verify		libxfs_dinode_verify
+ 
+ #define xfs_alloc_ag_max_usable		libxfs_alloc_ag_max_usable
+ #define xfs_allocbt_maxrecs		libxfs_allocbt_maxrecs
 diff --git a/repair/dinode.c b/repair/dinode.c
-index fb65ee22..cf1a0ad8 100644
+index d36338f..c0db15a 100644
 --- a/repair/dinode.c
 +++ b/repair/dinode.c
-@@ -2841,24 +2841,21 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
- 	 * only regular files with REALTIME or EXTSIZE flags set can have
- 	 * extsize set, or directories with EXTSZINHERIT.
- 	 */
--	if (be32_to_cpu(dino->di_extsize) != 0) {
--		if ((type == XR_INO_RTDATA) ||
--		    (type == XR_INO_DIR && (be16_to_cpu(dino->di_flags) &
--					XFS_DIFLAG_EXTSZINHERIT)) ||
--		    (type == XR_INO_DATA && (be16_to_cpu(dino->di_flags) &
--				 XFS_DIFLAG_EXTSIZE)))  {
--			/* s'okay */ ;
--		} else {
--			do_warn(
--_("bad non-zero extent size %u for non-realtime/extsize inode %" PRIu64 ", "),
--					be32_to_cpu(dino->di_extsize), lino);
--			if (!no_modify)  {
--				do_warn(_("resetting to zero\n"));
--				dino->di_extsize = 0;
--				*dirty = 1;
--			} else
--				do_warn(_("would reset to zero\n"));
--		}
-+	if (libxfs_inode_validate_extsize(mp,
-+			be32_to_cpu(dino->di_extsize),
-+			be16_to_cpu(dino->di_mode),
-+			be16_to_cpu(dino->di_flags)) != NULL) {
-+		do_warn(
-+_("Bad extent size %u on inode %" PRIu64 ", "),
-+				be32_to_cpu(dino->di_extsize), lino);
-+		if (!no_modify)  {
-+			do_warn(_("resetting to zero\n"));
-+			dino->di_extsize = 0;
-+			dino->di_flags &= ~cpu_to_be16(XFS_DIFLAG_EXTSIZE |
-+						       XFS_DIFLAG_EXTSZINHERIT);
-+			*dirty = 1;
-+		} else
-+			do_warn(_("would reset to zero\n"));
- 	}
- 
- 	/*
-@@ -2866,41 +2863,21 @@ _("bad non-zero extent size %u for non-realtime/extsize inode %" PRIu64 ", "),
- 	 * set can have extsize set.
- 	 */
- 	if (dino->di_version >= 3 &&
--	    be32_to_cpu(dino->di_cowextsize) != 0) {
--		if ((type == XR_INO_DIR || type == XR_INO_DATA) &&
--		    (be64_to_cpu(dino->di_flags2) &
--					XFS_DIFLAG2_COWEXTSIZE)) {
--			/* s'okay */ ;
--		} else {
--			do_warn(
--_("Cannot have non-zero CoW extent size %u on non-cowextsize inode %" PRIu64 ", "),
--					be32_to_cpu(dino->di_cowextsize), lino);
--			if (!no_modify)  {
--				do_warn(_("resetting to zero\n"));
--				dino->di_flags2 &= ~cpu_to_be64(XFS_DIFLAG2_COWEXTSIZE);
--				dino->di_cowextsize = 0;
--				*dirty = 1;
--			} else
--				do_warn(_("would reset to zero\n"));
--		}
--	}
--
--	/*
--	 * Can't have the COWEXTSIZE flag set with no hint.
--	 */
--	if (dino->di_version >= 3 &&
--	    be32_to_cpu(dino->di_cowextsize) == 0 &&
--	    (be64_to_cpu(dino->di_flags2) & XFS_DIFLAG2_COWEXTSIZE)) {
-+	    libxfs_inode_validate_cowextsize(mp,
-+			be32_to_cpu(dino->di_cowextsize),
-+			be16_to_cpu(dino->di_mode),
-+			be16_to_cpu(dino->di_flags),
-+			be64_to_cpu(dino->di_flags2)) != NULL) {
- 		do_warn(
--_("Cannot have CoW extent size of zero on cowextsize inode %" PRIu64 ", "),
--				lino);
-+_("Bad CoW extent size %u on inode %" PRIu64 ", "),
-+				be32_to_cpu(dino->di_cowextsize), lino);
- 		if (!no_modify)  {
--			do_warn(_("clearing cowextsize flag\n"));
-+			do_warn(_("resetting to zero\n"));
- 			dino->di_flags2 &= ~cpu_to_be64(XFS_DIFLAG2_COWEXTSIZE);
-+			dino->di_cowextsize = 0;
- 			*dirty = 1;
--		} else {
--			do_warn(_("would clear cowextsize flag\n"));
--		}
-+		} else
-+			do_warn(_("would reset to zero\n"));
- 	}
- 
- 	/* nsec fields cannot be larger than 1 billion */
+@@ -2560,12 +2560,20 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
+ 		 */
+ 		if (was_free) {
+ 			/*
+-			 * easy case, inode free -- inode and map agree, clear
++			 * easy case, inode free -- inode and map agree, check
+ 			 * it just in case to ensure that format, etc. are
+ 			 * set correctly
+ 			 */
+-			if (!no_modify)
+-				*dirty += clear_dinode(mp, dino, lino);
++			if (libxfs_dinode_verify(mp, lino, dino) != NULL) {
++				do_warn(
++ _("free inode %" PRIu64 " contains errors, "), lino);
++				if (!no_modify) {
++					*dirty += clear_dinode(mp, dino, lino);
++					do_warn(_("corrected\n"));
++				} else {
++					do_warn(_("would correct\n"));
++				}
++			}
+ 			*used = is_free;
+ 			return 0;
+ 		}
+
