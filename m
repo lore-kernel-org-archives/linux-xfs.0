@@ -1,140 +1,432 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46390 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727721AbeGSVye (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 19 Jul 2018 17:54:34 -0400
-Subject: Re: [PATCH] mkfs: fix divide-by-zero in align_ag_geometry
-References: <20180621025520.9115-1-jeffm@suse.com>
- <20180621035749.GR19934@dastard>
- <85feed9e-c347-5559-59cc-9f4e035324e5@suse.com>
- <342f7e6a-83f6-e887-b24f-b9a628f790e2@sandeen.net>
- <20180621194936.GS19934@dastard>
- <919ce2d0-b560-3fe6-f16c-503f57e3157c@suse.com>
- <20180621223644.GW19934@dastard>
- <1c60e3f5-3d2f-d739-cc1d-e23919f6c585@sandeen.net>
- <c78886ab-c334-a96f-795e-ea1985a1a8f3@sandeen.net>
-From: Jeff Mahoney <jeffm@suse.com>
-Message-ID: <4f4fdc17-918c-6293-21e1-97cc7a5fdd6b@suse.com>
-Date: Thu, 19 Jul 2018 17:09:36 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:34172 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388476AbeGXWdr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Jul 2018 18:33:47 -0400
+Date: Tue, 24 Jul 2018 13:55:09 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 14/15] xfs: drop unnecessary xfs_defer_finish() dfops
+ parameter
+Message-ID: <20180724205509.GM4813@magnolia>
+References: <20180723130414.47980-1-bfoster@redhat.com>
+ <20180723130414.47980-15-bfoster@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <c78886ab-c334-a96f-795e-ea1985a1a8f3@sandeen.net>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="B3WjqmbuWGzRvM4R7DWbtQCZzVeY5VDks"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180723130414.47980-15-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <david@fromorbit.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---B3WjqmbuWGzRvM4R7DWbtQCZzVeY5VDks
-Content-Type: multipart/mixed; boundary="MCMtHBz7qr6MwjcLC0PEyIUpn4Oxths8E";
- protected-headers="v1"
-From: Jeff Mahoney <jeffm@suse.com>
-To: Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
-Message-ID: <4f4fdc17-918c-6293-21e1-97cc7a5fdd6b@suse.com>
-Subject: Re: [PATCH] mkfs: fix divide-by-zero in align_ag_geometry
-References: <20180621025520.9115-1-jeffm@suse.com>
- <20180621035749.GR19934@dastard>
- <85feed9e-c347-5559-59cc-9f4e035324e5@suse.com>
- <342f7e6a-83f6-e887-b24f-b9a628f790e2@sandeen.net>
- <20180621194936.GS19934@dastard>
- <919ce2d0-b560-3fe6-f16c-503f57e3157c@suse.com>
- <20180621223644.GW19934@dastard>
- <1c60e3f5-3d2f-d739-cc1d-e23919f6c585@sandeen.net>
- <c78886ab-c334-a96f-795e-ea1985a1a8f3@sandeen.net>
-In-Reply-To: <c78886ab-c334-a96f-795e-ea1985a1a8f3@sandeen.net>
+On Mon, Jul 23, 2018 at 09:04:13AM -0400, Brian Foster wrote:
+> Every caller of xfs_defer_finish() now passes the transaction and
+> its associated ->t_dfops. The xfs_defer_ops parameter is therefore
+> no longer necessary and can be removed.
+> 
+> Since most xfs_defer_finish() callers also have to consider
+> xfs_defer_cancel() on error, update the latter to also receive the
+> transaction for consistency. The log recovery code contains an
+> outlier case that cancels a dfops directly without an available
+> transaction. Retain an internal wrapper to support this outlier case
+> for the time being.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
---MCMtHBz7qr6MwjcLC0PEyIUpn4Oxths8E
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-On 6/21/18 9:34 PM, Eric Sandeen wrote:
-> On 6/21/18 6:16 PM, Eric Sandeen wrote:
->>> Ah, so it came from the hardware? In that case, we probably
->>> shouldn't zero sunit when blkid reports this whacky case. i.e. I
->>> think we should set swidth =3D sunit so that we retain allocation
->>> alignment to the minimum IO size the device specified.
->> Hrmph.
->>
->> yeah, I'd really like to see=20
->>
->> # blockdev --getiomin --getioopt --getss --getpbsz
->>
->> for all the devices in the stack, I guess...
->=20
-> Ok, so Jeff shared the lsblk output with me; the underlying
-> device and the mpath device are both:
->=20
-> MIN-IO OPT-IO PHY-SEC LOG-SEC
-> 8192      0     512     512
->=20
-> so logical/physical 512, with minimum io 8192 and optimal io 0.
-> On further inspection Jeff says this may be because an optimal
-> size is reported as greater than the maximum size, so we get 0
-> due to the inconsistency.
->=20
-> Ok, well, I guess I see your point that we should probably set
-> sunit=3Dswidth=3D8192 here.  I was thinking that conflicted with
-> how we process it on the commandline but no, it doesn't; if you're
-> going to manually specify you can't set one to 0 and not the other,
-> but we have to make the best of what the hardware tells us.
->=20
-> So we could do:
->=20
->         /*
->          * Some odd hardware sets minimum IO but not optimal; assume
->          * minimal is the smallest preferred IO size, and set optimal
-> 	 * to the same value, i.e. a stripe of 1 disk.
->          */
->         if (*sunit && *swidth =3D=3D 0)
->                 *swidth =3D *sunit;
->=20
-> But it's clearly buggy hardware.  How are we to know which values=20
-> are accurate and which are not?  It still may be better to just set
-> to no stripe geometry if we've gotten nonsense from libblockdev,
-> if the device wants better performance it needs to have rational
-> firmware... trying to 2nd guess bad values is just a crapshoot.
-> I guess we could issue a warning ...
+--D
 
-Getting back to this after some time off.  I agree we should warn, but
-if we warn, we need to do it when we have more context.  Otherwise we'll
-warn even when the user specifies stripe parameters, which just looks
-sloppy.  I have an updated patch that puts it in calc_stripe_factors and
-only issues the warning if we will consume those values.
-
--Jeff
-
---=20
-Jeff Mahoney
-SUSE Labs
-
-
---MCMtHBz7qr6MwjcLC0PEyIUpn4Oxths8E--
-
---B3WjqmbuWGzRvM4R7DWbtQCZzVeY5VDks
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEE8wzgbmZ74SnKPwtDHntLYyF55bIFAltQ/hEACgkQHntLYyF5
-5bJp4hAAnDPWvt4Cfoub1oaxTdkZ7d2YlGij6jzHsAolBZsK5bOdTysebK5DcqNt
-UMnJFFlO/jSz00mFQbGBAieTm5IBpn5OxoOvNuBtKdyKD1V57rbvwvlbH1bY3HIo
-r1xl5bv662L7DJj8010O4O/acgGBJQIVRwKYvEoukEE7NRgvFPkFzJG7KgAFkwyG
-w8PYymkyyaDzwBtIZY1mAzTIqGmo3t84PlIvU5JuUGCWMGHJQnIpuhp51613AygW
-wDQmCKQt5epzj1nv5cuZznuzSy3R4VlF3h+kq3m5SExrg0CsRNUZ6AOwZV56232P
-VQM9Ojwu3OcizQxCWTiaZui+0Z0W82E7wKzFOwxMq3Xqdem6pBhAaqWdVoJr6E/1
-oI6Lf4l1ynaSkealyrypUsMgn76T/VOBlK9bTa+NhDzEnJ2lIwAR91fpZDX6Cyww
-fRslQNmV7TbgNom95P/SFCUE1HNaxSdnqv72Ycqw1X0RahZj/XN7Ap2EhJDCwXxl
-70DkAWRwaw9BXEsENRBAkKEoPg3vnIkM4B+qlxZWECekN5DDA4XsoTquoOI7aBLe
-ct/uZKhtBbgWL6VHyVya0WeI9BgXzroxyqt1AJfTDQ/O8tduZ5LnL+DQEhS9Av+5
-6zRPjYu4XNDUHRBEZhJ/RFLTOnNlEHyaFcRi74STD0f1kwPjNBk=
-=bmRL
------END PGP SIGNATURE-----
-
---B3WjqmbuWGzRvM4R7DWbtQCZzVeY5VDks--
+> ---
+>  fs/xfs/libxfs/xfs_attr.c        | 27 +++++++++++++--------------
+>  fs/xfs/libxfs/xfs_attr_remote.c |  8 ++++----
+>  fs/xfs/libxfs/xfs_defer.c       |  7 +++----
+>  fs/xfs/libxfs/xfs_defer.h       |  4 ++--
+>  fs/xfs/xfs_bmap_util.c          |  4 ++--
+>  fs/xfs/xfs_dquot.c              |  4 ++--
+>  fs/xfs/xfs_inode.c              |  4 ++--
+>  fs/xfs/xfs_log_recover.c        |  2 +-
+>  fs/xfs/xfs_reflink.c            |  8 ++++----
+>  fs/xfs/xfs_trans.c              | 13 ++++++++++---
+>  fs/xfs/xfs_trans.h              |  3 +++
+>  11 files changed, 46 insertions(+), 38 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index 3e98f0af389c..3deb5cdadf08 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -322,7 +322,7 @@ xfs_attr_set(
+>  		xfs_trans_bhold(args.trans, leaf_bp);
+>  		xfs_defer_bjoin(args.trans->t_dfops, leaf_bp);
+>  		xfs_defer_ijoin(args.trans->t_dfops, dp);
+> -		error = xfs_defer_finish(&args.trans, args.trans->t_dfops);
+> +		error = xfs_defer_finish(&args.trans);
+>  		if (error)
+>  			goto out;
+>  
+> @@ -591,7 +591,7 @@ xfs_attr_leaf_addname(
+>  		if (error)
+>  			goto out_defer_cancel;
+>  		xfs_defer_ijoin(args->trans->t_dfops, dp);
+> -		error = xfs_defer_finish(&args->trans, args->trans->t_dfops);
+> +		error = xfs_defer_finish(&args->trans);
+>  		if (error)
+>  			goto out_defer_cancel;
+>  
+> @@ -680,7 +680,7 @@ xfs_attr_leaf_addname(
+>  			if (error)
+>  				goto out_defer_cancel;
+>  			xfs_defer_ijoin(args->trans->t_dfops, dp);
+> -			error = xfs_defer_finish(&args->trans, args->trans->t_dfops);
+> +			error = xfs_defer_finish(&args->trans);
+>  			if (error)
+>  				goto out_defer_cancel;
+>  		}
+> @@ -698,7 +698,7 @@ xfs_attr_leaf_addname(
+>  	}
+>  	return error;
+>  out_defer_cancel:
+> -	xfs_defer_cancel(args->trans->t_dfops);
+> +	xfs_defer_cancel(args->trans);
+>  	return error;
+>  }
+>  
+> @@ -744,13 +744,13 @@ xfs_attr_leaf_removename(
+>  		if (error)
+>  			goto out_defer_cancel;
+>  		xfs_defer_ijoin(args->trans->t_dfops, dp);
+> -		error = xfs_defer_finish(&args->trans, args->trans->t_dfops);
+> +		error = xfs_defer_finish(&args->trans);
+>  		if (error)
+>  			goto out_defer_cancel;
+>  	}
+>  	return 0;
+>  out_defer_cancel:
+> -	xfs_defer_cancel(args->trans->t_dfops);
+> +	xfs_defer_cancel(args->trans);
+>  	return error;
+>  }
+>  
+> @@ -871,8 +871,7 @@ xfs_attr_node_addname(
+>  			if (error)
+>  				goto out_defer_cancel;
+>  			xfs_defer_ijoin(args->trans->t_dfops, dp);
+> -			error = xfs_defer_finish(&args->trans,
+> -						 args->trans->t_dfops);
+> +			error = xfs_defer_finish(&args->trans);
+>  			if (error)
+>  				goto out_defer_cancel;
+>  
+> @@ -897,7 +896,7 @@ xfs_attr_node_addname(
+>  		if (error)
+>  			goto out_defer_cancel;
+>  		xfs_defer_ijoin(args->trans->t_dfops, dp);
+> -		error = xfs_defer_finish(&args->trans, args->trans->t_dfops);
+> +		error = xfs_defer_finish(&args->trans);
+>  		if (error)
+>  			goto out_defer_cancel;
+>  	} else {
+> @@ -994,7 +993,7 @@ xfs_attr_node_addname(
+>  			if (error)
+>  				goto out_defer_cancel;
+>  			xfs_defer_ijoin(args->trans->t_dfops, dp);
+> -			error = xfs_defer_finish(&args->trans, args->trans->t_dfops);
+> +			error = xfs_defer_finish(&args->trans);
+>  			if (error)
+>  				goto out_defer_cancel;
+>  		}
+> @@ -1023,7 +1022,7 @@ xfs_attr_node_addname(
+>  		return error;
+>  	return retval;
+>  out_defer_cancel:
+> -	xfs_defer_cancel(args->trans->t_dfops);
+> +	xfs_defer_cancel(args->trans);
+>  	goto out;
+>  }
+>  
+> @@ -1118,7 +1117,7 @@ xfs_attr_node_removename(
+>  		if (error)
+>  			goto out_defer_cancel;
+>  		xfs_defer_ijoin(args->trans->t_dfops, dp);
+> -		error = xfs_defer_finish(&args->trans, args->trans->t_dfops);
+> +		error = xfs_defer_finish(&args->trans);
+>  		if (error)
+>  			goto out_defer_cancel;
+>  		/*
+> @@ -1150,7 +1149,7 @@ xfs_attr_node_removename(
+>  			if (error)
+>  				goto out_defer_cancel;
+>  			xfs_defer_ijoin(args->trans->t_dfops, dp);
+> -			error = xfs_defer_finish(&args->trans, args->trans->t_dfops);
+> +			error = xfs_defer_finish(&args->trans);
+>  			if (error)
+>  				goto out_defer_cancel;
+>  		} else
+> @@ -1162,7 +1161,7 @@ xfs_attr_node_removename(
+>  	xfs_da_state_free(state);
+>  	return error;
+>  out_defer_cancel:
+> -	xfs_defer_cancel(args->trans->t_dfops);
+> +	xfs_defer_cancel(args->trans);
+>  	goto out;
+>  }
+>  
+> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+> index 0fbfb740949e..77ca38586913 100644
+> --- a/fs/xfs/libxfs/xfs_attr_remote.c
+> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
+> @@ -487,7 +487,7 @@ xfs_attr_rmtval_set(
+>  		if (error)
+>  			goto out_defer_cancel;
+>  		xfs_defer_ijoin(args->trans->t_dfops, dp);
+> -		error = xfs_defer_finish(&args->trans, args->trans->t_dfops);
+> +		error = xfs_defer_finish(&args->trans);
+>  		if (error)
+>  			goto out_defer_cancel;
+>  
+> @@ -555,7 +555,7 @@ xfs_attr_rmtval_set(
+>  	ASSERT(valuelen == 0);
+>  	return 0;
+>  out_defer_cancel:
+> -	xfs_defer_cancel(args->trans->t_dfops);
+> +	xfs_defer_cancel(args->trans);
+>  	return error;
+>  }
+>  
+> @@ -628,7 +628,7 @@ xfs_attr_rmtval_remove(
+>  		if (error)
+>  			goto out_defer_cancel;
+>  		xfs_defer_ijoin(args->trans->t_dfops, args->dp);
+> -		error = xfs_defer_finish(&args->trans, args->trans->t_dfops);
+> +		error = xfs_defer_finish(&args->trans);
+>  		if (error)
+>  			goto out_defer_cancel;
+>  
+> @@ -641,6 +641,6 @@ xfs_attr_rmtval_remove(
+>  	}
+>  	return 0;
+>  out_defer_cancel:
+> -	xfs_defer_cancel(args->trans->t_dfops);
+> +	xfs_defer_cancel(args->trans);
+>  	return error;
+>  }
+> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+> index b63cc9e730da..cbee0a86c978 100644
+> --- a/fs/xfs/libxfs/xfs_defer.c
+> +++ b/fs/xfs/libxfs/xfs_defer.c
+> @@ -342,9 +342,9 @@ xfs_defer_reset(
+>   */
+>  int
+>  xfs_defer_finish(
+> -	struct xfs_trans		**tp,
+> -	struct xfs_defer_ops		*dop)
+> +	struct xfs_trans		**tp)
+>  {
+> +	struct xfs_defer_ops		*dop = (*tp)->t_dfops;
+>  	struct xfs_defer_pending	*dfp;
+>  	struct list_head		*li;
+>  	struct list_head		*n;
+> @@ -353,7 +353,6 @@ xfs_defer_finish(
+>  	void				(*cleanup_fn)(struct xfs_trans *, void *, int);
+>  
+>  	ASSERT((*tp)->t_flags & XFS_TRANS_PERM_LOG_RES);
+> -	ASSERT((*tp)->t_dfops == dop);
+>  
+>  	trace_xfs_defer_finish((*tp)->t_mountp, dop, _RET_IP_);
+>  
+> @@ -454,7 +453,7 @@ xfs_defer_finish(
+>   * Free up any items left in the list.
+>   */
+>  void
+> -xfs_defer_cancel(
+> +__xfs_defer_cancel(
+>  	struct xfs_defer_ops		*dop)
+>  {
+>  	struct xfs_defer_pending	*dfp;
+> diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
+> index 35507ca9a148..56f927803940 100644
+> --- a/fs/xfs/libxfs/xfs_defer.h
+> +++ b/fs/xfs/libxfs/xfs_defer.h
+> @@ -48,8 +48,8 @@ enum xfs_defer_ops_type {
+>  
+>  void xfs_defer_add(struct xfs_defer_ops *dop, enum xfs_defer_ops_type type,
+>  		struct list_head *h);
+> -int xfs_defer_finish(struct xfs_trans **tp, struct xfs_defer_ops *dop);
+> -void xfs_defer_cancel(struct xfs_defer_ops *dop);
+> +int xfs_defer_finish(struct xfs_trans **tp);
+> +void __xfs_defer_cancel(struct xfs_defer_ops *dop);
+>  void xfs_defer_init(struct xfs_trans *tp, struct xfs_defer_ops *dop);
+>  bool xfs_defer_has_unfinished_work(struct xfs_defer_ops *dop);
+>  int xfs_defer_ijoin(struct xfs_defer_ops *dop, struct xfs_inode *ip);
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 6b0f31402a81..7b40e9fef381 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -1624,7 +1624,7 @@ xfs_swap_extent_rmap(
+>  				goto out_defer;
+>  
+>  			xfs_defer_ijoin(tp->t_dfops, ip);
+> -			error = xfs_defer_finish(tpp, tp->t_dfops);
+> +			error = xfs_defer_finish(tpp);
+>  			tp = *tpp;
+>  			if (error)
+>  				goto out_defer;
+> @@ -1645,7 +1645,7 @@ xfs_swap_extent_rmap(
+>  	return 0;
+>  
+>  out_defer:
+> -	xfs_defer_cancel(tp->t_dfops);
+> +	xfs_defer_cancel(tp);
+>  out:
+>  	trace_xfs_swap_extent_rmap_error(ip, error, _RET_IP_);
+>  	tip->i_d.di_flags2 = tip_flags2;
+> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> index a57d5e8c3118..da5c55cec966 100644
+> --- a/fs/xfs/xfs_dquot.c
+> +++ b/fs/xfs/xfs_dquot.c
+> @@ -368,7 +368,7 @@ xfs_dquot_disk_alloc(
+>  		xfs_trans_brelse(tp, bp);
+>  		goto error1;
+>  	}
+> -	error = xfs_defer_finish(tpp, tp->t_dfops);
+> +	error = xfs_defer_finish(tpp);
+>  	tp = *tpp;
+>  	if (error) {
+>  		xfs_buf_relse(bp);
+> @@ -378,7 +378,7 @@ xfs_dquot_disk_alloc(
+>  	return 0;
+>  
+>  error1:
+> -	xfs_defer_cancel(tp->t_dfops);
+> +	xfs_defer_cancel(tp);
+>  error0:
+>  	return error;
+>  }
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index c47183a2f167..0e4bd559a6a7 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -1570,7 +1570,7 @@ xfs_itruncate_extents_flags(
+>  		 * reservation and commit the old transaction.
+>  		 */
+>  		xfs_defer_ijoin(tp->t_dfops, ip);
+> -		error = xfs_defer_finish(&tp, tp->t_dfops);
+> +		error = xfs_defer_finish(&tp);
+>  		if (error)
+>  			goto out_bmap_cancel;
+>  
+> @@ -1606,7 +1606,7 @@ xfs_itruncate_extents_flags(
+>  	 * the transaction can be properly aborted.  We just need to make sure
+>  	 * we're not holding any resources that we were not when we came in.
+>  	 */
+> -	xfs_defer_cancel(tp->t_dfops);
+> +	xfs_defer_cancel(tp);
+>  	goto out;
+>  }
+>  
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 265e1f561157..94908a4019e1 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -4946,7 +4946,7 @@ xlog_recover_process_intents(
+>  	xfs_trans_ail_cursor_done(&cur);
+>  	spin_unlock(&ailp->ail_lock);
+>  	if (error)
+> -		xfs_defer_cancel(&dfops);
+> +		__xfs_defer_cancel(&dfops);
+>  	else
+>  		error = xlog_finish_defer_ops(log->l_mp, &dfops);
+>  
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index 865ba615dd76..cddde219630a 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -518,9 +518,9 @@ xfs_reflink_cancel_cow_blocks(
+>  
+>  			/* Roll the transaction */
+>  			xfs_defer_ijoin((*tpp)->t_dfops, ip);
+> -			error = xfs_defer_finish(tpp, (*tpp)->t_dfops);
+> +			error = xfs_defer_finish(tpp);
+>  			if (error) {
+> -				xfs_defer_cancel((*tpp)->t_dfops);
+> +				xfs_defer_cancel(*tpp);
+>  				break;
+>  			}
+>  
+> @@ -716,7 +716,7 @@ xfs_reflink_end_cow(
+>  		xfs_bmap_del_extent_cow(ip, &icur, &got, &del);
+>  
+>  		xfs_defer_ijoin(tp->t_dfops, ip);
+> -		error = xfs_defer_finish(&tp, tp->t_dfops);
+> +		error = xfs_defer_finish(&tp);
+>  		if (error)
+>  			goto out_cancel;
+>  		if (!xfs_iext_get_extent(ifp, &icur, &got))
+> @@ -1077,7 +1077,7 @@ xfs_reflink_remap_extent(
+>  next_extent:
+>  		/* Process all the deferred stuff. */
+>  		xfs_defer_ijoin(tp->t_dfops, ip);
+> -		error = xfs_defer_finish(&tp, tp->t_dfops);
+> +		error = xfs_defer_finish(&tp);
+>  		if (error)
+>  			goto out_cancel;
+>  	}
+> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> index 412c8d236c71..cd553aa9ecb0 100644
+> --- a/fs/xfs/xfs_trans.c
+> +++ b/fs/xfs/xfs_trans.c
+> @@ -933,9 +933,9 @@ __xfs_trans_commit(
+>  
+>  	/* finish deferred items on final commit */
+>  	if (!regrant && tp->t_dfops) {
+> -		error = xfs_defer_finish(&tp, tp->t_dfops);
+> +		error = xfs_defer_finish(&tp);
+>  		if (error) {
+> -			xfs_defer_cancel(tp->t_dfops);
+> +			xfs_defer_cancel(tp);
+>  			goto out_unreserve;
+>  		}
+>  	}
+> @@ -1030,7 +1030,7 @@ xfs_trans_cancel(
+>  	trace_xfs_trans_cancel(tp, _RET_IP_);
+>  
+>  	if (tp->t_dfops)
+> -		xfs_defer_cancel(tp->t_dfops);
+> +		xfs_defer_cancel(tp);
+>  
+>  	/*
+>  	 * See if the caller is relying on us to shut down the
+> @@ -1111,3 +1111,10 @@ xfs_trans_roll(
+>  	tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
+>  	return xfs_trans_reserve(*tpp, &tres, 0, 0);
+>  }
+> +
+> +void
+> +xfs_defer_cancel(
+> +	struct xfs_trans	*tp)
+> +{
+> +	__xfs_defer_cancel(tp->t_dfops);
+> +}
+> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> index dc79e3c1d3e8..5170e89bec02 100644
+> --- a/fs/xfs/xfs_trans.h
+> +++ b/fs/xfs/xfs_trans.h
+> @@ -214,6 +214,9 @@ xfs_trans_read_buf(
+>  				      flags, bpp, ops);
+>  }
+>  
+> +/* cancel dfops associated with a transaction */
+> +void xfs_defer_cancel(struct xfs_trans *);
+> +
+>  struct xfs_buf	*xfs_trans_getsb(xfs_trans_t *, struct xfs_mount *, int);
+>  
+>  void		xfs_trans_brelse(xfs_trans_t *, struct xfs_buf *);
+> -- 
+> 2.17.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
