@@ -1,97 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:36486 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:34474 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388109AbeGWX7Q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 23 Jul 2018 19:59:16 -0400
-Subject: Re: [PATCH 7/7] libxfs: remove crc32 functions
-References: <152728629694.22515.17699396814561914788.stgit@magnolia>
- <152728634020.22515.16684194597988861920.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <29c32d83-dfe8-8780-1808-f2c019a78fc5@sandeen.net>
-Date: Mon, 23 Jul 2018 15:55:46 -0700
+        id S2388315AbeGXDbP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 23 Jul 2018 23:31:15 -0400
+Received: from smtp.corp.redhat.com (int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id B54D530832D1
+        for <linux-xfs@vger.kernel.org>; Tue, 24 Jul 2018 02:27:08 +0000 (UTC)
+Received: from Liberator-5.local (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 8232392D03
+        for <linux-xfs@vger.kernel.org>; Tue, 24 Jul 2018 02:27:08 +0000 (UTC)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH 0/2 V3] xfs_repair: rework inode clearing and free inode
+ validation
+Message-ID: <b6f745ab-3016-9a95-3085-8584f7200b64@redhat.com>
+Date: Mon, 23 Jul 2018 19:27:07 -0700
 MIME-Version: 1.0
-In-Reply-To: <152728634020.22515.16684194597988861920.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On 5/25/18 3:12 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> XFS uses crc32c, not crc32.  Remove the unnecessary crc32 code, which
-> decreases binary size by the 8K crc32 table.
+Warn the user if any free inodes contain errors, and set exit code
+in the process.  Do this by running the existing dinode verifier and
+clearing / warning if it fails.
 
-Getting back to this ...
+2nd patch separates out the inode validation from the clearing function
 
-The files have diverged a bit since the initial lift from the kernel.
-Commenting out to keep things diffable is a bit pointless now, due
-to that divergence (for example, the crc32test stuff has been moved
-out to its own file, a big swath of code.)
+There is a functional change here which I'm on the fence about; free
+inodes are now only cleared if they won't pass the dinode verifier,
+which is the only thing the kernel would squawk about.  But that's
+a subset of the clear_inode checks.
 
-So, I think we should make a decision about whether we want to try
-to keep this in sync with the kernel, or just let it drift.
-
-If the former, I'd go with an #if 0 but only after syncing things
-up again.
-
-If the latter, just nuke the unused code, if we ever need the crc32c
-variants we can re-lift them from the kernel.  I'd still take a brief
-look at whether there's anything that needs to be synced in an ad-hoc
-fashion.
-
-I guess right now I'm feeling inclined to go with the former, and
-even add the crc32 file(s) to the libxfs-diff and/or libxfs-apply
-scripts, if we plan to keep them more in sync.
-
-I'd accept either plan, really - but there's no reason to comment
-out or #ifdef code to keep it around if it doesn't even necessarily
-match kernelspace anymore.
-
--Eric
-
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  include/libxfs.h        |    3 ---
->  libxfs/crc32.c          |   16 ++++++++++------
->  libxfs/gen_crc32table.c |    8 +++++++-
->  libxfs/libxfs_priv.h    |    3 ---
->  4 files changed, 17 insertions(+), 13 deletions(-)
-> 
-> 
-> diff --git a/include/libxfs.h b/include/libxfs.h
-> index fbaae089..109866de 100644
-> --- a/include/libxfs.h
-> +++ b/include/libxfs.h
-> @@ -43,10 +43,7 @@
->  
->  
->  /* CRC stuff, buffer API dependent on it */
-> -extern uint32_t crc32_le(uint32_t crc, unsigned char const *p, size_t len);
->  extern uint32_t crc32c_le(uint32_t crc, unsigned char const *p, size_t len);
-> -
-> -#define crc32(c,p,l)	crc32_le((c),(unsigned char const *)(p),(l))
->  #define crc32c(c,p,l)	crc32c_le((c),(unsigned char const *)(p),(l))
->  
->  #include "xfs_cksum.h"
-> diff --git a/libxfs/crc32.c b/libxfs/crc32.c
-> index 783d62e9..8fe5c42c 100644
-> --- a/libxfs/crc32.c
-> +++ b/libxfs/crc32.c
-> @@ -176,20 +176,26 @@ static inline u32 __pure crc32_le_generic(u32 crc, unsigned char const *p,
->  }
->  
->  #if CRC_LE_BITS == 1
-> +/*
-> + * not used by xfs.
->  u32 __pure crc32_le(u32 crc, unsigned char const *p, size_t len)
->  {
->  	return crc32_le_generic(crc, p, len, NULL, CRCPOLY_LE);
->  }
-> + */
-
-...
+The old clear_dinode function checked a lot of things that the
+verifier simply doesn't care about, but I think it's ok for
+those tests to go away; if the kernel does care about, say, extent
+count on a free inode, the verifier should test it.
