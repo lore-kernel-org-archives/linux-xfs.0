@@ -1,78 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:38632 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388414AbeGXTSr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Jul 2018 15:18:47 -0400
-Date: Tue, 24 Jul 2018 11:10:52 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: properly handle free inodes in extent hint
- validators
-Message-ID: <20180724181052.GV4813@magnolia>
-References: <4203c670-0064-8735-0931-573fdbeeaa67@redhat.com>
+Received: from sandeen.net ([63.231.237.45]:40806 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388316AbeGXHot (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 24 Jul 2018 03:44:49 -0400
+Subject: Re: [PATCH 2/6] xfs: verify extent size hint is valid in inode
+ verifier
+References: <20180605062423.4877-1-david@fromorbit.com>
+ <20180605062423.4877-3-david@fromorbit.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <6196d8ce-03b9-eaae-4a07-d307e35540ca@sandeen.net>
+Date: Mon, 23 Jul 2018 23:39:53 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4203c670-0064-8735-0931-573fdbeeaa67@redhat.com>
+In-Reply-To: <20180605062423.4877-3-david@fromorbit.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-On Tue, Jul 24, 2018 at 11:00:39AM -0700, Eric Sandeen wrote:
-> When inodes are freed in xfs_ifree(), di_flags is cleared (so extent size
-> hints are removed) but the actual extent size fields are left intact.
-> This causes the extent hint validators to fail on freed inodes which once
-> had extent size hints. 
+On 6/4/18 11:24 PM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> This can be observed (for example) by running xfs/229 twice on a
-> non-crc xfs filesystem, or presumably on V5 with ikeep.
-
-I couldn't get it to reproduce by running x/229 twice, but I did see
-x/242 blow up on the same problem overnight.  Which is funny since it
-hadn't blown up until now.
-
-> Fixes: 7d71a67 ("xfs: verify extent size hint is valid in inode verifier")
-> Fixes: 02a0fda ("xfs: verify COW extent size hint is valid in inode verifier")
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-
-Separate patch, but can you also modify xfs_ifree to zero the
-extsize/cowextsize fields so that 4.16-4.17 kernels without this patch
-are less likely to trip over this?
-
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> ---
+> There are rules for vald extent size hints. We enforce them when
+> applications set them, but fuzzers violate those rules and that
+> screws us over.
 > 
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index 33dc34655ac3..30d1d60f1d46 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -731,7 +731,8 @@ xfs_inode_validate_extsize(
->  	if ((hint_flag || inherit_flag) && extsize == 0)
->  		return __this_address;
->  
-> -	if (!(hint_flag || inherit_flag) && extsize != 0)
-> +	/* free inodes get flags set to zero but extsize remains */
-> +	if (mode && !(hint_flag || inherit_flag) && extsize != 0)
->  		return __this_address;
->  
->  	if (extsize_bytes % blocksize_bytes)
-> @@ -777,7 +778,8 @@ xfs_inode_validate_cowextsize(
->  	if (hint_flag && cowextsize == 0)
->  		return __this_address;
->  
-> -	if (!hint_flag && cowextsize != 0)
-> +	/* free inodes get flags set to zero but cowextsize remains */
-> +	if (mode && !hint_flag && cowextsize != 0)
->  		return __this_address;
->  
->  	if (hint_flag && rt_flag)
+> This results in alignment assertion failures when setting up
+> allocations such as this in direct IO:
 > 
+> XFS: Assertion failed: ap->length, file: fs/xfs/libxfs/xfs_bmap.c, line: 3432
+> ....
+> Call Trace:
+>  xfs_bmap_btalloc+0x415/0x910
+>  xfs_bmapi_write+0x71c/0x12e0
+>  xfs_iomap_write_direct+0x2a9/0x420
+>  xfs_file_iomap_begin+0x4dc/0xa70
+>  iomap_apply+0x43/0x100
+>  iomap_file_buffered_write+0x62/0x90
+>  xfs_file_buffered_aio_write+0xba/0x300
+>  __vfs_write+0xd5/0x150
+>  vfs_write+0xb6/0x180
+>  ksys_write+0x45/0xa0
+>  do_syscall_64+0x5a/0x180
+>  entry_SYSCALL_64_after_hwframe+0x49/0xbe
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> And from xfs_db:
+> 
+> core.extsize = 10380288
+> 
+> Which is not an integer multiple of the block size, and so violates
+> Rule #7 for setting extent size hints. Validate extent size hint
+> rules in the inode verifier to catch this.
+
+So, I think that if I do:
+
+# mkfs.xfs -f -m crc=0 $TEST_DEV
+# ./check xfs/229
+# ./check xfs/229
+
+I trip the verifier, because I end up with freed inodes on disk with an
+extent size hints but zeroed flags.  
+
+xfs_ifree sets di_flags = 0 but doesn't clear di_extsize; xfs_inode_validate_extsize
+says if extsize !=0 and the hint flag is set, it fails
+
+Anyone else see this?
+
+(crc=0 needed because that causes us to actually reread the inode chunks
+in xfs_iread vs. /* shortcut IO on inode allocation if possible */
+
+-Eric
