@@ -1,69 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf1-f50.google.com ([209.85.167.50]:38229 "EHLO
-        mail-lf1-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730668AbeHAGUq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Aug 2018 02:20:46 -0400
-Received: by mail-lf1-f50.google.com with SMTP id a4-v6so12333284lff.5
-        for <linux-xfs@vger.kernel.org>; Tue, 31 Jul 2018 21:37:08 -0700 (PDT)
+Received: from userp2130.oracle.com ([156.151.31.86]:38632 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388414AbeGXTSr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Jul 2018 15:18:47 -0400
+Date: Tue, 24 Jul 2018 11:10:52 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: properly handle free inodes in extent hint
+ validators
+Message-ID: <20180724181052.GV4813@magnolia>
+References: <4203c670-0064-8735-0931-573fdbeeaa67@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20180801042146.GI2234@dastard>
-References: <CAJCQCtSpiPiG1S0tq4j+D4DsGf0caTtQCHWyVJJxrT2P5MxPNQ@mail.gmail.com>
- <20180801042146.GI2234@dastard>
-From: Chris Murphy <lists@colorremedies.com>
-Date: Tue, 31 Jul 2018 22:37:06 -0600
-Message-ID: <CAJCQCtTv4ppBr1jxJBg4hBWfxDO=J2jZVYj-ZvZTADcb7KHT3g@mail.gmail.com>
-Subject: Re: xfsprogs 4.17.0 error building xfs_repair
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4203c670-0064-8735-0931-573fdbeeaa67@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Chris Murphy <lists@colorremedies.com>, xfs list <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Jul 31, 2018 at 10:21 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Tue, Jul 31, 2018 at 08:02:17PM -0600, Chris Murphy wrote:
->> Hi,
->> I'm doing this on Fedora 28, I'm including the entire output from
->> exporting environment variables from doc/INSTALL so it's kinda long...
->>
->> [chris@f28s xfsprogs-dev]$ git reset --hard origin/master
->> HEAD is now at 0821de47 xfsprogs: Release v4.17.0
->>
->> [chris@f28s xfsprogs-dev]$ export TAR=/usr/bin/tar
->> [chris@f28s xfsprogs-dev]$ export LIBTOOL=/usr/bin/libtool
->> [chris@f28s xfsprogs-dev]$ export INSTALL_GROUP=wheel
->> [chris@f28s xfsprogs-dev]$ export
->> LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no --enable-blkid=no
->> --enable-librt=no"
->
-> You shot yourself in the foot.
->
-> ....
->>     [CC]     versions.o
->>     [CC]     xfs_repair.o
->>     [LD]     xfs_repair
->> /tmp/cc95QLol.ltrans8.ltrans.o: In function `progress_rpt_thread.lto_priv.352':
->> <artificial>:(.text+0xa2c9): undefined reference to `timer_create'
->> <artificial>:(.text+0xa2e4): undefined reference to `timer_settime'
->> <artificial>:(.text+0xa570): undefined reference to `timer_delete'
->
-> These functions are in librt, and you told the build not to use it...
+On Tue, Jul 24, 2018 at 11:00:39AM -0700, Eric Sandeen wrote:
+> When inodes are freed in xfs_ifree(), di_flags is cleared (so extent size
+> hints are removed) but the actual extent size fields are left intact.
+> This causes the extent hint validators to fail on freed inodes which once
+> had extent size hints. 
+> 
+> This can be observed (for example) by running xfs/229 twice on a
+> non-crc xfs filesystem, or presumably on V5 with ikeep.
 
+I couldn't get it to reproduce by running x/229 twice, but I did see
+x/242 blow up on the same problem overnight.  Which is funny since it
+hadn't blown up until now.
 
-I did what doc/INSTALL told me to do:
+> Fixes: 7d71a67 ("xfs: verify extent size hint is valid in inode verifier")
+> Fixes: 02a0fda ("xfs: verify COW extent size hint is valid in inode verifier")
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-   Building xfsprogs:
+Separate patch, but can you also modify xfs_ifree to zero the
+extsize/cowextsize fields so that 4.16-4.17 kernels without this patch
+are less likely to trip over this?
 
-    [firstly set these environment variables to these values]
-    TAR=/usr/bin/gnutar
-    LIBTOOL=/usr/bin/glibtool
-    INSTALL_GROUP=wheel
-    LOCAL_CONFIGURE_OPTIONS="\
-                 --enable-gettext=no\
-                 --enable-blkid=no\
-                 --enable-librt=no\
-                 "
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
+--D
 
--- 
-Chris Murphy
+> ---
+> 
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index 33dc34655ac3..30d1d60f1d46 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -731,7 +731,8 @@ xfs_inode_validate_extsize(
+>  	if ((hint_flag || inherit_flag) && extsize == 0)
+>  		return __this_address;
+>  
+> -	if (!(hint_flag || inherit_flag) && extsize != 0)
+> +	/* free inodes get flags set to zero but extsize remains */
+> +	if (mode && !(hint_flag || inherit_flag) && extsize != 0)
+>  		return __this_address;
+>  
+>  	if (extsize_bytes % blocksize_bytes)
+> @@ -777,7 +778,8 @@ xfs_inode_validate_cowextsize(
+>  	if (hint_flag && cowextsize == 0)
+>  		return __this_address;
+>  
+> -	if (!hint_flag && cowextsize != 0)
+> +	/* free inodes get flags set to zero but cowextsize remains */
+> +	if (mode && !hint_flag && cowextsize != 0)
+>  		return __this_address;
+>  
+>  	if (hint_flag && rt_flag)
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
