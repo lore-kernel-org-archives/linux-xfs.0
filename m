@@ -1,68 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:55375 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730040AbeGQJ6K (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Jul 2018 05:58:10 -0400
-Received: by mail-wm0-f65.google.com with SMTP id f21-v6so744406wmc.5
-        for <linux-xfs@vger.kernel.org>; Tue, 17 Jul 2018 02:26:30 -0700 (PDT)
-Date: Tue, 17 Jul 2018 11:26:26 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: Recently-formatted XFS filesystems reporting negative used space
-Message-ID: <20180717092626.pxb6wzhcswf2f77p@odin.usersys.redhat.com>
-References: <CAKAc_Gwh-KMdnK6LqX3kE9jTmSHsg8_kzQE5fPsnL3xETD1O+w@mail.gmail.com>
- <3895eebe-3fa2-a977-4021-3bd6ef645fdd@sandeen.net>
- <CAKAc_GwXi4U=WceoWo_6dsjT_ThTYKbebOzxkcTAW2_-vfgt=g@mail.gmail.com>
- <CAKAc_GxsR9UxswqJMLhPOqR6HeYLi-rHZiEY8LLxs-hj0n=uMQ@mail.gmail.com>
+Received: from sandeen.net ([63.231.237.45]:60302 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388090AbeGXFkI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 24 Jul 2018 01:40:08 -0400
+Subject: Re: [PATCH 1/2 V3] xfs_repair: notify user if free inodes contain
+ errors
+From: Eric Sandeen <sandeen@sandeen.net>
+References: <b6f745ab-3016-9a95-3085-8584f7200b64@redhat.com>
+ <75f628bc-e8e7-b4fd-0bbb-fb3ca0fabac8@sandeen.net>
+Message-ID: <3a14c161-a476-58a9-1a13-c2225f5bbb51@sandeen.net>
+Date: Mon, 23 Jul 2018 21:35:35 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAKAc_GxsR9UxswqJMLhPOqR6HeYLi-rHZiEY8LLxs-hj0n=uMQ@mail.gmail.com>
+In-Reply-To: <75f628bc-e8e7-b4fd-0bbb-fb3ca0fabac8@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Filippo Giunchedi <fgiunchedi@wikimedia.org>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Jul 16, 2018 at 11:29:51AM +0200, Filippo Giunchedi wrote:
-> On Wed, Jul 11, 2018 at 10:31 AM Filippo Giunchedi
-> <fgiunchedi@wikimedia.org> wrote:
-> > > that sb_fdblocks really is ~17T which indicates the problem
-> > > really is on disk.
-> > >
-> > > 4461713825
-> > > 100001001111100000101100110100001
-> > > 166746529
-> > >      1001111100000101100110100001
-> > >
-> > > you have a bit flipped in the problematic value... but you're running
-> > > with CRCs so it seems unlikely to have been some sort of bit-rot (that,
-> > > and the fact that you're hitting the same problem on multiple nodes).
-> >
-> > Ouch, indeed we've seen this problem on multiple nodes, said hosts
-> > belong to the same and latest shipment from the OEM. We'll run
-> > hardware diagnostics on these hosts and others we've received at
-> > another datacenter (which haven't shown issues so far but don't serve
-> > reads either).
+On 7/23/18 7:34 PM, Eric Sandeen wrote:
+> xfs_repair checks allocated but unused (free) inodes in on-disk clusters,
+> and up until now silently repairs any errors, and as a result does not
+> alter exit status if errors are found.
+>     
+> The in-kernel verifiers will be noisy about these errors and instruct
+> the user to run repair, so it's best if repair is explicit about any
+> fixes it makes as a result.
 > 
-> Update on this: we've ran hw diagnostics and couldn't find anything
-> wrong, xfs_repair does fix the issue so we'll be going ahead with
-> that. Is there anything we can do to help debugging in case this
-> happens again?
+> To ensure we catch anything the kernel would complain about, re-use
+> xfs_dinode_verify to determine whether we must clear a free inode.
 > 
+> Note, however, that the verifier contains only a subset of the checks
+> currently in clear_dinode.  This should be ok; if it's not, the checks
+> should be added to the verifier in any case.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-There is a patch being discussed on list to help catch these bit corruptions
-before they reach the disk, but, bear in mind we can only improve the validation
-of our metadata. Nothing actually forbids these bit flips are occurring on your
-data, and you are actually writing corrupted data into your files.
+Ugh, dammit, pulled the trigger too soon, tests were looking fine until
+the last few.  Need to look at this more.
 
-Cheers
-
-> thanks a lot!
-> Filippo
+> ---
+> 
+> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+> index a98483b..05c06a7 100644
+> --- a/libxfs/libxfs_api_defs.h
+> +++ b/libxfs/libxfs_api_defs.h
+> @@ -134,6 +134,7 @@
+>  #define xfs_symlink_hdr_ok		libxfs_symlink_hdr_ok
+>  
+>  #define xfs_verify_cksum		libxfs_verify_cksum
+> +#define xfs_dinode_verify		libxfs_dinode_verify
+>  
+>  #define xfs_alloc_ag_max_usable		libxfs_alloc_ag_max_usable
+>  #define xfs_allocbt_maxrecs		libxfs_allocbt_maxrecs
+> diff --git a/repair/dinode.c b/repair/dinode.c
+> index d36338f..c0db15a 100644
+> --- a/repair/dinode.c
+> +++ b/repair/dinode.c
+> @@ -2560,12 +2560,20 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
+>  		 */
+>  		if (was_free) {
+>  			/*
+> -			 * easy case, inode free -- inode and map agree, clear
+> +			 * easy case, inode free -- inode and map agree, check
+>  			 * it just in case to ensure that format, etc. are
+>  			 * set correctly
+>  			 */
+> -			if (!no_modify)
+> -				*dirty += clear_dinode(mp, dino, lino);
+> +			if (libxfs_dinode_verify(mp, lino, dino) != NULL) {
+> +				do_warn(
+> + _("free inode %" PRIu64 " contains errors, "), lino);
+> +				if (!no_modify) {
+> +					*dirty += clear_dinode(mp, dino, lino);
+> +					do_warn(_("corrected\n"));
+> +				} else {
+> +					do_warn(_("would correct\n"));
+> +				}
+> +			}
+>  			*used = is_free;
+>  			return 0;
+>  		}
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-Carlos
+> 
