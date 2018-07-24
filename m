@@ -1,61 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:33542 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388666AbeGXVf5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Jul 2018 17:35:57 -0400
-Date: Tue, 24 Jul 2018 13:27:35 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 02/15] xfs: use ->t_dfops in log recovery intent
- processing
-Message-ID: <20180724202735.GA4813@magnolia>
-References: <20180723130414.47980-1-bfoster@redhat.com>
- <20180723130414.47980-3-bfoster@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:56950 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388436AbeGXTIS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 24 Jul 2018 15:08:18 -0400
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 96F45308214A
+        for <linux-xfs@vger.kernel.org>; Tue, 24 Jul 2018 18:00:40 +0000 (UTC)
+Received: from Liberator-5.local (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 683911001F4E
+        for <linux-xfs@vger.kernel.org>; Tue, 24 Jul 2018 18:00:40 +0000 (UTC)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs: properly handle free inodes in extent hint validators
+Message-ID: <4203c670-0064-8735-0931-573fdbeeaa67@redhat.com>
+Date: Tue, 24 Jul 2018 11:00:39 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180723130414.47980-3-bfoster@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Jul 23, 2018 at 09:04:01AM -0400, Brian Foster wrote:
-> xlog_finish_defer_ops() processes the deferred operations collected
-> over the entire intent recovery sequence. We can't xfs_defer_init()
-> here because the dfops is already populated. Attach it manually and
-> eliminate the last caller of xfs_defer_finish() that doesn't pass
-> ->t_dfops.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+When inodes are freed in xfs_ifree(), di_flags is cleared (so extent size
+hints are removed) but the actual extent size fields are left intact.
+This causes the extent hint validators to fail on freed inodes which once
+had extent size hints. 
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+This can be observed (for example) by running xfs/229 twice on a
+non-crc xfs filesystem, or presumably on V5 with ikeep.
 
---D
+Fixes: 7d71a67 ("xfs: verify extent size hint is valid in inode verifier")
+Fixes: 02a0fda ("xfs: verify COW extent size hint is valid in inode verifier")
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-> ---
->  fs/xfs/xfs_log_recover.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index cbac943896f4..3289811eb076 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -4854,6 +4854,8 @@ xlog_finish_defer_ops(
->  			0, XFS_TRANS_RESERVE, &tp);
->  	if (error)
->  		return error;
-> +	/* dfops is already populated so assign it manually */
-> +	tp->t_dfops = dfops;
->  
->  	error = xfs_defer_finish(&tp, dfops);
->  	if (error)
-> -- 
-> 2.17.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 33dc34655ac3..30d1d60f1d46 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -731,7 +731,8 @@ xfs_inode_validate_extsize(
+ 	if ((hint_flag || inherit_flag) && extsize == 0)
+ 		return __this_address;
+ 
+-	if (!(hint_flag || inherit_flag) && extsize != 0)
++	/* free inodes get flags set to zero but extsize remains */
++	if (mode && !(hint_flag || inherit_flag) && extsize != 0)
+ 		return __this_address;
+ 
+ 	if (extsize_bytes % blocksize_bytes)
+@@ -777,7 +778,8 @@ xfs_inode_validate_cowextsize(
+ 	if (hint_flag && cowextsize == 0)
+ 		return __this_address;
+ 
+-	if (!hint_flag && cowextsize != 0)
++	/* free inodes get flags set to zero but cowextsize remains */
++	if (mode && !hint_flag && cowextsize != 0)
+ 		return __this_address;
+ 
+ 	if (hint_flag && rt_flag)
+
+
