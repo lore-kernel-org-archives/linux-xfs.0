@@ -1,63 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:33838 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388269AbeGXCxo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Jul 2018 22:53:44 -0400
-Date: Mon, 23 Jul 2018 18:49:30 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs_db: add -d to short help for write command
-Message-ID: <20180724014930.GQ4813@magnolia>
-References: <fba33a51-50c1-ade6-79d2-f7ceaceb372f@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:34218 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388522AbeGXTWm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 24 Jul 2018 15:22:42 -0400
+Subject: Re: [PATCH] xfs: properly handle free inodes in extent hint
+ validators
+References: <4203c670-0064-8735-0931-573fdbeeaa67@redhat.com>
+ <20180724181052.GV4813@magnolia>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <fc1a459a-dc00-8236-898f-5277d37eecd9@redhat.com>
+Date: Tue, 24 Jul 2018 11:14:59 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <fba33a51-50c1-ade6-79d2-f7ceaceb372f@redhat.com>
+In-Reply-To: <20180724181052.GV4813@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Jul 23, 2018 at 06:25:27PM -0700, Eric Sandeen wrote:
-> And note in the man page that -c and -d are exclusive.
+On 7/24/18 11:10 AM, Darrick J. Wong wrote:
+> On Tue, Jul 24, 2018 at 11:00:39AM -0700, Eric Sandeen wrote:
+>> When inodes are freed in xfs_ifree(), di_flags is cleared (so extent size
+>> hints are removed) but the actual extent size fields are left intact.
+>> This causes the extent hint validators to fail on freed inodes which once
+>> had extent size hints. 
+>>
+>> This can be observed (for example) by running xfs/229 twice on a
+>> non-crc xfs filesystem, or presumably on V5 with ikeep.
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> I couldn't get it to reproduce by running x/229 twice, but I did see
+> x/242 blow up on the same problem overnight.  Which is funny since it
+> hadn't blown up until now.
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Huh.  Can you try it on a 16G fs?  Not sure what else might be unique
+about my setup.
 
---D
-
-> ---
+>> Fixes: 7d71a67 ("xfs: verify extent size hint is valid in inode verifier")
+>> Fixes: 02a0fda ("xfs: verify COW extent size hint is valid in inode verifier")
+>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > 
-> diff --git a/db/write.c b/db/write.c
-> index 5ef76bcd..bbaa609d 100644
-> --- a/db/write.c
-> +++ b/db/write.c
-> @@ -38,7 +38,7 @@ static int	write_f(int argc, char **argv);
->  static void     write_help(void);
->  
->  static const cmdinfo_t	write_cmd =
-> -	{ "write", NULL, write_f, 0, -1, 0, N_("[-c] [field or value]..."),
-> +	{ "write", NULL, write_f, 0, -1, 0, N_("[-c|-d] [field or value]..."),
->  	  N_("write value to disk"), write_help };
->  
->  void
-> diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-> index 10f2beb9..a1ee3514 100644
-> --- a/man/man8/xfs_db.8
-> +++ b/man/man8/xfs_db.8
-> @@ -837,7 +837,7 @@ and
->  bits respectively, and their string equivalent reported
->  (but no modifications are made).
->  .TP
-> -.BI "write [\-c] [\-d] [" "field value" "] ..."
-> +.BI "write [\-c|\-d] [" "field value" "] ..."
->  Write a value to disk.
->  Specific fields can be set in structures (struct mode),
->  or a block can be set to data values (data mode),
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Separate patch, but can you also modify xfs_ifree to zero the
+> extsize/cowextsize fields so that 4.16-4.17 kernels without this patch
+> are less likely to trip over this?
+
+I'm confused - 7d71a67 & 02a0fda (above) went into 4.18, so 4.1[67]
+shouldn't have the validator problem, right?
+
+Are you talking about scrub here?
+
+Sorry for waxing philosophical but my fear is that explicitly zeroing the
+fields /now/ will muddy the waters w.r.t. what we should expect to see on
+disk.  We had wrong verifiers, not wrong freeing routines - we need to
+just fix the verifiers IMHO.  Scrub is experimental for a reason, right?
+
+Thanks,
+-Eric
