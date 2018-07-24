@@ -1,59 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0135.outbound.protection.outlook.com ([104.47.33.135]:62912
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2388113AbeGWP2f (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 23 Jul 2018 11:28:35 -0400
-From: "Xu, Wen" <wen.xu@gatech.edu>
-Subject: Re: Query about the handling of a bug reported before
-Date: Mon, 23 Jul 2018 14:27:02 +0000
-Message-ID: <0845407C-6013-44BB-95D0-F1CC66B0ECB6@gatech.edu>
-References: <21AA8603-85D9-429A-A713-8B86F341FFC4@gatech.edu>
- <20180723123239.GA46987@bfoster>
-In-Reply-To: <20180723123239.GA46987@bfoster>
-Content-Language: en-US
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <4684B08A3A93DE4D8964ECC9349855FB@namprd07.prod.outlook.com>
-Content-Transfer-Encoding: 8BIT
+Received: from act-MTAout2.csiro.au ([150.229.7.38]:5734 "EHLO
+        act-MTAout2.csiro.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388278AbeGXFwG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Jul 2018 01:52:06 -0400
+Date: Tue, 24 Jul 2018 14:37:34 +1000
+From: Vincent McIntyre <vincent.mcintyre@csiro.au>
+Subject: Re: xfsprogs-dev failing to build
+Message-ID: <20180724043734.GI27624@mayhem.atnf.CSIRO.AU>
+References: <20180724040944.GH27624@mayhem.atnf.CSIRO.AU>
+ <20180724042738.GS4813@magnolia>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180724042738.GS4813@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-Hi Brian,
-
-Yeah I tested it which is fixed in latest kernel. I just wonder if there is a specific patch
-for this.
-
-Thanks,
-Wen
-
-> On Jul 23, 2018, at 8:32 AM, Brian Foster <bfoster@redhat.com> wrote:
+On Mon, Jul 23, 2018 at 09:27:38PM -0700, Darrick J. Wong wrote:
+> On Tue, Jul 24, 2018 at 02:09:44PM +1000, Vincent McIntyre wrote:
+> > Hi
+> > 
+> > I am trying to build the latest xfsprogs on an older system,
+> > details below. The configure script is failing on what appears
+> > to be an unexpanded m4 macro,
+> > 
+> >   PKG_CHECK_MODULES(libicu, icu-i18n, have_libicu=yes, have_libicu=no)
 > 
-> On Sun, Jul 22, 2018 at 06:30:03AM +0000, Xu, Wen wrote:
->> Hi XFS developers,
->> 
->> I wonder if this bug
->> 
->> https://bugzilla.kernel.org/show_bug.cgi?id=200127
->> 
->> has already been resolved by any patch.
->> 
+> Hmmm, I thought that pkg.m4 would be pulled in via aclocal
+> automatically, but I could be wrong. :/
 > 
-> It looks like you're on a kernel that already has the agfl reset
-> mechanism. I'm not aware of anything else in that area off the top of my
-> head, but FWIW, I don't see the KASAN error with a quick check on a
-> KASAN-enabled latest for-next (4.18.0-rc4) kernel. Have you given that a
-> try?
+> What version of pkg-config (or I guess pkgconf?) is on the system?
 > 
-> Brian
-> 
->> Thanks,
->> Wen
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+It was not actually installed, and that was the problem.
+The tree builds ok now, and xfs_repair -n works ok.
+
+A bit odd pkg-config was not installed, I had installed the
+'build-essential' metapackage but I guess it didn't pull in.
+
+> > I'm not quite sure how to work around this or if it is a bug.
+> > Any advice would be appreciated.
+> 
+> Definitely some sort of bug...
+
+I think the only fix needed is for the xfs.org faq page
+
+- apt-get install libtool automake gettext libblkid-dev uuid-dev
++ apt-get install libtool automake gettext libblkid-dev uuid-dev pkg-config
+
+Possibly libicu-dev should be added to the list also.
+
+Thanks for the fast response.
+Cheers
+Vince
