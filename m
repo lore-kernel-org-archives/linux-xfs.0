@@ -1,74 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:40806 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388316AbeGXHot (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Jul 2018 03:44:49 -0400
-Subject: Re: [PATCH 2/6] xfs: verify extent size hint is valid in inode
- verifier
-References: <20180605062423.4877-1-david@fromorbit.com>
- <20180605062423.4877-3-david@fromorbit.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <6196d8ce-03b9-eaae-4a07-d307e35540ca@sandeen.net>
-Date: Mon, 23 Jul 2018 23:39:53 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:33736 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388090AbeGXFWV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Jul 2018 01:22:21 -0400
+Date: Mon, 23 Jul 2018 21:17:38 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfsprogs: remove generated scrub files under clean target
+Message-ID: <20180724041738.GR4813@magnolia>
+References: <eed34d4b-7ec9-aedb-fbb3-1c887d375001@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20180605062423.4877-3-david@fromorbit.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <eed34d4b-7ec9-aedb-fbb3-1c887d375001@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On 6/4/18 11:24 PM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Mon, Jul 23, 2018 at 09:06:33PM -0700, Eric Sandeen wrote:
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> ---
 > 
-> There are rules for vald extent size hints. We enforce them when
-> applications set them, but fuzzers violate those rules and that
-> screws us over.
+> diff --git a/scrub/Makefile b/scrub/Makefile
+> index d9ab148..acebecc 100644
+> --- a/scrub/Makefile
+> +++ b/scrub/Makefile
+> @@ -97,6 +97,8 @@ ifeq ($(HAVE_HDIO_GETGEO),yes)
+>  LCFLAGS += -DHAVE_HDIO_GETGEO
+>  endif
+>  
+> +LDIRT = $(XFS_SCRUB_ALL_PROG) *.service *.cron
+> +
+>  default: depend $(LTCOMMAND) $(XFS_SCRUB_ALL_PROG) $(OPTIONAL_TARGETS)
+>  
+>  xfs_scrub_all: xfs_scrub_all.in
 > 
-> This results in alignment assertion failures when setting up
-> allocations such as this in direct IO:
-> 
-> XFS: Assertion failed: ap->length, file: fs/xfs/libxfs/xfs_bmap.c, line: 3432
-> ....
-> Call Trace:
->  xfs_bmap_btalloc+0x415/0x910
->  xfs_bmapi_write+0x71c/0x12e0
->  xfs_iomap_write_direct+0x2a9/0x420
->  xfs_file_iomap_begin+0x4dc/0xa70
->  iomap_apply+0x43/0x100
->  iomap_file_buffered_write+0x62/0x90
->  xfs_file_buffered_aio_write+0xba/0x300
->  __vfs_write+0xd5/0x150
->  vfs_write+0xb6/0x180
->  ksys_write+0x45/0xa0
->  do_syscall_64+0x5a/0x180
->  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-> 
-> And from xfs_db:
-> 
-> core.extsize = 10380288
-> 
-> Which is not an integer multiple of the block size, and so violates
-> Rule #7 for setting extent size hints. Validate extent size hint
-> rules in the inode verifier to catch this.
-
-So, I think that if I do:
-
-# mkfs.xfs -f -m crc=0 $TEST_DEV
-# ./check xfs/229
-# ./check xfs/229
-
-I trip the verifier, because I end up with freed inodes on disk with an
-extent size hints but zeroed flags.  
-
-xfs_ifree sets di_flags = 0 but doesn't clear di_extsize; xfs_inode_validate_extsize
-says if extsize !=0 and the hint flag is set, it fails
-
-Anyone else see this?
-
-(crc=0 needed because that causes us to actually reread the inode chunks
-in xfs_iread vs. /* shortcut IO on inode allocation if possible */
-
--Eric
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
