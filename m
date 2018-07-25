@@ -1,63 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:60890 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728660AbeGYMVD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 25 Jul 2018 08:21:03 -0400
-Date: Wed, 25 Jul 2018 07:09:51 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2 14/15] xfs: drop unnecessary xfs_defer_finish() dfops
- parameter
-Message-ID: <20180725110950.GA57913@bfoster>
-References: <20180723130414.47980-1-bfoster@redhat.com>
- <20180723130414.47980-15-bfoster@redhat.com>
- <20180725051143.GG5802@infradead.org>
+Received: from one.firstfloor.org ([193.170.194.197]:35208 "EHLO
+        one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728771AbeGYSNG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Jul 2018 14:13:06 -0400
+Date: Wed, 25 Jul 2018 10:00:31 -0700
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: XFS long delays on disk full
+Message-ID: <20180725170031.5r43tgsvxsvrhxyo@two.firstfloor.org>
+References: <20180718212240.vxl33543lrh7vgzz@two.firstfloor.org>
+ <20180718232533.GC4813@magnolia>
+ <20180720175837.wuxhlzhp6e6423cl@two.firstfloor.org>
+ <20180724181646.GW4813@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180725051143.GG5802@infradead.org>
+In-Reply-To: <20180724181646.GW4813@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Andi Kleen <andi@firstfloor.org>, linux-xfs@vger.kernel.org
 
-On Tue, Jul 24, 2018 at 10:11:43PM -0700, Christoph Hellwig wrote:
-> > -int xfs_defer_finish(struct xfs_trans **tp, struct xfs_defer_ops *dop);
-> > -void xfs_defer_cancel(struct xfs_defer_ops *dop);
-> > +int xfs_defer_finish(struct xfs_trans **tp);
-> > +void __xfs_defer_cancel(struct xfs_defer_ops *dop);
-> 
-> > index dc79e3c1d3e8..5170e89bec02 100644
-> > --- a/fs/xfs/xfs_trans.h
-> > +++ b/fs/xfs/xfs_trans.h
-> > @@ -214,6 +214,9 @@ xfs_trans_read_buf(
-> >  				      flags, bpp, ops);
-> >  }
-> >  
-> > +/* cancel dfops associated with a transaction */
-> > +void xfs_defer_cancel(struct xfs_trans *);
-> 
-> Is there any good reason not to keep xfs_defer_cancel in xfs_defer.[ch]?
-> 
+> Yep, that looks like xfs scraping around trying to find space when the
+> fs is nearly full.
 
-Hmm, I originally had this as an inline in the header, so it was in
-xfs_trans.h for similar reasons xfs_defer_ops was moved over there (the
-function has to access tp->t_dfops).
+Okay. Not sure what it is doing. The disk isn't that large after all,
+and it's not clear why it takes that long to check a few AGs.
 
-I happened to change this over to a non-inline function in v2, but just
-left it here for whatever reason. I could probably move it, but I don't
-think it's worth it as I already have patches that kill this wrapper off
-by updating the only __xfs_defer_cancel() caller (log recovery) to use
-an empty container transaction instead of the external dfops. That will
-be part of the next set of patches that reduce xfs_defer_ops to a single
-list_head and subsequently eliminate the need for the structure...
+Can something be done about it?
 
-Brian
+It would be good enough for me if it was interruptible, so that 
+Ctrl-C just worked.
 
-> Otherwise this looks good:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-Andi
