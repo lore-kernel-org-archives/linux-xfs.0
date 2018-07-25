@@ -1,65 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:44188 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728186AbeGZBdk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Jul 2018 21:33:40 -0400
-Subject: [PATCH v17 00/16] xfs-4.19: online repair support
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 25 Jul 2018 17:19:27 -0700
-Message-ID: <153256436688.29021.4638459579042241728.stgit@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:39254 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728474AbeGYMph (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Jul 2018 08:45:37 -0400
+Date: Wed, 25 Jul 2018 04:34:21 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 14/15] xfs: drop unnecessary xfs_defer_finish() dfops
+ parameter
+Message-ID: <20180725113421.GA19399@infradead.org>
+References: <20180723130414.47980-1-bfoster@redhat.com>
+ <20180723130414.47980-15-bfoster@redhat.com>
+ <20180725051143.GG5802@infradead.org>
+ <20180725110950.GA57913@bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180725110950.GA57913@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, allison.henderson@oracle.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
 
-Hi all,
+On Wed, Jul 25, 2018 at 07:09:51AM -0400, Brian Foster wrote:
+> Hmm, I originally had this as an inline in the header, so it was in
+> xfs_trans.h for similar reasons xfs_defer_ops was moved over there (the
+> function has to access tp->t_dfops).
+> 
+> I happened to change this over to a non-inline function in v2, but just
+> left it here for whatever reason. I could probably move it, but I don't
+> think it's worth it as I already have patches that kill this wrapper off
+> by updating the only __xfs_defer_cancel() caller (log recovery) to use
+> an empty container transaction instead of the external dfops. That will
+> be part of the next set of patches that reduce xfs_defer_ops to a single
+> list_head and subsequently eliminate the need for the structure...
 
-This is the seventeenth revision of a patchset that adds to XFS kernel
-support for online metadata scrubbing and repair.  There aren't any
-on-disk format changes.
-
-New for this version of the patch series are fixes for numerous review
-comments that came from Dave and Allison.  The long prefixes of the
-previous versions have been drastically shortened.  Comments about the
-strategies used to repair broken parts of the filesystem have been
-expanded where reviewers thought it confusing.  A few data structures
-have been renamed to reflect more accurately what they do.
-
-Note, this series does not include any of the controversial repair
-functionality that requires fs freezing; that has been deferred to a
-later posting.
-
-The first patch pushes a transaction pointer through the per-AG
-reservation code so that scrub can reinitialize the per-AG reservations
-after repairing metadata while maintaining the AG header lock.
-
-The next two patches move the 'extent list' functionality into a
-separate file and rename it xfs_bitmap, since that's what the data
-structure actually represents.
-
-Patches 4-14 implement reconstruction of the AGF/AGI/AGFL headers, the
-free space btrees, the inode btrees, the inodes, the inode forks, the
-inode block maps, symbolic links, and extended attributes.
-
-Patch 15 augments scrub to rebuild extended attributes when any of the
-attr blocks are fragmented.
-
-Patch 16 implements reconstruction of quota blocks.
-
-If you're going to start using this mess, you probably ought to just
-pull from my git trees.  The kernel patches[1] should apply against
-4.18-rc6.  xfsprogs[2] and xfstests[3] can be found in their usual
-places.  The git trees contain all four series' worth of changes.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
-[2] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
-[3] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=djwong-devel
+Sounds good, that is even better!
