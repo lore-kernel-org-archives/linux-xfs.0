@@ -1,33 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:59032 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726022AbeG1EJp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 28 Jul 2018 00:09:45 -0400
-Subject: Re: [PATCH ] misc: clean up MIN/MAX in the utilities
-References: <153273073460.1594.8379497525888711422.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <bb65d98a-26a2-cf56-38ea-096218715c88@sandeen.net>
-Date: Fri, 27 Jul 2018 19:45:02 -0700
+Received: from userp2120.oracle.com ([156.151.31.85]:37334 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731442AbeGZAJZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Jul 2018 20:09:25 -0400
+Date: Wed, 25 Jul 2018 15:55:26 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v3] libxfs: add more bounds checking to sb sanity checks
+Message-ID: <20180725225526.GC4218@magnolia>
+References: <20180713131003.31121-1-billodo@redhat.com>
+ <20180725213336.16263-1-billodo@redhat.com>
+ <bee8d307-e372-2b67-e46e-f54b6dd81379@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <153273073460.1594.8379497525888711422.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bee8d307-e372-2b67-e46e-f54b6dd81379@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Bill O'Donnell <billodo@redhat.com>, linux-xfs@vger.kernel.org
 
-On 7/27/18 3:32 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Jul 25, 2018 at 03:48:51PM -0700, Eric Sandeen wrote:
 > 
-> Get rid of the MIN/MAX macros and just use the native min/max macros
-> directly in the XFS code, just like we did for libxfs.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> On 7/25/18 2:33 PM, Bill O'Donnell wrote:
+> > +	/* Additional sb sanity checks for writes */
+> > +	if (!error) {
+> > +		if (sb.sb_fdblocks > sb.sb_dblocks ||
+> > +		    sb.sb_ifree > sb.sb_icount) {
+> > +			    xfs_notice(mp, "SB sanity check failed");
+> > +			    error = -EFSCORRUPTED;
+> > +		}
+> > +	}
+> 
+> I had kind of had it in my head that Dave suggested testing not
+> only sb_fdblocks & sb_ifree but also validating sb_icount against
+> sb_dblocks ... would that make sense?  something like:
+> 
+> +		if (sb.sb_fdblocks > sb.sb_dblocks ||
+> +		    sb.sb_icount / sb.sb_inopblock > sb.sb_dblocks) ||
 
-This is just s/MIN/min/g etc right?
+That would make sense, but perhaps we should have a xfs_verify_icount
+instead of open-coding a 64-bit division? :)
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Granted, I /was/ planning to add all that as part of fs summary counter
+scrubbing next cycle.
 
+--D
+
+> +		    sb.sb_ifree > sb.sb_icount) {
+> +			    xfs_notice(mp, "SB sanity check failed");
+> 
+> because all 3 go into the statfs calculations which went wonky
+> in the original report?  (xfs_sb_verify has done some sanity
+> checks on sb_inopblock by the time we get here.)
+> 
+> Also, a comment about why these checks are only for write, and are not
+> simply in xfs_mount_validate_sb() would be good, since that obviously
+> wasn't obvious to me at first.  o_O :)
+> 
+> -Eric
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
