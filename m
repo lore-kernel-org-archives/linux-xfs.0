@@ -1,52 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0110.outbound.protection.outlook.com ([104.47.41.110]:34112
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2388786AbeGYAIv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Jul 2018 20:08:51 -0400
-From: "Xu, Wen" <wen.xu@gatech.edu>
-Subject: Re: Query about the handling of a bug reported before
-Date: Tue, 24 Jul 2018 23:00:05 +0000
-Message-ID: <244F6DFE-80B8-4CC4-8BD4-5943AF974656@gatech.edu>
-References: <21AA8603-85D9-429A-A713-8B86F341FFC4@gatech.edu>
- <20180723123239.GA46987@bfoster>
- <0845407C-6013-44BB-95D0-F1CC66B0ECB6@gatech.edu>
- <20180724224727.GA2234@dastard>
-In-Reply-To: <20180724224727.GA2234@dastard>
-Content-Language: en-US
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <38515F602B715741B7CEF968805F9B80@namprd07.prod.outlook.com>
-Content-Transfer-Encoding: 8BIT
+Received: from aserp2130.oracle.com ([141.146.126.79]:56070 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388457AbeGYCXt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Jul 2018 22:23:49 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w6P18wB9173966
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Jul 2018 01:14:39 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp2130.oracle.com with ESMTP id 2kbtbcugy4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Jul 2018 01:14:39 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w6P1EdxL008471
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Jul 2018 01:14:39 GMT
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w6P1EdE3028239
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Jul 2018 01:14:39 GMT
+Subject: [PATCH 0/2] xfs-4.19: inode cleanups
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 24 Jul 2018 18:14:46 -0700
+Message-ID: <153248128617.28208.11803349732053454018.stgit@magnolia>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Got it, thanks.
+Hi all,
 
-> On Jul 24, 2018, at 6:47 PM, Dave Chinner <david@fromorbit.com> wrote:
-> 
-> On Mon, Jul 23, 2018 at 02:27:02PM +0000, Xu, Wen wrote:
->> Hi Brian,
->> 
->> Yeah I tested it which is fixed in latest kernel. I just wonder if there is a specific patch
->> for this.
-> 
-> The code was fixed as a result of committing the huge patch series
-> that removed bufferheads from the XFS IO path.  i.e. the bug went
-> away because of other changes that addressed the root cause, not
-> because we committed a change that specifically fixed the bug. Most
-> likely it was this commit in the middle of the series to remove
-> bufferhead dependencies in xfs_aops_discard_page() that solved the
-> problem.
-> 
-> e2ac836307e3 ("xfs: simplify xfs_bmap_punch_delalloc_range")
-> 
-> -Dave.
-> 
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+This series cleans up XFS inode handling.  The first patch removes the
+unused IHOLD macro; the second patch replaces the IRELE macro with a
+proper function that can be typechecked.  Having done that, the scrub
+code can use the new function, which allows me to trace iget/iput calls
+in the scrub code.
 
+Comments and questions are, as always, welcome.
+
+--D
