@@ -1,24 +1,37 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:55662 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731851AbeGZR2O (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Jul 2018 13:28:14 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:40334 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731918AbeGZR21 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Jul 2018 13:28:27 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w6QFwuw7191861
+        for <linux-xfs@vger.kernel.org>; Thu, 26 Jul 2018 16:10:56 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp2120.oracle.com with ESMTP id 2kbvsp3tff-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 26 Jul 2018 16:10:56 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w6QGAtIf020206
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 26 Jul 2018 16:10:56 GMT
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w6QGAtgo022070
+        for <linux-xfs@vger.kernel.org>; Thu, 26 Jul 2018 16:10:55 GMT
+Date: Thu, 26 Jul 2018 09:10:53 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 Subject: Re: [PATCH] xfs: remove deprecated barrier/nobarrier mount options
+Message-ID: <20180726161053.GE30972@magnolia>
 References: <20180726160119.GD30972@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <c3d8c6de-1680-686d-a16d-351b6ca4736e@sandeen.net>
-Date: Thu, 26 Jul 2018 09:10:42 -0700
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 In-Reply-To: <20180726160119.GD30972@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
+To: xfs <linux-xfs@vger.kernel.org>
 
-On 7/26/18 9:01 AM, Darrick J. Wong wrote:
+On Thu, Jul 26, 2018 at 09:01:19AM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
 > Remove the deprecated barrier and nobarrier mount options since they do
@@ -26,12 +39,10 @@ On 7/26/18 9:01 AM, Darrick J. Wong wrote:
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Looks at least as good as the one you reviewed from me on
-6/26/18 ;)
+NAK, Eric Sandeen already sent a patch doing this, will take that
+instead.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-if you prefer this flavor ;)
+--D
 
 > ---
 >  Documentation/filesystems/xfs.txt |    4 ++--
@@ -149,4 +160,3 @@ if you prefer this flavor ;)
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
