@@ -1,13 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:36200 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729506AbeGZPdF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Jul 2018 11:33:05 -0400
-Date: Thu, 26 Jul 2018 10:15:57 -0400
-From: Brian Foster <bfoster@redhat.com>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:15016 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1731231AbeG0AhA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Jul 2018 20:37:00 -0400
+Date: Fri, 27 Jul 2018 09:17:54 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH, RFC] xfs: completely disable toggling DAX flag via ioctl
  on reg files
-Message-ID: <20180726141556.GA18068@bfoster>
+Message-ID: <20180726231754.GB2234@dastard>
 References: <405e182f-0c24-81fe-9d04-1031a8bbac17@redhat.com>
  <20180726120854.GA16980@bfoster>
  <892f27ac-f985-bf8f-1cc9-bc0a996136f7@sandeen.net>
@@ -19,7 +19,7 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Jeff Moyer <jmoyer@redhat.com>
+Cc: Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Jeff Moyer <jmoyer@redhat.com>
 
 On Thu, Jul 26, 2018 at 06:23:58AM -0700, Eric Sandeen wrote:
 > On 7/26/18 5:08 AM, Brian Foster wrote:
@@ -59,27 +59,28 @@ On Thu, Jul 26, 2018 at 06:23:58AM -0700, Eric Sandeen wrote:
 > > flush/inval currently in this function not sufficient?
 > 
 > TBH I don't actually know the low-level details. :/
-> 
 
-Ok, it would be nice if somebody in the know could chime in on that. ;)
+page faults aren't synchronised with filesystem locks, so we can
+change the aops callout behaviour half way through a page fault.
+i.e. the first half of the page fault sees the S_DAX flag and does
+prep work based on that, the second half of the page fault doesn't
+see the S_DAX flag and assumes it's working on a page cache page
+that doesn't exist and things go bang...
 
-> > Implementation wise, I'm a little curious why we're piling on hacks
-> > (such as the return short-circuit and the previous #if 0) as opposed to
-> > just removing the code. The code can always be restored directly from
-> > the git history, right?
-> 
-> Well, fair point.  If this goes in it should probably at least remove
-> the other #if 0 so it's not stacking hacks on hacks, but if the issue
-> is in mm/ it might be a big ask for anyone eventually working on that
-> to dig supporting code back out of xfs git history ...
-> 
+As it is, I don't think we can remove this now - people are using
+the on-disk flags already, and the inherit flag from the directory
+has none of the problems of changing S_DAX dynamically. Hence just
+disabling it is the wrong thing to do because it removes the ability
+for people to manage the flags that are already on disk....
 
-If that's the case, shouldn't it essentially just be a revert of this
-patch that rips the code out? Even if the surrounding code changes in
-the meantime, we should be able to add it back fairly easily. If that's
-not the case, then it sounds like that dead code would need to change
-anyways. 
+I'd much prefer we fix the page fault synchronisation problem than
+break stuff that /isn't actually broken/. Yes, it's current
+behaviour is suboptimal, but that is only supposed to be /temporary/
+until the aops callout problem is fixed.
 
-Brian
+Cheers,
 
-> -Eric
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
