@@ -1,301 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:52232 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726950AbeGYF63 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Jul 2018 01:58:29 -0400
-Received: by mail-wm0-f68.google.com with SMTP id o11-v6so4567144wmh.2
-        for <linux-xfs@vger.kernel.org>; Tue, 24 Jul 2018 21:48:35 -0700 (PDT)
-Date: Wed, 25 Jul 2018 06:48:32 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 2/2 V3] xfs_repair: clear_dinode should simply clear, not
- check contents
-Message-ID: <20180725044832.t42ovmheont753lj@odin.usersys.redhat.com>
-References: <b6f745ab-3016-9a95-3085-8584f7200b64@redhat.com>
- <6d3277e7-610e-4777-7563-7026b21e8ac6@sandeen.net>
+Received: from sandeen.net ([63.231.237.45]:44472 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728119AbeGZBVX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 25 Jul 2018 21:21:23 -0400
+Subject: [PATCH V3] xfs_io: Document shutdown -f
+References: <20180510091030.15619-1-cmaiolino@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <b83b3da7-2549-0778-580e-2decbefbe790@sandeen.net>
+Date: Wed, 25 Jul 2018 17:07:13 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <6d3277e7-610e-4777-7563-7026b21e8ac6@sandeen.net>
+In-Reply-To: <20180510091030.15619-1-cmaiolino@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Carlos Maiolino <cmaiolino@redhat.com>, linux-xfs@vger.kernel.org
 
-On Mon, Jul 23, 2018 at 07:50:13PM -0700, Eric Sandeen wrote:
-> Today clear_inode performs 2 separate tasks - it clears a disk inode
-> when the calling code detects an inconsistency, and it also validates
-> free inodes to some extent by checking each field before zeroing it
-> out.  This leads to unnecessary checks in the former case where we
-> just want to zap the inode, and duplicates some of the existing
-> verifier checks in the latter case.
->     
-> Now that we're using xfs_dinode_verify to validate free inodes,
-> there's no reason to repeat all the checks inside clear_inode_core.
-> Drop them all and simply clear it when told to do so.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+From: Carlos Maiolino <cmaiolino@redhat.com>
 
-Looks good.
+Add help and manpage information for xfs_io shutdown -f
+[sandeen: more editing for clarity]
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
+V2: Add more detailed information about what shutdown command does
+V3: more editing
 
-> 
-> diff --git a/repair/dinode.c b/repair/dinode.c
-> index c0db15a..5b9fd9a 100644
-> --- a/repair/dinode.c
-> +++ b/repair/dinode.c
-> @@ -117,137 +117,24 @@ _("would have cleared inode %" PRIu64 " attributes\n"), ino_num);
->  	return(1);
->  }
->  
-> -static int
-> +static void
->  clear_dinode_core(struct xfs_mount *mp, xfs_dinode_t *dinoc, xfs_ino_t ino_num)
->  {
-> -	int dirty = 0;
-> -	int i;
-> -
-> -#define __dirty_no_modify_ret(dirty) \
-> -	({ (dirty) = 1; if (no_modify) return 1; })
-> -
-> -	if (be16_to_cpu(dinoc->di_magic) != XFS_DINODE_MAGIC)  {
-> -		__dirty_no_modify_ret(dirty);
-> -		dinoc->di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
-> -	}
-> -
-> -	if (!libxfs_dinode_good_version(mp, dinoc->di_version)) {
-> -		__dirty_no_modify_ret(dirty);
-> -		if (xfs_sb_version_hascrc(&mp->m_sb))
-> -			dinoc->di_version = 3;
-> -		else
-> -			dinoc->di_version = 2;
-> -	}
-> -
-> -	if (be16_to_cpu(dinoc->di_mode) != 0)  {
-> -		__dirty_no_modify_ret(dirty);
-> -		dinoc->di_mode = 0;
-> -	}
-> -
-> -	if (be16_to_cpu(dinoc->di_flags) != 0)  {
-> -		__dirty_no_modify_ret(dirty);
-> -		dinoc->di_flags = 0;
-> -	}
-> -
-> -	if (be32_to_cpu(dinoc->di_dmevmask) != 0)  {
-> -		__dirty_no_modify_ret(dirty);
-> -		dinoc->di_dmevmask = 0;
-> -	}
-> -
-> -	if (dinoc->di_forkoff != 0)  {
-> -		__dirty_no_modify_ret(dirty);
-> -		dinoc->di_forkoff = 0;
-> -	}
-> -
-> -	if (dinoc->di_format != XFS_DINODE_FMT_EXTENTS)  {
-> -		__dirty_no_modify_ret(dirty);
-> -		dinoc->di_format = XFS_DINODE_FMT_EXTENTS;
-> -	}
-> -
-> -	if (dinoc->di_aformat != XFS_DINODE_FMT_EXTENTS)  {
-> -		__dirty_no_modify_ret(dirty);
-> -		dinoc->di_aformat = XFS_DINODE_FMT_EXTENTS;
-> -	}
-> -
-> -	if (be64_to_cpu(dinoc->di_size) != 0)  {
-> -		__dirty_no_modify_ret(dirty);
-> -		dinoc->di_size = 0;
-> -	}
-> -
-> -	if (be64_to_cpu(dinoc->di_nblocks) != 0)  {
-> -		__dirty_no_modify_ret(dirty);
-> -		dinoc->di_nblocks = 0;
-> -	}
-> -
-> -	if (be16_to_cpu(dinoc->di_onlink) != 0)  {
-> -		__dirty_no_modify_ret(dirty);
-> -		dinoc->di_onlink = 0;
-> -	}
-> -
-> -	if (be32_to_cpu(dinoc->di_nextents) != 0)  {
-> -		__dirty_no_modify_ret(dirty);
-> -		dinoc->di_nextents = 0;
-> -	}
-> -
-> -	if (be16_to_cpu(dinoc->di_anextents) != 0)  {
-> -		__dirty_no_modify_ret(dirty);
-> -		dinoc->di_anextents = 0;
-> -	}
-> -
-> -	if (be32_to_cpu(dinoc->di_extsize) != 0)  {
-> -		__dirty_no_modify_ret(dirty);
-> -		dinoc->di_extsize = 0;
-> -	}
-> -
-> -	if (dinoc->di_version > 1 &&
-> -			be32_to_cpu(dinoc->di_nlink) != 0)  {
-> -		__dirty_no_modify_ret(dirty);
-> -		dinoc->di_nlink = 0;
-> -	}
-> -
-> +	memset(dinoc, 0, sizeof(*dinoc));
-> +	dinoc->di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
-> +	if (xfs_sb_version_hascrc(&mp->m_sb))
-> +		dinoc->di_version = 3;
-> +	else
-> +		dinoc->di_version = 2;
-> +	dinoc->di_gen = cpu_to_be32(random());
-> +	dinoc->di_format = XFS_DINODE_FMT_EXTENTS;
-> +	dinoc->di_aformat = XFS_DINODE_FMT_EXTENTS;
->  	/* we are done for version 1/2 inodes */
->  	if (dinoc->di_version < 3)
-> -		return dirty;
-> -
-> -	if (be64_to_cpu(dinoc->di_ino) != ino_num) {
-> -		__dirty_no_modify_ret(dirty);
-> -		dinoc->di_ino = cpu_to_be64(ino_num);
-> -	}
-> -
-> -	if (platform_uuid_compare(&dinoc->di_uuid, &mp->m_sb.sb_meta_uuid)) {
-> -		__dirty_no_modify_ret(dirty);
-> -		platform_uuid_copy(&dinoc->di_uuid, &mp->m_sb.sb_meta_uuid);
-> -	}
-> -
-> -	for (i = 0; i < sizeof(dinoc->di_pad2)/sizeof(dinoc->di_pad2[0]); i++) {
-> -		if (dinoc->di_pad2[i] != 0) {
-> -			__dirty_no_modify_ret(dirty);
-> -			memset(dinoc->di_pad2, 0, sizeof(dinoc->di_pad2));
-> -			break;
-> -		}
-> -	}
-> -
-> -	if (be64_to_cpu(dinoc->di_flags2) != 0)  {
-> -		__dirty_no_modify_ret(dirty);
-> -		dinoc->di_flags2 = 0;
-> -	}
-> -
-> -	if (be64_to_cpu(dinoc->di_lsn) != 0)  {
-> -		__dirty_no_modify_ret(dirty);
-> -		dinoc->di_lsn = 0;
-> -	}
-> -
-> -	if (be64_to_cpu(dinoc->di_changecount) != 0)  {
-> -		__dirty_no_modify_ret(dirty);
-> -		dinoc->di_changecount = 0;
-> -	}
-> -
-> -	if (be32_to_cpu(dinoc->di_cowextsize) != 0)  {
-> -		__dirty_no_modify_ret(dirty);
-> -		dinoc->di_cowextsize = 0;
-> -	}
-> -
-> -	return dirty;
-> +		return;
-> +	dinoc->di_ino = cpu_to_be64(ino_num);
-> +	platform_uuid_copy(&dinoc->di_uuid, &mp->m_sb.sb_meta_uuid);
-> +	return;
->  }
->  
->  static int
-> @@ -268,21 +155,15 @@ clear_dinode_unlinked(xfs_mount_t *mp, xfs_dinode_t *dino)
->   * until after the agi unlinked lists are walked in phase 3.
->   * returns > zero if the inode has been altered while being cleared
->   */
-> -static int
-> +static void
->  clear_dinode(xfs_mount_t *mp, xfs_dinode_t *dino, xfs_ino_t ino_num)
->  {
-> -	int dirty;
-> -
-> -	dirty = clear_dinode_core(mp, dino, ino_num);
-> -	dirty += clear_dinode_unlinked(mp, dino);
-> +	clear_dinode_core(mp, dino, ino_num);
-> +	clear_dinode_unlinked(mp, dino);
->  
->  	/* and clear the forks */
-> -
-> -	if (dirty && !no_modify)
-> -		memset(XFS_DFORK_DPTR(dino), 0,
-> -		       XFS_LITINO(mp, dino->di_version));
-> -
-> -	return(dirty);
-> +	memset(XFS_DFORK_DPTR(dino), 0, XFS_LITINO(mp, dino->di_version));
-> +	return;
->  }
->  
->  
-> @@ -2140,8 +2021,8 @@ process_inode_data_fork(
->  	if (err)  {
->  		do_warn(_("bad data fork in inode %" PRIu64 "\n"), lino);
->  		if (!no_modify)  {
-> -			*dirty += clear_dinode(mp, dino, lino);
-> -			ASSERT(*dirty > 0);
-> +			clear_dinode(mp, dino, lino);
-> +			*dirty += 1;
->  		}
->  		return 1;
->  	}
-> @@ -2551,7 +2432,7 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
->  	}
->  
->  	/*
-> -	 * if not in verify mode, check to sii if the inode and imap
-> +	 * if not in verify mode, check to see if the inode and imap
->  	 * agree that the inode is free
->  	 */
->  	if (!verify_mode && di_mode == 0) {
-> @@ -2568,8 +2449,9 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
->  				do_warn(
->   _("free inode %" PRIu64 " contains errors, "), lino);
->  				if (!no_modify) {
-> -					*dirty += clear_dinode(mp, dino, lino);
-> +					clear_dinode(mp, dino, lino);
->  					do_warn(_("corrected\n"));
-> +					*dirty += 1;
->  				} else {
->  					do_warn(_("would correct\n"));
->  				}
-> @@ -2586,7 +2468,8 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
->  	_("imap claims a free inode %" PRIu64 " is in use, "), lino);
->  		if (!no_modify)  {
->  			do_warn(_("correcting imap and clearing inode\n"));
-> -			*dirty += clear_dinode(mp, dino, lino);
-> +			clear_dinode(mp, dino, lino);
-> +			*dirty += 1;
->  			retval = 1;
->  		} else
->  			do_warn(_("would correct imap and clear inode\n"));
-> @@ -2804,8 +2687,10 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
->  	 * we're going to find.  check_dups is set to 1 only during
->  	 * phase 4.  Ugly.
->  	 */
-> -	if (check_dups && !no_modify)
-> -		*dirty += clear_dinode_unlinked(mp, dino);
-> +	if (check_dups && !no_modify) {
-> +		clear_dinode_unlinked(mp, dino);
-> +		*dirty += 1;
-> +	}
->  
->  	/* set type and map type info */
->  
-> @@ -3024,8 +2909,8 @@ _("Cannot have CoW extent size of zero on cowextsize inode %" PRIu64 ", "),
->  
->  clear_bad_out:
->  	if (!no_modify)  {
-> -		*dirty += clear_dinode(mp, dino, lino);
-> -		ASSERT(*dirty > 0);
-> +		clear_dinode(mp, dino, lino);
-> +		*dirty += 1;
->  	}
->  bad_out:
->  	*used = is_free;
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/io/shutdown.c b/io/shutdown.c
+index 7ceed7a..052d3de 100644
+--- a/io/shutdown.c
++++ b/io/shutdown.c
+@@ -35,6 +35,22 @@ shutdown_f(
+ 	return 0;
+ }
+ 
++static void
++shutdown_help(void)
++{
++	printf(_(
++"\n"
++" Shuts down the filesystem and prevents any further IO from occurring.\n"
++"\n"
++" By default, shutdown will not flush completed transactions to disk\n"
++" before shutting the filesystem down, simulating a disk failure or crash.\n"
++" With -f, the log will be flushed to disk, matching XFS behavior when\n"
++" metadata corruption is encountered.\n"
++"\n"
++" -f -- Flush completed transactions to disk before shut down.\n"
++"\n"));
++}
++
+ void
+ shutdown_init(void)
+ {
+@@ -44,6 +60,7 @@ shutdown_init(void)
+ 	shutdown_cmd.argmax = 1;
+ 	shutdown_cmd.flags = CMD_NOMAP_OK | CMD_FLAG_ONESHOT | CMD_FLAG_FOREIGN_OK;
+ 	shutdown_cmd.args = _("[-f]");
++	shutdown_cmd.help = shutdown_help;
+ 	shutdown_cmd.oneline =
+ 		_("shuts down the filesystem where the current file resides");
+ 
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index dd91589..54a077c 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -1017,8 +1017,23 @@ Note \-\- this can be useful for exercising out of space behavior.
+ Only available in expert mode and requires privileges.
+ .TP
+ .BR shutdown " [ " \-f " ]"
+-Force the filesystem to shutdown (with or without flushing the log).
++Force the filesystem to shut down, preventing any further IO.
++XFS and other filesystems implement this functionality, although implementation
++details may differ slightly.
+ Only available in expert mode and requires privileges.
++.PP
++.RS
++By default, XFS will not attempt to flush completed transactions to disk before
++shutting down the filesystem.  This simulates a disk failure or crash.
++.RE
++.RS 1.0i
++.PD 0
++.TP 0.4i
++.B \-f
++Force XFS to flush all completed transactions to disk before shutting down,
++matching XFS behavior when critical corruption is encountered.
++.PD
++.RE
+ .TP
+ .BR stat " [ " \-v "|" \-r " ]"
+ Selected statistics from
 
--- 
-Carlos
