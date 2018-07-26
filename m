@@ -1,114 +1,120 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:58232 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726000AbeG1JEu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 28 Jul 2018 05:04:50 -0400
-Date: Sat, 28 Jul 2018 00:39:11 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/2] misc: use xfs_agfl_walk where appropriate
-Message-ID: <20180728073911.GO30972@magnolia>
-References: <153273025311.29060.14065633572750924491.stgit@magnolia>
- <50fd5f62-3de1-17ac-2afd-ea2cfdbb8c8e@sandeen.net>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:43354 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728452AbeGZC7A (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 25 Jul 2018 22:59:00 -0400
+Subject: Re: [PATCH 12/10] xfs_repair: use libxfs extsize/cowextsize
+ validation helpers
+References: <153006766483.20121.9285982017465570544.stgit@magnolia>
+ <20180628173008.GJ5711@magnolia>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <6c0bc803-dd19-2b1f-a843-b5c555fab25a@redhat.com>
+Date: Wed, 25 Jul 2018 18:44:33 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <50fd5f62-3de1-17ac-2afd-ea2cfdbb8c8e@sandeen.net>
+In-Reply-To: <20180628173008.GJ5711@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Jul 27, 2018 at 07:38:06PM -0700, Eric Sandeen wrote:
-> On 7/27/18 3:24 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Use the xfs_agfl_walk function to iterate every block in the AGFL,
-> > instead of open-coding it db and repair.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  db/check.c               |   60 ++++++++++++++++++++++--------------------
-> >  db/freesp.c              |   31 ++++++++--------------
-> >  libxfs/libxfs_api_defs.h |    1 +
-> >  repair/scan.c            |   66 +++++++++++++++++++++++++---------------------
-> >  4 files changed, 81 insertions(+), 77 deletions(-)
-> > 
-> > 
-> > diff --git a/db/check.c b/db/check.c
-> > index 9846d672..76c28d49 100644
-> > --- a/db/check.c
-> > +++ b/db/check.c
-> > @@ -4010,16 +4010,30 @@ scan_ag(
-> >  	pop_cur();
-> >  }
-> >  
-> > +struct agfl_state {
-> > +	xfs_agnumber_t	agno;
-> > +	unsigned int	count;
-> > +};
-> > +
-> > +static int
-> > +scan_agfl(
-> > +	struct xfs_mount	*mp,
-> > +	xfs_agblock_t		bno,
-> > +	void			*priv)
-> > +{
-> > +	struct agfl_state	*as = priv;
-> > +
-> > +	set_dbmap(as->agno, bno, 1, DBM_FREELIST, as->agno, XFS_AGFL_BLOCK(mp));
-> > +	as->count++;
-> > +	return 0;
-> > +}
-> > +
-> >  static void
-> >  scan_freelist(
-> > -	xfs_agf_t	*agf)
-> > +	xfs_agf_t		*agf)
-> >  {
-> > -	xfs_agnumber_t	seqno = be32_to_cpu(agf->agf_seqno);
-> > -	xfs_agfl_t	*agfl;
-> > -	xfs_agblock_t	bno;
-> > -	uint		count;
-> > -	int		i;
-> > -	__be32		*freelist;
-> > +	xfs_agnumber_t		seqno = be32_to_cpu(agf->agf_seqno);
-> > +	struct agfl_state	state;
-> >  
-> >  	if (XFS_SB_BLOCK(mp) != XFS_AGFL_BLOCK(mp) &&
-> >  	    XFS_AGF_BLOCK(mp) != XFS_AGFL_BLOCK(mp) &&
-> > @@ -4032,46 +4046,36 @@ scan_freelist(
-> >  	set_cur(&typtab[TYP_AGFL],
-> >  		XFS_AG_DADDR(mp, seqno, XFS_AGFL_DADDR(mp)),
-> >  		XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
-> > -	if ((agfl = iocur_top->data) == NULL) {
-> > +	if (iocur_top->data == NULL) {
-> >  		dbprintf(_("can't read agfl block for ag %u\n"), seqno);
-> >  		serious_error++;
-> >  		pop_cur();
-> >  		return;
-> >  	}
-> > -	i = be32_to_cpu(agf->agf_flfirst);
-> >  
-> >  	/* verify agf values before proceeding */
-> >  	if (be32_to_cpu(agf->agf_flfirst) >= libxfs_agfl_size(mp) ||
-> >  	    be32_to_cpu(agf->agf_fllast) >= libxfs_agfl_size(mp)) {
-> >  		dbprintf(_("agf %d freelist blocks bad, skipping "
-> > -			  "freelist scan\n"), i);
-> > +			  "freelist scan\n"), seqno);
+On 6/28/18 10:30 AM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> This appears to be a change in output as well, though it also appears to be
-> a correct bugfix.  Just making sure ... right?
-
-Yep.
-
---D
-
-> (similar changes in each utility)
+> Now that we've ported the extent size hint verifiers to libxfs, call
+> them from xfs_repair instead of open-coding the checks.  Tweak the
+> repair message slightly to reflect the fact that we zero the field and
+> clear the inode flag if the hint is garbage or is inconsistent with the
+> inode flags.
 > 
-> -Eric
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  libxfs/libxfs_api_defs.h |    2 +
+>  repair/dinode.c          |   75 ++++++++++++++++------------------------------
+>  2 files changed, 28 insertions(+), 49 deletions(-)
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+> index e5cf1554..fe8336ab 100644
+> --- a/libxfs/libxfs_api_defs.h
+> +++ b/libxfs/libxfs_api_defs.h
+> @@ -98,6 +98,8 @@
+>  #define xfs_dinode_calc_crc		libxfs_dinode_calc_crc
+>  #define xfs_idata_realloc		libxfs_idata_realloc
+>  #define xfs_idestroy_fork		libxfs_idestroy_fork
+> +#define xfs_inode_validate_extsize	libxfs_inode_validate_extsize
+> +#define xfs_inode_validate_cowextsize	libxfs_inode_validate_cowextsize
+
+oh hey, I stepped on this with my later patches didn't I, sorry. I'll sort it out.
+
+>  
+>  #define xfs_rmap_ag_owner		libxfs_rmap_ag_owner
+>  #define xfs_rmap_alloc			libxfs_rmap_alloc
+> diff --git a/repair/dinode.c b/repair/dinode.c
+> index 4118db7c..14c055bd 100644
+> --- a/repair/dinode.c
+> +++ b/repair/dinode.c
+> @@ -2853,24 +2853,21 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
+>  	 * only regular files with REALTIME or EXTSIZE flags set can have
+>  	 * extsize set, or directories with EXTSZINHERIT.
+>  	 */
+> -	if (be32_to_cpu(dino->di_extsize) != 0) {
+> -		if ((type == XR_INO_RTDATA) ||
+> -		    (type == XR_INO_DIR && (be16_to_cpu(dino->di_flags) &
+> -					XFS_DIFLAG_EXTSZINHERIT)) ||
+> -		    (type == XR_INO_DATA && (be16_to_cpu(dino->di_flags) &
+> -				 XFS_DIFLAG_EXTSIZE)))  {
+> -			/* s'okay */ ;
+> -		} else {
+> -			do_warn(
+> -_("bad non-zero extent size %u for non-realtime/extsize inode %" PRIu64 ", "),
+> -					be32_to_cpu(dino->di_extsize), lino);
+> -			if (!no_modify)  {
+> -				do_warn(_("resetting to zero\n"));
+> -				dino->di_extsize = 0;
+> -				*dirty = 1;
+> -			} else
+> -				do_warn(_("would reset to zero\n"));
+> -		}
+> +	if (libxfs_inode_validate_extsize(mp,
+> +			be32_to_cpu(dino->di_extsize),
+> +			be16_to_cpu(dino->di_mode),
+> +			be16_to_cpu(dino->di_flags)) != NULL) {
+> +		do_warn(
+> +_("Bad extent size %u for non-realtime/extsize inode %" PRIu64 ", "),
+> +				be32_to_cpu(dino->di_extsize), lino);
+
+Failure doesn't mean it's "non-realtime/extsize" right?  It could
+in fact be flagged as extsize but with a bad value?
+
+> +		if (!no_modify)  {
+> +			do_warn(_("resetting to zero\n"));
+> +			dino->di_extsize = 0;
+> +			dino->di_flags &= ~cpu_to_be16(XFS_DIFLAG_EXTSIZE |
+> +						       XFS_DIFLAG_EXTSZINHERIT);
+> +			*dirty = 1;
+> +		} else
+> +			do_warn(_("would reset to zero\n"));
+...
+
+> -_("Cannot have CoW extent size of zero on cowextsize inode %" PRIu64 ", "),
+> -				lino);
+> +_("Bad CoW extent size %u on non-cowextsize inode %" PRIu64 ", "),
+> +				be32_to_cpu(dino->di_cowextsize), lino);
+
+Ditto ...
+
+The test could also fail for a cowextsize inode if the size is not
+legit, right?  I'm not sure why this says "non-cowextsize inode."
+
+So maybe just:
+
++_("Bad extent size %u for inode %" PRIu64 ", "),
++_("Bad CoW extent size %u on inode %" PRIu64 ", "),
+
+? Unless you really want to keep track of "is it flagged?" and print a
+different message based on flagged-or-not?
+
+-Eric
