@@ -1,51 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:56110 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:51598 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729017AbeG1ROr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 28 Jul 2018 13:14:47 -0400
-Subject: Re: [PATCH] xfs: add debian initramfs hook to package
-References: <20180726215154.GI30972@magnolia>
- <f2b317ec-3541-4441-cf11-58602eb8de4f@sandeen.net>
- <20180728074406.GQ30972@magnolia>
+        id S1728505AbeGZDCm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 25 Jul 2018 23:02:42 -0400
+Subject: Re: [PATCH 12/10] xfs_repair: use libxfs extsize/cowextsize
+ validation helpers
+References: <153006766483.20121.9285982017465570544.stgit@magnolia>
+ <20180628173008.GJ5711@magnolia>
+ <6c0bc803-dd19-2b1f-a843-b5c555fab25a@redhat.com>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <ea774c75-8401-e672-c8cf-43d2879753d4@sandeen.net>
-Date: Sat, 28 Jul 2018 08:47:49 -0700
+Message-ID: <761c1590-1a34-f62c-5a9b-64a54ba22de5@sandeen.net>
+Date: Wed, 25 Jul 2018 18:48:14 -0700
 MIME-Version: 1.0
-In-Reply-To: <20180728074406.GQ30972@magnolia>
+In-Reply-To: <6c0bc803-dd19-2b1f-a843-b5c555fab25a@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
+On 7/25/18 6:44 PM, Eric Sandeen wrote:
+> On 6/28/18 10:30 AM, Darrick J. Wong wrote:
+...
 
-
-On 7/28/18 12:44 AM, Darrick J. Wong wrote:
->> Actually... this sort of fstqab poses a problem for your function and mine:
->>
->> #/dev/mapper/vg-lv_root /                      xfs    defaults        1 1
->> /dev/mapper/vg-lv_root /                       ext4    defaults        1 1
->>
->> because it'll happily pick xfs.  Need to exclude comment lines, so exclude
->> MNT_FSNAME starting with # - 
->>
->> test ${MNT_FSNAME::1} == "#" && continue
->>
->> or in my fancy world could do:
->>
->> awk '(!/^#/) && ($2 == "/") {print $3}' $(fstab_files)
->>
->> tho I guess mine assumes only one matching line... | head -n 1 ;)
-> Might have to add awk as a Depends: dependency in debian/control if you
-> do that.  I think it's cleaner....
+> So maybe just:
 > 
+> +_("Bad extent size %u for inode %" PRIu64 ", "),
+> +_("Bad CoW extent size %u on inode %" PRIu64 ", "),
 
-Ok, up to you.  If this is all just boilerplate from other debian
-scripts and it's good enough for them I guess I can just merge as
-is.  The only thing that seemed to matter was not ignoring comment lines,
-which would be trivial to fix.
+Uh, may as well fix for-vs-on, too :)
 
--Eric
