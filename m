@@ -1,167 +1,280 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:40194 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726061AbeG1JJq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 28 Jul 2018 05:09:46 -0400
-Date: Sat, 28 Jul 2018 00:44:06 -0700
+Received: from userp2120.oracle.com ([156.151.31.85]:36556 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728292AbeGZBwn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Jul 2018 21:52:43 -0400
+Date: Wed, 25 Jul 2018 17:38:26 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: add debian initramfs hook to package
-Message-ID: <20180728074406.GQ30972@magnolia>
-References: <20180726215154.GI30972@magnolia>
- <f2b317ec-3541-4441-cf11-58602eb8de4f@sandeen.net>
+Subject: Re: [PATCH 01/16] xfs: pass transaction lock while setting up agresv
+ on cyclic metadata
+Message-ID: <20180726003826.GA30972@magnolia>
+References: <153256394843.28271.6602121920208272304.stgit@magnolia>
+ <153256398533.28271.6543506869396653634.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <f2b317ec-3541-4441-cf11-58602eb8de4f@sandeen.net>
+In-Reply-To: <153256398533.28271.6543506869396653634.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org, david@fromorbit.com, allison.henderson@oracle.com
 
-On Fri, Jul 27, 2018 at 05:13:42PM -0700, Eric Sandeen wrote:
+On Wed, Jul 25, 2018 at 05:13:05PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> 
-> On 7/26/18 2:51 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > In Debian bug 904086, the reporter complained that xfs_repair wasn't
-> > present in the initramfs, which prevented him from using shutdown -F to
-> > force a filesystem fsck after a reboot.  Add a hook to put the xfs
-> > utilities in the initramfs if xfs is the root filesystem.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  debian/local/initramfs.hook |   47 +++++++++++++++++++++++++++++++++++++++++++
-> >  debian/rules                |    1 +
-> >  2 files changed, 48 insertions(+)
-> >  create mode 100644 debian/local/initramfs.hook
-> > 
-> > diff --git a/debian/local/initramfs.hook b/debian/local/initramfs.hook
-> > new file mode 100644
-> > index 00000000..20df5d69
-> > --- /dev/null
-> > +++ b/debian/local/initramfs.hook
-> > @@ -0,0 +1,47 @@
-> > +#!/bin/sh
-> > +
-> > +# Put XFS utilities in initramfs if the root fs is XFS.
-> > +
-> > +PREREQ=""
-> > +
-> > +prereqs()
-> > +{
-> > +	echo "$PREREQ"
-> > +}
-> > +
-> > +case $1 in
-> > +prereqs)
-> > +	prereqs
-> > +	exit 0
-> > +	;;
-> > +esac
-> > +
-> > +fstab_files()
-> > +{
-> > +	echo /etc/fstab
-> > +	if [ -d /etc/fstab.d ]; then
-> > +		ls -1 /etc/fstab.d | grep '\.fstab$' | sed -e 's;^;/etc/fstab.d/;'
-> 
-> Is this just a fancy 
-> 
-> ls -1 /etc/fstab.d/*.fstab 2>/dev/null
-> 
-> ?  *shrug* ok :)
+> Pass a tranaction pointer through to all helpers that calculate the
+> per-AG block reservation.  Online repair will use this to reinitialize
+> per-ag reservations while it still holds all the AG headers locked to
+> the repair transaction.
 
-Yeah, it's ... bizarre, but it matches the debian initramfs scripts for
-shoving fsck and fsck.$FSTYP into the initramfs.
-
-> > +	fi
-> > +}
-> > +
-> > +rootfs_type() {
-> > +	fstab_files | while read file; do
-> > +		test ! -f "$file" && continue
-> > +
-> > +		while read MNT_FSNAME MNT_DIR MNT_TYPE MNT_OPTS MNT_FREQ MNT_PASS MNT_JUNK; do
-> > +			test "$MNT_DIR" != "/" && continue
-> > +			echo "$MNT_TYPE"
-> > +			break;
-> > +		done < "$file"
-> > +	done
-> > +}
-> 
-> ok, I was scheming up something, uh, more obtuse,
-> 
-> awk '$2 == "/" {print $3}' $(fstab_files)
-> 
-> but *shrug* :)
-
-Yeah, that fugly mess is also cribbed from the Debian initramfs scripts.
-
-> Actually... this sort of fstqab poses a problem for your function and mine:
-> 
-> #/dev/mapper/vg-lv_root /                      xfs    defaults        1 1
-> /dev/mapper/vg-lv_root /                       ext4    defaults        1 1
-> 
-> because it'll happily pick xfs.  Need to exclude comment lines, so exclude
-> MNT_FSNAME starting with # - 
-> 
-> test ${MNT_FSNAME::1} == "#" && continue
-> 
-> or in my fancy world could do:
-> 
-> awk '(!/^#/) && ($2 == "/") {print $3}' $(fstab_files)
-> 
-> tho I guess mine assumes only one matching line... | head -n 1 ;)
-
-Might have to add awk as a Depends: dependency in debian/control if you
-do that.  I think it's cleaner....
-
-> 
-> > +. /usr/share/initramfs-tools/scripts/functions
-> > +. /usr/share/initramfs-tools/hook-functions
-> > +
-> > +if [ "$(rootfs_type)" = "xfs" ]; then
-> > +	copy_exec /sbin/xfs_repair
-> > +	copy_exec /usr/sbin/xfs_db
-> > +	copy_exec /usr/sbin/xfs_metadump
-> 
-> Just to be sure, it gets fsck.xfs already?  or does it need to?
-
-fsck.xfs will be put in the initramfs by
-/usr/share/initramfs-tools/hooks/fsck if /etc/fstab says the rootfs is
-pass 1 or greater.  I find it weird that the bug reporter has pass == 0
-and complains that xfs_repair isn't present even though neither fsck nor
-fsck.xfs are in his initramfs either!
-
-Buuuut, it would be nice to have the xfs tools show up in the initramfs
-in case the rootfs is corrupt and the admin boots with 'break=premount'
-to get a shell to fix the root fs.
+So, clearly my $company smtp mta had a major meltdown... sorry for the
+duplicated messages, broken threads, and bleh. :/
 
 --D
 
-> -Eric
 > 
-> > +fi
-> > +exit 0
-> > diff --git a/debian/rules b/debian/rules
-> > index cb4fa22c..4c50654c 100755
-> > --- a/debian/rules
-> > +++ b/debian/rules
-> > @@ -77,6 +77,7 @@ binary-arch: checkroot built
-> >  	$(pkgdev) $(MAKE) -C . install-dev
-> >  	$(pkgdi)  $(MAKE) -C debian install-d-i
-> >  	$(pkgme)  $(MAKE) dist
-> > +	install -D -m 0755 debian/local/initramfs.hook debian/xfsprogs/usr/share/initramfs-tools/hooks/xfs
-> >  	rmdir debian/xfslibs-dev/usr/share/doc/xfsprogs
-> >  	rm -f debian/xfslibs-dev/lib/libhandle.la
-> >  	rm -fr debian/xfslibs-dev/usr/lib
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_ag_resv.c        |   13 +++++++------
+>  fs/xfs/libxfs/xfs_ag_resv.h        |    2 +-
+>  fs/xfs/libxfs/xfs_ialloc_btree.c   |   10 ++++++----
+>  fs/xfs/libxfs/xfs_ialloc_btree.h   |    4 ++--
+>  fs/xfs/libxfs/xfs_refcount_btree.c |    5 +++--
+>  fs/xfs/libxfs/xfs_refcount_btree.h |    3 ++-
+>  fs/xfs/libxfs/xfs_rmap_btree.c     |    5 +++--
+>  fs/xfs/libxfs/xfs_rmap_btree.h     |    2 +-
+>  fs/xfs/xfs_fsops.c                 |    2 +-
+>  9 files changed, 26 insertions(+), 20 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+> index fecd187fcf2c..e701ebc36c06 100644
+> --- a/fs/xfs/libxfs/xfs_ag_resv.c
+> +++ b/fs/xfs/libxfs/xfs_ag_resv.c
+> @@ -248,7 +248,8 @@ __xfs_ag_resv_init(
+>  /* Create a per-AG block reservation. */
+>  int
+>  xfs_ag_resv_init(
+> -	struct xfs_perag		*pag)
+> +	struct xfs_perag		*pag,
+> +	struct xfs_trans		*tp)
+>  {
+>  	struct xfs_mount		*mp = pag->pag_mount;
+>  	xfs_agnumber_t			agno = pag->pag_agno;
+> @@ -260,11 +261,11 @@ xfs_ag_resv_init(
+>  	if (pag->pag_meta_resv.ar_asked == 0) {
+>  		ask = used = 0;
+>  
+> -		error = xfs_refcountbt_calc_reserves(mp, agno, &ask, &used);
+> +		error = xfs_refcountbt_calc_reserves(mp, tp, agno, &ask, &used);
+>  		if (error)
+>  			goto out;
+>  
+> -		error = xfs_finobt_calc_reserves(mp, agno, &ask, &used);
+> +		error = xfs_finobt_calc_reserves(mp, tp, agno, &ask, &used);
+>  		if (error)
+>  			goto out;
+>  
+> @@ -282,7 +283,7 @@ xfs_ag_resv_init(
+>  
+>  			mp->m_inotbt_nores = true;
+>  
+> -			error = xfs_refcountbt_calc_reserves(mp, agno, &ask,
+> +			error = xfs_refcountbt_calc_reserves(mp, tp, agno, &ask,
+>  					&used);
+>  			if (error)
+>  				goto out;
+> @@ -298,7 +299,7 @@ xfs_ag_resv_init(
+>  	if (pag->pag_rmapbt_resv.ar_asked == 0) {
+>  		ask = used = 0;
+>  
+> -		error = xfs_rmapbt_calc_reserves(mp, agno, &ask, &used);
+> +		error = xfs_rmapbt_calc_reserves(mp, tp, agno, &ask, &used);
+>  		if (error)
+>  			goto out;
+>  
+> @@ -309,7 +310,7 @@ xfs_ag_resv_init(
+>  
+>  #ifdef DEBUG
+>  	/* need to read in the AGF for the ASSERT below to work */
+> -	error = xfs_alloc_pagf_init(pag->pag_mount, NULL, pag->pag_agno, 0);
+> +	error = xfs_alloc_pagf_init(pag->pag_mount, tp, pag->pag_agno, 0);
+>  	if (error)
+>  		return error;
+>  
+> diff --git a/fs/xfs/libxfs/xfs_ag_resv.h b/fs/xfs/libxfs/xfs_ag_resv.h
+> index 4619b554ee90..d1005116b43b 100644
+> --- a/fs/xfs/libxfs/xfs_ag_resv.h
+> +++ b/fs/xfs/libxfs/xfs_ag_resv.h
+> @@ -7,7 +7,7 @@
+>  #define	__XFS_AG_RESV_H__
+>  
+>  int xfs_ag_resv_free(struct xfs_perag *pag);
+> -int xfs_ag_resv_init(struct xfs_perag *pag);
+> +int xfs_ag_resv_init(struct xfs_perag *pag, struct xfs_trans *tp);
+>  
+>  bool xfs_ag_resv_critical(struct xfs_perag *pag, enum xfs_ag_resv_type type);
+>  xfs_extlen_t xfs_ag_resv_needed(struct xfs_perag *pag,
+> diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+> index 735a33252eb2..86c50208a143 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc_btree.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+> @@ -552,6 +552,7 @@ xfs_inobt_max_size(
+>  static int
+>  xfs_inobt_count_blocks(
+>  	struct xfs_mount	*mp,
+> +	struct xfs_trans	*tp,
+>  	xfs_agnumber_t		agno,
+>  	xfs_btnum_t		btnum,
+>  	xfs_extlen_t		*tree_blocks)
+> @@ -560,14 +561,14 @@ xfs_inobt_count_blocks(
+>  	struct xfs_btree_cur	*cur;
+>  	int			error;
+>  
+> -	error = xfs_ialloc_read_agi(mp, NULL, agno, &agbp);
+> +	error = xfs_ialloc_read_agi(mp, tp, agno, &agbp);
+>  	if (error)
+>  		return error;
+>  
+> -	cur = xfs_inobt_init_cursor(mp, NULL, agbp, agno, btnum);
+> +	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, btnum);
+>  	error = xfs_btree_count_blocks(cur, tree_blocks);
+>  	xfs_btree_del_cursor(cur, error);
+> -	xfs_buf_relse(agbp);
+> +	xfs_trans_brelse(tp, agbp);
+>  
+>  	return error;
+>  }
+> @@ -578,6 +579,7 @@ xfs_inobt_count_blocks(
+>  int
+>  xfs_finobt_calc_reserves(
+>  	struct xfs_mount	*mp,
+> +	struct xfs_trans	*tp,
+>  	xfs_agnumber_t		agno,
+>  	xfs_extlen_t		*ask,
+>  	xfs_extlen_t		*used)
+> @@ -588,7 +590,7 @@ xfs_finobt_calc_reserves(
+>  	if (!xfs_sb_version_hasfinobt(&mp->m_sb))
+>  		return 0;
+>  
+> -	error = xfs_inobt_count_blocks(mp, agno, XFS_BTNUM_FINO, &tree_len);
+> +	error = xfs_inobt_count_blocks(mp, tp, agno, XFS_BTNUM_FINO, &tree_len);
+>  	if (error)
+>  		return error;
+>  
+> diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.h b/fs/xfs/libxfs/xfs_ialloc_btree.h
+> index bf8f0c405e7d..ebdd0c6b8766 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc_btree.h
+> +++ b/fs/xfs/libxfs/xfs_ialloc_btree.h
+> @@ -60,8 +60,8 @@ int xfs_inobt_rec_check_count(struct xfs_mount *,
+>  #define xfs_inobt_rec_check_count(mp, rec)	0
+>  #endif	/* DEBUG */
+>  
+> -int xfs_finobt_calc_reserves(struct xfs_mount *mp, xfs_agnumber_t agno,
+> -		xfs_extlen_t *ask, xfs_extlen_t *used);
+> +int xfs_finobt_calc_reserves(struct xfs_mount *mp, struct xfs_trans *tp,
+> +		xfs_agnumber_t agno, xfs_extlen_t *ask, xfs_extlen_t *used);
+>  extern xfs_extlen_t xfs_iallocbt_calc_size(struct xfs_mount *mp,
+>  		unsigned long long len);
+>  
+> diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
+> index b71937982c5b..bcd65ee37260 100644
+> --- a/fs/xfs/libxfs/xfs_refcount_btree.c
+> +++ b/fs/xfs/libxfs/xfs_refcount_btree.c
+> @@ -408,6 +408,7 @@ xfs_refcountbt_max_size(
+>  int
+>  xfs_refcountbt_calc_reserves(
+>  	struct xfs_mount	*mp,
+> +	struct xfs_trans	*tp,
+>  	xfs_agnumber_t		agno,
+>  	xfs_extlen_t		*ask,
+>  	xfs_extlen_t		*used)
+> @@ -422,14 +423,14 @@ xfs_refcountbt_calc_reserves(
+>  		return 0;
+>  
+>  
+> -	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
+> +	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
+>  	if (error)
+>  		return error;
+>  
+>  	agf = XFS_BUF_TO_AGF(agbp);
+>  	agblocks = be32_to_cpu(agf->agf_length);
+>  	tree_len = be32_to_cpu(agf->agf_refcount_blocks);
+> -	xfs_buf_relse(agbp);
+> +	xfs_trans_brelse(tp, agbp);
+>  
+>  	*ask += xfs_refcountbt_max_size(mp, agblocks);
+>  	*used += tree_len;
+> diff --git a/fs/xfs/libxfs/xfs_refcount_btree.h b/fs/xfs/libxfs/xfs_refcount_btree.h
+> index d2852b6e1fa8..c868394ac02e 100644
+> --- a/fs/xfs/libxfs/xfs_refcount_btree.h
+> +++ b/fs/xfs/libxfs/xfs_refcount_btree.h
+> @@ -55,6 +55,7 @@ extern xfs_extlen_t xfs_refcountbt_max_size(struct xfs_mount *mp,
+>  		xfs_agblock_t agblocks);
+>  
+>  extern int xfs_refcountbt_calc_reserves(struct xfs_mount *mp,
+> -		xfs_agnumber_t agno, xfs_extlen_t *ask, xfs_extlen_t *used);
+> +		struct xfs_trans *tp, xfs_agnumber_t agno, xfs_extlen_t *ask,
+> +		xfs_extlen_t *used);
+>  
+>  #endif	/* __XFS_REFCOUNT_BTREE_H__ */
+> diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
+> index 221a88ea60bb..f79cf040d745 100644
+> --- a/fs/xfs/libxfs/xfs_rmap_btree.c
+> +++ b/fs/xfs/libxfs/xfs_rmap_btree.c
+> @@ -554,6 +554,7 @@ xfs_rmapbt_max_size(
+>  int
+>  xfs_rmapbt_calc_reserves(
+>  	struct xfs_mount	*mp,
+> +	struct xfs_trans	*tp,
+>  	xfs_agnumber_t		agno,
+>  	xfs_extlen_t		*ask,
+>  	xfs_extlen_t		*used)
+> @@ -567,14 +568,14 @@ xfs_rmapbt_calc_reserves(
+>  	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
+>  		return 0;
+>  
+> -	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
+> +	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
+>  	if (error)
+>  		return error;
+>  
+>  	agf = XFS_BUF_TO_AGF(agbp);
+>  	agblocks = be32_to_cpu(agf->agf_length);
+>  	tree_len = be32_to_cpu(agf->agf_rmap_blocks);
+> -	xfs_buf_relse(agbp);
+> +	xfs_trans_brelse(tp, agbp);
+>  
+>  	/* Reserve 1% of the AG or enough for 1 block per record. */
+>  	*ask += max(agblocks / 100, xfs_rmapbt_max_size(mp, agblocks));
+> diff --git a/fs/xfs/libxfs/xfs_rmap_btree.h b/fs/xfs/libxfs/xfs_rmap_btree.h
+> index 50198b6c3bb2..820d668b063d 100644
+> --- a/fs/xfs/libxfs/xfs_rmap_btree.h
+> +++ b/fs/xfs/libxfs/xfs_rmap_btree.h
+> @@ -51,7 +51,7 @@ extern xfs_extlen_t xfs_rmapbt_calc_size(struct xfs_mount *mp,
+>  extern xfs_extlen_t xfs_rmapbt_max_size(struct xfs_mount *mp,
+>  		xfs_agblock_t agblocks);
+>  
+> -extern int xfs_rmapbt_calc_reserves(struct xfs_mount *mp,
+> +extern int xfs_rmapbt_calc_reserves(struct xfs_mount *mp, struct xfs_trans *tp,
+>  		xfs_agnumber_t agno, xfs_extlen_t *ask, xfs_extlen_t *used);
+>  
+>  #endif	/* __XFS_RMAP_BTREE_H__ */
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index 3f2bd6032cf8..7c00b8bedfe3 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -536,7 +536,7 @@ xfs_fs_reserve_ag_blocks(
+>  
+>  	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
+>  		pag = xfs_perag_get(mp, agno);
+> -		err2 = xfs_ag_resv_init(pag);
+> +		err2 = xfs_ag_resv_init(pag, NULL);
+>  		xfs_perag_put(pag);
+>  		if (err2 && !error)
+>  			error = err2;
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
