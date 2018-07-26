@@ -1,83 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:58726 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726259AbeG3H3B (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Jul 2018 03:29:01 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w6U5rrjs012226
-        for <linux-xfs@vger.kernel.org>; Mon, 30 Jul 2018 05:55:41 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2130.oracle.com with ESMTP id 2kgfwstxsm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 30 Jul 2018 05:55:41 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w6U5tfiK029584
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 30 Jul 2018 05:55:41 GMT
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w6U5tepj006421
-        for <linux-xfs@vger.kernel.org>; Mon, 30 Jul 2018 05:55:41 GMT
-Date: Sun, 29 Jul 2018 22:55:39 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [RFC PATCH] xfs: fix cow_seq locking behavior
-Message-ID: <20180730055539.GT30972@magnolia>
+Received: from mail.kernel.org ([198.145.29.99]:48892 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731327AbeGZTkn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Jul 2018 15:40:43 -0400
+Date: Thu, 26 Jul 2018 11:22:43 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+Subject: [GIT PULL] xfs: 4.18 fixes, part 2
+Message-ID: <20180726182243.GG30972@magnolia>
+References: <20180627182421.GE5711@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20180627182421.GE5711@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Hi Linus,
 
-In Christoph Hellwig's patch "xfs: avoid COW fork extent lookups in
-writeback if the fork didn't change" (which has not yet graduated to
-for-next), we sample the COW fork sequence number without taking the
-ilock.  This is a little strange, since in general we always take it
-before accessing anything in a block mapping.  I think we get lucky in
-that the unlocking during actual cow fork changes will erect the
-necessary memory barriers (on x86 anyway) but let's not play fast and
-loose with breaking everyone else's model of how locking works.
+Here are a couple of late patches for 4.18 to fix a coding bug
+introduced in -rc1 and a fix for incorrect metadata verification of
+on-disk data.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_aops.c |   10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+This series has been run through a full xfstests run over the weekend
+and through a quick xfstests run against this morning's master, with no
+major failures reported.
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index aff9d44fa338..2e178ef89a15 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -338,16 +338,21 @@ xfs_map_blocks(
- 	 * COW one, or the COW fork hasn't changed from the last time we looked
- 	 * at it.
- 	 */
-+	xfs_ilock(ip, XFS_ILOCK_SHARED);
- 	imap_valid = offset_fsb >= wpc->imap.br_startoff &&
- 		     offset_fsb < wpc->imap.br_startoff + wpc->imap.br_blockcount;
- 	if (imap_valid &&
- 	    (!xfs_inode_has_cow_data(ip) ||
- 	     wpc->io_type == XFS_IO_COW ||
--	     wpc->cow_seq == ip->i_cowfp->if_seq))
-+	     wpc->cow_seq == ip->i_cowfp->if_seq)) {
-+		xfs_iunlock(ip, XFS_ILOCK_SHARED);
- 		return 0;
-+	}
- 
--	if (XFS_FORCED_SHUTDOWN(mp))
-+	if (XFS_FORCED_SHUTDOWN(mp)) {
-+		xfs_iunlock(ip, XFS_ILOCK_SHARED);
- 		return -EIO;
-+	}
- 
- 	/*
- 	 * If we don't have a valid map, now it's time to get a new one for this
-@@ -355,7 +360,6 @@ xfs_map_blocks(
- 	 * into real extents.  If we return without a valid map, it means we
- 	 * landed in a hole and we skip the block.
- 	 */
--	xfs_ilock(ip, XFS_ILOCK_SHARED);
- 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
- 	       (ip->i_df.if_flags & XFS_IFEXTENTS));
- 	ASSERT(offset <= mp->m_super->s_maxbytes);
+--D
+
+The following changes since commit d8cb5e42378918e00eda58792f3ab86dd1e7d214:
+
+  xfs: fix fdblocks accounting w/ RMAPBT per-AG reservation (2018-06-24 12:00:12 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.18-fixes-4
+
+for you to fetch changes up to d4a34e16555708bab5b67e679a95f055d8ef9882:
+
+  xfs: properly handle free inodes in extent hint validators (2018-07-24 11:34:52 -0700)
+
+----------------------------------------------------------------
+Changes since last update:
+- Fix some uninitialized variable errors
+- Fix an incorrect check in metadata verifiers
+
+----------------------------------------------------------------
+Carlos Maiolino (1):
+      xfs: Initialize variables in xfs_alloc_get_rec before using them
+
+Eric Sandeen (1):
+      xfs: properly handle free inodes in extent hint validators
+
+ fs/xfs/libxfs/xfs_alloc.c     | 5 +++--
+ fs/xfs/libxfs/xfs_inode_buf.c | 6 ++++--
+ 2 files changed, 7 insertions(+), 4 deletions(-)
