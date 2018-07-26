@@ -1,100 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:47536 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725858AbeG3HDt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Jul 2018 03:03:49 -0400
-Subject: [PATCH 3/3] xfs: verify icount in superblock write
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sun, 29 Jul 2018 22:30:27 -0700
-Message-ID: <153292862751.19274.16285578072920087708.stgit@magnolia>
-In-Reply-To: <153292860880.19274.14533449137039985963.stgit@magnolia>
-References: <153292860880.19274.14533449137039985963.stgit@magnolia>
+Received: from sandeen.net ([63.231.237.45]:43846 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730085AbeGZOkx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Jul 2018 10:40:53 -0400
+Subject: Re: [PATCH, RFC] xfs: completely disable toggling DAX flag via ioctl
+ on reg files
+References: <405e182f-0c24-81fe-9d04-1031a8bbac17@redhat.com>
+ <20180726120854.GA16980@bfoster>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <892f27ac-f985-bf8f-1cc9-bc0a996136f7@sandeen.net>
+Date: Thu, 26 Jul 2018 06:23:58 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20180726120854.GA16980@bfoster>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Bill O'Donnell <billodo@redhat.com>
+To: Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Jeff Moyer <jmoyer@redhat.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 7/26/18 5:08 AM, Brian Foster wrote:
+> On Wed, Jul 25, 2018 at 02:20:54PM -0700, Eric Sandeen wrote:
+>> 742d842 xfs: disable per-inode DAX flag was, I think, intended
+>> as a short-term workaround to avoid races when toggling DAX on
+>> and off of active inodes until mm/ sorted that out.
+>>
+>> (It's also a confusing title, as it didn't really disable
+>> per-inode DAX at all.)
+>>
+>> However, it has the surprising (to me, at least) result that while
+>> the ioctl succeeds, no behavior changes until the inode is cycled
+>> out of cache and re-read from disk at some unknown later time.
+>> This seems to badly violate the principle of least surprise.
+>>
+>> Until said races are properly resolved, it seems most prudent to
+>> disallow modification of the flag on regular files altogether.
+>> We can still allow per-inode DAX flagging via directory inheritance.
+>>
+>> Since DAX is still flagged as experimental (in part due to these
+>> concerns) I don't think it's a problem to (temporarily?) break
+>> this interface further.
+>>
+>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>> ---
+> 
+> I'm not in tune with the latest state of dax, but if the situation is
+> that we don't currently have a means to correctly switch the per-inode
+> state for an active inode (and thus have simply skipped changing the
+> online flag while carrying on with the on-disk flag, leading to this
+> inode cache cycling requirement), then I think this makes sense. The
+> current interface is essentially incomplete, I don't see any reason to
+> allow unless/until it actually works sanely.
+> 
+> BTW, what bits are actually missing to make that happen? Why is the
+> flush/inval currently in this function not sufficient?
 
-Add a helper predicate to check the inode count for sanity, then use it
-in the superblock write verifier to inspect sb_icount.
+TBH I don't actually know the low-level details. :/
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
----
- fs/xfs/libxfs/xfs_sb.c    |    1 +
- fs/xfs/libxfs/xfs_types.c |   34 ++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_types.h |    1 +
- 3 files changed, 36 insertions(+)
+> Implementation wise, I'm a little curious why we're piling on hacks
+> (such as the return short-circuit and the previous #if 0) as opposed to
+> just removing the code. The code can always be restored directly from
+> the git history, right?
 
+Well, fair point.  If this goes in it should probably at least remove
+the other #if 0 so it's not stacking hacks on hacks, but if the issue
+is in mm/ it might be a big ask for anyone eventually working on that
+to dig supporting code back out of xfs git history ...
 
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index 64bc471d57e6..e5972121e82d 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -160,6 +160,7 @@ xfs_validate_sb_write(
- 	 * cases.
- 	 */
- 	if (sbp->sb_fdblocks > sbp->sb_dblocks ||
-+	    !xfs_verify_icount(mp, sbp->sb_icount) ||
- 	    sbp->sb_ifree > sbp->sb_icount) {
- 		xfs_warn(mp, "SB summary counter sanity check failed");
- 		return -EFSCORRUPTED;
-diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
-index 2e2a243cef2e..57f4fd028898 100644
---- a/fs/xfs/libxfs/xfs_types.c
-+++ b/fs/xfs/libxfs/xfs_types.c
-@@ -171,3 +171,37 @@ xfs_verify_rtbno(
- {
- 	return rtbno < mp->m_sb.sb_rblocks;
- }
-+
-+/* Calculate the range of valid icount values. */
-+static void
-+xfs_icount_range(
-+	struct xfs_mount	*mp,
-+	unsigned long long	*min,
-+	unsigned long long	*max)
-+{
-+	unsigned long long	nr_inos = 0;
-+	xfs_agnumber_t		agno;
-+
-+	/* root, rtbitmap, rtsum all live in the first chunk */
-+	*min = XFS_INODES_PER_CHUNK;
-+
-+	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
-+		xfs_agino_t	first, last;
-+
-+		xfs_agino_range(mp, agno, &first, &last);
-+		nr_inos += last - first + 1;
-+	}
-+	*max = nr_inos;
-+}
-+
-+/* Sanity-checking of inode counts. */
-+bool
-+xfs_verify_icount(
-+	struct xfs_mount	*mp,
-+	unsigned long long	icount)
-+{
-+	unsigned long long	min, max;
-+
-+	xfs_icount_range(mp, &min, &max);
-+	return icount >= min && icount < max;
-+}
-diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-index 4055d62f690c..b9e6c89284c3 100644
---- a/fs/xfs/libxfs/xfs_types.h
-+++ b/fs/xfs/libxfs/xfs_types.h
-@@ -165,5 +165,6 @@ bool xfs_verify_ino(struct xfs_mount *mp, xfs_ino_t ino);
- bool xfs_internal_inum(struct xfs_mount *mp, xfs_ino_t ino);
- bool xfs_verify_dir_ino(struct xfs_mount *mp, xfs_ino_t ino);
- bool xfs_verify_rtbno(struct xfs_mount *mp, xfs_rtblock_t rtbno);
-+bool xfs_verify_icount(struct xfs_mount *mp, unsigned long long icount);
- 
- #endif	/* __XFS_TYPES_H__ */
-
+-Eric
