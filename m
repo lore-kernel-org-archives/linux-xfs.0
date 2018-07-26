@@ -1,71 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:55922 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:42872 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388366AbeGXT4R (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Jul 2018 15:56:17 -0400
-Date: Tue, 24 Jul 2018 11:16:46 -0700
+        with ESMTP id S1727852AbeGZB1L (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Jul 2018 21:27:11 -0400
+Subject: [PATCH v17 00/16] xfs-4.19: online repair support
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: XFS long delays on disk full
-Message-ID: <20180724181646.GW4813@magnolia>
-References: <20180718212240.vxl33543lrh7vgzz@two.firstfloor.org>
- <20180718232533.GC4813@magnolia>
- <20180720175837.wuxhlzhp6e6423cl@two.firstfloor.org>
+Date: Wed, 25 Jul 2018 17:12:28 -0700
+Message-ID: <153256394843.28271.6602121920208272304.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180720175837.wuxhlzhp6e6423cl@two.firstfloor.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andi Kleen <andi@firstfloor.org>
-Cc: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, allison.henderson@oracle.com
 
-On Fri, Jul 20, 2018 at 10:58:37AM -0700, Andi Kleen wrote:
-> On Wed, Jul 18, 2018 at 04:25:33PM -0700, Darrick J. Wong wrote:
-> > On Wed, Jul 18, 2018 at 02:22:40PM -0700, Andi Kleen wrote:
-> > > Hi,
-> > > 
-> > > I was doing some testing on a 4.18-rc1 kernel, and a single threaded
-> > > test wrote a fairly large file to a XFS file system, causing it to
-> > > fill up.
-> > > 
-> > > After that the process hung in D state for a long time, and only
-> > > recovered after several minutes. Here's the backtrace during
-> > > the hang:
-> > > 
-> > > [<0>] wb_wait_for_completion+0x5e/0x90
-> > > [<0>] sync_inodes_sb+0xc9/0x290
-> > 
-> > Hmm, these two:
-> > 
-> > > [<0>] xfs_flush_inodes+0x25/0x30 [xfs]
-> > > [<0>] xfs_file_buffered_aio_write+0x2be/0x300 [xfs]
-> > 
-> > Offhand I'd guess (while awayish at OSCON) that the fs hit ENOSPC while
-> > trying to write() the file so now we're scanning the fs like mad trying
-> > to free up space preallocations from any open file in the fs.
-> > 
-> > How big is the fs, how big is the file, how many inodes, how many are
-> > open, which kernel?
-> 
-> Kernel 2.18-rc1
-> 
-> /dev/sdb1       233G  211G   23G  91% /data
-> Filesystem     Inodes IUsed IFree IUse% Mounted on
-> /dev/sdb1         90M   59K   89M    1% /data
-> 
-> Very few files were open. The file was ~23G as it filled up
-> the file (I now deleted it)
+Hi all,
 
-Yep, that looks like xfs scraping around trying to find space when the
-fs is nearly full.
+This is the seventeenth revision of a patchset that adds to XFS kernel
+support for online metadata scrubbing and repair.  There aren't any
+on-disk format changes.
+
+New for this version of the patch series are fixes for numerous review
+comments that came from Dave and Allison.  The long prefixes of the
+previous versions have been drastically shortened.  Comments about the
+strategies used to repair broken parts of the filesystem have been
+expanded where reviewers thought it confusing.  A few data structures
+have been renamed to reflect more accurately what they do.
+
+Note, this series does not include any of the controversial repair
+functionality that requires fs freezing; that has been deferred to a
+later posting.
+
+The first patch pushes a transaction pointer through the per-AG
+reservation code so that scrub can reinitialize the per-AG reservations
+after repairing metadata while maintaining the AG header lock.
+
+The next two patches move the 'extent list' functionality into a
+separate file and rename it xfs_bitmap, since that's what the data
+structure actually represents.
+
+Patches 4-14 implement reconstruction of the AGF/AGI/AGFL headers, the
+free space btrees, the inode btrees, the inodes, the inode forks, the
+inode block maps, symbolic links, and extended attributes.
+
+Patch 15 augments scrub to rebuild extended attributes when any of the
+attr blocks are fragmented.
+
+Patch 16 implements reconstruction of quota blocks.
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees.  The kernel patches[1] should apply against
+4.18-rc6.  xfsprogs[2] and xfstests[3] can be found in their usual
+places.  The git trees contain all four series' worth of changes.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
 --D
 
-> 
-> -Andi
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+[1] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
+[2] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=djwong-devel
+[3] https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=djwong-devel
