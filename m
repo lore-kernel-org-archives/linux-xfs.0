@@ -1,101 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:43758 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729406AbeGZNZb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Jul 2018 09:25:31 -0400
-Date: Thu, 26 Jul 2018 08:08:54 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH, RFC] xfs: completely disable toggling DAX flag via ioctl
- on reg files
-Message-ID: <20180726120854.GA16980@bfoster>
-References: <405e182f-0c24-81fe-9d04-1031a8bbac17@redhat.com>
+Received: from sandeen.net ([63.231.237.45]:46072 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727776AbeGZBno (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 25 Jul 2018 21:43:44 -0400
+Subject: Re: [PATCH 03/10] xfs_scrub: destroy workqueues when erroring out
+References: <153006766483.20121.9285982017465570544.stgit@magnolia>
+ <153006768447.20121.17161456551475897498.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <a7c29d38-0351-6904-ff69-e95ed6e3dca7@sandeen.net>
+Date: Wed, 25 Jul 2018 17:29:32 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <405e182f-0c24-81fe-9d04-1031a8bbac17@redhat.com>
+In-Reply-To: <153006768447.20121.17161456551475897498.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Jeff Moyer <jmoyer@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Jul 25, 2018 at 02:20:54PM -0700, Eric Sandeen wrote:
-> 742d842 xfs: disable per-inode DAX flag was, I think, intended
-> as a short-term workaround to avoid races when toggling DAX on
-> and off of active inodes until mm/ sorted that out.
+On 6/26/18 7:48 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> (It's also a confusing title, as it didn't really disable
-> per-inode DAX at all.)
+> Fix a couple of code paths that forgot to tear down a workqueue when
+> erroring out, because if we don't the wq threads keep running even after
+> we've freed the wq memory.
 > 
-> However, it has the surprising (to me, at least) result that while
-> the ioctl succeeds, no behavior changes until the inode is cycled
-> out of cache and re-read from disk at some unknown later time.
-> This seems to badly violate the principle of least surprise.
+> Found by fuzzing core.nlinkv2=0 in xfs/377, but only because the fs will
+> shut down when it hits an error destroying the incore (corrupt) inode
+> after the scrub.
 > 
-> Until said races are properly resolved, it seems most prudent to
-> disallow modification of the flag on regular files altogether.
-> We can still allow per-inode DAX flagging via directory inheritance.
-> 
-> Since DAX is still flagged as experimental (in part due to these
-> concerns) I don't think it's a problem to (temporarily?) break
-> this interface further.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
 > ---
-
-I'm not in tune with the latest state of dax, but if the situation is
-that we don't currently have a means to correctly switch the per-inode
-state for an active inode (and thus have simply skipped changing the
-online flag while carrying on with the on-disk flag, leading to this
-inode cache cycling requirement), then I think this makes sense. The
-current interface is essentially incomplete, I don't see any reason to
-allow unless/until it actually works sanely.
-
-BTW, what bits are actually missing to make that happen? Why is the
-flush/inval currently in this function not sufficient?
-
-Implementation wise, I'm a little curious why we're piling on hacks
-(such as the return short-circuit and the previous #if 0) as opposed to
-just removing the code. The code can always be restored directly from
-the git history, right?
-
-Brian
-
+>  scrub/phase2.c |    2 +-
+>  scrub/vfs.c    |    4 +++-
+>  2 files changed, 4 insertions(+), 2 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 0ef5ece5634c..94e9e25883cc 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -1102,6 +1102,16 @@ xfs_ioctl_setattr_dax_invalidate(
->  
->  	if (S_ISDIR(inode->i_mode))
->  		return 0;
-> +	/*
-> +	 * For now, don't allow changing DAX mode on files via ioctl at all.
-> +	 * See 742d842 xfs: disable per-inode DAX flag, which only disabled
-> +	 * switching it on "live" inodes, but still set it on disk for the
-> +	 * next read - which leads to changed behavior only after cycling
-> +	 * out of cache.  Eliminate this surprising behavior.
-> +	 * We do still allow setting it as an inheritance flag on directories
-> +	 * (above) which will then affect newly-created files in the dir.
-> +	 */
-> +	return -EINVAL;
->  
->  	/* lock, flush and invalidate mapping in preparation for flag change */
->  	xfs_ilock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
-> @@ -1359,6 +1369,9 @@ xfs_ioctl_setattr(
->  	 * or cancel time, so need to be passed through to
->  	 * xfs_ioctl_setattr_get_trans() so it can apply them to the join call
->  	 * appropriately.
-> +	 *
-> +	 * Note, changing DAX flags on regular files via ioctl is currently
-> +	 * disallowed by this function, see comments within.
+> 
+> diff --git a/scrub/phase2.c b/scrub/phase2.c
+> index ad736bf5..7078e38d 100644
+> --- a/scrub/phase2.c
+> +++ b/scrub/phase2.c
+> @@ -102,7 +102,7 @@ xfs_scan_metadata(
 >  	 */
->  	code = xfs_ioctl_setattr_dax_invalidate(ip, fa, &join_flags);
->  	if (code)
-> 
+>  	moveon = xfs_scrub_primary_super(ctx);
+>  	if (!moveon)
+> -		return moveon;
+> +		goto out;
+>  
+>  	for (agno = 0; moveon && agno < ctx->geo.agcount; agno++) {
+>  		ret = workqueue_add(&wq, xfs_scan_ag_metadata, agno, &moveon);
+> diff --git a/scrub/vfs.c b/scrub/vfs.c
+> index 77df2874..12a6a860 100644
+> --- a/scrub/vfs.c
+> +++ b/scrub/vfs.c
+> @@ -210,7 +210,7 @@ scan_fs_tree(
+>  	if (ret) {
+>  		str_info(ctx, ctx->mntpoint,
+>  _("Could not queue directory scan work."));
+> -		goto out_free;
+> +		goto out_wq;
+>  	}
+>  
+>  	pthread_mutex_lock(&sft.lock);
+> @@ -220,6 +220,8 @@ _("Could not queue directory scan work."));
+>  	workqueue_destroy(&wq);
+>  
+>  	return sft.moveon;
+> +out_wq:
+> +	workqueue_destroy(&wq);
+>  out_free:
+>  	free(sftd->path);
+>  	free(sftd);
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
