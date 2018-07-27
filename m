@@ -1,72 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:43846 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:37426 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730085AbeGZOkx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Jul 2018 10:40:53 -0400
+        id S1731858AbeG0Cjo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Jul 2018 22:39:44 -0400
 Subject: Re: [PATCH, RFC] xfs: completely disable toggling DAX flag via ioctl
  on reg files
 References: <405e182f-0c24-81fe-9d04-1031a8bbac17@redhat.com>
  <20180726120854.GA16980@bfoster>
+ <892f27ac-f985-bf8f-1cc9-bc0a996136f7@sandeen.net>
+ <20180726231754.GB2234@dastard>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <892f27ac-f985-bf8f-1cc9-bc0a996136f7@sandeen.net>
-Date: Thu, 26 Jul 2018 06:23:58 -0700
+Message-ID: <e1caad41-40c2-3ff2-3ed4-46cf603fc4d2@sandeen.net>
+Date: Thu, 26 Jul 2018 18:20:01 -0700
 MIME-Version: 1.0
-In-Reply-To: <20180726120854.GA16980@bfoster>
+In-Reply-To: <20180726231754.GB2234@dastard>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Jeff Moyer <jmoyer@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Brian Foster <bfoster@redhat.com>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Jeff Moyer <jmoyer@redhat.com>
 
-On 7/26/18 5:08 AM, Brian Foster wrote:
-> On Wed, Jul 25, 2018 at 02:20:54PM -0700, Eric Sandeen wrote:
->> 742d842 xfs: disable per-inode DAX flag was, I think, intended
->> as a short-term workaround to avoid races when toggling DAX on
->> and off of active inodes until mm/ sorted that out.
->>
->> (It's also a confusing title, as it didn't really disable
->> per-inode DAX at all.)
->>
->> However, it has the surprising (to me, at least) result that while
->> the ioctl succeeds, no behavior changes until the inode is cycled
->> out of cache and re-read from disk at some unknown later time.
->> This seems to badly violate the principle of least surprise.
->>
->> Until said races are properly resolved, it seems most prudent to
->> disallow modification of the flag on regular files altogether.
->> We can still allow per-inode DAX flagging via directory inheritance.
->>
->> Since DAX is still flagged as experimental (in part due to these
->> concerns) I don't think it's a problem to (temporarily?) break
->> this interface further.
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
-> 
-> I'm not in tune with the latest state of dax, but if the situation is
-> that we don't currently have a means to correctly switch the per-inode
-> state for an active inode (and thus have simply skipped changing the
-> online flag while carrying on with the on-disk flag, leading to this
-> inode cache cycling requirement), then I think this makes sense. The
-> current interface is essentially incomplete, I don't see any reason to
-> allow unless/until it actually works sanely.
-> 
-> BTW, what bits are actually missing to make that happen? Why is the
-> flush/inval currently in this function not sufficient?
+On 7/26/18 4:17 PM, Dave Chinner wrote:
 
-TBH I don't actually know the low-level details. :/
+...
 
-> Implementation wise, I'm a little curious why we're piling on hacks
-> (such as the return short-circuit and the previous #if 0) as opposed to
-> just removing the code. The code can always be restored directly from
-> the git history, right?
+> As it is, I don't think we can remove this now - people are using
+> the on-disk flags already, and the inherit flag from the directory
+> has none of the problems of changing S_DAX dynamically.
 
-Well, fair point.  If this goes in it should probably at least remove
-the other #if 0 so it's not stacking hacks on hacks, but if the issue
-is in mm/ it might be a big ask for anyone eventually working on that
-to dig supporting code back out of xfs git history ...
+Which is why I left the inheritance part ...
 
+> Hence just
+> disabling it is the wrong thing to do because it removes the ability
+> for people to manage the flags that are already on disk....
+
+Well, it's EXPERIMENTAL... o_O
+
+But yeah, this does remove the ability to turn off the flag, at least
+w/o making a file copy or some other gross thing.
+
+> I'd much prefer we fix the page fault synchronisation problem than
+> break stuff that /isn't actually broken/. Yes, it's current
+> behaviour is suboptimal, but that is only supposed to be /temporary/
+> until the aops callout problem is fixed.
+
+Well, it's super confusing and from the user POV more or less
+nondeterministic, at this point.  That borders on broken/unusable IMHO.
+"Change the flag and some time later, not really within your control, the
+behavior will change."
+
+It's been broken for a year.  TBH I'm not sure I personally have
+the knowledge/skill (and I almost certainly don't have the time)
+to fix it.  Just trying to make the best of a sticky situation.
+This seemed better to me, modulo the inability to remove the
+flag.  :/  And I figured more permissive flag manipulation could
+be added back later if it ever does get fixed.
+
+Thanks,
 -Eric
+ 
+> Cheers,
+> 
+> Dave.
+> 
