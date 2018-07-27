@@ -1,572 +1,164 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:49002 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1730340AbeG0Pnf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 27 Jul 2018 11:43:35 -0400
-Date: Fri, 27 Jul 2018 10:21:22 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 02/16] xfs: move the repair extent list into its own file
-Message-ID: <20180727142121.GC22227@bfoster>
-References: <153256436688.29021.4638459579042241728.stgit@magnolia>
- <153256437975.29021.14919845411774307079.stgit@magnolia>
+Received: from mail.kernel.org ([198.145.29.99]:44636 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730675AbeG0Rvn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 27 Jul 2018 13:51:43 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <153256437975.29021.14919845411774307079.stgit@magnolia>
+References: <20180710191031.17919-1-ross.zwisler@linux.intel.com>
+ <20180711081741.lmr44sp4cmt3f6um@quack2.suse.cz> <20180725222839.GA28304@linux.intel.com>
+In-Reply-To: <20180725222839.GA28304@linux.intel.com>
+From: Ross Zwisler <zwisler@kernel.org>
+Date: Fri, 27 Jul 2018 10:28:51 -0600
+Message-ID: <CAOxpaSWCT+XRtGxGQT_PVMcn79csMxbqb+cf4yycbV3eqjjnkQ@mail.gmail.com>
+Subject: Re: [PATCH v4 0/2] ext4: fix DAX dma vs truncate/hole-punch
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, allison.henderson@oracle.com
+To: Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, darrick.wong@oracle.com, Dave Chinner <david@fromorbit.com>, lczerner@redhat.com, linux-ext4 <linux-ext4@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Jul 25, 2018 at 05:19:39PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Move the xrep_extent_list code into a separate file.  Logically, this
-> data structure is really just a clumsy bitmap, and in the next patch
-> we'll make this more obvious.  No functional changes.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
++ fsdevel and the xfs list.
+
+On Wed, Jul 25, 2018 at 4:28 PM Ross Zwisler
+<ross.zwisler@linux.intel.com> wrote:
+> On Wed, Jul 11, 2018 at 10:17:41AM +0200, Jan Kara wrote:
+> > On Tue 10-07-18 13:10:29, Ross Zwisler wrote:
+> > > Changes since v3:
+> > >  * Added an ext4_break_layouts() call to ext4_insert_range() to ensure
+> > >    that the {ext4,xfs}_break_layouts() calls have the same meaning.
+> > >    (Dave, Darrick and Jan)
+> >
+> > How about the occasional WARN_ON_ONCE you mention below. Were you able to
+> > hunt them down?
+>
+> The root cause of this issue is that while the ei->i_mmap_sem provides
+> synchronization between ext4_break_layouts() and page faults, it doesn't
+> provide synchronize us with the direct I/O path.  This exact same issue exists
+> in XFS AFAICT, with the synchronization tool there being the XFS_MMAPLOCK.
+>
+> This allows the direct I/O path to do I/O and raise & lower page->_refcount
+> while we're executing a truncate/hole punch.  This leads to us trying to free
+> a page with an elevated refcount.
+>
+> Here's one instance of the race:
+>
+> CPU 0                                   CPU 1
+> -----                                   -----
+> ext4_punch_hole()
+>   ext4_break_layouts() # all pages have refcount=1
+>
+>                                         ext4_direct_IO()
+>                                           ... lots of layers ...
+>                                           follow_page_pte()
+>                                             get_page() # elevates refcount
+>
+>   truncate_pagecache_range()
+>    ... a few layers ...
+>    dax_disassociate_entry() # sees elevated refcount, WARN_ON_ONCE()
+>
+> A similar race occurs when the refcount is being dropped while we're running
+> ext4_break_layouts(), and this is the one that my test was actually hitting:
+>
+> CPU 0                                   CPU 1
+> -----                                   -----
+>                                         ext4_direct_IO()
+>                                           ... lots of layers ...
+>                                           follow_page_pte()
+>                                             get_page()
+>                                             # elevates refcount of page X
+> ext4_punch_hole()
+>   ext4_break_layouts() # two pages, X & Y, have refcount == 2
+>     __wait_var_event() # called for page X
+>
+>                                           __put_devmap_managed_page()
+>                                           # drops refcount of X to 1
+>
+>    # __wait_var_events() checks X's refcount in "if (condition)", and breaks.
+>    # We never actually called ext4_wait_dax_page(), so 'retry' in
+>    # ext4_break_layouts() is still false.  Exit do/while loop in
+>    # ext4_break_layouts, never attempting to wait on page Y which still has an
+>    # elevated refcount of 2.
+>
+>   truncate_pagecache_range()
+>    ... a few layers ...
+>    dax_disassociate_entry() # sees elevated refcount for Y, WARN_ON_ONCE()
+>
+> This second race can be fixed with the patch at the end of this function,
+> which I think should go in, unless there is a benfit to the current retry
+> scheme which relies on the 'retry' variable in {ext4,xfs}_break_layouts()?
+> With this patch applied I've been able to run my unit test through
+> thousands of iterations, where it used to failed consistently within 10 or
+> so.
+>
+> Even so, I wonder if the real solution is to add synchronization between
+> the direct I/O path and {ext4,xfs}_break_layouts()?  Other ideas on how
+> this should be handled?
+>
+> --- >8 ---
+>
+> From a4519b0f40362f0a63ae96acaf986092aff0f0d3 Mon Sep 17 00:00:00 2001
+> From: Ross Zwisler <zwisler@kernel.org>
+> Date: Wed, 25 Jul 2018 16:16:05 -0600
+> Subject: [PATCH] ext4: Close race between direct IO and ext4_break_layouts()
+>
+> If the refcount of a page is lowered between the time that it is returned
+> by dax_busy_page() and when the refcount is again checked in
+> ext4_break_layouts() => ___wait_var_event(), the waiting function
+> ext4_wait_dax_page() will never be called.  This means that
+> ext4_break_layouts() will still have 'retry' set to false, so we'll stop
+> looping and never check the refcount of other pages in this inode.
+>
+> Instead, always continue looping as long as dax_layout_busy_page() gives us
+> a page which it found with an elevated refcount.
+>
+> Note that this works around the race exposed by my unit test, but I think
+> that there is another race that needs to be addressed, probably with
+> additional synchronization added between direct I/O and
+> {ext4,xfs}_break_layouts().
+>
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 > ---
-
-I'm not terribly familiar with the existing code, but looks like a
-straight move:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/Makefile       |    1 
->  fs/xfs/scrub/bitmap.c |  208 +++++++++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/scrub/bitmap.h |   37 +++++++++
->  fs/xfs/scrub/repair.c |  194 ----------------------------------------------
->  fs/xfs/scrub/repair.h |   27 ------
->  5 files changed, 248 insertions(+), 219 deletions(-)
->  create mode 100644 fs/xfs/scrub/bitmap.c
->  create mode 100644 fs/xfs/scrub/bitmap.h
-> 
-> 
-> diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-> index a36cccbec169..57ec46951ede 100644
-> --- a/fs/xfs/Makefile
-> +++ b/fs/xfs/Makefile
-> @@ -164,6 +164,7 @@ xfs-$(CONFIG_XFS_QUOTA)		+= scrub/quota.o
->  ifeq ($(CONFIG_XFS_ONLINE_REPAIR),y)
->  xfs-y				+= $(addprefix scrub/, \
->  				   agheader_repair.o \
-> +				   bitmap.o \
->  				   repair.o \
->  				   )
->  endif
-> diff --git a/fs/xfs/scrub/bitmap.c b/fs/xfs/scrub/bitmap.c
-> new file mode 100644
-> index 000000000000..a7c2f4773f98
-> --- /dev/null
-> +++ b/fs/xfs/scrub/bitmap.c
-> @@ -0,0 +1,208 @@
-> +// SPDX-License-Identifier: GPL-2.0+
-> +/*
-> + * Copyright (C) 2018 Oracle.  All Rights Reserved.
-> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
-> + */
-> +#include "xfs.h"
-> +#include "xfs_fs.h"
-> +#include "xfs_shared.h"
-> +#include "xfs_format.h"
-> +#include "xfs_trans_resv.h"
-> +#include "xfs_mount.h"
-> +#include "scrub/xfs_scrub.h"
-> +#include "scrub/scrub.h"
-> +#include "scrub/common.h"
-> +#include "scrub/trace.h"
-> +#include "scrub/repair.h"
-> +#include "scrub/bitmap.h"
-> +
-> +/* Collect a dead btree extent for later disposal. */
-> +int
-> +xrep_collect_btree_extent(
-> +	struct xfs_scrub	*sc,
-> +	struct xrep_extent_list	*exlist,
-> +	xfs_fsblock_t		fsbno,
-> +	xfs_extlen_t		len)
-> +{
-> +	struct xrep_extent	*rex;
-> +
-> +	trace_xrep_collect_btree_extent(sc->mp,
-> +			XFS_FSB_TO_AGNO(sc->mp, fsbno),
-> +			XFS_FSB_TO_AGBNO(sc->mp, fsbno), len);
-> +
-> +	rex = kmem_alloc(sizeof(struct xrep_extent), KM_MAYFAIL);
-> +	if (!rex)
-> +		return -ENOMEM;
-> +
-> +	INIT_LIST_HEAD(&rex->list);
-> +	rex->fsbno = fsbno;
-> +	rex->len = len;
-> +	list_add_tail(&rex->list, &exlist->list);
-> +
-> +	return 0;
-> +}
-> +
-> +/*
-> + * An error happened during the rebuild so the transaction will be cancelled.
-> + * The fs will shut down, and the administrator has to unmount and run repair.
-> + * Therefore, free all the memory associated with the list so we can die.
-> + */
-> +void
-> +xrep_cancel_btree_extents(
-> +	struct xfs_scrub	*sc,
-> +	struct xrep_extent_list	*exlist)
-> +{
-> +	struct xrep_extent	*rex;
-> +	struct xrep_extent	*n;
-> +
-> +	for_each_xrep_extent_safe(rex, n, exlist) {
-> +		list_del(&rex->list);
-> +		kmem_free(rex);
-> +	}
-> +}
-> +
-> +/* Compare two btree extents. */
-> +static int
-> +xrep_btree_extent_cmp(
-> +	void			*priv,
-> +	struct list_head	*a,
-> +	struct list_head	*b)
-> +{
-> +	struct xrep_extent	*ap;
-> +	struct xrep_extent	*bp;
-> +
-> +	ap = container_of(a, struct xrep_extent, list);
-> +	bp = container_of(b, struct xrep_extent, list);
-> +
-> +	if (ap->fsbno > bp->fsbno)
-> +		return 1;
-> +	if (ap->fsbno < bp->fsbno)
-> +		return -1;
-> +	return 0;
-> +}
-> +
-> +/*
-> + * Remove all the blocks mentioned in @sublist from the extents in @exlist.
-> + *
-> + * The intent is that callers will iterate the rmapbt for all of its records
-> + * for a given owner to generate @exlist; and iterate all the blocks of the
-> + * metadata structures that are not being rebuilt and have the same rmapbt
-> + * owner to generate @sublist.  This routine subtracts all the extents
-> + * mentioned in sublist from all the extents linked in @exlist, which leaves
-> + * @exlist as the list of blocks that are not accounted for, which we assume
-> + * are the dead blocks of the old metadata structure.  The blocks mentioned in
-> + * @exlist can be reaped.
-> + */
-> +#define LEFT_ALIGNED	(1 << 0)
-> +#define RIGHT_ALIGNED	(1 << 1)
-> +int
-> +xrep_subtract_extents(
-> +	struct xfs_scrub	*sc,
-> +	struct xrep_extent_list	*exlist,
-> +	struct xrep_extent_list	*sublist)
-> +{
-> +	struct list_head	*lp;
-> +	struct xrep_extent	*ex;
-> +	struct xrep_extent	*newex;
-> +	struct xrep_extent	*subex;
-> +	xfs_fsblock_t		sub_fsb;
-> +	xfs_extlen_t		sub_len;
-> +	int			state;
-> +	int			error = 0;
-> +
-> +	if (list_empty(&exlist->list) || list_empty(&sublist->list))
-> +		return 0;
-> +	ASSERT(!list_empty(&sublist->list));
-> +
-> +	list_sort(NULL, &exlist->list, xrep_btree_extent_cmp);
-> +	list_sort(NULL, &sublist->list, xrep_btree_extent_cmp);
-> +
-> +	/*
-> +	 * Now that we've sorted both lists, we iterate exlist once, rolling
-> +	 * forward through sublist and/or exlist as necessary until we find an
-> +	 * overlap or reach the end of either list.  We do not reset lp to the
-> +	 * head of exlist nor do we reset subex to the head of sublist.  The
-> +	 * list traversal is similar to merge sort, but we're deleting
-> +	 * instead.  In this manner we avoid O(n^2) operations.
-> +	 */
-> +	subex = list_first_entry(&sublist->list, struct xrep_extent,
-> +			list);
-> +	lp = exlist->list.next;
-> +	while (lp != &exlist->list) {
-> +		ex = list_entry(lp, struct xrep_extent, list);
-> +
-> +		/*
-> +		 * Advance subex and/or ex until we find a pair that
-> +		 * intersect or we run out of extents.
-> +		 */
-> +		while (subex->fsbno + subex->len <= ex->fsbno) {
-> +			if (list_is_last(&subex->list, &sublist->list))
-> +				goto out;
-> +			subex = list_next_entry(subex, list);
-> +		}
-> +		if (subex->fsbno >= ex->fsbno + ex->len) {
-> +			lp = lp->next;
-> +			continue;
-> +		}
-> +
-> +		/* trim subex to fit the extent we have */
-> +		sub_fsb = subex->fsbno;
-> +		sub_len = subex->len;
-> +		if (subex->fsbno < ex->fsbno) {
-> +			sub_len -= ex->fsbno - subex->fsbno;
-> +			sub_fsb = ex->fsbno;
-> +		}
-> +		if (sub_len > ex->len)
-> +			sub_len = ex->len;
-> +
-> +		state = 0;
-> +		if (sub_fsb == ex->fsbno)
-> +			state |= LEFT_ALIGNED;
-> +		if (sub_fsb + sub_len == ex->fsbno + ex->len)
-> +			state |= RIGHT_ALIGNED;
-> +		switch (state) {
-> +		case LEFT_ALIGNED:
-> +			/* Coincides with only the left. */
-> +			ex->fsbno += sub_len;
-> +			ex->len -= sub_len;
-> +			break;
-> +		case RIGHT_ALIGNED:
-> +			/* Coincides with only the right. */
-> +			ex->len -= sub_len;
-> +			lp = lp->next;
-> +			break;
-> +		case LEFT_ALIGNED | RIGHT_ALIGNED:
-> +			/* Total overlap, just delete ex. */
-> +			lp = lp->next;
-> +			list_del(&ex->list);
-> +			kmem_free(ex);
-> +			break;
-> +		case 0:
-> +			/*
-> +			 * Deleting from the middle: add the new right extent
-> +			 * and then shrink the left extent.
-> +			 */
-> +			newex = kmem_alloc(sizeof(struct xrep_extent),
-> +					KM_MAYFAIL);
-> +			if (!newex) {
-> +				error = -ENOMEM;
-> +				goto out;
-> +			}
-> +			INIT_LIST_HEAD(&newex->list);
-> +			newex->fsbno = sub_fsb + sub_len;
-> +			newex->len = ex->fsbno + ex->len - newex->fsbno;
-> +			list_add(&newex->list, &ex->list);
-> +			ex->len = sub_fsb - ex->fsbno;
-> +			lp = lp->next;
-> +			break;
-> +		default:
-> +			ASSERT(0);
-> +			break;
-> +		}
-> +	}
-> +
-> +out:
-> +	return error;
-> +}
-> +#undef LEFT_ALIGNED
-> +#undef RIGHT_ALIGNED
-> diff --git a/fs/xfs/scrub/bitmap.h b/fs/xfs/scrub/bitmap.h
-> new file mode 100644
-> index 000000000000..1038157695a8
-> --- /dev/null
-> +++ b/fs/xfs/scrub/bitmap.h
-> @@ -0,0 +1,37 @@
-> +// SPDX-License-Identifier: GPL-2.0+
-> +/*
-> + * Copyright (C) 2018 Oracle.  All Rights Reserved.
-> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
-> + */
-> +#ifndef __XFS_SCRUB_BITMAP_H__
-> +#define __XFS_SCRUB_BITMAP_H__
-> +
-> +struct xrep_extent {
-> +	struct list_head	list;
-> +	xfs_fsblock_t		fsbno;
-> +	xfs_extlen_t		len;
-> +};
-> +
-> +struct xrep_extent_list {
-> +	struct list_head	list;
-> +};
-> +
-> +static inline void
-> +xrep_init_extent_list(
-> +	struct xrep_extent_list		*exlist)
-> +{
-> +	INIT_LIST_HEAD(&exlist->list);
-> +}
-> +
-> +#define for_each_xrep_extent_safe(rbe, n, exlist) \
-> +	list_for_each_entry_safe((rbe), (n), &(exlist)->list, list)
-> +int xrep_collect_btree_extent(struct xfs_scrub *sc,
-> +		struct xrep_extent_list *btlist, xfs_fsblock_t fsbno,
-> +		xfs_extlen_t len);
-> +void xrep_cancel_btree_extents(struct xfs_scrub *sc,
-> +		struct xrep_extent_list *btlist);
-> +int xrep_subtract_extents(struct xfs_scrub *sc,
-> +		struct xrep_extent_list *exlist,
-> +		struct xrep_extent_list *sublist);
-> +
-> +#endif	/* __XFS_SCRUB_BITMAP_H__ */
-> diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-> index 5de1cac424ec..27a904ef6189 100644
-> --- a/fs/xfs/scrub/repair.c
-> +++ b/fs/xfs/scrub/repair.c
-> @@ -34,6 +34,7 @@
->  #include "scrub/common.h"
->  #include "scrub/trace.h"
->  #include "scrub/repair.h"
-> +#include "scrub/bitmap.h"
->  
->  /*
->   * Attempt to repair some metadata, if the metadata is corrupt and userspace
-> @@ -380,200 +381,7 @@ xrep_init_btblock(
->   * sublist.  As with the other btrees we subtract sublist from exlist, and the
->   * result (since the rmapbt lives in the free space) are the blocks from the
->   * old rmapbt.
-> - */
-> -
-> -/* Collect a dead btree extent for later disposal. */
-> -int
-> -xrep_collect_btree_extent(
-> -	struct xfs_scrub	*sc,
-> -	struct xrep_extent_list	*exlist,
-> -	xfs_fsblock_t		fsbno,
-> -	xfs_extlen_t		len)
-> -{
-> -	struct xrep_extent	*rex;
-> -
-> -	trace_xrep_collect_btree_extent(sc->mp,
-> -			XFS_FSB_TO_AGNO(sc->mp, fsbno),
-> -			XFS_FSB_TO_AGBNO(sc->mp, fsbno), len);
-> -
-> -	rex = kmem_alloc(sizeof(struct xrep_extent), KM_MAYFAIL);
-> -	if (!rex)
-> -		return -ENOMEM;
-> -
-> -	INIT_LIST_HEAD(&rex->list);
-> -	rex->fsbno = fsbno;
-> -	rex->len = len;
-> -	list_add_tail(&rex->list, &exlist->list);
-> -
-> -	return 0;
-> -}
-> -
-> -/*
-> - * An error happened during the rebuild so the transaction will be cancelled.
-> - * The fs will shut down, and the administrator has to unmount and run repair.
-> - * Therefore, free all the memory associated with the list so we can die.
-> - */
-> -void
-> -xrep_cancel_btree_extents(
-> -	struct xfs_scrub	*sc,
-> -	struct xrep_extent_list	*exlist)
-> -{
-> -	struct xrep_extent	*rex;
-> -	struct xrep_extent	*n;
-> -
-> -	for_each_xrep_extent_safe(rex, n, exlist) {
-> -		list_del(&rex->list);
-> -		kmem_free(rex);
-> -	}
-> -}
-> -
-> -/* Compare two btree extents. */
-> -static int
-> -xrep_btree_extent_cmp(
-> -	void			*priv,
-> -	struct list_head	*a,
-> -	struct list_head	*b)
-> -{
-> -	struct xrep_extent	*ap;
-> -	struct xrep_extent	*bp;
-> -
-> -	ap = container_of(a, struct xrep_extent, list);
-> -	bp = container_of(b, struct xrep_extent, list);
-> -
-> -	if (ap->fsbno > bp->fsbno)
-> -		return 1;
-> -	if (ap->fsbno < bp->fsbno)
-> -		return -1;
-> -	return 0;
-> -}
-> -
-> -/*
-> - * Remove all the blocks mentioned in @sublist from the extents in @exlist.
->   *
-> - * The intent is that callers will iterate the rmapbt for all of its records
-> - * for a given owner to generate @exlist; and iterate all the blocks of the
-> - * metadata structures that are not being rebuilt and have the same rmapbt
-> - * owner to generate @sublist.  This routine subtracts all the extents
-> - * mentioned in sublist from all the extents linked in @exlist, which leaves
-> - * @exlist as the list of blocks that are not accounted for, which we assume
-> - * are the dead blocks of the old metadata structure.  The blocks mentioned in
-> - * @exlist can be reaped.
-> - */
-> -#define LEFT_ALIGNED	(1 << 0)
-> -#define RIGHT_ALIGNED	(1 << 1)
-> -int
-> -xrep_subtract_extents(
-> -	struct xfs_scrub	*sc,
-> -	struct xrep_extent_list	*exlist,
-> -	struct xrep_extent_list	*sublist)
-> -{
-> -	struct list_head	*lp;
-> -	struct xrep_extent	*ex;
-> -	struct xrep_extent	*newex;
-> -	struct xrep_extent	*subex;
-> -	xfs_fsblock_t		sub_fsb;
-> -	xfs_extlen_t		sub_len;
-> -	int			state;
-> -	int			error = 0;
-> -
-> -	if (list_empty(&exlist->list) || list_empty(&sublist->list))
-> -		return 0;
-> -	ASSERT(!list_empty(&sublist->list));
-> -
-> -	list_sort(NULL, &exlist->list, xrep_btree_extent_cmp);
-> -	list_sort(NULL, &sublist->list, xrep_btree_extent_cmp);
-> -
-> -	/*
-> -	 * Now that we've sorted both lists, we iterate exlist once, rolling
-> -	 * forward through sublist and/or exlist as necessary until we find an
-> -	 * overlap or reach the end of either list.  We do not reset lp to the
-> -	 * head of exlist nor do we reset subex to the head of sublist.  The
-> -	 * list traversal is similar to merge sort, but we're deleting
-> -	 * instead.  In this manner we avoid O(n^2) operations.
-> -	 */
-> -	subex = list_first_entry(&sublist->list, struct xrep_extent,
-> -			list);
-> -	lp = exlist->list.next;
-> -	while (lp != &exlist->list) {
-> -		ex = list_entry(lp, struct xrep_extent, list);
-> -
-> -		/*
-> -		 * Advance subex and/or ex until we find a pair that
-> -		 * intersect or we run out of extents.
-> -		 */
-> -		while (subex->fsbno + subex->len <= ex->fsbno) {
-> -			if (list_is_last(&subex->list, &sublist->list))
-> -				goto out;
-> -			subex = list_next_entry(subex, list);
-> -		}
-> -		if (subex->fsbno >= ex->fsbno + ex->len) {
-> -			lp = lp->next;
-> -			continue;
-> -		}
-> -
-> -		/* trim subex to fit the extent we have */
-> -		sub_fsb = subex->fsbno;
-> -		sub_len = subex->len;
-> -		if (subex->fsbno < ex->fsbno) {
-> -			sub_len -= ex->fsbno - subex->fsbno;
-> -			sub_fsb = ex->fsbno;
-> -		}
-> -		if (sub_len > ex->len)
-> -			sub_len = ex->len;
-> -
-> -		state = 0;
-> -		if (sub_fsb == ex->fsbno)
-> -			state |= LEFT_ALIGNED;
-> -		if (sub_fsb + sub_len == ex->fsbno + ex->len)
-> -			state |= RIGHT_ALIGNED;
-> -		switch (state) {
-> -		case LEFT_ALIGNED:
-> -			/* Coincides with only the left. */
-> -			ex->fsbno += sub_len;
-> -			ex->len -= sub_len;
-> -			break;
-> -		case RIGHT_ALIGNED:
-> -			/* Coincides with only the right. */
-> -			ex->len -= sub_len;
-> -			lp = lp->next;
-> -			break;
-> -		case LEFT_ALIGNED | RIGHT_ALIGNED:
-> -			/* Total overlap, just delete ex. */
-> -			lp = lp->next;
-> -			list_del(&ex->list);
-> -			kmem_free(ex);
-> -			break;
-> -		case 0:
-> -			/*
-> -			 * Deleting from the middle: add the new right extent
-> -			 * and then shrink the left extent.
-> -			 */
-> -			newex = kmem_alloc(sizeof(struct xrep_extent),
-> -					KM_MAYFAIL);
-> -			if (!newex) {
-> -				error = -ENOMEM;
-> -				goto out;
-> -			}
-> -			INIT_LIST_HEAD(&newex->list);
-> -			newex->fsbno = sub_fsb + sub_len;
-> -			newex->len = ex->fsbno + ex->len - newex->fsbno;
-> -			list_add(&newex->list, &ex->list);
-> -			ex->len = sub_fsb - ex->fsbno;
-> -			lp = lp->next;
-> -			break;
-> -		default:
-> -			ASSERT(0);
-> -			break;
-> -		}
-> -	}
-> -
-> -out:
-> -	return error;
-> -}
-> -#undef LEFT_ALIGNED
-> -#undef RIGHT_ALIGNED
-> -
-> -/*
->   * Disposal of Blocks from Old per-AG Btrees
->   *
->   * Now that we've constructed a new btree to replace the damaged one, we want
-> diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-> index 91355f6b0087..a3d491a438f4 100644
-> --- a/fs/xfs/scrub/repair.h
-> +++ b/fs/xfs/scrub/repair.h
-> @@ -27,33 +27,8 @@ int xrep_init_btblock(struct xfs_scrub *sc, xfs_fsblock_t fsb,
->  		struct xfs_buf **bpp, xfs_btnum_t btnum,
->  		const struct xfs_buf_ops *ops);
->  
-> -struct xrep_extent {
-> -	struct list_head	list;
-> -	xfs_fsblock_t		fsbno;
-> -	xfs_extlen_t		len;
-> -};
-> -
-> -struct xrep_extent_list {
-> -	struct list_head	list;
-> -};
-> -
-> -static inline void
-> -xrep_init_extent_list(
-> -	struct xrep_extent_list	*exlist)
-> -{
-> -	INIT_LIST_HEAD(&exlist->list);
-> -}
-> +struct xrep_extent_list;
->  
-> -#define for_each_xrep_extent_safe(rbe, n, exlist) \
-> -	list_for_each_entry_safe((rbe), (n), &(exlist)->list, list)
-> -int xrep_collect_btree_extent(struct xfs_scrub *sc,
-> -		struct xrep_extent_list *btlist, xfs_fsblock_t fsbno,
-> -		xfs_extlen_t len);
-> -void xrep_cancel_btree_extents(struct xfs_scrub *sc,
-> -		struct xrep_extent_list *btlist);
-> -int xrep_subtract_extents(struct xfs_scrub *sc,
-> -		struct xrep_extent_list *exlist,
-> -		struct xrep_extent_list *sublist);
->  int xrep_fix_freelist(struct xfs_scrub *sc, bool can_shrink);
->  int xrep_invalidate_blocks(struct xfs_scrub *sc,
->  		struct xrep_extent_list *btlist);
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  fs/ext4/inode.c | 9 +++------
+>  1 file changed, 3 insertions(+), 6 deletions(-)
+>
+> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+> index 27e9643bc13b..fedb88104bbf 100644
+> --- a/fs/ext4/inode.c
+> +++ b/fs/ext4/inode.c
+> @@ -4193,9 +4193,8 @@ int ext4_update_disksize_before_punch(struct inode *inode, loff_t offset,
+>         return 0;
+>  }
+>
+> -static void ext4_wait_dax_page(struct ext4_inode_info *ei, bool *did_unlock)
+> +static void ext4_wait_dax_page(struct ext4_inode_info *ei)
+>  {
+> -       *did_unlock = true;
+>         up_write(&ei->i_mmap_sem);
+>         schedule();
+>         down_write(&ei->i_mmap_sem);
+> @@ -4205,14 +4204,12 @@ int ext4_break_layouts(struct inode *inode)
+>  {
+>         struct ext4_inode_info *ei = EXT4_I(inode);
+>         struct page *page;
+> -       bool retry;
+>         int error;
+>
+>         if (WARN_ON_ONCE(!rwsem_is_locked(&ei->i_mmap_sem)))
+>                 return -EINVAL;
+>
+>         do {
+> -               retry = false;
+>                 page = dax_layout_busy_page(inode->i_mapping);
+>                 if (!page)
+>                         return 0;
+> @@ -4220,8 +4217,8 @@ int ext4_break_layouts(struct inode *inode)
+>                 error = ___wait_var_event(&page->_refcount,
+>                                 atomic_read(&page->_refcount) == 1,
+>                                 TASK_INTERRUPTIBLE, 0, 0,
+> -                               ext4_wait_dax_page(ei, &retry));
+> -       } while (error == 0 && retry);
+> +                               ext4_wait_dax_page(ei));
+> +       } while (error == 0);
+>
+>         return error;
+>  }
