@@ -1,281 +1,378 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:56226 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:44028 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1730340AbeG0PnY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 27 Jul 2018 11:43:24 -0400
-Date: Fri, 27 Jul 2018 10:21:13 -0400
+        id S1730205AbeG0Rsh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 27 Jul 2018 13:48:37 -0400
+Date: Fri, 27 Jul 2018 12:25:56 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 01/16] xfs: pass transaction lock while setting up agresv
- on cyclic metadata
-Message-ID: <20180727142113.GB22227@bfoster>
+Subject: Re: [PATCH 04/16] xfs: repair the AGF
+Message-ID: <20180727162555.GF22227@bfoster>
 References: <153256436688.29021.4638459579042241728.stgit@magnolia>
- <153256437346.29021.16149947898612665862.stgit@magnolia>
+ <153256439500.29021.5265670898665301362.stgit@magnolia>
+ <20180727142348.GE22227@bfoster>
+ <20180727160238.GL30972@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <153256437346.29021.16149947898612665862.stgit@magnolia>
+In-Reply-To: <20180727160238.GL30972@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, allison.henderson@oracle.com
 
-On Wed, Jul 25, 2018 at 05:19:33PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Jul 27, 2018 at 09:02:38AM -0700, Darrick J. Wong wrote:
+> On Fri, Jul 27, 2018 at 10:23:48AM -0400, Brian Foster wrote:
+> > On Wed, Jul 25, 2018 at 05:19:55PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > Regenerate the AGF from the rmap data.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > 
+> > Mostly seems sane to me. I still need to come up to speed on the broader
+> > xfs_scrub context. A few comments in the meantime..
 > 
-> Pass a tranaction pointer through to all helpers that calculate the
-> per-AG block reservation.  Online repair will use this to reinitialize
-> per-ag reservations while it still holds all the AG headers locked to
-> the repair transaction.
+> <nod> Thanks for taking a look at this series. :)
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+> > >  fs/xfs/scrub/agheader_repair.c |  366 ++++++++++++++++++++++++++++++++++++++++
+> > >  fs/xfs/scrub/repair.c          |   27 ++-
+> > >  fs/xfs/scrub/repair.h          |    4 
+> > >  fs/xfs/scrub/scrub.c           |    2 
+> > >  4 files changed, 389 insertions(+), 10 deletions(-)
+> > > 
+> > > 
+> > > diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
+> > > index 1e96621ece3a..938af216cb1c 100644
+> > > --- a/fs/xfs/scrub/agheader_repair.c
+> > > +++ b/fs/xfs/scrub/agheader_repair.c
+> > ...
+> > > @@ -54,3 +61,362 @@ xrep_superblock(
+> > >  	xfs_trans_log_buf(sc->tp, bp, 0, BBTOB(bp->b_length) - 1);
+> > >  	return error;
+> > >  }
+> > ...
+> > > +/* Update all AGF fields which derive from btree contents. */
+> > > +STATIC int
+> > > +xrep_agf_calc_from_btrees(
+> > > +	struct xfs_scrub	*sc,
+> > > +	struct xfs_buf		*agf_bp)
+> > > +{
+> > > +	struct xrep_agf_allocbt	raa = { .sc = sc };
+> > > +	struct xfs_btree_cur	*cur = NULL;
+> > > +	struct xfs_agf		*agf = XFS_BUF_TO_AGF(agf_bp);
+> > > +	struct xfs_mount	*mp = sc->mp;
+> > > +	xfs_agblock_t		btreeblks;
+> > > +	xfs_agblock_t		blocks;
+> > > +	int			error;
+> > > +
+> > > +	/* Update the AGF counters from the bnobt. */
+> > > +	cur = xfs_allocbt_init_cursor(mp, sc->tp, agf_bp, sc->sa.agno,
+> > > +			XFS_BTNUM_BNO);
+> > > +	error = xfs_alloc_query_all(cur, xrep_agf_walk_allocbt, &raa);
+> > > +	if (error)
+> > > +		goto err;
+> > > +	error = xfs_btree_count_blocks(cur, &blocks);
+> > > +	if (error)
+> > > +		goto err;
+> > > +	xfs_btree_del_cursor(cur, error);
+> > > +	btreeblks = blocks - 1;
+> > 
+> > Why the -1? We don't count the root or something?
+> 
+> The AGF btreeblks field only counts the number of blocks added to the
+> bno/cnt/rmapbt since they were initialized (each with a single root
+> block).  I find it a little strange not to count the root, but oh well.
+> 
 
-Seems fine:
+Got it.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+> > > +	agf->agf_freeblks = cpu_to_be32(raa.freeblks);
+> > > +	agf->agf_longest = cpu_to_be32(raa.longest);
+> > > +
+> > > +	/* Update the AGF counters from the cntbt. */
+> > > +	cur = xfs_allocbt_init_cursor(mp, sc->tp, agf_bp, sc->sa.agno,
+> > > +			XFS_BTNUM_CNT);
+> > > +	error = xfs_btree_count_blocks(cur, &blocks);
+> > > +	if (error)
+> > > +		goto err;
+> > > +	xfs_btree_del_cursor(cur, error);
+> > > +	btreeblks += blocks - 1;
+> > > +
+> > > +	/* Update the AGF counters from the rmapbt. */
+> > > +	cur = xfs_rmapbt_init_cursor(mp, sc->tp, agf_bp, sc->sa.agno);
+> > > +	error = xfs_btree_count_blocks(cur, &blocks);
+> > > +	if (error)
+> > > +		goto err;
+> > > +	xfs_btree_del_cursor(cur, error);
+> > > +	agf->agf_rmap_blocks = cpu_to_be32(blocks);
+> > > +	btreeblks += blocks - 1;
+> > > +
+> > > +	agf->agf_btreeblks = cpu_to_be32(btreeblks);
+> > > +
+> > > +	/* Update the AGF counters from the refcountbt. */
+> > > +	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+> > > +		cur = xfs_refcountbt_init_cursor(mp, sc->tp, agf_bp,
+> > > +				sc->sa.agno, NULL);
+> > 
+> > FYI this fails to compile on for-next (dfops param has been removed).
+> 
+> Yeah, I'm working on a rebase to for-next (once I settle on the locking
+> question in hch's "reduce cow lookups" series).
+> 
+> > > +		error = xfs_btree_count_blocks(cur, &blocks);
+> > > +		if (error)
+> > > +			goto err;
+> > > +		xfs_btree_del_cursor(cur, error);
+> > > +		agf->agf_refcount_blocks = cpu_to_be32(blocks);
+> > > +	}
+> > > +
+> > > +	return 0;
+> > > +err:
+> > > +	xfs_btree_del_cursor(cur, error);
+> > > +	return error;
+> > > +}
+> > > +
+...
+> > > +/* Repair the AGF. v5 filesystems only. */
+> > > +int
+> > > +xrep_agf(
+> > > +	struct xfs_scrub		*sc)
+> > > +{
+> > > +	struct xrep_find_ag_btree	fab[XREP_AGF_MAX] = {
+> > > +		[XREP_AGF_BNOBT] = {
+> > > +			.rmap_owner = XFS_RMAP_OWN_AG,
+> > > +			.buf_ops = &xfs_allocbt_buf_ops,
+> > > +			.magic = XFS_ABTB_CRC_MAGIC,
+> > > +		},
+> > > +		[XREP_AGF_CNTBT] = {
+> > > +			.rmap_owner = XFS_RMAP_OWN_AG,
+> > > +			.buf_ops = &xfs_allocbt_buf_ops,
+> > > +			.magic = XFS_ABTC_CRC_MAGIC,
+> > > +		},
+> > > +		[XREP_AGF_RMAPBT] = {
+> > > +			.rmap_owner = XFS_RMAP_OWN_AG,
+> > > +			.buf_ops = &xfs_rmapbt_buf_ops,
+> > > +			.magic = XFS_RMAP_CRC_MAGIC,
+> > > +		},
+> > > +		[XREP_AGF_REFCOUNTBT] = {
+> > > +			.rmap_owner = XFS_RMAP_OWN_REFC,
+> > > +			.buf_ops = &xfs_refcountbt_buf_ops,
+> > > +			.magic = XFS_REFC_CRC_MAGIC,
+> > > +		},
+> > > +		[XREP_AGF_END] = {
+> > > +			.buf_ops = NULL,
+> > > +		},
+> > > +	};
+> > > +	struct xfs_agf			old_agf;
+> > > +	struct xfs_mount		*mp = sc->mp;
+> > > +	struct xfs_buf			*agf_bp;
+> > > +	struct xfs_buf			*agfl_bp;
+> > > +	struct xfs_agf			*agf;
+> > > +	int				error;
+> > > +
+> > > +	/* We require the rmapbt to rebuild anything. */
+> > > +	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
+> > > +		return -EOPNOTSUPP;
+> > > +
+> > > +	xchk_perag_get(sc->mp, &sc->sa);
+> > > +	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
+> > > +			XFS_AG_DADDR(mp, sc->sa.agno, XFS_AGF_DADDR(mp)),
+> > > +			XFS_FSS_TO_BB(mp, 1), 0, &agf_bp, NULL);
+> > > +	if (error)
+> > > +		return error;
+> > > +	agf_bp->b_ops = &xfs_agf_buf_ops;
+> > 
+> > Any reason we don't call xfs_read_agf() here? It looks like we use the
+> > similar helper for the agfl below.
+> 
+> We're grabbing the agf buffer without read verifiers so that we can
+> reinitialize it.  Note that scrub tries xfs_read_agf, and if it fails
+> with -EFSCORRUPTED/-EFSBADCRC it marks the agf as corrupt, so it's
+> possible that sc->sa.sa_agf is still null.
+> 
 
->  fs/xfs/libxfs/xfs_ag_resv.c        |   13 +++++++------
->  fs/xfs/libxfs/xfs_ag_resv.h        |    2 +-
->  fs/xfs/libxfs/xfs_ialloc_btree.c   |   10 ++++++----
->  fs/xfs/libxfs/xfs_ialloc_btree.h   |    4 ++--
->  fs/xfs/libxfs/xfs_refcount_btree.c |    5 +++--
->  fs/xfs/libxfs/xfs_refcount_btree.h |    3 ++-
->  fs/xfs/libxfs/xfs_rmap_btree.c     |    5 +++--
->  fs/xfs/libxfs/xfs_rmap_btree.h     |    2 +-
->  fs/xfs/xfs_fsops.c                 |    2 +-
->  9 files changed, 26 insertions(+), 20 deletions(-)
+Ah, makes sense. I missed the NULL b_ops..
+
+> This probably could have been trans_get_buf though...
 > 
+> > > +	agf = XFS_BUF_TO_AGF(agf_bp);
+> > > +
+> > > +	/*
+> > > +	 * Load the AGFL so that we can screen out OWN_AG blocks that are on
+> > > +	 * the AGFL now; these blocks might have once been part of the
+> > > +	 * bno/cnt/rmap btrees but are not now.  This is a chicken and egg
+> > > +	 * problem: the AGF is corrupt, so we have to trust the AGFL contents
+> > > +	 * because we can't do any serious cross-referencing with any of the
+> > > +	 * btrees rooted in the AGF.  If the AGFL contents are obviously bad
+> > > +	 * then we'll bail out.
+> > > +	 */
+> > > +	error = xfs_alloc_read_agfl(mp, sc->tp, sc->sa.agno, &agfl_bp);
+> > > +	if (error)
+> > > +		return error;
+> > > +
+> > > +	/*
+> > > +	 * Spot-check the AGFL blocks; if they're obviously corrupt then
+> > > +	 * there's nothing we can do but bail out.
+> > > +	 */
+> > 
+> > Why? Can't we reset the agfl, or is that handled elsewhere?
 > 
-> diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
-> index fecd187fcf2c..e701ebc36c06 100644
-> --- a/fs/xfs/libxfs/xfs_ag_resv.c
-> +++ b/fs/xfs/libxfs/xfs_ag_resv.c
-> @@ -248,7 +248,8 @@ __xfs_ag_resv_init(
->  /* Create a per-AG block reservation. */
->  int
->  xfs_ag_resv_init(
-> -	struct xfs_perag		*pag)
-> +	struct xfs_perag		*pag,
-> +	struct xfs_trans		*tp)
->  {
->  	struct xfs_mount		*mp = pag->pag_mount;
->  	xfs_agnumber_t			agno = pag->pag_agno;
-> @@ -260,11 +261,11 @@ xfs_ag_resv_init(
->  	if (pag->pag_meta_resv.ar_asked == 0) {
->  		ask = used = 0;
->  
-> -		error = xfs_refcountbt_calc_reserves(mp, agno, &ask, &used);
-> +		error = xfs_refcountbt_calc_reserves(mp, tp, agno, &ask, &used);
->  		if (error)
->  			goto out;
->  
-> -		error = xfs_finobt_calc_reserves(mp, agno, &ask, &used);
-> +		error = xfs_finobt_calc_reserves(mp, tp, agno, &ask, &used);
->  		if (error)
->  			goto out;
->  
-> @@ -282,7 +283,7 @@ xfs_ag_resv_init(
->  
->  			mp->m_inotbt_nores = true;
->  
-> -			error = xfs_refcountbt_calc_reserves(mp, agno, &ask,
-> +			error = xfs_refcountbt_calc_reserves(mp, tp, agno, &ask,
->  					&used);
->  			if (error)
->  				goto out;
-> @@ -298,7 +299,7 @@ xfs_ag_resv_init(
->  	if (pag->pag_rmapbt_resv.ar_asked == 0) {
->  		ask = used = 0;
->  
-> -		error = xfs_rmapbt_calc_reserves(mp, agno, &ask, &used);
-> +		error = xfs_rmapbt_calc_reserves(mp, tp, agno, &ask, &used);
->  		if (error)
->  			goto out;
->  
-> @@ -309,7 +310,7 @@ xfs_ag_resv_init(
->  
->  #ifdef DEBUG
->  	/* need to read in the AGF for the ASSERT below to work */
-> -	error = xfs_alloc_pagf_init(pag->pag_mount, NULL, pag->pag_agno, 0);
-> +	error = xfs_alloc_pagf_init(pag->pag_mount, tp, pag->pag_agno, 0);
->  	if (error)
->  		return error;
->  
-> diff --git a/fs/xfs/libxfs/xfs_ag_resv.h b/fs/xfs/libxfs/xfs_ag_resv.h
-> index 4619b554ee90..d1005116b43b 100644
-> --- a/fs/xfs/libxfs/xfs_ag_resv.h
-> +++ b/fs/xfs/libxfs/xfs_ag_resv.h
-> @@ -7,7 +7,7 @@
->  #define	__XFS_AG_RESV_H__
->  
->  int xfs_ag_resv_free(struct xfs_perag *pag);
-> -int xfs_ag_resv_init(struct xfs_perag *pag);
-> +int xfs_ag_resv_init(struct xfs_perag *pag, struct xfs_trans *tp);
->  
->  bool xfs_ag_resv_critical(struct xfs_perag *pag, enum xfs_ag_resv_type type);
->  xfs_extlen_t xfs_ag_resv_needed(struct xfs_perag *pag,
-> diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-> index 735a33252eb2..86c50208a143 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-> +++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-> @@ -552,6 +552,7 @@ xfs_inobt_max_size(
->  static int
->  xfs_inobt_count_blocks(
->  	struct xfs_mount	*mp,
-> +	struct xfs_trans	*tp,
->  	xfs_agnumber_t		agno,
->  	xfs_btnum_t		btnum,
->  	xfs_extlen_t		*tree_blocks)
-> @@ -560,14 +561,14 @@ xfs_inobt_count_blocks(
->  	struct xfs_btree_cur	*cur;
->  	int			error;
->  
-> -	error = xfs_ialloc_read_agi(mp, NULL, agno, &agbp);
-> +	error = xfs_ialloc_read_agi(mp, tp, agno, &agbp);
->  	if (error)
->  		return error;
->  
-> -	cur = xfs_inobt_init_cursor(mp, NULL, agbp, agno, btnum);
-> +	cur = xfs_inobt_init_cursor(mp, tp, agbp, agno, btnum);
->  	error = xfs_btree_count_blocks(cur, tree_blocks);
->  	xfs_btree_del_cursor(cur, error);
-> -	xfs_buf_relse(agbp);
-> +	xfs_trans_brelse(tp, agbp);
->  
->  	return error;
->  }
-> @@ -578,6 +579,7 @@ xfs_inobt_count_blocks(
->  int
->  xfs_finobt_calc_reserves(
->  	struct xfs_mount	*mp,
-> +	struct xfs_trans	*tp,
->  	xfs_agnumber_t		agno,
->  	xfs_extlen_t		*ask,
->  	xfs_extlen_t		*used)
-> @@ -588,7 +590,7 @@ xfs_finobt_calc_reserves(
->  	if (!xfs_sb_version_hasfinobt(&mp->m_sb))
->  		return 0;
->  
-> -	error = xfs_inobt_count_blocks(mp, agno, XFS_BTNUM_FINO, &tree_len);
-> +	error = xfs_inobt_count_blocks(mp, tp, agno, XFS_BTNUM_FINO, &tree_len);
->  	if (error)
->  		return error;
->  
-> diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.h b/fs/xfs/libxfs/xfs_ialloc_btree.h
-> index bf8f0c405e7d..ebdd0c6b8766 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc_btree.h
-> +++ b/fs/xfs/libxfs/xfs_ialloc_btree.h
-> @@ -60,8 +60,8 @@ int xfs_inobt_rec_check_count(struct xfs_mount *,
->  #define xfs_inobt_rec_check_count(mp, rec)	0
->  #endif	/* DEBUG */
->  
-> -int xfs_finobt_calc_reserves(struct xfs_mount *mp, xfs_agnumber_t agno,
-> -		xfs_extlen_t *ask, xfs_extlen_t *used);
-> +int xfs_finobt_calc_reserves(struct xfs_mount *mp, struct xfs_trans *tp,
-> +		xfs_agnumber_t agno, xfs_extlen_t *ask, xfs_extlen_t *used);
->  extern xfs_extlen_t xfs_iallocbt_calc_size(struct xfs_mount *mp,
->  		unsigned long long len);
->  
-> diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
-> index b71937982c5b..bcd65ee37260 100644
-> --- a/fs/xfs/libxfs/xfs_refcount_btree.c
-> +++ b/fs/xfs/libxfs/xfs_refcount_btree.c
-> @@ -408,6 +408,7 @@ xfs_refcountbt_max_size(
->  int
->  xfs_refcountbt_calc_reserves(
->  	struct xfs_mount	*mp,
-> +	struct xfs_trans	*tp,
->  	xfs_agnumber_t		agno,
->  	xfs_extlen_t		*ask,
->  	xfs_extlen_t		*used)
-> @@ -422,14 +423,14 @@ xfs_refcountbt_calc_reserves(
->  		return 0;
->  
->  
-> -	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
-> +	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
->  	if (error)
->  		return error;
->  
->  	agf = XFS_BUF_TO_AGF(agbp);
->  	agblocks = be32_to_cpu(agf->agf_length);
->  	tree_len = be32_to_cpu(agf->agf_refcount_blocks);
-> -	xfs_buf_relse(agbp);
-> +	xfs_trans_brelse(tp, agbp);
->  
->  	*ask += xfs_refcountbt_max_size(mp, agblocks);
->  	*used += tree_len;
-> diff --git a/fs/xfs/libxfs/xfs_refcount_btree.h b/fs/xfs/libxfs/xfs_refcount_btree.h
-> index d2852b6e1fa8..c868394ac02e 100644
-> --- a/fs/xfs/libxfs/xfs_refcount_btree.h
-> +++ b/fs/xfs/libxfs/xfs_refcount_btree.h
-> @@ -55,6 +55,7 @@ extern xfs_extlen_t xfs_refcountbt_max_size(struct xfs_mount *mp,
->  		xfs_agblock_t agblocks);
->  
->  extern int xfs_refcountbt_calc_reserves(struct xfs_mount *mp,
-> -		xfs_agnumber_t agno, xfs_extlen_t *ask, xfs_extlen_t *used);
-> +		struct xfs_trans *tp, xfs_agnumber_t agno, xfs_extlen_t *ask,
-> +		xfs_extlen_t *used);
->  
->  #endif	/* __XFS_REFCOUNT_BTREE_H__ */
-> diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
-> index 221a88ea60bb..f79cf040d745 100644
-> --- a/fs/xfs/libxfs/xfs_rmap_btree.c
-> +++ b/fs/xfs/libxfs/xfs_rmap_btree.c
-> @@ -554,6 +554,7 @@ xfs_rmapbt_max_size(
->  int
->  xfs_rmapbt_calc_reserves(
->  	struct xfs_mount	*mp,
-> +	struct xfs_trans	*tp,
->  	xfs_agnumber_t		agno,
->  	xfs_extlen_t		*ask,
->  	xfs_extlen_t		*used)
-> @@ -567,14 +568,14 @@ xfs_rmapbt_calc_reserves(
->  	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
->  		return 0;
->  
-> -	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
-> +	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
->  	if (error)
->  		return error;
->  
->  	agf = XFS_BUF_TO_AGF(agbp);
->  	agblocks = be32_to_cpu(agf->agf_length);
->  	tree_len = be32_to_cpu(agf->agf_rmap_blocks);
-> -	xfs_buf_relse(agbp);
-> +	xfs_trans_brelse(tp, agbp);
->  
->  	/* Reserve 1% of the AG or enough for 1 block per record. */
->  	*ask += max(agblocks / 100, xfs_rmapbt_max_size(mp, agblocks));
-> diff --git a/fs/xfs/libxfs/xfs_rmap_btree.h b/fs/xfs/libxfs/xfs_rmap_btree.h
-> index 50198b6c3bb2..820d668b063d 100644
-> --- a/fs/xfs/libxfs/xfs_rmap_btree.h
-> +++ b/fs/xfs/libxfs/xfs_rmap_btree.h
-> @@ -51,7 +51,7 @@ extern xfs_extlen_t xfs_rmapbt_calc_size(struct xfs_mount *mp,
->  extern xfs_extlen_t xfs_rmapbt_max_size(struct xfs_mount *mp,
->  		xfs_agblock_t agblocks);
->  
-> -extern int xfs_rmapbt_calc_reserves(struct xfs_mount *mp,
-> +extern int xfs_rmapbt_calc_reserves(struct xfs_mount *mp, struct xfs_trans *tp,
->  		xfs_agnumber_t agno, xfs_extlen_t *ask, xfs_extlen_t *used);
->  
->  #endif	/* __XFS_RMAP_BTREE_H__ */
-> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> index 3f2bd6032cf8..7c00b8bedfe3 100644
-> --- a/fs/xfs/xfs_fsops.c
-> +++ b/fs/xfs/xfs_fsops.c
-> @@ -536,7 +536,7 @@ xfs_fs_reserve_ag_blocks(
->  
->  	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
->  		pag = xfs_perag_get(mp, agno);
-> -		err2 = xfs_ag_resv_init(pag);
-> +		err2 = xfs_ag_resv_init(pag, NULL);
->  		xfs_perag_put(pag);
->  		if (err2 && !error)
->  			error = err2;
+> It's handled in xrep_agfl, but userspace will have to call us again to
+> fix the agfl and then call us a third time about the agf repair.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Ok, this was one of the things I feel like I don't have enough context
+on wrt to online repair: in general, what dependent structures we expect
+to be consistent in order to repair some other interrelated structure.
+Userspace repair is straightforward in this regard since we slurp the
+whole fs into memory, adjust the global state as we go, then essentially
+regenerate new metadata based on the finalized state.
+
+For online repair, it sounds like we're potentially limited because
+repair of one structure may always depend on some other subset of
+metadata being consistent, right? If so, is the goal of online repair to
+essentially "do the best we can but otherwise the most severe
+corruptions may have to always fall back to xfs_repair?"
+
+So in this particular case, we expect a sane agfl and otherwise buzz off
+because 1.) this is a targeted agf repair request and 2.) we have a
+separate request to deal with the agfl. It sounds like the smarts to
+understand how we might have to jump back and forth between them is in
+userspace, so the end-user doesn't necessarily have to understand the
+dependency.
+
+Brian
+
+> (xfs_scrub does this, naturally...)
+> 
+> --D
+> 
+> > Brian
+> > 
+> > > +	error = xfs_agfl_walk(sc->mp, XFS_BUF_TO_AGF(agf_bp), agfl_bp,
+> > > +			xrep_agf_check_agfl_block, sc);
+> > > +	if (error)
+> > > +		return error;
+> > > +
+> > > +	/*
+> > > +	 * Find the AGF btree roots.  This is also a chicken-and-egg situation;
+> > > +	 * see the function for more details.
+> > > +	 */
+> > > +	error = xrep_agf_find_btrees(sc, agf_bp, fab, agfl_bp);
+> > > +	if (error)
+> > > +		return error;
+> > > +
+> > > +	/* Start rewriting the header and implant the btrees we found. */
+> > > +	xrep_agf_init_header(sc, agf_bp, &old_agf);
+> > > +	xrep_agf_set_roots(sc, agf, fab);
+> > > +	error = xrep_agf_calc_from_btrees(sc, agf_bp);
+> > > +	if (error)
+> > > +		goto out_revert;
+> > > +
+> > > +	/* Commit the changes and reinitialize incore state. */
+> > > +	return xrep_agf_commit_new(sc, agf_bp);
+> > > +
+> > > +out_revert:
+> > > +	/* Mark the incore AGF state stale and revert the AGF. */
+> > > +	sc->sa.pag->pagf_init = 0;
+> > > +	memcpy(agf, &old_agf, sizeof(old_agf));
+> > > +	return error;
+> > > +}
+> > > diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+> > > index 85b048b341a0..17cf48564390 100644
+> > > --- a/fs/xfs/scrub/repair.c
+> > > +++ b/fs/xfs/scrub/repair.c
+> > > @@ -128,9 +128,12 @@ xrep_roll_ag_trans(
+> > >  	int			error;
+> > >  
+> > >  	/* Keep the AG header buffers locked so we can keep going. */
+> > > -	xfs_trans_bhold(sc->tp, sc->sa.agi_bp);
+> > > -	xfs_trans_bhold(sc->tp, sc->sa.agf_bp);
+> > > -	xfs_trans_bhold(sc->tp, sc->sa.agfl_bp);
+> > > +	if (sc->sa.agi_bp)
+> > > +		xfs_trans_bhold(sc->tp, sc->sa.agi_bp);
+> > > +	if (sc->sa.agf_bp)
+> > > +		xfs_trans_bhold(sc->tp, sc->sa.agf_bp);
+> > > +	if (sc->sa.agfl_bp)
+> > > +		xfs_trans_bhold(sc->tp, sc->sa.agfl_bp);
+> > >  
+> > >  	/* Roll the transaction. */
+> > >  	error = xfs_trans_roll(&sc->tp);
+> > > @@ -138,9 +141,12 @@ xrep_roll_ag_trans(
+> > >  		goto out_release;
+> > >  
+> > >  	/* Join AG headers to the new transaction. */
+> > > -	xfs_trans_bjoin(sc->tp, sc->sa.agi_bp);
+> > > -	xfs_trans_bjoin(sc->tp, sc->sa.agf_bp);
+> > > -	xfs_trans_bjoin(sc->tp, sc->sa.agfl_bp);
+> > > +	if (sc->sa.agi_bp)
+> > > +		xfs_trans_bjoin(sc->tp, sc->sa.agi_bp);
+> > > +	if (sc->sa.agf_bp)
+> > > +		xfs_trans_bjoin(sc->tp, sc->sa.agf_bp);
+> > > +	if (sc->sa.agfl_bp)
+> > > +		xfs_trans_bjoin(sc->tp, sc->sa.agfl_bp);
+> > >  
+> > >  	return 0;
+> > >  
+> > > @@ -150,9 +156,12 @@ xrep_roll_ag_trans(
+> > >  	 * buffers will be released during teardown on our way out
+> > >  	 * of the kernel.
+> > >  	 */
+> > > -	xfs_trans_bhold_release(sc->tp, sc->sa.agi_bp);
+> > > -	xfs_trans_bhold_release(sc->tp, sc->sa.agf_bp);
+> > > -	xfs_trans_bhold_release(sc->tp, sc->sa.agfl_bp);
+> > > +	if (sc->sa.agi_bp)
+> > > +		xfs_trans_bhold_release(sc->tp, sc->sa.agi_bp);
+> > > +	if (sc->sa.agf_bp)
+> > > +		xfs_trans_bhold_release(sc->tp, sc->sa.agf_bp);
+> > > +	if (sc->sa.agfl_bp)
+> > > +		xfs_trans_bhold_release(sc->tp, sc->sa.agfl_bp);
+> > >  
+> > >  	return error;
+> > >  }
+> > > diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+> > > index 5a4e92221916..1d283360b5ab 100644
+> > > --- a/fs/xfs/scrub/repair.h
+> > > +++ b/fs/xfs/scrub/repair.h
+> > > @@ -58,6 +58,8 @@ int xrep_ino_dqattach(struct xfs_scrub *sc);
+> > >  
+> > >  int xrep_probe(struct xfs_scrub *sc);
+> > >  int xrep_superblock(struct xfs_scrub *sc);
+> > > +int xrep_agf(struct xfs_scrub *sc);
+> > > +int xrep_agfl(struct xfs_scrub *sc);
+> > >  
+> > >  #else
+> > >  
+> > > @@ -81,6 +83,8 @@ xrep_calc_ag_resblks(
+> > >  
+> > >  #define xrep_probe			xrep_notsupported
+> > >  #define xrep_superblock			xrep_notsupported
+> > > +#define xrep_agf			xrep_notsupported
+> > > +#define xrep_agfl			xrep_notsupported
+> > >  
+> > >  #endif /* CONFIG_XFS_ONLINE_REPAIR */
+> > >  
+> > > diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+> > > index 6efb926f3cf8..1e8a17c8e2b9 100644
+> > > --- a/fs/xfs/scrub/scrub.c
+> > > +++ b/fs/xfs/scrub/scrub.c
+> > > @@ -214,7 +214,7 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
+> > >  		.type	= ST_PERAG,
+> > >  		.setup	= xchk_setup_fs,
+> > >  		.scrub	= xchk_agf,
+> > > -		.repair	= xrep_notsupported,
+> > > +		.repair	= xrep_agf,
+> > >  	},
+> > >  	[XFS_SCRUB_TYPE_AGFL]= {	/* agfl */
+> > >  		.type	= ST_PERAG,
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
