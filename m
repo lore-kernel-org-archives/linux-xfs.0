@@ -1,149 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:36530 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728667AbeGYMXh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 25 Jul 2018 08:23:37 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id D2FF840216E2
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Jul 2018 11:12:25 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id BA9442166BA3
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Jul 2018 11:12:25 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 15/15] xfs: bypass final dfops roll in trans commit path
-Date: Wed, 25 Jul 2018 07:12:25 -0400
-Message-Id: <20180725111225.3481-1-bfoster@redhat.com>
-In-Reply-To: <20180723130414.47980-16-bfoster@redhat.com>
-References: <20180723130414.47980-16-bfoster@redhat.com>
+Received: from sandeen.net ([63.231.237.45]:58582 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725755AbeG1ECs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 28 Jul 2018 00:02:48 -0400
+Subject: Re: [PATCH 1/2] misc: use xfs_agfl_walk where appropriate
+References: <153273025311.29060.14065633572750924491.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <50fd5f62-3de1-17ac-2afd-ea2cfdbb8c8e@sandeen.net>
+Date: Fri, 27 Jul 2018 19:38:06 -0700
+MIME-Version: 1.0
+In-Reply-To: <153273025311.29060.14065633572750924491.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
-Once xfs_defer_finish() has completed all deferred operations, it
-checks the dirty state of the transaction and rolls it once more to
-return a clean transaction for the caller. This primarily to cover
-the case where repeated xfs_defer_finish() calls are made in a loop
-and we need to make sure that the caller starts the next iteration
-with a clean transaction. Otherwise we risk transaction reservation
-overrun.
+On 7/27/18 3:24 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Use the xfs_agfl_walk function to iterate every block in the AGFL,
+> instead of open-coding it db and repair.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  db/check.c               |   60 ++++++++++++++++++++++--------------------
+>  db/freesp.c              |   31 ++++++++--------------
+>  libxfs/libxfs_api_defs.h |    1 +
+>  repair/scan.c            |   66 +++++++++++++++++++++++++---------------------
+>  4 files changed, 81 insertions(+), 77 deletions(-)
+> 
+> 
+> diff --git a/db/check.c b/db/check.c
+> index 9846d672..76c28d49 100644
+> --- a/db/check.c
+> +++ b/db/check.c
+> @@ -4010,16 +4010,30 @@ scan_ag(
+>  	pop_cur();
+>  }
+>  
+> +struct agfl_state {
+> +	xfs_agnumber_t	agno;
+> +	unsigned int	count;
+> +};
+> +
+> +static int
+> +scan_agfl(
+> +	struct xfs_mount	*mp,
+> +	xfs_agblock_t		bno,
+> +	void			*priv)
+> +{
+> +	struct agfl_state	*as = priv;
+> +
+> +	set_dbmap(as->agno, bno, 1, DBM_FREELIST, as->agno, XFS_AGFL_BLOCK(mp));
+> +	as->count++;
+> +	return 0;
+> +}
+> +
+>  static void
+>  scan_freelist(
+> -	xfs_agf_t	*agf)
+> +	xfs_agf_t		*agf)
+>  {
+> -	xfs_agnumber_t	seqno = be32_to_cpu(agf->agf_seqno);
+> -	xfs_agfl_t	*agfl;
+> -	xfs_agblock_t	bno;
+> -	uint		count;
+> -	int		i;
+> -	__be32		*freelist;
+> +	xfs_agnumber_t		seqno = be32_to_cpu(agf->agf_seqno);
+> +	struct agfl_state	state;
+>  
+>  	if (XFS_SB_BLOCK(mp) != XFS_AGFL_BLOCK(mp) &&
+>  	    XFS_AGF_BLOCK(mp) != XFS_AGFL_BLOCK(mp) &&
+> @@ -4032,46 +4046,36 @@ scan_freelist(
+>  	set_cur(&typtab[TYP_AGFL],
+>  		XFS_AG_DADDR(mp, seqno, XFS_AGFL_DADDR(mp)),
+>  		XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
+> -	if ((agfl = iocur_top->data) == NULL) {
+> +	if (iocur_top->data == NULL) {
+>  		dbprintf(_("can't read agfl block for ag %u\n"), seqno);
+>  		serious_error++;
+>  		pop_cur();
+>  		return;
+>  	}
+> -	i = be32_to_cpu(agf->agf_flfirst);
+>  
+>  	/* verify agf values before proceeding */
+>  	if (be32_to_cpu(agf->agf_flfirst) >= libxfs_agfl_size(mp) ||
+>  	    be32_to_cpu(agf->agf_fllast) >= libxfs_agfl_size(mp)) {
+>  		dbprintf(_("agf %d freelist blocks bad, skipping "
+> -			  "freelist scan\n"), i);
+> +			  "freelist scan\n"), seqno);
 
-This final transaction roll is not required in the transaction
-commit path, however, because the transaction is immediately
-committed and freed after dfops completion. Refactor the final roll
-into a separate helper such that we can avoid it in the transaction
-commit path.  Lift the dfops reset as well so dfops remains valid
-until after the last call to xfs_defer_trans_roll(). The reset is
-also unnecessary in the transaction commit path because the
-transaction is about to complete.
+This appears to be a change in output as well, though it also appears to be
+a correct bugfix.  Just making sure ... right?
 
-This eliminates unnecessary regrants of transactions where the
-associated transaction roll can be replaced by a transaction commit.
+(similar changes in each utility)
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
-
-v3:
-- Refactor xfs_defer_finish() error handling logic.
-
- fs/xfs/libxfs/xfs_defer.c | 38 +++++++++++++++++++++++++-------------
- fs/xfs/libxfs/xfs_defer.h |  1 +
- fs/xfs/xfs_trans.c        |  2 +-
- 3 files changed, 27 insertions(+), 14 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index cbee0a86c978..a5f7dc18a62f 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -341,7 +341,7 @@ xfs_defer_reset(
-  * If an inode is provided, relog it to the new transaction.
-  */
- int
--xfs_defer_finish(
-+xfs_defer_finish_noroll(
- 	struct xfs_trans		**tp)
- {
- 	struct xfs_defer_ops		*dop = (*tp)->t_dfops;
-@@ -430,25 +430,37 @@ xfs_defer_finish(
- 			cleanup_fn(*tp, state, error);
- 	}
- 
--	/*
--	 * Roll the transaction once more to avoid returning to the caller
--	 * with a dirty transaction.
--	 */
--	if ((*tp)->t_flags & XFS_TRANS_DIRTY) {
--		error = xfs_defer_trans_roll(tp);
--		dop = (*tp)->t_dfops;
--	}
- out:
--	if (error) {
-+	if (error)
- 		trace_xfs_defer_finish_error((*tp)->t_mountp, dop, error);
--	} else {
-+	 else
- 		trace_xfs_defer_finish_done((*tp)->t_mountp, dop, _RET_IP_);
--		xfs_defer_reset(dop);
--	}
- 
- 	return error;
- }
- 
-+int
-+xfs_defer_finish(
-+	struct xfs_trans	**tp)
-+{
-+	int			error;
-+
-+	/*
-+	 * Finish and roll the transaction once more to avoid returning to the
-+	 * caller with a dirty transaction.
-+	 */
-+	error = xfs_defer_finish_noroll(tp);
-+	if (error)
-+		return error;
-+	if ((*tp)->t_flags & XFS_TRANS_DIRTY) {
-+		error = xfs_defer_trans_roll(tp);
-+		if (error)
-+			return error;
-+	}
-+	xfs_defer_reset((*tp)->t_dfops);
-+	return 0;
-+}
-+
- /*
-  * Free up any items left in the list.
-  */
-diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-index 56f927803940..85c41fe4dbae 100644
---- a/fs/xfs/libxfs/xfs_defer.h
-+++ b/fs/xfs/libxfs/xfs_defer.h
-@@ -48,6 +48,7 @@ enum xfs_defer_ops_type {
- 
- void xfs_defer_add(struct xfs_defer_ops *dop, enum xfs_defer_ops_type type,
- 		struct list_head *h);
-+int xfs_defer_finish_noroll(struct xfs_trans **tp);
- int xfs_defer_finish(struct xfs_trans **tp);
- void __xfs_defer_cancel(struct xfs_defer_ops *dop);
- void xfs_defer_init(struct xfs_trans *tp, struct xfs_defer_ops *dop);
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index cd553aa9ecb0..7bf5c1202719 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -933,7 +933,7 @@ __xfs_trans_commit(
- 
- 	/* finish deferred items on final commit */
- 	if (!regrant && tp->t_dfops) {
--		error = xfs_defer_finish(&tp);
-+		error = xfs_defer_finish_noroll(&tp);
- 		if (error) {
- 			xfs_defer_cancel(tp);
- 			goto out_unreserve;
--- 
-2.17.1
+-Eric
 
