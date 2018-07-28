@@ -1,49 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:46032 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728407AbeGZCdh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Jul 2018 22:33:37 -0400
-Date: Wed, 25 Jul 2018 18:19:09 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 08/10] xfs_scrub: only retry non-permanent repair failures
-Message-ID: <20180726011909.GC30972@magnolia>
-References: <153006766483.20121.9285982017465570544.stgit@magnolia>
- <153006772140.20121.17551661183487526760.stgit@magnolia>
- <c2b7af0b-8f6e-b7d0-8972-0aec156f5707@sandeen.net>
+Received: from sandeen.net ([63.231.237.45]:49162 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388735AbeG1Bql (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 27 Jul 2018 21:46:41 -0400
+Subject: Re: [PATCH] xfs: add debian initramfs hook to package
+From: Eric Sandeen <sandeen@sandeen.net>
+References: <20180726215154.GI30972@magnolia>
+ <f2b317ec-3541-4441-cf11-58602eb8de4f@sandeen.net>
+Message-ID: <af4d254e-599d-7756-24ba-8c44254befae@sandeen.net>
+Date: Fri, 27 Jul 2018 17:22:21 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c2b7af0b-8f6e-b7d0-8972-0aec156f5707@sandeen.net>
+In-Reply-To: <f2b317ec-3541-4441-cf11-58602eb8de4f@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Jul 25, 2018 at 06:16:15PM -0700, Eric Sandeen wrote:
-> On 6/26/18 7:48 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > If a repair fails, we want to retry the repair if the error was a
-> > transient one, such as ENOMEM.  For "permanent" ones (shutdown fs,
-> > repair not supported by kernel, readonly fs) there's no point to
-> > retrying them so just error out immediately.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On 7/27/18 5:13 PM, Eric Sandeen wrote:
+
+> Actually... this sort of fstab poses a problem for your function and mine:
 > 
-> Is there something that stops infinite retries?
-> (I need to get this all applied for context I guess)
+> #/dev/mapper/vg-lv_root /                      xfs    defaults        1 1
+> /dev/mapper/vg-lv_root /                       ext4    defaults        1 1
 
-If scrub notices the set of unrepaired things stops shrinking it'll try
-them all again single-threaded and complain about anything that didn't
-get fixed.
+As would this:
 
---D
+# / on zfs won't work, use ext4:
+/dev/sda2	/	ext4	defaults	1 1
 
-> But anyway,
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+... anyway, regardless of likelihood need to filter out comments I think.
+
+Thanks,
+-Eric
