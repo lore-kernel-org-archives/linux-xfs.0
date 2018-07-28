@@ -1,81 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail02.adl2.internode.on.net ([150.101.137.139]:31509 "EHLO
-        ipmail02.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730701AbeG0AsB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Jul 2018 20:48:01 -0400
-Date: Fri, 27 Jul 2018 09:28:55 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2] libxfs: add more bounds checking to sb sanity checks
-Message-ID: <20180726232855.GD2234@dastard>
-References: <153262651940.8934.17525988748289196893.stgit@magnolia>
+Received: from aserp2130.oracle.com ([141.146.126.79]:58232 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726000AbeG1JEu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 28 Jul 2018 05:04:50 -0400
+Date: Sat, 28 Jul 2018 00:39:11 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/2] misc: use xfs_agfl_walk where appropriate
+Message-ID: <20180728073911.GO30972@magnolia>
+References: <153273025311.29060.14065633572750924491.stgit@magnolia>
+ <50fd5f62-3de1-17ac-2afd-ea2cfdbb8c8e@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <153262651940.8934.17525988748289196893.stgit@magnolia>
+In-Reply-To: <50fd5f62-3de1-17ac-2afd-ea2cfdbb8c8e@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, billodo@redhat.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-On Thu, Jul 26, 2018 at 10:35:19AM -0700, Darrick J. Wong wrote:
-> From: Bill O'Donnell <billodo@redhat.com>
+On Fri, Jul 27, 2018 at 07:38:06PM -0700, Eric Sandeen wrote:
+> On 7/27/18 3:24 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Use the xfs_agfl_walk function to iterate every block in the AGFL,
+> > instead of open-coding it db and repair.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  db/check.c               |   60 ++++++++++++++++++++++--------------------
+> >  db/freesp.c              |   31 ++++++++--------------
+> >  libxfs/libxfs_api_defs.h |    1 +
+> >  repair/scan.c            |   66 +++++++++++++++++++++++++---------------------
+> >  4 files changed, 81 insertions(+), 77 deletions(-)
+> > 
+> > 
+> > diff --git a/db/check.c b/db/check.c
+> > index 9846d672..76c28d49 100644
+> > --- a/db/check.c
+> > +++ b/db/check.c
+> > @@ -4010,16 +4010,30 @@ scan_ag(
+> >  	pop_cur();
+> >  }
+> >  
+> > +struct agfl_state {
+> > +	xfs_agnumber_t	agno;
+> > +	unsigned int	count;
+> > +};
+> > +
+> > +static int
+> > +scan_agfl(
+> > +	struct xfs_mount	*mp,
+> > +	xfs_agblock_t		bno,
+> > +	void			*priv)
+> > +{
+> > +	struct agfl_state	*as = priv;
+> > +
+> > +	set_dbmap(as->agno, bno, 1, DBM_FREELIST, as->agno, XFS_AGFL_BLOCK(mp));
+> > +	as->count++;
+> > +	return 0;
+> > +}
+> > +
+> >  static void
+> >  scan_freelist(
+> > -	xfs_agf_t	*agf)
+> > +	xfs_agf_t		*agf)
+> >  {
+> > -	xfs_agnumber_t	seqno = be32_to_cpu(agf->agf_seqno);
+> > -	xfs_agfl_t	*agfl;
+> > -	xfs_agblock_t	bno;
+> > -	uint		count;
+> > -	int		i;
+> > -	__be32		*freelist;
+> > +	xfs_agnumber_t		seqno = be32_to_cpu(agf->agf_seqno);
+> > +	struct agfl_state	state;
+> >  
+> >  	if (XFS_SB_BLOCK(mp) != XFS_AGFL_BLOCK(mp) &&
+> >  	    XFS_AGF_BLOCK(mp) != XFS_AGFL_BLOCK(mp) &&
+> > @@ -4032,46 +4046,36 @@ scan_freelist(
+> >  	set_cur(&typtab[TYP_AGFL],
+> >  		XFS_AG_DADDR(mp, seqno, XFS_AGFL_DADDR(mp)),
+> >  		XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
+> > -	if ((agfl = iocur_top->data) == NULL) {
+> > +	if (iocur_top->data == NULL) {
+> >  		dbprintf(_("can't read agfl block for ag %u\n"), seqno);
+> >  		serious_error++;
+> >  		pop_cur();
+> >  		return;
+> >  	}
+> > -	i = be32_to_cpu(agf->agf_flfirst);
+> >  
+> >  	/* verify agf values before proceeding */
+> >  	if (be32_to_cpu(agf->agf_flfirst) >= libxfs_agfl_size(mp) ||
+> >  	    be32_to_cpu(agf->agf_fllast) >= libxfs_agfl_size(mp)) {
+> >  		dbprintf(_("agf %d freelist blocks bad, skipping "
+> > -			  "freelist scan\n"), i);
+> > +			  "freelist scan\n"), seqno);
 > 
-> Current sb verifier doesn't check bounds on sb_fdblocks and sb_ifree.
-> Add sanity checks for these parameters.
+> This appears to be a change in output as well, though it also appears to be
+> a correct bugfix.  Just making sure ... right?
+
+Yep.
+
+--D
+
+> (similar changes in each utility)
 > 
-> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
-> [darrick: remove the icount check, tweak the comments a little]
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_sb.c |   45 +++++++++++++++++++++++++++++++++++----------
->  1 file changed, 35 insertions(+), 10 deletions(-)
+> -Eric
 > 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index b3ad15956366..b2c683588519 100644
-> --- a/fs/xfs/libxfs/xfs_sb.c
-> +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -599,22 +599,16 @@ xfs_sb_to_disk(
->  static int
->  xfs_sb_verify(
->  	struct xfs_buf	*bp,
-> +	struct xfs_sb	*sb,
->  	bool		check_version)
->  {
->  	struct xfs_mount *mp = bp->b_target->bt_mount;
-> -	struct xfs_sb	sb;
-> -
-> -	/*
-> -	 * Use call variant which doesn't convert quota flags from disk 
-> -	 * format, because xfs_mount_validate_sb checks the on-disk flags.
-> -	 */
-> -	__xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp), false);
->  
->  	/*
->  	 * Only check the in progress field for the primary superblock as
->  	 * mkfs.xfs doesn't clear it from secondary superblocks.
->  	 */
-> -	return xfs_mount_validate_sb(mp, &sb,
-> +	return xfs_mount_validate_sb(mp, sb,
->  				     bp->b_maps[0].bm_bn == XFS_SB_DADDR,
->  				     check_version);
-
-Why do we need to keep this wrapper function? The in-progress check
-is a primary superblock read verifier check (only useful at mount
-time), as is the "check_version" flag used to validate the V5
-feature mask during mount.
-
-i.e. xfs_sb_verify() needs to go away, and the read-side only checks
-need to be moved from xfs_mount_validate_sb() into
-xfs_sb_read_verify() too. At which point, xfs_mount_validate_sb()
-has nothing to do with mount and can be renamed to
-xfs_sb_verify_common()....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
