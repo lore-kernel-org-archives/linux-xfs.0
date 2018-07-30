@@ -1,20 +1,20 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:47778 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:32796 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732156AbeG3SVM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1730613AbeG3SVM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Mon, 30 Jul 2018 14:21:12 -0400
 Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 033D740214E2
-        for <linux-xfs@vger.kernel.org>; Mon, 30 Jul 2018 16:45:22 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 3258A4022909
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Jul 2018 16:45:21 +0000 (UTC)
 Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id E1F13112D193
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 1B9EB112D179
         for <linux-xfs@vger.kernel.org>; Mon, 30 Jul 2018 16:45:21 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 09/15] xfs: drop dop param from xfs_defer_op_type ->finish_item() callback
-Date: Mon, 30 Jul 2018 12:45:14 -0400
-Message-Id: <20180730164520.36882-10-bfoster@redhat.com>
+Subject: [PATCH 02/15] xfs: use transaction for intent recovery instead of raw dfops
+Date: Mon, 30 Jul 2018 12:45:07 -0400
+Message-Id: <20180730164520.36882-3-bfoster@redhat.com>
 In-Reply-To: <20180730164520.36882-1-bfoster@redhat.com>
 References: <20180730164520.36882-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -22,297 +22,285 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-The dfops infrastructure ->finish_item() callback passes the
-transaction and dfops as separate parameters. Since dfops is always
-part of a transaction, the latter parameter is no longer necessary.
-Remove it from the various callbacks.
+Log intent recovery is the last user of an external (on-stack)
+dfops. The pattern exists because the dfops is used to collect
+additional deferred operations queued during the whole recovery
+sequence. The dfops is finished with a new transaction after intent
+recovery completes.
+
+We already have a mechanism to create an empty, container-like
+transaction to support the scrub infrastructure. We can reuse that
+mechanism here to drop the final user of external dfops. This
+facilitates folding dfops state (i.e., dop_low) into the
+transaction, the elimination of now unused external dfops support
+and also eliminates the only caller of __xfs_defer_cancel().
+
+Replace the on-stack dfops with an empty transaction and pass it
+around to the various helpers that queue and finish deferred
+operations during intent recovery.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c     |  2 --
- fs/xfs/libxfs/xfs_bmap.h     |  6 +++---
- fs/xfs/libxfs/xfs_defer.c    |  2 +-
- fs/xfs/libxfs/xfs_defer.h    |  4 ++--
- fs/xfs/libxfs/xfs_refcount.c |  2 +-
- fs/xfs/libxfs/xfs_refcount.h |  7 +++----
- fs/xfs/xfs_bmap_item.c       |  5 ++---
- fs/xfs/xfs_refcount_item.c   |  4 ++--
- fs/xfs/xfs_trans.h           | 10 +++++-----
- fs/xfs/xfs_trans_bmap.c      |  6 ++----
- fs/xfs/xfs_trans_extfree.c   |  2 --
- fs/xfs/xfs_trans_refcount.c  |  6 ++----
- fs/xfs/xfs_trans_rmap.c      |  1 -
- 13 files changed, 23 insertions(+), 34 deletions(-)
+ fs/xfs/xfs_bmap_item.c     | 12 +++++------
+ fs/xfs/xfs_bmap_item.h     |  3 +--
+ fs/xfs/xfs_log_recover.c   | 42 ++++++++++++++++++--------------------
+ fs/xfs/xfs_refcount_item.c | 12 +++++------
+ fs/xfs/xfs_refcount_item.h |  3 +--
+ 5 files changed, 34 insertions(+), 38 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 5cd490dc891a..d20f541b7061 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -6045,7 +6045,6 @@ xfs_bmap_unmap_extent(
- int
- xfs_bmap_finish_one(
- 	struct xfs_trans		*tp,
--	struct xfs_defer_ops		*dfops,
- 	struct xfs_inode		*ip,
- 	enum xfs_bmap_intent_type	type,
- 	int				whichfork,
-@@ -6072,7 +6071,6 @@ xfs_bmap_finish_one(
- 
- 	switch (type) {
- 	case XFS_BMAP_MAP:
--		ASSERT(dfops == tp->t_dfops);
- 		error = xfs_bmapi_remap(tp, ip, startoff, *blockcount,
- 				startblock, 0);
- 		*blockcount = 0;
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index 2e8555c1229a..9165a878edcd 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -252,9 +252,9 @@ struct xfs_bmap_intent {
- 	struct xfs_bmbt_irec			bi_bmap;
- };
- 
--int	xfs_bmap_finish_one(struct xfs_trans *tp, struct xfs_defer_ops *dfops,
--		struct xfs_inode *ip, enum xfs_bmap_intent_type type,
--		int whichfork, xfs_fileoff_t startoff, xfs_fsblock_t startblock,
-+int	xfs_bmap_finish_one(struct xfs_trans *tp, struct xfs_inode *ip,
-+		enum xfs_bmap_intent_type type, int whichfork,
-+		xfs_fileoff_t startoff, xfs_fsblock_t startblock,
- 		xfs_filblks_t *blockcount, xfs_exntst_t state);
- int	xfs_bmap_map_extent(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
- 		struct xfs_inode *ip, struct xfs_bmbt_irec *imap);
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index 6230e74163ac..7fb7edd5d63e 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -365,7 +365,7 @@ xfs_defer_finish_noroll(
- 		list_for_each_safe(li, n, &dfp->dfp_work) {
- 			list_del(li);
- 			dfp->dfp_count--;
--			error = dfp->dfp_type->finish_item(*tp, dop, li,
-+			error = dfp->dfp_type->finish_item(*tp, li,
- 					dfp->dfp_done, &state);
- 			if (error == -EAGAIN) {
- 				/*
-diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-index bf1e9f78561e..0de7504e5651 100644
---- a/fs/xfs/libxfs/xfs_defer.h
-+++ b/fs/xfs/libxfs/xfs_defer.h
-@@ -50,8 +50,8 @@ struct xfs_defer_op_type {
- 	unsigned int		max_items;
- 	void (*abort_intent)(void *);
- 	void *(*create_done)(struct xfs_trans *, void *, unsigned int);
--	int (*finish_item)(struct xfs_trans *, struct xfs_defer_ops *,
--			struct list_head *, void *, void **);
-+	int (*finish_item)(struct xfs_trans *, struct list_head *, void *,
-+			void **);
- 	void (*finish_cleanup)(struct xfs_trans *, void *, int);
- 	void (*cancel_item)(struct list_head *);
- 	int (*diff_items)(void *, struct list_head *, struct list_head *);
-diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index 4cbc2efb099e..86f297ca90cd 100644
---- a/fs/xfs/libxfs/xfs_refcount.c
-+++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -1082,7 +1082,6 @@ xfs_refcount_finish_one_cleanup(
- int
- xfs_refcount_finish_one(
- 	struct xfs_trans		*tp,
--	struct xfs_defer_ops		*dfops,
- 	enum xfs_refcount_intent_type	type,
- 	xfs_fsblock_t			startblock,
- 	xfs_extlen_t			blockcount,
-@@ -1091,6 +1090,7 @@ xfs_refcount_finish_one(
- 	struct xfs_btree_cur		**pcur)
- {
- 	struct xfs_mount		*mp = tp->t_mountp;
-+	struct xfs_defer_ops		*dfops = tp->t_dfops;
- 	struct xfs_btree_cur		*rcur;
- 	struct xfs_buf			*agbp = NULL;
- 	int				error = 0;
-diff --git a/fs/xfs/libxfs/xfs_refcount.h b/fs/xfs/libxfs/xfs_refcount.h
-index 5fef74412727..3b72c6dbf6ad 100644
---- a/fs/xfs/libxfs/xfs_refcount.h
-+++ b/fs/xfs/libxfs/xfs_refcount.h
-@@ -37,10 +37,9 @@ extern int xfs_refcount_decrease_extent(struct xfs_mount *mp,
- extern void xfs_refcount_finish_one_cleanup(struct xfs_trans *tp,
- 		struct xfs_btree_cur *rcur, int error);
- extern int xfs_refcount_finish_one(struct xfs_trans *tp,
--		struct xfs_defer_ops *dfops, enum xfs_refcount_intent_type type,
--		xfs_fsblock_t startblock, xfs_extlen_t blockcount,
--		xfs_fsblock_t *new_fsb, xfs_extlen_t *new_len,
--		struct xfs_btree_cur **pcur);
-+		enum xfs_refcount_intent_type type, xfs_fsblock_t startblock,
-+		xfs_extlen_t blockcount, xfs_fsblock_t *new_fsb,
-+		xfs_extlen_t *new_len, struct xfs_btree_cur **pcur);
- 
- extern int xfs_refcount_find_shared(struct xfs_btree_cur *cur,
- 		xfs_agblock_t agbno, xfs_extlen_t aglen, xfs_agblock_t *fbno,
 diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index 4b4318ea4b76..328a5c60000b 100644
+index e1d6c127b07d..992235e7c761 100644
 --- a/fs/xfs/xfs_bmap_item.c
 +++ b/fs/xfs/xfs_bmap_item.c
-@@ -475,9 +475,8 @@ xfs_bui_recover(
- 	xfs_trans_ijoin(tp, ip, 0);
+@@ -375,9 +375,8 @@ xfs_bud_init(
+  */
+ int
+ xfs_bui_recover(
+-	struct xfs_mount		*mp,
+-	struct xfs_bui_log_item		*buip,
+-	struct xfs_defer_ops		*dfops)
++	struct xfs_trans		*itp,
++	struct xfs_bui_log_item		*buip)
+ {
+ 	int				error = 0;
+ 	unsigned int			bui_type;
+@@ -393,6 +392,7 @@ xfs_bui_recover(
+ 	struct xfs_trans		*tp;
+ 	struct xfs_inode		*ip = NULL;
+ 	struct xfs_bmbt_irec		irec;
++	struct xfs_mount		*mp = itp->t_mountp;
  
- 	count = bmap->me_len;
--	error = xfs_trans_log_finish_bmap_update(tp, budp, tp->t_dfops, type,
--			ip, whichfork, bmap->me_startoff,
--			bmap->me_startblock, &count, state);
-+	error = xfs_trans_log_finish_bmap_update(tp, budp, type, ip, whichfork,
-+			bmap->me_startoff, bmap->me_startblock, &count, state);
+ 	ASSERT(!test_bit(XFS_BUI_RECOVERED, &buip->bui_flags));
+ 
+@@ -446,7 +446,7 @@ xfs_bui_recover(
+ 	 * finishes them on completion. Transfer current dfops state to this
+ 	 * transaction and transfer the result back before we return.
+ 	 */
+-	xfs_defer_move(tp->t_dfops, dfops);
++	xfs_defer_move(tp->t_dfops, itp->t_dfops);
+ 	budp = xfs_trans_get_bud(tp, buip);
+ 
+ 	/* Grab the inode. */
+@@ -494,7 +494,7 @@ xfs_bui_recover(
+ 	}
+ 
+ 	set_bit(XFS_BUI_RECOVERED, &buip->bui_flags);
+-	xfs_defer_move(dfops, tp->t_dfops);
++	xfs_defer_move(itp->t_dfops, tp->t_dfops);
+ 	error = xfs_trans_commit(tp);
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	xfs_irele(ip);
+@@ -502,7 +502,7 @@ xfs_bui_recover(
+ 	return error;
+ 
+ err_inode:
+-	xfs_defer_move(dfops, tp->t_dfops);
++	xfs_defer_move(itp->t_dfops, tp->t_dfops);
+ 	xfs_trans_cancel(tp);
+ 	if (ip) {
+ 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+diff --git a/fs/xfs/xfs_bmap_item.h b/fs/xfs/xfs_bmap_item.h
+index fd1a1b13df51..ebf6cd6d33e2 100644
+--- a/fs/xfs/xfs_bmap_item.h
++++ b/fs/xfs/xfs_bmap_item.h
+@@ -79,7 +79,6 @@ struct xfs_bud_log_item *xfs_bud_init(struct xfs_mount *,
+ 		struct xfs_bui_log_item *);
+ void xfs_bui_item_free(struct xfs_bui_log_item *);
+ void xfs_bui_release(struct xfs_bui_log_item *);
+-int xfs_bui_recover(struct xfs_mount *mp, struct xfs_bui_log_item *buip,
+-		struct xfs_defer_ops *dfops);
++int xfs_bui_recover(struct xfs_trans *itp, struct xfs_bui_log_item *buip);
+ 
+ #endif	/* __XFS_BMAP_ITEM_H__ */
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 7776fde9430c..6650b790e43b 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -4733,10 +4733,9 @@ xlog_recover_cancel_rui(
+ /* Recover the CUI if necessary. */
+ STATIC int
+ xlog_recover_process_cui(
+-	struct xfs_mount		*mp,
++	struct xfs_trans		*tp,
+ 	struct xfs_ail			*ailp,
+-	struct xfs_log_item		*lip,
+-	struct xfs_defer_ops		*dfops)
++	struct xfs_log_item		*lip)
+ {
+ 	struct xfs_cui_log_item		*cuip;
+ 	int				error;
+@@ -4749,7 +4748,7 @@ xlog_recover_process_cui(
+ 		return 0;
+ 
+ 	spin_unlock(&ailp->ail_lock);
+-	error = xfs_cui_recover(mp, cuip, dfops);
++	error = xfs_cui_recover(tp, cuip);
+ 	spin_lock(&ailp->ail_lock);
+ 
+ 	return error;
+@@ -4774,10 +4773,9 @@ xlog_recover_cancel_cui(
+ /* Recover the BUI if necessary. */
+ STATIC int
+ xlog_recover_process_bui(
+-	struct xfs_mount		*mp,
++	struct xfs_trans		*tp,
+ 	struct xfs_ail			*ailp,
+-	struct xfs_log_item		*lip,
+-	struct xfs_defer_ops		*dfops)
++	struct xfs_log_item		*lip)
+ {
+ 	struct xfs_bui_log_item		*buip;
+ 	int				error;
+@@ -4790,7 +4788,7 @@ xlog_recover_process_bui(
+ 		return 0;
+ 
+ 	spin_unlock(&ailp->ail_lock);
+-	error = xfs_bui_recover(mp, buip, dfops);
++	error = xfs_bui_recover(tp, buip);
+ 	spin_lock(&ailp->ail_lock);
+ 
+ 	return error;
+@@ -4829,9 +4827,9 @@ static inline bool xlog_item_is_intent(struct xfs_log_item *lip)
+ /* Take all the collected deferred ops and finish them in order. */
+ static int
+ xlog_finish_defer_ops(
+-	struct xfs_mount	*mp,
+-	struct xfs_defer_ops	*dfops)
++	struct xfs_trans	*itp)
+ {
++	struct xfs_mount	*mp = itp->t_mountp;
+ 	struct xfs_trans	*tp;
+ 	int64_t			freeblks;
+ 	uint			resblks;
+@@ -4855,7 +4853,7 @@ xlog_finish_defer_ops(
  	if (error)
- 		goto err_inode;
+ 		return error;
+ 	/* transfer all collected dfops to this transaction */
+-	xfs_defer_move(tp->t_dfops, dfops);
++	xfs_defer_move(tp->t_dfops, itp->t_dfops);
  
+ 	return xfs_trans_commit(tp);
+ }
+@@ -4880,22 +4878,25 @@ STATIC int
+ xlog_recover_process_intents(
+ 	struct xlog		*log)
+ {
+-	struct xfs_defer_ops	dfops;
++	struct xfs_trans	*tp;
+ 	struct xfs_ail_cursor	cur;
+ 	struct xfs_log_item	*lip;
+ 	struct xfs_ail		*ailp;
+-	int			error = 0;
++	int			error;
+ #if defined(DEBUG) || defined(XFS_WARN)
+ 	xfs_lsn_t		last_lsn;
+ #endif
+ 
++	error = xfs_trans_alloc_empty(log->l_mp, &tp);
++	if (error)
++		return error;
++
+ 	ailp = log->l_ailp;
+ 	spin_lock(&ailp->ail_lock);
+ 	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
+ #if defined(DEBUG) || defined(XFS_WARN)
+ 	last_lsn = xlog_assign_lsn(log->l_curr_cycle, log->l_curr_block);
+ #endif
+-	xfs_defer_init(NULL, &dfops);
+ 	while (lip != NULL) {
+ 		/*
+ 		 * We're done when we see something other than an intent.
+@@ -4930,12 +4931,10 @@ xlog_recover_process_intents(
+ 			error = xlog_recover_process_rui(log->l_mp, ailp, lip);
+ 			break;
+ 		case XFS_LI_CUI:
+-			error = xlog_recover_process_cui(log->l_mp, ailp, lip,
+-					&dfops);
++			error = xlog_recover_process_cui(tp, ailp, lip);
+ 			break;
+ 		case XFS_LI_BUI:
+-			error = xlog_recover_process_bui(log->l_mp, ailp, lip,
+-					&dfops);
++			error = xlog_recover_process_bui(tp, ailp, lip);
+ 			break;
+ 		}
+ 		if (error)
+@@ -4945,10 +4944,9 @@ xlog_recover_process_intents(
+ out:
+ 	xfs_trans_ail_cursor_done(&cur);
+ 	spin_unlock(&ailp->ail_lock);
+-	if (error)
+-		__xfs_defer_cancel(&dfops);
+-	else
+-		error = xlog_finish_defer_ops(log->l_mp, &dfops);
++	if (!error)
++		error = xlog_finish_defer_ops(tp);
++	xfs_trans_cancel(tp);
+ 
+ 	return error;
+ }
 diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index 829b7a5bc707..f6a3249aa2d4 100644
+index d3582a06626f..d663ea1f4076 100644
 --- a/fs/xfs/xfs_refcount_item.c
 +++ b/fs/xfs/xfs_refcount_item.c
-@@ -479,8 +479,8 @@ xfs_cui_recover(
- 			new_len = refc->pe_len;
- 		} else
- 			error = xfs_trans_log_finish_refcount_update(tp, cudp,
--				tp->t_dfops, type, refc->pe_startblock,
--				refc->pe_len, &new_fsb, &new_len, &rcur);
-+				type, refc->pe_startblock, refc->pe_len,
-+				&new_fsb, &new_len, &rcur);
- 		if (error)
- 			goto abort_error;
- 
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 8665d45b82c6..299656dbf324 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -268,7 +268,7 @@ void xfs_refcount_update_init_defer_op(void);
- struct xfs_cud_log_item *xfs_trans_get_cud(struct xfs_trans *tp,
- 		struct xfs_cui_log_item *cuip);
- int xfs_trans_log_finish_refcount_update(struct xfs_trans *tp,
--		struct xfs_cud_log_item *cudp, struct xfs_defer_ops *dfops,
-+		struct xfs_cud_log_item *cudp,
- 		enum xfs_refcount_intent_type type, xfs_fsblock_t startblock,
- 		xfs_extlen_t blockcount, xfs_fsblock_t *new_fsb,
- 		xfs_extlen_t *new_len, struct xfs_btree_cur **pcur);
-@@ -280,9 +280,9 @@ void xfs_bmap_update_init_defer_op(void);
- struct xfs_bud_log_item *xfs_trans_get_bud(struct xfs_trans *tp,
- 		struct xfs_bui_log_item *buip);
- int xfs_trans_log_finish_bmap_update(struct xfs_trans *tp,
--		struct xfs_bud_log_item *rudp, struct xfs_defer_ops *dfops,
--		enum xfs_bmap_intent_type type, struct xfs_inode *ip,
--		int whichfork, xfs_fileoff_t startoff, xfs_fsblock_t startblock,
--		xfs_filblks_t *blockcount, xfs_exntst_t state);
-+		struct xfs_bud_log_item *rudp, enum xfs_bmap_intent_type type,
-+		struct xfs_inode *ip, int whichfork, xfs_fileoff_t startoff,
-+		xfs_fsblock_t startblock, xfs_filblks_t *blockcount,
-+		xfs_exntst_t state);
- 
- #endif	/* __XFS_TRANS_H__ */
-diff --git a/fs/xfs/xfs_trans_bmap.c b/fs/xfs/xfs_trans_bmap.c
-index a15a5cd867f9..741c558b2179 100644
---- a/fs/xfs/xfs_trans_bmap.c
-+++ b/fs/xfs/xfs_trans_bmap.c
-@@ -43,7 +43,6 @@ int
- xfs_trans_log_finish_bmap_update(
- 	struct xfs_trans		*tp,
- 	struct xfs_bud_log_item		*budp,
--	struct xfs_defer_ops		*dop,
- 	enum xfs_bmap_intent_type	type,
- 	struct xfs_inode		*ip,
- 	int				whichfork,
-@@ -54,7 +53,7 @@ xfs_trans_log_finish_bmap_update(
+@@ -380,9 +380,8 @@ xfs_cud_init(
+  */
+ int
+ xfs_cui_recover(
+-	struct xfs_mount		*mp,
+-	struct xfs_cui_log_item		*cuip,
+-	struct xfs_defer_ops		*dfops)
++	struct xfs_trans		*itp,
++	struct xfs_cui_log_item		*cuip)
  {
- 	int				error;
+ 	int				i;
+ 	int				error = 0;
+@@ -398,6 +397,7 @@ xfs_cui_recover(
+ 	xfs_extlen_t			new_len;
+ 	struct xfs_bmbt_irec		irec;
+ 	bool				requeue_only = false;
++	struct xfs_mount		*mp = itp->t_mountp;
  
--	error = xfs_bmap_finish_one(tp, dop, ip, type, whichfork, startoff,
-+	error = xfs_bmap_finish_one(tp, ip, type, whichfork, startoff,
- 			startblock, blockcount, state);
+ 	ASSERT(!test_bit(XFS_CUI_RECOVERED, &cuip->cui_flags));
  
- 	/*
-@@ -176,7 +175,6 @@ xfs_bmap_update_create_done(
- STATIC int
- xfs_bmap_update_finish_item(
- 	struct xfs_trans		*tp,
--	struct xfs_defer_ops		*dop,
- 	struct list_head		*item,
- 	void				*done_item,
- 	void				**state)
-@@ -187,7 +185,7 @@ xfs_bmap_update_finish_item(
+@@ -457,7 +457,7 @@ xfs_cui_recover(
+ 	 * finishes them on completion. Transfer current dfops state to this
+ 	 * transaction and transfer the result back before we return.
+ 	 */
+-	xfs_defer_move(tp->t_dfops, dfops);
++	xfs_defer_move(tp->t_dfops, itp->t_dfops);
+ 	cudp = xfs_trans_get_cud(tp, cuip);
  
- 	bmap = container_of(item, struct xfs_bmap_intent, bi_list);
- 	count = bmap->bi_bmap.br_blockcount;
--	error = xfs_trans_log_finish_bmap_update(tp, done_item, dop,
-+	error = xfs_trans_log_finish_bmap_update(tp, done_item,
- 			bmap->bi_type,
- 			bmap->bi_owner, bmap->bi_whichfork,
- 			bmap->bi_bmap.br_startoff,
-diff --git a/fs/xfs/xfs_trans_extfree.c b/fs/xfs/xfs_trans_extfree.c
-index bd66c76f55e6..855c0b651fd4 100644
---- a/fs/xfs/xfs_trans_extfree.c
-+++ b/fs/xfs/xfs_trans_extfree.c
-@@ -171,7 +171,6 @@ xfs_extent_free_create_done(
- STATIC int
- xfs_extent_free_finish_item(
- 	struct xfs_trans		*tp,
--	struct xfs_defer_ops		*dop,
- 	struct list_head		*item,
- 	void				*done_item,
- 	void				**state)
-@@ -226,7 +225,6 @@ static const struct xfs_defer_op_type xfs_extent_free_defer_type = {
- STATIC int
- xfs_agfl_free_finish_item(
- 	struct xfs_trans		*tp,
--	struct xfs_defer_ops		*dop,
- 	struct list_head		*item,
- 	void				*done_item,
- 	void				**state)
-diff --git a/fs/xfs/xfs_trans_refcount.c b/fs/xfs/xfs_trans_refcount.c
-index 46dd4fca8aa7..523c55663954 100644
---- a/fs/xfs/xfs_trans_refcount.c
-+++ b/fs/xfs/xfs_trans_refcount.c
-@@ -42,7 +42,6 @@ int
- xfs_trans_log_finish_refcount_update(
- 	struct xfs_trans		*tp,
- 	struct xfs_cud_log_item		*cudp,
--	struct xfs_defer_ops		*dop,
- 	enum xfs_refcount_intent_type	type,
- 	xfs_fsblock_t			startblock,
- 	xfs_extlen_t			blockcount,
-@@ -52,7 +51,7 @@ xfs_trans_log_finish_refcount_update(
- {
- 	int				error;
+ 	for (i = 0; i < cuip->cui_format.cui_nextents; i++) {
+@@ -522,13 +522,13 @@ xfs_cui_recover(
  
--	error = xfs_refcount_finish_one(tp, dop, type, startblock,
-+	error = xfs_refcount_finish_one(tp, type, startblock,
- 			blockcount, new_fsb, new_len, pcur);
+ 	xfs_refcount_finish_one_cleanup(tp, rcur, error);
+ 	set_bit(XFS_CUI_RECOVERED, &cuip->cui_flags);
+-	xfs_defer_move(dfops, tp->t_dfops);
++	xfs_defer_move(itp->t_dfops, tp->t_dfops);
+ 	error = xfs_trans_commit(tp);
+ 	return error;
  
- 	/*
-@@ -169,7 +168,6 @@ xfs_refcount_update_create_done(
- STATIC int
- xfs_refcount_update_finish_item(
- 	struct xfs_trans		*tp,
--	struct xfs_defer_ops		*dop,
- 	struct list_head		*item,
- 	void				*done_item,
- 	void				**state)
-@@ -180,7 +178,7 @@ xfs_refcount_update_finish_item(
- 	int				error;
+ abort_error:
+ 	xfs_refcount_finish_one_cleanup(tp, rcur, error);
+-	xfs_defer_move(dfops, tp->t_dfops);
++	xfs_defer_move(itp->t_dfops, tp->t_dfops);
+ 	xfs_trans_cancel(tp);
+ 	return error;
+ }
+diff --git a/fs/xfs/xfs_refcount_item.h b/fs/xfs/xfs_refcount_item.h
+index dd830b69cd1e..98895da52c1f 100644
+--- a/fs/xfs/xfs_refcount_item.h
++++ b/fs/xfs/xfs_refcount_item.h
+@@ -82,7 +82,6 @@ struct xfs_cud_log_item *xfs_cud_init(struct xfs_mount *,
+ 		struct xfs_cui_log_item *);
+ void xfs_cui_item_free(struct xfs_cui_log_item *);
+ void xfs_cui_release(struct xfs_cui_log_item *);
+-int xfs_cui_recover(struct xfs_mount *mp, struct xfs_cui_log_item *cuip,
+-		struct xfs_defer_ops *dfops);
++int xfs_cui_recover(struct xfs_trans *itp, struct xfs_cui_log_item *cuip);
  
- 	refc = container_of(item, struct xfs_refcount_intent, ri_list);
--	error = xfs_trans_log_finish_refcount_update(tp, done_item, dop,
-+	error = xfs_trans_log_finish_refcount_update(tp, done_item,
- 			refc->ri_type,
- 			refc->ri_startblock,
- 			refc->ri_blockcount,
-diff --git a/fs/xfs/xfs_trans_rmap.c b/fs/xfs/xfs_trans_rmap.c
-index 726d8e2c0558..05b00e40251f 100644
---- a/fs/xfs/xfs_trans_rmap.c
-+++ b/fs/xfs/xfs_trans_rmap.c
-@@ -193,7 +193,6 @@ xfs_rmap_update_create_done(
- STATIC int
- xfs_rmap_update_finish_item(
- 	struct xfs_trans		*tp,
--	struct xfs_defer_ops		*dop,
- 	struct list_head		*item,
- 	void				*done_item,
- 	void				**state)
+ #endif	/* __XFS_REFCOUNT_ITEM_H__ */
 -- 
 2.17.1
 
