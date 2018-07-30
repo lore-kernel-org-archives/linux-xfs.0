@@ -1,97 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:43288 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1731971AbeG3SVL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 30 Jul 2018 14:21:11 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 4D18F40216FE
-        for <linux-xfs@vger.kernel.org>; Mon, 30 Jul 2018 16:45:21 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 37C09112D179
-        for <linux-xfs@vger.kernel.org>; Mon, 30 Jul 2018 16:45:21 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 03/15] xfs: remove unused __xfs_defer_cancel() internal helper
-Date: Mon, 30 Jul 2018 12:45:08 -0400
-Message-Id: <20180730164520.36882-4-bfoster@redhat.com>
-In-Reply-To: <20180730164520.36882-1-bfoster@redhat.com>
-References: <20180730164520.36882-1-bfoster@redhat.com>
+Received: from sandeen.net ([63.231.237.45]:59334 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727478AbeGaBR3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 30 Jul 2018 21:17:29 -0400
+Subject: Re: [PATCH 2/3] libxfs: add more bounds checking to sb sanity checks
+References: <153292860880.19274.14533449137039985963.stgit@magnolia>
+ <153292862122.19274.13281750487162777731.stgit@magnolia>
+ <82b9a6d9-c5b9-112d-98eb-c9e7153e67da@sandeen.net>
+ <20180730233835.GR30972@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <b2743479-b33d-3488-d03b-f8ab319bd6ea@sandeen.net>
+Date: Mon, 30 Jul 2018 18:40:06 -0500
+MIME-Version: 1.0
+In-Reply-To: <20180730233835.GR30972@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Bill O'Donnell <billodo@redhat.com>
 
-With no more external dfops users, there is no need for an
-xfs_defer_ops cancel wrapper.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_defer.c | 5 +++--
- fs/xfs/libxfs/xfs_defer.h | 2 +-
- fs/xfs/xfs_trans.c        | 7 -------
- fs/xfs/xfs_trans.h        | 3 ---
- 4 files changed, 4 insertions(+), 13 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index a5f7dc18a62f..ebead781613f 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -465,9 +465,10 @@ xfs_defer_finish(
-  * Free up any items left in the list.
-  */
- void
--__xfs_defer_cancel(
--	struct xfs_defer_ops		*dop)
-+xfs_defer_cancel(
-+	struct xfs_trans		*tp)
- {
-+	struct xfs_defer_ops		*dop = tp->t_dfops;
- 	struct xfs_defer_pending	*dfp;
- 	struct xfs_defer_pending	*pli;
- 	struct list_head		*pwi;
-diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-index 85c41fe4dbae..da145fc04ae1 100644
---- a/fs/xfs/libxfs/xfs_defer.h
-+++ b/fs/xfs/libxfs/xfs_defer.h
-@@ -50,7 +50,7 @@ void xfs_defer_add(struct xfs_defer_ops *dop, enum xfs_defer_ops_type type,
- 		struct list_head *h);
- int xfs_defer_finish_noroll(struct xfs_trans **tp);
- int xfs_defer_finish(struct xfs_trans **tp);
--void __xfs_defer_cancel(struct xfs_defer_ops *dop);
-+void xfs_defer_cancel(struct xfs_trans *);
- void xfs_defer_init(struct xfs_trans *tp, struct xfs_defer_ops *dop);
- bool xfs_defer_has_unfinished_work(struct xfs_defer_ops *dop);
- int xfs_defer_ijoin(struct xfs_defer_ops *dop, struct xfs_inode *ip);
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 8d3b7f28b193..b0eeeaf6d24e 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -1105,10 +1105,3 @@ xfs_trans_roll(
- 	tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
- 	return xfs_trans_reserve(*tpp, &tres, 0, 0);
- }
--
--void
--xfs_defer_cancel(
--	struct xfs_trans	*tp)
--{
--	__xfs_defer_cancel(tp->t_dfops);
--}
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 5170e89bec02..dc79e3c1d3e8 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -214,9 +214,6 @@ xfs_trans_read_buf(
- 				      flags, bpp, ops);
- }
- 
--/* cancel dfops associated with a transaction */
--void xfs_defer_cancel(struct xfs_trans *);
--
- struct xfs_buf	*xfs_trans_getsb(xfs_trans_t *, struct xfs_mount *, int);
- 
- void		xfs_trans_brelse(xfs_trans_t *, struct xfs_buf *);
--- 
-2.17.1
+On 7/30/18 6:38 PM, Darrick J. Wong wrote:
+> On Mon, Jul 30, 2018 at 06:16:40PM -0500, Eric Sandeen wrote:
+>> On 7/30/18 12:30 AM, Darrick J. Wong wrote:
+>>> From: Bill O'Donnell <billodo@redhat.com>
+>>>
+>>> Current sb verifier doesn't check bounds on sb_fdblocks and sb_ifree.
+>>> Add sanity checks for these parameters.
+>>>
+>>> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+>>> [darrick: port to refactored sb validation predicates]
+>>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+>>
+>> comment nitpicks below, but otherwise
+>>
+>> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+>>
+>>> ---
+>>>  fs/xfs/libxfs/xfs_sb.c |   12 ++++++++++++
+>>>  1 file changed, 12 insertions(+)
+>>>
+>>>
+>>> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+>>> index 516bef7b0f50..64bc471d57e6 100644
+>>> --- a/fs/xfs/libxfs/xfs_sb.c
+>>> +++ b/fs/xfs/libxfs/xfs_sb.c
+>>> @@ -153,6 +153,18 @@ xfs_validate_sb_write(
+>>>  	struct xfs_mount	*mp,
+>>>  	struct xfs_sb		*sbp)
+>>>  {
+>>> +	/*
+>>> +	 * Carry out additional sb sanity checks exclusively for writes.
+>>
+>> We're in xfs_validate_sb_write so that's obvious, can drop this line.
+>>
+>>> +	 * We don't do these checks for reads, since faulty parameters could
+>>> +	 * be fixed in the log, and we shouldn't prohibit mounting for those
+>>> +	 * cases.
+>>> +	 */
+>>
+>> Hm, it's not really a log reaplay issue, right?  These summary counters
+>> get reinitialized at mount, so failing to mount before we overwrite them
+>> anyway makes no sense.
+> 
+> Well, we don't reinitialize them if ( (!lazysbcount) or (clean log) )
+> and (non-crazy values)...
+> 
+>> /*
+>>  * These summary counters get re-initialized after they are read
+>>  * during mount, so this is a write-only check.
+> 
+> They're not always re-initialized -- only if we had a dirty lazysbcont
+> fs or the values were crazy.
+> 
+> /*
+>  * Carry out additional sb summary counter sanity checks when we write
+>  * the superblock.  We skip this in the read validator because there
+>  * could be newer superblocks in the log and if the values are garbage
+>  * even after replay we'll recalculate them at the end of log mount.
+>  */
 
+Oh, ok sure.  Given my ongoing confusion an explicit/complete comment is
+probably good.  For me, if for nobody else.  ;)
+
+Thanks,
+-Eric
