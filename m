@@ -1,153 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:48240 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727019AbeG3VwT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Jul 2018 17:52:19 -0400
-Date: Mon, 30 Jul 2018 13:15:35 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 06/15] xfs: add missing defer ijoins for held inodes
-Message-ID: <20180730201535.GG30972@magnolia>
-References: <20180730164520.36882-1-bfoster@redhat.com>
- <20180730164520.36882-7-bfoster@redhat.com>
+Received: from sandeen.net ([63.231.237.45]:54264 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731863AbeGaAVq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 30 Jul 2018 20:21:46 -0400
+Subject: Re: Clearly state infrastructure change on old XFS website
+References: <4b3ef7f54f32dc2b61a5d4a33a0e5b2e@wh2.tu-dresden.de>
+ <20180730223042.GC4226@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <3f708cdb-4cb0-dd12-0483-ada1025364b9@sandeen.net>
+Date: Mon, 30 Jul 2018 17:44:35 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180730164520.36882-7-bfoster@redhat.com>
+In-Reply-To: <20180730223042.GC4226@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, adam_kalisz <adam_kalisz@wh2.tu-dresden.de>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Jul 30, 2018 at 12:45:11PM -0400, Brian Foster wrote:
-> Log items that require relogging during deferred operations
-> processing are explicitly joined to the associated dfops via the
-> xfs_defer_*join() helpers. These calls imply that the associated
-> object is "held" by the transaction such that when rolled, the item
-> can be immediately joined to a follow up transaction. For buffers,
-> this means the buffer remains locked and held after each roll. For
-> inodes, this means that the inode remains locked.
-> 
-> Failure to join a held item to the dfops structure means the
-> associated object pins the tail of the log while dfops processing
-> completes, because the item never relogs and is not unlocked or
-> released until deferred processing completes.
-> 
-> Currently, all buffers that are held in transactions (XFS_BLI_HOLD)
-> with deferred operations are explicitly joined to the dfops. This is
-> not the case for inodes, however, as various contexts defer
-> operations to transactions with held inodes without explicit joins
-> to the associated dfops (and thus not relogging).
-> 
-> While this is not a catastrophic problem, it is not ideal. Given
-> that we want to eventually relog such items automatically during
-> dfops processing, start by explicitly adding these missing
-> xfs_defer_ijoin() calls. A call is added everywhere an inode is
-> joined to a transaction without transferring lock ownership and
-> said transaction runs deferred operations.
-> 
-> All xfs_defer_ijoin() calls will eventually be replaced by automatic
-> dfops inode relogging. This patch essentially implements the
-> behavior change that would otherwise occur due to automatic inode
-> dfops relogging.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-Looks ok, though I admit I'm a little skeptical of adding the calls only
-to replace them with automatic ijoining two patches later... :)
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 1 +
->  fs/xfs/xfs_bmap_util.c   | 1 +
->  fs/xfs/xfs_inode.c       | 1 +
->  fs/xfs/xfs_iomap.c       | 3 +++
->  fs/xfs/xfs_reflink.c     | 1 +
->  5 files changed, 7 insertions(+)
+On 7/30/18 5:30 PM, Darrick J. Wong wrote:
+> On Sat, Jul 28, 2018 at 11:25:40PM +0200, adam_kalisz wrote:
+>> Dear Darrick,
+>>
+>> I wanted to have a look at the recent new features being added to XFS and
+>> stumbled on the fact, that Google presents me first with the old website [0]
+>> and starting on page 2 of the web results (for the desperate) with the
+>> current website [1].
+>>
+>> It would be most helpful to write some notice to the old website and the
+>> "Getting the latest source code" should point to the current git-repo. It
+>> cost me some time to realize, there is something wrong, because the git log
+>> ended at about 4.9 kernel (~2016) when the infrastructure from sgi probably
+>> got left behind. Also maybe highlight, that the current repo ist xfs-linux
+>> and NOT linux-xfs! It might help some of your possible future colleagues to
+>> get started with XFS.
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 8edf7522aaff..71687d805f79 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -1119,6 +1119,7 @@ xfs_bmap_add_attrfork(
->  			xfs_log_sb(tp);
->  	}
->  
-> +	xfs_defer_ijoin(tp->t_dfops, ip);
->  	error = xfs_trans_commit(tp);
->  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  	return error;
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 412dc58ae54d..0c58a66b39e5 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -979,6 +979,7 @@ xfs_alloc_file_space(
->  		/*
->  		 * Complete the transaction
->  		 */
-> +		xfs_defer_ijoin(tp->t_dfops, ip);
->  		error = xfs_trans_commit(tp);
->  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  		if (error)
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 5fc1815c2b62..441c8593cfd7 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -1810,6 +1810,7 @@ xfs_inactive_ifree(
->  	 * Just ignore errors at this point.  There is nothing we can do except
->  	 * to try to keep going. Make sure it's not a silent error.
->  	 */
-> +	xfs_defer_ijoin(tp->t_dfops, ip);
->  	error = xfs_trans_commit(tp);
->  	if (error)
->  		xfs_notice(mp, "%s: xfs_trans_commit returned error %d",
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 8e8ca9f03f0e..464b4b3225bb 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -261,6 +261,7 @@ xfs_iomap_write_direct(
->  	/*
->  	 * Complete the transaction
->  	 */
-> +	xfs_defer_ijoin(tp->t_dfops, ip);
->  	error = xfs_trans_commit(tp);
->  	if (error)
->  		goto out_unlock;
-> @@ -762,6 +763,7 @@ xfs_iomap_write_allocate(
->  			if (error)
->  				goto trans_cancel;
->  
-> +			xfs_defer_ijoin(tp->t_dfops, ip);
->  			error = xfs_trans_commit(tp);
->  			if (error)
->  				goto error0;
-> @@ -879,6 +881,7 @@ xfs_iomap_write_unwritten(
->  			xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
->  		}
->  
-> +		xfs_defer_ijoin(tp->t_dfops, ip);
->  		error = xfs_trans_commit(tp);
->  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  		if (error)
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 9a0a56526266..e986fcf928e5 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -435,6 +435,7 @@ xfs_reflink_allocate_cow(
->  	xfs_inode_set_cowblocks_tag(ip);
->  
->  	/* Finish up. */
-> +	xfs_defer_ijoin(tp->t_dfops, ip);
->  	error = xfs_trans_commit(tp);
->  	if (error)
->  		return error;
-> -- 
-> 2.17.1
+> Sorry about that -- I'll ask those who have write access to xfs.org to
+> update the links.  In the long run I'd rather just move all the
+> documentation and FAQ into the kernel source itself, especially since it
+> all now lives on https://www.kernel.org/doc/html/latest/ ...
+
+yeah ...
+
+As a general PSA, the wiki is known to be bitrotting.  It's impossible to add
+new editors, for example.  It'll eventually probably go away entirely.
+
+I've fixed up a couple things Darrick asked me to do, but maybe we should
+just put a big <blink>THIS WIKI IS BITROTTING</blink> at the top and be
+done with it.
+
+-Eric
+
+> --D
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> TL;DR:
+>> Please make sure the XFS development is more visible by ensuring that most
+>> prominent references point to the current repository and website.
+>>
