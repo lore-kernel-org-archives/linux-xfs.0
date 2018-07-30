@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:43686 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:43812 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726227AbeG3HWf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Jul 2018 03:22:35 -0400
-Subject: [PATCH 11/14] xfs: repair damaged symlinks
+        with ESMTP id S1726227AbeG3HWm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Jul 2018 03:22:42 -0400
+Subject: [PATCH 12/14] xfs: repair extended attributes
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sun, 29 Jul 2018 22:49:09 -0700
-Message-ID: <153292974980.24509.14967171523048953889.stgit@magnolia>
+Date: Sun, 29 Jul 2018 22:49:16 -0700
+Message-ID: <153292975639.24509.12593511556451726584.stgit@magnolia>
 In-Reply-To: <153292966714.24509.15809693393247424274.stgit@magnolia>
 References: <153292966714.24509.15809693393247424274.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,93 +20,53 @@ Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, david@fromorbit.com, allison.
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Repair inconsistent symbolic link data.
+If the extended attributes look bad, try to sift through the rubble to
+find whatever keys/values we can, zap the attr tree, and re-add the
+values.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/Makefile               |    1 
- fs/xfs/scrub/repair.h         |    2 
- fs/xfs/scrub/scrub.c          |    2 
- fs/xfs/scrub/symlink.c        |    5 +
- fs/xfs/scrub/symlink_repair.c |  244 +++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_symlink.c          |  150 ++++++++++++++-----------
- fs/xfs/xfs_symlink.h          |    3 +
- 7 files changed, 339 insertions(+), 68 deletions(-)
- create mode 100644 fs/xfs/scrub/symlink_repair.c
+ fs/xfs/Makefile            |    1 
+ fs/xfs/scrub/attr.c        |    2 
+ fs/xfs/scrub/attr_repair.c |  611 ++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/repair.h      |    2 
+ fs/xfs/scrub/scrub.c       |    2 
+ fs/xfs/scrub/scrub.h       |    3 
+ 6 files changed, 619 insertions(+), 2 deletions(-)
+ create mode 100644 fs/xfs/scrub/attr_repair.c
 
 
 diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 7f5467bb18b9..e25cde969d99 100644
+index e25cde969d99..c3963c88f952 100644
 --- a/fs/xfs/Makefile
 +++ b/fs/xfs/Makefile
-@@ -171,6 +171,7 @@ xfs-y				+= $(addprefix scrub/, \
- 				   inode_repair.o \
- 				   refcount_repair.o \
- 				   repair.o \
-+				   symlink_repair.o \
- 				   )
- endif
- endif
-diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-index 38444fec70db..17769efb20d9 100644
---- a/fs/xfs/scrub/repair.h
-+++ b/fs/xfs/scrub/repair.h
-@@ -68,6 +68,7 @@ int xrep_refcountbt(struct xfs_scrub *sc);
- int xrep_inode(struct xfs_scrub *sc);
- int xrep_bmap_data(struct xfs_scrub *sc);
- int xrep_bmap_attr(struct xfs_scrub *sc);
-+int xrep_symlink(struct xfs_scrub *sc);
- 
- #else
- 
-@@ -108,6 +109,7 @@ xrep_reset_perag_resv(
- #define xrep_inode			xrep_notsupported
- #define xrep_bmap_data			xrep_notsupported
- #define xrep_bmap_attr			xrep_notsupported
-+#define xrep_symlink			xrep_notsupported
- 
- #endif /* CONFIG_XFS_ONLINE_REPAIR */
- 
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 45af20a3ab50..0a8eea77e58f 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -307,7 +307,7 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
- 		.type	= ST_INODE,
- 		.setup	= xchk_setup_symlink,
- 		.scrub	= xchk_symlink,
--		.repair	= xrep_notsupported,
-+		.repair	= xrep_symlink,
- 	},
- 	[XFS_SCRUB_TYPE_PARENT] = {	/* parent pointers */
- 		.type	= ST_INODE,
-diff --git a/fs/xfs/scrub/symlink.c b/fs/xfs/scrub/symlink.c
-index f7ebaa946999..ee968c62d0f2 100644
---- a/fs/xfs/scrub/symlink.c
-+++ b/fs/xfs/scrub/symlink.c
-@@ -29,12 +29,15 @@ xchk_setup_symlink(
+@@ -164,6 +164,7 @@ xfs-$(CONFIG_XFS_QUOTA)		+= scrub/quota.o
+ ifeq ($(CONFIG_XFS_ONLINE_REPAIR),y)
+ xfs-y				+= $(addprefix scrub/, \
+ 				   agheader_repair.o \
++				   attr_repair.o \
+ 				   alloc_repair.o \
+ 				   bitmap.o \
+ 				   bmap_repair.o \
+diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
+index 81d5e90547a1..e20074c241b5 100644
+--- a/fs/xfs/scrub/attr.c
++++ b/fs/xfs/scrub/attr.c
+@@ -125,7 +125,7 @@ xchk_xattr_listent(
+  * Within a char, the lowest bit of the char represents the byte with
+  * the smallest address
+  */
+-STATIC bool
++bool
+ xchk_xattr_set_map(
  	struct xfs_scrub	*sc,
- 	struct xfs_inode	*ip)
- {
-+	uint			resblks;
-+
- 	/* Allocate the buffer without the inode lock held. */
- 	sc->buf = kmem_zalloc_large(XFS_SYMLINK_MAXLEN + 1, KM_SLEEP);
- 	if (!sc->buf)
- 		return -ENOMEM;
- 
--	return xchk_setup_inode_contents(sc, ip, 0);
-+	resblks = xfs_symlink_blocks(sc->mp, XFS_SYMLINK_MAXLEN);
-+	return xchk_setup_inode_contents(sc, ip, resblks);
- }
- 
- /* Symbolic links. */
-diff --git a/fs/xfs/scrub/symlink_repair.c b/fs/xfs/scrub/symlink_repair.c
+ 	unsigned long		*map,
+diff --git a/fs/xfs/scrub/attr_repair.c b/fs/xfs/scrub/attr_repair.c
 new file mode 100644
-index 000000000000..6888094cf941
+index 000000000000..5bacfb88f25e
 --- /dev/null
-+++ b/fs/xfs/scrub/symlink_repair.c
-@@ -0,0 +1,244 @@
++++ b/fs/xfs/scrub/attr_repair.c
+@@ -0,0 +1,611 @@
 +// SPDX-License-Identifier: GPL-2.0+
 +/*
 + * Copyright (C) 2018 Oracle.  All Rights Reserved.
@@ -125,14 +85,13 @@ index 000000000000..6888094cf941
 +#include "xfs_trans.h"
 +#include "xfs_sb.h"
 +#include "xfs_inode.h"
-+#include "xfs_inode_fork.h"
-+#include "xfs_symlink.h"
-+#include "xfs_bmap.h"
-+#include "xfs_quota.h"
 +#include "xfs_da_format.h"
 +#include "xfs_da_btree.h"
-+#include "xfs_bmap_btree.h"
-+#include "xfs_trans_space.h"
++#include "xfs_dir2.h"
++#include "xfs_attr.h"
++#include "xfs_attr_leaf.h"
++#include "xfs_attr_sf.h"
++#include "xfs_attr_remote.h"
 +#include "scrub/xfs_scrub.h"
 +#include "scrub/scrub.h"
 +#include "scrub/common.h"
@@ -140,405 +99,628 @@ index 000000000000..6888094cf941
 +#include "scrub/repair.h"
 +
 +/*
-+ * Symbolic Link Repair
-+ * ====================
++ * Extended Attribute Repair
++ * =========================
 + *
-+ * There's not much we can do to repair symbolic links -- we truncate them to
-+ * the first NULL byte and reinitialize the target.  Zero-length symlinks are
-+ * turned into links to the current dir.
++ * We repair extended attributes by reading the attribute fork blocks looking
++ * for keys and values, then truncate the entire attr fork and reinsert all
++ * the attributes.  Unfortunately, there's no secondary copy of most extended
++ * attribute data, which means that if we blow up midway through there's
++ * little we can do.
 + */
 +
-+/* Try to salvage the pathname from rmt blocks. */
++struct xrep_xattr_key {
++	struct list_head	list;
++	unsigned char		*value;
++	int			valuelen;
++	int			flags;
++	int			namelen;
++	unsigned char		name[0];
++};
++
++#define XREP_XATTR_KEY_LEN(namelen) \
++	(sizeof(struct xrep_xattr_key) + (namelen) + 1)
++
++struct xrep_xattr {
++	struct list_head	*attrlist;
++	struct xfs_scrub	*sc;
++};
++
++/*
++ * Iterate each block in an attr fork extent.  The m_attr_geo fsbcount is
++ * always 1 for now, but code defensively in case this ever changes.
++ */
++#define for_each_xfs_attr_block(mp, irec, dabno) \
++	for ((dabno) = roundup((xfs_dablk_t)(irec)->br_startoff, \
++			(mp)->m_attr_geo->fsbcount); \
++	     (dabno) < (irec)->br_startoff + (irec)->br_blockcount; \
++	     (dabno) += (mp)->m_attr_geo->fsbcount)
++
++/*
++ * Decide if we want to salvage this attribute.  We don't bother with
++ * incomplete or oversized keys or values.
++ */
 +STATIC int
-+xrep_symlink_salvage_remote(
-+	struct xfs_scrub	*sc)
++xrep_xattr_want_salvage(
++	int			flags,
++	int			namelen,
++	int			valuelen)
 +{
-+	struct xfs_bmbt_irec	mval[XFS_SYMLINK_MAPS];
-+	struct xfs_inode	*ip = sc->ip;
-+	struct xfs_buf		*bp;
-+	char			*target_buf = sc->buf;
-+	xfs_failaddr_t		fa;
-+	xfs_filblks_t		fsblocks;
-+	xfs_daddr_t		d;
-+	loff_t			len;
-+	loff_t			offset;
-+	unsigned int		byte_cnt;
-+	bool			magic_ok;
-+	bool			hdr_ok;
-+	int			n;
-+	int			nmaps = XFS_SYMLINK_MAPS;
-+	int			error;
++	if (flags & XFS_ATTR_INCOMPLETE)
++		return false;
++	if (namelen > XATTR_NAME_MAX || namelen <= 0)
++		return false;
++	if (valuelen > XATTR_SIZE_MAX || valuelen < 0)
++		return false;
++	return true;
++}
 +
-+	/* We'll only read until the buffer is full. */
-+	len = max_t(loff_t, ip->i_d.di_size, XFS_SYMLINK_MAXLEN);
-+	fsblocks = xfs_symlink_blocks(sc->mp, len);
-+	error = xfs_bmapi_read(ip, 0, fsblocks, mval, &nmaps, 0);
-+	if (error)
-+		return error;
++/* Allocate an in-core record to hold xattrs while we rebuild the xattr data. */
++STATIC struct xrep_xattr_key *
++xrep_xattr_salvage_key(
++	int			flags,
++	unsigned char		*name,
++	int			namelen,
++	int			valuelen)
++{
++	struct xrep_xattr_key	*key;
 +
-+	offset = 0;
-+	for (n = 0; n < nmaps; n++) {
-+		struct xfs_dsymlink_hdr	*dsl;
-+
-+		d = XFS_FSB_TO_DADDR(sc->mp, mval[n].br_startblock);
-+
-+		/* Read the rmt block.  We'll run the verifiers manually. */
-+		error = xfs_trans_read_buf(sc->mp, sc->tp, sc->mp->m_ddev_targp,
-+				d, XFS_FSB_TO_BB(sc->mp, mval[n].br_blockcount),
-+				0, &bp, NULL);
-+		if (error)
-+			return error;
-+		bp->b_ops = &xfs_symlink_buf_ops;
-+
-+		/* How many bytes do we expect to get out of this buffer? */
-+		byte_cnt = XFS_FSB_TO_B(sc->mp, mval[n].br_blockcount);
-+		byte_cnt = XFS_SYMLINK_BUF_SPACE(sc->mp, byte_cnt);
-+		byte_cnt = min_t(unsigned int, byte_cnt, len);
-+
-+		/*
-+		 * See if the verifiers accept this block.  We're willing to
-+		 * salvage if the if the offset/byte/ino are ok and either the
-+		 * verifier passed or the magic is ok.  Anything else and we
-+		 * stop dead in our tracks.
-+		 */
-+		fa = bp->b_ops->verify_struct(bp);
-+		dsl = bp->b_addr;
-+		magic_ok = dsl->sl_magic == cpu_to_be32(XFS_SYMLINK_MAGIC);
-+		hdr_ok = xfs_symlink_hdr_ok(ip->i_ino, offset, byte_cnt, bp);
-+		if (!hdr_ok || (fa != NULL && !magic_ok))
-+			break;
-+
-+		memcpy(target_buf + offset, dsl + 1, byte_cnt);
-+
-+		len -= byte_cnt;
-+		offset += byte_cnt;
++	/* Store attr key. */
++	key = kmem_alloc(XREP_XATTR_KEY_LEN(namelen), KM_MAYFAIL);
++	if (!key)
++		return NULL;
++	INIT_LIST_HEAD(&key->list);
++	key->valuelen = valuelen;
++	key->flags = flags & (ATTR_ROOT | ATTR_SECURE);
++	key->namelen = namelen;
++	key->name[namelen] = 0;
++	memcpy(key->name, name, namelen);
++	key->value = NULL;
++	if (valuelen) {
++		key->value = kmem_alloc_large(valuelen, KM_MAYFAIL);
++		if (!key->value) {
++			kmem_free(key);
++			return NULL;
++		}
 +	}
++	return key;
++}
 +
-+	/* Ensure we have a zero at the end, and /some/ contents. */
-+	if (offset == 0)
-+		sprintf(target_buf, ".");
-+	else
-+		target_buf[offset] = 0;
++/*
++ * Record a shortform extended attribute key & value for later reinsertion
++ * into the inode.
++ */
++STATIC int
++xrep_xattr_salvage_sf_attr(
++	struct xrep_xattr		*rx,
++	struct xfs_attr_sf_entry	*sfe)
++{
++	unsigned char			*value = &sfe->nameval[sfe->namelen];
++	struct xrep_xattr_key		*key;
++
++	if (!xrep_xattr_want_salvage(sfe->flags, sfe->namelen, sfe->valuelen))
++		return 0;
++	key = xrep_xattr_salvage_key(sfe->flags, sfe->nameval, sfe->namelen,
++			sfe->valuelen);
++	if (!key)
++		return -ENOMEM;
++	if (sfe->valuelen)
++		memcpy(key->value, value, sfe->valuelen);
++	list_add_tail(&key->list, rx->attrlist);
 +	return 0;
 +}
 +
 +/*
-+ * Try to salvage an inline symlink's contents.  Empty symlinks become a link
-+ * to the current directory.
-+ */
-+STATIC void
-+xrep_symlink_salvage_inline(
-+	struct xfs_scrub	*sc)
-+{
-+	struct xfs_inode	*ip = sc->ip;
-+	struct xfs_ifork	*ifp;
-+
-+	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+	if (ifp->if_u1.if_data)
-+		strncpy(sc->buf, ifp->if_u1.if_data, XFS_IFORK_DSIZE(ip));
-+	if (strlen(sc->buf) == 0)
-+		sprintf(sc->buf, ".");
-+}
-+
-+/* Reset an inline symlink to its fresh configuration. */
-+STATIC void
-+xrep_symlink_truncate_inline(
-+	struct xfs_inode	*ip)
-+{
-+	xfs_idestroy_fork(ip, XFS_DATA_FORK);
-+	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
-+	ip->i_d.di_nextents = 0;
-+	memset(&ip->i_df, 0, sizeof(struct xfs_ifork));
-+	ip->i_df.if_flags |= XFS_IFEXTENTS;
-+}
-+
-+/*
-+ * Salvage an inline symlink's contents and reset data fork.
-+ * Returns with the inode joined to the transaction.
++ * Record a local format extended attribute key & value for later reinsertion
++ * into the inode.
 + */
 +STATIC int
-+xrep_symlink_inline(
-+	struct xfs_scrub	*sc)
++xrep_xattr_salvage_local_attr(
++	struct xrep_xattr		*rx,
++	struct xfs_attr_leaf_entry	*ent,
++	unsigned int			nameidx,
++	const char			*buf_end,
++	struct xfs_attr_leaf_name_local	*lentry)
 +{
-+	/* Salvage whatever link target information we can find. */
-+	xrep_symlink_salvage_inline(sc);
-+
-+	/* Truncate the symlink. */
-+	xrep_symlink_truncate_inline(sc->ip);
-+
-+	xfs_trans_ijoin(sc->tp, sc->ip, 0);
-+	return 0;
-+}
-+
-+/*
-+ * Salvage an inline symlink's contents and reset data fork.
-+ * Returns with the inode joined to the transaction.
-+ */
-+STATIC int
-+xrep_symlink_remote(
-+	struct xfs_scrub	*sc)
-+{
-+	int			error;
-+
-+	/* Salvage whatever link target information we can find. */
-+	error = xrep_symlink_salvage_remote(sc);
-+	if (error)
-+		return error;
-+
-+	/* Truncate the symlink. */
-+	xfs_trans_ijoin(sc->tp, sc->ip, 0);
-+	return xfs_itruncate_extents(&sc->tp, sc->ip, XFS_DATA_FORK, 0);
-+}
-+
-+/*
-+ * Reinitialize a link target.  Caller must ensure the inode is joined to
-+ * the transaction.
-+ */
-+STATIC int
-+xrep_symlink_reinitialize(
-+	struct xfs_scrub	*sc)
-+{
-+	xfs_fsblock_t		fs_blocks;
-+	unsigned int		target_len;
-+	uint			resblks;
-+	int			error;
-+
-+	/* How many blocks do we need? */
-+	target_len = strlen(sc->buf);
-+	ASSERT(target_len != 0);
-+	if (target_len == 0 || target_len > XFS_SYMLINK_MAXLEN)
-+		return -EFSCORRUPTED;
-+
-+	/* Set up to reinitialize the target. */
-+	fs_blocks = xfs_symlink_blocks(sc->mp, target_len);
-+	resblks = XFS_SYMLINK_SPACE_RES(sc->mp, target_len, fs_blocks);
-+	error = xfs_trans_reserve_quota_nblks(sc->tp, sc->ip, resblks, 0,
-+			XFS_QMOPT_RES_REGBLKS);
-+
-+	/* Try to write the new target back out. */
-+	xfs_defer_ijoin(sc->tp->t_dfops, sc->ip);
-+	error = xfs_symlink_write_target(sc->tp, sc->ip, sc->buf, target_len,
-+			fs_blocks, resblks);
-+	if (error)
-+		return error;
-+
-+	/* Finish up any block mapping activities. */
-+	return xfs_defer_finish(&sc->tp);
-+}
-+
-+/* Repair a symbolic link. */
-+int
-+xrep_symlink(
-+	struct xfs_scrub	*sc)
-+{
-+	struct xfs_ifork	*ifp;
-+	int			error;
-+
-+	error = xfs_qm_dqattach_locked(sc->ip, false);
-+	if (error)
-+		return error;
-+
-+	/* Salvage whatever we can of the target. */
-+	*((char *)sc->buf) = 0;
-+	ifp = XFS_IFORK_PTR(sc->ip, XFS_DATA_FORK);
-+	if (ifp->if_flags & XFS_IFINLINE)
-+		error = xrep_symlink_inline(sc);
-+	else
-+		error = xrep_symlink_remote(sc);
-+	if (error)
-+		return error;
-+
-+	/* Now reset the target. */
-+	return xrep_symlink_reinitialize(sc);
-+}
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index 2bfe7fbbedb2..1097d9062ef3 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -150,6 +150,86 @@ xfs_readlink(
- 	return error;
- }
- 
-+/* Write the symlink target into the inode. */
-+int
-+xfs_symlink_write_target(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*ip,
-+	const char		*target_path,
-+	int			pathlen,
-+	xfs_fsblock_t		fs_blocks,
-+	uint			resblks)
-+{
-+	struct xfs_bmbt_irec	mval[XFS_SYMLINK_MAPS];
-+	struct xfs_mount	*mp = tp->t_mountp;
-+	const char		*cur_chunk;
-+	struct xfs_buf		*bp;
-+	xfs_daddr_t		d;
-+	int			byte_cnt;
-+	int			nmaps;
-+	int			offset;
-+	int			n;
-+	int			error;
++	struct xrep_xattr_key		*key;
++	unsigned long			*usedmap = rx->sc->buf;
++	unsigned int			valuelen;
++	unsigned int			namesize;
 +
 +	/*
-+	 * If the symlink will fit into the inode, write it inline.
++	 * Decode the leaf local entry format.  If something seems wrong, we
++	 * junk the attribute.
 +	 */
-+	if (pathlen <= XFS_IFORK_DSIZE(ip)) {
-+		xfs_init_local_fork(ip, XFS_DATA_FORK, target_path, pathlen);
++	valuelen = be16_to_cpu(lentry->valuelen);
++	namesize = xfs_attr_leaf_entsize_local(lentry->namelen, valuelen);
++	if ((char *)lentry + namesize > buf_end)
++		return 0;
++	if (!xrep_xattr_want_salvage(ent->flags, lentry->namelen, valuelen))
++		return 0;
++	if (!xchk_xattr_set_map(rx->sc, usedmap, nameidx, namesize))
++		return 0;
 +
-+		ip->i_d.di_size = pathlen;
-+		ip->i_d.di_format = XFS_DINODE_FMT_LOCAL;
-+		xfs_trans_log_inode(tp, ip, XFS_ILOG_DDATA | XFS_ILOG_CORE);
++	/* Try to save this attribute. */
++	key = xrep_xattr_salvage_key(ent->flags, lentry->nameval,
++			lentry->namelen, valuelen);
++	if (!key)
++		return -ENOMEM;
++	if (valuelen)
++		memcpy(key->value, &lentry->nameval[lentry->namelen], valuelen);
++	list_add_tail(&key->list, rx->attrlist);
++	return 0;
++}
 +
++/*
++ * Record a remote format extended attribute key & value for later reinsertion
++ * into the inode.
++ */
++STATIC int
++xrep_xattr_salvage_remote_attr(
++	struct xrep_xattr		*rx,
++	struct xfs_attr_leaf_entry	*ent,
++	unsigned int			nameidx,
++	const char			*buf_end,
++	struct xfs_attr_leaf_name_remote *rentry,
++	unsigned int			ent_idx,
++	struct xfs_buf			*leaf_bp)
++{
++	struct xfs_da_args		args = {
++		.trans		= rx->sc->tp,
++		.dp		= rx->sc->ip,
++		.index		= ent_idx,
++		.geo		= rx->sc->mp->m_attr_geo,
++	};
++	struct xrep_xattr_key		*key;
++	unsigned long			*usedmap = rx->sc->buf;
++	unsigned int			valuelen;
++	unsigned int			namesize;
++	int				error;
++
++	/*
++	 * Decode the leaf remote entry format.  If something seems wrong, we
++	 * junk the attribute.  Note that we should never find a zero-length
++	 * remote attribute value.
++	 */
++	valuelen = be32_to_cpu(rentry->valuelen);
++	namesize = xfs_attr_leaf_entsize_remote(rentry->namelen);
++	if ((char *)rentry + namesize > buf_end)
++		return 0;
++	if (valuelen == 0 ||
++	    !xrep_xattr_want_salvage(ent->flags, rentry->namelen, valuelen))
++		return 0;
++	if (!xchk_xattr_set_map(rx->sc, usedmap, nameidx, namesize))
++		return 0;
++
++	/* Try to save this attribute. */
++	key = xrep_xattr_salvage_key(ent->flags, rentry->name, rentry->namelen,
++			valuelen);
++	if (!key)
++		return -ENOMEM;
++
++	/* Look up the remote value and stash it for reconstruction. */
++	args.valuelen = valuelen;
++	args.namelen = rentry->namelen;
++	args.name = key->name;
++	args.value = key->value;
++	error = xfs_attr3_leaf_getvalue(leaf_bp, &args);
++	if (error || args.rmtblkno == 0)
++		goto err_free;
++
++	error = xfs_attr_rmtval_get(&args);
++	if (error == 0) {
++		/* Got the value, add the attr and get out. */
++		list_add_tail(&key->list, rx->attrlist);
 +		return 0;
 +	}
 +
-+	/* Write target to remote blocks. */
-+	nmaps = XFS_SYMLINK_MAPS;
-+	error = xfs_bmapi_write(tp, ip, 0, fs_blocks, XFS_BMAPI_METADATA,
-+			resblks, mval, &nmaps);
-+	if (error)
-+		return error;
++err_free:
++	/* remote value was garbage, junk it */
++	if (error == -EFSBADCRC || error == -EFSCORRUPTED)
++		error = 0;
++	kmem_free(key->value);
++	kmem_free(key);
++	return error;
++}
 +
-+	if (resblks)
-+		resblks -= fs_blocks;
-+	ip->i_d.di_size = pathlen;
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++/* Extract every xattr key that we can from this attr fork block. */
++STATIC int
++xrep_xattr_recover_leaf(
++	struct xrep_xattr		*rx,
++	struct xfs_buf			*bp)
++{
++	struct xfs_attr3_icleaf_hdr	leafhdr;
++	struct xfs_scrub		*sc = rx->sc;
++	struct xfs_mount		*mp = sc->mp;
++	struct xfs_attr_leafblock	*leaf;
++	unsigned long			*usedmap = sc->buf;
++	struct xfs_attr_leaf_name_local	*lentry;
++	struct xfs_attr_leaf_name_remote *rentry;
++	struct xfs_attr_leaf_entry	*ent;
++	struct xfs_attr_leaf_entry	*entries;
++	char				*buf_end;
++	size_t				off;
++	unsigned int			nameidx;
++	unsigned int			hdrsize;
++	int				i;
++	int				error = 0;
 +
-+	cur_chunk = target_path;
-+	offset = 0;
-+	for (n = 0; n < nmaps; n++) {
-+		char	*buf;
++	bitmap_zero(usedmap, mp->m_attr_geo->blksize);
 +
-+		d = XFS_FSB_TO_DADDR(mp, mval[n].br_startblock);
-+		byte_cnt = XFS_FSB_TO_B(mp, mval[n].br_blockcount);
-+		bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, d,
-+				BTOBB(byte_cnt), 0);
-+		if (!bp)
-+			return -ENOMEM;
-+		bp->b_ops = &xfs_symlink_buf_ops;
++	/* Check the leaf header */
++	leaf = bp->b_addr;
++	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, leaf);
++	hdrsize = xfs_attr3_leaf_hdr_size(leaf);
++	xchk_xattr_set_map(sc, usedmap, 0, hdrsize);
++	entries = xfs_attr3_leaf_entryp(leaf);
 +
-+		byte_cnt = XFS_SYMLINK_BUF_SPACE(mp, byte_cnt);
-+		byte_cnt = min(byte_cnt, pathlen);
++	buf_end = (char *)bp->b_addr + mp->m_attr_geo->blksize;
++	for (i = 0, ent = entries; i < leafhdr.count; ent++, i++) {
++		/* Skip key if it conflicts with something else? */
++		off = (char *)ent - (char *)leaf;
++		if (!xchk_xattr_set_map(sc, usedmap, off,
++				sizeof(xfs_attr_leaf_entry_t)))
++			continue;
 +
-+		buf = bp->b_addr;
-+		buf += xfs_symlink_hdr_set(mp, ip->i_ino, offset,
-+					   byte_cnt, bp);
++		/* Check the name information. */
++		nameidx = be16_to_cpu(ent->nameidx);
++		if (nameidx < leafhdr.firstused ||
++		    nameidx >= mp->m_attr_geo->blksize)
++			continue;
 +
-+		memcpy(buf, cur_chunk, byte_cnt);
-+
-+		cur_chunk += byte_cnt;
-+		pathlen -= byte_cnt;
-+		offset += byte_cnt;
-+
-+		xfs_trans_buf_set_type(tp, bp, XFS_BLFT_SYMLINK_BUF);
-+		xfs_trans_log_buf(tp, bp, 0, (buf + byte_cnt - 1) -
-+						(char *)bp->b_addr);
++		if (ent->flags & XFS_ATTR_LOCAL) {
++			lentry = xfs_attr3_leaf_name_local(leaf, i);
++			error = xrep_xattr_salvage_local_attr(rx, ent, nameidx,
++					buf_end, lentry);
++		} else {
++			rentry = xfs_attr3_leaf_name_remote(leaf, i);
++			error = xrep_xattr_salvage_remote_attr(rx, ent, nameidx,
++					buf_end, rentry, i, bp);
++		}
++		if (error)
++			break;
 +	}
-+	ASSERT(pathlen == 0);
++
++	return error;
++}
++
++/* Try to recover shortform attrs. */
++STATIC int
++xrep_xattr_recover_sf(
++	struct xrep_xattr		*rx)
++{
++	struct xfs_attr_shortform	*sf;
++	struct xfs_attr_sf_entry	*sfe;
++	struct xfs_attr_sf_entry	*next;
++	struct xfs_ifork		*ifp;
++	unsigned char			*end;
++	int				i;
++	int				error;
++
++	ifp = XFS_IFORK_PTR(rx->sc->ip, XFS_ATTR_FORK);
++	sf = (struct xfs_attr_shortform *)rx->sc->ip->i_afp->if_u1.if_data;
++	end = (unsigned char *)ifp->if_u1.if_data + ifp->if_bytes;
++
++	for (i = 0, sfe = &sf->list[0]; i < sf->hdr.count; i++) {
++		next = XFS_ATTR_SF_NEXTENTRY(sfe);
++		if ((unsigned char *)next > end)
++			break;
++
++		/* Ok, let's save this key/value. */
++		error = xrep_xattr_salvage_sf_attr(rx, sfe);
++		if (error)
++			return error;
++
++		sfe = next;
++	}
++
 +	return 0;
 +}
 +
- int
- xfs_symlink(
- 	struct xfs_inode	*dp,
-@@ -164,15 +244,7 @@ xfs_symlink(
- 	int			error = 0;
- 	int			pathlen;
- 	bool                    unlock_dp_on_error = false;
--	xfs_fileoff_t		first_fsb;
- 	xfs_filblks_t		fs_blocks;
--	int			nmaps;
--	struct xfs_bmbt_irec	mval[XFS_SYMLINK_MAPS];
--	xfs_daddr_t		d;
--	const char		*cur_chunk;
--	int			byte_cnt;
--	int			n;
--	xfs_buf_t		*bp;
- 	prid_t			prid;
- 	struct xfs_dquot	*udqp = NULL;
- 	struct xfs_dquot	*gdqp = NULL;
-@@ -265,65 +337,11 @@ xfs_symlink(
- 
- 	if (resblks)
- 		resblks -= XFS_IALLOC_SPACE_RES(mp);
--	/*
--	 * If the symlink will fit into the inode, write it inline.
--	 */
--	if (pathlen <= XFS_IFORK_DSIZE(ip)) {
--		xfs_init_local_fork(ip, XFS_DATA_FORK, target_path, pathlen);
--
--		ip->i_d.di_size = pathlen;
--		ip->i_d.di_format = XFS_DINODE_FMT_LOCAL;
--		xfs_trans_log_inode(tp, ip, XFS_ILOG_DDATA | XFS_ILOG_CORE);
--	} else {
--		int	offset;
--
--		first_fsb = 0;
--		nmaps = XFS_SYMLINK_MAPS;
--
--		error = xfs_bmapi_write(tp, ip, first_fsb, fs_blocks,
--				  XFS_BMAPI_METADATA, resblks, mval, &nmaps);
--		if (error)
--			goto out_trans_cancel;
--
--		if (resblks)
--			resblks -= fs_blocks;
--		ip->i_d.di_size = pathlen;
--		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--
--		cur_chunk = target_path;
--		offset = 0;
--		for (n = 0; n < nmaps; n++) {
--			char	*buf;
--
--			d = XFS_FSB_TO_DADDR(mp, mval[n].br_startblock);
--			byte_cnt = XFS_FSB_TO_B(mp, mval[n].br_blockcount);
--			bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, d,
--					       BTOBB(byte_cnt), 0);
--			if (!bp) {
--				error = -ENOMEM;
--				goto out_trans_cancel;
--			}
--			bp->b_ops = &xfs_symlink_buf_ops;
--
--			byte_cnt = XFS_SYMLINK_BUF_SPACE(mp, byte_cnt);
--			byte_cnt = min(byte_cnt, pathlen);
--
--			buf = bp->b_addr;
--			buf += xfs_symlink_hdr_set(mp, ip->i_ino, offset,
--						   byte_cnt, bp);
--
--			memcpy(buf, cur_chunk, byte_cnt);
- 
--			cur_chunk += byte_cnt;
--			pathlen -= byte_cnt;
--			offset += byte_cnt;
--
--			xfs_trans_buf_set_type(tp, bp, XFS_BLFT_SYMLINK_BUF);
--			xfs_trans_log_buf(tp, bp, 0, (buf + byte_cnt - 1) -
--							(char *)bp->b_addr);
--		}
--		ASSERT(pathlen == 0);
--	}
-+	error = xfs_symlink_write_target(tp, ip, target_path, pathlen,
-+			fs_blocks, resblks);
++/* Extract as many attribute keys and values as we can. */
++STATIC int
++xrep_xattr_recover(
++	struct xrep_xattr	*rx)
++{
++	struct xfs_iext_cursor	icur;
++	struct xfs_bmbt_irec	got;
++	struct xfs_scrub	*sc = rx->sc;
++	struct xfs_ifork	*ifp;
++	struct xfs_da_blkinfo	*info;
++	struct xfs_buf		*bp;
++	xfs_dablk_t		dabno;
++	int			error = 0;
++
++	if (sc->ip->i_d.di_aformat == XFS_DINODE_FMT_LOCAL)
++		return xrep_xattr_recover_sf(rx);
++
++	/* Iterate each attr block in the attr fork. */
++	ifp = XFS_IFORK_PTR(sc->ip, XFS_ATTR_FORK);
++	for_each_xfs_iext(ifp, &icur, &got) {
++		for_each_xfs_attr_block(sc->mp, &got, dabno) {
++			/*
++			 * Try to read buffer.  We invalidate them in the next
++			 * step so we don't bother to set a buffer type or
++			 * ops.
++			 */
++			error = xfs_da_read_buf(sc->tp, sc->ip, dabno, -1, &bp,
++					XFS_ATTR_FORK, NULL);
++			if (error || !bp)
++				continue;
++
++			/* Screen out non-leaves & other garbage. */
++			info = bp->b_addr;
++			if (info->magic != cpu_to_be16(XFS_ATTR3_LEAF_MAGIC) ||
++			    xfs_attr3_leaf_buf_ops.verify_struct(bp) != NULL)
++				continue;
++
++			error = xrep_xattr_recover_leaf(rx, bp);
++			if (error)
++				return error;
++		}
++	}
++
++	return error;
++}
++
++/* Free all the attribute fork blocks and delete the fork. */
++STATIC int
++xrep_xattr_reset_btree(
++	struct xfs_scrub	*sc)
++{
++	struct xfs_iext_cursor	icur;
++	struct xfs_bmbt_irec	got;
++	struct xfs_ifork	*ifp;
++	struct xfs_buf		*bp;
++	xfs_fileoff_t		lblk;
++	int			error;
++
++	xfs_trans_ijoin(sc->tp, sc->ip, 0);
++
++	if (sc->ip->i_d.di_aformat == XFS_DINODE_FMT_LOCAL)
++		goto out_fork_remove;
++
++	/* Invalidate each attr block in the attr fork. */
++	ifp = XFS_IFORK_PTR(sc->ip, XFS_ATTR_FORK);
++	for_each_xfs_iext(ifp, &icur, &got) {
++		for_each_xfs_attr_block(sc->mp, &got, lblk) {
++			error = xfs_da_get_buf(sc->tp, sc->ip, lblk, -1, &bp,
++					XFS_ATTR_FORK);
++			if (error || !bp)
++				continue;
++			xfs_trans_binval(sc->tp, bp);
++			error = xfs_trans_roll_inode(&sc->tp, sc->ip);
++			if (error)
++				return error;
++		}
++	}
++
++	/* Now free all the blocks. */
++	error = xfs_itruncate_extents(&sc->tp, sc->ip, XFS_ATTR_FORK, 0);
 +	if (error)
-+		goto out_trans_cancel;
++		return error;
++
++out_fork_remove:
++	/* Reset the attribute fork - this also destroys the in-core fork */
++	xfs_attr_fork_remove(sc->ip, sc->tp);
++	return 0;
++}
++
++/*
++ * Compare two xattr keys.  ATTR_SECURE keys come before ATTR_ROOT and
++ * ATTR_ROOT keys come before user attrs.  Otherwise sort in hash order.
++ */
++static int
++xrep_xattr_key_cmp(
++	void			*priv,
++	struct list_head	*a,
++	struct list_head	*b)
++{
++	struct xrep_xattr_key	*ap;
++	struct xrep_xattr_key	*bp;
++	uint			ahash;
++	uint			bhash;
++
++	ap = container_of(a, struct xrep_xattr_key, list);
++	bp = container_of(b, struct xrep_xattr_key, list);
++
++	if (ap->flags > bp->flags)
++		return 1;
++	else if (ap->flags < bp->flags)
++		return -1;
++
++	ahash = xfs_da_hashname(ap->name, ap->namelen);
++	bhash = xfs_da_hashname(bp->name, bp->namelen);
++	if (ahash > bhash)
++		return 1;
++	else if (ahash < bhash)
++		return -1;
++	return 0;
++}
++
++/*
++ * Find all the extended attributes for this inode by scraping them out of the
++ * attribute key blocks by hand.  The caller must clean up the lists if
++ * anything goes wrong.
++ */
++STATIC int
++xrep_xattr_find_attributes(
++	struct xfs_scrub	*sc,
++	struct list_head	*attrlist)
++{
++	struct xrep_xattr	rx;
++	struct xfs_ifork	*ifp;
++	int			error;
++
++	error = xrep_ino_dqattach(sc);
++	if (error)
++		return error;
++
++	/* Extent map should be loaded. */
++	ifp = XFS_IFORK_PTR(sc->ip, XFS_ATTR_FORK);
++	if (XFS_IFORK_FORMAT(sc->ip, XFS_ATTR_FORK) != XFS_DINODE_FMT_LOCAL &&
++	    !(ifp->if_flags & XFS_IFEXTENTS)) {
++		error = xfs_iread_extents(sc->tp, sc->ip, XFS_ATTR_FORK);
++		if (error)
++			return error;
++	}
++
++	rx.attrlist = attrlist;
++	rx.sc = sc;
++
++	/* Read every attr key and value and record them in memory. */
++	return xrep_xattr_recover(&rx);
++}
++
++/* Free all the attributes. */
++STATIC void
++xrep_xattr_cancel_attrs(
++	struct list_head	*attrlist)
++{
++	struct xrep_xattr_key	*key;
++	struct xrep_xattr_key	*n;
++
++	list_for_each_entry_safe(key, n, attrlist, list) {
++		list_del(&key->list);
++		kmem_free(key->value);
++		kmem_free(key);
++	}
++}
++
++/*
++ * Insert all the attributes that we collected.
++ *
++ * Commit the repair transaction and drop the ilock because the attribute
++ * setting code needs to be able to allocate special transactions and take the
++ * ilock on its own.  Some day we'll have deferred attribute setting, at which
++ * point we'll be able to use that to replace the attributes atomically and
++ * safely.
++ */
++STATIC int
++xrep_xattr_rebuild_tree(
++	struct xfs_scrub	*sc,
++	struct list_head	*attrlist)
++{
++	struct xrep_xattr_key	*key;
++	struct xrep_xattr_key	*n;
++	int			error;
++
++	error = xfs_trans_commit(sc->tp);
++	sc->tp = NULL;
++	if (error)
++		return error;
++
++	xfs_iunlock(sc->ip, XFS_ILOCK_EXCL);
++	sc->ilock_flags &= ~XFS_ILOCK_EXCL;
++
++	/* Re-add every attr to the file. */
++	list_sort(NULL, attrlist, xrep_xattr_key_cmp);
++	list_for_each_entry_safe(key, n, attrlist, list) {
++		error = xfs_attr_set(sc->ip, key->name, key->value,
++				key->valuelen, key->flags);
++		if (error)
++			return error;
++
++		/*
++		 * If the attr value is larger than a single page, free the
++		 * key now so that we aren't hogging memory while doing a lot
++		 * of metadata updates.  Otherwise, we want to spend as little
++		 * time reconstructing the attrs as we possibly can.
++		 */
++		if (key->valuelen <= PAGE_SIZE)
++			continue;
++		list_del(&key->list);
++		kmem_free(key->value);
++		kmem_free(key);
++	}
++
++	xrep_xattr_cancel_attrs(attrlist);
++	return 0;
++}
++
++/*
++ * Repair the extended attribute metadata.
++ *
++ * XXX: Remote attribute value buffers encompass the entire (up to 64k) buffer.
++ * The buffer cache in XFS can't handle aliased multiblock buffers, so this
++ * might misbehave if the attr fork is crosslinked with other filesystem
++ * metadata.
++ */
++int
++xrep_xattr(
++	struct xfs_scrub	*sc)
++{
++	struct list_head	attrlist;
++	int			error;
++
++	if (!xfs_inode_hasattr(sc->ip))
++		return -ENOENT;
++
++	/* Collect extended attributes by parsing raw blocks. */
++	INIT_LIST_HEAD(&attrlist);
++	error = xrep_xattr_find_attributes(sc, &attrlist);
++	if (error)
++		goto out;
++
++	/*
++	 * Invalidate and truncate all attribute fork extents.  This is the
++	 * point at which we are no longer able to bail out gracefully.
++	 * We commit the transaction here because xfs_attr_set allocates its
++	 * own transactions.
++	 */
++	error = xrep_xattr_reset_btree(sc);
++	if (error)
++		goto out;
++
++	/* Now rebuild the attribute information. */
++	error = xrep_xattr_rebuild_tree(sc, &attrlist);
++out:
++	xrep_xattr_cancel_attrs(&attrlist);
++	return error;
++}
+diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+index 17769efb20d9..b630084d0f39 100644
+--- a/fs/xfs/scrub/repair.h
++++ b/fs/xfs/scrub/repair.h
+@@ -69,6 +69,7 @@ int xrep_inode(struct xfs_scrub *sc);
+ int xrep_bmap_data(struct xfs_scrub *sc);
+ int xrep_bmap_attr(struct xfs_scrub *sc);
+ int xrep_symlink(struct xfs_scrub *sc);
++int xrep_xattr(struct xfs_scrub *sc);
  
- 	/*
- 	 * Create the directory entry for the symlink.
-diff --git a/fs/xfs/xfs_symlink.h b/fs/xfs/xfs_symlink.h
-index 9743d8c9394b..d7252f9cab41 100644
---- a/fs/xfs/xfs_symlink.h
-+++ b/fs/xfs/xfs_symlink.h
-@@ -12,5 +12,8 @@ int xfs_symlink(struct xfs_inode *dp, struct xfs_name *link_name,
- int xfs_readlink_bmap_ilocked(struct xfs_inode *ip, char *link);
- int xfs_readlink(struct xfs_inode *ip, char *link);
- int xfs_inactive_symlink(struct xfs_inode *ip);
-+int xfs_symlink_write_target(struct xfs_trans *tp, struct xfs_inode *ip,
-+		const char *target_path, int pathlen, xfs_fsblock_t fs_blocks,
-+		uint resblks);
+ #else
  
- #endif /* __XFS_SYMLINK_H */
+@@ -110,6 +111,7 @@ xrep_reset_perag_resv(
+ #define xrep_bmap_data			xrep_notsupported
+ #define xrep_bmap_attr			xrep_notsupported
+ #define xrep_symlink			xrep_notsupported
++#define xrep_xattr			xrep_notsupported
+ 
+ #endif /* CONFIG_XFS_ONLINE_REPAIR */
+ 
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 0a8eea77e58f..537636d789fb 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -301,7 +301,7 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
+ 		.type	= ST_INODE,
+ 		.setup	= xchk_setup_xattr,
+ 		.scrub	= xchk_xattr,
+-		.repair	= xrep_notsupported,
++		.repair	= xrep_xattr,
+ 	},
+ 	[XFS_SCRUB_TYPE_SYMLINK] = {	/* symbolic link */
+ 		.type	= ST_INODE,
+diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
+index 762db46fd696..d7ad8fad9318 100644
+--- a/fs/xfs/scrub/scrub.h
++++ b/fs/xfs/scrub/scrub.h
+@@ -139,4 +139,7 @@ void xchk_xref_is_used_rt_space(struct xfs_scrub *sc, xfs_rtblock_t rtbno,
+ # define xchk_xref_is_used_rt_space(sc, rtbno, len) do { } while (0)
+ #endif
+ 
++bool xchk_xattr_set_map(struct xfs_scrub *sc, unsigned long *map,
++		unsigned int start, unsigned int len);
++
+ #endif	/* __XFS_SCRUB_SCRUB_H__ */
 
