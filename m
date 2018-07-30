@@ -1,63 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:32804 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732162AbeG3SVM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 30 Jul 2018 14:21:12 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 9B4A54023444
-        for <linux-xfs@vger.kernel.org>; Mon, 30 Jul 2018 16:45:22 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 8043B112D179
-        for <linux-xfs@vger.kernel.org>; Mon, 30 Jul 2018 16:45:22 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 14/15] xfs: always defer agfl block frees
-Date: Mon, 30 Jul 2018 12:45:19 -0400
-Message-Id: <20180730164520.36882-15-bfoster@redhat.com>
-In-Reply-To: <20180730164520.36882-1-bfoster@redhat.com>
-References: <20180730164520.36882-1-bfoster@redhat.com>
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:43362 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726755AbeG3LhQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Jul 2018 07:37:16 -0400
+Received: by mail-pg1-f195.google.com with SMTP id d17-v6so2547631pgv.10
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Jul 2018 03:03:02 -0700 (PDT)
+MIME-Version: 1.0
+References: <CAKAc_Gwh-KMdnK6LqX3kE9jTmSHsg8_kzQE5fPsnL3xETD1O+w@mail.gmail.com>
+ <3895eebe-3fa2-a977-4021-3bd6ef645fdd@sandeen.net> <CAKAc_GwXi4U=WceoWo_6dsjT_ThTYKbebOzxkcTAW2_-vfgt=g@mail.gmail.com>
+ <CAKAc_GxsR9UxswqJMLhPOqR6HeYLi-rHZiEY8LLxs-hj0n=uMQ@mail.gmail.com>
+ <20180717092626.pxb6wzhcswf2f77p@odin.usersys.redhat.com> <CAKAc_Gx5RaiEC1C8aSYZXAcZcyyPHPNWHy6ALuzOJvkgkg5nkA@mail.gmail.com>
+ <830a7de7-34ca-7d79-d94a-ff16c98381a3@sandeen.net>
+In-Reply-To: <830a7de7-34ca-7d79-d94a-ff16c98381a3@sandeen.net>
+From: Filippo Giunchedi <fgiunchedi@wikimedia.org>
+Date: Mon, 30 Jul 2018 12:02:50 +0200
+Message-ID: <CAKAc_Gwh36OhTs9DfsfqxniRw+jZ5c-Tyh2P5D3tA+JJW31Y6g@mail.gmail.com>
+Subject: Re: Recently-formatted XFS filesystems reporting negative used space
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-The AGFL fixup code conditionally defers block frees from the free
-list based on whether the current transaction has an associated
-xfs_defer_ops structure. Now that dfops is embedded in the
-transaction and the internal dfops is used unconditionally, this
-invariant is always true.
+On Sun, Jul 22, 2018 at 2:03 AM Eric Sandeen <sandeen@sandeen.net> wrote:
+> On 7/20/18 3:20 AM, Filippo Giunchedi wrote:
+> > To recap what we've seen, hardware bit flipping is extremely unlikely:
+> > the same type of sb_fdblocks corruption has appeared on four different
+> > hosts affecting at most one third of xfs filesystems per host. Also
+> > the corruption looks always the same, namely the 33rd bit flipped
+> > which also seems suspicious.
+>
+> Running a debug kernel with memory poisoning, KASAN, or something similar might
+> help catch it if it's a stray memory write of some sort...
 
-Remove the now dead logic to check for ->t_dfops in
-xfs_alloc_fix_freelist() and unconditionally defer AGFL block frees.
+Thanks! BTW we've experienced this again on a FS at around 77% usage
+and xfs_repair reports a flip in the 32nd bit (output below). We'll
+enable memory poisoning on said host and see if other filesystems on
+that host experience the same.
+I see in the patch thread it has been mentioned this particular
+condition will be checked and fixed/prevented in 4.19 though the root
+cause isn't know (?)
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_alloc.c | 11 ++---------
- 1 file changed, 2 insertions(+), 9 deletions(-)
+Thanks again!
+Filippo
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 6bacdc31a439..32a370665d71 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2323,15 +2323,8 @@ xfs_alloc_fix_freelist(
- 		if (error)
- 			goto out_agbp_relse;
- 
--		/* defer agfl frees if dfops is provided */
--		if (tp->t_dfops) {
--			xfs_defer_agfl_block(tp, args->agno, bno, &targs.oinfo);
--		} else {
--			error = xfs_free_agfl_block(tp, args->agno, bno, agbp,
--						    &targs.oinfo);
--			if (error)
--				goto out_agbp_relse;
--		}
-+		/* defer agfl frees */
-+		xfs_defer_agfl_block(tp, args->agno, bno, &targs.oinfo);
- 	}
- 
- 	targs.tp = tp;
--- 
-2.17.1
-
+# xfs_repair -n /dev/sdc1
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - zero log...
+        - scan filesystem freespace and inode maps...
+sb_fdblocks 4515987426, counted 221020130
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan (but don't clear) agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+        - agno = 1
