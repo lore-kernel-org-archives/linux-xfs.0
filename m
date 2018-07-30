@@ -1,315 +1,351 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:55234 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726782AbeG3S6Y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Jul 2018 14:58:24 -0400
-Date: Mon, 30 Jul 2018 10:22:16 -0700
+Received: from aserp2130.oracle.com ([141.146.126.79]:36300 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728714AbeG3WXw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Jul 2018 18:23:52 -0400
+Date: Mon, 30 Jul 2018 13:47:02 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 03/14] xfs: repair the AGFL
-Message-ID: <20180730172216.GX30972@magnolia>
-References: <153292966714.24509.15809693393247424274.stgit@magnolia>
- <153292968888.24509.5021796491286828939.stgit@magnolia>
- <20180730162523.GC35107@bfoster>
+Subject: Re: [PATCH 12/15] xfs: replace xfs_defer_ops ->dop_pending with
+ on-stack list
+Message-ID: <20180730204702.GM30972@magnolia>
+References: <20180730164520.36882-1-bfoster@redhat.com>
+ <20180730164520.36882-13-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180730162523.GC35107@bfoster>
+In-Reply-To: <20180730164520.36882-13-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, allison.henderson@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jul 30, 2018 at 12:25:24PM -0400, Brian Foster wrote:
-> On Sun, Jul 29, 2018 at 10:48:08PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Repair the AGFL from the rmap data.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
+On Mon, Jul 30, 2018 at 12:45:17PM -0400, Brian Foster wrote:
+> The xfs_defer_ops ->dop_pending list is used to track active
+> deferred operations once intents are logged. These items must be
+> aborted in the event of an error. The list is populated as intents
+> are logged and items are removed as they complete (or are aborted).
 > 
-> FWIW, I tried tweaking a couple agfl values via xfs_db and xfs_scrub
-> seems to always dump a cross-referencing failed error and not want to
-> deal with it. Expected? Is there a good way to unit test some of this
-> stuff with simple/localized corruptions?
-
-I usually pick one of the corruptions from xfs/355...
-
-$ SCRATCH_XFS_LIST_FUZZ_VERBS=random \
-SCRATCH_XFS_LIST_METADATA_FIELDS=somefield \
-./check xfs/355
-
-> Otherwise this looks sane, a couple comments..
+> Now that xfs_defer_finish() cancels on error, there is no need to
+> ever access ->dop_pending outside of xfs_defer_finish(). The list is
+> only ever populated after xfs_defer_finish() begins and is either
+> completed or cancelled before it returns.
 > 
-> >  fs/xfs/scrub/agheader_repair.c |  276 ++++++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/scrub/bitmap.c          |   92 +++++++++++++
-> >  fs/xfs/scrub/bitmap.h          |    4 +
-> >  fs/xfs/scrub/scrub.c           |    2 
-> >  4 files changed, 373 insertions(+), 1 deletion(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-> > index 4842fc598c9b..bfef066c87c3 100644
-> > --- a/fs/xfs/scrub/agheader_repair.c
-> > +++ b/fs/xfs/scrub/agheader_repair.c
-> > @@ -424,3 +424,279 @@ xrep_agf(
-> >  	memcpy(agf, &old_agf, sizeof(old_agf));
-> >  	return error;
-> >  }
-> > +
-> ...
-> > +/* Write out a totally new AGFL. */
-> > +STATIC void
-> > +xrep_agfl_init_header(
-> > +	struct xfs_scrub	*sc,
-> > +	struct xfs_buf		*agfl_bp,
-> > +	struct xfs_bitmap	*agfl_extents,
-> > +	xfs_agblock_t		flcount)
-> > +{
-> > +	struct xfs_mount	*mp = sc->mp;
-> > +	__be32			*agfl_bno;
-> > +	struct xfs_bitmap_range	*br;
-> > +	struct xfs_bitmap_range	*n;
-> > +	struct xfs_agfl		*agfl;
-> > +	xfs_agblock_t		agbno;
-> > +	unsigned int		fl_off;
-> > +
-> > +	ASSERT(flcount <= xfs_agfl_size(mp));
-> > +
-> > +	/* Start rewriting the header. */
-> > +	agfl = XFS_BUF_TO_AGFL(agfl_bp);
-> > +	memset(agfl, 0xFF, BBTOB(agfl_bp->b_length));
+> Remove ->dop_pending from xfs_defer_ops and replace it with a local
+> list in the xfs_defer_finish() path. Pass the local list to the
+> various helpers now that it is not accessible via dfops. Note that
+> we have to check for NULL in the abort case as the final tx roll
+> occurs outside of the scope of the new local list (once the dfops
+> has completed and thus drained the list).
 > 
-> What's the purpose behind 0xFF? Related to NULLAGBLOCK/NULLCOMMITLSN..?
-
-Yes, it prepopulates the AGFL bno[] array with NULLAGBLOCK, then writes
-in the header fields.
-
-> > +	agfl->agfl_magicnum = cpu_to_be32(XFS_AGFL_MAGIC);
-> > +	agfl->agfl_seqno = cpu_to_be32(sc->sa.agno);
-> > +	uuid_copy(&agfl->agfl_uuid, &mp->m_sb.sb_meta_uuid);
-> > +
-> > +	/*
-> > +	 * Fill the AGFL with the remaining blocks.  If agfl_extents has more
-> > +	 * blocks than fit in the AGFL, they will be freed in a subsequent
-> > +	 * step.
-> > +	 */
-> > +	fl_off = 0;
-> > +	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agfl_bp);
-> > +	for_each_xfs_bitmap_extent(br, n, agfl_extents) {
-> > +		agbno = XFS_FSB_TO_AGBNO(mp, br->start);
-> > +
-> > +		trace_xrep_agfl_insert(mp, sc->sa.agno, agbno, br->len);
-> > +
-> > +		while (br->len > 0 && fl_off < flcount) {
-> > +			agfl_bno[fl_off] = cpu_to_be32(agbno);
-> > +			fl_off++;
-> > +			agbno++;
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_defer.c | 80 ++++++++++++++++++++-------------------
+>  fs/xfs/libxfs/xfs_defer.h |  3 +-
+>  fs/xfs/xfs_trace.h        |  1 -
+>  fs/xfs/xfs_trans.h        |  1 -
+>  4 files changed, 43 insertions(+), 42 deletions(-)
 > 
-> 			/* bump br so we don't reap blocks we've used */
-> 
-> (i.e., took me a sec to realize why we bother with ->start)
-> 
-> > +			br->start++;
-> > +			br->len--;
-> > +		}
-> > +
-> > +		if (br->len)
-> > +			break;
-> > +		list_del(&br->list);
-> > +		kmem_free(br);
-> > +	}
-> > +
-> > +	/* Write new AGFL to disk. */
-> > +	xfs_trans_buf_set_type(sc->tp, agfl_bp, XFS_BLFT_AGFL_BUF);
-> > +	xfs_trans_log_buf(sc->tp, agfl_bp, 0, BBTOB(agfl_bp->b_length) - 1);
-> > +}
-> > +
-> ...
-> > diff --git a/fs/xfs/scrub/bitmap.c b/fs/xfs/scrub/bitmap.c
-> > index c770e2d0b6aa..fdadc9e1dc49 100644
-> > --- a/fs/xfs/scrub/bitmap.c
-> > +++ b/fs/xfs/scrub/bitmap.c
-> > @@ -9,6 +9,7 @@
-> >  #include "xfs_format.h"
-> >  #include "xfs_trans_resv.h"
-> >  #include "xfs_mount.h"
-> > +#include "xfs_btree.h"
-> >  #include "scrub/xfs_scrub.h"
-> >  #include "scrub/scrub.h"
-> >  #include "scrub/common.h"
-> > @@ -209,3 +210,94 @@ xfs_bitmap_disunion(
-> >  }
-> >  #undef LEFT_ALIGNED
-> >  #undef RIGHT_ALIGNED
-> > +
-> > +/*
-> > + * Record all btree blocks seen while iterating all records of a btree.
-> > + *
-> > + * We know that the btree query_all function starts at the left edge and walks
-> > + * towards the right edge of the tree.  Therefore, we know that we can walk up
-> > + * the btree cursor towards the root; if the pointer for a given level points
-> > + * to the first record/key in that block, we haven't seen this block before;
-> > + * and therefore we need to remember that we saw this block in the btree.
-> > + *
-> > + * So if our btree is:
-> > + *
-> > + *    4
-> > + *  / | \
-> > + * 1  2  3
-> > + *
-> > + * Pretend for this example that each leaf block has 100 btree records.  For
-> > + * the first btree record, we'll observe that bc_ptrs[0] == 1, so we record
-> > + * that we saw block 1.  Then we observe that bc_ptrs[1] == 1, so we record
-> > + * block 4.  The list is [1, 4].
-> > + *
-> > + * For the second btree record, we see that bc_ptrs[0] == 2, so we exit the
-> > + * loop.  The list remains [1, 4].
-> > + *
-> > + * For the 101st btree record, we've moved onto leaf block 2.  Now
-> > + * bc_ptrs[0] == 1 again, so we record that we saw block 2.  We see that
-> > + * bc_ptrs[1] == 2, so we exit the loop.  The list is now [1, 4, 2].
-> > + *
-> > + * For the 102nd record, bc_ptrs[0] == 2, so we continue.
-> > + *
-> > + * For the 201st record, we've moved on to leaf block 3.  bc_ptrs[0] == 1, so
-> > + * we add 3 to the list.  Now it is [1, 4, 2, 3].
-> > + *
-> > + * For the 300th record we just exit, with the list being [1, 4, 2, 3].
-> > + */
-> > +
-> > +/*
-> > + * Record all the buffers pointed to by the btree cursor.  Callers already
-> > + * engaged in a btree walk should call this function to capture the list of
-> > + * blocks going from the leaf towards the root.
-> > + */
-> > +int
-> > +xfs_bitmap_set_btcur_path(
-> > +	struct xfs_bitmap	*bitmap,
-> > +	struct xfs_btree_cur	*cur)
-> > +{
-> > +	struct xfs_buf		*bp;
-> > +	xfs_fsblock_t		fsb;
-> > +	int			i;
-> > +	int			error;
-> > +
-> > +	for (i = 0; i < cur->bc_nlevels && cur->bc_ptrs[i] == 1; i++) {
-> > +		xfs_btree_get_block(cur, i, &bp);
-> > +		if (!bp)
-> > +			continue;
-> > +		fsb = XFS_DADDR_TO_FSB(cur->bc_mp, bp->b_bn);
-> > +		error = xfs_bitmap_set(bitmap, fsb, 1);
-> 
-> Thanks for the comment. It helps explain the bc_ptrs == 1 check above,
-> but also highlights that xfs_bitmap_set() essentially allocates entries
-> for duplicate values if they exist. Is this handled by the broader
-> mechanism, for example, if the rmapbt was corrupted to have multiple
-> entries for a particular unused OWN_AG block? Or could we end up leaking
-> that corruption over to the agfl?
+> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+> index 66848ede62c0..6bf792e2d61b 100644
+> --- a/fs/xfs/libxfs/xfs_defer.c
+> +++ b/fs/xfs/libxfs/xfs_defer.c
+> @@ -174,6 +174,8 @@
+>  
+>  static const struct xfs_defer_op_type *defer_op_types[XFS_DEFER_OPS_TYPE_MAX];
+>  
+> +static void __xfs_defer_cancel(struct list_head *);
+> +
+>  /*
+>   * For each pending item in the intake list, log its intent item and the
+>   * associated extents, then add the entire intake list to the end of
+> @@ -181,7 +183,8 @@ static const struct xfs_defer_op_type *defer_op_types[XFS_DEFER_OPS_TYPE_MAX];
+>   */
+>  STATIC void
+>  xfs_defer_intake_work(
+> -	struct xfs_trans		*tp)
+> +	struct xfs_trans		*tp,
+> +	struct list_head		*dop_pending)
+>  {
+>  	struct xfs_defer_ops		*dop = tp->t_dfops;
+>  	struct list_head		*li;
+> @@ -197,13 +200,14 @@ xfs_defer_intake_work(
+>  			dfp->dfp_type->log_item(tp, dfp->dfp_intent, li);
+>  	}
+>  
+> -	list_splice_tail_init(&dop->dop_intake, &dop->dop_pending);
+> +	list_splice_tail_init(&dop->dop_intake, dop_pending);
+>  }
+>  
+>  /* Abort all the intents that were committed. */
+>  STATIC void
+>  xfs_defer_trans_abort(
+>  	struct xfs_trans		*tp,
+> +	struct list_head		*dop_pending,
+>  	int				error)
+>  {
+>  	struct xfs_defer_ops		*dop = tp->t_dfops;
+> @@ -212,11 +216,13 @@ xfs_defer_trans_abort(
+>  	trace_xfs_defer_trans_abort(tp->t_mountp, dop, _RET_IP_);
+>  
+>  	/* Abort intent items that don't have a done item. */
+> -	list_for_each_entry(dfp, &dop->dop_pending, dfp_list) {
+> -		trace_xfs_defer_pending_abort(tp->t_mountp, dfp);
+> -		if (dfp->dfp_intent && !dfp->dfp_done) {
+> -			dfp->dfp_type->abort_intent(dfp->dfp_intent);
+> -			dfp->dfp_intent = NULL;
+> +	if (dop_pending) {
 
-Right now we're totally dependent on the rmapbt being sane to rebuild
-the space metadata.
+/me kinda wonders if you could just make xfs_defer_finish pass an empty
+list_head into xfs_defer_trans_roll to avoid this extra indent, but I
+don't care all that much and maybe we should save the stack space. :)
 
-> I also wonder a bit about memory consumption on filesystems with large
-> metadata footprints. We essentially have to allocate one of these for
-> every allocation btree block before we can do the disunion and locate
-> the agfl-appropriate blocks. If we had a more lookup friendly structure,
-> perhaps this could be optimized by filtering out bnobt/cntbt blocks
-> during the associated btree walks..?
-> 
-> Have you thought about reusing something like the new in-core extent
-> tree mechanism as a pure in-memory extent store? It's certainly not
-> worth reworking something like that right now, but I wonder if we could
-> save memory via the denser format (and perhaps benefit from code
-> flexibility, reuse, etc.).
+> +		list_for_each_entry(dfp, dop_pending, dfp_list) {
+> +			trace_xfs_defer_pending_abort(tp->t_mountp, dfp);
+> +			if (dfp->dfp_intent && !dfp->dfp_done) {
+> +				dfp->dfp_type->abort_intent(dfp->dfp_intent);
+> +				dfp->dfp_intent = NULL;
+> +			}
+>  		}
+>  	}
+>  
+> @@ -228,7 +234,8 @@ xfs_defer_trans_abort(
+>  /* Roll a transaction so we can do some deferred op processing. */
+>  STATIC int
+>  xfs_defer_trans_roll(
+> -	struct xfs_trans		**tp)
+> +	struct xfs_trans		**tp,
+> +	struct list_head		*dop_pending)
+>  {
+>  	struct xfs_buf_log_item		*bli;
+>  	struct xfs_inode_log_item	*ili;
+> @@ -272,7 +279,7 @@ xfs_defer_trans_roll(
+>  	if (error) {
+>  		trace_xfs_defer_trans_roll_error((*tp)->t_mountp,
+>  						 (*tp)->t_dfops, error);
+> -		xfs_defer_trans_abort(*tp,  error);
+> +		xfs_defer_trans_abort(*tp,  dop_pending, error);
+>  		return error;
+>  	}
+>  
+> @@ -292,9 +299,10 @@ xfs_defer_trans_roll(
+>  /* Do we have any work items to finish? */
+>  bool
+>  xfs_defer_has_unfinished_work(
+> -	struct xfs_trans		*tp)
+> +	struct xfs_trans		*tp,
+> +	struct list_head		*dop_pending)
+>  {
+> -	return !list_empty(&tp->t_dfops->dop_pending) ||
+> +	return !list_empty(dop_pending) ||
+>  		!list_empty(&tp->t_dfops->dop_intake);
+>  }
+>  
+> @@ -305,7 +313,7 @@ static void
+>  xfs_defer_reset(
+>  	struct xfs_trans	*tp)
+>  {
+> -	ASSERT(!xfs_defer_has_unfinished_work(tp));
+> +	ASSERT(list_empty(&tp->t_dfops->dop_intake));
+>  
+>  	/*
+>  	 * Low mode state transfers across transaction rolls to mirror dfops
+> @@ -332,26 +340,27 @@ xfs_defer_finish_noroll(
+>  	void				*state;
+>  	int				error = 0;
+>  	void				(*cleanup_fn)(struct xfs_trans *, void *, int);
+> +	LIST_HEAD(dop_pending);
+>  
+>  	ASSERT((*tp)->t_flags & XFS_TRANS_PERM_LOG_RES);
+>  
+>  	trace_xfs_defer_finish((*tp)->t_mountp, (*tp)->t_dfops, _RET_IP_);
+>  
+>  	/* Until we run out of pending work to finish... */
+> -	while (xfs_defer_has_unfinished_work(*tp)) {
+> +	while (xfs_defer_has_unfinished_work(*tp, &dop_pending)) {
 
-Yes, I was thinking about refactoring the iext btree into a more generic
-in-core index with 64-bit key so that I could adapt xfs_bitmap to use
-it.  In the longer term I would /also/ like to use xfs_bitmap to detect
-xfs_buf cache aliasing when multi-block buffers are in use, but that's
-further off. :)
+<urk> see discussion below.
 
-As for the memory-intensive record lists in all the btree rebuilders, I
-have some ideas around that too -- either find a way to build an
-alternate btree and switch the roots over, or (once we gain the ability
-to mark an AG unavailable for new allocations) allocate an unlinked
-inode, store the records in the page cache pages for the file, and
-release it when we're done.
+>  		/* Log intents for work items sitting in the intake. */
+> -		xfs_defer_intake_work(*tp);
+> +		xfs_defer_intake_work(*tp, &dop_pending);
+>  
+>  		/*
+>  		 * Roll the transaction.
+>  		 */
+> -		error = xfs_defer_trans_roll(tp);
+> +		error = xfs_defer_trans_roll(tp, &dop_pending);
+>  		if (error)
+>  			goto out;
+>  
+>  		/* Log an intent-done item for the first pending item. */
+> -		dfp = list_first_entry(&(*tp)->t_dfops->dop_pending,
+> -				struct xfs_defer_pending, dfp_list);
+> +		dfp = list_first_entry(&dop_pending, struct xfs_defer_pending,
+> +				       dfp_list);
+>  		trace_xfs_defer_pending_finish((*tp)->t_mountp, dfp);
+>  		dfp->dfp_done = dfp->dfp_type->create_done(*tp, dfp->dfp_intent,
+>  				dfp->dfp_count);
+> @@ -381,7 +390,7 @@ xfs_defer_finish_noroll(
+>  				 */
+>  				if (cleanup_fn)
+>  					cleanup_fn(*tp, state, error);
+> -				xfs_defer_trans_abort(*tp, error);
+> +				xfs_defer_trans_abort(*tp, &dop_pending, error);
+>  				goto out;
+>  			}
+>  		}
+> @@ -413,6 +422,7 @@ xfs_defer_finish_noroll(
+>  	if (error) {
+>  		trace_xfs_defer_finish_error((*tp)->t_mountp, (*tp)->t_dfops,
+>  					     error);
+> +		__xfs_defer_cancel(&dop_pending);
+>  		xfs_defer_cancel(*tp);
+>  		return error;
+>  	}
+> @@ -435,7 +445,7 @@ xfs_defer_finish(
+>  	if (error)
+>  		return error;
+>  	if ((*tp)->t_flags & XFS_TRANS_DIRTY) {
+> -		error = xfs_defer_trans_roll(tp);
+> +		error = xfs_defer_trans_roll(tp, NULL);
+>  		if (error)
+>  			return error;
+>  	}
+> @@ -446,34 +456,20 @@ xfs_defer_finish(
+>  /*
+>   * Free up any items left in the list.
+>   */
+> -void
+> -xfs_defer_cancel(
+> -	struct xfs_trans		*tp)
+> +static void
+> +__xfs_defer_cancel(
 
-But, that can wait until I've gotten more of this merged, or get bored.
-:)
+Maybe this should be xfs_defer_cancel_list?
+
+> +	struct list_head		*dop_list)
+>  {
+> -	struct xfs_defer_ops		*dop = tp->t_dfops;
+>  	struct xfs_defer_pending	*dfp;
+>  	struct xfs_defer_pending	*pli;
+>  	struct list_head		*pwi;
+>  	struct list_head		*n;
+>  
+> -	trace_xfs_defer_cancel(NULL, dop, _RET_IP_);
+> -
+>  	/*
+>  	 * Free the pending items.  Caller should already have arranged
+>  	 * for the intent items to be released.
+>  	 */
+> -	list_for_each_entry_safe(dfp, pli, &dop->dop_intake, dfp_list) {
+> -		trace_xfs_defer_intake_cancel(NULL, dfp);
+> -		list_del(&dfp->dfp_list);
+> -		list_for_each_safe(pwi, n, &dfp->dfp_work) {
+> -			list_del(pwi);
+> -			dfp->dfp_count--;
+> -			dfp->dfp_type->cancel_item(pwi);
+> -		}
+> -		ASSERT(dfp->dfp_count == 0);
+> -		kmem_free(dfp);
+> -	}
+> -	list_for_each_entry_safe(dfp, pli, &dop->dop_pending, dfp_list) {
+> +	list_for_each_entry_safe(dfp, pli, dop_list, dfp_list) {
+>  		trace_xfs_defer_pending_cancel(NULL, dfp);
+
+trace_xfs_defer_cancel_list?
+
+Maybe it's worth passing a *mp into this function so we can pass it to
+the tracepoint?
+
+>  		list_del(&dfp->dfp_list);
+>  		list_for_each_safe(pwi, n, &dfp->dfp_work) {
+> @@ -486,6 +482,14 @@ xfs_defer_cancel(
+>  	}
+>  }
+>  
+> +void
+> +xfs_defer_cancel(
+> +	struct xfs_trans	*tp)
+> +{
+> +	trace_xfs_defer_cancel(NULL, tp->t_dfops, _RET_IP_);
+
+That NULL can be tp->t_mountp, right?  Since tp should never be NULL?
+
+> +	__xfs_defer_cancel(&tp->t_dfops->dop_intake);
+> +}
+> +
+>  /* Add an item for later deferred processing. */
+>  void
+>  xfs_defer_add(
+> @@ -541,7 +545,6 @@ xfs_defer_init(
+>  
+>  	memset(dop, 0, sizeof(struct xfs_defer_ops));
+>  	INIT_LIST_HEAD(&dop->dop_intake);
+> -	INIT_LIST_HEAD(&dop->dop_pending);
+>  	if (tp) {
+>  		ASSERT(tp->t_firstblock == NULLFSBLOCK);
+>  		tp->t_dfops = dop;
+> @@ -565,7 +568,6 @@ xfs_defer_move(
+>  	ASSERT(dst != src);
+>  
+>  	list_splice_init(&src->dop_intake, &dst->dop_intake);
+> -	list_splice_init(&src->dop_pending, &dst->dop_pending);
+>  
+>  	/*
+>  	 * Low free space mode was historically controlled by a dfops field.
+> diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
+> index f051c8056141..363af16328cb 100644
+> --- a/fs/xfs/libxfs/xfs_defer.h
+> +++ b/fs/xfs/libxfs/xfs_defer.h
+> @@ -41,7 +41,8 @@ int xfs_defer_finish_noroll(struct xfs_trans **tp);
+>  int xfs_defer_finish(struct xfs_trans **tp);
+>  void xfs_defer_cancel(struct xfs_trans *);
+>  void xfs_defer_init(struct xfs_trans *tp, struct xfs_defer_ops *dop);
+> -bool xfs_defer_has_unfinished_work(struct xfs_trans *tp);
+> +bool xfs_defer_has_unfinished_work(struct xfs_trans *tp,
+> +		struct list_head *dop_pending);
+
+Eww, I dislike exposing this implementation detail in a public
+interface.  Assuming you take my suggestion in patch 1 to ASSERT if
+xfs_trans_{cancel,commit} encounter unfinished deferred work and a
+transaction we can't roll, there will be only three callers of this
+function, and only one of them knows about the pending item list.
+Perhaps the list_empty(dop_pending) check can be open-coded in
+xfs_defer_finish_noroll?
 
 --D
 
-> Brian
+>  void xfs_defer_move(struct xfs_trans *dtp, struct xfs_trans *stp);
+>  
+>  /* Description of a deferred type. */
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 8807f1bb814a..6b55bbc09578 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -2393,7 +2393,6 @@ DEFINE_DEFER_ERROR_EVENT(xfs_defer_trans_roll_error);
+>  DEFINE_DEFER_ERROR_EVENT(xfs_defer_finish_error);
+>  
+>  DEFINE_DEFER_PENDING_EVENT(xfs_defer_intake_work);
+> -DEFINE_DEFER_PENDING_EVENT(xfs_defer_intake_cancel);
+>  DEFINE_DEFER_PENDING_EVENT(xfs_defer_pending_cancel);
+>  DEFINE_DEFER_PENDING_EVENT(xfs_defer_pending_finish);
+>  DEFINE_DEFER_PENDING_EVENT(xfs_defer_pending_abort);
+> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> index 299656dbf324..1cdc7c0ebeac 100644
+> --- a/fs/xfs/xfs_trans.h
+> +++ b/fs/xfs/xfs_trans.h
+> @@ -96,7 +96,6 @@ void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
+>  #define XFS_DEFER_OPS_NR_BUFS	2	/* join up to two buffers */
+>  struct xfs_defer_ops {
+>  	struct list_head	dop_intake;	/* unlogged pending work */
+> -	struct list_head	dop_pending;	/* logged pending work */
+>  };
+>  
+>  /*
+> -- 
+> 2.17.1
 > 
-> > +		if (error)
-> > +			return error;
-> > +	}
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +/* Collect a btree's block in the bitmap. */
-> > +STATIC int
-> > +xfs_bitmap_collect_btblock(
-> > +	struct xfs_btree_cur	*cur,
-> > +	int			level,
-> > +	void			*priv)
-> > +{
-> > +	struct xfs_bitmap	*bitmap = priv;
-> > +	struct xfs_buf		*bp;
-> > +	xfs_fsblock_t		fsbno;
-> > +
-> > +	xfs_btree_get_block(cur, level, &bp);
-> > +	if (!bp)
-> > +		return 0;
-> > +
-> > +	fsbno = XFS_DADDR_TO_FSB(cur->bc_mp, bp->b_bn);
-> > +	return xfs_bitmap_set(bitmap, fsbno, 1);
-> > +}
-> > +
-> > +/* Walk the btree and mark the bitmap wherever a btree block is found. */
-> > +int
-> > +xfs_bitmap_set_btblocks(
-> > +	struct xfs_bitmap	*bitmap,
-> > +	struct xfs_btree_cur	*cur)
-> > +{
-> > +	return xfs_btree_visit_blocks(cur, xfs_bitmap_collect_btblock, bitmap);
-> > +}
-> > diff --git a/fs/xfs/scrub/bitmap.h b/fs/xfs/scrub/bitmap.h
-> > index dad652ee9177..ae8ecbce6fa6 100644
-> > --- a/fs/xfs/scrub/bitmap.h
-> > +++ b/fs/xfs/scrub/bitmap.h
-> > @@ -28,5 +28,9 @@ void xfs_bitmap_destroy(struct xfs_bitmap *bitmap);
-> >  
-> >  int xfs_bitmap_set(struct xfs_bitmap *bitmap, uint64_t start, uint64_t len);
-> >  int xfs_bitmap_disunion(struct xfs_bitmap *bitmap, struct xfs_bitmap *sub);
-> > +int xfs_bitmap_set_btcur_path(struct xfs_bitmap *bitmap,
-> > +		struct xfs_btree_cur *cur);
-> > +int xfs_bitmap_set_btblocks(struct xfs_bitmap *bitmap,
-> > +		struct xfs_btree_cur *cur);
-> >  
-> >  #endif	/* __XFS_SCRUB_BITMAP_H__ */
-> > diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-> > index 1e8a17c8e2b9..2670f4cf62f4 100644
-> > --- a/fs/xfs/scrub/scrub.c
-> > +++ b/fs/xfs/scrub/scrub.c
-> > @@ -220,7 +220,7 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
-> >  		.type	= ST_PERAG,
-> >  		.setup	= xchk_setup_fs,
-> >  		.scrub	= xchk_agfl,
-> > -		.repair	= xrep_notsupported,
-> > +		.repair	= xrep_agfl,
-> >  	},
-> >  	[XFS_SCRUB_TYPE_AGI] = {	/* agi */
-> >  		.type	= ST_PERAG,
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
