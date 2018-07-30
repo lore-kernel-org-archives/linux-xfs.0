@@ -1,91 +1,318 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:59334 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727478AbeGaBR3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 30 Jul 2018 21:17:29 -0400
-Subject: Re: [PATCH 2/3] libxfs: add more bounds checking to sb sanity checks
-References: <153292860880.19274.14533449137039985963.stgit@magnolia>
- <153292862122.19274.13281750487162777731.stgit@magnolia>
- <82b9a6d9-c5b9-112d-98eb-c9e7153e67da@sandeen.net>
- <20180730233835.GR30972@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <b2743479-b33d-3488-d03b-f8ab319bd6ea@sandeen.net>
-Date: Mon, 30 Jul 2018 18:40:06 -0500
-MIME-Version: 1.0
-In-Reply-To: <20180730233835.GR30972@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:47778 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1732156AbeG3SVM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 30 Jul 2018 14:21:12 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 033D740214E2
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Jul 2018 16:45:22 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id E1F13112D193
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Jul 2018 16:45:21 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 09/15] xfs: drop dop param from xfs_defer_op_type ->finish_item() callback
+Date: Mon, 30 Jul 2018 12:45:14 -0400
+Message-Id: <20180730164520.36882-10-bfoster@redhat.com>
+In-Reply-To: <20180730164520.36882-1-bfoster@redhat.com>
+References: <20180730164520.36882-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Bill O'Donnell <billodo@redhat.com>
+To: linux-xfs@vger.kernel.org
 
+The dfops infrastructure ->finish_item() callback passes the
+transaction and dfops as separate parameters. Since dfops is always
+part of a transaction, the latter parameter is no longer necessary.
+Remove it from the various callbacks.
 
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c     |  2 --
+ fs/xfs/libxfs/xfs_bmap.h     |  6 +++---
+ fs/xfs/libxfs/xfs_defer.c    |  2 +-
+ fs/xfs/libxfs/xfs_defer.h    |  4 ++--
+ fs/xfs/libxfs/xfs_refcount.c |  2 +-
+ fs/xfs/libxfs/xfs_refcount.h |  7 +++----
+ fs/xfs/xfs_bmap_item.c       |  5 ++---
+ fs/xfs/xfs_refcount_item.c   |  4 ++--
+ fs/xfs/xfs_trans.h           | 10 +++++-----
+ fs/xfs/xfs_trans_bmap.c      |  6 ++----
+ fs/xfs/xfs_trans_extfree.c   |  2 --
+ fs/xfs/xfs_trans_refcount.c  |  6 ++----
+ fs/xfs/xfs_trans_rmap.c      |  1 -
+ 13 files changed, 23 insertions(+), 34 deletions(-)
 
-On 7/30/18 6:38 PM, Darrick J. Wong wrote:
-> On Mon, Jul 30, 2018 at 06:16:40PM -0500, Eric Sandeen wrote:
->> On 7/30/18 12:30 AM, Darrick J. Wong wrote:
->>> From: Bill O'Donnell <billodo@redhat.com>
->>>
->>> Current sb verifier doesn't check bounds on sb_fdblocks and sb_ifree.
->>> Add sanity checks for these parameters.
->>>
->>> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
->>> [darrick: port to refactored sb validation predicates]
->>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
->>
->> comment nitpicks below, but otherwise
->>
->> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
->>
->>> ---
->>>  fs/xfs/libxfs/xfs_sb.c |   12 ++++++++++++
->>>  1 file changed, 12 insertions(+)
->>>
->>>
->>> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
->>> index 516bef7b0f50..64bc471d57e6 100644
->>> --- a/fs/xfs/libxfs/xfs_sb.c
->>> +++ b/fs/xfs/libxfs/xfs_sb.c
->>> @@ -153,6 +153,18 @@ xfs_validate_sb_write(
->>>  	struct xfs_mount	*mp,
->>>  	struct xfs_sb		*sbp)
->>>  {
->>> +	/*
->>> +	 * Carry out additional sb sanity checks exclusively for writes.
->>
->> We're in xfs_validate_sb_write so that's obvious, can drop this line.
->>
->>> +	 * We don't do these checks for reads, since faulty parameters could
->>> +	 * be fixed in the log, and we shouldn't prohibit mounting for those
->>> +	 * cases.
->>> +	 */
->>
->> Hm, it's not really a log reaplay issue, right?  These summary counters
->> get reinitialized at mount, so failing to mount before we overwrite them
->> anyway makes no sense.
-> 
-> Well, we don't reinitialize them if ( (!lazysbcount) or (clean log) )
-> and (non-crazy values)...
-> 
->> /*
->>  * These summary counters get re-initialized after they are read
->>  * during mount, so this is a write-only check.
-> 
-> They're not always re-initialized -- only if we had a dirty lazysbcont
-> fs or the values were crazy.
-> 
-> /*
->  * Carry out additional sb summary counter sanity checks when we write
->  * the superblock.  We skip this in the read validator because there
->  * could be newer superblocks in the log and if the values are garbage
->  * even after replay we'll recalculate them at the end of log mount.
->  */
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 5cd490dc891a..d20f541b7061 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -6045,7 +6045,6 @@ xfs_bmap_unmap_extent(
+ int
+ xfs_bmap_finish_one(
+ 	struct xfs_trans		*tp,
+-	struct xfs_defer_ops		*dfops,
+ 	struct xfs_inode		*ip,
+ 	enum xfs_bmap_intent_type	type,
+ 	int				whichfork,
+@@ -6072,7 +6071,6 @@ xfs_bmap_finish_one(
+ 
+ 	switch (type) {
+ 	case XFS_BMAP_MAP:
+-		ASSERT(dfops == tp->t_dfops);
+ 		error = xfs_bmapi_remap(tp, ip, startoff, *blockcount,
+ 				startblock, 0);
+ 		*blockcount = 0;
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index 2e8555c1229a..9165a878edcd 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -252,9 +252,9 @@ struct xfs_bmap_intent {
+ 	struct xfs_bmbt_irec			bi_bmap;
+ };
+ 
+-int	xfs_bmap_finish_one(struct xfs_trans *tp, struct xfs_defer_ops *dfops,
+-		struct xfs_inode *ip, enum xfs_bmap_intent_type type,
+-		int whichfork, xfs_fileoff_t startoff, xfs_fsblock_t startblock,
++int	xfs_bmap_finish_one(struct xfs_trans *tp, struct xfs_inode *ip,
++		enum xfs_bmap_intent_type type, int whichfork,
++		xfs_fileoff_t startoff, xfs_fsblock_t startblock,
+ 		xfs_filblks_t *blockcount, xfs_exntst_t state);
+ int	xfs_bmap_map_extent(struct xfs_mount *mp, struct xfs_defer_ops *dfops,
+ 		struct xfs_inode *ip, struct xfs_bmbt_irec *imap);
+diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+index 6230e74163ac..7fb7edd5d63e 100644
+--- a/fs/xfs/libxfs/xfs_defer.c
++++ b/fs/xfs/libxfs/xfs_defer.c
+@@ -365,7 +365,7 @@ xfs_defer_finish_noroll(
+ 		list_for_each_safe(li, n, &dfp->dfp_work) {
+ 			list_del(li);
+ 			dfp->dfp_count--;
+-			error = dfp->dfp_type->finish_item(*tp, dop, li,
++			error = dfp->dfp_type->finish_item(*tp, li,
+ 					dfp->dfp_done, &state);
+ 			if (error == -EAGAIN) {
+ 				/*
+diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
+index bf1e9f78561e..0de7504e5651 100644
+--- a/fs/xfs/libxfs/xfs_defer.h
++++ b/fs/xfs/libxfs/xfs_defer.h
+@@ -50,8 +50,8 @@ struct xfs_defer_op_type {
+ 	unsigned int		max_items;
+ 	void (*abort_intent)(void *);
+ 	void *(*create_done)(struct xfs_trans *, void *, unsigned int);
+-	int (*finish_item)(struct xfs_trans *, struct xfs_defer_ops *,
+-			struct list_head *, void *, void **);
++	int (*finish_item)(struct xfs_trans *, struct list_head *, void *,
++			void **);
+ 	void (*finish_cleanup)(struct xfs_trans *, void *, int);
+ 	void (*cancel_item)(struct list_head *);
+ 	int (*diff_items)(void *, struct list_head *, struct list_head *);
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index 4cbc2efb099e..86f297ca90cd 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -1082,7 +1082,6 @@ xfs_refcount_finish_one_cleanup(
+ int
+ xfs_refcount_finish_one(
+ 	struct xfs_trans		*tp,
+-	struct xfs_defer_ops		*dfops,
+ 	enum xfs_refcount_intent_type	type,
+ 	xfs_fsblock_t			startblock,
+ 	xfs_extlen_t			blockcount,
+@@ -1091,6 +1090,7 @@ xfs_refcount_finish_one(
+ 	struct xfs_btree_cur		**pcur)
+ {
+ 	struct xfs_mount		*mp = tp->t_mountp;
++	struct xfs_defer_ops		*dfops = tp->t_dfops;
+ 	struct xfs_btree_cur		*rcur;
+ 	struct xfs_buf			*agbp = NULL;
+ 	int				error = 0;
+diff --git a/fs/xfs/libxfs/xfs_refcount.h b/fs/xfs/libxfs/xfs_refcount.h
+index 5fef74412727..3b72c6dbf6ad 100644
+--- a/fs/xfs/libxfs/xfs_refcount.h
++++ b/fs/xfs/libxfs/xfs_refcount.h
+@@ -37,10 +37,9 @@ extern int xfs_refcount_decrease_extent(struct xfs_mount *mp,
+ extern void xfs_refcount_finish_one_cleanup(struct xfs_trans *tp,
+ 		struct xfs_btree_cur *rcur, int error);
+ extern int xfs_refcount_finish_one(struct xfs_trans *tp,
+-		struct xfs_defer_ops *dfops, enum xfs_refcount_intent_type type,
+-		xfs_fsblock_t startblock, xfs_extlen_t blockcount,
+-		xfs_fsblock_t *new_fsb, xfs_extlen_t *new_len,
+-		struct xfs_btree_cur **pcur);
++		enum xfs_refcount_intent_type type, xfs_fsblock_t startblock,
++		xfs_extlen_t blockcount, xfs_fsblock_t *new_fsb,
++		xfs_extlen_t *new_len, struct xfs_btree_cur **pcur);
+ 
+ extern int xfs_refcount_find_shared(struct xfs_btree_cur *cur,
+ 		xfs_agblock_t agbno, xfs_extlen_t aglen, xfs_agblock_t *fbno,
+diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+index 4b4318ea4b76..328a5c60000b 100644
+--- a/fs/xfs/xfs_bmap_item.c
++++ b/fs/xfs/xfs_bmap_item.c
+@@ -475,9 +475,8 @@ xfs_bui_recover(
+ 	xfs_trans_ijoin(tp, ip, 0);
+ 
+ 	count = bmap->me_len;
+-	error = xfs_trans_log_finish_bmap_update(tp, budp, tp->t_dfops, type,
+-			ip, whichfork, bmap->me_startoff,
+-			bmap->me_startblock, &count, state);
++	error = xfs_trans_log_finish_bmap_update(tp, budp, type, ip, whichfork,
++			bmap->me_startoff, bmap->me_startblock, &count, state);
+ 	if (error)
+ 		goto err_inode;
+ 
+diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
+index 829b7a5bc707..f6a3249aa2d4 100644
+--- a/fs/xfs/xfs_refcount_item.c
++++ b/fs/xfs/xfs_refcount_item.c
+@@ -479,8 +479,8 @@ xfs_cui_recover(
+ 			new_len = refc->pe_len;
+ 		} else
+ 			error = xfs_trans_log_finish_refcount_update(tp, cudp,
+-				tp->t_dfops, type, refc->pe_startblock,
+-				refc->pe_len, &new_fsb, &new_len, &rcur);
++				type, refc->pe_startblock, refc->pe_len,
++				&new_fsb, &new_len, &rcur);
+ 		if (error)
+ 			goto abort_error;
+ 
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 8665d45b82c6..299656dbf324 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -268,7 +268,7 @@ void xfs_refcount_update_init_defer_op(void);
+ struct xfs_cud_log_item *xfs_trans_get_cud(struct xfs_trans *tp,
+ 		struct xfs_cui_log_item *cuip);
+ int xfs_trans_log_finish_refcount_update(struct xfs_trans *tp,
+-		struct xfs_cud_log_item *cudp, struct xfs_defer_ops *dfops,
++		struct xfs_cud_log_item *cudp,
+ 		enum xfs_refcount_intent_type type, xfs_fsblock_t startblock,
+ 		xfs_extlen_t blockcount, xfs_fsblock_t *new_fsb,
+ 		xfs_extlen_t *new_len, struct xfs_btree_cur **pcur);
+@@ -280,9 +280,9 @@ void xfs_bmap_update_init_defer_op(void);
+ struct xfs_bud_log_item *xfs_trans_get_bud(struct xfs_trans *tp,
+ 		struct xfs_bui_log_item *buip);
+ int xfs_trans_log_finish_bmap_update(struct xfs_trans *tp,
+-		struct xfs_bud_log_item *rudp, struct xfs_defer_ops *dfops,
+-		enum xfs_bmap_intent_type type, struct xfs_inode *ip,
+-		int whichfork, xfs_fileoff_t startoff, xfs_fsblock_t startblock,
+-		xfs_filblks_t *blockcount, xfs_exntst_t state);
++		struct xfs_bud_log_item *rudp, enum xfs_bmap_intent_type type,
++		struct xfs_inode *ip, int whichfork, xfs_fileoff_t startoff,
++		xfs_fsblock_t startblock, xfs_filblks_t *blockcount,
++		xfs_exntst_t state);
+ 
+ #endif	/* __XFS_TRANS_H__ */
+diff --git a/fs/xfs/xfs_trans_bmap.c b/fs/xfs/xfs_trans_bmap.c
+index a15a5cd867f9..741c558b2179 100644
+--- a/fs/xfs/xfs_trans_bmap.c
++++ b/fs/xfs/xfs_trans_bmap.c
+@@ -43,7 +43,6 @@ int
+ xfs_trans_log_finish_bmap_update(
+ 	struct xfs_trans		*tp,
+ 	struct xfs_bud_log_item		*budp,
+-	struct xfs_defer_ops		*dop,
+ 	enum xfs_bmap_intent_type	type,
+ 	struct xfs_inode		*ip,
+ 	int				whichfork,
+@@ -54,7 +53,7 @@ xfs_trans_log_finish_bmap_update(
+ {
+ 	int				error;
+ 
+-	error = xfs_bmap_finish_one(tp, dop, ip, type, whichfork, startoff,
++	error = xfs_bmap_finish_one(tp, ip, type, whichfork, startoff,
+ 			startblock, blockcount, state);
+ 
+ 	/*
+@@ -176,7 +175,6 @@ xfs_bmap_update_create_done(
+ STATIC int
+ xfs_bmap_update_finish_item(
+ 	struct xfs_trans		*tp,
+-	struct xfs_defer_ops		*dop,
+ 	struct list_head		*item,
+ 	void				*done_item,
+ 	void				**state)
+@@ -187,7 +185,7 @@ xfs_bmap_update_finish_item(
+ 
+ 	bmap = container_of(item, struct xfs_bmap_intent, bi_list);
+ 	count = bmap->bi_bmap.br_blockcount;
+-	error = xfs_trans_log_finish_bmap_update(tp, done_item, dop,
++	error = xfs_trans_log_finish_bmap_update(tp, done_item,
+ 			bmap->bi_type,
+ 			bmap->bi_owner, bmap->bi_whichfork,
+ 			bmap->bi_bmap.br_startoff,
+diff --git a/fs/xfs/xfs_trans_extfree.c b/fs/xfs/xfs_trans_extfree.c
+index bd66c76f55e6..855c0b651fd4 100644
+--- a/fs/xfs/xfs_trans_extfree.c
++++ b/fs/xfs/xfs_trans_extfree.c
+@@ -171,7 +171,6 @@ xfs_extent_free_create_done(
+ STATIC int
+ xfs_extent_free_finish_item(
+ 	struct xfs_trans		*tp,
+-	struct xfs_defer_ops		*dop,
+ 	struct list_head		*item,
+ 	void				*done_item,
+ 	void				**state)
+@@ -226,7 +225,6 @@ static const struct xfs_defer_op_type xfs_extent_free_defer_type = {
+ STATIC int
+ xfs_agfl_free_finish_item(
+ 	struct xfs_trans		*tp,
+-	struct xfs_defer_ops		*dop,
+ 	struct list_head		*item,
+ 	void				*done_item,
+ 	void				**state)
+diff --git a/fs/xfs/xfs_trans_refcount.c b/fs/xfs/xfs_trans_refcount.c
+index 46dd4fca8aa7..523c55663954 100644
+--- a/fs/xfs/xfs_trans_refcount.c
++++ b/fs/xfs/xfs_trans_refcount.c
+@@ -42,7 +42,6 @@ int
+ xfs_trans_log_finish_refcount_update(
+ 	struct xfs_trans		*tp,
+ 	struct xfs_cud_log_item		*cudp,
+-	struct xfs_defer_ops		*dop,
+ 	enum xfs_refcount_intent_type	type,
+ 	xfs_fsblock_t			startblock,
+ 	xfs_extlen_t			blockcount,
+@@ -52,7 +51,7 @@ xfs_trans_log_finish_refcount_update(
+ {
+ 	int				error;
+ 
+-	error = xfs_refcount_finish_one(tp, dop, type, startblock,
++	error = xfs_refcount_finish_one(tp, type, startblock,
+ 			blockcount, new_fsb, new_len, pcur);
+ 
+ 	/*
+@@ -169,7 +168,6 @@ xfs_refcount_update_create_done(
+ STATIC int
+ xfs_refcount_update_finish_item(
+ 	struct xfs_trans		*tp,
+-	struct xfs_defer_ops		*dop,
+ 	struct list_head		*item,
+ 	void				*done_item,
+ 	void				**state)
+@@ -180,7 +178,7 @@ xfs_refcount_update_finish_item(
+ 	int				error;
+ 
+ 	refc = container_of(item, struct xfs_refcount_intent, ri_list);
+-	error = xfs_trans_log_finish_refcount_update(tp, done_item, dop,
++	error = xfs_trans_log_finish_refcount_update(tp, done_item,
+ 			refc->ri_type,
+ 			refc->ri_startblock,
+ 			refc->ri_blockcount,
+diff --git a/fs/xfs/xfs_trans_rmap.c b/fs/xfs/xfs_trans_rmap.c
+index 726d8e2c0558..05b00e40251f 100644
+--- a/fs/xfs/xfs_trans_rmap.c
++++ b/fs/xfs/xfs_trans_rmap.c
+@@ -193,7 +193,6 @@ xfs_rmap_update_create_done(
+ STATIC int
+ xfs_rmap_update_finish_item(
+ 	struct xfs_trans		*tp,
+-	struct xfs_defer_ops		*dop,
+ 	struct list_head		*item,
+ 	void				*done_item,
+ 	void				**state)
+-- 
+2.17.1
 
-Oh, ok sure.  Given my ongoing confusion an explicit/complete comment is
-probably good.  For me, if for nobody else.  ;)
-
-Thanks,
--Eric
