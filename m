@@ -1,350 +1,236 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:36300 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728714AbeG3WXw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Jul 2018 18:23:52 -0400
-Date: Mon, 30 Jul 2018 13:47:02 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 12/15] xfs: replace xfs_defer_ops ->dop_pending with
- on-stack list
-Message-ID: <20180730204702.GM30972@magnolia>
-References: <20180730164520.36882-1-bfoster@redhat.com>
- <20180730164520.36882-13-bfoster@redhat.com>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:48238 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727020AbeG3T5H (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 30 Jul 2018 15:57:07 -0400
+Date: Mon, 30 Jul 2018 14:20:51 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 04/14] xfs: repair the AGI
+Message-ID: <20180730182051.GE35107@bfoster>
+References: <153292966714.24509.15809693393247424274.stgit@magnolia>
+ <153292969532.24509.17576845400762793279.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180730164520.36882-13-bfoster@redhat.com>
+In-Reply-To: <153292969532.24509.17576845400762793279.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, allison.henderson@oracle.com
 
-On Mon, Jul 30, 2018 at 12:45:17PM -0400, Brian Foster wrote:
-> The xfs_defer_ops ->dop_pending list is used to track active
-> deferred operations once intents are logged. These items must be
-> aborted in the event of an error. The list is populated as intents
-> are logged and items are removed as they complete (or are aborted).
+On Sun, Jul 29, 2018 at 10:48:15PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Now that xfs_defer_finish() cancels on error, there is no need to
-> ever access ->dop_pending outside of xfs_defer_finish(). The list is
-> only ever populated after xfs_defer_finish() begins and is either
-> completed or cancelled before it returns.
+> Rebuild the AGI header items with some help from the rmapbt.
 > 
-> Remove ->dop_pending from xfs_defer_ops and replace it with a local
-> list in the xfs_defer_finish() path. Pass the local list to the
-> various helpers now that it is not accessible via dfops. Note that
-> we have to check for NULL in the abort case as the final tx roll
-> occurs outside of the scope of the new local list (once the dfops
-> has completed and thus drained the list).
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/libxfs/xfs_defer.c | 80 ++++++++++++++++++++-------------------
->  fs/xfs/libxfs/xfs_defer.h |  3 +-
->  fs/xfs/xfs_trace.h        |  1 -
->  fs/xfs/xfs_trans.h        |  1 -
->  4 files changed, 43 insertions(+), 42 deletions(-)
+
+A couple nits and future thoughts..
+
+>  fs/xfs/scrub/agheader_repair.c |  220 ++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/scrub/repair.h          |    2 
+>  fs/xfs/scrub/scrub.c           |    2 
+>  3 files changed, 223 insertions(+), 1 deletion(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-> index 66848ede62c0..6bf792e2d61b 100644
-> --- a/fs/xfs/libxfs/xfs_defer.c
-> +++ b/fs/xfs/libxfs/xfs_defer.c
-> @@ -174,6 +174,8 @@
->  
->  static const struct xfs_defer_op_type *defer_op_types[XFS_DEFER_OPS_TYPE_MAX];
->  
-> +static void __xfs_defer_cancel(struct list_head *);
-> +
->  /*
->   * For each pending item in the intake list, log its intent item and the
->   * associated extents, then add the entire intake list to the end of
-> @@ -181,7 +183,8 @@ static const struct xfs_defer_op_type *defer_op_types[XFS_DEFER_OPS_TYPE_MAX];
->   */
->  STATIC void
->  xfs_defer_intake_work(
-> -	struct xfs_trans		*tp)
-> +	struct xfs_trans		*tp,
-> +	struct list_head		*dop_pending)
->  {
->  	struct xfs_defer_ops		*dop = tp->t_dfops;
->  	struct list_head		*li;
-> @@ -197,13 +200,14 @@ xfs_defer_intake_work(
->  			dfp->dfp_type->log_item(tp, dfp->dfp_intent, li);
->  	}
->  
-> -	list_splice_tail_init(&dop->dop_intake, &dop->dop_pending);
-> +	list_splice_tail_init(&dop->dop_intake, dop_pending);
+> 
+> diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
+> index bfef066c87c3..921e7d42a2ef 100644
+> --- a/fs/xfs/scrub/agheader_repair.c
+> +++ b/fs/xfs/scrub/agheader_repair.c
+> @@ -700,3 +700,223 @@ xrep_agfl(
+>  	xfs_bitmap_destroy(&agfl_extents);
+>  	return error;
 >  }
->  
->  /* Abort all the intents that were committed. */
->  STATIC void
->  xfs_defer_trans_abort(
->  	struct xfs_trans		*tp,
-> +	struct list_head		*dop_pending,
->  	int				error)
->  {
->  	struct xfs_defer_ops		*dop = tp->t_dfops;
-> @@ -212,11 +216,13 @@ xfs_defer_trans_abort(
->  	trace_xfs_defer_trans_abort(tp->t_mountp, dop, _RET_IP_);
->  
->  	/* Abort intent items that don't have a done item. */
-> -	list_for_each_entry(dfp, &dop->dop_pending, dfp_list) {
-> -		trace_xfs_defer_pending_abort(tp->t_mountp, dfp);
-> -		if (dfp->dfp_intent && !dfp->dfp_done) {
-> -			dfp->dfp_type->abort_intent(dfp->dfp_intent);
-> -			dfp->dfp_intent = NULL;
-> +	if (dop_pending) {
-
-/me kinda wonders if you could just make xfs_defer_finish pass an empty
-list_head into xfs_defer_trans_roll to avoid this extra indent, but I
-don't care all that much and maybe we should save the stack space. :)
-
-> +		list_for_each_entry(dfp, dop_pending, dfp_list) {
-> +			trace_xfs_defer_pending_abort(tp->t_mountp, dfp);
-> +			if (dfp->dfp_intent && !dfp->dfp_done) {
-> +				dfp->dfp_type->abort_intent(dfp->dfp_intent);
-> +				dfp->dfp_intent = NULL;
-> +			}
->  		}
->  	}
->  
-> @@ -228,7 +234,8 @@ xfs_defer_trans_abort(
->  /* Roll a transaction so we can do some deferred op processing. */
->  STATIC int
->  xfs_defer_trans_roll(
-> -	struct xfs_trans		**tp)
-> +	struct xfs_trans		**tp,
-> +	struct list_head		*dop_pending)
->  {
->  	struct xfs_buf_log_item		*bli;
->  	struct xfs_inode_log_item	*ili;
-> @@ -272,7 +279,7 @@ xfs_defer_trans_roll(
->  	if (error) {
->  		trace_xfs_defer_trans_roll_error((*tp)->t_mountp,
->  						 (*tp)->t_dfops, error);
-> -		xfs_defer_trans_abort(*tp,  error);
-> +		xfs_defer_trans_abort(*tp,  dop_pending, error);
->  		return error;
->  	}
->  
-> @@ -292,9 +299,10 @@ xfs_defer_trans_roll(
->  /* Do we have any work items to finish? */
->  bool
->  xfs_defer_has_unfinished_work(
-> -	struct xfs_trans		*tp)
-> +	struct xfs_trans		*tp,
-> +	struct list_head		*dop_pending)
->  {
-> -	return !list_empty(&tp->t_dfops->dop_pending) ||
-> +	return !list_empty(dop_pending) ||
->  		!list_empty(&tp->t_dfops->dop_intake);
->  }
->  
-> @@ -305,7 +313,7 @@ static void
->  xfs_defer_reset(
->  	struct xfs_trans	*tp)
->  {
-> -	ASSERT(!xfs_defer_has_unfinished_work(tp));
-> +	ASSERT(list_empty(&tp->t_dfops->dop_intake));
->  
->  	/*
->  	 * Low mode state transfers across transaction rolls to mirror dfops
-> @@ -332,26 +340,27 @@ xfs_defer_finish_noroll(
->  	void				*state;
->  	int				error = 0;
->  	void				(*cleanup_fn)(struct xfs_trans *, void *, int);
-> +	LIST_HEAD(dop_pending);
->  
->  	ASSERT((*tp)->t_flags & XFS_TRANS_PERM_LOG_RES);
->  
->  	trace_xfs_defer_finish((*tp)->t_mountp, (*tp)->t_dfops, _RET_IP_);
->  
->  	/* Until we run out of pending work to finish... */
-> -	while (xfs_defer_has_unfinished_work(*tp)) {
-> +	while (xfs_defer_has_unfinished_work(*tp, &dop_pending)) {
-
-<urk> see discussion below.
-
->  		/* Log intents for work items sitting in the intake. */
-> -		xfs_defer_intake_work(*tp);
-> +		xfs_defer_intake_work(*tp, &dop_pending);
->  
->  		/*
->  		 * Roll the transaction.
->  		 */
-> -		error = xfs_defer_trans_roll(tp);
-> +		error = xfs_defer_trans_roll(tp, &dop_pending);
->  		if (error)
->  			goto out;
->  
->  		/* Log an intent-done item for the first pending item. */
-> -		dfp = list_first_entry(&(*tp)->t_dfops->dop_pending,
-> -				struct xfs_defer_pending, dfp_list);
-> +		dfp = list_first_entry(&dop_pending, struct xfs_defer_pending,
-> +				       dfp_list);
->  		trace_xfs_defer_pending_finish((*tp)->t_mountp, dfp);
->  		dfp->dfp_done = dfp->dfp_type->create_done(*tp, dfp->dfp_intent,
->  				dfp->dfp_count);
-> @@ -381,7 +390,7 @@ xfs_defer_finish_noroll(
->  				 */
->  				if (cleanup_fn)
->  					cleanup_fn(*tp, state, error);
-> -				xfs_defer_trans_abort(*tp, error);
-> +				xfs_defer_trans_abort(*tp, &dop_pending, error);
->  				goto out;
->  			}
->  		}
-> @@ -413,6 +422,7 @@ xfs_defer_finish_noroll(
->  	if (error) {
->  		trace_xfs_defer_finish_error((*tp)->t_mountp, (*tp)->t_dfops,
->  					     error);
-> +		__xfs_defer_cancel(&dop_pending);
->  		xfs_defer_cancel(*tp);
->  		return error;
->  	}
-> @@ -435,7 +445,7 @@ xfs_defer_finish(
->  	if (error)
->  		return error;
->  	if ((*tp)->t_flags & XFS_TRANS_DIRTY) {
-> -		error = xfs_defer_trans_roll(tp);
-> +		error = xfs_defer_trans_roll(tp, NULL);
->  		if (error)
->  			return error;
->  	}
-> @@ -446,34 +456,20 @@ xfs_defer_finish(
->  /*
->   * Free up any items left in the list.
->   */
-> -void
-> -xfs_defer_cancel(
-> -	struct xfs_trans		*tp)
-> +static void
-> +__xfs_defer_cancel(
-
-Maybe this should be xfs_defer_cancel_list?
-
-> +	struct list_head		*dop_list)
->  {
-> -	struct xfs_defer_ops		*dop = tp->t_dfops;
->  	struct xfs_defer_pending	*dfp;
->  	struct xfs_defer_pending	*pli;
->  	struct list_head		*pwi;
->  	struct list_head		*n;
->  
-> -	trace_xfs_defer_cancel(NULL, dop, _RET_IP_);
-> -
->  	/*
->  	 * Free the pending items.  Caller should already have arranged
->  	 * for the intent items to be released.
->  	 */
-> -	list_for_each_entry_safe(dfp, pli, &dop->dop_intake, dfp_list) {
-> -		trace_xfs_defer_intake_cancel(NULL, dfp);
-> -		list_del(&dfp->dfp_list);
-> -		list_for_each_safe(pwi, n, &dfp->dfp_work) {
-> -			list_del(pwi);
-> -			dfp->dfp_count--;
-> -			dfp->dfp_type->cancel_item(pwi);
-> -		}
-> -		ASSERT(dfp->dfp_count == 0);
-> -		kmem_free(dfp);
-> -	}
-> -	list_for_each_entry_safe(dfp, pli, &dop->dop_pending, dfp_list) {
-> +	list_for_each_entry_safe(dfp, pli, dop_list, dfp_list) {
->  		trace_xfs_defer_pending_cancel(NULL, dfp);
-
-trace_xfs_defer_cancel_list?
-
-Maybe it's worth passing a *mp into this function so we can pass it to
-the tracepoint?
-
->  		list_del(&dfp->dfp_list);
->  		list_for_each_safe(pwi, n, &dfp->dfp_work) {
-> @@ -486,6 +482,14 @@ xfs_defer_cancel(
->  	}
->  }
->  
-> +void
-> +xfs_defer_cancel(
-> +	struct xfs_trans	*tp)
+...
+> +STATIC int
+> +xrep_agi_find_btrees(
+> +	struct xfs_scrub		*sc,
+> +	struct xrep_find_ag_btree	*fab)
 > +{
-> +	trace_xfs_defer_cancel(NULL, tp->t_dfops, _RET_IP_);
+> +	struct xfs_buf			*agf_bp;
+> +	struct xfs_mount		*mp = sc->mp;
+> +	int				error;
+> +
+> +	/* Read the AGF. */
+> +	error = xfs_alloc_read_agf(mp, sc->tp, sc->sa.agno, 0, &agf_bp);
+> +	if (error)
+> +		return error;
+> +	if (!agf_bp)
+> +		return -ENOMEM;
+> +
+> +	/* Find the btree roots. */
+> +	error = xrep_find_ag_btree_roots(sc, agf_bp, fab, NULL);
+> +	if (error)
+> +		return error;
+> +
+> +	/* We must find the inobt root. */
+> +	if (fab[XREP_AGI_INOBT].root == NULLAGBLOCK ||
+> +	    fab[XREP_AGI_INOBT].height > XFS_BTREE_MAXLEVELS)
+> +		return -EFSCORRUPTED;
+> +
+> +	/* We must find the finobt root if that feature is enabled. */
+> +	if (xfs_sb_version_hasfinobt(&mp->m_sb) &&
+> +	    (fab[XREP_AGI_FINOBT].root == NULLAGBLOCK ||
+> +	     fab[XREP_AGI_FINOBT].height > XFS_BTREE_MAXLEVELS))
+> +		return -EFSCORRUPTED;
 
-That NULL can be tp->t_mountp, right?  Since tp should never be NULL?
+Skimming around some of the existing code to find the btree roots, I
+notice that the .root field is going to be != NULLAGBLOCK so long as we
+find at least one appropriately typed block in the rmapbt. I know you
+mentioned that we depend on a correct rmapbt atm, but I'm wondering if
+there's room for slightly more robust error checks to at least prevent
+us from doing something damaging. For example, perhaps we could unset
+.root when we've found a second block at the same level as the current
+"root," and/or check some of the generic characteristics of a root btree
+block (no left/right siblings) once we're done..?
 
-> +	__xfs_defer_cancel(&tp->t_dfops->dop_intake);
+> +
+> +	return 0;
 > +}
 > +
->  /* Add an item for later deferred processing. */
->  void
->  xfs_defer_add(
-> @@ -541,7 +545,6 @@ xfs_defer_init(
->  
->  	memset(dop, 0, sizeof(struct xfs_defer_ops));
->  	INIT_LIST_HEAD(&dop->dop_intake);
-> -	INIT_LIST_HEAD(&dop->dop_pending);
->  	if (tp) {
->  		ASSERT(tp->t_firstblock == NULLFSBLOCK);
->  		tp->t_dfops = dop;
-> @@ -565,7 +568,6 @@ xfs_defer_move(
->  	ASSERT(dst != src);
->  
->  	list_splice_init(&src->dop_intake, &dst->dop_intake);
-> -	list_splice_init(&src->dop_pending, &dst->dop_pending);
->  
->  	/*
->  	 * Low free space mode was historically controlled by a dfops field.
-> diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-> index f051c8056141..363af16328cb 100644
-> --- a/fs/xfs/libxfs/xfs_defer.h
-> +++ b/fs/xfs/libxfs/xfs_defer.h
-> @@ -41,7 +41,8 @@ int xfs_defer_finish_noroll(struct xfs_trans **tp);
->  int xfs_defer_finish(struct xfs_trans **tp);
->  void xfs_defer_cancel(struct xfs_trans *);
->  void xfs_defer_init(struct xfs_trans *tp, struct xfs_defer_ops *dop);
-> -bool xfs_defer_has_unfinished_work(struct xfs_trans *tp);
-> +bool xfs_defer_has_unfinished_work(struct xfs_trans *tp,
-> +		struct list_head *dop_pending);
+...
+> +/* Trigger reinitialization of the in-core data. */
+> +STATIC int
+> +xrep_agi_commit_new(
+> +	struct xfs_scrub	*sc,
+> +	struct xfs_buf		*agi_bp,
+> +	const struct xfs_agi	*old_agi)
 
-Eww, I dislike exposing this implementation detail in a public
-interface.  Assuming you take my suggestion in patch 1 to ASSERT if
-xfs_trans_{cancel,commit} encounter unfinished deferred work and a
-transaction we can't roll, there will be only three callers of this
-function, and only one of them knows about the pending item list.
-Perhaps the list_empty(dop_pending) check can be open-coded in
-xfs_defer_finish_noroll?
+old_agi is unused here.
 
---D
+> +{
+> +	struct xfs_perag	*pag;
+> +	struct xfs_agi		*agi = XFS_BUF_TO_AGI(agi_bp);
+> +
+> +	/* Trigger inode count recalculation */
+> +	xfs_force_summary_recalc(sc->mp);
+> +
+> +	/* Write this to disk. */
+> +	xfs_trans_buf_set_type(sc->tp, agi_bp, XFS_BLFT_AGI_BUF);
+> +	xfs_trans_log_buf(sc->tp, agi_bp, 0, BBTOB(agi_bp->b_length) - 1);
+> +
+> +	/* Now reinitialize the in-core counters if necessary. */
+> +	pag = sc->sa.pag;
+> +	sc->sa.pag->pagi_init = 1;
 
->  void xfs_defer_move(struct xfs_trans *dtp, struct xfs_trans *stp);
+Same s/sc->sa.pag/pag/ nit here as before.
+
+> +	pag->pagi_count = be32_to_cpu(agi->agi_count);
+> +	pag->pagi_freecount = be32_to_cpu(agi->agi_freecount);
+> +
+> +	return 0;
+> +}
+> +
+> +/* Repair the AGI. */
+> +int
+> +xrep_agi(
+> +	struct xfs_scrub		*sc)
+> +{
+> +	struct xrep_find_ag_btree	fab[XREP_AGI_MAX] = {
+> +		[XREP_AGI_INOBT] = {
+> +			.rmap_owner = XFS_RMAP_OWN_INOBT,
+> +			.buf_ops = &xfs_inobt_buf_ops,
+> +			.magic = XFS_IBT_CRC_MAGIC,
+> +		},
+> +		[XREP_AGI_FINOBT] = {
+> +			.rmap_owner = XFS_RMAP_OWN_INOBT,
+> +			.buf_ops = &xfs_inobt_buf_ops,
+> +			.magic = XFS_FIBT_CRC_MAGIC,
+> +		},
+> +		[XREP_AGI_END] = {
+> +			.buf_ops = NULL
+> +		},
+> +	};
+> +	struct xfs_agi			old_agi;
+
+It's not immediately clear to me how much of a danger this is here, if
+at all, but FWIW xfs_agi is one of our larger structures at 336 bytes
+(mostly due to agi_unlinked). I'm not terribly concerned if this isn't
+currently exploding, but it might be worth thinking about another
+technique to preserve original behavior without the stack usage. Perhaps
+we could use an uncached buffer to preserve the original data and
+implement an xfs_buf_copy() helper to facilitate, for example.
+
+Brian
+
+> +	struct xfs_mount		*mp = sc->mp;
+> +	struct xfs_buf			*agi_bp;
+> +	struct xfs_agi			*agi;
+> +	int				error;
+> +
+> +	/* We require the rmapbt to rebuild anything. */
+> +	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
+> +		return -EOPNOTSUPP;
+> +
+> +	xchk_perag_get(sc->mp, &sc->sa);
+> +	/*
+> +	 * Make sure we have the AGI buffer, as scrub might have decided it
+> +	 * was corrupt after xfs_ialloc_read_agi failed with -EFSCORRUPTED.
+> +	 */
+> +	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
+> +			XFS_AG_DADDR(mp, sc->sa.agno, XFS_AGI_DADDR(mp)),
+> +			XFS_FSS_TO_BB(mp, 1), 0, &agi_bp, NULL);
+> +	if (error)
+> +		return error;
+> +	agi_bp->b_ops = &xfs_agi_buf_ops;
+> +	agi = XFS_BUF_TO_AGI(agi_bp);
+> +
+> +	/* Find the AGI btree roots. */
+> +	error = xrep_agi_find_btrees(sc, fab);
+> +	if (error)
+> +		return error;
+> +
+> +	/* Start rewriting the header and implant the btrees we found. */
+> +	xrep_agi_init_header(sc, agi_bp, &old_agi);
+> +	xrep_agi_set_roots(sc, agi, fab);
+> +	error = xrep_agi_calc_from_btrees(sc, agi_bp);
+> +	if (error)
+> +		goto out_revert;
+> +
+> +	/* Reinitialize in-core state. */
+> +	return xrep_agi_commit_new(sc, agi_bp, &old_agi);
+> +
+> +out_revert:
+> +	/* Mark the incore AGI state stale and revert the AGI. */
+> +	sc->sa.pag->pagi_init = 0;
+> +	memcpy(agi, &old_agi, sizeof(old_agi));
+> +	return error;
+> +}
+> diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+> index 1d283360b5ab..9de321eee4ab 100644
+> --- a/fs/xfs/scrub/repair.h
+> +++ b/fs/xfs/scrub/repair.h
+> @@ -60,6 +60,7 @@ int xrep_probe(struct xfs_scrub *sc);
+>  int xrep_superblock(struct xfs_scrub *sc);
+>  int xrep_agf(struct xfs_scrub *sc);
+>  int xrep_agfl(struct xfs_scrub *sc);
+> +int xrep_agi(struct xfs_scrub *sc);
 >  
->  /* Description of a deferred type. */
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 8807f1bb814a..6b55bbc09578 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -2393,7 +2393,6 @@ DEFINE_DEFER_ERROR_EVENT(xfs_defer_trans_roll_error);
->  DEFINE_DEFER_ERROR_EVENT(xfs_defer_finish_error);
+>  #else
 >  
->  DEFINE_DEFER_PENDING_EVENT(xfs_defer_intake_work);
-> -DEFINE_DEFER_PENDING_EVENT(xfs_defer_intake_cancel);
->  DEFINE_DEFER_PENDING_EVENT(xfs_defer_pending_cancel);
->  DEFINE_DEFER_PENDING_EVENT(xfs_defer_pending_finish);
->  DEFINE_DEFER_PENDING_EVENT(xfs_defer_pending_abort);
-> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> index 299656dbf324..1cdc7c0ebeac 100644
-> --- a/fs/xfs/xfs_trans.h
-> +++ b/fs/xfs/xfs_trans.h
-> @@ -96,7 +96,6 @@ void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
->  #define XFS_DEFER_OPS_NR_BUFS	2	/* join up to two buffers */
->  struct xfs_defer_ops {
->  	struct list_head	dop_intake;	/* unlogged pending work */
-> -	struct list_head	dop_pending;	/* logged pending work */
->  };
+> @@ -85,6 +86,7 @@ xrep_calc_ag_resblks(
+>  #define xrep_superblock			xrep_notsupported
+>  #define xrep_agf			xrep_notsupported
+>  #define xrep_agfl			xrep_notsupported
+> +#define xrep_agi			xrep_notsupported
 >  
->  /*
-> -- 
-> 2.17.1
+>  #endif /* CONFIG_XFS_ONLINE_REPAIR */
+>  
+> diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+> index 2670f4cf62f4..4bfae1e61d30 100644
+> --- a/fs/xfs/scrub/scrub.c
+> +++ b/fs/xfs/scrub/scrub.c
+> @@ -226,7 +226,7 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
+>  		.type	= ST_PERAG,
+>  		.setup	= xchk_setup_fs,
+>  		.scrub	= xchk_agi,
+> -		.repair	= xrep_notsupported,
+> +		.repair	= xrep_agi,
+>  	},
+>  	[XFS_SCRUB_TYPE_BNOBT] = {	/* bnobt */
+>  		.type	= ST_PERAG,
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
