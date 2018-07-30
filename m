@@ -1,20 +1,20 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:43290 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:47776 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732065AbeG3SVM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1732151AbeG3SVM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Mon, 30 Jul 2018 14:21:12 -0400
 Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 6CF7E4021700
+        by mx1.redhat.com (Postfix) with ESMTPS id 8B5F94000784
         for <linux-xfs@vger.kernel.org>; Mon, 30 Jul 2018 16:45:21 +0000 (UTC)
 Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 541B4112D179
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 70A37112D179
         for <linux-xfs@vger.kernel.org>; Mon, 30 Jul 2018 16:45:21 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 04/15] xfs: pass transaction to dfops reset/move helpers
-Date: Mon, 30 Jul 2018 12:45:09 -0400
-Message-Id: <20180730164520.36882-5-bfoster@redhat.com>
+Subject: [PATCH 05/15] xfs: replace dop_low with transaction flag
+Date: Mon, 30 Jul 2018 12:45:10 -0400
+Message-Id: <20180730164520.36882-6-bfoster@redhat.com>
 In-Reply-To: <20180730164520.36882-1-bfoster@redhat.com>
 References: <20180730164520.36882-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -22,167 +22,255 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-All callers pass ->t_dfops of the associated transactions. Refactor
-the helpers to receive the transactions and facilitate further
-cleanups between xfs_defer_ops and xfs_trans.
+The dop_low field enables the low free space allocation mode when a
+previous allocation has detected difficulty allocating blocks. It
+has historically been part of the xfs_defer_ops structure, which
+means if enabled, it remains enabled across a set of transactions
+until the deferred operations have completed and the dfops is reset.
+
+Now that the dfops is embedded in the transaction, we can save a bit
+more space by using a transaction flag rather than a standalone
+boolean. Drop the ->dop_low field and replace it with a transaction
+flag that is set at the same points, carried across rolling
+transactions and cleared on completion of deferred operations. This
+essentially emulates the behavior of ->dop_low and so should not
+change behavior.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_defer.c  | 15 ++++++++++-----
- fs/xfs/libxfs/xfs_defer.h  |  2 +-
- fs/xfs/xfs_bmap_item.c     |  6 +++---
- fs/xfs/xfs_log_recover.c   |  2 +-
- fs/xfs/xfs_refcount_item.c |  6 +++---
- fs/xfs/xfs_trans.c         |  2 +-
- 6 files changed, 19 insertions(+), 14 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c       |  8 ++++----
+ fs/xfs/libxfs/xfs_bmap_btree.c |  4 ++--
+ fs/xfs/libxfs/xfs_defer.c      | 16 ++++++++++++++--
+ fs/xfs/libxfs/xfs_defer.h      | 11 -----------
+ fs/xfs/libxfs/xfs_shared.h     | 12 ++++++++++++
+ fs/xfs/xfs_filestream.c        |  3 ++-
+ fs/xfs/xfs_trace.h             | 10 ++--------
+ fs/xfs/xfs_trans.h             |  2 --
+ 8 files changed, 36 insertions(+), 30 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index ebead781613f..e3517a53c525 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -324,9 +324,12 @@ xfs_defer_bjoin(
-  */
- static void
- xfs_defer_reset(
--	struct xfs_defer_ops	*dop)
-+	struct xfs_trans	*tp)
- {
-+	struct xfs_defer_ops	*dop = tp->t_dfops;
-+
- 	ASSERT(!xfs_defer_has_unfinished_work(dop));
-+
- 	dop->dop_low = false;
- 	memset(dop->dop_inodes, 0, sizeof(dop->dop_inodes));
- 	memset(dop->dop_bufs, 0, sizeof(dop->dop_bufs));
-@@ -457,7 +460,7 @@ xfs_defer_finish(
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index a85c0445b38f..8edf7522aaff 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -700,7 +700,7 @@ xfs_bmap_extents_to_btree(
+ 	if (tp->t_firstblock == NULLFSBLOCK) {
+ 		args.type = XFS_ALLOCTYPE_START_BNO;
+ 		args.fsbno = XFS_INO_TO_FSB(mp, ip->i_ino);
+-	} else if (tp->t_dfops->dop_low) {
++	} else if (tp->t_flags & XFS_TRANS_LOWMODE) {
+ 		args.type = XFS_ALLOCTYPE_START_BNO;
+ 		args.fsbno = tp->t_firstblock;
+ 	} else {
+@@ -3449,7 +3449,7 @@ xfs_bmap_btalloc(
+ 			error = xfs_bmap_btalloc_nullfb(ap, &args, &blen);
  		if (error)
  			return error;
+-	} else if (ap->tp->t_dfops->dop_low) {
++	} else if (ap->tp->t_flags & XFS_TRANS_LOWMODE) {
+ 		if (xfs_inode_is_filestream(ap->ip))
+ 			args.type = XFS_ALLOCTYPE_FIRST_AG;
+ 		else
+@@ -3484,7 +3484,7 @@ xfs_bmap_btalloc(
+ 	 * is >= the stripe unit and the allocation offset is
+ 	 * at the end of file.
+ 	 */
+-	if (!ap->tp->t_dfops->dop_low && ap->aeof) {
++	if (!(ap->tp->t_flags & XFS_TRANS_LOWMODE) && ap->aeof) {
+ 		if (!ap->offset) {
+ 			args.alignment = stripe_align;
+ 			atype = args.type;
+@@ -3576,7 +3576,7 @@ xfs_bmap_btalloc(
+ 		args.total = ap->minlen;
+ 		if ((error = xfs_alloc_vextent(&args)))
+ 			return error;
+-		ap->tp->t_dfops->dop_low = true;
++		ap->tp->t_flags |= XFS_TRANS_LOWMODE;
  	}
--	xfs_defer_reset((*tp)->t_dfops);
-+	xfs_defer_reset(*tp);
- 	return 0;
+ 	if (args.fsbno != NULLFSBLOCK) {
+ 		/*
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index 01489714a253..955e29de8cae 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -226,7 +226,7 @@ xfs_bmbt_alloc_block(
+ 		 * block allocation here and corrupt the filesystem.
+ 		 */
+ 		args.minleft = args.tp->t_blk_res;
+-	} else if (cur->bc_tp->t_dfops->dop_low) {
++	} else if (cur->bc_tp->t_flags & XFS_TRANS_LOWMODE) {
+ 		args.type = XFS_ALLOCTYPE_START_BNO;
+ 	} else {
+ 		args.type = XFS_ALLOCTYPE_NEAR_BNO;
+@@ -253,7 +253,7 @@ xfs_bmbt_alloc_block(
+ 		error = xfs_alloc_vextent(&args);
+ 		if (error)
+ 			goto error0;
+-		cur->bc_tp->t_dfops->dop_low = true;
++		cur->bc_tp->t_flags |= XFS_TRANS_LOWMODE;
+ 	}
+ 	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
+ 		*stat = 0;
+diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+index e3517a53c525..0306187b5f56 100644
+--- a/fs/xfs/libxfs/xfs_defer.c
++++ b/fs/xfs/libxfs/xfs_defer.c
+@@ -330,9 +330,14 @@ xfs_defer_reset(
+ 
+ 	ASSERT(!xfs_defer_has_unfinished_work(dop));
+ 
+-	dop->dop_low = false;
+ 	memset(dop->dop_inodes, 0, sizeof(dop->dop_inodes));
+ 	memset(dop->dop_bufs, 0, sizeof(dop->dop_bufs));
++
++	/*
++	 * Low mode state transfers across transaction rolls to mirror dfops
++	 * lifetime. Clear it now that dfops is reset.
++	 */
++	tp->t_flags &= ~XFS_TRANS_LOWMODE;
  }
  
-@@ -575,9 +578,11 @@ xfs_defer_init(
-  */
- void
- xfs_defer_move(
--	struct xfs_defer_ops	*dst,
--	struct xfs_defer_ops	*src)
-+	struct xfs_trans	*dtp,
-+	struct xfs_trans	*stp)
- {
-+	struct xfs_defer_ops	*dst = dtp->t_dfops;
-+	struct xfs_defer_ops	*src = stp->t_dfops;
- 	ASSERT(dst != src);
+ /*
+@@ -590,7 +595,14 @@ xfs_defer_move(
  
- 	list_splice_init(&src->dop_intake, &dst->dop_intake);
-@@ -587,5 +592,5 @@ xfs_defer_move(
+ 	memcpy(dst->dop_inodes, src->dop_inodes, sizeof(dst->dop_inodes));
  	memcpy(dst->dop_bufs, src->dop_bufs, sizeof(dst->dop_bufs));
- 	dst->dop_low = src->dop_low;
+-	dst->dop_low = src->dop_low;
++
++	/*
++	 * Low free space mode was historically controlled by a dfops field.
++	 * This meant that low mode state potentially carried across multiple
++	 * transaction rolls. Transfer low mode on a dfops move to preserve
++	 * that behavior.
++	 */
++	dtp->t_flags |= stp->t_flags & XFS_TRANS_LOWMODE;
  
--	xfs_defer_reset(src);
-+	xfs_defer_reset(stp);
+ 	xfs_defer_reset(stp);
  }
 diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-index da145fc04ae1..d60c50498fdf 100644
+index d60c50498fdf..8908a2716774 100644
 --- a/fs/xfs/libxfs/xfs_defer.h
 +++ b/fs/xfs/libxfs/xfs_defer.h
-@@ -55,7 +55,7 @@ void xfs_defer_init(struct xfs_trans *tp, struct xfs_defer_ops *dop);
- bool xfs_defer_has_unfinished_work(struct xfs_defer_ops *dop);
- int xfs_defer_ijoin(struct xfs_defer_ops *dop, struct xfs_inode *ip);
- int xfs_defer_bjoin(struct xfs_defer_ops *dop, struct xfs_buf *bp);
--void xfs_defer_move(struct xfs_defer_ops *dst, struct xfs_defer_ops *src);
-+void xfs_defer_move(struct xfs_trans *dtp, struct xfs_trans *stp);
+@@ -25,17 +25,6 @@ struct xfs_defer_pending {
  
- /* Description of a deferred type. */
- struct xfs_defer_op_type {
-diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index 992235e7c761..4b4318ea4b76 100644
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -446,7 +446,7 @@ xfs_bui_recover(
- 	 * finishes them on completion. Transfer current dfops state to this
- 	 * transaction and transfer the result back before we return.
- 	 */
--	xfs_defer_move(tp->t_dfops, itp->t_dfops);
-+	xfs_defer_move(tp, itp);
- 	budp = xfs_trans_get_bud(tp, buip);
+ /*
+  * Header for deferred operation list.
+- *
+- * dop_low is used by the allocator to activate the lowspace algorithm -
+- * when free space is running low the extent allocator may choose to
+- * allocate an extent from an AG without leaving sufficient space for
+- * a btree split when inserting the new extent.  In this case the allocator
+- * will enable the lowspace algorithm which is supposed to allow further
+- * allocations (such as btree splits and newroots) to allocate from
+- * sequential AGs.  In order to avoid locking AGs out of order the lowspace
+- * algorithm will start searching for free space from AG 0.  If the correct
+- * transaction reservations have been made then this algorithm will eventually
+- * find all the space it needs.
+  */
+ enum xfs_defer_ops_type {
+ 	XFS_DEFER_OPS_TYPE_BMAP,
+diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
+index 22089f1c880a..1c5debe748f0 100644
+--- a/fs/xfs/libxfs/xfs_shared.h
++++ b/fs/xfs/libxfs/xfs_shared.h
+@@ -64,6 +64,18 @@ void	xfs_log_get_max_trans_res(struct xfs_mount *mp,
+ #define XFS_TRANS_RESERVE	0x20    /* OK to use reserved data blocks */
+ #define XFS_TRANS_NO_WRITECOUNT 0x40	/* do not elevate SB writecount */
+ #define XFS_TRANS_NOFS		0x80	/* pass KM_NOFS to kmem_alloc */
++/*
++ * LOWMODE is used by the allocator to activate the lowspace algorithm - when
++ * free space is running low the extent allocator may choose to allocate an
++ * extent from an AG without leaving sufficient space for a btree split when
++ * inserting the new extent. In this case the allocator will enable the
++ * lowspace algorithm which is supposed to allow further allocations (such as
++ * btree splits and newroots) to allocate from sequential AGs. In order to
++ * avoid locking AGs out of order the lowspace algorithm will start searching
++ * for free space from AG 0. If the correct transaction reservations have been
++ * made then this algorithm will eventually find all the space it needs.
++ */
++#define XFS_TRANS_LOWMODE	0x100	/* allocate in low space mode */
  
- 	/* Grab the inode. */
-@@ -494,7 +494,7 @@ xfs_bui_recover(
- 	}
+ /*
+  * Field values for xfs_trans_mod_sb.
+diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
+index 212173c62588..182501373af2 100644
+--- a/fs/xfs/xfs_filestream.c
++++ b/fs/xfs/xfs_filestream.c
+@@ -20,6 +20,7 @@
+ #include "xfs_trace.h"
+ #include "xfs_ag_resv.h"
+ #include "xfs_trans.h"
++#include "xfs_shared.h"
  
- 	set_bit(XFS_BUI_RECOVERED, &buip->bui_flags);
--	xfs_defer_move(itp->t_dfops, tp->t_dfops);
-+	xfs_defer_move(itp, tp);
- 	error = xfs_trans_commit(tp);
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	xfs_irele(ip);
-@@ -502,7 +502,7 @@ xfs_bui_recover(
- 	return error;
+ struct xfs_fstrm_item {
+ 	struct xfs_mru_cache_elem	mru;
+@@ -378,7 +379,7 @@ xfs_filestream_new_ag(
  
- err_inode:
--	xfs_defer_move(itp->t_dfops, tp->t_dfops);
-+	xfs_defer_move(itp, tp);
- 	xfs_trans_cancel(tp);
- 	if (ip) {
- 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 6650b790e43b..b4edd93a18e9 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -4853,7 +4853,7 @@ xlog_finish_defer_ops(
- 	if (error)
- 		return error;
- 	/* transfer all collected dfops to this transaction */
--	xfs_defer_move(tp->t_dfops, itp->t_dfops);
-+	xfs_defer_move(tp, itp);
+ 	if (xfs_alloc_is_userdata(ap->datatype))
+ 		flags |= XFS_PICK_USERDATA;
+-	if (ap->tp->t_dfops->dop_low)
++	if (ap->tp->t_flags & XFS_TRANS_LOWMODE)
+ 		flags |= XFS_PICK_LOWSPACE;
  
- 	return xfs_trans_commit(tp);
- }
-diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index d663ea1f4076..829b7a5bc707 100644
---- a/fs/xfs/xfs_refcount_item.c
-+++ b/fs/xfs/xfs_refcount_item.c
-@@ -457,7 +457,7 @@ xfs_cui_recover(
- 	 * finishes them on completion. Transfer current dfops state to this
- 	 * transaction and transfer the result back before we return.
- 	 */
--	xfs_defer_move(tp->t_dfops, itp->t_dfops);
-+	xfs_defer_move(tp, itp);
- 	cudp = xfs_trans_get_cud(tp, cuip);
+ 	err = xfs_filestream_pick_ag(pip, startag, agp, flags, minlen);
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index cc6995cfce66..8807f1bb814a 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -2223,19 +2223,16 @@ DECLARE_EVENT_CLASS(xfs_defer_class,
+ 		__field(dev_t, dev)
+ 		__field(void *, dop)
+ 		__field(char, committed)
+-		__field(char, low)
+ 		__field(unsigned long, caller_ip)
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = mp ? mp->m_super->s_dev : 0;
+ 		__entry->dop = dop;
+-		__entry->low = dop->dop_low;
+ 		__entry->caller_ip = caller_ip;
+ 	),
+-	TP_printk("dev %d:%d ops %p low %d, caller %pS",
++	TP_printk("dev %d:%d ops %p caller %pS",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->dop,
+-		  __entry->low,
+ 		  (char *)__entry->caller_ip)
+ )
+ #define DEFINE_DEFER_EVENT(name) \
+@@ -2251,19 +2248,16 @@ DECLARE_EVENT_CLASS(xfs_defer_error_class,
+ 		__field(dev_t, dev)
+ 		__field(void *, dop)
+ 		__field(char, committed)
+-		__field(char, low)
+ 		__field(int, error)
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = mp ? mp->m_super->s_dev : 0;
+ 		__entry->dop = dop;
+-		__entry->low = dop->dop_low;
+ 		__entry->error = error;
+ 	),
+-	TP_printk("dev %d:%d ops %p low %d err %d",
++	TP_printk("dev %d:%d ops %p err %d",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->dop,
+-		  __entry->low,
+ 		  __entry->error)
+ )
+ #define DEFINE_DEFER_ERROR_EVENT(name) \
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index dc79e3c1d3e8..7e493221160e 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -101,8 +101,6 @@ struct xfs_defer_ops {
+ 	/* relog these with each roll */
+ 	struct xfs_inode	*dop_inodes[XFS_DEFER_OPS_NR_INODES];
+ 	struct xfs_buf		*dop_bufs[XFS_DEFER_OPS_NR_BUFS];
+-
+-	bool			dop_low;	/* alloc in low mode */
+ };
  
- 	for (i = 0; i < cuip->cui_format.cui_nextents; i++) {
-@@ -522,13 +522,13 @@ xfs_cui_recover(
- 
- 	xfs_refcount_finish_one_cleanup(tp, rcur, error);
- 	set_bit(XFS_CUI_RECOVERED, &cuip->cui_flags);
--	xfs_defer_move(itp->t_dfops, tp->t_dfops);
-+	xfs_defer_move(itp, tp);
- 	error = xfs_trans_commit(tp);
- 	return error;
- 
- abort_error:
- 	xfs_refcount_finish_one_cleanup(tp, rcur, error);
--	xfs_defer_move(itp->t_dfops, tp->t_dfops);
-+	xfs_defer_move(itp, tp);
- 	xfs_trans_cancel(tp);
- 	return error;
- }
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index b0eeeaf6d24e..8c088568b05d 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -125,7 +125,7 @@ xfs_trans_dup(
- 	if (tp->t_dfops != &tp->t_dfops_internal)
- 		ntp->t_dfops = tp->t_dfops;
- 	else
--		xfs_defer_move(ntp->t_dfops, tp->t_dfops);
-+		xfs_defer_move(ntp, tp);
- 
- 	xfs_trans_dup_dqinfo(tp, ntp);
- 
+ /*
 -- 
 2.17.1
 
