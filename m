@@ -1,84 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:46072 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727776AbeGZBno (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 25 Jul 2018 21:43:44 -0400
-Subject: Re: [PATCH 03/10] xfs_scrub: destroy workqueues when erroring out
-References: <153006766483.20121.9285982017465570544.stgit@magnolia>
- <153006768447.20121.17161456551475897498.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <a7c29d38-0351-6904-ff69-e95ed6e3dca7@sandeen.net>
-Date: Wed, 25 Jul 2018 17:29:32 -0700
+Received: from aserp2130.oracle.com ([141.146.126.79]:47536 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725858AbeG3HDt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Jul 2018 03:03:49 -0400
+Subject: [PATCH 3/3] xfs: verify icount in superblock write
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Sun, 29 Jul 2018 22:30:27 -0700
+Message-ID: <153292862751.19274.16285578072920087708.stgit@magnolia>
+In-Reply-To: <153292860880.19274.14533449137039985963.stgit@magnolia>
+References: <153292860880.19274.14533449137039985963.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <153006768447.20121.17161456551475897498.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Bill O'Donnell <billodo@redhat.com>
 
-On 6/26/18 7:48 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Fix a couple of code paths that forgot to tear down a workqueue when
-> erroring out, because if we don't the wq threads keep running even after
-> we've freed the wq memory.
-> 
-> Found by fuzzing core.nlinkv2=0 in xfs/377, but only because the fs will
-> shut down when it hits an error destroying the incore (corrupt) inode
-> after the scrub.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Add a helper predicate to check the inode count for sanity, then use it
+in the superblock write verifier to inspect sb_icount.
 
-> ---
->  scrub/phase2.c |    2 +-
->  scrub/vfs.c    |    4 +++-
->  2 files changed, 4 insertions(+), 2 deletions(-)
-> 
-> 
-> diff --git a/scrub/phase2.c b/scrub/phase2.c
-> index ad736bf5..7078e38d 100644
-> --- a/scrub/phase2.c
-> +++ b/scrub/phase2.c
-> @@ -102,7 +102,7 @@ xfs_scan_metadata(
->  	 */
->  	moveon = xfs_scrub_primary_super(ctx);
->  	if (!moveon)
-> -		return moveon;
-> +		goto out;
->  
->  	for (agno = 0; moveon && agno < ctx->geo.agcount; agno++) {
->  		ret = workqueue_add(&wq, xfs_scan_ag_metadata, agno, &moveon);
-> diff --git a/scrub/vfs.c b/scrub/vfs.c
-> index 77df2874..12a6a860 100644
-> --- a/scrub/vfs.c
-> +++ b/scrub/vfs.c
-> @@ -210,7 +210,7 @@ scan_fs_tree(
->  	if (ret) {
->  		str_info(ctx, ctx->mntpoint,
->  _("Could not queue directory scan work."));
-> -		goto out_free;
-> +		goto out_wq;
->  	}
->  
->  	pthread_mutex_lock(&sft.lock);
-> @@ -220,6 +220,8 @@ _("Could not queue directory scan work."));
->  	workqueue_destroy(&wq);
->  
->  	return sft.moveon;
-> +out_wq:
-> +	workqueue_destroy(&wq);
->  out_free:
->  	free(sftd->path);
->  	free(sftd);
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+---
+ fs/xfs/libxfs/xfs_sb.c    |    1 +
+ fs/xfs/libxfs/xfs_types.c |   34 ++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_types.h |    1 +
+ 3 files changed, 36 insertions(+)
+
+
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 64bc471d57e6..e5972121e82d 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -160,6 +160,7 @@ xfs_validate_sb_write(
+ 	 * cases.
+ 	 */
+ 	if (sbp->sb_fdblocks > sbp->sb_dblocks ||
++	    !xfs_verify_icount(mp, sbp->sb_icount) ||
+ 	    sbp->sb_ifree > sbp->sb_icount) {
+ 		xfs_warn(mp, "SB summary counter sanity check failed");
+ 		return -EFSCORRUPTED;
+diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
+index 2e2a243cef2e..57f4fd028898 100644
+--- a/fs/xfs/libxfs/xfs_types.c
++++ b/fs/xfs/libxfs/xfs_types.c
+@@ -171,3 +171,37 @@ xfs_verify_rtbno(
+ {
+ 	return rtbno < mp->m_sb.sb_rblocks;
+ }
++
++/* Calculate the range of valid icount values. */
++static void
++xfs_icount_range(
++	struct xfs_mount	*mp,
++	unsigned long long	*min,
++	unsigned long long	*max)
++{
++	unsigned long long	nr_inos = 0;
++	xfs_agnumber_t		agno;
++
++	/* root, rtbitmap, rtsum all live in the first chunk */
++	*min = XFS_INODES_PER_CHUNK;
++
++	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
++		xfs_agino_t	first, last;
++
++		xfs_agino_range(mp, agno, &first, &last);
++		nr_inos += last - first + 1;
++	}
++	*max = nr_inos;
++}
++
++/* Sanity-checking of inode counts. */
++bool
++xfs_verify_icount(
++	struct xfs_mount	*mp,
++	unsigned long long	icount)
++{
++	unsigned long long	min, max;
++
++	xfs_icount_range(mp, &min, &max);
++	return icount >= min && icount < max;
++}
+diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+index 4055d62f690c..b9e6c89284c3 100644
+--- a/fs/xfs/libxfs/xfs_types.h
++++ b/fs/xfs/libxfs/xfs_types.h
+@@ -165,5 +165,6 @@ bool xfs_verify_ino(struct xfs_mount *mp, xfs_ino_t ino);
+ bool xfs_internal_inum(struct xfs_mount *mp, xfs_ino_t ino);
+ bool xfs_verify_dir_ino(struct xfs_mount *mp, xfs_ino_t ino);
+ bool xfs_verify_rtbno(struct xfs_mount *mp, xfs_rtblock_t rtbno);
++bool xfs_verify_icount(struct xfs_mount *mp, unsigned long long icount);
+ 
+ #endif	/* __XFS_TYPES_H__ */
+
