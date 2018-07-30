@@ -1,73 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:52960 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728798AbeG3OL2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 30 Jul 2018 10:11:28 -0400
-Date: Mon, 30 Jul 2018 08:36:37 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/2] xfs: verify icount in superblock write
-Message-ID: <20180730123636.GA34351@bfoster>
-References: <153262651940.8934.17525988748289196893.stgit@magnolia>
- <153262652554.8934.816888163232208002.stgit@magnolia>
- <20180726232028.GC2234@dastard>
- <20180727000715.GJ30972@magnolia>
- <20180727104439.GA21835@bfoster>
- <20180729043900.GE2234@dastard>
+Received: from userp2130.oracle.com ([156.151.31.86]:50450 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731760AbeGaAHz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Jul 2018 20:07:55 -0400
+Date: Mon, 30 Jul 2018 15:30:42 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: Clearly state infrastructure change on old XFS website
+Message-ID: <20180730223042.GC4226@magnolia>
+References: <4b3ef7f54f32dc2b61a5d4a33a0e5b2e@wh2.tu-dresden.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180729043900.GE2234@dastard>
+In-Reply-To: <4b3ef7f54f32dc2b61a5d4a33a0e5b2e@wh2.tu-dresden.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, billodo@redhat.com
+To: adam_kalisz <adam_kalisz@wh2.tu-dresden.de>
+Cc: david@fromorbit.com, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Sun, Jul 29, 2018 at 02:39:00PM +1000, Dave Chinner wrote:
-> On Fri, Jul 27, 2018 at 06:44:40AM -0400, Brian Foster wrote:
-> > That aside.. since these values shouldn't change often I'm wondering if
-> > it's worth calculating the global min/max once at mount time (we'd have
+On Sat, Jul 28, 2018 at 11:25:40PM +0200, adam_kalisz wrote:
+> Dear Darrick,
 > 
-> The values are needed during the initial read of the superblock
-> before any "for the life of the mount" calculations can be made,
-> and they can change across log recovery, too, if recovery replays a
-> growfs transaction. Hence they really need to be point in time
-> calculations based on the current superblock values during
-> superblock reads....
+> I wanted to have a look at the recent new features being added to XFS and
+> stumbled on the fact, that Google presents me first with the old website [0]
+> and starting on page 2 of the web results (for the desperate) with the
+> current website [1].
 > 
+> It would be most helpful to write some notice to the old website and the
+> "Getting the latest source code" should point to the current git-repo. It
+> cost me some time to realize, there is something wrong, because the git log
+> ended at about 4.9 kernel (~2016) when the infrastructure from sgi probably
+> got left behind. Also maybe highlight, that the current repo ist xfs-linux
+> and NOT linux-xfs! It might help some of your possible future colleagues to
+> get started with XFS.
 
-I'm not so worried about storing the calculated total as much as
-simplifying the implementation. All but the last iteration in the
-current loop calculate a fixed value, so this can trivially be
-simplified to something like:
+Sorry about that -- I'll ask those who have write access to xfs.org to
+update the links.  In the long run I'd rather just move all the
+documentation and FAQ into the kernel source itself, especially since it
+all now lives on https://www.kernel.org/doc/html/latest/ ...
 
-	xfs_agino_range(mp, --agcount, first, last);
-	max = last - first + 1;
-	if (agcount) {
-		xfs_agino_range(mp, agcount - 1, first, last);
-		max += (last - first + 1) * agcount;
-	}
+--D
 
-... which (if it mattered) could probably simplify even further if we
-factored out the additional portion of the calculation that is fixed:
-
-	xfs_agino_range(mp, --agcount, first, last);
-	max = last - first + 1;
-	if (agcount)
-		max += agcount * mp->m_aginodes;
-
-I.e., with an ->m_aginodes field in xfs_mount that is analogous to
-sb_agblocks.
-
-Brian
-
-> Cheers,
+> TL;DR:
+> Please make sure the XFS development is more visible by ensuring that most
+> prominent references point to the current repository and website.
 > 
-> Dave.
+> [0] http://xfs.org/index.php/Main_Page
+> [1] https://xfs.wiki.kernel.org/
+> 
+> Best regards and keep up the good work
+> 
 > -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Adam Kalisz
