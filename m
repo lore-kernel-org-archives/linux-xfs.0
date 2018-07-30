@@ -1,76 +1,608 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:42673 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732268AbeGaQeI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jul 2018 12:34:08 -0400
-Received: by mail-wr1-f65.google.com with SMTP id e7-v6so16973507wrs.9
-        for <linux-xfs@vger.kernel.org>; Tue, 31 Jul 2018 07:53:26 -0700 (PDT)
-Date: Tue, 31 Jul 2018 16:53:22 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH] xfs: move extent busy tree initialization to
- xfs_initialize_perag
-Message-ID: <20180731145322.w3gigzifs3bddpwr@odin.usersys.redhat.com>
-References: <20180731035812.GU30972@magnolia>
+Received: from userp2130.oracle.com ([156.151.31.86]:54586 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726227AbeG3HWz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Jul 2018 03:22:55 -0400
+Subject: [PATCH 14/14] xfs: repair quotas
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Sun, 29 Jul 2018 22:49:29 -0700
+Message-ID: <153292976946.24509.5875092286243407619.stgit@magnolia>
+In-Reply-To: <153292966714.24509.15809693393247424274.stgit@magnolia>
+References: <153292966714.24509.15809693393247424274.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180731035812.GU30972@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, david@fromorbit.com, allison.henderson@oracle.com
 
-On Mon, Jul 30, 2018 at 08:58:12PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Move the per-AG busy extent tree initialization to the per-ag structure
-> initialization since we don't want online repair to leak the old tree.
-> We only deconstruct the tree at unmount time, so this should be safe.
-> This also enables us to eliminate the commented out initialization in
-> the xfsprogs libxfs.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Fix anything that causes the quota verifiers to fail.
 
-> ---
->  fs/xfs/libxfs/xfs_alloc.c |    3 ---
->  fs/xfs/xfs_mount.c        |    3 +++
->  2 files changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 3c3f2d5119ea..9847c1632712 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -2755,9 +2755,6 @@ xfs_alloc_read_agf(
->  		pag->pagf_levels[XFS_BTNUM_RMAPi] =
->  			be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAPi]);
->  		pag->pagf_refcount_level = be32_to_cpu(agf->agf_refcount_level);
-> -		spin_lock_init(&pag->pagb_lock);
-> -		pag->pagb_count = 0;
-> -		pag->pagb_tree = RB_ROOT;
->  		pag->pagf_init = 1;
->  		pag->pagf_agflreset = xfs_agfl_needs_reset(mp, agf);
->  	}
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 8f739e4d0d1c..99db27d6ac8a 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -207,6 +207,9 @@ xfs_initialize_perag(
->  		if (xfs_buf_hash_init(pag))
->  			goto out_free_pag;
->  		init_waitqueue_head(&pag->pagb_wait);
-> +		spin_lock_init(&pag->pagb_lock);
-> +		pag->pagb_count = 0;
-> +		pag->pagb_tree = RB_ROOT;
->  
->  		if (radix_tree_preload(GFP_NOFS))
->  			goto out_hash_destroy;
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/Makefile             |    1 
+ fs/xfs/scrub/attr_repair.c  |    2 
+ fs/xfs/scrub/common.h       |    9 +
+ fs/xfs/scrub/quota.c        |    2 
+ fs/xfs/scrub/quota_repair.c |  363 +++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/repair.c       |   58 +++++++
+ fs/xfs/scrub/repair.h       |    8 +
+ fs/xfs/scrub/scrub.c        |   11 +
+ 8 files changed, 446 insertions(+), 8 deletions(-)
+ create mode 100644 fs/xfs/scrub/quota_repair.c
 
--- 
-Carlos
+
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index c3963c88f952..ed1fc827ed15 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -174,5 +174,6 @@ xfs-y				+= $(addprefix scrub/, \
+ 				   repair.o \
+ 				   symlink_repair.o \
+ 				   )
++xfs-$(CONFIG_XFS_QUOTA)		+= scrub/quota_repair.o
+ endif
+ endif
+diff --git a/fs/xfs/scrub/attr_repair.c b/fs/xfs/scrub/attr_repair.c
+index 5bacfb88f25e..e01ca4350857 100644
+--- a/fs/xfs/scrub/attr_repair.c
++++ b/fs/xfs/scrub/attr_repair.c
+@@ -395,7 +395,7 @@ xrep_xattr_recover(
+ }
+ 
+ /* Free all the attribute fork blocks and delete the fork. */
+-STATIC int
++int
+ xrep_xattr_reset_btree(
+ 	struct xfs_scrub	*sc)
+ {
+diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+index 2d4324d12f9a..aab82f7f9a67 100644
+--- a/fs/xfs/scrub/common.h
++++ b/fs/xfs/scrub/common.h
+@@ -138,4 +138,13 @@ static inline bool xchk_skip_xref(struct xfs_scrub_metadata *sm)
+ int xchk_metadata_inode_forks(struct xfs_scrub *sc);
+ int xchk_ilock_inverted(struct xfs_inode *ip, uint lock_mode);
+ 
++/* Do we need to invoke the repair tool? */
++static inline bool xfs_scrub_needs_repair(struct xfs_scrub_metadata *sm)
++{
++	return sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
++			       XFS_SCRUB_OFLAG_XCORRUPT |
++			       XFS_SCRUB_OFLAG_PREEN);
++}
++uint xchk_quota_to_dqtype(struct xfs_scrub *sc);
++
+ #endif	/* __XFS_SCRUB_COMMON_H__ */
+diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
+index 782d582d3edd..0e5578ab088e 100644
+--- a/fs/xfs/scrub/quota.c
++++ b/fs/xfs/scrub/quota.c
+@@ -29,7 +29,7 @@
+ #include "scrub/trace.h"
+ 
+ /* Convert a scrub type code to a DQ flag, or return 0 if error. */
+-static inline uint
++uint
+ xchk_quota_to_dqtype(
+ 	struct xfs_scrub	*sc)
+ {
+diff --git a/fs/xfs/scrub/quota_repair.c b/fs/xfs/scrub/quota_repair.c
+new file mode 100644
+index 000000000000..36635f7ca217
+--- /dev/null
++++ b/fs/xfs/scrub/quota_repair.c
+@@ -0,0 +1,363 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Copyright (C) 2018 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
++#include "xfs_defer.h"
++#include "xfs_btree.h"
++#include "xfs_bit.h"
++#include "xfs_log_format.h"
++#include "xfs_trans.h"
++#include "xfs_sb.h"
++#include "xfs_inode.h"
++#include "xfs_inode_fork.h"
++#include "xfs_alloc.h"
++#include "xfs_bmap.h"
++#include "xfs_quota.h"
++#include "xfs_qm.h"
++#include "xfs_dquot.h"
++#include "xfs_dquot_item.h"
++#include "scrub/xfs_scrub.h"
++#include "scrub/scrub.h"
++#include "scrub/common.h"
++#include "scrub/trace.h"
++#include "scrub/repair.h"
++
++/*
++ * Quota Repair
++ * ============
++ *
++ * Quota repairs are fairly simplistic; we fix everything that the dquot
++ * verifiers complain about, cap any counters or limits that make no sense,
++ * and schedule a quotacheck if we had to fix anything.  We also repair any
++ * data fork extent records that don't apply to metadata files.
++ */
++
++struct xrep_quota_info {
++	struct xfs_scrub	*sc;
++	bool			need_quotacheck;
++};
++
++/* Scrub the fields in an individual quota item. */
++STATIC int
++xrep_quota_item(
++	struct xfs_dquot	*dq,
++	uint			dqtype,
++	void			*priv)
++{
++	struct xrep_quota_info	*rqi = priv;
++	struct xfs_scrub	*sc = rqi->sc;
++	struct xfs_mount	*mp = sc->mp;
++	struct xfs_disk_dquot	*d = &dq->q_core;
++	unsigned long long	bsoft;
++	unsigned long long	isoft;
++	unsigned long long	rsoft;
++	unsigned long long	bhard;
++	unsigned long long	ihard;
++	unsigned long long	rhard;
++	unsigned long long	bcount;
++	unsigned long long	icount;
++	unsigned long long	rcount;
++	xfs_ino_t		fs_icount;
++	bool			dirty = false;
++	int			error;
++
++	/* Did we get the dquot type we wanted? */
++	if (dqtype != (d->d_flags & XFS_DQ_ALLTYPES)) {
++		d->d_flags = dqtype;
++		dirty = true;
++	}
++
++	if (d->d_pad0 || d->d_pad) {
++		d->d_pad0 = 0;
++		d->d_pad = 0;
++		dirty = true;
++	}
++
++	/* Check the limits. */
++	bhard = be64_to_cpu(d->d_blk_hardlimit);
++	ihard = be64_to_cpu(d->d_ino_hardlimit);
++	rhard = be64_to_cpu(d->d_rtb_hardlimit);
++
++	bsoft = be64_to_cpu(d->d_blk_softlimit);
++	isoft = be64_to_cpu(d->d_ino_softlimit);
++	rsoft = be64_to_cpu(d->d_rtb_softlimit);
++
++	if (bsoft > bhard) {
++		d->d_blk_softlimit = d->d_blk_hardlimit;
++		dirty = true;
++	}
++
++	if (isoft > ihard) {
++		d->d_ino_softlimit = d->d_ino_hardlimit;
++		dirty = true;
++	}
++
++	if (rsoft > rhard) {
++		d->d_rtb_softlimit = d->d_rtb_hardlimit;
++		dirty = true;
++	}
++
++	/* Check the resource counts. */
++	bcount = be64_to_cpu(d->d_bcount);
++	icount = be64_to_cpu(d->d_icount);
++	rcount = be64_to_cpu(d->d_rtbcount);
++	fs_icount = percpu_counter_sum(&mp->m_icount);
++
++	/*
++	 * Check that usage doesn't exceed physical limits.  However, on
++	 * a reflink filesystem we're allowed to exceed physical space
++	 * if there are no quota limits.  We don't know what the real number
++	 * is, but we can make quotacheck find out for us.
++	 */
++	if (!xfs_sb_version_hasreflink(&mp->m_sb) &&
++	    mp->m_sb.sb_dblocks < bcount) {
++		dq->q_res_bcount -= be64_to_cpu(dq->q_core.d_bcount);
++		dq->q_res_bcount += mp->m_sb.sb_dblocks;
++		d->d_bcount = cpu_to_be64(mp->m_sb.sb_dblocks);
++		rqi->need_quotacheck = true;
++		dirty = true;
++	}
++	if (icount > fs_icount) {
++		dq->q_res_icount -= be64_to_cpu(dq->q_core.d_icount);
++		dq->q_res_icount += fs_icount;
++		d->d_icount = cpu_to_be64(fs_icount);
++		rqi->need_quotacheck = true;
++		dirty = true;
++	}
++	if (rcount > mp->m_sb.sb_rblocks) {
++		dq->q_res_rtbcount -= be64_to_cpu(dq->q_core.d_rtbcount);
++		dq->q_res_rtbcount += mp->m_sb.sb_rblocks;
++		d->d_rtbcount = cpu_to_be64(mp->m_sb.sb_rblocks);
++		rqi->need_quotacheck = true;
++		dirty = true;
++	}
++
++	if (!dirty)
++		return 0;
++
++	dq->dq_flags |= XFS_DQ_DIRTY;
++	xfs_trans_dqjoin(sc->tp, dq);
++	xfs_trans_log_dquot(sc->tp, dq);
++	error = xfs_trans_roll(&sc->tp);
++	xfs_dqlock(dq);
++	return error;
++}
++
++/* Fix a quota timer so that we can pass the verifier. */
++STATIC void
++xrep_quota_fix_timer(
++	__be64			softlimit,
++	__be64			countnow,
++	__be32			*timer,
++	time_t			timelimit)
++{
++	uint64_t		soft = be64_to_cpu(softlimit);
++	uint64_t		count = be64_to_cpu(countnow);
++
++	if (soft && count > soft && *timer == 0)
++		*timer = cpu_to_be32(get_seconds() + timelimit);
++}
++
++/* Fix anything the verifiers complain about. */
++STATIC int
++xrep_quota_block(
++	struct xfs_scrub	*sc,
++	struct xfs_buf		*bp,
++	uint			dqtype,
++	xfs_dqid_t		id)
++{
++	struct xfs_dqblk	*d = (struct xfs_dqblk *)bp->b_addr;
++	struct xfs_disk_dquot	*ddq;
++	struct xfs_quotainfo	*qi = sc->mp->m_quotainfo;
++	enum xfs_blft		buftype = 0;
++	int			i;
++
++	bp->b_ops = &xfs_dquot_buf_ops;
++	for (i = 0; i < qi->qi_dqperchunk; i++) {
++		ddq = &d[i].dd_diskdq;
++
++		ddq->d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
++		ddq->d_version = XFS_DQUOT_VERSION;
++		ddq->d_flags = dqtype;
++		ddq->d_id = cpu_to_be32(id + i);
++
++		xrep_quota_fix_timer(ddq->d_blk_softlimit,
++				ddq->d_bcount, &ddq->d_btimer,
++				qi->qi_btimelimit);
++		xrep_quota_fix_timer(ddq->d_ino_softlimit,
++				ddq->d_icount, &ddq->d_itimer,
++				qi->qi_itimelimit);
++		xrep_quota_fix_timer(ddq->d_rtb_softlimit,
++				ddq->d_rtbcount, &ddq->d_rtbtimer,
++				qi->qi_rtbtimelimit);
++
++		/* We only support v5 filesystems so always set these. */
++		uuid_copy(&d->dd_uuid, &sc->mp->m_sb.sb_meta_uuid);
++		xfs_update_cksum((char *)d, sizeof(struct xfs_dqblk),
++				 XFS_DQUOT_CRC_OFF);
++		d->dd_lsn = 0;
++	}
++	switch (dqtype) {
++	case XFS_DQ_USER:
++		buftype = XFS_BLFT_UDQUOT_BUF;
++		break;
++	case XFS_DQ_GROUP:
++		buftype = XFS_BLFT_GDQUOT_BUF;
++		break;
++	case XFS_DQ_PROJ:
++		buftype = XFS_BLFT_PDQUOT_BUF;
++		break;
++	}
++	xfs_trans_buf_set_type(sc->tp, bp, buftype);
++	xfs_trans_log_buf(sc->tp, bp, 0, BBTOB(bp->b_length) - 1);
++	return xfs_trans_roll(&sc->tp);
++}
++
++/* Repair quota's data fork. */
++STATIC int
++xrep_quota_data_fork(
++	struct xfs_scrub	*sc,
++	uint			dqtype)
++{
++	struct xfs_bmbt_irec	irec = { 0 };
++	struct xfs_iext_cursor	icur;
++	struct xfs_quotainfo	*qi = sc->mp->m_quotainfo;
++	struct xfs_ifork	*ifp;
++	struct xfs_buf		*bp;
++	struct xfs_dqblk	*d;
++	xfs_dqid_t		id;
++	xfs_fileoff_t		max_dqid_off;
++	xfs_fileoff_t		off;
++	xfs_fsblock_t		fsbno;
++	bool			truncate = false;
++	int			error = 0;
++
++	error = xrep_metadata_inode_forks(sc);
++	if (error)
++		goto out;
++
++	/* Check for data fork problems that apply only to quota files. */
++	max_dqid_off = ((xfs_dqid_t)-1) / qi->qi_dqperchunk;
++	ifp = XFS_IFORK_PTR(sc->ip, XFS_DATA_FORK);
++	for_each_xfs_iext(ifp, &icur, &irec) {
++		if (isnullstartblock(irec.br_startblock)) {
++			error = -EFSCORRUPTED;
++			goto out;
++		}
++
++		if (irec.br_startoff > max_dqid_off ||
++		    irec.br_startoff + irec.br_blockcount - 1 > max_dqid_off) {
++			truncate = true;
++			break;
++		}
++	}
++	if (truncate) {
++		error = xfs_itruncate_extents(&sc->tp, sc->ip, XFS_DATA_FORK,
++				max_dqid_off * sc->mp->m_sb.sb_blocksize);
++		if (error)
++			goto out;
++	}
++
++	/* Now go fix anything that fails the verifiers. */
++	for_each_xfs_iext(ifp, &icur, &irec) {
++		for (fsbno = irec.br_startblock, off = irec.br_startoff;
++		     fsbno < irec.br_startblock + irec.br_blockcount;
++		     fsbno += XFS_DQUOT_CLUSTER_SIZE_FSB,
++				off += XFS_DQUOT_CLUSTER_SIZE_FSB) {
++			id = off * qi->qi_dqperchunk;
++			error = xfs_trans_read_buf(sc->mp, sc->tp,
++					sc->mp->m_ddev_targp,
++					XFS_FSB_TO_DADDR(sc->mp, fsbno),
++					qi->qi_dqchunklen,
++					0, &bp, &xfs_dquot_buf_ops);
++			if (error == 0) {
++				d = (struct xfs_dqblk *)bp->b_addr;
++				if (id == be32_to_cpu(d->dd_diskdq.d_id)) {
++					xfs_trans_brelse(sc->tp, bp);
++					continue;
++				}
++				error = -EFSCORRUPTED;
++				xfs_trans_brelse(sc->tp, bp);
++			}
++			if (error != -EFSBADCRC && error != -EFSCORRUPTED)
++				goto out;
++
++			/* Failed verifier, try again. */
++			error = xfs_trans_read_buf(sc->mp, sc->tp,
++					sc->mp->m_ddev_targp,
++					XFS_FSB_TO_DADDR(sc->mp, fsbno),
++					qi->qi_dqchunklen,
++					0, &bp, NULL);
++			if (error)
++				goto out;
++
++			/*
++			 * Fix the quota block, which will roll our transaction
++			 * and release bp.
++			 */
++			error = xrep_quota_block(sc, bp, dqtype, id);
++			if (error)
++				goto out;
++		}
++	}
++
++out:
++	return error;
++}
++
++/*
++ * Go fix anything in the quota items that we could have been mad about.  Now
++ * that we've checked the quota inode data fork we have to drop ILOCK_EXCL to
++ * use the regular dquot functions.
++ */
++STATIC int
++xrep_quota_problems(
++	struct xfs_scrub	*sc,
++	uint			dqtype)
++{
++	struct xrep_quota_info	rqi;
++	int			error;
++
++	rqi.sc = sc;
++	rqi.need_quotacheck = false;
++	error = xfs_qm_dqiterate(sc->mp, dqtype, xrep_quota_item, &rqi);
++	if (error)
++		return error;
++
++	/* Make a quotacheck happen. */
++	if (rqi.need_quotacheck)
++		xrep_force_quotacheck(sc, dqtype);
++	return 0;
++}
++
++/* Repair all of a quota type's items. */
++int
++xrep_quota(
++	struct xfs_scrub	*sc)
++{
++	uint			dqtype;
++	int			error;
++
++	dqtype = xchk_quota_to_dqtype(sc);
++
++	/* Fix problematic data fork mappings. */
++	error = xrep_quota_data_fork(sc, dqtype);
++	if (error)
++		goto out;
++
++	/* Unlock quota inode; we play only with dquots from now on. */
++	xfs_iunlock(sc->ip, sc->ilock_flags);
++	sc->ilock_flags = 0;
++
++	/* Fix anything the dquot verifiers complain about. */
++	error = xrep_quota_problems(sc, dqtype);
++out:
++	return error;
++}
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index a44deb6f06ab..27cc50178d86 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -29,6 +29,8 @@
+ #include "xfs_ag_resv.h"
+ #include "xfs_trans_space.h"
+ #include "xfs_quota.h"
++#include "xfs_attr.h"
++#include "xfs_reflink.h"
+ #include "scrub/xfs_scrub.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+@@ -900,3 +902,59 @@ xrep_reset_perag_resv(
+ out:
+ 	return error;
+ }
++
++/*
++ * Repair the attr/data forks of a metadata inode.  The metadata inode must be
++ * pointed to by sc->ip and the ILOCK must be held.
++ */
++int
++xrep_metadata_inode_forks(
++	struct xfs_scrub	*sc)
++{
++	__u32			smtype;
++	__u32			smflags;
++	int			error;
++
++	smtype = sc->sm->sm_type;
++	smflags = sc->sm->sm_flags;
++
++	/* Let's see if the forks need repair. */
++	sc->sm->sm_flags &= ~XFS_SCRUB_FLAGS_OUT;
++	error = xchk_metadata_inode_forks(sc);
++	if (error || !xfs_scrub_needs_repair(sc->sm))
++		goto out;
++
++	xfs_trans_ijoin(sc->tp, sc->ip, 0);
++
++	/* Clear the reflink flag & attr forks that we shouldn't have. */
++	if (xfs_is_reflink_inode(sc->ip)) {
++		error = xfs_reflink_clear_inode_flag(sc->ip, &sc->tp);
++		if (error)
++			goto out;
++	}
++
++	if (xfs_inode_hasattr(sc->ip)) {
++		error = xrep_xattr_reset_btree(sc);
++		if (error)
++			goto out;
++	}
++
++	/* Repair the data fork. */
++	sc->sm->sm_type = XFS_SCRUB_TYPE_BMBTD;
++	error = xrep_bmap_data(sc);
++	sc->sm->sm_type = smtype;
++	if (error)
++		goto out;
++
++	/* Bail out if we still need repairs. */
++	sc->sm->sm_flags &= ~XFS_SCRUB_FLAGS_OUT;
++	error = xchk_metadata_inode_forks(sc);
++	if (error)
++		goto out;
++	if (xfs_scrub_needs_repair(sc->sm))
++		error = -EFSCORRUPTED;
++out:
++	sc->sm->sm_type = smtype;
++	sc->sm->sm_flags = smflags;
++	return error;
++}
+diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+index b630084d0f39..aa032a7b99d0 100644
+--- a/fs/xfs/scrub/repair.h
++++ b/fs/xfs/scrub/repair.h
+@@ -54,6 +54,8 @@ int xrep_find_ag_btree_roots(struct xfs_scrub *sc, struct xfs_buf *agf_bp,
+ void xrep_force_quotacheck(struct xfs_scrub *sc, uint dqtype);
+ int xrep_ino_dqattach(struct xfs_scrub *sc);
+ int xrep_reset_perag_resv(struct xfs_scrub *sc);
++int xrep_xattr_reset_btree(struct xfs_scrub *sc);
++int xrep_metadata_inode_forks(struct xfs_scrub *sc);
+ 
+ /* Metadata repairers */
+ 
+@@ -70,6 +72,11 @@ int xrep_bmap_data(struct xfs_scrub *sc);
+ int xrep_bmap_attr(struct xfs_scrub *sc);
+ int xrep_symlink(struct xfs_scrub *sc);
+ int xrep_xattr(struct xfs_scrub *sc);
++#ifdef CONFIG_XFS_QUOTA
++int xrep_quota(struct xfs_scrub *sc);
++#else
++# define xrep_quota			xrep_notsupported
++#endif /* CONFIG_XFS_QUOTA */
+ 
+ #else
+ 
+@@ -112,6 +119,7 @@ xrep_reset_perag_resv(
+ #define xrep_bmap_attr			xrep_notsupported
+ #define xrep_symlink			xrep_notsupported
+ #define xrep_xattr			xrep_notsupported
++#define xrep_quota			xrep_notsupported
+ 
+ #endif /* CONFIG_XFS_ONLINE_REPAIR */
+ 
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 537636d789fb..a9f969214e69 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -333,19 +333,19 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
+ 		.type	= ST_FS,
+ 		.setup	= xchk_setup_quota,
+ 		.scrub	= xchk_quota,
+-		.repair	= xrep_notsupported,
++		.repair	= xrep_quota,
+ 	},
+ 	[XFS_SCRUB_TYPE_GQUOTA] = {	/* group quota */
+ 		.type	= ST_FS,
+ 		.setup	= xchk_setup_quota,
+ 		.scrub	= xchk_quota,
+-		.repair	= xrep_notsupported,
++		.repair	= xrep_quota,
+ 	},
+ 	[XFS_SCRUB_TYPE_PQUOTA] = {	/* project quota */
+ 		.type	= ST_FS,
+ 		.setup	= xchk_setup_quota,
+ 		.scrub	= xchk_quota,
+-		.repair	= xrep_notsupported,
++		.repair	= xrep_quota,
+ 	},
+ };
+ 
+@@ -539,9 +539,8 @@ xfs_scrub_metadata(
+ 		if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_FORCE_SCRUB_REPAIR))
+ 			sc.sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
+ 
+-		needs_fix = (sc.sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
+-						XFS_SCRUB_OFLAG_XCORRUPT |
+-						XFS_SCRUB_OFLAG_PREEN));
++		needs_fix = xfs_scrub_needs_repair(sc.sm);
++
+ 		/*
+ 		 * If userspace asked for a repair but it wasn't necessary,
+ 		 * report that back to userspace.
+
