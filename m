@@ -1,195 +1,249 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:40166 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727175AbeG3WBj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Jul 2018 18:01:39 -0400
-Date: Mon, 30 Jul 2018 13:24:53 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 10/15] xfs: clean out superfluous dfops dop params/vars
-Message-ID: <20180730202453.GK30972@magnolia>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:43296 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1730607AbeG3SVM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 30 Jul 2018 14:21:12 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 3A86240216FE
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Jul 2018 16:45:22 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 26232112D193
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Jul 2018 16:45:22 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 11/15] xfs: cancel dfops on xfs_defer_finish() error
+Date: Mon, 30 Jul 2018 12:45:16 -0400
+Message-Id: <20180730164520.36882-12-bfoster@redhat.com>
+In-Reply-To: <20180730164520.36882-1-bfoster@redhat.com>
 References: <20180730164520.36882-1-bfoster@redhat.com>
- <20180730164520.36882-11-bfoster@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180730164520.36882-11-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Mon, Jul 30, 2018 at 12:45:15PM -0400, Brian Foster wrote:
-> The dfops code still passes around the xfs_defer_ops pointer
-> superfluously in a few places. Clean this up wherever the
-> transaction will suffice.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+The current semantics of xfs_defer_finish() require the caller to
+call xfs_defer_cancel() on error. This is slightly inconsistent with
+transaction commit error handling where a failed commit cleans up
+the transaction before returning.
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+More significantly, the only requirement for exposure of
+->dop_pending outside of xfs_defer_finish() is so that
+xfs_defer_cancel() can drain it on error. Since the only recourse of
+xfs_defer_finish() errors is cancellation, mirror the transaction
+logic and cancel remaining dfops before returning from
+xfs_defer_finish() with an error.
 
---D
+Beside simplifying xfs_defer_finish() semantics, this ensures that
+xfs_defer_finish() always returns with an empty ->dop_pending and
+thus facilitates removal of the list from xfs_defer_ops.
 
-> ---
->  fs/xfs/libxfs/xfs_defer.c | 43 +++++++++++++++++++--------------------
->  fs/xfs/libxfs/xfs_defer.h |  2 +-
->  2 files changed, 22 insertions(+), 23 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-> index 7fb7edd5d63e..7b84e3a4b7f3 100644
-> --- a/fs/xfs/libxfs/xfs_defer.c
-> +++ b/fs/xfs/libxfs/xfs_defer.c
-> @@ -181,9 +181,9 @@ static const struct xfs_defer_op_type *defer_op_types[XFS_DEFER_OPS_TYPE_MAX];
->   */
->  STATIC void
->  xfs_defer_intake_work(
-> -	struct xfs_trans		*tp,
-> -	struct xfs_defer_ops		*dop)
-> +	struct xfs_trans		*tp)
->  {
-> +	struct xfs_defer_ops		*dop = tp->t_dfops;
->  	struct list_head		*li;
->  	struct xfs_defer_pending	*dfp;
->  
-> @@ -204,9 +204,9 @@ xfs_defer_intake_work(
->  STATIC void
->  xfs_defer_trans_abort(
->  	struct xfs_trans		*tp,
-> -	struct xfs_defer_ops		*dop,
->  	int				error)
->  {
-> +	struct xfs_defer_ops		*dop = tp->t_dfops;
->  	struct xfs_defer_pending	*dfp;
->  
->  	trace_xfs_defer_trans_abort(tp->t_mountp, dop, _RET_IP_);
-> @@ -230,7 +230,6 @@ STATIC int
->  xfs_defer_trans_roll(
->  	struct xfs_trans		**tp)
->  {
-> -	struct xfs_defer_ops		*dop = (*tp)->t_dfops;
->  	struct xfs_buf_log_item		*bli;
->  	struct xfs_inode_log_item	*ili;
->  	struct xfs_log_item		*lip;
-> @@ -266,14 +265,14 @@ xfs_defer_trans_roll(
->  		}
->  	}
->  
-> -	trace_xfs_defer_trans_roll((*tp)->t_mountp, dop, _RET_IP_);
-> +	trace_xfs_defer_trans_roll((*tp)->t_mountp, (*tp)->t_dfops, _RET_IP_);
->  
->  	/* Roll the transaction. */
->  	error = xfs_trans_roll(tp);
-> -	dop = (*tp)->t_dfops;
->  	if (error) {
-> -		trace_xfs_defer_trans_roll_error((*tp)->t_mountp, dop, error);
-> -		xfs_defer_trans_abort(*tp, dop, error);
-> +		trace_xfs_defer_trans_roll_error((*tp)->t_mountp,
-> +						 (*tp)->t_dfops, error);
-> +		xfs_defer_trans_abort(*tp,  error);
->  		return error;
->  	}
->  
-> @@ -293,9 +292,10 @@ xfs_defer_trans_roll(
->  /* Do we have any work items to finish? */
->  bool
->  xfs_defer_has_unfinished_work(
-> -	struct xfs_defer_ops		*dop)
-> +	struct xfs_trans		*tp)
->  {
-> -	return !list_empty(&dop->dop_pending) || !list_empty(&dop->dop_intake);
-> +	return !list_empty(&tp->t_dfops->dop_pending) ||
-> +		!list_empty(&tp->t_dfops->dop_intake);
->  }
->  
->  /*
-> @@ -305,7 +305,7 @@ static void
->  xfs_defer_reset(
->  	struct xfs_trans	*tp)
->  {
-> -	ASSERT(!xfs_defer_has_unfinished_work(tp->t_dfops));
-> +	ASSERT(!xfs_defer_has_unfinished_work(tp));
->  
->  	/*
->  	 * Low mode state transfers across transaction rolls to mirror dfops
-> @@ -326,7 +326,6 @@ int
->  xfs_defer_finish_noroll(
->  	struct xfs_trans		**tp)
->  {
-> -	struct xfs_defer_ops		*dop = (*tp)->t_dfops;
->  	struct xfs_defer_pending	*dfp;
->  	struct list_head		*li;
->  	struct list_head		*n;
-> @@ -336,24 +335,22 @@ xfs_defer_finish_noroll(
->  
->  	ASSERT((*tp)->t_flags & XFS_TRANS_PERM_LOG_RES);
->  
-> -	trace_xfs_defer_finish((*tp)->t_mountp, dop, _RET_IP_);
-> +	trace_xfs_defer_finish((*tp)->t_mountp, (*tp)->t_dfops, _RET_IP_);
->  
->  	/* Until we run out of pending work to finish... */
-> -	while (xfs_defer_has_unfinished_work(dop)) {
-> +	while (xfs_defer_has_unfinished_work(*tp)) {
->  		/* Log intents for work items sitting in the intake. */
-> -		xfs_defer_intake_work(*tp, dop);
-> +		xfs_defer_intake_work(*tp);
->  
->  		/*
-> -		 * Roll the transaction and update dop in case dfops was
-> -		 * embedded in the transaction.
-> +		 * Roll the transaction.
->  		 */
->  		error = xfs_defer_trans_roll(tp);
->  		if (error)
->  			goto out;
-> -		dop = (*tp)->t_dfops;
->  
->  		/* Log an intent-done item for the first pending item. */
-> -		dfp = list_first_entry(&dop->dop_pending,
-> +		dfp = list_first_entry(&(*tp)->t_dfops->dop_pending,
->  				struct xfs_defer_pending, dfp_list);
->  		trace_xfs_defer_pending_finish((*tp)->t_mountp, dfp);
->  		dfp->dfp_done = dfp->dfp_type->create_done(*tp, dfp->dfp_intent,
-> @@ -384,7 +381,7 @@ xfs_defer_finish_noroll(
->  				 */
->  				if (cleanup_fn)
->  					cleanup_fn(*tp, state, error);
-> -				xfs_defer_trans_abort(*tp, dop, error);
-> +				xfs_defer_trans_abort(*tp, error);
->  				goto out;
->  			}
->  		}
-> @@ -414,9 +411,11 @@ xfs_defer_finish_noroll(
->  
->  out:
->  	if (error)
-> -		trace_xfs_defer_finish_error((*tp)->t_mountp, dop, error);
-> +		trace_xfs_defer_finish_error((*tp)->t_mountp, (*tp)->t_dfops,
-> +					     error);
->  	 else
-> -		trace_xfs_defer_finish_done((*tp)->t_mountp, dop, _RET_IP_);
-> +		trace_xfs_defer_finish_done((*tp)->t_mountp, (*tp)->t_dfops,
-> +					    _RET_IP_);
->  
->  	return error;
->  }
-> diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-> index 0de7504e5651..f051c8056141 100644
-> --- a/fs/xfs/libxfs/xfs_defer.h
-> +++ b/fs/xfs/libxfs/xfs_defer.h
-> @@ -41,7 +41,7 @@ int xfs_defer_finish_noroll(struct xfs_trans **tp);
->  int xfs_defer_finish(struct xfs_trans **tp);
->  void xfs_defer_cancel(struct xfs_trans *);
->  void xfs_defer_init(struct xfs_trans *tp, struct xfs_defer_ops *dop);
-> -bool xfs_defer_has_unfinished_work(struct xfs_defer_ops *dop);
-> +bool xfs_defer_has_unfinished_work(struct xfs_trans *tp);
->  void xfs_defer_move(struct xfs_trans *dtp, struct xfs_trans *stp);
->  
->  /* Description of a deferred type. */
-> -- 
-> 2.17.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_attr.c        | 16 ++++++++--------
+ fs/xfs/libxfs/xfs_attr_remote.c |  4 ++--
+ fs/xfs/libxfs/xfs_defer.c       | 11 ++++++-----
+ fs/xfs/xfs_bmap_util.c          |  2 +-
+ fs/xfs/xfs_dquot.c              |  2 +-
+ fs/xfs/xfs_inode.c              |  2 +-
+ fs/xfs/xfs_reflink.c            |  4 +---
+ fs/xfs/xfs_trans.c              |  4 +---
+ 8 files changed, 21 insertions(+), 24 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 3190dfc21b60..1e671d4eb6fa 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -590,7 +590,7 @@ xfs_attr_leaf_addname(
+ 			goto out_defer_cancel;
+ 		error = xfs_defer_finish(&args->trans);
+ 		if (error)
+-			goto out_defer_cancel;
++			return error;
+ 
+ 		/*
+ 		 * Commit the current trans (including the inode) and start
+@@ -678,7 +678,7 @@ xfs_attr_leaf_addname(
+ 				goto out_defer_cancel;
+ 			error = xfs_defer_finish(&args->trans);
+ 			if (error)
+-				goto out_defer_cancel;
++				return error;
+ 		}
+ 
+ 		/*
+@@ -741,7 +741,7 @@ xfs_attr_leaf_removename(
+ 			goto out_defer_cancel;
+ 		error = xfs_defer_finish(&args->trans);
+ 		if (error)
+-			goto out_defer_cancel;
++			return error;
+ 	}
+ 	return 0;
+ out_defer_cancel:
+@@ -867,7 +867,7 @@ xfs_attr_node_addname(
+ 				goto out_defer_cancel;
+ 			error = xfs_defer_finish(&args->trans);
+ 			if (error)
+-				goto out_defer_cancel;
++				goto out;
+ 
+ 			/*
+ 			 * Commit the node conversion and start the next
+@@ -891,7 +891,7 @@ xfs_attr_node_addname(
+ 			goto out_defer_cancel;
+ 		error = xfs_defer_finish(&args->trans);
+ 		if (error)
+-			goto out_defer_cancel;
++			goto out;
+ 	} else {
+ 		/*
+ 		 * Addition succeeded, update Btree hashvals.
+@@ -987,7 +987,7 @@ xfs_attr_node_addname(
+ 				goto out_defer_cancel;
+ 			error = xfs_defer_finish(&args->trans);
+ 			if (error)
+-				goto out_defer_cancel;
++				goto out;
+ 		}
+ 
+ 		/*
+@@ -1110,7 +1110,7 @@ xfs_attr_node_removename(
+ 			goto out_defer_cancel;
+ 		error = xfs_defer_finish(&args->trans);
+ 		if (error)
+-			goto out_defer_cancel;
++			goto out;
+ 		/*
+ 		 * Commit the Btree join operation and start a new trans.
+ 		 */
+@@ -1141,7 +1141,7 @@ xfs_attr_node_removename(
+ 				goto out_defer_cancel;
+ 			error = xfs_defer_finish(&args->trans);
+ 			if (error)
+-				goto out_defer_cancel;
++				goto out;
+ 		} else
+ 			xfs_trans_brelse(args->trans, bp);
+ 	}
+diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+index f52552313773..af094063e402 100644
+--- a/fs/xfs/libxfs/xfs_attr_remote.c
++++ b/fs/xfs/libxfs/xfs_attr_remote.c
+@@ -488,7 +488,7 @@ xfs_attr_rmtval_set(
+ 			goto out_defer_cancel;
+ 		error = xfs_defer_finish(&args->trans);
+ 		if (error)
+-			goto out_defer_cancel;
++			return error;
+ 
+ 		ASSERT(nmap == 1);
+ 		ASSERT((map.br_startblock != DELAYSTARTBLOCK) &&
+@@ -628,7 +628,7 @@ xfs_attr_rmtval_remove(
+ 			goto out_defer_cancel;
+ 		error = xfs_defer_finish(&args->trans);
+ 		if (error)
+-			goto out_defer_cancel;
++			return error;
+ 
+ 		/*
+ 		 * Close out trans and start the next one in the chain.
+diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+index 7b84e3a4b7f3..66848ede62c0 100644
+--- a/fs/xfs/libxfs/xfs_defer.c
++++ b/fs/xfs/libxfs/xfs_defer.c
+@@ -410,14 +410,15 @@ xfs_defer_finish_noroll(
+ 	}
+ 
+ out:
+-	if (error)
++	if (error) {
+ 		trace_xfs_defer_finish_error((*tp)->t_mountp, (*tp)->t_dfops,
+ 					     error);
+-	 else
+-		trace_xfs_defer_finish_done((*tp)->t_mountp, (*tp)->t_dfops,
+-					    _RET_IP_);
++		xfs_defer_cancel(*tp);
++		return error;
++	}
+ 
+-	return error;
++	trace_xfs_defer_finish_done((*tp)->t_mountp, (*tp)->t_dfops, _RET_IP_);
++	return 0;
+ }
+ 
+ int
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 30ac1300dc49..d9dad399440a 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1624,7 +1624,7 @@ xfs_swap_extent_rmap(
+ 			error = xfs_defer_finish(tpp);
+ 			tp = *tpp;
+ 			if (error)
+-				goto out_defer;
++				goto out;
+ 
+ 			tirec.br_startoff += rlen;
+ 			if (tirec.br_startblock != HOLESTARTBLOCK &&
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index e1196854dbcd..70a76ac41f01 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -371,7 +371,7 @@ xfs_dquot_disk_alloc(
+ 	tp = *tpp;
+ 	if (error) {
+ 		xfs_buf_relse(bp);
+-		goto error1;
++		goto error0;
+ 	}
+ 	*bpp = bp;
+ 	return 0;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 7bb46a0eecfc..d957a46dc1cb 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1571,7 +1571,7 @@ xfs_itruncate_extents_flags(
+ 		 */
+ 		error = xfs_defer_finish(&tp);
+ 		if (error)
+-			goto out_bmap_cancel;
++			goto out;
+ 
+ 		error = xfs_trans_roll_inode(&tp, ip);
+ 		if (error)
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index dce8ba8ab681..2ec562d75494 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -518,10 +518,8 @@ xfs_reflink_cancel_cow_blocks(
+ 
+ 			/* Roll the transaction */
+ 			error = xfs_defer_finish(tpp);
+-			if (error) {
+-				xfs_defer_cancel(*tpp);
++			if (error)
+ 				break;
+-			}
+ 
+ 			/* Remove the mapping from the CoW fork. */
+ 			xfs_bmap_del_extent_cow(ip, &icur, &got, &del);
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 8c088568b05d..20750cd9c9e7 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -928,10 +928,8 @@ __xfs_trans_commit(
+ 	/* finish deferred items on final commit */
+ 	if (!regrant && (tp->t_flags & XFS_TRANS_PERM_LOG_RES)) {
+ 		error = xfs_defer_finish_noroll(&tp);
+-		if (error) {
+-			xfs_defer_cancel(tp);
++		if (error)
+ 			goto out_unreserve;
+-		}
+ 	}
+ 
+ 	/*
+-- 
+2.17.1
+
