@@ -1,284 +1,325 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:45438 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726861AbeG3VsI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Jul 2018 17:48:08 -0400
-Date: Mon, 30 Jul 2018 13:11:24 -0700
+Received: from aserp2130.oracle.com ([141.146.126.79]:47386 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725858AbeG3HDc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Jul 2018 03:03:32 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w6U5T4fE018124
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Jul 2018 05:30:17 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp2130.oracle.com with ESMTP id 2kge0ctyjs-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Jul 2018 05:30:17 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w6U5UGWd010341
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Jul 2018 05:30:16 GMT
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w6U5UG9h021822
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Jul 2018 05:30:16 GMT
+Subject: [PATCH 1/3] xfs: refactor superblock verifiers
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 05/15] xfs: replace dop_low with transaction flag
-Message-ID: <20180730201124.GF30972@magnolia>
-References: <20180730164520.36882-1-bfoster@redhat.com>
- <20180730164520.36882-6-bfoster@redhat.com>
+Date: Sun, 29 Jul 2018 22:30:15 -0700
+Message-ID: <153292861500.19274.6476856835031792043.stgit@magnolia>
+In-Reply-To: <153292860880.19274.14533449137039985963.stgit@magnolia>
+References: <153292860880.19274.14533449137039985963.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180730164520.36882-6-bfoster@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jul 30, 2018 at 12:45:10PM -0400, Brian Foster wrote:
-> The dop_low field enables the low free space allocation mode when a
-> previous allocation has detected difficulty allocating blocks. It
-> has historically been part of the xfs_defer_ops structure, which
-> means if enabled, it remains enabled across a set of transactions
-> until the deferred operations have completed and the dfops is reset.
-> 
-> Now that the dfops is embedded in the transaction, we can save a bit
-> more space by using a transaction flag rather than a standalone
-> boolean. Drop the ->dop_low field and replace it with a transaction
-> flag that is set at the same points, carried across rolling
-> transactions and cleared on completion of deferred operations. This
-> essentially emulates the behavior of ->dop_low and so should not
-> change behavior.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Split the superblock verifier into the common checks, the read-time
+checks, and the write-time check functions.  No functional changes, but
+we're setting up to add more write-only checks.
 
---D
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_sb.c |  205 ++++++++++++++++++++++++++----------------------
+ 1 file changed, 112 insertions(+), 93 deletions(-)
 
-> ---
->  fs/xfs/libxfs/xfs_bmap.c       |  8 ++++----
->  fs/xfs/libxfs/xfs_bmap_btree.c |  4 ++--
->  fs/xfs/libxfs/xfs_defer.c      | 16 ++++++++++++++--
->  fs/xfs/libxfs/xfs_defer.h      | 11 -----------
->  fs/xfs/libxfs/xfs_shared.h     | 12 ++++++++++++
->  fs/xfs/xfs_filestream.c        |  3 ++-
->  fs/xfs/xfs_trace.h             | 10 ++--------
->  fs/xfs/xfs_trans.h             |  2 --
->  8 files changed, 36 insertions(+), 30 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index a85c0445b38f..8edf7522aaff 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -700,7 +700,7 @@ xfs_bmap_extents_to_btree(
->  	if (tp->t_firstblock == NULLFSBLOCK) {
->  		args.type = XFS_ALLOCTYPE_START_BNO;
->  		args.fsbno = XFS_INO_TO_FSB(mp, ip->i_ino);
-> -	} else if (tp->t_dfops->dop_low) {
-> +	} else if (tp->t_flags & XFS_TRANS_LOWMODE) {
->  		args.type = XFS_ALLOCTYPE_START_BNO;
->  		args.fsbno = tp->t_firstblock;
->  	} else {
-> @@ -3449,7 +3449,7 @@ xfs_bmap_btalloc(
->  			error = xfs_bmap_btalloc_nullfb(ap, &args, &blen);
->  		if (error)
->  			return error;
-> -	} else if (ap->tp->t_dfops->dop_low) {
-> +	} else if (ap->tp->t_flags & XFS_TRANS_LOWMODE) {
->  		if (xfs_inode_is_filestream(ap->ip))
->  			args.type = XFS_ALLOCTYPE_FIRST_AG;
->  		else
-> @@ -3484,7 +3484,7 @@ xfs_bmap_btalloc(
->  	 * is >= the stripe unit and the allocation offset is
->  	 * at the end of file.
->  	 */
-> -	if (!ap->tp->t_dfops->dop_low && ap->aeof) {
-> +	if (!(ap->tp->t_flags & XFS_TRANS_LOWMODE) && ap->aeof) {
->  		if (!ap->offset) {
->  			args.alignment = stripe_align;
->  			atype = args.type;
-> @@ -3576,7 +3576,7 @@ xfs_bmap_btalloc(
->  		args.total = ap->minlen;
->  		if ((error = xfs_alloc_vextent(&args)))
->  			return error;
-> -		ap->tp->t_dfops->dop_low = true;
-> +		ap->tp->t_flags |= XFS_TRANS_LOWMODE;
->  	}
->  	if (args.fsbno != NULLFSBLOCK) {
->  		/*
-> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-> index 01489714a253..955e29de8cae 100644
-> --- a/fs/xfs/libxfs/xfs_bmap_btree.c
-> +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-> @@ -226,7 +226,7 @@ xfs_bmbt_alloc_block(
->  		 * block allocation here and corrupt the filesystem.
->  		 */
->  		args.minleft = args.tp->t_blk_res;
-> -	} else if (cur->bc_tp->t_dfops->dop_low) {
-> +	} else if (cur->bc_tp->t_flags & XFS_TRANS_LOWMODE) {
->  		args.type = XFS_ALLOCTYPE_START_BNO;
->  	} else {
->  		args.type = XFS_ALLOCTYPE_NEAR_BNO;
-> @@ -253,7 +253,7 @@ xfs_bmbt_alloc_block(
->  		error = xfs_alloc_vextent(&args);
->  		if (error)
->  			goto error0;
-> -		cur->bc_tp->t_dfops->dop_low = true;
-> +		cur->bc_tp->t_flags |= XFS_TRANS_LOWMODE;
->  	}
->  	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
->  		*stat = 0;
-> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-> index e3517a53c525..0306187b5f56 100644
-> --- a/fs/xfs/libxfs/xfs_defer.c
-> +++ b/fs/xfs/libxfs/xfs_defer.c
-> @@ -330,9 +330,14 @@ xfs_defer_reset(
->  
->  	ASSERT(!xfs_defer_has_unfinished_work(dop));
->  
-> -	dop->dop_low = false;
->  	memset(dop->dop_inodes, 0, sizeof(dop->dop_inodes));
->  	memset(dop->dop_bufs, 0, sizeof(dop->dop_bufs));
-> +
-> +	/*
-> +	 * Low mode state transfers across transaction rolls to mirror dfops
-> +	 * lifetime. Clear it now that dfops is reset.
-> +	 */
-> +	tp->t_flags &= ~XFS_TRANS_LOWMODE;
->  }
->  
->  /*
-> @@ -590,7 +595,14 @@ xfs_defer_move(
->  
->  	memcpy(dst->dop_inodes, src->dop_inodes, sizeof(dst->dop_inodes));
->  	memcpy(dst->dop_bufs, src->dop_bufs, sizeof(dst->dop_bufs));
-> -	dst->dop_low = src->dop_low;
-> +
-> +	/*
-> +	 * Low free space mode was historically controlled by a dfops field.
-> +	 * This meant that low mode state potentially carried across multiple
-> +	 * transaction rolls. Transfer low mode on a dfops move to preserve
-> +	 * that behavior.
-> +	 */
-> +	dtp->t_flags |= stp->t_flags & XFS_TRANS_LOWMODE;
->  
->  	xfs_defer_reset(stp);
->  }
-> diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-> index d60c50498fdf..8908a2716774 100644
-> --- a/fs/xfs/libxfs/xfs_defer.h
-> +++ b/fs/xfs/libxfs/xfs_defer.h
-> @@ -25,17 +25,6 @@ struct xfs_defer_pending {
->  
->  /*
->   * Header for deferred operation list.
-> - *
-> - * dop_low is used by the allocator to activate the lowspace algorithm -
-> - * when free space is running low the extent allocator may choose to
-> - * allocate an extent from an AG without leaving sufficient space for
-> - * a btree split when inserting the new extent.  In this case the allocator
-> - * will enable the lowspace algorithm which is supposed to allow further
-> - * allocations (such as btree splits and newroots) to allocate from
-> - * sequential AGs.  In order to avoid locking AGs out of order the lowspace
-> - * algorithm will start searching for free space from AG 0.  If the correct
-> - * transaction reservations have been made then this algorithm will eventually
-> - * find all the space it needs.
->   */
->  enum xfs_defer_ops_type {
->  	XFS_DEFER_OPS_TYPE_BMAP,
-> diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
-> index 22089f1c880a..1c5debe748f0 100644
-> --- a/fs/xfs/libxfs/xfs_shared.h
-> +++ b/fs/xfs/libxfs/xfs_shared.h
-> @@ -64,6 +64,18 @@ void	xfs_log_get_max_trans_res(struct xfs_mount *mp,
->  #define XFS_TRANS_RESERVE	0x20    /* OK to use reserved data blocks */
->  #define XFS_TRANS_NO_WRITECOUNT 0x40	/* do not elevate SB writecount */
->  #define XFS_TRANS_NOFS		0x80	/* pass KM_NOFS to kmem_alloc */
-> +/*
-> + * LOWMODE is used by the allocator to activate the lowspace algorithm - when
-> + * free space is running low the extent allocator may choose to allocate an
-> + * extent from an AG without leaving sufficient space for a btree split when
-> + * inserting the new extent. In this case the allocator will enable the
-> + * lowspace algorithm which is supposed to allow further allocations (such as
-> + * btree splits and newroots) to allocate from sequential AGs. In order to
-> + * avoid locking AGs out of order the lowspace algorithm will start searching
-> + * for free space from AG 0. If the correct transaction reservations have been
-> + * made then this algorithm will eventually find all the space it needs.
-> + */
-> +#define XFS_TRANS_LOWMODE	0x100	/* allocate in low space mode */
->  
->  /*
->   * Field values for xfs_trans_mod_sb.
-> diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-> index 212173c62588..182501373af2 100644
-> --- a/fs/xfs/xfs_filestream.c
-> +++ b/fs/xfs/xfs_filestream.c
-> @@ -20,6 +20,7 @@
->  #include "xfs_trace.h"
->  #include "xfs_ag_resv.h"
->  #include "xfs_trans.h"
-> +#include "xfs_shared.h"
->  
->  struct xfs_fstrm_item {
->  	struct xfs_mru_cache_elem	mru;
-> @@ -378,7 +379,7 @@ xfs_filestream_new_ag(
->  
->  	if (xfs_alloc_is_userdata(ap->datatype))
->  		flags |= XFS_PICK_USERDATA;
-> -	if (ap->tp->t_dfops->dop_low)
-> +	if (ap->tp->t_flags & XFS_TRANS_LOWMODE)
->  		flags |= XFS_PICK_LOWSPACE;
->  
->  	err = xfs_filestream_pick_ag(pip, startag, agp, flags, minlen);
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index cc6995cfce66..8807f1bb814a 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -2223,19 +2223,16 @@ DECLARE_EVENT_CLASS(xfs_defer_class,
->  		__field(dev_t, dev)
->  		__field(void *, dop)
->  		__field(char, committed)
-> -		__field(char, low)
->  		__field(unsigned long, caller_ip)
->  	),
->  	TP_fast_assign(
->  		__entry->dev = mp ? mp->m_super->s_dev : 0;
->  		__entry->dop = dop;
-> -		__entry->low = dop->dop_low;
->  		__entry->caller_ip = caller_ip;
->  	),
-> -	TP_printk("dev %d:%d ops %p low %d, caller %pS",
-> +	TP_printk("dev %d:%d ops %p caller %pS",
->  		  MAJOR(__entry->dev), MINOR(__entry->dev),
->  		  __entry->dop,
-> -		  __entry->low,
->  		  (char *)__entry->caller_ip)
->  )
->  #define DEFINE_DEFER_EVENT(name) \
-> @@ -2251,19 +2248,16 @@ DECLARE_EVENT_CLASS(xfs_defer_error_class,
->  		__field(dev_t, dev)
->  		__field(void *, dop)
->  		__field(char, committed)
-> -		__field(char, low)
->  		__field(int, error)
->  	),
->  	TP_fast_assign(
->  		__entry->dev = mp ? mp->m_super->s_dev : 0;
->  		__entry->dop = dop;
-> -		__entry->low = dop->dop_low;
->  		__entry->error = error;
->  	),
-> -	TP_printk("dev %d:%d ops %p low %d err %d",
-> +	TP_printk("dev %d:%d ops %p err %d",
->  		  MAJOR(__entry->dev), MINOR(__entry->dev),
->  		  __entry->dop,
-> -		  __entry->low,
->  		  __entry->error)
->  )
->  #define DEFINE_DEFER_ERROR_EVENT(name) \
-> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> index dc79e3c1d3e8..7e493221160e 100644
-> --- a/fs/xfs/xfs_trans.h
-> +++ b/fs/xfs/xfs_trans.h
-> @@ -101,8 +101,6 @@ struct xfs_defer_ops {
->  	/* relog these with each roll */
->  	struct xfs_inode	*dop_inodes[XFS_DEFER_OPS_NR_INODES];
->  	struct xfs_buf		*dop_bufs[XFS_DEFER_OPS_NR_BUFS];
-> -
-> -	bool			dop_low;	/* alloc in low mode */
->  };
->  
->  /*
-> -- 
-> 2.17.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index b3ad15956366..516bef7b0f50 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -96,80 +96,96 @@ xfs_perag_put(
+ 	trace_xfs_perag_put(pag->pag_mount, pag->pag_agno, ref, _RET_IP_);
+ }
+ 
+-/*
+- * Check the validity of the SB found.
+- */
++/* Check all the superblock fields we care about when reading one in. */
+ STATIC int
+-xfs_mount_validate_sb(
+-	xfs_mount_t	*mp,
+-	xfs_sb_t	*sbp,
+-	bool		check_inprogress,
+-	bool		check_version)
++xfs_validate_sb_read(
++	struct xfs_mount	*mp,
++	struct xfs_sb		*sbp)
+ {
+-	uint32_t	agcount = 0;
+-	uint32_t	rem;
+-
+-	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
+-		xfs_warn(mp, "bad magic number");
+-		return -EWRONGFS;
+-	}
+-
+-
+-	if (!xfs_sb_good_version(sbp)) {
+-		xfs_warn(mp, "bad version");
+-		return -EWRONGFS;
+-	}
++	if (!xfs_sb_version_hascrc(sbp))
++		return 0;
+ 
+ 	/*
+-	 * Version 5 superblock feature mask validation. Reject combinations the
+-	 * kernel cannot support up front before checking anything else. For
+-	 * write validation, we don't need to check feature masks.
++	 * Version 5 superblock feature mask validation. Reject combinations
++	 * the kernel cannot support up front before checking anything else.
++	 * For write validation, we don't need to check feature masks.
+ 	 */
+-	if (check_version && XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) {
+-		if (xfs_sb_has_compat_feature(sbp,
+-					XFS_SB_FEAT_COMPAT_UNKNOWN)) {
+-			xfs_warn(mp,
++	if (xfs_sb_has_compat_feature(sbp, XFS_SB_FEAT_COMPAT_UNKNOWN)) {
++		xfs_warn(mp,
+ "Superblock has unknown compatible features (0x%x) enabled.",
+-				(sbp->sb_features_compat &
+-						XFS_SB_FEAT_COMPAT_UNKNOWN));
+-			xfs_warn(mp,
++			(sbp->sb_features_compat & XFS_SB_FEAT_COMPAT_UNKNOWN));
++		xfs_warn(mp,
+ "Using a more recent kernel is recommended.");
+-		}
++	}
+ 
+-		if (xfs_sb_has_ro_compat_feature(sbp,
+-					XFS_SB_FEAT_RO_COMPAT_UNKNOWN)) {
+-			xfs_alert(mp,
++	if (xfs_sb_has_ro_compat_feature(sbp,
++				XFS_SB_FEAT_RO_COMPAT_UNKNOWN)) {
++		xfs_alert(mp,
+ "Superblock has unknown read-only compatible features (0x%x) enabled.",
+-				(sbp->sb_features_ro_compat &
+-						XFS_SB_FEAT_RO_COMPAT_UNKNOWN));
+-			if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
+-				xfs_warn(mp,
++			(sbp->sb_features_ro_compat &
++					XFS_SB_FEAT_RO_COMPAT_UNKNOWN));
++		if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
++			xfs_warn(mp,
+ "Attempted to mount read-only compatible filesystem read-write.");
+-				xfs_warn(mp,
++			xfs_warn(mp,
+ "Filesystem can only be safely mounted read only.");
+ 
+-				return -EINVAL;
+-			}
++			return -EINVAL;
+ 		}
+-		if (xfs_sb_has_incompat_feature(sbp,
+-					XFS_SB_FEAT_INCOMPAT_UNKNOWN)) {
+-			xfs_warn(mp,
++	}
++	if (xfs_sb_has_incompat_feature(sbp,
++				XFS_SB_FEAT_INCOMPAT_UNKNOWN)) {
++		xfs_warn(mp,
+ "Superblock has unknown incompatible features (0x%x) enabled.",
+-				(sbp->sb_features_incompat &
+-						XFS_SB_FEAT_INCOMPAT_UNKNOWN));
+-			xfs_warn(mp,
++			(sbp->sb_features_incompat &
++					XFS_SB_FEAT_INCOMPAT_UNKNOWN));
++		xfs_warn(mp,
+ "Filesystem can not be safely mounted by this kernel.");
+-			return -EINVAL;
+-		}
+-	} else if (xfs_sb_version_hascrc(sbp)) {
+-		/*
+-		 * We can't read verify the sb LSN because the read verifier is
+-		 * called before the log is allocated and processed. We know the
+-		 * log is set up before write verifier (!check_version) calls,
+-		 * so just check it here.
+-		 */
+-		if (!xfs_log_check_lsn(mp, sbp->sb_lsn))
+-			return -EFSCORRUPTED;
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
++/* Check all the superblock fields we care about when writing one out. */
++STATIC int
++xfs_validate_sb_write(
++	struct xfs_mount	*mp,
++	struct xfs_sb		*sbp)
++{
++	if (!xfs_sb_version_hascrc(sbp))
++		return 0;
++
++	/*
++	 * We can't read verify the sb LSN because the read verifier is called
++	 * before the log is allocated and processed. We know the log is set up
++	 * before write verifier (!check_version) calls, so just check it here.
++	 */
++	if (!xfs_log_check_lsn(mp, sbp->sb_lsn))
++		return -EFSCORRUPTED;
++
++	return 0;
++}
++
++/* Check the validity of the SB. */
++STATIC int
++xfs_validate_sb_common(
++	struct xfs_mount	*mp,
++	struct xfs_buf		*bp,
++	struct xfs_sb		*sbp)
++{
++	uint32_t		agcount = 0;
++	uint32_t		rem;
++
++	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
++		xfs_warn(mp, "bad magic number");
++		return -EWRONGFS;
++	}
++
++
++	if (!xfs_sb_good_version(sbp)) {
++		xfs_warn(mp, "bad version");
++		return -EWRONGFS;
+ 	}
+ 
+ 	if (xfs_sb_version_has_pquotino(sbp)) {
+@@ -321,7 +337,12 @@ xfs_mount_validate_sb(
+ 		return -EFBIG;
+ 	}
+ 
+-	if (check_inprogress && sbp->sb_inprogress) {
++	/*
++	 * Don't touch the filesystem if a user tool thinks it owns the primary
++	 * superblock.  mkfs doesn't clear the flag from secondary supers, so
++	 * we don't check them at all.
++	 */
++	if (XFS_BUF_ADDR(bp) == XFS_SB_DADDR && sbp->sb_inprogress) {
+ 		xfs_warn(mp, "Offline file system operation in progress!");
+ 		return -EFSCORRUPTED;
+ 	}
+@@ -596,29 +617,6 @@ xfs_sb_to_disk(
+ 	}
+ }
+ 
+-static int
+-xfs_sb_verify(
+-	struct xfs_buf	*bp,
+-	bool		check_version)
+-{
+-	struct xfs_mount *mp = bp->b_target->bt_mount;
+-	struct xfs_sb	sb;
+-
+-	/*
+-	 * Use call variant which doesn't convert quota flags from disk 
+-	 * format, because xfs_mount_validate_sb checks the on-disk flags.
+-	 */
+-	__xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp), false);
+-
+-	/*
+-	 * Only check the in progress field for the primary superblock as
+-	 * mkfs.xfs doesn't clear it from secondary superblocks.
+-	 */
+-	return xfs_mount_validate_sb(mp, &sb,
+-				     bp->b_maps[0].bm_bn == XFS_SB_DADDR,
+-				     check_version);
+-}
+-
+ /*
+  * If the superblock has the CRC feature bit set or the CRC field is non-null,
+  * check that the CRC is valid.  We check the CRC field is non-null because a
+@@ -633,11 +631,12 @@ xfs_sb_verify(
+  */
+ static void
+ xfs_sb_read_verify(
+-	struct xfs_buf	*bp)
++	struct xfs_buf		*bp)
+ {
+-	struct xfs_mount *mp = bp->b_target->bt_mount;
+-	struct xfs_dsb	*dsb = XFS_BUF_TO_SBP(bp);
+-	int		error;
++	struct xfs_sb		sb;
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++	struct xfs_dsb		*dsb = XFS_BUF_TO_SBP(bp);
++	int			error;
+ 
+ 	/*
+ 	 * open code the version check to avoid needing to convert the entire
+@@ -657,7 +656,16 @@ xfs_sb_read_verify(
+ 			}
+ 		}
+ 	}
+-	error = xfs_sb_verify(bp, true);
++
++	/*
++	 * Check all the superblock fields.  Don't byteswap the xquota flags
++	 * because _verify_common checks the on-disk values.
++	 */
++	__xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp), false);
++	error = xfs_validate_sb_common(mp, bp, &sb);
++	if (error)
++		goto out_error;
++	error = xfs_validate_sb_read(mp, &sb);
+ 
+ out_error:
+ 	if (error == -EFSCORRUPTED || error == -EFSBADCRC)
+@@ -691,15 +699,22 @@ static void
+ xfs_sb_write_verify(
+ 	struct xfs_buf		*bp)
+ {
++	struct xfs_sb		sb;
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 	struct xfs_buf_log_item	*bip = bp->b_log_item;
+ 	int			error;
+ 
+-	error = xfs_sb_verify(bp, false);
+-	if (error) {
+-		xfs_verifier_error(bp, error, __this_address);
+-		return;
+-	}
++	/*
++	 * Check all the superblock fields.  Don't byteswap the xquota flags
++	 * because _verify_common checks the on-disk values.
++	 */
++	__xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp), false);
++	error = xfs_validate_sb_common(mp, bp, &sb);
++	if (error)
++		goto out_error;
++	error = xfs_validate_sb_write(mp, &sb);
++	if (error)
++		goto out_error;
+ 
+ 	if (!xfs_sb_version_hascrc(&mp->m_sb))
+ 		return;
+@@ -708,6 +723,10 @@ xfs_sb_write_verify(
+ 		XFS_BUF_TO_SBP(bp)->sb_lsn = cpu_to_be64(bip->bli_item.li_lsn);
+ 
+ 	xfs_buf_update_cksum(bp, XFS_SB_CRC_OFF);
++	return;
++
++out_error:
++	xfs_verifier_error(bp, error, __this_address);
+ }
+ 
+ const struct xfs_buf_ops xfs_sb_buf_ops = {
+
