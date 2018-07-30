@@ -1,175 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:40682 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726765AbeG3R6L (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 30 Jul 2018 13:58:11 -0400
-Date: Mon, 30 Jul 2018 12:22:24 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 02/14] xfs: repair the AGF
-Message-ID: <20180730162224.GB35107@bfoster>
-References: <153292966714.24509.15809693393247424274.stgit@magnolia>
- <153292968232.24509.16936110804102265045.stgit@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:56386 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726760AbeG3R6h (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Jul 2018 13:58:37 -0400
+Date: Mon, 30 Jul 2018 09:22:52 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [RFC PATCH] xfs: fix cow_seq locking behavior
+Message-ID: <20180730162252.GA19254@infradead.org>
+References: <20180730055539.GT30972@magnolia>
+ <20180730081456.GA25004@infradead.org>
+ <20180730155207.GV30972@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <153292968232.24509.16936110804102265045.stgit@magnolia>
+In-Reply-To: <20180730155207.GV30972@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, allison.henderson@oracle.com
+Cc: Christoph Hellwig <hch@infradead.org>, xfs <linux-xfs@vger.kernel.org>
 
-On Sun, Jul 29, 2018 at 10:48:02PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Jul 30, 2018 at 08:52:07AM -0700, Darrick J. Wong wrote:
+> /*
+>  * COW fork blocks can overlap data fork blocks even if the blocks
+>  * aren't shared.  COW I/O always takes precedent, so we must always
+>  * check for overlap on reflink inodes unless the mapping is already a
+>  * COW one.
+>  *
+>  * It's safe to check the COW fork if_seq here without the ILOCK because
+>  * we've indirectly protected against concurrent updates: writeback has
+>  * the page locked, which prevents concurrent invalidations by reflink
+>  * and directio and prevents concurrent buffered writes to the same
+>  * page.  Concurrent changes to other parts of the COW fork will drop
+>  * the i_lock on their way out, which provides the necessary memory
+>  * barrier to ensure that we see the updated if_seq.
+>  */
 > 
-> Regenerate the AGF from the rmap data.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/scrub/agheader_repair.c |  370 ++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/scrub/repair.c          |   27 ++-
->  fs/xfs/scrub/repair.h          |    4 
->  fs/xfs/scrub/scrub.c           |    2 
->  4 files changed, 393 insertions(+), 10 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-> index 1e96621ece3a..4842fc598c9b 100644
-> --- a/fs/xfs/scrub/agheader_repair.c
-> +++ b/fs/xfs/scrub/agheader_repair.c
-...
-> @@ -54,3 +61,366 @@ xrep_superblock(
-...
-> +/* Repair the AGF. v5 filesystems only. */
-> +int
-> +xrep_agf(
-> +	struct xfs_scrub		*sc)
-> +{
-...
-> +	/* Start rewriting the header and implant the btrees we found. */
-> +	xrep_agf_init_header(sc, agf_bp, &old_agf);
-> +	xrep_agf_set_roots(sc, agf, fab);
-> +	error = xrep_agf_calc_from_btrees(sc, agf_bp);
-> +	if (error)
-> +		goto out_revert;
-> +
-> +	/* Commit the changes and reinitialize incore state. */
-> +	return xrep_agf_commit_new(sc, agf_bp);
-> +
-> +out_revert:
-> +	/* Mark the incore AGF state stale and revert the AGF. */
-> +	sc->sa.pag->pagf_init = 0;
+> I'm not actually sure about the last sentence anymore -- that's what I
+> was thinking the first time I looked at this patch, before Dave spoke
+> up.
 
-Hmm, looking at this again I'm not sure it's safe to reset ->pagf_init
-like this. The contexts where we hold agf might be Ok because I think
-that might prevent some other thread from actually coming in and
-resetting it, but look at xfs_alloc_read_agf() does in this case if the
-agf becomes available with !pagf_init. Specifically, are we at risk of
-corrupting a populated ->pagb_tree or causing other problems by
-reinitializing the spinlock? Perhaps we need another patch to separate
-out some of those fields that should only ever be initialized once.
+Yeah, that last sentence looks odd.  I'd replace it with:
 
-With something like that, it might subsequently make sense to factor the
-reinit from disk bits into a helper to be shared between
-xrep_agf_commit_new() and xfs_allo_read_agf(). I also wonder if it's
-sufficient to just update the agf on disk and leave pagf_init == 0.
-
-Otherwise the rest of this patch seems Ok to me.
-
-Brian
-
-> +	memcpy(agf, &old_agf, sizeof(old_agf));
-> +	return error;
-> +}
-> diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-> index 85b048b341a0..17cf48564390 100644
-> --- a/fs/xfs/scrub/repair.c
-> +++ b/fs/xfs/scrub/repair.c
-> @@ -128,9 +128,12 @@ xrep_roll_ag_trans(
->  	int			error;
->  
->  	/* Keep the AG header buffers locked so we can keep going. */
-> -	xfs_trans_bhold(sc->tp, sc->sa.agi_bp);
-> -	xfs_trans_bhold(sc->tp, sc->sa.agf_bp);
-> -	xfs_trans_bhold(sc->tp, sc->sa.agfl_bp);
-> +	if (sc->sa.agi_bp)
-> +		xfs_trans_bhold(sc->tp, sc->sa.agi_bp);
-> +	if (sc->sa.agf_bp)
-> +		xfs_trans_bhold(sc->tp, sc->sa.agf_bp);
-> +	if (sc->sa.agfl_bp)
-> +		xfs_trans_bhold(sc->tp, sc->sa.agfl_bp);
->  
->  	/* Roll the transaction. */
->  	error = xfs_trans_roll(&sc->tp);
-> @@ -138,9 +141,12 @@ xrep_roll_ag_trans(
->  		goto out_release;
->  
->  	/* Join AG headers to the new transaction. */
-> -	xfs_trans_bjoin(sc->tp, sc->sa.agi_bp);
-> -	xfs_trans_bjoin(sc->tp, sc->sa.agf_bp);
-> -	xfs_trans_bjoin(sc->tp, sc->sa.agfl_bp);
-> +	if (sc->sa.agi_bp)
-> +		xfs_trans_bjoin(sc->tp, sc->sa.agi_bp);
-> +	if (sc->sa.agf_bp)
-> +		xfs_trans_bjoin(sc->tp, sc->sa.agf_bp);
-> +	if (sc->sa.agfl_bp)
-> +		xfs_trans_bjoin(sc->tp, sc->sa.agfl_bp);
->  
->  	return 0;
->  
-> @@ -150,9 +156,12 @@ xrep_roll_ag_trans(
->  	 * buffers will be released during teardown on our way out
->  	 * of the kernel.
->  	 */
-> -	xfs_trans_bhold_release(sc->tp, sc->sa.agi_bp);
-> -	xfs_trans_bhold_release(sc->tp, sc->sa.agf_bp);
-> -	xfs_trans_bhold_release(sc->tp, sc->sa.agfl_bp);
-> +	if (sc->sa.agi_bp)
-> +		xfs_trans_bhold_release(sc->tp, sc->sa.agi_bp);
-> +	if (sc->sa.agf_bp)
-> +		xfs_trans_bhold_release(sc->tp, sc->sa.agf_bp);
-> +	if (sc->sa.agfl_bp)
-> +		xfs_trans_bhold_release(sc->tp, sc->sa.agfl_bp);
->  
->  	return error;
->  }
-> diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-> index 5a4e92221916..1d283360b5ab 100644
-> --- a/fs/xfs/scrub/repair.h
-> +++ b/fs/xfs/scrub/repair.h
-> @@ -58,6 +58,8 @@ int xrep_ino_dqattach(struct xfs_scrub *sc);
->  
->  int xrep_probe(struct xfs_scrub *sc);
->  int xrep_superblock(struct xfs_scrub *sc);
-> +int xrep_agf(struct xfs_scrub *sc);
-> +int xrep_agfl(struct xfs_scrub *sc);
->  
->  #else
->  
-> @@ -81,6 +83,8 @@ xrep_calc_ag_resblks(
->  
->  #define xrep_probe			xrep_notsupported
->  #define xrep_superblock			xrep_notsupported
-> +#define xrep_agf			xrep_notsupported
-> +#define xrep_agfl			xrep_notsupported
->  
->  #endif /* CONFIG_XFS_ONLINE_REPAIR */
->  
-> diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-> index 6efb926f3cf8..1e8a17c8e2b9 100644
-> --- a/fs/xfs/scrub/scrub.c
-> +++ b/fs/xfs/scrub/scrub.c
-> @@ -214,7 +214,7 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
->  		.type	= ST_PERAG,
->  		.setup	= xchk_setup_fs,
->  		.scrub	= xchk_agf,
-> -		.repair	= xrep_notsupported,
-> +		.repair	= xrep_agf,
->  	},
->  	[XFS_SCRUB_TYPE_AGFL]= {	/* agfl */
->  		.type	= ST_PERAG,
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Changes to if_seq always happen under i_lock, which protects against
+concurrent updates and provides a memory barrier on the way out that
+ensures that we always see the current value.
