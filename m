@@ -1,20 +1,20 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:47776 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:39684 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732151AbeG3SVM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 30 Jul 2018 14:21:12 -0400
+        id S1732155AbeG3SVN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 30 Jul 2018 14:21:13 -0400
 Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 8B5F94000784
+        by mx1.redhat.com (Postfix) with ESMTPS id DC50CCFB72
         for <linux-xfs@vger.kernel.org>; Mon, 30 Jul 2018 16:45:21 +0000 (UTC)
 Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 70A37112D179
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C5AEA112D179
         for <linux-xfs@vger.kernel.org>; Mon, 30 Jul 2018 16:45:21 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 05/15] xfs: replace dop_low with transaction flag
-Date: Mon, 30 Jul 2018 12:45:10 -0400
-Message-Id: <20180730164520.36882-6-bfoster@redhat.com>
+Subject: [PATCH 08/15] xfs: automatic dfops inode relogging
+Date: Mon, 30 Jul 2018 12:45:13 -0400
+Message-Id: <20180730164520.36882-9-bfoster@redhat.com>
 In-Reply-To: <20180730164520.36882-1-bfoster@redhat.com>
 References: <20180730164520.36882-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -22,252 +22,423 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-The dop_low field enables the low free space allocation mode when a
-previous allocation has detected difficulty allocating blocks. It
-has historically been part of the xfs_defer_ops structure, which
-means if enabled, it remains enabled across a set of transactions
-until the deferred operations have completed and the dfops is reset.
+Inodes that are held across deferred operations are explicitly
+joined to the dfops structure to ensure appropriate relogging.
+While inodes are currently joined explicitly, we can detect the
+conditions that require relogging at dfops finish time by inspecting
+the transaction item list for inodes with ili_lock_flags == 0.
 
-Now that the dfops is embedded in the transaction, we can save a bit
-more space by using a transaction flag rather than a standalone
-boolean. Drop the ->dop_low field and replace it with a transaction
-flag that is set at the same points, carried across rolling
-transactions and cleared on completion of deferred operations. This
-essentially emulates the behavior of ->dop_low and so should not
-change behavior.
+Replace the xfs_defer_ijoin() infrastructure with such detection and
+automatic relogging of held inodes. This eliminates the need for the
+per-dfops inode list, replaced by an on-stack variant in
+xfs_defer_trans_roll().
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c       |  8 ++++----
- fs/xfs/libxfs/xfs_bmap_btree.c |  4 ++--
- fs/xfs/libxfs/xfs_defer.c      | 16 ++++++++++++++--
- fs/xfs/libxfs/xfs_defer.h      | 11 -----------
- fs/xfs/libxfs/xfs_shared.h     | 12 ++++++++++++
- fs/xfs/xfs_filestream.c        |  3 ++-
- fs/xfs/xfs_trace.h             | 10 ++--------
- fs/xfs/xfs_trans.h             |  2 --
- 8 files changed, 36 insertions(+), 30 deletions(-)
+ fs/xfs/libxfs/xfs_attr.c        |  9 ------
+ fs/xfs/libxfs/xfs_attr_remote.c |  2 --
+ fs/xfs/libxfs/xfs_bmap.c        |  8 -----
+ fs/xfs/libxfs/xfs_defer.c       | 56 +++++++++++----------------------
+ fs/xfs/libxfs/xfs_defer.h       |  1 -
+ fs/xfs/xfs_bmap_util.c          |  4 ---
+ fs/xfs/xfs_inode.c              |  2 --
+ fs/xfs/xfs_iomap.c              |  3 --
+ fs/xfs/xfs_reflink.c            |  4 ---
+ fs/xfs/xfs_symlink.c            |  1 -
+ fs/xfs/xfs_trans.h              |  3 --
+ 11 files changed, 18 insertions(+), 75 deletions(-)
 
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 227887bee00d..3190dfc21b60 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -320,7 +320,6 @@ xfs_attr_set(
+ 		 * buffer and run into problems with the write verifier.
+ 		 */
+ 		xfs_trans_bhold(args.trans, leaf_bp);
+-		xfs_defer_ijoin(args.trans->t_dfops, dp);
+ 		error = xfs_defer_finish(&args.trans);
+ 		if (error)
+ 			goto out;
+@@ -589,7 +588,6 @@ xfs_attr_leaf_addname(
+ 		error = xfs_attr3_leaf_to_node(args);
+ 		if (error)
+ 			goto out_defer_cancel;
+-		xfs_defer_ijoin(args->trans->t_dfops, dp);
+ 		error = xfs_defer_finish(&args->trans);
+ 		if (error)
+ 			goto out_defer_cancel;
+@@ -678,7 +676,6 @@ xfs_attr_leaf_addname(
+ 			/* bp is gone due to xfs_da_shrink_inode */
+ 			if (error)
+ 				goto out_defer_cancel;
+-			xfs_defer_ijoin(args->trans->t_dfops, dp);
+ 			error = xfs_defer_finish(&args->trans);
+ 			if (error)
+ 				goto out_defer_cancel;
+@@ -742,7 +739,6 @@ xfs_attr_leaf_removename(
+ 		/* bp is gone due to xfs_da_shrink_inode */
+ 		if (error)
+ 			goto out_defer_cancel;
+-		xfs_defer_ijoin(args->trans->t_dfops, dp);
+ 		error = xfs_defer_finish(&args->trans);
+ 		if (error)
+ 			goto out_defer_cancel;
+@@ -869,7 +865,6 @@ xfs_attr_node_addname(
+ 			error = xfs_attr3_leaf_to_node(args);
+ 			if (error)
+ 				goto out_defer_cancel;
+-			xfs_defer_ijoin(args->trans->t_dfops, dp);
+ 			error = xfs_defer_finish(&args->trans);
+ 			if (error)
+ 				goto out_defer_cancel;
+@@ -894,7 +889,6 @@ xfs_attr_node_addname(
+ 		error = xfs_da3_split(state);
+ 		if (error)
+ 			goto out_defer_cancel;
+-		xfs_defer_ijoin(args->trans->t_dfops, dp);
+ 		error = xfs_defer_finish(&args->trans);
+ 		if (error)
+ 			goto out_defer_cancel;
+@@ -991,7 +985,6 @@ xfs_attr_node_addname(
+ 			error = xfs_da3_join(state);
+ 			if (error)
+ 				goto out_defer_cancel;
+-			xfs_defer_ijoin(args->trans->t_dfops, dp);
+ 			error = xfs_defer_finish(&args->trans);
+ 			if (error)
+ 				goto out_defer_cancel;
+@@ -1115,7 +1108,6 @@ xfs_attr_node_removename(
+ 		error = xfs_da3_join(state);
+ 		if (error)
+ 			goto out_defer_cancel;
+-		xfs_defer_ijoin(args->trans->t_dfops, dp);
+ 		error = xfs_defer_finish(&args->trans);
+ 		if (error)
+ 			goto out_defer_cancel;
+@@ -1147,7 +1139,6 @@ xfs_attr_node_removename(
+ 			/* bp is gone due to xfs_da_shrink_inode */
+ 			if (error)
+ 				goto out_defer_cancel;
+-			xfs_defer_ijoin(args->trans->t_dfops, dp);
+ 			error = xfs_defer_finish(&args->trans);
+ 			if (error)
+ 				goto out_defer_cancel;
+diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+index 77ca38586913..f52552313773 100644
+--- a/fs/xfs/libxfs/xfs_attr_remote.c
++++ b/fs/xfs/libxfs/xfs_attr_remote.c
+@@ -486,7 +486,6 @@ xfs_attr_rmtval_set(
+ 				  &nmap);
+ 		if (error)
+ 			goto out_defer_cancel;
+-		xfs_defer_ijoin(args->trans->t_dfops, dp);
+ 		error = xfs_defer_finish(&args->trans);
+ 		if (error)
+ 			goto out_defer_cancel;
+@@ -627,7 +626,6 @@ xfs_attr_rmtval_remove(
+ 				    XFS_BMAPI_ATTRFORK, 1, &done);
+ 		if (error)
+ 			goto out_defer_cancel;
+-		xfs_defer_ijoin(args->trans->t_dfops, args->dp);
+ 		error = xfs_defer_finish(&args->trans);
+ 		if (error)
+ 			goto out_defer_cancel;
 diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index a85c0445b38f..8edf7522aaff 100644
+index 71687d805f79..5cd490dc891a 100644
 --- a/fs/xfs/libxfs/xfs_bmap.c
 +++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -700,7 +700,7 @@ xfs_bmap_extents_to_btree(
- 	if (tp->t_firstblock == NULLFSBLOCK) {
- 		args.type = XFS_ALLOCTYPE_START_BNO;
- 		args.fsbno = XFS_INO_TO_FSB(mp, ip->i_ino);
--	} else if (tp->t_dfops->dop_low) {
-+	} else if (tp->t_flags & XFS_TRANS_LOWMODE) {
- 		args.type = XFS_ALLOCTYPE_START_BNO;
- 		args.fsbno = tp->t_firstblock;
- 	} else {
-@@ -3449,7 +3449,7 @@ xfs_bmap_btalloc(
- 			error = xfs_bmap_btalloc_nullfb(ap, &args, &blen);
- 		if (error)
- 			return error;
--	} else if (ap->tp->t_dfops->dop_low) {
-+	} else if (ap->tp->t_flags & XFS_TRANS_LOWMODE) {
- 		if (xfs_inode_is_filestream(ap->ip))
- 			args.type = XFS_ALLOCTYPE_FIRST_AG;
- 		else
-@@ -3484,7 +3484,7 @@ xfs_bmap_btalloc(
- 	 * is >= the stripe unit and the allocation offset is
- 	 * at the end of file.
- 	 */
--	if (!ap->tp->t_dfops->dop_low && ap->aeof) {
-+	if (!(ap->tp->t_flags & XFS_TRANS_LOWMODE) && ap->aeof) {
- 		if (!ap->offset) {
- 			args.alignment = stripe_align;
- 			atype = args.type;
-@@ -3576,7 +3576,7 @@ xfs_bmap_btalloc(
- 		args.total = ap->minlen;
- 		if ((error = xfs_alloc_vextent(&args)))
- 			return error;
--		ap->tp->t_dfops->dop_low = true;
-+		ap->tp->t_flags |= XFS_TRANS_LOWMODE;
+@@ -1119,7 +1119,6 @@ xfs_bmap_add_attrfork(
+ 			xfs_log_sb(tp);
  	}
- 	if (args.fsbno != NULLFSBLOCK) {
- 		/*
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index 01489714a253..955e29de8cae 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -226,7 +226,7 @@ xfs_bmbt_alloc_block(
- 		 * block allocation here and corrupt the filesystem.
- 		 */
- 		args.minleft = args.tp->t_blk_res;
--	} else if (cur->bc_tp->t_dfops->dop_low) {
-+	} else if (cur->bc_tp->t_flags & XFS_TRANS_LOWMODE) {
- 		args.type = XFS_ALLOCTYPE_START_BNO;
- 	} else {
- 		args.type = XFS_ALLOCTYPE_NEAR_BNO;
-@@ -253,7 +253,7 @@ xfs_bmbt_alloc_block(
- 		error = xfs_alloc_vextent(&args);
- 		if (error)
- 			goto error0;
--		cur->bc_tp->t_dfops->dop_low = true;
-+		cur->bc_tp->t_flags |= XFS_TRANS_LOWMODE;
- 	}
- 	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
- 		*stat = 0;
+ 
+-	xfs_defer_ijoin(tp->t_dfops, ip);
+ 	error = xfs_trans_commit(tp);
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	return error;
+@@ -5987,7 +5986,6 @@ __xfs_bmap_add(
+ 	int				whichfork,
+ 	struct xfs_bmbt_irec		*bmap)
+ {
+-	int				error;
+ 	struct xfs_bmap_intent		*bi;
+ 
+ 	trace_xfs_bmap_defer(mp,
+@@ -6006,12 +6004,6 @@ __xfs_bmap_add(
+ 	bi->bi_whichfork = whichfork;
+ 	bi->bi_bmap = *bmap;
+ 
+-	error = xfs_defer_ijoin(dfops, bi->bi_owner);
+-	if (error) {
+-		kmem_free(bi);
+-		return error;
+-	}
+-
+ 	xfs_defer_add(dfops, XFS_DEFER_OPS_TYPE_BMAP, &bi->bi_list);
+ 	return 0;
+ }
 diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index e3517a53c525..0306187b5f56 100644
+index d0ee55048a7a..6230e74163ac 100644
 --- a/fs/xfs/libxfs/xfs_defer.c
 +++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -330,9 +330,14 @@ xfs_defer_reset(
- 
- 	ASSERT(!xfs_defer_has_unfinished_work(dop));
- 
--	dop->dop_low = false;
- 	memset(dop->dop_inodes, 0, sizeof(dop->dop_inodes));
- 	memset(dop->dop_bufs, 0, sizeof(dop->dop_bufs));
-+
-+	/*
-+	 * Low mode state transfers across transaction rolls to mirror dfops
-+	 * lifetime. Clear it now that dfops is reset.
-+	 */
-+	tp->t_flags &= ~XFS_TRANS_LOWMODE;
- }
+@@ -15,6 +15,8 @@
+ #include "xfs_defer.h"
+ #include "xfs_trans.h"
+ #include "xfs_buf_item.h"
++#include "xfs_inode.h"
++#include "xfs_inode_item.h"
+ #include "xfs_trace.h"
  
  /*
-@@ -590,7 +595,14 @@ xfs_defer_move(
+@@ -230,16 +232,14 @@ xfs_defer_trans_roll(
+ {
+ 	struct xfs_defer_ops		*dop = (*tp)->t_dfops;
+ 	struct xfs_buf_log_item		*bli;
++	struct xfs_inode_log_item	*ili;
+ 	struct xfs_log_item		*lip;
+ 	struct xfs_buf			*bplist[XFS_DEFER_OPS_NR_BUFS];
+-	int				bpcount = 0;
++	struct xfs_inode		*iplist[XFS_DEFER_OPS_NR_INODES];
++	int				bpcount = 0, ipcount = 0;
+ 	int				i;
+ 	int				error;
  
- 	memcpy(dst->dop_inodes, src->dop_inodes, sizeof(dst->dop_inodes));
- 	memcpy(dst->dop_bufs, src->dop_bufs, sizeof(dst->dop_bufs));
--	dst->dop_low = src->dop_low;
-+
-+	/*
-+	 * Low free space mode was historically controlled by a dfops field.
-+	 * This meant that low mode state potentially carried across multiple
-+	 * transaction rolls. Transfer low mode on a dfops move to preserve
-+	 * that behavior.
-+	 */
-+	dtp->t_flags |= stp->t_flags & XFS_TRANS_LOWMODE;
+-	/* Log all the joined inodes. */
+-	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++)
+-		xfs_trans_log_inode(*tp, dop->dop_inodes[i], XFS_ILOG_CORE);
+-
+ 	list_for_each_entry(lip, &(*tp)->t_items, li_trans) {
+ 		switch (lip->li_type) {
+ 		case XFS_LI_BUF:
+@@ -251,6 +251,16 @@ xfs_defer_trans_roll(
+ 				bplist[bpcount++] = bli->bli_buf;
+ 			}
+ 			break;
++		case XFS_LI_INODE:
++			ili = container_of(lip, struct xfs_inode_log_item,
++					   ili_item);
++			if (ili->ili_lock_flags == 0) {
++				ASSERT(ipcount < XFS_DEFER_OPS_NR_INODES);
++				xfs_trans_log_inode(*tp, ili->ili_inode,
++						    XFS_ILOG_CORE);
++				iplist[ipcount++] = ili->ili_inode;
++			}
++			break;
+ 		default:
+ 			break;
+ 		}
+@@ -268,8 +278,8 @@ xfs_defer_trans_roll(
+ 	}
  
- 	xfs_defer_reset(stp);
+ 	/* Rejoin the joined inodes. */
+-	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++)
+-		xfs_trans_ijoin(*tp, dop->dop_inodes[i], 0);
++	for (i = 0; i < ipcount; i++)
++		xfs_trans_ijoin(*tp, iplist[i], 0);
+ 
+ 	/* Rejoin the buffers and dirty them so the log moves forward. */
+ 	for (i = 0; i < bpcount; i++) {
+@@ -288,30 +298,6 @@ xfs_defer_has_unfinished_work(
+ 	return !list_empty(&dop->dop_pending) || !list_empty(&dop->dop_intake);
  }
+ 
+-/*
+- * Add this inode to the deferred op.  Each joined inode is relogged
+- * each time we roll the transaction.
+- */
+-int
+-xfs_defer_ijoin(
+-	struct xfs_defer_ops		*dop,
+-	struct xfs_inode		*ip)
+-{
+-	int				i;
+-
+-	for (i = 0; i < XFS_DEFER_OPS_NR_INODES; i++) {
+-		if (dop->dop_inodes[i] == ip)
+-			return 0;
+-		else if (dop->dop_inodes[i] == NULL) {
+-			dop->dop_inodes[i] = ip;
+-			return 0;
+-		}
+-	}
+-
+-	ASSERT(0);
+-	return -EFSCORRUPTED;
+-}
+-
+ /*
+  * Reset an already used dfops after finish.
+  */
+@@ -319,11 +305,7 @@ static void
+ xfs_defer_reset(
+ 	struct xfs_trans	*tp)
+ {
+-	struct xfs_defer_ops	*dop = tp->t_dfops;
+-
+-	ASSERT(!xfs_defer_has_unfinished_work(dop));
+-
+-	memset(dop->dop_inodes, 0, sizeof(dop->dop_inodes));
++	ASSERT(!xfs_defer_has_unfinished_work(tp->t_dfops));
+ 
+ 	/*
+ 	 * Low mode state transfers across transaction rolls to mirror dfops
+@@ -585,8 +567,6 @@ xfs_defer_move(
+ 	list_splice_init(&src->dop_intake, &dst->dop_intake);
+ 	list_splice_init(&src->dop_pending, &dst->dop_pending);
+ 
+-	memcpy(dst->dop_inodes, src->dop_inodes, sizeof(dst->dop_inodes));
+-
+ 	/*
+ 	 * Low free space mode was historically controlled by a dfops field.
+ 	 * This meant that low mode state potentially carried across multiple
 diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-index d60c50498fdf..8908a2716774 100644
+index 4a8bb838adf2..bf1e9f78561e 100644
 --- a/fs/xfs/libxfs/xfs_defer.h
 +++ b/fs/xfs/libxfs/xfs_defer.h
-@@ -25,17 +25,6 @@ struct xfs_defer_pending {
+@@ -42,7 +42,6 @@ int xfs_defer_finish(struct xfs_trans **tp);
+ void xfs_defer_cancel(struct xfs_trans *);
+ void xfs_defer_init(struct xfs_trans *tp, struct xfs_defer_ops *dop);
+ bool xfs_defer_has_unfinished_work(struct xfs_defer_ops *dop);
+-int xfs_defer_ijoin(struct xfs_defer_ops *dop, struct xfs_inode *ip);
+ void xfs_defer_move(struct xfs_trans *dtp, struct xfs_trans *stp);
  
- /*
-  * Header for deferred operation list.
-- *
-- * dop_low is used by the allocator to activate the lowspace algorithm -
-- * when free space is running low the extent allocator may choose to
-- * allocate an extent from an AG without leaving sufficient space for
-- * a btree split when inserting the new extent.  In this case the allocator
-- * will enable the lowspace algorithm which is supposed to allow further
-- * allocations (such as btree splits and newroots) to allocate from
-- * sequential AGs.  In order to avoid locking AGs out of order the lowspace
-- * algorithm will start searching for free space from AG 0.  If the correct
-- * transaction reservations have been made then this algorithm will eventually
-- * find all the space it needs.
-  */
- enum xfs_defer_ops_type {
- 	XFS_DEFER_OPS_TYPE_BMAP,
-diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
-index 22089f1c880a..1c5debe748f0 100644
---- a/fs/xfs/libxfs/xfs_shared.h
-+++ b/fs/xfs/libxfs/xfs_shared.h
-@@ -64,6 +64,18 @@ void	xfs_log_get_max_trans_res(struct xfs_mount *mp,
- #define XFS_TRANS_RESERVE	0x20    /* OK to use reserved data blocks */
- #define XFS_TRANS_NO_WRITECOUNT 0x40	/* do not elevate SB writecount */
- #define XFS_TRANS_NOFS		0x80	/* pass KM_NOFS to kmem_alloc */
-+/*
-+ * LOWMODE is used by the allocator to activate the lowspace algorithm - when
-+ * free space is running low the extent allocator may choose to allocate an
-+ * extent from an AG without leaving sufficient space for a btree split when
-+ * inserting the new extent. In this case the allocator will enable the
-+ * lowspace algorithm which is supposed to allow further allocations (such as
-+ * btree splits and newroots) to allocate from sequential AGs. In order to
-+ * avoid locking AGs out of order the lowspace algorithm will start searching
-+ * for free space from AG 0. If the correct transaction reservations have been
-+ * made then this algorithm will eventually find all the space it needs.
-+ */
-+#define XFS_TRANS_LOWMODE	0x100	/* allocate in low space mode */
+ /* Description of a deferred type. */
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 0c58a66b39e5..30ac1300dc49 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -979,7 +979,6 @@ xfs_alloc_file_space(
+ 		/*
+ 		 * Complete the transaction
+ 		 */
+-		xfs_defer_ijoin(tp->t_dfops, ip);
+ 		error = xfs_trans_commit(tp);
+ 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 		if (error)
+@@ -1037,8 +1036,6 @@ xfs_unmap_extent(
+ 	if (error)
+ 		goto out_trans_cancel;
  
- /*
-  * Field values for xfs_trans_mod_sb.
-diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-index 212173c62588..182501373af2 100644
---- a/fs/xfs/xfs_filestream.c
-+++ b/fs/xfs/xfs_filestream.c
-@@ -20,6 +20,7 @@
- #include "xfs_trace.h"
- #include "xfs_ag_resv.h"
- #include "xfs_trans.h"
-+#include "xfs_shared.h"
+-	xfs_defer_ijoin(tp->t_dfops, ip);
+-
+ 	error = xfs_trans_commit(tp);
+ out_unlock:
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+@@ -1624,7 +1621,6 @@ xfs_swap_extent_rmap(
+ 			if (error)
+ 				goto out_defer;
  
- struct xfs_fstrm_item {
- 	struct xfs_mru_cache_elem	mru;
-@@ -378,7 +379,7 @@ xfs_filestream_new_ag(
+-			xfs_defer_ijoin(tp->t_dfops, ip);
+ 			error = xfs_defer_finish(tpp);
+ 			tp = *tpp;
+ 			if (error)
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 441c8593cfd7..7bb46a0eecfc 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1569,7 +1569,6 @@ xfs_itruncate_extents_flags(
+ 		 * Duplicate the transaction that has the permanent
+ 		 * reservation and commit the old transaction.
+ 		 */
+-		xfs_defer_ijoin(tp->t_dfops, ip);
+ 		error = xfs_defer_finish(&tp);
+ 		if (error)
+ 			goto out_bmap_cancel;
+@@ -1810,7 +1809,6 @@ xfs_inactive_ifree(
+ 	 * Just ignore errors at this point.  There is nothing we can do except
+ 	 * to try to keep going. Make sure it's not a silent error.
+ 	 */
+-	xfs_defer_ijoin(tp->t_dfops, ip);
+ 	error = xfs_trans_commit(tp);
+ 	if (error)
+ 		xfs_notice(mp, "%s: xfs_trans_commit returned error %d",
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 464b4b3225bb..8e8ca9f03f0e 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -261,7 +261,6 @@ xfs_iomap_write_direct(
+ 	/*
+ 	 * Complete the transaction
+ 	 */
+-	xfs_defer_ijoin(tp->t_dfops, ip);
+ 	error = xfs_trans_commit(tp);
+ 	if (error)
+ 		goto out_unlock;
+@@ -763,7 +762,6 @@ xfs_iomap_write_allocate(
+ 			if (error)
+ 				goto trans_cancel;
  
- 	if (xfs_alloc_is_userdata(ap->datatype))
- 		flags |= XFS_PICK_USERDATA;
--	if (ap->tp->t_dfops->dop_low)
-+	if (ap->tp->t_flags & XFS_TRANS_LOWMODE)
- 		flags |= XFS_PICK_LOWSPACE;
+-			xfs_defer_ijoin(tp->t_dfops, ip);
+ 			error = xfs_trans_commit(tp);
+ 			if (error)
+ 				goto error0;
+@@ -881,7 +879,6 @@ xfs_iomap_write_unwritten(
+ 			xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 		}
  
- 	err = xfs_filestream_pick_ag(pip, startag, agp, flags, minlen);
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index cc6995cfce66..8807f1bb814a 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -2223,19 +2223,16 @@ DECLARE_EVENT_CLASS(xfs_defer_class,
- 		__field(dev_t, dev)
- 		__field(void *, dop)
- 		__field(char, committed)
--		__field(char, low)
- 		__field(unsigned long, caller_ip)
- 	),
- 	TP_fast_assign(
- 		__entry->dev = mp ? mp->m_super->s_dev : 0;
- 		__entry->dop = dop;
--		__entry->low = dop->dop_low;
- 		__entry->caller_ip = caller_ip;
- 	),
--	TP_printk("dev %d:%d ops %p low %d, caller %pS",
-+	TP_printk("dev %d:%d ops %p caller %pS",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->dop,
--		  __entry->low,
- 		  (char *)__entry->caller_ip)
- )
- #define DEFINE_DEFER_EVENT(name) \
-@@ -2251,19 +2248,16 @@ DECLARE_EVENT_CLASS(xfs_defer_error_class,
- 		__field(dev_t, dev)
- 		__field(void *, dop)
- 		__field(char, committed)
--		__field(char, low)
- 		__field(int, error)
- 	),
- 	TP_fast_assign(
- 		__entry->dev = mp ? mp->m_super->s_dev : 0;
- 		__entry->dop = dop;
--		__entry->low = dop->dop_low;
- 		__entry->error = error;
- 	),
--	TP_printk("dev %d:%d ops %p low %d err %d",
-+	TP_printk("dev %d:%d ops %p err %d",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->dop,
--		  __entry->low,
- 		  __entry->error)
- )
- #define DEFINE_DEFER_ERROR_EVENT(name) \
+-		xfs_defer_ijoin(tp->t_dfops, ip);
+ 		error = xfs_trans_commit(tp);
+ 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 		if (error)
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index e986fcf928e5..dce8ba8ab681 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -435,7 +435,6 @@ xfs_reflink_allocate_cow(
+ 	xfs_inode_set_cowblocks_tag(ip);
+ 
+ 	/* Finish up. */
+-	xfs_defer_ijoin(tp->t_dfops, ip);
+ 	error = xfs_trans_commit(tp);
+ 	if (error)
+ 		return error;
+@@ -518,7 +517,6 @@ xfs_reflink_cancel_cow_blocks(
+ 					NULL);
+ 
+ 			/* Roll the transaction */
+-			xfs_defer_ijoin((*tpp)->t_dfops, ip);
+ 			error = xfs_defer_finish(tpp);
+ 			if (error) {
+ 				xfs_defer_cancel(*tpp);
+@@ -716,7 +714,6 @@ xfs_reflink_end_cow(
+ 		/* Remove the mapping from the CoW fork. */
+ 		xfs_bmap_del_extent_cow(ip, &icur, &got, &del);
+ 
+-		xfs_defer_ijoin(tp->t_dfops, ip);
+ 		error = xfs_defer_finish(&tp);
+ 		if (error)
+ 			goto out_cancel;
+@@ -1077,7 +1074,6 @@ xfs_reflink_remap_extent(
+ 
+ next_extent:
+ 		/* Process all the deferred stuff. */
+-		xfs_defer_ijoin(tp->t_dfops, ip);
+ 		error = xfs_defer_finish(&tp);
+ 		if (error)
+ 			goto out_cancel;
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index 2bfe7fbbedb2..a3e98c64b6e3 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -454,7 +454,6 @@ xfs_inactive_symlink_rmt(
+ 	 * Commit the transaction. This first logs the EFI and the inode, then
+ 	 * rolls and commits the transaction that frees the extents.
+ 	 */
+-	xfs_defer_ijoin(tp->t_dfops, ip);
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 	error = xfs_trans_commit(tp);
+ 	if (error) {
 diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index dc79e3c1d3e8..7e493221160e 100644
+index 581456c79197..8665d45b82c6 100644
 --- a/fs/xfs/xfs_trans.h
 +++ b/fs/xfs/xfs_trans.h
-@@ -101,8 +101,6 @@ struct xfs_defer_ops {
- 	/* relog these with each roll */
- 	struct xfs_inode	*dop_inodes[XFS_DEFER_OPS_NR_INODES];
- 	struct xfs_buf		*dop_bufs[XFS_DEFER_OPS_NR_BUFS];
+@@ -97,9 +97,6 @@ void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
+ struct xfs_defer_ops {
+ 	struct list_head	dop_intake;	/* unlogged pending work */
+ 	struct list_head	dop_pending;	/* logged pending work */
 -
--	bool			dop_low;	/* alloc in low mode */
+-	/* relog these with each roll */
+-	struct xfs_inode	*dop_inodes[XFS_DEFER_OPS_NR_INODES];
  };
  
  /*
