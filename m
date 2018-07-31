@@ -1,60 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:46862 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732373AbeGaVpz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jul 2018 17:45:55 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w6VJrtAJ154355
-        for <linux-xfs@vger.kernel.org>; Tue, 31 Jul 2018 20:03:58 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp2120.oracle.com with ESMTP id 2kggep2nyb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 31 Jul 2018 20:03:58 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w6VK3vVo030414
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 31 Jul 2018 20:03:57 GMT
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w6VK3vOK010204
-        for <linux-xfs@vger.kernel.org>; Tue, 31 Jul 2018 20:03:57 GMT
-Date: Tue, 31 Jul 2018 13:03:56 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: check da node magic in _node_lookup_int
-Message-ID: <20180731200356.GX30972@magnolia>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:48768 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727409AbeGaMLY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 31 Jul 2018 08:11:24 -0400
+Date: Tue, 31 Jul 2018 06:31:42 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: move extent busy tree initialization to
+ xfs_initialize_perag
+Message-ID: <20180731103142.GA39795@bfoster>
+References: <20180731035812.GU30972@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20180731035812.GU30972@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Jul 30, 2018 at 08:58:12PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Move the per-AG busy extent tree initialization to the per-ag structure
+> initialization since we don't want online repair to leak the old tree.
+> We only deconstruct the tree at unmount time, so this should be safe.
+> This also enables us to eliminate the commented out initialization in
+> the xfsprogs libxfs.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-Before we start processing what we /think/ is a da3 node block, actually
-check the magic to make sure that we're looking at a node block.  This
-way we won't blow the asserts in _node_hdr_from_disk on corrupted
-metadata.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_da_btree.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-index 9efbd2038ffb..70e7da634f3e 100644
---- a/fs/xfs/libxfs/xfs_da_btree.c
-+++ b/fs/xfs/libxfs/xfs_da_btree.c
-@@ -1522,8 +1522,11 @@ xfs_da3_node_lookup_int(
- 			break;
- 		}
- 
--		blk->magic = XFS_DA_NODE_MAGIC;
-+		if (blk->magic != XFS_DA_NODE_MAGIC &&
-+		    blk->magic != XFS_DA3_NODE_MAGIC)
-+			return -EFSCORRUPTED;
- 
-+		blk->magic = XFS_DA_NODE_MAGIC;
- 
- 		/*
- 		 * Search an intermediate node for a match.
+>  fs/xfs/libxfs/xfs_alloc.c |    3 ---
+>  fs/xfs/xfs_mount.c        |    3 +++
+>  2 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 3c3f2d5119ea..9847c1632712 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -2755,9 +2755,6 @@ xfs_alloc_read_agf(
+>  		pag->pagf_levels[XFS_BTNUM_RMAPi] =
+>  			be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAPi]);
+>  		pag->pagf_refcount_level = be32_to_cpu(agf->agf_refcount_level);
+> -		spin_lock_init(&pag->pagb_lock);
+> -		pag->pagb_count = 0;
+> -		pag->pagb_tree = RB_ROOT;
+>  		pag->pagf_init = 1;
+>  		pag->pagf_agflreset = xfs_agfl_needs_reset(mp, agf);
+>  	}
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index 8f739e4d0d1c..99db27d6ac8a 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -207,6 +207,9 @@ xfs_initialize_perag(
+>  		if (xfs_buf_hash_init(pag))
+>  			goto out_free_pag;
+>  		init_waitqueue_head(&pag->pagb_wait);
+> +		spin_lock_init(&pag->pagb_lock);
+> +		pag->pagb_count = 0;
+> +		pag->pagb_tree = RB_ROOT;
+>  
+>  		if (radix_tree_preload(GFP_NOFS))
+>  			goto out_hash_destroy;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
