@@ -1,111 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:54634 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:55618 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727132AbeGaFff (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 31 Jul 2018 01:35:35 -0400
-Subject: Re: [PATCH 3/4] xfs: verify icount in superblock write
+        id S1725862AbeGaFqJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 31 Jul 2018 01:46:09 -0400
+Subject: Re: [PATCH 4/4] xfs: check for unknown v5 feature bits in superblock
+ write verifier
 References: <153300933773.5164.7520087911614107147.stgit@magnolia>
- <153300935638.5164.15451295330900701809.stgit@magnolia>
+ <153300936259.5164.13952216512619844940.stgit@magnolia>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <ed65256a-f70e-c539-88be-044150689cd4@sandeen.net>
-Date: Mon, 30 Jul 2018 22:57:23 -0500
+Message-ID: <eeffe13f-5257-ff85-fe9c-dfed096e9cfb@sandeen.net>
+Date: Mon, 30 Jul 2018 23:07:54 -0500
 MIME-Version: 1.0
-In-Reply-To: <153300935638.5164.15451295330900701809.stgit@magnolia>
+In-Reply-To: <153300936259.5164.13952216512619844940.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Bill O'Donnell <billodo@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 7/30/18 10:55 PM, Darrick J. Wong wrote:
+On 7/30/18 10:56 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Add a helper predicate to check the inode count for sanity, then use it
-> in the superblock write verifier to inspect sb_icount.
+> Make sure we never try to write the superblock with unknown feature bits
+> set.  We checked those at mount time, so if they're set now then memory
+> is corrupt.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_sb.c |   35 ++++++++++++++++++++++++++++++++++-
+>  1 file changed, 34 insertions(+), 1 deletion(-)
+
+Meh, a lot of cut and paste of the tests, but I guess it needs different
+messages, behaviors, and error codes.  :(
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-
-> ---
->  fs/xfs/libxfs/xfs_sb.c    |    3 ++-
->  fs/xfs/libxfs/xfs_types.c |   34 ++++++++++++++++++++++++++++++++++
->  fs/xfs/libxfs/xfs_types.h |    1 +
->  3 files changed, 37 insertions(+), 1 deletion(-)
-> 
 > 
 > diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index 3d29f4a5242f..05e7ed1b8022 100644
+> index 05e7ed1b8022..ca1b3a7a9171 100644
 > --- a/fs/xfs/libxfs/xfs_sb.c
 > +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -154,9 +154,10 @@ xfs_validate_sb_write(
->  	 * Carry out additional sb summary counter sanity checks when we write
->  	 * the superblock.  We skip this in the read validator because there
->  	 * could be newer superblocks in the log and if the values are garbage
-> -	 * we'll recalculate them at the end of log mount.
-> +	 * even after replay we'll recalculate them at the end of log mount.
->  	 */
->  	if (sbp->sb_fdblocks > sbp->sb_dblocks ||
-> +	    !xfs_verify_icount(mp, sbp->sb_icount) ||
->  	    sbp->sb_ifree > sbp->sb_icount) {
->  		xfs_warn(mp, "SB summary counter sanity check failed");
->  		return -EFSCORRUPTED;
-> diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
-> index 2e2a243cef2e..33a5ca346baf 100644
-> --- a/fs/xfs/libxfs/xfs_types.c
-> +++ b/fs/xfs/libxfs/xfs_types.c
-> @@ -171,3 +171,37 @@ xfs_verify_rtbno(
->  {
->  	return rtbno < mp->m_sb.sb_rblocks;
->  }
-> +
-> +/* Calculate the range of valid icount values. */
-> +static void
-> +xfs_icount_range(
-> +	struct xfs_mount	*mp,
-> +	unsigned long long	*min,
-> +	unsigned long long	*max)
-> +{
-> +	unsigned long long	nr_inos = 0;
-> +	xfs_agnumber_t		agno;
-> +
-> +	/* root, rtbitmap, rtsum all live in the first chunk */
-> +	*min = XFS_INODES_PER_CHUNK;
-> +
-> +	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
-> +		xfs_agino_t	first, last;
-> +
-> +		xfs_agino_range(mp, agno, &first, &last);
-> +		nr_inos += last - first + 1;
-> +	}
-> +	*max = nr_inos;
-> +}
-> +
-> +/* Sanity-checking of inode counts. */
-> +bool
-> +xfs_verify_icount(
-> +	struct xfs_mount	*mp,
-> +	unsigned long long	icount)
-> +{
-> +	unsigned long long	min, max;
-> +
-> +	xfs_icount_range(mp, &min, &max);
-> +	return icount >= min && icount <= max;
-> +}
-> diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-> index 4055d62f690c..b9e6c89284c3 100644
-> --- a/fs/xfs/libxfs/xfs_types.h
-> +++ b/fs/xfs/libxfs/xfs_types.h
-> @@ -165,5 +165,6 @@ bool xfs_verify_ino(struct xfs_mount *mp, xfs_ino_t ino);
->  bool xfs_internal_inum(struct xfs_mount *mp, xfs_ino_t ino);
->  bool xfs_verify_dir_ino(struct xfs_mount *mp, xfs_ino_t ino);
->  bool xfs_verify_rtbno(struct xfs_mount *mp, xfs_rtblock_t rtbno);
-> +bool xfs_verify_icount(struct xfs_mount *mp, unsigned long long icount);
+> @@ -166,7 +166,40 @@ xfs_validate_sb_write(
+>  	if (XFS_SB_VERSION_NUM(sbp) != XFS_SB_VERSION_5)
+>  		return 0;
 >  
->  #endif	/* __XFS_TYPES_H__ */
+> -	/* XXX: For write validation, we don't need to check feature masks?? */
+> +	/*
+> +	 * Version 5 superblock feature mask validation. Reject combinations
+> +	 * the kernel cannot support since we checked for unsupported bits in
+> +	 * the read verifier, which means that memory is corrupt.
+> +	 */
+> +	if (xfs_sb_has_compat_feature(sbp, XFS_SB_FEAT_COMPAT_UNKNOWN)) {
+> +		xfs_warn(mp,
+> +"Corruption detected in superblock compatible features (0x%x)!",
+> +			(sbp->sb_features_compat & XFS_SB_FEAT_COMPAT_UNKNOWN));
+> +		return -EFSCORRUPTED;
+> +	}
+> +
+> +	if (xfs_sb_has_ro_compat_feature(sbp, XFS_SB_FEAT_RO_COMPAT_UNKNOWN)) {
+> +		xfs_alert(mp,
+> +"Corruption detected in superblock read-only compatible features (0x%x)!",
+> +			(sbp->sb_features_ro_compat &
+> +					XFS_SB_FEAT_RO_COMPAT_UNKNOWN));
+> +		return -EFSCORRUPTED;
+> +	}
+> +	if (xfs_sb_has_incompat_feature(sbp, XFS_SB_FEAT_INCOMPAT_UNKNOWN)) {
+> +		xfs_warn(mp,
+> +"Corruption detected in superblock incompatible features (0x%x)!",
+> +			(sbp->sb_features_incompat &
+> +					XFS_SB_FEAT_INCOMPAT_UNKNOWN));
+> +		return -EFSCORRUPTED;
+> +	}
+> +	if (xfs_sb_has_incompat_log_feature(sbp,
+> +			XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN)) {
+> +		xfs_warn(mp,
+> +"Corruption detected in superblock incompatible log features (0x%x)!",
+> +			(sbp->sb_features_log_incompat &
+> +					XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN));
+> +		return -EFSCORRUPTED;
+> +	}
+>  
+>  	/*
+>  	 * We can't read verify the sb LSN because the read verifier is called
 > 
