@@ -1,77 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:37556 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:54634 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732980AbeHAGXD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 1 Aug 2018 02:23:03 -0400
-Subject: Re: xfsprogs 4.17.0 error building xfs_repair
-References: <CAJCQCtSpiPiG1S0tq4j+D4DsGf0caTtQCHWyVJJxrT2P5MxPNQ@mail.gmail.com>
- <20180801042146.GI2234@dastard>
- <CAJCQCtTv4ppBr1jxJBg4hBWfxDO=J2jZVYj-ZvZTADcb7KHT3g@mail.gmail.com>
+        id S1727132AbeGaFff (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 31 Jul 2018 01:35:35 -0400
+Subject: Re: [PATCH 3/4] xfs: verify icount in superblock write
+References: <153300933773.5164.7520087911614107147.stgit@magnolia>
+ <153300935638.5164.15451295330900701809.stgit@magnolia>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <f052c332-e154-9aa7-7cdf-c1b92a7d994d@sandeen.net>
-Date: Tue, 31 Jul 2018 23:39:25 -0500
+Message-ID: <ed65256a-f70e-c539-88be-044150689cd4@sandeen.net>
+Date: Mon, 30 Jul 2018 22:57:23 -0500
 MIME-Version: 1.0
-In-Reply-To: <CAJCQCtTv4ppBr1jxJBg4hBWfxDO=J2jZVYj-ZvZTADcb7KHT3g@mail.gmail.com>
+In-Reply-To: <153300935638.5164.15451295330900701809.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chris Murphy <lists@colorremedies.com>, Dave Chinner <david@fromorbit.com>
-Cc: xfs list <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Bill O'Donnell <billodo@redhat.com>
+
+On 7/30/18 10:55 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Add a helper predicate to check the inode count for sanity, then use it
+> in the superblock write verifier to inspect sb_icount.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
 
-
-On 7/31/18 11:37 PM, Chris Murphy wrote:
-> On Tue, Jul 31, 2018 at 10:21 PM, Dave Chinner <david@fromorbit.com> wrote:
->> On Tue, Jul 31, 2018 at 08:02:17PM -0600, Chris Murphy wrote:
->>> Hi,
->>> I'm doing this on Fedora 28, I'm including the entire output from
->>> exporting environment variables from doc/INSTALL so it's kinda long...
->>>
->>> [chris@f28s xfsprogs-dev]$ git reset --hard origin/master
->>> HEAD is now at 0821de47 xfsprogs: Release v4.17.0
->>>
->>> [chris@f28s xfsprogs-dev]$ export TAR=/usr/bin/tar
->>> [chris@f28s xfsprogs-dev]$ export LIBTOOL=/usr/bin/libtool
->>> [chris@f28s xfsprogs-dev]$ export INSTALL_GROUP=wheel
->>> [chris@f28s xfsprogs-dev]$ export
->>> LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no --enable-blkid=no
->>> --enable-librt=no"
->>
->> You shot yourself in the foot.
->>
->> ....
->>>     [CC]     versions.o
->>>     [CC]     xfs_repair.o
->>>     [LD]     xfs_repair
->>> /tmp/cc95QLol.ltrans8.ltrans.o: In function `progress_rpt_thread.lto_priv.352':
->>> <artificial>:(.text+0xa2c9): undefined reference to `timer_create'
->>> <artificial>:(.text+0xa2e4): undefined reference to `timer_settime'
->>> <artificial>:(.text+0xa570): undefined reference to `timer_delete'
->>
->> These functions are in librt, and you told the build not to use it...
+> ---
+>  fs/xfs/libxfs/xfs_sb.c    |    3 ++-
+>  fs/xfs/libxfs/xfs_types.c |   34 ++++++++++++++++++++++++++++++++++
+>  fs/xfs/libxfs/xfs_types.h |    1 +
+>  3 files changed, 37 insertions(+), 1 deletion(-)
 > 
 > 
-> I did what doc/INSTALL told me to do:
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index 3d29f4a5242f..05e7ed1b8022 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -154,9 +154,10 @@ xfs_validate_sb_write(
+>  	 * Carry out additional sb summary counter sanity checks when we write
+>  	 * the superblock.  We skip this in the read validator because there
+>  	 * could be newer superblocks in the log and if the values are garbage
+> -	 * we'll recalculate them at the end of log mount.
+> +	 * even after replay we'll recalculate them at the end of log mount.
+>  	 */
+>  	if (sbp->sb_fdblocks > sbp->sb_dblocks ||
+> +	    !xfs_verify_icount(mp, sbp->sb_icount) ||
+>  	    sbp->sb_ifree > sbp->sb_icount) {
+>  		xfs_warn(mp, "SB summary counter sanity check failed");
+>  		return -EFSCORRUPTED;
+> diff --git a/fs/xfs/libxfs/xfs_types.c b/fs/xfs/libxfs/xfs_types.c
+> index 2e2a243cef2e..33a5ca346baf 100644
+> --- a/fs/xfs/libxfs/xfs_types.c
+> +++ b/fs/xfs/libxfs/xfs_types.c
+> @@ -171,3 +171,37 @@ xfs_verify_rtbno(
+>  {
+>  	return rtbno < mp->m_sb.sb_rblocks;
+>  }
+> +
+> +/* Calculate the range of valid icount values. */
+> +static void
+> +xfs_icount_range(
+> +	struct xfs_mount	*mp,
+> +	unsigned long long	*min,
+> +	unsigned long long	*max)
+> +{
+> +	unsigned long long	nr_inos = 0;
+> +	xfs_agnumber_t		agno;
+> +
+> +	/* root, rtbitmap, rtsum all live in the first chunk */
+> +	*min = XFS_INODES_PER_CHUNK;
+> +
+> +	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
+> +		xfs_agino_t	first, last;
+> +
+> +		xfs_agino_range(mp, agno, &first, &last);
+> +		nr_inos += last - first + 1;
+> +	}
+> +	*max = nr_inos;
+> +}
+> +
+> +/* Sanity-checking of inode counts. */
+> +bool
+> +xfs_verify_icount(
+> +	struct xfs_mount	*mp,
+> +	unsigned long long	icount)
+> +{
+> +	unsigned long long	min, max;
+> +
+> +	xfs_icount_range(mp, &min, &max);
+> +	return icount >= min && icount <= max;
+> +}
+> diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+> index 4055d62f690c..b9e6c89284c3 100644
+> --- a/fs/xfs/libxfs/xfs_types.h
+> +++ b/fs/xfs/libxfs/xfs_types.h
+> @@ -165,5 +165,6 @@ bool xfs_verify_ino(struct xfs_mount *mp, xfs_ino_t ino);
+>  bool xfs_internal_inum(struct xfs_mount *mp, xfs_ino_t ino);
+>  bool xfs_verify_dir_ino(struct xfs_mount *mp, xfs_ino_t ino);
+>  bool xfs_verify_rtbno(struct xfs_mount *mp, xfs_rtblock_t rtbno);
+> +bool xfs_verify_icount(struct xfs_mount *mp, unsigned long long icount);
+>  
+>  #endif	/* __XFS_TYPES_H__ */
 > 
->    Building xfsprogs:
-> 
->     [firstly set these environment variables to these values]
->     TAR=/usr/bin/gnutar
->     LIBTOOL=/usr/bin/glibtool
->     INSTALL_GROUP=wheel
->     LOCAL_CONFIGURE_OPTIONS="\
->                  --enable-gettext=no\
->                  --enable-blkid=no\
->                  --enable-librt=no\
->                  "
-
-Wow, no idea why that crap is in there, it should probably be removed.
-
-Just "make" will suffice.
-
-Patches accepted :)
-
--Eric
