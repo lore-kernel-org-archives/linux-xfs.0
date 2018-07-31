@@ -1,61 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:53806 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726389AbeGaFYK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jul 2018 01:24:10 -0400
-Date: Mon, 30 Jul 2018 20:45:56 -0700
+Received: from userp2120.oracle.com ([156.151.31.85]:43548 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727161AbeGaFeR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jul 2018 01:34:17 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w6V3slQQ177745
+        for <linux-xfs@vger.kernel.org>; Tue, 31 Jul 2018 03:56:05 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2120.oracle.com with ESMTP id 2kgh4py0yv-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 31 Jul 2018 03:56:05 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w6V3u3on015012
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 31 Jul 2018 03:56:04 GMT
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w6V3u3wZ000943
+        for <linux-xfs@vger.kernel.org>; Tue, 31 Jul 2018 03:56:03 GMT
+Subject: [PATCH 4/4] xfs: check for unknown v5 feature bits in superblock
+ write verifier
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] misc: remove COPYING from doc/ Makefile
-Message-ID: <20180731034556.GT30972@magnolia>
-References: <e4d64c9b-5a1a-54b5-8b69-463738c95307@redhat.com>
+Date: Mon, 30 Jul 2018 20:56:02 -0700
+Message-ID: <153300936259.5164.13952216512619844940.stgit@magnolia>
+In-Reply-To: <153300933773.5164.7520087911614107147.stgit@magnolia>
+References: <153300933773.5164.7520087911614107147.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e4d64c9b-5a1a-54b5-8b69-463738c95307@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Jul 30, 2018 at 10:41:54PM -0500, Eric Sandeen wrote:
-> COPYING is gone now, so make doc-install breaks.
-> 
-> Fixes: 959ef98 ("xfsprogs: convert to SPDX license tags")
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Make sure we never try to write the superblock with unknown feature bits
+set.  We checked those at mount time, so if they're set now then memory
+is corrupt.
 
---D
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_sb.c |   35 ++++++++++++++++++++++++++++++++++-
+ 1 file changed, 34 insertions(+), 1 deletion(-)
 
-> ---
-> 
-> diff --git a/doc/Makefile b/doc/Makefile
-> index 8b870dc..83dfa38 100644
-> --- a/doc/Makefile
-> +++ b/doc/Makefile
-> @@ -5,7 +5,7 @@
->  TOPDIR = ..
->  include $(TOPDIR)/include/builddefs
->  
-> -LSRCFILES = INSTALL CHANGES COPYING CREDITS sparse.txt
-> +LSRCFILES = INSTALL CHANGES CREDITS sparse.txt
->  LDIRT = *.gz
->  
->  default: CHANGES.gz
-> @@ -21,8 +21,6 @@ install: default
->  	$(INSTALL) -m 644 CHANGES.gz CREDITS $(PKG_DOC_DIR)
->  ifeq ($(PKG_DISTRIBUTION), debian)
->  	$(INSTALL) -S CHANGES.gz $(PKG_DOC_DIR)/changelog.gz
-> -else
-> -	$(INSTALL) -m 644 COPYING $(PKG_DOC_DIR)
->  endif
->  
->  install-dev:
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 05e7ed1b8022..ca1b3a7a9171 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -166,7 +166,40 @@ xfs_validate_sb_write(
+ 	if (XFS_SB_VERSION_NUM(sbp) != XFS_SB_VERSION_5)
+ 		return 0;
+ 
+-	/* XXX: For write validation, we don't need to check feature masks?? */
++	/*
++	 * Version 5 superblock feature mask validation. Reject combinations
++	 * the kernel cannot support since we checked for unsupported bits in
++	 * the read verifier, which means that memory is corrupt.
++	 */
++	if (xfs_sb_has_compat_feature(sbp, XFS_SB_FEAT_COMPAT_UNKNOWN)) {
++		xfs_warn(mp,
++"Corruption detected in superblock compatible features (0x%x)!",
++			(sbp->sb_features_compat & XFS_SB_FEAT_COMPAT_UNKNOWN));
++		return -EFSCORRUPTED;
++	}
++
++	if (xfs_sb_has_ro_compat_feature(sbp, XFS_SB_FEAT_RO_COMPAT_UNKNOWN)) {
++		xfs_alert(mp,
++"Corruption detected in superblock read-only compatible features (0x%x)!",
++			(sbp->sb_features_ro_compat &
++					XFS_SB_FEAT_RO_COMPAT_UNKNOWN));
++		return -EFSCORRUPTED;
++	}
++	if (xfs_sb_has_incompat_feature(sbp, XFS_SB_FEAT_INCOMPAT_UNKNOWN)) {
++		xfs_warn(mp,
++"Corruption detected in superblock incompatible features (0x%x)!",
++			(sbp->sb_features_incompat &
++					XFS_SB_FEAT_INCOMPAT_UNKNOWN));
++		return -EFSCORRUPTED;
++	}
++	if (xfs_sb_has_incompat_log_feature(sbp,
++			XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN)) {
++		xfs_warn(mp,
++"Corruption detected in superblock incompatible log features (0x%x)!",
++			(sbp->sb_features_log_incompat &
++					XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN));
++		return -EFSCORRUPTED;
++	}
+ 
+ 	/*
+ 	 * We can't read verify the sb LSN because the read verifier is called
+
