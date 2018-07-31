@@ -1,46 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:60000 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:53806 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727161AbeGaFdv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jul 2018 01:33:51 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w6V3sOeK010185
-        for <linux-xfs@vger.kernel.org>; Tue, 31 Jul 2018 03:55:40 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp2130.oracle.com with ESMTP id 2kge0cy7hd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 31 Jul 2018 03:55:39 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w6V3tdHw009329
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 31 Jul 2018 03:55:39 GMT
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w6V3tcN8000808
-        for <linux-xfs@vger.kernel.org>; Tue, 31 Jul 2018 03:55:39 GMT
-Subject: [PATCH v2 0/4] xfs-4.19: superblock verifier cleanups
+        with ESMTP id S1726389AbeGaFYK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jul 2018 01:24:10 -0400
+Date: Mon, 30 Jul 2018 20:45:56 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 30 Jul 2018 20:55:37 -0700
-Message-ID: <153300933773.5164.7520087911614107147.stgit@magnolia>
+Subject: Re: [PATCH] misc: remove COPYING from doc/ Makefile
+Message-ID: <20180731034556.GT30972@magnolia>
+References: <e4d64c9b-5a1a-54b5-8b69-463738c95307@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <e4d64c9b-5a1a-54b5-8b69-463738c95307@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-Hi all,
+On Mon, Jul 30, 2018 at 10:41:54PM -0500, Eric Sandeen wrote:
+> COPYING is gone now, so make doc-install breaks.
+> 
+> Fixes: 959ef98 ("xfsprogs: convert to SPDX license tags")
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-This series refactors the superblock verification routines into three
-predicates: one to handle checks that are only done at read time,
-another for write time checks, and a third for checks common to both.
-We then add some sanity checks for the summary counters to the write
-verifier (a reworked version of Bill O'Donnell's earlier patch), and end
-by addding a verifier for inode counts and adding that into the
-superblock write checks.  A fourth patch adds feature bit sanity checks
-for the write verifier.
-
-Comments and questions are, as always, welcome.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
+
+> ---
+> 
+> diff --git a/doc/Makefile b/doc/Makefile
+> index 8b870dc..83dfa38 100644
+> --- a/doc/Makefile
+> +++ b/doc/Makefile
+> @@ -5,7 +5,7 @@
+>  TOPDIR = ..
+>  include $(TOPDIR)/include/builddefs
+>  
+> -LSRCFILES = INSTALL CHANGES COPYING CREDITS sparse.txt
+> +LSRCFILES = INSTALL CHANGES CREDITS sparse.txt
+>  LDIRT = *.gz
+>  
+>  default: CHANGES.gz
+> @@ -21,8 +21,6 @@ install: default
+>  	$(INSTALL) -m 644 CHANGES.gz CREDITS $(PKG_DOC_DIR)
+>  ifeq ($(PKG_DISTRIBUTION), debian)
+>  	$(INSTALL) -S CHANGES.gz $(PKG_DOC_DIR)/changelog.gz
+> -else
+> -	$(INSTALL) -m 644 COPYING $(PKG_DOC_DIR)
+>  endif
+>  
+>  install-dev:
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
