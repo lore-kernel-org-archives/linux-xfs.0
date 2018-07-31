@@ -1,88 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:55618 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725862AbeGaFqJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 31 Jul 2018 01:46:09 -0400
-Subject: Re: [PATCH 4/4] xfs: check for unknown v5 feature bits in superblock
- write verifier
-References: <153300933773.5164.7520087911614107147.stgit@magnolia>
- <153300936259.5164.13952216512619844940.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <eeffe13f-5257-ff85-fe9c-dfed096e9cfb@sandeen.net>
-Date: Mon, 30 Jul 2018 23:07:54 -0500
-MIME-Version: 1.0
-In-Reply-To: <153300936259.5164.13952216512619844940.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:43416 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726287AbeGaHTz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 31 Jul 2018 03:19:55 -0400
+From: Zorro Lang <zlang@redhat.com>
+Subject: [PATCH v2 1/2] xfs/288: use -d option of xfs_db write command for v5 XFS
+Date: Tue, 31 Jul 2018 13:41:18 +0800
+Message-Id: <20180731054119.13539-1-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, yangx.jy@cn.fujitsu.com
 
-On 7/30/18 10:56 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Make sure we never try to write the superblock with unknown feature bits
-> set.  We checked those at mount time, so if they're set now then memory
-> is corrupt.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_sb.c |   35 ++++++++++++++++++++++++++++++++++-
->  1 file changed, 34 insertions(+), 1 deletion(-)
+The commit b3cf8b72334fd35ef961869506e5a72ab398bc82 update xfs/288
+to support v5 filesystem testing. That commit thought xfs_db write
+command can work well with -d option on V5 XFS. But the truth is
+the case doesn't use that option.
 
-Meh, a lot of cut and paste of the tests, but I guess it needs different
-messages, behaviors, and error codes.  :(
+So turn to use _scratch_xfs_set_metadata_field, it will help to use
+proper options for xfs_db write command.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Zorro Lang <zlang@redhat.com>
+---
 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index 05e7ed1b8022..ca1b3a7a9171 100644
-> --- a/fs/xfs/libxfs/xfs_sb.c
-> +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -166,7 +166,40 @@ xfs_validate_sb_write(
->  	if (XFS_SB_VERSION_NUM(sbp) != XFS_SB_VERSION_5)
->  		return 0;
->  
-> -	/* XXX: For write validation, we don't need to check feature masks?? */
-> +	/*
-> +	 * Version 5 superblock feature mask validation. Reject combinations
-> +	 * the kernel cannot support since we checked for unsupported bits in
-> +	 * the read verifier, which means that memory is corrupt.
-> +	 */
-> +	if (xfs_sb_has_compat_feature(sbp, XFS_SB_FEAT_COMPAT_UNKNOWN)) {
-> +		xfs_warn(mp,
-> +"Corruption detected in superblock compatible features (0x%x)!",
-> +			(sbp->sb_features_compat & XFS_SB_FEAT_COMPAT_UNKNOWN));
-> +		return -EFSCORRUPTED;
-> +	}
-> +
-> +	if (xfs_sb_has_ro_compat_feature(sbp, XFS_SB_FEAT_RO_COMPAT_UNKNOWN)) {
-> +		xfs_alert(mp,
-> +"Corruption detected in superblock read-only compatible features (0x%x)!",
-> +			(sbp->sb_features_ro_compat &
-> +					XFS_SB_FEAT_RO_COMPAT_UNKNOWN));
-> +		return -EFSCORRUPTED;
-> +	}
-> +	if (xfs_sb_has_incompat_feature(sbp, XFS_SB_FEAT_INCOMPAT_UNKNOWN)) {
-> +		xfs_warn(mp,
-> +"Corruption detected in superblock incompatible features (0x%x)!",
-> +			(sbp->sb_features_incompat &
-> +					XFS_SB_FEAT_INCOMPAT_UNKNOWN));
-> +		return -EFSCORRUPTED;
-> +	}
-> +	if (xfs_sb_has_incompat_log_feature(sbp,
-> +			XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN)) {
-> +		xfs_warn(mp,
-> +"Corruption detected in superblock incompatible log features (0x%x)!",
-> +			(sbp->sb_features_log_incompat &
-> +					XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN));
-> +		return -EFSCORRUPTED;
-> +	}
->  
->  	/*
->  	 * We can't read verify the sb LSN because the read verifier is called
-> 
+Hi,
+
+This patch has been reviewed by Darrick J. Wong:
+https://marc.info/?l=linux-xfs&m=153287978423915&w=2
+
+I sent this patch again only because it's related with next [2/2] patch.
+
+Thanks,
+Zorro
+
+ tests/xfs/288 | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/tests/xfs/288 b/tests/xfs/288
+index bccdb6fc..f4165b6c 100755
+--- a/tests/xfs/288
++++ b/tests/xfs/288
+@@ -56,9 +56,8 @@ $SETFATTR_PROG -n "user.testattr${seq}" \
+ 
+ _scratch_unmount
+ # manually corrupt the XFS, by set the header count of attr to 0
+-_scratch_xfs_db -x -c "inode $inum" \
+-		   -c "ablock 0" \
+-		   -c "write hdr.count 0" >> $seqres.full
++_scratch_xfs_set_metadata_field "hdr.count" "0" \
++				"inode $inum" "ablock 0" >> $seqres.full
+ 
+ # make sure xfs_repair can find above corruption. If it can't, that
+ # means we need to fix this bug on current xfs_repair
+-- 
+2.14.4
+
