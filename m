@@ -1,53 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail02.adl2.internode.on.net ([150.101.137.139]:37776 "EHLO
-        ipmail02.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728227AbeGaJp4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jul 2018 05:45:56 -0400
-Date: Tue, 31 Jul 2018 18:06:46 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] misc: remove COPYING from doc/ Makefile
-Message-ID: <20180731080646.GF2234@dastard>
-References: <e4d64c9b-5a1a-54b5-8b69-463738c95307@redhat.com>
- <20180731074313.GA19990@infradead.org>
+Received: from bombadil.infradead.org ([198.137.202.133]:58684 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727279AbeGaJuG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jul 2018 05:50:06 -0400
+Date: Tue, 31 Jul 2018 01:10:56 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 01/15] xfs: refactor internal dfops initialization
+Message-ID: <20180731081056.GB16028@infradead.org>
+References: <20180730164520.36882-1-bfoster@redhat.com>
+ <20180730164520.36882-2-bfoster@redhat.com>
+ <20180730193048.GB30972@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180731074313.GA19990@infradead.org>
+In-Reply-To: <20180730193048.GB30972@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-On Tue, Jul 31, 2018 at 12:43:13AM -0700, Christoph Hellwig wrote:
-> On Mon, Jul 30, 2018 at 10:41:54PM -0500, Eric Sandeen wrote:
-> > COPYING is gone now, so make doc-install breaks.
-> > 
-> > Fixes: 959ef98 ("xfsprogs: convert to SPDX license tags")
-> > 
-> > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+On Mon, Jul 30, 2018 at 12:30:48PM -0700, Darrick J. Wong wrote:
+> >  	trace_xfs_trans_commit(tp, _RET_IP_);
+> >  
+> >  	/* finish deferred items on final commit */
+> > -	if (!regrant && tp->t_dfops) {
+> > +	if (!regrant && (tp->t_flags & XFS_TRANS_PERM_LOG_RES)) {
 > 
-> The patch itself looks good, but I think we have a deeper problem,
-> in that there is no actual license information anywhere in xfsprogs now.
+> The usage model of deferred ops is that one has to create a transaction
+> with a permanent reservation, and only then start attaching deferred ops
+> to the dfops inside the transaction.  It's a programming error if a
+> caller tries to finish deferred ops using a non-permanent transaction,
+> and prior to this patch t_dfops would be NULL and we'd blow up
+> immediately in xfs_defer_add(..., tp->t_dfops, ...);
 > 
-> We need to fix that up similar to the LICENSES/ directory in the kernel.
-> SPDX tags are good and nice, but without an explanation what they mean
-> in the same source tree they are useless.
+> However, now that we initialize t_dfops unconditionally, won't this
+> cause the above programming mistake to leak silently any incorrectly
+> queued defer ops?
 
-Sorry, what? I added that as part of my spdx conversion patch. That
-patch also removed the COPYING file.
+I guess we'll just need an assert for a perment reservation in
+xfs_defer_add, although that'll have to wait for the patch that
+actually passes a transaction to it.
 
-How did these changes get merged? I sent a pull request to convert
-everything in xfsprogs and that had all the correct conversions and
-documentation in it. here's the pull request:
+Except for that this patch looks fine to me:
 
-https://marc.info/?l=linux-xfs&m=152948738523911&w=2
-
-and you can see from the diffstat it did all this stuff...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Reviewed-by: Christoph Hellwig <hch@lst.de>
