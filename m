@@ -1,456 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:52628 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728714AbeG3V7J (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Jul 2018 17:59:09 -0400
-Date: Mon, 30 Jul 2018 13:22:22 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 08/15] xfs: automatic dfops inode relogging
-Message-ID: <20180730202222.GI30972@magnolia>
-References: <20180730164520.36882-1-bfoster@redhat.com>
- <20180730164520.36882-9-bfoster@redhat.com>
+Received: from sandeen.net ([63.231.237.45]:45200 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728798AbeGaDwo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 30 Jul 2018 23:52:44 -0400
+Subject: Re: [PATCH] mkfs: avoid divide-by-zero when hardware reports optimal
+ i/o size as 0
+From: Eric Sandeen <sandeen@sandeen.net>
+References: <6f62dbc6-f516-e8b5-1f08-6be227a61219@suse.com>
+ <58f58144-d0a3-905b-0eb3-d1f33e42a5de@sandeen.net>
+Message-ID: <f5f35ff5-e8db-940a-e197-daf3f5758689@sandeen.net>
+Date: Mon, 30 Jul 2018 21:14:50 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180730164520.36882-9-bfoster@redhat.com>
+In-Reply-To: <58f58144-d0a3-905b-0eb3-d1f33e42a5de@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Jeff Mahoney <jeffm@suse.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-On Mon, Jul 30, 2018 at 12:45:13PM -0400, Brian Foster wrote:
-> Inodes that are held across deferred operations are explicitly
-> joined to the dfops structure to ensure appropriate relogging.
-> While inodes are currently joined explicitly, we can detect the
-> conditions that require relogging at dfops finish time by inspecting
-> the transaction item list for inodes with ili_lock_flags == 0.
+On 7/30/18 9:10 PM, Eric Sandeen wrote:
+> On 7/19/18 4:23 PM, Jeff Mahoney wrote:
+>> Commit 051b4e37f5e (mkfs: factor AG alignment) factored out the
+>> AG alignment code into a separate function.  It got rid of
+>> redundant checks for dswidth != 0 since calc_stripe_factors was
+>> supposed to guarantee that if dsunit is non-zero dswidth will be
+>> as well.  Unfortunately, there's hardware out there that reports its
+>> optimal i/o size as larger than the maximum i/o size, which the kernel
+>> treats as broken and zeros out the optimal i/o size.  We'll accept
+>> the multi-sector dsunit but have a zero dswidth and hit a divide-by-zero
+>> in align_ag_geometry.
+>>
+>> To resolve this we can check the topology before consuming it, default
+>> to using the stripe unit as the stripe width, and warn the user about it.
+>>
+>> Fixes: 051b4e37f5e (mkfs: factor AG alignment)
+>> Signed-off-by: Jeff Mahoney <jeffm@suse.com>
 > 
-> Replace the xfs_defer_ijoin() infrastructure with such detection and
-> automatic relogging of held inodes. This eliminates the need for the
-> per-dfops inode list, replaced by an on-stack variant in
-> xfs_defer_trans_roll().
+> Looks fine to me logically.  Sorry for nitpicking a patch again (it's
+> a character flaw) but I'd like to massage this slightly:
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_attr.c        |  9 ------
->  fs/xfs/libxfs/xfs_attr_remote.c |  2 --
->  fs/xfs/libxfs/xfs_bmap.c        |  8 -----
->  fs/xfs/libxfs/xfs_defer.c       | 56 +++++++++++----------------------
->  fs/xfs/libxfs/xfs_defer.h       |  1 -
->  fs/xfs/xfs_bmap_util.c          |  4 ---
->  fs/xfs/xfs_inode.c              |  2 --
->  fs/xfs/xfs_iomap.c              |  3 --
->  fs/xfs/xfs_reflink.c            |  4 ---
->  fs/xfs/xfs_symlink.c            |  1 -
->  fs/xfs/xfs_trans.h              |  3 --
->  11 files changed, 18 insertions(+), 75 deletions(-)
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 1074886..231542f 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -2281,6 +2281,16 @@ _("data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"),
+>  
+>  	/* if no stripe config set, use the device default */
+>  	if (!dsunit) {
+> +		/* Watch out for nonsense from device */
+> +		if (ft->dsunit && ft->dswidth == 0) {
+> +			fprintf(stderr,
+> +_("%s: Volume reports stripe unit of %d bytes but stripe width of 0.\n"),
+> +				progname, ft->dsunit << 9);
+> +			fprintf(stderr,
+> +_("Using stripe width of %d bytes, which may not be optimal.\n"),
+> +				ft->dsunit << 9);
+> +			ft->dswidth = ft->dsunit;
+> +		}
+>  		dsunit = ft->dsunit;
+>  		dswidth = ft->dswidth;
+>  		use_dev = true;
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 227887bee00d..3190dfc21b60 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -320,7 +320,6 @@ xfs_attr_set(
->  		 * buffer and run into problems with the write verifier.
->  		 */
->  		xfs_trans_bhold(args.trans, leaf_bp);
-> -		xfs_defer_ijoin(args.trans->t_dfops, dp);
->  		error = xfs_defer_finish(&args.trans);
->  		if (error)
->  			goto out;
-> @@ -589,7 +588,6 @@ xfs_attr_leaf_addname(
->  		error = xfs_attr3_leaf_to_node(args);
->  		if (error)
->  			goto out_defer_cancel;
-> -		xfs_defer_ijoin(args->trans->t_dfops, dp);
->  		error = xfs_defer_finish(&args->trans);
->  		if (error)
->  			goto out_defer_cancel;
-> @@ -678,7 +676,6 @@ xfs_attr_leaf_addname(
->  			/* bp is gone due to xfs_da_shrink_inode */
->  			if (error)
->  				goto out_defer_cancel;
-> -			xfs_defer_ijoin(args->trans->t_dfops, dp);
->  			error = xfs_defer_finish(&args->trans);
->  			if (error)
->  				goto out_defer_cancel;
-> @@ -742,7 +739,6 @@ xfs_attr_leaf_removename(
->  		/* bp is gone due to xfs_da_shrink_inode */
->  		if (error)
->  			goto out_defer_cancel;
-> -		xfs_defer_ijoin(args->trans->t_dfops, dp);
->  		error = xfs_defer_finish(&args->trans);
->  		if (error)
->  			goto out_defer_cancel;
-> @@ -869,7 +865,6 @@ xfs_attr_node_addname(
->  			error = xfs_attr3_leaf_to_node(args);
->  			if (error)
->  				goto out_defer_cancel;
-> -			xfs_defer_ijoin(args->trans->t_dfops, dp);
->  			error = xfs_defer_finish(&args->trans);
->  			if (error)
->  				goto out_defer_cancel;
-> @@ -894,7 +889,6 @@ xfs_attr_node_addname(
->  		error = xfs_da3_split(state);
->  		if (error)
->  			goto out_defer_cancel;
-> -		xfs_defer_ijoin(args->trans->t_dfops, dp);
->  		error = xfs_defer_finish(&args->trans);
->  		if (error)
->  			goto out_defer_cancel;
-> @@ -991,7 +985,6 @@ xfs_attr_node_addname(
->  			error = xfs_da3_join(state);
->  			if (error)
->  				goto out_defer_cancel;
-> -			xfs_defer_ijoin(args->trans->t_dfops, dp);
->  			error = xfs_defer_finish(&args->trans);
->  			if (error)
->  				goto out_defer_cancel;
-> @@ -1115,7 +1108,6 @@ xfs_attr_node_removename(
->  		error = xfs_da3_join(state);
->  		if (error)
->  			goto out_defer_cancel;
-> -		xfs_defer_ijoin(args->trans->t_dfops, dp);
->  		error = xfs_defer_finish(&args->trans);
->  		if (error)
->  			goto out_defer_cancel;
-> @@ -1147,7 +1139,6 @@ xfs_attr_node_removename(
->  			/* bp is gone due to xfs_da_shrink_inode */
->  			if (error)
->  				goto out_defer_cancel;
-> -			xfs_defer_ijoin(args->trans->t_dfops, dp);
->  			error = xfs_defer_finish(&args->trans);
->  			if (error)
->  				goto out_defer_cancel;
-> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
-> index 77ca38586913..f52552313773 100644
-> --- a/fs/xfs/libxfs/xfs_attr_remote.c
-> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
-> @@ -486,7 +486,6 @@ xfs_attr_rmtval_set(
->  				  &nmap);
->  		if (error)
->  			goto out_defer_cancel;
-> -		xfs_defer_ijoin(args->trans->t_dfops, dp);
->  		error = xfs_defer_finish(&args->trans);
->  		if (error)
->  			goto out_defer_cancel;
-> @@ -627,7 +626,6 @@ xfs_attr_rmtval_remove(
->  				    XFS_BMAPI_ATTRFORK, 1, &done);
->  		if (error)
->  			goto out_defer_cancel;
-> -		xfs_defer_ijoin(args->trans->t_dfops, args->dp);
->  		error = xfs_defer_finish(&args->trans);
->  		if (error)
->  			goto out_defer_cancel;
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 71687d805f79..5cd490dc891a 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -1119,7 +1119,6 @@ xfs_bmap_add_attrfork(
->  			xfs_log_sb(tp);
->  	}
->  
-> -	xfs_defer_ijoin(tp->t_dfops, ip);
->  	error = xfs_trans_commit(tp);
->  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  	return error;
-> @@ -5987,7 +5986,6 @@ __xfs_bmap_add(
->  	int				whichfork,
->  	struct xfs_bmbt_irec		*bmap)
->  {
-> -	int				error;
->  	struct xfs_bmap_intent		*bi;
->  
->  	trace_xfs_bmap_defer(mp,
-> @@ -6006,12 +6004,6 @@ __xfs_bmap_add(
->  	bi->bi_whichfork = whichfork;
->  	bi->bi_bmap = *bmap;
->  
-> -	error = xfs_defer_ijoin(dfops, bi->bi_owner);
-> -	if (error) {
-> -		kmem_free(bi);
-> -		return error;
-> -	}
-> -
->  	xfs_defer_add(dfops, XFS_DEFER_OPS_TYPE_BMAP, &bi->bi_list);
->  	return 0;
->  }
-> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-> index d0ee55048a7a..6230e74163ac 100644
-> --- a/fs/xfs/libxfs/xfs_defer.c
-> +++ b/fs/xfs/libxfs/xfs_defer.c
-> @@ -15,6 +15,8 @@
->  #include "xfs_defer.h"
->  #include "xfs_trans.h"
->  #include "xfs_buf_item.h"
-> +#include "xfs_inode.h"
-> +#include "xfs_inode_item.h"
->  #include "xfs_trace.h"
->  
->  /*
-> @@ -230,16 +232,14 @@ xfs_defer_trans_roll(
->  {
->  	struct xfs_defer_ops		*dop = (*tp)->t_dfops;
->  	struct xfs_buf_log_item		*bli;
-> +	struct xfs_inode_log_item	*ili;
->  	struct xfs_log_item		*lip;
->  	struct xfs_buf			*bplist[XFS_DEFER_OPS_NR_BUFS];
-> -	int				bpcount = 0;
-> +	struct xfs_inode		*iplist[XFS_DEFER_OPS_NR_INODES];
-> +	int				bpcount = 0, ipcount = 0;
->  	int				i;
->  	int				error;
->  
-> -	/* Log all the joined inodes. */
-> -	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++)
-> -		xfs_trans_log_inode(*tp, dop->dop_inodes[i], XFS_ILOG_CORE);
-> -
->  	list_for_each_entry(lip, &(*tp)->t_items, li_trans) {
->  		switch (lip->li_type) {
->  		case XFS_LI_BUF:
-> @@ -251,6 +251,16 @@ xfs_defer_trans_roll(
->  				bplist[bpcount++] = bli->bli_buf;
->  			}
->  			break;
-> +		case XFS_LI_INODE:
-> +			ili = container_of(lip, struct xfs_inode_log_item,
-> +					   ili_item);
-> +			if (ili->ili_lock_flags == 0) {
-> +				ASSERT(ipcount < XFS_DEFER_OPS_NR_INODES);
+> to make it a bit more clear that we're checking the /device/-reported
+> topology (by looking at ft before using it) and also to break up
+> the long warning message into < 80 char lines.  OK?
+> 
+> This all seems a little messy yet (an inherited mess) but that's slightly
+> clearer to me.
 
-Same complaint here as in the previous patch about the behavior change
-in the overflow check.  I admit I sucked at consistently checking the
-_defer_ijoin return value, sorry about that.  :(
+Hm, though now I'm half tempted to put all the dswidth-vs-dsunit checks in a helper,
+and if it fails on the commandline values, usage(); on detected values, set to 0
+with a warning, as it does here anyway:
 
---D
+        /*
+         * now we have our stripe config, check it's a multiple of block
+         * size.
+         */
+        if ((BBTOB(dsunit) % cfg->blocksize) ||
+            (BBTOB(dswidth) % cfg->blocksize)) {
+                if (!use_dev) {
+...
+                }
+                dsunit = 0;
+                dswidth = 0;
+                cfg->sb_feat.nodalign = true;)
 
-> +				xfs_trans_log_inode(*tp, ili->ili_inode,
-> +						    XFS_ILOG_CORE);
-> +				iplist[ipcount++] = ili->ili_inode;
-> +			}
-> +			break;
->  		default:
->  			break;
->  		}
-> @@ -268,8 +278,8 @@ xfs_defer_trans_roll(
->  	}
->  
->  	/* Rejoin the joined inodes. */
-> -	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++)
-> -		xfs_trans_ijoin(*tp, dop->dop_inodes[i], 0);
-> +	for (i = 0; i < ipcount; i++)
-> +		xfs_trans_ijoin(*tp, iplist[i], 0);
->  
->  	/* Rejoin the buffers and dirty them so the log moves forward. */
->  	for (i = 0; i < bpcount; i++) {
-> @@ -288,30 +298,6 @@ xfs_defer_has_unfinished_work(
->  	return !list_empty(&dop->dop_pending) || !list_empty(&dop->dop_intake);
->  }
->  
-> -/*
-> - * Add this inode to the deferred op.  Each joined inode is relogged
-> - * each time we roll the transaction.
-> - */
-> -int
-> -xfs_defer_ijoin(
-> -	struct xfs_defer_ops		*dop,
-> -	struct xfs_inode		*ip)
-> -{
-> -	int				i;
-> -
-> -	for (i = 0; i < XFS_DEFER_OPS_NR_INODES; i++) {
-> -		if (dop->dop_inodes[i] == ip)
-> -			return 0;
-> -		else if (dop->dop_inodes[i] == NULL) {
-> -			dop->dop_inodes[i] = ip;
-> -			return 0;
-> -		}
-> -	}
-> -
-> -	ASSERT(0);
-> -	return -EFSCORRUPTED;
-> -}
-> -
->  /*
->   * Reset an already used dfops after finish.
->   */
-> @@ -319,11 +305,7 @@ static void
->  xfs_defer_reset(
->  	struct xfs_trans	*tp)
->  {
-> -	struct xfs_defer_ops	*dop = tp->t_dfops;
-> -
-> -	ASSERT(!xfs_defer_has_unfinished_work(dop));
-> -
-> -	memset(dop->dop_inodes, 0, sizeof(dop->dop_inodes));
-> +	ASSERT(!xfs_defer_has_unfinished_work(tp->t_dfops));
->  
->  	/*
->  	 * Low mode state transfers across transaction rolls to mirror dfops
-> @@ -585,8 +567,6 @@ xfs_defer_move(
->  	list_splice_init(&src->dop_intake, &dst->dop_intake);
->  	list_splice_init(&src->dop_pending, &dst->dop_pending);
->  
-> -	memcpy(dst->dop_inodes, src->dop_inodes, sizeof(dst->dop_inodes));
-> -
->  	/*
->  	 * Low free space mode was historically controlled by a dfops field.
->  	 * This meant that low mode state potentially carried across multiple
-> diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-> index 4a8bb838adf2..bf1e9f78561e 100644
-> --- a/fs/xfs/libxfs/xfs_defer.h
-> +++ b/fs/xfs/libxfs/xfs_defer.h
-> @@ -42,7 +42,6 @@ int xfs_defer_finish(struct xfs_trans **tp);
->  void xfs_defer_cancel(struct xfs_trans *);
->  void xfs_defer_init(struct xfs_trans *tp, struct xfs_defer_ops *dop);
->  bool xfs_defer_has_unfinished_work(struct xfs_defer_ops *dop);
-> -int xfs_defer_ijoin(struct xfs_defer_ops *dop, struct xfs_inode *ip);
->  void xfs_defer_move(struct xfs_trans *dtp, struct xfs_trans *stp);
->  
->  /* Description of a deferred type. */
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 0c58a66b39e5..30ac1300dc49 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -979,7 +979,6 @@ xfs_alloc_file_space(
->  		/*
->  		 * Complete the transaction
->  		 */
-> -		xfs_defer_ijoin(tp->t_dfops, ip);
->  		error = xfs_trans_commit(tp);
->  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  		if (error)
-> @@ -1037,8 +1036,6 @@ xfs_unmap_extent(
->  	if (error)
->  		goto out_trans_cancel;
->  
-> -	xfs_defer_ijoin(tp->t_dfops, ip);
-> -
->  	error = xfs_trans_commit(tp);
->  out_unlock:
->  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> @@ -1624,7 +1621,6 @@ xfs_swap_extent_rmap(
->  			if (error)
->  				goto out_defer;
->  
-> -			xfs_defer_ijoin(tp->t_dfops, ip);
->  			error = xfs_defer_finish(tpp);
->  			tp = *tpp;
->  			if (error)
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 441c8593cfd7..7bb46a0eecfc 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -1569,7 +1569,6 @@ xfs_itruncate_extents_flags(
->  		 * Duplicate the transaction that has the permanent
->  		 * reservation and commit the old transaction.
->  		 */
-> -		xfs_defer_ijoin(tp->t_dfops, ip);
->  		error = xfs_defer_finish(&tp);
->  		if (error)
->  			goto out_bmap_cancel;
-> @@ -1810,7 +1809,6 @@ xfs_inactive_ifree(
->  	 * Just ignore errors at this point.  There is nothing we can do except
->  	 * to try to keep going. Make sure it's not a silent error.
->  	 */
-> -	xfs_defer_ijoin(tp->t_dfops, ip);
->  	error = xfs_trans_commit(tp);
->  	if (error)
->  		xfs_notice(mp, "%s: xfs_trans_commit returned error %d",
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 464b4b3225bb..8e8ca9f03f0e 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -261,7 +261,6 @@ xfs_iomap_write_direct(
->  	/*
->  	 * Complete the transaction
->  	 */
-> -	xfs_defer_ijoin(tp->t_dfops, ip);
->  	error = xfs_trans_commit(tp);
->  	if (error)
->  		goto out_unlock;
-> @@ -763,7 +762,6 @@ xfs_iomap_write_allocate(
->  			if (error)
->  				goto trans_cancel;
->  
-> -			xfs_defer_ijoin(tp->t_dfops, ip);
->  			error = xfs_trans_commit(tp);
->  			if (error)
->  				goto error0;
-> @@ -881,7 +879,6 @@ xfs_iomap_write_unwritten(
->  			xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
->  		}
->  
-> -		xfs_defer_ijoin(tp->t_dfops, ip);
->  		error = xfs_trans_commit(tp);
->  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  		if (error)
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index e986fcf928e5..dce8ba8ab681 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -435,7 +435,6 @@ xfs_reflink_allocate_cow(
->  	xfs_inode_set_cowblocks_tag(ip);
->  
->  	/* Finish up. */
-> -	xfs_defer_ijoin(tp->t_dfops, ip);
->  	error = xfs_trans_commit(tp);
->  	if (error)
->  		return error;
-> @@ -518,7 +517,6 @@ xfs_reflink_cancel_cow_blocks(
->  					NULL);
->  
->  			/* Roll the transaction */
-> -			xfs_defer_ijoin((*tpp)->t_dfops, ip);
->  			error = xfs_defer_finish(tpp);
->  			if (error) {
->  				xfs_defer_cancel(*tpp);
-> @@ -716,7 +714,6 @@ xfs_reflink_end_cow(
->  		/* Remove the mapping from the CoW fork. */
->  		xfs_bmap_del_extent_cow(ip, &icur, &got, &del);
->  
-> -		xfs_defer_ijoin(tp->t_dfops, ip);
->  		error = xfs_defer_finish(&tp);
->  		if (error)
->  			goto out_cancel;
-> @@ -1077,7 +1074,6 @@ xfs_reflink_remap_extent(
->  
->  next_extent:
->  		/* Process all the deferred stuff. */
-> -		xfs_defer_ijoin(tp->t_dfops, ip);
->  		error = xfs_defer_finish(&tp);
->  		if (error)
->  			goto out_cancel;
-> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-> index 2bfe7fbbedb2..a3e98c64b6e3 100644
-> --- a/fs/xfs/xfs_symlink.c
-> +++ b/fs/xfs/xfs_symlink.c
-> @@ -454,7 +454,6 @@ xfs_inactive_symlink_rmt(
->  	 * Commit the transaction. This first logs the EFI and the inode, then
->  	 * rolls and commits the transaction that frees the extents.
->  	 */
-> -	xfs_defer_ijoin(tp->t_dfops, ip);
->  	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
->  	error = xfs_trans_commit(tp);
->  	if (error) {
-> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> index 581456c79197..8665d45b82c6 100644
-> --- a/fs/xfs/xfs_trans.h
-> +++ b/fs/xfs/xfs_trans.h
-> @@ -97,9 +97,6 @@ void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
->  struct xfs_defer_ops {
->  	struct list_head	dop_intake;	/* unlogged pending work */
->  	struct list_head	dop_pending;	/* logged pending work */
-> -
-> -	/* relog these with each roll */
-> -	struct xfs_inode	*dop_inodes[XFS_DEFER_OPS_NR_INODES];
->  };
->  
->  /*
-> -- 
-> 2.17.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+and let the user respecify if they wish.  *shrug* I may follow up with another patch
+if it works out.
+
+-Eric
