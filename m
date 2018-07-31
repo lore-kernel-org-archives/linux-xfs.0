@@ -1,54 +1,171 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf1-f47.google.com ([209.85.167.47]:35871 "EHLO
-        mail-lf1-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733010AbeHAGWP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Aug 2018 02:22:15 -0400
-Received: by mail-lf1-f47.google.com with SMTP id b22-v6so12317847lfa.3
-        for <linux-xfs@vger.kernel.org>; Tue, 31 Jul 2018 21:38:36 -0700 (PDT)
+Received: from sandeen.net ([63.231.237.45]:48988 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725853AbeGaEfi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 31 Jul 2018 00:35:38 -0400
+Subject: [PATCH 2/1] mkfs: factor stripe geom validator & use for cli + device
+References: <6f62dbc6-f516-e8b5-1f08-6be227a61219@suse.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <b250d549-68aa-74da-0767-bc5c1d49a9f9@sandeen.net>
+Date: Mon, 30 Jul 2018 21:57:36 -0500
 MIME-Version: 1.0
-In-Reply-To: <20180801041204.GH2234@dastard>
-References: <CAJCQCtQpeQ_z9gMHhnhSvzJed4HfT=pxpORTTNjJQUogvVjLgA@mail.gmail.com>
- <20180801041204.GH2234@dastard>
-From: Chris Murphy <lists@colorremedies.com>
-Date: Tue, 31 Jul 2018 22:38:35 -0600
-Message-ID: <CAJCQCtQh3KCpG=PNNj1-3Z9cMKoeavgF++3aDTxZdo7YQ=15KA@mail.gmail.com>
-Subject: Re: agcount 33 by default for a single HDD?
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <6f62dbc6-f516-e8b5-1f08-6be227a61219@suse.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Chris Murphy <lists@colorremedies.com>, xfs list <linux-xfs@vger.kernel.org>
+To: Jeff Mahoney <jeffm@suse.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>
 
-On Tue, Jul 31, 2018 at 10:12 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Tue, Jul 31, 2018 at 07:32:50PM -0600, Chris Murphy wrote:
->> This seems suboptimal.
->
-> It's actually a very useful optimisation to make on thin devices.
->
->> Basically this is a 750G thin volume. I don't
->> have a plain partition on a device handy to try this out but I'm
->> pretty certain the default is 4 AG's in that case, so I'm confused why
->> by default 33 AGs are created on a thin volume. The LVM volume group
->> is on a dmcrypt PV.
->
-> It's a thin volume, therefore it advertises an optimal IO size and
-> alignment setting (i.e. the thin volume allocation chunk size).
-> Hence mkfs.xfs treats it as a "multi-disk device" and sets up
-> alignment and AG count appropriately.
->
-> This is actually the right optimisation to make for sparse devices -
-> more AGs increase filesystem concurrency but we normally restrict it
-> on single spindles because each AG adds more seeks into typical
-> workloads and slows them down. However, the thin volume already adds
-> that penalty to the storage stack for us because they don't have a
-> linear LBA-to-physical location characteristic.  Hence we can
-> increase filesystem concurrency without addition performance
-> penalties being incurred.
+Factor the dsunit-vs-dwidth-vs-blocksize checks into a helper.
 
-OK so why 33 AG's with xfsprogs 4.15, but 4 AG's with xfsprogs 4.17,
-when directed to the same thin LV? And also the difference in sunit
-and swidth?
+If they fail on user-specified values, exit with usage().
 
--- 
-Chris Murphy
+If they fail on values from the device, warn about it and set
+them to zero so they'll be ignored.
+
+This also ensures that we won't complain if user-specified values
+don't match bogus device-provided geometry.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+NB: this does undo Jeff's "try to make the best of it" approach
+which set swidth=sunit, but I feel like we get burned whenever
+we try to second-guess broken hardware anyway.  Thoughts?
+
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 8f0bd89..4f05354 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2196,6 +2196,37 @@ validate_rtextsize(
+ 	ASSERT(cfg->rtextblocks);
+ }
+ 
++static bool
++validate_stripe_factors(
++	int			blocksize,
++	int			dsunit,
++	int			dswidth,
++	bool			devicevals)
++{
++	/* Can't have one without the other, and dswidth must be multiple */
++	if ((dsunit && !dswidth) || (!dsunit && dswidth) ||
++	    (dsunit && (dswidth % dsunit != 0))) {
++		if (devicevals)
++			fprintf(stderr, _("Validating device geometry:\n"));
++		fprintf(stderr,
++_("Data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"),
++			BBTOB(dswidth), BBTOB(dsunit));
++		return false;
++	}
++
++	/* Check that the stripe config is a multiple of block size */
++	if ((BBTOB(dsunit) % blocksize) ||
++	    (BBTOB(dswidth) % blocksize)) {
++		if (devicevals)
++			fprintf(stderr, _("Validating device geometry:\n"));
++		fprintf(stderr,
++_("Stripe unit(%d) or stripe width(%d) is not a multiple of the block size(%d)\n"),
++			BBTOB(dsunit), BBTOB(dswidth), blocksize);
++		return false;
++	}
++	return true;
++}
++
+ /*
+  * Validate the configured stripe geometry, or is none is specified, pull
+  * the configuration from the underlying device.
+@@ -2215,7 +2246,6 @@ calc_stripe_factors(
+ 	int		dsu = 0;
+ 	int		dsw = 0;
+ 	int		lsu = 0;
+-	bool		use_dev = false;
+ 
+ 	if (cli_opt_set(&dopts, D_SUNIT))
+ 		dsunit = cli->dsunit;
+@@ -2259,13 +2289,9 @@ _("data stripe width (%lld) is too large of a multiple of the data stripe unit (
+ 		dswidth = big_dswidth;
+ 	}
+ 
+-	if ((dsunit && !dswidth) || (!dsunit && dswidth) ||
+-	    (dsunit && (dswidth % dsunit != 0))) {
+-		fprintf(stderr,
+-_("data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"),
+-			dswidth, dsunit);
++	/* Validate the user-supplied stripe geometry */
++	if (!validate_stripe_factors(cfg->blocksize, dsunit, dswidth, false))
+ 		usage();
+-	}
+ 
+ 	/* If sunit & swidth were manually specified as 0, same as noalign */
+ 	if ((cli_opt_set(&dopts, D_SUNIT) || cli_opt_set(&dopts, D_SU)) &&
+@@ -2279,22 +2305,16 @@ _("data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"),
+ 		goto check_lsunit;
+ 	}
+ 
+-	/* if no stripe config set, use the device default */
+-	if (!dsunit) {
+-		/* Watch out for nonsense from device */
+-		if (ft->dsunit && ft->dswidth == 0) {
+-			fprintf(stderr,
+-_("%s: Volume reports stripe unit of %d bytes but stripe width of 0.\n"),
+-				progname, ft->dsunit << 9);
+-			fprintf(stderr,
+-_("Using stripe width of %d bytes, which may not be optimal.\n"),
+-				ft->dsunit << 9);
+-			ft->dswidth = ft->dsunit;
+-		}
+-		dsunit = ft->dsunit;
+-		dswidth = ft->dswidth;
+-		use_dev = true;
+-	} else {
++	/* Validate the device-reported stripe geometry */
++	if (!validate_stripe_factors(cfg->blocksize, ft->dsunit, ft->dswidth, true)) {
++		fprintf(stderr,
++_("Device-reported stripe geometry failed checks, ignoring\n"));
++		ft->dsunit = 0;
++		ft->dswidth = 0;
++	}
++
++	/* If user specified geometry, check against device values */
++	if (dsunit) {
+ 		/* check and warn if user-specified alignment is sub-optimal */
+ 		if (ft->dsunit && ft->dsunit != dsunit) {
+ 			fprintf(stderr,
+@@ -2306,28 +2326,10 @@ _("%s: Specified data stripe unit %d is not the same as the volume stripe unit %
+ _("%s: Specified data stripe width %d is not the same as the volume stripe width %d\n"),
+ 				progname, dswidth, ft->dswidth);
+ 		}
+-	}
+-
+-	/*
+-	 * now we have our stripe config, check it's a multiple of block
+-	 * size.
+-	 */
+-	if ((BBTOB(dsunit) % cfg->blocksize) ||
+-	    (BBTOB(dswidth) % cfg->blocksize)) {
+-		/*
+-		 * If we are using device defaults, just clear them and we're
+-		 * good to go. Otherwise bail out with an error.
+-		 */
+-		if (!use_dev) {
+-			fprintf(stderr,
+-_("%s: Stripe unit(%d) or stripe width(%d) is not a multiple of the block size(%d)\n"),
+-				progname, BBTOB(dsunit), BBTOB(dswidth),
+-				cfg->blocksize);
+-			exit(1);
+-		}
+-		dsunit = 0;
+-		dswidth = 0;
+-		cfg->sb_feat.nodalign = true;
++	} else {
++		/* Use the device-reported geometry */
++		dsunit = ft->dsunit;
++		dswidth = ft->dswidth;
+ 	}
+ 
+ 	/* convert from 512 byte blocks to fs blocksize */
+
+
