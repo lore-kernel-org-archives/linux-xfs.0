@@ -1,71 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:37802 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728746AbeG3W0G (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Jul 2018 18:26:06 -0400
-Date: Mon, 30 Jul 2018 13:49:16 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 14/15] xfs: always defer agfl block frees
-Message-ID: <20180730204916.GO30972@magnolia>
-References: <20180730164520.36882-1-bfoster@redhat.com>
- <20180730164520.36882-15-bfoster@redhat.com>
+Received: from sandeen.net ([63.231.237.45]:44796 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726659AbeGaDsG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 30 Jul 2018 23:48:06 -0400
+Subject: Re: [PATCH] mkfs: avoid divide-by-zero when hardware reports optimal
+ i/o size as 0
+References: <6f62dbc6-f516-e8b5-1f08-6be227a61219@suse.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <58f58144-d0a3-905b-0eb3-d1f33e42a5de@sandeen.net>
+Date: Mon, 30 Jul 2018 21:10:13 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180730164520.36882-15-bfoster@redhat.com>
+In-Reply-To: <6f62dbc6-f516-e8b5-1f08-6be227a61219@suse.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Jeff Mahoney <jeffm@suse.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-On Mon, Jul 30, 2018 at 12:45:19PM -0400, Brian Foster wrote:
-> The AGFL fixup code conditionally defers block frees from the free
-> list based on whether the current transaction has an associated
-> xfs_defer_ops structure. Now that dfops is embedded in the
-> transaction and the internal dfops is used unconditionally, this
-> invariant is always true.
+On 7/19/18 4:23 PM, Jeff Mahoney wrote:
+> Commit 051b4e37f5e (mkfs: factor AG alignment) factored out the
+> AG alignment code into a separate function.  It got rid of
+> redundant checks for dswidth != 0 since calc_stripe_factors was
+> supposed to guarantee that if dsunit is non-zero dswidth will be
+> as well.  Unfortunately, there's hardware out there that reports its
+> optimal i/o size as larger than the maximum i/o size, which the kernel
+> treats as broken and zeros out the optimal i/o size.  We'll accept
+> the multi-sector dsunit but have a zero dswidth and hit a divide-by-zero
+> in align_ag_geometry.
 > 
-> Remove the now dead logic to check for ->t_dfops in
-> xfs_alloc_fix_freelist() and unconditionally defer AGFL block frees.
+> To resolve this we can check the topology before consuming it, default
+> to using the stripe unit as the stripe width, and warn the user about it.
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Fixes: 051b4e37f5e (mkfs: factor AG alignment)
+> Signed-off-by: Jeff Mahoney <jeffm@suse.com>
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Looks fine to me logically.  Sorry for nitpicking a patch again (it's
+a character flaw) but I'd like to massage this slightly:
 
---D
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 1074886..231542f 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2281,6 +2281,16 @@ _("data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"),
+ 
+ 	/* if no stripe config set, use the device default */
+ 	if (!dsunit) {
++		/* Watch out for nonsense from device */
++		if (ft->dsunit && ft->dswidth == 0) {
++			fprintf(stderr,
++_("%s: Volume reports stripe unit of %d bytes but stripe width of 0.\n"),
++				progname, ft->dsunit << 9);
++			fprintf(stderr,
++_("Using stripe width of %d bytes, which may not be optimal.\n"),
++				ft->dsunit << 9);
++			ft->dswidth = ft->dsunit;
++		}
+ 		dsunit = ft->dsunit;
+ 		dswidth = ft->dswidth;
+ 		use_dev = true;
+
+to make it a bit more clear that we're checking the /device/-reported
+topology (by looking at ft before using it) and also to break up
+the long warning message into < 80 char lines.  OK?
+
+This all seems a little messy yet (an inherited mess) but that's slightly
+clearer to me.
+
+Thanks,
+-Eric
 
 > ---
->  fs/xfs/libxfs/xfs_alloc.c | 11 ++---------
->  1 file changed, 2 insertions(+), 9 deletions(-)
+>  mkfs/xfs_mkfs.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 6bacdc31a439..32a370665d71 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -2323,15 +2323,8 @@ xfs_alloc_fix_freelist(
->  		if (error)
->  			goto out_agbp_relse;
->  
-> -		/* defer agfl frees if dfops is provided */
-> -		if (tp->t_dfops) {
-> -			xfs_defer_agfl_block(tp, args->agno, bno, &targs.oinfo);
-> -		} else {
-> -			error = xfs_free_agfl_block(tp, args->agno, bno, agbp,
-> -						    &targs.oinfo);
-> -			if (error)
-> -				goto out_agbp_relse;
-> -		}
-> +		/* defer agfl frees */
-> +		xfs_defer_agfl_block(tp, args->agno, bno, &targs.oinfo);
->  	}
->  
->  	targs.tp = tp;
-> -- 
-> 2.17.1
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index a135e06e..35542e57 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -2295,6 +2295,12 @@ _("data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"),
+>  	if (!dsunit) {
+>  		dsunit = ft->dsunit;
+>  		dswidth = ft->dswidth;
+> +		if (dsunit && dswidth == 0) {
+> +			fprintf(stderr,
+> +_("%s: Volume reports stripe unit of %d bytes but stripe width of 0.  Using stripe width of %d bytes, which may not be optimal.\n"),
+> +				progname, dsunit << 9, dsunit << 9);
+> +			dswidth = dsunit;
+> +		}
+>  		use_dev = true;
+>  	} else {
+>  		/* check and warn is alignment is sub-optimal */
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
