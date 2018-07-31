@@ -1,50 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:54958 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731199AbeHAGFX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Aug 2018 02:05:23 -0400
-Date: Wed, 1 Aug 2018 14:21:46 +1000
+Received: from ipmail02.adl2.internode.on.net ([150.101.137.139]:37776 "EHLO
+        ipmail02.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728227AbeGaJp4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jul 2018 05:45:56 -0400
+Date: Tue, 31 Jul 2018 18:06:46 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfsprogs 4.17.0 error building xfs_repair
-Message-ID: <20180801042146.GI2234@dastard>
-References: <CAJCQCtSpiPiG1S0tq4j+D4DsGf0caTtQCHWyVJJxrT2P5MxPNQ@mail.gmail.com>
+Subject: Re: [PATCH] misc: remove COPYING from doc/ Makefile
+Message-ID: <20180731080646.GF2234@dastard>
+References: <e4d64c9b-5a1a-54b5-8b69-463738c95307@redhat.com>
+ <20180731074313.GA19990@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAJCQCtSpiPiG1S0tq4j+D4DsGf0caTtQCHWyVJJxrT2P5MxPNQ@mail.gmail.com>
+In-Reply-To: <20180731074313.GA19990@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chris Murphy <lists@colorremedies.com>
-Cc: xfs list <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Jul 31, 2018 at 08:02:17PM -0600, Chris Murphy wrote:
-> Hi,
-> I'm doing this on Fedora 28, I'm including the entire output from
-> exporting environment variables from doc/INSTALL so it's kinda long...
+On Tue, Jul 31, 2018 at 12:43:13AM -0700, Christoph Hellwig wrote:
+> On Mon, Jul 30, 2018 at 10:41:54PM -0500, Eric Sandeen wrote:
+> > COPYING is gone now, so make doc-install breaks.
+> > 
+> > Fixes: 959ef98 ("xfsprogs: convert to SPDX license tags")
+> > 
+> > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > 
-> [chris@f28s xfsprogs-dev]$ git reset --hard origin/master
-> HEAD is now at 0821de47 xfsprogs: Release v4.17.0
+> The patch itself looks good, but I think we have a deeper problem,
+> in that there is no actual license information anywhere in xfsprogs now.
 > 
-> [chris@f28s xfsprogs-dev]$ export TAR=/usr/bin/tar
-> [chris@f28s xfsprogs-dev]$ export LIBTOOL=/usr/bin/libtool
-> [chris@f28s xfsprogs-dev]$ export INSTALL_GROUP=wheel
-> [chris@f28s xfsprogs-dev]$ export
-> LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no --enable-blkid=no
-> --enable-librt=no"
+> We need to fix that up similar to the LICENSES/ directory in the kernel.
+> SPDX tags are good and nice, but without an explanation what they mean
+> in the same source tree they are useless.
 
-You shot yourself in the foot.
+Sorry, what? I added that as part of my spdx conversion patch. That
+patch also removed the COPYING file.
 
-....
->     [CC]     versions.o
->     [CC]     xfs_repair.o
->     [LD]     xfs_repair
-> /tmp/cc95QLol.ltrans8.ltrans.o: In function `progress_rpt_thread.lto_priv.352':
-> <artificial>:(.text+0xa2c9): undefined reference to `timer_create'
-> <artificial>:(.text+0xa2e4): undefined reference to `timer_settime'
-> <artificial>:(.text+0xa570): undefined reference to `timer_delete'
+How did these changes get merged? I sent a pull request to convert
+everything in xfsprogs and that had all the correct conversions and
+documentation in it. here's the pull request:
 
-These functions are in librt, and you told the build not to use it...
+https://marc.info/?l=linux-xfs&m=152948738523911&w=2
+
+and you can see from the diffstat it did all this stuff...
 
 Cheers,
 
