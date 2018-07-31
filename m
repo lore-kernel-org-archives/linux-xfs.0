@@ -1,237 +1,350 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:36908 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732351AbeGaP6u (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jul 2018 11:58:50 -0400
-Date: Tue, 31 Jul 2018 07:18:12 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 02/15] xfs: use transaction for intent recovery instead
- of raw dfops
-Message-ID: <20180731141812.GW30972@magnolia>
-References: <20180730164520.36882-1-bfoster@redhat.com>
- <20180730164520.36882-3-bfoster@redhat.com>
- <20180730200909.GC30972@magnolia>
- <20180731114750.GB40201@bfoster>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:37992 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1729548AbeGaQut (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 31 Jul 2018 12:50:49 -0400
+Date: Tue, 31 Jul 2018 11:10:00 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 03/14] xfs: repair the AGFL
+Message-ID: <20180731151000.GH40201@bfoster>
+References: <153292966714.24509.15809693393247424274.stgit@magnolia>
+ <153292968888.24509.5021796491286828939.stgit@magnolia>
+ <20180730162523.GC35107@bfoster>
+ <20180730172216.GX30972@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180731114750.GB40201@bfoster>
+In-Reply-To: <20180730172216.GX30972@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, allison.henderson@oracle.com
 
-On Tue, Jul 31, 2018 at 07:47:51AM -0400, Brian Foster wrote:
-> On Mon, Jul 30, 2018 at 01:09:09PM -0700, Darrick J. Wong wrote:
-> > On Mon, Jul 30, 2018 at 12:45:07PM -0400, Brian Foster wrote:
-> > > Log intent recovery is the last user of an external (on-stack)
-> > > dfops. The pattern exists because the dfops is used to collect
-> > > additional deferred operations queued during the whole recovery
-> > > sequence. The dfops is finished with a new transaction after intent
-> > > recovery completes.
+On Mon, Jul 30, 2018 at 10:22:16AM -0700, Darrick J. Wong wrote:
+> On Mon, Jul 30, 2018 at 12:25:24PM -0400, Brian Foster wrote:
+> > On Sun, Jul 29, 2018 at 10:48:08PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > > 
-> > > We already have a mechanism to create an empty, container-like
-> > > transaction to support the scrub infrastructure. We can reuse that
-> > > mechanism here to drop the final user of external dfops. This
-> > > facilitates folding dfops state (i.e., dop_low) into the
-> > > transaction, the elimination of now unused external dfops support
-> > > and also eliminates the only caller of __xfs_defer_cancel().
+> > > Repair the AGFL from the rmap data.
 > > > 
-> > > Replace the on-stack dfops with an empty transaction and pass it
-> > > around to the various helpers that queue and finish deferred
-> > > operations during intent recovery.
-> > > 
-> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > > > ---
-> > >  fs/xfs/xfs_bmap_item.c     | 12 +++++------
-> > >  fs/xfs/xfs_bmap_item.h     |  3 +--
-> > >  fs/xfs/xfs_log_recover.c   | 42 ++++++++++++++++++--------------------
-> > >  fs/xfs/xfs_refcount_item.c | 12 +++++------
-> > >  fs/xfs/xfs_refcount_item.h |  3 +--
-> > >  5 files changed, 34 insertions(+), 38 deletions(-)
+> > 
+> > FWIW, I tried tweaking a couple agfl values via xfs_db and xfs_scrub
+> > seems to always dump a cross-referencing failed error and not want to
+> > deal with it. Expected? Is there a good way to unit test some of this
+> > stuff with simple/localized corruptions?
+> 
+> I usually pick one of the corruptions from xfs/355...
+> 
+> $ SCRATCH_XFS_LIST_FUZZ_VERBS=random \
+> SCRATCH_XFS_LIST_METADATA_FIELDS=somefield \
+> ./check xfs/355
+> 
+
+It looks like similar behavior if I do that, but tbh I'm not sure if I'm
+using this correctly. E.g., if I do:
+
+# SCRATCH_XFS_LIST_FUZZ_VERBS=random SCRATCH_XFS_LIST_METADATA_FIELDS=bno[0] ./check xfs/355
+FSTYP         -- xfs (debug)
+PLATFORM      -- Linux/x86_64 localhost 4.18.0-rc4+
+MKFS_OPTIONS  -- -f -mrmapbt=1,reflink=1 /dev/mapper/test-scratch
+MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/mapper/test-scratch /mnt/scratch
+
+xfs/355 - output mismatch (see /root/xfstests-dev/results//xfs/355.out.bad)
+    ...
+    (Run 'diff -u tests/xfs/355.out /root/xfstests-dev/results//xfs/355.out.bad'  to see the entire diff)
+Ran: xfs/355
+Failures: xfs/355
+Failed 1 of 1 tests
+# diff -u tests/xfs/355.out /root/xfstests-dev/results//xfs/355.out.bad
+--- tests/xfs/355.out   2018-07-25 07:47:23.739575416 -0400
++++ /root/xfstests-dev/results//xfs/355.out.bad 2018-07-31
+10:55:18.466178944 -0400
+@@ -1,6 +1,10 @@
+ QA output created by 355
+ Format and populate
+ Fuzz AGFL
++online re-scrub (1) with bno[0] = random.
+ Done fuzzing AGFL
+ Fuzz AGFL flfirst
++offline re-scrub (1) with bno[14] = random.
++online re-scrub (1) with bno[14] = random.
++re-repair failed (1) with bno[14] = random.
+ Done fuzzing AGFL flfirst
+
+If I run xfs_scrub directly on the scratch mount after the test I get a
+stream of inode cross-referencing errors and it doesn't seem to fix
+anything up.
+
+Brian
+
+> > Otherwise this looks sane, a couple comments..
+> > 
+> > >  fs/xfs/scrub/agheader_repair.c |  276 ++++++++++++++++++++++++++++++++++++++++
+> > >  fs/xfs/scrub/bitmap.c          |   92 +++++++++++++
+> > >  fs/xfs/scrub/bitmap.h          |    4 +
+> > >  fs/xfs/scrub/scrub.c           |    2 
+> > >  4 files changed, 373 insertions(+), 1 deletion(-)
 > > > 
-> > > diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-> > > index e1d6c127b07d..992235e7c761 100644
-> > > --- a/fs/xfs/xfs_bmap_item.c
-> > > +++ b/fs/xfs/xfs_bmap_item.c
-> > > @@ -375,9 +375,8 @@ xfs_bud_init(
-> > >   */
-> > >  int
-> > >  xfs_bui_recover(
-> > > -	struct xfs_mount		*mp,
-> > > -	struct xfs_bui_log_item		*buip,
-> > > -	struct xfs_defer_ops		*dfops)
-> > > +	struct xfs_trans		*itp,
-> > 
-> > "itp"?
-> > 
-> > Oh, the intent-holder transaction...
-> > 
-> 
-> Yeah..
-> 
-> > > +	struct xfs_bui_log_item		*buip)
-> > >  {
-> > >  	int				error = 0;
-> > >  	unsigned int			bui_type;
-> ...
-> > > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> > > index 7776fde9430c..6650b790e43b 100644
-> > > --- a/fs/xfs/xfs_log_recover.c
-> > > +++ b/fs/xfs/xfs_log_recover.c
-> ...
-> > > @@ -4880,22 +4878,25 @@ STATIC int
-> > >  xlog_recover_process_intents(
-> > >  	struct xlog		*log)
-> > >  {
-> > > -	struct xfs_defer_ops	dfops;
-> > > +	struct xfs_trans	*tp;
-> > >  	struct xfs_ail_cursor	cur;
-> > >  	struct xfs_log_item	*lip;
-> > >  	struct xfs_ail		*ailp;
-> > > -	int			error = 0;
-> > > +	int			error;
-> > >  #if defined(DEBUG) || defined(XFS_WARN)
-> > >  	xfs_lsn_t		last_lsn;
-> > >  #endif
-> > >  
-> > > +	error = xfs_trans_alloc_empty(log->l_mp, &tp);
-> > 
-> > Here's where we allocate the intent-placeholder transaction, so why
-> > isn't this named "itp" as well?
-> > 
-> 
-> I only used itp where tp conflicted with a local transaction (the
-> contexts where we have to transfer state back and forth between two
-> transactions).
-> 
-> > I think I have a handle on what this patch does, though the variable
-> > naming itp/tp is a little confusing.
-> > 
-> 
-> I have no real preference on the naming. I can call it parent_tp as
-> Christoph suggests and use that up and down the chain rather than only
-> in the contexts where both transactions exist if you think that is more
-> clear..?
-
-Yes, please.  The 'parent_tp' transaction is really just a holder for a
-dfops list that will eventually get finished with a non-empty
-transaction, so we should make it as clear as possible in the source
-code that the parent_tp is not for logging real work. :)
-
---D
-
-> Brian
-> 
-> > --D
-> > 
-> > > +	if (error)
-> > > +		return error;
+> > > 
+> > > diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
+> > > index 4842fc598c9b..bfef066c87c3 100644
+> > > --- a/fs/xfs/scrub/agheader_repair.c
+> > > +++ b/fs/xfs/scrub/agheader_repair.c
+> > > @@ -424,3 +424,279 @@ xrep_agf(
+> > >  	memcpy(agf, &old_agf, sizeof(old_agf));
+> > >  	return error;
+> > >  }
 > > > +
-> > >  	ailp = log->l_ailp;
-> > >  	spin_lock(&ailp->ail_lock);
-> > >  	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
-> > >  #if defined(DEBUG) || defined(XFS_WARN)
-> > >  	last_lsn = xlog_assign_lsn(log->l_curr_cycle, log->l_curr_block);
-> > >  #endif
-> > > -	xfs_defer_init(NULL, &dfops);
-> > >  	while (lip != NULL) {
-> > >  		/*
-> > >  		 * We're done when we see something other than an intent.
-> > > @@ -4930,12 +4931,10 @@ xlog_recover_process_intents(
-> > >  			error = xlog_recover_process_rui(log->l_mp, ailp, lip);
-> > >  			break;
-> > >  		case XFS_LI_CUI:
-> > > -			error = xlog_recover_process_cui(log->l_mp, ailp, lip,
-> > > -					&dfops);
-> > > +			error = xlog_recover_process_cui(tp, ailp, lip);
-> > >  			break;
-> > >  		case XFS_LI_BUI:
-> > > -			error = xlog_recover_process_bui(log->l_mp, ailp, lip,
-> > > -					&dfops);
-> > > +			error = xlog_recover_process_bui(tp, ailp, lip);
-> > >  			break;
-> > >  		}
-> > >  		if (error)
-> > > @@ -4945,10 +4944,9 @@ xlog_recover_process_intents(
-> > >  out:
-> > >  	xfs_trans_ail_cursor_done(&cur);
-> > >  	spin_unlock(&ailp->ail_lock);
-> > > -	if (error)
-> > > -		__xfs_defer_cancel(&dfops);
-> > > -	else
-> > > -		error = xlog_finish_defer_ops(log->l_mp, &dfops);
-> > > +	if (!error)
-> > > +		error = xlog_finish_defer_ops(tp);
-> > > +	xfs_trans_cancel(tp);
-> > >  
-> > >  	return error;
+> > ...
+> > > +/* Write out a totally new AGFL. */
+> > > +STATIC void
+> > > +xrep_agfl_init_header(
+> > > +	struct xfs_scrub	*sc,
+> > > +	struct xfs_buf		*agfl_bp,
+> > > +	struct xfs_bitmap	*agfl_extents,
+> > > +	xfs_agblock_t		flcount)
+> > > +{
+> > > +	struct xfs_mount	*mp = sc->mp;
+> > > +	__be32			*agfl_bno;
+> > > +	struct xfs_bitmap_range	*br;
+> > > +	struct xfs_bitmap_range	*n;
+> > > +	struct xfs_agfl		*agfl;
+> > > +	xfs_agblock_t		agbno;
+> > > +	unsigned int		fl_off;
+> > > +
+> > > +	ASSERT(flcount <= xfs_agfl_size(mp));
+> > > +
+> > > +	/* Start rewriting the header. */
+> > > +	agfl = XFS_BUF_TO_AGFL(agfl_bp);
+> > > +	memset(agfl, 0xFF, BBTOB(agfl_bp->b_length));
+> > 
+> > What's the purpose behind 0xFF? Related to NULLAGBLOCK/NULLCOMMITLSN..?
+> 
+> Yes, it prepopulates the AGFL bno[] array with NULLAGBLOCK, then writes
+> in the header fields.
+> 
+> > > +	agfl->agfl_magicnum = cpu_to_be32(XFS_AGFL_MAGIC);
+> > > +	agfl->agfl_seqno = cpu_to_be32(sc->sa.agno);
+> > > +	uuid_copy(&agfl->agfl_uuid, &mp->m_sb.sb_meta_uuid);
+> > > +
+> > > +	/*
+> > > +	 * Fill the AGFL with the remaining blocks.  If agfl_extents has more
+> > > +	 * blocks than fit in the AGFL, they will be freed in a subsequent
+> > > +	 * step.
+> > > +	 */
+> > > +	fl_off = 0;
+> > > +	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agfl_bp);
+> > > +	for_each_xfs_bitmap_extent(br, n, agfl_extents) {
+> > > +		agbno = XFS_FSB_TO_AGBNO(mp, br->start);
+> > > +
+> > > +		trace_xrep_agfl_insert(mp, sc->sa.agno, agbno, br->len);
+> > > +
+> > > +		while (br->len > 0 && fl_off < flcount) {
+> > > +			agfl_bno[fl_off] = cpu_to_be32(agbno);
+> > > +			fl_off++;
+> > > +			agbno++;
+> > 
+> > 			/* bump br so we don't reap blocks we've used */
+> > 
+> > (i.e., took me a sec to realize why we bother with ->start)
+> > 
+> > > +			br->start++;
+> > > +			br->len--;
+> > > +		}
+> > > +
+> > > +		if (br->len)
+> > > +			break;
+> > > +		list_del(&br->list);
+> > > +		kmem_free(br);
+> > > +	}
+> > > +
+> > > +	/* Write new AGFL to disk. */
+> > > +	xfs_trans_buf_set_type(sc->tp, agfl_bp, XFS_BLFT_AGFL_BUF);
+> > > +	xfs_trans_log_buf(sc->tp, agfl_bp, 0, BBTOB(agfl_bp->b_length) - 1);
+> > > +}
+> > > +
+> > ...
+> > > diff --git a/fs/xfs/scrub/bitmap.c b/fs/xfs/scrub/bitmap.c
+> > > index c770e2d0b6aa..fdadc9e1dc49 100644
+> > > --- a/fs/xfs/scrub/bitmap.c
+> > > +++ b/fs/xfs/scrub/bitmap.c
+> > > @@ -9,6 +9,7 @@
+> > >  #include "xfs_format.h"
+> > >  #include "xfs_trans_resv.h"
+> > >  #include "xfs_mount.h"
+> > > +#include "xfs_btree.h"
+> > >  #include "scrub/xfs_scrub.h"
+> > >  #include "scrub/scrub.h"
+> > >  #include "scrub/common.h"
+> > > @@ -209,3 +210,94 @@ xfs_bitmap_disunion(
 > > >  }
-> > > diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-> > > index d3582a06626f..d663ea1f4076 100644
-> > > --- a/fs/xfs/xfs_refcount_item.c
-> > > +++ b/fs/xfs/xfs_refcount_item.c
-> > > @@ -380,9 +380,8 @@ xfs_cud_init(
-> > >   */
-> > >  int
-> > >  xfs_cui_recover(
-> > > -	struct xfs_mount		*mp,
-> > > -	struct xfs_cui_log_item		*cuip,
-> > > -	struct xfs_defer_ops		*dfops)
-> > > +	struct xfs_trans		*itp,
-> > > +	struct xfs_cui_log_item		*cuip)
-> > >  {
-> > >  	int				i;
-> > >  	int				error = 0;
-> > > @@ -398,6 +397,7 @@ xfs_cui_recover(
-> > >  	xfs_extlen_t			new_len;
-> > >  	struct xfs_bmbt_irec		irec;
-> > >  	bool				requeue_only = false;
-> > > +	struct xfs_mount		*mp = itp->t_mountp;
+> > >  #undef LEFT_ALIGNED
+> > >  #undef RIGHT_ALIGNED
+> > > +
+> > > +/*
+> > > + * Record all btree blocks seen while iterating all records of a btree.
+> > > + *
+> > > + * We know that the btree query_all function starts at the left edge and walks
+> > > + * towards the right edge of the tree.  Therefore, we know that we can walk up
+> > > + * the btree cursor towards the root; if the pointer for a given level points
+> > > + * to the first record/key in that block, we haven't seen this block before;
+> > > + * and therefore we need to remember that we saw this block in the btree.
+> > > + *
+> > > + * So if our btree is:
+> > > + *
+> > > + *    4
+> > > + *  / | \
+> > > + * 1  2  3
+> > > + *
+> > > + * Pretend for this example that each leaf block has 100 btree records.  For
+> > > + * the first btree record, we'll observe that bc_ptrs[0] == 1, so we record
+> > > + * that we saw block 1.  Then we observe that bc_ptrs[1] == 1, so we record
+> > > + * block 4.  The list is [1, 4].
+> > > + *
+> > > + * For the second btree record, we see that bc_ptrs[0] == 2, so we exit the
+> > > + * loop.  The list remains [1, 4].
+> > > + *
+> > > + * For the 101st btree record, we've moved onto leaf block 2.  Now
+> > > + * bc_ptrs[0] == 1 again, so we record that we saw block 2.  We see that
+> > > + * bc_ptrs[1] == 2, so we exit the loop.  The list is now [1, 4, 2].
+> > > + *
+> > > + * For the 102nd record, bc_ptrs[0] == 2, so we continue.
+> > > + *
+> > > + * For the 201st record, we've moved on to leaf block 3.  bc_ptrs[0] == 1, so
+> > > + * we add 3 to the list.  Now it is [1, 4, 2, 3].
+> > > + *
+> > > + * For the 300th record we just exit, with the list being [1, 4, 2, 3].
+> > > + */
+> > > +
+> > > +/*
+> > > + * Record all the buffers pointed to by the btree cursor.  Callers already
+> > > + * engaged in a btree walk should call this function to capture the list of
+> > > + * blocks going from the leaf towards the root.
+> > > + */
+> > > +int
+> > > +xfs_bitmap_set_btcur_path(
+> > > +	struct xfs_bitmap	*bitmap,
+> > > +	struct xfs_btree_cur	*cur)
+> > > +{
+> > > +	struct xfs_buf		*bp;
+> > > +	xfs_fsblock_t		fsb;
+> > > +	int			i;
+> > > +	int			error;
+> > > +
+> > > +	for (i = 0; i < cur->bc_nlevels && cur->bc_ptrs[i] == 1; i++) {
+> > > +		xfs_btree_get_block(cur, i, &bp);
+> > > +		if (!bp)
+> > > +			continue;
+> > > +		fsb = XFS_DADDR_TO_FSB(cur->bc_mp, bp->b_bn);
+> > > +		error = xfs_bitmap_set(bitmap, fsb, 1);
+> > 
+> > Thanks for the comment. It helps explain the bc_ptrs == 1 check above,
+> > but also highlights that xfs_bitmap_set() essentially allocates entries
+> > for duplicate values if they exist. Is this handled by the broader
+> > mechanism, for example, if the rmapbt was corrupted to have multiple
+> > entries for a particular unused OWN_AG block? Or could we end up leaking
+> > that corruption over to the agfl?
+> 
+> Right now we're totally dependent on the rmapbt being sane to rebuild
+> the space metadata.
+> 
+> > I also wonder a bit about memory consumption on filesystems with large
+> > metadata footprints. We essentially have to allocate one of these for
+> > every allocation btree block before we can do the disunion and locate
+> > the agfl-appropriate blocks. If we had a more lookup friendly structure,
+> > perhaps this could be optimized by filtering out bnobt/cntbt blocks
+> > during the associated btree walks..?
+> > 
+> > Have you thought about reusing something like the new in-core extent
+> > tree mechanism as a pure in-memory extent store? It's certainly not
+> > worth reworking something like that right now, but I wonder if we could
+> > save memory via the denser format (and perhaps benefit from code
+> > flexibility, reuse, etc.).
+> 
+> Yes, I was thinking about refactoring the iext btree into a more generic
+> in-core index with 64-bit key so that I could adapt xfs_bitmap to use
+> it.  In the longer term I would /also/ like to use xfs_bitmap to detect
+> xfs_buf cache aliasing when multi-block buffers are in use, but that's
+> further off. :)
+> 
+> As for the memory-intensive record lists in all the btree rebuilders, I
+> have some ideas around that too -- either find a way to build an
+> alternate btree and switch the roots over, or (once we gain the ability
+> to mark an AG unavailable for new allocations) allocate an unlinked
+> inode, store the records in the page cache pages for the file, and
+> release it when we're done.
+> 
+> But, that can wait until I've gotten more of this merged, or get bored.
+> :)
+> 
+> --D
+> 
+> > Brian
+> > 
+> > > +		if (error)
+> > > +			return error;
+> > > +	}
+> > > +
+> > > +	return 0;
+> > > +}
+> > > +
+> > > +/* Collect a btree's block in the bitmap. */
+> > > +STATIC int
+> > > +xfs_bitmap_collect_btblock(
+> > > +	struct xfs_btree_cur	*cur,
+> > > +	int			level,
+> > > +	void			*priv)
+> > > +{
+> > > +	struct xfs_bitmap	*bitmap = priv;
+> > > +	struct xfs_buf		*bp;
+> > > +	xfs_fsblock_t		fsbno;
+> > > +
+> > > +	xfs_btree_get_block(cur, level, &bp);
+> > > +	if (!bp)
+> > > +		return 0;
+> > > +
+> > > +	fsbno = XFS_DADDR_TO_FSB(cur->bc_mp, bp->b_bn);
+> > > +	return xfs_bitmap_set(bitmap, fsbno, 1);
+> > > +}
+> > > +
+> > > +/* Walk the btree and mark the bitmap wherever a btree block is found. */
+> > > +int
+> > > +xfs_bitmap_set_btblocks(
+> > > +	struct xfs_bitmap	*bitmap,
+> > > +	struct xfs_btree_cur	*cur)
+> > > +{
+> > > +	return xfs_btree_visit_blocks(cur, xfs_bitmap_collect_btblock, bitmap);
+> > > +}
+> > > diff --git a/fs/xfs/scrub/bitmap.h b/fs/xfs/scrub/bitmap.h
+> > > index dad652ee9177..ae8ecbce6fa6 100644
+> > > --- a/fs/xfs/scrub/bitmap.h
+> > > +++ b/fs/xfs/scrub/bitmap.h
+> > > @@ -28,5 +28,9 @@ void xfs_bitmap_destroy(struct xfs_bitmap *bitmap);
 > > >  
-> > >  	ASSERT(!test_bit(XFS_CUI_RECOVERED, &cuip->cui_flags));
+> > >  int xfs_bitmap_set(struct xfs_bitmap *bitmap, uint64_t start, uint64_t len);
+> > >  int xfs_bitmap_disunion(struct xfs_bitmap *bitmap, struct xfs_bitmap *sub);
+> > > +int xfs_bitmap_set_btcur_path(struct xfs_bitmap *bitmap,
+> > > +		struct xfs_btree_cur *cur);
+> > > +int xfs_bitmap_set_btblocks(struct xfs_bitmap *bitmap,
+> > > +		struct xfs_btree_cur *cur);
 > > >  
-> > > @@ -457,7 +457,7 @@ xfs_cui_recover(
-> > >  	 * finishes them on completion. Transfer current dfops state to this
-> > >  	 * transaction and transfer the result back before we return.
-> > >  	 */
-> > > -	xfs_defer_move(tp->t_dfops, dfops);
-> > > +	xfs_defer_move(tp->t_dfops, itp->t_dfops);
-> > >  	cudp = xfs_trans_get_cud(tp, cuip);
-> > >  
-> > >  	for (i = 0; i < cuip->cui_format.cui_nextents; i++) {
-> > > @@ -522,13 +522,13 @@ xfs_cui_recover(
-> > >  
-> > >  	xfs_refcount_finish_one_cleanup(tp, rcur, error);
-> > >  	set_bit(XFS_CUI_RECOVERED, &cuip->cui_flags);
-> > > -	xfs_defer_move(dfops, tp->t_dfops);
-> > > +	xfs_defer_move(itp->t_dfops, tp->t_dfops);
-> > >  	error = xfs_trans_commit(tp);
-> > >  	return error;
-> > >  
-> > >  abort_error:
-> > >  	xfs_refcount_finish_one_cleanup(tp, rcur, error);
-> > > -	xfs_defer_move(dfops, tp->t_dfops);
-> > > +	xfs_defer_move(itp->t_dfops, tp->t_dfops);
-> > >  	xfs_trans_cancel(tp);
-> > >  	return error;
-> > >  }
-> > > diff --git a/fs/xfs/xfs_refcount_item.h b/fs/xfs/xfs_refcount_item.h
-> > > index dd830b69cd1e..98895da52c1f 100644
-> > > --- a/fs/xfs/xfs_refcount_item.h
-> > > +++ b/fs/xfs/xfs_refcount_item.h
-> > > @@ -82,7 +82,6 @@ struct xfs_cud_log_item *xfs_cud_init(struct xfs_mount *,
-> > >  		struct xfs_cui_log_item *);
-> > >  void xfs_cui_item_free(struct xfs_cui_log_item *);
-> > >  void xfs_cui_release(struct xfs_cui_log_item *);
-> > > -int xfs_cui_recover(struct xfs_mount *mp, struct xfs_cui_log_item *cuip,
-> > > -		struct xfs_defer_ops *dfops);
-> > > +int xfs_cui_recover(struct xfs_trans *itp, struct xfs_cui_log_item *cuip);
-> > >  
-> > >  #endif	/* __XFS_REFCOUNT_ITEM_H__ */
-> > > -- 
-> > > 2.17.1
+> > >  #endif	/* __XFS_SCRUB_BITMAP_H__ */
+> > > diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+> > > index 1e8a17c8e2b9..2670f4cf62f4 100644
+> > > --- a/fs/xfs/scrub/scrub.c
+> > > +++ b/fs/xfs/scrub/scrub.c
+> > > @@ -220,7 +220,7 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
+> > >  		.type	= ST_PERAG,
+> > >  		.setup	= xchk_setup_fs,
+> > >  		.scrub	= xchk_agfl,
+> > > -		.repair	= xrep_notsupported,
+> > > +		.repair	= xrep_agfl,
+> > >  	},
+> > >  	[XFS_SCRUB_TYPE_AGI] = {	/* agi */
+> > >  		.type	= ST_PERAG,
 > > > 
 > > > --
 > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
