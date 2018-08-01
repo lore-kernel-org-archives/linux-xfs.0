@@ -1,50 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:40236 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732959AbeHAGw7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 1 Aug 2018 02:52:59 -0400
-Subject: Re: xfsprogs 4.17.0 error building xfs_repair
-References: <CAJCQCtSpiPiG1S0tq4j+D4DsGf0caTtQCHWyVJJxrT2P5MxPNQ@mail.gmail.com>
- <20180801042146.GI2234@dastard>
- <CAJCQCtTv4ppBr1jxJBg4hBWfxDO=J2jZVYj-ZvZTADcb7KHT3g@mail.gmail.com>
- <f052c332-e154-9aa7-7cdf-c1b92a7d994d@sandeen.net>
- <CAJCQCtT9UoXdpF0OhWtEN7x_tKCZksJYY_BLqe-x68c8ubq81A@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <87156058-fd41-8130-7206-7cdc9e1a85d9@sandeen.net>
-Date: Wed, 1 Aug 2018 00:09:15 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAJCQCtT9UoXdpF0OhWtEN7x_tKCZksJYY_BLqe-x68c8ubq81A@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:49786 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2389382AbeHAPFi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 1 Aug 2018 11:05:38 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id C7C3E87A78
+        for <linux-xfs@vger.kernel.org>; Wed,  1 Aug 2018 13:19:52 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id B3D652026D68
+        for <linux-xfs@vger.kernel.org>; Wed,  1 Aug 2018 13:19:52 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2 03/15] xfs: remove unused __xfs_defer_cancel() internal helper
+Date: Wed,  1 Aug 2018 09:19:40 -0400
+Message-Id: <20180801131952.60250-4-bfoster@redhat.com>
+In-Reply-To: <20180801131952.60250-1-bfoster@redhat.com>
+References: <20180801131952.60250-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chris Murphy <lists@colorremedies.com>
-Cc: Dave Chinner <david@fromorbit.com>, xfs list <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On 8/1/18 12:06 AM, Chris Murphy wrote:
+With no more external dfops users, there is no need for an
+xfs_defer_ops cancel wrapper.
 
-> And then I found the xfsprogs.spec file for Fedora 29's xfsprogs which contains:
-> 
-> %configure \
->      --enable-readline=yes \
->      --enable-blkid=yes \
->      --enable-lto=no
-> 
-> 
-> That too blows up, likely because I don't have readline-devel.x86_64 installed.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_defer.c | 5 +++--
+ fs/xfs/libxfs/xfs_defer.h | 2 +-
+ fs/xfs/xfs_trans.c        | 7 -------
+ fs/xfs/xfs_trans.h        | 3 ---
+ 4 files changed, 4 insertions(+), 13 deletions(-)
 
-If you're gonna read the spec, read the whole spec:
+diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+index a5f7dc18a62f..ebead781613f 100644
+--- a/fs/xfs/libxfs/xfs_defer.c
++++ b/fs/xfs/libxfs/xfs_defer.c
+@@ -465,9 +465,10 @@ xfs_defer_finish(
+  * Free up any items left in the list.
+  */
+ void
+-__xfs_defer_cancel(
+-	struct xfs_defer_ops		*dop)
++xfs_defer_cancel(
++	struct xfs_trans		*tp)
+ {
++	struct xfs_defer_ops		*dop = tp->t_dfops;
+ 	struct xfs_defer_pending	*dfp;
+ 	struct xfs_defer_pending	*pli;
+ 	struct list_head		*pwi;
+diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
+index 85c41fe4dbae..da145fc04ae1 100644
+--- a/fs/xfs/libxfs/xfs_defer.h
++++ b/fs/xfs/libxfs/xfs_defer.h
+@@ -50,7 +50,7 @@ void xfs_defer_add(struct xfs_defer_ops *dop, enum xfs_defer_ops_type type,
+ 		struct list_head *h);
+ int xfs_defer_finish_noroll(struct xfs_trans **tp);
+ int xfs_defer_finish(struct xfs_trans **tp);
+-void __xfs_defer_cancel(struct xfs_defer_ops *dop);
++void xfs_defer_cancel(struct xfs_trans *);
+ void xfs_defer_init(struct xfs_trans *tp, struct xfs_defer_ops *dop);
+ bool xfs_defer_has_unfinished_work(struct xfs_defer_ops *dop);
+ int xfs_defer_ijoin(struct xfs_defer_ops *dop, struct xfs_inode *ip);
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 12b6ad1558e6..0d07cdcc5c7d 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -1110,10 +1110,3 @@ xfs_trans_roll(
+ 	tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
+ 	return xfs_trans_reserve(*tpp, &tres, 0, 0);
+ }
+-
+-void
+-xfs_defer_cancel(
+-	struct xfs_trans	*tp)
+-{
+-	__xfs_defer_cancel(tp->t_dfops);
+-}
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 5170e89bec02..dc79e3c1d3e8 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -214,9 +214,6 @@ xfs_trans_read_buf(
+ 				      flags, bpp, ops);
+ }
+ 
+-/* cancel dfops associated with a transaction */
+-void xfs_defer_cancel(struct xfs_trans *);
+-
+ struct xfs_buf	*xfs_trans_getsb(xfs_trans_t *, struct xfs_mount *, int);
+ 
+ void		xfs_trans_brelse(xfs_trans_t *, struct xfs_buf *);
+-- 
+2.17.1
 
-BuildRequires:  gcc
-BuildRequires:  libtool, gettext, libattr-devel, libuuid-devel
-BuildRequires:  readline-devel, libblkid-devel >= 2.17-0.1.git5e51568
-Buildrequires:  libunistring-devel, lvm2-devel
-Provides:       xfs-cmds
-
-or, you know, just rebuild 
-https://kojipkgs.fedoraproject.org/packages/xfsprogs/4.17.0/3.fc29/src/xfsprogs-4.17.0-3.fc29.src.rpm
-if you want 4.17.0 on fedora.
-
--Eric
