@@ -1,92 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:40020 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389370AbeHAQBX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Aug 2018 12:01:23 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w71EE9LP142826
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Aug 2018 14:15:26 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp2130.oracle.com with ESMTP id 2kge0d61as-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 01 Aug 2018 14:15:25 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w71EFOr2011115
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Aug 2018 14:15:25 GMT
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w71EFOhB027910
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Aug 2018 14:15:24 GMT
-Date: Wed, 1 Aug 2018 07:15:24 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2] xfs: check da node magic in _node_lookup_int
-Message-ID: <20180801141524.GB30972@magnolia>
-References: <153307925470.7924.18204385078598751297.stgit@magnolia>
- <153307926059.7924.13909891112765252120.stgit@magnolia>
- <20180801121202.2nk4qwwizmvhla57@odin.usersys.redhat.com>
+Received: from sandeen.net ([63.231.237.45]:39876 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732944AbeHAGs4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 1 Aug 2018 02:48:56 -0400
+Subject: Re: agcount 33 by default for a single HDD?
+References: <CAJCQCtQpeQ_z9gMHhnhSvzJed4HfT=pxpORTTNjJQUogvVjLgA@mail.gmail.com>
+ <20180801041204.GH2234@dastard>
+ <CAJCQCtQh3KCpG=PNNj1-3Z9cMKoeavgF++3aDTxZdo7YQ=15KA@mail.gmail.com>
+ <dce71dca-0b85-387c-a1c9-f62f6c824b1c@sandeen.net>
+ <CAJCQCtS56E32e3NhTR++vwt1qdbnrfu9Hcn46W3Hso7iq1Djfg@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <0eba1fe9-7d6a-7425-4cad-18af49419d3a@sandeen.net>
+Date: Wed, 1 Aug 2018 00:05:13 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180801121202.2nk4qwwizmvhla57@odin.usersys.redhat.com>
+In-Reply-To: <CAJCQCtS56E32e3NhTR++vwt1qdbnrfu9Hcn46W3Hso7iq1Djfg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Chris Murphy <lists@colorremedies.com>
+Cc: Dave Chinner <david@fromorbit.com>, xfs list <linux-xfs@vger.kernel.org>
 
-On Wed, Aug 01, 2018 at 02:12:02PM +0200, Carlos Maiolino wrote:
-> On Tue, Jul 31, 2018 at 04:21:00PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Before we start processing what we /think/ is a da3 node block, actually
-> > check the magic to make sure that we're looking at a node block.  This
-> > way we won't blow the asserts in _node_hdr_from_disk on corrupted
-> > metadata.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> The patch looks good, but why wouldn't merge it into the previous one?
-> 
-> Both patches look reasonable to fit into a single one.
-> 
-> But, merging both or not.
 
-They're different logical changes to the source code -- one refactors to
-use a local variable, the other adds extra checks.
 
---D
+On 8/1/18 12:04 AM, Chris Murphy wrote:
+> On Tue, Jul 31, 2018 at 10:41 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>>
+>>
+>> On 7/31/18 11:38 PM, Chris Murphy wrote:
+>>> On Tue, Jul 31, 2018 at 10:12 PM, Dave Chinner <david@fromorbit.com> wrote:
+>>>> On Tue, Jul 31, 2018 at 07:32:50PM -0600, Chris Murphy wrote:
+>>>>> This seems suboptimal.
+>>>>
+>>>> It's actually a very useful optimisation to make on thin devices.
+>>>>
+>>>>> Basically this is a 750G thin volume. I don't
+>>>>> have a plain partition on a device handy to try this out but I'm
+>>>>> pretty certain the default is 4 AG's in that case, so I'm confused why
+>>>>> by default 33 AGs are created on a thin volume. The LVM volume group
+>>>>> is on a dmcrypt PV.
+>>>>
+>>>> It's a thin volume, therefore it advertises an optimal IO size and
+>>>> alignment setting (i.e. the thin volume allocation chunk size).
+>>>> Hence mkfs.xfs treats it as a "multi-disk device" and sets up
+>>>> alignment and AG count appropriately.
+>>>>
+>>>> This is actually the right optimisation to make for sparse devices -
+>>>> more AGs increase filesystem concurrency but we normally restrict it
+>>>> on single spindles because each AG adds more seeks into typical
+>>>> workloads and slows them down. However, the thin volume already adds
+>>>> that penalty to the storage stack for us because they don't have a
+>>>> linear LBA-to-physical location characteristic.  Hence we can
+>>>> increase filesystem concurrency without addition performance
+>>>> penalties being incurred.
+>>>
+>>> OK so why 33 AG's with xfsprogs 4.15, but 4 AG's with xfsprogs 4.17,
+>>> when directed to the same thin LV? And also the difference in sunit
+>>> and swidth?
+>>>
+>>
+>> Did you build 4.17 with --disable-blkid?
+> 
+> Yep, that's what doc/INSTALL recommends. Removing that and rebuilding,
+> sure enough 33 AGs, sunit 128, swidth 1024, and sectsz 4096. I do get
+> a build time warning.
+> 
+> Building mkfs
+>     [CC]     proto.o
+>     [CC]     xfs_mkfs.o
+> In function ‘finish_superblock_setup’,
+>     inlined from ‘main’ at xfs_mkfs.c:3937:2:
+> xfs_mkfs.c:3188:3: warning: ‘strncpy’ specified bound 12 equals
+> destination size [-Wstringop-truncation]
+>    strncpy(sbp->sb_fname, cfg->label, sizeof(sbp->sb_fname));
 
-> Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-> 
-> > ---
-> >  fs/xfs/libxfs/xfs_da_btree.c |    4 +++-
-> >  1 file changed, 3 insertions(+), 1 deletion(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-> > index 8ffe17b223da..376bee94b5dd 100644
-> > --- a/fs/xfs/libxfs/xfs_da_btree.c
-> > +++ b/fs/xfs/libxfs/xfs_da_btree.c
-> > @@ -1523,8 +1523,10 @@ xfs_da3_node_lookup_int(
-> >  			break;
-> >  		}
-> >  
-> > -		blk->magic = XFS_DA_NODE_MAGIC;
-> > +		if (magic != XFS_DA_NODE_MAGIC && magic != XFS_DA3_NODE_MAGIC)
-> > +			return -EFSCORRUPTED;
-> >  
-> > +		blk->magic = XFS_DA_NODE_MAGIC;
-> >  
-> >  		/*
-> >  		 * Search an intermediate node for a match.
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> -- 
-> Carlos
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+yeah, the on-disk label is only 12 bytes and is not null-terminated.
+
+I guess we could change it to a memcpy or something.  o_O
+
+-Eric
