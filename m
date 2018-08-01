@@ -1,12 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:44480 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2388868AbeHANx0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 1 Aug 2018 09:53:26 -0400
-Date: Wed, 1 Aug 2018 08:07:56 -0400
-From: Brian Foster <bfoster@redhat.com>
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:36276 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387835AbeHAN5g (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Aug 2018 09:57:36 -0400
+Received: by mail-wr1-f66.google.com with SMTP id h9-v6so19888101wro.3
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Aug 2018 05:12:05 -0700 (PDT)
+Date: Wed, 1 Aug 2018 14:12:02 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
 Subject: Re: [PATCH 2/2] xfs: check da node magic in _node_lookup_int
-Message-ID: <20180801120755.GD48176@bfoster>
+Message-ID: <20180801121202.2nk4qwwizmvhla57@odin.usersys.redhat.com>
 References: <153307925470.7924.18204385078598751297.stgit@magnolia>
  <153307926059.7924.13909891112765252120.stgit@magnolia>
 MIME-Version: 1.0
@@ -28,10 +30,16 @@ On Tue, Jul 31, 2018 at 04:21:00PM -0700, Darrick J. Wong wrote:
 > metadata.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+The patch looks good, but why wouldn't merge it into the previous one?
+
+Both patches look reasonable to fit into a single one.
+
+But, merging both or not.
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
 >  fs/xfs/libxfs/xfs_da_btree.c |    4 +++-
 >  1 file changed, 3 insertions(+), 1 deletion(-)
 > 
@@ -57,3 +65,6 @@ Reviewed-by: Brian Foster <bfoster@redhat.com>
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Carlos
