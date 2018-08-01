@@ -1,70 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:32966 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732675AbeHAArQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jul 2018 20:47:16 -0400
-Date: Tue, 31 Jul 2018 16:04:35 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: check da node magic in _node_lookup_int
-Message-ID: <20180731230435.GZ30972@magnolia>
-References: <20180731200356.GX30972@magnolia>
- <20180731223112.GG2234@dastard>
+Received: from mail-lf1-f52.google.com ([209.85.167.52]:33450 "EHLO
+        mail-lf1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732974AbeHADox (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jul 2018 23:44:53 -0400
+Received: by mail-lf1-f52.google.com with SMTP id u14-v6so12134453lfu.0
+        for <linux-xfs@vger.kernel.org>; Tue, 31 Jul 2018 19:01:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180731223112.GG2234@dastard>
+In-Reply-To: <CAJCQCtQpeQ_z9gMHhnhSvzJed4HfT=pxpORTTNjJQUogvVjLgA@mail.gmail.com>
+References: <CAJCQCtQpeQ_z9gMHhnhSvzJed4HfT=pxpORTTNjJQUogvVjLgA@mail.gmail.com>
+From: Chris Murphy <lists@colorremedies.com>
+Date: Tue, 31 Jul 2018 20:01:42 -0600
+Message-ID: <CAJCQCtQ_seiyOUGFK_CvjQCZ--ho1C8A1Wao0Nx4WTZOk682NQ@mail.gmail.com>
+Subject: Re: agcount 33 by default for a single HDD?
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Chris Murphy <lists@colorremedies.com>
+Cc: xfs list <linux-xfs@vger.kernel.org>
 
-On Wed, Aug 01, 2018 at 08:31:12AM +1000, Dave Chinner wrote:
-> On Tue, Jul 31, 2018 at 01:03:56PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Before we start processing what we /think/ is a da3 node block, actually
-> > check the magic to make sure that we're looking at a node block.  This
-> > way we won't blow the asserts in _node_hdr_from_disk on corrupted
-> > metadata.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_da_btree.c |    5 ++++-
-> >  1 file changed, 4 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-> > index 9efbd2038ffb..70e7da634f3e 100644
-> > --- a/fs/xfs/libxfs/xfs_da_btree.c
-> > +++ b/fs/xfs/libxfs/xfs_da_btree.c
-> > @@ -1522,8 +1522,11 @@ xfs_da3_node_lookup_int(
-> >  			break;
-> >  		}
-> >  
-> > -		blk->magic = XFS_DA_NODE_MAGIC;
-> > +		if (blk->magic != XFS_DA_NODE_MAGIC &&
-> > +		    blk->magic != XFS_DA3_NODE_MAGIC)
-> > +			return -EFSCORRUPTED;
-> >  
-> > +		blk->magic = XFS_DA_NODE_MAGIC;
-> 
-> Can we please use a temporary variable for the on-disk magic number
-> checks, then? blk->magic isn't supposed to hold the on disk format
-> magic number - it's just an indication of the format the current
-> state block points at - so using it to temporarily store the on disk
-> magic number for checks like this is just wrong....
+On Tue, Jul 31, 2018 at 7:32 PM, Chris Murphy <lists@colorremedies.com> wrote:
+> This seems suboptimal. Basically this is a 750G thin volume. I don't
+> have a plain partition on a device handy to try this out but I'm
+> pretty certain the default is 4 AG's in that case, so I'm confused why
+> by default 33 AGs are created on a thin volume. The LVM volume group
+> is on a dmcrypt PV.
+>
+>
+> xfsprogs-4.15.1-1.fc28.x86_64
+> lvm2-2.02.177-5.fc28.x86_64
+> kernel-4.17.11-200.fc28.x86_64
+>
+>
+>          =                       sunit=128    swidth=1024 blks
 
-Ok.
+This also seems screwy for a single non-raid device. I wonder if
+there's something goofy happening with device mapper that's giving the
+wrong information to XFS.
 
---D
+I just built xfsprogs 4.17 from git and I get different unexpected results:
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+[chris@f28s mkfs]$ sudo ./mkfs.xfs -V
+mkfs.xfs version 4.17.0
+[chris@f28s mkfs]$ sudo ./mkfs.xfs /dev/mapper/4vg-nukeit
+mkfs.xfs: Use the -f option to force overwrite.
+[chris@f28s mkfs]$ sudo ./mkfs.xfs -f /dev/mapper/4vg-nukeit
+meta-data=/dev/mapper/4vg-nukeit isize=512    agcount=4, agsize=49152000 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=0
+         =                       reflink=0
+data     =                       bsize=4096   blocks=196608000, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=96000, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+[chris@f28s mkfs]$
+
+
+
+The agcount, sunit and swidth are what I expect, but sectsz=512 is
+not. The device has a 4096 byte physical sector. And this is being
+reported by 'lsblk' as a 4096 byte physical sector with 512 byte
+logical sector (it is a 512e drive). The 4.15.0 Fedora built xfsprogs
+got this right, but 4.17.0 as built is not.
+
+:shrug:
+
+
+-- 
+Chris Murphy
