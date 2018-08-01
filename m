@@ -1,100 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:59372 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726227AbeG3HWr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Jul 2018 03:22:47 -0400
-Subject: [PATCH 13/14] xfs: scrub should set preen if attr leaf has holes
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sun, 29 Jul 2018 22:49:23 -0700
-Message-ID: <153292976302.24509.5442706644295723757.stgit@magnolia>
-In-Reply-To: <153292966714.24509.15809693393247424274.stgit@magnolia>
-References: <153292966714.24509.15809693393247424274.stgit@magnolia>
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:58486 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1731555AbeHAF6d (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Aug 2018 01:58:33 -0400
+Date: Wed, 1 Aug 2018 14:12:04 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: agcount 33 by default for a single HDD?
+Message-ID: <20180801041204.GH2234@dastard>
+References: <CAJCQCtQpeQ_z9gMHhnhSvzJed4HfT=pxpORTTNjJQUogvVjLgA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAJCQCtQpeQ_z9gMHhnhSvzJed4HfT=pxpORTTNjJQUogvVjLgA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, david@fromorbit.com, allison.henderson@oracle.com, Dave Chinner <dchinner@redhat.com>
+To: Chris Murphy <lists@colorremedies.com>
+Cc: xfs list <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Jul 31, 2018 at 07:32:50PM -0600, Chris Murphy wrote:
+> This seems suboptimal.
 
-If an attr block indicates that it could use compaction, set the preen
-flag to have the attr fork rebuilt, since the attr fork rebuilder can
-take care of that for us.
+It's actually a very useful optimisation to make on thin devices.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/scrub/attr.c    |    2 ++
- fs/xfs/scrub/dabtree.c |   15 +++++++++++++++
- fs/xfs/scrub/dabtree.h |    1 +
- fs/xfs/scrub/trace.h   |    1 +
- 4 files changed, 19 insertions(+)
+> Basically this is a 750G thin volume. I don't
+> have a plain partition on a device handy to try this out but I'm
+> pretty certain the default is 4 AG's in that case, so I'm confused why
+> by default 33 AGs are created on a thin volume. The LVM volume group
+> is on a dmcrypt PV.
 
+It's a thin volume, therefore it advertises an optimal IO size and
+alignment setting (i.e. the thin volume allocation chunk size).
+Hence mkfs.xfs treats it as a "multi-disk device" and sets up
+alignment and AG count appropriately.
 
-diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-index e20074c241b5..0956d4588dc5 100644
---- a/fs/xfs/scrub/attr.c
-+++ b/fs/xfs/scrub/attr.c
-@@ -293,6 +293,8 @@ xchk_xattr_block(
- 		xchk_da_set_corrupt(ds, level);
- 	if (!xchk_xattr_set_map(ds->sc, usedmap, 0, hdrsize))
- 		xchk_da_set_corrupt(ds, level);
-+	if (leafhdr.holes)
-+		xchk_da_set_preen(ds, level);
- 
- 	if (ds->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
- 		goto out;
-diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
-index f1260b4bfdee..e2ecf9c77010 100644
---- a/fs/xfs/scrub/dabtree.c
-+++ b/fs/xfs/scrub/dabtree.c
-@@ -85,6 +85,21 @@ xchk_da_set_corrupt(
- 			__return_address);
- }
- 
-+/* Flag a da btree node in need of optimization. */
-+void
-+xchk_da_set_preen(
-+	struct xchk_da_btree	*ds,
-+	int			level)
-+{
-+	struct xfs_scrub	*sc = ds->sc;
-+
-+	sc->sm->sm_flags |= XFS_SCRUB_OFLAG_PREEN;
-+	trace_xchk_fblock_preen(sc, ds->dargs.whichfork,
-+			xfs_dir2_da_to_db(ds->dargs.geo,
-+				ds->state->path.blk[level].blkno),
-+			__return_address);
-+}
-+
- /* Find an entry at a certain level in a da btree. */
- STATIC void *
- xchk_da_btree_entry(
-diff --git a/fs/xfs/scrub/dabtree.h b/fs/xfs/scrub/dabtree.h
-index cb3f0003245b..b367bf87a183 100644
---- a/fs/xfs/scrub/dabtree.h
-+++ b/fs/xfs/scrub/dabtree.h
-@@ -36,6 +36,7 @@ bool xchk_da_process_error(struct xchk_da_btree *ds, int level, int *error);
- 
- /* Check for da btree corruption. */
- void xchk_da_set_corrupt(struct xchk_da_btree *ds, int level);
-+void xchk_da_set_preen(struct xchk_da_btree *ds, int level);
- 
- int xchk_da_btree_hash(struct xchk_da_btree *ds, int level, __be32 *hashp);
- int xchk_da_btree(struct xfs_scrub *sc, int whichfork,
-diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index 3383b14fd0c0..d7133d1d23d6 100644
---- a/fs/xfs/scrub/trace.h
-+++ b/fs/xfs/scrub/trace.h
-@@ -230,6 +230,7 @@ DEFINE_EVENT(xchk_fblock_error_class, name, \
- 
- DEFINE_SCRUB_FBLOCK_ERROR_EVENT(xchk_fblock_error);
- DEFINE_SCRUB_FBLOCK_ERROR_EVENT(xchk_fblock_warning);
-+DEFINE_SCRUB_FBLOCK_ERROR_EVENT(xchk_fblock_preen);
- 
- TRACE_EVENT(xchk_incomplete,
- 	TP_PROTO(struct xfs_scrub *sc, void *ret_ip),
+This is actually the right optimisation to make for sparse devices -
+more AGs increase filesystem concurrency but we normally restrict it
+on single spindles because each AG adds more seeks into typical
+workloads and slows them down. However, the thin volume already adds
+that penalty to the storage stack for us because they don't have a
+linear LBA-to-physical location characteristic.  Hence we can
+increase filesystem concurrency without addition performance
+penalties being incurred.
 
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
