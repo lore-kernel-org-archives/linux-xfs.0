@@ -1,171 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:48988 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725853AbeGaEfi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 31 Jul 2018 00:35:38 -0400
-Subject: [PATCH 2/1] mkfs: factor stripe geom validator & use for cli + device
-References: <6f62dbc6-f516-e8b5-1f08-6be227a61219@suse.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <b250d549-68aa-74da-0767-bc5c1d49a9f9@sandeen.net>
-Date: Mon, 30 Jul 2018 21:57:36 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:39244 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732029AbeHABtM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jul 2018 21:49:12 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w7104rMW100385
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Aug 2018 00:06:24 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2130.oracle.com with ESMTP id 2kgfwt3bsc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Aug 2018 00:06:24 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w7106N6R022099
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Aug 2018 00:06:24 GMT
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w7106Nia000673
+        for <linux-xfs@vger.kernel.org>; Wed, 1 Aug 2018 00:06:23 GMT
+Date: Tue, 31 Jul 2018 17:06:22 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: refactor log recovery check
+Message-ID: <20180801000622.GA30972@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <6f62dbc6-f516-e8b5-1f08-6be227a61219@suse.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Mahoney <jeffm@suse.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>
+To: xfs <linux-xfs@vger.kernel.org>
 
-Factor the dsunit-vs-dwidth-vs-blocksize checks into a helper.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-If they fail on user-specified values, exit with usage().
+Add a predicate to decide if the log is actively in recovery and use
+that instead of open-coding a pagf_init check in the attr leaf verifier.
 
-If they fail on values from the device, warn about it and set
-them to zero so they'll be ignored.
-
-This also ensures that we won't complain if user-specified values
-don't match bogus device-provided geometry.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
+ fs/xfs/libxfs/xfs_attr_leaf.c |    3 +--
+ fs/xfs/xfs_log.c              |    9 +++++++++
+ fs/xfs/xfs_log.h              |    1 +
+ 3 files changed, 11 insertions(+), 2 deletions(-)
 
-NB: this does undo Jeff's "try to make the best of it" approach
-which set swidth=sunit, but I feel like we get burned whenever
-we try to second-guess broken hardware anyway.  Thoughts?
-
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 8f0bd89..4f05354 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2196,6 +2196,37 @@ validate_rtextsize(
- 	ASSERT(cfg->rtextblocks);
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 4e7ef79a83c7..6fc5425b1474 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -242,7 +242,6 @@ xfs_attr3_leaf_verify(
+ 	struct xfs_attr3_icleaf_hdr	ichdr;
+ 	struct xfs_mount		*mp = bp->b_target->bt_mount;
+ 	struct xfs_attr_leafblock	*leaf = bp->b_addr;
+-	struct xfs_perag		*pag = bp->b_pag;
+ 	struct xfs_attr_leaf_entry	*entries;
+ 	uint16_t			end;
+ 	int				i;
+@@ -270,7 +269,7 @@ xfs_attr3_leaf_verify(
+ 	 * because we may have transitioned an empty shortform attr to a leaf
+ 	 * if the attr didn't fit in shortform.
+ 	 */
+-	if (pag && pag->pagf_init && ichdr.count == 0)
++	if (!xfs_log_in_recovery(mp) && ichdr.count == 0)
+ 		return __this_address;
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index fd10b1426382..00df4f39093a 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -4104,3 +4104,12 @@ xfs_log_check_lsn(
+ 
+ 	return valid;
  }
- 
-+static bool
-+validate_stripe_factors(
-+	int			blocksize,
-+	int			dsunit,
-+	int			dswidth,
-+	bool			devicevals)
++
++bool
++xfs_log_in_recovery(
++	struct xfs_mount	*mp)
 +{
-+	/* Can't have one without the other, and dswidth must be multiple */
-+	if ((dsunit && !dswidth) || (!dsunit && dswidth) ||
-+	    (dsunit && (dswidth % dsunit != 0))) {
-+		if (devicevals)
-+			fprintf(stderr, _("Validating device geometry:\n"));
-+		fprintf(stderr,
-+_("Data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"),
-+			BBTOB(dswidth), BBTOB(dsunit));
-+		return false;
-+	}
++	struct xlog		*log = mp->m_log;
 +
-+	/* Check that the stripe config is a multiple of block size */
-+	if ((BBTOB(dsunit) % blocksize) ||
-+	    (BBTOB(dswidth) % blocksize)) {
-+		if (devicevals)
-+			fprintf(stderr, _("Validating device geometry:\n"));
-+		fprintf(stderr,
-+_("Stripe unit(%d) or stripe width(%d) is not a multiple of the block size(%d)\n"),
-+			BBTOB(dsunit), BBTOB(dswidth), blocksize);
-+		return false;
-+	}
-+	return true;
++	return log->l_flags & XLOG_ACTIVE_RECOVERY;
 +}
-+
- /*
-  * Validate the configured stripe geometry, or is none is specified, pull
-  * the configuration from the underlying device.
-@@ -2215,7 +2246,6 @@ calc_stripe_factors(
- 	int		dsu = 0;
- 	int		dsw = 0;
- 	int		lsu = 0;
--	bool		use_dev = false;
+diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
+index 3c1f6a8b4b70..73a64bf32f6f 100644
+--- a/fs/xfs/xfs_log.h
++++ b/fs/xfs/xfs_log.h
+@@ -153,5 +153,6 @@ bool	xfs_log_item_in_current_chkpt(struct xfs_log_item *lip);
+ void	xfs_log_work_queue(struct xfs_mount *mp);
+ void	xfs_log_quiesce(struct xfs_mount *mp);
+ bool	xfs_log_check_lsn(struct xfs_mount *, xfs_lsn_t);
++bool	xfs_log_in_recovery(struct xfs_mount *);
  
- 	if (cli_opt_set(&dopts, D_SUNIT))
- 		dsunit = cli->dsunit;
-@@ -2259,13 +2289,9 @@ _("data stripe width (%lld) is too large of a multiple of the data stripe unit (
- 		dswidth = big_dswidth;
- 	}
- 
--	if ((dsunit && !dswidth) || (!dsunit && dswidth) ||
--	    (dsunit && (dswidth % dsunit != 0))) {
--		fprintf(stderr,
--_("data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"),
--			dswidth, dsunit);
-+	/* Validate the user-supplied stripe geometry */
-+	if (!validate_stripe_factors(cfg->blocksize, dsunit, dswidth, false))
- 		usage();
--	}
- 
- 	/* If sunit & swidth were manually specified as 0, same as noalign */
- 	if ((cli_opt_set(&dopts, D_SUNIT) || cli_opt_set(&dopts, D_SU)) &&
-@@ -2279,22 +2305,16 @@ _("data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"),
- 		goto check_lsunit;
- 	}
- 
--	/* if no stripe config set, use the device default */
--	if (!dsunit) {
--		/* Watch out for nonsense from device */
--		if (ft->dsunit && ft->dswidth == 0) {
--			fprintf(stderr,
--_("%s: Volume reports stripe unit of %d bytes but stripe width of 0.\n"),
--				progname, ft->dsunit << 9);
--			fprintf(stderr,
--_("Using stripe width of %d bytes, which may not be optimal.\n"),
--				ft->dsunit << 9);
--			ft->dswidth = ft->dsunit;
--		}
--		dsunit = ft->dsunit;
--		dswidth = ft->dswidth;
--		use_dev = true;
--	} else {
-+	/* Validate the device-reported stripe geometry */
-+	if (!validate_stripe_factors(cfg->blocksize, ft->dsunit, ft->dswidth, true)) {
-+		fprintf(stderr,
-+_("Device-reported stripe geometry failed checks, ignoring\n"));
-+		ft->dsunit = 0;
-+		ft->dswidth = 0;
-+	}
-+
-+	/* If user specified geometry, check against device values */
-+	if (dsunit) {
- 		/* check and warn if user-specified alignment is sub-optimal */
- 		if (ft->dsunit && ft->dsunit != dsunit) {
- 			fprintf(stderr,
-@@ -2306,28 +2326,10 @@ _("%s: Specified data stripe unit %d is not the same as the volume stripe unit %
- _("%s: Specified data stripe width %d is not the same as the volume stripe width %d\n"),
- 				progname, dswidth, ft->dswidth);
- 		}
--	}
--
--	/*
--	 * now we have our stripe config, check it's a multiple of block
--	 * size.
--	 */
--	if ((BBTOB(dsunit) % cfg->blocksize) ||
--	    (BBTOB(dswidth) % cfg->blocksize)) {
--		/*
--		 * If we are using device defaults, just clear them and we're
--		 * good to go. Otherwise bail out with an error.
--		 */
--		if (!use_dev) {
--			fprintf(stderr,
--_("%s: Stripe unit(%d) or stripe width(%d) is not a multiple of the block size(%d)\n"),
--				progname, BBTOB(dsunit), BBTOB(dswidth),
--				cfg->blocksize);
--			exit(1);
--		}
--		dsunit = 0;
--		dswidth = 0;
--		cfg->sb_feat.nodalign = true;
-+	} else {
-+		/* Use the device-reported geometry */
-+		dsunit = ft->dsunit;
-+		dswidth = ft->dswidth;
- 	}
- 
- 	/* convert from 512 byte blocks to fs blocksize */
-
-
+ #endif	/* __XFS_LOG_H__ */
