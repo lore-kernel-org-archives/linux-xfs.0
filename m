@@ -1,77 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37796 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730028AbeHAWhW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 1 Aug 2018 18:37:22 -0400
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH V2] mkfs: avoid divide-by-zero when hardware reports optimal
- i/o size as 0
-Message-ID: <c347c3d7-2181-d114-7547-2649bb2f1022@redhat.com>
-Date: Wed, 1 Aug 2018 15:49:45 -0500
+Received: from mail-wr1-f41.google.com ([209.85.221.41]:36378 "EHLO
+        mail-wr1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387568AbeHANzu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Aug 2018 09:55:50 -0400
+Received: by mail-wr1-f41.google.com with SMTP id h9-v6so19882558wro.3
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Aug 2018 05:10:21 -0700 (PDT)
+Date: Wed, 1 Aug 2018 14:10:17 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 1/2] xfs: use a local variable for magic number in
+ xfs_da3_node_lookup_int
+Message-ID: <20180801121017.tashfgy5u73rrtl7@odin.usersys.redhat.com>
+References: <153307925470.7924.18204385078598751297.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <153307925470.7924.18204385078598751297.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>, Jeff Mahoney <jeffm@suse.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Jeff Mahoney <jeffm@suse.com>
+On Tue, Jul 31, 2018 at 04:20:54PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Use a local variable for the block magic number checks instead of
+> abusing blk->magic.
+> 
 
-Commit 051b4e37f5e (mkfs: factor AG alignment) factored out the
-AG alignment code into a separate function.  It got rid of
-redundant checks for dswidth != 0 since calc_stripe_factors was
-supposed to guarantee that if dsunit is non-zero dswidth will be
-as well.  Unfortunately, there's hardware out there that reports its
-optimal i/o size as larger than the maximum i/o size, which the kernel
-treats as broken and zeros out the optimal i/o size.
+Looks good
 
-To resolve this we can check the topology before consuming it, and
-ignore the bad stripe geometry.
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-[sandeen: remove guessing heuristic, just warn and ignore bad data.]
+> ---
+>  fs/xfs/libxfs/xfs_da_btree.c |   11 ++++++-----
+>  1 file changed, 6 insertions(+), 5 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+> index 9efbd2038ffb..8ffe17b223da 100644
+> --- a/fs/xfs/libxfs/xfs_da_btree.c
+> +++ b/fs/xfs/libxfs/xfs_da_btree.c
+> @@ -1481,6 +1481,7 @@ xfs_da3_node_lookup_int(
+>  	int			error;
+>  	int			retval;
+>  	unsigned int		expected_level = 0;
+> +	uint16_t		magic;
+>  	struct xfs_inode	*dp = state->args->dp;
+>  
+>  	args = state->args;
+> @@ -1505,17 +1506,17 @@ xfs_da3_node_lookup_int(
+>  			return error;
+>  		}
+>  		curr = blk->bp->b_addr;
+> -		blk->magic = be16_to_cpu(curr->magic);
+> +		magic = be16_to_cpu(curr->magic);
+>  
+> -		if (blk->magic == XFS_ATTR_LEAF_MAGIC ||
+> -		    blk->magic == XFS_ATTR3_LEAF_MAGIC) {
+> +		if (magic == XFS_ATTR_LEAF_MAGIC ||
+> +		    magic == XFS_ATTR3_LEAF_MAGIC) {
+>  			blk->magic = XFS_ATTR_LEAF_MAGIC;
+>  			blk->hashval = xfs_attr_leaf_lasthash(blk->bp, NULL);
+>  			break;
+>  		}
+>  
+> -		if (blk->magic == XFS_DIR2_LEAFN_MAGIC ||
+> -		    blk->magic == XFS_DIR3_LEAFN_MAGIC) {
+> +		if (magic == XFS_DIR2_LEAFN_MAGIC ||
+> +		    magic == XFS_DIR3_LEAFN_MAGIC) {
+>  			blk->magic = XFS_DIR2_LEAFN_MAGIC;
+>  			blk->hashval = xfs_dir2_leaf_lasthash(args->dp,
+>  							      blk->bp, NULL);
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Fixes: 051b4e37f5e (mkfs: factor AG alignment)
-Signed-off-by: Jeff Mahoney <jeffm@suse.com>
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
-
-so, I rewrote this a bit.  I'm not a fan of guessing what the kernel
-really must have meant, becaue next time the root cause may be differnt.
-In other cases we ignore bad geometry, I think we should in this case as
-well.  This will also let me go forward with a factored-out geometry checker,
-and for user-specified badness we'll warn and exit, for kernel-provided
-badness we'll warn and ignore.
-
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 1074886..2e53c1e 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2281,11 +2281,20 @@ _("data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"),
- 
- 	/* if no stripe config set, use the device default */
- 	if (!dsunit) {
--		dsunit = ft->dsunit;
--		dswidth = ft->dswidth;
--		use_dev = true;
-+		/* Ignore nonsense from device.  XXX add more validation */
-+		if (ft->dsunit && ft->dswidth == 0) {
-+			fprintf(stderr,
-+_("%s: Volume reports stripe unit of %d bytes and stripe width of 0, ignoring.\n"),
-+				progname, BBTOB(ft->dsunit));
-+			ft->dsunit = 0;
-+			ft->dswidth = 0;
-+		} else {
-+			dsunit = ft->dsunit;
-+			dswidth = ft->dswidth;
-+			use_dev = true;
-+		}
- 	} else {
--		/* check and warn is alignment is sub-optimal */
-+		/* check and warn if user-specified alignment is sub-optimal */
- 		if (ft->dsunit && ft->dsunit != dsunit) {
- 			fprintf(stderr,
- _("%s: Specified data stripe unit %d is not the same as the volume stripe unit %d\n"),
-
+-- 
+Carlos
