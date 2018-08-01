@@ -1,65 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:32154 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726408AbeHFEq4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Aug 2018 00:46:56 -0400
-Date: Mon, 6 Aug 2018 12:37:38 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 6/6] xfs: avoid COW fork extent lookups in writeback if
- the fork didn't change
-Message-ID: <20180806023738.GC7395@dastard>
-References: <20180717232405.18511-1-hch@lst.de>
- <20180717232405.18511-7-hch@lst.de>
- <20180721232311.GA1691@dastard>
- <20180723074940.GA18816@lst.de>
- <20180724223523.GO4813@magnolia>
- <20180727151039.GA29982@lst.de>
+Received: from sandeen.net ([63.231.237.45]:55480 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732307AbeHAXYs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 1 Aug 2018 19:24:48 -0400
+Subject: [PATCH V2] misc: add handy tarball targets
+References: <89353d1e-b141-e8e6-e039-fb8340a45df0@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <3aeaf299-136f-b6ea-bde8-63086bdedf92@sandeen.net>
+Date: Wed, 1 Aug 2018 16:37:01 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180727151039.GA29982@lst.de>
+In-Reply-To: <89353d1e-b141-e8e6-e039-fb8340a45df0@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Jul 27, 2018 at 05:10:39PM +0200, Christoph Hellwig wrote:
-> On Tue, Jul 24, 2018 at 03:35:23PM -0700, Darrick J. Wong wrote:
-> > > mutex_unlock contains a barrier, and the sequence is a single register
-> > > read.  There is nothing holding a lock here would help us with.
-> > 
-> > Which mutex_unlock is that?
-> 
-> Actually an up_write (on i_lock), but the result is the same.
+It's a pain to need to know which version we're on to be able
+to create a tarball, just make a couple of simple "tarball"
+and "tarxz" targets that just DTRT and make a tarball with the
+current version.
 
-I'm not sure it is - I've lost count of the number of times I've
-heard the phrase "unlock does not provide a memory barrier, only
-unlock to lock provides a full memory barrier".  As such, I've
-always treated unlock as a store (release) barrier to keep stores
-inside the critical section, and lock as the correspending load
-barrier to keep loads inside the critical section.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-I think that's irrelevant, anyway, because there is no memory
-barrier implied until the ILOCK is dropped. i.e. we can change the
-value before making the extent modification, but there's no
-guarantee that it's visible to other CPUs until the store memory
-barrier occurs when the ILOCK is dropped. i.e. after the extent map
-has actually been changed.
+V2: give Darrick names he likes ;) and mark these and a bunch of other
+targets as .PHONY
 
-And, FWIW, without read-side memory barriers before checking the
-value, the load can be re-ordered and perhaps even elided by the
-optimising compiler.
+diff --git a/Makefile b/Makefile
+index 6774825..ad35114 100644
+--- a/Makefile
++++ b/Makefile
+@@ -178,6 +178,11 @@ $(SRCTARXZ) : default $(SRCTARINC) .gitcensus
+ 	   `cat .gitcensus` $(SRCTARINC)
+ 	echo Wrote: $@
+ 
++targz: $(SRCTAR)
++tarxz: $(SRCTARXZ)
++
++.PHONY: install install-dev dist clean distclean realclean targz tarxz
++
+ .gitcensus: $(_FORCE)
+ 	$(Q)if test -d .git; then \
+ 	  git ls-files > .gitcensus && echo "new .gitcensus"; \
 
-IOWs, I can't see any reliable access serialisation being provided
-by holding the ILOCK while modifying the value. Perhaps this should
-use WRITE_ONCE/READ_ONCE to ensure the correct memory barriers are
-used to serialise tthe sequence count against itself rather than the
-wider inode extent modification process?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
