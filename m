@@ -1,110 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lj1-f178.google.com ([209.85.208.178]:42720 "EHLO
-        mail-lj1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730832AbeHAUaq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Aug 2018 16:30:46 -0400
-Received: by mail-lj1-f178.google.com with SMTP id f1-v6so17755007ljc.9
-        for <linux-xfs@vger.kernel.org>; Wed, 01 Aug 2018 11:43:39 -0700 (PDT)
+Received: from mail-lf1-f51.google.com ([209.85.167.51]:41204 "EHLO
+        mail-lf1-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731592AbeHAGt6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Aug 2018 02:49:58 -0400
+Received: by mail-lf1-f51.google.com with SMTP id v22-v6so12370656lfe.8
+        for <linux-xfs@vger.kernel.org>; Tue, 31 Jul 2018 22:06:15 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <f052c332-e154-9aa7-7cdf-c1b92a7d994d@sandeen.net>
 References: <CAJCQCtSpiPiG1S0tq4j+D4DsGf0caTtQCHWyVJJxrT2P5MxPNQ@mail.gmail.com>
  <20180801042146.GI2234@dastard> <CAJCQCtTv4ppBr1jxJBg4hBWfxDO=J2jZVYj-ZvZTADcb7KHT3g@mail.gmail.com>
- <f052c332-e154-9aa7-7cdf-c1b92a7d994d@sandeen.net> <CAJCQCtT9UoXdpF0OhWtEN7x_tKCZksJYY_BLqe-x68c8ubq81A@mail.gmail.com>
- <87156058-fd41-8130-7206-7cdc9e1a85d9@sandeen.net> <20180801114951.a54jwkinr5rb5ori@odin.usersys.redhat.com>
-In-Reply-To: <20180801114951.a54jwkinr5rb5ori@odin.usersys.redhat.com>
+ <f052c332-e154-9aa7-7cdf-c1b92a7d994d@sandeen.net>
 From: Chris Murphy <lists@colorremedies.com>
-Date: Wed, 1 Aug 2018 12:43:26 -0600
-Message-ID: <CAJCQCtQAOiMcBg4pyy-vJnigMbPOM_U5ub33DzKNcrrv_LzuzA@mail.gmail.com>
+Date: Tue, 31 Jul 2018 23:06:13 -0600
+Message-ID: <CAJCQCtT9UoXdpF0OhWtEN7x_tKCZksJYY_BLqe-x68c8ubq81A@mail.gmail.com>
 Subject: Re: xfsprogs 4.17.0 error building xfs_repair
-Content-Type: multipart/alternative; boundary="000000000000aa06830572641254"
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, Chris Murphy <lists@colorremedies.com>, Dave Chinner <david@fromorbit.com>, xfs list <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Chris Murphy <lists@colorremedies.com>, Dave Chinner <david@fromorbit.com>, xfs list <linux-xfs@vger.kernel.org>
 
---000000000000aa06830572641254
-Content-Type: text/plain; charset="UTF-8"
-
-On Wed, Aug 1, 2018, 5:49 AM Carlos Maiolino <cmaiolino@redhat.com> wrote:
-
-> On Wed, Aug 01, 2018 at 12:09:15AM -0500, Eric Sandeen wrote:
-> > On 8/1/18 12:06 AM, Chris Murphy wrote:
-> >
-> > > And then I found the xfsprogs.spec file for Fedora 29's xfsprogs which
-> contains:
-> > >
-> > > %configure \
-> > >      --enable-readline=yes \
-> > >      --enable-blkid=yes \
-> > >      --enable-lto=no
-> > >
+On Tue, Jul 31, 2018 at 10:39 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
 >
-> Thing is, unless I'm looking at the wrong file, doc/INSTALL under
-> xfsprogs, only
-> require such options when building xfsprogs in MacOS, the Linux
-> instructions are
-> pretty straight forward"
 >
-> "
->    To build the package and install it manually, use the following steps:
+> On 7/31/18 11:37 PM, Chris Murphy wrote:
+>> On Tue, Jul 31, 2018 at 10:21 PM, Dave Chinner <david@fromorbit.com> wrote:
+>>> On Tue, Jul 31, 2018 at 08:02:17PM -0600, Chris Murphy wrote:
+>>>> Hi,
+>>>> I'm doing this on Fedora 28, I'm including the entire output from
+>>>> exporting environment variables from doc/INSTALL so it's kinda long...
+>>>>
+>>>> [chris@f28s xfsprogs-dev]$ git reset --hard origin/master
+>>>> HEAD is now at 0821de47 xfsprogs: Release v4.17.0
+>>>>
+>>>> [chris@f28s xfsprogs-dev]$ export TAR=/usr/bin/tar
+>>>> [chris@f28s xfsprogs-dev]$ export LIBTOOL=/usr/bin/libtool
+>>>> [chris@f28s xfsprogs-dev]$ export INSTALL_GROUP=wheel
+>>>> [chris@f28s xfsprogs-dev]$ export
+>>>> LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no --enable-blkid=no
+>>>> --enable-librt=no"
+>>>
+>>> You shot yourself in the foot.
+>>>
+>>> ....
+>>>>     [CC]     versions.o
+>>>>     [CC]     xfs_repair.o
+>>>>     [LD]     xfs_repair
+>>>> /tmp/cc95QLol.ltrans8.ltrans.o: In function `progress_rpt_thread.lto_priv.352':
+>>>> <artificial>:(.text+0xa2c9): undefined reference to `timer_create'
+>>>> <artificial>:(.text+0xa2e4): undefined reference to `timer_settime'
+>>>> <artificial>:(.text+0xa570): undefined reference to `timer_delete'
+>>>
+>>> These functions are in librt, and you told the build not to use it...
+>>
+>>
+>> I did what doc/INSTALL told me to do:
+>>
+>>    Building xfsprogs:
+>>
+>>     [firstly set these environment variables to these values]
+>>     TAR=/usr/bin/gnutar
+>>     LIBTOOL=/usr/bin/glibtool
+>>     INSTALL_GROUP=wheel
+>>     LOCAL_CONFIGURE_OPTIONS="\
+>>                  --enable-gettext=no\
+>>                  --enable-blkid=no\
+>>                  --enable-librt=no\
+>>                  "
 >
->        # make
->        # su root
->        # make install
->        [and optionally, for the development libraries and headers]
->        # make install-dev
-> "
+> Wow, no idea why that crap is in there, it should probably be removed.
 >
-> Why are you using such options if you are building it on Fedora?
+> Just "make" will suffice.
 >
-
-User error strikes again?
-
-I'd sooner expect IRIX instructions than macOS instructions.
+> Patches accepted :)
 
 
+And then I found the xfsprogs.spec file for Fedora 29's xfsprogs which contains:
+
+%configure \
+     --enable-readline=yes \
+     --enable-blkid=yes \
+     --enable-lto=no
+
+
+That too blows up, likely because I don't have readline-devel.x86_64 installed.
+
+...
+
+Building libxcmd
+    [CC]     command.lo
+    [CC]     input.lo
+input.c:25:11: fatal error: readline/history.h: No such file or directory
+ # include <readline/history.h>
+           ^~~~~~~~~~~~~~~~~~~~
+compilation terminated.
+gmake[3]: *** [../include/buildrules:56: input.lo] Error 1
+gmake[2]: *** [include/buildrules:36: libxcmd] Error 2
+make[1]: *** [Makefile:77: default] Error 2
+make: *** [Makefile:74: default] Error 2
+[chris@f28s xfsprogs-dev]$
+
+
+And starting over without any environment variables set from
+doc/INSTALL and that now works. :-P
+
+
+
+-- 
 Chris Murphy
-
---000000000000aa06830572641254
-Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-<br><br><div class=3D"gmail_quote"><div dir=3D"ltr">On Wed, Aug 1, 2018, 5:=
-49 AM Carlos Maiolino &lt;<a href=3D"mailto:cmaiolino@redhat.com">cmaiolino=
-@redhat.com</a>&gt; wrote:<br></div><blockquote class=3D"gmail_quote" style=
-=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">On Wed, =
-Aug 01, 2018 at 12:09:15AM -0500, Eric Sandeen wrote:<br>
-&gt; On 8/1/18 12:06 AM, Chris Murphy wrote:<br>
-&gt; <br>
-&gt; &gt; And then I found the xfsprogs.spec file for Fedora 29&#39;s xfspr=
-ogs which contains:<br>
-&gt; &gt; <br>
-&gt; &gt; %configure \<br>
-&gt; &gt;=C2=A0 =C2=A0 =C2=A0 --enable-readline=3Dyes \<br>
-&gt; &gt;=C2=A0 =C2=A0 =C2=A0 --enable-blkid=3Dyes \<br>
-&gt; &gt;=C2=A0 =C2=A0 =C2=A0 --enable-lto=3Dno<br>
-&gt; &gt; <br>
-<br>
-Thing is, unless I&#39;m looking at the wrong file, doc/INSTALL under xfspr=
-ogs, only<br>
-require such options when building xfsprogs in MacOS, the Linux instruction=
-s are<br>
-pretty straight forward&quot;<br>
-<br>
-&quot;<br>
-=C2=A0 =C2=A0To build the package and install it manually, use the followin=
-g steps:<br>
-<br>
-=C2=A0 =C2=A0 =C2=A0 =C2=A0# make<br>
-=C2=A0 =C2=A0 =C2=A0 =C2=A0# su root<br>
-=C2=A0 =C2=A0 =C2=A0 =C2=A0# make install<br>
-=C2=A0 =C2=A0 =C2=A0 =C2=A0[and optionally, for the development libraries a=
-nd headers]<br>
-=C2=A0 =C2=A0 =C2=A0 =C2=A0# make install-dev<br>
-&quot;<br>
-<br>
-Why are you using such options if you are building it on Fedora?<br></block=
-quote></div><div><br></div><div>User error strikes again?</div><div><br></d=
-iv><div>I&#39;d sooner expect IRIX instructions than macOS instructions.</d=
-iv><div><br></div><div><br></div><div>Chris Murphy</div>
-
---000000000000aa06830572641254--
