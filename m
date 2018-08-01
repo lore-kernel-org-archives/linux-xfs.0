@@ -1,451 +1,527 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:44432 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:35720 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2388555AbeHANji (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 1 Aug 2018 09:39:38 -0400
-Date: Wed, 1 Aug 2018 07:54:09 -0400
+        id S2389381AbeHAPFm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 1 Aug 2018 11:05:42 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 2A9DE40241C9
+        for <linux-xfs@vger.kernel.org>; Wed,  1 Aug 2018 13:19:54 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 1636A2026D68
+        for <linux-xfs@vger.kernel.org>; Wed,  1 Aug 2018 13:19:54 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 05/14] xfs: repair free space btrees
-Message-ID: <20180801115409.GA48176@bfoster>
-References: <153292966714.24509.15809693393247424274.stgit@magnolia>
- <153292970169.24509.4581630892233165448.stgit@magnolia>
- <20180731174722.GI40201@bfoster>
- <20180731220125.GY30972@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180731220125.GY30972@magnolia>
+Subject: [PATCH v2 15/15] xfs: fold dfops into the transaction
+Date: Wed,  1 Aug 2018 09:19:52 -0400
+Message-Id: <20180801131952.60250-16-bfoster@redhat.com>
+In-Reply-To: <20180801131952.60250-1-bfoster@redhat.com>
+References: <20180801131952.60250-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, allison.henderson@oracle.com
+To: linux-xfs@vger.kernel.org
 
-On Tue, Jul 31, 2018 at 03:01:25PM -0700, Darrick J. Wong wrote:
-> On Tue, Jul 31, 2018 at 01:47:23PM -0400, Brian Foster wrote:
-> > On Sun, Jul 29, 2018 at 10:48:21PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Rebuild the free space btrees from the gaps in the rmap btree.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  fs/xfs/Makefile             |    1 
-> > >  fs/xfs/scrub/alloc.c        |    1 
-> > >  fs/xfs/scrub/alloc_repair.c |  581 +++++++++++++++++++++++++++++++++++++++++++
-> > >  fs/xfs/scrub/common.c       |    8 +
-> > >  fs/xfs/scrub/repair.h       |    2 
-> > >  fs/xfs/scrub/scrub.c        |    4 
-> > >  fs/xfs/scrub/trace.h        |    2 
-> > >  fs/xfs/xfs_extent_busy.c    |   14 +
-> > >  fs/xfs/xfs_extent_busy.h    |    2 
-> > >  9 files changed, 610 insertions(+), 5 deletions(-)
-> > >  create mode 100644 fs/xfs/scrub/alloc_repair.c
-> > > 
-> > > 
-> > ...
-> > > diff --git a/fs/xfs/scrub/alloc_repair.c b/fs/xfs/scrub/alloc_repair.c
-> > > new file mode 100644
-> > > index 000000000000..b228c2906de2
-> > > --- /dev/null
-> > > +++ b/fs/xfs/scrub/alloc_repair.c
-> > > @@ -0,0 +1,581 @@
-> > ...
-> > > +/* Record extents that aren't in use from gaps in the rmap records. */
-> > > +STATIC int
-> > > +xrep_abt_walk_rmap(
-> > > +	struct xfs_btree_cur	*cur,
-> > > +	struct xfs_rmap_irec	*rec,
-> > > +	void			*priv)
-> > > +{
-> > > +	struct xrep_abt		*ra = priv;
-> > > +	struct xrep_abt_extent	*rae;
-> > > +	xfs_fsblock_t		fsb;
-> > > +	int			error;
-> > > +
-> > > +	/* Record all the OWN_AG blocks... */
-> > > +	if (rec->rm_owner == XFS_RMAP_OWN_AG) {
-> > > +		fsb = XFS_AGB_TO_FSB(cur->bc_mp, cur->bc_private.a.agno,
-> > > +				rec->rm_startblock);
-> > > +		error = xfs_bitmap_set(ra->btlist, fsb, rec->rm_blockcount);
-> > > +		if (error)
-> > > +			return error;
-> > > +	}
-> > > +
-> > > +	/* ...and all the rmapbt blocks... */
-> > > +	error = xfs_bitmap_set_btcur_path(&ra->nobtlist, cur);
-> > > +	if (error)
-> > > +		return error;
-> > > +
-> > > +	/* ...and all the free space. */
-> > > +	if (rec->rm_startblock > ra->next_bno) {
-> > > +		trace_xrep_abt_walk_rmap(cur->bc_mp, cur->bc_private.a.agno,
-> > > +				ra->next_bno, rec->rm_startblock - ra->next_bno,
-> > > +				XFS_RMAP_OWN_NULL, 0, 0);
-> > > +
-> > > +		rae = kmem_alloc(sizeof(struct xrep_abt_extent), KM_MAYFAIL);
-> > > +		if (!rae)
-> > > +			return -ENOMEM;
-> > > +		INIT_LIST_HEAD(&rae->list);
-> > > +		rae->bno = ra->next_bno;
-> > > +		rae->len = rec->rm_startblock - ra->next_bno;
-> > > +		list_add_tail(&rae->list, ra->extlist);
-> > 
-> > Any reason we don't use a bitmap for this one?
-> > 
+struct xfs_defer_ops has now been reduced to a single list_head. The
+external dfops mechanism is unused and thus everywhere a (permanent)
+transaction is accessible the associated dfops structure is as well.
 
-??
+Remove the xfs_defer_ops structure and fold the list_head into the
+transaction. Also remove the last remnant of external dfops in
+xfs_trans_dup().
 
-> > > +		ra->nr_records++;
-> > > +		ra->nr_blocks += rae->len;
-> > > +	}
-> > > +	ra->next_bno = max_t(xfs_agblock_t, ra->next_bno,
-> > > +			rec->rm_startblock + rec->rm_blockcount);
-> > 
-> > The max_t() is to cover the record overlap case, right? If so, another
-> > one liner comment would be good.
-> 
-> Right.  Will add a comment.
-> 
-> > > +	return 0;
-> > > +}
-> > > +
-> > ...
-> > > +/* Free an extent, which creates a record in the bnobt/cntbt. */
-> > > +STATIC int
-> > > +xrep_abt_free_extent(
-> > > +	struct xfs_scrub	*sc,
-> > > +	xfs_fsblock_t		fsbno,
-> > > +	xfs_extlen_t		len,
-> > > +	struct xfs_owner_info	*oinfo)
-> > > +{
-> > > +	int			error;
-> > > +
-> > > +	error = xfs_free_extent(sc->tp, fsbno, len, oinfo, 0);
-> > > +	if (error)
-> > > +		return error;
-> > > +	error = xrep_roll_ag_trans(sc);
-> > > +	if (error)
-> > > +		return error;
-> > > +	return xfs_mod_fdblocks(sc->mp, -(int64_t)len, false);
-> > 
-> > What's this call for? Is it because the blocks we're freeing were
-> > already free? (Similar question on the other xfs_mod_fdblocks() call
-> > further down).
-> 
-> Yes.  The goal here is to free the (already free) extent with no net
-> change in fdblocks...
-> 
-> > BTW, what prevents some other task from coming along and screwing with
-> > this? For example, could a large falloc or buffered write come in and
-> > allocate these global blocks before we take them away here (causing the
-> > whole sequence to fail)?
-> 
-> ...but you're right that here is a window of opportunity for someone to
-> swoop in and reserve the blocks while we still have the AGF locked,
-> which means that we'll fail here even though that other process will
-> never get the space.
-> 
-> Thinking about this a bit more, what we really want to do is to skip the
-> xfs_trans_mod_sb(len) that happens after xfs_free_ag_extent inserts the
-> record into the bno/cntbt.  Hm.  If a record insertion requires an
-> expansion of the bnobt/cntbt, we'll pull blocks from the AGFL, but we
-> separately force those to be accounted to XFS_AG_RESV_AGFL.  Therefore,
-> we could make a "fake" per-AG reservation type that would skip the
-> fdblocks update.  That avoids the problem where we commit the free space
-> record but someone else reserves all the free space and then we blow out
-> with ENOSPC and a half-rebuilt bnobt.
-> 
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_bmap.c     |  1 -
+ fs/xfs/libxfs/xfs_btree.h    |  1 -
+ fs/xfs/libxfs/xfs_da_btree.h |  1 -
+ fs/xfs/libxfs/xfs_defer.c    | 67 ++++++++++--------------------------
+ fs/xfs/libxfs/xfs_defer.h    |  2 --
+ fs/xfs/libxfs/xfs_dir2.c     |  2 --
+ fs/xfs/libxfs/xfs_dir2.h     |  1 -
+ fs/xfs/xfs_inode.h           |  1 -
+ fs/xfs/xfs_reflink.c         |  5 ++-
+ fs/xfs/xfs_trace.h           | 40 ++++++++++-----------
+ fs/xfs/xfs_trans.c           | 13 +++----
+ fs/xfs/xfs_trans.h           |  8 ++---
+ 12 files changed, 46 insertions(+), 96 deletions(-)
 
-Ok, that sounds a bit more straightforward to me.
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index f5f1fc47923e..0f9f522ab792 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -4285,7 +4285,6 @@ xfs_bmapi_write(
+ 	bma.ip = ip;
+ 	bma.total = total;
+ 	bma.datatype = 0;
+-	ASSERT(!tp || tp->t_dfops);
+ 
+ 	while (bno < end && n < *nmap) {
+ 		bool			need_alloc = false, wasdelay = false;
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index 503615f4d729..e3b3e9dce5da 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -7,7 +7,6 @@
+ #define	__XFS_BTREE_H__
+ 
+ struct xfs_buf;
+-struct xfs_defer_ops;
+ struct xfs_inode;
+ struct xfs_mount;
+ struct xfs_trans;
+diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
+index 59e290ef334f..84dd865b6c3d 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.h
++++ b/fs/xfs/libxfs/xfs_da_btree.h
+@@ -7,7 +7,6 @@
+ #ifndef __XFS_DA_BTREE_H__
+ #define	__XFS_DA_BTREE_H__
+ 
+-struct xfs_defer_ops;
+ struct xfs_inode;
+ struct xfs_trans;
+ struct zone;
+diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+index ded038e4051e..679c675eb252 100644
+--- a/fs/xfs/libxfs/xfs_defer.c
++++ b/fs/xfs/libxfs/xfs_defer.c
+@@ -183,11 +183,10 @@ STATIC void
+ xfs_defer_create_intents(
+ 	struct xfs_trans		*tp)
+ {
+-	struct xfs_defer_ops		*dop = tp->t_dfops;
+ 	struct list_head		*li;
+ 	struct xfs_defer_pending	*dfp;
+ 
+-	list_for_each_entry(dfp, &dop->dop_intake, dfp_list) {
++	list_for_each_entry(dfp, &tp->t_dfops, dfp_list) {
+ 		dfp->dfp_intent = dfp->dfp_type->create_intent(tp,
+ 				dfp->dfp_count);
+ 		trace_xfs_defer_create_intent(tp->t_mountp, dfp);
+@@ -205,10 +204,9 @@ xfs_defer_trans_abort(
+ 	struct list_head		*dop_pending,
+ 	int				error)
+ {
+-	struct xfs_defer_ops		*dop = tp->t_dfops;
+ 	struct xfs_defer_pending	*dfp;
+ 
+-	trace_xfs_defer_trans_abort(tp->t_mountp, dop, _RET_IP_);
++	trace_xfs_defer_trans_abort(tp, _RET_IP_);
+ 
+ 	/* Abort intent items that don't have a done item. */
+ 	if (dop_pending) {
+@@ -273,13 +271,12 @@ xfs_defer_trans_roll(
+ 		}
+ 	}
+ 
+-	trace_xfs_defer_trans_roll((*tp)->t_mountp, (*tp)->t_dfops, _RET_IP_);
++	trace_xfs_defer_trans_roll(*tp, _RET_IP_);
+ 
+ 	/* Roll the transaction. */
+ 	error = xfs_trans_roll(tp);
+ 	if (error) {
+-		trace_xfs_defer_trans_roll_error((*tp)->t_mountp,
+-						 (*tp)->t_dfops, error);
++		trace_xfs_defer_trans_roll_error(*tp, error);
+ 		xfs_defer_trans_abort(*tp,  dop_pending, error);
+ 		return error;
+ 	}
+@@ -304,7 +301,7 @@ static void
+ xfs_defer_reset(
+ 	struct xfs_trans	*tp)
+ {
+-	ASSERT(list_empty(&tp->t_dfops->dop_intake));
++	ASSERT(list_empty(&tp->t_dfops));
+ 
+ 	/*
+ 	 * Low mode state transfers across transaction rolls to mirror dfops
+@@ -365,15 +362,13 @@ xfs_defer_finish_noroll(
+ 
+ 	ASSERT((*tp)->t_flags & XFS_TRANS_PERM_LOG_RES);
+ 
+-	trace_xfs_defer_finish((*tp)->t_mountp, (*tp)->t_dfops, _RET_IP_);
++	trace_xfs_defer_finish(*tp, _RET_IP_);
+ 
+ 	/* Until we run out of pending work to finish... */
+-	while (!list_empty(&dop_pending) ||
+-	       !list_empty(&(*tp)->t_dfops->dop_intake)) {
++	while (!list_empty(&dop_pending) || !list_empty(&(*tp)->t_dfops)) {
+ 		/* log intents and pull in intake items */
+ 		xfs_defer_create_intents(*tp);
+-		list_splice_tail_init(&(*tp)->t_dfops->dop_intake,
+-				      &dop_pending);
++		list_splice_tail_init(&(*tp)->t_dfops, &dop_pending);
+ 
+ 		/*
+ 		 * Roll the transaction.
+@@ -444,14 +439,13 @@ xfs_defer_finish_noroll(
+ 
+ out:
+ 	if (error) {
+-		trace_xfs_defer_finish_error((*tp)->t_mountp, (*tp)->t_dfops,
+-					     error);
++		trace_xfs_defer_finish_error(*tp, error);
+ 		xfs_defer_cancel_list((*tp)->t_mountp, &dop_pending);
+ 		xfs_defer_cancel(*tp);
+ 		return error;
+ 	}
+ 
+-	trace_xfs_defer_finish_done((*tp)->t_mountp, (*tp)->t_dfops, _RET_IP_);
++	trace_xfs_defer_finish_done(*tp, _RET_IP_);
+ 	return 0;
+ }
+ 
+@@ -483,8 +477,8 @@ xfs_defer_cancel(
+ {
+ 	struct xfs_mount	*mp = tp->t_mountp;
+ 
+-	trace_xfs_defer_cancel(mp, tp->t_dfops, _RET_IP_);
+-	xfs_defer_cancel_list(mp, &tp->t_dfops->dop_intake);
++	trace_xfs_defer_cancel(tp, _RET_IP_);
++	xfs_defer_cancel_list(mp, &tp->t_dfops);
+ }
+ 
+ /* Add an item for later deferred processing. */
+@@ -494,7 +488,6 @@ xfs_defer_add(
+ 	enum xfs_defer_ops_type		type,
+ 	struct list_head		*li)
+ {
+-	struct xfs_defer_ops		*dop = tp->t_dfops;
+ 	struct xfs_defer_pending	*dfp = NULL;
+ 
+ 	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
+@@ -504,8 +497,8 @@ xfs_defer_add(
+ 	 * If the last pending item has the same type, reuse it.  Else,
+ 	 * create a new pending item at the end of the intake list.
+ 	 */
+-	if (!list_empty(&dop->dop_intake)) {
+-		dfp = list_last_entry(&dop->dop_intake,
++	if (!list_empty(&tp->t_dfops)) {
++		dfp = list_last_entry(&tp->t_dfops,
+ 				struct xfs_defer_pending, dfp_list);
+ 		if (dfp->dfp_type->type != type ||
+ 		    (dfp->dfp_type->max_items &&
+@@ -520,7 +513,7 @@ xfs_defer_add(
+ 		dfp->dfp_done = NULL;
+ 		dfp->dfp_count = 0;
+ 		INIT_LIST_HEAD(&dfp->dfp_work);
+-		list_add_tail(&dfp->dfp_list, &dop->dop_intake);
++		list_add_tail(&dfp->dfp_list, &tp->t_dfops);
+ 	}
+ 
+ 	list_add_tail(li, &dfp->dfp_work);
+@@ -535,39 +528,17 @@ xfs_defer_init_op_type(
+ 	defer_op_types[type->type] = type;
+ }
+ 
+-/* Initialize a deferred operation. */
+-void
+-xfs_defer_init(
+-	struct xfs_trans		*tp,
+-	struct xfs_defer_ops		*dop)
+-{
+-	struct xfs_mount		*mp = NULL;
+-
+-	memset(dop, 0, sizeof(struct xfs_defer_ops));
+-	INIT_LIST_HEAD(&dop->dop_intake);
+-	if (tp) {
+-		ASSERT(tp->t_firstblock == NULLFSBLOCK);
+-		tp->t_dfops = dop;
+-		mp = tp->t_mountp;
+-	}
+-	trace_xfs_defer_init(mp, dop, _RET_IP_);
+-}
+-
+ /*
+- * Move state from one xfs_defer_ops to another and reset the source to initial
+- * state. This is primarily used to carry state forward across transaction rolls
+- * with internal dfops.
++ * Move deferred ops from one transaction to another and reset the source to
++ * initial state. This is primarily used to carry state forward across
++ * transaction rolls with pending dfops.
+  */
+ void
+ xfs_defer_move(
+ 	struct xfs_trans	*dtp,
+ 	struct xfs_trans	*stp)
+ {
+-	struct xfs_defer_ops	*dst = dtp->t_dfops;
+-	struct xfs_defer_ops	*src = stp->t_dfops;
+-	ASSERT(dst != src);
+-
+-	list_splice_init(&src->dop_intake, &dst->dop_intake);
++	list_splice_init(&stp->t_dfops, &dtp->t_dfops);
+ 
+ 	/*
+ 	 * Low free space mode was historically controlled by a dfops field.
+diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
+index b2675f1ca909..2584a5b95b0d 100644
+--- a/fs/xfs/libxfs/xfs_defer.h
++++ b/fs/xfs/libxfs/xfs_defer.h
+@@ -7,7 +7,6 @@
+ #define	__XFS_DEFER_H__
+ 
+ struct xfs_defer_op_type;
+-struct xfs_defer_ops;
+ 
+ /*
+  * Save a log intent item and a list of extents, so that we can replay
+@@ -40,7 +39,6 @@ void xfs_defer_add(struct xfs_trans *tp, enum xfs_defer_ops_type type,
+ int xfs_defer_finish_noroll(struct xfs_trans **tp);
+ int xfs_defer_finish(struct xfs_trans **tp);
+ void xfs_defer_cancel(struct xfs_trans *);
+-void xfs_defer_init(struct xfs_trans *tp, struct xfs_defer_ops *dop);
+ void xfs_defer_move(struct xfs_trans *dtp, struct xfs_trans *stp);
+ 
+ /* Description of a deferred type. */
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index 4ea1fddb126f..229152cd1a24 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -424,7 +424,6 @@ xfs_dir_removename(
+ 	int			v;		/* type-checking value */
+ 
+ 	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
+-	ASSERT(tp->t_dfops);
+ 	XFS_STATS_INC(dp->i_mount, xs_dir_remove);
+ 
+ 	args = kmem_zalloc(sizeof(*args), KM_SLEEP | KM_NOFS);
+@@ -483,7 +482,6 @@ xfs_dir_replace(
+ 	int			v;		/* type-checking value */
+ 
+ 	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
+-	ASSERT(tp->t_dfops);
+ 
+ 	rval = xfs_dir_ino_validate(tp->t_mountp, inum);
+ 	if (rval)
+diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+index ba5acd03de94..c3e3f6b813d8 100644
+--- a/fs/xfs/libxfs/xfs_dir2.h
++++ b/fs/xfs/libxfs/xfs_dir2.h
+@@ -9,7 +9,6 @@
+ #include "xfs_da_format.h"
+ #include "xfs_da_btree.h"
+ 
+-struct xfs_defer_ops;
+ struct xfs_da_args;
+ struct xfs_inode;
+ struct xfs_mount;
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 79a3e61a6991..be2014520155 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -15,7 +15,6 @@
+ struct xfs_dinode;
+ struct xfs_inode;
+ struct xfs_buf;
+-struct xfs_defer_ops;
+ struct xfs_bmbt_irec;
+ struct xfs_inode_log_item;
+ struct xfs_mount;
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index cbceb320a2e7..38f405415b88 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -502,7 +502,6 @@ xfs_reflink_cancel_cow_blocks(
+ 			if (error)
+ 				break;
+ 		} else if (del.br_state == XFS_EXT_UNWRITTEN || cancel_real) {
+-			ASSERT((*tpp)->t_dfops);
+ 			ASSERT((*tpp)->t_firstblock == NULLFSBLOCK);
+ 
+ 			/* Free the CoW orphan record. */
+@@ -678,7 +677,7 @@ xfs_reflink_end_cow(
+ 			goto prev_extent;
+ 
+ 		/* Unmap the old blocks in the data fork. */
+-		ASSERT(tp->t_dfops && tp->t_firstblock == NULLFSBLOCK);
++		ASSERT(tp->t_firstblock == NULLFSBLOCK);
+ 		rlen = del.br_blockcount;
+ 		error = __xfs_bunmapi(tp, ip, del.br_startoff, &rlen, 0, 1);
+ 		if (error)
+@@ -1021,7 +1020,7 @@ xfs_reflink_remap_extent(
+ 	/* Unmap the old blocks in the data fork. */
+ 	rlen = unmap_len;
+ 	while (rlen) {
+-		ASSERT(tp->t_dfops && tp->t_firstblock == NULLFSBLOCK);
++		ASSERT(tp->t_firstblock == NULLFSBLOCK);
+ 		error = __xfs_bunmapi(tp, ip, destoff, &rlen, 0, 1);
+ 		if (error)
+ 			goto out_cancel;
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index fec9cfe3dfb4..ad315e83bc02 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -2213,57 +2213,54 @@ DEFINE_BTREE_CUR_EVENT(xfs_btree_overlapped_query_range);
+ 
+ /* deferred ops */
+ struct xfs_defer_pending;
+-struct xfs_defer_ops;
+ 
+ DECLARE_EVENT_CLASS(xfs_defer_class,
+-	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_ops *dop,
+-		 unsigned long caller_ip),
+-	TP_ARGS(mp, dop, caller_ip),
++	TP_PROTO(struct xfs_trans *tp, unsigned long caller_ip),
++	TP_ARGS(tp, caller_ip),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+-		__field(void *, dop)
++		__field(struct xfs_trans *, tp)
+ 		__field(char, committed)
+ 		__field(unsigned long, caller_ip)
+ 	),
+ 	TP_fast_assign(
+-		__entry->dev = mp ? mp->m_super->s_dev : 0;
+-		__entry->dop = dop;
++		__entry->dev = tp->t_mountp->m_super->s_dev;
++		__entry->tp = tp;
+ 		__entry->caller_ip = caller_ip;
+ 	),
+-	TP_printk("dev %d:%d ops %p caller %pS",
++	TP_printk("dev %d:%d tp %p caller %pS",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+-		  __entry->dop,
++		  __entry->tp,
+ 		  (char *)__entry->caller_ip)
+ )
+ #define DEFINE_DEFER_EVENT(name) \
+ DEFINE_EVENT(xfs_defer_class, name, \
+-	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_ops *dop, \
+-		 unsigned long caller_ip), \
+-	TP_ARGS(mp, dop, caller_ip))
++	TP_PROTO(struct xfs_trans *tp, unsigned long caller_ip), \
++	TP_ARGS(tp, caller_ip))
+ 
+ DECLARE_EVENT_CLASS(xfs_defer_error_class,
+-	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_ops *dop, int error),
+-	TP_ARGS(mp, dop, error),
++	TP_PROTO(struct xfs_trans *tp, int error),
++	TP_ARGS(tp, error),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+-		__field(void *, dop)
++		__field(struct xfs_trans *, tp)
+ 		__field(char, committed)
+ 		__field(int, error)
+ 	),
+ 	TP_fast_assign(
+-		__entry->dev = mp ? mp->m_super->s_dev : 0;
+-		__entry->dop = dop;
++		__entry->dev = tp->t_mountp->m_super->s_dev;
++		__entry->tp = tp;
+ 		__entry->error = error;
+ 	),
+-	TP_printk("dev %d:%d ops %p err %d",
++	TP_printk("dev %d:%d tp %p err %d",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+-		  __entry->dop,
++		  __entry->tp,
+ 		  __entry->error)
+ )
+ #define DEFINE_DEFER_ERROR_EVENT(name) \
+ DEFINE_EVENT(xfs_defer_error_class, name, \
+-	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_ops *dop, int error), \
+-	TP_ARGS(mp, dop, error))
++	TP_PROTO(struct xfs_trans *tp, int error), \
++	TP_ARGS(tp, error))
+ 
+ DECLARE_EVENT_CLASS(xfs_defer_pending_class,
+ 	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_pending *dfp),
+@@ -2382,7 +2379,6 @@ DEFINE_EVENT(xfs_map_extent_deferred_class, name, \
+ 		 xfs_exntst_t state), \
+ 	TP_ARGS(mp, agno, op, agbno, ino, whichfork, offset, len, state))
+ 
+-DEFINE_DEFER_EVENT(xfs_defer_init);
+ DEFINE_DEFER_EVENT(xfs_defer_cancel);
+ DEFINE_DEFER_EVENT(xfs_defer_trans_roll);
+ DEFINE_DEFER_EVENT(xfs_defer_trans_abort);
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 413e4138357f..bedc5a5133a5 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -100,6 +100,7 @@ xfs_trans_dup(
+ 	ntp->t_mountp = tp->t_mountp;
+ 	INIT_LIST_HEAD(&ntp->t_items);
+ 	INIT_LIST_HEAD(&ntp->t_busy);
++	INIT_LIST_HEAD(&ntp->t_dfops);
+ 	ntp->t_firstblock = NULLFSBLOCK;
+ 
+ 	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
+@@ -120,12 +121,8 @@ xfs_trans_dup(
+ 	tp->t_rtx_res = tp->t_rtx_res_used;
+ 	ntp->t_pflags = tp->t_pflags;
+ 
+-	/* copy the dfops pointer if it's external, otherwise move it */
+-	xfs_defer_init(ntp, &ntp->t_dfops_internal);
+-	if (tp->t_dfops != &tp->t_dfops_internal)
+-		ntp->t_dfops = tp->t_dfops;
+-	else
+-		xfs_defer_move(ntp, tp);
++	/* move deferred ops over to the new tp */
++	xfs_defer_move(ntp, tp);
+ 
+ 	xfs_trans_dup_dqinfo(tp, ntp);
+ 
+@@ -280,8 +277,8 @@ xfs_trans_alloc(
+ 	tp->t_mountp = mp;
+ 	INIT_LIST_HEAD(&tp->t_items);
+ 	INIT_LIST_HEAD(&tp->t_busy);
++	INIT_LIST_HEAD(&tp->t_dfops);
+ 	tp->t_firstblock = NULLFSBLOCK;
+-	xfs_defer_init(tp, &tp->t_dfops_internal);
+ 
+ 	error = xfs_trans_reserve(tp, resp, blocks, rtextents);
+ 	if (error) {
+@@ -929,7 +926,7 @@ __xfs_trans_commit(
+ 	 * Finish deferred items on final commit. Only permanent transactions
+ 	 * should ever have deferred ops.
+ 	 */
+-	WARN_ON_ONCE(!list_empty(&tp->t_dfops->dop_intake) &&
++	WARN_ON_ONCE(!list_empty(&tp->t_dfops) &&
+ 		     !(tp->t_flags & XFS_TRANS_PERM_LOG_RES));
+ 	if (!regrant && (tp->t_flags & XFS_TRANS_PERM_LOG_RES)) {
+ 		error = xfs_defer_finish_noroll(&tp);
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 1cdc7c0ebeac..c3d278e96ad1 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -90,13 +90,10 @@ void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
+ #define XFS_ITEM_FLUSHING	3
+ 
+ /*
+- * Deferred operations tracking structure.
++ * Deferred operation item relogging limits.
+  */
+ #define XFS_DEFER_OPS_NR_INODES	2	/* join up to two inodes */
+ #define XFS_DEFER_OPS_NR_BUFS	2	/* join up to two buffers */
+-struct xfs_defer_ops {
+-	struct list_head	dop_intake;	/* unlogged pending work */
+-};
+ 
+ /*
+  * This is the structure maintained for every active transaction.
+@@ -114,7 +111,6 @@ typedef struct xfs_trans {
+ 	struct xlog_ticket	*t_ticket;	/* log mgr ticket */
+ 	struct xfs_mount	*t_mountp;	/* ptr to fs mount struct */
+ 	struct xfs_dquot_acct   *t_dqinfo;	/* acctg info for dquots */
+-	struct xfs_defer_ops	*t_dfops;	/* dfops reference */
+ 	int64_t			t_icount_delta;	/* superblock icount change */
+ 	int64_t			t_ifree_delta;	/* superblock ifree change */
+ 	int64_t			t_fdblocks_delta; /* superblock fdblocks chg */
+@@ -136,8 +132,8 @@ typedef struct xfs_trans {
+ 	int64_t			t_rextslog_delta;/* superblocks rextslog chg */
+ 	struct list_head	t_items;	/* log item descriptors */
+ 	struct list_head	t_busy;		/* list of busy extents */
++	struct list_head	t_dfops;	/* deferred operations */
+ 	unsigned long		t_pflags;	/* saved process flags state */
+-	struct xfs_defer_ops	t_dfops_internal;
+ } xfs_trans_t;
+ 
+ /*
+-- 
+2.17.1
 
-> For the second case (which I assume is xrep_abt_reset_counters?) I'll
-> respond below.
-> 
-> > > +}
-> > > +
-...
-> > > +/*
-> > > + * Reset the global free block counter and the per-AG counters to make it look
-> > > + * like this AG has no free space.
-> > > + */
-> > > +STATIC int
-> > > +xrep_abt_reset_counters(
-> > > +	struct xfs_scrub	*sc,
-> > > +	int			*log_flags)
-> > > +{
-> > > +	struct xfs_perag	*pag = sc->sa.pag;
-> > > +	struct xfs_agf		*agf;
-> > > +	xfs_agblock_t		new_btblks;
-> > > +	xfs_agblock_t		to_free;
-> > > +	int			error;
-> > > +
-> > > +	/*
-> > > +	 * Since we're abandoning the old bnobt/cntbt, we have to decrease
-> > > +	 * fdblocks by the # of blocks in those trees.  btreeblks counts the
-> > > +	 * non-root blocks of the free space and rmap btrees.  Do this before
-> > > +	 * resetting the AGF counters.
-> > > +	 */
-> > 
-> > Hmm, I'm not quite following the comment wrt to the xfs_mod_fdblocks()
-> > below. to_free looks like it's the count of all current btree blocks
-> > minus rmap blocks (i.e., old bno/cnt btree blocks). Are we "allocating"
-> > those blocks here because we're going to free them later?
-> 
-> Yes.  Though now that I have a XFS_AG_RESV_IGNORE, maybe I should just
-> pass that to xrep_reap_extents in xrep_abt_rebuild_trees and then I can
-> skip the racy mod_fdblocks thing here too.
-> 
-
-I think I'll ultimately need to see the code to make sure I follow the
-ignore thing correctly, but that overall sounds better to me. If we do
-retain these kind of calls to undo/work-around underlying
-infrastructure, I think we need a bit more specific comments that
-describe precisely what behavior the call is offsetting.
-
-> > > +	agf = XFS_BUF_TO_AGF(sc->sa.agf_bp);
-> > > +
-> > > +	/* rmap_blocks accounts root block, btreeblks doesn't */
-> > > +	new_btblks = be32_to_cpu(agf->agf_rmap_blocks) - 1;
-> > > +
-> > > +	/* btreeblks doesn't account bno/cnt root blocks */
-> > > +	to_free = pag->pagf_btreeblks + 2;
-> > > +
-> > > +	/* and don't account for the blocks we aren't freeing */
-> > > +	to_free -= new_btblks;
-> > > +
-> > > +	error = xfs_mod_fdblocks(sc->mp, -(int64_t)to_free, false);
-> > > +	if (error)
-> > > +		return error;
-> > > +
-> > > +	/*
-> > > +	 * Reset the per-AG info, both incore and ondisk.  Mark the incore
-> > > +	 * state stale in case we fail out of here.
-> > > +	 */
-> > > +	ASSERT(pag->pagf_init);
-> > > +	pag->pagf_init = 0;
-> > > +	pag->pagf_btreeblks = new_btblks;
-> > > +	pag->pagf_freeblks = 0;
-> > > +	pag->pagf_longest = 0;
-> > > +
-> > > +	agf->agf_btreeblks = cpu_to_be32(new_btblks);
-> > > +	agf->agf_freeblks = 0;
-> > > +	agf->agf_longest = 0;
-> > > +	*log_flags |= XFS_AGF_BTREEBLKS | XFS_AGF_LONGEST | XFS_AGF_FREEBLKS;
-> > > +
-> > > +	return 0;
-> > > +}
-> > > +
-...
-> > > +
-> > > +/*
-> > > + * Make our new freespace btree roots permanent so that we can start freeing
-> > > + * unused space back into the AG.
-> > > + */
-> > > +STATIC int
-> > > +xrep_abt_commit_new(
-> > > +	struct xfs_scrub	*sc,
-> > > +	struct xfs_bitmap	*old_allocbt_blocks,
-> > > +	int			log_flags)
-> > > +{
-> > > +	int			error;
-> > > +
-> > > +	xfs_alloc_log_agf(sc->tp, sc->sa.agf_bp, log_flags);
-> > > +
-> > > +	/* Invalidate the old freespace btree blocks and commit. */
-> > > +	error = xrep_invalidate_blocks(sc, old_allocbt_blocks);
-> > > +	if (error)
-> > > +		return error;
-> > 
-> > It looks like the above invalidation all happens in the same
-> > transaction. Those aren't logging buffer data or anything, but any idea
-> > how many log formats we can get away with in this single transaction?
-> 
-> Hm... well, on my computer a log format is ~88 bytes.  Assuming 4K
-> blocks, the max AG size of 1TB, maximum free space fragmentation, and
-> two btrees, the tree could be up to ~270 million records.  Assuming ~505
-> records per block, that's ... ~531,000 leaf blocks and ~1100 node blocks
-> for both btrees.  If we invalidate both, that's ~46M of RAM?
-> 
-
-I was thinking more about transaction reservation than RAM. It may not
-currently be an issue, but it might be worth putting something down in a
-comment to note that this is a single transaction and we expect to not
-have to invalidate more than N (ballpark) blocks in a single go,
-whatever that value happens to be.
-
-> > > +	error = xrep_roll_ag_trans(sc);
-> > > +	if (error)
-> > > +		return error;
-> > > +
-> > > +	/* Now that we've succeeded, mark the incore state valid again. */
-> > > +	sc->sa.pag->pagf_init = 1;
-> > > +	return 0;
-> > > +}
-> > > +
-> > > +/* Build new free space btrees and dispose of the old one. */
-> > > +STATIC int
-> > > +xrep_abt_rebuild_trees(
-> > > +	struct xfs_scrub	*sc,
-> > > +	struct list_head	*free_extents,
-> > > +	struct xfs_bitmap	*old_allocbt_blocks)
-> > > +{
-> > > +	struct xfs_owner_info	oinfo;
-> > > +	struct xrep_abt_extent	*rae;
-> > > +	struct xrep_abt_extent	*n;
-> > > +	struct xrep_abt_extent	*longest;
-> > > +	int			error;
-> > > +
-> > > +	xfs_rmap_skip_owner_update(&oinfo);
-> > > +
-> > > +	/*
-> > > +	 * Insert the longest free extent in case it's necessary to
-> > > +	 * refresh the AGFL with multiple blocks.  If there is no longest
-> > > +	 * extent, we had exactly the free space we needed; we're done.
-> > > +	 */
-> > 
-> > I'm confused by the last sentence. longest should only be NULL if the
-> > free space list is empty and haven't we already bailed out with -ENOSPC
-> > if that's the case?
-> > 
-> > > +	longest = xrep_abt_get_longest(free_extents);
-> 
-> xrep_abt_rebuild_trees is called after we allocate and initialize two
-> new btree roots in xrep_abt_reset_btrees.  If free_extents is an empty
-> list here, then we found exactly two blocks worth of free space and used
-> them to set up new btree roots.
-> 
-
-Got it, thanks.
-
-> > > +	if (!longest)
-> > > +		goto done;
-> > > +	error = xrep_abt_free_extent(sc,
-> > > +			XFS_AGB_TO_FSB(sc->mp, sc->sa.agno, longest->bno),
-> > > +			longest->len, &oinfo);
-> > > +	list_del(&longest->list);
-> > > +	kmem_free(longest);
-> > > +	if (error)
-> > > +		return error;
-> > > +
-> > > +	/* Insert records into the new btrees. */
-> > > +	list_for_each_entry_safe(rae, n, free_extents, list) {
-> > > +		error = xrep_abt_free_extent(sc,
-> > > +				XFS_AGB_TO_FSB(sc->mp, sc->sa.agno, rae->bno),
-> > > +				rae->len, &oinfo);
-> > > +		if (error)
-> > > +			return error;
-> > > +		list_del(&rae->list);
-> > > +		kmem_free(rae);
-> > > +	}
-> > 
-> > Ok, at this point we've reset the btree roots and we start freeing the
-> > free ranges that were discovered via the rmapbt analysis. AFAICT, if we
-> > fail or crash at this point, we leave the allocbts in a partially
-> > constructed state. I take it that is Ok with respect to the broader
-> > repair algorithm because we'd essentially start over by inspecting the
-> > rmapbt again on a retry.
-> 
-> Right.  Though in the crash/shutdown case, you'll end up with the
-> filesystem in an offline state at some point before you can retry the
-> scrub, it's probably faster to run xfs_repair to fix the damage.
-> 
-
-Can we really assume that if we're already up and running an online
-repair? The filesystem has to be mountable in that case in the first
-place. If we've already reset and started reconstructing the allocation
-btrees then I'd think those transactions would recover just fine on a
-power loss or something (perhaps not in the event of some other
-corruption related shutdown).
-
-> > The blocks allocated for the btrees that we've begun to construct here
-> > end up mapped in the rmapbt as we go, right? IIUC, that means we don't
-> > necessarily have infinite retries to make sure this completes. IOW,
-> > suppose that a first repair attempt finds just enough free space to
-> > construct new trees, gets far enough along to consume most of that free
-> > space and then crashes. Is it possible that a subsequent repair attempt
-> > includes the btree blocks allocated during the previous failed repair
-> > attempt in the sum of "old btree blocks" and determines we don't have
-> > enough free space to repair?
-> 
-> Yes, that's a risk of running the free space repair.
-> 
-
-Can we improve on that? For example, are the rmapbt entries for the old
-allocation btree blocks necessary once we commit the btree resets? If
-not, could we remove those entries before we start tree reconstruction?
-
-Alternatively, could we incorporate use of the old btree blocks? As it
-is, we discover those blocks simply so we can free them at the end.
-Perhaps we could free them sooner or find a more clever means to
-reallocate directly from that in-core list? I guess we have to consider
-whether they were really valid/sane btree blocks, but either way ISTM
-that the old blocks list is essentially invalidated once we reset the
-btrees.
-
-Brian
-
-> > > +
-> > > +done:
-> > > +	/* Free all the OWN_AG blocks that are not in the rmapbt/agfl. */
-> > > +	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_AG);
-> > > +	return xrep_reap_extents(sc, old_allocbt_blocks, &oinfo,
-> > > +			XFS_AG_RESV_NONE);
-> > > +}
-> > > +
-> > ...
-> > > diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
-> > > index 0ed68379e551..82f99633a597 100644
-> > > --- a/fs/xfs/xfs_extent_busy.c
-> > > +++ b/fs/xfs/xfs_extent_busy.c
-> > > @@ -657,3 +657,17 @@ xfs_extent_busy_ag_cmp(
-> > >  		diff = b1->bno - b2->bno;
-> > >  	return diff;
-> > >  }
-> > > +
-> > > +/* Are there any busy extents in this AG? */
-> > > +bool
-> > > +xfs_extent_busy_list_empty(
-> > > +	struct xfs_perag	*pag)
-> > > +{
-> > > +	spin_lock(&pag->pagb_lock);
-> > > +	if (pag->pagb_tree.rb_node) {
-> > 
-> > RB_EMPTY_ROOT()?
-> 
-> Good suggestion, thank you!
-> 
-> --D
-> 
-> > Brian
-> > 
-> > > +		spin_unlock(&pag->pagb_lock);
-> > > +		return false;
-> > > +	}
-> > > +	spin_unlock(&pag->pagb_lock);
-> > > +	return true;
-> > > +}
-> > > diff --git a/fs/xfs/xfs_extent_busy.h b/fs/xfs/xfs_extent_busy.h
-> > > index 990ab3891971..2f8c73c712c6 100644
-> > > --- a/fs/xfs/xfs_extent_busy.h
-> > > +++ b/fs/xfs/xfs_extent_busy.h
-> > > @@ -65,4 +65,6 @@ static inline void xfs_extent_busy_sort(struct list_head *list)
-> > >  	list_sort(NULL, list, xfs_extent_busy_ag_cmp);
-> > >  }
-> > >  
-> > > +bool xfs_extent_busy_list_empty(struct xfs_perag *pag);
-> > > +
-> > >  #endif /* __XFS_EXTENT_BUSY_H__ */
-> > > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
