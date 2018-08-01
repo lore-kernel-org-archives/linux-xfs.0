@@ -1,99 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:49786 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2389382AbeHAPFi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 1 Aug 2018 11:05:38 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id C7C3E87A78
-        for <linux-xfs@vger.kernel.org>; Wed,  1 Aug 2018 13:19:52 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id B3D652026D68
-        for <linux-xfs@vger.kernel.org>; Wed,  1 Aug 2018 13:19:52 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 03/15] xfs: remove unused __xfs_defer_cancel() internal helper
-Date: Wed,  1 Aug 2018 09:19:40 -0400
-Message-Id: <20180801131952.60250-4-bfoster@redhat.com>
-In-Reply-To: <20180801131952.60250-1-bfoster@redhat.com>
-References: <20180801131952.60250-1-bfoster@redhat.com>
+Received: from mail-lj1-f178.google.com ([209.85.208.178]:42720 "EHLO
+        mail-lj1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730832AbeHAUaq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Aug 2018 16:30:46 -0400
+Received: by mail-lj1-f178.google.com with SMTP id f1-v6so17755007ljc.9
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Aug 2018 11:43:39 -0700 (PDT)
+MIME-Version: 1.0
+References: <CAJCQCtSpiPiG1S0tq4j+D4DsGf0caTtQCHWyVJJxrT2P5MxPNQ@mail.gmail.com>
+ <20180801042146.GI2234@dastard> <CAJCQCtTv4ppBr1jxJBg4hBWfxDO=J2jZVYj-ZvZTADcb7KHT3g@mail.gmail.com>
+ <f052c332-e154-9aa7-7cdf-c1b92a7d994d@sandeen.net> <CAJCQCtT9UoXdpF0OhWtEN7x_tKCZksJYY_BLqe-x68c8ubq81A@mail.gmail.com>
+ <87156058-fd41-8130-7206-7cdc9e1a85d9@sandeen.net> <20180801114951.a54jwkinr5rb5ori@odin.usersys.redhat.com>
+In-Reply-To: <20180801114951.a54jwkinr5rb5ori@odin.usersys.redhat.com>
+From: Chris Murphy <lists@colorremedies.com>
+Date: Wed, 1 Aug 2018 12:43:26 -0600
+Message-ID: <CAJCQCtQAOiMcBg4pyy-vJnigMbPOM_U5ub33DzKNcrrv_LzuzA@mail.gmail.com>
+Subject: Re: xfsprogs 4.17.0 error building xfs_repair
+Content-Type: multipart/alternative; boundary="000000000000aa06830572641254"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>, Chris Murphy <lists@colorremedies.com>, Dave Chinner <david@fromorbit.com>, xfs list <linux-xfs@vger.kernel.org>
 
-With no more external dfops users, there is no need for an
-xfs_defer_ops cancel wrapper.
+--000000000000aa06830572641254
+Content-Type: text/plain; charset="UTF-8"
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_defer.c | 5 +++--
- fs/xfs/libxfs/xfs_defer.h | 2 +-
- fs/xfs/xfs_trans.c        | 7 -------
- fs/xfs/xfs_trans.h        | 3 ---
- 4 files changed, 4 insertions(+), 13 deletions(-)
+On Wed, Aug 1, 2018, 5:49 AM Carlos Maiolino <cmaiolino@redhat.com> wrote:
 
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index a5f7dc18a62f..ebead781613f 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -465,9 +465,10 @@ xfs_defer_finish(
-  * Free up any items left in the list.
-  */
- void
--__xfs_defer_cancel(
--	struct xfs_defer_ops		*dop)
-+xfs_defer_cancel(
-+	struct xfs_trans		*tp)
- {
-+	struct xfs_defer_ops		*dop = tp->t_dfops;
- 	struct xfs_defer_pending	*dfp;
- 	struct xfs_defer_pending	*pli;
- 	struct list_head		*pwi;
-diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-index 85c41fe4dbae..da145fc04ae1 100644
---- a/fs/xfs/libxfs/xfs_defer.h
-+++ b/fs/xfs/libxfs/xfs_defer.h
-@@ -50,7 +50,7 @@ void xfs_defer_add(struct xfs_defer_ops *dop, enum xfs_defer_ops_type type,
- 		struct list_head *h);
- int xfs_defer_finish_noroll(struct xfs_trans **tp);
- int xfs_defer_finish(struct xfs_trans **tp);
--void __xfs_defer_cancel(struct xfs_defer_ops *dop);
-+void xfs_defer_cancel(struct xfs_trans *);
- void xfs_defer_init(struct xfs_trans *tp, struct xfs_defer_ops *dop);
- bool xfs_defer_has_unfinished_work(struct xfs_defer_ops *dop);
- int xfs_defer_ijoin(struct xfs_defer_ops *dop, struct xfs_inode *ip);
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 12b6ad1558e6..0d07cdcc5c7d 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -1110,10 +1110,3 @@ xfs_trans_roll(
- 	tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
- 	return xfs_trans_reserve(*tpp, &tres, 0, 0);
- }
--
--void
--xfs_defer_cancel(
--	struct xfs_trans	*tp)
--{
--	__xfs_defer_cancel(tp->t_dfops);
--}
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 5170e89bec02..dc79e3c1d3e8 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -214,9 +214,6 @@ xfs_trans_read_buf(
- 				      flags, bpp, ops);
- }
- 
--/* cancel dfops associated with a transaction */
--void xfs_defer_cancel(struct xfs_trans *);
--
- struct xfs_buf	*xfs_trans_getsb(xfs_trans_t *, struct xfs_mount *, int);
- 
- void		xfs_trans_brelse(xfs_trans_t *, struct xfs_buf *);
--- 
-2.17.1
+> On Wed, Aug 01, 2018 at 12:09:15AM -0500, Eric Sandeen wrote:
+> > On 8/1/18 12:06 AM, Chris Murphy wrote:
+> >
+> > > And then I found the xfsprogs.spec file for Fedora 29's xfsprogs which
+> contains:
+> > >
+> > > %configure \
+> > >      --enable-readline=yes \
+> > >      --enable-blkid=yes \
+> > >      --enable-lto=no
+> > >
+>
+> Thing is, unless I'm looking at the wrong file, doc/INSTALL under
+> xfsprogs, only
+> require such options when building xfsprogs in MacOS, the Linux
+> instructions are
+> pretty straight forward"
+>
+> "
+>    To build the package and install it manually, use the following steps:
+>
+>        # make
+>        # su root
+>        # make install
+>        [and optionally, for the development libraries and headers]
+>        # make install-dev
+> "
+>
+> Why are you using such options if you are building it on Fedora?
+>
 
+User error strikes again?
+
+I'd sooner expect IRIX instructions than macOS instructions.
+
+
+Chris Murphy
+
+--000000000000aa06830572641254
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<br><br><div class=3D"gmail_quote"><div dir=3D"ltr">On Wed, Aug 1, 2018, 5:=
+49 AM Carlos Maiolino &lt;<a href=3D"mailto:cmaiolino@redhat.com">cmaiolino=
+@redhat.com</a>&gt; wrote:<br></div><blockquote class=3D"gmail_quote" style=
+=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">On Wed, =
+Aug 01, 2018 at 12:09:15AM -0500, Eric Sandeen wrote:<br>
+&gt; On 8/1/18 12:06 AM, Chris Murphy wrote:<br>
+&gt; <br>
+&gt; &gt; And then I found the xfsprogs.spec file for Fedora 29&#39;s xfspr=
+ogs which contains:<br>
+&gt; &gt; <br>
+&gt; &gt; %configure \<br>
+&gt; &gt;=C2=A0 =C2=A0 =C2=A0 --enable-readline=3Dyes \<br>
+&gt; &gt;=C2=A0 =C2=A0 =C2=A0 --enable-blkid=3Dyes \<br>
+&gt; &gt;=C2=A0 =C2=A0 =C2=A0 --enable-lto=3Dno<br>
+&gt; &gt; <br>
+<br>
+Thing is, unless I&#39;m looking at the wrong file, doc/INSTALL under xfspr=
+ogs, only<br>
+require such options when building xfsprogs in MacOS, the Linux instruction=
+s are<br>
+pretty straight forward&quot;<br>
+<br>
+&quot;<br>
+=C2=A0 =C2=A0To build the package and install it manually, use the followin=
+g steps:<br>
+<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0# make<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0# su root<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0# make install<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0[and optionally, for the development libraries a=
+nd headers]<br>
+=C2=A0 =C2=A0 =C2=A0 =C2=A0# make install-dev<br>
+&quot;<br>
+<br>
+Why are you using such options if you are building it on Fedora?<br></block=
+quote></div><div><br></div><div>User error strikes again?</div><div><br></d=
+iv><div>I&#39;d sooner expect IRIX instructions than macOS instructions.</d=
+iv><div><br></div><div><br></div><div>Chris Murphy</div>
+
+--000000000000aa06830572641254--
