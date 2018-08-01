@@ -1,56 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:53620 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1732614AbeHAAN5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jul 2018 20:13:57 -0400
-Date: Wed, 1 Aug 2018 08:31:12 +1000
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:54958 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1731199AbeHAGFX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Aug 2018 02:05:23 -0400
+Date: Wed, 1 Aug 2018 14:21:46 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: check da node magic in _node_lookup_int
-Message-ID: <20180731223112.GG2234@dastard>
-References: <20180731200356.GX30972@magnolia>
+Subject: Re: xfsprogs 4.17.0 error building xfs_repair
+Message-ID: <20180801042146.GI2234@dastard>
+References: <CAJCQCtSpiPiG1S0tq4j+D4DsGf0caTtQCHWyVJJxrT2P5MxPNQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180731200356.GX30972@magnolia>
+In-Reply-To: <CAJCQCtSpiPiG1S0tq4j+D4DsGf0caTtQCHWyVJJxrT2P5MxPNQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Chris Murphy <lists@colorremedies.com>
+Cc: xfs list <linux-xfs@vger.kernel.org>
 
-On Tue, Jul 31, 2018 at 01:03:56PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Jul 31, 2018 at 08:02:17PM -0600, Chris Murphy wrote:
+> Hi,
+> I'm doing this on Fedora 28, I'm including the entire output from
+> exporting environment variables from doc/INSTALL so it's kinda long...
 > 
-> Before we start processing what we /think/ is a da3 node block, actually
-> check the magic to make sure that we're looking at a node block.  This
-> way we won't blow the asserts in _node_hdr_from_disk on corrupted
-> metadata.
+> [chris@f28s xfsprogs-dev]$ git reset --hard origin/master
+> HEAD is now at 0821de47 xfsprogs: Release v4.17.0
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_da_btree.c |    5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-> index 9efbd2038ffb..70e7da634f3e 100644
-> --- a/fs/xfs/libxfs/xfs_da_btree.c
-> +++ b/fs/xfs/libxfs/xfs_da_btree.c
-> @@ -1522,8 +1522,11 @@ xfs_da3_node_lookup_int(
->  			break;
->  		}
->  
-> -		blk->magic = XFS_DA_NODE_MAGIC;
-> +		if (blk->magic != XFS_DA_NODE_MAGIC &&
-> +		    blk->magic != XFS_DA3_NODE_MAGIC)
-> +			return -EFSCORRUPTED;
->  
-> +		blk->magic = XFS_DA_NODE_MAGIC;
+> [chris@f28s xfsprogs-dev]$ export TAR=/usr/bin/tar
+> [chris@f28s xfsprogs-dev]$ export LIBTOOL=/usr/bin/libtool
+> [chris@f28s xfsprogs-dev]$ export INSTALL_GROUP=wheel
+> [chris@f28s xfsprogs-dev]$ export
+> LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no --enable-blkid=no
+> --enable-librt=no"
 
-Can we please use a temporary variable for the on-disk magic number
-checks, then? blk->magic isn't supposed to hold the on disk format
-magic number - it's just an indication of the format the current
-state block points at - so using it to temporarily store the on disk
-magic number for checks like this is just wrong....
+You shot yourself in the foot.
+
+....
+>     [CC]     versions.o
+>     [CC]     xfs_repair.o
+>     [LD]     xfs_repair
+> /tmp/cc95QLol.ltrans8.ltrans.o: In function `progress_rpt_thread.lto_priv.352':
+> <artificial>:(.text+0xa2c9): undefined reference to `timer_create'
+> <artificial>:(.text+0xa2e4): undefined reference to `timer_settime'
+> <artificial>:(.text+0xa570): undefined reference to `timer_delete'
+
+These functions are in librt, and you told the build not to use it...
 
 Cheers,
 
