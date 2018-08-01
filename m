@@ -1,111 +1,145 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf1-f51.google.com ([209.85.167.51]:41204 "EHLO
-        mail-lf1-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731592AbeHAGt6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Aug 2018 02:49:58 -0400
-Received: by mail-lf1-f51.google.com with SMTP id v22-v6so12370656lfe.8
-        for <linux-xfs@vger.kernel.org>; Tue, 31 Jul 2018 22:06:15 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <f052c332-e154-9aa7-7cdf-c1b92a7d994d@sandeen.net>
-References: <CAJCQCtSpiPiG1S0tq4j+D4DsGf0caTtQCHWyVJJxrT2P5MxPNQ@mail.gmail.com>
- <20180801042146.GI2234@dastard> <CAJCQCtTv4ppBr1jxJBg4hBWfxDO=J2jZVYj-ZvZTADcb7KHT3g@mail.gmail.com>
- <f052c332-e154-9aa7-7cdf-c1b92a7d994d@sandeen.net>
-From: Chris Murphy <lists@colorremedies.com>
-Date: Tue, 31 Jul 2018 23:06:13 -0600
-Message-ID: <CAJCQCtT9UoXdpF0OhWtEN7x_tKCZksJYY_BLqe-x68c8ubq81A@mail.gmail.com>
-Subject: Re: xfsprogs 4.17.0 error building xfs_repair
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:47652 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2389380AbeHAPFj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 1 Aug 2018 11:05:39 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 248B97A7E0
+        for <linux-xfs@vger.kernel.org>; Wed,  1 Aug 2018 13:19:53 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 108ED2026D68
+        for <linux-xfs@vger.kernel.org>; Wed,  1 Aug 2018 13:19:53 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2 06/15] xfs: add missing defer ijoins for held inodes
+Date: Wed,  1 Aug 2018 09:19:43 -0400
+Message-Id: <20180801131952.60250-7-bfoster@redhat.com>
+In-Reply-To: <20180801131952.60250-1-bfoster@redhat.com>
+References: <20180801131952.60250-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Chris Murphy <lists@colorremedies.com>, Dave Chinner <david@fromorbit.com>, xfs list <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Tue, Jul 31, 2018 at 10:39 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
->
->
-> On 7/31/18 11:37 PM, Chris Murphy wrote:
->> On Tue, Jul 31, 2018 at 10:21 PM, Dave Chinner <david@fromorbit.com> wrote:
->>> On Tue, Jul 31, 2018 at 08:02:17PM -0600, Chris Murphy wrote:
->>>> Hi,
->>>> I'm doing this on Fedora 28, I'm including the entire output from
->>>> exporting environment variables from doc/INSTALL so it's kinda long...
->>>>
->>>> [chris@f28s xfsprogs-dev]$ git reset --hard origin/master
->>>> HEAD is now at 0821de47 xfsprogs: Release v4.17.0
->>>>
->>>> [chris@f28s xfsprogs-dev]$ export TAR=/usr/bin/tar
->>>> [chris@f28s xfsprogs-dev]$ export LIBTOOL=/usr/bin/libtool
->>>> [chris@f28s xfsprogs-dev]$ export INSTALL_GROUP=wheel
->>>> [chris@f28s xfsprogs-dev]$ export
->>>> LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no --enable-blkid=no
->>>> --enable-librt=no"
->>>
->>> You shot yourself in the foot.
->>>
->>> ....
->>>>     [CC]     versions.o
->>>>     [CC]     xfs_repair.o
->>>>     [LD]     xfs_repair
->>>> /tmp/cc95QLol.ltrans8.ltrans.o: In function `progress_rpt_thread.lto_priv.352':
->>>> <artificial>:(.text+0xa2c9): undefined reference to `timer_create'
->>>> <artificial>:(.text+0xa2e4): undefined reference to `timer_settime'
->>>> <artificial>:(.text+0xa570): undefined reference to `timer_delete'
->>>
->>> These functions are in librt, and you told the build not to use it...
->>
->>
->> I did what doc/INSTALL told me to do:
->>
->>    Building xfsprogs:
->>
->>     [firstly set these environment variables to these values]
->>     TAR=/usr/bin/gnutar
->>     LIBTOOL=/usr/bin/glibtool
->>     INSTALL_GROUP=wheel
->>     LOCAL_CONFIGURE_OPTIONS="\
->>                  --enable-gettext=no\
->>                  --enable-blkid=no\
->>                  --enable-librt=no\
->>                  "
->
-> Wow, no idea why that crap is in there, it should probably be removed.
->
-> Just "make" will suffice.
->
-> Patches accepted :)
+Log items that require relogging during deferred operations
+processing are explicitly joined to the associated dfops via the
+xfs_defer_*join() helpers. These calls imply that the associated
+object is "held" by the transaction such that when rolled, the item
+can be immediately joined to a follow up transaction. For buffers,
+this means the buffer remains locked and held after each roll. For
+inodes, this means that the inode remains locked.
 
+Failure to join a held item to the dfops structure means the
+associated object pins the tail of the log while dfops processing
+completes, because the item never relogs and is not unlocked or
+released until deferred processing completes.
 
-And then I found the xfsprogs.spec file for Fedora 29's xfsprogs which contains:
+Currently, all buffers that are held in transactions (XFS_BLI_HOLD)
+with deferred operations are explicitly joined to the dfops. This is
+not the case for inodes, however, as various contexts defer
+operations to transactions with held inodes without explicit joins
+to the associated dfops (and thus not relogging).
 
-%configure \
-     --enable-readline=yes \
-     --enable-blkid=yes \
-     --enable-lto=no
+While this is not a catastrophic problem, it is not ideal. Given
+that we want to eventually relog such items automatically during
+dfops processing, start by explicitly adding these missing
+xfs_defer_ijoin() calls. A call is added everywhere an inode is
+joined to a transaction without transferring lock ownership and
+said transaction runs deferred operations.
 
+All xfs_defer_ijoin() calls will eventually be replaced by automatic
+dfops inode relogging. This patch essentially implements the
+behavior change that would otherwise occur due to automatic inode
+dfops relogging.
 
-That too blows up, likely because I don't have readline-devel.x86_64 installed.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 1 +
+ fs/xfs/xfs_bmap_util.c   | 1 +
+ fs/xfs/xfs_inode.c       | 1 +
+ fs/xfs/xfs_iomap.c       | 3 +++
+ fs/xfs/xfs_reflink.c     | 1 +
+ 5 files changed, 7 insertions(+)
 
-...
-
-Building libxcmd
-    [CC]     command.lo
-    [CC]     input.lo
-input.c:25:11: fatal error: readline/history.h: No such file or directory
- # include <readline/history.h>
-           ^~~~~~~~~~~~~~~~~~~~
-compilation terminated.
-gmake[3]: *** [../include/buildrules:56: input.lo] Error 1
-gmake[2]: *** [include/buildrules:36: libxcmd] Error 2
-make[1]: *** [Makefile:77: default] Error 2
-make: *** [Makefile:74: default] Error 2
-[chris@f28s xfsprogs-dev]$
-
-
-And starting over without any environment variables set from
-doc/INSTALL and that now works. :-P
-
-
-
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 8edf7522aaff..71687d805f79 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1119,6 +1119,7 @@ xfs_bmap_add_attrfork(
+ 			xfs_log_sb(tp);
+ 	}
+ 
++	xfs_defer_ijoin(tp->t_dfops, ip);
+ 	error = xfs_trans_commit(tp);
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	return error;
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 412dc58ae54d..0c58a66b39e5 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -979,6 +979,7 @@ xfs_alloc_file_space(
+ 		/*
+ 		 * Complete the transaction
+ 		 */
++		xfs_defer_ijoin(tp->t_dfops, ip);
+ 		error = xfs_trans_commit(tp);
+ 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 		if (error)
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 5fc1815c2b62..441c8593cfd7 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1810,6 +1810,7 @@ xfs_inactive_ifree(
+ 	 * Just ignore errors at this point.  There is nothing we can do except
+ 	 * to try to keep going. Make sure it's not a silent error.
+ 	 */
++	xfs_defer_ijoin(tp->t_dfops, ip);
+ 	error = xfs_trans_commit(tp);
+ 	if (error)
+ 		xfs_notice(mp, "%s: xfs_trans_commit returned error %d",
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 3282575e2df4..8093a01fcf9e 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -261,6 +261,7 @@ xfs_iomap_write_direct(
+ 	/*
+ 	 * Complete the transaction
+ 	 */
++	xfs_defer_ijoin(tp->t_dfops, ip);
+ 	error = xfs_trans_commit(tp);
+ 	if (error)
+ 		goto out_unlock;
+@@ -763,6 +764,7 @@ xfs_iomap_write_allocate(
+ 			if (error)
+ 				goto trans_cancel;
+ 
++			xfs_defer_ijoin(tp->t_dfops, ip);
+ 			error = xfs_trans_commit(tp);
+ 			if (error)
+ 				goto error0;
+@@ -882,6 +884,7 @@ xfs_iomap_write_unwritten(
+ 			xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 		}
+ 
++		xfs_defer_ijoin(tp->t_dfops, ip);
+ 		error = xfs_trans_commit(tp);
+ 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 		if (error)
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 9a0a56526266..e986fcf928e5 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -435,6 +435,7 @@ xfs_reflink_allocate_cow(
+ 	xfs_inode_set_cowblocks_tag(ip);
+ 
+ 	/* Finish up. */
++	xfs_defer_ijoin(tp->t_dfops, ip);
+ 	error = xfs_trans_commit(tp);
+ 	if (error)
+ 		return error;
 -- 
-Chris Murphy
+2.17.1
+
