@@ -1,142 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:46546 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:50430 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725944AbeHBHEX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Aug 2018 03:04:23 -0400
-Date: Wed, 1 Aug 2018 22:14:52 -0700
+        with ESMTP id S1726228AbeHBIDE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Aug 2018 04:03:04 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w726DXco124400
+        for <linux-xfs@vger.kernel.org>; Thu, 2 Aug 2018 06:13:33 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp2130.oracle.com with ESMTP id 2kge0d9vme-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 02 Aug 2018 06:13:33 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w726DXFr032045
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 2 Aug 2018 06:13:33 GMT
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w726DWeD032023
+        for <linux-xfs@vger.kernel.org>; Thu, 2 Aug 2018 06:13:33 GMT
+Date: Wed, 1 Aug 2018 23:13:31 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 2/2] xfs/288: _notrun if xfs_db can't write values
- into dir or attr
-Message-ID: <20180802051452.GO30972@magnolia>
-References: <20180731054119.13539-1-zlang@redhat.com>
- <20180731054119.13539-2-zlang@redhat.com>
- <20180802004634.GB4211@magnolia>
- <20180802014941.GS4893@hp-dl360g9-06.rhts.eng.pek2.redhat.com>
+Subject: [PATCH v2] xfs: only validate summary counts on primary superblock
+Message-ID: <20180802061331.GP30972@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180802014941.GS4893@hp-dl360g9-06.rhts.eng.pek2.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Zorro Lang <zlang@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, yangx.jy@cn.fujitsu.com
+To: xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Aug 02, 2018 at 09:49:41AM +0800, Zorro Lang wrote:
-> On Wed, Aug 01, 2018 at 05:46:34PM -0700, Darrick J. Wong wrote:
-> > On Tue, Jul 31, 2018 at 01:41:19PM +0800, Zorro Lang wrote:
-> > > Commit b3cf8b72334fd35ef961869506e5a72ab398bc82 help xfs/288 to
-> > > support v5 filesystems testing, but there're still some old
-> > > distributions don't support xfs_db write '-d' option, or can't
-> > > write values into dir/attr of v5 filesystems.
-> > > 
-> > > For compatible with older versions, skip this test on v5 xfs
-> > > if xfs_db write can't write v5 XFS dir/attr.
-> > > 
-> > > Signed-off-by: Zorro Lang <zlang@redhat.com>
-> > > ---
-> > > 
-> > > Hi,
-> > > 
-> > > Xiao found v1 can't work well on xfsprogs-4.9, due to 'write -d' can't
-> > > write vaules into dir/attr of v5 filesystems before xfsprogs-4.13.
-> > > 
-> > > Only check "if write command has -d option" is not enough. So I write
-> > > a function _require_xfs_db_write_da() to make sure current xfs_db
-> > > can write dir/attr (not only on v5, but especially for v5).
-> > > 
-> > > Thanks,
-> > > Zorro
-> > > 
-> > >  common/xfs    | 28 ++++++++++++++++++++++++++++
-> > >  tests/xfs/288 |  1 +
-> > >  2 files changed, 29 insertions(+)
-> > > 
-> > > diff --git a/common/xfs b/common/xfs
-> > > index d971b4a8..95dcfd59 100644
-> > > --- a/common/xfs
-> > > +++ b/common/xfs
-> > > @@ -720,6 +720,34 @@ _require_xfs_db_write_array()
-> > >  	[ $supported -eq 0 ] && _notrun "xfs_db write can't support array"
-> > >  }
-> > >  
-> > > +# Before xfsprogs commit 89baf918(xfs_db: write values into dir/attr blocks and
-> > > +# recalculate CRCs), xfs_db write command can't write invalid data into dir/attr
-> > > +# field of v5 filesystems. For some cases need to write dir/attr (especially crc
-> > > +# enabled), use this _require at first.
-> > > +_require_xfs_db_write_da()
-> > > +{
-> > > +	local inum
-> > > +	local count
-> > > +
-> > > +	_require_scratch
-> > > +
-> > > +	_scratch_mkfs > /dev/null 2>&1
-> > > +	_scratch_mount
-> > > +	mkdir $SCRATCH_MNT/$seq.dir
-> > > +	inum=$(stat -c '%i' $SCRATCH_MNT/$seq.dir)
-> > > +	$SETFATTR_PROG -n "user.testda" \
-> > > +		       -v "$(perl -e "print 'v' x 65536;")" \
-> > > +		       $SCRATCH_MNT/$seq.dir
-> > > +	_scratch_unmount
-> > > +	_scratch_xfs_set_metadata_field "hdr.count" "0" \
-> > 
-> > Just FYI an upcoming change to the attr block verifier in 4.19 will
-> > break this because it rejects hdr.count == 0.  Can you please set this
-> > to 1 instead of 0?
-> > 
-> > > +					"inode $inum" "ablock 0" >/dev/null 2>&1
-> > > +	count=$(_scratch_xfs_get_metadata_field "hdr.count" \
-> > > +						"inode $inum" "ablock 0")
-> > > +	if [ "$count" != "0" ]; then
-> > 
-> > And update the test here?
-> 
-> Sure, I can change the 0 to 1. BTW, does it affect xfs/288? Because xfs/288 set
-> hdr.count to 0 too.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-IIUC, xfs/288 deliberately sets hdr.count to 0 to test how the code
-handles the (corrupt) attr header, so that use is fine.
+Skip the summary counter checks for secondary superblocks and inprogress
+primary superblocks because mkfs has always written those out with
+zeroed summary counters.
 
---D
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: add the inprogress check
+---
+ fs/xfs/libxfs/xfs_sb.c |   14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-> Thanks,
-> Zorro
-> 
-> > 
-> > --D
-> > 
-> > > +		_notrun "xfs_db write can't write values into dir/attr blocks"
-> > > +	fi
-> > > +}
-> > > +
-> > >  _require_xfs_spaceman_command()
-> > >  {
-> > >  	if [ -z "$1" ]; then
-> > > diff --git a/tests/xfs/288 b/tests/xfs/288
-> > > index f4165b6c..e9589fd5 100755
-> > > --- a/tests/xfs/288
-> > > +++ b/tests/xfs/288
-> > > @@ -35,6 +35,7 @@ _supported_fs xfs
-> > >  _supported_os Linux
-> > >  _require_scratch
-> > >  _require_attrs
-> > > +_require_xfs_db_write_da
-> > >  
-> > >  # get block size ($dbsize) from the mkfs output
-> > >  _scratch_mkfs_xfs 2>/dev/null | _filter_mkfs 2>$tmp.mkfs >/dev/null
-> > > -- 
-> > > 2.14.4
-> > > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe fstests" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe fstests" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index ca1b3a7a9171..081f46e30556 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -148,6 +148,7 @@ xfs_validate_sb_read(
+ STATIC int
+ xfs_validate_sb_write(
+ 	struct xfs_mount	*mp,
++	struct xfs_buf		*bp,
+ 	struct xfs_sb		*sbp)
+ {
+ 	/*
+@@ -155,10 +156,15 @@ xfs_validate_sb_write(
+ 	 * the superblock.  We skip this in the read validator because there
+ 	 * could be newer superblocks in the log and if the values are garbage
+ 	 * even after replay we'll recalculate them at the end of log mount.
++	 *
++	 * mkfs has traditionally written zeroed counters to inprogress and
++	 * secondary superblocks, so allow this usage to continue because
++	 * we never read counters from such superblocks.
+ 	 */
+-	if (sbp->sb_fdblocks > sbp->sb_dblocks ||
+-	    !xfs_verify_icount(mp, sbp->sb_icount) ||
+-	    sbp->sb_ifree > sbp->sb_icount) {
++	if (XFS_BUF_ADDR(bp) == XFS_SB_DADDR && !sbp->sb_inprogress &&
++	    (sbp->sb_fdblocks > sbp->sb_dblocks ||
++	     !xfs_verify_icount(mp, sbp->sb_icount) ||
++	     sbp->sb_ifree > sbp->sb_icount)) {
+ 		xfs_warn(mp, "SB summary counter sanity check failed");
+ 		return -EFSCORRUPTED;
+ 	}
+@@ -756,7 +762,7 @@ xfs_sb_write_verify(
+ 	error = xfs_validate_sb_common(mp, bp, &sb);
+ 	if (error)
+ 		goto out_error;
+-	error = xfs_validate_sb_write(mp, &sb);
++	error = xfs_validate_sb_write(mp, bp, &sb);
+ 	if (error)
+ 		goto out_error;
+ 
