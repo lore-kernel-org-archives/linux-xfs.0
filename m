@@ -1,95 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:51532 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726237AbeHBLYn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Aug 2018 07:24:43 -0400
-Received: by mail-wm0-f67.google.com with SMTP id y2-v6so1722225wma.1
-        for <linux-xfs@vger.kernel.org>; Thu, 02 Aug 2018 02:34:23 -0700 (PDT)
-Date: Thu, 2 Aug 2018 11:34:20 +0200
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:33628 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726702AbeHBLiJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Aug 2018 07:38:09 -0400
+Received: by mail-wr1-f67.google.com with SMTP id g6-v6so1480273wrp.0
+        for <linux-xfs@vger.kernel.org>; Thu, 02 Aug 2018 02:47:46 -0700 (PDT)
+Date: Thu, 2 Aug 2018 11:47:43 +0200
 From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH V2] mkfs: avoid divide-by-zero when hardware reports
- optimal i/o size as 0
-Message-ID: <20180802093420.tljr77jlyulnwv6p@odin.usersys.redhat.com>
-References: <c347c3d7-2181-d114-7547-2649bb2f1022@redhat.com>
+Subject: Re: Clearly state infrastructure change on old XFS website
+Message-ID: <20180802094743.iazovxo7xh45fcmn@odin.usersys.redhat.com>
+References: <4b3ef7f54f32dc2b61a5d4a33a0e5b2e@wh2.tu-dresden.de>
+ <20180730223042.GC4226@magnolia>
+ <3f708cdb-4cb0-dd12-0483-ada1025364b9@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <c347c3d7-2181-d114-7547-2649bb2f1022@redhat.com>
+In-Reply-To: <3f708cdb-4cb0-dd12-0483-ada1025364b9@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Jeff Mahoney <jeffm@suse.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, adam_kalisz <adam_kalisz@wh2.tu-dresden.de>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Aug 01, 2018 at 03:49:45PM -0500, Eric Sandeen wrote:
-> From: Jeff Mahoney <jeffm@suse.com>
+On Mon, Jul 30, 2018 at 05:44:35PM -0500, Eric Sandeen wrote:
 > 
-> Commit 051b4e37f5e (mkfs: factor AG alignment) factored out the
-> AG alignment code into a separate function.  It got rid of
-> redundant checks for dswidth != 0 since calc_stripe_factors was
-> supposed to guarantee that if dsunit is non-zero dswidth will be
-> as well.  Unfortunately, there's hardware out there that reports its
-> optimal i/o size as larger than the maximum i/o size, which the kernel
-> treats as broken and zeros out the optimal i/o size.
 > 
-> To resolve this we can check the topology before consuming it, and
-> ignore the bad stripe geometry.
+> On 7/30/18 5:30 PM, Darrick J. Wong wrote:
+> > On Sat, Jul 28, 2018 at 11:25:40PM +0200, adam_kalisz wrote:
+> >> Dear Darrick,
+> >>
+> >> I wanted to have a look at the recent new features being added to XFS and
+> >> stumbled on the fact, that Google presents me first with the old website [0]
+> >> and starting on page 2 of the web results (for the desperate) with the
+> >> current website [1].
+> >>
+> >> It would be most helpful to write some notice to the old website and the
+> >> "Getting the latest source code" should point to the current git-repo. It
+> >> cost me some time to realize, there is something wrong, because the git log
+> >> ended at about 4.9 kernel (~2016) when the infrastructure from sgi probably
+> >> got left behind. Also maybe highlight, that the current repo ist xfs-linux
+> >> and NOT linux-xfs! It might help some of your possible future colleagues to
+> >> get started with XFS.
+> > 
+> > Sorry about that -- I'll ask those who have write access to xfs.org to
+> > update the links.  In the long run I'd rather just move all the
+> > documentation and FAQ into the kernel source itself, especially since it
+> > all now lives on https://www.kernel.org/doc/html/latest/ ...
 > 
-> [sandeen: remove guessing heuristic, just warn and ignore bad data.]
+> yeah ...
 > 
-> Fixes: 051b4e37f5e (mkfs: factor AG alignment)
-> Signed-off-by: Jeff Mahoney <jeffm@suse.com>
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-> ---
+> As a general PSA, the wiki is known to be bitrotting.  It's impossible to add
+> new editors, for example.  It'll eventually probably go away entirely.
 > 
+> I've fixed up a couple things Darrick asked me to do, but maybe we should
+> just put a big <blink>THIS WIKI IS BITROTTING</blink> at the top and be
+> done with it.
 
-I'm ok with it, but I'm starting to think calc_stripe_factors() is growing more
-than it should, so, I'm thinking if we shouldn't factor out all these validation
-paths into different functions, I'm ok doing that if you guys think it's not a
-waste of time?
++1 I volunteered myself to take care of the wiki past year, but looks like my
+write access requests were completely ignored and well.
 
-For the patch itself:
+On the other hand though, I wonder if everything xfs.org currently has, is worth
+to actually move them to kernel sources.
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+There are a lot of interesting links there (well, the documents itself, not the
+links), which IMHO are really worth to keep.
 
-> so, I rewrote this a bit.  I'm not a fan of guessing what the kernel
-> really must have meant, becaue next time the root cause may be differnt.
-> In other cases we ignore bad geometry, I think we should in this case as
-> well.  This will also let me go forward with a factored-out geometry checker,
-> and for user-specified badness we'll warn and exit, for kernel-provided
-> badness we'll warn and ignore.
 > 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 1074886..2e53c1e 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -2281,11 +2281,20 @@ _("data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"),
->  
->  	/* if no stripe config set, use the device default */
->  	if (!dsunit) {
-> -		dsunit = ft->dsunit;
-> -		dswidth = ft->dswidth;
-> -		use_dev = true;
-> +		/* Ignore nonsense from device.  XXX add more validation */
-> +		if (ft->dsunit && ft->dswidth == 0) {
-> +			fprintf(stderr,
-> +_("%s: Volume reports stripe unit of %d bytes and stripe width of 0, ignoring.\n"),
-> +				progname, BBTOB(ft->dsunit));
-> +			ft->dsunit = 0;
-> +			ft->dswidth = 0;
-> +		} else {
-> +			dsunit = ft->dsunit;
-> +			dswidth = ft->dswidth;
-> +			use_dev = true;
-> +		}
->  	} else {
-> -		/* check and warn is alignment is sub-optimal */
-> +		/* check and warn if user-specified alignment is sub-optimal */
->  		if (ft->dsunit && ft->dsunit != dsunit) {
->  			fprintf(stderr,
->  _("%s: Specified data stripe unit %d is not the same as the volume stripe unit %d\n"),
+> -Eric
 > 
+> > --D
+> > 
+> >> TL;DR:
+> >> Please make sure the XFS development is more visible by ensuring that most
+> >> prominent references point to the current repository and website.
+> >>
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
 > the body of a message to majordomo@vger.kernel.org
