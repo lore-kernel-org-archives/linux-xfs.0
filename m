@@ -1,215 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:55148 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389372AbeHAQWF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Aug 2018 12:22:05 -0400
-Date: Wed, 1 Aug 2018 07:35:58 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 07/15] xfs: automatic dfops buffer relogging
-Message-ID: <20180801143558.GE30972@magnolia>
-References: <20180801131952.60250-1-bfoster@redhat.com>
- <20180801131952.60250-8-bfoster@redhat.com>
+Received: from sandeen.net ([63.231.237.45]:40760 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727193AbeHBXZJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Aug 2018 19:25:09 -0400
+Subject: Re: [PATCH] xfs: check for COW overflows in i_delayed_blks
+References: <20180802180335.GS30972@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <7c8ef73e-32a2-1d47-7caf-be81624c7eb2@sandeen.net>
+Date: Thu, 2 Aug 2018 16:32:10 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180801131952.60250-8-bfoster@redhat.com>
+In-Reply-To: <20180802180335.GS30972@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eryu Guan <guaneryu@gmail.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
 
-On Wed, Aug 01, 2018 at 09:19:44AM -0400, Brian Foster wrote:
-> Buffers that are held across deferred operations are explicitly
-> joined to the dfops structure to ensure appropriate relogging.
-> While buffers are currently joined explicitly, we can detect the
-> conditions that require relogging at dfops finish time by inspecting
-> the transaction item list for held buffers.
+On 8/2/18 1:03 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Replace the xfs_defer_bjoin() infrastructure with such detection and
-> automatic relogging of held buffers. This eliminates the need for
-> the per-dfops buffer list, replaced by an on-stack variant in
-> xfs_defer_trans_roll().
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> With the new copy on write functionality it's possible to reserve so
+> much COW space for a file that we end up overflowing i_delayed_blks.
+> The only user-visible effect of this is to cause totally wrong i_blocks
+> output in stat, so check for that.
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+The other thing that can go wrong is transfer of delayed blocks for
+quota accounting during a chown; it's fairly easy to add that to this
+test by mounting the loop fs w/ quota, doing quotacheck, and then doing
+a quota report before & after chowning both files to the qa user.
 
---D
+kindasorta like this:
 
-> ---
->  fs/xfs/libxfs/xfs_attr.c  |  1 -
->  fs/xfs/libxfs/xfs_defer.c | 58 ++++++++++++++++++---------------------
->  fs/xfs/libxfs/xfs_defer.h |  1 -
->  fs/xfs/xfs_dquot.c        |  1 -
->  fs/xfs/xfs_trans.h        |  1 -
->  5 files changed, 26 insertions(+), 36 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 3deb5cdadf08..227887bee00d 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -320,7 +320,6 @@ xfs_attr_set(
->  		 * buffer and run into problems with the write verifier.
->  		 */
->  		xfs_trans_bhold(args.trans, leaf_bp);
-> -		xfs_defer_bjoin(args.trans->t_dfops, leaf_bp);
->  		xfs_defer_ijoin(args.trans->t_dfops, dp);
->  		error = xfs_defer_finish(&args.trans);
->  		if (error)
-> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-> index 64e1abc60edc..e9b7671d289a 100644
-> --- a/fs/xfs/libxfs/xfs_defer.c
-> +++ b/fs/xfs/libxfs/xfs_defer.c
-> @@ -14,6 +14,7 @@
->  #include "xfs_mount.h"
->  #include "xfs_defer.h"
->  #include "xfs_trans.h"
-> +#include "xfs_buf_item.h"
->  #include "xfs_trace.h"
->  
->  /*
-> @@ -228,6 +229,10 @@ xfs_defer_trans_roll(
->  	struct xfs_trans		**tp)
->  {
->  	struct xfs_defer_ops		*dop = (*tp)->t_dfops;
-> +	struct xfs_buf_log_item		*bli;
-> +	struct xfs_log_item		*lip;
-> +	struct xfs_buf			*bplist[XFS_DEFER_OPS_NR_BUFS];
-> +	int				bpcount = 0;
->  	int				i;
->  	int				error;
->  
-> @@ -235,9 +240,24 @@ xfs_defer_trans_roll(
->  	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dop->dop_inodes[i]; i++)
->  		xfs_trans_log_inode(*tp, dop->dop_inodes[i], XFS_ILOG_CORE);
->  
-> -	/* Hold the (previously bjoin'd) buffer locked across the roll. */
-> -	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS && dop->dop_bufs[i]; i++)
-> -		xfs_trans_dirty_buf(*tp, dop->dop_bufs[i]);
-> +	list_for_each_entry(lip, &(*tp)->t_items, li_trans) {
-> +		switch (lip->li_type) {
-> +		case XFS_LI_BUF:
-> +			bli = container_of(lip, struct xfs_buf_log_item,
-> +					   bli_item);
-> +			if (bli->bli_flags & XFS_BLI_HOLD) {
-> +				if (bpcount >= XFS_DEFER_OPS_NR_BUFS) {
-> +					ASSERT(0);
-> +					return -EFSCORRUPTED;
-> +				}
-> +				xfs_trans_dirty_buf(*tp, bli->bli_buf);
-> +				bplist[bpcount++] = bli->bli_buf;
-> +			}
-> +			break;
-> +		default:
-> +			break;
-> +		}
-> +	}
->  
->  	trace_xfs_defer_trans_roll((*tp)->t_mountp, dop, _RET_IP_);
->  
-> @@ -255,9 +275,9 @@ xfs_defer_trans_roll(
->  		xfs_trans_ijoin(*tp, dop->dop_inodes[i], 0);
->  
->  	/* Rejoin the buffers and dirty them so the log moves forward. */
-> -	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS && dop->dop_bufs[i]; i++) {
-> -		xfs_trans_bjoin(*tp, dop->dop_bufs[i]);
-> -		xfs_trans_bhold(*tp, dop->dop_bufs[i]);
-> +	for (i = 0; i < bpcount; i++) {
-> +		xfs_trans_bjoin(*tp, bplist[i]);
-> +		xfs_trans_bhold(*tp, bplist[i]);
->  	}
->  
->  	return error;
-> @@ -295,30 +315,6 @@ xfs_defer_ijoin(
->  	return -EFSCORRUPTED;
->  }
->  
-> -/*
-> - * Add this buffer to the deferred op.  Each joined buffer is relogged
-> - * each time we roll the transaction.
-> - */
-> -int
-> -xfs_defer_bjoin(
-> -	struct xfs_defer_ops		*dop,
-> -	struct xfs_buf			*bp)
-> -{
-> -	int				i;
-> -
-> -	for (i = 0; i < XFS_DEFER_OPS_NR_BUFS; i++) {
-> -		if (dop->dop_bufs[i] == bp)
-> -			return 0;
-> -		else if (dop->dop_bufs[i] == NULL) {
-> -			dop->dop_bufs[i] = bp;
-> -			return 0;
-> -		}
-> -	}
-> -
-> -	ASSERT(0);
-> -	return -EFSCORRUPTED;
-> -}
-> -
->  /*
->   * Reset an already used dfops after finish.
->   */
-> @@ -331,7 +327,6 @@ xfs_defer_reset(
->  	ASSERT(!xfs_defer_has_unfinished_work(dop));
->  
->  	memset(dop->dop_inodes, 0, sizeof(dop->dop_inodes));
-> -	memset(dop->dop_bufs, 0, sizeof(dop->dop_bufs));
->  
->  	/*
->  	 * Low mode state transfers across transaction rolls to mirror dfops
-> @@ -594,7 +589,6 @@ xfs_defer_move(
->  	list_splice_init(&src->dop_pending, &dst->dop_pending);
->  
->  	memcpy(dst->dop_inodes, src->dop_inodes, sizeof(dst->dop_inodes));
-> -	memcpy(dst->dop_bufs, src->dop_bufs, sizeof(dst->dop_bufs));
->  
->  	/*
->  	 * Low free space mode was historically controlled by a dfops field.
-> diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-> index 8908a2716774..4a8bb838adf2 100644
-> --- a/fs/xfs/libxfs/xfs_defer.h
-> +++ b/fs/xfs/libxfs/xfs_defer.h
-> @@ -43,7 +43,6 @@ void xfs_defer_cancel(struct xfs_trans *);
->  void xfs_defer_init(struct xfs_trans *tp, struct xfs_defer_ops *dop);
->  bool xfs_defer_has_unfinished_work(struct xfs_defer_ops *dop);
->  int xfs_defer_ijoin(struct xfs_defer_ops *dop, struct xfs_inode *ip);
-> -int xfs_defer_bjoin(struct xfs_defer_ops *dop, struct xfs_buf *bp);
->  void xfs_defer_move(struct xfs_trans *dtp, struct xfs_trans *stp);
->  
->  /* Description of a deferred type. */
-> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> index da5c55cec966..e1196854dbcd 100644
-> --- a/fs/xfs/xfs_dquot.c
-> +++ b/fs/xfs/xfs_dquot.c
-> @@ -362,7 +362,6 @@ xfs_dquot_disk_alloc(
->  	 * manually or by committing the transaction.
->  	 */
->  	xfs_trans_bhold(tp, bp);
-> -	error = xfs_defer_bjoin(tp->t_dfops, bp);
->  	if (error) {
->  		xfs_trans_bhold_release(tp, bp);
->  		xfs_trans_brelse(tp, bp);
-> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> index 7e493221160e..581456c79197 100644
-> --- a/fs/xfs/xfs_trans.h
-> +++ b/fs/xfs/xfs_trans.h
-> @@ -100,7 +100,6 @@ struct xfs_defer_ops {
->  
->  	/* relog these with each roll */
->  	struct xfs_inode	*dop_inodes[XFS_DEFER_OPS_NR_INODES];
-> -	struct xfs_buf		*dop_bufs[XFS_DEFER_OPS_NR_BUFS];
->  };
->  
->  /*
-> -- 
-> 2.17.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/tests/xfs/907 b/tests/xfs/907
+index 029ed69f..2d50caaa 100755
+--- a/tests/xfs/907
++++ b/tests/xfs/907
+@@ -28,6 +28,7 @@ _cleanup()
+ # get standard environment, filters and checks
+ . ./common/rc
+ . ./common/reflink
++. ./common/quota
+ 
+ # real QA test starts here
+ _supported_os Linux
+@@ -35,10 +36,13 @@ _supported_fs xfs
+ _require_scratch_reflink
+ _require_loop
+ _require_xfs_debug
++_require_quota
++_require_user
+ 
+ echo "Format and mount"
+ _scratch_mkfs > "$seqres.full" 2>&1
+ _scratch_mount
++
+ _require_fs_space $SCRATCH_MNT 2400000	# 100T fs requires ~2.4GB of space
+ 
+ loop_file=$SCRATCH_MNT/a.img
+@@ -46,7 +50,10 @@ loop_mount=$SCRATCH_MNT/a
+ truncate -s 100T $loop_file
+ $MKFS_XFS_PROG $MKFS_OPTIONS -f $loop_file >> $seqres.full
+ mkdir $loop_mount
+-mount -o loop -t xfs $loop_file $loop_mount
++mount -o loop,usrquota,grpquota -t xfs $loop_file $loop_mount
++
++quotacheck -u -g $loop_mount 2> /dev/null
++quotaon $loop_mount 2> /dev/null
+ 
+ echo "Create crazy huge file"
+ touch "${loop_mount}/a"
+@@ -117,6 +124,15 @@ if [ "${fsblocks}" -lt "$((2 ** 32))" ]; then
+ 	echo "stat blocks (${fsblocks}) should be more than 2^32!"
+ fi
+ 
++echo "before"
++_report_quota_blocks ${loop_mount}
++echo "chown"
++chown $qa_user ${loop_mount}/a
++chown $qa_user ${loop_mount}/b
++ls -l ${loop_mount}
++echo "after"
++_report_quota_blocks ${loop_mount}
++
+ echo "Test done"
+ umount $loop_mount
+ 
+...
+
+which currently trips an assert:
+
+kernel:XFS: Assertion failed: dqp->q_res_bcount >= be64_to_cpu(dqp->q_core.d_bcount), file: fs/xfs/xfs_trans_dquot.c, line: 714
+
+
