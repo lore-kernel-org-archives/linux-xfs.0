@@ -1,316 +1,433 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:35716 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:46620 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2389381AbeHAPFj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 1 Aug 2018 11:05:39 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id ACFDC40241C5
-        for <linux-xfs@vger.kernel.org>; Wed,  1 Aug 2018 13:19:52 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 98C9E2026D68
-        for <linux-xfs@vger.kernel.org>; Wed,  1 Aug 2018 13:19:52 +0000 (UTC)
+        id S1732255AbeHBPjp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Aug 2018 11:39:45 -0400
+Date: Thu, 2 Aug 2018 09:48:24 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 02/15] xfs: use transaction for intent recovery instead of raw dfops
-Date: Wed,  1 Aug 2018 09:19:39 -0400
-Message-Id: <20180801131952.60250-3-bfoster@redhat.com>
-In-Reply-To: <20180801131952.60250-1-bfoster@redhat.com>
-References: <20180801131952.60250-1-bfoster@redhat.com>
+Subject: Re: [PATCH 05/14] xfs: repair free space btrees
+Message-ID: <20180802134824.GB65267@bfoster>
+References: <153292966714.24509.15809693393247424274.stgit@magnolia>
+ <153292970169.24509.4581630892233165448.stgit@magnolia>
+ <20180731174722.GI40201@bfoster>
+ <20180731220125.GY30972@magnolia>
+ <20180801115409.GA48176@bfoster>
+ <20180801162316.GH30972@magnolia>
+ <20180801183919.GE48176@bfoster>
+ <20180802062845.GQ30972@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180802062845.GQ30972@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, allison.henderson@oracle.com
 
-Log intent recovery is the last user of an external (on-stack)
-dfops. The pattern exists because the dfops is used to collect
-additional deferred operations queued during the whole recovery
-sequence. The dfops is finished with a new transaction after intent
-recovery completes.
+On Wed, Aug 01, 2018 at 11:28:45PM -0700, Darrick J. Wong wrote:
+> On Wed, Aug 01, 2018 at 02:39:20PM -0400, Brian Foster wrote:
+> > On Wed, Aug 01, 2018 at 09:23:16AM -0700, Darrick J. Wong wrote:
+> > > On Wed, Aug 01, 2018 at 07:54:09AM -0400, Brian Foster wrote:
+> > > > On Tue, Jul 31, 2018 at 03:01:25PM -0700, Darrick J. Wong wrote:
+> > > > > On Tue, Jul 31, 2018 at 01:47:23PM -0400, Brian Foster wrote:
+> > > > > > On Sun, Jul 29, 2018 at 10:48:21PM -0700, Darrick J. Wong wrote:
+> > > > > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > > > > 
+> > > > > > > Rebuild the free space btrees from the gaps in the rmap btree.
+> > > > > > > 
+> > > > > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > > > > ---
+> > > > > > >  fs/xfs/Makefile             |    1 
+> > > > > > >  fs/xfs/scrub/alloc.c        |    1 
+> > > > > > >  fs/xfs/scrub/alloc_repair.c |  581 +++++++++++++++++++++++++++++++++++++++++++
+> > > > > > >  fs/xfs/scrub/common.c       |    8 +
+> > > > > > >  fs/xfs/scrub/repair.h       |    2 
+> > > > > > >  fs/xfs/scrub/scrub.c        |    4 
+> > > > > > >  fs/xfs/scrub/trace.h        |    2 
+> > > > > > >  fs/xfs/xfs_extent_busy.c    |   14 +
+> > > > > > >  fs/xfs/xfs_extent_busy.h    |    2 
+> > > > > > >  9 files changed, 610 insertions(+), 5 deletions(-)
+> > > > > > >  create mode 100644 fs/xfs/scrub/alloc_repair.c
+> > > > > > > 
+> > > > > > > 
+> > > > > > ...
+> > > > > > > diff --git a/fs/xfs/scrub/alloc_repair.c b/fs/xfs/scrub/alloc_repair.c
+> > > > > > > new file mode 100644
+> > > > > > > index 000000000000..b228c2906de2
+> > > > > > > --- /dev/null
+> > > > > > > +++ b/fs/xfs/scrub/alloc_repair.c
+> > > > > > > @@ -0,0 +1,581 @@
+> > ...
+> > > > > > > +
+> > > > > > > +/*
+> > > > > > > + * Make our new freespace btree roots permanent so that we can start freeing
+> > > > > > > + * unused space back into the AG.
+> > > > > > > + */
+> > > > > > > +STATIC int
+> > > > > > > +xrep_abt_commit_new(
+> > > > > > > +	struct xfs_scrub	*sc,
+> > > > > > > +	struct xfs_bitmap	*old_allocbt_blocks,
+> > > > > > > +	int			log_flags)
+> > > > > > > +{
+> > > > > > > +	int			error;
+> > > > > > > +
+> > > > > > > +	xfs_alloc_log_agf(sc->tp, sc->sa.agf_bp, log_flags);
+> > > > > > > +
+> > > > > > > +	/* Invalidate the old freespace btree blocks and commit. */
+> > > > > > > +	error = xrep_invalidate_blocks(sc, old_allocbt_blocks);
+> > > > > > > +	if (error)
+> > > > > > > +		return error;
+> > > > > > 
+> > > > > > It looks like the above invalidation all happens in the same
+> > > > > > transaction. Those aren't logging buffer data or anything, but any idea
+> > > > > > how many log formats we can get away with in this single transaction?
+> > > > > 
+> > > > > Hm... well, on my computer a log format is ~88 bytes.  Assuming 4K
+> > > > > blocks, the max AG size of 1TB, maximum free space fragmentation, and
+> > > > > two btrees, the tree could be up to ~270 million records.  Assuming ~505
+> > > > > records per block, that's ... ~531,000 leaf blocks and ~1100 node blocks
+> > > > > for both btrees.  If we invalidate both, that's ~46M of RAM?
+> > > > > 
+> > > > 
+> > > > I was thinking more about transaction reservation than RAM. It may not
+> > > 
+> > > Hmm.  tr_itruncate is ~650K on my 2TB SSD, assuming 88 bytes per, that's
+> > > about ... ~7300 log format items?  Not a lot, maybe it should roll the
+> > > transaction every 1000 invalidations or so...
+> > > 
+> > 
+> > I'm not really sure what categorizes as a lot here given that the blocks
+> > would need to be in-core, but rolling on some fixed/safe interval sounds
+> > reasonable to me.
+> > 
+> > > > currently be an issue, but it might be worth putting something down in a
+> > > > comment to note that this is a single transaction and we expect to not
+> > > > have to invalidate more than N (ballpark) blocks in a single go,
+> > > > whatever that value happens to be.
+> > > > 
+> > > > > > > +	error = xrep_roll_ag_trans(sc);
+> > > > > > > +	if (error)
+> > > > > > > +		return error;
+> > > > > > > +
+> > > > > > > +	/* Now that we've succeeded, mark the incore state valid again. */
+> > > > > > > +	sc->sa.pag->pagf_init = 1;
+> > > > > > > +	return 0;
+> > > > > > > +}
+> > > > > > > +
+> > > > > > > +/* Build new free space btrees and dispose of the old one. */
+> > > > > > > +STATIC int
+> > > > > > > +xrep_abt_rebuild_trees(
+> > > > > > > +	struct xfs_scrub	*sc,
+> > > > > > > +	struct list_head	*free_extents,
+> > > > > > > +	struct xfs_bitmap	*old_allocbt_blocks)
+> > > > > > > +{
+> > > > > > > +	struct xfs_owner_info	oinfo;
+> > > > > > > +	struct xrep_abt_extent	*rae;
+> > > > > > > +	struct xrep_abt_extent	*n;
+> > > > > > > +	struct xrep_abt_extent	*longest;
+> > > > > > > +	int			error;
+> > > > > > > +
+> > > > > > > +	xfs_rmap_skip_owner_update(&oinfo);
+> > > > > > > +
+> > > > > > > +	/*
+> > > > > > > +	 * Insert the longest free extent in case it's necessary to
+> > > > > > > +	 * refresh the AGFL with multiple blocks.  If there is no longest
+> > > > > > > +	 * extent, we had exactly the free space we needed; we're done.
+> > > > > > > +	 */
+> > > > > > 
+> > > > > > I'm confused by the last sentence. longest should only be NULL if the
+> > > > > > free space list is empty and haven't we already bailed out with -ENOSPC
+> > > > > > if that's the case?
+> > > > > > 
+> > > > > > > +	longest = xrep_abt_get_longest(free_extents);
+> > > > > 
+> > > > > xrep_abt_rebuild_trees is called after we allocate and initialize two
+> > > > > new btree roots in xrep_abt_reset_btrees.  If free_extents is an empty
+> > > > > list here, then we found exactly two blocks worth of free space and used
+> > > > > them to set up new btree roots.
+> > > > > 
+> > > > 
+> > > > Got it, thanks.
+> > > > 
+> > > > > > > +	if (!longest)
+> > > > > > > +		goto done;
+> > > > > > > +	error = xrep_abt_free_extent(sc,
+> > > > > > > +			XFS_AGB_TO_FSB(sc->mp, sc->sa.agno, longest->bno),
+> > > > > > > +			longest->len, &oinfo);
+> > > > > > > +	list_del(&longest->list);
+> > > > > > > +	kmem_free(longest);
+> > > > > > > +	if (error)
+> > > > > > > +		return error;
+> > > > > > > +
+> > > > > > > +	/* Insert records into the new btrees. */
+> > > > > > > +	list_for_each_entry_safe(rae, n, free_extents, list) {
+> > > > > > > +		error = xrep_abt_free_extent(sc,
+> > > > > > > +				XFS_AGB_TO_FSB(sc->mp, sc->sa.agno, rae->bno),
+> > > > > > > +				rae->len, &oinfo);
+> > > > > > > +		if (error)
+> > > > > > > +			return error;
+> > > > > > > +		list_del(&rae->list);
+> > > > > > > +		kmem_free(rae);
+> > > > > > > +	}
+> > > > > > 
+> > > > > > Ok, at this point we've reset the btree roots and we start freeing the
+> > > > > > free ranges that were discovered via the rmapbt analysis. AFAICT, if we
+> > > > > > fail or crash at this point, we leave the allocbts in a partially
+> > > > > > constructed state. I take it that is Ok with respect to the broader
+> > > > > > repair algorithm because we'd essentially start over by inspecting the
+> > > > > > rmapbt again on a retry.
+> > > > > 
+> > > > > Right.  Though in the crash/shutdown case, you'll end up with the
+> > > > > filesystem in an offline state at some point before you can retry the
+> > > > > scrub, it's probably faster to run xfs_repair to fix the damage.
+> > > > > 
+> > > > 
+> > > > Can we really assume that if we're already up and running an online
+> > > > repair? The filesystem has to be mountable in that case in the first
+> > > > place. If we've already reset and started reconstructing the allocation
+> > > > btrees then I'd think those transactions would recover just fine on a
+> > > > power loss or something (perhaps not in the event of some other
+> > > > corruption related shutdown).
+> > > 
+> > > Right, for the system crash case, whatever transactions committed should
+> > > replay just fine, and you can even start up the online repair again, and
+> > > if the AG isn't particularly close to ENOSPC then (barring rmap
+> > > corruption) it should work just fine.
+> > > 
+> > > If the fs went down because either (a) repair hit other corruption or
+> > > (b) some other thread hit an error in some other part of the filesystem,
+> > > then it's not so clear -- in (b) you could probably try again, but for
+> > > (a) you'll definitely have to unmount and run xfs_repair.
+> > > 
+> > 
+> > Indeed, there are certainly cases where we simply won't be able to do an
+> > online repair. I'm trying to think about scenarios where we should be
+> > able to do an online repair, but we lose power or hit some kind of
+> > transient error like a memory allocation failure before it completes. It
+> > would be nice if the online repair itself didn't contribute (within
+> > reason) to the inability to simply try again just because the fs was
+> > close to -ENOSPC.
+> 
+> Agreed.  Most of the, uh, opportunities to hit ENOMEM happen before we
+> start modifying on-disk metadata.  If that happens, we just free all the
+> memory and bail out having done nothing.
+> 
+> > For one, I think it's potentially confusing behavior. Second, it might
+> > be concerning to regular users who perceive it as an online repair
+> > leaving the fs in a worse off state. Us fs devs know that may not really
+> > be the case, but I think we're better for addressing it if we can
+> > reasonably do so.
+> 
+> <nod> Further in the future I want to add the ability to offline an AG,
+> so the worst that happens is that scrub turns the AG off, repair doesn't
+> fix it, and the AG simply stays offline.  That might give us the
+> ability to survive cancelling the repair transaction, since if the AG's
+> offline already anyway we could just throw away the dirty buffers and
+> resurrect the AG later.  I don't know, that's purely speculative.
+> 
+> > > Perhaps the guideline here is that if the fs goes down more than once
+> > > during online repair then unmount it and run xfs_repair.
+> > > 
+> > 
+> > Yep, I think that makes sense if the filesystem or repair itself is
+> > tripping over other corruptions that fail to keep it active for the
+> > duration of the repair.
+> 
+> <nod>
+> 
+> > > > > > The blocks allocated for the btrees that we've begun to construct here
+> > > > > > end up mapped in the rmapbt as we go, right? IIUC, that means we don't
+> > > > > > necessarily have infinite retries to make sure this completes. IOW,
+> > > > > > suppose that a first repair attempt finds just enough free space to
+> > > > > > construct new trees, gets far enough along to consume most of that free
+> > > > > > space and then crashes. Is it possible that a subsequent repair attempt
+> > > > > > includes the btree blocks allocated during the previous failed repair
+> > > > > > attempt in the sum of "old btree blocks" and determines we don't have
+> > > > > > enough free space to repair?
+> > > > > 
+> > > > > Yes, that's a risk of running the free space repair.
+> > > > > 
+> > > > 
+> > > > Can we improve on that? For example, are the rmapbt entries for the old
+> > > > allocation btree blocks necessary once we commit the btree resets? If
+> > > > not, could we remove those entries before we start tree reconstruction?
+> > > > 
+> > > > Alternatively, could we incorporate use of the old btree blocks? As it
+> > > > is, we discover those blocks simply so we can free them at the end.
+> > > > Perhaps we could free them sooner or find a more clever means to
+> > > > reallocate directly from that in-core list? I guess we have to consider
+> > > > whether they were really valid/sane btree blocks, but either way ISTM
+> > > > that the old blocks list is essentially invalidated once we reset the
+> > > > btrees.
+> > > 
+> > > Hmm, it's a little tricky to do that -- we could reap the old bnobt and
+> > > cntbt blocks (in the old_allocbt_blocks bitmap) first, but if adding a
+> > > record causes a btree split we'll pull blocks from the AGFL, and if
+> > > there aren't enough blocks in the bnobt to fill the AGFL back up then
+> > > fix_freelist won't succeed.  That complication is why it finds the
+> > > longest extent in the unclaimed list and pushes that in first, then
+> > > works on the rest of the extents.
+> > > 
+> > 
+> > Hmm, but doesn't a btree split require at least one full space btree
+> > block per-level? In conjunction, the agfl minimum size requirement grows
+> > with the height of the tree, which implies available free space..? I
+> > could be missing something, perhaps we have to account for the rmapbt in
+> > that case as well? Regardless...
+> > 
+> > > I suppose one could try to avoid ENOSPC by pushing that longest extent
+> > > in first (since we know that won't trigger a split), then reap the old
+> > > alloc btree blocks, and then add everything else back in...
+> > > 
+> > 
+> > I think it would be reasonable to seed the btree with the longest record
+> > or some fixed number of longest records (~1/2 a root block, for example)
+> > before making actual use of the btrees to reap the old blocks. I think
+> > then you'd only have a very short window of a single block leak on a
+> > poorly timed power loss and repair retry sequence before you start
+> > actually freeing originally used space (which in practice, I think
+> > solves the problem).
+> > 
+> > Given that we're starting from empty, I wonder if another option may be
+> > to over fill the agfl with old btree blocks or something. The first real
+> > free should shift enough blocks back into the btrees to ensure the agfl
+> > can be managed from that point forward, right? That may be more work
+> > than it's worth though and/or a job for another patch. (FWIW, we also
+> > have that NOSHRINK agfl fixup flag for userspace repair.)
+> 
+> Yes, I'll give that a try tomorrow, now that I've finished porting all
+> the 4.19 stuff to xfsprogs. :)
+> 
+> Looping back to something we discussed earlier in this thread, I'd
+> prefer to hold off on converting the list of already-freed extents to
+> xfs_bitmap because the same problem exists in all the repair functions
+> of having to store a large number of records for the rebuilt btree, and
+> maybe there's some way to <cough> use pageable memory for that, since
+> the access patterns for that are append, sort, and iterate; for those
+> three uses we don't necessarily require all the records to be in memory
+> all the time.  For the allocbt repair I expect the free space records to
+> be far more numerous than the list of old bnobt/cntbt blocks.
+> 
 
-We already have a mechanism to create an empty, container-like
-transaction to support the scrub infrastructure. We can reuse that
-mechanism here to drop the final user of external dfops. This
-facilitates folding dfops state (i.e., dop_low) into the
-transaction, the elimination of now unused external dfops support
-and also eliminates the only caller of __xfs_defer_cancel().
+Ok, it's fair enough that we'll probably want to find some kind of
+generic, more efficient technique for handling this across the various
+applicable repair algorithms.
 
-Replace the on-stack dfops with an empty transaction and pass it
-around to the various helpers that queue and finish deferred
-operations during intent recovery.
+One other high level thing that crossed my mind with regard to the
+general btree reconstruction algorithms is whether we need to build up
+this kind of central record list at all. For example, rather than slurp
+up the entire list of btree records in-core, sort it and dump it back
+out, could we take advantage of the fact that our existing on-disk
+structure insertion mechanisms already handle out of order records
+(simply stated, an extent free knows how to insert the associated record
+at the right place in the space btrees)? For example, suppose we reset
+the existing btrees first, then scanned the rmapbt and repopulated the
+new btrees as records are discovered..?
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_bmap_item.c     | 12 ++++-----
- fs/xfs/xfs_bmap_item.h     |  3 +--
- fs/xfs/xfs_log_recover.c   | 51 ++++++++++++++++++++++----------------
- fs/xfs/xfs_refcount_item.c | 12 ++++-----
- fs/xfs/xfs_refcount_item.h |  3 +--
- 5 files changed, 43 insertions(+), 38 deletions(-)
+The obvious problem is that we still have some checks that allow the
+whole repair operation to bail out before we determine whether we can
+start to rebuild the on-disk btrees. These are things like making sure
+we can actually read the associated rmapbt blocks (i.e., no read errors
+or verifier failures), basic record sanity checks, etc. But ISTM that
+isn't anything we couldn't get around with a multi-pass implementation.
+Secondary issues might be things like no longer being able to easily
+insert the longest free extent range(s) first (meaning we'd have to
+stuff the agfl with old btree blocks or figure out some other approach).
 
-diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index e1d6c127b07d..57429055e608 100644
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -375,9 +375,8 @@ xfs_bud_init(
-  */
- int
- xfs_bui_recover(
--	struct xfs_mount		*mp,
--	struct xfs_bui_log_item		*buip,
--	struct xfs_defer_ops		*dfops)
-+	struct xfs_trans		*parent_tp,
-+	struct xfs_bui_log_item		*buip)
- {
- 	int				error = 0;
- 	unsigned int			bui_type;
-@@ -393,6 +392,7 @@ xfs_bui_recover(
- 	struct xfs_trans		*tp;
- 	struct xfs_inode		*ip = NULL;
- 	struct xfs_bmbt_irec		irec;
-+	struct xfs_mount		*mp = parent_tp->t_mountp;
- 
- 	ASSERT(!test_bit(XFS_BUI_RECOVERED, &buip->bui_flags));
- 
-@@ -446,7 +446,7 @@ xfs_bui_recover(
- 	 * finishes them on completion. Transfer current dfops state to this
- 	 * transaction and transfer the result back before we return.
- 	 */
--	xfs_defer_move(tp->t_dfops, dfops);
-+	xfs_defer_move(tp->t_dfops, parent_tp->t_dfops);
- 	budp = xfs_trans_get_bud(tp, buip);
- 
- 	/* Grab the inode. */
-@@ -494,7 +494,7 @@ xfs_bui_recover(
- 	}
- 
- 	set_bit(XFS_BUI_RECOVERED, &buip->bui_flags);
--	xfs_defer_move(dfops, tp->t_dfops);
-+	xfs_defer_move(parent_tp->t_dfops, tp->t_dfops);
- 	error = xfs_trans_commit(tp);
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	xfs_irele(ip);
-@@ -502,7 +502,7 @@ xfs_bui_recover(
- 	return error;
- 
- err_inode:
--	xfs_defer_move(dfops, tp->t_dfops);
-+	xfs_defer_move(parent_tp->t_dfops, tp->t_dfops);
- 	xfs_trans_cancel(tp);
- 	if (ip) {
- 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-diff --git a/fs/xfs/xfs_bmap_item.h b/fs/xfs/xfs_bmap_item.h
-index fd1a1b13df51..89e043a88bb8 100644
---- a/fs/xfs/xfs_bmap_item.h
-+++ b/fs/xfs/xfs_bmap_item.h
-@@ -79,7 +79,6 @@ struct xfs_bud_log_item *xfs_bud_init(struct xfs_mount *,
- 		struct xfs_bui_log_item *);
- void xfs_bui_item_free(struct xfs_bui_log_item *);
- void xfs_bui_release(struct xfs_bui_log_item *);
--int xfs_bui_recover(struct xfs_mount *mp, struct xfs_bui_log_item *buip,
--		struct xfs_defer_ops *dfops);
-+int xfs_bui_recover(struct xfs_trans *parent_tp, struct xfs_bui_log_item *buip);
- 
- #endif	/* __XFS_BMAP_ITEM_H__ */
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 7776fde9430c..fc1ce9a644e3 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -4733,10 +4733,9 @@ xlog_recover_cancel_rui(
- /* Recover the CUI if necessary. */
- STATIC int
- xlog_recover_process_cui(
--	struct xfs_mount		*mp,
-+	struct xfs_trans		*parent_tp,
- 	struct xfs_ail			*ailp,
--	struct xfs_log_item		*lip,
--	struct xfs_defer_ops		*dfops)
-+	struct xfs_log_item		*lip)
- {
- 	struct xfs_cui_log_item		*cuip;
- 	int				error;
-@@ -4749,7 +4748,7 @@ xlog_recover_process_cui(
- 		return 0;
- 
- 	spin_unlock(&ailp->ail_lock);
--	error = xfs_cui_recover(mp, cuip, dfops);
-+	error = xfs_cui_recover(parent_tp, cuip);
- 	spin_lock(&ailp->ail_lock);
- 
- 	return error;
-@@ -4774,10 +4773,9 @@ xlog_recover_cancel_cui(
- /* Recover the BUI if necessary. */
- STATIC int
- xlog_recover_process_bui(
--	struct xfs_mount		*mp,
-+	struct xfs_trans		*parent_tp,
- 	struct xfs_ail			*ailp,
--	struct xfs_log_item		*lip,
--	struct xfs_defer_ops		*dfops)
-+	struct xfs_log_item		*lip)
- {
- 	struct xfs_bui_log_item		*buip;
- 	int				error;
-@@ -4790,7 +4788,7 @@ xlog_recover_process_bui(
- 		return 0;
- 
- 	spin_unlock(&ailp->ail_lock);
--	error = xfs_bui_recover(mp, buip, dfops);
-+	error = xfs_bui_recover(parent_tp, buip);
- 	spin_lock(&ailp->ail_lock);
- 
- 	return error;
-@@ -4829,9 +4827,9 @@ static inline bool xlog_item_is_intent(struct xfs_log_item *lip)
- /* Take all the collected deferred ops and finish them in order. */
- static int
- xlog_finish_defer_ops(
--	struct xfs_mount	*mp,
--	struct xfs_defer_ops	*dfops)
-+	struct xfs_trans	*parent_tp)
- {
-+	struct xfs_mount	*mp = parent_tp->t_mountp;
- 	struct xfs_trans	*tp;
- 	int64_t			freeblks;
- 	uint			resblks;
-@@ -4855,7 +4853,7 @@ xlog_finish_defer_ops(
- 	if (error)
- 		return error;
- 	/* transfer all collected dfops to this transaction */
--	xfs_defer_move(tp->t_dfops, dfops);
-+	xfs_defer_move(tp->t_dfops, parent_tp->t_dfops);
- 
- 	return xfs_trans_commit(tp);
- }
-@@ -4880,22 +4878,34 @@ STATIC int
- xlog_recover_process_intents(
- 	struct xlog		*log)
- {
--	struct xfs_defer_ops	dfops;
-+	struct xfs_trans	*parent_tp;
- 	struct xfs_ail_cursor	cur;
- 	struct xfs_log_item	*lip;
- 	struct xfs_ail		*ailp;
--	int			error = 0;
-+	int			error;
- #if defined(DEBUG) || defined(XFS_WARN)
- 	xfs_lsn_t		last_lsn;
- #endif
- 
-+	/*
-+	 * The intent recovery handlers commit transactions to complete recovery
-+	 * for individual intents, but any new deferred operations that are
-+	 * queued during that process are held off until the very end. The
-+	 * purpose of this transaction is to serve as a container for deferred
-+	 * operations. Each intent recovery handler must transfer dfops here
-+	 * before its local transaction commits, and we'll finish the entire
-+	 * list below.
-+	 */
-+	error = xfs_trans_alloc_empty(log->l_mp, &parent_tp);
-+	if (error)
-+		return error;
-+
- 	ailp = log->l_ailp;
- 	spin_lock(&ailp->ail_lock);
- 	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
- #if defined(DEBUG) || defined(XFS_WARN)
- 	last_lsn = xlog_assign_lsn(log->l_curr_cycle, log->l_curr_block);
- #endif
--	xfs_defer_init(NULL, &dfops);
- 	while (lip != NULL) {
- 		/*
- 		 * We're done when we see something other than an intent.
-@@ -4930,12 +4940,10 @@ xlog_recover_process_intents(
- 			error = xlog_recover_process_rui(log->l_mp, ailp, lip);
- 			break;
- 		case XFS_LI_CUI:
--			error = xlog_recover_process_cui(log->l_mp, ailp, lip,
--					&dfops);
-+			error = xlog_recover_process_cui(parent_tp, ailp, lip);
- 			break;
- 		case XFS_LI_BUI:
--			error = xlog_recover_process_bui(log->l_mp, ailp, lip,
--					&dfops);
-+			error = xlog_recover_process_bui(parent_tp, ailp, lip);
- 			break;
- 		}
- 		if (error)
-@@ -4945,10 +4953,9 @@ xlog_recover_process_intents(
- out:
- 	xfs_trans_ail_cursor_done(&cur);
- 	spin_unlock(&ailp->ail_lock);
--	if (error)
--		__xfs_defer_cancel(&dfops);
--	else
--		error = xlog_finish_defer_ops(log->l_mp, &dfops);
-+	if (!error)
-+		error = xlog_finish_defer_ops(parent_tp);
-+	xfs_trans_cancel(parent_tp);
- 
- 	return error;
- }
-diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index d3582a06626f..011e1d0640fb 100644
---- a/fs/xfs/xfs_refcount_item.c
-+++ b/fs/xfs/xfs_refcount_item.c
-@@ -380,9 +380,8 @@ xfs_cud_init(
-  */
- int
- xfs_cui_recover(
--	struct xfs_mount		*mp,
--	struct xfs_cui_log_item		*cuip,
--	struct xfs_defer_ops		*dfops)
-+	struct xfs_trans		*parent_tp,
-+	struct xfs_cui_log_item		*cuip)
- {
- 	int				i;
- 	int				error = 0;
-@@ -398,6 +397,7 @@ xfs_cui_recover(
- 	xfs_extlen_t			new_len;
- 	struct xfs_bmbt_irec		irec;
- 	bool				requeue_only = false;
-+	struct xfs_mount		*mp = parent_tp->t_mountp;
- 
- 	ASSERT(!test_bit(XFS_CUI_RECOVERED, &cuip->cui_flags));
- 
-@@ -457,7 +457,7 @@ xfs_cui_recover(
- 	 * finishes them on completion. Transfer current dfops state to this
- 	 * transaction and transfer the result back before we return.
- 	 */
--	xfs_defer_move(tp->t_dfops, dfops);
-+	xfs_defer_move(tp->t_dfops, parent_tp->t_dfops);
- 	cudp = xfs_trans_get_cud(tp, cuip);
- 
- 	for (i = 0; i < cuip->cui_format.cui_nextents; i++) {
-@@ -522,13 +522,13 @@ xfs_cui_recover(
- 
- 	xfs_refcount_finish_one_cleanup(tp, rcur, error);
- 	set_bit(XFS_CUI_RECOVERED, &cuip->cui_flags);
--	xfs_defer_move(dfops, tp->t_dfops);
-+	xfs_defer_move(parent_tp->t_dfops, tp->t_dfops);
- 	error = xfs_trans_commit(tp);
- 	return error;
- 
- abort_error:
- 	xfs_refcount_finish_one_cleanup(tp, rcur, error);
--	xfs_defer_move(dfops, tp->t_dfops);
-+	xfs_defer_move(parent_tp->t_dfops, tp->t_dfops);
- 	xfs_trans_cancel(tp);
- 	return error;
- }
-diff --git a/fs/xfs/xfs_refcount_item.h b/fs/xfs/xfs_refcount_item.h
-index dd830b69cd1e..3896dcc2368f 100644
---- a/fs/xfs/xfs_refcount_item.h
-+++ b/fs/xfs/xfs_refcount_item.h
-@@ -82,7 +82,6 @@ struct xfs_cud_log_item *xfs_cud_init(struct xfs_mount *,
- 		struct xfs_cui_log_item *);
- void xfs_cui_item_free(struct xfs_cui_log_item *);
- void xfs_cui_release(struct xfs_cui_log_item *);
--int xfs_cui_recover(struct xfs_mount *mp, struct xfs_cui_log_item *cuip,
--		struct xfs_defer_ops *dfops);
-+int xfs_cui_recover(struct xfs_trans *parent_tp, struct xfs_cui_log_item *cuip);
- 
- #endif	/* __XFS_REFCOUNT_ITEM_H__ */
--- 
-2.17.1
+BTW, isn't the typical scrub sequence already multi-pass by virtue of
+the xfs_scrub_metadata() implementation? I'm wondering if the ->scrub()
+callout could not only detect corruption, but validate whether repair
+(if requested) is possible based on the kind of checks that are
+currently in the repair side rmapbt walkers. Thoughts? Are there future
+changes that are better supported by an in-core tracking structure in
+general (assuming we'll eventually replace the linked lists with
+something more efficient) as opposed to attempting to optimize out the
+need for that tracking at all?
 
+Brian
+
+> --D
+> 
+> > Brian
+> > 
+> > > --D
+> > > 
+> > > > Brian
+> > > > 
+> > > > > > > +
+> > > > > > > +done:
+> > > > > > > +	/* Free all the OWN_AG blocks that are not in the rmapbt/agfl. */
+> > > > > > > +	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_AG);
+> > > > > > > +	return xrep_reap_extents(sc, old_allocbt_blocks, &oinfo,
+> > > > > > > +			XFS_AG_RESV_NONE);
+> > > > > > > +}
+> > > > > > > +
+> > > > > > ...
+> > > > > > > diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
+> > > > > > > index 0ed68379e551..82f99633a597 100644
+> > > > > > > --- a/fs/xfs/xfs_extent_busy.c
+> > > > > > > +++ b/fs/xfs/xfs_extent_busy.c
+> > > > > > > @@ -657,3 +657,17 @@ xfs_extent_busy_ag_cmp(
+> > > > > > >  		diff = b1->bno - b2->bno;
+> > > > > > >  	return diff;
+> > > > > > >  }
+> > > > > > > +
+> > > > > > > +/* Are there any busy extents in this AG? */
+> > > > > > > +bool
+> > > > > > > +xfs_extent_busy_list_empty(
+> > > > > > > +	struct xfs_perag	*pag)
+> > > > > > > +{
+> > > > > > > +	spin_lock(&pag->pagb_lock);
+> > > > > > > +	if (pag->pagb_tree.rb_node) {
+> > > > > > 
+> > > > > > RB_EMPTY_ROOT()?
+> > > > > 
+> > > > > Good suggestion, thank you!
+> > > > > 
+> > > > > --D
+> > > > > 
+> > > > > > Brian
+> > > > > > 
+> > > > > > > +		spin_unlock(&pag->pagb_lock);
+> > > > > > > +		return false;
+> > > > > > > +	}
+> > > > > > > +	spin_unlock(&pag->pagb_lock);
+> > > > > > > +	return true;
+> > > > > > > +}
+> > > > > > > diff --git a/fs/xfs/xfs_extent_busy.h b/fs/xfs/xfs_extent_busy.h
+> > > > > > > index 990ab3891971..2f8c73c712c6 100644
+> > > > > > > --- a/fs/xfs/xfs_extent_busy.h
+> > > > > > > +++ b/fs/xfs/xfs_extent_busy.h
+> > > > > > > @@ -65,4 +65,6 @@ static inline void xfs_extent_busy_sort(struct list_head *list)
+> > > > > > >  	list_sort(NULL, list, xfs_extent_busy_ag_cmp);
+> > > > > > >  }
+> > > > > > >  
+> > > > > > > +bool xfs_extent_busy_list_empty(struct xfs_perag *pag);
+> > > > > > > +
+> > > > > > >  #endif /* __XFS_EXTENT_BUSY_H__ */
+> > > > > > > 
+> > > > > > > --
+> > > > > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > > > > the body of a message to majordomo@vger.kernel.org
+> > > > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > > > > --
+> > > > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > > > the body of a message to majordomo@vger.kernel.org
+> > > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > > > --
+> > > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > > the body of a message to majordomo@vger.kernel.org
+> > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > > --
+> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
