@@ -1,189 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:47656 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2389399AbeHAPFk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 1 Aug 2018 11:05:40 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 918E77A7E6
-        for <linux-xfs@vger.kernel.org>; Wed,  1 Aug 2018 13:19:53 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 7D3D02026D68
-        for <linux-xfs@vger.kernel.org>; Wed,  1 Aug 2018 13:19:53 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 10/15] xfs: clean out superfluous dfops dop params/vars
-Date: Wed,  1 Aug 2018 09:19:47 -0400
-Message-Id: <20180801131952.60250-11-bfoster@redhat.com>
-In-Reply-To: <20180801131952.60250-1-bfoster@redhat.com>
-References: <20180801131952.60250-1-bfoster@redhat.com>
+Received: from sandeen.net ([63.231.237.45]:40254 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732367AbeHBRmh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Aug 2018 13:42:37 -0400
+Subject: Re: [PATCH] xfs: refactor log recovery check
+References: <20180801000622.GA30972@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <d5dbabac-11c5-bcb7-1abc-d619561ddca3@sandeen.net>
+Date: Thu, 2 Aug 2018 10:50:52 -0500
+MIME-Version: 1.0
+In-Reply-To: <20180801000622.GA30972@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
 
-The dfops code still passes around the xfs_defer_ops pointer
-superfluously in a few places. Clean this up wherever the
-transaction will suffice.
+On 7/31/18 7:06 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Add a predicate to decide if the log is actively in recovery and use
+> that instead of open-coding a pagf_init check in the attr leaf verifier.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_defer.c | 43 +++++++++++++++++++--------------------
- fs/xfs/libxfs/xfs_defer.h |  2 +-
- 2 files changed, 22 insertions(+), 23 deletions(-)
+I suppose this could be used in a few ASSERT()s and in 
+xfs_log_force_umount() now too, for consistency?
 
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index 66ef9341813b..7079f534c735 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -181,9 +181,9 @@ static const struct xfs_defer_op_type *defer_op_types[XFS_DEFER_OPS_TYPE_MAX];
-  */
- STATIC void
- xfs_defer_intake_work(
--	struct xfs_trans		*tp,
--	struct xfs_defer_ops		*dop)
-+	struct xfs_trans		*tp)
- {
-+	struct xfs_defer_ops		*dop = tp->t_dfops;
- 	struct list_head		*li;
- 	struct xfs_defer_pending	*dfp;
- 
-@@ -204,9 +204,9 @@ xfs_defer_intake_work(
- STATIC void
- xfs_defer_trans_abort(
- 	struct xfs_trans		*tp,
--	struct xfs_defer_ops		*dop,
- 	int				error)
- {
-+	struct xfs_defer_ops		*dop = tp->t_dfops;
- 	struct xfs_defer_pending	*dfp;
- 
- 	trace_xfs_defer_trans_abort(tp->t_mountp, dop, _RET_IP_);
-@@ -230,7 +230,6 @@ STATIC int
- xfs_defer_trans_roll(
- 	struct xfs_trans		**tp)
- {
--	struct xfs_defer_ops		*dop = (*tp)->t_dfops;
- 	struct xfs_buf_log_item		*bli;
- 	struct xfs_inode_log_item	*ili;
- 	struct xfs_log_item		*lip;
-@@ -272,14 +271,14 @@ xfs_defer_trans_roll(
- 		}
- 	}
- 
--	trace_xfs_defer_trans_roll((*tp)->t_mountp, dop, _RET_IP_);
-+	trace_xfs_defer_trans_roll((*tp)->t_mountp, (*tp)->t_dfops, _RET_IP_);
- 
- 	/* Roll the transaction. */
- 	error = xfs_trans_roll(tp);
--	dop = (*tp)->t_dfops;
- 	if (error) {
--		trace_xfs_defer_trans_roll_error((*tp)->t_mountp, dop, error);
--		xfs_defer_trans_abort(*tp, dop, error);
-+		trace_xfs_defer_trans_roll_error((*tp)->t_mountp,
-+						 (*tp)->t_dfops, error);
-+		xfs_defer_trans_abort(*tp,  error);
- 		return error;
- 	}
- 
-@@ -299,9 +298,10 @@ xfs_defer_trans_roll(
- /* Do we have any work items to finish? */
- bool
- xfs_defer_has_unfinished_work(
--	struct xfs_defer_ops		*dop)
-+	struct xfs_trans		*tp)
- {
--	return !list_empty(&dop->dop_pending) || !list_empty(&dop->dop_intake);
-+	return !list_empty(&tp->t_dfops->dop_pending) ||
-+		!list_empty(&tp->t_dfops->dop_intake);
- }
- 
- /*
-@@ -311,7 +311,7 @@ static void
- xfs_defer_reset(
- 	struct xfs_trans	*tp)
- {
--	ASSERT(!xfs_defer_has_unfinished_work(tp->t_dfops));
-+	ASSERT(!xfs_defer_has_unfinished_work(tp));
- 
- 	/*
- 	 * Low mode state transfers across transaction rolls to mirror dfops
-@@ -332,7 +332,6 @@ int
- xfs_defer_finish_noroll(
- 	struct xfs_trans		**tp)
- {
--	struct xfs_defer_ops		*dop = (*tp)->t_dfops;
- 	struct xfs_defer_pending	*dfp;
- 	struct list_head		*li;
- 	struct list_head		*n;
-@@ -342,24 +341,22 @@ xfs_defer_finish_noroll(
- 
- 	ASSERT((*tp)->t_flags & XFS_TRANS_PERM_LOG_RES);
- 
--	trace_xfs_defer_finish((*tp)->t_mountp, dop, _RET_IP_);
-+	trace_xfs_defer_finish((*tp)->t_mountp, (*tp)->t_dfops, _RET_IP_);
- 
- 	/* Until we run out of pending work to finish... */
--	while (xfs_defer_has_unfinished_work(dop)) {
-+	while (xfs_defer_has_unfinished_work(*tp)) {
- 		/* Log intents for work items sitting in the intake. */
--		xfs_defer_intake_work(*tp, dop);
-+		xfs_defer_intake_work(*tp);
- 
- 		/*
--		 * Roll the transaction and update dop in case dfops was
--		 * embedded in the transaction.
-+		 * Roll the transaction.
- 		 */
- 		error = xfs_defer_trans_roll(tp);
- 		if (error)
- 			goto out;
--		dop = (*tp)->t_dfops;
- 
- 		/* Log an intent-done item for the first pending item. */
--		dfp = list_first_entry(&dop->dop_pending,
-+		dfp = list_first_entry(&(*tp)->t_dfops->dop_pending,
- 				struct xfs_defer_pending, dfp_list);
- 		trace_xfs_defer_pending_finish((*tp)->t_mountp, dfp);
- 		dfp->dfp_done = dfp->dfp_type->create_done(*tp, dfp->dfp_intent,
-@@ -390,7 +387,7 @@ xfs_defer_finish_noroll(
- 				 */
- 				if (cleanup_fn)
- 					cleanup_fn(*tp, state, error);
--				xfs_defer_trans_abort(*tp, dop, error);
-+				xfs_defer_trans_abort(*tp, error);
- 				goto out;
- 			}
- 		}
-@@ -420,9 +417,11 @@ xfs_defer_finish_noroll(
- 
- out:
- 	if (error)
--		trace_xfs_defer_finish_error((*tp)->t_mountp, dop, error);
-+		trace_xfs_defer_finish_error((*tp)->t_mountp, (*tp)->t_dfops,
-+					     error);
- 	 else
--		trace_xfs_defer_finish_done((*tp)->t_mountp, dop, _RET_IP_);
-+		trace_xfs_defer_finish_done((*tp)->t_mountp, (*tp)->t_dfops,
-+					    _RET_IP_);
- 
- 	return error;
- }
-diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-index 0de7504e5651..f051c8056141 100644
---- a/fs/xfs/libxfs/xfs_defer.h
-+++ b/fs/xfs/libxfs/xfs_defer.h
-@@ -41,7 +41,7 @@ int xfs_defer_finish_noroll(struct xfs_trans **tp);
- int xfs_defer_finish(struct xfs_trans **tp);
- void xfs_defer_cancel(struct xfs_trans *);
- void xfs_defer_init(struct xfs_trans *tp, struct xfs_defer_ops *dop);
--bool xfs_defer_has_unfinished_work(struct xfs_defer_ops *dop);
-+bool xfs_defer_has_unfinished_work(struct xfs_trans *tp);
- void xfs_defer_move(struct xfs_trans *dtp, struct xfs_trans *stp);
- 
- /* Description of a deferred type. */
--- 
-2.17.1
+-Eric
 
+> ---
+>  fs/xfs/libxfs/xfs_attr_leaf.c |    3 +--
+>  fs/xfs/xfs_log.c              |    9 +++++++++
+>  fs/xfs/xfs_log.h              |    1 +
+>  3 files changed, 11 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index 4e7ef79a83c7..6fc5425b1474 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> @@ -242,7 +242,6 @@ xfs_attr3_leaf_verify(
+>  	struct xfs_attr3_icleaf_hdr	ichdr;
+>  	struct xfs_mount		*mp = bp->b_target->bt_mount;
+>  	struct xfs_attr_leafblock	*leaf = bp->b_addr;
+> -	struct xfs_perag		*pag = bp->b_pag;
+>  	struct xfs_attr_leaf_entry	*entries;
+>  	uint16_t			end;
+>  	int				i;
+> @@ -270,7 +269,7 @@ xfs_attr3_leaf_verify(
+>  	 * because we may have transitioned an empty shortform attr to a leaf
+>  	 * if the attr didn't fit in shortform.
+>  	 */
+> -	if (pag && pag->pagf_init && ichdr.count == 0)
+> +	if (!xfs_log_in_recovery(mp) && ichdr.count == 0)
+>  		return __this_address;
+>  
+>  	/*
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index fd10b1426382..00df4f39093a 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -4104,3 +4104,12 @@ xfs_log_check_lsn(
+>  
+>  	return valid;
+>  }
+> +
+> +bool
+> +xfs_log_in_recovery(
+> +	struct xfs_mount	*mp)
+> +{
+> +	struct xlog		*log = mp->m_log;
+> +
+> +	return log->l_flags & XLOG_ACTIVE_RECOVERY;
+> +}
+> diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
+> index 3c1f6a8b4b70..73a64bf32f6f 100644
+> --- a/fs/xfs/xfs_log.h
+> +++ b/fs/xfs/xfs_log.h
+> @@ -153,5 +153,6 @@ bool	xfs_log_item_in_current_chkpt(struct xfs_log_item *lip);
+>  void	xfs_log_work_queue(struct xfs_mount *mp);
+>  void	xfs_log_quiesce(struct xfs_mount *mp);
+>  bool	xfs_log_check_lsn(struct xfs_mount *, xfs_lsn_t);
+> +bool	xfs_log_in_recovery(struct xfs_mount *);
+>  
+>  #endif	/* __XFS_LOG_H__ */
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
