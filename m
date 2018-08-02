@@ -1,95 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:53996 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389528AbeHAQUd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Aug 2018 12:20:33 -0400
-Date: Wed, 1 Aug 2018 07:34:20 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 01/15] xfs: refactor internal dfops initialization
-Message-ID: <20180801143420.GC30972@magnolia>
-References: <20180801131952.60250-1-bfoster@redhat.com>
- <20180801131952.60250-2-bfoster@redhat.com>
+Received: from sandeen.net ([63.231.237.45]:35134 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727111AbeHBWOx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 2 Aug 2018 18:14:53 -0400
+Subject: Re: [PATCH] xfs: avoid overflows in i_delayed_blks due to numerous
+ cow reservations
+References: <20180802180256.GR30972@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <cf9203f1-c41e-b302-f5e1-641e50903cfa@sandeen.net>
+Date: Thu, 2 Aug 2018 15:22:09 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180801131952.60250-2-bfoster@redhat.com>
+In-Reply-To: <20180802180256.GR30972@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Aug 01, 2018 at 09:19:38AM -0400, Brian Foster wrote:
-> The current transaction allocation code conditionally initializes
-> the ->t_dfops indirection pointer. Transaction commit/cancel check
-> the validity of the pointer to determine whether to finish/cancel
-> the internal dfops.
+On 8/2/18 1:02 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> This disallows the ability to use the internal dfops list as a
-> temporary container (via xfs_trans_alloc_empty()). Refactor
-> transaction allocation to always initialize ->t_dfops and check
-> permanent reservation state on transaction commit/cancel.
+> Prior to the arrival of copy on write, i_delayed_blks tracked the number
+> of blocks that had been reserved for delayed allocations.  Though the
+> counter was 32-bits in size, this was enough because writeback would
+> generally start flushing files well before we hit 2^32 blocks of dirty
+> data.
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> However, now that we're using it to track CoW reservations as well, it's
+> possible to create so many of those reservations that we overflow the
+> counter.  This is kind of an extreme case (it requires ~16T of COW
+> reservations) but we ought to avoid this trivial overflow.  A userspace
+> visible effect is that stat i_blocks returns incorrect values.
+> 
+> Change the field to xfs_filblks_t, which should suffice to fix the
+> problem.  There already was a 4-byte hole in struct xfs_inode, so we get
+> this for free.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+I think delblks in xfs_qm_vop_chown_reserve() needs to be bumped up
+too then, no?
 
---D
+(and, uh, does it then need to be chased through
+xfs_trans_reserve_quota_bydquot, xfs_trans_dqresv etc?)
+
+-Eric
 
 > ---
->  fs/xfs/xfs_trans.c | 19 +++++++++----------
->  1 file changed, 9 insertions(+), 10 deletions(-)
+>  fs/xfs/xfs_inode.h |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index 7bf5c1202719..12b6ad1558e6 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -281,13 +281,7 @@ xfs_trans_alloc(
->  	INIT_LIST_HEAD(&tp->t_items);
->  	INIT_LIST_HEAD(&tp->t_busy);
->  	tp->t_firstblock = NULLFSBLOCK;
-> -	/*
-> -	 * We only roll transactions with permanent log reservation. Don't init
-> -	 * ->t_dfops to skip attempts to finish or cancel an empty dfops with a
-> -	 * non-permanent res.
-> -	 */
-> -	if (resp->tr_logflags & XFS_TRANS_PERM_LOG_RES)
-> -		xfs_defer_init(tp, &tp->t_dfops_internal);
-> +	xfs_defer_init(tp, &tp->t_dfops_internal);
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index 59b06133ceb8..3fd0e07a363e 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -48,7 +48,7 @@ typedef struct xfs_inode {
+>  	spinlock_t		i_flags_lock;	/* inode i_flags lock */
+>  	/* Miscellaneous state. */
+>  	unsigned long		i_flags;	/* see defined flags below */
+> -	unsigned int		i_delayed_blks;	/* count of delay alloc blks */
+> +	xfs_filblks_t		i_delayed_blks;	/* count of delay alloc blks */
 >  
->  	error = xfs_trans_reserve(tp, resp, blocks, rtextents);
->  	if (error) {
-> @@ -931,8 +925,13 @@ __xfs_trans_commit(
+>  	struct xfs_icdinode	i_d;		/* most of ondisk inode */
 >  
->  	trace_xfs_trans_commit(tp, _RET_IP_);
->  
-> -	/* finish deferred items on final commit */
-> -	if (!regrant && tp->t_dfops) {
-> +	/*
-> +	 * Finish deferred items on final commit. Only permanent transactions
-> +	 * should ever have deferred ops.
-> +	 */
-> +	WARN_ON_ONCE(xfs_defer_has_unfinished_work(tp->t_dfops) &&
-> +		     !(tp->t_flags & XFS_TRANS_PERM_LOG_RES));
-> +	if (!regrant && (tp->t_flags & XFS_TRANS_PERM_LOG_RES)) {
->  		error = xfs_defer_finish_noroll(&tp);
->  		if (error) {
->  			xfs_defer_cancel(tp);
-> @@ -1029,7 +1028,7 @@ xfs_trans_cancel(
->  
->  	trace_xfs_trans_cancel(tp, _RET_IP_);
->  
-> -	if (tp->t_dfops)
-> +	if (tp->t_flags & XFS_TRANS_PERM_LOG_RES)
->  		xfs_defer_cancel(tp);
->  
->  	/*
-> -- 
-> 2.17.1
-> 
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
