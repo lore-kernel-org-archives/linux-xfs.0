@@ -1,607 +1,357 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:49016 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732531AbeHBQpj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 2 Aug 2018 12:45:39 -0400
-Date: Thu, 2 Aug 2018 10:54:03 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 06/14] xfs: repair inode btrees
-Message-ID: <20180802145403.GC65267@bfoster>
-References: <153292966714.24509.15809693393247424274.stgit@magnolia>
- <153292970836.24509.597298447307205186.stgit@magnolia>
+Received: from aserp2130.oracle.com ([141.146.126.79]:60620 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728324AbeHCVPL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Aug 2018 17:15:11 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w73JDmUp159144
+        for <linux-xfs@vger.kernel.org>; Fri, 3 Aug 2018 19:17:32 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp2130.oracle.com with ESMTP id 2kma04bjvn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 03 Aug 2018 19:17:32 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w73JHV39013532
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 3 Aug 2018 19:17:31 GMT
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w73JHVpt000957
+        for <linux-xfs@vger.kernel.org>; Fri, 3 Aug 2018 19:17:31 GMT
+Date: Fri, 3 Aug 2018 12:17:30 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to a0e336ba3e3d
+Message-ID: <20180803191730.GX30972@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <153292970836.24509.597298447307205186.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, allison.henderson@oracle.com
+To: xfs <linux-xfs@vger.kernel.org>
 
-On Sun, Jul 29, 2018 at 10:48:28PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Use the rmapbt to find inode chunks, query the chunks to compute
-> hole and free masks, and with that information rebuild the inobt
-> and finobt.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/Makefile              |    1 
->  fs/xfs/scrub/common.c        |    2 
->  fs/xfs/scrub/ialloc_repair.c |  673 ++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/scrub/repair.c        |   20 +
->  fs/xfs/scrub/repair.h        |   11 +
->  fs/xfs/scrub/scrub.c         |    4 
->  fs/xfs/scrub/scrub.h         |    1 
->  fs/xfs/scrub/trace.h         |    4 
->  8 files changed, 712 insertions(+), 4 deletions(-)
->  create mode 100644 fs/xfs/scrub/ialloc_repair.c
-> 
-> 
-...
-> diff --git a/fs/xfs/scrub/ialloc_repair.c b/fs/xfs/scrub/ialloc_repair.c
-> new file mode 100644
-> index 000000000000..126135c1a147
-> --- /dev/null
-> +++ b/fs/xfs/scrub/ialloc_repair.c
-> @@ -0,0 +1,673 @@
-...
-> +
-> +/*
-> + * Inode Btree Repair
-> + * ==================
-> + *
-> + * A quick refresher of inode btrees on a v5 filesystem:
-> + *
-> + * - Each inode btree record can describe a single 'inode chunk'.  The chunk
-> + *   size is defined to be 64 inodes.  If sparse inodes are enabled, every
-> + *   inobt record must be aligned to the chunk size.  A chunk can be smaller
-> + *   than a fs block.  One must be careful with 64k-block filesystems whose
-> + *   inodes are smaller than 1k.
-> + *
-> + * - Inode buffers are read into memory in units of 'inode clusters'.  However
-> + *   many inodes fit in a cluster buffer is the smallest number of inodes that
-> + *   can be allocated or freed.  Clusters are never larger than a chunk and
-> + *   never smaller than a fs block.  If sparse inodes are not enabled, then
-> + *   records can be aligned to a cluster.
-> + *
+Hi folks,
 
-I find the wording around alignment in the above two sections a little
-confusing. We distinguish between sparse=0/1 on some points but not
-others, like the cluster buffer being the smallest possible allocation
-unit of inodes, but IIUC that is only the case with sparse=1.
+The for-next branch of the xfs-linux repository at:
 
-My general understanding is that inode records should always be aligned
-to sb_inoalignmt, regardless of sparse inodes. For non-sparse
-filesystems, this value can be smaller than the chunk size. For sparse
-filesystems, it must match the chunk size and sb_spino_align defines the
-sparse chunk allocation alignment, which must match the cluster size.
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-> + * - If sparse inodes are enabled, the holemask field will be active.  Each
-> + *   bit of the holemask represents 4 potential inodes; if set, the
-> + *   corresponding space does *not* contain inodes and must be left alone.
-> + *
-> + * So what's the rebuild algorithm?
-> + *
-> + * Iterate the reverse mapping records looking for OWN_INODES and OWN_INOBT
-> + * records.  The OWN_INOBT records are the old inode btree blocks and will be
-> + * cleared out after we've rebuilt the tree.  Each possible inode chunk within
-> + * an OWN_INODES record will be read in and the freemask calculated from the
-> + * i_mode data in the inode chunk.  For sparse inodes the holemask will be
-> + * calculated by creating the properly aligned inobt record and punching out
-> + * any chunk that's missing.  Inode allocations and frees grab the AGI first,
-> + * so repair protects itself from concurrent access by locking the AGI.
-> + *
-> + * Once we've reconstructed all the inode records, we can create new inode
-> + * btree roots and reload the btrees.  We rebuild both inode trees at the same
-> + * time because they have the same rmap owner and it would be more complex to
-> + * figure out if the other tree isn't in need of a rebuild and which OWN_INOBT
-> + * blocks it owns.  We have all the data we need to build both, so dump
-> + * everything and start over.
-> + *
-> + * We use the prefix 'xrep_ibt' because we rebuild both inode btrees.
-> + */
-> +
-> +struct xrep_ibt_extent {
-> +	struct list_head	list;
-> +	xfs_inofree_t		freemask;
-> +	xfs_agino_t		startino;
-> +	unsigned int		count;
-> +	unsigned int		usedcount;
-> +	uint16_t		holemask;
+has just been updated.
 
-I'm curious why we wouldn't just reuse xfs_inobt_rec_incore here.
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.  We're a week away from the merge
+window opening, so it's not too late for patches yet.
 
-> +};
-> +
-...
-> +
-> +/*
-> + * For each inode cluster covering the physical extent recorded by the rmapbt,
-> + * we must calculate the properly aligned startino of that cluster, then
-> + * iterate each cluster to fill in used and filled masks appropriately.  We
-> + * then use the (startino, used, filled) information to construct the
-> + * appropriate inode records.
-> + */
-> +STATIC int
-> +xrep_ibt_process_cluster(
-> +	struct xrep_ibt		*ri,
-> +	xfs_agblock_t		agbno,
-> +	int			blks_per_cluster,
-> +	xfs_agino_t		rec_agino)
-> +{
-> +	struct xfs_imap		imap;
-> +	struct xrep_ibt_extent	*rie;
-> +	struct xfs_dinode	*dip;
-> +	struct xfs_buf		*bp;
-> +	struct xfs_scrub	*sc = ri->sc;
-> +	struct xfs_mount	*mp = sc->mp;
-> +	xfs_ino_t		fsino;
-> +	xfs_inofree_t		usedmask;
-> +	xfs_agino_t		nr_inodes;
-> +	xfs_agino_t		startino;
-> +	xfs_agino_t		clusterino;
-> +	xfs_agino_t		clusteroff;
-> +	xfs_agino_t		agino;
-> +	uint16_t		fillmask;
-> +	bool			inuse;
-> +	int			usedcount;
-> +	int			error;
-> +
-> +	/* The per-AG inum of this inode cluster. */
-> +	agino = XFS_OFFBNO_TO_AGINO(mp, agbno, 0);
-> +
-> +	/* The per-AG inum of the inobt record. */
-> +	startino = rec_agino + rounddown(agino - rec_agino,
-> +			XFS_INODES_PER_CHUNK);
+The new head of the for-next branch is commit:
 
-Hmm, I'm not following what this does. When does startino != rec_agino
-here? Is this related to the multi-chunk-per-block case on large block
-sizes, since I'm not quite following how we handle that case either...?
-Don't we need to factor in inodes_per_block somewhere in here to cover
-the multi-chunk case?
+a0e336ba3e3d xfs: fix a comment in xfs_log_reserve
 
-BTW, that second line could use another indent or two to clarify it's
-part of the rounddown() call.
+New Commits:
 
-> +
-> +	/* The per-AG inum of the cluster within the inobt record. */
-> +	clusteroff = agino - startino;
-> +
-> +	/* Every inode in this holemask slot is filled. */
-> +	nr_inodes = XFS_OFFBNO_TO_AGINO(mp, blks_per_cluster, 0);
-> +	fillmask = xfs_inobt_maskn(clusteroff / XFS_INODES_PER_HOLEMASK_BIT,
-> +			nr_inodes / XFS_INODES_PER_HOLEMASK_BIT);
-> +
-> +	/*
-> +	 * Grab the inode cluster buffer.  This is safe to do with a broken
-> +	 * inobt because imap_to_bp directly maps the buffer without touching
-> +	 * either inode btree.
-> +	 */
-> +	imap.im_blkno = XFS_AGB_TO_DADDR(mp, sc->sa.agno, agbno);
-> +	imap.im_len = XFS_FSB_TO_BB(mp, blks_per_cluster);
-> +	imap.im_boffset = 0;
-> +	error = xfs_imap_to_bp(mp, sc->tp, &imap, &dip, &bp, 0,
-> +			XFS_IGET_UNTRUSTED);
-> +	if (error)
-> +		return error;
-> +
-> +	usedmask = 0;
-> +	usedcount = 0;
-> +	/* Which inodes within this cluster are free? */
-> +	for (clusterino = 0; clusterino < nr_inodes; clusterino++) {
-> +		fsino = XFS_AGINO_TO_INO(mp, sc->sa.agno, agino + clusterino);
-> +		error = xrep_ibt_check_free(sc, bp, fsino,
-> +				clusterino, &inuse);
-> +		if (error) {
-> +			xfs_trans_brelse(sc->tp, bp);
-> +			return error;
-> +		}
-> +		if (inuse) {
-> +			usedcount++;
-> +			usedmask |= XFS_INOBT_MASK(clusteroff + clusterino);
-> +		}
-> +	}
-> +	xfs_trans_brelse(sc->tp, bp);
-> +
-> +	/*
-> +	 * If the last item in the list is our chunk record,
-> +	 * update that.
-> +	 */
-> +	if (!list_empty(ri->extlist)) {
-> +		rie = list_last_entry(ri->extlist, struct xrep_ibt_extent,
-> +				list);
-> +		if (rie->startino + XFS_INODES_PER_CHUNK > startino) {
-> +			rie->freemask &= ~usedmask;
-> +			rie->holemask &= ~fillmask;
-> +			rie->count += nr_inodes;
-> +			rie->usedcount += usedcount;
-> +			return 0;
-> +		}
+Andreas Gruenbacher (6):
+      [3d7b6b21f6c5] iomap: mark newly allocated buffer heads as new
+      [ebf00be37de3] iomap: complete partial direct I/O writes synchronously
+      [19e0c58f6552] iomap: generic inline data handling
+      [e184fde6f3f5] iomap: add private pointer to struct iomap
+      [ec181f6782d8] iomap: support direct I/O to inline data
+      [806a1477b10a] iomap: add inline data support to iomap_readpage_actor
 
-And I think if we used the existing in-core record data structure we
-could also reuse existing helpers like __xfs_inobt_rec_merge().
+Bill O'Donnell (1):
+      [8756a5af1819] libxfs: add more bounds checking to sb sanity checks
 
-Alternatively, could we allocate/lookup the xrep_ibt_extent earlier and
-update the associated fields directly rather than via the indirection of
-the various local vars?
+Brian Foster (83):
+      [8a7493864983] xfs: cow unwritten conversion uses uninitialized dfops
+      [6aa6718439ac] xfs: rename xfs_trans ->t_agfl_dfops to ->t_dfops
+      [0e0417f3e546] xfs: remove dfops parameter from ifree call stack
+      [c9cfdb381172] xfs: remove dfops param from high level dirname calls
+      [813d08cb6de0] xfs: use ->t_dfops for recovery of [b|c]ui log items
+      [40d03ac6aa2b] xfs: use ->t_dfops for attr set/remove operations
+      [0bd6207f8364] xfs: remove dfops param in attr fork add path
+      [d76e6ce8ed69] xfs: use ->t_dfops in extent split tx and remove param
+      [32a9b7c65cfc] xfs: replace xfs_da_args->dfops accesses with ->t_dfops and remove
+      [2ba13721257e] xfs: use ->t_dfops in dqalloc transaction
+      [175d1a013eaf] xfs: use ->t_dfops for all xfs_bmapi_write() callers
+      [6e702a5dcbe1] xfs: remove xfs_bmapi_write() dfops param
+      [4bcfa613a058] xfs: use ->t_dfops for all xfs_bunmapi() callers
+      [ccd9d9114878] xfs: remove xfs_bunmapi() dfops param
+      [ff3edf255da7] xfs: remove xfs_bmapi_remap() dfops param
+      [3e3673e3029c] xfs: remove struct xfs_bmalloca dfops field
+      [f4a9cf97faf4] xfs: use ->t_dfops for collapse/insert range operations
+      [81ba8f3e947c] xfs: remove dfops param from internal bmap extent helpers
+      [42b394a92562] xfs: remove xfs_btree_cur bmbt dfops field
+      [ed7ef8e55c6f] xfs: remove unused btree cursor bc_private.a.dfops field
+      [7a7943c7e095] xfs: use ->t_dfops for rmap extent swap operations
+      [27356a063a85] xfs: use ->t_dfops in cancel cow blocks operation
+      [d5669ed58175] xfs: use ->t_dfops in reflink cow recover path
+      [bcd2c9f33559] xfs: refactor dfops init to attach to transaction
+      [3ae2d89174e4] xfs: allow null firstblock in xfs_bmapi_write() when tp is null
+      [bba59c5e4b38] xfs: add firstblock field to xfs_trans
+      [f16dea54b789] xfs: use ->t_firstblock in dir ops
+      [381eee69f862] xfs: remove firstblock param from xfs dir ops
+      [825d75cd8c1b] xfs: use ->t_firstblock in attrfork add
+      [766139032f95] xfs: use ->t_firstblock in xattr ops
+      [650919f13182] xfs: use ->t_firstblock for all xfs_bmapi_write() callers
+      [372837978d90] xfs: use ->t_firstblock for all xfs_bunmapi() callers
+      [580c4ff9484a] xfs: use ->t_firstblock in xfs_bmapi_remap()
+      [d0a9d7957299] xfs: use ->t_firstblock in insert/collapse range
+      [a7beabeae221] xfs: remove xfs_bmapi_write() firstblock param
+      [2af528425342] xfs: remove xfs_bunmapi() firstblock param
+      [333f950c89a1] xfs: remove bmap insert/collapse firstblock param
+      [4b77a088d781] xfs: use ->t_firstblock in bmap extent split
+      [94c07b4dba01] xfs: remove xfs_bmalloca firstblock field
+      [92f9da30f57b] xfs: remove bmap extent add helper firstblock params
+      [280253d213fb] xfs: remove bmap format helpers firstblock params
+      [cf612de732cb] xfs: remove xfs_btree_cur private firstblock field
+      [64396ff2c25b] xfs: remove xfs_alloc_arg firstblock field
+      [058529c5f51c] xfs: use ->t_firstblock in dq alloc
+      [fb91f4b5d618] xfs: replace no-op firstblock init with ->t_firstblock
+      [381d59284872] xfs: use ->t_firstblock in reflink cow block cancel
+      [f53753892187] xfs: use ->t_firstblock in extent swap
+      [9c3bf5da80ef] xfs: use ->t_firstblock in inode inactivate
+      [5fdd97944ee5] xfs: remove xfs_defer_init() firstblock param
+      [eaebb515f1a4] xfs: refactor buffer submission into a common helper
+      [e339dd8d8b04] xfs: use sync buffer I/O for sync delwri queue submission
+      [6af88cda0076] xfs: combine [a]sync buffer submission apis
+      [bb00b6f1e2b9] xfs: kill __xfs_buf_submit_common()
+      [02dff7bf8168] xfs: pull up dfops from xfs_itruncate_extents()
+      [a61acc3c78df] xfs: use ->t_dfops in log recovery intent processing
+      [dcbd44f79986] xfs: fix transaction leak on remote attr set/remove failure
+      [03f4e4b26cd5] xfs: make deferred processing safe for embedded dfops
+      [83200bfac608] xfs: remove unused deferred ops committed field
+      [509308b413c9] xfs: reset dfops to initial state after finish
+      [44fd294681de] xfs: pack holes in xfs_defer_ops and xfs_trans
+      [e021a2e5fc52] xfs: support embedded dfops in transaction
+      [1e5ae1995a44] xfs: use internal dfops in cow blocks cancel
+      [9c6bb0cf7ba3] xfs: use internal dfops in attr code
+      [91ef75b65724] xfs: use internal dfops during [b|c]ui recovery
+      [c8eac49ef798] xfs: remove all boilerplate defer init/finish code
+      [d5cca7eb244d] xfs: remove unnecessary dfops init calls in xattr code
+      [9e28a242be65] xfs: drop unnecessary xfs_defer_finish() dfops parameter
+      [b277c37f43dd] xfs: bypass final dfops roll in trans commit path
+      [98719051e75c] xfs: refactor internal dfops initialization
+      [fbfa977d25dc] xfs: use transaction for intent recovery instead of raw dfops
+      [7279aa13b8fb] xfs: remove unused __xfs_defer_cancel() internal helper
+      [ce356d64772f] xfs: pass transaction to dfops reset/move helpers
+      [1214f1cf663b] xfs: replace dop_low with transaction flag
+      [488c919a5bec] xfs: add missing defer ijoins for held inodes
+      [82ff27bc52a8] xfs: automatic dfops buffer relogging
+      [a8198666fb75] xfs: automatic dfops inode relogging
+      [7dbddbaccd18] xfs: drop dop param from xfs_defer_op_type ->finish_item() callback
+      [60f31a609ed3] xfs: clean out superfluous dfops dop params/vars
+      [9b1f4e9831df] xfs: cancel dfops on xfs_defer_finish() error
+      [1ae093cbea3d] xfs: replace xfs_defer_ops ->dop_pending with on-stack list
+      [0f37d1780c3d] xfs: pass transaction to xfs_defer_add()
+      [c03edc9e49b6] xfs: always defer agfl block frees
+      [9d9e62338597] xfs: fold dfops into the transaction
 
-BTW, I initially thought this was a sparse inode thing but I see a bit
-further down that we process a cluster at a time regardless. That seems
-Ok, but I do wonder if some of this list hackery and whatnot could be
-simplified by walking the clusters here. I guess we'd still need to
-account for separate rmapbt records for sparse chunks, however.
+Carlos Maiolino (2):
+      [efe803277364] xfs: Initialize variables in xfs_alloc_get_rec before using them
+      [5089eafffba2] libxfs: Fix a couple of sparse complaintis
 
-> +	}
-> +
-> +	/* New inode chunk; add to the list. */
-> +	rie = kmem_alloc(sizeof(struct xrep_ibt_extent), KM_MAYFAIL);
-> +	if (!rie)
-> +		return -ENOMEM;
-> +
-> +	INIT_LIST_HEAD(&rie->list);
-> +	rie->startino = startino;
-> +	rie->freemask = XFS_INOBT_ALL_FREE & ~usedmask;
-> +	rie->holemask = XFS_INOBT_ALL_FREE & ~fillmask;
+Christoph Hellwig (32):
+      [a6d639da63ae] fs: factor out a __generic_write_end helper
+      [63899c6f8851] iomap: add a page_done callback
+      [72b4daa24129] iomap: add an iomap-based readpage and readpages implementation
+      [c03cea42149d] iomap: add initial support for writes without buffer heads
+      [09230435dffd] iomap: refactor iomap_dio_actor
+      [8b2e77c16349] xfs: use iomap for blocksize == PAGE_SIZE readpage and readpages
+      [036257213836] xfs: simplify xfs_aops_discard_page
+      [d43801775766] xfs: move locking into xfs_bmap_punch_delalloc_range
+      [91cdfd176165] xfs: do not set the page uptodate in xfs_writepage_map
+      [c57371a16d07] xfs: don't clear imap_valid for a non-uptodate buffers
+      [a7b28f72ab90] xfs: don't use XFS_BMAPI_IGSTATE in xfs_map_blocks
+      [fca8c805425c] xfs: remove xfs_reflink_trim_irec_to_next_cow
+      [5c665e5b5af6] xfs: remove xfs_map_cow
+      [6a4c95013608] xfs: rename the offset variable in xfs_writepage_map
+      [c3a2f9fff1bb] xfs: remove the now unused XFS_BMAPI_IGSTATE flag
+      [060d4eaa0bf3] xfs: remove xfs_reflink_find_cow_mapping
+      [3345746ef38b] xfs: simplify xfs_map_blocks by using xfs_iext_lookup_extent directly
+      [889c65b3f60a] xfs: remove the imap_valid flag
+      [3faed667644d] xfs: don't look at buffer heads in xfs_add_to_ioend
+      [6d465e895343] xfs: move all writeback buffer_head manipulation into xfs_map_at_offset
+      [1b65d3dd2d5e] xfs: remove xfs_start_page_writeback
+      [8e1f065bea1b] xfs: refactor the tail of xfs_writepage_map
+      [ac8ee54669c0] xfs: allow writeback on pages without buffer heads
+      [9dc55f1389f9] iomap: add support for sub-pagesize buffered I/O without buffer heads
+      [82cb14175e7d] xfs: add support for sub-pagesize writeback without buffer_heads
+      [98c1a7c0ece3] xfs: update my copyrights for the writeback and iomap code
+      [fcacbc3f5113] xfs: remove if_real_bytes
+      [1216b58b353f] xfs: simplify xfs_idata_realloc
+      [3ba738df2523] xfs: remove the xfs_ifork_t typedef
+      [51d626903083] xfs: introduce a new xfs_inode_has_cow_data helper
+      [745b3f76d1c8] xfs: maintain a sequence count for inode fork manipulations
+      [e666aa37f433] xfs: avoid COW fork extent lookups in writeback if the fork didn't change
 
-I'm not sure we need the ALL_FREE thing here..? We don't use it in the
-update case above. (Though it would make sense if we allocated this
-structure earlier and initialized it.)
+Darrick J. Wong (26):
+      [c2efdfc100af] Merge branch 'iomap-4.19-merge' into for-next
+      [fa248de98a6b] xfs: don't assume a left rmap when allocating a new rmap
+      [65cfcc3897d7] xfs: check leaf attribute block freemap in verifier
+      [81b549aa626b] xfs: return from _defer_finish with a clean transaction
+      [0b04b6b875b3] xfs: trivial xfs_btree_del_cursor cleanups
+      [ef97ef26d263] xfs: clean up xfs_btree_del_cursor callers
+      [c517b3aa02cf] xfs: shorten xfs_scrub_ prefix
+      [b5e2196e9c72] xfs: shorten xfs_repair_ prefix to xrep_
+      [1d8a748a8aa9] xfs: shorten struct xfs_scrub_context to struct xfs_scrub
+      [032d91f9820f] xfs: fix indentation and other whitespace problems in scrub/repair
+      [2e9e6481e2a7] xfs: detect and fix bad summary counts at mount
+      [53235f22151e] xfs: refactor unmount record write
+      [f467cad95f5e] xfs: force summary counter recalc at next mount
+      [89c3e8cf3c26] xfs: kill IHOLD
+      [44a8736bd20a] xfs: clean up IRELE/iput callsites
+      [ebcbef3a61a6] xfs: pass transaction lock while setting up agresv on cyclic metadata
+      [bc270b53e6aa] xfs: move the repair extent list into its own file
+      [86d969b425d7] xfs: refactor the xrep_extent_list into xfs_bitmap
+      [eca383fcd63b] xfs: refactor superblock verifiers
+      [69775fd15dc7] xfs: verify icount in superblock write
+      [9e037cb7972f] xfs: check for unknown v5 feature bits in superblock write verifier
+      [ff23f4af7efd] xfs: move extent busy tree initialization to xfs_initialize_perag
+      [0c60d3aa0e2d] xfs: refactor log recovery check
+      [611995db2ce2] xfs: use a local variable for magic number in xfs_da3_node_lookup_int
+      [56830d6cc114] xfs: check da node magic in _node_lookup_int
+      [1f31c98d650c] xfs: only validate summary counts on primary superblock
 
-> +	rie->count = nr_inodes;
-> +	rie->usedcount = usedcount;
-> +	list_add_tail(&rie->list, ri->extlist);
-> +	ri->nr_records++;
-> +
-> +	return 0;
-> +}
-> +
-> +/* Record extents that belong to inode btrees. */
-> +STATIC int
-> +xrep_ibt_walk_rmap(
-> +	struct xfs_btree_cur	*cur,
-> +	struct xfs_rmap_irec	*rec,
-> +	void			*priv)
-> +{
-> +	struct xrep_ibt		*ri = priv;
-> +	struct xfs_mount	*mp = cur->bc_mp;
-> +	xfs_fsblock_t		fsbno;
-> +	xfs_agblock_t		agbno = rec->rm_startblock;
-> +	xfs_agino_t		inoalign;
-> +	xfs_agino_t		agino;
-> +	xfs_agino_t		rec_agino;
-> +	int			blks_per_cluster;
-> +	int			error = 0;
-> +
-> +	if (xchk_should_terminate(ri->sc, &error))
-> +		return error;
-> +
-> +	/* Fragment of the old btrees; dispose of them later. */
-> +	if (rec->rm_owner == XFS_RMAP_OWN_INOBT) {
-> +		fsbno = XFS_AGB_TO_FSB(mp, ri->sc->sa.agno, agbno);
-> +		return xfs_bitmap_set(ri->btlist, fsbno, rec->rm_blockcount);
-> +	}
-> +
-> +	/* Skip extents which are not owned by this inode and fork. */
-> +	if (rec->rm_owner != XFS_RMAP_OWN_INODES)
-> +		return 0;
-> +
-> +	blks_per_cluster = xfs_icluster_size_fsb(mp);
-> +
-> +	if (agbno % blks_per_cluster != 0)
-> +		return -EFSCORRUPTED;
-> +
+Dave Chinner (1):
+      [e2f6ad4624df] xfs: make xfs_writepage_map extent map centric
 
-Ok, so we check that agbno is at least cluster aligned...
+Eric Sandeen (2):
+      [a4722a643fbb] xfs: remove unused iolock arg from xfs_break_dax_layouts
+      [1c02d502c208] xfs: remove deprecated barrier/nobarrier mount
 
-Shouldn't we verify that blockcount is sane as well?
+Gustavo A. R. Silva (3):
+      [1d5bebbafc73] xfs_attr_leaf: use swap macro in xfs_attr3_leaf_rebalance
+      [897992b7e350] xfs_bmap_util: use swap macro
+      [e4e542a683c1] xfs: use swap macro in xfs_dir2_leafn_rebalance
 
-> +	trace_xrep_ibt_walk_rmap(mp, ri->sc->sa.agno, rec->rm_startblock,
-> +			rec->rm_blockcount, rec->rm_owner, rec->rm_offset,
-> +			rec->rm_flags);
-> +
-> +	/*
-> +	 * Determine the inode block alignment, and where the block
-> +	 * ought to start if it's aligned properly.  On a sparse inode
-> +	 * system the rmap doesn't have to start on an alignment boundary,
-> +	 * but the record does.  On pre-sparse filesystems, we /must/
-> +	 * start both rmap and inobt on an alignment boundary.
-> +	 */
-> +	inoalign = xfs_ialloc_cluster_alignment(mp);
-> +	agino = XFS_OFFBNO_TO_AGINO(mp, agbno, 0);
-> +	rec_agino = XFS_OFFBNO_TO_AGINO(mp, rounddown(agbno, inoalign), 0);
-> +	if (!xfs_sb_version_hassparseinodes(&mp->m_sb) && agino != rec_agino)
-> +		return -EFSCORRUPTED;
-> +
+Huang Chong (1):
+      [a0e336ba3e3d] xfs: fix a comment in xfs_log_reserve
 
-... then if I follow correctly, verify the block is aligned
-appropriately on !sparse. Firstly, isn't the above logically equivalent
-to the following? E.g., I'm not sure why we need agino here.
+Thomas Bianchi (1):
+      [c2b6e1591b6b] xfs: substitute spaces with tabs
 
-	if (!sparse && (agbno % inoalign != 0))
-		return -EFSCORRUPTED;
 
-I take it that since we're walking the rmap, agbno could refer to a
-sparse cluster. Perhaps we should also check against sb_spino_align in
-the sparse case. FWIW, I think the comment above could be more clear as
-well:
+Code Diffstat:
 
-/*
- * On a sparse inode fs, agbno could refer to a partial chunk. This
- * should be aligned to the sparse chunk alignment. On a non-sparse fs,
- * agbno must always refer to the first block of an inode chunk and so
- * should be chunk aligned.
- */
-
-> +	/*
-> +	 * Set up the free/hole masks for each inode cluster that could be
-> +	 * mapped by this rmap record.
-> +	 */
-> +	for (;
-> +	     agbno < rec->rm_startblock + rec->rm_blockcount;
-> +	     agbno += blks_per_cluster) {
-> +		error = xrep_ibt_process_cluster(ri, agbno, blks_per_cluster,
-> +				rec_agino);
-> +		if (error)
-> +			return error;
-> +	}
-
-Hmm, Ok. We're processing inodes a cluster size at a time regardless of
-the extent length. That makes sense since we presumably need to read and
-process the inode cluster itself.
-
-> +
-> +	return 0;
-> +}
-> +
-...
-> +/* Build new inode btrees and dispose of the old one. */
-> +STATIC int
-> +xrep_ibt_rebuild_trees(
-> +	struct xfs_scrub	*sc,
-> +	struct list_head	*inode_records,
-> +	struct xfs_owner_info	*oinfo,
-> +	struct xfs_bitmap	*old_iallocbt_blocks)
-> +{
-> +	struct xrep_ibt_extent	*rie;
-> +	struct xrep_ibt_extent	*n;
-> +	int			error;
-> +
-> +	/* Add all records. */
-> +	list_sort(NULL, inode_records, xrep_ibt_extent_cmp);
-> +	list_for_each_entry_safe(rie, n, inode_records, list) {
-> +		error = xrep_ibt_insert_rec(sc, rie);
-> +		if (error)
-> +			return error;
-> +
-> +		list_del(&rie->list);
-> +		kmem_free(rie);
-> +	}
-
-Same general thoughts here around freeing old blocks and whatnot as for
-the allocbt repairs. Though I assume if we end up tweaking that behavior
-we'll do so across the board.
-
-Brian
-
-> +
-> +	/* Free the old inode btree blocks if they're not in use. */
-> +	return xrep_reap_extents(sc, old_iallocbt_blocks, oinfo,
-> +			XFS_AG_RESV_NONE);
-> +}
-> +
-> +/*
-> + * Make our new inode btree roots permanent so that we can start re-adding
-> + * inode records back into the AG.
-> + */
-> +STATIC int
-> +xrep_ibt_commit_new(
-> +	struct xfs_scrub	*sc,
-> +	struct xfs_bitmap	*old_iallocbt_blocks,
-> +	int			log_flags)
-> +{
-> +	int			error;
-> +
-> +	xfs_ialloc_log_agi(sc->tp, sc->sa.agi_bp, log_flags);
-> +
-> +	/* Invalidate all the inobt/finobt blocks in btlist. */
-> +	error = xrep_invalidate_blocks(sc, old_iallocbt_blocks);
-> +	if (error)
-> +		return error;
-> +	error = xrep_roll_ag_trans(sc);
-> +	if (error)
-> +		return error;
-> +
-> +	/*
-> +	 * Now that we've succeeded, mark the incore state valid again.  If the
-> +	 * finobt is enabled, make sure we reinitialize the per-AG reservations
-> +	 * when we're done.
-> +	 */
-> +	sc->sa.pag->pagi_init = 1;
-> +	if (xfs_sb_version_hasfinobt(&sc->mp->m_sb))
-> +		sc->reset_perag_resv = true;
-> +	return 0;
-> +}
-> +
-> +/* Repair both inode btrees. */
-> +int
-> +xrep_iallocbt(
-> +	struct xfs_scrub	*sc)
-> +{
-> +	struct xfs_owner_info	oinfo;
-> +	struct list_head	inode_records;
-> +	struct xfs_bitmap	old_iallocbt_blocks;
-> +	struct xfs_mount	*mp = sc->mp;
-> +	int			log_flags = 0;
-> +	int			error = 0;
-> +
-> +	/* We require the rmapbt to rebuild anything. */
-> +	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
-> +		return -EOPNOTSUPP;
-> +
-> +	xchk_perag_get(sc->mp, &sc->sa);
-> +
-> +	/* Collect the free space data and find the old btree blocks. */
-> +	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_INOBT);
-> +	INIT_LIST_HEAD(&inode_records);
-> +	xfs_bitmap_init(&old_iallocbt_blocks);
-> +	error = xrep_ibt_find_inodes(sc, &inode_records, &old_iallocbt_blocks);
-> +	if (error)
-> +		goto out;
-> +
-> +	/*
-> +	 * Blow out the old inode btrees.  This is the point at which
-> +	 * we are no longer able to bail out gracefully.
-> +	 */
-> +	error = xrep_ibt_reset_counters(sc, &inode_records, &log_flags);
-> +	if (error)
-> +		goto out;
-> +	error = xrep_ibt_reset_btrees(sc, &oinfo, &log_flags);
-> +	if (error)
-> +		goto out;
-> +	error = xrep_ibt_commit_new(sc, &old_iallocbt_blocks, log_flags);
-> +	if (error)
-> +		goto out;
-> +
-> +	/* Now rebuild the inode information. */
-> +	error = xrep_ibt_rebuild_trees(sc, &inode_records, &oinfo,
-> +			&old_iallocbt_blocks);
-> +	if (error)
-> +		goto out;
-> +out:
-> +	xrep_ibt_cancel_inorecs(&inode_records);
-> +	xfs_bitmap_destroy(&old_iallocbt_blocks);
-> +	return error;
-> +}
-> diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-> index 17cf48564390..a44deb6f06ab 100644
-> --- a/fs/xfs/scrub/repair.c
-> +++ b/fs/xfs/scrub/repair.c
-> @@ -880,3 +880,23 @@ xrep_ino_dqattach(
->  
->  	return error;
->  }
-> +
-> +/*
-> + * Reinitialize the per-AG block reservation for the AG we just fixed.
-> + */
-> +int
-> +xrep_reset_perag_resv(
-> +	struct xfs_scrub	*sc)
-> +{
-> +	int			error;
-> +
-> +	ASSERT(sc->ops->type == ST_PERAG);
-> +	ASSERT(sc->tp);
-> +
-> +	error = xfs_ag_resv_free(sc->sa.pag);
-> +	if (error)
-> +		goto out;
-> +	error = xfs_ag_resv_init(sc->sa.pag, sc->tp);
-> +out:
-> +	return error;
-> +}
-> diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-> index bc1a5f1cbcdc..0cc53dee3228 100644
-> --- a/fs/xfs/scrub/repair.h
-> +++ b/fs/xfs/scrub/repair.h
-> @@ -53,6 +53,7 @@ int xrep_find_ag_btree_roots(struct xfs_scrub *sc, struct xfs_buf *agf_bp,
->  		struct xrep_find_ag_btree *btree_info, struct xfs_buf *agfl_bp);
->  void xrep_force_quotacheck(struct xfs_scrub *sc, uint dqtype);
->  int xrep_ino_dqattach(struct xfs_scrub *sc);
-> +int xrep_reset_perag_resv(struct xfs_scrub *sc);
->  
->  /* Metadata repairers */
->  
-> @@ -62,6 +63,7 @@ int xrep_agf(struct xfs_scrub *sc);
->  int xrep_agfl(struct xfs_scrub *sc);
->  int xrep_agi(struct xfs_scrub *sc);
->  int xrep_allocbt(struct xfs_scrub *sc);
-> +int xrep_iallocbt(struct xfs_scrub *sc);
->  
->  #else
->  
-> @@ -83,12 +85,21 @@ xrep_calc_ag_resblks(
->  	return 0;
->  }
->  
-> +static inline int
-> +xrep_reset_perag_resv(
-> +	struct xfs_scrub	*sc)
-> +{
-> +	ASSERT(0);
-> +	return -EOPNOTSUPP;
-> +}
-> +
->  #define xrep_probe			xrep_notsupported
->  #define xrep_superblock			xrep_notsupported
->  #define xrep_agf			xrep_notsupported
->  #define xrep_agfl			xrep_notsupported
->  #define xrep_agi			xrep_notsupported
->  #define xrep_allocbt			xrep_notsupported
-> +#define xrep_iallocbt			xrep_notsupported
->  
->  #endif /* CONFIG_XFS_ONLINE_REPAIR */
->  
-> diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-> index 2133a3199372..631b0b06db99 100644
-> --- a/fs/xfs/scrub/scrub.c
-> +++ b/fs/xfs/scrub/scrub.c
-> @@ -244,14 +244,14 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
->  		.type	= ST_PERAG,
->  		.setup	= xchk_setup_ag_iallocbt,
->  		.scrub	= xchk_inobt,
-> -		.repair	= xrep_notsupported,
-> +		.repair	= xrep_iallocbt,
->  	},
->  	[XFS_SCRUB_TYPE_FINOBT] = {	/* finobt */
->  		.type	= ST_PERAG,
->  		.setup	= xchk_setup_ag_iallocbt,
->  		.scrub	= xchk_finobt,
->  		.has	= xfs_sb_version_hasfinobt,
-> -		.repair	= xrep_notsupported,
-> +		.repair	= xrep_iallocbt,
->  	},
->  	[XFS_SCRUB_TYPE_RMAPBT] = {	/* rmapbt */
->  		.type	= ST_PERAG,
-> diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-> index af323b229c4b..762db46fd696 100644
-> --- a/fs/xfs/scrub/scrub.h
-> +++ b/fs/xfs/scrub/scrub.h
-> @@ -64,6 +64,7 @@ struct xfs_scrub {
->  	uint				ilock_flags;
->  	bool				try_harder;
->  	bool				has_quotaofflock;
-> +	bool				reset_perag_resv;
->  
->  	/* State tracking for single-AG operations. */
->  	struct xchk_ag			sa;
-> diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-> index 26bd5dc68efe..9126dc66f726 100644
-> --- a/fs/xfs/scrub/trace.h
-> +++ b/fs/xfs/scrub/trace.h
-> @@ -552,7 +552,7 @@ DEFINE_EVENT(xrep_rmap_class, name, \
->  		 uint64_t owner, uint64_t offset, unsigned int flags), \
->  	TP_ARGS(mp, agno, agbno, len, owner, offset, flags))
->  DEFINE_REPAIR_RMAP_EVENT(xrep_abt_walk_rmap);
-> -DEFINE_REPAIR_RMAP_EVENT(xrep_ialloc_extent_fn);
-> +DEFINE_REPAIR_RMAP_EVENT(xrep_ibt_walk_rmap);
->  DEFINE_REPAIR_RMAP_EVENT(xrep_rmap_extent_fn);
->  DEFINE_REPAIR_RMAP_EVENT(xrep_bmap_extent_fn);
->  
-> @@ -700,7 +700,7 @@ TRACE_EVENT(xrep_reset_counters,
->  		  MAJOR(__entry->dev), MINOR(__entry->dev))
->  )
->  
-> -TRACE_EVENT(xrep_ialloc_insert,
-> +TRACE_EVENT(xrep_ibt_insert,
->  	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
->  		 xfs_agino_t startino, uint16_t holemask, uint8_t count,
->  		 uint8_t freecount, uint64_t freemask),
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ Documentation/filesystems/xfs.txt  |    4 +-
+ fs/buffer.c                        |   76 +--
+ fs/internal.h                      |    2 +
+ fs/iomap.c                         |  770 ++++++++++++++++++++++++---
+ fs/xfs/Makefile                    |    1 +
+ fs/xfs/libxfs/xfs_ag_resv.c        |   13 +-
+ fs/xfs/libxfs/xfs_ag_resv.h        |    4 +-
+ fs/xfs/libxfs/xfs_alloc.c          |   46 +-
+ fs/xfs/libxfs/xfs_alloc.h          |    1 -
+ fs/xfs/libxfs/xfs_attr.c           |  120 ++---
+ fs/xfs/libxfs/xfs_attr_leaf.c      |   70 +--
+ fs/xfs/libxfs/xfs_attr_remote.c    |   26 +-
+ fs/xfs/libxfs/xfs_bmap.c           |  420 ++++++---------
+ fs/xfs/libxfs/xfs_bmap.h           |   48 +-
+ fs/xfs/libxfs/xfs_bmap_btree.c     |   22 +-
+ fs/xfs/libxfs/xfs_btree.h          |    4 -
+ fs/xfs/libxfs/xfs_da_btree.c       |   37 +-
+ fs/xfs/libxfs/xfs_da_btree.h       |    3 -
+ fs/xfs/libxfs/xfs_defer.c          |  323 ++++++------
+ fs/xfs/libxfs/xfs_defer.h          |   41 +-
+ fs/xfs/libxfs/xfs_dir2.c           |   74 ++-
+ fs/xfs/libxfs/xfs_dir2.h           |   10 +-
+ fs/xfs/libxfs/xfs_dir2_node.c      |   17 +-
+ fs/xfs/libxfs/xfs_errortag.h       |    4 +-
+ fs/xfs/libxfs/xfs_ialloc.c         |   33 +-
+ fs/xfs/libxfs/xfs_ialloc.h         |    1 -
+ fs/xfs/libxfs/xfs_ialloc_btree.c   |   12 +-
+ fs/xfs/libxfs/xfs_ialloc_btree.h   |    4 +-
+ fs/xfs/libxfs/xfs_iext_tree.c      |    6 +
+ fs/xfs/libxfs/xfs_inode_fork.c     |   74 +--
+ fs/xfs/libxfs/xfs_inode_fork.h     |    6 +-
+ fs/xfs/libxfs/xfs_log_format.h     |   13 +
+ fs/xfs/libxfs/xfs_refcount.c       |  107 ++--
+ fs/xfs/libxfs/xfs_refcount.h       |   25 +-
+ fs/xfs/libxfs/xfs_refcount_btree.c |   13 +-
+ fs/xfs/libxfs/xfs_refcount_btree.h |    7 +-
+ fs/xfs/libxfs/xfs_rmap.c           |   99 ++--
+ fs/xfs/libxfs/xfs_rmap.h           |   22 +-
+ fs/xfs/libxfs/xfs_rmap_btree.c     |    5 +-
+ fs/xfs/libxfs/xfs_rmap_btree.h     |    2 +-
+ fs/xfs/libxfs/xfs_sb.c             |  278 ++++++----
+ fs/xfs/libxfs/xfs_shared.h         |   12 +
+ fs/xfs/libxfs/xfs_types.c          |   34 ++
+ fs/xfs/libxfs/xfs_types.h          |    1 +
+ fs/xfs/scrub/agheader.c            |  518 +++++++++----------
+ fs/xfs/scrub/agheader_repair.c     |   12 +-
+ fs/xfs/scrub/alloc.c               |  116 ++---
+ fs/xfs/scrub/attr.c                |  130 ++---
+ fs/xfs/scrub/bitmap.c              |  211 ++++++++
+ fs/xfs/scrub/bitmap.h              |   32 ++
+ fs/xfs/scrub/bmap.c                |  331 ++++++------
+ fs/xfs/scrub/btree.c               |  334 ++++++------
+ fs/xfs/scrub/btree.h               |   45 +-
+ fs/xfs/scrub/common.c              |  394 +++++++-------
+ fs/xfs/scrub/common.h              |  115 ++--
+ fs/xfs/scrub/dabtree.c             |  170 +++---
+ fs/xfs/scrub/dabtree.h             |   33 +-
+ fs/xfs/scrub/dir.c                 |  264 +++++-----
+ fs/xfs/scrub/ialloc.c              |  214 ++++----
+ fs/xfs/scrub/inode.c               |  282 +++++-----
+ fs/xfs/scrub/parent.c              |  132 ++---
+ fs/xfs/scrub/quota.c               |  140 ++---
+ fs/xfs/scrub/refcount.c            |  194 +++----
+ fs/xfs/scrub/repair.c              |  492 ++++++------------
+ fs/xfs/scrub/repair.h              |   89 ++--
+ fs/xfs/scrub/rmap.c                |  172 +++---
+ fs/xfs/scrub/rtbitmap.c            |   78 +--
+ fs/xfs/scrub/scrub.c               |  210 ++++----
+ fs/xfs/scrub/scrub.h               |  134 +++--
+ fs/xfs/scrub/symlink.c             |   28 +-
+ fs/xfs/scrub/trace.c               |    6 +-
+ fs/xfs/scrub/trace.h               |  141 +++--
+ fs/xfs/xfs_aops.c                  | 1007 ++++++++++--------------------------
+ fs/xfs/xfs_aops.h                  |    4 +-
+ fs/xfs/xfs_attr_inactive.c         |    1 +
+ fs/xfs/xfs_attr_list.c             |    2 +-
+ fs/xfs/xfs_bmap_item.c             |   25 +-
+ fs/xfs/xfs_bmap_item.h             |    3 +-
+ fs/xfs/xfs_bmap_util.c             |  118 ++---
+ fs/xfs/xfs_buf.c                   |  192 +++----
+ fs/xfs/xfs_buf.h                   |   11 +-
+ fs/xfs/xfs_discard.c               |    2 +-
+ fs/xfs/xfs_dquot.c                 |   31 +-
+ fs/xfs/xfs_error.c                 |    3 +
+ fs/xfs/xfs_export.c                |    2 +-
+ fs/xfs/xfs_file.c                  |    3 +-
+ fs/xfs/xfs_filestream.c            |    8 +-
+ fs/xfs/xfs_fsmap.c                 |    4 +-
+ fs/xfs/xfs_fsops.c                 |    2 +-
+ fs/xfs/xfs_icache.c                |   16 +-
+ fs/xfs/xfs_inode.c                 |  177 ++-----
+ fs/xfs/xfs_inode.h                 |   32 +-
+ fs/xfs/xfs_inode_item.c            |    4 -
+ fs/xfs/xfs_iomap.c                 |   55 +-
+ fs/xfs/xfs_iomap.h                 |    2 +-
+ fs/xfs/xfs_iops.c                  |    5 +-
+ fs/xfs/xfs_itable.c                |    8 +-
+ fs/xfs/xfs_log.c                   |  156 +++---
+ fs/xfs/xfs_log.h                   |    1 +
+ fs/xfs/xfs_log_recover.c           |   68 +--
+ fs/xfs/xfs_mount.c                 |  100 +++-
+ fs/xfs/xfs_mount.h                 |    3 +-
+ fs/xfs/xfs_qm.c                    |   22 +-
+ fs/xfs/xfs_qm_syscalls.c           |    9 +-
+ fs/xfs/xfs_quotaops.c              |    2 +-
+ fs/xfs/xfs_refcount_item.c         |   28 +-
+ fs/xfs/xfs_refcount_item.h         |    3 +-
+ fs/xfs/xfs_reflink.c               |  173 ++-----
+ fs/xfs/xfs_reflink.h               |    4 -
+ fs/xfs/xfs_rtalloc.c               |   20 +-
+ fs/xfs/xfs_super.c                 |   38 +-
+ fs/xfs/xfs_symlink.c               |   51 +-
+ fs/xfs/xfs_trace.h                 |   78 +--
+ fs/xfs/xfs_trans.c                 |   26 +-
+ fs/xfs/xfs_trans.h                 |   21 +-
+ fs/xfs/xfs_trans_bmap.c            |    6 +-
+ fs/xfs/xfs_trans_extfree.c         |    2 -
+ fs/xfs/xfs_trans_refcount.c        |    6 +-
+ fs/xfs/xfs_trans_rmap.c            |    1 -
+ include/linux/iomap.h              |   47 ++
+ 120 files changed, 5147 insertions(+), 5342 deletions(-)
+ create mode 100644 fs/xfs/scrub/bitmap.c
+ create mode 100644 fs/xfs/scrub/bitmap.h
