@@ -1,42 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:36041 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730149AbeHAVZG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Aug 2018 17:25:06 -0400
-From: Thomas Bianchi <thomas.bianchi8@gmail.com>
-Subject: [PATCH] xfs: substitute spaces with tabs
-Date: Wed,  1 Aug 2018 18:22:25 +0200
-Message-Id: <1533140611-23467-1-git-send-email-thomas.bianchi8@gmail.com>
+Received: from mail.kernel.org ([198.145.29.99]:53688 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726186AbeHDHQi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 4 Aug 2018 03:16:38 -0400
+Date: Fri, 3 Aug 2018 22:17:18 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+Subject: [GIT PULL] xfs: 4.18 fixes, part 3
+Message-ID: <20180804051718.GY30972@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Thomas Bianchi <thomas.bianchi8@gmail.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-kernel@vger.kernel.org
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
 
-Inside xfs_attr_shortform_list removes spaces at the beginnig of the line
-and replaces with tabs.
-Issue found by checkpatch.
+Hi Linus,
 
-ERROR: code indent should use tabs where possible
+Here's one more patch for 4.18 to fix a coding error in the iomap_bmap
+function introduced in -rc1.
 
-Signed-off-by: Thomas Bianchi <thomas.bianchi8@gmail.com>
----
- fs/xfs/xfs_attr_list.c | 2 +-
+This series has been run through a full xfstests run during the week and
+through a quick xfstests run against this morning's master, with no
+major failures reported.
+
+--D
+
+The following changes since commit d4a34e16555708bab5b67e679a95f055d8ef9882:
+
+  xfs: properly handle free inodes in extent hint validators (2018-07-24 11:34:52 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.18-fixes-5
+
+for you to fetch changes up to 79b3dbe4adb3420e74cf755b4beb5d2b43d5928d:
+
+  fs: fix iomap_bmap position calculation (2018-08-02 13:09:27 -0700)
+
+----------------------------------------------------------------
+Changes since last update:
+- Fix incorrect shifting in the iomap bmap functions.
+
+----------------------------------------------------------------
+Eric Sandeen (1):
+      fs: fix iomap_bmap position calculation
+
+ fs/iomap.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-index f9ca801..a580340 100644
---- a/fs/xfs/xfs_attr_list.c
-+++ b/fs/xfs/xfs_attr_list.c
-@@ -87,7 +87,7 @@
- 	 */
- 	if (context->bufsize == 0 ||
- 	    (XFS_ISRESET_CURSOR(cursor) &&
--             (dp->i_afp->if_bytes + sf->hdr.count * 16) < context->bufsize)) {
-+	     (dp->i_afp->if_bytes + sf->hdr.count * 16) < context->bufsize)) {
- 		for (i = 0, sfe = &sf->list[0]; i < sf->hdr.count; i++) {
- 			context->put_listent(context,
- 					     sfe->flags,
--- 
-1.8.3.1
-
