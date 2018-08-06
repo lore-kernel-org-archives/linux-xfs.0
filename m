@@ -1,87 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:54422 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726194AbeHBLLL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Aug 2018 07:11:11 -0400
-Received: by mail-wm0-f66.google.com with SMTP id c14-v6so1661552wmb.4
-        for <linux-xfs@vger.kernel.org>; Thu, 02 Aug 2018 02:20:54 -0700 (PDT)
-Date: Thu, 2 Aug 2018 11:20:50 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH v2] xfs: only validate summary counts on primary
- superblock
-Message-ID: <20180802092050.wc4qoscerrrek5k2@odin.usersys.redhat.com>
-References: <20180802061331.GP30972@magnolia>
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:32154 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726408AbeHFEq4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Aug 2018 00:46:56 -0400
+Date: Mon, 6 Aug 2018 12:37:38 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 6/6] xfs: avoid COW fork extent lookups in writeback if
+ the fork didn't change
+Message-ID: <20180806023738.GC7395@dastard>
+References: <20180717232405.18511-1-hch@lst.de>
+ <20180717232405.18511-7-hch@lst.de>
+ <20180721232311.GA1691@dastard>
+ <20180723074940.GA18816@lst.de>
+ <20180724223523.GO4813@magnolia>
+ <20180727151039.GA29982@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180802061331.GP30972@magnolia>
+In-Reply-To: <20180727151039.GA29982@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-On Wed, Aug 01, 2018 at 11:13:31PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Jul 27, 2018 at 05:10:39PM +0200, Christoph Hellwig wrote:
+> On Tue, Jul 24, 2018 at 03:35:23PM -0700, Darrick J. Wong wrote:
+> > > mutex_unlock contains a barrier, and the sequence is a single register
+> > > read.  There is nothing holding a lock here would help us with.
+> > 
+> > Which mutex_unlock is that?
 > 
-> Skip the summary counter checks for secondary superblocks and inprogress
-> primary superblocks because mkfs has always written those out with
-> zeroed summary counters.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v2: add the inprogress check
-> ---
+> Actually an up_write (on i_lock), but the result is the same.
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+I'm not sure it is - I've lost count of the number of times I've
+heard the phrase "unlock does not provide a memory barrier, only
+unlock to lock provides a full memory barrier".  As such, I've
+always treated unlock as a store (release) barrier to keep stores
+inside the critical section, and lock as the correspending load
+barrier to keep loads inside the critical section.
 
->  fs/xfs/libxfs/xfs_sb.c |   14 ++++++++++----
->  1 file changed, 10 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index ca1b3a7a9171..081f46e30556 100644
-> --- a/fs/xfs/libxfs/xfs_sb.c
-> +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -148,6 +148,7 @@ xfs_validate_sb_read(
->  STATIC int
->  xfs_validate_sb_write(
->  	struct xfs_mount	*mp,
-> +	struct xfs_buf		*bp,
->  	struct xfs_sb		*sbp)
->  {
->  	/*
-> @@ -155,10 +156,15 @@ xfs_validate_sb_write(
->  	 * the superblock.  We skip this in the read validator because there
->  	 * could be newer superblocks in the log and if the values are garbage
->  	 * even after replay we'll recalculate them at the end of log mount.
-> +	 *
-> +	 * mkfs has traditionally written zeroed counters to inprogress and
-> +	 * secondary superblocks, so allow this usage to continue because
-> +	 * we never read counters from such superblocks.
->  	 */
-> -	if (sbp->sb_fdblocks > sbp->sb_dblocks ||
-> -	    !xfs_verify_icount(mp, sbp->sb_icount) ||
-> -	    sbp->sb_ifree > sbp->sb_icount) {
-> +	if (XFS_BUF_ADDR(bp) == XFS_SB_DADDR && !sbp->sb_inprogress &&
-> +	    (sbp->sb_fdblocks > sbp->sb_dblocks ||
-> +	     !xfs_verify_icount(mp, sbp->sb_icount) ||
-> +	     sbp->sb_ifree > sbp->sb_icount)) {
->  		xfs_warn(mp, "SB summary counter sanity check failed");
->  		return -EFSCORRUPTED;
->  	}
-> @@ -756,7 +762,7 @@ xfs_sb_write_verify(
->  	error = xfs_validate_sb_common(mp, bp, &sb);
->  	if (error)
->  		goto out_error;
-> -	error = xfs_validate_sb_write(mp, &sb);
-> +	error = xfs_validate_sb_write(mp, bp, &sb);
->  	if (error)
->  		goto out_error;
->  
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I think that's irrelevant, anyway, because there is no memory
+barrier implied until the ILOCK is dropped. i.e. we can change the
+value before making the extent modification, but there's no
+guarantee that it's visible to other CPUs until the store memory
+barrier occurs when the ILOCK is dropped. i.e. after the extent map
+has actually been changed.
 
+And, FWIW, without read-side memory barriers before checking the
+value, the load can be re-ordered and perhaps even elided by the
+optimising compiler.
+
+IOWs, I can't see any reliable access serialisation being provided
+by holding the ILOCK while modifying the value. Perhaps this should
+use WRITE_ONCE/READ_ONCE to ensure the correct memory barriers are
+used to serialise tthe sequence count against itself rather than the
+wider inode extent modification process?
+
+Cheers,
+
+Dave.
 -- 
-Carlos
+Dave Chinner
+david@fromorbit.com
