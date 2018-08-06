@@ -1,63 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:50394 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727333AbeHKSKE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 11 Aug 2018 14:10:04 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w7BFY6TB094027
-        for <linux-xfs@vger.kernel.org>; Sat, 11 Aug 2018 15:35:29 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp2130.oracle.com with ESMTP id 2ksnacrvng-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 11 Aug 2018 15:35:29 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w7BFZS2B025391
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 11 Aug 2018 15:35:29 GMT
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w7BFZSbf008153
-        for <linux-xfs@vger.kernel.org>; Sat, 11 Aug 2018 15:35:28 GMT
-Subject: [PATCH 5/6] iomap: fix WARN_ON_ONCE on uninitialized variable
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 11 Aug 2018 08:35:28 -0700
-Message-ID: <153400172814.27471.988480858889151684.stgit@magnolia>
-In-Reply-To: <153400169747.27471.4044680761841034489.stgit@magnolia>
-References: <153400169747.27471.4044680761841034489.stgit@magnolia>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:50802 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730096AbeHGAgR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Aug 2018 20:36:17 -0400
+Date: Tue, 7 Aug 2018 08:25:01 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v4 0/2] ext4: fix DAX dma vs truncate/hole-punch
+Message-ID: <20180806222501.GK2234@dastard>
+References: <20180710191031.17919-1-ross.zwisler@linux.intel.com>
+ <20180711081741.lmr44sp4cmt3f6um@quack2.suse.cz>
+ <20180725222839.GA28304@linux.intel.com>
+ <CAOxpaSWCT+XRtGxGQT_PVMcn79csMxbqb+cf4yycbV3eqjjnkQ@mail.gmail.com>
+ <20180806035550.GE7395@dastard>
+ <20180806154943.GA17666@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180806154943.GA17666@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Ross Zwisler <zwisler@kernel.org>, Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, darrick.wong@oracle.com, lczerner@redhat.com, linux-ext4 <linux-ext4@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Aug 06, 2018 at 05:49:43PM +0200, Christoph Hellwig wrote:
+> > > > This allows the direct I/O path to do I/O and raise & lower page->_refcount
+> > > > while we're executing a truncate/hole punch.  This leads to us trying to free
+> > > > a page with an elevated refcount.
+> > 
+> > I don't see how this is possible in XFS - maybe I'm missing
+> > something, but "direct IO submission during truncate" is not
+> > something that should ever be happening in XFS, DAX or not.
+> 
+> The pages involved in a direct I/O are not that of the file that
+> the direct I/O read/write syscalls are called on, but those of the
+> memory regions the direct I/O read/write syscalls operate on.
+> Those pages could be file backed and undergo a truncate at the
+> same time.
 
-In commit 9dc55f1389f9569 ("iomap: add support for sub-pagesize buffered
-I/O without buffer heads") we moved the initialization of poff (it's
-computed from pos) into a separate helper function.  Inline data only
-ever deals with pos == 0, hence the WARN_ON_ONCE, but now we're testing
-an uninitialized variable.
+So let me get this straight. First, mmap() file A, then fault it all
+in, then use the mmapped range of file A as the user buffer for
+direct IO to file B, then concurrently truncate file A down so the
+destination buffer for the file B dio will be beyond EOF and so we
+need to invalidate it. But waiting for gup references in truncate
+can race with other new page references via gup because gup does not
+serialise access to the file backed pages in any way?
 
-Therefore, change the test to check the parameter directly.
+i.e. we hold no fs locks at all on file A when gup takes page
+references during direct IO to file B unless we have to fault in the
+page. this doesn't seem like a problem that the filesystem can
+solve, but it does indicate to me a potential solution. i.e. we
+take the MMAPLOCK during page faults, and so we can use that to
+serialise gup against the invalidation in progress on file A.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/iomap.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+i.e. it would seem to me that gup needs to refault file-backed pages
+rather than just blindly take a reference to them so that it
+triggers serialisation of the page references against in-progress
+invalidation operations.
 
+Thoughts?
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 8bd54c08deee..8a18163dc432 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -290,7 +290,7 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 	sector_t sector;
- 
- 	if (iomap->type == IOMAP_INLINE) {
--		WARN_ON_ONCE(poff);
-+		WARN_ON_ONCE(pos);
- 		iomap_read_inline_data(inode, page, iomap);
- 		return PAGE_SIZE;
- 	}
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
