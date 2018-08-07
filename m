@@ -1,69 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:21497 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726697AbeHHA2P (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 7 Aug 2018 20:28:15 -0400
-Subject: [PATCH 2/2] [PATCH] xfs: Close race between direct IO and
- xfs_break_layouts()
-From: Dave Jiang <dave.jiang@intel.com>
-Date: Tue, 07 Aug 2018 15:11:43 -0700
-Message-ID: <153367990333.37314.16218849614019392916.stgit@djiang5-desk3.ch.intel.com>
-In-Reply-To: <153367989755.37314.6889218648604435494.stgit@djiang5-desk3.ch.intel.com>
-References: <153367989755.37314.6889218648604435494.stgit@djiang5-desk3.ch.intel.com>
+Received: from tartarus.angband.pl ([89.206.35.136]:57300 "EHLO
+        tartarus.angband.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726579AbeHHAhr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Aug 2018 20:37:47 -0400
+Date: Wed, 8 Aug 2018 00:21:06 +0200
+From: Adam Borowski <kilobyte@angband.pl>
+Subject: Re: [RESEND][PATCH v5 0/2] vfs: better dedupe permission check
+Message-ID: <20180807222106.6qfyrivo6y4pzn6a@angband.pl>
+References: <20180807214949.7714-1-mfasheh@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20180807214949.7714-1-mfasheh@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: tytso@mit.edu, darrick.wong@oracle.com, jack@suse.cz, zwisler@kernel.org
-Cc: linux-nvdimm@lists.01.org, david@fromorbit.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, lczerner@redhat.com, linux-ext4@vger.kernel.org, hch@lst.de
+To: Mark Fasheh <mfasheh@suse.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@ZenIV.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, Michael Kerrisk <mtk.manpages@gmail.com>, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, David Sterba <dsterba@suse.cz>
 
-This patch is the duplicate of ross's fix for ext4 for xfs.
+On Tue, Aug 07, 2018 at 02:49:47PM -0700, Mark Fasheh wrote:
+> Hi Andrew,
+> 
+> Could I please have these patches upstreamed or at least put in a tree for
+> more public testing? They've hit fsdevel a few times now, I have links to
+> the discussions in the change log below.
 
-If the refcount of a page is lowered between the time that it is returned
-by dax_busy_page() and when the refcount is again checked in
-xfs_break_layouts() => ___wait_var_event(), the waiting function
-xfs_wait_dax_page() will never be called.  This means that
-xfs_break_layouts() will still have 'retry' set to false, so we'll stop
-looping and never check the refcount of other pages in this inode.
+> The first patch expands our check to allow dedupe of a file if the
+> user owns it or otherwise would be allowed to write to it.
+[...]
+> The other problem we have is also related to forcing the user to open
+> target files for write - A process trying to exec a file currently
+> being deduped gets ETXTBUSY. The answer (as above) is to allow them to
+> open the targets ro - root can already do this. There was a patch from
+> Adam Borowski to fix this back in 2016
 
-Instead, always continue looping as long as dax_layout_busy_page() gives us
-a page which it found with an elevated refcount.
+> The 2nd patch fixes our return code for permission denied to be
+> EPERM. For some reason we're returning EINVAL - I think that's
+> probably my fault. At any rate, we need to be returning something
+> descriptive of the actual problem, otherwise callers see EINVAL and
+> can't really make a valid determination of what's gone wrong.
 
-Signed-off-by: Dave Jiang <dave.jiang@intel.com>
----
- fs/xfs/xfs_file.c |    7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+Note that the counterpart of these two patches for BTRFS_IOC_DEFRAG, which
+fixes the same issues, is included in btrfs' for-next, slated for 4.19. 
+While technically dedupe and defrag are independent, there would be somewhat
+less confusion if both behave the same in the same kernel version.
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index a3e7767a5715..666c93fe5284 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -721,12 +721,10 @@ xfs_file_write_iter(
- 
- static void
- xfs_wait_dax_page(
--	struct inode		*inode,
--	bool			*did_unlock)
-+	struct inode		*inode)
- {
- 	struct xfs_inode        *ip = XFS_I(inode);
- 
--	*did_unlock = true;
- 	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
- 	schedule();
- 	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
-@@ -746,9 +744,10 @@ xfs_break_dax_layouts(
- 	if (!page)
- 		return 0;
- 
-+	*did_unlock = true;
- 	return ___wait_var_event(&page->_refcount,
- 			atomic_read(&page->_refcount) == 1, TASK_INTERRUPTIBLE,
--			0, 0, xfs_wait_dax_page(inode, did_unlock));
-+			0, 0, xfs_wait_dax_page(inode));
- }
- 
- int
+Thus, it'd be nice if you would consider taking this.  Should be safe:
+even the permission check is paranoid.
 
+
+Meow!
+-- 
+⢀⣴⠾⠻⢶⣦⠀ So a Hungarian gypsy mountainman, lumberjack by day job,
+⣾⠁⢰⠒⠀⣿⡁ brigand by, uhm, hobby, invented a dish: goulash on potato
+⢿⡄⠘⠷⠚⠋⠀ pancakes.  Then the Polish couldn't decide which of his
+⠈⠳⣄⠀⠀⠀⠀ adjectives to use for the dish's name.
