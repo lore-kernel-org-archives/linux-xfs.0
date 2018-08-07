@@ -1,191 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34070 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727578AbeHGK7G (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 7 Aug 2018 06:59:06 -0400
-Date: Tue, 7 Aug 2018 10:45:45 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v4 0/2] ext4: fix DAX dma vs truncate/hole-punch
-Message-ID: <20180807084545.6gzxrtrvb34hyhdq@quack2.suse.cz>
-References: <20180710191031.17919-1-ross.zwisler@linux.intel.com>
- <20180711081741.lmr44sp4cmt3f6um@quack2.suse.cz>
- <20180725222839.GA28304@linux.intel.com>
- <CAOxpaSWCT+XRtGxGQT_PVMcn79csMxbqb+cf4yycbV3eqjjnkQ@mail.gmail.com>
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:36533 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727388AbeHGNbQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Aug 2018 09:31:16 -0400
+Received: by mail-wr1-f68.google.com with SMTP id h9-v6so15415364wro.3
+        for <linux-xfs@vger.kernel.org>; Tue, 07 Aug 2018 04:17:25 -0700 (PDT)
+Date: Tue, 7 Aug 2018 13:17:21 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] design: Document project quota inode
+Message-ID: <20180807111721.phuphqqc4mt4uv4h@odin.usersys.redhat.com>
+References: <20180806211032.16777-1-mbenatto@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOxpaSWCT+XRtGxGQT_PVMcn79csMxbqb+cf4yycbV3eqjjnkQ@mail.gmail.com>
+In-Reply-To: <20180806211032.16777-1-mbenatto@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <zwisler@kernel.org>
-Cc: Jan Kara <jack@suse.cz>, linux-nvdimm@lists.01.org, darrick.wong@oracle.com, Dave Chinner <david@fromorbit.com>, lczerner@redhat.com, linux-ext4 <linux-ext4@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Marco Benatto <mbenatto@redhat.com>
+Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-On Fri 27-07-18 10:28:51, Ross Zwisler wrote:
-> + fsdevel and the xfs list.
+On Mon, Aug 06, 2018 at 06:10:32PM -0300, Marco Benatto wrote:
+> A project quota inode was introduced into V5 superblock allowing
+> project quotas and group quotas to be used simultaneously. However
+> on "Quota Inodes" section we still mention it's not possible to
+> use project and group quotas at sametime.
 > 
-> On Wed, Jul 25, 2018 at 4:28 PM Ross Zwisler
-> <ross.zwisler@linux.intel.com> wrote:
-> > On Wed, Jul 11, 2018 at 10:17:41AM +0200, Jan Kara wrote:
-> > > On Tue 10-07-18 13:10:29, Ross Zwisler wrote:
-> > > > Changes since v3:
-> > > >  * Added an ext4_break_layouts() call to ext4_insert_range() to ensure
-> > > >    that the {ext4,xfs}_break_layouts() calls have the same meaning.
-> > > >    (Dave, Darrick and Jan)
-> > >
-> > > How about the occasional WARN_ON_ONCE you mention below. Were you able to
-> > > hunt them down?
-> >
-> > The root cause of this issue is that while the ei->i_mmap_sem provides
-> > synchronization between ext4_break_layouts() and page faults, it doesn't
-> > provide synchronize us with the direct I/O path.  This exact same issue exists
-> > in XFS AFAICT, with the synchronization tool there being the XFS_MMAPLOCK.
-> >
-> > This allows the direct I/O path to do I/O and raise & lower page->_refcount
-> > while we're executing a truncate/hole punch.  This leads to us trying to free
-> > a page with an elevated refcount.
-> >
-> > Here's one instance of the race:
-> >
-> > CPU 0                                   CPU 1
-> > -----                                   -----
-> > ext4_punch_hole()
-> >   ext4_break_layouts() # all pages have refcount=1
-> >
-> >                                         ext4_direct_IO()
-> >                                           ... lots of layers ...
-> >                                           follow_page_pte()
-> >                                             get_page() # elevates refcount
-> >
-> >   truncate_pagecache_range()
-> >    ... a few layers ...
-> >    dax_disassociate_entry() # sees elevated refcount, WARN_ON_ONCE()
-> >
+> This patch documents this behavior for V5 and later superblocks,
+> while keeps documented the old behavior for earlier versions.
+> 
+> Signed-off-by: Marco Benatto <mbenatto@redhat.com>
+> ---
+>  design/XFS_Filesystem_Structure/internal_inodes.asciidoc | 11 +++++++----
+>  1 file changed, 7 insertions(+), 4 deletions(-)
+> 
+> diff --git a/design/XFS_Filesystem_Structure/internal_inodes.asciidoc b/design/XFS_Filesystem_Structure/internal_inodes.asciidoc
+> index f5c2654..b694e74 100644
+> --- a/design/XFS_Filesystem_Structure/internal_inodes.asciidoc
+> +++ b/design/XFS_Filesystem_Structure/internal_inodes.asciidoc
+> @@ -8,9 +8,12 @@ accessible from the superblock.
+>  [[Quota_Inodes]]
+>  == Quota Inodes
+>  
+> -If quotas are used, two inodes are allocated for user and group quota
+> -management. If project quotas are used, these replace the group quota management
+> -and therefore uses the group quota inode.
+> +If quotas are used, prior to version 5 superblocks, two inodes are allocated for
+> +user and group management. In this case if project quotas are used, these replace
+> +the group quota management and therefore uses the group quota inode.
+> +
+> +In version 5 superblock or later a third inode will be allocated to project quota
+> +management, making it possible to use group and project quotas management simultaneously.
 
-So this is a very different race from the one below. And it should be
-impossible to happen. This race is exactly the reason why
-dax_layout_busy_page() has unmap_mapping_range() call to force GUP to fault
-which blocks on ei->i_mmap_sem / XFS_MMAPLOCK and thus avoids the race.
+This is mostly ok, but I wonder we the V5 behavior should be emphasized, instead
+of V4 behavior?
 
-> > A similar race occurs when the refcount is being dropped while we're running
-> > ext4_break_layouts(), and this is the one that my test was actually hitting:
-> >
-> > CPU 0                                   CPU 1
-> > -----                                   -----
-> >                                         ext4_direct_IO()
-> >                                           ... lots of layers ...
-> >                                           follow_page_pte()
-> >                                             get_page()
-> >                                             # elevates refcount of page X
-> > ext4_punch_hole()
-> >   ext4_break_layouts() # two pages, X & Y, have refcount == 2
-> >     __wait_var_event() # called for page X
-> >
-> >                                           __put_devmap_managed_page()
-> >                                           # drops refcount of X to 1
-> >
-> >    # __wait_var_events() checks X's refcount in "if (condition)", and breaks.
-> >    # We never actually called ext4_wait_dax_page(), so 'retry' in
-> >    # ext4_break_layouts() is still false.  Exit do/while loop in
-> >    # ext4_break_layouts, never attempting to wait on page Y which still has an
-> >    # elevated refcount of 2.
-> >
-> >   truncate_pagecache_range()
-> >    ... a few layers ...
-> >    dax_disassociate_entry() # sees elevated refcount for Y, WARN_ON_ONCE()
-> >
-> > This second race can be fixed with the patch at the end of this function,
-> > which I think should go in, unless there is a benfit to the current retry
-> > scheme which relies on the 'retry' variable in {ext4,xfs}_break_layouts()?
-> > With this patch applied I've been able to run my unit test through
-> > thousands of iterations, where it used to failed consistently within 10 or
-> > so.
-> >
-> > Even so, I wonder if the real solution is to add synchronization between
-> > the direct I/O path and {ext4,xfs}_break_layouts()?  Other ideas on how
-> > this should be handled?
-> >
-> > --- >8 ---
-> >
-> > From a4519b0f40362f0a63ae96acaf986092aff0f0d3 Mon Sep 17 00:00:00 2001
-> > From: Ross Zwisler <zwisler@kernel.org>
-> > Date: Wed, 25 Jul 2018 16:16:05 -0600
-> > Subject: [PATCH] ext4: Close race between direct IO and ext4_break_layouts()
-> >
-> > If the refcount of a page is lowered between the time that it is returned
-> > by dax_busy_page() and when the refcount is again checked in
-> > ext4_break_layouts() => ___wait_var_event(), the waiting function
-> > ext4_wait_dax_page() will never be called.  This means that
-> > ext4_break_layouts() will still have 'retry' set to false, so we'll stop
-> > looping and never check the refcount of other pages in this inode.
-> >
-> > Instead, always continue looping as long as dax_layout_busy_page() gives us
-> > a page which it found with an elevated refcount.
-> >
-> > Note that this works around the race exposed by my unit test, but I think
-> > that there is another race that needs to be addressed, probably with
-> > additional synchronization added between direct I/O and
-> > {ext4,xfs}_break_layouts().
-> >
-> > Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
 
-OK, this is a good catch and the patch looks good. You can add:
+>  
+>  * Project quota's primary purpose is to track and monitor disk usage for
+>  directories. For this to occur, the directory inode must have the
+> @@ -28,7 +31,7 @@ multiplied by the size of +xfs_dqblk_t+ (136 bytes).
+>  .Quota inode layout
+>  image::images/76.png[]
+>  
+> -Quota information is stored in the data extents of the two reserved quota
+> +Quota information is stored in the data extents of the reserved quota
+>  inodes as an array of the +xfs_dqblk+ structures, where there is one array
+>  element for each ID in the system:
+>  
+> -- 
+> 2.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Reviewed-by: Jan Kara <jack@suse.cz>
-
-Also please post this fix officially to Ted to include it in his tree (I
-can see that he has all your other patches queued for the merge window).
-
-AFAICS XFS implementation of xfs_break_dax_layouts() has the same problem.
-Can you please fix it? Thanks for working on this!
-
-								Honza
-
-> > ---
-> >  fs/ext4/inode.c | 9 +++------
-> >  1 file changed, 3 insertions(+), 6 deletions(-)
-> >
-> > diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-> > index 27e9643bc13b..fedb88104bbf 100644
-> > --- a/fs/ext4/inode.c
-> > +++ b/fs/ext4/inode.c
-> > @@ -4193,9 +4193,8 @@ int ext4_update_disksize_before_punch(struct inode *inode, loff_t offset,
-> >         return 0;
-> >  }
-> >
-> > -static void ext4_wait_dax_page(struct ext4_inode_info *ei, bool *did_unlock)
-> > +static void ext4_wait_dax_page(struct ext4_inode_info *ei)
-> >  {
-> > -       *did_unlock = true;
-> >         up_write(&ei->i_mmap_sem);
-> >         schedule();
-> >         down_write(&ei->i_mmap_sem);
-> > @@ -4205,14 +4204,12 @@ int ext4_break_layouts(struct inode *inode)
-> >  {
-> >         struct ext4_inode_info *ei = EXT4_I(inode);
-> >         struct page *page;
-> > -       bool retry;
-> >         int error;
-> >
-> >         if (WARN_ON_ONCE(!rwsem_is_locked(&ei->i_mmap_sem)))
-> >                 return -EINVAL;
-> >
-> >         do {
-> > -               retry = false;
-> >                 page = dax_layout_busy_page(inode->i_mapping);
-> >                 if (!page)
-> >                         return 0;
-> > @@ -4220,8 +4217,8 @@ int ext4_break_layouts(struct inode *inode)
-> >                 error = ___wait_var_event(&page->_refcount,
-> >                                 atomic_read(&page->_refcount) == 1,
-> >                                 TASK_INTERRUPTIBLE, 0, 0,
-> > -                               ext4_wait_dax_page(ei, &retry));
-> > -       } while (error == 0 && retry);
-> > +                               ext4_wait_dax_page(ei));
-> > +       } while (error == 0);
-> >
-> >         return error;
-> >  }
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Carlos
