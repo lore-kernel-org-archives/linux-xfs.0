@@ -1,111 +1,162 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:50532 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:51694 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1731961AbeHBN76 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 2 Aug 2018 09:59:58 -0400
-Date: Thu, 2 Aug 2018 08:09:02 -0400
+        id S1733213AbeHGRtJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 7 Aug 2018 13:49:09 -0400
+Date: Tue, 7 Aug 2018 11:34:15 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2 12/15] xfs: replace xfs_defer_ops ->dop_pending with
- on-stack list
-Message-ID: <20180802120901.GA65267@bfoster>
-References: <20180801131952.60250-1-bfoster@redhat.com>
- <20180801131952.60250-13-bfoster@redhat.com>
- <20180802092913.GA6854@infradead.org>
+Subject: Re: xfs: cancel dfops on xfs_defer_finish() error
+Message-ID: <20180807153414.GC55416@bfoster>
+References: <18f3296d-e5d4-4d76-51f8-a40d0ceaa20e@canonical.com>
+ <20180807143720.GA55416@bfoster>
+ <20180807151029.GA30972@magnolia>
+ <20180807151836.GB55416@bfoster>
+ <20180807152644.GC30972@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180802092913.GA6854@infradead.org>
+In-Reply-To: <20180807152644.GC30972@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Colin Ian King <colin.king@canonical.com>, linux-xfs@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Thu, Aug 02, 2018 at 02:29:13AM -0700, Christoph Hellwig wrote:
-> On Wed, Aug 01, 2018 at 09:19:49AM -0400, Brian Foster wrote:
-> > The xfs_defer_ops ->dop_pending list is used to track active
-> > deferred operations once intents are logged. These items must be
-> > aborted in the event of an error. The list is populated as intents
-> > are logged and items are removed as they complete (or are aborted).
+On Tue, Aug 07, 2018 at 08:26:44AM -0700, Darrick J. Wong wrote:
+> On Tue, Aug 07, 2018 at 11:18:36AM -0400, Brian Foster wrote:
+> > On Tue, Aug 07, 2018 at 08:10:29AM -0700, Darrick J. Wong wrote:
+> > > On Tue, Aug 07, 2018 at 10:37:21AM -0400, Brian Foster wrote:
+> > > > On Tue, Aug 07, 2018 at 03:14:07PM +0100, Colin Ian King wrote:
+> > > > > Hi,
+> > > > > 
+> > > > > Recent commit 82ff27bc52a88cb5cc400bfa64e210d3ec8dfebd ("xfs: automatic
+> > > > > dfops buffer relogging") removed the assignment of variable error:
+> > > > > 
+> > > > > -       error = xfs_defer_bjoin(tp->t_dfops, bp);
+> > > > >         if (error) {
+> > > > >                 xfs_trans_bhold_release(tp, bp);
+> > > > >                 xfs_trans_brelse(tp, bp);
+> > > > > 
+> > > > 
+> > > > Hmm, I _think_ we can just drop these error checks now that this
+> > > > pre-finish error state is non-existent, something like the appended diff
+> > > > (with additional cleanups). E.g., if the buffer is held in the
+> > > > transaction then the bjoin is implicit. If the finish fails, then the
+> > > > state is essentially unchanged by the relogging patch.
+> > > > 
+> > > > That said, the error handling is a bit tricky here. Darrick, I think you
+> > > > reworked this recently.. thoughts?
+> > > > 
+> > > > Brian
+> > > > 
+> > > > --- 8< ---
+> > > > 
+> > > > diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> > > > index 70a76ac41f01..2106c4142ecd 100644
+> > > > --- a/fs/xfs/xfs_dquot.c
+> > > > +++ b/fs/xfs/xfs_dquot.c
+> > > > @@ -311,7 +311,7 @@ xfs_dquot_disk_alloc(
+> > > >  			XFS_DQUOT_CLUSTER_SIZE_FSB, XFS_BMAPI_METADATA,
+> > > >  			XFS_QM_DQALLOC_SPACE_RES(mp), &map, &nmaps);
+> > > >  	if (error)
+> > > > -		goto error0;
+> > > > +		return error;
+> > > >  	ASSERT(map.br_blockcount == XFS_DQUOT_CLUSTER_SIZE_FSB);
+> > > >  	ASSERT(nmaps == 1);
+> > > >  	ASSERT((map.br_startblock != DELAYSTARTBLOCK) &&
+> > > > @@ -326,8 +326,8 @@ xfs_dquot_disk_alloc(
+> > > >  	bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, dqp->q_blkno,
+> > > >  			mp->m_quotainfo->qi_dqchunklen, 0);
+> > > >  	if (!bp) {
+> > > > -		error = -ENOMEM;
+> > > > -		goto error1;
+> > > > +		xfs_defer_cancel(tp);
+> > > > +		return -ENOMEM;
+> > > 
+> > > The only caller of xfs_dquot_disk_alloc checks the return value and
+> > > xfs_trans_cancels the transaction, which should take care of calling
+> > > xfs_defer_cancel, right?
+> > > 
 > > 
-> > Now that xfs_defer_finish() cancels on error, there is no need to
-> > ever access ->dop_pending outside of xfs_defer_finish(). The list is
-> > only ever populated after xfs_defer_finish() begins and is either
-> > completed or cancelled before it returns.
-> > 
-> > Remove ->dop_pending from xfs_defer_ops and replace it with a local
-> > list in the xfs_defer_finish() path. Pass the local list to the
-> > various helpers now that it is not accessible via dfops. Note that
-> > we have to check for NULL in the abort case as the final tx roll
-> > occurs outside of the scope of the new local list (once the dfops
-> > has completed and thus drained the list).
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_defer.c | 129 ++++++++++++++++++--------------------
-> >  fs/xfs/libxfs/xfs_defer.h |   1 -
-> >  fs/xfs/xfs_trace.h        |   5 +-
-> >  fs/xfs/xfs_trans.c        |   2 +-
-> >  fs/xfs/xfs_trans.h        |   1 -
-> >  5 files changed, 64 insertions(+), 74 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-> > index b656a399cd71..d811a85daf6e 100644
-> > --- a/fs/xfs/libxfs/xfs_defer.c
-> > +++ b/fs/xfs/libxfs/xfs_defer.c
-...
-> > @@ -228,7 +229,8 @@ xfs_defer_trans_abort(
-> >  /* Roll a transaction so we can do some deferred op processing. */
-> >  STATIC int
-> >  xfs_defer_trans_roll(
-> > -	struct xfs_trans		**tp)
-> > +	struct xfs_trans		**tp,
-> > +	struct list_head		*dop_pending)
-> >  {
-> >  	struct xfs_buf_log_item		*bli;
-> >  	struct xfs_inode_log_item	*ili;
-> > @@ -278,7 +280,7 @@ xfs_defer_trans_roll(
-> >  	if (error) {
-> >  		trace_xfs_defer_trans_roll_error((*tp)->t_mountp,
-> >  						 (*tp)->t_dfops, error);
-> > -		xfs_defer_trans_abort(*tp,  error);
-> > +		xfs_defer_trans_abort(*tp,  dop_pending, error);
+> > Yeah. IIRC I originally left the defer_cancel() alone in this function
+> > just to be consistent, since it calls xfs_defer_finish() as well on the
+> > caller's transaction. Technically I don't think it matters either way,
+> > so I don't have much preference on if it stays or goes (assuming the
+> > other changes are correct)...
 > 
-> Can you just move this call into the caller?  That way we don't
-> need to pass dop_pending at all, xfs_defer_finish can just do
-> the plain shutdown instead of calling xfs_defer_trans_abort,
-> we can remove the NULL dop handling from xfs_defer_trans_abort.
-> In fact we could also move the shutdown out of xfs_defer_trans_abort
-> entirely and stop passing the errno to it.
-> 
-
-Sure. I dropped the SHUTDOWN_META_IO_ERROR usage as well because it
-reduces the churn a little bit and outside of here only seems to be used
-on legitimate I/O errors.
-
-> > -	while (xfs_defer_has_unfinished_work(*tp)) {
-> > -		/* Log intents for work items sitting in the intake. */
-> > -		xfs_defer_intake_work(*tp);
-> > +	while (!list_empty(&dop_pending) ||
-> > +	       !list_empty(&(*tp)->t_dfops->dop_intake)) {
-> > +		/* log intents and pull in intake items */
-> > +		xfs_defer_create_intents(*tp);
-> > +		list_splice_tail_init(&(*tp)->t_dfops->dop_intake,
-> > +				      &dop_pending);
-> 
-> Btw, it would be nice to rename tp to tpp in this function and have
-> a local tp without the double indirection.  Reading the current code
-> is a bit of a pain.
+> I can't think of a good reason for anything (except xfs_trans_cancel) to
+> call xfs_defer_cancel.  It's never correct to kill all the deferred ops
+> attached to a transaction and then continue logging things to the
+> transaction, which means that the only thing you can really do after
+> cancelling the dfops is to cancel the transaction.  I'd have to look
+> more carefully but I think all the remaining callers can all go away.
 > 
 
-Ok.
+Indeed, sounds good to me. I'll post a variant of the patch with the
+xfs_defer_cancel() call removed. I've also made a note to audit the
+remaining xfs_defer_cancel() callers to see if we can kill those off.
 
 Brian
 
-> Otherwise looks good:
+> xfs_defer_finish is a different story -- it can be used (by online
+> repair for example) to process the deferred operations so they don't sit
+> around pinning memory and log, even if there's a lot more work to be
+> done before _trans_commit.  But I don't think we need to _defer_cancel
+> if things go awry.
 > 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --D
+> 
+> > Brian
+> > 
+> > > --D
+> > > 
+> > > >  	}
+> > > >  	bp->b_ops = &xfs_dquot_buf_ops;
+> > > >  
+> > > > @@ -349,10 +349,8 @@ xfs_dquot_disk_alloc(
+> > > >  	 * the buffer locked across the _defer_finish call.  We can now do
+> > > >  	 * this correctly with xfs_defer_bjoin.
+> > > >  	 *
+> > > > -	 * Above, we allocated a disk block for the dquot information and
+> > > > -	 * used get_buf to initialize the dquot.  If the _defer_bjoin fails,
+> > > > -	 * the buffer is still locked to *tpp, so we must _bhold_release and
+> > > > -	 * then _trans_brelse the buffer.  If the _defer_finish fails, the old
+> > > > +	 * Above, we allocated a disk block for the dquot information and used
+> > > > +	 * get_buf to initialize the dquot. If the _defer_finish fails, the old
+> > > >  	 * transaction is gone but the new buffer is not joined or held to any
+> > > >  	 * transaction, so we must _buf_relse it.
+> > > >  	 *
+> > > > @@ -362,24 +360,14 @@ xfs_dquot_disk_alloc(
+> > > >  	 * manually or by committing the transaction.
+> > > >  	 */
+> > > >  	xfs_trans_bhold(tp, bp);
+> > > > -	if (error) {
+> > > > -		xfs_trans_bhold_release(tp, bp);
+> > > > -		xfs_trans_brelse(tp, bp);
+> > > > -		goto error1;
+> > > > -	}
+> > > >  	error = xfs_defer_finish(tpp);
+> > > >  	tp = *tpp;
+> > > >  	if (error) {
+> > > >  		xfs_buf_relse(bp);
+> > > > -		goto error0;
+> > > > +		return error;
+> > > >  	}
+> > > >  	*bpp = bp;
+> > > >  	return 0;
+> > > > -
+> > > > -error1:
+> > > > -	xfs_defer_cancel(tp);
+> > > > -error0:
+> > > > -	return error;
+> > > >  }
+> > > >  
+> > > >  /*
+> > > > --
+> > > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
