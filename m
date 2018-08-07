@@ -1,99 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf1-f68.google.com ([209.85.167.68]:33959 "EHLO
-        mail-lf1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388404AbeHGP2x (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Aug 2018 11:28:53 -0400
-Received: by mail-lf1-f68.google.com with SMTP id n96-v6so11616348lfi.1
-        for <linux-xfs@vger.kernel.org>; Tue, 07 Aug 2018 06:14:35 -0700 (PDT)
+Received: from youngberry.canonical.com ([91.189.89.112]:37951 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387617AbeHGQ2k (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Aug 2018 12:28:40 -0400
+From: Colin Ian King <colin.king@canonical.com>
+Subject: re: xfs: cancel dfops on xfs_defer_finish() error
+Message-ID: <18f3296d-e5d4-4d76-51f8-a40d0ceaa20e@canonical.com>
+Date: Tue, 7 Aug 2018 15:14:07 +0100
 MIME-Version: 1.0
-In-Reply-To: <20180807111721.phuphqqc4mt4uv4h@odin.usersys.redhat.com>
-References: <20180806211032.16777-1-mbenatto@redhat.com> <20180807111721.phuphqqc4mt4uv4h@odin.usersys.redhat.com>
-From: Marco Benatto <mbenatto@redhat.com>
-Date: Tue, 7 Aug 2018 10:13:54 -0300
-Message-ID: <CAOGQQ29oocfvTA+ig1KaA2r98UXh+uwnN1YSaEiDY0sfEuC10A@mail.gmail.com>
-Subject: Re: [PATCH] design: Document project quota inode
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Marco Benatto <mbenatto@redhat.com>, linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Brian Foster <bfoster@redhat.com>, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Tue, Aug 7, 2018 at 8:17 AM, Carlos Maiolino <cmaiolino@redhat.com> wrote:
-> On Mon, Aug 06, 2018 at 06:10:32PM -0300, Marco Benatto wrote:
->> A project quota inode was introduced into V5 superblock allowing
->> project quotas and group quotas to be used simultaneously. However
->> on "Quota Inodes" section we still mention it's not possible to
->> use project and group quotas at sametime.
->>
->> This patch documents this behavior for V5 and later superblocks,
->> while keeps documented the old behavior for earlier versions.
->>
->> Signed-off-by: Marco Benatto <mbenatto@redhat.com>
->> ---
->>  design/XFS_Filesystem_Structure/internal_inodes.asciidoc | 11 +++++++----
->>  1 file changed, 7 insertions(+), 4 deletions(-)
->>
->> diff --git a/design/XFS_Filesystem_Structure/internal_inodes.asciidoc b/design/XFS_Filesystem_Structure/internal_inodes.asciidoc
->> index f5c2654..b694e74 100644
->> --- a/design/XFS_Filesystem_Structure/internal_inodes.asciidoc
->> +++ b/design/XFS_Filesystem_Structure/internal_inodes.asciidoc
->> @@ -8,9 +8,12 @@ accessible from the superblock.
->>  [[Quota_Inodes]]
->>  == Quota Inodes
->>
->> -If quotas are used, two inodes are allocated for user and group quota
->> -management. If project quotas are used, these replace the group quota management
->> -and therefore uses the group quota inode.
->> +If quotas are used, prior to version 5 superblocks, two inodes are allocated for
->> +user and group management. In this case if project quotas are used, these replace
->> +the group quota management and therefore uses the group quota inode.
->> +
->> +In version 5 superblock or later a third inode will be allocated to project quota
->> +management, making it possible to use group and project quotas management simultaneously.
->
-> This is mostly ok, but I wonder we the V5 behavior should be emphasized, instead
-> of V4 behavior?
+Hi,
 
-I think most of people already know the V4 behavior, or at least I
-have seen people think
-gquota and pquota are mutually exclusive (including myself) on V5.
+Recent commit 82ff27bc52a88cb5cc400bfa64e210d3ec8dfebd ("xfs: automatic
+dfops buffer relogging") removed the assignment of variable error:
 
-Also sb_pquotino is documented on section 12.1 - Superblocks under V5 field, but
-when describing quota behavior on Inter Inodes section we still claim
-both group and
-project quotas cannot be used concurrently which imho may lead to
-misunderstanding.
-
-My intention was to make sure V5 behavior is documented while we don't
-lose the V4
-behavior description.
-
-Please let me know if this way works well..
-
-Thanks for your review.
+-       error = xfs_defer_bjoin(tp->t_dfops, bp);
+        if (error) {
+                xfs_trans_bhold_release(tp, bp);
+                xfs_trans_brelse(tp, bp);
 
 
->
->
->>
->>  * Project quota's primary purpose is to track and monitor disk usage for
->>  directories. For this to occur, the directory inode must have the
->> @@ -28,7 +31,7 @@ multiplied by the size of +xfs_dqblk_t+ (136 bytes).
->>  .Quota inode layout
->>  image::images/76.png[]
->>
->> -Quota information is stored in the data extents of the two reserved quota
->> +Quota information is stored in the data extents of the reserved quota
->>  inodes as an array of the +xfs_dqblk+ structures, where there is one array
->>  element for each ID in the system:
->>
->> --
->> 2.9.5
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> --
-> Carlos
+.. the removal of the assignment leads to dead code on the following if
+statement as error is always zero at this point.  Not sure if that was
+intended, but it tripped a static analysis warning from CoverityScan.
+
+
+364        xfs_trans_bhold(tp, bp);
+
+   const: At condition error, the value of error must be equal to 0.
+   dead_error_condition: The condition error cannot be true.
+
+365        if (error) {
+   CID 1472288 (#1 of 1): Logically dead code (DEADCODE)
+   dead_error_begin: Execution cannot reach this statement:
+xfs_trans_bhold_release(tp,....
+
+
+366                xfs_trans_bhold_release(tp, bp);
+367                xfs_trans_brelse(tp, bp);
+368                goto error1;
+369        }
+
+Colin
