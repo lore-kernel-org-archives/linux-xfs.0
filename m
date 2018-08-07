@@ -1,80 +1,133 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:36533 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727388AbeHGNbQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Aug 2018 09:31:16 -0400
-Received: by mail-wr1-f68.google.com with SMTP id h9-v6so15415364wro.3
-        for <linux-xfs@vger.kernel.org>; Tue, 07 Aug 2018 04:17:25 -0700 (PDT)
-Date: Tue, 7 Aug 2018 13:17:21 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH] design: Document project quota inode
-Message-ID: <20180807111721.phuphqqc4mt4uv4h@odin.usersys.redhat.com>
-References: <20180806211032.16777-1-mbenatto@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180806211032.16777-1-mbenatto@redhat.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:40218 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727201AbeHGOXn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Aug 2018 10:23:43 -0400
+Received: from clnet-p19-102.ikbnet.co.at ([83.175.77.102] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1fn0nz-0005C7-6p
+        for linux-xfs@vger.kernel.org; Tue, 07 Aug 2018 12:09:39 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] xfs: use WRITE_ONCE to update if_seq
+Date: Tue,  7 Aug 2018 14:09:37 +0200
+Message-Id: <20180807120937.26597-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Marco Benatto <mbenatto@redhat.com>
-Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: linux-xfs@vger.kernel.org
 
-On Mon, Aug 06, 2018 at 06:10:32PM -0300, Marco Benatto wrote:
-> A project quota inode was introduced into V5 superblock allowing
-> project quotas and group quotas to be used simultaneously. However
-> on "Quota Inodes" section we still mention it's not possible to
-> use project and group quotas at sametime.
-> 
-> This patch documents this behavior for V5 and later superblocks,
-> while keeps documented the old behavior for earlier versions.
-> 
-> Signed-off-by: Marco Benatto <mbenatto@redhat.com>
-> ---
->  design/XFS_Filesystem_Structure/internal_inodes.asciidoc | 11 +++++++----
->  1 file changed, 7 insertions(+), 4 deletions(-)
-> 
-> diff --git a/design/XFS_Filesystem_Structure/internal_inodes.asciidoc b/design/XFS_Filesystem_Structure/internal_inodes.asciidoc
-> index f5c2654..b694e74 100644
-> --- a/design/XFS_Filesystem_Structure/internal_inodes.asciidoc
-> +++ b/design/XFS_Filesystem_Structure/internal_inodes.asciidoc
-> @@ -8,9 +8,12 @@ accessible from the superblock.
->  [[Quota_Inodes]]
->  == Quota Inodes
->  
-> -If quotas are used, two inodes are allocated for user and group quota
-> -management. If project quotas are used, these replace the group quota management
-> -and therefore uses the group quota inode.
-> +If quotas are used, prior to version 5 superblocks, two inodes are allocated for
-> +user and group management. In this case if project quotas are used, these replace
-> +the group quota management and therefore uses the group quota inode.
-> +
-> +In version 5 superblock or later a third inode will be allocated to project quota
-> +management, making it possible to use group and project quotas management simultaneously.
+This adds ordering of the updates and makes sure we always see the if_seq
+update before the extent tree is modified.
 
-This is mostly ok, but I wonder we the V5 behavior should be emphasized, instead
-of V4 behavior?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_iext_tree.c | 20 +++++++++++++++++---
+ fs/xfs/xfs_aops.c             |  4 ++--
+ fs/xfs/xfs_iomap.c            |  3 ++-
+ 3 files changed, 21 insertions(+), 6 deletions(-)
 
-
->  
->  * Project quota's primary purpose is to track and monitor disk usage for
->  directories. For this to occur, the directory inode must have the
-> @@ -28,7 +31,7 @@ multiplied by the size of +xfs_dqblk_t+ (136 bytes).
->  .Quota inode layout
->  image::images/76.png[]
->  
-> -Quota information is stored in the data extents of the two reserved quota
-> +Quota information is stored in the data extents of the reserved quota
->  inodes as an array of the +xfs_dqblk+ structures, where there is one array
->  element for each ID in the system:
->  
-> -- 
-> 2.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+diff --git a/fs/xfs/libxfs/xfs_iext_tree.c b/fs/xfs/libxfs/xfs_iext_tree.c
+index 8a7aea041ee1..771dd072015d 100644
+--- a/fs/xfs/libxfs/xfs_iext_tree.c
++++ b/fs/xfs/libxfs/xfs_iext_tree.c
+@@ -14,6 +14,7 @@
+ #include "xfs_inode_fork.h"
+ #include "xfs_trans_resv.h"
+ #include "xfs_mount.h"
++#include "xfs_bmap.h"
+ #include "xfs_trace.h"
+ 
+ /*
+@@ -612,6 +613,19 @@ xfs_iext_realloc_root(
+ 	cur->leaf = new;
+ }
+ 
++/*
++ * Increment the sequence counter if we are on a COW fork.  This allows
++ * the writeback code to skip looking for a COW extent if the COW fork
++ * hasn't changed.  We use WRITE_ONCE here to ensure the update to the
++ * sequence counter is seen before the modifications to the extent
++ * tree itself take effect.
++ */
++static inline void xfs_iext_inc_seq(struct xfs_ifork *ifp, int state)
++{
++	if (state & BMAP_COWFORK)
++		WRITE_ONCE(ifp->if_seq, READ_ONCE(ifp->if_seq) + 1);
++}
++
+ void
+ xfs_iext_insert(
+ 	struct xfs_inode	*ip,
+@@ -624,7 +638,7 @@ xfs_iext_insert(
+ 	struct xfs_iext_leaf	*new = NULL;
+ 	int			nr_entries, i;
+ 
+-	ifp->if_seq++;
++	xfs_iext_inc_seq(ifp, state);
+ 
+ 	if (ifp->if_height == 0)
+ 		xfs_iext_alloc_root(ifp, cur);
+@@ -866,7 +880,7 @@ xfs_iext_remove(
+ 	ASSERT(ifp->if_u1.if_root != NULL);
+ 	ASSERT(xfs_iext_valid(ifp, cur));
+ 
+-	ifp->if_seq++;
++	xfs_iext_inc_seq(ifp, state);
+ 
+ 	nr_entries = xfs_iext_leaf_nr_entries(ifp, leaf, cur->pos) - 1;
+ 	for (i = cur->pos; i < nr_entries; i++)
+@@ -974,7 +988,7 @@ xfs_iext_update_extent(
+ {
+ 	struct xfs_ifork	*ifp = xfs_iext_state_to_fork(ip, state);
+ 
+-	ifp->if_seq++;
++	xfs_iext_inc_seq(ifp, state);
+ 
+ 	if (cur->pos == 0) {
+ 		struct xfs_bmbt_irec	old;
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 235b4ddcd324..49f5f5896a43 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -351,7 +351,7 @@ xfs_map_blocks(
+ 	if (imap_valid &&
+ 	    (!xfs_inode_has_cow_data(ip) ||
+ 	     wpc->io_type == XFS_IO_COW ||
+-	     wpc->cow_seq == ip->i_cowfp->if_seq))
++	     wpc->cow_seq == READ_ONCE(ip->i_cowfp->if_seq)))
+ 		return 0;
+ 
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+@@ -380,7 +380,7 @@ xfs_map_blocks(
+ 	    xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &imap))
+ 		cow_fsb = imap.br_startoff;
+ 	if (cow_fsb != NULLFILEOFF && cow_fsb <= offset_fsb) {
+-		wpc->cow_seq = ip->i_cowfp->if_seq;
++		wpc->cow_seq = READ_ONCE(ip->i_cowfp->if_seq);
+ 		xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ 		/*
+ 		 * Truncate can race with writeback since writeback doesn't
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 3282575e2df4..6320aca39f39 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -655,6 +655,7 @@ xfs_iomap_write_allocate(
+ 	unsigned int	*cow_seq)
+ {
+ 	xfs_mount_t	*mp = ip->i_mount;
++	struct xfs_ifork *ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	xfs_fileoff_t	offset_fsb, last_block;
+ 	xfs_fileoff_t	end_fsb, map_start_fsb;
+ 	xfs_filblks_t	count_fsb;
+@@ -768,7 +769,7 @@ xfs_iomap_write_allocate(
+ 				goto error0;
+ 
+ 			if (whichfork == XFS_COW_FORK)
+-				*cow_seq = XFS_IFORK_PTR(ip, whichfork)->if_seq;
++				*cow_seq = READ_ONCE(ifp->if_seq);
+ 			xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 		}
+ 
 -- 
-Carlos
+2.18.0
+
