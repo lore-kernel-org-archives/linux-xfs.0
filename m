@@ -1,13 +1,15 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:44480 "EHLO mga02.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:21497 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726537AbeHHA2P (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1726697AbeHHA2P (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Tue, 7 Aug 2018 20:28:15 -0400
-Subject: [PATCH 1/2] ext4: Close race between direct IO and
- ext4_break_layouts()
+Subject: [PATCH 2/2] [PATCH] xfs: Close race between direct IO and
+ xfs_break_layouts()
 From: Dave Jiang <dave.jiang@intel.com>
-Date: Tue, 07 Aug 2018 15:11:37 -0700
-Message-ID: <153367989755.37314.6889218648604435494.stgit@djiang5-desk3.ch.intel.com>
+Date: Tue, 07 Aug 2018 15:11:43 -0700
+Message-ID: <153367990333.37314.16218849614019392916.stgit@djiang5-desk3.ch.intel.com>
+In-Reply-To: <153367989755.37314.6889218648604435494.stgit@djiang5-desk3.ch.intel.com>
+References: <153367989755.37314.6889218648604435494.stgit@djiang5-desk3.ch.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -17,68 +19,51 @@ List-Id: xfs
 To: tytso@mit.edu, darrick.wong@oracle.com, jack@suse.cz, zwisler@kernel.org
 Cc: linux-nvdimm@lists.01.org, david@fromorbit.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, lczerner@redhat.com, linux-ext4@vger.kernel.org, hch@lst.de
 
-From: Ross Zwisler <zwisler@kernel.org>
+This patch is the duplicate of ross's fix for ext4 for xfs.
 
 If the refcount of a page is lowered between the time that it is returned
 by dax_busy_page() and when the refcount is again checked in
-ext4_break_layouts() => ___wait_var_event(), the waiting function
-ext4_wait_dax_page() will never be called.  This means that
-ext4_break_layouts() will still have 'retry' set to false, so we'll stop
+xfs_break_layouts() => ___wait_var_event(), the waiting function
+xfs_wait_dax_page() will never be called.  This means that
+xfs_break_layouts() will still have 'retry' set to false, so we'll stop
 looping and never check the refcount of other pages in this inode.
 
 Instead, always continue looping as long as dax_layout_busy_page() gives us
 a page which it found with an elevated refcount.
 
-Note that this works around the race exposed by my unit test, but I think
-that there is another race that needs to be addressed, probably with
-additional synchronization added between direct I/O and
-{ext4,xfs}_break_layouts().
-
-Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Dave Jiang <dave.jiang@intel.com>
 ---
- fs/ext4/inode.c |    9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_file.c |    7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 8f6ad7667974..d2663a1e3ec2 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -4191,9 +4191,8 @@ int ext4_update_disksize_before_punch(struct inode *inode, loff_t offset,
- 	return 0;
- }
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index a3e7767a5715..666c93fe5284 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -721,12 +721,10 @@ xfs_file_write_iter(
  
--static void ext4_wait_dax_page(struct ext4_inode_info *ei, bool *did_unlock)
-+static void ext4_wait_dax_page(struct ext4_inode_info *ei)
+ static void
+ xfs_wait_dax_page(
+-	struct inode		*inode,
+-	bool			*did_unlock)
++	struct inode		*inode)
  {
+ 	struct xfs_inode        *ip = XFS_I(inode);
+ 
 -	*did_unlock = true;
- 	up_write(&ei->i_mmap_sem);
+ 	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
  	schedule();
- 	down_write(&ei->i_mmap_sem);
-@@ -4203,14 +4202,12 @@ int ext4_break_layouts(struct inode *inode)
- {
- 	struct ext4_inode_info *ei = EXT4_I(inode);
- 	struct page *page;
--	bool retry;
- 	int error;
+ 	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+@@ -746,9 +744,10 @@ xfs_break_dax_layouts(
+ 	if (!page)
+ 		return 0;
  
- 	if (WARN_ON_ONCE(!rwsem_is_locked(&ei->i_mmap_sem)))
- 		return -EINVAL;
- 
- 	do {
--		retry = false;
- 		page = dax_layout_busy_page(inode->i_mapping);
- 		if (!page)
- 			return 0;
-@@ -4218,8 +4215,8 @@ int ext4_break_layouts(struct inode *inode)
- 		error = ___wait_var_event(&page->_refcount,
- 				atomic_read(&page->_refcount) == 1,
- 				TASK_INTERRUPTIBLE, 0, 0,
--				ext4_wait_dax_page(ei, &retry));
--	} while (error == 0 && retry);
-+				ext4_wait_dax_page(ei));
-+	} while (error == 0);
- 
- 	return error;
++	*did_unlock = true;
+ 	return ___wait_var_event(&page->_refcount,
+ 			atomic_read(&page->_refcount) == 1, TASK_INTERRUPTIBLE,
+-			0, 0, xfs_wait_dax_page(inode, did_unlock));
++			0, 0, xfs_wait_dax_page(inode));
  }
+ 
+ int
 
