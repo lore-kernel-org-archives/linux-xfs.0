@@ -1,15 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:64457 "EHLO mga09.intel.com"
+Received: from mga04.intel.com ([192.55.52.120]:11312 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727337AbeHHTrc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 8 Aug 2018 15:47:32 -0400
+        id S1727062AbeHHTwW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 8 Aug 2018 15:52:22 -0400
 Subject: [PATCH v2 2/2] [PATCH] xfs: Close race between direct IO and
  xfs_break_layouts()
 From: Dave Jiang <dave.jiang@intel.com>
-Date: Wed, 08 Aug 2018 10:26:36 -0700
-Message-ID: <153374915981.40645.3350205963852459041.stgit@djiang5-desk3.ch.intel.com>
-In-Reply-To: <153374910694.40645.17166196534680658204.stgit@djiang5-desk3.ch.intel.com>
-References: <153374910694.40645.17166196534680658204.stgit@djiang5-desk3.ch.intel.com>
+Date: Wed, 08 Aug 2018 10:31:40 -0700
+Message-ID: <153374942137.42241.10539674028265137668.stgit@djiang5-desk3.ch.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -32,10 +30,13 @@ Instead, always continue looping as long as dax_layout_busy_page() gives us
 a page which it found with an elevated refcount.
 
 Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
 ---
 
+Sorry resend, forgot to add Jan's reviewed-by.
+
 v2:
-- Rename parameter from did_unlock to retry (Jan) 
+- Rename parameter from did_unlock to retry (Jan)
 
  fs/xfs/xfs_file.c |    9 ++++-----
  1 file changed, 4 insertions(+), 5 deletions(-)
