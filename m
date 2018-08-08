@@ -1,293 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:47106 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726373AbeHHGPJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Aug 2018 02:15:09 -0400
-Subject: [PATCH 4/4] xfs: repair the AGI
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 07 Aug 2018 20:57:25 -0700
-Message-ID: <153370064560.25077.4297214180664675165.stgit@magnolia>
-In-Reply-To: <153370061966.25077.161884080659267764.stgit@magnolia>
-References: <153370061966.25077.161884080659267764.stgit@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:38022 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727174AbeHHLH7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 8 Aug 2018 07:07:59 -0400
+Date: Wed, 8 Aug 2018 10:49:13 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 1/2] ext4: Close race between direct IO and
+ ext4_break_layouts()
+Message-ID: <20180808084913.GB15413@quack2.suse.cz>
+References: <153367989755.37314.6889218648604435494.stgit@djiang5-desk3.ch.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <153367989755.37314.6889218648604435494.stgit@djiang5-desk3.ch.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, david@fromorbit.com, allison.henderson@oracle.com
+To: Dave Jiang <dave.jiang@intel.com>
+Cc: tytso@mit.edu, darrick.wong@oracle.com, jack@suse.cz, zwisler@kernel.org, linux-nvdimm@lists.01.org, david@fromorbit.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, lczerner@redhat.com, linux-ext4@vger.kernel.org, hch@lst.de
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue 07-08-18 15:11:37, Dave Jiang wrote:
+> From: Ross Zwisler <zwisler@kernel.org>
+> 
+> If the refcount of a page is lowered between the time that it is returned
+> by dax_busy_page() and when the refcount is again checked in
+> ext4_break_layouts() => ___wait_var_event(), the waiting function
+> ext4_wait_dax_page() will never be called.  This means that
+> ext4_break_layouts() will still have 'retry' set to false, so we'll stop
+> looping and never check the refcount of other pages in this inode.
+> 
+> Instead, always continue looping as long as dax_layout_busy_page() gives us
+> a page which it found with an elevated refcount.
+> 
+> Note that this works around the race exposed by my unit test, but I think
+> that there is another race that needs to be addressed, probably with
+> additional synchronization added between direct I/O and
+> {ext4,xfs}_break_layouts().
 
-Rebuild the AGI header items with some help from the rmapbt.
+I'd just note that the race Ross suspected should be properly handled by
+dax_layout_busy_page() so I think this last paragraph from the changelog
+can go.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/scrub/agheader_repair.c |  219 ++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/repair.h          |    2 
- fs/xfs/scrub/scrub.c           |    2 
- 3 files changed, 222 insertions(+), 1 deletion(-)
+Also Ted, this fixes a problem in the DAX truncate patches you currently
+carry in your tree so you can consider just pushing it with them during the
+merge window. It's not necessary though - the patches already make the
+problematic behavior much less likely, this patch just hopefully completely
+closes the race window.
 
+> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
+> Reviewed-by: Jan Kara <jack@suse.cz>
 
-diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-index 0decf711b3c7..df8657a5d475 100644
---- a/fs/xfs/scrub/agheader_repair.c
-+++ b/fs/xfs/scrub/agheader_repair.c
-@@ -708,3 +708,222 @@ xrep_agfl(
- 	xfs_bitmap_destroy(&agfl_extents);
- 	return error;
- }
-+
-+/* AGI */
-+
-+/*
-+ * Offset within the xrep_find_ag_btree array for each btree type.  Avoid the
-+ * XFS_BTNUM_ names here to avoid creating a sparse array.
-+ */
-+enum {
-+	XREP_AGI_INOBT = 0,
-+	XREP_AGI_FINOBT,
-+	XREP_AGI_END,
-+	XREP_AGI_MAX
-+};
-+
-+/*
-+ * Given the inode btree roots described by *fab, find the roots, check them
-+ * for sanity, and pass the root data back out via *fab.
-+ */
-+STATIC int
-+xrep_agi_find_btrees(
-+	struct xfs_scrub		*sc,
-+	struct xrep_find_ag_btree	*fab)
-+{
-+	struct xfs_buf			*agf_bp;
-+	struct xfs_mount		*mp = sc->mp;
-+	int				error;
-+
-+	/* Read the AGF. */
-+	error = xfs_alloc_read_agf(mp, sc->tp, sc->sa.agno, 0, &agf_bp);
-+	if (error)
-+		return error;
-+	if (!agf_bp)
-+		return -ENOMEM;
-+
-+	/* Find the btree roots. */
-+	error = xrep_find_ag_btree_roots(sc, agf_bp, fab, NULL);
-+	if (error)
-+		return error;
-+
-+	/* We must find the inobt root. */
-+	if (fab[XREP_AGI_INOBT].root == NULLAGBLOCK ||
-+	    fab[XREP_AGI_INOBT].height > XFS_BTREE_MAXLEVELS)
-+		return -EFSCORRUPTED;
-+
-+	/* We must find the finobt root if that feature is enabled. */
-+	if (xfs_sb_version_hasfinobt(&mp->m_sb) &&
-+	    (fab[XREP_AGI_FINOBT].root == NULLAGBLOCK ||
-+	     fab[XREP_AGI_FINOBT].height > XFS_BTREE_MAXLEVELS))
-+		return -EFSCORRUPTED;
-+
-+	return 0;
-+}
-+
-+/*
-+ * Reinitialize the AGI header, making an in-core copy of the old contents so
-+ * that we know which in-core state needs to be reinitialized.
-+ */
-+STATIC void
-+xrep_agi_init_header(
-+	struct xfs_scrub	*sc,
-+	struct xfs_buf		*agi_bp,
-+	struct xfs_agi		*old_agi)
-+{
-+	struct xfs_agi		*agi = XFS_BUF_TO_AGI(agi_bp);
-+	struct xfs_mount	*mp = sc->mp;
-+
-+	memcpy(old_agi, agi, sizeof(*old_agi));
-+	memset(agi, 0, BBTOB(agi_bp->b_length));
-+	agi->agi_magicnum = cpu_to_be32(XFS_AGI_MAGIC);
-+	agi->agi_versionnum = cpu_to_be32(XFS_AGI_VERSION);
-+	agi->agi_seqno = cpu_to_be32(sc->sa.agno);
-+	agi->agi_length = cpu_to_be32(xfs_ag_block_count(mp, sc->sa.agno));
-+	agi->agi_newino = cpu_to_be32(NULLAGINO);
-+	agi->agi_dirino = cpu_to_be32(NULLAGINO);
-+	if (xfs_sb_version_hascrc(&mp->m_sb))
-+		uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_meta_uuid);
-+
-+	/* We don't know how to fix the unlinked list yet. */
-+	memcpy(&agi->agi_unlinked, &old_agi->agi_unlinked,
-+			sizeof(agi->agi_unlinked));
-+
-+	/* Mark the incore AGF data stale until we're done fixing things. */
-+	ASSERT(sc->sa.pag->pagi_init);
-+	sc->sa.pag->pagi_init = 0;
-+}
-+
-+/* Set btree root information in an AGI. */
-+STATIC void
-+xrep_agi_set_roots(
-+	struct xfs_scrub		*sc,
-+	struct xfs_agi			*agi,
-+	struct xrep_find_ag_btree	*fab)
-+{
-+	agi->agi_root = cpu_to_be32(fab[XREP_AGI_INOBT].root);
-+	agi->agi_level = cpu_to_be32(fab[XREP_AGI_INOBT].height);
-+
-+	if (xfs_sb_version_hasfinobt(&sc->mp->m_sb)) {
-+		agi->agi_free_root = cpu_to_be32(fab[XREP_AGI_FINOBT].root);
-+		agi->agi_free_level = cpu_to_be32(fab[XREP_AGI_FINOBT].height);
-+	}
-+}
-+
-+/* Update the AGI counters. */
-+STATIC int
-+xrep_agi_calc_from_btrees(
-+	struct xfs_scrub	*sc,
-+	struct xfs_buf		*agi_bp)
-+{
-+	struct xfs_btree_cur	*cur;
-+	struct xfs_agi		*agi = XFS_BUF_TO_AGI(agi_bp);
-+	struct xfs_mount	*mp = sc->mp;
-+	xfs_agino_t		count;
-+	xfs_agino_t		freecount;
-+	int			error;
-+
-+	cur = xfs_inobt_init_cursor(mp, sc->tp, agi_bp, sc->sa.agno,
-+			XFS_BTNUM_INO);
-+	error = xfs_ialloc_count_inodes(cur, &count, &freecount);
-+	if (error)
-+		goto err;
-+	xfs_btree_del_cursor(cur, error);
-+
-+	agi->agi_count = cpu_to_be32(count);
-+	agi->agi_freecount = cpu_to_be32(freecount);
-+	return 0;
-+err:
-+	xfs_btree_del_cursor(cur, error);
-+	return error;
-+}
-+
-+/* Trigger reinitialization of the in-core data. */
-+STATIC int
-+xrep_agi_commit_new(
-+	struct xfs_scrub	*sc,
-+	struct xfs_buf		*agi_bp)
-+{
-+	struct xfs_perag	*pag;
-+	struct xfs_agi		*agi = XFS_BUF_TO_AGI(agi_bp);
-+
-+	/* Trigger inode count recalculation */
-+	xfs_force_summary_recalc(sc->mp);
-+
-+	/* Write this to disk. */
-+	xfs_trans_buf_set_type(sc->tp, agi_bp, XFS_BLFT_AGI_BUF);
-+	xfs_trans_log_buf(sc->tp, agi_bp, 0, BBTOB(agi_bp->b_length) - 1);
-+
-+	/* Now reinitialize the in-core counters if necessary. */
-+	pag = sc->sa.pag;
-+	pag->pagi_count = be32_to_cpu(agi->agi_count);
-+	pag->pagi_freecount = be32_to_cpu(agi->agi_freecount);
-+	pag->pagi_init = 1;
-+
-+	return 0;
-+}
-+
-+/* Repair the AGI. */
-+int
-+xrep_agi(
-+	struct xfs_scrub		*sc)
-+{
-+	struct xrep_find_ag_btree	fab[XREP_AGI_MAX] = {
-+		[XREP_AGI_INOBT] = {
-+			.rmap_owner = XFS_RMAP_OWN_INOBT,
-+			.buf_ops = &xfs_inobt_buf_ops,
-+			.magic = XFS_IBT_CRC_MAGIC,
-+		},
-+		[XREP_AGI_FINOBT] = {
-+			.rmap_owner = XFS_RMAP_OWN_INOBT,
-+			.buf_ops = &xfs_inobt_buf_ops,
-+			.magic = XFS_FIBT_CRC_MAGIC,
-+		},
-+		[XREP_AGI_END] = {
-+			.buf_ops = NULL
-+		},
-+	};
-+	struct xfs_agi			old_agi;
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_buf			*agi_bp;
-+	struct xfs_agi			*agi;
-+	int				error;
-+
-+	/* We require the rmapbt to rebuild anything. */
-+	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
-+		return -EOPNOTSUPP;
-+
-+	xchk_perag_get(sc->mp, &sc->sa);
-+	/*
-+	 * Make sure we have the AGI buffer, as scrub might have decided it
-+	 * was corrupt after xfs_ialloc_read_agi failed with -EFSCORRUPTED.
-+	 */
-+	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
-+			XFS_AG_DADDR(mp, sc->sa.agno, XFS_AGI_DADDR(mp)),
-+			XFS_FSS_TO_BB(mp, 1), 0, &agi_bp, NULL);
-+	if (error)
-+		return error;
-+	agi_bp->b_ops = &xfs_agi_buf_ops;
-+	agi = XFS_BUF_TO_AGI(agi_bp);
-+
-+	/* Find the AGI btree roots. */
-+	error = xrep_agi_find_btrees(sc, fab);
-+	if (error)
-+		return error;
-+
-+	/* Start rewriting the header and implant the btrees we found. */
-+	xrep_agi_init_header(sc, agi_bp, &old_agi);
-+	xrep_agi_set_roots(sc, agi, fab);
-+	error = xrep_agi_calc_from_btrees(sc, agi_bp);
-+	if (error)
-+		goto out_revert;
-+
-+	/* Reinitialize in-core state. */
-+	return xrep_agi_commit_new(sc, agi_bp);
-+
-+out_revert:
-+	/* Mark the incore AGI state stale and revert the AGI. */
-+	sc->sa.pag->pagi_init = 0;
-+	memcpy(agi, &old_agi, sizeof(old_agi));
-+	return error;
-+}
-diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-index 1d283360b5ab..9de321eee4ab 100644
---- a/fs/xfs/scrub/repair.h
-+++ b/fs/xfs/scrub/repair.h
-@@ -60,6 +60,7 @@ int xrep_probe(struct xfs_scrub *sc);
- int xrep_superblock(struct xfs_scrub *sc);
- int xrep_agf(struct xfs_scrub *sc);
- int xrep_agfl(struct xfs_scrub *sc);
-+int xrep_agi(struct xfs_scrub *sc);
- 
- #else
- 
-@@ -85,6 +86,7 @@ xrep_calc_ag_resblks(
- #define xrep_superblock			xrep_notsupported
- #define xrep_agf			xrep_notsupported
- #define xrep_agfl			xrep_notsupported
-+#define xrep_agi			xrep_notsupported
- 
- #endif /* CONFIG_XFS_ONLINE_REPAIR */
- 
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 2670f4cf62f4..4bfae1e61d30 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -226,7 +226,7 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
- 		.type	= ST_PERAG,
- 		.setup	= xchk_setup_fs,
- 		.scrub	= xchk_agi,
--		.repair	= xrep_notsupported,
-+		.repair	= xrep_agi,
- 	},
- 	[XFS_SCRUB_TYPE_BNOBT] = {	/* bnobt */
- 		.type	= ST_PERAG,
+								Honza
 
+> ---
+>  fs/ext4/inode.c |    9 +++------
+>  1 file changed, 3 insertions(+), 6 deletions(-)
+> 
+> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+> index 8f6ad7667974..d2663a1e3ec2 100644
+> --- a/fs/ext4/inode.c
+> +++ b/fs/ext4/inode.c
+> @@ -4191,9 +4191,8 @@ int ext4_update_disksize_before_punch(struct inode *inode, loff_t offset,
+>  	return 0;
+>  }
+>  
+> -static void ext4_wait_dax_page(struct ext4_inode_info *ei, bool *did_unlock)
+> +static void ext4_wait_dax_page(struct ext4_inode_info *ei)
+>  {
+> -	*did_unlock = true;
+>  	up_write(&ei->i_mmap_sem);
+>  	schedule();
+>  	down_write(&ei->i_mmap_sem);
+> @@ -4203,14 +4202,12 @@ int ext4_break_layouts(struct inode *inode)
+>  {
+>  	struct ext4_inode_info *ei = EXT4_I(inode);
+>  	struct page *page;
+> -	bool retry;
+>  	int error;
+>  
+>  	if (WARN_ON_ONCE(!rwsem_is_locked(&ei->i_mmap_sem)))
+>  		return -EINVAL;
+>  
+>  	do {
+> -		retry = false;
+>  		page = dax_layout_busy_page(inode->i_mapping);
+>  		if (!page)
+>  			return 0;
+> @@ -4218,8 +4215,8 @@ int ext4_break_layouts(struct inode *inode)
+>  		error = ___wait_var_event(&page->_refcount,
+>  				atomic_read(&page->_refcount) == 1,
+>  				TASK_INTERRUPTIBLE, 0, 0,
+> -				ext4_wait_dax_page(ei, &retry));
+> -	} while (error == 0 && retry);
+> +				ext4_wait_dax_page(ei));
+> +	} while (error == 0);
+>  
+>  	return error;
+>  }
+> 
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
