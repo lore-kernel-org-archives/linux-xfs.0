@@ -1,115 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:37063 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726745AbeHHPcM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Aug 2018 11:32:12 -0400
-Received: by mail-wr1-f68.google.com with SMTP id u12-v6so1991815wrr.4
-        for <linux-xfs@vger.kernel.org>; Wed, 08 Aug 2018 06:12:33 -0700 (PDT)
-Date: Wed, 8 Aug 2018 15:12:30 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH] design: Document project quota inode
-Message-ID: <20180808131230.nc67uu7yyhbosy6w@odin.usersys.redhat.com>
-References: <20180806211032.16777-1-mbenatto@redhat.com>
- <20180807151050.GB30972@magnolia>
- <20180807152806.GD30972@magnolia>
+Received: from mga04.intel.com ([192.55.52.120]:62151 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727108AbeHHSIE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 8 Aug 2018 14:08:04 -0400
+Subject: Re: [PATCH 2/2] [PATCH] xfs: Close race between direct IO and
+ xfs_break_layouts()
+References: <153367989755.37314.6889218648604435494.stgit@djiang5-desk3.ch.intel.com>
+ <153367990333.37314.16218849614019392916.stgit@djiang5-desk3.ch.intel.com>
+ <20180808085339.GD15413@quack2.suse.cz>
+From: Dave Jiang <dave.jiang@intel.com>
+Message-ID: <97fcc79a-2d2e-b2ba-562a-76533fe3696f@intel.com>
+Date: Wed, 8 Aug 2018 08:47:39 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180807152806.GD30972@magnolia>
+In-Reply-To: <20180808085339.GD15413@quack2.suse.cz>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Marco Benatto <mbenatto@redhat.com>, linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: tytso@mit.edu, darrick.wong@oracle.com, zwisler@kernel.org, linux-nvdimm@lists.01.org, david@fromorbit.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, lczerner@redhat.com, linux-ext4@vger.kernel.org, hch@lst.de
 
-On Tue, Aug 07, 2018 at 08:28:06AM -0700, Darrick J. Wong wrote:
-> On Tue, Aug 07, 2018 at 08:10:50AM -0700, Darrick J. Wong wrote:
-> > On Mon, Aug 06, 2018 at 06:10:32PM -0300, Marco Benatto wrote:
-> > > A project quota inode was introduced into V5 superblock allowing
-> > > project quotas and group quotas to be used simultaneously. However
-> > > on "Quota Inodes" section we still mention it's not possible to
-> > > use project and group quotas at sametime.
-> > > 
-> > > This patch documents this behavior for V5 and later superblocks,
-> > > while keeps documented the old behavior for earlier versions.
-> > > 
-> > > Signed-off-by: Marco Benatto <mbenatto@redhat.com>
-> > 
-> > Looks ok,
-> > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > --D
-> > 
-> > > ---
-> > >  design/XFS_Filesystem_Structure/internal_inodes.asciidoc | 11 +++++++----
-> > >  1 file changed, 7 insertions(+), 4 deletions(-)
-> > > 
-> > > diff --git a/design/XFS_Filesystem_Structure/internal_inodes.asciidoc b/design/XFS_Filesystem_Structure/internal_inodes.asciidoc
-> > > index f5c2654..b694e74 100644
-> > > --- a/design/XFS_Filesystem_Structure/internal_inodes.asciidoc
-> > > +++ b/design/XFS_Filesystem_Structure/internal_inodes.asciidoc
-> > > @@ -8,9 +8,12 @@ accessible from the superblock.
-> > >  [[Quota_Inodes]]
-> > >  == Quota Inodes
-> > >  
-> > > -If quotas are used, two inodes are allocated for user and group quota
-> > > -management. If project quotas are used, these replace the group quota management
-> > > -and therefore uses the group quota inode.
-> > > +If quotas are used, prior to version 5 superblocks, two inodes are allocated for
-> > > +user and group management. In this case if project quotas are used, these replace
-> > > +the group quota management and therefore uses the group quota inode.
-> > > +
-> > > +In version 5 superblock or later a third inode will be allocated to project quota
-> > > +management, making it possible to use group and project quotas management simultaneously.
+
+
+On 08/08/2018 01:53 AM, Jan Kara wrote:
+> On Tue 07-08-18 15:11:43, Dave Jiang wrote:
+>> This patch is the duplicate of ross's fix for ext4 for xfs.
+>>
+>> If the refcount of a page is lowered between the time that it is returned
+>> by dax_busy_page() and when the refcount is again checked in
+>> xfs_break_layouts() => ___wait_var_event(), the waiting function
+>> xfs_wait_dax_page() will never be called.  This means that
+>> xfs_break_layouts() will still have 'retry' set to false, so we'll stop
+>> looping and never check the refcount of other pages in this inode.
+>>
+>> Instead, always continue looping as long as dax_layout_busy_page() gives us
+>> a page which it found with an elevated refcount.
+>>
+>> Signed-off-by: Dave Jiang <dave.jiang@intel.com>
 > 
-> Ugh, /me has post-review regrets... mind if I rearrange this a little?
+> The patch looks good to me. You can add:
 > 
-> "Prior to version 5 filesystems, two inodes can be allocated for quota
-> management.  The first inode will be used for user quotas.  The second
-> inode will be used for group quotas or project quotas, depending on
-> mount options.  Group and project quotas are mutually exclusive features
-> in these environments.
+> Reviewed-by: Jan Kara <jack@suse.cz>
 > 
-> "In version 5 or later filesystems, each quota type is allocated its own
-> inode, making it possible to use group and project quota management
-> simultaneously."
+> Just one minor nit below:
 > 
-
-FWIW
-
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-
-
-
-> --D
+>> @@ -746,9 +744,10 @@ xfs_break_dax_layouts(
+>>  	if (!page)
+>>  		return 0;
+>>  
+>> +	*did_unlock = true;
 > 
-> > >  
-> > >  * Project quota's primary purpose is to track and monitor disk usage for
-> > >  directories. For this to occur, the directory inode must have the
-> > > @@ -28,7 +31,7 @@ multiplied by the size of +xfs_dqblk_t+ (136 bytes).
-> > >  .Quota inode layout
-> > >  image::images/76.png[]
-> > >  
-> > > -Quota information is stored in the data extents of the two reserved quota
-> > > +Quota information is stored in the data extents of the reserved quota
-> > >  inodes as an array of the +xfs_dqblk+ structures, where there is one array
-> > >  element for each ID in the system:
-> > >  
-> > > -- 
-> > > 2.9.5
-> > > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I think it would be more understandable to name the argument of
+> xfs_break_dax_layouts() as 'retry' instead of 'did_unlock' as it's not
+> about unlocking anymore.
 
--- 
-Carlos
+Thanks for the review Jan! I will change. I was trying to decide between
+less code change vs more clear definition. :)
+
+> 
+> 							Honza
+> 
