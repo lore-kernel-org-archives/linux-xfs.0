@@ -1,281 +1,299 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:50816 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:56248 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1730419AbeHIPdu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 9 Aug 2018 11:33:50 -0400
-Date: Thu, 9 Aug 2018 09:08:58 -0400
+        id S1730419AbeHIPeC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 9 Aug 2018 11:34:02 -0400
+Date: Thu, 9 Aug 2018 09:09:09 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/4] xfs: repair the AGFL
-Message-ID: <20180809130857.GD21639@bfoster>
+Subject: Re: [PATCH 4/4] xfs: repair the AGI
+Message-ID: <20180809130909.GE21639@bfoster>
 References: <153370061966.25077.161884080659267764.stgit@magnolia>
- <153370063920.25077.18266205510701321535.stgit@magnolia>
+ <153370064560.25077.4297214180664675165.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <153370063920.25077.18266205510701321535.stgit@magnolia>
+In-Reply-To: <153370064560.25077.4297214180664675165.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, allison.henderson@oracle.com
 
-On Tue, Aug 07, 2018 at 08:57:19PM -0700, Darrick J. Wong wrote:
+On Tue, Aug 07, 2018 at 08:57:25PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Repair the AGFL from the rmap data.
+> Rebuild the AGI header items with some help from the rmapbt.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/scrub/agheader_repair.c |  284 ++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/scrub/bitmap.c          |   92 +++++++++++++
->  fs/xfs/scrub/bitmap.h          |    4 +
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/scrub/agheader_repair.c |  219 ++++++++++++++++++++++++++++++++++++++++
 >  fs/xfs/scrub/repair.h          |    2 
 >  fs/xfs/scrub/scrub.c           |    2 
->  5 files changed, 383 insertions(+), 1 deletion(-)
+>  3 files changed, 222 insertions(+), 1 deletion(-)
 > 
 > 
 > diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-> index 4842fc598c9b..0decf711b3c7 100644
+> index 0decf711b3c7..df8657a5d475 100644
 > --- a/fs/xfs/scrub/agheader_repair.c
 > +++ b/fs/xfs/scrub/agheader_repair.c
-> @@ -424,3 +424,287 @@ xrep_agf(
-...
-> +/* Repair the AGFL. */
-> +int
-> +xrep_agfl(
-> +	struct xfs_scrub	*sc)
+> @@ -708,3 +708,222 @@ xrep_agfl(
+>  	xfs_bitmap_destroy(&agfl_extents);
+>  	return error;
+>  }
+> +
+> +/* AGI */
+> +
+> +/*
+> + * Offset within the xrep_find_ag_btree array for each btree type.  Avoid the
+> + * XFS_BTNUM_ names here to avoid creating a sparse array.
+> + */
+> +enum {
+> +	XREP_AGI_INOBT = 0,
+> +	XREP_AGI_FINOBT,
+> +	XREP_AGI_END,
+> +	XREP_AGI_MAX
+> +};
+> +
+> +/*
+> + * Given the inode btree roots described by *fab, find the roots, check them
+> + * for sanity, and pass the root data back out via *fab.
+> + */
+> +STATIC int
+> +xrep_agi_find_btrees(
+> +	struct xfs_scrub		*sc,
+> +	struct xrep_find_ag_btree	*fab)
 > +{
-> +	struct xfs_owner_info	oinfo;
-> +	struct xfs_bitmap	agfl_extents;
-> +	struct xfs_mount	*mp = sc->mp;
-> +	struct xfs_buf		*agf_bp;
-> +	struct xfs_buf		*agfl_bp;
-> +	xfs_agblock_t		flcount;
-> +	int			error;
+> +	struct xfs_buf			*agf_bp;
+> +	struct xfs_mount		*mp = sc->mp;
+> +	int				error;
 > +
-> +	/* We require the rmapbt to rebuild anything. */
-> +	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
-> +		return -EOPNOTSUPP;
-> +
-> +	xchk_perag_get(sc->mp, &sc->sa);
-> +	xfs_bitmap_init(&agfl_extents);
-> +
-> +	/*
-> +	 * Read the AGF so that we can query the rmapbt.  We hope that there's
-> +	 * nothing wrong with the AGF, but all the AG header repair functions
-> +	 * have this chicken-and-egg problem.
-> +	 */
+> +	/* Read the AGF. */
 > +	error = xfs_alloc_read_agf(mp, sc->tp, sc->sa.agno, 0, &agf_bp);
 > +	if (error)
 > +		return error;
 > +	if (!agf_bp)
 > +		return -ENOMEM;
 > +
-> +	/*
-> +	 * Make sure we have the AGFL buffer, as scrub might have decided it
-> +	 * was corrupt after xfs_alloc_read_agfl failed with -EFSCORRUPTED.
-> +	 */
-> +	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
-> +			XFS_AG_DADDR(mp, sc->sa.agno, XFS_AGFL_DADDR(mp)),
-> +			XFS_FSS_TO_BB(mp, 1), 0, &agfl_bp, NULL);
+> +	/* Find the btree roots. */
+> +	error = xrep_find_ag_btree_roots(sc, agf_bp, fab, NULL);
 > +	if (error)
 > +		return error;
-> +	agfl_bp->b_ops = &xfs_agfl_buf_ops;
 > +
-> +	/* Gather all the extents we're going to put on the new AGFL. */
-> +	error = xrep_agfl_collect_blocks(sc, agf_bp, &agfl_extents, &flcount);
-> +	if (error)
-> +		goto err;
+> +	/* We must find the inobt root. */
+> +	if (fab[XREP_AGI_INOBT].root == NULLAGBLOCK ||
+> +	    fab[XREP_AGI_INOBT].height > XFS_BTREE_MAXLEVELS)
+> +		return -EFSCORRUPTED;
 > +
-> +	/*
-> +	 * Update AGF and AGFL.  We reset the global free block counter when
-> +	 * we adjust the AGF flcount (which can fail) so avoid updating any
-> +	 * buffers until we know that part works.
-> +	 */
-> +	error = xrep_agfl_update_agf(sc, agf_bp, flcount);
-> +	if (error)
-> +		goto err;
-> +	xrep_agfl_init_header(sc, agfl_bp, &agfl_extents, flcount);
-> +
-> +	/*
-> +	 * Ok, the AGFL should be ready to go now.  Roll the transaction to
-> +	 * make the new AGFL permanent before we start using it to return
-> +	 * freespace overflow to the freespace btrees.
-> +	 */
-> +	sc->sa.agf_bp = agf_bp;
-> +	sc->sa.agfl_bp = agfl_bp;
-> +	error = xrep_roll_ag_trans(sc);
-> +	if (error)
-> +		goto err;
-> +
-> +	/* Dump any AGFL overflow. */
-> +	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_AG);
-> +	return xrep_reap_extents(sc, &agfl_extents, &oinfo, XFS_AG_RESV_AGFL);
-> +err:
-> +	xfs_bitmap_destroy(&agfl_extents);
-> +	return error;
-
-Was there a reason we don't maintain the ability to revert the AGFL on
-error as is done in the AGF repair case? I take it we'll end up shutting
-down the fs if anything causes us to fail once we've logged the
-associated agf fields in xrep_agfl_update_agf()..?
-
-Brian
-
-> +}
-> diff --git a/fs/xfs/scrub/bitmap.c b/fs/xfs/scrub/bitmap.c
-> index c770e2d0b6aa..fdadc9e1dc49 100644
-> --- a/fs/xfs/scrub/bitmap.c
-> +++ b/fs/xfs/scrub/bitmap.c
-> @@ -9,6 +9,7 @@
->  #include "xfs_format.h"
->  #include "xfs_trans_resv.h"
->  #include "xfs_mount.h"
-> +#include "xfs_btree.h"
->  #include "scrub/xfs_scrub.h"
->  #include "scrub/scrub.h"
->  #include "scrub/common.h"
-> @@ -209,3 +210,94 @@ xfs_bitmap_disunion(
->  }
->  #undef LEFT_ALIGNED
->  #undef RIGHT_ALIGNED
-> +
-> +/*
-> + * Record all btree blocks seen while iterating all records of a btree.
-> + *
-> + * We know that the btree query_all function starts at the left edge and walks
-> + * towards the right edge of the tree.  Therefore, we know that we can walk up
-> + * the btree cursor towards the root; if the pointer for a given level points
-> + * to the first record/key in that block, we haven't seen this block before;
-> + * and therefore we need to remember that we saw this block in the btree.
-> + *
-> + * So if our btree is:
-> + *
-> + *    4
-> + *  / | \
-> + * 1  2  3
-> + *
-> + * Pretend for this example that each leaf block has 100 btree records.  For
-> + * the first btree record, we'll observe that bc_ptrs[0] == 1, so we record
-> + * that we saw block 1.  Then we observe that bc_ptrs[1] == 1, so we record
-> + * block 4.  The list is [1, 4].
-> + *
-> + * For the second btree record, we see that bc_ptrs[0] == 2, so we exit the
-> + * loop.  The list remains [1, 4].
-> + *
-> + * For the 101st btree record, we've moved onto leaf block 2.  Now
-> + * bc_ptrs[0] == 1 again, so we record that we saw block 2.  We see that
-> + * bc_ptrs[1] == 2, so we exit the loop.  The list is now [1, 4, 2].
-> + *
-> + * For the 102nd record, bc_ptrs[0] == 2, so we continue.
-> + *
-> + * For the 201st record, we've moved on to leaf block 3.  bc_ptrs[0] == 1, so
-> + * we add 3 to the list.  Now it is [1, 4, 2, 3].
-> + *
-> + * For the 300th record we just exit, with the list being [1, 4, 2, 3].
-> + */
-> +
-> +/*
-> + * Record all the buffers pointed to by the btree cursor.  Callers already
-> + * engaged in a btree walk should call this function to capture the list of
-> + * blocks going from the leaf towards the root.
-> + */
-> +int
-> +xfs_bitmap_set_btcur_path(
-> +	struct xfs_bitmap	*bitmap,
-> +	struct xfs_btree_cur	*cur)
-> +{
-> +	struct xfs_buf		*bp;
-> +	xfs_fsblock_t		fsb;
-> +	int			i;
-> +	int			error;
-> +
-> +	for (i = 0; i < cur->bc_nlevels && cur->bc_ptrs[i] == 1; i++) {
-> +		xfs_btree_get_block(cur, i, &bp);
-> +		if (!bp)
-> +			continue;
-> +		fsb = XFS_DADDR_TO_FSB(cur->bc_mp, bp->b_bn);
-> +		error = xfs_bitmap_set(bitmap, fsb, 1);
-> +		if (error)
-> +			return error;
-> +	}
+> +	/* We must find the finobt root if that feature is enabled. */
+> +	if (xfs_sb_version_hasfinobt(&mp->m_sb) &&
+> +	    (fab[XREP_AGI_FINOBT].root == NULLAGBLOCK ||
+> +	     fab[XREP_AGI_FINOBT].height > XFS_BTREE_MAXLEVELS))
+> +		return -EFSCORRUPTED;
 > +
 > +	return 0;
 > +}
 > +
-> +/* Collect a btree's block in the bitmap. */
+> +/*
+> + * Reinitialize the AGI header, making an in-core copy of the old contents so
+> + * that we know which in-core state needs to be reinitialized.
+> + */
+> +STATIC void
+> +xrep_agi_init_header(
+> +	struct xfs_scrub	*sc,
+> +	struct xfs_buf		*agi_bp,
+> +	struct xfs_agi		*old_agi)
+> +{
+> +	struct xfs_agi		*agi = XFS_BUF_TO_AGI(agi_bp);
+> +	struct xfs_mount	*mp = sc->mp;
+> +
+> +	memcpy(old_agi, agi, sizeof(*old_agi));
+> +	memset(agi, 0, BBTOB(agi_bp->b_length));
+> +	agi->agi_magicnum = cpu_to_be32(XFS_AGI_MAGIC);
+> +	agi->agi_versionnum = cpu_to_be32(XFS_AGI_VERSION);
+> +	agi->agi_seqno = cpu_to_be32(sc->sa.agno);
+> +	agi->agi_length = cpu_to_be32(xfs_ag_block_count(mp, sc->sa.agno));
+> +	agi->agi_newino = cpu_to_be32(NULLAGINO);
+> +	agi->agi_dirino = cpu_to_be32(NULLAGINO);
+> +	if (xfs_sb_version_hascrc(&mp->m_sb))
+> +		uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_meta_uuid);
+> +
+> +	/* We don't know how to fix the unlinked list yet. */
+> +	memcpy(&agi->agi_unlinked, &old_agi->agi_unlinked,
+> +			sizeof(agi->agi_unlinked));
+> +
+> +	/* Mark the incore AGF data stale until we're done fixing things. */
+> +	ASSERT(sc->sa.pag->pagi_init);
+> +	sc->sa.pag->pagi_init = 0;
+> +}
+> +
+> +/* Set btree root information in an AGI. */
+> +STATIC void
+> +xrep_agi_set_roots(
+> +	struct xfs_scrub		*sc,
+> +	struct xfs_agi			*agi,
+> +	struct xrep_find_ag_btree	*fab)
+> +{
+> +	agi->agi_root = cpu_to_be32(fab[XREP_AGI_INOBT].root);
+> +	agi->agi_level = cpu_to_be32(fab[XREP_AGI_INOBT].height);
+> +
+> +	if (xfs_sb_version_hasfinobt(&sc->mp->m_sb)) {
+> +		agi->agi_free_root = cpu_to_be32(fab[XREP_AGI_FINOBT].root);
+> +		agi->agi_free_level = cpu_to_be32(fab[XREP_AGI_FINOBT].height);
+> +	}
+> +}
+> +
+> +/* Update the AGI counters. */
 > +STATIC int
-> +xfs_bitmap_collect_btblock(
-> +	struct xfs_btree_cur	*cur,
-> +	int			level,
-> +	void			*priv)
+> +xrep_agi_calc_from_btrees(
+> +	struct xfs_scrub	*sc,
+> +	struct xfs_buf		*agi_bp)
 > +{
-> +	struct xfs_bitmap	*bitmap = priv;
-> +	struct xfs_buf		*bp;
-> +	xfs_fsblock_t		fsbno;
+> +	struct xfs_btree_cur	*cur;
+> +	struct xfs_agi		*agi = XFS_BUF_TO_AGI(agi_bp);
+> +	struct xfs_mount	*mp = sc->mp;
+> +	xfs_agino_t		count;
+> +	xfs_agino_t		freecount;
+> +	int			error;
 > +
-> +	xfs_btree_get_block(cur, level, &bp);
-> +	if (!bp)
-> +		return 0;
+> +	cur = xfs_inobt_init_cursor(mp, sc->tp, agi_bp, sc->sa.agno,
+> +			XFS_BTNUM_INO);
+> +	error = xfs_ialloc_count_inodes(cur, &count, &freecount);
+> +	if (error)
+> +		goto err;
+> +	xfs_btree_del_cursor(cur, error);
 > +
-> +	fsbno = XFS_DADDR_TO_FSB(cur->bc_mp, bp->b_bn);
-> +	return xfs_bitmap_set(bitmap, fsbno, 1);
+> +	agi->agi_count = cpu_to_be32(count);
+> +	agi->agi_freecount = cpu_to_be32(freecount);
+> +	return 0;
+> +err:
+> +	xfs_btree_del_cursor(cur, error);
+> +	return error;
 > +}
 > +
-> +/* Walk the btree and mark the bitmap wherever a btree block is found. */
+> +/* Trigger reinitialization of the in-core data. */
+> +STATIC int
+> +xrep_agi_commit_new(
+> +	struct xfs_scrub	*sc,
+> +	struct xfs_buf		*agi_bp)
+> +{
+> +	struct xfs_perag	*pag;
+> +	struct xfs_agi		*agi = XFS_BUF_TO_AGI(agi_bp);
+> +
+> +	/* Trigger inode count recalculation */
+> +	xfs_force_summary_recalc(sc->mp);
+> +
+> +	/* Write this to disk. */
+> +	xfs_trans_buf_set_type(sc->tp, agi_bp, XFS_BLFT_AGI_BUF);
+> +	xfs_trans_log_buf(sc->tp, agi_bp, 0, BBTOB(agi_bp->b_length) - 1);
+> +
+> +	/* Now reinitialize the in-core counters if necessary. */
+> +	pag = sc->sa.pag;
+> +	pag->pagi_count = be32_to_cpu(agi->agi_count);
+> +	pag->pagi_freecount = be32_to_cpu(agi->agi_freecount);
+> +	pag->pagi_init = 1;
+> +
+> +	return 0;
+> +}
+> +
+> +/* Repair the AGI. */
 > +int
-> +xfs_bitmap_set_btblocks(
-> +	struct xfs_bitmap	*bitmap,
-> +	struct xfs_btree_cur	*cur)
+> +xrep_agi(
+> +	struct xfs_scrub		*sc)
 > +{
-> +	return xfs_btree_visit_blocks(cur, xfs_bitmap_collect_btblock, bitmap);
+> +	struct xrep_find_ag_btree	fab[XREP_AGI_MAX] = {
+> +		[XREP_AGI_INOBT] = {
+> +			.rmap_owner = XFS_RMAP_OWN_INOBT,
+> +			.buf_ops = &xfs_inobt_buf_ops,
+> +			.magic = XFS_IBT_CRC_MAGIC,
+> +		},
+> +		[XREP_AGI_FINOBT] = {
+> +			.rmap_owner = XFS_RMAP_OWN_INOBT,
+> +			.buf_ops = &xfs_inobt_buf_ops,
+> +			.magic = XFS_FIBT_CRC_MAGIC,
+> +		},
+> +		[XREP_AGI_END] = {
+> +			.buf_ops = NULL
+> +		},
+> +	};
+> +	struct xfs_agi			old_agi;
+> +	struct xfs_mount		*mp = sc->mp;
+> +	struct xfs_buf			*agi_bp;
+> +	struct xfs_agi			*agi;
+> +	int				error;
+> +
+> +	/* We require the rmapbt to rebuild anything. */
+> +	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
+> +		return -EOPNOTSUPP;
+> +
+> +	xchk_perag_get(sc->mp, &sc->sa);
+> +	/*
+> +	 * Make sure we have the AGI buffer, as scrub might have decided it
+> +	 * was corrupt after xfs_ialloc_read_agi failed with -EFSCORRUPTED.
+> +	 */
+> +	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
+> +			XFS_AG_DADDR(mp, sc->sa.agno, XFS_AGI_DADDR(mp)),
+> +			XFS_FSS_TO_BB(mp, 1), 0, &agi_bp, NULL);
+> +	if (error)
+> +		return error;
+> +	agi_bp->b_ops = &xfs_agi_buf_ops;
+> +	agi = XFS_BUF_TO_AGI(agi_bp);
+> +
+> +	/* Find the AGI btree roots. */
+> +	error = xrep_agi_find_btrees(sc, fab);
+> +	if (error)
+> +		return error;
+> +
+> +	/* Start rewriting the header and implant the btrees we found. */
+> +	xrep_agi_init_header(sc, agi_bp, &old_agi);
+> +	xrep_agi_set_roots(sc, agi, fab);
+> +	error = xrep_agi_calc_from_btrees(sc, agi_bp);
+> +	if (error)
+> +		goto out_revert;
+> +
+> +	/* Reinitialize in-core state. */
+> +	return xrep_agi_commit_new(sc, agi_bp);
+> +
+> +out_revert:
+> +	/* Mark the incore AGI state stale and revert the AGI. */
+> +	sc->sa.pag->pagi_init = 0;
+> +	memcpy(agi, &old_agi, sizeof(old_agi));
+> +	return error;
 > +}
-> diff --git a/fs/xfs/scrub/bitmap.h b/fs/xfs/scrub/bitmap.h
-> index dad652ee9177..ae8ecbce6fa6 100644
-> --- a/fs/xfs/scrub/bitmap.h
-> +++ b/fs/xfs/scrub/bitmap.h
-> @@ -28,5 +28,9 @@ void xfs_bitmap_destroy(struct xfs_bitmap *bitmap);
->  
->  int xfs_bitmap_set(struct xfs_bitmap *bitmap, uint64_t start, uint64_t len);
->  int xfs_bitmap_disunion(struct xfs_bitmap *bitmap, struct xfs_bitmap *sub);
-> +int xfs_bitmap_set_btcur_path(struct xfs_bitmap *bitmap,
-> +		struct xfs_btree_cur *cur);
-> +int xfs_bitmap_set_btblocks(struct xfs_bitmap *bitmap,
-> +		struct xfs_btree_cur *cur);
->  
->  #endif	/* __XFS_SCRUB_BITMAP_H__ */
 > diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-> index 6f0903c51a47..1d283360b5ab 100644
+> index 1d283360b5ab..9de321eee4ab 100644
 > --- a/fs/xfs/scrub/repair.h
 > +++ b/fs/xfs/scrub/repair.h
-> @@ -59,6 +59,7 @@ int xrep_ino_dqattach(struct xfs_scrub *sc);
->  int xrep_probe(struct xfs_scrub *sc);
+> @@ -60,6 +60,7 @@ int xrep_probe(struct xfs_scrub *sc);
 >  int xrep_superblock(struct xfs_scrub *sc);
 >  int xrep_agf(struct xfs_scrub *sc);
-> +int xrep_agfl(struct xfs_scrub *sc);
+>  int xrep_agfl(struct xfs_scrub *sc);
+> +int xrep_agi(struct xfs_scrub *sc);
 >  
 >  #else
 >  
-> @@ -83,6 +84,7 @@ xrep_calc_ag_resblks(
->  #define xrep_probe			xrep_notsupported
+> @@ -85,6 +86,7 @@ xrep_calc_ag_resblks(
 >  #define xrep_superblock			xrep_notsupported
 >  #define xrep_agf			xrep_notsupported
-> +#define xrep_agfl			xrep_notsupported
+>  #define xrep_agfl			xrep_notsupported
+> +#define xrep_agi			xrep_notsupported
 >  
 >  #endif /* CONFIG_XFS_ONLINE_REPAIR */
 >  
 > diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-> index 1e8a17c8e2b9..2670f4cf62f4 100644
+> index 2670f4cf62f4..4bfae1e61d30 100644
 > --- a/fs/xfs/scrub/scrub.c
 > +++ b/fs/xfs/scrub/scrub.c
-> @@ -220,7 +220,7 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
+> @@ -226,7 +226,7 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
 >  		.type	= ST_PERAG,
 >  		.setup	= xchk_setup_fs,
->  		.scrub	= xchk_agfl,
+>  		.scrub	= xchk_agi,
 > -		.repair	= xrep_notsupported,
-> +		.repair	= xrep_agfl,
+> +		.repair	= xrep_agi,
 >  	},
->  	[XFS_SCRUB_TYPE_AGI] = {	/* agi */
+>  	[XFS_SCRUB_TYPE_BNOBT] = {	/* bnobt */
 >  		.type	= ST_PERAG,
 > 
 > --
