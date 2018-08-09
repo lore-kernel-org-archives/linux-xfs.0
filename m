@@ -1,122 +1,290 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:40066 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730419AbeHIUJS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Aug 2018 16:09:18 -0400
-Date: Thu, 9 Aug 2018 10:43:17 -0700
+Received: from aserp2120.oracle.com ([141.146.126.78]:33372 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726757AbeHIUcM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Aug 2018 16:32:12 -0400
+Date: Thu, 9 Aug 2018 11:06:04 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/4] xfs: xrep_findroot_block should reject root blocks
- with siblings
-Message-ID: <20180809174317.GL30972@magnolia>
+Subject: Re: [PATCH 3/4] xfs: repair the AGFL
+Message-ID: <20180809180604.GA15083@magnolia>
 References: <153370061966.25077.161884080659267764.stgit@magnolia>
- <153370062610.25077.16005158396857920623.stgit@magnolia>
- <20180809130839.GB21639@bfoster>
+ <153370063920.25077.18266205510701321535.stgit@magnolia>
+ <20180809130857.GD21639@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180809130839.GB21639@bfoster>
+In-Reply-To: <20180809130857.GD21639@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org, david@fromorbit.com, allison.henderson@oracle.com
 
-On Thu, Aug 09, 2018 at 09:08:39AM -0400, Brian Foster wrote:
-> On Tue, Aug 07, 2018 at 08:57:06PM -0700, Darrick J. Wong wrote:
+On Thu, Aug 09, 2018 at 09:08:58AM -0400, Brian Foster wrote:
+> On Tue, Aug 07, 2018 at 08:57:19PM -0700, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > In xrep_findroot_block, if we find a candidate root block with sibling
-> > pointers or sibling blocks on the same tree level, we should not return
-> > that block as a tree root because root blocks cannot have siblings.
+> > Repair the AGFL from the rmap data.
 > > 
 > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > > ---
-> >  fs/xfs/scrub/repair.c |   17 +++++++++++++++++
-> >  1 file changed, 17 insertions(+)
+> >  fs/xfs/scrub/agheader_repair.c |  284 ++++++++++++++++++++++++++++++++++++++++
+> >  fs/xfs/scrub/bitmap.c          |   92 +++++++++++++
+> >  fs/xfs/scrub/bitmap.h          |    4 +
+> >  fs/xfs/scrub/repair.h          |    2 
+> >  fs/xfs/scrub/scrub.c           |    2 
+> >  5 files changed, 383 insertions(+), 1 deletion(-)
 > > 
 > > 
-> > diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-> > index 85b048b341a0..6c199e2ebb81 100644
-> > --- a/fs/xfs/scrub/repair.c
-> > +++ b/fs/xfs/scrub/repair.c
-> > @@ -727,6 +727,23 @@ xrep_findroot_block(
-> >  	bp->b_ops->verify_read(bp);
-> >  	if (bp->b_error)
-> >  		goto out;
+> > diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
+> > index 4842fc598c9b..0decf711b3c7 100644
+> > --- a/fs/xfs/scrub/agheader_repair.c
+> > +++ b/fs/xfs/scrub/agheader_repair.c
+> > @@ -424,3 +424,287 @@ xrep_agf(
+> ...
+> > +/* Repair the AGFL. */
+> > +int
+> > +xrep_agfl(
+> > +	struct xfs_scrub	*sc)
+> > +{
+> > +	struct xfs_owner_info	oinfo;
+> > +	struct xfs_bitmap	agfl_extents;
+> > +	struct xfs_mount	*mp = sc->mp;
+> > +	struct xfs_buf		*agf_bp;
+> > +	struct xfs_buf		*agfl_bp;
+> > +	xfs_agblock_t		flcount;
+> > +	int			error;
 > > +
-> > +	/* Root blocks can't have siblings. */
-> > +	if (btblock->bb_u.s.bb_leftsib != cpu_to_be32(NULLAGBLOCK) ||
-> > +	    btblock->bb_u.s.bb_rightsib != cpu_to_be32(NULLAGBLOCK))
-> > +		goto out;
+> > +	/* We require the rmapbt to rebuild anything. */
+> > +	if (!xfs_sb_version_hasrmapbt(&mp->m_sb))
+> > +		return -EOPNOTSUPP;
+> > +
+> > +	xchk_perag_get(sc->mp, &sc->sa);
+> > +	xfs_bitmap_init(&agfl_extents);
 > > +
 > > +	/*
-> > +	 * If we find a second block at this level, ignore this level because
-> > +	 * it can't possibly be a root level.  Maybe we'll find a higher level,
-> > +	 * or maybe the rmap information is garbage.
+> > +	 * Read the AGF so that we can query the rmapbt.  We hope that there's
+> > +	 * nothing wrong with the AGF, but all the AG header repair functions
+> > +	 * have this chicken-and-egg problem.
 > > +	 */
-> > +	if (fab->root != NULLAGBLOCK &&
-> > +	    fab->height == xfs_btree_get_level(btblock) + 1) {
-> > +		fab->root = NULLAGBLOCK;
-> > +		goto out;
-> > +	}
+> > +	error = xfs_alloc_read_agf(mp, sc->tp, sc->sa.agno, 0, &agf_bp);
+> > +	if (error)
+> > +		return error;
+> > +	if (!agf_bp)
+> > +		return -ENOMEM;
+> > +
+> > +	/*
+> > +	 * Make sure we have the AGFL buffer, as scrub might have decided it
+> > +	 * was corrupt after xfs_alloc_read_agfl failed with -EFSCORRUPTED.
+> > +	 */
+> > +	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
+> > +			XFS_AG_DADDR(mp, sc->sa.agno, XFS_AGFL_DADDR(mp)),
+> > +			XFS_FSS_TO_BB(mp, 1), 0, &agfl_bp, NULL);
+> > +	if (error)
+> > +		return error;
+> > +	agfl_bp->b_ops = &xfs_agfl_buf_ops;
+> > +
+> > +	/* Gather all the extents we're going to put on the new AGFL. */
+> > +	error = xrep_agfl_collect_blocks(sc, agf_bp, &agfl_extents, &flcount);
+> > +	if (error)
+> > +		goto err;
+> > +
+> > +	/*
+> > +	 * Update AGF and AGFL.  We reset the global free block counter when
+> > +	 * we adjust the AGF flcount (which can fail) so avoid updating any
+> > +	 * buffers until we know that part works.
+> > +	 */
+> > +	error = xrep_agfl_update_agf(sc, agf_bp, flcount);
+> > +	if (error)
+> > +		goto err;
+> > +	xrep_agfl_init_header(sc, agfl_bp, &agfl_extents, flcount);
+> > +
+> > +	/*
+> > +	 * Ok, the AGFL should be ready to go now.  Roll the transaction to
+> > +	 * make the new AGFL permanent before we start using it to return
+> > +	 * freespace overflow to the freespace btrees.
+> > +	 */
+> > +	sc->sa.agf_bp = agf_bp;
+> > +	sc->sa.agfl_bp = agfl_bp;
+> > +	error = xrep_roll_ag_trans(sc);
+> > +	if (error)
+> > +		goto err;
+> > +
+> > +	/* Dump any AGFL overflow. */
+> > +	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_AG);
+> > +	return xrep_reap_extents(sc, &agfl_extents, &oinfo, XFS_AG_RESV_AGFL);
+> > +err:
+> > +	xfs_bitmap_destroy(&agfl_extents);
+> > +	return error;
 > 
-> Ok, but is this enough? Won't resetting fab->root like this mean that
-> we'd just reassign it to the next block we find at this level? I'm
-> wondering if we should maintain ->height independently and anticipate
-> that (height == <valid> && root == NULLAGBLOCK) means we couldn't find a
-> valid root. That may also allow for more efficient height filtering
-> during the query.
+> Was there a reason we don't maintain the ability to revert the AGFL on
+> error as is done in the AGF repair case? I take it we'll end up shutting
+> down the fs if anything causes us to fail once we've logged the
+> associated agf fields in xrep_agfl_update_agf()..?
 
-Working through this again, I think we could just set fab->root = 0
-when we encounter this situation.  I think the two height checks could
-be combined as well, so I'll retest and repost.
-
-Roughly, I think this whole section could be restructured as:
-
-/* Make sure we pass the verifiers. */
-...
-
-/* Root blocks can't have siblings. */
-...
-
-/* If we've recorded a root candidate... */
-block_level = xfs_btree_get_level(btblock);
-if (fab->root != NULLAGBLOCK) {
-	/*
-	 * ...and this no-sibling root block candidate has the same
-	 * level as the recorded candidate, there's no way we're going
-	 * to accept any candidates at this tree level.  Stash a root
-	 * block of zero because the height is still valid, but no AG
-	 * btree can root at agblock 0.  Callers should verify the root
-	 * agbno.
-	 */
-	if (block_level + 1 == fab->height) {
-		fab->root = 0;
-		goto out;
-	}
-
-	/*
-	 * ...and this no-sibling root block is lower in the tree than
-	 * the recorded root block candidate, just ignore it.  There's
-	 * still a strong chance that something is wrong with the btree
-	 * itself, but that's not what we're fixing right now.
-	 */
-	if (block_level < fab->height)
-		goto out;
-}
-
-/* Record the candidate root block */
-...
+Yep.  Once we've started logging we don't really want to deal with the
+complexity of rolling back a transaction.  The fs will shut down and the
+admin can run xfs_repair instead.
 
 --D
 
-> 
 > Brian
 > 
+> > +}
+> > diff --git a/fs/xfs/scrub/bitmap.c b/fs/xfs/scrub/bitmap.c
+> > index c770e2d0b6aa..fdadc9e1dc49 100644
+> > --- a/fs/xfs/scrub/bitmap.c
+> > +++ b/fs/xfs/scrub/bitmap.c
+> > @@ -9,6 +9,7 @@
+> >  #include "xfs_format.h"
+> >  #include "xfs_trans_resv.h"
+> >  #include "xfs_mount.h"
+> > +#include "xfs_btree.h"
+> >  #include "scrub/xfs_scrub.h"
+> >  #include "scrub/scrub.h"
+> >  #include "scrub/common.h"
+> > @@ -209,3 +210,94 @@ xfs_bitmap_disunion(
+> >  }
+> >  #undef LEFT_ALIGNED
+> >  #undef RIGHT_ALIGNED
 > > +
-> >  	fab->root = agbno;
-> >  	fab->height = xfs_btree_get_level(btblock) + 1;
-> >  	*found_it = true;
+> > +/*
+> > + * Record all btree blocks seen while iterating all records of a btree.
+> > + *
+> > + * We know that the btree query_all function starts at the left edge and walks
+> > + * towards the right edge of the tree.  Therefore, we know that we can walk up
+> > + * the btree cursor towards the root; if the pointer for a given level points
+> > + * to the first record/key in that block, we haven't seen this block before;
+> > + * and therefore we need to remember that we saw this block in the btree.
+> > + *
+> > + * So if our btree is:
+> > + *
+> > + *    4
+> > + *  / | \
+> > + * 1  2  3
+> > + *
+> > + * Pretend for this example that each leaf block has 100 btree records.  For
+> > + * the first btree record, we'll observe that bc_ptrs[0] == 1, so we record
+> > + * that we saw block 1.  Then we observe that bc_ptrs[1] == 1, so we record
+> > + * block 4.  The list is [1, 4].
+> > + *
+> > + * For the second btree record, we see that bc_ptrs[0] == 2, so we exit the
+> > + * loop.  The list remains [1, 4].
+> > + *
+> > + * For the 101st btree record, we've moved onto leaf block 2.  Now
+> > + * bc_ptrs[0] == 1 again, so we record that we saw block 2.  We see that
+> > + * bc_ptrs[1] == 2, so we exit the loop.  The list is now [1, 4, 2].
+> > + *
+> > + * For the 102nd record, bc_ptrs[0] == 2, so we continue.
+> > + *
+> > + * For the 201st record, we've moved on to leaf block 3.  bc_ptrs[0] == 1, so
+> > + * we add 3 to the list.  Now it is [1, 4, 2, 3].
+> > + *
+> > + * For the 300th record we just exit, with the list being [1, 4, 2, 3].
+> > + */
+> > +
+> > +/*
+> > + * Record all the buffers pointed to by the btree cursor.  Callers already
+> > + * engaged in a btree walk should call this function to capture the list of
+> > + * blocks going from the leaf towards the root.
+> > + */
+> > +int
+> > +xfs_bitmap_set_btcur_path(
+> > +	struct xfs_bitmap	*bitmap,
+> > +	struct xfs_btree_cur	*cur)
+> > +{
+> > +	struct xfs_buf		*bp;
+> > +	xfs_fsblock_t		fsb;
+> > +	int			i;
+> > +	int			error;
+> > +
+> > +	for (i = 0; i < cur->bc_nlevels && cur->bc_ptrs[i] == 1; i++) {
+> > +		xfs_btree_get_block(cur, i, &bp);
+> > +		if (!bp)
+> > +			continue;
+> > +		fsb = XFS_DADDR_TO_FSB(cur->bc_mp, bp->b_bn);
+> > +		error = xfs_bitmap_set(bitmap, fsb, 1);
+> > +		if (error)
+> > +			return error;
+> > +	}
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +/* Collect a btree's block in the bitmap. */
+> > +STATIC int
+> > +xfs_bitmap_collect_btblock(
+> > +	struct xfs_btree_cur	*cur,
+> > +	int			level,
+> > +	void			*priv)
+> > +{
+> > +	struct xfs_bitmap	*bitmap = priv;
+> > +	struct xfs_buf		*bp;
+> > +	xfs_fsblock_t		fsbno;
+> > +
+> > +	xfs_btree_get_block(cur, level, &bp);
+> > +	if (!bp)
+> > +		return 0;
+> > +
+> > +	fsbno = XFS_DADDR_TO_FSB(cur->bc_mp, bp->b_bn);
+> > +	return xfs_bitmap_set(bitmap, fsbno, 1);
+> > +}
+> > +
+> > +/* Walk the btree and mark the bitmap wherever a btree block is found. */
+> > +int
+> > +xfs_bitmap_set_btblocks(
+> > +	struct xfs_bitmap	*bitmap,
+> > +	struct xfs_btree_cur	*cur)
+> > +{
+> > +	return xfs_btree_visit_blocks(cur, xfs_bitmap_collect_btblock, bitmap);
+> > +}
+> > diff --git a/fs/xfs/scrub/bitmap.h b/fs/xfs/scrub/bitmap.h
+> > index dad652ee9177..ae8ecbce6fa6 100644
+> > --- a/fs/xfs/scrub/bitmap.h
+> > +++ b/fs/xfs/scrub/bitmap.h
+> > @@ -28,5 +28,9 @@ void xfs_bitmap_destroy(struct xfs_bitmap *bitmap);
+> >  
+> >  int xfs_bitmap_set(struct xfs_bitmap *bitmap, uint64_t start, uint64_t len);
+> >  int xfs_bitmap_disunion(struct xfs_bitmap *bitmap, struct xfs_bitmap *sub);
+> > +int xfs_bitmap_set_btcur_path(struct xfs_bitmap *bitmap,
+> > +		struct xfs_btree_cur *cur);
+> > +int xfs_bitmap_set_btblocks(struct xfs_bitmap *bitmap,
+> > +		struct xfs_btree_cur *cur);
+> >  
+> >  #endif	/* __XFS_SCRUB_BITMAP_H__ */
+> > diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+> > index 6f0903c51a47..1d283360b5ab 100644
+> > --- a/fs/xfs/scrub/repair.h
+> > +++ b/fs/xfs/scrub/repair.h
+> > @@ -59,6 +59,7 @@ int xrep_ino_dqattach(struct xfs_scrub *sc);
+> >  int xrep_probe(struct xfs_scrub *sc);
+> >  int xrep_superblock(struct xfs_scrub *sc);
+> >  int xrep_agf(struct xfs_scrub *sc);
+> > +int xrep_agfl(struct xfs_scrub *sc);
+> >  
+> >  #else
+> >  
+> > @@ -83,6 +84,7 @@ xrep_calc_ag_resblks(
+> >  #define xrep_probe			xrep_notsupported
+> >  #define xrep_superblock			xrep_notsupported
+> >  #define xrep_agf			xrep_notsupported
+> > +#define xrep_agfl			xrep_notsupported
+> >  
+> >  #endif /* CONFIG_XFS_ONLINE_REPAIR */
+> >  
+> > diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+> > index 1e8a17c8e2b9..2670f4cf62f4 100644
+> > --- a/fs/xfs/scrub/scrub.c
+> > +++ b/fs/xfs/scrub/scrub.c
+> > @@ -220,7 +220,7 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
+> >  		.type	= ST_PERAG,
+> >  		.setup	= xchk_setup_fs,
+> >  		.scrub	= xchk_agfl,
+> > -		.repair	= xrep_notsupported,
+> > +		.repair	= xrep_agfl,
+> >  	},
+> >  	[XFS_SCRUB_TYPE_AGI] = {	/* agi */
+> >  		.type	= ST_PERAG,
 > > 
 > > --
 > > To unsubscribe from this list: send the line "unsubscribe linux-xfs" in
