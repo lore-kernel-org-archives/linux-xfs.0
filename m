@@ -1,45 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:51980 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726162AbeHJVdi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Aug 2018 17:33:38 -0400
-Date: Fri, 10 Aug 2018 22:02:17 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: Missing security_inode_readlink() in xfs_file_ioctl()
-Message-ID: <20180810190217.uhiyp4totxrem5lw@mwanda>
-References: <41DC519D-83A7-4964-A6C8-B16CFEEDB65F@vt.edu>
- <20180810092229.rq7m4zdq75tsggqv@mwanda>
- <20180810160931.GF12194@magnolia>
+Received: from mga05.intel.com ([192.55.52.43]:60844 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726666AbeHJVyR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 10 Aug 2018 17:54:17 -0400
+Subject: Re: [PATCH v2 2/2] [PATCH] xfs: Close race between direct IO and
+ xfs_break_layouts()
+References: <153374942137.42241.10539674028265137668.stgit@djiang5-desk3.ch.intel.com>
+ <be8603ab-ccb2-3f0d-4dbf-7935fc3ed357@redhat.com>
+From: Dave Jiang <dave.jiang@intel.com>
+Message-ID: <c4580e0d-e403-88a4-0e3a-7be8d0489f09@intel.com>
+Date: Fri, 10 Aug 2018 12:23:04 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180810160931.GF12194@magnolia>
+In-Reply-To: <be8603ab-ccb2-3f0d-4dbf-7935fc3ed357@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: TongZhang <ztong@vt.edu>, linux-xfs@vger.kernel.org, "security@kernel.org>" <security@kernel.org>, wenbo.s@samsung.com, ahmedmoneeb@gmail.com
+To: sandeen@redhat.com, tytso@mit.edu, darrick.wong@oracle.com, jack@suse.cz, zwisler@kernel.org
+Cc: linux-nvdimm@lists.01.org, david@fromorbit.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, lczerner@redhat.com, linux-ext4@vger.kernel.org, hch@lst.de
 
-On Fri, Aug 10, 2018 at 09:09:31AM -0700, Darrick J. Wong wrote:
-> On Fri, Aug 10, 2018 at 12:22:29PM +0300, Dan Carpenter wrote:
-> > Hi XFS devs,
-> > 
-> > We received this email on security@kernel.org.  This is under
-> > CAP_SYS_ADMIN, but it maybe should also check with selinux?
+
+
+On 08/10/2018 11:31 AM, Eric Sandeen wrote:
+> On 8/8/18 12:31 PM, Dave Jiang wrote:
+>> This patch is the duplicate of ross's fix for ext4 for xfs.
+>>
+>> If the refcount of a page is lowered between the time that it is returned
+>> by dax_busy_page() and when the refcount is again checked in
+>> xfs_break_layouts() => ___wait_var_event(), the waiting function
+>> xfs_wait_dax_page() will never be called.  This means that
+>> xfs_break_layouts() will still have 'retry' set to false, so we'll stop
+>> looping and never check the refcount of other pages in this inode.
+>>
+>> Instead, always continue looping as long as dax_layout_busy_page() gives us
+>> a page which it found with an elevated refcount.
 > 
-> Hmm, so the point of adding a security_inode_readlink call would be to
-> restrict userland access xfs_readlink_by_handle further in case the
-> system has a policy whereby even possessing CAP_SYS_ADMIN is not by
-> itself sufficient to be able to read a symlink?
+> Hi Dave, does this have a testcase?  Have you seen the issue using Ross's
+> xfstest generic/503 or is there some other test?  Apologies if I missed
+> prior discussion on a testcase or race frequency...
+
+I do not have a testcase. I know Ross replicated it on ext4. And Jan
+asked to create the same fix with XFS when he reviewed Ross's fix for ext4.
+
 > 
-> IOWs, are there security policies where CAP_SYS_ADMIN isn't a "get
-> access to everything" wildcard?  I imagine the answer is "yes" and
-> therefore xfs needs the call, but I thought I'd ask first.
->
-
-Yeah...  Forget about it.  I pushed this out to you without really
-thinking about it, just to get it off my todo list and that wasn't the
-right thing.
-
-regards,
-dan carpenter
+> Thanks,
+> -Eric
+> 
+>> Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+>> Reviewed-by: Jan Kara <jack@suse.cz>
+>> ---
+>>
+>> Sorry resend, forgot to add Jan's reviewed-by.
+>>
+>> v2:
+>> - Rename parameter from did_unlock to retry (Jan)
+>>
+>>  fs/xfs/xfs_file.c |    9 ++++-----
+>>  1 file changed, 4 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+>> index a3e7767a5715..cd6f0d8c4922 100644
+>> --- a/fs/xfs/xfs_file.c
+>> +++ b/fs/xfs/xfs_file.c
+>> @@ -721,12 +721,10 @@ xfs_file_write_iter(
+>>  
+>>  static void
+>>  xfs_wait_dax_page(
+>> -	struct inode		*inode,
+>> -	bool			*did_unlock)
+>> +	struct inode		*inode)
+>>  {
+>>  	struct xfs_inode        *ip = XFS_I(inode);
+>>  
+>> -	*did_unlock = true;
+>>  	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
+>>  	schedule();
+>>  	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+>> @@ -736,7 +734,7 @@ static int
+>>  xfs_break_dax_layouts(
+>>  	struct inode		*inode,
+>>  	uint			iolock,
+>> -	bool			*did_unlock)
+>> +	bool			*retry)
+>>  {
+>>  	struct page		*page;
+>>  
+>> @@ -746,9 +744,10 @@ xfs_break_dax_layouts(
+>>  	if (!page)
+>>  		return 0;
+>>  
+>> +	*retry = true;
+>>  	return ___wait_var_event(&page->_refcount,
+>>  			atomic_read(&page->_refcount) == 1, TASK_INTERRUPTIBLE,
+>> -			0, 0, xfs_wait_dax_page(inode, did_unlock));
+>> +			0, 0, xfs_wait_dax_page(inode));
+>>  }
+>>  
+>>  int
+>>
