@@ -1,64 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:60294 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727542AbeHJSkR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Aug 2018 14:40:17 -0400
-Date: Fri, 10 Aug 2018 09:09:31 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: Missing security_inode_readlink() in xfs_file_ioctl()
-Message-ID: <20180810160931.GF12194@magnolia>
-References: <41DC519D-83A7-4964-A6C8-B16CFEEDB65F@vt.edu>
- <20180810092229.rq7m4zdq75tsggqv@mwanda>
+Received: from mx1.redhat.com ([209.132.183.28]:54080 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726096AbeHJVDB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 10 Aug 2018 17:03:01 -0400
+Reply-To: sandeen@redhat.com
+Subject: Re: [PATCH v2 2/2] [PATCH] xfs: Close race between direct IO and
+ xfs_break_layouts()
+References: <153374942137.42241.10539674028265137668.stgit@djiang5-desk3.ch.intel.com>
+From: Eric Sandeen <esandeen@redhat.com>
+Message-ID: <be8603ab-ccb2-3f0d-4dbf-7935fc3ed357@redhat.com>
+Date: Fri, 10 Aug 2018 13:31:57 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180810092229.rq7m4zdq75tsggqv@mwanda>
+In-Reply-To: <153374942137.42241.10539674028265137668.stgit@djiang5-desk3.ch.intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: TongZhang <ztong@vt.edu>, linux-xfs@vger.kernel.org, "security@kernel.org>" <security@kernel.org>, wenbo.s@samsung.com, ahmedmoneeb@gmail.com
+To: Dave Jiang <dave.jiang@intel.com>, tytso@mit.edu, darrick.wong@oracle.com, jack@suse.cz, zwisler@kernel.org
+Cc: linux-nvdimm@lists.01.org, david@fromorbit.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, lczerner@redhat.com, linux-ext4@vger.kernel.org, hch@lst.de
 
-On Fri, Aug 10, 2018 at 12:22:29PM +0300, Dan Carpenter wrote:
-> Hi XFS devs,
+On 8/8/18 12:31 PM, Dave Jiang wrote:
+> This patch is the duplicate of ross's fix for ext4 for xfs.
 > 
-> We received this email on security@kernel.org.  This is under
-> CAP_SYS_ADMIN, but it maybe should also check with selinux?
-
-Hmm, so the point of adding a security_inode_readlink call would be to
-restrict userland access xfs_readlink_by_handle further in case the
-system has a policy whereby even possessing CAP_SYS_ADMIN is not by
-itself sufficient to be able to read a symlink?
-
-IOWs, are there security policies where CAP_SYS_ADMIN isn't a "get
-access to everything" wildcard?  I imagine the answer is "yes" and
-therefore xfs needs the call, but I thought I'd ask first.
-
---D
-
-> regards,
-> dan carpenter
+> If the refcount of a page is lowered between the time that it is returned
+> by dax_busy_page() and when the refcount is again checked in
+> xfs_break_layouts() => ___wait_var_event(), the waiting function
+> xfs_wait_dax_page() will never be called.  This means that
+> xfs_break_layouts() will still have 'retry' set to false, so we'll stop
+> looping and never check the refcount of other pages in this inode.
 > 
-> On Thu, Aug 09, 2018 at 05:59:50PM -0700, TongZhang wrote:
-> > [1.] One line summary of the problem:
-> > 
-> > Possible missing security_inode_readlink() in xfs_file_ioctl()
-> > 
-> > [2.] Full description of the problem/report:
-> > 
-> > We noticed a use of vfs_readlink() in xfs_file_ioctl(), which should have been checked by 
-> > security_inode_readlink().
-> > 
-> > The callgraph is:
-> > 	xfs_file_ioctl()->xfs_readlink_by_handle()->vfs_readlink()
-> > 
-> > This path allows user to do things similar to SyS_readlinkat(), and the parameters are
-> > user controllable.
-> > 
-> > 
-> > [3.] Keywords: LSM check
-> > [4.] Kernel information
-> > [4.1] Kernel Version: 4.14.61
-> > 
-> > 
-> > - Tong
+> Instead, always continue looping as long as dax_layout_busy_page() gives us
+> a page which it found with an elevated refcount.
+
+Hi Dave, does this have a testcase?  Have you seen the issue using Ross's
+xfstest generic/503 or is there some other test?  Apologies if I missed
+prior discussion on a testcase or race frequency...
+
+Thanks,
+-Eric
+
+> Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+> Reviewed-by: Jan Kara <jack@suse.cz>
+> ---
+> 
+> Sorry resend, forgot to add Jan's reviewed-by.
+> 
+> v2:
+> - Rename parameter from did_unlock to retry (Jan)
+> 
+>  fs/xfs/xfs_file.c |    9 ++++-----
+>  1 file changed, 4 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index a3e7767a5715..cd6f0d8c4922 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -721,12 +721,10 @@ xfs_file_write_iter(
+>  
+>  static void
+>  xfs_wait_dax_page(
+> -	struct inode		*inode,
+> -	bool			*did_unlock)
+> +	struct inode		*inode)
+>  {
+>  	struct xfs_inode        *ip = XFS_I(inode);
+>  
+> -	*did_unlock = true;
+>  	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
+>  	schedule();
+>  	xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+> @@ -736,7 +734,7 @@ static int
+>  xfs_break_dax_layouts(
+>  	struct inode		*inode,
+>  	uint			iolock,
+> -	bool			*did_unlock)
+> +	bool			*retry)
+>  {
+>  	struct page		*page;
+>  
+> @@ -746,9 +744,10 @@ xfs_break_dax_layouts(
+>  	if (!page)
+>  		return 0;
+>  
+> +	*retry = true;
+>  	return ___wait_var_event(&page->_refcount,
+>  			atomic_read(&page->_refcount) == 1, TASK_INTERRUPTIBLE,
+> -			0, 0, xfs_wait_dax_page(inode, did_unlock));
+> +			0, 0, xfs_wait_dax_page(inode));
+>  }
+>  
+>  int
+> 
