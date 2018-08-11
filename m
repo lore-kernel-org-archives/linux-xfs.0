@@ -1,67 +1,128 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:33010 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:50254 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727012AbeHLKad (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 12 Aug 2018 06:30:33 -0400
+        with ESMTP id S1727333AbeHKSJw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 11 Aug 2018 14:09:52 -0400
 Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w7C7npTk051236
-        for <linux-xfs@vger.kernel.org>; Sun, 12 Aug 2018 07:53:24 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp2130.oracle.com with ESMTP id 2ksnacsk7q-1
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w7BFYiKL094464
+        for <linux-xfs@vger.kernel.org>; Sat, 11 Aug 2018 15:35:17 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp2130.oracle.com with ESMTP id 2ksnacrvn4-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 12 Aug 2018 07:53:24 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w7C7rO2q012740
+        for <linux-xfs@vger.kernel.org>; Sat, 11 Aug 2018 15:35:17 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w7BFZGrq029646
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 12 Aug 2018 07:53:24 GMT
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w7C7rNcd031609
-        for <linux-xfs@vger.kernel.org>; Sun, 12 Aug 2018 07:53:23 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: Re: [PATCH 1/6] xfs: recalculate summary counters at mount time if
- icount is bad
+        for <linux-xfs@vger.kernel.org>; Sat, 11 Aug 2018 15:35:17 GMT
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w7BFZGoh031748
+        for <linux-xfs@vger.kernel.org>; Sat, 11 Aug 2018 15:35:16 GMT
+Subject: [PATCH 3/6] xfs: sanity check ag header values in
+ xrep_calc_ag_resblks
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Sat, 11 Aug 2018 08:35:15 -0700
+Message-ID: <153400171586.27471.17428651076544146314.stgit@magnolia>
+In-Reply-To: <153400169747.27471.4044680761841034489.stgit@magnolia>
 References: <153400169747.27471.4044680761841034489.stgit@magnolia>
- <153400170370.27471.3984686896617555055.stgit@magnolia>
-Message-ID: <bcc59ede-916b-fb03-d5bc-f059f332cba5@oracle.com>
-Date: Sun, 12 Aug 2018 00:53:22 -0700
 MIME-Version: 1.0
-In-Reply-To: <153400170370.27471.3984686896617555055.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-On 08/11/2018 08:35 AM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Since the sb write verifier trips on bad icounts, we should also force a
-> mount time recalculation of the summary counters if the icount is bad.
-> This helps us avoid blowing up at freeze/unmount time when the bad
-> counter gets written back out.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->   fs/xfs/xfs_mount.c |    1 +
->   1 file changed, 1 insertion(+)
-> 
-> 
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 99db27d6ac8a..02d15098dbee 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -637,6 +637,7 @@ xfs_check_summary_counts(
->   	 */
->   	if (XFS_LAST_UNMOUNT_WAS_CLEAN(mp) &&
->   	    (mp->m_sb.sb_fdblocks > mp->m_sb.sb_dblocks ||
-> +	     !xfs_verify_icount(mp, mp->m_sb.sb_icount) ||
->   	     mp->m_sb.sb_ifree > mp->m_sb.sb_icount))
->   		mp->m_flags |= XFS_MOUNT_BAD_SUMMARY;
->   
-> 
-Ok, looks good
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+Check the values we read in from the AG headers when calculating the
+block reservations for a repair transaction.  If they're obviously
+wrong, substitute worst case assumptions (rather than ENOSPC on a bogus
+reservatoin request).
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/scrub/repair.c |   46 +++++++++++++++++++++++++++-------------------
+ 1 file changed, 27 insertions(+), 19 deletions(-)
+
+
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index 42d8c798ce7d..97c3077fb005 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -195,8 +195,8 @@ xrep_calc_ag_resblks(
+ 	struct xfs_scrub_metadata	*sm = sc->sm;
+ 	struct xfs_perag		*pag;
+ 	struct xfs_buf			*bp;
+-	xfs_agino_t			icount = 0;
+-	xfs_extlen_t			aglen = 0;
++	xfs_agino_t			icount = NULLAGINO;
++	xfs_extlen_t			aglen = NULLAGBLOCK;
+ 	xfs_extlen_t			usedlen;
+ 	xfs_extlen_t			freelen;
+ 	xfs_extlen_t			bnobt_sz;
+@@ -208,20 +208,14 @@ xrep_calc_ag_resblks(
+ 	if (!(sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR))
+ 		return 0;
+ 
+-	/* Use in-core counters if possible. */
+ 	pag = xfs_perag_get(mp, sm->sm_agno);
+-	if (pag->pagi_init)
++	if (pag->pagi_init) {
++		/* Use in-core icount if possible. */
+ 		icount = pag->pagi_count;
+-
+-	/*
+-	 * Otherwise try to get the actual counters from disk; if not, make
+-	 * some worst case assumptions.
+-	 */
+-	if (icount == 0) {
++	} else {
++		/* Try to get the actual counters from disk. */
+ 		error = xfs_ialloc_read_agi(mp, NULL, sm->sm_agno, &bp);
+-		if (error) {
+-			icount = mp->m_sb.sb_agblocks / mp->m_sb.sb_inopblock;
+-		} else {
++		if (!error) {
+ 			icount = pag->pagi_count;
+ 			xfs_buf_relse(bp);
+ 		}
+@@ -229,18 +223,32 @@ xrep_calc_ag_resblks(
+ 
+ 	/* Now grab the block counters from the AGF. */
+ 	error = xfs_alloc_read_agf(mp, NULL, sm->sm_agno, 0, &bp);
+-	if (error) {
+-		aglen = mp->m_sb.sb_agblocks;
+-		freelen = aglen;
+-		usedlen = aglen;
+-	} else {
++	if (!error) {
+ 		aglen = be32_to_cpu(XFS_BUF_TO_AGF(bp)->agf_length);
+-		freelen = pag->pagf_freeblks;
++		freelen = be32_to_cpu(XFS_BUF_TO_AGF(bp)->agf_freeblks);
+ 		usedlen = aglen - freelen;
+ 		xfs_buf_relse(bp);
+ 	}
+ 	xfs_perag_put(pag);
+ 
++	/* If the icount is impossible, make some worst-case assumptions. */
++	if (icount == NULLAGINO ||
++	    !xfs_verify_agino(mp, sm->sm_agno, icount)) {
++		xfs_agino_t	first, last;
++
++		xfs_agino_range(mp, sm->sm_agno, &first, &last);
++		icount = last - first + 1;
++	}
++
++	/* If the block counts are impossible, make worst-case assumptions. */
++	if (aglen == NULLAGBLOCK ||
++	    aglen != xfs_ag_block_count(mp, sm->sm_agno) ||
++	    freelen >= aglen) {
++		aglen = xfs_ag_block_count(mp, sm->sm_agno);
++		freelen = aglen;
++		usedlen = aglen;
++	}
++
+ 	trace_xrep_calc_ag_resblks(mp, sm->sm_agno, icount, aglen,
+ 			freelen, usedlen);
+ 
