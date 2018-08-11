@@ -1,51 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:42548 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725917AbeHJLvr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Aug 2018 07:51:47 -0400
-Date: Fri, 10 Aug 2018 12:22:29 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: Missing security_inode_readlink() in xfs_file_ioctl()
-Message-ID: <20180810092229.rq7m4zdq75tsggqv@mwanda>
-References: <41DC519D-83A7-4964-A6C8-B16CFEEDB65F@vt.edu>
+Received: from userp2130.oracle.com ([156.151.31.86]:39792 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727333AbeHKSKL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 11 Aug 2018 14:10:11 -0400
+Subject: [PATCH 6/6] xfs: don't crash the vfs on a garbage inline symlink
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Sat, 11 Aug 2018 08:35:34 -0700
+Message-ID: <153400173428.27471.504421086760762828.stgit@magnolia>
+In-Reply-To: <153400169747.27471.4044680761841034489.stgit@magnolia>
+References: <153400169747.27471.4044680761841034489.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <41DC519D-83A7-4964-A6C8-B16CFEEDB65F@vt.edu>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: TongZhang <ztong@vt.edu>, linux-xfs@vger.kernel.org
-Cc: "security@kernel.org>" <security@kernel.org>, darrick.wong@oracle.com, wenbo.s@samsung.com, ahmedmoneeb@gmail.com
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, wen.xu@gatech.edu
 
-Hi XFS devs,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-We received this email on security@kernel.org.  This is under
-CAP_SYS_ADMIN, but it maybe should also check with selinux?
+The VFS routine that calls ->get_link blindly copies whatever's returned
+into the user's buffer.  If we return a NULL pointer, the vfs will
+crash on the null pointer.  Therefore, return -EFSCORRUPTED instead of
+blowing up the kernel.
 
-regards,
-dan carpenter
+Reported-by: wen.xu@gatech.edu
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_iops.c |   10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-On Thu, Aug 09, 2018 at 05:59:50PM -0700, TongZhang wrote:
-> [1.] One line summary of the problem:
-> 
-> Possible missing security_inode_readlink() in xfs_file_ioctl()
-> 
-> [2.] Full description of the problem/report:
-> 
-> We noticed a use of vfs_readlink() in xfs_file_ioctl(), which should have been checked by 
-> security_inode_readlink().
-> 
-> The callgraph is:
-> 	xfs_file_ioctl()->xfs_readlink_by_handle()->vfs_readlink()
-> 
-> This path allows user to do things similar to SyS_readlinkat(), and the parameters are
-> user controllable.
-> 
-> 
-> [3.] Keywords: LSM check
-> [4.] Kernel information
-> [4.1] Kernel Version: 4.14.61
-> 
-> 
-> - Tong
+
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 0ef5ad7fb851..26007a9db49d 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -471,8 +471,16 @@ xfs_vn_get_link_inline(
+ 	struct inode		*inode,
+ 	struct delayed_call	*done)
+ {
++	char			*ptr;
++
+ 	ASSERT(XFS_I(inode)->i_df.if_flags & XFS_IFINLINE);
+-	return XFS_I(inode)->i_df.if_u1.if_data;
++
++	/*
++	 * The VFS crashes on a NULL pointer, so return -EFSCORRUPTED if
++	 * if_data is junk.
++	 */
++	ptr = XFS_I(inode)->i_df.if_u1.if_data;
++	return ptr ? ptr : ERR_PTR(-EFSCORRUPTED);
+ }
+ 
+ STATIC int
