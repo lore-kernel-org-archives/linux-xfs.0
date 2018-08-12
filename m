@@ -1,83 +1,125 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:11052 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726461AbeHUBKr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Aug 2018 21:10:47 -0400
-Date: Tue, 21 Aug 2018 07:53:22 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] mm: introduce kvvirt_to_page() helper
-Message-ID: <20180820215322.GF31495@dastard>
-References: <1534596541-31393-1-git-send-email-lirongqing@baidu.com>
- <20180820144116.GO29735@dhcp22.suse.cz>
- <20180820144923.GA25153@bombadil.infradead.org>
- <20180820162406.GQ29735@dhcp22.suse.cz>
- <20180820170744.GD25153@bombadil.infradead.org>
+Received: from aserp2130.oracle.com ([141.146.126.79]:33052 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727012AbeHLKaj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 12 Aug 2018 06:30:39 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w7C7ofmb051772
+        for <linux-xfs@vger.kernel.org>; Sun, 12 Aug 2018 07:53:30 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp2130.oracle.com with ESMTP id 2ksnacsk7t-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 12 Aug 2018 07:53:30 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w7C7rU4l003923
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 12 Aug 2018 07:53:30 GMT
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w7C7rTpw021593
+        for <linux-xfs@vger.kernel.org>; Sun, 12 Aug 2018 07:53:29 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: Re: [PATCH 2/6] xfs: xrep_findroot_block should reject root blocks
+ with siblings
+References: <153400169747.27471.4044680761841034489.stgit@magnolia>
+ <153400170977.27471.4053607329690572828.stgit@magnolia>
+Message-ID: <4bc901c6-cc57-a660-1c9c-76b4cbd372b6@oracle.com>
+Date: Sun, 12 Aug 2018 00:53:28 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180820170744.GD25153@bombadil.infradead.org>
+In-Reply-To: <153400170977.27471.4053607329690572828.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Michal Hocko <mhocko@kernel.org>, Li RongQing <lirongqing@baidu.com>, Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Matthew Wilcox <mawilcox@microsoft.com>, Souptick Joarder <jrdr.linux@gmail.com>, darrick.wong@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Aug 20, 2018 at 10:07:44AM -0700, Matthew Wilcox wrote:
-> On Mon, Aug 20, 2018 at 06:24:06PM +0200, Michal Hocko wrote:
-> > On Mon 20-08-18 07:49:23, Matthew Wilcox wrote:
-> > > On Mon, Aug 20, 2018 at 04:41:16PM +0200, Michal Hocko wrote:
-> > > > On Sat 18-08-18 20:49:01, Li RongQing wrote:
-> > > > > The new helper returns address mapping page, which has several users
-> > > > > in individual subsystem, like mem_to_page in xfs_buf.c and pgv_to_page
-> > > > > in af_packet.c, unify them
-> > > > 
-> > > > kvvirt_to_page is a weird name. I guess you wanted it to fit into
-> > > > kv*alloc, kvfree naming, right? If yes then I guess kvmem_to_page
-> > > > would be slightly better.
-> > > > 
-> > > > Other than that the patch makes sense to me. It would be great to add
-> > > > some documentation and be explicit that the call is only safe on
-> > > > directly mapped kernel address and vmalloc areas.
-> > > 
-> > > ... and not safe if the length crosses a page boundary.  I don't want to
-> > > see new code emerge that does kvmalloc(PAGE_SIZE * 2, ...); kvmem_to_page()
-> > > and have it randomly crash when kvmalloc happens to fall back to vmalloc()
-> > > under heavy memory pressure.
-> > > 
-> > > Also, people are going to start using this for stack addresses.  Perhaps
-> > > we should have a debug option to guard against them doing that.
-> > 
-> > I do agree that such an interface is quite dangerous. That's why I was
-> > stressing out the proper documentation. I would be much happier if we
-> > could do without it altogether. Maybe the existing users can be rewoked
-> > to not rely on the addr2page functionality. If that is not the case then
-> > we should probably offer a helper. With some WARN_ONs to catch misuse
-> > would be really nice. I am not really sure how many abuses can we catch
-> > actually though.
+
+
+On 08/11/2018 08:35 AM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> I certainly understand the enthusiasm for sharing this code rather than
-> having dozens of places outside the VM implement their own version of it.
-> But I think most of these users are using code that's working at the wrong
-> level.  Most of them seem to have an address range which may-or-may-not-be
-> virtually mapped and they want to get an array-of-pages for that.
+> In xrep_findroot_block, if we find a candidate root block with sibling
+> pointers or sibling blocks on the same tree level, we should not return
+> that block as a tree root because root blocks cannot have siblings.
 > 
-> Perhaps we should offer -that- API instead.  vmalloc/vmap already has
-> an array-of-pages, and the various users could be given a pointer to
-> that array.  If the memory isn't vmapped, maybe the caller could pass
-> an array pointer like XFS does, or we could require them to pass GFP flags
-> to allocate a new array.
-
-We have code in XFS to avoid allocating the array for the common
-case - it ends up embedded in the struct xfs_buf instead and so we
-avoid needing and extra alloc/free for every single buffer in the
-fast path. Hence I'd prefer the interface lets the caller to supply
-the result array, similar to the way callers provide their own
-pagevecs for bulk page lookup functions...
-
-Cheers,
-
-Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>   fs/xfs/scrub/repair.c |   47 +++++++++++++++++++++++++++++++++++++++++------
+>   1 file changed, 41 insertions(+), 6 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+> index 17cf48564390..42d8c798ce7d 100644
+> --- a/fs/xfs/scrub/repair.c
+> +++ b/fs/xfs/scrub/repair.c
+> @@ -690,6 +690,7 @@ xrep_findroot_block(
+>   	struct xfs_buf			*bp;
+>   	struct xfs_btree_block		*btblock;
+>   	xfs_daddr_t			daddr;
+> +	int				block_level;
+>   	int				error;
+>   
+>   	daddr = XFS_AGB_TO_DADDR(mp, ri->sc->sa.agno, agbno);
+> @@ -727,17 +728,51 @@ xrep_findroot_block(
+>   		goto out;
+>   	bp->b_ops = fab->buf_ops;
+>   
+> -	/* Ignore this block if it's lower in the tree than we've seen. */
+> -	if (fab->root != NULLAGBLOCK &&
+> -	    xfs_btree_get_level(btblock) < fab->height)
+> -		goto out;
+> -
+>   	/* Make sure we pass the verifiers. */
+>   	bp->b_ops->verify_read(bp);
+>   	if (bp->b_error)
+>   		goto out;
+> +
+> +	/* If we've recorded a root candidate... */
+> +	block_level = xfs_btree_get_level(btblock);
+> +	if (fab->root != NULLAGBLOCK) {
+> +		/*
+> +		 * ...and this no-sibling root block candidate has the same
+> +		 * level as the recorded candidate, there's no way we're going
+> +		 * to accept any candidates at this tree level.  Stash a root
+> +		 * block of zero because the height is still valid, but no
+> +		 * AG btree can root at agblock 0.  Callers should verify the
+> +		 * root agbno with xfs_verify_agbno...
+> +		 */
+> +		if (block_level + 1 == fab->height) {
+> +			fab->root = 0;
+> +			goto out;
+> +		}
+> +
+> +		/*
+> +		 * ...and this no-sibling root block is lower in the tree than
+> +		 * the recorded root block candidate, just ignore it.  There's
+> +		 * still a strong chance that something is wrong with the btree
+> +		 * itself, but that's not what we're fixing right now.
+> +		 */
+> +		if (block_level < fab->height)
+> +			goto out;
+> +	}
+> +
+> +	/*
+> +	 * Root blocks can't have siblings.  This level can't be the root, so
+> +	 * record the tree height (but not the ag block pointer) to force us to
+> +	 * look for a higher level in the tree.
+> +	 */
+> +	if (btblock->bb_u.s.bb_leftsib != cpu_to_be32(NULLAGBLOCK) ||
+> +	    btblock->bb_u.s.bb_rightsib != cpu_to_be32(NULLAGBLOCK)) {
+> +		fab->root = 0;
+> +		fab->height = block_level + 1;
+> +		goto out;
+> +	}
+> +
+>   	fab->root = agbno;
+> -	fab->height = xfs_btree_get_level(btblock) + 1;
+> +	fab->height = block_level + 1;
+>   	*found_it = true;
+>   
+>   	trace_xrep_findroot_block(mp, ri->sc->sa.agno, agbno,
+> 
+Looks ok, thank you for the comments!
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
