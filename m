@@ -1,150 +1,153 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:45834 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:42684 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1730079AbeHMTjl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 13 Aug 2018 15:39:41 -0400
-Date: Mon, 13 Aug 2018 12:56:36 -0400
+        id S1729029AbeHMTkE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 13 Aug 2018 15:40:04 -0400
+Date: Mon, 13 Aug 2018 12:56:59 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/6] xfs: xrep_findroot_block should reject root blocks
- with siblings
-Message-ID: <20180813165635.GA64121@bfoster>
+Subject: Re: [PATCH 4/6] xfs: fix buffer state management in
+ xrep_findroot_block
+Message-ID: <20180813165658.GB64121@bfoster>
 References: <153400169747.27471.4044680761841034489.stgit@magnolia>
- <153400170977.27471.4053607329690572828.stgit@magnolia>
+ <153400172200.27471.13133656951315541955.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <153400170977.27471.4053607329690572828.stgit@magnolia>
+In-Reply-To: <153400172200.27471.13133656951315541955.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Sat, Aug 11, 2018 at 08:35:09AM -0700, Darrick J. Wong wrote:
+On Sat, Aug 11, 2018 at 08:35:22AM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> In xrep_findroot_block, if we find a candidate root block with sibling
-> pointers or sibling blocks on the same tree level, we should not return
-> that block as a tree root because root blocks cannot have siblings.
+> We don't quite handle buffer state properly in online repair's findroot
+> routine.  If the buffer is already in-core we don't want to trash its
+> b_ops and state, so first we should try _get_buf to grab the buffer.  If
+> the buffer is loaded, we only want to verify the structure of the buffer
+> since it could be dirty and the crc hasn't yet been recalculated.
+> 
+> Only if the buffer hasn't been read in should try _read_buf, and if we
+> were the ones who read the buffer then we must be careful to oneshot the
+> buffer so that a subsequent _read_buf won't find a buffer with no ops.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/scrub/repair.c |   47 +++++++++++++++++++++++++++++++++++++++++------
->  1 file changed, 41 insertions(+), 6 deletions(-)
+>  fs/xfs/scrub/repair.c |   67 +++++++++++++++++++++++++++++++++++++++----------
+>  1 file changed, 54 insertions(+), 13 deletions(-)
 > 
 > 
 > diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-> index 17cf48564390..42d8c798ce7d 100644
+> index 97c3077fb005..fae50dced8bc 100644
 > --- a/fs/xfs/scrub/repair.c
 > +++ b/fs/xfs/scrub/repair.c
-> @@ -690,6 +690,7 @@ xrep_findroot_block(
+> @@ -697,6 +697,7 @@ xrep_findroot_block(
+>  	struct xfs_mount		*mp = ri->sc->mp;
 >  	struct xfs_buf			*bp;
 >  	struct xfs_btree_block		*btblock;
+> +	xfs_failaddr_t			fa;
 >  	xfs_daddr_t			daddr;
-> +	int				block_level;
+>  	int				block_level;
 >  	int				error;
+> @@ -718,28 +719,68 @@ xrep_findroot_block(
+>  			return error;
+>  	}
 >  
->  	daddr = XFS_AGB_TO_DADDR(mp, ri->sc->sa.agno, agbno);
-> @@ -727,17 +728,51 @@ xrep_findroot_block(
->  		goto out;
->  	bp->b_ops = fab->buf_ops;
->  
-> -	/* Ignore this block if it's lower in the tree than we've seen. */
-> -	if (fab->root != NULLAGBLOCK &&
-> -	    xfs_btree_get_level(btblock) < fab->height)
-> -		goto out;
+> -	error = xfs_trans_read_buf(mp, ri->sc->tp, mp->m_ddev_targp, daddr,
+> -			mp->m_bsize, 0, &bp, NULL);
+> -	if (error)
+> -		return error;
 > -
->  	/* Make sure we pass the verifiers. */
->  	bp->b_ops->verify_read(bp);
->  	if (bp->b_error)
->  		goto out;
+>  	/*
+> -	 * Does this look like a block matching our fs and higher than any
+> -	 * other block we've found so far?  If so, reattach buffer verifiers
+> -	 * so the AIL won't complain if the buffer is also dirty.
+> +	 * Try to grab the buffer, on the off chance it's already in memory.
+> +	 * If the buffer doesn't have the DONE flag set it hasn't been read
+> +	 * into memory yet.  Drop the buffer and read the buffer with NULL
+> +	 * b_ops.  (This could race with another read_buf.)  If we get the
+> +	 * buffer back with NULL b_ops then we know that there weren't any
+> +	 * other readers.  There's a risk we won't match the buffer with any
+> +	 * of the findroot prototypes, so we want to encourage the buffer layer
+> +	 * to drop the buffer as soon as possible.
+>  	 */
+> +	bp = xfs_trans_get_buf(ri->sc->tp, mp->m_ddev_targp, daddr,
+> +			mp->m_bsize, 0);
+> +	if (!bp)
+> +		return -ENOMEM;
+> +	if (!(bp->b_flags & XBF_DONE)) {
+> +		xfs_trans_brelse(ri->sc->tp, bp);
 > +
-> +	/* If we've recorded a root candidate... */
-> +	block_level = xfs_btree_get_level(btblock);
-> +	if (fab->root != NULLAGBLOCK) {
-> +		/*
-> +		 * ...and this no-sibling root block candidate has the same
-> +		 * level as the recorded candidate, there's no way we're going
-> +		 * to accept any candidates at this tree level.  Stash a root
-> +		 * block of zero because the height is still valid, but no
-> +		 * AG btree can root at agblock 0.  Callers should verify the
-> +		 * root agbno with xfs_verify_agbno...
-> +		 */
-> +		if (block_level + 1 == fab->height) {
-> +			fab->root = 0;
-> +			goto out;
-> +		}
-> +
-> +		/*
-> +		 * ...and this no-sibling root block is lower in the tree than
-> +		 * the recorded root block candidate, just ignore it.  There's
-> +		 * still a strong chance that something is wrong with the btree
-> +		 * itself, but that's not what we're fixing right now.
-> +		 */
-> +		if (block_level < fab->height)
-> +			goto out;
-> +	}
-> +
-> +	/*
-> +	 * Root blocks can't have siblings.  This level can't be the root, so
-> +	 * record the tree height (but not the ag block pointer) to force us to
-> +	 * look for a higher level in the tree.
-> +	 */
-> +	if (btblock->bb_u.s.bb_leftsib != cpu_to_be32(NULLAGBLOCK) ||
-> +	    btblock->bb_u.s.bb_rightsib != cpu_to_be32(NULLAGBLOCK)) {
-> +		fab->root = 0;
-> +		fab->height = block_level + 1;
-> +		goto out;
+> +		error = xfs_trans_read_buf(mp, ri->sc->tp, mp->m_ddev_targp,
+> +				daddr, mp->m_bsize, 0, &bp, NULL);
+
+Maybe I'm missing something, but I thought buf_ops should only be
+attached to the buffer if the call actually read the buffer from disk.
+Doesn't that mean we could continue to call xfs_trans_read_buf() here
+and do the oneshot thing below to cover the case where we read it (and
+don't want to leave around a buf with ->b_ops == NULL)?
+
+> +		if (error)
+> +			return error;
+> +		if (!bp->b_ops)
+> +			xfs_buf_oneshot(bp);
 > +	}
 > +
 
-Hmm, this looks technically correct but this still seems more involved
-than necessary. I don't really like how we define yet another magic
-value of 0, for example, and differentiate that from NULLAGBLOCK when it
-seems like we could just check the height.
-
-Could we do something like the following (which assumes ->height is
-initialized to 0)?
-
-        /*
-         * If current height exceeds the block level, we've already seen at
-         * least one block at this level or higher. Skip it and invalidate the
-         * root if this block matches the current root level because a root
-         * block has no siblings.
-         */
-        block_level = xfs_btree_get_level(btblock);
-        if (fab->height > block_level) {
-                if (fab->height - 1 == block_level)
-                        fab->root = NULLAGBLOCK;
-                goto out;
-        }
-
-        /*
-         * Found a block with a new max height. Track it as a root candidate if
-         * it has no siblings. Otherwise invalidate root since we know the root
-         * can't be at this level.
-         */
-        if (btblock->bb_u.s.bb_leftsib == cpu_to_be32(NULLAGBLOCK) &&
-            btblock->bb_u.s.bb_rightsib == cpu_to_be32(NULLAGBLOCK))
-                fab->root = agbno;
-        else
-                fab->root = NULLAGBLOCK;
-        fab->height = block_level + 1;
-
-... and then ->root should either be valid or NULLAGBLOCK at the end..?
-
-Also, shouldn't we set *found_it a bit earlier in this function? It
-looks like that simply controls the fab iteration and we have
-technically matched the block to a btree type at this point, regardless
-of whether we update root/height. (I wonder if something like "matched"
-or "found_match" might be a better name than found_it...).
+It's also kind of painful that we have to re-read the same buffer
+multiple times to compare it to each fab. It seems like this could use
+some refactoring to read each buffer once, check it against each fab
+until we get through the verifier, then run the root/level processing on
+the fab that matched. Perhaps that's something for another patch though
+(make it work vs. make it fast :P)...
 
 Brian
 
->  	fab->root = agbno;
-> -	fab->height = xfs_btree_get_level(btblock) + 1;
-> +	fab->height = block_level + 1;
->  	*found_it = true;
+> +	/* Does this look like a block matching our fs? */
+>  	btblock = XFS_BUF_TO_BLOCK(bp);
+>  	if (be32_to_cpu(btblock->bb_magic) != fab->magic)
+>  		goto out;
+>  	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+>  	    !uuid_equal(&btblock->bb_u.s.bb_uuid, &mp->m_sb.sb_meta_uuid))
+>  		goto out;
+> -	bp->b_ops = fab->buf_ops;
 >  
->  	trace_xrep_findroot_block(mp, ri->sc->sa.agno, agbno,
+> -	/* Make sure we pass the verifiers. */
+> -	bp->b_ops->verify_read(bp);
+> -	if (bp->b_error)
+> -		goto out;
+> +	/*
+> +	 * We've matched this buffer by magic number to this findroot
+> +	 * prototype.  If there are no buffer ops attached, attach the one
+> +	 * specified by the prototype.  Otherwise, the buffer ops must match
+> +	 * the prototype.   We don't want to disturb existing b_ops.
+> +	 */
+> +	if (bp->b_ops) {
+> +		if (bp->b_ops != fab->buf_ops)
+> +			goto out;
+> +		/*
+> +		 * If the buffer was already incore (on a v5 fs) then it should
+> +		 * already have had b_ops assigned.  Call ->verify_struct to
+> +		 * check the structure.  Avoid checking the CRC because we
+> +		 * don't calculate CRCs until the buffer is written by the log.
+> +		 */
+> +		fa = bp->b_ops->verify_struct(bp);
+> +		if (fa)
+> +			goto out;
+> +	} else {
+> +		/*
+> +		 * If we have to assign buffer ops, that means that nobody's
+> +		 * checked the buffer structure or its CRC.  Do both now by
+> +		 * calling ->verify_read.
+> +		 */
+> +		bp->b_ops = fab->buf_ops;
+> +		bp->b_ops->verify_read(bp);
+> +		if (bp->b_error)
+> +			goto out;
+> +	}
+>  
+>  	/* If we've recorded a root candidate... */
+>  	block_level = xfs_btree_get_level(btblock);
 > 
