@@ -1,132 +1,143 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:38716 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726704AbeHMKim (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Aug 2018 06:38:42 -0400
-Received: by mail-wr1-f66.google.com with SMTP id v14-v6so13400684wro.5
-        for <linux-xfs@vger.kernel.org>; Mon, 13 Aug 2018 00:57:35 -0700 (PDT)
-Received: from odin.usersys.redhat.com (ip-86-49-61-71.net.upcbroadband.cz. [86.49.61.71])
-        by smtp.gmail.com with ESMTPSA id c129-v6sm12525073wmh.2.2018.08.13.00.57.34
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 13 Aug 2018 00:57:34 -0700 (PDT)
-Date: Mon, 13 Aug 2018 09:52:14 +0200
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:52738 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728244AbeHMKqV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Aug 2018 06:46:21 -0400
+Received: by mail-wm0-f65.google.com with SMTP id o11-v6so7859853wmh.2
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Aug 2018 01:05:11 -0700 (PDT)
+Date: Mon, 13 Aug 2018 10:05:08 +0200
 From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 3/6] xfs: sanity check ag header values in
- xrep_calc_ag_resblks
-Message-ID: <20180813075214.rzfw7kwgogyyvyqi@odin.usersys.redhat.com>
+Subject: Re: [PATCH 4/6] xfs: fix buffer state management in
+ xrep_findroot_block
+Message-ID: <20180813080508.ocnhzyke6jfvhxrb@odin.usersys.redhat.com>
 References: <153400169747.27471.4044680761841034489.stgit@magnolia>
- <153400171586.27471.17428651076544146314.stgit@magnolia>
+ <153400172200.27471.13133656951315541955.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <153400171586.27471.17428651076544146314.stgit@magnolia>
+In-Reply-To: <153400172200.27471.13133656951315541955.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Sat, Aug 11, 2018 at 08:35:15AM -0700, Darrick J. Wong wrote:
+On Sat, Aug 11, 2018 at 08:35:22AM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Check the values we read in from the AG headers when calculating the
-> block reservations for a repair transaction.  If they're obviously
-> wrong, substitute worst case assumptions (rather than ENOSPC on a bogus
-> reservatoin request).
-
-reservation ^
-
-Other than that:
-
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-
+> We don't quite handle buffer state properly in online repair's findroot
+> routine.  If the buffer is already in-core we don't want to trash its
+> b_ops and state, so first we should try _get_buf to grab the buffer.  If
+> the buffer is loaded, we only want to verify the structure of the buffer
+> since it could be dirty and the crc hasn't yet been recalculated.
+> 
+> Only if the buffer hasn't been read in should try _read_buf, and if we
+> were the ones who read the buffer then we must be careful to oneshot the
+> buffer so that a subsequent _read_buf won't find a buffer with no ops.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/scrub/repair.c |   46 +++++++++++++++++++++++++++-------------------
->  1 file changed, 27 insertions(+), 19 deletions(-)
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+>  fs/xfs/scrub/repair.c |   67 +++++++++++++++++++++++++++++++++++++++----------
+>  1 file changed, 54 insertions(+), 13 deletions(-)
 > 
 > 
 > diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-> index 42d8c798ce7d..97c3077fb005 100644
+> index 97c3077fb005..fae50dced8bc 100644
 > --- a/fs/xfs/scrub/repair.c
 > +++ b/fs/xfs/scrub/repair.c
-> @@ -195,8 +195,8 @@ xrep_calc_ag_resblks(
->  	struct xfs_scrub_metadata	*sm = sc->sm;
->  	struct xfs_perag		*pag;
+> @@ -697,6 +697,7 @@ xrep_findroot_block(
+>  	struct xfs_mount		*mp = ri->sc->mp;
 >  	struct xfs_buf			*bp;
-> -	xfs_agino_t			icount = 0;
-> -	xfs_extlen_t			aglen = 0;
-> +	xfs_agino_t			icount = NULLAGINO;
-> +	xfs_extlen_t			aglen = NULLAGBLOCK;
->  	xfs_extlen_t			usedlen;
->  	xfs_extlen_t			freelen;
->  	xfs_extlen_t			bnobt_sz;
-> @@ -208,20 +208,14 @@ xrep_calc_ag_resblks(
->  	if (!(sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR))
->  		return 0;
->  
-> -	/* Use in-core counters if possible. */
->  	pag = xfs_perag_get(mp, sm->sm_agno);
-> -	if (pag->pagi_init)
-> +	if (pag->pagi_init) {
-> +		/* Use in-core icount if possible. */
->  		icount = pag->pagi_count;
-> -
-> -	/*
-> -	 * Otherwise try to get the actual counters from disk; if not, make
-> -	 * some worst case assumptions.
-> -	 */
-> -	if (icount == 0) {
-> +	} else {
-> +		/* Try to get the actual counters from disk. */
->  		error = xfs_ialloc_read_agi(mp, NULL, sm->sm_agno, &bp);
-> -		if (error) {
-> -			icount = mp->m_sb.sb_agblocks / mp->m_sb.sb_inopblock;
-> -		} else {
-> +		if (!error) {
->  			icount = pag->pagi_count;
->  			xfs_buf_relse(bp);
->  		}
-> @@ -229,18 +223,32 @@ xrep_calc_ag_resblks(
->  
->  	/* Now grab the block counters from the AGF. */
->  	error = xfs_alloc_read_agf(mp, NULL, sm->sm_agno, 0, &bp);
-> -	if (error) {
-> -		aglen = mp->m_sb.sb_agblocks;
-> -		freelen = aglen;
-> -		usedlen = aglen;
-> -	} else {
-> +	if (!error) {
->  		aglen = be32_to_cpu(XFS_BUF_TO_AGF(bp)->agf_length);
-> -		freelen = pag->pagf_freeblks;
-> +		freelen = be32_to_cpu(XFS_BUF_TO_AGF(bp)->agf_freeblks);
->  		usedlen = aglen - freelen;
->  		xfs_buf_relse(bp);
+>  	struct xfs_btree_block		*btblock;
+> +	xfs_failaddr_t			fa;
+>  	xfs_daddr_t			daddr;
+>  	int				block_level;
+>  	int				error;
+> @@ -718,28 +719,68 @@ xrep_findroot_block(
+>  			return error;
 >  	}
->  	xfs_perag_put(pag);
 >  
-> +	/* If the icount is impossible, make some worst-case assumptions. */
-> +	if (icount == NULLAGINO ||
-> +	    !xfs_verify_agino(mp, sm->sm_agno, icount)) {
-> +		xfs_agino_t	first, last;
+> -	error = xfs_trans_read_buf(mp, ri->sc->tp, mp->m_ddev_targp, daddr,
+> -			mp->m_bsize, 0, &bp, NULL);
+> -	if (error)
+> -		return error;
+> -
+>  	/*
+> -	 * Does this look like a block matching our fs and higher than any
+> -	 * other block we've found so far?  If so, reattach buffer verifiers
+> -	 * so the AIL won't complain if the buffer is also dirty.
+> +	 * Try to grab the buffer, on the off chance it's already in memory.
+> +	 * If the buffer doesn't have the DONE flag set it hasn't been read
+> +	 * into memory yet.  Drop the buffer and read the buffer with NULL
+> +	 * b_ops.  (This could race with another read_buf.)  If we get the
+> +	 * buffer back with NULL b_ops then we know that there weren't any
+> +	 * other readers.  There's a risk we won't match the buffer with any
+> +	 * of the findroot prototypes, so we want to encourage the buffer layer
+> +	 * to drop the buffer as soon as possible.
+>  	 */
+> +	bp = xfs_trans_get_buf(ri->sc->tp, mp->m_ddev_targp, daddr,
+> +			mp->m_bsize, 0);
+> +	if (!bp)
+> +		return -ENOMEM;
+> +	if (!(bp->b_flags & XBF_DONE)) {
+> +		xfs_trans_brelse(ri->sc->tp, bp);
 > +
-> +		xfs_agino_range(mp, sm->sm_agno, &first, &last);
-> +		icount = last - first + 1;
+> +		error = xfs_trans_read_buf(mp, ri->sc->tp, mp->m_ddev_targp,
+> +				daddr, mp->m_bsize, 0, &bp, NULL);
+> +		if (error)
+> +			return error;
+> +		if (!bp->b_ops)
+> +			xfs_buf_oneshot(bp);
 > +	}
 > +
-> +	/* If the block counts are impossible, make worst-case assumptions. */
-> +	if (aglen == NULLAGBLOCK ||
-> +	    aglen != xfs_ag_block_count(mp, sm->sm_agno) ||
-> +	    freelen >= aglen) {
-> +		aglen = xfs_ag_block_count(mp, sm->sm_agno);
-> +		freelen = aglen;
-> +		usedlen = aglen;
-> +	}
-> +
->  	trace_xrep_calc_ag_resblks(mp, sm->sm_agno, icount, aglen,
->  			freelen, usedlen);
+> +	/* Does this look like a block matching our fs? */
+>  	btblock = XFS_BUF_TO_BLOCK(bp);
+>  	if (be32_to_cpu(btblock->bb_magic) != fab->magic)
+>  		goto out;
+>  	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+>  	    !uuid_equal(&btblock->bb_u.s.bb_uuid, &mp->m_sb.sb_meta_uuid))
+>  		goto out;
+> -	bp->b_ops = fab->buf_ops;
 >  
+> -	/* Make sure we pass the verifiers. */
+> -	bp->b_ops->verify_read(bp);
+> -	if (bp->b_error)
+> -		goto out;
+> +	/*
+> +	 * We've matched this buffer by magic number to this findroot
+> +	 * prototype.  If there are no buffer ops attached, attach the one
+> +	 * specified by the prototype.  Otherwise, the buffer ops must match
+> +	 * the prototype.   We don't want to disturb existing b_ops.
+> +	 */
+> +	if (bp->b_ops) {
+> +		if (bp->b_ops != fab->buf_ops)
+> +			goto out;
+> +		/*
+> +		 * If the buffer was already incore (on a v5 fs) then it should
+> +		 * already have had b_ops assigned.  Call ->verify_struct to
+> +		 * check the structure.  Avoid checking the CRC because we
+> +		 * don't calculate CRCs until the buffer is written by the log.
+> +		 */
+> +		fa = bp->b_ops->verify_struct(bp);
+> +		if (fa)
+> +			goto out;
+> +	} else {
+> +		/*
+> +		 * If we have to assign buffer ops, that means that nobody's
+> +		 * checked the buffer structure or its CRC.  Do both now by
+> +		 * calling ->verify_read.
+> +		 */
+> +		bp->b_ops = fab->buf_ops;
+> +		bp->b_ops->verify_read(bp);
+> +		if (bp->b_error)
+> +			goto out;
+> +	}
+>  
+>  	/* If we've recorded a root candidate... */
+>  	block_level = xfs_btree_get_level(btblock);
 > 
 
 -- 
