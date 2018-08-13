@@ -1,65 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ua1-f68.google.com ([209.85.222.68]:40348 "EHLO
-        mail-ua1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728192AbeHMMMq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Aug 2018 08:12:46 -0400
-Received: by mail-ua1-f68.google.com with SMTP id m13-v6so8439588uaq.7
-        for <linux-xfs@vger.kernel.org>; Mon, 13 Aug 2018 02:31:20 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.133]:37918 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726577AbeHMKEN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Aug 2018 06:04:13 -0400
+Date: Mon, 13 Aug 2018 00:23:13 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 6/6] xfs: don't crash the vfs on a garbage inline symlink
+Message-ID: <20180813072313.GA26027@infradead.org>
+References: <153400169747.27471.4044680761841034489.stgit@magnolia>
+ <153400173428.27471.504421086760762828.stgit@magnolia>
 MIME-Version: 1.0
-Reply-To: maryannprivateoffice2014@yahoo.com
-From: "khali Dfaisl Secretary to Mrs.Mary Ann"
-        <mrkhalidfaisl2014@gmail.com>
-Date: Mon, 13 Aug 2018 10:31:19 +0100
-Message-ID: <CAMZrLjX_QZkmhUy6unKU7n2292o4p-WWYCxccj8s0uGt4qYFkA@mail.gmail.com>
-Subject: FROM MRS MARY ANN MADU, IMPORTANT INFORMATION PART PAYMENT OF ($18.7M)
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <153400173428.27471.504421086760762828.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, wen.xu@gatech.edu
 
-                                    CENTRAL BANK OF NIGERIA
-                      INTERNATIONAL REMITTANCE DEPARTMENT
-                      PAYMENT NOTIFICATION CENTRAL BANK OF NIGERIA
-                            OFFICE CODE:(CBN 1960)
+>  	struct delayed_call	*done)
+>  {
+> +	char			*ptr;
+> +
+>  	ASSERT(XFS_I(inode)->i_df.if_flags & XFS_IFINLINE);
+> -	return XFS_I(inode)->i_df.if_u1.if_data;
+> +
+> +	/*
+> +	 * The VFS crashes on a NULL pointer, so return -EFSCORRUPTED if
+> +	 * if_data is junk.
+> +	 */
+> +	ptr = XFS_I(inode)->i_df.if_u1.if_data;
+> +	return ptr ? ptr : ERR_PTR(-EFSCORRUPTED);
+>  }
+>  
+>  STATIC int
 
+Please simplify this to:
 
-IMPORTANT INFORMATION: PART PAYMENT OF ($18.7M)
+>  	struct delayed_call	*done)
+>  {
+	char			*link = XFS_I(inode)->i_df.if_u1.if_data;
 
-Attention;
+  	ASSERT(XFS_I(inode)->i_df.if_flags & XFS_IFINLINE);
+> +	ptr = XFS_I(inode)->i_df.if_u1.if_data;
 
-I am  Mrs. Mary Ann the confidential Secretary to the past Central
-Bank of Nigeria Governor (CBN) Mallam Sanusi Lamido Sanusi. I have an
-urgent information that is vital to you, if you promise that you will
-not betray me.
+	if (!link)
+		return ERR_PTR(-EFSCORRUPTED);
+	return link;
 
-The information is about your outstanding  payment with the Federal
-government of Nigeria  which you are supposed to receive through the
-apex bank in the 2nd quarter 2014.
-
-My past boss and some of his colleagues in government  are involved in
-your transaction has conspired to divert your funds to another
-account, and the strategy they employed is by demanding several
-charges from you, so that you will feel  be frustrated and abandon the
-fund,thereby it will open an avenue for them to refer your fund as
-unclaimed and it will be transferred to their coded account, you can
-see all your effort and money you spent to receive this money but all
-your effort is in vain.
-
-Our  President  mandated my retired boss to release your funds to you
-which failed before he was suspended and sacked shamefully due to
-fraudulent activities and other miscellaneous offense that led to the
-appointment of Godwin Emefiele, new governor.
-
-Please this information I am giving to you is a great risk on my
-side,i know that you will not forget my effort.
-
-Please if you are not going to put me into trouble about this
-development, kindly contact me , As  I will give you  more further
-details on how to proceed towards the successful remittance of your
-funds.
-
-I look forward to hear from you.
-
-Best regards,
-
-Mrs. Mary Ann
+But be honest I'd much rather fix this in the caller than every fs.
+Can you send a patch to Al to do that instead?
