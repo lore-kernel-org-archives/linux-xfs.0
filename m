@@ -1,140 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:28878 "EHLO
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:12447 "EHLO
         ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726119AbeHUBcd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Aug 2018 21:32:33 -0400
-Date: Tue, 21 Aug 2018 08:15:06 +1000
+        by vger.kernel.org with ESMTP id S1725849AbeHMF0w (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Aug 2018 01:26:52 -0400
+Date: Mon, 13 Aug 2018 12:46:40 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/6] xfs: verify extent size hint is valid in inode
- verifier
-Message-ID: <20180820221506.GG31495@dastard>
-References: <20180605062423.4877-1-david@fromorbit.com>
- <20180605062423.4877-3-david@fromorbit.com>
- <6196d8ce-03b9-eaae-4a07-d307e35540ca@sandeen.net>
- <20180724164346.GU4813@magnolia>
- <20180820150603.GA9568@bfoster>
- <17c55fba-5615-35a4-65d6-665ea89d20c2@sandeen.net>
- <20180820153626.GB4334@magnolia>
- <20180820155918.GB9568@bfoster>
+Subject: Re: [PATCH 05/14] xfs: repair free space btrees
+Message-ID: <20180813024640.GB31495@dastard>
+References: <20180807233458.GH30972@magnolia>
+ <20180808122953.GB2819@bfoster>
+ <20180808224232.GJ30972@magnolia>
+ <20180809120027.GC21030@bfoster>
+ <20180809155959.GK30972@magnolia>
+ <20180810103351.GA27330@bfoster>
+ <20180810153944.GC15083@magnolia>
+ <20180810190740.GA27589@bfoster>
+ <20180810193651.GE15083@magnolia>
+ <20180811125049.GA35189@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180820155918.GB9568@bfoster>
+In-Reply-To: <20180811125049.GA35189@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, allison.henderson@oracle.com
 
-On Mon, Aug 20, 2018 at 11:59:18AM -0400, Brian Foster wrote:
-> On Mon, Aug 20, 2018 at 08:36:26AM -0700, Darrick J. Wong wrote:
-> > On Mon, Aug 20, 2018 at 10:27:42AM -0500, Eric Sandeen wrote:
-> > > On 8/20/18 10:06 AM, Brian Foster wrote:
-> > > > On Tue, Jul 24, 2018 at 09:43:46AM -0700, Darrick J. Wong wrote:
-> > > >> On Mon, Jul 23, 2018 at 11:39:53PM -0700, Eric Sandeen wrote:
-> > > >>> On 6/4/18 11:24 PM, Dave Chinner wrote:
-> > > >>>> From: Dave Chinner <dchinner@redhat.com>
-> > > >>>>
-> > > >>>> There are rules for vald extent size hints. We enforce them when
-> > > >>>> applications set them, but fuzzers violate those rules and that
-> > > >>>> screws us over.
-> > > >>>>
-> > > >>>> This results in alignment assertion failures when setting up
-> > > >>>> allocations such as this in direct IO:
-> > > >>>>
-> > > >>>> XFS: Assertion failed: ap->length, file: fs/xfs/libxfs/xfs_bmap.c, line: 3432
-> > > >>>> ....
-> > > >>>> Call Trace:
-> > > >>>>  xfs_bmap_btalloc+0x415/0x910
-> > > >>>>  xfs_bmapi_write+0x71c/0x12e0
-> > > >>>>  xfs_iomap_write_direct+0x2a9/0x420
-> > > >>>>  xfs_file_iomap_begin+0x4dc/0xa70
-> > > >>>>  iomap_apply+0x43/0x100
-> > > >>>>  iomap_file_buffered_write+0x62/0x90
-> > > >>>>  xfs_file_buffered_aio_write+0xba/0x300
-> > > >>>>  __vfs_write+0xd5/0x150
-> > > >>>>  vfs_write+0xb6/0x180
-> > > >>>>  ksys_write+0x45/0xa0
-> > > >>>>  do_syscall_64+0x5a/0x180
-> > > >>>>  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-> > > >>>>
-> > > >>>> And from xfs_db:
-> > > >>>>
-> > > >>>> core.extsize = 10380288
-> > > >>>>
-> > > >>>> Which is not an integer multiple of the block size, and so violates
-> > > >>>> Rule #7 for setting extent size hints. Validate extent size hint
-> > > >>>> rules in the inode verifier to catch this.
-> > > >>>
-> > > >>> So, I think that if I do:
-> > > >>>
-> > > >>> # mkfs.xfs -f -m crc=0 $TEST_DEV
-> > > >>> # ./check xfs/229
-> > > >>> # ./check xfs/229
-> > > >>>
-> > > >>> I trip the verifier, because I end up with freed inodes on disk with an
-> > > >>> extent size hints but zeroed flags.  
-> > > >>>
-> > > >>> xfs_ifree sets di_flags = 0 but doesn't clear di_extsize; xfs_inode_validate_extsize
-> > > >>> says if extsize !=0 and the hint flag is set, it fails
-> > > >>>
-> > > >>> Anyone else see this?
-> > > >>
-> > > >> Yeah, I think I just hit this on the TEST_DEV in xfs/242.
-> > > >>
-> > > >> git blame says I lifted the code from the scrub code, and I probably
-> > > >> wrote the code having read the ioctl code (which clears the extsize
-> > > >> field if the iflag isn't set).
-> > > >>
-> > > >>> (crc=0 needed because that causes us to actually reread the inode chunks
-> > > >>> in xfs_iread vs. /* shortcut IO on inode allocation if possible */
-> > > >>
-> > > >> Hmmm, so a v5 fs mounted with ikeep will also read an inode chunk when
-> > > >> creating an inode.  It looks like we do that (instead of zeroing the
-> > > >> incore inode and setting a random i_generation) to preserve the existing
-> > > >> generation number?
-> > > >>
-> > > >> In any case, it's pretty clear that kernels have been writing out freed
-> > > >> inode cores with di_mode == 0, di_flags == 0, and di_extsize == (some
-> > > >> number) so we clearly can't have that in the verifier.  It looks like we
-> > > >> only examine di_extsize if either EXTSZ flag are set, so it's not
-> > > >> causing incorrect behavior.  Maybe it can be a preening fix in
-> > > >> scrub/repair.
-> > > >>
-> > > > 
-> > > > I just stumbled on this problem with xfs/229 that Eric reported. I'm
-> > > > confused by the comment above regarding this not causing incorrect
-> > > > behavior.
-> > > 
-> > > I think Darrick meant that having a nonzero extent size hint on disk
-> > > won't cause incorrect behavior because "we only examine di_extsize if
-> > > either EXTSZ flag are set"
-> > 
-> > Yeah, he probably did. :)
+On Sat, Aug 11, 2018 at 08:50:49AM -0400, Brian Foster wrote:
+> On Fri, Aug 10, 2018 at 12:36:51PM -0700, Darrick J. Wong wrote:
+> > Technically we're not supposed to have flag days, but otoh this is a
+> > xfs-only ioctl for a feature that's still experimental, so perhaps it's
+> > not crucial to maintain compatibility with old kernels where the feature
+> > is incomplete and experimental?
 > > 
 > 
-> Got it, thanks.
-> 
-> > I think Brian's suggestion of
-> > 
-> > if (i_mode != 0 && !hint && extsize != 0)
-> > 	barf_error();
-> > 
-> > sounds reasonable (having not tested that at all).
-> > 
-> 
-> I'll run it through xfstests and get it posted if nothing else fails.
-> 
-> BTW, do we have a similar issue with the cowextsize hint (assuming
-> v5+ikeep)? It looks like it's cleared similarly in xfs_ialloc(), but I'm
-> not sure if it's cleared somewhere else on free...
+> In my mind, I kind of take the experimental status as all bits/interface
+> may explode and are otherwise subject to change or disappear. Perhaps
+> others feel differently, it does seem we've kind of hinted towards the
+> contrary recently with respect to the per-inode dax bits and then now in
+> this discussion, but IMO that's kind of an inherent risk of doing
+> incremental work on complex features upstream.
 
-We should clear them on free now, so that we can draw a line in the
-sand for when we can have verifiers check it. e.g. when the next
-feature bit gets introduced, filesystems with that feature bit set
-can also verify the extent size hints are zero on freed inodes
-because we know that kernels supporting that feature always zero
-them on free....
+I've always considered that the experimental tag covers the
+user/ioctl interfaces as much as it does the functionality and
+on-disk format. i.e. like the on-disk format, the ioctl interfaces
+are subject to change until we clear the exp. tag, at which point
+they are essentially fixed forever. We /try/ not to have to change
+them after the initial merge, but sometimes we screw up and need to
+fix them before we commit to long term support.
 
 Cheers,
 
