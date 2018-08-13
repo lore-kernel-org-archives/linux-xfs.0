@@ -1,153 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:42684 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729029AbeHMTkE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 13 Aug 2018 15:40:04 -0400
-Date: Mon, 13 Aug 2018 12:56:59 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 4/6] xfs: fix buffer state management in
- xrep_findroot_block
-Message-ID: <20180813165658.GB64121@bfoster>
-References: <153400169747.27471.4044680761841034489.stgit@magnolia>
- <153400172200.27471.13133656951315541955.stgit@magnolia>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:48405 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730480AbeHNBG2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Aug 2018 21:06:28 -0400
+Date: Tue, 14 Aug 2018 08:22:13 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Missing security_inode_readlink() in xfs_file_ioctl()
+Message-ID: <20180813222213.GC31495@dastard>
+References: <41DC519D-83A7-4964-A6C8-B16CFEEDB65F@vt.edu>
+ <20180810092229.rq7m4zdq75tsggqv@mwanda>
+ <20180810160931.GF12194@magnolia>
+ <20180810190217.uhiyp4totxrem5lw@mwanda>
+ <20180813073528.s5hck4bmwmg6pvoq@odin.usersys.redhat.com>
+ <20180813083047.plcvj4k5qkoxr26l@mwanda>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <153400172200.27471.13133656951315541955.stgit@magnolia>
+In-Reply-To: <20180813083047.plcvj4k5qkoxr26l@mwanda>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, TongZhang <ztong@vt.edu>, linux-xfs@vger.kernel.org, "security@kernel.org>" <security@kernel.org>, wenbo.s@samsung.com, ahmedmoneeb@gmail.com
 
-On Sat, Aug 11, 2018 at 08:35:22AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Aug 13, 2018 at 11:30:48AM +0300, Dan Carpenter wrote:
+> On Mon, Aug 13, 2018 at 09:35:28AM +0200, Carlos Maiolino wrote:
+> > On Fri, Aug 10, 2018 at 10:02:17PM +0300, Dan Carpenter wrote:
+> > > On Fri, Aug 10, 2018 at 09:09:31AM -0700, Darrick J. Wong wrote:
+> > > > On Fri, Aug 10, 2018 at 12:22:29PM +0300, Dan Carpenter wrote:
+> > > > > Hi XFS devs,
+> > > > > 
+> > > > > We received this email on security@kernel.org.  This is under
+> > > > > CAP_SYS_ADMIN, but it maybe should also check with selinux?
+> > > > 
+> > > > Hmm, so the point of adding a security_inode_readlink call would be to
+> > > > restrict userland access xfs_readlink_by_handle further in case the
+> > > > system has a policy whereby even possessing CAP_SYS_ADMIN is not by
+> > > > itself sufficient to be able to read a symlink?
+> > > > 
+> > > > IOWs, are there security policies where CAP_SYS_ADMIN isn't a "get
+> > > > access to everything" wildcard?  I imagine the answer is "yes" and
+> > > > therefore xfs needs the call, but I thought I'd ask first.
+> > > >
+> > > 
+> > > Yeah...  Forget about it.  I pushed this out to you without really
+> > > thinking about it, just to get it off my todo list and that wasn't the
+> > > right thing.
+> > > 
+> > 
+> > Just thought it was worth to mention...
+> > 
+> > A long time ago, I've seen implementations where the system administration was
+> > split between a sys admin and a 'security admin', where the security admin
+> > removed some root permissions, and so, some very specific tasks could only be
+> > done by the security admin.
+> > All these were enforced by selinux.
+> > Although, I don't see such implementations in ages, I still think they are out
+> > there.
 > 
-> We don't quite handle buffer state properly in online repair's findroot
-> routine.  If the buffer is already in-core we don't want to trash its
-> b_ops and state, so first we should try _get_buf to grab the buffer.  If
-> the buffer is loaded, we only want to verify the structure of the buffer
-> since it could be dirty and the crc hasn't yet been recalculated.
+> That seems like a crazy thing.  Sys admin can write to firmware, so you
+> can't really separate root from sys admin.  There are so many other
+> things that you can do with sys admin.
 > 
-> Only if the buffer hasn't been read in should try _read_buf, and if we
-> were the ones who read the buffer then we must be careful to oneshot the
-> buffer so that a subsequent _read_buf won't find a buffer with no ops.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/scrub/repair.c |   67 +++++++++++++++++++++++++++++++++++++++----------
->  1 file changed, 54 insertions(+), 13 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-> index 97c3077fb005..fae50dced8bc 100644
-> --- a/fs/xfs/scrub/repair.c
-> +++ b/fs/xfs/scrub/repair.c
-> @@ -697,6 +697,7 @@ xrep_findroot_block(
->  	struct xfs_mount		*mp = ri->sc->mp;
->  	struct xfs_buf			*bp;
->  	struct xfs_btree_block		*btblock;
-> +	xfs_failaddr_t			fa;
->  	xfs_daddr_t			daddr;
->  	int				block_level;
->  	int				error;
-> @@ -718,28 +719,68 @@ xrep_findroot_block(
->  			return error;
->  	}
->  
-> -	error = xfs_trans_read_buf(mp, ri->sc->tp, mp->m_ddev_targp, daddr,
-> -			mp->m_bsize, 0, &bp, NULL);
-> -	if (error)
-> -		return error;
-> -
->  	/*
-> -	 * Does this look like a block matching our fs and higher than any
-> -	 * other block we've found so far?  If so, reattach buffer verifiers
-> -	 * so the AIL won't complain if the buffer is also dirty.
-> +	 * Try to grab the buffer, on the off chance it's already in memory.
-> +	 * If the buffer doesn't have the DONE flag set it hasn't been read
-> +	 * into memory yet.  Drop the buffer and read the buffer with NULL
-> +	 * b_ops.  (This could race with another read_buf.)  If we get the
-> +	 * buffer back with NULL b_ops then we know that there weren't any
-> +	 * other readers.  There's a risk we won't match the buffer with any
-> +	 * of the findroot prototypes, so we want to encourage the buffer layer
-> +	 * to drop the buffer as soon as possible.
->  	 */
-> +	bp = xfs_trans_get_buf(ri->sc->tp, mp->m_ddev_targp, daddr,
-> +			mp->m_bsize, 0);
-> +	if (!bp)
-> +		return -ENOMEM;
-> +	if (!(bp->b_flags & XBF_DONE)) {
-> +		xfs_trans_brelse(ri->sc->tp, bp);
-> +
-> +		error = xfs_trans_read_buf(mp, ri->sc->tp, mp->m_ddev_targp,
-> +				daddr, mp->m_bsize, 0, &bp, NULL);
+> Another possibility is that maybe the NSA uses selinux for logging, to
+> try out what files Snowden accessed.  But it's sort of weird for us to
+> try support some application which might not exist.  TongZhang, try
+> emailing these things directly to the selinux devs.
+> selinux@tycho.nsa.gov  They're really the best qualified to talk about
+> missing LSM checks.
 
-Maybe I'm missing something, but I thought buf_ops should only be
-attached to the buffer if the call actually read the buffer from disk.
-Doesn't that mean we could continue to call xfs_trans_read_buf() here
-and do the oneshot thing below to cover the case where we read it (and
-don't want to leave around a buf with ->b_ops == NULL)?
+I suspect the the piece of the puzzle that is missing here is that
+this is a private XFS _filehandle_ interface. This means it is used
+to directly access inodes *without permission checks* by highly
+trusted applications that are tightly integrated into filesystem
+operation.  e.g. HSMs, userspace file servers, online defrag tools,
+backup/restore utilities, etc.
 
-> +		if (error)
-> +			return error;
-> +		if (!bp->b_ops)
-> +			xfs_buf_oneshot(bp);
-> +	}
-> +
+These applications are subject to very different access rules to
+"normal" users - they are effectively considered an extension of the
+kernel filesystem implementation as the filesystem may not function
+correctly without those applications being able to do what they do
+without interference. Hence the CAP_SYS_ADMIN check and the complete
+absence of any other type of permission check.....
 
-It's also kind of painful that we have to re-read the same buffer
-multiple times to compare it to each fab. It seems like this could use
-some refactoring to read each buffer once, check it against each fab
-until we get through the verifier, then run the root/level processing on
-the fab that matched. Perhaps that's something for another patch though
-(make it work vs. make it fast :P)...
+IOWs, denying inode access through these interfaces based on LSM
+policy checks will almost certainly cause the applications that use
+the private XFS filehandle interfaces to misbehave in unpredictable
+ways.
 
-Brian
+Cheers,
 
-> +	/* Does this look like a block matching our fs? */
->  	btblock = XFS_BUF_TO_BLOCK(bp);
->  	if (be32_to_cpu(btblock->bb_magic) != fab->magic)
->  		goto out;
->  	if (xfs_sb_version_hascrc(&mp->m_sb) &&
->  	    !uuid_equal(&btblock->bb_u.s.bb_uuid, &mp->m_sb.sb_meta_uuid))
->  		goto out;
-> -	bp->b_ops = fab->buf_ops;
->  
-> -	/* Make sure we pass the verifiers. */
-> -	bp->b_ops->verify_read(bp);
-> -	if (bp->b_error)
-> -		goto out;
-> +	/*
-> +	 * We've matched this buffer by magic number to this findroot
-> +	 * prototype.  If there are no buffer ops attached, attach the one
-> +	 * specified by the prototype.  Otherwise, the buffer ops must match
-> +	 * the prototype.   We don't want to disturb existing b_ops.
-> +	 */
-> +	if (bp->b_ops) {
-> +		if (bp->b_ops != fab->buf_ops)
-> +			goto out;
-> +		/*
-> +		 * If the buffer was already incore (on a v5 fs) then it should
-> +		 * already have had b_ops assigned.  Call ->verify_struct to
-> +		 * check the structure.  Avoid checking the CRC because we
-> +		 * don't calculate CRCs until the buffer is written by the log.
-> +		 */
-> +		fa = bp->b_ops->verify_struct(bp);
-> +		if (fa)
-> +			goto out;
-> +	} else {
-> +		/*
-> +		 * If we have to assign buffer ops, that means that nobody's
-> +		 * checked the buffer structure or its CRC.  Do both now by
-> +		 * calling ->verify_read.
-> +		 */
-> +		bp->b_ops = fab->buf_ops;
-> +		bp->b_ops->verify_read(bp);
-> +		if (bp->b_error)
-> +			goto out;
-> +	}
->  
->  	/* If we've recorded a root candidate... */
->  	block_level = xfs_btree_get_level(btblock);
-> 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
