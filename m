@@ -1,61 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:50778 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728846AbeHMQ22 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 13 Aug 2018 12:28:28 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 14D7187A50
-        for <linux-xfs@vger.kernel.org>; Mon, 13 Aug 2018 13:46:07 +0000 (UTC)
-Received: from odin.usersys.redhat.com (ovpn-204-88.brq.redhat.com [10.40.204.88])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 6DF542026D66
-        for <linux-xfs@vger.kernel.org>; Mon, 13 Aug 2018 13:46:06 +0000 (UTC)
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH] xfs_buf: Remove unneeded variable from xfs_buf_ioapply_map
-Date: Mon, 13 Aug 2018 15:46:01 +0200
-Message-Id: <20180813134601.29390-1-cmaiolino@redhat.com>
+Received: from mail.kernel.org ([198.145.29.99]:57552 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728540AbeHMReR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 13 Aug 2018 13:34:17 -0400
+Date: Mon, 13 Aug 2018 07:51:40 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+Subject: [GIT PULL] xfs: 4.19 merge, part 1
+Message-ID: <20180813145140.GD11750@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>, agruenba@redhat.com, Christoph Hellwig <hch@infradead.org>
 
-bio_add_page only returns 0 or the same value passed as length, there is
-no need to compare its return value against the passed length.
+Hi Linus,
 
-Just check if the return value is 0 or not.
+This is the first part of the XFS changes for 4.19.  Christoph and
+Andreas coordinated some refactoring work on the iomap code in
+preparation for removing buffer heads from XFS and porting gfs2 to
+iomap.  I'm sending this small pull request ahead of the main XFS merge
+to avoid holding up gfs2 unnecessarily.
 
+--D
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
+The following changes since commit ce397d215ccd07b8ae3f71db689aedb85d56ab40:
 
-P.S. Patch survived xfstests using different block sizes
+  Linux 4.18-rc1 (2018-06-17 08:04:49 +0900)
 
- fs/xfs/xfs_buf.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+are available in the Git repository at:
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index e839907e8492..a353b39b00e2 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1306,14 +1306,14 @@ xfs_buf_ioapply_map(
- 	bio_set_op_attrs(bio, op, op_flags);
- 
- 	for (; size && nr_pages; nr_pages--, page_index++) {
--		int	rbytes, nbytes = PAGE_SIZE - offset;
-+		int	nbytes = PAGE_SIZE - offset;
- 
- 		if (nbytes > size)
- 			nbytes = size;
- 
--		rbytes = bio_add_page(bio, bp->b_pages[page_index], nbytes,
--				      offset);
--		if (rbytes < nbytes)
-+		/* Stop if bio is full */
-+		if (!(bio_add_page(bio, bp->b_pages[page_index], nbytes,
-+				   offset)))
- 			break;
- 
- 		offset = 0;
--- 
-2.14.3
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git iomap-4.19-merge
+
+for you to fetch changes up to 806a1477b10a153cd01ee7ccba8ca2492df3e0b2:
+
+  iomap: add inline data support to iomap_readpage_actor (2018-07-03 09:07:47 -0700)
+
+----------------------------------------------------------------
+Andreas Gruenbacher (6):
+      iomap: mark newly allocated buffer heads as new
+      iomap: complete partial direct I/O writes synchronously
+      iomap: generic inline data handling
+      iomap: add private pointer to struct iomap
+      iomap: support direct I/O to inline data
+      iomap: add inline data support to iomap_readpage_actor
+
+Christoph Hellwig (5):
+      fs: factor out a __generic_write_end helper
+      iomap: add a page_done callback
+      iomap: add an iomap-based readpage and readpages implementation
+      iomap: add initial support for writes without buffer heads
+      iomap: refactor iomap_dio_actor
+
+ fs/buffer.c           |  76 ++++----
+ fs/internal.h         |   2 +
+ fs/iomap.c            | 532 ++++++++++++++++++++++++++++++++++++++++++++------
+ fs/xfs/xfs_iomap.c    |   6 +-
+ include/linux/iomap.h |  16 ++
+ 5 files changed, 536 insertions(+), 96 deletions(-)
