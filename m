@@ -1,58 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:36156 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726356AbeHQRIC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Aug 2018 13:08:02 -0400
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id BCE972BAE3
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Aug 2018 14:04:32 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 200835] XFS hangs in xfs_reclaim_inode()
-Date: Fri, 17 Aug 2018 14:04:33 +0000
-Message-ID: <bug-200835-201763-hTOAB0qHop@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-200835-201763@https.bugzilla.kernel.org/>
-References: <bug-200835-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Received: from mx.gnuher.de ([144.76.235.56]:57053 "EHLO mx.gnuher.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728668AbeHOOzw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Aug 2018 10:55:52 -0400
+Received: from home.geggus.net ([2001:470:7053:1::1])
+        by mx.gnuher.de (envelope-from
+        <lists@fuchsschwanzdomain.de>)
+        with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.84_2)
+        id 1fpuBa-0006yh-HD
+        for linux-xfs@vger.kernel.org; Wed, 15 Aug 2018 13:41:58 +0200
+Received: from sven  by solar.geggus.net (envelope-from
+        <lists@fuchsschwanzdomain.de>)
+        with local (Exim 4.84_2)
+        id 1fpuBV-0000Ix-88
+        for linux-xfs@vger.kernel.org; Wed, 15 Aug 2018 13:41:53 +0200
+Date: Wed, 15 Aug 2018 13:41:53 +0200
+From: Sven Geggus <lists@fuchsschwanzdomain.de>
+Subject: mount (quotacheck) triggers OOM killer
+Message-ID: <20180815114152.GA519@geggus.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@kernel.org
+To: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=200835
+Hello,
 
---- Comment #9 from Mike Snitzer (snitzer@redhat.com) ---
-(In reply to Mike Snitzer from comment #8)
+my fileserver has been running with this kernel for about 1.5years now
+without problems. The filesystem should be even older.
 
-> init_crypt() does the allocation with:
->         gfp = req->base.flags & CRYPTO_TFM_REQ_MAY_SLEEP ? GFP_KERNEL :
->                                                            GFP_ATOMIC;
-> 
-> So another option would be for DM-crypt to _not_ set
-> CRYPTO_TFM_REQ_MAY_SLEEP in struct skcipher_request *req's base.flags (I
-> wonder if it defaults to setting it?)
-> 
-> The crypto code gets opaque quite quickly.. not yet sure where the relevant
-> dm-crypt code is that would be able to ensure CRYPTO_TFM_REQ_MAY_SLEEP is
-> _not_ set in skcipher_request req->base.flags
+Unfortunately today I got an nfsd crash and thus unmounted, rebooted and ran
+xfs_repair afterwards.
 
-drivers/md/dm-crypt.c:crypt_alloc_req_skcipher() is calling
-skcipher_request_set_callback() with CRYPTO_TFM_REQ_MAY_SLEEP set.
+Unfortunately I'm now unable to mount the filesystem as quotacheck crashes
+the machine with OOM.
 
-But there are quite a few other modes that also set CRYPTO_TFM_REQ_MAY_SLEEP. 
-And most crypto code uses GFP_KERNEL if that is set.
+Is there a way to skip quotacheck? What would be the way to go in this case?
+mkfs + restore from backup?
 
-In any case, it would seem commit f1c131b45410a ("crypto: xts - Convert to
-skcipher") is what ushered in the use of GFP_KERNEL underneath dm-crypt's IO
-path.
+Here is what I get. Kernel is somewhat older (vanilla 4.9.0).
 
-> In any case, it really does seem to make sense to change xts.c:init_crypt()
-> to use GDP_NOIO instead of GFP_KERNEL.
+Aug 15 11:31:38 alpha-centauri kernel: [ 5869.299844] XFS (drbd0): Mounting V4 Filesystem
+Aug 15 11:31:39 alpha-centauri kernel: [ 5869.568131] XFS (drbd0): Ending clean mount
+Aug 15 11:31:39 alpha-centauri kernel: [ 5869.577553] XFS (drbd0): Quotacheck needed: Please wait.
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032121] mount invoked oom-killer: gfp_mask=0x26042d0(GFP_TEMPORARY|__GFP_NOWARN|__GFP_COMP|__GFP_NOTRACK), nodemask=0, order=0, oom_score_adj=0
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032148] mount cpuset=/ mems_allowed=0
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032165] CPU: 4 PID: 7541 Comm: mount Not tainted 4.9.0-iosbfs1+ #1
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032193] Hardware name: Supermicro X9DRi-LN4+/X9DR3-LN4+/X9DRi-LN4+/X9DR3-LN4+, BIOS 1.1 06/07/2012
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032240]  0000000000000000 ffffffff8138f9c6 ffffc90004f63938 ffffffff8197a994
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032290]  ffffffff8113d8a2 0000000000000000 0000000000000000 ffff880858995000
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032340]  ffffffff8197a994 0000000000000000 ffffc90004f63938 0000000000000001
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032391] Call Trace:
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032418]  [<ffffffff8138f9c6>] ? dump_stack+0x46/0x59
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032447]  [<ffffffff8113d8a2>] ? dump_header.isra.20+0x75/0x19f
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032478]  [<ffffffff810f10b0>] ? oom_kill_process+0x76/0x31a
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032506]  [<ffffffff810f18dc>] ? out_of_memory+0x46f/0x492
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032535]  [<ffffffff810f5038>] ? __alloc_pages_slowpath+0x7d4/0x877
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032564]  [<ffffffff810f5255>] ? __alloc_pages_nodemask+0x17a/0x206
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032594]  [<ffffffff81130210>] ? cache_grow_begin+0xa0/0x268
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032622]  [<ffffffff81130824>] ? fallback_alloc+0x142/0x1a7
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032650]  [<ffffffff81130ec3>] ? kmem_cache_alloc+0x8a/0x125
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032679]  [<ffffffff81273439>] ? kmem_zone_alloc+0x42/0x98
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032708]  [<ffffffff81260225>] ? xfs_inode_alloc+0x1c/0x12d
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032736]  [<ffffffff8126088e>] ? xfs_iget+0x40b/0x6ee
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032765]  [<ffffffff8110edcb>] ? list_lru_add+0x4b/0x7d
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032794]  [<ffffffff81286fbe>] ? xfs_qm_dqusage_adjust+0x5a/0x1ac
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032824]  [<ffffffff8126a914>] ? xfs_bulkstat+0x395/0x494
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032851]  [<ffffffff81286f64>] ? xfs_qm_quotacheck_dqadjust+0x11a/0x11a
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032881]  [<ffffffff81287a65>] ? xfs_qm_quotacheck+0xf3/0x24b
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032908]  [<ffffffff81287c4d>] ? xfs_qm_mount_quotas+0x90/0x13b
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032936]  [<ffffffff8126c162>] ? xfs_mountfs+0x5c4/0x769
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032964]  [<ffffffff812704bc>] ? xfs_fs_fill_super+0x477/0x552
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.032992]  [<ffffffff81270045>] ? xfs_fs_put_super+0x82/0x82
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.033021]  [<ffffffff8114275b>] ? mount_bdev+0x12e/0x17e
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.033048]  [<ffffffff81143274>] ? mount_fs+0x60/0x123
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.033075]  [<ffffffff811576c4>] ? vfs_kern_mount+0x60/0xd5
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.033103]  [<ffffffff81159d10>] ? do_mount+0x6d9/0x970
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.033130]  [<ffffffff81159500>] ? finish_automount+0x7b/0x8d
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.033157]  [<ffffffff811595e3>] ? copy_mount_options+0xd1/0x113
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.033185]  [<ffffffff8115a1ca>] ? SyS_mount+0x6d/0x93
+Aug 15 11:53:51 alpha-centauri kernel: [ 7202.033214]  [<ffffffff81652a20>] ? entry_SYSCALL_64_fastpath+0x13/0x94
 
-I still think switching to GFP_NOIO here needs further thought and review by
-the crypto/XTS developers.
+Sven
 
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+The main thing to note is that when you choose open source you don't
+get a Windows operating system.
+                                  (from http://www.dell.com/ubuntu)
+/me is giggls@ircnet, http://sven.gegg.us/ on the Web
