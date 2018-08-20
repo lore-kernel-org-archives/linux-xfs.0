@@ -1,177 +1,241 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:39951 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726021AbeHTIDQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Aug 2018 04:03:16 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1frc7b-0006S9-89
-        for linux-xfs@vger.kernel.org; Mon, 20 Aug 2018 14:48:55 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.91)
-        (envelope-from <david@fromorbit.com>)
-        id 1frc7b-0000QP-7A
-        for linux-xfs@vger.kernel.org; Mon, 20 Aug 2018 14:48:55 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 07/10] xfs: convert xfs_fs_geometry to use mount feature checks
-Date: Mon, 20 Aug 2018 14:48:48 +1000
-Message-Id: <20180820044851.414-8-david@fromorbit.com>
-In-Reply-To: <20180820044851.414-1-david@fromorbit.com>
-References: <20180820044851.414-1-david@fromorbit.com>
+Received: from mx2.suse.de ([195.135.220.15]:51210 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726735AbeHTR5P (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 20 Aug 2018 13:57:15 -0400
+Date: Mon, 20 Aug 2018 16:41:16 +0200
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH] mm: introduce kvvirt_to_page() helper
+Message-ID: <20180820144116.GO29735@dhcp22.suse.cz>
+References: <1534596541-31393-1-git-send-email-lirongqing@baidu.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1534596541-31393-1-git-send-email-lirongqing@baidu.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Li RongQing <lirongqing@baidu.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Matthew Wilcox <mawilcox@microsoft.com>, Souptick Joarder <jrdr.linux@gmail.com>, darrick.wong@oracle.com
 
-From: Dave Chinner <dchinner@redhat.com>
+On Sat 18-08-18 20:49:01, Li RongQing wrote:
+> The new helper returns address mapping page, which has several users
+> in individual subsystem, like mem_to_page in xfs_buf.c and pgv_to_page
+> in af_packet.c, unify them
 
-Reporting filesystem features to userspace is currently superblock
-based. Now we have a general mount-based feature infrastructure,
-switch to using the xfs_mount rather than the superblock directly.
+kvvirt_to_page is a weird name. I guess you wanted it to fit into
+kv*alloc, kvfree naming, right? If yes then I guess kvmem_to_page
+would be slightly better.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/libxfs/xfs_sb.c | 44 ++++++++++++++++++++++--------------------
- fs/xfs/libxfs/xfs_sb.h |  2 +-
- fs/xfs/xfs_ioctl.c     |  4 ++--
- fs/xfs/xfs_ioctl32.c   |  2 +-
- 4 files changed, 27 insertions(+), 25 deletions(-)
+Other than that the patch makes sense to me. It would be great to add
+some documentation and be explicit that the call is only safe on
+directly mapped kernel address and vmalloc areas.
 
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index ee4d483e1209..bedf6c6bf990 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -1144,10 +1144,12 @@ xfs_sync_sb_buf(
- 
- int
- xfs_fs_geometry(
--	struct xfs_sb		*sbp,
-+	struct xfs_mount	*mp,
- 	struct xfs_fsop_geom	*geo,
- 	int			struct_version)
- {
-+	struct xfs_sb		*sbp = &mp->m_sb;
-+
- 	memset(geo, 0, sizeof(struct xfs_fsop_geom));
- 
- 	geo->blocksize = sbp->sb_blocksize;
-@@ -1177,49 +1179,49 @@ xfs_fs_geometry(
- 	geo->version = XFS_FSOP_GEOM_VERSION;
- 	geo->flags = XFS_FSOP_GEOM_FLAGS_NLINK |
- 		     XFS_FSOP_GEOM_FLAGS_DIRV2;
--	if (xfs_sb_version_hasattr(sbp))
-+	if (xfs_has_attr(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_ATTR;
--	if (xfs_sb_version_hasquota(sbp))
-+	if (xfs_has_quota(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_QUOTA;
--	if (xfs_sb_version_hasalign(sbp))
-+	if (xfs_has_align(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_IALIGN;
--	if (xfs_sb_version_hasdalign(sbp))
-+	if (xfs_has_dalign(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_DALIGN;
--	if (xfs_sb_version_hasextflg(sbp))
-+	if (xfs_has_extflg(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_EXTFLG;
--	if (xfs_sb_version_hassector(sbp))
--		geo->flags |= XFS_FSOP_GEOM_FLAGS_SECTOR;
--	if (xfs_sb_version_hasasciici(sbp))
-+	if (xfs_has_asciici(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_DIRV2CI;
--	if (xfs_sb_version_haslazysbcount(sbp))
-+	if (xfs_has_lazysbcount(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_LAZYSB;
--	if (xfs_sb_version_hasattr2(sbp))
-+	if (xfs_has_attr2(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_ATTR2;
--	if (xfs_sb_version_hasprojid32(sbp))
-+	if (xfs_has_projid32(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_PROJID32;
--	if (xfs_sb_version_hascrc(sbp))
-+	if (xfs_has_crc(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_V5SB;
--	if (xfs_sb_version_hasftype(sbp))
-+	if (xfs_has_ftype(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_FTYPE;
--	if (xfs_sb_version_hasfinobt(sbp))
-+	if (xfs_has_finobt(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_FINOBT;
--	if (xfs_sb_version_hassparseinodes(sbp))
-+	if (xfs_has_sparseinodes(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_SPINODES;
--	if (xfs_sb_version_hasrmapbt(sbp))
-+	if (xfs_has_rmapbt(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_RMAPBT;
--	if (xfs_sb_version_hasreflink(sbp))
-+	if (xfs_has_reflink(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_REFLINK;
--	if (xfs_sb_version_hassector(sbp))
-+	if (xfs_has_sector(mp)) {
-+		geo->flags |= XFS_FSOP_GEOM_FLAGS_SECTOR;
- 		geo->logsectsize = sbp->sb_logsectsize;
--	else
-+	} else {
- 		geo->logsectsize = BBSIZE;
-+	}
- 	geo->rtsectsize = sbp->sb_blocksize;
- 	geo->dirblocksize = xfs_dir2_dirblock_bytes(sbp);
- 
- 	if (struct_version < 4)
- 		return 0;
- 
--	if (xfs_sb_version_haslogv2(sbp))
-+	if (xfs_has_logv2(mp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_LOGV2;
- 
- 	geo->logsunit = sbp->sb_logsunit;
-diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
-index 640a438402aa..8f4cbe2b639c 100644
---- a/fs/xfs/libxfs/xfs_sb.h
-+++ b/fs/xfs/libxfs/xfs_sb.h
-@@ -34,7 +34,7 @@ extern uint64_t	xfs_sb_version_to_features(struct xfs_sb *sbp);
- extern int	xfs_update_secondary_sbs(struct xfs_mount *mp);
- 
- #define XFS_FS_GEOM_MAX_STRUCT_VER	(4)
--extern int	xfs_fs_geometry(struct xfs_sb *sbp, struct xfs_fsop_geom *geo,
-+extern int	xfs_fs_geometry(struct xfs_mount *mp, struct xfs_fsop_geom *geo,
- 				int struct_version);
- extern int	xfs_sb_read_secondary(struct xfs_mount *mp,
- 				struct xfs_trans *tp, xfs_agnumber_t agno,
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 6238b6bb7653..8071a297bb44 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -794,7 +794,7 @@ xfs_ioc_fsgeometry_v1(
- 	xfs_fsop_geom_t         fsgeo;
- 	int			error;
- 
--	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, 3);
-+	error = xfs_fs_geometry(mp, &fsgeo, 3);
- 	if (error)
- 		return error;
- 
-@@ -816,7 +816,7 @@ xfs_ioc_fsgeometry(
- 	xfs_fsop_geom_t		fsgeo;
- 	int			error;
- 
--	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, 4);
-+	error = xfs_fs_geometry(mp, &fsgeo, 4);
- 	if (error)
- 		return error;
- 
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index 375d5baead9e..6b395dd63ea1 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -55,7 +55,7 @@ xfs_compat_ioc_fsgeometry_v1(
- 	xfs_fsop_geom_t		  fsgeo;
- 	int			  error;
- 
--	error = xfs_fs_geometry(&mp->m_sb, &fsgeo, 3);
-+	error = xfs_fs_geometry(mp, &fsgeo, 3);
- 	if (error)
- 		return error;
- 	/* The 32-bit variant simply has some padding at the end */
+> Signed-off-by: Zhang Yu <zhangyu31@baidu.com>
+> Signed-off-by: Li RongQing <lirongqing@baidu.com>
+> ---
+>  fs/xfs/xfs_buf.c       | 13 +------------
+>  include/linux/mm.h     |  8 ++++++++
+>  net/9p/trans_virtio.c  |  5 +----
+>  net/ceph/crypto.c      |  6 +-----
+>  net/packet/af_packet.c | 31 ++++++++++++-------------------
+>  5 files changed, 23 insertions(+), 40 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index e839907e8492..edd22b33f49e 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -866,17 +866,6 @@ xfs_buf_set_empty(
+>  	bp->b_maps[0].bm_len = bp->b_length;
+>  }
+>  
+> -static inline struct page *
+> -mem_to_page(
+> -	void			*addr)
+> -{
+> -	if ((!is_vmalloc_addr(addr))) {
+> -		return virt_to_page(addr);
+> -	} else {
+> -		return vmalloc_to_page(addr);
+> -	}
+> -}
+> -
+>  int
+>  xfs_buf_associate_memory(
+>  	xfs_buf_t		*bp,
+> @@ -909,7 +898,7 @@ xfs_buf_associate_memory(
+>  	bp->b_offset = offset;
+>  
+>  	for (i = 0; i < bp->b_page_count; i++) {
+> -		bp->b_pages[i] = mem_to_page((void *)pageaddr);
+> +		bp->b_pages[i] = kvvirt_to_page((void *)pageaddr);
+>  		pageaddr += PAGE_SIZE;
+>  	}
+>  
+> diff --git a/include/linux/mm.h b/include/linux/mm.h
+> index 68a5121694ef..bb34a3c71df5 100644
+> --- a/include/linux/mm.h
+> +++ b/include/linux/mm.h
+> @@ -599,6 +599,14 @@ static inline void *kvcalloc(size_t n, size_t size, gfp_t flags)
+>  	return kvmalloc_array(n, size, flags | __GFP_ZERO);
+>  }
+>  
+> +static inline struct page *kvvirt_to_page(const void *addr)
+> +{
+> +	if (!is_vmalloc_addr(addr))
+> +		return virt_to_page(addr);
+> +	else
+> +		return vmalloc_to_page(addr);
+> +}
+> +
+>  extern void kvfree(const void *addr);
+>  
+>  static inline atomic_t *compound_mapcount_ptr(struct page *page)
+> diff --git a/net/9p/trans_virtio.c b/net/9p/trans_virtio.c
+> index 05006cbb3361..8f1895f15593 100644
+> --- a/net/9p/trans_virtio.c
+> +++ b/net/9p/trans_virtio.c
+> @@ -368,10 +368,7 @@ static int p9_get_mapped_pages(struct virtio_chan *chan,
+>  		*need_drop = 0;
+>  		p -= (*offs = offset_in_page(p));
+>  		for (index = 0; index < nr_pages; index++) {
+> -			if (is_vmalloc_addr(p))
+> -				(*pages)[index] = vmalloc_to_page(p);
+> -			else
+> -				(*pages)[index] = kmap_to_page(p);
+> +			(*pages)[index] = kvvirt_to_page(p);
+>  			p += PAGE_SIZE;
+>  		}
+>  		return len;
+> diff --git a/net/ceph/crypto.c b/net/ceph/crypto.c
+> index 02172c408ff2..cc5f0723a44d 100644
+> --- a/net/ceph/crypto.c
+> +++ b/net/ceph/crypto.c
+> @@ -191,11 +191,7 @@ static int setup_sgtable(struct sg_table *sgt, struct scatterlist *prealloc_sg,
+>  		struct page *page;
+>  		unsigned int len = min(chunk_len - off, buf_len);
+>  
+> -		if (is_vmalloc)
+> -			page = vmalloc_to_page(buf);
+> -		else
+> -			page = virt_to_page(buf);
+> -
+> +		page = kvvirt_to_page(buf);
+>  		sg_set_page(sg, page, len, off);
+>  
+>  		off = 0;
+> diff --git a/net/packet/af_packet.c b/net/packet/af_packet.c
+> index 5610061e7f2e..1bec111122ad 100644
+> --- a/net/packet/af_packet.c
+> +++ b/net/packet/af_packet.c
+> @@ -359,13 +359,6 @@ static void unregister_prot_hook(struct sock *sk, bool sync)
+>  		__unregister_prot_hook(sk, sync);
+>  }
+>  
+> -static inline struct page * __pure pgv_to_page(void *addr)
+> -{
+> -	if (is_vmalloc_addr(addr))
+> -		return vmalloc_to_page(addr);
+> -	return virt_to_page(addr);
+> -}
+> -
+>  static void __packet_set_status(struct packet_sock *po, void *frame, int status)
+>  {
+>  	union tpacket_uhdr h;
+> @@ -374,15 +367,15 @@ static void __packet_set_status(struct packet_sock *po, void *frame, int status)
+>  	switch (po->tp_version) {
+>  	case TPACKET_V1:
+>  		h.h1->tp_status = status;
+> -		flush_dcache_page(pgv_to_page(&h.h1->tp_status));
+> +		flush_dcache_page(kvvirt_to_page(&h.h1->tp_status));
+>  		break;
+>  	case TPACKET_V2:
+>  		h.h2->tp_status = status;
+> -		flush_dcache_page(pgv_to_page(&h.h2->tp_status));
+> +		flush_dcache_page(kvvirt_to_page(&h.h2->tp_status));
+>  		break;
+>  	case TPACKET_V3:
+>  		h.h3->tp_status = status;
+> -		flush_dcache_page(pgv_to_page(&h.h3->tp_status));
+> +		flush_dcache_page(kvvirt_to_page(&h.h3->tp_status));
+>  		break;
+>  	default:
+>  		WARN(1, "TPACKET version not supported.\n");
+> @@ -401,13 +394,13 @@ static int __packet_get_status(struct packet_sock *po, void *frame)
+>  	h.raw = frame;
+>  	switch (po->tp_version) {
+>  	case TPACKET_V1:
+> -		flush_dcache_page(pgv_to_page(&h.h1->tp_status));
+> +		flush_dcache_page(kvvirt_to_page(&h.h1->tp_status));
+>  		return h.h1->tp_status;
+>  	case TPACKET_V2:
+> -		flush_dcache_page(pgv_to_page(&h.h2->tp_status));
+> +		flush_dcache_page(kvvirt_to_page(&h.h2->tp_status));
+>  		return h.h2->tp_status;
+>  	case TPACKET_V3:
+> -		flush_dcache_page(pgv_to_page(&h.h3->tp_status));
+> +		flush_dcache_page(kvvirt_to_page(&h.h3->tp_status));
+>  		return h.h3->tp_status;
+>  	default:
+>  		WARN(1, "TPACKET version not supported.\n");
+> @@ -462,7 +455,7 @@ static __u32 __packet_set_timestamp(struct packet_sock *po, void *frame,
+>  	}
+>  
+>  	/* one flush is safe, as both fields always lie on the same cacheline */
+> -	flush_dcache_page(pgv_to_page(&h.h1->tp_sec));
+> +	flush_dcache_page(kvvirt_to_page(&h.h1->tp_sec));
+>  	smp_wmb();
+>  
+>  	return ts_status;
+> @@ -728,7 +721,7 @@ static void prb_flush_block(struct tpacket_kbdq_core *pkc1,
+>  
+>  	end = (u8 *)PAGE_ALIGN((unsigned long)pkc1->pkblk_end);
+>  	for (; start < end; start += PAGE_SIZE)
+> -		flush_dcache_page(pgv_to_page(start));
+> +		flush_dcache_page(kvvirt_to_page(start));
+>  
+>  	smp_wmb();
+>  #endif
+> @@ -741,7 +734,7 @@ static void prb_flush_block(struct tpacket_kbdq_core *pkc1,
+>  
+>  #if ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE == 1
+>  	start = (u8 *)pbd1;
+> -	flush_dcache_page(pgv_to_page(start));
+> +	flush_dcache_page(kvvirt_to_page(start));
+>  
+>  	smp_wmb();
+>  #endif
+> @@ -2352,7 +2345,7 @@ static int tpacket_rcv(struct sk_buff *skb, struct net_device *dev,
+>  					macoff + snaplen);
+>  
+>  		for (start = h.raw; start < end; start += PAGE_SIZE)
+> -			flush_dcache_page(pgv_to_page(start));
+> +			flush_dcache_page(kvvirt_to_page(start));
+>  	}
+>  	smp_wmb();
+>  #endif
+> @@ -2508,7 +2501,7 @@ static int tpacket_fill_skb(struct packet_sock *po, struct sk_buff *skb,
+>  			return -EFAULT;
+>  		}
+>  
+> -		page = pgv_to_page(data);
+> +		page = kvvirt_to_page(data);
+>  		data += len;
+>  		flush_dcache_page(page);
+>  		get_page(page);
+> @@ -4385,7 +4378,7 @@ static int packet_mmap(struct file *file, struct socket *sock,
+>  			int pg_num;
+>  
+>  			for (pg_num = 0; pg_num < rb->pg_vec_pages; pg_num++) {
+> -				page = pgv_to_page(kaddr);
+> +				page = kvvirt_to_page(kaddr);
+>  				err = vm_insert_page(vma, start, page);
+>  				if (unlikely(err))
+>  					goto out;
+> -- 
+> 2.16.2
+> 
+
 -- 
-2.17.0
+Michal Hocko
+SUSE Labs
