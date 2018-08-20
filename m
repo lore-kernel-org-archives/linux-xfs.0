@@ -1,104 +1,216 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:47037 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727086AbeHUROd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Aug 2018 13:14:33 -0400
-Received: by mail-wr1-f68.google.com with SMTP id a108-v6so13283383wrc.13
-        for <linux-xfs@vger.kernel.org>; Tue, 21 Aug 2018 06:54:17 -0700 (PDT)
-MIME-Version: 1.0
-References: <20180820044851.414-1-david@fromorbit.com>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:45517 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725942AbeHTIDG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Aug 2018 04:03:06 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1frc7b-0006SK-Aa
+        for linux-xfs@vger.kernel.org; Mon, 20 Aug 2018 14:48:55 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1frc7b-0000QY-9Y
+        for linux-xfs@vger.kernel.org; Mon, 20 Aug 2018 14:48:55 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 10/10] xfs: remove unused xfs_sb_version_has... wrappers
+Date: Mon, 20 Aug 2018 14:48:51 +1000
+Message-Id: <20180820044851.414-11-david@fromorbit.com>
 In-Reply-To: <20180820044851.414-1-david@fromorbit.com>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Tue, 21 Aug 2018 15:54:05 +0200
-Message-ID: <CACj3i71SZOX=RSxCXmDE-Rakw=67Zxxbx70RZzLppoeM1r9FUQ@mail.gmail.com>
-Subject: Re: [PATCH 0/10] xfs: feature flag rework
-Content-Type: text/plain; charset="UTF-8"
+References: <20180820044851.414-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Chinner, Dave" <david@fromorbit.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Mon, Aug 20, 2018 at 6:49 AM Dave Chinner <david@fromorbit.com> wrote:
->
-> Hi folks,
->
-> This series reworks how the kernel code handles feature bits. It
-> seemed to me to be a bit crazy to repeatedly have to check multiple
-> values in the superblock to check whether a feature is supported.
-> e.g. to check if reflink is available, we first mask the version
-> number to extract it from the superblock field, then we check it
-> against the v5 value, then we load and check the feature bit from
-> the superblock.
->
-> This could all just be a single flag check - a flag that is set at
-> mount time after doing all of the above, and so it's just a single
-> operation to check.
->
-> I'm also tired of typing "xfs_sb_version_hasfoo" everytime a check
-> needs to be done. Not to mention having a different mechanism to
-> check mount option based features.
->
-> And then there's the conflation of mount option feature flags and
-> runtime state in the one set of flags. The flags field is not
-> updated atomically, so there no guarantee that a change of a state
-> flag does race with anything else and we lose it.
->
-> So this patch set moves all the feature flags into a new m_features
-> field in the struct xfs_mount. It doesn't matter if they are mount
-> options or superblock feature bits - they all end up in the one
-> place whether they are [almost entirely] read only. These are now
-> checked by "xfs_has_foo(mp)" functions (following the ext4 feature
-> check syntax), and for the very few features that can be dynamically
-> added or removed there are also xfs_feat_add/remove_foo(mp) helpers.
-> IOWs, both superblock and mount option features are checked the same
-> way.
->
-> The state flags (clean mount, unmounting, shutdown, etc) are all
-> moved to a new m_state field, which is manipulated entirely by
-> atomic bitops to avoid update races. THere are a couple of wrappers
-> for the common checks - xfs_is_read_only(mp) and
-> xfs_is_shut_down(mp). The latter replaces the XFS_FORCED_SHUTDOWN()
-> macro.
->
-> There's a bit of extra work around the attr2 feature bit - we've got
-> the superblock bit, and then "attr2" and "noattr2" mount options and
-> somewhat convoluted interactions. This patchset changes the
-> behaviour of all these now - the attr2 bit on disk and mount option
-> now mean the same thing, and noattr2 will turn off the superblock
-> bit if it is set and prevent attr2 inodes from being created. This
-> simplifies the mount time checking and clearing of these features.
->
-> Also, it gives us a clean separation of "inode32 mount option" and
-> "inode32 allocation is active". The former is a feature bit (i.e.
-> SMALL_INUMS), and the latter is a state bit (32BITINODES) that is
-> set if the filesystem size requires the allocator to limit
-> allocation to 32 bit inode space.
->
-> This also allows us to get rid of all the xfs_sb_version_hasfoo()
-> inline functions. THere is a single function to populate m_features
-> from the superblock bits, and the low level checks that are purely
-> superblock based (i.e. on disk conversion and verifiers) directly
-> check the superblock fields rather than use wrappers.
->
-> Overall, this doesn't change the amount of code. If does reduce the
-> built binary size by about 3.2kB, mainly through replacing the
-> xfs_sb_version...() checks with a single m_features flag check. It
-> makes the code a bit simpler, easier to read, and less shouty and
-> separates runtime state from filesystem features.
->
-> -Dave.
->
->
+From: Dave Chinner <dchinner@redhat.com>
 
-I have tried to give this patchset some review. Generally, it looks
-ok, but I didn't run any tests and could only look for inconsistencies
-between added and removed code and similar low-level stuff. I'm not
-sure if it is enough to add my Reviewed-by. :)
+These wrappers are now almost entirely unused. Remove them.
 
-Cheers,
-Jan
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/libxfs/xfs_format.h | 135 +------------------------------------
+ 1 file changed, 3 insertions(+), 132 deletions(-)
 
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 1f1107892dcd..c21fd566bf13 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -280,11 +280,6 @@ typedef struct xfs_dsb {
+ 
+ #define	XFS_SB_VERSION_NUM(sbp)	((sbp)->sb_versionnum & XFS_SB_VERSION_NUMBITS)
+ 
+-static inline bool xfs_sb_version_hasrealtime(struct xfs_sb *sbp)
+-{
+-	return sbp->sb_rblocks > 0;
+-}
+-
+ /*
+  * Detect a mismatched features2 field.  Older kernels read/wrote
+  * this into the wrong slot, so to be safe we keep them in sync.
+@@ -294,9 +289,10 @@ static inline bool xfs_sb_has_mismatched_features2(struct xfs_sb *sbp)
+ 	return sbp->sb_bad_features2 != sbp->sb_features2;
+ }
+ 
+-static inline bool xfs_sb_version_hasattr(struct xfs_sb *sbp)
++static inline bool xfs_sb_version_hasmorebits(struct xfs_sb *sbp)
+ {
+-	return (sbp->sb_versionnum & XFS_SB_VERSION_ATTRBIT);
++	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 ||
++	       (sbp->sb_versionnum & XFS_SB_VERSION_MOREBITSBIT);
+ }
+ 
+ static inline void xfs_sb_version_addattr(struct xfs_sb *sbp)
+@@ -304,72 +300,11 @@ static inline void xfs_sb_version_addattr(struct xfs_sb *sbp)
+ 	sbp->sb_versionnum |= XFS_SB_VERSION_ATTRBIT;
+ }
+ 
+-static inline bool xfs_sb_version_hasquota(struct xfs_sb *sbp)
+-{
+-	return (sbp->sb_versionnum & XFS_SB_VERSION_QUOTABIT);
+-}
+-
+ static inline void xfs_sb_version_addquota(struct xfs_sb *sbp)
+ {
+ 	sbp->sb_versionnum |= XFS_SB_VERSION_QUOTABIT;
+ }
+ 
+-static inline bool xfs_sb_version_hasalign(struct xfs_sb *sbp)
+-{
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 ||
+-		(sbp->sb_versionnum & XFS_SB_VERSION_ALIGNBIT));
+-}
+-
+-static inline bool xfs_sb_version_hasdalign(struct xfs_sb *sbp)
+-{
+-	return (sbp->sb_versionnum & XFS_SB_VERSION_DALIGNBIT);
+-}
+-
+-static inline bool xfs_sb_version_haslogv2(struct xfs_sb *sbp)
+-{
+-	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 ||
+-	       (sbp->sb_versionnum & XFS_SB_VERSION_LOGV2BIT);
+-}
+-
+-static inline bool xfs_sb_version_hasextflg(struct xfs_sb *sbp)
+-{
+-	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 ||
+-	       (sbp->sb_versionnum & XFS_SB_VERSION_EXTFLGBIT);
+-}
+-
+-static inline bool xfs_sb_version_hassector(struct xfs_sb *sbp)
+-{
+-	return (sbp->sb_versionnum & XFS_SB_VERSION_SECTORBIT);
+-}
+-
+-static inline bool xfs_sb_version_hasasciici(struct xfs_sb *sbp)
+-{
+-	return (sbp->sb_versionnum & XFS_SB_VERSION_BORGBIT);
+-}
+-
+-static inline bool xfs_sb_version_hasmorebits(struct xfs_sb *sbp)
+-{
+-	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 ||
+-	       (sbp->sb_versionnum & XFS_SB_VERSION_MOREBITSBIT);
+-}
+-
+-/*
+- * sb_features2 bit version macros.
+- */
+-static inline bool xfs_sb_version_haslazysbcount(struct xfs_sb *sbp)
+-{
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) ||
+-	       (xfs_sb_version_hasmorebits(sbp) &&
+-		(sbp->sb_features2 & XFS_SB_VERSION2_LAZYSBCOUNTBIT));
+-}
+-
+-static inline bool xfs_sb_version_hasattr2(struct xfs_sb *sbp)
+-{
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) ||
+-	       (xfs_sb_version_hasmorebits(sbp) &&
+-		(sbp->sb_features2 & XFS_SB_VERSION2_ATTR2BIT));
+-}
+-
+ static inline void xfs_sb_version_addattr2(struct xfs_sb *sbp)
+ {
+ 	sbp->sb_versionnum |= XFS_SB_VERSION_MOREBITSBIT;
+@@ -383,13 +318,6 @@ static inline void xfs_sb_version_removeattr2(struct xfs_sb *sbp)
+ 		sbp->sb_versionnum &= ~XFS_SB_VERSION_MOREBITSBIT;
+ }
+ 
+-static inline bool xfs_sb_version_hasprojid32(struct xfs_sb *sbp)
+-{
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) ||
+-	       (xfs_sb_version_hasmorebits(sbp) &&
+-		(sbp->sb_features2 & XFS_SB_VERSION2_PROJID32BIT));
+-}
+-
+ static inline void xfs_sb_version_addprojid32(struct xfs_sb *sbp)
+ {
+ 	sbp->sb_versionnum |= XFS_SB_VERSION_MOREBITSBIT;
+@@ -467,63 +395,6 @@ xfs_sb_has_incompat_log_feature(
+ 	return (sbp->sb_features_log_incompat & feature) != 0;
+ }
+ 
+-/*
+- * V5 superblock specific feature checks
+- */
+-static inline bool xfs_sb_version_hascrc(struct xfs_sb *sbp)
+-{
+-	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
+-}
+-
+-static inline bool xfs_sb_version_haspquotino(struct xfs_sb *sbp)
+-{
+-	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
+-}
+-
+-static inline int xfs_sb_version_hasftype(struct xfs_sb *sbp)
+-{
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
+-		xfs_sb_has_incompat_feature(sbp, XFS_SB_FEAT_INCOMPAT_FTYPE)) ||
+-	       (xfs_sb_version_hasmorebits(sbp) &&
+-		 (sbp->sb_features2 & XFS_SB_VERSION2_FTYPE));
+-}
+-
+-static inline bool xfs_sb_version_hasfinobt(xfs_sb_t *sbp)
+-{
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) &&
+-		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_FINOBT);
+-}
+-
+-static inline bool xfs_sb_version_hassparseinodes(struct xfs_sb *sbp)
+-{
+-	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
+-		xfs_sb_has_incompat_feature(sbp, XFS_SB_FEAT_INCOMPAT_SPINODES);
+-}
+-
+-/*
+- * XFS_SB_FEAT_INCOMPAT_META_UUID indicates that the metadata UUID
+- * is stored separately from the user-visible UUID; this allows the
+- * user-visible UUID to be changed on V5 filesystems which have a
+- * filesystem UUID stamped into every piece of metadata.
+- */
+-static inline bool xfs_sb_version_hasmetauuid(struct xfs_sb *sbp)
+-{
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) &&
+-		(sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_META_UUID);
+-}
+-
+-static inline bool xfs_sb_version_hasrmapbt(struct xfs_sb *sbp)
+-{
+-	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) &&
+-		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_RMAPBT);
+-}
+-
+-static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
+-{
+-	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
+-		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_REFLINK);
+-}
+-
+ /*
+  * end of superblock version macros
+  */
 -- 
-Jan Tulak
-jtulak@redhat.com / jan@tulak.me
+2.17.0
