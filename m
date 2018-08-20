@@ -1,128 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:49032 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726907AbeHUQpq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 Aug 2018 12:45:46 -0400
-Date: Tue, 21 Aug 2018 09:25:35 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 08/10] xfs: open code sb verifier feature checks
-Message-ID: <20180821132534.GF15030@bfoster>
-References: <20180820044851.414-1-david@fromorbit.com>
- <20180820044851.414-9-david@fromorbit.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:54034 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726033AbeHTUYR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Aug 2018 16:24:17 -0400
+Date: Mon, 20 Aug 2018 10:07:44 -0700
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH] mm: introduce kvvirt_to_page() helper
+Message-ID: <20180820170744.GD25153@bombadil.infradead.org>
+References: <1534596541-31393-1-git-send-email-lirongqing@baidu.com>
+ <20180820144116.GO29735@dhcp22.suse.cz>
+ <20180820144923.GA25153@bombadil.infradead.org>
+ <20180820162406.GQ29735@dhcp22.suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180820044851.414-9-david@fromorbit.com>
+In-Reply-To: <20180820162406.GQ29735@dhcp22.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Li RongQing <lirongqing@baidu.com>, Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Matthew Wilcox <mawilcox@microsoft.com>, Souptick Joarder <jrdr.linux@gmail.com>, darrick.wong@oracle.com
 
-On Mon, Aug 20, 2018 at 02:48:49PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Mon, Aug 20, 2018 at 06:24:06PM +0200, Michal Hocko wrote:
+> On Mon 20-08-18 07:49:23, Matthew Wilcox wrote:
+> > On Mon, Aug 20, 2018 at 04:41:16PM +0200, Michal Hocko wrote:
+> > > On Sat 18-08-18 20:49:01, Li RongQing wrote:
+> > > > The new helper returns address mapping page, which has several users
+> > > > in individual subsystem, like mem_to_page in xfs_buf.c and pgv_to_page
+> > > > in af_packet.c, unify them
+> > > 
+> > > kvvirt_to_page is a weird name. I guess you wanted it to fit into
+> > > kv*alloc, kvfree naming, right? If yes then I guess kvmem_to_page
+> > > would be slightly better.
+> > > 
+> > > Other than that the patch makes sense to me. It would be great to add
+> > > some documentation and be explicit that the call is only safe on
+> > > directly mapped kernel address and vmalloc areas.
+> > 
+> > ... and not safe if the length crosses a page boundary.  I don't want to
+> > see new code emerge that does kvmalloc(PAGE_SIZE * 2, ...); kvmem_to_page()
+> > and have it randomly crash when kvmalloc happens to fall back to vmalloc()
+> > under heavy memory pressure.
+> > 
+> > Also, people are going to start using this for stack addresses.  Perhaps
+> > we should have a debug option to guard against them doing that.
 > 
-> The superblock verifiers are one of the last places that use the sb
-> version functions to do feature checks. This are all quite simple
-> uses, and there aren't many of them so open code them all.
-> 
-> Also, move the good version number check into xfs_sb.c instead of it
-> being an inline function in xfs_format.h
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_format.h |  26 ---------
->  fs/xfs/libxfs/xfs_sb.c     | 116 +++++++++++++++++++++++++------------
->  fs/xfs/libxfs/xfs_sb.h     |   1 +
->  3 files changed, 81 insertions(+), 62 deletions(-)
-> 
-...
-> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index bedf6c6bf990..b83cf8adca1a 100644
-> --- a/fs/xfs/libxfs/xfs_sb.c
-> +++ b/fs/xfs/libxfs/xfs_sb.c
-...
-> @@ -485,7 +523,7 @@ xfs_sb_quota_from_disk(struct xfs_sb *sbp)
->  	 * We need to do these manipilations only if we are working
->  	 * with an older version of on-disk superblock.
->  	 */
-> -	if (xfs_sb_version_haspquotino(sbp))
-> +	if (XFS_SB_VERSION_NUM(sbp) < XFS_SB_VERSION_5)
->  		return;
+> I do agree that such an interface is quite dangerous. That's why I was
+> stressing out the proper documentation. I would be much happier if we
+> could do without it altogether. Maybe the existing users can be rewoked
+> to not rely on the addr2page functionality. If that is not the case then
+> we should probably offer a helper. With some WARN_ONs to catch misuse
+> would be really nice. I am not really sure how many abuses can we catch
+> actually though.
 
-Isn't this backwards (we want to exit if == XFS_SB_VERSION_5)?
+I certainly understand the enthusiasm for sharing this code rather than
+having dozens of places outside the VM implement their own version of it.
+But I think most of these users are using code that's working at the wrong
+level.  Most of them seem to have an address range which may-or-may-not-be
+virtually mapped and they want to get an array-of-pages for that.
 
-Brian
-
->  
->  	if (sbp->sb_qflags & XFS_OQUOTA_ENFD)
-> @@ -578,7 +616,8 @@ __xfs_sb_from_disk(
->  	 * sb_meta_uuid is only on disk if it differs from sb_uuid and the
->  	 * feature flag is set; if not set we keep it only in memory.
->  	 */
-> -	if (xfs_sb_version_hasmetauuid(to))
-> +	if (XFS_SB_VERSION_NUM(to) == XFS_SB_VERSION_5 &&
-> +	    (to->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_META_UUID))
->  		uuid_copy(&to->sb_meta_uuid, &from->sb_meta_uuid);
->  	else
->  		uuid_copy(&to->sb_meta_uuid, &from->sb_uuid);
-> @@ -603,7 +642,12 @@ xfs_sb_quota_to_disk(
->  	uint16_t	qflags = from->sb_qflags;
->  
->  	to->sb_uquotino = cpu_to_be64(from->sb_uquotino);
-> -	if (xfs_sb_version_haspquotino(from)) {
-> +
-> +	/*
-> +	 * The in-memory superblock quota state matches the v5 on-disk format so
-> +	 * just write them out and return
-> +	 */
-> +	if (XFS_SB_VERSION_NUM(from) == XFS_SB_VERSION_5) {
->  		to->sb_qflags = cpu_to_be16(from->sb_qflags);
->  		to->sb_gquotino = cpu_to_be64(from->sb_gquotino);
->  		to->sb_pquotino = cpu_to_be64(from->sb_pquotino);
-> @@ -611,9 +655,9 @@ xfs_sb_quota_to_disk(
->  	}
->  
->  	/*
-> -	 * The in-core version of sb_qflags do not have XFS_OQUOTA_*
-> -	 * flags, whereas the on-disk version does.  So, convert incore
-> -	 * XFS_{PG}QUOTA_* flags to on-disk XFS_OQUOTA_* flags.
-> +	 * For older superblocks (v4), the in-core version of sb_qflags do not
-> +	 * have XFS_OQUOTA_* flags, whereas the on-disk version does.  So,
-> +	 * convert incore XFS_{PG}QUOTA_* flags to on-disk XFS_OQUOTA_* flags.
->  	 */
->  	qflags &= ~(XFS_PQUOTA_ENFD | XFS_PQUOTA_CHKD |
->  			XFS_GQUOTA_ENFD | XFS_GQUOTA_CHKD);
-> @@ -713,7 +757,7 @@ xfs_sb_to_disk(
->  	to->sb_features2 = cpu_to_be32(from->sb_features2);
->  	to->sb_bad_features2 = cpu_to_be32(from->sb_bad_features2);
->  
-> -	if (xfs_sb_version_hascrc(from)) {
-> +	if (XFS_SB_VERSION_NUM(from) == XFS_SB_VERSION_5) {
->  		to->sb_features_compat = cpu_to_be32(from->sb_features_compat);
->  		to->sb_features_ro_compat =
->  				cpu_to_be32(from->sb_features_ro_compat);
-> @@ -723,7 +767,7 @@ xfs_sb_to_disk(
->  				cpu_to_be32(from->sb_features_log_incompat);
->  		to->sb_spino_align = cpu_to_be32(from->sb_spino_align);
->  		to->sb_lsn = cpu_to_be64(from->sb_lsn);
-> -		if (xfs_sb_version_hasmetauuid(from))
-> +		if (from->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_META_UUID)
->  			uuid_copy(&to->sb_meta_uuid, &from->sb_meta_uuid);
->  	}
->  }
-> diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
-> index 8f4cbe2b639c..e136c2517647 100644
-> --- a/fs/xfs/libxfs/xfs_sb.h
-> +++ b/fs/xfs/libxfs/xfs_sb.h
-> @@ -29,6 +29,7 @@ extern void	xfs_sb_mount_common(struct xfs_mount *mp, struct xfs_sb *sbp);
->  extern void	xfs_sb_from_disk(struct xfs_sb *to, struct xfs_dsb *from);
->  extern void	xfs_sb_to_disk(struct xfs_dsb *to, struct xfs_sb *from);
->  extern void	xfs_sb_quota_from_disk(struct xfs_sb *sbp);
-> +extern bool	xfs_sb_good_version(struct xfs_sb *sbp);
->  extern uint64_t	xfs_sb_version_to_features(struct xfs_sb *sbp);
->  
->  extern int	xfs_update_secondary_sbs(struct xfs_mount *mp);
-> -- 
-> 2.17.0
-> 
+Perhaps we should offer -that- API instead.  vmalloc/vmap already has
+an array-of-pages, and the various users could be given a pointer to
+that array.  If the memory isn't vmapped, maybe the caller could pass
+an array pointer like XFS does, or we could require them to pass GFP flags
+to allocate a new array.
