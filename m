@@ -1,229 +1,218 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:50128 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725743AbeHTEXF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Aug 2018 00:23:05 -0400
-Date: Mon, 20 Aug 2018 11:09:32 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [patch] file dedupe (and maybe clone) data corruption (was Re:
- [PATCH] generic: test for deduplication between different files)
-Message-ID: <20180820010932.GV2234@dastard>
-References: <20180817083924.16916-1-fdmanana@kernel.org>
- <20180819231126.GU2234@dastard>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:40396 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726907AbeHUQlv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 Aug 2018 12:41:51 -0400
+Date: Tue, 21 Aug 2018 09:21:40 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 01/10] xfs: reflect sb features in xfs_mount
+Message-ID: <20180821132139.GA15030@bfoster>
+References: <20180820044851.414-1-david@fromorbit.com>
+ <20180820044851.414-2-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180819231126.GU2234@dastard>
+In-Reply-To: <20180820044851.414-2-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fdmanana@kernel.org
-Cc: fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, Filipe Manana <fdmanana@suse.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-[cc linux-fsdevel now, too]
-
-On Mon, Aug 20, 2018 at 09:11:26AM +1000, Dave Chinner wrote:
-> [cc linux-xfs@vger.kernel.org]
+On Mon, Aug 20, 2018 at 02:48:42PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> On Fri, Aug 17, 2018 at 09:39:24AM +0100, fdmanana@kernel.org wrote:
-> > From: Filipe Manana <fdmanana@suse.com>
-> > 
-> > Test that deduplication of an entire file that has a size that is not
-> > aligned to the filesystem's block size into a different file does not
-> > corrupt the destination's file data.
-
-Ok, I've looked at this now. My first question is where did all the
-magic offsets in this test come from? i.e. how was this bug
-found and who is it affecting?
-
-> > This test is motivated by a bug found in Btrfs which is fixed by the
-> > following patch for the linux kernel:
-> > 
-> >   "Btrfs: fix data corruption when deduplicating between different files"
-> > 
-> > XFS also fails this test, at least as of linux kernel 4.18-rc7, exactly
-> > with the same corruption as in Btrfs - some bytes of a block get replaced
-> > with zeroes after the deduplication.
+> Currently on-disk feature checks require decoding the superblock
+> fileds and so can be non-trivial. We have almost 400 hundred
+> individual feature checks in the XFS code, so this is a significant
+> amount of code. To reduce runtime check overhead, pre-process all
+> the version flags into a features field in the xfs_mount at mount
+> time so we can convert all the feature checks to a simple flag
+> check.
 > 
-> Filipe, in future can please report XFS bugs you find to the XFS
-> list the moment you find them. We shouldn't ever find out about a
-> data corruption bug we need to fix via a "oh, by the way" comment in
-> a commit message for a regression test....
+> There is also a need to convert the dynamic feature flags to update
+> the m_features field. This is required for attr, attr2 and quota
+> features. New xfs_mount based wrappers are added for this.
+> 
+> Before:
+> 
+> $ size -t fs/xfs/built-in.a
+>    text	   data	    bss	    dec	    hex	filename
+> ....
+> 1294873	 182766	   1036	1478675	 169013	(TOTALS
+> 
 
-This becomes much more relevant because of what I've just found....
+Was some text truncated from the commit log description here? Did you
+mean to include the after size as well?
 
-.....
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_format.h |  2 +-
+>  fs/xfs/libxfs/xfs_sb.c     | 61 +++++++++++++++++++++++++++++
+>  fs/xfs/libxfs/xfs_sb.h     |  1 +
+>  fs/xfs/xfs_log_recover.c   |  1 +
+>  fs/xfs/xfs_mount.c         |  1 +
+>  fs/xfs/xfs_mount.h         | 79 ++++++++++++++++++++++++++++++++++++++
+>  6 files changed, 144 insertions(+), 1 deletion(-)
+> 
+...
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index a21dc61ec09e..5d0438ec07dd 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -5723,6 +5723,7 @@ xlog_do_recover(
+>  	xfs_buf_relse(bp);
+>  
+>  	/* re-initialise in-core superblock and geometry structures */
+> +	mp->m_features |= xfs_sb_version_to_features(sbp);
 
-> > +# The first byte with a value of 0xae starts at an offset (2518890) which is not
-> > +# a multiple of the block size.
-> > +$XFS_IO_PROG -f \
-> > +	-c "pwrite -S 0x6b 0 2518890" \
-> > +	-c "pwrite -S 0xae 2518890 102398" \
-> > +	$SCRATCH_MNT/foo | _filter_xfs_io
-> > +
-> > +# Create a second file with a length not aligned to the block size, whose bytes
-> > +# all have the value 0x6b, so that its extent(s) can be deduplicated with the
-> > +# first file.
-> > +$XFS_IO_PROG -f -c "pwrite -S 0x6b 0 557771" $SCRATCH_MNT/bar | _filter_xfs_io
-> > +
-> > +# The file is filled with bytes having the value 0x6b from offset 0 to offset
-> > +# 2518889 and with the value 0xae from offset 2518890 to offset 2621287.
-> > +echo "File content before deduplication:"
-> > +od -t x1 $SCRATCH_MNT/foo
+How is this a reinit if it ORs in fields? I guess I'm curious why we OR
+in fields in either case as opposed to using an assignment.
 
-Please use "od -Ad -t x1 <file>" so the file offsets reported by od
-match the offsets used in the test (i.e. in decimal, not octal).
+>  	xfs_reinit_percpu_counters(mp);
+>  	error = xfs_initialize_perag(mp, sbp->sb_agcount, &mp->m_maxagi);
+>  	if (error) {
+...
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index 7964513c3128..92d947f17c69 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -127,6 +127,7 @@ typedef struct xfs_mount {
+>  	struct mutex		m_growlock;	/* growfs mutex */
+>  	int			m_fixedfsid[2];	/* unchanged for life of FS */
+>  	uint64_t		m_flags;	/* global mount flags */
+> +	uint64_t		m_features;	/* active filesystem features */
+>  	bool			m_inotbt_nores; /* no per-AG finobt resv. */
+>  	int			m_ialloc_inos;	/* inodes in inode allocation */
+>  	int			m_ialloc_blks;	/* blocks in inode allocation */
+> @@ -195,6 +196,84 @@ typedef struct xfs_mount {
+>  #endif
+>  } xfs_mount_t;
+>  
+> +/*
+> + * Flags for m_features.
+> + *
+> + * These are all the active features in the filesystem, regardless of how
+> + * they are configured.
+> + */
+> +#define	XFS_FEAT_ATTR		(1ULL << 0)	/* xattrs present in fs */
+> +#define	XFS_FEAT_NLINK		(1ULL << 1)	/* 32 bit link counts */
+> +#define	XFS_FEAT_QUOTA		(1ULL << 2)	/* quota active */
+> +#define	XFS_FEAT_ALIGN		(1ULL << 3)	/* inode alignment */
+> +#define	XFS_FEAT_DALIGN		(1ULL << 4)	/* data alignment */
+> +#define XFS_FEAT_LOGV2		(1ULL << 5)	/* version 2 logs */
+> +#define XFS_FEAT_SECTOR		(1ULL << 6)	/* sector size > 512 bytes */
+> +#define	XFS_FEAT_EXTFLG		(1ULL << 7)	/* unwritten extents */
+> +#define	XFS_FEAT_ASCIICI	(1ULL << 8)	/* ASCII only case-insens. */
+> +#define XFS_FEAT_LAZYSBCOUNT	(1ULL << 9)	/* Superblk counters */
+> +#define XFS_FEAT_ATTR2		(1ULL << 10)	/* dynamic attr fork */
+> +#define XFS_FEAT_PARENT		(1ULL << 11)	/* parent pointers */
 
-> > +
-> > +# Now deduplicate the entire second file into a range of the first file that
-> > +# also has all bytes with the value 0x6b. The destination range's end offset
-> > +# must not be aligned to the block size and must be less then the offset of
-> > +# the first byte with the value 0xae (byte at offset 2518890).
-> > +$XFS_IO_PROG -c "dedupe $SCRATCH_MNT/bar 0 1957888 557771" $SCRATCH_MNT/foo \
-> > +	| _filter_xfs_io
+Hmm, none of the parent pointer stuff has been merged yet, has it? If
+not, I'm sure it will be at some point, but I'd prefer not to include
+code for features that technically don't exist.
 
-Ok, now it gets fun. dedupe to non-block aligned rtanges is supposed
-to be rejected by the kernel in vfs_clone_file_prep_inodes(). i.e
-this check:
+Otherwise it looks like we have some inconsistent spacing/indentation.
 
-        /* Only reflink if we're aligned to block boundaries */
-        if (!IS_ALIGNED(pos_in, bs) || !IS_ALIGNED(pos_in + blen, bs) ||
-            !IS_ALIGNED(pos_out, bs) || !IS_ALIGNED(pos_out + blen, bs))
-                return -EINVAL;
+> +#define XFS_FEAT_PROJID32	(1ULL << 12)	/* 32 bit project id */
+> +#define XFS_FEAT_CRC		(1ULL << 13)	/* metadata CRCs */
+> +#define XFS_FEAT_PQUOTINO	(1ULL << 14)	/* non-shared proj/grp quotas */
+> +#define XFS_FEAT_FTYPE		(1ULL << 15)	/* inode type in dir */
+> +#define XFS_FEAT_FINOBT		(1ULL << 16)	/* free inode btree */
+> +#define XFS_FEAT_RMAPBT		(1ULL << 17)	/* reverse map btree */
+> +#define XFS_FEAT_REFLINK	(1ULL << 18)	/* reflinked files */
+> +#define XFS_FEAT_SPINODES	(1ULL << 19)	/* sparse inode chunks */
+> +#define XFS_FEAT_META_UUID	(1ULL << 20)	/* metadata UUID */
+> +#define XFS_FEAT_REALTIME	(1ULL << 21)	/* realtime device present */
+> +
+> +#define __XFS_HAS_FEAT(name, NAME) \
+> +static inline bool xfs_has_ ## name (struct xfs_mount *mp) \
+> +{ \
 
-And it's pretty clear that a length of 557771 is not block aligned
-(being an odd number).
+I'm assuming these xfs_has_*() calls will end up replacing the current
+xfs_sb_version_has*() calls throughout the code. Could we start using a
+consistent function name prefix across the helpers? E.g., I think using
+'xfs_feat_ ## name' here (instead of xfs_has_) would be fine, and
+consistent with the other helpers.
 
-So why was this dedupe request even accepted by the kernel? Well,
-I think there's a bug in the check just above this:
+I don't want to get into bikeshedding too much but tbh I've always found
+the xfs_sb_has_* thing kind of weird where the "has" text seems
+superfluous. It's just not been worth changing. It would be nice if we
+could stop propagating it here and define a consistently used prefix.
 
-        /* If we're linking to EOF, continue to the block boundary. */
-        if (pos_in + *len == isize)
-                blen = ALIGN(isize, bs) - pos_in;
-        else
-                blen = *len;
+> +	return mp->m_features & XFS_FEAT_ ## NAME; \
+> +}
+> +
+> +/* Some features can be added dynamically so they need a set wrapper, too. */
+> +#define __XFS_HAS_ADDFEAT(name, NAME) \
+> +	__XFS_HAS_FEAT(name, NAME); \
+> +static inline void xfs_feat_add_ ## name (struct xfs_mount *mp) \
+> +{ \
+> +	mp->m_features |= XFS_FEAT_ ## NAME; \
+> +	xfs_sb_version_add ## name(&mp->m_sb); \
+> +}
+> +
+> +/* Some features can be cleared dynamically so they need a clear wrapper */
+> +#define __XFS_HAS_REMOVEFEAT(name, NAME) \
+> +	__XFS_HAS_ADDFEAT(name, NAME); \
+> +static inline void xfs_feat_remove_ ## name (struct xfs_mount *mp) \
+> +{ \
+> +	mp->m_features &= ~XFS_FEAT_ ## NAME; \
+> +	xfs_sb_version_remove ## name(&mp->m_sb); \
+> +}
+> +
 
-basically, when the "in" file dedupe/reflink range is to EOF, it
-expands the range to include /all/ of the block that contains the
-EOF byte. IOWs, it now requests us to dedupe /undefined data beyond
-EOF/. But when we go to compare the data in these ranges, it
-truncates the comparison to the length that the user asked for
-(i.e. *len) and not the extended block length.
+In addition to the above, we use HAS_FEAT for an underlying xfs_has_
+(i.e., no "feat") helper above, yet for some reason also use the HAS for
+the underlying xfs_feat_add/remove() helpers that don't use the "has"
+wording. On top of that, HAS_ADD implies HAS and HAS_REMOVE implies
+HAS_ADD, which isn't really clear from the naming.
 
-IOWs, it doesn't compare the bytes beyond EOF in the source block to
-the data in the destination block it would replace, and so doesn't
-fail the compare like it should.
+I think this would all be much clearer if we defined something like the
+following:
 
-And, well, btrfs has the same bug. extent_same_check_offsets()
-extends the range for alignment so it passes alignment checks, but
-then /explicitly/ uses the original length for the data compare
-and dedupe. i.e:
+	__XFS_FEAT -> xfs_feat_*
+	__XFS_FEAT_ADD -> xfs_feat_add_*
+	__XFS_FEAT_REMOVE -> xfs_feat_remove_*
 
-       /* pass original length for comparison so we stay within i_size */
-        ret = btrfs_cmp_data(olen, cmp);
-        if (ret == 0)
-                ret = btrfs_clone(src, dst, loff, olen, len, dst_loff, 1);
+... for the individual helpers (i.e., no implicit dependencies) and then
+just open-coded the appropriate calls in the list below. Alternatively,
+we could create another set of macros like
+XFS_FEAT_[FIXED|ADDONLY|ADDRM]() for the particular combinations that we
+happen to use today. Either way would make it self-evident from the list
+itself what helpers are defined without having to dig into all of the
+macros.
 
-This is what we should see if someone tried to dedupe the EOF block
-of a file:
+Brian
 
-generic/505     - output mismatch (see /home/dave/src/xfstests-dev/results//xfs/generic/505.out.bad)
-    --- tests/generic/505.out   2018-08-20 09:36:58.449015709 +1000
-    +++ /home/dave/src/xfstests-dev/results//xfs/generic/505.out.bad    2018-08-20 10:45:47.245482160 +1000
-    @@ -13,8 +13,7 @@
-     *
-     2621280 ae ae ae ae ae ae ae ae
-     2621288
-    -deduped 557771/557771 bytes at offset 1957888
-    -XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-    +XFS_IOC_FILE_EXTENT_SAME: Invalid argument
-     File content after deduplication and before unmounting:
-    ...
-    (Run 'diff -u tests/generic/505.out /home/dave/src/xfstests-dev/results//xfs/generic/505.out.bad'  to see the entire diff)
-
-i.e. the dedupe request should fail as we cannot dedupe the EOF
-block.
-
-The patch below does this for the VFS dedupe code. it's not a final
-patch, it's just a demonstration of how this should never have got
-past the range checks. Open questions:
-
-	- is documenting rejection on request alignment grounds
-	  (i.e. EINVAL) in the man page sufficient for app
-	  developers to understand what is going on here?
-	- should we just round down the EOF dedupe request to the
-	  block before EOF so dedupe still succeeds?
-	- should file cloning (i.e. reflink) be allow allowing the
-	  EOF block to be shared somewhere inside EOF in the
-	  destination file? That's stale data exposure, yes?
-	- should clone only allow sharing of the EOF block if it's a
-	  either a full file clone or a matching range clone and
-	  isize is the same for both src and dest files?
-
-Discuss.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-
-[RFC] vfs: fix data corruption w/ unaligned dedupe ranges
-
-From: Dave Chinner <dchinner@redhat.com>
-
-Exposed by fstests generic/505 on XFS, caused by extending the
-bblock match range to include the partial EOF block, but then
-allowing unknown data beyond EOF to be considered a "match" to data
-in the destination file because the comparison is only made to the
-end of the source file. This corrupts the destination file when the
-source extent is shared with it.
-
-Open questions:
-
-	- is documenting rejection on request alignment grounds
-	  (i.e. EINVAL) in the man page sufficient for app
-	  developers to understand what is going on here?
-	- should we just silently round down the EOF dedupe request
-	  to the block before EOF so dedupe still succeeds?
-	- should file cloning (i.e. reflink) be allow allowing the
-	  EOF block to be shared somewhere inside EOF in the
-	  destination file? That's stale data exposure, yes?
-	- should clone only allow sharing of the EOF block if it's a
-	  either a full file clone or a matching range clone and
-	  isize is the same for both src and dest files?
-
-Btrfs also has the same bug in extent_same_check_offsets() and
-btrfs_extent_same_range() that is not addressed by this patch.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/read_write.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
-
-diff --git a/fs/read_write.c b/fs/read_write.c
-index 153f8f690490..3844359a4597 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -1768,8 +1768,17 @@ int vfs_clone_file_prep_inodes(struct inode *inode_in, loff_t pos_in,
- 			return -EINVAL;
- 	}
- 
--	/* If we're linking to EOF, continue to the block boundary. */
--	if (pos_in + *len == isize)
-+	/* Reflink allows linking to EOF, so round the length up to allow us to
-+	 * shared the last block in the file. We don't care what is beyond the
-+	 * EOF point in the block that gets shared, as we can't access it and
-+	 * attempts to extent the file will break the sharing.
-+	 *
-+	 * For dedupe, sharing the EOF block is illegal because the bytes beyond
-+	 * EOF are undefined (i.e. not readable) and so can't be deduped. Hence
-+	 * we do not extend/align the length and instead let the alignment
-+	 * checks below reject it.
-+	 */
-+	if (!is_dedupe && pos_in + *len == isize)
- 		blen = ALIGN(isize, bs) - pos_in;
- 	else
- 		blen = *len;
+> +
+> +__XFS_HAS_ADDFEAT(attr, ATTR)
+> +__XFS_HAS_FEAT(nlink, NLINK)
+> +__XFS_HAS_ADDFEAT(quota, QUOTA)
+> +__XFS_HAS_FEAT(align, ALIGN)
+> +__XFS_HAS_FEAT(dalign, DALIGN)
+> +__XFS_HAS_FEAT(logv2, LOGV2)
+> +__XFS_HAS_FEAT(sector, SECTOR)
+> +__XFS_HAS_FEAT(extflg, EXTFLG)
+> +__XFS_HAS_FEAT(asciici, ASCIICI)
+> +__XFS_HAS_FEAT(lazysbcount, LAZYSBCOUNT)
+> +__XFS_HAS_REMOVEFEAT(attr2, ATTR2)
+> +__XFS_HAS_FEAT(parent, PARENT)
+> +__XFS_HAS_ADDFEAT(projid32, PROJID32)
+> +__XFS_HAS_FEAT(crc, CRC)
+> +__XFS_HAS_FEAT(pquotino, PQUOTINO)
+> +__XFS_HAS_FEAT(ftype, FTYPE)
+> +__XFS_HAS_FEAT(finobt, FINOBT)
+> +__XFS_HAS_FEAT(rmapbt, RMAPBT)
+> +__XFS_HAS_FEAT(reflink, REFLINK)
+> +__XFS_HAS_FEAT(sparseinodes, SPINODES)
+> +__XFS_HAS_FEAT(metauuid, META_UUID)
+> +__XFS_HAS_FEAT(realtime, REALTIME)
+> +
+> +
+>  /*
+>   * Flags for m_flags.
+>   */
+> -- 
+> 2.17.0
+> 
