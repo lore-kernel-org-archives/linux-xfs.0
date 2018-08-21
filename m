@@ -1,125 +1,198 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:43060 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726994AbeH0UlV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 27 Aug 2018 16:41:21 -0400
-Subject: Re: Trying to write to read-only block-device from XFS
-References: <20180824233756.kkvmkmm5mdlx77je@two.firstfloor.org>
- <a4d32107-abc0-60d3-8306-b091fbffefd8@sandeen.net>
- <20180825140951.a3dsz3efwnjsj2pz@two.firstfloor.org>
- <c6bcbef0-0c5b-a7a1-adb6-38085db98ce9@sandeen.net>
- <20180827081254.zat4lvxqviwgd4zn@odin.usersys.redhat.com>
- <20180827164342.4vlg3zaehkzcj6od@two.firstfloor.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <8a7cd158-82c8-ec43-2573-11799f09590e@sandeen.net>
-Date: Mon, 27 Aug 2018 11:53:56 -0500
-MIME-Version: 1.0
-In-Reply-To: <20180827164342.4vlg3zaehkzcj6od@two.firstfloor.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:56070 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726679AbeHURVe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 Aug 2018 13:21:34 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 3783240006EC
+        for <linux-xfs@vger.kernel.org>; Tue, 21 Aug 2018 14:01:17 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 2149010CD789
+        for <linux-xfs@vger.kernel.org>; Tue, 21 Aug 2018 14:01:17 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: don't unlock invalidated buf on aborted tx commit
+Date: Tue, 21 Aug 2018 10:01:16 -0400
+Message-Id: <20180821140116.15900-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andi Kleen <andi@firstfloor.org>, linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On 8/27/18 11:43 AM, Andi Kleen wrote:
-> 
-> Adding linux-fsdevel. Keeping full quote for context.
-> 
-> On Mon, Aug 27, 2018 at 10:12:54AM +0200, Carlos Maiolino wrote:
->> Hi.
->>
->> On Sat, Aug 25, 2018 at 09:25:33PM -0500, Eric Sandeen wrote:
->>>
->>>
->>> On 8/25/18 9:09 AM, Andi Kleen wrote:
->>>> On Fri, Aug 24, 2018 at 07:58:05PM -0500, Eric Sandeen wrote:
->>>>> On 8/24/18 6:37 PM, Andi Kleen wrote:
->>>>>>
->>>>>> Seen this a few times now with recent kernels:
->>>>>
->>>>> Hi Andi -
->>>>>
->>>>> Dumb question maybe, but just to be clear -
->>>>> Was this an RO mount on an RO device, or something else?
->>>>> What type of mount was this?
->>>>
->>>> Was just a normal RW partition on a normal SSD. I didn't do anything
->>>> special to make it RO.
->>>
->>> I don't know why it shows up as RO at this point, but maybe this fixes it:
->>>
->>> commit b089cfd95d32638335c551651a8e00fd2c4edb0b
->>> Author: Jens Axboe <axboe@kernel.dk>
->>> Date:   Tue Aug 14 10:52:40 2018 -0600
->>>
->>>     block: don't warn for flush on read-only device
->>>     
->>>     Don't warn for a flush issued to a read-only device. It's not strictly
->>>     a writable command, as it doesn't change any on-media data by itself.
->>>     
->>>     Reported-by: Stefan Agner <stefan@agner.ch>
->>>     Fixes: 721c7fc701c7 ("block: fail op_is_write() requests to read-only partitions")
->>>     Signed-off-by: Jens Axboe <axboe@kernel.dk>
->>
->> This kind of 'problem' is being reported quite often now. It all started with
->> commit:
->>
->> commit 721c7fc701c71f693307d274d2b346a1ecd4a534
->> Author: Ilya Dryomov <idryomov@gmail.com>
->> Date:   Thu Jan 11 14:09:11 2018 +0100
->>
->>     block: fail op_is_write() requests to read-only partitions
->>
->> Which basically added a generic check for RO devices into generic_make_request()
->> code path, as a way to enforce ioctl(BLKROSET), so far, write requests were
->> never checked.
->>
->>
->> Then, Linus applied the following commit:
->>
->> commit a32e236eb93e62a0f692e79b7c3c9636689559b9
->> Author: Linus Torvalds <torvalds@linux-foundation.org>
->> Date:   Fri Aug 3 12:22:09 2018 -0700
->>
->>     Partially revert "block: fail op_is_write() requests to read-only partitions"
->>
->> Once a few layers like LVM, didn't expect the device to enforce RO, which kept
->> writing to the device while snapshotting, even if the device has been marked as
->> RO.
->>
->> And then came the commit mentioned by Eric:
->>
->> commit b089cfd95d32638335c551651a8e00fd2c4edb0b
->> Author: Jens Axboe <axboe@kernel.dk>
->> Date:   Tue Aug 14 10:52:40 2018 -0600
->>
->>     block: don't warn for flush on read-only device
->>
->>
->> Which relaxed the rules a bit and basically let flushes to proceed without warnings.
->>
->> Essentially, this isn't a XFS problem, and most likely you are using XFS on top
->> of some layer like LVM, and/or using snapshots, and your underlying volume went
->> read-only behind XFS for some reason.
-> 
-> Ok, so the blame is assigned, but the question is still how to avoid the
-> warning:
-> 
-> (1) either XFS needs to check for read only underlying more often
-> or
-> (2) the warning needs to be removed.
-> 
-> I assume (2) is far easier. Is (1) even possible without races? 
-> What is preferred? 
+xfstests generic/388,475 occasionally reproduce assertion failures
+in xfs_buf_item_unpin() when the final bli reference is dropped on
+an invalidated buffer and the buffer is not locked as it is expected
+to be. Invalidated buffers should remain locked on transaction
+commit until the final unpin, at which point the buffer is removed
+from the AIL and the bli is freed since stale buffers are not
+written back.
 
-Seems like the first question to answer is: why is your "plain RW partition
-on an SSD" suddenly reporting itself as RO during umount?
+The assert failures are associated with filesystem shutdown,
+typically due to log I/O errors injected by the test. The
+problematic situation can occur if the shutdown happens to cause a
+race between an active transaction that has invalidated a particular
+buffer and an I/O error on a log buffer that contains the bli
+associated with the same (now stale) buffer.
 
-That said, I don't see a reason for xfs to continue to check for an RO partition
-during operation, if for some unexpected reason a block device starts returning
-EIO due to a device going readonly, normal error handling should kick in.
+Both transaction and log contexts acquire a bli reference. If the
+transaction has already invalidated the buffer by the time the I/O
+error occurs and ends up aborting due to shutdown, the transaction
+and log hold the last two references to a stale bli. If the
+transaction cancel occurs first, it treats the buffer as non-stale
+due to the aborted state: the bli reference is dropped and the
+buffer is released/unlocked. The log buffer I/O error handling
+eventually calls into xfs_buf_item_unpin(), drops the final
+reference to the bli and treats it as stale. The buffer wasn't left
+locked by xfs_buf_item_unlock(), however, so the assert fails and
+the buffer is double unlocked. The latter problem is mitigated by
+the fact that the fs is shutdown and no further damage is possible.
 
--Eric
+->iop_unlock() of an invalidated buffer should behave consistently
+with respect to the bli refcount, regardless of aborted state. If
+the refcount remains elevated on commit, we know the bli is awaiting
+an unpin (since it can't be in another transaction) and will be
+handled appropriately on log buffer completion. If the final bli
+reference of an invalidated buffer is dropped in ->iop_unlock(), we
+can assume the transaction has aborted because invalidation implies
+a dirty transaction. In the non-abort case, the log would have
+acquired a bli reference in ->iop_pin() and prevented bli release at
+->iop_unlock() time. In the abort case the item must be freed and
+buffer unlocked because it wasn't pinned by the log.
+
+Rework xfs_buf_item_unlock() to simplify the currently circuitous
+and duplicate logic and leave invalidated buffers locked based on
+bli refcount, regardless of aborted state. This ensures that a
+pinned, stale buffer is always found locked when eventually
+unpinned.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+
+Hi all,
+
+This survives the assert reproducer, several xfstests runs with v4/v5
+superblock filesystems, and fsstress and fsx workloads over a few hours.
+
+Brian
+
+ fs/xfs/xfs_buf_item.c | 85 +++++++++++++++++++------------------------
+ 1 file changed, 37 insertions(+), 48 deletions(-)
+
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 1c9d1398980b..5e8b91543d93 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -556,73 +556,62 @@ xfs_buf_item_unlock(
+ {
+ 	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
+ 	struct xfs_buf		*bp = bip->bli_buf;
++	int			freed;
+ 	bool			aborted;
+ 	bool			hold = !!(bip->bli_flags & XFS_BLI_HOLD);
+ 	bool			dirty = !!(bip->bli_flags & XFS_BLI_DIRTY);
++	bool			stale = !!(bip->bli_flags & XFS_BLI_STALE);
+ #if defined(DEBUG) || defined(XFS_WARN)
+ 	bool			ordered = !!(bip->bli_flags & XFS_BLI_ORDERED);
+ #endif
++	/*
++	 * The bli dirty state should match whether the blf has logged segments
++	 * except for ordered buffers, where only the bli should be dirty.
++	 */
++	ASSERT((!ordered && dirty == xfs_buf_item_dirty_format(bip)) ||
++	       (ordered && dirty && !xfs_buf_item_dirty_format(bip)));
++	ASSERT(!stale || (bip->__bli_format.blf_flags & XFS_BLF_CANCEL));
+ 
+-	aborted = test_bit(XFS_LI_ABORTED, &lip->li_flags);
++	trace_xfs_buf_item_unlock(bip);
+ 
+-	/* Clear the buffer's association with this transaction. */
+-	bp->b_transp = NULL;
++	aborted = test_bit(XFS_LI_ABORTED, &lip->li_flags);
+ 
+ 	/*
+-	 * The per-transaction state has been copied above so clear it from the
+-	 * bli.
++	 * Clear the buffer's association with this transaction and
++	 * per-transaction state from the bli, which has been copied above.
+ 	 */
++	bp->b_transp = NULL;
+ 	bip->bli_flags &= ~(XFS_BLI_LOGGED | XFS_BLI_HOLD | XFS_BLI_ORDERED);
+ 
+ 	/*
+-	 * If the buf item is marked stale, then don't do anything.  We'll
+-	 * unlock the buffer and free the buf item when the buffer is unpinned
+-	 * for the last time.
++	 * Drop the transaction bli reference and free the item if clean or
++	 * aborted and we had the last reference. In either case this is the
++	 * last opportunity to free the item since it won't be written back.
++	 * Otherwise, the bli is still referenced or dirty and will be freed on
++	 * final unpin of the buffer (if stale) or writeback completion.
+ 	 */
+-	if (bip->bli_flags & XFS_BLI_STALE) {
+-		trace_xfs_buf_item_unlock_stale(bip);
+-		ASSERT(bip->__bli_format.blf_flags & XFS_BLF_CANCEL);
+-		if (!aborted) {
+-			atomic_dec(&bip->bli_refcount);
+-			return;
+-		}
++	freed = atomic_dec_and_test(&bip->bli_refcount);
++	if (freed && (aborted || !dirty)) {
++		ASSERT(!aborted || XFS_FORCED_SHUTDOWN(lip->li_mountp));
++		ASSERT(!stale || aborted);
++		/* an aborted item may be in the AIL, remove it first */
++		if (aborted)
++			xfs_trans_ail_remove(lip, SHUTDOWN_LOG_IO_ERROR);
++		xfs_buf_item_relse(bp);
+ 	}
+ 
+-	trace_xfs_buf_item_unlock(bip);
+-
+-	/*
+-	 * If the buf item isn't tracking any data, free it, otherwise drop the
+-	 * reference we hold to it. If we are aborting the transaction, this may
+-	 * be the only reference to the buf item, so we free it anyway
+-	 * regardless of whether it is dirty or not. A dirty abort implies a
+-	 * shutdown, anyway.
+-	 *
+-	 * The bli dirty state should match whether the blf has logged segments
+-	 * except for ordered buffers, where only the bli should be dirty.
+-	 */
+-	ASSERT((!ordered && dirty == xfs_buf_item_dirty_format(bip)) ||
+-	       (ordered && dirty && !xfs_buf_item_dirty_format(bip)));
+-
+ 	/*
+-	 * Clean buffers, by definition, cannot be in the AIL. However, aborted
+-	 * buffers may be in the AIL regardless of dirty state. An aborted
+-	 * transaction that invalidates a buffer already in the AIL may have
+-	 * marked it stale and cleared the dirty state, for example.
+-	 *
+-	 * Therefore if we are aborting a buffer and we've just taken the last
+-	 * reference away, we have to check if it is in the AIL before freeing
+-	 * it. We need to free it in this case, because an aborted transaction
+-	 * has already shut the filesystem down and this is the last chance we
+-	 * will have to do so.
++	 * If the buffer was invalidated, leave it locked on transaction commit
++	 * unless we just dropped the final reference. The latter case should
++	 * only ever happen on abort because invalidation dirties the
++	 * transaction and the log would have grabbed another bli reference when
++	 * the buffer was pinned. In the non-abort case, the buffer is unlocked
++	 * on final unpin and the bli freed since stale buffers are not written
++	 * back.
+ 	 */
+-	if (atomic_dec_and_test(&bip->bli_refcount)) {
+-		if (aborted) {
+-			ASSERT(XFS_FORCED_SHUTDOWN(lip->li_mountp));
+-			xfs_trans_ail_remove(lip, SHUTDOWN_LOG_IO_ERROR);
+-			xfs_buf_item_relse(bp);
+-		} else if (!dirty)
+-			xfs_buf_item_relse(bp);
+-	}
++	if (stale && !freed)
++		return;
++	ASSERT(!stale || (aborted && freed));
+ 
+ 	if (!hold)
+ 		xfs_buf_relse(bp);
+-- 
+2.17.1
