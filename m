@@ -1,117 +1,266 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:39538 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727333AbeHKSJp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 11 Aug 2018 14:09:45 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w7BFYbM2078116
-        for <linux-xfs@vger.kernel.org>; Sat, 11 Aug 2018 15:35:11 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp2130.oracle.com with ESMTP id 2ksq7t0que-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 11 Aug 2018 15:35:11 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w7BFZA3C024879
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 11 Aug 2018 15:35:10 GMT
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w7BFZAmA011267
-        for <linux-xfs@vger.kernel.org>; Sat, 11 Aug 2018 15:35:10 GMT
-Subject: [PATCH 2/6] xfs: xrep_findroot_block should reject root blocks with
- siblings
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sat, 11 Aug 2018 08:35:09 -0700
-Message-ID: <153400170977.27471.4053607329690572828.stgit@magnolia>
-In-Reply-To: <153400169747.27471.4044680761841034489.stgit@magnolia>
-References: <153400169747.27471.4044680761841034489.stgit@magnolia>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:48910 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726907AbeHUQnT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 Aug 2018 12:43:19 -0400
+Date: Tue, 21 Aug 2018 09:23:09 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 05/10] xfs: convert remaining mount flags to state flags
+Message-ID: <20180821132308.GD15030@bfoster>
+References: <20180820044851.414-1-david@fromorbit.com>
+ <20180820044851.414-6-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180820044851.414-6-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
+To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Aug 20, 2018 at 02:48:46PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> The remaining mount flags kept in m_flags are actually runtime state
+> flags. These change dynamically, so they really should be updated
+> atomically so we don't potentially lose an update dur to racing
 
-In xrep_findroot_block, if we find a candidate root block with sibling
-pointers or sibling blocks on the same tree level, we should not return
-that block as a tree root because root blocks cannot have siblings.
+s/dur/due/
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/scrub/repair.c |   47 +++++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 41 insertions(+), 6 deletions(-)
+> modifications.
+> 
+> Rename m_flags to m_state, and convert it to use atomic bitops to
+> set and clear the flags. This also adds a couple of simple wrappers
+> for common state checks - read only and shutdown.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_alloc.c |  2 +-
+>  fs/xfs/libxfs/xfs_sb.c    |  4 ++--
+>  fs/xfs/scrub/scrub.c      |  2 +-
+>  fs/xfs/xfs_buf_item.c     |  2 +-
+>  fs/xfs/xfs_export.c       |  5 +++--
+>  fs/xfs/xfs_filestream.c   |  2 +-
+>  fs/xfs/xfs_fsops.c        |  2 +-
+>  fs/xfs/xfs_inode.c        |  4 ++--
+>  fs/xfs/xfs_ioctl.c        |  6 +++---
+>  fs/xfs/xfs_iops.c         |  2 +-
+>  fs/xfs/xfs_log.c          | 39 ++++++++++++++++++++++-----------------
+>  fs/xfs/xfs_log_recover.c  |  2 +-
+>  fs/xfs/xfs_mount.c        | 25 +++++++++++--------------
+>  fs/xfs/xfs_mount.h        | 36 +++++++++++++++++++++++-------------
+>  fs/xfs/xfs_super.c        | 28 +++++++++++++---------------
+>  15 files changed, 86 insertions(+), 75 deletions(-)
+> 
+...
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index 5dcb9005173c..ee4d483e1209 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -183,7 +183,7 @@ xfs_validate_sb_read(
+>  "Superblock has unknown read-only compatible features (0x%x) enabled.",
+>  			(sbp->sb_features_ro_compat &
+>  					XFS_SB_FEAT_RO_COMPAT_UNKNOWN));
+> -		if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
+> +		if (!test_bit(XFS_STATE_RDONLY, &mp->m_state)) {
 
+!xfs_is_readonly() ?
 
-diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index 17cf48564390..42d8c798ce7d 100644
---- a/fs/xfs/scrub/repair.c
-+++ b/fs/xfs/scrub/repair.c
-@@ -690,6 +690,7 @@ xrep_findroot_block(
- 	struct xfs_buf			*bp;
- 	struct xfs_btree_block		*btblock;
- 	xfs_daddr_t			daddr;
-+	int				block_level;
- 	int				error;
- 
- 	daddr = XFS_AGB_TO_DADDR(mp, ri->sc->sa.agno, agbno);
-@@ -727,17 +728,51 @@ xrep_findroot_block(
- 		goto out;
- 	bp->b_ops = fab->buf_ops;
- 
--	/* Ignore this block if it's lower in the tree than we've seen. */
--	if (fab->root != NULLAGBLOCK &&
--	    xfs_btree_get_level(btblock) < fab->height)
--		goto out;
--
- 	/* Make sure we pass the verifiers. */
- 	bp->b_ops->verify_read(bp);
- 	if (bp->b_error)
- 		goto out;
-+
-+	/* If we've recorded a root candidate... */
-+	block_level = xfs_btree_get_level(btblock);
-+	if (fab->root != NULLAGBLOCK) {
-+		/*
-+		 * ...and this no-sibling root block candidate has the same
-+		 * level as the recorded candidate, there's no way we're going
-+		 * to accept any candidates at this tree level.  Stash a root
-+		 * block of zero because the height is still valid, but no
-+		 * AG btree can root at agblock 0.  Callers should verify the
-+		 * root agbno with xfs_verify_agbno...
-+		 */
-+		if (block_level + 1 == fab->height) {
-+			fab->root = 0;
-+			goto out;
-+		}
-+
-+		/*
-+		 * ...and this no-sibling root block is lower in the tree than
-+		 * the recorded root block candidate, just ignore it.  There's
-+		 * still a strong chance that something is wrong with the btree
-+		 * itself, but that's not what we're fixing right now.
-+		 */
-+		if (block_level < fab->height)
-+			goto out;
-+	}
-+
-+	/*
-+	 * Root blocks can't have siblings.  This level can't be the root, so
-+	 * record the tree height (but not the ag block pointer) to force us to
-+	 * look for a higher level in the tree.
-+	 */
-+	if (btblock->bb_u.s.bb_leftsib != cpu_to_be32(NULLAGBLOCK) ||
-+	    btblock->bb_u.s.bb_rightsib != cpu_to_be32(NULLAGBLOCK)) {
-+		fab->root = 0;
-+		fab->height = block_level + 1;
-+		goto out;
-+	}
-+
- 	fab->root = agbno;
--	fab->height = xfs_btree_get_level(btblock) + 1;
-+	fab->height = block_level + 1;
- 	*found_it = true;
- 
- 	trace_xrep_findroot_block(mp, ri->sc->sa.agno, agbno,
+>  			xfs_warn(mp,
+>  "Attempted to mount read-only compatible filesystem read-write.");
+>  			xfs_warn(mp,
+> @@ -981,7 +981,7 @@ xfs_initialize_perag_data(
+>  
+>  	xfs_reinit_percpu_counters(mp);
+>  out:
+> -	mp->m_flags &= ~XFS_MOUNT_BAD_SUMMARY;
+> +	clear_bit(XFS_STATE_BAD_SUMMARY, &mp->m_state);
+>  	return error;
+>  }
+>  
+...
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index fee11d015b5a..03f4681c1ba6 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+...
+> @@ -316,17 +316,28 @@ __XFS_HAS_FEAT(noattr2, NOATTR2)
+>  __XFS_HAS_FEAT(noalign, NOALIGN)
+>  
+>  /*
+> - * Flags for m_flags.
+> + * Mount state flags
+> + *
+> + * Use these with atomic bit ops only!
+>   */
+> -#define XFS_MOUNT_UNMOUNTING	(1ULL << 1)	/* filesystem is unmounting */
+> -#define XFS_MOUNT_BAD_SUMMARY	(1ULL << 2)	/* summary counters are bad */
+> -#define XFS_MOUNT_WAS_CLEAN	(1ULL << 3)
+> -#define XFS_MOUNT_FS_SHUTDOWN	(1ULL << 4)	/* atomic stop of all filesystem
+> -						   operations, typically for
+> -						   disk errors in metadata */
+> -#define XFS_MOUNT_32BITINODES	(1ULL << 15)	/* inode32 allocator active */
+> -#define XFS_MOUNT_RDONLY	(1ULL << 20)	/* read-only fs */
+> +#define XFS_STATE_UNMOUNTING	0	/* filesystem is unmounting */
+> +#define XFS_STATE_BAD_SUMMARY	1	/* summary counters are bad */
+> +#define XFS_STATE_WAS_CLEAN	2	/* mount was clean */
+> +#define XFS_STATE_SHUTDOWN	3	/* atomic stop of all filesystem
+> +					   operations, typically for
+> +					   disk errors in metadata */
+> +#define XFS_STATE_32BITINODES	4	/* inode32 allocator active */
+> +#define XFS_STATE_RDONLY	5	/* read-only fs */
+> +
+> +static inline bool xfs_is_readonly(struct xfs_mount *mp)
+> +{
+> +	return test_bit(XFS_STATE_RDONLY, &mp->m_state);
+> +}
+>  
+> +static inline bool xfs_is_shut_down(struct xfs_mount *mp)
+> +{
+> +	return test_bit(XFS_STATE_SHUTDOWN, &mp->m_state);
+> +}
+
+This is unused, so what is the purpose of this in relation to
+XFS_FORCED_SHUTDOWN(), which this duplicates?
+
+Brian
+
+>  
+>  /*
+>   * Default minimum read and write sizes.
+> @@ -372,9 +383,8 @@ xfs_preferred_iosize(xfs_mount_t *mp)
+>  	return PAGE_SIZE;
+>  }
+>  
+> -#define XFS_LAST_UNMOUNT_WAS_CLEAN(mp)	\
+> -				((mp)->m_flags & XFS_MOUNT_WAS_CLEAN)
+> -#define XFS_FORCED_SHUTDOWN(mp)	((mp)->m_flags & XFS_MOUNT_FS_SHUTDOWN)
+> +#define XFS_FORCED_SHUTDOWN(mp) \
+> +		test_bit(XFS_STATE_SHUTDOWN, &(mp)->m_state)
+>  void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
+>  		int lnnum);
+>  #define xfs_force_shutdown(m,f)	\
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index d3dff878be99..9938d9fb420b 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -191,7 +191,7 @@ xfs_parseargs(
+>  	 * Copy binary VFS mount flags we are interested in.
+>  	 */
+>  	if (sb_rdonly(sb))
+> -		mp->m_flags |= XFS_MOUNT_RDONLY;
+> +		set_bit(XFS_STATE_RDONLY, &mp->m_state);
+>  	if (sb->s_flags & SB_DIRSYNC)
+>  		mp->m_features |= XFS_FEAT_DIRSYNC;
+>  	if (sb->s_flags & SB_SYNCHRONOUS)
+> @@ -361,7 +361,7 @@ xfs_parseargs(
+>  	/*
+>  	 * no recovery flag requires a read-only mount
+>  	 */
+> -	if (xfs_has_norecovery(mp) && !(mp->m_flags & XFS_MOUNT_RDONLY)) {
+> +	if (xfs_has_norecovery(mp) && !xfs_is_readonly(mp)) {
+>  		xfs_warn(mp, "no-recovery mounts must be read-only.");
+>  		return -EINVAL;
+>  	}
+> @@ -567,7 +567,7 @@ xfs_max_file_offset(
+>   *
+>   * Inode allocation patterns are altered only if inode32 is requested
+>   * (XFS_FEAT_SMALL_INUMS), and the filesystem is sufficiently large.
+> - * If altered, XFS_MOUNT_32BITINODES is set as well.
+> + * If altered, XFS_STATE_32BITINODES is set as well.
+>   *
+>   * An agcount independent of that in the mount structure is provided
+>   * because in the growfs case, mp->m_sb.sb_agcount is not yet updated
+> @@ -609,13 +609,13 @@ xfs_set_inode_alloc(
+>  
+>  	/*
+>  	 * If user asked for no more than 32-bit inodes, and the fs is
+> -	 * sufficiently large, set XFS_MOUNT_32BITINODES if we must alter
+> +	 * sufficiently large, set XFS_STATE_32BITINODES if we must alter
+>  	 * the allocator to accommodate the request.
+>  	 */
+>  	if (xfs_has_small_inums(mp) && ino > XFS_MAXINUMBER_32)
+> -		mp->m_flags |= XFS_MOUNT_32BITINODES;
+> +		set_bit(XFS_STATE_32BITINODES, &mp->m_state);
+>  	else
+> -		mp->m_flags &= ~XFS_MOUNT_32BITINODES;
+> +		clear_bit(XFS_STATE_32BITINODES, &mp->m_state);
+>  
+>  	for (index = 0; index < agcount; index++) {
+>  		struct xfs_perag	*pag;
+> @@ -624,7 +624,7 @@ xfs_set_inode_alloc(
+>  
+>  		pag = xfs_perag_get(mp, index);
+>  
+> -		if (mp->m_flags & XFS_MOUNT_32BITINODES) {
+> +		if (test_bit(XFS_STATE_32BITINODES, &mp->m_state)) {
+>  			if (ino > XFS_MAXINUMBER_32) {
+>  				pag->pagi_inodeok = 0;
+>  				pag->pagf_metadata = 0;
+> @@ -644,7 +644,7 @@ xfs_set_inode_alloc(
+>  		xfs_perag_put(pag);
+>  	}
+>  
+> -	return (mp->m_flags & XFS_MOUNT_32BITINODES) ? maxagi : agcount;
+> +	return test_bit(XFS_STATE_32BITINODES, &mp->m_state) ? maxagi : agcount;
+>  }
+>  
+>  STATIC int
+> @@ -1294,7 +1294,7 @@ xfs_fs_remount(
+>  	}
+>  
+>  	/* ro -> rw */
+> -	if ((mp->m_flags & XFS_MOUNT_RDONLY) && !(*flags & SB_RDONLY)) {
+> +	if (xfs_is_readonly(mp) && !(*flags & SB_RDONLY)) {
+>  		if (xfs_has_norecovery(mp)) {
+>  			xfs_warn(mp,
+>  		"ro->rw transition prohibited on norecovery mount");
+> @@ -1311,7 +1311,7 @@ xfs_fs_remount(
+>  			return -EINVAL;
+>  		}
+>  
+> -		mp->m_flags &= ~XFS_MOUNT_RDONLY;
+> +		clear_bit(XFS_STATE_RDONLY, &mp->m_state);
+>  
+>  		/*
+>  		 * If this is the first remount to writeable state we
+> @@ -1350,7 +1350,7 @@ xfs_fs_remount(
+>  	}
+>  
+>  	/* rw -> ro */
+> -	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (*flags & SB_RDONLY)) {
+> +	if (!xfs_is_readonly(mp) && (*flags & SB_RDONLY)) {
+>  		/*
+>  		 * Cancel background eofb scanning so it cannot race with the
+>  		 * final log force+buftarg wait and deadlock the remount.
+> @@ -1381,7 +1381,7 @@ xfs_fs_remount(
+>  		xfs_save_resvblks(mp);
+>  
+>  		xfs_quiesce_attr(mp);
+> -		mp->m_flags |= XFS_MOUNT_RDONLY;
+> +		set_bit(XFS_STATE_RDONLY, &mp->m_state);
+>  	}
+>  
+>  	return 0;
+> @@ -1433,8 +1433,6 @@ STATIC int
+>  xfs_finish_flags(
+>  	struct xfs_mount	*mp)
+>  {
+> -	int			ronly = (mp->m_flags & XFS_MOUNT_RDONLY);
+> -
+>  	/* Fail a mount where the logbuf is smaller than the log stripe */
+>  	if (xfs_has_logv2(mp)) {
+>  		if (mp->m_logbsize <= 0 &&
+> @@ -1467,7 +1465,7 @@ xfs_finish_flags(
+>  	/*
+>  	 * prohibit r/w mounts of read-only filesystems
+>  	 */
+> -	if ((mp->m_sb.sb_flags & XFS_SBF_READONLY) && !ronly) {
+> +	if ((mp->m_sb.sb_flags & XFS_SBF_READONLY) && !xfs_is_readonly(mp)) {
+>  		xfs_warn(mp,
+>  			"cannot mount a read-only filesystem as read-write");
+>  		return -EROFS;
+> -- 
+> 2.17.0
+> 
