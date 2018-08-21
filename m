@@ -1,198 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:56070 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726679AbeHURVe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 Aug 2018 13:21:34 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 3783240006EC
-        for <linux-xfs@vger.kernel.org>; Tue, 21 Aug 2018 14:01:17 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 2149010CD789
-        for <linux-xfs@vger.kernel.org>; Tue, 21 Aug 2018 14:01:17 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs: don't unlock invalidated buf on aborted tx commit
-Date: Tue, 21 Aug 2018 10:01:16 -0400
-Message-Id: <20180821140116.15900-1-bfoster@redhat.com>
+Received: from mail.kernel.org ([198.145.29.99]:33620 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726590AbeHUSdT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 21 Aug 2018 14:33:19 -0400
+Date: Tue, 21 Aug 2018 08:12:44 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+Subject: [GIT PULL] xfs: 4.19 merge, part 3
+Message-ID: <20180821151244.GC4334@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>, agruenba@redhat.com, Christoph Hellwig <hch@infradead.org>
 
-xfstests generic/388,475 occasionally reproduce assertion failures
-in xfs_buf_item_unpin() when the final bli reference is dropped on
-an invalidated buffer and the buffer is not locked as it is expected
-to be. Invalidated buffers should remain locked on transaction
-commit until the final unpin, at which point the buffer is removed
-from the AIL and the bli is freed since stale buffers are not
-written back.
+Hi Linus,
 
-The assert failures are associated with filesystem shutdown,
-typically due to log I/O errors injected by the test. The
-problematic situation can occur if the shutdown happens to cause a
-race between an active transaction that has invalidated a particular
-buffer and an I/O error on a log buffer that contains the bli
-associated with the same (now stale) buffer.
+Here are a few fixes that I've queued up for 4.19.  I need to recover
+from some medical events, so don't be too surprised if the next pull
+request(s) come from Dave Chinner.
 
-Both transaction and log contexts acquire a bli reference. If the
-transaction has already invalidated the buffer by the time the I/O
-error occurs and ends up aborting due to shutdown, the transaction
-and log hold the last two references to a stale bli. If the
-transaction cancel occurs first, it treats the buffer as non-stale
-due to the aborted state: the bli reference is dropped and the
-buffer is released/unlocked. The log buffer I/O error handling
-eventually calls into xfs_buf_item_unpin(), drops the final
-reference to the bli and treats it as stale. The buffer wasn't left
-locked by xfs_buf_item_unlock(), however, so the assert fails and
-the buffer is double unlocked. The latter problem is mitigated by
-the fact that the fs is shutdown and no further damage is possible.
+--D
 
-->iop_unlock() of an invalidated buffer should behave consistently
-with respect to the bli refcount, regardless of aborted state. If
-the refcount remains elevated on commit, we know the bli is awaiting
-an unpin (since it can't be in another transaction) and will be
-handled appropriately on log buffer completion. If the final bli
-reference of an invalidated buffer is dropped in ->iop_unlock(), we
-can assume the transaction has aborted because invalidation implies
-a dirty transaction. In the non-abort case, the log would have
-acquired a bli reference in ->iop_pin() and prevented bli release at
-->iop_unlock() time. In the abort case the item must be freed and
-buffer unlocked because it wasn't pinned by the log.
+The following changes since commit 01239d77b9dd978863d1a75f0d095ab942a1fe66:
 
-Rework xfs_buf_item_unlock() to simplify the currently circuitous
-and duplicate logic and leave invalidated buffers locked based on
-bli refcount, regardless of aborted state. This ensures that a
-pinned, stale buffer is always found locked when eventually
-unpinned.
+  xfs: fix a null pointer dereference in xfs_bmap_extents_to_btree (2018-08-12 08:37:31 -0700)
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+are available in the Git repository at:
 
-Hi all,
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-4.19-merge-7
 
-This survives the assert reproducer, several xfstests runs with v4/v5
-superblock filesystems, and fsstress and fsx workloads over a few hours.
+for you to fetch changes up to 7d5e049e72c4cb933b557c78cbd63285dd8102ce:
 
-Brian
+  iomap: fix WARN_ON_ONCE on uninitialized variable (2018-08-14 08:17:02 -0700)
 
- fs/xfs/xfs_buf_item.c | 85 +++++++++++++++++++------------------------
- 1 file changed, 37 insertions(+), 48 deletions(-)
+----------------------------------------------------------------
+Changes since last update:
+- Fix an uninitialized variable
+- Don't use obviously garbage AG header counters to calculate
+  transaction reservations
+- Trigger icount recalculation on bad icount when monting.
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 1c9d1398980b..5e8b91543d93 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -556,73 +556,62 @@ xfs_buf_item_unlock(
- {
- 	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
- 	struct xfs_buf		*bp = bip->bli_buf;
-+	int			freed;
- 	bool			aborted;
- 	bool			hold = !!(bip->bli_flags & XFS_BLI_HOLD);
- 	bool			dirty = !!(bip->bli_flags & XFS_BLI_DIRTY);
-+	bool			stale = !!(bip->bli_flags & XFS_BLI_STALE);
- #if defined(DEBUG) || defined(XFS_WARN)
- 	bool			ordered = !!(bip->bli_flags & XFS_BLI_ORDERED);
- #endif
-+	/*
-+	 * The bli dirty state should match whether the blf has logged segments
-+	 * except for ordered buffers, where only the bli should be dirty.
-+	 */
-+	ASSERT((!ordered && dirty == xfs_buf_item_dirty_format(bip)) ||
-+	       (ordered && dirty && !xfs_buf_item_dirty_format(bip)));
-+	ASSERT(!stale || (bip->__bli_format.blf_flags & XFS_BLF_CANCEL));
- 
--	aborted = test_bit(XFS_LI_ABORTED, &lip->li_flags);
-+	trace_xfs_buf_item_unlock(bip);
- 
--	/* Clear the buffer's association with this transaction. */
--	bp->b_transp = NULL;
-+	aborted = test_bit(XFS_LI_ABORTED, &lip->li_flags);
- 
- 	/*
--	 * The per-transaction state has been copied above so clear it from the
--	 * bli.
-+	 * Clear the buffer's association with this transaction and
-+	 * per-transaction state from the bli, which has been copied above.
- 	 */
-+	bp->b_transp = NULL;
- 	bip->bli_flags &= ~(XFS_BLI_LOGGED | XFS_BLI_HOLD | XFS_BLI_ORDERED);
- 
- 	/*
--	 * If the buf item is marked stale, then don't do anything.  We'll
--	 * unlock the buffer and free the buf item when the buffer is unpinned
--	 * for the last time.
-+	 * Drop the transaction bli reference and free the item if clean or
-+	 * aborted and we had the last reference. In either case this is the
-+	 * last opportunity to free the item since it won't be written back.
-+	 * Otherwise, the bli is still referenced or dirty and will be freed on
-+	 * final unpin of the buffer (if stale) or writeback completion.
- 	 */
--	if (bip->bli_flags & XFS_BLI_STALE) {
--		trace_xfs_buf_item_unlock_stale(bip);
--		ASSERT(bip->__bli_format.blf_flags & XFS_BLF_CANCEL);
--		if (!aborted) {
--			atomic_dec(&bip->bli_refcount);
--			return;
--		}
-+	freed = atomic_dec_and_test(&bip->bli_refcount);
-+	if (freed && (aborted || !dirty)) {
-+		ASSERT(!aborted || XFS_FORCED_SHUTDOWN(lip->li_mountp));
-+		ASSERT(!stale || aborted);
-+		/* an aborted item may be in the AIL, remove it first */
-+		if (aborted)
-+			xfs_trans_ail_remove(lip, SHUTDOWN_LOG_IO_ERROR);
-+		xfs_buf_item_relse(bp);
- 	}
- 
--	trace_xfs_buf_item_unlock(bip);
--
--	/*
--	 * If the buf item isn't tracking any data, free it, otherwise drop the
--	 * reference we hold to it. If we are aborting the transaction, this may
--	 * be the only reference to the buf item, so we free it anyway
--	 * regardless of whether it is dirty or not. A dirty abort implies a
--	 * shutdown, anyway.
--	 *
--	 * The bli dirty state should match whether the blf has logged segments
--	 * except for ordered buffers, where only the bli should be dirty.
--	 */
--	ASSERT((!ordered && dirty == xfs_buf_item_dirty_format(bip)) ||
--	       (ordered && dirty && !xfs_buf_item_dirty_format(bip)));
--
- 	/*
--	 * Clean buffers, by definition, cannot be in the AIL. However, aborted
--	 * buffers may be in the AIL regardless of dirty state. An aborted
--	 * transaction that invalidates a buffer already in the AIL may have
--	 * marked it stale and cleared the dirty state, for example.
--	 *
--	 * Therefore if we are aborting a buffer and we've just taken the last
--	 * reference away, we have to check if it is in the AIL before freeing
--	 * it. We need to free it in this case, because an aborted transaction
--	 * has already shut the filesystem down and this is the last chance we
--	 * will have to do so.
-+	 * If the buffer was invalidated, leave it locked on transaction commit
-+	 * unless we just dropped the final reference. The latter case should
-+	 * only ever happen on abort because invalidation dirties the
-+	 * transaction and the log would have grabbed another bli reference when
-+	 * the buffer was pinned. In the non-abort case, the buffer is unlocked
-+	 * on final unpin and the bli freed since stale buffers are not written
-+	 * back.
- 	 */
--	if (atomic_dec_and_test(&bip->bli_refcount)) {
--		if (aborted) {
--			ASSERT(XFS_FORCED_SHUTDOWN(lip->li_mountp));
--			xfs_trans_ail_remove(lip, SHUTDOWN_LOG_IO_ERROR);
--			xfs_buf_item_relse(bp);
--		} else if (!dirty)
--			xfs_buf_item_relse(bp);
--	}
-+	if (stale && !freed)
-+		return;
-+	ASSERT(!stale || (aborted && freed));
- 
- 	if (!hold)
- 		xfs_buf_relse(bp);
--- 
-2.17.1
+----------------------------------------------------------------
+Darrick J. Wong (3):
+      xfs: recalculate summary counters at mount time if icount is bad
+      xfs: sanity check ag header values in xrep_calc_ag_resblks
+      iomap: fix WARN_ON_ONCE on uninitialized variable
+
+ fs/iomap.c            |  2 +-
+ fs/xfs/scrub/repair.c | 46 +++++++++++++++++++++++++++-------------------
+ fs/xfs/xfs_mount.c    |  1 +
+ 3 files changed, 29 insertions(+), 20 deletions(-)
