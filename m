@@ -1,241 +1,181 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51210 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726735AbeHTR5P (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 20 Aug 2018 13:57:15 -0400
-Date: Mon, 20 Aug 2018 16:41:16 +0200
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH] mm: introduce kvvirt_to_page() helper
-Message-ID: <20180820144116.GO29735@dhcp22.suse.cz>
-References: <1534596541-31393-1-git-send-email-lirongqing@baidu.com>
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:27565 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725736AbeHUEHD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Aug 2018 00:07:03 -0400
+Date: Tue, 21 Aug 2018 10:49:07 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [patch] file dedupe (and maybe clone) data corruption (was Re:
+ [PATCH] generic: test for deduplication between different files)
+Message-ID: <20180821004907.GW2234@dastard>
+References: <20180817083924.16916-1-fdmanana@kernel.org>
+ <20180819231126.GU2234@dastard>
+ <20180820010932.GV2234@dastard>
+ <20180820153349.GA4334@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1534596541-31393-1-git-send-email-lirongqing@baidu.com>
+In-Reply-To: <20180820153349.GA4334@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Li RongQing <lirongqing@baidu.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Matthew Wilcox <mawilcox@microsoft.com>, Souptick Joarder <jrdr.linux@gmail.com>, darrick.wong@oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: fdmanana@kernel.org, fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, Filipe Manana <fdmanana@suse.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Sat 18-08-18 20:49:01, Li RongQing wrote:
-> The new helper returns address mapping page, which has several users
-> in individual subsystem, like mem_to_page in xfs_buf.c and pgv_to_page
-> in af_packet.c, unify them
-
-kvvirt_to_page is a weird name. I guess you wanted it to fit into
-kv*alloc, kvfree naming, right? If yes then I guess kvmem_to_page
-would be slightly better.
-
-Other than that the patch makes sense to me. It would be great to add
-some documentation and be explicit that the call is only safe on
-directly mapped kernel address and vmalloc areas.
-
-> Signed-off-by: Zhang Yu <zhangyu31@baidu.com>
-> Signed-off-by: Li RongQing <lirongqing@baidu.com>
-> ---
->  fs/xfs/xfs_buf.c       | 13 +------------
->  include/linux/mm.h     |  8 ++++++++
->  net/9p/trans_virtio.c  |  5 +----
->  net/ceph/crypto.c      |  6 +-----
->  net/packet/af_packet.c | 31 ++++++++++++-------------------
->  5 files changed, 23 insertions(+), 40 deletions(-)
+On Mon, Aug 20, 2018 at 08:33:49AM -0700, Darrick J. Wong wrote:
+> On Mon, Aug 20, 2018 at 11:09:32AM +1000, Dave Chinner wrote:
+....
+> > So why was this dedupe request even accepted by the kernel? Well,
+> > I think there's a bug in the check just above this:
+> > 
+> >         /* If we're linking to EOF, continue to the block boundary. */
+> >         if (pos_in + *len == isize)
+> >                 blen = ALIGN(isize, bs) - pos_in;
+> >         else
+> >                 blen = *len;
+> > 
+> > basically, when the "in" file dedupe/reflink range is to EOF, it
+> > expands the range to include /all/ of the block that contains the
+> > EOF byte. IOWs, it now requests us to dedupe /undefined data beyond
+> > EOF/. But when we go to compare the data in these ranges, it
+> > truncates the comparison to the length that the user asked for
+> > (i.e. *len) and not the extended block length.
+> > 
+> > IOWs, it doesn't compare the bytes beyond EOF in the source block to
+> > the data in the destination block it would replace, and so doesn't
+> > fail the compare like it should.
+......
+> > i.e. the dedupe request should fail as we cannot dedupe the EOF
+> > block.
+> > 
+> > The patch below does this for the VFS dedupe code. it's not a final
+> > patch, it's just a demonstration of how this should never have got
+> > past the range checks. Open questions:
 > 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index e839907e8492..edd22b33f49e 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -866,17 +866,6 @@ xfs_buf_set_empty(
->  	bp->b_maps[0].bm_len = bp->b_length;
->  }
->  
-> -static inline struct page *
-> -mem_to_page(
-> -	void			*addr)
-> -{
-> -	if ((!is_vmalloc_addr(addr))) {
-> -		return virt_to_page(addr);
-> -	} else {
-> -		return vmalloc_to_page(addr);
-> -	}
-> -}
-> -
->  int
->  xfs_buf_associate_memory(
->  	xfs_buf_t		*bp,
-> @@ -909,7 +898,7 @@ xfs_buf_associate_memory(
->  	bp->b_offset = offset;
->  
->  	for (i = 0; i < bp->b_page_count; i++) {
-> -		bp->b_pages[i] = mem_to_page((void *)pageaddr);
-> +		bp->b_pages[i] = kvvirt_to_page((void *)pageaddr);
->  		pageaddr += PAGE_SIZE;
->  	}
->  
-> diff --git a/include/linux/mm.h b/include/linux/mm.h
-> index 68a5121694ef..bb34a3c71df5 100644
-> --- a/include/linux/mm.h
-> +++ b/include/linux/mm.h
-> @@ -599,6 +599,14 @@ static inline void *kvcalloc(size_t n, size_t size, gfp_t flags)
->  	return kvmalloc_array(n, size, flags | __GFP_ZERO);
->  }
->  
-> +static inline struct page *kvvirt_to_page(const void *addr)
-> +{
-> +	if (!is_vmalloc_addr(addr))
-> +		return virt_to_page(addr);
-> +	else
-> +		return vmalloc_to_page(addr);
-> +}
-> +
->  extern void kvfree(const void *addr);
->  
->  static inline atomic_t *compound_mapcount_ptr(struct page *page)
-> diff --git a/net/9p/trans_virtio.c b/net/9p/trans_virtio.c
-> index 05006cbb3361..8f1895f15593 100644
-> --- a/net/9p/trans_virtio.c
-> +++ b/net/9p/trans_virtio.c
-> @@ -368,10 +368,7 @@ static int p9_get_mapped_pages(struct virtio_chan *chan,
->  		*need_drop = 0;
->  		p -= (*offs = offset_in_page(p));
->  		for (index = 0; index < nr_pages; index++) {
-> -			if (is_vmalloc_addr(p))
-> -				(*pages)[index] = vmalloc_to_page(p);
-> -			else
-> -				(*pages)[index] = kmap_to_page(p);
-> +			(*pages)[index] = kvvirt_to_page(p);
->  			p += PAGE_SIZE;
->  		}
->  		return len;
-> diff --git a/net/ceph/crypto.c b/net/ceph/crypto.c
-> index 02172c408ff2..cc5f0723a44d 100644
-> --- a/net/ceph/crypto.c
-> +++ b/net/ceph/crypto.c
-> @@ -191,11 +191,7 @@ static int setup_sgtable(struct sg_table *sgt, struct scatterlist *prealloc_sg,
->  		struct page *page;
->  		unsigned int len = min(chunk_len - off, buf_len);
->  
-> -		if (is_vmalloc)
-> -			page = vmalloc_to_page(buf);
-> -		else
-> -			page = virt_to_page(buf);
-> -
-> +		page = kvvirt_to_page(buf);
->  		sg_set_page(sg, page, len, off);
->  
->  		off = 0;
-> diff --git a/net/packet/af_packet.c b/net/packet/af_packet.c
-> index 5610061e7f2e..1bec111122ad 100644
-> --- a/net/packet/af_packet.c
-> +++ b/net/packet/af_packet.c
-> @@ -359,13 +359,6 @@ static void unregister_prot_hook(struct sock *sk, bool sync)
->  		__unregister_prot_hook(sk, sync);
->  }
->  
-> -static inline struct page * __pure pgv_to_page(void *addr)
-> -{
-> -	if (is_vmalloc_addr(addr))
-> -		return vmalloc_to_page(addr);
-> -	return virt_to_page(addr);
-> -}
-> -
->  static void __packet_set_status(struct packet_sock *po, void *frame, int status)
->  {
->  	union tpacket_uhdr h;
-> @@ -374,15 +367,15 @@ static void __packet_set_status(struct packet_sock *po, void *frame, int status)
->  	switch (po->tp_version) {
->  	case TPACKET_V1:
->  		h.h1->tp_status = status;
-> -		flush_dcache_page(pgv_to_page(&h.h1->tp_status));
-> +		flush_dcache_page(kvvirt_to_page(&h.h1->tp_status));
->  		break;
->  	case TPACKET_V2:
->  		h.h2->tp_status = status;
-> -		flush_dcache_page(pgv_to_page(&h.h2->tp_status));
-> +		flush_dcache_page(kvvirt_to_page(&h.h2->tp_status));
->  		break;
->  	case TPACKET_V3:
->  		h.h3->tp_status = status;
-> -		flush_dcache_page(pgv_to_page(&h.h3->tp_status));
-> +		flush_dcache_page(kvvirt_to_page(&h.h3->tp_status));
->  		break;
->  	default:
->  		WARN(1, "TPACKET version not supported.\n");
-> @@ -401,13 +394,13 @@ static int __packet_get_status(struct packet_sock *po, void *frame)
->  	h.raw = frame;
->  	switch (po->tp_version) {
->  	case TPACKET_V1:
-> -		flush_dcache_page(pgv_to_page(&h.h1->tp_status));
-> +		flush_dcache_page(kvvirt_to_page(&h.h1->tp_status));
->  		return h.h1->tp_status;
->  	case TPACKET_V2:
-> -		flush_dcache_page(pgv_to_page(&h.h2->tp_status));
-> +		flush_dcache_page(kvvirt_to_page(&h.h2->tp_status));
->  		return h.h2->tp_status;
->  	case TPACKET_V3:
-> -		flush_dcache_page(pgv_to_page(&h.h3->tp_status));
-> +		flush_dcache_page(kvvirt_to_page(&h.h3->tp_status));
->  		return h.h3->tp_status;
->  	default:
->  		WARN(1, "TPACKET version not supported.\n");
-> @@ -462,7 +455,7 @@ static __u32 __packet_set_timestamp(struct packet_sock *po, void *frame,
->  	}
->  
->  	/* one flush is safe, as both fields always lie on the same cacheline */
-> -	flush_dcache_page(pgv_to_page(&h.h1->tp_sec));
-> +	flush_dcache_page(kvvirt_to_page(&h.h1->tp_sec));
->  	smp_wmb();
->  
->  	return ts_status;
-> @@ -728,7 +721,7 @@ static void prb_flush_block(struct tpacket_kbdq_core *pkc1,
->  
->  	end = (u8 *)PAGE_ALIGN((unsigned long)pkc1->pkblk_end);
->  	for (; start < end; start += PAGE_SIZE)
-> -		flush_dcache_page(pgv_to_page(start));
-> +		flush_dcache_page(kvvirt_to_page(start));
->  
->  	smp_wmb();
->  #endif
-> @@ -741,7 +734,7 @@ static void prb_flush_block(struct tpacket_kbdq_core *pkc1,
->  
->  #if ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE == 1
->  	start = (u8 *)pbd1;
-> -	flush_dcache_page(pgv_to_page(start));
-> +	flush_dcache_page(kvvirt_to_page(start));
->  
->  	smp_wmb();
->  #endif
-> @@ -2352,7 +2345,7 @@ static int tpacket_rcv(struct sk_buff *skb, struct net_device *dev,
->  					macoff + snaplen);
->  
->  		for (start = h.raw; start < end; start += PAGE_SIZE)
-> -			flush_dcache_page(pgv_to_page(start));
-> +			flush_dcache_page(kvvirt_to_page(start));
->  	}
->  	smp_wmb();
->  #endif
-> @@ -2508,7 +2501,7 @@ static int tpacket_fill_skb(struct packet_sock *po, struct sk_buff *skb,
->  			return -EFAULT;
->  		}
->  
-> -		page = pgv_to_page(data);
-> +		page = kvvirt_to_page(data);
->  		data += len;
->  		flush_dcache_page(page);
->  		get_page(page);
-> @@ -4385,7 +4378,7 @@ static int packet_mmap(struct file *file, struct socket *sock,
->  			int pg_num;
->  
->  			for (pg_num = 0; pg_num < rb->pg_vec_pages; pg_num++) {
-> -				page = pgv_to_page(kaddr);
-> +				page = kvvirt_to_page(kaddr);
->  				err = vm_insert_page(vma, start, page);
->  				if (unlikely(err))
->  					goto out;
-> -- 
-> 2.16.2
+> (Here's my five minutes of XFS that I'm allowed per day... :/)
 > 
+> > 	- is documenting rejection on request alignment grounds
+> > 	  (i.e. EINVAL) in the man page sufficient for app
+> > 	  developers to understand what is going on here?
+> 
+> I think so.  The manpage says: "The filesystem does not support
+> reflinking the ranges of the given files", which (to my mind) covers
+> this case of not supporting dedupe of EOF blocks.
 
+Ok.
+
+> > 	- should we just round down the EOF dedupe request to the
+> > 	  block before EOF so dedupe still succeeds?
+> 
+> I've often wondered if the interface should (have) be(en) that we start
+> at src_off/dst_off and share as many common blocks as possible until we
+> find a mismatch, then tell userspace where we stopped... instead of like
+> now where we compare the entire extent and fail if any part of it
+> doesn't match.
+
+I think that the ioctl_fideduperange() man page description gives us
+the flexibility to do this. That is, this text:
+
+	Upon successful completion of this ioctl, the number of
+	bytes successfully deduplicated is returned in bytes_deduped
+	and a status code for the deduplication operation is
+	returned in status.  If even a single byte in the range does
+	not match, the deduplication request will be ignored  and
+	status set  to FILE_DEDUPE_RANGE_DIFFERS.
+
+This implies we can dedupe less than the entire range as long as the
+entire range matches. If the entire range does not match, we have
+to return FILE_DEDUPE_RANGE_DIFFERS, but in this case it does match
+so we can pick and choose how much we deduplicate. How much we
+dedupe is then returned as a byte count. In this case, it will be a
+few bytes short of the entire length requested because we aligned
+the dedupe inwards....
+
+Does that sound reasonable?
+
+> > 	- should file cloning (i.e. reflink) be allow allowing the
+> > 	  EOF block to be shared somewhere inside EOF in the
+> > 	  destination file?
+> 
+> I don't think we should.
+> 
+> > That's stale data exposure, yes?
+> 
+> Haven't tested that, but seems likely.
+
+Yeah, I haven't tested it either, but it I can't see how the current
+behaviour ends well.
+
+> > 	- should clone only allow sharing of the EOF block if it's a
+> > 	  either a full file clone or a matching range clone and
+> > 	  isize is the same for both src and dest files?
+> 
+> The above sound reasonable for clone, though I would also allow clone to
+> share the EOF block if we extend isize of the dest file.
+
+Hmmm. That covers the only valid rule for sharing the EOF block,
+right? i.e. That the source EOF lands exactly at or beyond the
+destination EOF, so it remains the EOF block in both files?
+
+FWIW, I just noticed that the ioctl_ficlonerange man page doesn't
+document the return value on success of a clone.
+
+> The above also nearly sound reasonable for dedupe too.  If we encounter
+> EOF at the same places in the src range and the dest range, should we
+> allow sharing there?  The post-eof bytes are undefined by definition;
+> does undefined == undefined?
+
+It's undefined, espescially as different fs implementations may be
+doing different things with partial blocks (e.g. tail packing).
+
+>From an XFS perspective, I don't think we should physically share
+partial EOF blocks on dedupe because it means extending either file
+becomes a COW operation and then a new allocation instead of just a
+new allocation (i.e. a fragmentation vector). So seems better to me
+to just leave the partial EOF block unshared in this case.
+
+> > [RFC] vfs: fix data corruption w/ unaligned dedupe ranges
+> > 
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Exposed by fstests generic/505 on XFS, caused by extending the
+> > bblock match range to include the partial EOF block, but then
+> > allowing unknown data beyond EOF to be considered a "match" to data
+> > in the destination file because the comparison is only made to the
+> > end of the source file. This corrupts the destination file when the
+> > source extent is shared with it.
+> > 
+> > Open questions:
+> > 
+> > 	- is documenting rejection on request alignment grounds
+> > 	  (i.e. EINVAL) in the man page sufficient for app
+> > 	  developers to understand what is going on here?
+> > 	- should we just silently round down the EOF dedupe request
+> > 	  to the block before EOF so dedupe still succeeds?
+> > 	- should file cloning (i.e. reflink) be allow allowing the
+> > 	  EOF block to be shared somewhere inside EOF in the
+> > 	  destination file? That's stale data exposure, yes?
+> > 	- should clone only allow sharing of the EOF block if it's a
+> > 	  either a full file clone or a matching range clone and
+> > 	  isize is the same for both src and dest files?
+> > 
+> > Btrfs also has the same bug in extent_same_check_offsets() and
+> > btrfs_extent_same_range() that is not addressed by this patch.
+> 
+> <nod> (xfs/ocfs2) clone ioctls tend to be bug-for-bug compatible with
+> btrfs more often than we probably ought to... :/
+
+*nod*
+
+> (I also sorta wonder if btrfs should be ported to the common vfs
+> routines for clone prep and dedupe comparison...?)
+
+If someone feels like trying to tame that dragon, then I'm not going
+to stop them. I'm not going to try, though.
+
+Cheers,
+
+Dave.
 -- 
-Michal Hocko
-SUSE Labs
+Dave Chinner
+david@fromorbit.com
