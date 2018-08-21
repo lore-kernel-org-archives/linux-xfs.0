@@ -1,136 +1,131 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:37372 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726033AbeHTTPd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 20 Aug 2018 15:15:33 -0400
-Date: Mon, 20 Aug 2018 11:59:18 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/6] xfs: verify extent size hint is valid in inode
- verifier
-Message-ID: <20180820155918.GB9568@bfoster>
-References: <20180605062423.4877-1-david@fromorbit.com>
- <20180605062423.4877-3-david@fromorbit.com>
- <6196d8ce-03b9-eaae-4a07-d307e35540ca@sandeen.net>
- <20180724164346.GU4813@magnolia>
- <20180820150603.GA9568@bfoster>
- <17c55fba-5615-35a4-65d6-665ea89d20c2@sandeen.net>
- <20180820153626.GB4334@magnolia>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:51515 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727043AbeHUQVh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Aug 2018 12:21:37 -0400
+Received: by mail-wm0-f67.google.com with SMTP id y2-v6so2859347wma.1
+        for <linux-xfs@vger.kernel.org>; Tue, 21 Aug 2018 06:01:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180820153626.GB4334@magnolia>
+References: <20180820044851.414-1-david@fromorbit.com> <20180820044851.414-9-david@fromorbit.com>
+In-Reply-To: <20180820044851.414-9-david@fromorbit.com>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Tue, 21 Aug 2018 15:01:21 +0200
+Message-ID: <CACj3i71PtPLve-zSUAdkzwQMXpf-pbXwpc+YGYmM6+9GQxBKjA@mail.gmail.com>
+Subject: Re: [PATCH 08/10] xfs: open code sb verifier feature checks
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: "Chinner, Dave" <david@fromorbit.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Aug 20, 2018 at 08:36:26AM -0700, Darrick J. Wong wrote:
-> On Mon, Aug 20, 2018 at 10:27:42AM -0500, Eric Sandeen wrote:
-> > 
-> > 
-> > On 8/20/18 10:06 AM, Brian Foster wrote:
-> > > On Tue, Jul 24, 2018 at 09:43:46AM -0700, Darrick J. Wong wrote:
-> > >> On Mon, Jul 23, 2018 at 11:39:53PM -0700, Eric Sandeen wrote:
-> > >>> On 6/4/18 11:24 PM, Dave Chinner wrote:
-> > >>>> From: Dave Chinner <dchinner@redhat.com>
-> > >>>>
-> > >>>> There are rules for vald extent size hints. We enforce them when
-> > >>>> applications set them, but fuzzers violate those rules and that
-> > >>>> screws us over.
-> > >>>>
-> > >>>> This results in alignment assertion failures when setting up
-> > >>>> allocations such as this in direct IO:
-> > >>>>
-> > >>>> XFS: Assertion failed: ap->length, file: fs/xfs/libxfs/xfs_bmap.c, line: 3432
-> > >>>> ....
-> > >>>> Call Trace:
-> > >>>>  xfs_bmap_btalloc+0x415/0x910
-> > >>>>  xfs_bmapi_write+0x71c/0x12e0
-> > >>>>  xfs_iomap_write_direct+0x2a9/0x420
-> > >>>>  xfs_file_iomap_begin+0x4dc/0xa70
-> > >>>>  iomap_apply+0x43/0x100
-> > >>>>  iomap_file_buffered_write+0x62/0x90
-> > >>>>  xfs_file_buffered_aio_write+0xba/0x300
-> > >>>>  __vfs_write+0xd5/0x150
-> > >>>>  vfs_write+0xb6/0x180
-> > >>>>  ksys_write+0x45/0xa0
-> > >>>>  do_syscall_64+0x5a/0x180
-> > >>>>  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-> > >>>>
-> > >>>> And from xfs_db:
-> > >>>>
-> > >>>> core.extsize = 10380288
-> > >>>>
-> > >>>> Which is not an integer multiple of the block size, and so violates
-> > >>>> Rule #7 for setting extent size hints. Validate extent size hint
-> > >>>> rules in the inode verifier to catch this.
-> > >>>
-> > >>> So, I think that if I do:
-> > >>>
-> > >>> # mkfs.xfs -f -m crc=0 $TEST_DEV
-> > >>> # ./check xfs/229
-> > >>> # ./check xfs/229
-> > >>>
-> > >>> I trip the verifier, because I end up with freed inodes on disk with an
-> > >>> extent size hints but zeroed flags.  
-> > >>>
-> > >>> xfs_ifree sets di_flags = 0 but doesn't clear di_extsize; xfs_inode_validate_extsize
-> > >>> says if extsize !=0 and the hint flag is set, it fails
-> > >>>
-> > >>> Anyone else see this?
-> > >>
-> > >> Yeah, I think I just hit this on the TEST_DEV in xfs/242.
-> > >>
-> > >> git blame says I lifted the code from the scrub code, and I probably
-> > >> wrote the code having read the ioctl code (which clears the extsize
-> > >> field if the iflag isn't set).
-> > >>
-> > >>> (crc=0 needed because that causes us to actually reread the inode chunks
-> > >>> in xfs_iread vs. /* shortcut IO on inode allocation if possible */
-> > >>
-> > >> Hmmm, so a v5 fs mounted with ikeep will also read an inode chunk when
-> > >> creating an inode.  It looks like we do that (instead of zeroing the
-> > >> incore inode and setting a random i_generation) to preserve the existing
-> > >> generation number?
-> > >>
-> > >> In any case, it's pretty clear that kernels have been writing out freed
-> > >> inode cores with di_mode == 0, di_flags == 0, and di_extsize == (some
-> > >> number) so we clearly can't have that in the verifier.  It looks like we
-> > >> only examine di_extsize if either EXTSZ flag are set, so it's not
-> > >> causing incorrect behavior.  Maybe it can be a preening fix in
-> > >> scrub/repair.
-> > >>
-> > > 
-> > > I just stumbled on this problem with xfs/229 that Eric reported. I'm
-> > > confused by the comment above regarding this not causing incorrect
-> > > behavior.
-> > 
-> > I think Darrick meant that having a nonzero extent size hint on disk
-> > won't cause incorrect behavior because "we only examine di_extsize if
-> > either EXTSZ flag are set"
-> 
-> Yeah, he probably did. :)
-> 
+On Mon, Aug 20, 2018 at 6:49 AM Dave Chinner <david@fromorbit.com> wrote:
+>
+> From: Dave Chinner <dchinner@redhat.com>
+>
+> The superblock verifiers are one of the last places that use the sb
+> version functions to do feature checks. This are all quite simple
+> uses, and there aren't many of them so open code them all.
+>
+> Also, move the good version number check into xfs_sb.c instead of it
+> being an inline function in xfs_format.h
+>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_format.h |  26 ---------
+>  fs/xfs/libxfs/xfs_sb.c     | 116 +++++++++++++++++++++++++------------
+>  fs/xfs/libxfs/xfs_sb.h     |   1 +
+>  3 files changed, 81 insertions(+), 62 deletions(-)
+>
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index e21c39b13890..1f1107892dcd 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -280,32 +280,6 @@ typedef struct xfs_dsb {
+>
+>  #define        XFS_SB_VERSION_NUM(sbp) ((sbp)->sb_versionnum & XFS_SB_VERSION_NUMBITS)
+>
+> -/*
+> - * The first XFS version we support is a v4 superblock with V2 directories.
+> - */
+> -static inline bool xfs_sb_good_v4_features(struct xfs_sb *sbp)
+> -{
+> -       if (!(sbp->sb_versionnum & XFS_SB_VERSION_DIRV2BIT))
+> -               return false;
+> -
+> -       /* check for unknown features in the fs */
+> -       if ((sbp->sb_versionnum & ~XFS_SB_VERSION_OKBITS) ||
+> -           ((sbp->sb_versionnum & XFS_SB_VERSION_MOREBITSBIT) &&
+> -            (sbp->sb_features2 & ~XFS_SB_VERSION2_OKBITS)))
+> -               return false;
+> -
+> -       return true;
+> -}
+> -
+> -static inline bool xfs_sb_good_version(struct xfs_sb *sbp)
+> -{
+> -       if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5)
+> -               return true;
+> -       if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4)
+> -               return xfs_sb_good_v4_features(sbp);
+> -       return false;
+> -}
+> -
 
-Got it, thanks.
+As I understand this removed code, if, in the future, we would have
+e.g. superblock v6, then xfs_sb_good_version would return false,
+right? Which I think is not correctly replicated in the new function
+below.
 
-> I think Brian's suggestion of
-> 
-> if (i_mode != 0 && !hint && extsize != 0)
-> 	barf_error();
-> 
-> sounds reasonable (having not tested that at all).
-> 
+>  static inline bool xfs_sb_version_hasrealtime(struct xfs_sb *sbp)
+>  {
+>         return sbp->sb_rblocks > 0;
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index bedf6c6bf990..b83cf8adca1a 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -96,6 +96,35 @@ xfs_perag_put(
+>         trace_xfs_perag_put(pag->pag_mount, pag->pag_agno, ref, _RET_IP_);
+>  }
+>
+> +/*
+> + * We support all XFS versions newer than a v4 superblock with V2 directories.
+> + */
+> +bool
+> +xfs_sb_good_version(
+> +       struct xfs_sb   *sbp)
+> +{
+> +       /* all v5 filesystems are supported */
+> +       if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5)
+> +               return true;
+> +
+> +       /* versions prior to v4 are not supported */
+> +       if (XFS_SB_VERSION_NUM(sbp) < XFS_SB_VERSION_4)
+> +               return false;
+> +
+> +       /* V4 filesystems need v2 directories */
+> +       if (!(sbp->sb_versionnum & XFS_SB_VERSION_DIRV2BIT))
+> +               return false;
+> +
+> +       /* And must not have any unknown v4 feature bits set */
+> +       if ((sbp->sb_versionnum & ~XFS_SB_VERSION_OKBITS) ||
+> +           ((sbp->sb_versionnum & XFS_SB_VERSION_MOREBITSBIT) &&
+> +            (sbp->sb_features2 & ~XFS_SB_VERSION2_OKBITS)))
+> +               return false;
+> +
+> +       /* It's a supported v4 filesystem */
+> +       return true;
+> +}
+> +
 
-I'll run it through xfstests and get it posted if nothing else fails.
+If we call this xfs_sb_good_version() with superblock v6 or higher, it
+returns true too, not only for a supported v4. Unless the V4 specific
+checks (v2 directories and feature bits) somehow implicitly prevents
+that from happening, which is something I can't tell. :-)
 
-BTW, do we have a similar issue with the cowextsize hint (assuming
-v5+ikeep)? It looks like it's cleared similarly in xfs_ialloc(), but I'm
-not sure if it's cleared somewhere else on free...
+Cheers,
+Jan
 
-Brian
-
-> --D
-> 
-> > -Eric
+-- 
+Jan Tulak
+jtulak@redhat.com / jan@tulak.me
