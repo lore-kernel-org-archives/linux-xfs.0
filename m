@@ -1,17 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:34140 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726628AbeHUXRg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 21 Aug 2018 19:17:36 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 9D9617D84D
-        for <linux-xfs@vger.kernel.org>; Tue, 21 Aug 2018 19:56:02 +0000 (UTC)
-Date: Tue, 21 Aug 2018 14:56:01 -0500
-From: Bill O'Donnell <billodo@redhat.com>
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:38749 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726916AbeHVDwB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Aug 2018 23:52:01 -0400
+Date: Wed, 22 Aug 2018 10:28:40 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH] xfs: don't unlock invalidated buf on aborted tx commit
-Message-ID: <20180821195601.GA27408@redhat.com>
+Message-ID: <20180822002840.GP31495@dastard>
 References: <20180821140116.15900-1-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -69,6 +64,15 @@ On Tue, Aug 21, 2018 at 10:01:16AM -0400, Brian Foster wrote:
 > bli refcount, regardless of aborted state. This ensures that a
 > pinned, stale buffer is always found locked when eventually
 > unpinned.
+
+Sounds reasonable to me.
+
+BTW, can you follow this up by checking the freeing logic in
+xfs_trans_brelse()? There's a commented out assert that the pincount
+should be zero, implying that at some point there was a similar
+free within transaction context vs unpin from log io completion
+race occurring there.
+
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
 > ---
@@ -79,12 +83,6 @@ On Tue, Aug 21, 2018 at 10:01:16AM -0400, Brian Foster wrote:
 > superblock filesystems, and fsstress and fsx workloads over a few hours.
 > 
 > Brian
-
-So far, this patch resolves the problem I had seen looping g/388,475
-on debug kernels. I never encountered the issue on non-debug builds.
-Thanks!
-
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
 > 
 >  fs/xfs/xfs_buf_item.c | 85 +++++++++++++++++++------------------------
 >  1 file changed, 37 insertions(+), 48 deletions(-)
@@ -98,6 +96,9 @@ Reviewed-by: Bill O'Donnell <billodo@redhat.com>
 >  	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
 >  	struct xfs_buf		*bp = bip->bli_buf;
 > +	int			freed;
+
+atomic_dec_and_test() returns a bool.
+
 >  	bool			aborted;
 >  	bool			hold = !!(bip->bli_flags & XFS_BLI_HOLD);
 >  	bool			dirty = !!(bip->bli_flags & XFS_BLI_DIRTY);
@@ -105,6 +106,11 @@ Reviewed-by: Bill O'Donnell <billodo@redhat.com>
 >  #if defined(DEBUG) || defined(XFS_WARN)
 >  	bool			ordered = !!(bip->bli_flags & XFS_BLI_ORDERED);
 >  #endif
+
+Can we get rid of the "!!" here? The variables are booleans, so
+there's not need to do a double negation to squash the value down to
+0 or 1 as the compiler will do that implicitly...
+
 > +	/*
 > +	 * The bli dirty state should match whether the blf has logged segments
 > +	 * except for ordered buffers, where only the bli should be dirty.
@@ -112,17 +118,18 @@ Reviewed-by: Bill O'Donnell <billodo@redhat.com>
 > +	ASSERT((!ordered && dirty == xfs_buf_item_dirty_format(bip)) ||
 > +	       (ordered && dirty && !xfs_buf_item_dirty_format(bip)));
 > +	ASSERT(!stale || (bip->__bli_format.blf_flags & XFS_BLF_CANCEL));
->  
-> -	aborted = test_bit(XFS_LI_ABORTED, &lip->li_flags);
 > +	trace_xfs_buf_item_unlock(bip);
->  
-> -	/* Clear the buffer's association with this transaction. */
-> -	bp->b_transp = NULL;
+
+Can you put the trace before the asserts? If an assert fires, we
+want the ibuf item state in the event trace record...
+
+Speaking of trace events, the trace_xfs_buf_item_unlock_stale()
+event is no longer called by this function. Can you remove it or
+or re-add it as per below?
+
 > +	aborted = test_bit(XFS_LI_ABORTED, &lip->li_flags);
 >  
 >  	/*
-> -	 * The per-transaction state has been copied above so clear it from the
-> -	 * bli.
 > +	 * Clear the buffer's association with this transaction and
 > +	 * per-transaction state from the bli, which has been copied above.
 >  	 */
@@ -130,22 +137,12 @@ Reviewed-by: Bill O'Donnell <billodo@redhat.com>
 >  	bip->bli_flags &= ~(XFS_BLI_LOGGED | XFS_BLI_HOLD | XFS_BLI_ORDERED);
 >  
 >  	/*
-> -	 * If the buf item is marked stale, then don't do anything.  We'll
-> -	 * unlock the buffer and free the buf item when the buffer is unpinned
-> -	 * for the last time.
 > +	 * Drop the transaction bli reference and free the item if clean or
 > +	 * aborted and we had the last reference. In either case this is the
 > +	 * last opportunity to free the item since it won't be written back.
 > +	 * Otherwise, the bli is still referenced or dirty and will be freed on
 > +	 * final unpin of the buffer (if stale) or writeback completion.
 >  	 */
-> -	if (bip->bli_flags & XFS_BLI_STALE) {
-> -		trace_xfs_buf_item_unlock_stale(bip);
-> -		ASSERT(bip->__bli_format.blf_flags & XFS_BLF_CANCEL);
-> -		if (!aborted) {
-> -			atomic_dec(&bip->bli_refcount);
-> -			return;
-> -		}
 > +	freed = atomic_dec_and_test(&bip->bli_refcount);
 > +	if (freed && (aborted || !dirty)) {
 > +		ASSERT(!aborted || XFS_FORCED_SHUTDOWN(lip->li_mountp));
@@ -156,32 +153,7 @@ Reviewed-by: Bill O'Donnell <billodo@redhat.com>
 > +		xfs_buf_item_relse(bp);
 >  	}
 >  
-> -	trace_xfs_buf_item_unlock(bip);
-> -
-> -	/*
-> -	 * If the buf item isn't tracking any data, free it, otherwise drop the
-> -	 * reference we hold to it. If we are aborting the transaction, this may
-> -	 * be the only reference to the buf item, so we free it anyway
-> -	 * regardless of whether it is dirty or not. A dirty abort implies a
-> -	 * shutdown, anyway.
-> -	 *
-> -	 * The bli dirty state should match whether the blf has logged segments
-> -	 * except for ordered buffers, where only the bli should be dirty.
-> -	 */
-> -	ASSERT((!ordered && dirty == xfs_buf_item_dirty_format(bip)) ||
-> -	       (ordered && dirty && !xfs_buf_item_dirty_format(bip)));
-> -
 >  	/*
-> -	 * Clean buffers, by definition, cannot be in the AIL. However, aborted
-> -	 * buffers may be in the AIL regardless of dirty state. An aborted
-> -	 * transaction that invalidates a buffer already in the AIL may have
-> -	 * marked it stale and cleared the dirty state, for example.
-> -	 *
-> -	 * Therefore if we are aborting a buffer and we've just taken the last
-> -	 * reference away, we have to check if it is in the AIL before freeing
-> -	 * it. We need to free it in this case, because an aborted transaction
-> -	 * has already shut the filesystem down and this is the last chance we
-> -	 * will have to do so.
 > +	 * If the buffer was invalidated, leave it locked on transaction commit
 > +	 * unless we just dropped the final reference. The latter case should
 > +	 * only ever happen on abort because invalidation dirties the
@@ -190,20 +162,30 @@ Reviewed-by: Bill O'Donnell <billodo@redhat.com>
 > +	 * on final unpin and the bli freed since stale buffers are not written
 > +	 * back.
 >  	 */
-> -	if (atomic_dec_and_test(&bip->bli_refcount)) {
-> -		if (aborted) {
-> -			ASSERT(XFS_FORCED_SHUTDOWN(lip->li_mountp));
-> -			xfs_trans_ail_remove(lip, SHUTDOWN_LOG_IO_ERROR);
-> -			xfs_buf_item_relse(bp);
-> -		} else if (!dirty)
-> -			xfs_buf_item_relse(bp);
-> -	}
 > +	if (stale && !freed)
 > +		return;
-> +	ASSERT(!stale || (aborted && freed));
->  
->  	if (!hold)
->  		xfs_buf_relse(bp);
-> -- 
-> 2.17.1
-> 
+
+This logic is still a bit circuitous. We have one action if the item
+is freed, and another action if it not freed. But they are separated
+by large comments and it's not clear that we do one or the other,
+but not both. Maybe it would be clearer if it were structured like
+this:
+
+	/*
+	 * Comment explaining life, the universe and everything.
+	 */
+	freed = atomic_dec_and_test(&bip->bli_refcount);
+	if (freed) {
+		if (aborted || !dirty) {
+		....
+	} else if (stale) {
+		trace_xfs_buf_item_unlock_stale(bip);
+		return;
+	}
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
