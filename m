@@ -1,193 +1,248 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:46926 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727067AbeH2CxG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Aug 2018 22:53:06 -0400
-Date: Wed, 29 Aug 2018 08:59:09 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/3] xfs: refactor xfs_buf_log_item reference count
- handling
-Message-ID: <20180828225909.GB5631@dastard>
-References: <20180827142548.45029-1-bfoster@redhat.com>
- <20180827142548.45029-4-bfoster@redhat.com>
+Received: from james.kirk.hungrycats.org ([174.142.39.145]:44290 "EHLO
+        james.kirk.hungrycats.org" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726730AbeHWQig (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Aug 2018 12:38:36 -0400
+Date: Thu, 23 Aug 2018 08:58:49 -0400
+From: Zygo Blaxell <ce3g8jdj@umail.furryterror.org>
+Subject: Re: [patch] file dedupe (and maybe clone) data corruption (was Re:
+ [PATCH] generic: test for deduplication between different files)
+Message-ID: <20180823125849.GF13528@hungrycats.org>
+References: <20180817083924.16916-1-fdmanana@kernel.org>
+ <20180819231126.GU2234@dastard>
+ <20180820010932.GV2234@dastard>
+ <20180820153349.GA4334@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="l+goss899txtYvYf"
 Content-Disposition: inline
-In-Reply-To: <20180827142548.45029-4-bfoster@redhat.com>
+In-Reply-To: <20180820153349.GA4334@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, fdmanana@kernel.org, fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, Filipe Manana <fdmanana@suse.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Mon, Aug 27, 2018 at 10:25:48AM -0400, Brian Foster wrote:
-> The xfs_buf_log_item structure has a reference counter with slightly
-> tricky semantics. In the common case, a buffer is logged and
-> committed in a transaction, committed to the on-disk log (added to
-> the AIL) and then finally written back and removed from the AIL. The
-> bli refcount covers two potentially overlapping timeframes:
-> 
->  1. the bli is held in an active transaction
->  2. the bli is pinned by the log
-> 
-> The caveat to this approach is that the reference counter does not
-> purely dictate the lifetime of the bli. IOW, when a dirty buffer is
-> physically logged and unpinned, the bli refcount may go to zero as
-> the log item is inserted into the AIL. Only once the buffer is
-> written back can the bli finally be freed.
-> 
-> The above semantics means that it is not enough for the various
-> refcount decrementing contexts to release the bli on decrement to
-> zero. xfs_trans_brelse(), transaction commit (->iop_unlock()) and
-> unpin (->iop_unpin()) must all drop the associated reference and
-> make additional checks to determine if the current context is
-> responsible for freeing the item.
-> 
-> For example, if a transaction holds but does not dirty a particular
-> bli, the commit may drop the refcount to zero. If the bli itself is
-> clean, it is also not AIL resident and must be freed at this time.
-> The same is true for xfs_trans_brelse(). If the transaction dirties
-> a bli and then aborts or an unpin results in an abort due to a log
-> I/O error, the last reference count holder is expected to explicitly
-> remove the item from the AIL and release it (since an abort means
-> filesystem shutdown and metadata writeback will never occur).
-> 
-> This leads to fairly complex checks being replicated in a few
-> different places. Since ->iop_unlock() and xfs_trans_brelse() are
-> nearly identical, refactor the logic into a common helper that
-> implements and documents the semantics in one place. This patch does
-> not change behavior.
 
-I think this improves the code further, because now we don't have to
-care about the buf item cleanup when dropping references.
+--l+goss899txtYvYf
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/xfs/xfs_buf_item.c  | 85 ++++++++++++++++++++++++------------------
->  fs/xfs/xfs_buf_item.h  |  1 +
->  fs/xfs/xfs_trans_buf.c | 22 +----------
->  3 files changed, 51 insertions(+), 57 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index b39d1b5320e7..d0191451fe18 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -556,13 +556,12 @@ xfs_buf_item_unlock(
->  {
->  	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
->  	struct xfs_buf		*bp = bip->bli_buf;
-> -	bool			freed;
-> -	bool			aborted;
-> +	bool			released;
->  	bool			hold = bip->bli_flags & XFS_BLI_HOLD;
-> -	bool			dirty = bip->bli_flags & XFS_BLI_DIRTY;
->  	bool			stale = bip->bli_flags & XFS_BLI_STALE;
->  #if defined(DEBUG) || defined(XFS_WARN)
->  	bool			ordered = bip->bli_flags & XFS_BLI_ORDERED;
-> +	bool			dirty = bip->bli_flags & XFS_BLI_DIRTY;
->  #endif
->  	trace_xfs_buf_item_unlock(bip);
->  
-> @@ -574,8 +573,6 @@ xfs_buf_item_unlock(
->  	       (ordered && dirty && !xfs_buf_item_dirty_format(bip)));
->  	ASSERT(!stale || (bip->__bli_format.blf_flags & XFS_BLF_CANCEL));
->  
-> -	aborted = test_bit(XFS_LI_ABORTED, &lip->li_flags);
-> -
->  	/*
->  	 * Clear the buffer's association with this transaction and
->  	 * per-transaction state from the bli, which has been copied above.
-> @@ -584,40 +581,16 @@ xfs_buf_item_unlock(
->  	bip->bli_flags &= ~(XFS_BLI_LOGGED | XFS_BLI_HOLD | XFS_BLI_ORDERED);
->  
->  	/*
-> -	 * Drop the transaction's bli reference and deal with the item if we had
-> -	 * the last one. We must free the item if clean or aborted since it
-> -	 * wasn't pinned by the log and this is the last chance to do so. If the
-> -	 * bli is freed and dirty (but non-aborted), the buffer was not dirty in
-> -	 * this transaction but modified by a previous one and still awaiting
-> -	 * writeback. In that case, the bli is freed on buffer writeback
-> -	 * completion.
-> +	 * Unref the item and unlock the buffer unless held or stale. Stale
-> +	 * buffers remain locked until final unpin unless the bli is freed by
-> +	 * the unref call. The latter implies shutdown because buffer
-> +	 * invalidation dirties the bli and transaction.
->  	 */
-> -	freed = atomic_dec_and_test(&bip->bli_refcount);
-> -	if (freed) {
-> -		ASSERT(!aborted || XFS_FORCED_SHUTDOWN(lip->li_mountp));
-> -		/*
-> -		 * An aborted item may be in the AIL regardless of dirty state.
-> -		 * For example, consider an aborted transaction that invalidated
-> -		 * a dirty bli and cleared the dirty state.
-> -		 */
-> -		if (aborted)
-> -			xfs_trans_ail_remove(lip, SHUTDOWN_LOG_IO_ERROR);
-> -		if (aborted || !dirty)
-> -			xfs_buf_item_relse(bp);
-> -	} else if (stale) {
-> -		/*
-> -		 * Stale buffers remain locked until final unpin unless the bli
-> -		 * was freed in the branch above. A freed stale bli implies an
-> -		 * abort because buffer invalidation dirties the bli and
-> -		 * transaction.
-> -		 */
-> -		ASSERT(!freed);
-> +	released = xfs_buf_item_unref(bip);
-> +	if ((stale && !released) || hold)
->  		return;
+On Mon, Aug 20, 2018 at 08:33:49AM -0700, Darrick J. Wong wrote:
+> On Mon, Aug 20, 2018 at 11:09:32AM +1000, Dave Chinner wrote:
+> > 	- is documenting rejection on request alignment grounds
+> > 	  (i.e. EINVAL) in the man page sufficient for app
+> > 	  developers to understand what is going on here?
+>=20
+> I think so.  The manpage says: "The filesystem does not support
+> reflinking the ranges of the given files", which (to my mind) covers
+> this case of not supporting dedupe of EOF blocks.
 
-Personal preference, but I'd put the hold check first because it's
-not a compound logic statement.
+Older versions of btrfs dedupe (before v4.2 or so) used to do exactly
+this; however, on btrfs, not supporting dedupe of EOF blocks means small
+files (one extent) cannot be deduped at all, because the EOF block holds
+a reference to the entire dst extent.  If a dedupe app doesn't go all the
+way to EOF on btrfs, then it should not attempt to dedupe any part of the
+last extent of the file as the benefit would be zero or slightly negative.
 
-> +bool
-> +xfs_buf_item_unref(
+The app developer would need to be aware that such a restriction could
+exist on some filesystems, and be able to distinguish this from other
+cases that could lead to EINVAL.  Portable code would have to try a dedupe
+up to EOF, then if that failed, round down and retry, and if that failed
+too, the app would have to figure out which filesystem it's running on
+to know what to do next.  Performance demands the app know what the FS
+will do in advance, and avoid a whole class of behavior.
 
-"+xfs_buf_item_put()" to be consistent with dropping references on
-other reference counted objects (e.g.  iput, dput, bio_put,
-xfs_perag_put, xfs_log_ticket_put, etc).
+btrfs dedupe reports success if the src extent is inline and the same
+size as the dst extent (i.e. file is smaller than one page).  No dedupe
+can occur in such cases--a clone results in a simple copy, so the best
+a dedupe could do would be a no-op.  Returning EINVAL there would break
+a few popular tools like "cp --reflink".  Returning OK but doing nothing
+seems to be the best option in that case.
 
-> +	struct xfs_buf_log_item	*bip)
-> +{
-> +	struct xfs_log_item	*lip = &bip->bli_item;
-> +	bool			aborted;
-> +	bool			dirty;
-> +	bool			freed;
-> +
-> +	/* drop the bli ref and return if it wasn't the last one */
-> +	freed = atomic_dec_and_test(&bip->bli_refcount);
-> +	if (!freed)
-> +		return false;
+> > 	- should we just round down the EOF dedupe request to the
+> > 	  block before EOF so dedupe still succeeds?
+>=20
+> I've often wondered if the interface should (have) be(en) that we start
+> at src_off/dst_off and share as many common blocks as possible until we
+> find a mismatch, then tell userspace where we stopped... instead of like
+> now where we compare the entire extent and fail if any part of it
+> doesn't match.
 
-We don't really need the freed variable here. This
+The usefulness or harmfulness of that approach depends a lot on what
+the application expects the filesystem to do.
 
-	if (!atomic_dec_and_test(refcount))
-		return false
+In btrfs, the dedupe operation acts on references to data, not the
+underlying data blocks.  If there are 1000 slightly overlapping references
+to a single contiguous range of data blocks in dst on disk, each dedupe
+operation acts on only one of those, leaving the other 999 untouched.
+If the app then submits 999 other dedupe requests, no references to the
+dst blocks remain and the underlying data blocks can be deleted.
 
-is a common enough "do something only when we drop the last
-reference" pattern that everyone should understand it by
-now.
+In a parallel universe (or a better filesystem, or a userspace emulation
+built out of dedupe and other ioctls), dedupe could work at the extent
+data (physical) level.  The app points at src and dst extent references
+(inode/offset/length tuples), and the filesystem figures out which
+physical blocks these point to, then adjusts all the references to the
+dst blocks at once, dealing with partial overlaps and snapshots and
+nodatacow and whatever other exotic features might be lurking in the
+filesystem, ending with every reference to every part of dst replaced
+by the longest possible contiguous reference(s) to src.
 
-> +	 * If the bli is dirty and non-aborted, the buffer was clean in the
-> +	 * transaction but still awaiting writeback from previous changes. In
-> +	 * that case, the bli is freed on buffer writeback completion.
-> +	 */
-> +	aborted = test_bit(XFS_LI_ABORTED, &lip->li_flags) ||
-> +		  XFS_FORCED_SHUTDOWN(lip->li_mountp);
-> +	dirty = bip->bli_flags & XFS_BLI_DIRTY;
-> +	if (!aborted && dirty)
-> +		return false;
+Problems arise if the length deduped is not exactly the length requested.
+If the search continues until a mismatch is found, where does the search
+for a mismatch lead?  Does the search follow physically contiguous
+blocks on disk, or would dedupe follow logically contiguous blocks in
+the src and dst files?  Or the intersection of those, i.e. physically
+contiguous blocks that are logically contiguous in _any_ two files,
+not limited to src and dst.
 
-Personal preference (again) is to check dirty first - same as the
-comment text mentions "dirty and not-aborted"...
+There is also the problem where the files could have been previously
+deduped and then partially overwritten with identical data.  If the
+application cannot control where the dedupe search for identical data
+ends, it can end up accidentally creating new references to extents
+while it is trying to eliminate those extents.  The kernel might do a
+lot of extra work from looking ahead that the application has to undo
+immediately (e.g. after the first few blocks of dst, the app wants to
+do another dedupe with a better src extent elsewhere on the filesystem,
+but the kernel goes ahead and dedupes with an inferior src beyond the
+end of what the app asked for).
 
-These are all minor things - I think it's a good improvement
-overall.
+bees tries to determine exactly the set of dedupe requests required to
+remove all references to duplicate extents (and maybe someday do defrag
+as well).  If the kernel deviates from the requested sizes (e.g. because
+the data changed on the filesystem between dedup requests), the final
+extent layout after the dedupe requests are finished won't match what
+bees expected it to be, so bees has to reexamine the filesystem and
+either retry with a fresh set of exact dedupe requests, or give up and
+leave duplicate extents on disk.  The retry loop is normal and ends
+quickly if the dedupe fails because data changed on disk, but if the
+kernel starts messing with the dedupe lengths then bees has to detect
+this and escape before it gets stuck in a nasty feedback loop.
 
-Cheers,
+If we want to design a new interface, it should allow the app to specify
+maximum and minimum length, so that the kernel knows how much flexibility
+it is allowed by the application.  Maximum length lets one app say
+"dedupe as much as you can find, up to EOF", while minimum length lets
+another app say "don't bother if the match is less than 12K, the space
+saving is not worth the write iops", and setting them equal lets the
+third app say "I have a plan that requires you to do precisely what I
+tell you or do nothing at all."
 
-dave.
+> > 	- should file cloning (i.e. reflink) be allow allowing the
+> > 	  EOF block to be shared somewhere inside EOF in the
+> > 	  destination file?
+>=20
+> I don't think we should.
+>=20
+> > That's stale data exposure, yes?
+>=20
+> Haven't tested that, but seems likely.
 
--- 
-Dave Chinner
-david@fromorbit.com
+It doesn't sound like a good idea, especially if mmap is involved.
+
+> > 	- should clone only allow sharing of the EOF block if it's a
+> > 	  either a full file clone or a matching range clone and
+> > 	  isize is the same for both src and dest files?
+>=20
+> The above sound reasonable for clone, though I would also allow clone to
+> share the EOF block if we extend isize of the dest file.
+>=20
+> The above also nearly sound reasonable for dedupe too.  If we encounter
+> EOF at the same places in the src range and the dest range, should we
+> allow sharing there?  The post-eof bytes are undefined by definition;
+> does undefined =3D=3D undefined?
+
+> >=20
+> > Discuss.
+> >=20
+> > Cheers,
+> >=20
+> > Dave.
+> > --=20
+> > Dave Chinner
+> > david@fromorbit.com
+> >=20
+> >=20
+> > [RFC] vfs: fix data corruption w/ unaligned dedupe ranges
+> >=20
+> > From: Dave Chinner <dchinner@redhat.com>
+> >=20
+> > Exposed by fstests generic/505 on XFS, caused by extending the
+> > bblock match range to include the partial EOF block, but then
+> > allowing unknown data beyond EOF to be considered a "match" to data
+> > in the destination file because the comparison is only made to the
+> > end of the source file. This corrupts the destination file when the
+> > source extent is shared with it.
+> >=20
+> > Open questions:
+> >=20
+> > 	- is documenting rejection on request alignment grounds
+> > 	  (i.e. EINVAL) in the man page sufficient for app
+> > 	  developers to understand what is going on here?
+> > 	- should we just silently round down the EOF dedupe request
+> > 	  to the block before EOF so dedupe still succeeds?
+> > 	- should file cloning (i.e. reflink) be allow allowing the
+> > 	  EOF block to be shared somewhere inside EOF in the
+> > 	  destination file? That's stale data exposure, yes?
+> > 	- should clone only allow sharing of the EOF block if it's a
+> > 	  either a full file clone or a matching range clone and
+> > 	  isize is the same for both src and dest files?
+> >=20
+> > Btrfs also has the same bug in extent_same_check_offsets() and
+> > btrfs_extent_same_range() that is not addressed by this patch.
+>=20
+> <nod> (xfs/ocfs2) clone ioctls tend to be bug-for-bug compatible with
+> btrfs more often than we probably ought to... :/
+>=20
+> (I also sorta wonder if btrfs should be ported to the common vfs
+> routines for clone prep and dedupe comparison...?)
+>=20
+> --D
+>=20
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  fs/read_write.c | 13 +++++++++++--
+> >  1 file changed, 11 insertions(+), 2 deletions(-)
+> >=20
+> > diff --git a/fs/read_write.c b/fs/read_write.c
+> > index 153f8f690490..3844359a4597 100644
+> > --- a/fs/read_write.c
+> > +++ b/fs/read_write.c
+> > @@ -1768,8 +1768,17 @@ int vfs_clone_file_prep_inodes(struct inode *ino=
+de_in, loff_t pos_in,
+> >  			return -EINVAL;
+> >  	}
+> > =20
+> > -	/* If we're linking to EOF, continue to the block boundary. */
+> > -	if (pos_in + *len =3D=3D isize)
+> > +	/* Reflink allows linking to EOF, so round the length up to allow us =
+to
+> > +	 * shared the last block in the file. We don't care what is beyond the
+> > +	 * EOF point in the block that gets shared, as we can't access it and
+> > +	 * attempts to extent the file will break the sharing.
+> > +	 *
+> > +	 * For dedupe, sharing the EOF block is illegal because the bytes bey=
+ond
+> > +	 * EOF are undefined (i.e. not readable) and so can't be deduped. Hen=
+ce
+> > +	 * we do not extend/align the length and instead let the alignment
+> > +	 * checks below reject it.
+> > +	 */
+> > +	if (!is_dedupe && pos_in + *len =3D=3D isize)
+> >  		blen =3D ALIGN(isize, bs) - pos_in;
+> >  	else
+> >  		blen =3D *len;
+
+--l+goss899txtYvYf
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iF0EABECAB0WIQSnOVjcfGcC/+em7H2B+YsaVrMbnAUCW36vhgAKCRCB+YsaVrMb
+nHu5AJ4izU5BtSjIMZo2L6/rnx0pNC9XcQCcCsJ+jv5w38/0I0ZdbPZtB4U5M84=
+=Yk/7
+-----END PGP SIGNATURE-----
+
+--l+goss899txtYvYf--
