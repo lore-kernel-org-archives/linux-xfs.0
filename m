@@ -1,65 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:32360 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727026AbeH1D6r (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Aug 2018 23:58:47 -0400
-Date: Tue, 28 Aug 2018 10:08:36 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Trying to write to read-only block-device from XFS
-Message-ID: <20180828000836.GI2234@dastard>
-References: <20180824233756.kkvmkmm5mdlx77je@two.firstfloor.org>
- <a4d32107-abc0-60d3-8306-b091fbffefd8@sandeen.net>
- <20180825140951.a3dsz3efwnjsj2pz@two.firstfloor.org>
- <c6bcbef0-0c5b-a7a1-adb6-38085db98ce9@sandeen.net>
- <20180827081254.zat4lvxqviwgd4zn@odin.usersys.redhat.com>
- <20180827164342.4vlg3zaehkzcj6od@two.firstfloor.org>
+Received: from mail-yb0-f194.google.com ([209.85.213.194]:35452 "EHLO
+        mail-yb0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726542AbeHZPNF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 Aug 2018 11:13:05 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180827164342.4vlg3zaehkzcj6od@two.firstfloor.org>
+References: <1535101371-26461-1-git-send-email-amir73il@gmail.com>
+ <20180824233901.GA2234@dastard> <CAOQ4uxj=3N28eSX1papQU4n3bt-J7S=_NhtTFq0xV1k0WgH-Ug@mail.gmail.com>
+ <CAJfpegtCj=bgVQ5SOD-WfSfU9=auderyYnYboUJtnCr8OcPdMA@mail.gmail.com>
+In-Reply-To: <CAJfpegtCj=bgVQ5SOD-WfSfU9=auderyYnYboUJtnCr8OcPdMA@mail.gmail.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Sun, 26 Aug 2018 14:32:33 +0300
+Message-ID: <CAOQ4uxiHFmiq98OUJqzALm8hHC9azkXVE_bDdKXZLcq+kaCC3Q@mail.gmail.com>
+Subject: Re: [PATCH] xfs: fix GPF in swapfile_activate of file from overlayfs
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andi Kleen <andi@firstfloor.org>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Miklos Szeredi <miklos@szeredi.hu>
+Cc: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, overlayfs <linux-unionfs@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>
 
-On Mon, Aug 27, 2018 at 09:43:43AM -0700, Andi Kleen wrote:
-> 
-> Adding linux-fsdevel. Keeping full quote for context.
-> 
-> On Mon, Aug 27, 2018 at 10:12:54AM +0200, Carlos Maiolino wrote:
-> > Essentially, this isn't a XFS problem, and most likely you are using XFS on top
-> > of some layer like LVM, and/or using snapshots, and your underlying volume went
-> > read-only behind XFS for some reason.
-> 
-> Ok, so the blame is assigned, but the question is still how to avoid the
-> warning:
-> 
-> (1) either XFS needs to check for read only underlying more often
-> or
-> (2) the warning needs to be removed.
-> 
-> I assume (2) is far easier. Is (1) even possible without races? 
+On Sat, Aug 25, 2018 at 11:04 PM Miklos Szeredi <miklos@szeredi.hu> wrote:
+>
+> On Sat, Aug 25, 2018 at 12:47 PM, Amir Goldstein <amir73il@gmail.com> wrote:
+>
+> > Actually, I believe the intention was that fs developers don't need to worry
+> > about using file_inode() at all, because before the change we had:
+> >
+> > - file passed in to xfs f_op's and a_ops is either overlay file OR xfs file
+> > - file_inode() of either overlay/xfs file in xfs context is always xfs inode
+> > - file->f_path in xfs context, BTW, was overlay path and therefore,
+> >   XFS_IOC_OPEN_BY_HANDLE was slightly broken in overlayfs over xfs,
+> >   as were several other fs specific ioctls
+> >
+> > After stacked file operations change we should have the rules:
+> >
+> > 1. file passed in to xfs f_op's is always xfs file (*)
+> > 2. file passed in to xfs a_ops is always xfs file (**)
+> > 3. file_inode() of overlay file is an overlay inode
+> >
+> > (*) as explicit file argument or on iocb->ki_filp
+> > (**) as explicit file argument or on ->vm_file
+> >
+> > I believe that swapfile leaking an overlay file into xfs was an oversight,
+> > that is breaking rule #2.
+>
+> Correct.
+>
+> I believe the root cause is this
+>
+>     /* For O_DIRECT dentry_open() checks f_mapping->a_ops->direct_IO */
+>     file->f_mapping = realfile->f_mapping;
+>
+> in ovl_open().  So lets start with removing that.  That should fix any
+> oopses related to this, but we'll have some other issues:
+>
+>  1) open(..., O_DIRECT) will return an error
+>
+> This is easy to fix:  add ovl_file_aops with a dummy ovl_direct_IO()
+> function that will never be called.
+>
 
-I doubt (1) is possible to handle at all.
+Nice. I pushed a patch to ovl-fixes branch [1].
 
-e.g. What's the filesystem supposed to do when the device goes RO
-under it without warning? We've now got a heap of dirty state in
-memory that we can't write, so in reality if this ever happens our
-only option is to shutdown the filesystem, toss everything away and
-unmount it.
+>  2) swapon() will return an error
+>
+> First question that comes to mind:  does anybody care?  I wouldn't
+> think swapfiles would be an important feature for overlayfs, but we
+> did support them up till now, so removing support might cause a
+> regression somewhere out there.   Unfortunate...
+>
 
-And because the device is now read only, we can't get the filesystem
-back into a consistent state by mounting it again because it can't
-run log recovery as that requires writing to the device.
+I think we better introduce this "regression" and see if there are any real
+world users out there. If there are, I have a WIP patch to make it work,
+but it involves cloning an accountable file from real file - not a pretty sight.
 
-IOWs, having devices turn read only underneath active read/write
-filesystems without warning is an unrecoverable failure from the
-filesystem perspective.
+3) readahead() will return an error and fadvise() will ignore request
 
-Cheers,
+I have patches [1] to fix those by familiarizing vfs with file_real().
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+4) I am afraid we may end up with more vfs hacks -
+    right off the top of my grep f_mapping fs/*.c:
+- FIBMAP
+- sync_file_range()
+
+But wasn't able to demonstrate a problem with those yet.
+I am running [1] through xfstests now and if it looks fine, I'll post
+the patches.
+
+Thanks,
+Amir.
+
+[1] https://github.com/amir73il/linux/commits/ovl-fixes
