@@ -1,93 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb0-f194.google.com ([209.85.213.194]:35452 "EHLO
-        mail-yb0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726542AbeHZPNF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 Aug 2018 11:13:05 -0400
-MIME-Version: 1.0
-References: <1535101371-26461-1-git-send-email-amir73il@gmail.com>
- <20180824233901.GA2234@dastard> <CAOQ4uxj=3N28eSX1papQU4n3bt-J7S=_NhtTFq0xV1k0WgH-Ug@mail.gmail.com>
- <CAJfpegtCj=bgVQ5SOD-WfSfU9=auderyYnYboUJtnCr8OcPdMA@mail.gmail.com>
-In-Reply-To: <CAJfpegtCj=bgVQ5SOD-WfSfU9=auderyYnYboUJtnCr8OcPdMA@mail.gmail.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Sun, 26 Aug 2018 14:32:33 +0300
-Message-ID: <CAOQ4uxiHFmiq98OUJqzALm8hHC9azkXVE_bDdKXZLcq+kaCC3Q@mail.gmail.com>
-Subject: Re: [PATCH] xfs: fix GPF in swapfile_activate of file from overlayfs
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:33234 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726714AbeH0Ah0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 26 Aug 2018 20:37:26 -0400
+From: Waiman Long <longman@redhat.com>
+Subject: [PATCH v2 0/3] xfs: Reduce spinlock contention in log space slowpath code
+Date: Sun, 26 Aug 2018 16:53:12 -0400
+Message-Id: <1535316795-21560-1-git-send-email-longman@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Miklos Szeredi <miklos@szeredi.hu>
-Cc: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, overlayfs <linux-unionfs@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Waiman Long <longman@redhat.com>
 
-On Sat, Aug 25, 2018 at 11:04 PM Miklos Szeredi <miklos@szeredi.hu> wrote:
->
-> On Sat, Aug 25, 2018 at 12:47 PM, Amir Goldstein <amir73il@gmail.com> wrote:
->
-> > Actually, I believe the intention was that fs developers don't need to worry
-> > about using file_inode() at all, because before the change we had:
-> >
-> > - file passed in to xfs f_op's and a_ops is either overlay file OR xfs file
-> > - file_inode() of either overlay/xfs file in xfs context is always xfs inode
-> > - file->f_path in xfs context, BTW, was overlay path and therefore,
-> >   XFS_IOC_OPEN_BY_HANDLE was slightly broken in overlayfs over xfs,
-> >   as were several other fs specific ioctls
-> >
-> > After stacked file operations change we should have the rules:
-> >
-> > 1. file passed in to xfs f_op's is always xfs file (*)
-> > 2. file passed in to xfs a_ops is always xfs file (**)
-> > 3. file_inode() of overlay file is an overlay inode
-> >
-> > (*) as explicit file argument or on iocb->ki_filp
-> > (**) as explicit file argument or on ->vm_file
-> >
-> > I believe that swapfile leaking an overlay file into xfs was an oversight,
-> > that is breaking rule #2.
->
-> Correct.
->
-> I believe the root cause is this
->
->     /* For O_DIRECT dentry_open() checks f_mapping->a_ops->direct_IO */
->     file->f_mapping = realfile->f_mapping;
->
-> in ovl_open().  So lets start with removing that.  That should fix any
-> oopses related to this, but we'll have some other issues:
->
->  1) open(..., O_DIRECT) will return an error
->
-> This is easy to fix:  add ovl_file_aops with a dummy ovl_direct_IO()
-> function that will never be called.
->
+v1->v2:
+ - For patch 1, remove wake_q_empty() & add task_in_wake_q().
+ - Rewrite patch 2 after comments from Dave Chinner and break it down
+   to 2 separate patches. Now the original xfs logic was kept. The
+   patches just try to move the task wakeup calls to outside the
+   spinlock.
 
-Nice. I pushed a patch to ovl-fixes branch [1].
+While running the AIM7 microbenchmark on a small xfs filesystem, it
+was found that there was a severe spinlock contention problem in the
+current XFS log space reservation code. To alleviate the problem, the
+patches try to move as much task wakeup code to outside the spinlock
+using the wake_q mechanism so as to reduce the lock hold time as much
+as possible.
 
->  2) swapon() will return an error
->
-> First question that comes to mind:  does anybody care?  I wouldn't
-> think swapfiles would be an important feature for overlayfs, but we
-> did support them up till now, so removing support might cause a
-> regression somewhere out there.   Unfortunate...
->
+Patch 1 exports the wake_up_q() and wake_q_add() functions and adds
+the task_in_wake_q() inline function.
 
-I think we better introduce this "regression" and see if there are any real
-world users out there. If there are, I have a WIP patch to make it work,
-but it involves cloning an accountable file from real file - not a pretty sight.
+Patch 2 adds a new flag XLOG_TIC_WAKING to mark a task that is being
+waken up and skip the wake_up_process() if a previous wakeup has
+been issued.
 
-3) readahead() will return an error and fadvise() will ignore request
+Patch 3 modifies the xlog_grant_head_wait() and xlog_grant_head_wake()
+functions to use wake_q for waking up tasks outside the lock critical
+section instead of calling wake_up_process() directly.
 
-I have patches [1] to fix those by familiarizing vfs with file_real().
+The following table shows the performance improvement in the AIM7
+fserver workload after applying patches 2 and 3:
 
-4) I am afraid we may end up with more vfs hacks -
-    right off the top of my grep f_mapping fs/*.c:
-- FIBMAP
-- sync_file_range()
+  Patches	Jobs/min	% Change
+  -------	--------	--------
+     -		 91,486		   -
+     2		192,666		 +111%
+    2+3		285,221 	 +212%
 
-But wasn't able to demonstrate a problem with those yet.
-I am running [1] through xfstests now and if it looks fine, I'll post
-the patches.
+So the final patched kernel performed more than 3X better than the
+unpatched one.
 
-Thanks,
-Amir.
+Waiman Long (3):
+  sched/core: Export wake_q functions to kernel modules
+  xfs: Prevent multiple wakeups of the same log space waiter
+  xfs: Use wake_q for waking up log space waiters
 
-[1] https://github.com/amir73il/linux/commits/ovl-fixes
+ fs/xfs/xfs_linux.h           |  1 +
+ fs/xfs/xfs_log.c             | 57 ++++++++++++++++++++++++++++++------
+ fs/xfs/xfs_log_priv.h        |  1 +
+ include/linux/sched/wake_q.h |  5 ++++
+ kernel/sched/core.c          |  2 ++
+ 5 files changed, 57 insertions(+), 9 deletions(-)
+
+-- 
+2.18.0
