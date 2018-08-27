@@ -1,78 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:32792 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726992AbeHYBDf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 24 Aug 2018 21:03:35 -0400
-Subject: Re: Corrupted large file ?
-References: <F6BD1F63141BFD48924FAD7C646366FA02EC869C40@SRV-MBX-01.intra.igr.fr>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <a53214a7-fd6f-1a0d-463b-e1882bd150cc@sandeen.net>
-Date: Fri, 24 Aug 2018 16:27:12 -0500
-MIME-Version: 1.0
-In-Reply-To: <F6BD1F63141BFD48924FAD7C646366FA02EC869C40@SRV-MBX-01.intra.igr.fr>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:39812 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726953AbeH0SMk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 27 Aug 2018 14:12:40 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id C220F40216E9
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Aug 2018 14:25:48 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id AAE16101325E
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Aug 2018 14:25:48 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2 0/3] xfs: bli refcount fixups
+Date: Mon, 27 Aug 2018 10:25:45 -0400
+Message-Id: <20180827142548.45029-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: BOURSIN YANNICK <YANNICK.BOURSIN@gustaveroussy.fr>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On 8/24/18 9:39 AM, BOURSIN YANNICK wrote:
-> Hello Everybody,
-> 
->                 I am facing some issues with XFS. I do not really know what went wrong and how to diagnose the issue I'm having, but here are the symptoms:
-> . My kernel is: Linux proxmox1 4.13.13-2-pve #1 SMP PVE 4.13.13-32. It's a 40 cores server that features 160Tb storage (with RAID-6) and 384G RAM.                                                                                             
-> . /dev/sdb1 is a raid array that is roughly 128Tb big
-> . It contains mainly virtual machine disks for a proxmox instance
-> . After a regular halt / restart in which nothing was odd, I could not start anymore one of my VM, kvm timing out.
-> . Tried a few things, one of which was "head -n 1 <name of the image>.qcow2 . The image being a single 30Tb file.
-> . The console freezes after that.
+Hi all,
 
-I know you said this was resolved - but I'll just point out a couple things.
+This is a v2 of the stale buffer locking fix for an aborted transaction.
+It has minor refactoring changes noted below. I've added two optional
+patches on top because I wanted to take a stab at a bit more cleanup in
+this area, but these are aesthetic changes only and can be dropped if
+desired.
 
-"head -n 1" reads the first line.  When you are reading a binary qcow2 file which really isn't a line-by-line file, it's possible that it'll read the entire file looking for a newline.
+Patch 1 is the original bug fix. Patch 2 cleans up xfs_trans_brelse() to
+remove some cruft and use similar logic/flow as xfs_buf_item_unlock().
+Patch 3 refactors the bli refcount cleanup logic that is common between
+the two functions. There is still open-coded bli refcount handling on
+unpin because there are additional considerations in that path. Stale
+inode buffer handling has special handling, for whatever reason. The
+stale inode buf handling actually looks quite similar to the
+non-specialized buffer handling, but further cleanup in that area would
+require a more in-depth audit to be sure.
 
-IOWs, interacting with it via "head" is possibly not a great debugging approach.  :)
+I find the end result a bit cleaner but I'm not wedded to it and I'm
+fine with just dropping patches 2-3 if the current approach is
+preferred. FWIW, this also raised a couple thoughts on alternative
+approaches, such as reworking the bli refcount such that the AIL also
+holds a reference, but it's not totally clear that (by itself)
+simplifies things in the case of a shutdown with AIL-held blis.
 
-> It seems that I cannot do anything with the qcow2 image. I tried to dd it into another file, but no change. After that, I tried rebooting again, and it told me upon process termination:
-> 
-> "echo 0" > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> Print_req_error: I/O error, dev sdb, sector 241349552640
-> XFS (sdb1): metadata I/O error: block 0x38818de200 ("xfs_trans_read_buf_map") error 5 numblks 8
+Thoughts, reviews, flames appreciated.
 
-More of the dmesg would be more enlightening - too often the critical bits get edited out.
+Brian
 
-> . Tried to run after that xfs_repair with default parameters on my /dev/sdb1. Nothing's getting out of that, it's almost like xfs_repair doesn't detect anything. It has ran 3 times now, always with the same output which you can see there:
-> 
-> root@proxmox1:~/xfsprogs-4.17.0# xfs_repair -e /dev/sdb1
+v2:
+- Refactor stale bli unlock logic to more closely resemble original.
+- Use bool for 'freed' variable and clean up type casting.
+- Reorder asserts/tracepoints and remove unused stale tracepoint.
+- Added patches 2 and 3.
+v1: https://marc.info/?l=linux-xfs&m=153486008127962&w=2
 
-<snip clean repair>
+Brian Foster (3):
+  xfs: don't unlock invalidated buf on aborted tx commit
+  xfs: clean up xfs_trans_brelse()
+  xfs: refactor xfs_buf_log_item reference count handling
 
-> root@proxmox1:~/xfsprogs-4.17.0# echo $?
-> 0
+ fs/xfs/xfs_buf_item.c  | 115 +++++++++++++++++++++--------------------
+ fs/xfs/xfs_buf_item.h  |   1 +
+ fs/xfs/xfs_trace.h     |   1 -
+ fs/xfs/xfs_trans_buf.c |  98 +++++++++--------------------------
+ 4 files changed, 84 insertions(+), 131 deletions(-)
 
-...
-
-> Here is the output of dmesg after a ls was blocked:
-> 
-> 
-> [ 3384.280537] INFO: task ls:21392 blocked for more than 120 seconds.
-> [ 3384.280592]       Not tainted 4.13.13-2-pve #1
-> [ 3384.280626] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this                                                                                              message.
-> [ 3384.280682] ls              D    0 21392   3298 0x00000004
-> [ 3384.280687] Call Trace:
-> [ 3384.280700]  __schedule+0x3cc/0x860
-> [ 3384.280788]  ? xfs_ilock_attr_map_shared+0x34/0x40 [xfs]
-> [ 3384.280796]  schedule+0x36/0x80
-> [ 3384.280800]  rwsem_down_read_failed+0x10a/0x170
-> [ 3384.280804]  call_rwsem_down_read_failed+0x18/0x30
-> [ 3384.280807]  ? call_rwsem_down_read_failed+0x18/0x30
-> [ 3384.280880]  ? xfs_trans_roll+0xc0/0xc0 [xfs]
-> [ 3384.280884]  down_read+0x20/0x40
-> [ 3384.280938]  xfs_ilock+0xe0/0x110 [xfs]
-...
-
-Something else had the ilock, but we don't know what.  If it happens again, I'd take stock of other activity on the box, I guess.
-
--Eric
+-- 
+2.17.1
