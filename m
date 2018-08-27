@@ -1,149 +1,196 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45058 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726822AbeH0GDx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 27 Aug 2018 02:03:53 -0400
-Subject: Re: [PATCH] xfs: verify size-vs-format for symlinks & dirs
-References: <b0919ac0-deb3-4a0c-f755-309dd65c3206@redhat.com>
- <20180827014314.GF2234@dastard>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <02c044f4-a1d9-b911-2b41-74d6d49f9242@redhat.com>
-Date: Sun, 26 Aug 2018 21:19:19 -0500
-MIME-Version: 1.0
-In-Reply-To: <20180827014314.GF2234@dastard>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:57856 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727113AbeH0SMl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 27 Aug 2018 14:12:41 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 0B2AB40201BE
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Aug 2018 14:25:49 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id E9B1F100727E
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Aug 2018 14:25:48 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 2/3] xfs: clean up xfs_trans_brelse()
+Date: Mon, 27 Aug 2018 10:25:47 -0400
+Message-Id: <20180827142548.45029-3-bfoster@redhat.com>
+In-Reply-To: <20180827142548.45029-1-bfoster@redhat.com>
+References: <20180827142548.45029-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, "Xu, Wen" <wen.xu@gatech.edu>
+To: linux-xfs@vger.kernel.org
 
-On 8/26/18 8:43 PM, Dave Chinner wrote:
-> On Sun, Aug 26, 2018 at 03:31:35PM -0500, Eric Sandeen wrote:
->> Today, xfs_ifork_verify_data() will simply skip verification if the inode
->> claims to be in non-local format.  However, nothing catches the case where
->> the size for the format is too small to be non-local.  xfs_repair tests
->> for this mismatch in process_check_inode_sizes(), so do the same in this
->> verifier.
->>
->> Reported-by: Xu, Wen <wen.xu@gatech.edu>
->> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=200925
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->>
->> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
->> index f9acf1d436f6..e032986d3f67 100644
->> --- a/fs/xfs/libxfs/xfs_inode_fork.c
->> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
->> @@ -704,12 +704,21 @@ xfs_ifork_verify_data(
->>  	struct xfs_inode	*ip,
->>  	struct xfs_ifork_ops	*ops)
->>  {
->> -	/* Non-local data fork, we're done. */
->> -	if (ip->i_d.di_format != XFS_DINODE_FMT_LOCAL)
->> -		return NULL;
->> +	int			mode = VFS_I(ip)->i_mode;
->> +
->> +	if (ip->i_d.di_format != XFS_DINODE_FMT_LOCAL) {
->> +		/* Small size for dir & symlink must be local */
->> +		if ((S_ISDIR(mode) || S_ISLNK(mode)) &&
->> +		    (ip->i_d.di_size <= XFS_IFORK_DSIZE(ip))) {
->> +			return __this_address;
-> 
-> So this trusts the ip->i_d.di_forkoff field to be correct to
-> validate the fork is in the correct format?
+xfs_trans_brelse() is a bit of a historical mess, similar to
+xfs_buf_item_unlock(). It is unnecessarily verbose, has snippets of
+commented out code, inconsistency with regard to stale items, etc.
 
-Well, if validates this particular combination of format, mode,
-size, and forkoff, right ;)
+Clean up xfs_trans_brelse() to use similar logic and flow as
+xfs_buf_item_unlock() with regard to bli reference count handling.
+This patch makes no functional changes, but facilitates further
+refactoring of the common bli reference count handling code.
 
->> +		} else {
->> +			/* Non-local data fork, we're done. */
->> +			return NULL;
->> +		}
->> +	}
-> 
-> Hmmm. A bit hard to follow.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_trans_buf.c | 108 +++++++++++++++--------------------------
+ 1 file changed, 38 insertions(+), 70 deletions(-)
 
-Yeah, wasn't super happy about the way I structured it I guess.
-
-> I'm having to think hard if the logic
-> here is correct. I don't think the else branch should be there - if
-> it's in non-local format we do not run the local format verifiers at
-> all, so that branch needs to return unconditionally.
-
-If it's not local format but the size indicates that it should be,
-return corruption, otherwise return success/ignore (as we did before).
-
-I think it does need to be there, but I get it that it's a mess to read.
-
-> Now, size checks - if a directory inode data fork is in extent or
-> btree format, then it must be at least in block form and so it's
-> size must be equal to or larger than the directory block size.
-> Hence the above check misses a whole range on invalid directory
-> sizes for extent/btree forms. I think we should check directories
-> against against the directory block size, so avoid needing to trust
-> any other inode fields at all.
-> 
-> Symlinks, though, aren't so nice. Even a short symlink can be pushed
-> into extent form if enough attributes are created, and the size
-> remains the same even though it now consumes entire blocks, so I
-> think we can only check against XFS_IFORK_DSIZE - there's nothing
-> else we can verify against.
-> 
-> so maybe something like this? 
-
-I like this structure better, yes.
-
-> 	if (ip->i_d.di_format != XFS_DINODE_FMT_LOCAL) {
-> 		/*
-> 		 * types that can be in local form need size checks
-> 		 * to ensure they have the right amount of data in
-> 		 * them to be in non-local form
-> 		 */
-> 		switch (mode & S_IFMT) {
-> 		case S_IFDIR:
-> 			if (ip->i_d.di_size < mp->m_dir_geo->blksize)
-> 				return __this_address;
-> 			break;
-
-TBH, I wasn't working from first principles, just looking at
-process_check_inode_sizes():
-
-        xfs_fsize_t     size = be64_to_cpu(dino->di_size);
-
-        switch (type)  {
-
-        case XR_INO_DIR:
-                if (size <= XFS_DFORK_DSIZE(dino, mp) &&
-                                dino->di_format != XFS_DINODE_FMT_LOCAL) {
-                        do_warn(
-_("mismatch between format (%d) and size (%" PRId64 ") in directory ino %" PRIu64 "\n"),
-                                dino->di_format, size, lino);
-                        return 1;
-                }
-
-and it's checking dir size against XFS_DFORK_DSIZE not blocksize in repair...?
-
-
-> 		case S_IFLNK:
-> 			if (ip->i_d.di_size <= XFS_IFORK_DSIZE(ip))
-> 				return __this_address;
-> 			break;
-> 		default:
-> 			break;
-> 		}
-> 		return NULL;
-> 	}
-> 
-> 
->>  	/* Check the inline data fork if there is one. */
->> -	switch (VFS_I(ip)->i_mode & S_IFMT) {
->> +	switch (mode & S_IFMT) {
->>  	case S_IFDIR:
->>  		return ops->verify_dir(ip);
->>  	case S_IFLNK:
->>
->>
-> 
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 15919f67a88f..92a708cdfee3 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -322,49 +322,40 @@ xfs_trans_read_buf_map(
+ }
+ 
+ /*
+- * Release the buffer bp which was previously acquired with one of the
+- * xfs_trans_... buffer allocation routines if the buffer has not
+- * been modified within this transaction.  If the buffer is modified
+- * within this transaction, do decrement the recursion count but do
+- * not release the buffer even if the count goes to 0.  If the buffer is not
+- * modified within the transaction, decrement the recursion count and
+- * release the buffer if the recursion count goes to 0.
++ * Release a buffer previously joined to the transaction. If the buffer is
++ * modified within this transaction, decrement the recursion count but do not
++ * release the buffer even if the count goes to 0. If the buffer is not modified
++ * within the transaction, decrement the recursion count and release the buffer
++ * if the recursion count goes to 0.
+  *
+- * If the buffer is to be released and it was not modified before
+- * this transaction began, then free the buf_log_item associated with it.
++ * If the buffer is to be released and it was not already dirty before this
++ * transaction began, then also free the buf_log_item associated with it.
+  *
+- * If the transaction pointer is NULL, make this just a normal
+- * brelse() call.
++ * If the transaction pointer is NULL, this is a normal xfs_buf_relse() call.
+  */
+ void
+ xfs_trans_brelse(
+-	xfs_trans_t		*tp,
+-	xfs_buf_t		*bp)
++	struct xfs_trans	*tp,
++	struct xfs_buf		*bp)
+ {
+-	struct xfs_buf_log_item	*bip;
+-	int			freed;
++	struct xfs_buf_log_item	*bip = bp->b_log_item;
++	bool			freed;
++	bool			dirty;
+ 
+-	/*
+-	 * Default to a normal brelse() call if the tp is NULL.
+-	 */
+-	if (tp == NULL) {
+-		ASSERT(bp->b_transp == NULL);
++	ASSERT(bp->b_transp == tp);
++
++	if (!tp) {
+ 		xfs_buf_relse(bp);
+ 		return;
+ 	}
+ 
+-	ASSERT(bp->b_transp == tp);
+-	bip = bp->b_log_item;
++	trace_xfs_trans_brelse(bip);
+ 	ASSERT(bip->bli_item.li_type == XFS_LI_BUF);
+-	ASSERT(!(bip->bli_flags & XFS_BLI_STALE));
+-	ASSERT(!(bip->__bli_format.blf_flags & XFS_BLF_CANCEL));
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+ 
+-	trace_xfs_trans_brelse(bip);
+-
+ 	/*
+-	 * If the release is just for a recursive lock,
+-	 * then decrement the count and return.
++	 * If the release is for a recursive lookup, then decrement the count
++	 * and return.
+ 	 */
+ 	if (bip->bli_recur > 0) {
+ 		bip->bli_recur--;
+@@ -372,63 +363,40 @@ xfs_trans_brelse(
+ 	}
+ 
+ 	/*
+-	 * If the buffer is dirty within this transaction, we can't
++	 * If the buffer is invalidated or dirty in this transaction, we can't
+ 	 * release it until we commit.
+ 	 */
+ 	if (test_bit(XFS_LI_DIRTY, &bip->bli_item.li_flags))
+ 		return;
+-
+-	/*
+-	 * If the buffer has been invalidated, then we can't release
+-	 * it until the transaction commits to disk unless it is re-dirtied
+-	 * as part of this transaction.  This prevents us from pulling
+-	 * the item from the AIL before we should.
+-	 */
+ 	if (bip->bli_flags & XFS_BLI_STALE)
+ 		return;
+ 
+-	ASSERT(!(bip->bli_flags & XFS_BLI_LOGGED));
+-
+ 	/*
+-	 * Free up the log item descriptor tracking the released item.
++	 * Unlink the log item from the transaction and clear the hold flag, if
++	 * set. We wouldn't want the next user of the buffer to get confused.
+ 	 */
++	ASSERT(!(bip->bli_flags & XFS_BLI_LOGGED));
+ 	xfs_trans_del_item(&bip->bli_item);
+-
+-	/*
+-	 * Clear the hold flag in the buf log item if it is set.
+-	 * We wouldn't want the next user of the buffer to
+-	 * get confused.
+-	 */
+-	if (bip->bli_flags & XFS_BLI_HOLD) {
++	if (bip->bli_flags & XFS_BLI_HOLD)
+ 		bip->bli_flags &= ~XFS_BLI_HOLD;
+-	}
+ 
+ 	/*
+-	 * Drop our reference to the buf log item.
++	 * Drop the reference to the bli. At this point, the bli must be either
++	 * freed or dirty (or both). If freed, there are a couple cases where we
++	 * are responsible to free the item. If the bli is clean, we're the last
++	 * user of it. If the fs has shut down, the bli may be dirty and AIL
++	 * resident, but won't ever be written back.
+ 	 */
+ 	freed = atomic_dec_and_test(&bip->bli_refcount);
+-
+-	/*
+-	 * If the buf item is not tracking data in the log, then we must free it
+-	 * before releasing the buffer back to the free pool.
+-	 *
+-	 * If the fs has shutdown and we dropped the last reference, it may fall
+-	 * on us to release a (possibly dirty) bli if it never made it to the
+-	 * AIL (e.g., the aborted unpin already happened and didn't release it
+-	 * due to our reference). Since we're already shutdown and need
+-	 * ail_lock, just force remove from the AIL and release the bli here.
+-	 */
+-	if (XFS_FORCED_SHUTDOWN(tp->t_mountp) && freed) {
+-		xfs_trans_ail_remove(&bip->bli_item, SHUTDOWN_LOG_IO_ERROR);
+-		xfs_buf_item_relse(bp);
+-	} else if (!(bip->bli_flags & XFS_BLI_DIRTY)) {
+-/***
+-		ASSERT(bp->b_pincount == 0);
+-***/
+-		ASSERT(atomic_read(&bip->bli_refcount) == 0);
+-		ASSERT(!test_bit(XFS_LI_IN_AIL, &bip->bli_item.li_flags));
+-		ASSERT(!(bip->bli_flags & XFS_BLI_INODE_ALLOC_BUF));
+-		xfs_buf_item_relse(bp);
++	dirty = bip->bli_flags & XFS_BLI_DIRTY;
++	ASSERT(freed || dirty);
++	if (freed) {
++		bool abort = XFS_FORCED_SHUTDOWN(tp->t_mountp);
++		ASSERT(abort || !test_bit(XFS_LI_IN_AIL, &bip->bli_item.li_flags));
++		if (abort)
++			xfs_trans_ail_remove(&bip->bli_item, SHUTDOWN_LOG_IO_ERROR);
++		if (!dirty || abort)
++			xfs_buf_item_relse(bp);
+ 	}
+ 
+ 	bp->b_transp = NULL;
+-- 
+2.17.1
