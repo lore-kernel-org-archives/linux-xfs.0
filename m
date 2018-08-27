@@ -1,121 +1,210 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:40893 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726886AbeH0CgU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 Aug 2018 22:36:20 -0400
-Date: Mon, 27 Aug 2018 08:52:17 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: fix GPF in swapfile_activate of file from overlayfs
-Message-ID: <20180826225217.GB2234@dastard>
-References: <1535101371-26461-1-git-send-email-amir73il@gmail.com>
- <20180824233901.GA2234@dastard>
- <CAOQ4uxj=3N28eSX1papQU4n3bt-J7S=_NhtTFq0xV1k0WgH-Ug@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxj=3N28eSX1papQU4n3bt-J7S=_NhtTFq0xV1k0WgH-Ug@mail.gmail.com>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:50766 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727043AbeH0SMk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 27 Aug 2018 14:12:40 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id E248481663F1
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Aug 2018 14:25:48 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C8588100727E
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Aug 2018 14:25:48 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH 1/3] xfs: don't unlock invalidated buf on aborted tx commit
+Date: Mon, 27 Aug 2018 10:25:46 -0400
+Message-Id: <20180827142548.45029-2-bfoster@redhat.com>
+In-Reply-To: <20180827142548.45029-1-bfoster@redhat.com>
+References: <20180827142548.45029-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Miklos Szeredi <miklos@szeredi.hu>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, overlayfs <linux-unionfs@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>
+To: linux-xfs@vger.kernel.org
 
-On Sat, Aug 25, 2018 at 01:47:52PM +0300, Amir Goldstein wrote:
-> [+cc: Al,linux-unionfs]
-> 
-> On Sat, Aug 25, 2018 at 2:39 AM Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > On Fri, Aug 24, 2018 at 12:02:51PM +0300, Amir Goldstein wrote:
-> > > Since overlayfs implements stacked file operations, f_inode
-> > > is no longer euqivalent to f_mapping->host and xfs should use
-> > > the latter, same as generic_swapfile_activate().
-> >
-> > Since when has file_inode() not pointed to the inode backing the
-> > struct file?
-> >
-> > > Using f_inode results in an attempt to dereference an xfs_inode
-> > > struct from an ovl_inode pointer:
-> > >
-> > >  CPU: 0 PID: 2462 Comm: swapon Not tainted
-> > >  4.18.0-xfstests-12721-g33e17876ea4e #3402
-> > >  RIP: 0010:xfs_find_bdev_for_inode+0x23/0x2f
-> > >  Call Trace:
-> > >   xfs_iomap_swapfile_activate+0x1f/0x43
-> > >   __se_sys_swapon+0xb1a/0xee9
-> > >
-> > > Fixes: d1d04ef8572b ("ovl: stack file ops")
-> >
-> > Oh, since about 3 days ago.
-> >
-> > So now we've got to deal with a vfs interface change that isn't
-> > documented, hasn't been clearly communicated prior to merging, and
-> > it subtly breaks a subset of callers.
-> >
-> 
-> Well, when you put it this way... ;-)
-> 
-> First of all - self NACK.
-> My fix is papering over a bigger issue, that is leaking of overlay
-> file/inode into xfs f_aops.
+xfstests generic/388,475 occasionally reproduce assertion failures
+in xfs_buf_item_unpin() when the final bli reference is dropped on
+an invalidated buffer and the buffer is not locked as it is expected
+to be. Invalidated buffers should remain locked on transaction
+commit until the final unpin, at which point the buffer is removed
+from the AIL and the bli is freed since stale buffers are not
+written back.
 
-That means any new operation vector introduced that passes a struct
-file is always going to need an overlay interposer function to
-ensure that the correct file is passed to the lower filesystem, yes?
+The assert failures are associated with filesystem shutdown,
+typically due to log I/O errors injected by the test. The
+problematic situation can occur if the shutdown happens to cause a
+race between an active transaction that has invalidated a particular
+buffer and an I/O error on a log buffer that contains the bli
+associated with the same (now stale) buffer.
 
-That seems like a bit of a landmine to leave for anyone implementing
-a new generic operation vector. Documentation patch?
+Both transaction and log contexts acquire a bli reference. If the
+transaction has already invalidated the buffer by the time the I/O
+error occurs and ends up aborting due to shutdown, the transaction
+and log hold the last two references to a stale bli. If the
+transaction cancel occurs first, it treats the buffer as non-stale
+due to the aborted state: the bli reference is dropped and the
+buffer is released/unlocked. The log buffer I/O error handling
+eventually calls into xfs_buf_item_unpin(), drops the final
+reference to the bli and treats it as stale. The buffer wasn't left
+locked by xfs_buf_item_unlock(), however, so the assert fails and
+the buffer is double unlocked. The latter problem is mitigated by
+the fact that the fs is shutdown and no further damage is possible.
 
-> I believe the correct fix right now would be to add an overlayfs hack
-> in swapon(), as well as some other hacks in mm/* syscalls
-> (e.g. readahead()).
-> 
-> The virtue of merging stacked file operations was getting rid of many
-> VFS hacks, but the last chapter has not been written yet, or to put it
-> in Al's words [1]:
-> 
-> "Uses of ->vm_file (and rules for those) are too convoluted to untangle
-> at the moment.  I still would love to get that straightened out, but
-> it's not this cycle fodder, more's the pity..."
-> 
-> So I expect this cycle will require adding a few temporary mm
-> syscall hacks, in the hope they will be more short lived than the
-> departing VFS hacks.
+->iop_unlock() of an invalidated buffer should behave consistently
+with respect to the bli refcount, regardless of aborted state. If
+the refcount remains elevated on commit, we know the bli is awaiting
+an unpin (since it can't be in another transaction) and will be
+handled appropriately on log buffer completion. If the final bli
+reference of an invalidated buffer is dropped in ->iop_unlock(), we
+can assume the transaction has aborted because invalidation implies
+a dirty transaction. In the non-abort case, the log would have
+acquired a bli reference in ->iop_pin() and prevented bli release at
+->iop_unlock() time. In the abort case the item must be freed and
+buffer unlocked because it wasn't pinned by the log.
 
-Yuck. 
+Rework xfs_buf_item_unlock() to simplify the currently circuitous
+and duplicate logic and leave invalidated buffers locked based on
+bli refcount, regardless of aborted state. This ensures that a
+pinned, stale buffer is always found locked when eventually
+unpinned.
 
-> > So, please enlighten me with a documentation patch before changing
-> > any XFS code: What is the new behaviour and the rules we must follow
-> > for calling file_inode()?
-> >
-> 
-> Actually, I believe the intention was that fs developers don't need to worry
-> about using file_inode() at all, because before the change we had:
-> 
-> - file passed in to xfs f_op's and a_ops is either overlay file OR xfs file
-> - file_inode() of either overlay/xfs file in xfs context is always xfs inode
-> - file->f_path in xfs context, BTW, was overlay path and therefore,
->   XFS_IOC_OPEN_BY_HANDLE was slightly broken in overlayfs over xfs,
->   as were several other fs specific ioctls
-> 
-> After stacked file operations change we should have the rules:
-> 
-> 1. file passed in to xfs f_op's is always xfs file (*)
-> 2. file passed in to xfs a_ops is always xfs file (**)
-> 3. file_inode() of overlay file is an overlay inode
-> 
-> (*) as explicit file argument or on iocb->ki_filp
-> (**) as explicit file argument or on ->vm_file
-> 
-> I believe that swapfile leaking an overlay file into xfs was an oversight,
-> that is breaking rule #2.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_buf_item.c | 92 ++++++++++++++++++++-----------------------
+ fs/xfs/xfs_trace.h    |  1 -
+ 2 files changed, 42 insertions(+), 51 deletions(-)
 
-Please add documentation explaining how this all works so pepole
-don't have to ask every time we come across a bug as a result of a
-missing/incorrect translation in overlay.
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 1c9d1398980b..b39d1b5320e7 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -556,73 +556,65 @@ xfs_buf_item_unlock(
+ {
+ 	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
+ 	struct xfs_buf		*bp = bip->bli_buf;
++	bool			freed;
+ 	bool			aborted;
+-	bool			hold = !!(bip->bli_flags & XFS_BLI_HOLD);
+-	bool			dirty = !!(bip->bli_flags & XFS_BLI_DIRTY);
++	bool			hold = bip->bli_flags & XFS_BLI_HOLD;
++	bool			dirty = bip->bli_flags & XFS_BLI_DIRTY;
++	bool			stale = bip->bli_flags & XFS_BLI_STALE;
+ #if defined(DEBUG) || defined(XFS_WARN)
+-	bool			ordered = !!(bip->bli_flags & XFS_BLI_ORDERED);
++	bool			ordered = bip->bli_flags & XFS_BLI_ORDERED;
+ #endif
+-
+-	aborted = test_bit(XFS_LI_ABORTED, &lip->li_flags);
+-
+-	/* Clear the buffer's association with this transaction. */
+-	bp->b_transp = NULL;
+-
+-	/*
+-	 * The per-transaction state has been copied above so clear it from the
+-	 * bli.
+-	 */
+-	bip->bli_flags &= ~(XFS_BLI_LOGGED | XFS_BLI_HOLD | XFS_BLI_ORDERED);
+-
+-	/*
+-	 * If the buf item is marked stale, then don't do anything.  We'll
+-	 * unlock the buffer and free the buf item when the buffer is unpinned
+-	 * for the last time.
+-	 */
+-	if (bip->bli_flags & XFS_BLI_STALE) {
+-		trace_xfs_buf_item_unlock_stale(bip);
+-		ASSERT(bip->__bli_format.blf_flags & XFS_BLF_CANCEL);
+-		if (!aborted) {
+-			atomic_dec(&bip->bli_refcount);
+-			return;
+-		}
+-	}
+-
+ 	trace_xfs_buf_item_unlock(bip);
+ 
+ 	/*
+-	 * If the buf item isn't tracking any data, free it, otherwise drop the
+-	 * reference we hold to it. If we are aborting the transaction, this may
+-	 * be the only reference to the buf item, so we free it anyway
+-	 * regardless of whether it is dirty or not. A dirty abort implies a
+-	 * shutdown, anyway.
+-	 *
+ 	 * The bli dirty state should match whether the blf has logged segments
+ 	 * except for ordered buffers, where only the bli should be dirty.
+ 	 */
+ 	ASSERT((!ordered && dirty == xfs_buf_item_dirty_format(bip)) ||
+ 	       (ordered && dirty && !xfs_buf_item_dirty_format(bip)));
++	ASSERT(!stale || (bip->__bli_format.blf_flags & XFS_BLF_CANCEL));
++
++	aborted = test_bit(XFS_LI_ABORTED, &lip->li_flags);
+ 
+ 	/*
+-	 * Clean buffers, by definition, cannot be in the AIL. However, aborted
+-	 * buffers may be in the AIL regardless of dirty state. An aborted
+-	 * transaction that invalidates a buffer already in the AIL may have
+-	 * marked it stale and cleared the dirty state, for example.
+-	 *
+-	 * Therefore if we are aborting a buffer and we've just taken the last
+-	 * reference away, we have to check if it is in the AIL before freeing
+-	 * it. We need to free it in this case, because an aborted transaction
+-	 * has already shut the filesystem down and this is the last chance we
+-	 * will have to do so.
++	 * Clear the buffer's association with this transaction and
++	 * per-transaction state from the bli, which has been copied above.
++	 */
++	bp->b_transp = NULL;
++	bip->bli_flags &= ~(XFS_BLI_LOGGED | XFS_BLI_HOLD | XFS_BLI_ORDERED);
++
++	/*
++	 * Drop the transaction's bli reference and deal with the item if we had
++	 * the last one. We must free the item if clean or aborted since it
++	 * wasn't pinned by the log and this is the last chance to do so. If the
++	 * bli is freed and dirty (but non-aborted), the buffer was not dirty in
++	 * this transaction but modified by a previous one and still awaiting
++	 * writeback. In that case, the bli is freed on buffer writeback
++	 * completion.
+ 	 */
+-	if (atomic_dec_and_test(&bip->bli_refcount)) {
+-		if (aborted) {
+-			ASSERT(XFS_FORCED_SHUTDOWN(lip->li_mountp));
++	freed = atomic_dec_and_test(&bip->bli_refcount);
++	if (freed) {
++		ASSERT(!aborted || XFS_FORCED_SHUTDOWN(lip->li_mountp));
++		/*
++		 * An aborted item may be in the AIL regardless of dirty state.
++		 * For example, consider an aborted transaction that invalidated
++		 * a dirty bli and cleared the dirty state.
++		 */
++		if (aborted)
+ 			xfs_trans_ail_remove(lip, SHUTDOWN_LOG_IO_ERROR);
++		if (aborted || !dirty)
+ 			xfs_buf_item_relse(bp);
+-		} else if (!dirty)
+-			xfs_buf_item_relse(bp);
++	} else if (stale) {
++		/*
++		 * Stale buffers remain locked until final unpin unless the bli
++		 * was freed in the branch above. A freed stale bli implies an
++		 * abort because buffer invalidation dirties the bli and
++		 * transaction.
++		 */
++		ASSERT(!freed);
++		return;
+ 	}
++	ASSERT(!stale || (aborted && freed));
+ 
+ 	if (!hold)
+ 		xfs_buf_relse(bp);
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index ad315e83bc02..3043e5ed6495 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -473,7 +473,6 @@ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_pin);
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_unpin);
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_unpin_stale);
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_unlock);
+-DEFINE_BUF_ITEM_EVENT(xfs_buf_item_unlock_stale);
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_committed);
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_push);
+ DEFINE_BUF_ITEM_EVENT(xfs_trans_get_buf);
 -- 
-Dave Chinner
-david@fromorbit.com
+2.17.1
