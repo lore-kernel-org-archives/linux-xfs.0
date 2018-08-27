@@ -1,115 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:53974 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726882AbeH0F1n (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Aug 2018 01:27:43 -0400
-Date: Mon, 27 Aug 2018 11:43:14 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: verify size-vs-format for symlinks & dirs
-Message-ID: <20180827014314.GF2234@dastard>
-References: <b0919ac0-deb3-4a0c-f755-309dd65c3206@redhat.com>
+Received: from one.firstfloor.org ([193.170.194.197]:60404 "EHLO
+        one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726995AbeH0UbG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Aug 2018 16:31:06 -0400
+Date: Mon, 27 Aug 2018 09:43:43 -0700
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: Trying to write to read-only block-device from XFS
+Message-ID: <20180827164342.4vlg3zaehkzcj6od@two.firstfloor.org>
+References: <20180824233756.kkvmkmm5mdlx77je@two.firstfloor.org>
+ <a4d32107-abc0-60d3-8306-b091fbffefd8@sandeen.net>
+ <20180825140951.a3dsz3efwnjsj2pz@two.firstfloor.org>
+ <c6bcbef0-0c5b-a7a1-adb6-38085db98ce9@sandeen.net>
+ <20180827081254.zat4lvxqviwgd4zn@odin.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <b0919ac0-deb3-4a0c-f755-309dd65c3206@redhat.com>
+In-Reply-To: <20180827081254.zat4lvxqviwgd4zn@odin.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, "Xu, Wen" <wen.xu@gatech.edu>
+To: Eric Sandeen <sandeen@sandeen.net>, Andi Kleen <andi@firstfloor.org>, linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org
 
-On Sun, Aug 26, 2018 at 03:31:35PM -0500, Eric Sandeen wrote:
-> Today, xfs_ifork_verify_data() will simply skip verification if the inode
-> claims to be in non-local format.  However, nothing catches the case where
-> the size for the format is too small to be non-local.  xfs_repair tests
-> for this mismatch in process_check_inode_sizes(), so do the same in this
-> verifier.
+
+Adding linux-fsdevel. Keeping full quote for context.
+
+On Mon, Aug 27, 2018 at 10:12:54AM +0200, Carlos Maiolino wrote:
+> Hi.
 > 
-> Reported-by: Xu, Wen <wen.xu@gatech.edu>
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=200925
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+> On Sat, Aug 25, 2018 at 09:25:33PM -0500, Eric Sandeen wrote:
+> > 
+> > 
+> > On 8/25/18 9:09 AM, Andi Kleen wrote:
+> > > On Fri, Aug 24, 2018 at 07:58:05PM -0500, Eric Sandeen wrote:
+> > >> On 8/24/18 6:37 PM, Andi Kleen wrote:
+> > >>>
+> > >>> Seen this a few times now with recent kernels:
+> > >>
+> > >> Hi Andi -
+> > >>
+> > >> Dumb question maybe, but just to be clear -
+> > >> Was this an RO mount on an RO device, or something else?
+> > >> What type of mount was this?
+> > > 
+> > > Was just a normal RW partition on a normal SSD. I didn't do anything
+> > > special to make it RO.
+> > 
+> > I don't know why it shows up as RO at this point, but maybe this fixes it:
+> > 
+> > commit b089cfd95d32638335c551651a8e00fd2c4edb0b
+> > Author: Jens Axboe <axboe@kernel.dk>
+> > Date:   Tue Aug 14 10:52:40 2018 -0600
+> > 
+> >     block: don't warn for flush on read-only device
+> >     
+> >     Don't warn for a flush issued to a read-only device. It's not strictly
+> >     a writable command, as it doesn't change any on-media data by itself.
+> >     
+> >     Reported-by: Stefan Agner <stefan@agner.ch>
+> >     Fixes: 721c7fc701c7 ("block: fail op_is_write() requests to read-only partitions")
+> >     Signed-off-by: Jens Axboe <axboe@kernel.dk>
 > 
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> index f9acf1d436f6..e032986d3f67 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.c
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> @@ -704,12 +704,21 @@ xfs_ifork_verify_data(
->  	struct xfs_inode	*ip,
->  	struct xfs_ifork_ops	*ops)
->  {
-> -	/* Non-local data fork, we're done. */
-> -	if (ip->i_d.di_format != XFS_DINODE_FMT_LOCAL)
-> -		return NULL;
-> +	int			mode = VFS_I(ip)->i_mode;
-> +
-> +	if (ip->i_d.di_format != XFS_DINODE_FMT_LOCAL) {
-> +		/* Small size for dir & symlink must be local */
-> +		if ((S_ISDIR(mode) || S_ISLNK(mode)) &&
-> +		    (ip->i_d.di_size <= XFS_IFORK_DSIZE(ip))) {
-> +			return __this_address;
-
-So this trusts the ip->i_d.di_forkoff field to be correct to
-validate the fork is in the correct format?
-
-> +		} else {
-> +			/* Non-local data fork, we're done. */
-> +			return NULL;
-> +		}
-> +	}
-
-Hmmm. A bit hard to follow. I'm having to think hard if the logic
-here is correct. I don't think the else branch should be there - if
-it's in non-local format we do not run the local format verifiers at
-all, so that branch needs to return unconditionally.
-
-Now, size checks - if a directory inode data fork is in extent or
-btree format, then it must be at least in block form and so it's
-size must be equal to or larger than the directory block size.
-Hence the above check misses a whole range on invalid directory
-sizes for extent/btree forms. I think we should check directories
-against against the directory block size, so avoid needing to trust
-any other inode fields at all.
-
-Symlinks, though, aren't so nice. Even a short symlink can be pushed
-into extent form if enough attributes are created, and the size
-remains the same even though it now consumes entire blocks, so I
-think we can only check against XFS_IFORK_DSIZE - there's nothing
-else we can verify against.
-
-so maybe something like this? 
-
-	if (ip->i_d.di_format != XFS_DINODE_FMT_LOCAL) {
-		/*
-		 * types that can be in local form need size checks
-		 * to ensure they have the right amount of data in
-		 * them to be in non-local form
-		 */
-		switch (mode & S_IFMT) {
-		case S_IFDIR:
-			if (ip->i_d.di_size < mp->m_dir_geo->blksize)
-				return __this_address;
-			break;
-		case S_IFLNK:
-			if (ip->i_d.di_size <= XFS_IFORK_DSIZE(ip))
-				return __this_address;
-			break;
-		default:
-			break;
-		}
-		return NULL;
-	}
-
-
->  	/* Check the inline data fork if there is one. */
-> -	switch (VFS_I(ip)->i_mode & S_IFMT) {
-> +	switch (mode & S_IFMT) {
->  	case S_IFDIR:
->  		return ops->verify_dir(ip);
->  	case S_IFLNK:
+> This kind of 'problem' is being reported quite often now. It all started with
+> commit:
+> 
+> commit 721c7fc701c71f693307d274d2b346a1ecd4a534
+> Author: Ilya Dryomov <idryomov@gmail.com>
+> Date:   Thu Jan 11 14:09:11 2018 +0100
+> 
+>     block: fail op_is_write() requests to read-only partitions
+> 
+> Which basically added a generic check for RO devices into generic_make_request()
+> code path, as a way to enforce ioctl(BLKROSET), so far, write requests were
+> never checked.
 > 
 > 
+> Then, Linus applied the following commit:
+> 
+> commit a32e236eb93e62a0f692e79b7c3c9636689559b9
+> Author: Linus Torvalds <torvalds@linux-foundation.org>
+> Date:   Fri Aug 3 12:22:09 2018 -0700
+> 
+>     Partially revert "block: fail op_is_write() requests to read-only partitions"
+> 
+> Once a few layers like LVM, didn't expect the device to enforce RO, which kept
+> writing to the device while snapshotting, even if the device has been marked as
+> RO.
+> 
+> And then came the commit mentioned by Eric:
+> 
+> commit b089cfd95d32638335c551651a8e00fd2c4edb0b
+> Author: Jens Axboe <axboe@kernel.dk>
+> Date:   Tue Aug 14 10:52:40 2018 -0600
+> 
+>     block: don't warn for flush on read-only device
+> 
+> 
+> Which relaxed the rules a bit and basically let flushes to proceed without warnings.
+> 
+> Essentially, this isn't a XFS problem, and most likely you are using XFS on top
+> of some layer like LVM, and/or using snapshots, and your underlying volume went
+> read-only behind XFS for some reason.
 
--- 
-Dave Chinner
-david@fromorbit.com
+Ok, so the blame is assigned, but the question is still how to avoid the
+warning:
+
+(1) either XFS needs to check for read only underlying more often
+or
+(2) the warning needs to be removed.
+
+I assume (2) is far easier. Is (1) even possible without races? 
+What is preferred? 
+
+
+-Andi
