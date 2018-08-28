@@ -1,67 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:47936 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726660AbeHaI3d (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 Aug 2018 04:29:33 -0400
-Date: Thu, 30 Aug 2018 21:23:55 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 02/18] xfs: support storing records in the inode core root
-Message-ID: <20180831042355.GB4359@magnolia>
-References: <153565389576.32612.11057291402738397706.stgit@magnolia>
- <153565390854.32612.15669075123760228429.stgit@magnolia>
- <20180831022812.GJ5631@dastard>
+Received: from sandeen.net ([63.231.237.45]:37260 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727951AbeH1RKs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 28 Aug 2018 13:10:48 -0400
+Subject: Re: Where to find xfs-import.git
+References: <20180827201559.GA10024@vader>
+ <20180828081307.233ln2mgitu4iy2t@odin.usersys.redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <5aff93b4-f440-5ce5-2147-6f3cf2759042@sandeen.net>
+Date: Tue, 28 Aug 2018 08:19:08 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180831022812.GJ5631@dastard>
+In-Reply-To: <20180828081307.233ln2mgitu4iy2t@odin.usersys.redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Omar Sandoval <osandov@osandov.com>, linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <dchinner@redhat.com>
 
-On Fri, Aug 31, 2018 at 12:28:13PM +1000, Dave Chinner wrote:
-> On Thu, Aug 30, 2018 at 11:31:48AM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Make it so that we can actually store btree records in the inode
-> > core (i.e. enable bb_level == 0) so that the rtrmapbt can do this.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On 8/28/18 3:13 AM, Carlos Maiolino wrote:
+> On Mon, Aug 27, 2018 at 01:15:59PM -0700, Omar Sandoval wrote:
+>> Hey,
+>>
+>> I was hoping to poke around some old XFS history, but now that
+>> oss.sgi.com is gone, I can't find the XFS CVS import repo. Does anyone
+>> have it lying around? Would it be possible to put it up on kernel.org?
+>>
 > 
-> So this is so you don't need XFS_DINODE_FMT_RMAP_EXTENTS/BTREE 
-> inode fork types, right? i.e. there just XFS_DINODE_FMT_RMAP to
-> indicate it's an rmap tree in the fork?
+> oss.sgi.com is by far gone. But you can find everything from oss.sgi.com in
+> archive.org. Unfortunately not the CVS repositories, which I have no idea if
+> they are still around somewhere. But on archive.org you can still find the
+> original design documents from xfs.
 
-Yep.
+Several developers do have copies of the old tree from oss.sgi.com.  We're
+discussing the best public place to republish them, stay tuned.
 
-> Could this code be used by the data fork, too? Sure, we need to
-> keep the on-disk fork format info the same, but we could use this to
-> kill the special BMDR formatting code it currently uses, right?
-
-Hmm.  FMT_EXTENTS uses di_nextents to count the number of records in the
-data fork area, whereas FMT_BTREE stores the number of records in the
-bmbt root in the data fork area, followed by bmbt keys/ptrs.  I imagine
-you could make the formats share code, but you'd have to special case
-how much btree header gets written into the data fork area.
-
-The maximum number of bmbt records that can fit in the data fork area
-(factoring in alignment requirements) actually does depend on whether or
-not we have to allocate space for the root block record count.
-
-Might be worth deeper investigation...
-
-(FWIW, FMT_RMAP always stores the number of root block records in the
-data fork area, since it doesn't affect the max record count.)
-
---D
-
-> (just trying to get an idea of whether we'll have to maintain two
-> bits of code that do essentially the same thing forever)
+Thanks,
+-Eric
+ 
+> Cheers
 > 
-> Cheers,
+>> Thanks!
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
