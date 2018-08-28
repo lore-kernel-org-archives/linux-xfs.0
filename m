@@ -1,62 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:13644 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726916AbeHVDGP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Aug 2018 23:06:15 -0400
-Date: Wed, 22 Aug 2018 09:43:57 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 08/10] xfs: open code sb verifier feature checks
-Message-ID: <20180821234357.GO31495@dastard>
-References: <20180820044851.414-1-david@fromorbit.com>
- <20180820044851.414-9-david@fromorbit.com>
- <20180821132534.GF15030@bfoster>
+Received: from aserp2120.oracle.com ([141.146.126.78]:33906 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725976AbeH1GgB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Aug 2018 02:36:01 -0400
+Date: Mon, 27 Aug 2018 19:46:30 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [ANNOUNCE] xfs: master and for-next branches updated to v4.19-rc1
+Message-ID: <20180828024630.GD4334@magnolia>
+References: <20180828015547.GB31495@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180821132534.GF15030@bfoster>
+In-Reply-To: <20180828015547.GB31495@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Dave Chinner <david@fromorbit.com>
 
-On Tue, Aug 21, 2018 at 09:25:35AM -0400, Brian Foster wrote:
-> On Mon, Aug 20, 2018 at 02:48:49PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > The superblock verifiers are one of the last places that use the sb
-> > version functions to do feature checks. This are all quite simple
-> > uses, and there aren't many of them so open code them all.
-> > 
-> > Also, move the good version number check into xfs_sb.c instead of it
-> > being an inline function in xfs_format.h
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_format.h |  26 ---------
-> >  fs/xfs/libxfs/xfs_sb.c     | 116 +++++++++++++++++++++++++------------
-> >  fs/xfs/libxfs/xfs_sb.h     |   1 +
-> >  3 files changed, 81 insertions(+), 62 deletions(-)
-> > 
-> ...
-> > diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> > index bedf6c6bf990..b83cf8adca1a 100644
-> > --- a/fs/xfs/libxfs/xfs_sb.c
-> > +++ b/fs/xfs/libxfs/xfs_sb.c
-> ...
-> > @@ -485,7 +523,7 @@ xfs_sb_quota_from_disk(struct xfs_sb *sbp)
-> >  	 * We need to do these manipilations only if we are working
-> >  	 * with an older version of on-disk superblock.
-> >  	 */
-> > -	if (xfs_sb_version_haspquotino(sbp))
-> > +	if (XFS_SB_VERSION_NUM(sbp) < XFS_SB_VERSION_5)
-> >  		return;
+On Tue, Aug 28, 2018 at 11:55:47AM +1000, Dave Chinner wrote:
+> Hi Folks,
 > 
-> Isn't this backwards (we want to exit if == XFS_SB_VERSION_5)?
+> The master and for-next branch of the xfs-linux repository at:
+> 
+>         git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+> 
+> has just been updated to 4.19-rc1 for the start of the new dev
+> cycle. Please update your trees and resend any outstanding patches
+> that do not apply cleanly to the updated master branch.
+> 
+> The new head of both branches is commit:
+> 
+> 5b394b2ddf03 Linux 4.19-rc1
 
-Good catch, will fix.
+To clarify any possible confusion, yes, Dave will be handling patches
+until I've recovered from current health problems.
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--D
+
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
