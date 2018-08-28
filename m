@@ -1,245 +1,282 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:33890 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:55096 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727299AbeH0SMl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 27 Aug 2018 14:12:41 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+        id S1727412AbeH1QZG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 28 Aug 2018 12:25:06 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 2995D87A50
-        for <linux-xfs@vger.kernel.org>; Mon, 27 Aug 2018 14:25:49 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id F03B1805A6D8
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 12:33:38 +0000 (UTC)
 Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 1269B100727E
-        for <linux-xfs@vger.kernel.org>; Mon, 27 Aug 2018 14:25:49 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id DBE83FA969
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 12:33:38 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 3/3] xfs: refactor xfs_buf_log_item reference count handling
-Date: Mon, 27 Aug 2018 10:25:48 -0400
-Message-Id: <20180827142548.45029-4-bfoster@redhat.com>
-In-Reply-To: <20180827142548.45029-1-bfoster@redhat.com>
-References: <20180827142548.45029-1-bfoster@redhat.com>
+Subject: [PATCH] xfs: remove last of unnecessary xfs_defer_cancel() callers
+Date: Tue, 28 Aug 2018 08:33:38 -0400
+Message-Id: <20180828123338.51189-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-The xfs_buf_log_item structure has a reference counter with slightly
-tricky semantics. In the common case, a buffer is logged and
-committed in a transaction, committed to the on-disk log (added to
-the AIL) and then finally written back and removed from the AIL. The
-bli refcount covers two potentially overlapping timeframes:
+Now that deferred operations are completely managed via
+transactions, it's no longer necessary to cancel the dfops in error
+paths that already cancel the associated transaction. There are a
+few such calls lingering throughout the codebase.
 
- 1. the bli is held in an active transaction
- 2. the bli is pinned by the log
-
-The caveat to this approach is that the reference counter does not
-purely dictate the lifetime of the bli. IOW, when a dirty buffer is
-physically logged and unpinned, the bli refcount may go to zero as
-the log item is inserted into the AIL. Only once the buffer is
-written back can the bli finally be freed.
-
-The above semantics means that it is not enough for the various
-refcount decrementing contexts to release the bli on decrement to
-zero. xfs_trans_brelse(), transaction commit (->iop_unlock()) and
-unpin (->iop_unpin()) must all drop the associated reference and
-make additional checks to determine if the current context is
-responsible for freeing the item.
-
-For example, if a transaction holds but does not dirty a particular
-bli, the commit may drop the refcount to zero. If the bli itself is
-clean, it is also not AIL resident and must be freed at this time.
-The same is true for xfs_trans_brelse(). If the transaction dirties
-a bli and then aborts or an unpin results in an abort due to a log
-I/O error, the last reference count holder is expected to explicitly
-remove the item from the AIL and release it (since an abort means
-filesystem shutdown and metadata writeback will never occur).
-
-This leads to fairly complex checks being replicated in a few
-different places. Since ->iop_unlock() and xfs_trans_brelse() are
-nearly identical, refactor the logic into a common helper that
-implements and documents the semantics in one place. This patch does
-not change behavior.
+Remove all remaining unnecessary calls to xfs_defer_cancel(). This
+leaves xfs_defer_cancel() calls in two places. The first is the call
+in the transaction cancel path itself, which facilitates this patch.
+The second is made via the xfs_defer_finish() error path to provide
+consistent error semantics with transaction commit. For example,
+xfs_trans_commit() expects an xfs_defer_finish() failure to clean up
+the dfops structure before it returns.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_buf_item.c  | 85 ++++++++++++++++++++++++------------------
- fs/xfs/xfs_buf_item.h  |  1 +
- fs/xfs/xfs_trans_buf.c | 22 +----------
- 3 files changed, 51 insertions(+), 57 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index b39d1b5320e7..d0191451fe18 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -556,13 +556,12 @@ xfs_buf_item_unlock(
- {
- 	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
- 	struct xfs_buf		*bp = bip->bli_buf;
--	bool			freed;
--	bool			aborted;
-+	bool			released;
- 	bool			hold = bip->bli_flags & XFS_BLI_HOLD;
--	bool			dirty = bip->bli_flags & XFS_BLI_DIRTY;
- 	bool			stale = bip->bli_flags & XFS_BLI_STALE;
- #if defined(DEBUG) || defined(XFS_WARN)
- 	bool			ordered = bip->bli_flags & XFS_BLI_ORDERED;
-+	bool			dirty = bip->bli_flags & XFS_BLI_DIRTY;
- #endif
- 	trace_xfs_buf_item_unlock(bip);
- 
-@@ -574,8 +573,6 @@ xfs_buf_item_unlock(
- 	       (ordered && dirty && !xfs_buf_item_dirty_format(bip)));
- 	ASSERT(!stale || (bip->__bli_format.blf_flags & XFS_BLF_CANCEL));
- 
--	aborted = test_bit(XFS_LI_ABORTED, &lip->li_flags);
--
- 	/*
- 	 * Clear the buffer's association with this transaction and
- 	 * per-transaction state from the bli, which has been copied above.
-@@ -584,40 +581,16 @@ xfs_buf_item_unlock(
- 	bip->bli_flags &= ~(XFS_BLI_LOGGED | XFS_BLI_HOLD | XFS_BLI_ORDERED);
- 
- 	/*
--	 * Drop the transaction's bli reference and deal with the item if we had
--	 * the last one. We must free the item if clean or aborted since it
--	 * wasn't pinned by the log and this is the last chance to do so. If the
--	 * bli is freed and dirty (but non-aborted), the buffer was not dirty in
--	 * this transaction but modified by a previous one and still awaiting
--	 * writeback. In that case, the bli is freed on buffer writeback
--	 * completion.
-+	 * Unref the item and unlock the buffer unless held or stale. Stale
-+	 * buffers remain locked until final unpin unless the bli is freed by
-+	 * the unref call. The latter implies shutdown because buffer
-+	 * invalidation dirties the bli and transaction.
- 	 */
--	freed = atomic_dec_and_test(&bip->bli_refcount);
--	if (freed) {
--		ASSERT(!aborted || XFS_FORCED_SHUTDOWN(lip->li_mountp));
--		/*
--		 * An aborted item may be in the AIL regardless of dirty state.
--		 * For example, consider an aborted transaction that invalidated
--		 * a dirty bli and cleared the dirty state.
--		 */
--		if (aborted)
--			xfs_trans_ail_remove(lip, SHUTDOWN_LOG_IO_ERROR);
--		if (aborted || !dirty)
--			xfs_buf_item_relse(bp);
--	} else if (stale) {
--		/*
--		 * Stale buffers remain locked until final unpin unless the bli
--		 * was freed in the branch above. A freed stale bli implies an
--		 * abort because buffer invalidation dirties the bli and
--		 * transaction.
--		 */
--		ASSERT(!freed);
-+	released = xfs_buf_item_unref(bip);
-+	if ((stale && !released) || hold)
- 		return;
--	}
--	ASSERT(!stale || (aborted && freed));
--
--	if (!hold)
--		xfs_buf_relse(bp);
-+	ASSERT(!stale || test_bit(XFS_LI_ABORTED, &lip->li_flags));
-+	xfs_buf_relse(bp);
+I think I promised Darrick I'd audit these and clean the rest out some
+time ago, during review of the core dfops cleanups...
+
+Brian
+
+ fs/xfs/libxfs/xfs_attr.c        | 28 ++++++++--------------------
+ fs/xfs/libxfs/xfs_attr_remote.c | 10 ++--------
+ fs/xfs/xfs_bmap_util.c          | 12 +++++-------
+ fs/xfs/xfs_inode.c              | 10 +---------
+ 4 files changed, 16 insertions(+), 44 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 1e671d4eb6fa..c6299f82a6e4 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -587,7 +587,7 @@ xfs_attr_leaf_addname(
+ 		 */
+ 		error = xfs_attr3_leaf_to_node(args);
+ 		if (error)
+-			goto out_defer_cancel;
++			return error;
+ 		error = xfs_defer_finish(&args->trans);
+ 		if (error)
+ 			return error;
+@@ -675,7 +675,7 @@ xfs_attr_leaf_addname(
+ 			error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
+ 			/* bp is gone due to xfs_da_shrink_inode */
+ 			if (error)
+-				goto out_defer_cancel;
++				return error;
+ 			error = xfs_defer_finish(&args->trans);
+ 			if (error)
+ 				return error;
+@@ -693,9 +693,6 @@ xfs_attr_leaf_addname(
+ 		error = xfs_attr3_leaf_clearflag(args);
+ 	}
+ 	return error;
+-out_defer_cancel:
+-	xfs_defer_cancel(args->trans);
+-	return error;
  }
  
  /*
-@@ -951,6 +924,44 @@ xfs_buf_item_relse(
- 	xfs_buf_item_free(bip);
+@@ -738,15 +735,12 @@ xfs_attr_leaf_removename(
+ 		error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
+ 		/* bp is gone due to xfs_da_shrink_inode */
+ 		if (error)
+-			goto out_defer_cancel;
++			return error;
+ 		error = xfs_defer_finish(&args->trans);
+ 		if (error)
+ 			return error;
+ 	}
+ 	return 0;
+-out_defer_cancel:
+-	xfs_defer_cancel(args->trans);
+-	return error;
  }
  
-+bool
-+xfs_buf_item_unref(
-+	struct xfs_buf_log_item	*bip)
-+{
-+	struct xfs_log_item	*lip = &bip->bli_item;
-+	bool			aborted;
-+	bool			dirty;
-+	bool			freed;
-+
-+	/* drop the bli ref and return if it wasn't the last one */
-+	freed = atomic_dec_and_test(&bip->bli_refcount);
-+	if (!freed)
-+		return false;
-+
-+	/*
-+	 * We dropped the last ref and must free the item if clean or aborted.
-+	 * If the bli is dirty and non-aborted, the buffer was clean in the
-+	 * transaction but still awaiting writeback from previous changes. In
-+	 * that case, the bli is freed on buffer writeback completion.
-+	 */
-+	aborted = test_bit(XFS_LI_ABORTED, &lip->li_flags) ||
-+		  XFS_FORCED_SHUTDOWN(lip->li_mountp);
-+	dirty = bip->bli_flags & XFS_BLI_DIRTY;
-+	if (!aborted && dirty)
-+		return false;
-+
-+	/*
-+	 * The bli is aborted or clean. An aborted item may be in the AIL
-+	 * regardless of dirty state.  For example, consider an aborted
-+	 * transaction that invalidated a dirty bli and cleared the dirty
-+	 * state.
-+	 */
-+	if (aborted)
-+		xfs_trans_ail_remove(lip, SHUTDOWN_LOG_IO_ERROR);
-+	xfs_buf_item_relse(bip->bli_buf);
-+	return true;
-+}
-+
+ /*
+@@ -864,7 +858,7 @@ xfs_attr_node_addname(
+ 			state = NULL;
+ 			error = xfs_attr3_leaf_to_node(args);
+ 			if (error)
+-				goto out_defer_cancel;
++				goto out;
+ 			error = xfs_defer_finish(&args->trans);
+ 			if (error)
+ 				goto out;
+@@ -888,7 +882,7 @@ xfs_attr_node_addname(
+ 		 */
+ 		error = xfs_da3_split(state);
+ 		if (error)
+-			goto out_defer_cancel;
++			goto out;
+ 		error = xfs_defer_finish(&args->trans);
+ 		if (error)
+ 			goto out;
+@@ -984,7 +978,7 @@ xfs_attr_node_addname(
+ 		if (retval && (state->path.active > 1)) {
+ 			error = xfs_da3_join(state);
+ 			if (error)
+-				goto out_defer_cancel;
++				goto out;
+ 			error = xfs_defer_finish(&args->trans);
+ 			if (error)
+ 				goto out;
+@@ -1013,9 +1007,6 @@ xfs_attr_node_addname(
+ 	if (error)
+ 		return error;
+ 	return retval;
+-out_defer_cancel:
+-	xfs_defer_cancel(args->trans);
+-	goto out;
+ }
  
  /*
-  * Add the given log item with its callback to the list of callbacks
-diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
-index 3f7d7b72e7e6..ac5663955daf 100644
---- a/fs/xfs/xfs_buf_item.h
-+++ b/fs/xfs/xfs_buf_item.h
-@@ -51,6 +51,7 @@ struct xfs_buf_log_item {
+@@ -1107,7 +1098,7 @@ xfs_attr_node_removename(
+ 	if (retval && (state->path.active > 1)) {
+ 		error = xfs_da3_join(state);
+ 		if (error)
+-			goto out_defer_cancel;
++			goto out;
+ 		error = xfs_defer_finish(&args->trans);
+ 		if (error)
+ 			goto out;
+@@ -1138,7 +1129,7 @@ xfs_attr_node_removename(
+ 			error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
+ 			/* bp is gone due to xfs_da_shrink_inode */
+ 			if (error)
+-				goto out_defer_cancel;
++				goto out;
+ 			error = xfs_defer_finish(&args->trans);
+ 			if (error)
+ 				goto out;
+@@ -1150,9 +1141,6 @@ xfs_attr_node_removename(
+ out:
+ 	xfs_da_state_free(state);
+ 	return error;
+-out_defer_cancel:
+-	xfs_defer_cancel(args->trans);
+-	goto out;
+ }
  
- int	xfs_buf_item_init(struct xfs_buf *, struct xfs_mount *);
- void	xfs_buf_item_relse(struct xfs_buf *);
-+bool	xfs_buf_item_unref(struct xfs_buf_log_item *);
- void	xfs_buf_item_log(struct xfs_buf_log_item *, uint, uint);
- bool	xfs_buf_item_dirty_format(struct xfs_buf_log_item *);
- void	xfs_buf_attach_iodone(struct xfs_buf *,
-diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index 92a708cdfee3..4a16db972518 100644
---- a/fs/xfs/xfs_trans_buf.c
-+++ b/fs/xfs/xfs_trans_buf.c
-@@ -339,8 +339,6 @@ xfs_trans_brelse(
- 	struct xfs_buf		*bp)
- {
- 	struct xfs_buf_log_item	*bip = bp->b_log_item;
--	bool			freed;
--	bool			dirty;
+ /*
+diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+index af094063e402..d89363c6b523 100644
+--- a/fs/xfs/libxfs/xfs_attr_remote.c
++++ b/fs/xfs/libxfs/xfs_attr_remote.c
+@@ -485,7 +485,7 @@ xfs_attr_rmtval_set(
+ 				  blkcnt, XFS_BMAPI_ATTRFORK, args->total, &map,
+ 				  &nmap);
+ 		if (error)
+-			goto out_defer_cancel;
++			return error;
+ 		error = xfs_defer_finish(&args->trans);
+ 		if (error)
+ 			return error;
+@@ -553,9 +553,6 @@ xfs_attr_rmtval_set(
+ 	}
+ 	ASSERT(valuelen == 0);
+ 	return 0;
+-out_defer_cancel:
+-	xfs_defer_cancel(args->trans);
+-	return error;
+ }
  
- 	ASSERT(bp->b_transp == tp);
+ /*
+@@ -625,7 +622,7 @@ xfs_attr_rmtval_remove(
+ 		error = xfs_bunmapi(args->trans, args->dp, lblkno, blkcnt,
+ 				    XFS_BMAPI_ATTRFORK, 1, &done);
+ 		if (error)
+-			goto out_defer_cancel;
++			return error;
+ 		error = xfs_defer_finish(&args->trans);
+ 		if (error)
+ 			return error;
+@@ -638,7 +635,4 @@ xfs_attr_rmtval_remove(
+ 			return error;
+ 	}
+ 	return 0;
+-out_defer_cancel:
+-	xfs_defer_cancel(args->trans);
+-	return error;
+ }
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index addbd74ecd8e..ae3cc393724f 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1584,7 +1584,7 @@ xfs_swap_extent_rmap(
+ 					tirec.br_blockcount, &irec,
+ 					&nimaps, 0);
+ 			if (error)
+-				goto out_defer;
++				goto out;
+ 			ASSERT(nimaps == 1);
+ 			ASSERT(tirec.br_startoff == irec.br_startoff);
+ 			trace_xfs_swap_extent_rmap_remap_piece(ip, &irec);
+@@ -1599,22 +1599,22 @@ xfs_swap_extent_rmap(
+ 			/* Remove the mapping from the donor file. */
+ 			error = xfs_bmap_unmap_extent(tp, tip, &uirec);
+ 			if (error)
+-				goto out_defer;
++				goto out;
  
-@@ -380,24 +378,8 @@ xfs_trans_brelse(
- 	if (bip->bli_flags & XFS_BLI_HOLD)
- 		bip->bli_flags &= ~XFS_BLI_HOLD;
+ 			/* Remove the mapping from the source file. */
+ 			error = xfs_bmap_unmap_extent(tp, ip, &irec);
+ 			if (error)
+-				goto out_defer;
++				goto out;
  
+ 			/* Map the donor file's blocks into the source file. */
+ 			error = xfs_bmap_map_extent(tp, ip, &uirec);
+ 			if (error)
+-				goto out_defer;
++				goto out;
+ 
+ 			/* Map the source file's blocks into the donor file. */
+ 			error = xfs_bmap_map_extent(tp, tip, &irec);
+ 			if (error)
+-				goto out_defer;
++				goto out;
+ 
+ 			error = xfs_defer_finish(tpp);
+ 			tp = *tpp;
+@@ -1636,8 +1636,6 @@ xfs_swap_extent_rmap(
+ 	tip->i_d.di_flags2 = tip_flags2;
+ 	return 0;
+ 
+-out_defer:
+-	xfs_defer_cancel(tp);
+ out:
+ 	trace_xfs_swap_extent_rmap_error(ip, error, _RET_IP_);
+ 	tip->i_d.di_flags2 = tip_flags2;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index d957a46dc1cb..05db9540e459 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1563,7 +1563,7 @@ xfs_itruncate_extents_flags(
+ 		error = xfs_bunmapi(tp, ip, first_unmap_block, unmap_len, flags,
+ 				    XFS_ITRUNC_MAX_EXTENTS, &done);
+ 		if (error)
+-			goto out_bmap_cancel;
++			goto out;
+ 
+ 		/*
+ 		 * Duplicate the transaction that has the permanent
+@@ -1599,14 +1599,6 @@ xfs_itruncate_extents_flags(
+ out:
+ 	*tpp = tp;
+ 	return error;
+-out_bmap_cancel:
 -	/*
--	 * Drop the reference to the bli. At this point, the bli must be either
--	 * freed or dirty (or both). If freed, there are a couple cases where we
--	 * are responsible to free the item. If the bli is clean, we're the last
--	 * user of it. If the fs has shut down, the bli may be dirty and AIL
--	 * resident, but won't ever be written back.
+-	 * If the bunmapi call encounters an error, return to the caller where
+-	 * the transaction can be properly aborted.  We just need to make sure
+-	 * we're not holding any resources that we were not when we came in.
 -	 */
--	freed = atomic_dec_and_test(&bip->bli_refcount);
--	dirty = bip->bli_flags & XFS_BLI_DIRTY;
--	ASSERT(freed || dirty);
--	if (freed) {
--		bool abort = XFS_FORCED_SHUTDOWN(tp->t_mountp);
--		ASSERT(abort || !test_bit(XFS_LI_IN_AIL, &bip->bli_item.li_flags));
--		if (abort)
--			xfs_trans_ail_remove(&bip->bli_item, SHUTDOWN_LOG_IO_ERROR);
--		if (!dirty || abort)
--			xfs_buf_item_relse(bp);
--	}
-+	/* drop the reference to the bli */
-+	xfs_buf_item_unref(bip);
+-	xfs_defer_cancel(tp);
+-	goto out;
+ }
  
- 	bp->b_transp = NULL;
- 	xfs_buf_relse(bp);
+ int
 -- 
 2.17.1
