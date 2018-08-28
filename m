@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:60030 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:60106 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727224AbeH1XSJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Aug 2018 19:18:09 -0400
+        with ESMTP id S1727224AbeH1XSP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Aug 2018 19:18:15 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w7SJJnvl081423
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:25:05 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp2120.oracle.com with ESMTP id 2m2yrq5tjf-1
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w7SJJSml081073
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:25:09 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2120.oracle.com with ESMTP id 2m2yrq5tjv-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:25:04 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w7SJP3g3012009
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:25:09 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w7SJP3oA019356
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:25:04 GMT
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:25:03 GMT
 Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w7SJP3ll012855
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w7SJP3Wb003552
         for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:25:03 GMT
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v8 27/28] xfs: Add parent pointer ioctl
-Date: Tue, 28 Aug 2018 12:22:40 -0700
-Message-Id: <1535484161-11059-28-git-send-email-allison.henderson@oracle.com>
+Subject: [PATCH v8 28/28] xfs: Add delayed attributes error tag
+Date: Tue, 28 Aug 2018 12:22:41 -0700
+Message-Id: <1535484161-11059-29-git-send-email-allison.henderson@oracle.com>
 In-Reply-To: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
 References: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -28,360 +28,97 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-This patch adds a new file ioctl to retrieve the parent
-pointer of a given inode
+This patch adds an error tag that we can use to test
+delayed attribute recovery and replay
 
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- fs/xfs/libxfs/xfs_fs.h     | 42 ++++++++++++++++++++++
- fs/xfs/libxfs/xfs_parent.c | 10 ++++++
- fs/xfs/libxfs/xfs_parent.h |  2 ++
- fs/xfs/xfs_attr_list.c     |  3 ++
- fs/xfs/xfs_ioctl.c         | 86 +++++++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_ondisk.h        |  4 +++
- fs/xfs/xfs_parent_utils.c  | 82 +++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_parent_utils.h  |  2 ++
- 8 files changed, 230 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_errortag.h | 4 +++-
+ fs/xfs/xfs_error.c           | 3 +++
+ fs/xfs/xfs_trans_attr.c      | 8 ++++++++
+ 3 files changed, 14 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 9c58a78..47d05ef 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -547,6 +547,47 @@ struct xfs_scrub_metadata {
- 				 XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED)
- #define XFS_SCRUB_FLAGS_ALL	(XFS_SCRUB_FLAGS_IN | XFS_SCRUB_FLAGS_OUT)
- 
-+#define XFS_PPTR_MAXNAMELEN				256
-+
-+/* return parents of the handle, not the open fd */
-+#define XFS_PPTR_IFLAG_HANDLE  (1U << 0)
-+
-+/* target was the root directory */
-+#define XFS_PPTR_OFLAG_ROOT    (1U << 1)
-+
-+/* Get an inode parent pointer through ioctl */
-+struct xfs_parent_ptr {
-+	__u64		xpp_ino;			/* Inode */
-+	__u32		xpp_gen;			/* Inode generation */
-+	__u32		xpp_diroffset;			/* Directory offset */
-+	__u32		xpp_namelen;			/* File name length */
-+	__u32		xpp_pad;
-+	__u8		xpp_name[XFS_PPTR_MAXNAMELEN];	/* File name */
-+};
-+
-+/* Iterate through an inodes parent pointers */
-+struct xfs_pptr_info {
-+	struct xfs_handle		pi_handle;
-+	struct xfs_attrlist_cursor	pi_cursor;
-+	__u32				pi_flags;
-+	__u32				pi_reserved;
-+	__u32				pi_ptrs_size;
-+	__u32				pi_ptrs_used;
-+	__u64				pi_reserved2[6];
-+
-+	/*
-+	 * An array of struct xfs_parent_ptr follows the header
-+	 * information. Use XFS_PPINFO_TO_PP() to access the
-+	 * parent pointer array entries.
-+	 */
-+};
-+
-+#define XFS_PPTR_INFO_SIZEOF(nr_ptrs) sizeof (struct xfs_pptr_info) + \
-+				      nr_ptrs * sizeof(struct xfs_parent_ptr)
-+
-+#define XFS_PPINFO_TO_PP(info, idx)    \
-+	(&(((struct xfs_parent_ptr *)((char *)(info) + sizeof(*(info))))[(idx)]))
-+
- /*
-  * ioctl limits
-  */
-@@ -591,6 +632,7 @@ struct xfs_scrub_metadata {
- #define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_fs_eofblocks)
- /*	XFS_IOC_GETFSMAP ------ hoisted 59         */
- #define XFS_IOC_SCRUB_METADATA	_IOWR('X', 60, struct xfs_scrub_metadata)
-+#define XFS_IOC_GETPPOINTER	_IOR ('X', 61, struct xfs_parent_ptr)
+diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
+index 66077a1..5cd408d0 100644
+--- a/fs/xfs/libxfs/xfs_errortag.h
++++ b/fs/xfs/libxfs/xfs_errortag.h
+@@ -54,7 +54,8 @@
+ #define XFS_ERRTAG_BUF_LRU_REF				31
+ #define XFS_ERRTAG_FORCE_SCRUB_REPAIR			32
+ #define XFS_ERRTAG_FORCE_SUMMARY_RECALC			33
+-#define XFS_ERRTAG_MAX					34
++#define XFS_ERRTAG_DELAYED_ATTR				34
++#define XFS_ERRTAG_MAX					35
  
  /*
-  * ioctl commands that replace IRIX syssgi()'s
-diff --git a/fs/xfs/libxfs/xfs_parent.c b/fs/xfs/libxfs/xfs_parent.c
-index 5045f65..74e41be 100644
---- a/fs/xfs/libxfs/xfs_parent.c
-+++ b/fs/xfs/libxfs/xfs_parent.c
-@@ -33,6 +33,16 @@
- #include "xfs_attr_sf.h"
- #include "xfs_bmap.h"
+  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+@@ -93,5 +94,6 @@
+ #define XFS_RANDOM_BUF_LRU_REF				2
+ #define XFS_RANDOM_FORCE_SCRUB_REPAIR			1
+ #define XFS_RANDOM_FORCE_SUMMARY_RECALC			1
++#define XFS_RANDOM_DELAYED_ATTR				1
  
-+/* Initializes a xfs_parent_ptr from an xfs_parent_name_rec */
-+void
-+xfs_init_parent_ptr(struct xfs_parent_ptr		*xpp,
-+		     struct xfs_parent_name_rec	*rec)
-+{
-+	xpp->xpp_ino = be64_to_cpu(rec->p_ino);
-+	xpp->xpp_gen = be32_to_cpu(rec->p_gen);
-+	xpp->xpp_diroffset = be32_to_cpu(rec->p_diroffset);
-+}
-+
- /*
-  * Parent pointer attribute handling.
-  *
-diff --git a/fs/xfs/libxfs/xfs_parent.h b/fs/xfs/libxfs/xfs_parent.h
-index 60f1172..3fcbbbb 100644
---- a/fs/xfs/libxfs/xfs_parent.h
-+++ b/fs/xfs/libxfs/xfs_parent.h
-@@ -32,4 +32,6 @@ void xfs_init_parent_name_irec(struct xfs_parent_name_irec *irec,
- int xfs_parent_add(struct xfs_inode *parent,
- 		   struct xfs_inode *child, struct xfs_name *child_name,
- 		   uint32_t diroffset);
-+void xfs_init_parent_ptr(struct xfs_parent_ptr *xpp,
-+			 struct xfs_parent_name_rec *rec);
- #endif	/* __XFS_PARENT_H__ */
-diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-index 3c30ec4..f4ffc2c 100644
---- a/fs/xfs/xfs_attr_list.c
-+++ b/fs/xfs/xfs_attr_list.c
-@@ -570,6 +570,9 @@ xfs_attr_put_listent(
- 	if (((context->flags & ATTR_ROOT) == 0) !=
- 	    ((flags & XFS_ATTR_ROOT) == 0))
- 		return;
-+	if (((context->flags & ATTR_PARENT) == 0) !=
-+	    ((flags & XFS_ATTR_PARENT) == 0))
-+		return;
+ #endif /* __XFS_ERRORTAG_H_ */
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index 9866f54..5193ba9 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -51,6 +51,7 @@ static unsigned int xfs_errortag_random_default[] = {
+ 	XFS_RANDOM_BUF_LRU_REF,
+ 	XFS_RANDOM_FORCE_SCRUB_REPAIR,
+ 	XFS_RANDOM_FORCE_SUMMARY_RECALC,
++	XFS_RANDOM_DELAYED_ATTR,
+ };
  
- 	arraytop = sizeof(*alist) +
- 			context->count * sizeof(alist->al_offset[0]);
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index b0a4b37..b0791f3 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
+ struct xfs_errortag_attr {
+@@ -159,6 +160,7 @@ XFS_ERRORTAG_ATTR_RW(log_item_pin,	XFS_ERRTAG_LOG_ITEM_PIN);
+ XFS_ERRORTAG_ATTR_RW(buf_lru_ref,	XFS_ERRTAG_BUF_LRU_REF);
+ XFS_ERRORTAG_ATTR_RW(force_repair,	XFS_ERRTAG_FORCE_SCRUB_REPAIR);
+ XFS_ERRORTAG_ATTR_RW(bad_summary,	XFS_ERRTAG_FORCE_SUMMARY_RECALC);
++XFS_ERRORTAG_ATTR_RW(delayed_attr,	XFS_ERRTAG_DELAYED_ATTR);
+ 
+ static struct attribute *xfs_errortag_attrs[] = {
+ 	XFS_ERRORTAG_ATTR_LIST(noerror),
+@@ -195,6 +197,7 @@ static struct attribute *xfs_errortag_attrs[] = {
+ 	XFS_ERRORTAG_ATTR_LIST(buf_lru_ref),
+ 	XFS_ERRORTAG_ATTR_LIST(force_repair),
+ 	XFS_ERRORTAG_ATTR_LIST(bad_summary),
++	XFS_ERRORTAG_ATTR_LIST(delayed_attr),
+ 	NULL,
+ };
+ 
+diff --git a/fs/xfs/xfs_trans_attr.c b/fs/xfs/xfs_trans_attr.c
+index 7e20721..1b14830 100644
+--- a/fs/xfs/xfs_trans_attr.c
++++ b/fs/xfs/xfs_trans_attr.c
 @@ -35,6 +35,8 @@
- #include "xfs_fsmap.h"
- #include "scrub/xfs_scrub.h"
- #include "xfs_sb.h"
-+#include "xfs_da_format.h"
-+#include "xfs_parent_utils.h"
- 
- #include <linux/capability.h>
- #include <linux/cred.h>
-@@ -1730,6 +1732,87 @@ xfs_ioc_scrub_metadata(
- 	return 0;
- }
- 
-+/*
-+ * IOCTL routine to get the parent pointers of an inode and return it to user
-+ * space.  Caller must pass a buffer space containing a struct xfs_pptr_info,
-+ * followed by a region large enough to contain an array of struct
-+ * xfs_parent_ptr of a size specified in pi_ptrs_size.  If the inode contains
-+ * more parent pointers than can fit in the buffer space, caller may re-call
-+ * the function using the returned pi_cursor to resume iteration.  The
-+ * number of xfs_parent_ptr returned will be stored in pi_ptrs_used.
-+ *
-+ * Returns 0 on success or non-zero on failure
-+ */
-+STATIC int
-+xfs_ioc_get_parent_pointer(
-+	struct file			*filp,
-+	void				__user *arg)
-+{
-+	struct xfs_pptr_info		*ppi = NULL;
-+	int				error = 0;
-+	struct xfs_inode		*ip = XFS_I(file_inode(filp));
-+	struct xfs_mount		*mp = ip->i_mount;
-+
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EPERM;
-+
-+	/* Allocate an xfs_pptr_info to put the user data */
-+	ppi = kmem_alloc(sizeof(struct xfs_pptr_info), KM_SLEEP);
-+	if (!ppi)
-+		return -ENOMEM;
-+
-+	/* Copy the data from the user */
-+	error = copy_from_user(ppi, arg, sizeof(struct xfs_pptr_info));
-+	if (error)
-+		goto out;
-+
-+	/* Check size of buffer requested by user */
-+	if (XFS_PPTR_INFO_SIZEOF(ppi->pi_ptrs_size) > XFS_XATTR_LIST_MAX) {
-+		error = -ENOMEM;
-+		goto out;
-+	}
-+
-+	/*
-+	 * Now that we know how big the trailing buffer is, expand
-+	 * our kernel xfs_pptr_info to be the same size
-+	 */
-+	ppi = kmem_realloc(ppi, XFS_PPTR_INFO_SIZEOF(ppi->pi_ptrs_size),
-+			     KM_SLEEP);
-+	if (!ppi)
-+		return -ENOMEM;
-+
-+	if (ppi->pi_flags != 0 && ppi->pi_flags != XFS_PPTR_IFLAG_HANDLE) {
-+		error = -EINVAL;
-+		goto out;
-+	}
-+
-+	if (ppi->pi_flags == XFS_PPTR_IFLAG_HANDLE) {
-+		error = xfs_iget(mp, NULL, ppi->pi_handle.ha_fid.fid_ino,
-+				0, 0, &ip);
-+		if (error)
-+			goto out;
-+	}
-+
-+	if (ip->i_ino == mp->m_sb.sb_rootino)
-+		ppi->pi_flags |= XFS_PPTR_OFLAG_ROOT;
-+
-+	/* Get the parent pointers */
-+	error = xfs_attr_get_parent_pointer(ip, ppi);
-+
-+	if (error)
-+		goto out;
-+
-+	/* Copy the parent pointers back to the user */
-+	error = copy_to_user(arg, ppi,
-+			XFS_PPTR_INFO_SIZEOF(ppi->pi_ptrs_size));
-+	if (error)
-+		goto out;
-+
-+out:
-+	kmem_free(ppi);
-+	return error;
-+}
-+
- int
- xfs_ioc_swapext(
- 	xfs_swapext_t	*sxp)
-@@ -1972,7 +2055,8 @@ xfs_file_ioctl(
- 		return xfs_ioc_getxflags(ip, arg);
- 	case XFS_IOC_SETXFLAGS:
- 		return xfs_ioc_setxflags(ip, filp, arg);
--
-+	case XFS_IOC_GETPPOINTER:
-+		return xfs_ioc_get_parent_pointer(filp, arg);
- 	case XFS_IOC_FSSETDM: {
- 		struct fsdmidata	dmi;
- 
-diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-index 9397b6b..a9ff19c 100644
---- a/fs/xfs/xfs_ondisk.h
-+++ b/fs/xfs/xfs_ondisk.h
-@@ -127,6 +127,10 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_trans_header,		16);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_attri_log_format,	40);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_attrd_log_format,	16);
-+
-+	/* parent pointer ioctls */
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_parent_ptr,		280);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_pptr_info,		104);
- }
- 
- #endif /* __XFS_ONDISK_H */
-diff --git a/fs/xfs/xfs_parent_utils.c b/fs/xfs/xfs_parent_utils.c
-index 8f35afe..6d8b1e3 100644
---- a/fs/xfs/xfs_parent_utils.c
-+++ b/fs/xfs/xfs_parent_utils.c
-@@ -30,6 +30,7 @@
- #include "xfs_da_btree.h"
- #include "xfs_attr.h"
- #include "xfs_parent.h"
-+#include "xfs_da_btree.h"
+ #include "xfs_inode.h"
+ #include "xfs_icache.h"
+ #include "xfs_quota.h"
++#include "xfs_errortag.h"
++#include "xfs_error.h"
  
  /*
-  * Add a parent record to an inode with existing parent records.
-@@ -68,3 +69,84 @@ xfs_parent_remove_deferred(
- 		ATTR_PARENT);
- }
+  * This routine is called to allocate an "attr free done"
+@@ -77,6 +79,11 @@ xfs_trans_attr(
+ 	if (error)
+ 		return error;
  
-+/*
-+ * Get the parent pointers for a given inode
-+ *
-+ * Returns 0 on success and non zero on error
-+ */
-+int
-+xfs_attr_get_parent_pointer(struct xfs_inode		*ip,
-+			     struct xfs_pptr_info	*ppi)
-+
-+{
-+
-+	struct attrlist			*alist;
-+	struct attrlist_ent		*aent;
-+	struct xfs_parent_ptr		*xpp;
-+	struct xfs_parent_name_rec	*xpnr;
-+	char				*namebuf;
-+	unsigned int			namebuf_size;
-+	int				name_len;
-+	int				error = 0;
-+	unsigned int			flags = ATTR_PARENT;
-+	int				i;
-+	struct xfs_attr_list_context	context;
-+	struct xfs_da_args		args;
-+
-+	/* Allocate a buffer to store the attribute names */
-+	namebuf_size = sizeof(struct attrlist) +
-+		       (ppi->pi_ptrs_size) * sizeof(struct attrlist_ent);
-+	namebuf = kmem_zalloc_large(namebuf_size, KM_SLEEP);
-+	if (!namebuf)
-+		return -ENOMEM;
-+
-+	error = xfs_attr_list_context_init(ip, namebuf, namebuf_size, flags,
-+			(attrlist_cursor_kern_t *)&ppi->pi_cursor, &context);
-+	if (error)
-+		goto out_kfree;
-+
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+
-+	error = xfs_attr_list_int_ilocked(&context);
-+	if (error)
-+		goto out_kfree;
-+
-+	alist = (struct attrlist *)namebuf;
-+	for (i = 0; i < alist->al_count; i++) {
-+		xpp = XFS_PPINFO_TO_PP(ppi, i);
-+		memset(xpp, 0, sizeof(struct xfs_parent_ptr));
-+		aent = (struct attrlist_ent *) &namebuf[alist->al_offset[i]];
-+		xpnr = (struct xfs_parent_name_rec *)(aent->a_name);
-+
-+		if (aent->a_valuelen > XFS_PPTR_MAXNAMELEN) {
-+			error = -ERANGE;
-+			goto out_kfree;
-+		}
-+		name_len = aent->a_valuelen;
-+
-+		error = xfs_attr_args_init(&args, ip, (char *)xpnr,
-+				sizeof(struct xfs_parent_name_rec), flags);
-+		if (error)
-+			goto out_kfree;
-+
-+		args.value = (unsigned char *)(xpp->xpp_name);
-+		args.valuelen = name_len;
-+		args.op_flags = XFS_DA_OP_OKNOENT;
-+
-+		error = xfs_attr_get_ilocked(ip, &args);
-+		error = (error == -EEXIST ? 0 : error);
-+		if (error)
-+			goto out_kfree;
-+
-+		xpp->xpp_namelen = name_len;
-+		xfs_init_parent_ptr(xpp, xpnr);
++	if (XFS_TEST_ERROR(false, args->dp->i_mount, XFS_ERRTAG_DELAYED_ATTR)) {
++		error = -EIO;
++		goto out;
 +	}
-+	ppi->pi_ptrs_used = alist->al_count;
 +
-+out_kfree:
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	kmem_free(namebuf);
-+
-+	return error;
-+}
-+
-diff --git a/fs/xfs/xfs_parent_utils.h b/fs/xfs/xfs_parent_utils.h
-index 010e517..5f5a3e2 100644
---- a/fs/xfs/xfs_parent_utils.h
-+++ b/fs/xfs/xfs_parent_utils.h
-@@ -27,4 +27,6 @@ int xfs_parent_remove_deferred(struct xfs_inode *parent,
- 			       struct xfs_trans *tp,
- 			       struct xfs_inode *child,
- 			       xfs_dir2_dataptr_t diroffset);
-+int xfs_attr_get_parent_pointer(struct xfs_inode *ip,
-+				struct xfs_pptr_info *ppi);
- #endif	/* __XFS_PARENT_UTILS_H__ */
+ 	switch (op_flags) {
+ 		case XFS_ATTR_OP_FLAGS_SET:
+ 			args->op_flags |= XFS_DA_OP_ADDNAME;
+@@ -91,6 +98,7 @@ xfs_trans_attr(
+ 			error = -EFSCORRUPTED;
+ 	}
+ 
++out:
+ 	/*
+ 	 * Mark the transaction dirty, even on error. This ensures the
+ 	 * transaction is aborted, which:
 -- 
 2.7.4
