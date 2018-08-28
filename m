@@ -1,81 +1,154 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:43492 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725772AbeHaFbn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 Aug 2018 01:31:43 -0400
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 430F32C092
-        for <linux-xfs@vger.kernel.org>; Fri, 31 Aug 2018 01:26:46 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 200981] hypervisor fs hangs at heavy write activity on VM (kvm,
- qcow2 image) having a reflink disk copy
-Date: Fri, 31 Aug 2018 01:26:46 +0000
-Message-ID: <bug-200981-201763-8OX7m1RWO0@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-200981-201763@https.bugzilla.kernel.org/>
-References: <bug-200981-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-MIME-Version: 1.0
+Received: from userp2130.oracle.com ([156.151.31.86]:32772 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727224AbeH1XSI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Aug 2018 19:18:08 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w7SJJRqt097573
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:25:03 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2130.oracle.com with ESMTP id 2m2xhtnxs8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:25:03 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w7SJP2NM032453
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:25:02 GMT
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w7SJP2ro003090
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:25:02 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [PATCH v8 25/28] xfs: Add helper function xfs_attr_list_context_init
+Date: Tue, 28 Aug 2018 12:22:38 -0700
+Message-Id: <1535484161-11059-26-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
+References: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@kernel.org
+To: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=200981
+This patch adds a helper function xfs_attr_list_context_init
+used by xfs_attr_list.  This function initializes the
+xfs_attr_list_context structure passed to xfs_attr_list_int.
+We will need this later to call xfs_attr_list_int_ilocked when
+the node is already locked.
 
---- Comment #2 from Dave Chinner (david@fromorbit.com) ---
-On Thu, Aug 30, 2018 at 02:32:35PM +0000, bugzilla-daemon@bugzilla.kernel.org
-wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=200981
-> 
-> kernel: vanilla 4.18.5
-> gcc (Ubuntu 7.3.0-16ubuntu3) 7.3.0
-> Copyright (C) 2017 Free Software Foundation, Inc.
-> This is free software; see the source for copying conditions.  There is NO
-> warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-> 
-> More or less reproducible for me using next sequence:
-> 
-> - on host:
->   create LV of appropriate size (20g in my case)
->   mkfs.xfs -m reflink=1 /dev/data/LV
->   mount /dev/data/LV /mnt/
->   run kvm VM with qcow2 image (/mnt/disk)    
-> 
-> - inside vm:
->   sysbench --test=fileio --file-total-size=9G prepare
-> 
-> - on host:
->   cp --reflink=always disk disk.b
-> 
-> - inside vm: 
->   sysbench --test=fileio --file-total-size=9G --file-test-mode=seqwr
-> --max-time=6000 --max-requests=0 --threads=16 run
-> 
-> Some time after i/o on /dev/data/LV fall to zero and fs become completely
-> unavailable and then I see a bunch of records:
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+---
+ fs/xfs/libxfs/xfs_attr.h |  3 ++
+ fs/xfs/xfs_attr_list.c   | 72 +++++++++++++++++++++++++++++++-----------------
+ 2 files changed, 50 insertions(+), 25 deletions(-)
 
-The first error is this:
-
-[ 2212.046108] ================================================
-[ 2212.051809] WARNING: lock held when returning to user space!
-[ 2212.057511] 4.18.5 #1 Not tainted
-[ 2212.060864] ------------------------------------------------
-[ 2212.066564] worker/6123 is leaving the kernel with locks still held!
-[ 2212.072961] 1 lock held by worker/6123:
-[ 2212.076835]  #0: 000000009eab4f1b (sb_internal#2){.+.+}, at:
-xfs_trans_alloc+0x17c/0x220
-
-Which happens 5 minutes before the hung processes start being
-reported. Looks like something has gone wrong and an error path has
-leaked a transaction.
-
-Can you see if commit dcbd44f79986 ("xfs: fix transaction leak on
-remote attr set/remove failure") addresses the problem you are
-seeing?
-
--Dave.
-
+diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+index 14cb7c1..913dcb7 100644
+--- a/fs/xfs/libxfs/xfs_attr.h
++++ b/fs/xfs/libxfs/xfs_attr.h
+@@ -188,6 +188,9 @@ int xfs_has_attr(struct xfs_da_args *args);
+ int xfs_attr_remove_args(struct xfs_da_args *args);
+ int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+ 		  int flags, struct attrlist_cursor_kern *cursor);
++int xfs_attr_list_context_init(struct xfs_inode *dp, char *buffer, int bufsize,
++		int flags, struct attrlist_cursor_kern *cursor,
++		struct xfs_attr_list_context *context);
+ int xfs_attr_args_init(struct xfs_da_args *args, struct xfs_inode *dp,
+ 		       const unsigned char *name, size_t namelen, int flags);
+ int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
+diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
+index a580340..3c30ec4 100644
+--- a/fs/xfs/xfs_attr_list.c
++++ b/fs/xfs/xfs_attr_list.c
+@@ -592,23 +592,19 @@ xfs_attr_put_listent(
+ }
+ 
+ /*
+- * Generate a list of extended attribute names and optionally
+- * also value lengths.  Positive return value follows the XFS
+- * convention of being an error, zero or negative return code
+- * is the length of the buffer returned (negated), indicating
+- * success.
++ * Initializes an xfs_attr_list_context suitable for
++ * use by xfs_attr_list
+  */
+ int
+-xfs_attr_list(
+-	xfs_inode_t	*dp,
+-	char		*buffer,
+-	int		bufsize,
+-	int		flags,
+-	attrlist_cursor_kern_t *cursor)
++xfs_attr_list_context_init(
++	xfs_inode_t			*dp,
++	char				*buffer,
++	int				bufsize,
++	int				flags,
++	struct attrlist_cursor_kern	*cursor,
++	struct xfs_attr_list_context	*context)
+ {
+-	xfs_attr_list_context_t context;
+ 	struct attrlist *alist;
+-	int error;
+ 
+ 	/*
+ 	 * Validate the cursor.
+@@ -634,20 +630,46 @@ xfs_attr_list(
+ 	/*
+ 	 * Initialize the output buffer.
+ 	 */
+-	memset(&context, 0, sizeof(context));
+-	context.dp = dp;
+-	context.cursor = cursor;
+-	context.resynch = 1;
+-	context.flags = flags;
+-	context.alist = buffer;
+-	context.bufsize = (bufsize & ~(sizeof(int)-1));  /* align */
+-	context.firstu = context.bufsize;
+-	context.put_listent = xfs_attr_put_listent;
+-
+-	alist = (struct attrlist *)context.alist;
++	memset(context, 0, sizeof(xfs_attr_list_context_t));
++	context->dp = dp;
++	context->cursor = cursor;
++	context->resynch = 1;
++	context->flags = flags;
++	context->alist = buffer;
++	context->bufsize = (bufsize & ~(sizeof(int)-1));  /* align */
++	context->firstu = context->bufsize;
++	context->put_listent = xfs_attr_put_listent;
++
++	alist = (struct attrlist *)context->alist;
+ 	alist->al_count = 0;
+ 	alist->al_more = 0;
+-	alist->al_offset[0] = context.bufsize;
++	alist->al_offset[0] = context->bufsize;
++
++	return 0;
++}
++
++/*
++ * Generate a list of extended attribute names and optionally
++ * also value lengths.  Positive return value follows the XFS
++ * convention of being an error, zero or negative return code
++ * is the length of the buffer returned (negated), indicating
++ * success.
++ */
++int
++xfs_attr_list(
++	xfs_inode_t		*dp,
++	char			*buffer,
++	int			bufsize,
++	int			flags,
++	attrlist_cursor_kern_t	*cursor)
++{
++	xfs_attr_list_context_t context;
++	int			error;
++
++	error = xfs_attr_list_context_init(dp, buffer, bufsize, flags,
++			cursor, &context);
++	if (error)
++		return error;
+ 
+ 	error = xfs_attr_list_int(&context);
+ 	ASSERT(error <= 0);
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+2.7.4
