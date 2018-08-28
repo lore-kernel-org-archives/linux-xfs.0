@@ -1,272 +1,155 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:60152 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727337AbeH3WhM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Aug 2018 18:37:12 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w7UIXhOL154875
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Aug 2018 18:33:43 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp2130.oracle.com with ESMTP id 2m2xhu6f5w-1
+Received: from aserp2120.oracle.com ([141.146.126.78]:38948 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726833AbeH1XR7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Aug 2018 19:17:59 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w7SJJZPc125278
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:54 GMT
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by aserp2120.oracle.com with ESMTP id 2m2y2pdwjj-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Aug 2018 18:33:43 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w7UIXaew030308
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:54 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w7SJOsWe011414
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Aug 2018 18:33:36 GMT
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w7UIXaBk013345
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Aug 2018 18:33:36 GMT
-Subject: [PATCH 18/18] xfs: cross-reference the realtime rmapbt
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 30 Aug 2018 11:33:34 -0700
-Message-ID: <153565401479.32612.6994922368754344692.stgit@magnolia>
-In-Reply-To: <153565389576.32612.11057291402738397706.stgit@magnolia>
-References: <153565389576.32612.11057291402738397706.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:54 GMT
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w7SJOrVu003466
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:54 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [PATCH v8 08/28] xfs: Add xfs_attr_set_deferred and xfs_attr_remove_deferred
+Date: Tue, 28 Aug 2018 12:22:21 -0700
+Message-Id: <1535484161-11059-9-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
+References: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+These routines set up set and start a new deferred attribute
+operation.  These functions are meant to be called by other
+code needing to initiate a deferred attribute operation.  We
+will use these routines later in the parent pointer patches.
 
-When we're scrubbing the realtime metadata, cross-reference
-the rtrmapt.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- fs/xfs/scrub/bmap.c     |   10 ++++++++++
- fs/xfs/scrub/common.c   |   22 ++++++++++++++++++++++
- fs/xfs/scrub/common.h   |    1 +
- fs/xfs/scrub/rmap.c     |   16 ++++++++--------
- fs/xfs/scrub/rtbitmap.c |   30 ++++++++++++++++++++++++++++++
- fs/xfs/scrub/scrub.h    |   12 ++++++------
- 6 files changed, 77 insertions(+), 14 deletions(-)
+ fs/xfs/libxfs/xfs_attr.c | 79 ++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_attr.h |  5 +++
+ 2 files changed, 84 insertions(+)
 
-
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index b62845d016d2..2a7eff7a9b96 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -249,11 +249,21 @@ xchk_bmap_rt_extent_xref(
- 	struct xfs_btree_cur	*cur,
- 	struct xfs_bmbt_irec	*irec)
- {
-+	int				error;
-+
- 	if (info->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
- 		return;
- 
-+	error = xchk_rt_init(info->sc, &info->sc->sa);
-+	if (!xchk_fblock_process_error(info->sc, info->whichfork,
-+			irec->br_startoff, &error))
-+		return;
-+
- 	xchk_xref_is_used_rt_space(info->sc, irec->br_startblock,
- 			irec->br_blockcount);
-+	xchk_bmap_xref_rmap(info, irec, irec->br_startblock);
-+
-+	xchk_ag_free(info->sc, &info->sc->sa);
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 94fbde4..afcb4e9 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -447,6 +447,52 @@ xfs_attr_set(
+ 	return error;
  }
  
- /* Cross-reference a single datadev extent record. */
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index d0f9b53a7ceb..204b572d0ce4 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -32,6 +32,7 @@
- #include "xfs_trans_priv.h"
- #include "xfs_attr.h"
- #include "xfs_reflink.h"
-+#include "xfs_rtrmap_btree.h"
- #include "scrub/xfs_scrub.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
-@@ -574,6 +575,27 @@ xchk_perag_get(
- 		sa->pag = xfs_perag_get(mp, sa->agno);
- }
- 
-+/*
-+ * For scrubbing a realtime file, grab the rtrmapt.  We follow the same
-+ * resource release rules as xfs_scrub_ag_init.
-+ */
++/* Sets an attribute for an inode as a deferred operation */
 +int
-+xchk_rt_init(
-+	struct xfs_scrub	*sc,
-+	struct xchk_ag			*sa)
++xfs_attr_set_deferred(
++	struct xfs_inode	*dp,
++	struct xfs_trans	*tp,
++	void			*name,
++	unsigned int		namelen,
++	void			*value,
++	unsigned int		valuelen,
++	int			flags)
 +{
-+	memset(sa, 0, sizeof(*sa));
-+	sa->agno = NULLAGNUMBER;
-+	if (xfs_sb_version_hasrmapbt(&sc->mp->m_sb)) {
-+		ASSERT(xfs_isilocked(sc->mp->m_rrmapip,
-+				XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
-+		sa->rmap_cur = xfs_rtrmapbt_init_cursor(sc->mp, sc->tp,
-+				sc->mp->m_rrmapip);
++
++	struct xfs_attr_item	*new;
++	char			*name_value;
++
++	/*
++	 * All set operations must have a name
++	 * but not necessarily a value.
++	 * Generic 062
++	 */
++	if (!namelen) {
++		ASSERT(0);
++		return -EFSCORRUPTED;
 +	}
++
++	new = kmem_alloc(XFS_ATTR_ITEM_SIZEOF(namelen, valuelen),
++			 KM_SLEEP|KM_NOFS);
++	name_value = ((char *)new) + sizeof(struct xfs_attr_item);
++	memset(new, 0, XFS_ATTR_ITEM_SIZEOF(namelen, valuelen));
++	new->xattri_ip = dp;
++	new->xattri_op_flags = XFS_ATTR_OP_FLAGS_SET;
++	new->xattri_name_len = namelen;
++	new->xattri_value_len = valuelen;
++	new->xattri_flags = flags;
++	memcpy(&name_value[0], name, namelen);
++	new->xattri_name = name_value;
++	new->xattri_value = name_value + namelen;
++
++	if (valuelen > 0)
++		memcpy(&name_value[namelen], value, valuelen);
++
++	xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
 +
 +	return 0;
 +}
 +
- /* Per-scrubber setup functions */
- 
  /*
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 6bccffddc832..4fcc2ccd2401 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -113,6 +113,7 @@ xchk_setup_quota(struct xfs_scrub *sc, struct xfs_inode *ip)
- #endif
- int xchk_setup_fscounters(struct xfs_scrub *sc, struct xfs_inode *ip);
+  * Generic handler routine to remove a name from an attribute list.
+  * Transitions attribute list from Btree to shortform as necessary.
+@@ -530,6 +576,39 @@ xfs_attr_remove(
+ 	return error;
+ }
  
-+int xchk_rt_init(struct xfs_scrub *sc, struct xchk_ag *sa);
- void xchk_ag_free(struct xfs_scrub *sc, struct xchk_ag *sa);
- int xchk_ag_init(struct xfs_scrub *sc, xfs_agnumber_t agno,
- 		struct xchk_ag *sa);
-diff --git a/fs/xfs/scrub/rmap.c b/fs/xfs/scrub/rmap.c
-index 32dc329e5411..32df9ed77b74 100644
---- a/fs/xfs/scrub/rmap.c
-+++ b/fs/xfs/scrub/rmap.c
-@@ -189,8 +189,8 @@ xchk_rmapbt(
- static inline void
- xchk_xref_check_owner(
- 	struct xfs_scrub	*sc,
--	xfs_agblock_t		bno,
--	xfs_extlen_t		len,
-+	xfs_fsblock_t		bno,
-+	xfs_filblks_t		len,
- 	struct xfs_owner_info	*oinfo,
- 	bool			should_have_rmap)
- {
-@@ -212,8 +212,8 @@ xchk_xref_check_owner(
- void
- xchk_xref_is_owned_by(
- 	struct xfs_scrub	*sc,
--	xfs_agblock_t		bno,
--	xfs_extlen_t		len,
-+	xfs_fsblock_t		bno,
-+	xfs_filblks_t		len,
- 	struct xfs_owner_info	*oinfo)
- {
- 	xchk_xref_check_owner(sc, bno, len, oinfo, true);
-@@ -223,8 +223,8 @@ xchk_xref_is_owned_by(
- void
- xchk_xref_is_not_owned_by(
- 	struct xfs_scrub	*sc,
--	xfs_agblock_t		bno,
--	xfs_extlen_t		len,
-+	xfs_fsblock_t		bno,
-+	xfs_filblks_t		len,
- 	struct xfs_owner_info	*oinfo)
- {
- 	xchk_xref_check_owner(sc, bno, len, oinfo, false);
-@@ -234,8 +234,8 @@ xchk_xref_is_not_owned_by(
- void
- xchk_xref_has_no_owner(
- 	struct xfs_scrub	*sc,
--	xfs_agblock_t		bno,
--	xfs_extlen_t		len)
-+	xfs_fsblock_t		bno,
-+	xfs_filblks_t		len)
- {
- 	bool			has_rmap;
- 	int			error;
-diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
-index 665d4bbb17cc..08041fc51fa1 100644
---- a/fs/xfs/scrub/rtbitmap.c
-+++ b/fs/xfs/scrub/rtbitmap.c
-@@ -15,12 +15,16 @@
- #include "xfs_log_format.h"
- #include "xfs_trans.h"
- #include "xfs_sb.h"
-+#include "xfs_inode.h"
- #include "xfs_alloc.h"
- #include "xfs_rtalloc.h"
- #include "xfs_inode.h"
-+#include "xfs_rmap.h"
-+#include "xfs_rtrmap_btree.h"
- #include "scrub/xfs_scrub.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
-+#include "scrub/btree.h"
- #include "scrub/trace.h"
- 
- /* Set us up with the realtime metadata locked. */
-@@ -39,11 +43,31 @@ xchk_setup_rt(
- 	sc->ip = sc->mp->m_rbmip;
- 	xfs_ilock(sc->ip, sc->ilock_flags);
- 
-+	if (xfs_sb_version_hasrmapbt(&sc->mp->m_sb)) {
-+		unsigned int	lockmode = XFS_ILOCK_EXCL;
++/* Removes an attribute for an inode as a deferred operation */
++int
++xfs_attr_remove_deferred(
++	struct xfs_inode        *dp,
++	struct xfs_trans	*tp,
++	void			*name,
++	unsigned int		namelen,
++	int                     flags)
++{
 +
-+		xfs_ilock(sc->mp->m_rrmapip, lockmode);
-+		xfs_trans_ijoin(sc->tp, sc->mp->m_rrmapip, lockmode);
++	struct xfs_attr_item	*new;
++	char			*name_value;
++
++	if (!namelen) {
++		ASSERT(0);
++		return -EFSCORRUPTED;
 +	}
 +
- 	return 0;
- }
- 
- /* Realtime bitmap. */
- 
-+/* Cross-reference rtbitmap entries with other metadata. */
-+STATIC void
-+xchk_rtbitmap_xref(
-+	struct xfs_scrub	*sc,
-+	xfs_rtblock_t		startblock,
-+	xfs_rtblock_t		blockcount)
-+{
-+	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		return;
++	new = kmem_alloc(XFS_ATTR_ITEM_SIZEOF(namelen, 0), KM_SLEEP|KM_NOFS);
++	name_value = ((char *)new) + sizeof(struct xfs_attr_item);
++	memset(new, 0, XFS_ATTR_ITEM_SIZEOF(namelen, 0));
++	new->xattri_ip = dp;
++	new->xattri_op_flags = XFS_ATTR_OP_FLAGS_REMOVE;
++	new->xattri_name_len = namelen;
++	new->xattri_value_len = 0;
++	new->xattri_flags = flags;
++	memcpy(name_value, name, namelen);
 +
-+	xchk_xref_has_no_owner(sc, startblock, blockcount);
++	xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
++
++	return 0;
 +}
 +
- /* Scrub a free extent record from the realtime bitmap. */
- STATIC int
- xchk_rtbitmap_rec(
-@@ -62,6 +86,8 @@ xchk_rtbitmap_rec(
- 	    !xfs_verify_rtbno(sc->mp, startblock) ||
- 	    !xfs_verify_rtbno(sc->mp, startblock + blockcount - 1))
- 		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
-+
-+	xchk_rtbitmap_xref(sc, startblock, blockcount);
- 	return 0;
- }
+ /*========================================================================
+  * External routines when attribute list is inside the inode
+  *========================================================================*/
+diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+index 5a5adc0..5c49120 100644
+--- a/fs/xfs/libxfs/xfs_attr.h
++++ b/fs/xfs/libxfs/xfs_attr.h
+@@ -171,5 +171,10 @@ int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+ int xfs_attr_args_init(struct xfs_da_args *args, struct xfs_inode *dp,
+ 		       const unsigned char *name, int flags);
+ int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
++int xfs_attr_set_deferred(struct xfs_inode *dp, struct xfs_trans *tp,
++			  void *name, unsigned int name_len, void *value,
++			  unsigned int valuelen, int flags);
++int xfs_attr_remove_deferred(struct xfs_inode *dp, struct xfs_trans *tp,
++			    void *name, unsigned int namelen, int flags);
  
-@@ -77,6 +103,10 @@ xchk_rtbitmap(
- 	if (error || (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
- 		return error;
- 
-+	error = xchk_rt_init(sc, &sc->sa);
-+	if (error)
-+		return error;
-+
- 	error = xfs_rtalloc_query_all(sc->tp, xchk_rtbitmap_rec, sc);
- 	if (!xchk_fblock_process_error(sc, XFS_DATA_FORK, 0, &error))
- 		goto out;
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index 470785292b46..87eed5bc6c80 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -135,12 +135,12 @@ void xchk_xref_is_not_inode_chunk(struct xfs_scrub *sc, xfs_agblock_t agbno,
- 		xfs_extlen_t len);
- void xchk_xref_is_inode_chunk(struct xfs_scrub *sc, xfs_agblock_t agbno,
- 		xfs_extlen_t len);
--void xchk_xref_is_owned_by(struct xfs_scrub *sc, xfs_agblock_t agbno,
--		xfs_extlen_t len, struct xfs_owner_info *oinfo);
--void xchk_xref_is_not_owned_by(struct xfs_scrub *sc, xfs_agblock_t agbno,
--		xfs_extlen_t len, struct xfs_owner_info *oinfo);
--void xchk_xref_has_no_owner(struct xfs_scrub *sc, xfs_agblock_t agbno,
--		xfs_extlen_t len);
-+void xchk_xref_is_owned_by(struct xfs_scrub *sc, xfs_fsblock_t bno,
-+		xfs_filblks_t len, struct xfs_owner_info *oinfo);
-+void xchk_xref_is_not_owned_by(struct xfs_scrub *sc, xfs_fsblock_t bno,
-+		xfs_filblks_t len, struct xfs_owner_info *oinfo);
-+void xchk_xref_has_no_owner(struct xfs_scrub *sc, xfs_fsblock_t bno,
-+		xfs_filblks_t len);
- void xchk_xref_is_cow_staging(struct xfs_scrub *sc, xfs_agblock_t bno,
- 		xfs_extlen_t len);
- void xchk_xref_is_not_shared(struct xfs_scrub *sc, xfs_agblock_t bno,
+ #endif	/* __XFS_ATTR_H__ */
+-- 
+2.7.4
