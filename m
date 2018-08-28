@@ -1,116 +1,108 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([193.170.194.197]:60404 "EHLO
-        one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726995AbeH0UbG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Aug 2018 16:31:06 -0400
-Date: Mon, 27 Aug 2018 09:43:43 -0700
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: Trying to write to read-only block-device from XFS
-Message-ID: <20180827164342.4vlg3zaehkzcj6od@two.firstfloor.org>
-References: <20180824233756.kkvmkmm5mdlx77je@two.firstfloor.org>
- <a4d32107-abc0-60d3-8306-b091fbffefd8@sandeen.net>
- <20180825140951.a3dsz3efwnjsj2pz@two.firstfloor.org>
- <c6bcbef0-0c5b-a7a1-adb6-38085db98ce9@sandeen.net>
- <20180827081254.zat4lvxqviwgd4zn@odin.usersys.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180827081254.zat4lvxqviwgd4zn@odin.usersys.redhat.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:59882 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727067AbeH1XR6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Aug 2018 19:17:58 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w7SJJGjN080949
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:53 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2120.oracle.com with ESMTP id 2m2yrq5thb-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:53 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w7SJOqE1018564
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:52 GMT
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w7SJOqtl014871
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:52 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [PATCH v8 04/28] xfs: Add attibute remove and helper functions
+Date: Tue, 28 Aug 2018 12:22:17 -0700
+Message-Id: <1535484161-11059-5-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
+References: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, Andi Kleen <andi@firstfloor.org>, linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
+This patch adds xfs_attr_remove_args. These sub-routines remove
+the attributes specified in @args. We will use this later for setting
+parent pointers as a deferred attribute operation.
 
-Adding linux-fsdevel. Keeping full quote for context.
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+---
+ fs/xfs/libxfs/xfs_attr.c | 36 +++++++++++++++++++++++++-----------
+ fs/xfs/libxfs/xfs_attr.h |  1 +
+ 2 files changed, 26 insertions(+), 11 deletions(-)
 
-On Mon, Aug 27, 2018 at 10:12:54AM +0200, Carlos Maiolino wrote:
-> Hi.
-> 
-> On Sat, Aug 25, 2018 at 09:25:33PM -0500, Eric Sandeen wrote:
-> > 
-> > 
-> > On 8/25/18 9:09 AM, Andi Kleen wrote:
-> > > On Fri, Aug 24, 2018 at 07:58:05PM -0500, Eric Sandeen wrote:
-> > >> On 8/24/18 6:37 PM, Andi Kleen wrote:
-> > >>>
-> > >>> Seen this a few times now with recent kernels:
-> > >>
-> > >> Hi Andi -
-> > >>
-> > >> Dumb question maybe, but just to be clear -
-> > >> Was this an RO mount on an RO device, or something else?
-> > >> What type of mount was this?
-> > > 
-> > > Was just a normal RW partition on a normal SSD. I didn't do anything
-> > > special to make it RO.
-> > 
-> > I don't know why it shows up as RO at this point, but maybe this fixes it:
-> > 
-> > commit b089cfd95d32638335c551651a8e00fd2c4edb0b
-> > Author: Jens Axboe <axboe@kernel.dk>
-> > Date:   Tue Aug 14 10:52:40 2018 -0600
-> > 
-> >     block: don't warn for flush on read-only device
-> >     
-> >     Don't warn for a flush issued to a read-only device. It's not strictly
-> >     a writable command, as it doesn't change any on-media data by itself.
-> >     
-> >     Reported-by: Stefan Agner <stefan@agner.ch>
-> >     Fixes: 721c7fc701c7 ("block: fail op_is_write() requests to read-only partitions")
-> >     Signed-off-by: Jens Axboe <axboe@kernel.dk>
-> 
-> This kind of 'problem' is being reported quite often now. It all started with
-> commit:
-> 
-> commit 721c7fc701c71f693307d274d2b346a1ecd4a534
-> Author: Ilya Dryomov <idryomov@gmail.com>
-> Date:   Thu Jan 11 14:09:11 2018 +0100
-> 
->     block: fail op_is_write() requests to read-only partitions
-> 
-> Which basically added a generic check for RO devices into generic_make_request()
-> code path, as a way to enforce ioctl(BLKROSET), so far, write requests were
-> never checked.
-> 
-> 
-> Then, Linus applied the following commit:
-> 
-> commit a32e236eb93e62a0f692e79b7c3c9636689559b9
-> Author: Linus Torvalds <torvalds@linux-foundation.org>
-> Date:   Fri Aug 3 12:22:09 2018 -0700
-> 
->     Partially revert "block: fail op_is_write() requests to read-only partitions"
-> 
-> Once a few layers like LVM, didn't expect the device to enforce RO, which kept
-> writing to the device while snapshotting, even if the device has been marked as
-> RO.
-> 
-> And then came the commit mentioned by Eric:
-> 
-> commit b089cfd95d32638335c551651a8e00fd2c4edb0b
-> Author: Jens Axboe <axboe@kernel.dk>
-> Date:   Tue Aug 14 10:52:40 2018 -0600
-> 
->     block: don't warn for flush on read-only device
-> 
-> 
-> Which relaxed the rules a bit and basically let flushes to proceed without warnings.
-> 
-> Essentially, this isn't a XFS problem, and most likely you are using XFS on top
-> of some layer like LVM, and/or using snapshots, and your underlying volume went
-> read-only behind XFS for some reason.
-
-Ok, so the blame is assigned, but the question is still how to avoid the
-warning:
-
-(1) either XFS needs to check for read only underlying more often
-or
-(2) the warning needs to be removed.
-
-I assume (2) is far easier. Is (1) even possible without races? 
-What is preferred? 
-
-
--Andi
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index bc70151..cecf950 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -315,6 +315,30 @@ xfs_attr_set_args(
+ 	return error;
+ }
+ 
++/*
++ * Remove the attribute specified in @args.
++ */
++int
++xfs_attr_remove_args(
++	struct xfs_da_args      *args)
++{
++	struct xfs_inode	*dp = args->dp;
++	int			error;
++
++	if (!xfs_inode_hasattr(dp)) {
++		error = -ENOATTR;
++	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
++		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
++		error = xfs_attr_shortform_remove(args);
++	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
++		error = xfs_attr_leaf_removename(args);
++	} else {
++		error = xfs_attr_node_removename(args);
++	}
++
++	return error;
++}
++
+ int
+ xfs_attr_set(
+ 	struct xfs_inode	*dp,
+@@ -470,17 +494,7 @@ xfs_attr_remove(
+ 	 */
+ 	xfs_trans_ijoin(args.trans, dp, 0);
+ 
+-	if (!xfs_inode_hasattr(dp)) {
+-		error = -ENOATTR;
+-	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
+-		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
+-		error = xfs_attr_shortform_remove(&args);
+-	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
+-		error = xfs_attr_leaf_removename(&args);
+-	} else {
+-		error = xfs_attr_node_removename(&args);
+-	}
+-
++	error = xfs_attr_remove_args(&args);
+ 	if (error)
+ 		goto out;
+ 
+diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+index f608ac8..bdf52a3 100644
+--- a/fs/xfs/libxfs/xfs_attr.h
++++ b/fs/xfs/libxfs/xfs_attr.h
+@@ -142,6 +142,7 @@ int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
+ 		 unsigned char *value, int valuelen, int flags);
+ int xfs_attr_set_args(struct xfs_da_args *args, struct xfs_buf **leaf_bp);
+ int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
++int xfs_attr_remove_args(struct xfs_da_args *args);
+ int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+ 		  int flags, struct attrlist_cursor_kern *cursor);
+ 
+-- 
+2.7.4
