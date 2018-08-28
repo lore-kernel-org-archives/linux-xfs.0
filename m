@@ -1,78 +1,180 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:39136 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725836AbeHaACp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 30 Aug 2018 20:02:45 -0400
-Date: Thu, 30 Aug 2018 15:58:51 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH, RFC] xfs: re-enable FIBMAP on reflink; disable for swap
-Message-ID: <20180830195851.GB35751@bfoster>
-References: <2eb759e5-2faa-67fd-5c16-c1d8edc42d02@redhat.com>
- <20180830162545.GA26816@lst.de>
- <dbe27763-2e69-6e3a-f769-2528eda54940@redhat.com>
- <20180830163614.GA27069@lst.de>
- <65e818f2-885d-50a4-0d4a-7700c703c2af@sandeen.net>
- <20180830180204.GC2853@bfoster>
- <20180830182849.GA4359@magnolia>
- <10d35380-6f5f-22a5-7b6a-1cfb60c53cfd@sandeen.net>
- <20180830193919.GA35751@bfoster>
- <3d6029ec-0afe-e90e-d608-e1c627c0818f@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <3d6029ec-0afe-e90e-d608-e1c627c0818f@sandeen.net>
+Received: from aserp2120.oracle.com ([141.146.126.78]:39066 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726383AbeH1XSH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Aug 2018 19:18:07 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w7SJJDso125075
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:25:02 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp2120.oracle.com with ESMTP id 2m2y2pdwkc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:25:02 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w7SJOu0j018840
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:56 GMT
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w7SJOuiK003489
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:56 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [PATCH v8 15/28] xfs: get directory offset when removing directory name
+Date: Tue, 28 Aug 2018 12:22:28 -0700
+Message-Id: <1535484161-11059-16-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
+References: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Thu, Aug 30, 2018 at 02:47:09PM -0500, Eric Sandeen wrote:
-> On 8/30/18 2:39 PM, Brian Foster wrote:
-> >>> Frankly I think FIBMAP comes verrry
-> >>> close to "this API is unfixably stupid and shouldn't be enabled for new
-> >>> use cases and should go away some day".
-> 
-> Backing up, the interface isn't /that/ dumb, other than being limited to
-> 32 bits.  Q: "Where is this logical file block physically located?"  A: "It is here."
-> 
-> Inefficient, sure.
-> 
-> >> So instead if anyone asks we'll just give them a successful response which
-> >> is indistinguishable from a hole.  :(
-> >>
-> > ... but this seems to be the crux of the matter (IMO, at least). If we
-> > can return -ENOTSUPP or whatever, then it can be made obvious that the
-> > user either needs to use fiemap or avoid using reflinked files. ISTM
-> > that what we do now is essentially report an incorrect bmap, which leads
-> > to these subtle bug reports.
-> > 
-> > I haven't dug into the fibmap code.. does something prevent returning a
-> > legitimate error code?
-> 
-> so ->bmap() returns a sector_t, which is a u64 and doesn't really
-> leave room for a negative error return.  But the ioctl interface 
-> stuffs that return into an int, and returns it to the user.
-> (note to self, wonder why it doesn't return -EOVERFLOW as needed).
-> 
+From: Mark Tinguely <tinguely@sgi.com>
 
-Ah, so the syscall can return an error, but the internal interface
-basically doesn't support error propagation from the fs callback.
+Return the directory offset information when removing an entry to the
+directory.
 
-> I suppose ->bmap() could be changed to take a u64 in/out pointer like the
-> user interface does, and return 0 or -errno.  *Shrug* this seems like
-> a lot of work to avoid simply giving the user what they asked
-> for.  ;)
-> 
+This offset will be used as the parent pointer offset in xfs_remove.
 
-FWIW, another option might be to drop the ->bmap() callback on reflinked
-inodes, which looks like it would trigger an -EINVAL to userspace. I
-also don't know if that is worth whatever trouble might be required to
-change function pointers like that, if it can even be done safely. I
-guess my take boils down to that I think either returning an error (one
-way or another) or accurate block map info is more sane than the current
-behavior.
+[dchinner: forward ported and cleaned up]
+[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t,
+	   Changed typedefs to raw struct types]
 
-Brian
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_dir2.c       | 6 +++++-
+ fs/xfs/libxfs/xfs_dir2.h       | 3 ++-
+ fs/xfs/libxfs/xfs_dir2_block.c | 4 ++--
+ fs/xfs/libxfs/xfs_dir2_leaf.c  | 5 +++--
+ fs/xfs/libxfs/xfs_dir2_node.c  | 5 +++--
+ fs/xfs/libxfs/xfs_dir2_sf.c    | 2 ++
+ fs/xfs/xfs_inode.c             | 4 ++--
+ 7 files changed, 19 insertions(+), 10 deletions(-)
 
-> -Eric
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index d334e66..f5475e7 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -422,7 +422,8 @@ xfs_dir_removename(
+ 	struct xfs_inode	*dp,
+ 	struct xfs_name		*name,
+ 	xfs_ino_t		ino,
+-	xfs_extlen_t		total)		/* bmap's total block count */
++	xfs_extlen_t		total,		/* bmap's total block count */
++	xfs_dir2_dataptr_t	*offset)	/* OUT: offset in directory */
+ {
+ 	struct xfs_da_args	*args;
+ 	int			rval;
+@@ -467,6 +468,9 @@ xfs_dir_removename(
+ 	else
+ 		rval = xfs_dir2_node_removename(args);
+ out_free:
++	if (offset)
++		*offset = args->offset;
++
+ 	kmem_free(args);
+ 	return rval;
+ }
+diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+index c164a38..2cf1d87 100644
+--- a/fs/xfs/libxfs/xfs_dir2.h
++++ b/fs/xfs/libxfs/xfs_dir2.h
+@@ -123,7 +123,8 @@ extern int xfs_dir_lookup(struct xfs_trans *tp, struct xfs_inode *dp,
+ 				struct xfs_name *ci_name);
+ extern int xfs_dir_removename(struct xfs_trans *tp, struct xfs_inode *dp,
+ 				struct xfs_name *name, xfs_ino_t ino,
+-				xfs_extlen_t tot);
++				xfs_extlen_t tot,
++				xfs_dir2_dataptr_t *offset);
+ extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
+ 				struct xfs_name *name, xfs_ino_t inum,
+ 				xfs_extlen_t tot);
+diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+index a31702c..aa84c45 100644
+--- a/fs/xfs/libxfs/xfs_dir2_block.c
++++ b/fs/xfs/libxfs/xfs_dir2_block.c
+@@ -786,9 +786,9 @@ xfs_dir2_block_removename(
+ 	/*
+ 	 * Point to the data entry using the leaf entry.
+ 	 */
++	args->offset = be32_to_cpu(blp[ent].address);
+ 	dep = (xfs_dir2_data_entry_t *)((char *)hdr +
+-			xfs_dir2_dataptr_to_off(args->geo,
+-						be32_to_cpu(blp[ent].address)));
++			xfs_dir2_dataptr_to_off(args->geo, args->offset));
+ 	/*
+ 	 * Mark the data entry's space free.
+ 	 */
+diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+index 37450ca..5e68c39 100644
+--- a/fs/xfs/libxfs/xfs_dir2_leaf.c
++++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+@@ -1402,9 +1402,10 @@ xfs_dir2_leaf_removename(
+ 	 * Point to the leaf entry, use that to point to the data entry.
+ 	 */
+ 	lep = &ents[index];
+-	db = xfs_dir2_dataptr_to_db(args->geo, be32_to_cpu(lep->address));
++	args->offset = be32_to_cpu(lep->address);
++	db = xfs_dir2_dataptr_to_db(args->geo, args->offset);
+ 	dep = (xfs_dir2_data_entry_t *)((char *)hdr +
+-		xfs_dir2_dataptr_to_off(args->geo, be32_to_cpu(lep->address)));
++		xfs_dir2_dataptr_to_off(args->geo, args->offset));
+ 	needscan = needlog = 0;
+ 	oldbest = be16_to_cpu(bf[0].length);
+ 	ltp = xfs_dir2_leaf_tail_p(args->geo, leaf);
+diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+index 654bbf4..3c1698f 100644
+--- a/fs/xfs/libxfs/xfs_dir2_node.c
++++ b/fs/xfs/libxfs/xfs_dir2_node.c
+@@ -1238,9 +1238,10 @@ xfs_dir2_leafn_remove(
+ 	/*
+ 	 * Extract the data block and offset from the entry.
+ 	 */
+-	db = xfs_dir2_dataptr_to_db(args->geo, be32_to_cpu(lep->address));
++	args->offset = be32_to_cpu(lep->address);
++	db = xfs_dir2_dataptr_to_db(args->geo, args->offset);
+ 	ASSERT(dblk->blkno == db);
+-	off = xfs_dir2_dataptr_to_off(args->geo, be32_to_cpu(lep->address));
++	off = xfs_dir2_dataptr_to_off(args->geo, args->offset);
+ 	ASSERT(dblk->index == off);
+ 
+ 	/*
+diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+index 549656b..e65615c 100644
+--- a/fs/xfs/libxfs/xfs_dir2_sf.c
++++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+@@ -905,6 +905,8 @@ xfs_dir2_sf_removename(
+ 								XFS_CMP_EXACT) {
+ 			ASSERT(dp->d_ops->sf_get_ino(sfp, sfep) ==
+ 			       args->inumber);
++			args->offset = xfs_dir2_byte_to_dataptr(
++						xfs_dir2_sf_get_offset(sfep));
+ 			break;
+ 		}
+ 	}
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 6aea30f..67a5437 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2621,7 +2621,7 @@ xfs_remove(
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
+-	error = xfs_dir_removename(tp, dp, name, ip->i_ino, resblks);
++	error = xfs_dir_removename(tp, dp, name, ip->i_ino, resblks, NULL);
+ 	if (error) {
+ 		ASSERT(error != -ENOENT);
+ 		goto out_trans_cancel;
+@@ -3099,7 +3099,7 @@ xfs_rename(
+ 					spaceres);
+ 	} else
+ 		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
+-					   spaceres);
++					   spaceres, NULL);
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
+-- 
+2.7.4
