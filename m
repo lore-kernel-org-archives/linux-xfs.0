@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:39018 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727130AbeH1XSE (ORCPT
+Received: from userp2130.oracle.com ([156.151.31.86]:60956 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726383AbeH1XSE (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Aug 2018 19:18:04 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w7SJJD2l125084
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:58 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp2120.oracle.com with ESMTP id 2m2y2pdwk3-1
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w7SJJRqs097573
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:59 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2130.oracle.com with ESMTP id 2m2xhtnxrw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:58 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w7SJOwrQ018953
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:59 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w7SJOxq1032275
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:58 GMT
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:59 GMT
 Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w7SJOw1S003051
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:58 GMT
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w7SJOw80012774
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:59 GMT
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v8 19/28] xfs: extent transaction reservations for parent attributes
-Date: Tue, 28 Aug 2018 12:22:32 -0700
-Message-Id: <1535484161-11059-20-git-send-email-allison.henderson@oracle.com>
+Subject: [PATCH v8 20/28] xfs: parent pointer attribute creation
+Date: Tue, 28 Aug 2018 12:22:33 -0700
+Message-Id: <1535484161-11059-21-git-send-email-allison.henderson@oracle.com>
 In-Reply-To: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
 References: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -30,193 +30,345 @@ To: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-We need to add, remove or modify parent pointer attributes during
-create/link/unlink/rename operations atomically with the dirents in the parent
-directories being modified. This means they need to be modified in the same
-transaction as the parent directories, and so we need to add the required
-space for the attribute modifications to the transaction reservations.
+Add parent pointer attribute during xfs_create, and
+subroutines to initialize attributes
 
-[achender: rebased, added xfs_sb_version_hasparent stub]
+[bfoster: rebase, use VFS inode generation]
+[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t,
+	   fixed some null pointer bugs,
+	   merged error handling patch,
+	   added subroutines to handle attribute initialization,
+	   remove unnecessary ENOSPC handling in xfs_attr_set_first_parent]
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- fs/xfs/libxfs/xfs_format.h     |   5 ++
- fs/xfs/libxfs/xfs_trans_resv.c | 111 ++++++++++++++++++++++++++++++++---------
- fs/xfs/libxfs/xfs_trans_resv.h |   1 +
- 3 files changed, 94 insertions(+), 23 deletions(-)
+ fs/xfs/Makefile            |   2 +
+ fs/xfs/libxfs/xfs_parent.c | 101 +++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_parent.h |  35 ++++++++++++++++
+ fs/xfs/xfs_inode.c         |  17 +++++++-
+ fs/xfs/xfs_parent_utils.c  |  52 +++++++++++++++++++++++
+ fs/xfs/xfs_parent_utils.h  |  26 ++++++++++++
+ 6 files changed, 231 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 059bc44..386d734 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -550,6 +550,11 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
- 		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_REFLINK);
- }
- 
-+static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
-+{
-+	return false; /* We'll enable this at the end of the set */
-+}
-+
- /*
-  * end of superblock version macros
-  */
-diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-index f99a7ae..44274b9 100644
---- a/fs/xfs/libxfs/xfs_trans_resv.c
-+++ b/fs/xfs/libxfs/xfs_trans_resv.c
-@@ -775,29 +775,30 @@ xfs_calc_sb_reservation(
- 	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
- }
- 
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 022e0b4..45a3360 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -42,6 +42,7 @@ xfs-y				+= $(addprefix libxfs/, \
+ 				   xfs_inode_fork.o \
+ 				   xfs_inode_buf.o \
+ 				   xfs_log_rlimit.o \
++				   xfs_parent.o \
+ 				   xfs_ag_resv.o \
+ 				   xfs_rmap.o \
+ 				   xfs_rmap_btree.o \
+@@ -82,6 +83,7 @@ xfs-y				+= xfs_aops.o \
+ 				   xfs_message.o \
+ 				   xfs_mount.o \
+ 				   xfs_mru_cache.o \
++				   xfs_parent_utils.o \
+ 				   xfs_reflink.o \
+ 				   xfs_stats.o \
+ 				   xfs_super.o \
+diff --git a/fs/xfs/libxfs/xfs_parent.c b/fs/xfs/libxfs/xfs_parent.c
+new file mode 100644
+index 0000000..5045f65
+--- /dev/null
++++ b/fs/xfs/libxfs/xfs_parent.c
+@@ -0,0 +1,101 @@
 +/*
-+ * Namespace reservations.
++ * Copyright (c) 2015 Red Hat, Inc.
++ * All rights reserved.
 + *
-+ * These get tricky when parent pointers are enabled as we have attribute
-+ * modifications occurring from within these transactions. Rather than confuse
-+ * each of these reservation calculations with the conditional attribute
-+ * reservations, add them here in a clear and concise manner. This assumes that
-+ * the attribute reservations have already been calculated.
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
 + *
-+ * Note that we only include the static attribute reservation here; the runtime
-+ * reservation will have to be modified by the size of the attributes being
-+ * added/removed/modified. See the comments on the attribute reservation
-+ * calculations for more details.
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
 + *
-+ * Note for rename: rename will vastly overestimate requirements. This will be
-+ * addressed later when modifications are made to ensure parent attribute
-+ * modifications can be done atomically with the rename operation.
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation
 + */
- void
--xfs_trans_resv_calc(
-+xfs_calc_namespace_reservations(
- 	struct xfs_mount	*mp,
- 	struct xfs_trans_resv	*resp)
- {
--	/*
--	 * The following transactions are logged in physical format and
--	 * require a permanent reservation on space.
--	 */
--	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
--	if (xfs_sb_version_hasreflink(&mp->m_sb))
--		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
--	else
--		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
--	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
--
--	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
--	if (xfs_sb_version_hasreflink(&mp->m_sb))
--		resp->tr_itruncate.tr_logcount =
--				XFS_ITRUNCATE_LOG_COUNT_REFLINK;
--	else
--		resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
--	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+	ASSERT(resp->tr_attrsetm.tr_logres > 0);
- 
- 	resp->tr_rename.tr_logres = xfs_calc_rename_reservation(mp);
- 	resp->tr_rename.tr_logcount = XFS_RENAME_LOG_COUNT;
-@@ -819,15 +820,77 @@ xfs_trans_resv_calc(
- 	resp->tr_create.tr_logcount = XFS_CREATE_LOG_COUNT;
- 	resp->tr_create.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
- 
-+	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
-+	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
-+	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_format.h"
++#include "xfs_da_format.h"
++#include "xfs_log_format.h"
++#include "xfs_shared.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
++#include "xfs_bmap_btree.h"
++#include "xfs_inode.h"
++#include "xfs_error.h"
++#include "xfs_trace.h"
++#include "xfs_trans.h"
++#include "xfs_da_btree.h"
++#include "xfs_attr.h"
++#include "xfs_da_btree.h"
++#include "xfs_attr_sf.h"
++#include "xfs_bmap.h"
 +
-+	xfs_calc_parent_ptr_reservations(mp);
-+}
++/*
++ * Parent pointer attribute handling.
++ *
++ * Because the attribute value is a filename component, it will never be longer
++ * than 255 bytes. This means the attribute will always be a local format
++ * attribute as it is xfs_attr_leaf_entsize_local_max() for v5 filesystems will
++ * always be larger than this (max is 75% of block size).
++ *
++ * Creating a new parent attribute will always create a new attribute - there
++ * should never, ever be an existing attribute in the tree for a new inode.
++ * ENOSPC behaviour is problematic - creating the inode without the parent
++ * pointer is effectively a corruption, so we allow parent attribute creation
++ * to dip into the reserve block pool to avoid unexpected ENOSPC errors from
++ * occurring.
++ */
 +
-+void xfs_calc_parent_ptr_reservations(struct xfs_mount     *mp)
-+{
-+	struct xfs_trans_resv   *resp = M_RES(mp);
 +
-+	/* Calculate extra space needed for parent pointer attributes */
-+	if (!xfs_sb_version_hasparent(&mp->m_sb))
-+		return;
-+
-+	/* rename can add/remove/modify 4 parent attributes */
-+	resp->tr_rename.tr_logres += 4 * max(resp->tr_attrsetm.tr_logres,
-+					 resp->tr_attrrm.tr_logres);
-+	resp->tr_rename.tr_logcount += 4 * max(resp->tr_attrsetm.tr_logcount,
-+					   resp->tr_attrrm.tr_logcount);
-+
-+	/* create will add 1 parent attribute */
-+	resp->tr_create.tr_logres += resp->tr_attrsetm.tr_logres;
-+	resp->tr_create.tr_logcount += resp->tr_attrsetm.tr_logcount;
-+
-+	/* mkdir will add 1 parent attribute */
-+	resp->tr_mkdir.tr_logres += resp->tr_attrsetm.tr_logres;
-+	resp->tr_mkdir.tr_logcount += resp->tr_attrsetm.tr_logcount;
-+
-+	/* link will add 1 parent attribute */
-+	resp->tr_link.tr_logres += resp->tr_attrsetm.tr_logres;
-+	resp->tr_link.tr_logcount += resp->tr_attrsetm.tr_logcount;
-+
-+	/* symlink will add 1 parent attribute */
-+	resp->tr_symlink.tr_logres += resp->tr_attrsetm.tr_logres;
-+	resp->tr_symlink.tr_logcount += resp->tr_attrsetm.tr_logcount;
-+
-+	/* remove will remove 1 parent attribute */
-+	resp->tr_remove.tr_logres += resp->tr_attrrm.tr_logres;
-+	resp->tr_remove.tr_logcount += resp->tr_attrrm.tr_logcount;
-+}
-+
++/* Initializes a xfs_parent_name_rec to be stored as an attribute name */
 +void
-+xfs_trans_resv_calc(
-+	struct xfs_mount	*mp,
-+	struct xfs_trans_resv	*resp)
++xfs_init_parent_name_rec(
++	struct xfs_parent_name_rec	*rec,
++	struct xfs_inode		*ip,
++	uint32_t			p_diroffset)
 +{
-+	/*
-+	 * The following transactions are logged in physical format and
-+	 * require a permanent reservation on space.
-+	 */
-+	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
-+	if (xfs_sb_version_hasreflink(&mp->m_sb))
-+		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
-+	else
-+		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
-+	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++	xfs_ino_t			p_ino = ip->i_ino;
++	uint32_t			p_gen = VFS_I(ip)->i_generation;
 +
-+	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
-+	if (xfs_sb_version_hasreflink(&mp->m_sb))
-+		resp->tr_itruncate.tr_logcount =
-+				XFS_ITRUNCATE_LOG_COUNT_REFLINK;
-+	else
-+		resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
-+	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++	rec->p_ino = cpu_to_be64(p_ino);
++	rec->p_gen = cpu_to_be32(p_gen);
++	rec->p_diroffset = cpu_to_be32(p_diroffset);
++}
 +
- 	resp->tr_create_tmpfile.tr_logres =
- 			xfs_calc_create_tmpfile_reservation(mp);
- 	resp->tr_create_tmpfile.tr_logcount = XFS_CREATE_TMPFILE_LOG_COUNT;
- 	resp->tr_create_tmpfile.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++/* Initializes a xfs_parent_name_irec from an xfs_parent_name_rec */
++void
++xfs_init_parent_name_irec(
++	struct xfs_parent_name_irec	*irec,
++	struct xfs_parent_name_rec	*rec)
++{
++	irec->p_ino = be64_to_cpu(rec->p_ino);
++	irec->p_gen = be32_to_cpu(rec->p_gen);
++	irec->p_diroffset = be32_to_cpu(rec->p_diroffset);
++}
++
++/*
++ * Directly add a parent pointer instead of as a deferred operation
++ * Currently only used during protofile creation
++ */
++int
++xfs_parent_add(
++	struct xfs_inode		*parent,
++	struct xfs_inode		*child,
++	struct xfs_name			*child_name,
++	uint32_t			diroffset)
++{
++	struct xfs_parent_name_rec	rec;
++	int				error;
++	int				flags = ATTR_PARENT;
++
++	xfs_init_parent_name_rec(&rec, parent, diroffset);
++
++	error = xfs_attr_set(child, (const unsigned char *)&rec, sizeof(rec), 
++		(char *)child_name->name, child_name->len, flags);
++
++	return error;
++}
++
+diff --git a/fs/xfs/libxfs/xfs_parent.h b/fs/xfs/libxfs/xfs_parent.h
+new file mode 100644
+index 0000000..60f1172
+--- /dev/null
++++ b/fs/xfs/libxfs/xfs_parent.h
+@@ -0,0 +1,35 @@
++/*
++ * Copyright (c) 2018 Oracle, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation Inc.
++ */
++#ifndef	__XFS_PARENT_H__
++#define	__XFS_PARENT_H__
++
++#include "xfs_da_format.h"
++#include "xfs_format.h"
++
++/*
++ * Parent pointer attribute prototypes
++ */
++void xfs_init_parent_name_rec(struct xfs_parent_name_rec *rec,
++			      struct xfs_inode *ip,
++			      uint32_t p_diroffset);
++void xfs_init_parent_name_irec(struct xfs_parent_name_irec *irec,
++			       struct xfs_parent_name_rec *rec);
++
++int xfs_parent_add(struct xfs_inode *parent,
++		   struct xfs_inode *child, struct xfs_name *child_name,
++		   uint32_t diroffset);
++#endif	/* __XFS_PARENT_H__ */
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index d7e06c2..3f722e6 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -41,6 +41,7 @@
+ #include "xfs_bmap_btree.h"
+ #include "xfs_reflink.h"
+ #include "xfs_dir2_priv.h"
++#include "xfs_parent_utils.h"
  
--	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
--	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
--	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
--
- 	resp->tr_ifree.tr_logres = xfs_calc_ifree_reservation(mp);
- 	resp->tr_ifree.tr_logcount = XFS_INACTIVE_LOG_COUNT;
- 	resp->tr_ifree.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-@@ -859,6 +922,8 @@ xfs_trans_resv_calc(
- 		resp->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT;
- 	resp->tr_qm_dqalloc.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+ kmem_zone_t *xfs_inode_zone;
  
-+	xfs_calc_namespace_reservations(mp, resp);
-+
+@@ -1151,6 +1152,7 @@ xfs_create(
+ 	struct xfs_dquot	*pdqp = NULL;
+ 	struct xfs_trans_res	*tres;
+ 	uint			resblks;
++	xfs_dir2_dataptr_t	diroffset;
+ 
+ 	trace_xfs_create(dp, name);
+ 
+@@ -1219,13 +1221,13 @@ xfs_create(
+ 	 * the transaction cancel unlocking dp so don't do it explicitly in the
+ 	 * error path.
+ 	 */
+-	xfs_trans_ijoin(tp, dp, XFS_ILOCK_EXCL);
++	xfs_trans_ijoin(tp, dp, 0);
+ 	unlock_dp_on_error = false;
+ 
+ 	error = xfs_dir_createname(tp, dp, name, ip->i_ino,
+ 				   resblks ?
+ 					resblks - XFS_IALLOC_SPACE_RES(mp) : 0,
+-					NULL);
++					&diroffset);
+ 	if (error) {
+ 		ASSERT(error != -ENOSPC);
+ 		goto out_trans_cancel;
+@@ -1244,6 +1246,16 @@ xfs_create(
+ 	}
+ 
  	/*
- 	 * The following transactions are logged in logical format with
- 	 * a default log count.
-diff --git a/fs/xfs/libxfs/xfs_trans_resv.h b/fs/xfs/libxfs/xfs_trans_resv.h
-index 7241ab2..0197d9e 100644
---- a/fs/xfs/libxfs/xfs_trans_resv.h
-+++ b/fs/xfs/libxfs/xfs_trans_resv.h
-@@ -93,5 +93,6 @@ struct xfs_trans_resv {
++	 * If we have parent pointers, we need to add the attribute containing
++	 * the parent information now.
++	 */
++	if (xfs_sb_version_hasparent(&mp->m_sb)) {
++		error = xfs_parent_add_deferred(dp, tp, ip, name, diroffset);
++		if (error)
++			goto out_trans_cancel;
++	}
++
++	/*
+ 	 * If this is a synchronous mount, make sure that the
+ 	 * create transaction goes to disk before returning to
+ 	 * the user.
+@@ -1268,6 +1280,7 @@ xfs_create(
  
- void xfs_trans_resv_calc(struct xfs_mount *mp, struct xfs_trans_resv *resp);
- uint xfs_allocfree_log_count(struct xfs_mount *mp, uint num_ops);
-+void xfs_calc_parent_ptr_reservations(struct xfs_mount *mp);
+ 	*ipp = ip;
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	xfs_iunlock(dp, XFS_ILOCK_EXCL | XFS_ILOCK_PARENT);
+ 	return 0;
  
- #endif	/* __XFS_TRANS_RESV_H__ */
+  out_trans_cancel:
+diff --git a/fs/xfs/xfs_parent_utils.c b/fs/xfs/xfs_parent_utils.c
+new file mode 100644
+index 0000000..f84a4fd
+--- /dev/null
++++ b/fs/xfs/xfs_parent_utils.c
+@@ -0,0 +1,52 @@
++/*
++ * Copyright (c) 2015 Red Hat, Inc.
++ * All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_format.h"
++#include "xfs_log_format.h"
++#include "xfs_shared.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
++#include "xfs_bmap_btree.h"
++#include "xfs_inode.h"
++#include "xfs_error.h"
++#include "xfs_trace.h"
++#include "xfs_trans.h"
++#include "xfs_da_format.h"
++#include "xfs_da_btree.h"
++#include "xfs_attr.h"
++#include "xfs_parent.h"
++
++/*
++ * Add a parent record to an inode with existing parent records.
++ */
++int
++xfs_parent_add_deferred(
++	struct xfs_inode        *parent,
++	struct xfs_trans	*tp,
++	struct xfs_inode        *child,
++	struct xfs_name         *child_name,
++	uint32_t                diroffset)
++{
++	struct xfs_parent_name_rec rec;
++
++	xfs_init_parent_name_rec(&rec, parent, diroffset);
++
++	return xfs_attr_set_deferred(child, tp, &rec, sizeof(rec),
++		(void *)child_name->name, child_name->len, ATTR_PARENT);
++}
++
+diff --git a/fs/xfs/xfs_parent_utils.h b/fs/xfs/xfs_parent_utils.h
+new file mode 100644
+index 0000000..82453d2
+--- /dev/null
++++ b/fs/xfs/xfs_parent_utils.h
+@@ -0,0 +1,26 @@
++/*
++ * Copyright (c) 2017 Oracle, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation Inc.
++ */
++#ifndef	__XFS_PARENT_UTILS_H__
++#define	__XFS_PARENT_UTILS_H__
++
++/*
++ * Parent pointer attribute prototypes
++ */
++int xfs_parent_add_deferred(struct xfs_inode *parent, struct xfs_trans *tp,
++	       struct xfs_inode *child, struct xfs_name *child_name,
++	       uint32_t diroffset);
++#endif	/* __XFS_PARENT_UTILS_H__ */
 -- 
 2.7.4
