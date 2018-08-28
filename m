@@ -1,66 +1,350 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:29367 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725722AbeHVEDm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Aug 2018 00:03:42 -0400
-Date: Wed, 22 Aug 2018 10:41:14 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/6] xfs: verify extent size hint is valid in inode
- verifier
-Message-ID: <20180822004113.GQ31495@dastard>
-References: <20180605062423.4877-1-david@fromorbit.com>
- <20180605062423.4877-3-david@fromorbit.com>
- <6196d8ce-03b9-eaae-4a07-d307e35540ca@sandeen.net>
- <20180724164346.GU4813@magnolia>
- <20180820150603.GA9568@bfoster>
- <17c55fba-5615-35a4-65d6-665ea89d20c2@sandeen.net>
- <20180820153626.GB4334@magnolia>
- <20180820155918.GB9568@bfoster>
- <20180820221506.GG31495@dastard>
- <20180821105645.GA14228@bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180821105645.GA14228@bfoster>
+Received: from aserp2120.oracle.com ([141.146.126.78]:38924 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726833AbeH1XR5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Aug 2018 19:17:57 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w7SJJKn9125136
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:52 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp2120.oracle.com with ESMTP id 2m2y2pdwjd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:51 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w7SJOp3u031821
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:51 GMT
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w7SJOo39014860
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:51 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [PATCH v8 01/28] xfs: Move fs/xfs/xfs_attr.h to fs/xfs/libxfs/xfs_attr.h
+Date: Tue, 28 Aug 2018 12:22:14 -0700
+Message-Id: <1535484161-11059-2-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
+References: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Tue, Aug 21, 2018 at 06:56:45AM -0400, Brian Foster wrote:
-> On Tue, Aug 21, 2018 at 08:15:06AM +1000, Dave Chinner wrote:
-> > We should clear them on free now, so that we can draw a line in the
-> > sand for when we can have verifiers check it. e.g. when the next
-> > feature bit gets introduced, filesystems with that feature bit set
-> > can also verify the extent size hints are zero on freed inodes
-> > because we know that kernels supporting that feature always zero
-> > them on free....
-> > 
-> 
-> That seems fine (and harmless) to me if the goal is ultimately to have
-> this content clear on-disk. It keeps things consistent for verifiers,
-> scrub, repair, etc. to not have some bits with required initialized
-> values and others where we need to accommodate stale data.
+This patch moves fs/xfs/xfs_attr.h to fs/xfs/libxfs/xfs_attr.h
+since xfs_attr.c is in libxfs.  We will need these later in
+xfsprogs.
 
-*nod*
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+---
+ fs/xfs/libxfs/xfs_attr.h | 148 +++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_attr.h        | 148 -----------------------------------------------
+ 2 files changed, 148 insertions(+), 148 deletions(-)
 
-One of my original goals for all the online repair work was to
-ensure that everything on disk was clean, sanitised and not
-ambiguous in any way. The verifiers are a mechanism that helps us
-identify things that aren't clean or sanitised, and working out how
-to verify those things identifies ambiguities we need to fix. Such
-as this one with freed inodes.
-
-As I said to Eric on #xfs:
-
-<dchinner_> We're well beyond the point where we trust a single field
-	    in an on-disk structure to be the One True Source of Truth
-<dchinner_> we want everything on disk to be correct and clean
-<dchinner_> so we can make decisions like this correctly via
-	    multi-field verifications
-
-
+diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+new file mode 100644
+index 0000000..033ff8c
+--- /dev/null
++++ b/fs/xfs/libxfs/xfs_attr.h
+@@ -0,0 +1,148 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2000,2002-2003,2005 Silicon Graphics, Inc.
++ * All Rights Reserved.
++ */
++#ifndef __XFS_ATTR_H__
++#define	__XFS_ATTR_H__
++
++struct xfs_inode;
++struct xfs_da_args;
++struct xfs_attr_list_context;
++
++/*
++ * Large attribute lists are structured around Btrees where all the data
++ * elements are in the leaf nodes.  Attribute names are hashed into an int,
++ * then that int is used as the index into the Btree.  Since the hashval
++ * of an attribute name may not be unique, we may have duplicate keys.
++ * The internal links in the Btree are logical block offsets into the file.
++ *
++ * Small attribute lists use a different format and are packed as tightly
++ * as possible so as to fit into the literal area of the inode.
++ */
++
++/*========================================================================
++ * External interfaces
++ *========================================================================*/
++
++
++#define ATTR_DONTFOLLOW	0x0001	/* -- unused, from IRIX -- */
++#define ATTR_ROOT	0x0002	/* use attrs in root (trusted) namespace */
++#define ATTR_TRUST	0x0004	/* -- unused, from IRIX -- */
++#define ATTR_SECURE	0x0008	/* use attrs in security namespace */
++#define ATTR_CREATE	0x0010	/* pure create: fail if attr already exists */
++#define ATTR_REPLACE	0x0020	/* pure set: fail if attr does not exist */
++
++#define ATTR_KERNOTIME	0x1000	/* [kernel] don't update inode timestamps */
++#define ATTR_KERNOVAL	0x2000	/* [kernel] get attr size only, not value */
++
++#define ATTR_INCOMPLETE	0x4000	/* [kernel] return INCOMPLETE attr keys */
++
++#define XFS_ATTR_FLAGS \
++	{ ATTR_DONTFOLLOW, 	"DONTFOLLOW" }, \
++	{ ATTR_ROOT,		"ROOT" }, \
++	{ ATTR_TRUST,		"TRUST" }, \
++	{ ATTR_SECURE,		"SECURE" }, \
++	{ ATTR_CREATE,		"CREATE" }, \
++	{ ATTR_REPLACE,		"REPLACE" }, \
++	{ ATTR_KERNOTIME,	"KERNOTIME" }, \
++	{ ATTR_KERNOVAL,	"KERNOVAL" }, \
++	{ ATTR_INCOMPLETE,	"INCOMPLETE" }
++
++/*
++ * The maximum size (into the kernel or returned from the kernel) of an
++ * attribute value or the buffer used for an attr_list() call.  Larger
++ * sizes will result in an ERANGE return code.
++ */
++#define	ATTR_MAX_VALUELEN	(64*1024)	/* max length of a value */
++
++/*
++ * Define how lists of attribute names are returned to the user from
++ * the attr_list() call.  A large, 32bit aligned, buffer is passed in
++ * along with its size.  We put an array of offsets at the top that each
++ * reference an attrlist_ent_t and pack the attrlist_ent_t's at the bottom.
++ */
++typedef struct attrlist {
++	__s32	al_count;	/* number of entries in attrlist */
++	__s32	al_more;	/* T/F: more attrs (do call again) */
++	__s32	al_offset[1];	/* byte offsets of attrs [var-sized] */
++} attrlist_t;
++
++/*
++ * Show the interesting info about one attribute.  This is what the
++ * al_offset[i] entry points to.
++ */
++typedef struct attrlist_ent {	/* data from attr_list() */
++	__u32	a_valuelen;	/* number bytes in value of attr */
++	char	a_name[1];	/* attr name (NULL terminated) */
++} attrlist_ent_t;
++
++/*
++ * Given a pointer to the (char*) buffer containing the attr_list() result,
++ * and an index, return a pointer to the indicated attribute in the buffer.
++ */
++#define	ATTR_ENTRY(buffer, index)		\
++	((attrlist_ent_t *)			\
++	 &((char *)buffer)[ ((attrlist_t *)(buffer))->al_offset[index] ])
++
++/*
++ * Kernel-internal version of the attrlist cursor.
++ */
++typedef struct attrlist_cursor_kern {
++	__u32	hashval;	/* hash value of next entry to add */
++	__u32	blkno;		/* block containing entry (suggestion) */
++	__u32	offset;		/* offset in list of equal-hashvals */
++	__u16	pad1;		/* padding to match user-level */
++	__u8	pad2;		/* padding to match user-level */
++	__u8	initted;	/* T/F: cursor has been initialized */
++} attrlist_cursor_kern_t;
++
++
++/*========================================================================
++ * Structure used to pass context around among the routines.
++ *========================================================================*/
++
++
++/* void; state communicated via *context */
++typedef void (*put_listent_func_t)(struct xfs_attr_list_context *, int,
++			      unsigned char *, int, int);
++
++typedef struct xfs_attr_list_context {
++	struct xfs_trans		*tp;
++	struct xfs_inode		*dp;		/* inode */
++	struct attrlist_cursor_kern	*cursor;	/* position in list */
++	char				*alist;		/* output buffer */
++	int				seen_enough;	/* T/F: seen enough of list? */
++	ssize_t				count;		/* num used entries */
++	int				dupcnt;		/* count dup hashvals seen */
++	int				bufsize;	/* total buffer size */
++	int				firstu;		/* first used byte in buffer */
++	int				flags;		/* from VOP call */
++	int				resynch;	/* T/F: resynch with cursor */
++	put_listent_func_t		put_listent;	/* list output fmt function */
++	int				index;		/* index into output buffer */
++} xfs_attr_list_context_t;
++
++
++/*========================================================================
++ * Function prototypes for the kernel.
++ *========================================================================*/
++
++/*
++ * Overall external interface routines.
++ */
++int xfs_attr_inactive(struct xfs_inode *dp);
++int xfs_attr_list_int_ilocked(struct xfs_attr_list_context *);
++int xfs_attr_list_int(struct xfs_attr_list_context *);
++int xfs_inode_hasattr(struct xfs_inode *ip);
++int xfs_attr_get_ilocked(struct xfs_inode *ip, struct xfs_da_args *args);
++int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
++		 unsigned char *value, int *valuelenp, int flags);
++int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
++		 unsigned char *value, int valuelen, int flags);
++int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
++int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
++		  int flags, struct attrlist_cursor_kern *cursor);
++
++
++#endif	/* __XFS_ATTR_H__ */
+diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
+deleted file mode 100644
+index 033ff8c..0000000
+--- a/fs/xfs/xfs_attr.h
++++ /dev/null
+@@ -1,148 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0
+-/*
+- * Copyright (c) 2000,2002-2003,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- */
+-#ifndef __XFS_ATTR_H__
+-#define	__XFS_ATTR_H__
+-
+-struct xfs_inode;
+-struct xfs_da_args;
+-struct xfs_attr_list_context;
+-
+-/*
+- * Large attribute lists are structured around Btrees where all the data
+- * elements are in the leaf nodes.  Attribute names are hashed into an int,
+- * then that int is used as the index into the Btree.  Since the hashval
+- * of an attribute name may not be unique, we may have duplicate keys.
+- * The internal links in the Btree are logical block offsets into the file.
+- *
+- * Small attribute lists use a different format and are packed as tightly
+- * as possible so as to fit into the literal area of the inode.
+- */
+-
+-/*========================================================================
+- * External interfaces
+- *========================================================================*/
+-
+-
+-#define ATTR_DONTFOLLOW	0x0001	/* -- unused, from IRIX -- */
+-#define ATTR_ROOT	0x0002	/* use attrs in root (trusted) namespace */
+-#define ATTR_TRUST	0x0004	/* -- unused, from IRIX -- */
+-#define ATTR_SECURE	0x0008	/* use attrs in security namespace */
+-#define ATTR_CREATE	0x0010	/* pure create: fail if attr already exists */
+-#define ATTR_REPLACE	0x0020	/* pure set: fail if attr does not exist */
+-
+-#define ATTR_KERNOTIME	0x1000	/* [kernel] don't update inode timestamps */
+-#define ATTR_KERNOVAL	0x2000	/* [kernel] get attr size only, not value */
+-
+-#define ATTR_INCOMPLETE	0x4000	/* [kernel] return INCOMPLETE attr keys */
+-
+-#define XFS_ATTR_FLAGS \
+-	{ ATTR_DONTFOLLOW, 	"DONTFOLLOW" }, \
+-	{ ATTR_ROOT,		"ROOT" }, \
+-	{ ATTR_TRUST,		"TRUST" }, \
+-	{ ATTR_SECURE,		"SECURE" }, \
+-	{ ATTR_CREATE,		"CREATE" }, \
+-	{ ATTR_REPLACE,		"REPLACE" }, \
+-	{ ATTR_KERNOTIME,	"KERNOTIME" }, \
+-	{ ATTR_KERNOVAL,	"KERNOVAL" }, \
+-	{ ATTR_INCOMPLETE,	"INCOMPLETE" }
+-
+-/*
+- * The maximum size (into the kernel or returned from the kernel) of an
+- * attribute value or the buffer used for an attr_list() call.  Larger
+- * sizes will result in an ERANGE return code.
+- */
+-#define	ATTR_MAX_VALUELEN	(64*1024)	/* max length of a value */
+-
+-/*
+- * Define how lists of attribute names are returned to the user from
+- * the attr_list() call.  A large, 32bit aligned, buffer is passed in
+- * along with its size.  We put an array of offsets at the top that each
+- * reference an attrlist_ent_t and pack the attrlist_ent_t's at the bottom.
+- */
+-typedef struct attrlist {
+-	__s32	al_count;	/* number of entries in attrlist */
+-	__s32	al_more;	/* T/F: more attrs (do call again) */
+-	__s32	al_offset[1];	/* byte offsets of attrs [var-sized] */
+-} attrlist_t;
+-
+-/*
+- * Show the interesting info about one attribute.  This is what the
+- * al_offset[i] entry points to.
+- */
+-typedef struct attrlist_ent {	/* data from attr_list() */
+-	__u32	a_valuelen;	/* number bytes in value of attr */
+-	char	a_name[1];	/* attr name (NULL terminated) */
+-} attrlist_ent_t;
+-
+-/*
+- * Given a pointer to the (char*) buffer containing the attr_list() result,
+- * and an index, return a pointer to the indicated attribute in the buffer.
+- */
+-#define	ATTR_ENTRY(buffer, index)		\
+-	((attrlist_ent_t *)			\
+-	 &((char *)buffer)[ ((attrlist_t *)(buffer))->al_offset[index] ])
+-
+-/*
+- * Kernel-internal version of the attrlist cursor.
+- */
+-typedef struct attrlist_cursor_kern {
+-	__u32	hashval;	/* hash value of next entry to add */
+-	__u32	blkno;		/* block containing entry (suggestion) */
+-	__u32	offset;		/* offset in list of equal-hashvals */
+-	__u16	pad1;		/* padding to match user-level */
+-	__u8	pad2;		/* padding to match user-level */
+-	__u8	initted;	/* T/F: cursor has been initialized */
+-} attrlist_cursor_kern_t;
+-
+-
+-/*========================================================================
+- * Structure used to pass context around among the routines.
+- *========================================================================*/
+-
+-
+-/* void; state communicated via *context */
+-typedef void (*put_listent_func_t)(struct xfs_attr_list_context *, int,
+-			      unsigned char *, int, int);
+-
+-typedef struct xfs_attr_list_context {
+-	struct xfs_trans		*tp;
+-	struct xfs_inode		*dp;		/* inode */
+-	struct attrlist_cursor_kern	*cursor;	/* position in list */
+-	char				*alist;		/* output buffer */
+-	int				seen_enough;	/* T/F: seen enough of list? */
+-	ssize_t				count;		/* num used entries */
+-	int				dupcnt;		/* count dup hashvals seen */
+-	int				bufsize;	/* total buffer size */
+-	int				firstu;		/* first used byte in buffer */
+-	int				flags;		/* from VOP call */
+-	int				resynch;	/* T/F: resynch with cursor */
+-	put_listent_func_t		put_listent;	/* list output fmt function */
+-	int				index;		/* index into output buffer */
+-} xfs_attr_list_context_t;
+-
+-
+-/*========================================================================
+- * Function prototypes for the kernel.
+- *========================================================================*/
+-
+-/*
+- * Overall external interface routines.
+- */
+-int xfs_attr_inactive(struct xfs_inode *dp);
+-int xfs_attr_list_int_ilocked(struct xfs_attr_list_context *);
+-int xfs_attr_list_int(struct xfs_attr_list_context *);
+-int xfs_inode_hasattr(struct xfs_inode *ip);
+-int xfs_attr_get_ilocked(struct xfs_inode *ip, struct xfs_da_args *args);
+-int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
+-		 unsigned char *value, int *valuelenp, int flags);
+-int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
+-		 unsigned char *value, int valuelen, int flags);
+-int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
+-int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+-		  int flags, struct attrlist_cursor_kern *cursor);
+-
+-
+-#endif	/* __XFS_ATTR_H__ */
 -- 
-Dave Chinner
-david@fromorbit.com
+2.7.4
