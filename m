@@ -1,75 +1,222 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:58639 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725772AbeHaEiN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 Aug 2018 00:38:13 -0400
-Date: Fri, 31 Aug 2018 10:33:25 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs log write design
-Message-ID: <20180831003325.GH5631@dastard>
-References: <CA+1E3rJCdcLJVYrj89H1HQDr7ETpZzQzueb6oqg3eJnNZ_q+UQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CA+1E3rJCdcLJVYrj89H1HQDr7ETpZzQzueb6oqg3eJnNZ_q+UQ@mail.gmail.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:39018 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727130AbeH1XSE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Aug 2018 19:18:04 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w7SJJD2l125084
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:58 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by aserp2120.oracle.com with ESMTP id 2m2y2pdwk3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:58 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w7SJOwrQ018953
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:58 GMT
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w7SJOw1S003051
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:58 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [PATCH v8 19/28] xfs: extent transaction reservations for parent attributes
+Date: Tue, 28 Aug 2018 12:22:32 -0700
+Message-Id: <1535484161-11059-20-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
+References: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Joshi <joshiiitr@gmail.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Thu, Aug 30, 2018 at 09:57:50PM +0530, Joshi wrote:
-> This must be novice topic for the list, please excuse the ignorance.
-> 
-> When it comes to log write scheme in XFS, I wonder if I can draw
-> parallel with any journaling mode of Ext4 (ordered or writeback)?
+From: Dave Chinner <dchinner@redhat.com>
 
-Neither, really.
+We need to add, remove or modify parent pointer attributes during
+create/link/unlink/rename operations atomically with the dirents in the parent
+directories being modified. This means they need to be modified in the same
+transaction as the parent directories, and so we need to add the required
+space for the attribute modifications to the transaction reservations.
 
-The journal records metadata operations in the order they occur but
-not data operations (like ext4 does in writeback mode), but XFS uses an
-"update on IO completion" model for data-related metadata operations
-such that the observable filesystem behaviour of ext4's ordered
-mode behaviour ended up being very similar to XFS's behaviour.
+[achender: rebased, added xfs_sb_version_hasparent stub]
 
-[ Keep in mind that ext4 ordered mode is not the same as ext3 ordered
-mode - ext4's behaviour is a hybrid writeback model because of
-delayed allocation and not wanting the ext3 sync-the-world fsync()
-problem. Another thing to keep in mind is that ext4 copied a fair
-number of XFS behaviours to avoid data loss in delayed allocation
-crash situations after ext4 "rediscovered" all the issues fixed
-in XFS over 10+ years of using delayed allocation. ]
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+---
+ fs/xfs/libxfs/xfs_format.h     |   5 ++
+ fs/xfs/libxfs/xfs_trans_resv.c | 111 ++++++++++++++++++++++++++++++++---------
+ fs/xfs/libxfs/xfs_trans_resv.h |   1 +
+ 3 files changed, 94 insertions(+), 23 deletions(-)
 
-> I checked xlog_sync() code, and found that each log IO is marked with
-> PREFLUSH and FUA (for internal log case).
-> This perhaps makes it similar to "ordered" journal mode of Ext4.
-
-No, the flushes have nothing to do with the this. They are about
-ensuring completion-to-submission IO ordering constraints are
-enforced at the storage level.
-
-> But I am not sure about exact intent of choosing PREFLUSH for log
-> write
-
-If we don't flush the cache prior to the log write and we crash, the
-log write might be on stable storage, but metadata we've written
-back and told has been complete may not be. i.e. the log write
-can overwrite metadta in the log may not be on stable storage if we
-don't do a pre-flush to ensure completion-to-submission ordering is
-enforced right down to the stable media.
-
-> i.e.whether it is for all previous non-log IO (meta and data) or
-> only for meta-IO. Nor I am sure whether xfs makes a conscious choice
-> to issue data writes before meta or journal I/Os.
-
-XFS does not control the order of data writes except for a few
-corner cases where expeditious writing of data masks common
-application-level data integrity bugs (typically unsafe overwrite
-operations).
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 059bc44..386d734 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -550,6 +550,11 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
+ 		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_REFLINK);
+ }
+ 
++static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
++{
++	return false; /* We'll enable this at the end of the set */
++}
++
+ /*
+  * end of superblock version macros
+  */
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+index f99a7ae..44274b9 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.c
++++ b/fs/xfs/libxfs/xfs_trans_resv.c
+@@ -775,29 +775,30 @@ xfs_calc_sb_reservation(
+ 	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
+ }
+ 
++/*
++ * Namespace reservations.
++ *
++ * These get tricky when parent pointers are enabled as we have attribute
++ * modifications occurring from within these transactions. Rather than confuse
++ * each of these reservation calculations with the conditional attribute
++ * reservations, add them here in a clear and concise manner. This assumes that
++ * the attribute reservations have already been calculated.
++ *
++ * Note that we only include the static attribute reservation here; the runtime
++ * reservation will have to be modified by the size of the attributes being
++ * added/removed/modified. See the comments on the attribute reservation
++ * calculations for more details.
++ *
++ * Note for rename: rename will vastly overestimate requirements. This will be
++ * addressed later when modifications are made to ensure parent attribute
++ * modifications can be done atomically with the rename operation.
++ */
+ void
+-xfs_trans_resv_calc(
++xfs_calc_namespace_reservations(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_trans_resv	*resp)
+ {
+-	/*
+-	 * The following transactions are logged in physical format and
+-	 * require a permanent reservation on space.
+-	 */
+-	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
+-	if (xfs_sb_version_hasreflink(&mp->m_sb))
+-		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
+-	else
+-		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
+-	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+-
+-	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
+-	if (xfs_sb_version_hasreflink(&mp->m_sb))
+-		resp->tr_itruncate.tr_logcount =
+-				XFS_ITRUNCATE_LOG_COUNT_REFLINK;
+-	else
+-		resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
+-	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++	ASSERT(resp->tr_attrsetm.tr_logres > 0);
+ 
+ 	resp->tr_rename.tr_logres = xfs_calc_rename_reservation(mp);
+ 	resp->tr_rename.tr_logcount = XFS_RENAME_LOG_COUNT;
+@@ -819,15 +820,77 @@ xfs_trans_resv_calc(
+ 	resp->tr_create.tr_logcount = XFS_CREATE_LOG_COUNT;
+ 	resp->tr_create.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+ 
++	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
++	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
++	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	xfs_calc_parent_ptr_reservations(mp);
++}
++
++void xfs_calc_parent_ptr_reservations(struct xfs_mount     *mp)
++{
++	struct xfs_trans_resv   *resp = M_RES(mp);
++
++	/* Calculate extra space needed for parent pointer attributes */
++	if (!xfs_sb_version_hasparent(&mp->m_sb))
++		return;
++
++	/* rename can add/remove/modify 4 parent attributes */
++	resp->tr_rename.tr_logres += 4 * max(resp->tr_attrsetm.tr_logres,
++					 resp->tr_attrrm.tr_logres);
++	resp->tr_rename.tr_logcount += 4 * max(resp->tr_attrsetm.tr_logcount,
++					   resp->tr_attrrm.tr_logcount);
++
++	/* create will add 1 parent attribute */
++	resp->tr_create.tr_logres += resp->tr_attrsetm.tr_logres;
++	resp->tr_create.tr_logcount += resp->tr_attrsetm.tr_logcount;
++
++	/* mkdir will add 1 parent attribute */
++	resp->tr_mkdir.tr_logres += resp->tr_attrsetm.tr_logres;
++	resp->tr_mkdir.tr_logcount += resp->tr_attrsetm.tr_logcount;
++
++	/* link will add 1 parent attribute */
++	resp->tr_link.tr_logres += resp->tr_attrsetm.tr_logres;
++	resp->tr_link.tr_logcount += resp->tr_attrsetm.tr_logcount;
++
++	/* symlink will add 1 parent attribute */
++	resp->tr_symlink.tr_logres += resp->tr_attrsetm.tr_logres;
++	resp->tr_symlink.tr_logcount += resp->tr_attrsetm.tr_logcount;
++
++	/* remove will remove 1 parent attribute */
++	resp->tr_remove.tr_logres += resp->tr_attrrm.tr_logres;
++	resp->tr_remove.tr_logcount += resp->tr_attrrm.tr_logcount;
++}
++
++void
++xfs_trans_resv_calc(
++	struct xfs_mount	*mp,
++	struct xfs_trans_resv	*resp)
++{
++	/*
++	 * The following transactions are logged in physical format and
++	 * require a permanent reservation on space.
++	 */
++	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
++	if (xfs_sb_version_hasreflink(&mp->m_sb))
++		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
++	else
++		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
++	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
++	if (xfs_sb_version_hasreflink(&mp->m_sb))
++		resp->tr_itruncate.tr_logcount =
++				XFS_ITRUNCATE_LOG_COUNT_REFLINK;
++	else
++		resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
++	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
+ 	resp->tr_create_tmpfile.tr_logres =
+ 			xfs_calc_create_tmpfile_reservation(mp);
+ 	resp->tr_create_tmpfile.tr_logcount = XFS_CREATE_TMPFILE_LOG_COUNT;
+ 	resp->tr_create_tmpfile.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+ 
+-	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
+-	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
+-	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+-
+ 	resp->tr_ifree.tr_logres = xfs_calc_ifree_reservation(mp);
+ 	resp->tr_ifree.tr_logcount = XFS_INACTIVE_LOG_COUNT;
+ 	resp->tr_ifree.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+@@ -859,6 +922,8 @@ xfs_trans_resv_calc(
+ 		resp->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT;
+ 	resp->tr_qm_dqalloc.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+ 
++	xfs_calc_namespace_reservations(mp, resp);
++
+ 	/*
+ 	 * The following transactions are logged in logical format with
+ 	 * a default log count.
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.h b/fs/xfs/libxfs/xfs_trans_resv.h
+index 7241ab2..0197d9e 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.h
++++ b/fs/xfs/libxfs/xfs_trans_resv.h
+@@ -93,5 +93,6 @@ struct xfs_trans_resv {
+ 
+ void xfs_trans_resv_calc(struct xfs_mount *mp, struct xfs_trans_resv *resp);
+ uint xfs_allocfree_log_count(struct xfs_mount *mp, uint num_ops);
++void xfs_calc_parent_ptr_reservations(struct xfs_mount *mp);
+ 
+ #endif	/* __XFS_TRANS_RESV_H__ */
 -- 
-Dave Chinner
-david@fromorbit.com
+2.7.4
