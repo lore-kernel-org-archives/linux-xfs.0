@@ -1,100 +1,234 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:59734 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726889AbeH3XnJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 30 Aug 2018 19:43:09 -0400
-Date: Thu, 30 Aug 2018 15:39:20 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH, RFC] xfs: re-enable FIBMAP on reflink; disable for swap
-Message-ID: <20180830193919.GA35751@bfoster>
-References: <2eb759e5-2faa-67fd-5c16-c1d8edc42d02@redhat.com>
- <20180830162545.GA26816@lst.de>
- <dbe27763-2e69-6e3a-f769-2528eda54940@redhat.com>
- <20180830163614.GA27069@lst.de>
- <65e818f2-885d-50a4-0d4a-7700c703c2af@sandeen.net>
- <20180830180204.GC2853@bfoster>
- <20180830182849.GA4359@magnolia>
- <10d35380-6f5f-22a5-7b6a-1cfb60c53cfd@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <10d35380-6f5f-22a5-7b6a-1cfb60c53cfd@sandeen.net>
+Received: from aserp2120.oracle.com ([141.146.126.78]:38962 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727130AbeH1XSA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Aug 2018 19:18:00 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w7SJJDsm125075
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:55 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by aserp2120.oracle.com with ESMTP id 2m2y2pdwjn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:55 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w7SJOsSF031968
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:54 GMT
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w7SJOs96014905
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:54 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [PATCH v8 09/28] xfs: Add xfs_has_attr and subroutines
+Date: Tue, 28 Aug 2018 12:22:22 -0700
+Message-Id: <1535484161-11059-10-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
+References: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Thu, Aug 30, 2018 at 01:51:56PM -0500, Eric Sandeen wrote:
-> On 8/30/18 1:28 PM, Darrick J. Wong wrote:
-> > On Thu, Aug 30, 2018 at 02:02:05PM -0400, Brian Foster wrote:
-> >> On Thu, Aug 30, 2018 at 11:35:46AM -0500, Eric Sandeen wrote:
-> >>> On 8/30/18 11:36 AM, Christoph Hellwig wrote:
-> >>>> On Thu, Aug 30, 2018 at 11:31:40AM -0500, Eric Sandeen wrote:
-> >>>>> That's no reason to uniquely disallow it for reflinked files, though;
-> >>>>> the problem is universal.  It's true for fiemap as well.  So I'm not sure
-> >>>>> that's an argument against the patch?
-> >>>>
-> >>>> fiemap at least tells you an extent is shared, bmap does not.
-> >>>
-> >>> yes, so bmap is clearly the wrong interface to use if you want to
-> >>> write directly to a file's blocks.  But if you know enough to check
-> >>> the fiemap shared flag, you know enough to not use fibmap for that purpose...
-> >>>
-> >>
-> >> FWIW, this patch seems reasonable to me. To Christoph's point, I don't
-> >> think either interface really grants license to write to the underlying
-> >> blocks, so either way it's technically being abused for this purpose.
-> >> Unless there's a clear way to return an error for a particular type of
-> >> file, I think it's reasonable behavior for fibmap to expose the data it
-> >> supports (i.e., block maps) and drop the data it doesn't (reflink
-> >> state).
-> > 
-> > But shared block status isn't something that can be dropped lightly.  If
-> > you write to a shared block without realizing it, you'll corrupt every
-> > other file that shares the block.
-> 
-> But there is no circumstance under which it is safe to write to a mapped
-> block no matter how you mapped it, tbh.  This is just singling out one case
-> of many, and it seems capricious to me.  Other than the blast zone being
-> possibly larger for reflinked files ... but I just don't think that's our
-> judgement to make here.
-> 
-> > I prefer to have FIBMAP return errors to *cough* encourage people to use
-> > FIEMAP.  If code are going to abuse the FI[BE]MAP interface they could
-> > at least abuse the one that gives it enough context to avoid fs
-> > corruption.  (A proper fs driver would be preferable, though very
-> > difficult).
-> > 
+This patch adds a new functions to check for the existence of
+an attribute.  Subroutines are also added to handle the cases
+of leaf blocks, nodes or shortform.  We will need this later
+for delayed attributes since delayed operations cannot return
+error codes.
 
-I think that's a reasonable option as well..
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+---
+ fs/xfs/libxfs/xfs_attr.c      | 80 +++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_attr.h      |  1 +
+ fs/xfs/libxfs/xfs_attr_leaf.c | 34 ++++++++++++++++++
+ fs/xfs/libxfs/xfs_attr_leaf.h |  1 +
+ 4 files changed, 116 insertions(+)
 
-> > Granted, grub's blocklist code doesn't seem to check for shared blocks
-> > when it writes grubenv.... yuck, though TBH I don't have the eye budget
-> > to spend on digging through grub2.
-> 
-> grub2 doesn't even use fiemap or fibmap so I'm not sure it's relevant
-> to this decision...
-> 
-> > Frankly I think FIBMAP comes verrry
-> > close to "this API is unfixably stupid and shouldn't be enabled for new
-> > use cases and should go away some day".
-> So instead if anyone asks we'll just give them a successful response which
-> is indistinguishable from a hole.  :(
-> 
-
-... but this seems to be the crux of the matter (IMO, at least). If we
-can return -ENOTSUPP or whatever, then it can be made obvious that the
-user either needs to use fiemap or avoid using reflinked files. ISTM
-that what we do now is essentially report an incorrect bmap, which leads
-to these subtle bug reports.
-
-I haven't dug into the fibmap code.. does something prevent returning a
-legitimate error code?
-
-Brian
-
-> I'm pretty strongly of the opinion that we should give the user what
-> they ask for, and not try to intuit their motives for the question.
-> 
-> -Eric
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index afcb4e9..09c0de8 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -52,6 +52,7 @@ STATIC int xfs_attr_shortform_addname(xfs_da_args_t *args);
+ STATIC int xfs_attr_leaf_get(xfs_da_args_t *args);
+ STATIC int xfs_attr_leaf_addname(xfs_da_args_t *args, bool roll_trans);
+ STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args, bool roll_trans);
++STATIC int xfs_leaf_has_attr(xfs_da_args_t *args);
+ 
+ /*
+  * Internal routines when attribute list is more than one block.
+@@ -59,6 +60,7 @@ STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args, bool roll_trans);
+ STATIC int xfs_attr_node_get(xfs_da_args_t *args);
+ STATIC int xfs_attr_node_addname(xfs_da_args_t *args, bool roll_trans);
+ STATIC int xfs_attr_node_removename(xfs_da_args_t *args, bool roll_trans);
++STATIC int xfs_attr_node_hasname(xfs_da_args_t *args);
+ STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
+ STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
+ 
+@@ -320,6 +322,29 @@ xfs_attr_set_args(
+ }
+ 
+ /*
++ * Return successful if attr is found, or ENOATTR if not
++ */
++int
++xfs_has_attr(
++	struct xfs_da_args      *args)
++{
++	struct xfs_inode        *dp = args->dp;
++	int                     error;
++
++	if (!xfs_inode_hasattr(dp))
++		error = -ENOATTR;
++	else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
++		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
++		error = xfs_shortform_has_attr(args);
++	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
++		error = xfs_leaf_has_attr(args);
++	else
++		error = xfs_attr_node_hasname(args);
++
++	return error;
++}
++
++/*
+  * Remove the attribute specified in @args.
+  */
+ int
+@@ -857,6 +882,31 @@ xfs_attr_leaf_addname(
+ }
+ 
+ /*
++ * Return successful if attr is found, or ENOATTR if not
++ */
++STATIC int
++xfs_leaf_has_attr(
++	struct xfs_da_args      *args)
++{
++	struct xfs_inode        *dp;
++	struct xfs_buf          *bp;
++	int                     error = 0;
++
++	dp = args->dp;
++	args->blkno = 0;
++	error = xfs_attr3_leaf_read(args->trans, args->dp,
++			args->blkno, -1, &bp);
++	if (error)
++		return error;
++
++	error = xfs_attr3_leaf_lookup_int(bp, args);
++	error = (error == -ENOATTR) ? -ENOATTR : 0;
++	xfs_trans_brelse(args->trans, bp);
++
++	return error;
++}
++
++/*
+  * Remove a name from the leaf attribute list structure
+  *
+  * This leaf block cannot have a "remote" value, we only call this routine
+@@ -1192,6 +1242,36 @@ xfs_attr_node_addname(
+ }
+ 
+ /*
++ * Return successful if attr is found, or ENOATTR if not
++ */
++STATIC int
++xfs_attr_node_hasname(
++	struct xfs_da_args	*args)
++{
++	struct xfs_da_state	*state;
++	struct xfs_inode	*dp;
++	int			retval, error;
++
++	/*
++	 * Tie a string around our finger to remind us where we are.
++	 */
++	dp = args->dp;
++	state = xfs_da_state_alloc();
++	state->args = args;
++	state->mp = dp->i_mount;
++
++	/*
++	 * Search to see if name exists, and get back a pointer to it.
++	 */
++	error = xfs_da3_node_lookup_int(state, &retval);
++	if (error || (retval != -EEXIST)) {
++		if (error == 0)
++			error = retval;
++	}
++	return error;
++}
++
++/*
+  * Remove a name from a B-tree attribute list.
+  *
+  * This will involve walking down the Btree, and may involve joining
+diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+index 5c49120..dcf1794 100644
+--- a/fs/xfs/libxfs/xfs_attr.h
++++ b/fs/xfs/libxfs/xfs_attr.h
+@@ -165,6 +165,7 @@ int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
+ int xfs_attr_set_args(struct xfs_da_args *args, struct xfs_buf **leaf_bp,
+ 		 bool roll_trans);
+ int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
++int xfs_has_attr(struct xfs_da_args *args);
+ int xfs_attr_remove_args(struct xfs_da_args *args, bool roll_trans);
+ int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+ 		  int flags, struct attrlist_cursor_kern *cursor);
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index d127f2c..43fafa9 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -624,6 +624,40 @@ xfs_attr_fork_remove(
+ }
+ 
+ /*
++ * Return successful if attr is found, or ENOATTR if not
++ */
++int
++xfs_shortform_has_attr(xfs_da_args_t *args)
++{
++	xfs_attr_shortform_t *sf;
++	xfs_attr_sf_entry_t *sfe;
++	int base, size = 0, end, i;
++	xfs_mount_t *mp;
++	xfs_inode_t *dp;
++
++	dp = args->dp;
++	mp = dp->i_mount;
++	base = sizeof(xfs_attr_sf_hdr_t);
++	sf = (xfs_attr_shortform_t *)dp->i_afp->if_u1.if_data;
++	sfe = &sf->list[0];
++	end = sf->hdr.count;
++	for (i = 0; i < end; sfe = XFS_ATTR_SF_NEXTENTRY(sfe),
++			base += size, i++) {
++		size = XFS_ATTR_SF_ENTSIZE(sfe);
++		if (sfe->namelen != args->namelen)
++			continue;
++		if (memcmp(sfe->nameval, args->name, args->namelen) != 0)
++			continue;
++		if (!xfs_attr_namesp_match(args->flags, sfe->flags))
++			continue;
++		break;
++	}
++	if (i == end)
++		return -ENOATTR;
++	return 0;
++}
++
++/*
+  * Remove an attribute from the shortform attribute list structure.
+  */
+ int
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
+index 9d830ec..98dd169 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.h
++++ b/fs/xfs/libxfs/xfs_attr_leaf.h
+@@ -39,6 +39,7 @@ int	xfs_attr_shortform_getvalue(struct xfs_da_args *args);
+ int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args,
+ 			struct xfs_buf **leaf_bp);
+ int	xfs_attr_shortform_remove(struct xfs_da_args *args);
++int	xfs_shortform_has_attr(struct xfs_da_args *args);
+ int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
+ int	xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
+ xfs_failaddr_t xfs_attr_shortform_verify(struct xfs_inode *ip);
+-- 
+2.7.4
