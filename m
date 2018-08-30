@@ -1,60 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:59668 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727359AbeH3Wgk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Aug 2018 18:36:40 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w7UISxp5150573
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Aug 2018 18:33:11 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2130.oracle.com with ESMTP id 2m2xhu6f3s-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Aug 2018 18:33:11 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w7UIXBna015095
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Aug 2018 18:33:11 GMT
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w7UIXA9m019933
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Aug 2018 18:33:10 GMT
-Subject: [PATCH 14/18] xfs: enable realtime rmap btree
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 30 Aug 2018 11:33:09 -0700
-Message-ID: <153565398972.32612.16225058597323951052.stgit@magnolia>
-In-Reply-To: <153565389576.32612.11057291402738397706.stgit@magnolia>
-References: <153565389576.32612.11057291402738397706.stgit@magnolia>
+Received: from sandeen.net ([63.231.237.45]:39788 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726959AbeH3Xu4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 30 Aug 2018 19:50:56 -0400
+Subject: Re: [PATCH, RFC] xfs: re-enable FIBMAP on reflink; disable for swap
+References: <2eb759e5-2faa-67fd-5c16-c1d8edc42d02@redhat.com>
+ <20180830162545.GA26816@lst.de>
+ <dbe27763-2e69-6e3a-f769-2528eda54940@redhat.com>
+ <20180830163614.GA27069@lst.de>
+ <65e818f2-885d-50a4-0d4a-7700c703c2af@sandeen.net>
+ <20180830180204.GC2853@bfoster> <20180830182849.GA4359@magnolia>
+ <10d35380-6f5f-22a5-7b6a-1cfb60c53cfd@sandeen.net>
+ <20180830193919.GA35751@bfoster>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <3d6029ec-0afe-e90e-d608-e1c627c0818f@sandeen.net>
+Date: Thu, 30 Aug 2018 14:47:09 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20180830193919.GA35751@bfoster>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 8/30/18 2:39 PM, Brian Foster wrote:
+>>> Frankly I think FIBMAP comes verrry
+>>> close to "this API is unfixably stupid and shouldn't be enabled for new
+>>> use cases and should go away some day".
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_super.c |    7 -------
- 1 file changed, 7 deletions(-)
+Backing up, the interface isn't /that/ dumb, other than being limited to
+32 bits.  Q: "Where is this logical file block physically located?"  A: "It is here."
 
+Inefficient, sure.
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index b73eb01f95f3..0b54e74b87ef 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1798,13 +1798,6 @@ xfs_fs_fill_super(
- 		goto out_filestream_unmount;
- 	}
- 
--	if (xfs_sb_version_hasrmapbt(&mp->m_sb) && mp->m_sb.sb_rblocks) {
--		xfs_alert(mp,
--	"reverse mapping btree not compatible with realtime device!");
--		error = -EINVAL;
--		goto out_filestream_unmount;
--	}
--
- 	error = xfs_mountfs(mp);
- 	if (error)
- 		goto out_filestream_unmount;
+>> So instead if anyone asks we'll just give them a successful response which
+>> is indistinguishable from a hole.  :(
+>>
+> ... but this seems to be the crux of the matter (IMO, at least). If we
+> can return -ENOTSUPP or whatever, then it can be made obvious that the
+> user either needs to use fiemap or avoid using reflinked files. ISTM
+> that what we do now is essentially report an incorrect bmap, which leads
+> to these subtle bug reports.
+> 
+> I haven't dug into the fibmap code.. does something prevent returning a
+> legitimate error code?
+
+so ->bmap() returns a sector_t, which is a u64 and doesn't really
+leave room for a negative error return.  But the ioctl interface 
+stuffs that return into an int, and returns it to the user.
+(note to self, wonder why it doesn't return -EOVERFLOW as needed).
+
+I suppose ->bmap() could be changed to take a u64 in/out pointer like the
+user interface does, and return 0 or -errno.  *Shrug* this seems like
+a lot of work to avoid simply giving the user what they asked
+for.  ;)
+
+-Eric
