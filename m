@@ -1,105 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:60020 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:50512 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726383AbeH1XSJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Aug 2018 19:18:09 -0400
+        with ESMTP id S1726727AbeH3WgV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Aug 2018 18:36:21 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w7SJJVUC081093
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:25:04 GMT
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w7UISgew133735
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Aug 2018 18:32:52 GMT
 Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp2120.oracle.com with ESMTP id 2m2yrq5tjd-1
+        by userp2120.oracle.com with ESMTP id 2m2yrqpaw4-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:25:03 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w7SJOwgX018926
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Aug 2018 18:32:52 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w7UIWkcr027227
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:58 GMT
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w7SJOwmc003499
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:24:58 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v8 18/28] xfs: define parent pointer xattr format
-Date: Tue, 28 Aug 2018 12:22:31 -0700
-Message-Id: <1535484161-11059-19-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
-References: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Aug 2018 18:32:46 GMT
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w7UIWk9o012930
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Aug 2018 18:32:46 GMT
+Subject: [PATCH 10/18] xfs: add realtime rmap btree block detection to log
+ recovery
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 30 Aug 2018 11:32:45 -0700
+Message-ID: <153565396501.32612.14802251387614910570.stgit@magnolia>
+In-Reply-To: <153565389576.32612.11057291402738397706.stgit@magnolia>
+References: <153565389576.32612.11057291402738397706.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-We need to define the parent pointer attribute format before we
-start adding support for it into all the code that needs to use it.
-The EA format we will use encodes the following information:
+Identify rtrmapbt blocks in the log correctly so that we can
+validate them during log recovery.
 
-	name={parent inode #, parent inode generation, dirent offset}
-	value={dirent filename}
-
-The inode/gen gives all the information we need to reliably identify
-the parent without requiring child->parent lock ordering, and allows
-userspace to do pathname component level reconstruction without the
-kernel ever needing to verify the parent itself as part of ioctl
-calls.
-
-By using the dirent offset in the EA name, we have a method of
-knowing the exact parent pointer EA we need to modify/remove in
-rename/unlink without an unbound EA name search.
-
-By keeping the dirent name in the value, we have enough information
-to be able to validate and reconstruct damaged directory trees.
-While the diroffset of a filename alone is not unique enough to
-identify the child, the {diroffset,filename,child_inode} tuple is
-sufficient. That is, if the diroffset gets reused and points to a
-different filename, we can detect that from the contents of EA. If a
-link of the same name is created, then we can check whether it
-points at the same inode as the parent EA we current have.
-
-[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t,
-	   changed p_ino to xfs_ino_t and p_namelen to uint8_t,
-	   moved to xfs_da_format for xfs_dir2_dataptr_t]
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-Reviewed-by: Darrick J. Wong<darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_da_format.h | 25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
+ fs/xfs/xfs_log_recover.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-index 67cb9ea..b6405d7 100644
---- a/fs/xfs/libxfs/xfs_da_format.h
-+++ b/fs/xfs/libxfs/xfs_da_format.h
-@@ -873,4 +873,29 @@ static inline unsigned int xfs_dir2_dirblock_bytes(struct xfs_sb *sbp)
- 	return 1 << (sbp->sb_blocklog + sbp->sb_dirblklog);
- }
- 
-+/*
-+ * Parent pointer attribute format definition
-+ *
-+ * EA name encodes the parent inode number, generation and the offset of
-+ * the dirent that points to the child inode. The EA value contains the
-+ * same name as the dirent in the parent directory.
-+ */
-+struct xfs_parent_name_rec {
-+	__be64  p_ino;
-+	__be32  p_gen;
-+	__be32  p_diroffset;
-+};
-+
-+/*
-+ * incore version of the above, also contains name pointers so callers
-+ * can pass/obtain all the parent pointer information in a single structure
-+ */
-+struct xfs_parent_name_irec {
-+	xfs_ino_t		p_ino;
-+	uint32_t		p_gen;
-+	xfs_dir2_dataptr_t	p_diroffset;
-+	const char		*p_name;
-+	uint8_t			p_namelen;
-+};
-+
- #endif /* __XFS_DA_FORMAT_H__ */
--- 
-2.7.4
+
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index db6d380ffa8d..f269c96cb0ab 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2302,6 +2302,7 @@ xlog_recover_get_buf_lsn(
+ 		uuid = &btb->bb_u.s.bb_uuid;
+ 		break;
+ 	}
++	case XFS_RTRMAP_CRC_MAGIC:
+ 	case XFS_BMAP_CRC_MAGIC:
+ 	case XFS_BMAP_MAGIC: {
+ 		struct xfs_btree_block *btb = blk;
+@@ -2464,6 +2465,9 @@ xlog_recover_validate_buf_type(
+ 		case XFS_BMAP_MAGIC:
+ 			bp->b_ops = &xfs_bmbt_buf_ops;
+ 			break;
++		case XFS_RTRMAP_CRC_MAGIC:
++			bp->b_ops = &xfs_rtrmapbt_buf_ops;
++			break;
+ 		case XFS_RMAP_CRC_MAGIC:
+ 			bp->b_ops = &xfs_rmapbt_buf_ops;
+ 			break;
