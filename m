@@ -1,49 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:36074 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725836AbeH3WFd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 30 Aug 2018 18:05:33 -0400
-Date: Thu, 30 Aug 2018 14:02:05 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH, RFC] xfs: re-enable FIBMAP on reflink; disable for swap
-Message-ID: <20180830180204.GC2853@bfoster>
-References: <2eb759e5-2faa-67fd-5c16-c1d8edc42d02@redhat.com>
- <20180830162545.GA26816@lst.de>
- <dbe27763-2e69-6e3a-f769-2528eda54940@redhat.com>
- <20180830163614.GA27069@lst.de>
- <65e818f2-885d-50a4-0d4a-7700c703c2af@sandeen.net>
+Received: from aserp2120.oracle.com ([141.146.126.78]:57018 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727088AbeH3Wfo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Aug 2018 18:35:44 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w7UISel4180333
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Aug 2018 18:32:16 GMT
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp2120.oracle.com with ESMTP id 2m2y2pxecn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Aug 2018 18:32:16 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w7UIWF4k015927
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Aug 2018 18:32:15 GMT
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w7UIWFc3020400
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Aug 2018 18:32:15 GMT
+Subject: [PATCH 06/18] xfs: realtime rmap btree transaction reservations
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 30 Aug 2018 11:32:14 -0700
+Message-ID: <153565393394.32612.114159822497813499.stgit@magnolia>
+In-Reply-To: <153565389576.32612.11057291402738397706.stgit@magnolia>
+References: <153565389576.32612.11057291402738397706.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <65e818f2-885d-50a4-0d4a-7700c703c2af@sandeen.net>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@lst.de>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Aug 30, 2018 at 11:35:46AM -0500, Eric Sandeen wrote:
-> On 8/30/18 11:36 AM, Christoph Hellwig wrote:
-> > On Thu, Aug 30, 2018 at 11:31:40AM -0500, Eric Sandeen wrote:
-> >> That's no reason to uniquely disallow it for reflinked files, though;
-> >> the problem is universal.  It's true for fiemap as well.  So I'm not sure
-> >> that's an argument against the patch?
-> > 
-> > fiemap at least tells you an extent is shared, bmap does not.
-> 
-> yes, so bmap is clearly the wrong interface to use if you want to
-> write directly to a file's blocks.  But if you know enough to check
-> the fiemap shared flag, you know enough to not use fibmap for that purpose...
-> 
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-FWIW, this patch seems reasonable to me. To Christoph's point, I don't
-think either interface really grants license to write to the underlying
-blocks, so either way it's technically being abused for this purpose.
-Unless there's a clear way to return an error for a particular type of
-file, I think it's reasonable behavior for fibmap to expose the data it
-supports (i.e., block maps) and drop the data it doesn't (reflink
-state).
+Make sure that there's enough log reservation to handle mapping
+and unmapping realtime extents.  We have to reserve enough space
+to handle a split in the rtrmapbt to add the record and a second
+split in the regular rmapbt to record the rtrmapbt split.
 
-Brian
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_trans_resv.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-> -Eric
+
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+index f99a7aefe418..33922646ec65 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.c
++++ b/fs/xfs/libxfs/xfs_trans_resv.c
+@@ -74,7 +74,8 @@ xfs_allocfree_log_count(
+ 
+ 	blocks = num_ops * 2 * (2 * mp->m_ag_maxlevels - 1);
+ 	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
+-		blocks += num_ops * (2 * mp->m_rmap_maxlevels - 1);
++		blocks += max(num_ops * (2 * mp->m_rmap_maxlevels - 1),
++			      num_ops * (2 * mp->m_rtrmap_maxlevels - 1));
+ 	if (xfs_sb_version_hasreflink(&mp->m_sb))
+ 		blocks += num_ops * (2 * mp->m_refc_maxlevels - 1);
+ 
