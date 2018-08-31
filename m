@@ -1,34 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:48960 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726652AbeH3UZv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 30 Aug 2018 16:25:51 -0400
-Date: Thu, 30 Aug 2018 18:25:45 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH, RFC] xfs: re-enable FIBMAP on reflink; disable for swap
-Message-ID: <20180830162545.GA26816@lst.de>
-References: <2eb759e5-2faa-67fd-5c16-c1d8edc42d02@redhat.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:48350 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727295AbeHaLam (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 Aug 2018 07:30:42 -0400
+Date: Fri, 31 Aug 2018 00:24:37 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v3 1/3] xfs: don't unlock invalidated buf on aborted tx
+ commit
+Message-ID: <20180831072437.GA7079@infradead.org>
+References: <20180829172634.57981-1-bfoster@redhat.com>
+ <20180829172634.57981-2-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <2eb759e5-2faa-67fd-5c16-c1d8edc42d02@redhat.com>
+In-Reply-To: <20180829172634.57981-2-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Aug 30, 2018 at 11:10:05AM -0500, Eric Sandeen wrote:
-> We disabled FIBMAP/bmap calls for reflinked files because swap will then
-> writes directly to the blocks, bypassing COW mechanisms, and breaking
-> copy on write.  As noted in commit db1327b, this restriction also breaks
-> bootloaders that want to use the FIBMAP ioctl.
-> 
-> Rather than disabling the entire mapping interface for everyone just
-> because swapon may abuse the info, teach xfs_iomap_swapfile_activate()
-> to reject activation for reflinked files, and re-enable the FIBMAP
-> interface.
+> -	}
+> -
+>  	trace_xfs_buf_item_unlock(bip);
 
-Every use of the feature is an abuse, and that includes bootloaders.
-By the time you've obtained the information it can (and often will)
-be stale.
+Can we keep an empty line between the variable declarations and the
+trace call?
+
+> +	freed = atomic_dec_and_test(&bip->bli_refcount);
+> +	if (freed) {
+> +		ASSERT(!aborted || XFS_FORCED_SHUTDOWN(lip->li_mountp));
+> +		/*
+> +		 * An aborted item may be in the AIL regardless of dirty state.
+> +		 * For example, consider an aborted transaction that invalidated
+> +		 * a dirty bli and cleared the dirty state.
+> +		 */
+> +		if (aborted)
+>  			xfs_trans_ail_remove(lip, SHUTDOWN_LOG_IO_ERROR);
+> +		if (aborted || !dirty)
+>  			xfs_buf_item_relse(bp);
+> +	} else if (stale) {
+> +		/*
+> +		 * Stale buffers remain locked until final unpin unless the bli
+> +		 * was freed in the branch above. A freed stale bli implies an
+> +		 * abort because buffer invalidation dirties the bli and
+> +		 * transaction.
+> +		 */
+> +		ASSERT(!freed);
+
+This assert doesn't make sense as we're already in the else statement
+of the 'if (freed) check.
+
+> +		return;
+>  	}
+> +	ASSERT(!stale || (aborted && freed));
+
+This assert still look a little odd to me because it duplicates so
+much of the above logic.  Why not:
+
+	if (atomic_dec_and_test(&bip->bli_refcount)) {
+		/*
+		 * An aborted item may be in the AIL regardless of dirty state.
+		 * For example, consider an aborted transaction that invalidated
+		 * a dirty bli and cleared the dirty state.
+		 */
+		if (aborted) {
+			ASSERT(XFS_FORCED_SHUTDOWN(lip->li_mountp));
+  			xfs_trans_ail_remove(lip, SHUTDOWN_LOG_IO_ERROR);
+ 			xfs_buf_item_relse(bp);
+		} else {
+			ASSERT(!stale);
+			if (!dirty)
+ 				xfs_buf_item_relse(bp);
+		}
+	} else if (stale) {
+		/*
+		 * Stale buffers remain locked until final unpin unless the bli
+		 * was freed in the branch above. A freed stale bli implies an
+		 * abort because buffer invalidation dirties the bli and
+		 * transaction.
+		 */
+		return;
+	}
