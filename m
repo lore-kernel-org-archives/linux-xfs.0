@@ -1,398 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:49660 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726727AbeH3Wfv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Aug 2018 18:35:51 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w7UISrcB134077
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Aug 2018 18:32:22 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp2120.oracle.com with ESMTP id 2m2yrqpaum-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Aug 2018 18:32:22 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w7UIWLxk021928
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Aug 2018 18:32:21 GMT
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w7UIWLCk003635
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Aug 2018 18:32:21 GMT
-Subject: [PATCH 07/18] xfs: add realtime rmap btree operations
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 30 Aug 2018 11:32:20 -0700
-Message-ID: <153565394004.32612.3279319394035721642.stgit@magnolia>
-In-Reply-To: <153565389576.32612.11057291402738397706.stgit@magnolia>
-References: <153565389576.32612.11057291402738397706.stgit@magnolia>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:43492 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725772AbeHaFbn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 Aug 2018 01:31:43 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 430F32C092
+        for <linux-xfs@vger.kernel.org>; Fri, 31 Aug 2018 01:26:46 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 200981] hypervisor fs hangs at heavy write activity on VM (kvm,
+ qcow2 image) having a reflink disk copy
+Date: Fri, 31 Aug 2018 01:26:46 +0000
+Message-ID: <bug-200981-201763-8OX7m1RWO0@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-200981-201763@https.bugzilla.kernel.org/>
+References: <bug-200981-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=200981
 
-Implement the generic btree operations needed to manipulate rtrmap
-btree blocks. This is different from the regular rmapbt in that we
-allocate space from the filesystem at large, and are neither
-constrained to the free space nor any particular AG.
+--- Comment #2 from Dave Chinner (david@fromorbit.com) ---
+On Thu, Aug 30, 2018 at 02:32:35PM +0000, bugzilla-daemon@bugzilla.kernel.org
+wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=200981
+> 
+> kernel: vanilla 4.18.5
+> gcc (Ubuntu 7.3.0-16ubuntu3) 7.3.0
+> Copyright (C) 2017 Free Software Foundation, Inc.
+> This is free software; see the source for copying conditions.  There is NO
+> warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+> 
+> More or less reproducible for me using next sequence:
+> 
+> - on host:
+>   create LV of appropriate size (20g in my case)
+>   mkfs.xfs -m reflink=1 /dev/data/LV
+>   mount /dev/data/LV /mnt/
+>   run kvm VM with qcow2 image (/mnt/disk)    
+> 
+> - inside vm:
+>   sysbench --test=fileio --file-total-size=9G prepare
+> 
+> - on host:
+>   cp --reflink=always disk disk.b
+> 
+> - inside vm: 
+>   sysbench --test=fileio --file-total-size=9G --file-test-mode=seqwr
+> --max-time=6000 --max-requests=0 --threads=16 run
+> 
+> Some time after i/o on /dev/data/LV fall to zero and fs become completely
+> unavailable and then I see a bunch of records:
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_rtrmap_btree.c |  314 ++++++++++++++++++++++++++++++++++++++
- 1 file changed, 314 insertions(+)
+The first error is this:
 
+[ 2212.046108] ================================================
+[ 2212.051809] WARNING: lock held when returning to user space!
+[ 2212.057511] 4.18.5 #1 Not tainted
+[ 2212.060864] ------------------------------------------------
+[ 2212.066564] worker/6123 is leaving the kernel with locks still held!
+[ 2212.072961] 1 lock held by worker/6123:
+[ 2212.076835]  #0: 000000009eab4f1b (sb_internal#2){.+.+}, at:
+xfs_trans_alloc+0x17c/0x220
 
-diff --git a/fs/xfs/libxfs/xfs_rtrmap_btree.c b/fs/xfs/libxfs/xfs_rtrmap_btree.c
-index 62ff99278b3d..4529dbc6545c 100644
---- a/fs/xfs/libxfs/xfs_rtrmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_rtrmap_btree.c
-@@ -17,12 +17,14 @@
- #include "xfs_trans.h"
- #include "xfs_alloc.h"
- #include "xfs_btree.h"
-+#include "xfs_rmap.h"
- #include "xfs_rtrmap_btree.h"
- #include "xfs_trace.h"
- #include "xfs_cksum.h"
- #include "xfs_error.h"
- #include "xfs_extent_busy.h"
- #include "xfs_ag_resv.h"
-+#include "xfs_bmap.h"
- 
- /*
-  * Realtime Reverse map btree.
-@@ -51,6 +53,270 @@ xfs_rtrmapbt_dup_cursor(
- 	return new;
- }
- 
-+STATIC int
-+xfs_rtrmapbt_alloc_block(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_ptr	*start,
-+	union xfs_btree_ptr	*new,
-+	int			*stat)
-+{
-+	struct xfs_alloc_arg	args;
-+	int			error;
-+
-+	memset(&args, 0, sizeof(args));
-+	args.tp = cur->bc_tp;
-+	args.mp = cur->bc_mp;
-+	args.fsbno = cur->bc_tp->t_firstblock;
-+	xfs_rmap_ino_bmbt_owner(&args.oinfo, cur->bc_private.b.ip->i_ino,
-+			cur->bc_private.b.whichfork);
-+
-+	if (args.fsbno == NULLFSBLOCK) {
-+		args.fsbno = be64_to_cpu(start->l);
-+		args.type = XFS_ALLOCTYPE_START_BNO;
-+		/*
-+		 * Make sure there is sufficient room left in the AG to
-+		 * complete a full tree split for an extent insert.  If
-+		 * we are converting the middle part of an extent then
-+		 * we may need space for two tree splits.
-+		 *
-+		 * We are relying on the caller to make the correct block
-+		 * reservation for this operation to succeed.  If the
-+		 * reservation amount is insufficient then we may fail a
-+		 * block allocation here and corrupt the filesystem.
-+		 */
-+		args.minleft = args.tp->t_blk_res;
-+	} else if (cur->bc_tp->t_flags & XFS_TRANS_LOWMODE) {
-+		args.type = XFS_ALLOCTYPE_START_BNO;
-+	} else {
-+		args.type = XFS_ALLOCTYPE_NEAR_BNO;
-+	}
-+
-+	args.minlen = args.maxlen = args.prod = 1;
-+	args.wasdel = 0;
-+	error = xfs_alloc_vextent(&args);
-+	if (error)
-+		goto error0;
-+
-+	if (args.fsbno == NULLFSBLOCK && args.minleft) {
-+		/*
-+		 * Could not find an AG with enough free space to satisfy
-+		 * a full btree split.  Try again without minleft and if
-+		 * successful activate the lowspace algorithm.
-+		 */
-+		args.fsbno = 0;
-+		args.type = XFS_ALLOCTYPE_FIRST_AG;
-+		args.minleft = 0;
-+		error = xfs_alloc_vextent(&args);
-+		if (error)
-+			goto error0;
-+		cur->bc_tp->t_flags |= XFS_TRANS_LOWMODE;
-+	}
-+	if (args.fsbno == NULLFSBLOCK) {
-+		*stat = 0;
-+		return 0;
-+	}
-+	ASSERT(args.len == 1);
-+	cur->bc_private.b.allocated++;
-+	cur->bc_private.b.ip->i_d.di_nblocks++;
-+	xfs_trans_log_inode(args.tp, cur->bc_private.b.ip, XFS_ILOG_CORE);
-+
-+	new->l = cpu_to_be64(args.fsbno);
-+
-+	*stat = 1;
-+	return 0;
-+
-+ error0:
-+	return error;
-+}
-+
-+STATIC int
-+xfs_rtrmapbt_free_block(
-+	struct xfs_btree_cur	*cur,
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_mount	*mp = cur->bc_mp;
-+	struct xfs_inode	*ip = cur->bc_private.b.ip;
-+	struct xfs_trans	*tp = cur->bc_tp;
-+	xfs_fsblock_t		fsbno = XFS_DADDR_TO_FSB(mp, XFS_BUF_ADDR(bp));
-+	struct xfs_owner_info	oinfo;
-+
-+	xfs_rmap_ino_bmbt_owner(&oinfo, ip->i_ino, cur->bc_private.b.whichfork);
-+	xfs_bmap_add_free(cur->bc_tp, fsbno, 1, &oinfo);
-+	ip->i_d.di_nblocks--;
-+
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+	return 0;
-+}
-+
-+/*
-+ * Calculate number of records in the in-core realtime rmap btree inode root.
-+ */
-+STATIC int
-+xfs_rtrmapbt_broot_maxrecs(
-+	int			blocklen,
-+	bool			leaf)
-+{
-+	blocklen -= XFS_RTRMAP_BLOCK_LEN;
-+
-+	if (leaf)
-+		return blocklen / sizeof(struct xfs_rtrmap_rec);
-+	return blocklen / (2 * sizeof(struct xfs_rtrmap_key) +
-+			sizeof(xfs_rtrmap_ptr_t));
-+}
-+
-+STATIC int
-+xfs_rtrmapbt_get_minrecs(
-+	struct xfs_btree_cur	*cur,
-+	int			level)
-+{
-+	struct xfs_ifork	*ifp;
-+
-+	if (level == cur->bc_nlevels - 1) {
-+		ifp = XFS_IFORK_PTR(cur->bc_private.b.ip,
-+				    cur->bc_private.b.whichfork);
-+
-+		return xfs_rtrmapbt_broot_maxrecs(ifp->if_broot_bytes,
-+				level == 0) / 2;
-+	}
-+
-+	return cur->bc_mp->m_rtrmap_mnr[level != 0];
-+}
-+
-+STATIC int
-+xfs_rtrmapbt_get_maxrecs(
-+	struct xfs_btree_cur	*cur,
-+	int			level)
-+{
-+	struct xfs_ifork	*ifp;
-+
-+	if (level == cur->bc_nlevels - 1) {
-+		ifp = XFS_IFORK_PTR(cur->bc_private.b.ip,
-+				    cur->bc_private.b.whichfork);
-+
-+		return xfs_rtrmapbt_broot_maxrecs(ifp->if_broot_bytes,
-+				level == 0);
-+	}
-+
-+	return cur->bc_mp->m_rtrmap_mxr[level != 0];
-+}
-+
-+STATIC void
-+xfs_rtrmapbt_init_key_from_rec(
-+	union xfs_btree_key	*key,
-+	union xfs_btree_rec	*rec)
-+{
-+	key->rtrmap.rm_startblock = rec->rtrmap.rm_startblock;
-+	key->rtrmap.rm_owner = rec->rtrmap.rm_owner;
-+	key->rtrmap.rm_offset = rec->rtrmap.rm_offset;
-+}
-+
-+STATIC void
-+xfs_rtrmapbt_init_high_key_from_rec(
-+	union xfs_btree_key	*key,
-+	union xfs_btree_rec	*rec)
-+{
-+	uint64_t		off;
-+	int			adj;
-+
-+	adj = be64_to_cpu(rec->rtrmap.rm_blockcount) - 1;
-+
-+	key->rtrmap.rm_startblock = rec->rtrmap.rm_startblock;
-+	be64_add_cpu(&key->rtrmap.rm_startblock, adj);
-+	key->rtrmap.rm_owner = rec->rtrmap.rm_owner;
-+	key->rtrmap.rm_offset = rec->rtrmap.rm_offset;
-+	if (XFS_RMAP_NON_INODE_OWNER(be64_to_cpu(rec->rtrmap.rm_owner)) ||
-+	    XFS_RMAP_IS_BMBT_BLOCK(be64_to_cpu(rec->rtrmap.rm_offset)))
-+		return;
-+	off = be64_to_cpu(key->rtrmap.rm_offset);
-+	off = (XFS_RMAP_OFF(off) + adj) | (off & ~XFS_RMAP_OFF_MASK);
-+	key->rtrmap.rm_offset = cpu_to_be64(off);
-+}
-+
-+STATIC void
-+xfs_rtrmapbt_init_rec_from_cur(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_rec	*rec)
-+{
-+	rec->rtrmap.rm_startblock = cpu_to_be64(cur->bc_rec.r.rm_startblock);
-+	rec->rtrmap.rm_blockcount = cpu_to_be64(cur->bc_rec.r.rm_blockcount);
-+	rec->rtrmap.rm_owner = cpu_to_be64(cur->bc_rec.r.rm_owner);
-+	rec->rtrmap.rm_offset = cpu_to_be64(
-+			xfs_rmap_irec_offset_pack(&cur->bc_rec.r));
-+}
-+
-+STATIC void
-+xfs_rtrmapbt_init_ptr_from_cur(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_ptr	*ptr)
-+{
-+	ptr->l = 0;
-+}
-+
-+STATIC int64_t
-+xfs_rtrmapbt_key_diff(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_key	*key)
-+{
-+	struct xfs_rmap_irec	*rec = &cur->bc_rec.r;
-+	struct xfs_rtrmap_key	*kp = &key->rtrmap;
-+	__u64			x, y;
-+
-+	x = be64_to_cpu(kp->rm_startblock);
-+	y = rec->rm_startblock;
-+	if (x > y)
-+		return 1;
-+	else if (y > x)
-+		return -1;
-+
-+	x = be64_to_cpu(kp->rm_owner);
-+	y = rec->rm_owner;
-+	if (x > y)
-+		return 1;
-+	else if (y > x)
-+		return -1;
-+
-+	x = XFS_RMAP_OFF(be64_to_cpu(kp->rm_offset));
-+	y = rec->rm_offset;
-+	if (x > y)
-+		return 1;
-+	else if (y > x)
-+		return -1;
-+	return 0;
-+}
-+
-+STATIC int64_t
-+xfs_rtrmapbt_diff_two_keys(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_key	*k1,
-+	union xfs_btree_key	*k2)
-+{
-+	struct xfs_rtrmap_key	*kp1 = &k1->rtrmap;
-+	struct xfs_rtrmap_key	*kp2 = &k2->rtrmap;
-+	__u64			x, y;
-+
-+	x = be64_to_cpu(kp1->rm_startblock);
-+	y = be64_to_cpu(kp2->rm_startblock);
-+	if (x > y)
-+		return 1;
-+	else if (y > x)
-+		return -1;
-+
-+	x = be64_to_cpu(kp1->rm_owner);
-+	y = be64_to_cpu(kp2->rm_owner);
-+	if (x > y)
-+		return 1;
-+	else if (y > x)
-+		return -1;
-+
-+	x = XFS_RMAP_OFF(be64_to_cpu(kp1->rm_offset));
-+	y = XFS_RMAP_OFF(be64_to_cpu(kp2->rm_offset));
-+	if (x > y)
-+		return 1;
-+	else if (y > x)
-+		return -1;
-+	return 0;
-+}
-+
- static xfs_failaddr_t
- xfs_rtrmapbt_verify(
- 	struct xfs_buf		*bp)
-@@ -116,12 +382,60 @@ const struct xfs_buf_ops xfs_rtrmapbt_buf_ops = {
- 	.verify_struct		= xfs_rtrmapbt_verify,
- };
- 
-+STATIC int
-+xfs_rtrmapbt_keys_inorder(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_key	*k1,
-+	union xfs_btree_key	*k2)
-+{
-+	if (be64_to_cpu(k1->rtrmap.rm_startblock) <
-+	    be64_to_cpu(k2->rtrmap.rm_startblock))
-+		return 1;
-+	if (be64_to_cpu(k1->rtrmap.rm_owner) <
-+	    be64_to_cpu(k2->rtrmap.rm_owner))
-+		return 1;
-+	if (XFS_RMAP_OFF(be64_to_cpu(k1->rtrmap.rm_offset)) <=
-+	    XFS_RMAP_OFF(be64_to_cpu(k2->rtrmap.rm_offset)))
-+		return 1;
-+	return 0;
-+}
-+
-+STATIC int
-+xfs_rtrmapbt_recs_inorder(
-+	struct xfs_btree_cur	*cur,
-+	union xfs_btree_rec	*r1,
-+	union xfs_btree_rec	*r2)
-+{
-+	if (be64_to_cpu(r1->rtrmap.rm_startblock) <
-+	    be64_to_cpu(r2->rtrmap.rm_startblock))
-+		return 1;
-+	if (XFS_RMAP_OFF(be64_to_cpu(r1->rtrmap.rm_offset)) <
-+	    XFS_RMAP_OFF(be64_to_cpu(r2->rtrmap.rm_offset)))
-+		return 1;
-+	if (be64_to_cpu(r1->rtrmap.rm_owner) <=
-+	    be64_to_cpu(r2->rtrmap.rm_owner))
-+		return 1;
-+	return 0;
-+}
-+
- static const struct xfs_btree_ops xfs_rtrmapbt_ops = {
- 	.rec_len		= sizeof(struct xfs_rtrmap_rec),
- 	.key_len		= 2 * sizeof(struct xfs_rtrmap_key),
- 
- 	.dup_cursor		= xfs_rtrmapbt_dup_cursor,
-+	.alloc_block		= xfs_rtrmapbt_alloc_block,
-+	.free_block		= xfs_rtrmapbt_free_block,
-+	.get_minrecs		= xfs_rtrmapbt_get_minrecs,
-+	.get_maxrecs		= xfs_rtrmapbt_get_maxrecs,
-+	.init_key_from_rec	= xfs_rtrmapbt_init_key_from_rec,
-+	.init_high_key_from_rec	= xfs_rtrmapbt_init_high_key_from_rec,
-+	.init_rec_from_cur	= xfs_rtrmapbt_init_rec_from_cur,
-+	.init_ptr_from_cur	= xfs_rtrmapbt_init_ptr_from_cur,
-+	.key_diff		= xfs_rtrmapbt_key_diff,
- 	.buf_ops		= &xfs_rtrmapbt_buf_ops,
-+	.diff_two_keys		= xfs_rtrmapbt_diff_two_keys,
-+	.keys_inorder		= xfs_rtrmapbt_keys_inorder,
-+	.recs_inorder		= xfs_rtrmapbt_recs_inorder,
- };
- 
- /*
+Which happens 5 minutes before the hung processes start being
+reported. Looks like something has gone wrong and an error path has
+leaked a transaction.
+
+Can you see if commit dcbd44f79986 ("xfs: fix transaction leak on
+remote attr set/remove failure") addresses the problem you are
+seeing?
+
+-Dave.
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
