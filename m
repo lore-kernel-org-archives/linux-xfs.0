@@ -1,77 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:60034 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:53284 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727292AbeHaRaJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 31 Aug 2018 13:30:09 -0400
-Date: Fri, 31 Aug 2018 09:22:39 -0400
+        id S1727326AbeHaTVY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 31 Aug 2018 15:21:24 -0400
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 92FA687A81
+        for <linux-xfs@vger.kernel.org>; Fri, 31 Aug 2018 15:13:27 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 790972166B41
+        for <linux-xfs@vger.kernel.org>; Fri, 31 Aug 2018 15:13:27 +0000 (UTC)
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v3 3/3] xfs: refactor xfs_buf_log_item reference count
- handling
-Message-ID: <20180831132239.GC39825@bfoster>
-References: <20180829172634.57981-1-bfoster@redhat.com>
- <20180829172634.57981-4-bfoster@redhat.com>
- <20180831073038.GB7079@infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180831073038.GB7079@infradead.org>
+Subject: [PATCH v4 0/3] xfs: bli refcount fixups
+Date: Fri, 31 Aug 2018 11:13:24 -0400
+Message-Id: <20180831151327.41225-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Fri, Aug 31, 2018 at 12:30:38AM -0700, Christoph Hellwig wrote:
-> > +bool
-> > +xfs_buf_item_put(
-> > +	struct xfs_buf_log_item	*bip)
-> 
-> Any reason to not have this above the caller?  Also a little
-> top of function comment explaining this helper might be nice.
-> 
+v4:
+- Add a space to xfs_buf_item_unlock().
+- Move xfs_buf_item_put() and add a comment.
+v3: https://marc.info/?l=linux-xfs&m=153556359604256&w=2
+- Rename xfs_buf_item_unref() to xfs_buf_item_put()
+- Minor logic and comment fixups.
+v2: https://marc.info/?l=linux-xfs&m=153537995111772&w=2
+- Refactor stale bli unlock logic to more closely resemble original.
+- Use bool for 'freed' variable and clean up type casting.
+- Reorder asserts/tracepoints and remove unused stale tracepoint.
+- Added patches 2 and 3.
+v1: https://marc.info/?l=linux-xfs&m=153486008127962&w=2
 
-Ok, I can move it and add a comment.
+Brian Foster (3):
+  xfs: don't unlock invalidated buf on aborted tx commit
+  xfs: clean up xfs_trans_brelse()
+  xfs: refactor xfs_buf_log_item reference count handling
 
-> > +	/*
-> > +	 * We dropped the last ref and must free the item if clean or aborted.
-> > +	 * If the bli is dirty and non-aborted, the buffer was clean in the
-> > +	 * transaction but still awaiting writeback from previous changes. In
-> > +	 * that case, the bli is freed on buffer writeback completion.
-> > +	 */
-> > +	aborted = test_bit(XFS_LI_ABORTED, &lip->li_flags) ||
-> > +		  XFS_FORCED_SHUTDOWN(lip->li_mountp);
-> > +	dirty = bip->bli_flags & XFS_BLI_DIRTY;
-> > +	if (dirty && !aborted)
-> > +		return false;
-> > +
-> > +	/*
-> > +	 * The bli is aborted or clean. An aborted item may be in the AIL
-> > +	 * regardless of dirty state.  For example, consider an aborted
-> > +	 * transaction that invalidated a dirty bli and cleared the dirty
-> > +	 * state.
-> > +	 */
-> > +	if (aborted)
-> > +		xfs_trans_ail_remove(lip, SHUTDOWN_LOG_IO_ERROR);
-> 
-> Hmm, why not:
-> 
-> 	if (test_bit(XFS_LI_ABORTED, &lip->li_flags) ||
-> 	    XFS_FORCED_SHUTDOWN(lip->li_mountp))
-> 		xfs_trans_ail_remove(lip, SHUTDOWN_LOG_IO_ERROR);
-> 	else if (dirty)
-> 		return false;
+ fs/xfs/xfs_buf_item.c  | 119 ++++++++++++++++++++++-------------------
+ fs/xfs/xfs_buf_item.h  |   1 +
+ fs/xfs/xfs_trace.h     |   1 -
+ fs/xfs/xfs_trans_buf.c |  99 +++++++++-------------------------
+ 4 files changed, 89 insertions(+), 131 deletions(-)
 
-Because 1.) I wanted to separate the logic and comments for when we must
-free the item from when we don't and 2.) I don't want to look at this
-function and see the aborted logic first and then try to grok the more
-common case in an 'else' branch. I want to see the common case logic
-front and center and consider the aborted case as the outlier.
-
-IOW, the aborted state shouldn't really drive the logical flow of this
-function:
-
-- if the bli is still referenced, return
-- if the bli is unreferenced but is going to be written back, return
-- otherwise we're the last user, free the item appropriately
-
-Brian
+-- 
+2.17.1
