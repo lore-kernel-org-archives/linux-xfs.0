@@ -1,204 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:39142 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727224AbeH1XSM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Aug 2018 19:18:12 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w7SJJEFS125093
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:25:07 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp2120.oracle.com with ESMTP id 2m2y2pdwm3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:25:07 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w7SJP1OG011855
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:25:01 GMT
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w7SJP1am003527
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Aug 2018 19:25:01 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v8 23/28] xfs: Add parent pointers to rename
-Date: Tue, 28 Aug 2018 12:22:36 -0700
-Message-Id: <1535484161-11059-24-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
-References: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
+Received: from sandeen.net ([63.231.237.45]:42374 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727258AbeHaRPg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 31 Aug 2018 13:15:36 -0400
+Subject: Re: [PATCH, RFC] xfs: re-enable FIBMAP on reflink; disable for swap
+References: <2eb759e5-2faa-67fd-5c16-c1d8edc42d02@redhat.com>
+ <20180830162545.GA26816@lst.de>
+ <dbe27763-2e69-6e3a-f769-2528eda54940@redhat.com>
+ <20180830163614.GA27069@lst.de>
+ <65e818f2-885d-50a4-0d4a-7700c703c2af@sandeen.net>
+ <20180830180204.GC2853@bfoster> <20180830182849.GA4359@magnolia>
+ <10d35380-6f5f-22a5-7b6a-1cfb60c53cfd@sandeen.net>
+ <20180831001106.GG5631@dastard>
+ <7ae98d88-7cbf-1314-83b6-dc15da5124eb@sandeen.net>
+ <20180831030542.GK5631@dastard>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <19b4da59-3720-6647-e557-9d7353ed509b@sandeen.net>
+Date: Fri, 31 Aug 2018 08:08:11 -0500
+MIME-Version: 1.0
+In-Reply-To: <20180831030542.GK5631@dastard>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-This patch removes the old parent pointer attribute during the
-rename operation, and re-adds the updated parent pointer
+On 8/30/18 10:05 PM, Dave Chinner wrote:
+> On Thu, Aug 30, 2018 at 08:34:02PM -0500, Eric Sandeen wrote:
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
- fs/xfs/xfs_inode.c | 70 +++++++++++++++++++++++++++++++++++++++++-------------
- 1 file changed, 54 insertions(+), 16 deletions(-)
+...
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 300ba90..043a5d6 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2931,6 +2931,8 @@ xfs_rename(
- 	bool			src_is_directory = S_ISDIR(VFS_I(src_ip)->i_mode);
- 	int			spaceres;
- 	int			error;
-+	xfs_dir2_dataptr_t	new_diroffset;
-+	xfs_dir2_dataptr_t	old_diroffset;
- 
- 	trace_xfs_rename(src_dp, target_dp, src_name, target_name);
- 
-@@ -2985,14 +2987,14 @@ xfs_rename(
- 	 * we can rely on either trans_commit or trans_cancel to unlock
- 	 * them.
- 	 */
--	xfs_trans_ijoin(tp, src_dp, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin(tp, src_dp, 0);
- 	if (new_parent)
--		xfs_trans_ijoin(tp, target_dp, XFS_ILOCK_EXCL);
--	xfs_trans_ijoin(tp, src_ip, XFS_ILOCK_EXCL);
-+		xfs_trans_ijoin(tp, target_dp, 0);
-+	xfs_trans_ijoin(tp, src_ip, 0);
- 	if (target_ip)
--		xfs_trans_ijoin(tp, target_ip, XFS_ILOCK_EXCL);
-+		xfs_trans_ijoin(tp, target_ip, 0);
- 	if (wip)
--		xfs_trans_ijoin(tp, wip, XFS_ILOCK_EXCL);
-+		xfs_trans_ijoin(tp, wip, 0);
- 
- 	/*
- 	 * If we are using project inheritance, we only allow renames
-@@ -3002,15 +3004,16 @@ xfs_rename(
- 	if (unlikely((target_dp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) &&
- 		     (xfs_get_projid(target_dp) != xfs_get_projid(src_ip)))) {
- 		error = -EXDEV;
--		goto out_trans_cancel;
-+		goto out_unlock;
- 	}
- 
- 	/* RENAME_EXCHANGE is unique from here on. */
--	if (flags & RENAME_EXCHANGE)
--		return xfs_cross_rename(tp, src_dp, src_name, src_ip,
-+	if (flags & RENAME_EXCHANGE) {
-+		error = xfs_cross_rename(tp, src_dp, src_name, src_ip,
- 					target_dp, target_name, target_ip,
- 					spaceres);
--
-+		goto out;
-+	}
- 	/*
- 	 * Set up the target.
- 	 */
-@@ -3022,7 +3025,7 @@ xfs_rename(
- 		if (!spaceres) {
- 			error = xfs_dir_canenter(tp, target_dp, target_name);
- 			if (error)
--				goto out_trans_cancel;
-+				goto out_unlock;
- 		}
- 		/*
- 		 * If target does not exist and the rename crosses
-@@ -3030,7 +3033,7 @@ xfs_rename(
- 		 * to account for the ".." reference from the new entry.
- 		 */
- 		error = xfs_dir_createname(tp, target_dp, target_name,
--					   src_ip->i_ino, spaceres, NULL);
-+					   src_ip->i_ino, spaceres, &new_diroffset);
- 		if (error)
- 			goto out_trans_cancel;
- 
-@@ -3055,7 +3058,7 @@ xfs_rename(
- 			if (!(xfs_dir_isempty(target_ip)) ||
- 			    (VFS_I(target_ip)->i_nlink > 2)) {
- 				error = -EEXIST;
--				goto out_trans_cancel;
-+				goto out_unlock;
- 			}
- 		}
- 
-@@ -3069,7 +3072,7 @@ xfs_rename(
- 		 * name at the destination directory, remove it first.
- 		 */
- 		error = xfs_dir_replace(tp, target_dp, target_name,
--					src_ip->i_ino, spaceres, NULL);
-+					src_ip->i_ino, spaceres, &new_diroffset);
- 		if (error)
- 			goto out_trans_cancel;
- 
-@@ -3103,7 +3106,7 @@ xfs_rename(
- 		 * directory.
- 		 */
- 		error = xfs_dir_replace(tp, src_ip, &xfs_name_dotdot,
--					target_dp->i_ino, spaceres, NULL);
-+					target_dp->i_ino, spaceres, &new_diroffset);
- 		ASSERT(error != -EEXIST);
- 		if (error)
- 			goto out_trans_cancel;
-@@ -3142,10 +3145,10 @@ xfs_rename(
- 	 */
- 	if (wip) {
- 		error = xfs_dir_replace(tp, src_dp, src_name, wip->i_ino,
--					spaceres, NULL);
-+					spaceres, &old_diroffset);
- 	} else
- 		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
--					   spaceres, NULL);
-+					   spaceres, &old_diroffset);
- 	if (error)
- 		goto out_trans_cancel;
- 
-@@ -3175,16 +3178,51 @@ xfs_rename(
- 		VFS_I(wip)->i_state &= ~I_LINKABLE;
- 	}
- 
-+out:
-+	if (xfs_sb_version_hasparent(&mp->m_sb)) {
-+		error = xfs_parent_add_deferred(target_dp, tp, src_ip, target_name,
-+				new_diroffset);
-+		if (error)
-+			goto out_bmap_cancel;
-+
-+		error = xfs_parent_remove_deferred(src_dp, tp, src_ip,
-+						   old_diroffset);
-+		if (error)
-+			goto out_bmap_cancel;
-+	}
-+
- 	xfs_trans_ichgtime(tp, src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
- 	xfs_trans_log_inode(tp, src_dp, XFS_ILOG_CORE);
- 	if (new_parent)
- 		xfs_trans_log_inode(tp, target_dp, XFS_ILOG_CORE);
- 
- 	error = xfs_finish_rename(tp);
-+
- 	if (wip)
- 		xfs_irele(wip);
-+	if (wip)
-+		xfs_iunlock(wip, XFS_ILOCK_EXCL);
-+	if (target_ip)
-+		xfs_iunlock(target_ip, XFS_ILOCK_EXCL);
-+	xfs_iunlock(src_ip, XFS_ILOCK_EXCL);
-+	if (new_parent)
-+		xfs_iunlock(target_dp, XFS_ILOCK_EXCL);
-+	xfs_iunlock(src_dp, XFS_ILOCK_EXCL);
-+
- 	return error;
- 
-+out_bmap_cancel:
-+	xfs_defer_cancel(tp);
-+out_unlock:
-+	if (wip)
-+		xfs_iunlock(wip, XFS_ILOCK_EXCL);
-+	if (target_ip)
-+		xfs_iunlock(target_ip, XFS_ILOCK_EXCL);
-+	xfs_iunlock(src_ip, XFS_ILOCK_EXCL);
-+	if (new_parent)
-+		xfs_iunlock(target_dp, XFS_ILOCK_EXCL);
-+	xfs_iunlock(src_dp, XFS_ILOCK_EXCL);
-+
- out_trans_cancel:
- 	xfs_trans_cancel(tp);
- out_release_wip:
--- 
-2.7.4
+>> We /could/ FIBMAP a reflinked file
+>> exactly as well as we can FIBMAP a non-reflinked file, but we choose
+>> not to.  This choice creates unnecessary problems for existing apps.
+> 
+> Yes, we /could/. But we don't, because because of the typical use
+> case of FIBMAP which is to map files so that IO (read and/or write)
+> can be done directly to the block device without going through the
+> filesystem. For normal files this is /relatively/ safe if the
+> correct precautions are taken. For a shared extent, writing is
+> *never* safe.
+> 
+> We don't know what users of FIBMAP are going to do with the block
+> map they get, but we *know* there are apps that use it to write
+> direct to block devices and we *know* that this will cause _silent_
+> data corruption and/or exposure of privileged information (shared
+> data can have different owners at different permission levels) when
+> it occurs.
+
+It'd be way better for my blood pressure if people would stop making
+poor arguments about orthogonal issues.
+
+If you can directly read the block device hosting the files, file
+permissions of shared blocks are completely beside the point.
+
+And app writers can make bad/dangerous decisions no matter what mapping
+mechanisms we provide.
+
+(If an app writer knows enough to look at FIEMAP flags to check for shared
+blocks before writing, they'd know enough to use it instead of FIBMAP in
+the first place.)
+
+But I'm not even aware of any apps that actually /do/ use FI[BE]MAP mapping
+information to write, in any case.
+
+While grub2 does directly write file blocks in one case, it doesn't
+even /use/ FIBMAP!  So it will happily continue doing so, even for
+reflinked files, despite our best efforts to break the interface for
+safe users.
+
+
+The "typical use case" is to map a file for a bootloader to /read/
+at boot, and our arbitrary restriction has broken systems in
+the real world, and burned a lot of institutional effort getting
+to the bottom of the problem and working around it.
+
+I know it's our job to be pedantic, secure, and correct, but speculating
+about what misbehaving privileged apps /could/ do and then plugging a
+small fraction of the possible misuse vectors while breaking actual, safe,
+real-world usecases just isn't a compelling story.
+
+-Eric
