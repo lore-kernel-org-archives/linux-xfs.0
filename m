@@ -1,96 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:38050 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728220AbeIFNMu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Sep 2018 09:12:50 -0400
-Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w868Ywvn061169
-        for <linux-xfs@vger.kernel.org>; Thu, 6 Sep 2018 04:38:29 -0400
-Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2mayfkbust-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Thu, 06 Sep 2018 04:38:29 -0400
-Received: from localhost
-        by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Thu, 6 Sep 2018 02:38:28 -0600
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH V2 06/16] Fix xfs/139 to work with 64k block size
-Date: Thu,  6 Sep 2018 14:10:03 +0530
-In-Reply-To: <20180906084013.2687-1-chandan@linux.vnet.ibm.com>
-References: <20180906084013.2687-1-chandan@linux.vnet.ibm.com>
-Message-Id: <20180906084013.2687-7-chandan@linux.vnet.ibm.com>
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:47064 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726953AbeIAVeq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Sep 2018 17:34:46 -0400
+Date: Sun, 2 Sep 2018 01:21:58 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH 00/16] Fix tests to work on non-4k block sized fs
+ instances
+Message-ID: <20180901172158.GH3651@desktop>
+References: <20180816072646.14490-1-chandan@linux.vnet.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180816072646.14490-1-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, eguan@redhat.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
+To: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-For 64k block size, the agsize provided in the test causes mkfs.xfs to
-fail due to insufficient log space. Hence this commit computes agsize
-based on block size of the filesystem.
+On Thu, Aug 16, 2018 at 12:56:30PM +0530, Chandan Rajendra wrote:
+> This patchset fixes tests (mostly XFS specific ones) to work on
+> variable block size. These patches now use the output of "od" utility
+> to verify the contents of the test files instead of the md5sum
+> utility.
+> 
+> The patchset modifies _filter_fiemap() filter function to optionally
+> print the file offset range in block size units.
+> 
+> Chandan Rajendra (16):
+>   Fix xfs/009 to work with 64k block size
+>   xfs/050: Fix "Push past soft inode limit" case
+>   Fix xfs/050 to work with 64k block size
+>   Fix xfs/074 to work with 64k block size
+>   Fix xfs/127 to work with 64k block size
+>   Fix xfs/139 to work with 64k block size
+>   Fix xfs/140 to work with 64k block size
+>   Fix xfs/190 to work with 64k block size
+>   Fix xfs/299 to work with 64k block size
+>   xfs/325: Inject free_extent error after CoW operation
 
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
----
- tests/xfs/139     | 15 +++++++++------
- tests/xfs/139.out |  8 ++++++--
- 2 files changed, 15 insertions(+), 8 deletions(-)
+I may need helps from XFS folks to review these changes.
 
-diff --git a/tests/xfs/139 b/tests/xfs/139
-index 2a26635..9ab74c8 100755
---- a/tests/xfs/139
-+++ b/tests/xfs/139
-@@ -34,17 +34,20 @@ _require_cp_reflink
- 
- rm -f $seqres.full
- 
-+_scratch_mkfs >/dev/null 2>&1
-+_scratch_mount
-+blksz=$(_get_block_size $SCRATCH_MNT)
-+_scratch_unmount
-+
- echo "Format and mount"
--_scratch_mkfs -d agsize=$((32 * 1048576)) > $seqres.full 2>&1
-+_scratch_mkfs -d agsize=$((4400 * $blksz)) > $seqres.full 2>&1
- _scratch_mount >> $seqres.full 2>&1
- 
- testdir=$SCRATCH_MNT/test-$seq
- mkdir $testdir
--blksz="$(_get_block_size $testdir)"
- 
- echo "Create the original files"
--sz=$((48 * 1048576))
--nr=$((sz / blksz))
-+sz=$((4800 * $blksz))
- _pwrite_byte 0x61 0 $sz $testdir/file1 >> $seqres.full
- _cp_reflink $testdir/file1 $testdir/file2 >> $seqres.full
- _scratch_cycle_mount
-@@ -54,8 +57,8 @@ _pwrite_byte 0x62 0 $sz $testdir/file1 >> $seqres.full
- _scratch_cycle_mount
- 
- echo "Compare files"
--md5sum $testdir/file1 | _filter_scratch
--md5sum $testdir/file2 | _filter_scratch
-+od -t x1 $testdir/file1 | _filter_od
-+od -t x1 $testdir/file2 | _filter_od
- #filefrag -v $testdir/file1 $testdir/file2
- 
- # success, all done
-diff --git a/tests/xfs/139.out b/tests/xfs/139.out
-index dc6a31e..55e03d6 100644
---- a/tests/xfs/139.out
-+++ b/tests/xfs/139.out
-@@ -3,5 +3,9 @@ Format and mount
- Create the original files
- CoW every other block
- Compare files
--673c759fb131ccf3336c4f8c549a497e  SCRATCH_MNT/test-139/file1
--dc802351f6717547cbf4c951b294f952  SCRATCH_MNT/test-139/file2
-+0 62 62 62 62 62 62 62 62 62 62 62 62 62 62 62 62
-+*
-+11300
-+0 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61
-+*
-+11300
--- 
-2.9.5
+But I noticed that you are getting fs block size all from TEST_DIR, even
+if the test is testing against $SCRATCH_MNT, e.g. xfs/139 xfs/140 (and
+other tests too). But the fs block size could be different on TEST_DEV
+and SCRATCH_DEV.
+
+Also, I'd be very helpful if someone could help test this patchset on
+real hardware that supports mounting 64k blocksize XFS.
+
+Thanks a lot!
+
+Eryu
+
+>   Fix generic/102 to work with 64k block size
+>   Fix generic/172 to work with 64k block size
+>   Filter fiemap output by FS block size
+>   Fix generic/177 to work with 64k block size
+>   Fix generic/230 to work with 64k block size
+>   Fix generic/235 to work with 64k block size
+> 
+>  common/punch          | 19 ++++++++---
+>  tests/generic/102     |  4 +--
+>  tests/generic/102.out | 20 +++++------
+>  tests/generic/172     |  4 +--
+>  tests/generic/177     | 20 ++++++-----
+>  tests/generic/177.out | 23 ++++++++-----
+>  tests/generic/230     | 24 ++++++++------
+>  tests/generic/230.out | 16 ++++-----
+>  tests/generic/235     |  2 +-
+>  tests/generic/235.out |  4 +--
+>  tests/xfs/009         | 92 ++++++++++++++++++++++++++++++++++++++++++---------
+>  tests/xfs/009.out     | 66 ++++++++++++++++++------------------
+>  tests/xfs/050         | 23 ++++++++-----
+>  tests/xfs/050.out     | 60 ++++++++++++++++-----------------
+>  tests/xfs/074         | 23 ++++++++++---
+>  tests/xfs/127         |  2 +-
+>  tests/xfs/139         | 12 +++----
+>  tests/xfs/139.out     |  8 +++--
+>  tests/xfs/140         |  9 ++---
+>  tests/xfs/190         | 44 +++++++++++++++++++-----
+>  tests/xfs/299         | 23 ++++++++-----
+>  tests/xfs/299.out     | 60 ++++++++++++++++-----------------
+>  tests/xfs/325         |  5 +--
+>  tests/xfs/325.out     |  2 +-
+>  24 files changed, 355 insertions(+), 210 deletions(-)
+> 
+> -- 
+> 2.9.5
+> 
