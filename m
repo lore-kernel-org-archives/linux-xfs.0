@@ -1,307 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:37756 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728224AbeIFNNB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Sep 2018 09:13:01 -0400
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w868YFXw081722
-        for <linux-xfs@vger.kernel.org>; Thu, 6 Sep 2018 04:38:39 -0400
-Received: from e33.co.us.ibm.com (e33.co.us.ibm.com [32.97.110.151])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2may61n1p1-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Thu, 06 Sep 2018 04:38:39 -0400
-Received: from localhost
-        by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Thu, 6 Sep 2018 02:38:38 -0600
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH V2 09/16] Fix xfs/299 to work with 64k block size
-Date: Thu,  6 Sep 2018 14:10:06 +0530
-In-Reply-To: <20180906084013.2687-1-chandan@linux.vnet.ibm.com>
-References: <20180906084013.2687-1-chandan@linux.vnet.ibm.com>
-Message-Id: <20180906084013.2687-10-chandan@linux.vnet.ibm.com>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:51895 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726020AbeIBSZC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Sep 2018 14:25:02 -0400
+Received: by mail-wm0-f65.google.com with SMTP id y2-v6so9127437wma.1
+        for <linux-xfs@vger.kernel.org>; Sun, 02 Sep 2018 07:09:01 -0700 (PDT)
+Date: Sun, 2 Sep 2018 16:08:58 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH, RFC] xfs: re-enable FIBMAP on reflink; disable for swap
+Message-ID: <20180902140858.ssl7dxtnbl7sw2ig@odin.usersys.redhat.com>
+References: <2eb759e5-2faa-67fd-5c16-c1d8edc42d02@redhat.com>
+ <20180830162545.GA26816@lst.de>
+ <dbe27763-2e69-6e3a-f769-2528eda54940@redhat.com>
+ <20180830163614.GA27069@lst.de>
+ <65e818f2-885d-50a4-0d4a-7700c703c2af@sandeen.net>
+ <20180830180204.GC2853@bfoster>
+ <20180830182849.GA4359@magnolia>
+ <20180831062813.GA7280@lst.de>
+ <20180831123639.GA39825@bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180831123639.GA39825@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, eguan@redhat.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@sandeen.net>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-This commit changes the test to calculate quota limits based on the
-block size of the underlying filesystem. Also, the sizes of the test
-files are now made to be a multiple of the filesystem block size.
+Hi Folks,
 
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
----
- tests/xfs/299     | 29 +++++++++++++++++----------
- tests/xfs/299.out | 60 +++++++++++++++++++++++++++----------------------------
- 2 files changed, 48 insertions(+), 41 deletions(-)
+On Fri, Aug 31, 2018 at 08:36:40AM -0400, Brian Foster wrote:
+> On Fri, Aug 31, 2018 at 08:28:13AM +0200, Christoph Hellwig wrote:
+> > On Thu, Aug 30, 2018 at 11:28:49AM -0700, Darrick J. Wong wrote:
+> > > I prefer to have FIBMAP return errors to *cough* encourage people to use
+> > > FIEMAP.  If code are going to abuse the FI[BE]MAP interface they could
+> > > at least abuse the one that gives it enough context to avoid fs
+> > > corruption.  (A proper fs driver would be preferable, though very
+> > > difficult).
+> > 
+> > I think Carlos was looking into implementing the FIBMAP ioctl
+> > using ->fiemap.  In that case we could return sensible errors,
+> > and centralize policy in a single place..
+> > 
+> 
+> So basically ioctl_fibmap() either prioritizes ->fiemap() or looks for
+> some special combination of (fiemap && !bmap) to translate the call..
+> 
+> > > Granted, grub's blocklist code doesn't seem to check for shared blocks
+> > > when it writes grubenv.... yuck, though TBH I don't have the eye budget
+> > > to spend on digging through grub2.  Frankly I think FIBMAP comes verrry
+> > > close to "this API is unfixably stupid and shouldn't be enabled for new
+> > > use cases and should go away some day".
+> > 
+> > .. and that policy should be: always return an error for the slightest
+> > unusual file layout (shared, encrypted, inline, etc).
+> 
+> ... and then return some error if the associate extent is in some state
+> that cannot be described by fibmap..? That sounds like a nice option to
+> me. Carlos..?
+> 
 
-diff --git a/tests/xfs/299 b/tests/xfs/299
-index f0012ff..5a0e693 100755
---- a/tests/xfs/299
-+++ b/tests/xfs/299
-@@ -41,11 +41,6 @@ _require_xfs_quota
- _require_xfs_mkfs_crc
- _require_xfs_crc
- 
--bsoft=100
--bhard=500
--isoft=4
--ihard=10
--
- _filter_report()
- {
- 	tr -s '[:space:]' | \
-@@ -58,7 +53,9 @@ _filter_report()
- 		if ($ENV{'LARGE_SCRATCH_DEV'}) {
- 			$val = $ENV{'NUM_SPACE_FILES'};
- 		}
--		s/(^\[ROOT\] \S+ \S+ \S+ \S+ \[--------\] )(\S+)/$1@{[$2 - $val]}/g'
-+		s/(^\[ROOT\] \S+ \S+ \S+ \S+ \[--------\] )(\S+)/$1@{[$2 - $val]}/g' |
-+	perl -npe '
-+		s|^(.*?) (\d+) (\d+) (\d+)|$1 @{[$2 * 1024 /'$bsize']} @{[$3 * 1024 /'$bsize']} @{[$4 * 1024 /'$bsize']}|'
- }
- 
- # The actual point at which limit enforcement takes place for the
-@@ -73,9 +70,10 @@ _filter_and_check_blks()
- 		if (/^\#'$id'\s+(\d+)/ && '$enforce') {
- 			$maximum = '$bhard';
- 			$minimum = '$bhard' * 85/100;
--			if (($1 < $minimum || $1 > $maximum) && '$noextsz') {
-+			$used = $1 * 1024;
-+			if (($used < $minimum || $used > $maximum) && '$noextsz') {
- 				printf(" URK %d: %d is out of range! [%d,%d]\n",
--					'$id', $1, $minimum, $maximum);
-+					'$id', $used, $minimum, $maximum);
- 			}
- 			s/^(\#'$id'\s+)(\d+)/\1 =OK=/g;
- 		}
-@@ -128,7 +126,7 @@ _exercise()
- 	echo "ls -l $SCRATCH_MNT" >>$seqres.full
- 	ls -l $SCRATCH_MNT >>$seqres.full
- 	xfs_quota -D $tmp.projects -P $tmp.projid -x \
--		-c "limit -$type bsoft=${bsoft}k bhard=${bhard}k $id" \
-+		-c "limit -$type bsoft=${bsoft} bhard=${bhard} $id" \
- 		-c "limit -$type isoft=$isoft ihard=$ihard $id" \
- 		$SCRATCH_DEV
- 	xfs_quota -D $tmp.projects -P $tmp.projid -x \
-@@ -139,6 +137,8 @@ _exercise()
- 	echo "*** push past the soft inode limit" | tee -a $seqres.full
- 	_file_as_id $SCRATCH_MNT/softie1 $id $type 1024 0
- 	_file_as_id $SCRATCH_MNT/softie2 $id $type 1024 0
-+	_file_as_id $SCRATCH_MNT/softie3 $id $type 1024 0
-+	_file_as_id $SCRATCH_MNT/softie4 $id $type 1024 0
- 	_qmount
- 	xfs_quota -D $tmp.projects -P $tmp.projid -x \
- 		-c "repquota -birnN -$type" $SCRATCH_DEV |
-@@ -146,7 +146,7 @@ _exercise()
- 
- 	echo
- 	echo "*** push past the soft block limit" | tee -a $seqres.full
--	_file_as_id $SCRATCH_MNT/softie $id $type 1024 140
-+	_file_as_id $SCRATCH_MNT/softie $id $type $bsize 35
- 	_qmount
- 	xfs_quota -D $tmp.projects -P $tmp.projid -x \
- 		-c "repquota -birnN -$type" $SCRATCH_DEV |
-@@ -167,7 +167,7 @@ _exercise()
- 	echo
- 	# Note: for quota accounting (not enforcement), EDQUOT is not expected
- 	echo "*** push past the hard block limit (expect EDQUOT)" | tee -a $seqres.full
--	_file_as_id $SCRATCH_MNT/softie $id $type 1024 540
-+	_file_as_id $SCRATCH_MNT/softie $id $type $bsize 135
- 	echo "ls -l $SCRATCH_MNT" >>$seqres.full
- 	ls -l $SCRATCH_MNT >>$seqres.full
- 	_qmount
-@@ -202,6 +202,13 @@ echo "*** user, group, and project"
- _qmount_option "uquota,gquota,pquota"
- _qmount
- 
-+bsize=$(_get_block_size $SCRATCH_MNT)
-+
-+bsoft=$(( 25 * $bsize ))
-+bhard=$(( 125 * $bsize ))
-+isoft=4
-+ihard=10
-+
- # non-root users need to be able to write to this filesystem
- chmod 777 $SCRATCH_MNT
- 
-diff --git a/tests/xfs/299.out b/tests/xfs/299.out
-index d13c7da..93e89a9 100644
---- a/tests/xfs/299.out
-+++ b/tests/xfs/299.out
-@@ -12,23 +12,23 @@ realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
- 
- *** report initial settings
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 0 100 500 00 [--------] 1 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 0 25 125 00 [--------] 1 4 10 00 [--------] 0 0 0 00 [--------]
- 
- *** push past the soft inode limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 0 100 500 00 [--------] 3 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 0 25 125 00 [--------] 5 4 10 00 [7 days] 0 0 0 00 [--------]
- 
- *** push past the soft block limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [7 days] 4 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 35 25 125 00 [7 days] 6 4 10 00 [7 days] 0 0 0 00 [--------]
- 
- *** push past the hard inode limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [7 days] 9 4 10 00 [7 days] 0 0 0 00 [--------]
-+[NAME] 35 25 125 00 [7 days] 9 4 10 00 [7 days] 0 0 0 00 [--------]
- 
- *** push past the hard block limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] =OK= 100 500 00 [7 days] 9 4 10 00 [7 days] 0 0 0 00 [--------]
-+[NAME] =OK= 25 125 0 [7 days] 9 4 10 00 [7 days] 0 0 0 00 [--------]
- 
- 
- *** report no quota settings
-@@ -36,23 +36,23 @@ realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
- 
- *** report initial settings
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 0 100 500 00 [--------] 1 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 0 25 125 00 [--------] 1 4 10 00 [--------] 0 0 0 00 [--------]
- 
- *** push past the soft inode limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 0 100 500 00 [--------] 3 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 0 25 125 00 [--------] 5 4 10 00 [7 days] 0 0 0 00 [--------]
- 
- *** push past the soft block limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [7 days] 4 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 35 25 125 00 [7 days] 6 4 10 00 [7 days] 0 0 0 00 [--------]
- 
- *** push past the hard inode limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [7 days] 10 4 10 00 [7 days] 0 0 0 00 [--------]
-+[NAME] 35 25 125 00 [7 days] 10 4 10 00 [7 days] 0 0 0 00 [--------]
- 
- *** push past the hard block limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] =OK= 100 500 00 [7 days] 10 4 10 00 [7 days] 0 0 0 00 [--------]
-+[NAME] =OK= 25 125 0 [7 days] 10 4 10 00 [7 days] 0 0 0 00 [--------]
- 
- 
- *** report no quota settings
-@@ -60,23 +60,23 @@ realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
- 
- *** report initial settings
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 0 100 500 00 [--------] 1 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 0 25 125 00 [--------] 1 4 10 00 [--------] 0 0 0 00 [--------]
- 
- *** push past the soft inode limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 0 100 500 00 [--------] 3 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 0 25 125 00 [--------] 5 4 10 00 [7 days] 0 0 0 00 [--------]
- 
- *** push past the soft block limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [7 days] 4 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 35 25 125 00 [7 days] 6 4 10 00 [7 days] 0 0 0 00 [--------]
- 
- *** push past the hard inode limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [7 days] 10 4 10 00 [7 days] 0 0 0 00 [--------]
-+[NAME] 35 25 125 00 [7 days] 10 4 10 00 [7 days] 0 0 0 00 [--------]
- 
- *** push past the hard block limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] =OK= 100 500 00 [7 days] 10 4 10 00 [7 days] 0 0 0 00 [--------]
-+[NAME] =OK= 25 125 0 [7 days] 10 4 10 00 [7 days] 0 0 0 00 [--------]
- 
- *** unmount
- meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-@@ -92,23 +92,23 @@ realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
- 
- *** report initial settings
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 0 100 500 00 [--------] 1 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 0 25 125 00 [--------] 1 4 10 00 [--------] 0 0 0 00 [--------]
- 
- *** push past the soft inode limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 0 100 500 00 [--------] 3 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 0 25 125 00 [--------] 5 4 10 00 [--------] 0 0 0 00 [--------]
- 
- *** push past the soft block limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [--------] 4 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 35 25 125 00 [--------] 6 4 10 00 [--------] 0 0 0 00 [--------]
- 
- *** push past the hard inode limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [--------] 16 4 10 00 [--none--] 0 0 0 00 [--------]
-+[NAME] 35 25 125 00 [--------] 18 4 10 00 [--none--] 0 0 0 00 [--------]
- 
- *** push past the hard block limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 540 100 500 00 [--none--] 16 4 10 00 [--none--] 0 0 0 00 [--------]
-+[NAME] 135 25 125 00 [--none--] 18 4 10 00 [--none--] 0 0 0 00 [--------]
- 
- 
- *** report no quota settings
-@@ -116,23 +116,23 @@ realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
- 
- *** report initial settings
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 0 100 500 00 [--------] 1 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 0 25 125 00 [--------] 1 4 10 00 [--------] 0 0 0 00 [--------]
- 
- *** push past the soft inode limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 0 100 500 00 [--------] 3 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 0 25 125 00 [--------] 5 4 10 00 [--------] 0 0 0 00 [--------]
- 
- *** push past the soft block limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [--------] 4 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 35 25 125 00 [--------] 6 4 10 00 [--------] 0 0 0 00 [--------]
- 
- *** push past the hard inode limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [--------] 16 4 10 00 [--none--] 0 0 0 00 [--------]
-+[NAME] 35 25 125 00 [--------] 18 4 10 00 [--none--] 0 0 0 00 [--------]
- 
- *** push past the hard block limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 540 100 500 00 [--none--] 16 4 10 00 [--none--] 0 0 0 00 [--------]
-+[NAME] 135 25 125 00 [--none--] 18 4 10 00 [--none--] 0 0 0 00 [--------]
- 
- 
- *** report no quota settings
-@@ -140,22 +140,22 @@ realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
- 
- *** report initial settings
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 0 100 500 00 [--------] 1 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 0 25 125 00 [--------] 1 4 10 00 [--------] 0 0 0 00 [--------]
- 
- *** push past the soft inode limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 0 100 500 00 [--------] 3 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 0 25 125 00 [--------] 5 4 10 00 [--------] 0 0 0 00 [--------]
- 
- *** push past the soft block limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [--------] 4 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 35 25 125 00 [--------] 6 4 10 00 [--------] 0 0 0 00 [--------]
- 
- *** push past the hard inode limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [--------] 16 4 10 00 [--none--] 0 0 0 00 [--------]
-+[NAME] 35 25 125 00 [--------] 18 4 10 00 [--none--] 0 0 0 00 [--------]
- 
- *** push past the hard block limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 540 100 500 00 [--none--] 16 4 10 00 [--none--] 0 0 0 00 [--------]
-+[NAME] 135 25 125 00 [--none--] 18 4 10 00 [--none--] 0 0 0 00 [--------]
- 
- *** unmount
+Yes, I've been working on using FIEMAP interface to handle FIBMAP, it was mostly
+working, although it needed some extra tweaks due the fact different
+filesystems return different blocks inside an extent, when a single block query
+is made on FIEMAP.
+
+I mean, if you query for a single block which is in the middle of an extent,
+ext4 returns the address of the specific block inside the extent, while xfs
+(using iomap fiemap infra), returns the address of the first block in the
+extent.
+Or something like that, I needed to context switch to some other tasks, but I'll
+come back to this during this week, and let you guys know.
+
+Cheers
+
+> Maybe it's too late for this, but I think even dropping ->bmap
+> completely for the time being on XFS reflink=1 filesystems is preferable
+> to the current behavior where we return a perfectly valid result and
+> pretend that somehow represents an error to userspace.
+> 
+> The arguments for the current behavior essentially apply the "known
+> fibmap usecase of direct block writes" as justification for implementing
+> this policy in the kernel. In practice, the current behavior just trades
+> off one problem (data corruption) for another where the end result is
+> probably the same for that particular use case: the system doesn't boot.
+> If we dropped bmap, then at least there's an obvious error and the user
+> can decide whether to update to fiemap or disable reflink (as opposed to
+> us having to continue to chase down these odd bootloader issues).
+> 
+> Brian
+
 -- 
-2.9.5
+Carlos
