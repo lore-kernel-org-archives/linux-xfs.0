@@ -1,89 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:37903 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725782AbeICJ7i (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Sep 2018 05:59:38 -0400
-Date: Mon, 3 Sep 2018 15:41:00 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v8 00/28] Parent Pointers v8
-Message-ID: <20180903054100.GP5631@dastard>
-References: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
+Received: from sandeen.net ([63.231.237.45]:55624 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726142AbeIBWJX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 2 Sep 2018 18:09:23 -0400
+Subject: Re: [PATCH, RFC] xfs: re-enable FIBMAP on reflink; disable for swap
+References: <2eb759e5-2faa-67fd-5c16-c1d8edc42d02@redhat.com>
+ <20180830162545.GA26816@lst.de>
+ <dbe27763-2e69-6e3a-f769-2528eda54940@redhat.com>
+ <20180830163614.GA27069@lst.de>
+ <65e818f2-885d-50a4-0d4a-7700c703c2af@sandeen.net>
+ <20180830180204.GC2853@bfoster> <20180830182849.GA4359@magnolia>
+ <20180831062813.GA7280@lst.de> <20180831123639.GA39825@bfoster>
+ <20180902140858.ssl7dxtnbl7sw2ig@odin.usersys.redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <2c0a6636-356e-fbc8-4c9d-89039e263e00@sandeen.net>
+Date: Sun, 2 Sep 2018 12:52:47 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <20180902140858.ssl7dxtnbl7sw2ig@odin.usersys.redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Allison Henderson <allison.henderson@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Aug 28, 2018 at 12:22:13PM -0700, Allison Henderson wrote:
-> Hi all,
+On 9/2/18 9:08 AM, Carlos Maiolino wrote:
+> Hi Folks,
 > 
-> This is the 8th version of parent pointer attributes for xfs. The goal of
-> this patch set is to add a parent pointer attribute to each inode.  The
-> attribute name containing the parent inode, generation, and directory offset,
-> while the  attribute value contains the file name.  This feature will enable
-> future optimizations for online scrub, or any other feature that could make
-> use of quickly deriving an inodes path from  the mount point.  This set also
-> introduces deferred attribute operations, though it is currently only used by
->  the new parent pointer code.
+> On Fri, Aug 31, 2018 at 08:36:40AM -0400, Brian Foster wrote:
+>> On Fri, Aug 31, 2018 at 08:28:13AM +0200, Christoph Hellwig wrote:
+>>> On Thu, Aug 30, 2018 at 11:28:49AM -0700, Darrick J. Wong wrote:
+>>>> I prefer to have FIBMAP return errors to *cough* encourage people to use
+>>>> FIEMAP.  If code are going to abuse the FI[BE]MAP interface they could
+>>>> at least abuse the one that gives it enough context to avoid fs
+>>>> corruption.  (A proper fs driver would be preferable, though very
+>>>> difficult).
+>>>
+>>> I think Carlos was looking into implementing the FIBMAP ioctl
+>>> using ->fiemap.  In that case we could return sensible errors,
+>>> and centralize policy in a single place..
+>>>
+>>
+>> So basically ioctl_fibmap() either prioritizes ->fiemap() or looks for
+>> some special combination of (fiemap && !bmap) to translate the call..
+>>
+>>>> Granted, grub's blocklist code doesn't seem to check for shared blocks
+>>>> when it writes grubenv.... yuck, though TBH I don't have the eye budget
+>>>> to spend on digging through grub2.  Frankly I think FIBMAP comes verrry
+>>>> close to "this API is unfixably stupid and shouldn't be enabled for new
+>>>> use cases and should go away some day".
+>>>
+>>> .. and that policy should be: always return an error for the slightest
+>>> unusual file layout (shared, encrypted, inline, etc).
+>>
+>> ... and then return some error if the associate extent is in some state
+>> that cannot be described by fibmap..? That sounds like a nice option to
+>> me. Carlos..?
+>>
+> 
+> Yes, I've been working on using FIEMAP interface to handle FIBMAP, it was mostly
+> working, although it needed some extra tweaks due the fact different
+> filesystems return different blocks inside an extent, when a single block query
+> is made on FIEMAP.
+> 
+> I mean, if you query for a single block which is in the middle of an extent,
+> ext4 returns the address of the specific block inside the extent, while xfs
+> (using iomap fiemap infra), returns the address of the first block in the
+> extent.
 
-Another assert failure on generic/026:
+IMHO, with hindsight, FIEMAP really kind of sucks.  The call is a pain to
+set up, and the results are a pain to interpret.
 
-SECTION       -- xfs
-FSTYP         -- xfs (debug)
-PLATFORM      -- Linux/x86_64 test1 4.19.0-rc2-dgc+
-MKFS_OPTIONS  -- -f -m rmapbt=1,reflink=1 -i sparse=1 -b size=1k /dev/sdc
-MOUNT_OPTIONS -- /dev/sdc /mnt/scratch
+Preparing a patch for zipl to use FIEMAP, I realized what a truly crappy and
+cumbersome interface it is, particularly if you just want to map a small
+handful of blocks.
 
-(though it appears block size has nothing to do with the failure as
-all my other test VMs also failed on this test, too)
+I doubt it'd fly, but I'm half tempted to propose a new block-at-at-time
+FIBMAP2 that doesn't overflow 32 bits, uses flags similar to FIEMAP to control
+behavior and return mapped block state, and can return proper errors.
 
+FIEMAP is great that it can efficiently map contiguous extents and all, but
+it's so cumbersome to use.  (ISTR that both xfsprogs' and e2fsprogs' use of
+FIEMAP had /multiple/ followon commits fixing the original implementation
+in filefrag and xfs_io.)
 
-[  368.699416] run fstests generic/026 at 2018-09-03 13:46:29
-[  376.651705] XFS: Assertion failed: tp->t_ticket != NULL, file: fs/xfs/xfs_trans.c, line: 952
-[  376.653346] ------------[ cut here ]------------
-[  376.654174] kernel BUG at fs/xfs/xfs_message.c:102!
-[  376.655537] invalid opcode: 0000 [#1] PREEMPT SMP
-[  376.656545] CPU: 0 PID: 12468 Comm: chacl Not tainted 4.19.0-rc2-dgc+ #653
-[  376.657742] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.11.1-1 04/01/2014
-[  376.659193] RIP: 0010:assfail+0x28/0x30
-[  376.659861] Code: c3 90 0f 1f 44 00 00 48 89 f1 41 89 d0 48 c7 c6 98 50 2e 82 48 89 fa 31 ff e8 64 f9 ff ff 80 3d f5 9a 0a 01 00 75 03 0f 0b c3 <0f> 0b 66 0f 1f 44 00 00 0f 1f 44 00 00 48 63 f6 49 8a
-[  376.663050] RSP: 0018:ffffc90000babaa0 EFLAGS: 00010202
-[  376.663950] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
-[  376.665167] RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffff8227a5fc
-[  376.666397] RBP: ffffffff822e68d0 R08: 0000000000000000 R09: 0000000000000000
-[  376.667618] R10: 0000000000000008 R11: f000000000000000 R12: 0000000000000000
-[  376.668841] R13: ffff88002d236000 R14: ffffffff814d6701 R15: 0000000000000025
-[  376.670075] FS:  00007fd8e35dc740(0000) GS:ffff88003ec00000(0000) knlGS:0000000000000000
-[  376.671462] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  376.672451] CR2: 000055624ed0c000 CR3: 00000000292b5000 CR4: 00000000000006f0
-[  376.673678] Call Trace:
-[  376.674136]  __xfs_trans_commit+0x35c/0x370
-[  376.674870]  xfs_attr_set+0x241/0x2d0
-[  376.675510]  __xfs_set_acl+0xf4/0x1a0
-[  376.676146]  xfs_set_acl+0xa8/0x100
-[  376.676759]  ? posix_acl_valid+0xb6/0xd0
-[  376.677444]  ? set_posix_acl+0xa0/0xa0
-[  376.678108]  posix_acl_xattr_set+0x3f/0x90
-[  376.678833]  __vfs_setxattr+0x64/0x80
-[  376.679484]  __vfs_setxattr_noperm+0x69/0x1a0
-[  376.680243]  ? unlazy_walk+0x4c/0xb0
-[  376.680871]  vfs_setxattr+0xa0/0xb0
-[  376.681485]  setxattr+0x132/0x1a0
-[  376.682088]  ? __handle_mm_fault+0x95b/0x10c0
-[  376.682850]  ? __mnt_want_write+0x5e/0x90
-[  376.683547]  ? preempt_count_sub+0x43/0x50
-[  376.684262]  path_setxattr+0xbe/0xe0
-[  376.684884]  __x64_sys_setxattr+0x27/0x30
-[  376.685584]  do_syscall_64+0x5a/0x180
-[  376.686236]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+-Eric
