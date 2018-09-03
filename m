@@ -1,120 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:46874 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727516AbeICOlB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Sep 2018 10:41:01 -0400
-Received: by mail-wr1-f66.google.com with SMTP id a108-v6so39107wrc.13
-        for <linux-xfs@vger.kernel.org>; Mon, 03 Sep 2018 03:21:30 -0700 (PDT)
-Date: Mon, 3 Sep 2018 12:21:27 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH, RFC] xfs: re-enable FIBMAP on reflink; disable for swap
-Message-ID: <20180903102127.sszbgh73lbinznwb@odin.usersys.redhat.com>
-References: <20180830162545.GA26816@lst.de>
- <dbe27763-2e69-6e3a-f769-2528eda54940@redhat.com>
- <20180830163614.GA27069@lst.de>
- <65e818f2-885d-50a4-0d4a-7700c703c2af@sandeen.net>
- <20180830180204.GC2853@bfoster>
- <20180830182849.GA4359@magnolia>
- <20180831062813.GA7280@lst.de>
- <20180831123639.GA39825@bfoster>
- <20180902140858.ssl7dxtnbl7sw2ig@odin.usersys.redhat.com>
- <2c0a6636-356e-fbc8-4c9d-89039e263e00@sandeen.net>
+Received: from mail-yb1-f195.google.com ([209.85.219.195]:35417 "EHLO
+        mail-yb1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725854AbeICJrP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Sep 2018 05:47:15 -0400
+Received: by mail-yb1-f195.google.com with SMTP id o17-v6so2896385yba.2
+        for <linux-xfs@vger.kernel.org>; Sun, 02 Sep 2018 22:28:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2c0a6636-356e-fbc8-4c9d-89039e263e00@sandeen.net>
+References: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
+ <1535484161-11059-24-git-send-email-allison.henderson@oracle.com> <20180903032031.GO5631@dastard>
+In-Reply-To: <20180903032031.GO5631@dastard>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Mon, 3 Sep 2018 08:28:32 +0300
+Message-ID: <CAOQ4uxj-cB4fXUJXyw0P+SZKm9xhRuPpYY_HVo2X+25hv2RAtQ@mail.gmail.com>
+Subject: Re: [PATCH v8 23/28] xfs: Add parent pointers to rename
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Allison Henderson <allison.henderson@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Sun, Sep 02, 2018 at 12:52:47PM -0500, Eric Sandeen wrote:
-> On 9/2/18 9:08 AM, Carlos Maiolino wrote:
-> > Hi Folks,
-> > 
-> > On Fri, Aug 31, 2018 at 08:36:40AM -0400, Brian Foster wrote:
-> >> On Fri, Aug 31, 2018 at 08:28:13AM +0200, Christoph Hellwig wrote:
-> >>> On Thu, Aug 30, 2018 at 11:28:49AM -0700, Darrick J. Wong wrote:
-> >>>> I prefer to have FIBMAP return errors to *cough* encourage people to use
-> >>>> FIEMAP.  If code are going to abuse the FI[BE]MAP interface they could
-> >>>> at least abuse the one that gives it enough context to avoid fs
-> >>>> corruption.  (A proper fs driver would be preferable, though very
-> >>>> difficult).
-> >>>
-> >>> I think Carlos was looking into implementing the FIBMAP ioctl
-> >>> using ->fiemap.  In that case we could return sensible errors,
-> >>> and centralize policy in a single place..
-> >>>
-> >>
-> >> So basically ioctl_fibmap() either prioritizes ->fiemap() or looks for
-> >> some special combination of (fiemap && !bmap) to translate the call..
-> >>
-> >>>> Granted, grub's blocklist code doesn't seem to check for shared blocks
-> >>>> when it writes grubenv.... yuck, though TBH I don't have the eye budget
-> >>>> to spend on digging through grub2.  Frankly I think FIBMAP comes verrry
-> >>>> close to "this API is unfixably stupid and shouldn't be enabled for new
-> >>>> use cases and should go away some day".
-> >>>
-> >>> .. and that policy should be: always return an error for the slightest
-> >>> unusual file layout (shared, encrypted, inline, etc).
-> >>
-> >> ... and then return some error if the associate extent is in some state
-> >> that cannot be described by fibmap..? That sounds like a nice option to
-> >> me. Carlos..?
-> >>
-> > 
-> > Yes, I've been working on using FIEMAP interface to handle FIBMAP, it was mostly
-> > working, although it needed some extra tweaks due the fact different
-> > filesystems return different blocks inside an extent, when a single block query
-> > is made on FIEMAP.
-> > 
-> > I mean, if you query for a single block which is in the middle of an extent,
-> > ext4 returns the address of the specific block inside the extent, while xfs
-> > (using iomap fiemap infra), returns the address of the first block in the
-> > extent.
+On Mon, Sep 3, 2018 at 6:26 AM Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Tue, Aug 28, 2018 at 12:22:36PM -0700, Allison Henderson wrote:
+> > This patch removes the old parent pointer attribute during the
+> > rename operation, and re-adds the updated parent pointer
+> >
+> > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+>
+[...]
+> >       }
+> >
+> >       /* RENAME_EXCHANGE is unique from here on. */
+> > -     if (flags & RENAME_EXCHANGE)
+> > -             return xfs_cross_rename(tp, src_dp, src_name, src_ip,
+> > +     if (flags & RENAME_EXCHANGE) {
+> > +             error = xfs_cross_rename(tp, src_dp, src_name, src_ip,
+> >                                       target_dp, target_name, target_ip,
+> >                                       spaceres);
+> > -
+> > +             goto out;
+> > +     }
+>
+> This looks problematic, too. i.e.  On error, xfs_cross_rename() will
+> have already called xfs_trans_cancel(), but it hasn't unlocked any
+> of the inodes. If it succeeds, it commits the transaction. Either
+> way, the transaction has been finished and freed. However, the
+> code we jump to expects that the transaction is open and still
+> running.
+>
+> Also "out" typically means "goto end of function and return". This
+> is jumping to parent pointer addition, not the function return
+> processing. Hence the label needs to be changed to
+> "parent_pointer"....
+>
+[...]
+> > +out:
+> > +     if (xfs_sb_version_hasparent(&mp->m_sb)) {
+> > +             error = xfs_parent_add_deferred(target_dp, tp, src_ip, target_name,
+> > +                             new_diroffset);
+>
+> And so when we try to add the a parent pointers, we haven't checked
+> if the cross rename failed and aborted the transaction. Or if it
+> succeeded, it expects to continue using the transaction which
+> xfs_cross_rename() committed.
+>
 
-Ops, after re-reading my notes about it today, it's quite the opposite. xfs
-(with iomap), returns the requested block, while ext4 returns the beginning of
-the extent.
-> 
-> IMHO, with hindsight, FIEMAP really kind of sucks.  The call is a pain to
-> set up, and the results are a pain to interpret.
-> 
-> Preparing a patch for zipl to use FIEMAP, I realized what a truly crappy and
-> cumbersome interface it is, particularly if you just want to map a small
-> handful of blocks.
-> 
-> I doubt it'd fly, but I'm half tempted to propose a new block-at-at-time
-> FIBMAP2 that doesn't overflow 32 bits, uses flags similar to FIEMAP to control
-> behavior and return mapped block state, and can return proper errors.
-> 
-> FIEMAP is great that it can efficiently map contiguous extents and all, but
-> it's so cumbersome to use.  (ISTR that both xfsprogs' and e2fsprogs' use of
-> FIEMAP had /multiple/ followon commits fixing the original implementation
-> in filefrag and xfs_io.)
-> 
+Allison,
 
-I'm still refreshing my memory at the subject, but, IIRC the past discussions,
-we will need to support FIBMAP forever, but, internally we can actually use
-FIEMAP infra-structure to answer FIBMAP calls. From a user perspective, it
-changes nothing.
+Not sure if you know that xfs_cross_rename() exchanges src with target, so
+the src_dp parent pointer has to be adjusted as well in case of cross rename.
 
-The idea, is to replace all the ->bmap calls, by calling into bmap directly, and
-make bmap() internals to use FIEMAP infra-structure to get the required single
-block.
-
-I made it work successfully on systems using only XFS, until I tested on ext4
-and the system didn't boot due the difference between iomap and ext4 FIEMAP
-implementation I explained above.
-
-Actually, IIRC I put this project by side because we haven't decided which
-interface would be better, but looks like the right approach would be to use an
-fs-independent solution, which is something I'll try to achieve this week.
-
-Cheers
-
-> -Eric
-
--- 
-Carlos
+Thanks,
+Amir.
