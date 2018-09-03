@@ -1,92 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:59008 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728229AbeIFNNF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Sep 2018 09:13:05 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w868XtYj116301
-        for <linux-xfs@vger.kernel.org>; Thu, 6 Sep 2018 04:38:43 -0400
-Received: from e33.co.us.ibm.com (e33.co.us.ibm.com [32.97.110.151])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2mb09aspda-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Thu, 06 Sep 2018 04:38:43 -0400
-Received: from localhost
-        by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Thu, 6 Sep 2018 02:38:42 -0600
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH V2 10/16] xfs/325: Inject free_extent error after CoW operation
-Date: Thu,  6 Sep 2018 14:10:07 +0530
-In-Reply-To: <20180906084013.2687-1-chandan@linux.vnet.ibm.com>
-References: <20180906084013.2687-1-chandan@linux.vnet.ibm.com>
-Message-Id: <20180906084013.2687-11-chandan@linux.vnet.ibm.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:58120 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725762AbeICFhz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Sep 2018 01:37:55 -0400
+Date: Mon, 3 Sep 2018 11:20:06 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v8 00/28] Parent Pointers v8
+Message-ID: <20180903012006.GM5631@dastard>
+References: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, eguan@redhat.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
+To: Allison Henderson <allison.henderson@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On a 64k blocksized filesystem, when the test CoWs the file2's offset
-range [10 * 64k, 19 * 64k], the call to xfs_bmapi_reserve_delalloc()
-allocates 32 64k blocks. This is because XFS_DEFAULT_COWEXTSZ_HINT has
-the value of 32 and xfs_get_cowextsz_hint() uses this to compute the
-extent alignment. This leads to xfs_bmapi_reserve_delalloc() to reserve
-space corresponding to the file range [0, 32 * 64k] in the inode's
-cow fork area. On completion of write I/O corresponding to file2's range
-[10 * 64k, 19 * 64k], xfs_end_io() moves 10 out of the originally
-allocated 32 64k blocks to the data fork area. The remaining 22 64k
-blocks linger on in cow fork area of the inode.
+On Tue, Aug 28, 2018 at 12:22:13PM -0700, Allison Henderson wrote:
+> Hi all,
+> 
+> This is the 8th version of parent pointer attributes for xfs. The goal of
+> this patch set is to add a parent pointer attribute to each inode.  The
+> attribute name containing the parent inode, generation, and directory offset,
+> while the  attribute value contains the file name.  This feature will enable
+> future optimizations for online scrub, or any other feature that could make
+> use of quickly deriving an inodes path from  the mount point.  This set also
+> introduces deferred attribute operations, though it is currently only used by
+>  the new parent pointer code.
 
-Later, when servicing the exit() syscall for the xfs_io process,
-xfs_free_eofblocks() ends up invoking xfs_reflink_cancel_cow_blocks()
-since i_delayed_blks has the value 22. xfs_reflink_cancel_cow_blocks()
-indirectly invokes __xfs_free_extent() which returns EIO since
-XFS_ERRTAG_FREE_EXTENT has been set. This leads to the filesystem to be
-shutdown. The "rm" command invoked later ends up returning an
-error and hence the test fails. The test actually requires that the
-filesystem gets shutdown when executing the "rm" command.
+Hi Allison,
 
-To fix the problem, this commit injects the free_extent error after we
-CoW file2's [10 * 64k, 19 * 64k] range.
+FYI, A couple of minor things I noticed on import of the patch set
+to 4.19-rc1:
 
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
----
- tests/xfs/325     | 5 +++--
- tests/xfs/325.out | 2 +-
- 2 files changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/tests/xfs/325 b/tests/xfs/325
-index b156de9..6795901 100755
---- a/tests/xfs/325
-+++ b/tests/xfs/325
-@@ -54,11 +54,12 @@ echo "Check files"
- md5sum $SCRATCH_MNT/file1 | _filter_scratch
- md5sum $SCRATCH_MNT/file2 | _filter_scratch
- 
-+echo "CoW a few blocks"
-+$XFS_IO_PROG -c "pwrite -W -S 0x67 $((10 * blksz)) $((10 * blksz))" $SCRATCH_MNT/file2 >> $seqres.full
+......
+Applying: xfs: parent pointer attribute creation
+.git/rebase-apply/patch:131: trailing whitespace.
+	error = xfs_attr_set(child, (const unsigned char *)&rec, sizeof(rec), 
+.git/rebase-apply/patch:136: new blank line at EOF.
 +
- echo "Inject error"
- _scratch_inject_error "free_extent"
- 
--echo "CoW a few blocks"
--$XFS_IO_PROG -c "pwrite -W -S 0x67 $((10 * blksz)) $((10 * blksz))" $SCRATCH_MNT/file2 >> $seqres.full
- rm $SCRATCH_MNT/file1
- sync
- 
-diff --git a/tests/xfs/325.out b/tests/xfs/325.out
-index 4e25d2b..92027cd 100644
---- a/tests/xfs/325.out
-+++ b/tests/xfs/325.out
-@@ -4,8 +4,8 @@ Create files
- Check files
- d5a0ed0305c8df4180cb2bf975ecffe8  SCRATCH_MNT/file1
- d5a0ed0305c8df4180cb2bf975ecffe8  SCRATCH_MNT/file2
--Inject error
- CoW a few blocks
-+Inject error
- FS should be shut down, touch will fail
- touch: cannot touch 'SCRATCH_MNT/badfs': Input/output error
- Remount to replay log
+.git/rebase-apply/patch:296: new blank line at EOF.
++
+warning: 3 lines add whitespace errors.
+Applying: xfs: add parent attributes to link
+Applying: xfs: remove parent pointers in unlink
+.git/rebase-apply/patch:97: new blank line at EOF.
++
+warning: 1 line adds whitespace errors.
+Applying: xfs: Add parent pointers to rename
+Applying: xfs: Add the parent pointer support to the superblock version 5.
+Applying: xfs: Add helper function xfs_attr_list_context_init
+Applying: xfs: Increase XFS_DEFER_OPS_NR_INODES to 4
+Applying: xfs: Add parent pointer ioctl
+.git/rebase-apply/patch:340: new blank line at EOF.
++
+warning: 1 line adds whitespace errors.
+Applying: xfs: Add delayed attributes error tag
+......
+
+Also, I get a couple of compiler warnings:
+
+fs/xfs/libxfs/xfs_attr.c: In function ¿xfs_attr_set¿:
+fs/xfs/libxfs/xfs_attr.c:446:48: warning: passing argument 3 of ¿xfs_attr_set_deferred¿ discards ¿const¿ qualifier from pointer target type [-Wdiscarded-qualifiers]
+  error = xfs_attr_set_deferred(dp, args.trans, name, namelen,
+                                                ^~~~
+In file included from fs/xfs/libxfs/xfs_attr.c:25:0:
+fs/xfs/libxfs/xfs_attr.h:197:5: note: expected ¿void *¿ but argument is of type ¿const unsigned char *¿
+ int xfs_attr_set_deferred(struct xfs_inode *dp, struct xfs_trans *tp,
+     ^~~~~~~~~~~~~~~~~~~~~
+fs/xfs/libxfs/xfs_attr.c: In function ¿xfs_attr_remove¿:
+fs/xfs/libxfs/xfs_attr.c:584:4: warning: passing argument 3 of ¿xfs_attr_remove_deferred¿ discards ¿const¿ qualifier from pointer target type [-Wdiscarded-qualifiers]
+    name, namelen, flags);
+    ^~~~
+In file included from fs/xfs/libxfs/xfs_attr.c:25:0:
+fs/xfs/libxfs/xfs_attr.h:200:5: note: expected ¿void *¿ but argument is of type ¿const unsigned char *¿
+ int xfs_attr_remove_deferred(struct xfs_inode *dp, struct xfs_trans *tp,
+     ^~~~~~~~~~~~~~~~~~~~~~~~
+
+I haven't looked to find what patch causes them,  but I thought I'd
+let you know straight away.
+
+Cheers,
+
+Dave.
 -- 
-2.9.5
+Dave Chinner
+david@fromorbit.com
