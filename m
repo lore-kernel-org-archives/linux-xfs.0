@@ -1,132 +1,120 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:40024 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728262AbeIFNNQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Sep 2018 09:13:16 -0400
-Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w868Yx71061209
-        for <linux-xfs@vger.kernel.org>; Thu, 6 Sep 2018 04:38:55 -0400
-Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2mayfkbv70-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Thu, 06 Sep 2018 04:38:55 -0400
-Received: from localhost
-        by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Thu, 6 Sep 2018 02:38:54 -0600
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH V2 14/16] Fix generic/177 to work with 64k block size
-Date: Thu,  6 Sep 2018 14:10:11 +0530
-In-Reply-To: <20180906084013.2687-1-chandan@linux.vnet.ibm.com>
-References: <20180906084013.2687-1-chandan@linux.vnet.ibm.com>
-Message-Id: <20180906084013.2687-15-chandan@linux.vnet.ibm.com>
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:46874 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727516AbeICOlB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Sep 2018 10:41:01 -0400
+Received: by mail-wr1-f66.google.com with SMTP id a108-v6so39107wrc.13
+        for <linux-xfs@vger.kernel.org>; Mon, 03 Sep 2018 03:21:30 -0700 (PDT)
+Date: Mon, 3 Sep 2018 12:21:27 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH, RFC] xfs: re-enable FIBMAP on reflink; disable for swap
+Message-ID: <20180903102127.sszbgh73lbinznwb@odin.usersys.redhat.com>
+References: <20180830162545.GA26816@lst.de>
+ <dbe27763-2e69-6e3a-f769-2528eda54940@redhat.com>
+ <20180830163614.GA27069@lst.de>
+ <65e818f2-885d-50a4-0d4a-7700c703c2af@sandeen.net>
+ <20180830180204.GC2853@bfoster>
+ <20180830182849.GA4359@magnolia>
+ <20180831062813.GA7280@lst.de>
+ <20180831123639.GA39825@bfoster>
+ <20180902140858.ssl7dxtnbl7sw2ig@odin.usersys.redhat.com>
+ <2c0a6636-356e-fbc8-4c9d-89039e263e00@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <2c0a6636-356e-fbc8-4c9d-89039e263e00@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, eguan@redhat.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-This commit changes the test to work on file offsets that are aligned
-with the block size of the underlying filesystem.
+On Sun, Sep 02, 2018 at 12:52:47PM -0500, Eric Sandeen wrote:
+> On 9/2/18 9:08 AM, Carlos Maiolino wrote:
+> > Hi Folks,
+> > 
+> > On Fri, Aug 31, 2018 at 08:36:40AM -0400, Brian Foster wrote:
+> >> On Fri, Aug 31, 2018 at 08:28:13AM +0200, Christoph Hellwig wrote:
+> >>> On Thu, Aug 30, 2018 at 11:28:49AM -0700, Darrick J. Wong wrote:
+> >>>> I prefer to have FIBMAP return errors to *cough* encourage people to use
+> >>>> FIEMAP.  If code are going to abuse the FI[BE]MAP interface they could
+> >>>> at least abuse the one that gives it enough context to avoid fs
+> >>>> corruption.  (A proper fs driver would be preferable, though very
+> >>>> difficult).
+> >>>
+> >>> I think Carlos was looking into implementing the FIBMAP ioctl
+> >>> using ->fiemap.  In that case we could return sensible errors,
+> >>> and centralize policy in a single place..
+> >>>
+> >>
+> >> So basically ioctl_fibmap() either prioritizes ->fiemap() or looks for
+> >> some special combination of (fiemap && !bmap) to translate the call..
+> >>
+> >>>> Granted, grub's blocklist code doesn't seem to check for shared blocks
+> >>>> when it writes grubenv.... yuck, though TBH I don't have the eye budget
+> >>>> to spend on digging through grub2.  Frankly I think FIBMAP comes verrry
+> >>>> close to "this API is unfixably stupid and shouldn't be enabled for new
+> >>>> use cases and should go away some day".
+> >>>
+> >>> .. and that policy should be: always return an error for the slightest
+> >>> unusual file layout (shared, encrypted, inline, etc).
+> >>
+> >> ... and then return some error if the associate extent is in some state
+> >> that cannot be described by fibmap..? That sounds like a nice option to
+> >> me. Carlos..?
+> >>
+> > 
+> > Yes, I've been working on using FIEMAP interface to handle FIBMAP, it was mostly
+> > working, although it needed some extra tweaks due the fact different
+> > filesystems return different blocks inside an extent, when a single block query
+> > is made on FIEMAP.
+> > 
+> > I mean, if you query for a single block which is in the middle of an extent,
+> > ext4 returns the address of the specific block inside the extent, while xfs
+> > (using iomap fiemap infra), returns the address of the first block in the
+> > extent.
 
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
----
- tests/generic/177     | 20 +++++++++++---------
- tests/generic/177.out | 23 +++++++++++++++--------
- 2 files changed, 26 insertions(+), 17 deletions(-)
+Ops, after re-reading my notes about it today, it's quite the opposite. xfs
+(with iomap), returns the requested block, while ext4 returns the beginning of
+the extent.
+> 
+> IMHO, with hindsight, FIEMAP really kind of sucks.  The call is a pain to
+> set up, and the results are a pain to interpret.
+> 
+> Preparing a patch for zipl to use FIEMAP, I realized what a truly crappy and
+> cumbersome interface it is, particularly if you just want to map a small
+> handful of blocks.
+> 
+> I doubt it'd fly, but I'm half tempted to propose a new block-at-at-time
+> FIBMAP2 that doesn't overflow 32 bits, uses flags similar to FIEMAP to control
+> behavior and return mapped block state, and can return proper errors.
+> 
+> FIEMAP is great that it can efficiently map contiguous extents and all, but
+> it's so cumbersome to use.  (ISTR that both xfsprogs' and e2fsprogs' use of
+> FIEMAP had /multiple/ followon commits fixing the original implementation
+> in filefrag and xfs_io.)
+> 
 
-diff --git a/tests/generic/177 b/tests/generic/177
-index 36577b1..069bb81 100755
---- a/tests/generic/177
-+++ b/tests/generic/177
-@@ -45,44 +45,46 @@ _require_metadata_journaling $SCRATCH_DEV
- _init_flakey
- _mount_flakey
- 
-+BLOCK_SIZE=$(_get_block_size $SCRATCH_MNT)
-+
- # Create out test file with some data and then fsync it.
- # We do the fsync only to make sure the last fsync we do in this test triggers
- # the fast code path of btrfs' fsync implementation, a condition necessary to
- # trigger the bug btrfs had.
--$XFS_IO_PROG -f -c "pwrite -S 0xaa 0K 128K" \
-+$XFS_IO_PROG -f -c "pwrite -S 0xaa 0K $(($BLOCK_SIZE * 32))" \
- 		-c "fsync"                  \
--		$SCRATCH_MNT/foobar | _filter_xfs_io
-+		$SCRATCH_MNT/foobar | _filter_xfs_io_blocks_modified
- 
- # Now punch a hole against the range [96K, 128K[.
--$XFS_IO_PROG -c "fpunch 96K 32K" $SCRATCH_MNT/foobar
-+$XFS_IO_PROG -c "fpunch $(($BLOCK_SIZE * 24)) $(($BLOCK_SIZE * 8))" $SCRATCH_MNT/foobar
- 
- # Punch another hole against a range that overlaps the previous range and ends
- # beyond eof.
--$XFS_IO_PROG -c "fpunch 64K 128K" $SCRATCH_MNT/foobar
-+$XFS_IO_PROG -c "fpunch $(($BLOCK_SIZE * 16)) $(($BLOCK_SIZE * 32))" $SCRATCH_MNT/foobar
- 
- # Punch another hole against a range that overlaps the first range ([96K, 128K[)
- # and ends at eof.
--$XFS_IO_PROG -c "fpunch 32K 96K" $SCRATCH_MNT/foobar
-+$XFS_IO_PROG -c "fpunch $(($BLOCK_SIZE * 8)) $(($BLOCK_SIZE * 24))" $SCRATCH_MNT/foobar
- 
- # Fsync our file. We want to verify that, after a power failure and mounting the
- # filesystem again, the file content reflects all the hole punch operations.
- $XFS_IO_PROG -c "fsync" $SCRATCH_MNT/foobar
- 
- echo "File digest before power failure:"
--md5sum $SCRATCH_MNT/foobar | _filter_scratch
-+od -t x1 $SCRATCH_MNT/foobar | _filter_od
- 
- echo "Fiemap before power failure:"
--$XFS_IO_PROG -c "fiemap -v" $SCRATCH_MNT/foobar | _filter_fiemap
-+$XFS_IO_PROG -c "fiemap -v" $SCRATCH_MNT/foobar | _filter_fiemap $BLOCK_SIZE
- 
- _flakey_drop_and_remount
- 
- echo "File digest after log replay:"
- # Must match the same digest we got before the power failure.
--md5sum $SCRATCH_MNT/foobar | _filter_scratch
-+od -t x1 $SCRATCH_MNT/foobar | _filter_od
- 
- echo "Fiemap after log replay:"
- # Must match the same extent listing we got before the power failure.
--$XFS_IO_PROG -c "fiemap -v" $SCRATCH_MNT/foobar | _filter_fiemap
-+$XFS_IO_PROG -c "fiemap -v" $SCRATCH_MNT/foobar | _filter_fiemap $BLOCK_SIZE
- 
- _unmount_flakey
- 
-diff --git a/tests/generic/177.out b/tests/generic/177.out
-index cc10768..b47e136 100644
---- a/tests/generic/177.out
-+++ b/tests/generic/177.out
-@@ -1,13 +1,20 @@
- QA output created by 177
--wrote 131072/131072 bytes at offset 0
--XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+Blocks modified: [0 - 31]
- File digest before power failure:
--d26bbb9a8396a9c0dd76423471b72b15  SCRATCH_MNT/foobar
-+0 aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa
-+*
-+10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+*
-+40
- Fiemap before power failure:
--0: [0..63]: data
--1: [64..255]: hole
-+0: [0..7]: data
-+1: [8..31]: hole
- File digest after log replay:
--d26bbb9a8396a9c0dd76423471b72b15  SCRATCH_MNT/foobar
-+0 aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa
-+*
-+10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+*
-+40
- Fiemap after log replay:
--0: [0..63]: data
--1: [64..255]: hole
-+0: [0..7]: data
-+1: [8..31]: hole
+I'm still refreshing my memory at the subject, but, IIRC the past discussions,
+we will need to support FIBMAP forever, but, internally we can actually use
+FIEMAP infra-structure to answer FIBMAP calls. From a user perspective, it
+changes nothing.
+
+The idea, is to replace all the ->bmap calls, by calling into bmap directly, and
+make bmap() internals to use FIEMAP infra-structure to get the required single
+block.
+
+I made it work successfully on systems using only XFS, until I tested on ext4
+and the system didn't boot due the difference between iomap and ext4 FIEMAP
+implementation I explained above.
+
+Actually, IIRC I put this project by side because we haven't decided which
+interface would be better, but looks like the right approach would be to use an
+fs-independent solution, which is something I'll try to achieve this week.
+
+Cheers
+
+> -Eric
+
 -- 
-2.9.5
+Carlos
