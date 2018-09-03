@@ -1,109 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:40242 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727579AbeIDTwo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Sep 2018 15:52:44 -0400
-Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w84FK4pI133574
-        for <linux-xfs@vger.kernel.org>; Tue, 4 Sep 2018 11:27:08 -0400
-Received: from e06smtp02.uk.ibm.com (e06smtp02.uk.ibm.com [195.75.94.98])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2m9ugkbs28-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Tue, 04 Sep 2018 11:27:08 -0400
-Received: from localhost
-        by e06smtp02.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Tue, 4 Sep 2018 16:27:05 +0100
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: Re: [PATCH 00/16] Fix tests to work on non-4k block sized fs instances
-Date: Tue, 04 Sep 2018 20:59:19 +0530
-In-Reply-To: <20180901172158.GH3651@desktop>
-References: <20180816072646.14490-1-chandan@linux.vnet.ibm.com> <20180901172158.GH3651@desktop>
+Received: from mx1.redhat.com ([209.132.183.28]:34014 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726047AbeIDDLh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 3 Sep 2018 23:11:37 -0400
+Received: from smtp.corp.redhat.com (int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.27])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id D30E0308FB85
+        for <linux-xfs@vger.kernel.org>; Mon,  3 Sep 2018 22:49:20 +0000 (UTC)
+Received: from localhost (ovpn-116-114.ams2.redhat.com [10.36.116.114])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 7853389DE7
+        for <linux-xfs@vger.kernel.org>; Mon,  3 Sep 2018 22:49:20 +0000 (UTC)
+Date: Mon, 3 Sep 2018 23:49:19 +0100
+From: "Richard W.M. Jones" <rjones@redhat.com>
+Subject: mkfs.xfs options suitable for creating absurdly large XFS
+ filesystems?
+Message-ID: <20180903224919.GA16358@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-Message-Id: <2571342.XK85Dr93Fb@localhost.localdomain>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: linux-xfs@vger.kernel.org
 
-On Saturday, September 1, 2018 10:51:58 PM IST Eryu Guan wrote:
-> On Thu, Aug 16, 2018 at 12:56:30PM +0530, Chandan Rajendra wrote:
-> > This patchset fixes tests (mostly XFS specific ones) to work on
-> > variable block size. These patches now use the output of "od" utility
-> > to verify the contents of the test files instead of the md5sum
-> > utility.
-> > 
-> > The patchset modifies _filter_fiemap() filter function to optionally
-> > print the file offset range in block size units.
-> > 
-> > Chandan Rajendra (16):
-> >   Fix xfs/009 to work with 64k block size
-> >   xfs/050: Fix "Push past soft inode limit" case
-> >   Fix xfs/050 to work with 64k block size
-> >   Fix xfs/074 to work with 64k block size
-> >   Fix xfs/127 to work with 64k block size
-> >   Fix xfs/139 to work with 64k block size
-> >   Fix xfs/140 to work with 64k block size
-> >   Fix xfs/190 to work with 64k block size
-> >   Fix xfs/299 to work with 64k block size
-> >   xfs/325: Inject free_extent error after CoW operation
-> 
-> I may need helps from XFS folks to review these changes.
-> 
-> But I noticed that you are getting fs block size all from TEST_DIR, even
-> if the test is testing against $SCRATCH_MNT, e.g. xfs/139 xfs/140 (and
-> other tests too). But the fs block size could be different on TEST_DEV
-> and SCRATCH_DEV.
+[This is silly and has no real purpose except to explore the limits.
+If that offends you, don't read the rest of this email.]
 
-Sure, I will fix that up and send the next version of the patchset.
+I am trying to create an XFS filesystem in a partition of approx
+2^63 - 1 bytes to see what happens.
 
-> 
-> Also, I'd be very helpful if someone could help test this patchset on
-> real hardware that supports mounting 64k blocksize XFS.
-> 
-> Thanks a lot!
-> 
-> Eryu
-> 
-> >   Fix generic/102 to work with 64k block size
-> >   Fix generic/172 to work with 64k block size
-> >   Filter fiemap output by FS block size
-> >   Fix generic/177 to work with 64k block size
-> >   Fix generic/230 to work with 64k block size
-> >   Fix generic/235 to work with 64k block size
-> > 
-> >  common/punch          | 19 ++++++++---
-> >  tests/generic/102     |  4 +--
-> >  tests/generic/102.out | 20 +++++------
-> >  tests/generic/172     |  4 +--
-> >  tests/generic/177     | 20 ++++++-----
-> >  tests/generic/177.out | 23 ++++++++-----
-> >  tests/generic/230     | 24 ++++++++------
-> >  tests/generic/230.out | 16 ++++-----
-> >  tests/generic/235     |  2 +-
-> >  tests/generic/235.out |  4 +--
-> >  tests/xfs/009         | 92 ++++++++++++++++++++++++++++++++++++++++++---------
-> >  tests/xfs/009.out     | 66 ++++++++++++++++++------------------
-> >  tests/xfs/050         | 23 ++++++++-----
-> >  tests/xfs/050.out     | 60 ++++++++++++++++-----------------
-> >  tests/xfs/074         | 23 ++++++++++---
-> >  tests/xfs/127         |  2 +-
-> >  tests/xfs/139         | 12 +++----
-> >  tests/xfs/139.out     |  8 +++--
-> >  tests/xfs/140         |  9 ++---
-> >  tests/xfs/190         | 44 +++++++++++++++++++-----
-> >  tests/xfs/299         | 23 ++++++++-----
-> >  tests/xfs/299.out     | 60 ++++++++++++++++-----------------
-> >  tests/xfs/325         |  5 +--
-> >  tests/xfs/325.out     |  2 +-
-> >  24 files changed, 355 insertions(+), 210 deletions(-)
-> > 
-> 
-> 
+This creates a 2^63 - 1 byte virtual disk and partitions it:
 
+  # nbdkit memory size=9223372036854775807
+
+  # modprobe nbd
+  # nbd-client localhost /dev/nbd0
+  # blockdev --getsize64 /dev/nbd0
+  9223372036854774784
+  # gdisk /dev/nbd0
+  [...]
+  Command (? for help): n
+  Partition number (1-128, default 1):
+  First sector (18-9007199254740973, default = 1024) or {+-}size{KMGTP}:
+  Last sector (1024-9007199254740973, default = 9007199254740973) or {+-}size{KMGT
+P}:
+  Current type is 'Linux filesystem'
+  Hex code or GUID (L to show codes, Enter = 8300):
+  Changed type of partition to 'Linux filesystem'
+  Command (? for help): w
+
+The first problem was that the standard mkfs.xfs command will
+try to trim the disk in 4 GB chunks (I believe this is a limit
+imposed by the kernel APIs).  For a 8 EB image that takes forever.
+
+However I can use the -K option to get around that:
+
+  # mkfs.xfs -K /dev/nbd0p1
+  meta-data=/dev/nbd0p1            isize=512    agcount=8388609, agsize=268435455 blks
+           =                       sectsz=1024  attr=2, projid32bit=1
+           =                       crc=1        finobt=1, sparse=0, rmapbt=0, reflink=0
+  data     =                       bsize=4096   blocks=2251799813684987, imaxpct=1
+           =                       sunit=0      swidth=0 blks
+  naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+  log      =internal log           bsize=4096   blocks=521728, version=2
+           =                       sectsz=1024  sunit=1 blks, lazy-count=1
+  realtime =none                   extsz=4096   blocks=0, rtextents=0
+  mkfs.xfs: read failed: Invalid argument
+
+I guess this indicates a real bug in mkfs.xfs.  I've not tracked down
+exactly why this syscall fails yet but will see if I can find it
+later.
+
+But first I wanted to ask a broader question about whether there are
+other mkfs options (apart from -K) which are suitable when creating
+especially large XFS filesystems?
+
+Rich.
 
 -- 
-chandan
+Richard Jones, Virtualization Group, Red Hat http://people.redhat.com/~rjones
+Read my programming and virtualization blog: http://rwmj.wordpress.com
+Fedora Windows cross-compiler. Compile Windows programs, test, and
+build Windows installers. Over 100 libraries supported.
+http://fedoraproject.org/wiki/MinGW
