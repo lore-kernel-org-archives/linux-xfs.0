@@ -1,132 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:43780 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728221AbeIFNNT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Sep 2018 09:13:19 -0400
-Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w868Y0wZ088880
-        for <linux-xfs@vger.kernel.org>; Thu, 6 Sep 2018 04:38:58 -0400
-Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2maxm76f8h-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Thu, 06 Sep 2018 04:38:58 -0400
-Received: from localhost
-        by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Thu, 6 Sep 2018 02:38:57 -0600
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH V2 15/16] Fix generic/230 to work with 64k block size
-Date: Thu,  6 Sep 2018 14:10:12 +0530
-In-Reply-To: <20180906084013.2687-1-chandan@linux.vnet.ibm.com>
-References: <20180906084013.2687-1-chandan@linux.vnet.ibm.com>
-Message-Id: <20180906084013.2687-16-chandan@linux.vnet.ibm.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:44348 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726507AbeIDW5g (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Sep 2018 18:57:36 -0400
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: Re: [PATCH v8 00/28] Parent Pointers v8
+References: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
+ <20180903012006.GM5631@dastard> <20180903014051.GN5631@dastard>
+Message-ID: <c3147918-2af3-ebc7-bf95-15ee73466a70@oracle.com>
+Date: Tue, 4 Sep 2018 11:31:09 -0700
+MIME-Version: 1.0
+In-Reply-To: <20180903014051.GN5631@dastard>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, eguan@redhat.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-This commit changes the test to work on file offsets that are aligned
-with the block size of the underlying filesystem.
+On 09/02/2018 06:40 PM, Dave Chinner wrote:
+> On Mon, Sep 03, 2018 at 11:20:06AM +1000, Dave Chinner wrote:
+>> On Tue, Aug 28, 2018 at 12:22:13PM -0700, Allison Henderson wrote:
+>>> Hi all,
+>>>
+>>> This is the 8th version of parent pointer attributes for xfs. The goal of
+>>> this patch set is to add a parent pointer attribute to each inode.  The
+>>> attribute name containing the parent inode, generation, and directory offset,
+>>> while the  attribute value contains the file name.  This feature will enable
+>>> future optimizations for online scrub, or any other feature that could make
+>>> use of quickly deriving an inodes path from  the mount point.  This set also
+>>> introduces deferred attribute operations, though it is currently only used by
+>>>   the new parent pointer code.
+>>
+>> Hi Allison,
+>>
+>> FYI, A couple of minor things I noticed on import of the patch set
+>> to 4.19-rc1:
+>>
+>> ......
+>> Applying: xfs: parent pointer attribute creation
+>> .git/rebase-apply/patch:131: trailing whitespace.
+>> 	error = xfs_attr_set(child, (const unsigned char *)&rec, sizeof(rec),
+>> .git/rebase-apply/patch:136: new blank line at EOF.
+>> +
+>> .git/rebase-apply/patch:296: new blank line at EOF.
+>> +
+>> warning: 3 lines add whitespace errors.
+>> Applying: xfs: add parent attributes to link
+>> Applying: xfs: remove parent pointers in unlink
+>> .git/rebase-apply/patch:97: new blank line at EOF.
+>> +
+>> warning: 1 line adds whitespace errors.
+>> Applying: xfs: Add parent pointers to rename
+>> Applying: xfs: Add the parent pointer support to the superblock version 5.
+>> Applying: xfs: Add helper function xfs_attr_list_context_init
+>> Applying: xfs: Increase XFS_DEFER_OPS_NR_INODES to 4
+>> Applying: xfs: Add parent pointer ioctl
+>> .git/rebase-apply/patch:340: new blank line at EOF.
+>> +
+>> warning: 1 line adds whitespace errors.
+>> Applying: xfs: Add delayed attributes error tag
+>> ......
+>>
+>> Also, I get a couple of compiler warnings:
+>>
+>> fs/xfs/libxfs/xfs_attr.c: In function ¿xfs_attr_set¿:
+>> fs/xfs/libxfs/xfs_attr.c:446:48: warning: passing argument 3 of ¿xfs_attr_set_deferred¿ discards ¿const¿ qualifier from pointer target type [-Wdiscarded-qualifiers]
+>>    error = xfs_attr_set_deferred(dp, args.trans, name, namelen,
+>>                                                  ^~~~
+>> In file included from fs/xfs/libxfs/xfs_attr.c:25:0:
+>> fs/xfs/libxfs/xfs_attr.h:197:5: note: expected ¿void *¿ but argument is of type ¿const unsigned char *¿
+>>   int xfs_attr_set_deferred(struct xfs_inode *dp, struct xfs_trans *tp,
+>>       ^~~~~~~~~~~~~~~~~~~~~
+>> fs/xfs/libxfs/xfs_attr.c: In function ¿xfs_attr_remove¿:
+>> fs/xfs/libxfs/xfs_attr.c:584:4: warning: passing argument 3 of ¿xfs_attr_remove_deferred¿ discards ¿const¿ qualifier from pointer target type [-Wdiscarded-qualifiers]
+>>      name, namelen, flags);
+>>      ^~~~
+>> In file included from fs/xfs/libxfs/xfs_attr.c:25:0:
+>> fs/xfs/libxfs/xfs_attr.h:200:5: note: expected ¿void *¿ but argument is of type ¿const unsigned char *¿
+>>   int xfs_attr_remove_deferred(struct xfs_inode *dp, struct xfs_trans *tp,
+>>       ^~~~~~~~~~~~~~~~~~~~~~~~
+> 
+> Another couple:
+> 
+> fs/xfs/libxfs/xfs_attr.c: In function ¿xfs_leaf_has_attr¿:
+> fs/xfs/libxfs/xfs_attr.c:863:27: error: variable ¿dp¿ set but not used [-Werror=unused-but-set-variable]
+>    struct xfs_inode        *dp;
+>                             ^~
+> fs/xfs/libxfs/xfs_attr_leaf.c: In function ¿xfs_shortform_has_attr¿:
+> fs/xfs/libxfs/xfs_attr_leaf.c:635:15: error: variable ¿mp¿ set but not used [-Werror=unused-but-set-variable]
+>    xfs_mount_t *mp;
+>                 ^~
+> 
+> The fixup patch I wrote to make it compile is below.
 
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
----
- tests/generic/230     | 23 +++++++++++++----------
- tests/generic/230.out | 16 ++++++++--------
- 2 files changed, 21 insertions(+), 18 deletions(-)
+Alrighty, thank you!  I will get those added in the next version.  I 
+think initially these pointers were char *, and then in an earlier 
+review we changed them to void *.  I'm not really sure it makes a huge 
+difference?  I had noticed the warnings earlier and forgot to come back 
+and weed them out.  I will get these changes added to their 
+corresponding patches.  Thank you!
 
-diff --git a/tests/generic/230 b/tests/generic/230
-index bc8c1ad..fc09391 100755
---- a/tests/generic/230
-+++ b/tests/generic/230
-@@ -42,27 +42,27 @@ test_enforcement()
- 	echo "### some buffered IO (type=$type)"
- 	echo "--- initiating IO..." >>$seqres.full
- 	# Firstly fit below block soft limit
--	echo "Write 900k..."
--	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 900k' -c fsync \
-+	echo "Write 225 blocks..."
-+	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 $((225 * $BLOCK_SIZE))' -c fsync \
- 		$SCRATCH_MNT/file1" 2>&1 >>$seqres.full | \
- 		_filter_xfs_io_error | tee -a $seqres.full
- 	repquota -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
- 	# Secondly overcome block soft limit
--	echo "Rewrite 1001k..."
--	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 1001k' -c fsync \
-+	echo "Rewrite 250 blocks plus 1 byte..."
-+	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 $((250 * $BLOCK_SIZE + 1))' -c fsync \
- 		$SCRATCH_MNT/file1" 2>&1 >>$seqres.full | \
- 		_filter_xfs_io_error | tee -a $seqres.full
- 	repquota -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
- 	# Now try to overcome block hardlimit
--	echo "Write 1000k..."
--	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 1000k' -c fsync \
-+	echo "Write 250 blocks..."
-+	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 $((250 * $BLOCK_SIZE))' -c fsync \
- 		$SCRATCH_MNT/file2" 2>&1 >>$seqres.full | \
- 		_filter_xfs_io_error | tee -a $seqres.full
- 	repquota -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
- 	# Now sleep for grace time and check that softlimit got enforced
- 	sleep $((grace+1))
--	echo "Write 4096..."
--	su $qa_user -c "$XFS_IO_PROG -c 'truncate 0' -c 'pwrite 0 4096' \
-+	echo "Write 1 block..."
-+	su $qa_user -c "$XFS_IO_PROG -c 'truncate 0' -c 'pwrite 0 $BLOCK_SIZE' \
- 		$SCRATCH_MNT/file2" 2>&1 >>$seqres.full | \
- 		_filter_xfs_io_error | tee -a $seqres.full
- 	repquota -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
-@@ -101,11 +101,14 @@ grace=2
- 
- _scratch_mkfs >> $seqres.full 2>&1
- _scratch_mount "-o usrquota,grpquota"
-+BLOCK_SIZE=$(_get_block_size $SCRATCH_MNT)
- quotacheck -u -g $SCRATCH_MNT 2>/dev/null
- quotaon $SCRATCH_MNT 2>/dev/null
--setquota -u $qa_user 1000 2000 3 5 $SCRATCH_MNT
-+setquota -u $qa_user $((250 * $BLOCK_SIZE / 1024)) \
-+	 $((500 * $BLOCK_SIZE / 1024)) 3 5 $SCRATCH_MNT
- setquota -u -t $grace $grace $SCRATCH_MNT
--setquota -g $qa_user 1000 2000 3 5 $SCRATCH_MNT
-+setquota -g $qa_user $((250 * $BLOCK_SIZE / 1024)) \
-+	 $((500 * $BLOCK_SIZE / 1024)) 3 5 $SCRATCH_MNT
- setquota -g -t $grace $grace $SCRATCH_MNT
- _scratch_unmount
- 
-diff --git a/tests/generic/230.out b/tests/generic/230.out
-index fcbacf2..9e89a47 100644
---- a/tests/generic/230.out
-+++ b/tests/generic/230.out
-@@ -4,11 +4,11 @@ QA output created by 230
- 
- ### create files, setting up ownership (type=u)
- ### some buffered IO (type=u)
--Write 900k...
--Rewrite 1001k...
--Write 1000k...
-+Write 225 blocks...
-+Rewrite 250 blocks plus 1 byte...
-+Write 250 blocks...
- pwrite: Disk quota exceeded
--Write 4096...
-+Write 1 block...
- pwrite: Disk quota exceeded
- Touch 3+4
- Touch 5+6
-@@ -20,11 +20,11 @@ touch: cannot touch 'SCRATCH_MNT/file5': Disk quota exceeded
- 
- ### create files, setting up ownership (type=g)
- ### some buffered IO (type=g)
--Write 900k...
--Rewrite 1001k...
--Write 1000k...
-+Write 225 blocks...
-+Rewrite 250 blocks plus 1 byte...
-+Write 250 blocks...
- pwrite: Disk quota exceeded
--Write 4096...
-+Write 1 block...
- pwrite: Disk quota exceeded
- Touch 3+4
- Touch 5+6
--- 
-2.9.5
+Allison
+
+> 
+> Cheers,
+> 
+> Dave.
+> 
