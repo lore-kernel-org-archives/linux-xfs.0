@@ -1,112 +1,156 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51858 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726133AbeIDMuG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 4 Sep 2018 08:50:06 -0400
-Date: Tue, 4 Sep 2018 09:26:00 +0100
-From: "Richard W.M. Jones" <rjones@redhat.com>
-Subject: Re: mkfs.xfs options suitable for creating absurdly large XFS
- filesystems?
-Message-ID: <20180904082600.GB16358@redhat.com>
-References: <20180903224919.GA16358@redhat.com>
- <20180904004940.GR5631@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180904004940.GR5631@dastard>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:65144 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725992AbeIDMxI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Sep 2018 08:53:08 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1fx6hn-0001wy-Uq
+        for linux-xfs@vger.kernel.org; Tue, 04 Sep 2018 18:29:00 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1fx6hn-0000jb-TY
+        for linux-xfs@vger.kernel.org; Tue, 04 Sep 2018 18:28:59 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 1/2] mkfs: stop zeroing old superblocks excessively
+Date: Tue,  4 Sep 2018 18:28:56 +1000
+Message-Id: <20180904082857.2180-2-david@fromorbit.com>
+In-Reply-To: <20180904082857.2180-1-david@fromorbit.com>
+References: <20180904082857.2180-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Tue, Sep 04, 2018 at 10:49:40AM +1000, Dave Chinner wrote:
-> On Mon, Sep 03, 2018 at 11:49:19PM +0100, Richard W.M. Jones wrote:
-> > [This is silly and has no real purpose except to explore the limits.
-> > If that offends you, don't read the rest of this email.]
-> 
-> We do this quite frequently ourselves, even if it is just to remind
-> ourselves how long it takes to wait for millions of IOs to be done.
->
-> > I am trying to create an XFS filesystem in a partition of approx
-> > 2^63 - 1 bytes to see what happens.
-> 
-> Should just work. You might find problems with the underlying
-> storage, but the XFS side of things should just work.
+From: Dave Chinner <dchinner@redhat.com>
 
-Great!  How do you test this normally?  I'm assuming you must use a
-virtual device and don't have actual 2^6x storage systems around?
+When making a new filesystem, don't zero superblocks way beyond the
+end of the new filesystem. If the old filesystem was an EB scale
+filesytsem, then this zeroing requires millions of IOs to complete.
+We don't want to do this if the new filesystem on the device is only
+going to be 100TB. Sure, zeroing old superblocks a good distance
+beyond the new size is a good idea, as is zeroing the ones in the
+middle and end, but the other 7,999,000 superblocks? Not so much.
 
-[...]
-> What's the sector size of you device? This seems to imply that it is
-> 1024 bytes, not the normal 512 or 4096 bytes we see in most devices.
+Make a sane cut-off decision - zero out to 10x the size of the new
+filesystem, then zero the middle AGs in the old filesystem, then
+zero the last ones.
 
-This led me to wondering how the sector size is chosen.  NBD itself is
-agnostic about sectors (it deals entirely with byte offsets).  It
-seems as if the Linux kernel NBD driver chooses this, I think here:
+The initial zeroing out to 10x the new fs size means that this code
+will only ever trigger in rare corner cases outside a testing
+environment - there are very few production workloads where a huge
+block device is reused immediately and permanently for a tiny much
+smaller filesystem. Those that do this (e.g. on thing provisioned
+devices) discard the in use blocks anyway and so the zeroing won't
+actually do anything useful.
 
-https://github.com/torvalds/linux/blob/60c1f89241d49bacf71035470684a8d7b4bb46ea/drivers/block/nbd.c#L1320
+Time to mkfs a 1TB filsystem on a big device after it held another
+larger filesystem:
 
-It seems an odd choice.
+previous FS size	10PB	100PB	 1EB
+old mkfs time		1.95s	8.9s	81.3s
+patched			0.95s	1.2s	 1.2s
 
-> Hence if you are seeing 4GB discards on the NBD side, then the NBD
-> device must be advertising 4GB to the block layer as the
-> discard_max_bytes. i.e. this, at first blush, looks purely like a
-> NBD issue.
 
-The 4 GB discard limit is indeed entirely a limit in the NBD protocol
-(it uses 32 bit count sizes for various things like zeroing and
-trimming, where it would make more sense to use wider type because we
-aren't sending data over the wire).  I will take this up with the
-upstream community and see if we can get an extension added.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ mkfs/xfs_mkfs.c | 64 +++++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 59 insertions(+), 5 deletions(-)
 
-> > However I can use the -K option to get around that:
-> > 
-> >   # mkfs.xfs -K /dev/nbd0p1
-> >   meta-data=/dev/nbd0p1            isize=512    agcount=8388609, agsize=268435455 blks
-> >            =                       sectsz=1024  attr=2, projid32bit=1
-> 
-> Oh, yeah, 1kB sectors. How weird is that - I've never seen a block
-> device with a 1kB sector before.
-> 
-> >            =                       crc=1        finobt=1, sparse=0, rmapbt=0, reflink=0
-> >   data     =                       bsize=4096   blocks=2251799813684987, imaxpct=1
-> >            =                       sunit=0      swidth=0 blks
-> >   naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-> >   log      =internal log           bsize=4096   blocks=521728, version=2
-> >            =                       sectsz=1024  sunit=1 blks, lazy-count=1
-> >   realtime =none                   extsz=4096   blocks=0, rtextents=0
-> >   mkfs.xfs: read failed: Invalid argument
-> > 
-> > I guess this indicates a real bug in mkfs.xfs.
-> 
-> Did it fail straight away? Or after a long time?  Can you trap this
-> in gdb and post a back trace so we know where it is coming from?
-
-Yes I think I was far too hasty declaring this a problem with mkfs.xfs
-last night.  It turns out that NBD on the wire can only describe a few
-different errors and maps any other error to -EINVAL, which is likely
-what is happening here.  I'll get the NBD server to log errors to find
-out what's really going on.
-
-[...]
-> > But first I wanted to ask a broader question about whether there are
-> > other mkfs options (apart from -K) which are suitable when creating
-> > especially large XFS filesystems?
-> 
-> Use the defaults - there's nothing you can "optimise" to make
-> testing like this go faster because all the time is in
-> reading/writing AG headers. There's millions of them, and there are
-> cases where they may have to all be read at mount time, too. Be
-> prepared to wait a long time for simple things to happen...
-
-OK this is really good to know, thanks.  I'll keep testing.
-
-Rich.
-
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 2e53c1e83b6a..c153592c705e 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -1155,14 +1155,15 @@ validate_ag_geometry(
+ 
+ static void
+ zero_old_xfs_structures(
+-	libxfs_init_t		*xi,
+-	xfs_sb_t		*new_sb)
++	struct libxfs_xinit	*xi,
++	struct xfs_sb		*new_sb)
+ {
+-	void 			*buf;
+-	xfs_sb_t 		sb;
++	void			*buf;
++	struct xfs_sb		sb;
+ 	uint32_t		bsize;
+ 	int			i;
+ 	xfs_off_t		off;
++	xfs_off_t		end;
+ 
+ 	/*
+ 	 * We open regular files with O_TRUNC|O_CREAT. Nothing to do here...
+@@ -1220,15 +1221,68 @@ zero_old_xfs_structures(
+ 
+ 	/*
+ 	 * block size and basic geometry seems alright, zero the secondaries.
++	 *
++	 * Don't be insane when it comes to overwriting really large filesystems
++	 * as it could take millions of IOs to zero every secondary
++	 * superblock. If we are remaking a huge filesystem, then do the
++	 * zeroing, but if we are replacing it with a small one (typically done
++	 * in test environments, limit the zeroing to:
++	 *
++	 *	- around the range of the new filesystem
++	 *	- the middle of the old filesystem
++	 *	- the end of the old filesystem
++	 *
++	 * Killing the middle and end of the old filesystem will prevent repair
++	 * from finding it with it's fast secondary sb scan algorithm. The slow
++	 * scan algorithm will then confirm the small filesystem geometry by
++	 * brute force scans.
+ 	 */
+ 	memset(buf, 0, new_sb->sb_sectsize);
++
++	/* this carefully avoids integer overflows */
++	end = sb.sb_dblocks;
++	if (sb.sb_agcount > 10000 &&
++	    new_sb->sb_dblocks < end / 10)
++		end = new_sb->sb_dblocks * 10;
+ 	off = 0;
+-	for (i = 1; i < sb.sb_agcount; i++)  {
++	for (i = 1; i < sb.sb_agcount && off < end; i++)  {
++		off += sb.sb_agblocks;
++		if (pwrite(xi->dfd, buf, new_sb->sb_sectsize,
++					off << sb.sb_blocklog) == -1)
++			break;
++	}
++
++	if (end == sb.sb_dblocks)
++		return;
++
++	/*
++	 * Trash the middle 1000 AGs of the old fs, which we know has at least
++	 * 10000 AGs at this point. Cast to make sure we are doing 64bit
++	 * multiplies, otherwise off gets truncated to 32 bit. I hate C.
++	 */
++	i = (sb.sb_agcount / 2) - 500;
++	off = (xfs_off_t)sb.sb_agblocks * i;
++	off = (xfs_off_t)sb.sb_agblocks * ((sb.sb_agcount / 2) - 500);
++	end = off + 1000 * sb.sb_agblocks;
++	while (off < end) {
++		if (pwrite(xi->dfd, buf, new_sb->sb_sectsize,
++					off << sb.sb_blocklog) == -1)
++			break;
+ 		off += sb.sb_agblocks;
++	}
++
++	/*
++	 * Trash the last 1000 AGs of the old fs
++	 */
++	off = (xfs_off_t)sb.sb_agblocks * (sb.sb_agcount - 1000);
++	end = sb.sb_dblocks;
++	while (off < end) {
+ 		if (pwrite(xi->dfd, buf, new_sb->sb_sectsize,
+ 					off << sb.sb_blocklog) == -1)
+ 			break;
++		off += sb.sb_agblocks;
+ 	}
++
+ done:
+ 	free(buf);
+ }
 -- 
-Richard Jones, Virtualization Group, Red Hat http://people.redhat.com/~rjones
-Read my programming and virtualization blog: http://rwmj.wordpress.com
-virt-top is 'top' for virtual machines.  Tiny program with many
-powerful monitoring features, net stats, disk stats, logging, etc.
-http://people.redhat.com/~rjones/virt-top
+2.17.0
