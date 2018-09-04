@@ -1,110 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:44348 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726507AbeIDW5g (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Sep 2018 18:57:36 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:34776 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726437AbeIDW62 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Sep 2018 18:58:28 -0400
 From: Allison Henderson <allison.henderson@oracle.com>
 Subject: Re: [PATCH v8 00/28] Parent Pointers v8
 References: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
- <20180903012006.GM5631@dastard> <20180903014051.GN5631@dastard>
-Message-ID: <c3147918-2af3-ebc7-bf95-15ee73466a70@oracle.com>
-Date: Tue, 4 Sep 2018 11:31:09 -0700
+ <20180903054100.GP5631@dastard>
+Message-ID: <90b2ceb3-ef7a-883a-5092-7e134687b68e@oracle.com>
+Date: Tue, 4 Sep 2018 11:32:05 -0700
 MIME-Version: 1.0
-In-Reply-To: <20180903014051.GN5631@dastard>
+In-Reply-To: <20180903054100.GP5631@dastard>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On 09/02/2018 06:40 PM, Dave Chinner wrote:
-> On Mon, Sep 03, 2018 at 11:20:06AM +1000, Dave Chinner wrote:
->> On Tue, Aug 28, 2018 at 12:22:13PM -0700, Allison Henderson wrote:
->>> Hi all,
->>>
->>> This is the 8th version of parent pointer attributes for xfs. The goal of
->>> this patch set is to add a parent pointer attribute to each inode.  The
->>> attribute name containing the parent inode, generation, and directory offset,
->>> while the  attribute value contains the file name.  This feature will enable
->>> future optimizations for online scrub, or any other feature that could make
->>> use of quickly deriving an inodes path from  the mount point.  This set also
->>> introduces deferred attribute operations, though it is currently only used by
->>>   the new parent pointer code.
+On 09/02/2018 10:41 PM, Dave Chinner wrote:
+> On Tue, Aug 28, 2018 at 12:22:13PM -0700, Allison Henderson wrote:
+>> Hi all,
 >>
->> Hi Allison,
->>
->> FYI, A couple of minor things I noticed on import of the patch set
->> to 4.19-rc1:
->>
->> ......
->> Applying: xfs: parent pointer attribute creation
->> .git/rebase-apply/patch:131: trailing whitespace.
->> 	error = xfs_attr_set(child, (const unsigned char *)&rec, sizeof(rec),
->> .git/rebase-apply/patch:136: new blank line at EOF.
->> +
->> .git/rebase-apply/patch:296: new blank line at EOF.
->> +
->> warning: 3 lines add whitespace errors.
->> Applying: xfs: add parent attributes to link
->> Applying: xfs: remove parent pointers in unlink
->> .git/rebase-apply/patch:97: new blank line at EOF.
->> +
->> warning: 1 line adds whitespace errors.
->> Applying: xfs: Add parent pointers to rename
->> Applying: xfs: Add the parent pointer support to the superblock version 5.
->> Applying: xfs: Add helper function xfs_attr_list_context_init
->> Applying: xfs: Increase XFS_DEFER_OPS_NR_INODES to 4
->> Applying: xfs: Add parent pointer ioctl
->> .git/rebase-apply/patch:340: new blank line at EOF.
->> +
->> warning: 1 line adds whitespace errors.
->> Applying: xfs: Add delayed attributes error tag
->> ......
->>
->> Also, I get a couple of compiler warnings:
->>
->> fs/xfs/libxfs/xfs_attr.c: In function ¿xfs_attr_set¿:
->> fs/xfs/libxfs/xfs_attr.c:446:48: warning: passing argument 3 of ¿xfs_attr_set_deferred¿ discards ¿const¿ qualifier from pointer target type [-Wdiscarded-qualifiers]
->>    error = xfs_attr_set_deferred(dp, args.trans, name, namelen,
->>                                                  ^~~~
->> In file included from fs/xfs/libxfs/xfs_attr.c:25:0:
->> fs/xfs/libxfs/xfs_attr.h:197:5: note: expected ¿void *¿ but argument is of type ¿const unsigned char *¿
->>   int xfs_attr_set_deferred(struct xfs_inode *dp, struct xfs_trans *tp,
->>       ^~~~~~~~~~~~~~~~~~~~~
->> fs/xfs/libxfs/xfs_attr.c: In function ¿xfs_attr_remove¿:
->> fs/xfs/libxfs/xfs_attr.c:584:4: warning: passing argument 3 of ¿xfs_attr_remove_deferred¿ discards ¿const¿ qualifier from pointer target type [-Wdiscarded-qualifiers]
->>      name, namelen, flags);
->>      ^~~~
->> In file included from fs/xfs/libxfs/xfs_attr.c:25:0:
->> fs/xfs/libxfs/xfs_attr.h:200:5: note: expected ¿void *¿ but argument is of type ¿const unsigned char *¿
->>   int xfs_attr_remove_deferred(struct xfs_inode *dp, struct xfs_trans *tp,
->>       ^~~~~~~~~~~~~~~~~~~~~~~~
+>> This is the 8th version of parent pointer attributes for xfs. The goal of
+>> this patch set is to add a parent pointer attribute to each inode.  The
+>> attribute name containing the parent inode, generation, and directory offset,
+>> while the  attribute value contains the file name.  This feature will enable
+>> future optimizations for online scrub, or any other feature that could make
+>> use of quickly deriving an inodes path from  the mount point.  This set also
+>> introduces deferred attribute operations, though it is currently only used by
+>>   the new parent pointer code.
 > 
-> Another couple:
+> Another assert failure on generic/026:
 > 
-> fs/xfs/libxfs/xfs_attr.c: In function ¿xfs_leaf_has_attr¿:
-> fs/xfs/libxfs/xfs_attr.c:863:27: error: variable ¿dp¿ set but not used [-Werror=unused-but-set-variable]
->    struct xfs_inode        *dp;
->                             ^~
-> fs/xfs/libxfs/xfs_attr_leaf.c: In function ¿xfs_shortform_has_attr¿:
-> fs/xfs/libxfs/xfs_attr_leaf.c:635:15: error: variable ¿mp¿ set but not used [-Werror=unused-but-set-variable]
->    xfs_mount_t *mp;
->                 ^~
+> SECTION       -- xfs
+> FSTYP         -- xfs (debug)
+> PLATFORM      -- Linux/x86_64 test1 4.19.0-rc2-dgc+
+> MKFS_OPTIONS  -- -f -m rmapbt=1,reflink=1 -i sparse=1 -b size=1k /dev/sdc
+> MOUNT_OPTIONS -- /dev/sdc /mnt/scratch
 > 
-> The fixup patch I wrote to make it compile is below.
+> (though it appears block size has nothing to do with the failure as
+> all my other test VMs also failed on this test, too)
 
-Alrighty, thank you!  I will get those added in the next version.  I 
-think initially these pointers were char *, and then in an earlier 
-review we changed them to void *.  I'm not really sure it makes a huge 
-difference?  I had noticed the warnings earlier and forgot to come back 
-and weed them out.  I will get these changes added to their 
-corresponding patches.  Thank you!
+Alrighty, good to know though.  I will take a look at it.  Thanks!
 
 Allison
 
+> 
+> 
+> [  368.699416] run fstests generic/026 at 2018-09-03 13:46:29
+> [  376.651705] XFS: Assertion failed: tp->t_ticket != NULL, file: fs/xfs/xfs_trans.c, line: 952
+> [  376.653346] ------------[ cut here ]------------
+> [  376.654174] kernel BUG at fs/xfs/xfs_message.c:102!
+> [  376.655537] invalid opcode: 0000 [#1] PREEMPT SMP
+> [  376.656545] CPU: 0 PID: 12468 Comm: chacl Not tainted 4.19.0-rc2-dgc+ #653
+> [  376.657742] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.11.1-1 04/01/2014
+> [  376.659193] RIP: 0010:assfail+0x28/0x30
+> [  376.659861] Code: c3 90 0f 1f 44 00 00 48 89 f1 41 89 d0 48 c7 c6 98 50 2e 82 48 89 fa 31 ff e8 64 f9 ff ff 80 3d f5 9a 0a 01 00 75 03 0f 0b c3 <0f> 0b 66 0f 1f 44 00 00 0f 1f 44 00 00 48 63 f6 49 8a
+> [  376.663050] RSP: 0018:ffffc90000babaa0 EFLAGS: 00010202
+> [  376.663950] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
+> [  376.665167] RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffff8227a5fc
+> [  376.666397] RBP: ffffffff822e68d0 R08: 0000000000000000 R09: 0000000000000000
+> [  376.667618] R10: 0000000000000008 R11: f000000000000000 R12: 0000000000000000
+> [  376.668841] R13: ffff88002d236000 R14: ffffffff814d6701 R15: 0000000000000025
+> [  376.670075] FS:  00007fd8e35dc740(0000) GS:ffff88003ec00000(0000) knlGS:0000000000000000
+> [  376.671462] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [  376.672451] CR2: 000055624ed0c000 CR3: 00000000292b5000 CR4: 00000000000006f0
+> [  376.673678] Call Trace:
+> [  376.674136]  __xfs_trans_commit+0x35c/0x370
+> [  376.674870]  xfs_attr_set+0x241/0x2d0
+> [  376.675510]  __xfs_set_acl+0xf4/0x1a0
+> [  376.676146]  xfs_set_acl+0xa8/0x100
+> [  376.676759]  ? posix_acl_valid+0xb6/0xd0
+> [  376.677444]  ? set_posix_acl+0xa0/0xa0
+> [  376.678108]  posix_acl_xattr_set+0x3f/0x90
+> [  376.678833]  __vfs_setxattr+0x64/0x80
+> [  376.679484]  __vfs_setxattr_noperm+0x69/0x1a0
+> [  376.680243]  ? unlazy_walk+0x4c/0xb0
+> [  376.680871]  vfs_setxattr+0xa0/0xb0
+> [  376.681485]  setxattr+0x132/0x1a0
+> [  376.682088]  ? __handle_mm_fault+0x95b/0x10c0
+> [  376.682850]  ? __mnt_want_write+0x5e/0x90
+> [  376.683547]  ? preempt_count_sub+0x43/0x50
+> [  376.684262]  path_setxattr+0xbe/0xe0
+> [  376.684884]  __x64_sys_setxattr+0x27/0x30
+> [  376.685584]  do_syscall_64+0x5a/0x180
+> [  376.686236]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
 > 
 > Cheers,
 > 
