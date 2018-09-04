@@ -1,109 +1,144 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:42758 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725921AbeIGEnA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Sep 2018 00:43:00 -0400
-Date: Fri, 7 Sep 2018 10:04:32 +1000
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:21667 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726066AbeIDMrj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Sep 2018 08:47:39 -0400
+Date: Tue, 4 Sep 2018 18:23:32 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/4] mkfs: stop zeroing old superblocks excessively
-Message-ID: <20180907000432.GH27618@dastard>
-References: <20180905081932.27478-1-david@fromorbit.com>
- <20180905081932.27478-2-david@fromorbit.com>
- <20180906133108.GA3311@bfoster>
+Subject: Re: mkfs.xfs options suitable for creating absurdly large XFS
+ filesystems?
+Message-ID: <20180904082332.GS5631@dastard>
+References: <20180903224919.GA16358@redhat.com>
+ <20180904004940.GR5631@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180906133108.GA3311@bfoster>
+In-Reply-To: <20180904004940.GR5631@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: "Richard W.M. Jones" <rjones@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Sep 06, 2018 at 09:31:08AM -0400, Brian Foster wrote:
-> On Wed, Sep 05, 2018 at 06:19:29PM +1000, Dave Chinner wrote:
-....
-> > @@ -1220,15 +1221,68 @@ zero_old_xfs_structures(
-> >  
-> >  	/*
-> >  	 * block size and basic geometry seems alright, zero the secondaries.
-> > +	 *
-> > +	 * Don't be insane when it comes to overwriting really large filesystems
-> > +	 * as it could take millions of IOs to zero every secondary
-> > +	 * superblock. If we are remaking a huge filesystem, then do the
-> > +	 * zeroing, but if we are replacing it with a small one (typically done
-> > +	 * in test environments, limit the zeroing to:
-> > +	 *
-> > +	 *	- around the range of the new filesystem
-> > +	 *	- the middle of the old filesystem
-> > +	 *	- the end of the old filesystem
-> > +	 *
-> > +	 * Killing the middle and end of the old filesystem will prevent repair
-> > +	 * from finding it with it's fast secondary sb scan algorithm. The slow
-> > +	 * scan algorithm will then confirm the small filesystem geometry by
-> > +	 * brute force scans.
-> >  	 */
-> >  	memset(buf, 0, new_sb->sb_sectsize);
-> > +
-> > +	/* this carefully avoids integer overflows */
-> > +	end = sb.sb_dblocks;
-> > +	if (sb.sb_agcount > 10000 &&
-> > +	    new_sb->sb_dblocks < end / 10)
-> > +		end = new_sb->sb_dblocks * 10;
+On Tue, Sep 04, 2018 at 10:49:40AM +1000, Dave Chinner wrote:
+> On Mon, Sep 03, 2018 at 11:49:19PM +0100, Richard W.M. Jones wrote:
+> > [This is silly and has no real purpose except to explore the limits.
+> > If that offends you, don't read the rest of this email.]
 > 
-> ... but what's with the 10k agcount cutoff? Just a number out of a hat
-> to demonstrate the improvement..?
-
-yeah, I pulled it from a hat, but mainly so it only triggers the new
-"partial zeroing" code on really large devices that had a large
-filesystem and now we're making a much smaller filesystem on it.
-
-There's no real reason for it except for the fact I haven't done the
-verification needed to make this the default behaviour (hence the
-RFCRAP status :).
-
-> Given that you've done the work to rough in an AIO buffered write
-> mechanism for mkfs, have you considered whether we can find a way to
-> apply that mechanism here?
-
-It would have be another AIO context because this loop doesn't
-use xfs_bufs.
-
-> I'm guessing that the result of using AIO
-> wouldn't be quite as impressive of not doing I/O at all, but as you've
-> already noted, this algorithmic optimization is more targeted at test
-> environments than production ones. The AIO approach sounds like it could
-> be more broadly beneficial, even if not quite as fast in those
-> particular test cases.
-
-I just don't think it's worth the hassle as, like you said, it's
-easier just to avoid the IO altogether.
-
+> We do this quite frequently ourselves, even if it is just to remind
+> ourselves how long it takes to wait for millions of IOs to be done.
 > 
-> >  	off = 0;
-> > -	for (i = 1; i < sb.sb_agcount; i++)  {
-> > +	for (i = 1; i < sb.sb_agcount && off < end; i++)  {
-> > +		off += sb.sb_agblocks;
-> > +		if (pwrite(xi->dfd, buf, new_sb->sb_sectsize,
-> > +					off << sb.sb_blocklog) == -1)
-> > +			break;
-> > +	}
-> > +
-> > +	if (end == sb.sb_dblocks)
-> > +		return;
-> > +
-> > +	/*
-> > +	 * Trash the middle 1000 AGs of the old fs, which we know has at least
-> > +	 * 10000 AGs at this point. Cast to make sure we are doing 64bit
-> > +	 * multiplies, otherwise off gets truncated to 32 bit. I hate C.
-> > +	 */
-> > +	i = (sb.sb_agcount / 2) - 500;
-> > +	off = (xfs_off_t)sb.sb_agblocks * i;
-> > +	off = (xfs_off_t)sb.sb_agblocks * ((sb.sb_agcount / 2) - 500);
+> > I am trying to create an XFS filesystem in a partition of approx
+> > 2^63 - 1 bytes to see what happens.
 > 
-> Looks like a couple lines of dead code there.
+> Should just work. You might find problems with the underlying
+> storage, but the XFS side of things should just work.
 
-Yup, didn't clean it up properly, did I?
+> I'm trying to reproduce it here:
+> 
+> $ grep vdd /proc/partitions 
+>  253       48 9007199254739968 vdd
+> $ sudo mkfs.xfs -f -s size=1024 -d size=2251799813684887b -N /dev/vdd
+> meta-data=/dev/vdd               isize=512    agcount=8388609, agsize=268435455 blks
+>          =                       sectsz=1024  attr=2, projid32bit=1
+>          =                       crc=1        finobt=1, sparse=1, rmapbt=0
+>          =                       reflink=0
+> data     =                       bsize=4096   blocks=2251799813684887, imaxpct=1
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+> log      =internal log           bsize=4096   blocks=521728, version=2
+>          =                       sectsz=1024  sunit=1 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> 
+> 
+> And it is running now without the "-N" and I have to wait for tens
+> of millions of IOs to be issued. The write rate is currently about
+> 13,000 IOPS, so I'm guessing it'll take at least an hour to do
+> this. Next time I'll run it on the machine with faster SSDs.
+> 
+> I haven't seen any error after 20 minutes, though.
+
+I killed it after 2 and half hours, and started looking at why it
+was taking that long. That's the above.
+
+But it's not fast. This is the first time I've looked at whether we
+perturbed the IO patterns in the recent mkfs.xfs refactoring. I'm
+not sure we made them any worse (the algorithms are the same), but
+it's now much more obvious how we can improve them drastically with
+a few small mods.
+
+Firstly, there's the force overwrite alogrithm that zeros the old
+filesystem signature. One an 8EB device with an existing 8EB
+filesystem, there's 8+ million single sector IOs right there.
+So for the moment, zero the first 1MB of the device to whack the
+old superblock and you can avoid this step. I've got a fix for that
+now:
+
+	Time to mkfs a 1TB filsystem on a big device after it held another
+	larger filesystem:
+
+	previous FS size	10PB	100PB	 1EB
+	old mkfs time		1.95s	8.9s	81.3s
+	patched			0.95s	1.2s	 1.2s
+
+
+Second, use -K to avoid discard (which you already know).
+
+Third, we do two passes over the AG headers to initialise them.
+Unfortunately, with a large number of AGs, they don't stay in the
+buffer cache and so the second pas involves RMW cycles. This means
+we do at least 5 extra read and 5 extra write IOs per AG than we
+need to. I've got a fix for this, too:
+
+	Time to make a filesystem from scratch, using a zeroed device so the
+	force overwrite algorithms are not triggered and -K to avoid
+	discards:
+
+	FS size         10PB    100PB    1EB
+	current mkfs    26.9s   214.8s  2484s
+	patched         11.3s    70.3s	 709s
+
+>From that projection, the 8EB mkfs would have taken somewhere around
+7-8 hours to complete. The new code should only take a couple of
+hours. Still not all that good....
+
+.... and I think that's because we are using direct IO. That means
+the IO we issue is effectively synchronous, even though we sorta
+doing delayed writeback. The problem is that mkfs is not threaded so
+writeback happens when the cache fills up and we run out of buffers
+on the free list. Basically it's "direct delayed writeback" at that
+point.
+
+Worse, because it's synchronous, we don't drive more than one IO at
+a time and so we don't get adjacent sector merging, even though most
+ofhte AG header writes are to adjacent sectors. That would cut the
+amount of IOs from ~10 per AG down to 2 for sectorsize < blocksize
+filesysetms and 1 for sectorsize = blocksize filesystems.
+
+This isn't so easy to fix. I either need to:
+
+	1) thread the libxfs buffer cache so we can do this
+	  writeback in the background.
+	2) thread mkfs so it can process multiple AGs at once; or
+	3) libxfs needs to use AIO via delayed write infrastructure
+	similar to what we have in the kernel (buffer lists)
+
+Approach 1) does not solve the queue depth = 1 issue, so
+it's of limited value. Might be quick, but doesn't really get us
+much improvement.
+
+Approach 2) drives deeper queues, but it doesn't solve the adjacent
+sector IO merging problem because each thread only has a queue depth
+of one. So we'll be able to do more IO, but IO efficiency won't
+improve. And, realistically, this isn't a good idea because OOO AG
+processing doesn't work on spinning rust - it just causes seek
+storms and things go slower. To make things faster on spinning rust,
+we need single threaded, in order dispatch, asynchronous writeback.
+Which is almost what 1) is, except it's not asynchronous.
+
+That's what 3) solves - single threaded, in-order, async writeback,
+controlled by the context creating the dirty buffers in a limited
+AIO context.  I'll have to think about this a bit more....
 
 Cheers,
 
