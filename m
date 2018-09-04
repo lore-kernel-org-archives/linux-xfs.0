@@ -1,160 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:41405 "EHLO
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:17490 "EHLO
         ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726154AbeIDMxJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Sep 2018 08:53:09 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1fx6hn-0001wz-Vn
-        for linux-xfs@vger.kernel.org; Tue, 04 Sep 2018 18:29:00 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.91)
-        (envelope-from <david@fromorbit.com>)
-        id 1fx6hn-0000je-Ue
-        for linux-xfs@vger.kernel.org; Tue, 04 Sep 2018 18:28:59 +1000
+        by vger.kernel.org with ESMTP id S1726210AbeIDNf3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Sep 2018 09:35:29 -0400
+Date: Tue, 4 Sep 2018 19:11:12 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/2] mkfs: rework AG header initialisation ordering
-Date: Tue,  4 Sep 2018 18:28:57 +1000
-Message-Id: <20180904082857.2180-3-david@fromorbit.com>
-In-Reply-To: <20180904082857.2180-1-david@fromorbit.com>
-References: <20180904082857.2180-1-david@fromorbit.com>
+Subject: Re: mkfs.xfs options suitable for creating absurdly large XFS
+ filesystems?
+Message-ID: <20180904091112.GT5631@dastard>
+References: <20180903224919.GA16358@redhat.com>
+ <20180904004940.GR5631@dastard>
+ <20180904082600.GB16358@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180904082600.GB16358@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Richard W.M. Jones" <rjones@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Tue, Sep 04, 2018 at 09:26:00AM +0100, Richard W.M. Jones wrote:
+> On Tue, Sep 04, 2018 at 10:49:40AM +1000, Dave Chinner wrote:
+> > On Mon, Sep 03, 2018 at 11:49:19PM +0100, Richard W.M. Jones wrote:
+> > > [This is silly and has no real purpose except to explore the limits.
+> > > If that offends you, don't read the rest of this email.]
+> > 
+> > We do this quite frequently ourselves, even if it is just to remind
+> > ourselves how long it takes to wait for millions of IOs to be done.
+> >
+> > > I am trying to create an XFS filesystem in a partition of approx
+> > > 2^63 - 1 bytes to see what happens.
+> > 
+> > Should just work. You might find problems with the underlying
+> > storage, but the XFS side of things should just work.
+> 
+> Great!  How do you test this normally?
 
-When observing the behaviour of an 8EB mkfs execution, I noticed
-that a phase where there are a massive number of read/modify/write
-cycles occurring. I didn't wait for it to complete - it was obvious
-that it was after all the AG headers had been written. That left the
-AGFL initialisation as the likely cause.
+The usual: it's turtles all the way down.
 
-When all the AG headers don't fit in the libxfs buffer cache, the
-AGFL init requires re-reading the AGF, the AGFL, the free space tree
-root blocks and the rmap tree root block. They all then get
-modified and written back out. 10 IOs per AG. When you have 8
-million AGs, that's a lot of extra IO.
+> I'm assuming you must use a
+> virtual device and don't have actual 2^6x storage systems around?
 
-Change the initialisation algorithm to initialise the AGFL
-immediately after initialising the rest of the headers and
-calculating the minimum AGFL size for that AG. This means the
-modifications will all hit the buffer cache and this will remove the
-IO penalty.
+Right. I use XFS on XFS configurations. i.e. XFS is the storage pool
+on physical storage (SSDs in RAID0 in this case). The disk images
+are sparse files w/ extent size hints to minimise fragmentation and
+allocation overhead. And the QEMU config uses AIO/DIO so it can do
+concurrent, deeply queued async read/write IO from the guest to the
+host - the guest block device behaves exactly like it is hosted on
+real disks.
 
-The "worst_freelist" size calculation doesn't change from AG to AG -
-it's based on the physical configuration of the AG, and all AGs have
-the same configuration. hence we only need to calculate this once,
-not for every AG. That allows us to initialise the AGFL immediately
-after the rest of the AG has been initialised rather than in a
-separate pass.
+Apart from reflink and extent size hints, I'm using the defaults for
+everything.
 
-TIme to make a filesystem from scratch, using a zeroed device so the
-force overwrite algorithms are not triggered and -K to avoid
-discards:
+> > > I guess this indicates a real bug in mkfs.xfs.
+> > 
+> > Did it fail straight away? Or after a long time?  Can you trap this
+> > in gdb and post a back trace so we know where it is coming from?
+> 
+> Yes I think I was far too hasty declaring this a problem with mkfs.xfs
+> last night.  It turns out that NBD on the wire can only describe a few
+> different errors and maps any other error to -EINVAL, which is likely
 
-FS size		10PB	100PB	 1EB
-current mkfs	26.9s	214.8s	2484s
-patched		11.3s	 70.3s	 709s
+Urk. It should map them to -EIO, because then we know it's come from
+the IO layer and isn't a problem related to userspace passing the
+kernel invalid parameters.
 
-In both cases, the IO profile looks identical for the initial AG
-header writeout loop. The difference is that the old code then
-does the RMW loop to init the AGFL, and that runs at about half the
-speed. Hence runtime of the new code is reduce by around 65-70%
-simply by avoiding all that IO.
+Cheers,
 
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- mkfs/xfs_mkfs.c | 40 +++++++++++++++++++++++++---------------
- 1 file changed, 25 insertions(+), 15 deletions(-)
-
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index c153592c705e..d70fbdb6b15a 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -3374,7 +3374,7 @@ initialise_ag_headers(
- 	struct xfs_mount	*mp,
- 	struct xfs_sb		*sbp,
- 	xfs_agnumber_t		agno,
--	int			*worst_freelist)
-+	int			*freelist_size)
- {
- 	struct xfs_perag	*pag = libxfs_perag_get(mp, agno);
- 	struct xfs_agfl		*agfl;
-@@ -3453,8 +3453,22 @@ initialise_ag_headers(
- 		agf->agf_longest = cpu_to_be32(agsize -
- 			XFS_FSB_TO_AGBNO(mp, cfg->logstart) - cfg->logblocks);
- 	}
--	if (libxfs_alloc_min_freelist(mp, pag) > *worst_freelist)
--		*worst_freelist = libxfs_alloc_min_freelist(mp, pag);
-+
-+	/*
-+	 * The AGFL size is the same for all AGs because all AGs have the same
-+	 * layout. If this AG sameness ever changes in the future, we'll need to
-+	 * revisit how we initialise the AGFLs.
-+	 */
-+	if (*freelist_size == 0)
-+		*freelist_size = libxfs_alloc_min_freelist(mp, pag);
-+	else if (*freelist_size < libxfs_alloc_min_freelist(mp, pag)) {
-+		fprintf(stderr,
-+_("%s: Abort! Freelist size (%u) for AG %u not constant (%u)!\n"),
-+			progname, libxfs_alloc_min_freelist(mp, pag),
-+			agno, *freelist_size);
-+		exit(1);
-+	}
-+
- 	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
- 
- 	/*
-@@ -3724,14 +3738,14 @@ static void
- initialise_ag_freespace(
- 	struct xfs_mount	*mp,
- 	xfs_agnumber_t		agno,
--	int			worst_freelist)
-+	int			freelist_size)
- {
- 	struct xfs_alloc_arg	args;
- 	struct xfs_trans	*tp;
- 	struct xfs_trans_res tres = {0};
- 	int			c;
- 
--	c = libxfs_trans_alloc(mp, &tres, worst_freelist, 0, 0, &tp);
-+	c = libxfs_trans_alloc(mp, &tres, freelist_size, 0, 0, &tp);
- 	if (c)
- 		res_failed(c);
- 
-@@ -3797,7 +3811,7 @@ main(
- 	int			quiet = 0;
- 	char			*protofile = NULL;
- 	char			*protostring = NULL;
--	int			worst_freelist = 0;
-+	int			freelist_size = 0;
- 
- 	struct libxfs_xinit	xi = {
- 		.isdirect = LIBXFS_DIRECT,
-@@ -4025,16 +4039,12 @@ main(
- 	}
- 
- 	/*
--	 * Initialise all the static on disk metadata.
-+	 * Initialise all the AG headers on disk.
- 	 */
--	for (agno = 0; agno < cfg.agcount; agno++)
--		initialise_ag_headers(&cfg, mp, sbp, agno, &worst_freelist);
--
--	/*
--	 * Initialise the freespace freelists (i.e. AGFLs) in each AG.
--	 */
--	for (agno = 0; agno < cfg.agcount; agno++)
--		initialise_ag_freespace(mp, agno, worst_freelist);
-+	for (agno = 0; agno < cfg.agcount; agno++) {
-+		initialise_ag_headers(&cfg, mp, sbp, agno, &freelist_size);
-+		initialise_ag_freespace(mp, agno, freelist_size);
-+	}
- 
- 	/*
- 	 * Allocate the root inode and anything else in the proto file.
+Dave.
 -- 
-2.17.0
+Dave Chinner
+david@fromorbit.com
