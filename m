@@ -1,88 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48030 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727023AbeIEBHh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 4 Sep 2018 21:07:37 -0400
-From: Mark Fasheh <mfasheh@suse.de>
-Subject: [PATCH v5 1/2] vfs: allow dedupe of user owned read-only files
-Date: Tue,  4 Sep 2018 13:40:15 -0700
-Message-Id: <20180904204016.14494-2-mfasheh@suse.de>
-In-Reply-To: <20180904204016.14494-1-mfasheh@suse.de>
-References: <20180904204016.14494-1-mfasheh@suse.de>
+Received: from mx1.redhat.com ([209.132.183.28]:35554 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726272AbeIENfA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Sep 2018 09:35:00 -0400
+Date: Wed, 5 Sep 2018 10:05:45 +0100
+From: "Richard W.M. Jones" <rjones@redhat.com>
+Subject: Re: mkfs.xfs options suitable for creating absurdly large XFS
+ filesystems?
+Message-ID: <20180905090545.GC27120@redhat.com>
+References: <20180903224919.GA16358@redhat.com>
+ <20180904004940.GR5631@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180904004940.GR5631@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Al Viro <viro@ZenIV.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, Michael Kerrisk <mtk.manpages@gmail.com>, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, Adam Borowski <kilobyte@angband.pl>, David Sterba <dsterba@suse.cz>, Mark Fasheh <mfasheh@suse.de>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-The permission check in vfs_dedupe_file_range() is too coarse - We
-only allow dedupe of the destination file if the user is root, or
-they have the file open for write.
+On Tue, Sep 04, 2018 at 10:49:40AM +1000, Dave Chinner wrote:
+> What's the sector size of you device? This seems to imply that it is
+> 1024 bytes, not the normal 512 or 4096 bytes we see in most devices.
 
-This effectively limits a non-root user from deduping their own read-only
-files. In addition, the write file descriptor that the user is forced to
-hold open can prevent execution of files. As file data during a dedupe
-does not change, the behavior is unexpected and this has caused a number of
-issue reports. For an example, see:
+It turns out that the sector size is selectable using the nbd-client
+-b parameter, which I didn't notice before:
 
-https://github.com/markfasheh/duperemove/issues/129
+  # nbd-client -b 512 localhost /dev/nbd0
 
-So change the check so we allow dedupe on the target if:
+This actually turns out to be essential when mounting MBR partitioned
+disks because the MBR partition table uses sector numbers, and if you
+use the default (1k) sector size then everything is messed up.
 
-- the root or admin is asking for it
-- the process has write access
-- the owner of the file is asking for the dedupe
-- the process could get write access
+Compare with 1k sectors:
 
-That way users can open read-only and still get dedupe.
+  # fdisk -l /dev/nbd0
+  Disk /dev/nbd0: 10 GiB, 10737418240 bytes, 10485760 sectors
+  Units: sectors of 1 * 1024 = 1024 bytes
+  Sector size (logical/physical): 1024 bytes / 1024 bytes
+  I/O size (minimum/optimal): 1024 bytes / 1024 bytes
+  Disklabel type: dos
+  Disk identifier: 0x000127ae
+  
+  Device      Boot Start      End  Sectors Size Id Type
+  /dev/nbd0p1       2048 20971519 20969472  20G 83 Linux
+                                            ~~~
 
-Signed-off-by: Mark Fasheh <mfasheh@suse.de>
-Acked-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/read_write.c | 17 +++++++++++++++--
- 1 file changed, 15 insertions(+), 2 deletions(-)
+to the correct output with 512b sectors:
 
-diff --git a/fs/read_write.c b/fs/read_write.c
-index e83bd9744b5d..71e9077f8bc1 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -1964,6 +1964,20 @@ int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
- }
- EXPORT_SYMBOL(vfs_dedupe_file_range_compare);
- 
-+/* Check whether we are allowed to dedupe the destination file */
-+static bool allow_file_dedupe(struct file *file)
-+{
-+	if (capable(CAP_SYS_ADMIN))
-+		return true;
-+	if (file->f_mode & FMODE_WRITE)
-+		return true;
-+	if (uid_eq(current_fsuid(), file_inode(file)->i_uid))
-+		return true;
-+	if (!inode_permission(file_inode(file), MAY_WRITE))
-+		return true;
-+	return false;
-+}
-+
- int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
- {
- 	struct file_dedupe_range_info *info;
-@@ -1972,7 +1986,6 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
- 	u64 len;
- 	int i;
- 	int ret;
--	bool is_admin = capable(CAP_SYS_ADMIN);
- 	u16 count = same->dest_count;
- 	struct file *dst_file;
- 	loff_t dst_off;
-@@ -2036,7 +2049,7 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
- 
- 		if (info->reserved) {
- 			info->status = -EINVAL;
--		} else if (!(is_admin || (dst_file->f_mode & FMODE_WRITE))) {
-+		} else if (!allow_file_dedupe(dst_file)) {
- 			info->status = -EINVAL;
- 		} else if (file->f_path.mnt != dst_file->f_path.mnt) {
- 			info->status = -EXDEV;
+  # fdisk -l /dev/nbd0
+  Disk /dev/nbd0: 10 GiB, 10737418240 bytes, 20971520 sectors
+  Units: sectors of 1 * 512 = 512 bytes
+  Sector size (logical/physical): 512 bytes / 512 bytes
+  I/O size (minimum/optimal): 1024 bytes / 1024 bytes
+  Disklabel type: dos
+  Disk identifier: 0x000127ae
+  
+  Device      Boot Start      End  Sectors Size Id Type
+  /dev/nbd0p1       2048 20971519 20969472  10G 83 Linux
+
+So that's a nasty little "gotcha" in the nbd-client tool.
+
+Rich.
+
 -- 
-2.15.1
+Richard Jones, Virtualization Group, Red Hat http://people.redhat.com/~rjones
+Read my programming and virtualization blog: http://rwmj.wordpress.com
+virt-df lists disk usage of guests without needing to install any
+software inside the virtual machine.  Supports Linux and Windows.
+http://people.redhat.com/~rjones/virt-df/
