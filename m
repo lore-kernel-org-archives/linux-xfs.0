@@ -1,43 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:35151 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726304AbeIDWjA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Sep 2018 18:39:00 -0400
-Received: by mail-pf1-f194.google.com with SMTP id p12-v6so2096115pfh.2
-        for <linux-xfs@vger.kernel.org>; Tue, 04 Sep 2018 11:12:45 -0700 (PDT)
-Date: Tue, 4 Sep 2018 11:12:43 -0700
-From: Omar Sandoval <osandov@osandov.com>
-Subject: Re: Where to find xfs-import.git
-Message-ID: <20180904181243.GC24406@vader>
-References: <20180827201559.GA10024@vader>
- <20180828081307.233ln2mgitu4iy2t@odin.usersys.redhat.com>
- <5aff93b4-f440-5ce5-2147-6f3cf2759042@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5aff93b4-f440-5ce5-2147-6f3cf2759042@sandeen.net>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:24725 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726342AbeIEMsn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Sep 2018 08:48:43 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1fxT2G-0003NA-1C
+        for linux-xfs@vger.kernel.org; Wed, 05 Sep 2018 18:19:36 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1fxT2G-0007GY-00
+        for linux-xfs@vger.kernel.org; Wed, 05 Sep 2018 18:19:36 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [RFCRAP PATCH 0/4 v2] mkfs.xfs IO scalability
+Date: Wed,  5 Sep 2018 18:19:28 +1000
+Message-Id: <20180905081932.27478-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <dchinner@redhat.com>
+To: linux-xfs@vger.kernel.org
 
-On Tue, Aug 28, 2018 at 08:19:08AM -0500, Eric Sandeen wrote:
-> On 8/28/18 3:13 AM, Carlos Maiolino wrote:
-> > On Mon, Aug 27, 2018 at 01:15:59PM -0700, Omar Sandoval wrote:
-> >> Hey,
-> >>
-> >> I was hoping to poke around some old XFS history, but now that
-> >> oss.sgi.com is gone, I can't find the XFS CVS import repo. Does anyone
-> >> have it lying around? Would it be possible to put it up on kernel.org?
-> >>
-> > 
-> > oss.sgi.com is by far gone. But you can find everything from oss.sgi.com in
-> > archive.org. Unfortunately not the CVS repositories, which I have no idea if
-> > they are still around somewhere. But on archive.org you can still find the
-> > original design documents from xfs.
-> 
-> Several developers do have copies of the old tree from oss.sgi.com.  We're
-> discussing the best public place to republish them, stay tuned.
+Hi folks,
 
-Any updates, Eric? Thanks!
+More on getting mkfs to be usable to testing unrealistically large
+filesystems. The first two patches of this series are unchanged from
+yesterday - the second two are new and build on them.
+
+The second two patches hack a delayed write buffer submission list
+in the mkfs and libxfs. It's a bit nasty, because I've chosen to
+ignore the fact that the libxfs has no concept of async IO or
+background write and instead hacked around it. You can see the
+result in passing a buffer list to xfs_trans_commit() to get it to
+add buffers to the delwri list rather than write them synchronously.
+
+Fast, loose and stupidly dangerous, all in one. Yeehaw!
+
+Better yet, it doesn't even make any difference to
+performance - it's just an enabling patch.
+
+The last patch is the performance improvement - it hacks a grotty,
+non-re-entrant AIO submission/completion ring to turn the single
+threaded sync write batching into a single threaded concurrent IO
+loop using AIO. This can drive really deep IO queues as long as it's
+got enough queued IO to work with, so mkfs is hacked to only submit
+IO every few hundred AGs it initialises.
+
+This sustains queue depths of around 100 IOs and SSD utilisation at
+around 80% using about half a CPU, and so the time to make an 8EB
+filesystem drops to around 15 minutes.
+
+This is most definitely not production code. This is a load of crap
+hacked together in a few hours as a proof of concept. But it's a
+successful proof of concept, so what we now need is someone who is
+looking around for a substantial project to volunteer to rewrite the
+libxfs buffer cache around an AIO submission/completion core and
+implement all this in a "proper" fashion. If you're interested, let
+me know...
+
+Cheers,
+
+Dave.
