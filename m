@@ -1,312 +1,287 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:39930 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728203AbeIFNMf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Sep 2018 09:12:35 -0400
-Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w868Y0tY088876
-        for <linux-xfs@vger.kernel.org>; Thu, 6 Sep 2018 04:38:13 -0400
-Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2maxm76ege-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Thu, 06 Sep 2018 04:38:13 -0400
-Received: from localhost
-        by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Thu, 6 Sep 2018 02:38:12 -0600
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH V2 01/16] Fix xfs/009 to work with 64k block size
-Date: Thu,  6 Sep 2018 14:09:58 +0530
-In-Reply-To: <20180906084013.2687-1-chandan@linux.vnet.ibm.com>
-References: <20180906084013.2687-1-chandan@linux.vnet.ibm.com>
-Message-Id: <20180906084013.2687-2-chandan@linux.vnet.ibm.com>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:24725 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726342AbeIEMsp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Sep 2018 08:48:45 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1fxT2G-0003NI-5Q
+        for linux-xfs@vger.kernel.org; Wed, 05 Sep 2018 18:19:36 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1fxT2G-0007Gj-3y
+        for linux-xfs@vger.kernel.org; Wed, 05 Sep 2018 18:19:36 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 4/4] mkfs: Use AIO for batched writeback
+Date: Wed,  5 Sep 2018 18:19:32 +1000
+Message-Id: <20180905081932.27478-5-david@fromorbit.com>
+In-Reply-To: <20180905081932.27478-1-david@fromorbit.com>
+References: <20180905081932.27478-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, eguan@redhat.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-xfs_alloc_file_space() rounds up allocation requests by the filesystem
-block size. Hence this commit changes the test to work with block size
-units rather than with a multiple of 4096 bytes.
+From: Dave Chinner <dchinner@redhat.com>
 
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+What it says. 8EB filesystem can now be made in 15 minutes on
+storage that can do 100,000 IOPS. Before this patch mkfs topped out
+at about 13,000 IOPS.
+
+Proof of concept proven.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- tests/xfs/009     | 92 ++++++++++++++++++++++++++++++++++++++++++++++---------
- tests/xfs/009.out | 66 +++++++++++++++++++--------------------
- 2 files changed, 110 insertions(+), 48 deletions(-)
+ libxfs/libxfs_io.h |   1 +
+ libxfs/rdwr.c      | 170 +++++++++++++++++++++++++++++++++++++++++++--
+ mkfs/Makefile      |   2 +-
+ mkfs/xfs_mkfs.c    |   2 +-
+ 4 files changed, 169 insertions(+), 6 deletions(-)
 
-diff --git a/tests/xfs/009 b/tests/xfs/009
-index 68f6379..70717eb 100755
---- a/tests/xfs/009
-+++ b/tests/xfs/009
-@@ -14,9 +14,6 @@ here=`pwd`
- tmp=/tmp/$$
- status=1	# failure is the default!
- trap "_cleanup; exit \$status" 0 1 2 3 15
--# This isn't really related to fs block size, it's just what
--# alloc uses for the "block" unit in it's input parameters...
--bsize=4096
+diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
+index c69cc7cd7ec5..2b11d008998d 100644
+--- a/libxfs/libxfs_io.h
++++ b/libxfs/libxfs_io.h
+@@ -67,6 +67,7 @@ typedef struct xfs_buf {
+ 	struct xfs_buf_map	__b_map;
+ 	int			b_nmaps;
+ 	struct list_head	b_list;
++	int			b_io_count;
+ #ifdef XFS_BUF_TRACING
+ 	struct list_head	b_lock_list;
+ 	const char		*b_func;
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index 7fbaae571abe..5336f6a1e1de 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -20,6 +20,9 @@
  
- _cleanup()
- {
-@@ -24,13 +21,6 @@ _cleanup()
-     _scratch_unmount
+ #include "libxfs.h"		/* for LIBXFS_EXIT_ON_FAILURE */
+ 
++/* XXX: all the aio stuff is hacky and proof of concept only */
++#include <libaio.h>
++
+ /*
+  * Important design/architecture note:
+  *
+@@ -1236,6 +1239,151 @@ xfs_buf_cmp(
+ 	return 0;
  }
  
--_block_filter()
--{
--   sed \
--	-e 's/[0-9][0-9]*\.\.[0-9][0-9]*/BLOCKRANGE/g' \
--	-e "s/blocksize $bsize/blocksize BSIZE/g"
--}
--
- _init()
++/* hacky AIO stuff that'll handle a single delwri queue flush at a time */
++#define MAX_AIO_EVENTS 1024
++io_context_t ctxp;
++struct iocb *iocbs[MAX_AIO_EVENTS];
++struct io_event ioevents[MAX_AIO_EVENTS];
++int aio_next;
++int aio_flight;
++
++static void
++init_aio_delwri(void)
++{
++	int i, r;
++
++	memset(&ctxp, 0, sizeof(ctxp));
++	r = io_setup(MAX_AIO_EVENTS, &ctxp);
++	if (r) {
++		printf("FAIL! io_setup returned %d\n", r);
++		exit(1);
++	}
++	for (i = 0; i < MAX_AIO_EVENTS; ++i) {
++		iocbs[i] = calloc(1, sizeof(struct iocb));
++		if (iocbs[i] == NULL) {
++			printf("failed to allocate an iocb\n");
++			exit(1);
++		}
++	}
++}
++
++int
++get_write_completions(
++	int	threshold)
++{
++	int	error = 0;
++	int	i, r;
++
++	while (aio_flight > threshold) {
++		/* gather up some completions */
++		r = io_getevents(ctxp, 1, MAX_AIO_EVENTS, ioevents, NULL);
++		if (r < 0)  {
++			printf("FAIL! io_getevents returned %d\n", r);
++			exit(1);
++		}
++
++		aio_flight -= r;
++		for (i = 0; i < r; ++i) {
++			struct xfs_buf *bp = ioevents[i].data;
++			if (ioevents[i].res < 0)
++				bp->b_error = ioevents[i].res;
++			else if (ioevents[i].res != bp->b_bcount)
++				bp->b_error = -EIO;
++
++			if (--bp->b_io_count == 0 && !bp->b_error) {
++				bp->b_flags |= LIBXFS_B_UPTODATE;
++				bp->b_flags &= ~(LIBXFS_B_DIRTY | LIBXFS_B_EXIT |
++						 LIBXFS_B_UNCHECKED);
++				libxfs_putbuf(bp);
++			} else if (!error) {
++				error = bp->b_error;
++			}
++		}
++		/* wait for a short while */
++		usleep(1000);
++	}
++	return error;
++}
++
++static int
++__aio_write(
++	struct xfs_buf  *bp,
++	void *buf,
++	int len,
++	off64_t offset)
++{
++	int	r, i;
++	int	fd = libxfs_device_to_fd(bp->b_target->dev);
++
++	i = aio_next++ % MAX_AIO_EVENTS;
++	aio_flight++;
++	bp->b_io_count++;
++
++	io_prep_pwrite(iocbs[i], fd, buf, len, offset);
++	iocbs[i]->data = bp;
++	r = io_submit(ctxp, 1, &iocbs[i]);
++	if (r != 1) {
++		aio_flight--;
++		if (bp->b_flags & LIBXFS_B_EXIT)
++			exit(1);
++		return -EIO;
++	}
++	return 0;
++
++}
++
++static int
++do_write(
++	struct xfs_buf	*bp)
++{
++	/*
++	 * we never write buffers that are marked stale. This indicates they
++	 * contain data that has been invalidated, and even if the buffer is
++	 * dirty it must *never* be written. Verifiers are wonderful for finding
++	 * bugs like this. Make sure the error is obvious as to the cause.
++	 */
++	if (bp->b_flags & LIBXFS_B_STALE) {
++		bp->b_error = -ESTALE;
++		return bp->b_error;
++	}
++
++	/*
++	 * clear any pre-existing error status on the buffer. This can occur if
++	 * the buffer is corrupt on disk and the repair process doesn't clear
++	 * the error before fixing and writing it back.
++	 */
++	bp->b_error = 0;
++	if (bp->b_ops) {
++		bp->b_ops->verify_write(bp);
++		if (bp->b_error) {
++			fprintf(stderr,
++	_("%s: write verifer failed on %s bno 0x%llx/0x%x\n"),
++				__func__, bp->b_ops->name,
++				(long long)bp->b_bn, bp->b_bcount);
++			return bp->b_error;
++		}
++	}
++
++	if (!(bp->b_flags & LIBXFS_B_DISCONTIG)) {
++		bp->b_error = __aio_write(bp, bp->b_addr, bp->b_bcount,
++				    LIBXFS_BBTOOFF64(bp->b_bn));
++	} else {
++		int	i;
++		void	*buf = bp->b_addr;
++
++		for (i = 0; i < bp->b_nmaps; i++) {
++			off64_t	offset = LIBXFS_BBTOOFF64(bp->b_maps[i].bm_bn);
++			int len = BBTOB(bp->b_maps[i].bm_len);
++
++			bp->b_error = __aio_write(bp, buf, len, offset);
++			if (bp->b_error)
++				break;	/* XXX: completion wait required! */
++			buf += len;
++		}
++	}
++	return bp->b_error;
++}
++
+ /* Processes entire list, but only returns the first error found */
+ int
+ libxfs_buf_delwri_flush(
+@@ -1243,21 +1391,35 @@ libxfs_buf_delwri_flush(
  {
-     echo "*** mkfs"
-@@ -49,11 +39,6 @@ _init()
-     fi
+ 	struct xfs_buf		*bp;
+ 	int			 error = 0;
++	static bool		aio_init = false;
++	int			ret;
++
++	if (!aio_init) {
++		init_aio_delwri();
++		aio_init = true;
++	}
+ 
+ 	list_sort(NULL, delwri_list, xfs_buf_cmp);
+ 	while (!list_empty(delwri_list)) {
+ 		bp = list_first_entry(delwri_list, struct xfs_buf, b_list);
+ 		list_del_init(&bp->b_list);
+ 		bp->b_flags &= ~LIBXFS_B_DELWRI_Q;
++		bp->b_io_count = 1;
+ 		if (!bp->b_error && (bp->b_flags & LIBXFS_B_DIRTY)) {
+-			int ret;
+-			ret = libxfs_writebufr(bp);
++			ret = do_write(bp);
+ 			if (ret && !error)
+ 				error = ret;
+ 		}
+-		libxfs_putbuf(bp);
++		if (--bp->b_io_count == 0)
++			libxfs_putbuf(bp);
++
++		/* wait for some completions if we've dispatched lots */
++		ret = get_write_completions(MAX_AIO_EVENTS / 5 * 4);
++		if (ret && !error)
++			error = ret;
+ 	}
+-	return error;
++	ret = get_write_completions(0);
++	return error ? error : ret;
  }
  
--_filesize()
--{
--    ls -l $1 | $AWK_PROG '{print "filesize = " $5}'
--}
--
- # get standard environment, filters and checks
- . ./common/rc
- . ./common/filter
-@@ -64,9 +49,86 @@ _supported_os Linux
  
- _require_scratch
+diff --git a/mkfs/Makefile b/mkfs/Makefile
+index 31482b08d559..e27f10f26b14 100644
+--- a/mkfs/Makefile
++++ b/mkfs/Makefile
+@@ -11,7 +11,7 @@ HFILES =
+ CFILES = proto.c xfs_mkfs.c
  
-+_filesize()
-+{
-+    ls -l $1 | $AWK_PROG -v bsize="$bsize" '{print "filesize = " $5 / bsize}'
-+}
-+
-+_block_filter()
-+{
-+	$AWK_PROG -v bsize="$bsize" '
-+	/blocksize/ {
-+		printf("    blocksize BSIZE\n")
-+
-+		next
-+	}
-+
-+	/CMD/ {
-+		split($3, off, "=")
-+		offset = strtonum(off[2])
-+		if (offset != -1)
-+			offset = offset / bsize
-+
-+		split($4, len, "=")
-+		nr_blocks = strtonum(len[2])
-+		if (nr_blocks != -1)
-+			nr_blocks = nr_blocks / bsize
-+
-+		printf("    %s %s off=%s, len=%d\n", $1, $2, offset, nr_blocks)
-+
-+		next
-+	}
-+
-+	/MAP/ {
-+		split($2, off, "=")
-+		offset = strtonum(off[2])
-+		if (offset != -1)
-+			offset = offset / bsize
-+
-+		split($3, len, "=")
-+
-+		nr_blocks = strtonum(len[2])
-+
-+		if (nr_blocks != -1)
-+			nr_blocks = nr_blocks / bsize
-+
-+		printf("    %s off=%s, len=%d %s\n", $1, offset, nr_blocks, $4)
-+
-+		next
-+	}
-+
-+	/TRUNCATE/ {
-+		split($2, off, "=")
-+		offset = strtonum(off[2]) / bsize
-+
-+		printf("    %s off=%s\n", $1, offset)
-+
-+		next
-+	}
-+
-+	/\[[0-9]+,[0-9]+\]:/ {
-+		printf("        %s BLOCKRANGE\n", $1)
-+
-+		next
-+	}
-+
-+	{
-+		print
-+
-+		next
-+	}
-+	'
-+}
-+
- _init
- out=$SCRATCH_MNT/$$.tmp
+ LLDLIBS += $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBRT) $(LIBPTHREAD) $(LIBBLKID) \
+-	$(LIBUUID)
++	$(LIBUUID) -laio
+ LTDEPENDENCIES += $(LIBXFS) $(LIBXCMD) $(LIBFROG)
+ LLDFLAGS = -static-libtool-libs
  
-+# This isn't really related to fs block size, it's just what
-+# alloc uses for the "block" unit in it's input parameters...
-+# However, xfs_alloc_file_space() rounds up allocation
-+# request by the filesystem's block size.
-+bsize=$(_get_block_size $SCRATCH_MNT)
-+
- # since we're using a clean FS here, we make some assumptions
- # about availability of contiguous blocks
- 
-diff --git a/tests/xfs/009.out b/tests/xfs/009.out
-index 7132aca..02b5d82 100644
---- a/tests/xfs/009.out
-+++ b/tests/xfs/009.out
-@@ -3,8 +3,8 @@ QA output created by 009
- *** mount
- *** test 1 - reservations cleared on O_TRUNC
-     blocksize BSIZE
--    CMD resvsp, off=0, len=4096000
--    MAP off=0, len=4096000 [0,1000]
-+    CMD resvsp, off=0, len=1000
-+    MAP off=0, len=1000 [0,1000]
-         [ofs,count]: start..end
-         [0,1000]: BLOCKRANGE
-     MAP off=0, len=-1 [0-]
-@@ -17,53 +17,53 @@ filesize = 0
- filesize = 0
- *** test 2 - reserve & filesize
-     blocksize BSIZE
--    CMD resvsp, off=0, len=4096000
--    MAP off=0, len=4096000 [0,1000]
-+    CMD resvsp, off=0, len=1000
-+    MAP off=0, len=1000 [0,1000]
-         [ofs,count]: start..end
-         [0,1000]: BLOCKRANGE
- filesize = 0
- *** test 3 - alloc & filesize
-     blocksize BSIZE
--    CMD allocsp, off=4096000, len=-1
--    MAP off=4096000, len=-1 [1000-]
-+    CMD allocsp, off=1000, len=-1
-+    MAP off=1000, len=-1 [1000-]
-         [ofs,count]: start..end
--filesize = 4096000
-+filesize = 1000
- *** test 4 - allocations cleared on O_TRUNC
-     blocksize BSIZE
--    CMD allocsp, off=4096000, len=-1
--    MAP off=4096000, len=-1 [1000-]
-+    CMD allocsp, off=1000, len=-1
-+    MAP off=1000, len=-1 [1000-]
-         [ofs,count]: start..end
--filesize = 4096000
-+filesize = 1000
-     blocksize BSIZE
-     MAP off=0, len=-1 [0-]
-         [ofs,count]: start..end
- filesize = 0
- *** test 5 - reserve / unreserve
-     blocksize BSIZE
--    CMD resvsp, off=0, len=409600
--    MAP off=0, len=409600 [0,100]
-+    CMD resvsp, off=0, len=100
-+    MAP off=0, len=100 [0,100]
-         [ofs,count]: start..end
-         [0,100]: BLOCKRANGE
--    CMD unresvsp, off=409600, len=2048000
--    MAP off=409600, len=2048000 [100,500]
-+    CMD unresvsp, off=100, len=500
-+    MAP off=100, len=500 [100,500]
-         [ofs,count]: start..end
-     MAP off=0, len=-1 [0-]
-         [ofs,count]: start..end
-         [0,100]: BLOCKRANGE
--    CMD unresvsp, off=3686400, len=819200
--    MAP off=3686400, len=819200 [900,200]
-+    CMD unresvsp, off=900, len=200
-+    MAP off=900, len=200 [900,200]
-         [ofs,count]: start..end
-     MAP off=0, len=-1 [0-]
-         [ofs,count]: start..end
-         [0,100]: BLOCKRANGE
- *** test 6 - reserve adjacent
-     blocksize BSIZE
--    CMD resvsp, off=0, len=409600
--    MAP off=0, len=409600 [0,100]
-+    CMD resvsp, off=0, len=100
-+    MAP off=0, len=100 [0,100]
-         [ofs,count]: start..end
-         [0,100]: BLOCKRANGE
--    CMD resvsp, off=409600, len=409600
--    MAP off=409600, len=409600 [100,100]
-+    CMD resvsp, off=100, len=100
-+    MAP off=100, len=100 [100,100]
-         [ofs,count]: start..end
-         [100,100]: BLOCKRANGE
-     MAP off=0, len=-1 [0-]
-@@ -71,44 +71,44 @@ filesize = 0
-         [0,200]: BLOCKRANGE
- *** test 7 - alloc
-     blocksize BSIZE
--    CMD allocsp, off=4096000, len=-1
--    MAP off=4096000, len=-1 [1000-]
-+    CMD allocsp, off=1000, len=-1
-+    MAP off=1000, len=-1 [1000-]
-         [ofs,count]: start..end
-     MAP off=0, len=-1 [0-]
-         [ofs,count]: start..end
-         [0,1000]: BLOCKRANGE
--    CMD allocsp, off=8192000, len=-1
--    MAP off=8192000, len=-1 [2000-]
-+    CMD allocsp, off=2000, len=-1
-+    MAP off=2000, len=-1 [2000-]
-         [ofs,count]: start..end
-     MAP off=0, len=-1 [0-]
-         [ofs,count]: start..end
-         [0,2000]: BLOCKRANGE
--filesize = 8192000
-+filesize = 2000
- *** test 8 - alloc & truncate
-     blocksize BSIZE
--    CMD allocsp, off=4096000, len=-1
--    MAP off=4096000, len=-1 [1000-]
-+    CMD allocsp, off=1000, len=-1
-+    MAP off=1000, len=-1 [1000-]
-         [ofs,count]: start..end
-     MAP off=0, len=-1 [0-]
-         [ofs,count]: start..end
-         [0,1000]: BLOCKRANGE
--    TRUNCATE off=2048000
-+    TRUNCATE off=500
-     MAP off=0, len=-1 [0-]
-         [ofs,count]: start..end
-         [0,500]: BLOCKRANGE
--filesize = 2048000
-+filesize = 500
- *** test 9 - reserve & truncate
-     blocksize BSIZE
--    CMD resvsp, off=0, len=4096000
--    MAP off=0, len=4096000 [0,1000]
-+    CMD resvsp, off=0, len=1000
-+    MAP off=0, len=1000 [0,1000]
-         [ofs,count]: start..end
-         [0,1000]: BLOCKRANGE
-     MAP off=0, len=-1 [0-]
-         [ofs,count]: start..end
-         [0,1000]: BLOCKRANGE
--    TRUNCATE off=2048000
-+    TRUNCATE off=500
-     MAP off=0, len=-1 [0-]
-         [ofs,count]: start..end
-         [0,1000]: BLOCKRANGE
--filesize = 2048000
-+filesize = 500
- *** unmount
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index b751b1fcb4a3..82e041dd1b48 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -4048,7 +4048,7 @@ main(
+ 		initialise_ag_headers(&cfg, mp, sbp, agno, &freelist_size,
+ 				      &delwri_list);
+ 		initialise_ag_freespace(mp, agno, freelist_size, &delwri_list);
+-		if (agno && !(agno % 100))
++		if (agno && !(agno % 1000))
+ 			libxfs_buf_delwri_flush(&delwri_list);
+ 	}
+ 	libxfs_buf_delwri_flush(&delwri_list);
 -- 
-2.9.5
+2.17.0
