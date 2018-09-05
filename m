@@ -1,44 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48076 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727023AbeIEBHp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 4 Sep 2018 21:07:45 -0400
-From: Mark Fasheh <mfasheh@suse.de>
-Subject: [PATCH v5 2/2] vfs: dedupe should return EPERM if permission is not granted
-Date: Tue,  4 Sep 2018 13:40:16 -0700
-Message-Id: <20180904204016.14494-3-mfasheh@suse.de>
-In-Reply-To: <20180904204016.14494-1-mfasheh@suse.de>
-References: <20180904204016.14494-1-mfasheh@suse.de>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:51519 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727594AbeIEKIU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Sep 2018 06:08:20 -0400
+Date: Wed, 5 Sep 2018 15:39:48 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Where to find xfs-import.git
+Message-ID: <20180905053948.GW5631@dastard>
+References: <20180827201559.GA10024@vader>
+ <20180828081307.233ln2mgitu4iy2t@odin.usersys.redhat.com>
+ <5aff93b4-f440-5ce5-2147-6f3cf2759042@sandeen.net>
+ <20180904181243.GC24406@vader>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180904181243.GC24406@vader>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Al Viro <viro@ZenIV.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, Michael Kerrisk <mtk.manpages@gmail.com>, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, Adam Borowski <kilobyte@angband.pl>, David Sterba <dsterba@suse.cz>, Mark Fasheh <mfasheh@suse.de>
+To: Omar Sandoval <osandov@osandov.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <dchinner@redhat.com>
 
-Right now we return EINVAL if a process does not have permission to dedupe a
-file. This was an oversight on my part. EPERM gives a true description of
-the nature of our error, and EINVAL is already used for the case that the
-filesystem does not support dedupe.
+On Tue, Sep 04, 2018 at 11:12:43AM -0700, Omar Sandoval wrote:
+> On Tue, Aug 28, 2018 at 08:19:08AM -0500, Eric Sandeen wrote:
+> > On 8/28/18 3:13 AM, Carlos Maiolino wrote:
+> > > On Mon, Aug 27, 2018 at 01:15:59PM -0700, Omar Sandoval wrote:
+> > >> Hey,
+> > >>
+> > >> I was hoping to poke around some old XFS history, but now that
+> > >> oss.sgi.com is gone, I can't find the XFS CVS import repo. Does anyone
+> > >> have it lying around? Would it be possible to put it up on kernel.org?
+> > > 
+> > > oss.sgi.com is by far gone. But you can find everything from oss.sgi.com in
+> > > archive.org. Unfortunately not the CVS repositories, which I have no idea if
+> > > they are still around somewhere. But on archive.org you can still find the
+> > > original design documents from xfs.
+> > 
+> > Several developers do have copies of the old tree from oss.sgi.com.  We're
+> > discussing the best public place to republish them, stay tuned.
+> 
+> Any updates, Eric? Thanks!
 
-Signed-off-by: Mark Fasheh <mfasheh@suse.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Acked-by: David Sterba <dsterba@suse.com>
----
- fs/read_write.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Omar, a copy of the original repo from oss.sgi.com can be found
+here:
 
-diff --git a/fs/read_write.c b/fs/read_write.c
-index 71e9077f8bc1..7188982e2733 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -2050,7 +2050,7 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
- 		if (info->reserved) {
- 			info->status = -EINVAL;
- 		} else if (!allow_file_dedupe(dst_file)) {
--			info->status = -EINVAL;
-+			info->status = -EPERM;
- 		} else if (file->f_path.mnt != dst_file->f_path.mnt) {
- 			info->status = -EXDEV;
- 		} else if (S_ISDIR(dst->i_mode)) {
+https://github.com/dchinner/xfs-history
+
+Cheers,
+
+Dave.
 -- 
-2.15.1
+Dave Chinner
+david@fromorbit.com
