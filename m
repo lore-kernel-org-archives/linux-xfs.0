@@ -1,73 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47456 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728196AbeIMAcq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 Sep 2018 20:32:46 -0400
-Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 12BEE3082A34
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 19:26:49 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id CF592308BE75
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 19:26:48 +0000 (UTC)
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs_repair: warn properly about reflink flag with and without
- -n
-Message-ID: <700e2326-fd4c-224e-bf9c-cb77756e4a55@redhat.com>
-Date: Wed, 12 Sep 2018 14:26:48 -0500
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:44325 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728436AbeIFWiG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Sep 2018 18:38:06 -0400
+Received: by mail-pl1-f194.google.com with SMTP id ba4-v6so5327469plb.11
+        for <linux-xfs@vger.kernel.org>; Thu, 06 Sep 2018 11:01:29 -0700 (PDT)
+Date: Thu, 6 Sep 2018 11:01:27 -0700
+From: Omar Sandoval <osandov@osandov.com>
+Subject: Re: Where to find xfs-import.git
+Message-ID: <20180906180127.GA27057@vader>
+References: <20180827201559.GA10024@vader>
+ <20180828081307.233ln2mgitu4iy2t@odin.usersys.redhat.com>
+ <5aff93b4-f440-5ce5-2147-6f3cf2759042@sandeen.net>
+ <20180904181243.GC24406@vader>
+ <20180905053948.GW5631@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180905053948.GW5631@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <dchinner@redhat.com>
 
-The decision to emit a warning in fix_inode_reflink_flag seems broken; in
-no-modify mode we'll do_warn that we're setting it (even though we don't),
-and we'll be silent if it needs to be cleared.
+On Wed, Sep 05, 2018 at 03:39:48PM +1000, Dave Chinner wrote:
+> On Tue, Sep 04, 2018 at 11:12:43AM -0700, Omar Sandoval wrote:
+> > On Tue, Aug 28, 2018 at 08:19:08AM -0500, Eric Sandeen wrote:
+> > > On 8/28/18 3:13 AM, Carlos Maiolino wrote:
+> > > > On Mon, Aug 27, 2018 at 01:15:59PM -0700, Omar Sandoval wrote:
+> > > >> Hey,
+> > > >>
+> > > >> I was hoping to poke around some old XFS history, but now that
+> > > >> oss.sgi.com is gone, I can't find the XFS CVS import repo. Does anyone
+> > > >> have it lying around? Would it be possible to put it up on kernel.org?
+> > > > 
+> > > > oss.sgi.com is by far gone. But you can find everything from oss.sgi.com in
+> > > > archive.org. Unfortunately not the CVS repositories, which I have no idea if
+> > > > they are still around somewhere. But on archive.org you can still find the
+> > > > original design documents from xfs.
+> > > 
+> > > Several developers do have copies of the old tree from oss.sgi.com.  We're
+> > > discussing the best public place to republish them, stay tuned.
+> > 
+> > Any updates, Eric? Thanks!
+> 
+> Omar, a copy of the original repo from oss.sgi.com can be found
+> here:
+> 
+> https://github.com/dchinner/xfs-history
 
-Fix this so it's the standard "would" in no-modify, and "will" in regular
-mode.  This also ensures that we return the proper status if flags are
-found to be incorrect in -n or -e mode.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/repair/rmap.c b/repair/rmap.c
-index bffb5b61..7ef2d0fd 100644
---- a/repair/rmap.c
-+++ b/repair/rmap.c
-@@ -1142,16 +1142,27 @@ fix_inode_reflink_flag(
- 	struct xfs_dinode	*dino;
- 	struct xfs_buf		*buf;
- 
-+	if (no_modify) {
-+		if (set)
-+			do_warn(
-+_("would set reflink flag on inode %"PRIu64"\n"),
-+				XFS_AGINO_TO_INO(mp, agno, agino));
-+		else
-+			do_warn(
-+_("would clear reflink flag on inode %"PRIu64"\n"),
-+				XFS_AGINO_TO_INO(mp, agno, agino));
-+		return 0;
-+	}
-+
-+	/* Modify mode */
- 	if (set)
- 		do_warn(
- _("setting reflink flag on inode %"PRIu64"\n"),
- 			XFS_AGINO_TO_INO(mp, agno, agino));
--	else if (!no_modify) /* && !set */
-+	else
- 		do_warn(
- _("clearing reflink flag on inode %"PRIu64"\n"),
- 			XFS_AGINO_TO_INO(mp, agno, agino));
--	if (no_modify)
--		return 0;
- 
- 	buf = get_agino_buf(mp, agno, agino, &dino);
- 	if (!buf)
+Thanks a lot, Dave!
