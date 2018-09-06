@@ -1,175 +1,175 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:45594 "EHLO mx1.redhat.com"
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:41620 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728776AbeIFSGo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 6 Sep 2018 14:06:44 -0400
-Date: Thu, 6 Sep 2018 09:31:08 -0400
+        id S1728776AbeIFSG7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 6 Sep 2018 14:06:59 -0400
+Date: Thu, 6 Sep 2018 09:31:24 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/4] mkfs: stop zeroing old superblocks excessively
-Message-ID: <20180906133108.GA3311@bfoster>
+Subject: Re: [PATCH 2/4] mkfs: rework AG header initialisation ordering
+Message-ID: <20180906133123.GB3311@bfoster>
 References: <20180905081932.27478-1-david@fromorbit.com>
- <20180905081932.27478-2-david@fromorbit.com>
+ <20180905081932.27478-3-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180905081932.27478-2-david@fromorbit.com>
+In-Reply-To: <20180905081932.27478-3-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Sep 05, 2018 at 06:19:29PM +1000, Dave Chinner wrote:
+On Wed, Sep 05, 2018 at 06:19:30PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> When making a new filesystem, don't zero superblocks way beyond the
-> end of the new filesystem. If the old filesystem was an EB scale
-> filesytsem, then this zeroing requires millions of IOs to complete.
-> We don't want to do this if the new filesystem on the device is only
-> going to be 100TB. Sure, zeroing old superblocks a good distance
-> beyond the new size is a good idea, as is zeroing the ones in the
-> middle and end, but the other 7,999,000 superblocks? Not so much.
+> When observing the behaviour of an 8EB mkfs execution, I noticed
+> that a phase where there are a massive number of read/modify/write
+> cycles occurring. I didn't wait for it to complete - it was obvious
+> that it was after all the AG headers had been written. That left the
+> AGFL initialisation as the likely cause.
 > 
-> Make a sane cut-off decision - zero out to 10x the size of the new
-> filesystem, then zero the middle AGs in the old filesystem, then
-> zero the last ones.
+> When all the AG headers don't fit in the libxfs buffer cache, the
+> AGFL init requires re-reading the AGF, the AGFL, the free space tree
+> root blocks and the rmap tree root block. They all then get
+> modified and written back out. 10 IOs per AG. When you have 8
+> million AGs, that's a lot of extra IO.
 > 
-> The initial zeroing out to 10x the new fs size means that this code
-> will only ever trigger in rare corner cases outside a testing
-> environment - there are very few production workloads where a huge
-> block device is reused immediately and permanently for a tiny much
-> smaller filesystem. Those that do this (e.g. on thing provisioned
-> devices) discard the in use blocks anyway and so the zeroing won't
-> actually do anything useful.
+> Change the initialisation algorithm to initialise the AGFL
+> immediately after initialising the rest of the headers and
+> calculating the minimum AGFL size for that AG. This means the
+> modifications will all hit the buffer cache and this will remove the
+> IO penalty.
 > 
-> Time to mkfs a 1TB filsystem on a big device after it held another
-> larger filesystem:
+> The "worst_freelist" size calculation doesn't change from AG to AG -
+> it's based on the physical configuration of the AG, and all AGs have
+> the same configuration. hence we only need to calculate this once,
+> not for every AG. That allows us to initialise the AGFL immediately
+> after the rest of the AG has been initialised rather than in a
+> separate pass.
 > 
-> previous FS size	10PB	100PB	 1EB
-> old mkfs time		1.95s	8.9s	81.3s
-> patched			0.95s	1.2s	 1.2s
+> TIme to make a filesystem from scratch, using a zeroed device so the
+> force overwrite algorithms are not triggered and -K to avoid
+> discards:
 > 
-
-Certainly a nice speedup...
-
+> FS size		10PB	100PB	 1EB
+> current mkfs	26.9s	214.8s	2484s
+> patched		11.3s	 70.3s	 709s
+> 
+> In both cases, the IO profile looks identical for the initial AG
+> header writeout loop. The difference is that the old code then
+> does the RMW loop to init the AGFL, and that runs at about half the
+> speed. Hence runtime of the new code is reduce by around 65-70%
+> simply by avoiding all that IO.
+> 
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  mkfs/xfs_mkfs.c | 64 +++++++++++++++++++++++++++++++++++++++++++++----
->  1 file changed, 59 insertions(+), 5 deletions(-)
+
+This one seems like it stands alone as a nice fixup. Were you planning
+to send this independently as a non-rfc patch?
+
+A couple nits...
+
+>  mkfs/xfs_mkfs.c | 40 +++++++++++++++++++++++++---------------
+>  1 file changed, 25 insertions(+), 15 deletions(-)
 > 
 > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 2e53c1e83b6a..c153592c705e 100644
+> index c153592c705e..d70fbdb6b15a 100644
 > --- a/mkfs/xfs_mkfs.c
 > +++ b/mkfs/xfs_mkfs.c
-> @@ -1155,14 +1155,15 @@ validate_ag_geometry(
->  
->  static void
->  zero_old_xfs_structures(
-> -	libxfs_init_t		*xi,
-> -	xfs_sb_t		*new_sb)
-> +	struct libxfs_xinit	*xi,
-> +	struct xfs_sb		*new_sb)
+> @@ -3374,7 +3374,7 @@ initialise_ag_headers(
+>  	struct xfs_mount	*mp,
+>  	struct xfs_sb		*sbp,
+>  	xfs_agnumber_t		agno,
+> -	int			*worst_freelist)
+> +	int			*freelist_size)
 >  {
-> -	void 			*buf;
-> -	xfs_sb_t 		sb;
-> +	void			*buf;
-> +	struct xfs_sb		sb;
->  	uint32_t		bsize;
->  	int			i;
->  	xfs_off_t		off;
-> +	xfs_off_t		end;
->  
->  	/*
->  	 * We open regular files with O_TRUNC|O_CREAT. Nothing to do here...
-> @@ -1220,15 +1221,68 @@ zero_old_xfs_structures(
->  
->  	/*
->  	 * block size and basic geometry seems alright, zero the secondaries.
-> +	 *
-> +	 * Don't be insane when it comes to overwriting really large filesystems
-> +	 * as it could take millions of IOs to zero every secondary
-> +	 * superblock. If we are remaking a huge filesystem, then do the
-> +	 * zeroing, but if we are replacing it with a small one (typically done
-> +	 * in test environments, limit the zeroing to:
-> +	 *
-> +	 *	- around the range of the new filesystem
-> +	 *	- the middle of the old filesystem
-> +	 *	- the end of the old filesystem
-> +	 *
-> +	 * Killing the middle and end of the old filesystem will prevent repair
-> +	 * from finding it with it's fast secondary sb scan algorithm. The slow
-> +	 * scan algorithm will then confirm the small filesystem geometry by
-> +	 * brute force scans.
->  	 */
->  	memset(buf, 0, new_sb->sb_sectsize);
-> +
-> +	/* this carefully avoids integer overflows */
-> +	end = sb.sb_dblocks;
-> +	if (sb.sb_agcount > 10000 &&
-> +	    new_sb->sb_dblocks < end / 10)
-> +		end = new_sb->sb_dblocks * 10;
-
-... but what's with the 10k agcount cutoff? Just a number out of a hat
-to demonstrate the improvement..?
-
-Given that you've done the work to rough in an AIO buffered write
-mechanism for mkfs, have you considered whether we can find a way to
-apply that mechanism here? I'm guessing that the result of using AIO
-wouldn't be quite as impressive of not doing I/O at all, but as you've
-already noted, this algorithmic optimization is more targeted at test
-environments than production ones. The AIO approach sounds like it could
-be more broadly beneficial, even if not quite as fast in those
-particular test cases.
-
->  	off = 0;
-> -	for (i = 1; i < sb.sb_agcount; i++)  {
-> +	for (i = 1; i < sb.sb_agcount && off < end; i++)  {
-> +		off += sb.sb_agblocks;
-> +		if (pwrite(xi->dfd, buf, new_sb->sb_sectsize,
-> +					off << sb.sb_blocklog) == -1)
-> +			break;
-> +	}
-> +
-> +	if (end == sb.sb_dblocks)
-> +		return;
+>  	struct xfs_perag	*pag = libxfs_perag_get(mp, agno);
+>  	struct xfs_agfl		*agfl;
+> @@ -3453,8 +3453,22 @@ initialise_ag_headers(
+>  		agf->agf_longest = cpu_to_be32(agsize -
+>  			XFS_FSB_TO_AGBNO(mp, cfg->logstart) - cfg->logblocks);
+>  	}
+> -	if (libxfs_alloc_min_freelist(mp, pag) > *worst_freelist)
+> -		*worst_freelist = libxfs_alloc_min_freelist(mp, pag);
 > +
 > +	/*
-> +	 * Trash the middle 1000 AGs of the old fs, which we know has at least
-> +	 * 10000 AGs at this point. Cast to make sure we are doing 64bit
-> +	 * multiplies, otherwise off gets truncated to 32 bit. I hate C.
+> +	 * The AGFL size is the same for all AGs because all AGs have the same
+> +	 * layout. If this AG sameness ever changes in the future, we'll need to
+> +	 * revisit how we initialise the AGFLs.
 > +	 */
-> +	i = (sb.sb_agcount / 2) - 500;
-> +	off = (xfs_off_t)sb.sb_agblocks * i;
-> +	off = (xfs_off_t)sb.sb_agblocks * ((sb.sb_agcount / 2) - 500);
 
-Looks like a couple lines of dead code there.
+This is not necessarily the case if the last AG is not full size, right?
+I think the comment could point that out (and/or that this works so long
+as we don't process the last AG first).
+
+BTW, libxfs_alloc_min_freelist() uses the ->pagf_levels values for the
+bno, cnt and rmap btrees to establish the freelist size, and I don't see
+where we've assigned ->pagf_levels[XFS_BTNUM_RMAPi] anywhere.
 
 Brian
 
-> +	end = off + 1000 * sb.sb_agblocks;
-> +	while (off < end) {
-> +		if (pwrite(xi->dfd, buf, new_sb->sb_sectsize,
-> +					off << sb.sb_blocklog) == -1)
-> +			break;
->  		off += sb.sb_agblocks;
+> +	if (*freelist_size == 0)
+> +		*freelist_size = libxfs_alloc_min_freelist(mp, pag);
+> +	else if (*freelist_size < libxfs_alloc_min_freelist(mp, pag)) {
+> +		fprintf(stderr,
+> +_("%s: Abort! Freelist size (%u) for AG %u not constant (%u)!\n"),
+> +			progname, libxfs_alloc_min_freelist(mp, pag),
+> +			agno, *freelist_size);
+> +		exit(1);
 > +	}
 > +
-> +	/*
-> +	 * Trash the last 1000 AGs of the old fs
-> +	 */
-> +	off = (xfs_off_t)sb.sb_agblocks * (sb.sb_agcount - 1000);
-> +	end = sb.sb_dblocks;
-> +	while (off < end) {
->  		if (pwrite(xi->dfd, buf, new_sb->sb_sectsize,
->  					off << sb.sb_blocklog) == -1)
->  			break;
-> +		off += sb.sb_agblocks;
+>  	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
+>  
+>  	/*
+> @@ -3724,14 +3738,14 @@ static void
+>  initialise_ag_freespace(
+>  	struct xfs_mount	*mp,
+>  	xfs_agnumber_t		agno,
+> -	int			worst_freelist)
+> +	int			freelist_size)
+>  {
+>  	struct xfs_alloc_arg	args;
+>  	struct xfs_trans	*tp;
+>  	struct xfs_trans_res tres = {0};
+>  	int			c;
+>  
+> -	c = libxfs_trans_alloc(mp, &tres, worst_freelist, 0, 0, &tp);
+> +	c = libxfs_trans_alloc(mp, &tres, freelist_size, 0, 0, &tp);
+>  	if (c)
+>  		res_failed(c);
+>  
+> @@ -3797,7 +3811,7 @@ main(
+>  	int			quiet = 0;
+>  	char			*protofile = NULL;
+>  	char			*protostring = NULL;
+> -	int			worst_freelist = 0;
+> +	int			freelist_size = 0;
+>  
+>  	struct libxfs_xinit	xi = {
+>  		.isdirect = LIBXFS_DIRECT,
+> @@ -4025,16 +4039,12 @@ main(
 >  	}
-> +
->  done:
->  	free(buf);
->  }
+>  
+>  	/*
+> -	 * Initialise all the static on disk metadata.
+> +	 * Initialise all the AG headers on disk.
+>  	 */
+> -	for (agno = 0; agno < cfg.agcount; agno++)
+> -		initialise_ag_headers(&cfg, mp, sbp, agno, &worst_freelist);
+> -
+> -	/*
+> -	 * Initialise the freespace freelists (i.e. AGFLs) in each AG.
+> -	 */
+> -	for (agno = 0; agno < cfg.agcount; agno++)
+> -		initialise_ag_freespace(mp, agno, worst_freelist);
+> +	for (agno = 0; agno < cfg.agcount; agno++) {
+> +		initialise_ag_headers(&cfg, mp, sbp, agno, &freelist_size);
+> +		initialise_ag_freespace(mp, agno, freelist_size);
+> +	}
+>  
+>  	/*
+>  	 * Allocate the root inode and anything else in the proto file.
 > -- 
 > 2.17.0
 > 
