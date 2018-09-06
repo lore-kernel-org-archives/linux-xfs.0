@@ -1,287 +1,170 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:24725 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726342AbeIEMsp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Sep 2018 08:48:45 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1fxT2G-0003NI-5Q
-        for linux-xfs@vger.kernel.org; Wed, 05 Sep 2018 18:19:36 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.91)
-        (envelope-from <david@fromorbit.com>)
-        id 1fxT2G-0007Gj-3y
-        for linux-xfs@vger.kernel.org; Wed, 05 Sep 2018 18:19:36 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/4] mkfs: Use AIO for batched writeback
-Date: Wed,  5 Sep 2018 18:19:32 +1000
-Message-Id: <20180905081932.27478-5-david@fromorbit.com>
-In-Reply-To: <20180905081932.27478-1-david@fromorbit.com>
-References: <20180905081932.27478-1-david@fromorbit.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:36492 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728211AbeIFNMi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Sep 2018 09:12:38 -0400
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w868XuVg083069
+        for <linux-xfs@vger.kernel.org>; Thu, 6 Sep 2018 04:38:17 -0400
+Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2maygqbjdj-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Thu, 06 Sep 2018 04:38:17 -0400
+Received: from localhost
+        by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Thu, 6 Sep 2018 02:38:17 -0600
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: [PATCH V2 02/16] xfs/050: Fix "Push past soft inode limit" case
+Date: Thu,  6 Sep 2018 14:09:59 +0530
+In-Reply-To: <20180906084013.2687-1-chandan@linux.vnet.ibm.com>
+References: <20180906084013.2687-1-chandan@linux.vnet.ibm.com>
+Message-Id: <20180906084013.2687-3-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, eguan@redhat.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+The test sets an inode soft limit of four but only three files are
+created. This commit creates two more files in order to really push past
+the soft inode limit.
 
-What it says. 8EB filesystem can now be made in 15 minutes on
-storage that can do 100,000 IOPS. Before this patch mkfs topped out
-at about 13,000 IOPS.
-
-Proof of concept proven.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
 ---
- libxfs/libxfs_io.h |   1 +
- libxfs/rdwr.c      | 170 +++++++++++++++++++++++++++++++++++++++++++--
- mkfs/Makefile      |   2 +-
- mkfs/xfs_mkfs.c    |   2 +-
- 4 files changed, 169 insertions(+), 6 deletions(-)
+ tests/xfs/050     |  2 ++
+ tests/xfs/050.out | 36 ++++++++++++++++++------------------
+ 2 files changed, 20 insertions(+), 18 deletions(-)
 
-diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
-index c69cc7cd7ec5..2b11d008998d 100644
---- a/libxfs/libxfs_io.h
-+++ b/libxfs/libxfs_io.h
-@@ -67,6 +67,7 @@ typedef struct xfs_buf {
- 	struct xfs_buf_map	__b_map;
- 	int			b_nmaps;
- 	struct list_head	b_list;
-+	int			b_io_count;
- #ifdef XFS_BUF_TRACING
- 	struct list_head	b_lock_list;
- 	const char		*b_func;
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index 7fbaae571abe..5336f6a1e1de 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -20,6 +20,9 @@
+diff --git a/tests/xfs/050 b/tests/xfs/050
+index dd77971..8569c2c 100755
+--- a/tests/xfs/050
++++ b/tests/xfs/050
+@@ -143,6 +143,8 @@ _exercise()
+ 	echo "*** push past the soft inode limit" | tee -a $seqres.full
+ 	_file_as_id $SCRATCH_MNT/softie1 $id $type 1024 0
+ 	_file_as_id $SCRATCH_MNT/softie2 $id $type 1024 0
++	_file_as_id $SCRATCH_MNT/softie3 $id $type 1024 0
++	_file_as_id $SCRATCH_MNT/softie4 $id $type 1024 0
+ 	_qmount
+ 	xfs_quota -D $tmp.projects -P $tmp.projid -x \
+ 		-c "repquota -birnN -$type" $SCRATCH_DEV |
+diff --git a/tests/xfs/050.out b/tests/xfs/050.out
+index 5cb4a10..ff9eb1c 100644
+--- a/tests/xfs/050.out
++++ b/tests/xfs/050.out
+@@ -16,11 +16,11 @@ realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
  
- #include "libxfs.h"		/* for LIBXFS_EXIT_ON_FAILURE */
+ *** push past the soft inode limit
+ [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
+-[NAME] 0 100 500 00 [--------] 3 4 10 00 [--------] 0 0 0 00 [--------]
++[NAME] 0 100 500 00 [--------] 5 4 10 00 [7 days] 0 0 0 00 [--------]
  
-+/* XXX: all the aio stuff is hacky and proof of concept only */
-+#include <libaio.h>
-+
- /*
-  * Important design/architecture note:
-  *
-@@ -1236,6 +1239,151 @@ xfs_buf_cmp(
- 	return 0;
- }
+ *** push past the soft block limit
+ [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
+-[NAME] 140 100 500 00 [7 days] 4 4 10 00 [--------] 0 0 0 00 [--------]
++[NAME] 140 100 500 00 [7 days] 6 4 10 00 [7 days] 0 0 0 00 [--------]
  
-+/* hacky AIO stuff that'll handle a single delwri queue flush at a time */
-+#define MAX_AIO_EVENTS 1024
-+io_context_t ctxp;
-+struct iocb *iocbs[MAX_AIO_EVENTS];
-+struct io_event ioevents[MAX_AIO_EVENTS];
-+int aio_next;
-+int aio_flight;
-+
-+static void
-+init_aio_delwri(void)
-+{
-+	int i, r;
-+
-+	memset(&ctxp, 0, sizeof(ctxp));
-+	r = io_setup(MAX_AIO_EVENTS, &ctxp);
-+	if (r) {
-+		printf("FAIL! io_setup returned %d\n", r);
-+		exit(1);
-+	}
-+	for (i = 0; i < MAX_AIO_EVENTS; ++i) {
-+		iocbs[i] = calloc(1, sizeof(struct iocb));
-+		if (iocbs[i] == NULL) {
-+			printf("failed to allocate an iocb\n");
-+			exit(1);
-+		}
-+	}
-+}
-+
-+int
-+get_write_completions(
-+	int	threshold)
-+{
-+	int	error = 0;
-+	int	i, r;
-+
-+	while (aio_flight > threshold) {
-+		/* gather up some completions */
-+		r = io_getevents(ctxp, 1, MAX_AIO_EVENTS, ioevents, NULL);
-+		if (r < 0)  {
-+			printf("FAIL! io_getevents returned %d\n", r);
-+			exit(1);
-+		}
-+
-+		aio_flight -= r;
-+		for (i = 0; i < r; ++i) {
-+			struct xfs_buf *bp = ioevents[i].data;
-+			if (ioevents[i].res < 0)
-+				bp->b_error = ioevents[i].res;
-+			else if (ioevents[i].res != bp->b_bcount)
-+				bp->b_error = -EIO;
-+
-+			if (--bp->b_io_count == 0 && !bp->b_error) {
-+				bp->b_flags |= LIBXFS_B_UPTODATE;
-+				bp->b_flags &= ~(LIBXFS_B_DIRTY | LIBXFS_B_EXIT |
-+						 LIBXFS_B_UNCHECKED);
-+				libxfs_putbuf(bp);
-+			} else if (!error) {
-+				error = bp->b_error;
-+			}
-+		}
-+		/* wait for a short while */
-+		usleep(1000);
-+	}
-+	return error;
-+}
-+
-+static int
-+__aio_write(
-+	struct xfs_buf  *bp,
-+	void *buf,
-+	int len,
-+	off64_t offset)
-+{
-+	int	r, i;
-+	int	fd = libxfs_device_to_fd(bp->b_target->dev);
-+
-+	i = aio_next++ % MAX_AIO_EVENTS;
-+	aio_flight++;
-+	bp->b_io_count++;
-+
-+	io_prep_pwrite(iocbs[i], fd, buf, len, offset);
-+	iocbs[i]->data = bp;
-+	r = io_submit(ctxp, 1, &iocbs[i]);
-+	if (r != 1) {
-+		aio_flight--;
-+		if (bp->b_flags & LIBXFS_B_EXIT)
-+			exit(1);
-+		return -EIO;
-+	}
-+	return 0;
-+
-+}
-+
-+static int
-+do_write(
-+	struct xfs_buf	*bp)
-+{
-+	/*
-+	 * we never write buffers that are marked stale. This indicates they
-+	 * contain data that has been invalidated, and even if the buffer is
-+	 * dirty it must *never* be written. Verifiers are wonderful for finding
-+	 * bugs like this. Make sure the error is obvious as to the cause.
-+	 */
-+	if (bp->b_flags & LIBXFS_B_STALE) {
-+		bp->b_error = -ESTALE;
-+		return bp->b_error;
-+	}
-+
-+	/*
-+	 * clear any pre-existing error status on the buffer. This can occur if
-+	 * the buffer is corrupt on disk and the repair process doesn't clear
-+	 * the error before fixing and writing it back.
-+	 */
-+	bp->b_error = 0;
-+	if (bp->b_ops) {
-+		bp->b_ops->verify_write(bp);
-+		if (bp->b_error) {
-+			fprintf(stderr,
-+	_("%s: write verifer failed on %s bno 0x%llx/0x%x\n"),
-+				__func__, bp->b_ops->name,
-+				(long long)bp->b_bn, bp->b_bcount);
-+			return bp->b_error;
-+		}
-+	}
-+
-+	if (!(bp->b_flags & LIBXFS_B_DISCONTIG)) {
-+		bp->b_error = __aio_write(bp, bp->b_addr, bp->b_bcount,
-+				    LIBXFS_BBTOOFF64(bp->b_bn));
-+	} else {
-+		int	i;
-+		void	*buf = bp->b_addr;
-+
-+		for (i = 0; i < bp->b_nmaps; i++) {
-+			off64_t	offset = LIBXFS_BBTOOFF64(bp->b_maps[i].bm_bn);
-+			int len = BBTOB(bp->b_maps[i].bm_len);
-+
-+			bp->b_error = __aio_write(bp, buf, len, offset);
-+			if (bp->b_error)
-+				break;	/* XXX: completion wait required! */
-+			buf += len;
-+		}
-+	}
-+	return bp->b_error;
-+}
-+
- /* Processes entire list, but only returns the first error found */
- int
- libxfs_buf_delwri_flush(
-@@ -1243,21 +1391,35 @@ libxfs_buf_delwri_flush(
- {
- 	struct xfs_buf		*bp;
- 	int			 error = 0;
-+	static bool		aio_init = false;
-+	int			ret;
-+
-+	if (!aio_init) {
-+		init_aio_delwri();
-+		aio_init = true;
-+	}
+ *** push past the hard inode limit (expect EDQUOT)
+ [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
+@@ -48,11 +48,11 @@ realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
  
- 	list_sort(NULL, delwri_list, xfs_buf_cmp);
- 	while (!list_empty(delwri_list)) {
- 		bp = list_first_entry(delwri_list, struct xfs_buf, b_list);
- 		list_del_init(&bp->b_list);
- 		bp->b_flags &= ~LIBXFS_B_DELWRI_Q;
-+		bp->b_io_count = 1;
- 		if (!bp->b_error && (bp->b_flags & LIBXFS_B_DIRTY)) {
--			int ret;
--			ret = libxfs_writebufr(bp);
-+			ret = do_write(bp);
- 			if (ret && !error)
- 				error = ret;
- 		}
--		libxfs_putbuf(bp);
-+		if (--bp->b_io_count == 0)
-+			libxfs_putbuf(bp);
-+
-+		/* wait for some completions if we've dispatched lots */
-+		ret = get_write_completions(MAX_AIO_EVENTS / 5 * 4);
-+		if (ret && !error)
-+			error = ret;
- 	}
--	return error;
-+	ret = get_write_completions(0);
-+	return error ? error : ret;
- }
+ *** push past the soft inode limit
+ [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
+-[NAME] 0 100 500 00 [--------] 3 4 10 00 [--------] 0 0 0 00 [--------]
++[NAME] 0 100 500 00 [--------] 5 4 10 00 [7 days] 0 0 0 00 [--------]
  
+ *** push past the soft block limit
+ [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
+-[NAME] 140 100 500 00 [7 days] 4 4 10 00 [--------] 0 0 0 00 [--------]
++[NAME] 140 100 500 00 [7 days] 6 4 10 00 [7 days] 0 0 0 00 [--------]
  
-diff --git a/mkfs/Makefile b/mkfs/Makefile
-index 31482b08d559..e27f10f26b14 100644
---- a/mkfs/Makefile
-+++ b/mkfs/Makefile
-@@ -11,7 +11,7 @@ HFILES =
- CFILES = proto.c xfs_mkfs.c
+ *** push past the hard inode limit (expect EDQUOT)
+ [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
+@@ -80,19 +80,19 @@ realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
  
- LLDLIBS += $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBRT) $(LIBPTHREAD) $(LIBBLKID) \
--	$(LIBUUID)
-+	$(LIBUUID) -laio
- LTDEPENDENCIES += $(LIBXFS) $(LIBXCMD) $(LIBFROG)
- LLDFLAGS = -static-libtool-libs
+ *** push past the soft inode limit
+ [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
+-[NAME] 0 100 500 00 [--------] 3 4 10 00 [--------] 0 0 0 00 [--------]
++[NAME] 0 100 500 00 [--------] 5 4 10 00 [--------] 0 0 0 00 [--------]
  
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index b751b1fcb4a3..82e041dd1b48 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -4048,7 +4048,7 @@ main(
- 		initialise_ag_headers(&cfg, mp, sbp, agno, &freelist_size,
- 				      &delwri_list);
- 		initialise_ag_freespace(mp, agno, freelist_size, &delwri_list);
--		if (agno && !(agno % 100))
-+		if (agno && !(agno % 1000))
- 			libxfs_buf_delwri_flush(&delwri_list);
- 	}
- 	libxfs_buf_delwri_flush(&delwri_list);
+ *** push past the soft block limit
+ [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
+-[NAME] 140 100 500 00 [--------] 4 4 10 00 [--------] 0 0 0 00 [--------]
++[NAME] 140 100 500 00 [--------] 6 4 10 00 [--------] 0 0 0 00 [--------]
+ 
+ *** push past the hard inode limit (expect EDQUOT)
+ [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
+-[NAME] 140 100 500 00 [--------] 16 4 10 00 [--none--] 0 0 0 00 [--------]
++[NAME] 140 100 500 00 [--------] 18 4 10 00 [--none--] 0 0 0 00 [--------]
+ 
+ *** push past the hard block limit (expect EDQUOT)
+ [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
+-[NAME] 540 100 500 00 [--none--] 16 4 10 00 [--none--] 0 0 0 00 [--------]
++[NAME] 540 100 500 00 [--none--] 18 4 10 00 [--none--] 0 0 0 00 [--------]
+ 
+ *** unmount
+ *** gqnoenforce
+@@ -112,19 +112,19 @@ realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
+ 
+ *** push past the soft inode limit
+ [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
+-[NAME] 0 100 500 00 [--------] 3 4 10 00 [--------] 0 0 0 00 [--------]
++[NAME] 0 100 500 00 [--------] 5 4 10 00 [--------] 0 0 0 00 [--------]
+ 
+ *** push past the soft block limit
+ [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
+-[NAME] 140 100 500 00 [--------] 4 4 10 00 [--------] 0 0 0 00 [--------]
++[NAME] 140 100 500 00 [--------] 6 4 10 00 [--------] 0 0 0 00 [--------]
+ 
+ *** push past the hard inode limit (expect EDQUOT)
+ [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
+-[NAME] 140 100 500 00 [--------] 16 4 10 00 [--none--] 0 0 0 00 [--------]
++[NAME] 140 100 500 00 [--------] 18 4 10 00 [--none--] 0 0 0 00 [--------]
+ 
+ *** push past the hard block limit (expect EDQUOT)
+ [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
+-[NAME] 540 100 500 00 [--none--] 16 4 10 00 [--none--] 0 0 0 00 [--------]
++[NAME] 540 100 500 00 [--none--] 18 4 10 00 [--none--] 0 0 0 00 [--------]
+ 
+ *** unmount
+ *** pquota
+@@ -144,11 +144,11 @@ realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
+ 
+ *** push past the soft inode limit
+ [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
+-[NAME] 0 100 500 00 [--------] 3 4 10 00 [--------] 0 0 0 00 [--------]
++[NAME] 0 100 500 00 [--------] 5 4 10 00 [7 days] 0 0 0 00 [--------]
+ 
+ *** push past the soft block limit
+ [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
+-[NAME] 140 100 500 00 [7 days] 4 4 10 00 [--------] 0 0 0 00 [--------]
++[NAME] 140 100 500 00 [7 days] 6 4 10 00 [7 days] 0 0 0 00 [--------]
+ 
+ *** push past the hard inode limit (expect EDQUOT)
+ [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
+@@ -176,18 +176,18 @@ realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
+ 
+ *** push past the soft inode limit
+ [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
+-[NAME] 0 100 500 00 [--------] 3 4 10 00 [--------] 0 0 0 00 [--------]
++[NAME] 0 100 500 00 [--------] 5 4 10 00 [--------] 0 0 0 00 [--------]
+ 
+ *** push past the soft block limit
+ [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
+-[NAME] 140 100 500 00 [--------] 4 4 10 00 [--------] 0 0 0 00 [--------]
++[NAME] 140 100 500 00 [--------] 6 4 10 00 [--------] 0 0 0 00 [--------]
+ 
+ *** push past the hard inode limit (expect EDQUOT)
+ [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
+-[NAME] 140 100 500 00 [--------] 16 4 10 00 [--none--] 0 0 0 00 [--------]
++[NAME] 140 100 500 00 [--------] 18 4 10 00 [--none--] 0 0 0 00 [--------]
+ 
+ *** push past the hard block limit (expect EDQUOT)
+ [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
+-[NAME] 540 100 500 00 [--none--] 16 4 10 00 [--none--] 0 0 0 00 [--------]
++[NAME] 540 100 500 00 [--none--] 18 4 10 00 [--none--] 0 0 0 00 [--------]
+ 
+ *** unmount
 -- 
-2.17.0
+2.9.5
