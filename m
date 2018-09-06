@@ -1,96 +1,33 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:47650 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727006AbeILU3Z (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 Sep 2018 16:29:25 -0400
-Date: Wed, 12 Sep 2018 23:25:08 +0800
-From: Zorro Lang <zlang@redhat.com>
-Subject: Re: [PATCH] xfs/119: fix too small log size error
-Message-ID: <20180912152507.GF8382@dhcp-12-152.nay.redhat.com>
-References: <20180912110404.32673-1-zlang@redhat.com>
- <20180912131509.GA17817@desktop>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:50280 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725850AbeIFKKT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Sep 2018 06:10:19 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id D94102A420
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Sep 2018 05:36:36 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 200981] hypervisor fs hangs at heavy write activity on VM (kvm,
+ qcow2 image) having a reflink disk copy
+Date: Thu, 06 Sep 2018 05:36:37 +0000
+Message-ID: <bug-200981-201763-4R9Oo6UPfh@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-200981-201763@https.bugzilla.kernel.org/>
+References: <bug-200981-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180912131509.GA17817@desktop>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: linux-xfs@kernel.org
 
-On Wed, Sep 12, 2018 at 09:15:09PM +0800, Eryu Guan wrote:
-> On Wed, Sep 12, 2018 at 07:04:04PM +0800, Zorro Lang wrote:
-> > xfs/119 fails on 4k hard sector size device if reflink (with/without
-> > rmapbt) is enabled:
-> > 
-> >   # mkfs.xfs -f -m reflink=1,rmapbt=0 -l version=2,size=2560b,su=64k /dev/sdf
-> >   log size 2560 blocks too small, minimum size is 2688 blocks
-> >   # mkfs.xfs -f -m reflink=1,rmapbt=1 -l version=2,size=2560b,su=64k /dev/sdf
-> >   log size 2560 blocks too small, minimum size is 4368 blocks
-> > 
-> > So remove log size parameter and run mkfs.xfs again if it fails.
-> > 
-> > Signed-off-by: Zorro Lang <zlang@redhat.com>
-> > ---
-> > 
-> > I saw Dave changed the log size once in commit:
-> >   d0a3cc5a xfs/104: log size too small for 4k sector drives
-> > 
-> > But it's still not enough after we have reflink feature now. I don't
-> > know why this case need "-l version=2,size=2560b,su=64k",
-> > if someone learns about this case, please tell me how to change this
-> > case properly. If the log size parameter is not necessary, I'd like
-> > to remove it.
-> 
-> I guess we still need the log size param, as the test is testing
-> "freeze/thaws on a small log fs", please see commit 3ebdf78c16cb ("Test
-> out pv#942130 where the unmount rec is not ungranting log space. Merge
-> of master-melb:xfs-cmds:23759a by kenmcd."), but we don't have much
-> background information from that ancient commit log..
+https://bugzilla.kernel.org/show_bug.cgi?id=200981
 
-Yeah, I can't understand the pv#942130 meaning, and can't find it by Google.
-Does anyone know the background, then tell me if it must use the minimum
-log size?
+--- Comment #5 from Alexander Y.  Fomichev (git.user@gmail.com) ---
+Created attachment 278345
+  --> https://bugzilla.kernel.org/attachment.cgi?id=278345&action=edit
+dmesg showing all locks held in the system
 
-And I find xfs_mkfs always trys to use the smallest log size which it can
-use by using libxfs_log_calc_minimum_size() (but the real calculator is
-more complicated)...
-
-Thanks,
-Zorro
-
-> 
-> Thanks,
-> Eryu
-> 
-> > 
-> > Thanks,
-> > Zorro
-> > 
-> >  tests/xfs/119 | 9 ++++++++-
-> >  1 file changed, 8 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/tests/xfs/119 b/tests/xfs/119
-> > index bf7f1ca8..d507aacf 100755
-> > --- a/tests/xfs/119
-> > +++ b/tests/xfs/119
-> > @@ -40,7 +40,14 @@ sync
-> >  
-> >  export MKFS_OPTIONS="-l version=2,size=2560b,su=64k" 
-> >  export MOUNT_OPTIONS="-o logbsize=64k"
-> > -_scratch_mkfs_xfs >/dev/null
-> > +_scratch_mkfs_xfs >/dev/null 2>&1
-> > +# The specified log size maybe too small if new features (e.g: reflink
-> > +# or/and rmapbt) is enabled. So if mkfs fails, don't specify log size
-> > +# and try to mkfs again.
-> > +if [ $? -ne 0 ]; then
-> > +	export MKFS_OPTIONS="-l version=2,su=64k"
-> > +	_scratch_mkfs_xfs >/dev/null
-> > +fi
-> >  
-> >  _scratch_mount
-> >  
-> > -- 
-> > 2.14.4
-> > 
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
