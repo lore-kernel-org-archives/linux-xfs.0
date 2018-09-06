@@ -1,221 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:47955 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725762AbeICF6q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Sep 2018 01:58:46 -0400
-Date: Mon, 3 Sep 2018 11:40:51 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v8 00/28] Parent Pointers v8
-Message-ID: <20180903014051.GN5631@dastard>
-References: <1535484161-11059-1-git-send-email-allison.henderson@oracle.com>
- <20180903012006.GM5631@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20180903012006.GM5631@dastard>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:48900 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728224AbeIFNNM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Sep 2018 09:13:12 -0400
+Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w868Xxqt126983
+        for <linux-xfs@vger.kernel.org>; Thu, 6 Sep 2018 04:38:51 -0400
+Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2maypek5p6-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Thu, 06 Sep 2018 04:38:51 -0400
+Received: from localhost
+        by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Thu, 6 Sep 2018 02:38:50 -0600
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: [PATCH V2 13/16] Filter fiemap output by FS block size
+Date: Thu,  6 Sep 2018 14:10:10 +0530
+In-Reply-To: <20180906084013.2687-1-chandan@linux.vnet.ibm.com>
+References: <20180906084013.2687-1-chandan@linux.vnet.ibm.com>
+Message-Id: <20180906084013.2687-14-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Allison Henderson <allison.henderson@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, eguan@redhat.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
 
-On Mon, Sep 03, 2018 at 11:20:06AM +1000, Dave Chinner wrote:
-> On Tue, Aug 28, 2018 at 12:22:13PM -0700, Allison Henderson wrote:
-> > Hi all,
-> > 
-> > This is the 8th version of parent pointer attributes for xfs. The goal of
-> > this patch set is to add a parent pointer attribute to each inode.  The
-> > attribute name containing the parent inode, generation, and directory offset,
-> > while the  attribute value contains the file name.  This feature will enable
-> > future optimizations for online scrub, or any other feature that could make
-> > use of quickly deriving an inodes path from  the mount point.  This set also
-> > introduces deferred attribute operations, though it is currently only used by
-> >  the new parent pointer code.
-> 
-> Hi Allison,
-> 
-> FYI, A couple of minor things I noticed on import of the patch set
-> to 4.19-rc1:
-> 
-> ......
-> Applying: xfs: parent pointer attribute creation
-> .git/rebase-apply/patch:131: trailing whitespace.
-> 	error = xfs_attr_set(child, (const unsigned char *)&rec, sizeof(rec), 
-> .git/rebase-apply/patch:136: new blank line at EOF.
-> +
-> .git/rebase-apply/patch:296: new blank line at EOF.
-> +
-> warning: 3 lines add whitespace errors.
-> Applying: xfs: add parent attributes to link
-> Applying: xfs: remove parent pointers in unlink
-> .git/rebase-apply/patch:97: new blank line at EOF.
-> +
-> warning: 1 line adds whitespace errors.
-> Applying: xfs: Add parent pointers to rename
-> Applying: xfs: Add the parent pointer support to the superblock version 5.
-> Applying: xfs: Add helper function xfs_attr_list_context_init
-> Applying: xfs: Increase XFS_DEFER_OPS_NR_INODES to 4
-> Applying: xfs: Add parent pointer ioctl
-> .git/rebase-apply/patch:340: new blank line at EOF.
-> +
-> warning: 1 line adds whitespace errors.
-> Applying: xfs: Add delayed attributes error tag
-> ......
-> 
-> Also, I get a couple of compiler warnings:
-> 
-> fs/xfs/libxfs/xfs_attr.c: In function ¿xfs_attr_set¿:
-> fs/xfs/libxfs/xfs_attr.c:446:48: warning: passing argument 3 of ¿xfs_attr_set_deferred¿ discards ¿const¿ qualifier from pointer target type [-Wdiscarded-qualifiers]
->   error = xfs_attr_set_deferred(dp, args.trans, name, namelen,
->                                                 ^~~~
-> In file included from fs/xfs/libxfs/xfs_attr.c:25:0:
-> fs/xfs/libxfs/xfs_attr.h:197:5: note: expected ¿void *¿ but argument is of type ¿const unsigned char *¿
->  int xfs_attr_set_deferred(struct xfs_inode *dp, struct xfs_trans *tp,
->      ^~~~~~~~~~~~~~~~~~~~~
-> fs/xfs/libxfs/xfs_attr.c: In function ¿xfs_attr_remove¿:
-> fs/xfs/libxfs/xfs_attr.c:584:4: warning: passing argument 3 of ¿xfs_attr_remove_deferred¿ discards ¿const¿ qualifier from pointer target type [-Wdiscarded-qualifiers]
->     name, namelen, flags);
->     ^~~~
-> In file included from fs/xfs/libxfs/xfs_attr.c:25:0:
-> fs/xfs/libxfs/xfs_attr.h:200:5: note: expected ¿void *¿ but argument is of type ¿const unsigned char *¿
->  int xfs_attr_remove_deferred(struct xfs_inode *dp, struct xfs_trans *tp,
->      ^~~~~~~~~~~~~~~~~~~~~~~~
+When testing FS instances of block size other than 4k, the output of
+fiemap command will not match those in *.out files. This commit adds
+an optional "block size" argument to _filter_fiemap() which prints
+fiemap output in units of block size.
 
-Another couple:
-
-fs/xfs/libxfs/xfs_attr.c: In function ¿xfs_leaf_has_attr¿:
-fs/xfs/libxfs/xfs_attr.c:863:27: error: variable ¿dp¿ set but not used [-Werror=unused-but-set-variable]
-  struct xfs_inode        *dp;
-                           ^~
-fs/xfs/libxfs/xfs_attr_leaf.c: In function ¿xfs_shortform_has_attr¿:
-fs/xfs/libxfs/xfs_attr_leaf.c:635:15: error: variable ¿mp¿ set but not used [-Werror=unused-but-set-variable]
-  xfs_mount_t *mp;
-               ^~
-
-The fixup patch I wrote to make it compile is below.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-xfs-pp: make it compile
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
 ---
- fs/xfs/libxfs/xfs_attr.c      |  8 +++-----
- fs/xfs/libxfs/xfs_attr.h      |  4 ++--
- fs/xfs/libxfs/xfs_attr_leaf.c | 19 +++++++++----------
- fs/xfs/xfs_parent_utils.c     |  6 +++---
- 4 files changed, 17 insertions(+), 20 deletions(-)
+ common/punch | 19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 40274c2904b6..147be48ce534 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -481,9 +481,9 @@ int
- xfs_attr_set_deferred(
- 	struct xfs_inode	*dp,
- 	struct xfs_trans	*tp,
--	void			*name,
-+	const char		*name,
- 	unsigned int		namelen,
--	void			*value,
-+	const char		*value,
- 	unsigned int		valuelen,
- 	int			flags)
+diff --git a/common/punch b/common/punch
+index 8088b01..0fc7729 100644
+--- a/common/punch
++++ b/common/punch
+@@ -165,7 +165,11 @@ _test_punch() {
+ 
+ _coalesce_extents()
  {
-@@ -616,7 +616,7 @@ int
- xfs_attr_remove_deferred(
- 	struct xfs_inode        *dp,
- 	struct xfs_trans	*tp,
--	void			*name,
-+	const char		*name,
- 	unsigned int		namelen,
- 	int                     flags)
- {
-@@ -860,11 +860,9 @@ STATIC int
- xfs_leaf_has_attr(
- 	struct xfs_da_args      *args)
- {
--	struct xfs_inode        *dp;
- 	struct xfs_buf          *bp;
- 	int                     error = 0;
+-	awk -F: '
++	block_size=$1
++
++	[[ -z $block_size ]] && block_size=512
++
++	awk -v block_size="$block_size" -F: '
+ 	{
+ 		range = $2;
+ 		type = $3;
+@@ -176,19 +180,24 @@ _coalesce_extents()
  
--	dp = args->dp;
- 	args->blkno = 0;
- 	error = xfs_attr3_leaf_read(args->trans, args->dp,
- 			args->blkno, -1, &bp);
-diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-index 913dcb790beb..5387e6177fa6 100644
---- a/fs/xfs/libxfs/xfs_attr.h
-+++ b/fs/xfs/libxfs/xfs_attr.h
-@@ -195,9 +195,9 @@ int xfs_attr_args_init(struct xfs_da_args *args, struct xfs_inode *dp,
- 		       const unsigned char *name, size_t namelen, int flags);
- int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
- int xfs_attr_set_deferred(struct xfs_inode *dp, struct xfs_trans *tp,
--			  void *name, unsigned int name_len, void *value,
-+			  const char *name, unsigned int name_len, const char *value,
- 			  unsigned int valuelen, int flags);
- int xfs_attr_remove_deferred(struct xfs_inode *dp, struct xfs_trans *tp,
--			    void *name, unsigned int namelen, int flags);
-+			    const char *name, unsigned int namelen, int flags);
- 
- #endif	/* __XFS_ATTR_H__ */
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index 09483fe97cd7..f1b3c734147e 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -627,18 +627,17 @@ xfs_attr_fork_remove(
-  * Return successful if attr is found, or ENOATTR if not
-  */
- int
--xfs_shortform_has_attr(xfs_da_args_t *args)
-+xfs_shortform_has_attr(
-+	struct xfs_da_args	 *args)
- {
--	xfs_attr_shortform_t *sf;
--	xfs_attr_sf_entry_t *sfe;
--	int base, size = 0, end, i;
--	xfs_mount_t *mp;
--	xfs_inode_t *dp;
-+	struct xfs_attr_shortform *sf;
-+	struct xfs_attr_sf_entry *sfe;
-+	int			base = sizeof(struct xfs_attr_sf_hdr);
-+	int			size = 0;
-+	int			end;
-+	int			i;
- 
--	dp = args->dp;
--	mp = dp->i_mount;
--	base = sizeof(xfs_attr_sf_hdr_t);
--	sf = (xfs_attr_shortform_t *)dp->i_afp->if_u1.if_data;
-+	sf = (struct xfs_attr_shortform *)args->dp->i_afp->if_u1.if_data;
- 	sfe = &sf->list[0];
- 	end = sf->hdr.count;
- 	for (i = 0; i < end; sfe = XFS_ATTR_SF_NEXTENTRY(sfe),
-diff --git a/fs/xfs/xfs_parent_utils.c b/fs/xfs/xfs_parent_utils.c
-index 6d8b1e3130c7..1dc6aad6c628 100644
---- a/fs/xfs/xfs_parent_utils.c
-+++ b/fs/xfs/xfs_parent_utils.c
-@@ -47,8 +47,8 @@ xfs_parent_add_deferred(
- 
- 	xfs_init_parent_name_rec(&rec, parent, diroffset);
- 
--	return xfs_attr_set_deferred(child, tp, &rec, sizeof(rec),
--		(void *)child_name->name, child_name->len, ATTR_PARENT);
-+	return xfs_attr_set_deferred(child, tp, (const char *)&rec, sizeof(rec),
-+		child_name->name, child_name->len, ATTR_PARENT);
+ 		if (type != prev_type) {
+ 			if (prev_type != "")
+-				printf("%u]:%s\n", low - 1, prev_type);
+-			printf("%u: [%u..", out_count++, low);
++				printf("%u]:%s\n", (low * 512 / block_size) - 1,
++					prev_type);
++			printf("%u: [%u..", out_count++,
++				(low * 512) / block_size);
+ 			prev_type = type;
+ 		}
+ 	}
+ 	END {
+ 		if (prev_type != "")
+-			printf("%u]:%s\n", high, prev_type);
++			printf("%u]:%s\n", ((high + 1) * 512 / block_size) - 1,
++				prev_type);
+ 	}'
  }
  
- /*
-@@ -65,7 +65,7 @@ xfs_parent_remove_deferred(
- 
- 	xfs_init_parent_name_rec(&rec, parent, diroffset);
- 
--	return xfs_attr_remove_deferred(child, tp, &rec, sizeof(rec),
-+	return xfs_attr_remove_deferred(child, tp, (const char *)&rec, sizeof(rec),
- 		ATTR_PARENT);
+ _filter_fiemap()
+ {
++	block_size=$1
++
+ 	$AWK_PROG '
+ 		$3 ~ /hole/ {
+ 			print $1, $2, $3;
+@@ -201,7 +210,7 @@ _filter_fiemap()
+ 		$5 ~ /0x[[:xdigit:]]+/ {
+ 			print $1, $2, "data";
+ 		}' |
+-	_coalesce_extents
++	_coalesce_extents $block_size
  }
  
+ _filter_fiemap_flags()
+-- 
+2.9.5
