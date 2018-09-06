@@ -1,212 +1,175 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:18132 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728753AbeIGG3k (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Sep 2018 02:29:40 -0400
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: fix transaction leak in xfs_reflink_allocate_cow()
-Date: Fri,  7 Sep 2018 11:51:13 +1000
-Message-Id: <20180907015113.32448-1-david@fromorbit.com>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:45594 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728776AbeIFSGo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 6 Sep 2018 14:06:44 -0400
+Date: Thu, 6 Sep 2018 09:31:08 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/4] mkfs: stop zeroing old superblocks excessively
+Message-ID: <20180906133108.GA3311@bfoster>
+References: <20180905081932.27478-1-david@fromorbit.com>
+ <20180905081932.27478-2-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180905081932.27478-2-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: git.user@gmail.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Wed, Sep 05, 2018 at 06:19:29PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> When making a new filesystem, don't zero superblocks way beyond the
+> end of the new filesystem. If the old filesystem was an EB scale
+> filesytsem, then this zeroing requires millions of IOs to complete.
+> We don't want to do this if the new filesystem on the device is only
+> going to be 100TB. Sure, zeroing old superblocks a good distance
+> beyond the new size is a good idea, as is zeroing the ones in the
+> middle and end, but the other 7,999,000 superblocks? Not so much.
+> 
+> Make a sane cut-off decision - zero out to 10x the size of the new
+> filesystem, then zero the middle AGs in the old filesystem, then
+> zero the last ones.
+> 
+> The initial zeroing out to 10x the new fs size means that this code
+> will only ever trigger in rare corner cases outside a testing
+> environment - there are very few production workloads where a huge
+> block device is reused immediately and permanently for a tiny much
+> smaller filesystem. Those that do this (e.g. on thing provisioned
+> devices) discard the in use blocks anyway and so the zeroing won't
+> actually do anything useful.
+> 
+> Time to mkfs a 1TB filsystem on a big device after it held another
+> larger filesystem:
+> 
+> previous FS size	10PB	100PB	 1EB
+> old mkfs time		1.95s	8.9s	81.3s
+> patched			0.95s	1.2s	 1.2s
+> 
 
-When xfs_reflink_allocate_cow() allocates a transaction, it drops
-the ILOCK to perform the operation. This Introduces a race condition
-where another thread modifying the file can perform the COW
-allocation operation underneath us. This result in the retry loop
-finding an allocated block and jumping straight to the conversion
-code. It does not, however, cancel the transaction it holds and so
-this gets leaked. This results in a lockdep warning:
+Certainly a nice speedup...
 
-================================================
-WARNING: lock held when returning to user space!
-4.18.5 #1 Not tainted
-------------------------------------------------
-worker/6123 is leaving the kernel with locks still held!
-1 lock held by worker/6123:
- #0: 000000009eab4f1b (sb_internal#2){.+.+}, at: xfs_trans_alloc+0x17c/0x220
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  mkfs/xfs_mkfs.c | 64 +++++++++++++++++++++++++++++++++++++++++++++----
+>  1 file changed, 59 insertions(+), 5 deletions(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 2e53c1e83b6a..c153592c705e 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -1155,14 +1155,15 @@ validate_ag_geometry(
+>  
+>  static void
+>  zero_old_xfs_structures(
+> -	libxfs_init_t		*xi,
+> -	xfs_sb_t		*new_sb)
+> +	struct libxfs_xinit	*xi,
+> +	struct xfs_sb		*new_sb)
+>  {
+> -	void 			*buf;
+> -	xfs_sb_t 		sb;
+> +	void			*buf;
+> +	struct xfs_sb		sb;
+>  	uint32_t		bsize;
+>  	int			i;
+>  	xfs_off_t		off;
+> +	xfs_off_t		end;
+>  
+>  	/*
+>  	 * We open regular files with O_TRUNC|O_CREAT. Nothing to do here...
+> @@ -1220,15 +1221,68 @@ zero_old_xfs_structures(
+>  
+>  	/*
+>  	 * block size and basic geometry seems alright, zero the secondaries.
+> +	 *
+> +	 * Don't be insane when it comes to overwriting really large filesystems
+> +	 * as it could take millions of IOs to zero every secondary
+> +	 * superblock. If we are remaking a huge filesystem, then do the
+> +	 * zeroing, but if we are replacing it with a small one (typically done
+> +	 * in test environments, limit the zeroing to:
+> +	 *
+> +	 *	- around the range of the new filesystem
+> +	 *	- the middle of the old filesystem
+> +	 *	- the end of the old filesystem
+> +	 *
+> +	 * Killing the middle and end of the old filesystem will prevent repair
+> +	 * from finding it with it's fast secondary sb scan algorithm. The slow
+> +	 * scan algorithm will then confirm the small filesystem geometry by
+> +	 * brute force scans.
+>  	 */
+>  	memset(buf, 0, new_sb->sb_sectsize);
+> +
+> +	/* this carefully avoids integer overflows */
+> +	end = sb.sb_dblocks;
+> +	if (sb.sb_agcount > 10000 &&
+> +	    new_sb->sb_dblocks < end / 10)
+> +		end = new_sb->sb_dblocks * 10;
 
-And eventually the filesystem deadlocks because it runs out of log
-space that is reserved by the leaked transaction and never gets
-released.
+... but what's with the 10k agcount cutoff? Just a number out of a hat
+to demonstrate the improvement..?
 
-The logic flow in xfs_reflink_allocate_cow() is a convoluted mess of
-gotos - it's no surprise that it has bug where the flow through
-several goto jumps then fails to clean up context from a non-obvious
-logic path. CLean up the logic flow and make sure every path does
-the right thing.
+Given that you've done the work to rough in an AIO buffered write
+mechanism for mkfs, have you considered whether we can find a way to
+apply that mechanism here? I'm guessing that the result of using AIO
+wouldn't be quite as impressive of not doing I/O at all, but as you've
+already noted, this algorithmic optimization is more targeted at test
+environments than production ones. The AIO approach sounds like it could
+be more broadly beneficial, even if not quite as fast in those
+particular test cases.
 
-Reported-by: Alexander Y. Fomichev <git.user@gmail.com>
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=200981
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_reflink.c | 98 +++++++++++++++++++++++++++++---------------
- 1 file changed, 66 insertions(+), 32 deletions(-)
+>  	off = 0;
+> -	for (i = 1; i < sb.sb_agcount; i++)  {
+> +	for (i = 1; i < sb.sb_agcount && off < end; i++)  {
+> +		off += sb.sb_agblocks;
+> +		if (pwrite(xi->dfd, buf, new_sb->sb_sectsize,
+> +					off << sb.sb_blocklog) == -1)
+> +			break;
+> +	}
+> +
+> +	if (end == sb.sb_dblocks)
+> +		return;
+> +
+> +	/*
+> +	 * Trash the middle 1000 AGs of the old fs, which we know has at least
+> +	 * 10000 AGs at this point. Cast to make sure we are doing 64bit
+> +	 * multiplies, otherwise off gets truncated to 32 bit. I hate C.
+> +	 */
+> +	i = (sb.sb_agcount / 2) - 500;
+> +	off = (xfs_off_t)sb.sb_agblocks * i;
+> +	off = (xfs_off_t)sb.sb_agblocks * ((sb.sb_agcount / 2) - 500);
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 38f405415b88..b39f5afa57aa 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -352,6 +352,47 @@ xfs_reflink_convert_cow(
- 	return error;
- }
- 
-+/*
-+ * Find the extent that maps the given range in the COW fork. Even if the extent
-+ * is not shared we might have a preallocation for it in the COW fork. If so we
-+ * use it that rather than trigger a new allocation.
-+ */
-+static int
-+find_trim_cow_extent(
-+	struct xfs_inode	*ip,
-+	struct xfs_bmbt_irec	*imap,
-+	bool			*shared,
-+	bool			*found)
-+{
-+	xfs_fileoff_t		offset_fsb = imap->br_startoff;
-+	xfs_filblks_t		count_fsb = imap->br_blockcount;
-+	struct xfs_iext_cursor	icur;
-+	struct xfs_bmbt_irec	got;
-+	bool			trimmed;
-+
-+	*found = false;
-+
-+	/*
-+	 * if we don't find an overlapping extent, trim the range we need to
-+	 * allocate to fit the hole we found.
-+	 */
-+	if (!xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &got) ||
-+	    got.br_startoff > offset_fsb)
-+		return xfs_reflink_trim_around_shared(ip, imap, shared, &trimmed);
-+
-+	*shared = true;
-+	if (isnullstartblock(got.br_startblock)) {
-+		xfs_trim_extent(imap, got.br_startoff, got.br_blockcount);
-+		return 0;
-+	}
-+
-+	/* real extent found - no need to allocate */
-+	xfs_trim_extent(&got, offset_fsb, count_fsb);
-+	*imap = got;
-+	*found = true;
-+	return 0;
-+}
-+
- /* Allocate all CoW reservations covering a range of blocks in a file. */
- int
- xfs_reflink_allocate_cow(
-@@ -363,41 +404,37 @@ xfs_reflink_allocate_cow(
- 	struct xfs_mount	*mp = ip->i_mount;
- 	xfs_fileoff_t		offset_fsb = imap->br_startoff;
- 	xfs_filblks_t		count_fsb = imap->br_blockcount;
--	struct xfs_bmbt_irec	got;
- 	struct xfs_trans	*tp = NULL;
- 	int			nimaps, error = 0;
--	bool			trimmed;
-+	bool			found;
- 	xfs_filblks_t		resaligned;
- 	xfs_extlen_t		resblks = 0;
--	struct xfs_iext_cursor	icur;
- 
--retry:
--	ASSERT(xfs_is_reflink_inode(ip));
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
- 
- 	/*
--	 * Even if the extent is not shared we might have a preallocation for
--	 * it in the COW fork.  If so use it.
-+	 * do-while to run a single lookup retry after transaction allocation.
-+	 * All exits from the loop need to check if the transaction needs
-+	 * cancelling. Dropping the ILOCK to allocate the transaction allows
-+	 * races with other COW fork allocations, so we need to start the extent
-+	 * lookup from scratch once we have the ILOCK again.
- 	 */
--	if (xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &got) &&
--	    got.br_startoff <= offset_fsb) {
--		*shared = true;
-+	do {
-+		ASSERT(xfs_is_reflink_inode(ip));
- 
--		/* If we have a real allocation in the COW fork we're done. */
--		if (!isnullstartblock(got.br_startblock)) {
--			xfs_trim_extent(&got, offset_fsb, count_fsb);
--			*imap = got;
-+		error = find_trim_cow_extent(ip, imap, shared, &found);
-+		if (error || !*shared)
-+			goto out_trans_cancel;
-+		if (found) {
-+			if (tp)
-+				xfs_trans_cancel(tp);
- 			goto convert;
- 		}
- 
--		xfs_trim_extent(imap, got.br_startoff, got.br_blockcount);
--	} else {
--		error = xfs_reflink_trim_around_shared(ip, imap, shared, &trimmed);
--		if (error || !*shared)
--			goto out;
--	}
-+		/* if we have a transaction, it's time to allocate */
-+		if (tp)
-+			break;
- 
--	if (!tp) {
- 		resaligned = xfs_aligned_fsb_count(imap->br_startoff,
- 			imap->br_blockcount, xfs_get_cowextsz_hint(ip));
- 		resblks = XFS_DIOSTRAT_SPACE_RES(mp, resaligned);
-@@ -412,29 +449,25 @@ xfs_reflink_allocate_cow(
- 
- 		error = xfs_qm_dqattach_locked(ip, false);
- 		if (error)
--			goto out;
--		goto retry;
--	}
-+			goto out_trans_cancel;
-+	} while (tp);
- 
- 	error = xfs_trans_reserve_quota_nblks(tp, ip, resblks, 0,
- 			XFS_QMOPT_RES_REGBLKS);
- 	if (error)
--		goto out;
-+		goto out_trans_cancel;
- 
- 	xfs_trans_ijoin(tp, ip, 0);
- 
--	nimaps = 1;
--
- 	/* Allocate the entire reservation as unwritten blocks. */
-+	nimaps = 1;
- 	error = xfs_bmapi_write(tp, ip, imap->br_startoff, imap->br_blockcount,
- 			XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC,
- 			resblks, imap, &nimaps);
- 	if (error)
--		goto out_trans_cancel;
-+		goto out_unreserve;
- 
- 	xfs_inode_set_cowblocks_tag(ip);
--
--	/* Finish up. */
- 	error = xfs_trans_commit(tp);
- 	if (error)
- 		return error;
-@@ -447,10 +480,11 @@ xfs_reflink_allocate_cow(
- 		return -ENOSPC;
- convert:
- 	return xfs_reflink_convert_cow_extent(ip, imap, offset_fsb, count_fsb);
--out_trans_cancel:
-+
-+out_unreserve:
- 	xfs_trans_unreserve_quota_nblks(tp, ip, (long)resblks, 0,
- 			XFS_QMOPT_RES_REGBLKS);
--out:
-+out_trans_cancel:
- 	if (tp)
- 		xfs_trans_cancel(tp);
- 	return error;
--- 
-2.17.0
+Looks like a couple lines of dead code there.
+
+Brian
+
+> +	end = off + 1000 * sb.sb_agblocks;
+> +	while (off < end) {
+> +		if (pwrite(xi->dfd, buf, new_sb->sb_sectsize,
+> +					off << sb.sb_blocklog) == -1)
+> +			break;
+>  		off += sb.sb_agblocks;
+> +	}
+> +
+> +	/*
+> +	 * Trash the last 1000 AGs of the old fs
+> +	 */
+> +	off = (xfs_off_t)sb.sb_agblocks * (sb.sb_agcount - 1000);
+> +	end = sb.sb_dblocks;
+> +	while (off < end) {
+>  		if (pwrite(xi->dfd, buf, new_sb->sb_sectsize,
+>  					off << sb.sb_blocklog) == -1)
+>  			break;
+> +		off += sb.sb_agblocks;
+>  	}
+> +
+>  done:
+>  	free(buf);
+>  }
+> -- 
+> 2.17.0
+> 
