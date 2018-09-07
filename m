@@ -1,312 +1,243 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:34856 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726502AbeILL1S (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Sep 2018 07:27:18 -0400
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8C6JeVf143449
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 02:24:18 -0400
-Received: from e13.ny.us.ibm.com (e13.ny.us.ibm.com [129.33.205.203])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2meqxvb9y3-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 02:24:18 -0400
-Received: from localhost
-        by e13.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Wed, 12 Sep 2018 02:24:17 -0400
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH V3 01/19] Fix xfs/009 to work with 64k block size
-Date: Wed, 12 Sep 2018 11:56:08 +0530
-In-Reply-To: <20180912062626.14349-1-chandan@linux.vnet.ibm.com>
-References: <20180912062626.14349-1-chandan@linux.vnet.ibm.com>
-Message-Id: <20180912062626.14349-2-chandan@linux.vnet.ibm.com>
+Received: from mail-lj1-f193.google.com ([209.85.208.193]:41923 "EHLO
+        mail-lj1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727653AbeIGRwu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Sep 2018 13:52:50 -0400
+Received: by mail-lj1-f193.google.com with SMTP id y17-v6so12226874ljy.8
+        for <linux-xfs@vger.kernel.org>; Fri, 07 Sep 2018 06:11:54 -0700 (PDT)
+Date: Fri, 7 Sep 2018 16:11:46 +0300
+From: "Alexander Y. Fomichev" <git.user@gmail.com>
+Subject: Re: [PATCH] xfs: fix transaction leak in xfs_reflink_allocate_cow()
+Message-Id: <20180907161146.fdfd4d631a75e9ac16c62ff3@gmail.com>
+In-Reply-To: <20180907024047.GA4607@magnolia>
+References: <20180907015113.32448-1-david@fromorbit.com>
+        <20180907024047.GA4607@magnolia>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-xfs_alloc_file_space() rounds up allocation requests by the filesystem
-block size. Hence this commit changes the test to work with block size
-units rather than with a multiple of 4096 bytes.
+On Thu, 6 Sep 2018 19:40:47 -0700
+"Darrick J. Wong" <darrick.wong@oracle.com> wrote:
 
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
----
- tests/xfs/009     | 92 ++++++++++++++++++++++++++++++++++++++++++++++---------
- tests/xfs/009.out | 66 +++++++++++++++++++--------------------
- 2 files changed, 110 insertions(+), 48 deletions(-)
+> On Fri, Sep 07, 2018 at 11:51:13AM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > When xfs_reflink_allocate_cow() allocates a transaction, it drops
+> > the ILOCK to perform the operation. This Introduces a race condition
+> > where another thread modifying the file can perform the COW
+> > allocation operation underneath us. This result in the retry loop
+> > finding an allocated block and jumping straight to the conversion
+> > code. It does not, however, cancel the transaction it holds and so
+> > this gets leaked. This results in a lockdep warning:
+> > 
+> > ================================================
+> > WARNING: lock held when returning to user space!
+> > 4.18.5 #1 Not tainted
+> > ------------------------------------------------
+> > worker/6123 is leaving the kernel with locks still held!
+> > 1 lock held by worker/6123:
+> >  #0: 000000009eab4f1b (sb_internal#2){.+.+}, at: xfs_trans_alloc+0x17c/0x220
+> > 
+> > And eventually the filesystem deadlocks because it runs out of log
+> > space that is reserved by the leaked transaction and never gets
+> > released.
+> > 
+> > The logic flow in xfs_reflink_allocate_cow() is a convoluted mess of
+> > gotos - it's no surprise that it has bug where the flow through
+> > several goto jumps then fails to clean up context from a non-obvious
+> > logic path. CLean up the logic flow and make sure every path does
+> > the right thing.
+> 
+> Ugh, sorry about leaving that mess.
+> 
+> I haven't tested this at all, but it looks right.  If the original
+> reporter tests it and the problem goes away I'm willing to attach a:
+> 
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> --D
+>
 
-diff --git a/tests/xfs/009 b/tests/xfs/009
-index 68f6379..70717eb 100755
---- a/tests/xfs/009
-+++ b/tests/xfs/009
-@@ -14,9 +14,6 @@ here=`pwd`
- tmp=/tmp/$$
- status=1	# failure is the default!
- trap "_cleanup; exit \$status" 0 1 2 3 15
--# This isn't really related to fs block size, it's just what
--# alloc uses for the "block" unit in it's input parameters...
--bsize=4096
- 
- _cleanup()
- {
-@@ -24,13 +21,6 @@ _cleanup()
-     _scratch_unmount
- }
- 
--_block_filter()
--{
--   sed \
--	-e 's/[0-9][0-9]*\.\.[0-9][0-9]*/BLOCKRANGE/g' \
--	-e "s/blocksize $bsize/blocksize BSIZE/g"
--}
--
- _init()
- {
-     echo "*** mkfs"
-@@ -49,11 +39,6 @@ _init()
-     fi
- }
- 
--_filesize()
--{
--    ls -l $1 | $AWK_PROG '{print "filesize = " $5}'
--}
--
- # get standard environment, filters and checks
- . ./common/rc
- . ./common/filter
-@@ -64,9 +49,86 @@ _supported_os Linux
- 
- _require_scratch
- 
-+_filesize()
-+{
-+    ls -l $1 | $AWK_PROG -v bsize="$bsize" '{print "filesize = " $5 / bsize}'
-+}
-+
-+_block_filter()
-+{
-+	$AWK_PROG -v bsize="$bsize" '
-+	/blocksize/ {
-+		printf("    blocksize BSIZE\n")
-+
-+		next
-+	}
-+
-+	/CMD/ {
-+		split($3, off, "=")
-+		offset = strtonum(off[2])
-+		if (offset != -1)
-+			offset = offset / bsize
-+
-+		split($4, len, "=")
-+		nr_blocks = strtonum(len[2])
-+		if (nr_blocks != -1)
-+			nr_blocks = nr_blocks / bsize
-+
-+		printf("    %s %s off=%s, len=%d\n", $1, $2, offset, nr_blocks)
-+
-+		next
-+	}
-+
-+	/MAP/ {
-+		split($2, off, "=")
-+		offset = strtonum(off[2])
-+		if (offset != -1)
-+			offset = offset / bsize
-+
-+		split($3, len, "=")
-+
-+		nr_blocks = strtonum(len[2])
-+
-+		if (nr_blocks != -1)
-+			nr_blocks = nr_blocks / bsize
-+
-+		printf("    %s off=%s, len=%d %s\n", $1, offset, nr_blocks, $4)
-+
-+		next
-+	}
-+
-+	/TRUNCATE/ {
-+		split($2, off, "=")
-+		offset = strtonum(off[2]) / bsize
-+
-+		printf("    %s off=%s\n", $1, offset)
-+
-+		next
-+	}
-+
-+	/\[[0-9]+,[0-9]+\]:/ {
-+		printf("        %s BLOCKRANGE\n", $1)
-+
-+		next
-+	}
-+
-+	{
-+		print
-+
-+		next
-+	}
-+	'
-+}
-+
- _init
- out=$SCRATCH_MNT/$$.tmp
- 
-+# This isn't really related to fs block size, it's just what
-+# alloc uses for the "block" unit in it's input parameters...
-+# However, xfs_alloc_file_space() rounds up allocation
-+# request by the filesystem's block size.
-+bsize=$(_get_block_size $SCRATCH_MNT)
-+
- # since we're using a clean FS here, we make some assumptions
- # about availability of contiguous blocks
- 
-diff --git a/tests/xfs/009.out b/tests/xfs/009.out
-index 7132aca..02b5d82 100644
---- a/tests/xfs/009.out
-+++ b/tests/xfs/009.out
-@@ -3,8 +3,8 @@ QA output created by 009
- *** mount
- *** test 1 - reservations cleared on O_TRUNC
-     blocksize BSIZE
--    CMD resvsp, off=0, len=4096000
--    MAP off=0, len=4096000 [0,1000]
-+    CMD resvsp, off=0, len=1000
-+    MAP off=0, len=1000 [0,1000]
-         [ofs,count]: start..end
-         [0,1000]: BLOCKRANGE
-     MAP off=0, len=-1 [0-]
-@@ -17,53 +17,53 @@ filesize = 0
- filesize = 0
- *** test 2 - reserve & filesize
-     blocksize BSIZE
--    CMD resvsp, off=0, len=4096000
--    MAP off=0, len=4096000 [0,1000]
-+    CMD resvsp, off=0, len=1000
-+    MAP off=0, len=1000 [0,1000]
-         [ofs,count]: start..end
-         [0,1000]: BLOCKRANGE
- filesize = 0
- *** test 3 - alloc & filesize
-     blocksize BSIZE
--    CMD allocsp, off=4096000, len=-1
--    MAP off=4096000, len=-1 [1000-]
-+    CMD allocsp, off=1000, len=-1
-+    MAP off=1000, len=-1 [1000-]
-         [ofs,count]: start..end
--filesize = 4096000
-+filesize = 1000
- *** test 4 - allocations cleared on O_TRUNC
-     blocksize BSIZE
--    CMD allocsp, off=4096000, len=-1
--    MAP off=4096000, len=-1 [1000-]
-+    CMD allocsp, off=1000, len=-1
-+    MAP off=1000, len=-1 [1000-]
-         [ofs,count]: start..end
--filesize = 4096000
-+filesize = 1000
-     blocksize BSIZE
-     MAP off=0, len=-1 [0-]
-         [ofs,count]: start..end
- filesize = 0
- *** test 5 - reserve / unreserve
-     blocksize BSIZE
--    CMD resvsp, off=0, len=409600
--    MAP off=0, len=409600 [0,100]
-+    CMD resvsp, off=0, len=100
-+    MAP off=0, len=100 [0,100]
-         [ofs,count]: start..end
-         [0,100]: BLOCKRANGE
--    CMD unresvsp, off=409600, len=2048000
--    MAP off=409600, len=2048000 [100,500]
-+    CMD unresvsp, off=100, len=500
-+    MAP off=100, len=500 [100,500]
-         [ofs,count]: start..end
-     MAP off=0, len=-1 [0-]
-         [ofs,count]: start..end
-         [0,100]: BLOCKRANGE
--    CMD unresvsp, off=3686400, len=819200
--    MAP off=3686400, len=819200 [900,200]
-+    CMD unresvsp, off=900, len=200
-+    MAP off=900, len=200 [900,200]
-         [ofs,count]: start..end
-     MAP off=0, len=-1 [0-]
-         [ofs,count]: start..end
-         [0,100]: BLOCKRANGE
- *** test 6 - reserve adjacent
-     blocksize BSIZE
--    CMD resvsp, off=0, len=409600
--    MAP off=0, len=409600 [0,100]
-+    CMD resvsp, off=0, len=100
-+    MAP off=0, len=100 [0,100]
-         [ofs,count]: start..end
-         [0,100]: BLOCKRANGE
--    CMD resvsp, off=409600, len=409600
--    MAP off=409600, len=409600 [100,100]
-+    CMD resvsp, off=100, len=100
-+    MAP off=100, len=100 [100,100]
-         [ofs,count]: start..end
-         [100,100]: BLOCKRANGE
-     MAP off=0, len=-1 [0-]
-@@ -71,44 +71,44 @@ filesize = 0
-         [0,200]: BLOCKRANGE
- *** test 7 - alloc
-     blocksize BSIZE
--    CMD allocsp, off=4096000, len=-1
--    MAP off=4096000, len=-1 [1000-]
-+    CMD allocsp, off=1000, len=-1
-+    MAP off=1000, len=-1 [1000-]
-         [ofs,count]: start..end
-     MAP off=0, len=-1 [0-]
-         [ofs,count]: start..end
-         [0,1000]: BLOCKRANGE
--    CMD allocsp, off=8192000, len=-1
--    MAP off=8192000, len=-1 [2000-]
-+    CMD allocsp, off=2000, len=-1
-+    MAP off=2000, len=-1 [2000-]
-         [ofs,count]: start..end
-     MAP off=0, len=-1 [0-]
-         [ofs,count]: start..end
-         [0,2000]: BLOCKRANGE
--filesize = 8192000
-+filesize = 2000
- *** test 8 - alloc & truncate
-     blocksize BSIZE
--    CMD allocsp, off=4096000, len=-1
--    MAP off=4096000, len=-1 [1000-]
-+    CMD allocsp, off=1000, len=-1
-+    MAP off=1000, len=-1 [1000-]
-         [ofs,count]: start..end
-     MAP off=0, len=-1 [0-]
-         [ofs,count]: start..end
-         [0,1000]: BLOCKRANGE
--    TRUNCATE off=2048000
-+    TRUNCATE off=500
-     MAP off=0, len=-1 [0-]
-         [ofs,count]: start..end
-         [0,500]: BLOCKRANGE
--filesize = 2048000
-+filesize = 500
- *** test 9 - reserve & truncate
-     blocksize BSIZE
--    CMD resvsp, off=0, len=4096000
--    MAP off=0, len=4096000 [0,1000]
-+    CMD resvsp, off=0, len=1000
-+    MAP off=0, len=1000 [0,1000]
-         [ofs,count]: start..end
-         [0,1000]: BLOCKRANGE
-     MAP off=0, len=-1 [0-]
-         [ofs,count]: start..end
-         [0,1000]: BLOCKRANGE
--    TRUNCATE off=2048000
-+    TRUNCATE off=500
-     MAP off=0, len=-1 [0-]
-         [ofs,count]: start..end
-         [0,1000]: BLOCKRANGE
--filesize = 2048000
-+filesize = 500
- *** unmount
+Tested and I can confirm.
+Patch works as expected for v4.19 and (with minimal modifications) for 4.18.
+Thanks.
+
+> > Reported-by: Alexander Y. Fomichev <git.user@gmail.com>
+> > Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=200981
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  fs/xfs/xfs_reflink.c | 98 +++++++++++++++++++++++++++++---------------
+> >  1 file changed, 66 insertions(+), 32 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> > index 38f405415b88..b39f5afa57aa 100644
+> > --- a/fs/xfs/xfs_reflink.c
+> > +++ b/fs/xfs/xfs_reflink.c
+> > @@ -352,6 +352,47 @@ xfs_reflink_convert_cow(
+> >  	return error;
+> >  }
+> >  
+> > +/*
+> > + * Find the extent that maps the given range in the COW fork. Even if the extent
+> > + * is not shared we might have a preallocation for it in the COW fork. If so we
+> > + * use it that rather than trigger a new allocation.
+> > + */
+> > +static int
+> > +find_trim_cow_extent(
+> > +	struct xfs_inode	*ip,
+> > +	struct xfs_bmbt_irec	*imap,
+> > +	bool			*shared,
+> > +	bool			*found)
+> > +{
+> > +	xfs_fileoff_t		offset_fsb = imap->br_startoff;
+> > +	xfs_filblks_t		count_fsb = imap->br_blockcount;
+> > +	struct xfs_iext_cursor	icur;
+> > +	struct xfs_bmbt_irec	got;
+> > +	bool			trimmed;
+> > +
+> > +	*found = false;
+> > +
+> > +	/*
+> > +	 * if we don't find an overlapping extent, trim the range we need to
+> > +	 * allocate to fit the hole we found.
+> > +	 */
+> > +	if (!xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &got) ||
+> > +	    got.br_startoff > offset_fsb)
+> > +		return xfs_reflink_trim_around_shared(ip, imap, shared, &trimmed);
+> > +
+> > +	*shared = true;
+> > +	if (isnullstartblock(got.br_startblock)) {
+> > +		xfs_trim_extent(imap, got.br_startoff, got.br_blockcount);
+> > +		return 0;
+> > +	}
+> > +
+> > +	/* real extent found - no need to allocate */
+> > +	xfs_trim_extent(&got, offset_fsb, count_fsb);
+> > +	*imap = got;
+> > +	*found = true;
+> > +	return 0;
+> > +}
+> > +
+> >  /* Allocate all CoW reservations covering a range of blocks in a file. */
+> >  int
+> >  xfs_reflink_allocate_cow(
+> > @@ -363,41 +404,37 @@ xfs_reflink_allocate_cow(
+> >  	struct xfs_mount	*mp = ip->i_mount;
+> >  	xfs_fileoff_t		offset_fsb = imap->br_startoff;
+> >  	xfs_filblks_t		count_fsb = imap->br_blockcount;
+> > -	struct xfs_bmbt_irec	got;
+> >  	struct xfs_trans	*tp = NULL;
+> >  	int			nimaps, error = 0;
+> > -	bool			trimmed;
+> > +	bool			found;
+> >  	xfs_filblks_t		resaligned;
+> >  	xfs_extlen_t		resblks = 0;
+> > -	struct xfs_iext_cursor	icur;
+> >  
+> > -retry:
+> > -	ASSERT(xfs_is_reflink_inode(ip));
+> >  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+> >  
+> >  	/*
+> > -	 * Even if the extent is not shared we might have a preallocation for
+> > -	 * it in the COW fork.  If so use it.
+> > +	 * do-while to run a single lookup retry after transaction allocation.
+> > +	 * All exits from the loop need to check if the transaction needs
+> > +	 * cancelling. Dropping the ILOCK to allocate the transaction allows
+> > +	 * races with other COW fork allocations, so we need to start the extent
+> > +	 * lookup from scratch once we have the ILOCK again.
+> >  	 */
+> > -	if (xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &got) &&
+> > -	    got.br_startoff <= offset_fsb) {
+> > -		*shared = true;
+> > +	do {
+> > +		ASSERT(xfs_is_reflink_inode(ip));
+> >  
+> > -		/* If we have a real allocation in the COW fork we're done. */
+> > -		if (!isnullstartblock(got.br_startblock)) {
+> > -			xfs_trim_extent(&got, offset_fsb, count_fsb);
+> > -			*imap = got;
+> > +		error = find_trim_cow_extent(ip, imap, shared, &found);
+> > +		if (error || !*shared)
+> > +			goto out_trans_cancel;
+> > +		if (found) {
+> > +			if (tp)
+> > +				xfs_trans_cancel(tp);
+> >  			goto convert;
+> >  		}
+> >  
+> > -		xfs_trim_extent(imap, got.br_startoff, got.br_blockcount);
+> > -	} else {
+> > -		error = xfs_reflink_trim_around_shared(ip, imap, shared, &trimmed);
+> > -		if (error || !*shared)
+> > -			goto out;
+> > -	}
+> > +		/* if we have a transaction, it's time to allocate */
+> > +		if (tp)
+> > +			break;
+> >  
+> > -	if (!tp) {
+> >  		resaligned = xfs_aligned_fsb_count(imap->br_startoff,
+> >  			imap->br_blockcount, xfs_get_cowextsz_hint(ip));
+> >  		resblks = XFS_DIOSTRAT_SPACE_RES(mp, resaligned);
+> > @@ -412,29 +449,25 @@ xfs_reflink_allocate_cow(
+> >  
+> >  		error = xfs_qm_dqattach_locked(ip, false);
+> >  		if (error)
+> > -			goto out;
+> > -		goto retry;
+> > -	}
+> > +			goto out_trans_cancel;
+> > +	} while (tp);
+> >  
+> >  	error = xfs_trans_reserve_quota_nblks(tp, ip, resblks, 0,
+> >  			XFS_QMOPT_RES_REGBLKS);
+> >  	if (error)
+> > -		goto out;
+> > +		goto out_trans_cancel;
+> >  
+> >  	xfs_trans_ijoin(tp, ip, 0);
+> >  
+> > -	nimaps = 1;
+> > -
+> >  	/* Allocate the entire reservation as unwritten blocks. */
+> > +	nimaps = 1;
+> >  	error = xfs_bmapi_write(tp, ip, imap->br_startoff, imap->br_blockcount,
+> >  			XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC,
+> >  			resblks, imap, &nimaps);
+> >  	if (error)
+> > -		goto out_trans_cancel;
+> > +		goto out_unreserve;
+> >  
+> >  	xfs_inode_set_cowblocks_tag(ip);
+> > -
+> > -	/* Finish up. */
+> >  	error = xfs_trans_commit(tp);
+> >  	if (error)
+> >  		return error;
+> > @@ -447,10 +480,11 @@ xfs_reflink_allocate_cow(
+> >  		return -ENOSPC;
+> >  convert:
+> >  	return xfs_reflink_convert_cow_extent(ip, imap, offset_fsb, count_fsb);
+> > -out_trans_cancel:
+> > +
+> > +out_unreserve:
+> >  	xfs_trans_unreserve_quota_nblks(tp, ip, (long)resblks, 0,
+> >  			XFS_QMOPT_RES_REGBLKS);
+> > -out:
+> > +out_trans_cancel:
+> >  	if (tp)
+> >  		xfs_trans_cancel(tp);
+> >  	return error;
+> > -- 
+> > 2.17.0
+> > 
+
+
 -- 
-2.9.5
+Alexander Y. Fomichev <git.user@gmail.com>
