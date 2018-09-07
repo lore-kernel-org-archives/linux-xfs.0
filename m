@@ -1,301 +1,228 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:41694 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729388AbeIFSIA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 6 Sep 2018 14:08:00 -0400
-Date: Thu, 6 Sep 2018 09:32:24 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 4/4] mkfs: Use AIO for batched writeback
-Message-ID: <20180906133224.GD3311@bfoster>
-References: <20180905081932.27478-1-david@fromorbit.com>
- <20180905081932.27478-5-david@fromorbit.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:51730 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725785AbeIGHT0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Sep 2018 03:19:26 -0400
+Date: Thu, 6 Sep 2018 19:40:47 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: fix transaction leak in xfs_reflink_allocate_cow()
+Message-ID: <20180907024047.GA4607@magnolia>
+References: <20180907015113.32448-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180905081932.27478-5-david@fromorbit.com>
+In-Reply-To: <20180907015113.32448-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, git.user@gmail.com
 
-On Wed, Sep 05, 2018 at 06:19:32PM +1000, Dave Chinner wrote:
+On Fri, Sep 07, 2018 at 11:51:13AM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> What it says. 8EB filesystem can now be made in 15 minutes on
-> storage that can do 100,000 IOPS. Before this patch mkfs topped out
-> at about 13,000 IOPS.
+> When xfs_reflink_allocate_cow() allocates a transaction, it drops
+> the ILOCK to perform the operation. This Introduces a race condition
+> where another thread modifying the file can perform the COW
+> allocation operation underneath us. This result in the retry loop
+> finding an allocated block and jumping straight to the conversion
+> code. It does not, however, cancel the transaction it holds and so
+> this gets leaked. This results in a lockdep warning:
 > 
-> Proof of concept proven.
+> ================================================
+> WARNING: lock held when returning to user space!
+> 4.18.5 #1 Not tainted
+> ------------------------------------------------
+> worker/6123 is leaving the kernel with locks still held!
+> 1 lock held by worker/6123:
+>  #0: 000000009eab4f1b (sb_internal#2){.+.+}, at: xfs_trans_alloc+0x17c/0x220
 > 
+> And eventually the filesystem deadlocks because it runs out of log
+> space that is reserved by the leaked transaction and never gets
+> released.
+> 
+> The logic flow in xfs_reflink_allocate_cow() is a convoluted mess of
+> gotos - it's no surprise that it has bug where the flow through
+> several goto jumps then fails to clean up context from a non-obvious
+> logic path. CLean up the logic flow and make sure every path does
+> the right thing.
+
+Ugh, sorry about leaving that mess.
+
+I haven't tested this at all, but it looks right.  If the original
+reporter tests it and the problem goes away I'm willing to attach a:
+
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> Reported-by: Alexander Y. Fomichev <git.user@gmail.com>
+> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=200981
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  libxfs/libxfs_io.h |   1 +
->  libxfs/rdwr.c      | 170 +++++++++++++++++++++++++++++++++++++++++++--
->  mkfs/Makefile      |   2 +-
->  mkfs/xfs_mkfs.c    |   2 +-
->  4 files changed, 169 insertions(+), 6 deletions(-)
+>  fs/xfs/xfs_reflink.c | 98 +++++++++++++++++++++++++++++---------------
+>  1 file changed, 66 insertions(+), 32 deletions(-)
 > 
-> diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
-> index c69cc7cd7ec5..2b11d008998d 100644
-> --- a/libxfs/libxfs_io.h
-> +++ b/libxfs/libxfs_io.h
-> @@ -67,6 +67,7 @@ typedef struct xfs_buf {
->  	struct xfs_buf_map	__b_map;
->  	int			b_nmaps;
->  	struct list_head	b_list;
-> +	int			b_io_count;
->  #ifdef XFS_BUF_TRACING
->  	struct list_head	b_lock_list;
->  	const char		*b_func;
-> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-> index 7fbaae571abe..5336f6a1e1de 100644
-> --- a/libxfs/rdwr.c
-> +++ b/libxfs/rdwr.c
-> @@ -20,6 +20,9 @@
->  
->  #include "libxfs.h"		/* for LIBXFS_EXIT_ON_FAILURE */
->  
-> +/* XXX: all the aio stuff is hacky and proof of concept only */
-> +#include <libaio.h>
-> +
->  /*
->   * Important design/architecture note:
->   *
-> @@ -1236,6 +1239,151 @@ xfs_buf_cmp(
->  	return 0;
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index 38f405415b88..b39f5afa57aa 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -352,6 +352,47 @@ xfs_reflink_convert_cow(
+>  	return error;
 >  }
 >  
-> +/* hacky AIO stuff that'll handle a single delwri queue flush at a time */
-> +#define MAX_AIO_EVENTS 1024
-> +io_context_t ctxp;
-> +struct iocb *iocbs[MAX_AIO_EVENTS];
-> +struct io_event ioevents[MAX_AIO_EVENTS];
-> +int aio_next;
-> +int aio_flight;
-> +
-> +static void
-> +init_aio_delwri(void)
-> +{
-> +	int i, r;
-> +
-> +	memset(&ctxp, 0, sizeof(ctxp));
-> +	r = io_setup(MAX_AIO_EVENTS, &ctxp);
-> +	if (r) {
-> +		printf("FAIL! io_setup returned %d\n", r);
-> +		exit(1);
-> +	}
-> +	for (i = 0; i < MAX_AIO_EVENTS; ++i) {
-> +		iocbs[i] = calloc(1, sizeof(struct iocb));
-> +		if (iocbs[i] == NULL) {
-> +			printf("failed to allocate an iocb\n");
-> +			exit(1);
-> +		}
-> +	}
-> +}
-> +
-> +int
-> +get_write_completions(
-> +	int	threshold)
-> +{
-> +	int	error = 0;
-> +	int	i, r;
-> +
-> +	while (aio_flight > threshold) {
-> +		/* gather up some completions */
-> +		r = io_getevents(ctxp, 1, MAX_AIO_EVENTS, ioevents, NULL);
-> +		if (r < 0)  {
-> +			printf("FAIL! io_getevents returned %d\n", r);
-> +			exit(1);
-> +		}
-> +
-> +		aio_flight -= r;
-> +		for (i = 0; i < r; ++i) {
-> +			struct xfs_buf *bp = ioevents[i].data;
-> +			if (ioevents[i].res < 0)
-> +				bp->b_error = ioevents[i].res;
-> +			else if (ioevents[i].res != bp->b_bcount)
-> +				bp->b_error = -EIO;
-> +
-> +			if (--bp->b_io_count == 0 && !bp->b_error) {
-> +				bp->b_flags |= LIBXFS_B_UPTODATE;
-> +				bp->b_flags &= ~(LIBXFS_B_DIRTY | LIBXFS_B_EXIT |
-> +						 LIBXFS_B_UNCHECKED);
-
-I'd think we need these flags updates on the submission side
-->b_io_count decrement as well, but I guess the single-threadedness of
-the whole things dictates that I/O will only ever complete here.
-
-Which begs the question.. why elevate ->b_io_count in the delwri submit
-path at all? FWIW, I can see writing this consistently either way: take
-the I/O ref and handle completion in both places, or rely on the fact
-that completion occurs in one place and the flush only needs to know if
-the buffer count is still elevated immediately after submission.
-
-> +				libxfs_putbuf(bp);
-> +			} else if (!error) {
-> +				error = bp->b_error;
-> +			}
-> +		}
-> +		/* wait for a short while */
-> +		usleep(1000);
-> +	}
-> +	return error;
-> +}
-> +
+> +/*
+> + * Find the extent that maps the given range in the COW fork. Even if the extent
+> + * is not shared we might have a preallocation for it in the COW fork. If so we
+> + * use it that rather than trigger a new allocation.
+> + */
 > +static int
-> +__aio_write(
-> +	struct xfs_buf  *bp,
-> +	void *buf,
-> +	int len,
-> +	off64_t offset)
+> +find_trim_cow_extent(
+> +	struct xfs_inode	*ip,
+> +	struct xfs_bmbt_irec	*imap,
+> +	bool			*shared,
+> +	bool			*found)
 > +{
-> +	int	r, i;
-> +	int	fd = libxfs_device_to_fd(bp->b_target->dev);
+> +	xfs_fileoff_t		offset_fsb = imap->br_startoff;
+> +	xfs_filblks_t		count_fsb = imap->br_blockcount;
+> +	struct xfs_iext_cursor	icur;
+> +	struct xfs_bmbt_irec	got;
+> +	bool			trimmed;
 > +
-> +	i = aio_next++ % MAX_AIO_EVENTS;
-> +	aio_flight++;
-> +	bp->b_io_count++;
+> +	*found = false;
 > +
-> +	io_prep_pwrite(iocbs[i], fd, buf, len, offset);
-> +	iocbs[i]->data = bp;
-> +	r = io_submit(ctxp, 1, &iocbs[i]);
-> +	if (r != 1) {
-> +		aio_flight--;
-
-Probably need to decrement ->b_io_count here as well..?
-
-Brian
-
-> +		if (bp->b_flags & LIBXFS_B_EXIT)
-> +			exit(1);
-> +		return -EIO;
+> +	/*
+> +	 * if we don't find an overlapping extent, trim the range we need to
+> +	 * allocate to fit the hole we found.
+> +	 */
+> +	if (!xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &got) ||
+> +	    got.br_startoff > offset_fsb)
+> +		return xfs_reflink_trim_around_shared(ip, imap, shared, &trimmed);
+> +
+> +	*shared = true;
+> +	if (isnullstartblock(got.br_startblock)) {
+> +		xfs_trim_extent(imap, got.br_startoff, got.br_blockcount);
+> +		return 0;
 > +	}
+> +
+> +	/* real extent found - no need to allocate */
+> +	xfs_trim_extent(&got, offset_fsb, count_fsb);
+> +	*imap = got;
+> +	*found = true;
 > +	return 0;
-> +
 > +}
 > +
-> +static int
-> +do_write(
-> +	struct xfs_buf	*bp)
-> +{
-> +	/*
-> +	 * we never write buffers that are marked stale. This indicates they
-> +	 * contain data that has been invalidated, and even if the buffer is
-> +	 * dirty it must *never* be written. Verifiers are wonderful for finding
-> +	 * bugs like this. Make sure the error is obvious as to the cause.
-> +	 */
-> +	if (bp->b_flags & LIBXFS_B_STALE) {
-> +		bp->b_error = -ESTALE;
-> +		return bp->b_error;
-> +	}
-> +
-> +	/*
-> +	 * clear any pre-existing error status on the buffer. This can occur if
-> +	 * the buffer is corrupt on disk and the repair process doesn't clear
-> +	 * the error before fixing and writing it back.
-> +	 */
-> +	bp->b_error = 0;
-> +	if (bp->b_ops) {
-> +		bp->b_ops->verify_write(bp);
-> +		if (bp->b_error) {
-> +			fprintf(stderr,
-> +	_("%s: write verifer failed on %s bno 0x%llx/0x%x\n"),
-> +				__func__, bp->b_ops->name,
-> +				(long long)bp->b_bn, bp->b_bcount);
-> +			return bp->b_error;
-> +		}
-> +	}
-> +
-> +	if (!(bp->b_flags & LIBXFS_B_DISCONTIG)) {
-> +		bp->b_error = __aio_write(bp, bp->b_addr, bp->b_bcount,
-> +				    LIBXFS_BBTOOFF64(bp->b_bn));
-> +	} else {
-> +		int	i;
-> +		void	*buf = bp->b_addr;
-> +
-> +		for (i = 0; i < bp->b_nmaps; i++) {
-> +			off64_t	offset = LIBXFS_BBTOOFF64(bp->b_maps[i].bm_bn);
-> +			int len = BBTOB(bp->b_maps[i].bm_len);
-> +
-> +			bp->b_error = __aio_write(bp, buf, len, offset);
-> +			if (bp->b_error)
-> +				break;	/* XXX: completion wait required! */
-> +			buf += len;
-> +		}
-> +	}
-> +	return bp->b_error;
-> +}
-> +
->  /* Processes entire list, but only returns the first error found */
+>  /* Allocate all CoW reservations covering a range of blocks in a file. */
 >  int
->  libxfs_buf_delwri_flush(
-> @@ -1243,21 +1391,35 @@ libxfs_buf_delwri_flush(
->  {
->  	struct xfs_buf		*bp;
->  	int			 error = 0;
-> +	static bool		aio_init = false;
-> +	int			ret;
-> +
-> +	if (!aio_init) {
-> +		init_aio_delwri();
-> +		aio_init = true;
-> +	}
+>  xfs_reflink_allocate_cow(
+> @@ -363,41 +404,37 @@ xfs_reflink_allocate_cow(
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  	xfs_fileoff_t		offset_fsb = imap->br_startoff;
+>  	xfs_filblks_t		count_fsb = imap->br_blockcount;
+> -	struct xfs_bmbt_irec	got;
+>  	struct xfs_trans	*tp = NULL;
+>  	int			nimaps, error = 0;
+> -	bool			trimmed;
+> +	bool			found;
+>  	xfs_filblks_t		resaligned;
+>  	xfs_extlen_t		resblks = 0;
+> -	struct xfs_iext_cursor	icur;
 >  
->  	list_sort(NULL, delwri_list, xfs_buf_cmp);
->  	while (!list_empty(delwri_list)) {
->  		bp = list_first_entry(delwri_list, struct xfs_buf, b_list);
->  		list_del_init(&bp->b_list);
->  		bp->b_flags &= ~LIBXFS_B_DELWRI_Q;
-> +		bp->b_io_count = 1;
->  		if (!bp->b_error && (bp->b_flags & LIBXFS_B_DIRTY)) {
-> -			int ret;
-> -			ret = libxfs_writebufr(bp);
-> +			ret = do_write(bp);
->  			if (ret && !error)
->  				error = ret;
+> -retry:
+> -	ASSERT(xfs_is_reflink_inode(ip));
+>  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+>  
+>  	/*
+> -	 * Even if the extent is not shared we might have a preallocation for
+> -	 * it in the COW fork.  If so use it.
+> +	 * do-while to run a single lookup retry after transaction allocation.
+> +	 * All exits from the loop need to check if the transaction needs
+> +	 * cancelling. Dropping the ILOCK to allocate the transaction allows
+> +	 * races with other COW fork allocations, so we need to start the extent
+> +	 * lookup from scratch once we have the ILOCK again.
+>  	 */
+> -	if (xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &got) &&
+> -	    got.br_startoff <= offset_fsb) {
+> -		*shared = true;
+> +	do {
+> +		ASSERT(xfs_is_reflink_inode(ip));
+>  
+> -		/* If we have a real allocation in the COW fork we're done. */
+> -		if (!isnullstartblock(got.br_startblock)) {
+> -			xfs_trim_extent(&got, offset_fsb, count_fsb);
+> -			*imap = got;
+> +		error = find_trim_cow_extent(ip, imap, shared, &found);
+> +		if (error || !*shared)
+> +			goto out_trans_cancel;
+> +		if (found) {
+> +			if (tp)
+> +				xfs_trans_cancel(tp);
+>  			goto convert;
 >  		}
-> -		libxfs_putbuf(bp);
-> +		if (--bp->b_io_count == 0)
-> +			libxfs_putbuf(bp);
+>  
+> -		xfs_trim_extent(imap, got.br_startoff, got.br_blockcount);
+> -	} else {
+> -		error = xfs_reflink_trim_around_shared(ip, imap, shared, &trimmed);
+> -		if (error || !*shared)
+> -			goto out;
+> -	}
+> +		/* if we have a transaction, it's time to allocate */
+> +		if (tp)
+> +			break;
+>  
+> -	if (!tp) {
+>  		resaligned = xfs_aligned_fsb_count(imap->br_startoff,
+>  			imap->br_blockcount, xfs_get_cowextsz_hint(ip));
+>  		resblks = XFS_DIOSTRAT_SPACE_RES(mp, resaligned);
+> @@ -412,29 +449,25 @@ xfs_reflink_allocate_cow(
+>  
+>  		error = xfs_qm_dqattach_locked(ip, false);
+>  		if (error)
+> -			goto out;
+> -		goto retry;
+> -	}
+> +			goto out_trans_cancel;
+> +	} while (tp);
+>  
+>  	error = xfs_trans_reserve_quota_nblks(tp, ip, resblks, 0,
+>  			XFS_QMOPT_RES_REGBLKS);
+>  	if (error)
+> -		goto out;
+> +		goto out_trans_cancel;
+>  
+>  	xfs_trans_ijoin(tp, ip, 0);
+>  
+> -	nimaps = 1;
+> -
+>  	/* Allocate the entire reservation as unwritten blocks. */
+> +	nimaps = 1;
+>  	error = xfs_bmapi_write(tp, ip, imap->br_startoff, imap->br_blockcount,
+>  			XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC,
+>  			resblks, imap, &nimaps);
+>  	if (error)
+> -		goto out_trans_cancel;
+> +		goto out_unreserve;
+>  
+>  	xfs_inode_set_cowblocks_tag(ip);
+> -
+> -	/* Finish up. */
+>  	error = xfs_trans_commit(tp);
+>  	if (error)
+>  		return error;
+> @@ -447,10 +480,11 @@ xfs_reflink_allocate_cow(
+>  		return -ENOSPC;
+>  convert:
+>  	return xfs_reflink_convert_cow_extent(ip, imap, offset_fsb, count_fsb);
+> -out_trans_cancel:
 > +
-> +		/* wait for some completions if we've dispatched lots */
-> +		ret = get_write_completions(MAX_AIO_EVENTS / 5 * 4);
-> +		if (ret && !error)
-> +			error = ret;
->  	}
-> -	return error;
-> +	ret = get_write_completions(0);
-> +	return error ? error : ret;
->  }
->  
->  
-> diff --git a/mkfs/Makefile b/mkfs/Makefile
-> index 31482b08d559..e27f10f26b14 100644
-> --- a/mkfs/Makefile
-> +++ b/mkfs/Makefile
-> @@ -11,7 +11,7 @@ HFILES =
->  CFILES = proto.c xfs_mkfs.c
->  
->  LLDLIBS += $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBRT) $(LIBPTHREAD) $(LIBBLKID) \
-> -	$(LIBUUID)
-> +	$(LIBUUID) -laio
->  LTDEPENDENCIES += $(LIBXFS) $(LIBXCMD) $(LIBFROG)
->  LLDFLAGS = -static-libtool-libs
->  
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index b751b1fcb4a3..82e041dd1b48 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -4048,7 +4048,7 @@ main(
->  		initialise_ag_headers(&cfg, mp, sbp, agno, &freelist_size,
->  				      &delwri_list);
->  		initialise_ag_freespace(mp, agno, freelist_size, &delwri_list);
-> -		if (agno && !(agno % 100))
-> +		if (agno && !(agno % 1000))
->  			libxfs_buf_delwri_flush(&delwri_list);
->  	}
->  	libxfs_buf_delwri_flush(&delwri_list);
+> +out_unreserve:
+>  	xfs_trans_unreserve_quota_nblks(tp, ip, (long)resblks, 0,
+>  			XFS_QMOPT_RES_REGBLKS);
+> -out:
+> +out_trans_cancel:
+>  	if (tp)
+>  		xfs_trans_cancel(tp);
+>  	return error;
 > -- 
 > 2.17.0
 > 
