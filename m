@@ -1,47 +1,161 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:54840 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727640AbeINTI0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 14 Sep 2018 15:08:26 -0400
-Subject: Re: [PATCH] xfs: re-enable FIBMAP on reflink; disable for swap
-References: <bf6e7f18-25fa-2b41-9532-78bffe33a241@sandeen.net>
- <20180914134607.GA6334@infradead.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <abb81c65-4ec8-87a3-0362-1812bca43d09@sandeen.net>
-Date: Fri, 14 Sep 2018 08:53:47 -0500
-MIME-Version: 1.0
-In-Reply-To: <20180914134607.GA6334@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Received: from mx2.suse.de ([195.135.220.15]:43032 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725739AbeIKERx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 11 Sep 2018 00:17:53 -0400
+From: Mark Fasheh <mfasheh@suse.de>
+Subject: [PATCH v6 0/2] vfs: fix dedupe permission check
+Date: Mon, 10 Sep 2018 16:21:16 -0700
+Message-Id: <20180910232118.14424-1-mfasheh@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Al Viro <viro@ZenIV.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, Michael Kerrisk <mtk.manpages@gmail.com>, linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, Adam Borowski <kilobyte@angband.pl>, David Sterba <dsterba@suse.cz>, Mark Fasheh <mfasheh@suse.de>
+
+Hi Andrew/Al,
+
+Could I please have these patches put in a tree for more public testing?
+They've hit fsdevel a few times now, I have links to the discussions in the
+change log below.
 
 
+The following patches fix a couple of issues with the permission check
+we do in vfs_dedupe_file_range().
 
-On 9/14/18 8:46 AM, Christoph Hellwig wrote:
-> On Wed, Sep 12, 2018 at 08:55:35PM -0500, Eric Sandeen wrote:
->> The commit:
->>
->>  db1327b1 xfs: report shared extent mappings to userspace correctly
->>
->> disabled FIBMAP on reflinked files, with this very clear rationale
->> regarding swapfiles:
->>
->> "Have xfs_vm_bmap return zero for reflinked files because the
->> bmap-based swap code requires static block mappings, which is
->> incompatible with copy on write."
->>
->> However, this broke the FIBMAP interface for existing userspace
->> apps, including bootloaders.
-> 
-> It didn't break any interface because the reflink flag has been
-> experimental and a mkfs-time opt in.
-> 
-> So NAK for this patch.
+The first patch expands our check to allow dedupe of a file if the
+user owns it or otherwise would be allowed to write to it.
 
-That's a really weak argument, but I guess it shouldn't be surprising
-because this whole episode has been a string of weak arguments.
+Current behavior is that we'll allow dedupe only if:
+
+- the user is an admin (root)
+- the user has the file open for write
+
+This makes it impossible for a user to dedupe their own file set
+unless they do it as root, or ensure that all files have write
+permission. There's a couple of duperemove bugs open for this:
+
+https://github.com/markfasheh/duperemove/issues/129
+https://github.com/markfasheh/duperemove/issues/86
+
+The other problem we have is also related to forcing the user to open
+target files for write - A process trying to exec a file currently
+being deduped gets ETXTBUSY. The answer (as above) is to allow them to
+open the targets ro - root can already do this. There was a patch from
+Adam Borowski to fix this back in 2016:
+
+https://lkml.org/lkml/2016/7/17/130
+
+which I have incorporated into my changes.
+
+
+The 2nd patch fixes our return code for permission denied to be
+EPERM. For some reason we're returning EINVAL - I think that's
+probably my fault. At any rate, we need to be returning something
+descriptive of the actual problem, otherwise callers see EINVAL and
+can't really make a valid determination of what's gone wrong.
+
+This has also popped up in duperemove, mostly in the form of cryptic
+error messages. Because this is a code returned to userspace, I did
+check the other users of extent-same that I could find. Both 'bees'
+and 'rust-btrfs' do the same as duperemove and simply report the error
+(as they should).
+
+
+One way I tested these patches was to make non-root owned files with
+read-only permissions and see if I could dedupe them as the owning user. For
+example, the following script fails on an unpatched kernel and succeeds with
+the patches applied.
+
+  TESTDIR=/btrfs
+  USER=mfasheh
+
+  rm -f $TESTDIR/file*
+
+  dd if=/dev/zero of=$TESTDIR/file1 count=1024 bs=1024
+  dd if=/dev/zero of=$TESTDIR/file2 count=1024 bs=1024
+
+  chown $USER $TESTDIR/file*
+  chmod 444 $TESTDIR/file*
+
+  # open file* for read and dedupe
+  sudo -u $USER duperemove -Ad $TESTDIR/file*
+
+
+Lastly, I have an update to the fi_deduperange manpage to reflect these
+changes. That patch is attached below.
+
+
+git pull https://github.com/markfasheh/linux dedupe-perms
+
+Thanks,
+  --Mark
+
+Changes from V5 to V6:
+- Rebase and retest on 4.19-rc3
+- Add a note on testing
+
+Changes from V4 to V5:
+- Rebase and retest on 4.18-rc8
+- Place updated manpage patch below, CC linux-api
+- V4 discussion: https://patchwork.kernel.org/patch/10530365/
+
+Changes from V3 to V4:
+- Add a patch (below) to ioctl_fideduperange.2 explaining our
+  changes. I will send this patch once the kernel update is
+  accepted. Thanks to Darrick Wong for this suggestion.
+- V3 discussion: https://www.spinics.net/lists/linux-btrfs/msg79135.html
+
+Changes from V2 to V3:
+- Return bool from allow_file_dedupe
+- V2 discussion: https://www.spinics.net/lists/linux-btrfs/msg78421.html
+
+Changes from V1 to V2:
+- Add inode_permission check as suggested by Adam Borowski
+- V1 discussion: https://marc.info/?l=linux-xfs&m=152606684017965&w=2
+
+
+From: Mark Fasheh <mfasheh@suse.de>
+
+[PATCH] ioctl_fideduperange.2: clarify permission requirements
+
+dedupe permission checks were recently relaxed - update our man page to
+reflect those changes.
+
+Signed-off-by: Mark Fasheh <mfasheh@suse.de>
+---
+ man2/ioctl_fideduperange.2 | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/man2/ioctl_fideduperange.2 b/man2/ioctl_fideduperange.2
+index 84d20a276..4040ee064 100644
+--- a/man2/ioctl_fideduperange.2
++++ b/man2/ioctl_fideduperange.2
+@@ -105,9 +105,12 @@ The field
+ must be zero.
+ During the call,
+ .IR src_fd
+-must be open for reading and
++must be open for reading.
+ .IR dest_fd
+-must be open for writing.
++can be open for writing, or reading.
++If
++.IR dest_fd
++is open for reading, the user must have write access to the file.
+ The combined size of the struct
+ .IR file_dedupe_range
+ and the struct
+@@ -185,8 +188,8 @@ This can appear if the filesystem does not support deduplicating either file
+ descriptor, or if either file descriptor refers to special inodes.
+ .TP
+ .B EPERM
+-.IR dest_fd
+-is immutable.
++This will be returned if the user lacks permission to dedupe the file referenced by
++.IR dest_fd .
+ .TP
+ .B ETXTBSY
+ One of the files is a swap file.
+-- 
+2.15.1
