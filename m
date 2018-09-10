@@ -1,58 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl1-f195.google.com ([209.85.214.195]:38016 "EHLO
-        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727514AbeIFXMd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Sep 2018 19:12:33 -0400
-Received: by mail-pl1-f195.google.com with SMTP id u11-v6so5377867plq.5
-        for <linux-xfs@vger.kernel.org>; Thu, 06 Sep 2018 11:35:50 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-Subject: [PATCH xfsprogs] build: don't assume $BUILD_CC has fsmap.h just because $CC does
-Date: Thu,  6 Sep 2018 11:35:29 -0700
-Message-Id: <20180906183529.117251-1-briannorris@chromium.org>
+Received: from mx1.redhat.com ([209.132.183.28]:55840 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726191AbeIKDSb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 10 Sep 2018 23:18:31 -0400
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 91E35C0467D6
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Sep 2018 22:22:20 +0000 (UTC)
+Subject: [PATCH 1/2] xfs: validate inode di_forkoff
+References: <0c8c405b-8929-82a6-5c9a-f5965da2c464@redhat.com>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <da670f4a-6ae7-fbe7-94db-b6a4e6bb0c9e@redhat.com>
+Date: Mon, 10 Sep 2018 17:22:08 -0500
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <0c8c405b-8929-82a6-5c9a-f5965da2c464@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Brian Norris <briannorris@chromium.org>
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-The $BUILD_CC toolchain might have an older set of Linux headers than
-the $CC toolchain. It's generally unsafe to try to build both with the
-same definitions, but in particular, this one can cause compilation
-failures in the local crc32selftest build:
+Verify the inode di_forkoff, lifted from xfs_repair's
+process_check_inode_forkoff().
 
- In file included from crc32.c:37:
- In file included from ../include/xfs.h:37:
- ../include/xfs/linux.h:226:11: fatal error: 'linux/fsmap.h' file not found
- # include <linux/fsmap.h>
-           ^~~~~~~~~~~~~~~
-
-It's safe to always assume that the headers don't have getfsmap, since
-the alternative just includes our local definitions anyway.
-
-Signed-off-by: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
-This isn't exactly a pretty solution, but it fixes cross-compilation
-problems I'm seeing.
 
- include/builddefs.in | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/include/builddefs.in b/include/builddefs.in
-index f7d39a4e4094..209abe1d84dd 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -156,8 +156,9 @@ endif
- ifeq ($(NEED_INTERNAL_FSXATTR),yes)
- PCFLAGS+= -DOVERRIDE_SYSTEM_FSXATTR
- endif
-+# Don't assume $BUILD_CC has getfsmap just because $CC does.
- ifeq ($(HAVE_GETFSMAP),yes)
--PCFLAGS+= -DHAVE_GETFSMAP
-+CFLAGS+= -DHAVE_GETFSMAP
- endif
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 30d1d60f1d46..8d76637a49a7 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -415,6 +415,31 @@ xfs_dinode_verify_fork(
+ 	return NULL;
+ }
  
- LIBICU_LIBS = @libicu_LIBS@
--- 
-2.19.0.rc2.392.g5ba43deb5a-goog
++static xfs_failaddr_t
++xfs_dinode_verify_forkoff(
++	struct xfs_dinode	*dip,
++	struct xfs_mount	*mp)
++{
++	if (dip->di_forkoff == 0)
++		return NULL;
++
++	switch (dip->di_format)  {
++	case XFS_DINODE_FMT_DEV:
++		if (dip->di_forkoff != (roundup(sizeof(xfs_dev_t), 8) >> 3))
++			return __this_address;
++		break;
++	case XFS_DINODE_FMT_LOCAL:	/* fall through ... */
++	case XFS_DINODE_FMT_EXTENTS:    /* fall through ... */
++	case XFS_DINODE_FMT_BTREE:
++		if (dip->di_forkoff >= (XFS_LITINO(mp, dip->di_version) >> 3))
++			return __this_address;
++		break;
++	default:
++		return __this_address;
++	}
++	return NULL;
++}
++
+ xfs_failaddr_t
+ xfs_dinode_verify(
+ 	struct xfs_mount	*mp,
+@@ -470,6 +498,11 @@ xfs_dinode_verify(
+ 	if (mode && (flags & XFS_DIFLAG_REALTIME) && !mp->m_rtdev_targp)
+ 		return __this_address;
+ 
++	/* check for illegal values of di_forkoff */
++	fa = xfs_dinode_verify_forkoff(dip, mp);
++	if (fa)
++		return fa;
++
+ 	/* Do we have appropriate data fork formats for the mode? */
+ 	switch (mode & S_IFMT) {
+ 	case S_IFIFO:
