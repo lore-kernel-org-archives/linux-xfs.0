@@ -1,94 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48130 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727777AbeIJVSu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 10 Sep 2018 17:18:50 -0400
-Reply-To: sandeen@redhat.com
-Subject: Re: [PATCH v2 1/2] ext4: Close race between direct IO and
- ext4_break_layouts()
-References: <153374910694.40645.17166196534680658204.stgit@djiang5-desk3.ch.intel.com>
-From: Eric Sandeen <esandeen@redhat.com>
-Message-ID: <e5232336-757e-2338-5b28-7dfadc8eb2c8@redhat.com>
-Date: Mon, 10 Sep 2018 11:23:56 -0500
+Received: from ipmail02.adl2.internode.on.net ([150.101.137.139]:33086 "EHLO
+        ipmail02.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725945AbeIKEzF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Sep 2018 00:55:05 -0400
+Date: Tue, 11 Sep 2018 09:58:27 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Strange behavior with log IO fake-completions
+Message-ID: <20180910235827.GD5631@dastard>
+References: <CA+1E3r+crZ6suDtTheOysm_dzZ2FeU=z4R-aQQw7etk1yuxOLQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <153374910694.40645.17166196534680658204.stgit@djiang5-desk3.ch.intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CA+1E3r+crZ6suDtTheOysm_dzZ2FeU=z4R-aQQw7etk1yuxOLQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Jiang <dave.jiang@intel.com>, tytso@mit.edu, darrick.wong@oracle.com, jack@suse.cz, zwisler@kernel.org
-Cc: linux-nvdimm@lists.01.org, david@fromorbit.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, lczerner@redhat.com, linux-ext4@vger.kernel.org, hch@lst.de
+To: Joshi <joshiiitr@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 8/8/18 12:25 PM, Dave Jiang wrote:
-> From: Ross Zwisler <zwisler@kernel.org>
+On Mon, Sep 10, 2018 at 11:37:45PM +0530, Joshi wrote:
+> Hi folks,
+> I wanted to check log IO speed impact during fsync-heavy workload.
+> To obtain theoretical maximum performance data, I did fake-completion
+> of all log IOs (i.e. log IO cost is made 0).
 > 
-> If the refcount of a page is lowered between the time that it is returned
-> by dax_busy_page() and when the refcount is again checked in
-> ext4_break_layouts() => ___wait_var_event(), the waiting function
-> ext4_wait_dax_page() will never be called.  This means that
-> ext4_break_layouts() will still have 'retry' set to false, so we'll stop
-> looping and never check the refcount of other pages in this inode.
+> Test: iozone, single-thread, 1GiB file, 4K record, sync for each 4K (
+> '-eo' option).
+> Disk: 800GB NVMe disk. XFS based on 4.15, default options except log size = 184M
+> Machine: Intel Xeon E5-2690 @2.6 GHz, 2 NUMA nodes, 24 cpus each
 > 
-> Instead, always continue looping as long as dax_layout_busy_page() gives us
-> a page which it found with an elevated refcount.
-> 
-> Signed-off-by: Ross Zwisler <ross.zwisler@linux.intel.com>
-> Reviewed-by: Jan Kara <jack@suse.cz>
+> And results are :
+> ------------------------------------------------
+> baseline                log fake-completion
+> 109,845                 45,538
+> ------------------------------------------------
+> I wondered why fake-completion turned out to be ~50% slower!
+> May I know if anyone encountered this before, or knows why this can happen?
 
-Ted - wondering if this one is still on your radar?
+You made all log IO submission/completion synchronous.
 
-Thanks,
--Eric
+https://marc.info/?l=linux-xfs&m=153532933529663&w=2
 
-> ---
+> For fake-completion, I just tag all log IOs bufer-pointers (in
+> xlog_sync). And later in xfs_buf_submit, I just complete those tagged
+> log IOs without any real bio-formation (comment call to
+> _xfs_bio_ioapply). Hope this is correct/enough to do nothing!
+
+It'll work, but it's a pretty silly thing to do. See above.
+
+> It seems to me that CPU count/frequency is playing a role here.
+
+Unlikely.
+
+> Above data was obtained with CPU frequency set to higher values. In
+> order to keep running CPU at nearly constant high frequency, I tried
+> things such as - performance governor, bios-based performance
+> settings, explicit setting of cpu scaling max frequency etc. However,
+> results did not differ much. Moreover frequency did not remain
+> constant/high.
 > 
-> v2:
-> - remove verbiage in comment header (Jan)
-> 
->  fs/ext4/inode.c |    9 +++------
->  1 file changed, 3 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-> index 8f6ad7667974..d2663a1e3ec2 100644
-> --- a/fs/ext4/inode.c
-> +++ b/fs/ext4/inode.c
-> @@ -4191,9 +4191,8 @@ int ext4_update_disksize_before_punch(struct inode *inode, loff_t offset,
->  	return 0;
->  }
->  
-> -static void ext4_wait_dax_page(struct ext4_inode_info *ei, bool *did_unlock)
-> +static void ext4_wait_dax_page(struct ext4_inode_info *ei)
->  {
-> -	*did_unlock = true;
->  	up_write(&ei->i_mmap_sem);
->  	schedule();
->  	down_write(&ei->i_mmap_sem);
-> @@ -4203,14 +4202,12 @@ int ext4_break_layouts(struct inode *inode)
->  {
->  	struct ext4_inode_info *ei = EXT4_I(inode);
->  	struct page *page;
-> -	bool retry;
->  	int error;
->  
->  	if (WARN_ON_ONCE(!rwsem_is_locked(&ei->i_mmap_sem)))
->  		return -EINVAL;
->  
->  	do {
-> -		retry = false;
->  		page = dax_layout_busy_page(inode->i_mapping);
->  		if (!page)
->  			return 0;
-> @@ -4218,8 +4215,8 @@ int ext4_break_layouts(struct inode *inode)
->  		error = ___wait_var_event(&page->_refcount,
->  				atomic_read(&page->_refcount) == 1,
->  				TASK_INTERRUPTIBLE, 0, 0,
-> -				ext4_wait_dax_page(ei, &retry));
-> -	} while (error == 0 && retry);
-> +				ext4_wait_dax_page(ei));
-> +	} while (error == 0);
->  
->  	return error;
->  }
-> 
+> But when I used "affine/bind" option of iozone (-P option), iozone
+> runs on single cpu all the time, and I get to see expected result -
+> -------------------------------------------------------------
+> baseline (affine)         log fake-completion(affine)
+> 125,253                     163,367
+> -------------------------------------------------------------
+
+Yup, because now it forces the work that gets handed off to another
+workqueue (the CIL push workqueue) to also run on the same CPU
+rather than asynchronously on another CPU. The result is that you
+essentially force everything to run in a tight loop on a hot CPU
+cache. Hitting a hot cache can make code run much, much faster in
+microbenchmark situations like this, leading to optimisations that
+don't actually work in the real world where those same code paths
+never run confined to a single pre-primed, hot CPU cache.
+
+When you combine that with the fact that IOZone has a very well
+known susceptibility to CPU cache residency effects, it means the
+results are largely useless for comparison between different kernel
+builds. This is because small code changes can result in
+sufficiently large changes in kernel CPU cache footprint that it
+perturbs IOZone behaviour. We typically see variations of over
++/-10% from IOZone just by running two kernels that have slightly
+different config parameters.
+
+IOWs, don't use IOZone for anything related to performance testing.
+
+> Also, during above episode, I felt the need to discover best way to
+> eliminate cpu frequency variations out of benchmarking. I'd be
+> thankful knowing about it.
+
+I've never bothered with tuning for affinity or CPU frequency
+scaling when perf testing. If you have to rely on such things to get
+optimal performance from your filesystem algorithms, you are doing
+it wrong.
+
+That is: a CPU running at near full utilisation will always be run
+at maximum frequency, hence if you have to tune CPU frequency to get
+decent performance your algorithm is limited by something that
+prevents full CPU utilisation, not CPU frequency.
+
+Similarly, if you have to use affinity to get decent performance,
+you're optimising for limited system utilisation rather than
+bein able to use all the resources in the machine effectively. The
+first goal of filesystem optimisation is to utilise every resource as
+efficiently as possible. Then people can constraint their workloads
+with affinity, containers, etc however they want without having to
+care about performance - it will never be worse than the performance
+at full resource utilisation.....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
