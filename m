@@ -1,82 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43676 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727453AbeIYJEG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 25 Sep 2018 05:04:06 -0400
-Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id D55DD81DE1
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Sep 2018 02:58:46 +0000 (UTC)
-Subject: [PATCH 1/2 V3] xfs: validate inode di_forkoff
-References: <ba65356c-2b57-75fb-0436-804913285809@redhat.com>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <5efa5984-2ef7-eb98-1078-3e8657d0b28c@redhat.com>
-Date: Mon, 24 Sep 2018 21:58:42 -0500
+Received: from mail-ed1-f54.google.com ([209.85.208.54]:35633 "EHLO
+        mail-ed1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726603AbeIJXDR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Sep 2018 19:03:17 -0400
+Received: by mail-ed1-f54.google.com with SMTP id y20-v6so17249242edq.2
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Sep 2018 11:07:59 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <ba65356c-2b57-75fb-0436-804913285809@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+From: Joshi <joshiiitr@gmail.com>
+Date: Mon, 10 Sep 2018 23:37:45 +0530
+Message-ID: <CA+1E3r+crZ6suDtTheOysm_dzZ2FeU=z4R-aQQw7etk1yuxOLQ@mail.gmail.com>
+Subject: Strange behavior with log IO fake-completions
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-Verify the inode di_forkoff, lifted from xfs_repair's
-process_check_inode_forkoff().
+Hi folks,
+I wanted to check log IO speed impact during fsync-heavy workload.
+To obtain theoretical maximum performance data, I did fake-completion
+of all log IOs (i.e. log IO cost is made 0).
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
+Test: iozone, single-thread, 1GiB file, 4K record, sync for each 4K (
+'-eo' option).
+Disk: 800GB NVMe disk. XFS based on 4.15, default options except log size = 184M
+Machine: Intel Xeon E5-2690 @2.6 GHz, 2 NUMA nodes, 24 cpus each
 
-V3: use XFS_DFORK_Q instead of open-coding forkoff check
+And results are :
+------------------------------------------------
+baseline                log fake-completion
+109,845                 45,538
+------------------------------------------------
+I wondered why fake-completion turned out to be ~50% slower!
+May I know if anyone encountered this before, or knows why this can happen?
 
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 30d1d60f1d46..09d9c8cfa4a0 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -415,6 +415,31 @@ xfs_dinode_verify_fork(
- 	return NULL;
- }
- 
-+static xfs_failaddr_t
-+xfs_dinode_verify_forkoff(
-+	struct xfs_dinode	*dip,
-+	struct xfs_mount	*mp)
-+{
-+	if (!XFS_DFORK_Q(dip))
-+		return NULL;
-+
-+	switch (dip->di_format)  {
-+	case XFS_DINODE_FMT_DEV:
-+		if (dip->di_forkoff != (roundup(sizeof(xfs_dev_t), 8) >> 3))
-+			return __this_address;
-+		break;
-+	case XFS_DINODE_FMT_LOCAL:	/* fall through ... */
-+	case XFS_DINODE_FMT_EXTENTS:    /* fall through ... */
-+	case XFS_DINODE_FMT_BTREE:
-+		if (dip->di_forkoff >= (XFS_LITINO(mp, dip->di_version) >> 3))
-+			return __this_address;
-+		break;
-+	default:
-+		return __this_address;
-+	}
-+	return NULL;
-+}
-+
- xfs_failaddr_t
- xfs_dinode_verify(
- 	struct xfs_mount	*mp,
-@@ -470,6 +495,11 @@ xfs_dinode_verify(
- 	if (mode && (flags & XFS_DIFLAG_REALTIME) && !mp->m_rtdev_targp)
- 		return __this_address;
- 
-+	/* check for illegal values of forkoff */
-+	fa = xfs_dinode_verify_forkoff(dip, mp);
-+	if (fa)
-+		return fa;
-+
- 	/* Do we have appropriate data fork formats for the mode? */
- 	switch (mode & S_IFMT) {
- 	case S_IFIFO:
+For fake-completion, I just tag all log IOs bufer-pointers (in
+xlog_sync). And later in xfs_buf_submit, I just complete those tagged
+log IOs without any real bio-formation (comment call to
+_xfs_bio_ioapply). Hope this is correct/enough to do nothing!
+
+It seems to me that CPU count/frequency is playing a role here.
+Above data was obtained with CPU frequency set to higher values. In
+order to keep running CPU at nearly constant high frequency, I tried
+things such as - performance governor, bios-based performance
+settings, explicit setting of cpu scaling max frequency etc. However,
+results did not differ much. Moreover frequency did not remain
+constant/high.
+
+But when I used "affine/bind" option of iozone (-P option), iozone
+runs on single cpu all the time, and I get to see expected result -
+-------------------------------------------------------------
+baseline (affine)         log fake-completion(affine)
+125,253                     163,367
+-------------------------------------------------------------
+
+Also, during above episode, I felt the need to discover best way to
+eliminate cpu frequency variations out of benchmarking. I'd be
+thankful knowing about it.
+
+
+Thanks,
+-- 
+Joshi
