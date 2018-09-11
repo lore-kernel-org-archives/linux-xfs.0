@@ -1,224 +1,173 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:56982 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728084AbeIGSom (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 7 Sep 2018 14:44:42 -0400
-Date: Fri, 7 Sep 2018 10:03:34 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: fix transaction leak in xfs_reflink_allocate_cow()
-Message-ID: <20180907140333.GB37751@bfoster>
-References: <20180907015113.32448-1-david@fromorbit.com>
+Received: from mail-ed1-f41.google.com ([209.85.208.41]:34478 "EHLO
+        mail-ed1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726562AbeIKJIe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Sep 2018 05:08:34 -0400
+Received: by mail-ed1-f41.google.com with SMTP id u1-v6so18152620eds.1
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Sep 2018 21:11:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180907015113.32448-1-david@fromorbit.com>
+References: <CA+1E3r+crZ6suDtTheOysm_dzZ2FeU=z4R-aQQw7etk1yuxOLQ@mail.gmail.com>
+ <20180910235827.GD5631@dastard>
+In-Reply-To: <20180910235827.GD5631@dastard>
+From: Joshi <joshiiitr@gmail.com>
+Date: Tue, 11 Sep 2018 09:40:59 +0530
+Message-ID: <CA+1E3r+Lggw9JJymdhoyzkqQfqGETZE=R=WG09s7FOhY3Snb5g@mail.gmail.com>
+Subject: Re: Strange behavior with log IO fake-completions
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, git.user@gmail.com
+To: david@fromorbit.com
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Sep 07, 2018 at 11:51:13AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> When xfs_reflink_allocate_cow() allocates a transaction, it drops
-> the ILOCK to perform the operation. This Introduces a race condition
-> where another thread modifying the file can perform the COW
-> allocation operation underneath us. This result in the retry loop
-> finding an allocated block and jumping straight to the conversion
-> code. It does not, however, cancel the transaction it holds and so
-> this gets leaked. This results in a lockdep warning:
-> 
-> ================================================
-> WARNING: lock held when returning to user space!
-> 4.18.5 #1 Not tainted
-> ------------------------------------------------
-> worker/6123 is leaving the kernel with locks still held!
-> 1 lock held by worker/6123:
->  #0: 000000009eab4f1b (sb_internal#2){.+.+}, at: xfs_trans_alloc+0x17c/0x220
-> 
-> And eventually the filesystem deadlocks because it runs out of log
-> space that is reserved by the leaked transaction and never gets
-> released.
-> 
-> The logic flow in xfs_reflink_allocate_cow() is a convoluted mess of
-> gotos - it's no surprise that it has bug where the flow through
-> several goto jumps then fails to clean up context from a non-obvious
-> logic path. CLean up the logic flow and make sure every path does
-> the right thing.
-> 
-> Reported-by: Alexander Y. Fomichev <git.user@gmail.com>
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=200981
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
+> > Test: iozone, single-thread, 1GiB file, 4K record, sync for each 4K (
+> > '-eo' option).
+> > Disk: 800GB NVMe disk. XFS based on 4.15, default options except log size = 184M
+> > Machine: Intel Xeon E5-2690 @2.6 GHz, 2 NUMA nodes, 24 cpus each
+> >
+> > And results are :
+> > ------------------------------------------------
+> > baseline                log fake-completion
+> > 109,845                 45,538
+> > ------------------------------------------------
+> > I wondered why fake-completion turned out to be ~50% slower!
+> > May I know if anyone encountered this before, or knows why this can happen?
+>
+> You made all log IO submission/completion synchronous.
+>
+> https://marc.info/?l=linux-xfs&m=153532933529663&w=2
+>
+> > For fake-completion, I just tag all log IOs bufer-pointers (in
+> > xlog_sync). And later in xfs_buf_submit, I just complete those tagged
+> > log IOs without any real bio-formation (comment call to
+> > _xfs_bio_ioapply). Hope this is correct/enough to do nothing!
+>
+> It'll work, but it's a pretty silly thing to do. See above.
 
-Looks good to me:
+Thank you very much, Dave. I feel things are somewhat different here
+than other email-thread you pointed.
+Only log IO was fake-completed, not that entire XFS volume was on
+ramdisk. Underlying disk was NVMe, and I checked that no
+merging/batching happened for log IO submissions in base case.
+Completion count were same (as many as submitted) too.
+Call that I disabled in base code (in xfs_buf_submit, for log IOs) is
+_xfs_buf_ioapply. So only thing happened differently for log IO
+submitter thread is that it executed bp-completion-handling-code
+(xfs_buf_ioend_async). And that anyway pushes the processing to
+worker. It still remains mostly async, I suppose. In original form, it
+would have executed extra code to form/sent bio (possibility of
+submission/completion merging, but that did not happen for this
+workload), and completion would have come after some time say T.
+I wondered about impact on XFS if this time T can be made very low by
+underlying storage for certain IOs.
+If underlying device/layers provide some sort of differentiated I/O
+service enabling ultra-low-latency completion for certain IOs (flagged
+as urgent), and one chooses log IO to take that low-latency path  -
+won't we see same problem as shown by fake-completion?
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Thanks,
 
->  fs/xfs/xfs_reflink.c | 98 +++++++++++++++++++++++++++++---------------
->  1 file changed, 66 insertions(+), 32 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 38f405415b88..b39f5afa57aa 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -352,6 +352,47 @@ xfs_reflink_convert_cow(
->  	return error;
->  }
->  
-> +/*
-> + * Find the extent that maps the given range in the COW fork. Even if the extent
-> + * is not shared we might have a preallocation for it in the COW fork. If so we
-> + * use it that rather than trigger a new allocation.
-> + */
-> +static int
-> +find_trim_cow_extent(
-> +	struct xfs_inode	*ip,
-> +	struct xfs_bmbt_irec	*imap,
-> +	bool			*shared,
-> +	bool			*found)
-> +{
-> +	xfs_fileoff_t		offset_fsb = imap->br_startoff;
-> +	xfs_filblks_t		count_fsb = imap->br_blockcount;
-> +	struct xfs_iext_cursor	icur;
-> +	struct xfs_bmbt_irec	got;
-> +	bool			trimmed;
-> +
-> +	*found = false;
-> +
-> +	/*
-> +	 * if we don't find an overlapping extent, trim the range we need to
-> +	 * allocate to fit the hole we found.
-> +	 */
-> +	if (!xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &got) ||
-> +	    got.br_startoff > offset_fsb)
-> +		return xfs_reflink_trim_around_shared(ip, imap, shared, &trimmed);
-> +
-> +	*shared = true;
-> +	if (isnullstartblock(got.br_startblock)) {
-> +		xfs_trim_extent(imap, got.br_startoff, got.br_blockcount);
-> +		return 0;
-> +	}
-> +
-> +	/* real extent found - no need to allocate */
-> +	xfs_trim_extent(&got, offset_fsb, count_fsb);
-> +	*imap = got;
-> +	*found = true;
-> +	return 0;
-> +}
-> +
->  /* Allocate all CoW reservations covering a range of blocks in a file. */
->  int
->  xfs_reflink_allocate_cow(
-> @@ -363,41 +404,37 @@ xfs_reflink_allocate_cow(
->  	struct xfs_mount	*mp = ip->i_mount;
->  	xfs_fileoff_t		offset_fsb = imap->br_startoff;
->  	xfs_filblks_t		count_fsb = imap->br_blockcount;
-> -	struct xfs_bmbt_irec	got;
->  	struct xfs_trans	*tp = NULL;
->  	int			nimaps, error = 0;
-> -	bool			trimmed;
-> +	bool			found;
->  	xfs_filblks_t		resaligned;
->  	xfs_extlen_t		resblks = 0;
-> -	struct xfs_iext_cursor	icur;
->  
-> -retry:
-> -	ASSERT(xfs_is_reflink_inode(ip));
->  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
->  
->  	/*
-> -	 * Even if the extent is not shared we might have a preallocation for
-> -	 * it in the COW fork.  If so use it.
-> +	 * do-while to run a single lookup retry after transaction allocation.
-> +	 * All exits from the loop need to check if the transaction needs
-> +	 * cancelling. Dropping the ILOCK to allocate the transaction allows
-> +	 * races with other COW fork allocations, so we need to start the extent
-> +	 * lookup from scratch once we have the ILOCK again.
->  	 */
-> -	if (xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &got) &&
-> -	    got.br_startoff <= offset_fsb) {
-> -		*shared = true;
-> +	do {
-> +		ASSERT(xfs_is_reflink_inode(ip));
->  
-> -		/* If we have a real allocation in the COW fork we're done. */
-> -		if (!isnullstartblock(got.br_startblock)) {
-> -			xfs_trim_extent(&got, offset_fsb, count_fsb);
-> -			*imap = got;
-> +		error = find_trim_cow_extent(ip, imap, shared, &found);
-> +		if (error || !*shared)
-> +			goto out_trans_cancel;
-> +		if (found) {
-> +			if (tp)
-> +				xfs_trans_cancel(tp);
->  			goto convert;
->  		}
->  
-> -		xfs_trim_extent(imap, got.br_startoff, got.br_blockcount);
-> -	} else {
-> -		error = xfs_reflink_trim_around_shared(ip, imap, shared, &trimmed);
-> -		if (error || !*shared)
-> -			goto out;
-> -	}
-> +		/* if we have a transaction, it's time to allocate */
-> +		if (tp)
-> +			break;
->  
-> -	if (!tp) {
->  		resaligned = xfs_aligned_fsb_count(imap->br_startoff,
->  			imap->br_blockcount, xfs_get_cowextsz_hint(ip));
->  		resblks = XFS_DIOSTRAT_SPACE_RES(mp, resaligned);
-> @@ -412,29 +449,25 @@ xfs_reflink_allocate_cow(
->  
->  		error = xfs_qm_dqattach_locked(ip, false);
->  		if (error)
-> -			goto out;
-> -		goto retry;
-> -	}
-> +			goto out_trans_cancel;
-> +	} while (tp);
->  
->  	error = xfs_trans_reserve_quota_nblks(tp, ip, resblks, 0,
->  			XFS_QMOPT_RES_REGBLKS);
->  	if (error)
-> -		goto out;
-> +		goto out_trans_cancel;
->  
->  	xfs_trans_ijoin(tp, ip, 0);
->  
-> -	nimaps = 1;
-> -
->  	/* Allocate the entire reservation as unwritten blocks. */
-> +	nimaps = 1;
->  	error = xfs_bmapi_write(tp, ip, imap->br_startoff, imap->br_blockcount,
->  			XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC,
->  			resblks, imap, &nimaps);
->  	if (error)
-> -		goto out_trans_cancel;
-> +		goto out_unreserve;
->  
->  	xfs_inode_set_cowblocks_tag(ip);
-> -
-> -	/* Finish up. */
->  	error = xfs_trans_commit(tp);
->  	if (error)
->  		return error;
-> @@ -447,10 +480,11 @@ xfs_reflink_allocate_cow(
->  		return -ENOSPC;
->  convert:
->  	return xfs_reflink_convert_cow_extent(ip, imap, offset_fsb, count_fsb);
-> -out_trans_cancel:
-> +
-> +out_unreserve:
->  	xfs_trans_unreserve_quota_nblks(tp, ip, (long)resblks, 0,
->  			XFS_QMOPT_RES_REGBLKS);
-> -out:
-> +out_trans_cancel:
->  	if (tp)
->  		xfs_trans_cancel(tp);
->  	return error;
-> -- 
-> 2.17.0
-> 
+On Tue, Sep 11, 2018 at 5:28 AM Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Mon, Sep 10, 2018 at 11:37:45PM +0530, Joshi wrote:
+> > Hi folks,
+> > I wanted to check log IO speed impact during fsync-heavy workload.
+> > To obtain theoretical maximum performance data, I did fake-completion
+> > of all log IOs (i.e. log IO cost is made 0).
+> >
+> > Test: iozone, single-thread, 1GiB file, 4K record, sync for each 4K (
+> > '-eo' option).
+> > Disk: 800GB NVMe disk. XFS based on 4.15, default options except log size = 184M
+> > Machine: Intel Xeon E5-2690 @2.6 GHz, 2 NUMA nodes, 24 cpus each
+> >
+> > And results are :
+> > ------------------------------------------------
+> > baseline                log fake-completion
+> > 109,845                 45,538
+> > ------------------------------------------------
+> > I wondered why fake-completion turned out to be ~50% slower!
+> > May I know if anyone encountered this before, or knows why this can happen?
+>
+> You made all log IO submission/completion synchronous.
+>
+> https://marc.info/?l=linux-xfs&m=153532933529663&w=2
+>
+> > For fake-completion, I just tag all log IOs bufer-pointers (in
+> > xlog_sync). And later in xfs_buf_submit, I just complete those tagged
+> > log IOs without any real bio-formation (comment call to
+> > _xfs_bio_ioapply). Hope this is correct/enough to do nothing!
+>
+> It'll work, but it's a pretty silly thing to do. See above.
+>
+> > It seems to me that CPU count/frequency is playing a role here.
+>
+> Unlikely.
+>
+> > Above data was obtained with CPU frequency set to higher values. In
+> > order to keep running CPU at nearly constant high frequency, I tried
+> > things such as - performance governor, bios-based performance
+> > settings, explicit setting of cpu scaling max frequency etc. However,
+> > results did not differ much. Moreover frequency did not remain
+> > constant/high.
+> >
+> > But when I used "affine/bind" option of iozone (-P option), iozone
+> > runs on single cpu all the time, and I get to see expected result -
+> > -------------------------------------------------------------
+> > baseline (affine)         log fake-completion(affine)
+> > 125,253                     163,367
+> > -------------------------------------------------------------
+>
+> Yup, because now it forces the work that gets handed off to another
+> workqueue (the CIL push workqueue) to also run on the same CPU
+> rather than asynchronously on another CPU. The result is that you
+> essentially force everything to run in a tight loop on a hot CPU
+> cache. Hitting a hot cache can make code run much, much faster in
+> microbenchmark situations like this, leading to optimisations that
+> don't actually work in the real world where those same code paths
+> never run confined to a single pre-primed, hot CPU cache.
+>
+> When you combine that with the fact that IOZone has a very well
+> known susceptibility to CPU cache residency effects, it means the
+> results are largely useless for comparison between different kernel
+> builds. This is because small code changes can result in
+> sufficiently large changes in kernel CPU cache footprint that it
+> perturbs IOZone behaviour. We typically see variations of over
+> +/-10% from IOZone just by running two kernels that have slightly
+> different config parameters.
+>
+> IOWs, don't use IOZone for anything related to performance testing.
+>
+> > Also, during above episode, I felt the need to discover best way to
+> > eliminate cpu frequency variations out of benchmarking. I'd be
+> > thankful knowing about it.
+>
+> I've never bothered with tuning for affinity or CPU frequency
+> scaling when perf testing. If you have to rely on such things to get
+> optimal performance from your filesystem algorithms, you are doing
+> it wrong.
+>
+> That is: a CPU running at near full utilisation will always be run
+> at maximum frequency, hence if you have to tune CPU frequency to get
+> decent performance your algorithm is limited by something that
+> prevents full CPU utilisation, not CPU frequency.
+>
+> Similarly, if you have to use affinity to get decent performance,
+> you're optimising for limited system utilisation rather than
+> bein able to use all the resources in the machine effectively. The
+> first goal of filesystem optimisation is to utilise every resource as
+> efficiently as possible. Then people can constraint their workloads
+> with affinity, containers, etc however they want without having to
+> care about performance - it will never be worse than the performance
+> at full resource utilisation.....
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+
+
+
+-- 
+Joshi
