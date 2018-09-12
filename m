@@ -1,53 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:44325 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728436AbeIFWiG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Sep 2018 18:38:06 -0400
-Received: by mail-pl1-f194.google.com with SMTP id ba4-v6so5327469plb.11
-        for <linux-xfs@vger.kernel.org>; Thu, 06 Sep 2018 11:01:29 -0700 (PDT)
-Date: Thu, 6 Sep 2018 11:01:27 -0700
-From: Omar Sandoval <osandov@osandov.com>
-Subject: Re: Where to find xfs-import.git
-Message-ID: <20180906180127.GA27057@vader>
-References: <20180827201559.GA10024@vader>
- <20180828081307.233ln2mgitu4iy2t@odin.usersys.redhat.com>
- <5aff93b4-f440-5ce5-2147-6f3cf2759042@sandeen.net>
- <20180904181243.GC24406@vader>
- <20180905053948.GW5631@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180905053948.GW5631@dastard>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:42824 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726502AbeILL1k (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Sep 2018 07:27:40 -0400
+Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8C6JcAX021977
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 02:24:40 -0400
+Received: from e15.ny.us.ibm.com (e15.ny.us.ibm.com [129.33.205.205])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2met8xeb4e-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 02:24:40 -0400
+Received: from localhost
+        by e15.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Wed, 12 Sep 2018 02:24:36 -0400
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: [PATCH V3 06/19] Fix xfs/139 to work with 64k block size
+Date: Wed, 12 Sep 2018 11:56:13 +0530
+In-Reply-To: <20180912062626.14349-1-chandan@linux.vnet.ibm.com>
+References: <20180912062626.14349-1-chandan@linux.vnet.ibm.com>
+Message-Id: <20180912062626.14349-7-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <dchinner@redhat.com>
+To: fstests@vger.kernel.org
+Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
 
-On Wed, Sep 05, 2018 at 03:39:48PM +1000, Dave Chinner wrote:
-> On Tue, Sep 04, 2018 at 11:12:43AM -0700, Omar Sandoval wrote:
-> > On Tue, Aug 28, 2018 at 08:19:08AM -0500, Eric Sandeen wrote:
-> > > On 8/28/18 3:13 AM, Carlos Maiolino wrote:
-> > > > On Mon, Aug 27, 2018 at 01:15:59PM -0700, Omar Sandoval wrote:
-> > > >> Hey,
-> > > >>
-> > > >> I was hoping to poke around some old XFS history, but now that
-> > > >> oss.sgi.com is gone, I can't find the XFS CVS import repo. Does anyone
-> > > >> have it lying around? Would it be possible to put it up on kernel.org?
-> > > > 
-> > > > oss.sgi.com is by far gone. But you can find everything from oss.sgi.com in
-> > > > archive.org. Unfortunately not the CVS repositories, which I have no idea if
-> > > > they are still around somewhere. But on archive.org you can still find the
-> > > > original design documents from xfs.
-> > > 
-> > > Several developers do have copies of the old tree from oss.sgi.com.  We're
-> > > discussing the best public place to republish them, stay tuned.
-> > 
-> > Any updates, Eric? Thanks!
-> 
-> Omar, a copy of the original repo from oss.sgi.com can be found
-> here:
-> 
-> https://github.com/dchinner/xfs-history
+For 64k block size, the agsize provided in the test causes mkfs.xfs to
+fail due to insufficient log space. Hence this commit computes agsize
+based on block size of the filesystem.
 
-Thanks a lot, Dave!
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+---
+ tests/xfs/139     | 15 +++++++++------
+ tests/xfs/139.out |  8 ++++++--
+ 2 files changed, 15 insertions(+), 8 deletions(-)
+
+diff --git a/tests/xfs/139 b/tests/xfs/139
+index 2a26635..9ab74c8 100755
+--- a/tests/xfs/139
++++ b/tests/xfs/139
+@@ -34,17 +34,20 @@ _require_cp_reflink
+ 
+ rm -f $seqres.full
+ 
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++blksz=$(_get_block_size $SCRATCH_MNT)
++_scratch_unmount
++
+ echo "Format and mount"
+-_scratch_mkfs -d agsize=$((32 * 1048576)) > $seqres.full 2>&1
++_scratch_mkfs -d agsize=$((4400 * $blksz)) > $seqres.full 2>&1
+ _scratch_mount >> $seqres.full 2>&1
+ 
+ testdir=$SCRATCH_MNT/test-$seq
+ mkdir $testdir
+-blksz="$(_get_block_size $testdir)"
+ 
+ echo "Create the original files"
+-sz=$((48 * 1048576))
+-nr=$((sz / blksz))
++sz=$((4800 * $blksz))
+ _pwrite_byte 0x61 0 $sz $testdir/file1 >> $seqres.full
+ _cp_reflink $testdir/file1 $testdir/file2 >> $seqres.full
+ _scratch_cycle_mount
+@@ -54,8 +57,8 @@ _pwrite_byte 0x62 0 $sz $testdir/file1 >> $seqres.full
+ _scratch_cycle_mount
+ 
+ echo "Compare files"
+-md5sum $testdir/file1 | _filter_scratch
+-md5sum $testdir/file2 | _filter_scratch
++od -t x1 $testdir/file1 | _filter_od
++od -t x1 $testdir/file2 | _filter_od
+ #filefrag -v $testdir/file1 $testdir/file2
+ 
+ # success, all done
+diff --git a/tests/xfs/139.out b/tests/xfs/139.out
+index dc6a31e..55e03d6 100644
+--- a/tests/xfs/139.out
++++ b/tests/xfs/139.out
+@@ -3,5 +3,9 @@ Format and mount
+ Create the original files
+ CoW every other block
+ Compare files
+-673c759fb131ccf3336c4f8c549a497e  SCRATCH_MNT/test-139/file1
+-dc802351f6717547cbf4c951b294f952  SCRATCH_MNT/test-139/file2
++0 62 62 62 62 62 62 62 62 62 62 62 62 62 62 62 62
++*
++11300
++0 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61
++*
++11300
+-- 
+2.9.5
