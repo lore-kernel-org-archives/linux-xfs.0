@@ -1,243 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lj1-f193.google.com ([209.85.208.193]:41923 "EHLO
-        mail-lj1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727653AbeIGRwu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Sep 2018 13:52:50 -0400
-Received: by mail-lj1-f193.google.com with SMTP id y17-v6so12226874ljy.8
-        for <linux-xfs@vger.kernel.org>; Fri, 07 Sep 2018 06:11:54 -0700 (PDT)
-Date: Fri, 7 Sep 2018 16:11:46 +0300
-From: "Alexander Y. Fomichev" <git.user@gmail.com>
-Subject: Re: [PATCH] xfs: fix transaction leak in xfs_reflink_allocate_cow()
-Message-Id: <20180907161146.fdfd4d631a75e9ac16c62ff3@gmail.com>
-In-Reply-To: <20180907024047.GA4607@magnolia>
-References: <20180907015113.32448-1-david@fromorbit.com>
-        <20180907024047.GA4607@magnolia>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:36280 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727004AbeILL1b (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Sep 2018 07:27:31 -0400
+Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8C6JcnW143306
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 02:24:31 -0400
+Received: from e16.ny.us.ibm.com (e16.ny.us.ibm.com [129.33.205.206])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2meqxvba6s-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 02:24:31 -0400
+Received: from localhost
+        by e16.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Wed, 12 Sep 2018 02:24:30 -0400
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: [PATCH V3 08/19] Fix xfs/190 to work with 64k block size
+Date: Wed, 12 Sep 2018 11:56:15 +0530
+In-Reply-To: <20180912062626.14349-1-chandan@linux.vnet.ibm.com>
+References: <20180912062626.14349-1-chandan@linux.vnet.ibm.com>
+Message-Id: <20180912062626.14349-9-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
 
-On Thu, 6 Sep 2018 19:40:47 -0700
-"Darrick J. Wong" <darrick.wong@oracle.com> wrote:
+This commit describes "file hole" ranges in multiples of block sizes
+rather than using constants.
 
-> On Fri, Sep 07, 2018 at 11:51:13AM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > When xfs_reflink_allocate_cow() allocates a transaction, it drops
-> > the ILOCK to perform the operation. This Introduces a race condition
-> > where another thread modifying the file can perform the COW
-> > allocation operation underneath us. This result in the retry loop
-> > finding an allocated block and jumping straight to the conversion
-> > code. It does not, however, cancel the transaction it holds and so
-> > this gets leaked. This results in a lockdep warning:
-> > 
-> > ================================================
-> > WARNING: lock held when returning to user space!
-> > 4.18.5 #1 Not tainted
-> > ------------------------------------------------
-> > worker/6123 is leaving the kernel with locks still held!
-> > 1 lock held by worker/6123:
-> >  #0: 000000009eab4f1b (sb_internal#2){.+.+}, at: xfs_trans_alloc+0x17c/0x220
-> > 
-> > And eventually the filesystem deadlocks because it runs out of log
-> > space that is reserved by the leaked transaction and never gets
-> > released.
-> > 
-> > The logic flow in xfs_reflink_allocate_cow() is a convoluted mess of
-> > gotos - it's no surprise that it has bug where the flow through
-> > several goto jumps then fails to clean up context from a non-obvious
-> > logic path. CLean up the logic flow and make sure every path does
-> > the right thing.
-> 
-> Ugh, sorry about leaving that mess.
-> 
-> I haven't tested this at all, but it looks right.  If the original
-> reporter tests it and the problem goes away I'm willing to attach a:
-> 
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> --D
->
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+---
+ tests/xfs/190 | 26 +++++++++++++++++---------
+ 1 file changed, 17 insertions(+), 9 deletions(-)
 
-Tested and I can confirm.
-Patch works as expected for v4.19 and (with minimal modifications) for 4.18.
-Thanks.
-
-> > Reported-by: Alexander Y. Fomichev <git.user@gmail.com>
-> > Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=200981
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/xfs_reflink.c | 98 +++++++++++++++++++++++++++++---------------
-> >  1 file changed, 66 insertions(+), 32 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > index 38f405415b88..b39f5afa57aa 100644
-> > --- a/fs/xfs/xfs_reflink.c
-> > +++ b/fs/xfs/xfs_reflink.c
-> > @@ -352,6 +352,47 @@ xfs_reflink_convert_cow(
-> >  	return error;
-> >  }
-> >  
-> > +/*
-> > + * Find the extent that maps the given range in the COW fork. Even if the extent
-> > + * is not shared we might have a preallocation for it in the COW fork. If so we
-> > + * use it that rather than trigger a new allocation.
-> > + */
-> > +static int
-> > +find_trim_cow_extent(
-> > +	struct xfs_inode	*ip,
-> > +	struct xfs_bmbt_irec	*imap,
-> > +	bool			*shared,
-> > +	bool			*found)
-> > +{
-> > +	xfs_fileoff_t		offset_fsb = imap->br_startoff;
-> > +	xfs_filblks_t		count_fsb = imap->br_blockcount;
-> > +	struct xfs_iext_cursor	icur;
-> > +	struct xfs_bmbt_irec	got;
-> > +	bool			trimmed;
-> > +
-> > +	*found = false;
-> > +
-> > +	/*
-> > +	 * if we don't find an overlapping extent, trim the range we need to
-> > +	 * allocate to fit the hole we found.
-> > +	 */
-> > +	if (!xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &got) ||
-> > +	    got.br_startoff > offset_fsb)
-> > +		return xfs_reflink_trim_around_shared(ip, imap, shared, &trimmed);
-> > +
-> > +	*shared = true;
-> > +	if (isnullstartblock(got.br_startblock)) {
-> > +		xfs_trim_extent(imap, got.br_startoff, got.br_blockcount);
-> > +		return 0;
-> > +	}
-> > +
-> > +	/* real extent found - no need to allocate */
-> > +	xfs_trim_extent(&got, offset_fsb, count_fsb);
-> > +	*imap = got;
-> > +	*found = true;
-> > +	return 0;
-> > +}
-> > +
-> >  /* Allocate all CoW reservations covering a range of blocks in a file. */
-> >  int
-> >  xfs_reflink_allocate_cow(
-> > @@ -363,41 +404,37 @@ xfs_reflink_allocate_cow(
-> >  	struct xfs_mount	*mp = ip->i_mount;
-> >  	xfs_fileoff_t		offset_fsb = imap->br_startoff;
-> >  	xfs_filblks_t		count_fsb = imap->br_blockcount;
-> > -	struct xfs_bmbt_irec	got;
-> >  	struct xfs_trans	*tp = NULL;
-> >  	int			nimaps, error = 0;
-> > -	bool			trimmed;
-> > +	bool			found;
-> >  	xfs_filblks_t		resaligned;
-> >  	xfs_extlen_t		resblks = 0;
-> > -	struct xfs_iext_cursor	icur;
-> >  
-> > -retry:
-> > -	ASSERT(xfs_is_reflink_inode(ip));
-> >  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> >  
-> >  	/*
-> > -	 * Even if the extent is not shared we might have a preallocation for
-> > -	 * it in the COW fork.  If so use it.
-> > +	 * do-while to run a single lookup retry after transaction allocation.
-> > +	 * All exits from the loop need to check if the transaction needs
-> > +	 * cancelling. Dropping the ILOCK to allocate the transaction allows
-> > +	 * races with other COW fork allocations, so we need to start the extent
-> > +	 * lookup from scratch once we have the ILOCK again.
-> >  	 */
-> > -	if (xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &got) &&
-> > -	    got.br_startoff <= offset_fsb) {
-> > -		*shared = true;
-> > +	do {
-> > +		ASSERT(xfs_is_reflink_inode(ip));
-> >  
-> > -		/* If we have a real allocation in the COW fork we're done. */
-> > -		if (!isnullstartblock(got.br_startblock)) {
-> > -			xfs_trim_extent(&got, offset_fsb, count_fsb);
-> > -			*imap = got;
-> > +		error = find_trim_cow_extent(ip, imap, shared, &found);
-> > +		if (error || !*shared)
-> > +			goto out_trans_cancel;
-> > +		if (found) {
-> > +			if (tp)
-> > +				xfs_trans_cancel(tp);
-> >  			goto convert;
-> >  		}
-> >  
-> > -		xfs_trim_extent(imap, got.br_startoff, got.br_blockcount);
-> > -	} else {
-> > -		error = xfs_reflink_trim_around_shared(ip, imap, shared, &trimmed);
-> > -		if (error || !*shared)
-> > -			goto out;
-> > -	}
-> > +		/* if we have a transaction, it's time to allocate */
-> > +		if (tp)
-> > +			break;
-> >  
-> > -	if (!tp) {
-> >  		resaligned = xfs_aligned_fsb_count(imap->br_startoff,
-> >  			imap->br_blockcount, xfs_get_cowextsz_hint(ip));
-> >  		resblks = XFS_DIOSTRAT_SPACE_RES(mp, resaligned);
-> > @@ -412,29 +449,25 @@ xfs_reflink_allocate_cow(
-> >  
-> >  		error = xfs_qm_dqattach_locked(ip, false);
-> >  		if (error)
-> > -			goto out;
-> > -		goto retry;
-> > -	}
-> > +			goto out_trans_cancel;
-> > +	} while (tp);
-> >  
-> >  	error = xfs_trans_reserve_quota_nblks(tp, ip, resblks, 0,
-> >  			XFS_QMOPT_RES_REGBLKS);
-> >  	if (error)
-> > -		goto out;
-> > +		goto out_trans_cancel;
-> >  
-> >  	xfs_trans_ijoin(tp, ip, 0);
-> >  
-> > -	nimaps = 1;
-> > -
-> >  	/* Allocate the entire reservation as unwritten blocks. */
-> > +	nimaps = 1;
-> >  	error = xfs_bmapi_write(tp, ip, imap->br_startoff, imap->br_blockcount,
-> >  			XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC,
-> >  			resblks, imap, &nimaps);
-> >  	if (error)
-> > -		goto out_trans_cancel;
-> > +		goto out_unreserve;
-> >  
-> >  	xfs_inode_set_cowblocks_tag(ip);
-> > -
-> > -	/* Finish up. */
-> >  	error = xfs_trans_commit(tp);
-> >  	if (error)
-> >  		return error;
-> > @@ -447,10 +480,11 @@ xfs_reflink_allocate_cow(
-> >  		return -ENOSPC;
-> >  convert:
-> >  	return xfs_reflink_convert_cow_extent(ip, imap, offset_fsb, count_fsb);
-> > -out_trans_cancel:
-> > +
-> > +out_unreserve:
-> >  	xfs_trans_unreserve_quota_nblks(tp, ip, (long)resblks, 0,
-> >  			XFS_QMOPT_RES_REGBLKS);
-> > -out:
-> > +out_trans_cancel:
-> >  	if (tp)
-> >  		xfs_trans_cancel(tp);
-> >  	return error;
-> > -- 
-> > 2.17.0
-> > 
-
-
+diff --git a/tests/xfs/190 b/tests/xfs/190
+index 3275e29..53dad06 100755
+--- a/tests/xfs/190
++++ b/tests/xfs/190
+@@ -10,13 +10,6 @@
+ #
+ # PV 985792
+ #
+-#This is the list of holes to punch in the file limited to $filesize
+-#NOTE holes cannot overlap or this script will fail.
+-holes="4096:4096 303104:4096 1048576:512 1051648:8192 1065984:8192 1085440:7168"
+-#filesize in MB
+-filesize=10
+-#Name of file to perform the test on
+-filename=test-190
+ 
+ seq=`basename $0`
+ seqres=$RESULT_DIR/$seq
+@@ -38,9 +31,24 @@ _supported_os Linux
+ _require_scratch
+ _scratch_mkfs_xfs >/dev/null 2>&1
+ _scratch_mount
+-fsblocksize=`$XFS_INFO_PROG $SCRATCH_MNT|sed 's/=/ /g'|awk '/^data / { print $3 }'`
+ 
+-dd if=/dev/zero of=$SCRATCH_MNT/$filename bs=1024k count=10 >> $seqres.full 2>&1
++fsblocksize=$(_get_block_size $SCRATCH_MNT)
++
++#This is the list of holes to punch in the file limited to $filesize
++#NOTE holes cannot overlap or this script will fail.
++holes="$fsblocksize:$fsblocksize \
++$(($fsblocksize * 74)):$fsblocksize \
++$(($fsblocksize * 256)):$(($fsblocksize / 8)) \
++$(echo scale=0\;$fsblocksize \* 256 \+ $fsblocksize \* 3 \/ 4 | bc):$(($fsblocksize * 2)) \
++$(echo scale=0\;$fsblocksize \* 260 \+ $fsblocksize \* 1 \/ 4 | bc):$(($fsblocksize * 2)) \
++$(($fsblocksize * 265)):$(echo scale=0\;$fsblocksize \+ $fsblocksize \* 3 \/ 4 | bc)"
++
++#filesize
++filesize=$(($fsblocksize * 2560))
++#Name of file to perform the test on
++filename=test-190
++
++$XFS_IO_PROG -f -c "pwrite 0 $(($fsblocksize * 2560))" $SCRATCH_MNT/$filename >> $seqres.full 2>&1
+ 
+ # run DMAPI test using verbose output
+ echo Punching holes in file
 -- 
-Alexander Y. Fomichev <git.user@gmail.com>
+2.9.5
