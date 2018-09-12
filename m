@@ -1,62 +1,312 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:59552 "EHLO
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:34856 "EHLO
         mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726502AbeILL14 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Sep 2018 07:27:56 -0400
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8C6OubR135993
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 02:24:56 -0400
-Received: from e17.ny.us.ibm.com (e17.ny.us.ibm.com [129.33.205.207])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2mescu87kt-1
+        by vger.kernel.org with ESMTP id S1726502AbeILL1S (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Sep 2018 07:27:18 -0400
+Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8C6JeVf143449
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 02:24:18 -0400
+Received: from e13.ny.us.ibm.com (e13.ny.us.ibm.com [129.33.205.203])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2meqxvb9y3-1
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 02:24:56 -0400
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 02:24:18 -0400
 Received: from localhost
-        by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e13.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Wed, 12 Sep 2018 02:24:49 -0400
+        Wed, 12 Sep 2018 02:24:17 -0400
 From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH V3 19/19] Fix generic/108 to work with 64k block size
-Date: Wed, 12 Sep 2018 11:56:26 +0530
+Subject: [PATCH V3 01/19] Fix xfs/009 to work with 64k block size
+Date: Wed, 12 Sep 2018 11:56:08 +0530
 In-Reply-To: <20180912062626.14349-1-chandan@linux.vnet.ibm.com>
 References: <20180912062626.14349-1-chandan@linux.vnet.ibm.com>
-Message-Id: <20180912062626.14349-20-chandan@linux.vnet.ibm.com>
+Message-Id: <20180912062626.14349-2-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: fstests@vger.kernel.org
 Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
 
-This commit increases the size of the scsi debug device to 300MiB to
-accommodate a 275MiB sized XFS filesystem with 64k block size. mkfs.xfs
-fails to create a 64k block sized filesystem on devices with capacity
-less than 275MiB.
+xfs_alloc_file_space() rounds up allocation requests by the filesystem
+block size. Hence this commit changes the test to work with block size
+units rather than with a multiple of 4096 bytes.
 
 Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
 ---
- tests/generic/108 | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ tests/xfs/009     | 92 ++++++++++++++++++++++++++++++++++++++++++++++---------
+ tests/xfs/009.out | 66 +++++++++++++++++++--------------------
+ 2 files changed, 110 insertions(+), 48 deletions(-)
 
-diff --git a/tests/generic/108 b/tests/generic/108
-index e464335..9b4fe60 100755
---- a/tests/generic/108
-+++ b/tests/generic/108
-@@ -48,7 +48,7 @@ vgname=vg_$seq
- rm -f $seqres.full
+diff --git a/tests/xfs/009 b/tests/xfs/009
+index 68f6379..70717eb 100755
+--- a/tests/xfs/009
++++ b/tests/xfs/009
+@@ -14,9 +14,6 @@ here=`pwd`
+ tmp=/tmp/$$
+ status=1	# failure is the default!
+ trap "_cleanup; exit \$status" 0 1 2 3 15
+-# This isn't really related to fs block size, it's just what
+-# alloc uses for the "block" unit in it's input parameters...
+-bsize=4096
  
- # _get_scsi_debug_dev returns a scsi debug device with 128M in size by default
--SCSI_DEBUG_DEV=`_get_scsi_debug_dev`
-+SCSI_DEBUG_DEV=`_get_scsi_debug_dev 512 512 0 300`
- if [ "$SCSI_DEBUG_DEV" == "/dev/" ]; then
- 	_fail "Failed to initialize scsi debug device"
- fi
-@@ -59,7 +59,7 @@ $LVM_PROG pvcreate -f $SCSI_DEBUG_DEV $SCRATCH_DEV >>$seqres.full 2>&1
- $LVM_PROG vgcreate -f $vgname $SCSI_DEBUG_DEV $SCRATCH_DEV >>$seqres.full 2>&1
- # We use yes pipe instead of 'lvcreate --yes' because old version of lvm
- # (like 2.02.95 in RHEL6) don't support --yes option
--yes | $LVM_PROG lvcreate -i 2 -I 4m -L 100m -n $lvname $vgname \
-+yes | $LVM_PROG lvcreate -i 2 -I 4m -L 275m -n $lvname $vgname \
- 	>>$seqres.full 2>&1
- # wait for lv creation to fully complete
- $UDEV_SETTLE_PROG >>$seqres.full 2>&1
+ _cleanup()
+ {
+@@ -24,13 +21,6 @@ _cleanup()
+     _scratch_unmount
+ }
+ 
+-_block_filter()
+-{
+-   sed \
+-	-e 's/[0-9][0-9]*\.\.[0-9][0-9]*/BLOCKRANGE/g' \
+-	-e "s/blocksize $bsize/blocksize BSIZE/g"
+-}
+-
+ _init()
+ {
+     echo "*** mkfs"
+@@ -49,11 +39,6 @@ _init()
+     fi
+ }
+ 
+-_filesize()
+-{
+-    ls -l $1 | $AWK_PROG '{print "filesize = " $5}'
+-}
+-
+ # get standard environment, filters and checks
+ . ./common/rc
+ . ./common/filter
+@@ -64,9 +49,86 @@ _supported_os Linux
+ 
+ _require_scratch
+ 
++_filesize()
++{
++    ls -l $1 | $AWK_PROG -v bsize="$bsize" '{print "filesize = " $5 / bsize}'
++}
++
++_block_filter()
++{
++	$AWK_PROG -v bsize="$bsize" '
++	/blocksize/ {
++		printf("    blocksize BSIZE\n")
++
++		next
++	}
++
++	/CMD/ {
++		split($3, off, "=")
++		offset = strtonum(off[2])
++		if (offset != -1)
++			offset = offset / bsize
++
++		split($4, len, "=")
++		nr_blocks = strtonum(len[2])
++		if (nr_blocks != -1)
++			nr_blocks = nr_blocks / bsize
++
++		printf("    %s %s off=%s, len=%d\n", $1, $2, offset, nr_blocks)
++
++		next
++	}
++
++	/MAP/ {
++		split($2, off, "=")
++		offset = strtonum(off[2])
++		if (offset != -1)
++			offset = offset / bsize
++
++		split($3, len, "=")
++
++		nr_blocks = strtonum(len[2])
++
++		if (nr_blocks != -1)
++			nr_blocks = nr_blocks / bsize
++
++		printf("    %s off=%s, len=%d %s\n", $1, offset, nr_blocks, $4)
++
++		next
++	}
++
++	/TRUNCATE/ {
++		split($2, off, "=")
++		offset = strtonum(off[2]) / bsize
++
++		printf("    %s off=%s\n", $1, offset)
++
++		next
++	}
++
++	/\[[0-9]+,[0-9]+\]:/ {
++		printf("        %s BLOCKRANGE\n", $1)
++
++		next
++	}
++
++	{
++		print
++
++		next
++	}
++	'
++}
++
+ _init
+ out=$SCRATCH_MNT/$$.tmp
+ 
++# This isn't really related to fs block size, it's just what
++# alloc uses for the "block" unit in it's input parameters...
++# However, xfs_alloc_file_space() rounds up allocation
++# request by the filesystem's block size.
++bsize=$(_get_block_size $SCRATCH_MNT)
++
+ # since we're using a clean FS here, we make some assumptions
+ # about availability of contiguous blocks
+ 
+diff --git a/tests/xfs/009.out b/tests/xfs/009.out
+index 7132aca..02b5d82 100644
+--- a/tests/xfs/009.out
++++ b/tests/xfs/009.out
+@@ -3,8 +3,8 @@ QA output created by 009
+ *** mount
+ *** test 1 - reservations cleared on O_TRUNC
+     blocksize BSIZE
+-    CMD resvsp, off=0, len=4096000
+-    MAP off=0, len=4096000 [0,1000]
++    CMD resvsp, off=0, len=1000
++    MAP off=0, len=1000 [0,1000]
+         [ofs,count]: start..end
+         [0,1000]: BLOCKRANGE
+     MAP off=0, len=-1 [0-]
+@@ -17,53 +17,53 @@ filesize = 0
+ filesize = 0
+ *** test 2 - reserve & filesize
+     blocksize BSIZE
+-    CMD resvsp, off=0, len=4096000
+-    MAP off=0, len=4096000 [0,1000]
++    CMD resvsp, off=0, len=1000
++    MAP off=0, len=1000 [0,1000]
+         [ofs,count]: start..end
+         [0,1000]: BLOCKRANGE
+ filesize = 0
+ *** test 3 - alloc & filesize
+     blocksize BSIZE
+-    CMD allocsp, off=4096000, len=-1
+-    MAP off=4096000, len=-1 [1000-]
++    CMD allocsp, off=1000, len=-1
++    MAP off=1000, len=-1 [1000-]
+         [ofs,count]: start..end
+-filesize = 4096000
++filesize = 1000
+ *** test 4 - allocations cleared on O_TRUNC
+     blocksize BSIZE
+-    CMD allocsp, off=4096000, len=-1
+-    MAP off=4096000, len=-1 [1000-]
++    CMD allocsp, off=1000, len=-1
++    MAP off=1000, len=-1 [1000-]
+         [ofs,count]: start..end
+-filesize = 4096000
++filesize = 1000
+     blocksize BSIZE
+     MAP off=0, len=-1 [0-]
+         [ofs,count]: start..end
+ filesize = 0
+ *** test 5 - reserve / unreserve
+     blocksize BSIZE
+-    CMD resvsp, off=0, len=409600
+-    MAP off=0, len=409600 [0,100]
++    CMD resvsp, off=0, len=100
++    MAP off=0, len=100 [0,100]
+         [ofs,count]: start..end
+         [0,100]: BLOCKRANGE
+-    CMD unresvsp, off=409600, len=2048000
+-    MAP off=409600, len=2048000 [100,500]
++    CMD unresvsp, off=100, len=500
++    MAP off=100, len=500 [100,500]
+         [ofs,count]: start..end
+     MAP off=0, len=-1 [0-]
+         [ofs,count]: start..end
+         [0,100]: BLOCKRANGE
+-    CMD unresvsp, off=3686400, len=819200
+-    MAP off=3686400, len=819200 [900,200]
++    CMD unresvsp, off=900, len=200
++    MAP off=900, len=200 [900,200]
+         [ofs,count]: start..end
+     MAP off=0, len=-1 [0-]
+         [ofs,count]: start..end
+         [0,100]: BLOCKRANGE
+ *** test 6 - reserve adjacent
+     blocksize BSIZE
+-    CMD resvsp, off=0, len=409600
+-    MAP off=0, len=409600 [0,100]
++    CMD resvsp, off=0, len=100
++    MAP off=0, len=100 [0,100]
+         [ofs,count]: start..end
+         [0,100]: BLOCKRANGE
+-    CMD resvsp, off=409600, len=409600
+-    MAP off=409600, len=409600 [100,100]
++    CMD resvsp, off=100, len=100
++    MAP off=100, len=100 [100,100]
+         [ofs,count]: start..end
+         [100,100]: BLOCKRANGE
+     MAP off=0, len=-1 [0-]
+@@ -71,44 +71,44 @@ filesize = 0
+         [0,200]: BLOCKRANGE
+ *** test 7 - alloc
+     blocksize BSIZE
+-    CMD allocsp, off=4096000, len=-1
+-    MAP off=4096000, len=-1 [1000-]
++    CMD allocsp, off=1000, len=-1
++    MAP off=1000, len=-1 [1000-]
+         [ofs,count]: start..end
+     MAP off=0, len=-1 [0-]
+         [ofs,count]: start..end
+         [0,1000]: BLOCKRANGE
+-    CMD allocsp, off=8192000, len=-1
+-    MAP off=8192000, len=-1 [2000-]
++    CMD allocsp, off=2000, len=-1
++    MAP off=2000, len=-1 [2000-]
+         [ofs,count]: start..end
+     MAP off=0, len=-1 [0-]
+         [ofs,count]: start..end
+         [0,2000]: BLOCKRANGE
+-filesize = 8192000
++filesize = 2000
+ *** test 8 - alloc & truncate
+     blocksize BSIZE
+-    CMD allocsp, off=4096000, len=-1
+-    MAP off=4096000, len=-1 [1000-]
++    CMD allocsp, off=1000, len=-1
++    MAP off=1000, len=-1 [1000-]
+         [ofs,count]: start..end
+     MAP off=0, len=-1 [0-]
+         [ofs,count]: start..end
+         [0,1000]: BLOCKRANGE
+-    TRUNCATE off=2048000
++    TRUNCATE off=500
+     MAP off=0, len=-1 [0-]
+         [ofs,count]: start..end
+         [0,500]: BLOCKRANGE
+-filesize = 2048000
++filesize = 500
+ *** test 9 - reserve & truncate
+     blocksize BSIZE
+-    CMD resvsp, off=0, len=4096000
+-    MAP off=0, len=4096000 [0,1000]
++    CMD resvsp, off=0, len=1000
++    MAP off=0, len=1000 [0,1000]
+         [ofs,count]: start..end
+         [0,1000]: BLOCKRANGE
+     MAP off=0, len=-1 [0-]
+         [ofs,count]: start..end
+         [0,1000]: BLOCKRANGE
+-    TRUNCATE off=2048000
++    TRUNCATE off=500
+     MAP off=0, len=-1 [0-]
+         [ofs,count]: start..end
+         [0,1000]: BLOCKRANGE
+-filesize = 2048000
++filesize = 500
+ *** unmount
 -- 
 2.9.5
