@@ -1,83 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:40192 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727417AbeILL14 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Sep 2018 07:27:56 -0400
-Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8C6Ou6S010387
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 02:24:56 -0400
-Received: from e15.ny.us.ibm.com (e15.ny.us.ibm.com [129.33.205.205])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2meu63cwfn-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 02:24:56 -0400
-Received: from localhost
-        by e15.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Wed, 12 Sep 2018 02:24:46 -0400
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH V3 17/19] Fix generic/459 to work with 64k block size
-Date: Wed, 12 Sep 2018 11:56:24 +0530
-In-Reply-To: <20180912062626.14349-1-chandan@linux.vnet.ibm.com>
-References: <20180912062626.14349-1-chandan@linux.vnet.ibm.com>
-Message-Id: <20180912062626.14349-18-chandan@linux.vnet.ibm.com>
+Received: from sandeen.net ([63.231.237.45]:52472 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726672AbeIMDMM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 Sep 2018 23:12:12 -0400
+Subject: Re: [PATCH] xfs_repair: warn properly about reflink flag with and
+ without -n
+References: <700e2326-fd4c-224e-bf9c-cb77756e4a55@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <ca3a9129-bda6-51ff-51cf-2dbe3506444f@sandeen.net>
+Date: Wed, 12 Sep 2018 17:05:40 -0500
+MIME-Version: 1.0
+In-Reply-To: <700e2326-fd4c-224e-bf9c-cb77756e4a55@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-With 64k block size, 200MiB disk space is not sufficient to create an
-XFS filesystem. Hence this commit increases the size of the
-overprovisioned dm-thin device to 300MiB. The commit also increases the
-other associated disk sizes (original physical size and new physical
-size) appropriately.
+On 9/12/18 2:26 PM, Eric Sandeen wrote:
+> The decision to emit a warning in fix_inode_reflink_flag seems broken; in
+> no-modify mode we'll do_warn that we're setting it (even though we don't),
+> and we'll be silent if it needs to be cleared.
+> 
+> Fix this so it's the standard "would" in no-modify, and "will" in regular
+> mode.  This also ensures that we return the proper status if flags are
+> found to be incorrect in -n or -e mode.
 
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
----
- tests/generic/459 | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+Oh, oops - I guess this might have been intentional, if "clear reflink flag
+on non-reflinked file" is more of a preening operation?  So in -n mode
+nothing happens, but we preen/clear it in full mode?
 
-diff --git a/tests/generic/459 b/tests/generic/459
-index aee71a0..c430952 100755
---- a/tests/generic/459
-+++ b/tests/generic/459
-@@ -59,14 +59,14 @@ vgname=vg_$seq
- lvname=lv_$seq
- poolname=pool_$seq
- snapname=snap_$seq
--origpsize=100
--virtsize=200
--newpsize=200
-+origpsize=200
-+virtsize=300
-+newpsize=300
- 
- # Ensure we have enough disk space
--_scratch_mkfs_sized $((250 * 1024 * 1024)) >>$seqres.full 2>&1
-+_scratch_mkfs_sized $((350 * 1024 * 1024)) >>$seqres.full 2>&1
- 
--# Create a 100MB dm-thin POOL
-+# Create a 200MB dm-thin POOL
- $LVM_PROG pvcreate -f $SCRATCH_DEV >>$seqres.full 2>&1
- $LVM_PROG vgcreate -f $vgname $SCRATCH_DEV >>$seqres.full 2>&1
- 
-@@ -74,7 +74,7 @@ $LVM_PROG lvcreate  --thinpool $poolname  --errorwhenfull y \
- 		    --zero n -L $origpsize \
- 		    --poolmetadatasize 4M $vgname >>$seqres.full 2>&1
- 
--# Create a overprovisioned 200MB dm-thin virt. device
-+# Create a overprovisioned 300MB dm-thin virt. device
- $LVM_PROG lvcreate  --virtualsize $virtsize \
- 		    -T $vgname/$poolname \
- 		    -n $lvname >>$seqres.full 2>&1
-@@ -92,7 +92,7 @@ _mount /dev/mapper/$vgname-$snapname $SCRATCH_MNT
- 
- # Consume all space available in the volume and freeze to ensure everything
- # required to make the fs consistent is flushed to disk.
--$XFS_IO_PROG -f -d -c 'pwrite -b 1m 0 120m' $SCRATCH_MNT/f1 >>$seqres.full 2>&1
-+$XFS_IO_PROG -f -d -c 'pwrite -b 1m 0 220m' $SCRATCH_MNT/f1 >>$seqres.full 2>&1
- 
- # In XFS, this freeze will never complete until the dm-thin POOL device is
- # extended. It is expected, and is only used so xfsaild is triggered to
--- 
-2.9.5
+(but in that case do_warn in the full run still triggers a non-zero
+exit code with -e ... bleah)
+
+(also: this makes refusing to map & boot from "reflinked" files that may
+not even /be/ reflinked at all even /more/ awesomely random, doesn't it!)
+
+-Eric
+
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> diff --git a/repair/rmap.c b/repair/rmap.c
+> index bffb5b61..7ef2d0fd 100644
+> --- a/repair/rmap.c
+> +++ b/repair/rmap.c
+> @@ -1142,16 +1142,27 @@ fix_inode_reflink_flag(
+>  	struct xfs_dinode	*dino;
+>  	struct xfs_buf		*buf;
+>  
+> +	if (no_modify) {
+> +		if (set)
+> +			do_warn(
+> +_("would set reflink flag on inode %"PRIu64"\n"),
+> +				XFS_AGINO_TO_INO(mp, agno, agino));
+> +		else
+> +			do_warn(
+> +_("would clear reflink flag on inode %"PRIu64"\n"),
+> +				XFS_AGINO_TO_INO(mp, agno, agino));
+> +		return 0;
+> +	}
+> +
+> +	/* Modify mode */
+>  	if (set)
+>  		do_warn(
+>  _("setting reflink flag on inode %"PRIu64"\n"),
+>  			XFS_AGINO_TO_INO(mp, agno, agino));
+> -	else if (!no_modify) /* && !set */
+> +	else
+>  		do_warn(
+>  _("clearing reflink flag on inode %"PRIu64"\n"),
+>  			XFS_AGINO_TO_INO(mp, agno, agino));
+> -	if (no_modify)
+> -		return 0;
+>  
+>  	buf = get_agino_buf(mp, agno, agino, &dino);
+>  	if (!buf)
+> 
