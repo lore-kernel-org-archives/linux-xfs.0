@@ -1,132 +1,360 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:58198 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727403AbeILL1m (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Sep 2018 07:27:42 -0400
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8C6Je8E121916
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 02:24:43 -0400
-Received: from e14.ny.us.ibm.com (e14.ny.us.ibm.com [129.33.205.204])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2mescu87f7-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 02:24:42 -0400
-Received: from localhost
-        by e14.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Wed, 12 Sep 2018 02:24:41 -0400
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH V3 15/19] Fix generic/230 to work with 64k block size
-Date: Wed, 12 Sep 2018 11:56:22 +0530
-In-Reply-To: <20180912062626.14349-1-chandan@linux.vnet.ibm.com>
-References: <20180912062626.14349-1-chandan@linux.vnet.ibm.com>
-Message-Id: <20180912062626.14349-16-chandan@linux.vnet.ibm.com>
+Received: from hermes.casalogic.dk ([91.216.14.29]:43772 "EHLO
+        hermes.casalogic.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725948AbeILNSX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Sep 2018 09:18:23 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+        by hermes.casalogic.dk (Postfix) with ESMTP id 3606C1E0694
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 10:07:57 +0200 (CEST)
+Received: from hermes.casalogic.dk ([127.0.0.1])
+        by localhost (hermes.casalogic.dk [127.0.0.1]) (amavisd-new, port 10032)
+        with ESMTP id SkufB-9gk0M2 for <linux-xfs@vger.kernel.org>;
+        Wed, 12 Sep 2018 10:07:55 +0200 (CEST)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+        by hermes.casalogic.dk (Postfix) with ESMTP id 943071E0698
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 10:07:55 +0200 (CEST)
+Received: from hermes.casalogic.dk ([127.0.0.1])
+        by localhost (hermes.casalogic.dk [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id OOfD3AuP_yzM for <linux-xfs@vger.kernel.org>;
+        Wed, 12 Sep 2018 10:07:55 +0200 (CEST)
+Received: from hermes.casalogic.dk (hermes.casalogic.dk [192.168.225.25])
+        by hermes.casalogic.dk (Postfix) with ESMTP id 723F61E0694
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 10:07:55 +0200 (CEST)
+Date: Wed, 12 Sep 2018 10:07:55 +0200 (CEST)
+From: Troels Hansen <th@casalogic.dk>
+Message-ID: <1063031109.4602643.1536739675362.JavaMail.zimbra@casalogic.dk>
+Subject: Strange XFS problem
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-This commit changes the test to work on file offsets that are aligned
-with the block size of the underlying filesystem.
+Hi, we are facing an issue where we can't figure out if its XFS software related, or actually related to hardware, and can't quite figure out why we are facing the issues, though is doesn't seem hardware related.
 
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
----
- tests/generic/230     | 23 +++++++++++++----------
- tests/generic/230.out | 16 ++++++++--------
- 2 files changed, 21 insertions(+), 18 deletions(-)
+The issue is with a 102Tb array on a Dell branded LSISAS 3508 (Perc H840).
+Running Ubuntu with a 4.15.0-32 (Ubuntu branded), but we have also been running a number of 4.4.0-x with the same issues.
 
-diff --git a/tests/generic/230 b/tests/generic/230
-index bc8c1ad..fc09391 100755
---- a/tests/generic/230
-+++ b/tests/generic/230
-@@ -42,27 +42,27 @@ test_enforcement()
- 	echo "### some buffered IO (type=$type)"
- 	echo "--- initiating IO..." >>$seqres.full
- 	# Firstly fit below block soft limit
--	echo "Write 900k..."
--	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 900k' -c fsync \
-+	echo "Write 225 blocks..."
-+	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 $((225 * $BLOCK_SIZE))' -c fsync \
- 		$SCRATCH_MNT/file1" 2>&1 >>$seqres.full | \
- 		_filter_xfs_io_error | tee -a $seqres.full
- 	repquota -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
- 	# Secondly overcome block soft limit
--	echo "Rewrite 1001k..."
--	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 1001k' -c fsync \
-+	echo "Rewrite 250 blocks plus 1 byte..."
-+	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 $((250 * $BLOCK_SIZE + 1))' -c fsync \
- 		$SCRATCH_MNT/file1" 2>&1 >>$seqres.full | \
- 		_filter_xfs_io_error | tee -a $seqres.full
- 	repquota -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
- 	# Now try to overcome block hardlimit
--	echo "Write 1000k..."
--	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 1000k' -c fsync \
-+	echo "Write 250 blocks..."
-+	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 $((250 * $BLOCK_SIZE))' -c fsync \
- 		$SCRATCH_MNT/file2" 2>&1 >>$seqres.full | \
- 		_filter_xfs_io_error | tee -a $seqres.full
- 	repquota -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
- 	# Now sleep for grace time and check that softlimit got enforced
- 	sleep $((grace+1))
--	echo "Write 4096..."
--	su $qa_user -c "$XFS_IO_PROG -c 'truncate 0' -c 'pwrite 0 4096' \
-+	echo "Write 1 block..."
-+	su $qa_user -c "$XFS_IO_PROG -c 'truncate 0' -c 'pwrite 0 $BLOCK_SIZE' \
- 		$SCRATCH_MNT/file2" 2>&1 >>$seqres.full | \
- 		_filter_xfs_io_error | tee -a $seqres.full
- 	repquota -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
-@@ -101,11 +101,14 @@ grace=2
- 
- _scratch_mkfs >> $seqres.full 2>&1
- _scratch_mount "-o usrquota,grpquota"
-+BLOCK_SIZE=$(_get_block_size $SCRATCH_MNT)
- quotacheck -u -g $SCRATCH_MNT 2>/dev/null
- quotaon $SCRATCH_MNT 2>/dev/null
--setquota -u $qa_user 1000 2000 3 5 $SCRATCH_MNT
-+setquota -u $qa_user $((250 * $BLOCK_SIZE / 1024)) \
-+	 $((500 * $BLOCK_SIZE / 1024)) 3 5 $SCRATCH_MNT
- setquota -u -t $grace $grace $SCRATCH_MNT
--setquota -g $qa_user 1000 2000 3 5 $SCRATCH_MNT
-+setquota -g $qa_user $((250 * $BLOCK_SIZE / 1024)) \
-+	 $((500 * $BLOCK_SIZE / 1024)) 3 5 $SCRATCH_MNT
- setquota -g -t $grace $grace $SCRATCH_MNT
- _scratch_unmount
- 
-diff --git a/tests/generic/230.out b/tests/generic/230.out
-index fcbacf2..9e89a47 100644
---- a/tests/generic/230.out
-+++ b/tests/generic/230.out
-@@ -4,11 +4,11 @@ QA output created by 230
- 
- ### create files, setting up ownership (type=u)
- ### some buffered IO (type=u)
--Write 900k...
--Rewrite 1001k...
--Write 1000k...
-+Write 225 blocks...
-+Rewrite 250 blocks plus 1 byte...
-+Write 250 blocks...
- pwrite: Disk quota exceeded
--Write 4096...
-+Write 1 block...
- pwrite: Disk quota exceeded
- Touch 3+4
- Touch 5+6
-@@ -20,11 +20,11 @@ touch: cannot touch 'SCRATCH_MNT/file5': Disk quota exceeded
- 
- ### create files, setting up ownership (type=g)
- ### some buffered IO (type=g)
--Write 900k...
--Rewrite 1001k...
--Write 1000k...
-+Write 225 blocks...
-+Rewrite 250 blocks plus 1 byte...
-+Write 250 blocks...
- pwrite: Disk quota exceeded
--Write 4096...
-+Write 1 block...
- pwrite: Disk quota exceeded
- Touch 3+4
- Touch 5+6
--- 
-2.9.5
+The XFS filsusyem is on a very busy NFS server, and when the issue occurs we see strange issues with NFS, while the system seems healthy on the local server, but at the same time some programs are having problems accessing the fs.
+
+It occure roughly every 14 days, where we have to restart the fs to come back fully working.
+Sometimes refusing to unmount cleanly during shutdown, forcing us to fsck the fs on startup.
+
+It looks like its hanging in xlog_grant_head_wait, but I don't know enough to determine what can make it hang there.
+
+Hoping someone in here could have a look and point me in the right direction.
+
+Below is a trace from the last crash we had:
+
+
+Sep  9 23:23:51 ged kernel: [1436769.178935] INFO: task mysqld:2847 blocked for more than 120 seconds.
+Sep  9 23:23:51 ged kernel: [1436769.178999]       Not tainted 4.15.0-32-generic #35~16.04.1-Ubuntu
+Sep  9 23:23:51 ged kernel: [1436769.179047] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+Sep  9 23:23:51 ged kernel: [1436769.179105] mysqld          D    0  2847      1 0x00000000
+Sep  9 23:23:51 ged kernel: [1436769.179111] Call Trace:
+Sep  9 23:23:51 ged kernel: [1436769.179123]  __schedule+0x3d6/0x8b0
+Sep  9 23:23:51 ged kernel: [1436769.179127]  schedule+0x36/0x80
+Sep  9 23:23:51 ged kernel: [1436769.179216]  xlog_grant_head_wait+0xb8/0x1e0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.179277]  xlog_grant_head_check+0x94/0x100 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.179330]  xfs_log_reserve+0xcb/0x1e0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.179381]  xfs_trans_reserve+0x169/0x1d0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.179428]  xfs_trans_alloc+0xbe/0x130 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.179478]  xfs_vn_update_time+0x5d/0x160 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.179486]  file_update_time+0xbe/0x110
+Sep  9 23:23:51 ged kernel: [1436769.179493]  ? tcp_recvmsg+0x317/0xab0
+Sep  9 23:23:51 ged kernel: [1436769.179542]  xfs_file_aio_write_checks+0x13a/0x180 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.179588]  xfs_file_buffered_aio_write+0x89/0x2a0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.179632]  xfs_file_write_iter+0x103/0x150 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.179637]  new_sync_write+0xe5/0x140
+Sep  9 23:23:51 ged kernel: [1436769.179641]  __vfs_write+0x29/0x40
+Sep  9 23:23:51 ged kernel: [1436769.179645]  vfs_write+0xb8/0x1b0
+Sep  9 23:23:51 ged kernel: [1436769.179649]  SyS_pwrite64+0x95/0xb0
+Sep  9 23:23:51 ged kernel: [1436769.179655]  do_syscall_64+0x73/0x130
+Sep  9 23:23:51 ged kernel: [1436769.179661]  entry_SYSCALL_64_after_hwframe+0x3d/0xa2
+Sep  9 23:23:51 ged kernel: [1436769.179664] RIP: 0033:0x7f16be838da3
+Sep  9 23:23:51 ged kernel: [1436769.179667] RSP: 002b:00007f148c31b950 EFLAGS: 00000293 ORIG_RAX: 0000000000000012
+Sep  9 23:23:51 ged kernel: [1436769.179671] RAX: ffffffffffffffda RBX: 00007f148c31ba50 RCX: 00007f16be838da3
+Sep  9 23:23:51 ged kernel: [1436769.179673] RDX: 0000000000000200 RSI: 00007f149ea80200 RDI: 0000000000000008
+Sep  9 23:23:51 ged kernel: [1436769.179675] RBP: 00007f148c31bc00 R08: 000000000019d200 R09: 00007f148c31bc3c
+Sep  9 23:23:51 ged kernel: [1436769.179677] R10: 000000000019d200 R11: 0000000000000293 R12: 0000000000000200
+Sep  9 23:23:51 ged kernel: [1436769.179679] R13: 000000000019d200 R14: 0000000000000000 R15: 0000000000000000
+Sep  9 23:23:51 ged kernel: [1436769.179686] INFO: task nfsd:1937 blocked for more than 120 seconds.
+Sep  9 23:23:51 ged kernel: [1436769.179738]       Not tainted 4.15.0-32-generic #35~16.04.1-Ubuntu
+Sep  9 23:23:51 ged kernel: [1436769.179784] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+Sep  9 23:23:51 ged kernel: [1436769.179842] nfsd            D    0  1937      2 0x80000000
+Sep  9 23:23:51 ged kernel: [1436769.179846] Call Trace:
+Sep  9 23:23:51 ged kernel: [1436769.179852]  __schedule+0x3d6/0x8b0
+Sep  9 23:23:51 ged kernel: [1436769.179857]  ? sch_direct_xmit+0x73/0x1b0
+Sep  9 23:23:51 ged kernel: [1436769.179860]  schedule+0x36/0x80
+Sep  9 23:23:51 ged kernel: [1436769.179910]  xlog_grant_head_wait+0xb8/0x1e0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.179956]  xlog_grant_head_check+0x94/0x100 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.180005]  xfs_log_reserve+0xcb/0x1e0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.180051]  xfs_trans_reserve+0x169/0x1d0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.180096]  xfs_trans_alloc+0xbe/0x130 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.180145]  xfs_vn_update_time+0x5d/0x160 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.180150]  file_update_time+0xbe/0x110
+Sep  9 23:23:51 ged kernel: [1436769.180199]  xfs_file_aio_write_checks+0x13a/0x180 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.180244]  xfs_file_buffered_aio_write+0x89/0x2a0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.180248]  ? _cond_resched+0x1a/0x50
+Sep  9 23:23:51 ged kernel: [1436769.180291]  xfs_file_write_iter+0x103/0x150 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.180295]  do_iter_readv_writev+0x111/0x180
+Sep  9 23:23:51 ged kernel: [1436769.180299]  do_iter_write+0x87/0x1a0
+Sep  9 23:23:51 ged kernel: [1436769.180302]  vfs_iter_write+0x19/0x30
+Sep  9 23:23:51 ged kernel: [1436769.180321]  nfsd_vfs_write+0xbe/0x380 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.180338]  nfsd4_write+0x16c/0x1a0 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.180352]  nfsd4_proc_compound+0x33c/0x630 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.180365]  nfsd_dispatch+0xbb/0x250 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.180395]  svc_process_common+0x380/0x690 [sunrpc]
+Sep  9 23:23:51 ged kernel: [1436769.180416]  svc_process+0xfa/0x1c0 [sunrpc]
+Sep  9 23:23:51 ged kernel: [1436769.180428]  nfsd+0xe9/0x150 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.180434]  kthread+0x105/0x140
+Sep  9 23:23:51 ged kernel: [1436769.180445]  ? nfsd_destroy+0x60/0x60 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.180451]  ? kthread_destroy_worker+0x50/0x50
+Sep  9 23:23:51 ged kernel: [1436769.180456]  ret_from_fork+0x35/0x40
+Sep  9 23:23:51 ged kernel: [1436769.180461] INFO: task nfsd:1938 blocked for more than 120 seconds.
+Sep  9 23:23:51 ged kernel: [1436769.180511]       Not tainted 4.15.0-32-generic #35~16.04.1-Ubuntu
+Sep  9 23:23:51 ged kernel: [1436769.180557] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+Sep  9 23:23:51 ged kernel: [1436769.180615] nfsd            D    0  1938      2 0x80000000
+Sep  9 23:23:51 ged kernel: [1436769.180619] Call Trace:
+Sep  9 23:23:51 ged kernel: [1436769.180623]  __schedule+0x3d6/0x8b0
+Sep  9 23:23:51 ged kernel: [1436769.180628]  ? sch_direct_xmit+0x73/0x1b0
+Sep  9 23:23:51 ged kernel: [1436769.180631]  schedule+0x36/0x80
+Sep  9 23:23:51 ged kernel: [1436769.180689]  xlog_grant_head_wait+0xb8/0x1e0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.180737]  xlog_grant_head_check+0x94/0x100 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.180786]  xfs_log_reserve+0xcb/0x1e0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.180832]  xfs_trans_reserve+0x169/0x1d0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.180876]  xfs_trans_alloc+0xbe/0x130 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.180926]  xfs_vn_update_time+0x5d/0x160 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.180931]  file_update_time+0xbe/0x110
+Sep  9 23:23:51 ged kernel: [1436769.180980]  xfs_file_aio_write_checks+0x13a/0x180 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.181025]  xfs_file_buffered_aio_write+0x89/0x2a0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.181029]  ? _cond_resched+0x1a/0x50
+Sep  9 23:23:51 ged kernel: [1436769.181073]  xfs_file_write_iter+0x103/0x150 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.181077]  do_iter_readv_writev+0x111/0x180
+Sep  9 23:23:51 ged kernel: [1436769.181080]  do_iter_write+0x87/0x1a0
+Sep  9 23:23:51 ged kernel: [1436769.181083]  vfs_iter_write+0x19/0x30
+Sep  9 23:23:51 ged kernel: [1436769.181101]  nfsd_vfs_write+0xbe/0x380 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.181117]  nfsd4_write+0x16c/0x1a0 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.181131]  nfsd4_proc_compound+0x33c/0x630 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.181143]  nfsd_dispatch+0xbb/0x250 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.181169]  svc_process_common+0x380/0x690 [sunrpc]
+Sep  9 23:23:51 ged kernel: [1436769.181189]  svc_process+0xfa/0x1c0 [sunrpc]
+Sep  9 23:23:51 ged kernel: [1436769.181200]  nfsd+0xe9/0x150 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.181206]  kthread+0x105/0x140
+Sep  9 23:23:51 ged kernel: [1436769.181217]  ? nfsd_destroy+0x60/0x60 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.181222]  ? kthread_destroy_worker+0x50/0x50
+Sep  9 23:23:51 ged kernel: [1436769.181228]  ret_from_fork+0x35/0x40
+Sep  9 23:23:51 ged kernel: [1436769.181233] INFO: task nfsd:1939 blocked for more than 120 seconds.
+Sep  9 23:23:51 ged kernel: [1436769.181282]       Not tainted 4.15.0-32-generic #35~16.04.1-Ubuntu
+Sep  9 23:23:51 ged kernel: [1436769.181328] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+Sep  9 23:23:51 ged kernel: [1436769.181385] nfsd            D    0  1939      2 0x80000000
+Sep  9 23:23:51 ged kernel: [1436769.181389] Call Trace:
+Sep  9 23:23:51 ged kernel: [1436769.181394]  __schedule+0x3d6/0x8b0
+Sep  9 23:23:51 ged kernel: [1436769.181398]  ? sch_direct_xmit+0x73/0x1b0
+Sep  9 23:23:51 ged kernel: [1436769.181401]  schedule+0x36/0x80
+Sep  9 23:23:51 ged kernel: [1436769.181455]  xlog_grant_head_wait+0xb8/0x1e0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.181503]  xlog_grant_head_check+0x94/0x100 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.181551]  xfs_log_reserve+0xcb/0x1e0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.181599]  xfs_trans_reserve+0x169/0x1d0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.181643]  xfs_trans_alloc+0xbe/0x130 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.181692]  xfs_vn_update_time+0x5d/0x160 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.181698]  file_update_time+0xbe/0x110
+Sep  9 23:23:51 ged kernel: [1436769.181747]  xfs_file_aio_write_checks+0x13a/0x180 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.181792]  xfs_file_buffered_aio_write+0x89/0x2a0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.181796]  ? _cond_resched+0x1a/0x50
+Sep  9 23:23:51 ged kernel: [1436769.181839]  xfs_file_write_iter+0x103/0x150 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.181843]  do_iter_readv_writev+0x111/0x180
+Sep  9 23:23:51 ged kernel: [1436769.181846]  do_iter_write+0x87/0x1a0
+Sep  9 23:23:51 ged kernel: [1436769.181849]  vfs_iter_write+0x19/0x30
+Sep  9 23:23:51 ged kernel: [1436769.181864]  nfsd_vfs_write+0xbe/0x380 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.181880]  nfsd4_write+0x16c/0x1a0 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.181894]  nfsd4_proc_compound+0x33c/0x630 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.181906]  nfsd_dispatch+0xbb/0x250 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.181930]  svc_process_common+0x380/0x690 [sunrpc]
+Sep  9 23:23:51 ged kernel: [1436769.181951]  svc_process+0xfa/0x1c0 [sunrpc]
+Sep  9 23:23:51 ged kernel: [1436769.181962]  nfsd+0xe9/0x150 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.181967]  kthread+0x105/0x140
+Sep  9 23:23:51 ged kernel: [1436769.181978]  ? nfsd_destroy+0x60/0x60 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.181984]  ? kthread_destroy_worker+0x50/0x50
+Sep  9 23:23:51 ged kernel: [1436769.181988]  ret_from_fork+0x35/0x40
+Sep  9 23:23:51 ged kernel: [1436769.181993] INFO: task nfsd:1940 blocked for more than 120 seconds.
+Sep  9 23:23:51 ged kernel: [1436769.182041]       Not tainted 4.15.0-32-generic #35~16.04.1-Ubuntu
+Sep  9 23:23:51 ged kernel: [1436769.182088] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+Sep  9 23:23:51 ged kernel: [1436769.182146] nfsd            D    0  1940      2 0x80000000
+Sep  9 23:23:51 ged kernel: [1436769.182149] Call Trace:
+Sep  9 23:23:51 ged kernel: [1436769.182153]  __schedule+0x3d6/0x8b0
+Sep  9 23:23:51 ged kernel: [1436769.182158]  ? __switch_to_asm+0x40/0x70
+Sep  9 23:23:51 ged kernel: [1436769.182162]  schedule+0x36/0x80
+Sep  9 23:23:51 ged kernel: [1436769.182213]  xlog_grant_head_wait+0xb8/0x1e0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.182259]  xlog_grant_head_check+0x94/0x100 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.182308]  xfs_log_reserve+0xcb/0x1e0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.182354]  xfs_trans_reserve+0x169/0x1d0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.182398]  xfs_trans_alloc+0xbe/0x130 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.182448]  xfs_setattr_nonsize+0x242/0x5a0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.182494]  xfs_vn_setattr_nonsize+0x42/0x90 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.182539]  xfs_vn_setattr+0x66/0xa0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.182544]  notify_change+0x2e1/0x410
+Sep  9 23:23:51 ged kernel: [1436769.182558]  nfsd_setattr+0x390/0x4f0 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.182562]  ? _cond_resched+0x1a/0x50
+Sep  9 23:23:51 ged kernel: [1436769.182577]  nfsd4_setattr+0x10e/0x140 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.182591]  nfsd4_proc_compound+0x33c/0x630 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.182603]  nfsd_dispatch+0xbb/0x250 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.182626]  svc_process_common+0x380/0x690 [sunrpc]
+Sep  9 23:23:51 ged kernel: [1436769.182646]  svc_process+0xfa/0x1c0 [sunrpc]
+Sep  9 23:23:51 ged kernel: [1436769.182657]  nfsd+0xe9/0x150 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.182662]  kthread+0x105/0x140
+Sep  9 23:23:51 ged kernel: [1436769.182673]  ? nfsd_destroy+0x60/0x60 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.182710]  ? kthread_destroy_worker+0x50/0x50
+Sep  9 23:23:51 ged kernel: [1436769.182715]  ret_from_fork+0x35/0x40
+Sep  9 23:23:51 ged kernel: [1436769.182720] INFO: task nfsd:1941 blocked for more than 120 seconds.
+Sep  9 23:23:51 ged kernel: [1436769.182771]       Not tainted 4.15.0-32-generic #35~16.04.1-Ubuntu
+Sep  9 23:23:51 ged kernel: [1436769.182820] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+Sep  9 23:23:51 ged kernel: [1436769.182884] nfsd            D    0  1941      2 0x80000000
+Sep  9 23:23:51 ged kernel: [1436769.182897] Call Trace:
+Sep  9 23:23:51 ged kernel: [1436769.182905]  __schedule+0x3d6/0x8b0
+Sep  9 23:23:51 ged kernel: [1436769.182914]  schedule+0x36/0x80
+Sep  9 23:23:51 ged kernel: [1436769.182972]  xlog_grant_head_wait+0xb8/0x1e0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.183022]  xlog_grant_head_check+0x94/0x100 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.183075]  xfs_log_reserve+0xcb/0x1e0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.183126]  xfs_trans_reserve+0x169/0x1d0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.183174]  xfs_trans_alloc+0xbe/0x130 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.183229]  xfs_create+0x1bf/0x6b0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.183239]  ? get_acl+0x1d/0x100
+Sep  9 23:23:51 ged kernel: [1436769.183248]  ? posix_acl_create+0x109/0x160
+Sep  9 23:23:51 ged kernel: [1436769.183300]  xfs_generic_create+0x21a/0x2f0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.183350]  xfs_vn_mknod+0x14/0x20 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.183396]  xfs_vn_create+0x13/0x20 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.183405]  vfs_create+0x12d/0x190
+Sep  9 23:23:51 ged kernel: [1436769.183424]  do_nfsd_create+0x43f/0x580 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.183446]  nfsd4_open+0x20c/0x730 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.183466]  nfsd4_proc_compound+0x33c/0x630 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.183482]  nfsd_dispatch+0xbb/0x250 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.183509]  svc_process_common+0x380/0x690 [sunrpc]
+Sep  9 23:23:51 ged kernel: [1436769.183535]  svc_process+0xfa/0x1c0 [sunrpc]
+Sep  9 23:23:51 ged kernel: [1436769.183553]  nfsd+0xe9/0x150 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.183562]  kthread+0x105/0x140
+Sep  9 23:23:51 ged kernel: [1436769.183578]  ? nfsd_destroy+0x60/0x60 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.183588]  ? kthread_destroy_worker+0x50/0x50
+Sep  9 23:23:51 ged kernel: [1436769.183596]  ret_from_fork+0x35/0x40
+Sep  9 23:23:51 ged kernel: [1436769.183607] INFO: task nfsd:1942 blocked for more than 120 seconds.
+Sep  9 23:23:51 ged kernel: [1436769.183657]       Not tainted 4.15.0-32-generic #35~16.04.1-Ubuntu
+Sep  9 23:23:51 ged kernel: [1436769.183703] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+Sep  9 23:23:51 ged kernel: [1436769.183760] nfsd            D    0  1942      2 0x80000000
+Sep  9 23:23:51 ged kernel: [1436769.183763] Call Trace:
+Sep  9 23:23:51 ged kernel: [1436769.183768]  __schedule+0x3d6/0x8b0
+Sep  9 23:23:51 ged kernel: [1436769.183772]  schedule+0x36/0x80
+Sep  9 23:23:51 ged kernel: [1436769.183823]  xlog_grant_head_wait+0xb8/0x1e0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.183870]  xlog_grant_head_check+0x94/0x100 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.183917]  xfs_log_reserve+0xcb/0x1e0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.183964]  xfs_trans_reserve+0x169/0x1d0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.184008]  xfs_trans_alloc+0xbe/0x130 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.184056]  xfs_setattr_nonsize+0x242/0x5a0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.184077]  ? nfsd_setuser+0x11f/0x2b0 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.184127]  xfs_vn_setattr_nonsize+0x42/0x90 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.184174]  xfs_vn_setattr+0x66/0xa0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.184184]  ? current_time+0x32/0x70
+Sep  9 23:23:51 ged kernel: [1436769.184194]  notify_change+0x2e1/0x410
+Sep  9 23:23:51 ged kernel: [1436769.184212]  nfsd_setattr+0x390/0x4f0 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.184222]  ? _cond_resched+0x1a/0x50
+Sep  9 23:23:51 ged kernel: [1436769.184241]  nfsd4_setattr+0x10e/0x140 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.184260]  nfsd4_proc_compound+0x33c/0x630 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.184278]  nfsd_dispatch+0xbb/0x250 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.184306]  svc_process_common+0x380/0x690 [sunrpc]
+Sep  9 23:23:51 ged kernel: [1436769.184330]  svc_process+0xfa/0x1c0 [sunrpc]
+Sep  9 23:23:51 ged kernel: [1436769.184345]  nfsd+0xe9/0x150 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.184356]  kthread+0x105/0x140
+Sep  9 23:23:51 ged kernel: [1436769.184374]  ? nfsd_destroy+0x60/0x60 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.184384]  ? kthread_destroy_worker+0x50/0x50
+Sep  9 23:23:51 ged kernel: [1436769.184395]  ret_from_fork+0x35/0x40
+Sep  9 23:23:51 ged kernel: [1436769.184406] INFO: task nfsd:1943 blocked for more than 120 seconds.
+Sep  9 23:23:51 ged kernel: [1436769.184460]       Not tainted 4.15.0-32-generic #35~16.04.1-Ubuntu
+Sep  9 23:23:51 ged kernel: [1436769.184508] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+Sep  9 23:23:51 ged kernel: [1436769.184565] nfsd            D    0  1943      2 0x80000000
+Sep  9 23:23:51 ged kernel: [1436769.184568] Call Trace:
+Sep  9 23:23:51 ged kernel: [1436769.184572]  __schedule+0x3d6/0x8b0
+Sep  9 23:23:51 ged kernel: [1436769.184577]  schedule+0x36/0x80
+Sep  9 23:23:51 ged kernel: [1436769.184628]  xlog_grant_head_wait+0xb8/0x1e0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.184673]  xlog_grant_head_check+0x94/0x100 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.184721]  xfs_log_reserve+0xcb/0x1e0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.184768]  xfs_trans_reserve+0x169/0x1d0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.184812]  xfs_trans_alloc+0xbe/0x130 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.184867]  xfs_setattr_nonsize+0x242/0x5a0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.184918]  xfs_vn_setattr_nonsize+0x42/0x90 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.184966]  xfs_vn_setattr+0x66/0xa0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.184977]  notify_change+0x2e1/0x410
+Sep  9 23:23:51 ged kernel: [1436769.184997]  nfsd_setattr+0x390/0x4f0 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.185004]  ? _cond_resched+0x1a/0x50
+Sep  9 23:23:51 ged kernel: [1436769.185020]  nfsd4_setattr+0x10e/0x140 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.185034]  nfsd4_proc_compound+0x33c/0x630 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.185046]  nfsd_dispatch+0xbb/0x250 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.185074]  svc_process_common+0x380/0x690 [sunrpc]
+Sep  9 23:23:51 ged kernel: [1436769.185098]  svc_process+0xfa/0x1c0 [sunrpc]
+Sep  9 23:23:51 ged kernel: [1436769.185113]  nfsd+0xe9/0x150 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.185119]  kthread+0x105/0x140
+Sep  9 23:23:51 ged kernel: [1436769.185135]  ? nfsd_destroy+0x60/0x60 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.185143]  ? kthread_destroy_worker+0x50/0x50
+Sep  9 23:23:51 ged kernel: [1436769.185151]  ret_from_fork+0x35/0x40
+Sep  9 23:23:51 ged kernel: [1436769.185156] INFO: task nfsd:1944 blocked for more than 120 seconds.
+Sep  9 23:23:51 ged kernel: [1436769.185205]       Not tainted 4.15.0-32-generic #35~16.04.1-Ubuntu
+Sep  9 23:23:51 ged kernel: [1436769.185251] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+Sep  9 23:23:51 ged kernel: [1436769.185308] nfsd            D    0  1944      2 0x80000000
+Sep  9 23:23:51 ged kernel: [1436769.185311] Call Trace:
+Sep  9 23:23:51 ged kernel: [1436769.185315]  __schedule+0x3d6/0x8b0
+Sep  9 23:23:51 ged kernel: [1436769.185321]  ? __slab_free+0xb2/0x2f0
+Sep  9 23:23:51 ged kernel: [1436769.185324]  schedule+0x36/0x80
+Sep  9 23:23:51 ged kernel: [1436769.185374]  xlog_grant_head_wait+0xb8/0x1e0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.185420]  xlog_grant_head_check+0xf1/0x100 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.185467]  xfs_log_reserve+0xcb/0x1e0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.185513]  xfs_trans_reserve+0x169/0x1d0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.185556]  xfs_trans_alloc+0xbe/0x130 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.185606]  xfs_rename+0x133/0xab0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.185610]  ? _cond_resched+0x1a/0x50
+Sep  9 23:23:51 ged kernel: [1436769.185614]  ? sort+0x165/0x250
+Sep  9 23:23:51 ged kernel: [1436769.185618]  ? iter_div_u64_rem+0x20/0x20
+Sep  9 23:23:51 ged kernel: [1436769.185665]  xfs_vn_rename+0xd4/0x150 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.185670]  vfs_rename+0x6a5/0x8c0
+Sep  9 23:23:51 ged kernel: [1436769.185675]  ? lookup_one_len+0xf5/0x120
+Sep  9 23:23:51 ged kernel: [1436769.185689]  nfsd_rename+0x359/0x3a0 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.185705]  nfsd4_rename+0x6e/0x190 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.185719]  nfsd4_proc_compound+0x33c/0x630 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.185731]  nfsd_dispatch+0xbb/0x250 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.185753]  svc_process_common+0x380/0x690 [sunrpc]
+Sep  9 23:23:51 ged kernel: [1436769.185773]  svc_process+0xfa/0x1c0 [sunrpc]
+Sep  9 23:23:51 ged kernel: [1436769.185785]  nfsd+0xe9/0x150 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.185790]  kthread+0x105/0x140
+Sep  9 23:23:51 ged kernel: [1436769.185801]  ? nfsd_destroy+0x60/0x60 [nfsd]
+Sep  9 23:23:51 ged kernel: [1436769.185807]  ? kthread_destroy_worker+0x50/0x50
+Sep  9 23:23:51 ged kernel: [1436769.185812]  ret_from_fork+0x35/0x40
+Sep  9 23:23:51 ged kernel: [1436769.185830] INFO: task bacula-fd:24743 blocked for more than 120 seconds.
+Sep  9 23:23:51 ged kernel: [1436769.185881]       Not tainted 4.15.0-32-generic #35~16.04.1-Ubuntu
+Sep  9 23:23:51 ged kernel: [1436769.185927] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+Sep  9 23:23:51 ged kernel: [1436769.185983] bacula-fd       D    0 24743      1 0x00000000
+Sep  9 23:23:51 ged kernel: [1436769.185987] Call Trace:
+Sep  9 23:23:51 ged kernel: [1436769.185991]  __schedule+0x3d6/0x8b0
+Sep  9 23:23:51 ged kernel: [1436769.185995]  schedule+0x36/0x80
+Sep  9 23:23:51 ged kernel: [1436769.186045]  xlog_grant_head_wait+0xb8/0x1e0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.186090]  xlog_grant_head_check+0x94/0x100 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.186136]  xfs_log_reserve+0xcb/0x1e0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.186182]  xfs_trans_reserve+0x169/0x1d0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.186225]  xfs_trans_alloc+0xbe/0x130 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.186274]  xfs_vn_update_time+0x5d/0x160 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.186279]  touch_atime+0xb2/0xe0
+Sep  9 23:23:51 ged kernel: [1436769.186286]  generic_file_read_iter+0x93a/0xba0
+Sep  9 23:23:51 ged kernel: [1436769.186292]  ? page_cache_tree_insert+0xe0/0xe0
+Sep  9 23:23:51 ged kernel: [1436769.186341]  xfs_file_buffered_aio_read+0x5d/0x100 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.186385]  xfs_file_read_iter+0x68/0xc0 [xfs]
+Sep  9 23:23:51 ged kernel: [1436769.186389]  new_sync_read+0xe2/0x130
+Sep  9 23:23:51 ged kernel: [1436769.186393]  __vfs_read+0x29/0x40
+Sep  9 23:23:51 ged kernel: [1436769.186396]  vfs_read+0x93/0x130
+Sep  9 23:23:51 ged kernel: [1436769.186399]  SyS_read+0x55/0xc0
+Sep  9 23:23:51 ged kernel: [1436769.186405]  do_syscall_64+0x73/0x130
+Sep  9 23:23:51 ged kernel: [1436769.186409]  entry_SYSCALL_64_after_hwframe+0x3d/0xa2
+Sep  9 23:23:51 ged kernel: [1436769.186412] RIP: 0033:0x7f919219b51d
+Sep  9 23:23:51 ged kernel: [1436769.186414] RSP: 002b:00007f918d90c9a0 EFLAGS: 00000293 ORIG_RAX: 0000000000000000
+Sep  9 23:23:51 ged kernel: [1436769.186418] RAX: ffffffffffffffda RBX: 00007f917c00b1a0 RCX: 00007f919219b51d
+Sep  9 23:23:51 ged kernel: [1436769.186420] RDX: 0000000000010000 RSI: 00007f917c00c8c0 RDI: 000000000000000e
+Sep  9 23:23:51 ged kernel: [1436769.186422] RBP: 00007f917e12de68 R08: 000000000000000a R09: 0000000000000000
+Sep  9 23:23:51 ged kernel: [1436769.186424] R10: 0000000000000000 R11: 0000000000000293 R12: 00007f917c096308
+Sep  9 23:23:51 ged kernel: [1436769.186426] R13: 00007f917c00bfa8 R14: 00007f917c00b1a0 R15: 00007f917e12de68
