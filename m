@@ -1,44 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:32805 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726086AbeIGDdY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Sep 2018 23:33:24 -0400
-Received: by mail-pg1-f196.google.com with SMTP id s7-v6so5979325pgc.0
-        for <linux-xfs@vger.kernel.org>; Thu, 06 Sep 2018 15:55:39 -0700 (PDT)
-Date: Thu, 6 Sep 2018 15:55:35 -0700
-From: Brian Norris <briannorris@chromium.org>
-Subject: Re: [PATCH xfsprogs] build: don't assume $BUILD_CC has fsmap.h just
- because $CC does
-Message-ID: <20180906225534.GA114388@ban.mtv.corp.google.com>
-References: <20180906183529.117251-1-briannorris@chromium.org>
- <30774ff1-57c1-c9f4-4ec3-31c177b11489@sandeen.net>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:47650 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727006AbeILU3Z (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 Sep 2018 16:29:25 -0400
+Date: Wed, 12 Sep 2018 23:25:08 +0800
+From: Zorro Lang <zlang@redhat.com>
+Subject: Re: [PATCH] xfs/119: fix too small log size error
+Message-ID: <20180912152507.GF8382@dhcp-12-152.nay.redhat.com>
+References: <20180912110404.32673-1-zlang@redhat.com>
+ <20180912131509.GA17817@desktop>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <30774ff1-57c1-c9f4-4ec3-31c177b11489@sandeen.net>
+In-Reply-To: <20180912131509.GA17817@desktop>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-Hi Eric,
+On Wed, Sep 12, 2018 at 09:15:09PM +0800, Eryu Guan wrote:
+> On Wed, Sep 12, 2018 at 07:04:04PM +0800, Zorro Lang wrote:
+> > xfs/119 fails on 4k hard sector size device if reflink (with/without
+> > rmapbt) is enabled:
+> > 
+> >   # mkfs.xfs -f -m reflink=1,rmapbt=0 -l version=2,size=2560b,su=64k /dev/sdf
+> >   log size 2560 blocks too small, minimum size is 2688 blocks
+> >   # mkfs.xfs -f -m reflink=1,rmapbt=1 -l version=2,size=2560b,su=64k /dev/sdf
+> >   log size 2560 blocks too small, minimum size is 4368 blocks
+> > 
+> > So remove log size parameter and run mkfs.xfs again if it fails.
+> > 
+> > Signed-off-by: Zorro Lang <zlang@redhat.com>
+> > ---
+> > 
+> > I saw Dave changed the log size once in commit:
+> >   d0a3cc5a xfs/104: log size too small for 4k sector drives
+> > 
+> > But it's still not enough after we have reflink feature now. I don't
+> > know why this case need "-l version=2,size=2560b,su=64k",
+> > if someone learns about this case, please tell me how to change this
+> > case properly. If the log size parameter is not necessary, I'd like
+> > to remove it.
+> 
+> I guess we still need the log size param, as the test is testing
+> "freeze/thaws on a small log fs", please see commit 3ebdf78c16cb ("Test
+> out pv#942130 where the unmount rec is not ungranting log space. Merge
+> of master-melb:xfs-cmds:23759a by kenmcd."), but we don't have much
+> background information from that ancient commit log..
 
-On Thu, Sep 06, 2018 at 05:33:56PM -0500, Eric Sandeen wrote:
-> I was trying to just get the selftest to build with a custom set of
-> userspace headers, like the patch below, so we don't have to pull in all
-> the various and sundry xfs headers & dependencies.  Not sure what the better
-> approach is here ...
+Yeah, I can't understand the pv#942130 meaning, and can't find it by Google.
+Does anyone know the background, then tell me if it must use the minimum
+log size?
 
-I think an ideal goal is still to remove all usage of HAVE_* from
-anything that gets built with $BUILD_CC. I guess that's just
-crc32selftest? So even if you do that, it would still be good to do
-something like my patch. (Maybe even more than that -- remove the BLKID,
-FSETXATTR, etc., flags from $BUILD_CFLAGS.)
-
-But your patch does work for me. (Well, I had to port it back a little,
-since my cross-compilation environment isn't building off the
-development tip.)
+And I find xfs_mkfs always trys to use the smallest log size which it can
+use by using libxfs_log_calc_minimum_size() (but the real calculator is
+more complicated)...
 
 Thanks,
-Brian
+Zorro
+
+> 
+> Thanks,
+> Eryu
+> 
+> > 
+> > Thanks,
+> > Zorro
+> > 
+> >  tests/xfs/119 | 9 ++++++++-
+> >  1 file changed, 8 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/tests/xfs/119 b/tests/xfs/119
+> > index bf7f1ca8..d507aacf 100755
+> > --- a/tests/xfs/119
+> > +++ b/tests/xfs/119
+> > @@ -40,7 +40,14 @@ sync
+> >  
+> >  export MKFS_OPTIONS="-l version=2,size=2560b,su=64k" 
+> >  export MOUNT_OPTIONS="-o logbsize=64k"
+> > -_scratch_mkfs_xfs >/dev/null
+> > +_scratch_mkfs_xfs >/dev/null 2>&1
+> > +# The specified log size maybe too small if new features (e.g: reflink
+> > +# or/and rmapbt) is enabled. So if mkfs fails, don't specify log size
+> > +# and try to mkfs again.
+> > +if [ $? -ne 0 ]; then
+> > +	export MKFS_OPTIONS="-l version=2,su=64k"
+> > +	_scratch_mkfs_xfs >/dev/null
+> > +fi
+> >  
+> >  _scratch_mount
+> >  
+> > -- 
+> > 2.14.4
+> > 
