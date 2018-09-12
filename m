@@ -1,82 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:36151 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726570AbeIMNlU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Sep 2018 09:41:20 -0400
-Date: Thu, 13 Sep 2018 18:32:50 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs/119: fix too small log size error
-Message-ID: <20180913083250.GA16550@dastard>
-References: <20180912110404.32673-1-zlang@redhat.com>
- <20180912131509.GA17817@desktop>
- <20180912152507.GF8382@dhcp-12-152.nay.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180912152507.GF8382@dhcp-12-152.nay.redhat.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:49622 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727004AbeILL1e (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Sep 2018 07:27:34 -0400
+Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8C6JcXJ017341
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 02:24:34 -0400
+Received: from e14.ny.us.ibm.com (e14.ny.us.ibm.com [129.33.205.204])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2metq5wf92-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 02:24:34 -0400
+Received: from localhost
+        by e14.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Wed, 12 Sep 2018 02:24:32 -0400
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: [PATCH V3 10/19] xfs/325: Inject free_extent error after CoW operation
+Date: Wed, 12 Sep 2018 11:56:17 +0530
+In-Reply-To: <20180912062626.14349-1-chandan@linux.vnet.ibm.com>
+References: <20180912062626.14349-1-chandan@linux.vnet.ibm.com>
+Message-Id: <20180912062626.14349-11-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Zorro Lang <zlang@redhat.com>
-Cc: Eryu Guan <guaneryu@gmail.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
 
-On Wed, Sep 12, 2018 at 11:25:08PM +0800, Zorro Lang wrote:
-> On Wed, Sep 12, 2018 at 09:15:09PM +0800, Eryu Guan wrote:
-> > On Wed, Sep 12, 2018 at 07:04:04PM +0800, Zorro Lang wrote:
-> > > xfs/119 fails on 4k hard sector size device if reflink (with/without
-> > > rmapbt) is enabled:
-> > > 
-> > >   # mkfs.xfs -f -m reflink=1,rmapbt=0 -l version=2,size=2560b,su=64k /dev/sdf
-> > >   log size 2560 blocks too small, minimum size is 2688 blocks
-> > >   # mkfs.xfs -f -m reflink=1,rmapbt=1 -l version=2,size=2560b,su=64k /dev/sdf
-> > >   log size 2560 blocks too small, minimum size is 4368 blocks
-> > > 
-> > > So remove log size parameter and run mkfs.xfs again if it fails.
-> > > 
-> > > Signed-off-by: Zorro Lang <zlang@redhat.com>
-> > > ---
-> > > 
-> > > I saw Dave changed the log size once in commit:
-> > >   d0a3cc5a xfs/104: log size too small for 4k sector drives
-> > > 
-> > > But it's still not enough after we have reflink feature now. I don't
-> > > know why this case need "-l version=2,size=2560b,su=64k",
-> > > if someone learns about this case, please tell me how to change this
-> > > case properly. If the log size parameter is not necessary, I'd like
-> > > to remove it.
-> > 
-> > I guess we still need the log size param, as the test is testing
-> > "freeze/thaws on a small log fs", please see commit 3ebdf78c16cb ("Test
-> > out pv#942130 where the unmount rec is not ungranting log space. Merge
-> > of master-melb:xfs-cmds:23759a by kenmcd."), but we don't have much
-> > background information from that ancient commit log..
-> 
-> Yeah, I can't understand the pv#942130 meaning, and can't find it by Google.
-> Does anyone know the background, then tell me if it must use the minimum
-> log size?
+On a 64k blocksized filesystem, when the test CoWs the file2's offset
+range [10 * 64k, 19 * 64k], the call to xfs_bmapi_reserve_delalloc()
+allocates 32 64k blocks. This is because XFS_DEFAULT_COWEXTSZ_HINT has
+the value of 32 and xfs_get_cowextsz_hint() uses this to compute the
+extent alignment. This leads to xfs_bmapi_reserve_delalloc() to reserve
+space corresponding to the file range [0, 32 * 64k] in the inode's
+cow fork area. On completion of write I/O corresponding to file2's range
+[10 * 64k, 19 * 64k], xfs_end_io() moves 10 out of the originally
+allocated 32 64k blocks to the data fork area. The remaining 22 64k
+blocks linger on in cow fork area of the inode.
 
-s/pv/bz/
+Later, when servicing the exit() syscall for the xfs_io process,
+xfs_free_eofblocks() ends up invoking xfs_reflink_cancel_cow_blocks()
+since i_delayed_blks has the value 22. xfs_reflink_cancel_cow_blocks()
+indirectly invokes __xfs_free_extent() which returns EIO since
+XFS_ERRTAG_FREE_EXTENT has been set. This leads to the filesystem to be
+shutdown. The "rm" command invoked later ends up returning an
+error and hence the test fails. The test actually requires that the
+filesystem gets shutdown when executing the "rm" command.
 
-i.e. PV was the SGI internal bug tracking system. You'll never find
-it in google.
+To fix the problem, this commit injects the free_extent error after we
+CoW file2's [10 * 64k, 19 * 64k] range.
 
-The issue with that test was exercising was a log space leak caused
-by unmount records not correctly reserving/releasing log space.
-Freezzing the filesystem writes an unmount record, and hence when
-filesystems were repeatedly frozen (e.g. for snapshots or backups)
-they'd eventually leak enough log space to hang.
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+---
+ tests/xfs/325     | 5 +++--
+ tests/xfs/325.out | 2 +-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-With a 10MB log, 100 iterations of the freeze/unfreeze loop leaked
-enough log space that the test would hang. If you're going to
-increase the log size, you need to increase the number of iterations
-appropriately.
-
-(The amount of almost entirely useless crap that has stuck inside my
-head over the years never ceases to amaze me!)
-
-Cheers,
-
-Dave.
+diff --git a/tests/xfs/325 b/tests/xfs/325
+index b156de9..6795901 100755
+--- a/tests/xfs/325
++++ b/tests/xfs/325
+@@ -54,11 +54,12 @@ echo "Check files"
+ md5sum $SCRATCH_MNT/file1 | _filter_scratch
+ md5sum $SCRATCH_MNT/file2 | _filter_scratch
+ 
++echo "CoW a few blocks"
++$XFS_IO_PROG -c "pwrite -W -S 0x67 $((10 * blksz)) $((10 * blksz))" $SCRATCH_MNT/file2 >> $seqres.full
++
+ echo "Inject error"
+ _scratch_inject_error "free_extent"
+ 
+-echo "CoW a few blocks"
+-$XFS_IO_PROG -c "pwrite -W -S 0x67 $((10 * blksz)) $((10 * blksz))" $SCRATCH_MNT/file2 >> $seqres.full
+ rm $SCRATCH_MNT/file1
+ sync
+ 
+diff --git a/tests/xfs/325.out b/tests/xfs/325.out
+index 4e25d2b..92027cd 100644
+--- a/tests/xfs/325.out
++++ b/tests/xfs/325.out
+@@ -4,8 +4,8 @@ Create files
+ Check files
+ d5a0ed0305c8df4180cb2bf975ecffe8  SCRATCH_MNT/file1
+ d5a0ed0305c8df4180cb2bf975ecffe8  SCRATCH_MNT/file2
+-Inject error
+ CoW a few blocks
++Inject error
+ FS should be shut down, touch will fail
+ touch: cannot touch 'SCRATCH_MNT/badfs': Input/output error
+ Remount to replay log
 -- 
-Dave Chinner
-david@fromorbit.com
+2.9.5
