@@ -1,91 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx3-rdu2.redhat.com ([66.187.233.73]:57126 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726594AbeIGStF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 7 Sep 2018 14:49:05 -0400
-Date: Fri, 7 Sep 2018 10:07:55 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: avoid lockdep false positives in xfs_trans_alloc
-Message-ID: <20180907140755.GC37751@bfoster>
-References: <20180907015155.32559-1-david@fromorbit.com>
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:46428 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726606AbeILSTo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Sep 2018 14:19:44 -0400
+Date: Wed, 12 Sep 2018 21:15:09 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH] xfs/119: fix too small log size error
+Message-ID: <20180912131509.GA17817@desktop>
+References: <20180912110404.32673-1-zlang@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180907015155.32559-1-david@fromorbit.com>
+In-Reply-To: <20180912110404.32673-1-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, jeffm@suse.com
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Fri, Sep 07, 2018 at 11:51:55AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Wed, Sep 12, 2018 at 07:04:04PM +0800, Zorro Lang wrote:
+> xfs/119 fails on 4k hard sector size device if reflink (with/without
+> rmapbt) is enabled:
 > 
-> We've had a few reports of lockdep tripping over memory reclaim
-> context vs filesystem freeze "deadlocks". They all have looked
-> to be false positives on analysis, but it seems that they are
-> being tripped because we take freeze references before we run
-> a GFP_KERNEL allocation for the struct xfs_trans.
+>   # mkfs.xfs -f -m reflink=1,rmapbt=0 -l version=2,size=2560b,su=64k /dev/sdf
+>   log size 2560 blocks too small, minimum size is 2688 blocks
+>   # mkfs.xfs -f -m reflink=1,rmapbt=1 -l version=2,size=2560b,su=64k /dev/sdf
+>   log size 2560 blocks too small, minimum size is 4368 blocks
 > 
-> We can avoid this false positive vector just by re-ordering the
-> operations in xfs_trans_alloc(). That is. we need allocate the
-> structure before we take the freeze reference and enter the GFP_NOFS
-> allocation context that follows the xfs_trans around. This prevents
-> lockdep from seeing the GFP_KERNEL allocation inside the transaction
-> context, and that prevents it from triggering the freeze level vs
-> alloc context vs reclaim warnings.
+> So remove log size parameter and run mkfs.xfs again if it fails.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
 > ---
-
-We have an old RHEL bug for this problem and I recall dwelling on this
-exact change for a bit. I don't recall whether I just lost track of it,
-there was some kind of problem or I just didn't think it worth the
-change to quiet a false positive. I think the latter because I don't
-remember actually testing it and don't otherwise have any notes to
-suggest it's problematic in any way.
-
-The only difference I can think of is that on a frozen fs, we'd allow
-some number of transaction allocations to occur and either immediately
-block on the freeze/write lock or drop into reclaim. Those instances
-should be limited, however, because most user-driven operations should
-block at the write level rather than the internal/transaction level.
-I'll run some tests to see if anything explodes, but in the meantime
-this seems reasonable to me:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/xfs_trans.c | 10 ++++++++--
->  1 file changed, 8 insertions(+), 2 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index bedc5a5133a5..912b42f5fe4a 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -259,6 +259,14 @@ xfs_trans_alloc(
->  	struct xfs_trans	*tp;
->  	int			error;
+> I saw Dave changed the log size once in commit:
+>   d0a3cc5a xfs/104: log size too small for 4k sector drives
+> 
+> But it's still not enough after we have reflink feature now. I don't
+> know why this case need "-l version=2,size=2560b,su=64k",
+> if someone learns about this case, please tell me how to change this
+> case properly. If the log size parameter is not necessary, I'd like
+> to remove it.
+
+I guess we still need the log size param, as the test is testing
+"freeze/thaws on a small log fs", please see commit 3ebdf78c16cb ("Test
+out pv#942130 where the unmount rec is not ungranting log space. Merge
+of master-melb:xfs-cmds:23759a by kenmcd."), but we don't have much
+background information from that ancient commit log..
+
+Thanks,
+Eryu
+
+> 
+> Thanks,
+> Zorro
+> 
+>  tests/xfs/119 | 9 ++++++++-
+>  1 file changed, 8 insertions(+), 1 deletion(-)
+> 
+> diff --git a/tests/xfs/119 b/tests/xfs/119
+> index bf7f1ca8..d507aacf 100755
+> --- a/tests/xfs/119
+> +++ b/tests/xfs/119
+> @@ -40,7 +40,14 @@ sync
 >  
-> +	/*
-> +	 * Allocate the handle before we do our freeze accounting and setting up
-> +	 * GFP_NOFS allocation context so that we avoid lockdep false positives
-> +	 * by doing GFP_KERNEL allocations inside sb_start_intwrite().
-> +	 */
-> +	tp = kmem_zone_zalloc(xfs_trans_zone,
-> +		(flags & XFS_TRANS_NOFS) ? KM_NOFS : KM_SLEEP);
-> +
->  	if (!(flags & XFS_TRANS_NO_WRITECOUNT))
->  		sb_start_intwrite(mp->m_super);
+>  export MKFS_OPTIONS="-l version=2,size=2560b,su=64k" 
+>  export MOUNT_OPTIONS="-o logbsize=64k"
+> -_scratch_mkfs_xfs >/dev/null
+> +_scratch_mkfs_xfs >/dev/null 2>&1
+> +# The specified log size maybe too small if new features (e.g: reflink
+> +# or/and rmapbt) is enabled. So if mkfs fails, don't specify log size
+> +# and try to mkfs again.
+> +if [ $? -ne 0 ]; then
+> +	export MKFS_OPTIONS="-l version=2,su=64k"
+> +	_scratch_mkfs_xfs >/dev/null
+> +fi
 >  
-> @@ -270,8 +278,6 @@ xfs_trans_alloc(
->  		mp->m_super->s_writers.frozen == SB_FREEZE_COMPLETE);
->  	atomic_inc(&mp->m_active_trans);
+>  _scratch_mount
 >  
-> -	tp = kmem_zone_zalloc(xfs_trans_zone,
-> -		(flags & XFS_TRANS_NOFS) ? KM_NOFS : KM_SLEEP);
->  	tp->t_magic = XFS_TRANS_HEADER_MAGIC;
->  	tp->t_flags = flags;
->  	tp->t_mountp = mp;
 > -- 
-> 2.17.0
+> 2.14.4
 > 
