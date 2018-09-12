@@ -1,89 +1,132 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:56662 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726642AbeILL1Y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Sep 2018 07:27:24 -0400
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8C6JebC121908
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 02:24:24 -0400
-Received: from e13.ny.us.ibm.com (e13.ny.us.ibm.com [129.33.205.203])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2mescu874b-1
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:38152 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727417AbeILL1y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Sep 2018 07:27:54 -0400
+Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8C6OqYB051354
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 02:24:53 -0400
+Received: from e14.ny.us.ibm.com (e14.ny.us.ibm.com [129.33.205.204])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2mevenj8ss-1
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 02:24:24 -0400
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 02:24:53 -0400
 Received: from localhost
-        by e13.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e14.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Wed, 12 Sep 2018 02:24:22 -0400
+        Wed, 12 Sep 2018 02:24:45 -0400
 From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH V3 04/19] Fix xfs/074 to work with 64k block size
-Date: Wed, 12 Sep 2018 11:56:11 +0530
+Subject: [PATCH V3 14/19] Fix generic/177 to work with 64k block size
+Date: Wed, 12 Sep 2018 11:56:21 +0530
 In-Reply-To: <20180912062626.14349-1-chandan@linux.vnet.ibm.com>
 References: <20180912062626.14349-1-chandan@linux.vnet.ibm.com>
-Message-Id: <20180912062626.14349-5-chandan@linux.vnet.ibm.com>
+Message-Id: <20180912062626.14349-15-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: fstests@vger.kernel.org
 Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
 
-This commit makes file and extent size calculations to be a function of
-the filesystem's block size. It also adds a brief description of the
-bug that is being tested.
+This commit changes the test to work on file offsets that are aligned
+with the block size of the underlying filesystem.
 
 Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
 ---
- tests/xfs/074 | 23 +++++++++++++++++++----
- 1 file changed, 19 insertions(+), 4 deletions(-)
+ tests/generic/177     | 20 +++++++++++---------
+ tests/generic/177.out | 23 +++++++++++++++--------
+ 2 files changed, 26 insertions(+), 17 deletions(-)
 
-diff --git a/tests/xfs/074 b/tests/xfs/074
-index e5888d5..1e1e16e 100755
---- a/tests/xfs/074
-+++ b/tests/xfs/074
-@@ -7,6 +7,18 @@
- # Check some extent size hint boundary conditions that can result in
- # MAXEXTLEN overflows.
- #
-+# In xfs_bmap_extsize_align(), we had,
-+# 	if ((temp = (align_alen % extsz))) {
-+# 		align_alen += extsz - temp;
-+# 	}
-+# align_alen had the value of 2097151 (i.e. MAXEXTLEN) blocks. extsz had
-+# the value of 4096 blocks.
-+#
-+# align_alen % extsz will be 4095. so align_alen will end up having
-+# 2097151 + (4096 - 4095) = 2097152 i.e. (MAXEXTLEN + 1). Thus the length
-+# of the new extent will be larger than MAXEXTLEN. This will later cause
-+# the bmbt leaf to have an entry whose length is set to zero block count.
-+#
- seq=`basename $0`
- seqres=$RESULT_DIR/$seq
- echo "QA output created by $seq"
-@@ -46,19 +58,22 @@ mkdir -p $LOOP_MNT
- $XFS_IO_PROG -ft -c "truncate 1t" $LOOP_FILE >> $seqres.full
- LOOP_DEV=`_create_loop_device $LOOP_FILE`
+diff --git a/tests/generic/177 b/tests/generic/177
+index 36577b1..069bb81 100755
+--- a/tests/generic/177
++++ b/tests/generic/177
+@@ -45,44 +45,46 @@ _require_metadata_journaling $SCRATCH_DEV
+ _init_flakey
+ _mount_flakey
  
--_mkfs_dev -d size=156452m,agcount=4 -l size=32m $LOOP_DEV
-+_mkfs_dev -d size=260g,agcount=2 $LOOP_DEV
- _mount $LOOP_DEV $LOOP_MNT
- 
-+BLOCK_SIZE=$(_get_block_size $LOOP_MNT)
++BLOCK_SIZE=$(_get_block_size $SCRATCH_MNT)
 +
- # Corrupt the BMBT by creating extents larger than MAXEXTLEN
-+# For 4k blocksize, MAXEXTLEN * 4k = 2097151 * 4k = 8589930496 = ~8GiB
- $XFS_IO_PROG -ft \
--	-c "extsize 16m" \
--	-c "falloc 0 30g" \
-+	-c "extsize $(($BLOCK_SIZE * 4096))" \
-+	-c "falloc 0 $(($BLOCK_SIZE * 2097152))" \
- 	$LOOP_MNT/foo >> $seqres.full
+ # Create out test file with some data and then fsync it.
+ # We do the fsync only to make sure the last fsync we do in this test triggers
+ # the fast code path of btrfs' fsync implementation, a condition necessary to
+ # trigger the bug btrfs had.
+-$XFS_IO_PROG -f -c "pwrite -S 0xaa 0K 128K" \
++$XFS_IO_PROG -f -c "pwrite -S 0xaa 0K $(($BLOCK_SIZE * 32))" \
+ 		-c "fsync"                  \
+-		$SCRATCH_MNT/foobar | _filter_xfs_io
++		$SCRATCH_MNT/foobar | _filter_xfs_io_blocks_modified
  
- umount $LOOP_MNT
- _check_xfs_filesystem $LOOP_DEV none none
+ # Now punch a hole against the range [96K, 128K[.
+-$XFS_IO_PROG -c "fpunch 96K 32K" $SCRATCH_MNT/foobar
++$XFS_IO_PROG -c "fpunch $(($BLOCK_SIZE * 24)) $(($BLOCK_SIZE * 8))" $SCRATCH_MNT/foobar
  
--_mkfs_dev -f -l size=32m $LOOP_DEV
-+_mkfs_dev -f $LOOP_DEV
- _mount $LOOP_DEV $LOOP_MNT
+ # Punch another hole against a range that overlaps the previous range and ends
+ # beyond eof.
+-$XFS_IO_PROG -c "fpunch 64K 128K" $SCRATCH_MNT/foobar
++$XFS_IO_PROG -c "fpunch $(($BLOCK_SIZE * 16)) $(($BLOCK_SIZE * 32))" $SCRATCH_MNT/foobar
  
- # check we trim both ends of the extent approproiately; this will fail
+ # Punch another hole against a range that overlaps the first range ([96K, 128K[)
+ # and ends at eof.
+-$XFS_IO_PROG -c "fpunch 32K 96K" $SCRATCH_MNT/foobar
++$XFS_IO_PROG -c "fpunch $(($BLOCK_SIZE * 8)) $(($BLOCK_SIZE * 24))" $SCRATCH_MNT/foobar
+ 
+ # Fsync our file. We want to verify that, after a power failure and mounting the
+ # filesystem again, the file content reflects all the hole punch operations.
+ $XFS_IO_PROG -c "fsync" $SCRATCH_MNT/foobar
+ 
+ echo "File digest before power failure:"
+-md5sum $SCRATCH_MNT/foobar | _filter_scratch
++od -t x1 $SCRATCH_MNT/foobar | _filter_od
+ 
+ echo "Fiemap before power failure:"
+-$XFS_IO_PROG -c "fiemap -v" $SCRATCH_MNT/foobar | _filter_fiemap
++$XFS_IO_PROG -c "fiemap -v" $SCRATCH_MNT/foobar | _filter_fiemap $BLOCK_SIZE
+ 
+ _flakey_drop_and_remount
+ 
+ echo "File digest after log replay:"
+ # Must match the same digest we got before the power failure.
+-md5sum $SCRATCH_MNT/foobar | _filter_scratch
++od -t x1 $SCRATCH_MNT/foobar | _filter_od
+ 
+ echo "Fiemap after log replay:"
+ # Must match the same extent listing we got before the power failure.
+-$XFS_IO_PROG -c "fiemap -v" $SCRATCH_MNT/foobar | _filter_fiemap
++$XFS_IO_PROG -c "fiemap -v" $SCRATCH_MNT/foobar | _filter_fiemap $BLOCK_SIZE
+ 
+ _unmount_flakey
+ 
+diff --git a/tests/generic/177.out b/tests/generic/177.out
+index cc10768..b47e136 100644
+--- a/tests/generic/177.out
++++ b/tests/generic/177.out
+@@ -1,13 +1,20 @@
+ QA output created by 177
+-wrote 131072/131072 bytes at offset 0
+-XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++Blocks modified: [0 - 31]
+ File digest before power failure:
+-d26bbb9a8396a9c0dd76423471b72b15  SCRATCH_MNT/foobar
++0 aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa
++*
++10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
++*
++40
+ Fiemap before power failure:
+-0: [0..63]: data
+-1: [64..255]: hole
++0: [0..7]: data
++1: [8..31]: hole
+ File digest after log replay:
+-d26bbb9a8396a9c0dd76423471b72b15  SCRATCH_MNT/foobar
++0 aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa
++*
++10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
++*
++40
+ Fiemap after log replay:
+-0: [0..63]: data
+-1: [64..255]: hole
++0: [0..7]: data
++1: [8..31]: hole
 -- 
 2.9.5
