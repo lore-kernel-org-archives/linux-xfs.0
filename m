@@ -1,92 +1,247 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:52717 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725810AbeIUGJt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Sep 2018 02:09:49 -0400
-Date: Fri, 21 Sep 2018 10:23:36 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Strange behavior with log IO fake-completions
-Message-ID: <20180921002336.GO27618@dastard>
-References: <CA+1E3r+crZ6suDtTheOysm_dzZ2FeU=z4R-aQQw7etk1yuxOLQ@mail.gmail.com>
- <20180910235827.GD5631@dastard>
- <CA+1E3r+Lggw9JJymdhoyzkqQfqGETZE=R=WG09s7FOhY3Snb5g@mail.gmail.com>
- <20180912004259.GJ5631@dastard>
- <CA+1E3r+gd57nOv=S0gjrbU8df2qXa67njPP=KK1oPqLmsO5thQ@mail.gmail.com>
- <20180917025601.GE16550@dastard>
+Received: from mail-lj1-f193.google.com ([209.85.208.193]:44643 "EHLO
+        mail-lj1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727153AbeILO2v (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Sep 2018 10:28:51 -0400
+Received: by mail-lj1-f193.google.com with SMTP id q127-v6so993305ljq.11
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 02:25:09 -0700 (PDT)
+Date: Wed, 12 Sep 2018 12:24:41 +0300
+From: "Alexander Y. Fomichev" <git.user@gmail.com>
+Subject: Re: [PATCH] xfs: fix transaction leak in xfs_reflink_allocate_cow()
+Message-ID: <20180912122441.30e58cea@madcat>
+In-Reply-To: <20180910070241.GB30888@infradead.org>
+References: <20180907015113.32448-1-david@fromorbit.com>
+        <20180910070241.GB30888@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180917025601.GE16550@dastard>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Joshi <joshiiitr@gmail.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-On Mon, Sep 17, 2018 at 12:56:01PM +1000, Dave Chinner wrote:
-> On Fri, Sep 14, 2018 at 05:21:43PM +0530, Joshi wrote:
-> > > Now, your other "unexpected" result - lets use affinity to confine
-> > > everything to one CPU:
-> > >
-> > > fsync proc              CIL             IO-complete     log
-> > > xfs_log_force_lsn
-> > >   <wait for CIL>
-> > >                         xlog_write()
-> > >                         <queue to log>
-> > >                         wake CIL waiters
-> > >                                                         xlog_iodone()
-> > >                                                         wake iclogbug waiters
-> > > log force done
-> > >
-> > > Note the difference? The log work can't start until the CIL work has
-> > > completed because it's constrained to the same CPU, so it doesn't
-> > > cause any contention with the finalising of the CIL push and waking
-> > > waiters.
-> > 
-> > "Log work can't start" part does not sound very good either. It needed
-> > to be done anyway before task waiting for fsync is woken.
+On Mon, 10 Sep 2018 00:02:41 -0700
+Christoph Hellwig <hch@infradead.org> wrote:
+
+> > +	/*
+> > +	 * if we don't find an overlapping extent, trim the range
+> > we need to
+> > +	 * allocate to fit the hole we found.
+> > +	 */  
 > 
-> I'm beginning to think you don't really understand how logging in
-> XFS works.  If you want to improve the logging subsystem, it would
-> be a good idea for you to read and understand this document so you
-> have some idea of how the data that is written to the log gets
-> there and what happens to it after it's in the log.
+> Please capitalize the first letter in each sentence.
 > 
-> Documentation/filesystems/xfs-delayed-logging-design.txt
+> > +	*shared = true;
+> > +	if (isnullstartblock(got.br_startblock)) {
+> > +		xfs_trim_extent(imap, got.br_startoff,
+> > got.br_blockcount);
+> > +		return 0;
+> > +	}  
+> 
+> Taken out of the context of the bigger function this conditional
+> could really use a comment as well.
+> 
+> > +	} while (tp);  
+> 
+> This looks a little odd as tp will always be true if we reach this
+> point.  I'd suggest to switch to a do { } while (1) or for (;;) style
+> loop.
+> 
+> Alternatively we could just skip the loop entirely now that we have
+> the lookup + trim helper.  Untested patch below:
 
-It occurred to me yesterday that looking at the journal in a
-different way might help explain how it all works.
-
-Instead of looking at it as an IO engine, think of how an
-out-of-order CPU is designed to be made up of multiple stages in a
-pipeline - each stage does a small piece of work that it passes on
-to the next stage to process. Individual operation progresses serially
-through the pipeline, but, each stage of the pipeline can be
-operating on a different operation. Hence we can have multiple
-operations in flight at once, and the operations can also be run
-out of order as dynamical stage completion scheduling dictates.
-However, from a high level everything appears to complete in order
-because of re-ordering stages put everythign in order once the
-indiivdual operations have been executed.
-
-Similarly, the XFS journalling subsystem is an out of order,
-multi-stage pipeline with a post-IO re-ordering stage to ensure the
-end result is that individual operations always appear to complete
-in order.  Indeed, what ends up on disk in the journal is not in
-order, so one of the things that log recovery does is rebuild the
-state necessarily to reorder operations correctly before replay so
-that, again, it appears like everything occurred in the order that
-the transactions were committed to the journal.
-
-So perhaps looking at it as a multi-stage pipeline might also help
-explain why fake-completion changes the behaviour in unpredictable
-ways. i.e. it basically chops out stages of the pipeline, changing
-the length of the pipeline and the order in which stages of the
-pipleine are executed.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I have just tested and it looks ok.
+ 
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index 38f405415b88..79e2279d8e15 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -352,6 +352,47 @@ xfs_reflink_convert_cow(
+>  	return error;
+>  }
+>  
+> +/*
+> + * Find the extent that maps the given range in the COW fork. Even
+> if the extent
+> + * is not shared we might have a preallocation for it in the COW
+> fork. If so we
+> + * use it that rather than trigger a new allocation.
+> + */
+> +static int
+> +find_trim_cow_extent(
+> +	struct xfs_inode	*ip,
+> +	struct xfs_bmbt_irec	*imap,
+> +	bool			*shared,
+> +	bool			*found)
+> +{
+> +	xfs_fileoff_t		offset_fsb = imap->br_startoff;
+> +	xfs_filblks_t		count_fsb = imap->br_blockcount;
+> +	struct xfs_iext_cursor	icur;
+> +	struct xfs_bmbt_irec	got;
+> +	bool			trimmed;
+> +
+> +	*found = false;
+> +
+> +	/*
+> +	 * If we don't find an overlapping extent, trim the range we
+> need to
+> +	 * allocate to fit the hole we found.
+> +	 */
+> +	if (!xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb,
+> &icur, &got) ||
+> +	    got.br_startoff > offset_fsb)
+> +		return xfs_reflink_trim_around_shared(ip, imap,
+> shared, &trimmed); +
+> +	*shared = true;
+> +	if (isnullstartblock(got.br_startblock)) {
+> +		xfs_trim_extent(imap, got.br_startoff,
+> got.br_blockcount);
+> +		return 0;
+> +	}
+> +
+> +	/* real extent found - no need to allocate */
+> +	xfs_trim_extent(&got, offset_fsb, count_fsb);
+> +	*imap = got;
+> +	*found = true;
+> +	return 0;
+> +}
+> +
+>  /* Allocate all CoW reservations covering a range of blocks in a
+> file. */ int
+>  xfs_reflink_allocate_cow(
+> @@ -363,78 +404,62 @@ xfs_reflink_allocate_cow(
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  	xfs_fileoff_t		offset_fsb = imap->br_startoff;
+>  	xfs_filblks_t		count_fsb = imap->br_blockcount;
+> -	struct xfs_bmbt_irec	got;
+> -	struct xfs_trans	*tp = NULL;
+> +	struct xfs_trans	*tp;
+>  	int			nimaps, error = 0;
+> -	bool			trimmed;
+> +	bool			found;
+>  	xfs_filblks_t		resaligned;
+>  	xfs_extlen_t		resblks = 0;
+> -	struct xfs_iext_cursor	icur;
+>  
+> -retry:
+> -	ASSERT(xfs_is_reflink_inode(ip));
+>  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+> +	ASSERT(xfs_is_reflink_inode(ip));
+>  
+> -	/*
+> -	 * Even if the extent is not shared we might have a
+> preallocation for
+> -	 * it in the COW fork.  If so use it.
+> -	 */
+> -	if (xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb,
+> &icur, &got) &&
+> -	    got.br_startoff <= offset_fsb) {
+> -		*shared = true;
+> -
+> -		/* If we have a real allocation in the COW fork
+> we're done. */
+> -		if (!isnullstartblock(got.br_startblock)) {
+> -			xfs_trim_extent(&got, offset_fsb, count_fsb);
+> -			*imap = got;
+> -			goto convert;
+> -		}
+> +	error = find_trim_cow_extent(ip, imap, shared, &found);
+> +	if (error || !*shared)
+> +		return error;
+> +	if (found)
+> +		goto convert;
+>  
+> -		xfs_trim_extent(imap, got.br_startoff,
+> got.br_blockcount);
+> -	} else {
+> -		error = xfs_reflink_trim_around_shared(ip, imap,
+> shared, &trimmed);
+> -		if (error || !*shared)
+> -			goto out;
+> -	}
+> +	resaligned = xfs_aligned_fsb_count(imap->br_startoff,
+> +		imap->br_blockcount, xfs_get_cowextsz_hint(ip));
+> +	resblks = XFS_DIOSTRAT_SPACE_RES(mp, resaligned);
+>  
+> -	if (!tp) {
+> -		resaligned = xfs_aligned_fsb_count(imap->br_startoff,
+> -			imap->br_blockcount,
+> xfs_get_cowextsz_hint(ip));
+> -		resblks = XFS_DIOSTRAT_SPACE_RES(mp, resaligned);
+> +	xfs_iunlock(ip, *lockmode);
+> +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks,
+> 0, 0, &tp);
+> +	*lockmode = XFS_ILOCK_EXCL;
+> +	xfs_ilock(ip, *lockmode);
+>  
+> -		xfs_iunlock(ip, *lockmode);
+> -		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write,
+> resblks, 0, 0, &tp);
+> -		*lockmode = XFS_ILOCK_EXCL;
+> -		xfs_ilock(ip, *lockmode);
+> +	if (error)
+> +		return error;
+>  
+> -		if (error)
+> -			return error;
+> +	error = xfs_qm_dqattach_locked(ip, false);
+> +	if (error)
+> +		goto out_trans_cancel;
+>  
+> -		error = xfs_qm_dqattach_locked(ip, false);
+> -		if (error)
+> -			goto out;
+> -		goto retry;
+> +	/* check for an overlapping extent again no that we dropped
+> the ilock */
+> +	error = find_trim_cow_extent(ip, imap, shared, &found);
+> +	if (error || !*shared)
+> +		goto out_trans_cancel;
+> +	if (found) {
+> +		xfs_trans_cancel(tp);
+> +		goto convert;
+>  	}
+>  
+>  	error = xfs_trans_reserve_quota_nblks(tp, ip, resblks, 0,
+>  			XFS_QMOPT_RES_REGBLKS);
+>  	if (error)
+> -		goto out;
+> +		goto out_trans_cancel;
+>  
+>  	xfs_trans_ijoin(tp, ip, 0);
+>  
+> -	nimaps = 1;
+> -
+>  	/* Allocate the entire reservation as unwritten blocks. */
+> +	nimaps = 1;
+>  	error = xfs_bmapi_write(tp, ip, imap->br_startoff,
+> imap->br_blockcount, XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC,
+>  			resblks, imap, &nimaps);
+>  	if (error)
+> -		goto out_trans_cancel;
+> +		goto out_unreserve;
+>  
+>  	xfs_inode_set_cowblocks_tag(ip);
+> -
+> -	/* Finish up. */
+>  	error = xfs_trans_commit(tp);
+>  	if (error)
+>  		return error;
+> @@ -447,12 +472,12 @@ xfs_reflink_allocate_cow(
+>  		return -ENOSPC;
+>  convert:
+>  	return xfs_reflink_convert_cow_extent(ip, imap, offset_fsb,
+> count_fsb); -out_trans_cancel:
+> +
+> +out_unreserve:
+>  	xfs_trans_unreserve_quota_nblks(tp, ip, (long)resblks, 0,
+>  			XFS_QMOPT_RES_REGBLKS);
+> -out:
+> -	if (tp)
+> -		xfs_trans_cancel(tp);
+> +out_trans_cancel:
+> +	xfs_trans_cancel(tp);
+>  	return error;
+>  }
+>  
