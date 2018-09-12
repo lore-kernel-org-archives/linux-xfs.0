@@ -1,228 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:51730 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725785AbeIGHT0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Sep 2018 03:19:26 -0400
-Date: Thu, 6 Sep 2018 19:40:47 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: fix transaction leak in xfs_reflink_allocate_cow()
-Message-ID: <20180907024047.GA4607@magnolia>
-References: <20180907015113.32448-1-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180907015113.32448-1-david@fromorbit.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:59552 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726502AbeILL14 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Sep 2018 07:27:56 -0400
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8C6OubR135993
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 02:24:56 -0400
+Received: from e17.ny.us.ibm.com (e17.ny.us.ibm.com [129.33.205.207])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2mescu87kt-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 02:24:56 -0400
+Received: from localhost
+        by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Wed, 12 Sep 2018 02:24:49 -0400
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: [PATCH V3 19/19] Fix generic/108 to work with 64k block size
+Date: Wed, 12 Sep 2018 11:56:26 +0530
+In-Reply-To: <20180912062626.14349-1-chandan@linux.vnet.ibm.com>
+References: <20180912062626.14349-1-chandan@linux.vnet.ibm.com>
+Message-Id: <20180912062626.14349-20-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, git.user@gmail.com
+To: fstests@vger.kernel.org
+Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
 
-On Fri, Sep 07, 2018 at 11:51:13AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> When xfs_reflink_allocate_cow() allocates a transaction, it drops
-> the ILOCK to perform the operation. This Introduces a race condition
-> where another thread modifying the file can perform the COW
-> allocation operation underneath us. This result in the retry loop
-> finding an allocated block and jumping straight to the conversion
-> code. It does not, however, cancel the transaction it holds and so
-> this gets leaked. This results in a lockdep warning:
-> 
-> ================================================
-> WARNING: lock held when returning to user space!
-> 4.18.5 #1 Not tainted
-> ------------------------------------------------
-> worker/6123 is leaving the kernel with locks still held!
-> 1 lock held by worker/6123:
->  #0: 000000009eab4f1b (sb_internal#2){.+.+}, at: xfs_trans_alloc+0x17c/0x220
-> 
-> And eventually the filesystem deadlocks because it runs out of log
-> space that is reserved by the leaked transaction and never gets
-> released.
-> 
-> The logic flow in xfs_reflink_allocate_cow() is a convoluted mess of
-> gotos - it's no surprise that it has bug where the flow through
-> several goto jumps then fails to clean up context from a non-obvious
-> logic path. CLean up the logic flow and make sure every path does
-> the right thing.
+This commit increases the size of the scsi debug device to 300MiB to
+accommodate a 275MiB sized XFS filesystem with 64k block size. mkfs.xfs
+fails to create a 64k block sized filesystem on devices with capacity
+less than 275MiB.
 
-Ugh, sorry about leaving that mess.
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+---
+ tests/generic/108 | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-I haven't tested this at all, but it looks right.  If the original
-reporter tests it and the problem goes away I'm willing to attach a:
-
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> Reported-by: Alexander Y. Fomichev <git.user@gmail.com>
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=200981
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_reflink.c | 98 +++++++++++++++++++++++++++++---------------
->  1 file changed, 66 insertions(+), 32 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 38f405415b88..b39f5afa57aa 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -352,6 +352,47 @@ xfs_reflink_convert_cow(
->  	return error;
->  }
->  
-> +/*
-> + * Find the extent that maps the given range in the COW fork. Even if the extent
-> + * is not shared we might have a preallocation for it in the COW fork. If so we
-> + * use it that rather than trigger a new allocation.
-> + */
-> +static int
-> +find_trim_cow_extent(
-> +	struct xfs_inode	*ip,
-> +	struct xfs_bmbt_irec	*imap,
-> +	bool			*shared,
-> +	bool			*found)
-> +{
-> +	xfs_fileoff_t		offset_fsb = imap->br_startoff;
-> +	xfs_filblks_t		count_fsb = imap->br_blockcount;
-> +	struct xfs_iext_cursor	icur;
-> +	struct xfs_bmbt_irec	got;
-> +	bool			trimmed;
-> +
-> +	*found = false;
-> +
-> +	/*
-> +	 * if we don't find an overlapping extent, trim the range we need to
-> +	 * allocate to fit the hole we found.
-> +	 */
-> +	if (!xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &got) ||
-> +	    got.br_startoff > offset_fsb)
-> +		return xfs_reflink_trim_around_shared(ip, imap, shared, &trimmed);
-> +
-> +	*shared = true;
-> +	if (isnullstartblock(got.br_startblock)) {
-> +		xfs_trim_extent(imap, got.br_startoff, got.br_blockcount);
-> +		return 0;
-> +	}
-> +
-> +	/* real extent found - no need to allocate */
-> +	xfs_trim_extent(&got, offset_fsb, count_fsb);
-> +	*imap = got;
-> +	*found = true;
-> +	return 0;
-> +}
-> +
->  /* Allocate all CoW reservations covering a range of blocks in a file. */
->  int
->  xfs_reflink_allocate_cow(
-> @@ -363,41 +404,37 @@ xfs_reflink_allocate_cow(
->  	struct xfs_mount	*mp = ip->i_mount;
->  	xfs_fileoff_t		offset_fsb = imap->br_startoff;
->  	xfs_filblks_t		count_fsb = imap->br_blockcount;
-> -	struct xfs_bmbt_irec	got;
->  	struct xfs_trans	*tp = NULL;
->  	int			nimaps, error = 0;
-> -	bool			trimmed;
-> +	bool			found;
->  	xfs_filblks_t		resaligned;
->  	xfs_extlen_t		resblks = 0;
-> -	struct xfs_iext_cursor	icur;
->  
-> -retry:
-> -	ASSERT(xfs_is_reflink_inode(ip));
->  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
->  
->  	/*
-> -	 * Even if the extent is not shared we might have a preallocation for
-> -	 * it in the COW fork.  If so use it.
-> +	 * do-while to run a single lookup retry after transaction allocation.
-> +	 * All exits from the loop need to check if the transaction needs
-> +	 * cancelling. Dropping the ILOCK to allocate the transaction allows
-> +	 * races with other COW fork allocations, so we need to start the extent
-> +	 * lookup from scratch once we have the ILOCK again.
->  	 */
-> -	if (xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &got) &&
-> -	    got.br_startoff <= offset_fsb) {
-> -		*shared = true;
-> +	do {
-> +		ASSERT(xfs_is_reflink_inode(ip));
->  
-> -		/* If we have a real allocation in the COW fork we're done. */
-> -		if (!isnullstartblock(got.br_startblock)) {
-> -			xfs_trim_extent(&got, offset_fsb, count_fsb);
-> -			*imap = got;
-> +		error = find_trim_cow_extent(ip, imap, shared, &found);
-> +		if (error || !*shared)
-> +			goto out_trans_cancel;
-> +		if (found) {
-> +			if (tp)
-> +				xfs_trans_cancel(tp);
->  			goto convert;
->  		}
->  
-> -		xfs_trim_extent(imap, got.br_startoff, got.br_blockcount);
-> -	} else {
-> -		error = xfs_reflink_trim_around_shared(ip, imap, shared, &trimmed);
-> -		if (error || !*shared)
-> -			goto out;
-> -	}
-> +		/* if we have a transaction, it's time to allocate */
-> +		if (tp)
-> +			break;
->  
-> -	if (!tp) {
->  		resaligned = xfs_aligned_fsb_count(imap->br_startoff,
->  			imap->br_blockcount, xfs_get_cowextsz_hint(ip));
->  		resblks = XFS_DIOSTRAT_SPACE_RES(mp, resaligned);
-> @@ -412,29 +449,25 @@ xfs_reflink_allocate_cow(
->  
->  		error = xfs_qm_dqattach_locked(ip, false);
->  		if (error)
-> -			goto out;
-> -		goto retry;
-> -	}
-> +			goto out_trans_cancel;
-> +	} while (tp);
->  
->  	error = xfs_trans_reserve_quota_nblks(tp, ip, resblks, 0,
->  			XFS_QMOPT_RES_REGBLKS);
->  	if (error)
-> -		goto out;
-> +		goto out_trans_cancel;
->  
->  	xfs_trans_ijoin(tp, ip, 0);
->  
-> -	nimaps = 1;
-> -
->  	/* Allocate the entire reservation as unwritten blocks. */
-> +	nimaps = 1;
->  	error = xfs_bmapi_write(tp, ip, imap->br_startoff, imap->br_blockcount,
->  			XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC,
->  			resblks, imap, &nimaps);
->  	if (error)
-> -		goto out_trans_cancel;
-> +		goto out_unreserve;
->  
->  	xfs_inode_set_cowblocks_tag(ip);
-> -
-> -	/* Finish up. */
->  	error = xfs_trans_commit(tp);
->  	if (error)
->  		return error;
-> @@ -447,10 +480,11 @@ xfs_reflink_allocate_cow(
->  		return -ENOSPC;
->  convert:
->  	return xfs_reflink_convert_cow_extent(ip, imap, offset_fsb, count_fsb);
-> -out_trans_cancel:
-> +
-> +out_unreserve:
->  	xfs_trans_unreserve_quota_nblks(tp, ip, (long)resblks, 0,
->  			XFS_QMOPT_RES_REGBLKS);
-> -out:
-> +out_trans_cancel:
->  	if (tp)
->  		xfs_trans_cancel(tp);
->  	return error;
-> -- 
-> 2.17.0
-> 
+diff --git a/tests/generic/108 b/tests/generic/108
+index e464335..9b4fe60 100755
+--- a/tests/generic/108
++++ b/tests/generic/108
+@@ -48,7 +48,7 @@ vgname=vg_$seq
+ rm -f $seqres.full
+ 
+ # _get_scsi_debug_dev returns a scsi debug device with 128M in size by default
+-SCSI_DEBUG_DEV=`_get_scsi_debug_dev`
++SCSI_DEBUG_DEV=`_get_scsi_debug_dev 512 512 0 300`
+ if [ "$SCSI_DEBUG_DEV" == "/dev/" ]; then
+ 	_fail "Failed to initialize scsi debug device"
+ fi
+@@ -59,7 +59,7 @@ $LVM_PROG pvcreate -f $SCSI_DEBUG_DEV $SCRATCH_DEV >>$seqres.full 2>&1
+ $LVM_PROG vgcreate -f $vgname $SCSI_DEBUG_DEV $SCRATCH_DEV >>$seqres.full 2>&1
+ # We use yes pipe instead of 'lvcreate --yes' because old version of lvm
+ # (like 2.02.95 in RHEL6) don't support --yes option
+-yes | $LVM_PROG lvcreate -i 2 -I 4m -L 100m -n $lvname $vgname \
++yes | $LVM_PROG lvcreate -i 2 -I 4m -L 275m -n $lvname $vgname \
+ 	>>$seqres.full 2>&1
+ # wait for lv creation to fully complete
+ $UDEV_SETTLE_PROG >>$seqres.full 2>&1
+-- 
+2.9.5
