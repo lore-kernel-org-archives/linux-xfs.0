@@ -1,83 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:58945 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726495AbeIML1D (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Sep 2018 07:27:03 -0400
-Date: Thu, 13 Sep 2018 16:18:33 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Strange XFS problem
-Message-ID: <20180913061833.GB27618@dastard>
-References: <1063031109.4602643.1536739675362.JavaMail.zimbra@casalogic.dk>
- <20180913041944.GA27618@dastard>
- <1406319049.4700361.1536816119283.JavaMail.zimbra@casalogic.dk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1406319049.4700361.1536816119283.JavaMail.zimbra@casalogic.dk>
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:56010 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727618AbeILQIN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 Sep 2018 12:08:13 -0400
+From: Zorro Lang <zlang@redhat.com>
+Subject: [PATCH] xfs/119: fix too small log size error
+Date: Wed, 12 Sep 2018 19:04:04 +0800
+Message-Id: <20180912110404.32673-1-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Troels Hansen <th@casalogic.dk>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Sep 13, 2018 at 07:21:59AM +0200, Troels Hansen wrote:
-> 
-> > 
-> > What happens on your network every 14 days or so? Is there a rogue
-> > client side backup or admin task running somewhere?
-> > 
-> 
-> Well, we run nightly backups, but thats read ops.
+xfs/119 fails on 4k hard sector size device if reflink (with/without
+rmapbt) is enabled:
 
-Yup, but that can get stuck modifying atime, like the bacula process
-in the hung process traces. :)
+  # mkfs.xfs -f -m reflink=1,rmapbt=0 -l version=2,size=2560b,su=64k /dev/sdf
+  log size 2560 blocks too small, minimum size is 2688 blocks
+  # mkfs.xfs -f -m reflink=1,rmapbt=1 -l version=2,size=2560b,su=64k /dev/sdf
+  log size 2560 blocks too small, minimum size is 4368 blocks
 
-Hmmm - just a thought - it's hardware raid - it's not running a
-background admin op like a media scrub every 14 days, is it?
+So remove log size parameter and run mkfs.xfs again if it fails.
 
-> When I look at the load, its not particular more loaded at that time, than normal work.
+Signed-off-by: Zorro Lang <zlang@redhat.com>
+---
 
-OK.
+I saw Dave changed the log size once in commit:
+  d0a3cc5a xfs/104: log size too small for 4k sector drives
 
-> > Does this repeat every 120s?
-> 
-> No, what I sent is the full trace. It happened around 23:23, but
-> no more XFS errors in the log (which is on the ext4 OS disk).
+But it's still not enough after we have reflink feature now. I don't
+know why this case need "-l version=2,size=2560b,su=64k",
+if someone learns about this case, please tell me how to change this
+case properly. If the log size parameter is not necessary, I'd like
+to remove it.
 
-Ok, so those processes reported as hung have been woken and made
-progress again. It seems like a temporary overload situation.
+Thanks,
+Zorro
 
-> It was working when I came in the following morning aroung 6:45,
-> and worked for some time,  but initially failed, and we had to
-> reboot the server to get NFS exports to work.  But, as I said,
-> even though the fs was inaccessible from NFS I could `ls` the
-> filesystem locally, but we really have no indication of it being
-> an NFS problem, as we only see the XFS problem.
+ tests/xfs/119 | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-That could be the same problem, with all the kernel nfsds blocked
-waiting for the filesystem so no new NFS requests could be
-processed.  How many kernel nfsd threads do you run?  Local
-operations can still be done (don't go through nfsds), and they
-won't be slow if they hit the caches rather than have to retreive
-data from disk.
-
-> It could also boil down to a NFS problem, I just wasn't sure how
-> to read the XFS trace.
-
-Like you, I don't think this is an NFS problem - it smells more of
-how huge hardware writeback caches in front of slow disks using
-RAID5/6 behave.
-
-i.e. Flushing 100MB of sequential write data from the cache takes a
-fraction or a second, flushing 100MB of random 4k write data to
-RAID5 luns can take minutes. While the hardware cache and flushing is
-supposed to be completely invisible to the OS, we can see it's
-impact via unexpectedly high device utilisations and long IO times
-for otherwise normal IO loads.
-
-Cheers,
-
-Dave.
+diff --git a/tests/xfs/119 b/tests/xfs/119
+index bf7f1ca8..d507aacf 100755
+--- a/tests/xfs/119
++++ b/tests/xfs/119
+@@ -40,7 +40,14 @@ sync
+ 
+ export MKFS_OPTIONS="-l version=2,size=2560b,su=64k" 
+ export MOUNT_OPTIONS="-o logbsize=64k"
+-_scratch_mkfs_xfs >/dev/null
++_scratch_mkfs_xfs >/dev/null 2>&1
++# The specified log size maybe too small if new features (e.g: reflink
++# or/and rmapbt) is enabled. So if mkfs fails, don't specify log size
++# and try to mkfs again.
++if [ $? -ne 0 ]; then
++	export MKFS_OPTIONS="-l version=2,su=64k"
++	_scratch_mkfs_xfs >/dev/null
++fi
+ 
+ _scratch_mount
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.14.4
