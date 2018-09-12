@@ -1,94 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:59468 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727409AbeILL1i (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Sep 2018 07:27:38 -0400
-Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8C6JfaI022644
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 02:24:38 -0400
-Received: from e15.ny.us.ibm.com (e15.ny.us.ibm.com [129.33.205.205])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2meqxfk4tq-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 02:24:38 -0400
-Received: from localhost
-        by e15.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Wed, 12 Sep 2018 02:24:38 -0400
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH V3 13/19] Filter fiemap output by FS block size
-Date: Wed, 12 Sep 2018 11:56:20 +0530
-In-Reply-To: <20180912062626.14349-1-chandan@linux.vnet.ibm.com>
-References: <20180912062626.14349-1-chandan@linux.vnet.ibm.com>
-Message-Id: <20180912062626.14349-14-chandan@linux.vnet.ibm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:47456 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728196AbeIMAcq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 Sep 2018 20:32:46 -0400
+Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 12BEE3082A34
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 19:26:49 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id CF592308BE75
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 19:26:48 +0000 (UTC)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs_repair: warn properly about reflink flag with and without
+ -n
+Message-ID: <700e2326-fd4c-224e-bf9c-cb77756e4a55@redhat.com>
+Date: Wed, 12 Sep 2018 14:26:48 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-When testing FS instances of block size other than 4k, the output of
-fiemap command will not match those in *.out files. This commit adds
-an optional "block size" argument to _filter_fiemap() which prints
-fiemap output in units of block size.
+The decision to emit a warning in fix_inode_reflink_flag seems broken; in
+no-modify mode we'll do_warn that we're setting it (even though we don't),
+and we'll be silent if it needs to be cleared.
 
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Fix this so it's the standard "would" in no-modify, and "will" in regular
+mode.  This also ensures that we return the proper status if flags are
+found to be incorrect in -n or -e mode.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- common/punch | 19 ++++++++++++++-----
- 1 file changed, 14 insertions(+), 5 deletions(-)
 
-diff --git a/common/punch b/common/punch
-index 8088b01..0fc7729 100644
---- a/common/punch
-+++ b/common/punch
-@@ -165,7 +165,11 @@ _test_punch() {
+diff --git a/repair/rmap.c b/repair/rmap.c
+index bffb5b61..7ef2d0fd 100644
+--- a/repair/rmap.c
++++ b/repair/rmap.c
+@@ -1142,16 +1142,27 @@ fix_inode_reflink_flag(
+ 	struct xfs_dinode	*dino;
+ 	struct xfs_buf		*buf;
  
- _coalesce_extents()
- {
--	awk -F: '
-+	block_size=$1
++	if (no_modify) {
++		if (set)
++			do_warn(
++_("would set reflink flag on inode %"PRIu64"\n"),
++				XFS_AGINO_TO_INO(mp, agno, agino));
++		else
++			do_warn(
++_("would clear reflink flag on inode %"PRIu64"\n"),
++				XFS_AGINO_TO_INO(mp, agno, agino));
++		return 0;
++	}
 +
-+	[[ -z $block_size ]] && block_size=512
-+
-+	awk -v block_size="$block_size" -F: '
- 	{
- 		range = $2;
- 		type = $3;
-@@ -176,19 +180,24 @@ _coalesce_extents()
++	/* Modify mode */
+ 	if (set)
+ 		do_warn(
+ _("setting reflink flag on inode %"PRIu64"\n"),
+ 			XFS_AGINO_TO_INO(mp, agno, agino));
+-	else if (!no_modify) /* && !set */
++	else
+ 		do_warn(
+ _("clearing reflink flag on inode %"PRIu64"\n"),
+ 			XFS_AGINO_TO_INO(mp, agno, agino));
+-	if (no_modify)
+-		return 0;
  
- 		if (type != prev_type) {
- 			if (prev_type != "")
--				printf("%u]:%s\n", low - 1, prev_type);
--			printf("%u: [%u..", out_count++, low);
-+				printf("%u]:%s\n", (low * 512 / block_size) - 1,
-+					prev_type);
-+			printf("%u: [%u..", out_count++,
-+				(low * 512) / block_size);
- 			prev_type = type;
- 		}
- 	}
- 	END {
- 		if (prev_type != "")
--			printf("%u]:%s\n", high, prev_type);
-+			printf("%u]:%s\n", ((high + 1) * 512 / block_size) - 1,
-+				prev_type);
- 	}'
- }
- 
- _filter_fiemap()
- {
-+	block_size=$1
-+
- 	$AWK_PROG '
- 		$3 ~ /hole/ {
- 			print $1, $2, $3;
-@@ -201,7 +210,7 @@ _filter_fiemap()
- 		$5 ~ /0x[[:xdigit:]]+/ {
- 			print $1, $2, "data";
- 		}' |
--	_coalesce_extents
-+	_coalesce_extents $block_size
- }
- 
- _filter_fiemap_flags()
--- 
-2.9.5
+ 	buf = get_agino_buf(mp, agno, agino, &dino);
+ 	if (!buf)
