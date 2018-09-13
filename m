@@ -1,92 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:49622 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727004AbeILL1e (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Sep 2018 07:27:34 -0400
-Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8C6JcXJ017341
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 02:24:34 -0400
-Received: from e14.ny.us.ibm.com (e14.ny.us.ibm.com [129.33.205.204])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2metq5wf92-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 02:24:34 -0400
-Received: from localhost
-        by e14.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Wed, 12 Sep 2018 02:24:32 -0400
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH V3 10/19] xfs/325: Inject free_extent error after CoW operation
-Date: Wed, 12 Sep 2018 11:56:17 +0530
-In-Reply-To: <20180912062626.14349-1-chandan@linux.vnet.ibm.com>
-References: <20180912062626.14349-1-chandan@linux.vnet.ibm.com>
-Message-Id: <20180912062626.14349-11-chandan@linux.vnet.ibm.com>
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:58945 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726495AbeIML1D (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Sep 2018 07:27:03 -0400
+Date: Thu, 13 Sep 2018 16:18:33 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Strange XFS problem
+Message-ID: <20180913061833.GB27618@dastard>
+References: <1063031109.4602643.1536739675362.JavaMail.zimbra@casalogic.dk>
+ <20180913041944.GA27618@dastard>
+ <1406319049.4700361.1536816119283.JavaMail.zimbra@casalogic.dk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1406319049.4700361.1536816119283.JavaMail.zimbra@casalogic.dk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
+To: Troels Hansen <th@casalogic.dk>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On a 64k blocksized filesystem, when the test CoWs the file2's offset
-range [10 * 64k, 19 * 64k], the call to xfs_bmapi_reserve_delalloc()
-allocates 32 64k blocks. This is because XFS_DEFAULT_COWEXTSZ_HINT has
-the value of 32 and xfs_get_cowextsz_hint() uses this to compute the
-extent alignment. This leads to xfs_bmapi_reserve_delalloc() to reserve
-space corresponding to the file range [0, 32 * 64k] in the inode's
-cow fork area. On completion of write I/O corresponding to file2's range
-[10 * 64k, 19 * 64k], xfs_end_io() moves 10 out of the originally
-allocated 32 64k blocks to the data fork area. The remaining 22 64k
-blocks linger on in cow fork area of the inode.
+On Thu, Sep 13, 2018 at 07:21:59AM +0200, Troels Hansen wrote:
+> 
+> > 
+> > What happens on your network every 14 days or so? Is there a rogue
+> > client side backup or admin task running somewhere?
+> > 
+> 
+> Well, we run nightly backups, but thats read ops.
 
-Later, when servicing the exit() syscall for the xfs_io process,
-xfs_free_eofblocks() ends up invoking xfs_reflink_cancel_cow_blocks()
-since i_delayed_blks has the value 22. xfs_reflink_cancel_cow_blocks()
-indirectly invokes __xfs_free_extent() which returns EIO since
-XFS_ERRTAG_FREE_EXTENT has been set. This leads to the filesystem to be
-shutdown. The "rm" command invoked later ends up returning an
-error and hence the test fails. The test actually requires that the
-filesystem gets shutdown when executing the "rm" command.
+Yup, but that can get stuck modifying atime, like the bacula process
+in the hung process traces. :)
 
-To fix the problem, this commit injects the free_extent error after we
-CoW file2's [10 * 64k, 19 * 64k] range.
+Hmmm - just a thought - it's hardware raid - it's not running a
+background admin op like a media scrub every 14 days, is it?
 
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
----
- tests/xfs/325     | 5 +++--
- tests/xfs/325.out | 2 +-
- 2 files changed, 4 insertions(+), 3 deletions(-)
+> When I look at the load, its not particular more loaded at that time, than normal work.
 
-diff --git a/tests/xfs/325 b/tests/xfs/325
-index b156de9..6795901 100755
---- a/tests/xfs/325
-+++ b/tests/xfs/325
-@@ -54,11 +54,12 @@ echo "Check files"
- md5sum $SCRATCH_MNT/file1 | _filter_scratch
- md5sum $SCRATCH_MNT/file2 | _filter_scratch
- 
-+echo "CoW a few blocks"
-+$XFS_IO_PROG -c "pwrite -W -S 0x67 $((10 * blksz)) $((10 * blksz))" $SCRATCH_MNT/file2 >> $seqres.full
-+
- echo "Inject error"
- _scratch_inject_error "free_extent"
- 
--echo "CoW a few blocks"
--$XFS_IO_PROG -c "pwrite -W -S 0x67 $((10 * blksz)) $((10 * blksz))" $SCRATCH_MNT/file2 >> $seqres.full
- rm $SCRATCH_MNT/file1
- sync
- 
-diff --git a/tests/xfs/325.out b/tests/xfs/325.out
-index 4e25d2b..92027cd 100644
---- a/tests/xfs/325.out
-+++ b/tests/xfs/325.out
-@@ -4,8 +4,8 @@ Create files
- Check files
- d5a0ed0305c8df4180cb2bf975ecffe8  SCRATCH_MNT/file1
- d5a0ed0305c8df4180cb2bf975ecffe8  SCRATCH_MNT/file2
--Inject error
- CoW a few blocks
-+Inject error
- FS should be shut down, touch will fail
- touch: cannot touch 'SCRATCH_MNT/badfs': Input/output error
- Remount to replay log
+OK.
+
+> > Does this repeat every 120s?
+> 
+> No, what I sent is the full trace. It happened around 23:23, but
+> no more XFS errors in the log (which is on the ext4 OS disk).
+
+Ok, so those processes reported as hung have been woken and made
+progress again. It seems like a temporary overload situation.
+
+> It was working when I came in the following morning aroung 6:45,
+> and worked for some time,  but initially failed, and we had to
+> reboot the server to get NFS exports to work.  But, as I said,
+> even though the fs was inaccessible from NFS I could `ls` the
+> filesystem locally, but we really have no indication of it being
+> an NFS problem, as we only see the XFS problem.
+
+That could be the same problem, with all the kernel nfsds blocked
+waiting for the filesystem so no new NFS requests could be
+processed.  How many kernel nfsd threads do you run?  Local
+operations can still be done (don't go through nfsds), and they
+won't be slow if they hit the caches rather than have to retreive
+data from disk.
+
+> It could also boil down to a NFS problem, I just wasn't sure how
+> to read the XFS trace.
+
+Like you, I don't think this is an NFS problem - it smells more of
+how huge hardware writeback caches in front of slow disks using
+RAID5/6 behave.
+
+i.e. Flushing 100MB of sequential write data from the cache takes a
+fraction or a second, flushing 100MB of random 4k write data to
+RAID5 luns can take minutes. While the hardware cache and flushing is
+supposed to be completely invisible to the OS, we can see it's
+impact via unexpectedly high device utilisations and long IO times
+for otherwise normal IO loads.
+
+Cheers,
+
+Dave.
 -- 
-2.9.5
+Dave Chinner
+david@fromorbit.com
