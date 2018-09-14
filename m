@@ -1,38 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:12595 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726258AbeIRHid (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Sep 2018 03:38:33 -0400
-From: YueHaibing <yuehaibing@huawei.com>
-Subject: [PATCH] xfs: remove duplicated include from alloc.c
-Date: Tue, 18 Sep 2018 10:07:34 +0800
-Message-ID: <20180918020734.23180-1-yuehaibing@huawei.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:43198 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727013AbeINTAn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Sep 2018 15:00:43 -0400
+Date: Fri, 14 Sep 2018 06:46:07 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: re-enable FIBMAP on reflink; disable for swap
+Message-ID: <20180914134607.GA6334@infradead.org>
+References: <bf6e7f18-25fa-2b41-9532-78bffe33a241@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bf6e7f18-25fa-2b41-9532-78bffe33a241@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com, linux-xfs@vger.kernel.org, dchinner@redhat.com, bfoster@redhat.com
-Cc: linux-kernel@vger.kernel.org, YueHaibing <yuehaibing@huawei.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-Remove duplicated include xfs_alloc.h
+On Wed, Sep 12, 2018 at 08:55:35PM -0500, Eric Sandeen wrote:
+> The commit:
+> 
+>  db1327b1 xfs: report shared extent mappings to userspace correctly
+> 
+> disabled FIBMAP on reflinked files, with this very clear rationale
+> regarding swapfiles:
+> 
+> "Have xfs_vm_bmap return zero for reflinked files because the
+> bmap-based swap code requires static block mappings, which is
+> incompatible with copy on write."
+> 
+> However, this broke the FIBMAP interface for existing userspace
+> apps, including bootloaders.
 
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
----
- fs/xfs/scrub/alloc.c | 1 -
- 1 file changed, 1 deletion(-)
+It didn't break any interface because the reflink flag has been
+experimental and a mkfs-time opt in.
 
-diff --git a/fs/xfs/scrub/alloc.c b/fs/xfs/scrub/alloc.c
-index 036b5c7..376bcb5 100644
---- a/fs/xfs/scrub/alloc.c
-+++ b/fs/xfs/scrub/alloc.c
-@@ -17,7 +17,6 @@
- #include "xfs_sb.h"
- #include "xfs_alloc.h"
- #include "xfs_rmap.h"
--#include "xfs_alloc.h"
- #include "scrub/xfs_scrub.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
--- 
-2.7.0
+So NAK for this patch.
