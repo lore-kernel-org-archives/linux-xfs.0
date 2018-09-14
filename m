@@ -1,247 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lj1-f193.google.com ([209.85.208.193]:44643 "EHLO
-        mail-lj1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727153AbeILO2v (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Sep 2018 10:28:51 -0400
-Received: by mail-lj1-f193.google.com with SMTP id q127-v6so993305ljq.11
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Sep 2018 02:25:09 -0700 (PDT)
-Date: Wed, 12 Sep 2018 12:24:41 +0300
-From: "Alexander Y. Fomichev" <git.user@gmail.com>
-Subject: Re: [PATCH] xfs: fix transaction leak in xfs_reflink_allocate_cow()
-Message-ID: <20180912122441.30e58cea@madcat>
-In-Reply-To: <20180910070241.GB30888@infradead.org>
-References: <20180907015113.32448-1-david@fromorbit.com>
-        <20180910070241.GB30888@infradead.org>
+Received: from sandeen.net ([63.231.237.45]:54840 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727640AbeINTI0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 14 Sep 2018 15:08:26 -0400
+Subject: Re: [PATCH] xfs: re-enable FIBMAP on reflink; disable for swap
+References: <bf6e7f18-25fa-2b41-9532-78bffe33a241@sandeen.net>
+ <20180914134607.GA6334@infradead.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <abb81c65-4ec8-87a3-0362-1812bca43d09@sandeen.net>
+Date: Fri, 14 Sep 2018 08:53:47 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20180914134607.GA6334@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, 10 Sep 2018 00:02:41 -0700
-Christoph Hellwig <hch@infradead.org> wrote:
 
-> > +	/*
-> > +	 * if we don't find an overlapping extent, trim the range
-> > we need to
-> > +	 * allocate to fit the hole we found.
-> > +	 */  
-> 
-> Please capitalize the first letter in each sentence.
-> 
-> > +	*shared = true;
-> > +	if (isnullstartblock(got.br_startblock)) {
-> > +		xfs_trim_extent(imap, got.br_startoff,
-> > got.br_blockcount);
-> > +		return 0;
-> > +	}  
-> 
-> Taken out of the context of the bigger function this conditional
-> could really use a comment as well.
-> 
-> > +	} while (tp);  
-> 
-> This looks a little odd as tp will always be true if we reach this
-> point.  I'd suggest to switch to a do { } while (1) or for (;;) style
-> loop.
-> 
-> Alternatively we could just skip the loop entirely now that we have
-> the lookup + trim helper.  Untested patch below:
 
-I have just tested and it looks ok.
- 
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 38f405415b88..79e2279d8e15 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -352,6 +352,47 @@ xfs_reflink_convert_cow(
->  	return error;
->  }
->  
-> +/*
-> + * Find the extent that maps the given range in the COW fork. Even
-> if the extent
-> + * is not shared we might have a preallocation for it in the COW
-> fork. If so we
-> + * use it that rather than trigger a new allocation.
-> + */
-> +static int
-> +find_trim_cow_extent(
-> +	struct xfs_inode	*ip,
-> +	struct xfs_bmbt_irec	*imap,
-> +	bool			*shared,
-> +	bool			*found)
-> +{
-> +	xfs_fileoff_t		offset_fsb = imap->br_startoff;
-> +	xfs_filblks_t		count_fsb = imap->br_blockcount;
-> +	struct xfs_iext_cursor	icur;
-> +	struct xfs_bmbt_irec	got;
-> +	bool			trimmed;
-> +
-> +	*found = false;
-> +
-> +	/*
-> +	 * If we don't find an overlapping extent, trim the range we
-> need to
-> +	 * allocate to fit the hole we found.
-> +	 */
-> +	if (!xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb,
-> &icur, &got) ||
-> +	    got.br_startoff > offset_fsb)
-> +		return xfs_reflink_trim_around_shared(ip, imap,
-> shared, &trimmed); +
-> +	*shared = true;
-> +	if (isnullstartblock(got.br_startblock)) {
-> +		xfs_trim_extent(imap, got.br_startoff,
-> got.br_blockcount);
-> +		return 0;
-> +	}
-> +
-> +	/* real extent found - no need to allocate */
-> +	xfs_trim_extent(&got, offset_fsb, count_fsb);
-> +	*imap = got;
-> +	*found = true;
-> +	return 0;
-> +}
-> +
->  /* Allocate all CoW reservations covering a range of blocks in a
-> file. */ int
->  xfs_reflink_allocate_cow(
-> @@ -363,78 +404,62 @@ xfs_reflink_allocate_cow(
->  	struct xfs_mount	*mp = ip->i_mount;
->  	xfs_fileoff_t		offset_fsb = imap->br_startoff;
->  	xfs_filblks_t		count_fsb = imap->br_blockcount;
-> -	struct xfs_bmbt_irec	got;
-> -	struct xfs_trans	*tp = NULL;
-> +	struct xfs_trans	*tp;
->  	int			nimaps, error = 0;
-> -	bool			trimmed;
-> +	bool			found;
->  	xfs_filblks_t		resaligned;
->  	xfs_extlen_t		resblks = 0;
-> -	struct xfs_iext_cursor	icur;
->  
-> -retry:
-> -	ASSERT(xfs_is_reflink_inode(ip));
->  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> +	ASSERT(xfs_is_reflink_inode(ip));
->  
-> -	/*
-> -	 * Even if the extent is not shared we might have a
-> preallocation for
-> -	 * it in the COW fork.  If so use it.
-> -	 */
-> -	if (xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb,
-> &icur, &got) &&
-> -	    got.br_startoff <= offset_fsb) {
-> -		*shared = true;
-> -
-> -		/* If we have a real allocation in the COW fork
-> we're done. */
-> -		if (!isnullstartblock(got.br_startblock)) {
-> -			xfs_trim_extent(&got, offset_fsb, count_fsb);
-> -			*imap = got;
-> -			goto convert;
-> -		}
-> +	error = find_trim_cow_extent(ip, imap, shared, &found);
-> +	if (error || !*shared)
-> +		return error;
-> +	if (found)
-> +		goto convert;
->  
-> -		xfs_trim_extent(imap, got.br_startoff,
-> got.br_blockcount);
-> -	} else {
-> -		error = xfs_reflink_trim_around_shared(ip, imap,
-> shared, &trimmed);
-> -		if (error || !*shared)
-> -			goto out;
-> -	}
-> +	resaligned = xfs_aligned_fsb_count(imap->br_startoff,
-> +		imap->br_blockcount, xfs_get_cowextsz_hint(ip));
-> +	resblks = XFS_DIOSTRAT_SPACE_RES(mp, resaligned);
->  
-> -	if (!tp) {
-> -		resaligned = xfs_aligned_fsb_count(imap->br_startoff,
-> -			imap->br_blockcount,
-> xfs_get_cowextsz_hint(ip));
-> -		resblks = XFS_DIOSTRAT_SPACE_RES(mp, resaligned);
-> +	xfs_iunlock(ip, *lockmode);
-> +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks,
-> 0, 0, &tp);
-> +	*lockmode = XFS_ILOCK_EXCL;
-> +	xfs_ilock(ip, *lockmode);
->  
-> -		xfs_iunlock(ip, *lockmode);
-> -		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write,
-> resblks, 0, 0, &tp);
-> -		*lockmode = XFS_ILOCK_EXCL;
-> -		xfs_ilock(ip, *lockmode);
-> +	if (error)
-> +		return error;
->  
-> -		if (error)
-> -			return error;
-> +	error = xfs_qm_dqattach_locked(ip, false);
-> +	if (error)
-> +		goto out_trans_cancel;
->  
-> -		error = xfs_qm_dqattach_locked(ip, false);
-> -		if (error)
-> -			goto out;
-> -		goto retry;
-> +	/* check for an overlapping extent again no that we dropped
-> the ilock */
-> +	error = find_trim_cow_extent(ip, imap, shared, &found);
-> +	if (error || !*shared)
-> +		goto out_trans_cancel;
-> +	if (found) {
-> +		xfs_trans_cancel(tp);
-> +		goto convert;
->  	}
->  
->  	error = xfs_trans_reserve_quota_nblks(tp, ip, resblks, 0,
->  			XFS_QMOPT_RES_REGBLKS);
->  	if (error)
-> -		goto out;
-> +		goto out_trans_cancel;
->  
->  	xfs_trans_ijoin(tp, ip, 0);
->  
-> -	nimaps = 1;
-> -
->  	/* Allocate the entire reservation as unwritten blocks. */
-> +	nimaps = 1;
->  	error = xfs_bmapi_write(tp, ip, imap->br_startoff,
-> imap->br_blockcount, XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC,
->  			resblks, imap, &nimaps);
->  	if (error)
-> -		goto out_trans_cancel;
-> +		goto out_unreserve;
->  
->  	xfs_inode_set_cowblocks_tag(ip);
-> -
-> -	/* Finish up. */
->  	error = xfs_trans_commit(tp);
->  	if (error)
->  		return error;
-> @@ -447,12 +472,12 @@ xfs_reflink_allocate_cow(
->  		return -ENOSPC;
->  convert:
->  	return xfs_reflink_convert_cow_extent(ip, imap, offset_fsb,
-> count_fsb); -out_trans_cancel:
-> +
-> +out_unreserve:
->  	xfs_trans_unreserve_quota_nblks(tp, ip, (long)resblks, 0,
->  			XFS_QMOPT_RES_REGBLKS);
-> -out:
-> -	if (tp)
-> -		xfs_trans_cancel(tp);
-> +out_trans_cancel:
-> +	xfs_trans_cancel(tp);
->  	return error;
->  }
->  
+On 9/14/18 8:46 AM, Christoph Hellwig wrote:
+> On Wed, Sep 12, 2018 at 08:55:35PM -0500, Eric Sandeen wrote:
+>> The commit:
+>>
+>>  db1327b1 xfs: report shared extent mappings to userspace correctly
+>>
+>> disabled FIBMAP on reflinked files, with this very clear rationale
+>> regarding swapfiles:
+>>
+>> "Have xfs_vm_bmap return zero for reflinked files because the
+>> bmap-based swap code requires static block mappings, which is
+>> incompatible with copy on write."
+>>
+>> However, this broke the FIBMAP interface for existing userspace
+>> apps, including bootloaders.
+> 
+> It didn't break any interface because the reflink flag has been
+> experimental and a mkfs-time opt in.
+> 
+> So NAK for this patch.
+
+That's a really weak argument, but I guess it shouldn't be surprising
+because this whole episode has been a string of weak arguments.
