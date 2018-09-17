@@ -1,116 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42798 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727165AbeIYTQ2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 25 Sep 2018 15:16:28 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 3E3DC3084218
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Sep 2018 13:08:59 +0000 (UTC)
-Date: Tue, 25 Sep 2018 08:08:52 -0500
-From: Bill O'Donnell <billodo@redhat.com>
-Subject: Re: [PATCH] xfsprogs: make scrub build config-optional
-Message-ID: <20180925130852.GA14580@redhat.com>
-References: <832c69f6-4cd4-224d-0d58-5a387f2ae9fa@redhat.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:42498 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728745AbeIQVwW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Sep 2018 17:52:22 -0400
+Date: Mon, 17 Sep 2018 09:24:09 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs_repair: warn properly about reflink flag with and
+ without -n
+Message-ID: <20180917162409.GB4607@magnolia>
+References: <700e2326-fd4c-224e-bf9c-cb77756e4a55@redhat.com>
+ <ca3a9129-bda6-51ff-51cf-2dbe3506444f@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <832c69f6-4cd4-224d-0d58-5a387f2ae9fa@redhat.com>
+In-Reply-To: <ca3a9129-bda6-51ff-51cf-2dbe3506444f@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Sep 24, 2018 at 12:07:00PM -0500, Eric Sandeen wrote:
-> This lets us do:
+On Wed, Sep 12, 2018 at 05:05:40PM -0500, Eric Sandeen wrote:
+> On 9/12/18 2:26 PM, Eric Sandeen wrote:
+> > The decision to emit a warning in fix_inode_reflink_flag seems broken; in
+> > no-modify mode we'll do_warn that we're setting it (even though we don't),
+> > and we'll be silent if it needs to be cleared.
+> > 
+> > Fix this so it's the standard "would" in no-modify, and "will" in regular
+> > mode.  This also ensures that we return the proper status if flags are
+> > found to be incorrect in -n or -e mode.
 > 
-> # ./configure --enable-scrub=no
-> or
-> # ./configure --disable-scrub
-> 
-> for any distros that may not want to ship the experimental scrub utility.
-> 
-> The default is still to build scrub.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> Oh, oops - I guess this might have been intentional, if "clear reflink flag
+> on non-reflinked file" is more of a preening operation?
 
-Looks good.
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+Correct.
 
-> ---
+> So in -n mode nothing happens, but we preen/clear it in full mode?
+
+Correct.
+
+> (but in that case do_warn in the full run still triggers a non-zero
+> exit code with -e ... bleah)
+
+I think you're correct that it's not necessary to trigger a nonzero exit
+code for a successful preening operation.
+
+> (also: this makes refusing to map & boot from "reflinked" files that may
+
+The purpose of the reflink iflag is a hint to the fs that it needs to
+check the refcount data when performing writes.  IOWs, we use it to
+avoid a performance hit when writing to files that have never been
+shared (at least not since creation/the last xfs_{repair,scrub} run/the
+last zero-to-eof FUNSHARE call) on a filesystem that supports reflink.
+
+> not even /be/ reflinked at all even /more/ awesomely random, doesn't it!)
+
+"not even be reflinked at all any more..." :)
+
+--D
+
+> -Eric
 > 
-> (skipping libicu checks is maybe overkill, I can drop that
-> if preferred; checking but not using is harmless)
-> 
-> diff --git a/Makefile b/Makefile
-> index 6774825..dd6ad16 100644
-> --- a/Makefile
-> +++ b/Makefile
-> @@ -49,7 +49,11 @@ LIBFROG_SUBDIR = libfrog
->  DLIB_SUBDIRS = libxlog libxcmd libhandle
->  LIB_SUBDIRS = libxfs $(DLIB_SUBDIRS)
->  TOOL_SUBDIRS = copy db estimate fsck growfs io logprint mkfs quota \
-> -		mdrestore repair rtcp m4 man doc debian spaceman scrub
-> +		mdrestore repair rtcp m4 man doc debian spaceman
-> +
-> +ifeq ("$(ENABLE_SCRUB)","yes")
-> +TOOL_SUBDIRS += scrub
-> +endif
->  
->  ifneq ("$(PKG_PLATFORM)","darwin")
->  TOOL_SUBDIRS += fsr
-> diff --git a/configure.ac b/configure.ac
-> index 5fdf78e..467ca2d 100644
-> --- a/configure.ac
-> +++ b/configure.ac
-> @@ -95,9 +95,15 @@ AC_ARG_ENABLE(lto,
->  	enable_lto=probe)
->  AC_SUBST(enable_lto)
->  
-> +# Enable xfs_scrub build
-> +AC_ARG_ENABLE(scrub,
-> +[ --enable-scrub=[yes/no]    Enable build of xfs_scrub utility [default=yes]],,
-> +	enable_scrub=yes)
-> +AC_SUBST(enable_scrub)
-> +
->  # Enable libicu for xfs_scrubbing of malicious unicode sequences in names
->  AC_ARG_ENABLE(libicu,
-> -[ --enable-libicu=[yes/no]   Enable Unicode name scanning (libicu) [default=probe]],,
-> +[ --enable-libicu=[yes/no]   Enable Unicode name scanning in xfs_scrub (libicu) [default=probe]],,
->  	enable_libicu=probe)
->  
->  #
-> @@ -178,11 +184,13 @@ AC_HAVE_DEVMAPPER
->  AC_HAVE_MALLINFO
->  AC_PACKAGE_WANT_ATTRIBUTES_H
->  AC_HAVE_LIBATTR
-> -if test "$enable_libicu" = "yes" || test "$enable_libicu" = "probe"; then
-> -	AC_HAVE_LIBICU
-> -fi
-> -if test "$enable_libicu" = "yes" && test "$have_libicu" != "yes"; then
-> -        AC_MSG_ERROR([libicu not found.])
-> +if test "$enable_scrub" = "yes"; then
-> +        if test "$enable_libicu" = "yes" || test "$enable_libicu" = "probe"; then
-> +                AC_HAVE_LIBICU
-> +        fi
-> +        if test "$enable_libicu" = "yes" && test "$have_libicu" != "yes"; then
-> +                AC_MSG_ERROR([libicu not found.])
-> +        fi
->  fi
->  AC_HAVE_OPENAT
->  AC_HAVE_FSTATAT
-> diff --git a/include/builddefs.in b/include/builddefs.in
-> index f7d39a4..f3fc187 100644
-> --- a/include/builddefs.in
-> +++ b/include/builddefs.in
-> @@ -81,6 +81,7 @@ ENABLE_GETTEXT	= @enable_gettext@
->  ENABLE_EDITLINE	= @enable_editline@
->  ENABLE_READLINE	= @enable_readline@
->  ENABLE_BLKID	= @enable_blkid@
-> +ENABLE_SCRUB	= @enable_scrub@
->  
->  HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
->  
-> 
+> > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> > ---
+> > 
+> > diff --git a/repair/rmap.c b/repair/rmap.c
+> > index bffb5b61..7ef2d0fd 100644
+> > --- a/repair/rmap.c
+> > +++ b/repair/rmap.c
+> > @@ -1142,16 +1142,27 @@ fix_inode_reflink_flag(
+> >  	struct xfs_dinode	*dino;
+> >  	struct xfs_buf		*buf;
+> >  
+> > +	if (no_modify) {
+> > +		if (set)
+> > +			do_warn(
+> > +_("would set reflink flag on inode %"PRIu64"\n"),
+> > +				XFS_AGINO_TO_INO(mp, agno, agino));
+> > +		else
+> > +			do_warn(
+> > +_("would clear reflink flag on inode %"PRIu64"\n"),
+> > +				XFS_AGINO_TO_INO(mp, agno, agino));
+> > +		return 0;
+> > +	}
+> > +
+> > +	/* Modify mode */
+> >  	if (set)
+> >  		do_warn(
+> >  _("setting reflink flag on inode %"PRIu64"\n"),
+> >  			XFS_AGINO_TO_INO(mp, agno, agino));
+> > -	else if (!no_modify) /* && !set */
+> > +	else
+> >  		do_warn(
+> >  _("clearing reflink flag on inode %"PRIu64"\n"),
+> >  			XFS_AGINO_TO_INO(mp, agno, agino));
+> > -	if (no_modify)
+> > -		return 0;
+> >  
+> >  	buf = get_agino_buf(mp, agno, agino, &dino);
+> >  	if (!buf)
+> > 
