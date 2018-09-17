@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:41288 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:41296 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728467AbeIRCXL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Sep 2018 22:23:11 -0400
+        with ESMTP id S1728467AbeIRCXN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Sep 2018 22:23:13 -0400
 Received: from 089144198037.atnat0007.highway.a1.net ([89.144.198.37] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1g20X4-0005xS-6J
-        for linux-xfs@vger.kernel.org; Mon, 17 Sep 2018 20:54:10 +0000
+        id 1g20X6-0005xv-Uo
+        for linux-xfs@vger.kernel.org; Mon, 17 Sep 2018 20:54:13 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 04/10] xfs: simplify the IOMAP_ZERO check in xfs_file_iomap_begin a bit
-Date: Mon, 17 Sep 2018 22:53:48 +0200
-Message-Id: <20180917205354.15401-5-hch@lst.de>
+Subject: [PATCH 05/10] xfs: handle zeroing in xfs_file_iomap_begin_delay
+Date: Mon, 17 Sep 2018 22:53:49 +0200
+Message-Id: <20180917205354.15401-6-hch@lst.de>
 In-Reply-To: <20180917205354.15401-1-hch@lst.de>
 References: <20180917205354.15401-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -18,53 +18,89 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Merge the two cases for reflink vs not into a single one.
+We only need to allocate blocks for zeroing for reflink inodes,
+and for we currently have a special case for reflink files in
+the otherwise direct I/O path that I'd like to get rid of.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_iomap.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ fs/xfs/xfs_iomap.c | 34 ++++++++++++++++++++++++++++++----
+ 1 file changed, 30 insertions(+), 4 deletions(-)
 
 diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 6320aca39f39..9595a3c59ade 100644
+index 9595a3c59ade..854b91080002 100644
 --- a/fs/xfs/xfs_iomap.c
 +++ b/fs/xfs/xfs_iomap.c
-@@ -1048,16 +1048,20 @@ xfs_file_iomap_begin(
- 	if (!(flags & (IOMAP_WRITE | IOMAP_ZERO)))
- 		goto out_found;
+@@ -62,6 +62,21 @@ xfs_bmbt_to_iomap(
+ 	iomap->dax_dev = xfs_find_daxdev_for_inode(VFS_I(ip));
+ }
  
-+	/*
-+	 * Don't need to allocate over holes when doing zeroing operations,
-+	 * unless we need to COW and have an existing extent.
-+	 */
-+	if ((flags & IOMAP_ZERO) &&
-+	    (!xfs_is_reflink_inode(ip) ||
-+	     !needs_cow_for_zeroing(&imap, nimaps)))
-+		goto out_found;
++static void
++xfs_hole_to_iomap(
++	struct xfs_inode	*ip,
++	struct iomap		*iomap,
++	xfs_fileoff_t		offset_fsb,
++	xfs_fileoff_t		end_fsb)
++{
++	iomap->addr = IOMAP_NULL_ADDR;
++	iomap->type = IOMAP_HOLE;
++	iomap->offset = XFS_FSB_TO_B(ip->i_mount, offset_fsb);
++	iomap->length = XFS_FSB_TO_B(ip->i_mount, end_fsb - offset_fsb);
++	iomap->bdev = xfs_find_bdev_for_inode(VFS_I(ip));
++	iomap->dax_dev = xfs_find_daxdev_for_inode(VFS_I(ip));
++}
 +
- 	/*
- 	 * Break shared extents if necessary. Checks for non-blocking IO have
- 	 * been done up front, so we don't need to do them here.
- 	 */
- 	if (xfs_is_reflink_inode(ip)) {
--		/* if zeroing doesn't need COW allocation, then we are done. */
--		if ((flags & IOMAP_ZERO) &&
--		    !needs_cow_for_zeroing(&imap, nimaps))
--			goto out_found;
--
- 		if (flags & IOMAP_DIRECT) {
- 			/* may drop and re-acquire the ilock */
- 			error = xfs_reflink_allocate_cow(ip, &imap, &shared,
-@@ -1074,10 +1078,6 @@ xfs_file_iomap_begin(
- 		length = XFS_FSB_TO_B(mp, end_fsb) - offset;
+ xfs_extlen_t
+ xfs_eof_alignment(
+ 	struct xfs_inode	*ip,
+@@ -502,6 +517,7 @@ xfs_file_iomap_begin_delay(
+ 	struct inode		*inode,
+ 	loff_t			offset,
+ 	loff_t			count,
++	unsigned		flags,
+ 	struct iomap		*iomap)
+ {
+ 	struct xfs_inode	*ip = XFS_I(inode);
+@@ -539,8 +555,12 @@ xfs_file_iomap_begin_delay(
  	}
  
--	/* Don't need to allocate over holes when doing zeroing operations. */
--	if (flags & IOMAP_ZERO)
--		goto out_found;
--
- 	if (!imap_needs_alloc(inode, &imap, nimaps))
- 		goto out_found;
+ 	eof = !xfs_iext_lookup_extent(ip, ifp, offset_fsb, &icur, &got);
+-	if (!eof && got.br_startoff <= offset_fsb) {
+-		if (xfs_is_reflink_inode(ip)) {
++	if (eof)
++		got.br_startoff = maxbytes_fsb;
++	if (got.br_startoff <= offset_fsb) {
++		if (xfs_is_reflink_inode(ip) &&
++		    ((flags & IOMAP_WRITE) ||
++		     got.br_state != XFS_EXT_UNWRITTEN)) {
+ 			bool		shared;
  
+ 			end_fsb = min(XFS_B_TO_FSB(mp, offset + count),
+@@ -555,6 +575,11 @@ xfs_file_iomap_begin_delay(
+ 		goto done;
+ 	}
+ 
++	if (flags & IOMAP_ZERO) {
++		xfs_hole_to_iomap(ip, iomap, offset_fsb, got.br_startoff);
++		goto out_unlock;
++	}
++
+ 	error = xfs_qm_dqattach_locked(ip, false);
+ 	if (error)
+ 		goto out_unlock;
+@@ -1009,10 +1034,11 @@ xfs_file_iomap_begin(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
+ 
+-	if (((flags & (IOMAP_WRITE | IOMAP_DIRECT)) == IOMAP_WRITE) &&
++	if ((flags & (IOMAP_WRITE | IOMAP_ZERO)) && !(flags & IOMAP_DIRECT) &&
+ 			!IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
+ 		/* Reserve delalloc blocks for regular writeback. */
+-		return xfs_file_iomap_begin_delay(inode, offset, length, iomap);
++		return xfs_file_iomap_begin_delay(inode, offset, length, flags,
++				iomap);
+ 	}
+ 
+ 	/*
 -- 
 2.18.0
