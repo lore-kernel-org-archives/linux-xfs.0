@@ -1,92 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:60548 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731485AbeISRhD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Sep 2018 13:37:03 -0400
-Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8JC1ctp055568
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 08:02:02 -0400
-Received: from e14.ny.us.ibm.com (e14.ny.us.ibm.com [129.33.205.204])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2mkmh13u54-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 08:02:02 -0400
-Received: from localhost
-        by e14.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Wed, 19 Sep 2018 07:59:25 -0400
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH V4 11/20] xfs/325: Inject free_extent error after CoW operation
-Date: Wed, 19 Sep 2018 17:30:44 +0530
-In-Reply-To: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
-References: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
-Message-Id: <20180919120053.7339-12-chandan@linux.vnet.ibm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:42808 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726768AbeIRRTB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 18 Sep 2018 13:19:01 -0400
+Date: Tue, 18 Sep 2018 07:46:47 -0400 (EDT)
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: Re: dm-writecache issue
+In-Reply-To: <20180911221147.GA23308@redhat.com>
+Message-ID: <alpine.LRH.2.02.1809180741001.6599@file01.intranet.prod.int.rdu2.redhat.com>
+References: <20180911221147.GA23308@redhat.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, zlang@redhat.com, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, David Teigland <teigland@redhat.com>
 
-On a 64k blocksized filesystem, when the test CoWs the file2's offset
-range [10 * 64k, 19 * 64k], the call to xfs_bmapi_reserve_delalloc()
-allocates 32 64k blocks. This is because XFS_DEFAULT_COWEXTSZ_HINT has
-the value of 32 and xfs_get_cowextsz_hint() uses this to compute the
-extent alignment. This leads to xfs_bmapi_reserve_delalloc() to reserve
-space corresponding to the file range [0, 32 * 64k] in the inode's
-cow fork area. On completion of write I/O corresponding to file2's range
-[10 * 64k, 19 * 64k], xfs_end_io() moves 10 out of the originally
-allocated 32 64k blocks to the data fork area. The remaining 22 64k
-blocks linger on in cow fork area of the inode.
+I would ask the XFS developers about this - why does mkfs.xfs select 
+sector size 512 by default?
 
-Later, when servicing the exit() syscall for the xfs_io process,
-xfs_free_eofblocks() ends up invoking xfs_reflink_cancel_cow_blocks()
-since i_delayed_blks has the value 22. xfs_reflink_cancel_cow_blocks()
-indirectly invokes __xfs_free_extent() which returns EIO since
-XFS_ERRTAG_FREE_EXTENT has been set. This leads to the filesystem to be
-shutdown. The "rm" command invoked later ends up returning an
-error and hence the test fails. The test actually requires that the
-filesystem gets shutdown when executing the "rm" command.
+If a filesystem created with the default 512-byte sector size is activated 
+on a device with 4k sectors, it results in mount failure.
 
-To fix the problem, this commit injects the free_extent error after we
-CoW file2's [10 * 64k, 19 * 64k] range.
+Mikulas
 
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
----
- tests/xfs/325     | 5 +++--
- tests/xfs/325.out | 2 +-
- 2 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/tests/xfs/325 b/tests/xfs/325
-index b156de9..6795901 100755
---- a/tests/xfs/325
-+++ b/tests/xfs/325
-@@ -54,11 +54,12 @@ echo "Check files"
- md5sum $SCRATCH_MNT/file1 | _filter_scratch
- md5sum $SCRATCH_MNT/file2 | _filter_scratch
- 
-+echo "CoW a few blocks"
-+$XFS_IO_PROG -c "pwrite -W -S 0x67 $((10 * blksz)) $((10 * blksz))" $SCRATCH_MNT/file2 >> $seqres.full
-+
- echo "Inject error"
- _scratch_inject_error "free_extent"
- 
--echo "CoW a few blocks"
--$XFS_IO_PROG -c "pwrite -W -S 0x67 $((10 * blksz)) $((10 * blksz))" $SCRATCH_MNT/file2 >> $seqres.full
- rm $SCRATCH_MNT/file1
- sync
- 
-diff --git a/tests/xfs/325.out b/tests/xfs/325.out
-index 4e25d2b..92027cd 100644
---- a/tests/xfs/325.out
-+++ b/tests/xfs/325.out
-@@ -4,8 +4,8 @@ Create files
- Check files
- d5a0ed0305c8df4180cb2bf975ecffe8  SCRATCH_MNT/file1
- d5a0ed0305c8df4180cb2bf975ecffe8  SCRATCH_MNT/file2
--Inject error
- CoW a few blocks
-+Inject error
- FS should be shut down, touch will fail
- touch: cannot touch 'SCRATCH_MNT/badfs': Input/output error
- Remount to replay log
--- 
-2.9.5
+
+On Tue, 11 Sep 2018, David Teigland wrote:
+
+> Hi Mikulas,
+> 
+> Am I doing something wrong below or is there a bug somewhere?  (I could be
+> doing something wrong in the lvm activation code, also.)
+> Thanks
+> 
+> 
+> [root@null-05 ~]# lvs foo
+>   LV   VG  Attr       LSize   
+>   fast foo -wi-------  32.00m
+>   main foo -wi------- 200.00m
+> 
+> [root@null-05 ~]# lvchange -ay foo/main
+> 
+> [root@null-05 ~]# mkfs.xfs /dev/foo/main
+> meta-data=/dev/foo/main          isize=512    agcount=4, agsize=12800 blks
+>          =                       sectsz=512   attr=2, projid32bit=1
+>          =                       crc=1        finobt=0, sparse=0
+> data     =                       bsize=4096   blocks=51200, imaxpct=25
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+> log      =internal log           bsize=4096   blocks=855, version=2
+>          =                       sectsz=512   sunit=0 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> 
+> [root@null-05 ~]# mount /dev/foo/main /mnt
+> [root@null-05 ~]# cp /root/pattern* /mnt/
+> [root@null-05 ~]# umount /mnt
+> [root@null-05 ~]# lvchange -an foo/main
+> 
+> [root@null-05 ~]# lvconvert --type writecache --cachepool fast foo/main
+>   Logical volume foo/main now has write cache.
+> 
+> [root@null-05 ~]# lvs -a foo -o+devices
+>   LV            VG  Attr       LSize   Origin        Devices       
+>   [fast]        foo -wi-------  32.00m               /dev/pmem0(0) 
+>   main          foo Cwi------- 200.00m [main_wcorig] main_wcorig(0)
+>   [main_wcorig] foo -wi------- 200.00m               /dev/loop0(0) 
+> 
+> [root@null-05 ~]# lvchange -ay foo/main
+> 
+> [root@null-05 ~]# dmsetup ls
+> foo-main_wcorig (253:4)
+> rhel_null--05-home      (253:2)
+> foo-main        (253:5)
+> foo-fast        (253:3)
+> rhel_null--05-swap      (253:1)
+> rhel_null--05-root      (253:0)
+> 
+> [root@null-05 ~]# dmsetup table
+> foo-main_wcorig: 0 409600 linear 7:0 2048
+> rhel_null--05-home: 0 853286912 linear 8:2 16517120
+> foo-main: 0 409600 writecache p 253:4 253:3 4096 0
+> foo-fast: 0 65536 linear 259:0 2048
+> rhel_null--05-swap: 0 16515072 linear 8:2 2048
+> rhel_null--05-root: 0 104857600 linear 8:2 869804032
+> 
+> [root@null-05 ~]# mount /dev/foo/main /mnt
+> mount: mount /dev/mapper/foo-main on /mnt failed: Function not implemented
+> 
+> [root@null-05 ~]# dmesg | tail -1
+> [802734.176118] XFS (dm-5): device supports 4096 byte sectors (not 512)
+> 
+> [root@null-05 ~]# lvchange -an foo/main
+> 
+> [root@null-05 ~]# lvconvert --splitcache foo/main
+>   Logical volume foo/main write cache has been detached.
+> 
+> [root@null-05 ~]# lvchange -ay foo/main
+> 
+> [root@null-05 ~]# mount /dev/foo/main /mnt
+> 
+> [root@null-05 ~]# diff /mnt/pattern1 /root/pattern1
+> 
+> [root@null-05 ~]# lvs foo
+>   LV   VG  Attr       LSize   
+>   fast foo -wi-------  32.00m
+>   main foo -wi-ao---- 200.00m
+> 
