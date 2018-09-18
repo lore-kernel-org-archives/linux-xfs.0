@@ -1,56 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:54760 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:49370 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728065AbeIRSUc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Sep 2018 14:20:32 -0400
-Subject: Re: dm-writecache issue
-References: <20180911221147.GA23308@redhat.com>
- <alpine.LRH.2.02.1809180741001.6599@file01.intranet.prod.int.rdu2.redhat.com>
- <20180918123238.GI27618@dastard>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <817349b8-b54e-a16a-276f-7a977f29b449@sandeen.net>
-Date: Tue, 18 Sep 2018 07:48:04 -0500
+        id S1725928AbeIRIL4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 18 Sep 2018 04:11:56 -0400
+Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id F2C74A70A
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Sep 2018 02:41:36 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 94D2420158A8
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Sep 2018 02:41:36 +0000 (UTC)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs: don't treat unknown di_flags[2] as corruption in scrub
+Message-ID: <be811b64-5630-e9eb-313f-3aa1f809ba79@redhat.com>
+Date: Mon, 17 Sep 2018 21:41:35 -0500
 MIME-Version: 1.0
-In-Reply-To: <20180918123238.GI27618@dastard>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, Mikulas Patocka <mpatocka@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, David Teigland <teigland@redhat.com>
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On 9/18/18 7:32 AM, Dave Chinner wrote:
-> On Tue, Sep 18, 2018 at 07:46:47AM -0400, Mikulas Patocka wrote:
->> I would ask the XFS developers about this - why does mkfs.xfs select 
->> sector size 512 by default?
-> 
-> Because the underlying device told it that it supported a
-> sector size of 512 bytes?
+xchk_inode_flags[2]() currently treats any di_flags[2] values that the
+running kernel doesn't recognize as corruption, and calls
+xchk_ino_set_corrupt() if they are set.  However, it's entirely possible
+that these flags were set in some newer kernel and are quite valid,
+but ignored in this kernel.
 
-Not only that, but it must have told us that it had a /physical/ 512 sector.
-If it had even said physical/logical 4096/512, we would have chosen 4096.
+(Validators don't care one bit about unknown di_flags[2].)
 
-What does please check blockdev --getpbsz --getss /dev/$FOO say at mkfs time?
+Call xchk_ino_set_warning instead, because this may or may not actually
+indicate a problem.
 
->> If a filesystem created with the default 512-byte sector size is activated 
->> on a device with 4k sectors, it results in mount failure.
-> 
-> Yes, it does, but mkfs should also fail when it tries to write 512
-> byte sectors to a 4k device, too.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-...
-
-> I'm betting that the underlying device advertised a logical/physical
-> sector size of 512 bytes to mkfs, and then adding pmem as the cache
-> device changed the logical volume from a 512 byte sector device to a
-> hard 4k sector device.
-
-Yup, please check blockdev --getpbsz --getss /dev/$FOO for the
-devices in question during the course of this testcase.  As Dave says,
-we can't mkfs a device that claims to support 512 bytes IOs and then
-have that granularity increase.  (And going the other way, i.e. making
-512 byte IOs non-atomic may break guarantees that journaling relies on).
-
--Eric
+diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+index 5b3b177..e53ed83 100644
+--- a/fs/xfs/scrub/inode.c
++++ b/fs/xfs/scrub/inode.c
+@@ -126,8 +126,9 @@
+ {
+ 	struct xfs_mount	*mp = sc->mp;
+ 
++	/* Unknown di_flags could simply be from newer kernel */
+ 	if (flags & ~XFS_DIFLAG_ANY)
+-		goto bad;
++		xchk_ino_set_warning(sc, ino);
+ 
+ 	/* rt flags require rt device */
+ 	if ((flags & (XFS_DIFLAG_REALTIME | XFS_DIFLAG_RTINHERIT)) &&
+@@ -172,8 +173,9 @@
+ {
+ 	struct xfs_mount	*mp = sc->mp;
+ 
++	/* Unknown di_flags2 could simply be from newer kernel */
+ 	if (flags2 & ~XFS_DIFLAG2_ANY)
+-		goto bad;
++		xchk_ino_set_warning(sc, ino);
+ 
+ 	/* reflink flag requires reflink feature */
+ 	if ((flags2 & XFS_DIFLAG2_REFLINK) &&
