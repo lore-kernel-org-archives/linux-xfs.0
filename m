@@ -1,103 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:43484 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731448AbeISRhF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Sep 2018 13:37:05 -0400
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8JBww2x055918
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 07:59:28 -0400
-Received: from e16.ny.us.ibm.com (e16.ny.us.ibm.com [129.33.205.206])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2mkkx2dpd7-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 07:59:28 -0400
-Received: from localhost
-        by e16.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Wed, 19 Sep 2018 07:59:27 -0400
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH V4 12/20] Fix generic/102 to work with 64k block size
-Date: Wed, 19 Sep 2018 17:30:45 +0530
-In-Reply-To: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
-References: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
-Message-Id: <20180919120053.7339-13-chandan@linux.vnet.ibm.com>
+Received: from sandeen.net ([63.231.237.45]:54760 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728065AbeIRSUc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 18 Sep 2018 14:20:32 -0400
+Subject: Re: dm-writecache issue
+References: <20180911221147.GA23308@redhat.com>
+ <alpine.LRH.2.02.1809180741001.6599@file01.intranet.prod.int.rdu2.redhat.com>
+ <20180918123238.GI27618@dastard>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <817349b8-b54e-a16a-276f-7a977f29b449@sandeen.net>
+Date: Tue, 18 Sep 2018 07:48:04 -0500
+MIME-Version: 1.0
+In-Reply-To: <20180918123238.GI27618@dastard>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, zlang@redhat.com, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>, Mikulas Patocka <mpatocka@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, David Teigland <teigland@redhat.com>
 
-With 64k block size, mkfs.xfs fails with the following message when the
-filesystem size is 512MiB in size,
+On 9/18/18 7:32 AM, Dave Chinner wrote:
+> On Tue, Sep 18, 2018 at 07:46:47AM -0400, Mikulas Patocka wrote:
+>> I would ask the XFS developers about this - why does mkfs.xfs select 
+>> sector size 512 by default?
+> 
+> Because the underlying device told it that it supported a
+> sector size of 512 bytes?
 
-"log size 2037 blocks too small, minimum size is 2473 blocks"
+Not only that, but it must have told us that it had a /physical/ 512 sector.
+If it had even said physical/logical 4096/512, we would have chosen 4096.
 
-Hence this commit increases the test filesystem size to 1GiB. Also, the
-size of the test file is increased to 800MiB which is ~80% of the test
-filesystem size. This is in proportion to the 400MiB test file used with
-the original 512MiB test filesystem.
+What does please check blockdev --getpbsz --getss /dev/$FOO say at mkfs time?
 
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
----
- tests/generic/102     |  4 ++--
- tests/generic/102.out | 20 ++++++++++----------
- 2 files changed, 12 insertions(+), 12 deletions(-)
+>> If a filesystem created with the default 512-byte sector size is activated 
+>> on a device with 4k sectors, it results in mount failure.
+> 
+> Yes, it does, but mkfs should also fail when it tries to write 512
+> byte sectors to a 4k device, too.
 
-diff --git a/tests/generic/102 b/tests/generic/102
-index faf940a..29abd89 100755
---- a/tests/generic/102
-+++ b/tests/generic/102
-@@ -31,14 +31,14 @@ _require_scratch
- 
- rm -f $seqres.full
- 
--dev_size=$((512 * 1024 * 1024))     # 512MB filesystem
-+dev_size=$((1024 * 1024 * 1024))     # 1GB filesystem
- _scratch_mkfs_sized $dev_size >>$seqres.full 2>&1
- _scratch_mount
- 
- for ((i = 0; i < 10; i++)); do
- 	echo "loop $i" >>$seqres.full
- 
--	$XFS_IO_PROG -f -c "pwrite -b 1m 0 400m" "$SCRATCH_MNT"/file | \
-+	$XFS_IO_PROG -f -c "pwrite -b 1m 0 800m" "$SCRATCH_MNT"/file | \
- _filter_xfs_io | _filter_scratch
- 
- 	rm -f "$SCRATCH_MNT"/file
-diff --git a/tests/generic/102.out b/tests/generic/102.out
-index fc9275d..b58aa5c 100644
---- a/tests/generic/102.out
-+++ b/tests/generic/102.out
-@@ -1,21 +1,21 @@
- QA output created by 102
--wrote 419430400/419430400 bytes at offset 0
-+wrote 838860800/838860800 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
--wrote 419430400/419430400 bytes at offset 0
-+wrote 838860800/838860800 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
--wrote 419430400/419430400 bytes at offset 0
-+wrote 838860800/838860800 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
--wrote 419430400/419430400 bytes at offset 0
-+wrote 838860800/838860800 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
--wrote 419430400/419430400 bytes at offset 0
-+wrote 838860800/838860800 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
--wrote 419430400/419430400 bytes at offset 0
-+wrote 838860800/838860800 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
--wrote 419430400/419430400 bytes at offset 0
-+wrote 838860800/838860800 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
--wrote 419430400/419430400 bytes at offset 0
-+wrote 838860800/838860800 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
--wrote 419430400/419430400 bytes at offset 0
-+wrote 838860800/838860800 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
--wrote 419430400/419430400 bytes at offset 0
-+wrote 838860800/838860800 bytes at offset 0
- XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
--- 
-2.9.5
+...
+
+> I'm betting that the underlying device advertised a logical/physical
+> sector size of 512 bytes to mkfs, and then adding pmem as the cache
+> device changed the logical volume from a 512 byte sector device to a
+> hard 4k sector device.
+
+Yup, please check blockdev --getpbsz --getss /dev/$FOO for the
+devices in question during the course of this testcase.  As Dave says,
+we can't mkfs a device that claims to support 512 bytes IOs and then
+have that granularity increase.  (And going the other way, i.e. making
+512 byte IOs non-atomic may break guarantees that journaling relies on).
+
+-Eric
