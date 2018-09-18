@@ -1,80 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45772 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:58800 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726037AbeIRRnc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Sep 2018 13:43:32 -0400
-Subject: Re: [PATCH] xfs: don't treat unknown di_flags[2] as corruption in
- scrub
-References: <be811b64-5630-e9eb-313f-3aa1f809ba79@redhat.com>
- <20180918052009.GG16550@dastard>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <225b5670-f141-6f02-3fa5-8445c4e5c27b@redhat.com>
-Date: Tue, 18 Sep 2018 07:11:12 -0500
+        id S1727140AbeISAgs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 18 Sep 2018 20:36:48 -0400
+Subject: Re: [ANNOUNCE] xfsprogs libxfs-4.19-sync branch pushed
+References: <d461e927-5b07-c72b-9dac-c82a4336a272@sandeen.net>
+ <20180918184800.GF20086@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <8df51bc3-aa09-d45c-7db7-3b30cb2abcaa@sandeen.net>
+Date: Tue, 18 Sep 2018 14:02:49 -0500
 MIME-Version: 1.0
-In-Reply-To: <20180918052009.GG16550@dastard>
+In-Reply-To: <20180918184800.GF20086@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On 9/18/18 12:20 AM, Dave Chinner wrote:
-> On Mon, Sep 17, 2018 at 09:41:35PM -0500, Eric Sandeen wrote:
->> xchk_inode_flags[2]() currently treats any di_flags[2] values that the
->> running kernel doesn't recognize as corruption, and calls
->> xchk_ino_set_corrupt() if they are set.  However, it's entirely possible
->> that these flags were set in some newer kernel and are quite valid,
->> but ignored in this kernel.
+On 9/18/18 1:48 PM, Darrick J. Wong wrote:
+> On Mon, Sep 17, 2018 at 09:16:10PM -0500, Eric Sandeen wrote:
+>> Hi all -
 >>
->> (Validators don't care one bit about unknown di_flags[2].)
+>> Sorry for the delay, but a preliminary libxfs-4.19-sync branch has
+>> been pushed up to the xfsprogs repository on kernel.org.  The 
+>> top commit is
 >>
->> Call xchk_ino_set_warning instead, because this may or may not actually
->> indicate a problem.
+>> The head of the libxfs-4.19-sync branch is commit:
 >>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
+>> b53f016 xfs: fix a null pointer dereference in xfs_bmap_extents_to_btree
 >>
->> diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
->> index 5b3b177..e53ed83 100644
->> --- a/fs/xfs/scrub/inode.c
->> +++ b/fs/xfs/scrub/inode.c
->> @@ -126,8 +126,9 @@
->>  {
->>  	struct xfs_mount	*mp = sc->mp;
->>  
->> +	/* Unknown di_flags could simply be from newer kernel */
->>  	if (flags & ~XFS_DIFLAG_ANY)
->> -		goto bad;
->> +		xchk_ino_set_warning(sc, ino);
+>> This passed basic sanity checks, now I'll go see what all differs
+>> in Darrick's tree that he did similar work in ~1 month ago...
 > 
-> There's only one flag in that set, right?
-
-Yes, (1 << 15).
-
-> And we only need that flag
-> for a future v2 inode features we add? i.e. any new feature will be
-> on a v3 inode format because the v2 format is the legacy inode
-> format and we're not developing new features for it.
-
-Ok...
-
-> [ There's also the minor issue that the remaining flag bit in
-> di_flags is reserved for the "more flags" flag bit so that we know
-> to grab flags from some other padding in the inode we redefined to
-> hold more flags in the v2 inode format. But that's irrelevant now
-> because it's a legacy format. ]
+> <urk> I had a bunch of cleanups for the userspace transaction code that
+> wanted to go in before the merge... sigh.
 > 
-> IOWs, I think the original code here is just fine because we're not
-> going to add new v2 format inode features in the future.
+> Well I guess I'll send them as a start and we can decide what to do about it.
+>
 
-Ok, if we're absolutely 100% sure that no future kernel will ever use
-that flag, then yes, it's corruption if it's ever found to be set.
-I wasn't quite ready to draw that line in the sand.
+No problem, I'll get it sorted.  These libxfs sync branches are /totally/
+rebaseable ...
 
-Should probably #define a new XFS_DIFLAG_NEVER or something then, to make
-it crystal clear?
+
+Thanks for the updates!
 
 -Eric
