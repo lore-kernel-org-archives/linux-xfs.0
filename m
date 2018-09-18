@@ -1,75 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:34526 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:42668 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728065AbeIRTwk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Sep 2018 15:52:40 -0400
+        id S1727228AbeIRTxo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 18 Sep 2018 15:53:44 -0400
+Date: Tue, 18 Sep 2018 09:20:53 -0500
+From: David Teigland <teigland@redhat.com>
 Subject: Re: dm-writecache issue
-From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <20180918142053.GA26193@redhat.com>
 References: <20180911221147.GA23308@redhat.com>
  <alpine.LRH.2.02.1809180741001.6599@file01.intranet.prod.int.rdu2.redhat.com>
  <20180918123238.GI27618@dastard>
  <817349b8-b54e-a16a-276f-7a977f29b449@sandeen.net>
- <alpine.LRH.2.02.1809180934040.28565@file01.intranet.prod.int.rdu2.redhat.com>
- <8975ad6d-bfde-0a50-e60c-59228493f1b2@sandeen.net>
-Message-ID: <d2d949ec-b3b6-cba3-66f8-c225784d5951@sandeen.net>
-Date: Tue, 18 Sep 2018 09:19:51 -0500
 MIME-Version: 1.0
-In-Reply-To: <8975ad6d-bfde-0a50-e60c-59228493f1b2@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <817349b8-b54e-a16a-276f-7a977f29b449@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, David Teigland <teigland@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Dave Chinner <david@fromorbit.com>, Mikulas Patocka <mpatocka@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+
+On Tue, Sep 18, 2018 at 07:48:04AM -0500, Eric Sandeen wrote:
+> Not only that, but it must have told us that it had a /physical/ 512 sector.
+> If it had even said physical/logical 4096/512, we would have chosen 4096.
+
+Right, just after asking I discovered that the advertised
+physical_block_size changes after attaching dm-writecache:
+
+Before:
+
+# dmsetup ls
+foo-main        (253:3)
+foo-fast        (253:4)
+
+# cat /sys/block/dm-3/queue/physical_block_size 
+512
+# cat /sys/block/dm-4/queue/physical_block_size 
+4096
+
+After:
+
+# dmsetup ls
+foo-main_wcorig (253:4)
+foo-main        (253:5)
+foo-fast        (253:3)
+
+# cat /sys/block/dm-3/queue/physical_block_size 
+4096
+# cat /sys/block/dm-5/queue/physical_block_size 
+4096
 
 
+> What does please check blockdev --getpbsz --getss /dev/$FOO say at mkfs time?
 
-On 9/18/18 9:16 AM, Eric Sandeen wrote:
-> On 9/18/18 9:09 AM, Mikulas Patocka wrote:
->>
->>
->> On Tue, 18 Sep 2018, Eric Sandeen wrote:
->>
->>> On 9/18/18 7:32 AM, Dave Chinner wrote:
->>>> On Tue, Sep 18, 2018 at 07:46:47AM -0400, Mikulas Patocka wrote:
->>>>> I would ask the XFS developers about this - why does mkfs.xfs select 
->>>>> sector size 512 by default?
->>>>
->>>> Because the underlying device told it that it supported a
->>>> sector size of 512 bytes?
->>>
->>> Not only that, but it must have told us that it had a /physical/ 512 sector.
->>> If it had even said physical/logical 4096/512, we would have chosen 4096.
->>>
->>> What does please check blockdev --getpbsz --getss /dev/$FOO say at mkfs time?
->>
->> On SSDs, physical sector size is not detectable - the ATA and NVME 
->> standards allows reporting physical sector size, but some SSD vendors 
->> report this as 512-bytes despite the fact that the SSD has 4k sectors 
->> internally.
-> 
-> There's a difference between "detecting" and "observing what the
-> device reports."
-> 
-> All we have to go on is the geometry reported by the device.
-> 
-> # cat /sys/block/sdc/device/model 
-> Samsung SSD 850 
-> # blockdev --getpbsz --getss /dev/sdc
-> 512
-> 512
-> 
-> If the device lies to us, there's nothing to be done about it.
-> 
->> I tested 5 SSDs (Samsung SSD 960 EVO NVME, KINGSTON SKC1000240G NVME, 
->> Samsung SSD 850 EVO SATA, Crucial MX100 SATA, Intel 520 SATA) - all of 
->> them have 4k sectors internally (i.e. the SSDs have higher IOPS for 4k 
->> writes than for 2k writes), but only the Crucial SSD reports 4096 in 
->> /sys/block/*/queue/physical_block_size. Intel and Samsung report 512.
+Before:
 
-See also 
-https://www.intel.com/content/www/us/en/support/articles/000006392/memory-and-storage.html
+# blockdev --getpbsz --getss /dev/foo/main
+512
+512
 
--Eric
+After:
+
+# blockdev --getpbsz --getss /dev/foo/main
+4096
+4096
+
+
+> > Yes, it does, but mkfs should also fail when it tries to write 512
+> > byte sectors to a 4k device, too.
+
+By default it uses the 4k sectors in that case:
+
+# mkfs.xfs -f /dev/foo/main
+meta-data=/dev/foo/main          isize=512    agcount=4, agsize=13056 blks
+         =                       sectsz=4096  attr=2, projid32bit=1
+         =                       crc=1        finobt=0, sparse=0
+data     =                       bsize=4096   blocks=52224, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+log      =internal log           bsize=4096   blocks=1605, version=2
+         =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+
+But you are correct if I request 512 on a 4k device:
+
+# mkfs.xfs -f -s size=512 /dev/foo/main
+illegal sector size 512; hw sector is 4096
+
+> > I'm betting that the underlying device advertised a logical/physical
+> > sector size of 512 bytes to mkfs, and then adding pmem as the cache
+> > device changed the logical volume from a 512 byte sector device to a
+> > hard 4k sector device.
+
+Yes
+
+I've been dealing with this by just using -s size=4096.
