@@ -1,41 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:34884 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:35952 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727348AbeIRT4d (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Sep 2018 15:56:33 -0400
+        id S1729618AbeIRUJK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 18 Sep 2018 16:09:10 -0400
 Subject: Re: dm-writecache issue
 References: <20180911221147.GA23308@redhat.com>
  <alpine.LRH.2.02.1809180741001.6599@file01.intranet.prod.int.rdu2.redhat.com>
  <20180918123238.GI27618@dastard>
  <817349b8-b54e-a16a-276f-7a977f29b449@sandeen.net>
- <20180918142053.GA26193@redhat.com>
+ <alpine.LRH.2.02.1809180934040.28565@file01.intranet.prod.int.rdu2.redhat.com>
+ <8975ad6d-bfde-0a50-e60c-59228493f1b2@sandeen.net>
+ <d2d949ec-b3b6-cba3-66f8-c225784d5951@sandeen.net>
+ <alpine.LRH.2.02.1809181024150.28565@file01.intranet.prod.int.rdu2.redhat.com>
 From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <25e71dc1-307f-83b2-d93a-b3215e892523@sandeen.net>
-Date: Tue, 18 Sep 2018 09:23:43 -0500
+Message-ID: <b359bcc7-bc76-33cc-30fb-2c8ad2ba4682@sandeen.net>
+Date: Tue, 18 Sep 2018 09:36:16 -0500
 MIME-Version: 1.0
-In-Reply-To: <20180918142053.GA26193@redhat.com>
+In-Reply-To: <alpine.LRH.2.02.1809181024150.28565@file01.intranet.prod.int.rdu2.redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: David Teigland <teigland@redhat.com>
-Cc: Dave Chinner <david@fromorbit.com>, Mikulas Patocka <mpatocka@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, David Teigland <teigland@redhat.com>
 
-On 9/18/18 9:20 AM, David Teigland wrote:
->>> I'm betting that the underlying device advertised a logical/physical
->>> sector size of 512 bytes to mkfs, and then adding pmem as the cache
->>> device changed the logical volume from a 512 byte sector device to a
->>> hard 4k sector device.
-> Yes
-> 
-> I've been dealing with this by just using -s size=4096.
-> 
+On 9/18/18 9:29 AM, Mikulas Patocka wrote:
 
-So the risk here - in general - is that using a sector size larger
-than the advertised physical sector size may - in general - lead to
-metadata IOs that are not atomic, when they are required to be so for
-consistency.
+> On Tue, 18 Sep 2018, Eric Sandeen wrote:
+
+...
+
+>> See also 
+>> https://www.intel.com/content/www/us/en/support/articles/000006392/memory-and-storage.html
+>>
+>> -Eric
+> 
+> And does it really support native 512-byte writes? Or does it emulate 
+> 512-byte writes by doing read-modify-write? That needs to be benchmarked, 
+> the paper doesn't say that.
+
+Interesting from a manual tuning perspective, but not from a default
+behavior perspective.
+
+I'm just pointing out that Intel does seem to give the user a choice about
+the /advertised/ geometry for some of their SSDs.
+
+> Memory is expensive and reducing SSD sector size increases memory 
+> requirement on the SSD. I doubt that any SSD vendor would want to use 
+> 8-times more memory just to support 512-byte sectors natively.
+
+Marketing decisions aside, we just can't safely ignore what the device
+tells us about these IO sizes.
+
+We have similar issues with raid devices which report nonsensical
+optimal and mininum IO sizes.  If it's reporting bad info, the user
+can override it, but they have to be sure to get it right.  For default
+behavior, mkfs.xfs has no choice but to use what the device tells it
+to use.
 
 -Eric
