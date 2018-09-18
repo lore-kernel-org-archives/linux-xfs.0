@@ -1,83 +1,197 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:57430 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726371AbeIRHqY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Sep 2018 03:46:24 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id C30504A2
-        for <linux-xfs@vger.kernel.org>; Mon, 17 Sep 2018 21:15:36 -0500 (CDT)
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs libxfs-4.19-sync branch pushed
-Message-ID: <d461e927-5b07-c72b-9dac-c82a4336a272@sandeen.net>
-Date: Mon, 17 Sep 2018 21:16:10 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:48832 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727756AbeIRUJc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Sep 2018 16:09:32 -0400
+Date: Tue, 18 Sep 2018 07:36:29 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH V3 01/19] Fix xfs/009 to work with 64k block size
+Message-ID: <20180918143629.GE20086@magnolia>
+References: <20180912062626.14349-1-chandan@linux.vnet.ibm.com>
+ <20180912062626.14349-2-chandan@linux.vnet.ibm.com>
+ <20180917225925.GE4635@magnolia>
+ <5182088.PSLVip6Wn9@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="tCWY8TyY6bITzh5TsGMugncGgAnDtAnuO"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5182088.PSLVip6Wn9@localhost.localdomain>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Cc: fstests@vger.kernel.org, guaneryu@gmail.com, linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---tCWY8TyY6bITzh5TsGMugncGgAnDtAnuO
-Content-Type: multipart/mixed; boundary="DWkmkdONr5rLowI2dPe1n8PVKdDNm8r6I";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Message-ID: <d461e927-5b07-c72b-9dac-c82a4336a272@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs libxfs-4.19-sync branch pushed
+On Tue, Sep 18, 2018 at 11:32:12AM +0530, Chandan Rajendra wrote:
+> On Tuesday, September 18, 2018 4:29:25 AM IST Darrick J. Wong wrote:
+> > On Wed, Sep 12, 2018 at 11:56:08AM +0530, Chandan Rajendra wrote:
+> > > xfs_alloc_file_space() rounds up allocation requests by the filesystem
+> > > block size. Hence this commit changes the test to work with block size
+> > > units rather than with a multiple of 4096 bytes.
+> > > 
+> > > Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+> > > ---
+> > >  tests/xfs/009     | 92 ++++++++++++++++++++++++++++++++++++++++++++++---------
+> > >  tests/xfs/009.out | 66 +++++++++++++++++++--------------------
+> > >  2 files changed, 110 insertions(+), 48 deletions(-)
+> > > 
+> > > diff --git a/tests/xfs/009 b/tests/xfs/009
+> > > index 68f6379..70717eb 100755
+> > > --- a/tests/xfs/009
+> > > +++ b/tests/xfs/009
+> > > @@ -14,9 +14,6 @@ here=`pwd`
+> > >  tmp=/tmp/$$
+> > >  status=1	# failure is the default!
+> > >  trap "_cleanup; exit \$status" 0 1 2 3 15
+> > > -# This isn't really related to fs block size, it's just what
+> > > -# alloc uses for the "block" unit in it's input parameters...
+> > > -bsize=4096
+> > >  
+> > >  _cleanup()
+> > >  {
+> > > @@ -24,13 +21,6 @@ _cleanup()
+> > >      _scratch_unmount
+> > >  }
+> > >  
+> > > -_block_filter()
+> > > -{
+> > > -   sed \
+> > > -	-e 's/[0-9][0-9]*\.\.[0-9][0-9]*/BLOCKRANGE/g' \
+> > > -	-e "s/blocksize $bsize/blocksize BSIZE/g"
+> > > -}
+> > > -
+> > >  _init()
+> > >  {
+> > >      echo "*** mkfs"
+> > > @@ -49,11 +39,6 @@ _init()
+> > >      fi
+> > >  }
+> > >  
+> > > -_filesize()
+> > > -{
+> > > -    ls -l $1 | $AWK_PROG '{print "filesize = " $5}'
+> > > -}
+> > > -
+> > >  # get standard environment, filters and checks
+> > >  . ./common/rc
+> > >  . ./common/filter
+> > > @@ -64,9 +49,86 @@ _supported_os Linux
+> > >  
+> > >  _require_scratch
+> > >  
+> > > +_filesize()
+> > > +{
+> > > +    ls -l $1 | $AWK_PROG -v bsize="$bsize" '{print "filesize = " $5 / bsize}'
+> > > +}
+> > > +
+> > > +_block_filter()
+> > > +{
+> > > +	$AWK_PROG -v bsize="$bsize" '
+> > > +	/blocksize/ {
+> > > +		printf("    blocksize BSIZE\n")
+> > > +
+> > > +		next
+> > > +	}
+> > > +
+> > > +	/CMD/ {
+> > > +		split($3, off, "=")
+> > > +		offset = strtonum(off[2])
+> > > +		if (offset != -1)
+> > > +			offset = offset / bsize
+> > > +
+> > > +		split($4, len, "=")
+> > > +		nr_blocks = strtonum(len[2])
+> > > +		if (nr_blocks != -1)
+> > > +			nr_blocks = nr_blocks / bsize
+> > > +
+> > > +		printf("    %s %s off=%s, len=%d\n", $1, $2, offset, nr_blocks)
+> > > +
+> > > +		next
+> > > +	}
+> > > +
+> > > +	/MAP/ {
+> > > +		split($2, off, "=")
+> > > +		offset = strtonum(off[2])
+> > > +		if (offset != -1)
+> > > +			offset = offset / bsize
+> > > +
+> > > +		split($3, len, "=")
+> > > +
+> > > +		nr_blocks = strtonum(len[2])
+> > > +
+> > > +		if (nr_blocks != -1)
+> > > +			nr_blocks = nr_blocks / bsize
+> > > +
+> > > +		printf("    %s off=%s, len=%d %s\n", $1, offset, nr_blocks, $4)
+> > > +
+> > > +		next
+> > > +	}
+> > > +
+> > > +	/TRUNCATE/ {
+> > > +		split($2, off, "=")
+> > > +		offset = strtonum(off[2]) / bsize
+> > > +
+> > > +		printf("    %s off=%s\n", $1, offset)
+> > > +
+> > > +		next
+> > > +	}
+> > > +
+> > > +	/\[[0-9]+,[0-9]+\]:/ {
+> > > +		printf("        %s BLOCKRANGE\n", $1)
+> > > +
+> > > +		next
+> > > +	}
+> > > +
+> > > +	{
+> > > +		print
+> > > +
+> > > +		next
+> > > +	}
+> > > +	'
+> > > +}
+> > > +
+> > >  _init
+> > >  out=$SCRATCH_MNT/$$.tmp
+> > >  
+> > > +# This isn't really related to fs block size, it's just what
+> > > +# alloc uses for the "block" unit in it's input parameters...
+> > > +# However, xfs_alloc_file_space() rounds up allocation
+> > > +# request by the filesystem's block size.
+> > > +bsize=$(_get_block_size $SCRATCH_MNT)
+> > 
+> > [Sorry for the extremely long delay, I've been on leave...]
+> > 
+> > Hm.  Certain filesystems draw a distinction between the fundamental
+> > block size and the minimum file block mapping size.  ocfs2 supports
+> > having a file cluster size (mkfs.ocfs2 -C) that is greater than the fs
+> > block size, and (I think) xfs can achieve something similar for files on
+> > a realtime device via the mkfs.xfs -r extsize= option.
+> > 
+> > If you're dealing with writing things into a file for a test, I think
+> > you have to use _get_file_block_size to make sure that you don't fall
+> > afoul of the cluster/block difference.  I don't know if you've checked
+> > that for this patch series...?
+> 
+> Thanks for pointing that out. I didn't know about the existance of 
+> _get_file_block_size. I will go through the patchset once again
+> and figure out which one of _get_block_size v/s _get_file_block_size to use?
 
---DWkmkdONr5rLowI2dPe1n8PVKdDNm8r6I
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+<nod>
 
-Hi all -
+_get_block_size is usually the appropriate tool when you're trying to
+massage a filesystem into creating a particular metadata block (e.g.
+fragmenting the free space just enough to force it to store free space
+records in N separate metadata blocks).
 
-Sorry for the delay, but a preliminary libxfs-4.19-sync branch has
-been pushed up to the xfsprogs repository on kernel.org.  The=20
-top commit is
+_get_file_block_size is more appropriate for massaging a file into a
+particular format (e.g. fragmenting a file just enough to force it to
+store the file's extent records in N separate metadata blocks).
 
-The head of the libxfs-4.19-sync branch is commit:
+And mea culpa, the vast majority of tests (including the ones I wrote)
+use _g_b_s when they probably mean _g_f_b_s...
 
-b53f016 xfs: fix a null pointer dereference in xfs_bmap_extents_to_btree
+--D
 
-This passed basic sanity checks, now I'll go see what all differs
-in Darrick's tree that he did similar work in ~1 month ago...
-
-Assuming it doesn't have any brown paper bags, I'd suggest basing any
-xfsprogs-4.19 patches on this branch now.
-
-Thanks,
--Eric
-
-
---DWkmkdONr5rLowI2dPe1n8PVKdDNm8r6I--
-
---tCWY8TyY6bITzh5TsGMugncGgAnDtAnuO
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAlugX+sACgkQIK4WkuE9
-3uDXjQ//ZuH1PiP5H1fF0Q9vnVDvaiIWxJmWUIhEjgKJUNi6ok9zbmJJ4rgBWR+h
-+2j6R/FkB6KiCvK0Pi036VuAlIqyv2fvHDVTZbr1SodnfpT/pbiZZw94s0J/8ArR
-9Pva3oG3CyRRktC/QEpjiGqA9jiPzICFnFPPV6cTRI2euvDdmNWeGVIId4AaZ34C
-eGuaiUBy6ew6kNapBmi3KBo7pXyjr9gpMHOV7otQ351R8LbVZZv/gHLCMDyFl4cm
-LQfEmqNCvaN1iG8HZGVRiXKZ0LGyFli+zegd/Hd85gyWDlCdYYVg/y2k9iwibK80
-ktAndAOC6s+eoN5uCkU6YW1WE241tfWimAMuArhjlzu5s/UDRW6v+MmvBQAwL2zS
-UlyeHoNTcFUq6wKbEJEn3KVg1mEgQZE+sz75gVYMapQsU1obedboJU6HDrZWBJAR
-BGSnUI+ykcyBikObz8XRUUzCXKVB3rK5V+jK+skrw9iGUyJNzBvHJifoMitnZTtM
-fl1qVMVOq+4HOZoOoRSr8AgYnaJnj2Q7BO7aXmXd0UKYrNlprfW8qMpW7XE9H5gR
-L4Hlcyh/lHZsrxYkfC/GS5WkZFss7E/NkrEgmOWXoguSeFqplQQOk3R4Ep2Dw9wX
-Zul2ykBQgi4LII/S6NXkk+BgP1svOAvfM7zUVIuB2eQN97j2f6o=
-=G7F+
------END PGP SIGNATURE-----
-
---tCWY8TyY6bITzh5TsGMugncGgAnDtAnuO--
+> 
+> -- 
+> chandan
+> 
