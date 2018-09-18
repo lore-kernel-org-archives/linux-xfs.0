@@ -1,83 +1,142 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:42022 "EHLO
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:56430 "EHLO
         mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731485AbeISRgx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Sep 2018 13:36:53 -0400
-Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8JBxBp9141248
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 07:59:17 -0400
-Received: from e12.ny.us.ibm.com (e12.ny.us.ibm.com [129.33.205.202])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2mkmmj3s6j-1
+        by vger.kernel.org with ESMTP id S1729578AbeIRP55 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Sep 2018 11:57:57 -0400
+Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8IAJCPJ106080
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Sep 2018 06:25:59 -0400
+Received: from e06smtp07.uk.ibm.com (e06smtp07.uk.ibm.com [195.75.94.103])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2mjw9f6g0a-1
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 07:59:16 -0400
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Sep 2018 06:25:59 -0400
 Received: from localhost
-        by e12.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e06smtp07.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Wed, 19 Sep 2018 07:59:13 -0400
+        Tue, 18 Sep 2018 11:25:57 +0100
 From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH V4 08/20] Fix xfs/190 to work with 64k block size
-Date: Wed, 19 Sep 2018 17:30:41 +0530
-In-Reply-To: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
-References: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
-Message-Id: <20180919120053.7339-9-chandan@linux.vnet.ibm.com>
+Subject: Re: [PATCH V3 00/19] Fix tests to work on non-4k block sized fs instances
+Date: Tue, 18 Sep 2018 15:58:04 +0530
+In-Reply-To: <20180918052027.GN8382@dhcp-12-152.nay.redhat.com>
+References: <20180912062626.14349-1-chandan@linux.vnet.ibm.com> <20180918052027.GN8382@dhcp-12-152.nay.redhat.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+Message-Id: <1716134.m6aQ7qFetf@localhost.localdomain>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, zlang@redhat.com, linux-xfs@vger.kernel.org
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, guaneryu@gmail.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org
 
-This commit describes "file hole" ranges in multiples of block sizes
-rather than using constants.
+On Tuesday, September 18, 2018 10:50:27 AM IST Zorro Lang wrote:
+> On Wed, Sep 12, 2018 at 11:56:07AM +0530, Chandan Rajendra wrote:
+> > This patchset fixes tests (mostly XFS specific ones) to work on
+> > variable block size. These patches now use the output of "od" utility
+> > to verify the contents of the test files instead of the md5sum
+> > utility.
+> > 
+> > Also, The patchset modifies _filter_fiemap() filter function to
+> > optionally print the file offset range in block size units.
+> > 
+> > Changelog:
+> > V2->V3:
+> > Added fixes for getting generic/018, generic/108 and generic/459 tests
+> > to work in 64k block size scenario.
+> > 
+> > V1->V2:
+> > Eryu Guan pointed out that some of the tests were obtaining the
+> > filesystem's block size value from $TEST_DIR even though the test was
+> > executed on the $SCRATCH_DEV's filesystem. This version of the
+> > patchset fixes the following tests to obtain the block size from
+> > $SCRATCH_MNT. The relevant changes was made to the following tests:
+> > xfs/009, xfs/050, xfs/074, xfs/139, xfs/140, xfs/190, xfs/299,
+> > generic/177 and generic/230.
+> > 
+> > Chandan Rajendra (19):
+> >   Fix xfs/009 to work with 64k block size
+> >   xfs/050: Fix "Push past soft inode limit" case
+> >   Fix xfs/050 to work with 64k block size
+> >   Fix xfs/074 to work with 64k block size
+> >   Fix xfs/127 to work with 64k block size
+> >   Fix xfs/139 to work with 64k block size
+> >   Fix xfs/140 to work with 64k block size
+> >   Fix xfs/190 to work with 64k block size
+> >   Fix xfs/299 to work with 64k block size
+> >   xfs/325: Inject free_extent error after CoW operation
+> >   Fix generic/102 to work with 64k block size
+> >   Fix generic/172 to work with 64k block size
+> >   Filter fiemap output by FS block size
+> >   Fix generic/177 to work with 64k block size
+> >   Fix generic/230 to work with 64k block size
+> >   Fix generic/235 to work with 64k block size
+> >   Fix generic/459 to work with 64k block size
+> >   Fix generic/018 to work with 64k block size
+> >   Fix generic/108 to work with 64k block size
+> > 
+> >  common/punch          | 19 ++++++++---
+> >  tests/generic/018     |  2 +-
+> >  tests/generic/102     |  4 +--
+> >  tests/generic/102.out | 20 +++++------
+> >  tests/generic/108     |  4 +--
+> >  tests/generic/172     |  4 +--
+> >  tests/generic/177     | 20 ++++++-----
+> >  tests/generic/177.out | 23 ++++++++-----
+> >  tests/generic/230     | 23 +++++++------
+> >  tests/generic/230.out | 16 ++++-----
+> >  tests/generic/235     |  2 +-
+> >  tests/generic/235.out |  4 +--
+> >  tests/generic/459     | 14 ++++----
+> >  tests/xfs/009         | 92 ++++++++++++++++++++++++++++++++++++++++++---------
+> >  tests/xfs/009.out     | 66 ++++++++++++++++++------------------
+> >  tests/xfs/050         | 26 ++++++++++-----
+> >  tests/xfs/050.out     | 60 ++++++++++++++++-----------------
+> >  tests/xfs/074         | 23 ++++++++++---
+> >  tests/xfs/127         |  2 +-
+> >  tests/xfs/139         | 15 +++++----
+> >  tests/xfs/139.out     |  8 +++--
+> >  tests/xfs/140         | 12 ++++---
+> >  tests/xfs/190         | 26 ++++++++++-----
+> >  tests/xfs/299         | 29 ++++++++++------
+> >  tests/xfs/299.out     | 60 ++++++++++++++++-----------------
+> >  tests/xfs/325         |  5 +--
+> >  tests/xfs/325.out     |  2 +-
+> >  27 files changed, 358 insertions(+), 223 deletions(-)
+> > 
+> 
+> Hi,
+> 
+> For help, I've tested this patchset on ppc64le machine with 4.18 released kernel.
+> But only tested thoses cases which changed, 64k xfs/ext4 and 4k xfs/ext4 all
+> test passed, refer to [1], [2], [3], [4].
+> 
+> But I tested 512 block size (crc=0) XFS passingly, then hit a new failure:
+> 
+> # ./check xfs/050
+> FSTYP         -- xfs (debug)
+> PLATFORM      -- Linux/ppc64le ibm-p9z-16-lp5 4.18.0-xfs-debug                                            
+> MKFS_OPTIONS  -- -f -b size=512 -m crc=0 /dev/sda5
+> MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/sda5 /mnt/xfstests/mnt2                      
+> 
+> xfs/050 18s ... - output mismatch (see /root/xfstests-patched/results//xfs/050.out.bad)
+>     --- tests/xfs/050.out       2018-09-17 05:56:47.738590176 -0400
+>     +++ /root/xfstests-patched/results//xfs/050.out.bad 2018-09-18 01:12:55.538747111 -0400
+>     @@ -12,23 +12,24 @@
+>      
+>      *** report initial settings
+>      [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
+>     -[NAME] 0 25 125 00 [--------] 1 4 10 00 [--------] 0 0 0 00 [--------]
+>     +[NAME] 0 24 124 00 [--------] 1 4 10 00 [--------] 0 0 0 00 [--------]
+>      
+>      *** push past the soft inode limit
+>     ...
+>     (Run 'diff -u tests/xfs/050.out /root/xfstests-patched/results//xfs/050.out.bad'  to see the entire diff)
+> Ran: xfs/050
+> Failures: xfs/050
+> Failed 1 of 1 tests
 
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
----
- tests/xfs/190 | 26 +++++++++++++++++---------
- 1 file changed, 17 insertions(+), 9 deletions(-)
+Thanks for testing this. The mismatch happens here due to xfs_quota using 1K as
+the minimum block size. I will have to think about how to solve this.
 
-diff --git a/tests/xfs/190 b/tests/xfs/190
-index 3275e29..13300ac 100755
---- a/tests/xfs/190
-+++ b/tests/xfs/190
-@@ -10,13 +10,6 @@
- #
- # PV 985792
- #
--#This is the list of holes to punch in the file limited to $filesize
--#NOTE holes cannot overlap or this script will fail.
--holes="4096:4096 303104:4096 1048576:512 1051648:8192 1065984:8192 1085440:7168"
--#filesize in MB
--filesize=10
--#Name of file to perform the test on
--filename=test-190
- 
- seq=`basename $0`
- seqres=$RESULT_DIR/$seq
-@@ -38,9 +31,24 @@ _supported_os Linux
- _require_scratch
- _scratch_mkfs_xfs >/dev/null 2>&1
- _scratch_mount
--fsblocksize=`$XFS_INFO_PROG $SCRATCH_MNT|sed 's/=/ /g'|awk '/^data / { print $3 }'`
- 
--dd if=/dev/zero of=$SCRATCH_MNT/$filename bs=1024k count=10 >> $seqres.full 2>&1
-+fsblocksize=$(_get_file_block_size $SCRATCH_MNT)
-+
-+#This is the list of holes to punch in the file limited to $filesize
-+#NOTE holes cannot overlap or this script will fail.
-+holes="$fsblocksize:$fsblocksize \
-+$(($fsblocksize * 74)):$fsblocksize \
-+$(($fsblocksize * 256)):$(($fsblocksize / 8)) \
-+$(echo scale=0\;$fsblocksize \* 256 \+ $fsblocksize \* 3 \/ 4 | bc):$(($fsblocksize * 2)) \
-+$(echo scale=0\;$fsblocksize \* 260 \+ $fsblocksize \* 1 \/ 4 | bc):$(($fsblocksize * 2)) \
-+$(($fsblocksize * 265)):$(echo scale=0\;$fsblocksize \+ $fsblocksize \* 3 \/ 4 | bc)"
-+
-+#filesize
-+filesize=$(($fsblocksize * 2560))
-+#Name of file to perform the test on
-+filename=test-190
-+
-+$XFS_IO_PROG -f -c "pwrite 0 $(($fsblocksize * 2560))" $SCRATCH_MNT/$filename >> $seqres.full 2>&1
- 
- # run DMAPI test using verbose output
- echo Punching holes in file
 -- 
-2.9.5
+chandan
