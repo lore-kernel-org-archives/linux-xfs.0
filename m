@@ -1,170 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:57036 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731458AbeISRgj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Sep 2018 13:36:39 -0400
-Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8JC1cLT055466
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 08:01:39 -0400
-Received: from e16.ny.us.ibm.com (e16.ny.us.ibm.com [129.33.205.206])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2mkmh13tff-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 08:01:38 -0400
-Received: from localhost
-        by e16.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Wed, 19 Sep 2018 07:58:51 -0400
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH V4 02/20] xfs/050: Fix "Push past soft inode limit" case
-Date: Wed, 19 Sep 2018 17:30:35 +0530
-In-Reply-To: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
-References: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
-Message-Id: <20180919120053.7339-3-chandan@linux.vnet.ibm.com>
+Received: from imap.thunk.org ([74.207.234.97]:43994 "EHLO imap.thunk.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729165AbeIRItE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 18 Sep 2018 04:49:04 -0400
+Date: Mon, 17 Sep 2018 23:18:30 -0400
+From: "Theodore Y. Ts'o" <tytso@mit.edu>
+Subject: Re: [PATCH V3 01/19] Fix xfs/009 to work with 64k block size
+Message-ID: <20180918031830.GA15708@thunk.org>
+References: <20180912062626.14349-1-chandan@linux.vnet.ibm.com>
+ <20180912062626.14349-2-chandan@linux.vnet.ibm.com>
+ <20180917225925.GE4635@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180917225925.GE4635@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, zlang@redhat.com, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, fstests@vger.kernel.org, guaneryu@gmail.com, linux-xfs@vger.kernel.org
 
-The test sets an inode soft limit of four but only three files are
-created. This commit creates two more files in order to really push past
-the soft inode limit.
+On Mon, Sep 17, 2018 at 03:59:25PM -0700, Darrick J. Wong wrote:
+> 
+> Hm.  Certain filesystems draw a distinction between the fundamental
+> block size and the minimum file block mapping size.  ocfs2 supports
+> having a file cluster size (mkfs.ocfs2 -C) that is greater than the fs
+> block size, and (I think) xfs can achieve something similar for files on
+> a realtime device via the mkfs.xfs -r extsize= option.
+> 
+> If you're dealing with writing things into a file for a test, I think
+> you have to use _get_file_block_size to make sure that you don't fall
+> afoul of the cluster/block difference.  I don't know if you've checked
+> that for this patch series...?
+> 
+> (Granted, I suspect that many tests have been sloppy about this...)
 
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
----
- tests/xfs/050     |  2 ++
- tests/xfs/050.out | 36 ++++++++++++++++++------------------
- 2 files changed, 20 insertions(+), 18 deletions(-)
+Indeed, we have a number of failures in ext4 bigalloc which are
+because of this block size vs. cluster size difference.  IIRC, a while
+back Eric Whitney had tried to start a discussion about how to best
+deal with this issue, but it wasn't clear what was the right way to
+add the necessary infrastructure to xfstests.  I had assumed it was an
+ext4-only problem, and no one had time to try to come up with a
+solution.
 
-diff --git a/tests/xfs/050 b/tests/xfs/050
-index dd77971..8569c2c 100755
---- a/tests/xfs/050
-+++ b/tests/xfs/050
-@@ -143,6 +143,8 @@ _exercise()
- 	echo "*** push past the soft inode limit" | tee -a $seqres.full
- 	_file_as_id $SCRATCH_MNT/softie1 $id $type 1024 0
- 	_file_as_id $SCRATCH_MNT/softie2 $id $type 1024 0
-+	_file_as_id $SCRATCH_MNT/softie3 $id $type 1024 0
-+	_file_as_id $SCRATCH_MNT/softie4 $id $type 1024 0
- 	_qmount
- 	xfs_quota -D $tmp.projects -P $tmp.projid -x \
- 		-c "repquota -birnN -$type" $SCRATCH_DEV |
-diff --git a/tests/xfs/050.out b/tests/xfs/050.out
-index 5cb4a10..ff9eb1c 100644
---- a/tests/xfs/050.out
-+++ b/tests/xfs/050.out
-@@ -16,11 +16,11 @@ realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
- 
- *** push past the soft inode limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 0 100 500 00 [--------] 3 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 0 100 500 00 [--------] 5 4 10 00 [7 days] 0 0 0 00 [--------]
- 
- *** push past the soft block limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [7 days] 4 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 140 100 500 00 [7 days] 6 4 10 00 [7 days] 0 0 0 00 [--------]
- 
- *** push past the hard inode limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
-@@ -48,11 +48,11 @@ realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
- 
- *** push past the soft inode limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 0 100 500 00 [--------] 3 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 0 100 500 00 [--------] 5 4 10 00 [7 days] 0 0 0 00 [--------]
- 
- *** push past the soft block limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [7 days] 4 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 140 100 500 00 [7 days] 6 4 10 00 [7 days] 0 0 0 00 [--------]
- 
- *** push past the hard inode limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
-@@ -80,19 +80,19 @@ realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
- 
- *** push past the soft inode limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 0 100 500 00 [--------] 3 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 0 100 500 00 [--------] 5 4 10 00 [--------] 0 0 0 00 [--------]
- 
- *** push past the soft block limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [--------] 4 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 140 100 500 00 [--------] 6 4 10 00 [--------] 0 0 0 00 [--------]
- 
- *** push past the hard inode limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [--------] 16 4 10 00 [--none--] 0 0 0 00 [--------]
-+[NAME] 140 100 500 00 [--------] 18 4 10 00 [--none--] 0 0 0 00 [--------]
- 
- *** push past the hard block limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 540 100 500 00 [--none--] 16 4 10 00 [--none--] 0 0 0 00 [--------]
-+[NAME] 540 100 500 00 [--none--] 18 4 10 00 [--none--] 0 0 0 00 [--------]
- 
- *** unmount
- *** gqnoenforce
-@@ -112,19 +112,19 @@ realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
- 
- *** push past the soft inode limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 0 100 500 00 [--------] 3 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 0 100 500 00 [--------] 5 4 10 00 [--------] 0 0 0 00 [--------]
- 
- *** push past the soft block limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [--------] 4 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 140 100 500 00 [--------] 6 4 10 00 [--------] 0 0 0 00 [--------]
- 
- *** push past the hard inode limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [--------] 16 4 10 00 [--none--] 0 0 0 00 [--------]
-+[NAME] 140 100 500 00 [--------] 18 4 10 00 [--none--] 0 0 0 00 [--------]
- 
- *** push past the hard block limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 540 100 500 00 [--none--] 16 4 10 00 [--none--] 0 0 0 00 [--------]
-+[NAME] 540 100 500 00 [--none--] 18 4 10 00 [--none--] 0 0 0 00 [--------]
- 
- *** unmount
- *** pquota
-@@ -144,11 +144,11 @@ realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
- 
- *** push past the soft inode limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 0 100 500 00 [--------] 3 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 0 100 500 00 [--------] 5 4 10 00 [7 days] 0 0 0 00 [--------]
- 
- *** push past the soft block limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [7 days] 4 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 140 100 500 00 [7 days] 6 4 10 00 [7 days] 0 0 0 00 [--------]
- 
- *** push past the hard inode limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
-@@ -176,18 +176,18 @@ realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
- 
- *** push past the soft inode limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 0 100 500 00 [--------] 3 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 0 100 500 00 [--------] 5 4 10 00 [--------] 0 0 0 00 [--------]
- 
- *** push past the soft block limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [--------] 4 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 140 100 500 00 [--------] 6 4 10 00 [--------] 0 0 0 00 [--------]
- 
- *** push past the hard inode limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [--------] 16 4 10 00 [--none--] 0 0 0 00 [--------]
-+[NAME] 140 100 500 00 [--------] 18 4 10 00 [--none--] 0 0 0 00 [--------]
- 
- *** push past the hard block limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 540 100 500 00 [--none--] 16 4 10 00 [--none--] 0 0 0 00 [--------]
-+[NAME] 540 100 500 00 [--none--] 18 4 10 00 [--none--] 0 0 0 00 [--------]
- 
- *** unmount
--- 
-2.9.5
+As far as I know, we still don't have any general infrastructure to
+support this in xfstests.  Is this correct, or am I missing something?
+
+	     		      	   	    - Ted
