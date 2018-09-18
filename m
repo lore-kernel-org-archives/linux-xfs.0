@@ -1,52 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:40036 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1731462AbeISRgk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Sep 2018 13:36:40 -0400
-Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8JBx2s9051770
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 07:59:04 -0400
-Received: from e11.ny.us.ibm.com (e11.ny.us.ibm.com [129.33.205.201])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2mkkxjdc50-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 07:59:04 -0400
-Received: from localhost
-        by e11.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Wed, 19 Sep 2018 07:59:03 -0400
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH V4 05/20] Fix xfs/127 to work with 64k block size
-Date: Wed, 19 Sep 2018 17:30:38 +0530
-In-Reply-To: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
-References: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
-Message-Id: <20180919120053.7339-6-chandan@linux.vnet.ibm.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:58650 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727471AbeIRI54 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Sep 2018 04:57:56 -0400
+Date: Mon, 17 Sep 2018 20:27:16 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH V3 01/19] Fix xfs/009 to work with 64k block size
+Message-ID: <20180918032716.GF4635@magnolia>
+References: <20180912062626.14349-1-chandan@linux.vnet.ibm.com>
+ <20180912062626.14349-2-chandan@linux.vnet.ibm.com>
+ <20180917225925.GE4635@magnolia>
+ <20180918031830.GA15708@thunk.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180918031830.GA15708@thunk.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, zlang@redhat.com, linux-xfs@vger.kernel.org
+To: "Theodore Y. Ts'o" <tytso@mit.edu>
+Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, fstests@vger.kernel.org, guaneryu@gmail.com, linux-xfs@vger.kernel.org
 
-With reflink feature enabled, we require atleast 500MiB of
-disk space to create a filesystem with 64k block size. Hence this commit
-sets the size of the scratch filesystem to 512MiB.
+On Mon, Sep 17, 2018 at 11:18:30PM -0400, Theodore Y. Ts'o wrote:
+> On Mon, Sep 17, 2018 at 03:59:25PM -0700, Darrick J. Wong wrote:
+> > 
+> > Hm.  Certain filesystems draw a distinction between the fundamental
+> > block size and the minimum file block mapping size.  ocfs2 supports
+> > having a file cluster size (mkfs.ocfs2 -C) that is greater than the fs
+> > block size, and (I think) xfs can achieve something similar for files on
+> > a realtime device via the mkfs.xfs -r extsize= option.
+> > 
+> > If you're dealing with writing things into a file for a test, I think
+> > you have to use _get_file_block_size to make sure that you don't fall
+> > afoul of the cluster/block difference.  I don't know if you've checked
+> > that for this patch series...?
+> > 
+> > (Granted, I suspect that many tests have been sloppy about this...)
+> 
+> Indeed, we have a number of failures in ext4 bigalloc which are
+> because of this block size vs. cluster size difference.  IIRC, a while
+> back Eric Whitney had tried to start a discussion about how to best
+> deal with this issue, but it wasn't clear what was the right way to
+> add the necessary infrastructure to xfstests.  I had assumed it was an
+> ext4-only problem, and no one had time to try to come up with a
+> solution.
+> 
+> As far as I know, we still don't have any general infrastructure to
+> support this in xfstests.  Is this correct, or am I missing something?
 
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
----
- tests/xfs/127 | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+As far as I know we don't have any general infrastructure -- ocfs2 has
+only recently been subjected to xfstests, and I don't think there are
+many people running xfstests on a xfs filesystem where realtime has been
+forced on for all files *and* the rt extent size is larger than a block.
 
-diff --git a/tests/xfs/127 b/tests/xfs/127
-index 41dacd7..6a95026 100755
---- a/tests/xfs/127
-+++ b/tests/xfs/127
-@@ -34,7 +34,7 @@ _require_no_large_scratch_dev
- _require_cp_reflink
- 
- echo "Format and mount"
--_scratch_mkfs_sized $((2 * 4096 * 4096)) > $seqres.full 2>&1
-+_scratch_mkfs_sized $((512 * 1024 * 1024)) > $seqres.full 2>&1
- _scratch_mount >> $seqres.full 2>&1
- 
- testdir=$SCRATCH_MNT/test-$seq
--- 
-2.9.5
+IOWs: we don't test hardly ever, it's probably broken, and sigh. :(
+
+--D
+
+> 	     		      	   	    - Ted
