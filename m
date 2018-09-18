@@ -1,99 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42668 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727228AbeIRTxo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Sep 2018 15:53:44 -0400
-Date: Tue, 18 Sep 2018 09:20:53 -0500
-From: David Teigland <teigland@redhat.com>
-Subject: Re: dm-writecache issue
-Message-ID: <20180918142053.GA26193@redhat.com>
-References: <20180911221147.GA23308@redhat.com>
- <alpine.LRH.2.02.1809180741001.6599@file01.intranet.prod.int.rdu2.redhat.com>
- <20180918123238.GI27618@dastard>
- <817349b8-b54e-a16a-276f-7a977f29b449@sandeen.net>
+Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:53358 "EHLO
+        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725778AbeISEft (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Sep 2018 00:35:49 -0400
+Date: Wed, 19 Sep 2018 09:00:57 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: delalloc and reflink fixes & tweaks
+Message-ID: <20180918230057.GK27618@dastard>
+References: <20180917205354.15401-1-hch@lst.de>
+ <20180917212323.GF16550@dastard>
+ <20180918181728.GA7171@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <817349b8-b54e-a16a-276f-7a977f29b449@sandeen.net>
+In-Reply-To: <20180918181728.GA7171@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Dave Chinner <david@fromorbit.com>, Mikulas Patocka <mpatocka@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Sep 18, 2018 at 07:48:04AM -0500, Eric Sandeen wrote:
-> Not only that, but it must have told us that it had a /physical/ 512 sector.
-> If it had even said physical/logical 4096/512, we would have chosen 4096.
+On Tue, Sep 18, 2018 at 08:17:28PM +0200, Christoph Hellwig wrote:
+> On Tue, Sep 18, 2018 at 07:23:23AM +1000, Dave Chinner wrote:
+> > Do you have any numbers that demonstrate the performance impact of
+> > the preallocation change? We've always intended to fix this exposure
+> > issue as you've done, I'm just interested in the sort of impact it
+> > has (if any).
+> 
+> For the absolute worst case - completely random 4k writes to a sparse
+> file I see a slowdown of about 3%.  Which is less than the improvement
+> that we saw from removing buffer heads.
 
-Right, just after asking I discovered that the advertised
-physical_block_size changes after attaching dm-writecache:
+Nice! I didn't expect a huge hit, and this is right in the ballpark
+of what I was expecting. I think we can live with this.
 
-Before:
+> > Also, with this change to use unwritten extents for all delalloc
+> > extents, we can start doing speculative preallocation for writes
+> > into holes inside EOF without leaving uninitialised/unzeroed blocks
+> > laying around.
+> 
+> Careful.  We already have issues because delalloc blocks before EOF don't
+> ever get reclaimed.  This triggers up on xfs/442 with 1k blocksize for
+> me.  I actually have a fix for that now, but that will require dropping
+> one of the cleanup patches from this series, so expect a respin.
 
-# dmsetup ls
-foo-main        (253:3)
-foo-fast        (253:4)
+Yeah, I didn't say everything already worked, just that using
+preallocation for delalloc gets rid of the stale data exposure
+problem that has prevented us from doing this in the past.
 
-# cat /sys/block/dm-3/queue/physical_block_size 
-512
-# cat /sys/block/dm-4/queue/physical_block_size 
-4096
+(Technically speaking, it has already been done in the past - ~1999,
+IIRC - but that got yanked pretty quickly when the stale data
+exposure problems were reported ;)
 
-After:
+> If we want to more generic preallocation I guess we should follow the
+> example of the COW direct I/O path and mark all preallocated extents
+> as unwritten - that way we know delalloc extents that have the unwritten
+> bit set can be safely reclaimed.  But that is more work than I want
+> to do for this merge window at least.
 
-# dmsetup ls
-foo-main_wcorig (253:4)
-foo-main        (253:5)
-foo-fast        (253:3)
+That's sounds like a good idea, and a good direction to head
+towards. No immediate hurry, just trying to understand where you
+might be going with these changes.
 
-# cat /sys/block/dm-3/queue/physical_block_size 
-4096
-# cat /sys/block/dm-5/queue/physical_block_size 
-4096
+Cheers,
 
-
-> What does please check blockdev --getpbsz --getss /dev/$FOO say at mkfs time?
-
-Before:
-
-# blockdev --getpbsz --getss /dev/foo/main
-512
-512
-
-After:
-
-# blockdev --getpbsz --getss /dev/foo/main
-4096
-4096
-
-
-> > Yes, it does, but mkfs should also fail when it tries to write 512
-> > byte sectors to a 4k device, too.
-
-By default it uses the 4k sectors in that case:
-
-# mkfs.xfs -f /dev/foo/main
-meta-data=/dev/foo/main          isize=512    agcount=4, agsize=13056 blks
-         =                       sectsz=4096  attr=2, projid32bit=1
-         =                       crc=1        finobt=0, sparse=0
-data     =                       bsize=4096   blocks=52224, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-log      =internal log           bsize=4096   blocks=1605, version=2
-         =                       sectsz=4096  sunit=1 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-
-But you are correct if I request 512 on a 4k device:
-
-# mkfs.xfs -f -s size=512 /dev/foo/main
-illegal sector size 512; hw sector is 4096
-
-> > I'm betting that the underlying device advertised a logical/physical
-> > sector size of 512 bytes to mkfs, and then adding pmem as the cache
-> > device changed the logical volume from a 512 byte sector device to a
-> > hard 4k sector device.
-
-Yes
-
-I've been dealing with this by just using -s size=4096.
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
