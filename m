@@ -1,59 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:57290 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731499AbeISRhJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Sep 2018 13:37:09 -0400
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8JBx2MI032224
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 07:59:33 -0400
-Received: from e14.ny.us.ibm.com (e14.ny.us.ibm.com [129.33.205.204])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2mkkxcnm9e-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 07:59:31 -0400
-Received: from localhost
-        by e14.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Wed, 19 Sep 2018 07:59:30 -0400
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH V4 13/20] Fix generic/172 to work with 64k block size
-Date: Wed, 19 Sep 2018 17:30:46 +0530
-In-Reply-To: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
-References: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
-Message-Id: <20180919120053.7339-14-chandan@linux.vnet.ibm.com>
+Received: from sandeen.net ([63.231.237.45]:60132 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729859AbeIRTW5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 18 Sep 2018 15:22:57 -0400
+Subject: [PATCH V2] xfs: don't treat unknown di_flags2 as corruption in scrub
+References: <be811b64-5630-e9eb-313f-3aa1f809ba79@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <dc7b97b4-c238-5bd5-77ce-8283f22cde98@sandeen.net>
+Date: Tue, 18 Sep 2018 08:50:14 -0500
+MIME-Version: 1.0
+In-Reply-To: <be811b64-5630-e9eb-313f-3aa1f809ba79@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, zlang@redhat.com, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-For 64k block size, With 256MiB as the XFS filesystem size and 168 MiB
-as the size of the clone source file, we end up hitting ENOSPC when
-cloning the source file. This happens due to lack of space for housing
-the corresponding metadata. This scenario also occurs when using a
-512MiB XFS filesystem and 300MiB clone source file.
+xchk_inode_flags2() currently treats any di_flags2 values that the
+running kernel doesn't recognize as corruption, and calls
+xchk_ino_set_corrupt() if they are set.  However, it's entirely possible
+that these flags were set in some newer kernel and are quite valid,
+but ignored in this kernel.
 
-Hence this commit increases the size of the test filesystem to 1 GiB and
-the size of the clone source file to 768MiB.
+(Validators don't care one bit about unknown di_flags2.)
 
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Call xchk_ino_set_warning instead, because this may or may not actually
+indicate a problem.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- tests/generic/172 | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/tests/generic/172 b/tests/generic/172
-index 5d6f295..08d2789 100755
---- a/tests/generic/172
-+++ b/tests/generic/172
-@@ -47,8 +47,8 @@ echo "Reformat with appropriate size"
- blksz="$(_get_block_size $testdir)"
- umount $SCRATCH_MNT
+V2: continue to treat unknown di_flag value as corruption, and add
+    comments about how the last di_flag bit cannot be used.
+
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 059bc44c27e8..afbe336600e1 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -1016,6 +1016,8 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
+ #define XFS_DIFLAG_EXTSZINHERIT_BIT 12	/* inherit inode extent size */
+ #define XFS_DIFLAG_NODEFRAG_BIT     13	/* do not reorganize/defragment */
+ #define XFS_DIFLAG_FILESTREAM_BIT   14  /* use filestream allocator */
++/* Do not use bit 15, di_flags is legacy and unchanging now */
++
+ #define XFS_DIFLAG_REALTIME      (1 << XFS_DIFLAG_REALTIME_BIT)
+ #define XFS_DIFLAG_PREALLOC      (1 << XFS_DIFLAG_PREALLOC_BIT)
+ #define XFS_DIFLAG_NEWRTBM       (1 << XFS_DIFLAG_NEWRTBM_BIT)
+diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+index 5b3b177c0fc9..8fb29540af45 100644
+--- a/fs/xfs/scrub/inode.c
++++ b/fs/xfs/scrub/inode.c
+@@ -126,6 +126,7 @@ xchk_inode_flags(
+ {
+ 	struct xfs_mount	*mp = sc->mp;
  
--file_size=$((168 * 1024 * 1024))
--fs_size=$((256 * 1024 * 1024))
-+file_size=$((768 * 1024 * 1024))
-+fs_size=$((1024 * 1024 * 1024))
- _scratch_mkfs_sized $fs_size >> $seqres.full 2>&1
- _scratch_mount >> $seqres.full 2>&1
- rm -rf $testdir
--- 
-2.9.5
++	/* di_flags are all taken, last bit cannot be used */
+ 	if (flags & ~XFS_DIFLAG_ANY)
+ 		goto bad;
+ 
+@@ -172,8 +173,9 @@ xchk_inode_flags2(
+ {
+ 	struct xfs_mount	*mp = sc->mp;
+ 
++	/* Unknown di_flags2 could be from a future kernel */
+ 	if (flags2 & ~XFS_DIFLAG2_ANY)
+-		goto bad;
++		xchk_ino_set_warning(sc, ino);
+ 
+ 	/* reflink flag requires reflink feature */
+ 	if ((flags2 & XFS_DIFLAG2_REFLINK) &&
