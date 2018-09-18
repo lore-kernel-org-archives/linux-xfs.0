@@ -1,66 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49370 "EHLO mx1.redhat.com"
+Received: from verein.lst.de ([213.95.11.211]:49242 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725928AbeIRIL4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Sep 2018 04:11:56 -0400
-Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id F2C74A70A
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Sep 2018 02:41:36 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 94D2420158A8
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Sep 2018 02:41:36 +0000 (UTC)
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs: don't treat unknown di_flags[2] as corruption in scrub
-Message-ID: <be811b64-5630-e9eb-313f-3aa1f809ba79@redhat.com>
-Date: Mon, 17 Sep 2018 21:41:35 -0500
+        id S1729618AbeIRXvL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 18 Sep 2018 19:51:11 -0400
+Date: Tue, 18 Sep 2018 20:17:28 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: delalloc and reflink fixes & tweaks
+Message-ID: <20180918181728.GA7171@lst.de>
+References: <20180917205354.15401-1-hch@lst.de> <20180917212323.GF16550@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180917212323.GF16550@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-xchk_inode_flags[2]() currently treats any di_flags[2] values that the
-running kernel doesn't recognize as corruption, and calls
-xchk_ino_set_corrupt() if they are set.  However, it's entirely possible
-that these flags were set in some newer kernel and are quite valid,
-but ignored in this kernel.
+On Tue, Sep 18, 2018 at 07:23:23AM +1000, Dave Chinner wrote:
+> Do you have any numbers that demonstrate the performance impact of
+> the preallocation change? We've always intended to fix this exposure
+> issue as you've done, I'm just interested in the sort of impact it
+> has (if any).
 
-(Validators don't care one bit about unknown di_flags[2].)
+For the absolute worst case - completely random 4k writes to a sparse
+file I see a slowdown of about 3%.  Which is less than the improvement
+that we saw from removing buffer heads.
 
-Call xchk_ino_set_warning instead, because this may or may not actually
-indicate a problem.
+> Also, with this change to use unwritten extents for all delalloc
+> extents, we can start doing speculative preallocation for writes
+> into holes inside EOF without leaving uninitialised/unzeroed blocks
+> laying around.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Careful.  We already have issues because delalloc blocks before EOF don't
+ever get reclaimed.  This triggers up on xfs/442 with 1k blocksize for
+me.  I actually have a fix for that now, but that will require dropping
+one of the cleanup patches from this series, so expect a respin.
 
-diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
-index 5b3b177..e53ed83 100644
---- a/fs/xfs/scrub/inode.c
-+++ b/fs/xfs/scrub/inode.c
-@@ -126,8 +126,9 @@
- {
- 	struct xfs_mount	*mp = sc->mp;
- 
-+	/* Unknown di_flags could simply be from newer kernel */
- 	if (flags & ~XFS_DIFLAG_ANY)
--		goto bad;
-+		xchk_ino_set_warning(sc, ino);
- 
- 	/* rt flags require rt device */
- 	if ((flags & (XFS_DIFLAG_REALTIME | XFS_DIFLAG_RTINHERIT)) &&
-@@ -172,8 +173,9 @@
- {
- 	struct xfs_mount	*mp = sc->mp;
- 
-+	/* Unknown di_flags2 could simply be from newer kernel */
- 	if (flags2 & ~XFS_DIFLAG2_ANY)
--		goto bad;
-+		xchk_ino_set_warning(sc, ino);
- 
- 	/* reflink flag requires reflink feature */
- 	if ((flags2 & XFS_DIFLAG2_REFLINK) &&
+If we want to more generic preallocation I guess we should follow the
+example of the COW direct I/O path and mark all preallocated extents
+as unwritten - that way we know delalloc extents that have the unwritten
+bit set can be safely reclaimed.  But that is more work than I want
+to do for this merge window at least.
+
+> Using spec.  prealloc for "extend-via-truncate,
+> sequential write to fill hole" workloads would greatly benefit from
+> that. Did you have any plans to look at that code?
+
+Not anytime soon.
