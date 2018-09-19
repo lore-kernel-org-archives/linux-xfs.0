@@ -1,92 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:47097 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731221AbeISUty (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Sep 2018 16:49:54 -0400
-Received: by mail-wr1-f66.google.com with SMTP id a108-v6so6173380wrc.13
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 08:11:31 -0700 (PDT)
+Received: from mail-wm1-f51.google.com ([209.85.128.51]:52544 "EHLO
+        mail-wm1-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727772AbeISTmW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Sep 2018 15:42:22 -0400
+Received: by mail-wm1-f51.google.com with SMTP id y139-v6so6380293wmc.2
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 07:04:17 -0700 (PDT)
 MIME-Version: 1.0
-References: <20180919125617.28048-1-jtulak@redhat.com> <20180919144405.GH20086@magnolia>
-In-Reply-To: <20180919144405.GH20086@magnolia>
 From: Jan Tulak <jtulak@redhat.com>
-Date: Wed, 19 Sep 2018 17:11:19 +0200
-Message-ID: <CACj3i72fGt799Z+vOAzxep93W-ksN=O_ZjSfMRji8SxvUFdN+Q@mail.gmail.com>
-Subject: Re: [PATCH 1/2] mkfs: discard only after all validations
+Date: Wed, 19 Sep 2018 16:04:05 +0200
+Message-ID: <CACj3i72BoYea5juHP98nRcFB+YDzcigfb7UWO1KC0y+oh_Ff9A@mail.gmail.com>
+Subject: [xfstests] xfs/191-input-validation issues
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Sep 19, 2018 at 4:44 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+Hi guys
 
-snip
+I see that there are some failed assertions in the xfs/191 test and
+they can be sorted into a few categories:
 
-> > @@ -2419,8 +2418,16 @@ open_devices(
-> >       xi->dsize &= sector_mask;
-> >       xi->rtsize &= sector_mask;
-> >       xi->logBBsize &= (uint64_t)-1 << (max(cfg->lsectorlog, 10) - BBSHIFT);
-> > +}
-> >
-> > -
-> > +static void
-> > +discard_data(
->
-> Perhaps discard_devices(), since this function can DISCARD more than
-> just the data device.
+pass -n size=2b /dev/sda2
+pass -d agsize=8192b /dev/sda2
+pass -d agsize=65536s /dev/sda2
+pass -l su=10b /dev/sda2
+pass -d su=4096s,sw=64 /dev/sda2
+pass -d su=4096b,sw=64 /dev/sda2
 
-Agreed.
+Here mkfs assumes a default block/sector size, so these checks can be deleted.
 
+fail -n log=15 /dev/sda2
+fail -i log=10 /dev/sda2
 
->
-> > +     struct libxfs_xinit     *xi,
-> > +     bool                    discard)
-> > +{
-> > +     /*
-> > +      * This function has to be called after libxfs has been initialized.
-> > +      */
-> >       if (!discard)
-> >               return;
-> >
->
-> While we're on the topic, I notice that we skip discard for any device
-> that's actually a file.  Seeing as fallocate(PUNCH_HOLE) works on files
-> (and block devices), is there a reason why we avoid punching out fs
-> image files?
->
+These checks can be removed too, log sizes have been removed from mkfs.xfs.
 
->From what I remember, it went along this: If the user is trying to
-mkfs an existing file, we don't want to destroy anything they did with
-the file before (sparse file, allocations...).
+pass -d su=0,sw=64 /dev/sda2
 
-> > @@ -3901,7 +3908,7 @@ main(
-> >       /*
-> >        * Open and validate the device configurations
-> >        */
-> > -     open_devices(&cfg, &xi, (discard && !dry_run));
-> > +     open_devices(&cfg, &xi);
-> >       validate_datadev(&cfg, &cli);
-> >       validate_logdev(&cfg, &cli, &logfile);
-> >       validate_rtdev(&cfg, &cli, &rtfile);
-> > @@ -3952,6 +3959,11 @@ main(
-> >                       exit(0);
-> >       }
-> >
-> > +     /*
-> > +      * All values have been validated, discard the old device layout.
-> > +      */
-> > +     discard_data(&xi, (discard && !dry_run));
->
-> if (discard && !dry_run)
->         discard_devices(&xi);
->
-> ?
+And if I understand the current behaviour, -d su=0 is the same as su
+not used at all, so this check should be changed to expect pass
+instead of fail.
 
-Yes, this makes more sense.
+Everyone agrees with this assessment that the test 191 needs to be
+updated and none of this is a bug of mkfs?
 
+Cheers,
 Jan
 
---
+-- 
 Jan Tulak
 jtulak@redhat.com / jan@tulak.me
