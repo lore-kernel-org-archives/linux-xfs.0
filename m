@@ -1,66 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf1-f45.google.com ([209.85.167.45]:33970 "EHLO
-        mail-lf1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731762AbeISWCT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Sep 2018 18:02:19 -0400
-Received: by mail-lf1-f45.google.com with SMTP id c29-v6so5694052lfj.1
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 09:23:40 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:42174 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731782AbeITB6r (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Sep 2018 21:58:47 -0400
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 97A594DD62
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 20:19:15 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 693045C886
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 20:19:15 +0000 (UTC)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfsprogs: define xfs_stack_trace() for debug builds
+Message-ID: <d260b935-c518-1fdb-c728-84db5a1224a8@redhat.com>
+Date: Wed, 19 Sep 2018 15:19:14 -0500
 MIME-Version: 1.0
-From: Chris Murphy <lists@colorremedies.com>
-Date: Wed, 19 Sep 2018 10:23:38 -0600
-Message-ID: <CAJCQCtQVzmwey0GcuHmZ8=_XuqmrA24d4DDVVuX9vL3KYStwZg@mail.gmail.com>
-Subject: inline extents
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs list <linux-xfs@vger.kernel.org>
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-Hi,
+Building with -DDEBUG fails due to lack of an xfs_stack_trace def'n.
 
-I ran across this:
-xfs: introduce inode data inline feature
-https://lwn.net/Articles/759183/
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-I'm wondering if there's a chance it becomes the default one day in
-the not too distant future? And if it is enabled at all (user or by
-default), what happens if something where to directly overwrite 1024
-bytes outside of the file system?
-
-For example:
-
-The file /boot/grub/grubenv is 1KiB and stores GRUB environment info,
-like what the default boot should be. Fedora up until now only writes
-to it when booted, so it goes through the file system, and the
-bootloader only reads from it.
-
-Fedora 29 has a new feature to test if boot+startup fails, so the
-bootloader can do a fallback at next boot, to a previously working
-entry. Part of this means GRUB (the bootloader code, not the user
-space code) uses "save_env" to overwrite the 1024 data bytes with
-updated environment information.
-
-On something like FAT or ext2 or even ext4 without checksums, this
-isn't a problem. On Btrfs, 1KiB is almost always going to be an inline
-extent, found inside a 16KiB leaf, and that leaf has a checksum
-predicated on the entire contents of that leaf. Overwrite 1KiB outside
-the file system and now the checksum is wrong, the kernel code will
-consider the entire 16KiB leaf corrupt. And that leaf might contain
-items totally unrelated to the file being modified so it could be a
-rather significant corruption. And it may not be fixable (I haven't
-really tested this yet and I think GRUB knows better than to write to
-a grubenv on Btrfs anyway).
-
-For XFS, I'm not sure how the inline extent is saved, and whether
-metadata checksumming includes or excludes the inline extent.
-
-I'm also kinda ignoring the reflink ramifications of this behavior,
-for now. Let's just say even if there's no corruption I'm really
-suspicious of bootloader code writing anything, even what seems to be
-a simple overwrite of two sectors.
-
-Thanks,
-
-
--- 
-Chris Murphy
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index 2f2ca06..b6746ca 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -118,6 +118,8 @@ enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
+ #define xfs_alert_tag(mp,tag,fmt,args...)	cmn_err(CE_ALERT,fmt, ## args)
+ 
+ #define xfs_hex_dump(d,n)		((void) 0)
++#define xfs_stack_trace()		((void) 0)
++
+ 
+ #define xfs_force_shutdown(d,n)		((void) 0)
+ 
