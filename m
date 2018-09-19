@@ -1,42 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:51679 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726044AbeISLQg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Sep 2018 07:16:36 -0400
-Date: Wed, 19 Sep 2018 07:40:22 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: delalloc and reflink fixes & tweaks
-Message-ID: <20180919054022.GA19507@lst.de>
-References: <20180917205354.15401-1-hch@lst.de> <20180917212323.GF16550@dastard> <20180918181728.GA7171@lst.de> <20180918230057.GK27618@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180918230057.GK27618@dastard>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:43484 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1731448AbeISRhF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Sep 2018 13:37:05 -0400
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8JBww2x055918
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 07:59:28 -0400
+Received: from e16.ny.us.ibm.com (e16.ny.us.ibm.com [129.33.205.206])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2mkkx2dpd7-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 07:59:28 -0400
+Received: from localhost
+        by e16.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Wed, 19 Sep 2018 07:59:27 -0400
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: [PATCH V4 12/20] Fix generic/102 to work with 64k block size
+Date: Wed, 19 Sep 2018 17:30:45 +0530
+In-Reply-To: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
+References: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
+Message-Id: <20180919120053.7339-13-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, zlang@redhat.com, linux-xfs@vger.kernel.org
 
-On Wed, Sep 19, 2018 at 09:00:57AM +1000, Dave Chinner wrote:
-> > Careful.  We already have issues because delalloc blocks before EOF don't
-> > ever get reclaimed.  This triggers up on xfs/442 with 1k blocksize for
-> > me.  I actually have a fix for that now, but that will require dropping
-> > one of the cleanup patches from this series, so expect a respin.
-> 
-> Yeah, I didn't say everything already worked, just that using
-> preallocation for delalloc gets rid of the stale data exposure
-> problem that has prevented us from doing this in the past.
+With 64k block size, mkfs.xfs fails with the following message when the
+filesystem size is 512MiB in size,
 
-And I think I have to do the mark preallocations as unwritten now
-given that my other fix idea that I wasted the whole day on yesterday
-didn't turn out to actually work properly.  Sigh..
+"log size 2037 blocks too small, minimum size is 2473 blocks"
 
-> That's sounds like a good idea, and a good direction to head
-> towards. No immediate hurry, just trying to understand where you
-> might be going with these changes.
+Hence this commit increases the test filesystem size to 1GiB. Also, the
+size of the test file is increased to 800MiB which is ~80% of the test
+filesystem size. This is in proportion to the 400MiB test file used with
+the original 512MiB test filesystem.
 
-I've been working on adding (or resurrecting) and always_cow mode,
-which helped to expose all kinds of interesting bugs.  That mode
-again will be that base for atomic writes (including safe overwrites)
-and a zone block device (aka SMR) mode that also can't write in place.
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+---
+ tests/generic/102     |  4 ++--
+ tests/generic/102.out | 20 ++++++++++----------
+ 2 files changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/tests/generic/102 b/tests/generic/102
+index faf940a..29abd89 100755
+--- a/tests/generic/102
++++ b/tests/generic/102
+@@ -31,14 +31,14 @@ _require_scratch
+ 
+ rm -f $seqres.full
+ 
+-dev_size=$((512 * 1024 * 1024))     # 512MB filesystem
++dev_size=$((1024 * 1024 * 1024))     # 1GB filesystem
+ _scratch_mkfs_sized $dev_size >>$seqres.full 2>&1
+ _scratch_mount
+ 
+ for ((i = 0; i < 10; i++)); do
+ 	echo "loop $i" >>$seqres.full
+ 
+-	$XFS_IO_PROG -f -c "pwrite -b 1m 0 400m" "$SCRATCH_MNT"/file | \
++	$XFS_IO_PROG -f -c "pwrite -b 1m 0 800m" "$SCRATCH_MNT"/file | \
+ _filter_xfs_io | _filter_scratch
+ 
+ 	rm -f "$SCRATCH_MNT"/file
+diff --git a/tests/generic/102.out b/tests/generic/102.out
+index fc9275d..b58aa5c 100644
+--- a/tests/generic/102.out
++++ b/tests/generic/102.out
+@@ -1,21 +1,21 @@
+ QA output created by 102
+-wrote 419430400/419430400 bytes at offset 0
++wrote 838860800/838860800 bytes at offset 0
+ XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+-wrote 419430400/419430400 bytes at offset 0
++wrote 838860800/838860800 bytes at offset 0
+ XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+-wrote 419430400/419430400 bytes at offset 0
++wrote 838860800/838860800 bytes at offset 0
+ XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+-wrote 419430400/419430400 bytes at offset 0
++wrote 838860800/838860800 bytes at offset 0
+ XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+-wrote 419430400/419430400 bytes at offset 0
++wrote 838860800/838860800 bytes at offset 0
+ XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+-wrote 419430400/419430400 bytes at offset 0
++wrote 838860800/838860800 bytes at offset 0
+ XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+-wrote 419430400/419430400 bytes at offset 0
++wrote 838860800/838860800 bytes at offset 0
+ XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+-wrote 419430400/419430400 bytes at offset 0
++wrote 838860800/838860800 bytes at offset 0
+ XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+-wrote 419430400/419430400 bytes at offset 0
++wrote 838860800/838860800 bytes at offset 0
+ XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+-wrote 419430400/419430400 bytes at offset 0
++wrote 838860800/838860800 bytes at offset 0
+ XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+-- 
+2.9.5
