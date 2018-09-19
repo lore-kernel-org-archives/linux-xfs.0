@@ -1,44 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:43094 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729992AbeIRVCo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Sep 2018 17:02:44 -0400
-Date: Tue, 18 Sep 2018 08:29:35 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: dm-writecache issue
-Message-ID: <20180918152935.GA13016@infradead.org>
-References: <20180918123238.GI27618@dastard>
- <817349b8-b54e-a16a-276f-7a977f29b449@sandeen.net>
- <alpine.LRH.2.02.1809180934040.28565@file01.intranet.prod.int.rdu2.redhat.com>
- <8975ad6d-bfde-0a50-e60c-59228493f1b2@sandeen.net>
- <d2d949ec-b3b6-cba3-66f8-c225784d5951@sandeen.net>
- <alpine.LRH.2.02.1809181024150.28565@file01.intranet.prod.int.rdu2.redhat.com>
- <b359bcc7-bc76-33cc-30fb-2c8ad2ba4682@sandeen.net>
- <alpine.LRH.2.02.1809181038350.28565@file01.intranet.prod.int.rdu2.redhat.com>
- <b3a162a8-7c2b-8a66-6f11-2abff3381690@sandeen.net>
- <128a77fc-dbcb-278f-115c-da4a3d63e58f@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <128a77fc-dbcb-278f-115c-da4a3d63e58f@sandeen.net>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:60548 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1731485AbeISRhD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Sep 2018 13:37:03 -0400
+Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8JC1ctp055568
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 08:02:02 -0400
+Received: from e14.ny.us.ibm.com (e14.ny.us.ibm.com [129.33.205.204])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2mkmh13u54-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 08:02:02 -0400
+Received: from localhost
+        by e14.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Wed, 19 Sep 2018 07:59:25 -0400
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: [PATCH V4 11/20] xfs/325: Inject free_extent error after CoW operation
+Date: Wed, 19 Sep 2018 17:30:44 +0530
+In-Reply-To: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
+References: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
+Message-Id: <20180919120053.7339-12-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Mikulas Patocka <mpatocka@redhat.com>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, David Teigland <teigland@redhat.com>
+To: fstests@vger.kernel.org
+Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, zlang@redhat.com, linux-xfs@vger.kernel.org
 
-On Tue, Sep 18, 2018 at 10:27:20AM -0500, Eric Sandeen wrote:
-> (this may be a bit uninformed on my part, Darrick reminds me that jbd2's
-> careful use of cache flushing & FUA probably means that it won't get burned
-> by a partial 4k metadata update if the power fails.)
+On a 64k blocksized filesystem, when the test CoWs the file2's offset
+range [10 * 64k, 19 * 64k], the call to xfs_bmapi_reserve_delalloc()
+allocates 32 64k blocks. This is because XFS_DEFAULT_COWEXTSZ_HINT has
+the value of 32 and xfs_get_cowextsz_hint() uses this to compute the
+extent alignment. This leads to xfs_bmapi_reserve_delalloc() to reserve
+space corresponding to the file range [0, 32 * 64k] in the inode's
+cow fork area. On completion of write I/O corresponding to file2's range
+[10 * 64k, 19 * 64k], xfs_end_io() moves 10 out of the originally
+allocated 32 64k blocks to the data fork area. The remaining 22 64k
+blocks linger on in cow fork area of the inode.
 
-cache flushing and FUA is never going to help you with torn writes.
+Later, when servicing the exit() syscall for the xfs_io process,
+xfs_free_eofblocks() ends up invoking xfs_reflink_cancel_cow_blocks()
+since i_delayed_blks has the value 22. xfs_reflink_cancel_cow_blocks()
+indirectly invokes __xfs_free_extent() which returns EIO since
+XFS_ERRTAG_FREE_EXTENT has been set. This leads to the filesystem to be
+shutdown. The "rm" command invoked later ends up returning an
+error and hence the test fails. The test actually requires that the
+filesystem gets shutdown when executing the "rm" command.
 
-> 
-> I'll stop for now and see if Dave wants to chime in on xfs's reliance on
-> the actual atomic IO size for metadata IO.  ;)
+To fix the problem, this commit injects the free_extent error after we
+CoW file2's [10 * 64k, 19 * 64k] range.
 
-What helps todays XFS (and probably ext4) is checksums on all metadata
-blocks, as that way we can check if we wrote the full "block".  This
-doesn't help applications that rely on the sector size unless they have
-similar protections of their own.
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+---
+ tests/xfs/325     | 5 +++--
+ tests/xfs/325.out | 2 +-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/tests/xfs/325 b/tests/xfs/325
+index b156de9..6795901 100755
+--- a/tests/xfs/325
++++ b/tests/xfs/325
+@@ -54,11 +54,12 @@ echo "Check files"
+ md5sum $SCRATCH_MNT/file1 | _filter_scratch
+ md5sum $SCRATCH_MNT/file2 | _filter_scratch
+ 
++echo "CoW a few blocks"
++$XFS_IO_PROG -c "pwrite -W -S 0x67 $((10 * blksz)) $((10 * blksz))" $SCRATCH_MNT/file2 >> $seqres.full
++
+ echo "Inject error"
+ _scratch_inject_error "free_extent"
+ 
+-echo "CoW a few blocks"
+-$XFS_IO_PROG -c "pwrite -W -S 0x67 $((10 * blksz)) $((10 * blksz))" $SCRATCH_MNT/file2 >> $seqres.full
+ rm $SCRATCH_MNT/file1
+ sync
+ 
+diff --git a/tests/xfs/325.out b/tests/xfs/325.out
+index 4e25d2b..92027cd 100644
+--- a/tests/xfs/325.out
++++ b/tests/xfs/325.out
+@@ -4,8 +4,8 @@ Create files
+ Check files
+ d5a0ed0305c8df4180cb2bf975ecffe8  SCRATCH_MNT/file1
+ d5a0ed0305c8df4180cb2bf975ecffe8  SCRATCH_MNT/file2
+-Inject error
+ CoW a few blocks
++Inject error
+ FS should be shut down, touch will fail
+ touch: cannot touch 'SCRATCH_MNT/badfs': Input/output error
+ Remount to replay log
+-- 
+2.9.5
