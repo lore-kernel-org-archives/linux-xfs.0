@@ -1,99 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:14588 "EHLO
-        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728681AbeIRSFE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Sep 2018 14:05:04 -0400
-Date: Tue, 18 Sep 2018 22:32:38 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: dm-writecache issue
-Message-ID: <20180918123238.GI27618@dastard>
-References: <20180911221147.GA23308@redhat.com>
- <alpine.LRH.2.02.1809180741001.6599@file01.intranet.prod.int.rdu2.redhat.com>
+Received: from verein.lst.de ([213.95.11.211]:51679 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726044AbeISLQg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Sep 2018 07:16:36 -0400
+Date: Wed, 19 Sep 2018 07:40:22 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: delalloc and reflink fixes & tweaks
+Message-ID: <20180919054022.GA19507@lst.de>
+References: <20180917205354.15401-1-hch@lst.de> <20180917212323.GF16550@dastard> <20180918181728.GA7171@lst.de> <20180918230057.GK27618@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <alpine.LRH.2.02.1809180741001.6599@file01.intranet.prod.int.rdu2.redhat.com>
+In-Reply-To: <20180918230057.GK27618@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, David Teigland <teigland@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Tue, Sep 18, 2018 at 07:46:47AM -0400, Mikulas Patocka wrote:
-> I would ask the XFS developers about this - why does mkfs.xfs select 
-> sector size 512 by default?
-
-Because the underlying device told it that it supported a
-sector size of 512 bytes?
-
-> If a filesystem created with the default 512-byte sector size is activated 
-> on a device with 4k sectors, it results in mount failure.
-
-Yes, it does, but mkfs should also fail when it tries to write 512
-byte sectors to a 4k device, too.
-
-> On Tue, 11 Sep 2018, David Teigland wrote:
+On Wed, Sep 19, 2018 at 09:00:57AM +1000, Dave Chinner wrote:
+> > Careful.  We already have issues because delalloc blocks before EOF don't
+> > ever get reclaimed.  This triggers up on xfs/442 with 1k blocksize for
+> > me.  I actually have a fix for that now, but that will require dropping
+> > one of the cleanup patches from this series, so expect a respin.
 > 
-> > Hi Mikulas,
-> > 
-> > Am I doing something wrong below or is there a bug somewhere?  (I could be
-> > doing something wrong in the lvm activation code, also.)
-> > Thanks
-> > 
-> > 
-> > [root@null-05 ~]# lvs foo
-> >   LV   VG  Attr       LSize   
-> >   fast foo -wi-------  32.00m
-> >   main foo -wi------- 200.00m
-> > 
-> > [root@null-05 ~]# lvchange -ay foo/main
-> > 
-> > [root@null-05 ~]# mkfs.xfs /dev/foo/main
-> > meta-data=/dev/foo/main          isize=512    agcount=4, agsize=12800 blks
-> >          =                       sectsz=512   attr=2, projid32bit=1
-> >          =                       crc=1        finobt=0, sparse=0
-> > data     =                       bsize=4096   blocks=51200, imaxpct=25
-> >          =                       sunit=0      swidth=0 blks
-> > naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-> > log      =internal log           bsize=4096   blocks=855, version=2
-> >          =                       sectsz=512   sunit=0 blks, lazy-count=1
-> > realtime =none                   extsz=4096   blocks=0, rtextents=0
-> > 
-> > [root@null-05 ~]# mount /dev/foo/main /mnt
-> > [root@null-05 ~]# cp /root/pattern* /mnt/
-> > [root@null-05 ~]# umount /mnt
-> > [root@null-05 ~]# lvchange -an foo/main
-> > 
-> > [root@null-05 ~]# lvconvert --type writecache --cachepool fast foo/main
-> >   Logical volume foo/main now has write cache.
-> > 
-> > [root@null-05 ~]# lvs -a foo -o+devices
-> >   LV            VG  Attr       LSize   Origin        Devices       
-> >   [fast]        foo -wi-------  32.00m               /dev/pmem0(0) 
-> >   main          foo Cwi------- 200.00m [main_wcorig] main_wcorig(0)
-> >   [main_wcorig] foo -wi------- 200.00m               /dev/loop0(0) 
+> Yeah, I didn't say everything already worked, just that using
+> preallocation for delalloc gets rid of the stale data exposure
+> problem that has prevented us from doing this in the past.
 
-Yeehaw!
+And I think I have to do the mark preallocations as unwritten now
+given that my other fix idea that I wasted the whole day on yesterday
+didn't turn out to actually work properly.  Sigh..
 
-I'm betting that the underlying device advertised a logical/physical
-sector size of 512 bytes to mkfs, and then adding pmem as the cache
-device changed the logical volume from a 512 byte sector device to a
-hard 4k sector device.
+> That's sounds like a good idea, and a good direction to head
+> towards. No immediate hurry, just trying to understand where you
+> might be going with these changes.
 
-If so, this is a dm-cache bug. Filesystems don't support changing
-the logical/physical sector sizes of the block device dynamically.
-Filesystems lay out the filesystem structure at mkfs time based on
-the assumption that the sector size of the block device is fixed and
-will never change for the life of that filesystem.
-
-Indeed, if the sector size of the block device is not fixed and can
-change dynamically, then the block device also violates the
-assumptions that the filesystem journalling algorithms make about
-the atomic write size of the underlying device....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I've been working on adding (or resurrecting) and always_cow mode,
+which helped to expose all kinds of interesting bugs.  That mode
+again will be that base for atomic writes (including safe overwrites)
+and a zone block device (aka SMR) mode that also can't write in place.
