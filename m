@@ -1,51 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:49242 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729618AbeIRXvL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Sep 2018 19:51:11 -0400
-Date: Tue, 18 Sep 2018 20:17:28 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: delalloc and reflink fixes & tweaks
-Message-ID: <20180918181728.GA7171@lst.de>
-References: <20180917205354.15401-1-hch@lst.de> <20180917212323.GF16550@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180917212323.GF16550@dastard>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:57290 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1731499AbeISRhJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Sep 2018 13:37:09 -0400
+Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8JBx2MI032224
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 07:59:33 -0400
+Received: from e14.ny.us.ibm.com (e14.ny.us.ibm.com [129.33.205.204])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2mkkxcnm9e-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 07:59:31 -0400
+Received: from localhost
+        by e14.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Wed, 19 Sep 2018 07:59:30 -0400
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: [PATCH V4 13/20] Fix generic/172 to work with 64k block size
+Date: Wed, 19 Sep 2018 17:30:46 +0530
+In-Reply-To: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
+References: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
+Message-Id: <20180919120053.7339-14-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, zlang@redhat.com, linux-xfs@vger.kernel.org
 
-On Tue, Sep 18, 2018 at 07:23:23AM +1000, Dave Chinner wrote:
-> Do you have any numbers that demonstrate the performance impact of
-> the preallocation change? We've always intended to fix this exposure
-> issue as you've done, I'm just interested in the sort of impact it
-> has (if any).
+For 64k block size, With 256MiB as the XFS filesystem size and 168 MiB
+as the size of the clone source file, we end up hitting ENOSPC when
+cloning the source file. This happens due to lack of space for housing
+the corresponding metadata. This scenario also occurs when using a
+512MiB XFS filesystem and 300MiB clone source file.
 
-For the absolute worst case - completely random 4k writes to a sparse
-file I see a slowdown of about 3%.  Which is less than the improvement
-that we saw from removing buffer heads.
+Hence this commit increases the size of the test filesystem to 1 GiB and
+the size of the clone source file to 768MiB.
 
-> Also, with this change to use unwritten extents for all delalloc
-> extents, we can start doing speculative preallocation for writes
-> into holes inside EOF without leaving uninitialised/unzeroed blocks
-> laying around.
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+---
+ tests/generic/172 | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Careful.  We already have issues because delalloc blocks before EOF don't
-ever get reclaimed.  This triggers up on xfs/442 with 1k blocksize for
-me.  I actually have a fix for that now, but that will require dropping
-one of the cleanup patches from this series, so expect a respin.
-
-If we want to more generic preallocation I guess we should follow the
-example of the COW direct I/O path and mark all preallocated extents
-as unwritten - that way we know delalloc extents that have the unwritten
-bit set can be safely reclaimed.  But that is more work than I want
-to do for this merge window at least.
-
-> Using spec.  prealloc for "extend-via-truncate,
-> sequential write to fill hole" workloads would greatly benefit from
-> that. Did you have any plans to look at that code?
-
-Not anytime soon.
+diff --git a/tests/generic/172 b/tests/generic/172
+index 5d6f295..08d2789 100755
+--- a/tests/generic/172
++++ b/tests/generic/172
+@@ -47,8 +47,8 @@ echo "Reformat with appropriate size"
+ blksz="$(_get_block_size $testdir)"
+ umount $SCRATCH_MNT
+ 
+-file_size=$((168 * 1024 * 1024))
+-fs_size=$((256 * 1024 * 1024))
++file_size=$((768 * 1024 * 1024))
++fs_size=$((1024 * 1024 * 1024))
+ _scratch_mkfs_sized $fs_size >> $seqres.full 2>&1
+ _scratch_mount >> $seqres.full 2>&1
+ rm -rf $testdir
+-- 
+2.9.5
