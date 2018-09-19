@@ -1,70 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:53358 "EHLO
-        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725778AbeISEft (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Sep 2018 00:35:49 -0400
-Date: Wed, 19 Sep 2018 09:00:57 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: delalloc and reflink fixes & tweaks
-Message-ID: <20180918230057.GK27618@dastard>
-References: <20180917205354.15401-1-hch@lst.de>
- <20180917212323.GF16550@dastard>
- <20180918181728.GA7171@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180918181728.GA7171@lst.de>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:34472 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1731523AbeISRhZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Sep 2018 13:37:25 -0400
+Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8JC1csF055451
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 08:02:24 -0400
+Received: from e15.ny.us.ibm.com (e15.ny.us.ibm.com [129.33.205.205])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2mkmh13ujd-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 08:02:24 -0400
+Received: from localhost
+        by e15.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Wed, 19 Sep 2018 07:59:47 -0400
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: [PATCH V4 17/20] Fix generic/235 to work with 64k block size
+Date: Wed, 19 Sep 2018 17:30:50 +0530
+In-Reply-To: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
+References: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
+Message-Id: <20180919120053.7339-18-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, zlang@redhat.com, linux-xfs@vger.kernel.org
 
-On Tue, Sep 18, 2018 at 08:17:28PM +0200, Christoph Hellwig wrote:
-> On Tue, Sep 18, 2018 at 07:23:23AM +1000, Dave Chinner wrote:
-> > Do you have any numbers that demonstrate the performance impact of
-> > the preallocation change? We've always intended to fix this exposure
-> > issue as you've done, I'm just interested in the sort of impact it
-> > has (if any).
-> 
-> For the absolute worst case - completely random 4k writes to a sparse
-> file I see a slowdown of about 3%.  Which is less than the improvement
-> that we saw from removing buffer heads.
+With 64k blocksized filesystem, this test fails since a single 8k write
+will actually end up consuming 64k. Hence this commit writes 64k data
+into the test file.
 
-Nice! I didn't expect a huge hit, and this is right in the ballpark
-of what I was expecting. I think we can live with this.
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+---
+ tests/generic/235     | 2 +-
+ tests/generic/235.out | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-> > Also, with this change to use unwritten extents for all delalloc
-> > extents, we can start doing speculative preallocation for writes
-> > into holes inside EOF without leaving uninitialised/unzeroed blocks
-> > laying around.
-> 
-> Careful.  We already have issues because delalloc blocks before EOF don't
-> ever get reclaimed.  This triggers up on xfs/442 with 1k blocksize for
-> me.  I actually have a fix for that now, but that will require dropping
-> one of the cleanup patches from this series, so expect a respin.
-
-Yeah, I didn't say everything already worked, just that using
-preallocation for delalloc gets rid of the stale data exposure
-problem that has prevented us from doing this in the past.
-
-(Technically speaking, it has already been done in the past - ~1999,
-IIRC - but that got yanked pretty quickly when the stale data
-exposure problems were reported ;)
-
-> If we want to more generic preallocation I guess we should follow the
-> example of the COW direct I/O path and mark all preallocated extents
-> as unwritten - that way we know delalloc extents that have the unwritten
-> bit set can be safely reclaimed.  But that is more work than I want
-> to do for this merge window at least.
-
-That's sounds like a good idea, and a good direction to head
-towards. No immediate hurry, just trying to understand where you
-might be going with these changes.
-
-Cheers,
-
-Dave.
+diff --git a/tests/generic/235 b/tests/generic/235
+index 902e9ad..6adc803 100755
+--- a/tests/generic/235
++++ b/tests/generic/235
+@@ -55,7 +55,7 @@ _try_scratch_mount "-o remount,ro" 2>&1 | tee -a $seqres.full | _filter_scratch
+ touch $SCRATCH_MNT/failed 2>&1 | tee -a $seqres.full | _filter_scratch
+ _try_scratch_mount "-o remount,rw" 2>&1 | tee -a $seqres.full | _filter_scratch
+ 
+-$XFS_IO_PROG -c 'pwrite 0 8k' -c 'fsync' \
++$XFS_IO_PROG -c 'pwrite 0 64k' -c 'fsync' \
+ 			$SCRATCH_MNT/testfile >>$seqres.full 2>&1
+ do_repquota
+ 
+diff --git a/tests/generic/235.out b/tests/generic/235.out
+index 601fa2f..abcb47a 100644
+--- a/tests/generic/235.out
++++ b/tests/generic/235.out
+@@ -17,10 +17,10 @@ Block grace time: 7days; Inode grace time: 7days
+                         Block limits                File limits
+ User            used    soft    hard  grace    used  soft  hard  grace
+ ----------------------------------------------------------------------
+-fsgqa     --       8       0       0              1     0     0       
++fsgqa     --      64       0       0              1     0     0       
+ *** Report for group quotas on device SCRATCH_DEV
+ Block grace time: 7days; Inode grace time: 7days
+                         Block limits                File limits
+ Group           used    soft    hard  grace    used  soft  hard  grace
+ ----------------------------------------------------------------------
+-fsgqa     --       8       0       0              1     0     0       
++fsgqa     --      64       0       0              1     0     0       
 -- 
-Dave Chinner
-david@fromorbit.com
+2.9.5
