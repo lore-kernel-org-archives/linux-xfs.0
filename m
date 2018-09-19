@@ -1,71 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:44238 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729286AbeIRItW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Sep 2018 04:49:22 -0400
-Date: Mon, 17 Sep 2018 20:18:40 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: don't treat unknown di_flags[2] as corruption in
- scrub
-Message-ID: <20180918031840.GC20086@magnolia>
-References: <be811b64-5630-e9eb-313f-3aa1f809ba79@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <be811b64-5630-e9eb-313f-3aa1f809ba79@redhat.com>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:40036 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1731462AbeISRgk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Sep 2018 13:36:40 -0400
+Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8JBx2s9051770
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 07:59:04 -0400
+Received: from e11.ny.us.ibm.com (e11.ny.us.ibm.com [129.33.205.201])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2mkkxjdc50-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 07:59:04 -0400
+Received: from localhost
+        by e11.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Wed, 19 Sep 2018 07:59:03 -0400
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: [PATCH V4 05/20] Fix xfs/127 to work with 64k block size
+Date: Wed, 19 Sep 2018 17:30:38 +0530
+In-Reply-To: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
+References: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
+Message-Id: <20180919120053.7339-6-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: fstests@vger.kernel.org
+Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, zlang@redhat.com, linux-xfs@vger.kernel.org
 
-On Mon, Sep 17, 2018 at 09:41:35PM -0500, Eric Sandeen wrote:
-> xchk_inode_flags[2]() currently treats any di_flags[2] values that the
-> running kernel doesn't recognize as corruption, and calls
-> xchk_ino_set_corrupt() if they are set.  However, it's entirely possible
-> that these flags were set in some newer kernel and are quite valid,
-> but ignored in this kernel.
-> 
-> (Validators don't care one bit about unknown di_flags[2].)
-> 
-> Call xchk_ino_set_warning instead, because this may or may not actually
-> indicate a problem.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
-> index 5b3b177..e53ed83 100644
-> --- a/fs/xfs/scrub/inode.c
-> +++ b/fs/xfs/scrub/inode.c
-> @@ -126,8 +126,9 @@
+With reflink feature enabled, we require atleast 500MiB of
+disk space to create a filesystem with 64k block size. Hence this commit
+sets the size of the scratch filesystem to 512MiB.
 
-Would be nice to know which function this is, but it otherwise seems
-fine to me:
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+---
+ tests/xfs/127 | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
->  {
->  	struct xfs_mount	*mp = sc->mp;
->  
-> +	/* Unknown di_flags could simply be from newer kernel */
->  	if (flags & ~XFS_DIFLAG_ANY)
-> -		goto bad;
-> +		xchk_ino_set_warning(sc, ino);
->  
->  	/* rt flags require rt device */
->  	if ((flags & (XFS_DIFLAG_REALTIME | XFS_DIFLAG_RTINHERIT)) &&
-> @@ -172,8 +173,9 @@
->  {
->  	struct xfs_mount	*mp = sc->mp;
->  
-> +	/* Unknown di_flags2 could simply be from newer kernel */
->  	if (flags2 & ~XFS_DIFLAG2_ANY)
-> -		goto bad;
-> +		xchk_ino_set_warning(sc, ino);
->  
->  	/* reflink flag requires reflink feature */
->  	if ((flags2 & XFS_DIFLAG2_REFLINK) &&
-> 
+diff --git a/tests/xfs/127 b/tests/xfs/127
+index 41dacd7..6a95026 100755
+--- a/tests/xfs/127
++++ b/tests/xfs/127
+@@ -34,7 +34,7 @@ _require_no_large_scratch_dev
+ _require_cp_reflink
+ 
+ echo "Format and mount"
+-_scratch_mkfs_sized $((2 * 4096 * 4096)) > $seqres.full 2>&1
++_scratch_mkfs_sized $((512 * 1024 * 1024)) > $seqres.full 2>&1
+ _scratch_mount >> $seqres.full 2>&1
+ 
+ testdir=$SCRATCH_MNT/test-$seq
+-- 
+2.9.5
