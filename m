@@ -1,91 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:38346 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729156AbeIRUhN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 18 Sep 2018 16:37:13 -0400
-Subject: Re: dm-writecache issue
-References: <20180911221147.GA23308@redhat.com>
- <alpine.LRH.2.02.1809180741001.6599@file01.intranet.prod.int.rdu2.redhat.com>
- <20180918123238.GI27618@dastard>
- <817349b8-b54e-a16a-276f-7a977f29b449@sandeen.net>
- <alpine.LRH.2.02.1809180934040.28565@file01.intranet.prod.int.rdu2.redhat.com>
- <8975ad6d-bfde-0a50-e60c-59228493f1b2@sandeen.net>
- <d2d949ec-b3b6-cba3-66f8-c225784d5951@sandeen.net>
- <alpine.LRH.2.02.1809181024150.28565@file01.intranet.prod.int.rdu2.redhat.com>
- <b359bcc7-bc76-33cc-30fb-2c8ad2ba4682@sandeen.net>
- <alpine.LRH.2.02.1809181038350.28565@file01.intranet.prod.int.rdu2.redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <b3a162a8-7c2b-8a66-6f11-2abff3381690@sandeen.net>
-Date: Tue, 18 Sep 2018 10:04:12 -0500
-MIME-Version: 1.0
-In-Reply-To: <alpine.LRH.2.02.1809181038350.28565@file01.intranet.prod.int.rdu2.redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:41244 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1731472AbeISRgr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Sep 2018 13:36:47 -0400
+Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8JBx001051590
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 07:59:10 -0400
+Received: from e11.ny.us.ibm.com (e11.ny.us.ibm.com [129.33.205.201])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2mkkxjdcas-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 07:59:10 -0400
+Received: from localhost
+        by e11.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Wed, 19 Sep 2018 07:59:10 -0400
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: [PATCH V4 07/20] Fix xfs/140 to work with 64k block size
+Date: Wed, 19 Sep 2018 17:30:40 +0530
+In-Reply-To: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
+References: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
+Message-Id: <20180919120053.7339-8-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, David Teigland <teigland@redhat.com>
+To: fstests@vger.kernel.org
+Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, zlang@redhat.com, linux-xfs@vger.kernel.org
 
-On 9/18/18 9:42 AM, Mikulas Patocka wrote:
-> 
-> 
-> On Tue, 18 Sep 2018, Eric Sandeen wrote:
-> 
->> On 9/18/18 9:29 AM, Mikulas Patocka wrote:
->>
->>> On Tue, 18 Sep 2018, Eric Sandeen wrote:
->>
->> ...
->>
->>>> See also 
->>>> https://www.intel.com/content/www/us/en/support/articles/000006392/memory-and-storage.html
->>>>
->>>> -Eric
->>>
->>> And does it really support native 512-byte writes? Or does it emulate 
->>> 512-byte writes by doing read-modify-write? That needs to be benchmarked, 
->>> the paper doesn't say that.
->>
->> Interesting from a manual tuning perspective, but not from a default
->> behavior perspective.
->>
->> I'm just pointing out that Intel does seem to give the user a choice about
->> the /advertised/ geometry for some of their SSDs.
->>
->>> Memory is expensive and reducing SSD sector size increases memory 
->>> requirement on the SSD. I doubt that any SSD vendor would want to use 
->>> 8-times more memory just to support 512-byte sectors natively.
->>
->> Marketing decisions aside, we just can't safely ignore what the device
->> tells us about these IO sizes.
-> 
-> No one is forcing you to use 512-byte writes. You can use 4k writes on a 
-> device that advertises 512-byte sectors.
+For 64k block size, the agsize provided in the test causes mkfs.xfs to
+fail due to insufficient log space. Hence this commit computes agsize
+based on block size of the filesystem.
 
-Of course.  But not if you require those 4k writes to be /atomic/.
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+---
+ tests/xfs/140 | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/tests/xfs/140 b/tests/xfs/140
+index 6e89fe3..c06a722 100755
+--- a/tests/xfs/140
++++ b/tests/xfs/140
+@@ -34,17 +34,21 @@ _require_cp_reflink
  
-> ext4 uses 4k block size by default (and lets the user lower it if the user 
-> is tight on disk space and doesn't care about performance).
-
-I think you may be conflating sector size with filesystem block size.
-
-ext4 makes no distinction between the two.
-
-XFS has both sector size (metadata atomic IO unit) and filesystem block size
-(file data allocation unit) as configurable mkfs-time options. The sector size
-can be smaller than, and up to, the filesystem block size.
-
-mkfs.xfs defaults to 4k filesystem blocks and device-physical-sector-sized
-sectors, i.e. the largest atomic IO the device advertises, because XFS
-metadata journaling relies on this IO atomicity.  We allocate file data in
-4k chunks, and do atomic metadata IO in device-sector-sized chunks.
-
-ext4 doesn't - it's true - but I cannot help but believe that ext4 occasionally
-gets harmed by this choice, because it's absolutely possible that a 4k
-metadata write gets only partly-persisted if power fails on a 512/512 disk,
-for example.  In practice it seems to generally work out ok, but it is going
-beyond what the device says it can guarantee.
-
--Eric
+ rm -f $seqres.full
+ 
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++blksz=$(_get_file_block_size $SCRATCH_MNT)
++_scratch_unmount
++
+ echo "Format and mount"
+-_scratch_mkfs -d agsize=$((32 * 1048576)) > $seqres.full 2>&1
++_scratch_mkfs -d agsize=$((8192 * $blksz)) > $seqres.full 2>&1
+ _scratch_mount >> $seqres.full 2>&1
+ 
+ testdir=$SCRATCH_MNT/test-$seq
+ mkdir $testdir
+-blksz=$(_get_block_size $testdir)
+ 
+ echo "Create the original files"
+-sz=$((48 * 1048576))
+-nr=$((sz / blksz))
++nr=12288
++sz=$(($nr * $blksz))
+ _pwrite_byte 0x61 0 $sz $testdir/file1 >> $seqres.full
+ _cp_reflink $testdir/file1 $testdir/file2 >> $seqres.full
+ _pwrite_byte 0x61 0 $sz $testdir/file2.chk >> $seqres.full
+-- 
+2.9.5
