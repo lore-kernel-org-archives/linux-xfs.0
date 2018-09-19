@@ -1,158 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:25977
-        "EHLO ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727800AbeISE1T (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Sep 2018 00:27:19 -0400
-Date: Wed, 19 Sep 2018 08:52:12 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: dm-writecache issue
-Message-ID: <20180918225212.GJ27618@dastard>
-References: <20180911221147.GA23308@redhat.com>
- <alpine.LRH.2.02.1809180741001.6599@file01.intranet.prod.int.rdu2.redhat.com>
- <20180918123238.GI27618@dastard>
- <alpine.LRH.2.02.1809181014500.28565@file01.intranet.prod.int.rdu2.redhat.com>
- <20180918153324.GB13016@infradead.org>
- <alpine.LRH.2.02.1809181316230.7172@file01.intranet.prod.int.rdu2.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <alpine.LRH.2.02.1809181316230.7172@file01.intranet.prod.int.rdu2.redhat.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:54254 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1731450AbeISRgk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Sep 2018 13:36:40 -0400
+Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8JBx2VU007947
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 07:59:04 -0400
+Received: from e12.ny.us.ibm.com (e12.ny.us.ibm.com [129.33.205.202])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2mkkc9xvvu-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 07:59:03 -0400
+Received: from localhost
+        by e12.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Wed, 19 Sep 2018 07:58:59 -0400
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: [PATCH V4 04/20] Fix xfs/074 to work with 64k block size
+Date: Wed, 19 Sep 2018 17:30:37 +0530
+In-Reply-To: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
+References: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
+Message-Id: <20180919120053.7339-5-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, David Teigland <teigland@redhat.com>
+To: fstests@vger.kernel.org
+Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, zlang@redhat.com, linux-xfs@vger.kernel.org
 
-On Tue, Sep 18, 2018 at 01:39:53PM -0400, Mikulas Patocka wrote:
-> On Tue, 18 Sep 2018, Christoph Hellwig wrote:
-> > On Tue, Sep 18, 2018 at 10:22:15AM -0400, Mikulas Patocka wrote:
-> > > > On Tue, Sep 18, 2018 at 07:46:47AM -0400, Mikulas Patocka wrote:
-> > SATA and SAS SSDs can always use the same trick as modern disks to
-> > support 512 byte access where really needed (e.g. BIOS and legacy
-> > OSes) but give a strong hint to modern OSes that they don't want that
-> > to be actually used with the physical block exponent.  NVMe doesn't
-> > have anything like that yet, but we are working on something like
-> > that in the NVMe TWG.
-> 
-> The question is - why do you want to use 512-byte writes if they perform 
-> badly? For example, the Kingston NVME SSD has 242k IOPS for 4k writes and 
-> 45k IOPS for 2k writes.
+This commit makes file and extent size calculations to be a function of
+the filesystem's block size. It also adds a brief description of the
+bug that is being tested.
 
-We know all about this sort of thing for a long, long while (e.g.
-the very first fusion IO hardware behaved like this).  We also know
-that various intel SSDs have the same problems(*), not to mention
-XFS being blamed for the single sector write data corruption
-problems they had (which Christoph has already mentioned).
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+---
+ tests/xfs/074 | 23 +++++++++++++++++++----
+ 1 file changed, 19 insertions(+), 4 deletions(-)
 
-That said, we /rarely/ do 512 byte metadata IOs in active XFS
-filesystems.  Single sector metadata are used only for static
-metadata - the allocation group headers. They were designed as
-single sector objects 25 years ago so they could be written
-atomically and could be relied on to be intact after power failure
-events.
-
-In reality, we read these objects once into memory when they are
-first accessed, and we only write them when the filesystem needs
-journal space or goes idle, both of which may be "never" because
-active metadata is just continually relogged and never rewritten in
-place until the workload idles.
-
-IOWs arguments about 512 byte sector metadata writes causing
-performance issues are irrelevant to the discussion here because
-they just don't.
-
-> The same problem is with dm-writecache - it can run with 512-byte sectors, 
-> but there's unnecessary overhead. It would be much better if XFS did 4k 
-> aligned writes.
-> 
-> 
-> You can do 4k writes and assume that only 512-byte units are written 
-> atomically - that would be safe for old 512-byte sector disk and it 
-> wouldn't degrade performance on SSDs.
-> 
-> If the XFS data blocks are aligned on 4k boundary, you can do 4k-aligned 
-> I/Os on the metadata as well.
-
-Yup, that's how XFS was designed way back when.  All the dynamically
-allocated metadata in XFS (i.e. everything but the AG header blocks)
-is filesystem block sized (or larger) and at least filesystem block
-aligned. So if you use the default 4k filesystem block size, all the
-dynamic metadata IO (dirs, btrees, inodes, etc) are at least 4k
-aligned and sized.
-
-This is all really basic filesystem design stuff - structures
-critical to recovery and repair need to be robust against torn
-writes (i.e. single sectors), while dynamically allocated run-time
-structures (data or metadata) are all allocated in multiples of the
-fundamental unit of space acounting (i.e. filesystem blocks).
-
-> You could allocate metadata in 512-byte 
-> quantities and you could do 4k reads and writes on them. You would 
-> over-read and over-write a bit, but it will perform better due to avoiding 
-> the read-modify-write logic in the SSD.
-
-No, we can't do that. The transaction models requires independent IO
-and locking for each of those AG headers. Trying to stuff them all
-into one IO and/or buffer will cause deadlocks and lock contention
-problems.
-
-> I'm not an expert in the XFS journal - but could the journal writes be 
-> just padded to 4k boundary (even if the journal space is allocated in 
-> 512-byte quantities)?
-
-<sigh>
-
-What do you think the log stripe unit configuration option does?
-Yup, it pads the log writes to whatever block size is specified.
-We've had that functionality since around 2005. The issue here is
-that the device told us "512 byte sectors" and no minimum/optimal IO
-sizes, so mkfs doesn't add any padding by default.
-
-Regardless, a log write is rarely a single sector - a log write
-header is a complete sector, maybe 2 depending on the iclogbuf size,
-which is then followed by the metadata that needs checkpointing.
-The typical log IO is an entire iclogbuf, which defaults to 32k and
-can be configured up to 256k. These writes have lsunit padding and
-alignment (which may be single sector), but these large writes
-didn't have any protection against tearing. Hence we still have to
-ensure individual sectors in each write are intact during recovery.
-
-Yes, we now have CRCs for entire log writes these large write tears
-and other IO errors, but that doesn't change the underlying on-disk
-format or algorithms that are used.
-
-And that's the issue: the XFS journal is a sector based device, not
-a filesystem block based device. It's on-disk format was designed
-around the fact that torn writes do not occur inside a single
-sector. Hence the log scan and search algorithms assume that it can
-read and write individual sectors in the device, and that if the
-per-sector log header has the correct sequence number stamped in it
-then the entire sector has valid contents.
-
-The long and short of all this is that block devices cannot
-dynamically change their advertised sector size. Filesystems have
-been designed for 40+ years around the assumption that the physical
-sector size of the underlying storage device is fixed for the life
-of the device. DM is just going to have to reject attempts to build
-dynamically layered devices with incompatible sector size
-requirements.
-
-Cheers,
-
-Dave.
-
-(*) Some recent high end intel enterprise SSDs had bath-tub curve
-performance problems with IO that isn't 128k aligned(**). I'm
-guessing that the internal page (flash erase block) size was 128k,
-and it didn't handle sub page or cross-page IO at all well. I'm not
-sure if there were ever firmware updates to fix that.
-
-(**) yes, filesystem developers see all sorts of whacky performance
-problems with storage. That's because everyone blames the messenger
-for storage problems (i.e. the filesystem), so we're the lucky
-people get to triage them and determine where the problem really
-lies.
-
+diff --git a/tests/xfs/074 b/tests/xfs/074
+index e5888d5..c10a7d0 100755
+--- a/tests/xfs/074
++++ b/tests/xfs/074
+@@ -7,6 +7,18 @@
+ # Check some extent size hint boundary conditions that can result in
+ # MAXEXTLEN overflows.
+ #
++# In xfs_bmap_extsize_align(), we had,
++# 	if ((temp = (align_alen % extsz))) {
++# 		align_alen += extsz - temp;
++# 	}
++# align_alen had the value of 2097151 (i.e. MAXEXTLEN) blocks. extsz had
++# the value of 4096 blocks.
++#
++# align_alen % extsz will be 4095. so align_alen will end up having
++# 2097151 + (4096 - 4095) = 2097152 i.e. (MAXEXTLEN + 1). Thus the length
++# of the new extent will be larger than MAXEXTLEN. This will later cause
++# the bmbt leaf to have an entry whose length is set to zero block count.
++#
+ seq=`basename $0`
+ seqres=$RESULT_DIR/$seq
+ echo "QA output created by $seq"
+@@ -46,19 +58,22 @@ mkdir -p $LOOP_MNT
+ $XFS_IO_PROG -ft -c "truncate 1t" $LOOP_FILE >> $seqres.full
+ LOOP_DEV=`_create_loop_device $LOOP_FILE`
+ 
+-_mkfs_dev -d size=156452m,agcount=4 -l size=32m $LOOP_DEV
++_mkfs_dev -d size=260g,agcount=2 $LOOP_DEV
+ _mount $LOOP_DEV $LOOP_MNT
+ 
++BLOCK_SIZE=$(_get_file_block_size $LOOP_MNT)
++
+ # Corrupt the BMBT by creating extents larger than MAXEXTLEN
++# For 4k blocksize, MAXEXTLEN * 4k = 2097151 * 4k = 8589930496 = ~8GiB
+ $XFS_IO_PROG -ft \
+-	-c "extsize 16m" \
+-	-c "falloc 0 30g" \
++	-c "extsize $(($BLOCK_SIZE * 4096))" \
++	-c "falloc 0 $(($BLOCK_SIZE * 2097152))" \
+ 	$LOOP_MNT/foo >> $seqres.full
+ 
+ umount $LOOP_MNT
+ _check_xfs_filesystem $LOOP_DEV none none
+ 
+-_mkfs_dev -f -l size=32m $LOOP_DEV
++_mkfs_dev -f $LOOP_DEV
+ _mount $LOOP_DEV $LOOP_MNT
+ 
+ # check we trim both ends of the extent approproiately; this will fail
 -- 
-Dave Chinner
-david@fromorbit.com
+2.9.5
