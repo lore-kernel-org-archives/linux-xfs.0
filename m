@@ -1,59 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:8076 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729065AbeIXVVS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Sep 2018 17:21:18 -0400
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8OFEZtA098339
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Sep 2018 11:18:37 -0400
-Received: from e34.co.us.ibm.com (e34.co.us.ibm.com [32.97.110.152])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2mq202sh70-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Sep 2018 11:18:37 -0400
-Received: from localhost
-        by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Mon, 24 Sep 2018 09:18:36 -0600
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH V5 13/20] Fix generic/172 to work with 64k block size
-Date: Mon, 24 Sep 2018 20:49:35 +0530
-In-Reply-To: <20180924151942.8220-1-chandan@linux.vnet.ibm.com>
-References: <20180924151942.8220-1-chandan@linux.vnet.ibm.com>
-Message-Id: <20180924151942.8220-14-chandan@linux.vnet.ibm.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:53446 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727229AbeIUCHv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Sep 2018 22:07:51 -0400
+Date: Thu, 20 Sep 2018 13:22:33 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/5] xfs: skip delalloc COW blocks in xfs_reflink_end_cow
+Message-ID: <20180920202233.GO20086@magnolia>
+References: <20180920144220.2181-1-hch@lst.de>
+ <20180920144220.2181-3-hch@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180920144220.2181-3-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, zlang@redhat.com, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-For 64k block size, With 256MiB as the XFS filesystem size and 168 MiB
-as the size of the clone source file, we end up hitting ENOSPC when
-cloning the source file. This happens due to lack of space for housing
-the corresponding metadata. This scenario also occurs when using a
-512MiB XFS filesystem and 300MiB clone source file.
+On Thu, Sep 20, 2018 at 04:42:17PM +0200, Christoph Hellwig wrote:
+> The iomap direct I/O code issues a single ->end_io call for the whole
+> I/O request, and if some of the extents cowered needed a COW operation
+> it will call xfs_reflink_end_cow over the whole range.
+> 
+> When we do AIO writes we drop the iolock after doing the initial setup,
+> but before the I/O completion.  Between dropping the lock and completing
+> the I/O we can have a racing buffered write create new delalloc COW fork
+> extents in the region covered by the outstanding direct I/O write, and
+> thus see delalloc COW fork extents in xfs_reflink_end_cow.  As
+> concurrent writes are fundamentally racy and no guarantees are given we
+> can simply skip those.
+> 
+> This can be easily reproduced with xfstests generic/208 in always_cow
+> mode.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Hence this commit increases the size of the test filesystem to 1 GiB and
-the size of the clone source file to 768MiB.
+Looks ok to me...
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
----
- tests/generic/172 | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+--D
 
-diff --git a/tests/generic/172 b/tests/generic/172
-index 5d6f295..08d2789 100755
---- a/tests/generic/172
-+++ b/tests/generic/172
-@@ -47,8 +47,8 @@ echo "Reformat with appropriate size"
- blksz="$(_get_block_size $testdir)"
- umount $SCRATCH_MNT
- 
--file_size=$((168 * 1024 * 1024))
--fs_size=$((256 * 1024 * 1024))
-+file_size=$((768 * 1024 * 1024))
-+fs_size=$((1024 * 1024 * 1024))
- _scratch_mkfs_sized $fs_size >> $seqres.full 2>&1
- _scratch_mount >> $seqres.full 2>&1
- rm -rf $testdir
--- 
-2.9.5
+> ---
+>  fs/xfs/xfs_reflink.c | 10 ++++------
+>  1 file changed, 4 insertions(+), 6 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index ac94ace45424..d1758771f21a 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -686,14 +686,12 @@ xfs_reflink_end_cow(
+>  		if (!del.br_blockcount)
+>  			goto prev_extent;
+>  
+> -		ASSERT(!isnullstartblock(got.br_startblock));
+> -
+>  		/*
+> -		 * Don't remap unwritten extents; these are
+> -		 * speculatively preallocated CoW extents that have been
+> -		 * allocated but have not yet been involved in a write.
+> +		 * Only remap real extent that contain data.  With AIO
+> +		 * speculatively preallocations can leak into the range we
+> +		 * are called upon, and we need to skip them.
+>  		 */
+> -		if (got.br_state == XFS_EXT_UNWRITTEN)
+> +		if (!xfs_bmap_is_real_extent(&got))
+>  			goto prev_extent;
+>  
+>  		/* Unmap the old blocks in the data fork. */
+> -- 
+> 2.18.0
+> 
