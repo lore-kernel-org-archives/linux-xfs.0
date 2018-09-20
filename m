@@ -1,170 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:39578 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730458AbeIXVVA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Sep 2018 17:21:00 -0400
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8OFEaUP098402
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Sep 2018 11:18:19 -0400
-Received: from e31.co.us.ibm.com (e31.co.us.ibm.com [32.97.110.149])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2mq202sguy-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Sep 2018 11:18:19 -0400
-Received: from localhost
-        by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Mon, 24 Sep 2018 09:18:17 -0600
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH V5 09/20] xfs/299: Fix "Push past soft inode limit" case
-Date: Mon, 24 Sep 2018 20:49:31 +0530
-In-Reply-To: <20180924151942.8220-1-chandan@linux.vnet.ibm.com>
-References: <20180924151942.8220-1-chandan@linux.vnet.ibm.com>
-Message-Id: <20180924151942.8220-10-chandan@linux.vnet.ibm.com>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:51118 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726065AbeITI5Q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Sep 2018 04:57:16 -0400
+Date: Thu, 20 Sep 2018 13:16:05 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/2] mkfs: discard only after all validations
+Message-ID: <20180920031605.GM27618@dastard>
+References: <20180919125617.28048-1-jtulak@redhat.com>
+ <20180919144405.GH20086@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20180919144405.GH20086@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, zlang@redhat.com, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org, sandeen@sandeen.net
 
-The test sets an inode soft limit of four but only three files are
-created. This commit creates two more files in order to really push past
-the soft inode limit.
+On Wed, Sep 19, 2018 at 07:44:05AM -0700, Darrick J. Wong wrote:
+> On Wed, Sep 19, 2018 at 02:56:16PM +0200, Jan Tulak wrote:
+> > Discard should happen only when everything has been validated, just
+> > before we start writing to the device. If it happens earlier, it is
+> > possible that mkfs will abort, but managed to already wipe data. This
+> > patch moves the discard to the latest possible moment.
+> > 
+> > Signed-off-by: Jan Tulak <jtulak@redhat.com>
+> > ---
+> >  mkfs/xfs_mkfs.c | 20 ++++++++++++++++----
+> >  1 file changed, 16 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> > index 2e53c1e8..81d9859a 100644
+> > --- a/mkfs/xfs_mkfs.c
+> > +++ b/mkfs/xfs_mkfs.c
+> > @@ -2389,8 +2389,7 @@ _("log stripe unit (%d bytes) is too large (maximum is 256KiB)\n"
+> >  static void
+> >  open_devices(
+> >  	struct mkfs_params	*cfg,
+> > -	struct libxfs_xinit	*xi,
+> > -	bool			discard)
+> > +	struct libxfs_xinit	*xi)
+> >  {
+> >  	uint64_t		sector_mask;
+> >  
+> > @@ -2419,8 +2418,16 @@ open_devices(
+> >  	xi->dsize &= sector_mask;
+> >  	xi->rtsize &= sector_mask;
+> >  	xi->logBBsize &= (uint64_t)-1 << (max(cfg->lsectorlog, 10) - BBSHIFT);
+> > +}
+> >  
+> > -
+> > +static void
+> > +discard_data(
+> 
+> Perhaps discard_devices(), since this function can DISCARD more than
+> just the data device.
+> 
+> > +	struct libxfs_xinit	*xi,
+> > +	bool			discard)
+> > +{
+> > +	/*
+> > +	 * This function has to be called after libxfs has been initialized.
+> > +	 */
+> >  	if (!discard)
+> >  		return;
+> >  
+> 
+> While we're on the topic, I notice that we skip discard for any device
+> that's actually a file.  Seeing as fallocate(PUNCH_HOLE) works on files
+> (and block devices), is there a reason why we avoid punching out fs
+> image files?
 
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
----
- tests/xfs/299     |  2 ++
- tests/xfs/299.out | 36 ++++++++++++++++++------------------
- 2 files changed, 20 insertions(+), 18 deletions(-)
+Yeah - preallocated image files shouldn't be punched, because it
+defeats the whole purpose of setting up preallocated image files.
 
-diff --git a/tests/xfs/299 b/tests/xfs/299
-index f0012ff..bbf7f61 100755
---- a/tests/xfs/299
-+++ b/tests/xfs/299
-@@ -139,6 +139,8 @@ _exercise()
- 	echo "*** push past the soft inode limit" | tee -a $seqres.full
- 	_file_as_id $SCRATCH_MNT/softie1 $id $type 1024 0
- 	_file_as_id $SCRATCH_MNT/softie2 $id $type 1024 0
-+	_file_as_id $SCRATCH_MNT/softie3 $id $type 1024 0
-+	_file_as_id $SCRATCH_MNT/softie4 $id $type 1024 0
- 	_qmount
- 	xfs_quota -D $tmp.projects -P $tmp.projid -x \
- 		-c "repquota -birnN -$type" $SCRATCH_DEV |
-diff --git a/tests/xfs/299.out b/tests/xfs/299.out
-index d13c7da..f1a1e48 100644
---- a/tests/xfs/299.out
-+++ b/tests/xfs/299.out
-@@ -16,11 +16,11 @@ realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
- 
- *** push past the soft inode limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 0 100 500 00 [--------] 3 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 0 100 500 00 [--------] 5 4 10 00 [7 days] 0 0 0 00 [--------]
- 
- *** push past the soft block limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [7 days] 4 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 140 100 500 00 [7 days] 6 4 10 00 [7 days] 0 0 0 00 [--------]
- 
- *** push past the hard inode limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
-@@ -40,11 +40,11 @@ realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
- 
- *** push past the soft inode limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 0 100 500 00 [--------] 3 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 0 100 500 00 [--------] 5 4 10 00 [7 days] 0 0 0 00 [--------]
- 
- *** push past the soft block limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [7 days] 4 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 140 100 500 00 [7 days] 6 4 10 00 [7 days] 0 0 0 00 [--------]
- 
- *** push past the hard inode limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
-@@ -64,11 +64,11 @@ realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
- 
- *** push past the soft inode limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 0 100 500 00 [--------] 3 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 0 100 500 00 [--------] 5 4 10 00 [7 days] 0 0 0 00 [--------]
- 
- *** push past the soft block limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [7 days] 4 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 140 100 500 00 [7 days] 6 4 10 00 [7 days] 0 0 0 00 [--------]
- 
- *** push past the hard inode limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
-@@ -96,19 +96,19 @@ realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
- 
- *** push past the soft inode limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 0 100 500 00 [--------] 3 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 0 100 500 00 [--------] 5 4 10 00 [--------] 0 0 0 00 [--------]
- 
- *** push past the soft block limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [--------] 4 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 140 100 500 00 [--------] 6 4 10 00 [--------] 0 0 0 00 [--------]
- 
- *** push past the hard inode limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [--------] 16 4 10 00 [--none--] 0 0 0 00 [--------]
-+[NAME] 140 100 500 00 [--------] 18 4 10 00 [--none--] 0 0 0 00 [--------]
- 
- *** push past the hard block limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 540 100 500 00 [--none--] 16 4 10 00 [--none--] 0 0 0 00 [--------]
-+[NAME] 540 100 500 00 [--none--] 18 4 10 00 [--none--] 0 0 0 00 [--------]
- 
- 
- *** report no quota settings
-@@ -120,19 +120,19 @@ realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
- 
- *** push past the soft inode limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 0 100 500 00 [--------] 3 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 0 100 500 00 [--------] 5 4 10 00 [--------] 0 0 0 00 [--------]
- 
- *** push past the soft block limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [--------] 4 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 140 100 500 00 [--------] 6 4 10 00 [--------] 0 0 0 00 [--------]
- 
- *** push past the hard inode limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [--------] 16 4 10 00 [--none--] 0 0 0 00 [--------]
-+[NAME] 140 100 500 00 [--------] 18 4 10 00 [--none--] 0 0 0 00 [--------]
- 
- *** push past the hard block limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 540 100 500 00 [--none--] 16 4 10 00 [--none--] 0 0 0 00 [--------]
-+[NAME] 540 100 500 00 [--none--] 18 4 10 00 [--none--] 0 0 0 00 [--------]
- 
- 
- *** report no quota settings
-@@ -144,18 +144,18 @@ realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
- 
- *** push past the soft inode limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 0 100 500 00 [--------] 3 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 0 100 500 00 [--------] 5 4 10 00 [--------] 0 0 0 00 [--------]
- 
- *** push past the soft block limit
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [--------] 4 4 10 00 [--------] 0 0 0 00 [--------]
-+[NAME] 140 100 500 00 [--------] 6 4 10 00 [--------] 0 0 0 00 [--------]
- 
- *** push past the hard inode limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 140 100 500 00 [--------] 16 4 10 00 [--none--] 0 0 0 00 [--------]
-+[NAME] 140 100 500 00 [--------] 18 4 10 00 [--none--] 0 0 0 00 [--------]
- 
- *** push past the hard block limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
--[NAME] 540 100 500 00 [--none--] 16 4 10 00 [--none--] 0 0 0 00 [--------]
-+[NAME] 540 100 500 00 [--none--] 18 4 10 00 [--none--] 0 0 0 00 [--------]
- 
- *** unmount
+Cheers,
+
+Dave.
 -- 
-2.9.5
+Dave Chinner
+david@fromorbit.com
