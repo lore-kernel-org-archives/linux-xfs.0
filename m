@@ -1,85 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:51118 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726065AbeITI5Q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Sep 2018 04:57:16 -0400
-Date: Thu, 20 Sep 2018 13:16:05 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2] mkfs: discard only after all validations
-Message-ID: <20180920031605.GM27618@dastard>
-References: <20180919125617.28048-1-jtulak@redhat.com>
- <20180919144405.GH20086@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:58160 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2387424AbeITS0Q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 20 Sep 2018 14:26:16 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id C4CF086668
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Sep 2018 12:42:57 +0000 (UTC)
+Date: Thu, 20 Sep 2018 07:42:52 -0500
+From: Bill O'Donnell <billodo@redhat.com>
+Subject: Re: [PATCH] xfsprogs: define xfs_stack_trace() for debug builds
+Message-ID: <20180920124252.GA745@redhat.com>
+References: <d260b935-c518-1fdb-c728-84db5a1224a8@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20180919144405.GH20086@magnolia>
+In-Reply-To: <d260b935-c518-1fdb-c728-84db5a1224a8@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Jan Tulak <jtulak@redhat.com>, linux-xfs@vger.kernel.org, sandeen@sandeen.net
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Sep 19, 2018 at 07:44:05AM -0700, Darrick J. Wong wrote:
-> On Wed, Sep 19, 2018 at 02:56:16PM +0200, Jan Tulak wrote:
-> > Discard should happen only when everything has been validated, just
-> > before we start writing to the device. If it happens earlier, it is
-> > possible that mkfs will abort, but managed to already wipe data. This
-> > patch moves the discard to the latest possible moment.
-> > 
-> > Signed-off-by: Jan Tulak <jtulak@redhat.com>
-> > ---
-> >  mkfs/xfs_mkfs.c | 20 ++++++++++++++++----
-> >  1 file changed, 16 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> > index 2e53c1e8..81d9859a 100644
-> > --- a/mkfs/xfs_mkfs.c
-> > +++ b/mkfs/xfs_mkfs.c
-> > @@ -2389,8 +2389,7 @@ _("log stripe unit (%d bytes) is too large (maximum is 256KiB)\n"
-> >  static void
-> >  open_devices(
-> >  	struct mkfs_params	*cfg,
-> > -	struct libxfs_xinit	*xi,
-> > -	bool			discard)
-> > +	struct libxfs_xinit	*xi)
-> >  {
-> >  	uint64_t		sector_mask;
-> >  
-> > @@ -2419,8 +2418,16 @@ open_devices(
-> >  	xi->dsize &= sector_mask;
-> >  	xi->rtsize &= sector_mask;
-> >  	xi->logBBsize &= (uint64_t)-1 << (max(cfg->lsectorlog, 10) - BBSHIFT);
-> > +}
-> >  
-> > -
-> > +static void
-> > +discard_data(
+On Wed, Sep 19, 2018 at 03:19:14PM -0500, Eric Sandeen wrote:
+> Building with -DDEBUG fails due to lack of an xfs_stack_trace def'n.
 > 
-> Perhaps discard_devices(), since this function can DISCARD more than
-> just the data device.
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+
+Looks fine.
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+
+> ---
 > 
-> > +	struct libxfs_xinit	*xi,
-> > +	bool			discard)
-> > +{
-> > +	/*
-> > +	 * This function has to be called after libxfs has been initialized.
-> > +	 */
-> >  	if (!discard)
-> >  		return;
-> >  
+> diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+> index 2f2ca06..b6746ca 100644
+> --- a/libxfs/libxfs_priv.h
+> +++ b/libxfs/libxfs_priv.h
+> @@ -118,6 +118,8 @@ enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
+>  #define xfs_alert_tag(mp,tag,fmt,args...)	cmn_err(CE_ALERT,fmt, ## args)
+>  
+>  #define xfs_hex_dump(d,n)		((void) 0)
+> +#define xfs_stack_trace()		((void) 0)
+> +
+>  
+>  #define xfs_force_shutdown(d,n)		((void) 0)
+>  
 > 
-> While we're on the topic, I notice that we skip discard for any device
-> that's actually a file.  Seeing as fallocate(PUNCH_HOLE) works on files
-> (and block devices), is there a reason why we avoid punching out fs
-> image files?
-
-Yeah - preallocated image files shouldn't be punched, because it
-defeats the whole purpose of setting up preallocated image files.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
