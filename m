@@ -1,83 +1,121 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:34786 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731523AbeISRh2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Sep 2018 13:37:28 -0400
-Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8JC1c4I055520
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 08:02:28 -0400
-Received: from e13.ny.us.ibm.com (e13.ny.us.ibm.com [129.33.205.203])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2mkmh13um5-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 08:02:27 -0400
-Received: from localhost
-        by e13.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Wed, 19 Sep 2018 07:59:50 -0400
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH V4 18/20] Fix generic/459 to work with 64k block size
-Date: Wed, 19 Sep 2018 17:30:51 +0530
-In-Reply-To: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
-References: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
-Message-Id: <20180919120053.7339-19-chandan@linux.vnet.ibm.com>
+Received: from mail-lf1-f68.google.com ([209.85.167.68]:39802 "EHLO
+        mail-lf1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727995AbeITI72 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Sep 2018 04:59:28 -0400
+Received: by mail-lf1-f68.google.com with SMTP id v77-v6so6998168lfa.6
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 20:18:18 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20180920014506.GL27618@dastard>
+References: <CAJCQCtQVzmwey0GcuHmZ8=_XuqmrA24d4DDVVuX9vL3KYStwZg@mail.gmail.com>
+ <20180920014506.GL27618@dastard>
+From: Chris Murphy <lists@colorremedies.com>
+Date: Wed, 19 Sep 2018 21:18:16 -0600
+Message-ID: <CAJCQCtQyws4LVJKrNiFST4ajFXB5ViXx=oRWq98r=tppa+K8FQ@mail.gmail.com>
+Subject: Re: inline extents
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, zlang@redhat.com, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>
+Cc: xfs list <linux-xfs@vger.kernel.org>, Btrfs BTRFS <linux-btrfs@vger.kernel.org>, linux-ext4@vger.kernel.org
 
-With 64k block size, 200MiB disk space is not sufficient to create an
-XFS filesystem. Hence this commit increases the size of the
-overprovisioned dm-thin device to 300MiB. The commit also increases the
-other associated disk sizes (original physical size and new physical
-size) appropriately.
+Adding fsdevel@, linux-ext4, and btrfs@ (which has a separate subject
+on this same issue)
 
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
----
- tests/generic/459 | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/tests/generic/459 b/tests/generic/459
-index aee71a0..c430952 100755
---- a/tests/generic/459
-+++ b/tests/generic/459
-@@ -59,14 +59,14 @@ vgname=vg_$seq
- lvname=lv_$seq
- poolname=pool_$seq
- snapname=snap_$seq
--origpsize=100
--virtsize=200
--newpsize=200
-+origpsize=200
-+virtsize=300
-+newpsize=300
- 
- # Ensure we have enough disk space
--_scratch_mkfs_sized $((250 * 1024 * 1024)) >>$seqres.full 2>&1
-+_scratch_mkfs_sized $((350 * 1024 * 1024)) >>$seqres.full 2>&1
- 
--# Create a 100MB dm-thin POOL
-+# Create a 200MB dm-thin POOL
- $LVM_PROG pvcreate -f $SCRATCH_DEV >>$seqres.full 2>&1
- $LVM_PROG vgcreate -f $vgname $SCRATCH_DEV >>$seqres.full 2>&1
- 
-@@ -74,7 +74,7 @@ $LVM_PROG lvcreate  --thinpool $poolname  --errorwhenfull y \
- 		    --zero n -L $origpsize \
- 		    --poolmetadatasize 4M $vgname >>$seqres.full 2>&1
- 
--# Create a overprovisioned 200MB dm-thin virt. device
-+# Create a overprovisioned 300MB dm-thin virt. device
- $LVM_PROG lvcreate  --virtualsize $virtsize \
- 		    -T $vgname/$poolname \
- 		    -n $lvname >>$seqres.full 2>&1
-@@ -92,7 +92,7 @@ _mount /dev/mapper/$vgname-$snapname $SCRATCH_MNT
- 
- # Consume all space available in the volume and freeze to ensure everything
- # required to make the fs consistent is flushed to disk.
--$XFS_IO_PROG -f -d -c 'pwrite -b 1m 0 120m' $SCRATCH_MNT/f1 >>$seqres.full 2>&1
-+$XFS_IO_PROG -f -d -c 'pwrite -b 1m 0 220m' $SCRATCH_MNT/f1 >>$seqres.full 2>&1
- 
- # In XFS, this freeze will never complete until the dm-thin POOL device is
- # extended. It is expected, and is only used so xfsaild is triggered to
+
+On Wed, Sep 19, 2018 at 7:45 PM, Dave Chinner <david@fromorbit.com> wrote:
+>On Wed, Sep 19, 2018 at 10:23:38AM -0600, Chris Murphy wrote:
+>> Fedora 29 has a new feature to test if boot+startup fails, so the
+>> bootloader can do a fallback at next boot, to a previously working
+>> entry. Part of this means GRUB (the bootloader code, not the user
+>> space code) uses "save_env" to overwrite the 1024 data bytes with
+>> updated environment information.
+>
+> That's just broken. Illegal. Completely unsupportable. Doesn't
+> matter what the filesystem is, nobody is allowed to write directly
+> to the block device a filesystem owns.
+
+Yeah, the word I'm thinking of is abomination.
+
+However in their defense, grubenv and the 'save_env' command are old features:
+
+line 3638 @node Environment block
+http://git.savannah.gnu.org/cgit/grub.git/tree/docs/grub.texi
+
+"For safety reasons, this storage is only available when installed on a plain
+disk (no LVM or RAID), using a non-checksumming filesystem (no ZFS), and
+using BIOS or EFI functions (no ATA, USB or IEEE1275)."
+
+I haven't checked how it tests for this. But by now, it should list
+the supported file systems, rather than what's exempt. That's a
+shorter list.
+
+
+> ext4 has inline data, too, so there's every chance grub will corrupt
+> ext4 filesystems with tit's wonderful new feature. I'm not sure if
+> the ext4 metadata cksums cover the entire inode and inline data, but
+> if they do it's the same problem as btrfs.
+
+I don't see inline used with a default mkfs, but I do see metadata_csum
+
+e2fsprogs-1.44.3-1.fc29.x86_64
+
+Filesystem features: has_journal ext_attr resize_inode dir_index
+filetype extent 64bit flex_bg sparse_super large_file huge_file
+dir_nlink extra_isize metadata_csum
+Filesystem flags: signed_directory_hash
+Default mount options: user_xattr acl
+
+>
+>> For XFS, I'm not sure how the inline extent is saved, and whether
+>> metadata checksumming includes or excludes the inline extent.
+>
+> When XFS implements this, it will be like btrfs as the data will be
+> covered by the metadata CRCs for the inode, and so writing directly
+> to it would corrupt the inode and render it unreadable by the
+> filesystem.
+
+Good to know.
+
+
+>
+>> I'm also kinda ignoring the reflink ramifications of this behavior,
+>> for now. Let's just say even if there's no corruption I'm really
+>> suspicious of bootloader code writing anything, even what seems to be
+>> a simple overwrite of two sectors.
+>
+> You're not the only one
+>
+> Like I said, it doesn't matter what the filesystem is, overwriting
+> file data by writing directly to the block device is not
+> supportable. It's essentially a filesystem corruption vector, and
+> grub needs to have that functionality removed immediately.
+
+I'm in agreement with respect to the more complex file systems. We've
+already realized the folly of the bootloader being unable to do
+journal replay, ergo it doesn't really for sure have a complete
+picture of the file system anyway. That's suboptimal when it results
+in boot failure. But if it were going to use stale file system
+information, get a wrong idea of the file system, and then use that to
+do even 1024 bytes of writes? No, no, and no.
+
+Meanwhile, also in Fedoraland, it's one of the distros where grubenv
+and grub.cfg stuff is on the EFI System partition, which is FAT. This
+overwrite behavior will work there, but even this case is a kind of
+betrayal that the file is being modified, without its metadata being
+updated. I think it's an old era hack that by today's standards simply
+isn't good enough. I'm a little surprised that all UEFI
+implementations permit arbitrary writes from the pre-boot environment
+to arbitrary block devices, even with Secure Boot enabled. That seems
+specious.
+
+I know some of the file systems have reserve areas for bootloader
+stuff. I'm not sure if that's preferred over bootloaders just getting
+their own partition and controlling it stem to stern however they
+want.
+
+
 -- 
-2.9.5
+Chris Murphy
