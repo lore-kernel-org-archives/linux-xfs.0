@@ -1,95 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:43534 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387451AbeITJkh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Sep 2018 05:40:37 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:37062 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388212AbeIUBsn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Sep 2018 21:48:43 -0400
+Date: Thu, 20 Sep 2018 13:03:29 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/2 v2] mkfs: discard only after all validations
+Message-ID: <20180920200329.GK20086@magnolia>
+References: <20180919125617.28048-1-jtulak@redhat.com>
+ <20180920092006.37596-1-jtulak@redhat.com>
 MIME-Version: 1.0
-References: <CACVXFVOBq3L_EjSTCoiqUL1PH=HMR5EuNNQV0hNndFpGxmUK6g@mail.gmail.com>
- <877ejh3jv0.fsf@vitty.brq.redhat.com> <20180919100256.GD23172@ming.t460p>
- <8736u53fij.fsf@vitty.brq.redhat.com> <20180920012836.GA27645@ming.t460p>
-In-Reply-To: <20180920012836.GA27645@ming.t460p>
-From: Yang Shi <shy828301@gmail.com>
-Date: Wed, 19 Sep 2018 20:59:07 -0700
-Message-ID: <CAHbLzkrq-CSBK8p-GbUgkhP0tMbA53=Es3v8Zw26qmf2t_vSQQ@mail.gmail.com>
-Subject: Re: block: DMA alignment of IO buffer allocated from slab
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20180920092006.37596-1-jtulak@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: ming.lei@redhat.com
-Cc: vkuznets@redhat.com, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Ming Lei <tom.leiming@gmail.com>, linux-block@vger.kernel.org, Linux MM <linux-mm@kvack.org>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, dchinner@redhat.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, hch@lst.de, axboe@kernel.dk
+To: Jan Tulak <jtulak@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Sep 19, 2018 at 6:28 PM Ming Lei <ming.lei@redhat.com> wrote:
->
-> On Wed, Sep 19, 2018 at 01:15:00PM +0200, Vitaly Kuznetsov wrote:
-> > Ming Lei <ming.lei@redhat.com> writes:
-> >
-> > > Hi Vitaly,
-> > >
-> > > On Wed, Sep 19, 2018 at 11:41:07AM +0200, Vitaly Kuznetsov wrote:
-> > >> Ming Lei <tom.leiming@gmail.com> writes:
-> > >>
-> > >> > Hi Guys,
-> > >> >
-> > >> > Some storage controllers have DMA alignment limit, which is often set via
-> > >> > blk_queue_dma_alignment(), such as 512-byte alignment for IO buffer.
-> > >>
-> > >> While mostly drivers use 512-byte alignment it is not a rule of thumb,
-> > >> 'git grep' tell me we have:
-> > >> ide-cd.c with 32-byte alignment
-> > >> ps3disk.c and rsxx/dev.c with variable alignment.
-> > >>
-> > >> What if our block configuration consists of several devices (in raid
-> > >> array, for example) with different requirements, e.g. one requiring
-> > >> 512-byte alignment and the other requiring 256?
-> > >
-> > > 512-byte alignment is also 256-byte aligned, and the sector size is 512 byte.
-> > >
-> >
-> > Yes, but it doesn't work the other way around, e.g. what if some device
-> > has e.g. PAGE_SIZE alignment requirement (this would likely imply that
-> > it's sector size is also not 512 I guess)?
->
-> Yeah, that can be true if one controller has 4k-byte sector size, also
-> its DMA alignment is 4K. But there shouldn't be cases in which the two
-> doesn't match.
->
-> >
-> > >
-> > > From the Red Hat BZ, looks I understand this issue is only triggered when
-> > > KASAN is enabled, or you have figured out how to reproduce it without
-> > > KASAN involved?
-> >
-> > Yes, any SLUB debug triggers it (e.g. build your kernel with
-> > SLUB_DEBUG_ON or slub_debug= options (Red zoning, User tracking, ... -
-> > everything will trigger it)
->
-> That means the slab always return 512-byte aligned buffer if the buffer
-> size is 512byte in case of no any slab debug options enabled.
->
-> The question is that if it is one reliable rule in slab. If yes, any
-> slab debug option does violate the rule.
+On Thu, Sep 20, 2018 at 11:20:06AM +0200, Jan Tulak wrote:
+> Discard should happen only when everything has been validated, just
+> before we start writing to the device. If it happens earlier, it is
+> possible that mkfs will abort, but managed to already wipe data. This
+> patch moves the discard to the latest possible moment.
+> 
+> Signed-off-by: Jan Tulak <jtulak@redhat.com>
 
-Once slub debug (i.e. red zone) is on, it will append extra bytes to
-the object, so the object may look like:
+Looks ok to me,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
------------------------------------------------------------------
-| object   | red zone | FP | owner track | red zone |
-------------------------------------------------------------------
+--D
 
-This is how slub debug is designed and how it works.
-
-CC to Chris Lameter who is the maintainer of SLUB.
-
-Regards,
-Yang
-
->
-> The same is true for 4k alignment and 4k sector size.
->
-> I think we need our MM guys to clarify this point.
->
->
-> Thanks,
-> Ming
->
+> ---
+> CHANGES:
+> v2
+> * discard_data -> discard_devices
+> * move the discard condition outside of the function
+> 
+> ---
+>  mkfs/xfs_mkfs.c | 22 ++++++++++++++++------
+>  1 file changed, 16 insertions(+), 6 deletions(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 2e53c1e8..c97c69e8 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -2389,8 +2389,7 @@ _("log stripe unit (%d bytes) is too large (maximum is 256KiB)\n"
+>  static void
+>  open_devices(
+>  	struct mkfs_params	*cfg,
+> -	struct libxfs_xinit	*xi,
+> -	bool			discard)
+> +	struct libxfs_xinit	*xi)
+>  {
+>  	uint64_t		sector_mask;
+>  
+> @@ -2419,10 +2418,15 @@ open_devices(
+>  	xi->dsize &= sector_mask;
+>  	xi->rtsize &= sector_mask;
+>  	xi->logBBsize &= (uint64_t)-1 << (max(cfg->lsectorlog, 10) - BBSHIFT);
+> +}
+>  
+> -
+> -	if (!discard)
+> -		return;
+> +static void
+> +discard_devices(
+> +	struct libxfs_xinit	*xi)
+> +{
+> +	/*
+> +	 * This function has to be called after libxfs has been initialized.
+> +	 */
+>  
+>  	if (!xi->disfile)
+>  		discard_blocks(xi->ddev, xi->dsize);
+> @@ -3901,7 +3905,7 @@ main(
+>  	/*
+>  	 * Open and validate the device configurations
+>  	 */
+> -	open_devices(&cfg, &xi, (discard && !dry_run));
+> +	open_devices(&cfg, &xi);
+>  	validate_datadev(&cfg, &cli);
+>  	validate_logdev(&cfg, &cli, &logfile);
+>  	validate_rtdev(&cfg, &cli, &rtfile);
+> @@ -3952,6 +3956,12 @@ main(
+>  			exit(0);
+>  	}
+>  
+> +	/*
+> +	 * All values have been validated, discard the old device layout.
+> +	 */
+> +	if (discard && !dry_run)
+> +		discard_devices(&xi);
+> +
+>  	/*
+>  	 * we need the libxfs buffer cache from here on in.
+>  	 */
+> -- 
+> 2.18.0
+> 
