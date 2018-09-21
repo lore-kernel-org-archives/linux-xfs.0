@@ -1,59 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:22826 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726321AbeIZHKl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 03:10:41 -0400
-Date: Wed, 26 Sep 2018 10:59:35 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Strange behavior with log IO fake-completions
-Message-ID: <20180926005935.GC31060@dastard>
-References: <CA+1E3r+crZ6suDtTheOysm_dzZ2FeU=z4R-aQQw7etk1yuxOLQ@mail.gmail.com>
- <20180910235827.GD5631@dastard>
- <CA+1E3r+Lggw9JJymdhoyzkqQfqGETZE=R=WG09s7FOhY3Snb5g@mail.gmail.com>
- <20180912004259.GJ5631@dastard>
- <CA+1E3r+gd57nOv=S0gjrbU8df2qXa67njPP=KK1oPqLmsO5thQ@mail.gmail.com>
- <20180917025601.GE16550@dastard>
- <20180921002336.GO27618@dastard>
- <CA+1E3rJ5d9ie8z79ph-71P-w1hSiR1Rdz7vAugv0vELF=sb5aA@mail.gmail.com>
- <CA+1E3rL1JA1PWC+53aU+RQcxFucccXu7M-K-m9AiEXaCjfCF=w@mail.gmail.com>
+Received: from verein.lst.de ([213.95.11.211]:35874 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725898AbeIULKX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 21 Sep 2018 07:10:23 -0400
+Date: Fri, 21 Sep 2018 07:23:14 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 5/5] xfs: introduce an always_cow mode
+Message-ID: <20180921052314.GA12825@lst.de>
+References: <20180920144220.2181-1-hch@lst.de> <20180920144220.2181-6-hch@lst.de> <20180920201702.GN20086@magnolia> <20180920212357.GN27618@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <CA+1E3rL1JA1PWC+53aU+RQcxFucccXu7M-K-m9AiEXaCjfCF=w@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20180920212357.GN27618@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Joshi <joshiiitr@gmail.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On Mon, Sep 24, 2018 at 07:55:02PM +0530, Joshi wrote:
-> > I changed all log wait queues (ic_force_wait, ic_write_wait, and
-> xc_commit_wait) into completion variables (despite knowing that it is
-> also implemented using wait_queue).
-> 
-> Sorry, ignore this and subsequent part of the text. I think replacing
-> with completion requires more work than I did.Calling "complete_all"
-> is tricky, given the need of calling "reinit_completion" which may get
-> executed by multiple threads in this case.
+On Fri, Sep 21, 2018 at 07:23:57AM +1000, Dave Chinner wrote:
+> sys/fs/xfs/debug/always_cow is the place for this if it is truly a
+> global debug option. However, that's probably not the best way to
+> enable this sort of debug for people with XFS root filesystems
+> trying to test XFS filesystems. I suspect it should be a per-mount
+> configuration (i.e. /sys/fs/xfs/<dev>/debug/always_cow)
 
-Yup.
+True.
 
-Perhaps 
-you might like to look at this recent patch set aimed at reducing
-spurious wake-ups and lock contention in the log reservation code:
+> However, this mode of operation seems like it is going to form the
+> basis of other per-filesystem features, so it would be good to know
+> how/if those features make use of this always_cow mode or are
+> controlled by some other set of knobs first.
 
-https://marc.info/?l=linux-kernel&m=153531683127094&w=2
+The current atomic write support is a per-inode fcntl based flag.
+(used to be an O_ATOMIC per open file flag, but that had all kinds
+of issues).
 
-Not sure it applies to this case, but it still may be useful to you.
+The zoned device support doesn't really existing for a bit of prototype
+write path code, but the current assumption is that all files in
+ѕequential write only zones have the RT bit set, and will get this
+behavior on that an a per-subperblock flag.
 
-BTW, when posting benchmark results, can you also include a baseline
-result from a completely unmodified kernel and the patches you are
-testing? Nobody can evaluate the correctness or effectiveness of the
-changes you are testing without these things....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+In other words - the know here is supposed to remain a debug build
+only debug nob.
