@@ -1,252 +1,164 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:36150 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732616AbeITU00 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Sep 2018 16:26:26 -0400
-Received: from 089144198037.atnat0007.highway.a1.net ([89.144.198.37] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1g30A9-0006gT-Pi
-        for linux-xfs@vger.kernel.org; Thu, 20 Sep 2018 14:42:38 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 5/5] xfs: introduce an always_cow mode
-Date: Thu, 20 Sep 2018 16:42:20 +0200
-Message-Id: <20180920144220.2181-6-hch@lst.de>
-In-Reply-To: <20180920144220.2181-1-hch@lst.de>
-References: <20180920144220.2181-1-hch@lst.de>
+Received: from james.kirk.hungrycats.org ([174.142.39.145]:36418 "EHLO
+        james.kirk.hungrycats.org" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726160AbeIUK1U (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Sep 2018 06:27:20 -0400
+Date: Fri, 21 Sep 2018 00:40:13 -0400
+From: Zygo Blaxell <ce3g8jdj@umail.furryterror.org>
+Subject: Re: [patch] file dedupe (and maybe clone) data corruption (was Re:
+ [PATCH] generic: test for deduplication between different files)
+Message-ID: <20180921044013.GD11392@hungrycats.org>
+References: <20180820010932.GV2234@dastard>
+ <20180820153349.GA4334@magnolia>
+ <20180823125849.GF13528@hungrycats.org>
+ <20180830062743.GF5631@dastard>
+ <20180831051045.GI26989@hungrycats.org>
+ <20180906083809.GF27618@dastard>
+ <20180907035305.GJ26989@hungrycats.org>
+ <20180910090646.GB5631@dastard>
+ <20180919041203.GA11397@hungrycats.org>
+ <20180921025931.GI16550@dastard>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="iVCmgExH7+hIHJ1A"
+Content-Disposition: inline
+In-Reply-To: <20180921025931.GI16550@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, fdmanana@kernel.org, fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, Filipe Manana <fdmanana@suse.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-When the (debug-only) always_cow module parameter is set, we will always
-write out place, even if the file is not reflinked.  In addition to being
-a useful debug aid this prepares for modes where we must always write
-out of place.  An example for that is the upcoming support for atomic
-overwrites.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_aops.c    |  2 +-
- fs/xfs/xfs_file.c    |  2 +-
- fs/xfs/xfs_iomap.c   |  8 +++----
- fs/xfs/xfs_reflink.c | 50 ++++++++++++++++++++++++++++++++------------
- fs/xfs/xfs_reflink.h | 13 ++++++++++++
- 5 files changed, 56 insertions(+), 19 deletions(-)
+--iVCmgExH7+hIHJ1A
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 775cdcfe70c2..65352d52d24a 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -980,7 +980,7 @@ xfs_vm_bmap(
- 	 * Since we don't pass back blockdev info, we can't return bmap
- 	 * information for rt files either.
- 	 */
--	if (xfs_is_reflink_inode(ip) || XFS_IS_REALTIME_INODE(ip))
-+	if (xfs_is_cow_inode(ip) || XFS_IS_REALTIME_INODE(ip))
- 		return 0;
- 	return iomap_bmap(mapping, block, &xfs_iomap_ops);
- }
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index fa8fbc84eec8..2756fc583716 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -507,7 +507,7 @@ xfs_file_dio_aio_write(
- 		 * We can't properly handle unaligned direct I/O to reflink
- 		 * files yet, as we can't unshare a partial block.
- 		 */
--		if (xfs_is_reflink_inode(ip)) {
-+		if (xfs_is_cow_inode(ip)) {
- 			trace_xfs_reflink_bounce_dio_write(ip, iocb->ki_pos, count);
- 			return -EREMCHG;
- 		}
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 1bfc40ce581a..398c5b23a368 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -570,7 +570,7 @@ xfs_delalloc_iomap_begin(
- 	if (eof)
- 		got.br_startoff = maxbytes_fsb;
- 	if (got.br_startoff <= offset_fsb) {
--		if (xfs_is_reflink_inode(ip) &&
-+		if (xfs_is_cow_inode(ip) &&
- 		    ((flags & IOMAP_WRITE) ||
- 		     got.br_state != XFS_EXT_UNWRITTEN)) {
- 			end_fsb = min(XFS_B_TO_FSB(mp, offset + count),
-@@ -1048,7 +1048,7 @@ xfs_ilock_for_iomap(
- 	 * COW writes may allocate delalloc space or convert unwritten COW
- 	 * extents, so we need to make sure to take the lock exclusively here.
- 	 */
--	if (xfs_is_reflink_inode(ip) && is_write) {
-+	if (xfs_is_cow_inode(ip) && is_write) {
- 		/*
- 		 * FIXME: It could still overwrite on unshared extents and not
- 		 * need allocation.
-@@ -1082,7 +1082,7 @@ xfs_ilock_for_iomap(
- 	 * check, so if we got ILOCK_SHARED for a write and but we're now a
- 	 * reflink inode we have to switch to ILOCK_EXCL and relock.
- 	 */
--	if (mode == XFS_ILOCK_SHARED && is_write && xfs_is_reflink_inode(ip)) {
-+	if (mode == XFS_ILOCK_SHARED && is_write && xfs_is_cow_inode(ip)) {
- 		xfs_iunlock(ip, mode);
- 		mode = XFS_ILOCK_EXCL;
- 		goto relock;
-@@ -1151,7 +1151,7 @@ xfs_file_iomap_begin(
- 	 * Break shared extents if necessary. Checks for non-blocking IO have
- 	 * been done up front, so we don't need to do them here.
- 	 */
--	if (xfs_is_reflink_inode(ip)) {
-+	if (xfs_is_cow_inode(ip)) {
- 		error = xfs_reflink_allocate_cow(ip, &imap, &shared, &lockmode);
- 		if (error)
- 			goto out_unlock;
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index b25ea7a3a0e7..a893f6d65ff0 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -129,6 +129,11 @@
-  * ioend, the better.
-  */
- 
-+#ifdef DEBUG
-+bool xfs_always_cow;
-+module_param_named(always_cow, xfs_always_cow, bool, 0644);
-+#endif
-+
- /*
-  * Given an AG extent, find the lowest-numbered run of shared blocks
-  * within that range and return the range in fbno/flen.  If
-@@ -192,7 +197,7 @@ xfs_reflink_trim_around_shared(
- 	int			error = 0;
- 
- 	/* Holes, unwritten, and delalloc extents cannot be shared */
--	if (!xfs_is_reflink_inode(ip) || !xfs_bmap_is_real_extent(irec)) {
-+	if (!xfs_is_cow_inode(ip) || !xfs_bmap_is_real_extent(irec)) {
- 		*shared = false;
- 		return 0;
- 	}
-@@ -234,6 +239,22 @@ xfs_reflink_trim_around_shared(
- 	}
- }
- 
-+static bool
-+xfs_inode_need_cow(
-+	struct xfs_inode	*ip,
-+	struct xfs_bmbt_irec	*imap,
-+	bool			*shared)
-+{
-+	/* We can't update any real extents in always COW mode. */
-+	if (xfs_always_cow && !isnullstartblock(imap->br_startblock)) {
-+		*shared = true;
-+		return 0;
-+	}
-+
-+	/* Trim the mapping to the nearest shared extent boundary. */
-+	return xfs_reflink_trim_around_shared(ip, imap, shared);
-+}
-+
- /*
-  * Trim the passed in imap to the next shared/unshared extent boundary, and
-  * if imap->br_startoff points to a shared extent reserve space for it in the
-@@ -248,13 +269,17 @@ xfs_reflink_reserve_cow(
- 	struct xfs_inode	*ip,
- 	struct xfs_bmbt_irec	*imap)
- {
--	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
- 	struct xfs_bmbt_irec	got;
- 	int			error = 0;
- 	bool			eof = false;
- 	struct xfs_iext_cursor	icur;
- 	bool			shared;
- 
-+	if (!ip->i_cowfp) {
-+		ASSERT(!xfs_is_reflink_inode(ip));
-+		xfs_ifork_init_cow(ip);
-+	}
-+
- 	/*
- 	 * Search the COW fork extent list first.  This serves two purposes:
- 	 * first this implement the speculative preallocation using cowextisze,
-@@ -263,8 +288,8 @@ xfs_reflink_reserve_cow(
- 	 * extent list is generally faster than going out to the shared extent
- 	 * tree.
- 	 */
--
--	if (!xfs_iext_lookup_extent(ip, ifp, imap->br_startoff, &icur, &got))
-+	if (!xfs_iext_lookup_extent(ip, ip->i_cowfp, imap->br_startoff, &icur,
-+			&got))
- 		eof = true;
- 	if (!eof && got.br_startoff <= imap->br_startoff) {
- 		trace_xfs_reflink_cow_found(ip, imap);
-@@ -273,14 +298,10 @@ xfs_reflink_reserve_cow(
- 	}
- 
- 	/* Trim the mapping to the nearest shared extent boundary. */
--	error = xfs_reflink_trim_around_shared(ip, imap, &shared);
--	if (error)
-+	error = xfs_inode_need_cow(ip, imap, &shared);
-+	if (error || !shared)
- 		return error;
- 
--	/* Not shared?  Just report the (potentially capped) extent. */
--	if (!shared)
--		return 0;
--
- 	/*
- 	 * Fork all the shared blocks from our write offset until the end of
- 	 * the extent.
-@@ -374,7 +395,7 @@ xfs_find_trim_cow_extent(
- 	if (got.br_startoff > offset_fsb) {
- 		xfs_trim_extent(imap, imap->br_startoff,
- 				got.br_startoff - imap->br_startoff);
--		return xfs_reflink_trim_around_shared(ip, imap, shared);
-+		return xfs_inode_need_cow(ip, imap, shared);
- 	}
- 
- 	*shared = true;
-@@ -408,7 +429,10 @@ xfs_reflink_allocate_cow(
- 	xfs_extlen_t		resblks = 0;
- 
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
--	ASSERT(xfs_is_reflink_inode(ip));
-+	if (!ip->i_cowfp) {
-+		ASSERT(!xfs_is_reflink_inode(ip));
-+		xfs_ifork_init_cow(ip);
-+	}
- 
- 	error = xfs_find_trim_cow_extent(ip, imap, shared, &found);
- 	if (error || !*shared)
-@@ -585,7 +609,7 @@ xfs_reflink_cancel_cow_range(
- 	int			error;
- 
- 	trace_xfs_reflink_cancel_cow_range(ip, offset, count);
--	ASSERT(xfs_is_reflink_inode(ip));
-+	ASSERT(ip->i_cowfp);
- 
- 	offset_fsb = XFS_B_TO_FSBT(ip->i_mount, offset);
- 	if (count == NULLFILEOFF)
-diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index 7f47202b5639..b89e07239b82 100644
---- a/fs/xfs/xfs_reflink.h
-+++ b/fs/xfs/xfs_reflink.h
-@@ -6,6 +6,19 @@
- #ifndef __XFS_REFLINK_H
- #define __XFS_REFLINK_H 1
- 
-+#ifdef DEBUG
-+extern bool xfs_always_cow;
-+#else
-+#define xfs_always_cow	false
-+#endif
-+
-+static inline bool xfs_is_cow_inode(struct xfs_inode *ip)
-+{
-+	return xfs_is_reflink_inode(ip) ||
-+		(xfs_always_cow &&
-+		 xfs_sb_version_hasreflink(&ip->i_mount->m_sb));
-+}
-+
- extern int xfs_reflink_find_shared(struct xfs_mount *mp, struct xfs_trans *tp,
- 		xfs_agnumber_t agno, xfs_agblock_t agbno, xfs_extlen_t aglen,
- 		xfs_agblock_t *fbno, xfs_extlen_t *flen, bool find_maximal);
--- 
-2.18.0
+On Fri, Sep 21, 2018 at 12:59:31PM +1000, Dave Chinner wrote:
+> On Wed, Sep 19, 2018 at 12:12:03AM -0400, Zygo Blaxell wrote:
+[...]
+> With no DMAPI in the future, people with custom HSM-like interfaces
+> based on dmapi are starting to turn to fanotify and friends to
+> provide them with the change notifications they require....
+
+I had a fanotify-based scanner once, before I noticed btrfs effectively
+had timestamps all over its metadata.
+
+fanotify won't tell me which parts of a file were modified (unless it
+got that feature in the last few years?).  fanotify was pretty useless
+when the only file on the system that was being modified was a 13TB
+VM image.  Or even a little 16GB one.  Has to scan the whole file to
+find the one new byte.  Even on desktops the poor thing spends most of
+its time looping over /var/log/messages.  It was sad.
+
+If fanotify gave me (inode, offset, length) tuples of dirty pages in
+cache, I could look them up and use a dedupe_file_range call to replace
+the dirty pages with a reference to an existing disk block.  If my
+listener can do that fast enough, it's in-band dedupe; if it doesn't,
+the data gets flushed to disk as normal, and I fall back to a scan of
+the filesystem to clean it up later.
+
+> > > e.g. a soft requirement is that we need to scan the entire fs at
+> > > least once a month.=20
+> >=20
+> > I have to scan and dedupe multiple times per hour.  OK, the first-ever
+> > scan of a non-empty filesystem is allowed to take much longer, but after
+> > that, if you have enough spare iops for continuous autodefrag you should
+> > also have spare iops for continuous dedupe.
+>=20
+> Yup, but using notifications avoids the for even these scans - you'd
+> know exactly what data has changed, when it changed, and know
+> exactly that you needed to read to calculate the new hashes.
+
+=2E..if the scanner can keep up with the notifications; otherwise, the
+notification receiver has to log them somewhere for the scanner to
+catch up.  If there are missed or dropped notifications--or 23 hours a
+day we're not listening for notifications because we only have an hour
+a day maintenance window--some kind of filesystem scan has to be done
+after the fact anyway.
+
+> > > A simple piece-wise per-AG scanning algorithm (like we use in
+> > > xfs_repair) could easily work within a 3GB RAM per AG constraint and
+> > > would scale very well. We'd only need to scan 30-40 AGs in the hour,
+> > > and a single AG at 1GB/s will only take 2 minutes to scan. We can
+> > > then do the processing while the next AG gets scanned. If we've got
+> > > 10-20GB RAM to use (and who doesn't when they have 1PB of storage?)
+> > > then we can scan 5-10AGs at once to keep the IO rate up, and process
+> > > them in bulk as we scan more.
+> >=20
+> > How do you match dupe blocks from different AGs if you only keep RAM for
+> > the duration of one AG scan?  Do you not dedupe across AG boundaries?
+>=20
+> We could, but do we need too? There's a heap of runtime considerations
+> at the filesystem level we need to take into consideration here, and
+> there's every chance that too much consolidation creates
+> unpredictable bottlenecks in overwrite workloads that need to break
+> the sharing (i.e. COW operations).
+
+I'm well aware of that.  I have a bunch of hacks in bees to not be too
+efficient lest it push the btrfs reflink bottlenecks too far.
+
+> e.g. An AG contains up to 1TB of data which is more than enough to
+> get decent AG-internal dedupe rates. If we've got 1PB of data spread
+> across 1000AGs, deduping a million copies of a common data pattern
+> spread across the entire filesystem down to one per AG (i.e. 10^6
+> copies down to 10^3) still gives a massive space saving.
+
+That's true for 1000+ AG filesystems, but it's a bigger problem for
+filesystems of 2-5 AGs, where each AG holds one copy of 20-50% of the
+duplicates on the filesystem.
+
+OTOH, a filesystem that small could just be done in one pass with a
+larger but still reasonable amount of RAM.
+
+> > What you've described so far means the scope isn't limited anyway.  If =
+the
+> > call is used to dedupe two heavily-reflinked extents together (e.g.
+> > both duplicate copies are each shared by thousands of snapshots that
+> > have been created during the month-long period between dedupe runs),
+> > it could always be stuck doing a lot of work updating dst owners.
+> > Was there an omitted detail there?
+>=20
+> As I said early in the discussion - if both copies of identical data
+> are already shared hundreds or thousands of times each, then it
+> makes no sense to dedupe them again. All that does is create huge
+> amounts of work updating metadata for very little additional gain.
+
+I've had a user complain about the existing 2560-reflink limit in bees,
+because they were starting with 3000 snapshots of their data before they
+ran dedupe for the first time, so almost all their data started above
+the reflink limit before dedupe, and no dedupes occurred because of that.
+
+Build servers end up with a 3-4 digit number of reflinks to every file
+after dedupe, then they make snapshots of a subvol of a million such files
+to back it up--instantly but temporarily doubling every reflink count.
+Billions of reflink updates in only 10 TB of space.
+
+Updating a thousand reflinks to an extent sounds like a stupid amount of
+work, but in configurations like these it is just the price of deduping
+anything.
+
+Still, there has to be a limit somewhere--millions of refs to a block
+might be a reasonable absurdity cutoff.
+
+
+> Cheers,
+>=20
+> Dave.
+> --=20
+> Dave Chinner
+> david@fromorbit.com
+>=20
+
+--iVCmgExH7+hIHJ1A
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iF0EABECAB0WIQSnOVjcfGcC/+em7H2B+YsaVrMbnAUCW6R2JQAKCRCB+YsaVrMb
+nFGdAKDCrCigLAUE/1ow/rDRWMdu6i/qwgCeLYmdgGfc8AQQCj62JvFQo09cqLc=
+=GPz1
+-----END PGP SIGNATURE-----
+
+--iVCmgExH7+hIHJ1A--
