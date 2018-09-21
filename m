@@ -1,139 +1,178 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ed1-f66.google.com ([209.85.208.66]:41477 "EHLO
-        mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728100AbeIUSnG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Sep 2018 14:43:06 -0400
-Received: by mail-ed1-f66.google.com with SMTP id f38-v6so10635484edd.8
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Sep 2018 05:54:19 -0700 (PDT)
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:64443 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727141AbeIUIqU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Sep 2018 04:46:20 -0400
+Date: Fri, 21 Sep 2018 12:59:31 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [patch] file dedupe (and maybe clone) data corruption (was Re:
+ [PATCH] generic: test for deduplication between different files)
+Message-ID: <20180921025931.GI16550@dastard>
+References: <20180819231126.GU2234@dastard>
+ <20180820010932.GV2234@dastard>
+ <20180820153349.GA4334@magnolia>
+ <20180823125849.GF13528@hungrycats.org>
+ <20180830062743.GF5631@dastard>
+ <20180831051045.GI26989@hungrycats.org>
+ <20180906083809.GF27618@dastard>
+ <20180907035305.GJ26989@hungrycats.org>
+ <20180910090646.GB5631@dastard>
+ <20180919041203.GA11397@hungrycats.org>
 MIME-Version: 1.0
-References: <CA+1E3r+crZ6suDtTheOysm_dzZ2FeU=z4R-aQQw7etk1yuxOLQ@mail.gmail.com>
- <20180910235827.GD5631@dastard> <CA+1E3r+Lggw9JJymdhoyzkqQfqGETZE=R=WG09s7FOhY3Snb5g@mail.gmail.com>
- <20180912004259.GJ5631@dastard> <CA+1E3r+gd57nOv=S0gjrbU8df2qXa67njPP=KK1oPqLmsO5thQ@mail.gmail.com>
- <20180917025601.GE16550@dastard> <20180921002336.GO27618@dastard>
-In-Reply-To: <20180921002336.GO27618@dastard>
-From: Joshi <joshiiitr@gmail.com>
-Date: Fri, 21 Sep 2018 18:24:07 +0530
-Message-ID: <CA+1E3rJ5d9ie8z79ph-71P-w1hSiR1Rdz7vAugv0vELF=sb5aA@mail.gmail.com>
-Subject: Re: Strange behavior with log IO fake-completions
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180919041203.GA11397@hungrycats.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com
-Cc: linux-xfs@vger.kernel.org
+To: Zygo Blaxell <ce3g8jdj@umail.furryterror.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, fdmanana@kernel.org, fstests@vger.kernel.org, linux-btrfs@vger.kernel.org, Filipe Manana <fdmanana@suse.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-I added some timing measurement code and obtained data for "dd" sync
-requests (dd if=/dev/zero of=/mnt/f1 bs=4k count=1000 oflag=sync).
-Let me define these times -
-T1= xfs_log_force_lsn time (loosely, this is overall time to complete
-one fsync request)
-And within xfs_log_foce_lsn , these were added -
-T2 = xlog_cil_force_lsn time
-T3 = xlog_wait time for ic_force_wait
-Last one is this -
-T4 =  Time elapsed between issuing wake-up on ic_force_wait (during
-completion) and thread waiting on ic_force_wait (dd in this case)
-resumed execution
-Basically T1 = T2+T3 +some_more, and T3 = T4 + some_more.
+On Wed, Sep 19, 2018 at 12:12:03AM -0400, Zygo Blaxell wrote:
+> On Mon, Sep 10, 2018 at 07:06:46PM +1000, Dave Chinner wrote:
+> > On Thu, Sep 06, 2018 at 11:53:06PM -0400, Zygo Blaxell wrote:
+> > > On Thu, Sep 06, 2018 at 06:38:09PM +1000, Dave Chinner wrote:
+> > > > On Fri, Aug 31, 2018 at 01:10:45AM -0400, Zygo Blaxell wrote:
+> > > > > On Thu, Aug 30, 2018 at 04:27:43PM +1000, Dave Chinner wrote:
+> > > > > > On Thu, Aug 23, 2018 at 08:58:49AM -0400, Zygo Blaxell wrote:
+> > > > > For future development I've abandoned the entire dedupe_file_range
+> > > > > approach.  I need to be able to read and dedupe the data blocks of
+> > > > > the filesystem directly without having to deal with details like which
+> > > > > files those blocks belong to, especially on filesystems with lots of
+> > > > > existing deduped blocks and snapshots. 
+> > > > 
+> > > > IOWs, your desired OOB dedupe algorithm is:
+> > > > 
+> > > > 	a) ask the filesystem where all it's file data is
+> > > 
+> > > Actually, it's "ask the filesystem where all the *new* file data is"
+> > > since we don't want to read any unique data twice on subsequent runs.
+> > 
+> > Sorry, how do you read "unique data" twice? By definition, unique
+> > data only occurs once....
+> 
+> ...but once it has been read, we don't want to read it again.  Ever.
+> Even better would be to read unique data less than 1.0 times on average.
+> 
+> > Oh, and you still need to hash the old data so you can find
+> > collisions with the new data that got written. Unless, of course,
+> > you are keeping your hash tree in a persistent database 
+> 
+> I do that.
 
-Here is the data for 1 dd-sync request (trend remains mostly same for
-all requests) -
-Base case: T1= 37096,  T2=11070,  T3=19130,  T4=2410
-FC case:    T1= 101206, T2=47150, T3=45443,  T4=29483
+OK, so you're slowly re-inventing the typical HSM implementation
+that keep a userspace database to keep track of what is happening in
+the filesystem. They do this to make better decisions when moving
+less frequently accessed data out to a slower teirs of storage to
+keep space in the primary storage available as it fills up. You're
+approaching dedupe in essentially the same way, for very similar
+reasons.
 
-T4 in fake-completion case seemed particularly odd to me. "dd" took so
-much time to resume even after wake up was issued on ic_force_wait!
-Looks like fast log completion is making xfs wait queues behave odd.
-I changed all log wait queues (ic_force_wait, ic_write_wait, and
-xc_commit_wait) into completion variables (despite knowing that it is
-also implemented using wait_queue).
-And it brought down the value of T4.
-Overall numbers with iozone/varmail look like this -
+> One big difference I am noticing in our approaches is latency.  ZFS (and
+> in-kernel btrfs dedupe) provides minimal dedupe latency (duplicate
+> data occupies disk space for zero time as it is never written to disk
+> at all) but it requires more RAM for a given dedupe hit rate than any
+> other dedupe implementation I've seen.  What you've written tells me
+> XFS saves RAM by partitioning the data and relying on an existing but
+> very large source of iops (sharing scrub reads with dedupe), but then
+> the dedupe latency is the same as the scrub interval (the worst so far).
 
-Iozone(48 cpus)
-Threads       Base           FC
-1                149149.2    151444.5
-2                251794.5     255033.1
-Varmail (48 cpus)
-Threads      Base          FC
-1                 61500.9     62396.4
-2                 102834.9   103080.1
+That's just the background maintenance implementation. xfs_fsr can
+run this way, but it can also be run as a complete immediate scan,
+or it can be pointed at a defined set of files to run on. We can
+(and probably will) do exactly the same thing with dedupe.
 
-However, base case numbers also got improved. Earlier base numbers
-were comparatively very low with 48 cpus.
+> bees aims to have latency of a few minutes (ideally scanning data while
+> it's still dirty in cache, but there's no good userspace API for that)
+> though it's obviously not there yet.
 
-Thanks,
-On Fri, Sep 21, 2018 at 5:53 AM Dave Chinner <david@fromorbit.com> wrote:
->
-> On Mon, Sep 17, 2018 at 12:56:01PM +1000, Dave Chinner wrote:
-> > On Fri, Sep 14, 2018 at 05:21:43PM +0530, Joshi wrote:
-> > > > Now, your other "unexpected" result - lets use affinity to confine
-> > > > everything to one CPU:
-> > > >
-> > > > fsync proc              CIL             IO-complete     log
-> > > > xfs_log_force_lsn
-> > > >   <wait for CIL>
-> > > >                         xlog_write()
-> > > >                         <queue to log>
-> > > >                         wake CIL waiters
-> > > >                                                         xlog_iodone()
-> > > >                                                         wake iclogbug waiters
-> > > > log force done
-> > > >
-> > > > Note the difference? The log work can't start until the CIL work has
-> > > > completed because it's constrained to the same CPU, so it doesn't
-> > > > cause any contention with the finalising of the CIL push and waking
-> > > > waiters.
-> > >
-> > > "Log work can't start" part does not sound very good either. It needed
-> > > to be done anyway before task waiting for fsync is woken.
-> >
-> > I'm beginning to think you don't really understand how logging in
-> > XFS works.  If you want to improve the logging subsystem, it would
-> > be a good idea for you to read and understand this document so you
-> > have some idea of how the data that is written to the log gets
-> > there and what happens to it after it's in the log.
-> >
-> > Documentation/filesystems/xfs-delayed-logging-design.txt
->
-> It occurred to me yesterday that looking at the journal in a
-> different way might help explain how it all works.
->
-> Instead of looking at it as an IO engine, think of how an
-> out-of-order CPU is designed to be made up of multiple stages in a
-> pipeline - each stage does a small piece of work that it passes on
-> to the next stage to process. Individual operation progresses serially
-> through the pipeline, but, each stage of the pipeline can be
-> operating on a different operation. Hence we can have multiple
-> operations in flight at once, and the operations can also be run
-> out of order as dynamical stage completion scheduling dictates.
-> However, from a high level everything appears to complete in order
-> because of re-ordering stages put everythign in order once the
-> indiivdual operations have been executed.
->
-> Similarly, the XFS journalling subsystem is an out of order,
-> multi-stage pipeline with a post-IO re-ordering stage to ensure the
-> end result is that individual operations always appear to complete
-> in order.  Indeed, what ends up on disk in the journal is not in
-> order, so one of the things that log recovery does is rebuild the
-> state necessarily to reorder operations correctly before replay so
-> that, again, it appears like everything occurred in the order that
-> the transactions were committed to the journal.
->
-> So perhaps looking at it as a multi-stage pipeline might also help
-> explain why fake-completion changes the behaviour in unpredictable
-> ways. i.e. it basically chops out stages of the pipeline, changing
-> the length of the pipeline and the order in which stages of the
-> pipleine are executed.
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+Yup, this is pretty much the "I need immediate notification that a
+file changed" problem that HSMs face. That's one of the things DMAPI
+was used for - XFS has (now unused) dmapi event notification fields in
+it's inode structure that were used by DMAPI to configure the
+notifications the filesystem was supposed to send userspace....
 
+With no DMAPI in the future, people with custom HSM-like interfaces
+based on dmapi are starting to turn to fanotify and friends to
+provide them with the change notifications they require....
 
+> > e.g. a soft requirement is that we need to scan the entire fs at
+> > least once a month. 
+> 
+> I have to scan and dedupe multiple times per hour.  OK, the first-ever
+> scan of a non-empty filesystem is allowed to take much longer, but after
+> that, if you have enough spare iops for continuous autodefrag you should
+> also have spare iops for continuous dedupe.
 
+Yup, but using notifications avoids the for even these scans - you'd
+know exactly what data has changed, when it changed, and know
+exactly that you needed to read to calculate the new hashes.
+
+> > A simple piece-wise per-AG scanning algorithm (like we use in
+> > xfs_repair) could easily work within a 3GB RAM per AG constraint and
+> > would scale very well. We'd only need to scan 30-40 AGs in the hour,
+> > and a single AG at 1GB/s will only take 2 minutes to scan. We can
+> > then do the processing while the next AG gets scanned. If we've got
+> > 10-20GB RAM to use (and who doesn't when they have 1PB of storage?)
+> > then we can scan 5-10AGs at once to keep the IO rate up, and process
+> > them in bulk as we scan more.
+> 
+> How do you match dupe blocks from different AGs if you only keep RAM for
+> the duration of one AG scan?  Do you not dedupe across AG boundaries?
+
+We could, but do we need too? There's a heap of runtime considerations
+at the filesystem level we need to take into consideration here, and
+there's every chance that too much consolidation creates
+unpredictable bottlenecks in overwrite workloads that need to break
+the sharing (i.e. COW operations).
+
+e.g. An AG contains up to 1TB of data which is more than enough to
+get decent AG-internal dedupe rates. If we've got 1PB of data spread
+across 1000AGs, deduping a million copies of a common data pattern
+spread across the entire filesystem down to one per AG (i.e. 10^6
+copies down to 10^3) still gives a massive space saving.
+
+However, still having multiple copies means that when an overwrite
+occurs we don't have a single global block that everyone contends on
+trying to COW it. i.e. dedupe within an AG means we can run both
+dedupe and COW operations wholly within a single AG. That means
+ENOSPC operation is much more reliable, we have less complex
+locking, we don't do as much work, we only need to manage one set of
+freelist blocks, etc.
+
+> > I'd like a pony, too.
+> 
+> I have friends with an assortment of horses.  What kind of pony would
+> you like?  ;)
+
+Rainbow, please :P
+
+> > However, I think that such bottom up operations are nearly
+> > impossible to do atomically because they invert the locking orders
+> > of normal operations and are completely open-ended in scope in what
+> > they may need to update.  
+> 
+> I don't think it needs to be atomic at all.  dedupe only needs a way
+> to know if it has lost a race and continue gracefully, and that can be
+
+Detecting races reliably implies locking and/or making operational
+state changes appear atomic to external observers.
+
+> What you've described so far means the scope isn't limited anyway.  If the
+> call is used to dedupe two heavily-reflinked extents together (e.g.
+> both duplicate copies are each shared by thousands of snapshots that
+> have been created during the month-long period between dedupe runs),
+> it could always be stuck doing a lot of work updating dst owners.
+> Was there an omitted detail there?
+
+As I said early in the discussion - if both copies of identical data
+are already shared hundreds or thousands of times each, then it
+makes no sense to dedupe them again. All that does is create huge
+amounts of work updating metadata for very little additional gain.
+
+Cheers,
+
+Dave.
 -- 
-Joshi
+Dave Chinner
+david@fromorbit.com
