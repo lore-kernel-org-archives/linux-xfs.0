@@ -1,80 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:43134 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726128AbeIUCRH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Sep 2018 22:17:07 -0400
-Date: Thu, 20 Sep 2018 13:31:46 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 04/10] xfs: simplify the IOMAP_ZERO check in
- xfs_file_iomap_begin a bit
-Message-ID: <20180920203146.GR20086@magnolia>
-References: <20180917205354.15401-1-hch@lst.de>
- <20180917205354.15401-5-hch@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:36286 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728098AbeIUSxM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 21 Sep 2018 14:53:12 -0400
+From: Vitaly Kuznetsov <vkuznets@redhat.com>
+Subject: Re: block: DMA alignment of IO buffer allocated from slab
+References: <CACVXFVOBq3L_EjSTCoiqUL1PH=HMR5EuNNQV0hNndFpGxmUK6g@mail.gmail.com>
+        <20180920063129.GB12913@lst.de>
+Date: Fri, 21 Sep 2018 15:04:18 +0200
+In-Reply-To: <20180920063129.GB12913@lst.de> (Christoph Hellwig's message of
+        "Thu, 20 Sep 2018 08:31:29 +0200")
+Message-ID: <87h8ij0zot.fsf@vitty.brq.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180917205354.15401-5-hch@lst.de>
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+Cc: Ming Lei <tom.leiming@gmail.com>, linux-block <linux-block@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Ming Lei <ming.lei@redhat.com>, Christoph Lameter <cl@linux.com>
 
-On Mon, Sep 17, 2018 at 10:53:48PM +0200, Christoph Hellwig wrote:
-> Merge the two cases for reflink vs not into a single one.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Christoph Hellwig <hch@lst.de> writes:
 
-Looks ok to me,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> On Wed, Sep 19, 2018 at 05:15:43PM +0800, Ming Lei wrote:
+>> 1) does kmalloc-N slab guarantee to return N-byte aligned buffer?  If
+>> yes, is it a stable rule?
+>
+> This is the assumption in a lot of the kernel, so I think if somethings
+> breaks this we are in a lot of pain.
 
---D
+It seems that SLUB debug breaks this assumption. Kernel built with
 
-> ---
->  fs/xfs/xfs_iomap.c | 18 +++++++++---------
->  1 file changed, 9 insertions(+), 9 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 6320aca39f39..9595a3c59ade 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -1048,16 +1048,20 @@ xfs_file_iomap_begin(
->  	if (!(flags & (IOMAP_WRITE | IOMAP_ZERO)))
->  		goto out_found;
->  
-> +	/*
-> +	 * Don't need to allocate over holes when doing zeroing operations,
-> +	 * unless we need to COW and have an existing extent.
-> +	 */
-> +	if ((flags & IOMAP_ZERO) &&
-> +	    (!xfs_is_reflink_inode(ip) ||
-> +	     !needs_cow_for_zeroing(&imap, nimaps)))
-> +		goto out_found;
-> +
->  	/*
->  	 * Break shared extents if necessary. Checks for non-blocking IO have
->  	 * been done up front, so we don't need to do them here.
->  	 */
->  	if (xfs_is_reflink_inode(ip)) {
-> -		/* if zeroing doesn't need COW allocation, then we are done. */
-> -		if ((flags & IOMAP_ZERO) &&
-> -		    !needs_cow_for_zeroing(&imap, nimaps))
-> -			goto out_found;
-> -
->  		if (flags & IOMAP_DIRECT) {
->  			/* may drop and re-acquire the ilock */
->  			error = xfs_reflink_allocate_cow(ip, &imap, &shared,
-> @@ -1074,10 +1078,6 @@ xfs_file_iomap_begin(
->  		length = XFS_FSB_TO_B(mp, end_fsb) - offset;
->  	}
->  
-> -	/* Don't need to allocate over holes when doing zeroing operations. */
-> -	if (flags & IOMAP_ZERO)
-> -		goto out_found;
-> -
->  	if (!imap_needs_alloc(inode, &imap, nimaps))
->  		goto out_found;
->  
-> -- 
-> 2.18.0
-> 
+CONFIG_SLUB_DEBUG=y
+CONFIG_SLUB=y
+CONFIG_SLUB_DEBUG_ON=y
+
+And the following patch:
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 3b20607d581b..56713b201921 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -1771,3 +1771,28 @@ void __init arch_reserve_mem_area(acpi_physical_address addr, size_t size)
+        e820__range_add(addr, size, E820_TYPE_ACPI);
+        e820__update_table_print();
+ }
++
++#define KMALLOCS 16
++
++static __init int kmalloc_check_512(void)
++{
++       void *buf[KMALLOCS];
++       int i;
++
++       pr_info("kmalloc_check_512: start\n");
++
++       for (i = 0; i < KMALLOCS; i++) {
++               buf[i] = kmalloc(512, GFP_KERNEL);
++       }
++
++       for (i = 0; i < KMALLOCS; i++) {
++               pr_info("%lx %x\n", (unsigned long)buf[i], ((unsigned long)buf[i]) % 512);
++               kfree(buf[i]);
++       }
++
++       pr_info("kmalloc_check_512: done\n");
++
++       return 0;
++}
++
++late_initcall(kmalloc_check_512);
+
+gives me the following output:
+
+[    8.417468] kmalloc_check_512: start
+[    8.429572] ffff9a3258bb09f8 1f8
+[    8.435513] ffff9a3258bb70a8 a8
+[    8.441352] ffff9a3258bb0d48 148
+[    8.447139] ffff9a3258bb6d58 158
+[    8.452864] ffff9a3258bb1098 98
+[    8.458536] ffff9a3258bb6a08 8
+[    8.464103] ffff9a3258bb13e8 1e8
+[    8.469534] ffff9a3258bb66b8 b8
+[    8.474907] ffff9a3258bb1738 138
+[    8.480214] ffff9a3258bb6368 168
+[    8.480217] ffff9a3258bb1a88 88
+[    8.496178] ffff9a3258bb6018 18
+[    8.501218] ffff9a3258bb1dd8 1d8
+[    8.506138] ffff9a3258bb5cc8 c8
+[    8.511010] ffff9a3258bb2128 128
+[    8.515795] ffff9a3258bb5978 178
+[    8.520517] kmalloc_check_512: done
+
+(without SLUB_DEBUG_ON all addresses are 512b aligned).
+
+-- 
+  Vitaly
