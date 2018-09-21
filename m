@@ -1,62 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:46408 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1731530AbeISRhf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Sep 2018 13:37:35 -0400
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8JBxQgN079658
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 07:59:58 -0400
-Received: from e16.ny.us.ibm.com (e16.ny.us.ibm.com [129.33.205.206])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2mkky2wdd6-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 07:59:58 -0400
-Received: from localhost
-        by e16.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Wed, 19 Sep 2018 07:59:58 -0400
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH V4 20/20] Fix generic/108 to work with 64k block size
-Date: Wed, 19 Sep 2018 17:30:53 +0530
-In-Reply-To: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
-References: <20180919120053.7339-1-chandan@linux.vnet.ibm.com>
-Message-Id: <20180919120053.7339-21-chandan@linux.vnet.ibm.com>
+Received: from mail-it1-f182.google.com ([209.85.166.182]:50551 "EHLO
+        mail-it1-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2390111AbeIUUtQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Sep 2018 16:49:16 -0400
+Received: by mail-it1-f182.google.com with SMTP id j81-v6so2279778ite.0
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Sep 2018 08:00:00 -0700 (PDT)
+Subject: Re: block: DMA alignment of IO buffer allocated from slab
+References: <CACVXFVOBq3L_EjSTCoiqUL1PH=HMR5EuNNQV0hNndFpGxmUK6g@mail.gmail.com>
+ <20180921015608.GA31060@dastard> <20180921070805.GC14529@lst.de>
+ <20180921072511.GA8188@ming.t460p>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <65999732-fc76-bb86-65ed-01aace49b9c7@kernel.dk>
+Date: Fri, 21 Sep 2018 08:59:57 -0600
+MIME-Version: 1.0
+In-Reply-To: <20180921072511.GA8188@ming.t460p>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, zlang@redhat.com, linux-xfs@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>
+Cc: Dave Chinner <david@fromorbit.com>, Ming Lei <tom.leiming@gmail.com>, linux-block <linux-block@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-This commit increases the size of the scsi debug device to 300MiB to
-accommodate a 275MiB sized XFS filesystem with 64k block size. mkfs.xfs
-fails to create a 64k block sized filesystem on devices with capacity
-less than 275MiB.
+On 9/21/18 1:25 AM, Ming Lei wrote:
+> On Fri, Sep 21, 2018 at 09:08:05AM +0200, Christoph Hellwig wrote:
+>> On Fri, Sep 21, 2018 at 11:56:08AM +1000, Dave Chinner wrote:
+>>>> 3) If slab can't guarantee to return 512-aligned buffer, how to fix
+>>>> this data corruption issue?
+>>>
+>>> I think that the block layer needs to check the alignment of memory
+>>> buffers passed to it and take appropriate action rather than
+>>> corrupting random memory and returning a sucess status to the bad
+>>> bio.
+>>
+>> Or just reject the I/O.  But yes, we already have the
+>> queue_dma_alignment helper in the block layer, we just don't do it
+>> in the fast path.  I think generic_make_request_checks needs to
+>> check it, and print an error and return a warning if the alignment
+>> requirement isn't met.
+> 
+> That can be done in generic_make_request_checks(), but some cost may be
+> introduced, because each bvec needs to be checked in the fast path.
 
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
----
- tests/generic/108 | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I think this is all crazy talk. We've never done this, we've always
+assumed that an address of length N, will be N aligned as well. If
+a driver sets queue dma alignment > than its sector size, then we're
+in real trouble and would need to bounce IOs. That's silly enough
+that it doesn't warrant being done in the core code imho, if you're
+hw is that crappy, then do it in your queue_rq(). Could be done with
+a core helper for sure, but I'm really not that interested in
+having a full bvec loop for each bio just to check something that
+(to my knowledge) hasn't been an issue in decades.
 
-diff --git a/tests/generic/108 b/tests/generic/108
-index e464335..9b4fe60 100755
---- a/tests/generic/108
-+++ b/tests/generic/108
-@@ -48,7 +48,7 @@ vgname=vg_$seq
- rm -f $seqres.full
- 
- # _get_scsi_debug_dev returns a scsi debug device with 128M in size by default
--SCSI_DEBUG_DEV=`_get_scsi_debug_dev`
-+SCSI_DEBUG_DEV=`_get_scsi_debug_dev 512 512 0 300`
- if [ "$SCSI_DEBUG_DEV" == "/dev/" ]; then
- 	_fail "Failed to initialize scsi debug device"
- fi
-@@ -59,7 +59,7 @@ $LVM_PROG pvcreate -f $SCSI_DEBUG_DEV $SCRATCH_DEV >>$seqres.full 2>&1
- $LVM_PROG vgcreate -f $vgname $SCSI_DEBUG_DEV $SCRATCH_DEV >>$seqres.full 2>&1
- # We use yes pipe instead of 'lvcreate --yes' because old version of lvm
- # (like 2.02.95 in RHEL6) don't support --yes option
--yes | $LVM_PROG lvcreate -i 2 -I 4m -L 100m -n $lvname $vgname \
-+yes | $LVM_PROG lvcreate -i 2 -I 4m -L 275m -n $lvname $vgname \
- 	>>$seqres.full 2>&1
- # wait for lv creation to fully complete
- $UDEV_SETTLE_PROG >>$seqres.full 2>&1
 -- 
-2.9.5
+Jens Axboe
