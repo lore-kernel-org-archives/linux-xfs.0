@@ -1,43 +1,34 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it1-f178.google.com ([209.85.166.178]:55493 "EHLO
-        mail-it1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732572AbeIYAND (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Sep 2018 20:13:03 -0400
-Received: by mail-it1-f178.google.com with SMTP id c23-v6so3689303itd.5
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Sep 2018 11:09:40 -0700 (PDT)
+Received: from verein.lst.de ([213.95.11.211]:36351 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725887AbeIUMzg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 21 Sep 2018 08:55:36 -0400
+Date: Fri, 21 Sep 2018 09:08:05 +0200
+From: Christoph Hellwig <hch@lst.de>
 Subject: Re: block: DMA alignment of IO buffer allocated from slab
-References: <CACVXFVOBq3L_EjSTCoiqUL1PH=HMR5EuNNQV0hNndFpGxmUK6g@mail.gmail.com>
- <20180920063129.GB12913@lst.de> <87h8ij0zot.fsf@vitty.brq.redhat.com>
- <20180921130504.GA22551@lst.de>
- <010001660c54fb65-b9d3a770-6678-40d0-8088-4db20af32280-000000@email.amazonses.com>
- <1f88f59a-2cac-e899-4c2e-402e919b1034@kernel.dk>
- <010001660cbd51ea-56e96208-564d-4f5d-a5fb-119a938762a9-000000@email.amazonses.com>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <1a5b255f-682e-783a-7f99-9d02e39c4af2@kernel.dk>
-Date: Mon, 24 Sep 2018 12:09:37 -0600
+Message-ID: <20180921070805.GC14529@lst.de>
+References: <CACVXFVOBq3L_EjSTCoiqUL1PH=HMR5EuNNQV0hNndFpGxmUK6g@mail.gmail.com> <20180921015608.GA31060@dastard>
 MIME-Version: 1.0
-In-Reply-To: <010001660cbd51ea-56e96208-564d-4f5d-a5fb-119a938762a9-000000@email.amazonses.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180921015608.GA31060@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christopher Lameter <cl@linux.com>
-Cc: Christoph Hellwig <hch@lst.de>, Vitaly Kuznetsov <vkuznets@redhat.com>, Ming Lei <tom.leiming@gmail.com>, linux-block <linux-block@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Ming Lei <ming.lei@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Ming Lei <tom.leiming@gmail.com>, linux-block <linux-block@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Ming Lei <ming.lei@redhat.com>
 
-On 9/24/18 12:00 PM, Christopher Lameter wrote:
-> On Mon, 24 Sep 2018, Jens Axboe wrote:
+On Fri, Sep 21, 2018 at 11:56:08AM +1000, Dave Chinner wrote:
+> > 3) If slab can't guarantee to return 512-aligned buffer, how to fix
+> > this data corruption issue?
 > 
->> The situation is making me a little uncomfortable, though. If we export
->> such a setting, we really should be honoring it...
-> 
-> Various subsystems create custom slab arrays with their particular
-> alignment requirement for these allocations.
+> I think that the block layer needs to check the alignment of memory
+> buffers passed to it and take appropriate action rather than
+> corrupting random memory and returning a sucess status to the bad
+> bio.
 
-Oh yeah, I think the solution is basic enough for XFS, for instance.
-They just have to error on the side of being cautious, by going full
-sector alignment for memory...
-
--- 
-Jens Axboe
+Or just reject the I/O.  But yes, we already have the
+queue_dma_alignment helper in the block layer, we just don't do it
+in the fast path.  I think generic_make_request_checks needs to
+check it, and print an error and return a warning if the alignment
+requirement isn't met.
