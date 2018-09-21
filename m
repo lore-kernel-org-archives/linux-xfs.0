@@ -1,112 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56332 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731419AbeISSeT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Sep 2018 14:34:19 -0400
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 2/2] mkfs: move 'mounted' check before 'existing fs' check
-Date: Wed, 19 Sep 2018 14:56:17 +0200
-Message-Id: <20180919125617.28048-2-jtulak@redhat.com>
-In-Reply-To: <20180919125617.28048-1-jtulak@redhat.com>
-References: <20180919125617.28048-1-jtulak@redhat.com>
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:44909 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2391279AbeIVBYg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Sep 2018 21:24:36 -0400
+Received: by mail-pl1-f196.google.com with SMTP id ba4-v6so6375494plb.11
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Sep 2018 12:34:17 -0700 (PDT)
+Date: Fri, 21 Sep 2018 12:34:14 -0700
+From: Brian Norris <briannorris@chromium.org>
+Subject: Re: [PATCH xfsprogs] build: don't assume $BUILD_CC has fsmap.h just
+ because $CC does
+Message-ID: <20180921193412.GA224566@ban.mtv.corp.google.com>
+References: <20180906183529.117251-1-briannorris@chromium.org>
+ <30774ff1-57c1-c9f4-4ec3-31c177b11489@sandeen.net>
+ <20180906225534.GA114388@ban.mtv.corp.google.com>
+ <20180921183700.GA203751@ban.mtv.corp.google.com>
+ <1daeaef0-af23-0d2d-cc30-e6f3ef12205c@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1daeaef0-af23-0d2d-cc30-e6f3ef12205c@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: sandeen@sandeen.net, Jan Tulak <jtulak@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-Check if a device is mounted (and issue an error about that) before
-asking for -f flag.
+On Fri, Sep 21, 2018 at 02:12:31PM -0500, Eric Sandeen wrote:
+> On 9/21/18 1:37 PM, Brian Norris wrote:
+> > Ping? Should I send a new version that combines our patches?
+> 
+> Hi Brian - I'm not ignoring your patch, I've just been working on getting
+> libxfs synced for 4.19 before merging anything else - this is usually how
+> I work when patches come in near the beginning of a release cycle.
+> I'll revisit your patch & reach out to you if I have other questions or
+> suggestions when I get there, ok?  Sorry for the delay.
 
-Example of the old behaviour I'm changing:
-$ mkfs.xfs /dev/sda1
-mkfs.xfs: /dev/sda1 appears to contain an existing filesystem (xfs).
-mkfs.xfs: Use the -f option to force overwrite.
+No problem at all. I don't think I understood the development patterns
+here anyway. It just wasn't clear if there was a next action for me.
+This makes it clear.
 
-$ mkfs.xfs -f /dev/sda1
-mkfs.xfs: /dev/sda1 contains a mounted filesystem
+Thanks!
 
-Signed-off-by: Jan Tulak <jtulak@redhat.com>
----
- mkfs/xfs_mkfs.c | 32 ++++++++++++++++++--------------
- 1 file changed, 18 insertions(+), 14 deletions(-)
-
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 81d9859a..97e78647 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -1012,7 +1012,6 @@ check_device_type(
- 	bool		no_size,
- 	bool		no_name,
- 	int		*create,
--	bool		force_overwrite,
- 	const char	*optname)
- {
- 	struct stat statbuf;
-@@ -1043,13 +1042,6 @@ check_device_type(
- 		return;
- 	}
-
--	if (!force_overwrite && check_overwrite(name)) {
--		fprintf(stderr,
--	_("%s: Use the -f option to force overwrite.\n"),
--			progname);
--		exit(1);
--	}
--
- 	/*
- 	 * We only want to completely truncate and recreate an existing file if
- 	 * we were specifically told it was a file. Set the create flag only in
-@@ -1079,6 +1071,20 @@ check_device_type(
- 	usage();
- }
-
-+static void
-+validate_overwrite(
-+	const char	*name,
-+	bool		force_overwrite)
-+{
-+	if (!force_overwrite && check_overwrite(name)) {
-+		fprintf(stderr,
-+	_("%s: Use the -f option to force overwrite.\n"),
-+			progname);
-+		exit(1);
-+	}
-+
-+}
-+
- static void
- validate_ag_geometry(
- 	int		blocklog,
-@@ -1731,18 +1737,15 @@ validate_sectorsize(
- 	 * files or block devices and set the control parameters correctly.
- 	 */
- 	check_device_type(dfile, &cli->xi->disfile, !cli->dsize, !dfile,
--			  dry_run ? NULL : &cli->xi->dcreat,
--			  force_overwrite, "d");
-+			  dry_run ? NULL : &cli->xi->dcreat, "d");
- 	if (!cli->loginternal)
- 		check_device_type(cli->xi->logname, &cli->xi->lisfile,
- 				  !cli->logsize, !cli->xi->logname,
--				  dry_run ? NULL : &cli->xi->lcreat,
--				  force_overwrite, "l");
-+				  dry_run ? NULL : &cli->xi->lcreat, "l");
- 	if (cli->xi->rtname)
- 		check_device_type(cli->xi->rtname, &cli->xi->risfile,
- 				  !cli->rtsize, !cli->xi->rtname,
--				  dry_run ? NULL : &cli->xi->rcreat,
--				  force_overwrite, "r");
-+				  dry_run ? NULL : &cli->xi->rcreat, "r");
-
- 	/*
- 	 * Explicitly disable direct IO for image files so we don't error out on
-@@ -3909,6 +3912,7 @@ main(
- 	 * Open and validate the device configurations
- 	 */
- 	open_devices(&cfg, &xi);
-+	validate_overwrite(dfile, force_overwrite);
- 	validate_datadev(&cfg, &cli);
- 	validate_logdev(&cfg, &cli, &logfile);
- 	validate_rtdev(&cfg, &cli, &rtfile);
---
-2.18.0
+Brian
