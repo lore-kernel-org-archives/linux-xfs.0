@@ -1,94 +1,139 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:44564 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729102AbeIXVVV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Sep 2018 17:21:21 -0400
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8OFEd6o086568
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Sep 2018 11:18:40 -0400
-Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2mq0mw5ydr-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Sep 2018 11:18:40 -0400
-Received: from localhost
-        by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Mon, 24 Sep 2018 09:18:39 -0600
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH V5 14/20] Filter fiemap output by FS block size
-Date: Mon, 24 Sep 2018 20:49:36 +0530
-In-Reply-To: <20180924151942.8220-1-chandan@linux.vnet.ibm.com>
-References: <20180924151942.8220-1-chandan@linux.vnet.ibm.com>
-Message-Id: <20180924151942.8220-15-chandan@linux.vnet.ibm.com>
+Received: from mail-ed1-f66.google.com ([209.85.208.66]:41477 "EHLO
+        mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728100AbeIUSnG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Sep 2018 14:43:06 -0400
+Received: by mail-ed1-f66.google.com with SMTP id f38-v6so10635484edd.8
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Sep 2018 05:54:19 -0700 (PDT)
+MIME-Version: 1.0
+References: <CA+1E3r+crZ6suDtTheOysm_dzZ2FeU=z4R-aQQw7etk1yuxOLQ@mail.gmail.com>
+ <20180910235827.GD5631@dastard> <CA+1E3r+Lggw9JJymdhoyzkqQfqGETZE=R=WG09s7FOhY3Snb5g@mail.gmail.com>
+ <20180912004259.GJ5631@dastard> <CA+1E3r+gd57nOv=S0gjrbU8df2qXa67njPP=KK1oPqLmsO5thQ@mail.gmail.com>
+ <20180917025601.GE16550@dastard> <20180921002336.GO27618@dastard>
+In-Reply-To: <20180921002336.GO27618@dastard>
+From: Joshi <joshiiitr@gmail.com>
+Date: Fri, 21 Sep 2018 18:24:07 +0530
+Message-ID: <CA+1E3rJ5d9ie8z79ph-71P-w1hSiR1Rdz7vAugv0vELF=sb5aA@mail.gmail.com>
+Subject: Re: Strange behavior with log IO fake-completions
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, zlang@redhat.com, linux-xfs@vger.kernel.org
+To: david@fromorbit.com
+Cc: linux-xfs@vger.kernel.org
 
-When testing FS instances of block size other than 4k, the output of
-fiemap command will not match those in *.out files. This commit adds
-an optional "block size" argument to _filter_fiemap() which prints
-fiemap output in units of block size.
+I added some timing measurement code and obtained data for "dd" sync
+requests (dd if=/dev/zero of=/mnt/f1 bs=4k count=1000 oflag=sync).
+Let me define these times -
+T1= xfs_log_force_lsn time (loosely, this is overall time to complete
+one fsync request)
+And within xfs_log_foce_lsn , these were added -
+T2 = xlog_cil_force_lsn time
+T3 = xlog_wait time for ic_force_wait
+Last one is this -
+T4 =  Time elapsed between issuing wake-up on ic_force_wait (during
+completion) and thread waiting on ic_force_wait (dd in this case)
+resumed execution
+Basically T1 = T2+T3 +some_more, and T3 = T4 + some_more.
 
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
----
- common/punch | 19 ++++++++++++++-----
- 1 file changed, 14 insertions(+), 5 deletions(-)
+Here is the data for 1 dd-sync request (trend remains mostly same for
+all requests) -
+Base case: T1= 37096,  T2=11070,  T3=19130,  T4=2410
+FC case:    T1= 101206, T2=47150, T3=45443,  T4=29483
 
-diff --git a/common/punch b/common/punch
-index 8088b01..0fc7729 100644
---- a/common/punch
-+++ b/common/punch
-@@ -165,7 +165,11 @@ _test_punch() {
- 
- _coalesce_extents()
- {
--	awk -F: '
-+	block_size=$1
-+
-+	[[ -z $block_size ]] && block_size=512
-+
-+	awk -v block_size="$block_size" -F: '
- 	{
- 		range = $2;
- 		type = $3;
-@@ -176,19 +180,24 @@ _coalesce_extents()
- 
- 		if (type != prev_type) {
- 			if (prev_type != "")
--				printf("%u]:%s\n", low - 1, prev_type);
--			printf("%u: [%u..", out_count++, low);
-+				printf("%u]:%s\n", (low * 512 / block_size) - 1,
-+					prev_type);
-+			printf("%u: [%u..", out_count++,
-+				(low * 512) / block_size);
- 			prev_type = type;
- 		}
- 	}
- 	END {
- 		if (prev_type != "")
--			printf("%u]:%s\n", high, prev_type);
-+			printf("%u]:%s\n", ((high + 1) * 512 / block_size) - 1,
-+				prev_type);
- 	}'
- }
- 
- _filter_fiemap()
- {
-+	block_size=$1
-+
- 	$AWK_PROG '
- 		$3 ~ /hole/ {
- 			print $1, $2, $3;
-@@ -201,7 +210,7 @@ _filter_fiemap()
- 		$5 ~ /0x[[:xdigit:]]+/ {
- 			print $1, $2, "data";
- 		}' |
--	_coalesce_extents
-+	_coalesce_extents $block_size
- }
- 
- _filter_fiemap_flags()
+T4 in fake-completion case seemed particularly odd to me. "dd" took so
+much time to resume even after wake up was issued on ic_force_wait!
+Looks like fast log completion is making xfs wait queues behave odd.
+I changed all log wait queues (ic_force_wait, ic_write_wait, and
+xc_commit_wait) into completion variables (despite knowing that it is
+also implemented using wait_queue).
+And it brought down the value of T4.
+Overall numbers with iozone/varmail look like this -
+
+Iozone(48 cpus)
+Threads       Base           FC
+1                149149.2    151444.5
+2                251794.5     255033.1
+Varmail (48 cpus)
+Threads      Base          FC
+1                 61500.9     62396.4
+2                 102834.9   103080.1
+
+However, base case numbers also got improved. Earlier base numbers
+were comparatively very low with 48 cpus.
+
+Thanks,
+On Fri, Sep 21, 2018 at 5:53 AM Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Mon, Sep 17, 2018 at 12:56:01PM +1000, Dave Chinner wrote:
+> > On Fri, Sep 14, 2018 at 05:21:43PM +0530, Joshi wrote:
+> > > > Now, your other "unexpected" result - lets use affinity to confine
+> > > > everything to one CPU:
+> > > >
+> > > > fsync proc              CIL             IO-complete     log
+> > > > xfs_log_force_lsn
+> > > >   <wait for CIL>
+> > > >                         xlog_write()
+> > > >                         <queue to log>
+> > > >                         wake CIL waiters
+> > > >                                                         xlog_iodone()
+> > > >                                                         wake iclogbug waiters
+> > > > log force done
+> > > >
+> > > > Note the difference? The log work can't start until the CIL work has
+> > > > completed because it's constrained to the same CPU, so it doesn't
+> > > > cause any contention with the finalising of the CIL push and waking
+> > > > waiters.
+> > >
+> > > "Log work can't start" part does not sound very good either. It needed
+> > > to be done anyway before task waiting for fsync is woken.
+> >
+> > I'm beginning to think you don't really understand how logging in
+> > XFS works.  If you want to improve the logging subsystem, it would
+> > be a good idea for you to read and understand this document so you
+> > have some idea of how the data that is written to the log gets
+> > there and what happens to it after it's in the log.
+> >
+> > Documentation/filesystems/xfs-delayed-logging-design.txt
+>
+> It occurred to me yesterday that looking at the journal in a
+> different way might help explain how it all works.
+>
+> Instead of looking at it as an IO engine, think of how an
+> out-of-order CPU is designed to be made up of multiple stages in a
+> pipeline - each stage does a small piece of work that it passes on
+> to the next stage to process. Individual operation progresses serially
+> through the pipeline, but, each stage of the pipeline can be
+> operating on a different operation. Hence we can have multiple
+> operations in flight at once, and the operations can also be run
+> out of order as dynamical stage completion scheduling dictates.
+> However, from a high level everything appears to complete in order
+> because of re-ordering stages put everythign in order once the
+> indiivdual operations have been executed.
+>
+> Similarly, the XFS journalling subsystem is an out of order,
+> multi-stage pipeline with a post-IO re-ordering stage to ensure the
+> end result is that individual operations always appear to complete
+> in order.  Indeed, what ends up on disk in the journal is not in
+> order, so one of the things that log recovery does is rebuild the
+> state necessarily to reorder operations correctly before replay so
+> that, again, it appears like everything occurred in the order that
+> the transactions were committed to the journal.
+>
+> So perhaps looking at it as a multi-stage pipeline might also help
+> explain why fake-completion changes the behaviour in unpredictable
+> ways. i.e. it basically chops out stages of the pipeline, changing
+> the length of the pipeline and the order in which stages of the
+> pipleine are executed.
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+
+
+
 -- 
-2.9.5
+Joshi
