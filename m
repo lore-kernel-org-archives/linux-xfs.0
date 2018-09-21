@@ -1,73 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-eopbgr60113.outbound.protection.outlook.com ([40.107.6.113]:3688
-        "EHLO EUR04-DB3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728421AbeIXUp3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 24 Sep 2018 16:45:29 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:41754 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725898AbeIUNNC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 21 Sep 2018 09:13:02 -0400
+Date: Fri, 21 Sep 2018 15:25:13 +0800
+From: Ming Lei <ming.lei@redhat.com>
 Subject: Re: block: DMA alignment of IO buffer allocated from slab
+Message-ID: <20180921072511.GA8188@ming.t460p>
 References: <CACVXFVOBq3L_EjSTCoiqUL1PH=HMR5EuNNQV0hNndFpGxmUK6g@mail.gmail.com>
- <20180920063129.GB12913@lst.de> <87h8ij0zot.fsf@vitty.brq.redhat.com>
- <20180923224206.GA13618@ming.t460p>
- <38c03920-0fd0-0a39-2a6e-70cd8cb4ef34@virtuozzo.com>
- <20a20568-5089-541d-3cee-546e549a0bc8@acm.org>
-From: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Message-ID: <12eee877-affa-c822-c9d5-fda3aa0a50da@virtuozzo.com>
-Date: Mon, 24 Sep 2018 17:43:10 +0300
+ <20180921015608.GA31060@dastard>
+ <20180921070805.GC14529@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20a20568-5089-541d-3cee-546e549a0bc8@acm.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180921070805.GC14529@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Bart Van Assche <bvanassche@acm.org>, Ming Lei <ming.lei@redhat.com>, Vitaly Kuznetsov <vkuznets@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Ming Lei <tom.leiming@gmail.com>, linux-block <linux-block@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Christoph Lameter <cl@linux.com>, Linus Torvalds <torvalds@linux-foundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Dave Chinner <david@fromorbit.com>, Ming Lei <tom.leiming@gmail.com>, linux-block <linux-block@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>
 
-
-
-On 09/24/2018 05:19 PM, Bart Van Assche wrote:
-> On 9/24/18 2:46 AM, Andrey Ryabinin wrote:
->> On 09/24/2018 01:42 AM, Ming Lei wrote:
->>> On Fri, Sep 21, 2018 at 03:04:18PM +0200, Vitaly Kuznetsov wrote:
->>>> Christoph Hellwig <hch@lst.de> writes:
->>>>
->>>>> On Wed, Sep 19, 2018 at 05:15:43PM +0800, Ming Lei wrote:
->>>>>> 1) does kmalloc-N slab guarantee to return N-byte aligned buffer?  If
->>>>>> yes, is it a stable rule?
->>>>>
->>>>> This is the assumption in a lot of the kernel, so I think if somethings
->>>>> breaks this we are in a lot of pain.
->>
->> This assumption is not correct. And it's not correct at least from the beginning of the
->> git era, which is even before SLUB allocator appeared. With CONFIG_DEBUG_SLAB=y
->> the same as with CONFIG_SLUB_DEBUG_ON=y kmalloc return 'unaligned' objects.
->> The guaranteed arch-and-config-independent alignment of kmalloc() result is "sizeof(void*)".
-
-
-Correction sizeof(unsigned long long), so 8-byte alignment guarantee.
-
->>
->> If objects has higher alignment requirement, the could be allocated via specifically created kmem_cache.
+On Fri, Sep 21, 2018 at 09:08:05AM +0200, Christoph Hellwig wrote:
+> On Fri, Sep 21, 2018 at 11:56:08AM +1000, Dave Chinner wrote:
+> > > 3) If slab can't guarantee to return 512-aligned buffer, how to fix
+> > > this data corruption issue?
+> > 
+> > I think that the block layer needs to check the alignment of memory
+> > buffers passed to it and take appropriate action rather than
+> > corrupting random memory and returning a sucess status to the bad
+> > bio.
 > 
-> Hello Andrey,
-> 
-> The above confuses me. Can you explain to me why the following comment is present in include/linux/slab.h?
-> 
-> /*
->  * kmalloc and friends return ARCH_KMALLOC_MINALIGN aligned
->  * pointers. kmem_cache_alloc and friends return ARCH_SLAB_MINALIGN
->  * aligned pointers.
->  */
-> 
+> Or just reject the I/O.  But yes, we already have the
+> queue_dma_alignment helper in the block layer, we just don't do it
+> in the fast path.  I think generic_make_request_checks needs to
+> check it, and print an error and return a warning if the alignment
+> requirement isn't met.
 
-ARCH_KMALLOC_MINALIGN - guaranteed alignment of the kmalloc() result.
-ARCH_SLAB_MINALIGN - guaranteed alignment of kmem_cache_alloc() result.
+That can be done in generic_make_request_checks(), but some cost may be
+introduced, because each bvec needs to be checked in the fast path.
 
-If the 'align' argument passed into kmem_cache_create() is bigger than ARCH_SLAB_MINALIGN
-than kmem_cache_alloc() from that cache should return 'align'-aligned pointers.
-
-
-> Thanks,
-> 
-> Bart.
+Thanks,
+Ming
