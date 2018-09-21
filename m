@@ -1,61 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:47992 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388196AbeIUBsX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Sep 2018 21:48:23 -0400
-Date: Thu, 20 Sep 2018 13:03:08 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2] mkfs: move 'mounted' check before 'existing fs' check
-Message-ID: <20180920200308.GJ20086@magnolia>
-References: <20180919125617.28048-1-jtulak@redhat.com>
- <20180919125617.28048-2-jtulak@redhat.com>
- <20180919144853.GI20086@magnolia>
- <CACj3i73ARZddDcCp9BJ626eo3v4N-dy535qSRLZUPT3==rdZjA@mail.gmail.com>
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:25238 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725855AbeIUHmn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Sep 2018 03:42:43 -0400
+Date: Fri, 21 Sep 2018 11:56:08 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: block: DMA alignment of IO buffer allocated from slab
+Message-ID: <20180921015608.GA31060@dastard>
+References: <CACVXFVOBq3L_EjSTCoiqUL1PH=HMR5EuNNQV0hNndFpGxmUK6g@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CACj3i73ARZddDcCp9BJ626eo3v4N-dy535qSRLZUPT3==rdZjA@mail.gmail.com>
+In-Reply-To: <CACVXFVOBq3L_EjSTCoiqUL1PH=HMR5EuNNQV0hNndFpGxmUK6g@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Tulak <jtulak@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
+To: Ming Lei <tom.leiming@gmail.com>
+Cc: linux-block <linux-block@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Ming Lei <ming.lei@redhat.com>
 
-On Wed, Sep 19, 2018 at 05:05:38PM +0200, Jan Tulak wrote:
-> On Wed, Sep 19, 2018 at 4:49 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> >
-> > On Wed, Sep 19, 2018 at 02:56:17PM +0200, Jan Tulak wrote:
-> > > Check if a device is mounted (and issue an error about that) before
-> > > asking for -f flag.
-> > >
-> > > Example of the old behaviour I'm changing:
-> > > $ mkfs.xfs /dev/sda1
-> > > mkfs.xfs: /dev/sda1 appears to contain an existing filesystem (xfs).
-> > > mkfs.xfs: Use the -f option to force overwrite.
-> > >
-> > > $ mkfs.xfs -f /dev/sda1
-> > > mkfs.xfs: /dev/sda1 contains a mounted filesystem
-> >
-> > I'm confused by the commit message -- what is the new behavior?
-> >
-> > Is it this?
-> >
-> > $ mkfs.xfs /dev/sda1
-> > mkfs.xfs: /dev/sda1 contains a mounted filesystem
-> >
-> > $ mkfs.xfs -f /dev/sda1
-> > mkfs.xfs: /dev/sda1 contains a mounted filesystem
+On Wed, Sep 19, 2018 at 05:15:43PM +0800, Ming Lei wrote:
+> Hi Guys,
 > 
-> Yes. I should put it right into the commit message.
-
-With that added,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
+> Some storage controllers have DMA alignment limit, which is often set via
+> blk_queue_dma_alignment(), such as 512-byte alignment for IO buffer.
 > 
-> Jan
+> Block layer now only checks if this limit is respected for buffer of
+> pass-through request,
+> see blk_rq_map_user_iov(), bio_map_user_iov().
 > 
-> -- 
-> Jan Tulak
-> jtulak@redhat.com / jan@tulak.me
+> The userspace buffer for direct IO is checked in dio path, see
+> do_blockdev_direct_IO().
+> IO buffer from page cache should be fine wrt. this limit too.
+> 
+> However, some file systems, such as XFS, may allocate single sector IO buffer
+> via slab. Usually I guess kmalloc-512 should be fine to return
+> 512-aligned buffer.
+> But once KASAN or other slab debug options are enabled, looks this
+> isn't true any
+> more, kmalloc-512 may not return 512-aligned buffer. Then data corruption
+> can be observed because the IO buffer from fs layer doesn't respect the DMA
+> alignment limit any more.
+> 
+> Follows several related questions:
+> 
+> 1) does kmalloc-N slab guarantee to return N-byte aligned buffer?  If
+> yes, is it a stable rule?
+
+It has behaved like this for both slab and slub for many, many
+years.  A quick check indicates that at least XFS and hfsplus feed
+kmalloc()d buffers straight to bios without any memory buffer
+alignment checks at all.
+
+> 2) If it is a rule for kmalloc-N slab to return N-byte aligned buffer,
+> seems KASAN violates this
+> rule?
+
+XFS has been using kmalloc()d memory like this since 2012 and lots
+of people use KASAN on XFS systems, including me. From this, it
+would seem that the problem of mishandling unaligned memory buffers
+is not widespread in the storage subsystem - it's taken years of
+developers using slub debug and/or KASAN to find a driver that has
+choked on an inappropriately aligned memory buffer....
+
+> 3) If slab can't guarantee to return 512-aligned buffer, how to fix
+> this data corruption issue?
+
+I think that the block layer needs to check the alignment of memory
+buffers passed to it and take appropriate action rather than
+corrupting random memory and returning a sucess status to the bad
+bio.
+
+IMO, trusting higher layers of kernel code to get everything right
+is somewhat naive. The block layer does not trust userspace to get
+everything right for good reason and those same reasons extend to
+kernel code. i.e. all software has bugs, we have an impossible
+complex kernel config test matrix, and even if correctly written,
+proven bug-free software existed, that perfect code can still
+misbehave when things like memory corruption from other bad code or
+hardware occurs.
+
+>From that persepective, I think that if the the receiver of a bio
+has specific alignment requirements and the bio does not meet them,
+then it needs to either enforce the alignment requirements (i.e.
+error out) or make it right by bouncing the bio to an acceptible
+alignment. Erroring out will cause things to fail hard until
+whatever problem causing the error is fixed, while bouncing them
+provides the "everything just works normally" solution...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
