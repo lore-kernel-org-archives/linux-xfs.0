@@ -1,62 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from out002.mailprotect.be ([83.217.72.86]:37797 "EHLO
-        out002.mailprotect.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387616AbeITTvM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Sep 2018 15:51:12 -0400
-Subject: Re: block: DMA alignment of IO buffer allocated from slab
-References: <CACVXFVOBq3L_EjSTCoiqUL1PH=HMR5EuNNQV0hNndFpGxmUK6g@mail.gmail.com>
-From: Bart Van Assche <bvanassche@acm.org>
-Message-ID: <c5acf280-b3e3-51b3-da98-0809d9d76cc4@acm.org>
-Date: Thu, 20 Sep 2018 07:07:19 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:60858 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725845AbeIWHTb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Sep 2018 03:19:31 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8N1JnXO054074
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Sep 2018 01:23:54 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2130.oracle.com with ESMTP id 2mnd5t1m0m-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Sep 2018 01:23:54 +0000
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w8N1Nruw028603
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Sep 2018 01:23:53 GMT
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w8N1NrjX022943
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Sep 2018 01:23:53 GMT
+Date: Sat, 22 Sep 2018 18:23:53 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: 4.20 plans
+Message-ID: <20180923012353.GS20086@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <CACVXFVOBq3L_EjSTCoiqUL1PH=HMR5EuNNQV0hNndFpGxmUK6g@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <tom.leiming@gmail.com>, linux-block <linux-block@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Ming Lei <ming.lei@redhat.com>
+To: xfs <linux-xfs@vger.kernel.org>
 
-On 9/19/18 2:15 AM, Ming Lei wrote:
-> Hi Guys,
-> 
-> Some storage controllers have DMA alignment limit, which is often set via
-> blk_queue_dma_alignment(), such as 512-byte alignment for IO buffer.
-> 
-> Block layer now only checks if this limit is respected for buffer of
-> pass-through request,
-> see blk_rq_map_user_iov(), bio_map_user_iov().
-> 
-> The userspace buffer for direct IO is checked in dio path, see
-> do_blockdev_direct_IO().
-> IO buffer from page cache should be fine wrt. this limit too.
-> 
-> However, some file systems, such as XFS, may allocate single sector IO buffer
-> via slab. Usually I guess kmalloc-512 should be fine to return
-> 512-aligned buffer.
-> But once KASAN or other slab debug options are enabled, looks this
-> isn't true any
-> more, kmalloc-512 may not return 512-aligned buffer. Then data corruption
-> can be observed because the IO buffer from fs layer doesn't respect the DMA
-> alignment limit any more.
-> 
-> Follows several related questions:
-> 
-> 1) does kmalloc-N slab guarantee to return N-byte aligned buffer?  If
-> yes, is it a stable rule?
-> 
-> 2) If it is a rule for kmalloc-N slab to return N-byte aligned buffer,
-> seems KASAN violates this
-> rule?
-> 
-> 3) If slab can't guarantee to return 512-aligned buffer, how to fix
-> this data corruption issue?
+Hi all,
 
-I don't think that (1) is correct, especially if N is not a power of 
-two. In the skd driver I addressed this problem by using 
-kmem_cache_create() and kmem_cache_alloc() instead of kmalloc(). 
-kmem_cache_create() allows to specify the alignment explicitly.
+I've recovered enough to start reviewing patches and collecting up all
+my scattered brains again.  Dave will handle the merge window for 4.20
+and I'll take over again after -rc1 is out.  For this release, we intend
+to focus on stability and defer new features until 4.21.  In other
+words, we'd prefer bug fixes and cleanups only this time around.
 
-Bart.
+It's nice to be back,
+
+--D
