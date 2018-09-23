@@ -1,53 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:56051 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731204AbeISUoL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Sep 2018 16:44:11 -0400
-Received: by mail-wm1-f67.google.com with SMTP id f21-v6so6645786wmc.5
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Sep 2018 08:05:50 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:53496 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725850AbeIXElf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 24 Sep 2018 00:41:35 -0400
+Date: Mon, 24 Sep 2018 06:42:07 +0800
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: block: DMA alignment of IO buffer allocated from slab
+Message-ID: <20180923224206.GA13618@ming.t460p>
+References: <CACVXFVOBq3L_EjSTCoiqUL1PH=HMR5EuNNQV0hNndFpGxmUK6g@mail.gmail.com>
+ <20180920063129.GB12913@lst.de>
+ <87h8ij0zot.fsf@vitty.brq.redhat.com>
 MIME-Version: 1.0
-References: <20180919125617.28048-1-jtulak@redhat.com> <20180919125617.28048-2-jtulak@redhat.com>
- <20180919144853.GI20086@magnolia>
-In-Reply-To: <20180919144853.GI20086@magnolia>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Wed, 19 Sep 2018 17:05:38 +0200
-Message-ID: <CACj3i73ARZddDcCp9BJ626eo3v4N-dy535qSRLZUPT3==rdZjA@mail.gmail.com>
-Subject: Re: [PATCH 2/2] mkfs: move 'mounted' check before 'existing fs' check
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87h8ij0zot.fsf@vitty.brq.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
+To: Vitaly Kuznetsov <vkuznets@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Ming Lei <tom.leiming@gmail.com>, linux-block <linux-block@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Christoph Lameter <cl@linux.com>, Linus Torvalds <torvalds@linux-foundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Andrey Ryabinin <aryabinin@virtuozzo.com>
 
-On Wed, Sep 19, 2018 at 4:49 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
->
-> On Wed, Sep 19, 2018 at 02:56:17PM +0200, Jan Tulak wrote:
-> > Check if a device is mounted (and issue an error about that) before
-> > asking for -f flag.
+On Fri, Sep 21, 2018 at 03:04:18PM +0200, Vitaly Kuznetsov wrote:
+> Christoph Hellwig <hch@lst.de> writes:
+> 
+> > On Wed, Sep 19, 2018 at 05:15:43PM +0800, Ming Lei wrote:
+> >> 1) does kmalloc-N slab guarantee to return N-byte aligned buffer?  If
+> >> yes, is it a stable rule?
 > >
-> > Example of the old behaviour I'm changing:
-> > $ mkfs.xfs /dev/sda1
-> > mkfs.xfs: /dev/sda1 appears to contain an existing filesystem (xfs).
-> > mkfs.xfs: Use the -f option to force overwrite.
-> >
-> > $ mkfs.xfs -f /dev/sda1
-> > mkfs.xfs: /dev/sda1 contains a mounted filesystem
->
-> I'm confused by the commit message -- what is the new behavior?
->
-> Is it this?
->
-> $ mkfs.xfs /dev/sda1
-> mkfs.xfs: /dev/sda1 contains a mounted filesystem
->
-> $ mkfs.xfs -f /dev/sda1
-> mkfs.xfs: /dev/sda1 contains a mounted filesystem
+> > This is the assumption in a lot of the kernel, so I think if somethings
+> > breaks this we are in a lot of pain.
+> 
+> It seems that SLUB debug breaks this assumption. Kernel built with
+> 
+> CONFIG_SLUB_DEBUG=y
+> CONFIG_SLUB=y
+> CONFIG_SLUB_DEBUG_ON=y
+> 
+> And the following patch:
+> diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+> index 3b20607d581b..56713b201921 100644
+> --- a/arch/x86/kernel/acpi/boot.c
+> +++ b/arch/x86/kernel/acpi/boot.c
+> @@ -1771,3 +1771,28 @@ void __init arch_reserve_mem_area(acpi_physical_address addr, size_t size)
+>         e820__range_add(addr, size, E820_TYPE_ACPI);
+>         e820__update_table_print();
+>  }
+> +
+> +#define KMALLOCS 16
+> +
+> +static __init int kmalloc_check_512(void)
+> +{
+> +       void *buf[KMALLOCS];
+> +       int i;
+> +
+> +       pr_info("kmalloc_check_512: start\n");
+> +
+> +       for (i = 0; i < KMALLOCS; i++) {
+> +               buf[i] = kmalloc(512, GFP_KERNEL);
+> +       }
+> +
+> +       for (i = 0; i < KMALLOCS; i++) {
+> +               pr_info("%lx %x\n", (unsigned long)buf[i], ((unsigned long)buf[i]) % 512);
+> +               kfree(buf[i]);
+> +       }
+> +
+> +       pr_info("kmalloc_check_512: done\n");
+> +
+> +       return 0;
+> +}
+> +
+> +late_initcall(kmalloc_check_512);
+> 
+> gives me the following output:
+> 
+> [    8.417468] kmalloc_check_512: start
+> [    8.429572] ffff9a3258bb09f8 1f8
+> [    8.435513] ffff9a3258bb70a8 a8
+> [    8.441352] ffff9a3258bb0d48 148
+> [    8.447139] ffff9a3258bb6d58 158
+> [    8.452864] ffff9a3258bb1098 98
+> [    8.458536] ffff9a3258bb6a08 8
+> [    8.464103] ffff9a3258bb13e8 1e8
+> [    8.469534] ffff9a3258bb66b8 b8
+> [    8.474907] ffff9a3258bb1738 138
+> [    8.480214] ffff9a3258bb6368 168
+> [    8.480217] ffff9a3258bb1a88 88
+> [    8.496178] ffff9a3258bb6018 18
+> [    8.501218] ffff9a3258bb1dd8 1d8
+> [    8.506138] ffff9a3258bb5cc8 c8
+> [    8.511010] ffff9a3258bb2128 128
+> [    8.515795] ffff9a3258bb5978 178
+> [    8.520517] kmalloc_check_512: done
+> 
+> (without SLUB_DEBUG_ON all addresses are 512b aligned).
 
-Yes. I should put it right into the commit message.
+Even some of buffer address is _not_ L1 cache size aligned, this way is
+totally broken wrt. DMA to/from this buffer.
 
-Jan
+So this issue has to be fixed in slab debug side.
 
--- 
-Jan Tulak
-jtulak@redhat.com / jan@tulak.me
+Thanks,
+Ming
