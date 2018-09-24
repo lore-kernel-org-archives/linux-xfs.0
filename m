@@ -1,79 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56220 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725914AbeITHJa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 20 Sep 2018 03:09:30 -0400
-Date: Thu, 20 Sep 2018 09:28:37 +0800
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: block: DMA alignment of IO buffer allocated from slab
-Message-ID: <20180920012836.GA27645@ming.t460p>
-References: <CACVXFVOBq3L_EjSTCoiqUL1PH=HMR5EuNNQV0hNndFpGxmUK6g@mail.gmail.com>
- <877ejh3jv0.fsf@vitty.brq.redhat.com>
- <20180919100256.GD23172@ming.t460p>
- <8736u53fij.fsf@vitty.brq.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <8736u53fij.fsf@vitty.brq.redhat.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:39608 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730619AbeIXVUk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Sep 2018 17:20:40 -0400
+Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8OFF1Xj110777
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Sep 2018 11:17:59 -0400
+Received: from e35.co.us.ibm.com (e35.co.us.ibm.com [32.97.110.153])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2mq135v7b8-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Sep 2018 11:17:58 -0400
+Received: from localhost
+        by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Mon, 24 Sep 2018 09:17:57 -0600
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: [PATCH V5 04/20] Fix xfs/074 to work with 64k block size
+Date: Mon, 24 Sep 2018 20:49:26 +0530
+In-Reply-To: <20180924151942.8220-1-chandan@linux.vnet.ibm.com>
+References: <20180924151942.8220-1-chandan@linux.vnet.ibm.com>
+Message-Id: <20180924151942.8220-5-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Vitaly Kuznetsov <vkuznets@redhat.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>
-Cc: Ming Lei <tom.leiming@gmail.com>, linux-block <linux-block@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+To: fstests@vger.kernel.org
+Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, zlang@redhat.com, linux-xfs@vger.kernel.org
 
-On Wed, Sep 19, 2018 at 01:15:00PM +0200, Vitaly Kuznetsov wrote:
-> Ming Lei <ming.lei@redhat.com> writes:
-> 
-> > Hi Vitaly,
-> >
-> > On Wed, Sep 19, 2018 at 11:41:07AM +0200, Vitaly Kuznetsov wrote:
-> >> Ming Lei <tom.leiming@gmail.com> writes:
-> >> 
-> >> > Hi Guys,
-> >> >
-> >> > Some storage controllers have DMA alignment limit, which is often set via
-> >> > blk_queue_dma_alignment(), such as 512-byte alignment for IO buffer.
-> >> 
-> >> While mostly drivers use 512-byte alignment it is not a rule of thumb,
-> >> 'git grep' tell me we have:
-> >> ide-cd.c with 32-byte alignment
-> >> ps3disk.c and rsxx/dev.c with variable alignment.
-> >> 
-> >> What if our block configuration consists of several devices (in raid
-> >> array, for example) with different requirements, e.g. one requiring
-> >> 512-byte alignment and the other requiring 256?
-> >
-> > 512-byte alignment is also 256-byte aligned, and the sector size is 512 byte.
-> >
-> 
-> Yes, but it doesn't work the other way around, e.g. what if some device
-> has e.g. PAGE_SIZE alignment requirement (this would likely imply that
-> it's sector size is also not 512 I guess)?
+This commit makes file and extent size calculations to be a function of
+the filesystem's block size. It also adds a brief description of the
+bug that is being tested.
 
-Yeah, that can be true if one controller has 4k-byte sector size, also
-its DMA alignment is 4K. But there shouldn't be cases in which the two
-doesn't match.
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+---
+ tests/xfs/074 | 23 +++++++++++++++++++----
+ 1 file changed, 19 insertions(+), 4 deletions(-)
 
-> 
-> >
-> > From the Red Hat BZ, looks I understand this issue is only triggered when
-> > KASAN is enabled, or you have figured out how to reproduce it without
-> > KASAN involved?
-> 
-> Yes, any SLUB debug triggers it (e.g. build your kernel with
-> SLUB_DEBUG_ON or slub_debug= options (Red zoning, User tracking, ... -
-> everything will trigger it)
-
-That means the slab always return 512-byte aligned buffer if the buffer
-size is 512byte in case of no any slab debug options enabled.
-
-The question is that if it is one reliable rule in slab. If yes, any
-slab debug option does violate the rule.
-
-The same is true for 4k alignment and 4k sector size.
-
-I think we need our MM guys to clarify this point.
-
-
-Thanks,
-Ming
+diff --git a/tests/xfs/074 b/tests/xfs/074
+index e5888d5..c10a7d0 100755
+--- a/tests/xfs/074
++++ b/tests/xfs/074
+@@ -7,6 +7,18 @@
+ # Check some extent size hint boundary conditions that can result in
+ # MAXEXTLEN overflows.
+ #
++# In xfs_bmap_extsize_align(), we had,
++# 	if ((temp = (align_alen % extsz))) {
++# 		align_alen += extsz - temp;
++# 	}
++# align_alen had the value of 2097151 (i.e. MAXEXTLEN) blocks. extsz had
++# the value of 4096 blocks.
++#
++# align_alen % extsz will be 4095. so align_alen will end up having
++# 2097151 + (4096 - 4095) = 2097152 i.e. (MAXEXTLEN + 1). Thus the length
++# of the new extent will be larger than MAXEXTLEN. This will later cause
++# the bmbt leaf to have an entry whose length is set to zero block count.
++#
+ seq=`basename $0`
+ seqres=$RESULT_DIR/$seq
+ echo "QA output created by $seq"
+@@ -46,19 +58,22 @@ mkdir -p $LOOP_MNT
+ $XFS_IO_PROG -ft -c "truncate 1t" $LOOP_FILE >> $seqres.full
+ LOOP_DEV=`_create_loop_device $LOOP_FILE`
+ 
+-_mkfs_dev -d size=156452m,agcount=4 -l size=32m $LOOP_DEV
++_mkfs_dev -d size=260g,agcount=2 $LOOP_DEV
+ _mount $LOOP_DEV $LOOP_MNT
+ 
++BLOCK_SIZE=$(_get_file_block_size $LOOP_MNT)
++
+ # Corrupt the BMBT by creating extents larger than MAXEXTLEN
++# For 4k blocksize, MAXEXTLEN * 4k = 2097151 * 4k = 8589930496 = ~8GiB
+ $XFS_IO_PROG -ft \
+-	-c "extsize 16m" \
+-	-c "falloc 0 30g" \
++	-c "extsize $(($BLOCK_SIZE * 4096))" \
++	-c "falloc 0 $(($BLOCK_SIZE * 2097152))" \
+ 	$LOOP_MNT/foo >> $seqres.full
+ 
+ umount $LOOP_MNT
+ _check_xfs_filesystem $LOOP_DEV none none
+ 
+-_mkfs_dev -f -l size=32m $LOOP_DEV
++_mkfs_dev -f $LOOP_DEV
+ _mount $LOOP_DEV $LOOP_MNT
+ 
+ # check we trim both ends of the extent approproiately; this will fail
+-- 
+2.9.5
