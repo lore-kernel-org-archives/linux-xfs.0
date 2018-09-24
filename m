@@ -1,154 +1,132 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ed1-f65.google.com ([209.85.208.65]:38190 "EHLO
-        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726350AbeIXU1k (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Sep 2018 16:27:40 -0400
-Received: by mail-ed1-f65.google.com with SMTP id x8-v6so2591169eds.5
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Sep 2018 07:25:15 -0700 (PDT)
-MIME-Version: 1.0
-References: <CA+1E3r+crZ6suDtTheOysm_dzZ2FeU=z4R-aQQw7etk1yuxOLQ@mail.gmail.com>
- <20180910235827.GD5631@dastard> <CA+1E3r+Lggw9JJymdhoyzkqQfqGETZE=R=WG09s7FOhY3Snb5g@mail.gmail.com>
- <20180912004259.GJ5631@dastard> <CA+1E3r+gd57nOv=S0gjrbU8df2qXa67njPP=KK1oPqLmsO5thQ@mail.gmail.com>
- <20180917025601.GE16550@dastard> <20180921002336.GO27618@dastard> <CA+1E3rJ5d9ie8z79ph-71P-w1hSiR1Rdz7vAugv0vELF=sb5aA@mail.gmail.com>
-In-Reply-To: <CA+1E3rJ5d9ie8z79ph-71P-w1hSiR1Rdz7vAugv0vELF=sb5aA@mail.gmail.com>
-From: Joshi <joshiiitr@gmail.com>
-Date: Mon, 24 Sep 2018 19:55:02 +0530
-Message-ID: <CA+1E3rL1JA1PWC+53aU+RQcxFucccXu7M-K-m9AiEXaCjfCF=w@mail.gmail.com>
-Subject: Re: Strange behavior with log IO fake-completions
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:34430 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1730748AbeIXVVa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Sep 2018 17:21:30 -0400
+Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8OFEeEm090598
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Sep 2018 11:18:49 -0400
+Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2mq1bskfja-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Sep 2018 11:18:48 -0400
+Received: from localhost
+        by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Mon, 24 Sep 2018 09:18:48 -0600
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: [PATCH V5 16/20] Fix generic/230 to work with 64k block size
+Date: Mon, 24 Sep 2018 20:49:38 +0530
+In-Reply-To: <20180924151942.8220-1-chandan@linux.vnet.ibm.com>
+References: <20180924151942.8220-1-chandan@linux.vnet.ibm.com>
+Message-Id: <20180924151942.8220-17-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com
-Cc: linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, zlang@redhat.com, linux-xfs@vger.kernel.org
 
-> I changed all log wait queues (ic_force_wait, ic_write_wait, and
-xc_commit_wait) into completion variables (despite knowing that it is
-also implemented using wait_queue).
+This commit changes the test to work on file offsets that are aligned
+with the block size of the underlying filesystem.
 
-Sorry, ignore this and subsequent part of the text. I think replacing
-with completion requires more work than I did.Calling "complete_all"
-is tricky, given the need of calling "reinit_completion" which may get
-executed by multiple threads in this case.
-On Fri, Sep 21, 2018 at 6:24 PM Joshi <joshiiitr@gmail.com> wrote:
->
-> I added some timing measurement code and obtained data for "dd" sync
-> requests (dd if=/dev/zero of=/mnt/f1 bs=4k count=1000 oflag=sync).
-> Let me define these times -
-> T1= xfs_log_force_lsn time (loosely, this is overall time to complete
-> one fsync request)
-> And within xfs_log_foce_lsn , these were added -
-> T2 = xlog_cil_force_lsn time
-> T3 = xlog_wait time for ic_force_wait
-> Last one is this -
-> T4 =  Time elapsed between issuing wake-up on ic_force_wait (during
-> completion) and thread waiting on ic_force_wait (dd in this case)
-> resumed execution
-> Basically T1 = T2+T3 +some_more, and T3 = T4 + some_more.
->
-> Here is the data for 1 dd-sync request (trend remains mostly same for
-> all requests) -
-> Base case: T1= 37096,  T2=11070,  T3=19130,  T4=2410
-> FC case:    T1= 101206, T2=47150, T3=45443,  T4=29483
->
-> T4 in fake-completion case seemed particularly odd to me. "dd" took so
-> much time to resume even after wake up was issued on ic_force_wait!
-> Looks like fast log completion is making xfs wait queues behave odd.
-> I changed all log wait queues (ic_force_wait, ic_write_wait, and
-> xc_commit_wait) into completion variables (despite knowing that it is
-> also implemented using wait_queue).
-> And it brought down the value of T4.
-> Overall numbers with iozone/varmail look like this -
->
-> Iozone(48 cpus)
-> Threads       Base           FC
-> 1                149149.2    151444.5
-> 2                251794.5     255033.1
-> Varmail (48 cpus)
-> Threads      Base          FC
-> 1                 61500.9     62396.4
-> 2                 102834.9   103080.1
->
-> However, base case numbers also got improved. Earlier base numbers
-> were comparatively very low with 48 cpus.
->
-> Thanks,
-> On Fri, Sep 21, 2018 at 5:53 AM Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > On Mon, Sep 17, 2018 at 12:56:01PM +1000, Dave Chinner wrote:
-> > > On Fri, Sep 14, 2018 at 05:21:43PM +0530, Joshi wrote:
-> > > > > Now, your other "unexpected" result - lets use affinity to confine
-> > > > > everything to one CPU:
-> > > > >
-> > > > > fsync proc              CIL             IO-complete     log
-> > > > > xfs_log_force_lsn
-> > > > >   <wait for CIL>
-> > > > >                         xlog_write()
-> > > > >                         <queue to log>
-> > > > >                         wake CIL waiters
-> > > > >                                                         xlog_iodone()
-> > > > >                                                         wake iclogbug waiters
-> > > > > log force done
-> > > > >
-> > > > > Note the difference? The log work can't start until the CIL work has
-> > > > > completed because it's constrained to the same CPU, so it doesn't
-> > > > > cause any contention with the finalising of the CIL push and waking
-> > > > > waiters.
-> > > >
-> > > > "Log work can't start" part does not sound very good either. It needed
-> > > > to be done anyway before task waiting for fsync is woken.
-> > >
-> > > I'm beginning to think you don't really understand how logging in
-> > > XFS works.  If you want to improve the logging subsystem, it would
-> > > be a good idea for you to read and understand this document so you
-> > > have some idea of how the data that is written to the log gets
-> > > there and what happens to it after it's in the log.
-> > >
-> > > Documentation/filesystems/xfs-delayed-logging-design.txt
-> >
-> > It occurred to me yesterday that looking at the journal in a
-> > different way might help explain how it all works.
-> >
-> > Instead of looking at it as an IO engine, think of how an
-> > out-of-order CPU is designed to be made up of multiple stages in a
-> > pipeline - each stage does a small piece of work that it passes on
-> > to the next stage to process. Individual operation progresses serially
-> > through the pipeline, but, each stage of the pipeline can be
-> > operating on a different operation. Hence we can have multiple
-> > operations in flight at once, and the operations can also be run
-> > out of order as dynamical stage completion scheduling dictates.
-> > However, from a high level everything appears to complete in order
-> > because of re-ordering stages put everythign in order once the
-> > indiivdual operations have been executed.
-> >
-> > Similarly, the XFS journalling subsystem is an out of order,
-> > multi-stage pipeline with a post-IO re-ordering stage to ensure the
-> > end result is that individual operations always appear to complete
-> > in order.  Indeed, what ends up on disk in the journal is not in
-> > order, so one of the things that log recovery does is rebuild the
-> > state necessarily to reorder operations correctly before replay so
-> > that, again, it appears like everything occurred in the order that
-> > the transactions were committed to the journal.
-> >
-> > So perhaps looking at it as a multi-stage pipeline might also help
-> > explain why fake-completion changes the behaviour in unpredictable
-> > ways. i.e. it basically chops out stages of the pipeline, changing
-> > the length of the pipeline and the order in which stages of the
-> > pipleine are executed.
-> >
-> > Cheers,
-> >
-> > Dave.
-> > --
-> > Dave Chinner
-> > david@fromorbit.com
->
->
->
-> --
-> Joshi
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+---
+ tests/generic/230     | 23 +++++++++++++----------
+ tests/generic/230.out | 16 ++++++++--------
+ 2 files changed, 21 insertions(+), 18 deletions(-)
 
-
-
---
-Joshi
+diff --git a/tests/generic/230 b/tests/generic/230
+index bc8c1ad..66b12d2 100755
+--- a/tests/generic/230
++++ b/tests/generic/230
+@@ -42,27 +42,27 @@ test_enforcement()
+ 	echo "### some buffered IO (type=$type)"
+ 	echo "--- initiating IO..." >>$seqres.full
+ 	# Firstly fit below block soft limit
+-	echo "Write 900k..."
+-	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 900k' -c fsync \
++	echo "Write 225 blocks..."
++	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 $((225 * $BLOCK_SIZE))' -c fsync \
+ 		$SCRATCH_MNT/file1" 2>&1 >>$seqres.full | \
+ 		_filter_xfs_io_error | tee -a $seqres.full
+ 	repquota -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
+ 	# Secondly overcome block soft limit
+-	echo "Rewrite 1001k..."
+-	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 1001k' -c fsync \
++	echo "Rewrite 250 blocks plus 1 byte..."
++	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 $((250 * $BLOCK_SIZE + 1))' -c fsync \
+ 		$SCRATCH_MNT/file1" 2>&1 >>$seqres.full | \
+ 		_filter_xfs_io_error | tee -a $seqres.full
+ 	repquota -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
+ 	# Now try to overcome block hardlimit
+-	echo "Write 1000k..."
+-	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 1000k' -c fsync \
++	echo "Write 250 blocks..."
++	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 $((250 * $BLOCK_SIZE))' -c fsync \
+ 		$SCRATCH_MNT/file2" 2>&1 >>$seqres.full | \
+ 		_filter_xfs_io_error | tee -a $seqres.full
+ 	repquota -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
+ 	# Now sleep for grace time and check that softlimit got enforced
+ 	sleep $((grace+1))
+-	echo "Write 4096..."
+-	su $qa_user -c "$XFS_IO_PROG -c 'truncate 0' -c 'pwrite 0 4096' \
++	echo "Write 1 block..."
++	su $qa_user -c "$XFS_IO_PROG -c 'truncate 0' -c 'pwrite 0 $BLOCK_SIZE' \
+ 		$SCRATCH_MNT/file2" 2>&1 >>$seqres.full | \
+ 		_filter_xfs_io_error | tee -a $seqres.full
+ 	repquota -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
+@@ -101,11 +101,14 @@ grace=2
+ 
+ _scratch_mkfs >> $seqres.full 2>&1
+ _scratch_mount "-o usrquota,grpquota"
++BLOCK_SIZE=$(_get_file_block_size $SCRATCH_MNT)
+ quotacheck -u -g $SCRATCH_MNT 2>/dev/null
+ quotaon $SCRATCH_MNT 2>/dev/null
+-setquota -u $qa_user 1000 2000 3 5 $SCRATCH_MNT
++setquota -u $qa_user $((250 * $BLOCK_SIZE / 1024)) \
++	 $((500 * $BLOCK_SIZE / 1024)) 3 5 $SCRATCH_MNT
+ setquota -u -t $grace $grace $SCRATCH_MNT
+-setquota -g $qa_user 1000 2000 3 5 $SCRATCH_MNT
++setquota -g $qa_user $((250 * $BLOCK_SIZE / 1024)) \
++	 $((500 * $BLOCK_SIZE / 1024)) 3 5 $SCRATCH_MNT
+ setquota -g -t $grace $grace $SCRATCH_MNT
+ _scratch_unmount
+ 
+diff --git a/tests/generic/230.out b/tests/generic/230.out
+index fcbacf2..9e89a47 100644
+--- a/tests/generic/230.out
++++ b/tests/generic/230.out
+@@ -4,11 +4,11 @@ QA output created by 230
+ 
+ ### create files, setting up ownership (type=u)
+ ### some buffered IO (type=u)
+-Write 900k...
+-Rewrite 1001k...
+-Write 1000k...
++Write 225 blocks...
++Rewrite 250 blocks plus 1 byte...
++Write 250 blocks...
+ pwrite: Disk quota exceeded
+-Write 4096...
++Write 1 block...
+ pwrite: Disk quota exceeded
+ Touch 3+4
+ Touch 5+6
+@@ -20,11 +20,11 @@ touch: cannot touch 'SCRATCH_MNT/file5': Disk quota exceeded
+ 
+ ### create files, setting up ownership (type=g)
+ ### some buffered IO (type=g)
+-Write 900k...
+-Rewrite 1001k...
+-Write 1000k...
++Write 225 blocks...
++Rewrite 250 blocks plus 1 byte...
++Write 250 blocks...
+ pwrite: Disk quota exceeded
+-Write 4096...
++Write 1 block...
+ pwrite: Disk quota exceeded
+ Touch 3+4
+ Touch 5+6
+-- 
+2.9.5
