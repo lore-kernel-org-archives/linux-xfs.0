@@ -1,52 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-eopbgr30103.outbound.protection.outlook.com ([40.107.3.103]:65344
-        "EHLO EUR03-AM5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727497AbeIXPrV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 24 Sep 2018 11:47:21 -0400
-Subject: Re: block: DMA alignment of IO buffer allocated from slab
-References: <CACVXFVOBq3L_EjSTCoiqUL1PH=HMR5EuNNQV0hNndFpGxmUK6g@mail.gmail.com>
- <20180920063129.GB12913@lst.de> <87h8ij0zot.fsf@vitty.brq.redhat.com>
- <20180923224206.GA13618@ming.t460p>
-From: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Message-ID: <38c03920-0fd0-0a39-2a6e-70cd8cb4ef34@virtuozzo.com>
-Date: Mon, 24 Sep 2018 12:46:27 +0300
-MIME-Version: 1.0
-In-Reply-To: <20180923224206.GA13618@ming.t460p>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:3241 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1730434AbeIXVVM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Sep 2018 17:21:12 -0400
+Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8OFEhit000778
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Sep 2018 11:18:31 -0400
+Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2mq2830nn7-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Sep 2018 11:18:30 -0400
+Received: from localhost
+        by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Mon, 24 Sep 2018 09:18:29 -0600
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: [PATCH V5 11/20] xfs/325: Inject free_extent error after CoW operation
+Date: Mon, 24 Sep 2018 20:49:33 +0530
+In-Reply-To: <20180924151942.8220-1-chandan@linux.vnet.ibm.com>
+References: <20180924151942.8220-1-chandan@linux.vnet.ibm.com>
+Message-Id: <20180924151942.8220-12-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>, Vitaly Kuznetsov <vkuznets@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Ming Lei <tom.leiming@gmail.com>, linux-block <linux-block@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Christoph Lameter <cl@linux.com>, Linus Torvalds <torvalds@linux-foundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: fstests@vger.kernel.org
+Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, zlang@redhat.com, linux-xfs@vger.kernel.org
 
-On 09/24/2018 01:42 AM, Ming Lei wrote:
-> On Fri, Sep 21, 2018 at 03:04:18PM +0200, Vitaly Kuznetsov wrote:
->> Christoph Hellwig <hch@lst.de> writes:
->>
->>> On Wed, Sep 19, 2018 at 05:15:43PM +0800, Ming Lei wrote:
->>>> 1) does kmalloc-N slab guarantee to return N-byte aligned buffer?  If
->>>> yes, is it a stable rule?
->>>
->>> This is the assumption in a lot of the kernel, so I think if somethings
->>> breaks this we are in a lot of pain.
+On a 64k blocksized filesystem, when the test CoWs the file2's offset
+range [10 * 64k, 19 * 64k], the call to xfs_bmapi_reserve_delalloc()
+allocates 32 64k blocks. This is because XFS_DEFAULT_COWEXTSZ_HINT has
+the value of 32 and xfs_get_cowextsz_hint() uses this to compute the
+extent alignment. This leads to xfs_bmapi_reserve_delalloc() to reserve
+space corresponding to the file range [0, 32 * 64k] in the inode's
+cow fork area. On completion of write I/O corresponding to file2's range
+[10 * 64k, 19 * 64k], xfs_end_io() moves 10 out of the originally
+allocated 32 64k blocks to the data fork area. The remaining 22 64k
+blocks linger on in cow fork area of the inode.
 
-This assumption is not correct. And it's not correct at least from the beginning of the
-git era, which is even before SLUB allocator appeared. With CONFIG_DEBUG_SLAB=y
-the same as with CONFIG_SLUB_DEBUG_ON=y kmalloc return 'unaligned' objects.
-The guaranteed arch-and-config-independent alignment of kmalloc() result is "sizeof(void*)".
+Later, when servicing the exit() syscall for the xfs_io process,
+xfs_free_eofblocks() ends up invoking xfs_reflink_cancel_cow_blocks()
+since i_delayed_blks has the value 22. xfs_reflink_cancel_cow_blocks()
+indirectly invokes __xfs_free_extent() which returns EIO since
+XFS_ERRTAG_FREE_EXTENT has been set. This leads to the filesystem to be
+shutdown. The "rm" command invoked later ends up returning an
+error and hence the test fails. The test actually requires that the
+filesystem gets shutdown when executing the "rm" command.
 
-If objects has higher alignment requirement, the could be allocated via specifically created kmem_cache.
+To fix the problem, this commit injects the free_extent error after we
+CoW file2's [10 * 64k, 19 * 64k] range.
 
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+---
+ tests/xfs/325     | 5 +++--
+ tests/xfs/325.out | 2 +-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-> 
-> Even some of buffer address is _not_ L1 cache size aligned, this way is
-> totally broken wrt. DMA to/from this buffer.
-> 
-> So this issue has to be fixed in slab debug side.
-> 
-
-Well, this definitely would increase memory consumption. Many (probably most) of the kmalloc()
-users doesn't need such alignment, why should they pay the cost? 
+diff --git a/tests/xfs/325 b/tests/xfs/325
+index b156de9..6795901 100755
+--- a/tests/xfs/325
++++ b/tests/xfs/325
+@@ -54,11 +54,12 @@ echo "Check files"
+ md5sum $SCRATCH_MNT/file1 | _filter_scratch
+ md5sum $SCRATCH_MNT/file2 | _filter_scratch
+ 
++echo "CoW a few blocks"
++$XFS_IO_PROG -c "pwrite -W -S 0x67 $((10 * blksz)) $((10 * blksz))" $SCRATCH_MNT/file2 >> $seqres.full
++
+ echo "Inject error"
+ _scratch_inject_error "free_extent"
+ 
+-echo "CoW a few blocks"
+-$XFS_IO_PROG -c "pwrite -W -S 0x67 $((10 * blksz)) $((10 * blksz))" $SCRATCH_MNT/file2 >> $seqres.full
+ rm $SCRATCH_MNT/file1
+ sync
+ 
+diff --git a/tests/xfs/325.out b/tests/xfs/325.out
+index 4e25d2b..92027cd 100644
+--- a/tests/xfs/325.out
++++ b/tests/xfs/325.out
+@@ -4,8 +4,8 @@ Create files
+ Check files
+ d5a0ed0305c8df4180cb2bf975ecffe8  SCRATCH_MNT/file1
+ d5a0ed0305c8df4180cb2bf975ecffe8  SCRATCH_MNT/file2
+-Inject error
+ CoW a few blocks
++Inject error
+ FS should be shut down, touch will fail
+ touch: cannot touch 'SCRATCH_MNT/badfs': Input/output error
+ Remount to replay log
+-- 
+2.9.5
