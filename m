@@ -1,9 +1,9 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-eopbgr80128.outbound.protection.outlook.com ([40.107.8.128]:8352
-        "EHLO EUR04-VI1-obe.outbound.protection.outlook.com"
+Received: from mail-eopbgr00102.outbound.protection.outlook.com ([40.107.0.102]:44697
+        "EHLO EUR02-AM5-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1730943AbeIXWJz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 24 Sep 2018 18:09:55 -0400
+        id S1730209AbeIXWJ5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 24 Sep 2018 18:09:57 -0400
 Subject: Re: block: DMA alignment of IO buffer allocated from slab
 References: <CACVXFVOBq3L_EjSTCoiqUL1PH=HMR5EuNNQV0hNndFpGxmUK6g@mail.gmail.com>
  <20180920063129.GB12913@lst.de> <87h8ij0zot.fsf@vitty.brq.redhat.com>
@@ -12,13 +12,11 @@ References: <CACVXFVOBq3L_EjSTCoiqUL1PH=HMR5EuNNQV0hNndFpGxmUK6g@mail.gmail.com>
  <20a20568-5089-541d-3cee-546e549a0bc8@acm.org>
  <12eee877-affa-c822-c9d5-fda3aa0a50da@virtuozzo.com>
  <1537801706.195115.7.camel@acm.org>
- <c844c598-be1d-bef4-fb99-09cf99571fd7@virtuozzo.com>
- <1537804720.195115.9.camel@acm.org>
 From: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Message-ID: <10c706fd-2252-f11b-312e-ae0d97d9a538@virtuozzo.com>
-Date: Mon, 24 Sep 2018 19:07:18 +0300
+Message-ID: <c844c598-be1d-bef4-fb99-09cf99571fd7@virtuozzo.com>
+Date: Mon, 24 Sep 2018 18:52:20 +0300
 MIME-Version: 1.0
-In-Reply-To: <1537804720.195115.9.camel@acm.org>
+In-Reply-To: <1537801706.195115.7.camel@acm.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -30,16 +28,72 @@ Cc: Christoph Hellwig <hch@lst.de>, Ming Lei <tom.leiming@gmail.com>, linux-bloc
 
 
 
-On 09/24/2018 06:58 PM, Bart Van Assche wrote:
-> On Mon, 2018-09-24 at 18:52 +0300, Andrey Ryabinin wrote:
->> Yes, with CONFIG_DEBUG_SLAB=y, CONFIG_SLUB_DEBUG_ON=y kmalloc() guarantees
->> that result is aligned on ARCH_KMALLOC_MINALIGN boundary.
+On 09/24/2018 06:08 PM, Bart Van Assche wrote:
+> On Mon, 2018-09-24 at 17:43 +0300, Andrey Ryabinin wrote:
+>>
+>> On 09/24/2018 05:19 PM, Bart Van Assche wrote:
+>>> On 9/24/18 2:46 AM, Andrey Ryabinin wrote:
+>>>> On 09/24/2018 01:42 AM, Ming Lei wrote:
+>>>>> On Fri, Sep 21, 2018 at 03:04:18PM +0200, Vitaly Kuznetsov wrote:
+>>>>>> Christoph Hellwig <hch@lst.de> writes:
+>>>>>>
+>>>>>>> On Wed, Sep 19, 2018 at 05:15:43PM +0800, Ming Lei wrote:
+>>>>>>>> 1) does kmalloc-N slab guarantee to return N-byte aligned buffer?  If
+>>>>>>>> yes, is it a stable rule?
+>>>>>>>
+>>>>>>> This is the assumption in a lot of the kernel, so I think if somethings
+>>>>>>> breaks this we are in a lot of pain.
+>>>>
+>>>> This assumption is not correct. And it's not correct at least from the beginning of the
+>>>> git era, which is even before SLUB allocator appeared. With CONFIG_DEBUG_SLAB=y
+>>>> the same as with CONFIG_SLUB_DEBUG_ON=y kmalloc return 'unaligned' objects.
+>>>> The guaranteed arch-and-config-independent alignment of kmalloc() result is "sizeof(void*)".
+>>
+>> Correction sizeof(unsigned long long), so 8-byte alignment guarantee.
+>>
+>>>>
+>>>> If objects has higher alignment requirement, the could be allocated via specifically created kmem_cache.
+>>>
+>>> Hello Andrey,
+>>>
+>>> The above confuses me. Can you explain to me why the following comment is present in include/linux/slab.h?
+>>>
+>>> /*
+>>>  * kmalloc and friends return ARCH_KMALLOC_MINALIGN aligned
+>>>  * pointers. kmem_cache_alloc and friends return ARCH_SLAB_MINALIGN
+>>>  * aligned pointers.
+>>>  */
+>>>
+>>
+>> ARCH_KMALLOC_MINALIGN - guaranteed alignment of the kmalloc() result.
+>> ARCH_SLAB_MINALIGN - guaranteed alignment of kmem_cache_alloc() result.
+>>
+>> If the 'align' argument passed into kmem_cache_create() is bigger than ARCH_SLAB_MINALIGN
+>> than kmem_cache_alloc() from that cache should return 'align'-aligned pointers.
 > 
-> Had you noticed that Vitaly Kuznetsov showed that this is not the case? See
-> also https://lore.kernel.org/lkml/87h8ij0zot.fsf@vitty.brq.redhat.com/.
+> Hello Andrey,
+> 
+> Do you realize that that comment from <linux/slab.h> contradicts what you
+> wrote about kmalloc() if ARCH_KMALLOC_MINALIGN > sizeof(unsigned long long)?
 > 
 
-I'm not following. On x86-64 ARCH_KMALLOC_MINALIGN is 8, all pointers that Vitaly Kuznetsov showed are 8-byte aligned.
+No, I don't see the contradiction. I said that arch-and-config-independent alignment is 8-bytes (at first I said that sizeof(void*), but corrected later)
+If some arch defines "ARCH_KMALLOC_MINALIGN > sizeof(unsigned long long)" than on that arch kmalloc() guarantee to return > 8 bytes
+aligned pointer, but that become arch-dependent alignment.
+
+I just realized that my phrase "kmalloc return 'unaligned' objects" is very confusing.
+By 'unaligned' objects, I meant that kmalloc-N doesn't return N-bytes aligned object.
+ARCH_KMALLOC_MINALIGN alignment is always guaranteed.
+
+> Additionally, shouldn't CONFIG_DEBUG_SLAB=y and CONFIG_SLUB_DEBUG_ON=y
+> provide the same guarantees as with debugging disabled, namely that kmalloc()
+> buffers are aligned on ARCH_KMALLOC_MINALIGN boundaries? Since buffers
+> allocated with kmalloc() are often used for DMA, how otherwise is DMA assumed
+> to work?
+> 
+
+Yes, with CONFIG_DEBUG_SLAB=y, CONFIG_SLUB_DEBUG_ON=y kmalloc() guarantees that result is aligned on ARCH_KMALLOC_MINALIGN boundary.
+
 
 > Thanks,
 > 
