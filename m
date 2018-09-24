@@ -1,96 +1,154 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36286 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728098AbeIUSxM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 21 Sep 2018 14:53:12 -0400
-From: Vitaly Kuznetsov <vkuznets@redhat.com>
-Subject: Re: block: DMA alignment of IO buffer allocated from slab
-References: <CACVXFVOBq3L_EjSTCoiqUL1PH=HMR5EuNNQV0hNndFpGxmUK6g@mail.gmail.com>
-        <20180920063129.GB12913@lst.de>
-Date: Fri, 21 Sep 2018 15:04:18 +0200
-In-Reply-To: <20180920063129.GB12913@lst.de> (Christoph Hellwig's message of
-        "Thu, 20 Sep 2018 08:31:29 +0200")
-Message-ID: <87h8ij0zot.fsf@vitty.brq.redhat.com>
+Received: from mail-ed1-f65.google.com ([209.85.208.65]:38190 "EHLO
+        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726350AbeIXU1k (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Sep 2018 16:27:40 -0400
+Received: by mail-ed1-f65.google.com with SMTP id x8-v6so2591169eds.5
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Sep 2018 07:25:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+References: <CA+1E3r+crZ6suDtTheOysm_dzZ2FeU=z4R-aQQw7etk1yuxOLQ@mail.gmail.com>
+ <20180910235827.GD5631@dastard> <CA+1E3r+Lggw9JJymdhoyzkqQfqGETZE=R=WG09s7FOhY3Snb5g@mail.gmail.com>
+ <20180912004259.GJ5631@dastard> <CA+1E3r+gd57nOv=S0gjrbU8df2qXa67njPP=KK1oPqLmsO5thQ@mail.gmail.com>
+ <20180917025601.GE16550@dastard> <20180921002336.GO27618@dastard> <CA+1E3rJ5d9ie8z79ph-71P-w1hSiR1Rdz7vAugv0vELF=sb5aA@mail.gmail.com>
+In-Reply-To: <CA+1E3rJ5d9ie8z79ph-71P-w1hSiR1Rdz7vAugv0vELF=sb5aA@mail.gmail.com>
+From: Joshi <joshiiitr@gmail.com>
+Date: Mon, 24 Sep 2018 19:55:02 +0530
+Message-ID: <CA+1E3rL1JA1PWC+53aU+RQcxFucccXu7M-K-m9AiEXaCjfCF=w@mail.gmail.com>
+Subject: Re: Strange behavior with log IO fake-completions
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Ming Lei <tom.leiming@gmail.com>, linux-block <linux-block@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Ming Lei <ming.lei@redhat.com>, Christoph Lameter <cl@linux.com>
+To: david@fromorbit.com
+Cc: linux-xfs@vger.kernel.org
 
-Christoph Hellwig <hch@lst.de> writes:
+> I changed all log wait queues (ic_force_wait, ic_write_wait, and
+xc_commit_wait) into completion variables (despite knowing that it is
+also implemented using wait_queue).
 
-> On Wed, Sep 19, 2018 at 05:15:43PM +0800, Ming Lei wrote:
->> 1) does kmalloc-N slab guarantee to return N-byte aligned buffer?  If
->> yes, is it a stable rule?
+Sorry, ignore this and subsequent part of the text. I think replacing
+with completion requires more work than I did.Calling "complete_all"
+is tricky, given the need of calling "reinit_completion" which may get
+executed by multiple threads in this case.
+On Fri, Sep 21, 2018 at 6:24 PM Joshi <joshiiitr@gmail.com> wrote:
 >
-> This is the assumption in a lot of the kernel, so I think if somethings
-> breaks this we are in a lot of pain.
+> I added some timing measurement code and obtained data for "dd" sync
+> requests (dd if=/dev/zero of=/mnt/f1 bs=4k count=1000 oflag=sync).
+> Let me define these times -
+> T1= xfs_log_force_lsn time (loosely, this is overall time to complete
+> one fsync request)
+> And within xfs_log_foce_lsn , these were added -
+> T2 = xlog_cil_force_lsn time
+> T3 = xlog_wait time for ic_force_wait
+> Last one is this -
+> T4 =  Time elapsed between issuing wake-up on ic_force_wait (during
+> completion) and thread waiting on ic_force_wait (dd in this case)
+> resumed execution
+> Basically T1 = T2+T3 +some_more, and T3 = T4 + some_more.
+>
+> Here is the data for 1 dd-sync request (trend remains mostly same for
+> all requests) -
+> Base case: T1= 37096,  T2=11070,  T3=19130,  T4=2410
+> FC case:    T1= 101206, T2=47150, T3=45443,  T4=29483
+>
+> T4 in fake-completion case seemed particularly odd to me. "dd" took so
+> much time to resume even after wake up was issued on ic_force_wait!
+> Looks like fast log completion is making xfs wait queues behave odd.
+> I changed all log wait queues (ic_force_wait, ic_write_wait, and
+> xc_commit_wait) into completion variables (despite knowing that it is
+> also implemented using wait_queue).
+> And it brought down the value of T4.
+> Overall numbers with iozone/varmail look like this -
+>
+> Iozone(48 cpus)
+> Threads       Base           FC
+> 1                149149.2    151444.5
+> 2                251794.5     255033.1
+> Varmail (48 cpus)
+> Threads      Base          FC
+> 1                 61500.9     62396.4
+> 2                 102834.9   103080.1
+>
+> However, base case numbers also got improved. Earlier base numbers
+> were comparatively very low with 48 cpus.
+>
+> Thanks,
+> On Fri, Sep 21, 2018 at 5:53 AM Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > On Mon, Sep 17, 2018 at 12:56:01PM +1000, Dave Chinner wrote:
+> > > On Fri, Sep 14, 2018 at 05:21:43PM +0530, Joshi wrote:
+> > > > > Now, your other "unexpected" result - lets use affinity to confine
+> > > > > everything to one CPU:
+> > > > >
+> > > > > fsync proc              CIL             IO-complete     log
+> > > > > xfs_log_force_lsn
+> > > > >   <wait for CIL>
+> > > > >                         xlog_write()
+> > > > >                         <queue to log>
+> > > > >                         wake CIL waiters
+> > > > >                                                         xlog_iodone()
+> > > > >                                                         wake iclogbug waiters
+> > > > > log force done
+> > > > >
+> > > > > Note the difference? The log work can't start until the CIL work has
+> > > > > completed because it's constrained to the same CPU, so it doesn't
+> > > > > cause any contention with the finalising of the CIL push and waking
+> > > > > waiters.
+> > > >
+> > > > "Log work can't start" part does not sound very good either. It needed
+> > > > to be done anyway before task waiting for fsync is woken.
+> > >
+> > > I'm beginning to think you don't really understand how logging in
+> > > XFS works.  If you want to improve the logging subsystem, it would
+> > > be a good idea for you to read and understand this document so you
+> > > have some idea of how the data that is written to the log gets
+> > > there and what happens to it after it's in the log.
+> > >
+> > > Documentation/filesystems/xfs-delayed-logging-design.txt
+> >
+> > It occurred to me yesterday that looking at the journal in a
+> > different way might help explain how it all works.
+> >
+> > Instead of looking at it as an IO engine, think of how an
+> > out-of-order CPU is designed to be made up of multiple stages in a
+> > pipeline - each stage does a small piece of work that it passes on
+> > to the next stage to process. Individual operation progresses serially
+> > through the pipeline, but, each stage of the pipeline can be
+> > operating on a different operation. Hence we can have multiple
+> > operations in flight at once, and the operations can also be run
+> > out of order as dynamical stage completion scheduling dictates.
+> > However, from a high level everything appears to complete in order
+> > because of re-ordering stages put everythign in order once the
+> > indiivdual operations have been executed.
+> >
+> > Similarly, the XFS journalling subsystem is an out of order,
+> > multi-stage pipeline with a post-IO re-ordering stage to ensure the
+> > end result is that individual operations always appear to complete
+> > in order.  Indeed, what ends up on disk in the journal is not in
+> > order, so one of the things that log recovery does is rebuild the
+> > state necessarily to reorder operations correctly before replay so
+> > that, again, it appears like everything occurred in the order that
+> > the transactions were committed to the journal.
+> >
+> > So perhaps looking at it as a multi-stage pipeline might also help
+> > explain why fake-completion changes the behaviour in unpredictable
+> > ways. i.e. it basically chops out stages of the pipeline, changing
+> > the length of the pipeline and the order in which stages of the
+> > pipleine are executed.
+> >
+> > Cheers,
+> >
+> > Dave.
+> > --
+> > Dave Chinner
+> > david@fromorbit.com
+>
+>
+>
+> --
+> Joshi
 
-It seems that SLUB debug breaks this assumption. Kernel built with
 
-CONFIG_SLUB_DEBUG=y
-CONFIG_SLUB=y
-CONFIG_SLUB_DEBUG_ON=y
 
-And the following patch:
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 3b20607d581b..56713b201921 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -1771,3 +1771,28 @@ void __init arch_reserve_mem_area(acpi_physical_address addr, size_t size)
-        e820__range_add(addr, size, E820_TYPE_ACPI);
-        e820__update_table_print();
- }
-+
-+#define KMALLOCS 16
-+
-+static __init int kmalloc_check_512(void)
-+{
-+       void *buf[KMALLOCS];
-+       int i;
-+
-+       pr_info("kmalloc_check_512: start\n");
-+
-+       for (i = 0; i < KMALLOCS; i++) {
-+               buf[i] = kmalloc(512, GFP_KERNEL);
-+       }
-+
-+       for (i = 0; i < KMALLOCS; i++) {
-+               pr_info("%lx %x\n", (unsigned long)buf[i], ((unsigned long)buf[i]) % 512);
-+               kfree(buf[i]);
-+       }
-+
-+       pr_info("kmalloc_check_512: done\n");
-+
-+       return 0;
-+}
-+
-+late_initcall(kmalloc_check_512);
-
-gives me the following output:
-
-[    8.417468] kmalloc_check_512: start
-[    8.429572] ffff9a3258bb09f8 1f8
-[    8.435513] ffff9a3258bb70a8 a8
-[    8.441352] ffff9a3258bb0d48 148
-[    8.447139] ffff9a3258bb6d58 158
-[    8.452864] ffff9a3258bb1098 98
-[    8.458536] ffff9a3258bb6a08 8
-[    8.464103] ffff9a3258bb13e8 1e8
-[    8.469534] ffff9a3258bb66b8 b8
-[    8.474907] ffff9a3258bb1738 138
-[    8.480214] ffff9a3258bb6368 168
-[    8.480217] ffff9a3258bb1a88 88
-[    8.496178] ffff9a3258bb6018 18
-[    8.501218] ffff9a3258bb1dd8 1d8
-[    8.506138] ffff9a3258bb5cc8 c8
-[    8.511010] ffff9a3258bb2128 128
-[    8.515795] ffff9a3258bb5978 178
-[    8.520517] kmalloc_check_512: done
-
-(without SLUB_DEBUG_ON all addresses are 512b aligned).
-
--- 
-  Vitaly
+--
+Joshi
