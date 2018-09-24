@@ -1,43 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41754 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725898AbeIUNNC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 21 Sep 2018 09:13:02 -0400
-Date: Fri, 21 Sep 2018 15:25:13 +0800
-From: Ming Lei <ming.lei@redhat.com>
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:42342 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728249AbeIXVLG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Sep 2018 17:11:06 -0400
+Message-ID: <1537801706.195115.7.camel@acm.org>
 Subject: Re: block: DMA alignment of IO buffer allocated from slab
-Message-ID: <20180921072511.GA8188@ming.t460p>
+From: Bart Van Assche <bvanassche@acm.org>
+Date: Mon, 24 Sep 2018 08:08:26 -0700
+In-Reply-To: <12eee877-affa-c822-c9d5-fda3aa0a50da@virtuozzo.com>
 References: <CACVXFVOBq3L_EjSTCoiqUL1PH=HMR5EuNNQV0hNndFpGxmUK6g@mail.gmail.com>
- <20180921015608.GA31060@dastard>
- <20180921070805.GC14529@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180921070805.GC14529@lst.de>
+         <20180920063129.GB12913@lst.de> <87h8ij0zot.fsf@vitty.brq.redhat.com>
+         <20180923224206.GA13618@ming.t460p>
+         <38c03920-0fd0-0a39-2a6e-70cd8cb4ef34@virtuozzo.com>
+         <20a20568-5089-541d-3cee-546e549a0bc8@acm.org>
+         <12eee877-affa-c822-c9d5-fda3aa0a50da@virtuozzo.com>
+Content-Type: text/plain; charset="UTF-7"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <david@fromorbit.com>, Ming Lei <tom.leiming@gmail.com>, linux-block <linux-block@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>
+To: Andrey Ryabinin <aryabinin@virtuozzo.com>, Ming Lei <ming.lei@redhat.com>, Vitaly Kuznetsov <vkuznets@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Ming Lei <tom.leiming@gmail.com>, linux-block <linux-block@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Christoph Lameter <cl@linux.com>, Linus Torvalds <torvalds@linux-foundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-On Fri, Sep 21, 2018 at 09:08:05AM +0200, Christoph Hellwig wrote:
-> On Fri, Sep 21, 2018 at 11:56:08AM +1000, Dave Chinner wrote:
-> > > 3) If slab can't guarantee to return 512-aligned buffer, how to fix
-> > > this data corruption issue?
-> > 
-> > I think that the block layer needs to check the alignment of memory
-> > buffers passed to it and take appropriate action rather than
-> > corrupting random memory and returning a sucess status to the bad
-> > bio.
-> 
-> Or just reject the I/O.  But yes, we already have the
-> queue_dma_alignment helper in the block layer, we just don't do it
-> in the fast path.  I think generic_make_request_checks needs to
-> check it, and print an error and return a warning if the alignment
-> requirement isn't met.
+On Mon, 2018-09-24 at 17:43 +-0300, Andrey Ryabinin wrote:
++AD4 
++AD4 On 09/24/2018 05:19 PM, Bart Van Assche wrote:
++AD4 +AD4 On 9/24/18 2:46 AM, Andrey Ryabinin wrote:
++AD4 +AD4 +AD4 On 09/24/2018 01:42 AM, Ming Lei wrote:
++AD4 +AD4 +AD4 +AD4 On Fri, Sep 21, 2018 at 03:04:18PM +-0200, Vitaly Kuznetsov wrote:
++AD4 +AD4 +AD4 +AD4 +AD4 Christoph Hellwig +ADw-hch+AEA-lst.de+AD4 writes:
++AD4 +AD4 +AD4 +AD4 +AD4 
++AD4 +AD4 +AD4 +AD4 +AD4 +AD4 On Wed, Sep 19, 2018 at 05:15:43PM +-0800, Ming Lei wrote:
++AD4 +AD4 +AD4 +AD4 +AD4 +AD4 +AD4 1) does kmalloc-N slab guarantee to return N-byte aligned buffer?  If
++AD4 +AD4 +AD4 +AD4 +AD4 +AD4 +AD4 yes, is it a stable rule?
++AD4 +AD4 +AD4 +AD4 +AD4 +AD4 
++AD4 +AD4 +AD4 +AD4 +AD4 +AD4 This is the assumption in a lot of the kernel, so I think if somethings
++AD4 +AD4 +AD4 +AD4 +AD4 +AD4 breaks this we are in a lot of pain.
++AD4 +AD4 +AD4 
++AD4 +AD4 +AD4 This assumption is not correct. And it's not correct at least from the beginning of the
++AD4 +AD4 +AD4 git era, which is even before SLUB allocator appeared. With CONFIG+AF8-DEBUG+AF8-SLAB+AD0-y
++AD4 +AD4 +AD4 the same as with CONFIG+AF8-SLUB+AF8-DEBUG+AF8-ON+AD0-y kmalloc return 'unaligned' objects.
++AD4 +AD4 +AD4 The guaranteed arch-and-config-independent alignment of kmalloc() result is +ACI-sizeof(void+ACo)+ACI.
++AD4 
++AD4 Correction sizeof(unsigned long long), so 8-byte alignment guarantee.
++AD4 
++AD4 +AD4 +AD4 
++AD4 +AD4 +AD4 If objects has higher alignment requirement, the could be allocated via specifically created kmem+AF8-cache.
++AD4 +AD4 
++AD4 +AD4 Hello Andrey,
++AD4 +AD4 
++AD4 +AD4 The above confuses me. Can you explain to me why the following comment is present in include/linux/slab.h?
++AD4 +AD4 
++AD4 +AD4 /+ACo
++AD4 +AD4  +ACo kmalloc and friends return ARCH+AF8-KMALLOC+AF8-MINALIGN aligned
++AD4 +AD4  +ACo pointers. kmem+AF8-cache+AF8-alloc and friends return ARCH+AF8-SLAB+AF8-MINALIGN
++AD4 +AD4  +ACo aligned pointers.
++AD4 +AD4  +ACo-/
++AD4 +AD4 
++AD4 
++AD4 ARCH+AF8-KMALLOC+AF8-MINALIGN - guaranteed alignment of the kmalloc() result.
++AD4 ARCH+AF8-SLAB+AF8-MINALIGN - guaranteed alignment of kmem+AF8-cache+AF8-alloc() result.
++AD4 
++AD4 If the 'align' argument passed into kmem+AF8-cache+AF8-create() is bigger than ARCH+AF8-SLAB+AF8-MINALIGN
++AD4 than kmem+AF8-cache+AF8-alloc() from that cache should return 'align'-aligned pointers.
 
-That can be done in generic_make_request_checks(), but some cost may be
-introduced, because each bvec needs to be checked in the fast path.
+Hello Andrey,
+
+Do you realize that that comment from +ADw-linux/slab.h+AD4 contradicts what you
+wrote about kmalloc() if ARCH+AF8-KMALLOC+AF8-MINALIGN +AD4 sizeof(unsigned long long)?
+
+Additionally, shouldn't CONFIG+AF8-DEBUG+AF8-SLAB+AD0-y and CONFIG+AF8-SLUB+AF8-DEBUG+AF8-ON+AD0-y
+provide the same guarantees as with debugging disabled, namely that kmalloc()
+buffers are aligned on ARCH+AF8-KMALLOC+AF8-MINALIGN boundaries? Since buffers
+allocated with kmalloc() are often used for DMA, how otherwise is DMA assumed
+to work?
 
 Thanks,
-Ming
+
+Bart.
