@@ -1,129 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:55356 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727451AbeIZQiB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 12:38:01 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8QANlr1087703
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:44 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp2120.oracle.com with ESMTP id 2mndpphh70-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:44 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAPhmM027002
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:43 GMT
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w8QAPht7018403
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:43 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v3 02/30] xfsprogs: Add helper function xfs_attr_try_sf_addname
-Date: Wed, 26 Sep 2018 03:23:05 -0700
-Message-Id: <1537957413-10630-3-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1537957413-10630-1-git-send-email-allison.henderson@oracle.com>
-References: <1537957413-10630-1-git-send-email-allison.henderson@oracle.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:57630 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726227AbeIYDNY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Sep 2018 23:13:24 -0400
+Date: Mon, 24 Sep 2018 14:09:13 -0700
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: block: DMA alignment of IO buffer allocated from slab
+Message-ID: <20180924210913.GB2542@bombadil.infradead.org>
+References: <12eee877-affa-c822-c9d5-fda3aa0a50da@virtuozzo.com>
+ <1537801706.195115.7.camel@acm.org>
+ <c844c598-be1d-bef4-fb99-09cf99571fd7@virtuozzo.com>
+ <1537804720.195115.9.camel@acm.org>
+ <10c706fd-2252-f11b-312e-ae0d97d9a538@virtuozzo.com>
+ <1537805984.195115.14.camel@acm.org>
+ <20180924185753.GA32269@bombadil.infradead.org>
+ <1537818978.195115.25.camel@acm.org>
+ <20180924204148.GA2542@bombadil.infradead.org>
+ <1537822441.195115.32.camel@acm.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1537822441.195115.32.camel@acm.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>, Ming Lei <ming.lei@redhat.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, Christoph Hellwig <hch@lst.de>, Ming Lei <tom.leiming@gmail.com>, linux-block <linux-block@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Christoph Lameter <cl@linux.com>, Linus Torvalds <torvalds@linux-foundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-This patch adds a subroutine xfs_attr_try_sf_addname
-used by xfs_attr_set.  This subrotine will attempt to
-add the attribute name specified in args in shortform,
-as well and perform error handling previously done in
-xfs_attr_set.
+On Mon, Sep 24, 2018 at 01:54:01PM -0700, Bart Van Assche wrote:
+> On Mon, 2018-09-24 at 13:41 -0700, Matthew Wilcox wrote:
+> > Good job snipping the part of my reply which addressed this.  Go read
+> > DMA-API.txt yourself.  Carefully.
+> 
+> The snipped part did not contradict your claim that "You're not supposed to use
+> kmalloc memory for DMA." In the DMA-API.txt document however there are multiple
+> explicit statements that support allocating memory for DMA with kmalloc(). Here
+> is one example from the DMA-API.txt section about dma_map_single():
+> 
+> 	Not all memory regions in a machine can be mapped by this API.
+> 	Further, contiguous kernel virtual space may not be contiguous as
+> 	physical memory.  Since this API does not provide any scatter/gather
+> 	capability, it will fail if the user tries to map a non-physically
+> 	contiguous piece of memory.  For this reason, memory to be mapped by
+> 	this API should be obtained from sources which guarantee it to be
+> 	physically contiguous (like kmalloc).
 
-This patch helps to pre-simplify xfs_attr_set for reviewing
-purposes and reduce indentation.  New function will be added
-in the next patch.
+Since you're only interested in reading the parts which support your
+viewpoint, I'll do the work for you.
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
- libxfs/xfs_attr.c | 61 ++++++++++++++++++++++++++++++++++++-------------------
- 1 file changed, 40 insertions(+), 21 deletions(-)
-
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index bbfe4ee..cc5bde2 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -186,6 +186,42 @@ xfs_attr_calc_size(
- 	return nblks;
- }
- 
-+STATIC int
-+xfs_attr_try_sf_addname(
-+	struct xfs_inode	*dp,
-+	struct xfs_da_args	*args)
-+{
-+
-+	struct xfs_mount	*mp = dp->i_mount;
-+	int			error;
-+
-+	error = xfs_attr_shortform_addname(args);
-+	if (error == -ENOSPC)
-+		return error;
-+
-+	/*
-+	 * Commit the shortform mods, and we're done.
-+	 * NOTE: this is also the error path
-+	 * (EEXIST, etc).
-+	 */
-+	ASSERT(args->trans != NULL);
-+
-+	/*
-+	 * If this is a synchronous mount, make sure
-+	 * that the transaction goes to disk before
-+	 * returning to the user.
-+	 */
-+	if (mp->m_flags & XFS_MOUNT_WSYNC)
-+		xfs_trans_set_sync(args->trans);
-+
-+	if (!error && (args->flags & ATTR_KERNOTIME) == 0) {
-+		xfs_trans_ichgtime(args->trans, dp,
-+				XFS_ICHGTIME_CHG);
-+	}
-+
-+	return error;
-+}
-+
- int
- xfs_attr_set(
- 	struct xfs_inode	*dp,
-@@ -276,30 +312,13 @@ xfs_attr_set(
- 		 * Try to add the attr to the attribute list in
- 		 * the inode.
- 		 */
--		error = xfs_attr_shortform_addname(&args);
-+		error = xfs_attr_try_sf_addname(dp, &args);
- 		if (error != -ENOSPC) {
--			/*
--			 * Commit the shortform mods, and we're done.
--			 * NOTE: this is also the error path (EEXIST, etc).
--			 */
--			ASSERT(args.trans != NULL);
--
--			/*
--			 * If this is a synchronous mount, make sure that
--			 * the transaction goes to disk before returning
--			 * to the user.
--			 */
--			if (mp->m_flags & XFS_MOUNT_WSYNC)
--				xfs_trans_set_sync(args.trans);
--
--			if (!error && (flags & ATTR_KERNOTIME) == 0) {
--				xfs_trans_ichgtime(args.trans, dp,
--							XFS_ICHGTIME_CHG);
--			}
- 			err2 = xfs_trans_commit(args.trans);
--			xfs_iunlock(dp, XFS_ILOCK_EXCL);
-+			error = error ? error : err2;
- 
--			return error ? error : err2;
-+			xfs_iunlock(dp, XFS_ILOCK_EXCL);
-+			return error;
- 		}
- 
- 		/*
--- 
-2.7.4
+        Memory coherency operates at a granularity called the cache
+        line width.  In order for memory mapped by this API to operate
+        correctly, the mapped region must begin exactly on a cache line
+        boundary and end exactly on one (to prevent two separately mapped
+        regions from sharing a single cache line).  Since the cache line size
+        may not be known at compile time, the API will not enforce this
+        requirement.  THEREFORE, IT IS RECOMMENDED THAT DRIVER WRITERS WHO
+        DON'T TAKE SPECIAL CARE TO DETERMINE THE CACHE LINE SIZE AT RUN TIME
+        ONLY MAP VIRTUAL REGIONS THAT BEGIN AND END ON PAGE BOUNDARIES (WHICH
+        ARE GUARANTEED ALSO TO BE CACHE LINE BOUNDARIES).
