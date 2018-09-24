@@ -1,60 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:57630 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726227AbeIYDNY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Sep 2018 23:13:24 -0400
-Date: Mon, 24 Sep 2018 14:09:13 -0700
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: block: DMA alignment of IO buffer allocated from slab
-Message-ID: <20180924210913.GB2542@bombadil.infradead.org>
-References: <12eee877-affa-c822-c9d5-fda3aa0a50da@virtuozzo.com>
- <1537801706.195115.7.camel@acm.org>
- <c844c598-be1d-bef4-fb99-09cf99571fd7@virtuozzo.com>
- <1537804720.195115.9.camel@acm.org>
- <10c706fd-2252-f11b-312e-ae0d97d9a538@virtuozzo.com>
- <1537805984.195115.14.camel@acm.org>
- <20180924185753.GA32269@bombadil.infradead.org>
- <1537818978.195115.25.camel@acm.org>
- <20180924204148.GA2542@bombadil.infradead.org>
- <1537822441.195115.32.camel@acm.org>
+Received: from mx1.redhat.com ([209.132.183.28]:35466 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729217AbeIXXKH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 24 Sep 2018 19:10:07 -0400
+Received: from smtp.corp.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.26])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id A230EC04BD4D
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Sep 2018 17:07:01 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 6D58230A6055
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Sep 2018 17:07:01 +0000 (UTC)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfsprogs: make scrub build config-optional
+Message-ID: <832c69f6-4cd4-224d-0d58-5a387f2ae9fa@redhat.com>
+Date: Mon, 24 Sep 2018 12:07:00 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1537822441.195115.32.camel@acm.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>, Ming Lei <ming.lei@redhat.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, Christoph Hellwig <hch@lst.de>, Ming Lei <tom.leiming@gmail.com>, linux-block <linux-block@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Christoph Lameter <cl@linux.com>, Linus Torvalds <torvalds@linux-foundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Sep 24, 2018 at 01:54:01PM -0700, Bart Van Assche wrote:
-> On Mon, 2018-09-24 at 13:41 -0700, Matthew Wilcox wrote:
-> > Good job snipping the part of my reply which addressed this.  Go read
-> > DMA-API.txt yourself.  Carefully.
-> 
-> The snipped part did not contradict your claim that "You're not supposed to use
-> kmalloc memory for DMA." In the DMA-API.txt document however there are multiple
-> explicit statements that support allocating memory for DMA with kmalloc(). Here
-> is one example from the DMA-API.txt section about dma_map_single():
-> 
-> 	Not all memory regions in a machine can be mapped by this API.
-> 	Further, contiguous kernel virtual space may not be contiguous as
-> 	physical memory.  Since this API does not provide any scatter/gather
-> 	capability, it will fail if the user tries to map a non-physically
-> 	contiguous piece of memory.  For this reason, memory to be mapped by
-> 	this API should be obtained from sources which guarantee it to be
-> 	physically contiguous (like kmalloc).
+This lets us do:
 
-Since you're only interested in reading the parts which support your
-viewpoint, I'll do the work for you.
+# ./configure --enable-scrub=no
+or
+# ./configure --disable-scrub
 
-        Memory coherency operates at a granularity called the cache
-        line width.  In order for memory mapped by this API to operate
-        correctly, the mapped region must begin exactly on a cache line
-        boundary and end exactly on one (to prevent two separately mapped
-        regions from sharing a single cache line).  Since the cache line size
-        may not be known at compile time, the API will not enforce this
-        requirement.  THEREFORE, IT IS RECOMMENDED THAT DRIVER WRITERS WHO
-        DON'T TAKE SPECIAL CARE TO DETERMINE THE CACHE LINE SIZE AT RUN TIME
-        ONLY MAP VIRTUAL REGIONS THAT BEGIN AND END ON PAGE BOUNDARIES (WHICH
-        ARE GUARANTEED ALSO TO BE CACHE LINE BOUNDARIES).
+for any distros that may not want to ship the experimental scrub utility.
+
+The default is still to build scrub.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+(skipping libicu checks is maybe overkill, I can drop that
+if preferred; checking but not using is harmless)
+
+diff --git a/Makefile b/Makefile
+index 6774825..dd6ad16 100644
+--- a/Makefile
++++ b/Makefile
+@@ -49,7 +49,11 @@ LIBFROG_SUBDIR = libfrog
+ DLIB_SUBDIRS = libxlog libxcmd libhandle
+ LIB_SUBDIRS = libxfs $(DLIB_SUBDIRS)
+ TOOL_SUBDIRS = copy db estimate fsck growfs io logprint mkfs quota \
+-		mdrestore repair rtcp m4 man doc debian spaceman scrub
++		mdrestore repair rtcp m4 man doc debian spaceman
++
++ifeq ("$(ENABLE_SCRUB)","yes")
++TOOL_SUBDIRS += scrub
++endif
+ 
+ ifneq ("$(PKG_PLATFORM)","darwin")
+ TOOL_SUBDIRS += fsr
+diff --git a/configure.ac b/configure.ac
+index 5fdf78e..467ca2d 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -95,9 +95,15 @@ AC_ARG_ENABLE(lto,
+ 	enable_lto=probe)
+ AC_SUBST(enable_lto)
+ 
++# Enable xfs_scrub build
++AC_ARG_ENABLE(scrub,
++[ --enable-scrub=[yes/no]    Enable build of xfs_scrub utility [default=yes]],,
++	enable_scrub=yes)
++AC_SUBST(enable_scrub)
++
+ # Enable libicu for xfs_scrubbing of malicious unicode sequences in names
+ AC_ARG_ENABLE(libicu,
+-[ --enable-libicu=[yes/no]   Enable Unicode name scanning (libicu) [default=probe]],,
++[ --enable-libicu=[yes/no]   Enable Unicode name scanning in xfs_scrub (libicu) [default=probe]],,
+ 	enable_libicu=probe)
+ 
+ #
+@@ -178,11 +184,13 @@ AC_HAVE_DEVMAPPER
+ AC_HAVE_MALLINFO
+ AC_PACKAGE_WANT_ATTRIBUTES_H
+ AC_HAVE_LIBATTR
+-if test "$enable_libicu" = "yes" || test "$enable_libicu" = "probe"; then
+-	AC_HAVE_LIBICU
+-fi
+-if test "$enable_libicu" = "yes" && test "$have_libicu" != "yes"; then
+-        AC_MSG_ERROR([libicu not found.])
++if test "$enable_scrub" = "yes"; then
++        if test "$enable_libicu" = "yes" || test "$enable_libicu" = "probe"; then
++                AC_HAVE_LIBICU
++        fi
++        if test "$enable_libicu" = "yes" && test "$have_libicu" != "yes"; then
++                AC_MSG_ERROR([libicu not found.])
++        fi
+ fi
+ AC_HAVE_OPENAT
+ AC_HAVE_FSTATAT
+diff --git a/include/builddefs.in b/include/builddefs.in
+index f7d39a4..f3fc187 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -81,6 +81,7 @@ ENABLE_GETTEXT	= @enable_gettext@
+ ENABLE_EDITLINE	= @enable_editline@
+ ENABLE_READLINE	= @enable_readline@
+ ENABLE_BLKID	= @enable_blkid@
++ENABLE_SCRUB	= @enable_scrub@
+ 
+ HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
+ 
