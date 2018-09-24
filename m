@@ -1,42 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:60858 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725845AbeIWHTb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Sep 2018 03:19:31 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8N1JnXO054074
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Sep 2018 01:23:54 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2130.oracle.com with ESMTP id 2mnd5t1m0m-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Sep 2018 01:23:54 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w8N1Nruw028603
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Sep 2018 01:23:53 GMT
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w8N1NrjX022943
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Sep 2018 01:23:53 GMT
-Date: Sat, 22 Sep 2018 18:23:53 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: 4.20 plans
-Message-ID: <20180923012353.GS20086@magnolia>
+Received: from mail-eopbgr30103.outbound.protection.outlook.com ([40.107.3.103]:65344
+        "EHLO EUR03-AM5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727497AbeIXPrV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 24 Sep 2018 11:47:21 -0400
+Subject: Re: block: DMA alignment of IO buffer allocated from slab
+References: <CACVXFVOBq3L_EjSTCoiqUL1PH=HMR5EuNNQV0hNndFpGxmUK6g@mail.gmail.com>
+ <20180920063129.GB12913@lst.de> <87h8ij0zot.fsf@vitty.brq.redhat.com>
+ <20180923224206.GA13618@ming.t460p>
+From: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Message-ID: <38c03920-0fd0-0a39-2a6e-70cd8cb4ef34@virtuozzo.com>
+Date: Mon, 24 Sep 2018 12:46:27 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <20180923224206.GA13618@ming.t460p>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: Ming Lei <ming.lei@redhat.com>, Vitaly Kuznetsov <vkuznets@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Ming Lei <tom.leiming@gmail.com>, linux-block <linux-block@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Christoph Lameter <cl@linux.com>, Linus Torvalds <torvalds@linux-foundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-Hi all,
+On 09/24/2018 01:42 AM, Ming Lei wrote:
+> On Fri, Sep 21, 2018 at 03:04:18PM +0200, Vitaly Kuznetsov wrote:
+>> Christoph Hellwig <hch@lst.de> writes:
+>>
+>>> On Wed, Sep 19, 2018 at 05:15:43PM +0800, Ming Lei wrote:
+>>>> 1) does kmalloc-N slab guarantee to return N-byte aligned buffer?  If
+>>>> yes, is it a stable rule?
+>>>
+>>> This is the assumption in a lot of the kernel, so I think if somethings
+>>> breaks this we are in a lot of pain.
 
-I've recovered enough to start reviewing patches and collecting up all
-my scattered brains again.  Dave will handle the merge window for 4.20
-and I'll take over again after -rc1 is out.  For this release, we intend
-to focus on stability and defer new features until 4.21.  In other
-words, we'd prefer bug fixes and cleanups only this time around.
+This assumption is not correct. And it's not correct at least from the beginning of the
+git era, which is even before SLUB allocator appeared. With CONFIG_DEBUG_SLAB=y
+the same as with CONFIG_SLUB_DEBUG_ON=y kmalloc return 'unaligned' objects.
+The guaranteed arch-and-config-independent alignment of kmalloc() result is "sizeof(void*)".
 
-It's nice to be back,
+If objects has higher alignment requirement, the could be allocated via specifically created kmem_cache.
 
---D
+
+> 
+> Even some of buffer address is _not_ L1 cache size aligned, this way is
+> totally broken wrt. DMA to/from this buffer.
+> 
+> So this issue has to be fixed in slab debug side.
+> 
+
+Well, this definitely would increase memory consumption. Many (probably most) of the kmalloc()
+users doesn't need such alignment, why should they pay the cost? 
