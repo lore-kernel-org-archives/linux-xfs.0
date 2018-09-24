@@ -1,53 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55530 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:45020 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727234AbeIYGZ5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 25 Sep 2018 02:25:57 -0400
-Date: Tue, 25 Sep 2018 08:20:58 +0800
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: block: DMA alignment of IO buffer allocated from slab
-Message-ID: <20180925002057.GB14386@ming.t460p>
-References: <CACVXFVOBq3L_EjSTCoiqUL1PH=HMR5EuNNQV0hNndFpGxmUK6g@mail.gmail.com>
- <20180920063129.GB12913@lst.de>
- <87h8ij0zot.fsf@vitty.brq.redhat.com>
- <20180923224206.GA13618@ming.t460p>
- <38c03920-0fd0-0a39-2a6e-70cd8cb4ef34@virtuozzo.com>
- <20a20568-5089-541d-3cee-546e549a0bc8@acm.org>
- <010001660c27f079-7ba54431-6f0c-430a-8db5-2398a8e761f0-000000@email.amazonses.com>
+        id S1730200AbeIXXH7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 24 Sep 2018 19:07:59 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 31842308FF32
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Sep 2018 17:04:53 +0000 (UTC)
+Date: Mon, 24 Sep 2018 13:04:48 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/2] xfs: validate inode di_forkoff
+Message-ID: <20180924170447.GA60179@bfoster>
+References: <0c8c405b-8929-82a6-5c9a-f5965da2c464@redhat.com>
+ <da670f4a-6ae7-fbe7-94db-b6a4e6bb0c9e@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <010001660c27f079-7ba54431-6f0c-430a-8db5-2398a8e761f0-000000@email.amazonses.com>
+In-Reply-To: <da670f4a-6ae7-fbe7-94db-b6a4e6bb0c9e@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christopher Lameter <cl@linux.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, Andrey Ryabinin <aryabinin@virtuozzo.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, Christoph Hellwig <hch@lst.de>, Ming Lei <tom.leiming@gmail.com>, linux-block <linux-block@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Linus Torvalds <torvalds@linux-foundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Sep 24, 2018 at 03:17:16PM +0000, Christopher Lameter wrote:
-> On Mon, 24 Sep 2018, Bart Van Assche wrote:
+On Mon, Sep 10, 2018 at 05:22:08PM -0500, Eric Sandeen wrote:
+> Verify the inode di_forkoff, lifted from xfs_repair's
+> process_check_inode_forkoff().
 > 
-> > /*
-> >  * kmalloc and friends return ARCH_KMALLOC_MINALIGN aligned
-> >  * pointers. kmem_cache_alloc and friends return ARCH_SLAB_MINALIGN
-> >  * aligned pointers.
-> >  */
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 > 
-> kmalloc alignment is only guaranteed to ARCH_KMALLOC_MINALIGN. That power
-> of 2 byte caches (without certain options) are aligned to the power of 2
-> is due to the nature that these objects are stored in SLUB. Other
-> allocators may behave different and actually different debug options
-> result in different alignments. You cannot rely on that.
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index 30d1d60f1d46..8d76637a49a7 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -415,6 +415,31 @@ xfs_dinode_verify_fork(
+>  	return NULL;
+>  }
+>  
+> +static xfs_failaddr_t
+> +xfs_dinode_verify_forkoff(
+> +	struct xfs_dinode	*dip,
+> +	struct xfs_mount	*mp)
+> +{
+> +	if (dip->di_forkoff == 0)
+> +		return NULL;
+
+I think it would be good to use XFS_DFORK_Q() here, just to be
+consistent with the other, similar checks. Otherwise looks good:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> +
+> +	switch (dip->di_format)  {
+> +	case XFS_DINODE_FMT_DEV:
+> +		if (dip->di_forkoff != (roundup(sizeof(xfs_dev_t), 8) >> 3))
+> +			return __this_address;
+> +		break;
+> +	case XFS_DINODE_FMT_LOCAL:	/* fall through ... */
+> +	case XFS_DINODE_FMT_EXTENTS:    /* fall through ... */
+> +	case XFS_DINODE_FMT_BTREE:
+> +		if (dip->di_forkoff >= (XFS_LITINO(mp, dip->di_version) >> 3))
+> +			return __this_address;
+> +		break;
+> +	default:
+> +		return __this_address;
+> +	}
+> +	return NULL;
+> +}
+> +
+>  xfs_failaddr_t
+>  xfs_dinode_verify(
+>  	struct xfs_mount	*mp,
+> @@ -470,6 +498,11 @@ xfs_dinode_verify(
+>  	if (mode && (flags & XFS_DIFLAG_REALTIME) && !mp->m_rtdev_targp)
+>  		return __this_address;
+>  
+> +	/* check for illegal values of di_forkoff */
+> +	fa = xfs_dinode_verify_forkoff(dip, mp);
+> +	if (fa)
+> +		return fa;
+> +
+>  	/* Do we have appropriate data fork formats for the mode? */
+>  	switch (mode & S_IFMT) {
+>  	case S_IFIFO:
 > 
-> ARCH_KMALLOC minalign shows the mininum alignment guarantees. If that is
-> not sufficient and you do not want to change the arch guarantees then you
-> can open you own slab cache with kmem_cache_create() where you can specify
-> different alignment requirements.
-
-Christopher, thank you for clarifying the point!
-
-Then looks it should be reasonable for XFS to switch to kmem_cache_create()
-for addressing this issue.
-
-Thanks,
-Ming
