@@ -1,61 +1,70 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:49596 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725756AbeIVH05 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 22 Sep 2018 03:26:57 -0400
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id F217F2D9FE
-        for <linux-xfs@vger.kernel.org>; Sat, 22 Sep 2018 01:35:25 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 201173] [xfstests xfs/137]: xfs_repair hang when it trying to
- repair a 500t xfs
-Date: Sat, 22 Sep 2018 01:35:25 +0000
-Message-ID: <bug-201173-201763-obG255pYHJ@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-201173-201763@https.bugzilla.kernel.org/>
-References: <bug-201173-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-MIME-Version: 1.0
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:41429 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1730748AbeIXVVe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Sep 2018 17:21:34 -0400
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w8OFEaAD129377
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Sep 2018 11:18:53 -0400
+Received: from e31.co.us.ibm.com (e31.co.us.ibm.com [32.97.110.149])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2mq05hq788-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Sep 2018 11:18:52 -0400
+Received: from localhost
+        by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Mon, 24 Sep 2018 09:18:52 -0600
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: [PATCH V5 17/20] Fix generic/235 to work with 64k block size
+Date: Mon, 24 Sep 2018 20:49:39 +0530
+In-Reply-To: <20180924151942.8220-1-chandan@linux.vnet.ibm.com>
+References: <20180924151942.8220-1-chandan@linux.vnet.ibm.com>
+Message-Id: <20180924151942.8220-18-chandan@linux.vnet.ibm.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@kernel.org
+To: fstests@vger.kernel.org
+Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, zlang@redhat.com, linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=201173
+With 64k blocksized filesystem, this test fails since a single 8k write
+will actually end up consuming 64k. Hence this commit writes 64k data
+into the test file.
 
-Eric Sandeen (sandeen@sandeen.net) changed:
+Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+---
+ tests/generic/235     | 2 +-
+ tests/generic/235.out | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |sandeen@sandeen.net
-           Assignee|filesystem_xfs@kernel-bugs. |sandeen@sandeen.net
-                   |kernel.org                  |
-
---- Comment #1 from Eric Sandeen (sandeen@sandeen.net) ---
-Several hours of debugging later, a simple patch seems to fix this:
-
-diff --git a/repair/prefetch.c b/repair/prefetch.c
-index 9571b24..c9a0748 100644
---- a/repair/prefetch.c
-+++ b/repair/prefetch.c
-@@ -768,8 +768,11 @@ pf_queuing_worker(
-                         * might get stuck on a buffer that has been locked
-                         * and added to the I/O queue but is waiting for
-                         * the thread to be woken.
-+                        * Start processing as well, in case everything so
-+                        * far was already prefetched and the queue is empty.
-                         */
-                        pf_start_io_workers(args);
-+                       pf_start_processing(args);
-                        sem_wait(&args->ra_count);
-                }
-
-
-but it still feels like a slightly odd fix, will give it more thought.  The
-problem is that if every buffer we tried to read ahead in phase6 was already up
-to date, pf_start_io_workers has no effect; there is no io to do, and the
-sem_wait waits forever.
-
+diff --git a/tests/generic/235 b/tests/generic/235
+index 902e9ad..6adc803 100755
+--- a/tests/generic/235
++++ b/tests/generic/235
+@@ -55,7 +55,7 @@ _try_scratch_mount "-o remount,ro" 2>&1 | tee -a $seqres.full | _filter_scratch
+ touch $SCRATCH_MNT/failed 2>&1 | tee -a $seqres.full | _filter_scratch
+ _try_scratch_mount "-o remount,rw" 2>&1 | tee -a $seqres.full | _filter_scratch
+ 
+-$XFS_IO_PROG -c 'pwrite 0 8k' -c 'fsync' \
++$XFS_IO_PROG -c 'pwrite 0 64k' -c 'fsync' \
+ 			$SCRATCH_MNT/testfile >>$seqres.full 2>&1
+ do_repquota
+ 
+diff --git a/tests/generic/235.out b/tests/generic/235.out
+index 601fa2f..abcb47a 100644
+--- a/tests/generic/235.out
++++ b/tests/generic/235.out
+@@ -17,10 +17,10 @@ Block grace time: 7days; Inode grace time: 7days
+                         Block limits                File limits
+ User            used    soft    hard  grace    used  soft  hard  grace
+ ----------------------------------------------------------------------
+-fsgqa     --       8       0       0              1     0     0       
++fsgqa     --      64       0       0              1     0     0       
+ *** Report for group quotas on device SCRATCH_DEV
+ Block grace time: 7days; Inode grace time: 7days
+                         Block limits                File limits
+ Group           used    soft    hard  grace    used  soft  hard  grace
+ ----------------------------------------------------------------------
+-fsgqa     --       8       0       0              1     0     0       
++fsgqa     --      64       0       0              1     0     0       
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+2.9.5
