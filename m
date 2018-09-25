@@ -1,79 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55840 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:42798 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726191AbeIKDSb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 10 Sep 2018 23:18:31 -0400
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        id S1727165AbeIYTQ2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 25 Sep 2018 15:16:28 -0400
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 91E35C0467D6
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Sep 2018 22:22:20 +0000 (UTC)
-Subject: [PATCH 1/2] xfs: validate inode di_forkoff
-References: <0c8c405b-8929-82a6-5c9a-f5965da2c464@redhat.com>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <da670f4a-6ae7-fbe7-94db-b6a4e6bb0c9e@redhat.com>
-Date: Mon, 10 Sep 2018 17:22:08 -0500
+        by mx1.redhat.com (Postfix) with ESMTPS id 3E3DC3084218
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Sep 2018 13:08:59 +0000 (UTC)
+Date: Tue, 25 Sep 2018 08:08:52 -0500
+From: Bill O'Donnell <billodo@redhat.com>
+Subject: Re: [PATCH] xfsprogs: make scrub build config-optional
+Message-ID: <20180925130852.GA14580@redhat.com>
+References: <832c69f6-4cd4-224d-0d58-5a387f2ae9fa@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <0c8c405b-8929-82a6-5c9a-f5965da2c464@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <832c69f6-4cd4-224d-0d58-5a387f2ae9fa@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-Verify the inode di_forkoff, lifted from xfs_repair's
-process_check_inode_forkoff().
+On Mon, Sep 24, 2018 at 12:07:00PM -0500, Eric Sandeen wrote:
+> This lets us do:
+> 
+> # ./configure --enable-scrub=no
+> or
+> # ./configure --disable-scrub
+> 
+> for any distros that may not want to ship the experimental scrub utility.
+> 
+> The default is still to build scrub.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Looks good.
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
 
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 30d1d60f1d46..8d76637a49a7 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -415,6 +415,31 @@ xfs_dinode_verify_fork(
- 	return NULL;
- }
- 
-+static xfs_failaddr_t
-+xfs_dinode_verify_forkoff(
-+	struct xfs_dinode	*dip,
-+	struct xfs_mount	*mp)
-+{
-+	if (dip->di_forkoff == 0)
-+		return NULL;
-+
-+	switch (dip->di_format)  {
-+	case XFS_DINODE_FMT_DEV:
-+		if (dip->di_forkoff != (roundup(sizeof(xfs_dev_t), 8) >> 3))
-+			return __this_address;
-+		break;
-+	case XFS_DINODE_FMT_LOCAL:	/* fall through ... */
-+	case XFS_DINODE_FMT_EXTENTS:    /* fall through ... */
-+	case XFS_DINODE_FMT_BTREE:
-+		if (dip->di_forkoff >= (XFS_LITINO(mp, dip->di_version) >> 3))
-+			return __this_address;
-+		break;
-+	default:
-+		return __this_address;
-+	}
-+	return NULL;
-+}
-+
- xfs_failaddr_t
- xfs_dinode_verify(
- 	struct xfs_mount	*mp,
-@@ -470,6 +498,11 @@ xfs_dinode_verify(
- 	if (mode && (flags & XFS_DIFLAG_REALTIME) && !mp->m_rtdev_targp)
- 		return __this_address;
- 
-+	/* check for illegal values of di_forkoff */
-+	fa = xfs_dinode_verify_forkoff(dip, mp);
-+	if (fa)
-+		return fa;
-+
- 	/* Do we have appropriate data fork formats for the mode? */
- 	switch (mode & S_IFMT) {
- 	case S_IFIFO:
+> ---
+> 
+> (skipping libicu checks is maybe overkill, I can drop that
+> if preferred; checking but not using is harmless)
+> 
+> diff --git a/Makefile b/Makefile
+> index 6774825..dd6ad16 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -49,7 +49,11 @@ LIBFROG_SUBDIR = libfrog
+>  DLIB_SUBDIRS = libxlog libxcmd libhandle
+>  LIB_SUBDIRS = libxfs $(DLIB_SUBDIRS)
+>  TOOL_SUBDIRS = copy db estimate fsck growfs io logprint mkfs quota \
+> -		mdrestore repair rtcp m4 man doc debian spaceman scrub
+> +		mdrestore repair rtcp m4 man doc debian spaceman
+> +
+> +ifeq ("$(ENABLE_SCRUB)","yes")
+> +TOOL_SUBDIRS += scrub
+> +endif
+>  
+>  ifneq ("$(PKG_PLATFORM)","darwin")
+>  TOOL_SUBDIRS += fsr
+> diff --git a/configure.ac b/configure.ac
+> index 5fdf78e..467ca2d 100644
+> --- a/configure.ac
+> +++ b/configure.ac
+> @@ -95,9 +95,15 @@ AC_ARG_ENABLE(lto,
+>  	enable_lto=probe)
+>  AC_SUBST(enable_lto)
+>  
+> +# Enable xfs_scrub build
+> +AC_ARG_ENABLE(scrub,
+> +[ --enable-scrub=[yes/no]    Enable build of xfs_scrub utility [default=yes]],,
+> +	enable_scrub=yes)
+> +AC_SUBST(enable_scrub)
+> +
+>  # Enable libicu for xfs_scrubbing of malicious unicode sequences in names
+>  AC_ARG_ENABLE(libicu,
+> -[ --enable-libicu=[yes/no]   Enable Unicode name scanning (libicu) [default=probe]],,
+> +[ --enable-libicu=[yes/no]   Enable Unicode name scanning in xfs_scrub (libicu) [default=probe]],,
+>  	enable_libicu=probe)
+>  
+>  #
+> @@ -178,11 +184,13 @@ AC_HAVE_DEVMAPPER
+>  AC_HAVE_MALLINFO
+>  AC_PACKAGE_WANT_ATTRIBUTES_H
+>  AC_HAVE_LIBATTR
+> -if test "$enable_libicu" = "yes" || test "$enable_libicu" = "probe"; then
+> -	AC_HAVE_LIBICU
+> -fi
+> -if test "$enable_libicu" = "yes" && test "$have_libicu" != "yes"; then
+> -        AC_MSG_ERROR([libicu not found.])
+> +if test "$enable_scrub" = "yes"; then
+> +        if test "$enable_libicu" = "yes" || test "$enable_libicu" = "probe"; then
+> +                AC_HAVE_LIBICU
+> +        fi
+> +        if test "$enable_libicu" = "yes" && test "$have_libicu" != "yes"; then
+> +                AC_MSG_ERROR([libicu not found.])
+> +        fi
+>  fi
+>  AC_HAVE_OPENAT
+>  AC_HAVE_FSTATAT
+> diff --git a/include/builddefs.in b/include/builddefs.in
+> index f7d39a4..f3fc187 100644
+> --- a/include/builddefs.in
+> +++ b/include/builddefs.in
+> @@ -81,6 +81,7 @@ ENABLE_GETTEXT	= @enable_gettext@
+>  ENABLE_EDITLINE	= @enable_editline@
+>  ENABLE_READLINE	= @enable_readline@
+>  ENABLE_BLKID	= @enable_blkid@
+> +ENABLE_SCRUB	= @enable_scrub@
+>  
+>  HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
+>  
+> 
