@@ -1,92 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it1-f194.google.com ([209.85.166.194]:38013 "EHLO
-        mail-it1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729494AbeIYVxD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Sep 2018 17:53:03 -0400
-Received: by mail-it1-f194.google.com with SMTP id p129-v6so15861968ite.3
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Sep 2018 08:44:58 -0700 (PDT)
-Subject: Re: block: DMA alignment of IO buffer allocated from slab
-References: <CACVXFVOBq3L_EjSTCoiqUL1PH=HMR5EuNNQV0hNndFpGxmUK6g@mail.gmail.com>
- <20180920063129.GB12913@lst.de> <87h8ij0zot.fsf@vitty.brq.redhat.com>
- <20180921130504.GA22551@lst.de>
- <010001660c54fb65-b9d3a770-6678-40d0-8088-4db20af32280-000000@email.amazonses.com>
- <1f88f59a-2cac-e899-4c2e-402e919b1034@kernel.dk>
- <010001660cbd51ea-56e96208-564d-4f5d-a5fb-119a938762a9-000000@email.amazonses.com>
- <1a5b255f-682e-783a-7f99-9d02e39c4af2@kernel.dk>
- <20180925074910.GB31060@dastard>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <3d63a42f-837a-4bf6-665a-c3a8c8cb46e8@kernel.dk>
-Date: Tue, 25 Sep 2018 09:44:54 -0600
+Received: from userp2120.oracle.com ([156.151.31.85]:39214 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729188AbeIYU1e (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Sep 2018 16:27:34 -0400
+Date: Tue, 25 Sep 2018 07:19:46 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfsprogs: make scrub build config-optional
+Message-ID: <20180925141946.GT20086@magnolia>
+References: <832c69f6-4cd4-224d-0d58-5a387f2ae9fa@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20180925074910.GB31060@dastard>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <832c69f6-4cd4-224d-0d58-5a387f2ae9fa@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christopher Lameter <cl@linux.com>, Christoph Hellwig <hch@lst.de>, Vitaly Kuznetsov <vkuznets@redhat.com>, Ming Lei <tom.leiming@gmail.com>, linux-block <linux-block@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Ming Lei <ming.lei@redhat.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On 9/25/18 1:49 AM, Dave Chinner wrote:
-> On Mon, Sep 24, 2018 at 12:09:37PM -0600, Jens Axboe wrote:
->> On 9/24/18 12:00 PM, Christopher Lameter wrote:
->>> On Mon, 24 Sep 2018, Jens Axboe wrote:
->>>
->>>> The situation is making me a little uncomfortable, though. If we export
->>>> such a setting, we really should be honoring it...
+On Mon, Sep 24, 2018 at 12:07:00PM -0500, Eric Sandeen wrote:
+> This lets us do:
 > 
-> That's what I said up front, but you replied to this with:
+> # ./configure --enable-scrub=no
+> or
+> # ./configure --disable-scrub
 > 
-> | I think this is all crazy talk. We've never done this, [...]
+> for any distros that may not want to ship the experimental scrub utility.
 > 
-> Now I'm not sure what you are saying we should do....
+> The default is still to build scrub.
 > 
->>> Various subsystems create custom slab arrays with their particular
->>> alignment requirement for these allocations.
->>
->> Oh yeah, I think the solution is basic enough for XFS, for instance.
->> They just have to error on the side of being cautious, by going full
->> sector alignment for memory...
-> 
-> How does the filesystem find out about hardware alignment
-> requirements? Isn't probing through the block device to find out
-> about the request queue configurations considered a layering
-> violation?
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Right now it isn't a stacked property, so answering the question
-isn't even possible beyond "what does the top device require".
+Looks ok to me (you tested --enable-scrub and --disable-scrub, right?);
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-> What if sector alignment is not sufficient?  And how would this work
-> if we start supporting sector sizes larger than page size? (which the
-> XFS buffer cache supports just fine, even if nothing else in
-> Linux does).
+--D
 
-If sector alignment isn't sufficient, then we'd need to bounce 512b
-formats... But I don't want to over-design something that isn't
-relevant to real life setups. I'm not aware of anything that needs
-memory aligned to that degree.
-
-> But even ignoring sector size > page size, implementing this
-> requires a bunch of new slab caches, especially for 64k page
-> machines because XFS supports sector sizes up to 32k.  And every
-> other filesystem that uses sector sized buffers (e.g. HFS) would
-> have to do the same thing. Seems somewhat wasteful to require
-> everyone to implement their own aligned sector slab cache...
+> ---
 > 
-> Perhaps we should take the filesystem out of this completely - maybe
-> the block layer could provide a generic "sector heap" and have all
-> filesystems that use sector sized buffers allocate from it. e.g.
-> something like
+> (skipping libicu checks is maybe overkill, I can drop that
+> if preferred; checking but not using is harmless)
 > 
-> 	mem = bdev_alloc_sector_buffer(bdev, sector_size)
+> diff --git a/Makefile b/Makefile
+> index 6774825..dd6ad16 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -49,7 +49,11 @@ LIBFROG_SUBDIR = libfrog
+>  DLIB_SUBDIRS = libxlog libxcmd libhandle
+>  LIB_SUBDIRS = libxfs $(DLIB_SUBDIRS)
+>  TOOL_SUBDIRS = copy db estimate fsck growfs io logprint mkfs quota \
+> -		mdrestore repair rtcp m4 man doc debian spaceman scrub
+> +		mdrestore repair rtcp m4 man doc debian spaceman
+> +
+> +ifeq ("$(ENABLE_SCRUB)","yes")
+> +TOOL_SUBDIRS += scrub
+> +endif
+>  
+>  ifneq ("$(PKG_PLATFORM)","darwin")
+>  TOOL_SUBDIRS += fsr
+> diff --git a/configure.ac b/configure.ac
+> index 5fdf78e..467ca2d 100644
+> --- a/configure.ac
+> +++ b/configure.ac
+> @@ -95,9 +95,15 @@ AC_ARG_ENABLE(lto,
+>  	enable_lto=probe)
+>  AC_SUBST(enable_lto)
+>  
+> +# Enable xfs_scrub build
+> +AC_ARG_ENABLE(scrub,
+> +[ --enable-scrub=[yes/no]    Enable build of xfs_scrub utility [default=yes]],,
+> +	enable_scrub=yes)
+> +AC_SUBST(enable_scrub)
+> +
+>  # Enable libicu for xfs_scrubbing of malicious unicode sequences in names
+>  AC_ARG_ENABLE(libicu,
+> -[ --enable-libicu=[yes/no]   Enable Unicode name scanning (libicu) [default=probe]],,
+> +[ --enable-libicu=[yes/no]   Enable Unicode name scanning in xfs_scrub (libicu) [default=probe]],,
+>  	enable_libicu=probe)
+>  
+>  #
+> @@ -178,11 +184,13 @@ AC_HAVE_DEVMAPPER
+>  AC_HAVE_MALLINFO
+>  AC_PACKAGE_WANT_ATTRIBUTES_H
+>  AC_HAVE_LIBATTR
+> -if test "$enable_libicu" = "yes" || test "$enable_libicu" = "probe"; then
+> -	AC_HAVE_LIBICU
+> -fi
+> -if test "$enable_libicu" = "yes" && test "$have_libicu" != "yes"; then
+> -        AC_MSG_ERROR([libicu not found.])
+> +if test "$enable_scrub" = "yes"; then
+> +        if test "$enable_libicu" = "yes" || test "$enable_libicu" = "probe"; then
+> +                AC_HAVE_LIBICU
+> +        fi
+> +        if test "$enable_libicu" = "yes" && test "$have_libicu" != "yes"; then
+> +                AC_MSG_ERROR([libicu not found.])
+> +        fi
+>  fi
+>  AC_HAVE_OPENAT
+>  AC_HAVE_FSTATAT
+> diff --git a/include/builddefs.in b/include/builddefs.in
+> index f7d39a4..f3fc187 100644
+> --- a/include/builddefs.in
+> +++ b/include/builddefs.in
+> @@ -81,6 +81,7 @@ ENABLE_GETTEXT	= @enable_gettext@
+>  ENABLE_EDITLINE	= @enable_editline@
+>  ENABLE_READLINE	= @enable_readline@
+>  ENABLE_BLKID	= @enable_blkid@
+> +ENABLE_SCRUB	= @enable_scrub@
+>  
+>  HAVE_ZIPPED_MANPAGES = @have_zipped_manpages@
+>  
 > 
-> That way we don't have to rely on filesystems knowing anything about
-> the alignment limitations of the devices or assumptions about DMA
-> to work correctly...
-
-I like that idea, would probably also need a mempool backing for
-certain cases.
-
--- 
-Jens Axboe
