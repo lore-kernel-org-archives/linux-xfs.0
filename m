@@ -1,136 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:48606 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727483AbeIZQiG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 12:38:06 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8QANhNW037022
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:49 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2120.oracle.com with ESMTP id 2mnvtur9bp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:49 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAPmMI027230
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:49 GMT
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w8QAPm9b032136
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:48 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v3 16/30] xfsprogs: add parent pointer support to attribute code
-Date: Wed, 26 Sep 2018 03:23:19 -0700
-Message-Id: <1537957413-10630-17-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1537957413-10630-1-git-send-email-allison.henderson@oracle.com>
-References: <1537957413-10630-1-git-send-email-allison.henderson@oracle.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:41448 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726242AbeIZDNu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Sep 2018 23:13:50 -0400
+Date: Tue, 25 Sep 2018 14:04:18 -0700
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: block: DMA alignment of IO buffer allocated from slab
+Message-ID: <20180925210418.GA9854@bombadil.infradead.org>
+References: <CACVXFVOBq3L_EjSTCoiqUL1PH=HMR5EuNNQV0hNndFpGxmUK6g@mail.gmail.com>
+ <20180920063129.GB12913@lst.de>
+ <87h8ij0zot.fsf@vitty.brq.redhat.com>
+ <20180921130504.GA22551@lst.de>
+ <010001660c54fb65-b9d3a770-6678-40d0-8088-4db20af32280-000000@email.amazonses.com>
+ <1f88f59a-2cac-e899-4c2e-402e919b1034@kernel.dk>
+ <010001660cbd51ea-56e96208-564d-4f5d-a5fb-119a938762a9-000000@email.amazonses.com>
+ <1a5b255f-682e-783a-7f99-9d02e39c4af2@kernel.dk>
+ <20180925074910.GB31060@dastard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180925074910.GB31060@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Christopher Lameter <cl@linux.com>, Christoph Hellwig <hch@lst.de>, Vitaly Kuznetsov <vkuznets@redhat.com>, Ming Lei <tom.leiming@gmail.com>, linux-block <linux-block@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Ming Lei <ming.lei@redhat.com>
 
-Add the new parent attribute type. XFS_ATTR_PARENT is used only for
-parent pointer entries; it uses reserved blocks like XFS_ATTR_ROOT.
+On Tue, Sep 25, 2018 at 05:49:10PM +1000, Dave Chinner wrote:
+> On Mon, Sep 24, 2018 at 12:09:37PM -0600, Jens Axboe wrote:
+> > On 9/24/18 12:00 PM, Christopher Lameter wrote:
+> > > On Mon, 24 Sep 2018, Jens Axboe wrote:
+> > > 
+> > >> The situation is making me a little uncomfortable, though. If we export
+> > >> such a setting, we really should be honoring it...
+> 
+> That's what I said up front, but you replied to this with:
+> 
+> | I think this is all crazy talk. We've never done this, [...]
+> 
+> Now I'm not sure what you are saying we should do....
+> 
+> > > Various subsystems create custom slab arrays with their particular
+> > > alignment requirement for these allocations.
+> > 
+> > Oh yeah, I think the solution is basic enough for XFS, for instance.
+> > They just have to error on the side of being cautious, by going full
+> > sector alignment for memory...
+> 
+> How does the filesystem find out about hardware alignment
+> requirements? Isn't probing through the block device to find out
+> about the request queue configurations considered a layering
+> violation?
+> 
+> What if sector alignment is not sufficient?  And how would this work
+> if we start supporting sector sizes larger than page size? (which the
+> XFS buffer cache supports just fine, even if nothing else in
+> Linux does).
 
-[dchinner: forward ported and cleaned up]
-[achender: rebased]
+I've never quite understood the O_DIRECT sector size alignment
+restriction.  The sector size has literally nothing to do with the
+limitations of the controller that's doing the DMA.  OK, NVMe smooshes the
+two components into one, but back in the SCSI era, the DMA abilities were
+the HBA's responsibility and the sector size was a property of the LUN!
 
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
- libxfs/xfs_attr.c      |  4 +++-
- libxfs/xfs_attr.h      |  2 ++
- libxfs/xfs_attr_leaf.c |  1 +
- libxfs/xfs_da_format.h | 12 ++++++++----
- 4 files changed, 14 insertions(+), 5 deletions(-)
+Heck, with a sufficiently advanced HBA (eg supporting scatterlists with
+bitbuckets), you could even ask for sub-sector-*sized* IOs.  Not terribly
+useful since the bytes still had to be transferred over the SCSI cable,
+but you'd save transferring them across the PCI bus.
 
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index 1e86c94..3a5f8f8 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -377,11 +377,13 @@ xfs_attr_set(
- 	struct xfs_buf		*leaf_bp = NULL;
- 	struct xfs_da_args	args;
- 	struct xfs_trans_res	tres;
--	int			rsvd = (flags & ATTR_ROOT) != 0;
-+	int			rsvd;
- 	int			error, local;
- 
- 	XFS_STATS_INC(mp, xs_attr_set);
- 
-+	rsvd = ((flags & ATTR_ROOT) | ATTR_PARENT) != 0;
-+
- 	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
- 		return -EIO;
- 
-diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
-index d3407f1..126a024 100644
---- a/libxfs/xfs_attr.h
-+++ b/libxfs/xfs_attr.h
-@@ -32,6 +32,7 @@ struct xfs_attr_list_context;
- #define ATTR_SECURE	0x0008	/* use attrs in security namespace */
- #define ATTR_CREATE	0x0010	/* pure create: fail if attr already exists */
- #define ATTR_REPLACE	0x0020	/* pure set: fail if attr does not exist */
-+#define ATTR_PARENT	0x0040	/*  use attrs in parent namespace */
- 
- #define ATTR_INCOMPLETE	0x4000	/* [kernel] return INCOMPLETE attr keys */
- 
-@@ -42,6 +43,7 @@ struct xfs_attr_list_context;
- 	{ ATTR_SECURE,		"SECURE" }, \
- 	{ ATTR_CREATE,		"CREATE" }, \
- 	{ ATTR_REPLACE,		"REPLACE" }, \
-+	{ ATTR_PARENT,		"PARENT" }, \
- 	{ ATTR_KERNOTIME,	"KERNOTIME" }, \
- 	{ ATTR_KERNOVAL,	"KERNOVAL" }, \
- 	{ ATTR_INCOMPLETE,	"INCOMPLETE" }
-diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
-index 7942aee..5420682 100644
---- a/libxfs/xfs_attr_leaf.c
-+++ b/libxfs/xfs_attr_leaf.c
-@@ -21,6 +21,7 @@
- #include "xfs_bmap.h"
- #include "xfs_attr_sf.h"
- #include "xfs_attr_remote.h"
-+#include "xfs_attr.h"
- #include "xfs_attr_leaf.h"
- #include "xfs_trace.h"
- #include "xfs_cksum.h"
-diff --git a/libxfs/xfs_da_format.h b/libxfs/xfs_da_format.h
-index 5d5bf3b..67cb9ea 100644
---- a/libxfs/xfs_da_format.h
-+++ b/libxfs/xfs_da_format.h
-@@ -746,24 +746,28 @@ struct xfs_attr3_icleaf_hdr {
- #define	XFS_ATTR_LOCAL_BIT	0	/* attr is stored locally */
- #define	XFS_ATTR_ROOT_BIT	1	/* limit access to trusted attrs */
- #define	XFS_ATTR_SECURE_BIT	2	/* limit access to secure attrs */
-+#define 	XFS_ATTR_PARENT_BIT	3	/* parent pointer secure attrs */
- #define	XFS_ATTR_INCOMPLETE_BIT	7	/* attr in middle of create/delete */
- #define XFS_ATTR_LOCAL		(1 << XFS_ATTR_LOCAL_BIT)
- #define XFS_ATTR_ROOT		(1 << XFS_ATTR_ROOT_BIT)
- #define XFS_ATTR_SECURE		(1 << XFS_ATTR_SECURE_BIT)
-+#define XFS_ATTR_PARENT		(1 << XFS_ATTR_PARENT_BIT)
- #define XFS_ATTR_INCOMPLETE	(1 << XFS_ATTR_INCOMPLETE_BIT)
- 
- /*
-  * Conversion macros for converting namespace bits from argument flags
-  * to ondisk flags.
-  */
--#define XFS_ATTR_NSP_ARGS_MASK		(ATTR_ROOT | ATTR_SECURE)
--#define XFS_ATTR_NSP_ONDISK_MASK	(XFS_ATTR_ROOT | XFS_ATTR_SECURE)
-+#define XFS_ATTR_NSP_ARGS_MASK		(ATTR_ROOT | ATTR_SECURE | XFS_ATTR_PARENT)
-+#define XFS_ATTR_NSP_ONDISK_MASK	(XFS_ATTR_ROOT | XFS_ATTR_SECURE | XFS_ATTR_PARENT)
- #define XFS_ATTR_NSP_ONDISK(flags)	((flags) & XFS_ATTR_NSP_ONDISK_MASK)
- #define XFS_ATTR_NSP_ARGS(flags)	((flags) & XFS_ATTR_NSP_ARGS_MASK)
- #define XFS_ATTR_NSP_ARGS_TO_ONDISK(x)	(((x) & ATTR_ROOT ? XFS_ATTR_ROOT : 0) |\
--					 ((x) & ATTR_SECURE ? XFS_ATTR_SECURE : 0))
-+					 ((x) & ATTR_SECURE ? XFS_ATTR_SECURE : 0) | \
-+					 ((x) & ATTR_PARENT ? XFS_ATTR_PARENT : 0))
- #define XFS_ATTR_NSP_ONDISK_TO_ARGS(x)	(((x) & XFS_ATTR_ROOT ? ATTR_ROOT : 0) |\
--					 ((x) & XFS_ATTR_SECURE ? ATTR_SECURE : 0))
-+					 ((x) & XFS_ATTR_SECURE ? ATTR_SECURE : 0) | \
-+					 ((x) & XFS_ATTR_PARENT ? ATTR_PARENT : 0))
- 
- /*
-  * Alignment for namelist and valuelist entries (since they are mixed
--- 
-2.7.4
+Anyway, why would we require *larger* than 512 byte alignment for
+in-kernel users?  I doubt there are any remaining HBAs that can't do
+8-byte aligned I/Os (for the record, NVMe requires controllers to be
+able to do 4-byte aligned I/Os).
