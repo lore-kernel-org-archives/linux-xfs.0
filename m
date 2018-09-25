@@ -1,75 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46458 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:55530 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726157AbeIYGVQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 25 Sep 2018 02:21:16 -0400
-Date: Tue, 25 Sep 2018 08:16:16 +0800
+        id S1727234AbeIYGZ5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 25 Sep 2018 02:25:57 -0400
+Date: Tue, 25 Sep 2018 08:20:58 +0800
 From: Ming Lei <ming.lei@redhat.com>
 Subject: Re: block: DMA alignment of IO buffer allocated from slab
-Message-ID: <20180925001615.GA14386@ming.t460p>
-References: <20180923224206.GA13618@ming.t460p>
+Message-ID: <20180925002057.GB14386@ming.t460p>
+References: <CACVXFVOBq3L_EjSTCoiqUL1PH=HMR5EuNNQV0hNndFpGxmUK6g@mail.gmail.com>
+ <20180920063129.GB12913@lst.de>
+ <87h8ij0zot.fsf@vitty.brq.redhat.com>
+ <20180923224206.GA13618@ming.t460p>
  <38c03920-0fd0-0a39-2a6e-70cd8cb4ef34@virtuozzo.com>
  <20a20568-5089-541d-3cee-546e549a0bc8@acm.org>
- <12eee877-affa-c822-c9d5-fda3aa0a50da@virtuozzo.com>
- <1537801706.195115.7.camel@acm.org>
- <c844c598-be1d-bef4-fb99-09cf99571fd7@virtuozzo.com>
- <1537804720.195115.9.camel@acm.org>
- <10c706fd-2252-f11b-312e-ae0d97d9a538@virtuozzo.com>
- <1537805984.195115.14.camel@acm.org>
- <20180924185753.GA32269@bombadil.infradead.org>
+ <010001660c27f079-7ba54431-6f0c-430a-8db5-2398a8e761f0-000000@email.amazonses.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180924185753.GA32269@bombadil.infradead.org>
+In-Reply-To: <010001660c27f079-7ba54431-6f0c-430a-8db5-2398a8e761f0-000000@email.amazonses.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Bart Van Assche <bvanassche@acm.org>, Andrey Ryabinin <aryabinin@virtuozzo.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, Christoph Hellwig <hch@lst.de>, Ming Lei <tom.leiming@gmail.com>, linux-block <linux-block@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Christoph Lameter <cl@linux.com>, Linus Torvalds <torvalds@linux-foundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Christopher Lameter <cl@linux.com>
+Cc: Bart Van Assche <bvanassche@acm.org>, Andrey Ryabinin <aryabinin@virtuozzo.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, Christoph Hellwig <hch@lst.de>, Ming Lei <tom.leiming@gmail.com>, linux-block <linux-block@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Linus Torvalds <torvalds@linux-foundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-On Mon, Sep 24, 2018 at 11:57:53AM -0700, Matthew Wilcox wrote:
-> On Mon, Sep 24, 2018 at 09:19:44AM -0700, Bart Van Assche wrote:
-> > That means that two buffers allocated with kmalloc() may share a cache line on
-> > x86-64. Since it is allowed to use a buffer allocated by kmalloc() for DMA, can
-> > this lead to data corruption, e.g. if the CPU writes into one buffer allocated
-> > with kmalloc() and a device performs a DMA write to another kmalloc() buffer and
-> > both write operations affect the same cache line?
+On Mon, Sep 24, 2018 at 03:17:16PM +0000, Christopher Lameter wrote:
+> On Mon, 24 Sep 2018, Bart Van Assche wrote:
 > 
-> You're not supposed to use kmalloc memory for DMA.  This is why we have
-> dma_alloc_coherent() and friends.  Also, from DMA-API.txt:
+> > /*
+> >  * kmalloc and friends return ARCH_KMALLOC_MINALIGN aligned
+> >  * pointers. kmem_cache_alloc and friends return ARCH_SLAB_MINALIGN
+> >  * aligned pointers.
+> >  */
+> 
+> kmalloc alignment is only guaranteed to ARCH_KMALLOC_MINALIGN. That power
+> of 2 byte caches (without certain options) are aligned to the power of 2
+> is due to the nature that these objects are stored in SLUB. Other
+> allocators may behave different and actually different debug options
+> result in different alignments. You cannot rely on that.
+> 
+> ARCH_KMALLOC minalign shows the mininum alignment guarantees. If that is
+> not sufficient and you do not want to change the arch guarantees then you
+> can open you own slab cache with kmem_cache_create() where you can specify
+> different alignment requirements.
 
-Please take a look at USB drivers, or storage drivers or scsi layer. Lot of
-DMA buffers are allocated via kmalloc.
+Christopher, thank you for clarifying the point!
 
-Also see the following description in DMA-API-HOWTO.txt:
-
-	If the device supports DMA, the driver sets up a buffer using kmalloc() or
-	a similar interface, which returns a virtual address (X).  The virtual
-	memory system maps X to a physical address (Y) in system RAM.  The driver
-	can use virtual address X to access the buffer, but the device itself
-	cannot because DMA doesn't go through the CPU virtual memory system.
-
-Also still see DMA-API-HOWTO.txt:
-
-Types of DMA mappings
-=====================
-
-There are two types of DMA mappings:
-
-- Consistent DMA mappings which are usually mapped at driver
-  initialization, unmapped at the end and for which the hardware should
-  guarantee that the device and the CPU can access the data
-  in parallel and will see updates made by each other without any
-  explicit software flushing.
-
-  Think of "consistent" as "synchronous" or "coherent".
-
-
-- Streaming DMA mappings which are usually mapped for one DMA
-  transfer, unmapped right after it (unless you use dma_sync_* below)
-  and for which hardware can optimize for sequential accesses.
-
-
+Then looks it should be reasonable for XFS to switch to kmem_cache_create()
+for addressing this issue.
 
 Thanks,
 Ming
