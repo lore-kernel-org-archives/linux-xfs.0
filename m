@@ -1,739 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:48564 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727451AbeIZQiD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 12:38:03 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8QANtGX037327
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:46 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp2120.oracle.com with ESMTP id 2mnvtur9bc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:46 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAPjBR004668
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:45 GMT
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAPiYG023161
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:44 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v3 05/30] xfsprogs: Add trans toggle to attr routines
-Date: Wed, 26 Sep 2018 03:23:08 -0700
-Message-Id: <1537957413-10630-6-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1537957413-10630-1-git-send-email-allison.henderson@oracle.com>
-References: <1537957413-10630-1-git-send-email-allison.henderson@oracle.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:48276 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727673AbeIYJd7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Sep 2018 05:33:59 -0400
+Date: Mon, 24 Sep 2018 20:28:26 -0700
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: block: DMA alignment of IO buffer allocated from slab
+Message-ID: <20180925032826.GA4110@bombadil.infradead.org>
+References: <38c03920-0fd0-0a39-2a6e-70cd8cb4ef34@virtuozzo.com>
+ <20a20568-5089-541d-3cee-546e549a0bc8@acm.org>
+ <12eee877-affa-c822-c9d5-fda3aa0a50da@virtuozzo.com>
+ <1537801706.195115.7.camel@acm.org>
+ <c844c598-be1d-bef4-fb99-09cf99571fd7@virtuozzo.com>
+ <1537804720.195115.9.camel@acm.org>
+ <10c706fd-2252-f11b-312e-ae0d97d9a538@virtuozzo.com>
+ <1537805984.195115.14.camel@acm.org>
+ <20180924185753.GA32269@bombadil.infradead.org>
+ <20180925001615.GA14386@ming.t460p>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180925001615.GA14386@ming.t460p>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Bart Van Assche <bvanassche@acm.org>, Andrey Ryabinin <aryabinin@virtuozzo.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, Christoph Hellwig <hch@lst.de>, Ming Lei <tom.leiming@gmail.com>, linux-block <linux-block@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Christoph Lameter <cl@linux.com>, Linus Torvalds <torvalds@linux-foundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-This patch adds a roll_trans parameter to all attribute routines
-that may roll a transaction. Calling functions may pass true to
-roll transactions as normal, or false to hold them.
+On Tue, Sep 25, 2018 at 08:16:16AM +0800, Ming Lei wrote:
+> On Mon, Sep 24, 2018 at 11:57:53AM -0700, Matthew Wilcox wrote:
+> > On Mon, Sep 24, 2018 at 09:19:44AM -0700, Bart Van Assche wrote:
+> > You're not supposed to use kmalloc memory for DMA.  This is why we have
+> > dma_alloc_coherent() and friends.  Also, from DMA-API.txt:
+> 
+> Please take a look at USB drivers, or storage drivers or scsi layer. Lot of
+> DMA buffers are allocated via kmalloc.
 
-This patch is temporary and will be removed later when all code
-paths have been made to pass a false value.  The temporary boolean
-assists us to introduce changes across multiple smaller patches instead
-of handling all affected code paths in one large patch.
+Then we have lots of broken places.  I mean, this isn't new.  We used
+to have lots of broken places that did DMA to the stack.  And then
+the stack was changed to be vmalloc'ed and all those places got fixed.
+The difference this time is that it's only certain rare configurations
+that are broken, and the brokenness is only found by corruption in some
+fairly unlikely scenarios.
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
- libxfs/xfs_attr.c        | 244 +++++++++++++++++++++++++++--------------------
- libxfs/xfs_attr.h        |   5 +-
- libxfs/xfs_attr_leaf.c   |  20 ++--
- libxfs/xfs_attr_leaf.h   |   8 +-
- libxfs/xfs_attr_remote.c |  50 ++++++----
- libxfs/xfs_attr_remote.h |   4 +-
- 6 files changed, 195 insertions(+), 136 deletions(-)
+> Also see the following description in DMA-API-HOWTO.txt:
+> 
+> 	If the device supports DMA, the driver sets up a buffer using kmalloc() or
+> 	a similar interface, which returns a virtual address (X).  The virtual
+> 	memory system maps X to a physical address (Y) in system RAM.  The driver
+> 	can use virtual address X to access the buffer, but the device itself
+> 	cannot because DMA doesn't go through the CPU virtual memory system.
 
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index ae8d1d6..d31560d 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -44,15 +44,15 @@ STATIC int xfs_attr_shortform_addname(xfs_da_args_t *args);
-  * Internal routines when attribute list is one block.
-  */
- STATIC int xfs_attr_leaf_get(xfs_da_args_t *args);
--STATIC int xfs_attr_leaf_addname(xfs_da_args_t *args);
--STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args);
-+STATIC int xfs_attr_leaf_addname(xfs_da_args_t *args, bool roll_trans);
-+STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args, bool roll_trans);
- 
- /*
-  * Internal routines when attribute list is more than one block.
-  */
- STATIC int xfs_attr_node_get(xfs_da_args_t *args);
--STATIC int xfs_attr_node_addname(xfs_da_args_t *args);
--STATIC int xfs_attr_node_removename(xfs_da_args_t *args);
-+STATIC int xfs_attr_node_addname(xfs_da_args_t *args, bool roll_trans);
-+STATIC int xfs_attr_node_removename(xfs_da_args_t *args, bool roll_trans);
- STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
- STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
- 
-@@ -228,10 +228,11 @@ xfs_attr_try_sf_addname(
- int
- xfs_attr_set_args(
- 	struct xfs_da_args	*args,
--	struct xfs_buf          **leaf_bp)
-+	struct xfs_buf          **leaf_bp,
-+	bool			roll_trans)
- {
- 	struct xfs_inode	*dp = args->dp;
--	int			error;
-+	int			error = 0;
- 	int			sf_size;
- 
- 	/*
-@@ -276,33 +277,35 @@ xfs_attr_set_args(
- 		if (error)
- 			goto out;
- 
--		/*
--		 * Prevent the leaf buffer from being unlocked so that a
--		 * concurrent AIL push cannot grab the half-baked leaf
--		 * buffer and run into problems with the write verifier.
--		 */
--		xfs_trans_bhold(args->trans, *leaf_bp);
-+		if (roll_trans) {
-+			/*
-+			 * Prevent the leaf buffer from being unlocked so that a
-+			 * concurrent AIL push cannot grab the half-baked leaf
-+			 * buffer and run into problems with the write verifier.
-+			 */
-+			xfs_trans_bhold(args->trans, *leaf_bp);
- 
--		error = xfs_defer_finish(&args->trans);
--		if (error)
--			goto out;
-+			error = xfs_defer_finish(&args->trans);
-+			if (error)
-+				goto out;
- 
--		/*
--		 * Commit the leaf transformation.  We'll need another
--		 * (linked) transaction to add the new attribute to the
--		 * leaf.
--		 */
--		error = xfs_trans_roll_inode(&args->trans, dp);
--		if (error)
--			goto out;
--		xfs_trans_bjoin(args->trans, *leaf_bp);
--		*leaf_bp = NULL;
-+			/*
-+			 * Commit the leaf transformation.  We'll need another
-+			 * (linked) transaction to add the new attribute to the
-+			 * leaf.
-+			 */
-+			error = xfs_trans_roll_inode(&args->trans, dp);
-+			if (error)
-+				goto out;
-+			xfs_trans_bjoin(args->trans, *leaf_bp);
-+			*leaf_bp = NULL;
-+		}
- 	}
- 
- 	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
--		error = xfs_attr_leaf_addname(args);
-+		error = xfs_attr_leaf_addname(args, roll_trans);
- 	else
--		error = xfs_attr_node_addname(args);
-+		error = xfs_attr_node_addname(args, roll_trans);
- 	if (error)
- 		goto out;
- 
-@@ -315,7 +318,8 @@ out:
-  */
- int
- xfs_attr_remove_args(
--	struct xfs_da_args      *args)
-+	struct xfs_da_args      *args,
-+	bool                    roll_trans)
- {
- 	struct xfs_inode	*dp = args->dp;
- 	int			error;
-@@ -326,9 +330,9 @@ xfs_attr_remove_args(
- 		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
- 		error = xfs_attr_shortform_remove(args);
- 	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
--		error = xfs_attr_leaf_removename(args);
-+		error = xfs_attr_leaf_removename(args, roll_trans);
- 	} else {
--		error = xfs_attr_node_removename(args);
-+		error = xfs_attr_node_removename(args, roll_trans);
- 	}
- 
- 	return error;
-@@ -405,7 +409,7 @@ xfs_attr_set(
- 	}
- 
- 	xfs_trans_ijoin(args.trans, dp, 0);
--	error = xfs_attr_set_args(&args, &leaf_bp);
-+	error = xfs_attr_set_args(&args, &leaf_bp, true);
- 	if (error)
- 		goto out;
- 
-@@ -489,7 +493,8 @@ xfs_attr_remove(
- 	 */
- 	xfs_trans_ijoin(args.trans, dp, 0);
- 
--	error = xfs_attr_remove_args(&args);
-+	error = xfs_attr_remove_args(&args, true);
-+
- 	if (error)
- 		goto out;
- 
-@@ -579,7 +584,8 @@ xfs_attr_shortform_addname(xfs_da_args_t *args)
-  */
- STATIC int
- xfs_attr_leaf_addname(
--	struct xfs_da_args	*args)
-+	struct xfs_da_args	*args,
-+	bool			roll_trans)
- {
- 	struct xfs_inode	*dp;
- 	struct xfs_buf		*bp;
-@@ -644,32 +650,39 @@ xfs_attr_leaf_addname(
- 		error = xfs_attr3_leaf_to_node(args);
- 		if (error)
- 			goto out_defer_cancel;
--		error = xfs_defer_finish(&args->trans);
--		if (error)
--			return error;
- 
--		/*
--		 * Commit the current trans (including the inode) and start
--		 * a new one.
--		 */
--		error = xfs_trans_roll_inode(&args->trans, dp);
--		if (error)
--			return error;
-+		if (roll_trans) {
-+			error = xfs_defer_finish(&args->trans);
-+			if (error)
-+				return error;
-+
-+			/*
-+			 * Commit the current trans (including the inode) and
-+			 * start a new one.
-+			 */
-+			error = xfs_trans_roll_inode(&args->trans, dp);
-+			if (error)
-+				return error;
-+		}
- 
- 		/*
- 		 * Fob the whole rest of the problem off on the Btree code.
- 		 */
--		error = xfs_attr_node_addname(args);
-+		error = xfs_attr_node_addname(args, roll_trans);
-+
- 		return error;
- 	}
- 
--	/*
--	 * Commit the transaction that added the attr name so that
--	 * later routines can manage their own transactions.
--	 */
--	error = xfs_trans_roll_inode(&args->trans, dp);
--	if (error)
--		return error;
-+
-+	if (roll_trans) {
-+		/*
-+		 * Commit the transaction that added the attr name so that
-+		 * later routines can manage their own transactions.
-+		 */
-+		error = xfs_trans_roll_inode(&args->trans, dp);
-+		if (error)
-+			return error;
-+	}
- 
- 	/*
- 	 * If there was an out-of-line value, allocate the blocks we
-@@ -678,7 +691,7 @@ xfs_attr_leaf_addname(
- 	 * maximum size of a transaction and/or hit a deadlock.
- 	 */
- 	if (args->rmtblkno > 0) {
--		error = xfs_attr_rmtval_set(args);
-+		error = xfs_attr_rmtval_set(args, roll_trans);
- 		if (error)
- 			return error;
- 	}
-@@ -694,7 +707,7 @@ xfs_attr_leaf_addname(
- 		 * In a separate transaction, set the incomplete flag on the
- 		 * "old" attr and clear the incomplete flag on the "new" attr.
- 		 */
--		error = xfs_attr3_leaf_flipflags(args);
-+		error = xfs_attr3_leaf_flipflags(args, roll_trans);
- 		if (error)
- 			return error;
- 
-@@ -708,7 +721,7 @@ xfs_attr_leaf_addname(
- 		args->rmtblkcnt = args->rmtblkcnt2;
- 		args->rmtvaluelen = args->rmtvaluelen2;
- 		if (args->rmtblkno) {
--			error = xfs_attr_rmtval_remove(args);
-+			error = xfs_attr_rmtval_remove(args, roll_trans);
- 			if (error)
- 				return error;
- 		}
-@@ -732,21 +745,25 @@ xfs_attr_leaf_addname(
- 			/* bp is gone due to xfs_da_shrink_inode */
- 			if (error)
- 				goto out_defer_cancel;
--			error = xfs_defer_finish(&args->trans);
--			if (error)
--				return error;
-+
-+			if (roll_trans) {
-+				error = xfs_defer_finish(&args->trans);
-+				if (error)
-+					return error;
-+			}
- 		}
- 
- 		/*
- 		 * Commit the remove and start the next trans in series.
- 		 */
--		error = xfs_trans_roll_inode(&args->trans, dp);
-+		if (roll_trans)
-+			error = xfs_trans_roll_inode(&args->trans, dp);
- 
- 	} else if (args->rmtblkno > 0) {
- 		/*
- 		 * Added a "remote" value, just clear the incomplete flag.
- 		 */
--		error = xfs_attr3_leaf_clearflag(args);
-+		error = xfs_attr3_leaf_clearflag(args, roll_trans);
- 	}
- 	return error;
- out_defer_cancel:
-@@ -762,7 +779,8 @@ out_defer_cancel:
-  */
- STATIC int
- xfs_attr_leaf_removename(
--	struct xfs_da_args	*args)
-+	struct xfs_da_args	*args,
-+	bool roll_trans)
- {
- 	struct xfs_inode	*dp;
- 	struct xfs_buf		*bp;
-@@ -795,9 +813,11 @@ xfs_attr_leaf_removename(
- 		/* bp is gone due to xfs_da_shrink_inode */
- 		if (error)
- 			goto out_defer_cancel;
--		error = xfs_defer_finish(&args->trans);
--		if (error)
--			return error;
-+		if (roll_trans) {
-+			error = xfs_defer_finish(&args->trans);
-+			if (error)
-+				return error;
-+		}
- 	}
- 	return 0;
- out_defer_cancel:
-@@ -853,7 +873,8 @@ xfs_attr_leaf_get(xfs_da_args_t *args)
-  */
- STATIC int
- xfs_attr_node_addname(
--	struct xfs_da_args	*args)
-+	struct xfs_da_args	*args,
-+	bool			roll_trans)
- {
- 	struct xfs_da_state	*state;
- 	struct xfs_da_state_blk	*blk;
-@@ -918,20 +939,24 @@ restart:
- 			 */
- 			xfs_da_state_free(state);
- 			state = NULL;
-+
- 			error = xfs_attr3_leaf_to_node(args);
- 			if (error)
- 				goto out_defer_cancel;
--			error = xfs_defer_finish(&args->trans);
--			if (error)
--				goto out;
- 
--			/*
--			 * Commit the node conversion and start the next
--			 * trans in the chain.
--			 */
--			error = xfs_trans_roll_inode(&args->trans, dp);
--			if (error)
--				goto out;
-+			if (roll_trans) {
-+				error = xfs_defer_finish(&args->trans);
-+				if (error)
-+					goto out;
-+
-+				/*
-+				 * Commit the node conversion and start the next
-+				 * trans in the chain.
-+				 */
-+				error = xfs_trans_roll_inode(&args->trans, dp);
-+				if (error)
-+					goto out;
-+			}
- 
- 			goto restart;
- 		}
-@@ -945,9 +970,12 @@ restart:
- 		error = xfs_da3_split(state);
- 		if (error)
- 			goto out_defer_cancel;
--		error = xfs_defer_finish(&args->trans);
--		if (error)
--			goto out;
-+
-+		if (roll_trans) {
-+			error = xfs_defer_finish(&args->trans);
-+			if (error)
-+				goto out;
-+		}
- 	} else {
- 		/*
- 		 * Addition succeeded, update Btree hashvals.
-@@ -966,9 +994,11 @@ restart:
- 	 * Commit the leaf addition or btree split and start the next
- 	 * trans in the chain.
- 	 */
--	error = xfs_trans_roll_inode(&args->trans, dp);
--	if (error)
--		goto out;
-+	if (roll_trans) {
-+		error = xfs_trans_roll_inode(&args->trans, dp);
-+		if (error)
-+			goto out;
-+	}
- 
- 	/*
- 	 * If there was an out-of-line value, allocate the blocks we
-@@ -977,7 +1007,7 @@ restart:
- 	 * maximum size of a transaction and/or hit a deadlock.
- 	 */
- 	if (args->rmtblkno > 0) {
--		error = xfs_attr_rmtval_set(args);
-+		error = xfs_attr_rmtval_set(args, roll_trans);
- 		if (error)
- 			return error;
- 	}
-@@ -993,7 +1023,7 @@ restart:
- 		 * In a separate transaction, set the incomplete flag on the
- 		 * "old" attr and clear the incomplete flag on the "new" attr.
- 		 */
--		error = xfs_attr3_leaf_flipflags(args);
-+		error = xfs_attr3_leaf_flipflags(args, roll_trans);
- 		if (error)
- 			goto out;
- 
-@@ -1007,7 +1037,7 @@ restart:
- 		args->rmtblkcnt = args->rmtblkcnt2;
- 		args->rmtvaluelen = args->rmtvaluelen2;
- 		if (args->rmtblkno) {
--			error = xfs_attr_rmtval_remove(args);
-+			error = xfs_attr_rmtval_remove(args, roll_trans);
- 			if (error)
- 				return error;
- 		}
-@@ -1041,9 +1071,11 @@ restart:
- 			error = xfs_da3_join(state);
- 			if (error)
- 				goto out_defer_cancel;
--			error = xfs_defer_finish(&args->trans);
--			if (error)
--				goto out;
-+			if (roll_trans) {
-+				error = xfs_defer_finish(&args->trans);
-+				if (error)
-+					goto out;
-+			}
- 		}
- 
- 		/*
-@@ -1057,7 +1089,7 @@ restart:
- 		/*
- 		 * Added a "remote" value, just clear the incomplete flag.
- 		 */
--		error = xfs_attr3_leaf_clearflag(args);
-+		error = xfs_attr3_leaf_clearflag(args, roll_trans);
- 		if (error)
- 			goto out;
- 	}
-@@ -1083,7 +1115,8 @@ out_defer_cancel:
-  */
- STATIC int
- xfs_attr_node_removename(
--	struct xfs_da_args	*args)
-+	struct xfs_da_args	*args,
-+	bool			roll_trans)
- {
- 	struct xfs_da_state	*state;
- 	struct xfs_da_state_blk	*blk;
-@@ -1133,10 +1166,10 @@ xfs_attr_node_removename(
- 		 * Mark the attribute as INCOMPLETE, then bunmapi() the
- 		 * remote value.
- 		 */
--		error = xfs_attr3_leaf_setflag(args);
-+		error = xfs_attr3_leaf_setflag(args, roll_trans);
- 		if (error)
- 			goto out;
--		error = xfs_attr_rmtval_remove(args);
-+		error = xfs_attr_rmtval_remove(args, roll_trans);
- 		if (error)
- 			goto out;
- 
-@@ -1164,15 +1197,19 @@ xfs_attr_node_removename(
- 		error = xfs_da3_join(state);
- 		if (error)
- 			goto out_defer_cancel;
--		error = xfs_defer_finish(&args->trans);
--		if (error)
--			goto out;
--		/*
--		 * Commit the Btree join operation and start a new trans.
--		 */
--		error = xfs_trans_roll_inode(&args->trans, dp);
--		if (error)
--			goto out;
-+
-+		if (roll_trans) {
-+			error = xfs_defer_finish(&args->trans);
-+			if (error)
-+				goto out;
-+			/*
-+			 * Commit the Btree join operation and
-+			 * start a new trans.
-+			 */
-+			error = xfs_trans_roll_inode(&args->trans, dp);
-+			if (error)
-+				goto out;
-+		}
- 	}
- 
- 	/*
-@@ -1195,9 +1232,12 @@ xfs_attr_node_removename(
- 			/* bp is gone due to xfs_da_shrink_inode */
- 			if (error)
- 				goto out_defer_cancel;
--			error = xfs_defer_finish(&args->trans);
--			if (error)
--				goto out;
-+
-+			if (roll_trans) {
-+				error = xfs_defer_finish(&args->trans);
-+				if (error)
-+					goto out;
-+			}
- 		} else
- 			xfs_trans_brelse(args->trans, bp);
- 	}
-diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
-index a6911b8..c7a194c 100644
---- a/libxfs/xfs_attr.h
-+++ b/libxfs/xfs_attr.h
-@@ -137,9 +137,10 @@ int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
- 		 unsigned char *value, int *valuelenp, int flags);
- int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
- 		 unsigned char *value, int valuelen, int flags);
--int xfs_attr_set_args(struct xfs_da_args *args, struct xfs_buf **leaf_bp);
-+int xfs_attr_set_args(struct xfs_da_args *args, struct xfs_buf **leaf_bp,
-+		 bool roll_trans);
- int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
--int xfs_attr_remove_args(struct xfs_da_args *args);
-+int xfs_attr_remove_args(struct xfs_da_args *args, bool roll_trans);
- int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
- 		  int flags, struct attrlist_cursor_kern *cursor);
- 
-diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
-index 3ecd524..60444d0 100644
---- a/libxfs/xfs_attr_leaf.c
-+++ b/libxfs/xfs_attr_leaf.c
-@@ -2634,7 +2634,8 @@ xfs_attr_leaf_newentsize(
-  */
- int
- xfs_attr3_leaf_clearflag(
--	struct xfs_da_args	*args)
-+	struct xfs_da_args	*args,
-+	bool			roll_trans)
- {
- 	struct xfs_attr_leafblock *leaf;
- 	struct xfs_attr_leaf_entry *entry;
-@@ -2695,7 +2696,9 @@ xfs_attr3_leaf_clearflag(
- 	/*
- 	 * Commit the flag value change and start the next trans in series.
- 	 */
--	return xfs_trans_roll_inode(&args->trans, args->dp);
-+	if (roll_trans)
-+		error = xfs_trans_roll_inode(&args->trans, args->dp);
-+	return error;
- }
- 
- /*
-@@ -2703,7 +2706,8 @@ xfs_attr3_leaf_clearflag(
-  */
- int
- xfs_attr3_leaf_setflag(
--	struct xfs_da_args	*args)
-+	struct xfs_da_args	*args,
-+	bool			roll_trans)
- {
- 	struct xfs_attr_leafblock *leaf;
- 	struct xfs_attr_leaf_entry *entry;
-@@ -2746,7 +2750,9 @@ xfs_attr3_leaf_setflag(
- 	/*
- 	 * Commit the flag value change and start the next trans in series.
- 	 */
--	return xfs_trans_roll_inode(&args->trans, args->dp);
-+	if (roll_trans)
-+		error = xfs_trans_roll_inode(&args->trans, args->dp);
-+	return error;
- }
- 
- /*
-@@ -2758,7 +2764,8 @@ xfs_attr3_leaf_setflag(
-  */
- int
- xfs_attr3_leaf_flipflags(
--	struct xfs_da_args	*args)
-+	struct xfs_da_args	*args,
-+	bool			roll_trans)
- {
- 	struct xfs_attr_leafblock *leaf1;
- 	struct xfs_attr_leafblock *leaf2;
-@@ -2864,7 +2871,8 @@ xfs_attr3_leaf_flipflags(
- 	/*
- 	 * Commit the flag value change and start the next trans in series.
- 	 */
--	error = xfs_trans_roll_inode(&args->trans, args->dp);
-+	if (roll_trans)
-+		error = xfs_trans_roll_inode(&args->trans, args->dp);
- 
- 	return error;
- }
-diff --git a/libxfs/xfs_attr_leaf.h b/libxfs/xfs_attr_leaf.h
-index 7b74e18..9d830ec 100644
---- a/libxfs/xfs_attr_leaf.h
-+++ b/libxfs/xfs_attr_leaf.h
-@@ -49,10 +49,10 @@ void	xfs_attr_fork_remove(struct xfs_inode *ip, struct xfs_trans *tp);
-  */
- int	xfs_attr3_leaf_to_node(struct xfs_da_args *args);
- int	xfs_attr3_leaf_to_shortform(struct xfs_buf *bp,
--				   struct xfs_da_args *args, int forkoff);
--int	xfs_attr3_leaf_clearflag(struct xfs_da_args *args);
--int	xfs_attr3_leaf_setflag(struct xfs_da_args *args);
--int	xfs_attr3_leaf_flipflags(struct xfs_da_args *args);
-+			struct xfs_da_args *args, int forkoff);
-+int	xfs_attr3_leaf_clearflag(struct xfs_da_args *args, bool roll_trans);
-+int	xfs_attr3_leaf_setflag(struct xfs_da_args *args, bool roll_trans);
-+int	xfs_attr3_leaf_flipflags(struct xfs_da_args *args, bool roll_trans);
- 
- /*
-  * Routines used for growing the Btree.
-diff --git a/libxfs/xfs_attr_remote.c b/libxfs/xfs_attr_remote.c
-index 1d078ef..6446607 100644
---- a/libxfs/xfs_attr_remote.c
-+++ b/libxfs/xfs_attr_remote.c
-@@ -428,7 +428,8 @@ xfs_attr_rmtval_get(
-  */
- int
- xfs_attr_rmtval_set(
--	struct xfs_da_args	*args)
-+	struct xfs_da_args	*args,
-+	bool			roll_trans)
- {
- 	struct xfs_inode	*dp = args->dp;
- 	struct xfs_mount	*mp = dp->i_mount;
-@@ -481,9 +482,12 @@ xfs_attr_rmtval_set(
- 				  &nmap);
- 		if (error)
- 			goto out_defer_cancel;
--		error = xfs_defer_finish(&args->trans);
--		if (error)
--			return error;
-+
-+		if (roll_trans) {
-+			error = xfs_defer_finish(&args->trans);
-+			if (error)
-+				return error;
-+		}
- 
- 		ASSERT(nmap == 1);
- 		ASSERT((map.br_startblock != DELAYSTARTBLOCK) &&
-@@ -491,12 +495,14 @@ xfs_attr_rmtval_set(
- 		lblkno += map.br_blockcount;
- 		blkcnt -= map.br_blockcount;
- 
--		/*
--		 * Start the next trans in the chain.
--		 */
--		error = xfs_trans_roll_inode(&args->trans, dp);
--		if (error)
--			return error;
-+		if (roll_trans) {
-+			/*
-+			 * Start the next trans in the chain.
-+			 */
-+			error = xfs_trans_roll_inode(&args->trans, dp);
-+			if (error)
-+				return error;
-+		}
- 	}
- 
- 	/*
-@@ -559,7 +565,8 @@ out_defer_cancel:
-  */
- int
- xfs_attr_rmtval_remove(
--	struct xfs_da_args	*args)
-+	struct xfs_da_args	*args,
-+	bool			roll_trans)
- {
- 	struct xfs_mount	*mp = args->dp->i_mount;
- 	xfs_dablk_t		lblkno;
-@@ -621,16 +628,19 @@ xfs_attr_rmtval_remove(
- 				    XFS_BMAPI_ATTRFORK, 1, &done);
- 		if (error)
- 			goto out_defer_cancel;
--		error = xfs_defer_finish(&args->trans);
--		if (error)
--			return error;
- 
--		/*
--		 * Close out trans and start the next one in the chain.
--		 */
--		error = xfs_trans_roll_inode(&args->trans, args->dp);
--		if (error)
--			return error;
-+		if (roll_trans) {
-+			error = xfs_defer_finish(&args->trans);
-+			if (error)
-+				return error;
-+
-+			/*
-+			 * Close out trans and start the next one in the chain.
-+			 */
-+			error = xfs_trans_roll_inode(&args->trans, args->dp);
-+			if (error)
-+				return error;
-+		}
- 	}
- 	return 0;
- out_defer_cancel:
-diff --git a/libxfs/xfs_attr_remote.h b/libxfs/xfs_attr_remote.h
-index 9d20b66..c7c073d 100644
---- a/libxfs/xfs_attr_remote.h
-+++ b/libxfs/xfs_attr_remote.h
-@@ -9,7 +9,7 @@
- int xfs_attr3_rmt_blocks(struct xfs_mount *mp, int attrlen);
- 
- int xfs_attr_rmtval_get(struct xfs_da_args *args);
--int xfs_attr_rmtval_set(struct xfs_da_args *args);
--int xfs_attr_rmtval_remove(struct xfs_da_args *args);
-+int xfs_attr_rmtval_set(struct xfs_da_args *args, bool roll_trans);
-+int xfs_attr_rmtval_remove(struct xfs_da_args *args, bool roll_trans);
- 
- #endif /* __XFS_ATTR_REMOTE_H__ */
--- 
-2.7.4
+Sure, but that's not addressing the cacheline coherency problem.
+
+Regardless of what the docs did or didn't say, let's try answering
+the question: what makes for a more useful system?
+
+A: A kmalloc implementation which always returns an address suitable
+for mapping using the DMA interfaces
+
+B: A kmalloc implementation which is more efficient, but requires drivers
+to use a different interface for allocating space for the purposes of DMA
+
+I genuinely don't know the answer to this question, and I think there are
+various people in this thread who believe A or B quite strongly.
+
+I would also like to ask people who believe in A what should happen in
+this situation:
+
+        blocks = kmalloc(4, GFP_KERNEL);
+        sg_init_one(&sg, blocks, 4);
+...
+        result = ntohl(*blocks);
+        kfree(blocks);
+
+(this is just one example; there are others).  Because if we have to
+round all allocations below 64 bytes up to 64 bytes, that's going to be
+a memory consumption problem.  On my laptop:
+
+kmalloc-96         11527  15792     96   42    1 : slabdata    376    376      0
+kmalloc-64         54406  62912     64   64    1 : slabdata    983    983      0
+kmalloc-32         80325  84096     32  128    1 : slabdata    657    657      0
+kmalloc-16         26844  30208     16  256    1 : slabdata    118    118      0
+kmalloc-8          17141  21504      8  512    1 : slabdata     42     42      0
+
+I make that an extra 1799 pages (7MB).  Not the end of the world, but
+not free either.
