@@ -1,39 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:43198 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727013AbeINTAn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Sep 2018 15:00:43 -0400
-Date: Fri, 14 Sep 2018 06:46:07 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: re-enable FIBMAP on reflink; disable for swap
-Message-ID: <20180914134607.GA6334@infradead.org>
-References: <bf6e7f18-25fa-2b41-9532-78bffe33a241@sandeen.net>
+Received: from mx1.redhat.com ([209.132.183.28]:43676 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727453AbeIYJEG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 25 Sep 2018 05:04:06 -0400
+Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id D55DD81DE1
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Sep 2018 02:58:46 +0000 (UTC)
+Subject: [PATCH 1/2 V3] xfs: validate inode di_forkoff
+References: <ba65356c-2b57-75fb-0436-804913285809@redhat.com>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <5efa5984-2ef7-eb98-1078-3e8657d0b28c@redhat.com>
+Date: Mon, 24 Sep 2018 21:58:42 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <bf6e7f18-25fa-2b41-9532-78bffe33a241@sandeen.net>
+In-Reply-To: <ba65356c-2b57-75fb-0436-804913285809@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Sep 12, 2018 at 08:55:35PM -0500, Eric Sandeen wrote:
-> The commit:
-> 
->  db1327b1 xfs: report shared extent mappings to userspace correctly
-> 
-> disabled FIBMAP on reflinked files, with this very clear rationale
-> regarding swapfiles:
-> 
-> "Have xfs_vm_bmap return zero for reflinked files because the
-> bmap-based swap code requires static block mappings, which is
-> incompatible with copy on write."
-> 
-> However, this broke the FIBMAP interface for existing userspace
-> apps, including bootloaders.
+Verify the inode di_forkoff, lifted from xfs_repair's
+process_check_inode_forkoff().
 
-It didn't break any interface because the reflink flag has been
-experimental and a mkfs-time opt in.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
 
-So NAK for this patch.
+V3: use XFS_DFORK_Q instead of open-coding forkoff check
+
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 30d1d60f1d46..09d9c8cfa4a0 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -415,6 +415,31 @@ xfs_dinode_verify_fork(
+ 	return NULL;
+ }
+ 
++static xfs_failaddr_t
++xfs_dinode_verify_forkoff(
++	struct xfs_dinode	*dip,
++	struct xfs_mount	*mp)
++{
++	if (!XFS_DFORK_Q(dip))
++		return NULL;
++
++	switch (dip->di_format)  {
++	case XFS_DINODE_FMT_DEV:
++		if (dip->di_forkoff != (roundup(sizeof(xfs_dev_t), 8) >> 3))
++			return __this_address;
++		break;
++	case XFS_DINODE_FMT_LOCAL:	/* fall through ... */
++	case XFS_DINODE_FMT_EXTENTS:    /* fall through ... */
++	case XFS_DINODE_FMT_BTREE:
++		if (dip->di_forkoff >= (XFS_LITINO(mp, dip->di_version) >> 3))
++			return __this_address;
++		break;
++	default:
++		return __this_address;
++	}
++	return NULL;
++}
++
+ xfs_failaddr_t
+ xfs_dinode_verify(
+ 	struct xfs_mount	*mp,
+@@ -470,6 +495,11 @@ xfs_dinode_verify(
+ 	if (mode && (flags & XFS_DIFLAG_REALTIME) && !mp->m_rtdev_targp)
+ 		return __this_address;
+ 
++	/* check for illegal values of forkoff */
++	fa = xfs_dinode_verify_forkoff(dip, mp);
++	if (fa)
++		return fa;
++
+ 	/* Do we have appropriate data fork formats for the mode? */
+ 	switch (mode & S_IFMT) {
+ 	case S_IFIFO:
