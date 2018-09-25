@@ -1,222 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:55504 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727201AbeIZQ3p (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 12:29:45 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8QAE1Dc065197
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:30 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by userp2130.oracle.com with ESMTP id 2mnd5thhr5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:30 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAHOrr026354
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:24 GMT
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w8QAHNGr014187
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:24 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v9 14/28] xfs: get directory offset when adding directory name
-Date: Wed, 26 Sep 2018 03:14:53 -0700
-Message-Id: <1537956907-10244-15-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1537956907-10244-1-git-send-email-allison.henderson@oracle.com>
-References: <1537956907-10244-1-git-send-email-allison.henderson@oracle.com>
+Received: from mail-it1-f194.google.com ([209.85.166.194]:38013 "EHLO
+        mail-it1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729494AbeIYVxD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Sep 2018 17:53:03 -0400
+Received: by mail-it1-f194.google.com with SMTP id p129-v6so15861968ite.3
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Sep 2018 08:44:58 -0700 (PDT)
+Subject: Re: block: DMA alignment of IO buffer allocated from slab
+References: <CACVXFVOBq3L_EjSTCoiqUL1PH=HMR5EuNNQV0hNndFpGxmUK6g@mail.gmail.com>
+ <20180920063129.GB12913@lst.de> <87h8ij0zot.fsf@vitty.brq.redhat.com>
+ <20180921130504.GA22551@lst.de>
+ <010001660c54fb65-b9d3a770-6678-40d0-8088-4db20af32280-000000@email.amazonses.com>
+ <1f88f59a-2cac-e899-4c2e-402e919b1034@kernel.dk>
+ <010001660cbd51ea-56e96208-564d-4f5d-a5fb-119a938762a9-000000@email.amazonses.com>
+ <1a5b255f-682e-783a-7f99-9d02e39c4af2@kernel.dk>
+ <20180925074910.GB31060@dastard>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <3d63a42f-837a-4bf6-665a-c3a8c8cb46e8@kernel.dk>
+Date: Tue, 25 Sep 2018 09:44:54 -0600
+MIME-Version: 1.0
+In-Reply-To: <20180925074910.GB31060@dastard>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christopher Lameter <cl@linux.com>, Christoph Hellwig <hch@lst.de>, Vitaly Kuznetsov <vkuznets@redhat.com>, Ming Lei <tom.leiming@gmail.com>, linux-block <linux-block@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Ming Lei <ming.lei@redhat.com>
 
-From: Mark Tinguely <tinguely@sgi.com>
+On 9/25/18 1:49 AM, Dave Chinner wrote:
+> On Mon, Sep 24, 2018 at 12:09:37PM -0600, Jens Axboe wrote:
+>> On 9/24/18 12:00 PM, Christopher Lameter wrote:
+>>> On Mon, 24 Sep 2018, Jens Axboe wrote:
+>>>
+>>>> The situation is making me a little uncomfortable, though. If we export
+>>>> such a setting, we really should be honoring it...
+> 
+> That's what I said up front, but you replied to this with:
+> 
+> | I think this is all crazy talk. We've never done this, [...]
+> 
+> Now I'm not sure what you are saying we should do....
+> 
+>>> Various subsystems create custom slab arrays with their particular
+>>> alignment requirement for these allocations.
+>>
+>> Oh yeah, I think the solution is basic enough for XFS, for instance.
+>> They just have to error on the side of being cautious, by going full
+>> sector alignment for memory...
+> 
+> How does the filesystem find out about hardware alignment
+> requirements? Isn't probing through the block device to find out
+> about the request queue configurations considered a layering
+> violation?
 
-Return the directory offset information when adding an entry to the
-directory.
+Right now it isn't a stacked property, so answering the question
+isn't even possible beyond "what does the top device require".
 
-This offset will be used as the parent pointer offset in xfs_create,
-xfs_symlink, xfs_link and xfs_rename.
+> What if sector alignment is not sufficient?  And how would this work
+> if we start supporting sector sizes larger than page size? (which the
+> XFS buffer cache supports just fine, even if nothing else in
+> Linux does).
 
-[dchinner: forward ported and cleaned up]
-[dchinner: no s-o-b from Mark]
-[bfoster: rebased, use args->geo in dir code]
-[achender: rebased, chaged __uint32_t to xfs_dir2_dataptr_t]
+If sector alignment isn't sufficient, then we'd need to bounce 512b
+formats... But I don't want to over-design something that isn't
+relevant to real life setups. I'm not aware of anything that needs
+memory aligned to that degree.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
- fs/xfs/libxfs/xfs_da_btree.h   | 1 +
- fs/xfs/libxfs/xfs_dir2.c       | 9 +++++++--
- fs/xfs/libxfs/xfs_dir2.h       | 2 +-
- fs/xfs/libxfs/xfs_dir2_block.c | 1 +
- fs/xfs/libxfs/xfs_dir2_leaf.c  | 2 ++
- fs/xfs/libxfs/xfs_dir2_node.c  | 2 ++
- fs/xfs/libxfs/xfs_dir2_sf.c    | 2 ++
- fs/xfs/xfs_inode.c             | 7 ++++---
- fs/xfs/xfs_symlink.c           | 3 ++-
- 9 files changed, 22 insertions(+), 7 deletions(-)
+> But even ignoring sector size > page size, implementing this
+> requires a bunch of new slab caches, especially for 64k page
+> machines because XFS supports sector sizes up to 32k.  And every
+> other filesystem that uses sector sized buffers (e.g. HFS) would
+> have to do the same thing. Seems somewhat wasteful to require
+> everyone to implement their own aligned sector slab cache...
+> 
+> Perhaps we should take the filesystem out of this completely - maybe
+> the block layer could provide a generic "sector heap" and have all
+> filesystems that use sector sized buffers allocate from it. e.g.
+> something like
+> 
+> 	mem = bdev_alloc_sector_buffer(bdev, sector_size)
+> 
+> That way we don't have to rely on filesystems knowing anything about
+> the alignment limitations of the devices or assumptions about DMA
+> to work correctly...
 
-diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
-index 84dd865..04a0641 100644
---- a/fs/xfs/libxfs/xfs_da_btree.h
-+++ b/fs/xfs/libxfs/xfs_da_btree.h
-@@ -71,6 +71,7 @@ typedef struct xfs_da_args {
- 	int		rmtvaluelen2;	/* remote attr value length in bytes */
- 	int		op_flags;	/* operation flags */
- 	enum xfs_dacmp	cmpresult;	/* name compare result for lookups */
-+	xfs_dir2_dataptr_t offset;	/* OUT: offset in directory */
- } xfs_da_args_t;
- 
- /*
-diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-index 229152c..d334e66 100644
---- a/fs/xfs/libxfs/xfs_dir2.c
-+++ b/fs/xfs/libxfs/xfs_dir2.c
-@@ -243,7 +243,8 @@ xfs_dir_createname(
- 	struct xfs_inode	*dp,
- 	struct xfs_name		*name,
- 	xfs_ino_t		inum,		/* new entry inode number */
--	xfs_extlen_t		total)		/* bmap's total block count */
-+	xfs_extlen_t		total,		/* bmap's total block count */
-+	xfs_dir2_dataptr_t	*offset)	/* OUT entry's dir offset */
- {
- 	struct xfs_da_args	*args;
- 	int			rval;
-@@ -298,6 +299,10 @@ xfs_dir_createname(
- 		rval = xfs_dir2_node_addname(args);
- 
- out_free:
-+	/* return the location that this entry was place in the parent inode */
-+	if (offset)
-+		*offset = args->offset;
-+
- 	kmem_free(args);
- 	return rval;
- }
-@@ -536,7 +541,7 @@ xfs_dir_canenter(
- 	xfs_inode_t	*dp,
- 	struct xfs_name	*name)		/* name of entry to add */
- {
--	return xfs_dir_createname(tp, dp, name, 0, 0);
-+	return xfs_dir_createname(tp, dp, name, 0, 0, NULL);
- }
- 
- /*
-diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
-index c3e3f6b..c164a38 100644
---- a/fs/xfs/libxfs/xfs_dir2.h
-+++ b/fs/xfs/libxfs/xfs_dir2.h
-@@ -117,7 +117,7 @@ extern int xfs_dir_init(struct xfs_trans *tp, struct xfs_inode *dp,
- 				struct xfs_inode *pdp);
- extern int xfs_dir_createname(struct xfs_trans *tp, struct xfs_inode *dp,
- 				struct xfs_name *name, xfs_ino_t inum,
--				xfs_extlen_t tot);
-+				xfs_extlen_t tot, xfs_dir2_dataptr_t *offset);
- extern int xfs_dir_lookup(struct xfs_trans *tp, struct xfs_inode *dp,
- 				struct xfs_name *name, xfs_ino_t *inum,
- 				struct xfs_name *ci_name);
-diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
-index 30ed591..a31702c 100644
---- a/fs/xfs/libxfs/xfs_dir2_block.c
-+++ b/fs/xfs/libxfs/xfs_dir2_block.c
-@@ -547,6 +547,7 @@ xfs_dir2_block_addname(
- 	dp->d_ops->data_put_ftype(dep, args->filetype);
- 	tagp = dp->d_ops->data_entry_tag_p(dep);
- 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
-+	args->offset = xfs_dir2_byte_to_dataptr((char *)dep - (char *)hdr);
- 	/*
- 	 * Clean up the bestfree array and log the header, tail, and entry.
- 	 */
-diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-index 1728a3e..37450ca 100644
---- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-@@ -882,6 +882,8 @@ xfs_dir2_leaf_addname(
- 	dp->d_ops->data_put_ftype(dep, args->filetype);
- 	tagp = dp->d_ops->data_entry_tag_p(dep);
- 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
-+	args->offset = xfs_dir2_db_off_to_dataptr(args->geo, use_block,
-+						(char *)dep - (char *)hdr);
- 	/*
- 	 * Need to scan fix up the bestfree table.
- 	 */
-diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-index f1bb343..654bbf4 100644
---- a/fs/xfs/libxfs/xfs_dir2_node.c
-+++ b/fs/xfs/libxfs/xfs_dir2_node.c
-@@ -2027,6 +2027,8 @@ xfs_dir2_node_addname_int(
- 	dp->d_ops->data_put_ftype(dep, args->filetype);
- 	tagp = dp->d_ops->data_entry_tag_p(dep);
- 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
-+	args->offset = xfs_dir2_db_off_to_dataptr(args->geo, dbno,
-+						  (char *)dep - (char *)hdr);
- 	xfs_dir2_data_log_entry(args, dbp, dep);
- 	/*
- 	 * Rescan the block for bestfree if needed.
-diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
-index 585dfdb..549656b 100644
---- a/fs/xfs/libxfs/xfs_dir2_sf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_sf.c
-@@ -393,6 +393,7 @@ xfs_dir2_sf_addname_easy(
- 	memcpy(sfep->name, args->name, sfep->namelen);
- 	dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
- 	dp->d_ops->sf_put_ftype(sfep, args->filetype);
-+	args->offset = xfs_dir2_byte_to_dataptr(offset);
- 
- 	/*
- 	 * Update the header and inode.
-@@ -484,6 +485,7 @@ xfs_dir2_sf_addname_hard(
- 	memcpy(sfep->name, args->name, sfep->namelen);
- 	dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
- 	dp->d_ops->sf_put_ftype(sfep, args->filetype);
-+	args->offset = xfs_dir2_byte_to_dataptr(offset);
- 	sfp->count++;
- 	if (args->inumber > XFS_DIR2_MAX_SHORT_INUM && !objchange)
- 		sfp->i8count++;
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 1ef9d03..6aea30f 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1224,7 +1224,8 @@ xfs_create(
- 
- 	error = xfs_dir_createname(tp, dp, name, ip->i_ino,
- 				   resblks ?
--					resblks - XFS_IALLOC_SPACE_RES(mp) : 0);
-+					resblks - XFS_IALLOC_SPACE_RES(mp) : 0,
-+					NULL);
- 	if (error) {
- 		ASSERT(error != -ENOSPC);
- 		goto out_trans_cancel;
-@@ -1452,7 +1453,7 @@ xfs_link(
- 	}
- 
- 	error = xfs_dir_createname(tp, tdp, target_name, sip->i_ino,
--				   resblks);
-+				   resblks, NULL);
- 	if (error)
- 		goto error_return;
- 	xfs_trans_ichgtime(tp, tdp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
-@@ -2983,7 +2984,7 @@ xfs_rename(
- 		 * to account for the ".." reference from the new entry.
- 		 */
- 		error = xfs_dir_createname(tp, target_dp, target_name,
--					   src_ip->i_ino, spaceres);
-+					   src_ip->i_ino, spaceres, NULL);
- 		if (error)
- 			goto out_trans_cancel;
- 
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index 07b1036..72e2915 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -328,7 +328,8 @@ xfs_symlink(
- 	/*
- 	 * Create the directory entry for the symlink.
- 	 */
--	error = xfs_dir_createname(tp, dp, link_name, ip->i_ino, resblks);
-+	error = xfs_dir_createname(tp, dp, link_name,
-+			ip->i_ino, resblks, NULL);
- 	if (error)
- 		goto out_trans_cancel;
- 	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+I like that idea, would probably also need a mempool backing for
+certain cases.
+
 -- 
-2.7.4
+Jens Axboe
