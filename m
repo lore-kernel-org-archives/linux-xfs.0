@@ -1,231 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:48560 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727157AbeIZQiC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 12:38:02 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8QANgRb037003
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:46 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2120.oracle.com with ESMTP id 2mnvtur9be-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:46 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAPj2J027109
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:45 GMT
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w8QAPju2018421
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:45 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v3 08/30] xfsprogs: Add xfs_has_attr and subroutines
-Date: Wed, 26 Sep 2018 03:23:11 -0700
-Message-Id: <1537957413-10630-9-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1537957413-10630-1-git-send-email-allison.henderson@oracle.com>
-References: <1537957413-10630-1-git-send-email-allison.henderson@oracle.com>
+Received: from mx1.redhat.com ([209.132.183.28]:46458 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726157AbeIYGVQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 25 Sep 2018 02:21:16 -0400
+Date: Tue, 25 Sep 2018 08:16:16 +0800
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: block: DMA alignment of IO buffer allocated from slab
+Message-ID: <20180925001615.GA14386@ming.t460p>
+References: <20180923224206.GA13618@ming.t460p>
+ <38c03920-0fd0-0a39-2a6e-70cd8cb4ef34@virtuozzo.com>
+ <20a20568-5089-541d-3cee-546e549a0bc8@acm.org>
+ <12eee877-affa-c822-c9d5-fda3aa0a50da@virtuozzo.com>
+ <1537801706.195115.7.camel@acm.org>
+ <c844c598-be1d-bef4-fb99-09cf99571fd7@virtuozzo.com>
+ <1537804720.195115.9.camel@acm.org>
+ <10c706fd-2252-f11b-312e-ae0d97d9a538@virtuozzo.com>
+ <1537805984.195115.14.camel@acm.org>
+ <20180924185753.GA32269@bombadil.infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180924185753.GA32269@bombadil.infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Bart Van Assche <bvanassche@acm.org>, Andrey Ryabinin <aryabinin@virtuozzo.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, Christoph Hellwig <hch@lst.de>, Ming Lei <tom.leiming@gmail.com>, linux-block <linux-block@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Christoph Lameter <cl@linux.com>, Linus Torvalds <torvalds@linux-foundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-This patch adds a new functions to check for the existence of
-an attribute.  Subroutines are also added to handle the cases
-of leaf blocks, nodes or shortform.  We will need this later
-for delayed attributes since delayed operations cannot return
-error codes.
+On Mon, Sep 24, 2018 at 11:57:53AM -0700, Matthew Wilcox wrote:
+> On Mon, Sep 24, 2018 at 09:19:44AM -0700, Bart Van Assche wrote:
+> > That means that two buffers allocated with kmalloc() may share a cache line on
+> > x86-64. Since it is allowed to use a buffer allocated by kmalloc() for DMA, can
+> > this lead to data corruption, e.g. if the CPU writes into one buffer allocated
+> > with kmalloc() and a device performs a DMA write to another kmalloc() buffer and
+> > both write operations affect the same cache line?
+> 
+> You're not supposed to use kmalloc memory for DMA.  This is why we have
+> dma_alloc_coherent() and friends.  Also, from DMA-API.txt:
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
----
- libxfs/xfs_attr.c      | 78 ++++++++++++++++++++++++++++++++++++++++++++++++++
- libxfs/xfs_attr.h      |  1 +
- libxfs/xfs_attr_leaf.c | 33 +++++++++++++++++++++
- libxfs/xfs_attr_leaf.h |  1 +
- 4 files changed, 113 insertions(+)
+Please take a look at USB drivers, or storage drivers or scsi layer. Lot of
+DMA buffers are allocated via kmalloc.
 
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index d50b5a1..ad0c5cd 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -48,6 +48,7 @@ STATIC int xfs_attr_shortform_addname(xfs_da_args_t *args);
- STATIC int xfs_attr_leaf_get(xfs_da_args_t *args);
- STATIC int xfs_attr_leaf_addname(xfs_da_args_t *args, bool roll_trans);
- STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args, bool roll_trans);
-+STATIC int xfs_leaf_has_attr(xfs_da_args_t *args);
- 
- /*
-  * Internal routines when attribute list is more than one block.
-@@ -55,6 +56,7 @@ STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args, bool roll_trans);
- STATIC int xfs_attr_node_get(xfs_da_args_t *args);
- STATIC int xfs_attr_node_addname(xfs_da_args_t *args, bool roll_trans);
- STATIC int xfs_attr_node_removename(xfs_da_args_t *args, bool roll_trans);
-+STATIC int xfs_attr_node_hasname(xfs_da_args_t *args);
- STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
- STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
- 
-@@ -316,6 +318,29 @@ out:
- }
- 
- /*
-+ * Return successful if attr is found, or ENOATTR if not
-+ */
-+int
-+xfs_has_attr(
-+	struct xfs_da_args      *args)
-+{
-+	struct xfs_inode        *dp = args->dp;
-+	int                     error;
-+
-+	if (!xfs_inode_hasattr(dp))
-+		error = -ENOATTR;
-+	else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
-+		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
-+		error = xfs_shortform_has_attr(args);
-+	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
-+		error = xfs_leaf_has_attr(args);
-+	else
-+		error = xfs_attr_node_hasname(args);
-+
-+	return error;
-+}
-+
-+/*
-  * Remove the attribute specified in @args.
-  */
- int
-@@ -853,6 +878,29 @@ out_defer_cancel:
- }
- 
- /*
-+ * Return successful if attr is found, or ENOATTR if not
-+ */
-+STATIC int
-+xfs_leaf_has_attr(
-+	struct xfs_da_args      *args)
-+{
-+	struct xfs_buf          *bp;
-+	int                     error = 0;
-+
-+	args->blkno = 0;
-+	error = xfs_attr3_leaf_read(args->trans, args->dp,
-+			args->blkno, -1, &bp);
-+	if (error)
-+		return error;
-+
-+	error = xfs_attr3_leaf_lookup_int(bp, args);
-+	error = (error == -ENOATTR) ? -ENOATTR : 0;
-+	xfs_trans_brelse(args->trans, bp);
-+
-+	return error;
-+}
-+
-+/*
-  * Remove a name from the leaf attribute list structure
-  *
-  * This leaf block cannot have a "remote" value, we only call this routine
-@@ -1188,6 +1236,36 @@ out_defer_cancel:
- }
- 
- /*
-+ * Return successful if attr is found, or ENOATTR if not
-+ */
-+STATIC int
-+xfs_attr_node_hasname(
-+	struct xfs_da_args	*args)
-+{
-+	struct xfs_da_state	*state;
-+	struct xfs_inode	*dp;
-+	int			retval, error;
-+
-+	/*
-+	 * Tie a string around our finger to remind us where we are.
-+	 */
-+	dp = args->dp;
-+	state = xfs_da_state_alloc();
-+	state->args = args;
-+	state->mp = dp->i_mount;
-+
-+	/*
-+	 * Search to see if name exists, and get back a pointer to it.
-+	 */
-+	error = xfs_da3_node_lookup_int(state, &retval);
-+	if (error || (retval != -EEXIST)) {
-+		if (error == 0)
-+			error = retval;
-+	}
-+	return error;
-+}
-+
-+/*
-  * Remove a name from a B-tree attribute list.
-  *
-  * This will involve walking down the Btree, and may involve joining
-diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
-index 6e546a1..1225c42 100644
---- a/libxfs/xfs_attr.h
-+++ b/libxfs/xfs_attr.h
-@@ -162,6 +162,7 @@ int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
- int xfs_attr_set_args(struct xfs_da_args *args, struct xfs_buf **leaf_bp,
- 		 bool roll_trans);
- int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
-+int xfs_has_attr(struct xfs_da_args *args);
- int xfs_attr_remove_args(struct xfs_da_args *args, bool roll_trans);
- int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
- 		  int flags, struct attrlist_cursor_kern *cursor);
-diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
-index 60444d0..d84cd59 100644
---- a/libxfs/xfs_attr_leaf.c
-+++ b/libxfs/xfs_attr_leaf.c
-@@ -619,6 +619,39 @@ xfs_attr_fork_remove(
- }
- 
- /*
-+ * Return successful if attr is found, or ENOATTR if not
-+ */
-+int
-+xfs_shortform_has_attr(
-+	struct xfs_da_args	 *args)
-+{
-+	struct xfs_attr_shortform *sf;
-+	struct xfs_attr_sf_entry *sfe;
-+	int			base = sizeof(struct xfs_attr_sf_hdr);
-+	int			size = 0;
-+	int			end;
-+	int			i;
-+
-+	sf = (struct xfs_attr_shortform *)args->dp->i_afp->if_u1.if_data;
-+	sfe = &sf->list[0];
-+	end = sf->hdr.count;
-+	for (i = 0; i < end; sfe = XFS_ATTR_SF_NEXTENTRY(sfe),
-+			base += size, i++) {
-+		size = XFS_ATTR_SF_ENTSIZE(sfe);
-+		if (sfe->namelen != args->namelen)
-+			continue;
-+		if (memcmp(sfe->nameval, args->name, args->namelen) != 0)
-+			continue;
-+		if (!xfs_attr_namesp_match(args->flags, sfe->flags))
-+			continue;
-+		break;
-+	}
-+	if (i == end)
-+		return -ENOATTR;
-+	return 0;
-+}
-+
-+/*
-  * Remove an attribute from the shortform attribute list structure.
-  */
- int
-diff --git a/libxfs/xfs_attr_leaf.h b/libxfs/xfs_attr_leaf.h
-index 9d830ec..98dd169 100644
---- a/libxfs/xfs_attr_leaf.h
-+++ b/libxfs/xfs_attr_leaf.h
-@@ -39,6 +39,7 @@ int	xfs_attr_shortform_getvalue(struct xfs_da_args *args);
- int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args,
- 			struct xfs_buf **leaf_bp);
- int	xfs_attr_shortform_remove(struct xfs_da_args *args);
-+int	xfs_shortform_has_attr(struct xfs_da_args *args);
- int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
- int	xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
- xfs_failaddr_t xfs_attr_shortform_verify(struct xfs_inode *ip);
--- 
-2.7.4
+Also see the following description in DMA-API-HOWTO.txt:
+
+	If the device supports DMA, the driver sets up a buffer using kmalloc() or
+	a similar interface, which returns a virtual address (X).  The virtual
+	memory system maps X to a physical address (Y) in system RAM.  The driver
+	can use virtual address X to access the buffer, but the device itself
+	cannot because DMA doesn't go through the CPU virtual memory system.
+
+Also still see DMA-API-HOWTO.txt:
+
+Types of DMA mappings
+=====================
+
+There are two types of DMA mappings:
+
+- Consistent DMA mappings which are usually mapped at driver
+  initialization, unmapped at the end and for which the hardware should
+  guarantee that the device and the CPU can access the data
+  in parallel and will see updates made by each other without any
+  explicit software flushing.
+
+  Think of "consistent" as "synchronous" or "coherent".
+
+
+- Streaming DMA mappings which are usually mapped for one DMA
+  transfer, unmapped right after it (unless you use dma_sync_* below)
+  and for which hardware can optimize for sequential accesses.
+
+
+
+Thanks,
+Ming
