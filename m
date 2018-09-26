@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:33608 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727551AbeIZQiJ (ORCPT
+Received: from aserp2120.oracle.com ([141.146.126.78]:55480 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727483AbeIZQiJ (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 12:38:09 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8QAPBJ3073963
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8QANhTb087676
         for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:53 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp2130.oracle.com with ESMTP id 2mnd5thjs7-1
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp2120.oracle.com with ESMTP id 2mndpphh7v-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:53 +0000
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAPkEk004776
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:52 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAPpGx013257
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:47 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:52 GMT
 Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAPk2N023175
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:46 GMT
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w8QAPpER032168
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:51 GMT
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v3 10/30] xfsprogs: Roll delayed attr operations by returning EAGAIN
-Date: Wed, 26 Sep 2018 03:23:13 -0700
-Message-Id: <1537957413-10630-11-git-send-email-allison.henderson@oracle.com>
+Subject: [PATCH v3 26/30] xfsprogs: Add xfs_verify_pptr
+Date: Wed, 26 Sep 2018 03:23:29 -0700
+Message-Id: <1537957413-10630-27-git-send-email-allison.henderson@oracle.com>
 In-Reply-To: <1537957413-10630-1-git-send-email-allison.henderson@oracle.com>
 References: <1537957413-10630-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -28,134 +28,140 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-This patch modifies xfs_attr_set_args to return -EAGAIN
-when a transaction needs to be rolled.  All functions
-currently calling xfs_attr_set_args are modified to use
-the deferred attr operation, or handle the -EAGAIN return
-code
+Attribute names of parent pointers are not strings.  So we
+need to modify attr_namecheck to verify parent pointer
+records when the XFS_ATTR_PARENT flag is set.
 
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- libxfs/xfs_attr.c | 43 +++++++++++++++++++++++++++++++++----------
- libxfs/xfs_attr.h |  2 +-
- 2 files changed, 34 insertions(+), 11 deletions(-)
+ repair/attr_repair.c | 21 +++++++++++----------
+ repair/da_util.c     | 43 +++++++++++++++++++++++++++++++++++++++++++
+ repair/da_util.h     | 12 ++++++++++++
+ 3 files changed, 66 insertions(+), 10 deletions(-)
 
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index ad0c5cd..1935128 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -233,12 +233,20 @@ int
- xfs_attr_set_args(
- 	struct xfs_da_args	*args,
- 	struct xfs_buf          **leaf_bp,
-+	xfs_attr_state_t	*state,
- 	bool			roll_trans)
- {
- 	struct xfs_inode	*dp = args->dp;
- 	int			error = 0;
- 	int			sf_size;
+diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+index 1d04500..df27fa4 100644
+--- a/repair/attr_repair.c
++++ b/repair/attr_repair.c
+@@ -292,13 +292,14 @@ process_shortform_attr(
+ 			}
+ 		}
  
-+	switch (*state) {
-+	case (XFS_ATTR_STATE1):
-+		goto state1;
-+	case (XFS_ATTR_STATE2):
-+		goto state2;
+-		/* namecheck checks for / and null terminated for file names.
+-		 * attributes names currently follow the same rules.
+-		*/
+-		if (namecheck((char *)&currententry->nameval[0],
+-						currententry->namelen))  {
++		/* namecheck checks for / and null terminated for file names,
++		 * or verifies parent pointer record in the case of a parent
++		 * pointer attribute.
++		 */
++		if (attr_namecheck(mp, (char *)&currententry->nameval[0],
++		       currententry->namelen, currententry->flags))  {
+ 			do_warn(
+-	_("entry contains illegal character in shortform attribute name\n"));
++	_("entry contains illegal shortform attribute name\n"));
+ 			junkit = 1;
+ 		}
+ 
+@@ -458,8 +459,8 @@ process_leaf_attr_local(
+ 	xfs_attr_leaf_name_local_t *local;
+ 
+ 	local = xfs_attr3_leaf_name_local(leaf, i);
+-	if (local->namelen == 0 || namecheck((char *)&local->nameval[0],
+-							local->namelen)) {
++	if (attr_namecheck(mp, (char *)&local->nameval[0],
++	       local->namelen, entry->flags)) {
+ 		do_warn(
+ 	_("attribute entry %d in attr block %u, inode %" PRIu64 " has bad name (namelen = %d)\n"),
+ 			i, da_bno, ino, local->namelen);
+@@ -513,8 +514,8 @@ process_leaf_attr_remote(
+ 
+ 	remotep = xfs_attr3_leaf_name_remote(leaf, i);
+ 
+-	if (remotep->namelen == 0 || namecheck((char *)&remotep->name[0],
+-						remotep->namelen) ||
++	if (attr_namecheck(mp, (char *)&remotep->name[0],
++				remotep->namelen, entry->flags) ||
+ 			be32_to_cpu(entry->hashval) !=
+ 				libxfs_da_hashname((unsigned char *)&remotep->name[0],
+ 						remotep->namelen) ||
+diff --git a/repair/da_util.c b/repair/da_util.c
+index 1450767..d94a31c 100644
+--- a/repair/da_util.c
++++ b/repair/da_util.c
+@@ -13,6 +13,49 @@
+ #include "da_util.h"
+ 
+ /*
++ * Verify parent pointer attribute is valid.
++ * Return 0 on success or 1 on failure
++ */
++int
++xfs_verify_pptr(struct xfs_mount *mp, struct xfs_parent_name_rec *rec)
++{
++	xfs_ino_t p_ino = (xfs_ino_t)be64_to_cpu(rec->p_ino);
++	xfs_dir2_dataptr_t p_diroffset =
++			(xfs_dir2_dataptr_t)be32_to_cpu(rec->p_diroffset);
++
++	if (!xfs_verify_ino(mp, p_ino))
++		return 1;
++
++	if (p_diroffset > XFS_DIR2_MAX_DATAPTR)
++		return 1;
++
++	return 0;
++}
++
++/*
++ * Check if an attribute name is valid
++ * Returns 0 on success and 1 on failure
++ */
++int
++attr_namecheck(struct xfs_mount *mp, char *name, int length, int flags)
++{
++	if (flags & XFS_ATTR_PARENT) {
++		if (length != sizeof(struct xfs_parent_name_rec))
++			return 1;
++		return xfs_verify_pptr(mp, (struct xfs_parent_name_rec *)name);
 +	}
 +
- 	/*
- 	 * New inodes setting the parent pointer attr will
- 	 * not have an attribute fork yet. So set the attribute
-@@ -259,7 +267,6 @@ xfs_attr_set_args(
- 	if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL ||
- 	    (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS &&
- 	     dp->i_d.di_anextents == 0)) {
--
- 		/*
- 		 * Build initial attribute list (if required).
- 		 */
-@@ -273,6 +280,9 @@ xfs_attr_set_args(
- 		if (error != -ENOSPC)
- 			goto out;
- 
-+		*state = XFS_ATTR_STATE1;
-+		return -EAGAIN;
-+state1:
- 		/*
- 		 * It won't fit in the shortform, transform to a leaf block.
- 		 * GROT: another possible req'mt for a double-split btree op.
-@@ -281,14 +291,14 @@ xfs_attr_set_args(
- 		if (error)
- 			goto out;
- 
--		if (roll_trans) {
--			/*
--			 * Prevent the leaf buffer from being unlocked so that a
--			 * concurrent AIL push cannot grab the half-baked leaf
--			 * buffer and run into problems with the write verifier.
--			 */
--			xfs_trans_bhold(args->trans, *leaf_bp);
-+		/*
-+		 * Prevent the leaf buffer from being unlocked so that a
-+		 * concurrent AIL push cannot grab the half-baked leaf
-+		 * buffer and run into problems with the write verifier.
-+		 */
-+		xfs_trans_bhold(args->trans, *leaf_bp);
- 
-+		if (roll_trans) {
- 			error = xfs_defer_finish(&args->trans);
- 			if (error)
- 				goto out;
-@@ -304,6 +314,12 @@ xfs_attr_set_args(
- 			xfs_trans_bjoin(args->trans, *leaf_bp);
- 			*leaf_bp = NULL;
- 		}
++	if (length == 0)
++		return 1;
 +
-+		*state = XFS_ATTR_STATE2;
-+		return -EAGAIN;
-+state2:
-+		if (*leaf_bp != NULL)
-+			xfs_trans_brelse(args->trans, *leaf_bp);
- 	}
- 
- 	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
-@@ -436,7 +452,9 @@ xfs_attr_set(
- 	}
- 
- 	xfs_trans_ijoin(args.trans, dp, 0);
--	error = xfs_attr_set_args(&args, &leaf_bp, true);
++	/*
++	 * namecheck checks for / and null terminated for file names.
++	 * attributes names currently follow the same rules.
++	 */
++	return namecheck(name, length);
++}
 +
-+	error = xfs_attr_set_deferred(dp, args.trans, name, strlen(name),
-+			value, valuelen, flags);
- 	if (error)
- 		goto out;
++/*
+  * takes a name and length (name need not be null-terminated)
+  * and returns 1 if the name contains a '/' or a \0, returns 0
+  * otherwise
+diff --git a/repair/da_util.h b/repair/da_util.h
+index d36dfd0..53ba843 100644
+--- a/repair/da_util.h
++++ b/repair/da_util.h
+@@ -25,6 +25,18 @@ typedef struct da_bt_cursor {
+ } da_bt_cursor_t;
  
-@@ -566,8 +584,13 @@ xfs_attr_remove(
- 	 */
- 	xfs_trans_ijoin(args.trans, dp, 0);
- 
--	error = xfs_attr_remove_args(&args, true);
-+	error = xfs_has_attr(&args);
-+	if (error)
-+		goto out;
+ int
++xfs_verify_pptr(
++	struct xfs_mount *mp,
++	struct xfs_parent_name_rec *rec);
 +
- 
-+	error = xfs_attr_remove_deferred(dp, args.trans,
-+			name, strlen(name), flags);
- 	if (error)
- 		goto out;
- 
-diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
-index ad2a73c..ee4bc13 100644
---- a/libxfs/xfs_attr.h
-+++ b/libxfs/xfs_attr.h
-@@ -175,7 +175,7 @@ int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
- int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
- 		 unsigned char *value, int valuelen, int flags);
- int xfs_attr_set_args(struct xfs_da_args *args, struct xfs_buf **leaf_bp,
--		 bool roll_trans);
-+		 xfs_attr_state_t *state, bool roll_trans);
- int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
- int xfs_has_attr(struct xfs_da_args *args);
- int xfs_attr_remove_args(struct xfs_da_args *args, bool roll_trans);
++int
++attr_namecheck(
++	struct xfs_mount	*mp,
++	char			*name,
++	int			length,
++	int			flags);
++
++int
+ namecheck(
+ 	char		*name,
+ 	int		length);
 -- 
 2.7.4
