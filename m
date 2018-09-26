@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:55452 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727512AbeIZQiI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 12:38:08 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8QANdIQ087632
+Received: from userp2130.oracle.com ([156.151.31.86]:33578 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727501AbeIZQiH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 12:38:07 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8QANuOC073253
         for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:51 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp2120.oracle.com with ESMTP id 2mndpphh7m-1
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2130.oracle.com with ESMTP id 2mnd5thjs0-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
         for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:51 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAPoOY013191
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAPouY027414
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:50 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:51 GMT
 Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w8QAPo3l018471
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAPoNN018441
         for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:50 GMT
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v3 22/30] xfsprogs: Add parent pointer ioctl
-Date: Wed, 26 Sep 2018 03:23:25 -0700
-Message-Id: <1537957413-10630-23-git-send-email-allison.henderson@oracle.com>
+Subject: [PATCH v3 23/30] xfs_io: Add delayed attributes error tag
+Date: Wed, 26 Sep 2018 03:23:26 -0700
+Message-Id: <1537957413-10630-24-git-send-email-allison.henderson@oracle.com>
 In-Reply-To: <1537957413-10630-1-git-send-email-allison.henderson@oracle.com>
 References: <1537957413-10630-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -28,110 +28,47 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-This patch adds a new file ioctl to retrieve the parent
-pointer of a given inode
+This patch adds an error tag that we can use to test
+delayed attribute recovery and replay
 
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- libxfs/xfs_fs.h     | 45 +++++++++++++++++++++++++++++++++++++++++++++
- libxfs/xfs_parent.c | 10 ++++++++++
- libxfs/xfs_parent.h |  2 ++
- 3 files changed, 57 insertions(+)
+ io/inject.c           | 1 +
+ libxfs/xfs_errortag.h | 4 +++-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index 407cd61..4c597be 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -568,6 +568,50 @@ struct xfs_scrub_metadata {
- 				 XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED)
- #define XFS_SCRUB_FLAGS_ALL	(XFS_SCRUB_FLAGS_IN | XFS_SCRUB_FLAGS_OUT)
- 
-+#define XFS_PPTR_MAXNAMELEN				256
-+
-+/* return parents of the handle, not the open fd */
-+#define XFS_PPTR_IFLAG_HANDLE  (1U << 0)
-+
-+/* target was the root directory */
-+#define XFS_PPTR_OFLAG_ROOT    (1U << 1)
-+
-+/* Cursor is done iterating pptrs */
-+#define XFS_PPTR_OFLAG_DONE    (1U << 2)
-+
-+/* Get an inode parent pointer through ioctl */
-+struct xfs_parent_ptr {
-+	__u64		xpp_ino;			/* Inode */
-+	__u32		xpp_gen;			/* Inode generation */
-+	__u32		xpp_diroffset;			/* Directory offset */
-+	__u32		xpp_namelen;			/* File name length */
-+	__u32		xpp_pad;
-+	__u8		xpp_name[XFS_PPTR_MAXNAMELEN];	/* File name */
-+};
-+
-+/* Iterate through an inodes parent pointers */
-+struct xfs_pptr_info {
-+	struct xfs_handle		pi_handle;
-+	struct xfs_attrlist_cursor	pi_cursor;
-+	__u32				pi_flags;
-+	__u32				pi_reserved;
-+	__u32				pi_ptrs_size;
-+	__u32				pi_ptrs_used;
-+	__u64				pi_reserved2[6];
-+
-+	/*
-+	 * An array of struct xfs_parent_ptr follows the header
-+	 * information. Use XFS_PPINFO_TO_PP() to access the
-+	 * parent pointer array entries.
-+	 */
-+};
-+
-+#define XFS_PPTR_INFO_SIZEOF(nr_ptrs) sizeof (struct xfs_pptr_info) + \
-+				      nr_ptrs * sizeof(struct xfs_parent_ptr)
-+
-+#define XFS_PPINFO_TO_PP(info, idx)    \
-+	(&(((struct xfs_parent_ptr *)((char *)(info) + sizeof(*(info))))[(idx)]))
-+
- /*
-  * ioctl limits
-  */
-@@ -611,6 +655,7 @@ struct xfs_scrub_metadata {
- #define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_fs_eofblocks)
- /*	XFS_IOC_GETFSMAP ------ hoisted 59         */
- #define XFS_IOC_SCRUB_METADATA	_IOWR('X', 60, struct xfs_scrub_metadata)
-+#define XFS_IOC_GETPPOINTER	_IOR ('X', 61, struct xfs_parent_ptr)
+diff --git a/io/inject.c b/io/inject.c
+index 2061c95..8711bdb 100644
+--- a/io/inject.c
++++ b/io/inject.c
+@@ -53,6 +53,7 @@ error_tag(char *name)
+ 		{ XFS_ERRTAG_BUF_LRU_REF,		"buf_lru_ref" },
+ 		{ XFS_ERRTAG_FORCE_SCRUB_REPAIR,	"force_repair" },
+ 		{ XFS_ERRTAG_FORCE_SUMMARY_RECALC,	"bad_summary" },
++		{ XFS_ERRTAG_DELAYED_ATTR,		"delayed_attr" },
+ 		{ XFS_ERRTAG_MAX,			NULL }
+ 	};
+ 	int	count;
+diff --git a/libxfs/xfs_errortag.h b/libxfs/xfs_errortag.h
+index 66077a1..5cd408d 100644
+--- a/libxfs/xfs_errortag.h
++++ b/libxfs/xfs_errortag.h
+@@ -54,7 +54,8 @@
+ #define XFS_ERRTAG_BUF_LRU_REF				31
+ #define XFS_ERRTAG_FORCE_SCRUB_REPAIR			32
+ #define XFS_ERRTAG_FORCE_SUMMARY_RECALC			33
+-#define XFS_ERRTAG_MAX					34
++#define XFS_ERRTAG_DELAYED_ATTR				34
++#define XFS_ERRTAG_MAX					35
  
  /*
-  * ioctl commands that replace IRIX syssgi()'s
-diff --git a/libxfs/xfs_parent.c b/libxfs/xfs_parent.c
-index f83815f..d506c22 100644
---- a/libxfs/xfs_parent.c
-+++ b/libxfs/xfs_parent.c
-@@ -43,6 +43,16 @@
- #include "kmem.h"
- #include "xfs_bmap.h"
+  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+@@ -93,5 +94,6 @@
+ #define XFS_RANDOM_BUF_LRU_REF				2
+ #define XFS_RANDOM_FORCE_SCRUB_REPAIR			1
+ #define XFS_RANDOM_FORCE_SUMMARY_RECALC			1
++#define XFS_RANDOM_DELAYED_ATTR				1
  
-+/* Initializes a xfs_parent_ptr from an xfs_parent_name_rec */
-+void
-+xfs_init_parent_ptr(struct xfs_parent_ptr		*xpp,
-+		     struct xfs_parent_name_rec	*rec)
-+{
-+	xpp->xpp_ino = be64_to_cpu(rec->p_ino);
-+	xpp->xpp_gen = be32_to_cpu(rec->p_gen);
-+	xpp->xpp_diroffset = be32_to_cpu(rec->p_diroffset);
-+}
-+
- /*
-  * Parent pointer attribute handling.
-  *
-diff --git a/libxfs/xfs_parent.h b/libxfs/xfs_parent.h
-index 60f1172..3fcbbbb 100644
---- a/libxfs/xfs_parent.h
-+++ b/libxfs/xfs_parent.h
-@@ -32,4 +32,6 @@ void xfs_init_parent_name_irec(struct xfs_parent_name_irec *irec,
- int xfs_parent_add(struct xfs_inode *parent,
- 		   struct xfs_inode *child, struct xfs_name *child_name,
- 		   uint32_t diroffset);
-+void xfs_init_parent_ptr(struct xfs_parent_ptr *xpp,
-+			 struct xfs_parent_name_rec *rec);
- #endif	/* __XFS_PARENT_H__ */
+ #endif /* __XFS_ERRORTAG_H_ */
 -- 
 2.7.4
