@@ -1,392 +1,222 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:48548 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727234AbeIZQ3o (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 12:29:44 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8QADwMp079540
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:29 GMT
+Received: from userp2120.oracle.com ([156.151.31.85]:48556 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727459AbeIZQiC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 12:38:02 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8QANpE1037052
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:45 GMT
 Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by aserp2120.oracle.com with ESMTP id 2mndpphg6c-1
+        by userp2120.oracle.com with ESMTP id 2mnvtur9bb-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:29 +0000
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:45 +0000
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAHSr9010015
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAPigg004665
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:29 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:45 GMT
 Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w8QAHSJc027777
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:28 GMT
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w8QAPieF032123
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:44 GMT
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v9 27/28] xfs: Add parent pointer ioctl
-Date: Wed, 26 Sep 2018 03:15:06 -0700
-Message-Id: <1537956907-10244-28-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1537956907-10244-1-git-send-email-allison.henderson@oracle.com>
-References: <1537956907-10244-1-git-send-email-allison.henderson@oracle.com>
+Subject: [PATCH v3 06/30] xfsprogs: Set up infastructure for deferred attribute operations
+Date: Wed, 26 Sep 2018 03:23:09 -0700
+Message-Id: <1537957413-10630-7-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1537957413-10630-1-git-send-email-allison.henderson@oracle.com>
+References: <1537957413-10630-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-This patch adds a new file ioctl to retrieve the parent
-pointer of a given inode
+This patch adds two new log item types for setting or
+removing attributes as deferred operations.  The
+xfs_attri_log_item logs an intent to set or remove an
+attribute.  The corresponding xfs_attrd_log_item holds
+a reference to the xfs_attri_log_item and is freed once
+the transaction is done.  Both log items use a generic
+xfs_attr_log_format structure that contains the attribute
+name, value, flags, inode, and an op_flag that indicates
+if the operations is a set or remove.
 
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- fs/xfs/libxfs/xfs_fs.h     | 45 ++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_parent.c | 10 ++++++
- fs/xfs/libxfs/xfs_parent.h |  2 ++
- fs/xfs/xfs_attr_list.c     |  3 ++
- fs/xfs/xfs_ioctl.c         | 86 +++++++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_ondisk.h        |  4 +++
- fs/xfs/xfs_parent_utils.c  | 84 ++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_parent_utils.h  |  2 ++
- 8 files changed, 235 insertions(+), 1 deletion(-)
+ libxfs/xfs_attr.c       |  5 +++--
+ libxfs/xfs_attr.h       | 26 +++++++++++++++++++++++++-
+ libxfs/xfs_defer.h      |  1 +
+ libxfs/xfs_log_format.h | 44 ++++++++++++++++++++++++++++++++++++++++++--
+ libxfs/xfs_types.h      |  1 +
+ 5 files changed, 72 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 9c58a78..5d28033 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -547,6 +547,50 @@ struct xfs_scrub_metadata {
- 				 XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED)
- #define XFS_SCRUB_FLAGS_ALL	(XFS_SCRUB_FLAGS_IN | XFS_SCRUB_FLAGS_OUT)
- 
-+#define XFS_PPTR_MAXNAMELEN				256
-+
-+/* return parents of the handle, not the open fd */
-+#define XFS_PPTR_IFLAG_HANDLE  (1U << 0)
-+
-+/* target was the root directory */
-+#define XFS_PPTR_OFLAG_ROOT    (1U << 1)
-+
-+/* Cursor is done iterating pptrs */
-+#define XFS_PPTR_OFLAG_DONE    (1U << 2)
-+
-+/* Get an inode parent pointer through ioctl */
-+struct xfs_parent_ptr {
-+	__u64		xpp_ino;			/* Inode */
-+	__u32		xpp_gen;			/* Inode generation */
-+	__u32		xpp_diroffset;			/* Directory offset */
-+	__u32		xpp_namelen;			/* File name length */
-+	__u32		xpp_pad;
-+	__u8		xpp_name[XFS_PPTR_MAXNAMELEN];	/* File name */
-+};
-+
-+/* Iterate through an inodes parent pointers */
-+struct xfs_pptr_info {
-+	struct xfs_handle		pi_handle;
-+	struct xfs_attrlist_cursor	pi_cursor;
-+	__u32				pi_flags;
-+	__u32				pi_reserved;
-+	__u32				pi_ptrs_size;
-+	__u32				pi_ptrs_used;
-+	__u64				pi_reserved2[6];
-+
-+	/*
-+	 * An array of struct xfs_parent_ptr follows the header
-+	 * information. Use XFS_PPINFO_TO_PP() to access the
-+	 * parent pointer array entries.
-+	 */
-+};
-+
-+#define XFS_PPTR_INFO_SIZEOF(nr_ptrs) sizeof (struct xfs_pptr_info) + \
-+				      nr_ptrs * sizeof(struct xfs_parent_ptr)
-+
-+#define XFS_PPINFO_TO_PP(info, idx)    \
-+	(&(((struct xfs_parent_ptr *)((char *)(info) + sizeof(*(info))))[(idx)]))
-+
- /*
-  * ioctl limits
-  */
-@@ -591,6 +635,7 @@ struct xfs_scrub_metadata {
- #define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_fs_eofblocks)
- /*	XFS_IOC_GETFSMAP ------ hoisted 59         */
- #define XFS_IOC_SCRUB_METADATA	_IOWR('X', 60, struct xfs_scrub_metadata)
-+#define XFS_IOC_GETPPOINTER	_IOR ('X', 61, struct xfs_parent_ptr)
+diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
+index d31560d..566a617 100644
+--- a/libxfs/xfs_attr.c
++++ b/libxfs/xfs_attr.c
+@@ -24,6 +24,7 @@
+ #include "xfs_attr_remote.h"
+ #include "xfs_trans_space.h"
+ #include "xfs_trace.h"
++#include "xfs_attr_item.h"
  
  /*
-  * ioctl commands that replace IRIX syssgi()'s
-diff --git a/fs/xfs/libxfs/xfs_parent.c b/fs/xfs/libxfs/xfs_parent.c
-index c82caf0..ea1e69a 100644
---- a/fs/xfs/libxfs/xfs_parent.c
-+++ b/fs/xfs/libxfs/xfs_parent.c
-@@ -33,6 +33,16 @@
- #include "xfs_attr_sf.h"
- #include "xfs_bmap.h"
+  * xfs_attr.c
+@@ -57,7 +58,7 @@ STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
+ STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
  
-+/* Initializes a xfs_parent_ptr from an xfs_parent_name_rec */
-+void
-+xfs_init_parent_ptr(struct xfs_parent_ptr		*xpp,
-+		     struct xfs_parent_name_rec	*rec)
-+{
-+	xpp->xpp_ino = be64_to_cpu(rec->p_ino);
-+	xpp->xpp_gen = be32_to_cpu(rec->p_gen);
-+	xpp->xpp_diroffset = be32_to_cpu(rec->p_diroffset);
-+}
-+
- /*
-  * Parent pointer attribute handling.
-  *
-diff --git a/fs/xfs/libxfs/xfs_parent.h b/fs/xfs/libxfs/xfs_parent.h
-index 60f1172..3fcbbbb 100644
---- a/fs/xfs/libxfs/xfs_parent.h
-+++ b/fs/xfs/libxfs/xfs_parent.h
-@@ -32,4 +32,6 @@ void xfs_init_parent_name_irec(struct xfs_parent_name_irec *irec,
- int xfs_parent_add(struct xfs_inode *parent,
- 		   struct xfs_inode *child, struct xfs_name *child_name,
- 		   uint32_t diroffset);
-+void xfs_init_parent_ptr(struct xfs_parent_ptr *xpp,
-+			 struct xfs_parent_name_rec *rec);
- #endif	/* __XFS_PARENT_H__ */
-diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-index 3c30ec4..f4ffc2c 100644
---- a/fs/xfs/xfs_attr_list.c
-+++ b/fs/xfs/xfs_attr_list.c
-@@ -570,6 +570,9 @@ xfs_attr_put_listent(
- 	if (((context->flags & ATTR_ROOT) == 0) !=
- 	    ((flags & XFS_ATTR_ROOT) == 0))
- 		return;
-+	if (((context->flags & ATTR_PARENT) == 0) !=
-+	    ((flags & XFS_ATTR_PARENT) == 0))
-+		return;
  
- 	arraytop = sizeof(*alist) +
- 			context->count * sizeof(alist->al_offset[0]);
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index b0a4b37..b0791f3 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -35,6 +35,8 @@
- #include "xfs_fsmap.h"
- #include "scrub/xfs_scrub.h"
- #include "xfs_sb.h"
-+#include "xfs_da_format.h"
-+#include "xfs_parent_utils.h"
- 
- #include <linux/capability.h>
- #include <linux/cred.h>
-@@ -1730,6 +1732,87 @@ xfs_ioc_scrub_metadata(
- 	return 0;
- }
- 
-+/*
-+ * IOCTL routine to get the parent pointers of an inode and return it to user
-+ * space.  Caller must pass a buffer space containing a struct xfs_pptr_info,
-+ * followed by a region large enough to contain an array of struct
-+ * xfs_parent_ptr of a size specified in pi_ptrs_size.  If the inode contains
-+ * more parent pointers than can fit in the buffer space, caller may re-call
-+ * the function using the returned pi_cursor to resume iteration.  The
-+ * number of xfs_parent_ptr returned will be stored in pi_ptrs_used.
-+ *
-+ * Returns 0 on success or non-zero on failure
-+ */
-+STATIC int
-+xfs_ioc_get_parent_pointer(
-+	struct file			*filp,
-+	void				__user *arg)
-+{
-+	struct xfs_pptr_info		*ppi = NULL;
-+	int				error = 0;
-+	struct xfs_inode		*ip = XFS_I(file_inode(filp));
-+	struct xfs_mount		*mp = ip->i_mount;
-+
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EPERM;
-+
-+	/* Allocate an xfs_pptr_info to put the user data */
-+	ppi = kmem_alloc(sizeof(struct xfs_pptr_info), KM_SLEEP);
-+	if (!ppi)
-+		return -ENOMEM;
-+
-+	/* Copy the data from the user */
-+	error = copy_from_user(ppi, arg, sizeof(struct xfs_pptr_info));
-+	if (error)
-+		goto out;
-+
-+	/* Check size of buffer requested by user */
-+	if (XFS_PPTR_INFO_SIZEOF(ppi->pi_ptrs_size) > XFS_XATTR_LIST_MAX) {
-+		error = -ENOMEM;
-+		goto out;
-+	}
-+
-+	/*
-+	 * Now that we know how big the trailing buffer is, expand
-+	 * our kernel xfs_pptr_info to be the same size
-+	 */
-+	ppi = kmem_realloc(ppi, XFS_PPTR_INFO_SIZEOF(ppi->pi_ptrs_size),
-+			     KM_SLEEP);
-+	if (!ppi)
-+		return -ENOMEM;
-+
-+	if (ppi->pi_flags != 0 && ppi->pi_flags != XFS_PPTR_IFLAG_HANDLE) {
-+		error = -EINVAL;
-+		goto out;
-+	}
-+
-+	if (ppi->pi_flags == XFS_PPTR_IFLAG_HANDLE) {
-+		error = xfs_iget(mp, NULL, ppi->pi_handle.ha_fid.fid_ino,
-+				0, 0, &ip);
-+		if (error)
-+			goto out;
-+	}
-+
-+	if (ip->i_ino == mp->m_sb.sb_rootino)
-+		ppi->pi_flags |= XFS_PPTR_OFLAG_ROOT;
-+
-+	/* Get the parent pointers */
-+	error = xfs_attr_get_parent_pointer(ip, ppi);
-+
-+	if (error)
-+		goto out;
-+
-+	/* Copy the parent pointers back to the user */
-+	error = copy_to_user(arg, ppi,
-+			XFS_PPTR_INFO_SIZEOF(ppi->pi_ptrs_size));
-+	if (error)
-+		goto out;
-+
-+out:
-+	kmem_free(ppi);
-+	return error;
-+}
-+
- int
- xfs_ioc_swapext(
- 	xfs_swapext_t	*sxp)
-@@ -1972,7 +2055,8 @@ xfs_file_ioctl(
- 		return xfs_ioc_getxflags(ip, arg);
- 	case XFS_IOC_SETXFLAGS:
- 		return xfs_ioc_setxflags(ip, filp, arg);
--
-+	case XFS_IOC_GETPPOINTER:
-+		return xfs_ioc_get_parent_pointer(filp, arg);
- 	case XFS_IOC_FSSETDM: {
- 		struct fsdmidata	dmi;
- 
-diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-index 9397b6b..a9ff19c 100644
---- a/fs/xfs/xfs_ondisk.h
-+++ b/fs/xfs/xfs_ondisk.h
-@@ -127,6 +127,10 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_trans_header,		16);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_attri_log_format,	40);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_attrd_log_format,	16);
-+
-+	/* parent pointer ioctls */
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_parent_ptr,		280);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_pptr_info,		104);
- }
- 
- #endif /* __XFS_ONDISK_H */
-diff --git a/fs/xfs/xfs_parent_utils.c b/fs/xfs/xfs_parent_utils.c
-index ae9a319..1b862ad 100644
---- a/fs/xfs/xfs_parent_utils.c
-+++ b/fs/xfs/xfs_parent_utils.c
-@@ -30,6 +30,7 @@
- #include "xfs_da_btree.h"
- #include "xfs_attr.h"
- #include "xfs_parent.h"
-+#include "xfs_da_btree.h"
- 
- /*
-  * Add a parent record to an inode with existing parent records.
-@@ -68,3 +69,86 @@ xfs_parent_remove_deferred(
- 		sizeof(rec), ATTR_PARENT);
- }
- 
-+/*
-+ * Get the parent pointers for a given inode
-+ *
-+ * Returns 0 on success and non zero on error
-+ */
+-STATIC int
 +int
-+xfs_attr_get_parent_pointer(struct xfs_inode		*ip,
-+			    struct xfs_pptr_info	*ppi)
+ xfs_attr_args_init(
+ 	struct xfs_da_args	*args,
+ 	struct xfs_inode	*dp,
+@@ -153,7 +154,7 @@ xfs_attr_get(
+ /*
+  * Calculate how many blocks we need for the new attribute,
+  */
+-STATIC int
++int
+ xfs_attr_calc_size(
+ 	struct xfs_da_args	*args,
+ 	int			*local)
+diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
+index c7a194c..39a7a26 100644
+--- a/libxfs/xfs_attr.h
++++ b/libxfs/xfs_attr.h
+@@ -75,6 +75,28 @@ typedef struct attrlist_ent {	/* data from attr_list() */
+ } attrlist_ent_t;
+ 
+ /*
++ * List of attrs to commit later.
++ */
++struct xfs_attr_item {
++	struct xfs_inode  *xattri_ip;
++	uint32_t	  xattri_op_flags;
++	void*		  xattri_value;	      /* attr value */
++	uint32_t	  xattri_value_len;   /* length of value */
++	void*		  xattri_name;	      /* attr name */
++	uint32_t	  xattri_name_len;    /* length of name */
++	uint32_t	  xattri_flags;       /* attr flags */
++	struct list_head  xattri_list;
 +
-+{
++	/*
++	 * A byte array follows the header containing the file name and
++	 * attribute value.
++	 */
++};
 +
-+	struct attrlist			*alist;
-+	struct attrlist_ent		*aent;
-+	struct xfs_parent_ptr		*xpp;
-+	struct xfs_parent_name_rec	*xpnr;
-+	char				*namebuf;
-+	unsigned int			namebuf_size;
-+	int				name_len;
-+	int				error = 0;
-+	unsigned int			flags = ATTR_PARENT;
-+	int				i;
-+	struct xfs_attr_list_context	context;
-+	struct xfs_da_args		args;
++#define XFS_ATTR_ITEM_SIZEOF(namelen, valuelen)	\
++	(sizeof(struct xfs_attr_item) + (namelen) + (valuelen))
 +
-+	/* Allocate a buffer to store the attribute names */
-+	namebuf_size = sizeof(struct attrlist) +
-+		       (ppi->pi_ptrs_size) * sizeof(struct attrlist_ent);
-+	namebuf = kmem_zalloc_large(namebuf_size, KM_SLEEP);
-+	if (!namebuf)
-+		return -ENOMEM;
++/*
+  * Given a pointer to the (char*) buffer containing the attr_list() result,
+  * and an index, return a pointer to the indicated attribute in the buffer.
+  */
+@@ -143,6 +165,8 @@ int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
+ int xfs_attr_remove_args(struct xfs_da_args *args, bool roll_trans);
+ int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+ 		  int flags, struct attrlist_cursor_kern *cursor);
+-
++int xfs_attr_args_init(struct xfs_da_args *args, struct xfs_inode *dp,
++		       const unsigned char *name, int flags);
++int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
+ 
+ #endif	/* __XFS_ATTR_H__ */
+diff --git a/libxfs/xfs_defer.h b/libxfs/xfs_defer.h
+index 2584a5b..326fa2b 100644
+--- a/libxfs/xfs_defer.h
++++ b/libxfs/xfs_defer.h
+@@ -31,6 +31,7 @@ enum xfs_defer_ops_type {
+ 	XFS_DEFER_OPS_TYPE_RMAP,
+ 	XFS_DEFER_OPS_TYPE_FREE,
+ 	XFS_DEFER_OPS_TYPE_AGFL_FREE,
++	XFS_DEFER_OPS_TYPE_ATTR,
+ 	XFS_DEFER_OPS_TYPE_MAX,
+ };
+ 
+diff --git a/libxfs/xfs_log_format.h b/libxfs/xfs_log_format.h
+index e5f97c6..76d42e6 100644
+--- a/libxfs/xfs_log_format.h
++++ b/libxfs/xfs_log_format.h
+@@ -117,7 +117,12 @@ struct xfs_unmount_log_format {
+ #define XLOG_REG_TYPE_CUD_FORMAT	24
+ #define XLOG_REG_TYPE_BUI_FORMAT	25
+ #define XLOG_REG_TYPE_BUD_FORMAT	26
+-#define XLOG_REG_TYPE_MAX		26
++#define XLOG_REG_TYPE_ATTRI_FORMAT	27
++#define XLOG_REG_TYPE_ATTRD_FORMAT	28
++#define XLOG_REG_TYPE_ATTR_NAME	29
++#define XLOG_REG_TYPE_ATTR_VALUE	30
++#define XLOG_REG_TYPE_MAX		31
 +
-+	error = xfs_attr_list_context_init(ip, namebuf, namebuf_size, flags,
-+			(attrlist_cursor_kern_t *)&ppi->pi_cursor, &context);
-+	if (error)
-+		goto out_kfree;
+ 
+ /*
+  * Flags to log operation header
+@@ -240,6 +245,8 @@ typedef struct xfs_trans_header {
+ #define	XFS_LI_CUD		0x1243
+ #define	XFS_LI_BUI		0x1244	/* bmbt update intent */
+ #define	XFS_LI_BUD		0x1245
++#define	XFS_LI_ATTRI		0x1246  /* attr set/remove intent*/
++#define	XFS_LI_ATTRD		0x1247  /* attr set/remove done */
+ 
+ #define XFS_LI_TYPE_DESC \
+ 	{ XFS_LI_EFI,		"XFS_LI_EFI" }, \
+@@ -255,7 +262,9 @@ typedef struct xfs_trans_header {
+ 	{ XFS_LI_CUI,		"XFS_LI_CUI" }, \
+ 	{ XFS_LI_CUD,		"XFS_LI_CUD" }, \
+ 	{ XFS_LI_BUI,		"XFS_LI_BUI" }, \
+-	{ XFS_LI_BUD,		"XFS_LI_BUD" }
++	{ XFS_LI_BUD,		"XFS_LI_BUD" }, \
++	{ XFS_LI_ATTRI,		"XFS_LI_ATTRI" }, \
++	{ XFS_LI_ATTRD,		"XFS_LI_ATTRD" }
+ 
+ /*
+  * Inode Log Item Format definitions.
+@@ -853,4 +862,35 @@ struct xfs_icreate_log {
+ 	__be32		icl_gen;	/* inode generation number to use */
+ };
+ 
++/*
++ * Flags for deferred attribute operations.
++ * Upper bits are flags, lower byte is type code
++ */
++#define XFS_ATTR_OP_FLAGS_SET		1	/* Set the attribute */
++#define XFS_ATTR_OP_FLAGS_REMOVE	2	/* Remove the attribute */
++#define XFS_ATTR_OP_FLAGS_TYPE_MASK	0x0FF	/* Flags type mask */
 +
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
++/*
++ * This is the structure used to lay out an attr log item in the
++ * log.
++ */
++struct xfs_attri_log_format {
++	uint16_t	alfi_type;	/* attri log item type */
++	uint16_t	alfi_size;	/* size of this item */
++	uint32_t	__pad;		/* pad to 64 bit aligned */
++	uint64_t	alfi_id;	/* attri identifier */
++	xfs_ino_t       alfi_ino;	/* the inode for this attr operation */
++	uint32_t        alfi_op_flags;	/* marks the op as a set or remove */
++	uint32_t        alfi_name_len;	/* attr name length */
++	uint32_t        alfi_value_len;	/* attr value length */
++	uint32_t        alfi_attr_flags;/* attr flags */
++};
 +
-+	error = xfs_attr_list_int_ilocked(&context);
-+	if (error)
-+		goto out_kfree;
++struct xfs_attrd_log_format {
++	uint16_t	alfd_type;	/* attrd log item type */
++	uint16_t	alfd_size;	/* size of this item */
++	uint32_t	__pad;		/* pad to 64 bit aligned */
++	uint64_t	alfd_alf_id;	/* id of corresponding attrd */
++};
 +
-+	alist = (struct attrlist *)namebuf;
-+	for (i = 0; i < alist->al_count; i++) {
-+		xpp = XFS_PPINFO_TO_PP(ppi, i);
-+		memset(xpp, 0, sizeof(struct xfs_parent_ptr));
-+		aent = (struct attrlist_ent *) &namebuf[alist->al_offset[i]];
-+		xpnr = (struct xfs_parent_name_rec *)(aent->a_name);
-+
-+		if (aent->a_valuelen > XFS_PPTR_MAXNAMELEN) {
-+			error = -ERANGE;
-+			goto out_kfree;
-+		}
-+		name_len = aent->a_valuelen;
-+
-+		error = xfs_attr_args_init(&args, ip, (char *)xpnr,
-+				sizeof(struct xfs_parent_name_rec), flags);
-+		if (error)
-+			goto out_kfree;
-+
-+		args.value = (unsigned char *)(xpp->xpp_name);
-+		args.valuelen = name_len;
-+		args.op_flags = XFS_DA_OP_OKNOENT;
-+
-+		error = xfs_attr_get_ilocked(ip, &args);
-+		error = (error == -EEXIST ? 0 : error);
-+		if (error)
-+			goto out_kfree;
-+
-+		xpp->xpp_namelen = name_len;
-+		xfs_init_parent_ptr(xpp, xpnr);
-+	}
-+	ppi->pi_ptrs_used = alist->al_count;
-+	if (!alist->al_more)
-+		ppi->pi_flags |= XFS_PPTR_OFLAG_DONE;
-+
-+out_kfree:
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	kmem_free(namebuf);
-+
-+	return error;
-+}
-+
-diff --git a/fs/xfs/xfs_parent_utils.h b/fs/xfs/xfs_parent_utils.h
-index 010e517..5f5a3e2 100644
---- a/fs/xfs/xfs_parent_utils.h
-+++ b/fs/xfs/xfs_parent_utils.h
-@@ -27,4 +27,6 @@ int xfs_parent_remove_deferred(struct xfs_inode *parent,
- 			       struct xfs_trans *tp,
- 			       struct xfs_inode *child,
- 			       xfs_dir2_dataptr_t diroffset);
-+int xfs_attr_get_parent_pointer(struct xfs_inode *ip,
-+				struct xfs_pptr_info *ppi);
- #endif	/* __XFS_PARENT_UTILS_H__ */
+ #endif /* __XFS_LOG_FORMAT_H__ */
+diff --git a/libxfs/xfs_types.h b/libxfs/xfs_types.h
+index b9e6c89..6f33dd6 100644
+--- a/libxfs/xfs_types.h
++++ b/libxfs/xfs_types.h
+@@ -11,6 +11,7 @@ typedef uint32_t	prid_t;		/* project ID */
+ typedef uint32_t	xfs_agblock_t;	/* blockno in alloc. group */
+ typedef uint32_t	xfs_agino_t;	/* inode # within allocation grp */
+ typedef uint32_t	xfs_extlen_t;	/* extent length in blocks */
++typedef uint32_t	xfs_attrlen_t;	/* attr length */
+ typedef uint32_t	xfs_agnumber_t;	/* allocation group number */
+ typedef int32_t		xfs_extnum_t;	/* # of extents in a file */
+ typedef int16_t		xfs_aextnum_t;	/* # extents in an attribute fork */
 -- 
 2.7.4
