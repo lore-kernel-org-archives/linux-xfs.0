@@ -1,18 +1,18 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:52108 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726410AbeI0BuJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 21:50:09 -0400
-Subject: [PATCH 12/24] docs: add XFS dir/attr btree structure to the DS&A
+Received: from userp2120.oracle.com ([156.151.31.85]:46008 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726385AbeI0Bu1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 21:50:27 -0400
+Subject: [PATCH 14/24] docs: add XFS reverse mapping structures to the DS&A
  book
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 26 Sep 2018 12:35:36 -0700
-Message-ID: <153799053609.31202.12804559503055861924.stgit@magnolia>
+Date: Wed, 26 Sep 2018 12:35:48 -0700
+Message-ID: <153799054876.31202.18333780757964179778.stgit@magnolia>
 In-Reply-To: <153799045443.31202.17537455000771265705.stgit@magnolia>
 References: <153799045443.31202.17537455000771265705.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
@@ -23,245 +23,361 @@ From: Darrick J. Wong <darrick.wong@oracle.com>
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- Documentation/filesystems/xfs/ondisk/dabtrees.rst |  221 +++++++++++++++++++++
- Documentation/filesystems/xfs/ondisk/globals.rst  |    1 
- 2 files changed, 222 insertions(+)
- create mode 100644 Documentation/filesystems/xfs/ondisk/dabtrees.rst
+ .../filesystems/xfs/ondisk/allocation_groups.rst   |    2 
+ Documentation/filesystems/xfs/ondisk/rmapbt.rst    |  336 ++++++++++++++++++++
+ 2 files changed, 338 insertions(+)
+ create mode 100644 Documentation/filesystems/xfs/ondisk/rmapbt.rst
 
 
-diff --git a/Documentation/filesystems/xfs/ondisk/dabtrees.rst b/Documentation/filesystems/xfs/ondisk/dabtrees.rst
+diff --git a/Documentation/filesystems/xfs/ondisk/allocation_groups.rst b/Documentation/filesystems/xfs/ondisk/allocation_groups.rst
+index 57fe8cde5d08..296c520a2fbb 100644
+--- a/Documentation/filesystems/xfs/ondisk/allocation_groups.rst
++++ b/Documentation/filesystems/xfs/ondisk/allocation_groups.rst
+@@ -1379,3 +1379,5 @@ response times that come from metadata operations.
+ 
+ None of the XFS per-AG B+trees are involved with real time files. It is not
+ possible for real time files to share data blocks.
++
++.. include:: rmapbt.rst
+diff --git a/Documentation/filesystems/xfs/ondisk/rmapbt.rst b/Documentation/filesystems/xfs/ondisk/rmapbt.rst
 new file mode 100644
-index 000000000000..72b31989489a
+index 000000000000..89dbac1b4c66
 --- /dev/null
-+++ b/Documentation/filesystems/xfs/ondisk/dabtrees.rst
-@@ -0,0 +1,221 @@
++++ b/Documentation/filesystems/xfs/ondisk/rmapbt.rst
+@@ -0,0 +1,336 @@
 +.. SPDX-License-Identifier: CC-BY-SA-3.0+
 +
-+Variable Length Record B+trees
-+------------------------------
++Reverse-Mapping B+tree
++~~~~~~~~~~~~~~~~~~~~~~
 +
-+Directories and extended attributes are implemented as a simple key-value
-+record store inside the blocks pointed to by the data or attribute fork of a
-+file. Blocks referenced by either data structure are block offsets of an inode
-+fork, not physical blocks.
++If the feature is enabled, each allocation group has its own reverse
++block-mapping B+tree, which grows in the free space like the free space
++B+trees. As mentioned in the chapter about
++`reconstruction <#metadata-reconstruction>`__, this data structure is another piece of
++the puzzle necessary to reconstruct the data or attribute fork of a file from
++reverse-mapping records; we can also use it to double-check allocations to
++ensure that we are not accidentally cross-linking blocks, which can cause
++severe damage to the filesystem.
 +
-+Directory and attribute data are stored as a linear array of variable-length
-+records in the low blocks of a fork. Both data types share the property that
-+record keys and record values are both arbitrary and unique sequences of
-+bytes. See the respective sections about `directories <#directories>`__ or
-+`attributes <#extended-attributes>`__ for more information about the exact
-+record formats.
++This B+tree is only present if the XFS\_SB\_FEAT\_RO\_COMPAT\_RMAPBT feature
++is enabled. The feature requires a version 5 filesystem.
 +
-+The dir/attr b+tree (or "dabtree"), if present, computes a hash of the record
-+key to produce the b+tree key, and b+tree keys are used to index the fork
-+block in which the record may be found. Unlike the fixed-length b+trees, the
-+variable length b+trees can index the same key multiple times. B+tree
-+keypointers and records both take this format:
++Each record in the reverse-mapping B+tree has the following structure:
++
++.. code:: c
++
++    struct xfs_rmap_rec {
++         __be32                     rm_startblock;
++         __be32                     rm_blockcount;
++         __be64                     rm_owner;
++         __be64                     rm_fork:1;
++         __be64                     rm_bmbt:1;
++         __be64                     rm_unwritten:1;
++         __be64                     rm_unused:7;
++         __be64                     rm_offset:54;
++    };
++
++**rm\_startblock**
++    AG block number of this record.
++
++**rm\_blockcount**
++    The length of this extent.
++
++**rm\_owner**
++    A 64-bit number describing the owner of this extent. This is typically the
++    absolute inode number, but can also correspond to one of the following:
++
++.. list-table::
++   :widths: 28 52
++   :header-rows: 1
++
++   * - Flag
++     - Description
++   * - XFS\_RMAP\_OWN\_NULL
++     - No owner. This should never appear on disk.
++
++   * - XFS\_RMAP\_OWN\_UNKNOWN
++     - Unknown owner; for EFI recovery. This should never appear on disk.
++
++   * - XFS\_RMAP\_OWN\_FS
++     - Allocation group headers.
++
++   * - XFS\_RMAP\_OWN\_LOG
++     - XFS log blocks.
++
++   * - XFS\_RMAP\_OWN\_AG
++     - Per-allocation group B+tree blocks. This means free space B+tree blocks,
++       blocks on the freelist, and reverse-mapping B+tree blocks.
++
++   * - XFS\_RMAP\_OWN\_INOBT
++     - Per-allocation group inode B+tree blocks. This includes free inode
++       B+tree blocks.
++
++   * - XFS\_RMAP\_OWN\_INODES
++     - Inode chunks.
++
++   * - XFS\_RMAP\_OWN\_REFC
++     - Per-allocation group refcount B+tree blocks. This will be used for
++       reflink support.
++
++   * - XFS\_RMAP\_OWN\_COW
++     - Blocks that have been reserved for a copy-on-write operation that has
++       not completed.
++
++Table: Special owner values
++
++**rm\_fork**
++    If rm\_owner describes an inode, this can be 1 if this record is for an
++    attribute fork.
++
++**rm\_bmbt**
++    If rm\_owner describes an inode, this can be 1 to signify that this record
++    is for a block map B+tree block. In this case, rm\_offset has no meaning.
++
++**rm\_unwritten**
++    A flag indicating that the extent is unwritten. This corresponds to the
++    flag in the `extent record <#data-extents>`__ format which means
++    XFS\_EXT\_UNWRITTEN.
++
++**rm\_offset**
++    The 54-bit logical file block offset, if rm\_owner describes an inode.
++    Meaningless otherwise.
++
++    **Note**
++
++    The single-bit flag values rm\_unwritten, rm\_fork, and rm\_bmbt are
++    packed into the larger fields in the C structure definition.
++
++The key has the following structure:
++
++.. code:: c
++
++    struct xfs_rmap_key {
++         __be32                     rm_startblock;
++         __be64                     rm_owner;
++         __be64                     rm_fork:1;
++         __be64                     rm_bmbt:1;
++         __be64                     rm_reserved:1;
++         __be64                     rm_unused:7;
++         __be64                     rm_offset:54;
++    };
++
++For the reverse-mapping B+tree on a filesystem that supports sharing of file
++data blocks, the key definition is larger than the usual AG block number. On a
++classic XFS filesystem, each block has only one owner, which means that
++rm\_startblock is sufficient to uniquely identify each record. However, shared
++block support (reflink) on XFS breaks that assumption; now filesystem blocks
++can be linked to any logical block offset of any file inode. Therefore, the
++key must include the owner and offset information to preserve the 1 to 1
++relation between key and record.
++
++-  As the reference counting is AG relative, all the block numbers are only
++   32-bits.
++
++-  The bb\_magic value is "RMB3" (0x524d4233).
++
++-  The xfs\_btree\_sblock\_t header is used for intermediate B+tree node as
++   well as the leaves.
++
++-  Each pointer is associated with two keys. The first of these is the "low
++   key", which is the key of the smallest record accessible through the
++   pointer. This low key has the same meaning as the key in all other btrees.
++   The second key is the high key, which is the maximum of the largest key
++   that can be used to access a given record underneath the pointer. Recall
++   that each record in the reverse mapping b+tree describes an interval of
++   physical blocks mapped to an interval of logical file block offsets;
++   therefore, it makes sense that a range of keys can be used to find to a
++   record.
++
++xfs\_db rmapbt Example
++^^^^^^^^^^^^^^^^^^^^^^
++
++This example shows a reverse-mapping B+tree from a freshly populated root
++filesystem:
 +
 +::
 +
-+    +---------+--------------+
-+    | hashval | before_block |
-+    +---------+--------------+
++    xfs_db> agf 0
++    xfs_db> addr rmaproot
++    xfs_db> p
++    magic = 0x524d4233
++    level = 1
++    numrecs = 43
++    leftsib = null
++    rightsib = null
++    bno = 56
++    lsn = 0x3000004c8
++    uuid = 1977221d-8345-464e-b1f4-aa2ea36895f4
++    owner = 0
++    crc = 0x7cf8be6f (correct)
++    keys[1-43] = [startblock,owner,offset]
++    keys[1-43] = [startblock,owner,offset,attrfork,bmbtblock,startblock_hi,owner_hi,
++             offset_hi,attrfork_hi,bmbtblock_hi]
++            1:[0,-3,0,0,0,351,4418,66,0,0]
++            2:[417,285,0,0,0,827,4419,2,0,0]
++            3:[829,499,0,0,0,2352,573,55,0,0]
++            4:[1292,710,0,0,0,32168,262923,47,0,0]
++            5:[32215,-5,0,0,0,34655,2365,3411,0,0]
++            6:[34083,1161,0,0,0,34895,265220,1,0,1]
++            7:[34896,256191,0,0,0,36522,-9,0,0,0]
++            ...
++            41:[50998,326734,0,0,0,51430,-5,0,0,0]
++            42:[51431,327010,0,0,0,51600,325722,11,0,0]
++            43:[51611,327112,0,0,0,94063,23522,28375272,0,0]
++    ptrs[1-43] = 1:5 2:6 3:8 4:9 5:10 6:11 7:418 ... 41:46377 42:48784 43:49522
 +
-+The "before block" is the block offset in the inode fork of the block in which
-+we can find the record whose hashed key is "hashval". The hash function is as
-+follows:
++We arbitrarily pick pointer 17 to traverse downwards:
 +
-+.. code:: c
++::
 +
-+    #define rol32(x,y)             (((x) << (y)) | ((x) >> (32 - (y))))
++    xfs_db> addr ptrs[17]
++    xfs_db> p
++    magic = 0x524d4233
++    level = 0
++    numrecs = 168
++    leftsib = 36284
++    rightsib = 37617
++    bno = 294760
++    lsn = 0x200002761
++    uuid = 1977221d-8345-464e-b1f4-aa2ea36895f4
++    owner = 0
++    crc = 0x2dad3fbe (correct)
++    recs[1-168] = [startblock,blockcount,owner,offset,extentflag,attrfork,bmbtblock]
++            1:[40326,1,259615,0,0,0,0] 2:[40327,1,-5,0,0,0,0]
++            3:[40328,2,259618,0,0,0,0] 4:[40330,1,259619,0,0,0,0]
++            ...
++            127:[40540,1,324266,0,0,0,0] 128:[40541,1,324266,8388608,0,0,0]
++            129:[40542,2,324266,1,0,0,0] 130:[40544,32,-7,0,0,0,0]
 +
-+    xfs_dahash_t
-+    xfs_da_hashname(const uint8_t *name, int namelen)
-+    {
-+        xfs_dahash_t hash;
++Several interesting things pop out here. The first record shows that inode
++259,615 has mapped AG block 40,326 at offset 0. We confirm this by looking at
++the block map for that inode:
 +
-+        /*
-+         * Do four characters at a time as long as we can.
-+         */
-+        for (hash = 0; namelen >= 4; namelen -= 4, name += 4)
-+            hash = (name[0] << 21) ^ (name[1] << 14) ^ (name[2] << 7) ^
-+                   (name[3] << 0) ^ rol32(hash, 7 * 4);
++::
 +
-+        /*
-+         * Now do the rest of the characters.
-+         */
-+        switch (namelen) {
-+        case 3:
-+            return (name[0] << 14) ^ (name[1] << 7) ^ (name[2] << 0) ^
-+                   rol32(hash, 7 * 3);
-+        case 2:
-+            return (name[0] << 7) ^ (name[1] << 0) ^ rol32(hash, 7 * 2);
-+        case 1:
-+            return (name[0] << 0) ^ rol32(hash, 7 * 1);
-+        default: /* case 0: */
-+            return hash;
-+        }
-+    }
++    xfs_db> inode 259615
++    xfs_db> bmap
++    data offset 0 startblock 40326 (0/40326) count 1 flag 0
 +
-+.. _directory-attribute-block-header:
++Next, notice records 127 and 128, which describe neighboring AG blocks that
++are mapped to non-contiguous logical blocks in inode 324,266. Given the
++logical offset of 8,388,608 we surmise that this is a leaf directory, but let
++us confirm:
 +
-+Block Headers
-+~~~~~~~~~~~~~
++::
 +
-+-  Tree nodes, leaf and node `directories <#directories>`__, and leaf and node
-+   `extended attributes <#extended-attributes>`__ use the xfs\_da\_blkinfo\_t
-+   filesystem block header. The structure appears as follows:
++    xfs_db> inode 324266
++    xfs_db> p core.mode
++    core.mode = 040755
++    xfs_db> bmap
++    data offset 0 startblock 40540 (0/40540) count 1 flag 0
++    data offset 1 startblock 40542 (0/40542) count 2 flag 0
++    data offset 3 startblock 40576 (0/40576) count 1 flag 0
++    data offset 8388608 startblock 40541 (0/40541) count 1 flag 0
++    xfs_db> p core.mode
++    core.mode = 0100644
++    xfs_db> dblock 0
++    xfs_db> p dhdr.hdr.magic
++    dhdr.hdr.magic = 0x58444433
++    xfs_db> dblock 8388608
++    xfs_db> p lhdr.info.hdr.magic
++    lhdr.info.hdr.magic = 0x3df1
 +
-+.. code:: c
++Indeed, this inode 324,266 appears to be a leaf directory, as it has regular
++directory data blocks at low offsets, and a single leaf block.
 +
-+    typedef struct xfs_da_blkinfo {
-+         __be32                     forw;
-+         __be32                     back;
-+         __be16                     magic;
-+         __be16                     pad;
-+    } xfs_da_blkinfo_t;
++Notice further the two reverse-mapping records with negative owners. An owner
++of -7 corresponds to XFS\_RMAP\_OWN\_INODES, which is an inode chunk, and an
++owner code of -5 corresponds to XFS\_RMAP\_OWN\_AG, which covers free space
++B+trees and free space. Let’s see if block 40,544 is part of an inode chunk:
 +
-+**forw**
-+    Logical block offset of the previous B+tree block at this level.
++::
 +
-+**back**
-+    Logical block offset of the next B+tree block at this level.
++    xfs_db> blockget
++    xfs_db> fsblock 40544
++    xfs_db> blockuse
++    block 40544 (0/40544) type inode
++    xfs_db> stack
++    1:
++            byte offset 166068224, length 4096
++            buffer block 324352 (fsbno 40544), 8 bbs
++            inode 324266, dir inode 324266, type data
++    xfs_db> type inode
++    xfs_db> p
++    core.magic = 0x494e
 +
-+**magic**
-+    Magic number for this directory/attribute block.
++Our suspicions are confirmed. Let’s also see if 40,327 is part of a free space
++tree:
 +
-+**pad**
-+    Padding to maintain alignment.
++::
 +
-+-  On a v5 filesystem, the leaves use the struct xfs\_da3\_blkinfo\_t
-+   filesystem block header. This header is used in the same place as
-+   xfs\_da\_blkinfo\_t:
++    xfs_db> fsblock 40327
++    xfs_db> blockuse
++    block 40327 (0/40327) type btrmap
++    xfs_db> type rmapbt
++    xfs_db> p
++    magic = 0x524d4233
 +
-+.. code:: c
++As you can see, the reverse block-mapping B+tree is an important secondary
++metadata structure, which can be used to reconstruct damaged primary metadata.
++Now let’s look at an extend rmap btree:
 +
-+    struct xfs_da3_blkinfo {
-+         /* these values are inside xfs_da_blkinfo */
-+         __be32                     forw;
-+         __be32                     back;
-+         __be16                     magic;
-+         __be16                     pad;
++::
 +
-+         __be32                     crc;
-+         __be64                     blkno;
-+         __be64                     lsn;
-+         uuid_t                     uuid;
-+         __be64                     owner;
-+    };
++    xfs_db> agf 0
++    xfs_db> addr rmaproot
++    xfs_db> p
++    magic = 0x34524d42
++    level = 1
++    numrecs = 5
++    leftsib = null
++    rightsib = null
++    bno = 6368
++    lsn = 0x100000d1b
++    uuid = 400f0928-6b88-4c37-af1e-cef1f8911f3f
++    owner = 0
++    crc = 0x8d4ace05 (correct)
++    keys[1-5] = [startblock,owner,offset,attrfork,bmbtblock,startblock_hi,owner_hi,offset_hi,attrfork_hi,bmbtblock_hi]
++    1:[0,-3,0,0,0,705,132,681,0,0]
++    2:[24,5761,0,0,0,548,5761,524,0,0]
++    3:[24,5929,0,0,0,380,5929,356,0,0]
++    4:[24,6097,0,0,0,212,6097,188,0,0]
++    5:[24,6277,0,0,0,807,-7,0,0,0]
++    ptrs[1-5] = 1:5 2:771 3:9 4:10 5:11
 +
-+**forw**
-+    Logical block offset of the previous B+tree block at this level.
++The second pointer stores both the low key [24,5761,0,0,0] and the high key
++[548,5761,524,0,0], which means that we can expect block 771 to contain
++records starting at physical block 24, inode 5761, offset zero; and that one
++of the records can be used to find a reverse mapping for physical block 548,
++inode 5761, and offset 524:
 +
-+**back**
-+    Logical block offset of the next B+tree block at this level.
++::
 +
-+**magic**
-+    Magic number for this directory/attribute block.
++    xfs_db> addr ptrs[2]
++    xfs_db> p
++    magic = 0x34524d42
++    level = 0
++    numrecs = 168
++    leftsib = 5
++    rightsib = 9
++    bno = 6168
++    lsn = 0x100000d1b
++    uuid = 400f0928-6b88-4c37-af1e-cef1f8911f3f
++    owner = 0
++    crc = 0xd58eff0e (correct)
++    recs[1-168] = [startblock,blockcount,owner,offset,extentflag,attrfork,bmbtblock]
++    1:[24,525,5761,0,0,0,0]
++    2:[24,524,5762,0,0,0,0]
++    3:[24,523,5763,0,0,0,0]
++    ...
++    166:[24,360,5926,0,0,0,0]
++    167:[24,359,5927,0,0,0,0]
++    168:[24,358,5928,0,0,0,0]
 +
-+**pad**
-+    Padding to maintain alignment.
-+
-+**crc**
-+    Checksum of the directory/attribute block.
-+
-+**blkno**
-+    Block number of this directory/attribute block.
-+
-+**lsn**
-+    Log sequence number of the last write to this block.
-+
-+**uuid**
-+    The UUID of this block, which must match either sb\_uuid or sb\_meta\_uuid
-+    depending on which features are set.
-+
-+**owner**
-+    The inode number that this directory/attribute block belongs to.
-+
-+.. _directory-attribute-internal-node:
-+
-+Internal Nodes
-+~~~~~~~~~~~~~~
-+
-+The nodes of a dabtree have the following format:
-+
-+.. code:: c
-+
-+    typedef struct xfs_da_intnode {
-+         struct xfs_da_node_hdr {
-+               xfs_da_blkinfo_t     info;
-+               __uint16_t           count;
-+               __uint16_t           level;
-+         } hdr;
-+         struct xfs_da_node_entry {
-+               xfs_dahash_t         hashval;
-+               xfs_dablk_t          before;
-+         } btree[1];
-+    } xfs_da_intnode_t;
-+
-+**info**
-+    Directory/attribute block info. The magic number is XFS\_DA\_NODE\_MAGIC
-+    (0xfebe).
-+
-+**count**
-+    Number of node entries in this block.
-+
-+**level**
-+    The level of this block in the B+tree. Levels start at 1 for blocks that
-+    point to directory or attribute data blocks and increase towards the root.
-+
-+**hashval**
-+    The hash value of a particular record.
-+
-+**before**
-+    The directory/attribute logical block containing all entries up to the
-+    corresponding hash value.
-+
-+    -  On a v5 filesystem, the directory/attribute node blocks have the
-+       following structure:
-+
-+.. code:: c
-+
-+    struct xfs_da3_intnode {
-+         struct xfs_da3_node_hdr {
-+               struct xfs_da3_blkinfo    info;
-+               __uint16_t                count;
-+               __uint16_t                level;
-+               __uint32_t                pad32;
-+         } hdr;
-+         struct xfs_da_node_entry {
-+               xfs_dahash_t              hashval;
-+               xfs_dablk_t               before;
-+         } btree[1];
-+    };
-+
-+**info**
-+    Directory/attribute block info. The magic number is XFS\_DA3\_NODE\_MAGIC
-+    (0x3ebe).
-+
-+**count**
-+    Number of node entries in this block.
-+
-+**level**
-+    The level of this block in the B+tree. Levels start at 1 for blocks that
-+    point to directory or attribute data blocks, and increase towards the
-+    root.
-+
-+**pad32**
-+    Padding to maintain alignment.
-+
-+**hashval**
-+    The hash value of a particular record.
-+
-+**before**
-+    The directory/attribute logical block containing all entries up to the
-+    corresponding hash value.
-diff --git a/Documentation/filesystems/xfs/ondisk/globals.rst b/Documentation/filesystems/xfs/ondisk/globals.rst
-index 0c919e561fb1..05c6ba5a02c8 100644
---- a/Documentation/filesystems/xfs/ondisk/globals.rst
-+++ b/Documentation/filesystems/xfs/ondisk/globals.rst
-@@ -4,3 +4,4 @@ Global Structures
- =================
- 
- .. include:: btrees.rst
-+.. include:: dabtrees.rst
++Observe that the first record in the block starts at physical block 24, inode
++5761, offset zero, just as we expected. Note that this first record is also
++indexed by the highest key as provided in the node block; physical block 548,
++inode 5761, offset 524 is the very last block mapped by this record.
++Furthermore, note that record 168, despite being the last record in this
++block, has a lower maximum key (physical block 382, inode 5928, offset 23)
++than the first record.
