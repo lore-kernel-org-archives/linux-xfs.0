@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:41722 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727027AbeI0Btn (ORCPT
+Received: from userp2130.oracle.com ([156.151.31.86]:51766 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726821AbeI0Btn (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 21:49:43 -0400
-Subject: [PATCH 08/24] docs: add XFS online repair chapter to DS&A book
+Subject: [PATCH 07/24] docs: add XFS shared data block chapter to DS&A book
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 26 Sep 2018 12:35:11 -0700
-Message-ID: <153799051115.31202.7124071971354287015.stgit@magnolia>
+Date: Wed, 26 Sep 2018 12:35:05 -0700
+Message-ID: <153799050497.31202.10399937862203923928.stgit@magnolia>
 In-Reply-To: <153799045443.31202.17537455000771265705.stgit@magnolia>
 References: <153799045443.31202.17537455000771265705.stgit@magnolia>
 MIME-Version: 1.0
@@ -22,92 +22,67 @@ From: Darrick J. Wong <darrick.wong@oracle.com>
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- Documentation/filesystems/xfs/ondisk/overview.rst  |    1 
- .../filesystems/xfs/ondisk/reconstruction.rst      |   68 ++++++++++++++++++++
- 2 files changed, 69 insertions(+)
- create mode 100644 Documentation/filesystems/xfs/ondisk/reconstruction.rst
+ Documentation/filesystems/xfs/ondisk/overview.rst |    1 
+ Documentation/filesystems/xfs/ondisk/reflink.rst  |   43 +++++++++++++++++++++
+ 2 files changed, 44 insertions(+)
+ create mode 100644 Documentation/filesystems/xfs/ondisk/reflink.rst
 
 
 diff --git a/Documentation/filesystems/xfs/ondisk/overview.rst b/Documentation/filesystems/xfs/ondisk/overview.rst
-index 484bf220c128..a2818102819d 100644
+index 9701f4d4173a..484bf220c128 100644
 --- a/Documentation/filesystems/xfs/ondisk/overview.rst
 +++ b/Documentation/filesystems/xfs/ondisk/overview.rst
-@@ -46,3 +46,4 @@ latency.
+@@ -45,3 +45,4 @@ latency.
+ 
  .. include:: self_describing_metadata.rst
  .. include:: delayed_logging.rst
- .. include:: reflink.rst
-+.. include:: reconstruction.rst
-diff --git a/Documentation/filesystems/xfs/ondisk/reconstruction.rst b/Documentation/filesystems/xfs/ondisk/reconstruction.rst
++.. include:: reflink.rst
+diff --git a/Documentation/filesystems/xfs/ondisk/reflink.rst b/Documentation/filesystems/xfs/ondisk/reflink.rst
 new file mode 100644
-index 000000000000..cb5baa494309
+index 000000000000..79ec87822b27
 --- /dev/null
-+++ b/Documentation/filesystems/xfs/ondisk/reconstruction.rst
-@@ -0,0 +1,68 @@
++++ b/Documentation/filesystems/xfs/ondisk/reflink.rst
+@@ -0,0 +1,43 @@
 +.. SPDX-License-Identifier: CC-BY-SA-3.0+
 +
-+Metadata Reconstruction
-+-----------------------
++Sharing Data Blocks
++-------------------
 +
-+    **Note**
++On a traditional filesystem, there is a 1:1 mapping between a logical block
++offset in a file and a physical block on disk, which is to say that physical
++blocks are not shared. However, there exist various use cases for being able
++to share blocks between files — deduplicating files saves space on archival
++systems; creating space-efficient clones of disk images for virtual machines
++and containers facilitates efficient datacenters; and deferring the payment of
++the allocation cost of a file system tree copy as long as possible makes
++regular work faster. In all of these cases, a write to one of the shared
++copies **must** not affect the other shared copies, which means that writes to
++shared blocks must employ a copy-on-write strategy. Sharing blocks in this
++manner is commonly referred to as "reflinking".
 +
-+    This is a theoretical discussion of how reconstruction could work; none of
-+    this is implemented as of 2018.
++XFS implements block sharing in a fairly straightforward manner. All existing
++data fork structures remain unchanged, save for the addition of a
++per-allocation group `reference count B+tree <#reference-count-b-tree>`__. This
++data structure tracks reference counts for all shared physical blocks, with a
++few rules to maintain compatibility with existing code: If a block is free, it
++will be tracked in the free space B+trees. If a block is owned by a single
++file, it appears in neither the free space nor the reference count B+trees. If
++a block is shared, it will appear in the reference count B+tree with a
++reference count >= 2. The first two cases are established precedent in XFS, so
++the third case is the only behavioral change.
 +
-+A simple UNIX filesystem can be thought of in terms of a directed acyclic
-+graph. To a first approximation, there exists a root directory node, which
-+points to other nodes. Those other nodes can themselves be directories or they
-+can be files. Each file, in turn, points to data blocks.
++When a filesystem block is shared, the block mapping in the destination file
++is updated to point to that filesystem block and the reference count B+tree
++records are updated to reflect the increased reference count. If a shared
++block is written, a new block will be allocated, the dirty data written to
++this new block, and the file’s block mapping updated to point to the new
++block. If a shared block is unmapped, the reference count records are updated
++to reflect the decreased reference count and the block is also freed if its
++reference count becomes zero. This enables users to create space efficient
++clones of disk images and to copy filesystem subtrees quickly, using the
++standard Linux coreutils packages.
 +
-+XFS adds a few more details to this picture:
-+
-+-  The real root(s) of an XFS filesystem are the allocation group headers
-+   (superblock, AGF, AGI, AGFL).
-+
-+-  Each allocation group’s headers point to various per-AG B+trees (free
-+   space, inode, free inodes, free list, etc.)
-+
-+-  The free space B+trees point to unused extents;
-+
-+-  The inode B+trees point to blocks containing inode chunks;
-+
-+-  All superblocks point to the root directory and the log;
-+
-+-  Hardlinks mean that multiple directories can point to a single file node;
-+
-+-  File data block pointers are indexed by file offset;
-+
-+-  Files and directories can have a second collection of pointers to data
-+   blocks which contain extended attributes;
-+
-+-  Large directories require multiple data blocks to store all the
-+   subpointers;
-+
-+-  Still larger directories use high-offset data blocks to store a B+tree of
-+   hashes to directory entries;
-+
-+-  Large extended attribute forks similarly use high-offset data blocks to
-+   store a B+tree of hashes to attribute keys; and
-+
-+-  Symbolic links can point to data blocks.
-+
-+The beauty of this massive graph structure is that under normal circumstances,
-+everything known to the filesystem is discoverable (access controls
-+notwithstanding) from the root. The major weakness of this structure of course
-+is that breaking a edge in the graph can render entire subtrees inaccessible.
-+xfs\_repair “recovers” from broken directories by scanning for unlinked inodes
-+and connecting them to /lost+found, but this isn’t sufficiently general to
-+recover from breaks in other parts of the graph structure. Wouldn’t it be
-+useful to have back pointers as a secondary data structure? The current repair
-+strategy is to reconstruct whatever can be rebuilt, but to scrap anything that
-+doesn’t check out.
-+
-+The `reverse-mapping B+tree <#reverse-mapping-b-tree>`__ fills in part of the
-+puzzle. Since it contains copies of every entry in each inode’s data and
-+attribute forks, we can fix a corrupted block map with these records.
-+Furthermore, if the inode B+trees become corrupt, it is possible to visit all
-+inode chunks using the reverse-mapping data. Should XFS ever gain the ability
-+to store parent directory information in each inode, it also becomes possible
-+to resurrect damaged directory trees, which should reduce the complaints about
-+inodes ending up in /lost+found. Everything else in the per-AG primary
-+metadata can already be reconstructed via xfs\_repair. Hopefully,
-+reconstruction will not turn out to be a fool’s errand.
++Deduplication employs the same mechanism to share blocks and copy them at
++write time. However, the kernel confirms that the contents of both files are
++identical before updating the destination file’s mapping. This enables XFS to
++be used by userspace deduplication programs such as duperemove.
