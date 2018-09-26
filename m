@@ -1,217 +1,393 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:57266 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726783AbeI1FlL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Sep 2018 01:41:11 -0400
-Date: Thu, 27 Sep 2018 16:20:23 -0700
+Received: from userp2120.oracle.com ([156.151.31.85]:45538 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726453AbeI0Btw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 21:49:52 -0400
+Subject: [PATCH 09/24] docs: add XFS common types and magic numbers to DS&A
+ book
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/6] xfs: xrep_findroot_block should reject root blocks
- with siblings
-Message-ID: <20180927232023.GC20086@magnolia>
-References: <153400169747.27471.4044680761841034489.stgit@magnolia>
- <153400170977.27471.4053607329690572828.stgit@magnolia>
- <20180813165635.GA64121@bfoster>
+Date: Wed, 26 Sep 2018 12:35:17 -0700
+Message-ID: <153799051733.31202.99539254470412866.stgit@magnolia>
+In-Reply-To: <153799045443.31202.17537455000771265705.stgit@magnolia>
+References: <153799045443.31202.17537455000771265705.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180813165635.GA64121@bfoster>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Aug 13, 2018 at 12:56:36PM -0400, Brian Foster wrote:
-> On Sat, Aug 11, 2018 at 08:35:09AM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > In xrep_findroot_block, if we find a candidate root block with sibling
-> > pointers or sibling blocks on the same tree level, we should not return
-> > that block as a tree root because root blocks cannot have siblings.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/scrub/repair.c |   47 +++++++++++++++++++++++++++++++++++++++++------
-> >  1 file changed, 41 insertions(+), 6 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-> > index 17cf48564390..42d8c798ce7d 100644
-> > --- a/fs/xfs/scrub/repair.c
-> > +++ b/fs/xfs/scrub/repair.c
-> > @@ -690,6 +690,7 @@ xrep_findroot_block(
-> >  	struct xfs_buf			*bp;
-> >  	struct xfs_btree_block		*btblock;
-> >  	xfs_daddr_t			daddr;
-> > +	int				block_level;
-> >  	int				error;
-> >  
-> >  	daddr = XFS_AGB_TO_DADDR(mp, ri->sc->sa.agno, agbno);
-> > @@ -727,17 +728,51 @@ xrep_findroot_block(
-> >  		goto out;
-> >  	bp->b_ops = fab->buf_ops;
-> >  
-> > -	/* Ignore this block if it's lower in the tree than we've seen. */
-> > -	if (fab->root != NULLAGBLOCK &&
-> > -	    xfs_btree_get_level(btblock) < fab->height)
-> > -		goto out;
-> > -
-> >  	/* Make sure we pass the verifiers. */
-> >  	bp->b_ops->verify_read(bp);
-> >  	if (bp->b_error)
-> >  		goto out;
-> > +
-> > +	/* If we've recorded a root candidate... */
-> > +	block_level = xfs_btree_get_level(btblock);
-> > +	if (fab->root != NULLAGBLOCK) {
-> > +		/*
-> > +		 * ...and this no-sibling root block candidate has the same
-> > +		 * level as the recorded candidate, there's no way we're going
-> > +		 * to accept any candidates at this tree level.  Stash a root
-> > +		 * block of zero because the height is still valid, but no
-> > +		 * AG btree can root at agblock 0.  Callers should verify the
-> > +		 * root agbno with xfs_verify_agbno...
-> > +		 */
-> > +		if (block_level + 1 == fab->height) {
-> > +			fab->root = 0;
-> > +			goto out;
-> > +		}
-> > +
-> > +		/*
-> > +		 * ...and this no-sibling root block is lower in the tree than
-> > +		 * the recorded root block candidate, just ignore it.  There's
-> > +		 * still a strong chance that something is wrong with the btree
-> > +		 * itself, but that's not what we're fixing right now.
-> > +		 */
-> > +		if (block_level < fab->height)
-> > +			goto out;
-> > +	}
-> > +
-> > +	/*
-> > +	 * Root blocks can't have siblings.  This level can't be the root, so
-> > +	 * record the tree height (but not the ag block pointer) to force us to
-> > +	 * look for a higher level in the tree.
-> > +	 */
-> > +	if (btblock->bb_u.s.bb_leftsib != cpu_to_be32(NULLAGBLOCK) ||
-> > +	    btblock->bb_u.s.bb_rightsib != cpu_to_be32(NULLAGBLOCK)) {
-> > +		fab->root = 0;
-> > +		fab->height = block_level + 1;
-> > +		goto out;
-> > +	}
-> > +
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-[Finally getting to this after weeks...]
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ .../filesystems/xfs/ondisk/common_types.rst        |   61 ++++
+ Documentation/filesystems/xfs/ondisk/magic.rst     |  277 ++++++++++++++++++++
+ Documentation/filesystems/xfs/ondisk/overview.rst  |    2 
+ 3 files changed, 340 insertions(+)
+ create mode 100644 Documentation/filesystems/xfs/ondisk/common_types.rst
+ create mode 100644 Documentation/filesystems/xfs/ondisk/magic.rst
 
-> Hmm, this looks technically correct but this still seems more involved
-> than necessary. I don't really like how we define yet another magic
-> value of 0, for example, and differentiate that from NULLAGBLOCK when it
-> seems like we could just check the height.
->
-> Could we do something like the following (which assumes ->height is
-> initialized to 0)?
 
-Yes, ->height is initialized to zero.
-
->         /*
->          * If current height exceeds the block level, we've already seen at
->          * least one block at this level or higher. Skip it and invalidate the
->          * root if this block matches the current root level because a root
->          * block has no siblings.
->          */
->         block_level = xfs_btree_get_level(btblock);
->         if (fab->height > block_level) {
->                 if (fab->height - 1 == block_level)
->                         fab->root = NULLAGBLOCK;
->                 goto out;
->         }
-
-Yes, I think that will work.  I might be a little more explicit that
-we're handling two cases here.
-
->         /*
->          * Found a block with a new max height. Track it as a root candidate if
->          * it has no siblings. Otherwise invalidate root since we know the root
->          * can't be at this level.
->          */
->         if (btblock->bb_u.s.bb_leftsib == cpu_to_be32(NULLAGBLOCK) &&
->             btblock->bb_u.s.bb_rightsib == cpu_to_be32(NULLAGBLOCK))
->                 fab->root = agbno;
->         else
->                 fab->root = NULLAGBLOCK;
->         fab->height = block_level + 1;
-> 
-> ... and then ->root should either be valid or NULLAGBLOCK at the end..?
-
-Correct.  This is much better. :)
-
-> Also, shouldn't we set *found_it a bit earlier in this function? It
-> looks like that simply controls the fab iteration and we have
-> technically matched the block to a btree type at this point, regardless
-> of whether we update root/height. (I wonder if something like "matched"
-> or "found_match" might be a better name than found_it...).
-
-If the block passes the magic number/uuid/verifier tests then we're
-certain that the block belongs to this btree type and we don't need to
-try the other btree types.  Therefore, *found_it should indeed be set
-earlier in the function.  It should probably be renamed *done or
-something.
-
-Ok so here's the new code, starting right after we finish the
-magic/uuid/verifier tests:
-
-	/*
-	 * This block passes the magic number and verifier test for this tree
-	 * type.  We don't need the caller to try the other tree types.
-	 */
-	*done_with_block = true;
-
-	block_level = xfs_btree_get_level(btblock);
-	if (block_level + 1 == fab->height) {
-		/*
-		 * This block claims to be at the same level as the root we
-		 * found previously.  There can't be two candidate roots, so
-		 * we'll throw away both of them and hope we later find a block
-		 * even higher in the tree.
-		 */
-		fab->root = NULLAGBLOCK;
-		goto out;
-	} else if (block_level < fab->height) {
-		/*
-		 * This block is lower in the tree than the root we found
-		 * previously, so just ignore it.
-		 */
-		goto out;
-	}
-
-	/*
-	 * This is the highest block in the tree that we've found so far.
-	 * Update the btree height to reflect what we've learned from this
-	 * block.
-	 */
-	fab->height = block_level + 1;
-
-	/*
-	 * If this block doesn't have sibling pointers, then it's the new root
-	 * block candidate.  Otherwise, the root will be found farther up the
-	 * tree.
-	 */
-	if (btblock->bb_u.s.bb_leftsib == cpu_to_be32(NULLAGBLOCK) &&
-	    btblock->bb_u.s.bb_rightsib == cpu_to_be32(NULLAGBLOCK))
-		fab->root = agbno;
-	else
-		fab->root = NULLAGBLOCK;
-
-Will ship this out for testing and see what happens. :)
-
---D
-
-> 
-> Brian
-> 
-> >  	fab->root = agbno;
-> > -	fab->height = xfs_btree_get_level(btblock) + 1;
-> > +	fab->height = block_level + 1;
-> >  	*found_it = true;
-> >  
-> >  	trace_xrep_findroot_block(mp, ri->sc->sa.agno, agbno,
-> > 
+diff --git a/Documentation/filesystems/xfs/ondisk/common_types.rst b/Documentation/filesystems/xfs/ondisk/common_types.rst
+new file mode 100644
+index 000000000000..94ede71427c3
+--- /dev/null
++++ b/Documentation/filesystems/xfs/ondisk/common_types.rst
+@@ -0,0 +1,61 @@
++.. SPDX-License-Identifier: CC-BY-SA-3.0+
++
++Common XFS Types
++----------------
++
++All the following XFS types can be found in xfs\_types.h. NULL values are
++always -1 on disk (ie. all bits for the value set to one).
++
++**xfs\_ino\_t**
++    Unsigned 64 bit absolute `inode number <#inode-numbers>`__.
++
++**xfs\_off\_t**
++    Signed 64 bit file offset.
++
++**xfs\_daddr\_t**
++    Signed 64 bit disk address (sectors).
++
++**xfs\_agnumber\_t**
++    Unsigned 32 bit `AG number <#allocation-groups>`__.
++
++**xfs\_agblock\_t**
++    Unsigned 32 bit AG relative block number.
++
++**xfs\_extlen\_t**
++    Unsigned 32 bit `extent <#data-extents>`__ length in blocks.
++
++**xfs\_extnum\_t**
++    Signed 32 bit number of extents in a data fork.
++
++**xfs\_aextnum\_t**
++    Signed 16 bit number of extents in an attribute fork.
++
++**xfs\_dablk\_t**
++    Unsigned 32 bit block number for `directories <#directories>`__ and
++    `extended attributes <#extended-attributes>`__.
++
++**xfs\_dahash\_t**
++    Unsigned 32 bit hash of a directory file name or extended attribute name.
++
++**xfs\_fsblock\_t**
++    Unsigned 64 bit filesystem block number combining `AG
++    number <#allocation-groups>`__ and block offset into the AG.
++
++**xfs\_rfsblock\_t**
++    Unsigned 64 bit raw filesystem block number.
++
++**xfs\_rtblock\_t**
++    Unsigned 64 bit extent number in the `real-time <#real-time-devices>`__
++    sub-volume.
++
++**xfs\_fileoff\_t**
++    Unsigned 64 bit block offset into a file.
++
++**xfs\_filblks\_t**
++    Unsigned 64 bit block count for a file.
++
++**uuid\_t**
++    16-byte universally unique identifier (UUID).
++
++**xfs\_fsize\_t**
++    Signed 64 bit byte size of a file.
+diff --git a/Documentation/filesystems/xfs/ondisk/magic.rst b/Documentation/filesystems/xfs/ondisk/magic.rst
+new file mode 100644
+index 000000000000..1ea823c74dde
+--- /dev/null
++++ b/Documentation/filesystems/xfs/ondisk/magic.rst
+@@ -0,0 +1,277 @@
++.. SPDX-License-Identifier: CC-BY-SA-3.0+
++
++Magic Numbers
++-------------
++
++These are the magic numbers that are known to XFS, along with links to the
++relevant chapters. Magic numbers tend to have consistent locations:
++
++-  32-bit magic numbers are always at offset zero in the block.
++
++-  16-bit magic numbers for the directory and attribute B+tree are at offset
++   eight.
++
++-  The quota magic number is at offset zero.
++
++-  The inode magic is at the beginning of each inode.
++
++.. list-table::
++   :widths: 28 12 8 34
++   :header-rows: 1
++
++   * - Flag
++     - Hexadecimal
++     - ASCII
++     - Data structure
++   * - XFS_SB_MAGIC
++     - 0x58465342
++     - XFSB
++     - `Superblock <#superblocks>`__
++   * - XFS_AGF_MAGIC
++     - 0x58414746
++     - XAGF
++     - `Free Space <#ag-free-space-block>`__
++   * - XFS_AGI_MAGIC
++     - 0x58414749
++     - XAGI
++     - `Inode Information <#inode-information>`__
++   * - XFS_AGFL_MAGIC
++     - 0x5841464c
++     - XAFL
++     - `Free Space List <#ag-free-list>`__, v5 only
++   * - XFS_DINODE_MAGIC
++     - 0x494e
++     - IN
++     - `Inodes <#inode-core>`__
++   * - XFS_DQUOT_MAGIC
++     - 0x4451
++     - DQ
++     - `Quota Inodes <#quota-inodes>`__
++   * - XFS_SYMLINK_MAGIC
++     - 0x58534c4d
++     - XSLM
++     - `Symbolic Links <#extent-symbolic-links>`__
++   * - XFS_ABTB_MAGIC
++     - 0x41425442
++     - ABTB
++     - `Free Space by Block B+tree <#ag-free-space-b-trees>`__
++   * - XFS_ABTB_CRC_MAGIC
++     - 0x41423342
++     - AB3B
++     - `Free Space by Block B+tree <#ag-free-space-b-trees>`__, v5 only
++   * - XFS_ABTC_MAGIC
++     - 0x41425443
++     - ABTC
++     - `Free Space by Size B+tree <#ag-free-space-b-trees>`__
++   * - XFS_ABTC_CRC_MAGIC
++     - 0x41423343
++     - AB3C
++     - `Free Space by Size B+tree <#ag-free-space-b-trees>`__, v5 only
++   * - XFS_IBT_MAGIC
++     - 0x49414254
++     - IABT
++     - `Inode B+tree <#inode-b-trees>`__
++   * - XFS_IBT_CRC_MAGIC
++     - 0x49414233
++     - IAB3
++     - `Inode B+tree <#inode-b-trees>`__, v5 only
++   * - XFS_FIBT_MAGIC
++     - 0x46494254
++     - FIBT
++     - `Free Inode B+tree <#inode-b-trees>`__
++   * - XFS_FIBT_CRC_MAGIC
++     - 0x46494233
++     - FIB3
++     - `Free Inode B+tree <#inode-b-trees>`__, v5 only
++   * - XFS_BMAP_MAGIC
++     - 0x424d4150
++     - BMAP
++     - `B+Tree Extent List <#b-tree-extent-list>`__
++   * - XFS_BMAP_CRC_MAGIC
++     - 0x424d4133
++     - BMA3
++     - `B+Tree Extent List <#b-tree-extent-list>`__, v5 only
++   * - XLOG_HEADER_MAGIC_NUM
++     - 0xfeedbabe
++     -
++     - `Log Records <#log-records>`__
++   * - XFS_DA_NODE_MAGIC
++     - 0xfebe
++     -
++     - `Directory/Attribute Node <#directory-attribute-internal-node>`__
++   * - XFS_DA3_NODE_MAGIC
++     - 0x3ebe
++     -
++     - `Directory/Attribute Node <#directory-attribute-internal-node>`__, v5 only
++   * - XFS_DIR2_BLOCK_MAGIC
++     - 0x58443242
++     - XD2B
++     - `Block Directory Data <#block-directories>`__
++   * - XFS_DIR3_BLOCK_MAGIC
++     - 0x58444233
++     - XDB3
++     - `Block Directory Data <#block-directories>`__, v5 only
++   * - XFS_DIR2_DATA_MAGIC
++     - 0x58443244
++     - XD2D
++     - `Leaf Directory Data <#leaf-directories>`__
++   * - XFS_DIR3_DATA_MAGIC
++     - 0x58444433
++     - XDD3
++     - `Leaf Directory Data <#leaf-directories>`__, v5 only
++   * - XFS_DIR2_LEAF1_MAGIC
++     - 0xd2f1
++     -
++     - `Leaf Directory <#leaf-directories>`__
++   * - XFS_DIR3_LEAF1_MAGIC
++     - 0x3df1
++     -
++     - `Leaf Directory <#leaf-directories>`__, v5 only
++   * - XFS_DIR2_LEAFN_MAGIC
++     - 0xd2ff
++     -
++     - `Node Directory <#node-directories>`__
++   * - XFS_DIR3_LEAFN_MAGIC
++     - 0x3dff
++     -
++     - `Node Directory <#node-directories>`__, v5 only
++   * - XFS_DIR2_FREE_MAGIC
++     - 0x58443246
++     - XD2F
++     - `Node Directory Free Space <#node-directories>`__
++   * - XFS_DIR3_FREE_MAGIC
++     - 0x58444633
++     - XDF3
++     - `Node Directory Free Space <#node-directories>`__, v5 only
++   * - XFS_ATTR_LEAF_MAGIC
++     - 0xfbee
++     -
++     - `Leaf Attribute <#leaf-attributes>`__
++   * - XFS_ATTR3_LEAF_MAGIC
++     - 0x3bee
++     -
++     - `Leaf Attribute <#leaf-attributes>`__, v5 only
++   * - XFS_ATTR3_RMT_MAGIC
++     - 0x5841524d
++     - XARM
++     - `Remote Attribute Value <#remote-attribute-values>`__, v5 only
++   * - XFS_RMAP_CRC_MAGIC
++     - 0x524d4233
++     - RMB3
++     - `Reverse Mapping B+tree <#reverse-mapping-b-tree>`__, v5 only
++   * - XFS_RTRMAP_CRC_MAGIC
++     - 0x4d415052
++     - MAPR
++     - `Real-Time Reverse Mapping B+tree <#real-time-reverse-mapping-b-tree>`__, v5 only
++   * - XFS_REFC_CRC_MAGIC
++     - 0x52334643
++     - R3FC
++     - `Reference Count B+tree <#reference-count-b-tree>`__, v5 only
++   * - XFS_MD_MAGIC
++     - 0x5846534d
++     - XFSM
++     - `Metadata Dumps <#metadata-dumps>`__
++
++The magic numbers for log items are at offset zero in each log item, but items
++are not aligned to blocks.
++
++.. list-table::
++   :widths: 24 12 8 36
++   :header-rows: 1
++
++   * - Flag
++     - Hexadecimal
++     - ASCII
++     - Data structure
++   * - XFS_TRANS_HEADER_MAGIC
++     - 0x5452414e
++     - TRAN
++     - `Log Transactions <#transaction-headers>`__
++   * - XFS_LI_EFI
++     - 0x1236
++     -
++     - `Extent Freeing Intent Log Item <#intent-to-free-an-extent>`__
++   * - XFS_LI_EFD
++     - 0x1237
++     -
++     - `Extent Freeing Done Log Item <#completion-of-intent-to-free-an-extent>`__
++   * - XFS_LI_IUNLINK
++     - 0x1238
++     -
++     -  Unknown?
++   * - XFS_LI_INODE
++     - 0x123b
++     -
++     - `Inode Updates Log Item <#inode-updates>`__
++   * - XFS_LI_BUF
++     - 0x123c
++     -
++     - `Buffer Writes Log Item <#buffer-log-item>`__
++   * - XFS_LI_DQUOT
++     - 0x123d
++     -
++     - `Update Quota Log Item <#quota-update-data-log-item>`__
++   * - XFS_LI_QUOTAOFF
++     - 0x123e
++     -
++     - `Quota Off Log Item <#disable-quota-log-item>`__
++   * - XFS_LI_ICREATE
++     - 0x123f
++     -
++     - `Inode Creation Log Item <#inode-creation-log-item>`__
++   * - XFS_LI_RUI
++     - 0x1240
++     -
++     - `Reverse Mapping Update Intent <#reverse-mapping-updates-intent>`__
++   * - XFS_LI_RUD
++     - 0x1241
++     -
++     - `Reverse Mapping Update Done <#completion-of-reverse-mapping-updates>`__
++   * - XFS_LI_CUI
++     - 0x1242
++     -
++     - `Reference Count Update Intent <#reference-count-updates-intent>`__
++   * - XFS_LI_CUD
++     - 0x1243
++     -
++     - `Reference Count Update Done <#completion-of-reference-count-updates>`__
++   * - XFS_LI_BUI
++     - 0x1244
++     -
++     - `File Block Mapping Update Intent <#file-block-mapping-intent>`__
++   * - XFS_LI_BUD
++     - 0x1245
++     -
++     - `File Block Mapping Update Done <#completion-of-file-block-mapping-updates>`__
++
++Theoretical Limits
++------------------
++
++XFS can create really big filesystems!
++
+++---------------------+---------------------+---------------------+---------------------+
++| Item                | 1KiB blocks         | 4KiB blocks         | 64KiB blocks        |
+++=====================+=====================+=====================+=====================+
++| Blocks              | 2\ :sup:`52`        | 2\ :sup:`52`        | 2\ :sup:`52`        |
+++---------------------+---------------------+---------------------+---------------------+
++| Inodes              | 2\ :sup:`63`        | 2\ :sup:`63`        | 2\ :sup:`64`        |
+++---------------------+---------------------+---------------------+---------------------+
++| Allocation Groups   | 2\ :sup:`32`        | 2\ :sup:`32`        | 2\ :sup:`32`        |
+++---------------------+---------------------+---------------------+---------------------+
++| File System Size    | 8EiB                | 8EiB                | 8EiB                |
+++---------------------+---------------------+---------------------+---------------------+
++| Blocks per AG       | 2\ :sup:`31`        | 2\ :sup:`31`        | 2\ :sup:`31`        |
+++---------------------+---------------------+---------------------+---------------------+
++| Inodes per AG       | 2\ :sup:`32`        | 2\ :sup:`32`        | 2\ :sup:`32`        |
+++---------------------+---------------------+---------------------+---------------------+
++| Max AG Size         | 2TiB                | 8TiB                | 128TiB              |
+++---------------------+---------------------+---------------------+---------------------+
++| Blocks Per File     | 2\ :sup:`54`        | 2\ :sup:`54`        | 2\ :sup:`54`        |
+++---------------------+---------------------+---------------------+---------------------+
++| File Size           | 8EiB                | 8EiB                | 8EiB                |
+++---------------------+---------------------+---------------------+---------------------+
++| Max Dir Size        | 32GiB               | 32GiB               | 32GiB               |
+++---------------------+---------------------+---------------------+---------------------+
++
++Linux doesn’t suppport files or devices larger than 8EiB, so the block
++limitations are largely ignorable.
+diff --git a/Documentation/filesystems/xfs/ondisk/overview.rst b/Documentation/filesystems/xfs/ondisk/overview.rst
+index a2818102819d..d2021fb68276 100644
+--- a/Documentation/filesystems/xfs/ondisk/overview.rst
++++ b/Documentation/filesystems/xfs/ondisk/overview.rst
+@@ -47,3 +47,5 @@ latency.
+ .. include:: delayed_logging.rst
+ .. include:: reflink.rst
+ .. include:: reconstruction.rst
++.. include:: common_types.rst
++.. include:: magic.rst
