@@ -1,154 +1,166 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:48552 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727239AbeIZQ3o (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 12:29:44 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8QAE2Kp079704
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:29 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by aserp2120.oracle.com with ESMTP id 2mndpphg6b-1
+Received: from userp2120.oracle.com ([156.151.31.85]:48600 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727157AbeIZQiG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 12:38:06 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8QANd56036964
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:49 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2120.oracle.com with ESMTP id 2mnvtur9bn-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:29 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAHSt5031498
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:49 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAPm9O004848
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:28 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:48 GMT
 Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w8QAHSvm027773
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:28 GMT
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAPmuo018374
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:48 GMT
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v9 25/28] xfs: Add helper function xfs_attr_list_context_init
-Date: Wed, 26 Sep 2018 03:15:04 -0700
-Message-Id: <1537956907-10244-26-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1537956907-10244-1-git-send-email-allison.henderson@oracle.com>
-References: <1537956907-10244-1-git-send-email-allison.henderson@oracle.com>
+Subject: [PATCH v3 15/30] xfsprogs: get directory offset when replacing a directory name
+Date: Wed, 26 Sep 2018 03:23:18 -0700
+Message-Id: <1537957413-10630-16-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1537957413-10630-1-git-send-email-allison.henderson@oracle.com>
+References: <1537957413-10630-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-This patch adds a helper function xfs_attr_list_context_init
-used by xfs_attr_list.  This function initializes the
-xfs_attr_list_context structure passed to xfs_attr_list_int.
-We will need this later to call xfs_attr_list_int_ilocked when
-the node is already locked.
+Return the directory offset information when replacing an entry to the
+directory.
 
+This offset will be used as the parent pointer offset in xfs_rename.
+
+[dchinner: forward ported and cleaned up]
+[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t,
+       Changed typedefs to raw struct types]
+
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- fs/xfs/libxfs/xfs_attr.h |  3 ++
- fs/xfs/xfs_attr_list.c   | 72 +++++++++++++++++++++++++++++++-----------------
- 2 files changed, 50 insertions(+), 25 deletions(-)
+ libxfs/xfs_dir2.c       | 8 ++++++--
+ libxfs/xfs_dir2.h       | 2 +-
+ libxfs/xfs_dir2_block.c | 4 ++--
+ libxfs/xfs_dir2_leaf.c  | 1 +
+ libxfs/xfs_dir2_node.c  | 1 +
+ libxfs/xfs_dir2_sf.c    | 2 ++
+ repair/phase6.c         | 2 +-
+ 7 files changed, 14 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-index fef9e48..e1b6a1a 100644
---- a/fs/xfs/libxfs/xfs_attr.h
-+++ b/fs/xfs/libxfs/xfs_attr.h
-@@ -188,6 +188,9 @@ int xfs_has_attr(struct xfs_da_args *args);
- int xfs_attr_remove_args(struct xfs_da_args *args);
- int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
- 		  int flags, struct attrlist_cursor_kern *cursor);
-+int xfs_attr_list_context_init(struct xfs_inode *dp, char *buffer, int bufsize,
-+		int flags, struct attrlist_cursor_kern *cursor,
-+		struct xfs_attr_list_context *context);
- int xfs_attr_args_init(struct xfs_da_args *args, struct xfs_inode *dp,
- 		       const unsigned char *name, size_t namelen, int flags);
- int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
-diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-index a580340..3c30ec4 100644
---- a/fs/xfs/xfs_attr_list.c
-+++ b/fs/xfs/xfs_attr_list.c
-@@ -592,23 +592,19 @@ xfs_attr_put_listent(
- }
+diff --git a/libxfs/xfs_dir2.c b/libxfs/xfs_dir2.c
+index 0093417..f76f412 100644
+--- a/libxfs/xfs_dir2.c
++++ b/libxfs/xfs_dir2.c
+@@ -466,7 +466,7 @@ xfs_dir_removename(
+ 	else
+ 		rval = xfs_dir2_node_removename(args);
+ out_free:
+-	if (offset)
++	if (!rval && offset)
+ 		*offset = args->offset;
  
- /*
-- * Generate a list of extended attribute names and optionally
-- * also value lengths.  Positive return value follows the XFS
-- * convention of being an error, zero or negative return code
-- * is the length of the buffer returned (negated), indicating
-- * success.
-+ * Initializes an xfs_attr_list_context suitable for
-+ * use by xfs_attr_list
-  */
- int
--xfs_attr_list(
--	xfs_inode_t	*dp,
--	char		*buffer,
--	int		bufsize,
--	int		flags,
--	attrlist_cursor_kern_t *cursor)
-+xfs_attr_list_context_init(
-+	xfs_inode_t			*dp,
-+	char				*buffer,
-+	int				bufsize,
-+	int				flags,
-+	struct attrlist_cursor_kern	*cursor,
-+	struct xfs_attr_list_context	*context)
+ 	kmem_free(args);
+@@ -482,7 +482,8 @@ xfs_dir_replace(
+ 	struct xfs_inode	*dp,
+ 	struct xfs_name		*name,		/* name of entry to replace */
+ 	xfs_ino_t		inum,		/* new inode number */
+-	xfs_extlen_t		total)		/* bmap's total block count */
++	xfs_extlen_t		total,		/* bmap's total block count */
++	xfs_dir2_dataptr_t	*offset)	/* OUT: offset in directory */
  {
--	xfs_attr_list_context_t context;
- 	struct attrlist *alist;
--	int error;
+ 	struct xfs_da_args	*args;
+ 	int			rval;
+@@ -530,6 +531,9 @@ xfs_dir_replace(
+ 	else
+ 		rval = xfs_dir2_node_replace(args);
+ out_free:
++	if (offset)
++		*offset = args->offset;
++
+ 	kmem_free(args);
+ 	return rval;
+ }
+diff --git a/libxfs/xfs_dir2.h b/libxfs/xfs_dir2.h
+index 2cf1d87..63de5b9 100644
+--- a/libxfs/xfs_dir2.h
++++ b/libxfs/xfs_dir2.h
+@@ -127,7 +127,7 @@ extern int xfs_dir_removename(struct xfs_trans *tp, struct xfs_inode *dp,
+ 				xfs_dir2_dataptr_t *offset);
+ extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
+ 				struct xfs_name *name, xfs_ino_t inum,
+-				xfs_extlen_t tot);
++				xfs_extlen_t tot, xfs_dir2_dataptr_t *offset);
+ extern int xfs_dir_canenter(struct xfs_trans *tp, struct xfs_inode *dp,
+ 				struct xfs_name *name);
  
+diff --git a/libxfs/xfs_dir2_block.c b/libxfs/xfs_dir2_block.c
+index 514b3fc..c80f9e4 100644
+--- a/libxfs/xfs_dir2_block.c
++++ b/libxfs/xfs_dir2_block.c
+@@ -856,9 +856,9 @@ xfs_dir2_block_replace(
  	/*
- 	 * Validate the cursor.
-@@ -634,20 +630,46 @@ xfs_attr_list(
- 	/*
- 	 * Initialize the output buffer.
+ 	 * Point to the data entry we need to change.
  	 */
--	memset(&context, 0, sizeof(context));
--	context.dp = dp;
--	context.cursor = cursor;
--	context.resynch = 1;
--	context.flags = flags;
--	context.alist = buffer;
--	context.bufsize = (bufsize & ~(sizeof(int)-1));  /* align */
--	context.firstu = context.bufsize;
--	context.put_listent = xfs_attr_put_listent;
--
--	alist = (struct attrlist *)context.alist;
-+	memset(context, 0, sizeof(xfs_attr_list_context_t));
-+	context->dp = dp;
-+	context->cursor = cursor;
-+	context->resynch = 1;
-+	context->flags = flags;
-+	context->alist = buffer;
-+	context->bufsize = (bufsize & ~(sizeof(int)-1));  /* align */
-+	context->firstu = context->bufsize;
-+	context->put_listent = xfs_attr_put_listent;
-+
-+	alist = (struct attrlist *)context->alist;
- 	alist->al_count = 0;
- 	alist->al_more = 0;
--	alist->al_offset[0] = context.bufsize;
-+	alist->al_offset[0] = context->bufsize;
-+
-+	return 0;
-+}
-+
-+/*
-+ * Generate a list of extended attribute names and optionally
-+ * also value lengths.  Positive return value follows the XFS
-+ * convention of being an error, zero or negative return code
-+ * is the length of the buffer returned (negated), indicating
-+ * success.
-+ */
-+int
-+xfs_attr_list(
-+	xfs_inode_t		*dp,
-+	char			*buffer,
-+	int			bufsize,
-+	int			flags,
-+	attrlist_cursor_kern_t	*cursor)
-+{
-+	xfs_attr_list_context_t context;
-+	int			error;
-+
-+	error = xfs_attr_list_context_init(dp, buffer, bufsize, flags,
-+			cursor, &context);
-+	if (error)
-+		return error;
- 
- 	error = xfs_attr_list_int(&context);
- 	ASSERT(error <= 0);
++	args->offset = be32_to_cpu(blp[ent].address);
+ 	dep = (xfs_dir2_data_entry_t *)((char *)hdr +
+-			xfs_dir2_dataptr_to_off(args->geo,
+-						be32_to_cpu(blp[ent].address)));
++			xfs_dir2_dataptr_to_off(args->geo, args->offset));
+ 	ASSERT(be64_to_cpu(dep->inumber) != args->inumber);
+ 	/*
+ 	 * Change the inode number to the new value.
+diff --git a/libxfs/xfs_dir2_leaf.c b/libxfs/xfs_dir2_leaf.c
+index 21906b1..c8e15e5 100644
+--- a/libxfs/xfs_dir2_leaf.c
++++ b/libxfs/xfs_dir2_leaf.c
+@@ -1535,6 +1535,7 @@ xfs_dir2_leaf_replace(
+ 	/*
+ 	 * Point to the data entry.
+ 	 */
++	args->offset = be32_to_cpu(lep->address);
+ 	dep = (xfs_dir2_data_entry_t *)
+ 	      ((char *)dbp->b_addr +
+ 	       xfs_dir2_dataptr_to_off(args->geo, be32_to_cpu(lep->address)));
+diff --git a/libxfs/xfs_dir2_node.c b/libxfs/xfs_dir2_node.c
+index 8a6cee1..b35b22f 100644
+--- a/libxfs/xfs_dir2_node.c
++++ b/libxfs/xfs_dir2_node.c
+@@ -2239,6 +2239,7 @@ xfs_dir2_node_replace(
+ 		hdr = state->extrablk.bp->b_addr;
+ 		ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
+ 		       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC));
++		args->offset = be32_to_cpu(lep->address);
+ 		dep = (xfs_dir2_data_entry_t *)
+ 		      ((char *)hdr +
+ 		       xfs_dir2_dataptr_to_off(args->geo,
+diff --git a/libxfs/xfs_dir2_sf.c b/libxfs/xfs_dir2_sf.c
+index 70808c9..7aa82e7 100644
+--- a/libxfs/xfs_dir2_sf.c
++++ b/libxfs/xfs_dir2_sf.c
+@@ -1029,6 +1029,8 @@ xfs_dir2_sf_replace(
+ 				ASSERT(args->inumber != ino);
+ 				dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
+ 				dp->d_ops->sf_put_ftype(sfep, args->filetype);
++				args->offset = xfs_dir2_byte_to_dataptr(
++						  xfs_dir2_sf_get_offset(sfep));
+ 				break;
+ 			}
+ 		}
+diff --git a/repair/phase6.c b/repair/phase6.c
+index db37a6c..c4651bc 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -1164,7 +1164,7 @@ mv_orphanage(
+ 			if (entry_ino_num != orphanage_ino)  {
+ 				err = -libxfs_dir_replace(tp, ino_p,
+ 						&xfs_name_dotdot, orphanage_ino,
+-						nres);
++						nres, NULL);
+ 				if (err)
+ 					do_error(
+ 	_("name replace op failed (%d), filesystem may be out of space\n"),
 -- 
 2.7.4
