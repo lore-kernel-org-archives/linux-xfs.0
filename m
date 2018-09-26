@@ -1,17 +1,17 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:52614 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726385AbeI0Bun (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 21:50:43 -0400
-Subject: [PATCH 15/24] docs: add XFS refcount btree structure to DS&A book
+Received: from aserp2120.oracle.com ([141.146.126.78]:42784 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726385AbeI0Bu4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 21:50:56 -0400
+Subject: [PATCH 17/24] docs: add XFS internal inodes to the DS&A book
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 26 Sep 2018 12:35:55 -0700
-Message-ID: <153799055508.31202.18152484638333180720.stgit@magnolia>
+Date: Wed, 26 Sep 2018 12:36:17 -0700
+Message-ID: <153799057723.31202.11004013729131727401.stgit@magnolia>
 In-Reply-To: <153799045443.31202.17537455000771265705.stgit@magnolia>
 References: <153799045443.31202.17537455000771265705.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
@@ -22,178 +22,232 @@ From: Darrick J. Wong <darrick.wong@oracle.com>
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- .../filesystems/xfs/ondisk/allocation_groups.rst   |    1 
- .../filesystems/xfs/ondisk/refcountbt.rst          |  154 ++++++++++++++++++++
- 2 files changed, 155 insertions(+)
- create mode 100644 Documentation/filesystems/xfs/ondisk/refcountbt.rst
+ Documentation/filesystems/xfs/ondisk/globals.rst   |    1 
+ .../filesystems/xfs/ondisk/internal_inodes.rst     |  208 ++++++++++++++++++++
+ 2 files changed, 209 insertions(+)
+ create mode 100644 Documentation/filesystems/xfs/ondisk/internal_inodes.rst
 
 
-diff --git a/Documentation/filesystems/xfs/ondisk/allocation_groups.rst b/Documentation/filesystems/xfs/ondisk/allocation_groups.rst
-index 296c520a2fbb..622cef4577bb 100644
---- a/Documentation/filesystems/xfs/ondisk/allocation_groups.rst
-+++ b/Documentation/filesystems/xfs/ondisk/allocation_groups.rst
-@@ -1381,3 +1381,4 @@ None of the XFS per-AG B+trees are involved with real time files. It is not
- possible for real time files to share data blocks.
- 
- .. include:: rmapbt.rst
-+.. include:: refcountbt.rst
-diff --git a/Documentation/filesystems/xfs/ondisk/refcountbt.rst b/Documentation/filesystems/xfs/ondisk/refcountbt.rst
+diff --git a/Documentation/filesystems/xfs/ondisk/globals.rst b/Documentation/filesystems/xfs/ondisk/globals.rst
+index 7f177fe39035..606af4915782 100644
+--- a/Documentation/filesystems/xfs/ondisk/globals.rst
++++ b/Documentation/filesystems/xfs/ondisk/globals.rst
+@@ -7,3 +7,4 @@ Global Structures
+ .. include:: dabtrees.rst
+ .. include:: allocation_groups.rst
+ .. include:: journaling_log.rst
++.. include:: internal_inodes.rst
+diff --git a/Documentation/filesystems/xfs/ondisk/internal_inodes.rst b/Documentation/filesystems/xfs/ondisk/internal_inodes.rst
 new file mode 100644
-index 000000000000..c76f4ec7e543
+index 000000000000..22a440d6046d
 --- /dev/null
-+++ b/Documentation/filesystems/xfs/ondisk/refcountbt.rst
-@@ -0,0 +1,154 @@
++++ b/Documentation/filesystems/xfs/ondisk/internal_inodes.rst
+@@ -0,0 +1,208 @@
 +.. SPDX-License-Identifier: CC-BY-SA-3.0+
 +
-+Reference Count B+tree
-+~~~~~~~~~~~~~~~~~~~~~~
++Internal Inodes
++---------------
 +
-+To support the sharing of file data blocks (reflink), each allocation group
-+has its own reference count B+tree, which grows in the allocated space like
-+the inode B+trees. This data could be gleaned by performing an interval query
-+of the reverse-mapping B+tree, but doing so would come at a huge performance
-+penalty. Therefore, this data structure is a cache of computable information.
++XFS allocates several inodes when a filesystem is created. These are internal
++and not accessible from the standard directory structure. These inodes are
++only accessible from the superblock.
 +
-+This B+tree is only present if the XFS\_SB\_FEAT\_RO\_COMPAT\_REFLINK feature
-+is enabled. The feature requires a version 5 filesystem.
++Quota Inodes
++~~~~~~~~~~~~
 +
-+Each record in the reference count B+tree has the following structure:
++Prior to version 5 filesystems, two inodes can be allocated for quota
++management. The first inode will be used for user quotas. The second inode
++will be used for group quotas or project quotas, depending on mount options.
++Group and project quotas are mutually exclusive features in these
++environments.
++
++In version 5 or later filesystems, each quota type is allocated its own inode,
++making it possible to use group and project quota management simultaneously.
++
++-  Project quota’s primary purpose is to track and monitor disk usage for
++   directories. For this to occur, the directory inode must have the
++   XFS\_DIFLAG\_PROJINHERIT flag set so all inodes created underneath the
++   directory inherit the project ID.
++
++-  Inodes and blocks owned by ID zero do not have enforced quotas, but only
++   quota accounting.
++
++-  Extended attributes do not contribute towards the ID’s quota.
++
++-  To access each ID’s quota information in the file, seek to the ID offset
++   multiplied by the size of xfs\_dqblk\_t (136 bytes).
++
++.. figure:: images/76.png
++   :alt: Quota inode layout
++
++   Quota inode layout
++
++Quota information is stored in the data extents of the reserved quota inodes
++as an array of the xfs\_dqblk structures, where there is one array element for
++each ID in the system:
 +
 +.. code:: c
 +
-+    struct xfs_refcount_rec {
-+         __be32                     rc_startblock;
-+         __be32                     rc_blockcount;
-+         __be32                     rc_refcount;
++    struct xfs_disk_dquot {
++         __be16                d_magic;
++         __u8                  d_version;
++         __u8                  d_flags;
++         __be32                d_id;
++         __be64                d_blk_hardlimit;
++         __be64                d_blk_softlimit;
++         __be64                d_ino_hardlimit;
++         __be64                d_ino_softlimit;
++         __be64                d_bcount;
++         __be64                d_icount;
++         __be32                d_itimer;
++         __be32                d_btimer;
++         __be16                d_iwarns;
++         __be16                d_bwarns;
++         __be32                d_pad0;
++         __be64                d_rtb_hardlimit;
++         __be64                d_rtb_softlimit;
++         __be64                d_rtbcount;
++         __be32                d_rtbtimer;
++         __be16                d_rtbwarns;
++         __be16                d_pad;
++    };
++    struct xfs_dqblk {
++         struct xfs_disk_dquot dd_diskdq;
++         char                  dd_fill[4];
++
++         /* version 5 filesystem fields begin here */
++         __be32                dd_crc;
++         __be64                dd_lsn;
++         uuid_t                dd_uuid;
 +    };
 +
-+**rc\_startblock**
-+    AG block number of this record. The high bit is set for all records
-+    referring to an extent that is being used to stage a copy on write
-+    operation. This reduces recovery time during mount operations. The
-+    reference count of these staging events must only be 1.
++**d\_magic**
++    Specifies the signature where these two bytes are 0x4451
++    (XFS\_DQUOT\_MAGIC), or \`\`DQ'' in ASCII.
 +
-+**rc\_blockcount**
-+    The length of this extent.
++**d\_version**
++    The structure version, currently this is 1 (XFS\_DQUOT\_VERSION).
 +
-+**rc\_refcount**
-+    Number of mappings of this filesystem extent.
-+
-+Node pointers are an AG relative block pointer:
++**d\_flags**
++    Specifies which type of ID the structure applies to:
 +
 +.. code:: c
 +
-+    struct xfs_refcount_key {
-+         __be32                     rc_startblock;
-+    };
++    #define XFS_DQ_USER  0x0001
++    #define XFS_DQ_PROJ  0x0002
++    #define XFS_DQ_GROUP 0x0004
 +
-+-  As the reference counting is AG relative, all the block numbers are only
-+   32-bits.
++**d\_id**
++    The ID for the quota structure. This will be a uid, gid or projid based on
++    the value of d\_flags.
 +
-+-  The bb\_magic value is "R3FC" (0x52334643).
++**d\_blk\_hardlimit**
++    The hard limit for the number of filesystem blocks the ID can own. The ID
++    will not be able to use more space than this limit. If it is attempted,
++    ENOSPC will be returned.
 +
-+-  The xfs\_btree\_sblock\_t header is used for intermediate B+tree node as
-+   well as the leaves.
++**d\_blk\_softlimit**
++    The soft limit for the number of filesystem blocks the ID can own. The ID
++    can temporarily use more space than by d\_blk\_softlimit up to
++    d\_blk\_hardlimit. If the space is not freed by the time limit specified
++    by ID zero’s d\_btimer value, the ID will be denied more space until the
++    total blocks owned goes below d\_blk\_softlimit.
 +
-+xfs\_db refcntbt Example
-+^^^^^^^^^^^^^^^^^^^^^^^^
++**d\_ino\_hardlimit**
++    The hard limit for the number of inodes the ID can own. The ID will not be
++    able to create or own any more inodes if d\_icount reaches this value.
 +
-+For this example, an XFS filesystem was populated with a root filesystem and a
-+deduplication program was run to create shared blocks:
++**d\_ino\_softlimit**
++    The soft limit for the number of inodes the ID can own. The ID can
++    temporarily create or own more inodes than specified by d\_ino\_softlimit
++    up to d\_ino\_hardlimit. If the inode count is not reduced by the time
++    limit specified by ID zero’s d\_itimer value, the ID will be denied from
++    creating or owning more inodes until the count goes below
++    d\_ino\_softlimit.
 +
-+::
++**d\_bcount**
++    How many filesystem blocks are actually owned by the ID.
 +
-+    xfs_db> agf 0
-+    xfs_db> addr refcntroot
-+    xfs_db> p
-+    magic = 0x52334643
-+    level = 1
-+    numrecs = 6
-+    leftsib = null
-+    rightsib = null
-+    bno = 36892
-+    lsn = 0x200004ec2
-+    uuid = f1f89746-e00b-49c9-96b3-ecef0f2f14ae
-+    owner = 0
-+    crc = 0x75f35128 (correct)
-+    keys[1-6] = [startblock] 1:[14] 2:[65633] 3:[65780] 4:[94571] 5:[117201] 6:[152442]
-+    ptrs[1-6] = 1:7 2:25836 3:25835 4:18447 5:18445 6:18449
-+    xfs_db> addr ptrs[3]
-+    xfs_db> p
-+    magic = 0x52334643
-+    level = 0
-+    numrecs = 80
-+    leftsib = 25836
-+    rightsib = 18447
-+    bno = 51670
-+    lsn = 0x200004ec2
-+    uuid = f1f89746-e00b-49c9-96b3-ecef0f2f14ae
-+    owner = 0
-+    crc = 0xc3962813 (correct)
-+    recs[1-80] = [startblock,blockcount,refcount,cowflag]
-+            1:[65780,1,2,0] 2:[65781,1,3,0] 3:[65785,2,2,0] 4:[66640,1,2,0]
-+            5:[69602,4,2,0] 6:[72256,16,2,0] 7:[72871,4,2,0] 8:[72879,20,2,0]
-+            9:[73395,4,2,0] 10:[75063,4,2,0] 11:[79093,4,2,0] 12:[86344,16,2,0]
-+            ...
-+            80:[35235,10,1,1]
++**d\_icount**
++    How many inodes are actually owned by the ID.
 +
-+Notice record 80. The copy on write flag is set and the reference count is 1,
-+which indicates that the extent 35,235 - 35,244 are being used to stage a copy
-+on write activity. The "cowflag" field is the high bit of rc\_startblock.
++**d\_itimer**
++    Specifies the time when the ID’s d\_icount exceeded d\_ino\_softlimit. The
++    soft limit will turn into a hard limit after the elapsed time exceeds ID
++    zero’s d\_itimer value. When d\_icount goes back below d\_ino\_softlimit,
++    d\_itimer is reset back to zero.
 +
-+Record 6 in the reference count B+tree for AG 0 indicates that the AG extent
-+starting at block 72,256 and running for 16 blocks has a reference count of 2.
-+This means that there are two files sharing the block:
++**d\_btimer**
++    Specifies the time when the ID’s d\_bcount exceeded d\_blk\_softlimit. The
++    soft limit will turn into a hard limit after the elapsed time exceeds ID
++    zero’s d\_btimer value. When d\_bcount goes back below d\_blk\_softlimit,
++    d\_btimer is reset back to zero.
 +
-+::
++**d\_iwarns**; \ **d\_bwarns**; \ **d\_rtbwarns**
++    Specifies how many times a warning has been issued. Currently not used.
 +
-+    xfs_db> blockget -n
-+    xfs_db> fsblock 72256
-+    xfs_db> blockuse
-+    block 72256 (0/72256) type rldata inode 25169197
++**d\_rtb\_hardlimit**
++    The hard limit for the number of real-time blocks the ID can own. The ID
++    cannot own more space on the real-time subvolume beyond this limit.
 +
-+The blockuse type changes to "rldata" to indicate that the block is shared
-+data. Unfortunately, blockuse only tells us about one block owner. If we
-+happen to have enabled the reverse-mapping B+tree, we can use it to find all
-+inodes that own this block:
++**d\_rtb\_softlimit**
++    The soft limit for the number of real-time blocks the ID can own. The ID
++    can temporarily own more space than specified by d\_rtb\_softlimit up to
++    d\_rtb\_hardlimit. If d\_rtbcount is not reduced by the time limit
++    specified by ID zero’s d\_rtbtimer value, the ID will be denied from
++    owning more space until the count goes below d\_rtb\_softlimit.
 +
-+::
++**d\_rtbcount**
++    How many real-time blocks are currently owned by the ID.
 +
-+    xfs_db> agf 0
-+    xfs_db> addr rmaproot
-+    ...
-+    xfs_db> addr ptrs[3]
-+    ...
-+    xfs_db> addr ptrs[7]
-+    xfs_db> p
-+    magic = 0x524d4233
-+    level = 0
-+    numrecs = 22
-+    leftsib = 65057
-+    rightsib = 65058
-+    bno = 291478
-+    lsn = 0x200004ec2
-+    uuid = f1f89746-e00b-49c9-96b3-ecef0f2f14ae
-+    owner = 0
-+    crc = 0xed7da3f7 (correct)
-+    recs[1-22] = [startblock,blockcount,owner,offset,extentflag,attrfork,bmbtblock]
-+            1:[68957,8,3201,0,0,0,0] 2:[68965,4,25260953,0,0,0,0]
-+            ...
-+            18:[72232,58,3227,0,0,0,0] 19:[72256,16,25169197,24,0,0,0]
-+            20:[72290,75,3228,0,0,0,0] 21:[72365,46,3229,0,0,0,0]
++**d\_rtbtimer**
++    Specifies the time when the ID’s d\_rtbcount exceeded d\_rtb\_softlimit.
++    The soft limit will turn into a hard limit after the elapsed time exceeds
++    ID zero’s d\_rtbtimer value. When d\_rtbcount goes back below
++    d\_rtb\_softlimit, d\_rtbtimer is reset back to zero.
 +
-+Records 18 and 19 intersect the block 72,256; they tell us that inodes 3,227
-+and 25,169,197 both claim ownership. Let us confirm this:
++**dd\_uuid**
++    The UUID of this block, which must match either sb\_uuid or sb\_meta\_uuid
++    depending on which features are set.
 +
-+::
++**dd\_lsn**
++    Log sequence number of the last DQ block write.
 +
-+    xfs_db> inode 25169197
-+    xfs_db> bmap
-+    data offset 0 startblock 12632259 (3/49347) count 24 flag 0
-+    data offset 24 startblock 72256 (0/72256) count 16 flag 0
-+    data offset 40 startblock 12632299 (3/49387) count 18 flag 0
-+    xfs_db> inode 3227
-+    xfs_db> bmap
-+    data offset 0 startblock 72232 (0/72232) count 58 flag 0
++**dd\_crc**
++    Checksum of the DQ block.
 +
-+Inodes 25,169,197 and 3,227 both contain mappings to block 0/72,256.
++Real-time Inodes
++~~~~~~~~~~~~~~~~
++
++There are two inodes allocated to managing the real-time device’s space, the
++Bitmap Inode and the Summary Inode.
++
++Real-Time Bitmap Inode
++^^^^^^^^^^^^^^^^^^^^^^
++
++The real time bitmap inode, sb\_rbmino, tracks the used/free space in the
++real-time device using an old-style bitmap. One bit is allocated per real-time
++extent. The size of an extent is specified by the superblock’s sb\_rextsize
++value.
++
++The number of blocks used by the bitmap inode is equal to the number of
++real-time extents (sb\_rextents) divided by the block size (sb\_blocksize) and
++bits per byte. This value is stored in sb\_rbmblocks. The nblocks and extent
++array for the inode should match this. Each real time block gets its own bit
++in the bitmap.
++
++Real-Time Summary Inode
++^^^^^^^^^^^^^^^^^^^^^^^
++
++The real time summary inode, sb\_rsumino, tracks the used and free space
++accounting information for the real-time device. This file indexes the
++approximate location of each free extent on the real-time device first by
++log2(extent size) and then by the real-time bitmap block number. The size of
++the summary inode file is equal to sb\_rbmblocks × log2(realtime device size)
++× sizeof(xfs\_suminfo\_t). The entry for a given log2(extent size) and
++rtbitmap block number is 0 if there is no free extents of that size at that
++rtbitmap location, and positive if there are any.
++
++This data structure is not particularly space efficient, however it is a very
++fast way to provide the same data as the two free space B+trees for regular
++files since the space is preallocated and metadata maintenance is minimal.
