@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:55480 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727483AbeIZQiJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 12:38:09 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8QANhTb087676
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:53 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by aserp2120.oracle.com with ESMTP id 2mndpphh7v-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:52 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAPpGx013257
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+Received: from userp2130.oracle.com ([156.151.31.86]:33588 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727484AbeIZQiI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 12:38:08 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8QAPBJ1073963
         for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:52 GMT
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w8QAPpER032168
+Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
+        by userp2130.oracle.com with ESMTP id 2mnd5thjs1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:51 +0000
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAPpgH021234
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
         for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:51 GMT
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w8QAPom9032156
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:50 GMT
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v3 26/30] xfsprogs: Add xfs_verify_pptr
-Date: Wed, 26 Sep 2018 03:23:29 -0700
-Message-Id: <1537957413-10630-27-git-send-email-allison.henderson@oracle.com>
+Subject: [PATCH v3 24/30] xfsprogs: Add parent pointer flag to cmd
+Date: Wed, 26 Sep 2018 03:23:27 -0700
+Message-Id: <1537957413-10630-25-git-send-email-allison.henderson@oracle.com>
 In-Reply-To: <1537957413-10630-1-git-send-email-allison.henderson@oracle.com>
 References: <1537957413-10630-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -28,140 +28,89 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Attribute names of parent pointers are not strings.  So we
-need to modify attr_namecheck to verify parent pointer
-records when the XFS_ATTR_PARENT flag is set.
+mkfs: enable formatting with parent pointers
+Enable parent pointer support in mkfs via the '-n parent' parameter.
 
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- repair/attr_repair.c | 21 +++++++++++----------
- repair/da_util.c     | 43 +++++++++++++++++++++++++++++++++++++++++++
- repair/da_util.h     | 12 ++++++++++++
- 3 files changed, 66 insertions(+), 10 deletions(-)
+ mkfs/xfs_mkfs.c | 23 ++++++++++++++++++++++-
+ 1 file changed, 22 insertions(+), 1 deletion(-)
 
-diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-index 1d04500..df27fa4 100644
---- a/repair/attr_repair.c
-+++ b/repair/attr_repair.c
-@@ -292,13 +292,14 @@ process_shortform_attr(
- 			}
- 		}
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 2e53c1e..d4afc08 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -92,6 +92,7 @@ enum {
+ 	N_SIZE = 0,
+ 	N_VERSION,
+ 	N_FTYPE,
++	N_PARENT,
+ 	N_MAX_OPTS,
+ };
  
--		/* namecheck checks for / and null terminated for file names.
--		 * attributes names currently follow the same rules.
--		*/
--		if (namecheck((char *)&currententry->nameval[0],
--						currententry->namelen))  {
-+		/* namecheck checks for / and null terminated for file names,
-+		 * or verifies parent pointer record in the case of a parent
-+		 * pointer attribute.
-+		 */
-+		if (attr_namecheck(mp, (char *)&currententry->nameval[0],
-+		       currententry->namelen, currententry->flags))  {
- 			do_warn(
--	_("entry contains illegal character in shortform attribute name\n"));
-+	_("entry contains illegal shortform attribute name\n"));
- 			junkit = 1;
- 		}
+@@ -538,6 +539,7 @@ struct opt_params nopts = {
+ 		[N_SIZE] = "size",
+ 		[N_VERSION] = "version",
+ 		[N_FTYPE] = "ftype",
++		[N_PARENT] = "parent",
+ 	},
+ 	.subopt_params = {
+ 		{ .index = N_SIZE,
+@@ -560,6 +562,12 @@ struct opt_params nopts = {
+ 		  .maxval = 1,
+ 		  .defaultval = 1,
+ 		},
++		{ .index = N_PARENT,
++		  .conflicts = { { NULL, LAST_CONFLICT } },
++		  .minval = 0,
++		  .maxval = 1,
++		  .defaultval = 1,
++		},
+ 	},
+ };
  
-@@ -458,8 +459,8 @@ process_leaf_attr_local(
- 	xfs_attr_leaf_name_local_t *local;
+@@ -864,7 +872,7 @@ usage( void )
+ /* log subvol */	[-l agnum=n,internal,size=num,logdev=xxx,version=n\n\
+ 			    sunit=value|su=num,sectsize=num,lazy-count=0|1]\n\
+ /* label */		[-L label (maximum 12 characters)]\n\
+-/* naming */		[-n size=num,version=2|ci,ftype=0|1]\n\
++/* naming */		[-n size=num,version=2|ci,ftype=0|1,parent=0|1]\n\
+ /* no-op info only */	[-N]\n\
+ /* prototype file */	[-p fname]\n\
+ /* quiet */		[-q]\n\
+@@ -1603,6 +1611,9 @@ naming_opts_parser(
+ 	case N_FTYPE:
+ 		cli->sb_feat.dirftype = getnum(value, opts, subopt);
+ 		break;
++	case N_PARENT:
++		cli->sb_feat.parent_pointers = getnum(value, &nopts, N_PARENT);
++		break;
+ 	default:
+ 		return -EINVAL;
+ 	}
+@@ -2006,6 +2017,14 @@ _("reflink not supported without CRC support\n"));
+ 		cli->sb_feat.reflink = false;
+ 	}
  
- 	local = xfs_attr3_leaf_name_local(leaf, i);
--	if (local->namelen == 0 || namecheck((char *)&local->nameval[0],
--							local->namelen)) {
-+	if (attr_namecheck(mp, (char *)&local->nameval[0],
-+	       local->namelen, entry->flags)) {
- 		do_warn(
- 	_("attribute entry %d in attr block %u, inode %" PRIu64 " has bad name (namelen = %d)\n"),
- 			i, da_bno, ino, local->namelen);
-@@ -513,8 +514,8 @@ process_leaf_attr_remote(
- 
- 	remotep = xfs_attr3_leaf_name_remote(leaf, i);
- 
--	if (remotep->namelen == 0 || namecheck((char *)&remotep->name[0],
--						remotep->namelen) ||
-+	if (attr_namecheck(mp, (char *)&remotep->name[0],
-+				remotep->namelen, entry->flags) ||
- 			be32_to_cpu(entry->hashval) !=
- 				libxfs_da_hashname((unsigned char *)&remotep->name[0],
- 						remotep->namelen) ||
-diff --git a/repair/da_util.c b/repair/da_util.c
-index 1450767..d94a31c 100644
---- a/repair/da_util.c
-+++ b/repair/da_util.c
-@@ -13,6 +13,49 @@
- #include "da_util.h"
- 
- /*
-+ * Verify parent pointer attribute is valid.
-+ * Return 0 on success or 1 on failure
-+ */
-+int
-+xfs_verify_pptr(struct xfs_mount *mp, struct xfs_parent_name_rec *rec)
-+{
-+	xfs_ino_t p_ino = (xfs_ino_t)be64_to_cpu(rec->p_ino);
-+	xfs_dir2_dataptr_t p_diroffset =
-+			(xfs_dir2_dataptr_t)be32_to_cpu(rec->p_diroffset);
-+
-+	if (!xfs_verify_ino(mp, p_ino))
-+		return 1;
-+
-+	if (p_diroffset > XFS_DIR2_MAX_DATAPTR)
-+		return 1;
-+
-+	return 0;
-+}
-+
-+/*
-+ * Check if an attribute name is valid
-+ * Returns 0 on success and 1 on failure
-+ */
-+int
-+attr_namecheck(struct xfs_mount *mp, char *name, int length, int flags)
-+{
-+	if (flags & XFS_ATTR_PARENT) {
-+		if (length != sizeof(struct xfs_parent_name_rec))
-+			return 1;
-+		return xfs_verify_pptr(mp, (struct xfs_parent_name_rec *)name);
++	if ((cli->sb_feat.parent_pointers) &&
++	    cli->sb_feat.dir_version == 4) {
++		fprintf(stderr,
++_("parent pointers not supported on v4 filesystems\n"));
++		usage();
++		cli->sb_feat.parent_pointers = false;
 +	}
 +
-+	if (length == 0)
-+		return 1;
-+
-+	/*
-+	 * namecheck checks for / and null terminated for file names.
-+	 * attributes names currently follow the same rules.
-+	 */
-+	return namecheck(name, length);
-+}
-+
-+/*
-  * takes a name and length (name need not be null-terminated)
-  * and returns 1 if the name contains a '/' or a \0, returns 0
-  * otherwise
-diff --git a/repair/da_util.h b/repair/da_util.h
-index d36dfd0..53ba843 100644
---- a/repair/da_util.h
-+++ b/repair/da_util.h
-@@ -25,6 +25,18 @@ typedef struct da_bt_cursor {
- } da_bt_cursor_t;
+ 	if ((cli->fsx.fsx_xflags & FS_XFLAG_COWEXTSIZE) &&
+ 	    !cli->sb_feat.reflink) {
+ 		fprintf(stderr,
+@@ -2885,6 +2904,8 @@ sb_set_features(
+ 		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_RMAPBT;
+ 	if (fp->reflink)
+ 		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_REFLINK;
++	if (fp->parent_pointers)
++		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_PARENT;
  
- int
-+xfs_verify_pptr(
-+	struct xfs_mount *mp,
-+	struct xfs_parent_name_rec *rec);
-+
-+int
-+attr_namecheck(
-+	struct xfs_mount	*mp,
-+	char			*name,
-+	int			length,
-+	int			flags);
-+
-+int
- namecheck(
- 	char		*name,
- 	int		length);
+ 	/*
+ 	 * Sparse inode chunk support has two main inode alignment requirements.
 -- 
 2.7.4
