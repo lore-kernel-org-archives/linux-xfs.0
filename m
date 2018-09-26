@@ -1,61 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from uphb19pa11.eemsg.mail.mil ([214.24.26.85]:44324 "EHLO
-        USFB19PA14.eemsg.mail.mil" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726602AbeIZTnz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 15:43:55 -0400
-Subject: Re: Leaking Path in XFS's ioctl interface(missing LSM check)
-References: <5EF0D46A-C098-4B51-AD13-225FFCA35D4C@vt.edu>
- <20180926013329.GD31060@dastard>
-From: Stephen Smalley <sds@tycho.nsa.gov>
-Message-ID: <dc3bf978-1b98-bebd-6f35-9b2795693ea7@tycho.nsa.gov>
-Date: Wed, 26 Sep 2018 09:23:03 -0400
+Received: from sandeen.net ([63.231.237.45]:54072 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726107AbeI0B1L (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 26 Sep 2018 21:27:11 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 5FC8E2B37
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 14:11:58 -0500 (CDT)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs libxfs-4.19-sync branch rebased
+Message-ID: <193ea177-7759-f501-2c24-d03be6904a8f@sandeen.net>
+Date: Wed, 26 Sep 2018 14:12:46 -0500
 MIME-Version: 1.0
-In-Reply-To: <20180926013329.GD31060@dastard>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, TongZhang <ztong@vt.edu>
-Cc: darrick.wong@oracle.com, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-security-module@vger.kernel.org, Wenbo Shen <shenwenbosmile@gmail.com>
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On 09/25/2018 09:33 PM, Dave Chinner wrote:
-> On Tue, Sep 25, 2018 at 08:51:50PM -0400, TongZhang wrote:
->> Hi,
->>
->> I'm bringing up this issue again to let of LSM developers know the situation, and would like to know your thoughts.
->> Several weeks ago I sent an email to the security list to discuss the issue where
->> XFS's ioctl interface can do things like vfs_readlink without asking LSM's
->> permission, which we think is kind of weird and this kind of operation should be
->> audited by LSM.
-> 
-> These aren't user interfaces. They are filesystem maintenance and
-> extension interfaces.  They are intended for low level filesystem
-> utilities that require complete, unrestricted access to the
-> underlying filesystem via holding CAP_SYSADMIN in the initns.
-> 
-> i.e.  they are used to perform filesystem maintenance and extension
-> operations that need to be completely invisible to users from
-> userspace. e.g.  online file defragmentation (xfs_fsr), data
-> migration (e.g. HSM products), efficient backup of data (xfsdump),
-> metadata and data scrubbing, online repair, etc.
-> 
-> IOWs, I really don't think these interfaces are something the LSMs
-> should be trying to intercept or audit, because they are essentially
-> internal filesystem interfaces used by trusted code and not general
-> user application facing APIs.
+Hi all -
 
-If they are interfaces exposed to userspace, then they should be 
-mediated via LSM.  We only omit the LSM hook when the usage is purely 
-kernel-internal.  Security modules are often used to limit even 
-"trusted" applications to least privilege and protect them from 
-untrustworthy inputs, moving from binary trust notions to only trusting 
-them for what they must be trusted to do.  CAP_SYS_ADMIN doesn't 
-necessarily indicate that they are trusted to override any given MAC 
-policy restrictions.
+I've rebased the libxfs-4.19-sync branch with some minor fixes (below).
 
-Wondering why we don't perform the security_inode_readlink() call inside 
-of vfs_readlink() currently.  The general pattern is that we do perform 
-security_inode_*() calls inside the other vfs_*() helpers, so 
-vfs_readlink() is an exception currently.
+The head of the libxfs-4.19-sync branch is commit:
+
+a891cd6 xfs: fix a null pointer dereference in xfs_bmap_extents_to_btree
+
+This is still just a backport of the kernel libxfs.  I'll get to Darrick's
+transaction cleanups on top of this soon, but I was trying to stick with
+the standard "update libxfs, then get to everything else" approach.
+
+I'll push this to for-next and tag it with an -rc0 in the next day or so,
+barring any disasters.
+
+Thanks,
+-Eric
+
+changes since the last push:
+
+diff -Nurp xfsprogs-maint-clean/libxfs/libxfs_priv.h xfsprogs-maint/libxfs/libxfs_priv.h
+--- xfsprogs-maint-clean/libxfs/libxfs_priv.h	2018-09-02 23:09:54.825409402 -0500
++++ xfsprogs-maint/libxfs/libxfs_priv.h	2018-09-26 14:11:08.805788185 -0500
+@@ -563,7 +563,7 @@ int libxfs_zero_extent(struct xfs_inode 
+ 
+ 
+ bool xfs_log_check_lsn(struct xfs_mount *, xfs_lsn_t);
+-#define xfs_log_in_recovery(mp)	false
++#define xfs_log_in_recovery(mp)	(false)
+ 
+ /* xfs_icache.c */
+ #define xfs_inode_set_cowblocks_tag(ip)	do { } while (0)
+Binary files xfsprogs-maint-clean/libxfs/list_sort.o and xfsprogs-maint/libxfs/list_sort.o differ
+Binary files xfsprogs-maint-clean/libxfs/radix-tree.o and xfsprogs-maint/libxfs/radix-tree.o differ
+diff -Nurp xfsprogs-maint-clean/libxfs/trans.c xfsprogs-maint/libxfs/trans.c
+--- xfsprogs-maint-clean/libxfs/trans.c	2018-09-02 23:09:54.826409407 -0500
++++ xfsprogs-maint/libxfs/trans.c	2018-09-26 14:10:37.664613207 -0500
+@@ -80,6 +80,8 @@ libxfs_trans_roll(
+ 	struct xfs_trans	*trans = *tpp;
+ 	struct xfs_trans_res	tres;
+ 	unsigned int		old_blk_res;
++	xfs_fsblock_t		old_firstblock;
++	struct list_head	old_dfops;
+ 	int			error;
+ 
+ 	/*
+@@ -89,6 +91,9 @@ libxfs_trans_roll(
+ 	tres.tr_logres = trans->t_log_res;
+ 	tres.tr_logcount = trans->t_log_count;
+ 	old_blk_res = trans->t_blk_res;
++	old_firstblock = trans->t_firstblock;
++	/* structure copy */
++	old_dfops = trans->t_dfops;
+ 
+ 	/*
+ 	 * Commit the current transaction.
+@@ -113,6 +118,9 @@ libxfs_trans_roll(
+ 	error = libxfs_trans_alloc(mp, &tres, 0, 0, 0, tpp);
+ 	trans = *tpp;
+ 	trans->t_blk_res = old_blk_res;
++	trans->t_firstblock = old_firstblock;
++	/* structure copy */
++	trans->t_dfops = old_dfops;
+ 
+ 	return 0;
+ }
+@@ -156,6 +164,8 @@ libxfs_trans_alloc(
+ 	ptr->t_mountp = mp;
+ 	ptr->t_blk_res = blocks;
+ 	INIT_LIST_HEAD(&ptr->t_items);
++	INIT_LIST_HEAD(&ptr->t_dfops);
++	ptr->t_firstblock = NULLFSBLOCK;
+ #ifdef XACT_DEBUG
+ 	fprintf(stderr, "allocated new transaction %p\n", ptr);
+ #endif
