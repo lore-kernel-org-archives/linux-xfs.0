@@ -1,48 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from www.llwyncelyn.cymru ([82.70.14.225]:52740 "EHLO fuzix.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725733AbeI0Aiv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 26 Sep 2018 20:38:51 -0400
-Date: Wed, 26 Sep 2018 19:24:26 +0100
-From: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
-Subject: Re: Leaking Path in XFS's ioctl interface(missing LSM check)
-Message-ID: <20180926192426.472360ea@alans-desktop>
-In-Reply-To: <20180926013329.GD31060@dastard>
-References: <5EF0D46A-C098-4B51-AD13-225FFCA35D4C@vt.edu>
-        <20180926013329.GD31060@dastard>
+Received: from userp2120.oracle.com ([156.151.31.85]:44698 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726395AbeI0Bsx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 21:48:53 -0400
+Subject: [RFC PATCH 00/24] xfs-4.20: major documentation surgery
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 26 Sep 2018 12:34:14 -0700
+Message-ID: <153799045443.31202.17537455000771265705.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: TongZhang <ztong@vt.edu>, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-security-module@vger.kernel.org, Wenbo Shen <shenwenbosmile@gmail.com>
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, 26 Sep 2018 11:33:29 +1000
-Dave Chinner <david@fromorbit.com> wrote:
+Hi all,
 
-> On Tue, Sep 25, 2018 at 08:51:50PM -0400, TongZhang wrote:
-> > Hi,
-> > 
-> > I'm bringing up this issue again to let of LSM developers know the situation, and would like to know your thoughts.
-> > Several weeks ago I sent an email to the security list to discuss the issue where
-> > XFS's ioctl interface can do things like vfs_readlink without asking LSM's
-> > permission, which we think is kind of weird and this kind of operation should be
-> > audited by LSM.  
-> 
-> These aren't user interfaces. They are filesystem maintenance and
-> extension interfaces.  They are intended for low level filesystem
-> utilities that require complete, unrestricted access to the
-> underlying filesystem via holding CAP_SYSADMIN in the initns.
+This series converts the existing in-kernel xfs documentation to rst
+format, links it in with the rest of the kernel's rst documetation, and
+then begins pulling in the contents of the Data Structures & Algorithms
+book from the xfs-documentation git tree.  No changes are made to the
+text during the import process except to fix things that the conversion
+process (asciidoctor + pandoc) didn't do correctly.  The goal of this
+series is to tie together the XFS code with the on-disk format
+documentation for the features supported by the code.
 
-CAP_SYS_ADMIN is meaningless in an environment using a strong LSM set up.
-So what if I have CAP_SYS_ADMIN ? In a secure environment low level
-complete unrestricted access to the file system is most definitely
-something that should be mediated.
+I've built the docs and put them here, in case you hate reading rst:
+https://djwong.org/docs/kdoc/filesystems/xfs/index.html
 
-CAP_SYS_ADMIN is also a bit weird because low level access usually
-implies you can bypass access controls so you should also check
-CAP_SYS_DAC ?
+I've posted a branch here because the png import patch is huge:
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=docs-4.20-merge
 
-Alan
+The patchset should apply cleanly against 4.19-rc5.  Comments and
+questions are, as always, welcome.
+
+--D
