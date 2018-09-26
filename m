@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:46008 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:46320 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726385AbeI0Bu1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 21:50:27 -0400
-Subject: [PATCH 14/24] docs: add XFS reverse mapping structures to the DS&A
- book
+        with ESMTP id S1726385AbeI0Bup (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 21:50:45 -0400
+Subject: [PATCH 16/24] docs: add XFS log to the DS&A book
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 26 Sep 2018 12:35:48 -0700
-Message-ID: <153799054876.31202.18333780757964179778.stgit@magnolia>
+Date: Wed, 26 Sep 2018 12:36:10 -0700
+Message-ID: <153799057077.31202.13021890964375401468.stgit@magnolia>
 In-Reply-To: <153799045443.31202.17537455000771265705.stgit@magnolia>
 References: <153799045443.31202.17537455000771265705.stgit@magnolia>
 MIME-Version: 1.0
@@ -23,361 +22,1466 @@ From: Darrick J. Wong <darrick.wong@oracle.com>
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- .../filesystems/xfs/ondisk/allocation_groups.rst   |    2 
- Documentation/filesystems/xfs/ondisk/rmapbt.rst    |  336 ++++++++++++++++++++
- 2 files changed, 338 insertions(+)
- create mode 100644 Documentation/filesystems/xfs/ondisk/rmapbt.rst
+ Documentation/filesystems/xfs/ondisk/globals.rst   |    1 
+ .../filesystems/xfs/ondisk/journaling_log.rst      | 1442 ++++++++++++++++++++
+ 2 files changed, 1443 insertions(+)
+ create mode 100644 Documentation/filesystems/xfs/ondisk/journaling_log.rst
 
 
-diff --git a/Documentation/filesystems/xfs/ondisk/allocation_groups.rst b/Documentation/filesystems/xfs/ondisk/allocation_groups.rst
-index 57fe8cde5d08..296c520a2fbb 100644
---- a/Documentation/filesystems/xfs/ondisk/allocation_groups.rst
-+++ b/Documentation/filesystems/xfs/ondisk/allocation_groups.rst
-@@ -1379,3 +1379,5 @@ response times that come from metadata operations.
- 
- None of the XFS per-AG B+trees are involved with real time files. It is not
- possible for real time files to share data blocks.
-+
-+.. include:: rmapbt.rst
-diff --git a/Documentation/filesystems/xfs/ondisk/rmapbt.rst b/Documentation/filesystems/xfs/ondisk/rmapbt.rst
+diff --git a/Documentation/filesystems/xfs/ondisk/globals.rst b/Documentation/filesystems/xfs/ondisk/globals.rst
+index 9b8c9e527a87..7f177fe39035 100644
+--- a/Documentation/filesystems/xfs/ondisk/globals.rst
++++ b/Documentation/filesystems/xfs/ondisk/globals.rst
+@@ -6,3 +6,4 @@ Global Structures
+ .. include:: btrees.rst
+ .. include:: dabtrees.rst
+ .. include:: allocation_groups.rst
++.. include:: journaling_log.rst
+diff --git a/Documentation/filesystems/xfs/ondisk/journaling_log.rst b/Documentation/filesystems/xfs/ondisk/journaling_log.rst
 new file mode 100644
-index 000000000000..89dbac1b4c66
+index 000000000000..2aa52eb016e6
 --- /dev/null
-+++ b/Documentation/filesystems/xfs/ondisk/rmapbt.rst
-@@ -0,0 +1,336 @@
++++ b/Documentation/filesystems/xfs/ondisk/journaling_log.rst
+@@ -0,0 +1,1442 @@
 +.. SPDX-License-Identifier: CC-BY-SA-3.0+
 +
-+Reverse-Mapping B+tree
-+~~~~~~~~~~~~~~~~~~~~~~
++Journaling Log
++--------------
 +
-+If the feature is enabled, each allocation group has its own reverse
-+block-mapping B+tree, which grows in the free space like the free space
-+B+trees. As mentioned in the chapter about
-+`reconstruction <#metadata-reconstruction>`__, this data structure is another piece of
-+the puzzle necessary to reconstruct the data or attribute fork of a file from
-+reverse-mapping records; we can also use it to double-check allocations to
-+ensure that we are not accidentally cross-linking blocks, which can cause
-+severe damage to the filesystem.
++    **Note**
 +
-+This B+tree is only present if the XFS\_SB\_FEAT\_RO\_COMPAT\_RMAPBT feature
-+is enabled. The feature requires a version 5 filesystem.
++    Only v2 log format is covered here.
 +
-+Each record in the reverse-mapping B+tree has the following structure:
++The XFS journal exists on disk as a reserved extent of blocks within the
++filesystem, or as a separate journal device. The journal itself can be thought
++of as a series of log records; each log record contains a part of or a whole
++transaction. A transaction consists of a series of log operation headers
++("log items"), formatting structures, and raw data. The first operation in
++a transaction establishes the transaction ID and the last operation is a
++commit record. The operations recorded between the start and commit operations
++represent the metadata changes made by the transaction. If the commit
++operation is missing, the transaction is incomplete and cannot be recovered.
++
++Log Records
++~~~~~~~~~~~
++
++The XFS log is split into a series of log records. Log records seem to
++correspond to an in-core log buffer, which can be up to 256KiB in size. Each
++record has a log sequence number, which is the same LSN recorded in the v5
++metadata integrity fields.
++
++Log sequence numbers are a 64-bit quantity consisting of two 32-bit
++quantities. The upper 32 bits are the
++"cycle number", which increments every time XFS
++cycles through the log.  The lower 32 bits are the "block number", which
++is assigned when a transaction is committed, and should correspond to the
++block offset within the log.
++
++A log record begins with the following header, which occupies 512 bytes on
++disk:
 +
 +.. code:: c
 +
-+    struct xfs_rmap_rec {
-+         __be32                     rm_startblock;
-+         __be32                     rm_blockcount;
-+         __be64                     rm_owner;
-+         __be64                     rm_fork:1;
-+         __be64                     rm_bmbt:1;
-+         __be64                     rm_unwritten:1;
-+         __be64                     rm_unused:7;
-+         __be64                     rm_offset:54;
++    typedef struct xlog_rec_header {
++         __be32            h_magicno;
++         __be32            h_cycle;
++         __be32            h_version;
++         __be32            h_len;
++         __be64            h_lsn;
++         __be64            h_tail_lsn;
++         __le32            h_crc;
++         __be32            h_prev_block;
++         __be32            h_num_logops;
++         __be32            h_cycle_data[XLOG_HEADER_CYCLE_SIZE / BBSIZE];
++         /* new fields */
++         __be32            h_fmt;
++         uuid_t            h_fs_uuid;
++         __be32            h_size;
++    } xlog_rec_header_t;
++
++**h\_magicno**
++    The magic number of log records, 0xfeedbabe.
++
++**h\_cycle**
++    Cycle number of this log record.
++
++**h\_version**
++    Log record version, currently 2.
++
++**h\_len**
++    Length of the log record, in bytes. Must be aligned to a 64-bit boundary.
++
++**h\_lsn**
++    Log sequence number of this record.
++
++**h\_tail\_lsn**
++    Log sequence number of the first log record with uncommitted buffers.
++
++**h\_crc**
++    Checksum of the log record header, the cycle data, and the log records
++    themselves.
++
++**h\_prev\_block**
++    Block number of the previous log record.
++
++**h\_num\_logops**
++    The number of log operations in this record.
++
++**h\_cycle\_data**
++    The first u32 of each log sector must contain the cycle number. Since log
++    item buffers are formatted without regard to this requirement, the
++    original contents of the first four bytes of each sector in the log are
++    copied into the corresponding element of this array. After that, the first
++    four bytes of those sectors are stamped with the cycle number. This
++    process is reversed at recovery time. If there are more sectors in this
++    log record than there are slots in this array, the cycle data continues
++    for as many sectors are needed; each sector is formatted as type
++    xlog\_rec\_ext\_header.
++
++**h\_fmt**
++    Format of the log record. This is one of the following values:
++
++.. list-table::
++   :widths: 24 56
++   :header-rows: 1
++
++   * - Format value
++     - Log format
++
++   * - XLOG\_FMT\_UNKNOWN
++     - Unknown. Perhaps this log is corrupt.
++
++   * - XLOG\_FMT\_LINUX\_LE
++     - Little-endian Linux.
++
++   * - XLOG\_FMT\_LINUX\_BE
++     - Big-endian Linux.
++
++   * - XLOG\_FMT\_IRIX\_BE
++     - Big-endian Irix.
++
++Table: Log record formats
++
++**h\_fs\_uuid**
++    Filesystem UUID.
++
++**h\_size**
++    In-core log record size. This is somewhere between 16 and 256KiB, with
++    32KiB being the default.
++
++As mentioned earlier, if this log record is longer than 256 sectors, the cycle
++data overflows into the next sector(s) in the log. Each of those sectors is
++formatted as follows:
++
++.. code:: c
++
++    typedef struct xlog_rec_ext_header {
++        __be32             xh_cycle;
++        __be32             xh_cycle_data[XLOG_HEADER_CYCLE_SIZE / BBSIZE];
++    } xlog_rec_ext_header_t;
++
++**xh\_cycle**
++    Cycle number of this log record. Should match h\_cycle.
++
++**xh\_cycle\_data**
++    Overflow cycle data.
++
++Log Operations
++~~~~~~~~~~~~~~
++
++Within a log record, log operations are recorded as a series consisting of an
++operation header immediately followed by a data region. The operation header
++has the following format:
++
++.. code:: c
++
++    typedef struct xlog_op_header {
++         __be32                    oh_tid;
++         __be32                    oh_len;
++         __u8                      oh_clientid;
++         __u8                      oh_flags;
++         __u16                     oh_res2;
++    } xlog_op_header_t;
++
++**oh\_tid**
++    Transaction ID of this operation.
++
++**oh\_len**
++    Number of bytes in the data region.
++
++**oh\_clientid**
++    The originator of this operation. This can be one of the following:
++
++.. list-table::
++   :widths: 24 56
++   :header-rows: 1
++
++   * - Client ID
++     - Originator
++
++   * - XFS\_TRANSACTION
++     - Operation came from a transaction.
++
++   * - XFS\_VOLUME
++     - ???
++
++   * - XFS\_LOG
++     - ???
++
++Table: Log Operation Client ID
++
++**oh\_flags**
++    Specifies flags associated with this operation. This can be a combination
++    of the following values (though most likely only one will be set at a
++    time):
++
++.. list-table::
++   :widths: 24 56
++   :header-rows: 1
++
++   * - Flag
++     - Description
++
++   * - XLOG\_START\_TRANS
++     - Start a new transaction. The next operation header should describe a
++       transaction header.
++
++   * - XLOG\_COMMIT\_TRANS
++     - Commit this transaction.
++
++   * - XLOG\_CONTINUE\_TRANS
++     - Continue this trans into new log record.
++
++   * - XLOG\_WAS\_CONT\_TRANS
++     - This transaction started in a previous log record.
++
++   * - XLOG\_END\_TRANS
++     - End of a continued transaction.
++
++   * - XLOG\_UNMOUNT\_TRANS
++     - Transaction to unmount a filesystem.
++
++Table: Log Operation Flags
++
++**oh\_res2**
++    Padding.
++
++The data region follows immediately after the operation header and is exactly
++oh\_len bytes long. These payloads are in host-endian order, which means that
++one cannot replay the log from an unclean XFS filesystem on a system with a
++different byte order.
++
++Log Items
++~~~~~~~~~
++
++Following are the types of log item payloads that can follow an
++xlog\_op\_header. Except for buffer data and inode cores, all log items have a
++magic number to distinguish themselves. Buffer data items only appear after
++xfs\_buf\_log\_format items; and inode core items only appear after
++xfs\_inode\_log\_format items.
++
++.. list-table::
++   :widths: 24 12 44
++   :header-rows: 1
++
++   * - Magic
++     - Hexadecimal
++     - Operation Type
++
++   * - XFS\_TRANS\_HEADER\_MAGIC
++     - 0x5452414e
++     - Log Transaction Header
++
++   * - XFS\_LI\_EFI
++     - 0x1236
++     - Extent Freeing Intent
++
++   * - XFS\_LI\_EFD
++     - 0x1237
++     - Extent Freeing Done
++
++   * - XFS\_LI\_IUNLINK
++     - 0x1238
++     - Unknown?
++
++   * - XFS\_LI\_INODE
++     - 0x123b
++     - Inode Updates
++
++   * - XFS\_LI\_BUF
++     - 0x123c
++     - Buffer Writes
++
++   * - XFS\_LI\_DQUOT
++     - 0x123d
++     - Update Quota
++
++   * - XFS\_LI\_QUOTAOFF
++     - 0x123e
++     - Quota Off
++
++   * - XFS\_LI\_ICREATE
++     - 0x123f
++     - Inode Creation
++
++   * - XFS\_LI\_RUI
++     - 0x1240
++     - Reverse Mapping Update Intent
++
++   * - XFS\_LI\_RUD
++     - 0x1241
++     - Reverse Mapping Update Done
++
++   * - XFS\_LI\_CUI
++     - 0x1242
++     - Reference Count Update Intent
++
++   * - XFS\_LI\_CUD
++     - 0x1243
++     - Reference Count Update Done
++
++   * - XFS\_LI\_BUI
++     - 0x1244
++     - File Block Mapping Update Intent
++
++   * - XFS\_LI\_BUD
++     - 0x1245
++     - File Block Mapping Update Done
++
++Table: Log Operation Magic Numbers
++
++Note that all log items (except for transaction headers) MUST start with the
++following header structure. The type and size fields are baked into each log
++item header, but there is not a separately defined header.
++
++.. code:: c
++
++    struct xfs_log_item {
++         __uint16_t                magic;
++         __uint16_t                size;
 +    };
 +
-+**rm\_startblock**
-+    AG block number of this record.
++Transaction Headers
++^^^^^^^^^^^^^^^^^^^
 +
-+**rm\_blockcount**
-+    The length of this extent.
++A transaction header is an operation payload that starts a transaction.
 +
-+**rm\_owner**
-+    A 64-bit number describing the owner of this extent. This is typically the
-+    absolute inode number, but can also correspond to one of the following:
++.. code:: c
++
++    typedef struct xfs_trans_header {
++         uint                      th_magic;
++         uint                      th_type;
++         __int32_t                 th_tid;
++         uint                      th_num_items;
++    } xfs_trans_header_t;
++
++**th\_magic**
++    The signature of a transaction header, "TRAN" (0x5452414e). Note that
++    this value is in host-endian order, not big-endian like the rest of XFS.
++
++**th\_type**
++    Transaction type. This is one of the following values:
 +
 +.. list-table::
 +   :widths: 28 52
 +   :header-rows: 1
 +
-+   * - Flag
++   * - Type
 +     - Description
-+   * - XFS\_RMAP\_OWN\_NULL
-+     - No owner. This should never appear on disk.
 +
-+   * - XFS\_RMAP\_OWN\_UNKNOWN
-+     - Unknown owner; for EFI recovery. This should never appear on disk.
++   * - XFS\_TRANS\_SETATTR\_NOT\_SIZE
++     - Set an inode attribute that isn’t the inode’s size.
 +
-+   * - XFS\_RMAP\_OWN\_FS
-+     - Allocation group headers.
++   * - XFS\_TRANS\_SETATTR\_SIZE
++     - Setting the size attribute of an inode.
 +
-+   * - XFS\_RMAP\_OWN\_LOG
-+     - XFS log blocks.
++   * - XFS\_TRANS\_INACTIVE
++     - Freeing blocks from an unlinked inode.
 +
-+   * - XFS\_RMAP\_OWN\_AG
-+     - Per-allocation group B+tree blocks. This means free space B+tree blocks,
-+       blocks on the freelist, and reverse-mapping B+tree blocks.
++   * - XFS\_TRANS\_CREATE
++     - Create a file.
 +
-+   * - XFS\_RMAP\_OWN\_INOBT
-+     - Per-allocation group inode B+tree blocks. This includes free inode
-+       B+tree blocks.
++   * - XFS\_TRANS\_CREATE\_TRUNC
++     - Unused?
 +
-+   * - XFS\_RMAP\_OWN\_INODES
-+     - Inode chunks.
++   * - XFS\_TRANS\_TRUNCATE\_FILE
++     - Truncate a quota file.
 +
-+   * - XFS\_RMAP\_OWN\_REFC
-+     - Per-allocation group refcount B+tree blocks. This will be used for
-+       reflink support.
++   * - XFS\_TRANS\_REMOVE
++     - Remove a file.
 +
-+   * - XFS\_RMAP\_OWN\_COW
-+     - Blocks that have been reserved for a copy-on-write operation that has
-+       not completed.
++   * - XFS\_TRANS\_LINK
++     - Link an inode into a directory.
 +
-+Table: Special owner values
++   * - XFS\_TRANS\_RENAME
++     - Rename a path.
 +
-+**rm\_fork**
-+    If rm\_owner describes an inode, this can be 1 if this record is for an
-+    attribute fork.
++   * - XFS\_TRANS\_MKDIR
++     - Create a directory.
 +
-+**rm\_bmbt**
-+    If rm\_owner describes an inode, this can be 1 to signify that this record
-+    is for a block map B+tree block. In this case, rm\_offset has no meaning.
++   * - XFS\_TRANS\_RMDIR
++     - Remove a directory.
 +
-+**rm\_unwritten**
-+    A flag indicating that the extent is unwritten. This corresponds to the
-+    flag in the `extent record <#data-extents>`__ format which means
-+    XFS\_EXT\_UNWRITTEN.
++   * - XFS\_TRANS\_SYMLINK
++     - Create a symbolic link.
 +
-+**rm\_offset**
-+    The 54-bit logical file block offset, if rm\_owner describes an inode.
-+    Meaningless otherwise.
++   * - XFS\_TRANS\_SET\_DMATTRS
++     - Set the DMAPI attributes of an inode.
 +
-+    **Note**
++   * - XFS\_TRANS\_GROWFS
++     - Expand the filesystem.
 +
-+    The single-bit flag values rm\_unwritten, rm\_fork, and rm\_bmbt are
-+    packed into the larger fields in the C structure definition.
++   * - XFS\_TRANS\_STRAT\_WRITE
++     - Convert an unwritten extent or delayed-allocate some blocks to
++       handle a write.
 +
-+The key has the following structure:
++   * - XFS\_TRANS\_DIOSTRAT
++     - Allocate some blocks to handle a direct I/O write.
++
++   * - XFS\_TRANS\_WRITEID
++     - Update an inode’s preallocation flag.
++
++   * - XFS\_TRANS\_ADDAFORK
++     - Add an attribute fork to an inode.
++
++   * - XFS\_TRANS\_ATTRINVAL
++     - Erase the attribute fork of an inode.
++
++   * - XFS\_TRANS\_ATRUNCATE
++     - Unused?
++
++   * - XFS\_TRANS\_ATTR\_SET
++     - Set an extended attribute.
++
++   * - XFS\_TRANS\_ATTR\_RM
++     - Remove an extended attribute.
++
++   * - XFS\_TRANS\_ATTR\_FLAG
++     - Unused?
++
++   * - XFS\_TRANS\_CLEAR\_AGI\_BUCKET
++     - Clear a bad inode pointer in the AGI unlinked inode hash bucket.
++
++   * - XFS\_TRANS\_SB\_CHANGE
++     - Write the superblock to disk.
++
++   * - XFS\_TRANS\_QM\_QUOTAOFF
++     - Start disabling quotas.
++
++   * - XFS\_TRANS\_QM\_DQALLOC
++     - Allocate a disk quota structure.
++
++   * - XFS\_TRANS\_QM\_SETQLIM
++     - Adjust quota limits.
++
++   * - XFS\_TRANS\_QM\_DQCLUSTER
++     - Unused?
++
++   * - XFS\_TRANS\_QM\_QINOCREATE
++     - Create a (quota) inode with reference taken.
++
++   * - XFS\_TRANS\_QM\_QUOTAOFF\_END
++     - Finish disabling quotas.
++
++   * - XFS\_TRANS\_FSYNC\_TS
++     - Update only inode timestamps.
++
++   * - XFS\_TRANS\_GROWFSRT\_ALLOC
++     - Grow the realtime bitmap and summary data for growfs.
++
++   * - XFS\_TRANS\_GROWFSRT\_ZERO
++     - Zero space in the realtime bitmap and summary data.
++
++   * - XFS\_TRANS\_GROWFSRT\_FREE
++     - Free space in the realtime bitmap and summary data.
++
++   * - XFS\_TRANS\_SWAPEXT
++     - Swap data fork of two inodes.
++
++   * - XFS\_TRANS\_CHECKPOINT
++     - Checkpoint the log.
++
++   * - XFS\_TRANS\_ICREATE
++     - Unknown?
++
++   * - XFS\_TRANS\_CREATE\_TMPFILE
++     - Create a temporary file.
++
++**th\_tid**
++    Transaction ID.
++
++**th\_num\_items**
++    The number of operations appearing after this operation, not including the
++    commit operation. In effect, this tracks the number of metadata change
++    operations in this transaction.
++
++Intent to Free an Extent
++^^^^^^^^^^^^^^^^^^^^^^^^
++
++The next two operation types work together to handle the freeing of filesystem
++blocks. Naturally, the ranges of blocks to be freed can be expressed in terms
++of extents:
 +
 +.. code:: c
 +
-+    struct xfs_rmap_key {
-+         __be32                     rm_startblock;
-+         __be64                     rm_owner;
-+         __be64                     rm_fork:1;
-+         __be64                     rm_bmbt:1;
-+         __be64                     rm_reserved:1;
-+         __be64                     rm_unused:7;
-+         __be64                     rm_offset:54;
++    typedef struct xfs_extent_32 {
++         __uint64_t                ext_start;
++         __uint32_t                ext_len;
++    } __attribute__((packed)) xfs_extent_32_t;
++
++    typedef struct xfs_extent_64 {
++         __uint64_t                ext_start;
++         __uint32_t                ext_len;
++         __uint32_t                ext_pad;
++    } xfs_extent_64_t;
++
++**ext\_start**
++    Start block of this extent.
++
++**ext\_len**
++    Length of this extent.
++
++The "extent freeing intent" operation comes first; it tells the log that XFS
++wants to free some extents.  This record is crucial for correct log recovery
++because it prevents the log from replaying blocks that are subsequently freed.
++If the log lacks a corresponding "extent freeing done" operation, the
++recovery process will free the extents.
++
++.. code:: c
++
++    typedef struct xfs_efi_log_format {
++         __uint16_t                efi_type;
++         __uint16_t                efi_size;
++         __uint32_t                efi_nextents;
++         __uint64_t                efi_id;
++         xfs_extent_t              efi_extents[1];
++    } xfs_efi_log_format_t;
++
++**efi\_type**
++    The signature of an EFI operation, 0x1236. This value is in host-endian
++    order, not big-endian like the rest of XFS.
++
++**efi\_size**
++    Size of this log item. Should be 1.
++
++**efi\_nextents**
++    Number of extents to free.
++
++**efi\_id**
++    A 64-bit number that binds the corresponding EFD log item to this EFI log
++    item.
++
++**efi\_extents**
++    Variable-length array of extents to be freed. The array length is given by
++    efi\_nextents. The record type will be either xfs\_extent\_64\_t or
++    xfs\_extent\_32\_t; this can be determined from the log item size
++    (oh\_len) and the number of extents (efi\_nextents).
++
++Completion of Intent to Free an Extent
++^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++
++The "extent freeing done" operation complements the "extent freeing
++intent" operation. This second operation indicates that the block freeing
++actually happened, so that log recovery needn’t try to free the blocks.
++Typically, the operations to update the free space B+trees follow immediately
++after the EFD.
++
++.. code:: c
++
++    typedef struct xfs_efd_log_format {
++         __uint16_t                efd_type;
++         __uint16_t                efd_size;
++         __uint32_t                efd_nextents;
++         __uint64_t                efd_efi_id;
++         xfs_extent_t              efd_extents[1];
++    } xfs_efd_log_format_t;
++
++**efd\_type**
++    The signature of an EFD operation, 0x1237. This value is in host-endian
++    order, not big-endian like the rest of XFS.
++
++**efd\_size**
++    Size of this log item. Should be 1.
++
++**efd\_nextents**
++    Number of extents to free.
++
++**efd\_id**
++    A 64-bit number that binds the corresponding EFI log item to this EFD log
++    item.
++
++**efd\_extents**
++    Variable-length array of extents to be freed. The array length is given by
++    efd\_nextents. The record type will be either xfs\_extent\_64\_t or
++    xfs\_extent\_32\_t; this can be determined from the log item size
++    (oh\_len) and the number of extents (efd\_nextents).
++
++Reverse Mapping Updates Intent
++^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++
++The next two operation types work together to handle deferred reverse mapping
++updates. Naturally, the mappings to be updated can be expressed in terms of
++mapping extents:
++
++.. code:: c
++
++    struct xfs_map_extent {
++         __uint64_t                me_owner;
++         __uint64_t                me_startblock;
++         __uint64_t                me_startoff;
++         __uint32_t                me_len;
++         __uint32_t                me_flags;
 +    };
 +
-+For the reverse-mapping B+tree on a filesystem that supports sharing of file
-+data blocks, the key definition is larger than the usual AG block number. On a
-+classic XFS filesystem, each block has only one owner, which means that
-+rm\_startblock is sufficient to uniquely identify each record. However, shared
-+block support (reflink) on XFS breaks that assumption; now filesystem blocks
-+can be linked to any logical block offset of any file inode. Therefore, the
-+key must include the owner and offset information to preserve the 1 to 1
-+relation between key and record.
++**me\_owner**
++    Owner of this reverse mapping. See the values in the section about
++    `reverse mapping <#reverse-mapping-b-tree>`__ for more information.
 +
-+-  As the reference counting is AG relative, all the block numbers are only
-+   32-bits.
++**me\_startblock**
++    Filesystem block of this mapping.
 +
-+-  The bb\_magic value is "RMB3" (0x524d4233).
++**me\_startoff**
++    Logical block offset of this mapping.
 +
-+-  The xfs\_btree\_sblock\_t header is used for intermediate B+tree node as
-+   well as the leaves.
++**me\_len**
++    The length of this mapping.
 +
-+-  Each pointer is associated with two keys. The first of these is the "low
-+   key", which is the key of the smallest record accessible through the
-+   pointer. This low key has the same meaning as the key in all other btrees.
-+   The second key is the high key, which is the maximum of the largest key
-+   that can be used to access a given record underneath the pointer. Recall
-+   that each record in the reverse mapping b+tree describes an interval of
-+   physical blocks mapped to an interval of logical file block offsets;
-+   therefore, it makes sense that a range of keys can be used to find to a
-+   record.
++**me\_flags**
++    The lower byte of this field is a type code indicating what sort of
++    reverse mapping operation we want. The upper three bytes are flag bits.
 +
-+xfs\_db rmapbt Example
++.. list-table::
++   :widths: 36 44
++   :header-rows: 1
++
++   * - Value
++     - Description
++
++   * - XFS\_RMAP\_EXTENT\_MAP
++     - Add a reverse mapping for file data.
++
++   * - XFS\_RMAP\_EXTENT\_MAP\_SHARED
++     - Add a reverse mapping for file data for a file with shared blocks.
++
++   * - XFS\_RMAP\_EXTENT\_UNMAP
++     - Remove a reverse mapping for file data.
++
++   * - XFS\_RMAP\_EXTENT\_UNMAP\_SHARED
++     - Remove a reverse mapping for file data for a file with shared blocks.
++
++   * - XFS\_RMAP\_EXTENT\_CONVERT
++     - Convert a reverse mapping for file data between unwritten and normal.
++
++   * - XFS\_RMAP\_EXTENT\_CONVERT\_SHARED
++     - Convert a reverse mapping for file data between unwritten and normal for
++       a file with shared blocks.
++
++   * - XFS\_RMAP\_EXTENT\_ALLOC
++     - Add a reverse mapping for non-file data.
++
++   * - XFS\_RMAP\_EXTENT\_FREE
++     - Remove a reverse mapping for non-file data.
++
++Table: Reverse mapping update log intent types
++
++.. list-table::
++   :widths: 36 44
++   :header-rows: 1
++
++   * - Value
++     - Description
++
++   * - XFS\_RMAP\_EXTENT\_ATTR\_FORK
++     - Extent is for the attribute fork.
++
++   * - XFS\_RMAP\_EXTENT\_BMBT\_BLOCK
++     - Extent is for a block mapping btree block.
++
++   * - XFS\_RMAP\_EXTENT\_UNWRITTEN
++     - Extent is unwritten.
++
++Table: Reverse mapping update log intent flags
++
++The "rmap update intent" operation comes first; it tells the log that XFS
++wants to update some reverse mappings. This record is crucial for correct log
++recovery because it enables us to spread a complex metadata update across
++multiple transactions while ensuring that a crash midway through the complex
++update will be replayed fully during log recovery.
++
++.. code:: c
++
++    struct xfs_rui_log_format {
++         __uint16_t                rui_type;
++         __uint16_t                rui_size;
++         __uint32_t                rui_nextents;
++         __uint64_t                rui_id;
++         struct xfs_map_extent     rui_extents[1];
++    };
++
++**rui\_type**
++    The signature of an RUI operation, 0x1240. This value is in host-endian
++    order, not big-endian like the rest of XFS.
++
++**rui\_size**
++    Size of this log item. Should be 1.
++
++**rui\_nextents**
++    Number of reverse mappings.
++
++**rui\_id**
++    A 64-bit number that binds the corresponding RUD log item to this RUI log
++    item.
++
++**rui\_extents**
++    Variable-length array of reverse mappings to update.
++
++Completion of Reverse Mapping Updates
++^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++
++The "reverse mapping update done" operation complements the "reverse
++mapping update intent" operation. This second operation indicates that the
++update actually happened, so that log recovery needn’t replay the update. The
++RUD and the actual updates are typically found in a new transaction following
++the transaction in which the RUI was logged.
++
++.. code:: c
++
++    struct xfs_rud_log_format {
++          __uint16_t               rud_type;
++          __uint16_t               rud_size;
++          __uint32_t               __pad;
++          __uint64_t               rud_rui_id;
++    };
++
++**rud\_type**
++    The signature of an RUD operation, 0x1241. This value is in host-endian
++    order, not big-endian like the rest of XFS.
++
++**rud\_size**
++    Size of this log item. Should be 1.
++
++**rud\_rui\_id**
++    A 64-bit number that binds the corresponding RUI log item to this RUD log
++    item.
++
++Reference Count Updates Intent
++^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++
++The next two operation types work together to handle reference count updates.
++Naturally, the ranges of extents having reference count updates can be
++expressed in terms of physical extents:
++
++.. code:: c
++
++    struct xfs_phys_extent {
++         __uint64_t                pe_startblock;
++         __uint32_t                pe_len;
++         __uint32_t                pe_flags;
++    };
++
++**pe\_startblock**
++    Filesystem block of this extent.
++
++**pe\_len**
++    The length of this extent.
++
++**pe\_flags**
++    The lower byte of this field is a type code indicating what sort of
++    reverse mapping operation we want. The upper three bytes are flag bits.
++
++.. list-table::
++   :widths: 34 46
++   :header-rows: 1
++
++   * - Value
++     - Description
++
++   * - XFS\_REFCOUNT\_EXTENT\_INCREASE
++     - Increase the reference count for this extent.
++
++   * - XFS\_REFCOUNT\_EXTENT\_DECREASE
++     - Decrease the reference count for this extent.
++
++   * - XFS\_REFCOUNT\_EXTENT\_ALLOC\_COW
++     - Reserve an extent for staging copy on write.
++
++   * - XFS\_REFCOUNT\_EXTENT\_FREE\_COW
++     - Unreserve an extent for staging copy on write.
++
++Table: Reference count update log intent types
++
++The "reference count update intent" operation comes first; it tells the
++log that XFS wants to update some reference counts. This record is crucial for
++correct log recovery because it enables us to spread a complex metadata update
++across multiple transactions while ensuring that a crash midway through the
++complex update will be replayed fully during log recovery.
++
++.. code:: c
++
++    struct xfs_cui_log_format {
++         __uint16_t                cui_type;
++         __uint16_t                cui_size;
++         __uint32_t                cui_nextents;
++         __uint64_t                cui_id;
++         struct xfs_map_extent     cui_extents[1];
++    };
++
++**cui\_type**
++    The signature of an CUI operation, 0x1242. This value is in host-endian
++    order, not big-endian like the rest of XFS.
++
++**cui\_size**
++    Size of this log item. Should be 1.
++
++**cui\_nextents**
++    Number of reference count updates.
++
++**cui\_id**
++    A 64-bit number that binds the corresponding RUD log item to this RUI log
++    item.
++
++**cui\_extents**
++    Variable-length array of reference count update information.
++
++Completion of Reference Count Updates
++^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++
++The "reference count update done" operation complements the "reference
++count update intent" operation. This second operation indicates that the
++update actually happened, so that log recovery needn’t replay the update. The
++CUD and the actual updates are typically found in a new transaction following
++the transaction in which the CUI was logged.
++
++.. code:: c
++
++    struct xfs_cud_log_format {
++          __uint16_t               cud_type;
++          __uint16_t               cud_size;
++          __uint32_t               __pad;
++          __uint64_t               cud_cui_id;
++    };
++
++**cud\_type**
++    The signature of an RUD operation, 0x1243. This value is in host-endian
++    order, not big-endian like the rest of XFS.
++
++**cud\_size**
++    Size of this log item. Should be 1.
++
++**cud\_cui\_id**
++    A 64-bit number that binds the corresponding CUI log item to this CUD log
++    item.
++
++File Block Mapping Intent
++^^^^^^^^^^^^^^^^^^^^^^^^^
++
++The next two operation types work together to handle deferred file block
++mapping updates. The extents to be mapped are expressed via the
++xfs\_map\_extent structure discussed in the section about `reverse mapping
++intents <#reverse-mapping-updates-intent>`__.
++
++The lower byte of the me\_flags field is a type code indicating what sort of
++file block mapping operation we want. The upper three bytes are flag bits.
++
++.. list-table::
++   :widths: 32 48
++   :header-rows: 1
++
++   * - Value
++     - Description
++
++   * - XFS\_BMAP\_EXTENT\_MAP
++     - Add a mapping for file data.
++
++   * - XFS\_BMAP\_EXTENT\_UNMAP
++     - Remove a mapping for file data.
++
++Table: File block mapping update log intent types
++
++.. list-table::
++   :widths: 32 48
++   :header-rows: 1
++
++   * - Value
++     - Description
++
++   * - XFS\_BMAP\_EXTENT\_ATTR\_FORK
++     - Extent is for the attribute fork.
++
++   * - XFS\_BMAP\_EXTENT\_UNWRITTEN
++     - Extent is unwritten.
++
++Table: File block mapping update log intent flags
++
++The "file block mapping update intent" operation comes first; it tells the
++log that XFS wants to map or unmap some extents in a file. This record is
++crucial for correct log recovery because it enables us to spread a complex
++metadata update across multiple transactions while ensuring that a crash
++midway through the complex update will be replayed fully during log recovery.
++
++.. code:: c
++
++    struct xfs_bui_log_format {
++         __uint16_t                bui_type;
++         __uint16_t                bui_size;
++         __uint32_t                bui_nextents;
++         __uint64_t                bui_id;
++         struct xfs_map_extent     bui_extents[1];
++    };
++
++**bui\_type**
++    The signature of an BUI operation, 0x1244. This value is in host-endian
++    order, not big-endian like the rest of XFS.
++
++**bui\_size**
++    Size of this log item. Should be 1.
++
++**bui\_nextents**
++    Number of file mappings. Should be 1.
++
++**bui\_id**
++    A 64-bit number that binds the corresponding BUD log item to this BUI log
++    item.
++
++**bui\_extents**
++    Variable-length array of file block mappings to update. There should only
++    be one mapping present.
++
++Completion of File Block Mapping Updates
++^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++
++The "file block mapping update done" operation complements the "file
++block mapping update intent" operation. This second operation indicates that
++the update actually happened, so that log recovery needn’t replay the update.
++The BUD and the actual updates are typically found in a new transaction
++following the transaction in which the BUI was logged.
++
++.. code:: c
++
++    struct xfs_bud_log_format {
++          __uint16_t               bud_type;
++          __uint16_t               bud_size;
++          __uint32_t               __pad;
++          __uint64_t               bud_bui_id;
++    };
++
++**bud\_type**
++    The signature of an BUD operation, 0x1245. This value is in host-endian
++    order, not big-endian like the rest of XFS.
++
++**bud\_size**
++    Size of this log item. Should be 1.
++
++**bud\_bui\_id**
++    A 64-bit number that binds the corresponding BUI log item to this BUD log
++    item.
++
++Inode Updates
++^^^^^^^^^^^^^
++
++This operation records changes to an inode record. There are several types of
++inode updates, each corresponding to different parts of the inode record.
++Allowing updates to proceed at a sub-inode granularity reduces contention for
++the inode, since different parts of the inode can be updated simultaneously.
++
++The actual buffer data are stored in subsequent log items.
++
++The inode log format header is as follows:
++
++.. code:: c
++
++    typedef struct xfs_inode_log_format_64 {
++         __uint16_t                ilf_type;
++         __uint16_t                ilf_size;
++         __uint32_t                ilf_fields;
++         __uint16_t                ilf_asize;
++         __uint16_t                ilf_dsize;
++         __uint32_t                ilf_pad;
++         __uint64_t                ilf_ino;
++         union {
++              __uint32_t           ilfu_rdev;
++              uuid_t               ilfu_uuid;
++         } ilf_u;
++         __int64_t                 ilf_blkno;
++         __int32_t                 ilf_len;
++         __int32_t                 ilf_boffset;
++    } xfs_inode_log_format_64_t;
++
++**ilf\_type**
++    The signature of an inode update operation, 0x123b. This value is in
++    host-endian order, not big-endian like the rest of XFS.
++
++**ilf\_size**
++    Number of operations involved in this update, including this format
++    operation.
++
++**ilf\_fields**
++    Specifies which parts of the inode are being updated. This can be certain
++    combinations of the following:
++
++.. list-table::
++   :widths: 24 56
++   :header-rows: 1
++
++   * - Flag
++     - Inode changes to log include:
++
++   * - XFS\_ILOG\_CORE
++     - The standard inode fields.
++
++   * - XFS\_ILOG\_DDATA
++     - Data fork’s local data.
++
++   * - XFS\_ILOG\_DEXT
++     - Data fork’s extent list.
++
++   * - XFS\_ILOG\_DBROOT
++     - Data fork’s B+tree root.
++
++   * - XFS\_ILOG\_DEV
++     - Data fork’s device number.
++
++   * - XFS\_ILOG\_UUID
++     - Data fork’s UUID contents.
++
++   * - XFS\_ILOG\_ADATA
++     - Attribute fork’s local data.
++
++   * - XFS\_ILOG\_AEXT
++     - Attribute fork’s extent list.
++
++   * - XFS\_ILOG\_ABROOT
++     - Attribute fork’s B+tree root.
++
++   * - XFS\_ILOG\_DOWNER
++     - Change the data fork owner on replay.
++
++   * - XFS\_ILOG\_AOWNER
++     - Change the attr fork owner on replay.
++
++   * - XFS\_ILOG\_TIMESTAMP
++     - Timestamps are dirty, but not necessarily anything else. Should never
++       appear on disk.
++
++   * - XFS\_ILOG\_NONCORE
++     - ( XFS_ILOG_DDATA \| XFS_ILOG_DEXT \| XFS_ILOG_DBROOT \|
++       XFS_ILOG_DEV \| XFS_ILOG_UUID \| XFS_ILOG_ADATA \| XFS_ILOG_AEXT
++       \| XFS_ILOG_ABROOT \| XFS_ILOG_DOWNER \| XFS_ILOG_AOWNER )
++
++   * - XFS\_ILOG\_DFORK
++     - ( XFS_ILOG_DDATA \| XFS_ILOG_DEXT \| XFS_ILOG_DBROOT 
++
++   * - XFS\_ILOG\_AFORK
++     - ( XFS_ILOG_ADATA \| XFS_ILOG_AEXT \| XFS_ILOG_ABROOT )
++
++
++   * - XFS\_ILOG\_ALL
++     - ( XFS_ILOG_CORE \| XFS_ILOG_DDATA \| XFS_ILOG_DEXT \|
++       XFS_ILOG_DBROOT \| XFS_ILOG_DEV \| XFS_ILOG_UUID \|
++       XFS_ILOG_ADATA \| XFS_ILOG_AEXT \| XFS_ILOG_ABROOT \|
++       XFS_ILOG_TIMESTAMP \| XFS_ILOG_DOWNER \| XFS_ILOG_AOWNER )
++
++**ilf\_asize**
++    Size of the attribute fork, in bytes.
++
++**ilf\_dsize**
++    Size of the data fork, in bytes.
++
++**ilf\_ino**
++    Absolute node number.
++
++**ilfu\_rdev**
++    Device number information, for a device file update.
++
++**ilfu\_uuid**
++    UUID, for a UUID update?
++
++**ilf\_blkno**
++    Block number of the inode buffer, in sectors.
++
++**ilf\_len**
++    Length of inode buffer, in sectors.
++
++**ilf\_boffset**
++    Byte offset of the inode in the buffer.
++
++Be aware that there is a nearly identical xfs\_inode\_log\_format\_32 which
++may appear on disk. It is the same as xfs\_inode\_log\_format\_64, except that
++it is missing the ilf\_pad field and is 52 bytes long as opposed to 56 bytes.
++
++Inode Data Log Item
++^^^^^^^^^^^^^^^^^^^
++
++This region contains the new contents of a part of an inode, as described in
++the `previous section <#inode-updates>`__. There are no magic numbers.
++
++If XFS\_ILOG\_CORE is set in ilf\_fields, the correpsonding data buffer must
++be in the format struct xfs\_icdinode, which has the same format as the first
++96 bytes of an `inode <#on-disk-inode>`__, but is recorded in host byte order.
++
++Buffer Log Item
++^^^^^^^^^^^^^^^
++
++This operation writes parts of a buffer to disk. The regions to write are
++tracked in the data map; the actual buffer data are stored in subsequent log
++items.
++
++.. code:: c
++
++    typedef struct xfs_buf_log_format {
++         unsigned short            blf_type;
++         unsigned short            blf_size;
++         ushort                    blf_flags;
++         ushort                    blf_len;
++         __int64_t                 blf_blkno;
++         unsigned int              blf_map_size;
++         unsigned int              blf_data_map[XFS_BLF_DATAMAP_SIZE];
++    } xfs_buf_log_format_t;
++
++**blf\_type**
++    Magic number to specify a buffer log item, 0x123c.
++
++**blf\_size**
++    Number of buffer data items following this item.
++
++**blf\_flags**
++    Specifies flags associated with the buffer item. This can be any of the
++    following:
++
++.. list-table::
++   :widths: 24 56
++   :header-rows: 1
++
++   * - Flag
++     - Description
++
++   * - XFS\_BLF\_INODE\_BUF
++     - Inode buffer. These must be recovered before replaying items that change
++       this buffer.
++
++   * - XFS\_BLF\_CANCEL
++     - Don’t recover this buffer, blocks are being freed.
++
++   * - XFS\_BLF\_UDQUOT\_BUF
++     - User quota buffer, don’t recover if there’s a subsequent quotaoff.
++
++   * - XFS\_BLF\_PDQUOT\_BUF
++     - Project quota buffer, don’t recover if there’s a subsequent quotaoff.
++
++   * - XFS\_BLF\_GDQUOT\_BUF
++     - Group quota buffer, don’t recover if there’s a subsequent quotaoff.
++
++**blf\_len**
++    Number of sectors affected by this buffer.
++
++**blf\_blkno**
++    Block number to write, in sectors.
++
++**blf\_map\_size**
++    The size of blf\_data\_map, in 32-bit words.
++
++**blf\_data\_map**
++    This variable-sized array acts as a dirty bitmap for the logged buffer.
++    Each 1 bit represents a dirty region in the buffer, and each run of 1 bits
++    corresponds to a subsequent log item containing the new contents of the
++    buffer area. Each bit represents (blf\_len \* 512) / (blf\_map\_size \*
++    NBBY) bytes.
++
++Buffer Data Log Item
++^^^^^^^^^^^^^^^^^^^^
++
++This region contains the new contents of a part of a buffer, as described in
++the `previous section <#buffer-log-item>`__. There are no magic numbers.
++
++Update Quota File
++^^^^^^^^^^^^^^^^^
++
++This updates a block in a quota file. The buffer data must be in the next log
++item.
++
++.. code:: c
++
++    typedef struct xfs_dq_logformat {
++         __uint16_t                qlf_type;
++         __uint16_t                qlf_size;
++         xfs_dqid_t                qlf_id;
++         __int64_t                 qlf_blkno;
++         __int32_t                 qlf_len;
++         __uint32_t                qlf_boffset;
++    } xfs_dq_logformat_t;
++
++**qlf\_type**
++    The signature of an inode create operation, 0x123e. This value is in
++    host-endian order, not big-endian like the rest of XFS.
++
++**qlf\_size**
++    Size of this log item. Should be 2.
++
++**qlf\_id**
++    The user/group/project ID to alter.
++
++**qlf\_blkno**
++    Block number of the quota buffer, in sectors.
++
++**qlf\_len**
++    Length of the quota buffer, in sectors.
++
++**qlf\_boffset**
++    Buffer offset of the quota data to update, in bytes.
++
++Quota Update Data Log Item
++^^^^^^^^^^^^^^^^^^^^^^^^^^
++
++This region contains the new contents of a part of a buffer, as described in
++the `previous section <#quota-update-data-log-item>`__. There are no magic numbers.
++
++Disable Quota Log Item
 +^^^^^^^^^^^^^^^^^^^^^^
 +
-+This example shows a reverse-mapping B+tree from a freshly populated root
-+filesystem:
++A request to disable quota controls has the following format:
++
++.. code:: c
++
++    typedef struct xfs_qoff_logformat {
++         unsigned short            qf_type;
++         unsigned short            qf_size;
++         unsigned int              qf_flags;
++         char                      qf_pad[12];
++    } xfs_qoff_logformat_t;
++
++**qf\_type**
++    The signature of an inode create operation, 0x123d. This value is in
++    host-endian order, not big-endian like the rest of XFS.
++
++**qf\_size**
++    Size of this log item. Should be 1.
++
++**qf\_flags**
++    Specifies which quotas are being turned off. Can be a combination of the
++    following:
++
++.. list-table::
++   :widths: 20 60
++   :header-rows: 1
++
++   * - Flag
++     - Quota type to disable
++
++   * - XFS\_UQUOTA\_ACCT
++     - User quotas.
++
++   * - XFS\_PQUOTA\_ACCT
++     - Project quotas.
++
++   * - XFS\_GQUOTA\_ACCT
++     - Group quotas.
++
++Inode Creation Log Item
++^^^^^^^^^^^^^^^^^^^^^^^
++
++This log item is created when inodes are allocated in-core. When replaying
++this item, the specified inode records will be zeroed and some of the inode
++fields populated with default values.
++
++.. code:: c
++
++    struct xfs_icreate_log {
++         __uint16_t                icl_type;
++         __uint16_t                icl_size;
++         __be32                    icl_ag;
++         __be32                    icl_agbno;
++         __be32                    icl_count;
++         __be32                    icl_isize;
++         __be32                    icl_length;
++         __be32                    icl_gen;
++    };
++
++**icl\_type**
++    The signature of an inode create operation, 0x123f. This value is in
++    host-endian order, not big-endian like the rest of XFS.
++
++**icl\_size**
++    Size of this log item. Should be 1.
++
++**icl\_ag**
++    AG number of the inode chunk to create.
++
++**icl\_agbno**
++    AG block number of the inode chunk.
++
++**icl\_count**
++    Number of inodes to initialize.
++
++**icl\_isize**
++    Size of each inode, in bytes.
++
++**icl\_length**
++    Length of the extent being initialized, in blocks.
++
++**icl\_gen**
++    Inode generation number to write into the new inodes.
++
++xfs\_logprint Example
++~~~~~~~~~~~~~~~~~~~~~
++
++Here’s an example of dumping the XFS log contents with xfs\_logprint:
 +
 +::
 +
-+    xfs_db> agf 0
-+    xfs_db> addr rmaproot
-+    xfs_db> p
-+    magic = 0x524d4233
-+    level = 1
-+    numrecs = 43
-+    leftsib = null
-+    rightsib = null
-+    bno = 56
-+    lsn = 0x3000004c8
-+    uuid = 1977221d-8345-464e-b1f4-aa2ea36895f4
-+    owner = 0
-+    crc = 0x7cf8be6f (correct)
-+    keys[1-43] = [startblock,owner,offset]
-+    keys[1-43] = [startblock,owner,offset,attrfork,bmbtblock,startblock_hi,owner_hi,
-+             offset_hi,attrfork_hi,bmbtblock_hi]
-+            1:[0,-3,0,0,0,351,4418,66,0,0]
-+            2:[417,285,0,0,0,827,4419,2,0,0]
-+            3:[829,499,0,0,0,2352,573,55,0,0]
-+            4:[1292,710,0,0,0,32168,262923,47,0,0]
-+            5:[32215,-5,0,0,0,34655,2365,3411,0,0]
-+            6:[34083,1161,0,0,0,34895,265220,1,0,1]
-+            7:[34896,256191,0,0,0,36522,-9,0,0,0]
-+            ...
-+            41:[50998,326734,0,0,0,51430,-5,0,0,0]
-+            42:[51431,327010,0,0,0,51600,325722,11,0,0]
-+            43:[51611,327112,0,0,0,94063,23522,28375272,0,0]
-+    ptrs[1-43] = 1:5 2:6 3:8 4:9 5:10 6:11 7:418 ... 41:46377 42:48784 43:49522
++    # xfs_logprint /dev/sda
++    xfs_logprint: /dev/sda contains a mounted and writable filesystem
++    xfs_logprint:
++        data device: 0xfc03
++        log device: 0xfc03 daddr: 900931640 length: 879816
 +
-+We arbitrarily pick pointer 17 to traverse downwards:
++    cycle: 48   version: 2      lsn: 48,0   tail_lsn: 47,879760
++    length of Log Record: 19968 prev offset: 879808     num ops: 53
++    uuid: 24afeec2-f418-46a2-a573-10091f5e200e   format: little endian linux
++    h_size: 32768
++
++This is the log record header.
 +
 +::
 +
-+    xfs_db> addr ptrs[17]
-+    xfs_db> p
-+    magic = 0x524d4233
-+    level = 0
-+    numrecs = 168
-+    leftsib = 36284
-+    rightsib = 37617
-+    bno = 294760
-+    lsn = 0x200002761
-+    uuid = 1977221d-8345-464e-b1f4-aa2ea36895f4
-+    owner = 0
-+    crc = 0x2dad3fbe (correct)
-+    recs[1-168] = [startblock,blockcount,owner,offset,extentflag,attrfork,bmbtblock]
-+            1:[40326,1,259615,0,0,0,0] 2:[40327,1,-5,0,0,0,0]
-+            3:[40328,2,259618,0,0,0,0] 4:[40330,1,259619,0,0,0,0]
-+            ...
-+            127:[40540,1,324266,0,0,0,0] 128:[40541,1,324266,8388608,0,0,0]
-+            129:[40542,2,324266,1,0,0,0] 130:[40544,32,-7,0,0,0,0]
++    Oper (0): tid: 30483aec  len: 0  clientid: TRANS  flags: START
 +
-+Several interesting things pop out here. The first record shows that inode
-+259,615 has mapped AG block 40,326 at offset 0. We confirm this by looking at
-+the block map for that inode:
++This operation indicates that we’re starting a transaction, so the next
++operation should record the transaction header.
 +
 +::
 +
-+    xfs_db> inode 259615
-+    xfs_db> bmap
-+    data offset 0 startblock 40326 (0/40326) count 1 flag 0
++    Oper (1): tid: 30483aec  len: 16  clientid: TRANS  flags: none
++    TRAN:    type: CHECKPOINT       tid: 30483aec       num_items: 50
 +
-+Next, notice records 127 and 128, which describe neighboring AG blocks that
-+are mapped to non-contiguous logical blocks in inode 324,266. Given the
-+logical offset of 8,388,608 we surmise that this is a leaf directory, but let
-+us confirm:
++This operation records a transaction header. There should be fifty operations
++in this transaction and the transaction ID is 0x30483aec.
 +
 +::
 +
-+    xfs_db> inode 324266
-+    xfs_db> p core.mode
-+    core.mode = 040755
-+    xfs_db> bmap
-+    data offset 0 startblock 40540 (0/40540) count 1 flag 0
-+    data offset 1 startblock 40542 (0/40542) count 2 flag 0
-+    data offset 3 startblock 40576 (0/40576) count 1 flag 0
-+    data offset 8388608 startblock 40541 (0/40541) count 1 flag 0
-+    xfs_db> p core.mode
-+    core.mode = 0100644
-+    xfs_db> dblock 0
-+    xfs_db> p dhdr.hdr.magic
-+    dhdr.hdr.magic = 0x58444433
-+    xfs_db> dblock 8388608
-+    xfs_db> p lhdr.info.hdr.magic
-+    lhdr.info.hdr.magic = 0x3df1
-+
-+Indeed, this inode 324,266 appears to be a leaf directory, as it has regular
-+directory data blocks at low offsets, and a single leaf block.
-+
-+Notice further the two reverse-mapping records with negative owners. An owner
-+of -7 corresponds to XFS\_RMAP\_OWN\_INODES, which is an inode chunk, and an
-+owner code of -5 corresponds to XFS\_RMAP\_OWN\_AG, which covers free space
-+B+trees and free space. Let’s see if block 40,544 is part of an inode chunk:
-+
-+::
-+
-+    xfs_db> blockget
-+    xfs_db> fsblock 40544
-+    xfs_db> blockuse
-+    block 40544 (0/40544) type inode
-+    xfs_db> stack
-+    1:
-+            byte offset 166068224, length 4096
-+            buffer block 324352 (fsbno 40544), 8 bbs
-+            inode 324266, dir inode 324266, type data
-+    xfs_db> type inode
-+    xfs_db> p
-+    core.magic = 0x494e
-+
-+Our suspicions are confirmed. Let’s also see if 40,327 is part of a free space
-+tree:
-+
-+::
-+
-+    xfs_db> fsblock 40327
-+    xfs_db> blockuse
-+    block 40327 (0/40327) type btrmap
-+    xfs_db> type rmapbt
-+    xfs_db> p
-+    magic = 0x524d4233
-+
-+As you can see, the reverse block-mapping B+tree is an important secondary
-+metadata structure, which can be used to reconstruct damaged primary metadata.
-+Now let’s look at an extend rmap btree:
-+
-+::
-+
-+    xfs_db> agf 0
-+    xfs_db> addr rmaproot
-+    xfs_db> p
-+    magic = 0x34524d42
-+    level = 1
-+    numrecs = 5
-+    leftsib = null
-+    rightsib = null
-+    bno = 6368
-+    lsn = 0x100000d1b
-+    uuid = 400f0928-6b88-4c37-af1e-cef1f8911f3f
-+    owner = 0
-+    crc = 0x8d4ace05 (correct)
-+    keys[1-5] = [startblock,owner,offset,attrfork,bmbtblock,startblock_hi,owner_hi,offset_hi,attrfork_hi,bmbtblock_hi]
-+    1:[0,-3,0,0,0,705,132,681,0,0]
-+    2:[24,5761,0,0,0,548,5761,524,0,0]
-+    3:[24,5929,0,0,0,380,5929,356,0,0]
-+    4:[24,6097,0,0,0,212,6097,188,0,0]
-+    5:[24,6277,0,0,0,807,-7,0,0,0]
-+    ptrs[1-5] = 1:5 2:771 3:9 4:10 5:11
-+
-+The second pointer stores both the low key [24,5761,0,0,0] and the high key
-+[548,5761,524,0,0], which means that we can expect block 771 to contain
-+records starting at physical block 24, inode 5761, offset zero; and that one
-+of the records can be used to find a reverse mapping for physical block 548,
-+inode 5761, and offset 524:
-+
-+::
-+
-+    xfs_db> addr ptrs[2]
-+    xfs_db> p
-+    magic = 0x34524d42
-+    level = 0
-+    numrecs = 168
-+    leftsib = 5
-+    rightsib = 9
-+    bno = 6168
-+    lsn = 0x100000d1b
-+    uuid = 400f0928-6b88-4c37-af1e-cef1f8911f3f
-+    owner = 0
-+    crc = 0xd58eff0e (correct)
-+    recs[1-168] = [startblock,blockcount,owner,offset,extentflag,attrfork,bmbtblock]
-+    1:[24,525,5761,0,0,0,0]
-+    2:[24,524,5762,0,0,0,0]
-+    3:[24,523,5763,0,0,0,0]
++    Oper (2): tid: 30483aec  len: 24  clientid: TRANS  flags: none
++    BUF:  #regs: 2   start blkno: 145400496 (0x8aaa2b0)  len: 8  bmap size: 1  flags: 0x2000
++    Oper (3): tid: 30483aec  len: 3712  clientid: TRANS  flags: none
++    BUF DATA
 +    ...
-+    166:[24,360,5926,0,0,0,0]
-+    167:[24,359,5927,0,0,0,0]
-+    168:[24,358,5928,0,0,0,0]
++    Oper (4): tid: 30483aec  len: 24  clientid: TRANS  flags: none
++    BUF:  #regs: 3   start blkno: 59116912 (0x3860d70)  len: 8  bmap size: 1  flags: 0x2000
++    Oper (5): tid: 30483aec  len: 128  clientid: TRANS  flags: none
++    BUF DATA
++     0 43544241 49010000 fa347000 2c357000 3a40b200 13000000 2343c200 13000000
++     8 3296d700 13000000 375deb00 13000000 8a551501 13000000 56be1601 13000000
++    10 af081901 13000000 ec741c01 13000000 9e911c01 13000000 69073501 13000000
++    18 4e539501 13000000  6549501 13000000 5d0e7f00 14000000 c6908200 14000000
 +
-+Observe that the first record in the block starts at physical block 24, inode
-+5761, offset zero, just as we expected. Note that this first record is also
-+indexed by the highest key as provided in the node block; physical block 548,
-+inode 5761, offset 524 is the very last block mapped by this record.
-+Furthermore, note that record 168, despite being the last record in this
-+block, has a lower maximum key (physical block 382, inode 5928, offset 23)
-+than the first record.
++    Oper (6): tid: 30483aec  len: 640  clientid: TRANS  flags: none
++    BUF DATA
++     0 7f47c800 21000000 23c0e400 21000000 2d0dfe00 21000000 e7060c01 21000000
++     8 34b91801 21000000 9cca9100 22000000 26e69800 22000000 4c969900 22000000
++    ...
++    90 1cf69900 27000000 42f79c00 27000000  6a99e00 27000000  6a99e00 27000000
++    98  6a99e00 27000000  6a99e00 27000000  6a99e00 27000000  6a99e00 27000000
++
++Operations 4-6 describe two updates to a single dirty buffer at disk address
++59,116,912. The first chunk of dirty data is 128 bytes long. Notice how the
++first four bytes of the first chunk is 0x43544241? Remembering that log items
++are in host byte order, reverse that to 0x41425443, which is the magic number
++for the free space B+tree ordered by size.
++
++The second chunk is 640 bytes. There are more buffer changes, so we’ll skip
++ahead a few operations:
++
++::
++
++    Oper (19): tid: 30483aec  len: 56  clientid: TRANS  flags: none
++    INODE: #regs: 2   ino: 0x63a73b4e  flags: 0x1   dsize: 40
++            blkno: 1412688704  len: 16  boff: 7168
++    Oper (20): tid: 30483aec  len: 96  clientid: TRANS  flags: none
++    INODE CORE
++    magic 0x494e mode 0100600 version 2 format 3
++    nlink 1 uid 1000 gid 1000
++    atime 0x5633d58d mtime 0x563a391b ctime 0x563a391b
++    size 0x109dc8 nblocks 0x111 extsize 0x0 nextents 0x1b
++    naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
++    flags 0x0 gen 0x389071be
++
++This is an update to the core of inode 0x63a73b4e. There were similar inode
++core updates after this, so we’ll skip ahead a bit:
++
++::
++
++    Oper (32): tid: 30483aec  len: 56  clientid: TRANS  flags: none
++    INODE: #regs: 3   ino: 0x4bde428  flags: 0x5   dsize: 16
++            blkno: 79553568  len: 16  boff: 4096
++    Oper (33): tid: 30483aec  len: 96  clientid: TRANS  flags: none
++    INODE CORE
++    magic 0x494e mode 0100644 version 2 format 2
++    nlink 1 uid 1000 gid 1000
++    atime 0x563a3924 mtime 0x563a3931 ctime 0x563a3931
++    size 0x1210 nblocks 0x2 extsize 0x0 nextents 0x1
++    naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
++    flags 0x0 gen 0x2829c6f9
++    Oper (34): tid: 30483aec  len: 16  clientid: TRANS  flags: none
++    EXTENTS inode data
++
++This inode update changes both the core and also the data fork. Since we’re
++changing the block map, it’s unsurprising that one of the subsequent
++operations is an EFI:
++
++::
++
++    Oper (37): tid: 30483aec  len: 32  clientid: TRANS  flags: none
++    EFI:  #regs: 1    num_extents: 1  id: 0xffff8801147b5c20
++    (s: 0x720daf, l: 1)
++    \----------------------------------------------------------------------------
++    Oper (38): tid: 30483aec  len: 32  clientid: TRANS  flags: none
++    EFD:  #regs: 1    num_extents: 1  id: 0xffff8801147b5c20
++    \----------------------------------------------------------------------------
++    Oper (39): tid: 30483aec  len: 24  clientid: TRANS  flags: none
++    BUF:  #regs: 2   start blkno: 8 (0x8)  len: 8  bmap size: 1  flags: 0x2800
++    Oper (40): tid: 30483aec  len: 128  clientid: TRANS  flags: none
++    AGF Buffer: XAGF
++    ver: 1  seq#: 0  len: 56308224
++    root BNO: 18174905  CNT: 18175030
++    level BNO: 2  CNT: 2
++    1st: 41  last: 46  cnt: 6  freeblks: 35790503  longest: 19343245
++    \----------------------------------------------------------------------------
++    Oper (41): tid: 30483aec  len: 24  clientid: TRANS  flags: none
++    BUF:  #regs: 3   start blkno: 145398760 (0x8aa9be8)  len: 8  bmap size: 1  flags: 0x2000
++    Oper (42): tid: 30483aec  len: 128  clientid: TRANS  flags: none
++    BUF DATA
++    Oper (43): tid: 30483aec  len: 128  clientid: TRANS  flags: none
++    BUF DATA
++    \----------------------------------------------------------------------------
++    Oper (44): tid: 30483aec  len: 24  clientid: TRANS  flags: none
++    BUF:  #regs: 3   start blkno: 145400224 (0x8aaa1a0)  len: 8  bmap size: 1  flags: 0x2000
++    Oper (45): tid: 30483aec  len: 128  clientid: TRANS  flags: none
++    BUF DATA
++    Oper (46): tid: 30483aec  len: 3584  clientid: TRANS  flags: none
++    BUF DATA
++    \----------------------------------------------------------------------------
++    Oper (47): tid: 30483aec  len: 24  clientid: TRANS  flags: none
++    BUF:  #regs: 3   start blkno: 59066216 (0x3854768)  len: 8  bmap size: 1  flags: 0x2000
++    Oper (48): tid: 30483aec  len: 128  clientid: TRANS  flags: none
++    BUF DATA
++    Oper (49): tid: 30483aec  len: 768  clientid: TRANS  flags: none
++    BUF DATA
++
++Here we see an EFI, followed by an EFD, followed by updates to the AGF and the
++free space B+trees. Most probably, we just unmapped a few blocks from a file.
++
++::
++
++    Oper (50): tid: 30483aec  len: 56  clientid: TRANS  flags: none
++    INODE: #regs: 2   ino: 0x3906f20  flags: 0x1   dsize: 16
++            blkno: 59797280  len: 16  boff: 0
++    Oper (51): tid: 30483aec  len: 96  clientid: TRANS  flags: none
++    INODE CORE
++    magic 0x494e mode 0100644 version 2 format 2
++    nlink 1 uid 1000 gid 1000
++    atime 0x563a3938 mtime 0x563a3938 ctime 0x563a3938
++    size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
++    naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
++    flags 0x0 gen 0x35ed661
++    \----------------------------------------------------------------------------
++    Oper (52): tid: 30483aec  len: 0  clientid: TRANS  flags: COMMIT
++
++One more inode core update and this transaction commits.
