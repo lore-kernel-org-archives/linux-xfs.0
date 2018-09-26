@@ -1,111 +1,143 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:60034 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727320AbeI1A6G (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 27 Sep 2018 20:58:06 -0400
-Subject: Re: [PATCH 3/3] xfsprogs: remove useless do_preadv and do_pwritev
- arguments
-References: <20171111172155.31941-1-zlang@redhat.com>
- <20171111172155.31941-3-zlang@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <4bd7efb7-627a-ead5-083c-55a168631a72@sandeen.net>
-Date: Thu, 27 Sep 2018 13:38:30 -0500
-MIME-Version: 1.0
-In-Reply-To: <20171111172155.31941-3-zlang@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Received: from userp2130.oracle.com ([156.151.31.86]:55256 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726915AbeIZQ3e (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 12:29:34 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8QAE1Un065206
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:19 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2130.oracle.com with ESMTP id 2mnd5thhq3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:19 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAHIqO009651
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:18 GMT
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAHHas019479
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:17 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [PATCH v9 00/28] Parent Pointers v9
+Date: Wed, 26 Sep 2018 03:14:39 -0700
+Message-Id: <1537956907-10244-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On 11/11/17 11:21 AM, Zorro Lang wrote:
-> do_preadv and do_pwritev all have a 'buffer_size' argument, but they
-> never used it. Instead of it, they use global 'buffersize' variable,
-> which is initialized in alloc_buffer(). As the 'buffer_size' is
-> useless, so remove it for clear code.
-> 
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
+Hi all,
 
-Hi Zorro, going through old patches and remembered that I never came
-back to this one, sorry.
+This is the 9th version of parent pointer attributes for xfs. The goal of
+this patch set is to add a parent pointer attribute to each inode.  The
+attribute name containing the parent inode, generation, and directory offset,
+while the  attribute value contains the file name.  This feature will enable
+future optimizations for online scrub, or any other feature that could make
+use of quickly deriving an inodes path from  the mount point.  
 
-I think that just removing it is ok.  do_preadv & do_pwritev
-both use iov and buffersize, each is a global variable; there is no
-need to pass in buffer size any more than there is a need to
-pass in the iov itself.  I'll go ahead & merge this as is.
+Some points of interest since v8:
+I've integrated the feed back from v8 and reworked the xfs_parent_add routine
+in patch 20 which is used in the corresponding xfsprogs set.  I try to push all
+three sets at once since sometimes changes in one set can affect the others.  
+Most of the activity this time is in xfsprogs and xfstests.  So feedback
+there appreciated!  As usual folks are welcome to go through any part of it, but
+I know it's a lot.  Thanks again everyone!
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Allison
 
-Thanks,
--Eric
+Allison Henderson (19):
+  xfs: Move fs/xfs/xfs_attr.h to fs/xfs/libxfs/xfs_attr.h
+  xfs: Add helper function xfs_attr_try_sf_addname
+  xfs: Add attibute set and helper functions
+  xfs: Add attibute remove and helper functions
+  xfs: Hold inode locks in xfs_ialloc
+  xfs: Add trans toggle to attr routines
+  xfs: Set up infastructure for deferred attribute operations
+  xfs: Add xfs_attr_set_deferred and xfs_attr_remove_deferred
+  xfs: Add xfs_has_attr and subroutines
+  xfs: Add attr context to log item
+  xfs: Roll delayed attr operations by returning EAGAIN
+  xfs: Remove roll_trans boolean
+  xfs: Remove all strlen calls in all xfs_attr_* functions for attr
+    names.
+  xfs: Add parent pointers to rename
+  xfs: Add the parent pointer support to the superblock version 5.
+  xfs: Add helper function xfs_attr_list_context_init
+  xfs: Increase  XFS_DEFER_OPS_NR_INODES to 4
+  xfs: Add parent pointer ioctl
+  xfs: Add delayed attributes error tag
 
-> ---
->  io/pread.c  | 7 +++----
->  io/pwrite.c | 5 ++---
->  2 files changed, 5 insertions(+), 7 deletions(-)
-> 
-> diff --git a/io/pread.c b/io/pread.c
-> index 60650aa3..98e992b0 100644
-> --- a/io/pread.c
-> +++ b/io/pread.c
-> @@ -176,8 +176,7 @@ static ssize_t
->  do_preadv(
->  	int		fd,
->  	off64_t		offset,
-> -	size_t		count,
-> -	size_t		buffer_size)
-> +	size_t		count)
->  {
->  	int		vecs = 0;
->  	ssize_t		oldlen = 0;
-> @@ -205,7 +204,7 @@ do_preadv(
->  	return bytes;
->  }
->  #else
-> -#define do_preadv(fd, offset, count, buffer_size) (0)
-> +#define do_preadv(fd, offset, count) (0)
->  #endif
->  
->  static ssize_t
-> @@ -218,7 +217,7 @@ do_pread(
->  	if (!vectors)
->  		return pread(fd, buffer, min(count, buffer_size), offset);
->  
-> -	return do_preadv(fd, offset, count, buffer_size);
-> +	return do_preadv(fd, offset, count);
->  }
->  
->  static int
-> diff --git a/io/pwrite.c b/io/pwrite.c
-> index a89edfd0..f75c6164 100644
-> --- a/io/pwrite.c
-> +++ b/io/pwrite.c
-> @@ -66,7 +66,6 @@ do_pwritev(
->  	int		fd,
->  	off64_t		offset,
->  	size_t		count,
-> -	size_t		buffer_size,
->  	int 		pwritev2_flags)
->  {
->  	int vecs = 0;
-> @@ -102,7 +101,7 @@ do_pwritev(
->  	return bytes;
->  }
->  #else
-> -#define do_pwritev(fd, offset, count, buffer_size, pwritev2_flags) (0)
-> +#define do_pwritev(fd, offset, count, pwritev2_flags) (0)
->  #endif
->  
->  static ssize_t
-> @@ -116,7 +115,7 @@ do_pwrite(
->  	if (!vectors)
->  		return pwrite(fd, buffer, min(count, buffer_size), offset);
->  
-> -	return do_pwritev(fd, offset, count, buffer_size, pwritev2_flags);
-> +	return do_pwritev(fd, offset, count, pwritev2_flags);
->  }
->  
->  static int
-> 
+Dave Chinner (5):
+  xfs: define parent pointer xattr format
+  xfs: extent transaction reservations for parent attributes
+  xfs: parent pointer attribute creation
+  xfs: add parent attributes to link
+  xfs: remove parent pointers in unlink
+
+Mark Tinguely (4):
+  xfs: get directory offset when adding directory name
+  xfs: get directory offset when removing directory name
+  xfs: get directory offset when replacing a directory name
+  xfs: add parent pointer support to attribute code
+
+ fs/xfs/Makefile                 |   4 +
+ fs/xfs/libxfs/xfs_attr.c        | 495 ++++++++++++++++++++++-----------
+ fs/xfs/libxfs/xfs_attr.h        | 205 ++++++++++++++
+ fs/xfs/libxfs/xfs_attr_leaf.c   |  48 +++-
+ fs/xfs/libxfs/xfs_attr_leaf.h   |   3 +-
+ fs/xfs/libxfs/xfs_attr_remote.c |  20 --
+ fs/xfs/libxfs/xfs_bmap.c        |  49 ++--
+ fs/xfs/libxfs/xfs_bmap.h        |   1 +
+ fs/xfs/libxfs/xfs_da_btree.h    |   1 +
+ fs/xfs/libxfs/xfs_da_format.h   |  37 ++-
+ fs/xfs/libxfs/xfs_defer.h       |   1 +
+ fs/xfs/libxfs/xfs_dir2.c        |  21 +-
+ fs/xfs/libxfs/xfs_dir2.h        |   7 +-
+ fs/xfs/libxfs/xfs_dir2_block.c  |   9 +-
+ fs/xfs/libxfs/xfs_dir2_leaf.c   |   8 +-
+ fs/xfs/libxfs/xfs_dir2_node.c   |   8 +-
+ fs/xfs/libxfs/xfs_dir2_sf.c     |   6 +
+ fs/xfs/libxfs/xfs_errortag.h    |   4 +-
+ fs/xfs/libxfs/xfs_format.h      |  10 +-
+ fs/xfs/libxfs/xfs_fs.h          |  46 ++++
+ fs/xfs/libxfs/xfs_log_format.h  |  44 ++-
+ fs/xfs/libxfs/xfs_parent.c      | 197 +++++++++++++
+ fs/xfs/libxfs/xfs_parent.h      |  37 +++
+ fs/xfs/libxfs/xfs_sb.c          |   2 +
+ fs/xfs/libxfs/xfs_trans_resv.c  | 111 ++++++--
+ fs/xfs/libxfs/xfs_trans_resv.h  |   1 +
+ fs/xfs/libxfs/xfs_types.h       |   1 +
+ fs/xfs/scrub/common.c           |   2 +
+ fs/xfs/xfs_acl.c                |  14 +-
+ fs/xfs/xfs_attr.h               | 148 ----------
+ fs/xfs/xfs_attr_item.c          | 598 ++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_attr_item.h          | 114 ++++++++
+ fs/xfs/xfs_attr_list.c          |  75 +++--
+ fs/xfs/xfs_error.c              |   3 +
+ fs/xfs/xfs_inode.c              | 150 +++++++---
+ fs/xfs/xfs_ioctl.c              | 101 ++++++-
+ fs/xfs/xfs_ioctl32.c            |   2 +
+ fs/xfs/xfs_iops.c               |   7 +-
+ fs/xfs/xfs_log_recover.c        | 172 ++++++++++++
+ fs/xfs/xfs_ondisk.h             |   6 +
+ fs/xfs/xfs_parent_utils.c       | 154 +++++++++++
+ fs/xfs/xfs_parent_utils.h       |  32 +++
+ fs/xfs/xfs_qm.c                 |   1 +
+ fs/xfs/xfs_super.c              |   5 +
+ fs/xfs/xfs_symlink.c            |   6 +-
+ fs/xfs/xfs_trans.h              |  16 +-
+ fs/xfs/xfs_trans_attr.c         | 275 ++++++++++++++++++
+ fs/xfs/xfs_xattr.c              |  11 +-
+ 48 files changed, 2781 insertions(+), 487 deletions(-)
+ create mode 100644 fs/xfs/libxfs/xfs_attr.h
+ create mode 100644 fs/xfs/libxfs/xfs_parent.c
+ create mode 100644 fs/xfs/libxfs/xfs_parent.h
+ delete mode 100644 fs/xfs/xfs_attr.h
+ create mode 100644 fs/xfs/xfs_attr_item.c
+ create mode 100644 fs/xfs/xfs_attr_item.h
+ create mode 100644 fs/xfs/xfs_parent_utils.c
+ create mode 100644 fs/xfs/xfs_parent_utils.h
+ create mode 100644 fs/xfs/xfs_trans_attr.c
+
+-- 
+2.7.4
