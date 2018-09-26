@@ -1,44 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([193.170.194.197]:52868 "EHLO
-        one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725922AbeH2GfB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Aug 2018 02:35:01 -0400
-Date: Tue, 28 Aug 2018 19:40:25 -0700
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: Trying to write to read-only block-device from XFS
-Message-ID: <20180829024013.ptprd7o3h3o6j2m2@two.firstfloor.org>
-References: <20180824233756.kkvmkmm5mdlx77je@two.firstfloor.org>
- <a4d32107-abc0-60d3-8306-b091fbffefd8@sandeen.net>
- <20180825140951.a3dsz3efwnjsj2pz@two.firstfloor.org>
- <c6bcbef0-0c5b-a7a1-adb6-38085db98ce9@sandeen.net>
- <20180827081254.zat4lvxqviwgd4zn@odin.usersys.redhat.com>
- <20180827164342.4vlg3zaehkzcj6od@two.firstfloor.org>
- <20180828075420.5zcww22du3kqkvmq@odin.usersys.redhat.com>
+Received: from uphb19pa11.eemsg.mail.mil ([214.24.26.85]:44324 "EHLO
+        USFB19PA14.eemsg.mail.mil" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726602AbeIZTnz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 15:43:55 -0400
+Subject: Re: Leaking Path in XFS's ioctl interface(missing LSM check)
+References: <5EF0D46A-C098-4B51-AD13-225FFCA35D4C@vt.edu>
+ <20180926013329.GD31060@dastard>
+From: Stephen Smalley <sds@tycho.nsa.gov>
+Message-ID: <dc3bf978-1b98-bebd-6f35-9b2795693ea7@tycho.nsa.gov>
+Date: Wed, 26 Sep 2018 09:23:03 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180828075420.5zcww22du3kqkvmq@odin.usersys.redhat.com>
+In-Reply-To: <20180926013329.GD31060@dastard>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andi Kleen <andi@firstfloor.org>, Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>, TongZhang <ztong@vt.edu>
+Cc: darrick.wong@oracle.com, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-security-module@vger.kernel.org, Wenbo Shen <shenwenbosmile@gmail.com>
 
-On Tue, Aug 28, 2018 at 09:54:20AM +0200, Carlos Maiolino wrote:
-> > 
-> > Ok, so the blame is assigned, but the question is still how to avoid the
-> > warning:
+On 09/25/2018 09:33 PM, Dave Chinner wrote:
+> On Tue, Sep 25, 2018 at 08:51:50PM -0400, TongZhang wrote:
+>> Hi,
+>>
+>> I'm bringing up this issue again to let of LSM developers know the situation, and would like to know your thoughts.
+>> Several weeks ago I sent an email to the security list to discuss the issue where
+>> XFS's ioctl interface can do things like vfs_readlink without asking LSM's
+>> permission, which we think is kind of weird and this kind of operation should be
+>> audited by LSM.
 > 
-> I'd say, unless you are using a volume manager that is doing something weird,
-> which essentially LVM did by keep writing to RO volumes for snapshots, you
+> These aren't user interfaces. They are filesystem maintenance and
+> extension interfaces.  They are intended for low level filesystem
+> utilities that require complete, unrestricted access to the
+> underlying filesystem via holding CAP_SYSADMIN in the initns.
+> 
+> i.e.  they are used to perform filesystem maintenance and extension
+> operations that need to be completely invisible to users from
+> userspace. e.g.  online file defragmentation (xfs_fsr), data
+> migration (e.g. HSM products), efficient backup of data (xfsdump),
+> metadata and data scrubbing, online repair, etc.
+> 
+> IOWs, I really don't think these interfaces are something the LSMs
+> should be trying to intercept or audit, because they are essentially
+> internal filesystem interfaces used by trusted code and not general
+> user application facing APIs.
 
-I don't use any snapshots.
+If they are interfaces exposed to userspace, then they should be 
+mediated via LSM.  We only omit the LSM hook when the usage is purely 
+kernel-internal.  Security modules are often used to limit even 
+"trusted" applications to least privilege and protect them from 
+untrustworthy inputs, moving from binary trust notions to only trusting 
+them for what they must be trusted to do.  CAP_SYS_ADMIN doesn't 
+necessarily indicate that they are trusted to override any given MAC 
+policy restrictions.
 
-> should avoid the warning by checking why your device went into RO mode and
-> fix it.
-
-You seem to be very confused about the purpose of kernel warnings.
-
-Users should never be able to cause warnings by any action. 
-It's always a software bug of some sort.
-
--Andi
+Wondering why we don't perform the security_inode_readlink() call inside 
+of vfs_readlink() currently.  The general pattern is that we do perform 
+security_inode_*() calls inside the other vfs_*() helpers, so 
+vfs_readlink() is an exception currently.
