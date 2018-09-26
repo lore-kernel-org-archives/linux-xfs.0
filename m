@@ -1,220 +1,220 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:55502 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727187AbeIZQ3o (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 12:29:44 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8QAERqx065434
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:30 GMT
+Received: from userp2120.oracle.com ([156.151.31.85]:48618 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727485AbeIZQiH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 12:38:07 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8QAOPRt037547
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:50 GMT
 Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2130.oracle.com with ESMTP id 2mnd5thhr7-1
+        by userp2120.oracle.com with ESMTP id 2mnvtur9bs-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:30 +0000
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:49 +0000
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAHOng031354
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAPnQY027255
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:25 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:49 GMT
 Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAHOc1014119
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:24 GMT
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAPnUp018386
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:49 GMT
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v9 16/28] xfs: get directory offset when replacing a directory name
-Date: Wed, 26 Sep 2018 03:14:55 -0700
-Message-Id: <1537956907-10244-17-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1537956907-10244-1-git-send-email-allison.henderson@oracle.com>
-References: <1537956907-10244-1-git-send-email-allison.henderson@oracle.com>
+Subject: [PATCH v3 18/30] xfsprogs: extent transaction reservations for parent attributes
+Date: Wed, 26 Sep 2018 03:23:21 -0700
+Message-Id: <1537957413-10630-19-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1537957413-10630-1-git-send-email-allison.henderson@oracle.com>
+References: <1537957413-10630-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-From: Mark Tinguely <tinguely@sgi.com>
+We need to add, remove or modify parent pointer attributes during
+create/link/unlink/rename operations atomically with the dirents in the parent
+directories being modified. This means they need to be modified in the same
+transaction as the parent directories, and so we need to add the required
+space for the attribute modifications to the transaction reservations.
 
-Return the directory offset information when replacing an entry to the
-directory.
+[achender: rebased, added xfs_sb_version_hasparent stub]
 
-This offset will be used as the parent pointer offset in xfs_rename.
-
-[dchinner: forward ported and cleaned up]
-[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t,
-	   Changed typedefs to raw struct types]
-
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_dir2.c       |  8 ++++++--
- fs/xfs/libxfs/xfs_dir2.h       |  2 +-
- fs/xfs/libxfs/xfs_dir2_block.c |  4 ++--
- fs/xfs/libxfs/xfs_dir2_leaf.c  |  1 +
- fs/xfs/libxfs/xfs_dir2_node.c  |  1 +
- fs/xfs/libxfs/xfs_dir2_sf.c    |  2 ++
- fs/xfs/xfs_inode.c             | 14 +++++++-------
- 7 files changed, 20 insertions(+), 12 deletions(-)
+ libxfs/xfs_format.h     |   5 +++
+ libxfs/xfs_trans_resv.c | 111 ++++++++++++++++++++++++++++++++++++++----------
+ libxfs/xfs_trans_resv.h |   1 +
+ 3 files changed, 94 insertions(+), 23 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
-index f5475e7..7d8c63b 100644
---- a/fs/xfs/libxfs/xfs_dir2.c
-+++ b/fs/xfs/libxfs/xfs_dir2.c
-@@ -468,7 +468,7 @@ xfs_dir_removename(
- 	else
- 		rval = xfs_dir2_node_removename(args);
- out_free:
--	if (offset)
-+	if (!rval && offset)
- 		*offset = args->offset;
- 
- 	kmem_free(args);
-@@ -484,7 +484,8 @@ xfs_dir_replace(
- 	struct xfs_inode	*dp,
- 	struct xfs_name		*name,		/* name of entry to replace */
- 	xfs_ino_t		inum,		/* new inode number */
--	xfs_extlen_t		total)		/* bmap's total block count */
-+	xfs_extlen_t		total,		/* bmap's total block count */
-+	xfs_dir2_dataptr_t	*offset)	/* OUT: offset in directory */
- {
- 	struct xfs_da_args	*args;
- 	int			rval;
-@@ -532,6 +533,9 @@ xfs_dir_replace(
- 	else
- 		rval = xfs_dir2_node_replace(args);
- out_free:
-+	if (offset)
-+		*offset = args->offset;
-+
- 	kmem_free(args);
- 	return rval;
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index be3a3bf..d00dd0a 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -550,6 +550,11 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
+ 		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_REFLINK);
  }
-diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
-index 2cf1d87..63de5b9 100644
---- a/fs/xfs/libxfs/xfs_dir2.h
-+++ b/fs/xfs/libxfs/xfs_dir2.h
-@@ -127,7 +127,7 @@ extern int xfs_dir_removename(struct xfs_trans *tp, struct xfs_inode *dp,
- 				xfs_dir2_dataptr_t *offset);
- extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
- 				struct xfs_name *name, xfs_ino_t inum,
--				xfs_extlen_t tot);
-+				xfs_extlen_t tot, xfs_dir2_dataptr_t *offset);
- extern int xfs_dir_canenter(struct xfs_trans *tp, struct xfs_inode *dp,
- 				struct xfs_name *name);
  
-diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
-index aa84c45..a327d81 100644
---- a/fs/xfs/libxfs/xfs_dir2_block.c
-+++ b/fs/xfs/libxfs/xfs_dir2_block.c
-@@ -860,9 +860,9 @@ xfs_dir2_block_replace(
++static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
++{
++	return false; /* We'll enable this at the end of the set */
++}
++
+ /*
+  * end of superblock version macros
+  */
+diff --git a/libxfs/xfs_trans_resv.c b/libxfs/xfs_trans_resv.c
+index 4ecf7c2..3f37a8b 100644
+--- a/libxfs/xfs_trans_resv.c
++++ b/libxfs/xfs_trans_resv.c
+@@ -774,29 +774,30 @@ xfs_calc_sb_reservation(
+ 	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
+ }
+ 
++/*
++ * Namespace reservations.
++ *
++ * These get tricky when parent pointers are enabled as we have attribute
++ * modifications occurring from within these transactions. Rather than confuse
++ * each of these reservation calculations with the conditional attribute
++ * reservations, add them here in a clear and concise manner. This assumes that
++ * the attribute reservations have already been calculated.
++ *
++ * Note that we only include the static attribute reservation here; the runtime
++ * reservation will have to be modified by the size of the attributes being
++ * added/removed/modified. See the comments on the attribute reservation
++ * calculations for more details.
++ *
++ * Note for rename: rename will vastly overestimate requirements. This will be
++ * addressed later when modifications are made to ensure parent attribute
++ * modifications can be done atomically with the rename operation.
++ */
+ void
+-xfs_trans_resv_calc(
++xfs_calc_namespace_reservations(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_trans_resv	*resp)
+ {
+-	/*
+-	 * The following transactions are logged in physical format and
+-	 * require a permanent reservation on space.
+-	 */
+-	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
+-	if (xfs_sb_version_hasreflink(&mp->m_sb))
+-		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
+-	else
+-		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
+-	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+-
+-	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
+-	if (xfs_sb_version_hasreflink(&mp->m_sb))
+-		resp->tr_itruncate.tr_logcount =
+-				XFS_ITRUNCATE_LOG_COUNT_REFLINK;
+-	else
+-		resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
+-	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++	ASSERT(resp->tr_attrsetm.tr_logres > 0);
+ 
+ 	resp->tr_rename.tr_logres = xfs_calc_rename_reservation(mp);
+ 	resp->tr_rename.tr_logcount = XFS_RENAME_LOG_COUNT;
+@@ -818,15 +819,77 @@ xfs_trans_resv_calc(
+ 	resp->tr_create.tr_logcount = XFS_CREATE_LOG_COUNT;
+ 	resp->tr_create.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+ 
++	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
++	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
++	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	xfs_calc_parent_ptr_reservations(mp);
++}
++
++void xfs_calc_parent_ptr_reservations(struct xfs_mount     *mp)
++{
++	struct xfs_trans_resv   *resp = M_RES(mp);
++
++	/* Calculate extra space needed for parent pointer attributes */
++	if (!xfs_sb_version_hasparent(&mp->m_sb))
++		return;
++
++	/* rename can add/remove/modify 4 parent attributes */
++	resp->tr_rename.tr_logres += 4 * max(resp->tr_attrsetm.tr_logres,
++					 resp->tr_attrrm.tr_logres);
++	resp->tr_rename.tr_logcount += 4 * max(resp->tr_attrsetm.tr_logcount,
++					   resp->tr_attrrm.tr_logcount);
++
++	/* create will add 1 parent attribute */
++	resp->tr_create.tr_logres += resp->tr_attrsetm.tr_logres;
++	resp->tr_create.tr_logcount += resp->tr_attrsetm.tr_logcount;
++
++	/* mkdir will add 1 parent attribute */
++	resp->tr_mkdir.tr_logres += resp->tr_attrsetm.tr_logres;
++	resp->tr_mkdir.tr_logcount += resp->tr_attrsetm.tr_logcount;
++
++	/* link will add 1 parent attribute */
++	resp->tr_link.tr_logres += resp->tr_attrsetm.tr_logres;
++	resp->tr_link.tr_logcount += resp->tr_attrsetm.tr_logcount;
++
++	/* symlink will add 1 parent attribute */
++	resp->tr_symlink.tr_logres += resp->tr_attrsetm.tr_logres;
++	resp->tr_symlink.tr_logcount += resp->tr_attrsetm.tr_logcount;
++
++	/* remove will remove 1 parent attribute */
++	resp->tr_remove.tr_logres += resp->tr_attrrm.tr_logres;
++	resp->tr_remove.tr_logcount += resp->tr_attrrm.tr_logcount;
++}
++
++void
++xfs_trans_resv_calc(
++	struct xfs_mount	*mp,
++	struct xfs_trans_resv	*resp)
++{
++	/*
++	 * The following transactions are logged in physical format and
++	 * require a permanent reservation on space.
++	 */
++	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
++	if (xfs_sb_version_hasreflink(&mp->m_sb))
++		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT_REFLINK;
++	else
++		resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
++	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
++	if (xfs_sb_version_hasreflink(&mp->m_sb))
++		resp->tr_itruncate.tr_logcount =
++				XFS_ITRUNCATE_LOG_COUNT_REFLINK;
++	else
++		resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
++	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
+ 	resp->tr_create_tmpfile.tr_logres =
+ 			xfs_calc_create_tmpfile_reservation(mp);
+ 	resp->tr_create_tmpfile.tr_logcount = XFS_CREATE_TMPFILE_LOG_COUNT;
+ 	resp->tr_create_tmpfile.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+ 
+-	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
+-	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
+-	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+-
+ 	resp->tr_ifree.tr_logres = xfs_calc_ifree_reservation(mp);
+ 	resp->tr_ifree.tr_logcount = XFS_INACTIVE_LOG_COUNT;
+ 	resp->tr_ifree.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+@@ -858,6 +921,8 @@ xfs_trans_resv_calc(
+ 		resp->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT;
+ 	resp->tr_qm_dqalloc.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+ 
++	xfs_calc_namespace_reservations(mp, resp);
++
  	/*
- 	 * Point to the data entry we need to change.
- 	 */
-+	args->offset = be32_to_cpu(blp[ent].address);
- 	dep = (xfs_dir2_data_entry_t *)((char *)hdr +
--			xfs_dir2_dataptr_to_off(args->geo,
--						be32_to_cpu(blp[ent].address)));
-+			xfs_dir2_dataptr_to_off(args->geo, args->offset));
- 	ASSERT(be64_to_cpu(dep->inumber) != args->inumber);
- 	/*
- 	 * Change the inode number to the new value.
-diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-index 5e68c39..1ef74572 100644
---- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-@@ -1538,6 +1538,7 @@ xfs_dir2_leaf_replace(
- 	/*
- 	 * Point to the data entry.
- 	 */
-+	args->offset = be32_to_cpu(lep->address);
- 	dep = (xfs_dir2_data_entry_t *)
- 	      ((char *)dbp->b_addr +
- 	       xfs_dir2_dataptr_to_off(args->geo, be32_to_cpu(lep->address)));
-diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-index 3c1698f..9cbe012 100644
---- a/fs/xfs/libxfs/xfs_dir2_node.c
-+++ b/fs/xfs/libxfs/xfs_dir2_node.c
-@@ -2242,6 +2242,7 @@ xfs_dir2_node_replace(
- 		hdr = state->extrablk.bp->b_addr;
- 		ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
- 		       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC));
-+		args->offset = be32_to_cpu(lep->address);
- 		dep = (xfs_dir2_data_entry_t *)
- 		      ((char *)hdr +
- 		       xfs_dir2_dataptr_to_off(args->geo,
-diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
-index e65615c..ea5b63b 100644
---- a/fs/xfs/libxfs/xfs_dir2_sf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_sf.c
-@@ -1031,6 +1031,8 @@ xfs_dir2_sf_replace(
- 				ASSERT(args->inumber != ino);
- 				dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
- 				dp->d_ops->sf_put_ftype(sfep, args->filetype);
-+				args->offset = xfs_dir2_byte_to_dataptr(
-+						  xfs_dir2_sf_get_offset(sfep));
- 				break;
- 			}
- 		}
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 67a5437..d7e06c2 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2737,12 +2737,12 @@ xfs_cross_rename(
- 	int		dp2_flags = 0;
+ 	 * The following transactions are logged in logical format with
+ 	 * a default log count.
+diff --git a/libxfs/xfs_trans_resv.h b/libxfs/xfs_trans_resv.h
+index 7241ab2..0197d9e 100644
+--- a/libxfs/xfs_trans_resv.h
++++ b/libxfs/xfs_trans_resv.h
+@@ -93,5 +93,6 @@ struct xfs_trans_resv {
  
- 	/* Swap inode number for dirent in first parent */
--	error = xfs_dir_replace(tp, dp1, name1, ip2->i_ino, spaceres);
-+	error = xfs_dir_replace(tp, dp1, name1, ip2->i_ino, spaceres, NULL);
- 	if (error)
- 		goto out_trans_abort;
+ void xfs_trans_resv_calc(struct xfs_mount *mp, struct xfs_trans_resv *resp);
+ uint xfs_allocfree_log_count(struct xfs_mount *mp, uint num_ops);
++void xfs_calc_parent_ptr_reservations(struct xfs_mount *mp);
  
- 	/* Swap inode number for dirent in second parent */
--	error = xfs_dir_replace(tp, dp2, name2, ip1->i_ino, spaceres);
-+	error = xfs_dir_replace(tp, dp2, name2, ip1->i_ino, spaceres, NULL);
- 	if (error)
- 		goto out_trans_abort;
- 
-@@ -2756,7 +2756,7 @@ xfs_cross_rename(
- 
- 		if (S_ISDIR(VFS_I(ip2)->i_mode)) {
- 			error = xfs_dir_replace(tp, ip2, &xfs_name_dotdot,
--						dp1->i_ino, spaceres);
-+						dp1->i_ino, spaceres, NULL);
- 			if (error)
- 				goto out_trans_abort;
- 
-@@ -2782,7 +2782,7 @@ xfs_cross_rename(
- 
- 		if (S_ISDIR(VFS_I(ip1)->i_mode)) {
- 			error = xfs_dir_replace(tp, ip1, &xfs_name_dotdot,
--						dp2->i_ino, spaceres);
-+						dp2->i_ino, spaceres, NULL);
- 			if (error)
- 				goto out_trans_abort;
- 
-@@ -3023,7 +3023,7 @@ xfs_rename(
- 		 * name at the destination directory, remove it first.
- 		 */
- 		error = xfs_dir_replace(tp, target_dp, target_name,
--					src_ip->i_ino, spaceres);
-+					src_ip->i_ino, spaceres, NULL);
- 		if (error)
- 			goto out_trans_cancel;
- 
-@@ -3057,7 +3057,7 @@ xfs_rename(
- 		 * directory.
- 		 */
- 		error = xfs_dir_replace(tp, src_ip, &xfs_name_dotdot,
--					target_dp->i_ino, spaceres);
-+					target_dp->i_ino, spaceres, NULL);
- 		ASSERT(error != -EEXIST);
- 		if (error)
- 			goto out_trans_cancel;
-@@ -3096,7 +3096,7 @@ xfs_rename(
- 	 */
- 	if (wip) {
- 		error = xfs_dir_replace(tp, src_dp, src_name, wip->i_ino,
--					spaceres);
-+					spaceres, NULL);
- 	} else
- 		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
- 					   spaceres, NULL);
+ #endif	/* __XFS_TRANS_RESV_H__ */
 -- 
 2.7.4
