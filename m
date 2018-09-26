@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:41702 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726938AbeIZQ3h (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 12:29:37 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8QADwFf029204
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:22 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp2120.oracle.com with ESMTP id 2mnvtur87u-1
+Received: from userp2130.oracle.com ([156.151.31.86]:55416 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727187AbeIZQ3l (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 12:29:41 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8QADwjH065080
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:26 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2130.oracle.com with ESMTP id 2mnd5thhqs-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:22 +0000
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAHLeW020261
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:26 +0000
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAHP2E009913
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:21 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:25 GMT
 Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w8QAHLj0027633
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:21 GMT
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAHPFe019513
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:25 GMT
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v9 08/28] xfs: Add xfs_attr_set_deferred and xfs_attr_remove_deferred
-Date: Wed, 26 Sep 2018 03:14:47 -0700
-Message-Id: <1537956907-10244-9-git-send-email-allison.henderson@oracle.com>
+Subject: [PATCH v9 17/28] xfs: add parent pointer support to attribute code
+Date: Wed, 26 Sep 2018 03:14:56 -0700
+Message-Id: <1537956907-10244-18-git-send-email-allison.henderson@oracle.com>
 In-Reply-To: <1537956907-10244-1-git-send-email-allison.henderson@oracle.com>
 References: <1537956907-10244-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -28,138 +28,98 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-These routines set up set and start a new deferred attribute
-operation.  These functions are meant to be called by other
-code needing to initiate a deferred attribute operation.  We
-will use these routines later in the parent pointer patches.
+From: Mark Tinguely <tinguely@sgi.com>
 
+Add the new parent attribute type. XFS_ATTR_PARENT is used only for
+parent pointer entries; it uses reserved blocks like XFS_ATTR_ROOT.
+
+[dchinner: forward ported and cleaned up]
+[achender: rebased]
+
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- fs/xfs/libxfs/xfs_attr.c | 80 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_attr.h |  7 +++++
- 2 files changed, 87 insertions(+)
+ fs/xfs/libxfs/xfs_attr.c      |  4 +++-
+ fs/xfs/libxfs/xfs_attr.h      |  2 ++
+ fs/xfs/libxfs/xfs_da_format.h | 12 ++++++++----
+ 3 files changed, 13 insertions(+), 5 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 94fbde4..e118282 100644
+index d514c81..4b86ddb 100644
 --- a/fs/xfs/libxfs/xfs_attr.c
 +++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -30,6 +30,7 @@
- #include "xfs_trans_space.h"
- #include "xfs_trace.h"
- #include "xfs_attr_item.h"
-+#include "xfs_attr.h"
+@@ -382,11 +382,13 @@ xfs_attr_set(
+ 	struct xfs_buf		*leaf_bp = NULL;
+ 	struct xfs_da_args	args;
+ 	struct xfs_trans_res	tres;
+-	int			rsvd = (flags & ATTR_ROOT) != 0;
++	int			rsvd;
+ 	int			error, local;
  
- /*
-  * xfs_attr.c
-@@ -447,6 +448,52 @@ xfs_attr_set(
- 	return error;
- }
+ 	XFS_STATS_INC(mp, xs_attr_set);
  
-+/* Sets an attribute for an inode as a deferred operation */
-+int
-+xfs_attr_set_deferred(
-+	struct xfs_inode	*dp,
-+	struct xfs_trans	*tp,
-+	const unsigned char	*name,
-+	unsigned int		namelen,
-+	const unsigned char	*value,
-+	unsigned int		valuelen,
-+	int			flags)
-+{
++	rsvd = ((flags & ATTR_ROOT) | ATTR_PARENT) != 0;
 +
-+	struct xfs_attr_item	*new;
-+	char			*name_value;
-+
-+	/*
-+	 * All set operations must have a name
-+	 * but not necessarily a value.
-+	 * Generic 062
-+	 */
-+	if (!namelen) {
-+		ASSERT(0);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	new = kmem_alloc(XFS_ATTR_ITEM_SIZEOF(namelen, valuelen),
-+			 KM_SLEEP|KM_NOFS);
-+	name_value = ((char *)new) + sizeof(struct xfs_attr_item);
-+	memset(new, 0, XFS_ATTR_ITEM_SIZEOF(namelen, valuelen));
-+	new->xattri_ip = dp;
-+	new->xattri_op_flags = XFS_ATTR_OP_FLAGS_SET;
-+	new->xattri_name_len = namelen;
-+	new->xattri_value_len = valuelen;
-+	new->xattri_flags = flags;
-+	memcpy(&name_value[0], name, namelen);
-+	new->xattri_name = name_value;
-+	new->xattri_value = name_value + namelen;
-+
-+	if (valuelen > 0)
-+		memcpy(&name_value[namelen], value, valuelen);
-+
-+	xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
-+
-+	return 0;
-+}
-+
- /*
-  * Generic handler routine to remove a name from an attribute list.
-  * Transitions attribute list from Btree to shortform as necessary.
-@@ -530,6 +577,39 @@ xfs_attr_remove(
- 	return error;
- }
+ 	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
+ 		return -EIO;
  
-+/* Removes an attribute for an inode as a deferred operation */
-+int
-+xfs_attr_remove_deferred(
-+	struct xfs_inode        *dp,
-+	struct xfs_trans	*tp,
-+	const unsigned char	*name,
-+	unsigned int		namelen,
-+	int                     flags)
-+{
-+
-+	struct xfs_attr_item	*new;
-+	char			*name_value;
-+
-+	if (!namelen) {
-+		ASSERT(0);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	new = kmem_alloc(XFS_ATTR_ITEM_SIZEOF(namelen, 0), KM_SLEEP|KM_NOFS);
-+	name_value = ((char *)new) + sizeof(struct xfs_attr_item);
-+	memset(new, 0, XFS_ATTR_ITEM_SIZEOF(namelen, 0));
-+	new->xattri_ip = dp;
-+	new->xattri_op_flags = XFS_ATTR_OP_FLAGS_REMOVE;
-+	new->xattri_name_len = namelen;
-+	new->xattri_value_len = 0;
-+	new->xattri_flags = flags;
-+	memcpy(name_value, name, namelen);
-+
-+	xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
-+
-+	return 0;
-+}
-+
- /*========================================================================
-  * External routines when attribute list is inside the inode
-  *========================================================================*/
 diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-index 5a5adc0..406c669 100644
+index 7817891..fef9e48 100644
 --- a/fs/xfs/libxfs/xfs_attr.h
 +++ b/fs/xfs/libxfs/xfs_attr.h
-@@ -171,5 +171,12 @@ int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
- int xfs_attr_args_init(struct xfs_da_args *args, struct xfs_inode *dp,
- 		       const unsigned char *name, int flags);
- int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
-+int xfs_attr_set_deferred(struct xfs_inode *dp, struct xfs_trans *tp,
-+			  const unsigned char *name, unsigned int name_len,
-+			  const unsigned char *value, unsigned int valuelen,
-+			  int flags);
-+int xfs_attr_remove_deferred(struct xfs_inode *dp, struct xfs_trans *tp,
-+			    const unsigned char *name, unsigned int namelen,
-+			    int flags);
+@@ -32,6 +32,7 @@ struct xfs_attr_list_context;
+ #define ATTR_SECURE	0x0008	/* use attrs in security namespace */
+ #define ATTR_CREATE	0x0010	/* pure create: fail if attr already exists */
+ #define ATTR_REPLACE	0x0020	/* pure set: fail if attr does not exist */
++#define ATTR_PARENT	0x0040	/*  use attrs in parent namespace */
  
- #endif	/* __XFS_ATTR_H__ */
+ #define ATTR_KERNOTIME	0x1000	/* [kernel] don't update inode timestamps */
+ #define ATTR_KERNOVAL	0x2000	/* [kernel] get attr size only, not value */
+@@ -45,6 +46,7 @@ struct xfs_attr_list_context;
+ 	{ ATTR_SECURE,		"SECURE" }, \
+ 	{ ATTR_CREATE,		"CREATE" }, \
+ 	{ ATTR_REPLACE,		"REPLACE" }, \
++	{ ATTR_PARENT,		"PARENT" }, \
+ 	{ ATTR_KERNOTIME,	"KERNOTIME" }, \
+ 	{ ATTR_KERNOVAL,	"KERNOVAL" }, \
+ 	{ ATTR_INCOMPLETE,	"INCOMPLETE" }
+diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
+index 5d5bf3b..67cb9ea 100644
+--- a/fs/xfs/libxfs/xfs_da_format.h
++++ b/fs/xfs/libxfs/xfs_da_format.h
+@@ -746,24 +746,28 @@ struct xfs_attr3_icleaf_hdr {
+ #define	XFS_ATTR_LOCAL_BIT	0	/* attr is stored locally */
+ #define	XFS_ATTR_ROOT_BIT	1	/* limit access to trusted attrs */
+ #define	XFS_ATTR_SECURE_BIT	2	/* limit access to secure attrs */
++#define 	XFS_ATTR_PARENT_BIT	3	/* parent pointer secure attrs */
+ #define	XFS_ATTR_INCOMPLETE_BIT	7	/* attr in middle of create/delete */
+ #define XFS_ATTR_LOCAL		(1 << XFS_ATTR_LOCAL_BIT)
+ #define XFS_ATTR_ROOT		(1 << XFS_ATTR_ROOT_BIT)
+ #define XFS_ATTR_SECURE		(1 << XFS_ATTR_SECURE_BIT)
++#define XFS_ATTR_PARENT		(1 << XFS_ATTR_PARENT_BIT)
+ #define XFS_ATTR_INCOMPLETE	(1 << XFS_ATTR_INCOMPLETE_BIT)
+ 
+ /*
+  * Conversion macros for converting namespace bits from argument flags
+  * to ondisk flags.
+  */
+-#define XFS_ATTR_NSP_ARGS_MASK		(ATTR_ROOT | ATTR_SECURE)
+-#define XFS_ATTR_NSP_ONDISK_MASK	(XFS_ATTR_ROOT | XFS_ATTR_SECURE)
++#define XFS_ATTR_NSP_ARGS_MASK		(ATTR_ROOT | ATTR_SECURE | XFS_ATTR_PARENT)
++#define XFS_ATTR_NSP_ONDISK_MASK	(XFS_ATTR_ROOT | XFS_ATTR_SECURE | XFS_ATTR_PARENT)
+ #define XFS_ATTR_NSP_ONDISK(flags)	((flags) & XFS_ATTR_NSP_ONDISK_MASK)
+ #define XFS_ATTR_NSP_ARGS(flags)	((flags) & XFS_ATTR_NSP_ARGS_MASK)
+ #define XFS_ATTR_NSP_ARGS_TO_ONDISK(x)	(((x) & ATTR_ROOT ? XFS_ATTR_ROOT : 0) |\
+-					 ((x) & ATTR_SECURE ? XFS_ATTR_SECURE : 0))
++					 ((x) & ATTR_SECURE ? XFS_ATTR_SECURE : 0) | \
++					 ((x) & ATTR_PARENT ? XFS_ATTR_PARENT : 0))
+ #define XFS_ATTR_NSP_ONDISK_TO_ARGS(x)	(((x) & XFS_ATTR_ROOT ? ATTR_ROOT : 0) |\
+-					 ((x) & XFS_ATTR_SECURE ? ATTR_SECURE : 0))
++					 ((x) & XFS_ATTR_SECURE ? ATTR_SECURE : 0) | \
++					 ((x) & XFS_ATTR_PARENT ? ATTR_PARENT : 0))
+ 
+ /*
+  * Alignment for namelist and valuelist entries (since they are mixed
 -- 
 2.7.4
