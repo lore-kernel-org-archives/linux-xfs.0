@@ -1,317 +1,267 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:33554 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:52108 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727493AbeIZQiH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 12:38:07 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8QAO2LQ073338
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:50 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp2130.oracle.com with ESMTP id 2mnd5thjrt-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:50 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAPngE013127
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:49 GMT
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAPndq018389
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:49 GMT
-From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v3 19/30] xfsprogs: parent pointer attribute creation
-Date: Wed, 26 Sep 2018 03:23:22 -0700
-Message-Id: <1537957413-10630-20-git-send-email-allison.henderson@oracle.com>
-In-Reply-To: <1537957413-10630-1-git-send-email-allison.henderson@oracle.com>
-References: <1537957413-10630-1-git-send-email-allison.henderson@oracle.com>
+        with ESMTP id S1726410AbeI0BuJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 21:50:09 -0400
+Subject: [PATCH 12/24] docs: add XFS dir/attr btree structure to the DS&A
+ book
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 26 Sep 2018 12:35:36 -0700
+Message-ID: <153799053609.31202.12804559503055861924.stgit@magnolia>
+In-Reply-To: <153799045443.31202.17537455000771265705.stgit@magnolia>
+References: <153799045443.31202.17537455000771265705.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Add parent pointer attribute during xfs_create, and
-subroutines to initialize attributes
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Kernel create routines take advantage of deferred attributes,
-where as libxfs routines will add parent pointers directly.
-
-[bfoster: rebase, use VFS inode generation]
-[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t,
-       fixed some null pointer bugs,
-       merged error handling patch,
-       added subroutines to handle attribute initialization,
-       remove unnecessary ENOSPC handling in xfs_attr_set_first_parent]
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/Makefile     |   2 +
- libxfs/xfs_parent.c | 197 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- libxfs/xfs_parent.h |  35 ++++++++++
- 3 files changed, 234 insertions(+)
+ Documentation/filesystems/xfs/ondisk/dabtrees.rst |  221 +++++++++++++++++++++
+ Documentation/filesystems/xfs/ondisk/globals.rst  |    1 
+ 2 files changed, 222 insertions(+)
+ create mode 100644 Documentation/filesystems/xfs/ondisk/dabtrees.rst
 
-diff --git a/libxfs/Makefile b/libxfs/Makefile
-index 51ba9d6..9d37e2b 100644
---- a/libxfs/Makefile
-+++ b/libxfs/Makefile
-@@ -37,6 +37,7 @@ HFILES = \
- 	xfs_ialloc_btree.h \
- 	xfs_inode_buf.h \
- 	xfs_inode_fork.h \
-+	xfs_parent.h \
- 	xfs_quota_defs.h \
- 	xfs_refcount.h \
- 	xfs_refcount_btree.h \
-@@ -87,6 +88,7 @@ CFILES = cache.c \
- 	xfs_inode_fork.c \
- 	xfs_ialloc_btree.c \
- 	xfs_log_rlimit.c \
-+	xfs_parent.c \
- 	xfs_refcount.c \
- 	xfs_refcount_btree.c \
- 	xfs_rmap.c \
-diff --git a/libxfs/xfs_parent.c b/libxfs/xfs_parent.c
+
+diff --git a/Documentation/filesystems/xfs/ondisk/dabtrees.rst b/Documentation/filesystems/xfs/ondisk/dabtrees.rst
 new file mode 100644
-index 0000000..f83815f
+index 000000000000..72b31989489a
 --- /dev/null
-+++ b/libxfs/xfs_parent.c
-@@ -0,0 +1,197 @@
-+/*
-+ * Copyright (c) 2015 Red Hat, Inc.
-+ * All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "platform_defs.h"
-+#include "xfs_arch.h"
-+#include "xfs_format.h"
-+#include "xfs_da_format.h"
-+#include "xfs_log_format.h"
-+#include "list.h"
-+#include "xfs_shared.h"
-+#include "xfs_trans_resv.h"
-+#include "radix-tree.h"
-+#include "atomic.h"
-+#include "xfs_mount.h"
-+#include "xfs_da_format.h"
-+#include "xfs_bmap_btree.h"
-+#include "cache.h"
-+#include "xfs_cksum.h"
-+#include "libxfs_io.h"
-+#include "xfs_inode.h"
-+#include "xfs_trace.h"
-+#include "xfs_trans.h"
-+#include "xfs_da_btree.h"
-+#include "xfs_attr.h"
-+#include "xfs_da_btree.h"
-+#include "xfs_attr_sf.h"
-+#include "libxfs_api_defs.h"
-+#include "kmem.h"
-+#include "xfs_bmap.h"
++++ b/Documentation/filesystems/xfs/ondisk/dabtrees.rst
+@@ -0,0 +1,221 @@
++.. SPDX-License-Identifier: CC-BY-SA-3.0+
 +
-+/*
-+ * Parent pointer attribute handling.
-+ *
-+ * Because the attribute value is a filename component, it will never be longer
-+ * than 255 bytes. This means the attribute will always be a local format
-+ * attribute as it is xfs_attr_leaf_entsize_local_max() for v5 filesystems will
-+ * always be larger than this (max is 75% of block size).
-+ *
-+ * Creating a new parent attribute will always create a new attribute - there
-+ * should never, ever be an existing attribute in the tree for a new inode.
-+ * ENOSPC behaviour is problematic - creating the inode without the parent
-+ * pointer is effectively a corruption, so we allow parent attribute creation
-+ * to dip into the reserve block pool to avoid unexpected ENOSPC errors from
-+ * occurring.
-+ */
++Variable Length Record B+trees
++------------------------------
 +
++Directories and extended attributes are implemented as a simple key-value
++record store inside the blocks pointed to by the data or attribute fork of a
++file. Blocks referenced by either data structure are block offsets of an inode
++fork, not physical blocks.
 +
-+/* Initializes a xfs_parent_name_rec to be stored as an attribute name */
-+void
-+xfs_init_parent_name_rec(
-+	struct xfs_parent_name_rec	*rec,
-+	struct xfs_inode		*ip,
-+	uint32_t			p_diroffset)
-+{
-+	xfs_ino_t			p_ino = ip->i_ino;
-+	uint32_t			p_gen = VFS_I(ip)->i_generation;
++Directory and attribute data are stored as a linear array of variable-length
++records in the low blocks of a fork. Both data types share the property that
++record keys and record values are both arbitrary and unique sequences of
++bytes. See the respective sections about `directories <#directories>`__ or
++`attributes <#extended-attributes>`__ for more information about the exact
++record formats.
 +
-+	rec->p_ino = cpu_to_be64(p_ino);
-+	rec->p_gen = cpu_to_be32(p_gen);
-+	rec->p_diroffset = cpu_to_be32(p_diroffset);
-+}
++The dir/attr b+tree (or "dabtree"), if present, computes a hash of the record
++key to produce the b+tree key, and b+tree keys are used to index the fork
++block in which the record may be found. Unlike the fixed-length b+trees, the
++variable length b+trees can index the same key multiple times. B+tree
++keypointers and records both take this format:
 +
-+/* Initializes a xfs_parent_name_irec from an xfs_parent_name_rec */
-+void
-+xfs_init_parent_name_irec(
-+	struct xfs_parent_name_irec	*irec,
-+	struct xfs_parent_name_rec	*rec)
-+{
-+	irec->p_ino = be64_to_cpu(rec->p_ino);
-+	irec->p_gen = be32_to_cpu(rec->p_gen);
-+	irec->p_diroffset = be32_to_cpu(rec->p_diroffset);
-+}
++::
 +
-+/*
-+ * Directly add a parent pointer instead of as a deferred operation
-+ * Currently only used during protofile creation
-+ */
-+int
-+xfs_parent_add(
-+	struct xfs_inode		*parent,
-+	struct xfs_inode		*child,
-+	struct xfs_name			*child_name,
-+	uint32_t			diroffset)
-+{
-+	struct xfs_parent_name_rec	rec;
-+	int				error, err2;
-+	struct xfs_da_args		args;
-+	int				local = 0;
-+	int				rsvd = 0;
-+	struct xfs_buf			*leaf_bp = NULL;
-+	struct xfs_trans_res		tres;
-+	struct xfs_mount		*mp = child->i_mount;
-+	xfs_attr_state_t		state = 0;
-+	int				flags = ATTR_PARENT;
++    +---------+--------------+
++    | hashval | before_block |
++    +---------+--------------+
 +
-+	xfs_init_parent_name_rec(&rec, parent, diroffset);
++The "before block" is the block offset in the inode fork of the block in which
++we can find the record whose hashed key is "hashval". The hash function is as
++follows:
 +
-+	error = xfs_attr_args_init(&args, child, (const unsigned char *)&rec,
-+		 sizeof(rec), flags);
-+	if (error)
-+		return error;
++.. code:: c
 +
-+	args.hashval = xfs_da_hashname(args.name, args.namelen);
-+	args.flags = flags;
-+	args.value = (uint8_t *)child_name->name;
-+	args.valuelen = child_name->len;
-+	args.op_flags = XFS_DA_OP_OKNOENT | XFS_DA_OP_ADDNAME;
-+	args.total = xfs_attr_calc_size(&args, &local);
++    #define rol32(x,y)             (((x) << (y)) | ((x) >> (32 - (y))))
 +
-+	tres.tr_logres = M_RES(mp)->tr_attrsetm.tr_logres +
-+		M_RES(mp)->tr_attrsetrt.tr_logres * args.total;
-+	tres.tr_logcount = XFS_ATTRSET_LOG_COUNT;
-+	tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
++    xfs_dahash_t
++    xfs_da_hashname(const uint8_t *name, int namelen)
++    {
++        xfs_dahash_t hash;
 +
-+	/*
-+	 * Root fork attributes can use reserved data blocks for this
-+	 * operation if necessary
-+	 */
-+	error = xfs_trans_alloc(mp, &tres, args.total, 0,
-+			rsvd ? XFS_TRANS_RESERVE : 0, &args.trans);
-+	if (error)
-+		goto out;
++        /*
++         * Do four characters at a time as long as we can.
++         */
++        for (hash = 0; namelen >= 4; namelen -= 4, name += 4)
++            hash = (name[0] << 21) ^ (name[1] << 14) ^ (name[2] << 7) ^
++                   (name[3] << 0) ^ rol32(hash, 7 * 4);
 +
-+	/*
-+	 * If the inode doesn't have an attribute fork, add one.
-+	 * (inode must not be locked when we call this routine)
-+	 */
-+	if (XFS_IFORK_Q(child) == 0) {
-+		int sf_size = sizeof(xfs_attr_sf_hdr_t) +
-+			XFS_ATTR_SF_ENTSIZE_BYNAME(args.namelen,
-+			args.valuelen);
++        /*
++         * Now do the rest of the characters.
++         */
++        switch (namelen) {
++        case 3:
++            return (name[0] << 14) ^ (name[1] << 7) ^ (name[2] << 0) ^
++                   rol32(hash, 7 * 3);
++        case 2:
++            return (name[0] << 7) ^ (name[1] << 0) ^ rol32(hash, 7 * 2);
++        case 1:
++            return (name[0] << 0) ^ rol32(hash, 7 * 1);
++        default: /* case 0: */
++            return hash;
++        }
++    }
 +
-+		error = xfs_bmap_add_attrfork(child, sf_size, rsvd);
-+		if (error)
-+			return error;
-+	}
++.. _directory-attribute-block-header:
 +
-+	xfs_trans_ijoin(args.trans, child, 0);
++Block Headers
++~~~~~~~~~~~~~
 +
-+	do {
-+		leaf_bp = NULL;
++-  Tree nodes, leaf and node `directories <#directories>`__, and leaf and node
++   `extended attributes <#extended-attributes>`__ use the xfs\_da\_blkinfo\_t
++   filesystem block header. The structure appears as follows:
 +
-+		error = xfs_attr_set_args(&args, &leaf_bp,
-+			&state);
-+		if (error && error != -EAGAIN)
-+			goto out;
++.. code:: c
 +
-+			xfs_trans_log_inode(args.trans, child,
-+					XFS_ILOG_CORE | XFS_ILOG_ADATA);
++    typedef struct xfs_da_blkinfo {
++         __be32                     forw;
++         __be32                     back;
++         __be16                     magic;
++         __be16                     pad;
++    } xfs_da_blkinfo_t;
 +
-+		err2 = xfs_trans_commit(args.trans);
-+		if (err2) {
-+			error = err2;
-+			goto out;
-+		}
++**forw**
++    Logical block offset of the previous B+tree block at this level.
 +
-+		if (error == -EAGAIN) {
-+			err2 = xfs_trans_alloc(mp, &tres, args.total, 0,
-+				XFS_TRANS_PERM_LOG_RES, &args.trans);
-+			if (err2) {
-+				error = err2;
-+				goto out;
-+			}
-+			xfs_trans_ijoin(args.trans, child, 0);
-+		}
-+	} while (error == -EAGAIN);
++**back**
++    Logical block offset of the next B+tree block at this level.
 +
-+	if (leaf_bp)
-+		xfs_trans_brelse(args.trans, leaf_bp);
++**magic**
++    Magic number for this directory/attribute block.
 +
-+	xfs_trans_log_inode(args.trans, child, XFS_ILOG_CORE);
++**pad**
++    Padding to maintain alignment.
 +
-+	return error;
++-  On a v5 filesystem, the leaves use the struct xfs\_da3\_blkinfo\_t
++   filesystem block header. This header is used in the same place as
++   xfs\_da\_blkinfo\_t:
 +
-+out:
-+	if (args.trans)
-+		xfs_trans_cancel(args.trans);
++.. code:: c
 +
-+	return error;
-+}
++    struct xfs_da3_blkinfo {
++         /* these values are inside xfs_da_blkinfo */
++         __be32                     forw;
++         __be32                     back;
++         __be16                     magic;
++         __be16                     pad;
 +
++         __be32                     crc;
++         __be64                     blkno;
++         __be64                     lsn;
++         uuid_t                     uuid;
++         __be64                     owner;
++    };
 +
-diff --git a/libxfs/xfs_parent.h b/libxfs/xfs_parent.h
-new file mode 100644
-index 0000000..60f1172
---- /dev/null
-+++ b/libxfs/xfs_parent.h
-@@ -0,0 +1,35 @@
-+/*
-+ * Copyright (c) 2018 Oracle, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation Inc.
-+ */
-+#ifndef	__XFS_PARENT_H__
-+#define	__XFS_PARENT_H__
++**forw**
++    Logical block offset of the previous B+tree block at this level.
 +
-+#include "xfs_da_format.h"
-+#include "xfs_format.h"
++**back**
++    Logical block offset of the next B+tree block at this level.
 +
-+/*
-+ * Parent pointer attribute prototypes
-+ */
-+void xfs_init_parent_name_rec(struct xfs_parent_name_rec *rec,
-+			      struct xfs_inode *ip,
-+			      uint32_t p_diroffset);
-+void xfs_init_parent_name_irec(struct xfs_parent_name_irec *irec,
-+			       struct xfs_parent_name_rec *rec);
++**magic**
++    Magic number for this directory/attribute block.
 +
-+int xfs_parent_add(struct xfs_inode *parent,
-+		   struct xfs_inode *child, struct xfs_name *child_name,
-+		   uint32_t diroffset);
-+#endif	/* __XFS_PARENT_H__ */
--- 
-2.7.4
++**pad**
++    Padding to maintain alignment.
++
++**crc**
++    Checksum of the directory/attribute block.
++
++**blkno**
++    Block number of this directory/attribute block.
++
++**lsn**
++    Log sequence number of the last write to this block.
++
++**uuid**
++    The UUID of this block, which must match either sb\_uuid or sb\_meta\_uuid
++    depending on which features are set.
++
++**owner**
++    The inode number that this directory/attribute block belongs to.
++
++.. _directory-attribute-internal-node:
++
++Internal Nodes
++~~~~~~~~~~~~~~
++
++The nodes of a dabtree have the following format:
++
++.. code:: c
++
++    typedef struct xfs_da_intnode {
++         struct xfs_da_node_hdr {
++               xfs_da_blkinfo_t     info;
++               __uint16_t           count;
++               __uint16_t           level;
++         } hdr;
++         struct xfs_da_node_entry {
++               xfs_dahash_t         hashval;
++               xfs_dablk_t          before;
++         } btree[1];
++    } xfs_da_intnode_t;
++
++**info**
++    Directory/attribute block info. The magic number is XFS\_DA\_NODE\_MAGIC
++    (0xfebe).
++
++**count**
++    Number of node entries in this block.
++
++**level**
++    The level of this block in the B+tree. Levels start at 1 for blocks that
++    point to directory or attribute data blocks and increase towards the root.
++
++**hashval**
++    The hash value of a particular record.
++
++**before**
++    The directory/attribute logical block containing all entries up to the
++    corresponding hash value.
++
++    -  On a v5 filesystem, the directory/attribute node blocks have the
++       following structure:
++
++.. code:: c
++
++    struct xfs_da3_intnode {
++         struct xfs_da3_node_hdr {
++               struct xfs_da3_blkinfo    info;
++               __uint16_t                count;
++               __uint16_t                level;
++               __uint32_t                pad32;
++         } hdr;
++         struct xfs_da_node_entry {
++               xfs_dahash_t              hashval;
++               xfs_dablk_t               before;
++         } btree[1];
++    };
++
++**info**
++    Directory/attribute block info. The magic number is XFS\_DA3\_NODE\_MAGIC
++    (0x3ebe).
++
++**count**
++    Number of node entries in this block.
++
++**level**
++    The level of this block in the B+tree. Levels start at 1 for blocks that
++    point to directory or attribute data blocks, and increase towards the
++    root.
++
++**pad32**
++    Padding to maintain alignment.
++
++**hashval**
++    The hash value of a particular record.
++
++**before**
++    The directory/attribute logical block containing all entries up to the
++    corresponding hash value.
+diff --git a/Documentation/filesystems/xfs/ondisk/globals.rst b/Documentation/filesystems/xfs/ondisk/globals.rst
+index 0c919e561fb1..05c6ba5a02c8 100644
+--- a/Documentation/filesystems/xfs/ondisk/globals.rst
++++ b/Documentation/filesystems/xfs/ondisk/globals.rst
+@@ -4,3 +4,4 @@ Global Structures
+ =================
+ 
+ .. include:: btrees.rst
++.. include:: dabtrees.rst
