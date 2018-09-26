@@ -1,74 +1,220 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:41448 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726242AbeIZDNu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Sep 2018 23:13:50 -0400
-Date: Tue, 25 Sep 2018 14:04:18 -0700
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: block: DMA alignment of IO buffer allocated from slab
-Message-ID: <20180925210418.GA9854@bombadil.infradead.org>
-References: <CACVXFVOBq3L_EjSTCoiqUL1PH=HMR5EuNNQV0hNndFpGxmUK6g@mail.gmail.com>
- <20180920063129.GB12913@lst.de>
- <87h8ij0zot.fsf@vitty.brq.redhat.com>
- <20180921130504.GA22551@lst.de>
- <010001660c54fb65-b9d3a770-6678-40d0-8088-4db20af32280-000000@email.amazonses.com>
- <1f88f59a-2cac-e899-4c2e-402e919b1034@kernel.dk>
- <010001660cbd51ea-56e96208-564d-4f5d-a5fb-119a938762a9-000000@email.amazonses.com>
- <1a5b255f-682e-783a-7f99-9d02e39c4af2@kernel.dk>
- <20180925074910.GB31060@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180925074910.GB31060@dastard>
+Received: from userp2130.oracle.com ([156.151.31.86]:55502 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727187AbeIZQ3o (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 12:29:44 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8QAERqx065434
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:30 GMT
+Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
+        by userp2130.oracle.com with ESMTP id 2mnd5thhr7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:30 +0000
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAHOng031354
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:25 GMT
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAHOc1014119
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:17:24 GMT
+From: Allison Henderson <allison.henderson@oracle.com>
+Subject: [PATCH v9 16/28] xfs: get directory offset when replacing a directory name
+Date: Wed, 26 Sep 2018 03:14:55 -0700
+Message-Id: <1537956907-10244-17-git-send-email-allison.henderson@oracle.com>
+In-Reply-To: <1537956907-10244-1-git-send-email-allison.henderson@oracle.com>
+References: <1537956907-10244-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Christopher Lameter <cl@linux.com>, Christoph Hellwig <hch@lst.de>, Vitaly Kuznetsov <vkuznets@redhat.com>, Ming Lei <tom.leiming@gmail.com>, linux-block <linux-block@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Ming Lei <ming.lei@redhat.com>
+To: linux-xfs@vger.kernel.org
 
-On Tue, Sep 25, 2018 at 05:49:10PM +1000, Dave Chinner wrote:
-> On Mon, Sep 24, 2018 at 12:09:37PM -0600, Jens Axboe wrote:
-> > On 9/24/18 12:00 PM, Christopher Lameter wrote:
-> > > On Mon, 24 Sep 2018, Jens Axboe wrote:
-> > > 
-> > >> The situation is making me a little uncomfortable, though. If we export
-> > >> such a setting, we really should be honoring it...
-> 
-> That's what I said up front, but you replied to this with:
-> 
-> | I think this is all crazy talk. We've never done this, [...]
-> 
-> Now I'm not sure what you are saying we should do....
-> 
-> > > Various subsystems create custom slab arrays with their particular
-> > > alignment requirement for these allocations.
-> > 
-> > Oh yeah, I think the solution is basic enough for XFS, for instance.
-> > They just have to error on the side of being cautious, by going full
-> > sector alignment for memory...
-> 
-> How does the filesystem find out about hardware alignment
-> requirements? Isn't probing through the block device to find out
-> about the request queue configurations considered a layering
-> violation?
-> 
-> What if sector alignment is not sufficient?  And how would this work
-> if we start supporting sector sizes larger than page size? (which the
-> XFS buffer cache supports just fine, even if nothing else in
-> Linux does).
+From: Mark Tinguely <tinguely@sgi.com>
 
-I've never quite understood the O_DIRECT sector size alignment
-restriction.  The sector size has literally nothing to do with the
-limitations of the controller that's doing the DMA.  OK, NVMe smooshes the
-two components into one, but back in the SCSI era, the DMA abilities were
-the HBA's responsibility and the sector size was a property of the LUN!
+Return the directory offset information when replacing an entry to the
+directory.
 
-Heck, with a sufficiently advanced HBA (eg supporting scatterlists with
-bitbuckets), you could even ask for sub-sector-*sized* IOs.  Not terribly
-useful since the bytes still had to be transferred over the SCSI cable,
-but you'd save transferring them across the PCI bus.
+This offset will be used as the parent pointer offset in xfs_rename.
 
-Anyway, why would we require *larger* than 512 byte alignment for
-in-kernel users?  I doubt there are any remaining HBAs that can't do
-8-byte aligned I/Os (for the record, NVMe requires controllers to be
-able to do 4-byte aligned I/Os).
+[dchinner: forward ported and cleaned up]
+[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t,
+	   Changed typedefs to raw struct types]
+
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_dir2.c       |  8 ++++++--
+ fs/xfs/libxfs/xfs_dir2.h       |  2 +-
+ fs/xfs/libxfs/xfs_dir2_block.c |  4 ++--
+ fs/xfs/libxfs/xfs_dir2_leaf.c  |  1 +
+ fs/xfs/libxfs/xfs_dir2_node.c  |  1 +
+ fs/xfs/libxfs/xfs_dir2_sf.c    |  2 ++
+ fs/xfs/xfs_inode.c             | 14 +++++++-------
+ 7 files changed, 20 insertions(+), 12 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index f5475e7..7d8c63b 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -468,7 +468,7 @@ xfs_dir_removename(
+ 	else
+ 		rval = xfs_dir2_node_removename(args);
+ out_free:
+-	if (offset)
++	if (!rval && offset)
+ 		*offset = args->offset;
+ 
+ 	kmem_free(args);
+@@ -484,7 +484,8 @@ xfs_dir_replace(
+ 	struct xfs_inode	*dp,
+ 	struct xfs_name		*name,		/* name of entry to replace */
+ 	xfs_ino_t		inum,		/* new inode number */
+-	xfs_extlen_t		total)		/* bmap's total block count */
++	xfs_extlen_t		total,		/* bmap's total block count */
++	xfs_dir2_dataptr_t	*offset)	/* OUT: offset in directory */
+ {
+ 	struct xfs_da_args	*args;
+ 	int			rval;
+@@ -532,6 +533,9 @@ xfs_dir_replace(
+ 	else
+ 		rval = xfs_dir2_node_replace(args);
+ out_free:
++	if (offset)
++		*offset = args->offset;
++
+ 	kmem_free(args);
+ 	return rval;
+ }
+diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+index 2cf1d87..63de5b9 100644
+--- a/fs/xfs/libxfs/xfs_dir2.h
++++ b/fs/xfs/libxfs/xfs_dir2.h
+@@ -127,7 +127,7 @@ extern int xfs_dir_removename(struct xfs_trans *tp, struct xfs_inode *dp,
+ 				xfs_dir2_dataptr_t *offset);
+ extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
+ 				struct xfs_name *name, xfs_ino_t inum,
+-				xfs_extlen_t tot);
++				xfs_extlen_t tot, xfs_dir2_dataptr_t *offset);
+ extern int xfs_dir_canenter(struct xfs_trans *tp, struct xfs_inode *dp,
+ 				struct xfs_name *name);
+ 
+diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+index aa84c45..a327d81 100644
+--- a/fs/xfs/libxfs/xfs_dir2_block.c
++++ b/fs/xfs/libxfs/xfs_dir2_block.c
+@@ -860,9 +860,9 @@ xfs_dir2_block_replace(
+ 	/*
+ 	 * Point to the data entry we need to change.
+ 	 */
++	args->offset = be32_to_cpu(blp[ent].address);
+ 	dep = (xfs_dir2_data_entry_t *)((char *)hdr +
+-			xfs_dir2_dataptr_to_off(args->geo,
+-						be32_to_cpu(blp[ent].address)));
++			xfs_dir2_dataptr_to_off(args->geo, args->offset));
+ 	ASSERT(be64_to_cpu(dep->inumber) != args->inumber);
+ 	/*
+ 	 * Change the inode number to the new value.
+diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+index 5e68c39..1ef74572 100644
+--- a/fs/xfs/libxfs/xfs_dir2_leaf.c
++++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+@@ -1538,6 +1538,7 @@ xfs_dir2_leaf_replace(
+ 	/*
+ 	 * Point to the data entry.
+ 	 */
++	args->offset = be32_to_cpu(lep->address);
+ 	dep = (xfs_dir2_data_entry_t *)
+ 	      ((char *)dbp->b_addr +
+ 	       xfs_dir2_dataptr_to_off(args->geo, be32_to_cpu(lep->address)));
+diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+index 3c1698f..9cbe012 100644
+--- a/fs/xfs/libxfs/xfs_dir2_node.c
++++ b/fs/xfs/libxfs/xfs_dir2_node.c
+@@ -2242,6 +2242,7 @@ xfs_dir2_node_replace(
+ 		hdr = state->extrablk.bp->b_addr;
+ 		ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
+ 		       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC));
++		args->offset = be32_to_cpu(lep->address);
+ 		dep = (xfs_dir2_data_entry_t *)
+ 		      ((char *)hdr +
+ 		       xfs_dir2_dataptr_to_off(args->geo,
+diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+index e65615c..ea5b63b 100644
+--- a/fs/xfs/libxfs/xfs_dir2_sf.c
++++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+@@ -1031,6 +1031,8 @@ xfs_dir2_sf_replace(
+ 				ASSERT(args->inumber != ino);
+ 				dp->d_ops->sf_put_ino(sfp, sfep, args->inumber);
+ 				dp->d_ops->sf_put_ftype(sfep, args->filetype);
++				args->offset = xfs_dir2_byte_to_dataptr(
++						  xfs_dir2_sf_get_offset(sfep));
+ 				break;
+ 			}
+ 		}
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 67a5437..d7e06c2 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2737,12 +2737,12 @@ xfs_cross_rename(
+ 	int		dp2_flags = 0;
+ 
+ 	/* Swap inode number for dirent in first parent */
+-	error = xfs_dir_replace(tp, dp1, name1, ip2->i_ino, spaceres);
++	error = xfs_dir_replace(tp, dp1, name1, ip2->i_ino, spaceres, NULL);
+ 	if (error)
+ 		goto out_trans_abort;
+ 
+ 	/* Swap inode number for dirent in second parent */
+-	error = xfs_dir_replace(tp, dp2, name2, ip1->i_ino, spaceres);
++	error = xfs_dir_replace(tp, dp2, name2, ip1->i_ino, spaceres, NULL);
+ 	if (error)
+ 		goto out_trans_abort;
+ 
+@@ -2756,7 +2756,7 @@ xfs_cross_rename(
+ 
+ 		if (S_ISDIR(VFS_I(ip2)->i_mode)) {
+ 			error = xfs_dir_replace(tp, ip2, &xfs_name_dotdot,
+-						dp1->i_ino, spaceres);
++						dp1->i_ino, spaceres, NULL);
+ 			if (error)
+ 				goto out_trans_abort;
+ 
+@@ -2782,7 +2782,7 @@ xfs_cross_rename(
+ 
+ 		if (S_ISDIR(VFS_I(ip1)->i_mode)) {
+ 			error = xfs_dir_replace(tp, ip1, &xfs_name_dotdot,
+-						dp2->i_ino, spaceres);
++						dp2->i_ino, spaceres, NULL);
+ 			if (error)
+ 				goto out_trans_abort;
+ 
+@@ -3023,7 +3023,7 @@ xfs_rename(
+ 		 * name at the destination directory, remove it first.
+ 		 */
+ 		error = xfs_dir_replace(tp, target_dp, target_name,
+-					src_ip->i_ino, spaceres);
++					src_ip->i_ino, spaceres, NULL);
+ 		if (error)
+ 			goto out_trans_cancel;
+ 
+@@ -3057,7 +3057,7 @@ xfs_rename(
+ 		 * directory.
+ 		 */
+ 		error = xfs_dir_replace(tp, src_ip, &xfs_name_dotdot,
+-					target_dp->i_ino, spaceres);
++					target_dp->i_ino, spaceres, NULL);
+ 		ASSERT(error != -EEXIST);
+ 		if (error)
+ 			goto out_trans_cancel;
+@@ -3096,7 +3096,7 @@ xfs_rename(
+ 	 */
+ 	if (wip) {
+ 		error = xfs_dir_replace(tp, src_dp, src_name, wip->i_ino,
+-					spaceres);
++					spaceres, NULL);
+ 	} else
+ 		error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
+ 					   spaceres, NULL);
+-- 
+2.7.4
