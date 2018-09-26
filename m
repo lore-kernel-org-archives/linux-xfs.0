@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:48608 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727484AbeIZQiG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 12:38:06 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8QAO291037394
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:49 GMT
-Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
-        by userp2120.oracle.com with ESMTP id 2mnvtur9bq-1
+Received: from userp2130.oracle.com ([156.151.31.86]:33574 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727483AbeIZQiI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 12:38:08 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8QANksG073198
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:51 GMT
+Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
+        by userp2130.oracle.com with ESMTP id 2mnd5thjrw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:49 +0000
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:51 +0000
 Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAPngi013104
+        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAPogc004953
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:49 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:50 GMT
 Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w8QAPmfV018458
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w8QAPnjY018462
         for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:49 GMT
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v3 17/30] xfsprogs: define parent pointer xattr format
-Date: Wed, 26 Sep 2018 03:23:20 -0700
-Message-Id: <1537957413-10630-18-git-send-email-allison.henderson@oracle.com>
+Subject: [PATCH v3 20/30] xfsprogs: Add the parent pointer support to the superblock version 5.
+Date: Wed, 26 Sep 2018 03:23:23 -0700
+Message-Id: <1537957413-10630-21-git-send-email-allison.henderson@oracle.com>
 In-Reply-To: <1537957413-10630-1-git-send-email-allison.henderson@oracle.com>
 References: <1537957413-10630-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -28,76 +28,71 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-We need to define the parent pointer attribute format before we
-start adding support for it into all the code that needs to use it.
-The EA format we will use encodes the following information:
+[dchinner: forward ported and cleaned up]
+[achender: rebased and added parent pointer attribute to
+           compatible attributes mask]
 
-    name={parent inode #, parent inode generation, dirent offset}
-    value={dirent filename}
-
-The inode/gen gives all the information we need to reliably identify
-the parent without requiring child->parent lock ordering, and allows
-userspace to do pathname component level reconstruction without the
-kernel ever needing to verify the parent itself as part of ioctl
-calls.
-
-By using the dirent offset in the EA name, we have a method of
-knowing the exact parent pointer EA we need to modify/remove in
-rename/unlink without an unbound EA name search.
-
-By keeping the dirent name in the value, we have enough information
-to be able to validate and reconstruct damaged directory trees.
-While the diroffset of a filename alone is not unique enough to
-identify the child, the {diroffset,filename,child_inode} tuple is
-sufficient. That is, if the diroffset gets reused and points to a
-different filename, we can detect that from the contents of EA. If a
-link of the same name is created, then we can check whether it
-points at the same inode as the parent EA we current have.
-
-[achender: rebased, changed __unint32_t to xfs_dir2_dataptr_t,
-       changed p_ino to xfs_ino_t and p_namelen to uint8_t,
-       moved to xfs_da_format for xfs_dir2_dataptr_t]
-
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-Reviewed-by: Darrick J. Wong<darrick.wong@oracle.com>
 ---
- libxfs/xfs_da_format.h | 25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
+ libxfs/xfs_format.h | 7 +++++--
+ libxfs/xfs_fs.h     | 1 +
+ libxfs/xfs_sb.c     | 2 ++
+ 3 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/libxfs/xfs_da_format.h b/libxfs/xfs_da_format.h
-index 67cb9ea..b6405d7 100644
---- a/libxfs/xfs_da_format.h
-+++ b/libxfs/xfs_da_format.h
-@@ -873,4 +873,29 @@ static inline unsigned int xfs_dir2_dirblock_bytes(struct xfs_sb *sbp)
- 	return 1 << (sbp->sb_blocklog + sbp->sb_dirblklog);
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index d00dd0a..0eb01c1 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -453,10 +453,12 @@ xfs_sb_has_compat_feature(
+ #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
+ #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
+ #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
++#define XFS_SB_FEAT_RO_COMPAT_PARENT	(1 << 3)		/* parent inode ptr */
+ #define XFS_SB_FEAT_RO_COMPAT_ALL \
+ 		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
+ 		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
+-		 XFS_SB_FEAT_RO_COMPAT_REFLINK)
++		 XFS_SB_FEAT_RO_COMPAT_REFLINK| \
++		 XFS_SB_FEAT_RO_COMPAT_PARENT)
+ #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
+ static inline bool
+ xfs_sb_has_ro_compat_feature(
+@@ -552,7 +554,8 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
+ 
+ static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
+ {
+-	return false; /* We'll enable this at the end of the set */
++	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
++		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_PARENT));
  }
  
-+/*
-+ * Parent pointer attribute format definition
-+ *
-+ * EA name encodes the parent inode number, generation and the offset of
-+ * the dirent that points to the child inode. The EA value contains the
-+ * same name as the dirent in the parent directory.
-+ */
-+struct xfs_parent_name_rec {
-+	__be64  p_ino;
-+	__be32  p_gen;
-+	__be32  p_diroffset;
-+};
-+
-+/*
-+ * incore version of the above, also contains name pointers so callers
-+ * can pass/obtain all the parent pointer information in a single structure
-+ */
-+struct xfs_parent_name_irec {
-+	xfs_ino_t		p_ino;
-+	uint32_t		p_gen;
-+	xfs_dir2_dataptr_t	p_diroffset;
-+	const char		*p_name;
-+	uint8_t			p_namelen;
-+};
-+
- #endif /* __XFS_DA_FORMAT_H__ */
+ /*
+diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
+index c8a3b12..407cd61 100644
+--- a/libxfs/xfs_fs.h
++++ b/libxfs/xfs_fs.h
+@@ -231,6 +231,7 @@ typedef struct xfs_fsop_resblks {
+ #define XFS_FSOP_GEOM_FLAGS_SPINODES	0x40000	/* sparse inode chunks	*/
+ #define XFS_FSOP_GEOM_FLAGS_RMAPBT	0x80000	/* reverse mapping btree */
+ #define XFS_FSOP_GEOM_FLAGS_REFLINK	0x100000 /* files can share blocks */
++#define XFS_FSOP_GEOM_FLAGS_PARENT	0x200000 /* parent pointers */
+ 
+ /*
+  * Minimum and maximum sizes need for growth checks.
+diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
+index 93584fa..dc70708 100644
+--- a/libxfs/xfs_sb.c
++++ b/libxfs/xfs_sb.c
+@@ -1125,6 +1125,8 @@ xfs_fs_geometry(
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_RMAPBT;
+ 	if (xfs_sb_version_hasreflink(sbp))
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_REFLINK;
++	if(xfs_sb_version_hasparent(sbp))
++		geo->flags |= XFS_FSOP_GEOM_FLAGS_PARENT;
+ 	if (xfs_sb_version_hassector(sbp))
+ 		geo->logsectsize = sbp->sb_logsectsize;
+ 	else
 -- 
 2.7.4
