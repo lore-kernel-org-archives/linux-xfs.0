@@ -1,26 +1,26 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:33574 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727483AbeIZQiI (ORCPT
+Received: from aserp2120.oracle.com ([141.146.126.78]:55452 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727512AbeIZQiI (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Sep 2018 12:38:08 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8QANksG073198
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w8QANdIQ087632
         for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:51 GMT
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp2130.oracle.com with ESMTP id 2mnd5thjrw-1
+Received: from userv0021.oracle.com (userv0021.oracle.com [156.151.31.71])
+        by aserp2120.oracle.com with ESMTP id 2mndpphh7m-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
         for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:51 +0000
 Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAPogc004953
+        by userv0021.oracle.com (8.14.4/8.14.4) with ESMTP id w8QAPoOY013191
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
         for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:50 GMT
 Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w8QAPnjY018462
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:49 GMT
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w8QAPo3l018471
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Sep 2018 10:25:50 GMT
 From: Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v3 20/30] xfsprogs: Add the parent pointer support to the superblock version 5.
-Date: Wed, 26 Sep 2018 03:23:23 -0700
-Message-Id: <1537957413-10630-21-git-send-email-allison.henderson@oracle.com>
+Subject: [PATCH v3 22/30] xfsprogs: Add parent pointer ioctl
+Date: Wed, 26 Sep 2018 03:23:25 -0700
+Message-Id: <1537957413-10630-23-git-send-email-allison.henderson@oracle.com>
 In-Reply-To: <1537957413-10630-1-git-send-email-allison.henderson@oracle.com>
 References: <1537957413-10630-1-git-send-email-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -28,71 +28,110 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-[dchinner: forward ported and cleaned up]
-[achender: rebased and added parent pointer attribute to
-           compatible attributes mask]
+This patch adds a new file ioctl to retrieve the parent
+pointer of a given inode
 
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- libxfs/xfs_format.h | 7 +++++--
- libxfs/xfs_fs.h     | 1 +
- libxfs/xfs_sb.c     | 2 ++
- 3 files changed, 8 insertions(+), 2 deletions(-)
+ libxfs/xfs_fs.h     | 45 +++++++++++++++++++++++++++++++++++++++++++++
+ libxfs/xfs_parent.c | 10 ++++++++++
+ libxfs/xfs_parent.h |  2 ++
+ 3 files changed, 57 insertions(+)
 
-diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
-index d00dd0a..0eb01c1 100644
---- a/libxfs/xfs_format.h
-+++ b/libxfs/xfs_format.h
-@@ -453,10 +453,12 @@ xfs_sb_has_compat_feature(
- #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
- #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
- #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
-+#define XFS_SB_FEAT_RO_COMPAT_PARENT	(1 << 3)		/* parent inode ptr */
- #define XFS_SB_FEAT_RO_COMPAT_ALL \
- 		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
- 		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
--		 XFS_SB_FEAT_RO_COMPAT_REFLINK)
-+		 XFS_SB_FEAT_RO_COMPAT_REFLINK| \
-+		 XFS_SB_FEAT_RO_COMPAT_PARENT)
- #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
- static inline bool
- xfs_sb_has_ro_compat_feature(
-@@ -552,7 +554,8 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
- 
- static inline bool xfs_sb_version_hasparent(struct xfs_sb *sbp)
- {
--	return false; /* We'll enable this at the end of the set */
-+	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
-+		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_PARENT));
- }
- 
- /*
 diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index c8a3b12..407cd61 100644
+index 407cd61..4c597be 100644
 --- a/libxfs/xfs_fs.h
 +++ b/libxfs/xfs_fs.h
-@@ -231,6 +231,7 @@ typedef struct xfs_fsop_resblks {
- #define XFS_FSOP_GEOM_FLAGS_SPINODES	0x40000	/* sparse inode chunks	*/
- #define XFS_FSOP_GEOM_FLAGS_RMAPBT	0x80000	/* reverse mapping btree */
- #define XFS_FSOP_GEOM_FLAGS_REFLINK	0x100000 /* files can share blocks */
-+#define XFS_FSOP_GEOM_FLAGS_PARENT	0x200000 /* parent pointers */
+@@ -568,6 +568,50 @@ struct xfs_scrub_metadata {
+ 				 XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED)
+ #define XFS_SCRUB_FLAGS_ALL	(XFS_SCRUB_FLAGS_IN | XFS_SCRUB_FLAGS_OUT)
+ 
++#define XFS_PPTR_MAXNAMELEN				256
++
++/* return parents of the handle, not the open fd */
++#define XFS_PPTR_IFLAG_HANDLE  (1U << 0)
++
++/* target was the root directory */
++#define XFS_PPTR_OFLAG_ROOT    (1U << 1)
++
++/* Cursor is done iterating pptrs */
++#define XFS_PPTR_OFLAG_DONE    (1U << 2)
++
++/* Get an inode parent pointer through ioctl */
++struct xfs_parent_ptr {
++	__u64		xpp_ino;			/* Inode */
++	__u32		xpp_gen;			/* Inode generation */
++	__u32		xpp_diroffset;			/* Directory offset */
++	__u32		xpp_namelen;			/* File name length */
++	__u32		xpp_pad;
++	__u8		xpp_name[XFS_PPTR_MAXNAMELEN];	/* File name */
++};
++
++/* Iterate through an inodes parent pointers */
++struct xfs_pptr_info {
++	struct xfs_handle		pi_handle;
++	struct xfs_attrlist_cursor	pi_cursor;
++	__u32				pi_flags;
++	__u32				pi_reserved;
++	__u32				pi_ptrs_size;
++	__u32				pi_ptrs_used;
++	__u64				pi_reserved2[6];
++
++	/*
++	 * An array of struct xfs_parent_ptr follows the header
++	 * information. Use XFS_PPINFO_TO_PP() to access the
++	 * parent pointer array entries.
++	 */
++};
++
++#define XFS_PPTR_INFO_SIZEOF(nr_ptrs) sizeof (struct xfs_pptr_info) + \
++				      nr_ptrs * sizeof(struct xfs_parent_ptr)
++
++#define XFS_PPINFO_TO_PP(info, idx)    \
++	(&(((struct xfs_parent_ptr *)((char *)(info) + sizeof(*(info))))[(idx)]))
++
+ /*
+  * ioctl limits
+  */
+@@ -611,6 +655,7 @@ struct xfs_scrub_metadata {
+ #define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_fs_eofblocks)
+ /*	XFS_IOC_GETFSMAP ------ hoisted 59         */
+ #define XFS_IOC_SCRUB_METADATA	_IOWR('X', 60, struct xfs_scrub_metadata)
++#define XFS_IOC_GETPPOINTER	_IOR ('X', 61, struct xfs_parent_ptr)
  
  /*
-  * Minimum and maximum sizes need for growth checks.
-diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
-index 93584fa..dc70708 100644
---- a/libxfs/xfs_sb.c
-+++ b/libxfs/xfs_sb.c
-@@ -1125,6 +1125,8 @@ xfs_fs_geometry(
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_RMAPBT;
- 	if (xfs_sb_version_hasreflink(sbp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_REFLINK;
-+	if(xfs_sb_version_hasparent(sbp))
-+		geo->flags |= XFS_FSOP_GEOM_FLAGS_PARENT;
- 	if (xfs_sb_version_hassector(sbp))
- 		geo->logsectsize = sbp->sb_logsectsize;
- 	else
+  * ioctl commands that replace IRIX syssgi()'s
+diff --git a/libxfs/xfs_parent.c b/libxfs/xfs_parent.c
+index f83815f..d506c22 100644
+--- a/libxfs/xfs_parent.c
++++ b/libxfs/xfs_parent.c
+@@ -43,6 +43,16 @@
+ #include "kmem.h"
+ #include "xfs_bmap.h"
+ 
++/* Initializes a xfs_parent_ptr from an xfs_parent_name_rec */
++void
++xfs_init_parent_ptr(struct xfs_parent_ptr		*xpp,
++		     struct xfs_parent_name_rec	*rec)
++{
++	xpp->xpp_ino = be64_to_cpu(rec->p_ino);
++	xpp->xpp_gen = be32_to_cpu(rec->p_gen);
++	xpp->xpp_diroffset = be32_to_cpu(rec->p_diroffset);
++}
++
+ /*
+  * Parent pointer attribute handling.
+  *
+diff --git a/libxfs/xfs_parent.h b/libxfs/xfs_parent.h
+index 60f1172..3fcbbbb 100644
+--- a/libxfs/xfs_parent.h
++++ b/libxfs/xfs_parent.h
+@@ -32,4 +32,6 @@ void xfs_init_parent_name_irec(struct xfs_parent_name_irec *irec,
+ int xfs_parent_add(struct xfs_inode *parent,
+ 		   struct xfs_inode *child, struct xfs_name *child_name,
+ 		   uint32_t diroffset);
++void xfs_init_parent_ptr(struct xfs_parent_ptr *xpp,
++			 struct xfs_parent_name_rec *rec);
+ #endif	/* __XFS_PARENT_H__ */
 -- 
 2.7.4
