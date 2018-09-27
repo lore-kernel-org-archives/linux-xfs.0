@@ -1,49 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:49032 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726477AbeI0F5n (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Sep 2018 01:57:43 -0400
-Date: Wed, 26 Sep 2018 16:41:46 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 02/24] docs: carry a copy of the CC-by-SA 3.0 license
-Message-ID: <20180926234146.GA20086@magnolia>
-References: <153799045443.31202.17537455000771265705.stgit@magnolia>
- <153799046767.31202.13234065186281153272.stgit@magnolia>
- <20180926213028.GA22763@infradead.org>
- <20180926232140.GE31060@dastard>
+Received: from mx1.redhat.com ([209.132.183.28]:57886 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727212AbeI0V0O (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 27 Sep 2018 17:26:14 -0400
+Date: Thu, 27 Sep 2018 11:07:31 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/5] xfs: cancel COW blocks before swapext
+Message-ID: <20180927150730.GA3743@bfoster>
+References: <20180920144220.2181-1-hch@lst.de>
+ <20180920144220.2181-2-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180926232140.GE31060@dastard>
+In-Reply-To: <20180920144220.2181-2-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, b@magnolia
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Sep 27, 2018 at 09:21:40AM +1000, Dave Chinner wrote:
-> On Wed, Sep 26, 2018 at 02:30:28PM -0700, Christoph Hellwig wrote:
-> > On Wed, Sep 26, 2018 at 12:34:27PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Add the CC-BY-SA 3.0 license so that the XFS Data Structures &
-> > > Algorithms book can reference it with spdx headers.
-> > 
-> > NAK.  We should not add random new licenses to the kernel tree.
+On Thu, Sep 20, 2018 at 04:42:16PM +0200, Christoph Hellwig wrote:
+> We need to make sure we have no outstanding COW blocks before we swap
+> extents, as there is nothing preventing us from having COW preallocations
+> on an inode that swapext is called on.  That case can easily be
+> reproduced by the upcoming always_cow mode.
 > 
-> Given these patches are all CC-BY-SA-3.0+ (i.e. they have an "or
-> later" clause in them), and the kernel already has
-> LICENSES/other/CC-BY-SA-4.0, why not just put them under the license
-> that the kernel already supports?
 
-Ok, will do.  I'll repost the whole thing w/ changed SPDX headers if I
-don't hear anything else. :)
+Why? Is the current code to swap the cow forks not sufficient or
+problematic in some way?
 
---D
-
-> Cheers,
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_bmap_util.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
 > 
-> Dave.
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 414dbc31139c..e0e9cbc98ccd 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -1515,6 +1515,12 @@ xfs_swap_extent_flush(
+>  		return error;
+>  	truncate_pagecache_range(VFS_I(ip), 0, -1);
+>  
+> +	if (xfs_inode_has_cow_data(ip)) {
+> +		error = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, true);
+> +		if (error)
+> +			return error;
+> +	}
+> +
+
+The change seems fine, but doesn't this make the follow on code to swap
+the cow blocks tags spurious..?
+
+Brian
+
+>  	/* Verify O_DIRECT for ftmp */
+>  	if (VFS_I(ip)->i_mapping->nrpages)
+>  		return -EINVAL;
 > -- 
-> Dave Chinner
-> david@fromorbit.com
+> 2.18.0
+> 
