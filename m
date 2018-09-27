@@ -1,93 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:35619 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726682AbeI0IZT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Sep 2018 04:25:19 -0400
-Date: Thu, 27 Sep 2018 12:08:23 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Leaking Path in XFS's ioctl interface(missing LSM check)
-Message-ID: <20180927020822.GG31060@dastard>
-References: <5EF0D46A-C098-4B51-AD13-225FFCA35D4C@vt.edu>
- <20180926013329.GD31060@dastard>
- <dc3bf978-1b98-bebd-6f35-9b2795693ea7@tycho.nsa.gov>
+Received: from userp2120.oracle.com ([156.151.31.85]:55932 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727335AbeI0XwH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Sep 2018 19:52:07 -0400
+Date: Thu, 27 Sep 2018 10:32:41 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [RFC PATCH 00/24] xfs-4.20: major documentation surgery
+Message-ID: <20180927173241.GB20086@magnolia>
+References: <153799045443.31202.17537455000771265705.stgit@magnolia>
+ <20180927085005.21f7e34a@lwn.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <dc3bf978-1b98-bebd-6f35-9b2795693ea7@tycho.nsa.gov>
+In-Reply-To: <20180927085005.21f7e34a@lwn.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Stephen Smalley <sds@tycho.nsa.gov>
-Cc: TongZhang <ztong@vt.edu>, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-security-module@vger.kernel.org, Wenbo Shen <shenwenbosmile@gmail.com>
+To: Jonathan Corbet <corbet@lwn.net>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
 
-On Wed, Sep 26, 2018 at 09:23:03AM -0400, Stephen Smalley wrote:
-> On 09/25/2018 09:33 PM, Dave Chinner wrote:
-> >On Tue, Sep 25, 2018 at 08:51:50PM -0400, TongZhang wrote:
-> >>Hi,
-> >>
-> >>I'm bringing up this issue again to let of LSM developers know the situation, and would like to know your thoughts.
-> >>Several weeks ago I sent an email to the security list to discuss the issue where
-> >>XFS's ioctl interface can do things like vfs_readlink without asking LSM's
-> >>permission, which we think is kind of weird and this kind of operation should be
-> >>audited by LSM.
-> >
-> >These aren't user interfaces. They are filesystem maintenance and
-> >extension interfaces.  They are intended for low level filesystem
-> >utilities that require complete, unrestricted access to the
-> >underlying filesystem via holding CAP_SYSADMIN in the initns.
-> >
-> >i.e.  they are used to perform filesystem maintenance and extension
-> >operations that need to be completely invisible to users from
-> >userspace. e.g.  online file defragmentation (xfs_fsr), data
-> >migration (e.g. HSM products), efficient backup of data (xfsdump),
-> >metadata and data scrubbing, online repair, etc.
-> >
-> >IOWs, I really don't think these interfaces are something the LSMs
-> >should be trying to intercept or audit, because they are essentially
-> >internal filesystem interfaces used by trusted code and not general
-> >user application facing APIs.
+On Thu, Sep 27, 2018 at 08:50:05AM -0600, Jonathan Corbet wrote:
+> On Wed, 26 Sep 2018 12:34:14 -0700
+> "Darrick J. Wong" <darrick.wong@oracle.com> wrote:
 > 
-> If they are interfaces exposed to userspace, then they should be
-> mediated via LSM.  We only omit the LSM hook when the usage is
-> purely kernel-internal.
+> > This series converts the existing in-kernel xfs documentation to rst
+> > format, links it in with the rest of the kernel's rst documetation, and
+> > then begins pulling in the contents of the Data Structures & Algorithms
+> > book from the xfs-documentation git tree.  No changes are made to the
+> > text during the import process except to fix things that the conversion
+> > process (asciidoctor + pandoc) didn't do correctly.  The goal of this
+> > series is to tie together the XFS code with the on-disk format
+> > documentation for the features supported by the code.
+> 
+> Some overall comments:
+> 
+>  - I certainly approve of improving the documentation and bringing it into
+>    the docs tree - even if you don't CC the docs maintainer :)
 
-/me points to the mass of diverse management ioctls across the
-kernel that aren't mediated by LSM hooks.
+Oops.  Sorry about that. :/
 
-> Security modules are often used to limit
-> even "trusted" applications to least privilege and protect them from
-> untrustworthy inputs, moving from binary trust notions to only
-> trusting them for what they must be trusted to do.  CAP_SYS_ADMIN
-> doesn't necessarily indicate that they are trusted to override any
-> given MAC policy restrictions.
+>  - When people do this work, I often end up asking them to think about who
+>    the audience is for the documentation.  Developers tend to want to
+>    group all of their docs together, but readers - the people the docs are
+>    for - tend to have different ideas.
+> 
+>    So, for example, the xfs.txt document converted in part 1 really, IMO,
+>    belongs in the admin guide - it's information for system
+>    administrators.  The data structures and algorithms stuff, instead, is
+>    aimed at developers.  I would really argue for separating the two.
+>    It's more work, but it's friendlier to our readers in the long term,
+>    and moves us away from our current pile of unorganized text.
 
-Applications that are tightly integrated into the filesystem to
-extend it's functionality effectively operate in the same trust
-space as the kernel filesystem implementation itself.  i.e. they
-interact with the filesystem at levels below the DAC/MAC checks that
-are performed on user filesystem accesses, and perform manipluation
-of the on-disk filesystem structure that is invisible to users
-accessing the filesystem.
+If the xfs.txt file moves to the administration guide, how difficult is
+it to have it link to the data structures & algorithms book, and vice
+versa?
 
-As such, there are very few trusted applications have "massive data
-loss" as a potential failure mode if an inappropriately configured
-LSM is loaded into the kernel. Breaking a HSM application's access
-to the filesystem unexpectedly because someone didn't set up a new
-security policy correctly brings a whole new level of risk to
-administrating sites that mix non-trivial storage solutions with
-LSM-based security.
+There's probably more administrative stuff from the old SGI guides that
+could be cleaned up and added to the administration guide, but that's
+something for later.
 
-> Wondering why we don't perform the security_inode_readlink() call
-> inside of vfs_readlink() currently.  The general pattern is that we
-> do perform security_inode_*() calls inside the other vfs_*()
-> helpers, so vfs_readlink() is an exception currently.
+>  - CC-SA is a great license for documentation; I would rather use it for
+>    all kernel docs.  But I think we head into dangerous territory if we
+>    introduce non-GPL-compatible licenses into the kernel documentation.
+>    The docs pull a lot of text from the code itself, to the point that it's
+>    really hard to say that the processed docs are not a derived product of
+>    the kernel code itself.  Do we really want to create a situation where
+>    the output of "make *docs" can't be legally distributed?
 
-Pretty sure that was done to mitigate the risk of breaking existing
-userspace applications using the handle interfaces to read links.
+Well... as discussed in a different part of the thread we can move the
+documentation to CC-BY-SA 4.0 trivially, since the old docs were
+CC-BY-SA 3.0+.
 
-Cheers,
+Relicensing the DS&A book to GPLv2 would be a /much/ bigger lift, one
+which would require figuring out exactly which pieces of SGI have gone
+where since 2006 and asking those organization(s) to allow relicensing.
+I think that's more work than I'm willing to put in on this, since the
+alternative would be to keep xfs-documentation.git running.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+To address 'pull[ing] a lot of text from the code itself', AFAICT the
+code snippets can be classified into three(?) categories:
+
+ 1. Structure definitions that were put in the book by someone at SGI
+    which roughly speaking resemble what's in the kernel now.  They're
+    not directly pulled from fs/xfs/; rather, someone at SGI put them
+    in the book and they've been updated to match the kernel irregularly
+    and not necessarily concurrently with feature development.
+
+ 2. Structure definitions and code put in the book by me; I'm fine with
+    licensing those pieces GPLv2+ or CC-BY-SA 3.0+.
+
+ 3. Structure definitions and code put in the book by Dave Chinner (and
+    anyone else).
+
+Note that the only /code/ in the DS&A book were put there by me
+(directory hash function) and Dave (sample metadata verifier functions),
+and it probably isn't difficult to get either of us to agree to
+relicense.
+
+So... do separate structure definitions that just happen to have the
+same layout as the kernel code create a derived product which would
+prohibit us from simply having CC-SA 4.0 licensed documentation in the
+kernel?
+
+>    Hmm...it looks like we have exactly one document asserting CC-SA now,
+>    slipped in by Willy for 4.16.  If I'd noticed it, I would have
+>    complained at the time; maybe I'll do so now.  In any case, I think we
+>    need to be careful about adding more.
+
+<nod>
+
+--D
+
+> Thanks,
+> 
+> jon
