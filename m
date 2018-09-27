@@ -1,42 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:14871 "EHLO
-        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726107AbeI0FhC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Sep 2018 01:37:02 -0400
-Date: Thu, 27 Sep 2018 09:21:40 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 02/24] docs: carry a copy of the CC-by-SA 3.0 license
-Message-ID: <20180926232140.GE31060@dastard>
+Received: from mail-wm1-f66.google.com ([209.85.128.66]:50300 "EHLO
+        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726962AbeI0P1A (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Sep 2018 11:27:00 -0400
+Received: by mail-wm1-f66.google.com with SMTP id s12-v6so5097866wmc.0
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Sep 2018 02:09:45 -0700 (PDT)
+Date: Thu, 27 Sep 2018 11:09:41 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [RFC PATCH 00/24] xfs-4.20: major documentation surgery
+Message-ID: <20180927090941.qgxyoptogdnllrfc@odin.usersys.redhat.com>
 References: <153799045443.31202.17537455000771265705.stgit@magnolia>
- <153799046767.31202.13234065186281153272.stgit@magnolia>
- <20180926213028.GA22763@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20180926213028.GA22763@infradead.org>
+In-Reply-To: <153799045443.31202.17537455000771265705.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
 
-On Wed, Sep 26, 2018 at 02:30:28PM -0700, Christoph Hellwig wrote:
-> On Wed, Sep 26, 2018 at 12:34:27PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Add the CC-BY-SA 3.0 license so that the XFS Data Structures &
-> > Algorithms book can reference it with spdx headers.
+On Wed, Sep 26, 2018 at 12:34:14PM -0700, Darrick J. Wong wrote:
+> Hi all,
 > 
-> NAK.  We should not add random new licenses to the kernel tree.
+> This series converts the existing in-kernel xfs documentation to rst
+> format, links it in with the rest of the kernel's rst documetation, and
+> then begins pulling in the contents of the Data Structures & Algorithms
+> book from the xfs-documentation git tree.  No changes are made to the
+> text during the import process except to fix things that the conversion
+> process (asciidoctor + pandoc) didn't do correctly.  The goal of this
+> series is to tie together the XFS code with the on-disk format
+> documentation for the features supported by the code.
+> 
+> I've built the docs and put them here, in case you hate reading rst:
+> https://djwong.org/docs/kdoc/filesystems/xfs/index.html
+> 
+> I've posted a branch here because the png import patch is huge:
+> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=docs-4.20-merge
+> 
+> The patchset should apply cleanly against 4.19-rc5.  Comments and
+> questions are, as always, welcome.
+> 
+> --D
 
-Given these patches are all CC-BY-SA-3.0+ (i.e. they have an "or
-later" clause in them), and the kernel already has
-LICENSES/other/CC-BY-SA-4.0, why not just put them under the license
-that the kernel already supports?
+Really nice.
 
-Cheers,
+I am not the best person to enter into the licensing discussion, but since
+you've already agreed to repost it with updated licensing stuff, for the
+documentation patches itself, you can add:
 
-Dave.
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+Cheers
+
 -- 
-Dave Chinner
-david@fromorbit.com
+Carlos
