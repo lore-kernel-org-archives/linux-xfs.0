@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:44908 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726060AbeI1H0M (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Sep 2018 03:26:12 -0400
-Subject: [PATCH 4/6] libxfs: check libxfs_trans_commit return values
+Received: from userp2130.oracle.com ([156.151.31.86]:49994 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726060AbeI1H0S (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Sep 2018 03:26:18 -0400
+Subject: [PATCH 5/6] libxfs: clean up IRELE/iput callsites
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 27 Sep 2018 18:05:01 -0700
-Message-ID: <153809670104.32548.8235841795111248441.stgit@magnolia>
+Date: Thu, 27 Sep 2018 18:05:08 -0700
+Message-ID: <153809670804.32548.8965735572592844433.stgit@magnolia>
 In-Reply-To: <153809666117.32548.6836488790026631787.stgit@magnolia>
 References: <153809666117.32548.6836488790026631787.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,363 +20,224 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Check the return value from libxfs_trans_commit since it can now return
-error codes.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Replace the IRELE macro with a proper function so that we can do proper
+typechecking.  This is the userspace cleanup in the same vein as the
+kernel patch with the same subject.
 ---
- mkfs/proto.c    |   38 ++++++++++++++++++-----
- mkfs/xfs_mkfs.c |    4 ++
- repair/phase6.c |   90 ++++++++++++++++++++++++++++++++++++++++++++-----------
- repair/rmap.c   |    4 ++
- 4 files changed, 108 insertions(+), 28 deletions(-)
+ db/attrset.c        |    4 ++--
+ include/xfs_inode.h |    4 +---
+ libxfs/init.c       |    4 ++--
+ libxfs/rdwr.c       |    5 +++--
+ mkfs/proto.c        |    6 +++---
+ repair/phase6.c     |   22 +++++++++++-----------
+ repair/phase7.c     |    2 +-
+ 7 files changed, 23 insertions(+), 24 deletions(-)
 
 
+diff --git a/db/attrset.c b/db/attrset.c
+index dc82a6c6..56972506 100644
+--- a/db/attrset.c
++++ b/db/attrset.c
+@@ -159,7 +159,7 @@ attr_set_f(
+ out:
+ 	mp->m_flags &= ~LIBXFS_MOUNT_COMPAT_ATTR;
+ 	if (ip)
+-		IRELE(ip);
++		libxfs_irele(ip);
+ 	if (value)
+ 		free(value);
+ 	return 0;
+@@ -234,6 +234,6 @@ attr_remove_f(
+ out:
+ 	mp->m_flags &= ~LIBXFS_MOUNT_COMPAT_ATTR;
+ 	if (ip)
+-		IRELE(ip);
++		libxfs_irele(ip);
+ 	return 0;
+ }
+diff --git a/include/xfs_inode.h b/include/xfs_inode.h
+index f573f23b..79ec3a2d 100644
+--- a/include/xfs_inode.h
++++ b/include/xfs_inode.h
+@@ -155,8 +155,6 @@ extern bool	libxfs_inode_verify_forks(struct xfs_inode *ip,
+ extern int	libxfs_iget(struct xfs_mount *, struct xfs_trans *, xfs_ino_t,
+ 				uint, struct xfs_inode **,
+ 				struct xfs_ifork_ops *);
+-extern void	libxfs_iput(struct xfs_inode *);
+-
+-#define IRELE(ip) libxfs_iput(ip)
++extern void	libxfs_irele(struct xfs_inode *ip);
+ 
+ #endif /* __XFS_INODE_H__ */
+diff --git a/libxfs/init.c b/libxfs/init.c
+index 36d637c5..d7543d4a 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -838,9 +838,9 @@ void
+ libxfs_rtmount_destroy(xfs_mount_t *mp)
+ {
+ 	if (mp->m_rsumip)
+-		IRELE(mp->m_rsumip);
++		libxfs_irele(mp->m_rsumip);
+ 	if (mp->m_rbmip)
+-		IRELE(mp->m_rbmip);
++		libxfs_irele(mp->m_rbmip);
+ 	mp->m_rsumip = mp->m_rbmip = NULL;
+ }
+ 
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index 14a4633e..0ee3ba86 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -1402,7 +1402,7 @@ libxfs_iget(
+ 	}
+ 
+ 	if (!libxfs_inode_verify_forks(ip, ifork_ops)) {
+-		libxfs_iput(ip);
++		libxfs_irele(ip);
+ 		return -EFSCORRUPTED;
+ 	}
+ 
+@@ -1435,7 +1435,8 @@ libxfs_idestroy(xfs_inode_t *ip)
+ }
+ 
+ void
+-libxfs_iput(xfs_inode_t *ip)
++libxfs_irele(
++	struct xfs_inode	*ip)
+ {
+ 	if (ip->i_itemp)
+ 		kmem_zone_free(xfs_ili_zone, ip->i_itemp);
 diff --git a/mkfs/proto.c b/mkfs/proto.c
-index 9da0587e..5999fd2e 100644
+index 5999fd2e..d5ffe969 100644
 --- a/mkfs/proto.c
 +++ b/mkfs/proto.c
-@@ -212,7 +212,9 @@ rsvfile(
- 	ip->i_d.di_flags |= XFS_DIFLAG_PREALLOC;
+@@ -480,7 +480,7 @@ parseproto(
+ 		if (error)
+ 			fail(_("Space preallocation failed."), error);
+ 		rsvfile(mp, ip, llen);
+-		IRELE(ip);
++		libxfs_irele(ip);
+ 		return;
  
- 	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--	libxfs_trans_commit(tp);
-+	error = -libxfs_trans_commit(tp);
-+	if (error)
-+		fail(_("committing space for a file failed"), error);
+ 	case IF_BLOCK:
+@@ -574,7 +574,7 @@ parseproto(
+ 				break;
+ 			parseproto(mp, ip, fsxp, pp, name);
+ 		}
+-		IRELE(ip);
++		libxfs_irele(ip);
+ 		return;
+ 	default:
+ 		ASSERT(0);
+@@ -586,7 +586,7 @@ parseproto(
+ 		fail(_("Error encountered creating file from prototype file"),
+ 			error);
+ 	}
+-	IRELE(ip);
++	libxfs_irele(ip);
+ }
+ 
+ void
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 0a52cf96..3d43935c 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -612,7 +612,7 @@ mk_rbmino(xfs_mount_t *mp)
+ 		_("allocation of the realtime bitmap failed, error = %d\n"),
+ 			error);
+ 	}
+-	IRELE(ip);
++	libxfs_irele(ip);
  }
  
  static int
-@@ -474,7 +476,9 @@ parseproto(
- 		xname.type = XFS_DIR3_FT_REG_FILE;
- 		newdirent(mp, tp, pip, &xname, ip->i_ino);
- 		libxfs_trans_log_inode(tp, ip, flags);
--		libxfs_trans_commit(tp);
-+		error = -libxfs_trans_commit(tp);
-+		if (error)
-+			fail(_("Space preallocation failed."), error);
- 		rsvfile(mp, ip, llen);
- 		IRELE(ip);
- 		return;
-@@ -552,7 +556,9 @@ parseproto(
- 		}
- 		newdirectory(mp, tp, ip, pip);
- 		libxfs_trans_log_inode(tp, ip, flags);
--		libxfs_trans_commit(tp);
-+		error = -libxfs_trans_commit(tp);
-+		if (error)
-+			fail(_("Directory inode allocation failed."), error);
- 		/*
- 		 * RT initialization.  Do this here to ensure that
- 		 * the RT inodes get placed after the root inode.
-@@ -575,7 +581,11 @@ parseproto(
- 		fail(_("Unknown format"), EINVAL);
- 	}
- 	libxfs_trans_log_inode(tp, ip, flags);
--	libxfs_trans_commit(tp);
-+	error = -libxfs_trans_commit(tp);
-+	if (error) {
-+		fail(_("Error encountered creating file from prototype file"),
-+			error);
-+	}
- 	IRELE(ip);
+@@ -679,7 +679,7 @@ _("can't access block %" PRIu64 " (fsbno %" PRIu64 ") of realtime bitmap inode %
+ 	error = -libxfs_trans_commit(tp);
+ 	if (error)
+ 		do_error(_("%s: commit failed, error %d\n"), __func__, error);
+-	IRELE(ip);
++	libxfs_irele(ip);
+ 	return(0);
  }
  
-@@ -645,7 +655,10 @@ rtinit(
- 	rsumip->i_d.di_size = mp->m_rsumsize;
- 	libxfs_trans_log_inode(tp, rsumip, XFS_ILOG_CORE);
- 	libxfs_log_sb(tp);
--	libxfs_trans_commit(tp);
-+	error = -libxfs_trans_commit(tp);
-+	if (error)
-+		fail(_("Completion of the realtime summary inode failed"),
-+				error);
- 	mp->m_rsumip = rsumip;
- 	/*
- 	 * Next, give the bitmap file some zero-filled blocks.
-@@ -675,7 +688,10 @@ rtinit(
+@@ -735,7 +735,7 @@ fill_rsumino(xfs_mount_t *mp)
+ 			do_warn(
+ _("can't access block %" PRIu64 " (fsbno %" PRIu64 ") of realtime summary inode %" PRIu64 "\n"),
+ 				bno, map.br_startblock, mp->m_sb.sb_rsumino);
+-			IRELE(ip);
++			libxfs_irele(ip);
+ 			return(1);
  		}
- 	}
  
--	libxfs_trans_commit(tp);
-+	error = -libxfs_trans_commit(tp);
-+	if (error)
-+		fail(_("Block allocation of the realtime bitmap inode failed"),
-+				error);
- 
- 	/*
- 	 * Give the summary file some zero-filled blocks.
-@@ -704,7 +720,10 @@ rtinit(
- 			bno += ep->br_blockcount;
- 		}
- 	}
--	libxfs_trans_commit(tp);
-+	error = -libxfs_trans_commit(tp);
-+	if (error)
-+		fail(_("Block allocation of the realtime summary inode failed"),
-+				error);
- 
- 	/*
- 	 * Free the whole area using transactions.
-@@ -723,7 +742,10 @@ rtinit(
- 			fail(_("Error initializing the realtime space"),
- 				error);
- 		}
--		libxfs_trans_commit(tp);
-+		error = -libxfs_trans_commit(tp);
-+		if (error)
-+			fail(_("Initialization of the realtime space failed"),
-+					error);
- 	}
+@@ -750,7 +750,7 @@ _("can't access block %" PRIu64 " (fsbno %" PRIu64 ") of realtime summary inode
+ 	error = -libxfs_trans_commit(tp);
+ 	if (error)
+ 		do_error(_("%s: commit failed, error %d\n"), __func__, error);
+-	IRELE(ip);
++	libxfs_irele(ip);
+ 	return(0);
  }
  
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 9ef6e84a..b04a705f 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -3690,7 +3690,9 @@ initialise_ag_freespace(
- 
- 	libxfs_alloc_fix_freelist(&args, 0);
- 	libxfs_perag_put(args.pag);
--	libxfs_trans_commit(tp);
-+	c = -libxfs_trans_commit(tp);
-+	if (c)
-+		res_failed(c);
+@@ -854,7 +854,7 @@ mk_rsumino(xfs_mount_t *mp)
+ 	_("allocation of the realtime summary ino failed, error = %d\n"),
+ 			error);
+ 	}
+-	IRELE(ip);
++	libxfs_irele(ip);
  }
  
  /*
-diff --git a/repair/phase6.c b/repair/phase6.c
-index ab125d6c..0a52cf96 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -573,7 +573,9 @@ mk_rbmino(xfs_mount_t *mp)
- 	 * commit changes
- 	 */
- 	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--	libxfs_trans_commit(tp);
-+	error = -libxfs_trans_commit(tp);
-+	if (error)
-+		do_error(_("%s: commit failed, error %d\n"), __func__, error);
+@@ -922,7 +922,7 @@ mk_root_dir(xfs_mount_t *mp)
+ 	if (error)
+ 		do_error(_("%s: commit failed, error %d\n"), __func__, error);
  
- 	/*
- 	 * then allocate blocks for file and fill with zeroes (stolen
-@@ -604,7 +606,12 @@ mk_rbmino(xfs_mount_t *mp)
- 			bno += ep->br_blockcount;
- 		}
- 	}
--	libxfs_trans_commit(tp);
-+	error = -libxfs_trans_commit(tp);
-+	if (error) {
-+		do_error(
-+		_("allocation of the realtime bitmap failed, error = %d\n"),
-+			error);
-+	}
- 	IRELE(ip);
- }
- 
-@@ -669,7 +676,9 @@ _("can't access block %" PRIu64 " (fsbno %" PRIu64 ") of realtime bitmap inode %
- 		bno++;
- 	}
- 
--	libxfs_trans_commit(tp);
-+	error = -libxfs_trans_commit(tp);
-+	if (error)
-+		do_error(_("%s: commit failed, error %d\n"), __func__, error);
- 	IRELE(ip);
- 	return(0);
- }
-@@ -738,7 +747,9 @@ _("can't access block %" PRIu64 " (fsbno %" PRIu64 ") of realtime summary inode
- 		bno++;
- 	}
- 
--	libxfs_trans_commit(tp);
-+	error = -libxfs_trans_commit(tp);
-+	if (error)
-+		do_error(_("%s: commit failed, error %d\n"), __func__, error);
- 	IRELE(ip);
- 	return(0);
- }
-@@ -803,7 +814,9 @@ mk_rsumino(xfs_mount_t *mp)
- 	 * commit changes
- 	 */
- 	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--	libxfs_trans_commit(tp);
-+	error = -libxfs_trans_commit(tp);
-+	if (error)
-+		do_error(_("%s: commit failed, error %d\n"), __func__, error);
- 
- 	/*
- 	 * then allocate blocks for file and fill with zeroes (stolen
-@@ -835,7 +848,12 @@ mk_rsumino(xfs_mount_t *mp)
- 			bno += ep->br_blockcount;
- 		}
- 	}
--	libxfs_trans_commit(tp);
-+	error = -libxfs_trans_commit(tp);
-+	if (error) {
-+		do_error(
-+	_("allocation of the realtime summary ino failed, error = %d\n"),
-+			error);
-+	}
- 	IRELE(ip);
- }
- 
-@@ -900,7 +918,10 @@ mk_root_dir(xfs_mount_t *mp)
- 	ip->d_ops = mp->m_dir_inode_ops;
- 	libxfs_dir_init(tp, ip, ip);
- 
--	libxfs_trans_commit(tp);
-+	error = -libxfs_trans_commit(tp);
-+	if (error)
-+		do_error(_("%s: commit failed, error %d\n"), __func__, error);
-+
- 	IRELE(ip);
+-	IRELE(ip);
++	libxfs_irele(ip);
  
  	irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino),
-@@ -1030,7 +1051,11 @@ mk_orphanage(xfs_mount_t *mp)
- 	libxfs_trans_log_inode(tp, pip, XFS_ILOG_CORE);
- 	libxfs_dir_init(tp, ip, pip);
- 	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--	libxfs_trans_commit(tp);
-+	error = -libxfs_trans_commit(tp);
-+	if (error) {
-+		do_error(_("%s directory creation failed -- bmapf error %d\n"),
-+			ORPHANAGE, error);
-+	}
- 	IRELE(ip);
- 	IRELE(pip);
+ 				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rootino));
+@@ -1056,8 +1056,8 @@ mk_orphanage(xfs_mount_t *mp)
+ 		do_error(_("%s directory creation failed -- bmapf error %d\n"),
+ 			ORPHANAGE, error);
+ 	}
+-	IRELE(ip);
+-	IRELE(pip);
++	libxfs_irele(ip);
++	libxfs_irele(pip);
  	add_inode_reached(irec,ino_offset);
-@@ -1128,7 +1153,10 @@ mv_orphanage(
  
- 			inc_nlink(VFS_I(ino_p));
- 			libxfs_trans_log_inode(tp, ino_p, XFS_ILOG_CORE);
--			libxfs_trans_commit(tp);
-+			err = -libxfs_trans_commit(tp);
-+			if (err)
-+				do_error(
-+	_("creation of .. entry failed (%d)\n"), err);
- 		} else  {
- 			err = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_rename,
- 						  nres, 0, 0, &tp);
-@@ -1168,7 +1196,10 @@ mv_orphanage(
- 						err);
- 			}
+ 	return(ino);
+@@ -1235,8 +1235,8 @@ mv_orphanage(
+ 			do_error(
+ 	_("orphanage name create failed (%d)\n"), err);
+ 	}
+-	IRELE(ino_p);
+-	IRELE(orphanage_ip);
++	libxfs_irele(ino_p);
++	libxfs_irele(orphanage_ip);
+ }
  
--			libxfs_trans_commit(tp);
-+			err = -libxfs_trans_commit(tp);
-+			if (err)
-+				do_error(
-+	_("orphanage name replace op failed (%d)\n"), err);
+ static int
+@@ -3052,7 +3052,7 @@ process_dir_inode(
+ 	_("root inode \".\" entry recreation failed (%d)\n"), error);
  		}
- 
- 	} else  {
-@@ -1199,7 +1230,10 @@ mv_orphanage(
- 
- 		set_nlink(VFS_I(ino_p), 1);
- 		libxfs_trans_log_inode(tp, ino_p, XFS_ILOG_CORE);
--		libxfs_trans_commit(tp);
-+		err = -libxfs_trans_commit(tp);
-+		if (err)
-+			do_error(
-+	_("orphanage name create failed (%d)\n"), err);
  	}
- 	IRELE(ino_p);
- 	IRELE(orphanage_ip);
-@@ -1335,7 +1369,10 @@ longform_dir2_rebuild(
- 		goto out_bmap_cancel;
- 	}
- 
--	libxfs_trans_commit(tp);
-+	error = -libxfs_trans_commit(tp);
-+	if (error)
-+		do_error(
-+	_("dir init failed (%d)\n"), error);
- 
- 	if (ino == mp->m_sb.sb_rootino)
- 		need_root_dotdot = 0;
-@@ -1366,7 +1403,10 @@ _("name create failed in ino %" PRIu64 " (%d), filesystem may be out of space\n"
- 			goto out_bmap_cancel;
- 		}
- 
--		libxfs_trans_commit(tp);
-+		error = -libxfs_trans_commit(tp);
-+		if (error)
-+			do_error(
-+_("name create failed (%d) during rebuild\n"), error);
- 	}
- 
- 	return;
-@@ -1412,7 +1452,10 @@ dir2_kill_block(
- 	if (error)
- 		do_error(_("shrink_inode failed inode %" PRIu64 " block %u\n"),
- 			ip->i_ino, da_bno);
--	libxfs_trans_commit(tp);
-+	error = -libxfs_trans_commit(tp);
-+	if (error)
-+		do_error(
-+_("directory shrink failed (%d)\n"), error);
+-	IRELE(ip);
++	libxfs_irele(ip);
  }
  
  /*
-@@ -1885,7 +1928,10 @@ _("entry \"%s\" in dir inode %" PRIu64 " inconsistent with .. value (%" PRIu64 "
- 				d, &i);
- 	if (needlog)
- 		libxfs_dir2_data_log_header(&da, bp);
--	libxfs_trans_commit(tp);
-+	error = -libxfs_trans_commit(tp);
-+	if (error)
-+		do_error(
-+_("directory block fixing failed (%d)\n"), error);
+diff --git a/repair/phase7.c b/repair/phase7.c
+index 09d11fcd..c2a60a93 100644
+--- a/repair/phase7.c
++++ b/repair/phase7.c
+@@ -77,7 +77,7 @@ update_inode_nlinks(
  
- 	/* record the largest free space in the freetab for later checking */
- 	bf = M_DIROPS(mp)->data_bestfree_p(d);
-@@ -2901,7 +2947,9 @@ process_dir_inode(
- 			if (dirty)  {
- 				libxfs_trans_log_inode(tp, ip,
- 					XFS_ILOG_CORE | XFS_ILOG_DDATA);
--				libxfs_trans_commit(tp);
-+				error = -libxfs_trans_commit(tp);
-+				if (error)
-+					res_failed(error);
- 			} else  {
- 				libxfs_trans_cancel(tp);
- 			}
-@@ -2942,7 +2990,10 @@ process_dir_inode(
- 	_("can't make \"..\" entry in root inode %" PRIu64 ", createname error %d\n"), ino, error);
- 
- 		libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--		libxfs_trans_commit(tp);
-+		error = -libxfs_trans_commit(tp);
-+		if (error)
-+			do_error(
-+	_("root inode \"..\" entry recreation failed (%d)\n"), error);
- 
- 		need_root_dotdot = 0;
- 	} else if (need_root_dotdot && ino == mp->m_sb.sb_rootino)  {
-@@ -2995,7 +3046,10 @@ process_dir_inode(
- 					ino, error);
- 
- 			libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--			libxfs_trans_commit(tp);
-+			error = -libxfs_trans_commit(tp);
-+			if (error)
-+				do_error(
-+	_("root inode \".\" entry recreation failed (%d)\n"), error);
- 		}
+ 		ASSERT(error == 0);
  	}
- 	IRELE(ip);
-diff --git a/repair/rmap.c b/repair/rmap.c
-index dbe5b2c8..bd24b527 100644
---- a/repair/rmap.c
-+++ b/repair/rmap.c
-@@ -1411,7 +1411,9 @@ fix_freelist(
- 		do_error(_("failed to fix AGFL on AG %d, error %d\n"),
- 				agno, error);
- 	}
--	libxfs_trans_commit(tp);
-+	error = -libxfs_trans_commit(tp);
-+	if (error)
-+		do_error(_("%s: commit failed, error %d\n"), __func__, error);
+-	IRELE(ip);
++	libxfs_irele(ip);
  }
  
  /*
