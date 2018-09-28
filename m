@@ -1,75 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:49112 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726106AbeI1M27 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Sep 2018 08:28:59 -0400
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 6FAD72B03B
-        for <linux-xfs@vger.kernel.org>; Fri, 28 Sep 2018 06:06:53 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 201259] New: [xfstests shared/010]: maybe pagecache contents is
- mutated after cycle mount
-Date: Fri, 28 Sep 2018 06:06:53 +0000
-Message-ID: <bug-201259-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-MIME-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:50308 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726137AbeI2AEr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 28 Sep 2018 20:04:47 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] iomap: set page dirty after partial delalloc on mkwrite
+Date: Fri, 28 Sep 2018 13:39:56 -0400
+Message-Id: <20180928173956.42428-1-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@kernel.org
+To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=201259
+The iomap page fault mechanism currently dirties the associated page
+after the full block range of the page has been allocated. This
+leaves the page susceptible to delayed allocations without ever
+being set dirty on sub-page block sized filesystems.
 
-            Bug ID: 201259
-           Summary: [xfstests shared/010]: maybe pagecache contents is
-                    mutated after cycle mount
-           Product: File System
-           Version: 2.5
-    Kernel Version: v4.19-rc5
-          Hardware: All
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: XFS
-          Assignee: filesystem_xfs@kernel-bugs.kernel.org
-          Reporter: zlang@redhat.com
-        Regression: No
+For example, consider a page fault on a page with one preexisting
+real (non-delalloc) block allocated in the middle of the page. The
+first iomap_apply() iteration performs delayed allocation on the
+range up to the preexisting block, the next iteration finds the
+preexisting block, and the last iteration attempts to perform
+delayed allocation on the range after the prexisting block to the
+end of the page. If the first allocation succeeds and the final
+allocation fails with -ENOSPC, iomap_apply() returns the error and
+iomap_page_mkwrite() fails to dirty the page having already
+performed partial delayed allocation. This eventually results in the
+page being invalidated without ever converting the delayed
+allocation to real blocks.
 
-Recently, shared/010 sometimes hit below issue:
+This problem is reliably reproduced by generic/083 on XFS on ppc64
+systems (64k page size, 4k block size). It results in leaked
+delalloc blocks on inode reclaim, which triggers an assert failure
+in xfs_fs_destroy_inode() and filesystem accounting inconsistency.
 
-QA output created by 010
-/mnt/scratch/dir/p0/deXXXXXXXXXXX/d218X/d3a0XXX/d3da/d90XXXXXXXXXXXXX/d1c8XXXXXXXXX/d71/d75XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/da6XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/db9XXXX/de0XXXXXXXXXXXXX/d7e0XXXXXXXXXXXX/d1d9X/f476XXXX:
-FAILED
-md5sum: WARNING: 1 computed checksum did NOT match
-Silence is golden
+Move the set_page_dirty() call from iomap_page_mkwrite() to the
+actor callback, similar to how the buffer head implementation works.
+The actor callback is called iff ->iomap_begin() returns success, so
+ensures the page is dirtied as soon as possible after an allocation.
 
-Looks like something changed after cycle mount, cause this integrity issue.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
 
-Version-Release number of selected component (if applicable):
-kernel v4.19-rc5
+This patch addresses the problem with generic/083, but I'm still in the
+process of running broader testing. I wanted to get it on the list for
+review in the meantime...
 
-How reproducible:
-10~30%
+Brian
 
-Steps to Reproduce:
-1) git clone https://github.com/markfasheh/duperemove.git
-2) cd duperemove; make; make install
-3) Run shared/010 on XFS several times, with reflink=1:
+ fs/iomap.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Actual results:
-checksum mismatch
-
-Expected results:
-test always pass
-
-Additional info:
-I can't be sure this's a real bug, maybe it's case issue. But I don't know
-what's wrong with the case, so report this bug to get more
-reviewing/suggestions from XFS developers. Thanks.
-
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 74762b1ec233..ec15cf2ec696 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -1051,6 +1051,7 @@ iomap_page_mkwrite_actor(struct inode *inode, loff_t pos, loff_t length,
+ 	} else {
+ 		WARN_ON_ONCE(!PageUptodate(page));
+ 		iomap_page_create(inode, page);
++		set_page_dirty(page);
+ 	}
+ 
+ 	return length;
+@@ -1090,7 +1091,6 @@ int iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops)
+ 		length -= ret;
+ 	}
+ 
+-	set_page_dirty(page);
+ 	wait_for_stable_page(page);
+ 	return VM_FAULT_LOCKED;
+ out_unlock:
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+2.17.1
