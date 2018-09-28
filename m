@@ -1,57 +1,124 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm1-f66.google.com ([209.85.128.66]:50300 "EHLO
-        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726962AbeI0P1A (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Sep 2018 11:27:00 -0400
-Received: by mail-wm1-f66.google.com with SMTP id s12-v6so5097866wmc.0
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Sep 2018 02:09:45 -0700 (PDT)
-Date: Thu, 27 Sep 2018 11:09:41 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [RFC PATCH 00/24] xfs-4.20: major documentation surgery
-Message-ID: <20180927090941.qgxyoptogdnllrfc@odin.usersys.redhat.com>
-References: <153799045443.31202.17537455000771265705.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:43220 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725972AbeI1H7n (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 28 Sep 2018 03:59:43 -0400
+Date: Fri, 28 Sep 2018 09:39:22 +0800
+From: Zorro Lang <zlang@redhat.com>
+Subject: Re: [PATCH 3/3] xfsprogs: remove useless do_preadv and do_pwritev
+ arguments
+Message-ID: <20180928013922.GC6430@dhcp-12-117.nay.redhat.com>
+References: <20171111172155.31941-1-zlang@redhat.com>
+ <20171111172155.31941-3-zlang@redhat.com>
+ <4bd7efb7-627a-ead5-083c-55a168631a72@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <153799045443.31202.17537455000771265705.stgit@magnolia>
+In-Reply-To: <4bd7efb7-627a-ead5-083c-55a168631a72@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Sep 26, 2018 at 12:34:14PM -0700, Darrick J. Wong wrote:
-> Hi all,
+On Thu, Sep 27, 2018 at 01:38:30PM -0500, Eric Sandeen wrote:
+> On 11/11/17 11:21 AM, Zorro Lang wrote:
+> > do_preadv and do_pwritev all have a 'buffer_size' argument, but they
+> > never used it. Instead of it, they use global 'buffersize' variable,
+> > which is initialized in alloc_buffer(). As the 'buffer_size' is
+> > useless, so remove it for clear code.
+> > 
+> > Signed-off-by: Zorro Lang <zlang@redhat.com>
 > 
-> This series converts the existing in-kernel xfs documentation to rst
-> format, links it in with the rest of the kernel's rst documetation, and
-> then begins pulling in the contents of the Data Structures & Algorithms
-> book from the xfs-documentation git tree.  No changes are made to the
-> text during the import process except to fix things that the conversion
-> process (asciidoctor + pandoc) didn't do correctly.  The goal of this
-> series is to tie together the XFS code with the on-disk format
-> documentation for the features supported by the code.
+> Hi Zorro, going through old patches and remembered that I never came
+> back to this one, sorry.
 > 
-> I've built the docs and put them here, in case you hate reading rst:
-> https://djwong.org/docs/kdoc/filesystems/xfs/index.html
+> I think that just removing it is ok.  do_preadv & do_pwritev
+> both use iov and buffersize, each is a global variable; there is no
+> need to pass in buffer size any more than there is a need to
+> pass in the iov itself.  I'll go ahead & merge this as is.
+
+Hi Eric,
+
+Thanks so much, I already forgot this patch, I don't know if it can
+be merged directly now, hope there's not conflict :-P
+
+Feel free to tell me if you need a new version.
+
+Thanks,
+Zorro
+
 > 
-> I've posted a branch here because the png import patch is huge:
-> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=docs-4.20-merge
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 > 
-> The patchset should apply cleanly against 4.19-rc5.  Comments and
-> questions are, as always, welcome.
+> Thanks,
+> -Eric
 > 
-> --D
-
-Really nice.
-
-I am not the best person to enter into the licensing discussion, but since
-you've already agreed to repost it with updated licensing stuff, for the
-documentation patches itself, you can add:
-
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-
-Cheers
-
--- 
-Carlos
+> > ---
+> >  io/pread.c  | 7 +++----
+> >  io/pwrite.c | 5 ++---
+> >  2 files changed, 5 insertions(+), 7 deletions(-)
+> > 
+> > diff --git a/io/pread.c b/io/pread.c
+> > index 60650aa3..98e992b0 100644
+> > --- a/io/pread.c
+> > +++ b/io/pread.c
+> > @@ -176,8 +176,7 @@ static ssize_t
+> >  do_preadv(
+> >  	int		fd,
+> >  	off64_t		offset,
+> > -	size_t		count,
+> > -	size_t		buffer_size)
+> > +	size_t		count)
+> >  {
+> >  	int		vecs = 0;
+> >  	ssize_t		oldlen = 0;
+> > @@ -205,7 +204,7 @@ do_preadv(
+> >  	return bytes;
+> >  }
+> >  #else
+> > -#define do_preadv(fd, offset, count, buffer_size) (0)
+> > +#define do_preadv(fd, offset, count) (0)
+> >  #endif
+> >  
+> >  static ssize_t
+> > @@ -218,7 +217,7 @@ do_pread(
+> >  	if (!vectors)
+> >  		return pread(fd, buffer, min(count, buffer_size), offset);
+> >  
+> > -	return do_preadv(fd, offset, count, buffer_size);
+> > +	return do_preadv(fd, offset, count);
+> >  }
+> >  
+> >  static int
+> > diff --git a/io/pwrite.c b/io/pwrite.c
+> > index a89edfd0..f75c6164 100644
+> > --- a/io/pwrite.c
+> > +++ b/io/pwrite.c
+> > @@ -66,7 +66,6 @@ do_pwritev(
+> >  	int		fd,
+> >  	off64_t		offset,
+> >  	size_t		count,
+> > -	size_t		buffer_size,
+> >  	int 		pwritev2_flags)
+> >  {
+> >  	int vecs = 0;
+> > @@ -102,7 +101,7 @@ do_pwritev(
+> >  	return bytes;
+> >  }
+> >  #else
+> > -#define do_pwritev(fd, offset, count, buffer_size, pwritev2_flags) (0)
+> > +#define do_pwritev(fd, offset, count, pwritev2_flags) (0)
+> >  #endif
+> >  
+> >  static ssize_t
+> > @@ -116,7 +115,7 @@ do_pwrite(
+> >  	if (!vectors)
+> >  		return pwrite(fd, buffer, min(count, buffer_size), offset);
+> >  
+> > -	return do_pwritev(fd, offset, count, buffer_size, pwritev2_flags);
+> > +	return do_pwritev(fd, offset, count, pwritev2_flags);
+> >  }
+> >  
+> >  static int
+> > 
