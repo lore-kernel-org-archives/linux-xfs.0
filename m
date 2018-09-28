@@ -1,124 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43220 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725972AbeI1H7n (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 28 Sep 2018 03:59:43 -0400
-Date: Fri, 28 Sep 2018 09:39:22 +0800
-From: Zorro Lang <zlang@redhat.com>
-Subject: Re: [PATCH 3/3] xfsprogs: remove useless do_preadv and do_pwritev
- arguments
-Message-ID: <20180928013922.GC6430@dhcp-12-117.nay.redhat.com>
-References: <20171111172155.31941-1-zlang@redhat.com>
- <20171111172155.31941-3-zlang@redhat.com>
- <4bd7efb7-627a-ead5-083c-55a168631a72@sandeen.net>
+Received: from userp2120.oracle.com ([156.151.31.85]:44578 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726060AbeI1HZv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Sep 2018 03:25:51 -0400
+Subject: [PATCH 2/6] libxfs: fix libxfs_trans_alloc callsite problems
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 27 Sep 2018 18:04:39 -0700
+Message-ID: <153809667939.32548.12481129952390241683.stgit@magnolia>
+In-Reply-To: <153809666117.32548.6836488790026631787.stgit@magnolia>
+References: <153809666117.32548.6836488790026631787.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4bd7efb7-627a-ead5-083c-55a168631a72@sandeen.net>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
+To: sandeen@redhat.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Sep 27, 2018 at 01:38:30PM -0500, Eric Sandeen wrote:
-> On 11/11/17 11:21 AM, Zorro Lang wrote:
-> > do_preadv and do_pwritev all have a 'buffer_size' argument, but they
-> > never used it. Instead of it, they use global 'buffersize' variable,
-> > which is initialized in alloc_buffer(). As the 'buffer_size' is
-> > useless, so remove it for clear code.
-> > 
-> > Signed-off-by: Zorro Lang <zlang@redhat.com>
-> 
-> Hi Zorro, going through old patches and remembered that I never came
-> back to this one, sorry.
-> 
-> I think that just removing it is ok.  do_preadv & do_pwritev
-> both use iov and buffersize, each is a global variable; there is no
-> need to pass in buffer size any more than there is a need to
-> pass in the iov itself.  I'll go ahead & merge this as is.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Hi Eric,
+Fix some incorrect libxfs_trans_alloc callers to check return values
+correctly.
 
-Thanks so much, I already forgot this patch, I don't know if it can
-be merged directly now, hope there's not conflict :-P
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ mkfs/proto.c    |    4 +++-
+ mkfs/xfs_mkfs.c |    2 +-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-Feel free to tell me if you need a new version.
 
-Thanks,
-Zorro
-
-> 
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-> 
-> Thanks,
-> -Eric
-> 
-> > ---
-> >  io/pread.c  | 7 +++----
-> >  io/pwrite.c | 5 ++---
-> >  2 files changed, 5 insertions(+), 7 deletions(-)
-> > 
-> > diff --git a/io/pread.c b/io/pread.c
-> > index 60650aa3..98e992b0 100644
-> > --- a/io/pread.c
-> > +++ b/io/pread.c
-> > @@ -176,8 +176,7 @@ static ssize_t
-> >  do_preadv(
-> >  	int		fd,
-> >  	off64_t		offset,
-> > -	size_t		count,
-> > -	size_t		buffer_size)
-> > +	size_t		count)
-> >  {
-> >  	int		vecs = 0;
-> >  	ssize_t		oldlen = 0;
-> > @@ -205,7 +204,7 @@ do_preadv(
-> >  	return bytes;
-> >  }
-> >  #else
-> > -#define do_preadv(fd, offset, count, buffer_size) (0)
-> > +#define do_preadv(fd, offset, count) (0)
-> >  #endif
-> >  
-> >  static ssize_t
-> > @@ -218,7 +217,7 @@ do_pread(
-> >  	if (!vectors)
-> >  		return pread(fd, buffer, min(count, buffer_size), offset);
-> >  
-> > -	return do_preadv(fd, offset, count, buffer_size);
-> > +	return do_preadv(fd, offset, count);
-> >  }
-> >  
-> >  static int
-> > diff --git a/io/pwrite.c b/io/pwrite.c
-> > index a89edfd0..f75c6164 100644
-> > --- a/io/pwrite.c
-> > +++ b/io/pwrite.c
-> > @@ -66,7 +66,6 @@ do_pwritev(
-> >  	int		fd,
-> >  	off64_t		offset,
-> >  	size_t		count,
-> > -	size_t		buffer_size,
-> >  	int 		pwritev2_flags)
-> >  {
-> >  	int vecs = 0;
-> > @@ -102,7 +101,7 @@ do_pwritev(
-> >  	return bytes;
-> >  }
-> >  #else
-> > -#define do_pwritev(fd, offset, count, buffer_size, pwritev2_flags) (0)
-> > +#define do_pwritev(fd, offset, count, pwritev2_flags) (0)
-> >  #endif
-> >  
-> >  static ssize_t
-> > @@ -116,7 +115,7 @@ do_pwrite(
-> >  	if (!vectors)
-> >  		return pwrite(fd, buffer, min(count, buffer_size), offset);
-> >  
-> > -	return do_pwritev(fd, offset, count, buffer_size, pwritev2_flags);
-> > +	return do_pwritev(fd, offset, count, pwritev2_flags);
-> >  }
-> >  
-> >  static int
-> > 
+diff --git a/mkfs/proto.c b/mkfs/proto.c
+index c13e3644..07d019d6 100644
+--- a/mkfs/proto.c
++++ b/mkfs/proto.c
+@@ -192,7 +192,9 @@ rsvfile(
+ 	/*
+ 	 * update the inode timestamp, mode, and prealloc flag bits
+ 	 */
+-	libxfs_trans_alloc(mp, &tres, 0, 0, 0, &tp);
++	error = -libxfs_trans_alloc(mp, &tres, 0, 0, 0, &tp);
++	if (error)
++		fail(_("allocating transaction for a file"), error);
+ 	libxfs_trans_ijoin(tp, ip, 0);
+ 
+ 	VFS_I(ip)->i_mode &= ~S_ISUID;
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 2e53c1e8..c6ef3a71 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -3677,7 +3677,7 @@ initialise_ag_freespace(
+ 	struct xfs_trans_res tres = {0};
+ 	int			c;
+ 
+-	c = libxfs_trans_alloc(mp, &tres, worst_freelist, 0, 0, &tp);
++	c = -libxfs_trans_alloc(mp, &tres, worst_freelist, 0, 0, &tp);
+ 	if (c)
+ 		res_failed(c);
+ 
