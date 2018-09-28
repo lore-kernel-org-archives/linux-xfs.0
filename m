@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:49822 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726060AbeI1H0I (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Sep 2018 03:26:08 -0400
-Subject: [PATCH 3/6] libxfs: fix xfs_trans_alloc reservation abuse
+Received: from userp2120.oracle.com ([156.151.31.85]:44908 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726060AbeI1H0M (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Sep 2018 03:26:12 -0400
+Subject: [PATCH 4/6] libxfs: check libxfs_trans_commit return values
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 27 Sep 2018 18:04:49 -0700
-Message-ID: <153809668914.32548.55544268146936270.stgit@magnolia>
+Date: Thu, 27 Sep 2018 18:05:01 -0700
+Message-ID: <153809670104.32548.8235841795111248441.stgit@magnolia>
 In-Reply-To: <153809666117.32548.6836488790026631787.stgit@magnolia>
 References: <153809666117.32548.6836488790026631787.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,254 +20,363 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Various xfsprogs tools have been abusing the transaction reservation
-system by allocating the transaction with zero reservation.  This has
-always worked in the past because userspace transactions do not require
-reservations.  However, once we merge deferred ops into the transaction
-structure, we will need to use a permanent reservation type to set up
-any transaction that can roll.  tr_itruncate has all we need, so use
-that as the reservation dummy.
+Check the return value from libxfs_trans_commit since it can now return
+error codes.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- mkfs/proto.c    |   19 +++++++++----------
- mkfs/xfs_mkfs.c |    4 ++--
- repair/phase5.c |    4 ++--
- repair/phase6.c |   20 ++++++++------------
- repair/rmap.c   |    7 +++----
- 5 files changed, 24 insertions(+), 30 deletions(-)
+ mkfs/proto.c    |   38 ++++++++++++++++++-----
+ mkfs/xfs_mkfs.c |    4 ++
+ repair/phase6.c |   90 ++++++++++++++++++++++++++++++++++++++++++++-----------
+ repair/rmap.c   |    4 ++
+ 4 files changed, 108 insertions(+), 28 deletions(-)
 
 
 diff --git a/mkfs/proto.c b/mkfs/proto.c
-index 07d019d6..9da0587e 100644
+index 9da0587e..5999fd2e 100644
 --- a/mkfs/proto.c
 +++ b/mkfs/proto.c
-@@ -123,9 +123,8 @@ getres(
- 	uint		r;
+@@ -212,7 +212,9 @@ rsvfile(
+ 	ip->i_d.di_flags |= XFS_DIFLAG_PREALLOC;
  
- 	for (i = 0, r = MKFS_BLOCKRES(blocks); r >= blocks; r--) {
--		struct xfs_trans_res    tres = {0};
--
--		i = -libxfs_trans_alloc(mp, &tres, r, 0, 0, &tp);
-+		i = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
-+				r, 0, 0, &tp);
- 		if (i == 0)
- 			return tp;
+ 	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-	libxfs_trans_commit(tp);
++	error = -libxfs_trans_commit(tp);
++	if (error)
++		fail(_("committing space for a file failed"), error);
+ }
+ 
+ static int
+@@ -474,7 +476,9 @@ parseproto(
+ 		xname.type = XFS_DIR3_FT_REG_FILE;
+ 		newdirent(mp, tp, pip, &xname, ip->i_ino);
+ 		libxfs_trans_log_inode(tp, ip, flags);
+-		libxfs_trans_commit(tp);
++		error = -libxfs_trans_commit(tp);
++		if (error)
++			fail(_("Space preallocation failed."), error);
+ 		rsvfile(mp, ip, llen);
+ 		IRELE(ip);
+ 		return;
+@@ -552,7 +556,9 @@ parseproto(
+ 		}
+ 		newdirectory(mp, tp, ip, pip);
+ 		libxfs_trans_log_inode(tp, ip, flags);
+-		libxfs_trans_commit(tp);
++		error = -libxfs_trans_commit(tp);
++		if (error)
++			fail(_("Directory inode allocation failed."), error);
+ 		/*
+ 		 * RT initialization.  Do this here to ensure that
+ 		 * the RT inodes get placed after the root inode.
+@@ -575,7 +581,11 @@ parseproto(
+ 		fail(_("Unknown format"), EINVAL);
  	}
-@@ -180,7 +179,6 @@ rsvfile(
- {
- 	int		error;
- 	xfs_trans_t	*tp;
--	struct xfs_trans_res tres = {0};
+ 	libxfs_trans_log_inode(tp, ip, flags);
+-	libxfs_trans_commit(tp);
++	error = -libxfs_trans_commit(tp);
++	if (error) {
++		fail(_("Error encountered creating file from prototype file"),
++			error);
++	}
+ 	IRELE(ip);
+ }
  
- 	error = -libxfs_alloc_file_space(ip, 0, llen, 1, 0);
- 
-@@ -192,7 +190,7 @@ rsvfile(
- 	/*
- 	 * update the inode timestamp, mode, and prealloc flag bits
- 	 */
--	error = -libxfs_trans_alloc(mp, &tres, 0, 0, 0, &tp);
-+	error = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0, 0, 0, &tp);
- 	if (error)
- 		fail(_("allocating transaction for a file"), error);
- 	libxfs_trans_ijoin(tp, ip, 0);
-@@ -610,12 +608,12 @@ rtinit(
- 	xfs_trans_t	*tp;
- 	struct cred	creds;
- 	struct fsxattr	fsxattrs;
--	struct xfs_trans_res tres = {0};
- 
- 	/*
- 	 * First, allocate the inodes.
- 	 */
--	i = -libxfs_trans_alloc(mp, &tres, MKFS_BLOCKRES_INODE, 0, 0, &tp);
-+	i = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
-+			MKFS_BLOCKRES_INODE, 0, 0, &tp);
- 	if (i)
- 		res_failed(i);
- 
-@@ -652,7 +650,7 @@ rtinit(
+@@ -645,7 +655,10 @@ rtinit(
+ 	rsumip->i_d.di_size = mp->m_rsumsize;
+ 	libxfs_trans_log_inode(tp, rsumip, XFS_ILOG_CORE);
+ 	libxfs_log_sb(tp);
+-	libxfs_trans_commit(tp);
++	error = -libxfs_trans_commit(tp);
++	if (error)
++		fail(_("Completion of the realtime summary inode failed"),
++				error);
+ 	mp->m_rsumip = rsumip;
  	/*
  	 * Next, give the bitmap file some zero-filled blocks.
- 	 */
--	i = -libxfs_trans_alloc(mp, &tres,
-+	i = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
- 		mp->m_sb.sb_rbmblocks + (XFS_BM_MAXLEVELS(mp,XFS_DATA_FORK) - 1),
- 				0, 0, &tp);
- 	if (i)
-@@ -683,7 +681,7 @@ rtinit(
+@@ -675,7 +688,10 @@ rtinit(
+ 		}
+ 	}
+ 
+-	libxfs_trans_commit(tp);
++	error = -libxfs_trans_commit(tp);
++	if (error)
++		fail(_("Block allocation of the realtime bitmap inode failed"),
++				error);
+ 
+ 	/*
  	 * Give the summary file some zero-filled blocks.
- 	 */
- 	nsumblocks = mp->m_rsumsize >> mp->m_sb.sb_blocklog;
--	i = -libxfs_trans_alloc(mp, &tres,
-+	i = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
- 			nsumblocks + (XFS_BM_MAXLEVELS(mp,XFS_DATA_FORK) - 1),
- 				0, 0, &tp);
- 	if (i)
-@@ -713,7 +711,8 @@ rtinit(
- 	 * Do one transaction per bitmap block.
- 	 */
- 	for (bno = 0; bno < mp->m_sb.sb_rextents; bno = ebno) {
--		i = -libxfs_trans_alloc(mp, &tres, 0, 0, 0, &tp);
-+		i = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
-+				0, 0, 0, &tp);
- 		if (i)
- 			res_failed(i);
- 		libxfs_trans_ijoin(tp, rbmip, 0);
+@@ -704,7 +720,10 @@ rtinit(
+ 			bno += ep->br_blockcount;
+ 		}
+ 	}
+-	libxfs_trans_commit(tp);
++	error = -libxfs_trans_commit(tp);
++	if (error)
++		fail(_("Block allocation of the realtime summary inode failed"),
++				error);
+ 
+ 	/*
+ 	 * Free the whole area using transactions.
+@@ -723,7 +742,10 @@ rtinit(
+ 			fail(_("Error initializing the realtime space"),
+ 				error);
+ 		}
+-		libxfs_trans_commit(tp);
++		error = -libxfs_trans_commit(tp);
++		if (error)
++			fail(_("Initialization of the realtime space failed"),
++					error);
+ 	}
+ }
+ 
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index c6ef3a71..9ef6e84a 100644
+index 9ef6e84a..b04a705f 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
-@@ -3674,10 +3674,10 @@ initialise_ag_freespace(
- {
- 	struct xfs_alloc_arg	args;
- 	struct xfs_trans	*tp;
--	struct xfs_trans_res tres = {0};
- 	int			c;
+@@ -3690,7 +3690,9 @@ initialise_ag_freespace(
  
--	c = -libxfs_trans_alloc(mp, &tres, worst_freelist, 0, 0, &tp);
-+	c = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
-+			worst_freelist, 0, 0, &tp);
- 	if (c)
- 		res_failed(c);
+ 	libxfs_alloc_fix_freelist(&args, 0);
+ 	libxfs_perag_put(args.pag);
+-	libxfs_trans_commit(tp);
++	c = -libxfs_trans_commit(tp);
++	if (c)
++		res_failed(c);
+ }
  
-diff --git a/repair/phase5.c b/repair/phase5.c
-index 64f7b6e8..ac2eea54 100644
---- a/repair/phase5.c
-+++ b/repair/phase5.c
-@@ -2421,7 +2421,6 @@ inject_lost_blocks(
- 	struct xfs_trans	*tp = NULL;
- 	struct xfs_slab_cursor	*cur = NULL;
- 	xfs_fsblock_t		*fsb;
--	struct xfs_trans_res	tres = {0};
- 	struct xfs_owner_info	oinfo;
- 	int			error;
- 
-@@ -2431,7 +2430,8 @@ inject_lost_blocks(
- 		return error;
- 
- 	while ((fsb = pop_slab_cursor(cur)) != NULL) {
--		error = -libxfs_trans_alloc(mp, &tres, 16, 0, 0, &tp);
-+		error = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
-+				16, 0, 0, &tp);
- 		if (error)
- 			goto out_cancel;
- 
+ /*
 diff --git a/repair/phase6.c b/repair/phase6.c
-index d4b6a5cf..ab125d6c 100644
+index ab125d6c..0a52cf96 100644
 --- a/repair/phase6.c
 +++ b/repair/phase6.c
-@@ -526,12 +526,12 @@ mk_rbmino(xfs_mount_t *mp)
- 	xfs_bmbt_irec_t	map[XFS_BMAP_MAX_NMAP];
- 	int		vers;
- 	int		times;
--	struct xfs_trans_res tres = {0};
+@@ -573,7 +573,9 @@ mk_rbmino(xfs_mount_t *mp)
+ 	 * commit changes
+ 	 */
+ 	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-	libxfs_trans_commit(tp);
++	error = -libxfs_trans_commit(tp);
++	if (error)
++		do_error(_("%s: commit failed, error %d\n"), __func__, error);
  
  	/*
- 	 * first set up inode
- 	 */
--	i = -libxfs_trans_alloc(mp, &tres, 10, 0, 0, &tp);
-+	i = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
-+			10, 0, 0, &tp);
- 	if (i)
- 		res_failed(i);
- 
-@@ -579,7 +579,7 @@ mk_rbmino(xfs_mount_t *mp)
  	 * then allocate blocks for file and fill with zeroes (stolen
- 	 * from mkfs)
+@@ -604,7 +606,12 @@ mk_rbmino(xfs_mount_t *mp)
+ 			bno += ep->br_blockcount;
+ 		}
+ 	}
+-	libxfs_trans_commit(tp);
++	error = -libxfs_trans_commit(tp);
++	if (error) {
++		do_error(
++		_("allocation of the realtime bitmap failed, error = %d\n"),
++			error);
++	}
+ 	IRELE(ip);
+ }
+ 
+@@ -669,7 +676,9 @@ _("can't access block %" PRIu64 " (fsbno %" PRIu64 ") of realtime bitmap inode %
+ 		bno++;
+ 	}
+ 
+-	libxfs_trans_commit(tp);
++	error = -libxfs_trans_commit(tp);
++	if (error)
++		do_error(_("%s: commit failed, error %d\n"), __func__, error);
+ 	IRELE(ip);
+ 	return(0);
+ }
+@@ -738,7 +747,9 @@ _("can't access block %" PRIu64 " (fsbno %" PRIu64 ") of realtime summary inode
+ 		bno++;
+ 	}
+ 
+-	libxfs_trans_commit(tp);
++	error = -libxfs_trans_commit(tp);
++	if (error)
++		do_error(_("%s: commit failed, error %d\n"), __func__, error);
+ 	IRELE(ip);
+ 	return(0);
+ }
+@@ -803,7 +814,9 @@ mk_rsumino(xfs_mount_t *mp)
+ 	 * commit changes
  	 */
--	error = -libxfs_trans_alloc(mp, &tres,
-+	error = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
- 		mp->m_sb.sb_rbmblocks + (XFS_BM_MAXLEVELS(mp,XFS_DATA_FORK) - 1),
- 				   0, 0, &tp);
- 	if (error)
-@@ -619,12 +619,12 @@ fill_rbmino(xfs_mount_t *mp)
- 	int		error;
- 	xfs_fileoff_t	bno;
- 	xfs_bmbt_irec_t	map;
--	struct xfs_trans_res tres = {0};
- 
- 	bmp = btmcompute;
- 	bno = 0;
- 
--	error = -libxfs_trans_alloc(mp, &tres, 10, 0, 0, &tp);
-+	error = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
-+			10, 0, 0, &tp);
- 	if (error)
- 		res_failed(error);
- 
-@@ -686,13 +686,13 @@ fill_rsumino(xfs_mount_t *mp)
- 	xfs_fileoff_t	bno;
- 	xfs_fileoff_t	end_bno;
- 	xfs_bmbt_irec_t	map;
--	struct xfs_trans_res tres = {0};
- 
- 	smp = sumcompute;
- 	bno = 0;
- 	end_bno = mp->m_rsumsize >> mp->m_sb.sb_blocklog;
- 
--	error = -libxfs_trans_alloc(mp, &tres, 10, 0, 0, &tp);
-+	error = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
-+			10, 0, 0, &tp);
- 	if (error)
- 		res_failed(error);
- 
-@@ -757,7 +757,6 @@ mk_rsumino(xfs_mount_t *mp)
- 	xfs_bmbt_irec_t	map[XFS_BMAP_MAX_NMAP];
- 	int		vers;
- 	int		times;
--	struct xfs_trans_res tres = {0};
+ 	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-	libxfs_trans_commit(tp);
++	error = -libxfs_trans_commit(tp);
++	if (error)
++		do_error(_("%s: commit failed, error %d\n"), __func__, error);
  
  	/*
- 	 * first set up inode
-@@ -811,10 +810,7 @@ mk_rsumino(xfs_mount_t *mp)
- 	 * from mkfs)
- 	 */
- 	nsumblocks = mp->m_rsumsize >> mp->m_sb.sb_blocklog;
--	tres.tr_logres = BBTOB(128);
--	tres.tr_logcount = XFS_DEFAULT_PERM_LOG_COUNT;
--	tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
--	error = -libxfs_trans_alloc(mp, &tres,
-+	error = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
- 		mp->m_sb.sb_rbmblocks + (XFS_BM_MAXLEVELS(mp,XFS_DATA_FORK) - 1),
- 				    0, 0, &tp);
+ 	 * then allocate blocks for file and fill with zeroes (stolen
+@@ -835,7 +848,12 @@ mk_rsumino(xfs_mount_t *mp)
+ 			bno += ep->br_blockcount;
+ 		}
+ 	}
+-	libxfs_trans_commit(tp);
++	error = -libxfs_trans_commit(tp);
++	if (error) {
++		do_error(
++	_("allocation of the realtime summary ino failed, error = %d\n"),
++			error);
++	}
+ 	IRELE(ip);
+ }
+ 
+@@ -900,7 +918,10 @@ mk_root_dir(xfs_mount_t *mp)
+ 	ip->d_ops = mp->m_dir_inode_ops;
+ 	libxfs_dir_init(tp, ip, ip);
+ 
+-	libxfs_trans_commit(tp);
++	error = -libxfs_trans_commit(tp);
++	if (error)
++		do_error(_("%s: commit failed, error %d\n"), __func__, error);
++
+ 	IRELE(ip);
+ 
+ 	irec = find_inode_rec(mp, XFS_INO_TO_AGNO(mp, mp->m_sb.sb_rootino),
+@@ -1030,7 +1051,11 @@ mk_orphanage(xfs_mount_t *mp)
+ 	libxfs_trans_log_inode(tp, pip, XFS_ILOG_CORE);
+ 	libxfs_dir_init(tp, ip, pip);
+ 	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-	libxfs_trans_commit(tp);
++	error = -libxfs_trans_commit(tp);
++	if (error) {
++		do_error(_("%s directory creation failed -- bmapf error %d\n"),
++			ORPHANAGE, error);
++	}
+ 	IRELE(ip);
+ 	IRELE(pip);
+ 	add_inode_reached(irec,ino_offset);
+@@ -1128,7 +1153,10 @@ mv_orphanage(
+ 
+ 			inc_nlink(VFS_I(ino_p));
+ 			libxfs_trans_log_inode(tp, ino_p, XFS_ILOG_CORE);
+-			libxfs_trans_commit(tp);
++			err = -libxfs_trans_commit(tp);
++			if (err)
++				do_error(
++	_("creation of .. entry failed (%d)\n"), err);
+ 		} else  {
+ 			err = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_rename,
+ 						  nres, 0, 0, &tp);
+@@ -1168,7 +1196,10 @@ mv_orphanage(
+ 						err);
+ 			}
+ 
+-			libxfs_trans_commit(tp);
++			err = -libxfs_trans_commit(tp);
++			if (err)
++				do_error(
++	_("orphanage name replace op failed (%d)\n"), err);
+ 		}
+ 
+ 	} else  {
+@@ -1199,7 +1230,10 @@ mv_orphanage(
+ 
+ 		set_nlink(VFS_I(ino_p), 1);
+ 		libxfs_trans_log_inode(tp, ino_p, XFS_ILOG_CORE);
+-		libxfs_trans_commit(tp);
++		err = -libxfs_trans_commit(tp);
++		if (err)
++			do_error(
++	_("orphanage name create failed (%d)\n"), err);
+ 	}
+ 	IRELE(ino_p);
+ 	IRELE(orphanage_ip);
+@@ -1335,7 +1369,10 @@ longform_dir2_rebuild(
+ 		goto out_bmap_cancel;
+ 	}
+ 
+-	libxfs_trans_commit(tp);
++	error = -libxfs_trans_commit(tp);
++	if (error)
++		do_error(
++	_("dir init failed (%d)\n"), error);
+ 
+ 	if (ino == mp->m_sb.sb_rootino)
+ 		need_root_dotdot = 0;
+@@ -1366,7 +1403,10 @@ _("name create failed in ino %" PRIu64 " (%d), filesystem may be out of space\n"
+ 			goto out_bmap_cancel;
+ 		}
+ 
+-		libxfs_trans_commit(tp);
++		error = -libxfs_trans_commit(tp);
++		if (error)
++			do_error(
++_("name create failed (%d) during rebuild\n"), error);
+ 	}
+ 
+ 	return;
+@@ -1412,7 +1452,10 @@ dir2_kill_block(
  	if (error)
+ 		do_error(_("shrink_inode failed inode %" PRIu64 " block %u\n"),
+ 			ip->i_ino, da_bno);
+-	libxfs_trans_commit(tp);
++	error = -libxfs_trans_commit(tp);
++	if (error)
++		do_error(
++_("directory shrink failed (%d)\n"), error);
+ }
+ 
+ /*
+@@ -1885,7 +1928,10 @@ _("entry \"%s\" in dir inode %" PRIu64 " inconsistent with .. value (%" PRIu64 "
+ 				d, &i);
+ 	if (needlog)
+ 		libxfs_dir2_data_log_header(&da, bp);
+-	libxfs_trans_commit(tp);
++	error = -libxfs_trans_commit(tp);
++	if (error)
++		do_error(
++_("directory block fixing failed (%d)\n"), error);
+ 
+ 	/* record the largest free space in the freetab for later checking */
+ 	bf = M_DIROPS(mp)->data_bestfree_p(d);
+@@ -2901,7 +2947,9 @@ process_dir_inode(
+ 			if (dirty)  {
+ 				libxfs_trans_log_inode(tp, ip,
+ 					XFS_ILOG_CORE | XFS_ILOG_DDATA);
+-				libxfs_trans_commit(tp);
++				error = -libxfs_trans_commit(tp);
++				if (error)
++					res_failed(error);
+ 			} else  {
+ 				libxfs_trans_cancel(tp);
+ 			}
+@@ -2942,7 +2990,10 @@ process_dir_inode(
+ 	_("can't make \"..\" entry in root inode %" PRIu64 ", createname error %d\n"), ino, error);
+ 
+ 		libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-		libxfs_trans_commit(tp);
++		error = -libxfs_trans_commit(tp);
++		if (error)
++			do_error(
++	_("root inode \"..\" entry recreation failed (%d)\n"), error);
+ 
+ 		need_root_dotdot = 0;
+ 	} else if (need_root_dotdot && ino == mp->m_sb.sb_rootino)  {
+@@ -2995,7 +3046,10 @@ process_dir_inode(
+ 					ino, error);
+ 
+ 			libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-			libxfs_trans_commit(tp);
++			error = -libxfs_trans_commit(tp);
++			if (error)
++				do_error(
++	_("root inode \".\" entry recreation failed (%d)\n"), error);
+ 		}
+ 	}
+ 	IRELE(ip);
 diff --git a/repair/rmap.c b/repair/rmap.c
-index f991144a..dbe5b2c8 100644
+index dbe5b2c8..bd24b527 100644
 --- a/repair/rmap.c
 +++ b/repair/rmap.c
-@@ -449,7 +449,6 @@ rmap_store_ag_btree_rec(
- 	struct xfs_buf		*agbp = NULL;
- 	struct xfs_buf		*agflbp = NULL;
- 	struct xfs_trans	*tp;
--	struct xfs_trans_res tres = {0};
- 	__be32			*agfl_bno, *b;
- 	int			error = 0;
- 	struct xfs_owner_info	oinfo;
-@@ -507,7 +506,8 @@ rmap_store_ag_btree_rec(
- 	/* Insert rmaps into the btree one at a time */
- 	rm_rec = pop_slab_cursor(rm_cur);
- 	while (rm_rec) {
--		error = -libxfs_trans_alloc(mp, &tres, 16, 0, 0, &tp);
-+		error = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
-+				16, 0, 0, &tp);
- 		if (error)
- 			goto err_slab;
- 
-@@ -1366,7 +1366,6 @@ fix_freelist(
- {
- 	xfs_alloc_arg_t		args;
- 	xfs_trans_t		*tp;
--	struct xfs_trans_res	tres = {0};
- 	int			flags;
- 	int			error;
- 
-@@ -1375,7 +1374,7 @@ fix_freelist(
- 	args.agno = agno;
- 	args.alignment = 1;
- 	args.pag = libxfs_perag_get(mp, agno);
--	error = -libxfs_trans_alloc(mp, &tres,
-+	error = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
- 			libxfs_alloc_min_freelist(mp, args.pag), 0, 0, &tp);
- 	if (error)
+@@ -1411,7 +1411,9 @@ fix_freelist(
  		do_error(_("failed to fix AGFL on AG %d, error %d\n"),
+ 				agno, error);
+ 	}
+-	libxfs_trans_commit(tp);
++	error = -libxfs_trans_commit(tp);
++	if (error)
++		do_error(_("%s: commit failed, error %d\n"), __func__, error);
+ }
+ 
+ /*
