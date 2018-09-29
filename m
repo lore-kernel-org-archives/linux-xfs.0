@@ -1,76 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:17068 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726009AbeI3FBr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 30 Sep 2018 01:01:47 -0400
-Date: Sun, 30 Sep 2018 08:31:31 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/6] libxfs: fix xfs_trans_alloc reservation abuse
-Message-ID: <20180929223131.GI31060@dastard>
-References: <153809666117.32548.6836488790026631787.stgit@magnolia>
- <153809668914.32548.55544268146936270.stgit@magnolia>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:39064 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726359AbeI3Fdb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 30 Sep 2018 01:33:31 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 01DD129A37
+        for <linux-xfs@vger.kernel.org>; Sat, 29 Sep 2018 23:03:13 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 201287] New: xfsprogs 4.17 and later can't be built as static
+ binaries anymore
+Date: Sat, 29 Sep 2018 23:03:12 +0000
+Message-ID: <bug-201287-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <153809668914.32548.55544268146936270.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
+To: linux-xfs@kernel.org
 
-On Thu, Sep 27, 2018 at 06:04:49PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Various xfsprogs tools have been abusing the transaction reservation
-> system by allocating the transaction with zero reservation.  This has
-> always worked in the past because userspace transactions do not require
-> reservations.  However, once we merge deferred ops into the transaction
-> structure, we will need to use a permanent reservation type to set up
-> any transaction that can roll.  tr_itruncate has all we need, so use
-> that as the reservation dummy.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  mkfs/proto.c    |   19 +++++++++----------
->  mkfs/xfs_mkfs.c |    4 ++--
->  repair/phase5.c |    4 ++--
->  repair/phase6.c |   20 ++++++++------------
->  repair/rmap.c   |    7 +++----
->  5 files changed, 24 insertions(+), 30 deletions(-)
-> 
-> 
-> diff --git a/mkfs/proto.c b/mkfs/proto.c
-> index 07d019d6..9da0587e 100644
-> --- a/mkfs/proto.c
-> +++ b/mkfs/proto.c
-> @@ -123,9 +123,8 @@ getres(
->  	uint		r;
->  
->  	for (i = 0, r = MKFS_BLOCKRES(blocks); r >= blocks; r--) {
-> -		struct xfs_trans_res    tres = {0};
-> -
-> -		i = -libxfs_trans_alloc(mp, &tres, r, 0, 0, &tp);
-> +		i = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
+https://bugzilla.kernel.org/show_bug.cgi?id=201287
 
-I'm wondering if this should explicitly call out that it's a dummy
-reservation rather than using the itruncate reservation? e.g. these
-places use:
+            Bug ID: 201287
+           Summary: xfsprogs 4.17 and later can't be built as static
+                    binaries anymore
+           Product: File System
+           Version: 2.5
+    Kernel Version: n/a
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: XFS
+          Assignee: filesystem_xfs@kernel-bugs.kernel.org
+          Reporter: dilfridge@gentoo.org
+        Regression: No
 
-	i = -libxfs_trans_alloc_perm(mp, blks, rtblks, flags, &tp);
+In Gentoo we offer the possibility to build xfsprogs fully static, e.g. for
+initramdisks.
 
-And the implementation of this function then goes and uses the
-itruncate reservation with a comment explaining what thay is used
+This still worked fine with 4.14. 
 
-(open to a better name - "dummy" doesn't seem right - perm, rolling,
-deferred, etc all seem appropriate to indicate that it's an
-allocation for a permanent transaction type for rolling/defered
-transactions).
+With 4.17 and 4.18 we however get:
 
-Cheers,
+../libfrog/.libs/libfrog.a(convert.o): In function `gid_from_string':
+convert.c:(.text+0x984): warning: Using 'getgrnam' in statically linked
+applications requires at runtime the shared libraries from the glibc version
+used for linking
 
-Dave.
+and final linking fails.
+
+See also https://bugs.gentoo.org/666196
 
 -- 
-Dave Chinner
-david@fromorbit.com
+You are receiving this mail because:
+You are watching the assignee of the bug.
