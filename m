@@ -1,77 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50308 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726137AbeI2AEr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 28 Sep 2018 20:04:47 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] iomap: set page dirty after partial delalloc on mkwrite
-Date: Fri, 28 Sep 2018 13:39:56 -0400
-Message-Id: <20180928173956.42428-1-bfoster@redhat.com>
+Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:17068 "EHLO
+        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726009AbeI3FBr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 30 Sep 2018 01:01:47 -0400
+Date: Sun, 30 Sep 2018 08:31:31 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/6] libxfs: fix xfs_trans_alloc reservation abuse
+Message-ID: <20180929223131.GI31060@dastard>
+References: <153809666117.32548.6836488790026631787.stgit@magnolia>
+ <153809668914.32548.55544268146936270.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <153809668914.32548.55544268146936270.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Cc: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: sandeen@redhat.com, linux-xfs@vger.kernel.org
 
-The iomap page fault mechanism currently dirties the associated page
-after the full block range of the page has been allocated. This
-leaves the page susceptible to delayed allocations without ever
-being set dirty on sub-page block sized filesystems.
+On Thu, Sep 27, 2018 at 06:04:49PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Various xfsprogs tools have been abusing the transaction reservation
+> system by allocating the transaction with zero reservation.  This has
+> always worked in the past because userspace transactions do not require
+> reservations.  However, once we merge deferred ops into the transaction
+> structure, we will need to use a permanent reservation type to set up
+> any transaction that can roll.  tr_itruncate has all we need, so use
+> that as the reservation dummy.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  mkfs/proto.c    |   19 +++++++++----------
+>  mkfs/xfs_mkfs.c |    4 ++--
+>  repair/phase5.c |    4 ++--
+>  repair/phase6.c |   20 ++++++++------------
+>  repair/rmap.c   |    7 +++----
+>  5 files changed, 24 insertions(+), 30 deletions(-)
+> 
+> 
+> diff --git a/mkfs/proto.c b/mkfs/proto.c
+> index 07d019d6..9da0587e 100644
+> --- a/mkfs/proto.c
+> +++ b/mkfs/proto.c
+> @@ -123,9 +123,8 @@ getres(
+>  	uint		r;
+>  
+>  	for (i = 0, r = MKFS_BLOCKRES(blocks); r >= blocks; r--) {
+> -		struct xfs_trans_res    tres = {0};
+> -
+> -		i = -libxfs_trans_alloc(mp, &tres, r, 0, 0, &tp);
+> +		i = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
 
-For example, consider a page fault on a page with one preexisting
-real (non-delalloc) block allocated in the middle of the page. The
-first iomap_apply() iteration performs delayed allocation on the
-range up to the preexisting block, the next iteration finds the
-preexisting block, and the last iteration attempts to perform
-delayed allocation on the range after the prexisting block to the
-end of the page. If the first allocation succeeds and the final
-allocation fails with -ENOSPC, iomap_apply() returns the error and
-iomap_page_mkwrite() fails to dirty the page having already
-performed partial delayed allocation. This eventually results in the
-page being invalidated without ever converting the delayed
-allocation to real blocks.
+I'm wondering if this should explicitly call out that it's a dummy
+reservation rather than using the itruncate reservation? e.g. these
+places use:
 
-This problem is reliably reproduced by generic/083 on XFS on ppc64
-systems (64k page size, 4k block size). It results in leaked
-delalloc blocks on inode reclaim, which triggers an assert failure
-in xfs_fs_destroy_inode() and filesystem accounting inconsistency.
+	i = -libxfs_trans_alloc_perm(mp, blks, rtblks, flags, &tp);
 
-Move the set_page_dirty() call from iomap_page_mkwrite() to the
-actor callback, similar to how the buffer head implementation works.
-The actor callback is called iff ->iomap_begin() returns success, so
-ensures the page is dirtied as soon as possible after an allocation.
+And the implementation of this function then goes and uses the
+itruncate reservation with a comment explaining what thay is used
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+(open to a better name - "dummy" doesn't seem right - perm, rolling,
+deferred, etc all seem appropriate to indicate that it's an
+allocation for a permanent transaction type for rolling/defered
+transactions).
 
-This patch addresses the problem with generic/083, but I'm still in the
-process of running broader testing. I wanted to get it on the list for
-review in the meantime...
+Cheers,
 
-Brian
+Dave.
 
- fs/iomap.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 74762b1ec233..ec15cf2ec696 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -1051,6 +1051,7 @@ iomap_page_mkwrite_actor(struct inode *inode, loff_t pos, loff_t length,
- 	} else {
- 		WARN_ON_ONCE(!PageUptodate(page));
- 		iomap_page_create(inode, page);
-+		set_page_dirty(page);
- 	}
- 
- 	return length;
-@@ -1090,7 +1091,6 @@ int iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops)
- 		length -= ret;
- 	}
- 
--	set_page_dirty(page);
- 	wait_for_stable_page(page);
- 	return VM_FAULT_LOCKED;
- out_unlock:
 -- 
-2.17.1
+Dave Chinner
+david@fromorbit.com
