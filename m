@@ -1,133 +1,36 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:8784 "EHLO
-        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726133AbeI3Mtu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 30 Sep 2018 08:49:50 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1g6V3P-000480-Vt
-        for linux-xfs@vger.kernel.org; Sun, 30 Sep 2018 16:18:08 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.91)
-        (envelope-from <david@fromorbit.com>)
-        id 1g6V3P-0000sI-Ul
-        for linux-xfs@vger.kernel.org; Sun, 30 Sep 2018 16:18:07 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: fix error handling in  xfs_bmap_extents_to_btree
-Date: Sun, 30 Sep 2018 16:18:07 +1000
-Message-Id: <20180930061807.3320-1-david@fromorbit.com>
+Received: from verein.lst.de ([213.95.11.211]:34077 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726364AbeJAFZU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 1 Oct 2018 01:25:20 -0400
+Date: Mon, 1 Oct 2018 00:50:30 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 1/5] xfs: cancel COW blocks before swapext
+Message-ID: <20180930225030.GB18893@lst.de>
+References: <20180920144220.2181-1-hch@lst.de> <20180920144220.2181-2-hch@lst.de> <20180927150730.GA3743@bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180927150730.GA3743@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Thu, Sep 27, 2018 at 11:07:31AM -0400, Brian Foster wrote:
+> On Thu, Sep 20, 2018 at 04:42:16PM +0200, Christoph Hellwig wrote:
+> > We need to make sure we have no outstanding COW blocks before we swap
+> > extents, as there is nothing preventing us from having COW preallocations
+> > on an inode that swapext is called on.  That case can easily be
+> > reproduced by the upcoming always_cow mode.
+> > 
+> 
+> Why? Is the current code to swap the cow forks not sufficient or
+> problematic in some way?
 
-Commit 01239d77b9dd ("xfs: fix a null pointer dereference in
-xfs_bmap_extents_to_btree") attempted to fix a null pointer
-dreference when a fuzzing corruption of some kind was found.
-This fix was flawed, resulting in assert failures like:
+The code didn't seem happy with non-delalloc COW fork extents sticking
+around over swapext, but I'd have to go back and look up why.
 
-XFS: Assertion failed: ifp->if_broot == NULL, file: fs/xfs/libxfs/xfs_bmap.c, line: 715
-.....
-Call Trace:
-  xfs_bmap_extents_to_btree+0x6b9/0x7b0
-  __xfs_bunmapi+0xae7/0xf00
-  ? xfs_log_reserve+0x1c8/0x290
-  xfs_reflink_remap_extent+0x20b/0x620
-  xfs_reflink_remap_blocks+0x7e/0x290
-  xfs_reflink_remap_range+0x311/0x530
-  vfs_dedupe_file_range_one+0xd7/0xe0
-  vfs_dedupe_file_range+0x15b/0x1a0
-  do_vfs_ioctl+0x267/0x6c0
-
-The problem is that the error handling code now asserts that the
-inode fork is not in btree format before the error handling code
-undoes the modifications that put the fork back in extent format.
-Fix this by moving the assert back to after the xfs_iroot_realloc()
-call that returns the fork to extent format, and clean up the jump
-labels to be meaningful.
-
-Also, returning ENOSPC when xfs_btree_get_bufl() fails to
-instantiate the buffer that was allocated (the actual fix in the
-commit mentioned above) is incorrect. This is a fatal error - only
-an invalid block address or a filesystem shutdown can result in
-failing to get a buffer here.
-
-Hence change this to EFSCORRUPTED so that the higher layer knows
-this was a corruption related failure and should not treat it as an
-ENOSPC error.  This should result in a shutdown (via cancelling a
-dirty transaction) which is necessary as we do not attempt to clean
-up the (invalid) block that we have already allocated.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/libxfs/xfs_bmap.c | 24 +++++++++++++-----------
- 1 file changed, 13 insertions(+), 11 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 2760314fdf7f..a47670332326 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -673,7 +673,8 @@ xfs_bmap_extents_to_btree(
- 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS);
- 
- 	/*
--	 * Make space in the inode incore.
-+	 * Make space in the inode incore. This needs to be undone if we fail
-+	 * to expand the root.
- 	 */
- 	xfs_iroot_realloc(ip, 1, whichfork);
- 	ifp->if_flags |= XFS_IFBROOT;
-@@ -711,16 +712,15 @@ xfs_bmap_extents_to_btree(
- 	args.minlen = args.maxlen = args.prod = 1;
- 	args.wasdel = wasdel;
- 	*logflagsp = 0;
--	if ((error = xfs_alloc_vextent(&args))) {
--		ASSERT(ifp->if_broot == NULL);
--		goto err1;
--	}
-+	error = xfs_alloc_vextent(&args);
-+	if (error)
-+		goto out_root_realloc;
- 
- 	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
--		ASSERT(ifp->if_broot == NULL);
- 		error = -ENOSPC;
--		goto err1;
-+		goto out_root_realloc;
- 	}
-+
- 	/*
- 	 * Allocation can't fail, the space was reserved.
- 	 */
-@@ -732,9 +732,10 @@ xfs_bmap_extents_to_btree(
- 	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, 1L);
- 	abp = xfs_btree_get_bufl(mp, tp, args.fsbno, 0);
- 	if (!abp) {
--		error = -ENOSPC;
--		goto err2;
-+		error = -EFSCORRUPTED;
-+		goto out_unreserve_dquot;
- 	}
-+
- 	/*
- 	 * Fill in the child block.
- 	 */
-@@ -775,11 +776,12 @@ xfs_bmap_extents_to_btree(
- 	*logflagsp = XFS_ILOG_CORE | xfs_ilog_fbroot(whichfork);
- 	return 0;
- 
--err2:
-+out_unreserve_dquot:
- 	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, -1L);
--err1:
-+out_root_realloc:
- 	xfs_iroot_realloc(ip, -1, whichfork);
- 	XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_EXTENTS);
-+	ASSERT(ifp->if_broot == NULL);
- 	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
- 
- 	return error;
--- 
-2.17.0
+It seemed easiest to just cancel them as there is no reason to keep
+these alive over a swapext.
