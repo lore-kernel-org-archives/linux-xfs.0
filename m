@@ -1,159 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:45735 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727719AbeI3MhB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 30 Sep 2018 08:37:01 -0400
-Date: Sun, 30 Sep 2018 16:05:20 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2 V3] xfs: verify size-vs-format for symlinks & dirs
-Message-ID: <20180930060520.GK31060@dastard>
-References: <ba65356c-2b57-75fb-0436-804913285809@redhat.com>
- <1e55b111-eae4-b0cf-0221-c96eb3f17b77@redhat.com>
- <20180930032553.GJ31060@dastard>
- <71034ef7-836b-a462-a4f9-53d9004339bc@sandeen.net>
+Received: from mail-yb1-f194.google.com ([209.85.219.194]:37869 "EHLO
+        mail-yb1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727496AbeI3O2M (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 30 Sep 2018 10:28:12 -0400
+Received: by mail-yb1-f194.google.com with SMTP id h1-v6so2269020ybm.4
+        for <linux-xfs@vger.kernel.org>; Sun, 30 Sep 2018 00:56:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <71034ef7-836b-a462-a4f9-53d9004339bc@sandeen.net>
+References: <20180907015155.32559-1-david@fromorbit.com>
+In-Reply-To: <20180907015155.32559-1-david@fromorbit.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Sun, 30 Sep 2018 10:56:02 +0300
+Message-ID: <CAOQ4uxjaAJ9WSo-rtvBq7bFsV4QXHhwqjFyCFO030U4qZ7ALKg@mail.gmail.com>
+Subject: Re: [PATCH] xfs: avoid lockdep false positives in xfs_trans_alloc
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, "Xu, Wen" <wen.xu@gatech.edu>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, Jeff Mahoney <jeffm@suse.com>, Theodore Tso <tytso@mit.edu>, Jan Kara <jack@suse.cz>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
 
-On Sun, Sep 30, 2018 at 12:06:44AM -0500, Eric Sandeen wrote:
-> On 9/29/18 10:25 PM, Dave Chinner wrote:
-> > On Mon, Sep 24, 2018 at 10:00:39PM -0500, Eric Sandeen wrote:
-> >> Today, xfs_ifork_verify_data() will simply skip verification if the inode
-> >> claims to be in non-local format.  However, nothing catches the case where
-> >> the size for the format is too small to be non-local.  xfs_repair tests
-> >> for this mismatch in process_check_inode_sizes(), so do the same in this
-> >> verifier.
-> >>
-> >> Reported-by: Xu, Wen <wen.xu@gatech.edu>
-> >> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=200925
-> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> >> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> >> ---
-> >>
-> >> V2: restructure code & tests per Dave's suggestion on the V1 patch.
-> >> V3: rewrite dave's comments per brian's suggestions
-> >>
-> >> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> >> index f9acf1d436f6..d1a58e7a872f 100644
-> >> --- a/fs/xfs/libxfs/xfs_inode_fork.c
-> >> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> >> @@ -704,12 +704,33 @@ xfs_ifork_verify_data(
-> >>  	struct xfs_inode	*ip,
-> >>  	struct xfs_ifork_ops	*ops)
-> >>  {
-> >> -	/* Non-local data fork, we're done. */
-> >> -	if (ip->i_d.di_format != XFS_DINODE_FMT_LOCAL)
-> >> +	struct xfs_mount	*mp = ip->i_mount;
-> >> +	int			mode = VFS_I(ip)->i_mode;
-> >> +
-> >> +	/*
-> >> +	 * Verify non-local format forks have a valid size. Symlinks must have
-> >> +	 * outgrown the data fork size. The same goes for non-local dirs, but
-> >> +	 * dirs grow at dirblock granularity. Perform a slightly stronger check
-> >> +	 * and require the dir is at least one dirblock in size.
-> >> +	 */
-> >> +	if (ip->i_d.di_format != XFS_DINODE_FMT_LOCAL) {
-> >> +		switch (mode & S_IFMT) {
-> >> +		case S_IFDIR:
-> >> +			if (ip->i_d.di_size < mp->m_dir_geo->blksize)
-> >> +				return __this_address;
-> >> +			break;
-> >> +		case S_IFLNK:
-> >> +			if (ip->i_d.di_size <= XFS_IFORK_DSIZE(ip))
-> >> +				return __this_address;
-> > 
-> > Just had this fire in inode writeback from generic/390. I'm going to
-> > drop it for the moment, because I'm not sure what the correct fix is
-> > yet.  Consider this:
-> > 
-> > 	create symlink XFS_LITINO bytes in length
-> > 	  fits in inode, so put inline. size <= IFORK_DSIZE
-> > 	[....]
-> > 	add attr to symlink
-> > 	  creates attr fork
-> > 	    inline data fork too large, size > new IFORK_DSIZE
-> > 	      xfs_symlink_local_to_remote()
-> > 		data fork goes to extent format, size remains unchanged
-> > 	[....]
-> > 	remove last attrs from inode
-> > 	  remove attr fork
-> > 	    IFORK_DSIZE grows again, now size = IFORK_DSIZE again
-> > 	    data fork remains in extent format
-> > 	[....]
-> > 	inode writeback
-> > 	  size = IFORK_DSIZE, extent format
-> > 	    xfs_ifork_verify_data verifier fails.
-> > 
-> > 
-> > With this process, I think a symlink can be out of line even if it
-> > is less than the size of the data fork. I think this can happen even
-> > for symlinks much smaller than XFS_LITINO, because the attribute
-> > fork can grow into free space in the literal area and push local
-> > data larger than XFS_BMDR_SPACE_CALC(MINDBTPTRS) bytes to extent
-> > format.
-> > 
-> > #define MINDBTPTRS 3
-> > 
-> > #define XFS_BMDR_SPACE_CALC(nrecs) \
-> >         (int)(sizeof(xfs_bmdr_block_t) + \
-> > 	       ((nrecs) * (sizeof(xfs_bmbt_key_t) + sizeof(xfs_bmbt_ptr_t)))) 
-> > 
-> > = 4 + 3 * (8 + 8)
-> > = 52 bytes
-> > = 56 bytes when rounded up to 8 byte offset
-> > 
-> > So, yeah, I think that this check needs to be different because I
-> > think we could have symlinks as short at 56 bytes in extent format,
-> > even when the inode has no attribute fork...
-> 
-> Hrmph.  And yet, xfs_repair:
-> 
-> static int
-> process_symlink_extlist(xfs_mount_t *mp, xfs_ino_t lino, xfs_dinode_t *dino)
-> {
->         xfs_fileoff_t           expected_offset;
->         xfs_bmbt_rec_t          *rp;
->         xfs_bmbt_irec_t         irec;
->         int                     numrecs;
->         int                     i;
->         int                     max_blocks;
-> 
->         if (be64_to_cpu(dino->di_size) <= XFS_DFORK_DSIZE(dino, mp)) {
->                 if (dino->di_format == XFS_DINODE_FMT_LOCAL)
->                         return 0;
->                 do_warn(
-> _("mismatch between format (%d) and size (%" PRId64 ") in symlink ino %" PRIu64 "\n"),
->                         dino->di_format,
->                         (int64_t)be64_to_cpu(dino->di_size), lino);
->                 return 1;
->         }
-> 
-> seems to clearly call "non-local symlink with size < XFS_DFORK_DSIZE" corruption.
-> What gives?
+[CC Ted and Jan to see if there are lessons here that apply to ext2 ext4]
 
-Seems to me like another cases that the verifiers have uncovered
-another situation that even repair doesn't handle correctly. (Which
-is why I like to look at these things from first principles, rather
-than just from the "what does reapir do" POV?). It's like to be rare
-because who removes all the attributes on a file apart from when
-unlinking the inode?
+On Fri, Sep 7, 2018 at 6:03 AM Dave Chinner <david@fromorbit.com> wrote:
+>
+> From: Dave Chinner <dchinner@redhat.com>
+>
+> We've had a few reports of lockdep tripping over memory reclaim
+> context vs filesystem freeze "deadlocks". They all have looked
+> to be false positives on analysis, but it seems that they are
+> being tripped because we take freeze references before we run
+> a GFP_KERNEL allocation for the struct xfs_trans.=====
+>
+> We can avoid this false positive vector just by re-ordering the
+> operations in xfs_trans_alloc(). That is. we need allocate the
+> structure before we take the freeze reference and enter the GFP_NOFS
+> allocation context that follows the xfs_trans around. This prevents
+> lockdep from seeing the GFP_KERNEL allocation inside the transaction
+> context, and that prevents it from triggering the freeze level vs
+> alloc context vs reclaim warnings.
+>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
 
-xfs_attr_fork_remove() has set the di_forkoff back to zero
-when the last attribute is removed from the inode for a long time
-(I stopped looking when I got to ~2008...), so this isn't a new
-situation. i.e. trying to define what are valid values has
-demonstrated that there are more cases we need to take into account
-than anyone has realised.
+Dave,
 
-Cheers,
+First of all, you may add
+Tested-by: Amir Goldstein <amir73il@gmail.com>
+and I think attribution of Reported-by [2] to
+Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
+is called for.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I was getting the lockdep warning below reliably with the stress test
+overlay/019 (over bas fs xfs with reflink) ever since kernel v4.18.
+The warning is tripped on my system after 2 minutes of stress test.
+
+The possibly interesting part about this particular splat is that, unlike
+previously reported traces [1][2], sb_internals is not taken by kswapd
+from pagewrite path, which as you wrote is not possible during freeze
+level internal. In my splats sb_internals is taken by kswapd from
+dcache shrink path.
+
+It's true that overlayfs adds some quirks to the equation and this
+specific stress test (by Ted) is especially evil for making changes
+on overlay lower layer. This could results for example with unlinked
+xfs inode with elevated reference from an overlay dentry, which
+wasn't informed about this underlying unlink.
+
+However, the case of an unlinked inode reference being held by an
+open file or by inotify event doesn't seem so unlikely during frozen
+filesystem, so I am not really sure that the "false positive" claim holds
+water. If you agree with this argument, you might want to tone down
+the "false positive" language from commit message and you may
+name overlay/19 as a reliable reproducer if you see fit.
+
+Thanks,
+Amir.
+
+>8->8->8->8 extracted only the interesting snip >8->8->8->8
+ -> #0 (sb_internal#2){.+.+}:
+        lock_acquire+0x150/0x182
+        __sb_start_write+0x93/0x164
+        xfs_trans_alloc+0x3c/0x1ca
+        xfs_inactive_truncate+0x3d/0x122
+        xfs_inactive+0x15a/0x1f4
+        xfs_fs_destroy_inode+0x160/0x246
+        __dentry_kill+0xdd/0x159
+        dentry_kill+0x138/0x173
+        dput+0x230/0x23d
+        ovl_destroy_inode+0x15/0x69
+        __dentry_kill+0xdd/0x159
+        shrink_dentry_list+0x286/0x2c5
+        prune_dcache_sb+0x5a/0x78
+        super_cache_scan+0xfe/0x17b
+        shrink_slab.constprop.31+0x27a/0x438
+        shrink_node+0x74/0x251
+        kswapd+0x502/0x62f
+
+[1] https://marc.info/?l=linux-xfs&m=152954339303385&w=2
+[2] https://marc.info/?l=linux-xfs&m=153627727029090&w=2
