@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:45958 "EHLO
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:33826 "EHLO
         mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725798AbeI3HDd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 30 Sep 2018 03:03:33 -0400
+        by vger.kernel.org with ESMTP id S1727019AbeI3JcA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 30 Sep 2018 05:32:00 -0400
 Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 2FC3329BAB
-        for <linux-xfs@vger.kernel.org>; Sun, 30 Sep 2018 00:32:59 +0000 (UTC)
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 4F3BD296B7
+        for <linux-xfs@vger.kernel.org>; Sun, 30 Sep 2018 03:00:54 +0000 (UTC)
 From: bugzilla-daemon@bugzilla.kernel.org
 Subject: [Bug 201287] xfsprogs 4.17 and later can't be built as static
  binaries anymore
-Date: Sun, 30 Sep 2018 00:32:59 +0000
-Message-ID: <bug-201287-201763-50z0RFMyQI@https.bugzilla.kernel.org/>
+Date: Sun, 30 Sep 2018 03:00:54 +0000
+Message-ID: <bug-201287-201763-JAifPmGprl@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-201287-201763@https.bugzilla.kernel.org/>
 References: <bug-201287-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
@@ -23,20 +23,23 @@ To: linux-xfs@kernel.org
 
 https://bugzilla.kernel.org/show_bug.cgi?id=201287
 
---- Comment #5 from Andreas K. Hüttel (dilfridge@gentoo.org) ---
-With above two commands and the configure call below I can reproduce the
-problem with the otherwise unmodified 4.18 tarball.
+Dave Chinner (david@fromorbit.com) changed:
 
-(Feel free to close anyway if you see fit.)
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |david@fromorbit.com
 
-./configure --prefix=/usr --build=x86_64-pc-linux-gnu
---host=x86_64-pc-linux-gnu --mandir=/usr/share/man --infodir=/usr/share/info
---datadir=/usr/share --sysconfdir=/etc --localstatedir=/var/lib
---docdir=/usr/share/doc/xfsprogs-4.18.0
---htmldir=/usr/share/doc/xfsprogs-4.18.0/html --libdir=/usr/lib64 --disable-lto
---enable-blkid --with-crond-dir=/etc/cron.d
---with-systemd-unit-dir=/lib/systemd/system --disable-libicu --enable-gettext
---disable-readline --disable-editline --enable-static
+--- Comment #6 from Dave Chinner (david@fromorbit.com) ---
+So the distro build env modifies the xfsprogs build flags to add something
+upstream doesn't support, right? And that distro hack doesn't work anymore,
+yes?
+
+If so, this is a distro package build problem, not an upstream issue. If the
+distro package maintainers want the upstream source tree to support static
+builds as the distro requires, then please send patches to support this
+functionality directly out of the upstream tree to linux-xfs@vger.kernel.org.
+
+-Dave.
 
 -- 
 You are receiving this mail because:
