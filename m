@@ -1,100 +1,145 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb1-f194.google.com ([209.85.219.194]:37869 "EHLO
-        mail-yb1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727496AbeI3O2M (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 30 Sep 2018 10:28:12 -0400
-Received: by mail-yb1-f194.google.com with SMTP id h1-v6so2269020ybm.4
-        for <linux-xfs@vger.kernel.org>; Sun, 30 Sep 2018 00:56:14 -0700 (PDT)
+Received: from aserp2120.oracle.com ([141.146.126.78]:58136 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727746AbeI3WIR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 30 Sep 2018 18:08:17 -0400
+Date: Sun, 30 Sep 2018 08:34:44 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: fix error handling in  xfs_bmap_extents_to_btree
+Message-ID: <20180930153444.GA5872@magnolia>
+References: <20180930061807.3320-1-david@fromorbit.com>
 MIME-Version: 1.0
-References: <20180907015155.32559-1-david@fromorbit.com>
-In-Reply-To: <20180907015155.32559-1-david@fromorbit.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Sun, 30 Sep 2018 10:56:02 +0300
-Message-ID: <CAOQ4uxjaAJ9WSo-rtvBq7bFsV4QXHhwqjFyCFO030U4qZ7ALKg@mail.gmail.com>
-Subject: Re: [PATCH] xfs: avoid lockdep false positives in xfs_trans_alloc
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180930061807.3320-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Jeff Mahoney <jeffm@suse.com>, Theodore Tso <tytso@mit.edu>, Jan Kara <jack@suse.cz>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
+Cc: linux-xfs@vger.kernel.org
 
-[CC Ted and Jan to see if there are lessons here that apply to ext2 ext4]
-
-On Fri, Sep 7, 2018 at 6:03 AM Dave Chinner <david@fromorbit.com> wrote:
->
+On Sun, Sep 30, 2018 at 04:18:07PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
->
-> We've had a few reports of lockdep tripping over memory reclaim
-> context vs filesystem freeze "deadlocks". They all have looked
-> to be false positives on analysis, but it seems that they are
-> being tripped because we take freeze references before we run
-> a GFP_KERNEL allocation for the struct xfs_trans.=====
->
-> We can avoid this false positive vector just by re-ordering the
-> operations in xfs_trans_alloc(). That is. we need allocate the
-> structure before we take the freeze reference and enter the GFP_NOFS
-> allocation context that follows the xfs_trans around. This prevents
-> lockdep from seeing the GFP_KERNEL allocation inside the transaction
-> context, and that prevents it from triggering the freeze level vs
-> alloc context vs reclaim warnings.
->
+> 
+> Commit 01239d77b9dd ("xfs: fix a null pointer dereference in
+> xfs_bmap_extents_to_btree") attempted to fix a null pointer
+> dreference when a fuzzing corruption of some kind was found.
+> This fix was flawed, resulting in assert failures like:
+> 
+> XFS: Assertion failed: ifp->if_broot == NULL, file: fs/xfs/libxfs/xfs_bmap.c, line: 715
+> .....
+> Call Trace:
+>   xfs_bmap_extents_to_btree+0x6b9/0x7b0
+>   __xfs_bunmapi+0xae7/0xf00
+>   ? xfs_log_reserve+0x1c8/0x290
+>   xfs_reflink_remap_extent+0x20b/0x620
+>   xfs_reflink_remap_blocks+0x7e/0x290
+>   xfs_reflink_remap_range+0x311/0x530
+>   vfs_dedupe_file_range_one+0xd7/0xe0
+>   vfs_dedupe_file_range+0x15b/0x1a0
+>   do_vfs_ioctl+0x267/0x6c0
+> 
+> The problem is that the error handling code now asserts that the
+> inode fork is not in btree format before the error handling code
+> undoes the modifications that put the fork back in extent format.
+> Fix this by moving the assert back to after the xfs_iroot_realloc()
+> call that returns the fork to extent format, and clean up the jump
+> labels to be meaningful.
+> 
+> Also, returning ENOSPC when xfs_btree_get_bufl() fails to
+> instantiate the buffer that was allocated (the actual fix in the
+> commit mentioned above) is incorrect. This is a fatal error - only
+> an invalid block address or a filesystem shutdown can result in
+> failing to get a buffer here.
+> 
+> Hence change this to EFSCORRUPTED so that the higher layer knows
+> this was a corruption related failure and should not treat it as an
+> ENOSPC error.  This should result in a shutdown (via cancelling a
+> dirty transaction) which is necessary as we do not attempt to clean
+> up the (invalid) block that we have already allocated.
+> 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
+>  fs/xfs/libxfs/xfs_bmap.c | 24 +++++++++++++-----------
+>  1 file changed, 13 insertions(+), 11 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 2760314fdf7f..a47670332326 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -673,7 +673,8 @@ xfs_bmap_extents_to_btree(
+>  	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS);
+>  
+>  	/*
+> -	 * Make space in the inode incore.
+> +	 * Make space in the inode incore. This needs to be undone if we fail
+> +	 * to expand the root.
+>  	 */
+>  	xfs_iroot_realloc(ip, 1, whichfork);
+>  	ifp->if_flags |= XFS_IFBROOT;
+> @@ -711,16 +712,15 @@ xfs_bmap_extents_to_btree(
+>  	args.minlen = args.maxlen = args.prod = 1;
+>  	args.wasdel = wasdel;
+>  	*logflagsp = 0;
+> -	if ((error = xfs_alloc_vextent(&args))) {
+> -		ASSERT(ifp->if_broot == NULL);
+> -		goto err1;
+> -	}
+> +	error = xfs_alloc_vextent(&args);
+> +	if (error)
+> +		goto out_root_realloc;
+>  
+>  	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
+> -		ASSERT(ifp->if_broot == NULL);
+>  		error = -ENOSPC;
+> -		goto err1;
+> +		goto out_root_realloc;
+>  	}
+> +
+>  	/*
+>  	 * Allocation can't fail, the space was reserved.
+>  	 */
+> @@ -732,9 +732,10 @@ xfs_bmap_extents_to_btree(
+>  	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, 1L);
+>  	abp = xfs_btree_get_bufl(mp, tp, args.fsbno, 0);
+>  	if (!abp) {
 
-Dave,
+This reminds me to ask, has anyone made progress converting the
+{get,read}_buf functions (and associated callers) to return error codes?
 
-First of all, you may add
-Tested-by: Amir Goldstein <amir73il@gmail.com>
-and I think attribution of Reported-by [2] to
-Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
-is called for.
+(I wasn't expecting that as a part of this fix; I'm simply recollecting
+my marbles.)
 
-I was getting the lockdep warning below reliably with the stress test
-overlay/019 (over bas fs xfs with reflink) ever since kernel v4.18.
-The warning is tripped on my system after 2 minutes of stress test.
+Anyway, this looks ok to me.
 
-The possibly interesting part about this particular splat is that, unlike
-previously reported traces [1][2], sb_internals is not taken by kswapd
-from pagewrite path, which as you wrote is not possible during freeze
-level internal. In my splats sb_internals is taken by kswapd from
-dcache shrink path.
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-It's true that overlayfs adds some quirks to the equation and this
-specific stress test (by Ted) is especially evil for making changes
-on overlay lower layer. This could results for example with unlinked
-xfs inode with elevated reference from an overlay dentry, which
-wasn't informed about this underlying unlink.
+--D
 
-However, the case of an unlinked inode reference being held by an
-open file or by inotify event doesn't seem so unlikely during frozen
-filesystem, so I am not really sure that the "false positive" claim holds
-water. If you agree with this argument, you might want to tone down
-the "false positive" language from commit message and you may
-name overlay/19 as a reliable reproducer if you see fit.
-
-Thanks,
-Amir.
-
->8->8->8->8 extracted only the interesting snip >8->8->8->8
- -> #0 (sb_internal#2){.+.+}:
-        lock_acquire+0x150/0x182
-        __sb_start_write+0x93/0x164
-        xfs_trans_alloc+0x3c/0x1ca
-        xfs_inactive_truncate+0x3d/0x122
-        xfs_inactive+0x15a/0x1f4
-        xfs_fs_destroy_inode+0x160/0x246
-        __dentry_kill+0xdd/0x159
-        dentry_kill+0x138/0x173
-        dput+0x230/0x23d
-        ovl_destroy_inode+0x15/0x69
-        __dentry_kill+0xdd/0x159
-        shrink_dentry_list+0x286/0x2c5
-        prune_dcache_sb+0x5a/0x78
-        super_cache_scan+0xfe/0x17b
-        shrink_slab.constprop.31+0x27a/0x438
-        shrink_node+0x74/0x251
-        kswapd+0x502/0x62f
-
-[1] https://marc.info/?l=linux-xfs&m=152954339303385&w=2
-[2] https://marc.info/?l=linux-xfs&m=153627727029090&w=2
+> -		error = -ENOSPC;
+> -		goto err2;
+> +		error = -EFSCORRUPTED;
+> +		goto out_unreserve_dquot;
+>  	}
+> +
+>  	/*
+>  	 * Fill in the child block.
+>  	 */
+> @@ -775,11 +776,12 @@ xfs_bmap_extents_to_btree(
+>  	*logflagsp = XFS_ILOG_CORE | xfs_ilog_fbroot(whichfork);
+>  	return 0;
+>  
+> -err2:
+> +out_unreserve_dquot:
+>  	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, -1L);
+> -err1:
+> +out_root_realloc:
+>  	xfs_iroot_realloc(ip, -1, whichfork);
+>  	XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_EXTENTS);
+> +	ASSERT(ifp->if_broot == NULL);
+>  	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+>  
+>  	return error;
+> -- 
+> 2.17.0
+> 
