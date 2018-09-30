@@ -1,145 +1,133 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:58136 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727746AbeI3WIR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 30 Sep 2018 18:08:17 -0400
-Date: Sun, 30 Sep 2018 08:34:44 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: fix error handling in  xfs_bmap_extents_to_btree
-Message-ID: <20180930153444.GA5872@magnolia>
-References: <20180930061807.3320-1-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20180930061807.3320-1-david@fromorbit.com>
+Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:8784 "EHLO
+        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726133AbeI3Mtu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 30 Sep 2018 08:49:50 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1g6V3P-000480-Vt
+        for linux-xfs@vger.kernel.org; Sun, 30 Sep 2018 16:18:08 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1g6V3P-0000sI-Ul
+        for linux-xfs@vger.kernel.org; Sun, 30 Sep 2018 16:18:07 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfs: fix error handling in  xfs_bmap_extents_to_btree
+Date: Sun, 30 Sep 2018 16:18:07 +1000
+Message-Id: <20180930061807.3320-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Sun, Sep 30, 2018 at 04:18:07PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Commit 01239d77b9dd ("xfs: fix a null pointer dereference in
-> xfs_bmap_extents_to_btree") attempted to fix a null pointer
-> dreference when a fuzzing corruption of some kind was found.
-> This fix was flawed, resulting in assert failures like:
-> 
-> XFS: Assertion failed: ifp->if_broot == NULL, file: fs/xfs/libxfs/xfs_bmap.c, line: 715
-> .....
-> Call Trace:
->   xfs_bmap_extents_to_btree+0x6b9/0x7b0
->   __xfs_bunmapi+0xae7/0xf00
->   ? xfs_log_reserve+0x1c8/0x290
->   xfs_reflink_remap_extent+0x20b/0x620
->   xfs_reflink_remap_blocks+0x7e/0x290
->   xfs_reflink_remap_range+0x311/0x530
->   vfs_dedupe_file_range_one+0xd7/0xe0
->   vfs_dedupe_file_range+0x15b/0x1a0
->   do_vfs_ioctl+0x267/0x6c0
-> 
-> The problem is that the error handling code now asserts that the
-> inode fork is not in btree format before the error handling code
-> undoes the modifications that put the fork back in extent format.
-> Fix this by moving the assert back to after the xfs_iroot_realloc()
-> call that returns the fork to extent format, and clean up the jump
-> labels to be meaningful.
-> 
-> Also, returning ENOSPC when xfs_btree_get_bufl() fails to
-> instantiate the buffer that was allocated (the actual fix in the
-> commit mentioned above) is incorrect. This is a fatal error - only
-> an invalid block address or a filesystem shutdown can result in
-> failing to get a buffer here.
-> 
-> Hence change this to EFSCORRUPTED so that the higher layer knows
-> this was a corruption related failure and should not treat it as an
-> ENOSPC error.  This should result in a shutdown (via cancelling a
-> dirty transaction) which is necessary as we do not attempt to clean
-> up the (invalid) block that we have already allocated.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 24 +++++++++++++-----------
->  1 file changed, 13 insertions(+), 11 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 2760314fdf7f..a47670332326 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -673,7 +673,8 @@ xfs_bmap_extents_to_btree(
->  	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS);
->  
->  	/*
-> -	 * Make space in the inode incore.
-> +	 * Make space in the inode incore. This needs to be undone if we fail
-> +	 * to expand the root.
->  	 */
->  	xfs_iroot_realloc(ip, 1, whichfork);
->  	ifp->if_flags |= XFS_IFBROOT;
-> @@ -711,16 +712,15 @@ xfs_bmap_extents_to_btree(
->  	args.minlen = args.maxlen = args.prod = 1;
->  	args.wasdel = wasdel;
->  	*logflagsp = 0;
-> -	if ((error = xfs_alloc_vextent(&args))) {
-> -		ASSERT(ifp->if_broot == NULL);
-> -		goto err1;
-> -	}
-> +	error = xfs_alloc_vextent(&args);
-> +	if (error)
-> +		goto out_root_realloc;
->  
->  	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
-> -		ASSERT(ifp->if_broot == NULL);
->  		error = -ENOSPC;
-> -		goto err1;
-> +		goto out_root_realloc;
->  	}
-> +
->  	/*
->  	 * Allocation can't fail, the space was reserved.
->  	 */
-> @@ -732,9 +732,10 @@ xfs_bmap_extents_to_btree(
->  	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, 1L);
->  	abp = xfs_btree_get_bufl(mp, tp, args.fsbno, 0);
->  	if (!abp) {
+From: Dave Chinner <dchinner@redhat.com>
 
-This reminds me to ask, has anyone made progress converting the
-{get,read}_buf functions (and associated callers) to return error codes?
+Commit 01239d77b9dd ("xfs: fix a null pointer dereference in
+xfs_bmap_extents_to_btree") attempted to fix a null pointer
+dreference when a fuzzing corruption of some kind was found.
+This fix was flawed, resulting in assert failures like:
 
-(I wasn't expecting that as a part of this fix; I'm simply recollecting
-my marbles.)
+XFS: Assertion failed: ifp->if_broot == NULL, file: fs/xfs/libxfs/xfs_bmap.c, line: 715
+.....
+Call Trace:
+  xfs_bmap_extents_to_btree+0x6b9/0x7b0
+  __xfs_bunmapi+0xae7/0xf00
+  ? xfs_log_reserve+0x1c8/0x290
+  xfs_reflink_remap_extent+0x20b/0x620
+  xfs_reflink_remap_blocks+0x7e/0x290
+  xfs_reflink_remap_range+0x311/0x530
+  vfs_dedupe_file_range_one+0xd7/0xe0
+  vfs_dedupe_file_range+0x15b/0x1a0
+  do_vfs_ioctl+0x267/0x6c0
 
-Anyway, this looks ok to me.
+The problem is that the error handling code now asserts that the
+inode fork is not in btree format before the error handling code
+undoes the modifications that put the fork back in extent format.
+Fix this by moving the assert back to after the xfs_iroot_realloc()
+call that returns the fork to extent format, and clean up the jump
+labels to be meaningful.
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Also, returning ENOSPC when xfs_btree_get_bufl() fails to
+instantiate the buffer that was allocated (the actual fix in the
+commit mentioned above) is incorrect. This is a fatal error - only
+an invalid block address or a filesystem shutdown can result in
+failing to get a buffer here.
 
---D
+Hence change this to EFSCORRUPTED so that the higher layer knows
+this was a corruption related failure and should not treat it as an
+ENOSPC error.  This should result in a shutdown (via cancelling a
+dirty transaction) which is necessary as we do not attempt to clean
+up the (invalid) block that we have already allocated.
 
-> -		error = -ENOSPC;
-> -		goto err2;
-> +		error = -EFSCORRUPTED;
-> +		goto out_unreserve_dquot;
->  	}
-> +
->  	/*
->  	 * Fill in the child block.
->  	 */
-> @@ -775,11 +776,12 @@ xfs_bmap_extents_to_btree(
->  	*logflagsp = XFS_ILOG_CORE | xfs_ilog_fbroot(whichfork);
->  	return 0;
->  
-> -err2:
-> +out_unreserve_dquot:
->  	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, -1L);
-> -err1:
-> +out_root_realloc:
->  	xfs_iroot_realloc(ip, -1, whichfork);
->  	XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_EXTENTS);
-> +	ASSERT(ifp->if_broot == NULL);
->  	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
->  
->  	return error;
-> -- 
-> 2.17.0
-> 
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 24 +++++++++++++-----------
+ 1 file changed, 13 insertions(+), 11 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 2760314fdf7f..a47670332326 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -673,7 +673,8 @@ xfs_bmap_extents_to_btree(
+ 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS);
+ 
+ 	/*
+-	 * Make space in the inode incore.
++	 * Make space in the inode incore. This needs to be undone if we fail
++	 * to expand the root.
+ 	 */
+ 	xfs_iroot_realloc(ip, 1, whichfork);
+ 	ifp->if_flags |= XFS_IFBROOT;
+@@ -711,16 +712,15 @@ xfs_bmap_extents_to_btree(
+ 	args.minlen = args.maxlen = args.prod = 1;
+ 	args.wasdel = wasdel;
+ 	*logflagsp = 0;
+-	if ((error = xfs_alloc_vextent(&args))) {
+-		ASSERT(ifp->if_broot == NULL);
+-		goto err1;
+-	}
++	error = xfs_alloc_vextent(&args);
++	if (error)
++		goto out_root_realloc;
+ 
+ 	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
+-		ASSERT(ifp->if_broot == NULL);
+ 		error = -ENOSPC;
+-		goto err1;
++		goto out_root_realloc;
+ 	}
++
+ 	/*
+ 	 * Allocation can't fail, the space was reserved.
+ 	 */
+@@ -732,9 +732,10 @@ xfs_bmap_extents_to_btree(
+ 	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, 1L);
+ 	abp = xfs_btree_get_bufl(mp, tp, args.fsbno, 0);
+ 	if (!abp) {
+-		error = -ENOSPC;
+-		goto err2;
++		error = -EFSCORRUPTED;
++		goto out_unreserve_dquot;
+ 	}
++
+ 	/*
+ 	 * Fill in the child block.
+ 	 */
+@@ -775,11 +776,12 @@ xfs_bmap_extents_to_btree(
+ 	*logflagsp = XFS_ILOG_CORE | xfs_ilog_fbroot(whichfork);
+ 	return 0;
+ 
+-err2:
++out_unreserve_dquot:
+ 	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, -1L);
+-err1:
++out_root_realloc:
+ 	xfs_iroot_realloc(ip, -1, whichfork);
+ 	XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_EXTENTS);
++	ASSERT(ifp->if_broot == NULL);
+ 	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
+ 
+ 	return error;
+-- 
+2.17.0
