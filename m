@@ -1,43 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from smtp-out003.kontent.com ([81.88.40.217]:44841 "EHLO
-        smtp-out003.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726827AbeIAPLq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Sep 2018 11:11:46 -0400
-Subject: Re: xfs_scrub_all warning
-References: <974f65da-60f9-55aa-2e27-3fe9abb64f97@bodenbinder.de>
- <20180831164535.GA4355@magnolia>
-From: Matthias Bodenbinder <matthias@bodenbinder.de>
-Message-ID: <14ac54ca-4f2d-c3a2-9157-93ae7e274f47@bodenbinder.de>
-Date: Sat, 1 Sep 2018 12:45:54 +0200
-MIME-Version: 1.0
-In-Reply-To: <20180831164535.GA4355@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: de-DE
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:45846 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725798AbeI3G6t (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 30 Sep 2018 02:58:49 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id CD637294D3
+        for <linux-xfs@vger.kernel.org>; Sun, 30 Sep 2018 00:28:15 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 201287] xfsprogs 4.17 and later can't be built as static
+ binaries anymore
+Date: Sun, 30 Sep 2018 00:28:15 +0000
+Message-ID: <bug-201287-201763-Obv8PT9Df5@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-201287-201763@https.bugzilla.kernel.org/>
+References: <bug-201287-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8BIT
+MIME-Version: 1.0
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@kernel.org
 
-Am 31.08.18 um 18:45 schrieb Darrick J. Wong:
-> I think so.  If you remove the lines:
+https://bugzilla.kernel.org/show_bug.cgi?id=201287
+
+--- Comment #4 from Andreas K. Hüttel (dilfridge@gentoo.org) ---
+(In reply to Andreas K. Hüttel from comment #3)
+> Ugh. I can't reproduce the final link failure with the unmodified release
+> tarball. So that part is likely our problem, sorry for the noise.
 > 
-> 	if '-' not in path:
-> 		return path
-> 
-> from systemd_escape() in /sbin/xfs_scrub_all, do the warnings go away?
-> Does scrub still work afterwards?
+> [We sed LLDFLAGS += -all-static into the Makefiles.]
 
-That does work:
- 
-8# ./my-xfs_scrub_all
-Scrubbing /home...
-Failed to add filter for units: No data available
-Scrubbing /home done, (err=0)
+(More precisely, simplified from the "ebuild":
 
+sed -i -e "1iLLDFLAGS += -all-static" include/builddefs.in
+find -name Makefile -exec sed -i -r -e '/^LLDFLAGS [+]?=
+-static(-libtool-libs)?$/d' {} +
 
-But what is this "Failed to add filter..." message about?
+)
 
-Thanks for your help
-Matthias
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
