@@ -1,87 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ed1-f44.google.com ([209.85.208.44]:43616 "EHLO
-        mail-ed1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729480AbeJAVyQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Oct 2018 17:54:16 -0400
+Received: from imap.thunk.org ([74.207.234.97]:36736 "EHLO imap.thunk.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729439AbeJAWDx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 1 Oct 2018 18:03:53 -0400
+Date: Mon, 1 Oct 2018 11:25:29 -0400
+From: "Theodore Y. Ts'o" <tytso@mit.edu>
+Subject: Re: Leaking Path in XFS's ioctl interface(missing LSM check)
+Message-ID: <20181001152529.GA2549@thunk.org>
+References: <5EF0D46A-C098-4B51-AD13-225FFCA35D4C@vt.edu>
+ <20180926013329.GD31060@dastard>
+ <20180926192426.472360ea@alans-desktop>
+ <20180927013812.GF31060@dastard>
+ <20180930151652.6975610c@alans-desktop>
+ <20181001002521.GM31060@dastard>
+ <20181001160442.47c798bc@alans-desktop>
 MIME-Version: 1.0
-References: <CA+1E3rLXPwzfO3ro49ZVg7RfpYon5YDB6Y_zqu60ivpgn4wenw@mail.gmail.com>
- <2a92fff4-d005-835a-3bd7-a328b008857f@gmx.com>
-In-Reply-To: <2a92fff4-d005-835a-3bd7-a328b008857f@gmx.com>
-From: Joshi <joshiiitr@gmail.com>
-Date: Mon, 1 Oct 2018 20:45:45 +0530
-Message-ID: <CA+1E3rJmoeVGhokE0phbH1kv_+izT0W14ZijWnjVbU0PPqRwOg@mail.gmail.com>
-Subject: Re: cross-fs copy support
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181001160442.47c798bc@alans-desktop>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: quwenruo.btrfs@gmx.com
-Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
+Cc: Dave Chinner <david@fromorbit.com>, TongZhang <ztong@vt.edu>, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-security-module@vger.kernel.org, Wenbo Shen <shenwenbosmile@gmail.com>
 
-Sorry if my post was not clear enough. I picked the term "cross-fs"
-from the implementation of vfs_copy_file_range.
-Below snippet, inside vfs_copy_file_range -
-1578         /* this could be relaxed once a method supports cross-fs copie=
-s */
-1579         if (inode_in->i_sb !=3D inode_out->i_sb)
-1580                 return -EXDEV;
+On Mon, Oct 01, 2018 at 04:04:42PM +0100, Alan Cox wrote:
+> > Systems restricted by LSMs to the point where CAP_SYS_ADMIN is not
+> > trusted have exactly the same issues. i.e. there's nobody trusted by
+> > the kernel to administer the storage stack, and nobody has defined a
+> > workable security model that can prevent untrusted users from
+> > violating the existing storage trust model....
+> 
+> With a proper set of LSM checks you can lock the filesystem management
+> and enforcement to a particular set of objects. You can build that model
+> where for example only an administrative login from a trusted console may
+> launch processes to do that management.
+> 
+> Or you could - if things were not going around the LSM hooks.
 
-And I was not trying reflink for copy, rather I just used example code
-for copy_file_range syscall -
-http://man7.org/linux/man-pages/man2/copy_file_range.2.html
-This code creates a new file first, and later issues "copy_file_range"
-for copying. I was trying this sort of copy among files residing on
-btrfs, ext4, and xfs.
-Although vfs_copy_file_range internally uses clone_file_range (which
-would be true for btrfs and xfs).
-On Mon, Oct 1, 2018 at 8:18 PM Qu Wenruo <quwenruo.btrfs@gmx.com> wrote:
->
->
->
-> On 2018/10/1 =E4=B8=8B=E5=8D=8810:32, Joshi wrote:
-> > I was wondering about the cross-fs copy through copy_file_range.
->
-> The term "cross-fs" looks pretty confusing.
->
-> If you mean "cross-subvolume", then it should work without problem in btr=
-fs.
->
-> If you mean reflink across two different file systems (not matter the
-> same fs type or not).
-> Then it's impossible to work.
->
-> Reflink (clone_file_range) works by inserting data pointers into the
-> filesystem other than really copying the data.
-> Thus if the source is outside of the fs, it's really impossible to work,
-> as the source pointer/data is completely out of control of the dest fs.
->
-> > It seems current implement has below check, that disables such copy.
-> >
-> > 1577         /* this could be relaxed once a method supports cross-fs c=
-opies */
-> > 1578         if (inode_in->i_sb !=3D inode_out->i_sb)
-> > 1579                 return -EXDEV;
-> >
-> > May I know what are the thoughts behind disabling cross-fs copy?
-> > Code has the comment "once a method supports", but that leaves me
-> > wondering exactly what 'method' is expected, and from whom.
-> >
-> > I disabled the check, and copy across volumes seemed to work fine. At
-> > least for a single file (1G size), with no data mismatch, and faster
-> > speed than regular copy.
->
-> Please provide the steps or script about how you did the reflink, in
-> case I misunderstand your "cross-fs" definition.
->
-> And just in case you're really doing cross filesystem reflink, please
-> also run "btrfs check" on both fs.
->
-> Thanks,
-> Qu
->
->
+It would be useful if anyone actually *wants* to do this thing to
+define a formal security model, and detail *everything* that would
+need to be changed in order to accomplish it.  Just as we don't
+speculatively add code "just in case" someone might want to use it
+someday, I don't think we should be adding random LSM hooks just
+becausre someone *might* want do something.
 
+Let's see the use case, and let's see how horrible the changes would
+need to be, and how credible we think it is that someone will actually
+want to *use* it.  I suspect the chagnes will be a really huge number
+of places, and not just in XFS....
 
---=20
-Joshi
+					- Ted
