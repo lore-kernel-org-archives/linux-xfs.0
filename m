@@ -1,113 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it1-f194.google.com ([209.85.166.194]:51551 "EHLO
-        mail-it1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726246AbeJBCaj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Oct 2018 22:30:39 -0400
-Received: by mail-it1-f194.google.com with SMTP id 74-v6so12352itw.1
-        for <linux-xfs@vger.kernel.org>; Mon, 01 Oct 2018 12:51:16 -0700 (PDT)
-From: Andreas Dilger <adilger@dilger.ca>
-Message-Id: <FE6394EC-5CB0-4A16-AAC6-97F465A4E50C@dilger.ca>
-Content-Type: multipart/signed;
- boundary="Apple-Mail=_6FD6155E-4B53-4E0B-BBB4-240C9582FC05";
- protocol="application/pgp-signature"; micalg=pgp-sha256
-Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: Re: cross-fs copy support
-Date: Mon, 1 Oct 2018 13:51:09 -0600
-In-Reply-To: <df92a795-3f2e-751a-8504-030015fba6d9@sandeen.net>
-References: <CA+1E3rLXPwzfO3ro49ZVg7RfpYon5YDB6Y_zqu60ivpgn4wenw@mail.gmail.com>
- <2a92fff4-d005-835a-3bd7-a328b008857f@gmx.com>
- <df92a795-3f2e-751a-8504-030015fba6d9@sandeen.net>
+Received: from mx1.redhat.com ([209.132.183.28]:36520 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729182AbeJAVEx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 1 Oct 2018 17:04:53 -0400
+Date: Mon, 1 Oct 2018 10:26:47 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 4/7] xfs: remove the unused shared argument to
+ xfs_reflink_reserve_cow
+Message-ID: <20181001142647.GF53694@bfoster>
+References: <20181001123741.32005-1-hch@lst.de>
+ <20181001123741.32005-5-hch@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181001123741.32005-5-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Qu Wenruo <quwenruo.btrfs@gmx.com>, Joshi <joshiiitr@gmail.com>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
+On Mon, Oct 01, 2018 at 05:37:38AM -0700, Christoph Hellwig wrote:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
 
---Apple-Mail=_6FD6155E-4B53-4E0B-BBB4-240C9582FC05
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=utf-8
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-=1D=08=1D=1DOn Oct 1, 2018, at 9:49 AM, Eric Sandeen =
-<sandeen@sandeen.net> wrote:
->=20
->=20
-> On 10/1/18 9:48 AM, Qu Wenruo wrote:
->>=20
->>=20
->> On 2018/10/1 =E4=B8=8B=E5=8D=8810:32, Joshi wrote:
->>> I was wondering about the cross-fs copy through copy_file_range.
->>=20
->> The term "cross-fs" looks pretty confusing.
->>=20
->> If you mean "cross-subvolume", then it should work without problem in =
-btrfs.
->>=20
->> If you mean reflink across two different file systems (not matter the
->> same fs type or not).
->> Then it's impossible to work.
->=20
-> I believe Joshi is talking about vfs_copy_file_range() not
-> vfs_clone_file range(), although _copy_ does call _clone_ if it can.
->=20
->> Reflink (clone_file_range) works by inserting data pointers into the
->> filesystem other than really copying the data.
->> Thus if the source is outside of the fs, it's really impossible to =
-work,
->> as the source pointer/data is completely out of control of the dest =
-fs.
->=20
-> Yes, I would expect there to be problems with his modified kernel
-> for a filesystem that supports clone_file_range, because
-> vfs_copy_file_range() will clone if possible, and this should fail =
-across
-> filesystems.
->=20
-> In general, though, I don't know for sure why we don't fall back to
-> do_splice_direct() across filesystems, although the filesystems that
-> implement their own ->copy_file_range ops may have their own,
-> further restrictions within their implementations.
->=20
-> This call /is/ documented in the manpage as only being valid for
-> files on the same filesystem, though:
-> http://man7.org/linux/man-pages/man2/copy_file_range.2.html
-
-There was a patch to allow cross-mount copy for NFS, but it hasn't =
-landed
-yet.
-
-Cheers, Andreas
-
-
-
-
-
-
---Apple-Mail=_6FD6155E-4B53-4E0B-BBB4-240C9582FC05
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename=signature.asc
-Content-Type: application/pgp-signature;
-	name=signature.asc
-Content-Description: Message signed with OpenPGP
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEDb73u6ZejP5ZMprvcqXauRfMH+AFAluyeq0ACgkQcqXauRfM
-H+CA/BAAlqfHLiBffwXGdhOXxmPi4v2pdAwCq1EtDwY2FrQ9pouuSEwVc5WimoYA
-8hPkLHmLw2DBwGon9YHgI90Or73VHWHY7hQDKJdU1kgo6BVSYDKSc2fj197DFuau
-1SJbsERSn+VGlgoJgnzLsWUFbsl7jU8wXQAVh53zh1xHQtKrTWpfwlMO1/LmkO5M
-FW5XIID7cE8iZHLMCdftciOufamoXiU1h1ILoWvMqmsL0lB8Ie2K2KKtw9EC6v2z
-+CjMDPoNHIlbOFB+LIUKSTCNB064Sts3OUKF1EjfIYYoPAjM4JCuWU7rh5q1mv3o
-gy7kxhx3IM8NpGDiGeUttCabdzqSMlY0VRyYLtTiqP5h6WkgHgrMkSb0zH26A2GZ
-AKzzJZzUk24QMEaLoQPCYbN8EnwFwES/4vxGpeAmb3FAtSk2jDJiZ3QitTWbamSY
-N2JydBps2Y+pi8W66VPKse/0u7REk9B79JSyouuB2VlyCxwGPME+VGCpAoMumrIA
-FUkYzp699AlMOwCCsdJocsVUfSCOnfwD2sU73n7ytBvqyKF4LaGN1q6VMxaWvZAf
-rM22YDLk3ATvYF2hp+hAzVJrVfEcPY+nadhUuFRt4AvgFrql56rGNEJzJ1e5kbe8
-f2BgJ6dQV09n3zywL7O5nLE4b1BMHDl4jGkiPeKB+COydXzj9Pw=
-=pSPg
------END PGP SIGNATURE-----
-
---Apple-Mail=_6FD6155E-4B53-4E0B-BBB4-240C9582FC05--
+>  fs/xfs/xfs_iomap.c   |  6 ++----
+>  fs/xfs/xfs_reflink.c | 12 +++++-------
+>  fs/xfs/xfs_reflink.h |  2 +-
+>  3 files changed, 8 insertions(+), 12 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 7cbebcf61fa7..8ba97e67b474 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -561,12 +561,10 @@ xfs_file_iomap_begin_delay(
+>  		if (xfs_is_reflink_inode(ip) &&
+>  		    ((flags & IOMAP_WRITE) ||
+>  		     got.br_state != XFS_EXT_UNWRITTEN)) {
+> -			bool		shared;
+> -
+>  			end_fsb = min(XFS_B_TO_FSB(mp, offset + count),
+>  					maxbytes_fsb);
+>  			xfs_trim_extent(&got, offset_fsb, end_fsb - offset_fsb);
+> -			error = xfs_reflink_reserve_cow(ip, &got, &shared);
+> +			error = xfs_reflink_reserve_cow(ip, &got);
+>  			if (error)
+>  				goto out_unlock;
+>  		}
+> @@ -1091,7 +1089,7 @@ xfs_file_iomap_begin(
+>  			if (error)
+>  				goto out_unlock;
+>  		} else {
+> -			error = xfs_reflink_reserve_cow(ip, &imap, &shared);
+> +			error = xfs_reflink_reserve_cow(ip, &imap);
+>  			if (error)
+>  				goto out_unlock;
+>  		}
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index 5289e22cb081..06e38e88ddee 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -241,7 +241,7 @@ xfs_reflink_trim_around_shared(
+>  /*
+>   * Trim the passed in imap to the next shared/unshared extent boundary, and
+>   * if imap->br_startoff points to a shared extent reserve space for it in the
+> - * COW fork.  In this case *shared is set to true, else to false.
+> + * COW fork.
+>   *
+>   * Note that imap will always contain the block numbers for the existing blocks
+>   * in the data fork, as the upper layers need them for read-modify-write
+> @@ -250,14 +250,14 @@ xfs_reflink_trim_around_shared(
+>  int
+>  xfs_reflink_reserve_cow(
+>  	struct xfs_inode	*ip,
+> -	struct xfs_bmbt_irec	*imap,
+> -	bool			*shared)
+> +	struct xfs_bmbt_irec	*imap)
+>  {
+>  	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
+>  	struct xfs_bmbt_irec	got;
+>  	int			error = 0;
+>  	bool			eof = false, trimmed;
+>  	struct xfs_iext_cursor	icur;
+> +	bool			shared;
+>  
+>  	/*
+>  	 * Search the COW fork extent list first.  This serves two purposes:
+> @@ -273,18 +273,16 @@ xfs_reflink_reserve_cow(
+>  	if (!eof && got.br_startoff <= imap->br_startoff) {
+>  		trace_xfs_reflink_cow_found(ip, imap);
+>  		xfs_trim_extent(imap, got.br_startoff, got.br_blockcount);
+> -
+> -		*shared = true;
+>  		return 0;
+>  	}
+>  
+>  	/* Trim the mapping to the nearest shared extent boundary. */
+> -	error = xfs_reflink_trim_around_shared(ip, imap, shared, &trimmed);
+> +	error = xfs_reflink_trim_around_shared(ip, imap, &shared, &trimmed);
+>  	if (error)
+>  		return error;
+>  
+>  	/* Not shared?  Just report the (potentially capped) extent. */
+> -	if (!*shared)
+> +	if (!shared)
+>  		return 0;
+>  
+>  	/*
+> diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+> index c585ad9552b2..b77f4079022a 100644
+> --- a/fs/xfs/xfs_reflink.h
+> +++ b/fs/xfs/xfs_reflink.h
+> @@ -13,7 +13,7 @@ extern int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
+>  		struct xfs_bmbt_irec *irec, bool *shared, bool *trimmed);
+>  
+>  extern int xfs_reflink_reserve_cow(struct xfs_inode *ip,
+> -		struct xfs_bmbt_irec *imap, bool *shared);
+> +		struct xfs_bmbt_irec *imap);
+>  extern int xfs_reflink_allocate_cow(struct xfs_inode *ip,
+>  		struct xfs_bmbt_irec *imap, bool *shared, uint *lockmode);
+>  extern int xfs_reflink_convert_cow(struct xfs_inode *ip, xfs_off_t offset,
+> -- 
+> 2.19.0
+> 
