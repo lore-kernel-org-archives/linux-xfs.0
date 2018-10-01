@@ -1,142 +1,137 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:33482 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726630AbeJBF2a (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Oct 2018 01:28:30 -0400
-Subject: [PATCH 1/2] xfs: xrep_findroot_block should reject root blocks with
- siblings
+Received: from userp2130.oracle.com ([156.151.31.86]:49882 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726517AbeJBFP4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Oct 2018 01:15:56 -0400
+Date: Mon, 1 Oct 2018 15:35:50 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 01 Oct 2018 15:48:22 -0700
-Message-ID: <153843410206.24414.16640243145941466296.stgit@magnolia>
-In-Reply-To: <153843409576.24414.14199833763423874927.stgit@magnolia>
-References: <153843409576.24414.14199833763423874927.stgit@magnolia>
+Subject: Re: [PATCH] xfs: don't use slab for metadata buffers
+Message-ID: <20181001223550.GD5872@magnolia>
+References: <20181001220911.4679-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181001220911.4679-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Oct 01, 2018 at 03:09:11PM -0700, Christoph Hellwig wrote:
+> It turns out the slub allocator won't always give us aligned memory,
+> and on some controllers this can lead to data corruption.  Remove the
+> special slab backed fast path in xfs_buf_allocate_memory.  The only
+> downside of this is a slight waste of memory for metadata buffers
+> smaller than page size.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-In xrep_findroot_block, if we find a candidate root block with sibling
-pointers or sibling blocks on the same tree level, we should not return
-that block as a tree root because root blocks cannot have siblings.
+Looks ok.  I sorta wonder if this could have been more targeted towards
+the situation where it didn't work, but ... meh, that might have just
+led to occasional wierd failure whackamole.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/scrub/repair.c |   61 +++++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 48 insertions(+), 13 deletions(-)
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
+--D
 
-diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index 9f08dd9bf1d5..6eb66b3543ff 100644
---- a/fs/xfs/scrub/repair.c
-+++ b/fs/xfs/scrub/repair.c
-@@ -692,12 +692,13 @@ xrep_findroot_block(
- 	struct xrep_find_ag_btree	*fab,
- 	uint64_t			owner,
- 	xfs_agblock_t			agbno,
--	bool				*found_it)
-+	bool				*done_with_block)
- {
- 	struct xfs_mount		*mp = ri->sc->mp;
- 	struct xfs_buf			*bp;
- 	struct xfs_btree_block		*btblock;
- 	xfs_daddr_t			daddr;
-+	int				block_level;
- 	int				error;
- 
- 	daddr = XFS_AGB_TO_DADDR(mp, ri->sc->sa.agno, agbno);
-@@ -735,18 +736,52 @@ xrep_findroot_block(
- 		goto out;
- 	bp->b_ops = fab->buf_ops;
- 
--	/* Ignore this block if it's lower in the tree than we've seen. */
--	if (fab->root != NULLAGBLOCK &&
--	    xfs_btree_get_level(btblock) < fab->height)
--		goto out;
--
- 	/* Make sure we pass the verifiers. */
- 	bp->b_ops->verify_read(bp);
- 	if (bp->b_error)
- 		goto out;
--	fab->root = agbno;
--	fab->height = xfs_btree_get_level(btblock) + 1;
--	*found_it = true;
-+
-+	/*
-+	 * This block passes the magic/uuid and verifier tests for this btree
-+	 * type.  We don't need the caller to try the other tree types.
-+	 */
-+	*done_with_block = true;
-+
-+	block_level = xfs_btree_get_level(btblock);
-+	if (block_level + 1 == fab->height) {
-+		/*
-+		 * This block claims to be at the same level as the root we
-+		 * found previously.  There can't be two candidate roots, so
-+		 * we'll throw away both of them and hope we later find a block
-+		 * even higher in the tree.
-+		 */
-+		fab->root = NULLAGBLOCK;
-+		goto out;
-+	} else if (block_level < fab->height) {
-+		/*
-+		 * This block is lower in the tree than the root we found
-+		 * previously, so just ignore it.
-+		 */
-+		goto out;
-+	}
-+
-+	/*
-+	 * This is the highest block in the tree that we've found so far.
-+	 * Update the btree height to reflect what we've learned from this
-+	 * block.
-+	 */
-+	fab->height = block_level + 1;
-+
-+	/*
-+	 * If this block doesn't have sibling pointers, then it's the new root
-+	 * block candidate.  Otherwise, the root will be found farther up the
-+	 * tree.
-+	 */
-+	if (btblock->bb_u.s.bb_leftsib == cpu_to_be32(NULLAGBLOCK) &&
-+	    btblock->bb_u.s.bb_rightsib == cpu_to_be32(NULLAGBLOCK))
-+		fab->root = agbno;
-+	else
-+		fab->root = NULLAGBLOCK;
- 
- 	trace_xrep_findroot_block(mp, ri->sc->sa.agno, agbno,
- 			be32_to_cpu(btblock->bb_magic), fab->height - 1);
-@@ -768,7 +803,7 @@ xrep_findroot_rmap(
- 	struct xrep_findroot		*ri = priv;
- 	struct xrep_find_ag_btree	*fab;
- 	xfs_agblock_t			b;
--	bool				found_it;
-+	bool				done;
- 	int				error = 0;
- 
- 	/* Ignore anything that isn't AG metadata. */
-@@ -777,16 +812,16 @@ xrep_findroot_rmap(
- 
- 	/* Otherwise scan each block + btree type. */
- 	for (b = 0; b < rec->rm_blockcount; b++) {
--		found_it = false;
-+		done = false;
- 		for (fab = ri->btree_info; fab->buf_ops; fab++) {
- 			if (rec->rm_owner != fab->rmap_owner)
- 				continue;
- 			error = xrep_findroot_block(ri, fab,
- 					rec->rm_owner, rec->rm_startblock + b,
--					&found_it);
-+					&done);
- 			if (error)
- 				return error;
--			if (found_it)
-+			if (done)
- 				break;
- 		}
- 	}
+> ---
+>  fs/xfs/xfs_buf.c | 37 ++++---------------------------------
+>  fs/xfs/xfs_buf.h |  6 ++----
+>  2 files changed, 6 insertions(+), 37 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index e839907e8492..4808fd38e7d7 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -313,8 +313,8 @@ xfs_buf_free(
+>  
+>  			__free_page(page);
+>  		}
+> -	} else if (bp->b_flags & _XBF_KMEM)
+> -		kmem_free(bp->b_addr);
+> +	}
+> +
+>  	_xfs_buf_free_pages(bp);
+>  	xfs_buf_free_maps(bp);
+>  	kmem_zone_free(xfs_buf_zone, bp);
+> @@ -328,42 +328,13 @@ xfs_buf_allocate_memory(
+>  	xfs_buf_t		*bp,
+>  	uint			flags)
+>  {
+> -	size_t			size;
+> +	size_t			size = BBTOB(bp->b_length);
+>  	size_t			nbytes, offset;
+>  	gfp_t			gfp_mask = xb_to_gfp(flags);
+>  	unsigned short		page_count, i;
+>  	xfs_off_t		start, end;
+>  	int			error;
+>  
+> -	/*
+> -	 * for buffers that are contained within a single page, just allocate
+> -	 * the memory from the heap - there's no need for the complexity of
+> -	 * page arrays to keep allocation down to order 0.
+> -	 */
+> -	size = BBTOB(bp->b_length);
+> -	if (size < PAGE_SIZE) {
+> -		bp->b_addr = kmem_alloc(size, KM_NOFS);
+> -		if (!bp->b_addr) {
+> -			/* low memory - use alloc_page loop instead */
+> -			goto use_alloc_page;
+> -		}
+> -
+> -		if (((unsigned long)(bp->b_addr + size - 1) & PAGE_MASK) !=
+> -		    ((unsigned long)bp->b_addr & PAGE_MASK)) {
+> -			/* b_addr spans two pages - use alloc_page instead */
+> -			kmem_free(bp->b_addr);
+> -			bp->b_addr = NULL;
+> -			goto use_alloc_page;
+> -		}
+> -		bp->b_offset = offset_in_page(bp->b_addr);
+> -		bp->b_pages = bp->b_page_array;
+> -		bp->b_pages[0] = virt_to_page(bp->b_addr);
+> -		bp->b_page_count = 1;
+> -		bp->b_flags |= _XBF_KMEM;
+> -		return 0;
+> -	}
+> -
+> -use_alloc_page:
+>  	start = BBTOB(bp->b_maps[0].bm_bn) >> PAGE_SHIFT;
+>  	end = (BBTOB(bp->b_maps[0].bm_bn + bp->b_length) + PAGE_SIZE - 1)
+>  								>> PAGE_SHIFT;
+> @@ -628,7 +599,7 @@ xfs_buf_find(
+>  	if (bp->b_flags & XBF_STALE) {
+>  		ASSERT((bp->b_flags & _XBF_DELWRI_Q) == 0);
+>  		ASSERT(bp->b_iodone == NULL);
+> -		bp->b_flags &= _XBF_KMEM | _XBF_PAGES;
+> +		bp->b_flags &= _XBF_PAGES;
+>  		bp->b_ops = NULL;
+>  	}
+>  
+> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> index 4e3171acd0f8..338fabb91f61 100644
+> --- a/fs/xfs/xfs_buf.h
+> +++ b/fs/xfs/xfs_buf.h
+> @@ -47,9 +47,8 @@ typedef enum {
+>  
+>  /* flags used only internally */
+>  #define _XBF_PAGES	 (1 << 20)/* backed by refcounted pages */
+> -#define _XBF_KMEM	 (1 << 21)/* backed by heap memory */
+> -#define _XBF_DELWRI_Q	 (1 << 22)/* buffer on a delwri queue */
+> -#define _XBF_COMPOUND	 (1 << 23)/* compound buffer */
+> +#define _XBF_DELWRI_Q	 (1 << 21)/* buffer on a delwri queue */
+> +#define _XBF_COMPOUND	 (1 << 22)/* compound buffer */
+>  
+>  typedef unsigned int xfs_buf_flags_t;
+>  
+> @@ -68,7 +67,6 @@ typedef unsigned int xfs_buf_flags_t;
+>  	{ XBF_TRYLOCK,		"TRYLOCK" },	/* should never be set */\
+>  	{ XBF_UNMAPPED,		"UNMAPPED" },	/* ditto */\
+>  	{ _XBF_PAGES,		"PAGES" }, \
+> -	{ _XBF_KMEM,		"KMEM" }, \
+>  	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
+>  	{ _XBF_COMPOUND,	"COMPOUND" }
+>  
+> -- 
+> 2.19.0
+> 
