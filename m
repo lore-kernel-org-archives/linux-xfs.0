@@ -1,137 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56206 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727798AbeJES6T (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 5 Oct 2018 14:58:19 -0400
-Date: Fri, 5 Oct 2018 07:59:51 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/3] xfs: fix buffer state management in
- xrep_findroot_block
-Message-ID: <20181005115950.GC54400@bfoster>
-References: <153870045847.29695.10286947858219936840.stgit@magnolia>
- <153870047729.29695.18042015772366432041.stgit@magnolia>
+Received: from userp2130.oracle.com ([156.151.31.86]:43424 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725740AbeJAXoH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Oct 2018 19:44:07 -0400
+Subject: [PATCH 8/8] xfs_scrub_all: fix systemd escaping again
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 01 Oct 2018 10:05:11 -0700
+Message-ID: <153841351155.27952.8070566787187802754.stgit@magnolia>
+In-Reply-To: <153841345236.27952.5050172703525712660.stgit@magnolia>
+References: <153841345236.27952.5050172703525712660.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <153870047729.29695.18042015772366432041.stgit@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
+To: sandeen@redhat.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Matthias Bodenbinder <matthias@bodenbinder.de>
 
-On Thu, Oct 04, 2018 at 05:47:57PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> We don't handle buffer state properly in online repair's findroot
-> routine.  If a buffer already has b_ops set, we don't ever want to touch
-> that, and we don't want to call the read verifiers on a buffer that
-> could be dirty (CRCs are only recomputed during log checkpoints).
-> 
-> Therefore, be more careful about what we do with a buffer -- if someone
-> else already attached ops that are not the ones for this btree type,
-> just ignore the buffer.  We only attach our btree type's buf ops if it
-> matches the magic/uuid and structure checks.
-> 
-> We also modify xfs_buf_read_map to allow callers to set buffer ops on a
-> DONE buffer with NULL ops so that repair doesn't leave behind buffers
-> which won't have buffers attached to them.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/scrub/repair.c  |   63 +++++++++++++++++++++++++++++++++++++-----------
->  fs/xfs/xfs_trans.h     |    1 +
->  fs/xfs/xfs_trans_buf.c |   13 ++++++++++
->  3 files changed, 63 insertions(+), 14 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-> index 63786341ac2a..cebaebb26566 100644
-> --- a/fs/xfs/scrub/repair.c
-> +++ b/fs/xfs/scrub/repair.c
-...
-> @@ -718,28 +720,61 @@ xrep_findroot_block(
->  			return error;
->  	}
->  
-...
-> +	/*
-> +	 * If the buffer already has ops applied and they're not the ones for
-> +	 * this btree type, we know this block doesn't match the btree and we
-> +	 * can bail out.
-> +	 *
-> +	 * If the buffer ops match ours, someone else has already validated
-> +	 * the block for us, so we can move on to checking if this is a root
-> +	 * block candidate.
-> +	 *
-> +	 * If the buffer does not have ops, nobody has successfully validated
-> +	 * the contents and the buffer cannot be dirty.  If the magic, uuid,
-> +	 * and structure match this btree type then we'll move on to checking
-> +	 * if it's a root block candidate.  If there is no match, bail out.
-> +	 */
-> +	if (bp->b_ops) {
-> +		if (bp->b_ops != fab->buf_ops)
-> +			goto out;
-> +	} else {
-> +		ASSERT(!xfs_trans_buf_is_dirty(bp));
-> +		if (!uuid_equal(&btblock->bb_u.s.bb_uuid,
-> +				&mp->m_sb.sb_meta_uuid))
-> +			goto out;
-> +		fab->buf_ops->verify_read(bp);
-> +		if (bp->b_error)
-> +			goto out;
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I guess this is related to my question on the previous patch. If the
-verifier fails, we leave the XBF_DONE buffer around with ->b_ops == NULL
-and ->b_error != 0.
+Apparently newer versions of systemd than the one on this author's
+laptop <cough> now complain about lack of (path) escaping in unit instance
+variable contents:
 
-I suppose somebody should eventually attach a verifier before this
-buffer is ever really used, but I think I'd feel a little better about
-this if we immediately cleaned up the side effects of using the wrong
-verifier rather than potentially leaking an error to other contexts
-where it has no relevance. That aside, this all looks fine to me.
+ # xfs_scrub_all
+ Scrubbing /home...
+  Invalid unit name "xfs_scrub@/home" was escaped as "xfs_scrub@-home"
+ (maybe you should use systemd-escape?)
+ Starting Online XFS Metadata Check for /home...
 
-Brian
+So change the systemd_escape() function to escape paths unconditionally
+to make the warning go away.
 
-> +		bp->b_ops = fab->buf_ops;
-> +	}
->  
->  	/*
->  	 * This block passes the magic/uuid and verifier tests for this btree
-> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> index c3d278e96ad1..a0c5dbda18aa 100644
-> --- a/fs/xfs/xfs_trans.h
-> +++ b/fs/xfs/xfs_trans.h
-> @@ -220,6 +220,7 @@ void		xfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *, uint);
->  void		xfs_trans_log_buf(struct xfs_trans *, struct xfs_buf *, uint,
->  				  uint);
->  void		xfs_trans_dirty_buf(struct xfs_trans *, struct xfs_buf *);
-> +bool		xfs_trans_buf_is_dirty(struct xfs_buf *bp);
->  void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
->  
->  void		xfs_extent_free_init_defer_op(void);
-> diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-> index b0ba2ca9cca3..93a053c700dd 100644
-> --- a/fs/xfs/xfs_trans_buf.c
-> +++ b/fs/xfs/xfs_trans_buf.c
-> @@ -349,6 +349,19 @@ xfs_trans_read_buf_map(
->  
->  }
->  
-> +/* Has this buffer been dirtied by anyone? */
-> +bool
-> +xfs_trans_buf_is_dirty(
-> +	struct xfs_buf		*bp)
-> +{
-> +	struct xfs_buf_log_item	*bip = bp->b_log_item;
-> +
-> +	if (!bip)
-> +		return false;
-> +	ASSERT(bip->bli_item.li_type == XFS_LI_BUF);
-> +	return test_bit(XFS_LI_DIRTY, &bip->bli_item.li_flags);
-> +}
-> +
->  /*
->   * Release the buffer bp which was previously acquired with one of the
->   * xfs_trans_... buffer allocation routines if the buffer has not
-> 
+Reported-by: Matthias Bodenbinder <matthias@bodenbinder.de>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ scrub/xfs_scrub_all.in |    9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+
+diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
+index f7d9e6c7..c4e9899d 100644
+--- a/scrub/xfs_scrub_all.in
++++ b/scrub/xfs_scrub_all.in
+@@ -82,11 +82,16 @@ def run_killable(cmd, stdout, killfuncs, kill_fn):
+ # actually /can/ escape the dashes correctly if it is told that this is a path
+ # (and not a unit name), but it didn't do this prior to January 2017, so fix
+ # this for them.
++#
++# systemd path escaping also drops the initial slash so we add that back in so
++# that log messages from the service units preserve the full path and users can
++# look up log messages using full paths.  However, for "/" the escaping rules
++# do /not/ drop the initial slash, so we have to special-case that here.
+ def systemd_escape(path):
+ 	'''Escape a path to avoid mangled systemd mangling.'''
+ 
+-	if '-' not in path:
+-		return path
++	if path == '/':
++		return '-'
+ 	cmd = ['systemd-escape', '--path', path]
+ 	try:
+ 		proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
