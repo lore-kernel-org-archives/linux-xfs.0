@@ -1,16 +1,16 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:54262 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:54266 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729298AbeJATPU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Oct 2018 15:15:20 -0400
+        with ESMTP id S1729311AbeJATPV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Oct 2018 15:15:21 -0400
 Received: from [38.126.112.138] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1g6xSK-0004J9-6l
-        for linux-xfs@vger.kernel.org; Mon, 01 Oct 2018 12:37:44 +0000
+        id 1g6xSL-0004JI-1A
+        for linux-xfs@vger.kernel.org; Mon, 01 Oct 2018 12:37:45 +0000
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/7] xfs: remove XFS_IO_INVALID
-Date: Mon,  1 Oct 2018 05:37:35 -0700
-Message-Id: <20181001123741.32005-2-hch@lst.de>
+Subject: [PATCH 3/7] xfs: handle zeroing in xfs_file_iomap_begin_delay
+Date: Mon,  1 Oct 2018 05:37:37 -0700
+Message-Id: <20181001123741.32005-4-hch@lst.de>
 In-Reply-To: <20181001123741.32005-1-hch@lst.de>
 References: <20181001123741.32005-1-hch@lst.de>
 MIME-Version: 1.0
@@ -20,69 +20,89 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-The invalid state isn't any different from a hole, so merge the two
-states.  Use the more descriptive hole name, but keep it as the first
-value of the enum to catch uninitialized fields.
+We only need to allocate blocks for zeroing for reflink inodes,
+and for we currently have a special case for reflink files in
+the otherwise direct I/O path that I'd like to get rid of.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_aops.c |  4 ++--
- fs/xfs/xfs_aops.h | 14 ++++++--------
- 2 files changed, 8 insertions(+), 10 deletions(-)
+ fs/xfs/xfs_iomap.c | 34 ++++++++++++++++++++++++++++++----
+ 1 file changed, 30 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 49f5f5896a43..338b9d9984e0 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -917,7 +917,7 @@ xfs_vm_writepage(
- 	struct writeback_control *wbc)
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 10fc93cebc42..7cbebcf61fa7 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -62,6 +62,21 @@ xfs_bmbt_to_iomap(
+ 	iomap->dax_dev = xfs_find_daxdev_for_inode(VFS_I(ip));
+ }
+ 
++static void
++xfs_hole_to_iomap(
++	struct xfs_inode	*ip,
++	struct iomap		*iomap,
++	xfs_fileoff_t		offset_fsb,
++	xfs_fileoff_t		end_fsb)
++{
++	iomap->addr = IOMAP_NULL_ADDR;
++	iomap->type = IOMAP_HOLE;
++	iomap->offset = XFS_FSB_TO_B(ip->i_mount, offset_fsb);
++	iomap->length = XFS_FSB_TO_B(ip->i_mount, end_fsb - offset_fsb);
++	iomap->bdev = xfs_find_bdev_for_inode(VFS_I(ip));
++	iomap->dax_dev = xfs_find_daxdev_for_inode(VFS_I(ip));
++}
++
+ xfs_extlen_t
+ xfs_eof_alignment(
+ 	struct xfs_inode	*ip,
+@@ -502,6 +517,7 @@ xfs_file_iomap_begin_delay(
+ 	struct inode		*inode,
+ 	loff_t			offset,
+ 	loff_t			count,
++	unsigned		flags,
+ 	struct iomap		*iomap)
  {
- 	struct xfs_writepage_ctx wpc = {
--		.io_type = XFS_IO_INVALID,
-+		.io_type = XFS_IO_HOLE,
- 	};
- 	int			ret;
+ 	struct xfs_inode	*ip = XFS_I(inode);
+@@ -539,8 +555,12 @@ xfs_file_iomap_begin_delay(
+ 	}
  
-@@ -933,7 +933,7 @@ xfs_vm_writepages(
- 	struct writeback_control *wbc)
- {
- 	struct xfs_writepage_ctx wpc = {
--		.io_type = XFS_IO_INVALID,
-+		.io_type = XFS_IO_HOLE,
- 	};
- 	int			ret;
+ 	eof = !xfs_iext_lookup_extent(ip, ifp, offset_fsb, &icur, &got);
+-	if (!eof && got.br_startoff <= offset_fsb) {
+-		if (xfs_is_reflink_inode(ip)) {
++	if (eof)
++		got.br_startoff = maxbytes_fsb;
++	if (got.br_startoff <= offset_fsb) {
++		if (xfs_is_reflink_inode(ip) &&
++		    ((flags & IOMAP_WRITE) ||
++		     got.br_state != XFS_EXT_UNWRITTEN)) {
+ 			bool		shared;
  
-diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
-index 9af867951a10..494b4338446e 100644
---- a/fs/xfs/xfs_aops.h
-+++ b/fs/xfs/xfs_aops.h
-@@ -12,21 +12,19 @@ extern struct bio_set xfs_ioend_bioset;
-  * Types of I/O for bmap clustering and I/O completion tracking.
-  */
- enum {
--	XFS_IO_INVALID,		/* initial state */
-+	XFS_IO_HOLE,		/* covers region without any block allocation */
- 	XFS_IO_DELALLOC,	/* covers delalloc region */
- 	XFS_IO_UNWRITTEN,	/* covers allocated but uninitialized data */
- 	XFS_IO_OVERWRITE,	/* covers already allocated extent */
- 	XFS_IO_COW,		/* covers copy-on-write extent */
--	XFS_IO_HOLE,		/* covers region without any block allocation */
- };
+ 			end_fsb = min(XFS_B_TO_FSB(mp, offset + count),
+@@ -555,6 +575,11 @@ xfs_file_iomap_begin_delay(
+ 		goto done;
+ 	}
  
- #define XFS_IO_TYPES \
--	{ XFS_IO_INVALID,		"invalid" }, \
--	{ XFS_IO_DELALLOC,		"delalloc" }, \
--	{ XFS_IO_UNWRITTEN,		"unwritten" }, \
--	{ XFS_IO_OVERWRITE,		"overwrite" }, \
--	{ XFS_IO_COW,			"CoW" }, \
--	{ XFS_IO_HOLE,			"hole" }
-+	{ XFS_IO_HOLE,			"hole" },	\
-+	{ XFS_IO_DELALLOC,		"delalloc" },	\
-+	{ XFS_IO_UNWRITTEN,		"unwritten" },	\
-+	{ XFS_IO_OVERWRITE,		"overwrite" },	\
-+	{ XFS_IO_COW,			"CoW" }
++	if (flags & IOMAP_ZERO) {
++		xfs_hole_to_iomap(ip, iomap, offset_fsb, got.br_startoff);
++		goto out_unlock;
++	}
++
+ 	error = xfs_qm_dqattach_locked(ip, false);
+ 	if (error)
+ 		goto out_unlock;
+@@ -1009,10 +1034,11 @@ xfs_file_iomap_begin(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
  
- /*
-  * Structure for buffered I/O completions.
+-	if (((flags & (IOMAP_WRITE | IOMAP_DIRECT)) == IOMAP_WRITE) &&
++	if ((flags & (IOMAP_WRITE | IOMAP_ZERO)) && !(flags & IOMAP_DIRECT) &&
+ 			!IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
+ 		/* Reserve delalloc blocks for regular writeback. */
+-		return xfs_file_iomap_begin_delay(inode, offset, length, iomap);
++		return xfs_file_iomap_begin_delay(inode, offset, length, flags,
++				iomap);
+ 	}
+ 
+ 	/*
 -- 
 2.19.0
