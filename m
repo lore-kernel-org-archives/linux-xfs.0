@@ -1,75 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:47138 "EHLO sandeen.net"
+Received: from verein.lst.de ([213.95.11.211]:38074 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725928AbeJFEhv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 6 Oct 2018 00:37:51 -0400
-Subject: Re: [PATCH 9/8] xfs_io: dedupe command should only complain if we
- don't dedupe anything
-References: <153841345236.27952.5050172703525712660.stgit@magnolia>
- <20181004222733.GM19324@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <bda0d21d-d81e-7a16-2440-67037c307c84@sandeen.net>
-Date: Fri, 5 Oct 2018 16:37:14 -0500
+        id S1729488AbeJAVY3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 1 Oct 2018 17:24:29 -0400
+Date: Mon, 1 Oct 2018 16:46:18 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 3/7] xfs: handle zeroing in xfs_file_iomap_begin_delay
+Message-ID: <20181001144618.GA5831@lst.de>
+References: <20181001123741.32005-1-hch@lst.de> <20181001123741.32005-4-hch@lst.de> <20181001142005.GE53694@bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20181004222733.GM19324@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181001142005.GE53694@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
-Cc: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-On 10/4/18 5:27 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Oct 01, 2018 at 10:20:05AM -0400, Brian Foster wrote:
+> >  	eof = !xfs_iext_lookup_extent(ip, ifp, offset_fsb, &icur, &got);
+> > -	if (!eof && got.br_startoff <= offset_fsb) {
+> > -		if (xfs_is_reflink_inode(ip)) {
+> > +	if (eof)
+> > +		got.br_startoff = maxbytes_fsb;
 > 
-> The dedupe command should only complain about non-matching extents if
-> the kernel hasn't managed to dedupe /any/ of the input range.
+> What's the purpose of this? Can't we just continue to use eof in the
+> logic below and report holes up through the requested range (offset +
+> length) just like the other branch does (via xfs_bmapi_read())?
+
+Setting the startblock makes the code a lot simpler.  But yes,
+we could limit the hole to the reporting range.
+
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Should it be "no extents matched" then perhaps?
-
-I mean xfs_io is not exactly-quite a purpose-built dedupe tool, but should
-we be a bit more specific if we're issuing a message at all?
-
-if (info->status == XFS_EXTENT_DATA_DIFFERS) {
-	if (deduped == 0)
-		fprintf(stderr, "XFS_IOC_FILE_EXTENT_SAME: %s\n",
-  			_("No extents matched."));
-	else
-		fprintf(stderr, "XFS_IOC_FILE_EXTENT_SAME: %s\n",
-  			_("Some extents did not match."));
-}
-
-And the manpage implies that any difference will make it fail:
-
-> map length bytes at offset dst_offset in the open file to the same physical
-> blocks that are mapped at offset src_offset in the file src_file, but only
-> if the contents of both ranges are identical.
-
-now you're telling me it'll make a best effort?  ;)  I think the manpage
-needs clarification too ...
-
-> ---
-
-
->  io/reflink.c |    3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+> > +	if (got.br_startoff <= offset_fsb) {
+> > +		if (xfs_is_reflink_inode(ip) &&
+> > +		    ((flags & IOMAP_WRITE) ||
+> > +		     got.br_state != XFS_EXT_UNWRITTEN)) {
 > 
-> diff --git a/io/reflink.c b/io/reflink.c
-> index 26eb2e32..72dfe32d 100644
-> --- a/io/reflink.c
-> +++ b/io/reflink.c
-> @@ -70,7 +70,8 @@ dedupe_ioctl(
->  					_(strerror(-info->status)));
->  			goto done;
->  		}
-> -		if (info->status == XFS_EXTENT_DATA_DIFFERS) {
-> +		if (deduped == 0 &&
-> +		    info->status == XFS_EXTENT_DATA_DIFFERS) {
->  			fprintf(stderr, "XFS_IOC_FILE_EXTENT_SAME: %s\n",
->  					_("Extents did not match."));
->  			goto done;
+> I think a small comment is useful here due to the implicit logic. For
+> example:
 > 
+> /* reservation is required for writes and zeroing over normal extents */
+
+Ok.
