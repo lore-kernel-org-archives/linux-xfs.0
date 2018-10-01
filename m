@@ -1,57 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:13450 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725936AbeJBGBl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Oct 2018 02:01:41 -0400
-Date: Tue, 2 Oct 2018 09:21:28 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] vfs: check ->get_link return value
-Message-ID: <20181001232128.GL18567@dastard>
-References: <20181001224500.GE5872@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:54262 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729298AbeJATPU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Oct 2018 15:15:20 -0400
+Received: from [38.126.112.138] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1g6xSK-0004J9-6l
+        for linux-xfs@vger.kernel.org; Mon, 01 Oct 2018 12:37:44 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 1/7] xfs: remove XFS_IO_INVALID
+Date: Mon,  1 Oct 2018 05:37:35 -0700
+Message-Id: <20181001123741.32005-2-hch@lst.de>
+In-Reply-To: <20181001123741.32005-1-hch@lst.de>
+References: <20181001123741.32005-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181001224500.GE5872@magnolia>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: viro@ZenIV.linux.org.uk, xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+To: linux-xfs@vger.kernel.org
 
-On Mon, Oct 01, 2018 at 03:45:00PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Teach callers of inode->i_op->get_link in the vfs code to check for a
-> NULL return value and return an error status instead of blindly
-> dereferencing the returned NULL pointer.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/namei.c |    4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/fs/namei.c b/fs/namei.c
-> index 0cab6494978c..0744ab981fa0 100644
-> --- a/fs/namei.c
-> +++ b/fs/namei.c
-> @@ -4737,6 +4737,8 @@ int vfs_readlink(struct dentry *dentry, char __user *buffer, int buflen)
->  		if (IS_ERR(link))
->  			return PTR_ERR(link);
->  	}
-> +	if (!link)
-> +		return -EUCLEAN;
+The invalid state isn't any different from a hole, so merge the two
+states.  Use the more descriptive hole name, but keep it as the first
+value of the enum to catch uninitialized fields.
 
-If we are going to start returning this as a filesystem corruption
-error from the VFS, can we please start with adding
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_aops.c |  4 ++--
+ fs/xfs/xfs_aops.h | 14 ++++++--------
+ 2 files changed, 8 insertions(+), 10 deletions(-)
 
-#define EFSCORRUPTED	EUCLEAN
-
-into one of the global error definition headers? The code makes much
-more sense when it uses EFSCORRUPTED....
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 49f5f5896a43..338b9d9984e0 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -917,7 +917,7 @@ xfs_vm_writepage(
+ 	struct writeback_control *wbc)
+ {
+ 	struct xfs_writepage_ctx wpc = {
+-		.io_type = XFS_IO_INVALID,
++		.io_type = XFS_IO_HOLE,
+ 	};
+ 	int			ret;
+ 
+@@ -933,7 +933,7 @@ xfs_vm_writepages(
+ 	struct writeback_control *wbc)
+ {
+ 	struct xfs_writepage_ctx wpc = {
+-		.io_type = XFS_IO_INVALID,
++		.io_type = XFS_IO_HOLE,
+ 	};
+ 	int			ret;
+ 
+diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
+index 9af867951a10..494b4338446e 100644
+--- a/fs/xfs/xfs_aops.h
++++ b/fs/xfs/xfs_aops.h
+@@ -12,21 +12,19 @@ extern struct bio_set xfs_ioend_bioset;
+  * Types of I/O for bmap clustering and I/O completion tracking.
+  */
+ enum {
+-	XFS_IO_INVALID,		/* initial state */
++	XFS_IO_HOLE,		/* covers region without any block allocation */
+ 	XFS_IO_DELALLOC,	/* covers delalloc region */
+ 	XFS_IO_UNWRITTEN,	/* covers allocated but uninitialized data */
+ 	XFS_IO_OVERWRITE,	/* covers already allocated extent */
+ 	XFS_IO_COW,		/* covers copy-on-write extent */
+-	XFS_IO_HOLE,		/* covers region without any block allocation */
+ };
+ 
+ #define XFS_IO_TYPES \
+-	{ XFS_IO_INVALID,		"invalid" }, \
+-	{ XFS_IO_DELALLOC,		"delalloc" }, \
+-	{ XFS_IO_UNWRITTEN,		"unwritten" }, \
+-	{ XFS_IO_OVERWRITE,		"overwrite" }, \
+-	{ XFS_IO_COW,			"CoW" }, \
+-	{ XFS_IO_HOLE,			"hole" }
++	{ XFS_IO_HOLE,			"hole" },	\
++	{ XFS_IO_DELALLOC,		"delalloc" },	\
++	{ XFS_IO_UNWRITTEN,		"unwritten" },	\
++	{ XFS_IO_OVERWRITE,		"overwrite" },	\
++	{ XFS_IO_COW,			"CoW" }
+ 
+ /*
+  * Structure for buffered I/O completions.
 -- 
-Dave Chinner
-david@fromorbit.com
+2.19.0
