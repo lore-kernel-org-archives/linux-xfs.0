@@ -1,60 +1,124 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi1-f196.google.com ([209.85.167.196]:44501 "EHLO
-        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725871AbeJDEEP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Oct 2018 00:04:15 -0400
-Received: by mail-oi1-f196.google.com with SMTP id u74-v6so5734765oia.11
-        for <linux-xfs@vger.kernel.org>; Wed, 03 Oct 2018 14:14:11 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:52440 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729493AbeJAU6K (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 1 Oct 2018 16:58:10 -0400
+Date: Mon, 1 Oct 2018 10:20:05 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 3/7] xfs: handle zeroing in xfs_file_iomap_begin_delay
+Message-ID: <20181001142005.GE53694@bfoster>
+References: <20181001123741.32005-1-hch@lst.de>
+ <20181001123741.32005-4-hch@lst.de>
 MIME-Version: 1.0
-References: <20181002142959.GD9127@quack2.suse.cz> <20181002143713.GA19845@infradead.org>
- <20181002144412.GC4963@linux-x5ow.site> <20181002145206.GA10903@infradead.org>
- <20181002153100.GG9127@quack2.suse.cz> <CAPcyv4j0tTD+rENqFExA68aw=-MmtCBaOe1qJovyrmJC=yBg-Q@mail.gmail.com>
- <20181003125056.GA21043@quack2.suse.cz> <CAPcyv4jfV10yuTiPg6ijsPRRL2-c_48ovfpU5TK1Zu7BWnfk3g@mail.gmail.com>
- <20181003150658.GC24030@quack2.suse.cz> <CAPcyv4iJvN6_Cf6tw=5a=Uh99LfMFKU7n8QkGcz1ZaxL0Oi-3w@mail.gmail.com>
- <20181003164407.GK24030@quack2.suse.cz>
-In-Reply-To: <20181003164407.GK24030@quack2.suse.cz>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Wed, 3 Oct 2018 14:13:59 -0700
-Message-ID: <CAPcyv4iCXNYTSzwU5OoZc_b+xxbqKwjyQV74CRxEfvDjaMPDfg@mail.gmail.com>
-Subject: Re: Problems with VM_MIXEDMAP removal from /proc/<pid>/smaps
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181001123741.32005-4-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@infradead.org>, Johannes Thumshirn <jthumshirn@suse.de>, Dave Jiang <dave.jiang@intel.com>, linux-nvdimm <linux-nvdimm@lists.01.org>, Linux MM <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Oct 3, 2018 at 9:46 AM Jan Kara <jack@suse.cz> wrote:
->
-> On Wed 03-10-18 08:13:37, Dan Williams wrote:
-> > On Wed, Oct 3, 2018 at 8:07 AM Jan Kara <jack@suse.cz> wrote:
-> > > WRT per-inode DAX property, AFAIU that inode flag is just going to be
-> > > advisory thing - i.e., use DAX if possible. If you mount a filesystem with
-> > > these inode flags set in a configuration which does not allow DAX to be
-> > > used, you will still be able to access such inodes but the access will use
-> > > page cache instead. And querying these flags should better show real
-> > > on-disk status and not just whether DAX is used as that would result in an
-> > > even bigger mess. So this feature seems to be somewhat orthogonal to the
-> > > API I'm looking for.
-> >
-> > True, I imagine once we have that flag we will be able to distinguish
-> > the "saved" property and the "effective / live" property of DAX...
-> > Also it's really not DAX that applications care about as much as "is
-> > there page-cache indirection / overhead for this mapping?". That seems
-> > to be a narrower guarantee that we can make than what "DAX" might
-> > imply.
->
-> Right. So what do people think about my suggestion earlier in the thread to
-> use madvise(MADV_DIRECT_ACCESS) for this? Currently it would return success
-> when DAX is in use, failure otherwise. Later we could extend it to be also
-> used as a hint for caching policy for the inode...
+On Mon, Oct 01, 2018 at 05:37:37AM -0700, Christoph Hellwig wrote:
+> We only need to allocate blocks for zeroing for reflink inodes,
+> and for we currently have a special case for reflink files in
+> the otherwise direct I/O path that I'd like to get rid of.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_iomap.c | 34 ++++++++++++++++++++++++++++++----
+>  1 file changed, 30 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 10fc93cebc42..7cbebcf61fa7 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -62,6 +62,21 @@ xfs_bmbt_to_iomap(
+>  	iomap->dax_dev = xfs_find_daxdev_for_inode(VFS_I(ip));
+>  }
+>  
+> +static void
+> +xfs_hole_to_iomap(
+> +	struct xfs_inode	*ip,
+> +	struct iomap		*iomap,
+> +	xfs_fileoff_t		offset_fsb,
+> +	xfs_fileoff_t		end_fsb)
+> +{
+> +	iomap->addr = IOMAP_NULL_ADDR;
+> +	iomap->type = IOMAP_HOLE;
+> +	iomap->offset = XFS_FSB_TO_B(ip->i_mount, offset_fsb);
+> +	iomap->length = XFS_FSB_TO_B(ip->i_mount, end_fsb - offset_fsb);
+> +	iomap->bdev = xfs_find_bdev_for_inode(VFS_I(ip));
+> +	iomap->dax_dev = xfs_find_daxdev_for_inode(VFS_I(ip));
+> +}
+> +
+>  xfs_extlen_t
+>  xfs_eof_alignment(
+>  	struct xfs_inode	*ip,
+> @@ -502,6 +517,7 @@ xfs_file_iomap_begin_delay(
+>  	struct inode		*inode,
+>  	loff_t			offset,
+>  	loff_t			count,
+> +	unsigned		flags,
+>  	struct iomap		*iomap)
+>  {
+>  	struct xfs_inode	*ip = XFS_I(inode);
+> @@ -539,8 +555,12 @@ xfs_file_iomap_begin_delay(
+>  	}
+>  
+>  	eof = !xfs_iext_lookup_extent(ip, ifp, offset_fsb, &icur, &got);
+> -	if (!eof && got.br_startoff <= offset_fsb) {
+> -		if (xfs_is_reflink_inode(ip)) {
+> +	if (eof)
+> +		got.br_startoff = maxbytes_fsb;
 
-The only problem is that you can't use it purely as a query. If we
-ever did plumb it to be a hint you could not read the state without
-writing the state.
+What's the purpose of this? Can't we just continue to use eof in the
+logic below and report holes up through the requested range (offset +
+length) just like the other branch does (via xfs_bmapi_read())?
 
-mincore(2) seems to be close the intent of discovering whether RAM is
-being consumed for a given address range, but it currently is
-implemented to only indicate if *any* mapping is established, not
-whether RAM is consumed. I can see an argument that a dax mapped file
-should always report an empty mincore vector.
+> +	if (got.br_startoff <= offset_fsb) {
+> +		if (xfs_is_reflink_inode(ip) &&
+> +		    ((flags & IOMAP_WRITE) ||
+> +		     got.br_state != XFS_EXT_UNWRITTEN)) {
+
+I think a small comment is useful here due to the implicit logic. For
+example:
+
+/* reservation is required for writes and zeroing over normal extents */
+
+Otherwise this seems fine.
+
+Brian
+
+>  			bool		shared;
+>  
+>  			end_fsb = min(XFS_B_TO_FSB(mp, offset + count),
+> @@ -555,6 +575,11 @@ xfs_file_iomap_begin_delay(
+>  		goto done;
+>  	}
+>  
+> +	if (flags & IOMAP_ZERO) {
+> +		xfs_hole_to_iomap(ip, iomap, offset_fsb, got.br_startoff);
+> +		goto out_unlock;
+> +	}
+> +
+>  	error = xfs_qm_dqattach_locked(ip, false);
+>  	if (error)
+>  		goto out_unlock;
+> @@ -1009,10 +1034,11 @@ xfs_file_iomap_begin(
+>  	if (XFS_FORCED_SHUTDOWN(mp))
+>  		return -EIO;
+>  
+> -	if (((flags & (IOMAP_WRITE | IOMAP_DIRECT)) == IOMAP_WRITE) &&
+> +	if ((flags & (IOMAP_WRITE | IOMAP_ZERO)) && !(flags & IOMAP_DIRECT) &&
+>  			!IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
+>  		/* Reserve delalloc blocks for regular writeback. */
+> -		return xfs_file_iomap_begin_delay(inode, offset, length, iomap);
+> +		return xfs_file_iomap_begin_delay(inode, offset, length, flags,
+> +				iomap);
+>  	}
+>  
+>  	/*
+> -- 
+> 2.19.0
+> 
