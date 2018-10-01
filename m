@@ -1,51 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from namei.org ([65.99.196.166]:35070 "EHLO namei.org"
+Received: from mx1.redhat.com ([209.132.183.28]:50532 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726946AbeJCCFd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 2 Oct 2018 22:05:33 -0400
-Date: Wed, 3 Oct 2018 05:20:31 +1000 (AEST)
-From: James Morris <jmorris@namei.org>
-Subject: Re: Leaking Path in XFS's ioctl interface(missing LSM check)
-In-Reply-To: <20181001224528.GI18567@dastard>
-Message-ID: <alpine.LRH.2.21.1810030518240.17817@namei.org>
-References: <5EF0D46A-C098-4B51-AD13-225FFCA35D4C@vt.edu> <20180926013329.GD31060@dastard> <20180926192426.472360ea@alans-desktop> <20180927013812.GF31060@dastard> <20180930151652.6975610c@alans-desktop> <20181001002521.GM31060@dastard>
- <20181001160442.47c798bc@alans-desktop> <20181001154459.GB5872@magnolia> <alpine.LRH.2.21.1810020608090.14406@namei.org> <20181001224528.GI18567@dastard>
+        id S1728921AbeJARlQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 1 Oct 2018 13:41:16 -0400
+Date: Mon, 1 Oct 2018 07:03:59 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/5] xfs: cancel COW blocks before swapext
+Message-ID: <20181001110359.GB53694@bfoster>
+References: <20180920144220.2181-1-hch@lst.de>
+ <20180920144220.2181-2-hch@lst.de>
+ <20180927150730.GA3743@bfoster>
+ <20180930225030.GB18893@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180930225030.GB18893@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Alan Cox <gnomes@lxorguk.ukuu.org.uk>, TongZhang <ztong@vt.edu>, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-security-module@vger.kernel.org, Wenbo Shen <shenwenbosmile@gmail.com>, Stephen Smalley <sds@tycho.nsa.gov>, Paul Moore <paul@paul-moore.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, 2 Oct 2018, Dave Chinner wrote:
-
-> On Tue, Oct 02, 2018 at 06:08:16AM +1000, James Morris wrote:
-> > On Mon, 1 Oct 2018, Darrick J. Wong wrote:
+On Mon, Oct 01, 2018 at 12:50:30AM +0200, Christoph Hellwig wrote:
+> On Thu, Sep 27, 2018 at 11:07:31AM -0400, Brian Foster wrote:
+> > On Thu, Sep 20, 2018 at 04:42:16PM +0200, Christoph Hellwig wrote:
+> > > We need to make sure we have no outstanding COW blocks before we swap
+> > > extents, as there is nothing preventing us from having COW preallocations
+> > > on an inode that swapext is called on.  That case can easily be
+> > > reproduced by the upcoming always_cow mode.
+> > > 
 > > 
-> > > If we /did/ replace CAP_SYS_ADMIN checking with a pile of LSM hooks,
-> > 
-> > Not sure we'd need a pile of hooks, what about just "read" and "write" 
-> > storage admin?
-> > 
-> > Or even two new capabilities along these lines, which we convert existing 
-> > CAP_SYS_ADMIN etc. to?
+> > Why? Is the current code to swap the cow forks not sufficient or
+> > problematic in some way?
 > 
-> So instead of having hundreds of management ioctls under
-> CAP_SYS_ADMIN, we'd now have hundreds of non-storage ioctls under
-> CAP_SYS_ADMIN and hundreds of storage ioctls under
-> CAP_SYS_STORAGE_ADMIN?
+> The code didn't seem happy with non-delalloc COW fork extents sticking
+> around over swapext, but I'd have to go back and look up why.
 > 
-> Maybe I'm missing something, but I don't see how that improves the
-> situation w.r.t. locked down LSM configurations?
 
-I'm not sure about capabilities, but having two specific LSM hooks for 
-storage admin would allow SELinux et al to explicitly control privileged 
-access to these interfaces.  Storage admin seems to be a special case of 
-its own which we want to be able to mediate as such.
+It would be nice to have at least a high level note in the commit log
+for historical purposes, so we have a reference on what needs fixing if
+we revisit it in the future.
 
+> It seemed easiest to just cancel them as there is no reason to keep
+> these alive over a swapext.
 
+Seems reasonable to me. I'd just perhaps replace the cowblocks flag swap
+code with asserts or something to be consistent, because it seems that
+should never be set on either inode with this change in place.
 
--- 
-James Morris
-<jmorris@namei.org>
+Brian
