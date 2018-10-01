@@ -1,43 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:39898 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726522AbeJICqX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 Oct 2018 22:46:23 -0400
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [PATCH 1/3] xfs: hard fail dax mount on unsupported devices
-Date: Mon,  8 Oct 2018 14:32:47 -0500
-Message-Id: <1539027169-23332-2-git-send-email-sandeen@sandeen.net>
-In-Reply-To: <1539027169-23332-1-git-send-email-sandeen@sandeen.net>
-References: <1539027169-23332-1-git-send-email-sandeen@sandeen.net>
+Received: from userp2130.oracle.com ([156.151.31.86]:47884 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725994AbeJAXrO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Oct 2018 19:47:14 -0400
+Date: Mon, 1 Oct 2018 10:08:23 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: xfs_scrub_all warning
+Message-ID: <20181001170823.GA5883@magnolia>
+References: <974f65da-60f9-55aa-2e27-3fe9abb64f97@bodenbinder.de>
+ <20180831164535.GA4355@magnolia>
+ <14ac54ca-4f2d-c3a2-9157-93ae7e274f47@bodenbinder.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <14ac54ca-4f2d-c3a2-9157-93ae7e274f47@bodenbinder.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Matthias Bodenbinder <matthias@bodenbinder.de>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-As dax inches closer to production use, an administrator should not
-be surprised by silently disabling the feature they asked for.
+On Sat, Sep 01, 2018 at 12:45:54PM +0200, Matthias Bodenbinder wrote:
+> Am 31.08.18 um 18:45 schrieb Darrick J. Wong:
+> > I think so.  If you remove the lines:
+> > 
+> > 	if '-' not in path:
+> > 		return path
+> > 
+> > from systemd_escape() in /sbin/xfs_scrub_all, do the warnings go away?
+> > Does scrub still work afterwards?
+> 
+> That does work:
+>  
+> 8# ./my-xfs_scrub_all
+> Scrubbing /home...
+> Failed to add filter for units: No data available
+> Scrubbing /home done, (err=0)
+> 
+> 
+> But what is this "Failed to add filter..." message about?
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
- fs/xfs/xfs_super.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+I /think/ that's journalctl failing to construct a filter for
+'xfs_scrub@*' to display whatever output comes out of running the
+xfs_scrub jobs.  I'll look further into it, but for now I've posted the
+fix to xfs_scrub_all to shut up the escaping complaints.
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 207ee30..a0a32cd 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1674,9 +1674,9 @@ struct proc_xfs_info {
- 			rtdev_is_dax = bdev_dax_supported(
- 				mp->m_rtdev_targp->bt_bdev, sb->s_blocksize);
- 		if (!rtdev_is_dax && !datadev_is_dax) {
--			xfs_alert(mp,
--			"DAX unsupported by block device. Turning off DAX.");
--			mp->m_flags &= ~XFS_MOUNT_DAX;
-+			xfs_alert(mp, "DAX unsupported by block device.");
-+			error = -EINVAL;
-+			goto out_filestream_unmount;
- 		}
- 		if (xfs_sb_version_hasreflink(&mp->m_sb)) {
- 			xfs_alert(mp,
--- 
-1.8.3.1
+--D
+
+> Thanks for your help
+> Matthias
+> 
