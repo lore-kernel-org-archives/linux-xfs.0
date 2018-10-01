@@ -1,91 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:36202 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726733AbeJAHpF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Oct 2018 03:45:05 -0400
-Date: Mon, 1 Oct 2018 11:09:31 +1000
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:25606 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728944AbeJAHYY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Oct 2018 03:24:24 -0400
+Received: from dave by dastard with local (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1g6mOc-0005I6-0X
+        for linux-xfs@vger.kernel.org; Mon, 01 Oct 2018 10:49:10 +1000
+Date: Mon, 1 Oct 2018 10:49:09 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: avoid lockdep false positives in xfs_trans_alloc
-Message-ID: <20181001010931.GO31060@dastard>
-References: <20180907015155.32559-1-david@fromorbit.com>
- <CAOQ4uxjaAJ9WSo-rtvBq7bFsV4QXHhwqjFyCFO030U4qZ7ALKg@mail.gmail.com>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to e55ec4ddbef9
+Message-ID: <20181001004909.GG18567@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="jI8keyz6grp/JLjh"
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxjaAJ9WSo-rtvBq7bFsV4QXHhwqjFyCFO030U4qZ7ALKg@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Jeff Mahoney <jeffm@suse.com>, Theodore Tso <tytso@mit.edu>, Jan Kara <jack@suse.cz>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
+To: linux-xfs@vger.kernel.org
 
-On Sun, Sep 30, 2018 at 10:56:02AM +0300, Amir Goldstein wrote:
-> [CC Ted and Jan to see if there are lessons here that apply to ext2 ext4]
-> 
-> On Fri, Sep 7, 2018 at 6:03 AM Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > From: Dave Chinner <dchinner@redhat.com>
-> >
-> > We've had a few reports of lockdep tripping over memory reclaim
-> > context vs filesystem freeze "deadlocks". They all have looked
-> > to be false positives on analysis, but it seems that they are
-> > being tripped because we take freeze references before we run
-> > a GFP_KERNEL allocation for the struct xfs_trans.=====
-> >
-> > We can avoid this false positive vector just by re-ordering the
-> > operations in xfs_trans_alloc(). That is. we need allocate the
-> > structure before we take the freeze reference and enter the GFP_NOFS
-> > allocation context that follows the xfs_trans around. This prevents
-> > lockdep from seeing the GFP_KERNEL allocation inside the transaction
-> > context, and that prevents it from triggering the freeze level vs
-> > alloc context vs reclaim warnings.
-> >
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> 
-> Dave,
-> 
-> First of all, you may add
-> Tested-by: Amir Goldstein <amir73il@gmail.com>
 
-Too late, already pushed.
+--jI8keyz6grp/JLjh
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> and I think attribution of Reported-by [2] to
-> Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
-> is called for.
+Hi folks,
 
-Not for multiply-reported bugs. i.e. this has been reported in RHEL,
-by syzbot, by various users and several developers so giving
-attribution to just one person is not the right thing to do. It's
-either all or none, and given that the commit message is not for
-tracking a list of people who hit the issue, I decided "none".
+The for-next branch of the xfs-linux repository at:
 
-> I was getting the lockdep warning below reliably with the stress test
-> overlay/019 (over bas fs xfs with reflink) ever since kernel v4.18.
-> The warning is tripped on my system after 2 minutes of stress test.
-> 
-> The possibly interesting part about this particular splat is that, unlike
-> previously reported traces [1][2], sb_internals is not taken by kswapd
-> from pagewrite path, which as you wrote is not possible during freeze
-> level internal. In my splats sb_internals is taken by kswapd from
-> dcache shrink path.
+        git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-Which is exactly the same case. i.e. a transaction is being run
-from kswapd's reclaim context. It doesn't matter if it's an extent
-allocation transaction in the direct page writeback path, or
-prune_dcache_sb() killing a dentry and dropping the last reference
-to an unlinked inode triggering a truncate, or indeed prune_icache_sb
-dropping an inode off the LRU and triggering a truncate of
-specualtively preallocated blocks beyond EOF.
+has just been updated.
 
-i.e. Lockdep is warning about a transaction being run in kswapd's
-reclaim context - this is something we are allowed to do (and need
-to do to make forwards progress) because the kswapd reclaim context
-is GFP_KERNEL....
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.=20
+
+This update contains fixes for the 4.19-rc6 cycle, I'll be pulling
+in stuff for the 4.20 merge window over the next few days.
 
 Cheers,
 
 Dave.
--- 
+
+The new head of the for-next branch is commit:
+
+e55ec4ddbef9 xfs: fix error handling in xfs_bmap_extents_to_btree
+
+----------------------------------------------------------------
+Brian Foster (6):
+      xfs: remove last of unnecessary xfs_defer_cancel() callers
+      xfs: don't unlock invalidated buf on aborted tx commit
+      xfs: clean up xfs_trans_brelse()
+      xfs: refactor xfs_buf_log_item reference count handling
+      xfs: remove invalid log recovery first/last cycle check
+      iomap: set page dirty after partial delalloc on mkwrite
+
+Christoph Hellwig (2):
+      xfs: don't bring in extents in xfs_bmap_punch_delalloc_range
+      xfs: skip delalloc COW blocks in xfs_reflink_end_cow
+
+Darrick J. Wong (1):
+      xfs: don't crash the vfs on a garbage inline symlink
+
+Dave Chinner (3):
+      xfs: avoid lockdep false positives in xfs_trans_alloc
+      xfs: fix transaction leak in xfs_reflink_allocate_cow()
+      xfs: fix error handling in xfs_bmap_extents_to_btree
+
+Eric Sandeen (2):
+      xfs: don't treat unknown di_flags2 as corruption in scrub
+      xfs: validate inode di_forkoff
+
+YueHaibing (1):
+      xfs: remove duplicated include from alloc.c
+
+ fs/iomap.c                      |   2 +-
+ fs/xfs/libxfs/xfs_attr.c        |  28 +++-----
+ fs/xfs/libxfs/xfs_attr_remote.c |  10 +--
+ fs/xfs/libxfs/xfs_bmap.c        |  24 +++----
+ fs/xfs/libxfs/xfs_format.h      |   2 +
+ fs/xfs/libxfs/xfs_inode_buf.c   |  30 +++++++++
+ fs/xfs/scrub/alloc.c            |   1 -
+ fs/xfs/scrub/inode.c            |   4 +-
+ fs/xfs/xfs_bmap_util.c          |  20 ++----
+ fs/xfs/xfs_buf_item.c           | 119 ++++++++++++++++++----------------
+ fs/xfs/xfs_buf_item.h           |   1 +
+ fs/xfs/xfs_inode.c              |  10 +--
+ fs/xfs/xfs_iops.c               |  12 +++-
+ fs/xfs/xfs_log_recover.c        |  10 ---
+ fs/xfs/xfs_reflink.c            | 137 ++++++++++++++++++++++++------------=
+----
+ fs/xfs/xfs_trace.h              |   1 -
+ fs/xfs/xfs_trans.c              |  10 ++-
+ fs/xfs/xfs_trans_buf.c          |  99 +++++++----------------------
+ 18 files changed, 256 insertions(+), 264 deletions(-)
+--=20
 Dave Chinner
 david@fromorbit.com
+
+--jI8keyz6grp/JLjh
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJbsW8FAAoJEK3oKUf0dfodcHQQAK+XEKMZQXKN0aUCcQBjAzaU
+SoA8opFLU7knKIjBeaTOjhO5Iz8YaBmHlkSIuSPJv5imlrpI8Os/+vg1HhoiOcKW
+UB5+PIQOHzauCatZ8TjWIWZXlr6ylTPRX7f8hPNJxa8uwIa7lK66u0XCEGImeV7L
+6jGg3CRi6E2lP4FiEzdgZXt26CjLXp07IJNBy4KPrT/37jBHji1ccADj5O8DVTMX
+H1vHTi+Fyb5fwOZ7eWLSMAYdpcMT2nQRDuCoziOGWzhij4/HhHPvIYj7ZA5a4Axv
+2zaFXrHae+K+ON+1b5mO7Ro6ksOBk2jDifFnkitVzzcyd+07gJbKvb80UkZrV9AU
+Y/FrZ6QljvnO8YVg7c6Ls5I9WuqifBiii74wj87MEbV6tQ1HUvTVM7BbrUD4x255
+6jcNiA9yAqoILxwVnIEnRmiEKEUG0a5iNmIzJfIu5Q0rwFi1zv+p8jr481O3A95m
+bttHa6JQKPhAcLzPS/aG6yrdRnqqsHaSWir8oR/FZ/yTn5utpQxZGmnpbhl1YEQv
+9WwHEA9eo5eEw2ysnSryVYJWGmwNDrGp+dImr/aK+WMb3HHcaVzY9LEnM3N6Fnc4
+uBRHgn4IQZdaOLbgkUF82SCPIycZVlTSsnLaOkMYdkQsKVoQdyv29B8oMtcC6dDE
+by76wT4C1G/oFg/w2tcs
+=le8Y
+-----END PGP SIGNATURE-----
+
+--jI8keyz6grp/JLjh--
