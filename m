@@ -1,85 +1,28 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:54274 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729298AbeJATPW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Oct 2018 15:15:22 -0400
-Received: from [38.126.112.138] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1g6xSM-0004JX-09
-        for linux-xfs@vger.kernel.org; Mon, 01 Oct 2018 12:37:46 +0000
+Received: from verein.lst.de ([213.95.11.211]:37497 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729384AbeJATQ0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 1 Oct 2018 15:16:26 -0400
+Date: Mon, 1 Oct 2018 14:38:48 +0200
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 7/7] xfs: print dangling delalloc extents
-Date: Mon,  1 Oct 2018 05:37:41 -0700
-Message-Id: <20181001123741.32005-8-hch@lst.de>
-In-Reply-To: <20181001123741.32005-1-hch@lst.de>
-References: <20181001123741.32005-1-hch@lst.de>
+Subject: Re: [PATCH 07/10] xfs: handle extent size hints in
+ xfs_file_iomap_begin_delay
+Message-ID: <20181001123848.GA3452@lst.de>
+References: <20180917205354.15401-1-hch@lst.de> <20180917205354.15401-8-hch@lst.de> <20180926151723.GB899@bfoster>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20180926151723.GB899@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 
-Instead of just asserting that we have no delalloc space dangling
-in an inode that gets freed print the actual offenders for debug
-mode.
+On Wed, Sep 26, 2018 at 11:17:24AM -0400, Brian Foster wrote:
+> I'd guess this is due to the extent overlap check in
+> xfs_bmap_extsize_align(), but I haven't verified.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_super.c | 33 ++++++++++++++++++++++++++++++++-
- 1 file changed, 32 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 207ee302b1bb..99250bcb65a7 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -933,6 +933,32 @@ xfs_fs_alloc_inode(
- 	return NULL;
- }
- 
-+#ifdef DEBUG
-+static void
-+xfs_check_delalloc(
-+	struct xfs_inode	*ip,
-+	int			whichfork)
-+{
-+	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
-+	struct xfs_bmbt_irec	got;
-+	struct xfs_iext_cursor	icur;
-+
-+	if (!ifp || !xfs_iext_lookup_extent(ip, ifp, 0, &icur, &got))
-+		return;
-+	do {
-+		if (isnullstartblock(got.br_startblock)) {
-+			xfs_warn(ip->i_mount,
-+	"ino %llx %s fork has delalloc extent at [0x%llx:0x%llx]",
-+				ip->i_ino,
-+				whichfork == XFS_DATA_FORK ? "data" : "cow",
-+				got.br_startoff, got.br_blockcount);
-+		}
-+	} while (xfs_iext_next_extent(ifp, &icur, &got));
-+}
-+#else
-+#define xfs_check_delalloc(ip, whichfork)	do { } while (0)
-+#endif
-+
- /*
-  * Now that the generic code is guaranteed not to be accessing
-  * the linux inode, we can inactivate and reclaim the inode.
-@@ -951,7 +977,12 @@ xfs_fs_destroy_inode(
- 
- 	xfs_inactive(ip);
- 
--	ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0);
-+	if (!XFS_FORCED_SHUTDOWN(ip->i_mount) && ip->i_delayed_blks) {
-+		xfs_check_delalloc(ip, XFS_DATA_FORK);
-+		xfs_check_delalloc(ip, XFS_COW_FORK);
-+		ASSERT(0);
-+	}
-+
- 	XFS_STATS_INC(ip->i_mount, vn_reclaim);
- 
- 	/*
--- 
-2.19.0
+The problem is that we don't honor extent size hints at all when
+converting delalloc to real extents.  This will be a much bigger
+change, so I'll defer it for now.
