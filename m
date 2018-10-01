@@ -1,73 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:26400 "EHLO mail1.g1.pair.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726118AbeJBVUp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 2 Oct 2018 17:20:45 -0400
-Received: from mail1.g1.pair.com (localhost [127.0.0.1])
-        by mail1.g1.pair.com (Postfix) with ESMTP id 2E06E5476BF
-        for <linux-xfs@vger.kernel.org>; Tue,  2 Oct 2018 10:37:03 -0400 (EDT)
-Received: from harpe.intellique.com (labo.djinux.com [82.225.196.72])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail1.g1.pair.com (Postfix) with ESMTPSA id E594960B374
-        for <linux-xfs@vger.kernel.org>; Tue,  2 Oct 2018 10:37:02 -0400 (EDT)
-Date: Tue, 2 Oct 2018 16:37:07 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: [somewhat OT] I just discovered that Stratis uses XFS.
-Message-ID: <20181002163707.5452307c@harpe.intellique.com>
-In-Reply-To: <20181002162530.42b30c11@harpe.intellique.com>
-References: <20181002162530.42b30c11@harpe.intellique.com>
+Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:10454 "EHLO
+        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725878AbeJBFZf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Oct 2018 01:25:35 -0400
+Date: Tue, 2 Oct 2018 08:45:28 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Leaking Path in XFS's ioctl interface(missing LSM check)
+Message-ID: <20181001224528.GI18567@dastard>
+References: <5EF0D46A-C098-4B51-AD13-225FFCA35D4C@vt.edu>
+ <20180926013329.GD31060@dastard>
+ <20180926192426.472360ea@alans-desktop>
+ <20180927013812.GF31060@dastard>
+ <20180930151652.6975610c@alans-desktop>
+ <20181001002521.GM31060@dastard>
+ <20181001160442.47c798bc@alans-desktop>
+ <20181001154459.GB5872@magnolia>
+ <alpine.LRH.2.21.1810020608090.14406@namei.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/B/RfdDx=hC/.o+MuEojJmos"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <alpine.LRH.2.21.1810020608090.14406@namei.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: James Morris <jmorris@namei.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Alan Cox <gnomes@lxorguk.ukuu.org.uk>, TongZhang <ztong@vt.edu>, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-security-module@vger.kernel.org, Wenbo Shen <shenwenbosmile@gmail.com>
 
---Sig_/B/RfdDx=hC/.o+MuEojJmos
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Tue, Oct 02, 2018 at 06:08:16AM +1000, James Morris wrote:
+> On Mon, 1 Oct 2018, Darrick J. Wong wrote:
+> 
+> > If we /did/ replace CAP_SYS_ADMIN checking with a pile of LSM hooks,
+> 
+> Not sure we'd need a pile of hooks, what about just "read" and "write" 
+> storage admin?
+> 
+> Or even two new capabilities along these lines, which we convert existing 
+> CAP_SYS_ADMIN etc. to?
 
-Le Tue, 2 Oct 2018 16:25:30 +0200
-Emmanuel Florac <eflorac@intellique.com> =C3=A9crivait:
+So instead of having hundreds of management ioctls under
+CAP_SYS_ADMIN, we'd now have hundreds of non-storage ioctls under
+CAP_SYS_ADMIN and hundreds of storage ioctls under
+CAP_SYS_STORAGE_ADMIN?
 
-> Hi all,=20
-> in fact I just discovered that Stratis exists :)
-> (https://stratis-storage.github.io/relnotes/relnotes-1.0.html)
-> ( details on https://lwn.net/Articles/755454/)
->=20
-> Reading the FAQ (https://stratis-storage.github.io/FAQ.html) I see
-> that it uses XFS as a filesystem layer. Furthermore it seems to come
-> from RedHat. What are the relations with the future XFS capabilities
-> that Dave (IIRC) demonstrated recently?
->=20
-> Sorry for the OT message :)
+Maybe I'm missing something, but I don't see how that improves the
+situation w.r.t. locked down LSM configurations?
 
-Oh, and what about the probable constant use of xfs_growfs? Stratis
-seems to create all filesystems with a size of 1TB, and extends them as
-needed from there. However that means that a filesystem could
-potentially be expanded many times, which, as I understand it, is very
-suboptimal or worse, can lead to problems (inode allocation, AGs
-count and structure, etc).
+Cheers,
 
---=20
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+Dave.
 
---Sig_/B/RfdDx=hC/.o+MuEojJmos
-Content-Type: application/pgp-signature
-Content-Description: Signature digitale OpenPGP
 
------BEGIN PGP SIGNATURE-----
-
-iEYEARECAAYFAluzgpMACgkQX3jQXNUicVYB1wCgpwLePuzHwZhMkTLBZ9pEnmiT
-FMcAoPwszFIz+zZUjs3ekcPzUEOzhJD0
-=UgnB
------END PGP SIGNATURE-----
-
---Sig_/B/RfdDx=hC/.o+MuEojJmos--
+-- 
+Dave Chinner
+david@fromorbit.com
