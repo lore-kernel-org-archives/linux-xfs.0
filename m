@@ -1,64 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:18385 "EHLO mail1.g1.pair.com"
+Received: from mx1.redhat.com ([209.132.183.28]:48554 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727109AbeJDRUM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 4 Oct 2018 13:20:12 -0400
-Date: Thu, 4 Oct 2018 12:27:00 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: [somewhat OT] I just discovered that Stratis uses XFS.
-Message-ID: <20181004122639.330a6243@harpe.intellique.com>
-In-Reply-To: <CAJCQCtQyXjB1bzOWuj8f+cd-WgFkxDY8xpZ8YhVoTC72rPLThA@mail.gmail.com>
-References: <20181002162530.42b30c11@harpe.intellique.com>
-        <20181002163707.5452307c@harpe.intellique.com>
-        <6eb79c7b-4f15-28af-44b5-03488008a897@sandeen.net>
-        <20181002183018.37343c26@harpe.intellique.com>
-        <CAJCQCtQyXjB1bzOWuj8f+cd-WgFkxDY8xpZ8YhVoTC72rPLThA@mail.gmail.com>
+        id S1729272AbeJAU5v (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 1 Oct 2018 16:57:51 -0400
+Date: Mon, 1 Oct 2018 10:19:47 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/7] xfs: remove XFS_IO_INVALID
+Message-ID: <20181001141946.GC53694@bfoster>
+References: <20181001123741.32005-1-hch@lst.de>
+ <20181001123741.32005-2-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_//5+3Ka2eUlVH2WcZ/ZLBZ.J"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181001123741.32005-2-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chris Murphy <lists@colorremedies.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
---Sig_//5+3Ka2eUlVH2WcZ/ZLBZ.J
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Mon, Oct 01, 2018 at 05:37:35AM -0700, Christoph Hellwig wrote:
+> The invalid state isn't any different from a hole, so merge the two
+> states.  Use the more descriptive hole name, but keep it as the first
+> value of the enum to catch uninitialized fields.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
 
-Le Wed, 3 Oct 2018 16:47:05 -0600
-Chris Murphy <lists@colorremedies.com> =C3=A9crivait:
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-> >
-> > You're right, I've looked through the source code and no option ever
-> > gets passed to mkfs.xfs nor xfs_growfs related to FS size. That
-> > means that it creates the FS with the default 4 AGs for a start. =20
->=20
-> Stratis volumes are always built on dm-thin so I'd expect default
-> mkfs.xfs to create ~33 AG's, which is what I get when running mkfs.xfs
-> on LVM thin volumes.
->=20
-
-Ah yes, interesting. I've created a 1TB thin volume and mkfs.xfs makes
-32 AGs indeed.
-
---=20
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
-
---Sig_//5+3Ka2eUlVH2WcZ/ZLBZ.J
-Content-Type: application/pgp-signature
-Content-Description: Signature digitale OpenPGP
-
------BEGIN PGP SIGNATURE-----
-
-iEYEARECAAYFAlu16xcACgkQX3jQXNUicVYBFACghw03VkmEErrw0yXkBdtFDPKD
-v5kAoMaMQtWbTktL1qsXreZXWV12L+VQ
-=pN6j
------END PGP SIGNATURE-----
-
---Sig_//5+3Ka2eUlVH2WcZ/ZLBZ.J--
+>  fs/xfs/xfs_aops.c |  4 ++--
+>  fs/xfs/xfs_aops.h | 14 ++++++--------
+>  2 files changed, 8 insertions(+), 10 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 49f5f5896a43..338b9d9984e0 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -917,7 +917,7 @@ xfs_vm_writepage(
+>  	struct writeback_control *wbc)
+>  {
+>  	struct xfs_writepage_ctx wpc = {
+> -		.io_type = XFS_IO_INVALID,
+> +		.io_type = XFS_IO_HOLE,
+>  	};
+>  	int			ret;
+>  
+> @@ -933,7 +933,7 @@ xfs_vm_writepages(
+>  	struct writeback_control *wbc)
+>  {
+>  	struct xfs_writepage_ctx wpc = {
+> -		.io_type = XFS_IO_INVALID,
+> +		.io_type = XFS_IO_HOLE,
+>  	};
+>  	int			ret;
+>  
+> diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
+> index 9af867951a10..494b4338446e 100644
+> --- a/fs/xfs/xfs_aops.h
+> +++ b/fs/xfs/xfs_aops.h
+> @@ -12,21 +12,19 @@ extern struct bio_set xfs_ioend_bioset;
+>   * Types of I/O for bmap clustering and I/O completion tracking.
+>   */
+>  enum {
+> -	XFS_IO_INVALID,		/* initial state */
+> +	XFS_IO_HOLE,		/* covers region without any block allocation */
+>  	XFS_IO_DELALLOC,	/* covers delalloc region */
+>  	XFS_IO_UNWRITTEN,	/* covers allocated but uninitialized data */
+>  	XFS_IO_OVERWRITE,	/* covers already allocated extent */
+>  	XFS_IO_COW,		/* covers copy-on-write extent */
+> -	XFS_IO_HOLE,		/* covers region without any block allocation */
+>  };
+>  
+>  #define XFS_IO_TYPES \
+> -	{ XFS_IO_INVALID,		"invalid" }, \
+> -	{ XFS_IO_DELALLOC,		"delalloc" }, \
+> -	{ XFS_IO_UNWRITTEN,		"unwritten" }, \
+> -	{ XFS_IO_OVERWRITE,		"overwrite" }, \
+> -	{ XFS_IO_COW,			"CoW" }, \
+> -	{ XFS_IO_HOLE,			"hole" }
+> +	{ XFS_IO_HOLE,			"hole" },	\
+> +	{ XFS_IO_DELALLOC,		"delalloc" },	\
+> +	{ XFS_IO_UNWRITTEN,		"unwritten" },	\
+> +	{ XFS_IO_OVERWRITE,		"overwrite" },	\
+> +	{ XFS_IO_COW,			"CoW" }
+>  
+>  /*
+>   * Structure for buffered I/O completions.
+> -- 
+> 2.19.0
+> 
