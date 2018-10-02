@@ -1,155 +1,259 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:19237 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:58346 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727555AbeJBTRk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 2 Oct 2018 15:17:40 -0400
-Date: Tue, 2 Oct 2018 08:34:30 -0400
+        id S1727555AbeJBTTv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 2 Oct 2018 15:19:51 -0400
+Date: Tue, 2 Oct 2018 08:36:41 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/2] xfs: xrep_findroot_block should reject root blocks
- with siblings
-Message-ID: <20181002123429.GA55077@bfoster>
+Subject: Re: [PATCH 2/2] xfs: fix buffer state management in
+ xrep_findroot_block
+Message-ID: <20181002123640.GB55077@bfoster>
 References: <153843409576.24414.14199833763423874927.stgit@magnolia>
- <153843410206.24414.16640243145941466296.stgit@magnolia>
+ <153843410841.24414.2317164703479198891.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <153843410206.24414.16640243145941466296.stgit@magnolia>
+In-Reply-To: <153843410841.24414.2317164703479198891.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
 
-On Mon, Oct 01, 2018 at 03:48:22PM -0700, Darrick J. Wong wrote:
+On Mon, Oct 01, 2018 at 03:48:28PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> In xrep_findroot_block, if we find a candidate root block with sibling
-> pointers or sibling blocks on the same tree level, we should not return
-> that block as a tree root because root blocks cannot have siblings.
+> We don't quite handle buffer state properly in online repair's findroot
+> routine.  If the buffer is already in-core we don't want to trash its
+> b_ops and state, but we /do/ want to read the contents in from disk if
+> the buffer wasn't already in memory.
+> 
+> Therefore, introduce the ONESHOT_OPS buffer flag.  If the buffer had to
+> be read in from disk, the buf_ops supplied to read_buf will be used once
+> to verify the buffer contents, but they will not be attached to the
+> buffer itself.
+> 
+> With this change, xrep_findroot_block's buffer handling can be
+> simplified -- if b_ops is null, we know that it was freshly read (and
+> verified), we can set b_ops, and proceed.  If b_ops is not null, the
+> buffer was already in memory and we need to do some more structure
+> checks.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/scrub/repair.c |   61 +++++++++++++++++++++++++++++++++++++++----------
->  1 file changed, 48 insertions(+), 13 deletions(-)
+>  fs/xfs/scrub/repair.c |   76 ++++++++++++++++++++++++++++++++++++++-----------
+>  fs/xfs/xfs_buf.c      |    7 ++++-
+>  fs/xfs/xfs_buf.h      |    2 +
+>  3 files changed, 67 insertions(+), 18 deletions(-)
 > 
 > 
 > diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-> index 9f08dd9bf1d5..6eb66b3543ff 100644
+> index 6eb66b3543ff..8e1dfa5752b4 100644
 > --- a/fs/xfs/scrub/repair.c
 > +++ b/fs/xfs/scrub/repair.c
 ...
-> @@ -735,18 +736,52 @@ xrep_findroot_block(
->  		goto out;
->  	bp->b_ops = fab->buf_ops;
+> @@ -718,28 +721,67 @@ xrep_findroot_block(
+>  			return error;
+>  	}
 >  
-> -	/* Ignore this block if it's lower in the tree than we've seen. */
-> -	if (fab->root != NULLAGBLOCK &&
-> -	    xfs_btree_get_level(btblock) < fab->height)
-> -		goto out;
-> -
->  	/* Make sure we pass the verifiers. */
->  	bp->b_ops->verify_read(bp);
->  	if (bp->b_error)
->  		goto out;
-> -	fab->root = agbno;
-> -	fab->height = xfs_btree_get_level(btblock) + 1;
-> -	*found_it = true;
-> +
 > +	/*
-> +	 * This block passes the magic/uuid and verifier tests for this btree
-> +	 * type.  We don't need the caller to try the other tree types.
+> +	 * Read the buffer into memory with ONESHOT_OPS.  We can tell if we
+> +	 * had to go to disk by whether or not b_ops is set.
 > +	 */
-> +	*done_with_block = true;
-> +
-> +	block_level = xfs_btree_get_level(btblock);
-> +	if (block_level + 1 == fab->height) {
+>  	error = xfs_trans_read_buf(mp, ri->sc->tp, mp->m_ddev_targp, daddr,
+> -			mp->m_bsize, 0, &bp, NULL);
+> +			mp->m_bsize, XBF_ONESHOT_OPS, &bp, fab->buf_ops);
+>  	if (error)
+>  		return error;
+>  
+> -	/*
+> -	 * Does this look like a block matching our fs and higher than any
+> -	 * other block we've found so far?  If so, reattach buffer verifiers
+> -	 * so the AIL won't complain if the buffer is also dirty.
+> -	 */
+>  	btblock = XFS_BUF_TO_BLOCK(bp);
+> -	if (be32_to_cpu(btblock->bb_magic) != fab->magic)
+> -		goto out;
+> -	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+> -	    !uuid_equal(&btblock->bb_u.s.bb_uuid, &mp->m_sb.sb_meta_uuid))
+> -		goto out;
+> -	bp->b_ops = fab->buf_ops;
+> +	if (bp->b_ops == NULL) {
 > +		/*
-> +		 * This block claims to be at the same level as the root we
-> +		 * found previously.  There can't be two candidate roots, so
-> +		 * we'll throw away both of them and hope we later find a block
-> +		 * even higher in the tree.
-> +		 */
-> +		fab->root = NULLAGBLOCK;
-> +		goto out;
-> +	} else if (block_level < fab->height) {
-> +		/*
-> +		 * This block is lower in the tree than the root we found
-> +		 * previously, so just ignore it.
+> +		 * The buffer came back with NULL b_ops, which means that the
+> +		 * buffer was not in memory, we had to read it off disk, and
+> +		 * the verifier has run.
+> +		 *
+> +		 * If b_error == 0, the block matches the magic, the uuid, and
+> +		 * ->verify_struct of the btree type and we can proceed.  Set
+> +		 * b_ops to the btree type's buf_ops so that we don't have a
+> +		 * buffer in memory with no verifiers.
+> +		 *
+> +		 * Otherwise, the block doesn't match the btree type so we
+> +		 * mark it oneshot so it doesn't stick around, and move on.
 > +		 */
 
-Nit: can we combine these two comments into one above the whole if/else
-statement? It makes the code slightly more readable than multi-line
-comments in each branch, IMO. E.g.:
+Hmm, the fact that this interface still requires looking at internal
+buffer state to process what happened suggests to me it may not be the
+best approach. IIUC, a buffer that's already in-core is just going to
+return with the existing b_ops (the else branch below). Otherwise,
+->b_ops is NULL to indicate that we read it from disk and ran the passed
+in (prospective) verifier...
+
+> +		if (bp->b_error) {
+> +			xfs_buf_oneshot(bp);
+> +			goto out;
+> +		}
+
+... which means that this can't happen, because if we ran the passed in
+verifier and it fails the xfs_trans_read_buf() call invalidates the
+buffer and returns an error. I think that also means we'd abort the scan
+if we don't filter out -EFSCORRUPTED returns so long as we pass a
+potentially incorrect verifier.
+
+Also note that I think this still means that each failure to match a
+verifier has to re-read the buffer from disk, but we can deal with that
+separately.
+
+> +		bp->b_ops = fab->buf_ops;
+
+Therefore, a successful return with a NULL ->b_ops means we ran the
+verifier, it passed, and we're going to attach it. Am I missing
+something, or is this a roundabout way to just do what the buffer read
+mechanism already does without the flag?
+
+I could easily be missing some of the verification intricacies that are
+required from scrub context, but is this logic roughly equivalent to the
+following (without any special control flags)? We'd repeat some checks
+in the event the buffer was read from disk, but perhaps that can also be
+optimized out separately if it really matters. Hm?
+
+	...
+        error = xfs_trans_read_buf(mp, ri->sc->tp, mp->m_ddev_targp, daddr,
+                        mp->m_bsize, 0, &bp, fab->buf_ops);
+        if (error == -EFSCORRUPTED)
+                goto out;
+        else if (error)
+                return error;
 
         /*
-         * Compare the current block level with the height of the current
-         * candidate root block. If the level matches the current candidate,
-         * we know the current candidate can't be a root so we must invalidate
-         * it. If the level is lower than the current candidate, just ignore
-         * this block.
+         * If b_ops doesn't match fab, the buffer was already in-core with a
+         * different verifier. We know it doesn't match in that case.
          */
-        block_level = xfs_btree_get_level(btblock);
-        if (block_level + 1 == fab->height) {
-                fab->root = NULLAGBLOCK;
+        if (bp->b_ops != fab->buf_ops)
                 goto out;
-        } else if (block_level < fab->height) {
+
+        /*
+         * The verifier matches but the buffer may have already been in-core
+         * with this verifier. Sanity check the latest content before we
+         * proceed. Don't check the CRC because CRCs aren't updated until
+         * writeback.
+         */
+        btblock = XFS_BUF_TO_BLOCK(bp);
+        if (be32_to_cpu(btblock->bb_magic) != fab->magic)
                 goto out;
-        }
+        if (xfs_sb_version_hascrc(&mp->m_sb) &&
+            !uuid_equal(&btblock->bb_u.s.bb_uuid,
+                        &mp->m_sb.sb_meta_uuid))
+                goto out;
+        fa = bp->b_ops->verify_struct(bp);
+        if (fa)
+                goto out;
+	...
 
-With that:
+Brian
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-> +		goto out;
+> +	} else {
+> +		/*
+> +		 * The buffer came back with b_ops set, which means that the
+> +		 * buffer was already in memory.  We'll run the magic, uuid,
+> +		 * and ->verify_struct checks by hand to see if we want to
+> +		 * examine it further.
+> +		 */
+> +		if (be32_to_cpu(btblock->bb_magic) != fab->magic)
+> +			goto out;
+> +		if (xfs_sb_version_hascrc(&mp->m_sb) &&
+> +		    !uuid_equal(&btblock->bb_u.s.bb_uuid,
+> +				&mp->m_sb.sb_meta_uuid))
+> +			goto out;
+>  
+> -	/* Make sure we pass the verifiers. */
+> -	bp->b_ops->verify_read(bp);
+> -	if (bp->b_error)
+> -		goto out;
+> +		/*
+> +		 * If b_ops do not match fab->buf_ops even though the magic
+> +		 * does, something is seriously wrong here and we'd rather
+> +		 * abort the entire repair than risk screwing things up.
+> +		 */
+> +		if (bp->b_ops != fab->buf_ops)
+> +			goto out;
+> +
+> +		/*
+> +		 * If the buffer was already incore (on a v5 fs) then it should
+> +		 * already have had b_ops assigned.  Call ->verify_struct to
+> +		 * check the structure.  Avoid checking the CRC because we
+> +		 * don't calculate CRCs until the buffer is written by the log.
+> +		 */
+> +		fa = bp->b_ops->verify_struct(bp);
+> +		if (fa)
+> +			goto out;
 > +	}
-> +
-> +	/*
-> +	 * This is the highest block in the tree that we've found so far.
-> +	 * Update the btree height to reflect what we've learned from this
-> +	 * block.
-> +	 */
-> +	fab->height = block_level + 1;
-> +
-> +	/*
-> +	 * If this block doesn't have sibling pointers, then it's the new root
-> +	 * block candidate.  Otherwise, the root will be found farther up the
-> +	 * tree.
-> +	 */
-> +	if (btblock->bb_u.s.bb_leftsib == cpu_to_be32(NULLAGBLOCK) &&
-> +	    btblock->bb_u.s.bb_rightsib == cpu_to_be32(NULLAGBLOCK))
-> +		fab->root = agbno;
-> +	else
-> +		fab->root = NULLAGBLOCK;
 >  
->  	trace_xrep_findroot_block(mp, ri->sc->sa.agno, agbno,
->  			be32_to_cpu(btblock->bb_magic), fab->height - 1);
-> @@ -768,7 +803,7 @@ xrep_findroot_rmap(
->  	struct xrep_findroot		*ri = priv;
->  	struct xrep_find_ag_btree	*fab;
->  	xfs_agblock_t			b;
-> -	bool				found_it;
-> +	bool				done;
->  	int				error = 0;
+>  	/*
+>  	 * This block passes the magic/uuid and verifier tests for this btree
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index e839907e8492..139d35f6da64 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -206,7 +206,8 @@ _xfs_buf_alloc(
+>  	 * We don't want certain flags to appear in b_flags unless they are
+>  	 * specifically set by later operations on the buffer.
+>  	 */
+> -	flags &= ~(XBF_UNMAPPED | XBF_TRYLOCK | XBF_ASYNC | XBF_READ_AHEAD);
+> +	flags &= ~(XBF_UNMAPPED | XBF_TRYLOCK | XBF_ASYNC | XBF_READ_AHEAD |
+> +		   XBF_ONESHOT_OPS);
 >  
->  	/* Ignore anything that isn't AG metadata. */
-> @@ -777,16 +812,16 @@ xrep_findroot_rmap(
+>  	atomic_set(&bp->b_hold, 1);
+>  	atomic_set(&bp->b_lru_ref, 1);
+> @@ -758,6 +759,7 @@ xfs_buf_read_map(
+>  	const struct xfs_buf_ops *ops)
+>  {
+>  	struct xfs_buf		*bp;
+> +	const struct xfs_buf_ops *orig_ops;
 >  
->  	/* Otherwise scan each block + btree type. */
->  	for (b = 0; b < rec->rm_blockcount; b++) {
-> -		found_it = false;
-> +		done = false;
->  		for (fab = ri->btree_info; fab->buf_ops; fab++) {
->  			if (rec->rm_owner != fab->rmap_owner)
->  				continue;
->  			error = xrep_findroot_block(ri, fab,
->  					rec->rm_owner, rec->rm_startblock + b,
-> -					&found_it);
-> +					&done);
->  			if (error)
->  				return error;
-> -			if (found_it)
-> +			if (done)
->  				break;
->  		}
->  	}
+>  	flags |= XBF_READ;
+>  
+> @@ -767,8 +769,11 @@ xfs_buf_read_map(
+>  
+>  		if (!(bp->b_flags & XBF_DONE)) {
+>  			XFS_STATS_INC(target->bt_mount, xb_get_read);
+> +			orig_ops = bp->b_ops;
+>  			bp->b_ops = ops;
+>  			_xfs_buf_read(bp, flags);
+> +			if (flags & XBF_ONESHOT_OPS)
+> +				bp->b_ops = orig_ops;
+>  		} else if (flags & XBF_ASYNC) {
+>  			/*
+>  			 * Read ahead call which is already satisfied,
+> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> index 4e3171acd0f8..62139d3ad349 100644
+> --- a/fs/xfs/xfs_buf.h
+> +++ b/fs/xfs/xfs_buf.h
+> @@ -34,6 +34,7 @@ typedef enum {
+>  #define XBF_ASYNC	 (1 << 4) /* initiator will not wait for completion */
+>  #define XBF_DONE	 (1 << 5) /* all pages in the buffer uptodate */
+>  #define XBF_STALE	 (1 << 6) /* buffer has been staled, do not find it */
+> +#define XBF_ONESHOT_OPS	 (1 << 7) /* only use ops if we read in the buf */
+>  #define XBF_WRITE_FAIL	 (1 << 24)/* async writes have failed on this buffer */
+>  
+>  /* I/O hints for the BIO layer */
+> @@ -61,6 +62,7 @@ typedef unsigned int xfs_buf_flags_t;
+>  	{ XBF_ASYNC,		"ASYNC" }, \
+>  	{ XBF_DONE,		"DONE" }, \
+>  	{ XBF_STALE,		"STALE" }, \
+> +	{ XBF_ONESHOT_OPS,	"ONESHOT_OPS" }, /* should never be set */ \
+>  	{ XBF_WRITE_FAIL,	"WRITE_FAIL" }, \
+>  	{ XBF_SYNCIO,		"SYNCIO" }, \
+>  	{ XBF_FUA,		"FUA" }, \
 > 
