@@ -1,68 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:57288 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726748AbeJCWJI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Oct 2018 18:09:08 -0400
-Date: Wed, 3 Oct 2018 08:20:13 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/2] xfs: Fix xqmstats offsets in /proc/fs/xfs/xqmstat
-Message-ID: <20181003152013.GI19324@magnolia>
-References: <20181003123537.30965-1-cmaiolino@redhat.com>
- <20181003123537.30965-2-cmaiolino@redhat.com>
- <20181003151808.GG19324@magnolia>
+Received: from mail1.g1.pair.com ([66.39.3.162]:26400 "EHLO mail1.g1.pair.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726118AbeJBVUp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 2 Oct 2018 17:20:45 -0400
+Received: from mail1.g1.pair.com (localhost [127.0.0.1])
+        by mail1.g1.pair.com (Postfix) with ESMTP id 2E06E5476BF
+        for <linux-xfs@vger.kernel.org>; Tue,  2 Oct 2018 10:37:03 -0400 (EDT)
+Received: from harpe.intellique.com (labo.djinux.com [82.225.196.72])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail1.g1.pair.com (Postfix) with ESMTPSA id E594960B374
+        for <linux-xfs@vger.kernel.org>; Tue,  2 Oct 2018 10:37:02 -0400 (EDT)
+Date: Tue, 2 Oct 2018 16:37:07 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: [somewhat OT] I just discovered that Stratis uses XFS.
+Message-ID: <20181002163707.5452307c@harpe.intellique.com>
+In-Reply-To: <20181002162530.42b30c11@harpe.intellique.com>
+References: <20181002162530.42b30c11@harpe.intellique.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181003151808.GG19324@magnolia>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/B/RfdDx=hC/.o+MuEojJmos"; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Oct 03, 2018 at 08:18:08AM -0700, Darrick J. Wong wrote:
-> On Wed, Oct 03, 2018 at 02:35:36PM +0200, Carlos Maiolino wrote:
-> > The addition of FIBT, RMAP and REFCOUNT changed the offsets into
-> > __xfssats structure.
-> > 
-> > Although this didn't cause any direct issue,  xqmstat_proc_show() relied
-> > on the old offsets to display the xqm statistics.
-> > 
-> > Fix it.
-> > 
-> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> > ---
-> >  fs/xfs/xfs_stats.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
-> > index 4e4423153071..740ac9674848 100644
-> > --- a/fs/xfs/xfs_stats.c
-> > +++ b/fs/xfs/xfs_stats.c
-> > @@ -119,7 +119,7 @@ static int xqmstat_proc_show(struct seq_file *m, void *v)
-> >  	int j;
-> >  
-> >  	seq_printf(m, "qm");
-> > -	for (j = XFSSTAT_END_IBT_V2; j < XFSSTAT_END_XQMSTAT; j++)
-> > +	for (j = XFSSTAT_END_REFCOUNT; j < XFSSTAT_END_XQMSTAT; j++)
-> 
-> /me totally missed that when I was writing reflink, sorry. :(
-> 
-> Can we have a:
-> 
->   #define XFSSTAT_START_XQMSTAT (XFSSTAT_END_REFCOUNT)
-> 
-> in xfs_stats.h right above the XFSSTAT_END_XQMSTAT definition so that
-> future authors don't have to remember that some code use _END_REFCOUNT
-> to mean "start of next thing"?
+--Sig_/B/RfdDx=hC/.o+MuEojJmos
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Oh, that is patch 2.  Sorry, disregard message.
+Le Tue, 2 Oct 2018 16:25:30 +0200
+Emmanuel Florac <eflorac@intellique.com> =C3=A9crivait:
 
-> --D
-> 
-> >  		seq_printf(m, " %u", counter_val(xfsstats.xs_stats, j));
-> >  	seq_putc(m, '\n');
-> >  	return 0;
-> > -- 
-> > 2.17.1
-> > 
+> Hi all,=20
+> in fact I just discovered that Stratis exists :)
+> (https://stratis-storage.github.io/relnotes/relnotes-1.0.html)
+> ( details on https://lwn.net/Articles/755454/)
+>=20
+> Reading the FAQ (https://stratis-storage.github.io/FAQ.html) I see
+> that it uses XFS as a filesystem layer. Furthermore it seems to come
+> from RedHat. What are the relations with the future XFS capabilities
+> that Dave (IIRC) demonstrated recently?
+>=20
+> Sorry for the OT message :)
+
+Oh, and what about the probable constant use of xfs_growfs? Stratis
+seems to create all filesystems with a size of 1TB, and extends them as
+needed from there. However that means that a filesystem could
+potentially be expanded many times, which, as I understand it, is very
+suboptimal or worse, can lead to problems (inode allocation, AGs
+count and structure, etc).
+
+--=20
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
+
+--Sig_/B/RfdDx=hC/.o+MuEojJmos
+Content-Type: application/pgp-signature
+Content-Description: Signature digitale OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+
+iEYEARECAAYFAluzgpMACgkQX3jQXNUicVYB1wCgpwLePuzHwZhMkTLBZ9pEnmiT
+FMcAoPwszFIz+zZUjs3ekcPzUEOzhJD0
+=UgnB
+-----END PGP SIGNATURE-----
+
+--Sig_/B/RfdDx=hC/.o+MuEojJmos--
