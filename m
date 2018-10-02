@@ -1,75 +1,161 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:44378 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726769AbeJCUwt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 3 Oct 2018 16:52:49 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 5F783B56
-        for <linux-xfs@vger.kernel.org>; Wed,  3 Oct 2018 09:04:12 -0500 (CDT)
-Subject: Re: [PATCH 2/2] xfs: Add new constant to mark start of xqmstat
-References: <20181003123537.30965-1-cmaiolino@redhat.com>
- <20181003123537.30965-3-cmaiolino@redhat.com>
- <eacf197c-98d7-4507-a40f-cf32d49bb5eb@sandeen.net>
- <20181003140054.5kjzhfuit35zldkl@odin.usersys.redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <b7b5bab1-5c6f-2bd8-2953-b6a7f95f4717@sandeen.net>
-Date: Wed, 3 Oct 2018 09:04:16 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:44506 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727372AbeJCA0k (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Oct 2018 20:26:40 -0400
+Received: from [38.126.112.138] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1g7OgT-0007e1-I3
+        for linux-xfs@vger.kernel.org; Tue, 02 Oct 2018 17:42:09 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 6/8] xfs: remove the unused trimmed argument from xfs_reflink_trim_around_shared
+Date: Tue,  2 Oct 2018 10:42:05 -0700
+Message-Id: <20181002174207.25275-7-hch@lst.de>
+In-Reply-To: <20181002174207.25275-1-hch@lst.de>
+References: <20181002174207.25275-1-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20181003140054.5kjzhfuit35zldkl@odin.usersys.redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_bmap_util.c |  4 ++--
+ fs/xfs/xfs_iomap.c     |  5 ++---
+ fs/xfs/xfs_reflink.c   | 15 +++++----------
+ fs/xfs/xfs_reflink.h   |  2 +-
+ 4 files changed, 10 insertions(+), 16 deletions(-)
 
-
-On 10/3/18 9:00 AM, Carlos Maiolino wrote:
-> On Wed, Oct 03, 2018 at 07:51:43AM -0500, Eric Sandeen wrote:
->> On 10/3/18 7:35 AM, Carlos Maiolino wrote:
->>> xqmstat information under __xfsstats is used directly by the
->>> /proc/fs/xfs/xqmstat show method, which makes use of struct offsets to
->>> print out the values.
->>>
->>> Currently, the function is setup to start printing values from the offset of
->>> the last marker before xqmstat, so, an update to __xfsstats structure
->>> may also require an update of xqmstat_proc_show() function.
->>>
->>> By adding a new constant, we concentrate any updates do __xfsstats
->>> structure fields locally to the file xfs_stats.h, reducing the
->>> likelyhood of future bugs if an update to xqmstat_proc_show is
->>> forgotten as have happened before.
->>
->> did 
->>
->> BUILD_BUG_ON(offsetof(struct __xfsstats, xs_qm_dqreclaims)/sizeof(uint32_t)) != XFSSTAT_START_XQMSTAT);
->>
->> and/or
->>
->> #define XFSSTAT_START_XQMSTAT	(offsetof(struct __xfsstats, xs_qm_dqreclaims)/sizeof(uint32_t))
-> 
-> Yup, it worked, although, it still doesn't really close the possibility for
-> mistakes here, the first field may change for example and we may end up in the
-> same situation.
-> 
-> I think only the 2nd option (defining START via offsetof), doesn't differ much
-> from the approach in the patch, and, using the 1st option (BUILD_BUG_ON), will
-> require an update to xqmstat_proc_show() if by any reason we change the quota
-> values, so, I thought the simpler version as the patch would suffice and be a
-> bit less confusing. But well, feel free to disagree, it's my opinion only and
-> not written on stone :P
-
-I'd argue that the first field of xqmstats changing not possible, because
-this is essentially a userspacce API.  If we're going to change the format
-of xqmstats, we should only add to the end of it.
-
-The thing about using offsetof() is that we'll never have to update the START
-define again, even if we add more records to the larger stats structure.
-
-But we can see what others think as well.
-
--Eric
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 416524f6ba69..7cfda25f1bb1 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -406,10 +406,10 @@ xfs_getbmap_report_one(
+ 	struct xfs_bmbt_irec	*got)
+ {
+ 	struct kgetbmap		*p = out + bmv->bmv_entries;
+-	bool			shared = false, trimmed = false;
++	bool			shared = false;
+ 	int			error;
+ 
+-	error = xfs_reflink_trim_around_shared(ip, got, &shared, &trimmed);
++	error = xfs_reflink_trim_around_shared(ip, got, &shared);
+ 	if (error)
+ 		return error;
+ 
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index bdba6b91598a..27c93b5f029d 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1032,7 +1032,7 @@ xfs_file_iomap_begin(
+ 	struct xfs_bmbt_irec	imap;
+ 	xfs_fileoff_t		offset_fsb, end_fsb;
+ 	int			nimaps = 1, error = 0;
+-	bool			shared = false, trimmed = false;
++	bool			shared = false;
+ 	unsigned		lockmode;
+ 
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+@@ -1068,8 +1068,7 @@ xfs_file_iomap_begin(
+ 
+ 	if (flags & IOMAP_REPORT) {
+ 		/* Trim the mapping to the nearest shared extent boundary. */
+-		error = xfs_reflink_trim_around_shared(ip, &imap, &shared,
+-				&trimmed);
++		error = xfs_reflink_trim_around_shared(ip, &imap, &shared);
+ 		if (error)
+ 			goto out_unlock;
+ 	}
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 06e38e88ddee..1e39a7d21c7e 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -182,8 +182,7 @@ int
+ xfs_reflink_trim_around_shared(
+ 	struct xfs_inode	*ip,
+ 	struct xfs_bmbt_irec	*irec,
+-	bool			*shared,
+-	bool			*trimmed)
++	bool			*shared)
+ {
+ 	xfs_agnumber_t		agno;
+ 	xfs_agblock_t		agbno;
+@@ -209,7 +208,7 @@ xfs_reflink_trim_around_shared(
+ 	if (error)
+ 		return error;
+ 
+-	*shared = *trimmed = false;
++	*shared = false;
+ 	if (fbno == NULLAGBLOCK) {
+ 		/* No shared blocks at all. */
+ 		return 0;
+@@ -222,8 +221,6 @@ xfs_reflink_trim_around_shared(
+ 		 */
+ 		irec->br_blockcount = flen;
+ 		*shared = true;
+-		if (flen != aglen)
+-			*trimmed = true;
+ 		return 0;
+ 	} else {
+ 		/*
+@@ -233,7 +230,6 @@ xfs_reflink_trim_around_shared(
+ 		 * start of the shared region.
+ 		 */
+ 		irec->br_blockcount = fbno - agbno;
+-		*trimmed = true;
+ 		return 0;
+ 	}
+ }
+@@ -255,7 +251,7 @@ xfs_reflink_reserve_cow(
+ 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
+ 	struct xfs_bmbt_irec	got;
+ 	int			error = 0;
+-	bool			eof = false, trimmed;
++	bool			eof = false;
+ 	struct xfs_iext_cursor	icur;
+ 	bool			shared;
+ 
+@@ -277,7 +273,7 @@ xfs_reflink_reserve_cow(
+ 	}
+ 
+ 	/* Trim the mapping to the nearest shared extent boundary. */
+-	error = xfs_reflink_trim_around_shared(ip, imap, &shared, &trimmed);
++	error = xfs_reflink_trim_around_shared(ip, imap, &shared);
+ 	if (error)
+ 		return error;
+ 
+@@ -366,7 +362,6 @@ xfs_find_trim_cow_extent(
+ 	xfs_filblks_t		count_fsb = imap->br_blockcount;
+ 	struct xfs_iext_cursor	icur;
+ 	struct xfs_bmbt_irec	got;
+-	bool			trimmed;
+ 
+ 	*found = false;
+ 
+@@ -376,7 +371,7 @@ xfs_find_trim_cow_extent(
+ 	 */
+ 	if (!xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &got) ||
+ 	    got.br_startoff > offset_fsb)
+-		return xfs_reflink_trim_around_shared(ip, imap, shared, &trimmed);
++		return xfs_reflink_trim_around_shared(ip, imap, shared);
+ 
+ 	*shared = true;
+ 	if (isnullstartblock(got.br_startblock)) {
+diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+index b77f4079022a..7f47202b5639 100644
+--- a/fs/xfs/xfs_reflink.h
++++ b/fs/xfs/xfs_reflink.h
+@@ -10,7 +10,7 @@ extern int xfs_reflink_find_shared(struct xfs_mount *mp, struct xfs_trans *tp,
+ 		xfs_agnumber_t agno, xfs_agblock_t agbno, xfs_extlen_t aglen,
+ 		xfs_agblock_t *fbno, xfs_extlen_t *flen, bool find_maximal);
+ extern int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
+-		struct xfs_bmbt_irec *irec, bool *shared, bool *trimmed);
++		struct xfs_bmbt_irec *irec, bool *shared);
+ 
+ extern int xfs_reflink_reserve_cow(struct xfs_inode *ip,
+ 		struct xfs_bmbt_irec *imap);
+-- 
+2.19.0
