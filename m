@@ -1,112 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:39814 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726353AbeJBVte (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 2 Oct 2018 17:49:34 -0400
-Subject: Re: [somewhat OT] I just discovered that Stratis uses XFS.
-References: <20181002162530.42b30c11@harpe.intellique.com>
- <20181002163707.5452307c@harpe.intellique.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <6eb79c7b-4f15-28af-44b5-03488008a897@sandeen.net>
-Date: Tue, 2 Oct 2018 10:05:42 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:52530 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726233AbeJBWDd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Oct 2018 18:03:33 -0400
+Date: Tue, 2 Oct 2018 08:19:26 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: cross-fs copy support
+Message-ID: <20181002151926.GC6706@magnolia>
+References: <CA+1E3rLXPwzfO3ro49ZVg7RfpYon5YDB6Y_zqu60ivpgn4wenw@mail.gmail.com>
+ <2a92fff4-d005-835a-3bd7-a328b008857f@gmx.com>
+ <df92a795-3f2e-751a-8504-030015fba6d9@sandeen.net>
+ <FE6394EC-5CB0-4A16-AAC6-97F465A4E50C@dilger.ca>
+ <20181002081544.GW3255@twin.jikos.cz>
 MIME-Version: 1.0
-In-Reply-To: <20181002163707.5452307c@harpe.intellique.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="vD5pMcn9p4w53WVrZ7oNSs2Etq9xK09oW"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181002081544.GW3255@twin.jikos.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Emmanuel Florac <eflorac@intellique.com>, xfs <linux-xfs@vger.kernel.org>
+To: dsterba@suse.cz, Andreas Dilger <adilger@dilger.ca>, Eric Sandeen <sandeen@sandeen.net>, Qu Wenruo <quwenruo.btrfs@gmx.com>, Joshi <joshiiitr@gmail.com>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---vD5pMcn9p4w53WVrZ7oNSs2Etq9xK09oW
-Content-Type: multipart/mixed; boundary="dtAleURllUYzGWW4fLo2JatSo8fnMDW72";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: Emmanuel Florac <eflorac@intellique.com>, xfs <linux-xfs@vger.kernel.org>
-Message-ID: <6eb79c7b-4f15-28af-44b5-03488008a897@sandeen.net>
-Subject: Re: [somewhat OT] I just discovered that Stratis uses XFS.
-References: <20181002162530.42b30c11@harpe.intellique.com>
- <20181002163707.5452307c@harpe.intellique.com>
-In-Reply-To: <20181002163707.5452307c@harpe.intellique.com>
+On Tue, Oct 02, 2018 at 10:15:44AM +0200, David Sterba wrote:
+> On Mon, Oct 01, 2018 at 01:51:09PM -0600, Andreas Dilger wrote:
+> > > Yes, I would expect there to be problems with his modified kernel
+> > > for a filesystem that supports clone_file_range, because
+> > > vfs_copy_file_range() will clone if possible, and this should fail across
+> > > filesystems.
+> > > 
+> > > In general, though, I don't know for sure why we don't fall back to
+> > > do_splice_direct() across filesystems, although the filesystems that
+> > > implement their own ->copy_file_range ops may have their own,
+> > > further restrictions within their implementations.
+> > > 
+> > > This call /is/ documented in the manpage as only being valid for
+> > > files on the same filesystem, though:
+> > > http://man7.org/linux/man-pages/man2/copy_file_range.2.html
+> > 
+> > There was a patch to allow cross-mount copy for NFS, but it hasn't landed
+> > yet.
+> 
+> I found https://marc.info/?l=linux-nfs&m=144138779721907&w=2 that lifts
+> the VFS check (part of a series that can't be easily linked to).
+> 
+> The lack of cross-mount reflink (based on the copy_file_ragne) is often
+> confusing users, there are common setups that mount subvolumes
+> separately and reflinking between them would require mount of the
+> toplevel subvolume.
+> 
+> If there are 2 in-kernel users of the relaxed cross-mount copy, I think
+> this would help to push the series forward.
 
---dtAleURllUYzGWW4fLo2JatSo8fnMDW72
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+I don't have any objection to cross-mountpoint same-filesystem clones,
+though obviously we need to all agree that from now on the vfs /does/
+support certain IO operations across mountpoints.
 
+(I haven't any opinion on cross-filesystem copies, as XFS is incapable
+of such things.)
 
-
-On 10/2/18 9:37 AM, Emmanuel Florac wrote:
-> Le Tue, 2 Oct 2018 16:25:30 +0200
-> Emmanuel Florac <eflorac@intellique.com> =C3=A9crivait:
->=20
->> Hi all,=20
->> in fact I just discovered that Stratis exists :)
->> (https://stratis-storage.github.io/relnotes/relnotes-1.0.html)
->> ( details on https://lwn.net/Articles/755454/)
->>
->> Reading the FAQ (https://stratis-storage.github.io/FAQ.html) I see
->> that it uses XFS as a filesystem layer. Furthermore it seems to come
->> from RedHat. What are the relations with the future XFS capabilities
->> that Dave (IIRC) demonstrated recently?
->>
->> Sorry for the OT message :)
->=20
-> Oh, and what about the probable constant use of xfs_growfs? Stratis
-> seems to create all filesystems with a size of 1TB, and extends them as=
-
-> needed from there. However that means that a filesystem could
-> potentially be expanded many times, which, as I understand it, is very
-> suboptimal or worse, can lead to problems (inode allocation, AGs
-> count and structure, etc).
-
-First, a disclaimer: I'm not a Stratis expert.
-
-None of Dave's fancy new tricks are in Stratis, because right now Dave's
-fancy new tricks are pretty much just in his lab.
-
-As for the growfs, that's a little bit of a concern - in general, the "st=
-art
-small and grow" worry is that we'll have a bazillion tiny AGs in the resu=
-lt.
-
-But if Stratis starts at 1TB it's not terrible; I'd need to look and see =
-how
-many AGs get created (probably 4?) and if so, 250G AGs are not /too/ gran=
-ular.
-If it's creating a lot more smaller AGs, that could become an issue if it=
- gets
-grown to a very large size.  IOWs the growfs concern is mostly about the
-resulting AG size & AG count.
-
--Eric
-
-
---dtAleURllUYzGWW4fLo2JatSo8fnMDW72--
-
---vD5pMcn9p4w53WVrZ7oNSs2Etq9xK09oW
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAluziUYACgkQIK4WkuE9
-3uBOaQ//bodnd07ZhnZr7JR3KKTisLnvT40bLjz5gfa3kfKJIAbc+Wn4qUDb/RSQ
-xPpSnhYsvHdupf6Egx0uGUApzxmRzhwrXCdV//esUTOpjDzVbIlYqUe4FO4INHiC
-kz83l69+v8Q9NidWYgQQCbiSoR6V8bAFMbZdOGAu9P/2ipip2sJfoTwJLM0VCntv
-pWgfQ24kQNUkAOJR0zWMvkrnagJYq9v9p2qsclY1atV0KSND8Apt05HmU7EJI5x3
-4r+y6O19+9QlHVapnGVjjhkqNQ8BvZtvhZl+XknBoKn1vRsY8k1pClhsxHTOhImk
-EGj251zqb6nsulo2k1VsQTqI1nD/1CrNB0+X1VY/LBsL4ht0SVfqq3PtpYkMSkFI
-3H9icDEaBEhXUjrqgG9qIWv1xA3ji4tvZ5Z62Sqy1cTyFWb0k2wje+KyH+8rtUXj
-MXoydr0lelWkqsuEpjMTY20GFCJq0pul+3pATv/iom9/z3loqrhDGN7nhby1y89W
-jcXcH37+310AHKzQWqu0Fl/gs43DIUWcXk/B+PEYvILMFJSQ0jLIGDKh0FwJAZPn
-fAbsfGqb8PhiNKy3sr4qPmaY8z+5xLZJVyU1yqVymq9+B0AV8W/5iUH6n5Udp8QD
-ZamCXEDgIvVKmtq5YZkIuyL4RIgvha8czIKPh/g8twaF4AvTJ+4=
-=d9sg
------END PGP SIGNATURE-----
-
---vD5pMcn9p4w53WVrZ7oNSs2Etq9xK09oW--
+--D
