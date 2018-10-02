@@ -1,83 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:51808 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726198AbeJDGAY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Oct 2018 02:00:24 -0400
-Date: Thu, 4 Oct 2018 09:09:53 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfs: Add new constant to mark start of xqmstat
-Message-ID: <20181003230953.GS18567@dastard>
-References: <20181003123537.30965-1-cmaiolino@redhat.com>
- <20181003123537.30965-3-cmaiolino@redhat.com>
- <eacf197c-98d7-4507-a40f-cf32d49bb5eb@sandeen.net>
- <20181003140054.5kjzhfuit35zldkl@odin.usersys.redhat.com>
- <b7b5bab1-5c6f-2bd8-2953-b6a7f95f4717@sandeen.net>
+Received: from mx2.suse.de ([195.135.220.15]:41226 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726330AbeJBWO7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 2 Oct 2018 18:14:59 -0400
+Date: Tue, 2 Oct 2018 17:31:00 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: Problems with VM_MIXEDMAP removal from /proc/<pid>/smaps
+Message-ID: <20181002153100.GG9127@quack2.suse.cz>
+References: <20181002100531.GC4135@quack2.suse.cz>
+ <20181002121039.GA3274@linux-x5ow.site>
+ <20181002142959.GD9127@quack2.suse.cz>
+ <20181002143713.GA19845@infradead.org>
+ <20181002144412.GC4963@linux-x5ow.site>
+ <20181002145206.GA10903@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <b7b5bab1-5c6f-2bd8-2953-b6a7f95f4717@sandeen.net>
+In-Reply-To: <20181002145206.GA10903@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>, Jan Kara <jack@suse.cz>, Dan Williams <dan.j.williams@intel.com>, Dave Jiang <dave.jiang@intel.com>, linux-nvdimm@lists.01.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org
 
-On Wed, Oct 03, 2018 at 09:04:16AM -0500, Eric Sandeen wrote:
-> 
-> 
-> On 10/3/18 9:00 AM, Carlos Maiolino wrote:
-> > On Wed, Oct 03, 2018 at 07:51:43AM -0500, Eric Sandeen wrote:
-> >> On 10/3/18 7:35 AM, Carlos Maiolino wrote:
-> >>> xqmstat information under __xfsstats is used directly by the
-> >>> /proc/fs/xfs/xqmstat show method, which makes use of struct offsets to
-> >>> print out the values.
-> >>>
-> >>> Currently, the function is setup to start printing values from the offset of
-> >>> the last marker before xqmstat, so, an update to __xfsstats structure
-> >>> may also require an update of xqmstat_proc_show() function.
-> >>>
-> >>> By adding a new constant, we concentrate any updates do __xfsstats
-> >>> structure fields locally to the file xfs_stats.h, reducing the
-> >>> likelyhood of future bugs if an update to xqmstat_proc_show is
-> >>> forgotten as have happened before.
-> >>
-> >> did 
-> >>
-> >> BUILD_BUG_ON(offsetof(struct __xfsstats, xs_qm_dqreclaims)/sizeof(uint32_t)) != XFSSTAT_START_XQMSTAT);
-> >>
-> >> and/or
-> >>
-> >> #define XFSSTAT_START_XQMSTAT	(offsetof(struct __xfsstats, xs_qm_dqreclaims)/sizeof(uint32_t))
+On Tue 02-10-18 07:52:06, Christoph Hellwig wrote:
+> On Tue, Oct 02, 2018 at 04:44:13PM +0200, Johannes Thumshirn wrote:
+> > On Tue, Oct 02, 2018 at 07:37:13AM -0700, Christoph Hellwig wrote:
+> > > No, it should not.  DAX is an implementation detail thay may change
+> > > or go away at any time.
 > > 
-> > Yup, it worked, although, it still doesn't really close the possibility for
-> > mistakes here, the first field may change for example and we may end up in the
-> > same situation.
-> > 
-> > I think only the 2nd option (defining START via offsetof), doesn't differ much
-> > from the approach in the patch, and, using the 1st option (BUILD_BUG_ON), will
-> > require an update to xqmstat_proc_show() if by any reason we change the quota
-> > values, so, I thought the simpler version as the patch would suffice and be a
-> > bit less confusing. But well, feel free to disagree, it's my opinion only and
-> > not written on stone :P
+> > Well we had an issue with an application checking for dax, this is how
+> > we landed here in the first place.
 > 
-> I'd argue that the first field of xqmstats changing not possible, because
-> this is essentially a userspacce API.  If we're going to change the format
-> of xqmstats, we should only add to the end of it.
+> So what exacty is that "DAX" they are querying about (and no, I'm not
+> joking, nor being philosophical).
 
-That's correct. Once published, the stats in each line are fixed in
-place forever. We can extend the stats by appending new stats to the
-end of each line, or by adding new lines. But we can't change the
-order or meaning of existing entries.
+I believe the application we are speaking about is mostly concerned about
+the memory overhead of the page cache. Think of a machine that has ~ 1TB of
+DRAM, the database running on it is about that size as well and they want
+database state stored somewhere persistently - which they may want to do by
+modifying mmaped database files if they do small updates... So they really
+want to be able to use close to all DRAM for the DB and not leave slack
+space for the kernel page cache to cache 1TB of database files.
 
-> The thing about using offsetof() is that we'll never have to update the START
-> define again, even if we add more records to the larger stats structure.
-
-I think the whole thing needs to be changed to use offsetof() rather
-than the messy set of cascading defines we have now.
-
-Cheers,
-
-Dave.
+								Honza
 -- 
-Dave Chinner
-david@fromorbit.com
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
