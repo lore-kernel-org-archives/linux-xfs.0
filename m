@@ -1,91 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io1-f67.google.com ([209.85.166.67]:43720 "EHLO
-        mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726789AbeJBOPX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Oct 2018 10:15:23 -0400
-Received: by mail-io1-f67.google.com with SMTP id y10-v6so1310510ioa.10
-        for <linux-xfs@vger.kernel.org>; Tue, 02 Oct 2018 00:33:31 -0700 (PDT)
+Received: from mx2.suse.de ([195.135.220.15]:45544 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727006AbeJBO5s (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 2 Oct 2018 10:57:48 -0400
+Date: Tue, 2 Oct 2018 10:15:44 +0200
+From: David Sterba <dsterba@suse.cz>
+Subject: Re: cross-fs copy support
+Message-ID: <20181002081544.GW3255@twin.jikos.cz>
+Reply-To: dsterba@suse.cz
+References: <CA+1E3rLXPwzfO3ro49ZVg7RfpYon5YDB6Y_zqu60ivpgn4wenw@mail.gmail.com>
+ <2a92fff4-d005-835a-3bd7-a328b008857f@gmx.com>
+ <df92a795-3f2e-751a-8504-030015fba6d9@sandeen.net>
+ <FE6394EC-5CB0-4A16-AAC6-97F465A4E50C@dilger.ca>
 MIME-Version: 1.0
-In-Reply-To: <20181002063952.GN18567@dastard>
-References: <20180907015155.32559-1-david@fromorbit.com> <CAOQ4uxjaAJ9WSo-rtvBq7bFsV4QXHhwqjFyCFO030U4qZ7ALKg@mail.gmail.com>
- <20181001010931.GO31060@dastard> <CAOQ4uxjo1nE38q=FL+EofoMz=1=D2eZYo9s3-TVBSEjbHH52kQ@mail.gmail.com>
- <20181001223244.GH18567@dastard> <CAOQ4uxhTJcEtUJkwO5UCyF1sCFQ=bPo0ragy5255aM30C9Z1Zw@mail.gmail.com>
- <20181002063952.GN18567@dastard>
-From: Miklos Szeredi <miklos@szeredi.hu>
-Date: Tue, 2 Oct 2018 09:33:30 +0200
-Message-ID: <CAJfpegvcmKiaU-oPfXk0ub6tdBKhDRcUKTkLd5_rAagv05R-EA@mail.gmail.com>
-Subject: Re: [PATCH] xfs: avoid lockdep false positives in xfs_trans_alloc
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <FE6394EC-5CB0-4A16-AAC6-97F465A4E50C@dilger.ca>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Amir Goldstein <amir73il@gmail.com>, linux-xfs <linux-xfs@vger.kernel.org>, Jeff Mahoney <jeffm@suse.com>, Theodore Tso <tytso@mit.edu>, Jan Kara <jack@suse.cz>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
+To: Andreas Dilger <adilger@dilger.ca>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Qu Wenruo <quwenruo.btrfs@gmx.com>, Joshi <joshiiitr@gmail.com>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Tue, Oct 2, 2018 at 8:39 AM, Dave Chinner <david@fromorbit.com> wrote:
+On Mon, Oct 01, 2018 at 01:51:09PM -0600, Andreas Dilger wrote:
+> > Yes, I would expect there to be problems with his modified kernel
+> > for a filesystem that supports clone_file_range, because
+> > vfs_copy_file_range() will clone if possible, and this should fail across
+> > filesystems.
+> > 
+> > In general, though, I don't know for sure why we don't fall back to
+> > do_splice_direct() across filesystems, although the filesystems that
+> > implement their own ->copy_file_range ops may have their own,
+> > further restrictions within their implementations.
+> > 
+> > This call /is/ documented in the manpage as only being valid for
+> > files on the same filesystem, though:
+> > http://man7.org/linux/man-pages/man2/copy_file_range.2.html
+> 
+> There was a patch to allow cross-mount copy for NFS, but it hasn't landed
+> yet.
 
-> Have a look at shrink_dcache_sb() and shrink_dcache_for_umount() and
-> what they imply about the dentries that take references to an inode
-> on a different superblock. Then look at generic_shutdown_super() -
-> pay attention to what happens if there are still allocated inodes
-> after all the superblock dentries have been pruned and inodes
-> evicted. i.e. this will trigger if some other superblock holds
-> references to them:
->
->                 if (!list_empty(&sb->s_inodes)) {
->                         printk("VFS: Busy inodes after unmount of %s. "
->                            "Self-destruct in 5 seconds.  Have a nice day...\n",
->                            sb->s_id);
->                 }
->
+I found https://marc.info/?l=linux-nfs&m=144138779721907&w=2 that lifts
+the VFS check (part of a series that can't be easily linked to).
 
-Overlay holds references to the underlying sb's (through a set of
-internal mounts), so that's not going to happen.
+The lack of cross-mount reflink (based on the copy_file_ragne) is often
+confusing users, there are common setups that mount subvolumes
+separately and reflinking between them would require mount of the
+toplevel subvolume.
 
-> If overlay puts unlinked dentries on it's LRU where the superblock
-> shrinker may clean them up and release the final reference to
-> unlinked inodes, then whatever calls the shrinker will get blocked.
-> If kswapd does the shrinking, then the whole system can lock up
-> because kswapd can't make progress until the filesystem is unfrozen.
-> And if the process that does that unfreezing needs memory....
-
-Seems like freezing any of the layers if overlay itself is not frozen
-is not a good idea.
-
-Preventing unlink (or modification generally) on the underlying layers
-if part of an overlay is also doable, but it would likely run into
-such backward compat issues that no one would be happy.   So I don't
-think that's now the way to go.   We could have done that initially,
-but it turns out allowing modification of the underlying layers can be
-useful at times.
-
-> I can think of several other similar ways that we can probably be
-> screwed by cross-superblock references and memory reclaim
-> interactions. I can't think of any way to avoid them except for
-> not getting into that mess in the first place.
-
-The freezer interaction can be solved by letting the freezer know
-about the dependencies of filesystems.   So if an underlying layer
-needs to be frozen, then all stacks containing that underlying layer
-would need to be frozen first.  I guess any of the other bad
-interactions would be solvable in a similar manner.
-
-Thanks,
-Miklos
-
->
->> pardon my ignorance, but can't memory shrinker
->> trigger oom killer indirectly causing to release deleted inodes?
->> Not sure in which context those files/inodes get released?
->
-> The oom killer doesn't free anything. It marks a process as being
-> killed, then when that process context gets scehduled it exits,
-> releasing all the open files it holds and so dropping the last
-> reference to the dentries in task context, not the OOM kill context.
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+If there are 2 in-kernel users of the relaxed cross-mount copy, I think
+this would help to push the series forward.
