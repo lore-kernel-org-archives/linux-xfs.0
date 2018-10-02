@@ -1,161 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:44506 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727372AbeJCA0k (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Oct 2018 20:26:40 -0400
-Received: from [38.126.112.138] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1g7OgT-0007e1-I3
-        for linux-xfs@vger.kernel.org; Tue, 02 Oct 2018 17:42:09 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 6/8] xfs: remove the unused trimmed argument from xfs_reflink_trim_around_shared
-Date: Tue,  2 Oct 2018 10:42:05 -0700
-Message-Id: <20181002174207.25275-7-hch@lst.de>
-In-Reply-To: <20181002174207.25275-1-hch@lst.de>
-References: <20181002174207.25275-1-hch@lst.de>
+Received: from mail1.g1.pair.com ([66.39.3.162]:51438 "EHLO mail1.g1.pair.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726293AbeJBXO1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 2 Oct 2018 19:14:27 -0400
+Date: Tue, 2 Oct 2018 18:30:18 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: [somewhat OT] I just discovered that Stratis uses XFS.
+Message-ID: <20181002183018.37343c26@harpe.intellique.com>
+In-Reply-To: <6eb79c7b-4f15-28af-44b5-03488008a897@sandeen.net>
+References: <20181002162530.42b30c11@harpe.intellique.com>
+        <20181002163707.5452307c@harpe.intellique.com>
+        <6eb79c7b-4f15-28af-44b5-03488008a897@sandeen.net>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/Ngv+8CMLZaTpxEPBy3DrmBY"; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_bmap_util.c |  4 ++--
- fs/xfs/xfs_iomap.c     |  5 ++---
- fs/xfs/xfs_reflink.c   | 15 +++++----------
- fs/xfs/xfs_reflink.h   |  2 +-
- 4 files changed, 10 insertions(+), 16 deletions(-)
+--Sig_/Ngv+8CMLZaTpxEPBy3DrmBY
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 416524f6ba69..7cfda25f1bb1 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -406,10 +406,10 @@ xfs_getbmap_report_one(
- 	struct xfs_bmbt_irec	*got)
- {
- 	struct kgetbmap		*p = out + bmv->bmv_entries;
--	bool			shared = false, trimmed = false;
-+	bool			shared = false;
- 	int			error;
- 
--	error = xfs_reflink_trim_around_shared(ip, got, &shared, &trimmed);
-+	error = xfs_reflink_trim_around_shared(ip, got, &shared);
- 	if (error)
- 		return error;
- 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index bdba6b91598a..27c93b5f029d 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1032,7 +1032,7 @@ xfs_file_iomap_begin(
- 	struct xfs_bmbt_irec	imap;
- 	xfs_fileoff_t		offset_fsb, end_fsb;
- 	int			nimaps = 1, error = 0;
--	bool			shared = false, trimmed = false;
-+	bool			shared = false;
- 	unsigned		lockmode;
- 
- 	if (XFS_FORCED_SHUTDOWN(mp))
-@@ -1068,8 +1068,7 @@ xfs_file_iomap_begin(
- 
- 	if (flags & IOMAP_REPORT) {
- 		/* Trim the mapping to the nearest shared extent boundary. */
--		error = xfs_reflink_trim_around_shared(ip, &imap, &shared,
--				&trimmed);
-+		error = xfs_reflink_trim_around_shared(ip, &imap, &shared);
- 		if (error)
- 			goto out_unlock;
- 	}
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 06e38e88ddee..1e39a7d21c7e 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -182,8 +182,7 @@ int
- xfs_reflink_trim_around_shared(
- 	struct xfs_inode	*ip,
- 	struct xfs_bmbt_irec	*irec,
--	bool			*shared,
--	bool			*trimmed)
-+	bool			*shared)
- {
- 	xfs_agnumber_t		agno;
- 	xfs_agblock_t		agbno;
-@@ -209,7 +208,7 @@ xfs_reflink_trim_around_shared(
- 	if (error)
- 		return error;
- 
--	*shared = *trimmed = false;
-+	*shared = false;
- 	if (fbno == NULLAGBLOCK) {
- 		/* No shared blocks at all. */
- 		return 0;
-@@ -222,8 +221,6 @@ xfs_reflink_trim_around_shared(
- 		 */
- 		irec->br_blockcount = flen;
- 		*shared = true;
--		if (flen != aglen)
--			*trimmed = true;
- 		return 0;
- 	} else {
- 		/*
-@@ -233,7 +230,6 @@ xfs_reflink_trim_around_shared(
- 		 * start of the shared region.
- 		 */
- 		irec->br_blockcount = fbno - agbno;
--		*trimmed = true;
- 		return 0;
- 	}
- }
-@@ -255,7 +251,7 @@ xfs_reflink_reserve_cow(
- 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
- 	struct xfs_bmbt_irec	got;
- 	int			error = 0;
--	bool			eof = false, trimmed;
-+	bool			eof = false;
- 	struct xfs_iext_cursor	icur;
- 	bool			shared;
- 
-@@ -277,7 +273,7 @@ xfs_reflink_reserve_cow(
- 	}
- 
- 	/* Trim the mapping to the nearest shared extent boundary. */
--	error = xfs_reflink_trim_around_shared(ip, imap, &shared, &trimmed);
-+	error = xfs_reflink_trim_around_shared(ip, imap, &shared);
- 	if (error)
- 		return error;
- 
-@@ -366,7 +362,6 @@ xfs_find_trim_cow_extent(
- 	xfs_filblks_t		count_fsb = imap->br_blockcount;
- 	struct xfs_iext_cursor	icur;
- 	struct xfs_bmbt_irec	got;
--	bool			trimmed;
- 
- 	*found = false;
- 
-@@ -376,7 +371,7 @@ xfs_find_trim_cow_extent(
- 	 */
- 	if (!xfs_iext_lookup_extent(ip, ip->i_cowfp, offset_fsb, &icur, &got) ||
- 	    got.br_startoff > offset_fsb)
--		return xfs_reflink_trim_around_shared(ip, imap, shared, &trimmed);
-+		return xfs_reflink_trim_around_shared(ip, imap, shared);
- 
- 	*shared = true;
- 	if (isnullstartblock(got.br_startblock)) {
-diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index b77f4079022a..7f47202b5639 100644
---- a/fs/xfs/xfs_reflink.h
-+++ b/fs/xfs/xfs_reflink.h
-@@ -10,7 +10,7 @@ extern int xfs_reflink_find_shared(struct xfs_mount *mp, struct xfs_trans *tp,
- 		xfs_agnumber_t agno, xfs_agblock_t agbno, xfs_extlen_t aglen,
- 		xfs_agblock_t *fbno, xfs_extlen_t *flen, bool find_maximal);
- extern int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
--		struct xfs_bmbt_irec *irec, bool *shared, bool *trimmed);
-+		struct xfs_bmbt_irec *irec, bool *shared);
- 
- extern int xfs_reflink_reserve_cow(struct xfs_inode *ip,
- 		struct xfs_bmbt_irec *imap);
--- 
-2.19.0
+Le Tue, 2 Oct 2018 10:05:42 -0500
+Eric Sandeen <sandeen@sandeen.net> =C3=A9crivait:
+
+> But if Stratis starts at 1TB it's not terrible; I'd need to look and
+> see how many AGs get created (probably 4?) and if so, 250G AGs are
+> not /too/ granular. If it's creating a lot more smaller AGs, that
+> could become an issue if it gets grown to a very large size.  IOWs
+> the growfs concern is mostly about the resulting AG size & AG count.
+>=20
+
+You're right, I've looked through the source code and no option ever
+gets passed to mkfs.xfs nor xfs_growfs related to FS size. That means
+that it creates the FS with the default 4 AGs for a start.
+
+--=20
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
+
+--Sig_/Ngv+8CMLZaTpxEPBy3DrmBY
+Content-Type: application/pgp-signature
+Content-Description: Signature digitale OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+
+iEYEARECAAYFAluznRoACgkQX3jQXNUicVYzsACgh9AmK/W2sytT9AWebCGLEuZd
+13oAn13CLxO+f+w7Bi80jcLBwSV9LDsg
+=MZFq
+-----END PGP SIGNATURE-----
+
+--Sig_/Ngv+8CMLZaTpxEPBy3DrmBY--
