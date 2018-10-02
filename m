@@ -1,51 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36722 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729254AbeJBVvB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 2 Oct 2018 17:51:01 -0400
-Date: Tue, 2 Oct 2018 17:07:08 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: Problems with VM_MIXEDMAP removal from /proc/<pid>/smaps
-Message-ID: <20181002150708.GF9127@quack2.suse.cz>
-References: <20181002100531.GC4135@quack2.suse.cz>
- <20181002121039.GA3274@linux-x5ow.site>
- <20181002142959.GD9127@quack2.suse.cz>
- <20181002143713.GA19845@infradead.org>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:53258 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726233AbeJBXV2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Oct 2018 19:21:28 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 6638E284C0
+        for <linux-xfs@vger.kernel.org>; Tue,  2 Oct 2018 16:37:13 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 201259] [xfstests shared/010]: maybe pagecache contents is
+ mutated after cycle mount
+Date: Tue, 02 Oct 2018 16:37:14 +0000
+Message-ID: <bug-201259-201763-SMSx0idCb1@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-201259-201763@https.bugzilla.kernel.org/>
+References: <bug-201259-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181002143713.GA19845@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jan Kara <jack@suse.cz>, Johannes Thumshirn <jthumshirn@suse.de>, Dan Williams <dan.j.williams@intel.com>, Dave Jiang <dave.jiang@intel.com>, linux-nvdimm@lists.01.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org
+To: linux-xfs@kernel.org
 
-On Tue 02-10-18 07:37:13, Christoph Hellwig wrote:
-> On Tue, Oct 02, 2018 at 04:29:59PM +0200, Jan Kara wrote:
-> > > OK naive question from me, how do we want an application to be able to
-> > > check if it is running on a DAX mapping?
-> > 
-> > The question from me is: Should application really care?
-> 
-> No, it should not.  DAX is an implementation detail thay may change
-> or go away at any time.
+https://bugzilla.kernel.org/show_bug.cgi?id=201259
 
-I agree that whether / how pagecache is used for filesystem access is an
-implementation detail of the kernel.  OTOH for some workloads it is about
-whether kernel needs gigabytes of RAM to cache files or not, which is not a
-detail anymore if you want to fully utilize the machine. So people will be
-asking for this and will be finding odd ways to determine whether DAX is
-used or not (such as poking in smaps). And once there is some widely enough
-used application doing this, it is not "stupid application" problem anymore
-but the kernel's problem of not maintaining backward compatibility.
+--- Comment #5 from Eric Sandeen (sandeen@sandeen.net) ---
+Even simpler, 
 
-So I think we would be better off providing *some* API which applications
-can use to determine whether pagecache is used or not and make sure this
-API will convey the right information even if we change DAX
-implementation or remove it altogether.
+xfs_io -f -c "pwrite -S 0x72 0 4096" $DONOR1
 
-								Honza
+xfs_io -f \
+        -c "falloc -k 8192 4096"        \
+        -c "pwrite -S 0x57 65536 8192" \
+        -c "fdatasync" \
+        -c "reflink $DONOR1 0 131072 4096" \
+                $TARGET
+
+so this seems to be an extending reflink extending past/into speculative
+preallocation which exposes the stale blocks.
+
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+You are receiving this mail because:
+You are watching the assignee of the bug.
