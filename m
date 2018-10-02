@@ -1,64 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:44556 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726748AbeJCWHC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Oct 2018 18:07:02 -0400
-Date: Wed, 3 Oct 2018 08:18:08 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/2] xfs: Fix xqmstats offsets in /proc/fs/xfs/xqmstat
-Message-ID: <20181003151808.GG19324@magnolia>
-References: <20181003123537.30965-1-cmaiolino@redhat.com>
- <20181003123537.30965-2-cmaiolino@redhat.com>
+Received: from namei.org ([65.99.196.166]:35070 "EHLO namei.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726946AbeJCCFd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 2 Oct 2018 22:05:33 -0400
+Date: Wed, 3 Oct 2018 05:20:31 +1000 (AEST)
+From: James Morris <jmorris@namei.org>
+Subject: Re: Leaking Path in XFS's ioctl interface(missing LSM check)
+In-Reply-To: <20181001224528.GI18567@dastard>
+Message-ID: <alpine.LRH.2.21.1810030518240.17817@namei.org>
+References: <5EF0D46A-C098-4B51-AD13-225FFCA35D4C@vt.edu> <20180926013329.GD31060@dastard> <20180926192426.472360ea@alans-desktop> <20180927013812.GF31060@dastard> <20180930151652.6975610c@alans-desktop> <20181001002521.GM31060@dastard>
+ <20181001160442.47c798bc@alans-desktop> <20181001154459.GB5872@magnolia> <alpine.LRH.2.21.1810020608090.14406@namei.org> <20181001224528.GI18567@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181003123537.30965-2-cmaiolino@redhat.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Alan Cox <gnomes@lxorguk.ukuu.org.uk>, TongZhang <ztong@vt.edu>, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-security-module@vger.kernel.org, Wenbo Shen <shenwenbosmile@gmail.com>, Stephen Smalley <sds@tycho.nsa.gov>, Paul Moore <paul@paul-moore.com>
 
-On Wed, Oct 03, 2018 at 02:35:36PM +0200, Carlos Maiolino wrote:
-> The addition of FIBT, RMAP and REFCOUNT changed the offsets into
-> __xfssats structure.
+On Tue, 2 Oct 2018, Dave Chinner wrote:
+
+> On Tue, Oct 02, 2018 at 06:08:16AM +1000, James Morris wrote:
+> > On Mon, 1 Oct 2018, Darrick J. Wong wrote:
+> > 
+> > > If we /did/ replace CAP_SYS_ADMIN checking with a pile of LSM hooks,
+> > 
+> > Not sure we'd need a pile of hooks, what about just "read" and "write" 
+> > storage admin?
+> > 
+> > Or even two new capabilities along these lines, which we convert existing 
+> > CAP_SYS_ADMIN etc. to?
 > 
-> Although this didn't cause any direct issue,  xqmstat_proc_show() relied
-> on the old offsets to display the xqm statistics.
+> So instead of having hundreds of management ioctls under
+> CAP_SYS_ADMIN, we'd now have hundreds of non-storage ioctls under
+> CAP_SYS_ADMIN and hundreds of storage ioctls under
+> CAP_SYS_STORAGE_ADMIN?
 > 
-> Fix it.
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
->  fs/xfs/xfs_stats.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
-> index 4e4423153071..740ac9674848 100644
-> --- a/fs/xfs/xfs_stats.c
-> +++ b/fs/xfs/xfs_stats.c
-> @@ -119,7 +119,7 @@ static int xqmstat_proc_show(struct seq_file *m, void *v)
->  	int j;
->  
->  	seq_printf(m, "qm");
-> -	for (j = XFSSTAT_END_IBT_V2; j < XFSSTAT_END_XQMSTAT; j++)
-> +	for (j = XFSSTAT_END_REFCOUNT; j < XFSSTAT_END_XQMSTAT; j++)
+> Maybe I'm missing something, but I don't see how that improves the
+> situation w.r.t. locked down LSM configurations?
 
-/me totally missed that when I was writing reflink, sorry. :(
+I'm not sure about capabilities, but having two specific LSM hooks for 
+storage admin would allow SELinux et al to explicitly control privileged 
+access to these interfaces.  Storage admin seems to be a special case of 
+its own which we want to be able to mediate as such.
 
-Can we have a:
 
-  #define XFSSTAT_START_XQMSTAT (XFSSTAT_END_REFCOUNT)
 
-in xfs_stats.h right above the XFSSTAT_END_XQMSTAT definition so that
-future authors don't have to remember that some code use _END_REFCOUNT
-to mean "start of next thing"?
-
---D
-
->  		seq_printf(m, " %u", counter_val(xfsstats.xs_stats, j));
->  	seq_putc(m, '\n');
->  	return 0;
-> -- 
-> 2.17.1
-> 
+-- 
+James Morris
+<jmorris@namei.org>
