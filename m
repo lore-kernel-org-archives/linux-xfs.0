@@ -1,52 +1,155 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:45544 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727006AbeJBO5s (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 2 Oct 2018 10:57:48 -0400
-Date: Tue, 2 Oct 2018 10:15:44 +0200
-From: David Sterba <dsterba@suse.cz>
-Subject: Re: cross-fs copy support
-Message-ID: <20181002081544.GW3255@twin.jikos.cz>
-Reply-To: dsterba@suse.cz
-References: <CA+1E3rLXPwzfO3ro49ZVg7RfpYon5YDB6Y_zqu60ivpgn4wenw@mail.gmail.com>
- <2a92fff4-d005-835a-3bd7-a328b008857f@gmx.com>
- <df92a795-3f2e-751a-8504-030015fba6d9@sandeen.net>
- <FE6394EC-5CB0-4A16-AAC6-97F465A4E50C@dilger.ca>
+Received: from mx1.redhat.com ([209.132.183.28]:19237 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727555AbeJBTRk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 2 Oct 2018 15:17:40 -0400
+Date: Tue, 2 Oct 2018 08:34:30 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/2] xfs: xrep_findroot_block should reject root blocks
+ with siblings
+Message-ID: <20181002123429.GA55077@bfoster>
+References: <153843409576.24414.14199833763423874927.stgit@magnolia>
+ <153843410206.24414.16640243145941466296.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <FE6394EC-5CB0-4A16-AAC6-97F465A4E50C@dilger.ca>
+In-Reply-To: <153843410206.24414.16640243145941466296.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andreas Dilger <adilger@dilger.ca>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Qu Wenruo <quwenruo.btrfs@gmx.com>, Joshi <joshiiitr@gmail.com>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
 
-On Mon, Oct 01, 2018 at 01:51:09PM -0600, Andreas Dilger wrote:
-> > Yes, I would expect there to be problems with his modified kernel
-> > for a filesystem that supports clone_file_range, because
-> > vfs_copy_file_range() will clone if possible, and this should fail across
-> > filesystems.
-> > 
-> > In general, though, I don't know for sure why we don't fall back to
-> > do_splice_direct() across filesystems, although the filesystems that
-> > implement their own ->copy_file_range ops may have their own,
-> > further restrictions within their implementations.
-> > 
-> > This call /is/ documented in the manpage as only being valid for
-> > files on the same filesystem, though:
-> > http://man7.org/linux/man-pages/man2/copy_file_range.2.html
+On Mon, Oct 01, 2018 at 03:48:22PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> There was a patch to allow cross-mount copy for NFS, but it hasn't landed
-> yet.
+> In xrep_findroot_block, if we find a candidate root block with sibling
+> pointers or sibling blocks on the same tree level, we should not return
+> that block as a tree root because root blocks cannot have siblings.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/scrub/repair.c |   61 +++++++++++++++++++++++++++++++++++++++----------
+>  1 file changed, 48 insertions(+), 13 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+> index 9f08dd9bf1d5..6eb66b3543ff 100644
+> --- a/fs/xfs/scrub/repair.c
+> +++ b/fs/xfs/scrub/repair.c
+...
+> @@ -735,18 +736,52 @@ xrep_findroot_block(
+>  		goto out;
+>  	bp->b_ops = fab->buf_ops;
+>  
+> -	/* Ignore this block if it's lower in the tree than we've seen. */
+> -	if (fab->root != NULLAGBLOCK &&
+> -	    xfs_btree_get_level(btblock) < fab->height)
+> -		goto out;
+> -
+>  	/* Make sure we pass the verifiers. */
+>  	bp->b_ops->verify_read(bp);
+>  	if (bp->b_error)
+>  		goto out;
+> -	fab->root = agbno;
+> -	fab->height = xfs_btree_get_level(btblock) + 1;
+> -	*found_it = true;
+> +
+> +	/*
+> +	 * This block passes the magic/uuid and verifier tests for this btree
+> +	 * type.  We don't need the caller to try the other tree types.
+> +	 */
+> +	*done_with_block = true;
+> +
+> +	block_level = xfs_btree_get_level(btblock);
+> +	if (block_level + 1 == fab->height) {
+> +		/*
+> +		 * This block claims to be at the same level as the root we
+> +		 * found previously.  There can't be two candidate roots, so
+> +		 * we'll throw away both of them and hope we later find a block
+> +		 * even higher in the tree.
+> +		 */
+> +		fab->root = NULLAGBLOCK;
+> +		goto out;
+> +	} else if (block_level < fab->height) {
+> +		/*
+> +		 * This block is lower in the tree than the root we found
+> +		 * previously, so just ignore it.
+> +		 */
 
-I found https://marc.info/?l=linux-nfs&m=144138779721907&w=2 that lifts
-the VFS check (part of a series that can't be easily linked to).
+Nit: can we combine these two comments into one above the whole if/else
+statement? It makes the code slightly more readable than multi-line
+comments in each branch, IMO. E.g.:
 
-The lack of cross-mount reflink (based on the copy_file_ragne) is often
-confusing users, there are common setups that mount subvolumes
-separately and reflinking between them would require mount of the
-toplevel subvolume.
+        /*
+         * Compare the current block level with the height of the current
+         * candidate root block. If the level matches the current candidate,
+         * we know the current candidate can't be a root so we must invalidate
+         * it. If the level is lower than the current candidate, just ignore
+         * this block.
+         */
+        block_level = xfs_btree_get_level(btblock);
+        if (block_level + 1 == fab->height) {
+                fab->root = NULLAGBLOCK;
+                goto out;
+        } else if (block_level < fab->height) {
+                goto out;
+        }
 
-If there are 2 in-kernel users of the relaxed cross-mount copy, I think
-this would help to push the series forward.
+With that:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> +		goto out;
+> +	}
+> +
+> +	/*
+> +	 * This is the highest block in the tree that we've found so far.
+> +	 * Update the btree height to reflect what we've learned from this
+> +	 * block.
+> +	 */
+> +	fab->height = block_level + 1;
+> +
+> +	/*
+> +	 * If this block doesn't have sibling pointers, then it's the new root
+> +	 * block candidate.  Otherwise, the root will be found farther up the
+> +	 * tree.
+> +	 */
+> +	if (btblock->bb_u.s.bb_leftsib == cpu_to_be32(NULLAGBLOCK) &&
+> +	    btblock->bb_u.s.bb_rightsib == cpu_to_be32(NULLAGBLOCK))
+> +		fab->root = agbno;
+> +	else
+> +		fab->root = NULLAGBLOCK;
+>  
+>  	trace_xrep_findroot_block(mp, ri->sc->sa.agno, agbno,
+>  			be32_to_cpu(btblock->bb_magic), fab->height - 1);
+> @@ -768,7 +803,7 @@ xrep_findroot_rmap(
+>  	struct xrep_findroot		*ri = priv;
+>  	struct xrep_find_ag_btree	*fab;
+>  	xfs_agblock_t			b;
+> -	bool				found_it;
+> +	bool				done;
+>  	int				error = 0;
+>  
+>  	/* Ignore anything that isn't AG metadata. */
+> @@ -777,16 +812,16 @@ xrep_findroot_rmap(
+>  
+>  	/* Otherwise scan each block + btree type. */
+>  	for (b = 0; b < rec->rm_blockcount; b++) {
+> -		found_it = false;
+> +		done = false;
+>  		for (fab = ri->btree_info; fab->buf_ops; fab++) {
+>  			if (rec->rm_owner != fab->rmap_owner)
+>  				continue;
+>  			error = xrep_findroot_block(ri, fab,
+>  					rec->rm_owner, rec->rm_startblock + b,
+> -					&found_it);
+> +					&done);
+>  			if (error)
+>  				return error;
+> -			if (found_it)
+> +			if (done)
+>  				break;
+>  		}
+>  	}
+> 
