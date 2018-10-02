@@ -1,54 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi1-f195.google.com ([209.85.167.195]:46506 "EHLO
-        mail-oi1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726809AbeJCDEL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Oct 2018 23:04:11 -0400
-Received: by mail-oi1-f195.google.com with SMTP id k64-v6so2613575oia.13
-        for <linux-xfs@vger.kernel.org>; Tue, 02 Oct 2018 13:19:05 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:11188 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725724AbeJCGAL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Oct 2018 02:00:11 -0400
+Date: Wed, 3 Oct 2018 09:14:21 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: avoid lockdep false positives in xfs_trans_alloc
+Message-ID: <20181002231421.GQ18567@dastard>
+References: <20180907015155.32559-1-david@fromorbit.com>
+ <CAOQ4uxjaAJ9WSo-rtvBq7bFsV4QXHhwqjFyCFO030U4qZ7ALKg@mail.gmail.com>
+ <20181001010931.GO31060@dastard>
+ <CAOQ4uxjo1nE38q=FL+EofoMz=1=D2eZYo9s3-TVBSEjbHH52kQ@mail.gmail.com>
+ <20181001223244.GH18567@dastard>
+ <CAOQ4uxhTJcEtUJkwO5UCyF1sCFQ=bPo0ragy5255aM30C9Z1Zw@mail.gmail.com>
+ <20181002063952.GN18567@dastard>
+ <CAJfpegvcmKiaU-oPfXk0ub6tdBKhDRcUKTkLd5_rAagv05R-EA@mail.gmail.com>
 MIME-Version: 1.0
-References: <20181002100531.GC4135@quack2.suse.cz> <20181002121039.GA3274@linux-x5ow.site>
- <20181002142959.GD9127@quack2.suse.cz> <20181002143713.GA19845@infradead.org>
- <20181002144412.GC4963@linux-x5ow.site> <20181002145206.GA10903@infradead.org>
- <20181002153100.GG9127@quack2.suse.cz>
-In-Reply-To: <20181002153100.GG9127@quack2.suse.cz>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 2 Oct 2018 13:18:54 -0700
-Message-ID: <CAPcyv4j0tTD+rENqFExA68aw=-MmtCBaOe1qJovyrmJC=yBg-Q@mail.gmail.com>
-Subject: Re: Problems with VM_MIXEDMAP removal from /proc/<pid>/smaps
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAJfpegvcmKiaU-oPfXk0ub6tdBKhDRcUKTkLd5_rAagv05R-EA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@infradead.org>, Johannes Thumshirn <jthumshirn@suse.de>, Dave Jiang <dave.jiang@intel.com>, linux-nvdimm <linux-nvdimm@lists.01.org>, Linux MM <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>
+To: Miklos Szeredi <miklos@szeredi.hu>
+Cc: Amir Goldstein <amir73il@gmail.com>, linux-xfs <linux-xfs@vger.kernel.org>, Jeff Mahoney <jeffm@suse.com>, Theodore Tso <tytso@mit.edu>, Jan Kara <jack@suse.cz>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
 
-On Tue, Oct 2, 2018 at 8:32 AM Jan Kara <jack@suse.cz> wrote:
->
-> On Tue 02-10-18 07:52:06, Christoph Hellwig wrote:
-> > On Tue, Oct 02, 2018 at 04:44:13PM +0200, Johannes Thumshirn wrote:
-> > > On Tue, Oct 02, 2018 at 07:37:13AM -0700, Christoph Hellwig wrote:
-> > > > No, it should not.  DAX is an implementation detail thay may change
-> > > > or go away at any time.
-> > >
-> > > Well we had an issue with an application checking for dax, this is how
-> > > we landed here in the first place.
+On Tue, Oct 02, 2018 at 09:33:30AM +0200, Miklos Szeredi wrote:
+> On Tue, Oct 2, 2018 at 8:39 AM, Dave Chinner <david@fromorbit.com> wrote:
+> 
+> > Have a look at shrink_dcache_sb() and shrink_dcache_for_umount() and
+> > what they imply about the dentries that take references to an inode
+> > on a different superblock. Then look at generic_shutdown_super() -
+> > pay attention to what happens if there are still allocated inodes
+> > after all the superblock dentries have been pruned and inodes
+> > evicted. i.e. this will trigger if some other superblock holds
+> > references to them:
 > >
-> > So what exacty is that "DAX" they are querying about (and no, I'm not
-> > joking, nor being philosophical).
->
-> I believe the application we are speaking about is mostly concerned about
-> the memory overhead of the page cache. Think of a machine that has ~ 1TB of
-> DRAM, the database running on it is about that size as well and they want
-> database state stored somewhere persistently - which they may want to do by
-> modifying mmaped database files if they do small updates... So they really
-> want to be able to use close to all DRAM for the DB and not leave slack
-> space for the kernel page cache to cache 1TB of database files.
+> >                 if (!list_empty(&sb->s_inodes)) {
+> >                         printk("VFS: Busy inodes after unmount of %s. "
+> >                            "Self-destruct in 5 seconds.  Have a nice day...\n",
+> >                            sb->s_id);
+> >                 }
+> >
+> 
+> Overlay holds references to the underlying sb's (through a set of
+> internal mounts), so that's not going to happen.
 
-VM_MIXEDMAP was never a reliable indication of DAX because it could be
-set for random other device-drivers that use vm_insert_mixed(). The
-MAP_SYNC flag positively indicates that page cache is disabled for a
-given mapping, although whether that property is due to "dax" or some
-other kernel mechanics is purely an internal detail.
+Ok, so that example is not going to trigger. That doesn't mean it
+isn't a problem, though....
 
-I'm not opposed to faking out VM_MIXEDMAP if this broken check has
-made it into production, but again, it's unreliable.
+> > If overlay puts unlinked dentries on it's LRU where the superblock
+> > shrinker may clean them up and release the final reference to
+> > unlinked inodes, then whatever calls the shrinker will get blocked.
+> > If kswapd does the shrinking, then the whole system can lock up
+> > because kswapd can't make progress until the filesystem is unfrozen.
+> > And if the process that does that unfreezing needs memory....
+> 
+> Seems like freezing any of the layers if overlay itself is not frozen
+> is not a good idea.
+
+That's something we can't directly control. e.g. lower filesystem is
+on a DM volume. DM can freeze the lower fileystem through the block
+device when a dm command is run. It may well be that the admins that
+set up the storage and filesystem layer have no idea that there are
+now overlay users on top of the filesystem they originally set up.
+Indeed, the admins may not even know that dm operations freeze
+filesystems because it happens completely transparently to them.
+
+> Preventing unlink (or modification generally) on the underlying layers
+> if part of an overlay is also doable, but it would likely run into
+> such backward compat issues that no one would be happy.   So I don't
+> think that's now the way to go.   We could have done that initially,
+> but it turns out allowing modification of the underlying layers can be
+> useful at times.
+
+Which means we're stuck with a fundamental "overlay can
+panic/deadlock machines" problem, yes?
+
+> > I can think of several other similar ways that we can probably be
+> > screwed by cross-superblock references and memory reclaim
+> > interactions. I can't think of any way to avoid them except for
+> > not getting into that mess in the first place.
+> 
+> The freezer interaction can be solved by letting the freezer know
+> about the dependencies of filesystems.
+
+What freezer is that - the userspace application that calls the
+freeze ioctl()?
+
+> So if an underlying layer
+> needs to be frozen, then all stacks containing that underlying layer
+> would need to be frozen first.  I guess any of the other bad
+> interactions would be solvable in a similar manner.
+
+We've talked about this in the context for fixing the hibernation
+mess - freezing multiple layers requires determining the
+dependencies between filesystem layers, and it has to work both
+up and down the dependency tree. And that tree has to include block
+devices, because things like loopback devices and locally mounted
+network devices form part of that dependency tree.
+
+Doing that as a global "freeze everything" operation can be solved
+by reverse walking the superblock list (as it's in sb instantiation
+order), but we have no obvious way of solving this dependency
+problem for any random superblock in the system. If you have a
+solution to this, I'm all ears :P
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
