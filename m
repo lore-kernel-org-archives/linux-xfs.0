@@ -1,48 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from fieldses.org ([173.255.197.46]:56426 "EHLO fieldses.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725951AbeJCBMm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 2 Oct 2018 21:12:42 -0400
-Date: Tue, 2 Oct 2018 14:28:00 -0400
-Subject: Re: cross-fs copy support
-Message-ID: <20181002182800.GA8364@fieldses.org>
-References: <CA+1E3rLXPwzfO3ro49ZVg7RfpYon5YDB6Y_zqu60ivpgn4wenw@mail.gmail.com>
- <2a92fff4-d005-835a-3bd7-a328b008857f@gmx.com>
- <df92a795-3f2e-751a-8504-030015fba6d9@sandeen.net>
- <FE6394EC-5CB0-4A16-AAC6-97F465A4E50C@dilger.ca>
+Received: from mail-oi1-f195.google.com ([209.85.167.195]:46506 "EHLO
+        mail-oi1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726809AbeJCDEL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Oct 2018 23:04:11 -0400
+Received: by mail-oi1-f195.google.com with SMTP id k64-v6so2613575oia.13
+        for <linux-xfs@vger.kernel.org>; Tue, 02 Oct 2018 13:19:05 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: 8BIT
-In-Reply-To: <FE6394EC-5CB0-4A16-AAC6-97F465A4E50C@dilger.ca>
-From: bfields@fieldses.org (J. Bruce Fields)
+References: <20181002100531.GC4135@quack2.suse.cz> <20181002121039.GA3274@linux-x5ow.site>
+ <20181002142959.GD9127@quack2.suse.cz> <20181002143713.GA19845@infradead.org>
+ <20181002144412.GC4963@linux-x5ow.site> <20181002145206.GA10903@infradead.org>
+ <20181002153100.GG9127@quack2.suse.cz>
+In-Reply-To: <20181002153100.GG9127@quack2.suse.cz>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Tue, 2 Oct 2018 13:18:54 -0700
+Message-ID: <CAPcyv4j0tTD+rENqFExA68aw=-MmtCBaOe1qJovyrmJC=yBg-Q@mail.gmail.com>
+Subject: Re: Problems with VM_MIXEDMAP removal from /proc/<pid>/smaps
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andreas Dilger <adilger@dilger.ca>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Qu Wenruo <quwenruo.btrfs@gmx.com>, Joshi <joshiiitr@gmail.com>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Christoph Hellwig <hch@infradead.org>, Johannes Thumshirn <jthumshirn@suse.de>, Dave Jiang <dave.jiang@intel.com>, linux-nvdimm <linux-nvdimm@lists.01.org>, Linux MM <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>
 
-On Mon, Oct 01, 2018 at 01:51:09PM -0600, Andreas Dilger wrote:
-> On Oct 1, 2018, at 9:49 AM, Eric Sandeen <sandeen@sandeen.net> wrote:
-> > Yes, I would expect there to be problems with his modified kernel
-> > for a filesystem that supports clone_file_range, because
-> > vfs_copy_file_range() will clone if possible, and this should fail across
-> > filesystems.
-> > 
-> > In general, though, I don't know for sure why we don't fall back to
-> > do_splice_direct() across filesystems, although the filesystems that
-> > implement their own ->copy_file_range ops may have their own,
-> > further restrictions within their implementations.
-> > 
-> > This call /is/ documented in the manpage as only being valid for
-> > files on the same filesystem, though:
-> > http://man7.org/linux/man-pages/man2/copy_file_range.2.html
-> 
-> There was a patch to allow cross-mount copy for NFS, but it hasn't landed
-> yet.
+On Tue, Oct 2, 2018 at 8:32 AM Jan Kara <jack@suse.cz> wrote:
+>
+> On Tue 02-10-18 07:52:06, Christoph Hellwig wrote:
+> > On Tue, Oct 02, 2018 at 04:44:13PM +0200, Johannes Thumshirn wrote:
+> > > On Tue, Oct 02, 2018 at 07:37:13AM -0700, Christoph Hellwig wrote:
+> > > > No, it should not.  DAX is an implementation detail thay may change
+> > > > or go away at any time.
+> > >
+> > > Well we had an issue with an application checking for dax, this is how
+> > > we landed here in the first place.
+> >
+> > So what exacty is that "DAX" they are querying about (and no, I'm not
+> > joking, nor being philosophical).
+>
+> I believe the application we are speaking about is mostly concerned about
+> the memory overhead of the page cache. Think of a machine that has ~ 1TB of
+> DRAM, the database running on it is about that size as well and they want
+> database state stored somewhere persistently - which they may want to do by
+> modifying mmaped database files if they do small updates... So they really
+> want to be able to use close to all DRAM for the DB and not leave slack
+> space for the kernel page cache to cache 1TB of database files.
 
-I thought Christoph Hellwig vetoed it partly because he thought NFS
-server-to-server copy is too complicated.  Which perhaps it is, but I
-suspect we'll do it anyway because the benefit seems obvious.
+VM_MIXEDMAP was never a reliable indication of DAX because it could be
+set for random other device-drivers that use vm_insert_mixed(). The
+MAP_SYNC flag positively indicates that page cache is disabled for a
+given mapping, although whether that property is due to "dax" or some
+other kernel mechanics is purely an internal detail.
 
---b.
+I'm not opposed to faking out VM_MIXEDMAP if this broken check has
+made it into production, but again, it's unreliable.
