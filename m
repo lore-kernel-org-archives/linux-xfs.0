@@ -1,69 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:36300 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726619AbeJCTgD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 3 Oct 2018 15:36:03 -0400
-Subject: Re: [PATCH 1/2] xfs: Fix xqmstats offsets in /proc/fs/xfs/xqmstat
-References: <20181003123537.30965-1-cmaiolino@redhat.com>
- <20181003123537.30965-2-cmaiolino@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <46ff8aca-5053-541d-6d74-fbc7e12a9898@sandeen.net>
-Date: Wed, 3 Oct 2018 07:47:46 -0500
+Received: from mail-yw1-f68.google.com ([209.85.161.68]:35295 "EHLO
+        mail-yw1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726785AbeJBKn3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Oct 2018 06:43:29 -0400
+Received: by mail-yw1-f68.google.com with SMTP id y76-v6so248142ywd.2
+        for <linux-xfs@vger.kernel.org>; Mon, 01 Oct 2018 21:02:20 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20181003123537.30965-2-cmaiolino@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+References: <20180907015155.32559-1-david@fromorbit.com> <CAOQ4uxjaAJ9WSo-rtvBq7bFsV4QXHhwqjFyCFO030U4qZ7ALKg@mail.gmail.com>
+ <20181001010931.GO31060@dastard> <CAOQ4uxjo1nE38q=FL+EofoMz=1=D2eZYo9s3-TVBSEjbHH52kQ@mail.gmail.com>
+ <20181001223244.GH18567@dastard>
+In-Reply-To: <20181001223244.GH18567@dastard>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 2 Oct 2018 07:02:08 +0300
+Message-ID: <CAOQ4uxhTJcEtUJkwO5UCyF1sCFQ=bPo0ragy5255aM30C9Z1Zw@mail.gmail.com>
+Subject: Re: [PATCH] xfs: avoid lockdep false positives in xfs_trans_alloc
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Carlos Maiolino <cmaiolino@redhat.com>, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, Jeff Mahoney <jeffm@suse.com>, Theodore Tso <tytso@mit.edu>, Jan Kara <jack@suse.cz>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Miklos Szeredi <miklos@szeredi.hu>
 
-On 10/3/18 7:35 AM, Carlos Maiolino wrote:
-> The addition of FIBT, RMAP and REFCOUNT changed the offsets into
-> __xfssats structure.
-> 
-> Although this didn't cause any direct issue,  xqmstat_proc_show() relied
-> on the old offsets to display the xqm statistics.
+On Tue, Oct 2, 2018 at 1:32 AM Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Mon, Oct 01, 2018 at 10:56:25AM +0300, Amir Goldstein wrote:
+[...]
+> > So while the statement "it's not a deadlock" may still be true, I am not
+> > yet convinced that the claim that there are no dirty pages to write when
+> > filesystem is frozen is sufficient to back that claim.
+> >
+> > Are you sure there was no deadlock lurking in there while fs is past
+> > SB_FREEZE_FS and kswapd shrinker races with another process
+> > releasing the last reference to an(other) inode?
+>
+> The inodes being released by the shrinkers should be clean, and
+> hence releasing them does not require post-release transactions to
+> be run.
+>
+> It does concern me that the overlay dcache shrinker is dropping the
+> last reference to an XFS inode and it does not get put on the LRU
+> for the correct superblock inode cache shrinker to free it. That
+> implies that the overlay dcache shrinker is dropping the last
+> reference to an unlinked inode.
+>
 
-Well, it caused /proc/fs/xfs/xqmstat to display garbage data, right?
-That seems worth highlighting in the changelog, and not glossing over.
+Yes, there is nothing that prevents overlayfs (or ecryptfs) to end up
+with the last reference on an underlying unlinked inode.
+It will require an action of unlink from underlying layer, which is not
+normal user behavior, but it is possible.
 
-Could maybe use Fixes: tags for:
+> AFAIA, the dcache shrinker should never be freeing the last
+> reference to an unlinked inode - it should always be done from the
+> context that unlinked the inode or the context that closed the final
+> fd on that inode. i.e. a task context, not a shrinker or kswapd. Can
+> you confirm what the state of the inode being dropped in that
+> lockdep trace is?
+>
 
-00f4e4f9 xfs: add rmap btree stats infrastructure
-aafc3c24 xfs: support the XFS_BTNUM_FINOBT free inode btree type
-46eeb521 xfs: introduce refcount btree definitions
+Given that the stress tests runs fsstress in parallel (same seed) on
+overlay and underlying lower fs, I would say that it is very likely to
+trip on shrinker putting an overlay dentry/inode holding the last reference
+to an unlinked underlying fs inode.
 
-and a stable tag as well?  Though stable is tricky because different patches
-would be required for different points along the stats structure evolution...
-maybe best to ignore it, chances of auto-applying it correctly are slim to
-none.
+How concerned are you about this? Is it inherently hard to deal with
+this situation in XFS? pardon my ignorance, but can't memory shrinker
+trigger oom killer indirectly causing to release deleted inodes?
+Not sure in which context those files/inodes get released?
 
-As for the change itself,
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-
-
-> Fix it.
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
->  fs/xfs/xfs_stats.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
-> index 4e4423153071..740ac9674848 100644
-> --- a/fs/xfs/xfs_stats.c
-> +++ b/fs/xfs/xfs_stats.c
-> @@ -119,7 +119,7 @@ static int xqmstat_proc_show(struct seq_file *m, void *v)
->  	int j;
->  
->  	seq_printf(m, "qm");
-> -	for (j = XFSSTAT_END_IBT_V2; j < XFSSTAT_END_XQMSTAT; j++)
-> +	for (j = XFSSTAT_END_REFCOUNT; j < XFSSTAT_END_XQMSTAT; j++)
->  		seq_printf(m, " %u", counter_val(xfsstats.xs_stats, j));
->  	seq_putc(m, '\n');
->  	return 0;
-> 
+Thanks,
+Amir.
