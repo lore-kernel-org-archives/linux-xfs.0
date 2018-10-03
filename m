@@ -1,89 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:34586 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726304AbeJCIuE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Oct 2018 04:50:04 -0400
-Date: Tue, 2 Oct 2018 19:03:42 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: zero posteof blocks when cloning above eof
-Message-ID: <20181003020342.GD19324@magnolia>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:51808 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726198AbeJDGAY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Oct 2018 02:00:24 -0400
+Date: Thu, 4 Oct 2018 09:09:53 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/2] xfs: Add new constant to mark start of xqmstat
+Message-ID: <20181003230953.GS18567@dastard>
+References: <20181003123537.30965-1-cmaiolino@redhat.com>
+ <20181003123537.30965-3-cmaiolino@redhat.com>
+ <eacf197c-98d7-4507-a40f-cf32d49bb5eb@sandeen.net>
+ <20181003140054.5kjzhfuit35zldkl@odin.usersys.redhat.com>
+ <b7b5bab1-5c6f-2bd8-2953-b6a7f95f4717@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <b7b5bab1-5c6f-2bd8-2953-b6a7f95f4717@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, zlang@redhat.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Oct 03, 2018 at 09:04:16AM -0500, Eric Sandeen wrote:
+> 
+> 
+> On 10/3/18 9:00 AM, Carlos Maiolino wrote:
+> > On Wed, Oct 03, 2018 at 07:51:43AM -0500, Eric Sandeen wrote:
+> >> On 10/3/18 7:35 AM, Carlos Maiolino wrote:
+> >>> xqmstat information under __xfsstats is used directly by the
+> >>> /proc/fs/xfs/xqmstat show method, which makes use of struct offsets to
+> >>> print out the values.
+> >>>
+> >>> Currently, the function is setup to start printing values from the offset of
+> >>> the last marker before xqmstat, so, an update to __xfsstats structure
+> >>> may also require an update of xqmstat_proc_show() function.
+> >>>
+> >>> By adding a new constant, we concentrate any updates do __xfsstats
+> >>> structure fields locally to the file xfs_stats.h, reducing the
+> >>> likelyhood of future bugs if an update to xqmstat_proc_show is
+> >>> forgotten as have happened before.
+> >>
+> >> did 
+> >>
+> >> BUILD_BUG_ON(offsetof(struct __xfsstats, xs_qm_dqreclaims)/sizeof(uint32_t)) != XFSSTAT_START_XQMSTAT);
+> >>
+> >> and/or
+> >>
+> >> #define XFSSTAT_START_XQMSTAT	(offsetof(struct __xfsstats, xs_qm_dqreclaims)/sizeof(uint32_t))
+> > 
+> > Yup, it worked, although, it still doesn't really close the possibility for
+> > mistakes here, the first field may change for example and we may end up in the
+> > same situation.
+> > 
+> > I think only the 2nd option (defining START via offsetof), doesn't differ much
+> > from the approach in the patch, and, using the 1st option (BUILD_BUG_ON), will
+> > require an update to xqmstat_proc_show() if by any reason we change the quota
+> > values, so, I thought the simpler version as the patch would suffice and be a
+> > bit less confusing. But well, feel free to disagree, it's my opinion only and
+> > not written on stone :P
+> 
+> I'd argue that the first field of xqmstats changing not possible, because
+> this is essentially a userspacce API.  If we're going to change the format
+> of xqmstats, we should only add to the end of it.
 
-When we're reflinking between two files and the destination file range
-is well beyond the destination file's EOF marker, zero any posteof
-speculative preallocations in the destination file so that we don't
-expose stale disk contents.  The previous strategy of trying to clear
-the preallocations does not work if the destination file has the
-PREALLOC flag set but no delalloc blocks.
+That's correct. Once published, the stats in each line are fixed in
+place forever. We can extend the stats by appending new stats to the
+end of each line, or by adding new lines. But we can't change the
+order or meaning of existing entries.
 
-Uncovered by shared/010.
+> The thing about using offsetof() is that we'll never have to update the START
+> define again, even if we add more records to the larger stats structure.
 
-Reported-by: Zorro Lang <zlang@redhat.com>
-Bugzilla-id: https://bugzilla.kernel.org/show_bug.cgi?id=201259
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_reflink.c |   34 ++++++++++++++++++++++++++--------
- 1 file changed, 26 insertions(+), 8 deletions(-)
+I think the whole thing needs to be changed to use offsetof() rather
+than the messy set of cascading defines we have now.
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 38f405415b88..c8e996a99a74 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1195,6 +1195,27 @@ xfs_iolock_two_inodes_and_break_layout(
- 	return 0;
- }
- 
-+/*
-+ * If we're reflinking to a point past the destination file's EOF, we must
-+ * zero any speculative post-EOF preallocations that sit between the old EOF
-+ * and the destination file offset.
-+ */
-+static int
-+xfs_reflink_zero_posteof(
-+	struct xfs_inode	*ip,
-+	loff_t			pos)
-+{
-+	loff_t			isize = i_size_read(VFS_I(ip));
-+	bool			did_zeroing = false;
-+
-+	if (pos <= isize)
-+		return 0;
-+
-+	trace_xfs_zero_eof(ip, isize, pos - isize);
-+	return iomap_zero_range(VFS_I(ip), isize, pos - isize, &did_zeroing,
-+			&xfs_iomap_ops);
-+}
-+
- /*
-  * Link a range of blocks from one file to another.
-  */
-@@ -1257,15 +1278,12 @@ xfs_reflink_remap_range(
- 	trace_xfs_reflink_remap_range(src, pos_in, len, dest, pos_out);
- 
- 	/*
--	 * Clear out post-eof preallocations because we don't have page cache
--	 * backing the delayed allocations and they'll never get freed on
--	 * their own.
-+	 * Zero existing post-eof speculative preallocations in the destination
-+	 * file.
- 	 */
--	if (xfs_can_free_eofblocks(dest, true)) {
--		ret = xfs_free_eofblocks(dest);
--		if (ret)
--			goto out_unlock;
--	}
-+	ret = xfs_reflink_zero_posteof(dest, pos_out);
-+	if (ret)
-+		goto out_unlock;
- 
- 	/* Set flags and remap blocks. */
- 	ret = xfs_reflink_set_inode_flag(src, dest);
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
