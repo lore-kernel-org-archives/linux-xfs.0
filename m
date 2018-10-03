@@ -1,58 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb1-f195.google.com ([209.85.219.195]:33358 "EHLO
-        mail-yb1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726510AbeJCKb5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Oct 2018 06:31:57 -0400
-Received: by mail-yb1-f195.google.com with SMTP id u88-v6so1812579ybi.0
-        for <linux-xfs@vger.kernel.org>; Tue, 02 Oct 2018 20:45:24 -0700 (PDT)
-MIME-Version: 1.0
-References: <20180907015155.32559-1-david@fromorbit.com> <CAOQ4uxjaAJ9WSo-rtvBq7bFsV4QXHhwqjFyCFO030U4qZ7ALKg@mail.gmail.com>
- <20181001010931.GO31060@dastard> <CAOQ4uxjo1nE38q=FL+EofoMz=1=D2eZYo9s3-TVBSEjbHH52kQ@mail.gmail.com>
- <20181001223244.GH18567@dastard> <CAOQ4uxhTJcEtUJkwO5UCyF1sCFQ=bPo0ragy5255aM30C9Z1Zw@mail.gmail.com>
- <20181002063952.GN18567@dastard> <CAJfpegvcmKiaU-oPfXk0ub6tdBKhDRcUKTkLd5_rAagv05R-EA@mail.gmail.com>
- <20181002231421.GQ18567@dastard>
-In-Reply-To: <20181002231421.GQ18567@dastard>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Wed, 3 Oct 2018 06:45:13 +0300
-Message-ID: <CAOQ4uxhrEm4uMhsw5G+_Bv87-zPenJ9gwvDJvCPSmRkQAWiszQ@mail.gmail.com>
-Subject: Re: [PATCH] xfs: avoid lockdep false positives in xfs_trans_alloc
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx1.redhat.com ([209.132.183.28]:48212 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726547AbeJCTYA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 3 Oct 2018 15:24:00 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id B166D3081D83
+        for <linux-xfs@vger.kernel.org>; Wed,  3 Oct 2018 12:35:47 +0000 (UTC)
+Received: from odin.usersys.redhat.com (unknown [10.40.205.15])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 0CE625D77E
+        for <linux-xfs@vger.kernel.org>; Wed,  3 Oct 2018 12:35:46 +0000 (UTC)
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH 0/2] xfs stats fixes
+Date: Wed,  3 Oct 2018 14:35:35 +0200
+Message-Id: <20181003123537.30965-1-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Miklos Szeredi <miklos@szeredi.hu>, linux-xfs <linux-xfs@vger.kernel.org>, Jeff Mahoney <jeffm@suse.com>, Theodore Tso <tytso@mit.edu>, Jan Kara <jack@suse.cz>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
+To: linux-xfs@vger.kernel.org
 
-On Wed, Oct 3, 2018 at 2:14 AM Dave Chinner <david@fromorbit.com> wrote:
-[...]
-> > Seems like freezing any of the layers if overlay itself is not frozen
-> > is not a good idea.
->
-> That's something we can't directly control. e.g. lower filesystem is
-> on a DM volume. DM can freeze the lower fileystem through the block
-> device when a dm command is run. It may well be that the admins that
-> set up the storage and filesystem layer have no idea that there are
-> now overlay users on top of the filesystem they originally set up.
-> Indeed, the admins may not even know that dm operations freeze
-> filesystems because it happens completely transparently to them.
->
+Hi,
 
-I don't think we should be binding the stacked filesystem issues with
-the stacked block over fs issues. The latter is more complex to solve
-generally and has by design non limited stack depth. The former has
-limited stack depth (2) and each sb knows its own stack depth, which
-is already used in overlay to annotate lockdep correctly.
+this week I found a bug in the code for xqmstat file in procfs, caused by wrong
+offsets while reading the __xfsstats structure fields in xqmstat_proc_show.
 
-If vfs stores a reverse tree of stacked fs dependencies, then individual
-sb freeze can be solved.
+This patchset aims to fix the bug (patch 1) and add a way to reduce the
+likelyhood of creating the same error again.
 
-Drawing the fire away from overlayfs.. I personally find the behavior that
-a process that only has files open for read could block when filesystem is
-frozen somewhat unexpected to users (even if I can expect it).
+xqmstat_proc_show() uses a loop to walk through the quota-specific fields in
+__xfsstats when printing the information. The problem is, since the start/end
+offsets are hardcoded, any update to __xfsstats may also require an update on
+the start offset in xqmstat_proc_show().
 
-I wonder out loud if it wouldn't be friendlier for any filesystem to defer
-"garbage collection" (e.g. truncate deleted inode blocks) to thawing time,
-just as those operations are already run on mount (post crash) anyway.
+I decided to split it into two patches, because I think it is easier to let the
+bugfix itself in a separated patch, and the approach on how to avoid it in the
+future can be discussed in a separated patch.
 
-Thanks,
-Amir.
+My first idea was to try to add a method to check it at compile time, and I spent
+some time discussing with Eric what would be the best way to avoid this problem
+in the future.
+We end up with an possible solution using offsetof() and a new constant in
+xfs_stats.h to properly check the offsets at compile time.
+Although, after giving it some extra thought, I found it better to only use a
+new constant to mark the start of xqmstat in xfs_stats.h and not add any fancy
+calculation in xqmstat_proc_show itself.
+History told me that all updates to __xfsstats and its respective content/uses,
+were properly done when needed, only the xqmstat was left behind because it's
+unusual direct usage of the offset markers. So, I believe that the addition of a
+new marker to specify the start offset of the quota stat fields is enough to
+avoid future problems here, once no more changes will be needed in xqmstat code
+whenever __xfsstats requires to be updated.
+
+My idea though is still to move this file to sysfs together with the rest of
+statistic code, but by now, I believe we should fix this bug.
+
+Comments?
+
+Cheers.
+
+
+Carlos Maiolino (2):
+  xfs: Fix xqmstats offsets in /proc/fs/xfs/xqmstat
+  xfs: Add new constant to mark start of xqmstat
+
+ fs/xfs/xfs_stats.c | 2 +-
+ fs/xfs/xfs_stats.h | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+-- 
+2.17.1
