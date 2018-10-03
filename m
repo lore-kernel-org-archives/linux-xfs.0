@@ -1,200 +1,260 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:36906 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726407AbeJCIsd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Oct 2018 04:48:33 -0400
-Date: Tue, 2 Oct 2018 19:02:11 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 2/2] xfs: fix buffer state management in
- xrep_findroot_block
-Message-ID: <20181003020211.GC19324@magnolia>
-References: <153843409576.24414.14199833763423874927.stgit@magnolia>
- <153843410841.24414.2317164703479198891.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:41918 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726547AbeJCTD6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 3 Oct 2018 15:03:58 -0400
+Date: Wed, 3 Oct 2018 08:15:47 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/8] xfs: remove suport for filesystems without unwritten
+ extent flag
+Message-ID: <20181003121547.GA61971@bfoster>
+References: <20181002174207.25275-1-hch@lst.de>
+ <20181002174207.25275-3-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <153843410841.24414.2317164703479198891.stgit@magnolia>
+In-Reply-To: <20181002174207.25275-3-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-We don't handle buffer state properly in online repair's findroot
-routine.  If a buffer already has b_ops set, we don't ever want to touch
-that, and we don't want to call the read verifiers on a buffer that
-could be dirty (CRCs are only recomputed during log checkpoints).
+On Tue, Oct 02, 2018 at 10:42:01AM -0700, Christoph Hellwig wrote:
+> The option to enable unwritten extents was made default in 2003, removed
+> from mkfs in 2007, and cannot be disabled in v5.  We also rely on it for
+> a lot of common functionality, so filesystems without it will run a
+> completely untested and buggy code path.  Enabling the support also is
+> a simple bit flip using xfs_db, so legacy file systems can still be
+> brought forward.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
 
-Therefore, be more careful about what we do with a buffer -- if someone
-else already attached ops that are not the ones for this btree type,
-just ignore the buffer.  We only attach our btree type's buf ops if it
-matches the magic/uuid and structure checks.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-We also modify xfs_buf_read_map to allow callers to set buffer ops on a
-DONE buffer with NULL ops so that repair doesn't leave behind buffers
-which won't have buffers attached to them.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/scrub/repair.c  |   63 +++++++++++++++++++++++++++++++++++++-----------
- fs/xfs/xfs_buf.c       |   12 +++++++++
- fs/xfs/xfs_trans.h     |    1 +
- fs/xfs/xfs_trans_buf.c |   13 ++++++++++
- 4 files changed, 75 insertions(+), 14 deletions(-)
-
-diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index 63786341ac2a..cebaebb26566 100644
---- a/fs/xfs/scrub/repair.c
-+++ b/fs/xfs/scrub/repair.c
-@@ -29,6 +29,8 @@
- #include "xfs_ag_resv.h"
- #include "xfs_trans_space.h"
- #include "xfs_quota.h"
-+#include "xfs_attr.h"
-+#include "xfs_reflink.h"
- #include "scrub/xfs_scrub.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
-@@ -699,7 +701,7 @@ xrep_findroot_block(
- 	struct xfs_btree_block		*btblock;
- 	xfs_daddr_t			daddr;
- 	int				block_level;
--	int				error;
-+	int				error = 0;
- 
- 	daddr = XFS_AGB_TO_DADDR(mp, ri->sc->sa.agno, agbno);
- 
-@@ -718,28 +720,61 @@ xrep_findroot_block(
- 			return error;
- 	}
- 
-+	/*
-+	 * Read the buffer into memory so that we can see if it's a match for
-+	 * our btree type.  We have no clue if it is beforehand, and we want to
-+	 * avoid xfs_trans_read_buf's behavior of dumping the DONE state (which
-+	 * will cause needless disk reads in subsequent calls to this function)
-+	 * and logging metadata verifier failures.
-+	 *
-+	 * Therefore, pass in NULL buffer ops.  If the buffer was already in
-+	 * memory from some other caller it will already have b_ops assigned.
-+	 * If it was in memory from a previous unsuccessful findroot_block
-+	 * call, the buffer won't have b_ops but it should be clean and ready
-+	 * for us to try to verify if the read call succeeds.  The same applies
-+	 * if the buffer wasn't in memory at all.
-+	 *
-+	 * Note: If we never match a btree type with this buffer, it will be
-+	 * left in memory with NULL b_ops.  This shouldn't be a problem unless
-+	 * the buffer gets written.
-+	 */
- 	error = xfs_trans_read_buf(mp, ri->sc->tp, mp->m_ddev_targp, daddr,
- 			mp->m_bsize, 0, &bp, NULL);
- 	if (error)
- 		return error;
- 
--	/*
--	 * Does this look like a block matching our fs and higher than any
--	 * other block we've found so far?  If so, reattach buffer verifiers
--	 * so the AIL won't complain if the buffer is also dirty.
--	 */
-+	/* Ensure the block magic matches the btree type we're looking for. */
- 	btblock = XFS_BUF_TO_BLOCK(bp);
- 	if (be32_to_cpu(btblock->bb_magic) != fab->magic)
- 		goto out;
--	if (xfs_sb_version_hascrc(&mp->m_sb) &&
--	    !uuid_equal(&btblock->bb_u.s.bb_uuid, &mp->m_sb.sb_meta_uuid))
--		goto out;
--	bp->b_ops = fab->buf_ops;
- 
--	/* Make sure we pass the verifiers. */
--	bp->b_ops->verify_read(bp);
--	if (bp->b_error)
--		goto out;
-+	/*
-+	 * If the buffer already has ops applied and they're not the ones for
-+	 * this btree type, we know this block doesn't match the btree and we
-+	 * can bail out.
-+	 *
-+	 * If the buffer ops match ours, someone else has already validated
-+	 * the block for us, so we can move on to checking if this is a root
-+	 * block candidate.
-+	 *
-+	 * If the buffer does not have ops, nobody has successfully validated
-+	 * the contents and the buffer cannot be dirty.  If the magic, uuid,
-+	 * and structure match this btree type then we'll move on to checking
-+	 * if it's a root block candidate.  If there is no match, bail out.
-+	 */
-+	if (bp->b_ops) {
-+		if (bp->b_ops != fab->buf_ops)
-+			goto out;
-+	} else {
-+		ASSERT(!xfs_trans_buf_is_dirty(bp));
-+		if (!uuid_equal(&btblock->bb_u.s.bb_uuid,
-+				&mp->m_sb.sb_meta_uuid))
-+			goto out;
-+		fab->buf_ops->verify_read(bp);
-+		if (bp->b_error)
-+			goto out;
-+		bp->b_ops = fab->buf_ops;
-+	}
- 
- 	/*
- 	 * This block passes the magic/uuid and verifier tests for this btree
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index e839907e8492..7aa78cef9c3a 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -777,6 +777,18 @@ xfs_buf_read_map(
- 			xfs_buf_relse(bp);
- 			return NULL;
- 		} else {
-+			/*
-+			 * Online repair can leave done buffers in memory with
-+			 * no b_ops assigned.  If the caller passed in an ops
-+			 * structure, see if the buffer passes the verifier.
-+			 * If successful, assign the ops to the buffer.
-+			 */
-+			if (!bp->b_ops && ops) {
-+				ops->verify_read(bp);
-+				if (!bp->b_error)
-+					bp->b_ops = ops;
-+			}
-+
- 			/* We do not want read in the flags */
- 			bp->b_flags &= ~XBF_READ;
- 		}
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index c3d278e96ad1..a0c5dbda18aa 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -220,6 +220,7 @@ void		xfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *, uint);
- void		xfs_trans_log_buf(struct xfs_trans *, struct xfs_buf *, uint,
- 				  uint);
- void		xfs_trans_dirty_buf(struct xfs_trans *, struct xfs_buf *);
-+bool		xfs_trans_buf_is_dirty(struct xfs_buf *bp);
- void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
- 
- void		xfs_extent_free_init_defer_op(void);
-diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index 15919f67a88f..bdc5be4d0210 100644
---- a/fs/xfs/xfs_trans_buf.c
-+++ b/fs/xfs/xfs_trans_buf.c
-@@ -321,6 +321,19 @@ xfs_trans_read_buf_map(
- 
- }
- 
-+/* Has this buffer been dirtied by anyone? */
-+bool
-+xfs_trans_buf_is_dirty(
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
-+
-+	if (!bip)
-+		return false;
-+	ASSERT(bip->bli_item.li_type == XFS_LI_BUF);
-+	return test_bit(XFS_LI_DIRTY, &bip->bli_item.li_flags);
-+}
-+
- /*
-  * Release the buffer bp which was previously acquired with one of the
-  * xfs_trans_... buffer allocation routines if the buffer has not
+>  fs/xfs/libxfs/xfs_bmap.c   | 21 ++++++----------
+>  fs/xfs/libxfs/xfs_format.h |  8 ++----
+>  fs/xfs/libxfs/xfs_sb.c     |  5 ++--
+>  fs/xfs/scrub/scrub.c       | 13 ----------
+>  fs/xfs/xfs_bmap_util.c     | 51 +-------------------------------------
+>  fs/xfs/xfs_ioctl.c         |  8 ------
+>  6 files changed, 12 insertions(+), 94 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index a47670332326..da6b768664e3 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -4081,8 +4081,7 @@ xfs_bmapi_allocate(
+>  	 * extents to real extents when we're about to write the data.
+>  	 */
+>  	if ((!bma->wasdel || (bma->flags & XFS_BMAPI_COWFORK)) &&
+> -	    (bma->flags & XFS_BMAPI_PREALLOC) &&
+> -	    xfs_sb_version_hasextflgbit(&mp->m_sb))
+> +	    (bma->flags & XFS_BMAPI_PREALLOC))
+>  		bma->got.br_state = XFS_EXT_UNWRITTEN;
+>  
+>  	if (bma->wasdel)
+> @@ -5245,8 +5244,7 @@ __xfs_bunmapi(
+>  			 * unmapping part of it.  But we can't really
+>  			 * get rid of part of a realtime extent.
+>  			 */
+> -			if (del.br_state == XFS_EXT_UNWRITTEN ||
+> -			    !xfs_sb_version_hasextflgbit(&mp->m_sb)) {
+> +			if (del.br_state == XFS_EXT_UNWRITTEN) {
+>  				/*
+>  				 * This piece is unwritten, or we're not
+>  				 * using unwritten extents.  Skip over it.
+> @@ -5296,10 +5294,9 @@ __xfs_bunmapi(
+>  				del.br_blockcount -= mod;
+>  				del.br_startoff += mod;
+>  				del.br_startblock += mod;
+> -			} else if ((del.br_startoff == start &&
+> -				    (del.br_state == XFS_EXT_UNWRITTEN ||
+> -				     tp->t_blk_res == 0)) ||
+> -				   !xfs_sb_version_hasextflgbit(&mp->m_sb)) {
+> +			} else if (del.br_startoff == start &&
+> +				   (del.br_state == XFS_EXT_UNWRITTEN ||
+> +				    tp->t_blk_res == 0)) {
+>  				/*
+>  				 * Can't make it unwritten.  There isn't
+>  				 * a full extent here so just skip it.
+> @@ -6114,11 +6111,7 @@ xfs_bmap_validate_extent(
+>  		    XFS_FSB_TO_AGNO(mp, endfsb))
+>  			return __this_address;
+>  	}
+> -	if (irec->br_state != XFS_EXT_NORM) {
+> -		if (whichfork != XFS_DATA_FORK)
+> -			return __this_address;
+> -		if (!xfs_sb_version_hasextflgbit(&mp->m_sb))
+> -			return __this_address;
+> -	}
+> +	if (irec->br_state != XFS_EXT_NORM && whichfork != XFS_DATA_FORK)
+> +		return __this_address;
+>  	return NULL;
+>  }
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index afbe336600e1..9995d5ae380b 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -287,6 +287,8 @@ static inline bool xfs_sb_good_v4_features(struct xfs_sb *sbp)
+>  {
+>  	if (!(sbp->sb_versionnum & XFS_SB_VERSION_DIRV2BIT))
+>  		return false;
+> +	if (!(sbp->sb_versionnum & XFS_SB_VERSION_EXTFLGBIT))
+> +		return false;
+>  
+>  	/* check for unknown features in the fs */
+>  	if ((sbp->sb_versionnum & ~XFS_SB_VERSION_OKBITS) ||
+> @@ -357,12 +359,6 @@ static inline bool xfs_sb_version_haslogv2(struct xfs_sb *sbp)
+>  	       (sbp->sb_versionnum & XFS_SB_VERSION_LOGV2BIT);
+>  }
+>  
+> -static inline bool xfs_sb_version_hasextflgbit(struct xfs_sb *sbp)
+> -{
+> -	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 ||
+> -	       (sbp->sb_versionnum & XFS_SB_VERSION_EXTFLGBIT);
+> -}
+> -
+>  static inline bool xfs_sb_version_hassector(struct xfs_sb *sbp)
+>  {
+>  	return (sbp->sb_versionnum & XFS_SB_VERSION_SECTORBIT);
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index 081f46e30556..b5a82acd7dfe 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -1115,7 +1115,8 @@ xfs_fs_geometry(
+>  
+>  	geo->version = XFS_FSOP_GEOM_VERSION;
+>  	geo->flags = XFS_FSOP_GEOM_FLAGS_NLINK |
+> -		     XFS_FSOP_GEOM_FLAGS_DIRV2;
+> +		     XFS_FSOP_GEOM_FLAGS_DIRV2 |
+> +		     XFS_FSOP_GEOM_FLAGS_EXTFLG;
+>  	if (xfs_sb_version_hasattr(sbp))
+>  		geo->flags |= XFS_FSOP_GEOM_FLAGS_ATTR;
+>  	if (xfs_sb_version_hasquota(sbp))
+> @@ -1124,8 +1125,6 @@ xfs_fs_geometry(
+>  		geo->flags |= XFS_FSOP_GEOM_FLAGS_IALIGN;
+>  	if (xfs_sb_version_hasdalign(sbp))
+>  		geo->flags |= XFS_FSOP_GEOM_FLAGS_DALIGN;
+> -	if (xfs_sb_version_hasextflgbit(sbp))
+> -		geo->flags |= XFS_FSOP_GEOM_FLAGS_EXTFLG;
+>  	if (xfs_sb_version_hassector(sbp))
+>  		geo->flags |= XFS_FSOP_GEOM_FLAGS_SECTOR;
+>  	if (xfs_sb_version_hasasciici(sbp))
+> diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+> index 4bfae1e61d30..1b2344d00525 100644
+> --- a/fs/xfs/scrub/scrub.c
+> +++ b/fs/xfs/scrub/scrub.c
+> @@ -412,19 +412,6 @@ xchk_validate_inputs(
+>  		goto out;
+>  	}
+>  
+> -	error = -EOPNOTSUPP;
+> -	/*
+> -	 * We won't scrub any filesystem that doesn't have the ability
+> -	 * to record unwritten extents.  The option was made default in
+> -	 * 2003, removed from mkfs in 2007, and cannot be disabled in
+> -	 * v5, so if we find a filesystem without this flag it's either
+> -	 * really old or totally unsupported.  Avoid it either way.
+> -	 * We also don't support v1-v3 filesystems, which aren't
+> -	 * mountable.
+> -	 */
+> -	if (!xfs_sb_version_hasextflgbit(&mp->m_sb))
+> -		goto out;
+> -
+>  	/*
+>  	 * We only want to repair read-write v5+ filesystems.  Defer the check
+>  	 * for ops->repair until after our scrub confirms that we need to
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 6de8d90041ff..416524f6ba69 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -1042,44 +1042,6 @@ xfs_unmap_extent(
+>  	goto out_unlock;
+>  }
+>  
+> -static int
+> -xfs_adjust_extent_unmap_boundaries(
+> -	struct xfs_inode	*ip,
+> -	xfs_fileoff_t		*startoffset_fsb,
+> -	xfs_fileoff_t		*endoffset_fsb)
+> -{
+> -	struct xfs_mount	*mp = ip->i_mount;
+> -	struct xfs_bmbt_irec	imap;
+> -	int			nimap, error;
+> -	xfs_extlen_t		mod = 0;
+> -
+> -	nimap = 1;
+> -	error = xfs_bmapi_read(ip, *startoffset_fsb, 1, &imap, &nimap, 0);
+> -	if (error)
+> -		return error;
+> -
+> -	if (nimap && imap.br_startblock != HOLESTARTBLOCK) {
+> -		ASSERT(imap.br_startblock != DELAYSTARTBLOCK);
+> -		div_u64_rem(imap.br_startblock, mp->m_sb.sb_rextsize, &mod);
+> -		if (mod)
+> -			*startoffset_fsb += mp->m_sb.sb_rextsize - mod;
+> -	}
+> -
+> -	nimap = 1;
+> -	error = xfs_bmapi_read(ip, *endoffset_fsb - 1, 1, &imap, &nimap, 0);
+> -	if (error)
+> -		return error;
+> -
+> -	if (nimap && imap.br_startblock != HOLESTARTBLOCK) {
+> -		ASSERT(imap.br_startblock != DELAYSTARTBLOCK);
+> -		mod++;
+> -		if (mod && mod != mp->m_sb.sb_rextsize)
+> -			*endoffset_fsb -= mod;
+> -	}
+> -
+> -	return 0;
+> -}
+> -
+>  static int
+>  xfs_flush_unmap_range(
+>  	struct xfs_inode	*ip,
+> @@ -1133,19 +1095,8 @@ xfs_free_file_space(
+>  	endoffset_fsb = XFS_B_TO_FSBT(mp, offset + len);
+>  
+>  	/*
+> -	 * Need to zero the stuff we're not freeing, on disk.  If it's a RT file
+> -	 * and we can't use unwritten extents then we actually need to ensure
+> -	 * to zero the whole extent, otherwise we just need to take of block
+> -	 * boundaries, and xfs_bunmapi will handle the rest.
+> +	 * Need to zero the stuff we're not freeing, on disk.
+>  	 */
+> -	if (XFS_IS_REALTIME_INODE(ip) &&
+> -	    !xfs_sb_version_hasextflgbit(&mp->m_sb)) {
+> -		error = xfs_adjust_extent_unmap_boundaries(ip, &startoffset_fsb,
+> -				&endoffset_fsb);
+> -		if (error)
+> -			return error;
+> -	}
+> -
+>  	if (endoffset_fsb > startoffset_fsb) {
+>  		while (!done) {
+>  			error = xfs_unmap_extent(ip, startoffset_fsb,
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 0ef5ece5634c..6e2c08f30f60 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -604,14 +604,6 @@ xfs_ioc_space(
+>  	uint			iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+>  	int			error;
+>  
+> -	/*
+> -	 * Only allow the sys admin to reserve space unless
+> -	 * unwritten extents are enabled.
+> -	 */
+> -	if (!xfs_sb_version_hasextflgbit(&ip->i_mount->m_sb) &&
+> -	    !capable(CAP_SYS_ADMIN))
+> -		return -EPERM;
+> -
+>  	if (inode->i_flags & (S_IMMUTABLE|S_APPEND))
+>  		return -EPERM;
+>  
+> -- 
+> 2.19.0
+> 
