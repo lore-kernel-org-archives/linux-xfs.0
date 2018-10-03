@@ -1,121 +1,200 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:44504 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727372AbeJCA0k (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Oct 2018 20:26:40 -0400
-Received: from [38.126.112.138] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1g7OgT-0007dw-BY
-        for linux-xfs@vger.kernel.org; Tue, 02 Oct 2018 17:42:09 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 5/8] xfs: remove the unused shared argument to xfs_reflink_reserve_cow
-Date: Tue,  2 Oct 2018 10:42:04 -0700
-Message-Id: <20181002174207.25275-6-hch@lst.de>
-In-Reply-To: <20181002174207.25275-1-hch@lst.de>
-References: <20181002174207.25275-1-hch@lst.de>
+Received: from userp2130.oracle.com ([156.151.31.86]:36906 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726407AbeJCIsd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Oct 2018 04:48:33 -0400
+Date: Tue, 2 Oct 2018 19:02:11 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH v2 2/2] xfs: fix buffer state management in
+ xrep_findroot_block
+Message-ID: <20181003020211.GC19324@magnolia>
+References: <153843409576.24414.14199833763423874927.stgit@magnolia>
+ <153843410841.24414.2317164703479198891.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <153843410841.24414.2317164703479198891.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: david@fromorbit.com
+Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+We don't handle buffer state properly in online repair's findroot
+routine.  If a buffer already has b_ops set, we don't ever want to touch
+that, and we don't want to call the read verifiers on a buffer that
+could be dirty (CRCs are only recomputed during log checkpoints).
+
+Therefore, be more careful about what we do with a buffer -- if someone
+else already attached ops that are not the ones for this btree type,
+just ignore the buffer.  We only attach our btree type's buf ops if it
+matches the magic/uuid and structure checks.
+
+We also modify xfs_buf_read_map to allow callers to set buffer ops on a
+DONE buffer with NULL ops so that repair doesn't leave behind buffers
+which won't have buffers attached to them.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_iomap.c   |  6 ++----
- fs/xfs/xfs_reflink.c | 12 +++++-------
- fs/xfs/xfs_reflink.h |  2 +-
- 3 files changed, 8 insertions(+), 12 deletions(-)
+ fs/xfs/scrub/repair.c  |   63 +++++++++++++++++++++++++++++++++++++-----------
+ fs/xfs/xfs_buf.c       |   12 +++++++++
+ fs/xfs/xfs_trans.h     |    1 +
+ fs/xfs/xfs_trans_buf.c |   13 ++++++++++
+ 4 files changed, 75 insertions(+), 14 deletions(-)
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 9b572a1fbd42..bdba6b91598a 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -569,10 +569,8 @@ xfs_file_iomap_begin_delay(
- 		if (xfs_is_reflink_inode(ip) &&
- 		    ((flags & IOMAP_WRITE) ||
- 		     got.br_state != XFS_EXT_UNWRITTEN)) {
--			bool		shared;
--
- 			xfs_trim_extent(&got, offset_fsb, end_fsb - offset_fsb);
--			error = xfs_reflink_reserve_cow(ip, &got, &shared);
-+			error = xfs_reflink_reserve_cow(ip, &got);
- 			if (error)
- 				goto out_unlock;
- 		}
-@@ -1097,7 +1095,7 @@ xfs_file_iomap_begin(
- 			if (error)
- 				goto out_unlock;
- 		} else {
--			error = xfs_reflink_reserve_cow(ip, &imap, &shared);
-+			error = xfs_reflink_reserve_cow(ip, &imap);
- 			if (error)
- 				goto out_unlock;
- 		}
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 5289e22cb081..06e38e88ddee 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -241,7 +241,7 @@ xfs_reflink_trim_around_shared(
- /*
-  * Trim the passed in imap to the next shared/unshared extent boundary, and
-  * if imap->br_startoff points to a shared extent reserve space for it in the
-- * COW fork.  In this case *shared is set to true, else to false.
-+ * COW fork.
-  *
-  * Note that imap will always contain the block numbers for the existing blocks
-  * in the data fork, as the upper layers need them for read-modify-write
-@@ -250,14 +250,14 @@ xfs_reflink_trim_around_shared(
- int
- xfs_reflink_reserve_cow(
- 	struct xfs_inode	*ip,
--	struct xfs_bmbt_irec	*imap,
--	bool			*shared)
-+	struct xfs_bmbt_irec	*imap)
- {
- 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_COW_FORK);
- 	struct xfs_bmbt_irec	got;
- 	int			error = 0;
- 	bool			eof = false, trimmed;
- 	struct xfs_iext_cursor	icur;
-+	bool			shared;
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index 63786341ac2a..cebaebb26566 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -29,6 +29,8 @@
+ #include "xfs_ag_resv.h"
+ #include "xfs_trans_space.h"
+ #include "xfs_quota.h"
++#include "xfs_attr.h"
++#include "xfs_reflink.h"
+ #include "scrub/xfs_scrub.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+@@ -699,7 +701,7 @@ xrep_findroot_block(
+ 	struct xfs_btree_block		*btblock;
+ 	xfs_daddr_t			daddr;
+ 	int				block_level;
+-	int				error;
++	int				error = 0;
  
- 	/*
- 	 * Search the COW fork extent list first.  This serves two purposes:
-@@ -273,18 +273,16 @@ xfs_reflink_reserve_cow(
- 	if (!eof && got.br_startoff <= imap->br_startoff) {
- 		trace_xfs_reflink_cow_found(ip, imap);
- 		xfs_trim_extent(imap, got.br_startoff, got.br_blockcount);
--
--		*shared = true;
- 		return 0;
+ 	daddr = XFS_AGB_TO_DADDR(mp, ri->sc->sa.agno, agbno);
+ 
+@@ -718,28 +720,61 @@ xrep_findroot_block(
+ 			return error;
  	}
  
- 	/* Trim the mapping to the nearest shared extent boundary. */
--	error = xfs_reflink_trim_around_shared(ip, imap, shared, &trimmed);
-+	error = xfs_reflink_trim_around_shared(ip, imap, &shared, &trimmed);
++	/*
++	 * Read the buffer into memory so that we can see if it's a match for
++	 * our btree type.  We have no clue if it is beforehand, and we want to
++	 * avoid xfs_trans_read_buf's behavior of dumping the DONE state (which
++	 * will cause needless disk reads in subsequent calls to this function)
++	 * and logging metadata verifier failures.
++	 *
++	 * Therefore, pass in NULL buffer ops.  If the buffer was already in
++	 * memory from some other caller it will already have b_ops assigned.
++	 * If it was in memory from a previous unsuccessful findroot_block
++	 * call, the buffer won't have b_ops but it should be clean and ready
++	 * for us to try to verify if the read call succeeds.  The same applies
++	 * if the buffer wasn't in memory at all.
++	 *
++	 * Note: If we never match a btree type with this buffer, it will be
++	 * left in memory with NULL b_ops.  This shouldn't be a problem unless
++	 * the buffer gets written.
++	 */
+ 	error = xfs_trans_read_buf(mp, ri->sc->tp, mp->m_ddev_targp, daddr,
+ 			mp->m_bsize, 0, &bp, NULL);
  	if (error)
  		return error;
  
- 	/* Not shared?  Just report the (potentially capped) extent. */
--	if (!*shared)
-+	if (!shared)
- 		return 0;
+-	/*
+-	 * Does this look like a block matching our fs and higher than any
+-	 * other block we've found so far?  If so, reattach buffer verifiers
+-	 * so the AIL won't complain if the buffer is also dirty.
+-	 */
++	/* Ensure the block magic matches the btree type we're looking for. */
+ 	btblock = XFS_BUF_TO_BLOCK(bp);
+ 	if (be32_to_cpu(btblock->bb_magic) != fab->magic)
+ 		goto out;
+-	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+-	    !uuid_equal(&btblock->bb_u.s.bb_uuid, &mp->m_sb.sb_meta_uuid))
+-		goto out;
+-	bp->b_ops = fab->buf_ops;
+ 
+-	/* Make sure we pass the verifiers. */
+-	bp->b_ops->verify_read(bp);
+-	if (bp->b_error)
+-		goto out;
++	/*
++	 * If the buffer already has ops applied and they're not the ones for
++	 * this btree type, we know this block doesn't match the btree and we
++	 * can bail out.
++	 *
++	 * If the buffer ops match ours, someone else has already validated
++	 * the block for us, so we can move on to checking if this is a root
++	 * block candidate.
++	 *
++	 * If the buffer does not have ops, nobody has successfully validated
++	 * the contents and the buffer cannot be dirty.  If the magic, uuid,
++	 * and structure match this btree type then we'll move on to checking
++	 * if it's a root block candidate.  If there is no match, bail out.
++	 */
++	if (bp->b_ops) {
++		if (bp->b_ops != fab->buf_ops)
++			goto out;
++	} else {
++		ASSERT(!xfs_trans_buf_is_dirty(bp));
++		if (!uuid_equal(&btblock->bb_u.s.bb_uuid,
++				&mp->m_sb.sb_meta_uuid))
++			goto out;
++		fab->buf_ops->verify_read(bp);
++		if (bp->b_error)
++			goto out;
++		bp->b_ops = fab->buf_ops;
++	}
  
  	/*
-diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index c585ad9552b2..b77f4079022a 100644
---- a/fs/xfs/xfs_reflink.h
-+++ b/fs/xfs/xfs_reflink.h
-@@ -13,7 +13,7 @@ extern int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
- 		struct xfs_bmbt_irec *irec, bool *shared, bool *trimmed);
+ 	 * This block passes the magic/uuid and verifier tests for this btree
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index e839907e8492..7aa78cef9c3a 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -777,6 +777,18 @@ xfs_buf_read_map(
+ 			xfs_buf_relse(bp);
+ 			return NULL;
+ 		} else {
++			/*
++			 * Online repair can leave done buffers in memory with
++			 * no b_ops assigned.  If the caller passed in an ops
++			 * structure, see if the buffer passes the verifier.
++			 * If successful, assign the ops to the buffer.
++			 */
++			if (!bp->b_ops && ops) {
++				ops->verify_read(bp);
++				if (!bp->b_error)
++					bp->b_ops = ops;
++			}
++
+ 			/* We do not want read in the flags */
+ 			bp->b_flags &= ~XBF_READ;
+ 		}
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index c3d278e96ad1..a0c5dbda18aa 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -220,6 +220,7 @@ void		xfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *, uint);
+ void		xfs_trans_log_buf(struct xfs_trans *, struct xfs_buf *, uint,
+ 				  uint);
+ void		xfs_trans_dirty_buf(struct xfs_trans *, struct xfs_buf *);
++bool		xfs_trans_buf_is_dirty(struct xfs_buf *bp);
+ void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
  
- extern int xfs_reflink_reserve_cow(struct xfs_inode *ip,
--		struct xfs_bmbt_irec *imap, bool *shared);
-+		struct xfs_bmbt_irec *imap);
- extern int xfs_reflink_allocate_cow(struct xfs_inode *ip,
- 		struct xfs_bmbt_irec *imap, bool *shared, uint *lockmode);
- extern int xfs_reflink_convert_cow(struct xfs_inode *ip, xfs_off_t offset,
--- 
-2.19.0
+ void		xfs_extent_free_init_defer_op(void);
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 15919f67a88f..bdc5be4d0210 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -321,6 +321,19 @@ xfs_trans_read_buf_map(
+ 
+ }
+ 
++/* Has this buffer been dirtied by anyone? */
++bool
++xfs_trans_buf_is_dirty(
++	struct xfs_buf		*bp)
++{
++	struct xfs_buf_log_item	*bip = bp->b_log_item;
++
++	if (!bip)
++		return false;
++	ASSERT(bip->bli_item.li_type == XFS_LI_BUF);
++	return test_bit(XFS_LI_DIRTY, &bip->bli_item.li_flags);
++}
++
+ /*
+  * Release the buffer bp which was previously acquired with one of the
+  * xfs_trans_... buffer allocation routines if the buffer has not
