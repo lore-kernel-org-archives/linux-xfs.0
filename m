@@ -1,92 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48554 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729272AbeJAU5v (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 1 Oct 2018 16:57:51 -0400
-Date: Mon, 1 Oct 2018 10:19:47 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/7] xfs: remove XFS_IO_INVALID
-Message-ID: <20181001141946.GC53694@bfoster>
-References: <20181001123741.32005-1-hch@lst.de>
- <20181001123741.32005-2-hch@lst.de>
+Received: from mail-oi1-f196.google.com ([209.85.167.196]:44501 "EHLO
+        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725871AbeJDEEP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Oct 2018 00:04:15 -0400
+Received: by mail-oi1-f196.google.com with SMTP id u74-v6so5734765oia.11
+        for <linux-xfs@vger.kernel.org>; Wed, 03 Oct 2018 14:14:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181001123741.32005-2-hch@lst.de>
+References: <20181002142959.GD9127@quack2.suse.cz> <20181002143713.GA19845@infradead.org>
+ <20181002144412.GC4963@linux-x5ow.site> <20181002145206.GA10903@infradead.org>
+ <20181002153100.GG9127@quack2.suse.cz> <CAPcyv4j0tTD+rENqFExA68aw=-MmtCBaOe1qJovyrmJC=yBg-Q@mail.gmail.com>
+ <20181003125056.GA21043@quack2.suse.cz> <CAPcyv4jfV10yuTiPg6ijsPRRL2-c_48ovfpU5TK1Zu7BWnfk3g@mail.gmail.com>
+ <20181003150658.GC24030@quack2.suse.cz> <CAPcyv4iJvN6_Cf6tw=5a=Uh99LfMFKU7n8QkGcz1ZaxL0Oi-3w@mail.gmail.com>
+ <20181003164407.GK24030@quack2.suse.cz>
+In-Reply-To: <20181003164407.GK24030@quack2.suse.cz>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Wed, 3 Oct 2018 14:13:59 -0700
+Message-ID: <CAPcyv4iCXNYTSzwU5OoZc_b+xxbqKwjyQV74CRxEfvDjaMPDfg@mail.gmail.com>
+Subject: Re: Problems with VM_MIXEDMAP removal from /proc/<pid>/smaps
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Christoph Hellwig <hch@infradead.org>, Johannes Thumshirn <jthumshirn@suse.de>, Dave Jiang <dave.jiang@intel.com>, linux-nvdimm <linux-nvdimm@lists.01.org>, Linux MM <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>
 
-On Mon, Oct 01, 2018 at 05:37:35AM -0700, Christoph Hellwig wrote:
-> The invalid state isn't any different from a hole, so merge the two
-> states.  Use the more descriptive hole name, but keep it as the first
-> value of the enum to catch uninitialized fields.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+On Wed, Oct 3, 2018 at 9:46 AM Jan Kara <jack@suse.cz> wrote:
+>
+> On Wed 03-10-18 08:13:37, Dan Williams wrote:
+> > On Wed, Oct 3, 2018 at 8:07 AM Jan Kara <jack@suse.cz> wrote:
+> > > WRT per-inode DAX property, AFAIU that inode flag is just going to be
+> > > advisory thing - i.e., use DAX if possible. If you mount a filesystem with
+> > > these inode flags set in a configuration which does not allow DAX to be
+> > > used, you will still be able to access such inodes but the access will use
+> > > page cache instead. And querying these flags should better show real
+> > > on-disk status and not just whether DAX is used as that would result in an
+> > > even bigger mess. So this feature seems to be somewhat orthogonal to the
+> > > API I'm looking for.
+> >
+> > True, I imagine once we have that flag we will be able to distinguish
+> > the "saved" property and the "effective / live" property of DAX...
+> > Also it's really not DAX that applications care about as much as "is
+> > there page-cache indirection / overhead for this mapping?". That seems
+> > to be a narrower guarantee that we can make than what "DAX" might
+> > imply.
+>
+> Right. So what do people think about my suggestion earlier in the thread to
+> use madvise(MADV_DIRECT_ACCESS) for this? Currently it would return success
+> when DAX is in use, failure otherwise. Later we could extend it to be also
+> used as a hint for caching policy for the inode...
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+The only problem is that you can't use it purely as a query. If we
+ever did plumb it to be a hint you could not read the state without
+writing the state.
 
->  fs/xfs/xfs_aops.c |  4 ++--
->  fs/xfs/xfs_aops.h | 14 ++++++--------
->  2 files changed, 8 insertions(+), 10 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 49f5f5896a43..338b9d9984e0 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -917,7 +917,7 @@ xfs_vm_writepage(
->  	struct writeback_control *wbc)
->  {
->  	struct xfs_writepage_ctx wpc = {
-> -		.io_type = XFS_IO_INVALID,
-> +		.io_type = XFS_IO_HOLE,
->  	};
->  	int			ret;
->  
-> @@ -933,7 +933,7 @@ xfs_vm_writepages(
->  	struct writeback_control *wbc)
->  {
->  	struct xfs_writepage_ctx wpc = {
-> -		.io_type = XFS_IO_INVALID,
-> +		.io_type = XFS_IO_HOLE,
->  	};
->  	int			ret;
->  
-> diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
-> index 9af867951a10..494b4338446e 100644
-> --- a/fs/xfs/xfs_aops.h
-> +++ b/fs/xfs/xfs_aops.h
-> @@ -12,21 +12,19 @@ extern struct bio_set xfs_ioend_bioset;
->   * Types of I/O for bmap clustering and I/O completion tracking.
->   */
->  enum {
-> -	XFS_IO_INVALID,		/* initial state */
-> +	XFS_IO_HOLE,		/* covers region without any block allocation */
->  	XFS_IO_DELALLOC,	/* covers delalloc region */
->  	XFS_IO_UNWRITTEN,	/* covers allocated but uninitialized data */
->  	XFS_IO_OVERWRITE,	/* covers already allocated extent */
->  	XFS_IO_COW,		/* covers copy-on-write extent */
-> -	XFS_IO_HOLE,		/* covers region without any block allocation */
->  };
->  
->  #define XFS_IO_TYPES \
-> -	{ XFS_IO_INVALID,		"invalid" }, \
-> -	{ XFS_IO_DELALLOC,		"delalloc" }, \
-> -	{ XFS_IO_UNWRITTEN,		"unwritten" }, \
-> -	{ XFS_IO_OVERWRITE,		"overwrite" }, \
-> -	{ XFS_IO_COW,			"CoW" }, \
-> -	{ XFS_IO_HOLE,			"hole" }
-> +	{ XFS_IO_HOLE,			"hole" },	\
-> +	{ XFS_IO_DELALLOC,		"delalloc" },	\
-> +	{ XFS_IO_UNWRITTEN,		"unwritten" },	\
-> +	{ XFS_IO_OVERWRITE,		"overwrite" },	\
-> +	{ XFS_IO_COW,			"CoW" }
->  
->  /*
->   * Structure for buffered I/O completions.
-> -- 
-> 2.19.0
-> 
+mincore(2) seems to be close the intent of discovering whether RAM is
+being consumed for a given address range, but it currently is
+implemented to only indicate if *any* mapping is established, not
+whether RAM is consumed. I can see an argument that a dax mapped file
+should always report an empty mincore vector.
