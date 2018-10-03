@@ -1,86 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:44510 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727449AbeJCA0k (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Oct 2018 20:26:40 -0400
-Received: from [38.126.112.138] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1g7OgU-0007e7-1a
-        for linux-xfs@vger.kernel.org; Tue, 02 Oct 2018 17:42:10 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 8/8] xfs: print dangling delalloc extents
-Date: Tue,  2 Oct 2018 10:42:07 -0700
-Message-Id: <20181002174207.25275-9-hch@lst.de>
-In-Reply-To: <20181002174207.25275-1-hch@lst.de>
-References: <20181002174207.25275-1-hch@lst.de>
+Received: from mail-yb1-f195.google.com ([209.85.219.195]:33358 "EHLO
+        mail-yb1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726510AbeJCKb5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Oct 2018 06:31:57 -0400
+Received: by mail-yb1-f195.google.com with SMTP id u88-v6so1812579ybi.0
+        for <linux-xfs@vger.kernel.org>; Tue, 02 Oct 2018 20:45:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20180907015155.32559-1-david@fromorbit.com> <CAOQ4uxjaAJ9WSo-rtvBq7bFsV4QXHhwqjFyCFO030U4qZ7ALKg@mail.gmail.com>
+ <20181001010931.GO31060@dastard> <CAOQ4uxjo1nE38q=FL+EofoMz=1=D2eZYo9s3-TVBSEjbHH52kQ@mail.gmail.com>
+ <20181001223244.GH18567@dastard> <CAOQ4uxhTJcEtUJkwO5UCyF1sCFQ=bPo0ragy5255aM30C9Z1Zw@mail.gmail.com>
+ <20181002063952.GN18567@dastard> <CAJfpegvcmKiaU-oPfXk0ub6tdBKhDRcUKTkLd5_rAagv05R-EA@mail.gmail.com>
+ <20181002231421.GQ18567@dastard>
+In-Reply-To: <20181002231421.GQ18567@dastard>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Wed, 3 Oct 2018 06:45:13 +0300
+Message-ID: <CAOQ4uxhrEm4uMhsw5G+_Bv87-zPenJ9gwvDJvCPSmRkQAWiszQ@mail.gmail.com>
+Subject: Re: [PATCH] xfs: avoid lockdep false positives in xfs_trans_alloc
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Miklos Szeredi <miklos@szeredi.hu>, linux-xfs <linux-xfs@vger.kernel.org>, Jeff Mahoney <jeffm@suse.com>, Theodore Tso <tytso@mit.edu>, Jan Kara <jack@suse.cz>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
 
-Instead of just asserting that we have no delalloc space dangling
-in an inode that gets freed print the actual offenders for debug
-mode.
+On Wed, Oct 3, 2018 at 2:14 AM Dave Chinner <david@fromorbit.com> wrote:
+[...]
+> > Seems like freezing any of the layers if overlay itself is not frozen
+> > is not a good idea.
+>
+> That's something we can't directly control. e.g. lower filesystem is
+> on a DM volume. DM can freeze the lower fileystem through the block
+> device when a dm command is run. It may well be that the admins that
+> set up the storage and filesystem layer have no idea that there are
+> now overlay users on top of the filesystem they originally set up.
+> Indeed, the admins may not even know that dm operations freeze
+> filesystems because it happens completely transparently to them.
+>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_super.c | 33 ++++++++++++++++++++++++++++++++-
- 1 file changed, 32 insertions(+), 1 deletion(-)
+I don't think we should be binding the stacked filesystem issues with
+the stacked block over fs issues. The latter is more complex to solve
+generally and has by design non limited stack depth. The former has
+limited stack depth (2) and each sb knows its own stack depth, which
+is already used in overlay to annotate lockdep correctly.
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 207ee302b1bb..99250bcb65a7 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -933,6 +933,32 @@ xfs_fs_alloc_inode(
- 	return NULL;
- }
- 
-+#ifdef DEBUG
-+static void
-+xfs_check_delalloc(
-+	struct xfs_inode	*ip,
-+	int			whichfork)
-+{
-+	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
-+	struct xfs_bmbt_irec	got;
-+	struct xfs_iext_cursor	icur;
-+
-+	if (!ifp || !xfs_iext_lookup_extent(ip, ifp, 0, &icur, &got))
-+		return;
-+	do {
-+		if (isnullstartblock(got.br_startblock)) {
-+			xfs_warn(ip->i_mount,
-+	"ino %llx %s fork has delalloc extent at [0x%llx:0x%llx]",
-+				ip->i_ino,
-+				whichfork == XFS_DATA_FORK ? "data" : "cow",
-+				got.br_startoff, got.br_blockcount);
-+		}
-+	} while (xfs_iext_next_extent(ifp, &icur, &got));
-+}
-+#else
-+#define xfs_check_delalloc(ip, whichfork)	do { } while (0)
-+#endif
-+
- /*
-  * Now that the generic code is guaranteed not to be accessing
-  * the linux inode, we can inactivate and reclaim the inode.
-@@ -951,7 +977,12 @@ xfs_fs_destroy_inode(
- 
- 	xfs_inactive(ip);
- 
--	ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0);
-+	if (!XFS_FORCED_SHUTDOWN(ip->i_mount) && ip->i_delayed_blks) {
-+		xfs_check_delalloc(ip, XFS_DATA_FORK);
-+		xfs_check_delalloc(ip, XFS_COW_FORK);
-+		ASSERT(0);
-+	}
-+
- 	XFS_STATS_INC(ip->i_mount, vn_reclaim);
- 
- 	/*
--- 
-2.19.0
+If vfs stores a reverse tree of stacked fs dependencies, then individual
+sb freeze can be solved.
+
+Drawing the fire away from overlayfs.. I personally find the behavior that
+a process that only has files open for read could block when filesystem is
+frozen somewhat unexpected to users (even if I can expect it).
+
+I wonder out loud if it wouldn't be friendlier for any filesystem to defer
+"garbage collection" (e.g. truncate deleted inode blocks) to thawing time,
+just as those operations are already run on mount (post crash) anyway.
+
+Thanks,
+Amir.
