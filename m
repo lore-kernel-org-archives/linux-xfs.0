@@ -1,55 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:10454 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725878AbeJBFZf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Oct 2018 01:25:35 -0400
-Date: Tue, 2 Oct 2018 08:45:28 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Leaking Path in XFS's ioctl interface(missing LSM check)
-Message-ID: <20181001224528.GI18567@dastard>
-References: <5EF0D46A-C098-4B51-AD13-225FFCA35D4C@vt.edu>
- <20180926013329.GD31060@dastard>
- <20180926192426.472360ea@alans-desktop>
- <20180927013812.GF31060@dastard>
- <20180930151652.6975610c@alans-desktop>
- <20181001002521.GM31060@dastard>
- <20181001160442.47c798bc@alans-desktop>
- <20181001154459.GB5872@magnolia>
- <alpine.LRH.2.21.1810020608090.14406@namei.org>
+Received: from mx1.redhat.com ([209.132.183.28]:41000 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726547AbeJCTIm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 3 Oct 2018 15:08:42 -0400
+Date: Wed, 3 Oct 2018 08:20:27 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: zero posteof blocks when cloning above eof
+Message-ID: <20181003122027.GD61971@bfoster>
+References: <20181003020342.GD19324@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <alpine.LRH.2.21.1810020608090.14406@namei.org>
+In-Reply-To: <20181003020342.GD19324@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: James Morris <jmorris@namei.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Alan Cox <gnomes@lxorguk.ukuu.org.uk>, TongZhang <ztong@vt.edu>, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-security-module@vger.kernel.org, Wenbo Shen <shenwenbosmile@gmail.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, zlang@redhat.com
 
-On Tue, Oct 02, 2018 at 06:08:16AM +1000, James Morris wrote:
-> On Mon, 1 Oct 2018, Darrick J. Wong wrote:
+On Tue, Oct 02, 2018 at 07:03:42PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> > If we /did/ replace CAP_SYS_ADMIN checking with a pile of LSM hooks,
+> When we're reflinking between two files and the destination file range
+> is well beyond the destination file's EOF marker, zero any posteof
+> speculative preallocations in the destination file so that we don't
+> expose stale disk contents.  The previous strategy of trying to clear
+> the preallocations does not work if the destination file has the
+> PREALLOC flag set but no delalloc blocks.
 > 
-> Not sure we'd need a pile of hooks, what about just "read" and "write" 
-> storage admin?
+> Uncovered by shared/010.
 > 
-> Or even two new capabilities along these lines, which we convert existing 
-> CAP_SYS_ADMIN etc. to?
+> Reported-by: Zorro Lang <zlang@redhat.com>
+> Bugzilla-id: https://bugzilla.kernel.org/show_bug.cgi?id=201259
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_reflink.c |   34 ++++++++++++++++++++++++++--------
+>  1 file changed, 26 insertions(+), 8 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index 38f405415b88..c8e996a99a74 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -1195,6 +1195,27 @@ xfs_iolock_two_inodes_and_break_layout(
+>  	return 0;
+>  }
+>  
+> +/*
+> + * If we're reflinking to a point past the destination file's EOF, we must
+> + * zero any speculative post-EOF preallocations that sit between the old EOF
+> + * and the destination file offset.
+> + */
+> +static int
+> +xfs_reflink_zero_posteof(
+> +	struct xfs_inode	*ip,
+> +	loff_t			pos)
+> +{
+> +	loff_t			isize = i_size_read(VFS_I(ip));
+> +	bool			did_zeroing = false;
+> +
+> +	if (pos <= isize)
+> +		return 0;
+> +
+> +	trace_xfs_zero_eof(ip, isize, pos - isize);
+> +	return iomap_zero_range(VFS_I(ip), isize, pos - isize, &did_zeroing,
+> +			&xfs_iomap_ops);
 
-So instead of having hundreds of management ioctls under
-CAP_SYS_ADMIN, we'd now have hundreds of non-storage ioctls under
-CAP_SYS_ADMIN and hundreds of storage ioctls under
-CAP_SYS_STORAGE_ADMIN?
+iomap_zero_range() accepts NULL for the *did_zero param. Otherwise seems
+fine, barring Eric's question on whether we need additional checks..
 
-Maybe I'm missing something, but I don't see how that improves the
-situation w.r.t. locked down LSM configurations?
+Brian
 
-Cheers,
-
-Dave.
-
-
--- 
-Dave Chinner
-david@fromorbit.com
+> +}
+> +
+>  /*
+>   * Link a range of blocks from one file to another.
+>   */
+> @@ -1257,15 +1278,12 @@ xfs_reflink_remap_range(
+>  	trace_xfs_reflink_remap_range(src, pos_in, len, dest, pos_out);
+>  
+>  	/*
+> -	 * Clear out post-eof preallocations because we don't have page cache
+> -	 * backing the delayed allocations and they'll never get freed on
+> -	 * their own.
+> +	 * Zero existing post-eof speculative preallocations in the destination
+> +	 * file.
+>  	 */
+> -	if (xfs_can_free_eofblocks(dest, true)) {
+> -		ret = xfs_free_eofblocks(dest);
+> -		if (ret)
+> -			goto out_unlock;
+> -	}
+> +	ret = xfs_reflink_zero_posteof(dest, pos_out);
+> +	if (ret)
+> +		goto out_unlock;
+>  
+>  	/* Set flags and remap blocks. */
+>  	ret = xfs_reflink_set_inode_flag(src, dest);
