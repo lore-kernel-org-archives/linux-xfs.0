@@ -1,114 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:11188 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725724AbeJCGAL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Oct 2018 02:00:11 -0400
-Date: Wed, 3 Oct 2018 09:14:21 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: avoid lockdep false positives in xfs_trans_alloc
-Message-ID: <20181002231421.GQ18567@dastard>
-References: <20180907015155.32559-1-david@fromorbit.com>
- <CAOQ4uxjaAJ9WSo-rtvBq7bFsV4QXHhwqjFyCFO030U4qZ7ALKg@mail.gmail.com>
- <20181001010931.GO31060@dastard>
- <CAOQ4uxjo1nE38q=FL+EofoMz=1=D2eZYo9s3-TVBSEjbHH52kQ@mail.gmail.com>
- <20181001223244.GH18567@dastard>
- <CAOQ4uxhTJcEtUJkwO5UCyF1sCFQ=bPo0ragy5255aM30C9Z1Zw@mail.gmail.com>
- <20181002063952.GN18567@dastard>
- <CAJfpegvcmKiaU-oPfXk0ub6tdBKhDRcUKTkLd5_rAagv05R-EA@mail.gmail.com>
+Received: from mail-wm1-f66.google.com ([209.85.128.66]:53626 "EHLO
+        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726755AbeJCUta (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Oct 2018 16:49:30 -0400
+Received: by mail-wm1-f66.google.com with SMTP id b19-v6so5841618wme.3
+        for <linux-xfs@vger.kernel.org>; Wed, 03 Oct 2018 07:00:58 -0700 (PDT)
+Date: Wed, 3 Oct 2018 16:00:54 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 2/2] xfs: Add new constant to mark start of xqmstat
+Message-ID: <20181003140054.5kjzhfuit35zldkl@odin.usersys.redhat.com>
+References: <20181003123537.30965-1-cmaiolino@redhat.com>
+ <20181003123537.30965-3-cmaiolino@redhat.com>
+ <eacf197c-98d7-4507-a40f-cf32d49bb5eb@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAJfpegvcmKiaU-oPfXk0ub6tdBKhDRcUKTkLd5_rAagv05R-EA@mail.gmail.com>
+In-Reply-To: <eacf197c-98d7-4507-a40f-cf32d49bb5eb@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Miklos Szeredi <miklos@szeredi.hu>
-Cc: Amir Goldstein <amir73il@gmail.com>, linux-xfs <linux-xfs@vger.kernel.org>, Jeff Mahoney <jeffm@suse.com>, Theodore Tso <tytso@mit.edu>, Jan Kara <jack@suse.cz>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Oct 02, 2018 at 09:33:30AM +0200, Miklos Szeredi wrote:
-> On Tue, Oct 2, 2018 at 8:39 AM, Dave Chinner <david@fromorbit.com> wrote:
+On Wed, Oct 03, 2018 at 07:51:43AM -0500, Eric Sandeen wrote:
+> On 10/3/18 7:35 AM, Carlos Maiolino wrote:
+> > xqmstat information under __xfsstats is used directly by the
+> > /proc/fs/xfs/xqmstat show method, which makes use of struct offsets to
+> > print out the values.
+> > 
+> > Currently, the function is setup to start printing values from the offset of
+> > the last marker before xqmstat, so, an update to __xfsstats structure
+> > may also require an update of xqmstat_proc_show() function.
+> > 
+> > By adding a new constant, we concentrate any updates do __xfsstats
+> > structure fields locally to the file xfs_stats.h, reducing the
+> > likelyhood of future bugs if an update to xqmstat_proc_show is
+> > forgotten as have happened before.
 > 
-> > Have a look at shrink_dcache_sb() and shrink_dcache_for_umount() and
-> > what they imply about the dentries that take references to an inode
-> > on a different superblock. Then look at generic_shutdown_super() -
-> > pay attention to what happens if there are still allocated inodes
-> > after all the superblock dentries have been pruned and inodes
-> > evicted. i.e. this will trigger if some other superblock holds
-> > references to them:
-> >
-> >                 if (!list_empty(&sb->s_inodes)) {
-> >                         printk("VFS: Busy inodes after unmount of %s. "
-> >                            "Self-destruct in 5 seconds.  Have a nice day...\n",
-> >                            sb->s_id);
-> >                 }
-> >
+> did 
 > 
-> Overlay holds references to the underlying sb's (through a set of
-> internal mounts), so that's not going to happen.
-
-Ok, so that example is not going to trigger. That doesn't mean it
-isn't a problem, though....
-
-> > If overlay puts unlinked dentries on it's LRU where the superblock
-> > shrinker may clean them up and release the final reference to
-> > unlinked inodes, then whatever calls the shrinker will get blocked.
-> > If kswapd does the shrinking, then the whole system can lock up
-> > because kswapd can't make progress until the filesystem is unfrozen.
-> > And if the process that does that unfreezing needs memory....
+> BUILD_BUG_ON(offsetof(struct __xfsstats, xs_qm_dqreclaims)/sizeof(uint32_t)) != XFSSTAT_START_XQMSTAT);
 > 
-> Seems like freezing any of the layers if overlay itself is not frozen
-> is not a good idea.
-
-That's something we can't directly control. e.g. lower filesystem is
-on a DM volume. DM can freeze the lower fileystem through the block
-device when a dm command is run. It may well be that the admins that
-set up the storage and filesystem layer have no idea that there are
-now overlay users on top of the filesystem they originally set up.
-Indeed, the admins may not even know that dm operations freeze
-filesystems because it happens completely transparently to them.
-
-> Preventing unlink (or modification generally) on the underlying layers
-> if part of an overlay is also doable, but it would likely run into
-> such backward compat issues that no one would be happy.   So I don't
-> think that's now the way to go.   We could have done that initially,
-> but it turns out allowing modification of the underlying layers can be
-> useful at times.
-
-Which means we're stuck with a fundamental "overlay can
-panic/deadlock machines" problem, yes?
-
-> > I can think of several other similar ways that we can probably be
-> > screwed by cross-superblock references and memory reclaim
-> > interactions. I can't think of any way to avoid them except for
-> > not getting into that mess in the first place.
+> and/or
 > 
-> The freezer interaction can be solved by letting the freezer know
-> about the dependencies of filesystems.
+> #define XFSSTAT_START_XQMSTAT	(offsetof(struct __xfsstats, xs_qm_dqreclaims)/sizeof(uint32_t))
 
-What freezer is that - the userspace application that calls the
-freeze ioctl()?
+Yup, it worked, although, it still doesn't really close the possibility for
+mistakes here, the first field may change for example and we may end up in the
+same situation.
 
-> So if an underlying layer
-> needs to be frozen, then all stacks containing that underlying layer
-> would need to be frozen first.  I guess any of the other bad
-> interactions would be solvable in a similar manner.
+I think only the 2nd option (defining START via offsetof), doesn't differ much
+from the approach in the patch, and, using the 1st option (BUILD_BUG_ON), will
+require an update to xqmstat_proc_show() if by any reason we change the quota
+values, so, I thought the simpler version as the patch would suffice and be a
+bit less confusing. But well, feel free to disagree, it's my opinion only and
+not written on stone :P
 
-We've talked about this in the context for fixing the hibernation
-mess - freezing multiple layers requires determining the
-dependencies between filesystem layers, and it has to work both
-up and down the dependency tree. And that tree has to include block
-devices, because things like loopback devices and locally mounted
-network devices form part of that dependency tree.
+> 
+> not work out?
+> 
+> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> > ---
+> >  fs/xfs/xfs_stats.c | 2 +-
+> >  fs/xfs/xfs_stats.h | 1 +
+> >  2 files changed, 2 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
+> > index 740ac9674848..09121c36a062 100644
+> > --- a/fs/xfs/xfs_stats.c
+> > +++ b/fs/xfs/xfs_stats.c
+> > @@ -119,7 +119,7 @@ static int xqmstat_proc_show(struct seq_file *m, void *v)
+> >  	int j;
+> >  
+> >  	seq_printf(m, "qm");
+> > -	for (j = XFSSTAT_END_REFCOUNT; j < XFSSTAT_END_XQMSTAT; j++)
+> > +	for (j = XFSSTAT_START_XQMSTAT; j < XFSSTAT_END_XQMSTAT; j++)
+> >  		seq_printf(m, " %u", counter_val(xfsstats.xs_stats, j));
+> >  	seq_putc(m, '\n');
+> >  	return 0;
+> > diff --git a/fs/xfs/xfs_stats.h b/fs/xfs/xfs_stats.h
+> > index 130db070e4d8..102e794addac 100644
+> > --- a/fs/xfs/xfs_stats.h
+> > +++ b/fs/xfs/xfs_stats.h
+> > @@ -147,6 +147,7 @@ struct __xfsstats {
+> >  	uint32_t		xs_rmap_2[__XBTS_MAX];
+> >  #define XFSSTAT_END_REFCOUNT		(XFSSTAT_END_RMAP_V2 + __XBTS_MAX)
+> >  	uint32_t		xs_refcbt_2[__XBTS_MAX];
+> > +#define XFSSTAT_START_XQMSTAT		XFSSTAT_END_REFCOUNT
+> >  #define XFSSTAT_END_XQMSTAT		(XFSSTAT_END_REFCOUNT + 6)
+> >  	uint32_t		xs_qm_dqreclaims;
+> >  	uint32_t		xs_qm_dqreclaim_misses;
+> > 
 
-Doing that as a global "freeze everything" operation can be solved
-by reverse walking the superblock list (as it's in sb instantiation
-order), but we have no obvious way of solving this dependency
-problem for any random superblock in the system. If you have a
-solution to this, I'm all ears :P
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Carlos
