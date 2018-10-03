@@ -1,13 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41918 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726547AbeJCTD6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 3 Oct 2018 15:03:58 -0400
-Date: Wed, 3 Oct 2018 08:15:47 -0400
-From: Brian Foster <bfoster@redhat.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:39898 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726748AbeJCVlc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Oct 2018 17:41:32 -0400
+Date: Wed, 3 Oct 2018 07:52:05 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 Subject: Re: [PATCH 2/8] xfs: remove suport for filesystems without unwritten
  extent flag
-Message-ID: <20181003121547.GA61971@bfoster>
+Message-ID: <20181003145205.GE19324@magnolia>
 References: <20181002174207.25275-1-hch@lst.de>
  <20181002174207.25275-3-hch@lst.de>
 MIME-Version: 1.0
@@ -27,12 +27,14 @@ On Tue, Oct 02, 2018 at 10:42:01AM -0700, Christoph Hellwig wrote:
 > completely untested and buggy code path.  Enabling the support also is
 > a simple bit flip using xfs_db, so legacy file systems can still be
 > brought forward.
-> 
+
+Will there be a migration tool in xfsprogs to help administrators roll
+their filesystems forward?  Generally we don't seem to support enabling
+new features on old filesystems (ala ext4) though maybe we should for a
+very small and controlled set of porting operations?
+
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
 >  fs/xfs/libxfs/xfs_bmap.c   | 21 ++++++----------
 >  fs/xfs/libxfs/xfs_format.h |  8 ++----
 >  fs/xfs/libxfs/xfs_sb.c     |  5 ++--
@@ -103,6 +105,13 @@ Reviewed-by: Brian Foster <bfoster@redhat.com>
 >  		return false;
 > +	if (!(sbp->sb_versionnum & XFS_SB_VERSION_EXTFLGBIT))
 > +		return false;
+
+The kernel only spits out "XFS(sda): bad version" in dmesg.  Maybe it'd
+be helpful to steer admins towards whatever they need to do to make
+their ancient fs work again?
+
+--D
+
 >  
 >  	/* check for unknown features in the fs */
 >  	if ((sbp->sb_versionnum & ~XFS_SB_VERSION_OKBITS) ||
