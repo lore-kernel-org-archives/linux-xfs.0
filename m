@@ -1,43 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:53258 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726233AbeJBXV2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Oct 2018 19:21:28 -0400
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 6638E284C0
-        for <linux-xfs@vger.kernel.org>; Tue,  2 Oct 2018 16:37:13 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 201259] [xfstests shared/010]: maybe pagecache contents is
- mutated after cycle mount
-Date: Tue, 02 Oct 2018 16:37:14 +0000
-Message-ID: <bug-201259-201763-SMSx0idCb1@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-201259-201763@https.bugzilla.kernel.org/>
-References: <bug-201259-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Received: from aserp2120.oracle.com ([141.146.126.78]:34586 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726304AbeJCIuE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Oct 2018 04:50:04 -0400
+Date: Tue, 2 Oct 2018 19:03:42 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: zero posteof blocks when cloning above eof
+Message-ID: <20181003020342.GD19324@magnolia>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>, zlang@redhat.com
 
-https://bugzilla.kernel.org/show_bug.cgi?id=201259
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
---- Comment #5 from Eric Sandeen (sandeen@sandeen.net) ---
-Even simpler, 
+When we're reflinking between two files and the destination file range
+is well beyond the destination file's EOF marker, zero any posteof
+speculative preallocations in the destination file so that we don't
+expose stale disk contents.  The previous strategy of trying to clear
+the preallocations does not work if the destination file has the
+PREALLOC flag set but no delalloc blocks.
 
-xfs_io -f -c "pwrite -S 0x72 0 4096" $DONOR1
+Uncovered by shared/010.
 
-xfs_io -f \
-        -c "falloc -k 8192 4096"        \
-        -c "pwrite -S 0x57 65536 8192" \
-        -c "fdatasync" \
-        -c "reflink $DONOR1 0 131072 4096" \
-                $TARGET
+Reported-by: Zorro Lang <zlang@redhat.com>
+Bugzilla-id: https://bugzilla.kernel.org/show_bug.cgi?id=201259
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_reflink.c |   34 ++++++++++++++++++++++++++--------
+ 1 file changed, 26 insertions(+), 8 deletions(-)
 
-so this seems to be an extending reflink extending past/into speculative
-preallocation which exposes the stale blocks.
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 38f405415b88..c8e996a99a74 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -1195,6 +1195,27 @@ xfs_iolock_two_inodes_and_break_layout(
+ 	return 0;
+ }
+ 
++/*
++ * If we're reflinking to a point past the destination file's EOF, we must
++ * zero any speculative post-EOF preallocations that sit between the old EOF
++ * and the destination file offset.
++ */
++static int
++xfs_reflink_zero_posteof(
++	struct xfs_inode	*ip,
++	loff_t			pos)
++{
++	loff_t			isize = i_size_read(VFS_I(ip));
++	bool			did_zeroing = false;
++
++	if (pos <= isize)
++		return 0;
++
++	trace_xfs_zero_eof(ip, isize, pos - isize);
++	return iomap_zero_range(VFS_I(ip), isize, pos - isize, &did_zeroing,
++			&xfs_iomap_ops);
++}
++
+ /*
+  * Link a range of blocks from one file to another.
+  */
+@@ -1257,15 +1278,12 @@ xfs_reflink_remap_range(
+ 	trace_xfs_reflink_remap_range(src, pos_in, len, dest, pos_out);
+ 
+ 	/*
+-	 * Clear out post-eof preallocations because we don't have page cache
+-	 * backing the delayed allocations and they'll never get freed on
+-	 * their own.
++	 * Zero existing post-eof speculative preallocations in the destination
++	 * file.
+ 	 */
+-	if (xfs_can_free_eofblocks(dest, true)) {
+-		ret = xfs_free_eofblocks(dest);
+-		if (ret)
+-			goto out_unlock;
+-	}
++	ret = xfs_reflink_zero_posteof(dest, pos_out);
++	if (ret)
++		goto out_unlock;
+ 
+ 	/* Set flags and remap blocks. */
+ 	ret = xfs_reflink_set_inode_flag(src, dest);
