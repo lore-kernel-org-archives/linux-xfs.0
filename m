@@ -1,63 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:42774 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726455AbeJBIfB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Oct 2018 04:35:01 -0400
-Date: Tue, 2 Oct 2018 02:54:10 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: [PATCH] vfs: check ->get_link return value
-Message-ID: <20181002015410.GM32577@ZenIV.linux.org.uk>
-References: <20181001224500.GE5872@magnolia>
- <20181001235251.GA10425@bombadil.infradead.org>
- <20181002002332.GA6706@magnolia>
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:34976 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726748AbeJCU1q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Oct 2018 16:27:46 -0400
+Received: by mail-wr1-f66.google.com with SMTP id w5-v6so6206046wrt.2
+        for <linux-xfs@vger.kernel.org>; Wed, 03 Oct 2018 06:39:18 -0700 (PDT)
+Date: Wed, 3 Oct 2018 15:39:14 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 1/2] xfs: Fix xqmstats offsets in /proc/fs/xfs/xqmstat
+Message-ID: <20181003133914.gikxezpadsyil7hp@odin.usersys.redhat.com>
+References: <20181003123537.30965-1-cmaiolino@redhat.com>
+ <20181003123537.30965-2-cmaiolino@redhat.com>
+ <46ff8aca-5053-541d-6d74-fbc7e12a9898@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181002002332.GA6706@magnolia>
+In-Reply-To: <46ff8aca-5053-541d-6d74-fbc7e12a9898@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Matthew Wilcox <willy@infradead.org>, xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Oct 01, 2018 at 05:23:32PM -0700, Darrick J. Wong wrote:
-
-> get_link doesn't need the EFSCORRUPTED return; all two of its callers
-> handle null pointer returns correctly and they don't return the ->get_link
-> return value directly to userspace.
+On Wed, Oct 03, 2018 at 07:47:46AM -0500, Eric Sandeen wrote:
+> On 10/3/18 7:35 AM, Carlos Maiolino wrote:
+> > The addition of FIBT, RMAP and REFCOUNT changed the offsets into
+> > __xfssats structure.
+> > 
+> > Although this didn't cause any direct issue,  xqmstat_proc_show() relied
+> > on the old offsets to display the xqm statistics.
 > 
-> It's just these two functions below whose callers assume they have to
-> deal an error pointer or that it's totally safe to dereference it.
+> Well, it caused /proc/fs/xfs/xqmstat to display garbage data, right?
+> That seems worth highlighting in the changelog, and not glossing over.
 
-No.  The only case when ->get_link() has any business returning NULL is
-when it has done nd_jump_link().  Those should never come without explicit
-->readlink() and they should never be fed to vfs_get_link(), so they are
-not a problem; anything else is a filesystem driver bug, plain and simple.
+Well, I wouldn't say 'garbage' data. I'd say data from other fields in the
+structure (at this point, specifically fino btree data) :P, but sure, I can add
+it to the changelog.
 
-Check for NULL in fs/namei.c:get_link() is *NOT* "defensive programming"
-bullshit; there it can legitimately happen (aforementioned procfs-style
-symlinks).  Note that there it is not an error at all.
+> 
+> Could maybe use Fixes: tags for:
+> 
+> 00f4e4f9 xfs: add rmap btree stats infrastructure
+> aafc3c24 xfs: support the XFS_BTNUM_FINOBT free inode btree type
+> 46eeb521 xfs: introduce refcount btree definitions
+> 
 
-Current calling conventions are:
-	* return ERR_PTR(-E...) on error
-	* return pointer to symlink body to be traversed on success
-	* return NULL when ->get_link() instances has jumped to destination
-on its own and there's no "symlink body" to be traversed.  For such symlinks
-we obviously need an explicit ->readlink() (for whatever string we want
-readlink(2) to return).  These should not be occur on anything NFS-exported
-or on overlayfs layers, since neither NFSD nor overlayfs don't know what
-to do with such.
+No objection.
 
-What you are proposing is a weird change along the lines of "if you
-accidentally return NULL it will be treated as empty body, except when it
-occurs on NFS exports or overlayfs layers; in such cases it will be
-interpreted as fs corruption.  $DEITY help you if real procfs-style
-symlink hits one of those, since nd_jump_link() called by those will
-oops in such conditions".
+> and a stable tag as well?  Though stable is tricky because different patches
+> would be required for different points along the stats structure evolution...
+> maybe best to ignore it, chances of auto-applying it correctly are slim to
+> none.
 
-As a mitigation strategy it sucks.  As part of calling conventions it's
-confusing and AFAICS absolutely pointless.
+Indeed, this may not apply to stable trees, unless the tree itself contains all
+three data structures (rmap finobtree and refcount).
 
-NAK.  And I'm really curious - what has lead to that?  Because procfs-style
-symlink in such conditions would have oopsed before it returned from
-->get_link()...
+> 
+> As for the change itself,
+> 
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> 
+> 
+> 
+> > Fix it.
+> > 
+> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> > ---
+> >  fs/xfs/xfs_stats.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
+> > index 4e4423153071..740ac9674848 100644
+> > --- a/fs/xfs/xfs_stats.c
+> > +++ b/fs/xfs/xfs_stats.c
+> > @@ -119,7 +119,7 @@ static int xqmstat_proc_show(struct seq_file *m, void *v)
+> >  	int j;
+> >  
+> >  	seq_printf(m, "qm");
+> > -	for (j = XFSSTAT_END_IBT_V2; j < XFSSTAT_END_XQMSTAT; j++)
+> > +	for (j = XFSSTAT_END_REFCOUNT; j < XFSSTAT_END_XQMSTAT; j++)
+> >  		seq_printf(m, " %u", counter_val(xfsstats.xs_stats, j));
+> >  	seq_putc(m, '\n');
+> >  	return 0;
+> > 
+
+-- 
+Carlos
