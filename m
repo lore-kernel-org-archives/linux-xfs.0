@@ -1,259 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58346 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:44378 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727555AbeJBTTv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 2 Oct 2018 15:19:51 -0400
-Date: Tue, 2 Oct 2018 08:36:41 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/2] xfs: fix buffer state management in
- xrep_findroot_block
-Message-ID: <20181002123640.GB55077@bfoster>
-References: <153843409576.24414.14199833763423874927.stgit@magnolia>
- <153843410841.24414.2317164703479198891.stgit@magnolia>
+        id S1726769AbeJCUwt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 3 Oct 2018 16:52:49 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 5F783B56
+        for <linux-xfs@vger.kernel.org>; Wed,  3 Oct 2018 09:04:12 -0500 (CDT)
+Subject: Re: [PATCH 2/2] xfs: Add new constant to mark start of xqmstat
+References: <20181003123537.30965-1-cmaiolino@redhat.com>
+ <20181003123537.30965-3-cmaiolino@redhat.com>
+ <eacf197c-98d7-4507-a40f-cf32d49bb5eb@sandeen.net>
+ <20181003140054.5kjzhfuit35zldkl@odin.usersys.redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <b7b5bab1-5c6f-2bd8-2953-b6a7f95f4717@sandeen.net>
+Date: Wed, 3 Oct 2018 09:04:16 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <153843410841.24414.2317164703479198891.stgit@magnolia>
+In-Reply-To: <20181003140054.5kjzhfuit35zldkl@odin.usersys.redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Mon, Oct 01, 2018 at 03:48:28PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+
+
+On 10/3/18 9:00 AM, Carlos Maiolino wrote:
+> On Wed, Oct 03, 2018 at 07:51:43AM -0500, Eric Sandeen wrote:
+>> On 10/3/18 7:35 AM, Carlos Maiolino wrote:
+>>> xqmstat information under __xfsstats is used directly by the
+>>> /proc/fs/xfs/xqmstat show method, which makes use of struct offsets to
+>>> print out the values.
+>>>
+>>> Currently, the function is setup to start printing values from the offset of
+>>> the last marker before xqmstat, so, an update to __xfsstats structure
+>>> may also require an update of xqmstat_proc_show() function.
+>>>
+>>> By adding a new constant, we concentrate any updates do __xfsstats
+>>> structure fields locally to the file xfs_stats.h, reducing the
+>>> likelyhood of future bugs if an update to xqmstat_proc_show is
+>>> forgotten as have happened before.
+>>
+>> did 
+>>
+>> BUILD_BUG_ON(offsetof(struct __xfsstats, xs_qm_dqreclaims)/sizeof(uint32_t)) != XFSSTAT_START_XQMSTAT);
+>>
+>> and/or
+>>
+>> #define XFSSTAT_START_XQMSTAT	(offsetof(struct __xfsstats, xs_qm_dqreclaims)/sizeof(uint32_t))
 > 
-> We don't quite handle buffer state properly in online repair's findroot
-> routine.  If the buffer is already in-core we don't want to trash its
-> b_ops and state, but we /do/ want to read the contents in from disk if
-> the buffer wasn't already in memory.
+> Yup, it worked, although, it still doesn't really close the possibility for
+> mistakes here, the first field may change for example and we may end up in the
+> same situation.
 > 
-> Therefore, introduce the ONESHOT_OPS buffer flag.  If the buffer had to
-> be read in from disk, the buf_ops supplied to read_buf will be used once
-> to verify the buffer contents, but they will not be attached to the
-> buffer itself.
-> 
-> With this change, xrep_findroot_block's buffer handling can be
-> simplified -- if b_ops is null, we know that it was freshly read (and
-> verified), we can set b_ops, and proceed.  If b_ops is not null, the
-> buffer was already in memory and we need to do some more structure
-> checks.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/scrub/repair.c |   76 ++++++++++++++++++++++++++++++++++++++-----------
->  fs/xfs/xfs_buf.c      |    7 ++++-
->  fs/xfs/xfs_buf.h      |    2 +
->  3 files changed, 67 insertions(+), 18 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-> index 6eb66b3543ff..8e1dfa5752b4 100644
-> --- a/fs/xfs/scrub/repair.c
-> +++ b/fs/xfs/scrub/repair.c
-...
-> @@ -718,28 +721,67 @@ xrep_findroot_block(
->  			return error;
->  	}
->  
-> +	/*
-> +	 * Read the buffer into memory with ONESHOT_OPS.  We can tell if we
-> +	 * had to go to disk by whether or not b_ops is set.
-> +	 */
->  	error = xfs_trans_read_buf(mp, ri->sc->tp, mp->m_ddev_targp, daddr,
-> -			mp->m_bsize, 0, &bp, NULL);
-> +			mp->m_bsize, XBF_ONESHOT_OPS, &bp, fab->buf_ops);
->  	if (error)
->  		return error;
->  
-> -	/*
-> -	 * Does this look like a block matching our fs and higher than any
-> -	 * other block we've found so far?  If so, reattach buffer verifiers
-> -	 * so the AIL won't complain if the buffer is also dirty.
-> -	 */
->  	btblock = XFS_BUF_TO_BLOCK(bp);
-> -	if (be32_to_cpu(btblock->bb_magic) != fab->magic)
-> -		goto out;
-> -	if (xfs_sb_version_hascrc(&mp->m_sb) &&
-> -	    !uuid_equal(&btblock->bb_u.s.bb_uuid, &mp->m_sb.sb_meta_uuid))
-> -		goto out;
-> -	bp->b_ops = fab->buf_ops;
-> +	if (bp->b_ops == NULL) {
-> +		/*
-> +		 * The buffer came back with NULL b_ops, which means that the
-> +		 * buffer was not in memory, we had to read it off disk, and
-> +		 * the verifier has run.
-> +		 *
-> +		 * If b_error == 0, the block matches the magic, the uuid, and
-> +		 * ->verify_struct of the btree type and we can proceed.  Set
-> +		 * b_ops to the btree type's buf_ops so that we don't have a
-> +		 * buffer in memory with no verifiers.
-> +		 *
-> +		 * Otherwise, the block doesn't match the btree type so we
-> +		 * mark it oneshot so it doesn't stick around, and move on.
-> +		 */
+> I think only the 2nd option (defining START via offsetof), doesn't differ much
+> from the approach in the patch, and, using the 1st option (BUILD_BUG_ON), will
+> require an update to xqmstat_proc_show() if by any reason we change the quota
+> values, so, I thought the simpler version as the patch would suffice and be a
+> bit less confusing. But well, feel free to disagree, it's my opinion only and
+> not written on stone :P
 
-Hmm, the fact that this interface still requires looking at internal
-buffer state to process what happened suggests to me it may not be the
-best approach. IIUC, a buffer that's already in-core is just going to
-return with the existing b_ops (the else branch below). Otherwise,
-->b_ops is NULL to indicate that we read it from disk and ran the passed
-in (prospective) verifier...
+I'd argue that the first field of xqmstats changing not possible, because
+this is essentially a userspacce API.  If we're going to change the format
+of xqmstats, we should only add to the end of it.
 
-> +		if (bp->b_error) {
-> +			xfs_buf_oneshot(bp);
-> +			goto out;
-> +		}
+The thing about using offsetof() is that we'll never have to update the START
+define again, even if we add more records to the larger stats structure.
 
-... which means that this can't happen, because if we ran the passed in
-verifier and it fails the xfs_trans_read_buf() call invalidates the
-buffer and returns an error. I think that also means we'd abort the scan
-if we don't filter out -EFSCORRUPTED returns so long as we pass a
-potentially incorrect verifier.
+But we can see what others think as well.
 
-Also note that I think this still means that each failure to match a
-verifier has to re-read the buffer from disk, but we can deal with that
-separately.
-
-> +		bp->b_ops = fab->buf_ops;
-
-Therefore, a successful return with a NULL ->b_ops means we ran the
-verifier, it passed, and we're going to attach it. Am I missing
-something, or is this a roundabout way to just do what the buffer read
-mechanism already does without the flag?
-
-I could easily be missing some of the verification intricacies that are
-required from scrub context, but is this logic roughly equivalent to the
-following (without any special control flags)? We'd repeat some checks
-in the event the buffer was read from disk, but perhaps that can also be
-optimized out separately if it really matters. Hm?
-
-	...
-        error = xfs_trans_read_buf(mp, ri->sc->tp, mp->m_ddev_targp, daddr,
-                        mp->m_bsize, 0, &bp, fab->buf_ops);
-        if (error == -EFSCORRUPTED)
-                goto out;
-        else if (error)
-                return error;
-
-        /*
-         * If b_ops doesn't match fab, the buffer was already in-core with a
-         * different verifier. We know it doesn't match in that case.
-         */
-        if (bp->b_ops != fab->buf_ops)
-                goto out;
-
-        /*
-         * The verifier matches but the buffer may have already been in-core
-         * with this verifier. Sanity check the latest content before we
-         * proceed. Don't check the CRC because CRCs aren't updated until
-         * writeback.
-         */
-        btblock = XFS_BUF_TO_BLOCK(bp);
-        if (be32_to_cpu(btblock->bb_magic) != fab->magic)
-                goto out;
-        if (xfs_sb_version_hascrc(&mp->m_sb) &&
-            !uuid_equal(&btblock->bb_u.s.bb_uuid,
-                        &mp->m_sb.sb_meta_uuid))
-                goto out;
-        fa = bp->b_ops->verify_struct(bp);
-        if (fa)
-                goto out;
-	...
-
-Brian
-
-> +	} else {
-> +		/*
-> +		 * The buffer came back with b_ops set, which means that the
-> +		 * buffer was already in memory.  We'll run the magic, uuid,
-> +		 * and ->verify_struct checks by hand to see if we want to
-> +		 * examine it further.
-> +		 */
-> +		if (be32_to_cpu(btblock->bb_magic) != fab->magic)
-> +			goto out;
-> +		if (xfs_sb_version_hascrc(&mp->m_sb) &&
-> +		    !uuid_equal(&btblock->bb_u.s.bb_uuid,
-> +				&mp->m_sb.sb_meta_uuid))
-> +			goto out;
->  
-> -	/* Make sure we pass the verifiers. */
-> -	bp->b_ops->verify_read(bp);
-> -	if (bp->b_error)
-> -		goto out;
-> +		/*
-> +		 * If b_ops do not match fab->buf_ops even though the magic
-> +		 * does, something is seriously wrong here and we'd rather
-> +		 * abort the entire repair than risk screwing things up.
-> +		 */
-> +		if (bp->b_ops != fab->buf_ops)
-> +			goto out;
-> +
-> +		/*
-> +		 * If the buffer was already incore (on a v5 fs) then it should
-> +		 * already have had b_ops assigned.  Call ->verify_struct to
-> +		 * check the structure.  Avoid checking the CRC because we
-> +		 * don't calculate CRCs until the buffer is written by the log.
-> +		 */
-> +		fa = bp->b_ops->verify_struct(bp);
-> +		if (fa)
-> +			goto out;
-> +	}
->  
->  	/*
->  	 * This block passes the magic/uuid and verifier tests for this btree
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index e839907e8492..139d35f6da64 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -206,7 +206,8 @@ _xfs_buf_alloc(
->  	 * We don't want certain flags to appear in b_flags unless they are
->  	 * specifically set by later operations on the buffer.
->  	 */
-> -	flags &= ~(XBF_UNMAPPED | XBF_TRYLOCK | XBF_ASYNC | XBF_READ_AHEAD);
-> +	flags &= ~(XBF_UNMAPPED | XBF_TRYLOCK | XBF_ASYNC | XBF_READ_AHEAD |
-> +		   XBF_ONESHOT_OPS);
->  
->  	atomic_set(&bp->b_hold, 1);
->  	atomic_set(&bp->b_lru_ref, 1);
-> @@ -758,6 +759,7 @@ xfs_buf_read_map(
->  	const struct xfs_buf_ops *ops)
->  {
->  	struct xfs_buf		*bp;
-> +	const struct xfs_buf_ops *orig_ops;
->  
->  	flags |= XBF_READ;
->  
-> @@ -767,8 +769,11 @@ xfs_buf_read_map(
->  
->  		if (!(bp->b_flags & XBF_DONE)) {
->  			XFS_STATS_INC(target->bt_mount, xb_get_read);
-> +			orig_ops = bp->b_ops;
->  			bp->b_ops = ops;
->  			_xfs_buf_read(bp, flags);
-> +			if (flags & XBF_ONESHOT_OPS)
-> +				bp->b_ops = orig_ops;
->  		} else if (flags & XBF_ASYNC) {
->  			/*
->  			 * Read ahead call which is already satisfied,
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index 4e3171acd0f8..62139d3ad349 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -34,6 +34,7 @@ typedef enum {
->  #define XBF_ASYNC	 (1 << 4) /* initiator will not wait for completion */
->  #define XBF_DONE	 (1 << 5) /* all pages in the buffer uptodate */
->  #define XBF_STALE	 (1 << 6) /* buffer has been staled, do not find it */
-> +#define XBF_ONESHOT_OPS	 (1 << 7) /* only use ops if we read in the buf */
->  #define XBF_WRITE_FAIL	 (1 << 24)/* async writes have failed on this buffer */
->  
->  /* I/O hints for the BIO layer */
-> @@ -61,6 +62,7 @@ typedef unsigned int xfs_buf_flags_t;
->  	{ XBF_ASYNC,		"ASYNC" }, \
->  	{ XBF_DONE,		"DONE" }, \
->  	{ XBF_STALE,		"STALE" }, \
-> +	{ XBF_ONESHOT_OPS,	"ONESHOT_OPS" }, /* should never be set */ \
->  	{ XBF_WRITE_FAIL,	"WRITE_FAIL" }, \
->  	{ XBF_SYNCIO,		"SYNCIO" }, \
->  	{ XBF_FUA,		"FUA" }, \
-> 
+-Eric
