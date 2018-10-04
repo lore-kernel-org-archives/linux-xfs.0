@@ -1,13 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:37046 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726998AbeJDKQe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Oct 2018 06:16:34 -0400
-Subject: [PATCH 01/22] docs: add skeleton of XFS Data Structures and
- Algorithms book
+Received: from userp2130.oracle.com ([156.151.31.86]:46592 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726998AbeJDKQx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Oct 2018 06:16:53 -0400
+Subject: [PATCH 03/22] docs: add XFS self-describing metadata integrity doc
+ to DS&A book
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 03 Oct 2018 20:25:13 -0700
-Message-ID: <153862351393.27883.536297478095101496.stgit@magnolia>
+Date: Wed, 03 Oct 2018 20:25:32 -0700
+Message-ID: <153862353232.27883.1143065708834747014.stgit@magnolia>
 In-Reply-To: <153862350727.27883.9408120819569795102.stgit@magnolia>
 References: <153862350727.27883.9408120819569795102.stgit@magnolia>
 MIME-Version: 1.0
@@ -21,280 +21,787 @@ Cc: linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org, corbet@lwn.net
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Start adding the main TOC of the XFS data structures and algorithms
-book.  We'll add the individual sections in later patches.
-
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- Documentation/conf.py                              |    2 
- .../filesystems/xfs-data-structures/about.rst      |  123 ++++++++++++++++++++
- .../filesystems/xfs-data-structures/auxiliary.rst  |    4 +
- .../filesystems/xfs-data-structures/dynamic.rst    |    4 +
- .../filesystems/xfs-data-structures/globals.rst    |    4 +
- .../filesystems/xfs-data-structures/index.rst      |   15 ++
- .../filesystems/xfs-data-structures/overview.rst   |   44 +++++++
- Documentation/index.rst                            |    1 
- 8 files changed, 197 insertions(+)
- create mode 100644 Documentation/filesystems/xfs-data-structures/about.rst
- create mode 100644 Documentation/filesystems/xfs-data-structures/auxiliary.rst
- create mode 100644 Documentation/filesystems/xfs-data-structures/dynamic.rst
- create mode 100644 Documentation/filesystems/xfs-data-structures/globals.rst
- create mode 100644 Documentation/filesystems/xfs-data-structures/index.rst
- create mode 100644 Documentation/filesystems/xfs-data-structures/overview.rst
+ .../filesystems/xfs-data-structures/overview.rst   |    2 
+ .../self_describing_metadata.rst                   |  402 ++++++++++++++++++++
+ .../filesystems/xfs-self-describing-metadata.txt   |  350 -----------------
+ 3 files changed, 404 insertions(+), 350 deletions(-)
+ create mode 100644 Documentation/filesystems/xfs-data-structures/self_describing_metadata.rst
+ delete mode 100644 Documentation/filesystems/xfs-self-describing-metadata.txt
 
 
-diff --git a/Documentation/conf.py b/Documentation/conf.py
-index add6788bbb8c..fbf8f5dce7d9 100644
---- a/Documentation/conf.py
-+++ b/Documentation/conf.py
-@@ -383,6 +383,8 @@ latex_documents = [
-      'The kernel development community', 'manual'),
-     ('admin-guide/xfs', 'xfs-admin-guide.tex',
-      'XFS Administration Guide', 'XFS Community', 'manual'),
-+    ('filesystems/xfs-data-structures/index', 'xfs-data-structures.tex',
-+     'XFS Data Structures and Algorithms', 'XFS Community', 'manual'),
-     ('filesystems/index', 'filesystems.tex', 'Linux Filesystems API',
-      'The kernel development community', 'manual'),
-     ('filesystems/ext4/index', 'ext4.tex', 'ext4 Filesystem',
-diff --git a/Documentation/filesystems/xfs-data-structures/about.rst b/Documentation/filesystems/xfs-data-structures/about.rst
-new file mode 100644
-index 000000000000..7df40b637e2e
---- /dev/null
-+++ b/Documentation/filesystems/xfs-data-structures/about.rst
-@@ -0,0 +1,123 @@
-+.. SPDX-License-Identifier: CC-BY-SA-4.0
-+
-+About this Book
-+===============
-+
-+XFS is a high performance filesystem which was designed to maximize
-+parallel throughput and to scale up to extremely large 64-bit storage
-+systems. Originally developed by SGI in October 1993 for IRIX, XFS can
-+handle large files, large filesystems, many inodes, large directories,
-+large file attributes, and large allocations. Filesystems are optimized
-+for parallel access by splitting the storage device into semi-autonomous
-+allocation groups. XFS employs branching trees (B+ trees) to facilitate
-+fast searches of large lists; it also uses delayed extent-based
-+allocation to improve data contiguity and IO performance.
-+
-+This document describes the on-disk layout of an XFS filesystem and how
-+to use the debugging tools ``xfs_db`` and ``xfs_logprint`` to inspect
-+the metadata structures. It also describes how on-disk metadata relates
-+to the higher level design goals.
-+
-+This book’s source code is available in the Linux kernel git tree.
-+Feedback should be sent to the XFS mailing list, currently at:
-+``linux-xfs@vger.kernel.org``.
-+
-+    **Note**
-+
-+    All fields in XFS metadata structures are in big-endian byte order
-+    except for log items which are formatted in host order.
-+
-+Copyright
-+---------
-+© Copyright 2006 Silicon Graphics Inc. All rights reserved.  Permission is
-+granted to copy, distribute, and/or modify this document under the terms of the
-+Creative Commons Attribution-Share Alike, Version 3.0 or any later version
-+published by the Creative Commons Corp. A copy of the license is available at
-+http://creativecommons.org/licenses/by-sa/3.0/us/ .
-+
-+Change Log
-+----------
-+
-+.. list-table::
-+   :widths: 8 12 14 46
-+   :header-rows: 1
-+
-+   * - Version
-+     - Date
-+     - Author
-+     - Description
-+
-+   * - 0.1
-+     - 2006
-+     - Silicon Graphics, Inc.
-+     - Initial Release
-+
-+   * - 1.0
-+     - Fri Jul 03 2009
-+     - Ryan Lerch
-+     - Publican Conversion
-+
-+   * - 1.1
-+     - March 2010
-+     - Eric Sandeen
-+     - Community Release
-+
-+   * - 1.99
-+     - February 2014
-+     - Dave Chinner
-+     - AsciiDoc Conversion
-+
-+   * - 3.0
-+     - October 2015
-+     - Darrick J. Wong
-+     - Miscellaneous fixes.
-+       Add missing field definitions.
-+       Add some missing xfs_db examples.
-+       Add an overview of XFS.
-+       Document the journal format.
-+       Document the realtime device.
-+
-+   * - 3.1
-+     - October 2015
-+     - Darrick J. Wong
-+     - Add v5 fields.
-+       Discuss metadata integrity.
-+       Document the free inode B+tree.
-+       Create an index of magic numbers.
-+       Document sparse inodes.
-+
-+   * - 3.14
-+     - January 2016
-+     - Darrick J. Wong
-+     - Document disk format change testing.
-+
-+   * - 3.141
-+     - June 2016
-+     - Darrick J. Wong
-+     - Document the reverse-mapping btree.
-+       Move the b+tree info to a separate chapter.
-+       Discuss overlapping interval b+trees.
-+       Discuss new log items for atomic updates.
-+       Document the reference-count btree.
-+       Discuss block sharing, reflink, &amp; deduplication.
-+
-+   * - 3.1415
-+     - July 2016
-+     - Darrick J. Wong
-+     - Document the real-time reverse-mapping btree.
-+
-+   * - 3.14159
-+     - June 2017
-+     - Darrick J. Wong
-+     - Add the metadump file format.
-+
-+   * - 3.141592
-+     - May 2018
-+     - Darrick J. Wong
-+     - Incorporate Dave Chinner's log design document.
-+       Incorporate Dave Chinner's self-describing metadata design document.
-+
-+   * - 4.20
-+     - September 2018
-+     - Darrick J. Wong
-+     - Convert to RestructuredText and move to the kernel source tree.
-diff --git a/Documentation/filesystems/xfs-data-structures/auxiliary.rst b/Documentation/filesystems/xfs-data-structures/auxiliary.rst
-new file mode 100644
-index 000000000000..d2fd2f88ad0e
---- /dev/null
-+++ b/Documentation/filesystems/xfs-data-structures/auxiliary.rst
-@@ -0,0 +1,4 @@
-+.. SPDX-License-Identifier: CC-BY-SA-4.0
-+
-+Auxiliary Data Structures
-+=========================
-diff --git a/Documentation/filesystems/xfs-data-structures/dynamic.rst b/Documentation/filesystems/xfs-data-structures/dynamic.rst
-new file mode 100644
-index 000000000000..895c94e95889
---- /dev/null
-+++ b/Documentation/filesystems/xfs-data-structures/dynamic.rst
-@@ -0,0 +1,4 @@
-+.. SPDX-License-Identifier: CC-BY-SA-4.0
-+
-+Dynamic Allocated Structures
-+============================
-diff --git a/Documentation/filesystems/xfs-data-structures/globals.rst b/Documentation/filesystems/xfs-data-structures/globals.rst
-new file mode 100644
-index 000000000000..3499e0fcd4a8
---- /dev/null
-+++ b/Documentation/filesystems/xfs-data-structures/globals.rst
-@@ -0,0 +1,4 @@
-+.. SPDX-License-Identifier: CC-BY-SA-4.0
-+
-+Global Structures
-+=================
-diff --git a/Documentation/filesystems/xfs-data-structures/index.rst b/Documentation/filesystems/xfs-data-structures/index.rst
-new file mode 100644
-index 000000000000..bd164f62c387
---- /dev/null
-+++ b/Documentation/filesystems/xfs-data-structures/index.rst
-@@ -0,0 +1,15 @@
-+.. SPDX-License-Identifier: CC-BY-SA-4.0
-+
-+==================================
-+XFS Data Structures and Algorithms
-+==================================
-+
-+.. toctree::
-+   :maxdepth: 5
-+   :numbered:
-+
-+   about.rst
-+   overview.rst
-+   globals.rst
-+   dynamic.rst
-+   auxiliary.rst
 diff --git a/Documentation/filesystems/xfs-data-structures/overview.rst b/Documentation/filesystems/xfs-data-structures/overview.rst
-new file mode 100644
-index 000000000000..43b48f30f7e8
---- /dev/null
+index 43b48f30f7e8..8b3de9abcf39 100644
+--- a/Documentation/filesystems/xfs-data-structures/overview.rst
 +++ b/Documentation/filesystems/xfs-data-structures/overview.rst
-@@ -0,0 +1,44 @@
+@@ -42,3 +42,5 @@ filesystem operations can be carried out atomically in the case of a crash.
+ Furthermore, there is the concept of a real-time device wherein allocations
+ are tracked more simply and in larger chunks to reduce jitter in allocation
+ latency.
++
++.. include:: self_describing_metadata.rst
+diff --git a/Documentation/filesystems/xfs-data-structures/self_describing_metadata.rst b/Documentation/filesystems/xfs-data-structures/self_describing_metadata.rst
+new file mode 100644
+index 000000000000..f9d41c76e1d5
+--- /dev/null
++++ b/Documentation/filesystems/xfs-data-structures/self_describing_metadata.rst
+@@ -0,0 +1,402 @@
 +.. SPDX-License-Identifier: CC-BY-SA-4.0
 +
-+High Level Design
-+=================
++Metadata Integrity
++------------------
 +
-+Overview
-+--------
++Introduction
++~~~~~~~~~~~~
 +
-+XFS presents to users a standard Unix filesystem interface: a rooted tree of
-+directories, files, symbolic links, and devices. All five of those entities
-+are represented inside the filesystem by an index node, or "inode";
-+each node is uniquely referenced by an inode number.  Directories consist of
-+(name, inode number) tuples and it is possible for multiple tuples to contain
-+the same inode number.  Data blocks are associated with files by means of a
-+block map in each index node.  It is also possible to attach (key, value)
-+tuples to any index node; these are known as "extended attributes", which
-+extend beyond the standard Unix file attributes.
++The largest scalability problem facing XFS is not one of algorithmic
++scalability, but of verification of the filesystem structure. Scalabilty of
++the structures and indexes on disk and the algorithms for iterating them are
++adequate for supporting PB scale filesystems with billions of inodes, however
++it is this very scalability that causes the verification problem.
 +
-+Internally, XFS filesystems are divided into a number of equally sized chunks
-+called Allocation Groups. Each AG can almost be thought of as an individual
-+filesystem that maintains its own space usage, index nodes, and other
-+secondary metadata. Having multiple AGs allows XFS to handle most operations
-+in parallel without degrading performance as the number of concurrent accesses
-+increases. Each allocation group uses multiple B+trees to maintain bookkeeping
-+records such as the locations of free blocks, the locations of allocated
-+inodes, and the locations of free inodes.
++Almost all metadata on XFS is dynamically allocated. The only fixed location
++metadata is the allocation group headers (SB, AGF, AGFL and AGI), while all
++other metadata structures need to be discovered by walking the filesystem
++structure in different ways. While this is already done by userspace tools for
++validating and repairing the structure, there are limits to what they can
++verify, and this in turn limits the supportable size of an XFS filesystem.
 +
-+Files, symbolic links, and directories can have up to two block maps, or
-+"forks", which associate filesystems blocks with a particular file or
-+directory.  The "attribute fork" tracks blocks used to store and index
-+extended attributes, whereas the "data fork" tracks file data blocks,
-+symbolic link targets, or directory blocks, depending on the type of the inode
-+record. Both forks associate a logical offset with an extent of physical
-+blocks, which makes sparse files and directories possible. Directory entries
-+and extended attributes are contained inside a second-level data structure
-+within the blocks that are mapped by the forks. This structure consists of
-+variable-length directory or attribute records and possible a second B+tree to
-+index these records.
++For example, it is entirely possible to manually use xfs\_db and a bit of
++scripting to analyse the structure of a 100TB filesystem when trying to
++determine the root cause of a corruption problem, but it is still mainly a
++manual task of verifying that things like single bit errors or misplaced
++writes weren’t the ultimate cause of a corruption event. It may take a few
++hours to a few days to perform such forensic analysis, so for at this scale
++root cause analysis is entirely possible.
 +
-+XFS employs a journalling log in which metadata changes are collected so that
-+filesystem operations can be carried out atomically in the case of a crash.
-+Furthermore, there is the concept of a real-time device wherein allocations
-+are tracked more simply and in larger chunks to reduce jitter in allocation
-+latency.
-diff --git a/Documentation/index.rst b/Documentation/index.rst
-index 5db7e87c7cb1..4136d2274fa6 100644
---- a/Documentation/index.rst
-+++ b/Documentation/index.rst
-@@ -115,6 +115,7 @@ subprojects.
-    :maxdepth: 2
- 
-    filesystems/ext4/index
-+   filesystems/xfs-data-structures/index
- 
- Translations
- ------------
++However, if we scale the filesystem up to 1PB, we now have 10x as much
++metadata to analyse and so that analysis blows out towards weeks/months of
++forensic work. Most of the analysis work is slow and tedious, so as the amount
++of analysis goes up, the more likely that the cause will be lost in the noise.
++Hence the primary concern for supporting PB scale filesystems is minimising
++the time and effort required for basic forensic analysis of the filesystem
++structure.
++
++Therefore, the version 5 disk format introduced larger headers for all
++metadata types, which enable the filesystem to check information being read
++from the disk more rigorously. Metadata integrity fields now include:
++
++-  **Magic** numbers, to classify all types of metadata. This is unchanged
++   from v4.
++
++-  A copy of the filesystem **UUID**, to confirm that a given disk block is
++   connected to the superblock.
++
++-  The **owner**, to avoid accessing a piece of metadata which belongs to some
++   other part of the filesystem.
++
++-  The filesystem **block number**, to detect misplaced writes.
++
++-  The **log serial number** of the last write to this block, to avoid
++   replaying obsolete log entries.
++
++-  A CRC32c **checksum** of the entire block, to detect minor corruption.
++
++Metadata integrity coverage has been extended to all metadata blocks in the
++filesystem, with the following notes:
++
++-  Inodes can have multiple "owners" in the directory tree; therefore the
++   record contains the inode number instead of an owner or a block number.
++
++-  Superblocks have no owners.
++
++-  The disk quota file has no owner or block numbers.
++
++-  Metadata owned by files list the inode number as the owner.
++
++-  Per-AG data and B+tree blocks list the AG number as the owner.
++
++-  Per-AG header sectors don’t list owners or block numbers, since they have
++   fixed locations.
++
++-  Remote attribute blocks are not logged and therefore the LSN must be -1.
++
++This functionality enables XFS to decide that a block contents are so
++unexpected that it should stop immediately. Unfortunately checksums do not
++allow for automatic correction. Please keep regular backups, as always.
++
++Self Describing Metadata
++~~~~~~~~~~~~~~~~~~~~~~~~
++
++One of the problems with the current metadata format is that apart from the
++magic number in the metadata block, we have no other way of identifying what
++it is supposed to be. We can’t even identify if it is the right place. Put
++simply, you can’t look at a single metadata block in isolation and say "yes,
++it is supposed to be there and the contents are valid".
++
++Hence most of the time spent on forensic analysis is spent doing basic
++verification of metadata values, looking for values that are in range (and
++hence not detected by automated verification checks) but are not correct.
++Finding and understanding how things like cross linked block lists (e.g.
++sibling pointers in a btree end up with loops in them) are the key to
++understanding what went wrong, but it is impossible to tell what order the
++blocks were linked into each other or written to disk after the fact.
++
++Hence we need to record more information into the metadata to allow us to
++quickly determine if the metadata is intact and can be ignored for the purpose
++of analysis. We can’t protect against every possible type of error, but we can
++ensure that common types of errors are easily detectable. Hence the concept of
++self describing metadata.
++
++The first, fundamental requirement of self describing metadata is that the
++metadata object contains some form of unique identifier in a well known
++location. This allows us to identify the expected contents of the block and
++hence parse and verify the metadata object. IF we can’t independently identify
++the type of metadata in the object, then the metadata doesn’t describe itself
++very well at all!
++
++Luckily, almost all XFS metadata has magic numbers embedded already - only the
++AGFL, remote symlinks and remote attribute blocks do not contain identifying
++magic numbers. Hence we can change the on-disk format of all these objects to
++add more identifying information and detect this simply by changing the magic
++numbers in the metadata objects. That is, if it has the current magic number,
++the metadata isn’t self identifying. If it contains a new magic number, it is
++self identifying and we can do much more expansive automated verification of
++the metadata object at runtime, during forensic analysis or repair.
++
++As a primary concern, self describing metadata needs some form of overall
++integrity checking. We cannot trust the metadata if we cannot verify that it
++has not been changed as a result of external influences. Hence we need some
++form of integrity check, and this is done by adding CRC32c validation to the
++metadata block. If we can verify the block contains the metadata it was
++intended to contain, a large amount of the manual verification work can be
++skipped.
++
++CRC32c was selected as metadata cannot be more than 64k in length in XFS and
++hence a 32 bit CRC is more than sufficient to detect multi-bit errors in
++metadata blocks. CRC32c is also now hardware accelerated on common CPUs so it
++is fast. So while CRC32c is not the strongest of possible integrity checks
++that could be used, it is more than sufficient for our needs and has
++relatively little overhead. Adding support for larger integrity fields and/or
++algorithms does really provide any extra value over CRC32c, but it does add a
++lot of complexity and so there is no provision for changing the integrity
++checking mechanism.
++
++Self describing metadata needs to contain enough information so that the
++metadata block can be verified as being in the correct place without needing
++to look at any other metadata. This means it needs to contain location
++information. Just adding a block number to the metadata is not sufficient to
++protect against mis-directed writes - a write might be misdirected to the
++wrong LUN and so be written to the "correct block" of the wrong filesystem.
++Hence location information must contain a filesystem identifier as well as a
++block number.
++
++Another key information point in forensic analysis is knowing who the metadata
++block belongs to. We already know the type, the location, that it is valid
++and/or corrupted, and how long ago that it was last modified. Knowing the
++owner of the block is important as it allows us to find other related metadata
++to determine the scope of the corruption. For example, if we have a extent
++btree object, we don’t know what inode it belongs to and hence have to walk
++the entire filesystem to find the owner of the block. Worse, the corruption
++could mean that no owner can be found (i.e. it’s an orphan block), and so
++without an owner field in the metadata we have no idea of the scope of the
++corruption. If we have an owner field in the metadata object, we can
++immediately do top down validation to determine the scope of the problem.
++
++Different types of metadata have different owner identifiers. For example,
++directory, attribute and extent tree blocks are all owned by an inode, whilst
++freespace btree blocks are owned by an allocation group. Hence the size and
++contents of the owner field are determined by the type of metadata object we
++are looking at. The owner information can also identify misplaced writes (e.g.
++freespace btree block written to the wrong AG).
++
++Self describing metadata also needs to contain some indication of when it was
++written to the filesystem. One of the key information points when doing
++forensic analysis is how recently the block was modified. Correlation of set
++of corrupted metadata blocks based on modification times is important as it
++can indicate whether the corruptions are related, whether there’s been
++multiple corruption events that lead to the eventual failure, and even whether
++there are corruptions present that the run-time verification is not detecting.
++
++For example, we can determine whether a metadata object is supposed to be free
++space or still allocated if it is still referenced by its owner by looking at
++when the free space btree block that contains the block was last written
++compared to when the metadata object itself was last written. If the free
++space block is more recent than the object and the object’s owner, then there
++is a very good chance that the block should have been removed from the owner.
++
++To provide this "written timestamp", each metadata block gets the Log Sequence
++Number (LSN) of the most recent transaction it was modified on written into
++it. This number will always increase over the life of the filesystem, and the
++only thing that resets it is running xfs\_repair on the filesystem. Further,
++by use of the LSN we can tell if the corrupted metadata all belonged to the
++same log checkpoint and hence have some idea of how much modification occurred
++between the first and last instance of corrupt metadata on disk and, further,
++how much modification occurred between the corruption being written and when
++it was detected.
++
++Runtime Validation
++~~~~~~~~~~~~~~~~~~
++
++Validation of self-describing metadata takes place at runtime in two places:
++
++-  immediately after a successful read from disk
++
++-  immediately prior to write IO submission
++
++The verification is completely stateless - it is done independently of the
++modification process, and seeks only to check that the metadata is what it
++says it is and that the metadata fields are within bounds and internally
++consistent. As such, we cannot catch all types of corruption that can occur
++within a block as there may be certain limitations that operational state
++enforces of the metadata, or there may be corruption of interblock
++relationships (e.g. corrupted sibling pointer lists). Hence we still need
++stateful checking in the main code body, but in general most of the per-field
++validation is handled by the verifiers.
++
++For read verification, the caller needs to specify the expected type of
++metadata that it should see, and the IO completion process verifies that the
++metadata object matches what was expected. If the verification process fails,
++then it marks the object being read as EFSCORRUPTED. The caller needs to catch
++this error (same as for IO errors), and if it needs to take special action due
++to a verification error it can do so by catching the EFSCORRUPTED error value.
++If we need more discrimination of error type at higher levels, we can define
++new error numbers for different errors as necessary.
++
++The first step in read verification is checking the magic number and
++determining whether CRC validating is necessary. If it is, the CRC32c is
++calculated and compared against the value stored in the object itself. Once
++this is validated, further checks are made against the location information,
++followed by extensive object specific metadata validation. If any of these
++checks fail, then the buffer is considered corrupt and the EFSCORRUPTED error
++is set appropriately.
++
++Write verification is the opposite of the read verification - first the object
++is extensively verified and if it is OK we then update the LSN from the last
++modification made to the object, After this, we calculate the CRC and insert
++it into the object. Once this is done the write IO is allowed to continue. If
++any error occurs during this process, the buffer is again marked with a
++EFSCORRUPTED error for the higher layers to catch.
++
++Structures
++~~~~~~~~~~
++
++A typical on-disk structure needs to contain the following information:
++
++.. code:: c
++
++    struct xfs_ondisk_hdr {
++            __be32  magic;      /* magic number */
++            __be32  crc;        /* CRC, not logged */
++            uuid_t  uuid;       /* filesystem identifier */
++            __be64  owner;      /* parent object */
++            __be64  blkno;      /* location on disk */
++            __be64  lsn;        /* last modification in log, not logged */
++    };
++
++Depending on the metadata, this information may be part of a header structure
++separate to the metadata contents, or may be distributed through an existing
++structure. The latter occurs with metadata that already contains some of this
++information, such as the superblock and AG headers.
++
++Other metadata may have different formats for the information, but the same
++level of information is generally provided. For example:
++
++-  short btree blocks have a 32 bit owner (ag number) and a 32 bit block
++   number for location. The two of these combined provide the same information
++   as @owner and @blkno in eh above structure, but using 8 bytes less space on
++   disk.
++
++-  directory/attribute node blocks have a 16 bit magic number, and the header
++   that contains the magic number has other information in it as well. hence
++   the additional metadata headers change the overall format of the metadata.
++
++A typical buffer read verifier is structured as follows:
++
++.. code:: c
++
++    #define XFS_FOO_CRC_OFF     offsetof(struct xfs_ondisk_hdr, crc)
++
++    static void
++    xfs_foo_read_verify(
++        struct xfs_buf  *bp)
++    {
++           struct xfs_mount *mp = bp->b_target->bt_mount;
++
++            if ((xfs_sb_version_hascrc(&mp->m_sb) &&
++                 !xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
++                        XFS_FOO_CRC_OFF)) ||
++                !xfs_foo_verify(bp)) {
++                    XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++                    xfs_buf_ioerror(bp, EFSCORRUPTED);
++            }
++    }
++
++The code ensures that the CRC is only checked if the filesystem has CRCs
++enabled by checking the superblock of the feature bit, and then if the CRC
++verifies OK (or is not needed) it verifies the actual contents of the block.
++
++The verifier function will take a couple of different forms, depending on
++whether the magic number can be used to determine the format of the block. In
++the case it can’t, the code is structured as follows:
++
++.. code:: c
++
++    static bool
++    xfs_foo_verify(
++        struct xfs_buf      *bp)
++    {
++            struct xfs_mount    *mp = bp->b_target->bt_mount;
++            struct xfs_ondisk_hdr   *hdr = bp->b_addr;
++
++            if (hdr->magic != cpu_to_be32(XFS_FOO_MAGIC))
++                    return false;
++
++            if (!xfs_sb_version_hascrc(&mp->m_sb)) {
++            if (!uuid_equal(&hdr->uuid, &mp->m_sb.sb_uuid))
++                return false;
++            if (bp->b_bn != be64_to_cpu(hdr->blkno))
++                return false;
++            if (hdr->owner == 0)
++                return false;
++        }
++
++        /* object specific verification checks here */
++
++            return true;
++    }
++
++If there are different magic numbers for the different formats, the verifier
++will look like:
++
++.. code:: c
++
++    static bool
++    xfs_foo_verify(
++        struct xfs_buf      *bp)
++    {
++            struct xfs_mount    *mp = bp->b_target->bt_mount;
++            struct xfs_ondisk_hdr   *hdr = bp->b_addr;
++
++            if (hdr->magic == cpu_to_be32(XFS_FOO_CRC_MAGIC)) {
++            if (!uuid_equal(&hdr->uuid, &mp->m_sb.sb_uuid))
++                return false;
++            if (bp->b_bn != be64_to_cpu(hdr->blkno))
++                return false;
++            if (hdr->owner == 0)
++                return false;
++        } else if (hdr->magic != cpu_to_be32(XFS_FOO_MAGIC))
++            return false;
++
++        /* object specific verification checks here */
++
++            return true;
++    }
++
++Write verifiers are very similar to the read verifiers, they just do things in
++the opposite order to the read verifiers. A typical write verifier:
++
++.. code:: c
++
++    static void
++    xfs_foo_write_verify(
++        struct xfs_buf  *bp)
++    {
++        struct xfs_mount    *mp = bp->b_target->bt_mount;
++        struct xfs_buf_log_item *bip = bp->b_fspriv;
++
++        if (!xfs_foo_verify(bp)) {
++            XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++            xfs_buf_ioerror(bp, EFSCORRUPTED);
++            return;
++        }
++
++        if (!xfs_sb_version_hascrc(&mp->m_sb))
++            return;
++
++
++        if (bip) {
++            struct xfs_ondisk_hdr   *hdr = bp->b_addr;
++            hdr->lsn = cpu_to_be64(bip->bli_item.li_lsn);
++        }
++        xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length), XFS_FOO_CRC_OFF);
++    }
++
++This will verify the internal structure of the metadata before we go any
++further, detecting corruptions that have occurred as the metadata has been
++modified in memory. If the metadata verifies OK, and CRCs are enabled, we then
++update the LSN field (when it was last modified) and calculate the CRC on the
++metadata. Once this is done, we can issue the IO.
++
++Inodes and Dquots
++~~~~~~~~~~~~~~~~~
++
++Inodes and dquots are special snowflakes. They have per-object CRC and
++self-identifiers, but they are packed so that there are multiple objects per
++buffer. Hence we do not use per-buffer verifiers to do the work of per-object
++verification and CRC calculations. The per-buffer verifiers simply perform
++basic identification of the buffer - that they contain inodes or dquots, and
++that there are magic numbers in all the expected spots. All further CRC and
++verification checks are done when each inode is read from or written back to
++the buffer.
++
++The structure of the verifiers and the identifiers checks is very similar to
++the buffer code described above. The only difference is where they are called.
++For example, inode read verification is done in xfs\_iread() when the inode is
++first read out of the buffer and the struct xfs\_inode is instantiated. The
++inode is already extensively verified during writeback in xfs\_iflush\_int, so
++the only addition here is to add the LSN and CRC to the inode as it is copied
++back into the buffer.
+diff --git a/Documentation/filesystems/xfs-self-describing-metadata.txt b/Documentation/filesystems/xfs-self-describing-metadata.txt
+deleted file mode 100644
+index 05aa455163e3..000000000000
+--- a/Documentation/filesystems/xfs-self-describing-metadata.txt
++++ /dev/null
+@@ -1,350 +0,0 @@
+-XFS Self Describing Metadata
+-----------------------------
+-
+-Introduction
+-------------
+-
+-The largest scalability problem facing XFS is not one of algorithmic
+-scalability, but of verification of the filesystem structure. Scalabilty of the
+-structures and indexes on disk and the algorithms for iterating them are
+-adequate for supporting PB scale filesystems with billions of inodes, however it
+-is this very scalability that causes the verification problem.
+-
+-Almost all metadata on XFS is dynamically allocated. The only fixed location
+-metadata is the allocation group headers (SB, AGF, AGFL and AGI), while all
+-other metadata structures need to be discovered by walking the filesystem
+-structure in different ways. While this is already done by userspace tools for
+-validating and repairing the structure, there are limits to what they can
+-verify, and this in turn limits the supportable size of an XFS filesystem.
+-
+-For example, it is entirely possible to manually use xfs_db and a bit of
+-scripting to analyse the structure of a 100TB filesystem when trying to
+-determine the root cause of a corruption problem, but it is still mainly a
+-manual task of verifying that things like single bit errors or misplaced writes
+-weren't the ultimate cause of a corruption event. It may take a few hours to a
+-few days to perform such forensic analysis, so for at this scale root cause
+-analysis is entirely possible.
+-
+-However, if we scale the filesystem up to 1PB, we now have 10x as much metadata
+-to analyse and so that analysis blows out towards weeks/months of forensic work.
+-Most of the analysis work is slow and tedious, so as the amount of analysis goes
+-up, the more likely that the cause will be lost in the noise.  Hence the primary
+-concern for supporting PB scale filesystems is minimising the time and effort
+-required for basic forensic analysis of the filesystem structure.
+-
+-
+-Self Describing Metadata
+-------------------------
+-
+-One of the problems with the current metadata format is that apart from the
+-magic number in the metadata block, we have no other way of identifying what it
+-is supposed to be. We can't even identify if it is the right place. Put simply,
+-you can't look at a single metadata block in isolation and say "yes, it is
+-supposed to be there and the contents are valid".
+-
+-Hence most of the time spent on forensic analysis is spent doing basic
+-verification of metadata values, looking for values that are in range (and hence
+-not detected by automated verification checks) but are not correct. Finding and
+-understanding how things like cross linked block lists (e.g. sibling
+-pointers in a btree end up with loops in them) are the key to understanding what
+-went wrong, but it is impossible to tell what order the blocks were linked into
+-each other or written to disk after the fact.
+-
+-Hence we need to record more information into the metadata to allow us to
+-quickly determine if the metadata is intact and can be ignored for the purpose
+-of analysis. We can't protect against every possible type of error, but we can
+-ensure that common types of errors are easily detectable.  Hence the concept of
+-self describing metadata.
+-
+-The first, fundamental requirement of self describing metadata is that the
+-metadata object contains some form of unique identifier in a well known
+-location. This allows us to identify the expected contents of the block and
+-hence parse and verify the metadata object. IF we can't independently identify
+-the type of metadata in the object, then the metadata doesn't describe itself
+-very well at all!
+-
+-Luckily, almost all XFS metadata has magic numbers embedded already - only the
+-AGFL, remote symlinks and remote attribute blocks do not contain identifying
+-magic numbers. Hence we can change the on-disk format of all these objects to
+-add more identifying information and detect this simply by changing the magic
+-numbers in the metadata objects. That is, if it has the current magic number,
+-the metadata isn't self identifying. If it contains a new magic number, it is
+-self identifying and we can do much more expansive automated verification of the
+-metadata object at runtime, during forensic analysis or repair.
+-
+-As a primary concern, self describing metadata needs some form of overall
+-integrity checking. We cannot trust the metadata if we cannot verify that it has
+-not been changed as a result of external influences. Hence we need some form of
+-integrity check, and this is done by adding CRC32c validation to the metadata
+-block. If we can verify the block contains the metadata it was intended to
+-contain, a large amount of the manual verification work can be skipped.
+-
+-CRC32c was selected as metadata cannot be more than 64k in length in XFS and
+-hence a 32 bit CRC is more than sufficient to detect multi-bit errors in
+-metadata blocks. CRC32c is also now hardware accelerated on common CPUs so it is
+-fast. So while CRC32c is not the strongest of possible integrity checks that
+-could be used, it is more than sufficient for our needs and has relatively
+-little overhead. Adding support for larger integrity fields and/or algorithms
+-does really provide any extra value over CRC32c, but it does add a lot of
+-complexity and so there is no provision for changing the integrity checking
+-mechanism.
+-
+-Self describing metadata needs to contain enough information so that the
+-metadata block can be verified as being in the correct place without needing to
+-look at any other metadata. This means it needs to contain location information.
+-Just adding a block number to the metadata is not sufficient to protect against
+-mis-directed writes - a write might be misdirected to the wrong LUN and so be
+-written to the "correct block" of the wrong filesystem. Hence location
+-information must contain a filesystem identifier as well as a block number.
+-
+-Another key information point in forensic analysis is knowing who the metadata
+-block belongs to. We already know the type, the location, that it is valid
+-and/or corrupted, and how long ago that it was last modified. Knowing the owner
+-of the block is important as it allows us to find other related metadata to
+-determine the scope of the corruption. For example, if we have a extent btree
+-object, we don't know what inode it belongs to and hence have to walk the entire
+-filesystem to find the owner of the block. Worse, the corruption could mean that
+-no owner can be found (i.e. it's an orphan block), and so without an owner field
+-in the metadata we have no idea of the scope of the corruption. If we have an
+-owner field in the metadata object, we can immediately do top down validation to
+-determine the scope of the problem.
+-
+-Different types of metadata have different owner identifiers. For example,
+-directory, attribute and extent tree blocks are all owned by an inode, whilst
+-freespace btree blocks are owned by an allocation group. Hence the size and
+-contents of the owner field are determined by the type of metadata object we are
+-looking at.  The owner information can also identify misplaced writes (e.g.
+-freespace btree block written to the wrong AG).
+-
+-Self describing metadata also needs to contain some indication of when it was
+-written to the filesystem. One of the key information points when doing forensic
+-analysis is how recently the block was modified. Correlation of set of corrupted
+-metadata blocks based on modification times is important as it can indicate
+-whether the corruptions are related, whether there's been multiple corruption
+-events that lead to the eventual failure, and even whether there are corruptions
+-present that the run-time verification is not detecting.
+-
+-For example, we can determine whether a metadata object is supposed to be free
+-space or still allocated if it is still referenced by its owner by looking at
+-when the free space btree block that contains the block was last written
+-compared to when the metadata object itself was last written.  If the free space
+-block is more recent than the object and the object's owner, then there is a
+-very good chance that the block should have been removed from the owner.
+-
+-To provide this "written timestamp", each metadata block gets the Log Sequence
+-Number (LSN) of the most recent transaction it was modified on written into it.
+-This number will always increase over the life of the filesystem, and the only
+-thing that resets it is running xfs_repair on the filesystem. Further, by use of
+-the LSN we can tell if the corrupted metadata all belonged to the same log
+-checkpoint and hence have some idea of how much modification occurred between
+-the first and last instance of corrupt metadata on disk and, further, how much
+-modification occurred between the corruption being written and when it was
+-detected.
+-
+-Runtime Validation
+-------------------
+-
+-Validation of self-describing metadata takes place at runtime in two places:
+-
+-	- immediately after a successful read from disk
+-	- immediately prior to write IO submission
+-
+-The verification is completely stateless - it is done independently of the
+-modification process, and seeks only to check that the metadata is what it says
+-it is and that the metadata fields are within bounds and internally consistent.
+-As such, we cannot catch all types of corruption that can occur within a block
+-as there may be certain limitations that operational state enforces of the
+-metadata, or there may be corruption of interblock relationships (e.g. corrupted
+-sibling pointer lists). Hence we still need stateful checking in the main code
+-body, but in general most of the per-field validation is handled by the
+-verifiers.
+-
+-For read verification, the caller needs to specify the expected type of metadata
+-that it should see, and the IO completion process verifies that the metadata
+-object matches what was expected. If the verification process fails, then it
+-marks the object being read as EFSCORRUPTED. The caller needs to catch this
+-error (same as for IO errors), and if it needs to take special action due to a
+-verification error it can do so by catching the EFSCORRUPTED error value. If we
+-need more discrimination of error type at higher levels, we can define new
+-error numbers for different errors as necessary.
+-
+-The first step in read verification is checking the magic number and determining
+-whether CRC validating is necessary. If it is, the CRC32c is calculated and
+-compared against the value stored in the object itself. Once this is validated,
+-further checks are made against the location information, followed by extensive
+-object specific metadata validation. If any of these checks fail, then the
+-buffer is considered corrupt and the EFSCORRUPTED error is set appropriately.
+-
+-Write verification is the opposite of the read verification - first the object
+-is extensively verified and if it is OK we then update the LSN from the last
+-modification made to the object, After this, we calculate the CRC and insert it
+-into the object. Once this is done the write IO is allowed to continue. If any
+-error occurs during this process, the buffer is again marked with a EFSCORRUPTED
+-error for the higher layers to catch.
+-
+-Structures
+-----------
+-
+-A typical on-disk structure needs to contain the following information:
+-
+-struct xfs_ondisk_hdr {
+-        __be32  magic;		/* magic number */
+-        __be32  crc;		/* CRC, not logged */
+-        uuid_t  uuid;		/* filesystem identifier */
+-        __be64  owner;		/* parent object */
+-        __be64  blkno;		/* location on disk */
+-        __be64  lsn;		/* last modification in log, not logged */
+-};
+-
+-Depending on the metadata, this information may be part of a header structure
+-separate to the metadata contents, or may be distributed through an existing
+-structure. The latter occurs with metadata that already contains some of this
+-information, such as the superblock and AG headers.
+-
+-Other metadata may have different formats for the information, but the same
+-level of information is generally provided. For example:
+-
+-	- short btree blocks have a 32 bit owner (ag number) and a 32 bit block
+-	  number for location. The two of these combined provide the same
+-	  information as @owner and @blkno in eh above structure, but using 8
+-	  bytes less space on disk.
+-
+-	- directory/attribute node blocks have a 16 bit magic number, and the
+-	  header that contains the magic number has other information in it as
+-	  well. hence the additional metadata headers change the overall format
+-	  of the metadata.
+-
+-A typical buffer read verifier is structured as follows:
+-
+-#define XFS_FOO_CRC_OFF		offsetof(struct xfs_ondisk_hdr, crc)
+-
+-static void
+-xfs_foo_read_verify(
+-	struct xfs_buf	*bp)
+-{
+-       struct xfs_mount *mp = bp->b_target->bt_mount;
+-
+-        if ((xfs_sb_version_hascrc(&mp->m_sb) &&
+-             !xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
+-					XFS_FOO_CRC_OFF)) ||
+-            !xfs_foo_verify(bp)) {
+-                XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+-                xfs_buf_ioerror(bp, EFSCORRUPTED);
+-        }
+-}
+-
+-The code ensures that the CRC is only checked if the filesystem has CRCs enabled
+-by checking the superblock of the feature bit, and then if the CRC verifies OK
+-(or is not needed) it verifies the actual contents of the block.
+-
+-The verifier function will take a couple of different forms, depending on
+-whether the magic number can be used to determine the format of the block. In
+-the case it can't, the code is structured as follows:
+-
+-static bool
+-xfs_foo_verify(
+-	struct xfs_buf		*bp)
+-{
+-        struct xfs_mount	*mp = bp->b_target->bt_mount;
+-        struct xfs_ondisk_hdr	*hdr = bp->b_addr;
+-
+-        if (hdr->magic != cpu_to_be32(XFS_FOO_MAGIC))
+-                return false;
+-
+-        if (!xfs_sb_version_hascrc(&mp->m_sb)) {
+-		if (!uuid_equal(&hdr->uuid, &mp->m_sb.sb_uuid))
+-			return false;
+-		if (bp->b_bn != be64_to_cpu(hdr->blkno))
+-			return false;
+-		if (hdr->owner == 0)
+-			return false;
+-	}
+-
+-	/* object specific verification checks here */
+-
+-        return true;
+-}
+-
+-If there are different magic numbers for the different formats, the verifier
+-will look like:
+-
+-static bool
+-xfs_foo_verify(
+-	struct xfs_buf		*bp)
+-{
+-        struct xfs_mount	*mp = bp->b_target->bt_mount;
+-        struct xfs_ondisk_hdr	*hdr = bp->b_addr;
+-
+-        if (hdr->magic == cpu_to_be32(XFS_FOO_CRC_MAGIC)) {
+-		if (!uuid_equal(&hdr->uuid, &mp->m_sb.sb_uuid))
+-			return false;
+-		if (bp->b_bn != be64_to_cpu(hdr->blkno))
+-			return false;
+-		if (hdr->owner == 0)
+-			return false;
+-	} else if (hdr->magic != cpu_to_be32(XFS_FOO_MAGIC))
+-		return false;
+-
+-	/* object specific verification checks here */
+-
+-        return true;
+-}
+-
+-Write verifiers are very similar to the read verifiers, they just do things in
+-the opposite order to the read verifiers. A typical write verifier:
+-
+-static void
+-xfs_foo_write_verify(
+-	struct xfs_buf	*bp)
+-{
+-	struct xfs_mount	*mp = bp->b_target->bt_mount;
+-	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+-
+-	if (!xfs_foo_verify(bp)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+-		xfs_buf_ioerror(bp, EFSCORRUPTED);
+-		return;
+-	}
+-
+-	if (!xfs_sb_version_hascrc(&mp->m_sb))
+-		return;
+-
+-
+-	if (bip) {
+-		struct xfs_ondisk_hdr	*hdr = bp->b_addr;
+-		hdr->lsn = cpu_to_be64(bip->bli_item.li_lsn);
+-	}
+-	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length), XFS_FOO_CRC_OFF);
+-}
+-
+-This will verify the internal structure of the metadata before we go any
+-further, detecting corruptions that have occurred as the metadata has been
+-modified in memory. If the metadata verifies OK, and CRCs are enabled, we then
+-update the LSN field (when it was last modified) and calculate the CRC on the
+-metadata. Once this is done, we can issue the IO.
+-
+-Inodes and Dquots
+------------------
+-
+-Inodes and dquots are special snowflakes. They have per-object CRC and
+-self-identifiers, but they are packed so that there are multiple objects per
+-buffer. Hence we do not use per-buffer verifiers to do the work of per-object
+-verification and CRC calculations. The per-buffer verifiers simply perform basic
+-identification of the buffer - that they contain inodes or dquots, and that
+-there are magic numbers in all the expected spots. All further CRC and
+-verification checks are done when each inode is read from or written back to the
+-buffer.
+-
+-The structure of the verifiers and the identifiers checks is very similar to the
+-buffer code described above. The only difference is where they are called. For
+-example, inode read verification is done in xfs_iread() when the inode is first
+-read out of the buffer and the struct xfs_inode is instantiated. The inode is
+-already extensively verified during writeback in xfs_iflush_int, so the only
+-addition here is to add the LSN and CRC to the inode as it is copied back into
+-the buffer.
+-
+-XXX: inode unlinked list modification doesn't recalculate the inode CRC! None of
+-the unlinked list modifications check or update CRCs, neither during unlink nor
+-log recovery. So, it's gone unnoticed until now. This won't matter immediately -
+-repair will probably complain about it - but it needs to be fixed.
+-
