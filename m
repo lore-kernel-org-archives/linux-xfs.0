@@ -1,52 +1,199 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:60908 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726919AbeJFRRm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 6 Oct 2018 13:17:42 -0400
-Date: Sat, 6 Oct 2018 03:15:00 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 12/15] xfsprogs: kill EXTERN macro
-Message-ID: <20181006101500.GL28114@infradead.org>
-References: <1538712196-13625-1-git-send-email-sandeen@sandeen.net>
- <1538712196-13625-13-git-send-email-sandeen@sandeen.net>
+Received: from userp2120.oracle.com ([156.151.31.85]:34934 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727138AbeJDLLK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Oct 2018 07:11:10 -0400
+Subject: [PATCH 13/22] docs: add XFS refcount btree structure to DS&A book
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 03 Oct 2018 21:19:46 -0700
+Message-ID: <153862678652.26427.14910212060817967947.stgit@magnolia>
+In-Reply-To: <153862669110.26427.16504658853992750743.stgit@magnolia>
+References: <153862669110.26427.16504658853992750743.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1538712196-13625-13-git-send-email-sandeen@sandeen.net>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org, corbet@lwn.net
 
-On Thu, Oct 04, 2018 at 11:03:13PM -0500, Eric Sandeen wrote:
-> From: Eric Sandeen <sandeen@redhat.com>
-> 
-> The EXTERN macro was a too-clever hack to allow a header file to both
-> declare global variables and export them.  Get rid of the hack and do
-> things the predictable way.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-> ---
->  repair/globals.c  | 123 ++++++++++++++++++++++++++++++++++++++++++++++--
->  repair/globals.h  | 136 +++++++++++++++++++++++++++---------------------------
->  repair/versions.c |  23 +++++++--
->  repair/versions.h |  16 +++----
->  4 files changed, 214 insertions(+), 84 deletions(-)
-> 
-> diff --git a/repair/globals.c b/repair/globals.c
-> index d00e964..e963edb 100644
-> --- a/repair/globals.c
-> +++ b/repair/globals.c
-> @@ -1,10 +1,125 @@
->  // SPDX-License-Identifier: GPL-2.0
->  /*
-> - * Copyright (c) 2000-2001,2005 Silicon Graphics, Inc.
-> + * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-This doesn't look related.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ .../xfs-data-structures/allocation_groups.rst      |    1 
+ .../filesystems/xfs-data-structures/refcountbt.rst |  154 ++++++++++++++++++++
+ 2 files changed, 155 insertions(+)
+ create mode 100644 Documentation/filesystems/xfs-data-structures/refcountbt.rst
 
-Otherwise this looks good:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+diff --git a/Documentation/filesystems/xfs-data-structures/allocation_groups.rst b/Documentation/filesystems/xfs-data-structures/allocation_groups.rst
+index 6c0ffd3a170b..76c6ddcd02ac 100644
+--- a/Documentation/filesystems/xfs-data-structures/allocation_groups.rst
++++ b/Documentation/filesystems/xfs-data-structures/allocation_groups.rst
+@@ -1381,3 +1381,4 @@ None of the XFS per-AG B+trees are involved with real time files. It is not
+ possible for real time files to share data blocks.
+ 
+ .. include:: rmapbt.rst
++.. include:: refcountbt.rst
+diff --git a/Documentation/filesystems/xfs-data-structures/refcountbt.rst b/Documentation/filesystems/xfs-data-structures/refcountbt.rst
+new file mode 100644
+index 000000000000..0f2b818959df
+--- /dev/null
++++ b/Documentation/filesystems/xfs-data-structures/refcountbt.rst
+@@ -0,0 +1,154 @@
++.. SPDX-License-Identifier: CC-BY-SA-4.0
++
++Reference Count B+tree
++~~~~~~~~~~~~~~~~~~~~~~
++
++To support the sharing of file data blocks (reflink), each allocation group
++has its own reference count B+tree, which grows in the allocated space like
++the inode B+trees. This data could be gleaned by performing an interval query
++of the reverse-mapping B+tree, but doing so would come at a huge performance
++penalty. Therefore, this data structure is a cache of computable information.
++
++This B+tree is only present if the XFS\_SB\_FEAT\_RO\_COMPAT\_REFLINK feature
++is enabled. The feature requires a version 5 filesystem.
++
++Each record in the reference count B+tree has the following structure:
++
++.. code:: c
++
++    struct xfs_refcount_rec {
++         __be32                     rc_startblock;
++         __be32                     rc_blockcount;
++         __be32                     rc_refcount;
++    };
++
++**rc\_startblock**
++    AG block number of this record. The high bit is set for all records
++    referring to an extent that is being used to stage a copy on write
++    operation. This reduces recovery time during mount operations. The
++    reference count of these staging events must only be 1.
++
++**rc\_blockcount**
++    The length of this extent.
++
++**rc\_refcount**
++    Number of mappings of this filesystem extent.
++
++Node pointers are an AG relative block pointer:
++
++.. code:: c
++
++    struct xfs_refcount_key {
++         __be32                     rc_startblock;
++    };
++
++-  As the reference counting is AG relative, all the block numbers are only
++   32-bits.
++
++-  The bb\_magic value is "R3FC" (0x52334643).
++
++-  The xfs\_btree\_sblock\_t header is used for intermediate B+tree node as
++   well as the leaves.
++
++xfs\_db refcntbt Example
++^^^^^^^^^^^^^^^^^^^^^^^^
++
++For this example, an XFS filesystem was populated with a root filesystem and a
++deduplication program was run to create shared blocks:
++
++::
++
++    xfs_db> agf 0
++    xfs_db> addr refcntroot
++    xfs_db> p
++    magic = 0x52334643
++    level = 1
++    numrecs = 6
++    leftsib = null
++    rightsib = null
++    bno = 36892
++    lsn = 0x200004ec2
++    uuid = f1f89746-e00b-49c9-96b3-ecef0f2f14ae
++    owner = 0
++    crc = 0x75f35128 (correct)
++    keys[1-6] = [startblock] 1:[14] 2:[65633] 3:[65780] 4:[94571] 5:[117201] 6:[152442]
++    ptrs[1-6] = 1:7 2:25836 3:25835 4:18447 5:18445 6:18449
++    xfs_db> addr ptrs[3]
++    xfs_db> p
++    magic = 0x52334643
++    level = 0
++    numrecs = 80
++    leftsib = 25836
++    rightsib = 18447
++    bno = 51670
++    lsn = 0x200004ec2
++    uuid = f1f89746-e00b-49c9-96b3-ecef0f2f14ae
++    owner = 0
++    crc = 0xc3962813 (correct)
++    recs[1-80] = [startblock,blockcount,refcount,cowflag]
++            1:[65780,1,2,0] 2:[65781,1,3,0] 3:[65785,2,2,0] 4:[66640,1,2,0]
++            5:[69602,4,2,0] 6:[72256,16,2,0] 7:[72871,4,2,0] 8:[72879,20,2,0]
++            9:[73395,4,2,0] 10:[75063,4,2,0] 11:[79093,4,2,0] 12:[86344,16,2,0]
++            ...
++            80:[35235,10,1,1]
++
++Notice record 80. The copy on write flag is set and the reference count is 1,
++which indicates that the extent 35,235 - 35,244 are being used to stage a copy
++on write activity. The "cowflag" field is the high bit of rc\_startblock.
++
++Record 6 in the reference count B+tree for AG 0 indicates that the AG extent
++starting at block 72,256 and running for 16 blocks has a reference count of 2.
++This means that there are two files sharing the block:
++
++::
++
++    xfs_db> blockget -n
++    xfs_db> fsblock 72256
++    xfs_db> blockuse
++    block 72256 (0/72256) type rldata inode 25169197
++
++The blockuse type changes to "rldata" to indicate that the block is shared
++data. Unfortunately, blockuse only tells us about one block owner. If we
++happen to have enabled the reverse-mapping B+tree, we can use it to find all
++inodes that own this block:
++
++::
++
++    xfs_db> agf 0
++    xfs_db> addr rmaproot
++    ...
++    xfs_db> addr ptrs[3]
++    ...
++    xfs_db> addr ptrs[7]
++    xfs_db> p
++    magic = 0x524d4233
++    level = 0
++    numrecs = 22
++    leftsib = 65057
++    rightsib = 65058
++    bno = 291478
++    lsn = 0x200004ec2
++    uuid = f1f89746-e00b-49c9-96b3-ecef0f2f14ae
++    owner = 0
++    crc = 0xed7da3f7 (correct)
++    recs[1-22] = [startblock,blockcount,owner,offset,extentflag,attrfork,bmbtblock]
++            1:[68957,8,3201,0,0,0,0] 2:[68965,4,25260953,0,0,0,0]
++            ...
++            18:[72232,58,3227,0,0,0,0] 19:[72256,16,25169197,24,0,0,0]
++            20:[72290,75,3228,0,0,0,0] 21:[72365,46,3229,0,0,0,0]
++
++Records 18 and 19 intersect the block 72,256; they tell us that inodes 3,227
++and 25,169,197 both claim ownership. Let us confirm this:
++
++::
++
++    xfs_db> inode 25169197
++    xfs_db> bmap
++    data offset 0 startblock 12632259 (3/49347) count 24 flag 0
++    data offset 24 startblock 72256 (0/72256) count 16 flag 0
++    data offset 40 startblock 12632299 (3/49387) count 18 flag 0
++    xfs_db> inode 3227
++    xfs_db> bmap
++    data offset 0 startblock 72232 (0/72232) count 58 flag 0
++
++Inodes 25,169,197 and 3,227 both contain mappings to block 0/72,256.
