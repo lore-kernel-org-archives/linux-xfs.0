@@ -1,49 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from 2.mo302.mail-out.ovh.net ([137.74.110.75]:50750 "EHLO
-        2.mo302.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726778AbeJPSWG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Oct 2018 14:22:06 -0400
-Received: from dag002ex3.OVH.local (gw1.corp.ovh.com [51.255.55.226])
-        by mo302.mail-out.ovh.net (Postfix) with ESMTPS id 2BB214A5B5
-        for <linux-xfs@vger.kernel.org>; Tue, 16 Oct 2018 12:22:23 +0200 (CEST)
-From: Romain Le Disez <romain.le-disez@corp.ovh.com>
-Subject: [QUESTION] multiple fsync() vs single sync()
-Date: Tue, 16 Oct 2018 10:22:18 +0000
-Message-ID: <6A65F394-C1BA-4339-AC9B-051885D12F65@corp.ovh.com>
-Content-Language: en-US
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <A39EDE220E43964BB69B3C2AA2E8DD16@corp.ovh.com>
-Content-Transfer-Encoding: base64
+Received: from sandeen.net ([63.231.237.45]:43804 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727407AbeJEB1n (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 4 Oct 2018 21:27:43 -0400
+Subject: Re: [PATCH] mkfs.xfs: don't go into multidisk mode if there is only
+ one stripe
+References: <20181004175839.18736-1-idryomov@gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <24d229f3-1a75-a65d-5ad3-c8565cb32e76@sandeen.net>
+Date: Thu, 4 Oct 2018 13:33:12 -0500
 MIME-Version: 1.0
+In-Reply-To: <20181004175839.18736-1-idryomov@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+To: Ilya Dryomov <idryomov@gmail.com>, linux-xfs@vger.kernel.org
+Cc: Mark Nelson <mnelson@redhat.com>, Eric Sandeen <sandeen@redhat.com>
 
-SGkgYWxsLA0KDQpJbiB0aGlzIHBzZXVkby1jb2RlIChleHRyYWN0ZWQgZnJvbSBPcGVuU3RhY2sg
-U3dpZnQgWzFdKToNCiAgICBmZD1vcGVuKCIvdG1wL3RlbXBmaWxlIiwgT19DUkVBVCB8IE9fV1JP
-TkxZKTsNCiAgICB3cml0ZShmZCwgLi4uKTsNCiAgICBmc2V0eGF0dHIoZmQsIC4uLik7DQogICAg
-ZnN5bmMoZmQpOw0KICAgIHJlbmFtZSgiL3RtcC90ZW1wZmlsZSIsICIvZGF0YS9mb29iYXIiKTsN
-CiAgICBkaXJmZCA9IG9wZW4oIi9kYXRhIiwgT19ESVJFQ1RPUlkgfCBPX1JET05MWSk7DQogICAg
-ZnN5bmMoZGlyZmQpOw0KDQpPUiAodGhlIHNhbWUgd2l0aG91dCB0ZW1wb3JhcnkgZmlsZSk6DQog
-ICAgZmQ9b3BlbigiL2RhdGEiLCBPX1RNUEZJTEUgfCBPX1dST05MWSk7DQogICAgd3JpdGUoZmQs
-IC4uLik7DQogICAgZnNldHhhdHRyKGZkLCAuLi4pOw0KICAgIGZzeW5jKGZkKTsNCiAgICBsaW5r
-YXQoQVRfRkRDV0QsICIvcHJvYy9zZWxmL2ZkLyIgKyBmZCwgQVRfRkRDV0QsICIvZGF0YS9mb29i
-YXIiLCBBVF9TWU1MSU5LX0ZPTExPVyk7DQogICAgZGlyZmQgPSBvcGVuKCIvZGF0YSIsIE9fRElS
-RUNUT1JZIHwgT19SRE9OTFkpOw0KICAgIGZzeW5jKGRpcmZkKTsNCg0KDQpJ4oCZbSBndWFyYW50
-ZWVkIHRoYXQsIHdoYXQgZXZlciBoYXBwZW4sIEnigJlsbCBoYXZlIGEgY29tcGxldGUgZmlsZSAo
-ZGF0YSt4YXR0cikgb3Igbm8gZmlsZSBhdCBhbGwgaW4gdGhlIGRpcmVjdG9yeSAvZGF0YS4NCg0K
-Rmlyc3QgcXVlc3Rpb246IGlzIHRoYXQgYSBjb3JyZWN0IGFzc3VtcHRpb24gb3IgaXMgdGhlcmUg
-YW55IGxvb3Bob2xlcz8NCg0KU2Vjb25kIHF1ZXN0aW9uLCBpZiBJIHJlcGxhY2UgdGhlIHR3byBm
-c3luYygpIGJ5IG9uZSBzeW5jKCksIGRvIEkgZ2V0IHRoZSBzYW1lIGd1YXJhbnRlZT8NCiAgICBm
-ZD1vcGVuKCIvZGF0YSIsIE9fVE1QRklMRSB8IE9fV1JPTkxZKTsNCiAgICB3cml0ZShmZCwgLi4u
-KTsNCiAgICBmc2V0eGF0dHIoZmQsIC4uLik7DQogICAgbGlua2F0KEFUX0ZEQ1dELCDCqyAvcHJv
-Yy9zZWxmL2ZkLyIgKyBmZCwgQVRfRkRDV0QsICIvZGF0YS9mb29iYXIiLCBBVF9TWU1MSU5LX0ZP
-TExPVyk7DQogICAgc3luYygpOw0KDQpGcm9tIHdoYXQgSSB1bmRlcnN0YW5kIG9mIHRoZSBGQVEg
-WzFdLCB3cml0ZV9iYXJyaWVyIGd1YXJhbnRlZSB0aGF0IGpvdXJuYWwgKGFrYSBsb2cpIHdpbGwg
-YmUgd3JpdHRlbiBiZWZvcmUgdGhlIGlub2RlIChha2EgbWV0YWRhdGEpLiBEaWQgSSBtaXNzIHNv
-bWV0aGluZz8NCg0KTWFueSB0aGFua3MgZm9yIHlvdXIgaGVscC4NCg0KWzFdIGh0dHBzOi8vZ2l0
-aHViLmNvbS9vcGVuc3RhY2svc3dpZnQvYmxvYi8yLjE5LjAvc3dpZnQvb2JqL2Rpc2tmaWxlLnB5
-I0wxNjc0LUwxNjk0DQpbMl0gaHR0cDovL3hmcy5vcmcvaW5kZXgucGhwL1hGU19GQVEjUTpfV2hh
-dF9pc190aGVfcHJvYmxlbV93aXRoX3RoZV93cml0ZV9jYWNoZV9vbl9qb3VybmFsZWRfZmlsZXN5
-c3RlbXMuM0YNCg0KLS0gDQpSb21haW4NCg0K
+On 10/4/18 12:58 PM, Ilya Dryomov wrote:
+> rbd devices report the following geometry:
+> 
+>   $ blockdev --getss --getpbsz --getiomin --getioopt /dev/rbd0
+>   512
+>   512
+>   4194304
+>   4194304
+> 
+> (4M is unnecessarily high and will probably be made configurable and
+> changed to 64K in the future.  By default, the new bluestore backend
+> does double-write for I/Os smaller than 64K.)
+> 
+> If pbsz != iomin, mkfs.xfs goes into multidisk mode and, under the
+> assumption that larger multidisk filesystems will have more devices,
+> chooses a higher agcount.  Though rbd devices are indeed backed by
+> multiple OSD devices, it appears that high agcount actually degrades
+> the performance with multiple rbd devices on the same host.
+> 
+> Commit 9a106b5fbb88 ("mkfs.xfs: Don't stagger AG for a single disk")
+> has set a precedent for treating sunit == swidth specially.  Take it
+> one step further.
+> 
+> Signed-off-by: Ilya Dryomov <idryomov@gmail.com>
+> ---
+>  mkfs/xfs_mkfs.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 2e53c1e83b6a..c3efa30005a2 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -2650,8 +2650,8 @@ _("agsize (%s) not a multiple of fs blk size (%d)\n"),
+>  				(cfg->dblocks % cfg->agcount != 0);
+>  	} else {
+>  		calc_default_ag_geometry(cfg->blocklog, cfg->dblocks,
+> -					 cfg->dsunit, &cfg->agsize,
+> -					 &cfg->agcount);
+> +					 cfg->dsunit != cfg->dswidth,
+> +					 &cfg->agsize, &cfg->agcount);
+>  	}
+>  }
+
+I think this makes reasonable sense - it's tough to argue that storage is
+advertising parallelism (multidisk) if swidth == sunit, IMHO.  I'd be curious
+to know what others think though, and I may go back and review the definitions
+of what these values actually mean and how we choose to interpret them :)
+
+TBH though if the functionality is OK (and I think it is) I'd rather pass
+dsunit and dswidth both to the function, and let /it/ make the determination
+about multidisk as opposed to leaving  that up to the callers.  Seems like
+I had some other reason to do that as well, though I'm not remembering it
+right now ...
+
+-Eric
