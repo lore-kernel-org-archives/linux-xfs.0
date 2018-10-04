@@ -1,99 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:41224 "EHLO sandeen.net"
+Received: from mail1.g1.pair.com ([66.39.3.162]:18385 "EHLO mail1.g1.pair.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726291AbeJHVzD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 Oct 2018 17:55:03 -0400
-Subject: Re: repair: realloc(): invalid next size
-From: Eric Sandeen <sandeen@sandeen.net>
-References: <214be03d-9cc7-378b-3635-6fca3cdcb1dd@gmail.com>
- <944a6c4f-4f4a-d80e-eba2-a69a179e5408@sandeen.net>
-Message-ID: <8a574052-acc5-b23d-560e-77f461d683ed@sandeen.net>
-Date: Mon, 8 Oct 2018 09:42:57 -0500
+        id S1727109AbeJDRUM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 4 Oct 2018 13:20:12 -0400
+Date: Thu, 4 Oct 2018 12:27:00 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: [somewhat OT] I just discovered that Stratis uses XFS.
+Message-ID: <20181004122639.330a6243@harpe.intellique.com>
+In-Reply-To: <CAJCQCtQyXjB1bzOWuj8f+cd-WgFkxDY8xpZ8YhVoTC72rPLThA@mail.gmail.com>
+References: <20181002162530.42b30c11@harpe.intellique.com>
+        <20181002163707.5452307c@harpe.intellique.com>
+        <6eb79c7b-4f15-28af-44b5-03488008a897@sandeen.net>
+        <20181002183018.37343c26@harpe.intellique.com>
+        <CAJCQCtQyXjB1bzOWuj8f+cd-WgFkxDY8xpZ8YhVoTC72rPLThA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <944a6c4f-4f4a-d80e-eba2-a69a179e5408@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_//5+3Ka2eUlVH2WcZ/ZLBZ.J"; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: =?UTF-8?Q?Arkadiusz_Mi=c5=9bkiewicz?= <a.miskiewicz@gmail.com>, linux-xfs@vger.kernel.org
+To: Chris Murphy <lists@colorremedies.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs <linux-xfs@vger.kernel.org>
 
+--Sig_//5+3Ka2eUlVH2WcZ/ZLBZ.J
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
+Le Wed, 3 Oct 2018 16:47:05 -0600
+Chris Murphy <lists@colorremedies.com> =C3=A9crivait:
 
-On 10/8/18 9:26 AM, Eric Sandeen wrote:
-> 
-> 
-> On 10/8/18 9:03 AM, Arkadiusz Miśkiewicz wrote:
->>
->> Big fs, ton of small files, repair takes 36h until this happens:
->>
->> rebuilding directory inode 30363993060
->> rebuilding directory inode 30398868604
->> rebuilding directory inode 30414474627
->> rebuilding directory inode 30425006954
->> rebuilding directory inode 30447937553
->> rebuilding directory inode 30529556616
->> rebuilding directory inode 30537494728
->> rebuilding directory inode 30569826838
->> rebuilding directory inode 31060721895
->> Metadata corruption detected at 0x41f9db, inode 0x73b5d00e7 data fork
->> xfs_repair: warning - iflush_int failed (-117)
->> Warning: recursive buffer locking at block 31060721776 detected
->> Metadata corruption detected at 0x41f9db, inode 0x73b5d00e7 data fork
->> xfs_repair: warning - iflush_int failed (-117)
->> Warning: recursive buffer locking at block 31060721776 detected
->> Metadata corruption detected at 0x41f980, inode 0x73b5d00e7 data fork
->> xfs_repair: warning - iflush_int failed (-117)
->> realloc(): invalid next size
->> Aborted
->>
->>
->> Fails somewhere in 0x41f9db <xfs_dir2_sf_verify+603>
->>
->> Complete log at
->> https://ixion.pld-linux.org/~arekm/xfs-1/repair.txt
->>
->> Test was done with xfs_repair 4.17.0 and 4.18.0 with the same result.
->>
->> kernel 4.18.5
->>
->> Running under gdb now.
->>
->> Any ideas?
-> 
-> With such a big fs it's tough to share a metadump for a reproducer, I assume.
-> 
-> The earlier write verifiers failing for xfs_repair writes are troubling...
-> 
-> I'm not certain why it's rebuilding so many dir inodes; there are several cases
-> where that happens, but unfortunately repair doesn't always say which one or why.
-> 
-> Anyway, you eventually get to this inode (it's the same in decimal & hex
-> below):
-> 
-> rebuilding directory inode 360732305
-> Metadata corruption detected at 0x41f9db, inode 0x15805691 data fork
-> xfs_repair: warning - iflush_int failed (-117)
-> 
-> with lots of corruption during the writes, and this happens for a couple
-> other inodes, until finally:
-> 
-> rebuilding directory inode 31060721895
-> Metadata corruption detected at 0x41f9db, inode 0x73b5d00e7 data fork
-> 
-> and this one ends up aborting in glibc's realloc():
-> 
-> realloc(): invalid next size
-> 
-> I /think/ that this indicates that memory has been corrupted during the repair
-> run.  :/  Running under valgrind would probably lead to a 72hr runtime or more :)
-> 
-> I wonder if it would save time in the long run to make a metadump and remove all
-> directory trees other than this inode (360732305) from it, and see if the same
-> failure occurs when running on the reduced fs image?
+> >
+> > You're right, I've looked through the source code and no option ever
+> > gets passed to mkfs.xfs nor xfs_growfs related to FS size. That
+> > means that it creates the FS with the default 4 AGs for a start. =20
+>=20
+> Stratis volumes are always built on dm-thin so I'd expect default
+> mkfs.xfs to create ~33 AG's, which is what I get when running mkfs.xfs
+> on LVM thin volumes.
+>=20
 
-Actually if you try that, also leaving the directory trees in place for the other
-inodes that reported issues would make sense.
+Ah yes, interesting. I've created a 1TB thin volume and mkfs.xfs makes
+32 AGs indeed.
 
--Eric
+--=20
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
+
+--Sig_//5+3Ka2eUlVH2WcZ/ZLBZ.J
+Content-Type: application/pgp-signature
+Content-Description: Signature digitale OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+
+iEYEARECAAYFAlu16xcACgkQX3jQXNUicVYBFACghw03VkmEErrw0yXkBdtFDPKD
+v5kAoMaMQtWbTktL1qsXreZXWV12L+VQ
+=pN6j
+-----END PGP SIGNATURE-----
+
+--Sig_//5+3Ka2eUlVH2WcZ/ZLBZ.J--
