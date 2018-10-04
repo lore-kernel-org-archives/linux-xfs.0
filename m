@@ -1,58 +1,243 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:53298 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726038AbeJEHPh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 03:15:37 -0400
-Subject: [PATCH 3/6] xfs/189: skip 'barrier' mount option test on newer
- kernels
+Received: from aserp2120.oracle.com ([141.146.126.78]:49884 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727138AbeJDLKo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Oct 2018 07:10:44 -0400
+Subject: [PATCH 09/22] docs: add XFS btrees to the DS&A book
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 04 Oct 2018 17:19:26 -0700
-Message-ID: <153869876687.26648.3788433504474045378.stgit@magnolia>
-In-Reply-To: <153869874763.26648.516233620615833277.stgit@magnolia>
-References: <153869874763.26648.516233620615833277.stgit@magnolia>
+Date: Wed, 03 Oct 2018 21:19:21 -0700
+Message-ID: <153862676104.26427.683490999583171121.stgit@magnolia>
+In-Reply-To: <153862669110.26427.16504658853992750743.stgit@magnolia>
+References: <153862669110.26427.16504658853992750743.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, fstests@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org, corbet@lwn.net
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Starting in Linux 4.19 the 'barrier' and 'nobarrier' mount options were
-removed.  If mount complains about a bad option when we remount with
-'barrier', just skip the test.
-
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tests/xfs/189 |   14 +++++++++++++-
- 1 file changed, 13 insertions(+), 1 deletion(-)
+ .../filesystems/xfs-data-structures/btrees.rst     |  197 ++++++++++++++++++++
+ .../filesystems/xfs-data-structures/globals.rst    |    2 
+ 2 files changed, 199 insertions(+)
+ create mode 100644 Documentation/filesystems/xfs-data-structures/btrees.rst
 
 
-diff --git a/tests/xfs/189 b/tests/xfs/189
-index c1c52a22..2a2682ef 100755
---- a/tests/xfs/189
-+++ b/tests/xfs/189
-@@ -165,7 +165,19 @@ _test_remount_barrier()
- 	echo
- 
- 	# mention barrier explicitly even if it's currently the default just to be sure
--	_try_scratch_mount -o barrier
-+	_try_scratch_mount -o barrier > $tmp.barriermount 2>&1
+diff --git a/Documentation/filesystems/xfs-data-structures/btrees.rst b/Documentation/filesystems/xfs-data-structures/btrees.rst
+new file mode 100644
+index 000000000000..e343f71b37f6
+--- /dev/null
++++ b/Documentation/filesystems/xfs-data-structures/btrees.rst
+@@ -0,0 +1,197 @@
++.. SPDX-License-Identifier: CC-BY-SA-4.0
 +
-+	# If the kernel doesn't recognize 'barrier' as a mount option then
-+	# just fake the output.  The barrier option was removed in 4.19.
-+	if grep -q "bad option" $tmp.barriermount; then
-+		cat << ENDL
-+SCRATCH_DEV on SCRATCH_MNT type xfs (rw)
-+SCRATCH_DEV on SCRATCH_MNT type xfs (rw,nobarrier)
-+SCRATCH_DEV on SCRATCH_MNT type xfs (rw)
-+ENDL
-+		return
-+	fi
++Fixed Length Record B+trees
++---------------------------
 +
- 	[ $? -eq 0 ] || echo "mount failed unexpectedly!"
- 	_check_mount rw
++XFS uses b+trees to index all metadata records. This well known data structure
++is used to provide efficient random and sequential access to metadata records
++while minimizing seek times. There are two btree formats: a short format for
++records pertaining to a single allocation group, since all block pointers in
++an AG are 32-bits in size; and a long format for records pertaining to a file,
++since file data can have 64-bit block offsets. Each b+tree block is either a
++leaf node containing records, or an internal node containing keys and pointers
++to other b+tree blocks. The tree consists of a root block which may point to
++some number of other blocks; blocks in the bottom level of the b+tree contains
++only records.
++
++Leaf blocks of both types of b+trees have the same general format: a header
++describing the data in the block, and an array of records. The specific header
++formats are given in the next two sections, and the record format is provided
++by the b+tree client itself. The generic b+tree code does not have any
++specific knowledge of the record format.
++
++::
++
++    +--------+------------+------------+
++    | header |   record   | records... |
++    +--------+------------+------------+
++
++Internal node blocks of both types of b+trees also have the same general
++format: a header describing the data in the block, an array of keys, and an
++array of pointers. Each pointer may be associated with one or two keys. The
++first key uniquely identifies the first record accessible via the leftmost
++path down the branch of the tree.
++
++If the records in a b+tree are indexed by an interval, then a range of keys
++can uniquely identify a single record. For example, if a record covers blocks
++12-16, then any one of the keys 12, 13, 14, 15, or 16 return the same record.
++In this case, the key for the record describing "12-16" is 12. If none of the
++records overlap, we only need to store one key.
++
++This is the format of a standard b+tree node:
++
++::
++
++    +--------+---------+---------+---------+---------+
++    | header |   key   | keys... |   ptr   | ptrs... |
++    +--------+---------+---------+---------+---------+
++
++If the b+tree records do not overlap, performing a b+tree lookup is simple.
++Start with the root. If it is a leaf block, perform a binary search of the
++records until we find the record with a lower key than our search key. If the
++block is a node block, perform a binary search of the keys until we find a key
++lower than our search key, then follow the pointer to the next block. Repeat
++until we find a record.
++
++However, if b+tree records contain intervals and are allowed to overlap, the
++internal nodes of the b+tree become larger:
++
++::
++
++    +--------+---------+----------+---------+-------------+---------+---------+
++    | header | low key | high key | low key | high key... |   ptr   | ptrs... |
++    +--------+---------+----------+---------+-------------+---------+---------+
++
++The low keys are exactly the same as the keys in the non-overlapping b+tree.
++High keys, however, are a little different. Recall that a record with a key
++consisting of an interval can be referenced by a number of keys. Since the low
++key of a record indexes the low end of that key range, the high key indexes
++the high end of the key range. Returning to the example above, the high key
++for the record describing "12-16" is 16. The high key recorded in a b+tree
++node is the largest of the high keys of all records accessible under the
++subtree rooted by the pointer. For a level 1 node, this is the largest high
++key in the pointed-to leaf node; for any other node, this is the largest of
++the high keys in the pointed-to node.
++
++Nodes and leaves use the same magic numbers.
++
++Short Format B+trees
++~~~~~~~~~~~~~~~~~~~~
++
++Each allocation group uses a "short format" B+tree to index various
++information about the allocation group. The structure is called short format
++because all block pointers are AG block numbers. The trees use the following
++header:
++
++.. code:: c
++
++    struct xfs_btree_sblock {
++         __be32                    bb_magic;
++         __be16                    bb_level;
++         __be16                    bb_numrecs;
++         __be32                    bb_leftsib;
++         __be32                    bb_rightsib;
++
++         /* version 5 filesystem fields start here */
++         __be64                    bb_blkno;
++         __be64                    bb_lsn;
++         uuid_t                    bb_uuid;
++         __be32                    bb_owner;
++         __le32                    bb_crc;
++    };
++
++**bb\_magic**
++    Specifies the magic number for the per-AG B+tree block.
++
++**bb\_level**
++    The level of the tree in which this block is found. If this value is 0,
++    this is a leaf block and contains records; otherwise, it is a node block
++    and contains keys and pointers. Level values increase towards the root.
++
++**bb\_numrecs**
++    Number of records in this block.
++
++**bb\_leftsib**
++    AG block number of the left sibling of this B+tree node.
++
++**bb\_rightsib**
++    AG block number of the right sibling of this B+tree node.
++
++**bb\_blkno**
++    FS block number of this B+tree block.
++
++**bb\_lsn**
++    Log sequence number of the last write to this block.
++
++**bb\_uuid**
++    The UUID of this block, which must match either sb\_uuid or sb\_meta\_uuid
++    depending on which features are set.
++
++**bb\_owner**
++    The AG number that this B+tree block ought to be in.
++
++**bb\_crc**
++    Checksum of the B+tree block.
++
++Long Format B+trees
++~~~~~~~~~~~~~~~~~~~
++
++Long format B+trees are similar to short format B+trees, except that their
++block pointers are 64-bit filesystem block numbers instead of 32-bit AG block
++numbers. Because of this, long format b+trees can be (and usually are) rooted
++in an inode’s data or attribute fork. The nodes and leaves of this B+tree use
++the xfs\_btree\_lblock declaration:
++
++.. code:: c
++
++    struct xfs_btree_lblock {
++         __be32                    bb_magic;
++         __be16                    bb_level;
++         __be16                    bb_numrecs;
++         __be64                    bb_leftsib;
++         __be64                    bb_rightsib;
++
++         /* version 5 filesystem fields start here */
++         __be64                    bb_blkno;
++         __be64                    bb_lsn;
++         uuid_t                    bb_uuid;
++         __be64                    bb_owner;
++         __le32                    bb_crc;
++         __be32                    bb_pad;
++    };
++
++**bb\_magic**
++    Specifies the magic number for the btree block.
++
++**bb\_level**
++    The level of the tree in which this block is found. If this value is 0,
++    this is a leaf block and contains records; otherwise, it is a node block
++    and contains keys and pointers.
++
++**bb\_numrecs**
++    Number of records in this block.
++
++**bb\_leftsib**
++    FS block number of the left sibling of this B+tree node.
++
++**bb\_rightsib**
++    FS block number of the right sibling of this B+tree node.
++
++**bb\_blkno**
++    FS block number of this B+tree block.
++
++**bb\_lsn**
++    Log sequence number of the last write to this block.
++
++**bb\_uuid**
++    The UUID of this block, which must match either sb\_uuid or sb\_meta\_uuid
++    depending on which features are set.
++
++**bb\_owner**
++    The AG number that this B+tree block ought to be in.
++
++**bb\_crc**
++    Checksum of the B+tree block.
++
++**bb\_pad**
++    Pads the structure to 64 bytes.
+diff --git a/Documentation/filesystems/xfs-data-structures/globals.rst b/Documentation/filesystems/xfs-data-structures/globals.rst
+index 3499e0fcd4a8..8a2173908b0e 100644
+--- a/Documentation/filesystems/xfs-data-structures/globals.rst
++++ b/Documentation/filesystems/xfs-data-structures/globals.rst
+@@ -2,3 +2,5 @@
  
+ Global Structures
+ =================
++
++.. include:: btrees.rst
