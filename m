@@ -1,125 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:55374 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727625AbeJEHmJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 03:42:09 -0400
-Subject: [PATCH 11/15] vfs: allow short clone and dedupe operations
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 04 Oct 2018 17:45:54 -0700
-Message-ID: <153870035471.29072.15690301164025555492.stgit@magnolia>
-In-Reply-To: <153870027422.29072.7433543674436957232.stgit@magnolia>
-References: <153870027422.29072.7433543674436957232.stgit@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:60972 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727483AbeJDQ4l (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 4 Oct 2018 12:56:41 -0400
+Date: Thu, 4 Oct 2018 12:04:06 +0200
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: Problems with VM_MIXEDMAP removal from /proc/<pid>/smaps
+Message-ID: <20181004100406.GE6682@linux-x5ow.site>
+References: <20181002143713.GA19845@infradead.org>
+ <20181002144412.GC4963@linux-x5ow.site>
+ <20181002145206.GA10903@infradead.org>
+ <20181002153100.GG9127@quack2.suse.cz>
+ <CAPcyv4j0tTD+rENqFExA68aw=-MmtCBaOe1qJovyrmJC=yBg-Q@mail.gmail.com>
+ <20181003125056.GA21043@quack2.suse.cz>
+ <CAPcyv4jfV10yuTiPg6ijsPRRL2-c_48ovfpU5TK1Zu7BWnfk3g@mail.gmail.com>
+ <20181003150658.GC24030@quack2.suse.cz>
+ <CAPcyv4iJvN6_Cf6tw=5a=Uh99LfMFKU7n8QkGcz1ZaxL0Oi-3w@mail.gmail.com>
+ <20181003164407.GK24030@quack2.suse.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20181003164407.GK24030@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, ocfs2-devel@oss.oracle.com, sandeen@redhat.com
+To: Jan Kara <jack@suse.cz>
+Cc: Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@infradead.org>, Dave Jiang <dave.jiang@intel.com>, linux-nvdimm <linux-nvdimm@lists.01.org>, Linux MM <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Oct 03, 2018 at 06:44:07PM +0200, Jan Kara wrote:
+> On Wed 03-10-18 08:13:37, Dan Williams wrote:
+> > On Wed, Oct 3, 2018 at 8:07 AM Jan Kara <jack@suse.cz> wrote:
+> > > WRT per-inode DAX property, AFAIU that inode flag is just going to be
+> > > advisory thing - i.e., use DAX if possible. If you mount a filesystem with
+> > > these inode flags set in a configuration which does not allow DAX to be
+> > > used, you will still be able to access such inodes but the access will use
+> > > page cache instead. And querying these flags should better show real
+> > > on-disk status and not just whether DAX is used as that would result in an
+> > > even bigger mess. So this feature seems to be somewhat orthogonal to the
+> > > API I'm looking for.
+> > 
+> > True, I imagine once we have that flag we will be able to distinguish
+> > the "saved" property and the "effective / live" property of DAX...
+> > Also it's really not DAX that applications care about as much as "is
+> > there page-cache indirection / overhead for this mapping?". That seems
+> > to be a narrower guarantee that we can make than what "DAX" might
+> > imply.
+> 
+> Right. So what do people think about my suggestion earlier in the thread to
+> use madvise(MADV_DIRECT_ACCESS) for this? Currently it would return success
+> when DAX is in use, failure otherwise. Later we could extend it to be also
+> used as a hint for caching policy for the inode...
 
-Allow the clone and dedupe prep function to shorten the request if the
-caller can handle it.
+Hmm apart from Dan's objection that it can't really be used for a
+query, isn't madvise(2) for mmap(2)?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/read_write.c    |    8 ++------
- include/linux/fs.h |    2 +-
- mm/filemap.c       |   19 +++++++++++++++----
- 3 files changed, 18 insertions(+), 11 deletions(-)
+But AFAIU (from looking at the xfs code, so please correct me if I',
+wrong), DAX can be used for the traditional read(2)/write(2) interface
+as well.
 
+There is at least:
 
-diff --git a/fs/read_write.c b/fs/read_write.c
-index 4eaea52f70a8..292d68c2f47c 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -1726,7 +1726,6 @@ int vfs_clone_file_prep(struct file *file_in, loff_t pos_in,
- {
- 	struct inode *inode_in = file_inode(file_in);
- 	struct inode *inode_out = file_inode(file_out);
--	uint64_t nlen;
- 	loff_t isize;
- 	bool same_inode = (inode_in == inode_out);
- 	bool is_dedupe = (flags & CLONERANGE_DEDUPE);
-@@ -1758,13 +1757,10 @@ int vfs_clone_file_prep(struct file *file_in, loff_t pos_in,
- 	}
- 
- 	/* Check that we don't violate system file offset limits. */
--	nlen = *len;
--	ret = generic_clone_checks(file_in, pos_in, file_out, pos_out, &nlen,
--			is_dedupe);
-+	ret = generic_clone_checks(file_in, pos_in, file_out, pos_out, len,
-+			flags);
- 	if (ret)
- 		return ret;
--	if (nlen != *len)
--		return -EINVAL;
- 
- 	/* Wait for the completion of any pending IOs on both files */
- 	inode_dio_wait(inode_in);
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index ae5685c31270..eb35363478e5 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2988,7 +2988,7 @@ extern int generic_file_readonly_mmap(struct file *, struct vm_area_struct *);
- extern ssize_t generic_write_checks(struct kiocb *, struct iov_iter *);
- extern int generic_clone_checks(struct file *file_in, loff_t pos_in,
- 				struct file *file_out, loff_t pos_out,
--				uint64_t *count, bool is_dedupe);
-+				uint64_t *count, unsigned int flags);
- extern ssize_t generic_file_read_iter(struct kiocb *, struct iov_iter *);
- extern ssize_t __generic_file_write_iter(struct kiocb *, struct iov_iter *);
- extern ssize_t generic_file_write_iter(struct kiocb *, struct iov_iter *);
-diff --git a/mm/filemap.c b/mm/filemap.c
-index f74391721234..013451b8017f 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -2983,7 +2983,7 @@ EXPORT_SYMBOL(generic_write_checks);
-  */
- int generic_clone_checks(struct file *file_in, loff_t pos_in,
- 			 struct file *file_out, loff_t pos_out,
--			 uint64_t *req_count, bool is_dedupe)
-+			 uint64_t *req_count, unsigned int flags)
- {
- 	struct inode *inode_in = file_in->f_mapping->host;
- 	struct inode *inode_out = file_out->f_mapping->host;
-@@ -3005,7 +3005,7 @@ int generic_clone_checks(struct file *file_in, loff_t pos_in,
- 	size_out = i_size_read(inode_out);
- 
- 	/* Dedupe requires both ranges to be within EOF. */
--	if (is_dedupe &&
-+	if ((flags & CLONERANGE_DEDUPE) &&
- 	    (pos_in >= size_in || pos_in + count > size_in ||
- 	     pos_out >= size_out || pos_out + count > size_out))
- 		return -EINVAL;
-@@ -3056,8 +3056,12 @@ int generic_clone_checks(struct file *file_in, loff_t pos_in,
- 	if (pos_in + count == size_in) {
- 		bcount = ALIGN(size_in, bs) - pos_in;
- 	} else {
--		if (!IS_ALIGNED(count, bs))
--			return -EINVAL;
-+		if (!IS_ALIGNED(count, bs)) {
-+			if (flags & CLONERANGE_SHORT)
-+				count = ALIGN_DOWN(count, bs);
-+			else
-+				return -EINVAL;
-+		}
- 
- 		bcount = count;
- 	}
-@@ -3068,6 +3072,13 @@ int generic_clone_checks(struct file *file_in, loff_t pos_in,
- 	    pos_out < pos_in + bcount)
- 		return -EINVAL;
- 
-+	/*
-+	 * We shortened the request but the caller can't deal with that, so
-+	 * bounce the request back to userspace.
-+	 */
-+	if (*req_count != count && !(flags & CLONERANGE_SHORT))
-+		return -EINVAL;
-+
- 	*req_count = count;
- 	return 0;
- }
+xfs_file_read_iter()
+`-> if (IS_DAX(inode))
+    `-> xfs_file_dax_read()
+        `->dax_iomap_rw()
+
+So IMHO something on an inode granularity would make more sens to me.
+
+Byte,
+	Johannes
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
