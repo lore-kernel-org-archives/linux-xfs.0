@@ -1,79 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:59950 "EHLO
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:15683 "EHLO
         ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726258AbeJFGng (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 6 Oct 2018 02:43:36 -0400
-Date: Sat, 6 Oct 2018 09:42:33 +1000
+        by vger.kernel.org with ESMTP id S1726277AbeJDHyE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Oct 2018 03:54:04 -0400
+Date: Thu, 4 Oct 2018 11:03:12 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 02/15] xfs: refactor clonerange preparation into a
- separate helper
-Message-ID: <20181005234233.GK12041@dastard>
-References: <153870027422.29072.7433543674436957232.stgit@magnolia>
- <153870028762.29072.5369530877410002226.stgit@magnolia>
- <20181005070228.GE12041@dastard>
- <20181005090242.GF12041@dastard>
- <20181005172159.GV19324@magnolia>
+Subject: [GIT PULL] xfs: fixes for 4.19-rc6
+Message-ID: <20181004010311.GU31060@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181005172159.GV19324@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, ocfs2-devel@oss.oracle.com, sandeen@redhat.com
+To: gregkh@linuxfoundation.org
+Cc: djwong@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, sandeen@sandeen.net
 
-On Fri, Oct 05, 2018 at 10:21:59AM -0700, Darrick J. Wong wrote:
-> On Fri, Oct 05, 2018 at 07:02:42PM +1000, Dave Chinner wrote:
-> > On Fri, Oct 05, 2018 at 05:02:28PM +1000, Dave Chinner wrote:
-> > > On Thu, Oct 04, 2018 at 05:44:47PM -0700, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > 
-> > > > Refactor all the reflink preparation steps into a separate helper that
-> > > > we'll use to land all the upcoming fixes for insufficient input checks.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > .....
-> > > 
-> > > > +xfs_reflink_remap_range(
-> > > > +	struct file		*file_in,
-> > > > +	loff_t			pos_in,
-> > > > +	struct file		*file_out,
-> > > > +	loff_t			pos_out,
-> > > > +	u64			len,
-> > > > +	bool			is_dedupe)
-> > > > +{
-> > > > +	struct inode		*inode_in = file_inode(file_in);
-> > > > +	struct xfs_inode	*src = XFS_I(inode_in);
-> > > > +	struct inode		*inode_out = file_inode(file_out);
-> > > > +	struct xfs_inode	*dest = XFS_I(inode_out);
-> > > > +	struct xfs_mount	*mp = src->i_mount;
-> > > > +	xfs_fileoff_t		sfsbno, dfsbno;
-> > > > +	xfs_filblks_t		fsblen;
-> > > > +	xfs_extlen_t		cowextsize;
-> > > > +	ssize_t			ret;
-> > > > +
-> > > > +	if (!xfs_sb_version_hasreflink(&mp->m_sb))
-> > > > +		return -EOPNOTSUPP;
-> > > > +
-> > > > +	if (XFS_FORCED_SHUTDOWN(mp))
-> > > > +		return -EIO;
-> > > > +
-> > > > +	/* Prepare and then clone file data. */
-> > > > +	ret = xfs_reflink_remap_prep(file_in, pos_in, file_out, pos_out,
-> > > > +			len, is_dedupe);
-> > 
-> > More than one bug. vfs_clone_file_prep_inodes() modifes the length
-> > parameter in the case of whole file reflink by way of "len == 0"
-> > on a non-zero length file. So I fixed this, too.
-> 
-> Did your patch look something like the attached?
+Hi Greg,
 
-Identical. I folded it back in once it tested ok, though.
+Can you please pull the XFS from the tag listed below. It's a bit
+bigger than that I'd like this late in the cycle, but we've had a
+few challenges getting ourselves sorted out this cycle. Details
+of the contents are in the pull-req output below. This has been be
+run through xfstests over the past week, and merges against 4.19-rc6
+cleanly.
+
+FYI, there is likely to be one more XFS fix for this cycle - we've
+just tracked down the source of a clone_file_range() data corruption
+so I'll send that as a separate pullreq once Darrick's fix is
+reviewed and tested.
 
 Cheers,
 
 Dave.
+
+The following changes since commit 5b394b2ddf0347bef56e50c69a58773c94343ff3:
+
+  Linux 4.19-rc1 (2018-08-26 14:11:59 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux tags/xfs-fixes-for-4.19-rc6
+
+for you to fetch changes up to e55ec4ddbef9897199c307dfb23167e3801fdaf5:
+
+  xfs: fix error handling in xfs_bmap_extents_to_btree (2018-10-01 08:11:07 +1000)
+
+----------------------------------------------------------------
+XFS fixes for 4.19-rc6
+
+Accumlated regression and bug fixes for 4.19-rc6, including:
+
+o make iomap correctly mark dirty pages for sub-page block sizes
+o fix regression in handling extent-to-btree format conversion errors
+o fix torn log wrap detection for new logs
+o various corrupt inode detection fixes
+o various delalloc state fixes
+o cleanup all the missed transaction cancel cases missed from changes merged
+  in 4.19-rc1
+o fix lockdep false positive on transaction allocation
+o fix locking and reference counting on buffer log items
+
+----------------------------------------------------------------
+Brian Foster (6):
+      xfs: remove last of unnecessary xfs_defer_cancel() callers
+      xfs: don't unlock invalidated buf on aborted tx commit
+      xfs: clean up xfs_trans_brelse()
+      xfs: refactor xfs_buf_log_item reference count handling
+      xfs: remove invalid log recovery first/last cycle check
+      iomap: set page dirty after partial delalloc on mkwrite
+
+Christoph Hellwig (2):
+      xfs: don't bring in extents in xfs_bmap_punch_delalloc_range
+      xfs: skip delalloc COW blocks in xfs_reflink_end_cow
+
+Darrick J. Wong (1):
+      xfs: don't crash the vfs on a garbage inline symlink
+
+Dave Chinner (3):
+      xfs: avoid lockdep false positives in xfs_trans_alloc
+      xfs: fix transaction leak in xfs_reflink_allocate_cow()
+      xfs: fix error handling in xfs_bmap_extents_to_btree
+
+Eric Sandeen (2):
+      xfs: don't treat unknown di_flags2 as corruption in scrub
+      xfs: validate inode di_forkoff
+
+YueHaibing (1):
+      xfs: remove duplicated include from alloc.c
+
+ fs/iomap.c                      |   2 +-
+ fs/xfs/libxfs/xfs_attr.c        |  28 +++-----
+ fs/xfs/libxfs/xfs_attr_remote.c |  10 +--
+ fs/xfs/libxfs/xfs_bmap.c        |  24 +++----
+ fs/xfs/libxfs/xfs_format.h      |   2 +
+ fs/xfs/libxfs/xfs_inode_buf.c   |  30 +++++++++
+ fs/xfs/scrub/alloc.c            |   1 -
+ fs/xfs/scrub/inode.c            |   4 +-
+ fs/xfs/xfs_bmap_util.c          |  20 ++----
+ fs/xfs/xfs_buf_item.c           | 119 ++++++++++++++++++----------------
+ fs/xfs/xfs_buf_item.h           |   1 +
+ fs/xfs/xfs_inode.c              |  10 +--
+ fs/xfs/xfs_iops.c               |  12 +++-
+ fs/xfs/xfs_log_recover.c        |  10 ---
+ fs/xfs/xfs_reflink.c            | 137 ++++++++++++++++++++++++----------------
+ fs/xfs/xfs_trace.h              |   1 -
+ fs/xfs/xfs_trans.c              |  10 ++-
+ fs/xfs/xfs_trans_buf.c          |  99 +++++++----------------------
+ 18 files changed, 256 insertions(+), 264 deletions(-)
 -- 
 Dave Chinner
 david@fromorbit.com
