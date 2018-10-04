@@ -1,56 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:48088 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727176AbeJELAM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 5 Oct 2018 07:00:12 -0400
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [PATCH 01/15] xfsprogs: minor sparse fixes
-Date: Thu,  4 Oct 2018 23:03:02 -0500
-Message-Id: <1538712196-13625-2-git-send-email-sandeen@sandeen.net>
-In-Reply-To: <1538712196-13625-1-git-send-email-sandeen@sandeen.net>
-References: <1538712196-13625-1-git-send-email-sandeen@sandeen.net>
+Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:37607 "EHLO
+        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725996AbeJEFZ1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 01:25:27 -0400
+Date: Fri, 5 Oct 2018 08:29:52 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] mkfs.xfs: don't go into multidisk mode if there is only
+ one stripe
+Message-ID: <20181004222952.GV31060@dastard>
+References: <20181004175839.18736-1-idryomov@gmail.com>
+ <24d229f3-1a75-a65d-5ad3-c8565cb32e76@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <24d229f3-1a75-a65d-5ad3-c8565cb32e76@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Ilya Dryomov <idryomov@gmail.com>, linux-xfs@vger.kernel.org, Mark Nelson <mnelson@redhat.com>, Eric Sandeen <sandeen@redhat.com>
 
-From: Eric Sandeen <sandeen@redhat.com>
+On Thu, Oct 04, 2018 at 01:33:12PM -0500, Eric Sandeen wrote:
+> On 10/4/18 12:58 PM, Ilya Dryomov wrote:
+> > rbd devices report the following geometry:
+> > 
+> >   $ blockdev --getss --getpbsz --getiomin --getioopt /dev/rbd0
+> >   512
+> >   512
+> >   4194304
+> >   4194304
 
-Remove stray semicolon, add missing return.
+dm-thinp does this as well. THis is from the thinp device created
+by tests/generic/459:
 
-Fixes sparse warnings about this.
+512
+4096
+65536
+65536
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
- io/init.c         | 1 +
- repair/agheader.c | 2 +-
- 2 files changed, 2 insertions(+), 1 deletion(-)
+And I've also seen some hardware raid controllers do this, too,
+because they only expose the stripe width in their enquiry page
+rather than stripe unit and stripe width.
 
-diff --git a/io/init.c b/io/init.c
-index 82774c7..e9449a2 100644
---- a/io/init.c
-+++ b/io/init.c
-@@ -240,6 +240,7 @@ idle_loop(void *arg)
- {
- 	for (;;)
- 		pause();
-+	return NULL;
- }
- 
- void
-diff --git a/repair/agheader.c b/repair/agheader.c
-index 77e04f6..218ee25 100644
---- a/repair/agheader.c
-+++ b/repair/agheader.c
-@@ -245,7 +245,7 @@ secondary_sb_whack(
- 	int		do_bzero = 0;
- 	int		size;
- 	char		*ip;
--	int		rval = 0;;
-+	int		rval = 0;
- 	uuid_t		tmpuuid;
- 
- 	rval = do_bzero = 0;
+IOWs, this behaviour isn't really specific to Ceph's rbd device, and
+it does occur on multi-disk devices that have something layered over
+the top (dm-thinp, hardware raid, etc). As such, I don't think
+there's a "one size fits all" solution and so someone is going to
+have to tweak mkfs settings to have it do the right thing for their
+storage subsystem....
+
+Indeed, does Ceph really needs 4MB aligned filesystem IO? What
+performance benefit does that give over setting iomin=PAGE_SIZE and
+ioopt=0? (i.e mkfs.xfs -d sunit=0,swidth=0 or just mounting with -o
+noalign)
+
+
+Cheers,
+
+Dave.
 -- 
-1.8.3.1
+Dave Chinner
+david@fromorbit.com
