@@ -1,206 +1,165 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:56014 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727625AbeJEHmg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 03:42:36 -0400
-Subject: [PATCH 14/15] ocfs2: support partial clone range and dedupe range
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 04 Oct 2018 17:46:20 -0700
-Message-ID: <153870038054.29072.6999468698657448422.stgit@magnolia>
-In-Reply-To: <153870027422.29072.7433543674436957232.stgit@magnolia>
-References: <153870027422.29072.7433543674436957232.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mail-wr1-f49.google.com ([209.85.221.49]:37049 "EHLO
+        mail-wr1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727536AbeJEDxD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Oct 2018 23:53:03 -0400
+Received: by mail-wr1-f49.google.com with SMTP id y11-v6so629300wrd.4
+        for <linux-xfs@vger.kernel.org>; Thu, 04 Oct 2018 13:58:00 -0700 (PDT)
+Received: from dyn.cm.kabsi.at (h081217199198.dyn.cm.kabsi.at. [81.217.199.198])
+        by smtp.gmail.com with ESMTPSA id x2-v6sm2003171wrs.47.2018.10.04.13.57.58
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 04 Oct 2018 13:57:58 -0700 (PDT)
+From: Stefan Ring <stefanrin@gmail.com>
+Subject: [PATCH 1/1] xfs_metadump: Zap more stale data
+Date: Thu,  4 Oct 2018 22:57:49 +0200
+Message-Id: <20181004205749.2042-2-stefanrin@gmail.com>
+In-Reply-To: <20181004205749.2042-1-stefanrin@gmail.com>
+References: <20181004205749.2042-1-stefanrin@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, ocfs2-devel@oss.oracle.com, sandeen@redhat.com
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+I have empirically found and tried to fix some places where stale data was not properly zeroed out.
 
-Change the ocfs2 remap code to allow for returning partial results.
+In the order of the code changes:
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+The "freeindex" blocks in inode directories, from last entry to end of block.
+
+XFS_DIR2_LEAF1_MAGIC, from last entry to end of block.
+
+In btree format inodes before as well as after the btree pointers.
+
+In dev inodes, everything after the header.
 ---
- fs/ocfs2/file.c         |   14 ++++----------
- fs/ocfs2/refcounttree.c |   35 ++++++++++++++++++++---------------
- fs/ocfs2/refcounttree.h |    4 ++--
- 3 files changed, 26 insertions(+), 27 deletions(-)
+ db/metadump.c | 74 +++++++++++++++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 69 insertions(+), 5 deletions(-)
 
-
-diff --git a/fs/ocfs2/file.c b/fs/ocfs2/file.c
-index 1ee6d3ecdac6..4562111259b4 100644
---- a/fs/ocfs2/file.c
-+++ b/fs/ocfs2/file.c
-@@ -2534,11 +2534,8 @@ static s64 ocfs2_file_clone_range(struct file *file_in,
- 				  u64 len,
- 				  unsigned int flags)
+diff --git a/db/metadump.c b/db/metadump.c
+index cc2ae9af..e7159cd1 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -1421,12 +1421,42 @@ process_sf_attr(
+ 		memset(asfep, 0, XFS_DFORK_ASIZE(dip, mp) - ino_attr_size);
+ }
+ 
++static void
++process_dir_free_block(
++	char				*block)
++{
++	struct xfs_dir2_free		*free;
++	struct xfs_dir3_icfree_hdr	freehdr;
++
++	if (!zero_stale_data)
++		return;
++
++	free = (struct xfs_dir2_free *)block;
++	M_DIROPS(mp)->free_hdr_from_disk(&freehdr, free);
++
++	/* Zero out space from end of bests[] to end of block */
++	if (freehdr.magic == XFS_DIR2_FREE_MAGIC) {
++		__be16			*bests;
++		char			*high;
++		int			used;
++
++		bests = M_DIROPS(mp)->free_bests_p(free);
++		high = (char *)&bests[freehdr.nvalid];
++		used = high - (char*)free;
++		memset(high, 0, mp->m_sb.sb_blocksize - used);
++		iocur_top->need_crc = 1;
++	}
++	else if (show_warnings)
++		print_warning("invalid magic in dir inode %llu free block",
++				(unsigned long long)cur_ino);
++}
++
+ static void
+ process_dir_leaf_block(
+ 	char				*block)
  {
--	int ret;
--
--	ret = ocfs2_reflink_remap_range(file_in, pos_in, file_out, pos_out,
--					len, false);
--	return ret < 0 ? ret : len;
-+	return ocfs2_reflink_remap_range(file_in, pos_in, file_out, pos_out,
-+			len, flags);
+ 	struct xfs_dir2_leaf		*leaf;
+-	struct xfs_dir3_icleaf_hdr 	leafhdr;
++	struct xfs_dir3_icleaf_hdr	leafhdr;
+ 
+ 	if (!zero_stale_data)
+ 		return;
+@@ -1449,6 +1479,18 @@ process_dir_leaf_block(
+ 		lbp = xfs_dir2_leaf_bests_p(ltp);
+ 		memset(free, 0, (char *)lbp - free);
+ 		iocur_top->need_crc = 1;
++	} else
++	if (leafhdr.magic == XFS_DIR2_LEAFN_MAGIC ||
++	    leafhdr.magic == XFS_DIR3_LEAFN_MAGIC) {
++		struct xfs_dir2_leaf_entry	*ents;
++		char				*free;
++		int				used;
++
++		ents = M_DIROPS(mp)->leaf_ents_p(leaf);
++		free = (char *)&ents[leafhdr.count];
++		used = free - (char*)leaf;
++		memset(free, 0, mp->m_sb.sb_blocksize - used);
++		iocur_top->need_crc = 1;
+ 	}
  }
  
- static s64 ocfs2_file_dedupe_range(struct file *file_in,
-@@ -2547,11 +2544,8 @@ static s64 ocfs2_file_dedupe_range(struct file *file_in,
- 				   loff_t pos_out,
- 				   u64 len)
- {
--	int ret;
--
--	ret = ocfs2_reflink_remap_range(file_in, pos_in, file_out, pos_out,
--					len, true);
--	return ret < 0 ? ret : len;
-+	return ocfs2_reflink_remap_range(file_in, pos_in, file_out, pos_out,
-+			len, CLONERANGE_DEDUPE | CLONERANGE_SHORT);
- }
- 
- const struct inode_operations ocfs2_file_iops = {
-diff --git a/fs/ocfs2/refcounttree.c b/fs/ocfs2/refcounttree.c
-index 02283c38b5a4..60be5c76db6d 100644
---- a/fs/ocfs2/refcounttree.c
-+++ b/fs/ocfs2/refcounttree.c
-@@ -4499,7 +4499,7 @@ static int ocfs2_reflink_update_dest(struct inode *dest,
- }
- 
- /* Remap the range pos_in:len in s_inode to pos_out:len in t_inode. */
--static int ocfs2_reflink_remap_extent(struct inode *s_inode,
-+static s64 ocfs2_reflink_remap_extent(struct inode *s_inode,
- 				      struct buffer_head *s_bh,
- 				      loff_t pos_in,
- 				      struct inode *t_inode,
-@@ -4514,6 +4514,7 @@ static int ocfs2_reflink_remap_extent(struct inode *s_inode,
- 	struct buffer_head *ref_root_bh = NULL;
- 	struct ocfs2_refcount_tree *ref_tree;
- 	struct ocfs2_super *osb;
-+	s64 remapped = 0;
- 	loff_t pstart, plen;
- 	u32 p_cluster, num_clusters, slast, spos, tpos;
- 	unsigned int ext_flags;
-@@ -4597,18 +4598,20 @@ static int ocfs2_reflink_remap_extent(struct inode *s_inode,
- next_loop:
- 		spos += num_clusters;
- 		tpos += num_clusters;
-+		remapped += ocfs2_clusters_to_bytes(t_inode->i_sb,
-+				num_clusters);
+@@ -1499,7 +1541,7 @@ process_dir_data_block(
+ 		if (show_warnings)
+ 			print_warning(
+ 		"invalid magic in dir inode %llu block %ld",
+-					(long long)cur_ino, (long)offset);
++					(unsigned long long)cur_ino, (long)offset);
+ 		return;
  	}
  
--out:
--	return ret;
-+	return remapped;
- out_unlock_refcount:
- 	ocfs2_unlock_refcount_tree(osb, ref_tree, 1);
- 	brelse(ref_root_bh);
--	return ret;
-+out:
-+	return remapped > 0 ? remapped : ret;
- }
- 
- /* Set up refcount tree and remap s_inode to t_inode. */
--static int ocfs2_reflink_remap_blocks(struct inode *s_inode,
-+static s64 ocfs2_reflink_remap_blocks(struct inode *s_inode,
- 				      struct buffer_head *s_bh,
- 				      loff_t pos_in,
- 				      struct inode *t_inode,
-@@ -4620,7 +4623,7 @@ static int ocfs2_reflink_remap_blocks(struct inode *s_inode,
- 	struct ocfs2_super *osb;
- 	struct ocfs2_dinode *dis;
- 	struct ocfs2_dinode *dit;
--	int ret;
-+	s64 ret;
- 
- 	osb = OCFS2_SB(s_inode->i_sb);
- 	dis = (struct ocfs2_dinode *)s_bh->b_data;
-@@ -4692,7 +4695,7 @@ static int ocfs2_reflink_remap_blocks(struct inode *s_inode,
- 	/* Actually remap extents now. */
- 	ret = ocfs2_reflink_remap_extent(s_inode, s_bh, pos_in, t_inode, t_bh,
- 					 pos_out, len, &dealloc);
--	if (ret) {
-+	if (ret < 0) {
- 		mlog_errno(ret);
- 		goto out;
- 	}
-@@ -4812,18 +4815,19 @@ static void ocfs2_reflink_inodes_unlock(struct inode *s_inode,
- }
- 
- /* Link a range of blocks from one file to another. */
--int ocfs2_reflink_remap_range(struct file *file_in,
-+s64 ocfs2_reflink_remap_range(struct file *file_in,
- 			      loff_t pos_in,
- 			      struct file *file_out,
- 			      loff_t pos_out,
- 			      u64 len,
--			      bool is_dedupe)
-+			      unsigned int flags)
- {
- 	struct inode *inode_in = file_inode(file_in);
- 	struct inode *inode_out = file_inode(file_out);
- 	struct ocfs2_super *osb = OCFS2_SB(inode_in->i_sb);
- 	struct buffer_head *in_bh = NULL, *out_bh = NULL;
- 	bool same_inode = (inode_in == inode_out);
-+	s64 remapped = 0;
- 	ssize_t ret;
- 
- 	if (!ocfs2_refcount_tree(osb))
-@@ -4843,7 +4847,7 @@ int ocfs2_reflink_remap_range(struct file *file_in,
- 		goto out_unlock;
- 
- 	ret = vfs_clone_file_prep(file_in, pos_in, file_out, pos_out,
--			&len, is_dedupe ? CLONERANGE_DEDUPE : 0);
-+			&len, flags);
- 	if (ret <= 0)
- 		goto out_unlock;
- 
-@@ -4857,12 +4861,13 @@ int ocfs2_reflink_remap_range(struct file *file_in,
- 	truncate_inode_pages_range(&inode_out->i_data, pos_out,
- 				   PAGE_ALIGN(pos_out + len) - 1);
- 
--	ret = ocfs2_reflink_remap_blocks(inode_in, in_bh, pos_in, inode_out,
--					 out_bh, pos_out, len);
-+	remapped = ocfs2_reflink_remap_blocks(inode_in, in_bh, pos_in,
-+			inode_out, out_bh, pos_out, len);
- 	up_write(&OCFS2_I(inode_in)->ip_alloc_sem);
- 	if (!same_inode)
- 		up_write(&OCFS2_I(inode_out)->ip_alloc_sem);
--	if (ret) {
-+	if (remapped < 0) {
-+		ret = remapped;
- 		mlog_errno(ret);
- 		goto out_unlock;
- 	}
-@@ -4881,9 +4886,9 @@ int ocfs2_reflink_remap_range(struct file *file_in,
+@@ -1813,8 +1855,7 @@ process_single_fsb_objects(
+ 		switch (btype) {
+ 		case TYP_DIR2:
+ 			if (o >= mp->m_dir_geo->freeblk) {
+-				/* TODO, zap any stale data */
+-				break;
++				process_dir_free_block(dp);
+ 			} else if (o >= mp->m_dir_geo->leafblk) {
+ 				process_dir_leaf_block(dp);
+ 			} else {
+@@ -2115,6 +2156,20 @@ process_btinode(
  	}
  
- 	ocfs2_reflink_inodes_unlock(inode_in, in_bh, inode_out, out_bh);
--	return 0;
-+	return remapped;
+ 	pp = XFS_BMDR_PTR_ADDR(dib, 1, maxrecs);
++
++	if (zero_stale_data) {
++		/* Space before btree pointers */
++		char	*top;
++		int	used;
++		top = (char*)XFS_BMDR_PTR_ADDR(dib, 1, nrecs);
++		memset(top, 0, (char*)pp - top);
++
++		/* Space after btree pointers */
++		top = (char*)&pp[nrecs];
++		used = top - (char*)dip;
++		memset(top, 0, mp->m_sb.sb_inodesize - used);
++	}
++
+ 	for (i = 0; i < nrecs; i++) {
+ 		xfs_agnumber_t	ag;
+ 		xfs_agblock_t	bno;
+@@ -2250,7 +2305,16 @@ process_inode(
+ 		case S_IFREG:
+ 			success = process_inode_data(dip, TYP_DATA);
+ 			break;
+-		default: ;
++		default:
++			if (XFS_DFORK_NEXTENTS(dip, XFS_ATTR_FORK) ||
++					XFS_DFORK_NEXTENTS(dip, XFS_DATA_FORK)) {
++				if (show_warnings)
++					print_warning("inode %llu has unexpected extents",
++							(unsigned long long)cur_ino);
++				success = 0;
++			}
++			else
++				memset(XFS_DFORK_DPTR(dip), 0, mp->m_sb.sb_inodesize - (XFS_DFORK_DPTR(dip) - (char*)dip));
+ 	}
+ 	nametable_clear();
  
- out_unlock:
- 	ocfs2_reflink_inodes_unlock(inode_in, in_bh, inode_out, out_bh);
--	return ret;
-+	return remapped > 0 ? remapped : ret;
- }
-diff --git a/fs/ocfs2/refcounttree.h b/fs/ocfs2/refcounttree.h
-index 4af55bf4b35b..410a3145a06a 100644
---- a/fs/ocfs2/refcounttree.h
-+++ b/fs/ocfs2/refcounttree.h
-@@ -115,11 +115,11 @@ int ocfs2_reflink_ioctl(struct inode *inode,
- 			const char __user *oldname,
- 			const char __user *newname,
- 			bool preserve);
--int ocfs2_reflink_remap_range(struct file *file_in,
-+s64 ocfs2_reflink_remap_range(struct file *file_in,
- 			      loff_t pos_in,
- 			      struct file *file_out,
- 			      loff_t pos_out,
- 			      u64 len,
--			      bool is_dedupe);
-+			      unsigned int flags);
- 
- #endif /* OCFS2_REFCOUNTTREE_H */
+-- 
+2.14.4
