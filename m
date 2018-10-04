@@ -1,65 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49674 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:48150 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726547AbeJCTEF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 3 Oct 2018 15:04:05 -0400
-Date: Wed, 3 Oct 2018 08:15:54 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/8] xfs: remove magic handling of unwritten extents in
- xfs_bmapi_allocate
-Message-ID: <20181003121553.GB61971@bfoster>
-References: <20181002174207.25275-1-hch@lst.de>
- <20181002174207.25275-4-hch@lst.de>
+        id S1727354AbeJECH5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 4 Oct 2018 22:07:57 -0400
+Subject: Re: [PATCH v3 0/8] xfsprogs-4.19: transaction cleanups
+References: <153841345236.27952.5050172703525712660.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <6233116e-24bd-bd7c-d19d-883887953335@sandeen.net>
+Date: Thu, 4 Oct 2018 14:13:19 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181002174207.25275-4-hch@lst.de>
+In-Reply-To: <153841345236.27952.5050172703525712660.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Oct 02, 2018 at 10:42:02AM -0700, Christoph Hellwig wrote:
-> There is no real need to treat unwritten delalloc extent special in
-> any way here, so remove the special casing and related comment.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/libxfs/xfs_bmap.c | 16 +++-------------
->  1 file changed, 3 insertions(+), 13 deletions(-)
+On 10/1/18 12:04 PM, Darrick J. Wong wrote:
+> Here are seven cleanups to the userspace transaction code that make the
+> commit and roll code more closely resemble their kernel counterparts,
+> and fix a number of problems where client code did not check the return
+> values of the transaction functions.  The eighth patch fixes a bug in
+> xfs_scrub_all.  The patches should apply to Eric's libxfs-4.19-sync
+> branch.
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index da6b768664e3..3bb250ee6c7c 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -4069,20 +4069,10 @@ xfs_bmapi_allocate(
->  	bma->got.br_startoff = bma->offset;
->  	bma->got.br_startblock = bma->blkno;
->  	bma->got.br_blockcount = bma->length;
-> -	bma->got.br_state = XFS_EXT_NORM;
-> -
-> -	/*
-> -	 * In the data fork, a wasdelay extent has been initialized, so
-> -	 * shouldn't be flagged as unwritten.
-> -	 *
-> -	 * For the cow fork, however, we convert delalloc reservations
-> -	 * (extents allocated for speculative preallocation) to
-> -	 * allocated unwritten extents, and only convert the unwritten
-> -	 * extents to real extents when we're about to write the data.
-> -	 */
-> -	if ((!bma->wasdel || (bma->flags & XFS_BMAPI_COWFORK)) &&
-> -	    (bma->flags & XFS_BMAPI_PREALLOC))
-> +	if (bma->flags & XFS_BMAPI_PREALLOC)
->  		bma->got.br_state = XFS_EXT_UNWRITTEN;
-> +	else
-> +		bma->got.br_state = XFS_EXT_NORM;
->  
->  	if (bma->wasdel)
->  		error = xfs_bmap_add_extent_delay_real(bma, whichfork);
-> -- 
-> 2.19.0
+> --D
 > 
+
+You're going to hate me (or maybe not) but in the end I decided to stop
+being stubborn and bring in these patches before the libxfs-4.19 up[date,
+as I should have from the start.  You don't have to rebase them again tho,
+I already got through it.  I'll diff to your tree to make sure nothing went
+haywire.
+
+For the series with my out of order backporting tweaks,
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+Thanks, this was great work.
+
+-Eric
