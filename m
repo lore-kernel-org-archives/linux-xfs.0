@@ -1,99 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:35336 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727941AbeJFAgB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 20:36:01 -0400
-Date: Fri, 5 Oct 2018 10:36:07 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 06/15] vfs: strengthen checking of file range inputs to
- clone/dedupe range
-Message-ID: <20181005173607.GW19324@magnolia>
-References: <153870027422.29072.7433543674436957232.stgit@magnolia>
- <153870031519.29072.18289185889660082318.stgit@magnolia>
- <CAOQ4uxiVPvNPxTNZ-njeyte6yk3jo3tjNKv78kS9NqA_Xzxc6g@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxiVPvNPxTNZ-njeyte6yk3jo3tjNKv78kS9NqA_Xzxc6g@mail.gmail.com>
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:41438 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727536AbeJEDxC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Oct 2018 23:53:02 -0400
+Received: by mail-wr1-f67.google.com with SMTP id x12-v6so11362757wru.8
+        for <linux-xfs@vger.kernel.org>; Thu, 04 Oct 2018 13:57:58 -0700 (PDT)
+Received: from dyn.cm.kabsi.at (h081217199198.dyn.cm.kabsi.at. [81.217.199.198])
+        by smtp.gmail.com with ESMTPSA id x2-v6sm2003171wrs.47.2018.10.04.13.57.56
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 04 Oct 2018 13:57:56 -0700 (PDT)
+From: Stefan Ring <stefanrin@gmail.com>
+Subject: [PATCH 0/1] Try to squash metadump data leaks
+Date: Thu,  4 Oct 2018 22:57:48 +0200
+Message-Id: <20181004205749.2042-1-stefanrin@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, ocfs2-devel@oss.oracle.com, Eric Sandeen <sandeen@redhat.com>
+To: linux-xfs@vger.kernel.org
 
-On Fri, Oct 05, 2018 at 09:10:12AM +0300, Amir Goldstein wrote:
-> On Fri, Oct 5, 2018 at 3:46 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> >
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> >
-> > Clone range is an optimization on a regular file write.  File writes
-> > that extend the file length are subject to various constraints which are
-> > not checked by clonerange.  This is a correctness problem, because we're
-> > never allowed to touch ranges that the page cache can't support
-> > (s_maxbytes); we're not supposed to deal with large offsets
-> > (MAX_NON_LFS) if O_LARGEFILE isn't set; and we must obey resource limits
-> > (RLIMIT_FSIZE).
-> >
-> > Therefore, add these checks to the new generic_clone_checks function so
-> > that we curtail unexpected behavior.
-> >
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  mm/filemap.c |   31 +++++++++++++++++++++++++++++++
-> >  1 file changed, 31 insertions(+)
-> >
-> >
-> > diff --git a/mm/filemap.c b/mm/filemap.c
-> > index 68ec91d05c7b..f74391721234 100644
-> > --- a/mm/filemap.c
-> > +++ b/mm/filemap.c
-> > @@ -3015,6 +3015,37 @@ int generic_clone_checks(struct file *file_in, loff_t pos_in,
-> >                 return -EINVAL;
-> >         count = min(count, size_in - (uint64_t)pos_in);
-> >
-> > +       /* Don't exceed RLMIT_FSIZE in the file we're writing into. */
-> > +       if (limit != RLIM_INFINITY) {
-> > +               if (pos_out >= limit) {
-> > +                       send_sig(SIGXFSZ, current, 0);
-> > +                       return -EFBIG;
-> > +               }
-> > +               count = min(count, limit - (uint64_t)pos_out);
-> > +       }
-> > +
-> > +       /* Don't exceed the LFS limits. */
-> > +       if (unlikely(pos_out + count > MAX_NON_LFS &&
-> > +                               !(file_out->f_flags & O_LARGEFILE))) {
-> > +               if (pos_out >= MAX_NON_LFS)
-> > +                       return -EFBIG;
-> > +               count = min(count, MAX_NON_LFS - (uint64_t)pos_out);
-> > +       }
-> > +       if (unlikely(pos_in + count > MAX_NON_LFS &&
-> > +                               !(file_in->f_flags & O_LARGEFILE))) {
-> > +               if (pos_in >= MAX_NON_LFS)
-> > +                       return -EFBIG;
-> > +               count = min(count, MAX_NON_LFS - (uint64_t)pos_in);
-> > +       }
-> > +
-> > +       /* Don't operate on ranges the page cache doesn't support. */
-> > +       if (unlikely(pos_out >= inode_out->i_sb->s_maxbytes ||
-> > +                    pos_in >= inode_in->i_sb->s_maxbytes))
-> > +               return -EFBIG;
-> > +
-> 
-> Forget my standards, this doesn't abide by your own standards ;-)
-> Please factor out generic_write_checks() and use it instead of
-> duplicating the code. The in/out variant doesn't justify not calling
-> the helper twice IMO.
+This is inspired by a thread last year when someone intended to
+collect metadata about filesystems and I would have been happy to
+help, except that I noticed lots of left-over data in the dump that
+should never have been there. I would not have worried that much about
+some fragments of Python code or directory listings, but the
+possibility of recognizable customer data (potentially even
+cryptographic keys) made it unthinkable to share this.
 
-Factor generic_write_checks and generic_clone_checks how?  They operate
-on very different parameter types.
+My method of coming up with these patches was: Pipe a metadump of my
+reference image through "strings -n 10" and scroll until something
+recognizable catches my eye. This did not take too long, usually. Find
+the origin of the found leak and squash it (using "XFS File System
+Structure" from the wiki). Repeat until there is nothing recognizable
+left. Said image is a 1.1 TB volume created in early 2012 and used
+daily ever since on our development server, containing about 12
+million inodes (mostly hundreds of checkouts of our main Mercurial
+repo with about 15000 files in it).
 
-Or were you suggeseting refactoring just the "Dont' exceed LFS limits"
-and "Don't operate on ranges the page cache..." sections of
-generic_clone_checks to reduce copy paste?  That I'll do.
+I have not submitted a patch before, and I don't think I will be
+particularly pushy with this one. It exists mostly to inform you of my
+findings. I have not dealt at all with a v3 filesystem. TBH, I don't
+even know what this is and how to create one. Looking at the metadump
+code as it exists now, it would likely have been much safer to copy
+just the required contents as opposed to copying everything and then
+trying to find every nook and cranny where unwanted stuff could seep
+through.
 
---D
+Stefan Ring (1):
+  xfs_metadump: Zap more stale data
 
-> 
-> Thanks,
-> Amir.
+ db/metadump.c | 74 +++++++++++++++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 69 insertions(+), 5 deletions(-)
+
+-- 
+2.14.4
