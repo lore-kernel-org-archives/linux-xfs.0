@@ -1,119 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:43244 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726073AbeJEIC1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 04:02:27 -0400
-Date: Thu, 4 Oct 2018 18:06:03 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] docs: improve readability for people with poorer eyesight
-Message-ID: <20181005010603.GA6702@magnolia>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:56937 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726073AbeJEINk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 04:13:40 -0400
+Date: Fri, 5 Oct 2018 11:17:18 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 00/15] fs: fixes for serious clone/dedupe problems
+Message-ID: <20181005011718.GX31060@dastard>
+References: <153870027422.29072.7433543674436957232.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <153870027422.29072.7433543674436957232.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: corbet@lwn.net
-Cc: xfs <linux-xfs@vger.kernel.org>, linux-doc@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, ocfs2-devel@oss.oracle.com, sandeen@redhat.com
 
-Hi,
+On Thu, Oct 04, 2018 at 05:44:34PM -0700, Darrick J. Wong wrote:
+> Hi all,
+> 
+> Dave, Eric, and I have been chasing a stale data exposure bug in the XFS
+> reflink implementation, and tracked it down to reflink forgetting to do
+> some of the file-extending activities that must happen for regular
+> writes.
+> 
+> We then started auditing the clone, dedupe, and copyfile code and
+> realized that from a file contents perspective, clonerange isn't any
+> different from a regular file write.  Unfortunately, we also noticed
+> that *unlike* a regular write, clonerange skips a ton of overflow
+> checks, such as validating the ranges against s_maxbytes, MAX_NON_LFS,
+> and RLIMIT_FSIZE.  We also observed that cloning into a file did not
+> strip security privileges (suid, capabilities) like a regular write
+> would.  I also noticed that xfs and ocfs2 need to dump the page cache
+> before remapping blocks, not after.
+> 
+> In fixing the range checking problems I also realized that both dedupe
+> and copyfile tell userspace how much of the requested operation was
+> acted upon.  Since the range validation can shorten a clone request (or
+> we can ENOSPC midway through), we might as well plumb the short
+> operation reporting back through the VFS indirection code to userspace.
+> 
+> So, here's the whole giant pile of patches[1] that fix all the problems.
+> The patch "generic: test reflink side effects" recently sent to fstests
+> exercises the fixes in this series.  Tests are in [2].
 
-So my eyesight still hasn't fully recovered, so in the meantime it's
-been difficult to read the online documentation.  Here's some stylesheet
-overrides I've been using to make it easier for me to read them:
-https://djwong.org/docs/kdoc/index.html
+Hmmm. I've got a couple of patches to fix dedupe/reflink partial EOF
+block data corruptions, too. I'll have to see how they fit into this
+new series - combined they add this code just after the call to
+vfs_clone_file_prep_inodes():
 
----
-From: Darrick J. Wong <darrick.wong@oracle.com>
+....
++       u64                     blkmask = i_blocksize(inode_in) - 1;
+....
++       /*
++        * If the dedupe data matches, chop off the partial EOF block
++        * from the source file so we don't try to dedupe the partial
++        * EOF block.
++        */
++       if (is_dedupe) {
++               len &= ~blkmask;
++       } else if (len & blkmask) {
++               /*
++                * The user is attempting to share a partial EOF block,
++                * if it's inside the destination EOF then reject it
++                */
++               if (pos_out + len < i_size_read(inode_out)) {
++                       ret = -EINVAL;
++                       goto out_unlock;
++               }
++       }
 
-My eyesight is not in good shape, which means that I have difficulty
-reading the online Linux documentation.  Specifically, body text is
-oddly small compared to list items and the contrast of various text
-elements is too low for me to be able to see easily.
+It might be better to put these in with the eof-zeroing patch then
+add all the other changes on top? Let me post them separately,
+as they may be candidates for 4.19-rc7 along with the eof zeroing.
 
-Therefore, alter the HTML theme overrides to make the text larger and
-increase the contrast for better visibility, and trust the typeface
-choices of the reader's browser.
+Cheers,
 
-For the PDF output, increase the text size, use a sans-serif typeface
-for sans-serif text, and use a serif typeface for "roman" serif text.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- Documentation/conf.py                           |    6 ++--
- Documentation/sphinx-static/theme_overrides.css |   38 +++++++++++++++++++++++
- 2 files changed, 41 insertions(+), 3 deletions(-)
-
-diff --git a/Documentation/conf.py b/Documentation/conf.py
-index e45d4d2b5adb..03dd6dc135ea 100644
---- a/Documentation/conf.py
-+++ b/Documentation/conf.py
-@@ -259,7 +259,7 @@ latex_elements = {
- 'papersize': 'a4paper',
- 
- # The font size ('10pt', '11pt' or '12pt').
--'pointsize': '8pt',
-+'pointsize': '11pt',
- 
- # Latex figure (float) alignment
- #'figure_align': 'htbp',
-@@ -272,8 +272,8 @@ latex_elements = {
-     'preamble': '''
- 	% Use some font with UTF-8 support with XeLaTeX
-         \\usepackage{fontspec}
--        \\setsansfont{DejaVu Serif}
--        \\setromanfont{DejaVu Sans}
-+        \\setsansfont{DejaVu Sans}
-+        \\setromanfont{DejaVu Serif}
-         \\setmonofont{DejaVu Sans Mono}
- 
-      '''
-diff --git a/Documentation/sphinx-static/theme_overrides.css b/Documentation/sphinx-static/theme_overrides.css
-index 522b6d4c49d4..e21e36cd6761 100644
---- a/Documentation/sphinx-static/theme_overrides.css
-+++ b/Documentation/sphinx-static/theme_overrides.css
-@@ -4,6 +4,44 @@
-  *
-  */
- 
-+/* Improve contrast and increase size for easier reading. */
-+
-+body {
-+	font-family: serif;
-+	color: black;
-+	font-size: 100%;
-+}
-+
-+h1, h2, .rst-content .toctree-wrapper p.caption, h3, h4, h5, h6, legend {
-+	font-family: sans-serif;
-+}
-+
-+.wy-menu-vertical li.current a {
-+	color: #505050;
-+}
-+
-+.wy-menu-vertical li.on a, .wy-menu-vertical li.current > a {
-+	color: #303030;
-+}
-+
-+div[class^="highlight"] pre {
-+	font-family: monospace;
-+	color: black;
-+	font-size: 100%;
-+}
-+
-+.wy-menu-vertical {
-+	font-family: sans-serif;
-+}
-+
-+.c {
-+	font-style: normal;
-+}
-+
-+p {
-+	font-size: 100%;
-+}
-+
- /* Interim: Code-blocks with line nos - lines and line numbers don't line up.
-  * see: https://github.com/rtfd/sphinx_rtd_theme/issues/419
-  */
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
