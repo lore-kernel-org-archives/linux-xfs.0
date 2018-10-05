@@ -1,177 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:55470 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727012AbeJEHoK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 03:44:10 -0400
-Subject: [PATCH 3/3] xfs: fix buffer state management in xrep_findroot_block
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 04 Oct 2018 17:47:57 -0700
-Message-ID: <153870047729.29695.18042015772366432041.stgit@magnolia>
-In-Reply-To: <153870045847.29695.10286947858219936840.stgit@magnolia>
-References: <153870045847.29695.10286947858219936840.stgit@magnolia>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:44202 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726073AbeJEICb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 04:02:31 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 0634428537
+        for <linux-xfs@vger.kernel.org>; Fri,  5 Oct 2018 01:06:16 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 201331] deadlock (XFS?)
+Date: Fri, 05 Oct 2018 01:06:15 +0000
+Message-ID: <bug-201331-201763-IvlP5wp6YW@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-201331-201763@https.bugzilla.kernel.org/>
+References: <bug-201331-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=201331
 
-We don't handle buffer state properly in online repair's findroot
-routine.  If a buffer already has b_ops set, we don't ever want to touch
-that, and we don't want to call the read verifiers on a buffer that
-could be dirty (CRCs are only recomputed during log checkpoints).
+--- Comment #5 from Dave Chinner (david@fromorbit.com) ---
+On Thu, Oct 04, 2018 at 11:25:49PM +0000, bugzilla-daemon@bugzilla.kernel.org
+wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=201331
 
-Therefore, be more careful about what we do with a buffer -- if someone
-else already attached ops that are not the ones for this btree type,
-just ignore the buffer.  We only attach our btree type's buf ops if it
-matches the magic/uuid and structure checks.
+> 
+> --- Comment #4 from edo (edo.rus@gmail.com) ---
+> I tested with 4.17 and 4.18 prebuilt Debian kernels, behavior is the same:
+> Sep 30 16:01:23 storage10x10n1 kernel: [23683.218388] INFO: task
+> kworker/u24:0:21848 blocked for more than 120 seconds.
 
-We also modify xfs_buf_read_map to allow callers to set buffer ops on a
-DONE buffer with NULL ops so that repair doesn't leave behind buffers
-which won't have buffers attached to them.
+I think we need to rename XFS to "The Messenger: Please don't shoot
+me"... :)
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/scrub/repair.c  |   63 +++++++++++++++++++++++++++++++++++++-----------
- fs/xfs/xfs_trans.h     |    1 +
- fs/xfs/xfs_trans_buf.c |   13 ++++++++++
- 3 files changed, 63 insertions(+), 14 deletions(-)
+>From the xfs_info:
 
+sunit=4096   swidth=32768 blks
 
-diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index 63786341ac2a..cebaebb26566 100644
---- a/fs/xfs/scrub/repair.c
-+++ b/fs/xfs/scrub/repair.c
-@@ -29,6 +29,8 @@
- #include "xfs_ag_resv.h"
- #include "xfs_trans_space.h"
- #include "xfs_quota.h"
-+#include "xfs_attr.h"
-+#include "xfs_reflink.h"
- #include "scrub/xfs_scrub.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
-@@ -699,7 +701,7 @@ xrep_findroot_block(
- 	struct xfs_btree_block		*btblock;
- 	xfs_daddr_t			daddr;
- 	int				block_level;
--	int				error;
-+	int				error = 0;
- 
- 	daddr = XFS_AGB_TO_DADDR(mp, ri->sc->sa.agno, agbno);
- 
-@@ -718,28 +720,61 @@ xrep_findroot_block(
- 			return error;
- 	}
- 
-+	/*
-+	 * Read the buffer into memory so that we can see if it's a match for
-+	 * our btree type.  We have no clue if it is beforehand, and we want to
-+	 * avoid xfs_trans_read_buf's behavior of dumping the DONE state (which
-+	 * will cause needless disk reads in subsequent calls to this function)
-+	 * and logging metadata verifier failures.
-+	 *
-+	 * Therefore, pass in NULL buffer ops.  If the buffer was already in
-+	 * memory from some other caller it will already have b_ops assigned.
-+	 * If it was in memory from a previous unsuccessful findroot_block
-+	 * call, the buffer won't have b_ops but it should be clean and ready
-+	 * for us to try to verify if the read call succeeds.  The same applies
-+	 * if the buffer wasn't in memory at all.
-+	 *
-+	 * Note: If we never match a btree type with this buffer, it will be
-+	 * left in memory with NULL b_ops.  This shouldn't be a problem unless
-+	 * the buffer gets written.
-+	 */
- 	error = xfs_trans_read_buf(mp, ri->sc->tp, mp->m_ddev_targp, daddr,
- 			mp->m_bsize, 0, &bp, NULL);
- 	if (error)
- 		return error;
- 
--	/*
--	 * Does this look like a block matching our fs and higher than any
--	 * other block we've found so far?  If so, reattach buffer verifiers
--	 * so the AIL won't complain if the buffer is also dirty.
--	 */
-+	/* Ensure the block magic matches the btree type we're looking for. */
- 	btblock = XFS_BUF_TO_BLOCK(bp);
- 	if (be32_to_cpu(btblock->bb_magic) != fab->magic)
- 		goto out;
--	if (xfs_sb_version_hascrc(&mp->m_sb) &&
--	    !uuid_equal(&btblock->bb_u.s.bb_uuid, &mp->m_sb.sb_meta_uuid))
--		goto out;
--	bp->b_ops = fab->buf_ops;
- 
--	/* Make sure we pass the verifiers. */
--	bp->b_ops->verify_read(bp);
--	if (bp->b_error)
--		goto out;
-+	/*
-+	 * If the buffer already has ops applied and they're not the ones for
-+	 * this btree type, we know this block doesn't match the btree and we
-+	 * can bail out.
-+	 *
-+	 * If the buffer ops match ours, someone else has already validated
-+	 * the block for us, so we can move on to checking if this is a root
-+	 * block candidate.
-+	 *
-+	 * If the buffer does not have ops, nobody has successfully validated
-+	 * the contents and the buffer cannot be dirty.  If the magic, uuid,
-+	 * and structure match this btree type then we'll move on to checking
-+	 * if it's a root block candidate.  If there is no match, bail out.
-+	 */
-+	if (bp->b_ops) {
-+		if (bp->b_ops != fab->buf_ops)
-+			goto out;
-+	} else {
-+		ASSERT(!xfs_trans_buf_is_dirty(bp));
-+		if (!uuid_equal(&btblock->bb_u.s.bb_uuid,
-+				&mp->m_sb.sb_meta_uuid))
-+			goto out;
-+		fab->buf_ops->verify_read(bp);
-+		if (bp->b_error)
-+			goto out;
-+		bp->b_ops = fab->buf_ops;
-+	}
- 
- 	/*
- 	 * This block passes the magic/uuid and verifier tests for this btree
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index c3d278e96ad1..a0c5dbda18aa 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -220,6 +220,7 @@ void		xfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *, uint);
- void		xfs_trans_log_buf(struct xfs_trans *, struct xfs_buf *, uint,
- 				  uint);
- void		xfs_trans_dirty_buf(struct xfs_trans *, struct xfs_buf *);
-+bool		xfs_trans_buf_is_dirty(struct xfs_buf *bp);
- void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
- 
- void		xfs_extent_free_init_defer_op(void);
-diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index b0ba2ca9cca3..93a053c700dd 100644
---- a/fs/xfs/xfs_trans_buf.c
-+++ b/fs/xfs/xfs_trans_buf.c
-@@ -349,6 +349,19 @@ xfs_trans_read_buf_map(
- 
- }
- 
-+/* Has this buffer been dirtied by anyone? */
-+bool
-+xfs_trans_buf_is_dirty(
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
-+
-+	if (!bip)
-+		return false;
-+	ASSERT(bip->bli_item.li_type == XFS_LI_BUF);
-+	return test_bit(XFS_LI_DIRTY, &bip->bli_item.li_flags);
-+}
-+
- /*
-  * Release the buffer bp which was previously acquired with one of the
-  * xfs_trans_... buffer allocation routines if the buffer has not
+Ok, that looks wrong - why do you have a MD raid device with
+16MB stripe unit and a 128MB stripe width?
+
+Yup:
+
+md3 : active raid6 sda4[0] sdj4[9] sdg4[6] sdd4[3] sdi4[8] sdf4[5] sde4[4]
+sdh4[7] sdb4[2] sdc4[1]
+      77555695616 blocks super 1.2 level 6, 16384k chunk, algorithm 2 [10/10]
+[UUUUUUUUUU]
+            bitmap: 9/73 pages [36KB], 65536KB chunk
+
+You've configured your RAID6 device with a 16MB chunk size, which
+gives the XFS su/sw noted above.
+
+Basically, your RMW'd your RAID device to death because every write
+is a sub-stripe write.
+
+>  Workqueue: writeback wb_workfn (flush-9:3)
+>  Call Trace:
+>   schedule+0x32/0x80
+>  bitmap_startwrite+0x161/0x1e0 [md_mod]
+
+MD blocks here when it has too many inflight bitmap updates and so
+waits for IO to complete before starting another. This isn't XFS
+filesystem IO - this in internal MD RAID consistency information
+that it needs to write for crash recovery purposes.
+
+This will be a direct result of the raid device configuration....
+
+>  add_stripe_bio+0x441/0x7d0 [raid456]
+>  raid5_make_request+0x1ae/0xb10 [raid456]
+>  md_handle_request+0x116/0x190 [md_mod]
+>  md_make_request+0x65/0x160 [md_mod]
+>  generic_make_request+0x1e7/0x410
+>   submit_bio+0x6c/0x140
+>  xfs_add_to_ioend+0x14c/0x280 [xfs]
+>  xfs_do_writepage+0x2bb/0x680 [xfs]
+>  write_cache_pages+0x1ed/0x430
+>  xfs_vm_writepages+0x64/0xa0 [xfs]
+>   do_writepages+0x1a/0x60
+>  __writeback_single_inode+0x3d/0x320
+>  writeback_sb_inodes+0x221/0x4b0
+>  __writeback_inodes_wb+0x87/0xb0
+>   wb_writeback+0x288/0x320
+>   wb_workfn+0x37c/0x450
+
+... and this is just the writeback path - your problem has nothing
+do with XFS...
+
+Cheers,
+
+Dave.
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
