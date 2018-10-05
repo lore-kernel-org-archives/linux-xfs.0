@@ -1,209 +1,143 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:42438 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725996AbeJEFSo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 01:18:44 -0400
-Date: Thu, 4 Oct 2018 15:23:09 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:53936 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726800AbeJEHoA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 03:44:00 -0400
+Subject: [PATCH 1/3] xfs: xrep_findroot_block should reject root blocks with
+ siblings
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/1] xfs_metadump: Zap more stale data
-Message-ID: <20181004222309.GL19324@magnolia>
-References: <20181004205749.2042-1-stefanrin@gmail.com>
- <20181004205749.2042-2-stefanrin@gmail.com>
+Date: Thu, 04 Oct 2018 17:47:44 -0700
+Message-ID: <153870046473.29695.7280792997309785336.stgit@magnolia>
+In-Reply-To: <153870045847.29695.10286947858219936840.stgit@magnolia>
+References: <153870045847.29695.10286947858219936840.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181004205749.2042-2-stefanrin@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Stefan Ring <stefanrin@gmail.com>
-Cc: linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
 
-On Thu, Oct 04, 2018 at 10:57:49PM +0200, Stefan Ring wrote:
-> I have empirically found and tried to fix some places where stale data was not properly zeroed out.
-> 
-> In the order of the code changes:
-> 
-> The "freeindex" blocks in inode directories, from last entry to end of block.
-> 
-> XFS_DIR2_LEAF1_MAGIC, from last entry to end of block.
-> 
-> In btree format inodes before as well as after the btree pointers.
-> 
-> In dev inodes, everything after the header.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Mostly looks ok, but with some style issues:
+In xrep_findroot_block, if we find a candidate root block with sibling
+pointers or sibling blocks on the same tree level, we should not return
+that block as a tree root because root blocks cannot have siblings.
 
-> ---
->  db/metadump.c | 74 +++++++++++++++++++++++++++++++++++++++++++++++++++++++----
->  1 file changed, 69 insertions(+), 5 deletions(-)
-> 
-> diff --git a/db/metadump.c b/db/metadump.c
-> index cc2ae9af..e7159cd1 100644
-> --- a/db/metadump.c
-> +++ b/db/metadump.c
-> @@ -1421,12 +1421,42 @@ process_sf_attr(
->  		memset(asfep, 0, XFS_DFORK_ASIZE(dip, mp) - ino_attr_size);
->  }
->  
-> +static void
-> +process_dir_free_block(
-> +	char				*block)
-> +{
-> +	struct xfs_dir2_free		*free;
-> +	struct xfs_dir3_icfree_hdr	freehdr;
-> +
-> +	if (!zero_stale_data)
-> +		return;
-> +
-> +	free = (struct xfs_dir2_free *)block;
-> +	M_DIROPS(mp)->free_hdr_from_disk(&freehdr, free);
-> +
-> +	/* Zero out space from end of bests[] to end of block */
-> +	if (freehdr.magic == XFS_DIR2_FREE_MAGIC) {
-
-How about XFS_DIR3_FREE_MAGIC ?
-
-> +		__be16			*bests;
-> +		char			*high;
-> +		int			used;
-> +
-> +		bests = M_DIROPS(mp)->free_bests_p(free);
-> +		high = (char *)&bests[freehdr.nvalid];
-> +		used = high - (char*)free;
-> +		memset(high, 0, mp->m_sb.sb_blocksize - used);
-> +		iocur_top->need_crc = 1;
-> +	}
-> +	else if (show_warnings)
-
-Though perhaps this should be structured as:
-
-switch (freehdr.magic) {
-case XFS_DIR3_FREE_MAGIC:
-case XFS_DIR2_FREE_MAGIC:
-	/* clear stuff */
-	break;
-default:
-	if (show_warnings)
-		print_warning(...);
-	break;
-}
-
-> +		print_warning("invalid magic in dir inode %llu free block",
-> +				(unsigned long long)cur_ino);
-> +}
-> +
->  static void
->  process_dir_leaf_block(
->  	char				*block)
->  {
->  	struct xfs_dir2_leaf		*leaf;
-> -	struct xfs_dir3_icleaf_hdr 	leafhdr;
-> +	struct xfs_dir3_icleaf_hdr	leafhdr;
->  
->  	if (!zero_stale_data)
->  		return;
-> @@ -1449,6 +1479,18 @@ process_dir_leaf_block(
->  		lbp = xfs_dir2_leaf_bests_p(ltp);
->  		memset(free, 0, (char *)lbp - free);
->  		iocur_top->need_crc = 1;
-> +	} else
-> +	if (leafhdr.magic == XFS_DIR2_LEAFN_MAGIC ||
-> +	    leafhdr.magic == XFS_DIR3_LEAFN_MAGIC) {
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/scrub/repair.c |   61 +++++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 48 insertions(+), 13 deletions(-)
 
 
-Convert this whole thing to a switch?
-
-> +		struct xfs_dir2_leaf_entry	*ents;
-> +		char				*free;
-> +		int				used;
-> +
-> +		ents = M_DIROPS(mp)->leaf_ents_p(leaf);
-> +		free = (char *)&ents[leafhdr.count];
-> +		used = free - (char*)leaf;
-> +		memset(free, 0, mp->m_sb.sb_blocksize - used);
-> +		iocur_top->need_crc = 1;
->  	}
->  }
->  
-> @@ -1499,7 +1541,7 @@ process_dir_data_block(
->  		if (show_warnings)
->  			print_warning(
->  		"invalid magic in dir inode %llu block %ld",
-> -					(long long)cur_ino, (long)offset);
-> +					(unsigned long long)cur_ino, (long)offset);
-
-Unrelated (but still good) change.
-
->  		return;
->  	}
->  
-> @@ -1813,8 +1855,7 @@ process_single_fsb_objects(
->  		switch (btype) {
->  		case TYP_DIR2:
->  			if (o >= mp->m_dir_geo->freeblk) {
-> -				/* TODO, zap any stale data */
-> -				break;
-> +				process_dir_free_block(dp);
->  			} else if (o >= mp->m_dir_geo->leafblk) {
->  				process_dir_leaf_block(dp);
->  			} else {
-> @@ -2115,6 +2156,20 @@ process_btinode(
->  	}
->  
->  	pp = XFS_BMDR_PTR_ADDR(dib, 1, maxrecs);
-> +
-> +	if (zero_stale_data) {
-> +		/* Space before btree pointers */
-> +		char	*top;
-> +		int	used;
-> +		top = (char*)XFS_BMDR_PTR_ADDR(dib, 1, nrecs);
-
-Blank line between "int used;" and "top =...", please.
-
-> +		memset(top, 0, (char*)pp - top);
-> +
-> +		/* Space after btree pointers */
-> +		top = (char*)&pp[nrecs];
-> +		used = top - (char*)dip;
-> +		memset(top, 0, mp->m_sb.sb_inodesize - used);
-> +	}
-> +
->  	for (i = 0; i < nrecs; i++) {
->  		xfs_agnumber_t	ag;
->  		xfs_agblock_t	bno;
-> @@ -2250,7 +2305,16 @@ process_inode(
->  		case S_IFREG:
->  			success = process_inode_data(dip, TYP_DATA);
->  			break;
-> -		default: ;
-> +		default:
-> +			if (XFS_DFORK_NEXTENTS(dip, XFS_ATTR_FORK) ||
-> +					XFS_DFORK_NEXTENTS(dip, XFS_DATA_FORK)) {
-
-Please line up the XFS_DFORK_NEXTENTS(...) calls.
-
-> +				if (show_warnings)
-> +					print_warning("inode %llu has unexpected extents",
-> +							(unsigned long long)cur_ino);
-> +				success = 0;
-> +			}
-> +			else
-
-} else
-	memset(...)
-
-
-> +				memset(XFS_DFORK_DPTR(dip), 0, mp->m_sb.sb_inodesize - (XFS_DFORK_DPTR(dip) - (char*)dip));
-
-Please put this in a separate helper that isn't triple-indented and
-overflows 80 columns.
-
---D
-
->  	}
->  	nametable_clear();
->  
-> -- 
-> 2.14.4
-> 
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index 9f08dd9bf1d5..63786341ac2a 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -692,12 +692,13 @@ xrep_findroot_block(
+ 	struct xrep_find_ag_btree	*fab,
+ 	uint64_t			owner,
+ 	xfs_agblock_t			agbno,
+-	bool				*found_it)
++	bool				*done_with_block)
+ {
+ 	struct xfs_mount		*mp = ri->sc->mp;
+ 	struct xfs_buf			*bp;
+ 	struct xfs_btree_block		*btblock;
+ 	xfs_daddr_t			daddr;
++	int				block_level;
+ 	int				error;
+ 
+ 	daddr = XFS_AGB_TO_DADDR(mp, ri->sc->sa.agno, agbno);
+@@ -735,18 +736,52 @@ xrep_findroot_block(
+ 		goto out;
+ 	bp->b_ops = fab->buf_ops;
+ 
+-	/* Ignore this block if it's lower in the tree than we've seen. */
+-	if (fab->root != NULLAGBLOCK &&
+-	    xfs_btree_get_level(btblock) < fab->height)
+-		goto out;
+-
+ 	/* Make sure we pass the verifiers. */
+ 	bp->b_ops->verify_read(bp);
+ 	if (bp->b_error)
+ 		goto out;
+-	fab->root = agbno;
+-	fab->height = xfs_btree_get_level(btblock) + 1;
+-	*found_it = true;
++
++	/*
++	 * This block passes the magic/uuid and verifier tests for this btree
++	 * type.  We don't need the caller to try the other tree types.
++	 */
++	*done_with_block = true;
++
++	/*
++	 * Compare this btree block's level to the height of the current
++	 * candidate root block.
++	 *
++	 * If the level matches the root we found previously, throw away both
++	 * blocks because there can't be two candidate roots.
++	 *
++	 * If level is lower in the tree than the root we found previously,
++	 * ignore this block.
++	 */
++	block_level = xfs_btree_get_level(btblock);
++	if (block_level + 1 == fab->height) {
++		fab->root = NULLAGBLOCK;
++		goto out;
++	} else if (block_level < fab->height) {
++		goto out;
++	}
++
++	/*
++	 * This is the highest block in the tree that we've found so far.
++	 * Update the btree height to reflect what we've learned from this
++	 * block.
++	 */
++	fab->height = block_level + 1;
++
++	/*
++	 * If this block doesn't have sibling pointers, then it's the new root
++	 * block candidate.  Otherwise, the root will be found farther up the
++	 * tree.
++	 */
++	if (btblock->bb_u.s.bb_leftsib == cpu_to_be32(NULLAGBLOCK) &&
++	    btblock->bb_u.s.bb_rightsib == cpu_to_be32(NULLAGBLOCK))
++		fab->root = agbno;
++	else
++		fab->root = NULLAGBLOCK;
+ 
+ 	trace_xrep_findroot_block(mp, ri->sc->sa.agno, agbno,
+ 			be32_to_cpu(btblock->bb_magic), fab->height - 1);
+@@ -768,7 +803,7 @@ xrep_findroot_rmap(
+ 	struct xrep_findroot		*ri = priv;
+ 	struct xrep_find_ag_btree	*fab;
+ 	xfs_agblock_t			b;
+-	bool				found_it;
++	bool				done;
+ 	int				error = 0;
+ 
+ 	/* Ignore anything that isn't AG metadata. */
+@@ -777,16 +812,16 @@ xrep_findroot_rmap(
+ 
+ 	/* Otherwise scan each block + btree type. */
+ 	for (b = 0; b < rec->rm_blockcount; b++) {
+-		found_it = false;
++		done = false;
+ 		for (fab = ri->btree_info; fab->buf_ops; fab++) {
+ 			if (rec->rm_owner != fab->rmap_owner)
+ 				continue;
+ 			error = xrep_findroot_block(ri, fab,
+ 					rec->rm_owner, rec->rm_startblock + b,
+-					&found_it);
++					&done);
+ 			if (error)
+ 				return error;
+-			if (found_it)
++			if (done)
+ 				break;
+ 		}
+ 	}
