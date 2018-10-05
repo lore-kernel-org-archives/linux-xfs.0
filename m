@@ -1,55 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:48090 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727134AbeJELAM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 5 Oct 2018 07:00:12 -0400
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [PATCH 02/15] xfsprogs: use ANSI declarations of void-arg functions
-Date: Thu,  4 Oct 2018 23:03:03 -0500
-Message-Id: <1538712196-13625-3-git-send-email-sandeen@sandeen.net>
-In-Reply-To: <1538712196-13625-1-git-send-email-sandeen@sandeen.net>
-References: <1538712196-13625-1-git-send-email-sandeen@sandeen.net>
+Received: from mail-yw1-f67.google.com ([209.85.161.67]:35135 "EHLO
+        mail-yw1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728072AbeJEPhS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 11:37:18 -0400
+MIME-Version: 1.0
+References: <153870027422.29072.7433543674436957232.stgit@magnolia> <153870032167.29072.11158511021942868400.stgit@magnolia>
+In-Reply-To: <153870032167.29072.11158511021942868400.stgit@magnolia>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Fri, 5 Oct 2018 11:39:24 +0300
+Message-ID: <CAOQ4uxha3=jyVmZ0ArbSsO-CSMeQb43p7YTMGazZRB_M8zS0SQ@mail.gmail.com>
+Subject: Re: [PATCH 07/15] vfs: skip zero-length dedupe requests
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, ocfs2-devel@oss.oracle.com, Eric Sandeen <sandeen@redhat.com>
 
-From: Eric Sandeen <sandeen@redhat.com>
+On Fri, Oct 5, 2018 at 3:46 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+>
+> Don't bother calling the filesystem for a zero-length dedupe request;
+> we can return zero and exit.
+>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/read_write.c |    5 +++++
+>  1 file changed, 5 insertions(+)
+>
+>
+> diff --git a/fs/read_write.c b/fs/read_write.c
+> index 973d3da78c09..99b2f809180c 100644
+> --- a/fs/read_write.c
+> +++ b/fs/read_write.c
+> @@ -1966,6 +1966,11 @@ int vfs_dedupe_file_range_one(struct file *src_file, loff_t src_pos,
+>         if (!dst_file->f_op->dedupe_file_range)
+>                 goto out_drop_write;
+>
+> +       if (len == 0) {
+> +               ret = 0;
+> +               goto out_drop_write;
+> +       }
+> +
+>         ret = dst_file->f_op->dedupe_file_range(src_file, src_pos,
+>                                                 dst_file, dst_pos, len);
 
-Fixes sparse warnings about this.
+I suppose it is best to let user get the same errors he would get
+before this change rather than skipping zero length copy at
+vfs_dedupe_file_range() level, so looks fine.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
- db/io.h   | 2 +-
- io/init.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/db/io.h b/db/io.h
-index a60aaaa..8d5720b 100644
---- a/db/io.h
-+++ b/db/io.h
-@@ -59,7 +59,7 @@ extern void	xfs_verify_recalc_crc(struct xfs_buf *bp);
-  * returns -1 for unchecked, 0 for bad and 1 for good
-  */
- static inline int
--iocur_crc_valid()
-+iocur_crc_valid(void)
- {
- 	if (!iocur_top->bp)
- 		return -1;
-diff --git a/io/init.c b/io/init.c
-index e9449a2..29afe09 100644
---- a/io/init.c
-+++ b/io/init.c
-@@ -244,7 +244,7 @@ idle_loop(void *arg)
- }
- 
- void
--start_idle_thread()
-+start_idle_thread(void)
- {
- 	pthread_t t;
- 
--- 
-1.8.3.1
+Thanks,
+Amir.
