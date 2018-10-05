@@ -1,71 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf1-f65.google.com ([209.85.167.65]:35306 "EHLO
-        mail-lf1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728293AbeJFDrG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 23:47:06 -0400
-Received: by mail-lf1-f65.google.com with SMTP id r191-v6so10266075lff.2
-        for <linux-xfs@vger.kernel.org>; Fri, 05 Oct 2018 13:46:41 -0700 (PDT)
-MIME-Version: 1.0
-References: <20181004205749.2042-1-stefanrin@gmail.com> <20181004205749.2042-2-stefanrin@gmail.com>
- <20181004222309.GL19324@magnolia>
-In-Reply-To: <20181004222309.GL19324@magnolia>
-From: Stefan Ring <stefanrin@gmail.com>
-Date: Fri, 5 Oct 2018 22:46:28 +0200
-Message-ID: <CAAxjCExSQ7Ex8U5k9_Com_89YDFGB-DE2FNGoEvO_MwFEMB_MQ@mail.gmail.com>
-Subject: Re: [PATCH 1/1] xfs_metadump: Zap more stale data
-Content-Type: text/plain; charset="UTF-8"
+Received: from sandeen.net ([63.231.237.45]:48092 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727456AbeJELAM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 5 Oct 2018 07:00:12 -0400
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [PATCH 03/15] mkfs.xfs: include full parser prototype in subopts definition
+Date: Thu,  4 Oct 2018 23:03:04 -0500
+Message-Id: <1538712196-13625-4-git-send-email-sandeen@sandeen.net>
+In-Reply-To: <1538712196-13625-1-git-send-email-sandeen@sandeen.net>
+References: <1538712196-13625-1-git-send-email-sandeen@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Fri, Oct 5, 2018 at 12:23 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
->
-> On Thu, Oct 04, 2018 at 10:57:49PM +0200, Stefan Ring wrote:
-> > I have empirically found and tried to fix some places where stale data was not properly zeroed out.
-> >
-> > In the order of the code changes:
-> >
-> > The "freeindex" blocks in inode directories, from last entry to end of block.
-> >
-> > XFS_DIR2_LEAF1_MAGIC, from last entry to end of block.
-> >
-> > In btree format inodes before as well as after the btree pointers.
-> >
-> > In dev inodes, everything after the header.
->
-> Mostly looks ok, but with some style issues:
->
-> > ---
-> >  db/metadump.c | 74 +++++++++++++++++++++++++++++++++++++++++++++++++++++++----
-> >  1 file changed, 69 insertions(+), 5 deletions(-)
-> >
-> > diff --git a/db/metadump.c b/db/metadump.c
-> > index cc2ae9af..e7159cd1 100644
-> > --- a/db/metadump.c
-> > +++ b/db/metadump.c
-> > @@ -1421,12 +1421,42 @@ process_sf_attr(
-> >               memset(asfep, 0, XFS_DFORK_ASIZE(dip, mp) - ino_attr_size);
-> >  }
-> >
-> > +static void
-> > +process_dir_free_block(
-> > +     char                            *block)
-> > +{
-> > +     struct xfs_dir2_free            *free;
-> > +     struct xfs_dir3_icfree_hdr      freehdr;
-> > +
-> > +     if (!zero_stale_data)
-> > +             return;
-> > +
-> > +     free = (struct xfs_dir2_free *)block;
-> > +     M_DIROPS(mp)->free_hdr_from_disk(&freehdr, free);
-> > +
-> > +     /* Zero out space from end of bests[] to end of block */
-> > +     if (freehdr.magic == XFS_DIR2_FREE_MAGIC) {
->
-> How about XFS_DIR3_FREE_MAGIC ?
+From: Eric Sandeen <sandeen@redhat.com>
 
-Is there any documentation on DIR3? I left it out on purpose and hoped
-someone would fill in the blanks for me ;).
+Fixes sparse warnings about this.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
+ mkfs/xfs_mkfs.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 7c05c6f..2eec005 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -1661,7 +1661,10 @@ sector_opts_parser(
+ struct subopts {
+ 	char		opt;
+ 	struct opt_params *opts;
+-	int		(*parser)();
++	int		(*parser)(struct opt_params	*opts,
++				  int			subopt,
++				  char			*value,
++				  struct cli_params	*cli);
+ } subopt_tab[] = {
+ 	{ 'b', &bopts, block_opts_parser },
+ 	{ 'd', &dopts, data_opts_parser },
+-- 
+1.8.3.1
