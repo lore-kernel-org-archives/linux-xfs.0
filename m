@@ -1,382 +1,268 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:51254 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726813AbeJDLLm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Oct 2018 07:11:42 -0400
-Subject: [PATCH 18/22] docs: add XFS data extent map doc to the DS&A book
+Received: from userp2120.oracle.com ([156.151.31.85]:54636 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727576AbeJEHl1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 03:41:27 -0400
+Subject: [PATCH 05/15] vfs: check file ranges before cloning files
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 03 Oct 2018 21:20:18 -0700
-Message-ID: <153862681852.26427.2638721124503707692.stgit@magnolia>
-In-Reply-To: <153862669110.26427.16504658853992750743.stgit@magnolia>
-References: <153862669110.26427.16504658853992750743.stgit@magnolia>
+Date: Thu, 04 Oct 2018 17:45:08 -0700
+Message-ID: <153870030868.29072.14603423813271148877.stgit@magnolia>
+In-Reply-To: <153870027422.29072.7433543674436957232.stgit@magnolia>
+References: <153870027422.29072.7433543674436957232.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org, corbet@lwn.net
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, ocfs2-devel@oss.oracle.com, sandeen@redhat.com
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
+Move the file range checks from vfs_clone_file_prep into a separate
+generic_clone_checks function so that all the checks are collected in a
+central location.  This forms the basis for adding more checks from
+generic_write_checks that will make cloning's input checking more
+consistent with write input checking.
+
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- .../xfs-data-structures/data_extents.rst           |  337 ++++++++++++++++++++
- .../filesystems/xfs-data-structures/dynamic.rst    |    1 
- 2 files changed, 338 insertions(+)
- create mode 100644 Documentation/filesystems/xfs-data-structures/data_extents.rst
+ fs/ocfs2/refcounttree.c |    2 +
+ fs/read_write.c         |   55 ++++++++++----------------------------
+ fs/xfs/xfs_reflink.c    |    2 +
+ include/linux/fs.h      |    9 ++++--
+ mm/filemap.c            |   68 +++++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 90 insertions(+), 46 deletions(-)
 
 
-diff --git a/Documentation/filesystems/xfs-data-structures/data_extents.rst b/Documentation/filesystems/xfs-data-structures/data_extents.rst
-new file mode 100644
-index 000000000000..a410397e9892
---- /dev/null
-+++ b/Documentation/filesystems/xfs-data-structures/data_extents.rst
-@@ -0,0 +1,337 @@
-+.. SPDX-License-Identifier: CC-BY-SA-4.0
-+
-+Data Extents
-+------------
-+
-+XFS manages space using extents, which are defined as a starting location and
-+length. A fork in an XFS inode maps a logical offset to a space extent. This
-+enables a file’s extent map to support sparse files (i.e. "holes" in the
-+file). A flag is also used to specify if the extent has been preallocated but
-+has not yet been written (unwritten extent).
-+
-+A file can have more than one extent if one chunk of contiguous disk space is
-+not available for the file. As a file grows, the XFS space allocator will
-+attempt to keep space contiguous and to merge extents. If more than one file
-+is being allocated space in the same AG at the same time, multiple extents for
-+the files will occur as the extent allocations interleave. The effect of this
-+can vary depending on the extent allocator used in the XFS driver.
-+
-+An extent is 128 bits in size and uses the following packed layout:
-+
-+.. figure:: images/31.png
-+   :alt: Extent record format
-+
-+   Extent record format
-+
-+The extent is represented by the xfs\_bmbt\_rec structure which uses a big
-+endian format on-disk. In-core management of extents use the xfs\_bmbt\_irec
-+structure which is the unpacked version of xfs\_bmbt\_rec:
-+
-+.. code:: c
-+
-+    struct xfs_bmbt_irec {
-+         xfs_fileoff_t             br_startoff;
-+         xfs_fsblock_t             br_startblock;
-+         xfs_filblks_t             br_blockcount;
-+         xfs_exntst_t              br_state;
-+    };
-+
-+**br\_startoff**
-+    Logical block offset of this mapping.
-+
-+**br\_startblock**
-+    Filesystem block of this mapping.
-+
-+**br\_blockcount**
-+    The length of this mapping.
-+
-+**br\_state**
-+    The extent br\_state field uses the following enum declaration:
-+
-+.. code:: c
-+
-+    typedef enum {
-+         XFS_EXT_NORM,
-+         XFS_EXT_UNWRITTEN,
-+         XFS_EXT_INVALID
-+    } xfs_exntst_t;
-+
-+Some other points about extents:
-+
-+-  The xfs\_bmbt\_rec\_32\_t and xfs\_bmbt\_rec\_64\_t structures were
-+   effectively the same as xfs\_bmbt\_rec\_t, just different representations
-+   of the same 128 bits in on-disk big endian format. xfs\_bmbt\_rec\_32\_t
-+   was removed and xfs\_bmbt\_rec\_64\_t renamed to xfs\_bmbt\_rec\_t some
-+   time ago.
-+
-+-  When a file is created and written to, XFS will endeavour to keep the
-+   extents within the same AG as the inode. It may use a different AG if the
-+   AG is busy or there is no space left in it.
-+
-+-  If a file is zero bytes long, it will have no extents and di\_nblocks and
-+   di\_nexents will be zero. Any file with data will have at least one extent,
-+   and each extent can use from 1 to over 2 million blocks (2:sup:`21`) on the
-+   filesystem. For a default 4KB block size filesystem, a single extent can be
-+   up to 8GB in length.
-+
-+The following two subsections cover the two methods of storing extent
-+information for a file. The first is the fastest and simplest where the inode
-+completely contains an extent array to the file’s data. The second is slower
-+and more complex B+tree which can handle thousands to millions of extents
-+efficiently.
-+
-+Extent List
-+~~~~~~~~~~~
-+
-+If the entire extent list is short enough to fit within the inode’s fork
-+region, we say that the fork is in "extent list" format. This is the most
-+optimal in terms of speed and resource consumption. The trade-off is the file
-+can only have a few extents before the inode runs out of space.
-+
-+The data fork of the inode contains an array of extents; the size of the array
-+is determined by the inode’s di\_nextents value.
-+
-+.. figure:: images/32.png
-+   :alt: Inode data fork extent layout
-+
-+   Inode data fork extent layout
-+
-+The number of extents that can fit in the inode depends on the inode size and
-+di\_forkoff. For a default 256 byte inode with no extended attributes, a file
-+can have up to 9 extents with this format. On a default v5 filesystem with 512
-+byte inodes, a file can have up to 21 extents with this format. Beyond that,
-+extents have to use the B+tree format.
-+
-+xfs\_db Inode Data Fork Extents Example
-+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-+
-+An 8MB file with one extent:
-+
-+::
-+
-+    xfs_db> inode <inode#>
-+    xfs_db> p
-+    core.magic = 0x494e
-+    core.mode = 0100644
-+    core.version = 1
-+    core.format = 2 (extents)
-+    ...
-+    core.size = 8294400
-+    core.nblocks = 2025
-+    core.extsize = 0
-+    core.nextents = 1
-+    core.naextents = 0
-+    core.forkoff = 0
-+    ...
-+    u.bmx[0] = [startoff,startblock,blockcount,extentflag]
-+        0:[0,25356,2025,0]
-+
-+A 24MB file with three extents:
-+
-+::
-+
-+    xfs_db> inode <inode#>
-+    xfs_db> p
-+    ...
-+    core.format = 2 (extents)
-+    ...
-+    core.size = 24883200
-+    core.nblocks = 6075
-+    core.nextents = 3
-+    ...
-+    u.bmx[0-2] = [startoff,startblock,blockcount,extentflag]
-+        0:[0,27381,2025,0]
-+        1:[2025,31431,2025,0]
-+        2:[4050,35481,2025,0]
-+
-+Raw disk version of the inode with the third extent highlighted (di\_u starts
-+at offset 0x64):
-+
-+::
-+
-+    xfs_db> type text
-+    xfs_db> p
-+    00: 49 4e 81 a4 01 02 00 01 00 00 00 00 00 00 00 00 IN..............
-+    10: 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 01 ................
-+    20: 44 b6 88 dd 2f 8a ed d0 44 b6 88 f7 10 8c 5b de D.......D.......
-+    30: 44 b6 88 f7 10 8c 5b d0 00 00 00 00 01 7b b0 00 D...............
-+    40: 00 00 00 00 00 00 17 bb 00 00 00 00 00 00 00 03 ................
-+    50: 00 00 00 02 00 00 00 00 00 00 00 00 00 00 00 00 ................
-+    60: ff ff ff ff 00 00 00 00 00 00 00 00 00 00 00 0d ................
-+    70: 5e a0 07 e9 00 00 00 00 00 0f d2 00 00 00 00 0f ................
-+    80: 58 e0 07 e9 00 00 00 00 00 1f a4 00 00 00 00 11 X...............
-+    90: 53 20 07 e9 00 00 00 00 00 00 00 00 00 00 00 00 S...............
-+    a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
-+    be: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
-+    co: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
-+    do: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
-+    e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
-+    fo: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
-+
-+We can expand the highlighted section into the following bit array from MSB to
-+LSB with the file offset and the block count highlighted:
-+
-+::
-+
-+    127-96:  0000 0000 0000 0000  0000 0000 0000 0000
-+     95-64:  0000 0000 0001 1111  1010 0100 0000 0000
-+     63-32:  0000 0000 0000 0000  0000 0000 0000 1111
-+     31-0 :  0101 1000 1110 0000  0000 0111 1110 1001
-+
-+    Grouping by highlights we get:
-+       file offset = 0x0fd2 (4050)
-+       start block = 0x7ac7 (31431)
-+       block count = 0x07e9 (2025)
-+
-+A 4MB file with two extents and a hole in the middle, the first extent
-+containing 64KB of data, the second about 4MB in containing 32KB (write 64KB,
-+lseek 4MB, write 32KB operations):
-+
-+::
-+
-+    xfs_db> inode <inode#>
-+    xfs_db> p
-+    ...
-+    core.format = 2 (extents)
-+    ...
-+    core.size = 4063232
-+    core.nblocks = 24
-+    core.nextents = 2
-+    ...
-+    u.bmx[0-1] = [startoff,startblock,blockcount,extentflag]
-+        0:[0,37506,16,0]
-+        1:[984,37522,8,0]
-+
-+B+tree Extent List
-+~~~~~~~~~~~~~~~~~~
-+
-+To manage extent maps that cannot fit in the inode fork area, XFS uses `long
-+format B+trees <#long-format-b-trees>`__. The root node of the B+tree is stored
-+in the inode’s data fork. All block pointers for extent B+trees are 64-bit
-+filesystem block numbers.
-+
-+For a single level B+tree, the root node points to the B+tree’s leaves. Each
-+leaf occupies one filesystem block and contains a header and an array of
-+extents sorted by the file’s offset. Each leaf has left and right (or backward
-+and forward) block pointers to adjacent leaves. For a standard 4KB filesystem
-+block, a leaf can contain up to 254 extents before a B+tree rebalance is
-+triggered.
-+
-+For a multi-level B+tree, the root node points to other B+tree nodes which
-+eventually point to the extent leaves. B+tree keys are based on the file’s
-+offset and have pointers to the next level down. Nodes at each level in the
-+B+tree also have pointers to the adjacent nodes.
-+
-+The base B+tree node is used for extents, directories and extended attributes.
-+The structures used for an inode’s B+tree root are:
-+
-+.. code:: c
-+
-+    struct xfs_bmdr_block {
-+         __be16                     bb_level;
-+         __be16                     bb_numrecs;
-+    };
-+    struct xfs_bmbt_key {
-+         xfs_fileoff_t              br_startoff;
-+    };
-+    typedef xfs_fsblock_t xfs_bmbt_ptr_t, xfs_bmdr_ptr_t;
-+
-+-  On disk, the B+tree node starts with the xfs\_bmdr\_block\_t header
-+   followed by an array of xfs\_bmbt\_key\_t values and then an array of
-+   xfs\_bmbt\_ptr\_t values. The size of both arrays is specified by the
-+   header’s bb\_numrecs value.
-+
-+-  The root node in the inode can only contain up to 9 key/pointer pairs for a
-+   standard 256 byte inode before a new level of nodes is added between the
-+   root and the leaves. This will be less if di\_forkoff is not zero (i.e.
-+   attributes are in use on the inode).
-+
-+-  The magic number for a BMBT block is "BMAP" (0x424d4150).  On a v5
-+   filesystem, this is "BMA3" (0x424d4133).
-+
-+-  For intermediate nodes, the data following xfs\_btree\_lblock is the same
-+   as the root node: array of xfs\_bmbt\_key value followed by an array of
-+   xfs\_bmbt\_ptr\_t values that starts halfway through the block (offset
-+   0x808 for a 4096 byte filesystem block).
-+
-+-  For leaves, an array of xfs\_bmbt\_rec extents follow the
-+   xfs\_btree\_lblock header.
-+
-+-  Nodes and leaves use the same value for bb\_magic.
-+
-+-  The bb\_level value determines if the node is an intermediate node or a
-+   leaf. Leaves have a bb\_level of zero, nodes are one or greater.
-+
-+-  Intermediate nodes, like leaves, can contain up to 254 pointers to leaf
-+   blocks for a standard 4KB filesystem block size as both the keys and
-+   pointers are 64 bits in size.
-+
-+.. ifconfig:: builder != 'latex'
-+
-+   .. figure:: images/35.png
-+      :alt: Single level extent B+tree
-+
-+      Single level extent B+tree
-+
-+   .. figure:: images/36.png
-+      :alt: Multiple level extent B+tree
-+
-+      Multiple level extent B+tree
-+
-+.. ifconfig:: builder == 'latex'
-+
-+   .. figure:: images/35.png
-+      :scale: 45%
-+      :alt: Single level extent B+tree
-+
-+      Single level extent B+tree
-+
-+   .. figure:: images/36.png
-+      :scale: 40%
-+      :alt: Multiple level extent B+tree
-+
-+      Multiple level extent B+tree
-+
-+xfs\_db bmbt Example
-+^^^^^^^^^^^^^^^^^^^^
-+
-+In this example, we dissect the data fork of a VM image that is sufficiently
-+sparse and interleaved to have become a B+tree.
-+
-+::
-+
-+    xfs_db> inode 132
-+    xfs_db> p
-+    core.magic = 0x494e
-+    core.mode = 0100600
-+    core.version = 3
-+    core.format = 3 (btree)
-+    ...
-+    u3.bmbt.level = 1
-+    u3.bmbt.numrecs = 3
-+    u3.bmbt.keys[1-3] = [startoff] 1:[0] 2:[9072] 3:[13136]
-+    u3.bmbt.ptrs[1-3] = 1:8568 2:8569 3:8570
-+
-+As you can see, the block map B+tree is rooted in the inode. This tree has two
-+levels, so let’s go down a level to look at the records:
-+
-+::
-+
-+    xfs_db> addr u3.bmbt.ptrs[1]
-+    xfs_db> p
-+    magic = 0x424d4133
-+    level = 0
-+    numrecs = 251
-+    leftsib = null
-+    rightsib = 8569
-+    bno = 68544
-+    lsn = 0x100000006
-+    uuid = 9579903c-333f-4673-a7d4-3254c05816ea
-+    owner = 132
-+    crc = 0xc61513dc (correct)
-+    recs[1-251] = [startoff,startblock,blockcount,extentflag]
-+            1:[0,8520,48,0] 2:[48,4421,16,0] 3:[80,9136,16,0] 4:[96,8569,16,0]
-+            5:[144,8601,32,0] 6:[192,8637,16,0] 7:[240,8680,16,0] 8:[288,9870,16,0]
-+            9:[320,9920,16,0] 10:[336,9950,16,0] 11:[384,4004,32,0]
-+            12:[432,6771,16,0] 13:[480,2702,16,0] 14:[528,8420,16,0]
-+            ...
-diff --git a/Documentation/filesystems/xfs-data-structures/dynamic.rst b/Documentation/filesystems/xfs-data-structures/dynamic.rst
-index 945b07be2034..5ba6f3940808 100644
---- a/Documentation/filesystems/xfs-data-structures/dynamic.rst
-+++ b/Documentation/filesystems/xfs-data-structures/dynamic.rst
-@@ -4,3 +4,4 @@ Dynamic Allocated Structures
- ============================
+diff --git a/fs/ocfs2/refcounttree.c b/fs/ocfs2/refcounttree.c
+index 7869622af22a..11e4aad7b783 100644
+--- a/fs/ocfs2/refcounttree.c
++++ b/fs/ocfs2/refcounttree.c
+@@ -4842,7 +4842,7 @@ int ocfs2_reflink_remap_range(struct file *file_in,
+ 	    (OCFS2_I(inode_out)->ip_flags & OCFS2_INODE_SYSTEM_FILE))
+ 		goto out_unlock;
  
- .. include:: ondisk_inode.rst
-+.. include:: data_extents.rst
+-	ret = vfs_clone_file_prep_inodes(inode_in, pos_in, inode_out, pos_out,
++	ret = vfs_clone_file_prep(file_in, pos_in, file_out, pos_out,
+ 			&len, is_dedupe);
+ 	if (ret <= 0)
+ 		goto out_unlock;
+diff --git a/fs/read_write.c b/fs/read_write.c
+index 39b4a21dd933..973d3da78c09 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1717,12 +1717,13 @@ static int clone_verify_area(struct file *file, loff_t pos, u64 len, bool write)
+  * Returns: 0 for "nothing to clone", 1 for "something to clone", or
+  * the usual negative error code.
+  */
+-int vfs_clone_file_prep_inodes(struct inode *inode_in, loff_t pos_in,
+-			       struct inode *inode_out, loff_t pos_out,
+-			       u64 *len, bool is_dedupe)
++int vfs_clone_file_prep(struct file *file_in, loff_t pos_in,
++			struct file *file_out, loff_t pos_out,
++			u64 *len, bool is_dedupe)
+ {
+-	loff_t bs = inode_out->i_sb->s_blocksize;
+-	loff_t blen;
++	struct inode *inode_in = file_inode(file_in);
++	struct inode *inode_out = file_inode(file_out);
++	uint64_t nlen;
+ 	loff_t isize;
+ 	bool same_inode = (inode_in == inode_out);
+ 	int ret;
+@@ -1740,10 +1741,7 @@ int vfs_clone_file_prep_inodes(struct inode *inode_in, loff_t pos_in,
+ 	if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
+ 		return -EINVAL;
+ 
+-	/* Are we going all the way to the end? */
+ 	isize = i_size_read(inode_in);
+-	if (isize == 0)
+-		return 0;
+ 
+ 	/* Zero length dedupe exits immediately; reflink goes to EOF. */
+ 	if (*len == 0) {
+@@ -1754,37 +1752,15 @@ int vfs_clone_file_prep_inodes(struct inode *inode_in, loff_t pos_in,
+ 		*len = isize - pos_in;
+ 	}
+ 
+-	/* Ensure offsets don't wrap and the input is inside i_size */
+-	if (pos_in + *len < pos_in || pos_out + *len < pos_out ||
+-	    pos_in + *len > isize)
+-		return -EINVAL;
+-
+-	/* Don't allow dedupe past EOF in the dest file */
+-	if (is_dedupe) {
+-		loff_t	disize;
+-
+-		disize = i_size_read(inode_out);
+-		if (pos_out >= disize || pos_out + *len > disize)
+-			return -EINVAL;
+-	}
+-
+-	/* If we're linking to EOF, continue to the block boundary. */
+-	if (pos_in + *len == isize)
+-		blen = ALIGN(isize, bs) - pos_in;
+-	else
+-		blen = *len;
+-
+-	/* Only reflink if we're aligned to block boundaries */
+-	if (!IS_ALIGNED(pos_in, bs) || !IS_ALIGNED(pos_in + blen, bs) ||
+-	    !IS_ALIGNED(pos_out, bs) || !IS_ALIGNED(pos_out + blen, bs))
++	/* Check that we don't violate system file offset limits. */
++	nlen = *len;
++	ret = generic_clone_checks(file_in, pos_in, file_out, pos_out, &nlen,
++			is_dedupe);
++	if (ret)
++		return ret;
++	if (nlen != *len)
+ 		return -EINVAL;
+ 
+-	/* Don't allow overlapped reflink within the same file */
+-	if (same_inode) {
+-		if (pos_out + blen > pos_in && pos_out < pos_in + blen)
+-			return -EINVAL;
+-	}
+-
+ 	/* Wait for the completion of any pending IOs on both files */
+ 	inode_dio_wait(inode_in);
+ 	if (!same_inode)
+@@ -1816,7 +1792,7 @@ int vfs_clone_file_prep_inodes(struct inode *inode_in, loff_t pos_in,
+ 
+ 	return 1;
+ }
+-EXPORT_SYMBOL(vfs_clone_file_prep_inodes);
++EXPORT_SYMBOL(vfs_clone_file_prep);
+ 
+ int vfs_clone_file_range(struct file *file_in, loff_t pos_in,
+ 		struct file *file_out, loff_t pos_out, u64 len)
+@@ -1854,9 +1830,6 @@ int vfs_clone_file_range(struct file *file_in, loff_t pos_in,
+ 	if (ret)
+ 		return ret;
+ 
+-	if (pos_in + len > i_size_read(inode_in))
+-		return -EINVAL;
+-
+ 	ret = file_in->f_op->clone_file_range(file_in, pos_in,
+ 			file_out, pos_out, len);
+ 	if (!ret) {
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index d8f209bc8937..1955e093e9ea 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -1277,7 +1277,7 @@ xfs_reflink_remap_prep(
+ 	if (IS_DAX(inode_in) || IS_DAX(inode_out))
+ 		goto out_unlock;
+ 
+-	ret = vfs_clone_file_prep_inodes(inode_in, pos_in, inode_out, pos_out,
++	ret = vfs_clone_file_prep(file_in, pos_in, file_out, pos_out,
+ 			&len, is_dedupe);
+ 	if (ret <= 0)
+ 		goto out_unlock;
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 6c0b4a1c22ff..2a4141d36ebf 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1825,9 +1825,9 @@ extern ssize_t vfs_readv(struct file *, const struct iovec __user *,
+ 		unsigned long, loff_t *, rwf_t);
+ extern ssize_t vfs_copy_file_range(struct file *, loff_t , struct file *,
+ 				   loff_t, size_t, unsigned int);
+-extern int vfs_clone_file_prep_inodes(struct inode *inode_in, loff_t pos_in,
+-				      struct inode *inode_out, loff_t pos_out,
+-				      u64 *len, bool is_dedupe);
++extern int vfs_clone_file_prep(struct file *file_in, loff_t pos_in,
++			       struct file *file_out, loff_t pos_out,
++			       u64 *count, bool is_dedupe);
+ extern int vfs_clone_file_range(struct file *file_in, loff_t pos_in,
+ 		struct file *file_out, loff_t pos_out, u64 len);
+ extern int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
+@@ -2978,6 +2978,9 @@ extern int sb_min_blocksize(struct super_block *, int);
+ extern int generic_file_mmap(struct file *, struct vm_area_struct *);
+ extern int generic_file_readonly_mmap(struct file *, struct vm_area_struct *);
+ extern ssize_t generic_write_checks(struct kiocb *, struct iov_iter *);
++extern int generic_clone_checks(struct file *file_in, loff_t pos_in,
++				struct file *file_out, loff_t pos_out,
++				uint64_t *count, bool is_dedupe);
+ extern ssize_t generic_file_read_iter(struct kiocb *, struct iov_iter *);
+ extern ssize_t __generic_file_write_iter(struct kiocb *, struct iov_iter *);
+ extern ssize_t generic_file_write_iter(struct kiocb *, struct iov_iter *);
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 52517f28e6f4..68ec91d05c7b 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -2974,6 +2974,74 @@ inline ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
+ }
+ EXPORT_SYMBOL(generic_write_checks);
+ 
++/*
++ * Performs necessary checks before doing a clone.
++ *
++ * Can adjust amount of bytes to clone.
++ * Returns appropriate error code that caller should return or
++ * zero in case the clone should be allowed.
++ */
++int generic_clone_checks(struct file *file_in, loff_t pos_in,
++			 struct file *file_out, loff_t pos_out,
++			 uint64_t *req_count, bool is_dedupe)
++{
++	struct inode *inode_in = file_in->f_mapping->host;
++	struct inode *inode_out = file_out->f_mapping->host;
++	unsigned long limit = rlimit(RLIMIT_FSIZE);
++	uint64_t count = *req_count;
++	uint64_t bcount;
++	loff_t size_in, size_out;
++	loff_t bs = inode_out->i_sb->s_blocksize;
++
++	/* The start of both ranges must be aligned to an fs block. */
++	if (!IS_ALIGNED(pos_in, bs) || !IS_ALIGNED(pos_out, bs))
++		return -EINVAL;
++
++	/* Ensure offsets don't wrap. */
++	if (pos_in + count < pos_in || pos_out + count < pos_out)
++		return -EINVAL;
++
++	size_in = i_size_read(inode_in);
++	size_out = i_size_read(inode_out);
++
++	/* Dedupe requires both ranges to be within EOF. */
++	if (is_dedupe &&
++	    (pos_in >= size_in || pos_in + count > size_in ||
++	     pos_out >= size_out || pos_out + count > size_out))
++		return -EINVAL;
++
++	/* Ensure the infile range is within the infile. */
++	if (pos_in >= size_in)
++		return -EINVAL;
++	count = min(count, size_in - (uint64_t)pos_in);
++
++	/*
++	 * If the user wanted us to link to the infile's EOF, round up to the
++	 * next block boundary for this check.
++	 *
++	 * Otherwise, make sure the count is also block-aligned, having
++	 * already confirmed the starting offsets' block alignment.
++	 */
++	if (pos_in + count == size_in) {
++		bcount = ALIGN(size_in, bs) - pos_in;
++	} else {
++		if (!IS_ALIGNED(count, bs))
++			return -EINVAL;
++
++		bcount = count;
++	}
++
++	/* Don't allow overlapped cloning within the same file. */
++	if (inode_in == inode_out &&
++	    pos_out + bcount > pos_in &&
++	    pos_out < pos_in + bcount)
++		return -EINVAL;
++
++	*req_count = count;
++	return 0;
++}
++EXPORT_SYMBOL(generic_clone_checks);
++
+ int pagecache_write_begin(struct file *file, struct address_space *mapping,
+ 				loff_t pos, unsigned len, unsigned flags,
+ 				struct page **pagep, void **fsdata)
