@@ -1,253 +1,179 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:35334 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726813AbeJDLL1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Oct 2018 07:11:27 -0400
-Subject: [PATCH 15/22] docs: add XFS internal inodes to the DS&A book
+Received: from userp2130.oracle.com ([156.151.31.86]:50576 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726073AbeJEHlD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 03:41:03 -0400
+Subject: [PATCH 02/15] xfs: refactor clonerange preparation into a separate
+ helper
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 03 Oct 2018 21:19:59 -0700
-Message-ID: <153862679943.26427.8180150868933893763.stgit@magnolia>
-In-Reply-To: <153862669110.26427.16504658853992750743.stgit@magnolia>
-References: <153862669110.26427.16504658853992750743.stgit@magnolia>
+Date: Thu, 04 Oct 2018 17:44:47 -0700
+Message-ID: <153870028762.29072.5369530877410002226.stgit@magnolia>
+In-Reply-To: <153870027422.29072.7433543674436957232.stgit@magnolia>
+References: <153870027422.29072.7433543674436957232.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org, corbet@lwn.net
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, ocfs2-devel@oss.oracle.com, sandeen@redhat.com
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
+Refactor all the reflink preparation steps into a separate helper that
+we'll use to land all the upcoming fixes for insufficient input checks.
+
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- .../filesystems/xfs-data-structures/globals.rst    |    1 
- .../xfs-data-structures/internal_inodes.rst        |  208 ++++++++++++++++++++
- 2 files changed, 209 insertions(+)
- create mode 100644 Documentation/filesystems/xfs-data-structures/internal_inodes.rst
+ fs/xfs/xfs_reflink.c |   96 +++++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 71 insertions(+), 25 deletions(-)
 
 
-diff --git a/Documentation/filesystems/xfs-data-structures/globals.rst b/Documentation/filesystems/xfs-data-structures/globals.rst
-index 8ce83deafae5..1662540e40ef 100644
---- a/Documentation/filesystems/xfs-data-structures/globals.rst
-+++ b/Documentation/filesystems/xfs-data-structures/globals.rst
-@@ -7,3 +7,4 @@ Global Structures
- .. include:: dabtrees.rst
- .. include:: allocation_groups.rst
- .. include:: journaling_log.rst
-+.. include:: internal_inodes.rst
-diff --git a/Documentation/filesystems/xfs-data-structures/internal_inodes.rst b/Documentation/filesystems/xfs-data-structures/internal_inodes.rst
-new file mode 100644
-index 000000000000..4c3a1bf1f822
---- /dev/null
-+++ b/Documentation/filesystems/xfs-data-structures/internal_inodes.rst
-@@ -0,0 +1,208 @@
-+.. SPDX-License-Identifier: CC-BY-SA-4.0
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 38f405415b88..80ca9b6793cd 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -1195,11 +1195,33 @@ xfs_iolock_two_inodes_and_break_layout(
+ 	return 0;
+ }
+ 
++/* Unlock both inodes after they've been prepped for a range clone. */
++STATIC void
++xfs_reflink_remap_unlock(
++	struct file		*file_in,
++	struct file		*file_out)
++{
++	struct inode		*inode_in = file_inode(file_in);
++	struct xfs_inode	*src = XFS_I(inode_in);
++	struct inode		*inode_out = file_inode(file_out);
++	struct xfs_inode	*dest = XFS_I(inode_out);
++	bool			same_inode = (inode_in == inode_out);
 +
-+Internal Inodes
-+---------------
++	xfs_iunlock(dest, XFS_MMAPLOCK_EXCL);
++	if (!same_inode)
++		xfs_iunlock(src, XFS_MMAPLOCK_SHARED);
++	inode_unlock(inode_out);
++	if (!same_inode)
++		inode_unlock_shared(inode_in);
++}
 +
-+XFS allocates several inodes when a filesystem is created. These are internal
-+and not accessible from the standard directory structure. These inodes are
-+only accessible from the superblock.
+ /*
+- * Link a range of blocks from one file to another.
++ * Prepare two files for range cloning.  Upon a successful return both inodes
++ * will have the iolock and mmaplock held, the page cache of the out file
++ * will be truncated, and any leases on the out file will have been broken.
+  */
+-int
+-xfs_reflink_remap_range(
++STATIC int
++xfs_reflink_remap_prep(
+ 	struct file		*file_in,
+ 	loff_t			pos_in,
+ 	struct file		*file_out,
+@@ -1211,19 +1233,9 @@ xfs_reflink_remap_range(
+ 	struct xfs_inode	*src = XFS_I(inode_in);
+ 	struct inode		*inode_out = file_inode(file_out);
+ 	struct xfs_inode	*dest = XFS_I(inode_out);
+-	struct xfs_mount	*mp = src->i_mount;
+ 	bool			same_inode = (inode_in == inode_out);
+-	xfs_fileoff_t		sfsbno, dfsbno;
+-	xfs_filblks_t		fsblen;
+-	xfs_extlen_t		cowextsize;
+ 	ssize_t			ret;
+ 
+-	if (!xfs_sb_version_hasreflink(&mp->m_sb))
+-		return -EOPNOTSUPP;
+-
+-	if (XFS_FORCED_SHUTDOWN(mp))
+-		return -EIO;
+-
+ 	/* Lock both files against IO */
+ 	ret = xfs_iolock_two_inodes_and_break_layout(inode_in, inode_out);
+ 	if (ret)
+@@ -1254,8 +1266,6 @@ xfs_reflink_remap_range(
+ 	if (ret)
+ 		goto out_unlock;
+ 
+-	trace_xfs_reflink_remap_range(src, pos_in, len, dest, pos_out);
+-
+ 	/*
+ 	 * Clear out post-eof preallocations because we don't have page cache
+ 	 * backing the delayed allocations and they'll never get freed on
+@@ -1272,6 +1282,51 @@ xfs_reflink_remap_range(
+ 	if (ret)
+ 		goto out_unlock;
+ 
++	/* Zap any page cache for the destination file's range. */
++	truncate_inode_pages_range(&inode_out->i_data, pos_out,
++				   PAGE_ALIGN(pos_out + len) - 1);
++	return 0;
++out_unlock:
++	xfs_reflink_remap_unlock(file_in, file_out);
++	return ret;
++}
 +
-+Quota Inodes
-+~~~~~~~~~~~~
++/*
++ * Link a range of blocks from one file to another.
++ */
++int
++xfs_reflink_remap_range(
++	struct file		*file_in,
++	loff_t			pos_in,
++	struct file		*file_out,
++	loff_t			pos_out,
++	u64			len,
++	bool			is_dedupe)
++{
++	struct inode		*inode_in = file_inode(file_in);
++	struct xfs_inode	*src = XFS_I(inode_in);
++	struct inode		*inode_out = file_inode(file_out);
++	struct xfs_inode	*dest = XFS_I(inode_out);
++	struct xfs_mount	*mp = src->i_mount;
++	xfs_fileoff_t		sfsbno, dfsbno;
++	xfs_filblks_t		fsblen;
++	xfs_extlen_t		cowextsize;
++	ssize_t			ret;
 +
-+Prior to version 5 filesystems, two inodes can be allocated for quota
-+management. The first inode will be used for user quotas. The second inode
-+will be used for group quotas or project quotas, depending on mount options.
-+Group and project quotas are mutually exclusive features in these
-+environments.
++	if (!xfs_sb_version_hasreflink(&mp->m_sb))
++		return -EOPNOTSUPP;
 +
-+In version 5 or later filesystems, each quota type is allocated its own inode,
-+making it possible to use group and project quota management simultaneously.
++	if (XFS_FORCED_SHUTDOWN(mp))
++		return -EIO;
 +
-+-  Project quota’s primary purpose is to track and monitor disk usage for
-+   directories. For this to occur, the directory inode must have the
-+   XFS\_DIFLAG\_PROJINHERIT flag set so all inodes created underneath the
-+   directory inherit the project ID.
++	/* Prepare and then clone file data. */
++	ret = xfs_reflink_remap_prep(file_in, pos_in, file_out, pos_out,
++			len, is_dedupe);
++	if (ret)
++		return ret;
 +
-+-  Inodes and blocks owned by ID zero do not have enforced quotas, but only
-+   quota accounting.
++	trace_xfs_reflink_remap_range(src, pos_in, len, dest, pos_out);
 +
-+-  Extended attributes do not contribute towards the ID’s quota.
-+
-+-  To access each ID’s quota information in the file, seek to the ID offset
-+   multiplied by the size of xfs\_dqblk\_t (136 bytes).
-+
-+.. figure:: images/76.png
-+   :alt: Quota inode layout
-+
-+   Quota inode layout
-+
-+Quota information is stored in the data extents of the reserved quota inodes
-+as an array of the xfs\_dqblk structures, where there is one array element for
-+each ID in the system:
-+
-+.. code:: c
-+
-+    struct xfs_disk_dquot {
-+         __be16                d_magic;
-+         __u8                  d_version;
-+         __u8                  d_flags;
-+         __be32                d_id;
-+         __be64                d_blk_hardlimit;
-+         __be64                d_blk_softlimit;
-+         __be64                d_ino_hardlimit;
-+         __be64                d_ino_softlimit;
-+         __be64                d_bcount;
-+         __be64                d_icount;
-+         __be32                d_itimer;
-+         __be32                d_btimer;
-+         __be16                d_iwarns;
-+         __be16                d_bwarns;
-+         __be32                d_pad0;
-+         __be64                d_rtb_hardlimit;
-+         __be64                d_rtb_softlimit;
-+         __be64                d_rtbcount;
-+         __be32                d_rtbtimer;
-+         __be16                d_rtbwarns;
-+         __be16                d_pad;
-+    };
-+    struct xfs_dqblk {
-+         struct xfs_disk_dquot dd_diskdq;
-+         char                  dd_fill[4];
-+
-+         /* version 5 filesystem fields begin here */
-+         __be32                dd_crc;
-+         __be64                dd_lsn;
-+         uuid_t                dd_uuid;
-+    };
-+
-+**d\_magic**
-+    Specifies the signature where these two bytes are 0x4451
-+    (XFS\_DQUOT\_MAGIC), or \`\`DQ'' in ASCII.
-+
-+**d\_version**
-+    The structure version, currently this is 1 (XFS\_DQUOT\_VERSION).
-+
-+**d\_flags**
-+    Specifies which type of ID the structure applies to:
-+
-+.. code:: c
-+
-+    #define XFS_DQ_USER  0x0001
-+    #define XFS_DQ_PROJ  0x0002
-+    #define XFS_DQ_GROUP 0x0004
-+
-+**d\_id**
-+    The ID for the quota structure. This will be a uid, gid or projid based on
-+    the value of d\_flags.
-+
-+**d\_blk\_hardlimit**
-+    The hard limit for the number of filesystem blocks the ID can own. The ID
-+    will not be able to use more space than this limit. If it is attempted,
-+    ENOSPC will be returned.
-+
-+**d\_blk\_softlimit**
-+    The soft limit for the number of filesystem blocks the ID can own. The ID
-+    can temporarily use more space than by d\_blk\_softlimit up to
-+    d\_blk\_hardlimit. If the space is not freed by the time limit specified
-+    by ID zero’s d\_btimer value, the ID will be denied more space until the
-+    total blocks owned goes below d\_blk\_softlimit.
-+
-+**d\_ino\_hardlimit**
-+    The hard limit for the number of inodes the ID can own. The ID will not be
-+    able to create or own any more inodes if d\_icount reaches this value.
-+
-+**d\_ino\_softlimit**
-+    The soft limit for the number of inodes the ID can own. The ID can
-+    temporarily create or own more inodes than specified by d\_ino\_softlimit
-+    up to d\_ino\_hardlimit. If the inode count is not reduced by the time
-+    limit specified by ID zero’s d\_itimer value, the ID will be denied from
-+    creating or owning more inodes until the count goes below
-+    d\_ino\_softlimit.
-+
-+**d\_bcount**
-+    How many filesystem blocks are actually owned by the ID.
-+
-+**d\_icount**
-+    How many inodes are actually owned by the ID.
-+
-+**d\_itimer**
-+    Specifies the time when the ID’s d\_icount exceeded d\_ino\_softlimit. The
-+    soft limit will turn into a hard limit after the elapsed time exceeds ID
-+    zero’s d\_itimer value. When d\_icount goes back below d\_ino\_softlimit,
-+    d\_itimer is reset back to zero.
-+
-+**d\_btimer**
-+    Specifies the time when the ID’s d\_bcount exceeded d\_blk\_softlimit. The
-+    soft limit will turn into a hard limit after the elapsed time exceeds ID
-+    zero’s d\_btimer value. When d\_bcount goes back below d\_blk\_softlimit,
-+    d\_btimer is reset back to zero.
-+
-+**d\_iwarns**; \ **d\_bwarns**; \ **d\_rtbwarns**
-+    Specifies how many times a warning has been issued. Currently not used.
-+
-+**d\_rtb\_hardlimit**
-+    The hard limit for the number of real-time blocks the ID can own. The ID
-+    cannot own more space on the real-time subvolume beyond this limit.
-+
-+**d\_rtb\_softlimit**
-+    The soft limit for the number of real-time blocks the ID can own. The ID
-+    can temporarily own more space than specified by d\_rtb\_softlimit up to
-+    d\_rtb\_hardlimit. If d\_rtbcount is not reduced by the time limit
-+    specified by ID zero’s d\_rtbtimer value, the ID will be denied from
-+    owning more space until the count goes below d\_rtb\_softlimit.
-+
-+**d\_rtbcount**
-+    How many real-time blocks are currently owned by the ID.
-+
-+**d\_rtbtimer**
-+    Specifies the time when the ID’s d\_rtbcount exceeded d\_rtb\_softlimit.
-+    The soft limit will turn into a hard limit after the elapsed time exceeds
-+    ID zero’s d\_rtbtimer value. When d\_rtbcount goes back below
-+    d\_rtb\_softlimit, d\_rtbtimer is reset back to zero.
-+
-+**dd\_uuid**
-+    The UUID of this block, which must match either sb\_uuid or sb\_meta\_uuid
-+    depending on which features are set.
-+
-+**dd\_lsn**
-+    Log sequence number of the last DQ block write.
-+
-+**dd\_crc**
-+    Checksum of the DQ block.
-+
-+Real-time Inodes
-+~~~~~~~~~~~~~~~~
-+
-+There are two inodes allocated to managing the real-time device’s space, the
-+Bitmap Inode and the Summary Inode.
-+
-+Real-Time Bitmap Inode
-+^^^^^^^^^^^^^^^^^^^^^^
-+
-+The real time bitmap inode, sb\_rbmino, tracks the used/free space in the
-+real-time device using an old-style bitmap. One bit is allocated per real-time
-+extent. The size of an extent is specified by the superblock’s sb\_rextsize
-+value.
-+
-+The number of blocks used by the bitmap inode is equal to the number of
-+real-time extents (sb\_rextents) divided by the block size (sb\_blocksize) and
-+bits per byte. This value is stored in sb\_rbmblocks. The nblocks and extent
-+array for the inode should match this. Each real time block gets its own bit
-+in the bitmap.
-+
-+Real-Time Summary Inode
-+^^^^^^^^^^^^^^^^^^^^^^^
-+
-+The real time summary inode, sb\_rsumino, tracks the used and free space
-+accounting information for the real-time device. This file indexes the
-+approximate location of each free extent on the real-time device first by
-+log2(extent size) and then by the real-time bitmap block number. The size of
-+the summary inode file is equal to sb\_rbmblocks × log2(realtime device size)
-+× sizeof(xfs\_suminfo\_t). The entry for a given log2(extent size) and
-+rtbitmap block number is 0 if there is no free extents of that size at that
-+rtbitmap location, and positive if there are any.
-+
-+This data structure is not particularly space efficient, however it is a very
-+fast way to provide the same data as the two free space B+trees for regular
-+files since the space is preallocated and metadata maintenance is minimal.
+ 	dfsbno = XFS_B_TO_FSBT(mp, pos_out);
+ 	sfsbno = XFS_B_TO_FSBT(mp, pos_in);
+ 	fsblen = XFS_B_TO_FSB(mp, len);
+@@ -1280,10 +1335,6 @@ xfs_reflink_remap_range(
+ 	if (ret)
+ 		goto out_unlock;
+ 
+-	/* Zap any page cache for the destination file's range. */
+-	truncate_inode_pages_range(&inode_out->i_data, pos_out,
+-				   PAGE_ALIGN(pos_out + len) - 1);
+-
+ 	/*
+ 	 * Carry the cowextsize hint from src to dest if we're sharing the
+ 	 * entire source file to the entire destination file, the source file
+@@ -1300,12 +1351,7 @@ xfs_reflink_remap_range(
+ 			is_dedupe);
+ 
+ out_unlock:
+-	xfs_iunlock(dest, XFS_MMAPLOCK_EXCL);
+-	if (!same_inode)
+-		xfs_iunlock(src, XFS_MMAPLOCK_SHARED);
+-	inode_unlock(inode_out);
+-	if (!same_inode)
+-		inode_unlock_shared(inode_in);
++	xfs_reflink_remap_unlock(file_in, file_out);
+ 	if (ret)
+ 		trace_xfs_reflink_remap_range_error(dest, ret, _RET_IP_);
+ 	return ret;
