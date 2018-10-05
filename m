@@ -1,211 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:46499 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726939AbeJEMZT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 08:25:19 -0400
-Date: Fri, 5 Oct 2018 15:28:09 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 02/15] xfs: refactor clonerange preparation into a
- separate helper
-Message-ID: <20181005052809.GB12041@dastard>
-References: <153870027422.29072.7433543674436957232.stgit@magnolia>
- <153870028762.29072.5369530877410002226.stgit@magnolia>
+Received: from mail-yw1-f67.google.com ([209.85.161.67]:37957 "EHLO
+        mail-yw1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726732AbeJENHf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 09:07:35 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <153870028762.29072.5369530877410002226.stgit@magnolia>
+References: <153870027422.29072.7433543674436957232.stgit@magnolia> <153870031519.29072.18289185889660082318.stgit@magnolia>
+In-Reply-To: <153870031519.29072.18289185889660082318.stgit@magnolia>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Fri, 5 Oct 2018 09:10:12 +0300
+Message-ID: <CAOQ4uxiVPvNPxTNZ-njeyte6yk3jo3tjNKv78kS9NqA_Xzxc6g@mail.gmail.com>
+Subject: Re: [PATCH 06/15] vfs: strengthen checking of file range inputs to
+ clone/dedupe range
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, ocfs2-devel@oss.oracle.com, sandeen@redhat.com
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, ocfs2-devel@oss.oracle.com, Eric Sandeen <sandeen@redhat.com>
 
-On Thu, Oct 04, 2018 at 05:44:47PM -0700, Darrick J. Wong wrote:
+On Fri, Oct 5, 2018 at 3:46 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
 > From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Refactor all the reflink preparation steps into a separate helper that
-> we'll use to land all the upcoming fixes for insufficient input checks.
-
-If I've read the patch right, this also changes the location of the
-page cache truncation, right?  i.e. it now happens in the
-xfs_reflink_remap_prep() function instead of after the remap?  I
-think the commit message needs to mention that because it's a fix to
-incorrect behaviour....
-
-I've added:
-
---
-This rework also moves the invalidation of the destination range to
-the prep function so that it is done before the range is remapped.
-This ensures that nobody can access the data in range being remapped
-until the remap is complete.
---
-
-Sound OK?
-
-Otherwise this looks fine.
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
--Dave.
-
-> 
+>
+> Clone range is an optimization on a regular file write.  File writes
+> that extend the file length are subject to various constraints which are
+> not checked by clonerange.  This is a correctness problem, because we're
+> never allowed to touch ranges that the page cache can't support
+> (s_maxbytes); we're not supposed to deal with large offsets
+> (MAX_NON_LFS) if O_LARGEFILE isn't set; and we must obey resource limits
+> (RLIMIT_FSIZE).
+>
+> Therefore, add these checks to the new generic_clone_checks function so
+> that we curtail unexpected behavior.
+>
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/xfs_reflink.c |   96 +++++++++++++++++++++++++++++++++++++-------------
->  1 file changed, 71 insertions(+), 25 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 38f405415b88..80ca9b6793cd 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -1195,11 +1195,33 @@ xfs_iolock_two_inodes_and_break_layout(
->  	return 0;
->  }
->  
-> +/* Unlock both inodes after they've been prepped for a range clone. */
-> +STATIC void
-> +xfs_reflink_remap_unlock(
-> +	struct file		*file_in,
-> +	struct file		*file_out)
-> +{
-> +	struct inode		*inode_in = file_inode(file_in);
-> +	struct xfs_inode	*src = XFS_I(inode_in);
-> +	struct inode		*inode_out = file_inode(file_out);
-> +	struct xfs_inode	*dest = XFS_I(inode_out);
-> +	bool			same_inode = (inode_in == inode_out);
+>  mm/filemap.c |   31 +++++++++++++++++++++++++++++++
+>  1 file changed, 31 insertions(+)
+>
+>
+> diff --git a/mm/filemap.c b/mm/filemap.c
+> index 68ec91d05c7b..f74391721234 100644
+> --- a/mm/filemap.c
+> +++ b/mm/filemap.c
+> @@ -3015,6 +3015,37 @@ int generic_clone_checks(struct file *file_in, loff_t pos_in,
+>                 return -EINVAL;
+>         count = min(count, size_in - (uint64_t)pos_in);
+>
+> +       /* Don't exceed RLMIT_FSIZE in the file we're writing into. */
+> +       if (limit != RLIM_INFINITY) {
+> +               if (pos_out >= limit) {
+> +                       send_sig(SIGXFSZ, current, 0);
+> +                       return -EFBIG;
+> +               }
+> +               count = min(count, limit - (uint64_t)pos_out);
+> +       }
 > +
-> +	xfs_iunlock(dest, XFS_MMAPLOCK_EXCL);
-> +	if (!same_inode)
-> +		xfs_iunlock(src, XFS_MMAPLOCK_SHARED);
-> +	inode_unlock(inode_out);
-> +	if (!same_inode)
-> +		inode_unlock_shared(inode_in);
-> +}
+> +       /* Don't exceed the LFS limits. */
+> +       if (unlikely(pos_out + count > MAX_NON_LFS &&
+> +                               !(file_out->f_flags & O_LARGEFILE))) {
+> +               if (pos_out >= MAX_NON_LFS)
+> +                       return -EFBIG;
+> +               count = min(count, MAX_NON_LFS - (uint64_t)pos_out);
+> +       }
+> +       if (unlikely(pos_in + count > MAX_NON_LFS &&
+> +                               !(file_in->f_flags & O_LARGEFILE))) {
+> +               if (pos_in >= MAX_NON_LFS)
+> +                       return -EFBIG;
+> +               count = min(count, MAX_NON_LFS - (uint64_t)pos_in);
+> +       }
 > +
->  /*
-> - * Link a range of blocks from one file to another.
-> + * Prepare two files for range cloning.  Upon a successful return both inodes
-> + * will have the iolock and mmaplock held, the page cache of the out file
-> + * will be truncated, and any leases on the out file will have been broken.
->   */
-> -int
-> -xfs_reflink_remap_range(
-> +STATIC int
-> +xfs_reflink_remap_prep(
->  	struct file		*file_in,
->  	loff_t			pos_in,
->  	struct file		*file_out,
-> @@ -1211,19 +1233,9 @@ xfs_reflink_remap_range(
->  	struct xfs_inode	*src = XFS_I(inode_in);
->  	struct inode		*inode_out = file_inode(file_out);
->  	struct xfs_inode	*dest = XFS_I(inode_out);
-> -	struct xfs_mount	*mp = src->i_mount;
->  	bool			same_inode = (inode_in == inode_out);
-> -	xfs_fileoff_t		sfsbno, dfsbno;
-> -	xfs_filblks_t		fsblen;
-> -	xfs_extlen_t		cowextsize;
->  	ssize_t			ret;
->  
-> -	if (!xfs_sb_version_hasreflink(&mp->m_sb))
-> -		return -EOPNOTSUPP;
-> -
-> -	if (XFS_FORCED_SHUTDOWN(mp))
-> -		return -EIO;
-> -
->  	/* Lock both files against IO */
->  	ret = xfs_iolock_two_inodes_and_break_layout(inode_in, inode_out);
->  	if (ret)
-> @@ -1254,8 +1266,6 @@ xfs_reflink_remap_range(
->  	if (ret)
->  		goto out_unlock;
->  
-> -	trace_xfs_reflink_remap_range(src, pos_in, len, dest, pos_out);
-> -
->  	/*
->  	 * Clear out post-eof preallocations because we don't have page cache
->  	 * backing the delayed allocations and they'll never get freed on
-> @@ -1272,6 +1282,51 @@ xfs_reflink_remap_range(
->  	if (ret)
->  		goto out_unlock;
->  
-> +	/* Zap any page cache for the destination file's range. */
-> +	truncate_inode_pages_range(&inode_out->i_data, pos_out,
-> +				   PAGE_ALIGN(pos_out + len) - 1);
-> +	return 0;
-> +out_unlock:
-> +	xfs_reflink_remap_unlock(file_in, file_out);
-> +	return ret;
-> +}
+> +       /* Don't operate on ranges the page cache doesn't support. */
+> +       if (unlikely(pos_out >= inode_out->i_sb->s_maxbytes ||
+> +                    pos_in >= inode_in->i_sb->s_maxbytes))
+> +               return -EFBIG;
 > +
-> +/*
-> + * Link a range of blocks from one file to another.
-> + */
-> +int
-> +xfs_reflink_remap_range(
-> +	struct file		*file_in,
-> +	loff_t			pos_in,
-> +	struct file		*file_out,
-> +	loff_t			pos_out,
-> +	u64			len,
-> +	bool			is_dedupe)
-> +{
-> +	struct inode		*inode_in = file_inode(file_in);
-> +	struct xfs_inode	*src = XFS_I(inode_in);
-> +	struct inode		*inode_out = file_inode(file_out);
-> +	struct xfs_inode	*dest = XFS_I(inode_out);
-> +	struct xfs_mount	*mp = src->i_mount;
-> +	xfs_fileoff_t		sfsbno, dfsbno;
-> +	xfs_filblks_t		fsblen;
-> +	xfs_extlen_t		cowextsize;
-> +	ssize_t			ret;
-> +
-> +	if (!xfs_sb_version_hasreflink(&mp->m_sb))
-> +		return -EOPNOTSUPP;
-> +
-> +	if (XFS_FORCED_SHUTDOWN(mp))
-> +		return -EIO;
-> +
-> +	/* Prepare and then clone file data. */
-> +	ret = xfs_reflink_remap_prep(file_in, pos_in, file_out, pos_out,
-> +			len, is_dedupe);
-> +	if (ret)
-> +		return ret;
-> +
-> +	trace_xfs_reflink_remap_range(src, pos_in, len, dest, pos_out);
-> +
->  	dfsbno = XFS_B_TO_FSBT(mp, pos_out);
->  	sfsbno = XFS_B_TO_FSBT(mp, pos_in);
->  	fsblen = XFS_B_TO_FSB(mp, len);
-> @@ -1280,10 +1335,6 @@ xfs_reflink_remap_range(
->  	if (ret)
->  		goto out_unlock;
->  
-> -	/* Zap any page cache for the destination file's range. */
-> -	truncate_inode_pages_range(&inode_out->i_data, pos_out,
-> -				   PAGE_ALIGN(pos_out + len) - 1);
-> -
->  	/*
->  	 * Carry the cowextsize hint from src to dest if we're sharing the
->  	 * entire source file to the entire destination file, the source file
-> @@ -1300,12 +1351,7 @@ xfs_reflink_remap_range(
->  			is_dedupe);
->  
->  out_unlock:
-> -	xfs_iunlock(dest, XFS_MMAPLOCK_EXCL);
-> -	if (!same_inode)
-> -		xfs_iunlock(src, XFS_MMAPLOCK_SHARED);
-> -	inode_unlock(inode_out);
-> -	if (!same_inode)
-> -		inode_unlock_shared(inode_in);
-> +	xfs_reflink_remap_unlock(file_in, file_out);
->  	if (ret)
->  		trace_xfs_reflink_remap_range_error(dest, ret, _RET_IP_);
->  	return ret;
-> 
-> 
 
--- 
-Dave Chinner
-david@fromorbit.com
+Forget my standards, this doesn't abide by your own standards ;-)
+Please factor out generic_write_checks() and use it instead of
+duplicating the code. The in/out variant doesn't justify not calling
+the helper twice IMO.
+
+Thanks,
+Amir.
