@@ -1,79 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60972 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727483AbeJDQ4l (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 4 Oct 2018 12:56:41 -0400
-Date: Thu, 4 Oct 2018 12:04:06 +0200
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: Problems with VM_MIXEDMAP removal from /proc/<pid>/smaps
-Message-ID: <20181004100406.GE6682@linux-x5ow.site>
-References: <20181002143713.GA19845@infradead.org>
- <20181002144412.GC4963@linux-x5ow.site>
- <20181002145206.GA10903@infradead.org>
- <20181002153100.GG9127@quack2.suse.cz>
- <CAPcyv4j0tTD+rENqFExA68aw=-MmtCBaOe1qJovyrmJC=yBg-Q@mail.gmail.com>
- <20181003125056.GA21043@quack2.suse.cz>
- <CAPcyv4jfV10yuTiPg6ijsPRRL2-c_48ovfpU5TK1Zu7BWnfk3g@mail.gmail.com>
- <20181003150658.GC24030@quack2.suse.cz>
- <CAPcyv4iJvN6_Cf6tw=5a=Uh99LfMFKU7n8QkGcz1ZaxL0Oi-3w@mail.gmail.com>
- <20181003164407.GK24030@quack2.suse.cz>
+Received: from aserp2120.oracle.com ([141.146.126.78]:53666 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727625AbeJEHm2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 03:42:28 -0400
+Subject: [PATCH 13/15] ocfs2: truncate page cache for clone destination file
+ before remapping
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 04 Oct 2018 17:46:14 -0700
+Message-ID: <153870037408.29072.13917200269931783121.stgit@magnolia>
+In-Reply-To: <153870027422.29072.7433543674436957232.stgit@magnolia>
+References: <153870027422.29072.7433543674436957232.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20181003164407.GK24030@quack2.suse.cz>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@infradead.org>, Dave Jiang <dave.jiang@intel.com>, linux-nvdimm <linux-nvdimm@lists.01.org>, Linux MM <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, ocfs2-devel@oss.oracle.com, sandeen@redhat.com
 
-On Wed, Oct 03, 2018 at 06:44:07PM +0200, Jan Kara wrote:
-> On Wed 03-10-18 08:13:37, Dan Williams wrote:
-> > On Wed, Oct 3, 2018 at 8:07 AM Jan Kara <jack@suse.cz> wrote:
-> > > WRT per-inode DAX property, AFAIU that inode flag is just going to be
-> > > advisory thing - i.e., use DAX if possible. If you mount a filesystem with
-> > > these inode flags set in a configuration which does not allow DAX to be
-> > > used, you will still be able to access such inodes but the access will use
-> > > page cache instead. And querying these flags should better show real
-> > > on-disk status and not just whether DAX is used as that would result in an
-> > > even bigger mess. So this feature seems to be somewhat orthogonal to the
-> > > API I'm looking for.
-> > 
-> > True, I imagine once we have that flag we will be able to distinguish
-> > the "saved" property and the "effective / live" property of DAX...
-> > Also it's really not DAX that applications care about as much as "is
-> > there page-cache indirection / overhead for this mapping?". That seems
-> > to be a narrower guarantee that we can make than what "DAX" might
-> > imply.
-> 
-> Right. So what do people think about my suggestion earlier in the thread to
-> use madvise(MADV_DIRECT_ACCESS) for this? Currently it would return success
-> when DAX is in use, failure otherwise. Later we could extend it to be also
-> used as a hint for caching policy for the inode...
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Hmm apart from Dan's objection that it can't really be used for a
-query, isn't madvise(2) for mmap(2)?
+When cloning blocks into another file, truncate the page cache before we
+start remapping blocks so that concurrent reads wait for us to finish.
 
-But AFAIU (from looking at the xfs code, so please correct me if I',
-wrong), DAX can be used for the traditional read(2)/write(2) interface
-as well.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/ocfs2/refcounttree.c |   10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-There is at least:
 
-xfs_file_read_iter()
-`-> if (IS_DAX(inode))
-    `-> xfs_file_dax_read()
-        `->dax_iomap_rw()
-
-So IMHO something on an inode granularity would make more sens to me.
-
-Byte,
-	Johannes
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+diff --git a/fs/ocfs2/refcounttree.c b/fs/ocfs2/refcounttree.c
+index 3758954f2377..02283c38b5a4 100644
+--- a/fs/ocfs2/refcounttree.c
++++ b/fs/ocfs2/refcounttree.c
+@@ -4853,14 +4853,12 @@ int ocfs2_reflink_remap_range(struct file *file_in,
+ 		down_write_nested(&OCFS2_I(inode_out)->ip_alloc_sem,
+ 				  SINGLE_DEPTH_NESTING);
+ 
+-	ret = ocfs2_reflink_remap_blocks(inode_in, in_bh, pos_in, inode_out,
+-					 out_bh, pos_out, len);
+-
+ 	/* Zap any page cache for the destination file's range. */
+-	if (!ret)
+-		truncate_inode_pages_range(&inode_out->i_data, pos_out,
+-					   PAGE_ALIGN(pos_out + len) - 1);
++	truncate_inode_pages_range(&inode_out->i_data, pos_out,
++				   PAGE_ALIGN(pos_out + len) - 1);
+ 
++	ret = ocfs2_reflink_remap_blocks(inode_in, in_bh, pos_in, inode_out,
++					 out_bh, pos_out, len);
+ 	up_write(&OCFS2_I(inode_in)->ip_alloc_sem);
+ 	if (!same_inode)
+ 		up_write(&OCFS2_I(inode_out)->ip_alloc_sem);
