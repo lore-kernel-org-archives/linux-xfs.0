@@ -1,63 +1,163 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:37607 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725996AbeJEFZ1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 01:25:27 -0400
-Date: Fri, 5 Oct 2018 08:29:52 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] mkfs.xfs: don't go into multidisk mode if there is only
- one stripe
-Message-ID: <20181004222952.GV31060@dastard>
-References: <20181004175839.18736-1-idryomov@gmail.com>
- <24d229f3-1a75-a65d-5ad3-c8565cb32e76@sandeen.net>
+Received: from userp2130.oracle.com ([156.151.31.86]:45962 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728139AbeJFDlZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 23:41:25 -0400
+Date: Fri, 5 Oct 2018 13:40:57 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/1] xfs_metadump: Zap more stale data
+Message-ID: <20181005204057.GB19324@magnolia>
+References: <20181004205749.2042-1-stefanrin@gmail.com>
+ <20181004205749.2042-2-stefanrin@gmail.com>
+ <CAAxjCEw0prn7P3dn-OuuxbmMTgzs2HydpZsgkwH8RVBkedQXOA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <24d229f3-1a75-a65d-5ad3-c8565cb32e76@sandeen.net>
+In-Reply-To: <CAAxjCEw0prn7P3dn-OuuxbmMTgzs2HydpZsgkwH8RVBkedQXOA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Ilya Dryomov <idryomov@gmail.com>, linux-xfs@vger.kernel.org, Mark Nelson <mnelson@redhat.com>, Eric Sandeen <sandeen@redhat.com>
+To: Stefan Ring <stefanrin@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Oct 04, 2018 at 01:33:12PM -0500, Eric Sandeen wrote:
-> On 10/4/18 12:58 PM, Ilya Dryomov wrote:
-> > rbd devices report the following geometry:
-> > 
-> >   $ blockdev --getss --getpbsz --getiomin --getioopt /dev/rbd0
-> >   512
-> >   512
-> >   4194304
-> >   4194304
+On Fri, Oct 05, 2018 at 10:35:34PM +0200, Stefan Ring wrote:
+> On Thu, Oct 4, 2018 at 10:57 PM Stefan Ring <stefanrin@gmail.com> wrote:
+> > diff --git a/db/metadump.c b/db/metadump.c
+> > index cc2ae9af..e7159cd1 100644
+> > --- a/db/metadump.c
+> > +++ b/db/metadump.c
+> > @@ -1421,12 +1421,42 @@ process_sf_attr(
+> >                 memset(asfep, 0, XFS_DFORK_ASIZE(dip, mp) - ino_attr_size);
+> >  }
+> >
+> > +static void
+> > +process_dir_free_block(
+> > +       char                            *block)
+> > +{
+> > +       struct xfs_dir2_free            *free;
+> > +       struct xfs_dir3_icfree_hdr      freehdr;
+> > +
+> > +       if (!zero_stale_data)
+> > +               return;
+> > +
+> > +       free = (struct xfs_dir2_free *)block;
+> > +       M_DIROPS(mp)->free_hdr_from_disk(&freehdr, free);
+> > +
+> > +       /* Zero out space from end of bests[] to end of block */
+> > +       if (freehdr.magic == XFS_DIR2_FREE_MAGIC) {
+> > +               __be16                  *bests;
+> > +               char                    *high;
+> > +               int                     used;
+> > +
+> > +               bests = M_DIROPS(mp)->free_bests_p(free);
+> > +               high = (char *)&bests[freehdr.nvalid];
+> > +               used = high - (char*)free;
+> > +               memset(high, 0, mp->m_sb.sb_blocksize - used);
+> > +               iocur_top->need_crc = 1;
+> > +       }
+> > +       else if (show_warnings)
+> > +               print_warning("invalid magic in dir inode %llu free block",
+> > +                               (unsigned long long)cur_ino);
+> > +}
+> > +
+> >  static void
+> >  process_dir_leaf_block(
+> >         char                            *block)
+> >  {
+> >         struct xfs_dir2_leaf            *leaf;
+> > -       struct xfs_dir3_icleaf_hdr      leafhdr;
+> > +       struct xfs_dir3_icleaf_hdr      leafhdr;
+> >
+> >         if (!zero_stale_data)
+> >                 return;
+> > @@ -1449,6 +1479,18 @@ process_dir_leaf_block(
+> >                 lbp = xfs_dir2_leaf_bests_p(ltp);
+> >                 memset(free, 0, (char *)lbp - free);
+> >                 iocur_top->need_crc = 1;
+> > +       } else
+> > +       if (leafhdr.magic == XFS_DIR2_LEAFN_MAGIC ||
+> > +           leafhdr.magic == XFS_DIR3_LEAFN_MAGIC) {
+> > +               struct xfs_dir2_leaf_entry      *ents;
+> > +               char                            *free;
+> > +               int                             used;
+> > +
+> > +               ents = M_DIROPS(mp)->leaf_ents_p(leaf);
+> > +               free = (char *)&ents[leafhdr.count];
+> > +               used = free - (char*)leaf;
+> > +               memset(free, 0, mp->m_sb.sb_blocksize - used);
+> 
+> I forgot to mention this: sb_blocksize is used conspicuously rarely in
+> this file. Is this the right metric to lean on?
 
-dm-thinp does this as well. THis is from the thinp device created
-by tests/generic/459:
+No, because directory blocks span multiple fs blocks (good self catch!).
 
-512
-4096
-65536
-65536
+You could look it up in the directory geometry structure in the
+xfs_mount *.
 
-And I've also seen some hardware raid controllers do this, too,
-because they only expose the stripe width in their enquiry page
-rather than stripe unit and stripe width.
+--D
 
-IOWs, this behaviour isn't really specific to Ceph's rbd device, and
-it does occur on multi-disk devices that have something layered over
-the top (dm-thinp, hardware raid, etc). As such, I don't think
-there's a "one size fits all" solution and so someone is going to
-have to tweak mkfs settings to have it do the right thing for their
-storage subsystem....
-
-Indeed, does Ceph really needs 4MB aligned filesystem IO? What
-performance benefit does that give over setting iomin=PAGE_SIZE and
-ioopt=0? (i.e mkfs.xfs -d sunit=0,swidth=0 or just mounting with -o
-noalign)
-
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> > +               iocur_top->need_crc = 1;
+> >         }
+> >  }
+> >
+> > @@ -1499,7 +1541,7 @@ process_dir_data_block(
+> >                 if (show_warnings)
+> >                         print_warning(
+> >                 "invalid magic in dir inode %llu block %ld",
+> > -                                       (long long)cur_ino, (long)offset);
+> > +                                       (unsigned long long)cur_ino, (long)offset);
+> >                 return;
+> >         }
+> >
+> > @@ -1813,8 +1855,7 @@ process_single_fsb_objects(
+> >                 switch (btype) {
+> >                 case TYP_DIR2:
+> >                         if (o >= mp->m_dir_geo->freeblk) {
+> > -                               /* TODO, zap any stale data */
+> > -                               break;
+> > +                               process_dir_free_block(dp);
+> >                         } else if (o >= mp->m_dir_geo->leafblk) {
+> >                                 process_dir_leaf_block(dp);
+> >                         } else {
+> > @@ -2115,6 +2156,20 @@ process_btinode(
+> >         }
+> >
+> >         pp = XFS_BMDR_PTR_ADDR(dib, 1, maxrecs);
+> > +
+> > +       if (zero_stale_data) {
+> > +               /* Space before btree pointers */
+> > +               char    *top;
+> > +               int     used;
+> > +               top = (char*)XFS_BMDR_PTR_ADDR(dib, 1, nrecs);
+> > +               memset(top, 0, (char*)pp - top);
+> > +
+> > +               /* Space after btree pointers */
+> > +               top = (char*)&pp[nrecs];
+> > +               used = top - (char*)dip;
+> > +               memset(top, 0, mp->m_sb.sb_inodesize - used);
+> > +       }
+> > +
+> >         for (i = 0; i < nrecs; i++) {
+> >                 xfs_agnumber_t  ag;
+> >                 xfs_agblock_t   bno;
+> > @@ -2250,7 +2305,16 @@ process_inode(
+> >                 case S_IFREG:
+> >                         success = process_inode_data(dip, TYP_DATA);
+> >                         break;
+> > -               default: ;
+> > +               default:
+> > +                       if (XFS_DFORK_NEXTENTS(dip, XFS_ATTR_FORK) ||
+> > +                                       XFS_DFORK_NEXTENTS(dip, XFS_DATA_FORK)) {
+> > +                               if (show_warnings)
+> > +                                       print_warning("inode %llu has unexpected extents",
+> > +                                                       (unsigned long long)cur_ino);
+> > +                               success = 0;
+> > +                       }
+> > +                       else
+> > +                               memset(XFS_DFORK_DPTR(dip), 0, mp->m_sb.sb_inodesize - (XFS_DFORK_DPTR(dip) - (char*)dip));
+> >         }
+> >         nametable_clear();
+> >
+> > --
+> > 2.14.4
+> >
