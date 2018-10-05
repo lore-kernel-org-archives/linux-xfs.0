@@ -1,85 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw1-f67.google.com ([209.85.161.67]:37957 "EHLO
-        mail-yw1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726732AbeJENHf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 09:07:35 -0400
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:52362 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727133AbeJEN7w (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 09:59:52 -0400
+Date: Fri, 5 Oct 2018 17:02:28 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 02/15] xfs: refactor clonerange preparation into a
+ separate helper
+Message-ID: <20181005070228.GE12041@dastard>
+References: <153870027422.29072.7433543674436957232.stgit@magnolia>
+ <153870028762.29072.5369530877410002226.stgit@magnolia>
 MIME-Version: 1.0
-References: <153870027422.29072.7433543674436957232.stgit@magnolia> <153870031519.29072.18289185889660082318.stgit@magnolia>
-In-Reply-To: <153870031519.29072.18289185889660082318.stgit@magnolia>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Fri, 5 Oct 2018 09:10:12 +0300
-Message-ID: <CAOQ4uxiVPvNPxTNZ-njeyte6yk3jo3tjNKv78kS9NqA_Xzxc6g@mail.gmail.com>
-Subject: Re: [PATCH 06/15] vfs: strengthen checking of file range inputs to
- clone/dedupe range
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <153870028762.29072.5369530877410002226.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, ocfs2-devel@oss.oracle.com, Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, ocfs2-devel@oss.oracle.com, sandeen@redhat.com
 
-On Fri, Oct 5, 2018 at 3:46 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
->
+On Thu, Oct 04, 2018 at 05:44:47PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
->
-> Clone range is an optimization on a regular file write.  File writes
-> that extend the file length are subject to various constraints which are
-> not checked by clonerange.  This is a correctness problem, because we're
-> never allowed to touch ranges that the page cache can't support
-> (s_maxbytes); we're not supposed to deal with large offsets
-> (MAX_NON_LFS) if O_LARGEFILE isn't set; and we must obey resource limits
-> (RLIMIT_FSIZE).
->
-> Therefore, add these checks to the new generic_clone_checks function so
-> that we curtail unexpected behavior.
->
+> 
+> Refactor all the reflink preparation steps into a separate helper that
+> we'll use to land all the upcoming fixes for insufficient input checks.
+> 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  mm/filemap.c |   31 +++++++++++++++++++++++++++++++
->  1 file changed, 31 insertions(+)
->
->
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index 68ec91d05c7b..f74391721234 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -3015,6 +3015,37 @@ int generic_clone_checks(struct file *file_in, loff_t pos_in,
->                 return -EINVAL;
->         count = min(count, size_in - (uint64_t)pos_in);
->
-> +       /* Don't exceed RLMIT_FSIZE in the file we're writing into. */
-> +       if (limit != RLIM_INFINITY) {
-> +               if (pos_out >= limit) {
-> +                       send_sig(SIGXFSZ, current, 0);
-> +                       return -EFBIG;
-> +               }
-> +               count = min(count, limit - (uint64_t)pos_out);
-> +       }
-> +
-> +       /* Don't exceed the LFS limits. */
-> +       if (unlikely(pos_out + count > MAX_NON_LFS &&
-> +                               !(file_out->f_flags & O_LARGEFILE))) {
-> +               if (pos_out >= MAX_NON_LFS)
-> +                       return -EFBIG;
-> +               count = min(count, MAX_NON_LFS - (uint64_t)pos_out);
-> +       }
-> +       if (unlikely(pos_in + count > MAX_NON_LFS &&
-> +                               !(file_in->f_flags & O_LARGEFILE))) {
-> +               if (pos_in >= MAX_NON_LFS)
-> +                       return -EFBIG;
-> +               count = min(count, MAX_NON_LFS - (uint64_t)pos_in);
-> +       }
-> +
-> +       /* Don't operate on ranges the page cache doesn't support. */
-> +       if (unlikely(pos_out >= inode_out->i_sb->s_maxbytes ||
-> +                    pos_in >= inode_in->i_sb->s_maxbytes))
-> +               return -EFBIG;
-> +
+.....
 
-Forget my standards, this doesn't abide by your own standards ;-)
-Please factor out generic_write_checks() and use it instead of
-duplicating the code. The in/out variant doesn't justify not calling
-the helper twice IMO.
+> +xfs_reflink_remap_range(
+> +	struct file		*file_in,
+> +	loff_t			pos_in,
+> +	struct file		*file_out,
+> +	loff_t			pos_out,
+> +	u64			len,
+> +	bool			is_dedupe)
+> +{
+> +	struct inode		*inode_in = file_inode(file_in);
+> +	struct xfs_inode	*src = XFS_I(inode_in);
+> +	struct inode		*inode_out = file_inode(file_out);
+> +	struct xfs_inode	*dest = XFS_I(inode_out);
+> +	struct xfs_mount	*mp = src->i_mount;
+> +	xfs_fileoff_t		sfsbno, dfsbno;
+> +	xfs_filblks_t		fsblen;
+> +	xfs_extlen_t		cowextsize;
+> +	ssize_t			ret;
+> +
+> +	if (!xfs_sb_version_hasreflink(&mp->m_sb))
+> +		return -EOPNOTSUPP;
+> +
+> +	if (XFS_FORCED_SHUTDOWN(mp))
+> +		return -EIO;
+> +
+> +	/* Prepare and then clone file data. */
+> +	ret = xfs_reflink_remap_prep(file_in, pos_in, file_out, pos_out,
+> +			len, is_dedupe);
+> +	if (ret)
+> +		return ret;
 
-Thanks,
-Amir.
+generic/013 indicates there's a double unlock bug here.	
+
+vfs_clone_file_prep_inodes() can return zero (do nothing, but don't
+fail!), and when that happens xfs_reflink_remap_prep() unlocks the
+inodes and returns 0.  This new code doesn't catch it, we do the
+remap on unlocked inodes, and then trip lock debugging bugs 
+
+> @@ -1300,12 +1351,7 @@ xfs_reflink_remap_range(
+>  			is_dedupe);
+>  
+>  out_unlock:
+> -	xfs_iunlock(dest, XFS_MMAPLOCK_EXCL);
+> -	if (!same_inode)
+> -		xfs_iunlock(src, XFS_MMAPLOCK_SHARED);
+> -	inode_unlock(inode_out);
+> -	if (!same_inode)
+> -		inode_unlock_shared(inode_in);
+> +	xfs_reflink_remap_unlock(file_in, file_out);
+
+here:
+
+ DEBUG_LOCKS_WARN_ON(sem->owner != get_current())
+ WARNING: CPU: 3 PID: 4766 at kernel/locking/rwsem.c:133 up_write+0x66/0x70
+ CPU: 3 PID: 4766 Comm: fsstress Not tainted 4.19.0-rc6-dgc+ #671
+....
+ Call Trace:
+  xfs_iunlock+0x152/0x220
+  xfs_reflink_remap_unlock+0x22/0x70
+  xfs_reflink_remap_range+0x129/0x2a0
+  do_clone_file_range+0x119/0x200
+  vfs_clone_file_range+0x35/0xa0
+  ioctl_file_clone+0x8a/0xa0
+  do_vfs_ioctl+0x2e1/0x6c0
+  ksys_ioctl+0x70/0x80
+  __x64_sys_ioctl+0x16/0x20
+  do_syscall_64+0x5a/0x180
+  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+
+I'll fix it for the moment by making xfs_reflink_remap_prep() behave
+like vfs_clone_file_prep_inodes() - it will return 1 on success,
+0 for nothing to do and < 0 for an error and catch it in this code.
+
+I note that later patches in the series change the
+vfs_clone_file_prep_inodes() behaviour so this behaviour is probably
+masked by those later changes. It's still a nasty bisect landmine,
+though, so I'll fix it here.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
