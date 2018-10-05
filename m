@@ -1,79 +1,252 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:56230 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728293AbeJFD6E (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 23:58:04 -0400
-Date: Fri, 5 Oct 2018 13:57:33 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/1] xfs_metadump: Zap more stale data
-Message-ID: <20181005205733.GC19324@magnolia>
-References: <20181004205749.2042-1-stefanrin@gmail.com>
- <20181004205749.2042-2-stefanrin@gmail.com>
- <20181004222309.GL19324@magnolia>
- <CAAxjCExSQ7Ex8U5k9_Com_89YDFGB-DE2FNGoEvO_MwFEMB_MQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAAxjCExSQ7Ex8U5k9_Com_89YDFGB-DE2FNGoEvO_MwFEMB_MQ@mail.gmail.com>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:7145 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727179AbeJEMmi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 08:42:38 -0400
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] writeback: fix range_cyclic writeback vs writepages deadlock
+Date: Fri,  5 Oct 2018 15:45:26 +1000
+Message-Id: <20181005054526.21507-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Stefan Ring <stefanrin@gmail.com>
-Cc: linux-xfs@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Fri, Oct 05, 2018 at 10:46:28PM +0200, Stefan Ring wrote:
-> On Fri, Oct 5, 2018 at 12:23 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> >
-> > On Thu, Oct 04, 2018 at 10:57:49PM +0200, Stefan Ring wrote:
-> > > I have empirically found and tried to fix some places where stale data was not properly zeroed out.
-> > >
-> > > In the order of the code changes:
-> > >
-> > > The "freeindex" blocks in inode directories, from last entry to end of block.
-> > >
-> > > XFS_DIR2_LEAF1_MAGIC, from last entry to end of block.
-> > >
-> > > In btree format inodes before as well as after the btree pointers.
-> > >
-> > > In dev inodes, everything after the header.
-> >
-> > Mostly looks ok, but with some style issues:
-> >
-> > > ---
-> > >  db/metadump.c | 74 +++++++++++++++++++++++++++++++++++++++++++++++++++++++----
-> > >  1 file changed, 69 insertions(+), 5 deletions(-)
-> > >
-> > > diff --git a/db/metadump.c b/db/metadump.c
-> > > index cc2ae9af..e7159cd1 100644
-> > > --- a/db/metadump.c
-> > > +++ b/db/metadump.c
-> > > @@ -1421,12 +1421,42 @@ process_sf_attr(
-> > >               memset(asfep, 0, XFS_DFORK_ASIZE(dip, mp) - ino_attr_size);
-> > >  }
-> > >
-> > > +static void
-> > > +process_dir_free_block(
-> > > +     char                            *block)
-> > > +{
-> > > +     struct xfs_dir2_free            *free;
-> > > +     struct xfs_dir3_icfree_hdr      freehdr;
-> > > +
-> > > +     if (!zero_stale_data)
-> > > +             return;
-> > > +
-> > > +     free = (struct xfs_dir2_free *)block;
-> > > +     M_DIROPS(mp)->free_hdr_from_disk(&freehdr, free);
-> > > +
-> > > +     /* Zero out space from end of bests[] to end of block */
-> > > +     if (freehdr.magic == XFS_DIR2_FREE_MAGIC) {
-> >
-> > How about XFS_DIR3_FREE_MAGIC ?
-> 
-> Is there any documentation on DIR3? I left it out on purpose and hoped
-> someone would fill in the blanks for me ;).
+From: Dave Chinner <dchinner@redhat.com>
 
-Fairly similar to DIR2, but with bigger headers, I think.
+We've recently seen a workload on XFS filesystems with a repeatable
+deadlock between background writeback and a multi-process
+application doing concurrent writes and fsyncs to a small range of a
+file.
 
-https://djwong.org/docs/kdoc/filesystems/xfs-data-structures/dynamic.html#leaf-directories
+range_cyclic
+writeback		Process 1		Process 2
 
---D
+xfs_vm_writepages
+  write_cache_pages
+    writeback_index = 2
+    cycled = 0
+    ....
+    find page 2 dirty
+    lock Page 2
+    ->writepage
+      page 2 writeback
+      page 2 clean
+      page 2 added to bio
+    no more pages
+			write()
+			locks page 1
+			dirties page 1
+			locks page 2
+			dirties page 1
+			fsync()
+			....
+			xfs_vm_writepages
+			write_cache_pages
+			  start index 0
+			  find page 1 towrite
+			  lock Page 1
+			  ->writepage
+			    page 1 writeback
+			    page 1 clean
+			    page 1 added to bio
+			  find page 2 towrite
+			  lock Page 2
+			  page 2 is writeback
+			  <blocks>
+						write()
+						locks page 1
+						dirties page 1
+						fsync()
+						....
+						xfs_vm_writepages
+						write_cache_pages
+						  start index 0
+
+    !done && !cycled
+      sets index to 0, restarts lookup
+    find page 1 dirty
+						  find page 1 towrite
+						  lock Page 1
+						  page 1 is writeback
+						  <blocks>
+
+    lock Page 1
+    <blocks>
+
+DEADLOCK because:
+
+	- process 1 needs page 2 writeback to complete to make
+	  enough progress to issue IO pending for page 1
+	- writeback needs page 1 writeback to complete so process 2
+	  can progress and unlock the page it is blocked on, then it
+	  can issue the IO pending for page 2
+	- process 2 can't make progress until process 1 issues IO
+	  for page 1
+
+The underlying cause of the problem here is that range_cyclic
+writeback is processing pages in descending index order as we
+hold higher index pages in a structure controlled from above
+write_cache_pages(). The write_cache_pages() caller needs to
+be able to submit these pages for IO before write_cache_pages
+restarts writeback at mapping index 0 to avoid wcp inverting the
+page lock/writeback wait order.
+
+generic_writepages() is not susceptible to this bug as it has no
+private context held across write_cache_pages() - filesystems using
+this infrastructure always submit pages in ->writepage immediately
+and so there is no problem with range_cyclic going back to mapping
+index 0.
+
+However:
+	mpage_writepages() has a private bio context,
+	exofs_writepages() has page_collect
+	fuse_writepages() has fuse_fill_wb_data
+	nfs_writepages() has nfs_pageio_descriptor
+	xfs_vm_writepages() has xfs_writepage_ctx
+
+All of these ->writepages implementations can hold pages under
+writeback in their private structures until write_cache_pages()
+returns, and hence they are all susceptible to this deadlock.
+
+Also worth noting is that ext4 has it's own bastardised version of
+write_cache_pages() and so it /may/ have an equivalent deadlock. I
+looked at the code long enough to understand that it has a similar
+retry loop for range_cyclic writeback reaching the end of the file
+and then promptly ran away before my eyes bled too much.  I'll leave
+it for the ext4 developers to determine if their code is actually
+has this deadlock and how to fix it if it has.
+
+There's a few ways I can see avoid this deadlock. There's probably
+more, but these are the first I've though of:
+
+1. get rid of range_cyclic altogether
+
+2. range_cyclic always stops at EOF, and we start again from
+writeback index 0 on the next call into write_cache_pages()
+
+2a. wcp also returns EAGAIN to ->writepages implementations to
+indicate range cyclic has hit EOF. writepages implementations can
+then flush the current context and call wpc again to continue. i.e.
+lift the retry into the ->writepages implementation
+
+3. range_cyclic uses trylock_page() rather than lock_page(), and it
+skips pages it can't lock without blocking. It will already do this
+for pages under writeback, so this seems like a no-brainer
+
+3a. all non-WB_SYNC_ALL writeback uses trylock_page() to avoid
+blocking as per pages under writeback.
+
+I don't think #1 is an option - range_cyclic prevents frequently
+dirtied lower file offset from starving background writeback of
+rarely touched higher file offsets.
+
+#2 is simple, and I don't think it will have any impact on
+performance as going back to the start of the file implies an
+immediate seek. We'll have exactly the same number of seeks if we
+switch writeback to another inode, and then come back to this one
+later and restart from index 0.
+
+#2a is pretty much "status quo without the deadlock". Moving the
+retry loop up into the wcp caller means we can issue IO on the
+pending pages before calling wcp again, and so avoid locking or
+waiting on pages in the wrong order. I'm not convinced we need to do
+this given that we get the same thing from #2 on the next writeback
+call from the writeback infrastructure.
+
+#3 is really just a band-aid - it doesn't fix the access/wait
+inversion problem, just prevents it from becoming a deadlock
+situation. I'd prefer we fix the inversion, not sweep it under the
+carpet like this.
+
+#3a is really an optimisation that just so happens to include the
+band-aid fix of #3.
+
+So it seems that the simplest way to fix this issue is to implement
+solution #2
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Jan Kara <jack@suse.de>
+---
+ mm/page-writeback.c | 33 +++++++++++++++------------------
+ 1 file changed, 15 insertions(+), 18 deletions(-)
+
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index 84ae9bf5858a..439a304a6c92 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -2149,6 +2149,13 @@ EXPORT_SYMBOL(tag_pages_for_writeback);
+  * not miss some pages (e.g., because some other process has cleared TOWRITE
+  * tag we set). The rule we follow is that TOWRITE tag can be cleared only
+  * by the process clearing the DIRTY tag (and submitting the page for IO).
++ *
++ * To avoid deadlocks between range_cyclic writeback and callers that hold
++ * pages in PageWriteback to aggregate IO until write_cache_pages() returns,
++ * we do not loop back to the start of the file. Doing so causes a page
++ * lock/page writeback access order inversion - we should only ever lock
++ * multiple pages in ascending page->index order, and looping back to the start
++ * of the file violates that rule and causes deadlocks.
+  */
+ int write_cache_pages(struct address_space *mapping,
+ 		      struct writeback_control *wbc, writepage_t writepage,
+@@ -2162,7 +2169,6 @@ int write_cache_pages(struct address_space *mapping,
+ 	pgoff_t index;
+ 	pgoff_t end;		/* Inclusive */
+ 	pgoff_t done_index;
+-	int cycled;
+ 	int range_whole = 0;
+ 	int tag;
+ 
+@@ -2170,23 +2176,17 @@ int write_cache_pages(struct address_space *mapping,
+ 	if (wbc->range_cyclic) {
+ 		writeback_index = mapping->writeback_index; /* prev offset */
+ 		index = writeback_index;
+-		if (index == 0)
+-			cycled = 1;
+-		else
+-			cycled = 0;
+ 		end = -1;
+ 	} else {
+ 		index = wbc->range_start >> PAGE_SHIFT;
+ 		end = wbc->range_end >> PAGE_SHIFT;
+ 		if (wbc->range_start == 0 && wbc->range_end == LLONG_MAX)
+ 			range_whole = 1;
+-		cycled = 1; /* ignore range_cyclic tests */
+ 	}
+ 	if (wbc->sync_mode == WB_SYNC_ALL || wbc->tagged_writepages)
+ 		tag = PAGECACHE_TAG_TOWRITE;
+ 	else
+ 		tag = PAGECACHE_TAG_DIRTY;
+-retry:
+ 	if (wbc->sync_mode == WB_SYNC_ALL || wbc->tagged_writepages)
+ 		tag_pages_for_writeback(mapping, index, end);
+ 	done_index = index;
+@@ -2272,17 +2272,14 @@ int write_cache_pages(struct address_space *mapping,
+ 		pagevec_release(&pvec);
+ 		cond_resched();
+ 	}
+-	if (!cycled && !done) {
+-		/*
+-		 * range_cyclic:
+-		 * We hit the last page and there is more work to be done: wrap
+-		 * back to the start of the file
+-		 */
+-		cycled = 1;
+-		index = 0;
+-		end = writeback_index - 1;
+-		goto retry;
+-	}
++
++	/*
++	 * If we hit the last page and there is more work to be done: wrap
++	 * back the index back to the start of the file for the next
++	 * time we are called.
++	 */
++	if (wbc->range_cyclic && !done)
++		done_index = 0;
+ 	if (wbc->range_cyclic || (range_whole && wbc->nr_to_write > 0))
+ 		mapping->writeback_index = done_index;
+ 
+-- 
+2.17.0
