@@ -1,383 +1,390 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:59742 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727138AbeJDLLD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Oct 2018 07:11:03 -0400
-Subject: [PATCH 12/22] docs: add XFS reverse mapping structures to the DS&A
- book
+Received: from aserp2120.oracle.com ([141.146.126.78]:52060 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727557AbeJEHPx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 03:15:53 -0400
+Subject: [PATCH 6/6] generic: test reflink side effects
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 03 Oct 2018 21:19:40 -0700
-Message-ID: <153862678010.26427.10700488839888247014.stgit@magnolia>
-In-Reply-To: <153862669110.26427.16504658853992750743.stgit@magnolia>
-References: <153862669110.26427.16504658853992750743.stgit@magnolia>
+Date: Thu, 04 Oct 2018 17:19:45 -0700
+Message-ID: <153869878588.26648.667247878682671113.stgit@magnolia>
+In-Reply-To: <153869874763.26648.516233620615833277.stgit@magnolia>
+References: <153869874763.26648.516233620615833277.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org, corbet@lwn.net
+To: guaneryu@gmail.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, fstests@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
+Test that ctime gets updated and suid is cleared when we reflink.
+Ensure we can't reflink about RLIMIT_FSIZE.
+
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- .../xfs-data-structures/allocation_groups.rst      |    2 
- .../filesystems/xfs-data-structures/rmapbt.rst     |  336 ++++++++++++++++++++
- 2 files changed, 338 insertions(+)
- create mode 100644 Documentation/filesystems/xfs-data-structures/rmapbt.rst
+ tests/generic/934     |   63 ++++++++++++++++++++++++++++++++++++++
+ tests/generic/934.out |    2 +
+ tests/generic/935     |   48 +++++++++++++++++++++++++++++
+ tests/generic/935.out |    2 +
+ tests/generic/936     |   70 ++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/936.out |    5 +++
+ tests/generic/937     |   81 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/937.out |   12 +++++++
+ tests/generic/group   |    4 ++
+ 9 files changed, 287 insertions(+)
+ create mode 100755 tests/generic/934
+ create mode 100644 tests/generic/934.out
+ create mode 100755 tests/generic/935
+ create mode 100644 tests/generic/935.out
+ create mode 100755 tests/generic/936
+ create mode 100644 tests/generic/936.out
+ create mode 100755 tests/generic/937
+ create mode 100644 tests/generic/937.out
 
 
-diff --git a/Documentation/filesystems/xfs-data-structures/allocation_groups.rst b/Documentation/filesystems/xfs-data-structures/allocation_groups.rst
-index 30d169ab5cc5..6c0ffd3a170b 100644
---- a/Documentation/filesystems/xfs-data-structures/allocation_groups.rst
-+++ b/Documentation/filesystems/xfs-data-structures/allocation_groups.rst
-@@ -1379,3 +1379,5 @@ response times that come from metadata operations.
- 
- None of the XFS per-AG B+trees are involved with real time files. It is not
- possible for real time files to share data blocks.
-+
-+.. include:: rmapbt.rst
-diff --git a/Documentation/filesystems/xfs-data-structures/rmapbt.rst b/Documentation/filesystems/xfs-data-structures/rmapbt.rst
-new file mode 100644
-index 000000000000..eefcee5d4e95
+diff --git a/tests/generic/934 b/tests/generic/934
+new file mode 100755
+index 00000000..ec7ad092
 --- /dev/null
-+++ b/Documentation/filesystems/xfs-data-structures/rmapbt.rst
-@@ -0,0 +1,336 @@
-+.. SPDX-License-Identifier: CC-BY-SA-4.0
++++ b/tests/generic/934
+@@ -0,0 +1,63 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2018 Oracle, Inc.  All Rights Reserved.
++#
++# FS QA Test No. 934
++#
++# Ensure that ctime is updated and capabilities are cleared when reflinking.
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
 +
-+Reverse-Mapping B+tree
-+~~~~~~~~~~~~~~~~~~~~~~
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
 +
-+If the feature is enabled, each allocation group has its own reverse
-+block-mapping B+tree, which grows in the free space like the free space
-+B+trees. As mentioned in the chapter about
-+`reconstruction <#metadata-reconstruction>`__, this data structure is another piece of
-+the puzzle necessary to reconstruct the data or attribute fork of a file from
-+reverse-mapping records; we can also use it to double-check allocations to
-+ensure that we are not accidentally cross-linking blocks, which can cause
-+severe damage to the filesystem.
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/reflink
 +
-+This B+tree is only present if the XFS\_SB\_FEAT\_RO\_COMPAT\_RMAPBT feature
-+is enabled. The feature requires a version 5 filesystem.
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++_require_scratch_reflink
++_require_command "$GETCAP_PROG" getcap
++_require_command "$SETCAP_PROG" setcap
 +
-+Each record in the reverse-mapping B+tree has the following structure:
++rm -f $seqres.full
 +
-+.. code:: c
++_scratch_mkfs >>$seqres.full 2>&1
++_scratch_mount
 +
-+    struct xfs_rmap_rec {
-+         __be32                     rm_startblock;
-+         __be32                     rm_blockcount;
-+         __be64                     rm_owner;
-+         __be64                     rm_fork:1;
-+         __be64                     rm_bmbt:1;
-+         __be64                     rm_unwritten:1;
-+         __be64                     rm_unused:7;
-+         __be64                     rm_offset:54;
-+    };
++$XFS_IO_PROG -f -c "pwrite -S 0x18 0 1m" $SCRATCH_MNT/foo >>$seqres.full
++$XFS_IO_PROG -f -c "pwrite -S 0x20 0 1m" $SCRATCH_MNT/bar >>$seqres.full
 +
-+**rm\_startblock**
-+    AG block number of this record.
++$SETCAP_PROG cap_setgid,cap_setuid+ep $SCRATCH_MNT/bar
 +
-+**rm\_blockcount**
-+    The length of this extent.
++before_cap="$($GETCAP_PROG -v $SCRATCH_MNT/bar)"
++before_ctime="$(stat -c '%z' $SCRATCH_MNT/bar)"
 +
-+**rm\_owner**
-+    A 64-bit number describing the owner of this extent. This is typically the
-+    absolute inode number, but can also correspond to one of the following:
++sleep 1
 +
-+.. list-table::
-+   :widths: 28 52
-+   :header-rows: 1
++$XFS_IO_PROG -c "reflink $SCRATCH_MNT/foo" $SCRATCH_MNT/bar >> $seqres.full 2>&1
++#trace-cmd record -p function_graph -l 'file_remove_privs' -g 'file_remove_privs' $XFS_IO_PROG -c "reflink $SCRATCH_MNT/foo" $SCRATCH_MNT/bar >> $seqres.full 2>&1
 +
-+   * - Flag
-+     - Description
-+   * - XFS\_RMAP\_OWN\_NULL
-+     - No owner. This should never appear on disk.
++after_cap="$($GETCAP_PROG -v $SCRATCH_MNT/bar)"
++after_ctime="$(stat -c '%z' $SCRATCH_MNT/bar)"
 +
-+   * - XFS\_RMAP\_OWN\_UNKNOWN
-+     - Unknown owner; for EFI recovery. This should never appear on disk.
++echo "$before_cap $before_ctime" >> $seqres.full
++echo "$after_cap $after_ctime" >> $seqres.full
 +
-+   * - XFS\_RMAP\_OWN\_FS
-+     - Allocation group headers.
++test "$before_cap" != "$after_cap" || echo "Expected capabilities to drop."
++test "$before_ctime" != "$after_ctime" || echo "Expected ctime to change."
 +
-+   * - XFS\_RMAP\_OWN\_LOG
-+     - XFS log blocks.
++echo Silence is golden.
++status=0
++exit
+diff --git a/tests/generic/934.out b/tests/generic/934.out
+new file mode 100644
+index 00000000..98f0bb3f
+--- /dev/null
++++ b/tests/generic/934.out
+@@ -0,0 +1,2 @@
++QA output created by 934
++Silence is golden.
+diff --git a/tests/generic/935 b/tests/generic/935
+new file mode 100755
+index 00000000..3b0eaa95
+--- /dev/null
++++ b/tests/generic/935
+@@ -0,0 +1,48 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2018 Oracle, Inc.  All Rights Reserved.
++#
++# FS QA Test No. 935
++#
++# Ensure that file size resource limits are respected when reflinking.
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
 +
-+   * - XFS\_RMAP\_OWN\_AG
-+     - Per-allocation group B+tree blocks. This means free space B+tree blocks,
-+       blocks on the freelist, and reverse-mapping B+tree blocks.
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
 +
-+   * - XFS\_RMAP\_OWN\_INOBT
-+     - Per-allocation group inode B+tree blocks. This includes free inode
-+       B+tree blocks.
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/reflink
 +
-+   * - XFS\_RMAP\_OWN\_INODES
-+     - Inode chunks.
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++_require_scratch_reflink
 +
-+   * - XFS\_RMAP\_OWN\_REFC
-+     - Per-allocation group refcount B+tree blocks. This will be used for
-+       reflink support.
++rm -f $seqres.full
 +
-+   * - XFS\_RMAP\_OWN\_COW
-+     - Blocks that have been reserved for a copy-on-write operation that has
-+       not completed.
++_scratch_mkfs >>$seqres.full 2>&1
++_scratch_mount
 +
-+Table: Special owner values
++chmod a+rwx $SCRATCH_MNT
++$XFS_IO_PROG -f -c "pwrite -S 0x18 0 1m" $SCRATCH_MNT/foo >>$seqres.full
++su -s/bin/bash - $qa_user -c "ulimit -f 64 ; $XFS_IO_PROG -f -c \"reflink $SCRATCH_MNT/foo\" $SCRATCH_MNT/bar" >> $seqres.full 2>&1
 +
-+**rm\_fork**
-+    If rm\_owner describes an inode, this can be 1 if this record is for an
-+    attribute fork.
++sz="$(stat -c '%s' $SCRATCH_MNT/bar)"
++if [ "$sz" -ne 0 ] && [ "$sz" -ne 65536 ]; then
++	echo "Oddball file size $sz??"
++fi
 +
-+**rm\_bmbt**
-+    If rm\_owner describes an inode, this can be 1 to signify that this record
-+    is for a block map B+tree block. In this case, rm\_offset has no meaning.
++echo Silence is golden.
++status=0
++exit
+diff --git a/tests/generic/935.out b/tests/generic/935.out
+new file mode 100644
+index 00000000..adb5e92a
+--- /dev/null
++++ b/tests/generic/935.out
+@@ -0,0 +1,2 @@
++QA output created by 935
++Silence is golden.
+diff --git a/tests/generic/936 b/tests/generic/936
+new file mode 100755
+index 00000000..eacf9b5e
+--- /dev/null
++++ b/tests/generic/936
+@@ -0,0 +1,70 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2018 Oracle, Inc.  All Rights Reserved.
++#
++# FS QA Test No. 936
++#
++# Ensure that reflinking into a file well beyond EOF zeroes everything between
++# the old EOF and the start of the newly linked chunk.  This is an adaptation
++# of a reproducer script that Eric Sandeen formulated from a stale data
++# exposure bug uncovered by shared/010.
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
 +
-+**rm\_unwritten**
-+    A flag indicating that the extent is unwritten. This corresponds to the
-+    flag in the `extent record <#data-extents>`__ format which means
-+    XFS\_EXT\_UNWRITTEN.
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
 +
-+**rm\_offset**
-+    The 54-bit logical file block offset, if rm\_owner describes an inode.
-+    Meaningless otherwise.
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/reflink
 +
-+    **Note**
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++_require_scratch_reflink
 +
-+    The single-bit flag values rm\_unwritten, rm\_fork, and rm\_bmbt are
-+    packed into the larger fields in the C structure definition.
++rm -f $seqres.full
 +
-+The key has the following structure:
++# Fill disk with a well known pattern so that stale data exposure becomes much
++# more obvious.
++$XFS_IO_PROG -c "pwrite -S 0x58 -b 1m 0 300m" $SCRATCH_DEV >> $seqres.full
++_scratch_mkfs_sized $((300 * 1048576)) >>$seqres.full 2>&1
++_scratch_mount
 +
-+.. code:: c
++DONOR1=$SCRATCH_MNT/a
++TARGET=$SCRATCH_MNT/b
++blksz=65536
 +
-+    struct xfs_rmap_key {
-+         __be32                     rm_startblock;
-+         __be64                     rm_owner;
-+         __be64                     rm_fork:1;
-+         __be64                     rm_bmbt:1;
-+         __be64                     rm_reserved:1;
-+         __be64                     rm_unused:7;
-+         __be64                     rm_offset:54;
-+    };
++$XFS_IO_PROG -f -c "pwrite -S 0x72 0 $blksz" $DONOR1 >> $seqres.full
 +
-+For the reverse-mapping B+tree on a filesystem that supports sharing of file
-+data blocks, the key definition is larger than the usual AG block number. On a
-+classic XFS filesystem, each block has only one owner, which means that
-+rm\_startblock is sufficient to uniquely identify each record. However, shared
-+block support (reflink) on XFS breaks that assumption; now filesystem blocks
-+can be linked to any logical block offset of any file inode. Therefore, the
-+key must include the owner and offset information to preserve the 1 to 1
-+relation between key and record.
++$XFS_IO_PROG -f \
++	-c "falloc -k $((blksz*2)) $blksz"        \
++	-c "pwrite -S 0x57 $((blksz*16)) 8192" \
++        -c "fdatasync" \
++	-c 'stat' \
++	-c "reflink $DONOR1 0 $((blksz*17)) $blksz" \
++                $TARGET >> $seqres.full
 +
-+-  As the reference counting is AG relative, all the block numbers are only
-+   32-bits.
++od -tx1 -Ad -c $TARGET >> $seqres.full
++${FILEFRAG_PROG} -v $TARGET >> $seqres.full
++md5sum $DONOR1 | _filter_scratch
++md5sum $TARGET | _filter_scratch
 +
-+-  The bb\_magic value is "RMB3" (0x524d4233).
++_scratch_cycle_mount
 +
-+-  The xfs\_btree\_sblock\_t header is used for intermediate B+tree node as
-+   well as the leaves.
++od -tx1 -Ad -c $TARGET >> $seqres.full
++${FILEFRAG_PROG} -v $TARGET >> $seqres.full
++md5sum $DONOR1 | _filter_scratch
++md5sum $TARGET | _filter_scratch
 +
-+-  Each pointer is associated with two keys. The first of these is the "low
-+   key", which is the key of the smallest record accessible through the
-+   pointer. This low key has the same meaning as the key in all other btrees.
-+   The second key is the high key, which is the maximum of the largest key
-+   that can be used to access a given record underneath the pointer. Recall
-+   that each record in the reverse mapping b+tree describes an interval of
-+   physical blocks mapped to an interval of logical file block offsets;
-+   therefore, it makes sense that a range of keys can be used to find to a
-+   record.
++status=0
++exit
+diff --git a/tests/generic/936.out b/tests/generic/936.out
+new file mode 100644
+index 00000000..73685490
+--- /dev/null
++++ b/tests/generic/936.out
+@@ -0,0 +1,5 @@
++QA output created by 936
++34a4daf52c562253a2f6108c5123605a  SCRATCH_MNT/a
++4fe4dfe3d2244bd380adcefdc5006e37  SCRATCH_MNT/b
++34a4daf52c562253a2f6108c5123605a  SCRATCH_MNT/a
++4fe4dfe3d2244bd380adcefdc5006e37  SCRATCH_MNT/b
+diff --git a/tests/generic/937 b/tests/generic/937
+new file mode 100755
+index 00000000..e3a94dbb
+--- /dev/null
++++ b/tests/generic/937
+@@ -0,0 +1,81 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2018, Oracle and/or its affiliates.  All Rights Reserved.
++#
++# FS QA Test No. 937
++#
++# Ensuring that we cannot dedupe non-matching parts of files:
++#   - Fail to dedupe non-identical parts of two different files
++#   - Check that nothing changes in either file
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
 +
-+xfs\_db rmapbt Example
-+^^^^^^^^^^^^^^^^^^^^^^
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
 +
-+This example shows a reverse-mapping B+tree from a freshly populated root
-+filesystem:
++_cleanup()
++{
++    cd /
++    rm -rf $tmp.* $testdir
++}
 +
-+::
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/reflink
 +
-+    xfs_db> agf 0
-+    xfs_db> addr rmaproot
-+    xfs_db> p
-+    magic = 0x524d4233
-+    level = 1
-+    numrecs = 43
-+    leftsib = null
-+    rightsib = null
-+    bno = 56
-+    lsn = 0x3000004c8
-+    uuid = 1977221d-8345-464e-b1f4-aa2ea36895f4
-+    owner = 0
-+    crc = 0x7cf8be6f (correct)
-+    keys[1-43] = [startblock,owner,offset]
-+    keys[1-43] = [startblock,owner,offset,attrfork,bmbtblock,startblock_hi,owner_hi,
-+             offset_hi,attrfork_hi,bmbtblock_hi]
-+            1:[0,-3,0,0,0,351,4418,66,0,0]
-+            2:[417,285,0,0,0,827,4419,2,0,0]
-+            3:[829,499,0,0,0,2352,573,55,0,0]
-+            4:[1292,710,0,0,0,32168,262923,47,0,0]
-+            5:[32215,-5,0,0,0,34655,2365,3411,0,0]
-+            6:[34083,1161,0,0,0,34895,265220,1,0,1]
-+            7:[34896,256191,0,0,0,36522,-9,0,0,0]
-+            ...
-+            41:[50998,326734,0,0,0,51430,-5,0,0,0]
-+            42:[51431,327010,0,0,0,51600,325722,11,0,0]
-+            43:[51611,327112,0,0,0,94063,23522,28375272,0,0]
-+    ptrs[1-43] = 1:5 2:6 3:8 4:9 5:10 6:11 7:418 ... 41:46377 42:48784 43:49522
++# real QA test starts here
++_supported_os Linux
++_require_test_dedupe
 +
-+We arbitrarily pick pointer 17 to traverse downwards:
++rm -f $seqres.full
 +
-+::
++testdir=$TEST_DIR/test-$seq
++rm -rf $testdir
++mkdir $testdir
 +
-+    xfs_db> addr ptrs[17]
-+    xfs_db> p
-+    magic = 0x524d4233
-+    level = 0
-+    numrecs = 168
-+    leftsib = 36284
-+    rightsib = 37617
-+    bno = 294760
-+    lsn = 0x200002761
-+    uuid = 1977221d-8345-464e-b1f4-aa2ea36895f4
-+    owner = 0
-+    crc = 0x2dad3fbe (correct)
-+    recs[1-168] = [startblock,blockcount,owner,offset,extentflag,attrfork,bmbtblock]
-+            1:[40326,1,259615,0,0,0,0] 2:[40327,1,-5,0,0,0,0]
-+            3:[40328,2,259618,0,0,0,0] 4:[40330,1,259619,0,0,0,0]
-+            ...
-+            127:[40540,1,324266,0,0,0,0] 128:[40541,1,324266,8388608,0,0,0]
-+            129:[40542,2,324266,1,0,0,0] 130:[40544,32,-7,0,0,0,0]
++echo "Create the original files"
++blksz=65536
++_pwrite_byte 0x61 $((blksz * 2)) $((blksz * 6)) $testdir/file1 >> $seqres.full
++_pwrite_byte 0x61 $((blksz * 2)) $((blksz * 6)) $testdir/file2 >> $seqres.full
++_pwrite_byte 0x62 $(((blksz * 6) - 33)) 1 $testdir/file2 >> $seqres.full
++_test_cycle_mount
 +
-+Several interesting things pop out here. The first record shows that inode
-+259,615 has mapped AG block 40,326 at offset 0. We confirm this by looking at
-+the block map for that inode:
++md5sum $testdir/file1 | _filter_test_dir
++md5sum $testdir/file2 | _filter_test_dir
 +
-+::
++_compare_range $testdir/file1 0 $testdir/file2 0 "$((blksz * 8))" \
++       || echo "Files 1-2 do not match (intentional)"
 +
-+    xfs_db> inode 259615
-+    xfs_db> bmap
-+    data offset 0 startblock 40326 (0/40326) count 1 flag 0
++echo "(partial) dedupe the middle blocks together"
++free_before=$(stat -f -c '%a' $testdir)
++_dedupe_range $testdir/file1 $((blksz * 4)) $testdir/file2 \
++		$((blksz * 4)) $((blksz * 2)) 2>&1 | _filter_xfs_io_numbers | _filter_dedupe_error
++_test_cycle_mount
++${FILEFRAG_PROG} -v $testdir/file1 >> $seqres.full
++${FILEFRAG_PROG} -v $testdir/file2 >> $seqres.full
++free_after=$(stat -f -c '%a' $testdir)
++echo "freesp changed by $free_before -> $free_after" >> $seqres.full
 +
-+Next, notice records 127 and 128, which describe neighboring AG blocks that
-+are mapped to non-contiguous logical blocks in inode 324,266. Given the
-+logical offset of 8,388,608 we surmise that this is a leaf directory, but let
-+us confirm:
++echo "Compare sections"
++md5sum $testdir/file1 | _filter_test_dir
++md5sum $testdir/file2 | _filter_test_dir
 +
-+::
++_compare_range $testdir/file1 0 $testdir/file2 0 $((blksz * 4)) \
++       || echo "Start sections do not match (error)"
 +
-+    xfs_db> inode 324266
-+    xfs_db> p core.mode
-+    core.mode = 040755
-+    xfs_db> bmap
-+    data offset 0 startblock 40540 (0/40540) count 1 flag 0
-+    data offset 1 startblock 40542 (0/40542) count 2 flag 0
-+    data offset 3 startblock 40576 (0/40576) count 1 flag 0
-+    data offset 8388608 startblock 40541 (0/40541) count 1 flag 0
-+    xfs_db> p core.mode
-+    core.mode = 0100644
-+    xfs_db> dblock 0
-+    xfs_db> p dhdr.hdr.magic
-+    dhdr.hdr.magic = 0x58444433
-+    xfs_db> dblock 8388608
-+    xfs_db> p lhdr.info.hdr.magic
-+    lhdr.info.hdr.magic = 0x3df1
++_compare_range $testdir/file1 $((blksz * 4)) $testdir/file2 \
++		$((blksz * 4)) $((blksz * 2)) \
++       || echo "Middle sections do not match (intentional)"
 +
-+Indeed, this inode 324,266 appears to be a leaf directory, as it has regular
-+directory data blocks at low offsets, and a single leaf block.
++_compare_range $testdir/file1 $((blksz * 6)) $testdir/file2 \
++		$((blksz * 6)) $((blksz * 2)) \
++       || echo "End sections do not match (error)"
 +
-+Notice further the two reverse-mapping records with negative owners. An owner
-+of -7 corresponds to XFS\_RMAP\_OWN\_INODES, which is an inode chunk, and an
-+owner code of -5 corresponds to XFS\_RMAP\_OWN\_AG, which covers free space
-+B+trees and free space. Let’s see if block 40,544 is part of an inode chunk:
-+
-+::
-+
-+    xfs_db> blockget
-+    xfs_db> fsblock 40544
-+    xfs_db> blockuse
-+    block 40544 (0/40544) type inode
-+    xfs_db> stack
-+    1:
-+            byte offset 166068224, length 4096
-+            buffer block 324352 (fsbno 40544), 8 bbs
-+            inode 324266, dir inode 324266, type data
-+    xfs_db> type inode
-+    xfs_db> p
-+    core.magic = 0x494e
-+
-+Our suspicions are confirmed. Let’s also see if 40,327 is part of a free space
-+tree:
-+
-+::
-+
-+    xfs_db> fsblock 40327
-+    xfs_db> blockuse
-+    block 40327 (0/40327) type btrmap
-+    xfs_db> type rmapbt
-+    xfs_db> p
-+    magic = 0x524d4233
-+
-+As you can see, the reverse block-mapping B+tree is an important secondary
-+metadata structure, which can be used to reconstruct damaged primary metadata.
-+Now let’s look at an extend rmap btree:
-+
-+::
-+
-+    xfs_db> agf 0
-+    xfs_db> addr rmaproot
-+    xfs_db> p
-+    magic = 0x34524d42
-+    level = 1
-+    numrecs = 5
-+    leftsib = null
-+    rightsib = null
-+    bno = 6368
-+    lsn = 0x100000d1b
-+    uuid = 400f0928-6b88-4c37-af1e-cef1f8911f3f
-+    owner = 0
-+    crc = 0x8d4ace05 (correct)
-+    keys[1-5] = [startblock,owner,offset,attrfork,bmbtblock,startblock_hi,owner_hi,offset_hi,attrfork_hi,bmbtblock_hi]
-+    1:[0,-3,0,0,0,705,132,681,0,0]
-+    2:[24,5761,0,0,0,548,5761,524,0,0]
-+    3:[24,5929,0,0,0,380,5929,356,0,0]
-+    4:[24,6097,0,0,0,212,6097,188,0,0]
-+    5:[24,6277,0,0,0,807,-7,0,0,0]
-+    ptrs[1-5] = 1:5 2:771 3:9 4:10 5:11
-+
-+The second pointer stores both the low key [24,5761,0,0,0] and the high key
-+[548,5761,524,0,0], which means that we can expect block 771 to contain
-+records starting at physical block 24, inode 5761, offset zero; and that one
-+of the records can be used to find a reverse mapping for physical block 548,
-+inode 5761, and offset 524:
-+
-+::
-+
-+    xfs_db> addr ptrs[2]
-+    xfs_db> p
-+    magic = 0x34524d42
-+    level = 0
-+    numrecs = 168
-+    leftsib = 5
-+    rightsib = 9
-+    bno = 6168
-+    lsn = 0x100000d1b
-+    uuid = 400f0928-6b88-4c37-af1e-cef1f8911f3f
-+    owner = 0
-+    crc = 0xd58eff0e (correct)
-+    recs[1-168] = [startblock,blockcount,owner,offset,extentflag,attrfork,bmbtblock]
-+    1:[24,525,5761,0,0,0,0]
-+    2:[24,524,5762,0,0,0,0]
-+    3:[24,523,5763,0,0,0,0]
-+    ...
-+    166:[24,360,5926,0,0,0,0]
-+    167:[24,359,5927,0,0,0,0]
-+    168:[24,358,5928,0,0,0,0]
-+
-+Observe that the first record in the block starts at physical block 24, inode
-+5761, offset zero, just as we expected. Note that this first record is also
-+indexed by the highest key as provided in the node block; physical block 548,
-+inode 5761, offset 524 is the very last block mapped by this record.
-+Furthermore, note that record 168, despite being the last record in this
-+block, has a lower maximum key (physical block 382, inode 5928, offset 23)
-+than the first record.
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/937.out b/tests/generic/937.out
+new file mode 100644
+index 00000000..496975d6
+--- /dev/null
++++ b/tests/generic/937.out
+@@ -0,0 +1,12 @@
++QA output created by 937
++Create the original files
++35ac8d7917305c385c30f3d82c30a8f6  TEST_DIR/test-937/file1
++39578c21e2cb9f6049b1cf7fc7be12a6  TEST_DIR/test-937/file2
++Files 1-2 do not match (intentional)
++(partial) dedupe the middle blocks together
++deduped XXXX/XXXX bytes at offset XXXX
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++Compare sections
++35ac8d7917305c385c30f3d82c30a8f6  TEST_DIR/test-937/file1
++39578c21e2cb9f6049b1cf7fc7be12a6  TEST_DIR/test-937/file2
++Middle sections do not match (intentional)
+diff --git a/tests/generic/group b/tests/generic/group
+index 06b062e1..ef08c0de 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -509,3 +509,7 @@
+ 504 auto quick locks
+ 505 shutdown auto quick metadata
+ 707 auto quick rw collapse zero
++934 auto quick clone
++935 auto quick clone
++936 auto quick clone
++937 auto quick dedupe clone
