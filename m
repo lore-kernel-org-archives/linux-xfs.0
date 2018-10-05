@@ -1,163 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:45962 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728139AbeJFDlZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 23:41:25 -0400
-Date: Fri, 5 Oct 2018 13:40:57 -0700
+Received: from userp2120.oracle.com ([156.151.31.85]:35336 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727941AbeJFAgB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 20:36:01 -0400
+Date: Fri, 5 Oct 2018 10:36:07 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/1] xfs_metadump: Zap more stale data
-Message-ID: <20181005204057.GB19324@magnolia>
-References: <20181004205749.2042-1-stefanrin@gmail.com>
- <20181004205749.2042-2-stefanrin@gmail.com>
- <CAAxjCEw0prn7P3dn-OuuxbmMTgzs2HydpZsgkwH8RVBkedQXOA@mail.gmail.com>
+Subject: Re: [PATCH 06/15] vfs: strengthen checking of file range inputs to
+ clone/dedupe range
+Message-ID: <20181005173607.GW19324@magnolia>
+References: <153870027422.29072.7433543674436957232.stgit@magnolia>
+ <153870031519.29072.18289185889660082318.stgit@magnolia>
+ <CAOQ4uxiVPvNPxTNZ-njeyte6yk3jo3tjNKv78kS9NqA_Xzxc6g@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAAxjCEw0prn7P3dn-OuuxbmMTgzs2HydpZsgkwH8RVBkedQXOA@mail.gmail.com>
+In-Reply-To: <CAOQ4uxiVPvNPxTNZ-njeyte6yk3jo3tjNKv78kS9NqA_Xzxc6g@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Stefan Ring <stefanrin@gmail.com>
-Cc: linux-xfs@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, ocfs2-devel@oss.oracle.com, Eric Sandeen <sandeen@redhat.com>
 
-On Fri, Oct 05, 2018 at 10:35:34PM +0200, Stefan Ring wrote:
-> On Thu, Oct 4, 2018 at 10:57 PM Stefan Ring <stefanrin@gmail.com> wrote:
-> > diff --git a/db/metadump.c b/db/metadump.c
-> > index cc2ae9af..e7159cd1 100644
-> > --- a/db/metadump.c
-> > +++ b/db/metadump.c
-> > @@ -1421,12 +1421,42 @@ process_sf_attr(
-> >                 memset(asfep, 0, XFS_DFORK_ASIZE(dip, mp) - ino_attr_size);
-> >  }
+On Fri, Oct 05, 2018 at 09:10:12AM +0300, Amir Goldstein wrote:
+> On Fri, Oct 5, 2018 at 3:46 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
 > >
-> > +static void
-> > +process_dir_free_block(
-> > +       char                            *block)
-> > +{
-> > +       struct xfs_dir2_free            *free;
-> > +       struct xfs_dir3_icfree_hdr      freehdr;
-> > +
-> > +       if (!zero_stale_data)
-> > +               return;
-> > +
-> > +       free = (struct xfs_dir2_free *)block;
-> > +       M_DIROPS(mp)->free_hdr_from_disk(&freehdr, free);
-> > +
-> > +       /* Zero out space from end of bests[] to end of block */
-> > +       if (freehdr.magic == XFS_DIR2_FREE_MAGIC) {
-> > +               __be16                  *bests;
-> > +               char                    *high;
-> > +               int                     used;
-> > +
-> > +               bests = M_DIROPS(mp)->free_bests_p(free);
-> > +               high = (char *)&bests[freehdr.nvalid];
-> > +               used = high - (char*)free;
-> > +               memset(high, 0, mp->m_sb.sb_blocksize - used);
-> > +               iocur_top->need_crc = 1;
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> >
+> > Clone range is an optimization on a regular file write.  File writes
+> > that extend the file length are subject to various constraints which are
+> > not checked by clonerange.  This is a correctness problem, because we're
+> > never allowed to touch ranges that the page cache can't support
+> > (s_maxbytes); we're not supposed to deal with large offsets
+> > (MAX_NON_LFS) if O_LARGEFILE isn't set; and we must obey resource limits
+> > (RLIMIT_FSIZE).
+> >
+> > Therefore, add these checks to the new generic_clone_checks function so
+> > that we curtail unexpected behavior.
+> >
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  mm/filemap.c |   31 +++++++++++++++++++++++++++++++
+> >  1 file changed, 31 insertions(+)
+> >
+> >
+> > diff --git a/mm/filemap.c b/mm/filemap.c
+> > index 68ec91d05c7b..f74391721234 100644
+> > --- a/mm/filemap.c
+> > +++ b/mm/filemap.c
+> > @@ -3015,6 +3015,37 @@ int generic_clone_checks(struct file *file_in, loff_t pos_in,
+> >                 return -EINVAL;
+> >         count = min(count, size_in - (uint64_t)pos_in);
+> >
+> > +       /* Don't exceed RLMIT_FSIZE in the file we're writing into. */
+> > +       if (limit != RLIM_INFINITY) {
+> > +               if (pos_out >= limit) {
+> > +                       send_sig(SIGXFSZ, current, 0);
+> > +                       return -EFBIG;
+> > +               }
+> > +               count = min(count, limit - (uint64_t)pos_out);
 > > +       }
-> > +       else if (show_warnings)
-> > +               print_warning("invalid magic in dir inode %llu free block",
-> > +                               (unsigned long long)cur_ino);
-> > +}
 > > +
-> >  static void
-> >  process_dir_leaf_block(
-> >         char                            *block)
-> >  {
-> >         struct xfs_dir2_leaf            *leaf;
-> > -       struct xfs_dir3_icleaf_hdr      leafhdr;
-> > +       struct xfs_dir3_icleaf_hdr      leafhdr;
-> >
-> >         if (!zero_stale_data)
-> >                 return;
-> > @@ -1449,6 +1479,18 @@ process_dir_leaf_block(
-> >                 lbp = xfs_dir2_leaf_bests_p(ltp);
-> >                 memset(free, 0, (char *)lbp - free);
-> >                 iocur_top->need_crc = 1;
-> > +       } else
-> > +       if (leafhdr.magic == XFS_DIR2_LEAFN_MAGIC ||
-> > +           leafhdr.magic == XFS_DIR3_LEAFN_MAGIC) {
-> > +               struct xfs_dir2_leaf_entry      *ents;
-> > +               char                            *free;
-> > +               int                             used;
+> > +       /* Don't exceed the LFS limits. */
+> > +       if (unlikely(pos_out + count > MAX_NON_LFS &&
+> > +                               !(file_out->f_flags & O_LARGEFILE))) {
+> > +               if (pos_out >= MAX_NON_LFS)
+> > +                       return -EFBIG;
+> > +               count = min(count, MAX_NON_LFS - (uint64_t)pos_out);
+> > +       }
+> > +       if (unlikely(pos_in + count > MAX_NON_LFS &&
+> > +                               !(file_in->f_flags & O_LARGEFILE))) {
+> > +               if (pos_in >= MAX_NON_LFS)
+> > +                       return -EFBIG;
+> > +               count = min(count, MAX_NON_LFS - (uint64_t)pos_in);
+> > +       }
 > > +
-> > +               ents = M_DIROPS(mp)->leaf_ents_p(leaf);
-> > +               free = (char *)&ents[leafhdr.count];
-> > +               used = free - (char*)leaf;
-> > +               memset(free, 0, mp->m_sb.sb_blocksize - used);
+> > +       /* Don't operate on ranges the page cache doesn't support. */
+> > +       if (unlikely(pos_out >= inode_out->i_sb->s_maxbytes ||
+> > +                    pos_in >= inode_in->i_sb->s_maxbytes))
+> > +               return -EFBIG;
+> > +
 > 
-> I forgot to mention this: sb_blocksize is used conspicuously rarely in
-> this file. Is this the right metric to lean on?
+> Forget my standards, this doesn't abide by your own standards ;-)
+> Please factor out generic_write_checks() and use it instead of
+> duplicating the code. The in/out variant doesn't justify not calling
+> the helper twice IMO.
 
-No, because directory blocks span multiple fs blocks (good self catch!).
+Factor generic_write_checks and generic_clone_checks how?  They operate
+on very different parameter types.
 
-You could look it up in the directory geometry structure in the
-xfs_mount *.
+Or were you suggeseting refactoring just the "Dont' exceed LFS limits"
+and "Don't operate on ranges the page cache..." sections of
+generic_clone_checks to reduce copy paste?  That I'll do.
 
 --D
 
-> > +               iocur_top->need_crc = 1;
-> >         }
-> >  }
-> >
-> > @@ -1499,7 +1541,7 @@ process_dir_data_block(
-> >                 if (show_warnings)
-> >                         print_warning(
-> >                 "invalid magic in dir inode %llu block %ld",
-> > -                                       (long long)cur_ino, (long)offset);
-> > +                                       (unsigned long long)cur_ino, (long)offset);
-> >                 return;
-> >         }
-> >
-> > @@ -1813,8 +1855,7 @@ process_single_fsb_objects(
-> >                 switch (btype) {
-> >                 case TYP_DIR2:
-> >                         if (o >= mp->m_dir_geo->freeblk) {
-> > -                               /* TODO, zap any stale data */
-> > -                               break;
-> > +                               process_dir_free_block(dp);
-> >                         } else if (o >= mp->m_dir_geo->leafblk) {
-> >                                 process_dir_leaf_block(dp);
-> >                         } else {
-> > @@ -2115,6 +2156,20 @@ process_btinode(
-> >         }
-> >
-> >         pp = XFS_BMDR_PTR_ADDR(dib, 1, maxrecs);
-> > +
-> > +       if (zero_stale_data) {
-> > +               /* Space before btree pointers */
-> > +               char    *top;
-> > +               int     used;
-> > +               top = (char*)XFS_BMDR_PTR_ADDR(dib, 1, nrecs);
-> > +               memset(top, 0, (char*)pp - top);
-> > +
-> > +               /* Space after btree pointers */
-> > +               top = (char*)&pp[nrecs];
-> > +               used = top - (char*)dip;
-> > +               memset(top, 0, mp->m_sb.sb_inodesize - used);
-> > +       }
-> > +
-> >         for (i = 0; i < nrecs; i++) {
-> >                 xfs_agnumber_t  ag;
-> >                 xfs_agblock_t   bno;
-> > @@ -2250,7 +2305,16 @@ process_inode(
-> >                 case S_IFREG:
-> >                         success = process_inode_data(dip, TYP_DATA);
-> >                         break;
-> > -               default: ;
-> > +               default:
-> > +                       if (XFS_DFORK_NEXTENTS(dip, XFS_ATTR_FORK) ||
-> > +                                       XFS_DFORK_NEXTENTS(dip, XFS_DATA_FORK)) {
-> > +                               if (show_warnings)
-> > +                                       print_warning("inode %llu has unexpected extents",
-> > +                                                       (unsigned long long)cur_ino);
-> > +                               success = 0;
-> > +                       }
-> > +                       else
-> > +                               memset(XFS_DFORK_DPTR(dip), 0, mp->m_sb.sb_inodesize - (XFS_DFORK_DPTR(dip) - (char*)dip));
-> >         }
-> >         nametable_clear();
-> >
-> > --
-> > 2.14.4
-> >
+> 
+> Thanks,
+> Amir.
