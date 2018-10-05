@@ -1,143 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:39154 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727572AbeJEWKN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 18:10:13 -0400
-Date: Fri, 5 Oct 2018 08:11:00 -0700
+Received: from userp2120.oracle.com ([156.151.31.85]:47512 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727746AbeJFAVq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 20:21:46 -0400
+Date: Fri, 5 Oct 2018 10:21:59 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/3] xfs: fix buffer state management in
- xrep_findroot_block
-Message-ID: <20181005151100.GP19324@magnolia>
-References: <153870045847.29695.10286947858219936840.stgit@magnolia>
- <153870047729.29695.18042015772366432041.stgit@magnolia>
- <20181005115950.GC54400@bfoster>
+Subject: Re: [PATCH 02/15] xfs: refactor clonerange preparation into a
+ separate helper
+Message-ID: <20181005172159.GV19324@magnolia>
+References: <153870027422.29072.7433543674436957232.stgit@magnolia>
+ <153870028762.29072.5369530877410002226.stgit@magnolia>
+ <20181005070228.GE12041@dastard>
+ <20181005090242.GF12041@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181005115950.GC54400@bfoster>
+In-Reply-To: <20181005090242.GF12041@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, ocfs2-devel@oss.oracle.com, sandeen@redhat.com
 
-On Fri, Oct 05, 2018 at 07:59:51AM -0400, Brian Foster wrote:
-> On Thu, Oct 04, 2018 at 05:47:57PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Oct 05, 2018 at 07:02:42PM +1000, Dave Chinner wrote:
+> On Fri, Oct 05, 2018 at 05:02:28PM +1000, Dave Chinner wrote:
+> > On Thu, Oct 04, 2018 at 05:44:47PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > Refactor all the reflink preparation steps into a separate helper that
+> > > we'll use to land all the upcoming fixes for insufficient input checks.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > .....
 > > 
-> > We don't handle buffer state properly in online repair's findroot
-> > routine.  If a buffer already has b_ops set, we don't ever want to touch
-> > that, and we don't want to call the read verifiers on a buffer that
-> > could be dirty (CRCs are only recomputed during log checkpoints).
-> > 
-> > Therefore, be more careful about what we do with a buffer -- if someone
-> > else already attached ops that are not the ones for this btree type,
-> > just ignore the buffer.  We only attach our btree type's buf ops if it
-> > matches the magic/uuid and structure checks.
-> > 
-> > We also modify xfs_buf_read_map to allow callers to set buffer ops on a
-> > DONE buffer with NULL ops so that repair doesn't leave behind buffers
-> > which won't have buffers attached to them.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/scrub/repair.c  |   63 +++++++++++++++++++++++++++++++++++++-----------
-> >  fs/xfs/xfs_trans.h     |    1 +
-> >  fs/xfs/xfs_trans_buf.c |   13 ++++++++++
-> >  3 files changed, 63 insertions(+), 14 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-> > index 63786341ac2a..cebaebb26566 100644
-> > --- a/fs/xfs/scrub/repair.c
-> > +++ b/fs/xfs/scrub/repair.c
-> ...
-> > @@ -718,28 +720,61 @@ xrep_findroot_block(
-> >  			return error;
-> >  	}
-> >  
-> ...
-> > +	/*
-> > +	 * If the buffer already has ops applied and they're not the ones for
-> > +	 * this btree type, we know this block doesn't match the btree and we
-> > +	 * can bail out.
-> > +	 *
-> > +	 * If the buffer ops match ours, someone else has already validated
-> > +	 * the block for us, so we can move on to checking if this is a root
-> > +	 * block candidate.
-> > +	 *
-> > +	 * If the buffer does not have ops, nobody has successfully validated
-> > +	 * the contents and the buffer cannot be dirty.  If the magic, uuid,
-> > +	 * and structure match this btree type then we'll move on to checking
-> > +	 * if it's a root block candidate.  If there is no match, bail out.
-> > +	 */
-> > +	if (bp->b_ops) {
-> > +		if (bp->b_ops != fab->buf_ops)
-> > +			goto out;
-> > +	} else {
-> > +		ASSERT(!xfs_trans_buf_is_dirty(bp));
-> > +		if (!uuid_equal(&btblock->bb_u.s.bb_uuid,
-> > +				&mp->m_sb.sb_meta_uuid))
-> > +			goto out;
-> > +		fab->buf_ops->verify_read(bp);
-> > +		if (bp->b_error)
-> > +			goto out;
+> > > +xfs_reflink_remap_range(
+> > > +	struct file		*file_in,
+> > > +	loff_t			pos_in,
+> > > +	struct file		*file_out,
+> > > +	loff_t			pos_out,
+> > > +	u64			len,
+> > > +	bool			is_dedupe)
+> > > +{
+> > > +	struct inode		*inode_in = file_inode(file_in);
+> > > +	struct xfs_inode	*src = XFS_I(inode_in);
+> > > +	struct inode		*inode_out = file_inode(file_out);
+> > > +	struct xfs_inode	*dest = XFS_I(inode_out);
+> > > +	struct xfs_mount	*mp = src->i_mount;
+> > > +	xfs_fileoff_t		sfsbno, dfsbno;
+> > > +	xfs_filblks_t		fsblen;
+> > > +	xfs_extlen_t		cowextsize;
+> > > +	ssize_t			ret;
+> > > +
+> > > +	if (!xfs_sb_version_hasreflink(&mp->m_sb))
+> > > +		return -EOPNOTSUPP;
+> > > +
+> > > +	if (XFS_FORCED_SHUTDOWN(mp))
+> > > +		return -EIO;
+> > > +
+> > > +	/* Prepare and then clone file data. */
+> > > +	ret = xfs_reflink_remap_prep(file_in, pos_in, file_out, pos_out,
+> > > +			len, is_dedupe);
 > 
-> I guess this is related to my question on the previous patch. If the
-> verifier fails, we leave the XBF_DONE buffer around with ->b_ops == NULL
-> and ->b_error != 0.
-> 
-> I suppose somebody should eventually attach a verifier before this
-> buffer is ever really used, but I think I'd feel a little better about
-> this if we immediately cleaned up the side effects of using the wrong
-> verifier rather than potentially leaking an error to other contexts
-> where it has no relevance. That aside, this all looks fine to me.
+> More than one bug. vfs_clone_file_prep_inodes() modifes the length
+> parameter in the case of whole file reflink by way of "len == 0"
+> on a non-zero length file. So I fixed this, too.
 
-Ok, I'll make it clean up the error state before dumping the buffer.
+Did your patch look something like the attached?
 
 --D
 
-> Brian
-> 
-> > +		bp->b_ops = fab->buf_ops;
-> > +	}
-> >  
-> >  	/*
-> >  	 * This block passes the magic/uuid and verifier tests for this btree
-> > diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> > index c3d278e96ad1..a0c5dbda18aa 100644
-> > --- a/fs/xfs/xfs_trans.h
-> > +++ b/fs/xfs/xfs_trans.h
-> > @@ -220,6 +220,7 @@ void		xfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *, uint);
-> >  void		xfs_trans_log_buf(struct xfs_trans *, struct xfs_buf *, uint,
-> >  				  uint);
-> >  void		xfs_trans_dirty_buf(struct xfs_trans *, struct xfs_buf *);
-> > +bool		xfs_trans_buf_is_dirty(struct xfs_buf *bp);
-> >  void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
-> >  
-> >  void		xfs_extent_free_init_defer_op(void);
-> > diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-> > index b0ba2ca9cca3..93a053c700dd 100644
-> > --- a/fs/xfs/xfs_trans_buf.c
-> > +++ b/fs/xfs/xfs_trans_buf.c
-> > @@ -349,6 +349,19 @@ xfs_trans_read_buf_map(
-> >  
-> >  }
-> >  
-> > +/* Has this buffer been dirtied by anyone? */
-> > +bool
-> > +xfs_trans_buf_is_dirty(
-> > +	struct xfs_buf		*bp)
-> > +{
-> > +	struct xfs_buf_log_item	*bip = bp->b_log_item;
-> > +
-> > +	if (!bip)
-> > +		return false;
-> > +	ASSERT(bip->bli_item.li_type == XFS_LI_BUF);
-> > +	return test_bit(XFS_LI_DIRTY, &bip->bli_item.li_flags);
-> > +}
-> > +
-> >  /*
-> >   * Release the buffer bp which was previously acquired with one of the
-> >   * xfs_trans_... buffer allocation routines if the buffer has not
-> > 
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 80ca9b6793cd..53158bdb1105 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -1219,6 +1219,7 @@ xfs_reflink_remap_unlock(
+  * Prepare two files for range cloning.  Upon a successful return both inodes
+  * will have the iolock and mmaplock held, the page cache of the out file
+  * will be truncated, and any leases on the out file will have been broken.
++ * Returns negative for error, 0 for nothing to do, and 1 for success.
+  */
+ STATIC int
+ xfs_reflink_remap_prep(
+@@ -1226,7 +1227,7 @@ xfs_reflink_remap_prep(
+ 	loff_t			pos_in,
+ 	struct file		*file_out,
+ 	loff_t			pos_out,
+-	u64			len,
++	u64			*len,
+ 	bool			is_dedupe)
+ {
+ 	struct inode		*inode_in = file_inode(file_in);
+@@ -1257,7 +1258,7 @@ xfs_reflink_remap_prep(
+ 		goto out_unlock;
+ 
+ 	ret = vfs_clone_file_prep_inodes(inode_in, pos_in, inode_out, pos_out,
+-			&len, is_dedupe);
++			len, is_dedupe);
+ 	if (ret <= 0)
+ 		goto out_unlock;
+ 
+@@ -1284,8 +1285,8 @@ xfs_reflink_remap_prep(
+ 
+ 	/* Zap any page cache for the destination file's range. */
+ 	truncate_inode_pages_range(&inode_out->i_data, pos_out,
+-				   PAGE_ALIGN(pos_out + len) - 1);
+-	return 0;
++				   PAGE_ALIGN(pos_out + *len) - 1);
++	return 1;
+ out_unlock:
+ 	xfs_reflink_remap_unlock(file_in, file_out);
+ 	return ret;
+@@ -1321,8 +1322,8 @@ xfs_reflink_remap_range(
+ 
+ 	/* Prepare and then clone file data. */
+ 	ret = xfs_reflink_remap_prep(file_in, pos_in, file_out, pos_out,
+-			len, is_dedupe);
+-	if (ret)
++			&len, is_dedupe);
++	if (ret <= 0)
+ 		return ret;
+ 
+ 	trace_xfs_reflink_remap_range(src, pos_in, len, dest, pos_out);
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
