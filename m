@@ -1,98 +1,119 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:44202 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726073AbeJEICb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 04:02:31 -0400
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 0634428537
-        for <linux-xfs@vger.kernel.org>; Fri,  5 Oct 2018 01:06:16 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 201331] deadlock (XFS?)
-Date: Fri, 05 Oct 2018 01:06:15 +0000
-Message-ID: <bug-201331-201763-IvlP5wp6YW@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-201331-201763@https.bugzilla.kernel.org/>
-References: <bug-201331-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Received: from userp2130.oracle.com ([156.151.31.86]:43244 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726073AbeJEIC1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 04:02:27 -0400
+Date: Thu, 4 Oct 2018 18:06:03 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] docs: improve readability for people with poorer eyesight
+Message-ID: <20181005010603.GA6702@magnolia>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@kernel.org
+To: corbet@lwn.net
+Cc: xfs <linux-xfs@vger.kernel.org>, linux-doc@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=201331
+Hi,
 
---- Comment #5 from Dave Chinner (david@fromorbit.com) ---
-On Thu, Oct 04, 2018 at 11:25:49PM +0000, bugzilla-daemon@bugzilla.kernel.org
-wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=201331
+So my eyesight still hasn't fully recovered, so in the meantime it's
+been difficult to read the online documentation.  Here's some stylesheet
+overrides I've been using to make it easier for me to read them:
+https://djwong.org/docs/kdoc/index.html
 
-> 
-> --- Comment #4 from edo (edo.rus@gmail.com) ---
-> I tested with 4.17 and 4.18 prebuilt Debian kernels, behavior is the same:
-> Sep 30 16:01:23 storage10x10n1 kernel: [23683.218388] INFO: task
-> kworker/u24:0:21848 blocked for more than 120 seconds.
+---
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I think we need to rename XFS to "The Messenger: Please don't shoot
-me"... :)
+My eyesight is not in good shape, which means that I have difficulty
+reading the online Linux documentation.  Specifically, body text is
+oddly small compared to list items and the contrast of various text
+elements is too low for me to be able to see easily.
 
->From the xfs_info:
+Therefore, alter the HTML theme overrides to make the text larger and
+increase the contrast for better visibility, and trust the typeface
+choices of the reader's browser.
 
-sunit=4096   swidth=32768 blks
+For the PDF output, increase the text size, use a sans-serif typeface
+for sans-serif text, and use a serif typeface for "roman" serif text.
 
-Ok, that looks wrong - why do you have a MD raid device with
-16MB stripe unit and a 128MB stripe width?
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ Documentation/conf.py                           |    6 ++--
+ Documentation/sphinx-static/theme_overrides.css |   38 +++++++++++++++++++++++
+ 2 files changed, 41 insertions(+), 3 deletions(-)
 
-Yup:
-
-md3 : active raid6 sda4[0] sdj4[9] sdg4[6] sdd4[3] sdi4[8] sdf4[5] sde4[4]
-sdh4[7] sdb4[2] sdc4[1]
-      77555695616 blocks super 1.2 level 6, 16384k chunk, algorithm 2 [10/10]
-[UUUUUUUUUU]
-            bitmap: 9/73 pages [36KB], 65536KB chunk
-
-You've configured your RAID6 device with a 16MB chunk size, which
-gives the XFS su/sw noted above.
-
-Basically, your RMW'd your RAID device to death because every write
-is a sub-stripe write.
-
->  Workqueue: writeback wb_workfn (flush-9:3)
->  Call Trace:
->   schedule+0x32/0x80
->  bitmap_startwrite+0x161/0x1e0 [md_mod]
-
-MD blocks here when it has too many inflight bitmap updates and so
-waits for IO to complete before starting another. This isn't XFS
-filesystem IO - this in internal MD RAID consistency information
-that it needs to write for crash recovery purposes.
-
-This will be a direct result of the raid device configuration....
-
->  add_stripe_bio+0x441/0x7d0 [raid456]
->  raid5_make_request+0x1ae/0xb10 [raid456]
->  md_handle_request+0x116/0x190 [md_mod]
->  md_make_request+0x65/0x160 [md_mod]
->  generic_make_request+0x1e7/0x410
->   submit_bio+0x6c/0x140
->  xfs_add_to_ioend+0x14c/0x280 [xfs]
->  xfs_do_writepage+0x2bb/0x680 [xfs]
->  write_cache_pages+0x1ed/0x430
->  xfs_vm_writepages+0x64/0xa0 [xfs]
->   do_writepages+0x1a/0x60
->  __writeback_single_inode+0x3d/0x320
->  writeback_sb_inodes+0x221/0x4b0
->  __writeback_inodes_wb+0x87/0xb0
->   wb_writeback+0x288/0x320
->   wb_workfn+0x37c/0x450
-
-... and this is just the writeback path - your problem has nothing
-do with XFS...
-
-Cheers,
-
-Dave.
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+diff --git a/Documentation/conf.py b/Documentation/conf.py
+index e45d4d2b5adb..03dd6dc135ea 100644
+--- a/Documentation/conf.py
++++ b/Documentation/conf.py
+@@ -259,7 +259,7 @@ latex_elements = {
+ 'papersize': 'a4paper',
+ 
+ # The font size ('10pt', '11pt' or '12pt').
+-'pointsize': '8pt',
++'pointsize': '11pt',
+ 
+ # Latex figure (float) alignment
+ #'figure_align': 'htbp',
+@@ -272,8 +272,8 @@ latex_elements = {
+     'preamble': '''
+ 	% Use some font with UTF-8 support with XeLaTeX
+         \\usepackage{fontspec}
+-        \\setsansfont{DejaVu Serif}
+-        \\setromanfont{DejaVu Sans}
++        \\setsansfont{DejaVu Sans}
++        \\setromanfont{DejaVu Serif}
+         \\setmonofont{DejaVu Sans Mono}
+ 
+      '''
+diff --git a/Documentation/sphinx-static/theme_overrides.css b/Documentation/sphinx-static/theme_overrides.css
+index 522b6d4c49d4..e21e36cd6761 100644
+--- a/Documentation/sphinx-static/theme_overrides.css
++++ b/Documentation/sphinx-static/theme_overrides.css
+@@ -4,6 +4,44 @@
+  *
+  */
+ 
++/* Improve contrast and increase size for easier reading. */
++
++body {
++	font-family: serif;
++	color: black;
++	font-size: 100%;
++}
++
++h1, h2, .rst-content .toctree-wrapper p.caption, h3, h4, h5, h6, legend {
++	font-family: sans-serif;
++}
++
++.wy-menu-vertical li.current a {
++	color: #505050;
++}
++
++.wy-menu-vertical li.on a, .wy-menu-vertical li.current > a {
++	color: #303030;
++}
++
++div[class^="highlight"] pre {
++	font-family: monospace;
++	color: black;
++	font-size: 100%;
++}
++
++.wy-menu-vertical {
++	font-family: sans-serif;
++}
++
++.c {
++	font-style: normal;
++}
++
++p {
++	font-size: 100%;
++}
++
+ /* Interim: Code-blocks with line nos - lines and line numbers don't line up.
+  * see: https://github.com/rtfd/sphinx_rtd_theme/issues/419
+  */
