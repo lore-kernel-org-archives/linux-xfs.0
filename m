@@ -1,65 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:43424 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725740AbeJAXoH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Oct 2018 19:44:07 -0400
-Subject: [PATCH 8/8] xfs_scrub_all: fix systemd escaping again
+Received: from userp2120.oracle.com ([156.151.31.85]:42946 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727941AbeJFAmj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 20:42:39 -0400
+Date: Fri, 5 Oct 2018 10:42:47 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 01 Oct 2018 10:05:11 -0700
-Message-ID: <153841351155.27952.8070566787187802754.stgit@magnolia>
-In-Reply-To: <153841345236.27952.5050172703525712660.stgit@magnolia>
-References: <153841345236.27952.5050172703525712660.stgit@magnolia>
+Subject: Re: [PATCH 12/15] vfs: implement opportunistic short dedupe
+Message-ID: <20181005174247.GX19324@magnolia>
+References: <153870027422.29072.7433543674436957232.stgit@magnolia>
+ <153870036143.29072.11970142092673351715.stgit@magnolia>
+ <CAOQ4uxgqQ9ovr1i5+uGz1hq=fedFGKK7TpPCUvXkYPXhoPji3g@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxgqQ9ovr1i5+uGz1hq=fedFGKK7TpPCUvXkYPXhoPji3g@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Matthias Bodenbinder <matthias@bodenbinder.de>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, ocfs2-devel@oss.oracle.com, Eric Sandeen <sandeen@redhat.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Oct 05, 2018 at 09:40:44AM +0300, Amir Goldstein wrote:
+> On Fri, Oct 5, 2018 at 3:46 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> >
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> >
+> > For a given dedupe request, the bytes_deduped field in the control
+> > structure tells userspace if we managed to deduplicate some, but not all
+> > of, the requested regions starting from the file offsets supplied.
+> > However, due to sloppy coding, the current dedupe code returns
+> > FILE_DEDUPE_RANGE_DIFFERS if any part of the range is different.
+> > Fix this so that we can actually support partial request completion.
+> >
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/read_write.c    |   44 +++++++++++++++++++++++++++++++++++---------
+> >  include/linux/fs.h |    2 +-
+> >  2 files changed, 36 insertions(+), 10 deletions(-)
+> >
+> >
+> > diff --git a/fs/read_write.c b/fs/read_write.c
+> > index 292d68c2f47c..9be9f261edd2 100644
+> > --- a/fs/read_write.c
+> > +++ b/fs/read_write.c
+> > @@ -1781,13 +1781,11 @@ int vfs_clone_file_prep(struct file *file_in, loff_t pos_in,
+> >          * Check that the extents are the same.
+> >          */
+> >         if (is_dedupe) {
+> > -               bool            is_same = false;
+> > -
+> >                 ret = vfs_dedupe_file_range_compare(inode_in, pos_in,
+> > -                               inode_out, pos_out, *len, &is_same);
+> > +                               inode_out, pos_out, len);
+> >                 if (ret)
+> >                         return ret;
+> > -               if (!is_same)
+> > +               if (*len == 0)
+> >                         return -EBADE;
+> >         }
+> >
+> > @@ -1872,13 +1870,30 @@ static struct page *vfs_dedupe_get_page(struct inode *inode, loff_t offset)
+> >         return page;
+> >  }
+> >
+> > +static unsigned int vfs_dedupe_memcmp(const char *s1, const char *s2,
+> > +                                     unsigned int cmp_len)
+> > +{
+> > +       const char *orig_s1 = s1;
+> > +       const char *e1 = s1 + cmp_len;
+> > +       const char *e2 = s2 + cmp_len;
+> > +
+> > +       while (s1 < e1 && s2 < e2) {
+> > +               if (*s1 != *s2)
+> > +                       break;
+> > +               s1++;
+> > +               s2++;
+> > +       }
+> > +
+> > +       return s1 - orig_s1;
+> > +}
+> > +
+> 
+> A few nits:
+> 'len' wouldn't have been ambiguous in this context.
+> I find the for loop in memcmp more elegant. It is definitely shorter.
+> Not sure how differently the variants compile, but decrementing
+> count/len seems much more sane then checking 2 conditions that
+> always have the same result.
 
-Apparently newer versions of systemd than the one on this author's
-laptop <cough> now complain about lack of (path) escaping in unit instance
-variable contents:
+Fair enough; will fix.
 
- # xfs_scrub_all
- Scrubbing /home...
-  Invalid unit name "xfs_scrub@/home" was escaped as "xfs_scrub@-home"
- (maybe you should use systemd-escape?)
- Starting Online XFS Metadata Check for /home...
+--D
 
-So change the systemd_escape() function to escape paths unconditionally
-to make the warning go away.
-
-Reported-by: Matthias Bodenbinder <matthias@bodenbinder.de>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- scrub/xfs_scrub_all.in |    9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
-
-
-diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
-index f7d9e6c7..c4e9899d 100644
---- a/scrub/xfs_scrub_all.in
-+++ b/scrub/xfs_scrub_all.in
-@@ -82,11 +82,16 @@ def run_killable(cmd, stdout, killfuncs, kill_fn):
- # actually /can/ escape the dashes correctly if it is told that this is a path
- # (and not a unit name), but it didn't do this prior to January 2017, so fix
- # this for them.
-+#
-+# systemd path escaping also drops the initial slash so we add that back in so
-+# that log messages from the service units preserve the full path and users can
-+# look up log messages using full paths.  However, for "/" the escaping rules
-+# do /not/ drop the initial slash, so we have to special-case that here.
- def systemd_escape(path):
- 	'''Escape a path to avoid mangled systemd mangling.'''
- 
--	if '-' not in path:
--		return path
-+	if path == '/':
-+		return '-'
- 	cmd = ['systemd-escape', '--path', path]
- 	try:
- 		proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
+> Thanks,
+> Amir.
