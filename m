@@ -1,69 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:8890 "EHLO
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:59950 "EHLO
         ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726258AbeJFGlK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 6 Oct 2018 02:41:10 -0400
-Date: Sat, 6 Oct 2018 09:40:09 +1000
+        by vger.kernel.org with ESMTP id S1726258AbeJFGng (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 6 Oct 2018 02:43:36 -0400
+Date: Sat, 6 Oct 2018 09:42:33 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: move the define for superblock magic to uapi
-Message-ID: <20181005234009.GJ12041@dastard>
-References: <20181005122741.5100-1-kilobyte@angband.pl>
- <20181005160600.GR19324@magnolia>
- <20181005181032.pal6fwt7ebijvqu4@angband.pl>
- <20181005182356.GA19324@magnolia>
+Subject: Re: [PATCH 02/15] xfs: refactor clonerange preparation into a
+ separate helper
+Message-ID: <20181005234233.GK12041@dastard>
+References: <153870027422.29072.7433543674436957232.stgit@magnolia>
+ <153870028762.29072.5369530877410002226.stgit@magnolia>
+ <20181005070228.GE12041@dastard>
+ <20181005090242.GF12041@dastard>
+ <20181005172159.GV19324@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181005182356.GA19324@magnolia>
+In-Reply-To: <20181005172159.GV19324@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Adam Borowski <kilobyte@angband.pl>, linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, ocfs2-devel@oss.oracle.com, sandeen@redhat.com
 
-On Fri, Oct 05, 2018 at 11:23:56AM -0700, Darrick J. Wong wrote:
-> On Fri, Oct 05, 2018 at 08:10:32PM +0200, Adam Borowski wrote:
-> > On Fri, Oct 05, 2018 at 09:06:00AM -0700, Darrick J. Wong wrote:
-> > > On Fri, Oct 05, 2018 at 02:27:41PM +0200, Adam Borowski wrote:
-> > > > Needed by users of fstatfs().
+On Fri, Oct 05, 2018 at 10:21:59AM -0700, Darrick J. Wong wrote:
+> On Fri, Oct 05, 2018 at 07:02:42PM +1000, Dave Chinner wrote:
+> > On Fri, Oct 05, 2018 at 05:02:28PM +1000, Dave Chinner wrote:
+> > > On Thu, Oct 04, 2018 at 05:44:47PM -0700, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > 
+> > > > Refactor all the reflink preparation steps into a separate helper that
+> > > > we'll use to land all the upcoming fixes for insufficient input checks.
+> > > > 
+> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > .....
 > > > 
-> > > NAK.
-> > > 
-> > > The XFS superblock magic number is part of the on-disk format definition
-> > > of XFS. It belongs with all the other on-disk format definitions in this
-> > > file.
-> > > 
-> > > I don't think it's a good idea for userspace to associate s_magic with
-> > > userspace API feature sets, though the cat's long escaped the bag on
-> > > that one.
-> > > 
-> > > With that being reality, "the XFS superblock magic number" has a
-> > > different semantic meaning than "the agreed upon statfs.f_type value for
-> > > XFS", which means the latter should have a different symbol name to
-> > > reflect that difference.
+> > > > +xfs_reflink_remap_range(
+> > > > +	struct file		*file_in,
+> > > > +	loff_t			pos_in,
+> > > > +	struct file		*file_out,
+> > > > +	loff_t			pos_out,
+> > > > +	u64			len,
+> > > > +	bool			is_dedupe)
+> > > > +{
+> > > > +	struct inode		*inode_in = file_inode(file_in);
+> > > > +	struct xfs_inode	*src = XFS_I(inode_in);
+> > > > +	struct inode		*inode_out = file_inode(file_out);
+> > > > +	struct xfs_inode	*dest = XFS_I(inode_out);
+> > > > +	struct xfs_mount	*mp = src->i_mount;
+> > > > +	xfs_fileoff_t		sfsbno, dfsbno;
+> > > > +	xfs_filblks_t		fsblen;
+> > > > +	xfs_extlen_t		cowextsize;
+> > > > +	ssize_t			ret;
+> > > > +
+> > > > +	if (!xfs_sb_version_hasreflink(&mp->m_sb))
+> > > > +		return -EOPNOTSUPP;
+> > > > +
+> > > > +	if (XFS_FORCED_SHUTDOWN(mp))
+> > > > +		return -EIO;
+> > > > +
+> > > > +	/* Prepare and then clone file data. */
+> > > > +	ret = xfs_reflink_remap_prep(file_in, pos_in, file_out, pos_out,
+> > > > +			len, is_dedupe);
 > > 
-> > Ie, you'd be ok with the same value to be defined in two places -- do I
-> > understand this right?
-> > 
-> > > > --- a/fs/xfs/libxfs/xfs_format.h
-> > > > -#define	XFS_SB_MAGIC		0x58465342	/* 'XFSB' */
-> > > > +#define	XFS_SB_MAGIC		XFS_SUPER_MAGIC /* 0x58465342 = 'XFSB' */
-> > > > --- a/include/uapi/linux/magic.h
-> > > >  #define JFFS2_SUPER_MAGIC	0x72b6
-> > > > +#define XFS_SUPER_MAGIC		0x58465342	/* "XFSB" */
-> > > >  #define PSTOREFS_MAGIC		0x6165676C
+> > More than one bug. vfs_clone_file_prep_inodes() modifes the length
+> > parameter in the case of whole file reflink by way of "len == 0"
+> > on a non-zero length file. So I fixed this, too.
 > 
-> Sorry, hit send too fast.
-> 
-> include/uapi/linux/magic.h would get:
-> 
-> #define XFS_STATFS_MAGIC	0x58465342	/* 'XFSB' */
+> Did your patch look something like the attached?
 
-$ man statfs |grep 0x5846
-           XFS_SUPER_MAGIC       0x58465342
-$
+Identical. I folded it back in once it tested ok, though.
 
--Dave.
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
