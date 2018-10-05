@@ -1,62 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from www.llwyncelyn.cymru ([82.70.14.225]:44932 "EHLO fuzix.org"
+Received: from sandeen.net ([63.231.237.45]:47138 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729439AbeJAVnF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 1 Oct 2018 17:43:05 -0400
-Date: Mon, 1 Oct 2018 16:04:42 +0100
-From: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
-Subject: Re: Leaking Path in XFS's ioctl interface(missing LSM check)
-Message-ID: <20181001160442.47c798bc@alans-desktop>
-In-Reply-To: <20181001002521.GM31060@dastard>
-References: <5EF0D46A-C098-4B51-AD13-225FFCA35D4C@vt.edu>
-        <20180926013329.GD31060@dastard>
-        <20180926192426.472360ea@alans-desktop>
-        <20180927013812.GF31060@dastard>
-        <20180930151652.6975610c@alans-desktop>
-        <20181001002521.GM31060@dastard>
+        id S1725928AbeJFEhv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 6 Oct 2018 00:37:51 -0400
+Subject: Re: [PATCH 9/8] xfs_io: dedupe command should only complain if we
+ don't dedupe anything
+References: <153841345236.27952.5050172703525712660.stgit@magnolia>
+ <20181004222733.GM19324@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <bda0d21d-d81e-7a16-2440-67037c307c84@sandeen.net>
+Date: Fri, 5 Oct 2018 16:37:14 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20181004222733.GM19324@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: TongZhang <ztong@vt.edu>, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-security-module@vger.kernel.org, Wenbo Shen <shenwenbosmile@gmail.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@redhat.com
+Cc: linux-xfs@vger.kernel.org
 
->         /* only root can play with this */
->         if (!capable(CAP_SYS_ADMIN))
->                 return -EACCES;
+On 10/4/18 5:27 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Think about it - if DM control ioctls only require CAP_SYS_ADMIN,
-> then if have that cap you can use DM to remap any block in a block
-> device to any other block. You don't need to the filesystem to move
-> stuff around, it can be moved around without the filesystem knowing
-> anything about it.
-
-Yes - I am not surprised the XFS is not the only problem area. The fact
-XFS also isn't going via the security hooks so security hooks can fix it
-just makes it worse.
-
-> > That's what people said about setuid shell scripts.  
+> The dedupe command should only complain about non-matching extents if
+> the kernel hasn't managed to dedupe /any/ of the input range.
 > 
-> Completely different. setuid shell scripts got abused as a hack for
-> the lazy to avoid setting up permissions properly and hence were
-> easily exploited.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Sounds to me like an accurate description of the current capabilities
-mess in the kernel (and not just XFS and not just file systems)
+Should it be "no extents matched" then perhaps?
 
-> Systems restricted by LSMs to the point where CAP_SYS_ADMIN is not
-> trusted have exactly the same issues. i.e. there's nobody trusted by
-> the kernel to administer the storage stack, and nobody has defined a
-> workable security model that can prevent untrusted users from
-> violating the existing storage trust model....
+I mean xfs_io is not exactly-quite a purpose-built dedupe tool, but should
+we be a bit more specific if we're issuing a message at all?
 
-With a proper set of LSM checks you can lock the filesystem management
-and enforcement to a particular set of objects. You can build that model
-where for example only an administrative login from a trusted console may
-launch processes to do that management.
+if (info->status == XFS_EXTENT_DATA_DIFFERS) {
+	if (deduped == 0)
+		fprintf(stderr, "XFS_IOC_FILE_EXTENT_SAME: %s\n",
+  			_("No extents matched."));
+	else
+		fprintf(stderr, "XFS_IOC_FILE_EXTENT_SAME: %s\n",
+  			_("Some extents did not match."));
+}
 
-Or you could - if things were not going around the LSM hooks.
+And the manpage implies that any difference will make it fail:
 
-Alan
+> map length bytes at offset dst_offset in the open file to the same physical
+> blocks that are mapped at offset src_offset in the file src_file, but only
+> if the contents of both ranges are identical.
+
+now you're telling me it'll make a best effort?  ;)  I think the manpage
+needs clarification too ...
+
+> ---
+
+
+>  io/reflink.c |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/io/reflink.c b/io/reflink.c
+> index 26eb2e32..72dfe32d 100644
+> --- a/io/reflink.c
+> +++ b/io/reflink.c
+> @@ -70,7 +70,8 @@ dedupe_ioctl(
+>  					_(strerror(-info->status)));
+>  			goto done;
+>  		}
+> -		if (info->status == XFS_EXTENT_DATA_DIFFERS) {
+> +		if (deduped == 0 &&
+> +		    info->status == XFS_EXTENT_DATA_DIFFERS) {
+>  			fprintf(stderr, "XFS_IOC_FILE_EXTENT_SAME: %s\n",
+>  					_("Extents did not match."));
+>  			goto done;
+> 
