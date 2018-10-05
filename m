@@ -1,49 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:39480 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727958AbeJEXjZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 19:39:25 -0400
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 5D9B229A3E
-        for <linux-xfs@vger.kernel.org>; Fri,  5 Oct 2018 16:39:55 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 201331] deadlock (XFS?)
-Date: Fri, 05 Oct 2018 16:39:55 +0000
-Message-ID: <bug-201331-201763-hP0TZ4Prac@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-201331-201763@https.bugzilla.kernel.org/>
-References: <bug-201331-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Received: from tartarus.angband.pl ([54.37.238.230]:40416 "EHLO
+        tartarus.angband.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727666AbeJET0U (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 15:26:20 -0400
+From: Adam Borowski <kilobyte@angband.pl>
+Date: Fri,  5 Oct 2018 14:27:41 +0200
+Message-Id: <20181005122741.5100-1-kilobyte@angband.pl>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Subject: [PATCH] xfs: move the define for superblock magic to uapi
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+Cc: Adam Borowski <kilobyte@angband.pl>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=201331
+Needed by users of fstatfs().
 
---- Comment #10 from edo (edo.rus@gmail.com) ---
-> A substripe write will require 4MiB + parity (which IIRC will be another 1024MiB) so a total of 5MiB needs to be Read, modified and written for each undersized write.
+Signed-off-by: Adam Borowski <kilobyte@angband.pl>
+---
+ fs/xfs/libxfs/xfs_format.h | 3 ++-
+ include/uapi/linux/magic.h | 1 +
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-I'm pretty sure, md raid can do partial update for chunks.
-
-I just ran 4Kib random write test (fio) on freshly created array with chunk
-size 4Kib, after that with chunk size 16Mib - no difference in terms iops on
-raid device (observed in fio), iops and transfer speed on raid members
-(observed in iostat).
-
-
-> Your system is not locked up, it's just really slow due the amount of time being spent waiting for IO completion.
-
-No.
-Array was filling with good speed (80-250Mib/s, limited by network) several
-hours after system startup.
-Unexpectedly write stopped (zeros in iostat) and messages "blocked for more
-than 120 seconds" arrive. I managed to continue disk filling with hardware
-reset only.
-Such behavior repeated many times, I tried several kernel versions and kernel
-options.
-
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 059bc44c27e8..837863c57e8c 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -14,6 +14,7 @@
+  * xfs_da_format.h, which log and log item formats are defined in
+  * xfs_log_format.h. Everything else goes here.
+  */
++#include <linux/magic.h>
+ 
+ struct xfs_mount;
+ struct xfs_trans;
+@@ -26,7 +27,7 @@ struct xfs_ifork;
+  * Fits into a sector-sized buffer at address 0 of each allocation group.
+  * Only the first of these is ever updated except during growfs.
+  */
+-#define	XFS_SB_MAGIC		0x58465342	/* 'XFSB' */
++#define	XFS_SB_MAGIC		XFS_SUPER_MAGIC /* 0x58465342 = 'XFSB' */
+ #define	XFS_SB_VERSION_1	1		/* 5.3, 6.0.1, 6.1 */
+ #define	XFS_SB_VERSION_2	2		/* 6.2 - attributes */
+ #define	XFS_SB_VERSION_3	3		/* 6.2 - new inode version */
+diff --git a/include/uapi/linux/magic.h b/include/uapi/linux/magic.h
+index 1a6fee974116..96c24478d8ce 100644
+--- a/include/uapi/linux/magic.h
++++ b/include/uapi/linux/magic.h
+@@ -29,6 +29,7 @@
+ #define HPFS_SUPER_MAGIC	0xf995e849
+ #define ISOFS_SUPER_MAGIC	0x9660
+ #define JFFS2_SUPER_MAGIC	0x72b6
++#define XFS_SUPER_MAGIC		0x58465342	/* "XFSB" */
+ #define PSTOREFS_MAGIC		0x6165676C
+ #define EFIVARFS_MAGIC		0xde5e81e4
+ #define HOSTFS_SUPER_MAGIC	0x00c0ffee
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+2.19.0
