@@ -1,132 +1,137 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb1-f193.google.com ([209.85.219.193]:39658 "EHLO
-        mail-yb1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727329AbeJEPEl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 11:04:41 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:56206 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727798AbeJES6T (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 5 Oct 2018 14:58:19 -0400
+Date: Fri, 5 Oct 2018 07:59:51 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 3/3] xfs: fix buffer state management in
+ xrep_findroot_block
+Message-ID: <20181005115950.GC54400@bfoster>
+References: <153870045847.29695.10286947858219936840.stgit@magnolia>
+ <153870047729.29695.18042015772366432041.stgit@magnolia>
 MIME-Version: 1.0
-References: <153870027422.29072.7433543674436957232.stgit@magnolia> <153870033496.29072.3660384210745578982.stgit@magnolia>
-In-Reply-To: <153870033496.29072.3660384210745578982.stgit@magnolia>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Fri, 5 Oct 2018 11:06:54 +0300
-Message-ID: <CAOQ4uxjjSFt07P1Qv9am9sN--UZOojzE4QGQSdx1o+sLN+M2RQ@mail.gmail.com>
-Subject: Re: [PATCH 08/15] vfs: change clone and dedupe range function
- pointers to return bytes completed
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <153870047729.29695.18042015772366432041.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, ocfs2-devel@oss.oracle.com, Eric Sandeen <sandeen@redhat.com>, Matthew Wilcox <willy@infradead.org>, Miklos Szeredi <miklos@szeredi.hu>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
 
-On Fri, Oct 5, 2018 at 3:46 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
->
+On Thu, Oct 04, 2018 at 05:47:57PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
->
-> Change the clone_file_range and dedupe_file_range functions to return
-> the number of bytes they operated on.  This is the precursor to allowing
-> fs implementations to return short clone/dedupe results to the user,
-> which will enable us to obey resource limits in a graceful manner.
->
+> 
+> We don't handle buffer state properly in online repair's findroot
+> routine.  If a buffer already has b_ops set, we don't ever want to touch
+> that, and we don't want to call the read verifiers on a buffer that
+> could be dirty (CRCs are only recomputed during log checkpoints).
+> 
+> Therefore, be more careful about what we do with a buffer -- if someone
+> else already attached ops that are not the ones for this btree type,
+> just ignore the buffer.  We only attach our btree type's buf ops if it
+> matches the magic/uuid and structure checks.
+> 
+> We also modify xfs_buf_read_map to allow callers to set buffer ops on a
+> DONE buffer with NULL ops so that repair doesn't leave behind buffers
+> which won't have buffers attached to them.
+> 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
+>  fs/xfs/scrub/repair.c  |   63 +++++++++++++++++++++++++++++++++++++-----------
+>  fs/xfs/xfs_trans.h     |    1 +
+>  fs/xfs/xfs_trans_buf.c |   13 ++++++++++
+>  3 files changed, 63 insertions(+), 14 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+> index 63786341ac2a..cebaebb26566 100644
+> --- a/fs/xfs/scrub/repair.c
+> +++ b/fs/xfs/scrub/repair.c
+...
+> @@ -718,28 +720,61 @@ xrep_findroot_block(
+>  			return error;
+>  	}
+>  
+...
+> +	/*
+> +	 * If the buffer already has ops applied and they're not the ones for
+> +	 * this btree type, we know this block doesn't match the btree and we
+> +	 * can bail out.
+> +	 *
+> +	 * If the buffer ops match ours, someone else has already validated
+> +	 * the block for us, so we can move on to checking if this is a root
+> +	 * block candidate.
+> +	 *
+> +	 * If the buffer does not have ops, nobody has successfully validated
+> +	 * the contents and the buffer cannot be dirty.  If the magic, uuid,
+> +	 * and structure match this btree type then we'll move on to checking
+> +	 * if it's a root block candidate.  If there is no match, bail out.
+> +	 */
+> +	if (bp->b_ops) {
+> +		if (bp->b_ops != fab->buf_ops)
+> +			goto out;
+> +	} else {
+> +		ASSERT(!xfs_trans_buf_is_dirty(bp));
+> +		if (!uuid_equal(&btblock->bb_u.s.bb_uuid,
+> +				&mp->m_sb.sb_meta_uuid))
+> +			goto out;
+> +		fab->buf_ops->verify_read(bp);
+> +		if (bp->b_error)
+> +			goto out;
 
-[...]
+I guess this is related to my question on the previous patch. If the
+verifier fails, we leave the XBF_DONE buffer around with ->b_ops == NULL
+and ->b_error != 0.
 
-> diff --git a/fs/overlayfs/file.c b/fs/overlayfs/file.c
-> index aeaefd2a551b..6d792d817538 100644
-> --- a/fs/overlayfs/file.c
-> +++ b/fs/overlayfs/file.c
-> @@ -487,16 +487,21 @@ static ssize_t ovl_copy_file_range(struct file *file_in, loff_t pos_in,
->                             OVL_COPY);
+I suppose somebody should eventually attach a verifier before this
+buffer is ever really used, but I think I'd feel a little better about
+this if we immediately cleaned up the side effects of using the wrong
+verifier rather than potentially leaking an error to other contexts
+where it has no relevance. That aside, this all looks fine to me.
+
+Brian
+
+> +		bp->b_ops = fab->buf_ops;
+> +	}
+>  
+>  	/*
+>  	 * This block passes the magic/uuid and verifier tests for this btree
+> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> index c3d278e96ad1..a0c5dbda18aa 100644
+> --- a/fs/xfs/xfs_trans.h
+> +++ b/fs/xfs/xfs_trans.h
+> @@ -220,6 +220,7 @@ void		xfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *, uint);
+>  void		xfs_trans_log_buf(struct xfs_trans *, struct xfs_buf *, uint,
+>  				  uint);
+>  void		xfs_trans_dirty_buf(struct xfs_trans *, struct xfs_buf *);
+> +bool		xfs_trans_buf_is_dirty(struct xfs_buf *bp);
+>  void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
+>  
+>  void		xfs_extent_free_init_defer_op(void);
+> diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+> index b0ba2ca9cca3..93a053c700dd 100644
+> --- a/fs/xfs/xfs_trans_buf.c
+> +++ b/fs/xfs/xfs_trans_buf.c
+> @@ -349,6 +349,19 @@ xfs_trans_read_buf_map(
+>  
 >  }
->
-> -static int ovl_clone_file_range(struct file *file_in, loff_t pos_in,
-> +static s64 ovl_clone_file_range(struct file *file_in, loff_t pos_in,
->                                 struct file *file_out, loff_t pos_out, u64 len)
->  {
-> -       return ovl_copyfile(file_in, pos_in, file_out, pos_out, len, 0,
-> -                           OVL_CLONE);
-> +       int ret;
+>  
+> +/* Has this buffer been dirtied by anyone? */
+> +bool
+> +xfs_trans_buf_is_dirty(
+> +	struct xfs_buf		*bp)
+> +{
+> +	struct xfs_buf_log_item	*bip = bp->b_log_item;
 > +
-> +       ret = ovl_copyfile(file_in, pos_in, file_out, pos_out, len, 0,
-> +                          OVL_CLONE);
-> +       return ret < 0 ? ret : len;
->  }
->
-> -static int ovl_dedupe_file_range(struct file *file_in, loff_t pos_in,
-> +static s64 ovl_dedupe_file_range(struct file *file_in, loff_t pos_in,
->                                  struct file *file_out, loff_t pos_out, u64 len)
->  {
-> +       int ret;
+> +	if (!bip)
+> +		return false;
+> +	ASSERT(bip->bli_item.li_type == XFS_LI_BUF);
+> +	return test_bit(XFS_LI_DIRTY, &bip->bli_item.li_flags);
+> +}
 > +
->         /*
->          * Don't copy up because of a dedupe request, this wouldn't make sense
->          * most of the time (data would be duplicated instead of deduplicated).
-> @@ -505,8 +510,9 @@ static int ovl_dedupe_file_range(struct file *file_in, loff_t pos_in,
->             !ovl_inode_upper(file_inode(file_out)))
->                 return -EPERM;
->
-> -       return ovl_copyfile(file_in, pos_in, file_out, pos_out, len, 0,
-> -                           OVL_DEDUPE);
-> +       ret = ovl_copyfile(file_in, pos_in, file_out, pos_out, len, 0,
-> +                          OVL_DEDUPE);
-> +       return ret < 0 ? ret : len;
->  }
->
-
-This is not pretty at all.
-You are blocking the propagation of partial dedupe/clone result
-of files that are accessed via overlay over xfs.
-
-Please extend the interface change to the vfs helpers
-(i.e. vfs_clone_file_range()) and then the change above is not needed.
-
-Of course you would need to change the 3 callers of
-vfs_clone_file_range() that expect 0 is ok.
-
-Please take a look at commit
-a725356b6659 ("vfs: swap names of {do,vfs}_clone_file_range()")
-
-That was just merged for rc7.
-
-I do apologize for the churn, but it's a semantic mistake that
-I made that needed fixing, so please rebase your work on top
-of that and take care not to trip over it.
-
-ioctl_file_clone() and ovl_copy_up_data() just need to interpret
-positive return value correctly.
-nfsd4_clone_file_range() should have the same return value as
-vfs_clone_file_range() to be interpreted in nfsd4_clone(), following
-same practice as nfsd4_copy_file_range().
-
-[...]
-
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index 2a4141d36ebf..e5755340e825 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -1759,10 +1759,12 @@ struct file_operations {
->  #endif
->         ssize_t (*copy_file_range)(struct file *, loff_t, struct file *,
->                         loff_t, size_t, unsigned int);
-> -       int (*clone_file_range)(struct file *, loff_t, struct file *, loff_t,
-> -                       u64);
-> -       int (*dedupe_file_range)(struct file *, loff_t, struct file *, loff_t,
-> -                       u64);
-> +       s64 (*clone_file_range)(struct file *file_in, loff_t pos_in,
-> +                               struct file *file_out, loff_t pos_out,
-> +                               u64 count);
-> +       s64 (*dedupe_file_range)(struct file *file_in, loff_t pos_in,
-> +                                struct file *file_out, loff_t pos_out,
-> +                                u64 count);
-
-Matthew has objected a similar interface change when it was proposed by Miklos:
-https://marc.info/?l=linux-fsdevel&m=152570317110292&w=2
-https://marc.info/?l=linux-fsdevel&m=152569298704781&w=2
-
-He claimed that the interface should look like this:
-+       loff_t (*dedupe_file_range)(struct file *src, loff_t src_off,
-+                       struct file *dst, loff_t dst_off, loff_t len);
-
-Thanks,
-Amir.
+>  /*
+>   * Release the buffer bp which was previously acquired with one of the
+>   * xfs_trans_... buffer allocation routines if the buffer has not
+> 
