@@ -1,105 +1,133 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:53030 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726515AbeJKAYv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Oct 2018 20:24:51 -0400
-Date: Wed, 10 Oct 2018 10:01:37 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 06/25] vfs: strengthen checking of file range inputs to
- generic_remap_checks
-Message-ID: <20181010170137.GA24824@magnolia>
-References: <153913023835.32295.13962696655740190941.stgit@magnolia>
- <153913028015.32295.15993665528948323051.stgit@magnolia>
- <CAOQ4uxjZ1JuT3Ga1kTDF9boeYF5pafDmsnzWxVNPWcTpESchgw@mail.gmail.com>
+Received: from sandeen.net ([63.231.237.45]:53174 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728278AbeJEUuu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 5 Oct 2018 16:50:50 -0400
+Subject: Re: [PATCH] mkfs.xfs: don't go into multidisk mode if there is only
+ one stripe
+References: <20181004175839.18736-1-idryomov@gmail.com>
+ <24d229f3-1a75-a65d-5ad3-c8565cb32e76@sandeen.net>
+ <20181004222952.GV31060@dastard>
+ <CAOi1vP_U-QpABgs+a9oYpYvLWs4D2qVmff=-JEikn7S_=eCAXQ@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <67627995-714c-5c38-a796-32b503de7d13@sandeen.net>
+Date: Fri, 5 Oct 2018 08:51:59 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxjZ1JuT3Ga1kTDF9boeYF5pafDmsnzWxVNPWcTpESchgw@mail.gmail.com>
+In-Reply-To: <CAOi1vP_U-QpABgs+a9oYpYvLWs4D2qVmff=-JEikn7S_=eCAXQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-cifs@vger.kernel.org, overlayfs <linux-unionfs@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, ocfs2-devel@oss.oracle.com
+To: Ilya Dryomov <idryomov@gmail.com>, Dave Chinner <david@fromorbit.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, Mark Nelson <mnelson@redhat.com>, Eric Sandeen <sandeen@redhat.com>, Mike Snitzer <snitzer@redhat.com>
 
-On Wed, Oct 10, 2018 at 08:23:27AM +0300, Amir Goldstein wrote:
-> On Wed, Oct 10, 2018 at 3:11 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> >
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> >
-> > File range remapping, if allowed to run past the destination file's EOF,
-> > is an optimization on a regular file write.  Regular file writes that
-> > extend the file length are subject to various constraints which are not
-> > checked by range cloning.
-> >
-> > This is a correctness problem because we're never allowed to touch
-> > ranges that the page cache can't support (s_maxbytes); we're not
-> > supposed to deal with large offsets (MAX_NON_LFS) if O_LARGEFILE isn't
-> > set; and we must obey resource limits (RLIMIT_FSIZE).
-> >
-> > Therefore, add these checks to the new generic_remap_checks function so
-> > that we curtail unexpected behavior.
-> >
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  mm/filemap.c |   39 +++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 39 insertions(+)
-> >
-> >
-> > diff --git a/mm/filemap.c b/mm/filemap.c
-> > index 14041a8468ba..59056bd9c58a 100644
-> > --- a/mm/filemap.c
-> > +++ b/mm/filemap.c
-> > @@ -2974,6 +2974,27 @@ inline ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
-> >  }
-> >  EXPORT_SYMBOL(generic_write_checks);
-> >
-> > +static int
-> > +generic_remap_check_limits(struct file *file, loff_t pos, uint64_t *count)
-> > +{
-> > +       struct inode *inode = file->f_mapping->host;
-> > +
-> > +       /* Don't exceed the LFS limits. */
-> > +       if (unlikely(pos + *count > MAX_NON_LFS &&
-> > +                               !(file->f_flags & O_LARGEFILE))) {
-> > +               if (pos >= MAX_NON_LFS)
-> > +                       return -EFBIG;
-> > +               *count = min(*count, MAX_NON_LFS - (uint64_t)pos);
-> > +       }
-> > +
-> > +       /* Don't operate on ranges the page cache doesn't support. */
-> > +       if (unlikely(pos >= inode->i_sb->s_maxbytes))
-> > +               return -EFBIG;
-> > +
-> > +       *count = min(*count, inode->i_sb->s_maxbytes - (uint64_t)pos);
-> > +       return 0;
-> > +}
-> > +
+On 10/5/18 6:27 AM, Ilya Dryomov wrote:
+> On Fri, Oct 5, 2018 at 12:29 AM Dave Chinner <david@fromorbit.com> wrote:
+>>
+>> On Thu, Oct 04, 2018 at 01:33:12PM -0500, Eric Sandeen wrote:
+>>> On 10/4/18 12:58 PM, Ilya Dryomov wrote:
+>>>> rbd devices report the following geometry:
+>>>>
+>>>>   $ blockdev --getss --getpbsz --getiomin --getioopt /dev/rbd0
+>>>>   512
+>>>>   512
+>>>>   4194304
+>>>>   4194304
+>>
+>> dm-thinp does this as well. THis is from the thinp device created
+>> by tests/generic/459:
+>>
+>> 512
+>> 4096
+>> 65536
+>> 65536
 > 
-> Sorry. I haven't explained myself properly last time.
-> What I meant is that it hurts my eyes to see generic_write_checks() and
-> generic_remap_check_limits() which from the line of (limit != RLIM_INFINITY)
-> are exactly the same thing. Yes, generic_remap_check_limits() uses
-> iov_iter_truncate(), but that's a minor semantic change - it can be easily
-> resolved by creating a dummy iter in generic_remap_checks() instead of
-> passing int *count.
-
-Making a fake kiocb and iterator seem like a terribly fragile idea.
-
-How about I make the common helper take a pos and *count, and
-generic_write_checks can translate that into iov_iter_truncate?
-
-> You could say that this is nit picking, but the very reason this patch
-> set exists
-> it because clone/dedup implementation did not use the same range checks
-> of write to begin with, so it just seems wrong to diverge them at this point.
+> (adding Mike)
 > 
-> So to be clear, I suggest that generic_write_checks() should use your
-> generic_remap_check_limits() helper.
-> If you disagree and others can live with this minor duplication, fine by me.
+> ... and that 300M filesystem ends up with 8 AGs, when normally you get
+> 4 AGs for anything less than 4T.  Is that really intended?
 
-Nah, I think I misunderstood you the first time, sorry about that.
+Well, yes.  Multi-disk mode gives you more AGs, how many more is scaled
+by fs size.
 
---D
+        /*
+         * For the multidisk configs we choose an AG count based on the number
+         * of data blocks available, trying to keep the number of AGs higher
+         * than the single disk configurations. This makes the assumption that
+         * larger filesystems have more parallelism available to them.
+         */
 
-> Thanks,
-> Amir.
+For really tiny filesystems we cut down the number of AGs, but in general
+if the storage "told" us it has parallelism, mkfs uses it by default.
+
+> AFAIK dm-thinp reports these values for the same exact reason as rbd:
+> we are passing up the information about the efficient I/O size.  In the
+> case of dm-thinp, this is the thinp block size.  If you put dm-thinp on
+> top of a RAID array, I suspect it would pass up the array's preferred
+> sizes, as long as they are a proper factor of the thinp block size.
+> 
+> The high agcount on dm-thinp has come up before and you suggested that
+> dm-thinp should report iomin == ioopt (i.e. sunit == swidth).  If that
+> was the right fix back in 2014, mkfs.xfs must have regressed:
+> 
+>   https://marc.info/?l=linux-xfs&m=137783388617206&w=2
+
+Well, that question started out as being about higher AG counts.  And
+it did come from the stripe geometry advertised, but I don't think
+Dave's suggestion was intended to keep the AG count lower, it was just
+explaining that the values seemed wrong.  It was a bit of an odd situation,
+the existence of stripe geometry bumped up AG count but then mkfs decided
+that a 512 byte "stripe unit" wasn't legit, and set it back to zero.  But
+kept the higher AG count.  So there a few related issues there.
+
+>   https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=fdfb4c8c1a9fc8dd8cf8eeb4e3ed83573b375285
+
+So that sets them to the same size, but I don't think that change was
+ever expected to change the AG count heuristic behavior, which has been
+there for probably a decade or more.
+
+>>
+>> And I've also seen some hardware raid controllers do this, too,
+>> because they only expose the stripe width in their enquiry page
+>> rather than stripe unit and stripe width.
+
+(which should be considered semi broken hardware, no?)
+
+>> IOWs, this behaviour isn't really specific to Ceph's rbd device, and
+>> it does occur on multi-disk devices that have something layered over
+>> the top (dm-thinp, hardware raid, etc). As such, I don't think
+>> there's a "one size fits all" solution and so someone is going to
+>> have to tweak mkfs settings to have it do the right thing for their
+>> storage subsystem....
+> 
+> FWIW I was surprised to see that calc_default_ag_geometry() doesn't
+> look at swidth and just assumes that there will be "more parallelism
+> available".  I expected it to be based on swidth to sunit ratio (i.e.
+> sw).  sw is supposed to be the multiplier equal to the number of
+> data-bearing disks, so it's the first thing that comes to mind for
+> a parallelism estimate.
+> 
+> I'd argue that hardware RAID administrators are much more likely to pay
+> attention to the output of mkfs.xfs and be able to tweak the settings
+> to work around broken controllers that only expose stripe width.
+
+Yeah, this starts to get a little philosophical.  We don't want to second
+guess geometry or try to figure out what the raid array "really meant" if
+it's sending weird numbers. [1]
+
+But at the end of the day, it seems reasonable to always apply the
+"swidth/sunit = number of data disks" rule  (which we apply in reverse when
+we tell people how to manually figure out stripe widths) and stop treating
+sunit==swidth as any indication of parallelism.
+
+Dave, do you have any problem with changing the behavior to only go into
+multidisk if swidth > sunit?  The more I think about it, the more it makes
+sense to me.
+
+-Eric
+
+
+[1] for example,
+    99a3f52 mkfs: avoid divide-by-zero when hardware reports optimal i/o size as 0
