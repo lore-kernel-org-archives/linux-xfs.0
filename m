@@ -1,45 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:47352 "EHLO sandeen.net"
+Received: from ms.lwn.net ([45.79.88.28]:58770 "EHLO ms.lwn.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726291AbeJHXBL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 Oct 2018 19:01:11 -0400
-Subject: Re: [PATCH 14/15] xfsprogs: eliminate shadow variables
-References: <1538712196-13625-1-git-send-email-sandeen@sandeen.net>
- <1538712196-13625-15-git-send-email-sandeen@sandeen.net>
- <20181006101655.GN28114@infradead.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <9a7008ef-7500-f041-5c4d-4b316059ea4f@sandeen.net>
-Date: Mon, 8 Oct 2018 10:48:48 -0500
+        id S1727726AbeJFVNm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 6 Oct 2018 17:13:42 -0400
+Date: Sat, 6 Oct 2018 08:10:13 -0600
+From: Jonathan Corbet <corbet@lwn.net>
+Subject: Re: [PATCH v2 00/22] xfs-4.20: major documentation surgery
+Message-ID: <20181006081013.2c8bb0b6@lwn.net>
+In-Reply-To: <20181006132951.GA17023@bombadil.infradead.org>
+References: <153862669110.26427.16504658853992750743.stgit@magnolia>
+        <20181006005154.GM12041@dastard>
+        <20181006132951.GA17023@bombadil.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20181006101655.GN28114@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org
 
+On Sat, 6 Oct 2018 06:29:51 -0700
+Matthew Wilcox <willy@infradead.org> wrote:
 
+> I had an informal chat with Bradley Kuhn at LinuxCon Japan about using
+> CC-BY-SA-4.0 and he indicated that I was probably better off using the
+> GPL-2(+) for documentation.  I've changed the XArray documentation from
+> CC-BY-SA-4.0 to GPL-2+.
 
-On 10/6/18 5:16 AM, Christoph Hellwig wrote:
-> On Thu, Oct 04, 2018 at 11:03:15PM -0500, Eric Sandeen wrote:
->> From: Eric Sandeen <sandeen@redhat.com>
->>
->> None of these seem activel harmful, but to avoid confusion, remove all
->> shadow variables by just renaming them in their local scope.
->>
->> Fixes sparse warnings about this.
-> 
-> I'd feel much more comforable reviewing this with one patch per
-> function that explains why the transformation is safe, especially
-> as the patch itself contradicts the explanation above - some variables
-> are removed instead of renamed for example.
-> 
+Would you consider doing the same for Documentation/core-api/idr.rst?
+That's the only CC-SA SPDX tag in the kernel now, and it's a clear
+example of just what I'm worried about: it pulls in a nice DOC section
+from the code when you run Sphinx on it, so we're not just talking
+function prototypes here.  I was likely to come knocking on your door
+after my upcoming conversation anyway...:)
 
-Well, existing variables are used in their place, i.e. another existing
-loop counter "i" is re-used instead of one which shadows a global variable
-("x").
+Thanks,
 
-But ok, I can split it up more.
+jon
