@@ -1,25 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:60708 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:48842 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726919AbeJFRKW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 6 Oct 2018 13:10:22 -0400
-Date: Sat, 6 Oct 2018 03:07:41 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 02/15] xfsprogs: use ANSI declarations of void-arg
- functions
-Message-ID: <20181006100741.GB28114@infradead.org>
-References: <1538712196-13625-1-git-send-email-sandeen@sandeen.net>
- <1538712196-13625-3-git-send-email-sandeen@sandeen.net>
+        with ESMTP id S1727726AbeJFUdM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 6 Oct 2018 16:33:12 -0400
+Date: Sat, 6 Oct 2018 06:29:51 -0700
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH v2 00/22] xfs-4.20: major documentation surgery
+Message-ID: <20181006132951.GA17023@bombadil.infradead.org>
+References: <153862669110.26427.16504658853992750743.stgit@magnolia>
+ <20181006005154.GM12041@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1538712196-13625-3-git-send-email-sandeen@sandeen.net>
+In-Reply-To: <20181006005154.GM12041@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org, corbet@lwn.net
 
-Looks good,
+On Sat, Oct 06, 2018 at 10:51:54AM +1000, Dave Chinner wrote:
+> On Wed, Oct 03, 2018 at 09:18:11PM -0700, Darrick J. Wong wrote:
+> > Hi all,
+> > 
+> > This series converts the existing in-kernel xfs documentation to rst
+> > format, links it in with the rest of the kernel's rst documetation, and
+> > then begins pulling in the contents of the Data Structures & Algorithms
+> > book from the xfs-documentation git tree.  No changes are made to the
+> > text during the import process except to fix things that the conversion
+> > process (asciidoctor + pandoc) didn't do correctly.  The goal of this
+> > series is to tie together the XFS code with the on-disk format
+> > documentation for the features supported by the code.
+> > 
+> > I've built the docs and put them here, in case you hate reading rst:
+> > https://djwong.org/docs/kdoc/admin-guide/xfs.html
+> > https://djwong.org/docs/kdoc/filesystems/xfs-data-structures/index.html
+> > 
+> > I've posted a branch here because the png import patch is huge:
+> > https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=docs-4.20-merge
+> > 
+> > The patchset should apply cleanly against 4.19-rc6.  Comments and
+> > questions are, as always, welcome.
+> 
+> Jon,
+> 
+> Can you let us know whether the CC-by-SA 4.0 license is acceptible
+> or not? That's really the only thing that we need clarified at this
+> point - if it's OK I'll to pull this into the XFS tree for the 4.20
+> merge window. If not, we'll go back to the drawing board....
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+This is (obviously) not legal advice.
+
+I had an informal chat with Bradley Kuhn at LinuxCon Japan about using
+CC-BY-SA-4.0 and he indicated that I was probably better off using the
+GPL-2(+) for documentation.  I've changed the XArray documentation from
+CC-BY-SA-4.0 to GPL-2+.
+
+YMMV, defer to the LF lawyer, but I thought it worth providing a data
+point.
