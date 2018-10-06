@@ -1,80 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:54910 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726913AbeJFNvN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 6 Oct 2018 09:51:13 -0400
-Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w966ehUY063920
-        for <linux-xfs@vger.kernel.org>; Sat, 6 Oct 2018 02:49:03 -0400
-Received: from e06smtp04.uk.ibm.com (e06smtp04.uk.ibm.com [195.75.94.100])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2mxq73hp4u-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Sat, 06 Oct 2018 02:49:03 -0400
-Received: from localhost
-        by e06smtp04.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Sat, 6 Oct 2018 07:49:02 +0100
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: Re: [PATCH V5 06/20] Fix xfs/139 to work with 64k block size
-Date: Sat, 06 Oct 2018 12:21:22 +0530
-In-Reply-To: <20181006003338.GC6311@dastard>
-References: <20180924151942.8220-1-chandan@linux.vnet.ibm.com> <20180924151942.8220-7-chandan@linux.vnet.ibm.com> <20181006003338.GC6311@dastard>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:40738 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726409AbeJFQhM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 6 Oct 2018 12:37:12 -0400
+Date: Sat, 6 Oct 2018 19:34:34 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/8] xfs: remove magic handling of unwritten extents in
+ xfs_bmapi_allocate
+Message-ID: <20181006093433.GA18095@dastard>
+References: <20181002174207.25275-1-hch@lst.de>
+ <20181002174207.25275-4-hch@lst.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-Message-Id: <3892653.Ddf5GiE5O6@localhost.localdomain>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181002174207.25275-4-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: fstests@vger.kernel.org, guaneryu@gmail.com, darrick.wong@oracle.com, zlang@redhat.com, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org
 
-On Saturday, October 6, 2018 6:03:38 AM IST Dave Chinner wrote:
-> On Mon, Sep 24, 2018 at 08:49:28PM +0530, Chandan Rajendra wrote:
-> > For 64k block size, the agsize provided in the test causes mkfs.xfs to
-> > fail due to insufficient log space. Hence this commit computes agsize
-> > based on block size of the filesystem.
-> > 
-> > Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-> > ---
-> >  tests/xfs/139     | 15 +++++++++------
-> >  tests/xfs/139.out |  8 ++++++--
-> >  2 files changed, 15 insertions(+), 8 deletions(-)
-> > 
-> > diff --git a/tests/xfs/139 b/tests/xfs/139
-> > index 2a26635..c074273 100755
-> > --- a/tests/xfs/139
-> > +++ b/tests/xfs/139
-> > @@ -34,17 +34,20 @@ _require_cp_reflink
-> >  
-> >  rm -f $seqres.full
-> >  
-> > +_scratch_mkfs >/dev/null 2>&1
-> > +_scratch_mount
-> > +blksz=$(_get_file_block_size $SCRATCH_MNT)
-> > +_scratch_unmount
-> > +
-> >  echo "Format and mount"
-> > -_scratch_mkfs -d agsize=$((32 * 1048576)) > $seqres.full 2>&1
-> > +_scratch_mkfs -d agsize=$((8192 * $blksz)) > $seqres.full 2>&1
+On Tue, Oct 02, 2018 at 10:42:02AM -0700, Christoph Hellwig wrote:
+> There is no real need to treat unwritten delalloc extent special in
+> any way here, so remove the special casing and related comment.
 > 
-> This breaks 512 byte and 1k block size filesystems.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 16 +++-------------
+>  1 file changed, 3 insertions(+), 13 deletions(-)
 > 
-> $ head -3 139.full
-> Invalid value 8388608 for -d agsize option. Value is too small.
-> Usage: mkfs.xfs
-> /* blocksize */         [-b size=num]
-> $
-> 
-> Minimum AG size is 16MB. There are more changes to other tests in
-> this series that also demonstrate this regression.
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index da6b768664e3..3bb250ee6c7c 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -4069,20 +4069,10 @@ xfs_bmapi_allocate(
+>  	bma->got.br_startoff = bma->offset;
+>  	bma->got.br_startblock = bma->blkno;
+>  	bma->got.br_blockcount = bma->length;
+> -	bma->got.br_state = XFS_EXT_NORM;
+> -
+> -	/*
+> -	 * In the data fork, a wasdelay extent has been initialized, so
+> -	 * shouldn't be flagged as unwritten.
+> -	 *
+> -	 * For the cow fork, however, we convert delalloc reservations
+> -	 * (extents allocated for speculative preallocation) to
+> -	 * allocated unwritten extents, and only convert the unwritten
+> -	 * extents to real extents when we're about to write the data.
+> -	 */
+> -	if ((!bma->wasdel || (bma->flags & XFS_BMAPI_COWFORK)) &&
+> -	    (bma->flags & XFS_BMAPI_PREALLOC))
+> +	if (bma->flags & XFS_BMAPI_PREALLOC)
+>  		bma->got.br_state = XFS_EXT_UNWRITTEN;
+> +	else
+> +		bma->got.br_state = XFS_EXT_NORM;
 
-Thanks for mentioning this fact about the minimum AG size. I will verify
-all the tests once again. 
+I bisected the generic/127 rmap corruption down to this patch:
 
-Also, for xfs/139, 512 byte block size does not apply since reflink feature
-requires CRC to be enabled. Nevertheless, I will make sure that mkfs.xfs
-actually does succeed for other tests where 512 bytes block size is applicable.
+[   36.523002] run fstests generic/127 at 2018-10-06 19:25:42
+[   48.642735] XFS: Assertion failed: fs_is_ok, file: fs/xfs/libxfs/xfs_rmap.c, line: 418
+[   48.647380] ------------ [ cut here ]------------
+[   48.648322] kernel BUG at fs/xfs/xfs_message.c:102!
+[   48.649347] invalid opcode: 0000
+[#1] PREEMPT SMP
+[   48.650303] CPU: 9 PID: 4468 Comm: fsx Not tainted 4.19.0-rc6-dgc+ #681
+[   48.651874] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.11.1-1 04/01/2014
+[   48.653562] RIP: 0010:assfail+0x28/0x30
+[   48.654332] Code: c3 90 66 66 66 66 90 48 89 f1 41 89 d0 48 c7 c6 70 56 2e 82 48 89 fa 31 ff e8 64 f9 ff ff 80 3d 75 9f 0a 01 00 75 03 0f 0b c3 <0f> 0b 66 0f 1f 44 00 00 66 66 66 66 90 48 63 f6 49 89a
+[   48.657980] RSP: 0018:ffffc900049a7b18 EFLAGS: 00010202
+[   48.659015] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
+[   48.660423] RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffff8227ab34
+[   48.661817] RBP: ffffc900049a7c38 R08: 0000000000000000 R09: 0000000000000000
+[   48.663209] R10: 00000000000000c0 R11: f000000000000000 R12: 00000000000000c0
+[   48.664634] R13: 0000000000000004 R14: ffff880239789d20 R15: 0000000000000000
+[   48.666033] FS:  00007fb5eed1db80(0000) GS:ffff88023fd00000(0000) knlGS:0000000000000000
+[   48.667608] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   48.668752] CR2: 00007f5ce9a0e8e0 CR3: 0000000238f5c001 CR4: 0000000000060ee0
+[   48.670168] Call Trace:
+[   48.671250]  xfs_rmap_unmap+0x633/0x980
+[   48.672037]  ? kmem_zone_alloc+0x61/0xe0
+[   48.672842]  xfs_rmap_finish_one+0x2d0/0x340
+[   48.673692]  xfs_trans_log_finish_rmap_update+0x2f/0x40
+[   48.674737]  xfs_rmap_update_finish_item+0x2c/0x40
+[   48.675710]  xfs_defer_finish_noroll+0x184/0x520
+[   48.676614]  ? xfs_rmap_update_cancel_item+0x10/0x10
+[   48.677615]  ? xfs_free_file_space+0x355/0x390
+[   48.678512]  __xfs_trans_commit+0x189/0x370
+[   48.679360]  xfs_free_file_space+0x355/0x390
+[   48.680227]  xfs_file_fallocate+0x1b3/0x330
+[   48.681077]  ? __sb_start_write+0x8d/0xc0
+[   48.681889]  vfs_fallocate+0x13d/0x270
+[   48.682637]  ksys_fallocate+0x3c/0x70
+[   48.683382]  __x64_sys_fallocate+0x1a/0x20
+[   48.684208]  do_syscall_64+0x5a/0x180
+[   48.684953]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
 
+The corruption check that is failing is this:
+
+        /* Make sure the unwritten flag matches. */
+	XFS_WANT_CORRUPTED_GOTO(mp, (flags & XFS_RMAP_UNWRITTEN) ==
+			(rec->rm_flags & XFS_RMAP_UNWRITTEN), out);
+
+So this patch does not appear to be doing the right thing with
+unwritten extent flagging in some case.
+
+Cheers,
+
+Dave.
 -- 
-chandan
+Dave Chinner
+david@fromorbit.com
