@@ -1,73 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38206 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728522AbeJEVtL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 5 Oct 2018 17:49:11 -0400
-Date: Fri, 5 Oct 2018 10:50:02 -0400
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: mkfs.xfs: don't go into multidisk mode if there is only one
- stripe
-Message-ID: <20181005145001.GA4883@redhat.com>
-References: <20181004175839.18736-1-idryomov@gmail.com>
- <24d229f3-1a75-a65d-5ad3-c8565cb32e76@sandeen.net>
- <20181004222952.GV31060@dastard>
- <CAOi1vP_U-QpABgs+a9oYpYvLWs4D2qVmff=-JEikn7S_=eCAXQ@mail.gmail.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:60908 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726919AbeJFRRm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 6 Oct 2018 13:17:42 -0400
+Date: Sat, 6 Oct 2018 03:15:00 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 12/15] xfsprogs: kill EXTERN macro
+Message-ID: <20181006101500.GL28114@infradead.org>
+References: <1538712196-13625-1-git-send-email-sandeen@sandeen.net>
+ <1538712196-13625-13-git-send-email-sandeen@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOi1vP_U-QpABgs+a9oYpYvLWs4D2qVmff=-JEikn7S_=eCAXQ@mail.gmail.com>
+In-Reply-To: <1538712196-13625-13-git-send-email-sandeen@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ilya Dryomov <idryomov@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@sandeen.net>, xfs <linux-xfs@vger.kernel.org>, Mark Nelson <mnelson@redhat.com>, Eric Sandeen <sandeen@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Oct 05 2018 at  7:27am -0400,
-Ilya Dryomov <idryomov@gmail.com> wrote:
-
-> On Fri, Oct 5, 2018 at 12:29 AM Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > On Thu, Oct 04, 2018 at 01:33:12PM -0500, Eric Sandeen wrote:
-> > > On 10/4/18 12:58 PM, Ilya Dryomov wrote:
-> > > > rbd devices report the following geometry:
-> > > >
-> > > >   $ blockdev --getss --getpbsz --getiomin --getioopt /dev/rbd0
-> > > >   512
-> > > >   512
-> > > >   4194304
-> > > >   4194304
-> >
-> > dm-thinp does this as well. THis is from the thinp device created
-> > by tests/generic/459:
-> >
-> > 512
-> > 4096
-> > 65536
-> > 65536
+On Thu, Oct 04, 2018 at 11:03:13PM -0500, Eric Sandeen wrote:
+> From: Eric Sandeen <sandeen@redhat.com>
 > 
-> (adding Mike)
+> The EXTERN macro was a too-clever hack to allow a header file to both
+> declare global variables and export them.  Get rid of the hack and do
+> things the predictable way.
 > 
-> ... and that 300M filesystem ends up with 8 AGs, when normally you get
-> 4 AGs for anything less than 4T.  Is that really intended?
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+> ---
+>  repair/globals.c  | 123 ++++++++++++++++++++++++++++++++++++++++++++++--
+>  repair/globals.h  | 136 +++++++++++++++++++++++++++---------------------------
+>  repair/versions.c |  23 +++++++--
+>  repair/versions.h |  16 +++----
+>  4 files changed, 214 insertions(+), 84 deletions(-)
 > 
-> AFAIK dm-thinp reports these values for the same exact reason as rbd:
-> we are passing up the information about the efficient I/O size.  In the
-> case of dm-thinp, this is the thinp block size.  If you put dm-thinp on
-> top of a RAID array, I suspect it would pass up the array's preferred
-> sizes, as long as they are a proper factor of the thinp block size.
+> diff --git a/repair/globals.c b/repair/globals.c
+> index d00e964..e963edb 100644
+> --- a/repair/globals.c
+> +++ b/repair/globals.c
+> @@ -1,10 +1,125 @@
+>  // SPDX-License-Identifier: GPL-2.0
+>  /*
+> - * Copyright (c) 2000-2001,2005 Silicon Graphics, Inc.
+> + * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.
 
-Right, see pool_io_hints() for all the logic thinp uses to consume block
-core's blk_stack_limits() provided limits.. thinp can override if the
-underlying limits are _not_ a factor of the thinp's blocksize.
+This doesn't look related.
 
-> The high agcount on dm-thinp has come up before and you suggested that
-> dm-thinp should report iomin == ioopt (i.e. sunit == swidth).  If that
-> was the right fix back in 2014, mkfs.xfs must have regressed:
-> 
->   https://marc.info/?l=linux-xfs&m=137783388617206&w=2
->   https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=fdfb4c8c1a9fc8dd8cf8eeb4e3ed83573b375285
+Otherwise this looks good:
 
-Yeah, if we're getting larger AG count again, certainly seems like
-mkfs.xfs regressed.
-
-Mike
+Reviewed-by: Christoph Hellwig <hch@lst.de>
