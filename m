@@ -1,91 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it1-f194.google.com ([209.85.166.194]:56158 "EHLO
-        mail-it1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727572AbeJFAUz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Oct 2018 20:20:55 -0400
-Received: by mail-it1-f194.google.com with SMTP id c23-v6so3563937itd.5
-        for <linux-xfs@vger.kernel.org>; Fri, 05 Oct 2018 10:21:15 -0700 (PDT)
+Received: from tartarus.angband.pl ([54.37.238.230]:53370 "EHLO
+        tartarus.angband.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725779AbeJGFNQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 7 Oct 2018 01:13:16 -0400
+From: Adam Borowski <kilobyte@angband.pl>
+Date: Sun,  7 Oct 2018 00:08:11 +0200
+Message-Id: <20181006220811.21482-1-kilobyte@angband.pl>
+In-Reply-To: <20181005234009.GJ12041@dastard>
+References: <20181005234009.GJ12041@dastard>
 MIME-Version: 1.0
-References: <20181004175839.18736-1-idryomov@gmail.com> <24d229f3-1a75-a65d-5ad3-c8565cb32e76@sandeen.net>
- <20181004222952.GV31060@dastard> <CAOi1vP_U-QpABgs+a9oYpYvLWs4D2qVmff=-JEikn7S_=eCAXQ@mail.gmail.com>
- <20181005145001.GA4883@redhat.com> <5f6d3d86-7e56-dcf7-fb3d-3c3bc54ebc97@sandeen.net>
-In-Reply-To: <5f6d3d86-7e56-dcf7-fb3d-3c3bc54ebc97@sandeen.net>
-From: Ilya Dryomov <idryomov@gmail.com>
-Date: Fri, 5 Oct 2018 19:21:03 +0200
-Message-ID: <CAOi1vP_G6=2MSiXxs3ohCXsoH=YX8UZjx7N86CNUdyasmwkKYw@mail.gmail.com>
-Subject: Re: mkfs.xfs: don't go into multidisk mode if there is only one stripe
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Subject: [PATCH v2] xfs: add a define for statfs magic to uapi
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Mike Snitzer <snitzer@redhat.com>, Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>, Mark Nelson <mnelson@redhat.com>, Eric Sandeen <sandeen@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Cc: Adam Borowski <kilobyte@angband.pl>
 
-On Fri, Oct 5, 2018 at 4:55 PM Eric Sandeen <sandeen@sandeen.net> wrote:
->
->
->
-> On 10/5/18 9:50 AM, Mike Snitzer wrote:
-> > On Fri, Oct 05 2018 at  7:27am -0400,
-> > Ilya Dryomov <idryomov@gmail.com> wrote:
+Needed by userspace programs that call fstatfs().
+
+It'd be natural to publish XFS_SB_MAGIC in uapi, but while these two have
+identical values, they have different semantic meaning: one is an enum
+cookie meant for statfs, the other a signature of the on-disk format.
+
+Signed-off-by: Adam Borowski <kilobyte@angband.pl>
+---
+> > include/uapi/linux/magic.h would get:
 > >
-> >> On Fri, Oct 5, 2018 at 12:29 AM Dave Chinner <david@fromorbit.com> wrote:
-> >>>
-> >>> On Thu, Oct 04, 2018 at 01:33:12PM -0500, Eric Sandeen wrote:
-> >>>> On 10/4/18 12:58 PM, Ilya Dryomov wrote:
-> >>>>> rbd devices report the following geometry:
-> >>>>>
-> >>>>>   $ blockdev --getss --getpbsz --getiomin --getioopt /dev/rbd0
-> >>>>>   512
-> >>>>>   512
-> >>>>>   4194304
-> >>>>>   4194304
-> >>>
-> >>> dm-thinp does this as well. THis is from the thinp device created
-> >>> by tests/generic/459:
-> >>>
-> >>> 512
-> >>> 4096
-> >>> 65536
-> >>> 65536
-> >>
-> >> (adding Mike)
-> >>
-> >> ... and that 300M filesystem ends up with 8 AGs, when normally you get
-> >> 4 AGs for anything less than 4T.  Is that really intended?
-> >>
-> >> AFAIK dm-thinp reports these values for the same exact reason as rbd:
-> >> we are passing up the information about the efficient I/O size.  In the
-> >> case of dm-thinp, this is the thinp block size.  If you put dm-thinp on
-> >> top of a RAID array, I suspect it would pass up the array's preferred
-> >> sizes, as long as they are a proper factor of the thinp block size.
-> >
-> > Right, see pool_io_hints() for all the logic thinp uses to consume block
-> > core's blk_stack_limits() provided limits.. thinp can override if the
-> > underlying limits are _not_ a factor of the thinp's blocksize.
-> >
-> >> The high agcount on dm-thinp has come up before and you suggested that
-> >> dm-thinp should report iomin == ioopt (i.e. sunit == swidth).  If that
-> >> was the right fix back in 2014, mkfs.xfs must have regressed:
-> >>
-> >>   https://marc.info/?l=linux-xfs&m=137783388617206&w=2
-> >>   https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=fdfb4c8c1a9fc8dd8cf8eeb4e3ed83573b375285
-> >
-> > Yeah, if we're getting larger AG count again, certainly seems like
-> > mkfs.xfs regressed.
+> > #define XFS_STATFS_MAGIC      0x58465342      /* 'XFSB' */
 >
-> Our emails crossed ;) - no, there's no regression.  Dave's comment about
-> the thinp values weren't related to the mkfs AG heuristic.
+> $ man statfs |grep 0x5846
+>            XFS_SUPER_MAGIC       0x58465342
 
-I was going by "This fixes an issue reported where mkfs.xfs would
-create more XFS Allocation Groups on thinp volumes than on a normal
-linear LV of comparable size" in the commit message (Jul 2014, 3.17
-kernel).
+Indeed, not only it is documented this way, but almost every other
+filesystem has the define named FOO_SUPER_MAGIC.  Thus, inventing something
+else doesn't seem to be a good idea to me.
 
-I've just went through xfsprogs releases v3.1.8 (Mar 2012) through
-v3.2.2 (Dec 2014) with dm-thinp on 3.18.108 kernel and they all do the
-same high agcount thing, so there appears to be no regression indeed.
+On the other hand, this might be considered bikeshedding, and you're the
+maintainer of this particular shed...
 
-Thanks,
 
-                Ilya
+ fs/xfs/xfs_super.c         | 5 +++--
+ include/uapi/linux/magic.h | 1 +
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 207ee302b1bb..90b08051a4f3 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -43,6 +43,7 @@
+ #include <linux/dax.h>
+ #include <linux/init.h>
+ #include <linux/slab.h>
++#include <linux/magic.h>
+ #include <linux/mount.h>
+ #include <linux/mempool.h>
+ #include <linux/writeback.h>
+@@ -1097,7 +1098,7 @@ xfs_fs_statfs(
+ 	xfs_extlen_t		lsize;
+ 	int64_t			ffree;
+ 
+-	statp->f_type = XFS_SB_MAGIC;
++	statp->f_type = XFS_SUPER_MAGIC;
+ 	statp->f_namelen = MAXNAMELEN - 1;
+ 
+ 	id = huge_encode_dev(mp->m_ddev_targp->bt_dev);
+@@ -1650,7 +1651,7 @@ xfs_fs_fill_super(
+ 	 * we must configure the block size in the superblock before we run the
+ 	 * full mount process as the mount process can lookup and cache inodes.
+ 	 */
+-	sb->s_magic = XFS_SB_MAGIC;
++	sb->s_magic = XFS_SUPER_MAGIC;
+ 	sb->s_blocksize = mp->m_sb.sb_blocksize;
+ 	sb->s_blocksize_bits = ffs(sb->s_blocksize) - 1;
+ 	sb->s_maxbytes = xfs_max_file_offset(sb->s_blocksize_bits);
+diff --git a/include/uapi/linux/magic.h b/include/uapi/linux/magic.h
+index 1a6fee974116..96c24478d8ce 100644
+--- a/include/uapi/linux/magic.h
++++ b/include/uapi/linux/magic.h
+@@ -29,6 +29,7 @@
+ #define HPFS_SUPER_MAGIC	0xf995e849
+ #define ISOFS_SUPER_MAGIC	0x9660
+ #define JFFS2_SUPER_MAGIC	0x72b6
++#define XFS_SUPER_MAGIC		0x58465342	/* "XFSB" */
+ #define PSTOREFS_MAGIC		0x6165676C
+ #define EFIVARFS_MAGIC		0xde5e81e4
+ #define HOSTFS_SUPER_MAGIC	0x00c0ffee
+-- 
+2.19.1
