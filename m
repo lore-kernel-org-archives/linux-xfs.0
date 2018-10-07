@@ -1,36 +1,32 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:50910 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726404AbeJOAuo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 14 Oct 2018 20:50:44 -0400
-Date: Sun, 14 Oct 2018 10:09:03 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: PATCH 2/2] xfsprogs: enable sparse checking with "make C=2"
-Message-ID: <20181014170903.GB30673@infradead.org>
-References: <5b155482-78db-b58d-13d3-a478f79b1558@redhat.com>
- <086806d2-c2e5-bca0-1ade-fb7e5995c7d4@redhat.com>
+Received: from mail-lf1-f47.google.com ([209.85.167.47]:36276 "EHLO
+        mail-lf1-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726152AbeJGQuK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 7 Oct 2018 12:50:10 -0400
+Received: by mail-lf1-f47.google.com with SMTP id d4-v6so12025376lfa.3
+        for <linux-xfs@vger.kernel.org>; Sun, 07 Oct 2018 02:43:26 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <086806d2-c2e5-bca0-1ade-fb7e5995c7d4@redhat.com>
+References: <20181004205749.2042-1-stefanrin@gmail.com> <20181004205749.2042-2-stefanrin@gmail.com>
+ <CAAxjCEw0prn7P3dn-OuuxbmMTgzs2HydpZsgkwH8RVBkedQXOA@mail.gmail.com> <20181005204057.GB19324@magnolia>
+In-Reply-To: <20181005204057.GB19324@magnolia>
+From: Stefan Ring <stefanrin@gmail.com>
+Date: Sun, 7 Oct 2018 11:43:16 +0200
+Message-ID: <CAAxjCEzGykBJLp7mssn7f3MJoS3nx6DmsXSuiNn+T7qGSYPk4w@mail.gmail.com>
+Subject: Re: [PATCH 1/1] xfs_metadump: Zap more stale data
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Thu, Oct 11, 2018 at 11:14:14AM -0500, Eric Sandeen wrote:
-> Enable "make C=2" sparse checking of all files without rebuilding them.
-> 
-> This is a bit simpler than redefining CC for the whole build, which
-> requires extra commandline definitions and apparently is enough of a
-> barrier that nobody's doing sparse checking.
-> 
-> Note, this requires unreleased sparse after v0.5, which enables the
-> CHAR_BIT definition; otherwise it chokes.
+On Fri, Oct 5, 2018 at 10:41 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> > I forgot to mention this: sb_blocksize is used conspicuously rarely in
+> > this file. Is this the right metric to lean on?
+>
+> No, because directory blocks span multiple fs blocks (good self catch!).
+>
+> You could look it up in the directory geometry structure in the
+> xfs_mount *.
 
-This seems to duplicate much of the previous commit message..
-
-Except for that it looks fine to me:
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Interestingly my file system has dirblklog = 0. I guess I'll have to
+start creating some toy file system images for experimentation.
