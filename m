@@ -1,32 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:60834 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726919AbeJFROt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 6 Oct 2018 13:14:49 -0400
-Date: Sat, 6 Oct 2018 03:12:08 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 07/15] libxfs: avoid redefinitions of macros in mount.h
-Message-ID: <20181006101208.GG28114@infradead.org>
-References: <1538712196-13625-1-git-send-email-sandeen@sandeen.net>
- <1538712196-13625-8-git-send-email-sandeen@sandeen.net>
+Received: from aserp2120.oracle.com ([141.146.126.78]:40678 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726995AbeJICN2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Oct 2018 22:13:28 -0400
+Date: Mon, 8 Oct 2018 11:59:51 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 08/15] vfs: change clone and dedupe range function
+ pointers to return bytes completed
+Message-ID: <20181008185951.GF28243@magnolia>
+References: <153870027422.29072.7433543674436957232.stgit@magnolia>
+ <153870033496.29072.3660384210745578982.stgit@magnolia>
+ <20181006104134.GF25747@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1538712196-13625-8-git-send-email-sandeen@sandeen.net>
+In-Reply-To: <20181006104134.GF25747@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org, ocfs2-devel@oss.oracle.com, sandeen@redhat.com
 
-On Thu, Oct 04, 2018 at 11:03:08PM -0500, Eric Sandeen wrote:
-> From: Eric Sandeen <sandeen@redhat.com>
+On Sat, Oct 06, 2018 at 03:41:34AM -0700, Christoph Hellwig wrote:
+> On Thu, Oct 04, 2018 at 05:45:35PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Change the clone_file_range and dedupe_file_range functions to return
+> > the number of bytes they operated on.  This is the precursor to allowing
+> > fs implementations to return short clone/dedupe results to the user,
+> > which will enable us to obey resource limits in a graceful manner.
 > 
-> MS_* (MS_NOSUID ... etc) get redefined.  Fix this by
-> simply removing the inclusion of mount.h, which isn't needed.
-> 
-> Fixes sparse warnings about this.
+> For clone this doesn't make any sense, as we don't allow 'short clones'.
 
-Looks good,
+That's correct.  The overall goal is that copy_file_range will be able
+to call ->clone_file_range with a "I can handle a short clone" flag so
+that the fs (and the prep functions) know that they're allowed to
+shorten the request length, and we have a way to communicate the actual
+results back to userspace.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Neither FS_IOC_CLONE nor FS_IOC_CLONERANGE will be able to take
+advantage of this, of course.  They won't pass in the flag, and any
+implementation that wants to shorten the length will pass back -EINVAL
+instead.
+
+--D
