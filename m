@@ -1,81 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:47852 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725740AbeJAXnz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Oct 2018 19:43:55 -0400
-Subject: [PATCH 7/8] libxfs: track transaction block reservation usage like
- the kernel
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 01 Oct 2018 10:05:05 -0700
-Message-ID: <153841350523.27952.11171629461645481206.stgit@magnolia>
-In-Reply-To: <153841345236.27952.5050172703525712660.stgit@magnolia>
-References: <153841345236.27952.5050172703525712660.stgit@magnolia>
+Received: from sandeen.net ([63.231.237.45]:41224 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726291AbeJHVzD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Oct 2018 17:55:03 -0400
+Subject: Re: repair: realloc(): invalid next size
+From: Eric Sandeen <sandeen@sandeen.net>
+References: <214be03d-9cc7-378b-3635-6fca3cdcb1dd@gmail.com>
+ <944a6c4f-4f4a-d80e-eba2-a69a179e5408@sandeen.net>
+Message-ID: <8a574052-acc5-b23d-560e-77f461d683ed@sandeen.net>
+Date: Mon, 8 Oct 2018 09:42:57 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <944a6c4f-4f4a-d80e-eba2-a69a179e5408@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@redhat.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
-
-From: Darrick J. Wong <darrick.wong@oracle.com>
-
-Currently, block reservations in userspace transactions are not carried
-over across transaction rolls.  This will lead to ENOSPC failures inside
-libxfs code which checks for reservation overruns in an upcoming patch
-that borrows the bmbt repair code from the kernel because it makes
-extensive use of transaction rolling.
-
-Therefore, port t_blk_res_used from the kernel so that block
-reservations work the same way in userspace.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- include/xfs_trans.h |    1 +
- libxfs/trans.c      |   12 ++++++++++++
- 2 files changed, 13 insertions(+)
+To: =?UTF-8?Q?Arkadiusz_Mi=c5=9bkiewicz?= <a.miskiewicz@gmail.com>, linux-xfs@vger.kernel.org
 
 
-diff --git a/include/xfs_trans.h b/include/xfs_trans.h
-index eda2f894..31df1172 100644
---- a/include/xfs_trans.h
-+++ b/include/xfs_trans.h
-@@ -71,6 +71,7 @@ typedef struct xfs_trans {
- 	unsigned int	t_blk_res;		/* # of blocks resvd */
- 	xfs_fsblock_t	t_firstblock;		/* first block allocated */
- 	struct xfs_mount *t_mountp;		/* ptr to fs mount struct */
-+	unsigned int	t_blk_res_used;		/* # of resvd blocks used */
- 	unsigned int	t_flags;		/* misc flags */
- 	long		t_icount_delta;		/* superblock icount change */
- 	long		t_ifree_delta;		/* superblock ifree change */
-diff --git a/libxfs/trans.c b/libxfs/trans.c
-index 508d12d7..7058ecef 100644
---- a/libxfs/trans.c
-+++ b/libxfs/trans.c
-@@ -158,6 +158,9 @@ xfs_trans_dup(
- 	/* We gave our writer reference to the new transaction */
- 	tp->t_flags |= XFS_TRANS_NO_WRITECOUNT;
- 
-+	ntp->t_blk_res = tp->t_blk_res - tp->t_blk_res_used;
-+	tp->t_blk_res = tp->t_blk_res_used;
-+
- 	/* move deferred ops over to the new tp */
- 	xfs_defer_move(ntp, tp);
- 
-@@ -790,6 +793,15 @@ libxfs_trans_mod_sb(
- 	case XFS_TRANS_SB_RES_FDBLOCKS:
- 		return;
- 	case XFS_TRANS_SB_FDBLOCKS:
-+		if (delta < 0) {
-+			tp->t_blk_res_used += (uint)-delta;
-+			if (tp->t_blk_res_used > tp->t_blk_res) {
-+				fprintf(stderr,
-+_("Transaction block reservation exceeded! %u > %u\n"),
-+					tp->t_blk_res_used, tp->t_blk_res);
-+				ASSERT(0);
-+			}
-+		}
- 		tp->t_fdblocks_delta += delta;
- 		break;
- 	case XFS_TRANS_SB_ICOUNT:
+
+On 10/8/18 9:26 AM, Eric Sandeen wrote:
+> 
+> 
+> On 10/8/18 9:03 AM, Arkadiusz Miśkiewicz wrote:
+>>
+>> Big fs, ton of small files, repair takes 36h until this happens:
+>>
+>> rebuilding directory inode 30363993060
+>> rebuilding directory inode 30398868604
+>> rebuilding directory inode 30414474627
+>> rebuilding directory inode 30425006954
+>> rebuilding directory inode 30447937553
+>> rebuilding directory inode 30529556616
+>> rebuilding directory inode 30537494728
+>> rebuilding directory inode 30569826838
+>> rebuilding directory inode 31060721895
+>> Metadata corruption detected at 0x41f9db, inode 0x73b5d00e7 data fork
+>> xfs_repair: warning - iflush_int failed (-117)
+>> Warning: recursive buffer locking at block 31060721776 detected
+>> Metadata corruption detected at 0x41f9db, inode 0x73b5d00e7 data fork
+>> xfs_repair: warning - iflush_int failed (-117)
+>> Warning: recursive buffer locking at block 31060721776 detected
+>> Metadata corruption detected at 0x41f980, inode 0x73b5d00e7 data fork
+>> xfs_repair: warning - iflush_int failed (-117)
+>> realloc(): invalid next size
+>> Aborted
+>>
+>>
+>> Fails somewhere in 0x41f9db <xfs_dir2_sf_verify+603>
+>>
+>> Complete log at
+>> https://ixion.pld-linux.org/~arekm/xfs-1/repair.txt
+>>
+>> Test was done with xfs_repair 4.17.0 and 4.18.0 with the same result.
+>>
+>> kernel 4.18.5
+>>
+>> Running under gdb now.
+>>
+>> Any ideas?
+> 
+> With such a big fs it's tough to share a metadump for a reproducer, I assume.
+> 
+> The earlier write verifiers failing for xfs_repair writes are troubling...
+> 
+> I'm not certain why it's rebuilding so many dir inodes; there are several cases
+> where that happens, but unfortunately repair doesn't always say which one or why.
+> 
+> Anyway, you eventually get to this inode (it's the same in decimal & hex
+> below):
+> 
+> rebuilding directory inode 360732305
+> Metadata corruption detected at 0x41f9db, inode 0x15805691 data fork
+> xfs_repair: warning - iflush_int failed (-117)
+> 
+> with lots of corruption during the writes, and this happens for a couple
+> other inodes, until finally:
+> 
+> rebuilding directory inode 31060721895
+> Metadata corruption detected at 0x41f9db, inode 0x73b5d00e7 data fork
+> 
+> and this one ends up aborting in glibc's realloc():
+> 
+> realloc(): invalid next size
+> 
+> I /think/ that this indicates that memory has been corrupted during the repair
+> run.  :/  Running under valgrind would probably lead to a 72hr runtime or more :)
+> 
+> I wonder if it would save time in the long run to make a metadump and remove all
+> directory trees other than this inode (360732305) from it, and see if the same
+> failure occurs when running on the reduced fs image?
+
+Actually if you try that, also leaving the directory trees in place for the other
+inodes that reported issues would make sense.
+
+-Eric
