@@ -1,100 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:47228 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725783AbeJIFqF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Oct 2018 01:46:05 -0400
-Date: Mon, 8 Oct 2018 15:31:52 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] xfs: add a define for statfs magic to uapi
-Message-ID: <20181008223152.GG28243@magnolia>
-References: <20181005234009.GJ12041@dastard>
- <20181006220811.21482-1-kilobyte@angband.pl>
+Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:12829 "EHLO
+        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726540AbeJIG3M (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Oct 2018 02:29:12 -0400
+Received: from dave by dastard with local (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1g9ejw-0000HL-62
+        for linux-xfs@vger.kernel.org; Tue, 09 Oct 2018 10:15:04 +1100
+Date: Tue, 9 Oct 2018 10:15:04 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to b39989009bdb
+Message-ID: <20181008231504.GE6311@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="UlVJffcvxoiEqYs2"
 Content-Disposition: inline
-In-Reply-To: <20181006220811.21482-1-kilobyte@angband.pl>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Adam Borowski <kilobyte@angband.pl>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Sun, Oct 07, 2018 at 12:08:11AM +0200, Adam Borowski wrote:
-> Needed by userspace programs that call fstatfs().
-> 
-> It'd be natural to publish XFS_SB_MAGIC in uapi, but while these two have
-> identical values, they have different semantic meaning: one is an enum
-> cookie meant for statfs, the other a signature of the on-disk format.
-> 
-> Signed-off-by: Adam Borowski <kilobyte@angband.pl>
-> ---
-> > > include/uapi/linux/magic.h would get:
-> > >
-> > > #define XFS_STATFS_MAGIC      0x58465342      /* 'XFSB' */
-> >
-> > $ man statfs |grep 0x5846
-> >            XFS_SUPER_MAGIC       0x58465342
-> 
-> Indeed, not only it is documented this way, but almost every other
-> filesystem has the define named FOO_SUPER_MAGIC.  Thus, inventing something
-> else doesn't seem to be a good idea to me.
-> 
-> On the other hand, this might be considered bikeshedding, and you're the
-> maintainer of this particular shed...
-> 
-> 
->  fs/xfs/xfs_super.c         | 5 +++--
->  include/uapi/linux/magic.h | 1 +
->  2 files changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 207ee302b1bb..90b08051a4f3 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -43,6 +43,7 @@
->  #include <linux/dax.h>
->  #include <linux/init.h>
->  #include <linux/slab.h>
-> +#include <linux/magic.h>
->  #include <linux/mount.h>
->  #include <linux/mempool.h>
->  #include <linux/writeback.h>
-> @@ -1097,7 +1098,7 @@ xfs_fs_statfs(
->  	xfs_extlen_t		lsize;
->  	int64_t			ffree;
->  
-> -	statp->f_type = XFS_SB_MAGIC;
-> +	statp->f_type = XFS_SUPER_MAGIC;
->  	statp->f_namelen = MAXNAMELEN - 1;
->  
->  	id = huge_encode_dev(mp->m_ddev_targp->bt_dev);
-> @@ -1650,7 +1651,7 @@ xfs_fs_fill_super(
->  	 * we must configure the block size in the superblock before we run the
->  	 * full mount process as the mount process can lookup and cache inodes.
->  	 */
-> -	sb->s_magic = XFS_SB_MAGIC;
-> +	sb->s_magic = XFS_SUPER_MAGIC;
->  	sb->s_blocksize = mp->m_sb.sb_blocksize;
->  	sb->s_blocksize_bits = ffs(sb->s_blocksize) - 1;
->  	sb->s_maxbytes = xfs_max_file_offset(sb->s_blocksize_bits);
-> diff --git a/include/uapi/linux/magic.h b/include/uapi/linux/magic.h
-> index 1a6fee974116..96c24478d8ce 100644
-> --- a/include/uapi/linux/magic.h
-> +++ b/include/uapi/linux/magic.h
-> @@ -29,6 +29,7 @@
->  #define HPFS_SUPER_MAGIC	0xf995e849
->  #define ISOFS_SUPER_MAGIC	0x9660
->  #define JFFS2_SUPER_MAGIC	0x72b6
-> +#define XFS_SUPER_MAGIC		0x58465342	/* "XFSB" */
 
-Looks ok to me...
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+--UlVJffcvxoiEqYs2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
---D
+Hi folks,
 
->  #define PSTOREFS_MAGIC		0x6165676C
->  #define EFIVARFS_MAGIC		0xde5e81e4
->  #define HOSTFS_SUPER_MAGIC	0x00c0ffee
-> -- 
-> 2.19.1
-> 
+The for-next branch of the xfs-linux repository at:
+
+        git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+
+has just been updated. This is an update with a bunch of important
+reflink fixes intended for 4.19-rc7, so please update and test this
+so I can send a pull request to greg before the end of the week.
+
+-Dave.
+
+The following changes since commit e55ec4ddbef9897199c307dfb23167e3801fdaf5:
+
+  xfs: fix error handling in xfs_bmap_extents_to_btree (2018-10-01 08:11:07=
+ +1000)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux for-next
+
+for you to fetch changes up to b39989009bdb84992915c9869f58094ed5becf10:
+
+  xfs: fix data corruption w/ unaligned reflink ranges (2018-10-06 11:44:39=
+ +1000)
+
+----------------------------------------------------------------
+Darrick J. Wong (3):
+      xfs: refactor clonerange preparation into a separate helper
+      xfs: zero posteof blocks when cloning above eof
+      xfs: update ctime and remove suid before cloning files
+
+Dave Chinner (2):
+      xfs: fix data corruption w/ unaligned dedupe ranges
+      xfs: fix data corruption w/ unaligned reflink ranges
+
+ fs/xfs/xfs_reflink.c | 200 ++++++++++++++++++++++++++++++++++++++++++-----=
+----
+ 1 file changed, 165 insertions(+), 35 deletions(-)
+--=20
+Dave Chinner
+david@fromorbit.com
+
+--UlVJffcvxoiEqYs2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJbu+T3AAoJEK3oKUf0dfodYvcP/1Mk9fkhA+5TLSrrQGUpl8AO
+kioIRKp4UBFll71QoWNhPj28Hxjs6oIZ+HbIOlKbDXJ0Zo26hioN0qLUo7rKdMgy
+hdr005Fi5GFx5mXdteECzn8BOUgaLM75j5lN4N6J2/k57QNENHw9IleVcjS/b8I4
+jiYj91OGNrx+1KQ+0wevsHZYf+mnc1DNycbBAgTb8gknsNlCZ5eMauFeXJM0cvKC
+vH6Yzni2bpQUlqMp05SIucBGo569TU2jEdv07LDyvRRaRCNyKQz7BkU6HUCCmiu8
+nk1P0/6iD0AykJ/NtGOMVmX6Es0t3WnhzAXB8u3KXqoBeYNglr2Ft79Fn4G3+6Ig
+qmsHtLLoPZQwgf179BVXFKoT6J2nUUf7/vzjPkSoJJw1IQVMzc8kKryFy6vVm9rY
+fD78jnIpacM1cpiU7Wlt8uaS1igHPgonY5x1AxK3Zt+qE1wEKqgVtsBDq7i114o4
++VUyUO3OMLab3eHNFgK8uWvd7Hvegg6Sp+SWWiJbTMUzWc70jxsAZlKPLIW0u34T
+QBDNs3pO5NIsaZM0IWyb/Vc+6gw101S05kq0LqrRfSdpir7tqVHvk9Tvb1y57WtA
+Brg1hvRTZAPwBDm2rDPG6r2H7uDOw6wJLbQe0DZaoZiobj9EYnfXMegLis71831K
+LKoOBYl/Q1WFkWx7KwPa
+=3Ebg
+-----END PGP SIGNATURE-----
+
+--UlVJffcvxoiEqYs2--
