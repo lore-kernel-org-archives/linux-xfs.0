@@ -1,60 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:48842 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727726AbeJFUdM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 6 Oct 2018 16:33:12 -0400
-Date: Sat, 6 Oct 2018 06:29:51 -0700
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH v2 00/22] xfs-4.20: major documentation surgery
-Message-ID: <20181006132951.GA17023@bombadil.infradead.org>
-References: <153862669110.26427.16504658853992750743.stgit@magnolia>
- <20181006005154.GM12041@dastard>
+Received: from mail-ed1-f53.google.com ([209.85.208.53]:43168 "EHLO
+        mail-ed1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726159AbeJHVPV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Oct 2018 17:15:21 -0400
+Received: by mail-ed1-f53.google.com with SMTP id y20-v6so11049805eds.10
+        for <linux-xfs@vger.kernel.org>; Mon, 08 Oct 2018 07:03:27 -0700 (PDT)
+Received: from amb.local (31-179-17-47.dynamic.chello.pl. [31.179.17.47])
+        by smtp.gmail.com with ESMTPSA id g52-v6sm5657054edb.91.2018.10.08.07.03.25
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 08 Oct 2018 07:03:26 -0700 (PDT)
+From: =?UTF-8?Q?Arkadiusz_Mi=c5=9bkiewicz?= <a.miskiewicz@gmail.com>
+Subject: repair: realloc(): invalid next size
+Message-ID: <214be03d-9cc7-378b-3635-6fca3cdcb1dd@gmail.com>
+Date: Mon, 8 Oct 2018 16:03:25 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181006005154.GM12041@dastard>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: pl
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org, corbet@lwn.net
+To: linux-xfs@vger.kernel.org
 
-On Sat, Oct 06, 2018 at 10:51:54AM +1000, Dave Chinner wrote:
-> On Wed, Oct 03, 2018 at 09:18:11PM -0700, Darrick J. Wong wrote:
-> > Hi all,
-> > 
-> > This series converts the existing in-kernel xfs documentation to rst
-> > format, links it in with the rest of the kernel's rst documetation, and
-> > then begins pulling in the contents of the Data Structures & Algorithms
-> > book from the xfs-documentation git tree.  No changes are made to the
-> > text during the import process except to fix things that the conversion
-> > process (asciidoctor + pandoc) didn't do correctly.  The goal of this
-> > series is to tie together the XFS code with the on-disk format
-> > documentation for the features supported by the code.
-> > 
-> > I've built the docs and put them here, in case you hate reading rst:
-> > https://djwong.org/docs/kdoc/admin-guide/xfs.html
-> > https://djwong.org/docs/kdoc/filesystems/xfs-data-structures/index.html
-> > 
-> > I've posted a branch here because the png import patch is huge:
-> > https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=docs-4.20-merge
-> > 
-> > The patchset should apply cleanly against 4.19-rc6.  Comments and
-> > questions are, as always, welcome.
-> 
-> Jon,
-> 
-> Can you let us know whether the CC-by-SA 4.0 license is acceptible
-> or not? That's really the only thing that we need clarified at this
-> point - if it's OK I'll to pull this into the XFS tree for the 4.20
-> merge window. If not, we'll go back to the drawing board....
 
-This is (obviously) not legal advice.
+Big fs, ton of small files, repair takes 36h until this happens:
 
-I had an informal chat with Bradley Kuhn at LinuxCon Japan about using
-CC-BY-SA-4.0 and he indicated that I was probably better off using the
-GPL-2(+) for documentation.  I've changed the XArray documentation from
-CC-BY-SA-4.0 to GPL-2+.
+rebuilding directory inode 30363993060
+rebuilding directory inode 30398868604
+rebuilding directory inode 30414474627
+rebuilding directory inode 30425006954
+rebuilding directory inode 30447937553
+rebuilding directory inode 30529556616
+rebuilding directory inode 30537494728
+rebuilding directory inode 30569826838
+rebuilding directory inode 31060721895
+Metadata corruption detected at 0x41f9db, inode 0x73b5d00e7 data fork
+xfs_repair: warning - iflush_int failed (-117)
+Warning: recursive buffer locking at block 31060721776 detected
+Metadata corruption detected at 0x41f9db, inode 0x73b5d00e7 data fork
+xfs_repair: warning - iflush_int failed (-117)
+Warning: recursive buffer locking at block 31060721776 detected
+Metadata corruption detected at 0x41f980, inode 0x73b5d00e7 data fork
+xfs_repair: warning - iflush_int failed (-117)
+realloc(): invalid next size
+Aborted
 
-YMMV, defer to the LF lawyer, but I thought it worth providing a data
-point.
+
+Fails somewhere in 0x41f9db <xfs_dir2_sf_verify+603>
+
+Complete log at
+https://ixion.pld-linux.org/~arekm/xfs-1/repair.txt
+
+Test was done with xfs_repair 4.17.0 and 4.18.0 with the same result.
+
+kernel 4.18.5
+
+Running under gdb now.
+
+Any ideas?
+
+-- 
+Arkadiusz Miśkiewicz, arekm / ( maven.pl | pld-linux.org )
