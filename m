@@ -1,79 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:33608 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725925AbeJHNbF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Oct 2018 09:31:05 -0400
-Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id w986K1fV053837
-        for <linux-xfs@vger.kernel.org>; Mon, 8 Oct 2018 02:21:00 -0400
-Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2mywmvjhrx-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Mon, 08 Oct 2018 02:21:00 -0400
-Received: from localhost
-        by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
-        Mon, 8 Oct 2018 00:20:59 -0600
-From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-Subject: [PATCH 1/2] xfs/139: work with 1k block size
-Date: Mon,  8 Oct 2018 11:53:02 +0530
-Message-Id: <20181008062303.32286-1-chandan@linux.vnet.ibm.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:52818 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726330AbeJHR10 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Oct 2018 13:27:26 -0400
+Received: from 089144207060.atnat0016.highway.bob.at ([89.144.207.60] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1g9SaR-0004Cn-3r
+        for linux-xfs@vger.kernel.org; Mon, 08 Oct 2018 10:16:27 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] xfs: cancel COW blocks before swapext
+Date: Mon,  8 Oct 2018 12:16:24 +0200
+Message-Id: <20181008101624.28120-1-hch@lst.de>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: Chandan Rajendra <chandan@linux.vnet.ibm.com>, guaneryu@gmail.com, darrick.wong@oracle.com, zlang@redhat.com, david@fromorbit.com, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-Commit 0e2b99951fa11ea8a8adf4676aef130cfeeb5250 (xfs/139: work with 64k
-block size) created a test filesystem with AG size set to (8192 * block
-size). When working with a 1k block sized XFS filesystem, this tries to
-set the AG size to 8MiB which is less than the minimum AG size of
-16MiB. Hence creation of the filesystem had actually failed.
+We need to make sure we have no outstanding COW blocks before we swap
+extents, as there is nothing preventing us from having preallocated COW
+delalloc on either inode that swapext is called on.  That case can
+easily be reproduced by running generic/324 in always_cow mode:
 
-This commit fixes the issue by setting AG size to be (16384 * block
-size).
+[  620.760572] XFS: Assertion failed: tip->i_delayed_blks == 0, file: fs/xfs/xfs_bmap_util.c, line: 1669
+[  620.761608] ------------[ cut here ]------------
+[  620.762171] kernel BUG at fs/xfs/xfs_message.c:102!
+[  620.762732] invalid opcode: 0000 [#1] SMP PTI
+[  620.763272] CPU: 0 PID: 24153 Comm: xfs_fsr Tainted: G        W         4.19.0-rc1+ #4182
+[  620.764203] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.11.1-1 04/01/2014
+[  620.765202] RIP: 0010:assfail+0x20/0x28
+[  620.765646] Code: 31 ff e8 83 fc ff ff 0f 0b c3 48 89 f1 41 89 d0 48 c7 c6 48 ca 8d 82 48 89 fa 38
+[  620.767758] RSP: 0018:ffffc9000898bc10 EFLAGS: 00010202
+[  620.768359] RAX: 0000000000000000 RBX: ffff88012f14ba40 RCX: 0000000000000000
+[  620.769174] RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffff828560d9
+[  620.769982] RBP: ffff88012f14b300 R08: 0000000000000000 R09: 0000000000000000
+[  620.770788] R10: 000000000000000a R11: f000000000000000 R12: ffffc9000898bc98
+[  620.771638] R13: ffffc9000898bc9c R14: ffff880130b5e2b8 R15: ffff88012a1fa2a8
+[  620.772504] FS:  00007fdc36e0fbc0(0000) GS:ffff88013ba00000(0000) knlGS:0000000000000000
+[  620.773475] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  620.774168] CR2: 00007fdc3604d000 CR3: 0000000132afc000 CR4: 00000000000006f0
+[  620.774978] Call Trace:
+[  620.775274]  xfs_swap_extent_forks+0x2a0/0x2e0
+[  620.775792]  xfs_swap_extents+0x38b/0xab0
+[  620.776256]  xfs_ioc_swapext+0x121/0x140
+[  620.776709]  xfs_file_ioctl+0x328/0xc90
+[  620.777154]  ? rcu_read_lock_sched_held+0x50/0x60
+[  620.777694]  ? xfs_iunlock+0x233/0x260
+[  620.778127]  ? xfs_setattr_nonsize+0x3be/0x6a0
+[  620.778647]  do_vfs_ioctl+0x9d/0x680
+[  620.779071]  ? ksys_fchown+0x47/0x80
+[  620.779552]  ksys_ioctl+0x35/0x70
+[  620.780040]  __x64_sys_ioctl+0x11/0x20
+[  620.780530]  do_syscall_64+0x4b/0x190
+[  620.780927]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+[  620.781467] RIP: 0033:0x7fdc364d0f07
+[  620.781900] Code: b3 66 90 48 8b 05 81 5f 2c 00 64 c7 00 26 00 00 00 48 c7 c0 ff ff ff ff c3 66 28
+[  620.784044] RSP: 002b:00007ffe2a766038 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+[  620.784896] RAX: ffffffffffffffda RBX: 0000000000000025 RCX: 00007fdc364d0f07
+[  620.785667] RDX: 0000560296ca2fc0 RSI: 00000000c0c0586d RDI: 0000000000000005
+[  620.786398] RBP: 0000000000000025 R08: 0000000000001200 R09: 0000000000000000
+[  620.787283] R10: 0000000000000432 R11: 0000000000000246 R12: 0000000000000005
+[  620.788051] R13: 0000000000000000 R14: 0000000000001000 R15: 0000000000000006
+[  620.788927] Modules linked in:
+[  620.789340] ---[ end trace 9503b7417ffdbdb0 ]---
+[  620.790065] RIP: 0010:assfail+0x20/0x28
+[  620.790642] Code: 31 ff e8 83 fc ff ff 0f 0b c3 48 89 f1 41 89 d0 48 c7 c6 48 ca 8d 82 48 89 fa 38
+[  620.793038] RSP: 0018:ffffc9000898bc10 EFLAGS: 00010202
+[  620.793609] RAX: 0000000000000000 RBX: ffff88012f14ba40 RCX: 0000000000000000
+[  620.794317] RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffff828560d9
+[  620.795025] RBP: ffff88012f14b300 R08: 0000000000000000 R09: 0000000000000000
+[  620.795778] R10: 000000000000000a R11: f000000000000000 R12: ffffc9000898bc98
+[  620.796675] R13: ffffc9000898bc9c R14: ffff880130b5e2b8 R15: ffff88012a1fa2a8
+[  620.797782] FS:  00007fdc36e0fbc0(0000) GS:ffff88013ba00000(0000) knlGS:0000000000000000
+[  620.798908] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  620.799594] CR2: 00007fdc3604d000 CR3: 0000000132afc000 CR4: 00000000000006f0
+[  620.800424] Kernel panic - not syncing: Fatal exception
+[  620.801191] Kernel Offset: disabled
+[  620.801597] ---[ end Kernel panic - not syncing: Fatal exception ]---
 
-Reported-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tests/xfs/139     | 4 ++--
- tests/xfs/139.out | 4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_bmap_util.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/tests/xfs/139 b/tests/xfs/139
-index c074273..3a20ce5 100755
---- a/tests/xfs/139
-+++ b/tests/xfs/139
-@@ -40,14 +40,14 @@ blksz=$(_get_file_block_size $SCRATCH_MNT)
- _scratch_unmount
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 7cfda25f1bb1..97f7543fdfb6 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1465,6 +1465,12 @@ xfs_swap_extent_flush(
+ 		return error;
+ 	truncate_pagecache_range(VFS_I(ip), 0, -1);
  
- echo "Format and mount"
--_scratch_mkfs -d agsize=$((8192 * $blksz)) > $seqres.full 2>&1
-+_scratch_mkfs -d agsize=$((16384 * $blksz)) > $seqres.full 2>&1
- _scratch_mount >> $seqres.full 2>&1
- 
- testdir=$SCRATCH_MNT/test-$seq
- mkdir $testdir
- 
- echo "Create the original files"
--sz=$((12288 * $blksz))
-+sz=$((20480 * $blksz))
- _pwrite_byte 0x61 0 $sz $testdir/file1 >> $seqres.full
- _cp_reflink $testdir/file1 $testdir/file2 >> $seqres.full
- _scratch_cycle_mount
-diff --git a/tests/xfs/139.out b/tests/xfs/139.out
-index 72909bc..1005d5c 100644
---- a/tests/xfs/139.out
-+++ b/tests/xfs/139.out
-@@ -5,7 +5,7 @@ CoW every other block
- Compare files
- 0 62 62 62 62 62 62 62 62 62 62 62 62 62 62 62 62
- *
--30000
-+50000
- 0 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61
- *
--30000
-+50000
++	if (xfs_inode_has_cow_data(ip)) {
++		error = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, true);
++		if (error)
++			return error;
++	}
++
+ 	/* Verify O_DIRECT for ftmp */
+ 	if (VFS_I(ip)->i_mapping->nrpages)
+ 		return -EINVAL;
 -- 
-2.9.5
+2.19.0
