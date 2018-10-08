@@ -1,106 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:52818 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726330AbeJHR10 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Oct 2018 13:27:26 -0400
-Received: from 089144207060.atnat0016.highway.bob.at ([89.144.207.60] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1g9SaR-0004Cn-3r
-        for linux-xfs@vger.kernel.org; Mon, 08 Oct 2018 10:16:27 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] xfs: cancel COW blocks before swapext
-Date: Mon,  8 Oct 2018 12:16:24 +0200
-Message-Id: <20181008101624.28120-1-hch@lst.de>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:33852 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725749AbeJIFYH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Oct 2018 01:24:07 -0400
+Date: Tue, 9 Oct 2018 09:10:11 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/3] xfs: hard fail dax mount on unsupported devices
+Message-ID: <20181008221011.GF18095@dastard>
+References: <1539027169-23332-1-git-send-email-sandeen@sandeen.net>
+ <1539027169-23332-2-git-send-email-sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1539027169-23332-2-git-send-email-sandeen@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
 
-We need to make sure we have no outstanding COW blocks before we swap
-extents, as there is nothing preventing us from having preallocated COW
-delalloc on either inode that swapext is called on.  That case can
-easily be reproduced by running generic/324 in always_cow mode:
+On Mon, Oct 08, 2018 at 02:32:47PM -0500, Eric Sandeen wrote:
+> As dax inches closer to production use, an administrator should not
+> be surprised by silently disabling the feature they asked for.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+> ---
+>  fs/xfs/xfs_super.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 207ee30..a0a32cd 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1674,9 +1674,9 @@ struct proc_xfs_info {
+>  			rtdev_is_dax = bdev_dax_supported(
+>  				mp->m_rtdev_targp->bt_bdev, sb->s_blocksize);
+>  		if (!rtdev_is_dax && !datadev_is_dax) {
+> -			xfs_alert(mp,
+> -			"DAX unsupported by block device. Turning off DAX.");
+> -			mp->m_flags &= ~XFS_MOUNT_DAX;
+> +			xfs_alert(mp, "DAX unsupported by block device.");
+> +			error = -EINVAL;
+> +			goto out_filestream_unmount;
+>  		}
+>  		if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+>  			xfs_alert(mp,
 
-[  620.760572] XFS: Assertion failed: tip->i_delayed_blks == 0, file: fs/xfs/xfs_bmap_util.c, line: 1669
-[  620.761608] ------------[ cut here ]------------
-[  620.762171] kernel BUG at fs/xfs/xfs_message.c:102!
-[  620.762732] invalid opcode: 0000 [#1] SMP PTI
-[  620.763272] CPU: 0 PID: 24153 Comm: xfs_fsr Tainted: G        W         4.19.0-rc1+ #4182
-[  620.764203] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.11.1-1 04/01/2014
-[  620.765202] RIP: 0010:assfail+0x20/0x28
-[  620.765646] Code: 31 ff e8 83 fc ff ff 0f 0b c3 48 89 f1 41 89 d0 48 c7 c6 48 ca 8d 82 48 89 fa 38
-[  620.767758] RSP: 0018:ffffc9000898bc10 EFLAGS: 00010202
-[  620.768359] RAX: 0000000000000000 RBX: ffff88012f14ba40 RCX: 0000000000000000
-[  620.769174] RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffff828560d9
-[  620.769982] RBP: ffff88012f14b300 R08: 0000000000000000 R09: 0000000000000000
-[  620.770788] R10: 000000000000000a R11: f000000000000000 R12: ffffc9000898bc98
-[  620.771638] R13: ffffc9000898bc9c R14: ffff880130b5e2b8 R15: ffff88012a1fa2a8
-[  620.772504] FS:  00007fdc36e0fbc0(0000) GS:ffff88013ba00000(0000) knlGS:0000000000000000
-[  620.773475] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  620.774168] CR2: 00007fdc3604d000 CR3: 0000000132afc000 CR4: 00000000000006f0
-[  620.774978] Call Trace:
-[  620.775274]  xfs_swap_extent_forks+0x2a0/0x2e0
-[  620.775792]  xfs_swap_extents+0x38b/0xab0
-[  620.776256]  xfs_ioc_swapext+0x121/0x140
-[  620.776709]  xfs_file_ioctl+0x328/0xc90
-[  620.777154]  ? rcu_read_lock_sched_held+0x50/0x60
-[  620.777694]  ? xfs_iunlock+0x233/0x260
-[  620.778127]  ? xfs_setattr_nonsize+0x3be/0x6a0
-[  620.778647]  do_vfs_ioctl+0x9d/0x680
-[  620.779071]  ? ksys_fchown+0x47/0x80
-[  620.779552]  ksys_ioctl+0x35/0x70
-[  620.780040]  __x64_sys_ioctl+0x11/0x20
-[  620.780530]  do_syscall_64+0x4b/0x190
-[  620.780927]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-[  620.781467] RIP: 0033:0x7fdc364d0f07
-[  620.781900] Code: b3 66 90 48 8b 05 81 5f 2c 00 64 c7 00 26 00 00 00 48 c7 c0 ff ff ff ff c3 66 28
-[  620.784044] RSP: 002b:00007ffe2a766038 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
-[  620.784896] RAX: ffffffffffffffda RBX: 0000000000000025 RCX: 00007fdc364d0f07
-[  620.785667] RDX: 0000560296ca2fc0 RSI: 00000000c0c0586d RDI: 0000000000000005
-[  620.786398] RBP: 0000000000000025 R08: 0000000000001200 R09: 0000000000000000
-[  620.787283] R10: 0000000000000432 R11: 0000000000000246 R12: 0000000000000005
-[  620.788051] R13: 0000000000000000 R14: 0000000000001000 R15: 0000000000000006
-[  620.788927] Modules linked in:
-[  620.789340] ---[ end trace 9503b7417ffdbdb0 ]---
-[  620.790065] RIP: 0010:assfail+0x20/0x28
-[  620.790642] Code: 31 ff e8 83 fc ff ff 0f 0b c3 48 89 f1 41 89 d0 48 c7 c6 48 ca 8d 82 48 89 fa 38
-[  620.793038] RSP: 0018:ffffc9000898bc10 EFLAGS: 00010202
-[  620.793609] RAX: 0000000000000000 RBX: ffff88012f14ba40 RCX: 0000000000000000
-[  620.794317] RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffff828560d9
-[  620.795025] RBP: ffff88012f14b300 R08: 0000000000000000 R09: 0000000000000000
-[  620.795778] R10: 000000000000000a R11: f000000000000000 R12: ffffc9000898bc98
-[  620.796675] R13: ffffc9000898bc9c R14: ffff880130b5e2b8 R15: ffff88012a1fa2a8
-[  620.797782] FS:  00007fdc36e0fbc0(0000) GS:ffff88013ba00000(0000) knlGS:0000000000000000
-[  620.798908] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  620.799594] CR2: 00007fdc3604d000 CR3: 0000000132afc000 CR4: 00000000000006f0
-[  620.800424] Kernel panic - not syncing: Fatal exception
-[  620.801191] Kernel Offset: disabled
-[  620.801597] ---[ end Kernel panic - not syncing: Fatal exception ]---
+Looks good, I'll throw it in the stack for 4.20.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_bmap_util.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 7cfda25f1bb1..97f7543fdfb6 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1465,6 +1465,12 @@ xfs_swap_extent_flush(
- 		return error;
- 	truncate_pagecache_range(VFS_I(ip), 0, -1);
- 
-+	if (xfs_inode_has_cow_data(ip)) {
-+		error = xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, true);
-+		if (error)
-+			return error;
-+	}
-+
- 	/* Verify O_DIRECT for ftmp */
- 	if (VFS_I(ip)->i_mapping->nrpages)
- 		return -EINVAL;
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 -- 
-2.19.0
+Dave Chinner
+david@fromorbit.com
