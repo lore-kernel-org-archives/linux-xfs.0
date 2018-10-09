@@ -1,123 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41086 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726468AbeJITd2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 9 Oct 2018 15:33:28 -0400
-Date: Tue, 9 Oct 2018 08:16:45 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: issue log message on user force shutdown
-Message-ID: <20181009121644.GC2816@bfoster>
-References: <20181009053045.27473-1-david@fromorbit.com>
+Received: from mail-wr1-f49.google.com ([209.85.221.49]:35556 "EHLO
+        mail-wr1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726540AbeJIVGI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Oct 2018 17:06:08 -0400
+Received: by mail-wr1-f49.google.com with SMTP id w5-v6so1922202wrt.2
+        for <linux-xfs@vger.kernel.org>; Tue, 09 Oct 2018 06:49:05 -0700 (PDT)
+Received: from amb.local ([194.99.105.102])
+        by smtp.gmail.com with ESMTPSA id j6-v6sm15166163wru.20.2018.10.09.06.49.03
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 09 Oct 2018 06:49:03 -0700 (PDT)
+Subject: Re: repair: realloc(): invalid next size
+References: <214be03d-9cc7-378b-3635-6fca3cdcb1dd@gmail.com>
+From: =?UTF-8?Q?Arkadiusz_Mi=c5=9bkiewicz?= <a.miskiewicz@gmail.com>
+Message-ID: <81713fcb-915b-d408-83a6-0d98eb6de4b6@gmail.com>
+Date: Tue, 9 Oct 2018 15:49:02 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181009053045.27473-1-david@fromorbit.com>
+In-Reply-To: <214be03d-9cc7-378b-3635-6fca3cdcb1dd@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: pl
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Tue, Oct 09, 2018 at 04:30:45PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On 08/10/2018 16:03, Arkadiusz Miśkiewicz wrote:
 > 
-> The kernel only issues a log message that it's been shut down when
-> the filesystem triggers a shutdown itself. Hence there is no trace
-> in the log when a shutdown is triggered manually from userspace.
-> This can make it hard to see sequence of events in the log when
-> things go wrong, so make sure we always log a message when a
-> shutdown is run.
+> Big fs, ton of small files, repair takes 36h until this happens:
 > 
-> While there, clean up the logic flow so we don't have to continually
-> check if the shutdown trigger was user initiated before logging
-> shutdown messages.
+> rebuilding directory inode 30363993060
+> rebuilding directory inode 30398868604
+> rebuilding directory inode 30414474627
+> rebuilding directory inode 30425006954
+> rebuilding directory inode 30447937553
+> rebuilding directory inode 30529556616
+> rebuilding directory inode 30537494728
+> rebuilding directory inode 30569826838
+> rebuilding directory inode 31060721895
+> Metadata corruption detected at 0x41f9db, inode 0x73b5d00e7 data fork
+> xfs_repair: warning - iflush_int failed (-117)
+> Warning: recursive buffer locking at block 31060721776 detected
+> Metadata corruption detected at 0x41f9db, inode 0x73b5d00e7 data fork
+> xfs_repair: warning - iflush_int failed (-117)
+> Warning: recursive buffer locking at block 31060721776 detected
+> Metadata corruption detected at 0x41f980, inode 0x73b5d00e7 data fork
+> xfs_repair: warning - iflush_int failed (-117)
+> realloc(): invalid next size
+> Aborted
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
+> 
+> Fails somewhere in 0x41f9db <xfs_dir2_sf_verify+603>
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Not much progress, traceback but without line numbers:
+[New Thread 0x7ffff4588700 (LWP 16783)]
+rebuilding directory inode 30299650439
+rebuilding directory inode 30300818030
+rebuilding directory inode 30317087573
+rebuilding directory inode 30363993060
+rebuilding directory inode 30398868604
+rebuilding directory inode 30414474627
+rebuilding directory inode 30425006954
+rebuilding directory inode 30447937553
+rebuilding directory inode 30529556616
+rebuilding directory inode 30537494728
+rebuilding directory inode 30569826838
+rebuilding directory inode 31060721895
+Metadata corruption detected at 0x486261, inode 0x73b5d00e7 data fork
+xfs_repair: warning - iflush_int failed (-117)
+Warning: recursive buffer locking at block 31060721776 detected
+Metadata corruption detected at 0x486261, inode 0x73b5d00e7 data fork
+xfs_repair: warning - iflush_int failed (-117)
+and segfault
 
->  fs/xfs/xfs_fsops.c | 50 +++++++++++++++++++++++-----------------------
->  1 file changed, 25 insertions(+), 25 deletions(-)
+warning: Loadable section ".note.gnu.property" outside of ELF segments
+Core was generated by `/sbin/xfs_repair -vvvv /dev/sdc1'.
+Program terminated with signal SIGSEGV, Segmentation fault.
+#0  __memmove_avx_unaligned_erms () at 
+../sysdeps/x86_64/multiarch/memmove-vec-unaligned-erms.S:525
+525		VMOVU	-VEC_SIZE(%rcx), %VEC(1)
+[Current thread is 1 (Thread 0x7ffff797d300 (LWP 31979))]
+(gdb) bt
+#0  __memmove_avx_unaligned_erms () at 
+../sysdeps/x86_64/multiarch/memmove-vec-unaligned-erms.S:525
+#1  0x0000000000485e1e in xfs_dir2_sf_addname_hard ()
+#2  0x000000000048599b in xfs_dir2_sf_addname ()
+#3  0x00000000004773c2 in libxfs_dir_createname ()
+#4  0x00000000004279f3 in longform_dir2_rebuild ()
+#5  0x000000000042a61a in longform_dir2_entry_check ()
+#6  0x000000000042b697 in process_dir_inode ()
+#7  0x000000000042c3ca in traverse_function ()
+#8  0x00000000004304a1 in prefetch_ag_range ()
+#9  0x000000000043061f in do_inode_prefetch ()
+#10 0x000000000042c49c in traverse_ags ()
+#11 0x000000000042c752 in phase6 ()
+#12 0x000000000043ea38 in main ()
+
+gdb doesn't like my binary, not sure why yet
+
+/sbin/xfs_repair: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), 
+dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for 
+GNU/Linux 3.2.0, BuildID[sha1]=710d79304cb58f8e415302572cc718e38f0f1aa4, 
+with debug_info, not stripped
+
 > 
-> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> index 7c00b8bedfe3..093c2b8d7e20 100644
-> --- a/fs/xfs/xfs_fsops.c
-> +++ b/fs/xfs/xfs_fsops.c
-> @@ -470,20 +470,13 @@ xfs_fs_goingdown(
->   */
->  void
->  xfs_do_force_shutdown(
-> -	xfs_mount_t	*mp,
-> +	struct xfs_mount *mp,
->  	int		flags,
->  	char		*fname,
->  	int		lnnum)
->  {
-> -	int		logerror;
-> -
-> -	logerror = flags & SHUTDOWN_LOG_IO_ERROR;
-> +	bool		logerror = flags & SHUTDOWN_LOG_IO_ERROR;
->  
-> -	if (!(flags & SHUTDOWN_FORCE_UMOUNT)) {
-> -		xfs_notice(mp,
-> -	"%s(0x%x) called from line %d of file %s.  Return address = "PTR_FMT,
-> -			__func__, flags, lnnum, fname, __return_address);
-> -	}
->  	/*
->  	 * No need to duplicate efforts.
->  	 */
-> @@ -499,27 +492,34 @@ xfs_do_force_shutdown(
->  	if (xfs_log_force_umount(mp, logerror))
->  		return;
->  
-> +	if (flags & SHUTDOWN_FORCE_UMOUNT) {
-> +		xfs_alert(mp,
-> +"User initiated shutdown received. Shutting down filesystem");
-> +		return;
-> +	}
-> +
-> +	xfs_notice(mp,
-> +"%s(0x%x) called from line %d of file %s. Return address = "PTR_FMT,
-> +		__func__, flags, lnnum, fname, __return_address);
-> +
->  	if (flags & SHUTDOWN_CORRUPT_INCORE) {
->  		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_CORRUPT,
-> -    "Corruption of in-memory data detected.  Shutting down filesystem");
-> +"Corruption of in-memory data detected.  Shutting down filesystem");
->  		if (XFS_ERRLEVEL_HIGH <= xfs_error_level)
->  			xfs_stack_trace();
-> -	} else if (!(flags & SHUTDOWN_FORCE_UMOUNT)) {
-> -		if (logerror) {
-> -			xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_LOGERROR,
-> -		"Log I/O Error Detected.  Shutting down filesystem");
-> -		} else if (flags & SHUTDOWN_DEVICE_REQ) {
-> -			xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_IOERROR,
-> -		"All device paths lost.  Shutting down filesystem");
-> -		} else if (!(flags & SHUTDOWN_REMOTE_REQ)) {
-> -			xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_IOERROR,
-> -		"I/O Error Detected. Shutting down filesystem");
-> -		}
-> -	}
-> -	if (!(flags & SHUTDOWN_FORCE_UMOUNT)) {
-> -		xfs_alert(mp,
-> -	"Please umount the filesystem and rectify the problem(s)");
-> +	} else if (logerror) {
-> +		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_LOGERROR,
-> +			"Log I/O Error Detected. Shutting down filesystem");
-> +	} else if (flags & SHUTDOWN_DEVICE_REQ) {
-> +		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_IOERROR,
-> +			"All device paths lost. Shutting down filesystem");
-> +	} else if (!(flags & SHUTDOWN_REMOTE_REQ)) {
-> +		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_IOERROR,
-> +			"I/O Error Detected. Shutting down filesystem");
->  	}
-> +
-> +	xfs_alert(mp,
-> +		"Please unmount the filesystem and rectify the problem(s)");
->  }
->  
->  /*
-> -- 
-> 2.17.0
+> Complete log at
+> https://ixion.pld-linux.org/~arekm/xfs-1/repair.txt
+> 
+> Test was done with xfs_repair 4.17.0 and 4.18.0 with the same result.
+> 
+> kernel 4.18.5
+> 
+> Running under gdb now.
+> 
+> Any ideas?
 > 
