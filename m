@@ -1,214 +1,187 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:50202 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726503AbeJJWgI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Oct 2018 18:36:08 -0400
-Date: Wed, 10 Oct 2018 08:13:21 -0700
+Received: from userp2120.oracle.com ([156.151.31.85]:33676 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726492AbeJJCE2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Oct 2018 22:04:28 -0400
+Date: Tue, 9 Oct 2018 11:46:01 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 08/25] vfs: combine the clone and dedupe into a single
- remap_file_range
-Message-ID: <20181010151321.GR28243@magnolia>
-References: <153913023835.32295.13962696655740190941.stgit@magnolia>
- <153913029885.32295.7399525233513945673.stgit@magnolia>
- <CAOQ4uxj_wftoGvub9n_6X3Qc64LKxs+8TB-opUiq59sGQ=YoKw@mail.gmail.com>
+Subject: [PATCH v2 3/3] xfs: fix buffer state management in
+ xrep_findroot_block
+Message-ID: <20181009184601.GJ28243@magnolia>
+References: <153905876877.10127.12478254551500076698.stgit@magnolia>
+ <153905878783.10127.5891089492746914373.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxj_wftoGvub9n_6X3Qc64LKxs+8TB-opUiq59sGQ=YoKw@mail.gmail.com>
+In-Reply-To: <153905878783.10127.5891089492746914373.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-cifs@vger.kernel.org, overlayfs <linux-unionfs@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, ocfs2-devel@oss.oracle.com
+To: david@fromorbit.com
+Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
 
-On Wed, Oct 10, 2018 at 08:54:44AM +0300, Amir Goldstein wrote:
-> On Wed, Oct 10, 2018 at 3:12 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> >
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> >
-> > Combine the clone_file_range and dedupe_file_range operations into a
-> > single remap_file_range file operation dispatch since they're
-> > fundamentally the same operation.  The differences between the two can
-> > be made in the prep functions.
-> >
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> 
-> I like this. Nits below.
-> 
-> [...]
-> 
-> > diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c
-> > index d60b6caf09e8..e22b294fa25b 100644
-> > --- a/fs/btrfs/ioctl.c
-> > +++ b/fs/btrfs/ioctl.c
-> > @@ -3627,26 +3627,6 @@ static int btrfs_extent_same(struct inode *src, u64 loff, u64 olen,
-> >         return ret;
-> >  }
-> >
-> > -int btrfs_dedupe_file_range(struct file *src_file, loff_t src_loff,
-> > -                           struct file *dst_file, loff_t dst_loff,
-> > -                           u64 olen)
-> > -{
-> > -       struct inode *src = file_inode(src_file);
-> > -       struct inode *dst = file_inode(dst_file);
-> > -       u64 bs = BTRFS_I(src)->root->fs_info->sb->s_blocksize;
-> > -
-> > -       if (WARN_ON_ONCE(bs < PAGE_SIZE)) {
-> > -               /*
-> > -                * Btrfs does not support blocksize < page_size. As a
-> > -                * result, btrfs_cmp_data() won't correctly handle
-> > -                * this situation without an update.
-> > -                */
-> > -               return -EINVAL;
-> > -       }
-> > -
-> > -       return btrfs_extent_same(src, src_loff, olen, dst, dst_loff);
-> > -}
-> > -
-> >  static int clone_finish_inode_update(struct btrfs_trans_handle *trans,
-> >                                      struct inode *inode,
-> >                                      u64 endoff,
-> > @@ -4348,9 +4328,27 @@ static noinline int btrfs_clone_files(struct file *file, struct file *file_src,
-> >         return ret;
-> >  }
-> >
-> > -int btrfs_clone_file_range(struct file *src_file, loff_t off,
-> > -               struct file *dst_file, loff_t destoff, u64 len)
-> > +int btrfs_remap_file_range(struct file *src_file, loff_t off,
-> > +               struct file *dst_file, loff_t destoff, u64 len,
-> > +               unsigned int flags)
-> >  {
-> > +       if (flags & RFR_IDENTICAL_DATA) {
-> > +               struct inode *src = file_inode(src_file);
-> > +               struct inode *dst = file_inode(dst_file);
-> > +               u64 bs = BTRFS_I(src)->root->fs_info->sb->s_blocksize;
-> > +
-> > +               if (WARN_ON_ONCE(bs < PAGE_SIZE)) {
-> > +                       /*
-> > +                        * Btrfs does not support blocksize < page_size. As a
-> > +                        * result, btrfs_cmp_data() won't correctly handle
-> > +                        * this situation without an update.
-> > +                        */
-> > +                       return -EINVAL;
-> > +               }
-> > +
-> > +               return btrfs_extent_same(src, off, len, dst, destoff);
-> > +       }
-> > +
-> 
-> Seems weird that you would do that instead of:
-> 
-> +    if (flags & ~RFR_IDENTICAL_DATA)
-> +        return -EINVAL;
-> +    if (flags & RFR_IDENTICAL_DATA)
-> +        return btrfs_dedupe_file_range(src, off, dst, destoff, len);
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Hmm.  The flags validation thing is kind of a mess here.  There should be a:
+We don't handle buffer state properly in online repair's findroot
+routine.  If a buffer already has b_ops set, we don't ever want to touch
+that, and we don't want to call the read verifiers on a buffer that
+could be dirty (CRCs are only recomputed during log checkpoints).
 
-#define RFR_VALID_FLAGS	(RFR_IDENTICAL_DATA | /* add other RFR flags */)
+Therefore, be more careful about what we do with a buffer -- if someone
+else already attached ops that are not the ones for this btree type,
+just ignore the buffer.  We only attach our btree type's buf ops if it
+matches the magic/uuid and structure checks.
 
-And all these functions should also gate on:
+We also modify xfs_buf_read_map to allow callers to set buffer ops on a
+DONE buffer with NULL ops so that repair doesn't leave behind buffers
+which won't have buffers attached to them.
 
-if (remap_flags & ~RFR_VALID_FLAGS) {
-	WARN_ON(...);
-	return -EINVAL;
-}
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/scrub/repair.c  |   71 +++++++++++++++++++++++++++++++++++++++---------
+ fs/xfs/xfs_trans.h     |    1 +
+ fs/xfs/xfs_trans_buf.c |   13 +++++++++
+ 3 files changed, 71 insertions(+), 14 deletions(-)
 
-Though FWIW the btrfs implementation actually will support all three
-flags, so the particular structure of these checks here are correct if
-you add in my self-criticism above.
-
-> 
-> >         return btrfs_clone_files(dst_file, src_file, off, len, destoff);
-> >  }
-> >
-> > diff --git a/fs/cifs/cifsfs.c b/fs/cifs/cifsfs.c
-> > index 7065426b3280..bf971fd7cab2 100644
-> > --- a/fs/cifs/cifsfs.c
-> > +++ b/fs/cifs/cifsfs.c
-> > @@ -975,8 +975,9 @@ const struct inode_operations cifs_symlink_inode_ops = {
-> >         .listxattr = cifs_listxattr,
-> >  };
-> >
-> > -static int cifs_clone_file_range(struct file *src_file, loff_t off,
-> > -               struct file *dst_file, loff_t destoff, u64 len)
-> > +static int cifs_remap_file_range(struct file *src_file, loff_t off,
-> > +               struct file *dst_file, loff_t destoff, u64 len,
-> > +               unsigned int flags)
-> >  {
-> >         struct inode *src_inode = file_inode(src_file);
-> >         struct inode *target_inode = file_inode(dst_file);
-> > @@ -986,6 +987,9 @@ static int cifs_clone_file_range(struct file *src_file, loff_t off,
-> >         unsigned int xid;
-> >         int rc;
-> >
-> > +       if (flags & RFR_IDENTICAL_DATA)
-> > +               return -EOPNOTSUPP;
-> > +
-> 
-> I think everyone would be better off with:
-> +       if (flags)
-> +               return -EINVAL;
-> 
-> This way you won't need to change all filesystem implementations
-> every time that you add a new RFR flag.
-> Lucky for us, dedup already return -EINVAL if (!f_op->dedupe_file_range)
-> (and not -EOPNOTSUPP).
-
-Ugh, right, I forgot about that, um, quirk of the interface. :(
-
-> [...]
-> > diff --git a/fs/overlayfs/file.c b/fs/overlayfs/file.c
-> > index 986313da0c88..693bd0620a81 100644
-> > --- a/fs/overlayfs/file.c
-> > +++ b/fs/overlayfs/file.c
-> > @@ -489,26 +489,28 @@ static ssize_t ovl_copy_file_range(struct file *file_in, loff_t pos_in,
-> >                             OVL_COPY);
-> >  }
-> >
-> > -static int ovl_clone_file_range(struct file *file_in, loff_t pos_in,
-> > -                               struct file *file_out, loff_t pos_out, u64 len)
-> > +static int ovl_remap_file_range(struct file *file_in, loff_t pos_in,
-> > +                               struct file *file_out, loff_t pos_out,
-> > +                               u64 len, unsigned int flags)
-> >  {
-> > -       return ovl_copyfile(file_in, pos_in, file_out, pos_out, len, 0,
-> > -                           OVL_CLONE);
-> > -}
-> > +       enum ovl_copyop op;
-> > +
-> > +       if (flags & RFR_IDENTICAL_DATA)
-> > +               op = OVL_DEDUPE;
-> > +       else
-> > +               op = OVL_CLONE;
-> >
-> > -static int ovl_dedupe_file_range(struct file *file_in, loff_t pos_in,
-> > -                                struct file *file_out, loff_t pos_out, u64 len)
-> > -{
-> >         /*
-> >          * Don't copy up because of a dedupe request, this wouldn't make sense
-> >          * most of the time (data would be duplicated instead of deduplicated).
-> >          */
-> > -       if (!ovl_inode_upper(file_inode(file_in)) ||
-> > -           !ovl_inode_upper(file_inode(file_out)))
-> > +       if (op == OVL_DEDUPE &&
-> > +           (!ovl_inode_upper(file_inode(file_in)) ||
-> > +            !ovl_inode_upper(file_inode(file_out))))
-> >                 return -EPERM;
-> >
-> >         return ovl_copyfile(file_in, pos_in, file_out, pos_out, len, 0,
-> > -                           OVL_DEDUPE);
-> > +                           op);
-> >  }
-> >
-> 
-> Apart from the generic check invalid flags comment - ACK on ovl part.
-
-Thanks for the review!  Is that an official Acked-by to add to the
-commit message, or an informal ACK?
-
---D
-
-> Thanks,
-> Amir.
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index 63786341ac2a..4fc0a5ea7673 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -29,6 +29,8 @@
+ #include "xfs_ag_resv.h"
+ #include "xfs_trans_space.h"
+ #include "xfs_quota.h"
++#include "xfs_attr.h"
++#include "xfs_reflink.h"
+ #include "scrub/xfs_scrub.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+@@ -699,7 +701,7 @@ xrep_findroot_block(
+ 	struct xfs_btree_block		*btblock;
+ 	xfs_daddr_t			daddr;
+ 	int				block_level;
+-	int				error;
++	int				error = 0;
+ 
+ 	daddr = XFS_AGB_TO_DADDR(mp, ri->sc->sa.agno, agbno);
+ 
+@@ -718,28 +720,69 @@ xrep_findroot_block(
+ 			return error;
+ 	}
+ 
++	/*
++	 * Read the buffer into memory so that we can see if it's a match for
++	 * our btree type.  We have no clue if it is beforehand, and we want to
++	 * avoid xfs_trans_read_buf's behavior of dumping the DONE state (which
++	 * will cause needless disk reads in subsequent calls to this function)
++	 * and logging metadata verifier failures.
++	 *
++	 * Therefore, pass in NULL buffer ops.  If the buffer was already in
++	 * memory from some other caller it will already have b_ops assigned.
++	 * If it was in memory from a previous unsuccessful findroot_block
++	 * call, the buffer won't have b_ops but it should be clean and ready
++	 * for us to try to verify if the read call succeeds.  The same applies
++	 * if the buffer wasn't in memory at all.
++	 *
++	 * Note: If we never match a btree type with this buffer, it will be
++	 * left in memory with NULL b_ops.  This shouldn't be a problem unless
++	 * the buffer gets written.
++	 */
+ 	error = xfs_trans_read_buf(mp, ri->sc->tp, mp->m_ddev_targp, daddr,
+ 			mp->m_bsize, 0, &bp, NULL);
+ 	if (error)
+ 		return error;
+ 
+-	/*
+-	 * Does this look like a block matching our fs and higher than any
+-	 * other block we've found so far?  If so, reattach buffer verifiers
+-	 * so the AIL won't complain if the buffer is also dirty.
+-	 */
++	/* Ensure the block magic matches the btree type we're looking for. */
+ 	btblock = XFS_BUF_TO_BLOCK(bp);
+ 	if (be32_to_cpu(btblock->bb_magic) != fab->magic)
+ 		goto out;
+-	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+-	    !uuid_equal(&btblock->bb_u.s.bb_uuid, &mp->m_sb.sb_meta_uuid))
+-		goto out;
+-	bp->b_ops = fab->buf_ops;
+ 
+-	/* Make sure we pass the verifiers. */
+-	bp->b_ops->verify_read(bp);
+-	if (bp->b_error)
+-		goto out;
++	/*
++	 * If the buffer already has ops applied and they're not the ones for
++	 * this btree type, we know this block doesn't match the btree and we
++	 * can bail out.
++	 *
++	 * If the buffer ops match ours, someone else has already validated
++	 * the block for us, so we can move on to checking if this is a root
++	 * block candidate.
++	 *
++	 * If the buffer does not have ops, nobody has successfully validated
++	 * the contents and the buffer cannot be dirty.  If the magic, uuid,
++	 * and structure match this btree type then we'll move on to checking
++	 * if it's a root block candidate.  If there is no match, bail out.
++	 */
++	if (bp->b_ops) {
++		if (bp->b_ops != fab->buf_ops)
++			goto out;
++	} else {
++		ASSERT(!xfs_trans_buf_is_dirty(bp));
++		if (!uuid_equal(&btblock->bb_u.s.bb_uuid,
++				&mp->m_sb.sb_meta_uuid))
++			goto out;
++		fab->buf_ops->verify_read(bp);
++		if (bp->b_error) {
++			bp->b_error = 0;
++			goto out;
++		}
++
++		/*
++		 * Some read verifiers will (re)set b_ops, so we must be
++		 * careful not to blow away any such assignment.
++		 */
++		if (!bp->b_ops)
++			bp->b_ops = fab->buf_ops;
++	}
+ 
+ 	/*
+ 	 * This block passes the magic/uuid and verifier tests for this btree
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index c3d278e96ad1..a0c5dbda18aa 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -220,6 +220,7 @@ void		xfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *, uint);
+ void		xfs_trans_log_buf(struct xfs_trans *, struct xfs_buf *, uint,
+ 				  uint);
+ void		xfs_trans_dirty_buf(struct xfs_trans *, struct xfs_buf *);
++bool		xfs_trans_buf_is_dirty(struct xfs_buf *bp);
+ void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
+ 
+ void		xfs_extent_free_init_defer_op(void);
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index fc40160c1773..629f1479c9d2 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -350,6 +350,19 @@ xfs_trans_read_buf_map(
+ 
+ }
+ 
++/* Has this buffer been dirtied by anyone? */
++bool
++xfs_trans_buf_is_dirty(
++	struct xfs_buf		*bp)
++{
++	struct xfs_buf_log_item	*bip = bp->b_log_item;
++
++	if (!bip)
++		return false;
++	ASSERT(bip->bli_item.li_type == XFS_LI_BUF);
++	return test_bit(XFS_LI_DIRTY, &bip->bli_item.li_flags);
++}
++
+ /*
+  * Release a buffer previously joined to the transaction. If the buffer is
+  * modified within this transaction, decrement the recursion count but do not
