@@ -1,121 +1,199 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:39018 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725855AbeJIMp5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Oct 2018 08:45:57 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1g9kbV-0000e1-1q
-        for linux-xfs@vger.kernel.org; Tue, 09 Oct 2018 16:30:45 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.91)
-        (envelope-from <david@fromorbit.com>)
-        id 1g9kbV-00079p-0V
-        for linux-xfs@vger.kernel.org; Tue, 09 Oct 2018 16:30:45 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: issue log message on user force shutdown
-Date: Tue,  9 Oct 2018 16:30:45 +1100
-Message-Id: <20181009053045.27473-1-david@fromorbit.com>
+Received: from mx1.redhat.com ([209.132.183.28]:43792 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726468AbeJITdW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 Oct 2018 15:33:22 -0400
+Date: Tue, 9 Oct 2018 08:16:39 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 3/3] xfs: fix buffer state management in
+ xrep_findroot_block
+Message-ID: <20181009121638.GB2816@bfoster>
+References: <153905876877.10127.12478254551500076698.stgit@magnolia>
+ <153905878783.10127.5891089492746914373.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <153905878783.10127.5891089492746914373.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Mon, Oct 08, 2018 at 09:19:47PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> We don't handle buffer state properly in online repair's findroot
+> routine.  If a buffer already has b_ops set, we don't ever want to touch
+> that, and we don't want to call the read verifiers on a buffer that
+> could be dirty (CRCs are only recomputed during log checkpoints).
+> 
+> Therefore, be more careful about what we do with a buffer -- if someone
+> else already attached ops that are not the ones for this btree type,
+> just ignore the buffer.  We only attach our btree type's buf ops if it
+> matches the magic/uuid and structure checks.
+> 
+> We also modify xfs_buf_read_map to allow callers to set buffer ops on a
+> DONE buffer with NULL ops so that repair doesn't leave behind buffers
+> which won't have buffers attached to them.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/scrub/repair.c  |   65 ++++++++++++++++++++++++++++++++++++++----------
+>  fs/xfs/xfs_trans.h     |    1 +
+>  fs/xfs/xfs_trans_buf.c |   13 ++++++++++
+>  3 files changed, 65 insertions(+), 14 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+> index 63786341ac2a..a07b9364c9de 100644
+> --- a/fs/xfs/scrub/repair.c
+> +++ b/fs/xfs/scrub/repair.c
+> @@ -29,6 +29,8 @@
+>  #include "xfs_ag_resv.h"
+>  #include "xfs_trans_space.h"
+>  #include "xfs_quota.h"
+> +#include "xfs_attr.h"
+> +#include "xfs_reflink.h"
+>  #include "scrub/xfs_scrub.h"
+>  #include "scrub/scrub.h"
+>  #include "scrub/common.h"
+> @@ -699,7 +701,7 @@ xrep_findroot_block(
+>  	struct xfs_btree_block		*btblock;
+>  	xfs_daddr_t			daddr;
+>  	int				block_level;
+> -	int				error;
+> +	int				error = 0;
+>  
+>  	daddr = XFS_AGB_TO_DADDR(mp, ri->sc->sa.agno, agbno);
+>  
+> @@ -718,28 +720,63 @@ xrep_findroot_block(
+>  			return error;
+>  	}
+>  
+> +	/*
+> +	 * Read the buffer into memory so that we can see if it's a match for
+> +	 * our btree type.  We have no clue if it is beforehand, and we want to
+> +	 * avoid xfs_trans_read_buf's behavior of dumping the DONE state (which
+> +	 * will cause needless disk reads in subsequent calls to this function)
+> +	 * and logging metadata verifier failures.
+> +	 *
+> +	 * Therefore, pass in NULL buffer ops.  If the buffer was already in
+> +	 * memory from some other caller it will already have b_ops assigned.
+> +	 * If it was in memory from a previous unsuccessful findroot_block
+> +	 * call, the buffer won't have b_ops but it should be clean and ready
+> +	 * for us to try to verify if the read call succeeds.  The same applies
+> +	 * if the buffer wasn't in memory at all.
+> +	 *
+> +	 * Note: If we never match a btree type with this buffer, it will be
+> +	 * left in memory with NULL b_ops.  This shouldn't be a problem unless
+> +	 * the buffer gets written.
+> +	 */
+>  	error = xfs_trans_read_buf(mp, ri->sc->tp, mp->m_ddev_targp, daddr,
+>  			mp->m_bsize, 0, &bp, NULL);
+>  	if (error)
+>  		return error;
+>  
+> -	/*
+> -	 * Does this look like a block matching our fs and higher than any
+> -	 * other block we've found so far?  If so, reattach buffer verifiers
+> -	 * so the AIL won't complain if the buffer is also dirty.
+> -	 */
+> +	/* Ensure the block magic matches the btree type we're looking for. */
+>  	btblock = XFS_BUF_TO_BLOCK(bp);
+>  	if (be32_to_cpu(btblock->bb_magic) != fab->magic)
+>  		goto out;
+> -	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+> -	    !uuid_equal(&btblock->bb_u.s.bb_uuid, &mp->m_sb.sb_meta_uuid))
+> -		goto out;
+> -	bp->b_ops = fab->buf_ops;
+>  
+> -	/* Make sure we pass the verifiers. */
+> -	bp->b_ops->verify_read(bp);
+> -	if (bp->b_error)
+> -		goto out;
+> +	/*
+> +	 * If the buffer already has ops applied and they're not the ones for
+> +	 * this btree type, we know this block doesn't match the btree and we
+> +	 * can bail out.
+> +	 *
+> +	 * If the buffer ops match ours, someone else has already validated
+> +	 * the block for us, so we can move on to checking if this is a root
+> +	 * block candidate.
+> +	 *
+> +	 * If the buffer does not have ops, nobody has successfully validated
+> +	 * the contents and the buffer cannot be dirty.  If the magic, uuid,
+> +	 * and structure match this btree type then we'll move on to checking
+> +	 * if it's a root block candidate.  If there is no match, bail out.
+> +	 */
+> +	if (bp->b_ops) {
+> +		if (bp->b_ops != fab->buf_ops)
+> +			goto out;
+> +	} else {
+> +		ASSERT(!xfs_trans_buf_is_dirty(bp));
+> +		if (!uuid_equal(&btblock->bb_u.s.bb_uuid,
+> +				&mp->m_sb.sb_meta_uuid))
+> +			goto out;
+> +		fab->buf_ops->verify_read(bp);
+> +		if (bp->b_error) {
+> +			bp->b_error = 0;
+> +			goto out;
+> +		}
+> +		bp->b_ops = fab->buf_ops;
 
-The kernel only issues a log message that it's been shut down when
-the filesystem triggers a shutdown itself. Hence there is no trace
-in the log when a shutdown is triggered manually from userspace.
-This can make it hard to see sequence of events in the log when
-things go wrong, so make sure we always log a message when a
-shutdown is run.
+In light of the assert issues you hit on the previous patch related to
+verifiers reassigning ->b_ops, perhaps we should think about clearing
+->b_ops on error and making the line above something like:
 
-While there, clean up the logic flow so we don't have to continually
-check if the shutdown trigger was user initiated before logging
-shutdown messages.
+		if (!bp->b_ops)
+			bp->b_ops = fab->buf_ops;
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_fsops.c | 50 +++++++++++++++++++++++-----------------------
- 1 file changed, 25 insertions(+), 25 deletions(-)
+I guess this mechanism is only for per-ag btrees atm, but that could be
+a fun landmine to deal with if this rmap searching/detecting code is
+ever repurposed to deal with directories/attrs or other verifiers are
+updated to do a similar kind of reassignment. Not an immediate issue
+(and I don't want to nit this patch to death :P), so:
 
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 7c00b8bedfe3..093c2b8d7e20 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -470,20 +470,13 @@ xfs_fs_goingdown(
-  */
- void
- xfs_do_force_shutdown(
--	xfs_mount_t	*mp,
-+	struct xfs_mount *mp,
- 	int		flags,
- 	char		*fname,
- 	int		lnnum)
- {
--	int		logerror;
--
--	logerror = flags & SHUTDOWN_LOG_IO_ERROR;
-+	bool		logerror = flags & SHUTDOWN_LOG_IO_ERROR;
- 
--	if (!(flags & SHUTDOWN_FORCE_UMOUNT)) {
--		xfs_notice(mp,
--	"%s(0x%x) called from line %d of file %s.  Return address = "PTR_FMT,
--			__func__, flags, lnnum, fname, __return_address);
--	}
- 	/*
- 	 * No need to duplicate efforts.
- 	 */
-@@ -499,27 +492,34 @@ xfs_do_force_shutdown(
- 	if (xfs_log_force_umount(mp, logerror))
- 		return;
- 
-+	if (flags & SHUTDOWN_FORCE_UMOUNT) {
-+		xfs_alert(mp,
-+"User initiated shutdown received. Shutting down filesystem");
-+		return;
-+	}
-+
-+	xfs_notice(mp,
-+"%s(0x%x) called from line %d of file %s. Return address = "PTR_FMT,
-+		__func__, flags, lnnum, fname, __return_address);
-+
- 	if (flags & SHUTDOWN_CORRUPT_INCORE) {
- 		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_CORRUPT,
--    "Corruption of in-memory data detected.  Shutting down filesystem");
-+"Corruption of in-memory data detected.  Shutting down filesystem");
- 		if (XFS_ERRLEVEL_HIGH <= xfs_error_level)
- 			xfs_stack_trace();
--	} else if (!(flags & SHUTDOWN_FORCE_UMOUNT)) {
--		if (logerror) {
--			xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_LOGERROR,
--		"Log I/O Error Detected.  Shutting down filesystem");
--		} else if (flags & SHUTDOWN_DEVICE_REQ) {
--			xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_IOERROR,
--		"All device paths lost.  Shutting down filesystem");
--		} else if (!(flags & SHUTDOWN_REMOTE_REQ)) {
--			xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_IOERROR,
--		"I/O Error Detected. Shutting down filesystem");
--		}
--	}
--	if (!(flags & SHUTDOWN_FORCE_UMOUNT)) {
--		xfs_alert(mp,
--	"Please umount the filesystem and rectify the problem(s)");
-+	} else if (logerror) {
-+		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_LOGERROR,
-+			"Log I/O Error Detected. Shutting down filesystem");
-+	} else if (flags & SHUTDOWN_DEVICE_REQ) {
-+		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_IOERROR,
-+			"All device paths lost. Shutting down filesystem");
-+	} else if (!(flags & SHUTDOWN_REMOTE_REQ)) {
-+		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_IOERROR,
-+			"I/O Error Detected. Shutting down filesystem");
- 	}
-+
-+	xfs_alert(mp,
-+		"Please unmount the filesystem and rectify the problem(s)");
- }
- 
- /*
--- 
-2.17.0
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> +	}
+>  
+>  	/*
+>  	 * This block passes the magic/uuid and verifier tests for this btree
+> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> index c3d278e96ad1..a0c5dbda18aa 100644
+> --- a/fs/xfs/xfs_trans.h
+> +++ b/fs/xfs/xfs_trans.h
+> @@ -220,6 +220,7 @@ void		xfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *, uint);
+>  void		xfs_trans_log_buf(struct xfs_trans *, struct xfs_buf *, uint,
+>  				  uint);
+>  void		xfs_trans_dirty_buf(struct xfs_trans *, struct xfs_buf *);
+> +bool		xfs_trans_buf_is_dirty(struct xfs_buf *bp);
+>  void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
+>  
+>  void		xfs_extent_free_init_defer_op(void);
+> diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+> index fc40160c1773..629f1479c9d2 100644
+> --- a/fs/xfs/xfs_trans_buf.c
+> +++ b/fs/xfs/xfs_trans_buf.c
+> @@ -350,6 +350,19 @@ xfs_trans_read_buf_map(
+>  
+>  }
+>  
+> +/* Has this buffer been dirtied by anyone? */
+> +bool
+> +xfs_trans_buf_is_dirty(
+> +	struct xfs_buf		*bp)
+> +{
+> +	struct xfs_buf_log_item	*bip = bp->b_log_item;
+> +
+> +	if (!bip)
+> +		return false;
+> +	ASSERT(bip->bli_item.li_type == XFS_LI_BUF);
+> +	return test_bit(XFS_LI_DIRTY, &bip->bli_item.li_flags);
+> +}
+> +
+>  /*
+>   * Release a buffer previously joined to the transaction. If the buffer is
+>   * modified within this transaction, decrement the recursion count but do not
+> 
