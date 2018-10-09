@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:45736 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:45768 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725803AbeJILes (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Oct 2018 07:34:48 -0400
-Subject: [PATCH 3/3] xfs: fix buffer state management in xrep_findroot_block
+        with ESMTP id S1725803AbeJILeu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Oct 2018 07:34:50 -0400
+Subject: [PATCH 2/3] xfs: always assign buffer verifiers when one is provided
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 08 Oct 2018 21:19:47 -0700
-Message-ID: <153905878783.10127.5891089492746914373.stgit@magnolia>
+Date: Mon, 08 Oct 2018 21:19:41 -0700
+Message-ID: <153905878138.10127.642780431830916608.stgit@magnolia>
 In-Reply-To: <153905876877.10127.12478254551500076698.stgit@magnolia>
 References: <153905876877.10127.12478254551500076698.stgit@magnolia>
 MIME-Version: 1.0
@@ -16,164 +16,175 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
+Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, Christoph Hellwig <hch@lst.de>
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-We don't handle buffer state properly in online repair's findroot
-routine.  If a buffer already has b_ops set, we don't ever want to touch
-that, and we don't want to call the read verifiers on a buffer that
-could be dirty (CRCs are only recomputed during log checkpoints).
+If a caller supplies buffer ops when trying to read a buffer and the
+buffer doesn't already have buf ops assigned, ensure that the ops are
+assigned to the buffer and the verifier is run on that buffer.
 
-Therefore, be more careful about what we do with a buffer -- if someone
-else already attached ops that are not the ones for this btree type,
-just ignore the buffer.  We only attach our btree type's buf ops if it
-matches the magic/uuid and structure checks.
-
-We also modify xfs_buf_read_map to allow callers to set buffer ops on a
-DONE buffer with NULL ops so that repair doesn't leave behind buffers
-which won't have buffers attached to them.
+Note that current XFS code is careful to assign buffer ops after a
+xfs_{trans_,}buf_read call in which ops were not supplied.  However, we
+should apply ops defensively in case there is ever a coding mistake; and
+an upcoming repair patch will need to be able to read a buffer without
+assigning buf ops.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/repair.c  |   65 ++++++++++++++++++++++++++++++++++++++----------
- fs/xfs/xfs_trans.h     |    1 +
- fs/xfs/xfs_trans_buf.c |   13 ++++++++++
- 3 files changed, 65 insertions(+), 14 deletions(-)
+ fs/xfs/xfs_buf.c       |   64 +++++++++++++++++++++++++++++++++++-------------
+ fs/xfs/xfs_buf.h       |    2 ++
+ fs/xfs/xfs_trans_buf.c |   29 ++++++++++++++++++++++
+ 3 files changed, 78 insertions(+), 17 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index 63786341ac2a..a07b9364c9de 100644
---- a/fs/xfs/scrub/repair.c
-+++ b/fs/xfs/scrub/repair.c
-@@ -29,6 +29,8 @@
- #include "xfs_ag_resv.h"
- #include "xfs_trans_space.h"
- #include "xfs_quota.h"
-+#include "xfs_attr.h"
-+#include "xfs_reflink.h"
- #include "scrub/xfs_scrub.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
-@@ -699,7 +701,7 @@ xrep_findroot_block(
- 	struct xfs_btree_block		*btblock;
- 	xfs_daddr_t			daddr;
- 	int				block_level;
--	int				error;
-+	int				error = 0;
- 
- 	daddr = XFS_AGB_TO_DADDR(mp, ri->sc->sa.agno, agbno);
- 
-@@ -718,28 +720,63 @@ xrep_findroot_block(
- 			return error;
- 	}
- 
-+	/*
-+	 * Read the buffer into memory so that we can see if it's a match for
-+	 * our btree type.  We have no clue if it is beforehand, and we want to
-+	 * avoid xfs_trans_read_buf's behavior of dumping the DONE state (which
-+	 * will cause needless disk reads in subsequent calls to this function)
-+	 * and logging metadata verifier failures.
-+	 *
-+	 * Therefore, pass in NULL buffer ops.  If the buffer was already in
-+	 * memory from some other caller it will already have b_ops assigned.
-+	 * If it was in memory from a previous unsuccessful findroot_block
-+	 * call, the buffer won't have b_ops but it should be clean and ready
-+	 * for us to try to verify if the read call succeeds.  The same applies
-+	 * if the buffer wasn't in memory at all.
-+	 *
-+	 * Note: If we never match a btree type with this buffer, it will be
-+	 * left in memory with NULL b_ops.  This shouldn't be a problem unless
-+	 * the buffer gets written.
-+	 */
- 	error = xfs_trans_read_buf(mp, ri->sc->tp, mp->m_ddev_targp, daddr,
- 			mp->m_bsize, 0, &bp, NULL);
- 	if (error)
- 		return error;
- 
--	/*
--	 * Does this look like a block matching our fs and higher than any
--	 * other block we've found so far?  If so, reattach buffer verifiers
--	 * so the AIL won't complain if the buffer is also dirty.
--	 */
-+	/* Ensure the block magic matches the btree type we're looking for. */
- 	btblock = XFS_BUF_TO_BLOCK(bp);
- 	if (be32_to_cpu(btblock->bb_magic) != fab->magic)
- 		goto out;
--	if (xfs_sb_version_hascrc(&mp->m_sb) &&
--	    !uuid_equal(&btblock->bb_u.s.bb_uuid, &mp->m_sb.sb_meta_uuid))
--		goto out;
--	bp->b_ops = fab->buf_ops;
- 
--	/* Make sure we pass the verifiers. */
--	bp->b_ops->verify_read(bp);
--	if (bp->b_error)
--		goto out;
-+	/*
-+	 * If the buffer already has ops applied and they're not the ones for
-+	 * this btree type, we know this block doesn't match the btree and we
-+	 * can bail out.
-+	 *
-+	 * If the buffer ops match ours, someone else has already validated
-+	 * the block for us, so we can move on to checking if this is a root
-+	 * block candidate.
-+	 *
-+	 * If the buffer does not have ops, nobody has successfully validated
-+	 * the contents and the buffer cannot be dirty.  If the magic, uuid,
-+	 * and structure match this btree type then we'll move on to checking
-+	 * if it's a root block candidate.  If there is no match, bail out.
-+	 */
-+	if (bp->b_ops) {
-+		if (bp->b_ops != fab->buf_ops)
-+			goto out;
-+	} else {
-+		ASSERT(!xfs_trans_buf_is_dirty(bp));
-+		if (!uuid_equal(&btblock->bb_u.s.bb_uuid,
-+				&mp->m_sb.sb_meta_uuid))
-+			goto out;
-+		fab->buf_ops->verify_read(bp);
-+		if (bp->b_error) {
-+			bp->b_error = 0;
-+			goto out;
-+		}
-+		bp->b_ops = fab->buf_ops;
-+	}
- 
- 	/*
- 	 * This block passes the magic/uuid and verifier tests for this btree
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index c3d278e96ad1..a0c5dbda18aa 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -220,6 +220,7 @@ void		xfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *, uint);
- void		xfs_trans_log_buf(struct xfs_trans *, struct xfs_buf *, uint,
- 				  uint);
- void		xfs_trans_dirty_buf(struct xfs_trans *, struct xfs_buf *);
-+bool		xfs_trans_buf_is_dirty(struct xfs_buf *bp);
- void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
- 
- void		xfs_extent_free_init_defer_op(void);
-diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index fc40160c1773..629f1479c9d2 100644
---- a/fs/xfs/xfs_trans_buf.c
-+++ b/fs/xfs/xfs_trans_buf.c
-@@ -350,6 +350,19 @@ xfs_trans_read_buf_map(
- 
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index e839907e8492..06149bac2f58 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -749,6 +749,30 @@ _xfs_buf_read(
+ 	return xfs_buf_submit(bp);
  }
  
-+/* Has this buffer been dirtied by anyone? */
-+bool
-+xfs_trans_buf_is_dirty(
-+	struct xfs_buf		*bp)
++/*
++ * If the caller passed in an ops structure and the buffer doesn't have ops
++ * assigned, set the ops and use them to verify the contents.  If the contents
++ * cannot be verified, we'll clear XBF_DONE.  We assume the buffer has no
++ * recorded errors and is already in XBF_DONE state.
++ */
++int
++xfs_buf_ensure_ops(
++	struct xfs_buf		*bp,
++	const struct xfs_buf_ops *ops)
 +{
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
++	ASSERT(bp->b_flags & XBF_DONE);
++	ASSERT(bp->b_error == 0);
 +
-+	if (!bip)
-+		return false;
-+	ASSERT(bip->bli_item.li_type == XFS_LI_BUF);
-+	return test_bit(XFS_LI_DIRTY, &bip->bli_item.li_flags);
++	if (!ops || bp->b_ops)
++		return 0;
++
++	bp->b_ops = ops;
++	bp->b_ops->verify_read(bp);
++	if (bp->b_error)
++		bp->b_flags &= ~XBF_DONE;
++	return bp->b_error;
 +}
 +
- /*
-  * Release a buffer previously joined to the transaction. If the buffer is
-  * modified within this transaction, decrement the recursion count but do not
+ xfs_buf_t *
+ xfs_buf_read_map(
+ 	struct xfs_buftarg	*target,
+@@ -762,26 +786,32 @@ xfs_buf_read_map(
+ 	flags |= XBF_READ;
+ 
+ 	bp = xfs_buf_get_map(target, map, nmaps, flags);
+-	if (bp) {
+-		trace_xfs_buf_read(bp, flags, _RET_IP_);
++	if (!bp)
++		return NULL;
+ 
+-		if (!(bp->b_flags & XBF_DONE)) {
+-			XFS_STATS_INC(target->bt_mount, xb_get_read);
+-			bp->b_ops = ops;
+-			_xfs_buf_read(bp, flags);
+-		} else if (flags & XBF_ASYNC) {
+-			/*
+-			 * Read ahead call which is already satisfied,
+-			 * drop the buffer
+-			 */
+-			xfs_buf_relse(bp);
+-			return NULL;
+-		} else {
+-			/* We do not want read in the flags */
+-			bp->b_flags &= ~XBF_READ;
+-		}
++	trace_xfs_buf_read(bp, flags, _RET_IP_);
++
++	if (!(bp->b_flags & XBF_DONE)) {
++		XFS_STATS_INC(target->bt_mount, xb_get_read);
++		bp->b_ops = ops;
++		_xfs_buf_read(bp, flags);
++		return bp;
++	}
++
++	xfs_buf_ensure_ops(bp, ops);
++
++	if (flags & XBF_ASYNC) {
++		/*
++		 * Read ahead call which is already satisfied,
++		 * drop the buffer
++		 */
++		xfs_buf_relse(bp);
++		return NULL;
+ 	}
+ 
++	/* We do not want read in the flags */
++	bp->b_flags &= ~XBF_READ;
++	ASSERT(bp->b_ops != NULL || ops == NULL);
+ 	return bp;
+ }
+ 
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 4e3171acd0f8..b9f5511ea998 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -385,4 +385,6 @@ extern int xfs_setsize_buftarg(xfs_buftarg_t *, unsigned int);
+ #define xfs_getsize_buftarg(buftarg)	block_size((buftarg)->bt_bdev)
+ #define xfs_readonly_buftarg(buftarg)	bdev_read_only((buftarg)->bt_bdev)
+ 
++int xfs_buf_ensure_ops(struct xfs_buf *bp, const struct xfs_buf_ops *ops);
++
+ #endif	/* __XFS_BUF_H__ */
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 286a287ac57a..fc40160c1773 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -264,11 +264,39 @@ xfs_trans_read_buf_map(
+ 			return -EIO;
+ 		}
+ 
++		/*
++		 * Check if the caller is trying to read a buffer that is
++		 * already attached to the transaction yet has no buffer ops
++		 * assigned.  Ops are usually attached when the buffer is
++		 * attached to the transaction, or by the read caller if
++		 * special circumstances.  That didn't happen, which is not
++		 * how this is supposed to go.
++		 *
++		 * If the buffer passes verification we'll let this go, but if
++		 * not we have to shut down.  Let the transaction cleanup code
++		 * release this buffer when it kills the tranaction.
++		 */
++		ASSERT(bp->b_ops != NULL);
++		error = xfs_buf_ensure_ops(bp, ops);
++		if (error) {
++			xfs_buf_ioerror_alert(bp, __func__);
++
++			if (tp->t_flags & XFS_TRANS_DIRTY)
++				xfs_force_shutdown(tp->t_mountp,
++						SHUTDOWN_META_IO_ERROR);
++
++			/* bad CRC means corrupted metadata */
++			if (error == -EFSBADCRC)
++				error = -EFSCORRUPTED;
++			return error;
++		}
++
+ 		bip = bp->b_log_item;
+ 		bip->bli_recur++;
+ 
+ 		ASSERT(atomic_read(&bip->bli_refcount) > 0);
+ 		trace_xfs_trans_read_buf_recur(bip);
++		ASSERT(bp->b_ops != NULL || ops == NULL);
+ 		*bpp = bp;
+ 		return 0;
+ 	}
+@@ -316,6 +344,7 @@ xfs_trans_read_buf_map(
+ 		_xfs_trans_bjoin(tp, bp, 1);
+ 		trace_xfs_trans_read_buf(bp->b_log_item);
+ 	}
++	ASSERT(bp->b_ops != NULL || ops == NULL);
+ 	*bpp = bp;
+ 	return 0;
+ 
