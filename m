@@ -1,202 +1,251 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:50578 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726503AbeJJXwy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Oct 2018 19:52:54 -0400
-Date: Wed, 10 Oct 2018 09:29:48 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 17/25] vfs: make remapping to source file eof more
- explicit
-Message-ID: <20181010162948.GT28243@magnolia>
-References: <153913023835.32295.13962696655740190941.stgit@magnolia>
- <153913043746.32295.17463515265798256890.stgit@magnolia>
- <CAOQ4uxivwLR5assf0VwHdp5p06Er4w7urB637Z3wiQ1eZoT9tQ@mail.gmail.com>
+Received: from sandeen.net ([63.231.237.45]:48438 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725750AbeJJGOP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 Oct 2018 02:14:15 -0400
+Received: from Liberator-5.local (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 5D83154F
+        for <linux-xfs@vger.kernel.org>; Tue,  9 Oct 2018 17:54:49 -0500 (CDT)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs for-next updated to 5f56a56
+Message-ID: <e2306f09-8443-b05a-4f2a-d840ba8384d9@sandeen.net>
+Date: Tue, 9 Oct 2018 17:55:01 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxivwLR5assf0VwHdp5p06Er4w7urB637Z3wiQ1eZoT9tQ@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="HYLYmzWhmnrDa8AQENYXwAtVTW0hqjkjs"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-cifs@vger.kernel.org, overlayfs <linux-unionfs@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, ocfs2-devel@oss.oracle.com
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Oct 10, 2018 at 03:29:06PM +0300, Amir Goldstein wrote:
-> On Wed, Oct 10, 2018 at 3:14 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> >
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> >
-> > Create a RFR_TO_SRC_EOF flag to explicitly declare that the caller wants
-> > the remap implementation to remap to the end of the source file, once
-> > the files are locked.
-> >
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/ioctl.c         |    3 ++-
-> >  fs/nfsd/vfs.c      |    3 ++-
-> >  fs/read_write.c    |   13 +++++++------
-> >  include/linux/fs.h |    2 ++
-> >  4 files changed, 13 insertions(+), 8 deletions(-)
-> >
-> >
-> > diff --git a/fs/ioctl.c b/fs/ioctl.c
-> > index 505275ec5596..7fec997abd2f 100644
-> > --- a/fs/ioctl.c
-> > +++ b/fs/ioctl.c
-> > @@ -224,6 +224,7 @@ static long ioctl_file_clone(struct file *dst_file, unsigned long srcfd,
-> >  {
-> >         struct fd src_file = fdget(srcfd);
-> >         loff_t cloned;
-> > +       unsigned int flags = olen == 0 ? RFR_TO_SRC_EOF : 0;
-> >         int ret;
-> >
-> >         if (!src_file.file)
-> > @@ -232,7 +233,7 @@ static long ioctl_file_clone(struct file *dst_file, unsigned long srcfd,
-> >         if (src_file.file->f_path.mnt != dst_file->f_path.mnt)
-> >                 goto fdput;
-> >         cloned = vfs_clone_file_range(src_file.file, off, dst_file, destoff,
-> > -                                     olen, 0);
-> > +                                     olen, flags);
-> >         if (cloned < 0)
-> >                 ret = cloned;
-> >         else if (olen && cloned != olen)
-> > diff --git a/fs/nfsd/vfs.c b/fs/nfsd/vfs.c
-> > index 726fc5b2b27a..d1f2ae08adf6 100644
-> > --- a/fs/nfsd/vfs.c
-> > +++ b/fs/nfsd/vfs.c
-> > @@ -542,8 +542,9 @@ __be32 nfsd4_clone_file_range(struct file *src, u64 src_pos, struct file *dst,
-> >                 u64 dst_pos, u64 count)
-> >  {
-> >         loff_t cloned;
-> > +       unsigned int flags = count == 0 ? RFR_TO_SRC_EOF : 0;
-> >
-> > -       cloned = vfs_clone_file_range(src, src_pos, dst, dst_pos, count, 0);
-> > +       cloned = vfs_clone_file_range(src, src_pos, dst, dst_pos, count, flags);
-> >         if (count && cloned != count)
-> >                 cloned = -EINVAL;
-> >         return nfserrno(cloned < 0 ? cloned : 0);
-> > diff --git a/fs/read_write.c b/fs/read_write.c
-> > index 479eb810c8e6..a628fd9a47cf 100644
-> > --- a/fs/read_write.c
-> > +++ b/fs/read_write.c
-> > @@ -1748,11 +1748,12 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-> >
-> >         isize = i_size_read(inode_in);
-> >
-> > -       /* Zero length dedupe exits immediately; reflink goes to EOF. */
-> > -       if (*len == 0) {
-> > -               if (is_dedupe || pos_in == isize)
-> > -                       return 0;
-> > -               if (pos_in > isize)
-> > +       /*
-> > +        * If the caller asked to go all the way to the end of the source file,
-> > +        * set *len now that we have the file locked.
-> > +        */
-> > +       if (remap_flags & RFR_TO_SRC_EOF) {
-> > +               if (pos_in >= isize)
-> >                         return -EINVAL;
-> >                 *len = isize - pos_in;
-> >         }
-> > @@ -1828,7 +1829,7 @@ loff_t do_clone_file_range(struct file *file_in, loff_t pos_in,
-> >         struct inode *inode_out = file_inode(file_out);
-> >         loff_t ret;
-> >
-> > -       WARN_ON_ONCE(remap_flags);
-> > +       WARN_ON_ONCE(remap_flags & ~(RFR_TO_SRC_EOF));
-> >
-> >         if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
-> >                 return -EISDIR;
-> > diff --git a/include/linux/fs.h b/include/linux/fs.h
-> > index 5c1bf1c35bc6..9f90dcd4df3b 100644
-> > --- a/include/linux/fs.h
-> > +++ b/include/linux/fs.h
-> > @@ -1725,8 +1725,10 @@ struct block_device_operations;
-> >   * These flags control the behavior of the remap_file_range function pointer.
-> >   *
-> >   * RFR_IDENTICAL_DATA: only remap if contents identical (i.e. deduplicate)
-> 
-> <bikeshedding> not that I care so much, but is there any reason you chose
-> to use _IDENTICAL_ vs. _SAME_? The latter is shorter and already engraved
-> in the dedup uapi. </bikeshedding>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--HYLYmzWhmnrDa8AQENYXwAtVTW0hqjkjs
+Content-Type: multipart/mixed; boundary="Hiu0F4WQoja4lKQ6DZAdBTsTabhX2hrGp";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <e2306f09-8443-b05a-4f2a-d840ba8384d9@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs for-next updated to 5f56a56
 
-I picked 'identical' because it seemed (to me anyway) to hint that yes
-we do memcmp the contents.  Some people I've met seem to use 'same' to
-describe the much looser statement that hash(a) == hash(b), e.g.
+--Hiu0F4WQoja4lKQ6DZAdBTsTabhX2hrGp
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-  "We use crc32c to find out if the blocks are the same and then we of
-   course do a byte by byte comparison to find out if they're really the
-   same."
+Hi folks,
 
-No, you're using crc32c to find block-match candidates and then memcmp
-to decide if they're really identical. :)
+The for-next branch of the xfsprogs repository at:
 
-Anyway, I suppose we already use 'same' elsewhere in the kernel to
-describe this, so I should reduce the cognitive dissonance and use that
-too.  Fixed.
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-> > + * RFR_TO_SRC_EOF: remap to the end of the source file
-> >   */
-> >  #define RFR_IDENTICAL_DATA     (1 << 0)
-> > +#define RFR_TO_SRC_EOF         (1 << 1)
-> >
-> 
-> So what is the best way to make sure that all filesystems can
-> properly handle this flag? and the RFR_CAN_SHORTEN flag?
-> 
-> The way that your patches took is to not check for invalid flags
-> at all in filesystems, but I don't think that is a viable option.
+has just been updated.
 
-The RFR flags are internal APIs, so we don't need to be quite as strict
-as fiemap does...
+This update nukes the old unsupported/unloved platforms, fixes a bunch
+of sparse checker warnings (but not all), syncs a little bit more of
+4.19's libxfs, includes 2 of djwong's libxfs cleanups, tidies up some
+mkfs behavior, and probably a couple other things.   See below.
 
-> Another way would be to individually add those flags to invalid
-> flags check in all relevant filesystems.
-> 
-> Another way would be to follow a pattern similar to
-> fiemap_check_flags(), except in case filesystem does not declare
-> to support the RFR_ "advisory" flags, it will not fail the operation
-> 
-> Comparing to FIEMAP_ flags, no filesystem would have needed to declare
-> support for FIEMAP_FLAG_SYNC, because vfs dealt with it anyway
-> before calling into the filesystem. So de-facto, any filesystem supports
-> FIEMAP_FLAG_SYNC without doing anything, but it is still worth passing
-> the flag into filesystem in case it matter (it does for overlayfs).
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
 
-...but I think you have a good point that we could help filesystem
-writers distinguish between advisory flags that are taken care of by the
-VFS but passed to the fs for full disclosure; and mandatory flags that
-the fs for which the fs must advertise support.
+(I know there are still more outstanding patches on the list, will get
+to the ones I know about next, but feel free to resend if you like.)
 
-IOWs,
+The new head of the for-next branch is commit:
 
-int remap_check_flags(unsigned int remap_flags, unsigned int supported_flags)
-{
-	/* VFS already took care of these */
-	remap_flags &= ~(RFR_TO_EOF | RFR_CAN_SHORTEN);
+5f56a56 libxfs: export unused nonstatic functions to quiet static checker=
+s
 
-	if (remap_flags & ~supported_flags) {
-		WARN_ONCE(1, "Internal API misuse at %pS", __return_address);
-		return -EINVAL;
-	}
+Thanks,
+-Eric
 
-	return 0;
-}
+New Commits:
 
-> I am not sure if giving fiemap_check_flags() as an example for sorting
-> out VFS API flags is a good idea, because I completely don't understand
-> what is going on in ext4_fiemap(). Why do FIEMAP_FLAG_CACHE and
-> the case of  !EXT4_INODE_EXTENTS bypass fiemap_check_flags()?
+Brian Foster (1):
+      [50fba28] xfs: remove last of unnecessary xfs_defer_cancel() caller=
+s
 
-generic_block_fiemap calls fiemap_check_flags.
+Darrick J. Wong (2):
+      [f2279d8] libxfs: check libxfs_trans_commit return values
+      [31845e4] libxfs: clean up IRELE/iput callsites
 
-> Is there a rational behind all this or just plain old API bit rot?
-> If bit rot, then perhaps the fiemap_check_flags() wasn't a good enough
-> coding pattern?
+Dave Chinner (1):
+      [d7c2f6c] xfs: fix error handling in xfs_bmap_extents_to_btree
 
-Hooooo... I don't even want to get into what FIEMAP_FLAG_CACHE does in
-ext4.
+Eric Sandeen (19):
+      [f69ea1f] xfs: don't treat unknown di_flags2 as corruption in scrub=
 
---D
+      [91b32a0] xfs: validate inode di_forkoff
+      [c4bd48e] xfsprogs: remove irix platform files
+      [36b6291] xfsprogs: remove bsd platform files
+      [231a533] xfsprogs: remove darwin platform files
+      [bf64c90] xfsprogs: remove PKG_PLATFORM macro
+      [ea01951] scrub: remove redundant debug test
+      [669be3c] xfsprogs: document environment variables
+      [9fae859] xfsprogs: make scrub build config-optional
+      [8791bf6] xfsprogs: define xfs_stack_trace() for debug builds
+      [f6ebe7c] xfsprogs: minor sparse fixes
+      [e66e9ee] xfsprogs: use ANSI declarations of void-arg functions
+      [33dc45c] mkfs.xfs: include full parser prototype in subopts defini=
+tion
+      [3dd2705] xfsprogs: don't use 0 as pointer
+      [7e4109b] libxfs: avoid redefinitions of macros in mount.h
+      [73ab3f6] xfsprogs: remove write-only variables
+      [00ff2b1] xfsprogs: make static things static
+      [a5e0945] xfsprogs: kill EXTERN macro
+      [5f56a56] libxfs: export unused nonstatic functions to quiet static=
+ checker
 
-> Thanks,
-> Amir.
+Jan Tulak (2):
+      [915a27a] mkfs: discard only after all validations
+      [cb46aab] mkfs: move 'mounted' check before 'existing fs' check
+
+Zorro Lang (1):
+      [248b6f9] xfs_io: remove useless do_preadv and do_pwritev arguments=
+
+
+
+Code Diffstat:
+
+ Makefile                  |   8 +-
+ configure.ac              |  21 ++--
+ copy/xfs_copy.c           |  69 ++++++-----
+ db/attrset.c              |   4 +-
+ db/btblock.c              |   2 +-
+ db/check.c                |   4 +-
+ db/dir2sf.c               |   4 +-
+ db/fsmap.c                |   2 +-
+ db/init.c                 |   8 +-
+ db/input.c                |   6 +-
+ db/io.c                   |   2 +-
+ db/io.h                   |   2 +-
+ db/logformat.c            |   2 +-
+ doc/INSTALL               |  54 ---------
+ doc/README-env-vars.txt   |  26 ++++
+ estimate/xfs_estimate.c   |  34 +++---
+ fsr/Makefile              |   4 -
+ fsr/xfs_fsr.c             |  50 ++++----
+ include/Makefile          |   8 +-
+ include/builddefs.in      |  17 +--
+ include/darwin.h          | 303 ----------------------------------------=
+-------
+ include/freebsd.h         | 198 -------------------------------
+ include/gnukfreebsd.h     | 144 ----------------------
+ include/xfs.h             |   6 -
+ include/xfs_inode.h       |   4 +-
+ io/Makefile               |  19 +--
+ io/bmap.c                 |   2 +-
+ io/fiemap.c               |   2 +-
+ io/freeze.c               |   4 +-
+ io/fsmap.c                |   2 +-
+ io/imap.c                 |   2 +-
+ io/init.c                 |  13 +-
+ io/io.h                   |   7 +-
+ io/label.c                |   1 -
+ io/madvise.c              |   2 +-
+ io/mincore.c              |   2 +-
+ io/mmap.c                 |  10 +-
+ io/parent.c               |   2 +-
+ io/pread.c                |   7 +-
+ io/pwrite.c               |   5 +-
+ io/readdir.c              |   2 +-
+ io/seek.c                 |   4 +-
+ io/stat.c                 |   8 +-
+ libfrog/Makefile          |   9 +-
+ libfrog/darwin.c          | 136 ---------------------
+ libfrog/freebsd.c         | 193 ------------------------------
+ libfrog/irix.c            | 103 ----------------
+ libfrog/linux.c           |   2 -
+ libfrog/paths.c           |  55 ---------
+ libhandle/Makefile        |   4 -
+ libxcmd/command.c         |   4 +-
+ libxfs/cache.c            |   2 +-
+ libxfs/init.c             |   6 +-
+ libxfs/init.h             |   1 -
+ libxfs/libxfs_priv.h      |  58 ++++++++-
+ libxfs/rdwr.c             |  17 +--
+ libxfs/util.c             |   6 +-
+ libxfs/xfs_attr.c         |  28 ++---
+ libxfs/xfs_attr_remote.c  |  10 +-
+ libxfs/xfs_bmap.c         |  24 ++--
+ libxfs/xfs_format.h       |   2 +
+ libxfs/xfs_inode_buf.c    |  30 +++++
+ logprint/log_misc.c       |  34 +++---
+ logprint/log_print_all.c  |   2 +-
+ logprint/logprint.c       |   6 +-
+ m4/package_globals.m4     |   4 -
+ m4/package_libcdev.m4     |  19 +--
+ man/man8/xfs_quota.8      |  11 +-
+ mdrestore/xfs_mdrestore.c |   6 +-
+ mkfs/proto.c              |  48 ++++++--
+ mkfs/xfs_mkfs.c           |  89 ++++++++------
+ quota/Makefile            |   6 +-
+ quota/darwin.c            |  21 ----
+ quota/freebsd.c           |  19 ---
+ quota/irix.c              |  54 ---------
+ repair/agheader.c         |   2 +-
+ repair/btree.c            |   2 +-
+ repair/globals.c          | 121 ++++++++++++++++++-
+ repair/globals.h          | 136 +++++++++++----------
+ repair/incore_ext.c       |  10 +-
+ repair/incore_ino.c       |   4 +-
+ repair/phase6.c           | 114 +++++++++++++-----
+ repair/phase7.c           |   2 +-
+ repair/progress.c         |   2 +-
+ repair/rmap.c             |   4 +-
+ repair/sb.c               |   2 +-
+ repair/scan.c             |   2 +-
+ repair/versions.c         |  23 +++-
+ repair/versions.h         |  16 +--
+ rtcp/xfs_rtcp.c           |   4 +-
+ scrub/Makefile            |   4 +-
+ scrub/fscounters.c        |   2 +-
+ scrub/inodes.c            |   6 +-
+ scrub/scrub.c             |   2 +-
+ scrub/xfs_scrub.c         |   2 +-
+ spaceman/Makefile         |   6 +-
+ spaceman/init.c           |   4 +-
+ 97 files changed, 757 insertions(+), 1798 deletions(-)
+ create mode 100644 doc/README-env-vars.txt
+ delete mode 100644 include/darwin.h
+ delete mode 100644 include/freebsd.h
+ delete mode 100644 include/gnukfreebsd.h
+ delete mode 100644 libfrog/darwin.c
+ delete mode 100644 libfrog/freebsd.c
+ delete mode 100644 libfrog/irix.c
+ delete mode 100644 quota/darwin.c
+ delete mode 100644 quota/freebsd.c
+ delete mode 100644 quota/irix.c
+
+
+--Hiu0F4WQoja4lKQ6DZAdBTsTabhX2hrGp--
+
+--HYLYmzWhmnrDa8AQENYXwAtVTW0hqjkjs
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAlu9McUACgkQIK4WkuE9
+3uDQOA//TxwYLW0RhYq9yslAN6bbIYmsvlT/0rOwHKG7BwTqHF7uWd5JE1lHHd9J
+PfrdN9prPwaRPkpm6M9fcG1/4gpHSc6ABzzjYun2azr74854it3tbLSiA7Jc/zjq
+m1e05+OGEhqmPd4AxCSTsUf39zP35YOAtYgBVgYKl9aRMCv4S9Ql70W/xgjJYhEE
+XG/TMJxbQ03Se9eWVaWKP61QtS35Mk/0PnJHrmQaZKo5iSlW3L2xZu6DgvHM+RS3
+gFQ1wIr3zpGxcAHGJPMpSTvUEW5waJQFxypzgnjXbqdR1N15RxIYNOqNwFQQqL96
+kaDwg3/iQ6oMm4v9dK/VTJ2hHMsjYAFF+GCH7laDOcLvZjPjhrS2wedgyb1hUa81
+E6xmyitMgKPzKlGchwA95viGWxJ0JpLbp4iZNJ31RiSRUxg4nzYTZxPcUAHQ57pi
+8cWvILZ3BHYi+AxVnykdgur1RbSFgozEIeDkfKAnvPkVsBYlQwUfFlNQtyIVnnUH
+KmC40maOScFc35WK9oFmgaPwm2jAJQhFFz2TYyq1IoCIjQKMqM1byf3+hIVg5nPv
+nS0/TOwOvQPAl5TS/G349lsdWwnOV6heMD8fTxY61LnPaT2oI6ZhOVmfgy/6ufwk
+s0Q1kOBkjiLhio9NERvD8ZZAmEkMkcEWC95eUZw/yyc4GvC7NNM=
+=6z7m
+-----END PGP SIGNATURE-----
+
+--HYLYmzWhmnrDa8AQENYXwAtVTW0hqjkjs--
