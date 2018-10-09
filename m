@@ -1,50 +1,373 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw1-f68.google.com ([209.85.161.68]:46147 "EHLO
-        mail-yw1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726503AbeJJWqf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Oct 2018 18:46:35 -0400
+Received: from mail-wm1-f47.google.com ([209.85.128.47]:39521 "EHLO
+        mail-wm1-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726476AbeJJCHZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Oct 2018 22:07:25 -0400
+Received: by mail-wm1-f47.google.com with SMTP id y144-v6so3088444wmd.4
+        for <linux-xfs@vger.kernel.org>; Tue, 09 Oct 2018 11:49:01 -0700 (PDT)
+Received: from amb.local ([194.99.105.102])
+        by smtp.gmail.com with ESMTPSA id n11-v6sm25603847wra.26.2018.10.09.11.48.59
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 09 Oct 2018 11:48:59 -0700 (PDT)
+From: =?UTF-8?Q?Arkadiusz_Mi=c5=9bkiewicz?= <a.miskiewicz@gmail.com>
+Subject: Re: repair: realloc(): invalid next size
+References: <214be03d-9cc7-378b-3635-6fca3cdcb1dd@gmail.com>
+ <81713fcb-915b-d408-83a6-0d98eb6de4b6@gmail.com>
+Message-ID: <fc59a801-0f0f-6e09-3cb4-4631ae6e3ebe@gmail.com>
+Date: Tue, 9 Oct 2018 20:48:58 +0200
 MIME-Version: 1.0
-References: <153913023835.32295.13962696655740190941.stgit@magnolia>
- <153913029885.32295.7399525233513945673.stgit@magnolia> <CAOQ4uxj_wftoGvub9n_6X3Qc64LKxs+8TB-opUiq59sGQ=YoKw@mail.gmail.com>
- <20181010151321.GR28243@magnolia>
-In-Reply-To: <20181010151321.GR28243@magnolia>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Wed, 10 Oct 2018 18:23:43 +0300
-Message-ID: <CAOQ4uxjrkgiKXTYP8d93kLvU2zaKO14Wx3ZL7-7TnDd95CHnOA@mail.gmail.com>
-Subject: Re: [PATCH 08/25] vfs: combine the clone and dedupe into a single remap_file_range
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <81713fcb-915b-d408-83a6-0d98eb6de4b6@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: pl
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-cifs@vger.kernel.org, overlayfs <linux-unionfs@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, ocfs2-devel@oss.oracle.com
+To: linux-xfs@vger.kernel.org
 
-On Wed, Oct 10, 2018 at 6:13 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
->
-> On Wed, Oct 10, 2018 at 08:54:44AM +0300, Amir Goldstein wrote:
-> > On Wed, Oct 10, 2018 at 3:12 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> > >
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > >
-> > > Combine the clone_file_range and dedupe_file_range operations into a
-> > > single remap_file_range file operation dispatch since they're
-> > > fundamentally the same operation.  The differences between the two can
-> > > be made in the prep functions.
-> > >
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> >
+On 09/10/2018 15:49, Arkadiusz Miśkiewicz wrote:
+> On 08/10/2018 16:03, Arkadiusz Miśkiewicz wrote:
+>>
+>> Big fs, ton of small files, repair takes 36h until this happens:
+>>
+>> rebuilding directory inode 30363993060
+>> rebuilding directory inode 30398868604
+>> rebuilding directory inode 30414474627
+>> rebuilding directory inode 30425006954
+>> rebuilding directory inode 30447937553
+>> rebuilding directory inode 30529556616
+>> rebuilding directory inode 30537494728
+>> rebuilding directory inode 30569826838
+>> rebuilding directory inode 31060721895
+>> Metadata corruption detected at 0x41f9db, inode 0x73b5d00e7 data fork
+>> xfs_repair: warning - iflush_int failed (-117)
+>> Warning: recursive buffer locking at block 31060721776 detected
+>> Metadata corruption detected at 0x41f9db, inode 0x73b5d00e7 data fork
+>> xfs_repair: warning - iflush_int failed (-117)
+>> Warning: recursive buffer locking at block 31060721776 detected
+>> Metadata corruption detected at 0x41f980, inode 0x73b5d00e7 data fork
+>> xfs_repair: warning - iflush_int failed (-117)
+>> realloc(): invalid next size
+>> Aborted
+>>
+>>
+>> Fails somewhere in 0x41f9db <xfs_dir2_sf_verify+603>
+> 
+> Not much progress, traceback but without line numbers:
+> [New Thread 0x7ffff4588700 (LWP 16783)]
+> rebuilding directory inode 30299650439
+> rebuilding directory inode 30300818030
+> rebuilding directory inode 30317087573
+> rebuilding directory inode 30363993060
+> rebuilding directory inode 30398868604
+> rebuilding directory inode 30414474627
+> rebuilding directory inode 30425006954
+> rebuilding directory inode 30447937553
+> rebuilding directory inode 30529556616
+> rebuilding directory inode 30537494728
+> rebuilding directory inode 30569826838
+> rebuilding directory inode 31060721895
+> Metadata corruption detected at 0x486261, inode 0x73b5d00e7 data fork
+> xfs_repair: warning - iflush_int failed (-117)
+> Warning: recursive buffer locking at block 31060721776 detected
+> Metadata corruption detected at 0x486261, inode 0x73b5d00e7 data fork
+> xfs_repair: warning - iflush_int failed (-117)
+> and segfault
+> 
+> warning: Loadable section ".note.gnu.property" outside of ELF segments
+> Core was generated by `/sbin/xfs_repair -vvvv /dev/sdc1'.
+> Program terminated with signal SIGSEGV, Segmentation fault.
+> #0  __memmove_avx_unaligned_erms () at 
+> ../sysdeps/x86_64/multiarch/memmove-vec-unaligned-erms.S:525
+> 525        VMOVU    -VEC_SIZE(%rcx), %VEC(1)
+> [Current thread is 1 (Thread 0x7ffff797d300 (LWP 31979))]
+> (gdb) bt
+> #0  __memmove_avx_unaligned_erms () at 
+> ../sysdeps/x86_64/multiarch/memmove-vec-unaligned-erms.S:525
+> #1  0x0000000000485e1e in xfs_dir2_sf_addname_hard ()
+> #2  0x000000000048599b in xfs_dir2_sf_addname ()
+> #3  0x00000000004773c2 in libxfs_dir_createname ()
+> #4  0x00000000004279f3 in longform_dir2_rebuild ()
+> #5  0x000000000042a61a in longform_dir2_entry_check ()
+> #6  0x000000000042b697 in process_dir_inode ()
+> #7  0x000000000042c3ca in traverse_function ()
+> #8  0x00000000004304a1 in prefetch_ag_range ()
+> #9  0x000000000043061f in do_inode_prefetch ()
+> #10 0x000000000042c49c in traverse_ags ()
+> #11 0x000000000042c752 in phase6 ()
+> #12 0x000000000043ea38 in main ()
+> 
+> gdb doesn't like my binary, not sure why yet
 
-> >
-> > Apart from the generic check invalid flags comment - ACK on ovl part.
->
-> Thanks for the review!  Is that an official Acked-by to add to the
-> commit message, or an informal ACK?
->
+but it looks to be memcpy near the end of function
 
-I would offer my Acked-by for whole of the vfs patches
-if we agree on the correct way to handle invalid flags
-(see more comments up the series regarding the "advisory" flags).
+(gdb) where
+#0  __memmove_avx_unaligned_erms () at 
+../sysdeps/x86_64/multiarch/memmove-vec-unaligned-erms.S:525
+#1  0x0000000000485e1e in xfs_dir2_sf_addname_hard ()
+#2  0x000000000048599b in xfs_dir2_sf_addname ()
+#3  0x00000000004773c2 in libxfs_dir_createname ()
+#4  0x00000000004279f3 in longform_dir2_rebuild ()
+#5  0x000000000042a61a in longform_dir2_entry_check ()
+#6  0x000000000042b697 in process_dir_inode ()
+#7  0x000000000042c3ca in traverse_function ()
+#8  0x00000000004304a1 in prefetch_ag_range ()
+#9  0x000000000043061f in do_inode_prefetch ()
+#10 0x000000000042c49c in traverse_ags ()
+#11 0x000000000042c752 in phase6 ()
+#12 0x000000000043ea38 in main ()
+(gdb) frame 1
+#1  0x0000000000485e1e in xfs_dir2_sf_addname_hard ()
+(gdb) disassemble 0x0000000000485e1e
+Dump of assembler code for function xfs_dir2_sf_addname_hard:
+    0x0000000000485b32 <+0>:	push   %rbp
+    0x0000000000485b33 <+1>:	mov    %rsp,%rbp
+    0x0000000000485b36 <+4>:	sub    $0x60,%rsp
+    0x0000000000485b3a <+8>:	mov    %rdi,-0x58(%rbp)
+    0x0000000000485b3e <+12>:	mov    %esi,-0x5c(%rbp)
+    0x0000000000485b41 <+15>:	mov    %edx,-0x60(%rbp)
+    0x0000000000485b44 <+18>:	mov    -0x58(%rbp),%rax
+    0x0000000000485b48 <+22>:	mov    0x38(%rax),%rax
+    0x0000000000485b4c <+26>:	mov    %rax,-0x18(%rbp)
+    0x0000000000485b50 <+30>:	mov    -0x18(%rbp),%rax
+    0x0000000000485b54 <+34>:	mov    0xb0(%rax),%rax
+    0x0000000000485b5b <+41>:	mov    %rax,-0x20(%rbp)
+    0x0000000000485b5f <+45>:	mov    -0x18(%rbp),%rax
+    0x0000000000485b63 <+49>:	mov    0xe0(%rax),%rax
+    0x0000000000485b6a <+56>:	mov    %eax,-0x24(%rbp)
+    0x0000000000485b6d <+59>:	mov    -0x24(%rbp),%eax
+    0x0000000000485b70 <+62>:	cltq
+    0x0000000000485b72 <+64>:	mov    $0x1,%esi
+    0x0000000000485b77 <+69>:	mov    %rax,%rdi
+    0x0000000000485b7a <+72>:	callq  0x443186 <kmem_alloc>
+    0x0000000000485b7f <+77>:	mov    %rax,-0x30(%rbp)
+    0x0000000000485b83 <+81>:	mov    -0x30(%rbp),%rax
+    0x0000000000485b87 <+85>:	mov    %rax,-0x38(%rbp)
+    0x0000000000485b8b <+89>:	mov    -0x24(%rbp),%eax
+    0x0000000000485b8e <+92>:	movslq %eax,%rdx
+    0x0000000000485b91 <+95>:	mov    -0x20(%rbp),%rcx
+    0x0000000000485b95 <+99>:	mov    -0x38(%rbp),%rax
+    0x0000000000485b99 <+103>:	mov    %rcx,%rsi
+    0x0000000000485b9c <+106>:	mov    %rax,%rdi
+    0x0000000000485b9f <+109>:	callq  0x4033c0 <memcpy@plt>
+    0x0000000000485ba4 <+114>:	mov    -0x18(%rbp),%rax
+    0x0000000000485ba8 <+118>:	mov    0x130(%rax),%rax
+    0x0000000000485baf <+125>:	mov    0x70(%rax),%eax
+    0x0000000000485bb2 <+128>:	mov    %eax,-0x8(%rbp)
+    0x0000000000485bb5 <+131>:	mov    -0x38(%rbp),%rax
+    0x0000000000485bb9 <+135>:	mov    %rax,%rdi
+    0x0000000000485bbc <+138>:	callq  0x48510e 
+<xfs_dir2_sf_firstentry.lto_priv.614>
+    0x0000000000485bc1 <+143>:	mov    %rax,-0x10(%rbp)
+    0x0000000000485bc5 <+147>:	mov    -0x18(%rbp),%rax
+    0x0000000000485bc9 <+151>:	mov    0x130(%rax),%rax
+    0x0000000000485bd0 <+158>:	mov    0x40(%rax),%rax
+    0x0000000000485bd4 <+162>:	mov    -0x58(%rbp),%rdx
+    0x0000000000485bd8 <+166>:	mov    0x10(%rdx),%edx
+    0x0000000000485bdb <+169>:	mov    %edx,%edi
+    0x0000000000485bdd <+171>:	callq  0x4ac8cb <__x86_indirect_thunk_rax>
+    0x0000000000485be2 <+176>:	mov    %eax,-0x3c(%rbp)
+    0x0000000000485be5 <+179>:	mov    -0x24(%rbp),%eax
+    0x0000000000485be8 <+182>:	movslq %eax,%rdx
+    0x0000000000485beb <+185>:	mov    -0x30(%rbp),%rax
+    0x0000000000485bef <+189>:	add    %rdx,%rax
+    0x0000000000485bf2 <+192>:	cmp    %rax,-0x10(%rbp)
+    0x0000000000485bf6 <+196>:	sete   %al
+--Type <RET> for more, q to quit, c to continue without paging--
+    0x0000000000485bf9 <+199>:	movzbl %al,%eax
+    0x0000000000485bfc <+202>:	mov    %eax,-0x4(%rbp)
+    0x0000000000485bff <+205>:	jmpq   0x485c8a 
+<xfs_dir2_sf_addname_hard+344>
+    0x0000000000485c04 <+210>:	mov    -0x10(%rbp),%rax
+    0x0000000000485c08 <+214>:	mov    %rax,%rdi
+    0x0000000000485c0b <+217>:	callq  0x4850c4 
+<xfs_dir2_sf_get_offset.lto_priv.619>
+    0x0000000000485c10 <+222>:	mov    %eax,-0x40(%rbp)
+    0x0000000000485c13 <+225>:	mov    -0x3c(%rbp),%edx
+    0x0000000000485c16 <+228>:	mov    -0x8(%rbp),%eax
+    0x0000000000485c19 <+231>:	add    %edx,%eax
+    0x0000000000485c1b <+233>:	cmp    %eax,-0x40(%rbp)
+    0x0000000000485c1e <+236>:	jae    0x485c94 
+<xfs_dir2_sf_addname_hard+354>
+    0x0000000000485c20 <+238>:	mov    -0x18(%rbp),%rax
+    0x0000000000485c24 <+242>:	mov    0x130(%rax),%rax
+    0x0000000000485c2b <+249>:	mov    0x40(%rax),%rax
+    0x0000000000485c2f <+253>:	mov    -0x10(%rbp),%rdx
+    0x0000000000485c33 <+257>:	movzbl (%rdx),%edx
+    0x0000000000485c36 <+260>:	movzbl %dl,%edx
+    0x0000000000485c39 <+263>:	mov    %edx,%edi
+    0x0000000000485c3b <+265>:	callq  0x4ac8cb <__x86_indirect_thunk_rax>
+    0x0000000000485c40 <+270>:	mov    %eax,%edx
+    0x0000000000485c42 <+272>:	mov    -0x40(%rbp),%eax
+    0x0000000000485c45 <+275>:	add    %edx,%eax
+    0x0000000000485c47 <+277>:	mov    %eax,-0x8(%rbp)
+    0x0000000000485c4a <+280>:	mov    -0x18(%rbp),%rax
+    0x0000000000485c4e <+284>:	mov    0x130(%rax),%rax
+    0x0000000000485c55 <+291>:	mov    0x8(%rax),%rax
+    0x0000000000485c59 <+295>:	mov    -0x10(%rbp),%rcx
+    0x0000000000485c5d <+299>:	mov    -0x38(%rbp),%rdx
+    0x0000000000485c61 <+303>:	mov    %rcx,%rsi
+    0x0000000000485c64 <+306>:	mov    %rdx,%rdi
+    0x0000000000485c67 <+309>:	callq  0x4ac8cb <__x86_indirect_thunk_rax>
+    0x0000000000485c6c <+314>:	mov    %rax,-0x10(%rbp)
+    0x0000000000485c70 <+318>:	mov    -0x24(%rbp),%eax
+    0x0000000000485c73 <+321>:	movslq %eax,%rdx
+    0x0000000000485c76 <+324>:	mov    -0x30(%rbp),%rax
+    0x0000000000485c7a <+328>:	add    %rdx,%rax
+    0x0000000000485c7d <+331>:	cmp    %rax,-0x10(%rbp)
+    0x0000000000485c81 <+335>:	sete   %al
+    0x0000000000485c84 <+338>:	movzbl %al,%eax
+    0x0000000000485c87 <+341>:	mov    %eax,-0x4(%rbp)
+    0x0000000000485c8a <+344>:	cmpl   $0x0,-0x4(%rbp)
+    0x0000000000485c8e <+348>:	je     0x485c04 
+<xfs_dir2_sf_addname_hard+210>
+    0x0000000000485c94 <+354>:	mov    -0x24(%rbp),%eax
+    0x0000000000485c97 <+357>:	neg    %eax
+    0x0000000000485c99 <+359>:	mov    %eax,%ecx
+    0x0000000000485c9b <+361>:	mov    -0x18(%rbp),%rax
+    0x0000000000485c9f <+365>:	mov    $0x0,%edx
+    0x0000000000485ca4 <+370>:	mov    %ecx,%esi
+    0x0000000000485ca6 <+372>:	mov    %rax,%rdi
+    0x0000000000485ca9 <+375>:	callq  0x4918ee <libxfs_idata_realloc>
+    0x0000000000485cae <+380>:	mov    -0x60(%rbp),%ecx
+    0x0000000000485cb1 <+383>:	mov    -0x18(%rbp),%rax
+--Type <RET> for more, q to quit, c to continue without paging--
+    0x0000000000485cb5 <+387>:	mov    $0x0,%edx
+    0x0000000000485cba <+392>:	mov    %ecx,%esi
+    0x0000000000485cbc <+394>:	mov    %rax,%rdi
+    0x0000000000485cbf <+397>:	callq  0x4918ee <libxfs_idata_realloc>
+    0x0000000000485cc4 <+402>:	mov    -0x18(%rbp),%rax
+    0x0000000000485cc8 <+406>:	mov    0xb0(%rax),%rax
+    0x0000000000485ccf <+413>:	mov    %rax,-0x20(%rbp)
+    0x0000000000485cd3 <+417>:	mov    -0x10(%rbp),%rax
+    0x0000000000485cd7 <+421>:	sub    -0x38(%rbp),%rax
+    0x0000000000485cdb <+425>:	mov    %eax,-0x44(%rbp)
+    0x0000000000485cde <+428>:	mov    -0x44(%rbp),%eax
+    0x0000000000485ce1 <+431>:	movslq %eax,%rdx
+    0x0000000000485ce4 <+434>:	mov    -0x38(%rbp),%rcx
+    0x0000000000485ce8 <+438>:	mov    -0x20(%rbp),%rax
+    0x0000000000485cec <+442>:	mov    %rcx,%rsi
+    0x0000000000485cef <+445>:	mov    %rax,%rdi
+    0x0000000000485cf2 <+448>:	callq  0x4033c0 <memcpy@plt>
+    0x0000000000485cf7 <+453>:	mov    -0x44(%rbp),%eax
+    0x0000000000485cfa <+456>:	movslq %eax,%rdx
+    0x0000000000485cfd <+459>:	mov    -0x20(%rbp),%rax
+    0x0000000000485d01 <+463>:	add    %rdx,%rax
+    0x0000000000485d04 <+466>:	mov    %rax,-0x50(%rbp)
+    0x0000000000485d08 <+470>:	mov    -0x58(%rbp),%rax
+    0x0000000000485d0c <+474>:	mov    0x10(%rax),%eax
+    0x0000000000485d0f <+477>:	mov    %eax,%edx
+    0x0000000000485d11 <+479>:	mov    -0x50(%rbp),%rax
+    0x0000000000485d15 <+483>:	mov    %dl,(%rax)
+    0x0000000000485d17 <+485>:	mov    -0x8(%rbp),%edx
+    0x0000000000485d1a <+488>:	mov    -0x50(%rbp),%rax
+    0x0000000000485d1e <+492>:	mov    %edx,%esi
+    0x0000000000485d20 <+494>:	mov    %rax,%rdi
+    0x0000000000485d23 <+497>:	callq  0x4850e5 
+<xfs_dir2_sf_put_offset.lto_priv.616>
+    0x0000000000485d28 <+502>:	mov    -0x50(%rbp),%rax
+    0x0000000000485d2c <+506>:	movzbl (%rax),%eax
+    0x0000000000485d2f <+509>:	movzbl %al,%edx
+    0x0000000000485d32 <+512>:	mov    -0x58(%rbp),%rax
+    0x0000000000485d36 <+516>:	mov    0x8(%rax),%rax
+    0x0000000000485d3a <+520>:	mov    -0x50(%rbp),%rcx
+    0x0000000000485d3e <+524>:	add    $0x3,%rcx
+    0x0000000000485d42 <+528>:	mov    %rax,%rsi
+    0x0000000000485d45 <+531>:	mov    %rcx,%rdi
+    0x0000000000485d48 <+534>:	callq  0x4033c0 <memcpy@plt>
+    0x0000000000485d4d <+539>:	mov    -0x18(%rbp),%rax
+    0x0000000000485d51 <+543>:	mov    0x130(%rax),%rax
+    0x0000000000485d58 <+550>:	mov    0x28(%rax),%rax
+    0x0000000000485d5c <+554>:	mov    -0x58(%rbp),%rdx
+    0x0000000000485d60 <+558>:	mov    0x30(%rdx),%rdx
+    0x0000000000485d64 <+562>:	mov    -0x50(%rbp),%rsi
+    0x0000000000485d68 <+566>:	mov    -0x20(%rbp),%rcx
+    0x0000000000485d6c <+570>:	mov    %rcx,%rdi
+    0x0000000000485d6f <+573>:	callq  0x4ac8cb <__x86_indirect_thunk_rax>
+    0x0000000000485d74 <+578>:	mov    -0x18(%rbp),%rax
+    0x0000000000485d78 <+582>:	mov    0x130(%rax),%rax
+--Type <RET> for more, q to quit, c to continue without paging--
+    0x0000000000485d7f <+589>:	mov    0x18(%rax),%rax
+    0x0000000000485d83 <+593>:	mov    -0x58(%rbp),%rdx
+    0x0000000000485d87 <+597>:	movzbl 0x14(%rdx),%edx
+    0x0000000000485d8b <+601>:	movzbl %dl,%ecx
+    0x0000000000485d8e <+604>:	mov    -0x50(%rbp),%rdx
+    0x0000000000485d92 <+608>:	mov    %ecx,%esi
+    0x0000000000485d94 <+610>:	mov    %rdx,%rdi
+    0x0000000000485d97 <+613>:	callq  0x4ac8cb <__x86_indirect_thunk_rax>
+    0x0000000000485d9c <+618>:	mov    -0x20(%rbp),%rax
+    0x0000000000485da0 <+622>:	movzbl (%rax),%eax
+    0x0000000000485da3 <+625>:	lea    0x1(%rax),%edx
+    0x0000000000485da6 <+628>:	mov    -0x20(%rbp),%rax
+    0x0000000000485daa <+632>:	mov    %dl,(%rax)
+    0x0000000000485dac <+634>:	mov    -0x58(%rbp),%rax
+    0x0000000000485db0 <+638>:	mov    0x30(%rax),%rax
+    0x0000000000485db4 <+642>:	mov    $0xffffffff,%edx
+    0x0000000000485db9 <+647>:	cmp    %rdx,%rax
+    0x0000000000485dbc <+650>:	jbe    0x485dd6 
+<xfs_dir2_sf_addname_hard+676>
+    0x0000000000485dbe <+652>:	cmpl   $0x0,-0x5c(%rbp)
+    0x0000000000485dc2 <+656>:	jne    0x485dd6 
+<xfs_dir2_sf_addname_hard+676>
+    0x0000000000485dc4 <+658>:	mov    -0x20(%rbp),%rax
+    0x0000000000485dc8 <+662>:	movzbl 0x1(%rax),%eax
+    0x0000000000485dcc <+666>:	lea    0x1(%rax),%edx
+    0x0000000000485dcf <+669>:	mov    -0x20(%rbp),%rax
+    0x0000000000485dd3 <+673>:	mov    %dl,0x1(%rax)
+    0x0000000000485dd6 <+676>:	cmpl   $0x0,-0x4(%rbp)
+    0x0000000000485dda <+680>:	jne    0x485e1e 
+<xfs_dir2_sf_addname_hard+748>
+    0x0000000000485ddc <+682>:	mov    -0x18(%rbp),%rax
+    0x0000000000485de0 <+686>:	mov    0x130(%rax),%rax
+    0x0000000000485de7 <+693>:	mov    0x8(%rax),%rax
+    0x0000000000485deb <+697>:	mov    -0x50(%rbp),%rcx
+    0x0000000000485def <+701>:	mov    -0x20(%rbp),%rdx
+    0x0000000000485df3 <+705>:	mov    %rcx,%rsi
+    0x0000000000485df6 <+708>:	mov    %rdx,%rdi
+    0x0000000000485df9 <+711>:	callq  0x4ac8cb <__x86_indirect_thunk_rax>
+    0x0000000000485dfe <+716>:	mov    %rax,-0x50(%rbp)
+    0x0000000000485e02 <+720>:	mov    -0x24(%rbp),%eax
+    0x0000000000485e05 <+723>:	sub    -0x44(%rbp),%eax
+    0x0000000000485e08 <+726>:	movslq %eax,%rdx
+    0x0000000000485e0b <+729>:	mov    -0x10(%rbp),%rcx
+    0x0000000000485e0f <+733>:	mov    -0x50(%rbp),%rax
+    0x0000000000485e13 <+737>:	mov    %rcx,%rsi
+    0x0000000000485e16 <+740>:	mov    %rax,%rdi
+    0x0000000000485e19 <+743>:	callq  0x4033c0 <memcpy@plt>
+=> 0x0000000000485e1e <+748>:	mov    -0x30(%rbp),%rax
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    0x0000000000485e22 <+752>:	mov    %rax,%rdi
+    0x0000000000485e25 <+755>:	callq  0x484e23 <kmem_free.lto_priv.174>
+    0x0000000000485e2a <+760>:	mov    -0x60(%rbp),%eax
+    0x0000000000485e2d <+763>:	movslq %eax,%rdx
+    0x0000000000485e30 <+766>:	mov    -0x18(%rbp),%rax
+    0x0000000000485e34 <+770>:	mov    %rdx,0xe0(%rax)
+    0x0000000000485e3b <+777>:	leaveq
+    0x0000000000485e3c <+778>:	retq
+--Type <RET> for more, q to quit, c to continue without paging--
+End of assembler dump.
 
-Thanks,
-Amir.
+> 
+> /sbin/xfs_repair: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), 
+> dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for 
+> GNU/Linux 3.2.0, BuildID[sha1]=710d79304cb58f8e415302572cc718e38f0f1aa4, 
+> with debug_info, not stripped
+> 
+>>
+>> Complete log at
+>> https://ixion.pld-linux.org/~arekm/xfs-1/repair.txt
+>>
+>> Test was done with xfs_repair 4.17.0 and 4.18.0 with the same result.
+>>
+>> kernel 4.18.5
+>>
+>> Running under gdb now.
+>>
+>> Any ideas?
+>>
+> 
+> 
+
+-- 
+Arkadiusz Miśkiewicz, arekm / ( maven.pl | pld-linux.org )
