@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:42800 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726418AbeJIXlk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Oct 2018 19:41:40 -0400
-Date: Tue, 9 Oct 2018 09:23:54 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Received: from mx1.redhat.com ([209.132.183.28]:41086 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726468AbeJITd2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 Oct 2018 15:33:28 -0400
+Date: Tue, 9 Oct 2018 08:16:45 -0400
+From: Brian Foster <bfoster@redhat.com>
 Subject: Re: [PATCH] xfs: issue log message on user force shutdown
-Message-ID: <20181009162354.GI28243@magnolia>
+Message-ID: <20181009121644.GC2816@bfoster>
 References: <20181009053045.27473-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -33,13 +33,10 @@ On Tue, Oct 09, 2018 at 04:30:45PM +1100, Dave Chinner wrote:
 > shutdown messages.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
 > ---
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
 >  fs/xfs/xfs_fsops.c | 50 +++++++++++++++++++++++-----------------------
 >  1 file changed, 25 insertions(+), 25 deletions(-)
 > 
