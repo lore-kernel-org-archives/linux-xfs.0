@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:56210 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:56196 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727749AbeJKDZV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 Oct 2018 23:25:21 -0400
+        id S1727654AbeJKDZU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 Oct 2018 23:25:20 -0400
 From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 10/18] avl64: export avl64_firstino / avl64_firstino from avl64.h
-Date: Wed, 10 Oct 2018 15:01:14 -0500
-Message-Id: <1539201682-22198-11-git-send-email-sandeen@redhat.com>
+Subject: [PATCH 03/18] xfsprogs: minor endian annotation fixes
+Date: Wed, 10 Oct 2018 15:01:07 -0500
+Message-Id: <1539201682-22198-4-git-send-email-sandeen@redhat.com>
 In-Reply-To: <1539201682-22198-1-git-send-email-sandeen@redhat.com>
 References: <1539201682-22198-1-git-send-email-sandeen@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -14,32 +14,114 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-These are flagged by the sparse checker as possibly static.
-They are actually not used at this point; avl64.c has a few unused
-functions and/or ones that could be made static, but for now just silence
-the warnings, and save deeper surgery for later.
+No actual bugs, just quiet the sparse checker.
+
+Fixes sparse warnings about this.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- include/avl64.h | 6 ++++++
- 1 file changed, 6 insertions(+)
+ copy/xfs_copy.c     | 2 +-
+ db/crc.c            | 6 +++---
+ db/write.c          | 4 ++--
+ logprint/log_misc.c | 5 +++--
+ repair/rmap.c       | 3 ++-
+ 5 files changed, 11 insertions(+), 9 deletions(-)
 
-diff --git a/include/avl64.h b/include/avl64.h
-index 7a66883..4042f6c 100644
---- a/include/avl64.h
-+++ b/include/avl64.h
-@@ -69,6 +69,12 @@ avl64_insert_immediate(
- 	avl64node_t *afterp,
- 	avl64node_t *newnode);
+diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
+index 64761b3..a6d6703 100644
+--- a/copy/xfs_copy.c
++++ b/copy/xfs_copy.c
+@@ -505,7 +505,7 @@ sb_update_uuid(
+ 	 */
+ 	if (xfs_sb_version_hascrc(sb) && !xfs_sb_version_hasmetauuid(sb) &&
+ 	    !uuid_equal(&tcarg->uuid, &sb->sb_uuid)) {
+-		__be32 feat;
++		uint32_t feat;
  
-+avl64node_t *
-+avl64_firstino(avl64node_t *root);
-+
-+avl64node_t *
-+avl64_lastino(avl64node_t *root);
-+
- void
- avl64_init_tree(
- 	avl64tree_desc_t  *tree,
+ 		feat = be32_to_cpu(ag_hdr->xfs_sb->sb_features_incompat);
+ 		feat |= XFS_SB_FEAT_INCOMPAT_META_UUID;
+diff --git a/db/crc.c b/db/crc.c
+index b6775bc..b6612a5 100644
+--- a/db/crc.c
++++ b/db/crc.c
+@@ -130,7 +130,7 @@ crc_f(
+ 		flist_t		*sfl;
+ 		int		bit_length;
+ 		int		parentoffset;
+-		int		crc;
++		uint32_t	crc;
+ 
+ 		sfl = fl;
+ 		parentoffset = 0;
+@@ -144,8 +144,8 @@ crc_f(
+ 		bit_length *= fcount(sfl->fld, iocur_top->data, parentoffset);
+ 		crc = getbitval(iocur_top->data, sfl->offset, bit_length,
+ 				BVUNSIGNED);
+-		/* Off by one.. */
+-		crc = cpu_to_be32(crc + 1);
++		/* Off by one, ignore endianness - we're just corrupting it. */
++		crc++;
+ 		setbitval(iocur_top->data, sfl->offset, bit_length, &crc);
+ 
+ 		/* Temporarily remove write verifier to write a bad CRC */
+diff --git a/db/write.c b/db/write.c
+index a48576b..e25d6ea 100644
+--- a/db/write.c
++++ b/db/write.c
+@@ -525,7 +525,7 @@ convert_arg(
+ 	char		*endp;
+ 	char		*rbuf;
+ 	char		*ostr;
+-	__u64		*value;
++	__be64		*value;
+ 	__u64		val = 0;
+ 
+ 	if (bit_length <= 64)
+@@ -535,7 +535,7 @@ convert_arg(
+ 
+ 	buf = xrealloc(buf, alloc_size);
+ 	memset(buf, 0, alloc_size);
+-	value = (__u64 *)buf;
++	value = (__be64 *)buf;
+ 	rbuf = buf;
+ 
+ 	if (*arg == '\"') {
+diff --git a/logprint/log_misc.c b/logprint/log_misc.c
+index e2889f0..e29366a 100644
+--- a/logprint/log_misc.c
++++ b/logprint/log_misc.c
+@@ -467,6 +467,7 @@ xlog_print_dir2_sf(
+ 	xfs_dir2_sf_hdr_t *sfp,
+ 	int		size)
+ {
++	__be64		pino;	/* parent inode nr */
+ 	xfs_ino_t	ino;
+ 	int		count;
+ 	int		i;
+@@ -481,8 +482,8 @@ xlog_print_dir2_sf(
+ 
+ 	printf(_("SHORTFORM DIRECTORY size %d count %d\n"),
+ 	       size, sfp->count);
+-	memmove(&ino, &(sfp->parent), sizeof(ino));
+-	printf(_(".. ino 0x%llx\n"), (unsigned long long) be64_to_cpu(ino));
++	memmove(&pino, &(sfp->parent), sizeof(pino));
++	printf(_(".. ino 0x%llx\n"), (unsigned long long) be64_to_cpu(pino));
+ 
+ 	count = sfp->count;
+ 	sfep = xfs_dir2_sf_firstentry(sfp);
+diff --git a/repair/rmap.c b/repair/rmap.c
+index 6de4a10..ebb5a3a 100644
+--- a/repair/rmap.c
++++ b/repair/rmap.c
+@@ -482,7 +482,8 @@ rmap_store_ag_btree_rec(
+ 	 */
+ 	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
+ 	b = agfl_bno + ag_rmaps[agno].ar_flcount;
+-	while (*b != NULLAGBLOCK && b - agfl_bno < libxfs_agfl_size(mp)) {
++	while (*b != cpu_to_be32(NULLAGBLOCK) &&
++	       b - agfl_bno < libxfs_agfl_size(mp)) {
+ 		error = rmap_add_ag_rec(mp, agno, be32_to_cpu(*b), 1,
+ 				XFS_RMAP_OWN_AG);
+ 		if (error)
 -- 
 1.8.3.1
