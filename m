@@ -1,106 +1,176 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:41148 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725971AbeJKFmc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 Oct 2018 01:42:32 -0400
-Subject: [PATCH 01/18 V2] xfsprogs: enable sparse checking with "make C=[12]"
-References: <1539201682-22198-1-git-send-email-sandeen@redhat.com>
- <1539201682-22198-2-git-send-email-sandeen@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <3048f94d-191c-0e62-1a3b-a0ec0e4b8374@sandeen.net>
-Date: Wed, 10 Oct 2018 17:18:20 -0500
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:38104 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726206AbeJJUkF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Oct 2018 16:40:05 -0400
+Received: by mail-wr1-f67.google.com with SMTP id a13-v6so5712503wrt.5
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Oct 2018 06:17:55 -0700 (PDT)
+Date: Wed, 10 Oct 2018 15:17:51 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 2/2] xfsprogs: remove unused functions
+Message-ID: <20181010131751.wpyaqw2vuphziuru@odin.usersys.redhat.com>
+References: <20181010071023.6765-1-david@fromorbit.com>
+ <20181010071023.6765-3-david@fromorbit.com>
 MIME-Version: 1.0
-In-Reply-To: <1539201682-22198-2-git-send-email-sandeen@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181010071023.6765-3-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-Enable "make C=1" or "make C=2" to do sparse checking.
-Blatantly ripped off from djwong's patch in e2fsprogs to do the same.
+On Wed, Oct 10, 2018 at 06:10:23PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Clean up build warnings about defined by not used functions by
+				defined but not used
 
-This is a bit simpler than redefining CC for the whole build, which
-requires extra commandline definitions and apparently is enough of a
-barrier that nobody's doing sparse checking.
+> removing them.
 
-Note, this requires unreleased sparse after v0.5, which enables the
-CHAR_BIT definition; otherwise it chokes.
+otherwise looks good
 
-Add information about these helpers to doc/sparse.txt
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  libxfs/rdwr.c  |  8 -------
+>  libxfs/util.c  | 63 --------------------------------------------------
+>  repair/btree.c | 23 ------------------
+>  3 files changed, 94 deletions(-)
+> 
+> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+> index 753b9396fbe5..e580aba1d7ee 100644
+> --- a/libxfs/rdwr.c
+> +++ b/libxfs/rdwr.c
+> @@ -544,14 +544,6 @@ libxfs_bcompare(struct cache_node *node, cache_key_t key)
+>  	return CACHE_MISS;
+>  }
+>  
+> -static void
+> -libxfs_bprint(xfs_buf_t *bp)
+> -{
+> -	fprintf(stderr, "Buffer %p blkno=%llu bytes=%u flags=0x%x count=%u\n",
+> -		bp, (unsigned long long)bp->b_bn, (unsigned)bp->b_bcount,
+> -		bp->b_flags, bp->b_node.cn_count);
+> -}
+> -
+>  static void
+>  __initbuf(xfs_buf_t *bp, struct xfs_buftarg *btp, xfs_daddr_t bno,
+>  		unsigned int bytes)
+> diff --git a/libxfs/util.c b/libxfs/util.c
+> index 993218615d00..ffd265094b4c 100644
+> --- a/libxfs/util.c
+> +++ b/libxfs/util.c
+> @@ -380,69 +380,6 @@ libxfs_ialloc(
+>  	return 0;
+>  }
+>  
+> -static void
+> -libxfs_iprint(
+> -	xfs_inode_t		*ip)
+> -{
+> -	struct xfs_icdinode	*dip;
+> -	xfs_extnum_t		i = 0;
+> -	struct xfs_ifork	*ifp;		/* inode fork pointer */
+> -	struct xfs_iext_cursor	icur;
+> -	xfs_bmbt_irec_t		rec;
+> -
+> -	printf("Inode %lx\n", (unsigned long)ip);
+> -	printf("    i_ino %llx\n", (unsigned long long)ip->i_ino);
+> -
+> -	if (ip->i_df.if_flags & XFS_IFEXTENTS)
+> -		printf("EXTENTS ");
+> -	printf("\n");
+> -	printf("    i_df.if_bytes %d\n", ip->i_df.if_bytes);
+> -	printf("    i_df.if_u1.if_root/if_data %lx\n",
+> -		(unsigned long)ip->i_df.if_u1.if_root);
+> -	if (ip->i_df.if_flags & XFS_IFEXTENTS) {
+> -		ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+> -		for_each_xfs_iext(ifp, &icur, &rec) {
+> -			printf("\t%d: startoff %llu, startblock 0x%llx,"
+> -				" blockcount %llu, state %d\n",
+> -				i, (unsigned long long)rec.br_startoff,
+> -				(unsigned long long)rec.br_startblock,
+> -				(unsigned long long)rec.br_blockcount,
+> -				(int)rec.br_state);
+> -			i++;
+> -		}
+> -	}
+> -	printf("    i_df.if_broot %lx\n", (unsigned long)ip->i_df.if_broot);
+> -	printf("    i_df.if_broot_bytes %x\n", ip->i_df.if_broot_bytes);
+> -
+> -	dip = &ip->i_d;
+> -	printf("\nOn disk portion\n");
+> -	printf("    di_mode %o\n", VFS_I(ip)->i_mode);
+> -	printf("    di_version %x\n", (uint)dip->di_version);
+> -	switch (ip->i_d.di_format) {
+> -	case XFS_DINODE_FMT_LOCAL:
+> -		printf("    Inline inode\n");
+> -		break;
+> -	case XFS_DINODE_FMT_EXTENTS:
+> -		printf("    Extents inode\n");
+> -		break;
+> -	case XFS_DINODE_FMT_BTREE:
+> -		printf("    B-tree inode\n");
+> -		break;
+> -	default:
+> -		printf("    Other inode\n");
+> -		break;
+> -	}
+> -	printf("   di_nlink %x\n", VFS_I(ip)->i_nlink);
+> -	printf("   di_uid %d\n", dip->di_uid);
+> -	printf("   di_gid %d\n", dip->di_gid);
+> -	printf("   di_nextents %d\n", dip->di_nextents);
+> -	printf("   di_size %llu\n", (unsigned long long)dip->di_size);
+> -	printf("   di_gen %x\n", VFS_I(ip)->i_generation);
+> -	printf("   di_extsize %d\n", dip->di_extsize);
+> -	printf("   di_flags %x\n", dip->di_flags);
+> -	printf("   di_nblocks %llu\n", (unsigned long long)dip->di_nblocks);
+> -}
+> -
+>  /*
+>   * Writes a modified inode's changes out to the inode's on disk home.
+>   * Originally based on xfs_iflush_int() from xfs_inode.c in the kernel.
+> diff --git a/repair/btree.c b/repair/btree.c
+> index a402d0a67349..292fa518d019 100644
+> --- a/repair/btree.c
+> +++ b/repair/btree.c
+> @@ -444,29 +444,6 @@ btree_lookup_prev(
+>  	return value;
+>  }
+>  
+> -static void *
+> -btree_uncached_lookup(
+> -	struct btree_root	*root,
+> -	unsigned long		key)
+> -{
+> -	/* cursor-less (ie. uncached) lookup */
+> -	int			height = root->height - 1;
+> -	struct btree_node	*node = root->root_node;
+> -	int			i;
+> -	int			key_found = 0;
+> -
+> -	while (height >= 0) {
+> -		for (i = 0; i < node->num_keys; i++)
+> -			if (node->keys[i] >= key) {
+> -				key_found = node->keys[i] == key;
+> -				break;
+> -			}
+> -		node = node->ptrs[i];
+> -		height--;
+> -	}
+> -	return key_found ? node : NULL;
+> -}
+> -
+>  /* Update functions */
+>  
+>  static inline void
+> -- 
+> 2.17.0
+> 
 
-diff --git a/Makefile b/Makefile
-index d031a60..7f3e774 100644
---- a/Makefile
-+++ b/Makefile
-@@ -16,6 +16,20 @@ else
-   Q = @
- endif
- 
-+CHECK=sparse
-+CHECK_OPTS=-Wsparse-all -Wno-transparent-union -Wno-return-void -Wno-undef \
-+	-Wno-non-pointer-null -D__linux__
-+ifeq ("$(C)", "2")
-+  CHECK_CMD=$(CHECK) $(CHECK_OPTS) -Wbitwise -D__CHECK_ENDIAN__
-+else
-+  ifeq ("$(C)", "1")
-+    CHECK_CMD=$(CHECK) $(CHECK_OPTS)
-+   else
-+    CHECK_CMD=@true
-+  endif
-+endif
-+export CHECK_CMD
-+
- MAKEOPTS = --no-print-directory Q=$(Q)
- 
- TOPDIR = .
-diff --git a/doc/sparse.txt b/doc/sparse.txt
-index 36a34a0..d426739 100644
---- a/doc/sparse.txt
-+++ b/doc/sparse.txt
-@@ -5,9 +5,20 @@ to check the source code of the open source XFS commands and utilites
- First you need to install sparse, either from your distribution or from
- source as provided at http://www.kernel.org/pub/software/devel/sparse/.
- 
--To simply build the xfsprogs source code while checking the source using
--sparse just set the compiler to cgcc, which is a wrapper that calls both
--sparse and gcc using:
-+The xfsprogs Makefile has a convenient shortcut to running sparse, by setting
-+the C ("check") variable on the make commandline.  To perform generic checks,
-+
-+	make C=1
-+
-+which checks with -Wsparse-all -Wno-transparent-union -Wno-return-void
-+-Wno-undef -Wno-non-pointer-null, or to perform the bitwise checks, use
-+
-+	make C=2
-+
-+which checks with -Wbitwise -D__CHECK_ENDIAN__
-+
-+If you'd rather run sparse more manually, just set the compiler to cgcc,
-+which is a wrapper that calls both sparse and gcc using:
- 
- 	CC=cgcc ./configure
- 
-diff --git a/include/buildrules b/include/buildrules
-index c57fdfc..23fc866 100644
---- a/include/buildrules
-+++ b/include/buildrules
-@@ -54,10 +54,12 @@ $(LTLIBRARY) : $(SUBDIRS) $(LTOBJECTS)
- %.lo: %.c
- 	@echo "    [CC]     $@"
- 	$(Q)$(LTCOMPILE) -c $<
-+	$(Q)$(CHECK_CMD) $(CFLAGS) $<
- else
- %.o: %.c
- 	@echo "    [CC]     $@"
- 	$(Q)$(CC) $(CFLAGS) -c $<
-+	$(Q)$(CHECK_CMD) $(CFLAGS) $<
- 
- endif
- 
+-- 
+Carlos
