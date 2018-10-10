@@ -1,119 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:56200 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727722AbeJKDZV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 Oct 2018 23:25:21 -0400
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 05/18] xfsprogs: include headers for extern variables
-Date: Wed, 10 Oct 2018 15:01:09 -0500
-Message-Id: <1539201682-22198-6-git-send-email-sandeen@redhat.com>
-In-Reply-To: <1539201682-22198-1-git-send-email-sandeen@redhat.com>
-References: <1539201682-22198-1-git-send-email-sandeen@redhat.com>
+Received: from mail-yw1-f68.google.com ([209.85.161.68]:46147 "EHLO
+        mail-yw1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726503AbeJJWqf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Oct 2018 18:46:35 -0400
+MIME-Version: 1.0
+References: <153913023835.32295.13962696655740190941.stgit@magnolia>
+ <153913029885.32295.7399525233513945673.stgit@magnolia> <CAOQ4uxj_wftoGvub9n_6X3Qc64LKxs+8TB-opUiq59sGQ=YoKw@mail.gmail.com>
+ <20181010151321.GR28243@magnolia>
+In-Reply-To: <20181010151321.GR28243@magnolia>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Wed, 10 Oct 2018 18:23:43 +0300
+Message-ID: <CAOQ4uxjrkgiKXTYP8d93kLvU2zaKO14Wx3ZL7-7TnDd95CHnOA@mail.gmail.com>
+Subject: Re: [PATCH 08/25] vfs: combine the clone and dedupe into a single remap_file_range
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-cifs@vger.kernel.org, overlayfs <linux-unionfs@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, ocfs2-devel@oss.oracle.com
 
-Include headers which export functions for their matching C files so that
-they don't appear to be static to the sparse checker.
+On Wed, Oct 10, 2018 at 6:13 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> On Wed, Oct 10, 2018 at 08:54:44AM +0300, Amir Goldstein wrote:
+> > On Wed, Oct 10, 2018 at 3:12 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> > >
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > >
+> > > Combine the clone_file_range and dedupe_file_range operations into a
+> > > single remap_file_range file operation dispatch since they're
+> > > fundamentally the same operation.  The differences between the two can
+> > > be made in the prep functions.
+> > >
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> >
 
-Fixes sparse warnings about this.
+> >
+> > Apart from the generic check invalid flags comment - ACK on ovl part.
+>
+> Thanks for the review!  Is that an official Acked-by to add to the
+> commit message, or an informal ACK?
+>
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
- db/crc.c        | 1 +
- db/fuzz.c       | 1 +
- db/hash.c       | 1 +
- db/logformat.c  | 1 +
- db/symlink.c    | 2 +-
- db/text.c       | 1 +
- libfrog/crc32.c | 1 +
- 7 files changed, 7 insertions(+), 1 deletion(-)
+I would offer my Acked-by for whole of the vfs patches
+if we agree on the correct way to handle invalid flags
+(see more comments up the series regarding the "advisory" flags).
 
-diff --git a/db/crc.c b/db/crc.c
-index b6612a5..95161c6 100644
---- a/db/crc.c
-+++ b/db/crc.c
-@@ -17,6 +17,7 @@
- #include "output.h"
- #include "bit.h"
- #include "print.h"
-+#include "crc.h"
- 
- static int crc_f(int argc, char **argv);
- static void crc_help(void);
-diff --git a/db/fuzz.c b/db/fuzz.c
-index 5d5d54f..65157bd 100644
---- a/db/fuzz.c
-+++ b/db/fuzz.c
-@@ -21,6 +21,7 @@
- #include "print.h"
- #include "write.h"
- #include "malloc.h"
-+#include "fuzz.h"
- 
- static int	fuzz_f(int argc, char **argv);
- static void     fuzz_help(void);
-diff --git a/db/hash.c b/db/hash.c
-index bda3316..68c53e7 100644
---- a/db/hash.c
-+++ b/db/hash.c
-@@ -10,6 +10,7 @@
- #include "type.h"
- #include "io.h"
- #include "output.h"
-+#include "hash.h"
- 
- static int hash_f(int argc, char **argv);
- static void hash_help(void);
-diff --git a/db/logformat.c b/db/logformat.c
-index 42ce245..3374c29 100644
---- a/db/logformat.c
-+++ b/db/logformat.c
-@@ -9,6 +9,7 @@
- #include "init.h"
- #include "output.h"
- #include "libxlog.h"
-+#include "logformat.h"
- 
- #define MAX_LSUNIT	256 * 1024	/* max log buf. size */
- 
-diff --git a/db/symlink.c b/db/symlink.c
-index ebf6637..752cae4 100644
---- a/db/symlink.c
-+++ b/db/symlink.c
-@@ -11,7 +11,7 @@
- #include "field.h"
- #include "bit.h"
- #include "init.h"
--
-+#include "symlink.h"
- 
- /*
-  * XXX: no idea how to handle multiple contiguous block symlinks here.
-diff --git a/db/text.c b/db/text.c
-index 3a279d1..adf33a7 100644
---- a/db/text.c
-+++ b/db/text.c
-@@ -17,6 +17,7 @@
- #include "io.h"
- #include "output.h"
- #include "init.h"
-+#include "text.h"
- 
- static void     print_rawtext(void *data, int len);
- 
-diff --git a/libfrog/crc32.c b/libfrog/crc32.c
-index 1d52f68..e3f3fd1 100644
---- a/libfrog/crc32.c
-+++ b/libfrog/crc32.c
-@@ -33,6 +33,7 @@
- #include "xfs.h"
- #include "xfs_arch.h"
- #include "crc32defs.h"
-+#include "crc32c.h"
- 
- /* types specifc to this file */
- typedef __u8	u8;
--- 
-1.8.3.1
+Thanks,
+Amir.
