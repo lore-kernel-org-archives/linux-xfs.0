@@ -1,70 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:44778 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726647AbeJJWGf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Oct 2018 18:06:35 -0400
-Date: Wed, 10 Oct 2018 07:44:03 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/2] xfsprogs: document changes for 4.19.0-rc0
-Message-ID: <20181010144403.GL28243@magnolia>
-References: <20181010071023.6765-1-david@fromorbit.com>
- <20181010071023.6765-2-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181010071023.6765-2-david@fromorbit.com>
+Received: from mx1.redhat.com ([209.132.183.28]:51379 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726700AbeJJT7N (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 Oct 2018 15:59:13 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 729F330BDA0A
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Oct 2018 12:37:14 +0000 (UTC)
+Received: from odin.usersys.redhat.com (unknown [10.40.205.46])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C4E825D9CB
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Oct 2018 12:37:13 +0000 (UTC)
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH 0/2] xfs stats fixes - V2
+Date: Wed, 10 Oct 2018 14:37:06 +0200
+Message-Id: <20181010123708.7632-1-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Wed, Oct 10, 2018 at 06:10:22PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Because 'make deb' breaks without them.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  debian/changelog | 7 +++++++
->  doc/CHANGES      | 7 +++++++
->  2 files changed, 14 insertions(+)
-> 
-> diff --git a/debian/changelog b/debian/changelog
-> index 01639f9efeec..ef129e278948 100644
-> --- a/debian/changelog
-> +++ b/debian/changelog
-> @@ -1,3 +1,10 @@
-> +xfsprogs (4.19.0-rc0-1) unstable; urgency=low
-> +
-> +  * New upstream pre-release
-> +  * Merge libxfs changes from kernel-4.19
-> +
-> + -- Nathan Scott <nathans@debian.org>  Wed, 10 Oct 2018 17:52:48 +1100
-> +
->  xfsprogs (4.18.0-1) unstable; urgency=low
->  
->    * New upstream release
-> diff --git a/doc/CHANGES b/doc/CHANGES
-> index 3c1e39469008..1c41bd90a1c5 100644
-> --- a/doc/CHANGES
-> +++ b/doc/CHANGES
-> @@ -1,3 +1,10 @@
-> +xfsprogs-4.18.0-rc0 (10 Oct 2018)
+Hi,
 
-4.19-rc0, right?
+this is a new version of my fixes to xfsstats code, the V1 is here:
+https://marc.info/?l=linux-xfs&m=153857014823217&w=2
 
---D
+This patchset main goal, is to fix a bug which makes /proc/fs/xfs/xqmstat to
+display garbage data (patch 1), and a re-work of the offset marks in __xfsstats,
+replacing the defines, by usage of offsetof(), as suggested by Eric and Dave.
 
-> +	- Majority of 4.18 libxfs changes merged from kernel
-> +	- Big sparse static checker cleanup (Eric Sandeen)
-> +	- mkfs.xfs discard fixes (Jan Tulak)
-> +	- xfs_io readv/writev cleanup (Zorro Lang)
-> +	- libxfs transaction commit error checking (Darrick Wong)
-> +
->  xfsprogs-4.18.0 (24 Aug 2018)
->  	- Tweak SPDX license in xfs_cksum.h (Darrick Wong)
->  
-> -- 
-> 2.17.0
-> 
+Patch 2 isn't tagged as V2, because it's essentially different from the patch 2
+of the first version. It still prevents offset mistakes in future updates of
+__xfsstats, but in a different way than the V1 patchset
+
+I'm not tagging stable here, because patch 2 only applies cleanly since 4.18
+
+
+Carlos Maiolino (2):
+  xfs: Fix xqmstats offsets in /proc/fs/xfs/xqmstat
+  xfs: use offsetof() in place of offset macros for __xfsstats
+
+ fs/xfs/xfs_stats.c | 52 +++++++++++++++++++++++++---------------------
+ fs/xfs/xfs_stats.h | 28 +++----------------------
+ 2 files changed, 31 insertions(+), 49 deletions(-)
+
+-- 
+2.17.1
