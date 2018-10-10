@@ -1,146 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:54872 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:53030 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725955AbeJJHeY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Oct 2018 03:34:24 -0400
-Subject: [PATCH 25/25] xfs: support returning partial reflink results
+        with ESMTP id S1726515AbeJKAYv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Oct 2018 20:24:51 -0400
+Date: Wed, 10 Oct 2018 10:01:37 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 09 Oct 2018 17:14:52 -0700
-Message-ID: <153913049195.32295.13614911442275409372.stgit@magnolia>
-In-Reply-To: <153913023835.32295.13962696655740190941.stgit@magnolia>
+Subject: Re: [PATCH 06/25] vfs: strengthen checking of file range inputs to
+ generic_remap_checks
+Message-ID: <20181010170137.GA24824@magnolia>
 References: <153913023835.32295.13962696655740190941.stgit@magnolia>
+ <153913028015.32295.15993665528948323051.stgit@magnolia>
+ <CAOQ4uxjZ1JuT3Ga1kTDF9boeYF5pafDmsnzWxVNPWcTpESchgw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxjZ1JuT3Ga1kTDF9boeYF5pafDmsnzWxVNPWcTpESchgw@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-cifs@vger.kernel.org, overlayfs <linux-unionfs@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, ocfs2-devel@oss.oracle.com
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Oct 10, 2018 at 08:23:27AM +0300, Amir Goldstein wrote:
+> On Wed, Oct 10, 2018 at 3:11 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> >
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> >
+> > File range remapping, if allowed to run past the destination file's EOF,
+> > is an optimization on a regular file write.  Regular file writes that
+> > extend the file length are subject to various constraints which are not
+> > checked by range cloning.
+> >
+> > This is a correctness problem because we're never allowed to touch
+> > ranges that the page cache can't support (s_maxbytes); we're not
+> > supposed to deal with large offsets (MAX_NON_LFS) if O_LARGEFILE isn't
+> > set; and we must obey resource limits (RLIMIT_FSIZE).
+> >
+> > Therefore, add these checks to the new generic_remap_checks function so
+> > that we curtail unexpected behavior.
+> >
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  mm/filemap.c |   39 +++++++++++++++++++++++++++++++++++++++
+> >  1 file changed, 39 insertions(+)
+> >
+> >
+> > diff --git a/mm/filemap.c b/mm/filemap.c
+> > index 14041a8468ba..59056bd9c58a 100644
+> > --- a/mm/filemap.c
+> > +++ b/mm/filemap.c
+> > @@ -2974,6 +2974,27 @@ inline ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
+> >  }
+> >  EXPORT_SYMBOL(generic_write_checks);
+> >
+> > +static int
+> > +generic_remap_check_limits(struct file *file, loff_t pos, uint64_t *count)
+> > +{
+> > +       struct inode *inode = file->f_mapping->host;
+> > +
+> > +       /* Don't exceed the LFS limits. */
+> > +       if (unlikely(pos + *count > MAX_NON_LFS &&
+> > +                               !(file->f_flags & O_LARGEFILE))) {
+> > +               if (pos >= MAX_NON_LFS)
+> > +                       return -EFBIG;
+> > +               *count = min(*count, MAX_NON_LFS - (uint64_t)pos);
+> > +       }
+> > +
+> > +       /* Don't operate on ranges the page cache doesn't support. */
+> > +       if (unlikely(pos >= inode->i_sb->s_maxbytes))
+> > +               return -EFBIG;
+> > +
+> > +       *count = min(*count, inode->i_sb->s_maxbytes - (uint64_t)pos);
+> > +       return 0;
+> > +}
+> > +
+> 
+> Sorry. I haven't explained myself properly last time.
+> What I meant is that it hurts my eyes to see generic_write_checks() and
+> generic_remap_check_limits() which from the line of (limit != RLIM_INFINITY)
+> are exactly the same thing. Yes, generic_remap_check_limits() uses
+> iov_iter_truncate(), but that's a minor semantic change - it can be easily
+> resolved by creating a dummy iter in generic_remap_checks() instead of
+> passing int *count.
 
-Back when the XFS reflink code only supported clone_file_range, we were
-only able to return zero or negative error codes to userspace.  However,
-now that copy_file_range (which returns bytes copied) can use XFS'
-clone_file_range, we have the opportunity to return partial results.
-For example, if userspace sends a 1GB clone request and we run out of
-space halfway through, we at least can tell userspace that we completed
-512M of that request like a regular write.
+Making a fake kiocb and iterator seem like a terribly fragile idea.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_file.c    |    7 ++-----
- fs/xfs/xfs_reflink.c |   19 ++++++++++++++-----
- fs/xfs/xfs_reflink.h |    2 +-
- 3 files changed, 17 insertions(+), 11 deletions(-)
+How about I make the common helper take a pos and *count, and
+generic_write_checks can translate that into iov_iter_truncate?
 
+> You could say that this is nit picking, but the very reason this patch
+> set exists
+> it because clone/dedup implementation did not use the same range checks
+> of write to begin with, so it just seems wrong to diverge them at this point.
+> 
+> So to be clear, I suggest that generic_write_checks() should use your
+> generic_remap_check_limits() helper.
+> If you disagree and others can live with this minor duplication, fine by me.
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 6f4205846451..a15057be1994 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -928,11 +928,8 @@ xfs_file_remap_range(
- 	loff_t		len,
- 	unsigned int	flags)
- {
--	int		ret;
--
--	ret = xfs_reflink_remap_range(file_in, pos_in, file_out, pos_out,
--			len, false);
--	return ret < 0 ? ret : len;
-+	return xfs_reflink_remap_range(file_in, pos_in, file_out, pos_out,
-+			len, flags);
- }
- 
- STATIC int
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 0f4678920240..b33107a35330 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1123,6 +1123,7 @@ xfs_reflink_remap_blocks(
- 	struct xfs_inode	*dest,
- 	xfs_fileoff_t		destoff,
- 	xfs_filblks_t		len,
-+	xfs_filblks_t		*remapped,
- 	xfs_off_t		new_isize)
- {
- 	struct xfs_bmbt_irec	imap;
-@@ -1130,6 +1131,7 @@ xfs_reflink_remap_blocks(
- 	int			error = 0;
- 	xfs_filblks_t		range_len;
- 
-+	*remapped = 0;
- 	/* drange = (destoff, destoff + len); srange = (srcoff, srcoff + len) */
- 	while (len) {
- 		uint		lock_mode;
-@@ -1168,6 +1170,7 @@ xfs_reflink_remap_blocks(
- 		srcoff += range_len;
- 		destoff += range_len;
- 		len -= range_len;
-+		*remapped += range_len;
- 	}
- 
- 	return 0;
-@@ -1349,7 +1352,7 @@ xfs_reflink_remap_prep(
- /*
-  * Link a range of blocks from one file to another.
-  */
--int
-+loff_t
- xfs_reflink_remap_range(
- 	struct file		*file_in,
- 	loff_t			pos_in,
-@@ -1364,9 +1367,9 @@ xfs_reflink_remap_range(
- 	struct xfs_inode	*dest = XFS_I(inode_out);
- 	struct xfs_mount	*mp = src->i_mount;
- 	xfs_fileoff_t		sfsbno, dfsbno;
--	xfs_filblks_t		fsblen;
-+	xfs_filblks_t		fsblen, remapped = 0;
- 	xfs_extlen_t		cowextsize;
--	ssize_t			ret;
-+	int			ret;
- 
- 	if (!xfs_sb_version_hasreflink(&mp->m_sb))
- 		return -EOPNOTSUPP;
-@@ -1382,11 +1385,17 @@ xfs_reflink_remap_range(
- 
- 	trace_xfs_reflink_remap_range(src, pos_in, len, dest, pos_out);
- 
-+	if (len == 0) {
-+		ret = 0;
-+		goto out_unlock;
-+	}
-+
- 	dfsbno = XFS_B_TO_FSBT(mp, pos_out);
- 	sfsbno = XFS_B_TO_FSBT(mp, pos_in);
- 	fsblen = XFS_B_TO_FSB(mp, len);
- 	ret = xfs_reflink_remap_blocks(src, sfsbno, dest, dfsbno, fsblen,
--			pos_out + len);
-+			&remapped, pos_out + len);
-+	remapped = min_t(int64_t, len, XFS_FSB_TO_B(mp, remapped));
- 	if (ret)
- 		goto out_unlock;
- 
-@@ -1409,7 +1418,7 @@ xfs_reflink_remap_range(
- 	xfs_reflink_remap_unlock(file_in, file_out);
- 	if (ret)
- 		trace_xfs_reflink_remap_range_error(dest, ret, _RET_IP_);
--	return ret;
-+	return remapped > 0 ? remapped : ret;
- }
- 
- /*
-diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index c3c46c276fe1..cbc26ff79a8f 100644
---- a/fs/xfs/xfs_reflink.h
-+++ b/fs/xfs/xfs_reflink.h
-@@ -27,7 +27,7 @@ extern int xfs_reflink_cancel_cow_range(struct xfs_inode *ip, xfs_off_t offset,
- extern int xfs_reflink_end_cow(struct xfs_inode *ip, xfs_off_t offset,
- 		xfs_off_t count);
- extern int xfs_reflink_recover_cow(struct xfs_mount *mp);
--extern int xfs_reflink_remap_range(struct file *file_in, loff_t pos_in,
-+extern loff_t xfs_reflink_remap_range(struct file *file_in, loff_t pos_in,
- 		struct file *file_out, loff_t pos_out, loff_t len,
- 		unsigned int remap_flags);
- extern int xfs_reflink_inode_has_shared_extents(struct xfs_trans *tp,
+Nah, I think I misunderstood you the first time, sorry about that.
+
+--D
+
+> Thanks,
+> Amir.
