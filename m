@@ -1,171 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:58874 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726625AbeJJWHT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Oct 2018 18:07:19 -0400
-Date: Wed, 10 Oct 2018 07:44:41 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2] xfsprogs: remove unused functions
-Message-ID: <20181010144441.GM28243@magnolia>
-References: <20181010071023.6765-1-david@fromorbit.com>
- <20181010071023.6765-3-david@fromorbit.com>
+Received: from mail-yb1-f193.google.com ([209.85.219.193]:41574 "EHLO
+        mail-yb1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725816AbeJJMoE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Oct 2018 08:44:04 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181010071023.6765-3-david@fromorbit.com>
+References: <153913023835.32295.13962696655740190941.stgit@magnolia> <153913028015.32295.15993665528948323051.stgit@magnolia>
+In-Reply-To: <153913028015.32295.15993665528948323051.stgit@magnolia>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Wed, 10 Oct 2018 08:23:27 +0300
+Message-ID: <CAOQ4uxjZ1JuT3Ga1kTDF9boeYF5pafDmsnzWxVNPWcTpESchgw@mail.gmail.com>
+Subject: Re: [PATCH 06/25] vfs: strengthen checking of file range inputs to generic_remap_checks
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-cifs@vger.kernel.org, overlayfs <linux-unionfs@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, ocfs2-devel@oss.oracle.com
 
-On Wed, Oct 10, 2018 at 06:10:23PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Clean up build warnings about defined by not used functions by
-> removing them.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-
-Fine with me; if anyone wants them in the future they can put them back.
-
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
+On Wed, Oct 10, 2018 at 3:11 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+>
+> File range remapping, if allowed to run past the destination file's EOF,
+> is an optimization on a regular file write.  Regular file writes that
+> extend the file length are subject to various constraints which are not
+> checked by range cloning.
+>
+> This is a correctness problem because we're never allowed to touch
+> ranges that the page cache can't support (s_maxbytes); we're not
+> supposed to deal with large offsets (MAX_NON_LFS) if O_LARGEFILE isn't
+> set; and we must obey resource limits (RLIMIT_FSIZE).
+>
+> Therefore, add these checks to the new generic_remap_checks function so
+> that we curtail unexpected behavior.
+>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  libxfs/rdwr.c  |  8 -------
->  libxfs/util.c  | 63 --------------------------------------------------
->  repair/btree.c | 23 ------------------
->  3 files changed, 94 deletions(-)
-> 
-> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-> index 753b9396fbe5..e580aba1d7ee 100644
-> --- a/libxfs/rdwr.c
-> +++ b/libxfs/rdwr.c
-> @@ -544,14 +544,6 @@ libxfs_bcompare(struct cache_node *node, cache_key_t key)
->  	return CACHE_MISS;
+>  mm/filemap.c |   39 +++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 39 insertions(+)
+>
+>
+> diff --git a/mm/filemap.c b/mm/filemap.c
+> index 14041a8468ba..59056bd9c58a 100644
+> --- a/mm/filemap.c
+> +++ b/mm/filemap.c
+> @@ -2974,6 +2974,27 @@ inline ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
 >  }
->  
-> -static void
-> -libxfs_bprint(xfs_buf_t *bp)
-> -{
-> -	fprintf(stderr, "Buffer %p blkno=%llu bytes=%u flags=0x%x count=%u\n",
-> -		bp, (unsigned long long)bp->b_bn, (unsigned)bp->b_bcount,
-> -		bp->b_flags, bp->b_node.cn_count);
-> -}
-> -
->  static void
->  __initbuf(xfs_buf_t *bp, struct xfs_buftarg *btp, xfs_daddr_t bno,
->  		unsigned int bytes)
-> diff --git a/libxfs/util.c b/libxfs/util.c
-> index 993218615d00..ffd265094b4c 100644
-> --- a/libxfs/util.c
-> +++ b/libxfs/util.c
-> @@ -380,69 +380,6 @@ libxfs_ialloc(
->  	return 0;
->  }
->  
-> -static void
-> -libxfs_iprint(
-> -	xfs_inode_t		*ip)
-> -{
-> -	struct xfs_icdinode	*dip;
-> -	xfs_extnum_t		i = 0;
-> -	struct xfs_ifork	*ifp;		/* inode fork pointer */
-> -	struct xfs_iext_cursor	icur;
-> -	xfs_bmbt_irec_t		rec;
-> -
-> -	printf("Inode %lx\n", (unsigned long)ip);
-> -	printf("    i_ino %llx\n", (unsigned long long)ip->i_ino);
-> -
-> -	if (ip->i_df.if_flags & XFS_IFEXTENTS)
-> -		printf("EXTENTS ");
-> -	printf("\n");
-> -	printf("    i_df.if_bytes %d\n", ip->i_df.if_bytes);
-> -	printf("    i_df.if_u1.if_root/if_data %lx\n",
-> -		(unsigned long)ip->i_df.if_u1.if_root);
-> -	if (ip->i_df.if_flags & XFS_IFEXTENTS) {
-> -		ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-> -		for_each_xfs_iext(ifp, &icur, &rec) {
-> -			printf("\t%d: startoff %llu, startblock 0x%llx,"
-> -				" blockcount %llu, state %d\n",
-> -				i, (unsigned long long)rec.br_startoff,
-> -				(unsigned long long)rec.br_startblock,
-> -				(unsigned long long)rec.br_blockcount,
-> -				(int)rec.br_state);
-> -			i++;
-> -		}
-> -	}
-> -	printf("    i_df.if_broot %lx\n", (unsigned long)ip->i_df.if_broot);
-> -	printf("    i_df.if_broot_bytes %x\n", ip->i_df.if_broot_bytes);
-> -
-> -	dip = &ip->i_d;
-> -	printf("\nOn disk portion\n");
-> -	printf("    di_mode %o\n", VFS_I(ip)->i_mode);
-> -	printf("    di_version %x\n", (uint)dip->di_version);
-> -	switch (ip->i_d.di_format) {
-> -	case XFS_DINODE_FMT_LOCAL:
-> -		printf("    Inline inode\n");
-> -		break;
-> -	case XFS_DINODE_FMT_EXTENTS:
-> -		printf("    Extents inode\n");
-> -		break;
-> -	case XFS_DINODE_FMT_BTREE:
-> -		printf("    B-tree inode\n");
-> -		break;
-> -	default:
-> -		printf("    Other inode\n");
-> -		break;
-> -	}
-> -	printf("   di_nlink %x\n", VFS_I(ip)->i_nlink);
-> -	printf("   di_uid %d\n", dip->di_uid);
-> -	printf("   di_gid %d\n", dip->di_gid);
-> -	printf("   di_nextents %d\n", dip->di_nextents);
-> -	printf("   di_size %llu\n", (unsigned long long)dip->di_size);
-> -	printf("   di_gen %x\n", VFS_I(ip)->i_generation);
-> -	printf("   di_extsize %d\n", dip->di_extsize);
-> -	printf("   di_flags %x\n", dip->di_flags);
-> -	printf("   di_nblocks %llu\n", (unsigned long long)dip->di_nblocks);
-> -}
-> -
->  /*
->   * Writes a modified inode's changes out to the inode's on disk home.
->   * Originally based on xfs_iflush_int() from xfs_inode.c in the kernel.
-> diff --git a/repair/btree.c b/repair/btree.c
-> index a402d0a67349..292fa518d019 100644
-> --- a/repair/btree.c
-> +++ b/repair/btree.c
-> @@ -444,29 +444,6 @@ btree_lookup_prev(
->  	return value;
->  }
->  
-> -static void *
-> -btree_uncached_lookup(
-> -	struct btree_root	*root,
-> -	unsigned long		key)
-> -{
-> -	/* cursor-less (ie. uncached) lookup */
-> -	int			height = root->height - 1;
-> -	struct btree_node	*node = root->root_node;
-> -	int			i;
-> -	int			key_found = 0;
-> -
-> -	while (height >= 0) {
-> -		for (i = 0; i < node->num_keys; i++)
-> -			if (node->keys[i] >= key) {
-> -				key_found = node->keys[i] == key;
-> -				break;
-> -			}
-> -		node = node->ptrs[i];
-> -		height--;
-> -	}
-> -	return key_found ? node : NULL;
-> -}
-> -
->  /* Update functions */
->  
->  static inline void
-> -- 
-> 2.17.0
-> 
+>  EXPORT_SYMBOL(generic_write_checks);
+>
+> +static int
+> +generic_remap_check_limits(struct file *file, loff_t pos, uint64_t *count)
+> +{
+> +       struct inode *inode = file->f_mapping->host;
+> +
+> +       /* Don't exceed the LFS limits. */
+> +       if (unlikely(pos + *count > MAX_NON_LFS &&
+> +                               !(file->f_flags & O_LARGEFILE))) {
+> +               if (pos >= MAX_NON_LFS)
+> +                       return -EFBIG;
+> +               *count = min(*count, MAX_NON_LFS - (uint64_t)pos);
+> +       }
+> +
+> +       /* Don't operate on ranges the page cache doesn't support. */
+> +       if (unlikely(pos >= inode->i_sb->s_maxbytes))
+> +               return -EFBIG;
+> +
+> +       *count = min(*count, inode->i_sb->s_maxbytes - (uint64_t)pos);
+> +       return 0;
+> +}
+> +
+
+Sorry. I haven't explained myself properly last time.
+What I meant is that it hurts my eyes to see generic_write_checks() and
+generic_remap_check_limits() which from the line of (limit != RLIM_INFINITY)
+are exactly the same thing. Yes, generic_remap_check_limits() uses
+iov_iter_truncate(), but that's a minor semantic change - it can be easily
+resolved by creating a dummy iter in generic_remap_checks() instead of
+passing int *count.
+
+You could say that this is nit picking, but the very reason this patch
+set exists
+it because clone/dedup implementation did not use the same range checks
+of write to begin with, so it just seems wrong to diverge them at this point.
+
+So to be clear, I suggest that generic_write_checks() should use your
+generic_remap_check_limits() helper.
+If you disagree and others can live with this minor duplication, fine by me.
+
+Thanks,
+Amir.
