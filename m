@@ -1,88 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:60392 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726908AbeJKB4M (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Oct 2018 21:56:12 -0400
-Date: Wed, 10 Oct 2018 11:32:36 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 14/25] vfs: make remap_file_range functions take and
- return bytes completed
-Message-ID: <20181010183236.GU28243@magnolia>
-References: <153913023835.32295.13962696655740190941.stgit@magnolia>
- <153913040858.32295.9474188640729118153.stgit@magnolia>
- <CAOQ4uxg0=EJp1WJXmUeHT05yF1txRKKhPHVTWeG+rdtRD5FfHA@mail.gmail.com>
- <20181010155055.GS28243@magnolia>
- <CAOQ4uxjsKZHxoYqbnJTxQ1SPGn7o_2QhYseuETHnvZxvgCV5vg@mail.gmail.com>
+Received: from sandeen.net ([63.231.237.45]:54126 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727360AbeJKDDV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 Oct 2018 23:03:21 -0400
+Received: from Liberator-5.local (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 67A49B5B
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Oct 2018 14:39:28 -0500 (CDT)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs for-next updated to 2937043
+Message-ID: <0ddd5f1d-933d-aa35-7f36-ca701abe34e4@sandeen.net>
+Date: Wed, 10 Oct 2018 14:39:40 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOQ4uxjsKZHxoYqbnJTxQ1SPGn7o_2QhYseuETHnvZxvgCV5vg@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="wTPZArpZnoMLyPbqEVfdW2abqNMHGXDeX"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-cifs@vger.kernel.org, overlayfs <linux-unionfs@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, ocfs2-devel@oss.oracle.com
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Oct 10, 2018 at 09:28:34PM +0300, Amir Goldstein wrote:
-> On Wed, Oct 10, 2018 at 6:51 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> >
-> > On Wed, Oct 10, 2018 at 09:47:00AM +0300, Amir Goldstein wrote:
-> > > On Wed, Oct 10, 2018 at 3:14 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> > > >
-> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > >
-> > > > Change the remap_file_range functions to take a number of bytes to
-> > > > operate upon and return the number of bytes they operated on.  This is a
-> > > > requirement for allowing fs implementations to return short clone/dedupe
-> > > > results to the user, which will enable us to obey resource limits in a
-> > > > graceful manner.
-> > > >
-> > > > A subsequent patch will enable copy_file_range to signal to the
-> > > > ->clone_file_range implementation that it can handle a short length,
-> > > > which will be returned in the function's return value.  Neither clone
-> > > > ioctl can take advantage of this, alas.
-> > > >
-> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > ---
-> [...]
-> > > Commit message wasn't clear enough on the behavior of copy_file_range()
-> > > before and after the patch IMO. Maybe it would be better to pospone this
-> > > semantic change to the RFR_SHORTEN patch and keep if (cloned == len)
-> > > in this patch?
-> >
-> > There shouldn't be any behavior change here -- all implementations
-> > return a negative error code or the length that was passed in.  I'll
-> > clarify that in the commit message.
-> >
-> 
-> OK. BTW, you forgot to update Documentation/filesystems/vfs.txt.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--wTPZArpZnoMLyPbqEVfdW2abqNMHGXDeX
+Content-Type: multipart/mixed; boundary="eC1EOq6G7YRwgBNAgiIHBq1al5DGKDbNg";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <0ddd5f1d-933d-aa35-7f36-ca701abe34e4@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs for-next updated to 2937043
 
-Yeah, I noticed that and updated it too.
+--eC1EOq6G7YRwgBNAgiIHBq1al5DGKDbNg
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-> Also since this series has a potential to break clone/dedup on
-> overlayfs, it would be great if you could run some of the clone/dedupe
-> xfstests with overlay over xfs.
-> 
-> For the simple case of running ./check with a local.config file that is
-> not multi section, this just means running ./check -overlay after the
-> first ./check run (-overlay doesn't mkfs the base fs).
+Hi folks,
 
-I'll give it a try, though we should probably both run '-g clone' just
-to make sure everything is working...
+The xfsprogs repository at:
 
-> If this is a problem, let me know once new devel branch is ready
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-Yeah, Dave asked me to merge the xfs for-next branch so I'm working on
-that too.
+has just been updated.
 
-> and I'll pull it for testing. If I need to pull in extra xfstests, please
-> mention that as well.
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
 
-You'll probably want "generic: test creation time recovery after power
-failure" that I sent to the fstests lists a few days ago.
+The new head of the for-next branch is commit:
 
---D
+2937043 xfs_scrub_all: fix systemd escaping again
 
-> 
-> Thanks,
-> Amir.
+New Commits:
+
+Darrick J. Wong (1):
+      [2937043] xfs_scrub_all: fix systemd escaping again
+
+Dave Chinner (2):
+      [9060cb3] xfsprogs: document changes for 4.19.0-rc0
+      [b9df750] xfsprogs: remove unused functions
+
+
+Code Diffstat:
+
+ debian/changelog       |  7 ++++++
+ doc/CHANGES            |  7 ++++++
+ libxfs/rdwr.c          |  8 -------
+ libxfs/util.c          | 63 --------------------------------------------=
+------
+ repair/btree.c         | 23 ------------------
+ scrub/xfs_scrub_all.in |  9 ++++++--
+ 6 files changed, 21 insertions(+), 96 deletions(-)
+
+
+--eC1EOq6G7YRwgBNAgiIHBq1al5DGKDbNg--
+
+--wTPZArpZnoMLyPbqEVfdW2abqNMHGXDeX
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAlu+VXwACgkQIK4WkuE9
+3uCr9RAAmt0Wraw3DPo21zBhnhX5Mts7VhfXJtlCIT2zhEsNar44Pf1jztFZ/YsC
+c/eVbqoUfSxGU1ha9+NycYSeKIxW2a8vUx+uv3mYqpjwjuvzoJ++YJN0b4yoCFD6
+CHj0aQhdsQVGZEu7g+l3AEyvH216yumqJJR8hMU4zVYjzt2BWrvUWPQA5FMypnU1
+AVUvFVVFyUJl0yg5YHLSIrYv+ni1KgkPFHWaYZH3/7s9qFIRxH9vF085SVNAEops
+XNblxFxs59xTXO4pcZcK6lpkkMkBNhVwJJeteorwg5gRAgTfFVN00QV4J5Zfd/4Z
+AYI/7yWPIUmwSNQC4mDj6f+GbEX2FbDHHOXw28TcewXwBqHFk5RuZRm5e/wH0jGz
+YPG2DGrupfKvLMJJAjc5x2053irpK+9fMvfGPFFCKAO/bsufBYQVI3a7VWOB5VKt
+22G4Casz4p+jnTiIn8sdexp55zw7Aqjktd/XERF2AKERdkyT3pt13bmZEDHfytFR
+XdKYJqXgNufY18tUT9C/YGI+og35ZfUhMxweXk9uSC1IxNSYBqJ2wE0jedqLV0nG
+wKQGkAseU9jepOlunSTiI11dULIXmdA2wXDMGWCMIGN14/VtVXJqC5yzUWl9Xkqm
+8DuACzdt4wbf0oVF409LuC6zMY52bX6xzor/ZPix9LWSjKLbh6Q=
+=nptj
+-----END PGP SIGNATURE-----
+
+--wTPZArpZnoMLyPbqEVfdW2abqNMHGXDeX--
