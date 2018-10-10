@@ -1,69 +1,166 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw1-f66.google.com ([209.85.161.66]:46111 "EHLO
-        mail-yw1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727013AbeJKBwJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Oct 2018 21:52:09 -0400
-MIME-Version: 1.0
-References: <153913023835.32295.13962696655740190941.stgit@magnolia>
- <153913040858.32295.9474188640729118153.stgit@magnolia> <CAOQ4uxg0=EJp1WJXmUeHT05yF1txRKKhPHVTWeG+rdtRD5FfHA@mail.gmail.com>
- <20181010155055.GS28243@magnolia>
-In-Reply-To: <20181010155055.GS28243@magnolia>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Wed, 10 Oct 2018 21:28:34 +0300
-Message-ID: <CAOQ4uxjsKZHxoYqbnJTxQ1SPGn7o_2QhYseuETHnvZxvgCV5vg@mail.gmail.com>
-Subject: Re: [PATCH 14/25] vfs: make remap_file_range functions take and
- return bytes completed
-Content-Type: text/plain; charset="UTF-8"
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:38939 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725837AbeJJObU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Oct 2018 10:31:20 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1gA8dX-0002GH-KL
+        for linux-xfs@vger.kernel.org; Wed, 10 Oct 2018 18:10:27 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1gA8dX-0001mJ-JF
+        for linux-xfs@vger.kernel.org; Wed, 10 Oct 2018 18:10:27 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 2/2] xfsprogs: remove unused functions
+Date: Wed, 10 Oct 2018 18:10:23 +1100
+Message-Id: <20181010071023.6765-3-david@fromorbit.com>
+In-Reply-To: <20181010071023.6765-1-david@fromorbit.com>
+References: <20181010071023.6765-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-cifs@vger.kernel.org, overlayfs <linux-unionfs@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, ocfs2-devel@oss.oracle.com
+To: linux-xfs@vger.kernel.org
 
-On Wed, Oct 10, 2018 at 6:51 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
->
-> On Wed, Oct 10, 2018 at 09:47:00AM +0300, Amir Goldstein wrote:
-> > On Wed, Oct 10, 2018 at 3:14 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> > >
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > >
-> > > Change the remap_file_range functions to take a number of bytes to
-> > > operate upon and return the number of bytes they operated on.  This is a
-> > > requirement for allowing fs implementations to return short clone/dedupe
-> > > results to the user, which will enable us to obey resource limits in a
-> > > graceful manner.
-> > >
-> > > A subsequent patch will enable copy_file_range to signal to the
-> > > ->clone_file_range implementation that it can handle a short length,
-> > > which will be returned in the function's return value.  Neither clone
-> > > ioctl can take advantage of this, alas.
-> > >
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-[...]
-> > Commit message wasn't clear enough on the behavior of copy_file_range()
-> > before and after the patch IMO. Maybe it would be better to pospone this
-> > semantic change to the RFR_SHORTEN patch and keep if (cloned == len)
-> > in this patch?
->
-> There shouldn't be any behavior change here -- all implementations
-> return a negative error code or the length that was passed in.  I'll
-> clarify that in the commit message.
->
+From: Dave Chinner <dchinner@redhat.com>
 
-OK. BTW, you forgot to update Documentation/filesystems/vfs.txt.
+Clean up build warnings about defined by not used functions by
+removing them.
 
-Also since this series has a potential to break clone/dedup on
-overlayfs, it would be great if you could run some of the clone/dedupe
-xfstests with overlay over xfs.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ libxfs/rdwr.c  |  8 -------
+ libxfs/util.c  | 63 --------------------------------------------------
+ repair/btree.c | 23 ------------------
+ 3 files changed, 94 deletions(-)
 
-For the simple case of running ./check with a local.config file that is
-not multi section, this just means running ./check -overlay after the
-first ./check run (-overlay doesn't mkfs the base fs).
-
-If this is a problem, let me know once new devel branch is ready
-and I'll pull it for testing. If I need to pull in extra xfstests, please
-mention that as well.
-
-Thanks,
-Amir.
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index 753b9396fbe5..e580aba1d7ee 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -544,14 +544,6 @@ libxfs_bcompare(struct cache_node *node, cache_key_t key)
+ 	return CACHE_MISS;
+ }
+ 
+-static void
+-libxfs_bprint(xfs_buf_t *bp)
+-{
+-	fprintf(stderr, "Buffer %p blkno=%llu bytes=%u flags=0x%x count=%u\n",
+-		bp, (unsigned long long)bp->b_bn, (unsigned)bp->b_bcount,
+-		bp->b_flags, bp->b_node.cn_count);
+-}
+-
+ static void
+ __initbuf(xfs_buf_t *bp, struct xfs_buftarg *btp, xfs_daddr_t bno,
+ 		unsigned int bytes)
+diff --git a/libxfs/util.c b/libxfs/util.c
+index 993218615d00..ffd265094b4c 100644
+--- a/libxfs/util.c
++++ b/libxfs/util.c
+@@ -380,69 +380,6 @@ libxfs_ialloc(
+ 	return 0;
+ }
+ 
+-static void
+-libxfs_iprint(
+-	xfs_inode_t		*ip)
+-{
+-	struct xfs_icdinode	*dip;
+-	xfs_extnum_t		i = 0;
+-	struct xfs_ifork	*ifp;		/* inode fork pointer */
+-	struct xfs_iext_cursor	icur;
+-	xfs_bmbt_irec_t		rec;
+-
+-	printf("Inode %lx\n", (unsigned long)ip);
+-	printf("    i_ino %llx\n", (unsigned long long)ip->i_ino);
+-
+-	if (ip->i_df.if_flags & XFS_IFEXTENTS)
+-		printf("EXTENTS ");
+-	printf("\n");
+-	printf("    i_df.if_bytes %d\n", ip->i_df.if_bytes);
+-	printf("    i_df.if_u1.if_root/if_data %lx\n",
+-		(unsigned long)ip->i_df.if_u1.if_root);
+-	if (ip->i_df.if_flags & XFS_IFEXTENTS) {
+-		ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+-		for_each_xfs_iext(ifp, &icur, &rec) {
+-			printf("\t%d: startoff %llu, startblock 0x%llx,"
+-				" blockcount %llu, state %d\n",
+-				i, (unsigned long long)rec.br_startoff,
+-				(unsigned long long)rec.br_startblock,
+-				(unsigned long long)rec.br_blockcount,
+-				(int)rec.br_state);
+-			i++;
+-		}
+-	}
+-	printf("    i_df.if_broot %lx\n", (unsigned long)ip->i_df.if_broot);
+-	printf("    i_df.if_broot_bytes %x\n", ip->i_df.if_broot_bytes);
+-
+-	dip = &ip->i_d;
+-	printf("\nOn disk portion\n");
+-	printf("    di_mode %o\n", VFS_I(ip)->i_mode);
+-	printf("    di_version %x\n", (uint)dip->di_version);
+-	switch (ip->i_d.di_format) {
+-	case XFS_DINODE_FMT_LOCAL:
+-		printf("    Inline inode\n");
+-		break;
+-	case XFS_DINODE_FMT_EXTENTS:
+-		printf("    Extents inode\n");
+-		break;
+-	case XFS_DINODE_FMT_BTREE:
+-		printf("    B-tree inode\n");
+-		break;
+-	default:
+-		printf("    Other inode\n");
+-		break;
+-	}
+-	printf("   di_nlink %x\n", VFS_I(ip)->i_nlink);
+-	printf("   di_uid %d\n", dip->di_uid);
+-	printf("   di_gid %d\n", dip->di_gid);
+-	printf("   di_nextents %d\n", dip->di_nextents);
+-	printf("   di_size %llu\n", (unsigned long long)dip->di_size);
+-	printf("   di_gen %x\n", VFS_I(ip)->i_generation);
+-	printf("   di_extsize %d\n", dip->di_extsize);
+-	printf("   di_flags %x\n", dip->di_flags);
+-	printf("   di_nblocks %llu\n", (unsigned long long)dip->di_nblocks);
+-}
+-
+ /*
+  * Writes a modified inode's changes out to the inode's on disk home.
+  * Originally based on xfs_iflush_int() from xfs_inode.c in the kernel.
+diff --git a/repair/btree.c b/repair/btree.c
+index a402d0a67349..292fa518d019 100644
+--- a/repair/btree.c
++++ b/repair/btree.c
+@@ -444,29 +444,6 @@ btree_lookup_prev(
+ 	return value;
+ }
+ 
+-static void *
+-btree_uncached_lookup(
+-	struct btree_root	*root,
+-	unsigned long		key)
+-{
+-	/* cursor-less (ie. uncached) lookup */
+-	int			height = root->height - 1;
+-	struct btree_node	*node = root->root_node;
+-	int			i;
+-	int			key_found = 0;
+-
+-	while (height >= 0) {
+-		for (i = 0; i < node->num_keys; i++)
+-			if (node->keys[i] >= key) {
+-				key_found = node->keys[i] == key;
+-				break;
+-			}
+-		node = node->ptrs[i];
+-		height--;
+-	}
+-	return key_found ? node : NULL;
+-}
+-
+ /* Update functions */
+ 
+ static inline void
+-- 
+2.17.0
