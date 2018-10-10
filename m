@@ -1,73 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f53.google.com ([209.85.221.53]:40146 "EHLO
-        mail-wr1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726636AbeJJWVb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Oct 2018 18:21:31 -0400
-Received: by mail-wr1-f53.google.com with SMTP id d2-v6so6120006wro.7
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Oct 2018 07:58:57 -0700 (PDT)
-Date: Wed, 10 Oct 2018 16:58:53 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 2/2] xfs: use offsetof() in place of offset macros for
- __xfsstats
-Message-ID: <20181010145853.tzel5ymyktsbiln7@odin.usersys.redhat.com>
-References: <20181010123708.7632-1-cmaiolino@redhat.com>
- <20181010123708.7632-3-cmaiolino@redhat.com>
- <20181010144932.GO28243@magnolia>
+Received: from sandeen.net ([63.231.237.45]:41148 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725971AbeJKFmc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 Oct 2018 01:42:32 -0400
+Subject: [PATCH 01/18 V2] xfsprogs: enable sparse checking with "make C=[12]"
+References: <1539201682-22198-1-git-send-email-sandeen@redhat.com>
+ <1539201682-22198-2-git-send-email-sandeen@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <3048f94d-191c-0e62-1a3b-a0ec0e4b8374@sandeen.net>
+Date: Wed, 10 Oct 2018 17:18:20 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181010144932.GO28243@magnolia>
+In-Reply-To: <1539201682-22198-2-git-send-email-sandeen@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org
 
-> >  	uint32_t		xs_rmap_2[__XBTS_MAX];
-> > -#define XFSSTAT_END_REFCOUNT		(XFSSTAT_END_RMAP_V2 + __XBTS_MAX)
-> >  	uint32_t		xs_refcbt_2[__XBTS_MAX];
-> > -#define XFSSTAT_END_XQMSTAT		(XFSSTAT_END_REFCOUNT + 6)
-> >  	uint32_t		xs_qm_dqreclaims;
-> >  	uint32_t		xs_qm_dqreclaim_misses;
-> >  	uint32_t		xs_qm_dquot_dups;
-> >  	uint32_t		xs_qm_dqcachemisses;
-> >  	uint32_t		xs_qm_dqcachehits;
-> >  	uint32_t		xs_qm_dqwants;
-> > -#define XFSSTAT_END_QM			(XFSSTAT_END_XQMSTAT+2)
-> >  	uint32_t		xs_qm_dquot;
-> >  	uint32_t		xs_qm_dquot_unused;
-> >  /* Extra precision counters */
-> > @@ -163,10 +139,12 @@ struct __xfsstats {
-> >  	uint64_t		xs_read_bytes;
-> >  };
-> >  
-> > +#define	xfsstats_offset(f)	(offsetof(struct __xfsstats, f)/sizeof(uint32_t))
-> 
-> Goes past 80 columns, but otherwise looks ok,
-> 
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Enable "make C=1" or "make C=2" to do sparse checking.
+Blatantly ripped off from djwong's patch in e2fsprogs to do the same.
 
-Ops, sorry, I traded readability+tabs X 80 columns, I think changing the tabs
-for spaces is enough to fix it.
+This is a bit simpler than redefining CC for the whole build, which
+requires extra commandline definitions and apparently is enough of a
+barrier that nobody's doing sparse checking.
 
-Do you want me to send it again?
+Note, this requires unreleased sparse after v0.5, which enables the
+CHAR_BIT definition; otherwise it chokes.
 
-> 
-> --D
-> 
-> 
-> > +
-> >  struct xfsstats {
-> >  	union {
-> >  		struct __xfsstats	s;
-> > -		uint32_t		a[XFSSTAT_END_XQMSTAT];
-> > +		uint32_t		a[xfsstats_offset(xs_qm_dquot)];
-> >  	};
-> >  };
-> >  
-> > -- 
-> > 2.17.1
-> > 
+Add information about these helpers to doc/sparse.txt
 
--- 
-Carlos
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+diff --git a/Makefile b/Makefile
+index d031a60..7f3e774 100644
+--- a/Makefile
++++ b/Makefile
+@@ -16,6 +16,20 @@ else
+   Q = @
+ endif
+ 
++CHECK=sparse
++CHECK_OPTS=-Wsparse-all -Wno-transparent-union -Wno-return-void -Wno-undef \
++	-Wno-non-pointer-null -D__linux__
++ifeq ("$(C)", "2")
++  CHECK_CMD=$(CHECK) $(CHECK_OPTS) -Wbitwise -D__CHECK_ENDIAN__
++else
++  ifeq ("$(C)", "1")
++    CHECK_CMD=$(CHECK) $(CHECK_OPTS)
++   else
++    CHECK_CMD=@true
++  endif
++endif
++export CHECK_CMD
++
+ MAKEOPTS = --no-print-directory Q=$(Q)
+ 
+ TOPDIR = .
+diff --git a/doc/sparse.txt b/doc/sparse.txt
+index 36a34a0..d426739 100644
+--- a/doc/sparse.txt
++++ b/doc/sparse.txt
+@@ -5,9 +5,20 @@ to check the source code of the open source XFS commands and utilites
+ First you need to install sparse, either from your distribution or from
+ source as provided at http://www.kernel.org/pub/software/devel/sparse/.
+ 
+-To simply build the xfsprogs source code while checking the source using
+-sparse just set the compiler to cgcc, which is a wrapper that calls both
+-sparse and gcc using:
++The xfsprogs Makefile has a convenient shortcut to running sparse, by setting
++the C ("check") variable on the make commandline.  To perform generic checks,
++
++	make C=1
++
++which checks with -Wsparse-all -Wno-transparent-union -Wno-return-void
++-Wno-undef -Wno-non-pointer-null, or to perform the bitwise checks, use
++
++	make C=2
++
++which checks with -Wbitwise -D__CHECK_ENDIAN__
++
++If you'd rather run sparse more manually, just set the compiler to cgcc,
++which is a wrapper that calls both sparse and gcc using:
+ 
+ 	CC=cgcc ./configure
+ 
+diff --git a/include/buildrules b/include/buildrules
+index c57fdfc..23fc866 100644
+--- a/include/buildrules
++++ b/include/buildrules
+@@ -54,10 +54,12 @@ $(LTLIBRARY) : $(SUBDIRS) $(LTOBJECTS)
+ %.lo: %.c
+ 	@echo "    [CC]     $@"
+ 	$(Q)$(LTCOMPILE) -c $<
++	$(Q)$(CHECK_CMD) $(CFLAGS) $<
+ else
+ %.o: %.c
+ 	@echo "    [CC]     $@"
+ 	$(Q)$(CC) $(CFLAGS) -c $<
++	$(Q)$(CHECK_CMD) $(CFLAGS) $<
+ 
+ endif
+ 
