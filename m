@@ -1,90 +1,186 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from tartarus.angband.pl ([54.37.238.230]:53370 "EHLO
-        tartarus.angband.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725779AbeJGFNQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 7 Oct 2018 01:13:16 -0400
-From: Adam Borowski <kilobyte@angband.pl>
-Date: Sun,  7 Oct 2018 00:08:11 +0200
-Message-Id: <20181006220811.21482-1-kilobyte@angband.pl>
-In-Reply-To: <20181005234009.GJ12041@dastard>
-References: <20181005234009.GJ12041@dastard>
+Received: from mail-yb1-f196.google.com ([209.85.219.196]:44299 "EHLO
+        mail-yb1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725837AbeJJNP1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Oct 2018 09:15:27 -0400
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2] xfs: add a define for statfs magic to uapi
+References: <153913023835.32295.13962696655740190941.stgit@magnolia> <153913029885.32295.7399525233513945673.stgit@magnolia>
+In-Reply-To: <153913029885.32295.7399525233513945673.stgit@magnolia>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Wed, 10 Oct 2018 08:54:44 +0300
+Message-ID: <CAOQ4uxj_wftoGvub9n_6X3Qc64LKxs+8TB-opUiq59sGQ=YoKw@mail.gmail.com>
+Subject: Re: [PATCH 08/25] vfs: combine the clone and dedupe into a single remap_file_range
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Cc: Adam Borowski <kilobyte@angband.pl>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-cifs@vger.kernel.org, overlayfs <linux-unionfs@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, ocfs2-devel@oss.oracle.com
 
-Needed by userspace programs that call fstatfs().
-
-It'd be natural to publish XFS_SB_MAGIC in uapi, but while these two have
-identical values, they have different semantic meaning: one is an enum
-cookie meant for statfs, the other a signature of the on-disk format.
-
-Signed-off-by: Adam Borowski <kilobyte@angband.pl>
----
-> > include/uapi/linux/magic.h would get:
-> >
-> > #define XFS_STATFS_MAGIC      0x58465342      /* 'XFSB' */
+On Wed, Oct 10, 2018 at 3:12 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
 >
-> $ man statfs |grep 0x5846
->            XFS_SUPER_MAGIC       0x58465342
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+>
+> Combine the clone_file_range and dedupe_file_range operations into a
+> single remap_file_range file operation dispatch since they're
+> fundamentally the same operation.  The differences between the two can
+> be made in the prep functions.
+>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-Indeed, not only it is documented this way, but almost every other
-filesystem has the define named FOO_SUPER_MAGIC.  Thus, inventing something
-else doesn't seem to be a good idea to me.
+I like this. Nits below.
 
-On the other hand, this might be considered bikeshedding, and you're the
-maintainer of this particular shed...
+[...]
 
+> diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c
+> index d60b6caf09e8..e22b294fa25b 100644
+> --- a/fs/btrfs/ioctl.c
+> +++ b/fs/btrfs/ioctl.c
+> @@ -3627,26 +3627,6 @@ static int btrfs_extent_same(struct inode *src, u64 loff, u64 olen,
+>         return ret;
+>  }
+>
+> -int btrfs_dedupe_file_range(struct file *src_file, loff_t src_loff,
+> -                           struct file *dst_file, loff_t dst_loff,
+> -                           u64 olen)
+> -{
+> -       struct inode *src = file_inode(src_file);
+> -       struct inode *dst = file_inode(dst_file);
+> -       u64 bs = BTRFS_I(src)->root->fs_info->sb->s_blocksize;
+> -
+> -       if (WARN_ON_ONCE(bs < PAGE_SIZE)) {
+> -               /*
+> -                * Btrfs does not support blocksize < page_size. As a
+> -                * result, btrfs_cmp_data() won't correctly handle
+> -                * this situation without an update.
+> -                */
+> -               return -EINVAL;
+> -       }
+> -
+> -       return btrfs_extent_same(src, src_loff, olen, dst, dst_loff);
+> -}
+> -
+>  static int clone_finish_inode_update(struct btrfs_trans_handle *trans,
+>                                      struct inode *inode,
+>                                      u64 endoff,
+> @@ -4348,9 +4328,27 @@ static noinline int btrfs_clone_files(struct file *file, struct file *file_src,
+>         return ret;
+>  }
+>
+> -int btrfs_clone_file_range(struct file *src_file, loff_t off,
+> -               struct file *dst_file, loff_t destoff, u64 len)
+> +int btrfs_remap_file_range(struct file *src_file, loff_t off,
+> +               struct file *dst_file, loff_t destoff, u64 len,
+> +               unsigned int flags)
+>  {
+> +       if (flags & RFR_IDENTICAL_DATA) {
+> +               struct inode *src = file_inode(src_file);
+> +               struct inode *dst = file_inode(dst_file);
+> +               u64 bs = BTRFS_I(src)->root->fs_info->sb->s_blocksize;
+> +
+> +               if (WARN_ON_ONCE(bs < PAGE_SIZE)) {
+> +                       /*
+> +                        * Btrfs does not support blocksize < page_size. As a
+> +                        * result, btrfs_cmp_data() won't correctly handle
+> +                        * this situation without an update.
+> +                        */
+> +                       return -EINVAL;
+> +               }
+> +
+> +               return btrfs_extent_same(src, off, len, dst, destoff);
+> +       }
+> +
 
- fs/xfs/xfs_super.c         | 5 +++--
- include/uapi/linux/magic.h | 1 +
- 2 files changed, 4 insertions(+), 2 deletions(-)
+Seems weird that you would do that instead of:
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 207ee302b1bb..90b08051a4f3 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -43,6 +43,7 @@
- #include <linux/dax.h>
- #include <linux/init.h>
- #include <linux/slab.h>
-+#include <linux/magic.h>
- #include <linux/mount.h>
- #include <linux/mempool.h>
- #include <linux/writeback.h>
-@@ -1097,7 +1098,7 @@ xfs_fs_statfs(
- 	xfs_extlen_t		lsize;
- 	int64_t			ffree;
- 
--	statp->f_type = XFS_SB_MAGIC;
-+	statp->f_type = XFS_SUPER_MAGIC;
- 	statp->f_namelen = MAXNAMELEN - 1;
- 
- 	id = huge_encode_dev(mp->m_ddev_targp->bt_dev);
-@@ -1650,7 +1651,7 @@ xfs_fs_fill_super(
- 	 * we must configure the block size in the superblock before we run the
- 	 * full mount process as the mount process can lookup and cache inodes.
- 	 */
--	sb->s_magic = XFS_SB_MAGIC;
-+	sb->s_magic = XFS_SUPER_MAGIC;
- 	sb->s_blocksize = mp->m_sb.sb_blocksize;
- 	sb->s_blocksize_bits = ffs(sb->s_blocksize) - 1;
- 	sb->s_maxbytes = xfs_max_file_offset(sb->s_blocksize_bits);
-diff --git a/include/uapi/linux/magic.h b/include/uapi/linux/magic.h
-index 1a6fee974116..96c24478d8ce 100644
---- a/include/uapi/linux/magic.h
-+++ b/include/uapi/linux/magic.h
-@@ -29,6 +29,7 @@
- #define HPFS_SUPER_MAGIC	0xf995e849
- #define ISOFS_SUPER_MAGIC	0x9660
- #define JFFS2_SUPER_MAGIC	0x72b6
-+#define XFS_SUPER_MAGIC		0x58465342	/* "XFSB" */
- #define PSTOREFS_MAGIC		0x6165676C
- #define EFIVARFS_MAGIC		0xde5e81e4
- #define HOSTFS_SUPER_MAGIC	0x00c0ffee
--- 
-2.19.1
++    if (flags & ~RFR_IDENTICAL_DATA)
++        return -EINVAL;
++    if (flags & RFR_IDENTICAL_DATA)
++        return btrfs_dedupe_file_range(src, off, dst, destoff, len);
+
+>         return btrfs_clone_files(dst_file, src_file, off, len, destoff);
+>  }
+>
+> diff --git a/fs/cifs/cifsfs.c b/fs/cifs/cifsfs.c
+> index 7065426b3280..bf971fd7cab2 100644
+> --- a/fs/cifs/cifsfs.c
+> +++ b/fs/cifs/cifsfs.c
+> @@ -975,8 +975,9 @@ const struct inode_operations cifs_symlink_inode_ops = {
+>         .listxattr = cifs_listxattr,
+>  };
+>
+> -static int cifs_clone_file_range(struct file *src_file, loff_t off,
+> -               struct file *dst_file, loff_t destoff, u64 len)
+> +static int cifs_remap_file_range(struct file *src_file, loff_t off,
+> +               struct file *dst_file, loff_t destoff, u64 len,
+> +               unsigned int flags)
+>  {
+>         struct inode *src_inode = file_inode(src_file);
+>         struct inode *target_inode = file_inode(dst_file);
+> @@ -986,6 +987,9 @@ static int cifs_clone_file_range(struct file *src_file, loff_t off,
+>         unsigned int xid;
+>         int rc;
+>
+> +       if (flags & RFR_IDENTICAL_DATA)
+> +               return -EOPNOTSUPP;
+> +
+
+I think everyone would be better off with:
++       if (flags)
++               return -EINVAL;
+
+This way you won't need to change all filesystem implementations
+every time that you add a new RFR flag.
+Lucky for us, dedup already return -EINVAL if (!f_op->dedupe_file_range)
+(and not -EOPNOTSUPP).
+
+[...]
+> diff --git a/fs/overlayfs/file.c b/fs/overlayfs/file.c
+> index 986313da0c88..693bd0620a81 100644
+> --- a/fs/overlayfs/file.c
+> +++ b/fs/overlayfs/file.c
+> @@ -489,26 +489,28 @@ static ssize_t ovl_copy_file_range(struct file *file_in, loff_t pos_in,
+>                             OVL_COPY);
+>  }
+>
+> -static int ovl_clone_file_range(struct file *file_in, loff_t pos_in,
+> -                               struct file *file_out, loff_t pos_out, u64 len)
+> +static int ovl_remap_file_range(struct file *file_in, loff_t pos_in,
+> +                               struct file *file_out, loff_t pos_out,
+> +                               u64 len, unsigned int flags)
+>  {
+> -       return ovl_copyfile(file_in, pos_in, file_out, pos_out, len, 0,
+> -                           OVL_CLONE);
+> -}
+> +       enum ovl_copyop op;
+> +
+> +       if (flags & RFR_IDENTICAL_DATA)
+> +               op = OVL_DEDUPE;
+> +       else
+> +               op = OVL_CLONE;
+>
+> -static int ovl_dedupe_file_range(struct file *file_in, loff_t pos_in,
+> -                                struct file *file_out, loff_t pos_out, u64 len)
+> -{
+>         /*
+>          * Don't copy up because of a dedupe request, this wouldn't make sense
+>          * most of the time (data would be duplicated instead of deduplicated).
+>          */
+> -       if (!ovl_inode_upper(file_inode(file_in)) ||
+> -           !ovl_inode_upper(file_inode(file_out)))
+> +       if (op == OVL_DEDUPE &&
+> +           (!ovl_inode_upper(file_inode(file_in)) ||
+> +            !ovl_inode_upper(file_inode(file_out))))
+>                 return -EPERM;
+>
+>         return ovl_copyfile(file_in, pos_in, file_out, pos_out, len, 0,
+> -                           OVL_DEDUPE);
+> +                           op);
+>  }
+>
+
+Apart from the generic check invalid flags comment - ACK on ovl part.
+
+Thanks,
+Amir.
