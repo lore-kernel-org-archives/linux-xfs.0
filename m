@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:55788 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725811AbeJJHad (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Oct 2018 03:30:33 -0400
-Subject: [PATCH 03/25] xfs: zero posteof blocks when cloning above eof
+Received: from userp2130.oracle.com ([156.151.31.86]:51008 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725811AbeJJHai (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Oct 2018 03:30:38 -0400
+Subject: [PATCH 04/25] xfs: update ctime and remove suid before cloning files
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 09 Oct 2018 17:10:59 -0700
-Message-ID: <153913025949.32295.17548471289910846210.stgit@magnolia>
+Date: Tue, 09 Oct 2018 17:11:06 -0700
+Message-ID: <153913026644.32295.612141018276176517.stgit@magnolia>
 In-Reply-To: <153913023835.32295.13962696655740190941.stgit@magnolia>
 References: <153913023835.32295.13962696655740190941.stgit@magnolia>
 MIME-Version: 1.0
@@ -16,77 +16,60 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Zorro Lang <zlang@redhat.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
+Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-When we're reflinking between two files and the destination file range
-is well beyond the destination file's EOF marker, zero any posteof
-speculative preallocations in the destination file so that we don't
-expose stale disk contents.  The previous strategy of trying to clear
-the preallocations does not work if the destination file has the
-PREALLOC flag set.
+Before cloning into a file, update the ctime and remove sensitive
+attributes like suid, just like we'd do for a regular file write.
 
-Uncovered by shared/010.
-
-Reported-by: Zorro Lang <zlang@redhat.com>
-Bugzilla-id: https://bugzilla.kernel.org/show_bug.cgi?id=201259
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_reflink.c |   33 +++++++++++++++++++++++++--------
- 1 file changed, 25 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_reflink.c |   25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
 
 
 diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index ebd65d3e31f3..cbb359e68a72 100644
+index cbb359e68a72..d4feaeba8542 100644
 --- a/fs/xfs/xfs_reflink.c
 +++ b/fs/xfs/xfs_reflink.c
-@@ -1240,6 +1240,26 @@ xfs_reflink_remap_unlock(
- 		inode_unlock_shared(inode_in);
- }
- 
-+/*
-+ * If we're reflinking to a point past the destination file's EOF, we must
-+ * zero any speculative post-EOF preallocations that sit between the old EOF
-+ * and the destination file offset.
-+ */
-+static int
-+xfs_reflink_zero_posteof(
-+	struct xfs_inode	*ip,
-+	loff_t			pos)
-+{
-+	loff_t			isize = i_size_read(VFS_I(ip));
-+
-+	if (pos <= isize)
-+		return 0;
-+
-+	trace_xfs_zero_eof(ip, isize, pos - isize);
-+	return iomap_zero_range(VFS_I(ip), isize, pos - isize, NULL,
-+			&xfs_iomap_ops);
-+}
-+
- /*
+@@ -1264,6 +1264,7 @@ xfs_reflink_zero_posteof(
   * Prepare two files for range cloning.  Upon a successful return both inodes
   * will have the iolock and mmaplock held, the page cache of the out file
-@@ -1293,15 +1313,12 @@ xfs_reflink_remap_prep(
- 		goto out_unlock;
- 
- 	/*
--	 * Clear out post-eof preallocations because we don't have page cache
--	 * backing the delayed allocations and they'll never get freed on
--	 * their own.
-+	 * Zero existing post-eof speculative preallocations in the destination
-+	 * file.
- 	 */
--	if (xfs_can_free_eofblocks(dest, true)) {
--		ret = xfs_free_eofblocks(dest);
--		if (ret)
--			goto out_unlock;
--	}
-+	ret = xfs_reflink_zero_posteof(dest, pos_out);
-+	if (ret)
-+		goto out_unlock;
- 
- 	/* Set flags and remap blocks. */
- 	ret = xfs_reflink_set_inode_flag(src, dest);
+  * will be truncated, and any leases on the out file will have been broken.
++ * This function borrows heavily from xfs_file_aio_write_checks.
+  * Returns negative for error, 0 for nothing to do, and 1 for success.
+  */
+ STATIC int
+@@ -1328,6 +1329,30 @@ xfs_reflink_remap_prep(
+ 	/* Zap any page cache for the destination file's range. */
+ 	truncate_inode_pages_range(&inode_out->i_data, pos_out,
+ 				   PAGE_ALIGN(pos_out + *len) - 1);
++
++	/* If we're altering the file contents... */
++	if (!is_dedupe) {
++		/*
++		 * ...update the timestamps (which will grab the ilock again
++		 * from xfs_fs_dirty_inode, so we have to call it before we
++		 * take the ilock).
++		 */
++		if (!(file_out->f_mode & FMODE_NOCMTIME)) {
++			ret = file_update_time(file_out);
++			if (ret)
++				goto out_unlock;
++		}
++
++		/*
++		 * ...clear the security bits if the process is not being run
++		 * by root.  This keeps people from modifying setuid and setgid
++		 * binaries.
++		 */
++		ret = file_remove_privs(file_out);
++		if (ret)
++			goto out_unlock;
++	}
++
+ 	return 1;
+ out_unlock:
+ 	xfs_reflink_remap_unlock(file_in, file_out);
