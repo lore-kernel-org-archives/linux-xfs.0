@@ -1,187 +1,119 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:33676 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726492AbeJJCE2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Oct 2018 22:04:28 -0400
-Date: Tue, 9 Oct 2018 11:46:01 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 3/3] xfs: fix buffer state management in
- xrep_findroot_block
-Message-ID: <20181009184601.GJ28243@magnolia>
-References: <153905876877.10127.12478254551500076698.stgit@magnolia>
- <153905878783.10127.5891089492746914373.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <153905878783.10127.5891089492746914373.stgit@magnolia>
+Received: from sandeen.net ([63.231.237.45]:56200 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727722AbeJKDZV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 Oct 2018 23:25:21 -0400
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH 05/18] xfsprogs: include headers for extern variables
+Date: Wed, 10 Oct 2018 15:01:09 -0500
+Message-Id: <1539201682-22198-6-git-send-email-sandeen@redhat.com>
+In-Reply-To: <1539201682-22198-1-git-send-email-sandeen@redhat.com>
+References: <1539201682-22198-1-git-send-email-sandeen@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Include headers which export functions for their matching C files so that
+they don't appear to be static to the sparse checker.
 
-We don't handle buffer state properly in online repair's findroot
-routine.  If a buffer already has b_ops set, we don't ever want to touch
-that, and we don't want to call the read verifiers on a buffer that
-could be dirty (CRCs are only recomputed during log checkpoints).
+Fixes sparse warnings about this.
 
-Therefore, be more careful about what we do with a buffer -- if someone
-else already attached ops that are not the ones for this btree type,
-just ignore the buffer.  We only attach our btree type's buf ops if it
-matches the magic/uuid and structure checks.
-
-We also modify xfs_buf_read_map to allow callers to set buffer ops on a
-DONE buffer with NULL ops so that repair doesn't leave behind buffers
-which won't have buffers attached to them.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/xfs/scrub/repair.c  |   71 +++++++++++++++++++++++++++++++++++++++---------
- fs/xfs/xfs_trans.h     |    1 +
- fs/xfs/xfs_trans_buf.c |   13 +++++++++
- 3 files changed, 71 insertions(+), 14 deletions(-)
+ db/crc.c        | 1 +
+ db/fuzz.c       | 1 +
+ db/hash.c       | 1 +
+ db/logformat.c  | 1 +
+ db/symlink.c    | 2 +-
+ db/text.c       | 1 +
+ libfrog/crc32.c | 1 +
+ 7 files changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index 63786341ac2a..4fc0a5ea7673 100644
---- a/fs/xfs/scrub/repair.c
-+++ b/fs/xfs/scrub/repair.c
-@@ -29,6 +29,8 @@
- #include "xfs_ag_resv.h"
- #include "xfs_trans_space.h"
- #include "xfs_quota.h"
-+#include "xfs_attr.h"
-+#include "xfs_reflink.h"
- #include "scrub/xfs_scrub.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
-@@ -699,7 +701,7 @@ xrep_findroot_block(
- 	struct xfs_btree_block		*btblock;
- 	xfs_daddr_t			daddr;
- 	int				block_level;
--	int				error;
-+	int				error = 0;
+diff --git a/db/crc.c b/db/crc.c
+index b6612a5..95161c6 100644
+--- a/db/crc.c
++++ b/db/crc.c
+@@ -17,6 +17,7 @@
+ #include "output.h"
+ #include "bit.h"
+ #include "print.h"
++#include "crc.h"
  
- 	daddr = XFS_AGB_TO_DADDR(mp, ri->sc->sa.agno, agbno);
+ static int crc_f(int argc, char **argv);
+ static void crc_help(void);
+diff --git a/db/fuzz.c b/db/fuzz.c
+index 5d5d54f..65157bd 100644
+--- a/db/fuzz.c
++++ b/db/fuzz.c
+@@ -21,6 +21,7 @@
+ #include "print.h"
+ #include "write.h"
+ #include "malloc.h"
++#include "fuzz.h"
  
-@@ -718,28 +720,69 @@ xrep_findroot_block(
- 			return error;
- 	}
+ static int	fuzz_f(int argc, char **argv);
+ static void     fuzz_help(void);
+diff --git a/db/hash.c b/db/hash.c
+index bda3316..68c53e7 100644
+--- a/db/hash.c
++++ b/db/hash.c
+@@ -10,6 +10,7 @@
+ #include "type.h"
+ #include "io.h"
+ #include "output.h"
++#include "hash.h"
  
-+	/*
-+	 * Read the buffer into memory so that we can see if it's a match for
-+	 * our btree type.  We have no clue if it is beforehand, and we want to
-+	 * avoid xfs_trans_read_buf's behavior of dumping the DONE state (which
-+	 * will cause needless disk reads in subsequent calls to this function)
-+	 * and logging metadata verifier failures.
-+	 *
-+	 * Therefore, pass in NULL buffer ops.  If the buffer was already in
-+	 * memory from some other caller it will already have b_ops assigned.
-+	 * If it was in memory from a previous unsuccessful findroot_block
-+	 * call, the buffer won't have b_ops but it should be clean and ready
-+	 * for us to try to verify if the read call succeeds.  The same applies
-+	 * if the buffer wasn't in memory at all.
-+	 *
-+	 * Note: If we never match a btree type with this buffer, it will be
-+	 * left in memory with NULL b_ops.  This shouldn't be a problem unless
-+	 * the buffer gets written.
-+	 */
- 	error = xfs_trans_read_buf(mp, ri->sc->tp, mp->m_ddev_targp, daddr,
- 			mp->m_bsize, 0, &bp, NULL);
- 	if (error)
- 		return error;
+ static int hash_f(int argc, char **argv);
+ static void hash_help(void);
+diff --git a/db/logformat.c b/db/logformat.c
+index 42ce245..3374c29 100644
+--- a/db/logformat.c
++++ b/db/logformat.c
+@@ -9,6 +9,7 @@
+ #include "init.h"
+ #include "output.h"
+ #include "libxlog.h"
++#include "logformat.h"
  
--	/*
--	 * Does this look like a block matching our fs and higher than any
--	 * other block we've found so far?  If so, reattach buffer verifiers
--	 * so the AIL won't complain if the buffer is also dirty.
--	 */
-+	/* Ensure the block magic matches the btree type we're looking for. */
- 	btblock = XFS_BUF_TO_BLOCK(bp);
- 	if (be32_to_cpu(btblock->bb_magic) != fab->magic)
- 		goto out;
--	if (xfs_sb_version_hascrc(&mp->m_sb) &&
--	    !uuid_equal(&btblock->bb_u.s.bb_uuid, &mp->m_sb.sb_meta_uuid))
--		goto out;
--	bp->b_ops = fab->buf_ops;
+ #define MAX_LSUNIT	256 * 1024	/* max log buf. size */
  
--	/* Make sure we pass the verifiers. */
--	bp->b_ops->verify_read(bp);
--	if (bp->b_error)
--		goto out;
-+	/*
-+	 * If the buffer already has ops applied and they're not the ones for
-+	 * this btree type, we know this block doesn't match the btree and we
-+	 * can bail out.
-+	 *
-+	 * If the buffer ops match ours, someone else has already validated
-+	 * the block for us, so we can move on to checking if this is a root
-+	 * block candidate.
-+	 *
-+	 * If the buffer does not have ops, nobody has successfully validated
-+	 * the contents and the buffer cannot be dirty.  If the magic, uuid,
-+	 * and structure match this btree type then we'll move on to checking
-+	 * if it's a root block candidate.  If there is no match, bail out.
-+	 */
-+	if (bp->b_ops) {
-+		if (bp->b_ops != fab->buf_ops)
-+			goto out;
-+	} else {
-+		ASSERT(!xfs_trans_buf_is_dirty(bp));
-+		if (!uuid_equal(&btblock->bb_u.s.bb_uuid,
-+				&mp->m_sb.sb_meta_uuid))
-+			goto out;
-+		fab->buf_ops->verify_read(bp);
-+		if (bp->b_error) {
-+			bp->b_error = 0;
-+			goto out;
-+		}
-+
-+		/*
-+		 * Some read verifiers will (re)set b_ops, so we must be
-+		 * careful not to blow away any such assignment.
-+		 */
-+		if (!bp->b_ops)
-+			bp->b_ops = fab->buf_ops;
-+	}
+diff --git a/db/symlink.c b/db/symlink.c
+index ebf6637..752cae4 100644
+--- a/db/symlink.c
++++ b/db/symlink.c
+@@ -11,7 +11,7 @@
+ #include "field.h"
+ #include "bit.h"
+ #include "init.h"
+-
++#include "symlink.h"
  
- 	/*
- 	 * This block passes the magic/uuid and verifier tests for this btree
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index c3d278e96ad1..a0c5dbda18aa 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -220,6 +220,7 @@ void		xfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *, uint);
- void		xfs_trans_log_buf(struct xfs_trans *, struct xfs_buf *, uint,
- 				  uint);
- void		xfs_trans_dirty_buf(struct xfs_trans *, struct xfs_buf *);
-+bool		xfs_trans_buf_is_dirty(struct xfs_buf *bp);
- void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
- 
- void		xfs_extent_free_init_defer_op(void);
-diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index fc40160c1773..629f1479c9d2 100644
---- a/fs/xfs/xfs_trans_buf.c
-+++ b/fs/xfs/xfs_trans_buf.c
-@@ -350,6 +350,19 @@ xfs_trans_read_buf_map(
- 
- }
- 
-+/* Has this buffer been dirtied by anyone? */
-+bool
-+xfs_trans_buf_is_dirty(
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_buf_log_item	*bip = bp->b_log_item;
-+
-+	if (!bip)
-+		return false;
-+	ASSERT(bip->bli_item.li_type == XFS_LI_BUF);
-+	return test_bit(XFS_LI_DIRTY, &bip->bli_item.li_flags);
-+}
-+
  /*
-  * Release a buffer previously joined to the transaction. If the buffer is
-  * modified within this transaction, decrement the recursion count but do not
+  * XXX: no idea how to handle multiple contiguous block symlinks here.
+diff --git a/db/text.c b/db/text.c
+index 3a279d1..adf33a7 100644
+--- a/db/text.c
++++ b/db/text.c
+@@ -17,6 +17,7 @@
+ #include "io.h"
+ #include "output.h"
+ #include "init.h"
++#include "text.h"
+ 
+ static void     print_rawtext(void *data, int len);
+ 
+diff --git a/libfrog/crc32.c b/libfrog/crc32.c
+index 1d52f68..e3f3fd1 100644
+--- a/libfrog/crc32.c
++++ b/libfrog/crc32.c
+@@ -33,6 +33,7 @@
+ #include "xfs.h"
+ #include "xfs_arch.h"
+ #include "crc32defs.h"
++#include "crc32c.h"
+ 
+ /* types specifc to this file */
+ typedef __u8	u8;
+-- 
+1.8.3.1
