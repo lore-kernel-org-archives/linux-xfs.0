@@ -1,95 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:48886 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726649AbeJJWYw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Oct 2018 18:24:52 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id w9AEx0EG025086
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Oct 2018 15:02:17 GMT
-Received: from userv0022.oracle.com (userv0022.oracle.com [156.151.31.74])
-        by userp2120.oracle.com with ESMTP id 2mxnpr4j27-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Oct 2018 15:02:17 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userv0022.oracle.com (8.14.4/8.14.4) with ESMTP id w9AF2Bbq014836
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Oct 2018 15:02:12 GMT
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id w9AF2BRl032161
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Oct 2018 15:02:11 GMT
-Date: Wed, 10 Oct 2018 08:02:10 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2] xfs: use offsetof() in place of offset macros for
- __xfsstats
-Message-ID: <20181010150210.GQ28243@magnolia>
-References: <20181010123708.7632-1-cmaiolino@redhat.com>
- <20181010123708.7632-3-cmaiolino@redhat.com>
- <20181010144932.GO28243@magnolia>
- <20181010145853.tzel5ymyktsbiln7@odin.usersys.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181010145853.tzel5ymyktsbiln7@odin.usersys.redhat.com>
+Received: from sandeen.net ([63.231.237.45]:56192 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727503AbeJKDZU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 Oct 2018 23:25:20 -0400
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH 01/18] xfsprogs: enable sparse checking with "make C=[12]"
+Date: Wed, 10 Oct 2018 15:01:05 -0500
+Message-Id: <1539201682-22198-2-git-send-email-sandeen@redhat.com>
+In-Reply-To: <1539201682-22198-1-git-send-email-sandeen@redhat.com>
+References: <1539201682-22198-1-git-send-email-sandeen@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-On Wed, Oct 10, 2018 at 04:58:53PM +0200, Carlos Maiolino wrote:
-> > >  	uint32_t		xs_rmap_2[__XBTS_MAX];
-> > > -#define XFSSTAT_END_REFCOUNT		(XFSSTAT_END_RMAP_V2 + __XBTS_MAX)
-> > >  	uint32_t		xs_refcbt_2[__XBTS_MAX];
-> > > -#define XFSSTAT_END_XQMSTAT		(XFSSTAT_END_REFCOUNT + 6)
-> > >  	uint32_t		xs_qm_dqreclaims;
-> > >  	uint32_t		xs_qm_dqreclaim_misses;
-> > >  	uint32_t		xs_qm_dquot_dups;
-> > >  	uint32_t		xs_qm_dqcachemisses;
-> > >  	uint32_t		xs_qm_dqcachehits;
-> > >  	uint32_t		xs_qm_dqwants;
-> > > -#define XFSSTAT_END_QM			(XFSSTAT_END_XQMSTAT+2)
-> > >  	uint32_t		xs_qm_dquot;
-> > >  	uint32_t		xs_qm_dquot_unused;
-> > >  /* Extra precision counters */
-> > > @@ -163,10 +139,12 @@ struct __xfsstats {
-> > >  	uint64_t		xs_read_bytes;
-> > >  };
-> > >  
-> > > +#define	xfsstats_offset(f)	(offsetof(struct __xfsstats, f)/sizeof(uint32_t))
-> > 
-> > Goes past 80 columns, but otherwise looks ok,
-> > 
-> > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Ops, sorry, I traded readability+tabs X 80 columns, I think changing the tabs
-> for spaces is enough to fix it.
-> 
-> Do you want me to send it again?
+Enable "make C=1" or "make C=2" to do sparse checking.
+Blatantly ripped off from djwong's patch in e2fsprogs to do the same.
 
-<shrug> If Dave elects to fix it on the way in that's fine with me.
+This is a bit simpler than redefining CC for the whole build, which
+requires extra commandline definitions and apparently is enough of a
+barrier that nobody's doing sparse checking.
 
-Though I guess so long as I'm being pedantic about things that 'f' ought
-to be parentheses-wrapped too, e.g.
+Note, this requires unreleased sparse after v0.5, which enables the
+CHAR_BIT definition; otherwise it chokes.
 
-#define xfsstats_offset(f) (offsetof(struct __xfsstats, (f)) / sizeof(uint32_t))
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+ Makefile           | 14 ++++++++++++++
+ include/buildrules |  2 ++
+ 2 files changed, 16 insertions(+)
 
---D
-
-> > 
-> > --D
-> > 
-> > 
-> > > +
-> > >  struct xfsstats {
-> > >  	union {
-> > >  		struct __xfsstats	s;
-> > > -		uint32_t		a[XFSSTAT_END_XQMSTAT];
-> > > +		uint32_t		a[xfsstats_offset(xs_qm_dquot)];
-> > >  	};
-> > >  };
-> > >  
-> > > -- 
-> > > 2.17.1
-> > > 
-> 
-> -- 
-> Carlos
+diff --git a/Makefile b/Makefile
+index d031a60..7f3e774 100644
+--- a/Makefile
++++ b/Makefile
+@@ -16,6 +16,20 @@ else
+   Q = @
+ endif
+ 
++CHECK=sparse
++CHECK_OPTS=-Wsparse-all -Wno-transparent-union -Wno-return-void -Wno-undef \
++	-Wno-non-pointer-null -D__linux__
++ifeq ("$(C)", "2")
++  CHECK_CMD=$(CHECK) $(CHECK_OPTS) -Wbitwise -D__CHECK_ENDIAN__
++else
++  ifeq ("$(C)", "1")
++    CHECK_CMD=$(CHECK) $(CHECK_OPTS)
++   else
++    CHECK_CMD=@true
++  endif
++endif
++export CHECK_CMD
++
+ MAKEOPTS = --no-print-directory Q=$(Q)
+ 
+ TOPDIR = .
+diff --git a/include/buildrules b/include/buildrules
+index c57fdfc..23fc866 100644
+--- a/include/buildrules
++++ b/include/buildrules
+@@ -54,10 +54,12 @@ $(LTLIBRARY) : $(SUBDIRS) $(LTOBJECTS)
+ %.lo: %.c
+ 	@echo "    [CC]     $@"
+ 	$(Q)$(LTCOMPILE) -c $<
++	$(Q)$(CHECK_CMD) $(CFLAGS) $<
+ else
+ %.o: %.c
+ 	@echo "    [CC]     $@"
+ 	$(Q)$(CC) $(CFLAGS) -c $<
++	$(Q)$(CHECK_CMD) $(CFLAGS) $<
+ 
+ endif
+ 
+-- 
+1.8.3.1
