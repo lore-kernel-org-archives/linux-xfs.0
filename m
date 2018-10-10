@@ -1,176 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:38104 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726206AbeJJUkF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Oct 2018 16:40:05 -0400
-Received: by mail-wr1-f67.google.com with SMTP id a13-v6so5712503wrt.5
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Oct 2018 06:17:55 -0700 (PDT)
-Date: Wed, 10 Oct 2018 15:17:51 +0200
+Received: from mx1.redhat.com ([209.132.183.28]:46770 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726700AbeJJT7P (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 Oct 2018 15:59:15 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 7DADC305D643
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Oct 2018 12:37:16 +0000 (UTC)
+Received: from odin.usersys.redhat.com (unknown [10.40.205.46])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id D15D27555D
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Oct 2018 12:37:15 +0000 (UTC)
 From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 2/2] xfsprogs: remove unused functions
-Message-ID: <20181010131751.wpyaqw2vuphziuru@odin.usersys.redhat.com>
-References: <20181010071023.6765-1-david@fromorbit.com>
- <20181010071023.6765-3-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181010071023.6765-3-david@fromorbit.com>
+Subject: [PATCH 1/2] xfs: Fix xqmstats offsets in /proc/fs/xfs/xqmstat
+Date: Wed, 10 Oct 2018 14:37:07 +0200
+Message-Id: <20181010123708.7632-2-cmaiolino@redhat.com>
+In-Reply-To: <20181010123708.7632-1-cmaiolino@redhat.com>
+References: <20181010123708.7632-1-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Wed, Oct 10, 2018 at 06:10:23PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Clean up build warnings about defined by not used functions by
-				defined but not used
+The addition of FIBT, RMAP and REFCOUNT changed the offsets into
+__xfssats structure.
 
-> removing them.
+This caused xqmstat_proc_show() to display garbage data via
+/proc/fs/xfs/xqmstat, once it relies on the offsets marked via macros.
 
-otherwise looks good
+Fix it.
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Fixes: 00f4e4f9 xfs: add rmap btree stats infrastructure
+Fixes: aafc3c24 xfs: support the XFS_BTNUM_FINOBT free inode btree type
+Fixes: 46eeb521 xfs: introduce refcount btree definitions
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+ fs/xfs/xfs_stats.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  libxfs/rdwr.c  |  8 -------
->  libxfs/util.c  | 63 --------------------------------------------------
->  repair/btree.c | 23 ------------------
->  3 files changed, 94 deletions(-)
-> 
-> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-> index 753b9396fbe5..e580aba1d7ee 100644
-> --- a/libxfs/rdwr.c
-> +++ b/libxfs/rdwr.c
-> @@ -544,14 +544,6 @@ libxfs_bcompare(struct cache_node *node, cache_key_t key)
->  	return CACHE_MISS;
->  }
->  
-> -static void
-> -libxfs_bprint(xfs_buf_t *bp)
-> -{
-> -	fprintf(stderr, "Buffer %p blkno=%llu bytes=%u flags=0x%x count=%u\n",
-> -		bp, (unsigned long long)bp->b_bn, (unsigned)bp->b_bcount,
-> -		bp->b_flags, bp->b_node.cn_count);
-> -}
-> -
->  static void
->  __initbuf(xfs_buf_t *bp, struct xfs_buftarg *btp, xfs_daddr_t bno,
->  		unsigned int bytes)
-> diff --git a/libxfs/util.c b/libxfs/util.c
-> index 993218615d00..ffd265094b4c 100644
-> --- a/libxfs/util.c
-> +++ b/libxfs/util.c
-> @@ -380,69 +380,6 @@ libxfs_ialloc(
->  	return 0;
->  }
->  
-> -static void
-> -libxfs_iprint(
-> -	xfs_inode_t		*ip)
-> -{
-> -	struct xfs_icdinode	*dip;
-> -	xfs_extnum_t		i = 0;
-> -	struct xfs_ifork	*ifp;		/* inode fork pointer */
-> -	struct xfs_iext_cursor	icur;
-> -	xfs_bmbt_irec_t		rec;
-> -
-> -	printf("Inode %lx\n", (unsigned long)ip);
-> -	printf("    i_ino %llx\n", (unsigned long long)ip->i_ino);
-> -
-> -	if (ip->i_df.if_flags & XFS_IFEXTENTS)
-> -		printf("EXTENTS ");
-> -	printf("\n");
-> -	printf("    i_df.if_bytes %d\n", ip->i_df.if_bytes);
-> -	printf("    i_df.if_u1.if_root/if_data %lx\n",
-> -		(unsigned long)ip->i_df.if_u1.if_root);
-> -	if (ip->i_df.if_flags & XFS_IFEXTENTS) {
-> -		ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-> -		for_each_xfs_iext(ifp, &icur, &rec) {
-> -			printf("\t%d: startoff %llu, startblock 0x%llx,"
-> -				" blockcount %llu, state %d\n",
-> -				i, (unsigned long long)rec.br_startoff,
-> -				(unsigned long long)rec.br_startblock,
-> -				(unsigned long long)rec.br_blockcount,
-> -				(int)rec.br_state);
-> -			i++;
-> -		}
-> -	}
-> -	printf("    i_df.if_broot %lx\n", (unsigned long)ip->i_df.if_broot);
-> -	printf("    i_df.if_broot_bytes %x\n", ip->i_df.if_broot_bytes);
-> -
-> -	dip = &ip->i_d;
-> -	printf("\nOn disk portion\n");
-> -	printf("    di_mode %o\n", VFS_I(ip)->i_mode);
-> -	printf("    di_version %x\n", (uint)dip->di_version);
-> -	switch (ip->i_d.di_format) {
-> -	case XFS_DINODE_FMT_LOCAL:
-> -		printf("    Inline inode\n");
-> -		break;
-> -	case XFS_DINODE_FMT_EXTENTS:
-> -		printf("    Extents inode\n");
-> -		break;
-> -	case XFS_DINODE_FMT_BTREE:
-> -		printf("    B-tree inode\n");
-> -		break;
-> -	default:
-> -		printf("    Other inode\n");
-> -		break;
-> -	}
-> -	printf("   di_nlink %x\n", VFS_I(ip)->i_nlink);
-> -	printf("   di_uid %d\n", dip->di_uid);
-> -	printf("   di_gid %d\n", dip->di_gid);
-> -	printf("   di_nextents %d\n", dip->di_nextents);
-> -	printf("   di_size %llu\n", (unsigned long long)dip->di_size);
-> -	printf("   di_gen %x\n", VFS_I(ip)->i_generation);
-> -	printf("   di_extsize %d\n", dip->di_extsize);
-> -	printf("   di_flags %x\n", dip->di_flags);
-> -	printf("   di_nblocks %llu\n", (unsigned long long)dip->di_nblocks);
-> -}
-> -
->  /*
->   * Writes a modified inode's changes out to the inode's on disk home.
->   * Originally based on xfs_iflush_int() from xfs_inode.c in the kernel.
-> diff --git a/repair/btree.c b/repair/btree.c
-> index a402d0a67349..292fa518d019 100644
-> --- a/repair/btree.c
-> +++ b/repair/btree.c
-> @@ -444,29 +444,6 @@ btree_lookup_prev(
->  	return value;
->  }
->  
-> -static void *
-> -btree_uncached_lookup(
-> -	struct btree_root	*root,
-> -	unsigned long		key)
-> -{
-> -	/* cursor-less (ie. uncached) lookup */
-> -	int			height = root->height - 1;
-> -	struct btree_node	*node = root->root_node;
-> -	int			i;
-> -	int			key_found = 0;
-> -
-> -	while (height >= 0) {
-> -		for (i = 0; i < node->num_keys; i++)
-> -			if (node->keys[i] >= key) {
-> -				key_found = node->keys[i] == key;
-> -				break;
-> -			}
-> -		node = node->ptrs[i];
-> -		height--;
-> -	}
-> -	return key_found ? node : NULL;
-> -}
-> -
->  /* Update functions */
->  
->  static inline void
-> -- 
-> 2.17.0
-> 
-
+diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
+index 4e4423153071..740ac9674848 100644
+--- a/fs/xfs/xfs_stats.c
++++ b/fs/xfs/xfs_stats.c
+@@ -119,7 +119,7 @@ static int xqmstat_proc_show(struct seq_file *m, void *v)
+ 	int j;
+ 
+ 	seq_printf(m, "qm");
+-	for (j = XFSSTAT_END_IBT_V2; j < XFSSTAT_END_XQMSTAT; j++)
++	for (j = XFSSTAT_END_REFCOUNT; j < XFSSTAT_END_XQMSTAT; j++)
+ 		seq_printf(m, " %u", counter_val(xfsstats.xs_stats, j));
+ 	seq_putc(m, '\n');
+ 	return 0;
 -- 
-Carlos
+2.17.1
