@@ -1,136 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:56108 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726226AbeJJFTs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Oct 2018 01:19:48 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1gA03Y-0001eF-Dc
-        for linux-xfs@vger.kernel.org; Wed, 10 Oct 2018 09:00:44 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.91)
-        (envelope-from <david@fromorbit.com>)
-        id 1gA03Y-0001S3-CG
-        for linux-xfs@vger.kernel.org; Wed, 10 Oct 2018 09:00:44 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: fix use-after-free race in xfs_buf_rele
-Date: Wed, 10 Oct 2018 09:00:44 +1100
-Message-Id: <20181009220044.5539-1-david@fromorbit.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:58576 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725800AbeJJHc7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Oct 2018 03:32:59 -0400
+Subject: [PATCH 13/25] vfs: pass remap flags to generic_remap_checks
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 09 Oct 2018 17:13:21 -0700
+Message-ID: <153913040183.32295.16281682485157170773.stgit@magnolia>
+In-Reply-To: <153913023835.32295.13962696655740190941.stgit@magnolia>
+References: <153913023835.32295.13962696655740190941.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-When looking at a 4.18 based KASAN use after free report, I noticed
-that racing xfs_buf_rele() may race on dropping the last reference
-to the buffer and taking the buffer lock. This was the symptom
-displayed by the KASAN report, but the actual issue that was
-reported had already been fixed in 4.19-rc1 by commit e339dd8d8b04
-("xfs: use sync buffer I/O for sync delwri queue submission").
+Pass the same remap flags to generic_remap_checks for consistency.
 
-Despite this, I think there is still an issue with xfs_buf_rele()
-in this code:
-
-
-        release = atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock);
-        spin_lock(&bp->b_lock);
-        if (!release) {
-.....
-
-If two threads race on the b_lock after both dropping a reference
-and one getting dropping the last reference so release = true, we
-end up with:
-
-
-CPU 0				CPU 1
-atomic_dec_and_lock()
-				atomic_dec_and_lock()
-				spin_lock(&bp->b_lock)
-spin_lock(&bp->b_lock)
-<spins>
-				<release = true bp->b_lru_ref = 0>
-				<remove from lists>
-				freebuf = true
-				spin_unlock(&bp->b_lock)
-				xfs_buf_free(bp)
-<gets lock, reading and writing freed memory>
-<accesses freed memory>
-spin_unlock(&bp->b_lock) <reads/writes freed memory>
-
-IOWs, we can't safely take bp->b_lock after dropping the hold
-reference because the buffer may go away at any time after we
-drop that reference. However, this can be fixed simply by taking the
-bp->b_lock before we drop the reference.
-
-It is safe to nest the pag_buf_lock inside bp->b_lock as the
-pag_buf_lock is only used to serialise against lookup in
-xfs_buf_find() and no other locks are held over or under the
-pag_buf_lock there. Make this clear by documenting the buffer lock
-orders at the top of the file.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_buf.c | 38 +++++++++++++++++++++++++++++++++++++-
- 1 file changed, 37 insertions(+), 1 deletion(-)
+ fs/read_write.c    |    2 +-
+ include/linux/fs.h |    2 +-
+ mm/filemap.c       |    4 ++--
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 57d28dde5a78..d76116760ef6 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -37,6 +37,32 @@ static kmem_zone_t *xfs_buf_zone;
- #define xb_to_gfp(flags) \
- 	((((flags) & XBF_READ_AHEAD) ? __GFP_NORETRY : GFP_NOFS) | __GFP_NOWARN)
+
+diff --git a/fs/read_write.c b/fs/read_write.c
+index 47174785a94f..917934770b08 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1755,7 +1755,7 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
  
-+/*
-+ * Locking orders
-+ *
-+ * xfs_buf_ioacct_inc:
-+ * xfs_buf_ioacct_dec:
-+ *	b_sema (caller holds)
-+ *	  b_lock
-+ *
-+ * xfs_buf_stale:
-+ *	b_sema (caller holds)
-+ *	  b_lock
-+ *	    lru_lock
-+ *
-+ * xfs_buf_rele:
-+ *	b_lock
-+ *	  pag_buf_lock
-+ *	    lru_lock
-+ *
-+ * xfs_buftarg_wait_rele
-+ *	lru_lock
-+ *	  b_lock (trylock due to inversion)
-+ *
-+ * xfs_buftarg_isolate
-+ *	lru_lock
-+ *	  b_lock (trylock due to inversion)
-+ */
+ 	/* Check that we don't violate system file offset limits. */
+ 	ret = generic_remap_checks(file_in, pos_in, file_out, pos_out, len,
+-			is_dedupe);
++			remap_flags);
+ 	if (ret)
+ 		return ret;
  
- static inline int
- xfs_buf_is_vmapped(
-@@ -1036,8 +1062,18 @@ xfs_buf_rele(
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 0d9bdef0b4ea..56167b10cbad 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2976,7 +2976,7 @@ extern int generic_file_readonly_mmap(struct file *, struct vm_area_struct *);
+ extern ssize_t generic_write_checks(struct kiocb *, struct iov_iter *);
+ extern int generic_remap_checks(struct file *file_in, loff_t pos_in,
+ 				struct file *file_out, loff_t pos_out,
+-				uint64_t *count, bool is_dedupe);
++				uint64_t *count, unsigned int remap_flags);
+ extern ssize_t generic_file_read_iter(struct kiocb *, struct iov_iter *);
+ extern ssize_t __generic_file_write_iter(struct kiocb *, struct iov_iter *);
+ extern ssize_t generic_file_write_iter(struct kiocb *, struct iov_iter *);
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 59056bd9c58a..e099c8880863 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -3004,7 +3004,7 @@ generic_remap_check_limits(struct file *file, loff_t pos, uint64_t *count)
+  */
+ int generic_remap_checks(struct file *file_in, loff_t pos_in,
+ 			 struct file *file_out, loff_t pos_out,
+-			 uint64_t *req_count, bool is_dedupe)
++			 uint64_t *req_count, unsigned int remap_flags)
+ {
+ 	struct inode *inode_in = file_in->f_mapping->host;
+ 	struct inode *inode_out = file_out->f_mapping->host;
+@@ -3027,7 +3027,7 @@ int generic_remap_checks(struct file *file_in, loff_t pos_in,
+ 	size_out = i_size_read(inode_out);
  
- 	ASSERT(atomic_read(&bp->b_hold) > 0);
- 
--	release = atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock);
-+	/*
-+	 * We grab the b_lock here first to serialise racing xfs_buf_rele()
-+	 * calls. The pag_buf_lock being taken on the last reference only
-+	 * serialises against racing lookups in xfs_buf_find(). IOWs, the second
-+	 * to last reference we drop here is not serialised against the last
-+	 * reference until we take bp->b_lock. Hence if we don't grab b_lock
-+	 * first, the last "release" reference can win the race to the lock and
-+	 * free the buffer before the second-to-last reference is processed,
-+	 * leading to a use-after-free scenario.
-+	 */
- 	spin_lock(&bp->b_lock);
-+	release = atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock);
- 	if (!release) {
- 		/*
- 		 * Drop the in-flight state if the buffer is already on the LRU
--- 
-2.17.0
+ 	/* Dedupe requires both ranges to be within EOF. */
+-	if (is_dedupe &&
++	if ((remap_flags & RFR_IDENTICAL_DATA) &&
+ 	    (pos_in >= size_in || pos_in + count > size_in ||
+ 	     pos_out >= size_out || pos_out + count > size_out))
+ 		return -EINVAL;
