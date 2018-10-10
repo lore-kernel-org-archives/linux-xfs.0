@@ -1,56 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46770 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726700AbeJJT7P (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 Oct 2018 15:59:15 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 7DADC305D643
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Oct 2018 12:37:16 +0000 (UTC)
-Received: from odin.usersys.redhat.com (unknown [10.40.205.46])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id D15D27555D
-        for <linux-xfs@vger.kernel.org>; Wed, 10 Oct 2018 12:37:15 +0000 (UTC)
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 1/2] xfs: Fix xqmstats offsets in /proc/fs/xfs/xqmstat
-Date: Wed, 10 Oct 2018 14:37:07 +0200
-Message-Id: <20181010123708.7632-2-cmaiolino@redhat.com>
-In-Reply-To: <20181010123708.7632-1-cmaiolino@redhat.com>
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:35675 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725769AbeJKExA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Oct 2018 00:53:00 -0400
+Date: Thu, 11 Oct 2018 08:28:56 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/2] xfs: use offsetof() in place of offset macros for
+ __xfsstats
+Message-ID: <20181010212856.GL6311@dastard>
 References: <20181010123708.7632-1-cmaiolino@redhat.com>
+ <20181010123708.7632-3-cmaiolino@redhat.com>
+ <20181010144932.GO28243@magnolia>
+ <20181010145853.tzel5ymyktsbiln7@odin.usersys.redhat.com>
+ <20181010150210.GQ28243@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181010150210.GQ28243@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-The addition of FIBT, RMAP and REFCOUNT changed the offsets into
-__xfssats structure.
+On Wed, Oct 10, 2018 at 08:02:10AM -0700, Darrick J. Wong wrote:
+> On Wed, Oct 10, 2018 at 04:58:53PM +0200, Carlos Maiolino wrote:
+> > > >  	uint32_t		xs_rmap_2[__XBTS_MAX];
+> > > > -#define XFSSTAT_END_REFCOUNT		(XFSSTAT_END_RMAP_V2 + __XBTS_MAX)
+> > > >  	uint32_t		xs_refcbt_2[__XBTS_MAX];
+> > > > -#define XFSSTAT_END_XQMSTAT		(XFSSTAT_END_REFCOUNT + 6)
+> > > >  	uint32_t		xs_qm_dqreclaims;
+> > > >  	uint32_t		xs_qm_dqreclaim_misses;
+> > > >  	uint32_t		xs_qm_dquot_dups;
+> > > >  	uint32_t		xs_qm_dqcachemisses;
+> > > >  	uint32_t		xs_qm_dqcachehits;
+> > > >  	uint32_t		xs_qm_dqwants;
+> > > > -#define XFSSTAT_END_QM			(XFSSTAT_END_XQMSTAT+2)
+> > > >  	uint32_t		xs_qm_dquot;
+> > > >  	uint32_t		xs_qm_dquot_unused;
+> > > >  /* Extra precision counters */
+> > > > @@ -163,10 +139,12 @@ struct __xfsstats {
+> > > >  	uint64_t		xs_read_bytes;
+> > > >  };
+> > > >  
+> > > > +#define	xfsstats_offset(f)	(offsetof(struct __xfsstats, f)/sizeof(uint32_t))
+> > > 
+> > > Goes past 80 columns, but otherwise looks ok,
+> > > 
+> > > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Ops, sorry, I traded readability+tabs X 80 columns, I think changing the tabs
+> > for spaces is enough to fix it.
+> > 
+> > Do you want me to send it again?
+> 
+> <shrug> If Dave elects to fix it on the way in that's fine with me.
+> 
+> Though I guess so long as I'm being pedantic about things that 'f' ought
+> to be parentheses-wrapped too, e.g.
+> 
+> #define xfsstats_offset(f) (offsetof(struct __xfsstats, (f)) / sizeof(uint32_t))
 
-This caused xqmstat_proc_show() to display garbage data via
-/proc/fs/xfs/xqmstat, once it relies on the offsets marked via macros.
+I'll clean it up on merge.
 
-Fix it.
+Thanks,
 
-Fixes: 00f4e4f9 xfs: add rmap btree stats infrastructure
-Fixes: aafc3c24 xfs: support the XFS_BTNUM_FINOBT free inode btree type
-Fixes: 46eeb521 xfs: introduce refcount btree definitions
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
- fs/xfs/xfs_stats.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Dave.
 
-diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
-index 4e4423153071..740ac9674848 100644
---- a/fs/xfs/xfs_stats.c
-+++ b/fs/xfs/xfs_stats.c
-@@ -119,7 +119,7 @@ static int xqmstat_proc_show(struct seq_file *m, void *v)
- 	int j;
- 
- 	seq_printf(m, "qm");
--	for (j = XFSSTAT_END_IBT_V2; j < XFSSTAT_END_XQMSTAT; j++)
-+	for (j = XFSSTAT_END_REFCOUNT; j < XFSSTAT_END_XQMSTAT; j++)
- 		seq_printf(m, " %u", counter_val(xfsstats.xs_stats, j));
- 	seq_putc(m, '\n');
- 	return 0;
 -- 
-2.17.1
+Dave Chinner
+david@fromorbit.com
