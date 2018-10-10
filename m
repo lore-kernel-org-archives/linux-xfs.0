@@ -1,97 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb1-f194.google.com ([209.85.219.194]:44035 "EHLO
-        mail-yb1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726126AbeJKQAY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Oct 2018 12:00:24 -0400
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:18333 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726011AbeJKGbg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Oct 2018 02:31:36 -0400
+Date: Thu, 11 Oct 2018 10:06:39 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 05/25] vfs: check file ranges before cloning files
+Message-ID: <20181010230639.GN6311@dastard>
+References: <153913023835.32295.13962696655740190941.stgit@magnolia>
+ <153913027326.32295.7601238218404639876.stgit@magnolia>
 MIME-Version: 1.0
-References: <153923113649.5546.9840926895953408273.stgit@magnolia>
-In-Reply-To: <153923113649.5546.9840926895953408273.stgit@magnolia>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 11 Oct 2018 11:33:57 +0300
-Message-ID: <CAOQ4uxgOvOOnKL5TsC9jpjBsepAgtQ56Hhjh7WDeXM7m0=dz7g@mail.gmail.com>
-Subject: Re: [PATCH v3 00/25] fs: fixes for serious clone/dedupe problems
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <153913027326.32295.7601238218404639876.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-cifs@vger.kernel.org, overlayfs <linux-unionfs@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, ocfs2-devel@oss.oracle.com
+Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, ocfs2-devel@oss.oracle.com
 
-On Thu, Oct 11, 2018 at 7:12 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
->
-> Hi all,
->
-> Dave, Eric, and I have been chasing a stale data exposure bug in the XFS
-> reflink implementation, and tracked it down to reflink forgetting to do
-> some of the file-extending activities that must happen for regular
-> writes.
->
-> We then started auditing the clone, dedupe, and copyfile code and
-> realized that from a file contents perspective, clonerange isn't any
-> different from a regular file write.  Unfortunately, we also noticed
-> that *unlike* a regular write, clonerange skips a ton of overflow
-> checks, such as validating the ranges against s_maxbytes, MAX_NON_LFS,
-> and RLIMIT_FSIZE.  We also observed that cloning into a file did not
-> strip security privileges (suid, capabilities) like a regular write
-> would.  I also noticed that xfs and ocfs2 need to dump the page cache
-> before remapping blocks, not after.
->
-> In fixing the range checking problems I also realized that both dedupe
-> and copyfile tell userspace how much of the requested operation was
-> acted upon.  Since the range validation can shorten a clone request (or
-> we can ENOSPC midway through), we might as well plumb the short
-> operation reporting back through the VFS indirection code to userspace.
->
-> So, here's the whole giant pile of patches[1] that fix all the problems.
-> This branch is against 4.19-rc7 with Dave Chinner's XFS for-next branch.
-> The patch "generic: test reflink side effects" recently sent to fstests
-> exercises the fixes in this series.  Tests are in [2].
->
-> --D
->
-> [1] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
-> [2] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git/log/?h=djwong-devel
+On Tue, Oct 09, 2018 at 05:11:13PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Move the file range checks from vfs_clone_file_prep into a separate
+> generic_remap_checks function so that all the checks are collected in a
+> central location.  This forms the basis for adding more checks from
+> generic_write_checks that will make cloning's input checking more
+> consistent with write input checking.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+....
+> --- a/fs/read_write.c
+> +++ b/fs/read_write.c
+> @@ -1717,12 +1717,12 @@ static int clone_verify_area(struct file *file, loff_t pos, u64 len, bool write)
+>   * Returns: 0 for "nothing to clone", 1 for "something to clone", or
+>   * the usual negative error code.
+>   */
+> -int vfs_clone_file_prep_inodes(struct inode *inode_in, loff_t pos_in,
+> -			       struct inode *inode_out, loff_t pos_out,
+> -			       u64 *len, bool is_dedupe)
+> +int vfs_clone_file_prep(struct file *file_in, loff_t pos_in,
+> +			struct file *file_out, loff_t pos_out,
+> +			u64 *len, bool is_dedupe)
+>  {
+> -	loff_t bs = inode_out->i_sb->s_blocksize;
+> -	loff_t blen;
+> +	struct inode *inode_in = file_inode(file_in);
+> +	struct inode *inode_out = file_inode(file_out);
+>  	loff_t isize;
+>  	bool same_inode = (inode_in == inode_out);
+>  	int ret;
+> @@ -1740,10 +1740,7 @@ int vfs_clone_file_prep_inodes(struct inode *inode_in, loff_t pos_in,
+>  	if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
+>  		return -EINVAL;
+>  
+> -	/* Are we going all the way to the end? */
+>  	isize = i_size_read(inode_in);
+> -	if (isize == 0)
+> -		return 0;
 
-I tested your branch with overlayfs over xfs.
-I did not observe any failures with -g clone except for test generic/937
-which also failed on xfs in my test.
+This looks like a change of behaviour. Instead of skipping zero
+legnth source files and returning success, this will now return
+-EINVAL as other checks fail? That needs to be documented in the
+commit message if it's intentional and a valid change to make...
 
-I though that you forgot to mention I needed to grab xfsprogs from djwong-devel
-for commit e84a9e93 ("xfs_io: dedupe command should only complain
-if we don't dedupe anything"), but even with this change the test still fails:
+Cheers,
 
-generic/937     - output mismatch (see
-/old/home/amir/src/fstests/xfstests-dev/results//generic/937.out.bad)
-    --- tests/generic/937.out   2018-10-11 08:23:00.630938364 +0300
-    +++ /old/home/amir/src/fstests/xfstests-dev/results//generic/937.out.bad
-   2018-10-11 10:54:40.448134832 +0300
-    @@ -4,8 +4,7 @@
-     39578c21e2cb9f6049b1cf7fc7be12a6  TEST_DIR/test-937/file2
-     Files 1-2 do not match (intentional)
-     (partial) dedupe the middle blocks together
-    -deduped XXXX/XXXX bytes at offset XXXX
-    -XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-    +XFS_IOC_FILE_EXTENT_SAME: Extents did not match.
-     Compare sections
-
-One thing that *is* different with overlayfs test is that filefrag crashes
-on this same test:
-
-    QA output created by 937
-    Create the original files
-    35ac8d7917305c385c30f3d82c30a8f6  TEST_DIR/test-937/file1
-    39578c21e2cb9f6049b1cf7fc7be12a6  TEST_DIR/test-937/file2
-    Files 1-2 do not match (intentional)
-    (partial) dedupe the middle blocks together
-    XFS_IOC_FILE_EXTENT_SAME: Extents did not match.
-    ./tests/generic/937: line 59: 19242 Floating point exception(core
-dumped) ${FILEFRAG_PROG} -v $testdir/file1 >> $seqres.full
-    ./tests/generic/937: line 60: 19244 Floating point exception(core
-dumped) ${FILEFRAG_PROG} -v $testdir/file2 >> $seqres.full
-
-It looks like an overlayfs v4.19-rc1 regression - FIGETBSZ returns zero.
-I never noticed this regression before, because none of the generic tests
-are using filefrag.
-
-Thanks,
-Amir.
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
