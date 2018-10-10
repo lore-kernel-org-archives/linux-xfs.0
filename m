@@ -1,32 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:33788 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727529AbeJKN2z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Oct 2018 09:28:55 -0400
-Date: Wed, 10 Oct 2018 23:03:12 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 14/18] xfs_logprint: fix shadow var in
- xlog_print_trans_buffer
-Message-ID: <20181011060312.GN20811@infradead.org>
+Received: from sandeen.net ([63.231.237.45]:56198 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727714AbeJKDZU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 Oct 2018 23:25:20 -0400
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH 04/18] xfsprogs: avoid redefinition of NBBY
+Date: Wed, 10 Oct 2018 15:01:08 -0500
+Message-Id: <1539201682-22198-5-git-send-email-sandeen@redhat.com>
+In-Reply-To: <1539201682-22198-1-git-send-email-sandeen@redhat.com>
 References: <1539201682-22198-1-git-send-email-sandeen@redhat.com>
- <1539201682-22198-15-git-send-email-sandeen@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1539201682-22198-15-git-send-email-sandeen@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Wed, Oct 10, 2018 at 03:01:18PM -0500, Eric Sandeen wrote:
-> xlog_print_trans_buffer takes 'i' as an argument, but then uses it later
-> as a local byte counter.  Give the local var more useful, non-shadow
-> name of "byte"
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Include sys/param.h for NBBY definition.  Do this before our local
+guarded definition which is for platforms like android that don't have it,
+see commit:
 
-Looks good,
+c9a90185 xfsprogs: define NBBY if not defined by the system header files
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Fixes sparse warnings about this redefinition.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+ include/platform_defs.h.in | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/include/platform_defs.h.in b/include/platform_defs.h.in
+index c4f0e8b..d111ec6 100644
+--- a/include/platform_defs.h.in
++++ b/include/platform_defs.h.in
+@@ -19,6 +19,7 @@
+ #include <pthread.h>
+ #include <ctype.h>
+ #include <sys/types.h>
++#include <sys/param.h>
+ #include <limits.h>
+ #include <stdbool.h>
+ #include <libgen.h>
+@@ -65,6 +66,7 @@ typedef unsigned short umode_t;
+ #define max(a,b)	(((a)>(b))?(a):(b))
+ #endif
+ 
++/* If param.h doesn't provide it, i.e. for Android */
+ #ifndef NBBY
+ #define NBBY 8
+ #endif
+-- 
+1.8.3.1
