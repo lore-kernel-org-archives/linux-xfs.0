@@ -1,70 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:35644 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726139AbeJMHng (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Oct 2018 03:43:36 -0400
-Subject: [PATCH 25/25] xfs: remove redundant remap partial EOF block checks
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 12 Oct 2018 17:08:39 -0700
-Message-ID: <153938931898.8361.12558032149746338745.stgit@magnolia>
-In-Reply-To: <153938912912.8361.13446310416406388958.stgit@magnolia>
-References: <153938912912.8361.13446310416406388958.stgit@magnolia>
+Received: from ms.lwn.net ([45.79.88.28]:44280 "EHLO ms.lwn.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726168AbeJLAzs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 Oct 2018 20:55:48 -0400
+Date: Thu, 11 Oct 2018 11:27:35 -0600
+From: Jonathan Corbet <corbet@lwn.net>
+Subject: Re: [PATCH v2 00/22] xfs-4.20: major documentation surgery
+Message-ID: <20181011112735.4f696d8a@lwn.net>
+In-Reply-To: <20181006005154.GM12041@dastard>
+References: <153862669110.26427.16504658853992750743.stgit@magnolia>
+        <20181006005154.GM12041@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Sat, 6 Oct 2018 10:51:54 +1000
+Dave Chinner <david@fromorbit.com> wrote:
 
-Now that we've moved the partial EOF block checks to the VFS helpers, we
-can remove the redundantn functionality from XFS.
+> Can you let us know whether the CC-by-SA 4.0 license is acceptible
+> or not? That's really the only thing that we need clarified at this
+> point - if it's OK I'll to pull this into the XFS tree for the 4.20
+> merge window. If not, we'll go back to the drawing board....
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_reflink.c |   20 --------------------
- 1 file changed, 20 deletions(-)
+OK, I've had a long conversation with the LF lawyer, and she said clearly
+that we really should not be introducing CC-SA material into the kernel
+source tree.  It's a pain; I really do like CC-SA better for
+documentation, but it's not GPL-compatible, and that creates a problem for
+the processed docs.
 
+Sorry,
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 66a8ddb9c058..709735880efb 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1307,8 +1307,6 @@ xfs_reflink_remap_prep(
- 	struct inode		*inode_out = file_inode(file_out);
- 	struct xfs_inode	*dest = XFS_I(inode_out);
- 	bool			same_inode = (inode_in == inode_out);
--	bool			is_dedupe = (remap_flags & RFR_SAME_DATA);
--	u64			blkmask = i_blocksize(inode_in) - 1;
- 	ssize_t			ret;
- 
- 	/* Lock both files against IO */
-@@ -1336,24 +1334,6 @@ xfs_reflink_remap_prep(
- 	if (ret <= 0)
- 		goto out_unlock;
- 
--	/*
--	 * If the dedupe data matches, chop off the partial EOF block
--	 * from the source file so we don't try to dedupe the partial
--	 * EOF block.
--	 */
--	if (is_dedupe) {
--		*len &= ~blkmask;
--	} else if (*len & blkmask) {
--		/*
--		 * The user is attempting to share a partial EOF block,
--		 * if it's inside the destination EOF then reject it.
--		 */
--		if (pos_out + *len < i_size_read(inode_out)) {
--			ret = -EINVAL;
--			goto out_unlock;
--		}
--	}
--
- 	/* Attach dquots to dest inode before changing block map */
- 	ret = xfs_qm_dqattach(dest);
- 	if (ret)
+jon
