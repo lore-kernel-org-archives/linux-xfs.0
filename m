@@ -1,51 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:59874 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726656AbeJKLkl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Oct 2018 07:40:41 -0400
-Subject: [PATCH 23/25] xfs: fix pagecache truncation prior to reflink
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 10 Oct 2018 21:15:12 -0700
-Message-ID: <153923131273.5546.6811645962559576222.stgit@magnolia>
-In-Reply-To: <153923113649.5546.9840926895953408273.stgit@magnolia>
-References: <153923113649.5546.9840926895953408273.stgit@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:33600 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727065AbeJKNXb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Oct 2018 09:23:31 -0400
+Date: Wed, 10 Oct 2018 22:57:47 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 01/18 V2] xfsprogs: enable sparse checking with "make
+ C=[12]"
+Message-ID: <20181011055747.GA20811@infradead.org>
+References: <1539201682-22198-1-git-send-email-sandeen@redhat.com>
+ <1539201682-22198-2-git-send-email-sandeen@redhat.com>
+ <3048f94d-191c-0e62-1a3b-a0ec0e4b8374@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <3048f94d-191c-0e62-1a3b-a0ec0e4b8374@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+> -sparse and gcc using:
+> +The xfsprogs Makefile has a convenient shortcut to running sparse, by setting
+> +the C ("check") variable on the make commandline.  To perform generic checks,
+> +
+> +	make C=1
+> +
+> +which checks with -Wsparse-all -Wno-transparent-union -Wno-return-void
+> +-Wno-undef -Wno-non-pointer-null, or to perform the bitwise checks, use
+> +
+> +	make C=2
+> +
+> +which checks with -Wbitwise -D__CHECK_ENDIAN__
 
-Prior to remapping blocks, it is necessary to remove pages from the
-destination file's page cache.  Unfortunately, the truncation is not
-aggressive enough -- if page size > block size, we'll end up zeroing
-subpage blocks instead of removing them.  So, round the start offset
-down and the end offset up to page boundaries.  We already wrote all
-the dirty data so the larger range shouldn't be a problem.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_reflink.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index b24a2a1c4db1..e1592e751cc2 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1370,8 +1370,9 @@ xfs_reflink_remap_prep(
- 		goto out_unlock;
- 
- 	/* Zap any page cache for the destination file's range. */
--	truncate_inode_pages_range(&inode_out->i_data, pos_out,
--				   PAGE_ALIGN(pos_out + *len) - 1);
-+	truncate_inode_pages_range(&inode_out->i_data,
-+			round_down(pos_out, PAGE_SIZE),
-+			round_up(pos_out + *len, PAGE_SIZE) - 1);
- 
- 	/*
- 	 * Update inode timestamps and remove security privileges before we
+Out of all the sparce checks applicable to xfsprogs endianess is by
+far the most impotant one.  I don't think it makes any sense to ever
+turn it off..
