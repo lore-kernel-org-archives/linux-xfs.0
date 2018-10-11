@@ -1,57 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:56200 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727773AbeJKDZV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 Oct 2018 23:25:21 -0400
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 16/18] xfs_scrub: remove shadow var from run_scrub_phases()
-Date: Wed, 10 Oct 2018 15:01:20 -0500
-Message-Id: <1539201682-22198-17-git-send-email-sandeen@redhat.com>
-In-Reply-To: <1539201682-22198-1-git-send-email-sandeen@redhat.com>
-References: <1539201682-22198-1-git-send-email-sandeen@redhat.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:44368 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726047AbeJKLk5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Oct 2018 07:40:57 -0400
+Subject: [PATCH 25/25] xfs: remove redundant remap partial EOF block checks
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 10 Oct 2018 21:15:26 -0700
+Message-ID: <153923132645.5546.97372209609060021.stgit@magnolia>
+In-Reply-To: <153923113649.5546.9840926895953408273.stgit@magnolia>
+References: <153923113649.5546.9840926895953408273.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
-The local nr_threads shadows a global var of the same name.
-Use a local variable to avoid confusion (even though estimate_work()
-may simply fill in the value of the global...)
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Now that we've moved the partial EOF block checks to the VFS helpers, we
+can remove the redundantn functionality from XFS.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/xfs_scrub.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_reflink.c |   20 --------------------
+ 1 file changed, 20 deletions(-)
 
-diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index 33b83a5..a789b6f 100644
---- a/scrub/xfs_scrub.c
-+++ b/scrub/xfs_scrub.c
-@@ -422,7 +422,6 @@ run_scrub_phases(
- 	bool			moveon = true;
- 	unsigned int		debug_phase = 0;
- 	unsigned int		phase;
--	unsigned int		nr_threads;
- 	int			rshift;
+
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 12a1fe92454e..4450443f1148 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -1307,8 +1307,6 @@ xfs_reflink_remap_prep(
+ 	struct inode		*inode_out = file_inode(file_out);
+ 	struct xfs_inode	*dest = XFS_I(inode_out);
+ 	bool			same_inode = (inode_in == inode_out);
+-	bool			is_dedupe = (remap_flags & RFR_SAME_DATA);
+-	u64			blkmask = i_blocksize(inode_in) - 1;
+ 	ssize_t			ret;
  
- 	if (debug_tweak_on("XFS_SCRUB_PHASE"))
-@@ -454,12 +453,14 @@ run_scrub_phases(
- 		if (!moveon)
- 			break;
- 		if (sp->estimate_work) {
--			moveon = sp->estimate_work(ctx, &max_work, &nr_threads,
--					&rshift);
-+			unsigned int		work_threads;
-+
-+			moveon = sp->estimate_work(ctx, &max_work,
-+					&work_threads, &rshift);
- 			if (!moveon)
- 				break;
- 			moveon = progress_init_phase(ctx, progress_fp, phase,
--					max_work, rshift, nr_threads);
-+					max_work, rshift, work_threads);
- 		} else {
- 			moveon = progress_init_phase(ctx, NULL, phase, 0, 0, 0);
- 		}
--- 
-1.8.3.1
+ 	/* Lock both files against IO */
+@@ -1336,24 +1334,6 @@ xfs_reflink_remap_prep(
+ 	if (ret <= 0)
+ 		goto out_unlock;
+ 
+-	/*
+-	 * If the dedupe data matches, chop off the partial EOF block
+-	 * from the source file so we don't try to dedupe the partial
+-	 * EOF block.
+-	 */
+-	if (is_dedupe) {
+-		*len &= ~blkmask;
+-	} else if (*len & blkmask) {
+-		/*
+-		 * The user is attempting to share a partial EOF block,
+-		 * if it's inside the destination EOF then reject it.
+-		 */
+-		if (pos_out + *len < i_size_read(inode_out)) {
+-			ret = -EINVAL;
+-			goto out_unlock;
+-		}
+-	}
+-
+ 	/* Attach dquots to dest inode before changing block map */
+ 	ret = xfs_qm_dqattach(dest);
+ 	if (ret)
