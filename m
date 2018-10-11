@@ -1,94 +1,143 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:56212 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727714AbeJKDZV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 Oct 2018 23:25:21 -0400
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 11/18] xfsprogs: misc static function warning fixes
-Date: Wed, 10 Oct 2018 15:01:15 -0500
-Message-Id: <1539201682-22198-12-git-send-email-sandeen@redhat.com>
-In-Reply-To: <1539201682-22198-1-git-send-email-sandeen@redhat.com>
-References: <1539201682-22198-1-git-send-email-sandeen@redhat.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:59152 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726695AbeJKLkH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Oct 2018 07:40:07 -0400
+Subject: [PATCH 17/25] vfs: enable remap callers that can handle short
+ operations
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 10 Oct 2018 21:14:26 -0700
+Message-ID: <153923126628.5546.3484461137192547927.stgit@magnolia>
+In-Reply-To: <153923113649.5546.9840926895953408273.stgit@magnolia>
+References: <153923113649.5546.9840926895953408273.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
-The last handful of static symbol warning cleanups for misc remaining
-issues.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Plumb in a remap flag that enables the filesystem remap handler to
+shorten remapping requests for callers that can handle it.  Now
+copy_file_range can report partial success (in case we run up against
+alignment problems, resource limits, etc.).
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 ---
- libxfs/init.h     | 1 +
- libxfs/rdwr.c     | 2 --
- repair/phase2.c   | 2 --
- repair/scan.h     | 2 ++
- scrub/xfs_scrub.h | 2 ++
- 5 files changed, 5 insertions(+), 4 deletions(-)
+ fs/read_write.c    |   15 +++++++++------
+ include/linux/fs.h |    7 +++++--
+ mm/filemap.c       |   16 ++++++++++++----
+ 3 files changed, 26 insertions(+), 12 deletions(-)
 
-diff --git a/libxfs/init.h b/libxfs/init.h
-index 2cda895..b23e493 100644
---- a/libxfs/init.h
-+++ b/libxfs/init.h
-@@ -7,6 +7,7 @@
- #define LIBXFS_INIT_H
+
+diff --git a/fs/read_write.c b/fs/read_write.c
+index 6ec908f9a69b..3713893b7e38 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1593,7 +1593,8 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
  
- struct stat;
-+extern int     use_xfs_buf_lock;
+ 		cloned = file_in->f_op->remap_file_range(file_in, pos_in,
+ 				file_out, pos_out,
+-				min_t(loff_t, MAX_RW_COUNT, len), 0);
++				min_t(loff_t, MAX_RW_COUNT, len),
++				RFR_CAN_SHORTEN);
+ 		if (cloned > 0) {
+ 			ret = cloned;
+ 			goto done;
+@@ -1804,16 +1805,18 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
+ 		 * If the user is attempting to remap a partial EOF block and
+ 		 * it's inside the destination EOF then reject it.
+ 		 *
+-		 * We don't support shortening requests, so we can only reject
+-		 * them.
++		 * If possible, shorten the request instead of rejecting it.
+ 		 */
+ 		if (is_dedupe)
+ 			ret = -EBADE;
+ 		else if (pos_out + *len < i_size_read(inode_out))
+ 			ret = -EINVAL;
  
- extern int platform_check_ismounted (char *path, char *block,
- 					struct stat *sptr, int verbose);
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index e580aba..a00360e 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -712,8 +712,6 @@ struct list_head	lock_buf_list = {&lock_buf_list, &lock_buf_list};
- int			lock_buf_count = 0;
- #endif
+-		if (ret)
+-			return ret;
++		if (ret) {
++			if (!(remap_flags & RFR_CAN_SHORTEN))
++				return ret;
++			*len &= ~blkmask;
++		}
+ 	}
  
--extern int     use_xfs_buf_lock;
--
- static struct xfs_buf *
- __cache_lookup(struct xfs_bufkey *key, unsigned int flags)
- {
-diff --git a/repair/phase2.c b/repair/phase2.c
-index b92ceb8..4bd6c63 100644
---- a/repair/phase2.c
-+++ b/repair/phase2.c
-@@ -15,8 +15,6 @@
- #include "progress.h"
- #include "scan.h"
+ 	return 1;
+@@ -2112,7 +2115,7 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
  
--void	set_mp(xfs_mount_t *mpp);
--
- /* workaround craziness in the xlog routines */
- int xlog_recover_do_trans(struct xlog *log, xlog_recover_t *t, int p)
- {
-diff --git a/repair/scan.h b/repair/scan.h
-index aa7c38d..bf1ee83 100644
---- a/repair/scan.h
-+++ b/repair/scan.h
-@@ -8,6 +8,8 @@
+ 		deduped = vfs_dedupe_file_range_one(file, off, dst_file,
+ 						    info->dest_offset, len,
+-						    0);
++						    RFR_CAN_SHORTEN);
+ 		if (deduped == -EBADE)
+ 			info->status = FILE_DEDUPE_RANGE_DIFFERS;
+ 		else if (deduped < 0)
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index b9c314f9d5a4..57cb56bbc30a 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1726,14 +1726,17 @@ struct block_device_operations;
+  *
+  * RFR_SAME_DATA: only remap if contents identical (i.e. deduplicate)
+  * RFR_TO_SRC_EOF: remap to the end of the source file
++ * RFR_CAN_SHORTEN: caller can handle a shortened request
+  */
+ #define RFR_SAME_DATA		(1 << 0)
+ #define RFR_TO_SRC_EOF		(1 << 1)
++#define RFR_CAN_SHORTEN		(1 << 2)
  
- struct blkmap;
+-#define RFR_VALID_FLAGS		(RFR_SAME_DATA | RFR_TO_SRC_EOF)
++#define RFR_VALID_FLAGS		(RFR_SAME_DATA | RFR_TO_SRC_EOF | \
++				 RFR_CAN_SHORTEN)
  
-+void set_mp(xfs_mount_t *mpp);
-+
- int scan_lbtree(
- 	xfs_fsblock_t	root,
- 	int		nlevels,
-diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
-index 8b80c79..a961d8f 100644
---- a/scrub/xfs_scrub.h
-+++ b/scrub/xfs_scrub.h
-@@ -6,6 +6,8 @@
- #ifndef XFS_SCRUB_XFS_SCRUB_H_
- #define XFS_SCRUB_XFS_SCRUB_H_
+ /* Implemented by the VFS, so these are advisory. */
+-#define RFR_VFS_FLAGS		(RFR_TO_SRC_EOF)
++#define RFR_VFS_FLAGS		(RFR_TO_SRC_EOF | RFR_CAN_SHORTEN)
  
-+extern char *progname;
-+
- #define _PATH_PROC_MOUNTS	"/proc/mounts"
+ /*
+  * Filesystem remapping implementations should call this helper on their
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 369cfd164e90..bccbd3621238 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -3051,8 +3051,12 @@ int generic_remap_checks(struct file *file_in, loff_t pos_in,
+ 	if (pos_in + count == size_in) {
+ 		bcount = ALIGN(size_in, bs) - pos_in;
+ 	} else {
+-		if (!IS_ALIGNED(count, bs))
+-			return -EINVAL;
++		if (!IS_ALIGNED(count, bs)) {
++			if (remap_flags & RFR_CAN_SHORTEN)
++				count = ALIGN_DOWN(count, bs);
++			else
++				return -EINVAL;
++		}
  
- extern unsigned int		nr_threads;
--- 
-1.8.3.1
+ 		bcount = count;
+ 	}
+@@ -3063,10 +3067,14 @@ int generic_remap_checks(struct file *file_in, loff_t pos_in,
+ 	    pos_out < pos_in + bcount)
+ 		return -EINVAL;
+ 
+-	/* For now we don't support changing the length. */
+-	if (*req_count != count)
++	/*
++	 * We shortened the request but the caller can't deal with that, so
++	 * bounce the request back to userspace.
++	 */
++	if (*req_count != count && !(remap_flags & RFR_CAN_SHORTEN))
+ 		return -EINVAL;
+ 
++	*req_count = count;
+ 	return 0;
+ }
+ 
