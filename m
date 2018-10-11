@@ -1,34 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:48674 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726112AbeJQQe7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Oct 2018 12:34:59 -0400
-Date: Wed, 17 Oct 2018 01:40:20 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 26/26] xfs: remove redundant remap partial EOF block
- checks
-Message-ID: <20181017084020.GJ16896@infradead.org>
-References: <153965939489.1256.7400115244528045860.stgit@magnolia>
- <153966006214.3607.15131077363912605792.stgit@magnolia>
+Received: from userp2120.oracle.com ([156.151.31.85]:59940 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725840AbeJLGPG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Oct 2018 02:15:06 -0400
+Date: Thu, 11 Oct 2018 15:45:36 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfsprogs: don't include all xfs headers just for crc32
+Message-ID: <20181011224536.GC28243@magnolia>
+References: <e1259a8b-b5aa-cfa2-aeab-13d63757d7a5@redhat.com>
+ <20181011195859.GA114854@rodete-desktop-imager.corp.google.com>
+ <b6ee7861-3bf0-7192-d26e-5d57bcb10d19@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <153966006214.3607.15131077363912605792.stgit@magnolia>
+In-Reply-To: <b6ee7861-3bf0-7192-d26e-5d57bcb10d19@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: david@fromorbit.com, sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Brian Norris <briannorris@chromium.org>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Oct 15, 2018 at 08:21:02PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Oct 11, 2018 at 05:36:36PM -0500, Eric Sandeen wrote:
 > 
-> Now that we've moved the partial EOF block checks to the VFS helpers, we
-> can remove the redundant functionality from XFS.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> On 10/11/18 2:59 PM, Brian Norris wrote:
+> > On Wed, Oct 10, 2018 at 03:55:32PM -0500, Eric Sandeen wrote:
+> >> Brian Norris reported that "The $BUILD_CC toolchain might have an
+> >> older set of Linux headers than the $CC toolchain. It's generally
+> >> unsafe to try to build both with the same definitions, but in
+> >> particular, this one can cause compilation failures in the local
+> >> crc32selftest build: [failure to find fsmap.h]"
+> >>
+> >> It seems like the most straightforward thing to do here is include
+> >> a specific set of system headers, instead of pulling in the whole
+> >> xfs.h header chain which has multiple tests and definitions in
+> >> place for headers that may or may not be there during the build.
+> >>
+> >> Reported-by: Brian Norris <briannorris@chromium.org>
+> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> >> ---
+> >>
+> >> Brian, here's try #3, does this also work for you?
+> > 
+> > Tested-by: Brian Norris <briannorris@chromium.org>
+> > 
+> > This still leaves $BUILD_CFLAGS with bad entries, but as long as they
+> > don't get used anywhere that matters, it'll be OK.
+> 
+> Thanks.  At this point I think you have a better grasp of what all the
+> $FOO_FLAGS do than I do ;)  It may be  to keep things sorted
+> and separate, but it also seemed useful to get a giant tangle of
+> xfs header out of a non-xfs library file.
+> 
+> I'm also on the fence about whether cross-compiling the self-check
+> really even gains us much, given that it may be built or optimized
+> completely differently from the code on the target arch ...
 
-Looks fine,
+So long as it's a software algorithm with a big lookup table I guess
+it's a serviceable sanity check that nobody totally goobered up the
+source code, but I don't know if it adds much value in the cross
+compilation case either.  If you ever wanted to add a faster
+implementation in the built libxfs <cough> that would be more of an
+issue.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+(Granted, I've been running a patched xfsprogs with hw accelerated
+crc32c for a year now and haven't noticed any difference in runtime.
+Maybe now that I've finished upgrading everything to flash...)
+
+--D
+
+> -Eric
