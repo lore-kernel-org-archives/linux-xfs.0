@@ -1,76 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:56192 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727503AbeJKDZU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 Oct 2018 23:25:20 -0400
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 01/18] xfsprogs: enable sparse checking with "make C=[12]"
-Date: Wed, 10 Oct 2018 15:01:05 -0500
-Message-Id: <1539201682-22198-2-git-send-email-sandeen@redhat.com>
-In-Reply-To: <1539201682-22198-1-git-send-email-sandeen@redhat.com>
-References: <1539201682-22198-1-git-send-email-sandeen@redhat.com>
+Received: from mail-yb1-f194.google.com ([209.85.219.194]:44035 "EHLO
+        mail-yb1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726126AbeJKQAY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Oct 2018 12:00:24 -0400
+MIME-Version: 1.0
+References: <153923113649.5546.9840926895953408273.stgit@magnolia>
+In-Reply-To: <153923113649.5546.9840926895953408273.stgit@magnolia>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Thu, 11 Oct 2018 11:33:57 +0300
+Message-ID: <CAOQ4uxgOvOOnKL5TsC9jpjBsepAgtQ56Hhjh7WDeXM7m0=dz7g@mail.gmail.com>
+Subject: Re: [PATCH v3 00/25] fs: fixes for serious clone/dedupe problems
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-cifs@vger.kernel.org, overlayfs <linux-unionfs@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, ocfs2-devel@oss.oracle.com
 
-Enable "make C=1" or "make C=2" to do sparse checking.
-Blatantly ripped off from djwong's patch in e2fsprogs to do the same.
+On Thu, Oct 11, 2018 at 7:12 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> Hi all,
+>
+> Dave, Eric, and I have been chasing a stale data exposure bug in the XFS
+> reflink implementation, and tracked it down to reflink forgetting to do
+> some of the file-extending activities that must happen for regular
+> writes.
+>
+> We then started auditing the clone, dedupe, and copyfile code and
+> realized that from a file contents perspective, clonerange isn't any
+> different from a regular file write.  Unfortunately, we also noticed
+> that *unlike* a regular write, clonerange skips a ton of overflow
+> checks, such as validating the ranges against s_maxbytes, MAX_NON_LFS,
+> and RLIMIT_FSIZE.  We also observed that cloning into a file did not
+> strip security privileges (suid, capabilities) like a regular write
+> would.  I also noticed that xfs and ocfs2 need to dump the page cache
+> before remapping blocks, not after.
+>
+> In fixing the range checking problems I also realized that both dedupe
+> and copyfile tell userspace how much of the requested operation was
+> acted upon.  Since the range validation can shorten a clone request (or
+> we can ENOSPC midway through), we might as well plumb the short
+> operation reporting back through the VFS indirection code to userspace.
+>
+> So, here's the whole giant pile of patches[1] that fix all the problems.
+> This branch is against 4.19-rc7 with Dave Chinner's XFS for-next branch.
+> The patch "generic: test reflink side effects" recently sent to fstests
+> exercises the fixes in this series.  Tests are in [2].
+>
+> --D
+>
+> [1] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
+> [2] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git/log/?h=djwong-devel
 
-This is a bit simpler than redefining CC for the whole build, which
-requires extra commandline definitions and apparently is enough of a
-barrier that nobody's doing sparse checking.
+I tested your branch with overlayfs over xfs.
+I did not observe any failures with -g clone except for test generic/937
+which also failed on xfs in my test.
 
-Note, this requires unreleased sparse after v0.5, which enables the
-CHAR_BIT definition; otherwise it chokes.
+I though that you forgot to mention I needed to grab xfsprogs from djwong-devel
+for commit e84a9e93 ("xfs_io: dedupe command should only complain
+if we don't dedupe anything"), but even with this change the test still fails:
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
- Makefile           | 14 ++++++++++++++
- include/buildrules |  2 ++
- 2 files changed, 16 insertions(+)
+generic/937     - output mismatch (see
+/old/home/amir/src/fstests/xfstests-dev/results//generic/937.out.bad)
+    --- tests/generic/937.out   2018-10-11 08:23:00.630938364 +0300
+    +++ /old/home/amir/src/fstests/xfstests-dev/results//generic/937.out.bad
+   2018-10-11 10:54:40.448134832 +0300
+    @@ -4,8 +4,7 @@
+     39578c21e2cb9f6049b1cf7fc7be12a6  TEST_DIR/test-937/file2
+     Files 1-2 do not match (intentional)
+     (partial) dedupe the middle blocks together
+    -deduped XXXX/XXXX bytes at offset XXXX
+    -XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+    +XFS_IOC_FILE_EXTENT_SAME: Extents did not match.
+     Compare sections
 
-diff --git a/Makefile b/Makefile
-index d031a60..7f3e774 100644
---- a/Makefile
-+++ b/Makefile
-@@ -16,6 +16,20 @@ else
-   Q = @
- endif
- 
-+CHECK=sparse
-+CHECK_OPTS=-Wsparse-all -Wno-transparent-union -Wno-return-void -Wno-undef \
-+	-Wno-non-pointer-null -D__linux__
-+ifeq ("$(C)", "2")
-+  CHECK_CMD=$(CHECK) $(CHECK_OPTS) -Wbitwise -D__CHECK_ENDIAN__
-+else
-+  ifeq ("$(C)", "1")
-+    CHECK_CMD=$(CHECK) $(CHECK_OPTS)
-+   else
-+    CHECK_CMD=@true
-+  endif
-+endif
-+export CHECK_CMD
-+
- MAKEOPTS = --no-print-directory Q=$(Q)
- 
- TOPDIR = .
-diff --git a/include/buildrules b/include/buildrules
-index c57fdfc..23fc866 100644
---- a/include/buildrules
-+++ b/include/buildrules
-@@ -54,10 +54,12 @@ $(LTLIBRARY) : $(SUBDIRS) $(LTOBJECTS)
- %.lo: %.c
- 	@echo "    [CC]     $@"
- 	$(Q)$(LTCOMPILE) -c $<
-+	$(Q)$(CHECK_CMD) $(CFLAGS) $<
- else
- %.o: %.c
- 	@echo "    [CC]     $@"
- 	$(Q)$(CC) $(CFLAGS) -c $<
-+	$(Q)$(CHECK_CMD) $(CFLAGS) $<
- 
- endif
- 
--- 
-1.8.3.1
+One thing that *is* different with overlayfs test is that filefrag crashes
+on this same test:
+
+    QA output created by 937
+    Create the original files
+    35ac8d7917305c385c30f3d82c30a8f6  TEST_DIR/test-937/file1
+    39578c21e2cb9f6049b1cf7fc7be12a6  TEST_DIR/test-937/file2
+    Files 1-2 do not match (intentional)
+    (partial) dedupe the middle blocks together
+    XFS_IOC_FILE_EXTENT_SAME: Extents did not match.
+    ./tests/generic/937: line 59: 19242 Floating point exception(core
+dumped) ${FILEFRAG_PROG} -v $testdir/file1 >> $seqres.full
+    ./tests/generic/937: line 60: 19244 Floating point exception(core
+dumped) ${FILEFRAG_PROG} -v $testdir/file2 >> $seqres.full
+
+It looks like an overlayfs v4.19-rc1 regression - FIGETBSZ returns zero.
+I never noticed this regression before, because none of the generic tests
+are using filefrag.
+
+Thanks,
+Amir.
