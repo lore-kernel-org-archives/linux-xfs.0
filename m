@@ -1,31 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:33614 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727065AbeJKNYN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Oct 2018 09:24:13 -0400
-Date: Wed, 10 Oct 2018 22:58:32 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 02/18] xfs_db: convert single-bit bitfields  to bools
-Message-ID: <20181011055832.GB20811@infradead.org>
-References: <1539201682-22198-1-git-send-email-sandeen@redhat.com>
- <1539201682-22198-3-git-send-email-sandeen@redhat.com>
+Received: from ipmailnode02.adl6.internode.on.net ([150.101.137.148]:9502 "EHLO
+        ipmailnode02.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727822AbeJKN0M (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Oct 2018 09:26:12 -0400
+Date: Thu, 11 Oct 2018 17:00:27 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs_bmap stuck at ~/.steam/steam.pipe file
+Message-ID: <20181011060027.GP6311@dastard>
+References: <CABXGCsPMXLbPJdAFq79Fmby3y89s=o7F-tf_+zSo_RsJXjaRaA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1539201682-22198-3-git-send-email-sandeen@redhat.com>
+In-Reply-To: <CABXGCsPMXLbPJdAFq79Fmby3y89s=o7F-tf_+zSo_RsJXjaRaA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
+To: Mikhail Gavrilov <mikhail.v.gavrilov@gmail.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Oct 10, 2018 at 03:01:06PM -0500, Eric Sandeen wrote:
-> Sparse doesn't like signed single-bit bitfields, and they may as well
-> just be booleans.
+On Thu, Oct 11, 2018 at 10:47:31AM +0500, Mikhail Gavrilov wrote:
+> When I researched the most fragmented files, I found that xfs_bmap
+> stuck at the file /home/mikhail/.steam/steam.pipe.
+
+Stuck, or just taking a long time?
+
+> Can you look why it happens?
 > 
-> Fixes sparse warnings about this.
+> $ xfs_bmap -V
+> xfs_bmap version 4.18.0
+> 
+> 
+> Here backtrace of xfs_bmap process:
+> (gdb) thread apply all bt full
+> 
+> Thread 1 (Thread 0x7fe0a8c86880 (LWP 21024)):
+> #0  0x00007fe0a92f649f in __libc_open64
 
-Looks good, although we could still do bool bitfields to save a tiny
-bit of space if we areally cared:
+It's in the kernel open() syscall opening the file. userspace
+tracing won't tell you what is going on at this point. Is there
+anything in dmesg?
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+what is the output of `cat /proc/<pid>/stack` for the xfs_io process
+that is running the bmap command?
+
+What output ends up in dmesg after running 'echo w > sysrq-trigger'?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
