@@ -1,34 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw1-f66.google.com ([209.85.161.66]:34487 "EHLO
-        mail-yw1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726537AbeJKVlS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Oct 2018 17:41:18 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:51063 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727735AbeJKVgk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 Oct 2018 17:36:40 -0400
+Subject: Re: [PATCH 01/18 V2] xfsprogs: enable sparse checking with "make
+ C=[12]"
+References: <1539201682-22198-1-git-send-email-sandeen@redhat.com>
+ <1539201682-22198-2-git-send-email-sandeen@redhat.com>
+ <3048f94d-191c-0e62-1a3b-a0ec0e4b8374@sandeen.net>
+ <20181011055747.GA20811@infradead.org>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <bdaaeb58-6fc1-7114-7137-2b7e6f08922b@redhat.com>
+Date: Thu, 11 Oct 2018 09:09:18 -0500
 MIME-Version: 1.0
-References: <153923113649.5546.9840926895953408273.stgit@magnolia>
- <153923115968.5546.9927577186377570573.stgit@magnolia> <20181011134256.GC23424@infradead.org>
-In-Reply-To: <20181011134256.GC23424@infradead.org>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 11 Oct 2018 17:13:44 +0300
-Message-ID: <CAOQ4uxiavoysJQEUEaMXb+mnZWhPT5kvmK6WZav9tbiJxara5A@mail.gmail.com>
-Subject: Re: [PATCH 03/25] vfs: check file ranges before cloning files
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20181011055747.GA20811@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-cifs@vger.kernel.org, overlayfs <linux-unionfs@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, ocfs2-devel@oss.oracle.com
+To: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Oct 11, 2018 at 4:43 PM Christoph Hellwig <hch@infradead.org> wrote:
->
-> > -EXPORT_SYMBOL(vfs_clone_file_prep_inodes);
-> > +EXPORT_SYMBOL(vfs_clone_file_prep);
->
-> Btw, why isn't this EXPORT_SYMBOL_GPL?  It is rather Linux internal
-> code, including some that I wrote which you lifted into the core
-> in "vfs: refactor clone/dedupe_file_range common functions".
+On 10/11/18 12:57 AM, Christoph Hellwig wrote:
+>> -sparse and gcc using:
+>> +The xfsprogs Makefile has a convenient shortcut to running sparse, by setting
+>> +the C ("check") variable on the make commandline.  To perform generic checks,
+>> +
+>> +	make C=1
+>> +
+>> +which checks with -Wsparse-all -Wno-transparent-union -Wno-return-void
+>> +-Wno-undef -Wno-non-pointer-null, or to perform the bitwise checks, use
+>> +
+>> +	make C=2
+>> +
+>> +which checks with -Wbitwise -D__CHECK_ENDIAN__
+> 
+> Out of all the sparce checks applicable to xfsprogs endianess is by
+> far the most impotant one.  I don't think it makes any sense to ever
+> turn it off..
 
-Because Al will shot down any attempt of those in vfs code:
-https://lkml.org/lkml/2018/6/10/4
+Oh... whoops, I thought I was emulating kernel behavior (by following e2fsprogs
+behavior), but sadly no:
 
-Thanks,
-Amir.
+> Do a kernel make with "make C=1" to run sparse on all the C files that get
+> recompiled, or use "make C=2" to run sparse on the files whether they need to
+> be recompiled or not.  The latter is a fast way to check the whole tree if you
+> have already built it.
+
+Let me see if I can properly mimic that behavior, with endian checking baked
+in for both.
+
+Thanks for bringing it up,
+-Eric
