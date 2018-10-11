@@ -1,75 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:52855 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725954AbeJMKEh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Oct 2018 06:04:37 -0400
-Date: Sat, 13 Oct 2018 13:29:14 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: clear ail delwri queued bufs on unmount of shutdown
- fs
-Message-ID: <20181013022914.GX6311@dastard>
-References: <20181012174654.2557-1-bfoster@redhat.com>
+Received: from mail-ot1-f67.google.com ([209.85.210.67]:39694 "EHLO
+        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726699AbeJLBg6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Oct 2018 21:36:58 -0400
+Received: by mail-ot1-f67.google.com with SMTP id l58so9840385otd.6
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Oct 2018 11:08:38 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181012174654.2557-1-bfoster@redhat.com>
+References: <1539027169-23332-1-git-send-email-sandeen@sandeen.net> <20181011103636.GC9467@quack2.suse.cz>
+In-Reply-To: <20181011103636.GC9467@quack2.suse.cz>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 11 Oct 2018 11:08:26 -0700
+Message-ID: <CAPcyv4iAD_wkjY1way1rOxr4=gC_TGx71VquF13ooAuUPz9RJw@mail.gmail.com>
+Subject: Re: [PATCH 0/3] ext2, ext4, xfs: hard fail dax mount on unsupported devices
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs <linux-xfs@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, zwisler@kernel.org
 
-On Fri, Oct 12, 2018 at 01:46:54PM -0400, Brian Foster wrote:
-> In the typical unmount case, the AIL is forced out by the unmount
-> sequence before the xfsaild task is stopped. Since AIL items are
-> removed on writeback completion, this means that the AIL
-> ->ail_buf_list delwri queue has been drained. This is not always
-> true in the shutdown case, however.
-> 
-> It's possible for buffers to sit on a delwri queue for a period of
-> time across submission attempts if said items are locked or have
-> been relogged and pinned since first added to the queue.
+On Thu, Oct 11, 2018 at 3:37 AM Jan Kara <jack@suse.cz> wrote:
+>
+> On Mon 08-10-18 14:32:46, Eric Sandeen wrote:
+> > In response to an earlier xfs patch to change how xfs reacts to
+> > dax incompatibilities, Dave said:
+> >
+> > > I suspect we need to be more harsh are rejecting mounts with -o dax
+> > > on devices DAX isn't supported on. This mount option is going into
+> > > production systems - it's not just for "testing" as the comments all
+> > > claim. i Things will break in production systems if DAX isn't
+> > > enabled and they are expecting it to be enabled.
+> >
+> > and I tend to agree, so proposing this change to hard-fail a dax mount if
+> > the device doesn't support it, instead of silently disabling the
+> > functionality.  Proposing for ext2, ext4, and xfs to keep behavior in
+> > sync.
+>
+> Let me include Dan and Ross into the discussion since they were the ones
+> proposing the "silent fallback" behavior (ext4 actually did fail the mount
+> instead not so long ago - see 24f3478d664b "ext4: auto disable dax instead
+> of failing mount" from December). Guys, why did you choose the fallback
+> path instead of a failure?
 
-Can you add this as a comment to xfs_buf_delwri_submit_nowait() to
-document that callers either need to check that everything was
-submitted and/or cancel the delwri list before they tear it down?
+The different behavior between filesystems was confusing customers so
+we had to align them, then the question was which default to pick.
+Honestly, we came to the decision to bring ext4 in line with the xfs
+behavior because we thought that would be easier than the alternative.
+Dave and Christoph made repeated arguments that DAX is just a hidden
+performance optimization that no application should rely on, so we
+went the path of least resistance and changed the ext4 default.
 
-
-> If the
-> attempt to log such an item results in a log I/O error, the error
-> processing can shutdown the fs, remove the item from the AIL, stale
-> the buffer (dropping the LRU reference) and clear its delwri queue
-> state. The latter bit means the buffer will be released from a
-> delwri queue on the next submission attempt, but this might never
-> occur if the filesystem has shutdown and the AIL is empty.
-> 
-> This means that such buffers are held indefinitely by the AIL delwri
-> queue across destruction of the AIL. Aside from being a memory leak,
-> these buffers can also hold references to in-core perag structures.
-> The latter problem manifests as a generic/475 failure, reproducing
-> the following asserts at unmount time:
-> 
->   XFS: Assertion failed: atomic_read(&pag->pag_ref) == 0,
-> 	file: fs/xfs/xfs_mount.c, line: 151
->   XFS: Assertion failed: atomic_read(&pag->pag_ref) == 0,
-> 	file: fs/xfs/xfs_mount.c, line: 132
-
-Yup, I saw that once a couple of weeks ago, but was not able to
-reproduce it to track it down.
-
-> To prevent this problem, clear the AIL delwri queue as a final step
-> before xfsaild() exit. The !empty state should never occur in the
-> normal case, so add an assert to catch unexpected problems going
-> forward.
-
-*nod*.
-
-Apart from needing to document how to use
-xfs_buf_delwri_submit_nowait(), this looks fine.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I'm perfectly fine switching both to the "fail if not DAX device" behavior.
