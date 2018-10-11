@@ -1,149 +1,124 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:51522 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726161AbeJMHna (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Oct 2018 03:43:30 -0400
-Subject: [PATCH 24/25] xfs: support returning partial reflink results
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 12 Oct 2018 17:08:32 -0700
-Message-ID: <153938931226.8361.7365948775364411156.stgit@magnolia>
-In-Reply-To: <153938912912.8361.13446310416406388958.stgit@magnolia>
-References: <153938912912.8361.13446310416406388958.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:43720 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726700AbeJKXmJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 Oct 2018 19:42:09 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 40D36637EE
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Oct 2018 16:14:15 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id E906F8541B
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Oct 2018 16:14:14 +0000 (UTC)
+Subject: PATCH 2/2] xfsprogs: enable sparse checking with "make C=2"
+References: <5b155482-78db-b58d-13d3-a478f79b1558@redhat.com>
+From: Eric Sandeen <sandeen@redhat.com>
+Message-ID: <086806d2-c2e5-bca0-1ade-fb7e5995c7d4@redhat.com>
+Date: Thu, 11 Oct 2018 11:14:14 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <5b155482-78db-b58d-13d3-a478f79b1558@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Enable "make C=2" sparse checking of all files without rebuilding them.
 
-Back when the XFS reflink code only supported clone_file_range, we were
-only able to return zero or negative error codes to userspace.  However,
-now that copy_file_range (which returns bytes copied) can use XFS'
-clone_file_range, we have the opportunity to return partial results.
-For example, if userspace sends a 1GB clone request and we run out of
-space halfway through, we at least can tell userspace that we completed
-512M of that request like a regular write.
+This is a bit simpler than redefining CC for the whole build, which
+requires extra commandline definitions and apparently is enough of a
+barrier that nobody's doing sparse checking.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_file.c    |    5 +----
- fs/xfs/xfs_reflink.c |   20 +++++++++++++++-----
- fs/xfs/xfs_reflink.h |    2 +-
- 3 files changed, 17 insertions(+), 10 deletions(-)
+Note, this requires unreleased sparse after v0.5, which enables the
+CHAR_BIT definition; otherwise it chokes.
 
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+--- 
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index bc9e94bcb7a3..b2b15b8dc4a1 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -928,14 +928,11 @@ xfs_file_remap_range(
- 	loff_t		len,
- 	unsigned int	remap_flags)
- {
--	int		ret;
+diff --git a/Makefile b/Makefile
+index 05fe609..9204bed 100644
+--- a/Makefile
++++ b/Makefile
+@@ -21,14 +21,14 @@ CHECK_OPTS=-Wsparse-all -Wbitwise -Wno-transparent-union -Wno-return-void -Wno-u
+ 	-Wno-non-pointer-null -D__CHECK_ENDIAN__ -D__linux__
+ 
+ ifeq ("$(origin C)", "command line")
+-  ifeq ("$(C)", "1")
+-    CHECK_CMD=$(CHECK) $(CHECK_OPTS)
+-  else
+-    CHECK_CMD=@true
+-  endif
++  CHECK_CMD=$(CHECK) $(CHECK_OPTS)
++  CHECKSRC=$(C)
++else
++  CHECK_CMD=@true
++  CHECKSRC=0
+ endif
+ 
+-export CHECK_CMD
++export CHECK_CMD CHECKSRC
+ 
+ MAKEOPTS = --no-print-directory Q=$(Q)
+ 
+diff --git a/doc/sparse.txt b/doc/sparse.txt
+index c6d1fe7..75b24e0 100644
+--- a/doc/sparse.txt
++++ b/doc/sparse.txt
+@@ -5,15 +5,12 @@ to check the source code of the open source XFS commands and utilites
+ First you need to install sparse, either from your distribution or from
+ source as provided at http://www.kernel.org/pub/software/devel/sparse/.
+ 
+-The xfsprogs Makefile has a convenient shortcut to running sparse, by setting
+-the C ("check") variable on the make commandline.  To perform these checks on
+-files when they get rebuilt, use:
++Then, run make with "make C=1" to run sparse on all the C files that get
++recompiled, or use "make C=2" to run sparse on the files whether they need to
++be recompiled or not.  The latter is a fast way to check the whole tree if you
++have already built it.
+ 
+-	make C=1
 -
- 	if (!remap_check_flags(remap_flags, RFR_SAME_DATA))
- 		return -EINVAL;
+-(Note that xfsprogs does not yet support the kernel convention of checking
+-all C files without compilation via "make C=2", so to run sparse on all
+-C files, start with a "make clean")
++See the top-level Makefile for a list of which sparse flags are enabled.
  
--	ret = xfs_reflink_remap_range(file_in, pos_in, file_out, pos_out,
-+	return xfs_reflink_remap_range(file_in, pos_in, file_out, pos_out,
- 			len, remap_flags);
--	return ret < 0 ? ret : len;
- }
+ If you'd rather run sparse more manually, just set the compiler to cgcc,
+ which is a wrapper that calls both sparse and gcc using:
+diff --git a/include/buildrules b/include/buildrules
+index 297e598..c207a16 100644
+--- a/include/buildrules
++++ b/include/buildrules
+@@ -40,6 +40,21 @@ endif
+ # Standard targets
+ #
  
- STATIC int
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index e1592e751cc2..66a8ddb9c058 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1123,6 +1123,7 @@ xfs_reflink_remap_blocks(
- 	struct xfs_inode	*dest,
- 	xfs_fileoff_t		destoff,
- 	xfs_filblks_t		len,
-+	xfs_filblks_t		*remapped_len,
- 	xfs_off_t		new_isize)
- {
- 	struct xfs_bmbt_irec	imap;
-@@ -1130,6 +1131,7 @@ xfs_reflink_remap_blocks(
- 	int			error = 0;
- 	xfs_filblks_t		range_len;
- 
-+	*remapped_len = 0;
- 	/* drange = (destoff, destoff + len); srange = (srcoff, srcoff + len) */
- 	while (len) {
- 		uint		lock_mode;
-@@ -1168,6 +1170,7 @@ xfs_reflink_remap_blocks(
- 		srcoff += range_len;
- 		destoff += range_len;
- 		len -= range_len;
-+		*remapped_len += range_len;
- 	}
- 
- 	return 0;
-@@ -1391,7 +1394,7 @@ xfs_reflink_remap_prep(
- /*
-  * Link a range of blocks from one file to another.
-  */
--int
-+loff_t
- xfs_reflink_remap_range(
- 	struct file		*file_in,
- 	loff_t			pos_in,
-@@ -1406,9 +1409,10 @@ xfs_reflink_remap_range(
- 	struct xfs_inode	*dest = XFS_I(inode_out);
- 	struct xfs_mount	*mp = src->i_mount;
- 	xfs_fileoff_t		sfsbno, dfsbno;
--	xfs_filblks_t		fsblen;
-+	xfs_filblks_t		fsblen, remappedfsb = 0;
-+	loff_t			remapped_bytes = 0;
- 	xfs_extlen_t		cowextsize;
--	ssize_t			ret;
-+	int			ret;
- 
- 	if (!xfs_sb_version_hasreflink(&mp->m_sb))
- 		return -EOPNOTSUPP;
-@@ -1424,11 +1428,17 @@ xfs_reflink_remap_range(
- 
- 	trace_xfs_reflink_remap_range(src, pos_in, len, dest, pos_out);
- 
-+	if (len == 0) {
-+		ret = 0;
-+		goto out_unlock;
-+	}
++ifeq ($(CHECKSRC),2)
 +
- 	dfsbno = XFS_B_TO_FSBT(mp, pos_out);
- 	sfsbno = XFS_B_TO_FSBT(mp, pos_in);
- 	fsblen = XFS_B_TO_FSB(mp, len);
- 	ret = xfs_reflink_remap_blocks(src, sfsbno, dest, dfsbno, fsblen,
--			pos_out + len);
-+			&remappedfsb, pos_out + len);
-+	remapped_bytes = min_t(int64_t, len, XFS_FSB_TO_B(mp, remappedfsb));
- 	if (ret)
- 		goto out_unlock;
++# Check every .c file with sparse CHECK_CMD, do not call compiler
++$(LTCOMMAND) $(LTLIBRARY) : $(SUBDIRS) $(OBJECTS)
++.PHONY: $(LTCOMMAND) $(LTLIBRARY)
++
++%.lo %.o : %.c FORCE
++	@echo "    [CHECK]  $<"
++	$(Q)$(CHECK_CMD) $(CFLAGS) $<
++
++FORCE:
++
++else
++# Regular build, possibly calling sparse CHECK_CMD as well
++
+ ifdef LTCOMMAND
+ $(LTCOMMAND) : $(SUBDIRS) $(OBJECTS) $(LTDEPENDENCIES)
+ 	@echo "    [LD]     $@"
+@@ -63,6 +78,7 @@ else
+ 	$(Q)$(CHECK_CMD) $(CFLAGS) $<
  
-@@ -1451,7 +1461,7 @@ xfs_reflink_remap_range(
- 	xfs_reflink_remap_unlock(file_in, file_out);
- 	if (ret)
- 		trace_xfs_reflink_remap_range_error(dest, ret, _RET_IP_);
--	return ret;
-+	return remapped_bytes > 0 ? remapped_bytes : ret;
- }
+ endif
++endif
  
- /*
-diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index c3c46c276fe1..cbc26ff79a8f 100644
---- a/fs/xfs/xfs_reflink.h
-+++ b/fs/xfs/xfs_reflink.h
-@@ -27,7 +27,7 @@ extern int xfs_reflink_cancel_cow_range(struct xfs_inode *ip, xfs_off_t offset,
- extern int xfs_reflink_end_cow(struct xfs_inode *ip, xfs_off_t offset,
- 		xfs_off_t count);
- extern int xfs_reflink_recover_cow(struct xfs_mount *mp);
--extern int xfs_reflink_remap_range(struct file *file_in, loff_t pos_in,
-+extern loff_t xfs_reflink_remap_range(struct file *file_in, loff_t pos_in,
- 		struct file *file_out, loff_t pos_out, loff_t len,
- 		unsigned int remap_flags);
- extern int xfs_reflink_inode_has_shared_extents(struct xfs_trans *tp,
+ ifdef POTHEAD
+ $(POTHEAD): $(XGETTEXTFILES)
