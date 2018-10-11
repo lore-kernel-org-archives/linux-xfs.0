@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:60792 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727258AbeJKLiw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Oct 2018 07:38:52 -0400
-Subject: [PATCH 08/25] vfs: rename vfs_clone_file_prep to be more descriptive
+Received: from userp2130.oracle.com ([156.151.31.86]:57466 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726964AbeJKLi5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Oct 2018 07:38:57 -0400
+Subject: [PATCH 09/25] vfs: rename clone_verify_area to remap_verify_area
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 10 Oct 2018 21:13:21 -0700
-Message-ID: <153923120146.5546.12819462933063012193.stgit@magnolia>
+Date: Wed, 10 Oct 2018 21:13:28 -0700
+Message-ID: <153923120833.5546.17948742293210510133.stgit@magnolia>
 In-Reply-To: <153923113649.5546.9840926895953408273.stgit@magnolia>
 References: <153923113649.5546.9840926895953408273.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,86 +20,58 @@ Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, A
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-The vfs_clone_file_prep is a generic function to be called by filesystem
-implementations only.  Rename the prefix to generic_ and make it more
-clear that it applies to remap operations, not just clones.
+Since we use clone_verify_area for both clone and dedupe range checks,
+rename the function to make it clear that it's for both.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 ---
- fs/ocfs2/refcounttree.c |    2 +-
- fs/read_write.c         |    8 ++++----
- fs/xfs/xfs_reflink.c    |    2 +-
- include/linux/fs.h      |    6 +++---
- 4 files changed, 9 insertions(+), 9 deletions(-)
+ fs/read_write.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
 
-diff --git a/fs/ocfs2/refcounttree.c b/fs/ocfs2/refcounttree.c
-index 19e03936c5e1..36c56dfbe485 100644
---- a/fs/ocfs2/refcounttree.c
-+++ b/fs/ocfs2/refcounttree.c
-@@ -4850,7 +4850,7 @@ int ocfs2_reflink_remap_range(struct file *file_in,
- 	    (OCFS2_I(inode_out)->ip_flags & OCFS2_INODE_SYSTEM_FILE))
- 		goto out_unlock;
- 
--	ret = vfs_clone_file_prep(file_in, pos_in, file_out, pos_out,
-+	ret = generic_remap_file_range_prep(file_in, pos_in, file_out, pos_out,
- 			&len, is_dedupe);
- 	if (ret <= 0)
- 		goto out_unlock;
 diff --git a/fs/read_write.c b/fs/read_write.c
-index 4d6855671bf3..ebf62ffca57b 100644
+index ebf62ffca57b..60cdfb576d81 100644
 --- a/fs/read_write.c
 +++ b/fs/read_write.c
-@@ -1717,9 +1717,9 @@ static int clone_verify_area(struct file *file, loff_t pos, u64 len, bool write)
-  * Returns: 0 for "nothing to clone", 1 for "something to clone", or
-  * the usual negative error code.
-  */
--int vfs_clone_file_prep(struct file *file_in, loff_t pos_in,
--			struct file *file_out, loff_t pos_out,
--			u64 *len, bool is_dedupe)
-+int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-+				  struct file *file_out, loff_t pos_out,
-+				  u64 *len, bool is_dedupe)
- {
- 	struct inode *inode_in = file_inode(file_in);
- 	struct inode *inode_out = file_inode(file_out);
-@@ -1809,7 +1809,7 @@ int vfs_clone_file_prep(struct file *file_in, loff_t pos_in,
- 
- 	return 1;
+@@ -1686,7 +1686,7 @@ SYSCALL_DEFINE6(copy_file_range, int, fd_in, loff_t __user *, off_in,
+ 	return ret;
  }
--EXPORT_SYMBOL(vfs_clone_file_prep);
-+EXPORT_SYMBOL(generic_remap_file_range_prep);
  
- int do_clone_file_range(struct file *file_in, loff_t pos_in,
- 			struct file *file_out, loff_t pos_out, u64 len)
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 281d5f53f2ec..a7757a128a78 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1326,7 +1326,7 @@ xfs_reflink_remap_prep(
- 	if (IS_DAX(inode_in) || IS_DAX(inode_out))
- 		goto out_unlock;
+-static int clone_verify_area(struct file *file, loff_t pos, u64 len, bool write)
++static int remap_verify_area(struct file *file, loff_t pos, u64 len, bool write)
+ {
+ 	struct inode *inode = file_inode(file);
  
--	ret = vfs_clone_file_prep(file_in, pos_in, file_out, pos_out,
-+	ret = generic_remap_file_range_prep(file_in, pos_in, file_out, pos_out,
- 			len, is_dedupe);
- 	if (ret <= 0)
- 		goto out_unlock;
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 11fe36576d34..686905be04c0 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1844,9 +1844,9 @@ extern ssize_t vfs_readv(struct file *, const struct iovec __user *,
- 		unsigned long, loff_t *, rwf_t);
- extern ssize_t vfs_copy_file_range(struct file *, loff_t , struct file *,
- 				   loff_t, size_t, unsigned int);
--extern int vfs_clone_file_prep(struct file *file_in, loff_t pos_in,
--			       struct file *file_out, loff_t pos_out,
--			       u64 *count, bool is_dedupe);
-+extern int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-+					 struct file *file_out, loff_t pos_out,
-+					 u64 *count, bool is_dedupe);
- extern int do_clone_file_range(struct file *file_in, loff_t pos_in,
- 			       struct file *file_out, loff_t pos_out, u64 len);
- extern int vfs_clone_file_range(struct file *file_in, loff_t pos_in,
+@@ -1839,11 +1839,11 @@ int do_clone_file_range(struct file *file_in, loff_t pos_in,
+ 	if (!file_in->f_op->remap_file_range)
+ 		return -EOPNOTSUPP;
+ 
+-	ret = clone_verify_area(file_in, pos_in, len, false);
++	ret = remap_verify_area(file_in, pos_in, len, false);
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = clone_verify_area(file_out, pos_out, len, true);
++	ret = remap_verify_area(file_out, pos_out, len, true);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -1976,7 +1976,7 @@ int vfs_dedupe_file_range_one(struct file *src_file, loff_t src_pos,
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = clone_verify_area(dst_file, dst_pos, len, true);
++	ret = remap_verify_area(dst_file, dst_pos, len, true);
+ 	if (ret < 0)
+ 		goto out_drop_write;
+ 
+@@ -2038,7 +2038,7 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
+ 	if (!S_ISREG(src->i_mode))
+ 		goto out;
+ 
+-	ret = clone_verify_area(file, off, len, false);
++	ret = remap_verify_area(file, off, len, false);
+ 	if (ret < 0)
+ 		goto out;
+ 	ret = 0;
