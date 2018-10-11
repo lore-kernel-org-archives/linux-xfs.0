@@ -1,86 +1,33 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:38294 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727693AbeJKGiL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Oct 2018 02:38:11 -0400
-Date: Wed, 10 Oct 2018 16:13:39 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 05/25] vfs: check file ranges before cloning files
-Message-ID: <20181010231339.GA6701@magnolia>
-References: <153913023835.32295.13962696655740190941.stgit@magnolia>
- <153913027326.32295.7601238218404639876.stgit@magnolia>
- <20181010230639.GN6311@dastard>
+Received: from bombadil.infradead.org ([198.137.202.133]:33772 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727529AbeJKN2C (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Oct 2018 09:28:02 -0400
+Date: Wed, 10 Oct 2018 23:02:19 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 12/18] xfsprogs: don't shadow global libxfs_init x
+ variable
+Message-ID: <20181011060219.GL20811@infradead.org>
+References: <1539201682-22198-1-git-send-email-sandeen@redhat.com>
+ <1539201682-22198-13-git-send-email-sandeen@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181010230639.GN6311@dastard>
+In-Reply-To: <1539201682-22198-13-git-send-email-sandeen@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, ocfs2-devel@oss.oracle.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Oct 11, 2018 at 10:06:39AM +1100, Dave Chinner wrote:
-> On Tue, Oct 09, 2018 at 05:11:13PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Move the file range checks from vfs_clone_file_prep into a separate
-> > generic_remap_checks function so that all the checks are collected in a
-> > central location.  This forms the basis for adding more checks from
-> > generic_write_checks that will make cloning's input checking more
-> > consistent with write input checking.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> ....
-> > --- a/fs/read_write.c
-> > +++ b/fs/read_write.c
-> > @@ -1717,12 +1717,12 @@ static int clone_verify_area(struct file *file, loff_t pos, u64 len, bool write)
-> >   * Returns: 0 for "nothing to clone", 1 for "something to clone", or
-> >   * the usual negative error code.
-> >   */
-> > -int vfs_clone_file_prep_inodes(struct inode *inode_in, loff_t pos_in,
-> > -			       struct inode *inode_out, loff_t pos_out,
-> > -			       u64 *len, bool is_dedupe)
-> > +int vfs_clone_file_prep(struct file *file_in, loff_t pos_in,
-> > +			struct file *file_out, loff_t pos_out,
-> > +			u64 *len, bool is_dedupe)
-> >  {
-> > -	loff_t bs = inode_out->i_sb->s_blocksize;
-> > -	loff_t blen;
-> > +	struct inode *inode_in = file_inode(file_in);
-> > +	struct inode *inode_out = file_inode(file_out);
-> >  	loff_t isize;
-> >  	bool same_inode = (inode_in == inode_out);
-> >  	int ret;
-> > @@ -1740,10 +1740,7 @@ int vfs_clone_file_prep_inodes(struct inode *inode_in, loff_t pos_in,
-> >  	if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
-> >  		return -EINVAL;
-> >  
-> > -	/* Are we going all the way to the end? */
-> >  	isize = i_size_read(inode_in);
-> > -	if (isize == 0)
-> > -		return 0;
+On Wed, Oct 10, 2018 at 03:01:16PM -0500, Eric Sandeen wrote:
+> We use the variable 'x' for the global libxfs_init structure, but several
+> other functions think 'x' is a nice convenient local var too, and sparse
+> complains.  Rename these local variables (or in some cases re-use existing
+> loop counter vars when x was used for this purpose).
 > 
-> This looks like a change of behaviour. Instead of skipping zero
-> legnth source files and returning success, this will now return
-> -EINVAL as other checks fail? That needs to be documented in the
-> commit message if it's intentional and a valid change to make...
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Meh, I'll make another patch.  btrfs has never had this behavior.
+Looks good,
 
-$ ls /mnt/a
--rw-r--r-- 1 root root 0 Oct 10 16:10 /mnt/a
-$ xfs_io -f -c 'reflink /mnt/a 1000000 0 4096' /mnt/b
-XFS_IOC_CLONE_RANGE: Invalid argument
-
-So it's a bug in the vfs prep functions.
-
---D
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Reviewed-by: Christoph Hellwig <hch@lst.de>
