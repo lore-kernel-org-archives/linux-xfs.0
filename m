@@ -1,114 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:53106 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727689AbeJLPyK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Oct 2018 11:54:10 -0400
-Received: by mail-wm1-f67.google.com with SMTP id 189-v6so11448392wmw.2
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Oct 2018 01:22:51 -0700 (PDT)
-Date: Fri, 12 Oct 2018 10:22:47 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 1/2] xfsprogs: enable sparse checking with make C=1
-Message-ID: <20181012082247.piys2rxsfiljpnqq@odin.usersys.redhat.com>
-References: <5b155482-78db-b58d-13d3-a478f79b1558@redhat.com>
- <97a4f428-9c9c-7bd7-7d6f-f2bf3a39b9ac@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <97a4f428-9c9c-7bd7-7d6f-f2bf3a39b9ac@redhat.com>
+Received: from mail-wr1-f54.google.com ([209.85.221.54]:33551 "EHLO
+        mail-wr1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727011AbeJLCvx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Oct 2018 22:51:53 -0400
+Received: by mail-wr1-f54.google.com with SMTP id e4-v6so10939068wrs.0
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Oct 2018 12:23:17 -0700 (PDT)
+From: Stefan Ring <stefanrin@gmail.com>
+Subject: [PATCH 1/2] xfs_metadump: Extend zapping to multi fsb dir blocks
+Date: Thu, 11 Oct 2018 21:23:06 +0200
+Message-Id: <20181011192307.18553-2-stefanrin@gmail.com>
+In-Reply-To: <20181011192307.18553-1-stefanrin@gmail.com>
+References: <20181011192307.18553-1-stefanrin@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: Stefan Ring <str@visotech.com>
 
-On Thu, Oct 11, 2018 at 11:12:52AM -0500, Eric Sandeen wrote:
-> Enable "make C=1" sparse checking when files get rebuilt.  To check
-> all files, run "make clean" first.
-> 
-> This is a bit simpler than redefining CC for the whole build, which
-> requires extra commandline definitions and apparently is enough of a
-> barrier that nobody's doing sparse checking.
-> 
-> Note, this requires unreleased sparse after v0.5, which enables the
-> CHAR_BIT definition; otherwise it chokes.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> --- 
-> 
-> diff --git a/Makefile b/Makefile
-> index d031a60..05fe609 100644
-> --- a/Makefile
-> +++ b/Makefile
-> @@ -16,6 +16,20 @@ else
->    Q = @
->  endif
->  
-> +CHECK=sparse
-> +CHECK_OPTS=-Wsparse-all -Wbitwise -Wno-transparent-union -Wno-return-void -Wno-undef \
-> +	-Wno-non-pointer-null -D__CHECK_ENDIAN__ -D__linux__
-> +
-> +ifeq ("$(origin C)", "command line")
-> +  ifeq ("$(C)", "1")
-> +    CHECK_CMD=$(CHECK) $(CHECK_OPTS)
-> +  else
-> +    CHECK_CMD=@true
-> +  endif
-> +endif
-> +
-> +export CHECK_CMD
-> +
->  MAKEOPTS = --no-print-directory Q=$(Q)
+From: Stefan Ring <str@visotech.com>
 
-Looks good
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+The processing for data zeroing was never added to process_multi_fsb_objects.
+It is now the same thing that process_single_fsb_objects does.
+---
+ db/metadump.c | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
->  
->  TOPDIR = .
-> diff --git a/doc/sparse.txt b/doc/sparse.txt
-> index 36a34a0..c6d1fe7 100644
-> --- a/doc/sparse.txt
-> +++ b/doc/sparse.txt
-> @@ -5,9 +5,18 @@ to check the source code of the open source XFS commands and utilites
->  First you need to install sparse, either from your distribution or from
->  source as provided at http://www.kernel.org/pub/software/devel/sparse/.
->  
-> -To simply build the xfsprogs source code while checking the source using
-> -sparse just set the compiler to cgcc, which is a wrapper that calls both
-> -sparse and gcc using:
-> +The xfsprogs Makefile has a convenient shortcut to running sparse, by setting
-> +the C ("check") variable on the make commandline.  To perform these checks on
-> +files when they get rebuilt, use:
-> +
-> +	make C=1
-> +
-> +(Note that xfsprogs does not yet support the kernel convention of checking
-> +all C files without compilation via "make C=2", so to run sparse on all
-> +C files, start with a "make clean")
-> +
-> +If you'd rather run sparse more manually, just set the compiler to cgcc,
-> +which is a wrapper that calls both sparse and gcc using:
->  
->  	CC=cgcc ./configure
->  
-> diff --git a/include/buildrules b/include/buildrules
-> index c57fdfc..297e598 100644
-> --- a/include/buildrules
-> +++ b/include/buildrules
-> @@ -54,10 +54,13 @@ $(LTLIBRARY) : $(SUBDIRS) $(LTOBJECTS)
->  %.lo: %.c
->  	@echo "    [CC]     $@"
->  	$(Q)$(LTCOMPILE) -c $<
-> +	$(Q)$(CHECK_CMD) $(CFLAGS) $<
->  else
-> +
->  %.o: %.c
->  	@echo "    [CC]     $@"
->  	$(Q)$(CC) $(CFLAGS) -c $<
-> +	$(Q)$(CHECK_CMD) $(CFLAGS) $<
->  
->  endif
->  
-> 
-
+diff --git a/db/metadump.c b/db/metadump.c
+index cc2ae9af..ff96860d 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -1862,6 +1862,7 @@ process_multi_fsb_objects(
+ 	typnm_t		btype,
+ 	xfs_fileoff_t	last)
+ {
++	char		*dp;
+ 	int		ret = 0;
+ 
+ 	switch (btype) {
+@@ -1902,14 +1903,16 @@ process_multi_fsb_objects(
+ 
+ 			}
+ 
+-			if ((!obfuscate && !zero_stale_data) ||
+-			     o >= mp->m_dir_geo->leafblk) {
+-				ret = write_buf(iocur_top);
+-				goto out_pop;
++			dp = iocur_top->data;
++			if (o >= mp->m_dir_geo->freeblk) {
++				process_dir_free_block(dp);
++			} else if (o >= mp->m_dir_geo->leafblk) {
++				process_dir_leaf_block(dp);
++			} else {
++				process_dir_data_block(
++					dp, o, last == mp->m_dir_geo->fsbcount);
+ 			}
+ 
+-			process_dir_data_block(iocur_top->data, o,
+-					       last == mp->m_dir_geo->fsbcount);
+ 			iocur_top->need_crc = 1;
+ 			ret = write_buf(iocur_top);
+ out_pop:
 -- 
-Carlos
+2.14.4
