@@ -1,33 +1,37 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:52822 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726319AbeJOBGT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 14 Oct 2018 21:06:19 -0400
-Date: Sun, 14 Oct 2018 10:24:33 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 16/25] vfs: make remapping to source file eof more
- explicit
-Message-ID: <20181014172433.GG30673@infradead.org>
-References: <153938912912.8361.13446310416406388958.stgit@magnolia>
- <153938925737.8361.3995899966552253527.stgit@magnolia>
+Received: from aserp2120.oracle.com ([141.146.126.78]:36388 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725825AbeJLHEq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Oct 2018 03:04:46 -0400
+Date: Thu, 11 Oct 2018 16:34:43 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 01/25] xfs: add a per-xfs trace_printk macro
+Message-ID: <20181011233443.GD28243@magnolia>
+References: <153923113649.5546.9840926895953408273.stgit@magnolia>
+ <153923114361.5546.11838344265359068530.stgit@magnolia>
+ <20181011133934.GA23424@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <153938925737.8361.3995899966552253527.stgit@magnolia>
+In-Reply-To: <20181011133934.GA23424@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: david@fromorbit.com, sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: david@fromorbit.com, sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
-On Fri, Oct 12, 2018 at 05:07:37PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Oct 11, 2018 at 06:39:34AM -0700, Christoph Hellwig wrote:
+> On Wed, Oct 10, 2018 at 09:12:23PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Add a "xfs_tprintk" macro so that developers can use trace_printk to
+> > print out arbitrary debugging information with the XFS device name
+> > attached to the trace output.
 > 
-> Create a RFR_TO_SRC_EOF flag to explicitly declare that the caller wants
-> the remap implementation to remap to the end of the source file, once
-> the files are locked.
+> I can't say I'm a fan of this.  trace_printk is a debugging aid,
+> and opencoding the file system name really isn't much of a burden.
 
-The name looks like a cat threw up on your keyboard :)
+<shrug> I got tired enough of typing it to add a ewwgross macro, and then
+got tired enough of maintaining the patch, let's see what Dave says. :)
 
->From reading the code this seems to ask for a whole file remap, right?
-Why not put that in the name to make it more descriptive?
+--D
