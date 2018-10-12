@@ -1,67 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:54272 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727061AbeJRAci (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Oct 2018 20:32:38 -0400
-Date: Wed, 17 Oct 2018 09:35:37 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 17/26] vfs: enable remap callers that can handle short
- operations
-Message-ID: <20181017163537.GO28243@magnolia>
-References: <153965939489.1256.7400115244528045860.stgit@magnolia>
- <153965999426.3607.3221368918901209000.stgit@magnolia>
- <20181017083652.GF16896@infradead.org>
+Received: from imap.thunk.org ([74.207.234.97]:54424 "EHLO imap.thunk.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726336AbeJLJvW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 12 Oct 2018 05:51:22 -0400
+Date: Thu, 11 Oct 2018 22:21:08 -0400
+From: "Theodore Y. Ts'o" <tytso@mit.edu>
+Subject: Re: [PATCH 0/3] ext2, ext4, xfs: hard fail dax mount on unsupported
+ devices
+Message-ID: <20181012022108.GA2420@thunk.org>
+References: <1539027169-23332-1-git-send-email-sandeen@sandeen.net>
+ <20181011103636.GC9467@quack2.suse.cz>
+ <CAPcyv4iAD_wkjY1way1rOxr4=gC_TGx71VquF13ooAuUPz9RJw@mail.gmail.com>
+ <5a8e54e8-4845-1c85-e4e9-0b9b551a9ce2@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181017083652.GF16896@infradead.org>
+In-Reply-To: <5a8e54e8-4845-1c85-e4e9-0b9b551a9ce2@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: david@fromorbit.com, sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, linux-xfs <linux-xfs@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, Ross Zwisler <zwisler@kernel.org>, Christoph Hellwig <hch@lst.de>
 
-On Wed, Oct 17, 2018 at 01:36:52AM -0700, Christoph Hellwig wrote:
-> >  /* Update inode timestamps and remove security privileges when remapping. */
-> > @@ -2023,7 +2034,8 @@ loff_t vfs_dedupe_file_range_one(struct file *src_file, loff_t src_pos,
-> >  {
-> >  	loff_t ret;
-> >  
-> > -	WARN_ON_ONCE(remap_flags & ~(REMAP_FILE_DEDUP));
-> > +	WARN_ON_ONCE(remap_flags & ~(REMAP_FILE_DEDUP |
-> > +				     REMAP_FILE_CAN_SHORTEN));
+On Thu, Oct 11, 2018 at 01:38:34PM -0500, Eric Sandeen wrote:
+> > The different behavior between filesystems was confusing customers so
+> > we had to align them, then the question was which default to pick.
+> > Honestly, we came to the decision to bring ext4 in line with the xfs
+> > behavior because we thought that would be easier than the alternative.
+> > Dave and Christoph made repeated arguments that DAX is just a hidden
+> > performance optimization that no application should rely on, so we
+> > went the path of least resistance and changed the ext4 default.
 > 
-> I guess this is where you could actually use REMAP_FILE_VALID_FLAGS..
-> 
-> >  /* REMAP_FILE flags taken care of by the vfs. */
-> > -#define REMAP_FILE_ADVISORY		(0)
-> > +#define REMAP_FILE_ADVISORY		(REMAP_FILE_CAN_SHORTEN)
-> 
-> And btw, they are not 'taken care of by the VFS', they need to be
-> taken care of by the fs (possibly using helpers) to take affect,
-> but they can be safely ignored.
+> Ok, well, I guess we'd better reconcile "it's a hidden performance hint"
+> with "if the administrator asked they must receive..." before making this
+> change... cc: hch for bonus input.
 
-Ok, I'll update the comment.
+And it's not so hidden if there are some applications that are
+demanding that they know whether "dax" is turned on....
 
-> > +		if (!IS_ALIGNED(count, bs)) {
-> > +			if (remap_flags & REMAP_FILE_CAN_SHORTEN)
-> > +				count = ALIGN_DOWN(count, bs);
-> > +			else
-> > +				return -EINVAL;
-> 
-> 			if (!(remap_flags & REMAP_FILE_CAN_SHORTEN))
-> 				return -EINVAL;
-> 			count = ALIGN_DOWN(count, bs);
+I don't really care, but it would nice if we settled all of these
+disagreements about what dax is one way or another.  Flip a coin if
+necessary; ext4 isn't supporting a per-file dax flag right now since
+it hasn't been clear whether or not XFS is going to drop support
+(which it is claimed we can do since dax is still "experimental").
+ 
+But whether it's flipping a coin or super-soakers at 20 paces, can we
+please figure this out?  One way or another?  I'll provide some
+suitable coin at LSF/MM if we can't figure it out sooner --- but I
+really would prefer that it be sooner.  :-)
 
-Seeing as we return EINVAL on shortened count and !CAN_SHORTEN below
-this, I think this can be simplified further:
+Thanks,
 
-	if (pos_in + count == size_in) {
-		bcount = ALIGN(size_in, bs) - pos_in;
-	} else {
-		if (!IS_ALIGNED(count, bs))
-			count = ALIGN_DOWN(count, bs);
-		bcount = count;
-	}
-
---D
+						- Ted
