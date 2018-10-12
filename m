@@ -1,36 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl6.internode.on.net ([150.101.137.136]:55564 "EHLO
-        ipmail01.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726172AbeJLIws (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Oct 2018 04:52:48 -0400
-Date: Fri, 12 Oct 2018 12:22:43 +1100
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:12349 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726053AbeJLJDI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Oct 2018 05:03:08 -0400
+Date: Fri, 12 Oct 2018 12:33:08 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 25/25] xfs: remove redundant remap partial EOF block
- checks
-Message-ID: <20181012012243.GU6311@dastard>
-References: <153923113649.5546.9840926895953408273.stgit@magnolia>
- <153923132645.5546.97372209609060021.stgit@magnolia>
+Subject: Re: [PATCH v2 00/22] xfs-4.20: major documentation surgery
+Message-ID: <20181012013308.GV6311@dastard>
+References: <153862669110.26427.16504658853992750743.stgit@magnolia>
+ <20181006005154.GM12041@dastard>
+ <20181011112735.4f696d8a@lwn.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <153923132645.5546.97372209609060021.stgit@magnolia>
+In-Reply-To: <20181011112735.4f696d8a@lwn.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
+To: Jonathan Corbet <corbet@lwn.net>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org
 
-On Wed, Oct 10, 2018 at 09:15:26PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Oct 11, 2018 at 11:27:35AM -0600, Jonathan Corbet wrote:
+> On Sat, 6 Oct 2018 10:51:54 +1000 Dave Chinner
+> <david@fromorbit.com> wrote:
 > 
-> Now that we've moved the partial EOF block checks to the VFS helpers, we
-> can remove the redundantn functionality from XFS.
+> > Can you let us know whether the CC-by-SA 4.0 license is
+> > acceptible or not? That's really the only thing that we need
+> > clarified at this point - if it's OK I'll to pull this into the
+> > XFS tree for the 4.20 merge window. If not, we'll go back to the
+> > drawing board....
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> OK, I've had a long conversation with the LF lawyer, and she said
+> clearly that we really should not be introducing CC-SA material
+> into the kernel source tree.  It's a pain; I really do like CC-SA
+> better for documentation, but it's not GPL-compatible, and that
+> creates a problem for the processed docs.
 
-looks fine.
+Ok, thanks for following upon this, Jon. We'll just keep it all in
+the existing external repo and work out what to do from there.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
