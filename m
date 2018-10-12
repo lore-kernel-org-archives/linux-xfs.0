@@ -1,93 +1,127 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:46592 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727014AbeJRDju (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 17 Oct 2018 23:39:50 -0400
-Subject: Re: [PATCH 0/3] ext2, ext4, xfs: hard fail dax mount on unsupported
- devices
-References: <1539027169-23332-1-git-send-email-sandeen@sandeen.net>
- <20181011103636.GC9467@quack2.suse.cz>
- <CAPcyv4iAD_wkjY1way1rOxr4=gC_TGx71VquF13ooAuUPz9RJw@mail.gmail.com>
- <5a8e54e8-4845-1c85-e4e9-0b9b551a9ce2@sandeen.net>
- <20181012082154.GB30154@lst.de>
- <CAOxpaSWf=6RBTa3WM=Hnbr7MwpQ5mMSMAZ+B5FfZo3zKv4Nu7w@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <116ef687-f23d-b45c-1b48-fd444b346719@sandeen.net>
-Date: Wed, 17 Oct 2018 14:42:36 -0500
+Received: from mail-wm1-f66.google.com ([209.85.128.66]:52067 "EHLO
+        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727571AbeJLPzM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Oct 2018 11:55:12 -0400
+Received: by mail-wm1-f66.google.com with SMTP id 143-v6so11381521wmf.1
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Oct 2018 01:23:52 -0700 (PDT)
+Date: Fri, 12 Oct 2018 10:23:49 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: PATCH 2/2] xfsprogs: enable sparse checking with "make C=2"
+Message-ID: <20181012082349.jwbeww4upejq4cot@odin.usersys.redhat.com>
+References: <5b155482-78db-b58d-13d3-a478f79b1558@redhat.com>
+ <086806d2-c2e5-bca0-1ade-fb7e5995c7d4@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <CAOxpaSWf=6RBTa3WM=Hnbr7MwpQ5mMSMAZ+B5FfZo3zKv4Nu7w@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <086806d2-c2e5-bca0-1ade-fb7e5995c7d4@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ross Zwisler <zwisler@kernel.org>, Christoph Hellwig <hch@lst.de>
-Cc: Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, linux-xfs <linux-xfs@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-
-
-On 10/13/18 11:05 AM, Ross Zwisler wrote:
-> On Fri, Oct 12, 2018 at 2:21 AM Christoph Hellwig <hch@lst.de> wrote:
->>
->> On Thu, Oct 11, 2018 at 01:38:34PM -0500, Eric Sandeen wrote:
->>>> The different behavior between filesystems was confusing customers so
->>>> we had to align them, then the question was which default to pick.
->>>> Honestly, we came to the decision to bring ext4 in line with the xfs
->>>> behavior because we thought that would be easier than the alternative.
->>>> Dave and Christoph made repeated arguments that DAX is just a hidden
->>>> performance optimization that no application should rely on, so we
->>>> went the path of least resistance and changed the ext4 default.
->>>
->>> Ok, well, I guess we'd better reconcile "it's a hidden performance hint"
->>> with "if the administrator asked they must receive..." before making this
->>> change... cc: hch for bonus input.
->>
->> I don't really care too mouch on the mount options, the important bit
->> was the application behavior.
->>
->> I fully agree with Dan that we should have the same behavior for every
->> file system, though.
+On Thu, Oct 11, 2018 at 11:14:14AM -0500, Eric Sandeen wrote:
+> Enable "make C=2" sparse checking of all files without rebuilding them.
 > 
-> One factor that might influence this is how we expect users to detect
-> whether or not DAX is being used, and whether that can vary per-inode
-> within a filesystem.  If we choose to only have the mount option then
-> I agree that a hard failure when -o dax doesn't work seems fine.  And
-> of course keeping the filesystems behaving the same is desirable.
+> This is a bit simpler than redefining CC for the whole build, which
+> requires extra commandline definitions and apparently is enough of a
+> barrier that nobody's doing sparse checking.
 > 
-> If we eventually do go back to having a per-inode DAX option, though,
-> the mount option becomes a hint as to what the default behavior is,
-> and the user will need another way to detect whether or not DAX is
-> being used for a given inode.  In that case having the mount option
-> fail loudly isn't as important because all we've really changed is the
-> filesystem's default, and the application will still need a consistent
-> way of detecting whether the inode they are actually using is DAX or
-> not.
+> Note, this requires unreleased sparse after v0.5, which enables the
+> CHAR_BIT definition; otherwise it chokes.
 > 
-> I'm not sure if per-inode DAX is still a goal for anyone.  If not,
-> then sure, using the DAX mount option as the one source of truth and
-> making it a hard failure when it doesn't work seems reasonable.
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> --- 
+> 
+> diff --git a/Makefile b/Makefile
+> index 05fe609..9204bed 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -21,14 +21,14 @@ CHECK_OPTS=-Wsparse-all -Wbitwise -Wno-transparent-union -Wno-return-void -Wno-u
+>  	-Wno-non-pointer-null -D__CHECK_ENDIAN__ -D__linux__
+>  
+>  ifeq ("$(origin C)", "command line")
+> -  ifeq ("$(C)", "1")
+> -    CHECK_CMD=$(CHECK) $(CHECK_OPTS)
+> -  else
+> -    CHECK_CMD=@true
+> -  endif
+> +  CHECK_CMD=$(CHECK) $(CHECK_OPTS)
+> +  CHECKSRC=$(C)
+> +else
+> +  CHECK_CMD=@true
+> +  CHECKSRC=0
+>  endif
 
-I've been thinking about the per-inode stuff a bit, and while I don't know
-how to resolve some of the trickier issues, at least the expected behavior
-seems like something we can narrow down and specify.
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-Because it's an on-disk flag (in xfs today, in any case) it seems that
-the only sane behavior to expect is either/or, i.e.:
+>  
+> -export CHECK_CMD
+> +export CHECK_CMD CHECKSRC
+>  
+>  MAKEOPTS = --no-print-directory Q=$(Q)
+>  
+> diff --git a/doc/sparse.txt b/doc/sparse.txt
+> index c6d1fe7..75b24e0 100644
+> --- a/doc/sparse.txt
+> +++ b/doc/sparse.txt
+> @@ -5,15 +5,12 @@ to check the source code of the open source XFS commands and utilites
+>  First you need to install sparse, either from your distribution or from
+>  source as provided at http://www.kernel.org/pub/software/devel/sparse/.
+>  
+> -The xfsprogs Makefile has a convenient shortcut to running sparse, by setting
+> -the C ("check") variable on the make commandline.  To perform these checks on
+> -files when they get rebuilt, use:
+> +Then, run make with "make C=1" to run sparse on all the C files that get
+> +recompiled, or use "make C=2" to run sparse on the files whether they need to
+> +be recompiled or not.  The latter is a fast way to check the whole tree if you
+> +have already built it.
+>  
+> -	make C=1
+> -
+> -(Note that xfsprogs does not yet support the kernel convention of checking
+> -all C files without compilation via "make C=2", so to run sparse on all
+> -C files, start with a "make clean")
+> +See the top-level Makefile for a list of which sparse flags are enabled.
+>  
+>  If you'd rather run sparse more manually, just set the compiler to cgcc,
+>  which is a wrapper that calls both sparse and gcc using:
+> diff --git a/include/buildrules b/include/buildrules
+> index 297e598..c207a16 100644
+> --- a/include/buildrules
+> +++ b/include/buildrules
+> @@ -40,6 +40,21 @@ endif
+>  # Standard targets
+>  #
+>  
+> +ifeq ($(CHECKSRC),2)
+> +
+> +# Check every .c file with sparse CHECK_CMD, do not call compiler
+> +$(LTCOMMAND) $(LTLIBRARY) : $(SUBDIRS) $(OBJECTS)
+> +.PHONY: $(LTCOMMAND) $(LTLIBRARY)
+> +
+> +%.lo %.o : %.c FORCE
+> +	@echo "    [CHECK]  $<"
+> +	$(Q)$(CHECK_CMD) $(CFLAGS) $<
+> +
+> +FORCE:
+> +
+> +else
+> +# Regular build, possibly calling sparse CHECK_CMD as well
+> +
+>  ifdef LTCOMMAND
+>  $(LTCOMMAND) : $(SUBDIRS) $(OBJECTS) $(LTDEPENDENCIES)
+>  	@echo "    [LD]     $@"
+> @@ -63,6 +78,7 @@ else
+>  	$(Q)$(CHECK_CMD) $(CFLAGS) $<
+>  
+>  endif
+> +endif
+>  
+>  ifdef POTHEAD
+>  $(POTHEAD): $(XGETTEXTFILES)
+> 
 
-Mount option: All files always dax, per-inode flags ignored (or rejected)
-Per-inode: Mount option cannot be specified; only inodes explicitly flagged are dax
-
-Think about it; what would mount-option-plus-per-inode mean?  We have
-no "negative" dax flag, so while mount-option-with-flag surely means
-"dax", what the heck does mount-option-without-flag mean, and how is it
-distinguishable from mount option only?
-
-I submit that flags can only have meaning w/o the fs-wide mount option
-enabled, so the question of "should we hard fail mount -o dax for devices
-that cannot support it" seems to be orthogonal to the per-inode question.
-
-i.e. mount -o dax really can only mean "I want dax on everything" and so
-again, I think we probably need to fail the mount if that can't be honored.
-
--Eric
+-- 
+Carlos
