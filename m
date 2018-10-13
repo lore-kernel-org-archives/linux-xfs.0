@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:49354 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725812AbeJMHlY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Oct 2018 03:41:24 -0400
-Subject: [PATCH 06/25] vfs: skip zero-length dedupe requests
+Received: from userp2130.oracle.com ([156.151.31.86]:34842 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726167AbeJMHm4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Oct 2018 03:42:56 -0400
+Subject: [PATCH 19/25] vfs: implement opportunistic short dedupe
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 12 Oct 2018 17:06:24 -0700
-Message-ID: <153938918436.8361.13374851564644374971.stgit@magnolia>
+Date: Fri, 12 Oct 2018 17:07:57 -0700
+Message-ID: <153938927786.8361.10345203650384514542.stgit@magnolia>
 In-Reply-To: <153938912912.8361.13446310416406388958.stgit@magnolia>
 References: <153938912912.8361.13446310416406388958.stgit@magnolia>
 MIME-Version: 1.0
@@ -16,34 +16,159 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, ocfs2-devel@oss.oracle.com
+Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Don't bother calling the filesystem for a zero-length dedupe request;
-we can return zero and exit.
+For a given dedupe request, the bytes_deduped field in the control
+structure tells userspace if we managed to deduplicate some, but not all
+of, the requested regions starting from the file offsets supplied.
+However, due to sloppy coding, the current dedupe code returns
+FILE_DEDUPE_RANGE_DIFFERS if any part of the range is different.
+Fix this so that we can actually support partial request completion.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 ---
- fs/read_write.c |    5 +++++
- 1 file changed, 5 insertions(+)
+ fs/read_write.c    |   48 ++++++++++++++++++++++++++++++++++++++----------
+ include/linux/fs.h |    7 +++++--
+ 2 files changed, 43 insertions(+), 12 deletions(-)
 
 
 diff --git a/fs/read_write.c b/fs/read_write.c
-index 067ff5698e0b..2d84d18dc095 100644
+index ce3d5c4b1d34..edd2e9ceb71b 100644
 --- a/fs/read_write.c
 +++ b/fs/read_write.c
-@@ -1991,6 +1991,11 @@ int vfs_dedupe_file_range_one(struct file *src_file, loff_t src_pos,
- 	if (!dst_file->f_op->dedupe_file_range)
- 		goto out_drop_write;
+@@ -1737,13 +1737,26 @@ static struct page *vfs_dedupe_get_page(struct inode *inode, loff_t offset)
+ 	return page;
+ }
  
-+	if (len == 0) {
-+		ret = 0;
-+		goto out_drop_write;
++static unsigned int vfs_dedupe_memcmp(const char *s1, const char *s2,
++				      unsigned int len)
++{
++	const char *orig_s1;
++
++	for (orig_s1 = s1; len > 0; s1++, s2++, len--)
++		if (*s1 != *s2)
++			break;
++
++	return s1 - orig_s1;
++}
++
+ /*
+  * Compare extents of two files to see if they are the same.
+  * Caller must have locked both inodes to prevent write races.
+  */
+ static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
+ 					 struct inode *dest, loff_t destoff,
+-					 loff_t len, bool *is_same)
++					 loff_t *req_len,
++					 unsigned int remap_flags)
+ {
+ 	loff_t src_poff;
+ 	loff_t dest_poff;
+@@ -1751,8 +1764,11 @@ static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
+ 	void *dest_addr;
+ 	struct page *src_page;
+ 	struct page *dest_page;
+-	loff_t cmp_len;
++	loff_t len = *req_len;
++	loff_t same_len = 0;
+ 	bool same;
++	unsigned int cmp_len;
++	unsigned int cmp_same;
+ 	int error;
+ 
+ 	error = -EINVAL;
+@@ -1762,7 +1778,7 @@ static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
+ 		dest_poff = destoff & (PAGE_SIZE - 1);
+ 		cmp_len = min(PAGE_SIZE - src_poff,
+ 			      PAGE_SIZE - dest_poff);
+-		cmp_len = min(cmp_len, len);
++		cmp_len = min_t(loff_t, cmp_len, len);
+ 		if (cmp_len <= 0)
+ 			goto out_error;
+ 
+@@ -1784,7 +1800,10 @@ static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
+ 		flush_dcache_page(src_page);
+ 		flush_dcache_page(dest_page);
+ 
+-		if (memcmp(src_addr + src_poff, dest_addr + dest_poff, cmp_len))
++		cmp_same = vfs_dedupe_memcmp(src_addr + src_poff,
++					     dest_addr + dest_poff, cmp_len);
++		same_len += cmp_same;
++		if (cmp_same != cmp_len)
+ 			same = false;
+ 
+ 		kunmap_atomic(dest_addr);
+@@ -1802,7 +1821,17 @@ static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
+ 		len -= cmp_len;
+ 	}
+ 
+-	*is_same = same;
++	/*
++	 * If less than the whole range matched, we have to back down to the
++	 * nearest block boundary.
++	 */
++	if (*req_len != same_len) {
++		if (!(remap_flags & RFR_SHORT_DEDUPE))
++			return -EBADE;
++
++		*req_len = ALIGN_DOWN(same_len, dest->i_sb->s_blocksize);
 +	}
 +
- 	ret = dst_file->f_op->dedupe_file_range(src_file, src_pos,
- 						dst_file, dst_pos, len);
- out_drop_write:
+ 	return 0;
+ 
+ out_error:
+@@ -1881,13 +1910,11 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
+ 	 * Check that the extents are the same.
+ 	 */
+ 	if (is_dedupe) {
+-		bool		is_same = false;
+-
+ 		ret = vfs_dedupe_file_range_compare(inode_in, pos_in,
+-				inode_out, pos_out, *len, &is_same);
++				inode_out, pos_out, len, remap_flags);
+ 		if (ret)
+ 			return ret;
+-		if (!is_same)
++		if (*len == 0)
+ 			return -EBADE;
+ 	}
+ 
+@@ -2013,7 +2040,8 @@ loff_t vfs_dedupe_file_range_one(struct file *src_file, loff_t src_pos,
+ {
+ 	loff_t ret;
+ 
+-	WARN_ON_ONCE(remap_flags & ~(RFR_SAME_DATA | RFR_CAN_SHORTEN));
++	WARN_ON_ONCE(remap_flags & ~(RFR_SAME_DATA | RFR_CAN_SHORTEN |
++				     RFR_SHORT_DEDUPE));
+ 
+ 	ret = mnt_want_write_file(dst_file);
+ 	if (ret)
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index f0603ed007e9..18b6db85ab64 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1727,16 +1727,19 @@ struct block_device_operations;
+  * RFR_SAME_DATA: only remap if contents identical (i.e. deduplicate)
+  * RFR_TO_SRC_EOF: remap to the end of the source file
+  * RFR_CAN_SHORTEN: caller can handle a shortened request
++ * RFR_SHORT_DEDUPE: deduplicate from byte 0 until the file data don't match
+  */
+ #define RFR_SAME_DATA		(1 << 0)
+ #define RFR_TO_SRC_EOF		(1 << 1)
+ #define RFR_CAN_SHORTEN		(1 << 2)
++#define RFR_SHORT_DEDUPE	(1 << 3)
+ 
+ #define RFR_VALID_FLAGS		(RFR_SAME_DATA | RFR_TO_SRC_EOF | \
+-				 RFR_CAN_SHORTEN)
++				 RFR_CAN_SHORTEN | RFR_SHORT_DEDUPE)
+ 
+ /* Implemented by the VFS, so these are advisory. */
+-#define RFR_VFS_FLAGS		(RFR_TO_SRC_EOF | RFR_CAN_SHORTEN)
++#define RFR_VFS_FLAGS		(RFR_TO_SRC_EOF | RFR_CAN_SHORTEN | \
++				 RFR_SHORT_DEDUPE)
+ 
+ /*
+  * Filesystem remapping implementations should call this helper on their
