@@ -1,138 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:48104 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728707AbeJLXjt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Oct 2018 19:39:49 -0400
-Date: Fri, 12 Oct 2018 09:06:30 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:33070 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725812AbeJMHlT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Oct 2018 03:41:19 -0400
+Subject: [PATCH 05/25] vfs: avoid problematic remapping requests into
+ partial EOF block
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 24/25] xfs: support returning partial reflink results
-Message-ID: <20181012160630.GE28243@magnolia>
-References: <153923113649.5546.9840926895953408273.stgit@magnolia>
- <153923131946.5546.5209673711907751253.stgit@magnolia>
- <20181012012226.GT6311@dastard>
+Date: Fri, 12 Oct 2018 17:06:17 -0700
+Message-ID: <153938917765.8361.15966712047859994604.stgit@magnolia>
+In-Reply-To: <153938912912.8361.13446310416406388958.stgit@magnolia>
+References: <153938912912.8361.13446310416406388958.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181012012226.GT6311@dastard>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: david@fromorbit.com, darrick.wong@oracle.com
 Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
-On Fri, Oct 12, 2018 at 12:22:26PM +1100, Dave Chinner wrote:
-> On Wed, Oct 10, 2018 at 09:15:19PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Back when the XFS reflink code only supported clone_file_range, we were
-> > only able to return zero or negative error codes to userspace.  However,
-> > now that copy_file_range (which returns bytes copied) can use XFS'
-> > clone_file_range, we have the opportunity to return partial results.
-> > For example, if userspace sends a 1GB clone request and we run out of
-> > space halfway through, we at least can tell userspace that we completed
-> > 512M of that request like a regular write.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/xfs_file.c    |    5 +----
-> >  fs/xfs/xfs_reflink.c |   19 ++++++++++++++-----
-> >  fs/xfs/xfs_reflink.h |    2 +-
-> >  3 files changed, 16 insertions(+), 10 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> > index bc9e94bcb7a3..b2b15b8dc4a1 100644
-> > --- a/fs/xfs/xfs_file.c
-> > +++ b/fs/xfs/xfs_file.c
-> > @@ -928,14 +928,11 @@ xfs_file_remap_range(
-> >  	loff_t		len,
-> >  	unsigned int	remap_flags)
-> >  {
-> > -	int		ret;
-> > -
-> >  	if (!remap_check_flags(remap_flags, RFR_SAME_DATA))
-> >  		return -EINVAL;
-> >  
-> > -	ret = xfs_reflink_remap_range(file_in, pos_in, file_out, pos_out,
-> > +	return xfs_reflink_remap_range(file_in, pos_in, file_out, pos_out,
-> >  			len, remap_flags);
-> > -	return ret < 0 ? ret : len;
-> >  }
-> >  
-> >  STATIC int
-> > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > index e1592e751cc2..12a1fe92454e 100644
-> > --- a/fs/xfs/xfs_reflink.c
-> > +++ b/fs/xfs/xfs_reflink.c
-> > @@ -1123,6 +1123,7 @@ xfs_reflink_remap_blocks(
-> >  	struct xfs_inode	*dest,
-> >  	xfs_fileoff_t		destoff,
-> >  	xfs_filblks_t		len,
-> > +	xfs_filblks_t		*remapped,
-> >  	xfs_off_t		new_isize)
-> >  {
-> >  	struct xfs_bmbt_irec	imap;
-> > @@ -1130,6 +1131,7 @@ xfs_reflink_remap_blocks(
-> >  	int			error = 0;
-> >  	xfs_filblks_t		range_len;
-> >  
-> > +	*remapped = 0;
-> >  	/* drange = (destoff, destoff + len); srange = (srcoff, srcoff + len) */
-> >  	while (len) {
-> >  		uint		lock_mode;
-> > @@ -1168,6 +1170,7 @@ xfs_reflink_remap_blocks(
-> >  		srcoff += range_len;
-> >  		destoff += range_len;
-> >  		len -= range_len;
-> > +		*remapped += range_len;
-> >  	}
-> 
-> So "remapped" is a block count? Can we call this something like
-> remap_len so it's obvious what it is tracking?
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Ok.
+A deduplication data corruption is exposed in XFS and btrfs. It is
+caused by extending the block match range to include the partial EOF
+block, but then allowing unknown data beyond EOF to be considered a
+"match" to data in the destination file because the comparison is only
+made to the end of the source file. This corrupts the destination file
+when the source extent is shared with it.
 
-> > @@ -1424,11 +1427,17 @@ xfs_reflink_remap_range(
-> >  
-> >  	trace_xfs_reflink_remap_range(src, pos_in, len, dest, pos_out);
-> >  
-> > +	if (len == 0) {
-> > +		ret = 0;
-> > +		goto out_unlock;
-> > +	}
-> > +
-> >  	dfsbno = XFS_B_TO_FSBT(mp, pos_out);
-> >  	sfsbno = XFS_B_TO_FSBT(mp, pos_in);
-> >  	fsblen = XFS_B_TO_FSB(mp, len);
-> >  	ret = xfs_reflink_remap_blocks(src, sfsbno, dest, dfsbno, fsblen,
-> > -			pos_out + len);
-> > +			&remapped, pos_out + len);
-> > +	remapped = min_t(int64_t, len, XFS_FSB_TO_B(mp, remapped));
-> 
-> So remapped is returned as a block count, then immediately converted
-> to a byte count? Can we return it as byte count so that we don't
-> have this weird unit conversion?
+The VFS remapping prep functions  only support whole block dedupe, but
+we still need to appear to support whole file dedupe correctly.  Hence
+if the dedupe request includes the last block of the souce file, don't
+include it in the actual dedupe operation. If the rest of the range
+dedupes successfully, then reject the entire request.  A subsequent
+patch will enable us to shorten dedupe requests correctly.
 
-But then we'd have a function whose inputs are in units of blocks but
-whose return value is in units of bytes.
+When reflinking sub-file ranges, a data corruption can occur when the
+source file range includes a partial EOF block. This shares the unknown
+data beyond EOF into the second file at a position inside EOF, exposing
+stale data in the second file.
 
-Maybe I'll just do this to make it more explicit:
+If the reflink request includes the last block of the souce file, only
+proceed with the reflink operation if it lands at or past the
+destination file's current EOF. If it lands within the destination file
+EOF, reject the entire request with -EINVAL and make the caller go the
+hard way.  A subsequent patch will enable us to shorten reflink requests
+correctly.
 
-xfs_filblks_t	remapped_blocks = 0;
-loff_t		remapped_bytes = 0;
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/read_write.c |   17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-ret = xfs_reflink_remap_blocks(..., &remapped_blocks...);
-remapped_bytes = min_t(int64_t, len, XFS_FSB_TO_B(mp, remapped_blocks));
 
-...
-
-return remapped_bytes > 0 ? remapped_bytes : ret;
-
---D
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+diff --git a/fs/read_write.c b/fs/read_write.c
+index d6e8e242a15f..067ff5698e0b 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1723,6 +1723,7 @@ int vfs_clone_file_prep(struct file *file_in, loff_t pos_in,
+ {
+ 	struct inode *inode_in = file_inode(file_in);
+ 	struct inode *inode_out = file_inode(file_out);
++	u64 blkmask = i_blocksize(inode_in) - 1;
+ 	bool same_inode = (inode_in == inode_out);
+ 	int ret;
+ 
+@@ -1785,6 +1786,22 @@ int vfs_clone_file_prep(struct file *file_in, loff_t pos_in,
+ 			return -EBADE;
+ 	}
+ 
++	/* Are we doing a partial EOF block remapping of some kind? */
++	if (*len & blkmask) {
++		/*
++		 * If the dedupe data matches, chop off the partial EOF block
++		 * from the source file so we don't try to dedupe the partial
++		 * EOF block.
++		 *
++		 * If the user is attempting to remap a partial EOF block and
++		 * it's inside the destination EOF then reject it.
++		 */
++		if (is_dedupe)
++			*len &= ~blkmask;
++		else if (pos_out + *len < i_size_read(inode_out))
++			return -EINVAL;
++	}
++
+ 	return 1;
+ }
+ EXPORT_SYMBOL(vfs_clone_file_prep);
