@@ -1,114 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33184 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726665AbeJMBUc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 12 Oct 2018 21:20:32 -0400
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 8FCE490C65
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Oct 2018 17:46:55 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 4A95910027D8
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Oct 2018 17:46:55 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs: clear ail delwri queued bufs on unmount of shutdown fs
-Date: Fri, 12 Oct 2018 13:46:54 -0400
-Message-Id: <20181012174654.2557-1-bfoster@redhat.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:49354 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725812AbeJMHlY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Oct 2018 03:41:24 -0400
+Subject: [PATCH 06/25] vfs: skip zero-length dedupe requests
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 12 Oct 2018 17:06:24 -0700
+Message-ID: <153938918436.8361.13374851564644374971.stgit@magnolia>
+In-Reply-To: <153938912912.8361.13446310416406388958.stgit@magnolia>
+References: <153938912912.8361.13446310416406388958.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, ocfs2-devel@oss.oracle.com
 
-In the typical unmount case, the AIL is forced out by the unmount
-sequence before the xfsaild task is stopped. Since AIL items are
-removed on writeback completion, this means that the AIL
-->ail_buf_list delwri queue has been drained. This is not always
-true in the shutdown case, however.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-It's possible for buffers to sit on a delwri queue for a period of
-time across submission attempts if said items are locked or have
-been relogged and pinned since first added to the queue. If the
-attempt to log such an item results in a log I/O error, the error
-processing can shutdown the fs, remove the item from the AIL, stale
-the buffer (dropping the LRU reference) and clear its delwri queue
-state. The latter bit means the buffer will be released from a
-delwri queue on the next submission attempt, but this might never
-occur if the filesystem has shutdown and the AIL is empty.
+Don't bother calling the filesystem for a zero-length dedupe request;
+we can return zero and exit.
 
-This means that such buffers are held indefinitely by the AIL delwri
-queue across destruction of the AIL. Aside from being a memory leak,
-these buffers can also hold references to in-core perag structures.
-The latter problem manifests as a generic/475 failure, reproducing
-the following asserts at unmount time:
-
-  XFS: Assertion failed: atomic_read(&pag->pag_ref) == 0,
-	file: fs/xfs/xfs_mount.c, line: 151
-  XFS: Assertion failed: atomic_read(&pag->pag_ref) == 0,
-	file: fs/xfs/xfs_mount.c, line: 132
-
-To prevent this problem, clear the AIL delwri queue as a final step
-before xfsaild() exit. The !empty state should never occur in the
-normal case, so add an assert to catch unexpected problems going
-forward.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 ---
+ fs/read_write.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-Hi all,
 
-This is a minor issue I ran into via generic/475. That test still
-occasionally fails for me with this patch in place, but the failure
-appears to be unrelated.
-
-Brian
-
- fs/xfs/xfs_trans_ail.c | 28 ++++++++++++++++++++++------
- 1 file changed, 22 insertions(+), 6 deletions(-)
-
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 55326f971cb3..d3a4e89bf4a0 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -531,17 +531,33 @@ xfsaild(
- 			set_current_state(TASK_INTERRUPTIBLE);
+diff --git a/fs/read_write.c b/fs/read_write.c
+index 067ff5698e0b..2d84d18dc095 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1991,6 +1991,11 @@ int vfs_dedupe_file_range_one(struct file *src_file, loff_t src_pos,
+ 	if (!dst_file->f_op->dedupe_file_range)
+ 		goto out_drop_write;
  
- 		/*
--		 * Check kthread_should_stop() after we set the task state
--		 * to guarantee that we either see the stop bit and exit or
--		 * the task state is reset to runnable such that it's not
--		 * scheduled out indefinitely and detects the stop bit at
--		 * next iteration.
--		 *
-+		 * Check kthread_should_stop() after we set the task state to
-+		 * guarantee that we either see the stop bit and exit or the
-+		 * task state is reset to runnable such that it's not scheduled
-+		 * out indefinitely and detects the stop bit at next iteration.
- 		 * A memory barrier is included in above task state set to
- 		 * serialize again kthread_stop().
- 		 */
- 		if (kthread_should_stop()) {
- 			__set_current_state(TASK_RUNNING);
++	if (len == 0) {
++		ret = 0;
++		goto out_drop_write;
++	}
 +
-+			/*
-+			 * The caller forces out the AIL before stopping the
-+			 * thread in the common case, which means the delwri
-+			 * queue is drained. In the shutdown case, the queue may
-+			 * still hold relogged buffers that haven't been
-+			 * submitted because they were pinned since added to the
-+			 * queue.
-+			 *
-+			 * Log I/O error processing stales the underlying buffer
-+			 * and clears the delwri state, expecting the buf to be
-+			 * removed on the next submission attempt. That won't
-+			 * happen if we're shutting down, so this is the last
-+			 * opportunity to release such buffers from the queue.
-+			 */
-+			ASSERT(list_empty(&ailp->ail_buf_list) ||
-+			       XFS_FORCED_SHUTDOWN(ailp->ail_mount));
-+			xfs_buf_delwri_cancel(&ailp->ail_buf_list);
- 			break;
- 		}
- 
--- 
-2.17.1
+ 	ret = dst_file->f_op->dedupe_file_range(src_file, src_pos,
+ 						dst_file, dst_pos, len);
+ out_drop_write:
