@@ -1,27 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60244 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726700AbeJKXip (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 Oct 2018 19:38:45 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 4567B83F3C
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Oct 2018 16:10:53 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 54405912AC
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Oct 2018 16:10:52 +0000 (UTC)
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 0/2] xfsprogs: enable sparse checking with "make C=[12]"
-Message-ID: <5b155482-78db-b58d-13d3-a478f79b1558@redhat.com>
-Date: Thu, 11 Oct 2018 11:10:51 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:49746 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726655AbeJMHlo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Oct 2018 03:41:44 -0400
+Subject: [PATCH 09/25] vfs: rename clone_verify_area to remap_verify_area
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 12 Oct 2018 17:06:45 -0700
+Message-ID: <153938920501.8361.2713830760292171099.stgit@magnolia>
+In-Reply-To: <153938912912.8361.13446310416406388958.stgit@magnolia>
+References: <153938912912.8361.13446310416406388958.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
-Ok one more pass at this, trying to mimic kernel behavior for C=1 & C=2
+From: Darrick J. Wong <darrick.wong@oracle.com>
+
+Since we use clone_verify_area for both clone and dedupe range checks,
+rename the function to make it clear that it's for both.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+---
+ fs/read_write.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+
+diff --git a/fs/read_write.c b/fs/read_write.c
+index 65285524e4c3..ff6fcb3b99dd 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1686,7 +1686,7 @@ SYSCALL_DEFINE6(copy_file_range, int, fd_in, loff_t __user *, off_in,
+ 	return ret;
+ }
+ 
+-static int clone_verify_area(struct file *file, loff_t pos, u64 len, bool write)
++static int remap_verify_area(struct file *file, loff_t pos, u64 len, bool write)
+ {
+ 	struct inode *inode = file_inode(file);
+ 
+@@ -1834,11 +1834,11 @@ int do_clone_file_range(struct file *file_in, loff_t pos_in,
+ 	if (!file_in->f_op->remap_file_range)
+ 		return -EOPNOTSUPP;
+ 
+-	ret = clone_verify_area(file_in, pos_in, len, false);
++	ret = remap_verify_area(file_in, pos_in, len, false);
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = clone_verify_area(file_out, pos_out, len, true);
++	ret = remap_verify_area(file_out, pos_out, len, true);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -1971,7 +1971,7 @@ int vfs_dedupe_file_range_one(struct file *src_file, loff_t src_pos,
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = clone_verify_area(dst_file, dst_pos, len, true);
++	ret = remap_verify_area(dst_file, dst_pos, len, true);
+ 	if (ret < 0)
+ 		goto out_drop_write;
+ 
+@@ -2033,7 +2033,7 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
+ 	if (!S_ISREG(src->i_mode))
+ 		goto out;
+ 
+-	ret = clone_verify_area(file, off, len, false);
++	ret = remap_verify_area(file, off, len, false);
+ 	if (ret < 0)
+ 		goto out;
+ 	ret = 0;
