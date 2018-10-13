@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:36066 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:37182 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725812AbeJMHkl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Oct 2018 03:40:41 -0400
-Subject: [PATCH 01/25] xfs: add a per-xfs trace_printk macro
+        with ESMTP id S1725812AbeJMHlk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Oct 2018 03:41:40 -0400
+Subject: [PATCH 08/25] vfs: rename vfs_clone_file_prep to be more descriptive
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 12 Oct 2018 17:05:36 -0700
-Message-ID: <153938913665.8361.8967777059460905975.stgit@magnolia>
+Date: Fri, 12 Oct 2018 17:06:38 -0700
+Message-ID: <153938919824.8361.6077145801942639742.stgit@magnolia>
 In-Reply-To: <153938912912.8361.13446310416406388958.stgit@magnolia>
 References: <153938912912.8361.13446310416406388958.stgit@magnolia>
 MIME-Version: 1.0
@@ -16,41 +16,90 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
+Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Add a "xfs_tprintk" macro so that developers can use trace_printk to
-print out arbitrary debugging information with the XFS device name
-attached to the trace output.
+The vfs_clone_file_prep is a generic function to be called by filesystem
+implementations only.  Rename the prefix to generic_ and make it more
+clear that it applies to remap operations, not just clones.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 ---
- fs/xfs/xfs_error.h |    6 ++++++
- 1 file changed, 6 insertions(+)
+ fs/ocfs2/refcounttree.c |    2 +-
+ fs/read_write.c         |    8 ++++----
+ fs/xfs/xfs_reflink.c    |    2 +-
+ include/linux/fs.h      |    6 +++---
+ 4 files changed, 9 insertions(+), 9 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
-index 246d3e989c6c..5caa8bdf6c38 100644
---- a/fs/xfs/xfs_error.h
-+++ b/fs/xfs/xfs_error.h
-@@ -76,6 +76,11 @@ extern int xfs_errortag_set(struct xfs_mount *mp, unsigned int error_tag,
- 		unsigned int tag_value);
- extern int xfs_errortag_add(struct xfs_mount *mp, unsigned int error_tag);
- extern int xfs_errortag_clearall(struct xfs_mount *mp);
-+
-+/* trace printk version of xfs_err and friends */
-+#define xfs_tprintk(mp, fmt, args...) \
-+	trace_printk("dev %d:%d " fmt, MAJOR((mp)->m_super->s_dev), \
-+			MINOR((mp)->m_super->s_dev), ##args)
- #else
- #define xfs_errortag_init(mp)			(0)
- #define xfs_errortag_del(mp)
-@@ -83,6 +88,7 @@ extern int xfs_errortag_clearall(struct xfs_mount *mp);
- #define xfs_errortag_set(mp, tag, val)		(ENOSYS)
- #define xfs_errortag_add(mp, tag)		(ENOSYS)
- #define xfs_errortag_clearall(mp)		(ENOSYS)
-+#define xfs_tprintk(mp, fmt, args...)		do { } while (0)
- #endif /* DEBUG */
+diff --git a/fs/ocfs2/refcounttree.c b/fs/ocfs2/refcounttree.c
+index 19e03936c5e1..36c56dfbe485 100644
+--- a/fs/ocfs2/refcounttree.c
++++ b/fs/ocfs2/refcounttree.c
+@@ -4850,7 +4850,7 @@ int ocfs2_reflink_remap_range(struct file *file_in,
+ 	    (OCFS2_I(inode_out)->ip_flags & OCFS2_INODE_SYSTEM_FILE))
+ 		goto out_unlock;
  
- /*
+-	ret = vfs_clone_file_prep(file_in, pos_in, file_out, pos_out,
++	ret = generic_remap_file_range_prep(file_in, pos_in, file_out, pos_out,
+ 			&len, is_dedupe);
+ 	if (ret <= 0)
+ 		goto out_unlock;
+diff --git a/fs/read_write.c b/fs/read_write.c
+index fd3fe05060a4..65285524e4c3 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1717,9 +1717,9 @@ static int clone_verify_area(struct file *file, loff_t pos, u64 len, bool write)
+  * Returns: 0 for "nothing to clone", 1 for "something to clone", or
+  * the usual negative error code.
+  */
+-int vfs_clone_file_prep(struct file *file_in, loff_t pos_in,
+-			struct file *file_out, loff_t pos_out,
+-			u64 *len, bool is_dedupe)
++int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
++				  struct file *file_out, loff_t pos_out,
++				  u64 *len, bool is_dedupe)
+ {
+ 	struct inode *inode_in = file_inode(file_in);
+ 	struct inode *inode_out = file_inode(file_out);
+@@ -1804,7 +1804,7 @@ int vfs_clone_file_prep(struct file *file_in, loff_t pos_in,
+ 
+ 	return 1;
+ }
+-EXPORT_SYMBOL(vfs_clone_file_prep);
++EXPORT_SYMBOL(generic_remap_file_range_prep);
+ 
+ int do_clone_file_range(struct file *file_in, loff_t pos_in,
+ 			struct file *file_out, loff_t pos_out, u64 len)
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 281d5f53f2ec..a7757a128a78 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -1326,7 +1326,7 @@ xfs_reflink_remap_prep(
+ 	if (IS_DAX(inode_in) || IS_DAX(inode_out))
+ 		goto out_unlock;
+ 
+-	ret = vfs_clone_file_prep(file_in, pos_in, file_out, pos_out,
++	ret = generic_remap_file_range_prep(file_in, pos_in, file_out, pos_out,
+ 			len, is_dedupe);
+ 	if (ret <= 0)
+ 		goto out_unlock;
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 11fe36576d34..686905be04c0 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1844,9 +1844,9 @@ extern ssize_t vfs_readv(struct file *, const struct iovec __user *,
+ 		unsigned long, loff_t *, rwf_t);
+ extern ssize_t vfs_copy_file_range(struct file *, loff_t , struct file *,
+ 				   loff_t, size_t, unsigned int);
+-extern int vfs_clone_file_prep(struct file *file_in, loff_t pos_in,
+-			       struct file *file_out, loff_t pos_out,
+-			       u64 *count, bool is_dedupe);
++extern int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
++					 struct file *file_out, loff_t pos_out,
++					 u64 *count, bool is_dedupe);
+ extern int do_clone_file_range(struct file *file_in, loff_t pos_in,
+ 			       struct file *file_out, loff_t pos_out, u64 len);
+ extern int vfs_clone_file_range(struct file *file_in, loff_t pos_in,
