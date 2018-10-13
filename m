@@ -1,66 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f52.google.com ([209.85.221.52]:38584 "EHLO
-        mail-wr1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726054AbeJLDNu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Oct 2018 23:13:50 -0400
-Received: by mail-wr1-f52.google.com with SMTP id a13-v6so10985632wrt.5
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Oct 2018 12:45:06 -0700 (PDT)
-Received: from dyn.cm.kabsi.at (h081217199198.dyn.cm.kabsi.at. [81.217.199.198])
-        by smtp.gmail.com with ESMTPSA id x203-v6sm17909785wmg.42.2018.10.11.12.45.04
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 11 Oct 2018 12:45:04 -0700 (PDT)
-From: Stefan Ring <stefanrin@gmail.com>
-Subject: [PATCH 1/2] xfs_metadump: Extend zapping to multi fsb dir blocks
-Date: Thu, 11 Oct 2018 21:44:23 +0200
-Message-Id: <20181011194424.20306-2-stefanrin@gmail.com>
-In-Reply-To: <20181011194424.20306-1-stefanrin@gmail.com>
-References: <20181011194424.20306-1-stefanrin@gmail.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:60864 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725812AbeJMHkz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Oct 2018 03:40:55 -0400
+Subject: [PATCH 02/25] vfs: vfs_clone_file_prep_inodes should return EINVAL
+ for a clone from beyond EOF
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 12 Oct 2018 17:05:50 -0700
+Message-ID: <153938915033.8361.8568201027937509597.stgit@magnolia>
+In-Reply-To: <153938912912.8361.13446310416406388958.stgit@magnolia>
+References: <153938912912.8361.13446310416406388958.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, ocfs2-devel@oss.oracle.com
 
-The processing for data zeroing was never added to process_multi_fsb_objects.
-It is now the same thing that process_single_fsb_objects does.
+From: Darrick J. Wong <darrick.wong@oracle.com>
+
+vfs_clone_file_prep_inodes cannot return 0 if it is asked to remap from
+a zero byte file because that's what btrfs does.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- db/metadump.c | 15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
+ fs/read_write.c |    3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/db/metadump.c b/db/metadump.c
-index cc2ae9af..ff96860d 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -1862,6 +1862,7 @@ process_multi_fsb_objects(
- 	typnm_t		btype,
- 	xfs_fileoff_t	last)
- {
-+	char		*dp;
- 	int		ret = 0;
+
+diff --git a/fs/read_write.c b/fs/read_write.c
+index 8a2737f0d61d..260797b01851 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1740,10 +1740,7 @@ int vfs_clone_file_prep_inodes(struct inode *inode_in, loff_t pos_in,
+ 	if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
+ 		return -EINVAL;
  
- 	switch (btype) {
-@@ -1902,14 +1903,16 @@ process_multi_fsb_objects(
+-	/* Are we going all the way to the end? */
+ 	isize = i_size_read(inode_in);
+-	if (isize == 0)
+-		return 0;
  
- 			}
- 
--			if ((!obfuscate && !zero_stale_data) ||
--			     o >= mp->m_dir_geo->leafblk) {
--				ret = write_buf(iocur_top);
--				goto out_pop;
-+			dp = iocur_top->data;
-+			if (o >= mp->m_dir_geo->freeblk) {
-+				process_dir_free_block(dp);
-+			} else if (o >= mp->m_dir_geo->leafblk) {
-+				process_dir_leaf_block(dp);
-+			} else {
-+				process_dir_data_block(
-+					dp, o, last == mp->m_dir_geo->fsbcount);
- 			}
- 
--			process_dir_data_block(iocur_top->data, o,
--					       last == mp->m_dir_geo->fsbcount);
- 			iocur_top->need_crc = 1;
- 			ret = write_buf(iocur_top);
- out_pop:
--- 
-2.14.4
+ 	/* Zero length dedupe exits immediately; reflink goes to EOF. */
+ 	if (*len == 0) {
