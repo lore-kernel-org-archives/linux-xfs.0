@@ -1,110 +1,145 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33186 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726700AbeJKXkr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 Oct 2018 19:40:47 -0400
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 26FE081F01
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Oct 2018 16:12:54 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id E913B85734
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Oct 2018 16:12:53 +0000 (UTC)
-Subject: [PATCH 1/2] xfsprogs: enable sparse checking with make C=1
-References: <5b155482-78db-b58d-13d3-a478f79b1558@redhat.com>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <97a4f428-9c9c-7bd7-7d6f-f2bf3a39b9ac@redhat.com>
-Date: Thu, 11 Oct 2018 11:12:52 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:37416 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726655AbeJMHls (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Oct 2018 03:41:48 -0400
+Subject: [PATCH 10/25] vfs: create generic_remap_file_range_touch to update
+ inode metadata
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 12 Oct 2018 17:06:51 -0700
+Message-ID: <153938921180.8361.13556945128095535605.stgit@magnolia>
+In-Reply-To: <153938912912.8361.13446310416406388958.stgit@magnolia>
+References: <153938912912.8361.13446310416406388958.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <5b155482-78db-b58d-13d3-a478f79b1558@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
-Enable "make C=1" sparse checking when files get rebuilt.  To check
-all files, run "make clean" first.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-This is a bit simpler than redefining CC for the whole build, which
-requires extra commandline definitions and apparently is enough of a
-barrier that nobody's doing sparse checking.
+Create a new VFS helper to handle inode metadata updates when remapping
+into a file.  If the operation can possibly alter the file contents, we
+must update the ctime and mtime and remove security privileges, just
+like we do for regular file writes.  Wire up ocfs2 to ensure consistent
+behavior.
 
-Note, this requires unreleased sparse after v0.5, which enables the
-CHAR_BIT definition; otherwise it chokes.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+---
+ fs/ocfs2/refcounttree.c |    8 ++++++++
+ fs/read_write.c         |   24 ++++++++++++++++++++++++
+ fs/xfs/xfs_reflink.c    |   29 +++++++----------------------
+ include/linux/fs.h      |    1 +
+ 4 files changed, 40 insertions(+), 22 deletions(-)
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
---- 
 
-diff --git a/Makefile b/Makefile
-index d031a60..05fe609 100644
---- a/Makefile
-+++ b/Makefile
-@@ -16,6 +16,20 @@ else
-   Q = @
- endif
+diff --git a/fs/ocfs2/refcounttree.c b/fs/ocfs2/refcounttree.c
+index 36c56dfbe485..ee1ed11379b3 100644
+--- a/fs/ocfs2/refcounttree.c
++++ b/fs/ocfs2/refcounttree.c
+@@ -4855,6 +4855,14 @@ int ocfs2_reflink_remap_range(struct file *file_in,
+ 	if (ret <= 0)
+ 		goto out_unlock;
  
-+CHECK=sparse
-+CHECK_OPTS=-Wsparse-all -Wbitwise -Wno-transparent-union -Wno-return-void -Wno-undef \
-+	-Wno-non-pointer-null -D__CHECK_ENDIAN__ -D__linux__
++	/*
++	 * Update inode timestamps and remove security privileges before we
++	 * take the ilock.
++	 */
++	ret = generic_remap_file_range_touch(file_out, is_dedupe);
++	if (ret)
++		goto out_unlock;
 +
-+ifeq ("$(origin C)", "command line")
-+  ifeq ("$(C)", "1")
-+    CHECK_CMD=$(CHECK) $(CHECK_OPTS)
-+  else
-+    CHECK_CMD=@true
-+  endif
-+endif
-+
-+export CHECK_CMD
-+
- MAKEOPTS = --no-print-directory Q=$(Q)
+ 	/* Lock out changes to the allocation maps and remap. */
+ 	down_write(&OCFS2_I(inode_in)->ip_alloc_sem);
+ 	if (!same_inode)
+diff --git a/fs/read_write.c b/fs/read_write.c
+index ff6fcb3b99dd..7b837d12f75d 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1806,6 +1806,30 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
+ }
+ EXPORT_SYMBOL(generic_remap_file_range_prep);
  
- TOPDIR = .
-diff --git a/doc/sparse.txt b/doc/sparse.txt
-index 36a34a0..c6d1fe7 100644
---- a/doc/sparse.txt
-+++ b/doc/sparse.txt
-@@ -5,9 +5,18 @@ to check the source code of the open source XFS commands and utilites
- First you need to install sparse, either from your distribution or from
- source as provided at http://www.kernel.org/pub/software/devel/sparse/.
- 
--To simply build the xfsprogs source code while checking the source using
--sparse just set the compiler to cgcc, which is a wrapper that calls both
--sparse and gcc using:
-+The xfsprogs Makefile has a convenient shortcut to running sparse, by setting
-+the C ("check") variable on the make commandline.  To perform these checks on
-+files when they get rebuilt, use:
++/* Update inode timestamps and remove security privileges when remapping. */
++int generic_remap_file_range_touch(struct file *file, bool is_dedupe)
++{
++	int ret;
 +
-+	make C=1
++	/* If can't alter the file contents, we're done. */
++	if (is_dedupe)
++		return 0;
 +
-+(Note that xfsprogs does not yet support the kernel convention of checking
-+all C files without compilation via "make C=2", so to run sparse on all
-+C files, start with a "make clean")
++	/* Update the timestamps, since we can alter file contents. */
++	if (!(file->f_mode & FMODE_NOCMTIME)) {
++		ret = file_update_time(file);
++		if (ret)
++			return ret;
++	}
 +
-+If you'd rather run sparse more manually, just set the compiler to cgcc,
-+which is a wrapper that calls both sparse and gcc using:
- 
- 	CC=cgcc ./configure
- 
-diff --git a/include/buildrules b/include/buildrules
-index c57fdfc..297e598 100644
---- a/include/buildrules
-+++ b/include/buildrules
-@@ -54,10 +54,13 @@ $(LTLIBRARY) : $(SUBDIRS) $(LTOBJECTS)
- %.lo: %.c
- 	@echo "    [CC]     $@"
- 	$(Q)$(LTCOMPILE) -c $<
-+	$(Q)$(CHECK_CMD) $(CFLAGS) $<
- else
++	/*
++	 * Clear the security bits if the process is not being run by root.
++	 * This keeps people from modifying setuid and setgid binaries.
++	 */
++	return file_remove_privs(file);
++}
++EXPORT_SYMBOL(generic_remap_file_range_touch);
 +
- %.o: %.c
- 	@echo "    [CC]     $@"
- 	$(Q)$(CC) $(CFLAGS) -c $<
-+	$(Q)$(CHECK_CMD) $(CFLAGS) $<
+ int do_clone_file_range(struct file *file_in, loff_t pos_in,
+ 			struct file *file_out, loff_t pos_out, u64 len)
+ {
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index a7757a128a78..99f2ea4fcaba 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -1371,28 +1371,13 @@ xfs_reflink_remap_prep(
+ 	truncate_inode_pages_range(&inode_out->i_data, pos_out,
+ 				   PAGE_ALIGN(pos_out + *len) - 1);
  
- endif
+-	/* If we're altering the file contents... */
+-	if (!is_dedupe) {
+-		/*
+-		 * ...update the timestamps (which will grab the ilock again
+-		 * from xfs_fs_dirty_inode, so we have to call it before we
+-		 * take the ilock).
+-		 */
+-		if (!(file_out->f_mode & FMODE_NOCMTIME)) {
+-			ret = file_update_time(file_out);
+-			if (ret)
+-				goto out_unlock;
+-		}
+-
+-		/*
+-		 * ...clear the security bits if the process is not being run
+-		 * by root.  This keeps people from modifying setuid and setgid
+-		 * binaries.
+-		 */
+-		ret = file_remove_privs(file_out);
+-		if (ret)
+-			goto out_unlock;
+-	}
++	/*
++	 * Update inode timestamps and remove security privileges before we
++	 * take the ilock.
++	 */
++	ret = generic_remap_file_range_touch(file_out, is_dedupe);
++	if (ret)
++		goto out_unlock;
  
+ 	return 1;
+ out_unlock:
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 686905be04c0..91fd3c77763b 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1847,6 +1847,7 @@ extern ssize_t vfs_copy_file_range(struct file *, loff_t , struct file *,
+ extern int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
+ 					 struct file *file_out, loff_t pos_out,
+ 					 u64 *count, bool is_dedupe);
++extern int generic_remap_file_range_touch(struct file *file, bool is_dedupe);
+ extern int do_clone_file_range(struct file *file_in, loff_t pos_in,
+ 			       struct file *file_out, loff_t pos_out, u64 len);
+ extern int vfs_clone_file_range(struct file *file_in, loff_t pos_in,
