@@ -1,13 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:36612 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725812AbeJMHlK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Oct 2018 03:41:10 -0400
-Subject: [PATCH 04/25] vfs: strengthen checking of file range inputs to
- generic_remap_checks
+Received: from userp2130.oracle.com ([156.151.31.86]:34626 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726167AbeJMHml (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Oct 2018 03:42:41 -0400
+Subject: [PATCH 17/25] vfs: enable remap callers that can handle short
+ operations
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 12 Oct 2018 17:06:10 -0700
-Message-ID: <153938917040.8361.8262720501664468642.stgit@magnolia>
+Date: Fri, 12 Oct 2018 17:07:44 -0700
+Message-ID: <153938926421.8361.13101766265446494393.stgit@magnolia>
 In-Reply-To: <153938912912.8361.13446310416406388958.stgit@magnolia>
 References: <153938912912.8361.13446310416406388958.stgit@magnolia>
 MIME-Version: 1.0
@@ -17,162 +17,147 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, ocfs2-devel@oss.oracle.com
+Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-File range remapping, if allowed to run past the destination file's EOF,
-is an optimization on a regular file write.  Regular file writes that
-extend the file length are subject to various constraints which are not
-checked by range cloning.
+Plumb in a remap flag that enables the filesystem remap handler to
+shorten remapping requests for callers that can handle it.  Now
+copy_file_range can report partial success (in case we run up against
+alignment problems, resource limits, etc.).
 
-This is a correctness problem because we're never allowed to touch
-ranges that the page cache can't support (s_maxbytes); we're not
-supposed to deal with large offsets (MAX_NON_LFS) if O_LARGEFILE isn't
-set; and we must obey resource limits (RLIMIT_FSIZE).
-
-Therefore, add these checks to the new generic_remap_checks function so
-that we curtail unexpected behavior.
+We also enable CAN_SHORTEN for fideduperange to maintain existing
+userspace-visible behavior where xfs/btrfs shorten the dedupe range to
+avoid stale post-eof data exposure.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Amir Goldstein <amir73il@gmail.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- mm/filemap.c |   91 ++++++++++++++++++++++++++++++++++++++--------------------
- 1 file changed, 59 insertions(+), 32 deletions(-)
+ fs/read_write.c    |   22 +++++++++++++++-------
+ include/linux/fs.h |    7 +++++--
+ mm/filemap.c       |   16 ++++++++++++----
+ 3 files changed, 32 insertions(+), 13 deletions(-)
 
 
+diff --git a/fs/read_write.c b/fs/read_write.c
+index c02fc5144d15..86a8c2557d18 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1593,7 +1593,8 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
+ 
+ 		cloned = file_in->f_op->remap_file_range(file_in, pos_in,
+ 				file_out, pos_out,
+-				min_t(loff_t, MAX_RW_COUNT, len), 0);
++				min_t(loff_t, MAX_RW_COUNT, len),
++				RFR_CAN_SHORTEN);
+ 		if (cloned > 0) {
+ 			ret = cloned;
+ 			goto done;
+@@ -1797,6 +1798,8 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
+ 
+ 	/* Are we doing a partial EOF block remapping of some kind? */
+ 	if (*len & blkmask) {
++		loff_t	new_len = *len;
++
+ 		/*
+ 		 * If the dedupe data matches, chop off the partial EOF block
+ 		 * from the source file so we don't try to dedupe the partial
+@@ -1804,11 +1807,16 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
+ 		 *
+ 		 * If the user is attempting to remap a partial EOF block and
+ 		 * it's inside the destination EOF then reject it.
++		 *
++		 * If possible, shorten the request instead of rejecting it.
+ 		 */
+-		if (is_dedupe)
+-			*len &= ~blkmask;
+-		else if (pos_out + *len < i_size_read(inode_out))
+-			return -EINVAL;
++		if (is_dedupe || pos_out + *len < i_size_read(inode_out))
++			new_len &= ~blkmask;
++
++		if (new_len != *len && !(remap_flags & RFR_CAN_SHORTEN))
++			return is_dedupe ? -EBADE : -EINVAL;
++
++		*len = new_len;
+ 	}
+ 
+ 	return 1;
+@@ -2006,7 +2014,7 @@ loff_t vfs_dedupe_file_range_one(struct file *src_file, loff_t src_pos,
+ {
+ 	loff_t ret;
+ 
+-	WARN_ON_ONCE(remap_flags & ~(RFR_SAME_DATA));
++	WARN_ON_ONCE(remap_flags & ~(RFR_SAME_DATA | RFR_CAN_SHORTEN));
+ 
+ 	ret = mnt_want_write_file(dst_file);
+ 	if (ret)
+@@ -2107,7 +2115,7 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
+ 
+ 		deduped = vfs_dedupe_file_range_one(file, off, dst_file,
+ 						    info->dest_offset, len,
+-						    0);
++						    RFR_CAN_SHORTEN);
+ 		if (deduped == -EBADE)
+ 			info->status = FILE_DEDUPE_RANGE_DIFFERS;
+ 		else if (deduped < 0)
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index b9c314f9d5a4..57cb56bbc30a 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1726,14 +1726,17 @@ struct block_device_operations;
+  *
+  * RFR_SAME_DATA: only remap if contents identical (i.e. deduplicate)
+  * RFR_TO_SRC_EOF: remap to the end of the source file
++ * RFR_CAN_SHORTEN: caller can handle a shortened request
+  */
+ #define RFR_SAME_DATA		(1 << 0)
+ #define RFR_TO_SRC_EOF		(1 << 1)
++#define RFR_CAN_SHORTEN		(1 << 2)
+ 
+-#define RFR_VALID_FLAGS		(RFR_SAME_DATA | RFR_TO_SRC_EOF)
++#define RFR_VALID_FLAGS		(RFR_SAME_DATA | RFR_TO_SRC_EOF | \
++				 RFR_CAN_SHORTEN)
+ 
+ /* Implemented by the VFS, so these are advisory. */
+-#define RFR_VFS_FLAGS		(RFR_TO_SRC_EOF)
++#define RFR_VFS_FLAGS		(RFR_TO_SRC_EOF | RFR_CAN_SHORTEN)
+ 
+ /*
+  * Filesystem remapping implementations should call this helper on their
 diff --git a/mm/filemap.c b/mm/filemap.c
-index 47e6bfd45a91..08ad210fee49 100644
+index 369cfd164e90..bccbd3621238 100644
 --- a/mm/filemap.c
 +++ b/mm/filemap.c
-@@ -2915,6 +2915,49 @@ struct page *read_cache_page_gfp(struct address_space *mapping,
- }
- EXPORT_SYMBOL(read_cache_page_gfp);
- 
-+static int generic_access_check_limits(struct file *file, loff_t pos,
-+				       loff_t *count)
-+{
-+	struct inode *inode = file->f_mapping->host;
-+
-+	/* Don't exceed the LFS limits. */
-+	if (unlikely(pos + *count > MAX_NON_LFS &&
-+				!(file->f_flags & O_LARGEFILE))) {
-+		if (pos >= MAX_NON_LFS)
-+			return -EFBIG;
-+		*count = min(*count, (loff_t)MAX_NON_LFS - pos);
-+	}
-+
-+	/*
-+	 * Don't operate on ranges the page cache doesn't support.
-+	 *
-+	 * If we have written data it becomes a short write.  If we have
-+	 * exceeded without writing data we send a signal and return EFBIG.
-+	 * Linus frestrict idea will clean these up nicely..
-+	 */
-+	if (unlikely(pos >= inode->i_sb->s_maxbytes))
-+		return -EFBIG;
-+
-+	*count = min(*count, inode->i_sb->s_maxbytes - pos);
-+	return 0;
-+}
-+
-+static int generic_write_check_limits(struct file *file, loff_t pos,
-+				      loff_t *count)
-+{
-+	unsigned long limit = rlimit(RLIMIT_FSIZE);
-+
-+	if (limit != RLIM_INFINITY) {
-+		if (pos >= limit) {
-+			send_sig(SIGXFSZ, current, 0);
-+			return -EFBIG;
+@@ -3051,8 +3051,12 @@ int generic_remap_checks(struct file *file_in, loff_t pos_in,
+ 	if (pos_in + count == size_in) {
+ 		bcount = ALIGN(size_in, bs) - pos_in;
+ 	} else {
+-		if (!IS_ALIGNED(count, bs))
+-			return -EINVAL;
++		if (!IS_ALIGNED(count, bs)) {
++			if (remap_flags & RFR_CAN_SHORTEN)
++				count = ALIGN_DOWN(count, bs);
++			else
++				return -EINVAL;
 +		}
-+		*count = min(*count, (loff_t)limit - pos);
-+	}
-+
-+	return generic_access_check_limits(file, pos, count);
-+}
-+
- /*
-  * Performs necessary checks before doing a write
-  *
-@@ -2926,8 +2969,8 @@ inline ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
- {
- 	struct file *file = iocb->ki_filp;
- 	struct inode *inode = file->f_mapping->host;
--	unsigned long limit = rlimit(RLIMIT_FSIZE);
--	loff_t pos;
-+	loff_t count;
-+	int ret;
  
- 	if (!iov_iter_count(from))
- 		return 0;
-@@ -2936,40 +2979,15 @@ inline ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
- 	if (iocb->ki_flags & IOCB_APPEND)
- 		iocb->ki_pos = i_size_read(inode);
- 
--	pos = iocb->ki_pos;
--
- 	if ((iocb->ki_flags & IOCB_NOWAIT) && !(iocb->ki_flags & IOCB_DIRECT))
+ 		bcount = count;
+ 	}
+@@ -3063,10 +3067,14 @@ int generic_remap_checks(struct file *file_in, loff_t pos_in,
+ 	    pos_out < pos_in + bcount)
  		return -EINVAL;
  
--	if (limit != RLIM_INFINITY) {
--		if (iocb->ki_pos >= limit) {
--			send_sig(SIGXFSZ, current, 0);
--			return -EFBIG;
--		}
--		iov_iter_truncate(from, limit - (unsigned long)pos);
--	}
-+	count = iov_iter_count(from);
-+	ret = generic_write_check_limits(file, iocb->ki_pos, &count);
-+	if (ret)
-+		return ret;
+-	/* For now we don't support changing the length. */
+-	if (*req_count != count)
++	/*
++	 * We shortened the request but the caller can't deal with that, so
++	 * bounce the request back to userspace.
++	 */
++	if (*req_count != count && !(remap_flags & RFR_CAN_SHORTEN))
+ 		return -EINVAL;
  
--	/*
--	 * LFS rule
--	 */
--	if (unlikely(pos + iov_iter_count(from) > MAX_NON_LFS &&
--				!(file->f_flags & O_LARGEFILE))) {
--		if (pos >= MAX_NON_LFS)
--			return -EFBIG;
--		iov_iter_truncate(from, MAX_NON_LFS - (unsigned long)pos);
--	}
--
--	/*
--	 * Are we about to exceed the fs block limit ?
--	 *
--	 * If we have written data it becomes a short write.  If we have
--	 * exceeded without writing data we send a signal and return EFBIG.
--	 * Linus frestrict idea will clean these up nicely..
--	 */
--	if (unlikely(pos >= inode->i_sb->s_maxbytes))
--		return -EFBIG;
--
--	iov_iter_truncate(from, inode->i_sb->s_maxbytes - pos);
-+	iov_iter_truncate(from, count);
- 	return iov_iter_count(from);
++	*req_count = count;
+ 	return 0;
  }
- EXPORT_SYMBOL(generic_write_checks);
-@@ -2991,6 +3009,7 @@ int generic_remap_checks(struct file *file_in, loff_t pos_in,
- 	uint64_t bcount;
- 	loff_t size_in, size_out;
- 	loff_t bs = inode_out->i_sb->s_blocksize;
-+	int ret;
  
- 	/* The start of both ranges must be aligned to an fs block. */
- 	if (!IS_ALIGNED(pos_in, bs) || !IS_ALIGNED(pos_out, bs))
-@@ -3014,6 +3033,14 @@ int generic_remap_checks(struct file *file_in, loff_t pos_in,
- 		return -EINVAL;
- 	count = min(count, size_in - (uint64_t)pos_in);
- 
-+	ret = generic_access_check_limits(file_in, pos_in, &count);
-+	if (ret)
-+		return ret;
-+
-+	ret = generic_write_check_limits(file_out, pos_out, &count);
-+	if (ret)
-+		return ret;
-+
- 	/*
- 	 * If the user wanted us to link to the infile's EOF, round up to the
- 	 * next block boundary for this check.
