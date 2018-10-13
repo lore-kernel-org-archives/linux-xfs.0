@@ -1,66 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:46630 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728164AbeJLCHB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 Oct 2018 22:07:01 -0400
-Subject: Re: [PATCH 0/3] ext2, ext4, xfs: hard fail dax mount on unsupported
- devices
-References: <1539027169-23332-1-git-send-email-sandeen@sandeen.net>
- <20181011103636.GC9467@quack2.suse.cz>
- <CAPcyv4iAD_wkjY1way1rOxr4=gC_TGx71VquF13ooAuUPz9RJw@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5a8e54e8-4845-1c85-e4e9-0b9b551a9ce2@sandeen.net>
-Date: Thu, 11 Oct 2018 13:38:34 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:34002 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726001AbeJMHmH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Oct 2018 03:42:07 -0400
+Subject: [PATCH 12/25] vfs: pass remap flags to generic_remap_checks
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 12 Oct 2018 17:07:05 -0700
+Message-ID: <153938922552.8361.18136407106022565712.stgit@magnolia>
+In-Reply-To: <153938912912.8361.13446310416406388958.stgit@magnolia>
+References: <153938912912.8361.13446310416406388958.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <CAPcyv4iAD_wkjY1way1rOxr4=gC_TGx71VquF13ooAuUPz9RJw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, Ross Zwisler <zwisler@kernel.org>, Christoph Hellwig <hch@lst.de>
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
+
+From: Darrick J. Wong <darrick.wong@oracle.com>
+
+Pass the same remap flags to generic_remap_checks for consistency.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+---
+ fs/read_write.c    |    2 +-
+ include/linux/fs.h |    2 +-
+ mm/filemap.c       |    4 ++--
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
 
-
-On 10/11/18 1:08 PM, Dan Williams wrote:
-> On Thu, Oct 11, 2018 at 3:37 AM Jan Kara <jack@suse.cz> wrote:
->>
->> On Mon 08-10-18 14:32:46, Eric Sandeen wrote:
->>> In response to an earlier xfs patch to change how xfs reacts to
->>> dax incompatibilities, Dave said:
->>>
->>>> I suspect we need to be more harsh are rejecting mounts with -o dax
->>>> on devices DAX isn't supported on. This mount option is going into
->>>> production systems - it's not just for "testing" as the comments all
->>>> claim. i Things will break in production systems if DAX isn't
->>>> enabled and they are expecting it to be enabled.
->>>
->>> and I tend to agree, so proposing this change to hard-fail a dax mount if
->>> the device doesn't support it, instead of silently disabling the
->>> functionality.  Proposing for ext2, ext4, and xfs to keep behavior in
->>> sync.
->>
->> Let me include Dan and Ross into the discussion since they were the ones
->> proposing the "silent fallback" behavior (ext4 actually did fail the mount
->> instead not so long ago - see 24f3478d664b "ext4: auto disable dax instead
->> of failing mount" from December). Guys, why did you choose the fallback
->> path instead of a failure?
-> 
-> The different behavior between filesystems was confusing customers so
-> we had to align them, then the question was which default to pick.
-> Honestly, we came to the decision to bring ext4 in line with the xfs
-> behavior because we thought that would be easier than the alternative.
-> Dave and Christoph made repeated arguments that DAX is just a hidden
-> performance optimization that no application should rely on, so we
-> went the path of least resistance and changed the ext4 default.
-
-Ok, well, I guess we'd better reconcile "it's a hidden performance hint"
-with "if the administrator asked they must receive..." before making this
-change... cc: hch for bonus input.
-
--Eric
-
-> I'm perfectly fine switching both to the "fail if not DAX device" behavior.
-> 
+diff --git a/fs/read_write.c b/fs/read_write.c
+index 5d24e9854765..0c43997bd4a1 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1755,7 +1755,7 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
+ 
+ 	/* Check that we don't violate system file offset limits. */
+ 	ret = generic_remap_checks(file_in, pos_in, file_out, pos_out, len,
+-			is_dedupe);
++			remap_flags);
+ 	if (ret)
+ 		return ret;
+ 
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index b67f108932a5..b59637b2f484 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2990,7 +2990,7 @@ extern int generic_file_readonly_mmap(struct file *, struct vm_area_struct *);
+ extern ssize_t generic_write_checks(struct kiocb *, struct iov_iter *);
+ extern int generic_remap_checks(struct file *file_in, loff_t pos_in,
+ 				struct file *file_out, loff_t pos_out,
+-				uint64_t *count, bool is_dedupe);
++				uint64_t *count, unsigned int remap_flags);
+ extern ssize_t generic_file_read_iter(struct kiocb *, struct iov_iter *);
+ extern ssize_t __generic_file_write_iter(struct kiocb *, struct iov_iter *);
+ extern ssize_t generic_file_write_iter(struct kiocb *, struct iov_iter *);
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 08ad210fee49..c34a89a35d5a 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -3001,7 +3001,7 @@ EXPORT_SYMBOL(generic_write_checks);
+  */
+ int generic_remap_checks(struct file *file_in, loff_t pos_in,
+ 			 struct file *file_out, loff_t pos_out,
+-			 uint64_t *req_count, bool is_dedupe)
++			 uint64_t *req_count, unsigned int remap_flags)
+ {
+ 	struct inode *inode_in = file_in->f_mapping->host;
+ 	struct inode *inode_out = file_out->f_mapping->host;
+@@ -3023,7 +3023,7 @@ int generic_remap_checks(struct file *file_in, loff_t pos_in,
+ 	size_out = i_size_read(inode_out);
+ 
+ 	/* Dedupe requires both ranges to be within EOF. */
+-	if (is_dedupe &&
++	if ((remap_flags & RFR_SAME_DATA) &&
+ 	    (pos_in >= size_in || pos_in + count > size_in ||
+ 	     pos_out >= size_out || pos_out + count > size_out))
+ 		return -EINVAL;
