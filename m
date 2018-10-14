@@ -1,165 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:34426 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726167AbeJMHma (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Oct 2018 03:42:30 -0400
-Subject: [PATCH 14/25] vfs: plumb RFR_* remap flags through the vfs clone
- functions
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 12 Oct 2018 17:07:23 -0700
-Message-ID: <153938924351.8361.7769839930817710679.stgit@magnolia>
-In-Reply-To: <153938912912.8361.13446310416406388958.stgit@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:52606 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726319AbeJOBBM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 14 Oct 2018 21:01:12 -0400
+Date: Sun, 14 Oct 2018 10:19:27 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 07/25] vfs: combine the clone and dedupe into a single
+ remap_file_range
+Message-ID: <20181014171927.GD30673@infradead.org>
 References: <153938912912.8361.13446310416406388958.stgit@magnolia>
+ <153938919123.8361.13059492965161549195.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <153938919123.8361.13059492965161549195.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: david@fromorbit.com, sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+>  	unsigned (*mmap_capabilities)(struct file *);
+>  #endif
+>  	ssize_t (*copy_file_range)(struct file *, loff_t, struct file *, loff_t, size_t, unsigned int);
+> -	int (*clone_file_range)(struct file *, loff_t, struct file *, loff_t, u64);
+> -	int (*dedupe_file_range)(struct file *, loff_t, struct file *, loff_t, u64);
+> +	int (*remap_file_range)(struct file *file_in, loff_t pos_in,
+> +				struct file *file_out, loff_t pos_out,
+> +				u64 len, unsigned int remap_flags);
 
-Plumb a remap_flags argument through the {do,vfs}_clone_file_range
-functions so that clone can take advantage of it.
+None of the other methods in this file name their parameters.  While
+I generally don't like people leaving them out, in the end consistency
+is even more important.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Amir Goldstein <amir73il@gmail.com>
----
- fs/ioctl.c             |    2 +-
- fs/nfsd/vfs.c          |    2 +-
- fs/overlayfs/copy_up.c |    2 +-
- fs/overlayfs/file.c    |    6 +++---
- fs/read_write.c        |   13 +++++++++----
- include/linux/fs.h     |    4 ++--
- 6 files changed, 17 insertions(+), 12 deletions(-)
+> +int btrfs_remap_file_range(struct file *src_file, loff_t off,
+> +		struct file *dst_file, loff_t destoff, u64 len,
+> +		unsigned int remap_flags)
+>  {
+> +	if (!remap_check_flags(remap_flags, RFR_SAME_DATA))
+> +		return -EINVAL;
+> +
+> +	if (remap_flags & RFR_SAME_DATA) {
 
+So at least for btrfs there seems to be no shared code at all below
+the function calls.  This kinda speaks against the argument that
+they fundamentally are the same..
 
-diff --git a/fs/ioctl.c b/fs/ioctl.c
-index 72537b68c272..505275ec5596 100644
---- a/fs/ioctl.c
-+++ b/fs/ioctl.c
-@@ -232,7 +232,7 @@ static long ioctl_file_clone(struct file *dst_file, unsigned long srcfd,
- 	if (src_file.file->f_path.mnt != dst_file->f_path.mnt)
- 		goto fdput;
- 	cloned = vfs_clone_file_range(src_file.file, off, dst_file, destoff,
--				      olen);
-+				      olen, 0);
- 	if (cloned < 0)
- 		ret = cloned;
- 	else if (olen && cloned != olen)
-diff --git a/fs/nfsd/vfs.c b/fs/nfsd/vfs.c
-index ac6cb6101cbe..726fc5b2b27a 100644
---- a/fs/nfsd/vfs.c
-+++ b/fs/nfsd/vfs.c
-@@ -543,7 +543,7 @@ __be32 nfsd4_clone_file_range(struct file *src, u64 src_pos, struct file *dst,
- {
- 	loff_t cloned;
- 
--	cloned = vfs_clone_file_range(src, src_pos, dst, dst_pos, count);
-+	cloned = vfs_clone_file_range(src, src_pos, dst, dst_pos, count, 0);
- 	if (count && cloned != count)
- 		cloned = -EINVAL;
- 	return nfserrno(cloned < 0 ? cloned : 0);
-diff --git a/fs/overlayfs/copy_up.c b/fs/overlayfs/copy_up.c
-index 8750b7235516..5f82fece64a0 100644
---- a/fs/overlayfs/copy_up.c
-+++ b/fs/overlayfs/copy_up.c
-@@ -142,7 +142,7 @@ static int ovl_copy_up_data(struct path *old, struct path *new, loff_t len)
- 	}
- 
- 	/* Try to use clone_file_range to clone up within the same fs */
--	cloned = do_clone_file_range(old_file, 0, new_file, 0, len);
-+	cloned = do_clone_file_range(old_file, 0, new_file, 0, len, 0);
- 	if (cloned == len)
- 		goto out;
- 	/* Couldn't clone, so now we try to copy the data */
-diff --git a/fs/overlayfs/file.c b/fs/overlayfs/file.c
-index 177731b21bad..e5cc17281d0b 100644
---- a/fs/overlayfs/file.c
-+++ b/fs/overlayfs/file.c
-@@ -462,7 +462,7 @@ static loff_t ovl_copyfile(struct file *file_in, loff_t pos_in,
- 
- 	case OVL_CLONE:
- 		ret = vfs_clone_file_range(real_in.file, pos_in,
--					   real_out.file, pos_out, len);
-+					   real_out.file, pos_out, len, flags);
- 		break;
- 
- 	case OVL_DEDUPE:
-@@ -512,8 +512,8 @@ static loff_t ovl_remap_file_range(struct file *file_in, loff_t pos_in,
- 	     !ovl_inode_upper(file_inode(file_out))))
- 		return -EPERM;
- 
--	return ovl_copyfile(file_in, pos_in, file_out, pos_out, len, 0,
--			    op);
-+	return ovl_copyfile(file_in, pos_in, file_out, pos_out, len,
-+			    remap_flags, op);
- }
- 
- const struct file_operations ovl_file_operations = {
-diff --git a/fs/read_write.c b/fs/read_write.c
-index 29ec0a6bfa2f..30076ed38091 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -1837,12 +1837,15 @@ int generic_remap_file_range_touch(struct file *file, unsigned int remap_flags)
- EXPORT_SYMBOL(generic_remap_file_range_touch);
- 
- loff_t do_clone_file_range(struct file *file_in, loff_t pos_in,
--			   struct file *file_out, loff_t pos_out, loff_t len)
-+			   struct file *file_out, loff_t pos_out,
-+			   loff_t len, unsigned int remap_flags)
- {
- 	struct inode *inode_in = file_inode(file_in);
- 	struct inode *inode_out = file_inode(file_out);
- 	loff_t ret;
- 
-+	WARN_ON_ONCE(remap_flags);
-+
- 	if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
- 		return -EISDIR;
- 	if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
-@@ -1873,7 +1876,7 @@ loff_t do_clone_file_range(struct file *file_in, loff_t pos_in,
- 		return ret;
- 
- 	ret = file_in->f_op->remap_file_range(file_in, pos_in,
--			file_out, pos_out, len, 0);
-+			file_out, pos_out, len, remap_flags);
- 	if (ret < 0)
- 		return ret;
- 
-@@ -1884,12 +1887,14 @@ loff_t do_clone_file_range(struct file *file_in, loff_t pos_in,
- EXPORT_SYMBOL(do_clone_file_range);
- 
- loff_t vfs_clone_file_range(struct file *file_in, loff_t pos_in,
--			    struct file *file_out, loff_t pos_out, loff_t len)
-+			    struct file *file_out, loff_t pos_out,
-+			    loff_t len, unsigned int remap_flags)
- {
- 	loff_t ret;
- 
- 	file_start_write(file_out);
--	ret = do_clone_file_range(file_in, pos_in, file_out, pos_out, len);
-+	ret = do_clone_file_range(file_in, pos_in, file_out, pos_out, len,
-+				  remap_flags);
- 	file_end_write(file_out);
- 
- 	return ret;
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 035d8a88f633..4acda4809027 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1852,10 +1852,10 @@ extern int generic_remap_file_range_touch(struct file *file,
- 					  unsigned int remap_flags);
- extern loff_t do_clone_file_range(struct file *file_in, loff_t pos_in,
- 				  struct file *file_out, loff_t pos_out,
--				  loff_t len);
-+				  loff_t len, unsigned int remap_flags);
- extern loff_t vfs_clone_file_range(struct file *file_in, loff_t pos_in,
- 				   struct file *file_out, loff_t pos_out,
--				   loff_t len);
-+				   loff_t len, unsigned int remap_flags);
- extern int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
- 					 struct inode *dest, loff_t destoff,
- 					 loff_t len, bool *is_same);
+> +/*
+> + * These flags control the behavior of the remap_file_range function pointer.
+> + *
+> + * RFR_SAME_DATA: only remap if contents identical (i.e. deduplicate)
+> + */
+> +#define RFR_SAME_DATA		(1 << 0)
+> +
+> +#define RFR_VALID_FLAGS		(RFR_SAME_DATA)
+
+RFR?  Why not REMAP_FILE_*  Also why not the well understood
+REMAP_FILE_DEDUP instead of the odd SAME_DATA?
+
+> +
+> +/*
+> + * Filesystem remapping implementations should call this helper on their
+> + * remap flags to filter out flags that the implementation doesn't support.
+> + *
+> + * Returns true if the flags are ok, false otherwise.
+> + */
+> +static inline bool remap_check_flags(unsigned int remap_flags,
+> +				     unsigned int supported_flags)
+> +{
+> +	return (remap_flags & ~(supported_flags & RFR_VALID_FLAGS)) == 0;
+> +}
+
+Any reason to even bother with a helper for this?  ->fallocate
+seems to be doing fine without the helper, and the resulting code
+seems a lot easier to understand to me.
+
+> @@ -1759,10 +1779,9 @@ struct file_operations {
+>  #endif
+>  	ssize_t (*copy_file_range)(struct file *, loff_t, struct file *,
+>  			loff_t, size_t, unsigned int);
+> -	int (*clone_file_range)(struct file *, loff_t, struct file *, loff_t,
+> -			u64);
+> -	int (*dedupe_file_range)(struct file *, loff_t, struct file *, loff_t,
+> -			u64);
+> +	int (*remap_file_range)(struct file *file_in, loff_t pos_in,
+> +				struct file *file_out, loff_t pos_out,
+> +				u64 len, unsigned int remap_flags);
+
+Same comment here.  Didn't we have some nice doc tools to avoid this
+duplication? :)
