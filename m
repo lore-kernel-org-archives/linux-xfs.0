@@ -1,256 +1,109 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:50822 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726167AbeJMHmt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Oct 2018 03:42:49 -0400
-Subject: [PATCH 18/25] vfs: hide file range comparison function
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 12 Oct 2018 17:07:51 -0700
-Message-ID: <153938927103.8361.6327676425188043040.stgit@magnolia>
-In-Reply-To: <153938912912.8361.13446310416406388958.stgit@magnolia>
-References: <153938912912.8361.13446310416406388958.stgit@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:56916 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726175AbeJOCaV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 14 Oct 2018 22:30:21 -0400
+Received: from 089144199123.atnat0008.highway.a1.net ([89.144.199.123] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1gBlRA-0000xQ-3B
+        for linux-xfs@vger.kernel.org; Sun, 14 Oct 2018 18:48:24 +0000
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] xfs: cancel COW blocks before swapext
+Date: Sun, 14 Oct 2018 20:48:22 +0200
+Message-Id: <20181014184822.25016-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+We need to make sure we have no outstanding COW blocks before we swap
+extents, as there is nothing preventing us from having preallocated COW
+delalloc on either inode that swapext is called on.  That case can
+easily be reproduced by running generic/324 in always_cow mode:
 
-There are no callers of vfs_dedupe_file_range_compare, so we might as
-well make it a static helper and remove the export.
+[  620.760572] XFS: Assertion failed: tip->i_delayed_blks == 0, file: fs/xfs/xfs_bmap_util.c, line: 1669
+[  620.761608] ------------[ cut here ]------------
+[  620.762171] kernel BUG at fs/xfs/xfs_message.c:102!
+[  620.762732] invalid opcode: 0000 [#1] SMP PTI
+[  620.763272] CPU: 0 PID: 24153 Comm: xfs_fsr Tainted: G        W         4.19.0-rc1+ #4182
+[  620.764203] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.11.1-1 04/01/2014
+[  620.765202] RIP: 0010:assfail+0x20/0x28
+[  620.765646] Code: 31 ff e8 83 fc ff ff 0f 0b c3 48 89 f1 41 89 d0 48 c7 c6 48 ca 8d 82 48 89 fa 38
+[  620.767758] RSP: 0018:ffffc9000898bc10 EFLAGS: 00010202
+[  620.768359] RAX: 0000000000000000 RBX: ffff88012f14ba40 RCX: 0000000000000000
+[  620.769174] RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffff828560d9
+[  620.769982] RBP: ffff88012f14b300 R08: 0000000000000000 R09: 0000000000000000
+[  620.770788] R10: 000000000000000a R11: f000000000000000 R12: ffffc9000898bc98
+[  620.771638] R13: ffffc9000898bc9c R14: ffff880130b5e2b8 R15: ffff88012a1fa2a8
+[  620.772504] FS:  00007fdc36e0fbc0(0000) GS:ffff88013ba00000(0000) knlGS:0000000000000000
+[  620.773475] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  620.774168] CR2: 00007fdc3604d000 CR3: 0000000132afc000 CR4: 00000000000006f0
+[  620.774978] Call Trace:
+[  620.775274]  xfs_swap_extent_forks+0x2a0/0x2e0
+[  620.775792]  xfs_swap_extents+0x38b/0xab0
+[  620.776256]  xfs_ioc_swapext+0x121/0x140
+[  620.776709]  xfs_file_ioctl+0x328/0xc90
+[  620.777154]  ? rcu_read_lock_sched_held+0x50/0x60
+[  620.777694]  ? xfs_iunlock+0x233/0x260
+[  620.778127]  ? xfs_setattr_nonsize+0x3be/0x6a0
+[  620.778647]  do_vfs_ioctl+0x9d/0x680
+[  620.779071]  ? ksys_fchown+0x47/0x80
+[  620.779552]  ksys_ioctl+0x35/0x70
+[  620.780040]  __x64_sys_ioctl+0x11/0x20
+[  620.780530]  do_syscall_64+0x4b/0x190
+[  620.780927]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+[  620.781467] RIP: 0033:0x7fdc364d0f07
+[  620.781900] Code: b3 66 90 48 8b 05 81 5f 2c 00 64 c7 00 26 00 00 00 48 c7 c0 ff ff ff ff c3 66 28
+[  620.784044] RSP: 002b:00007ffe2a766038 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+[  620.784896] RAX: ffffffffffffffda RBX: 0000000000000025 RCX: 00007fdc364d0f07
+[  620.785667] RDX: 0000560296ca2fc0 RSI: 00000000c0c0586d RDI: 0000000000000005
+[  620.786398] RBP: 0000000000000025 R08: 0000000000001200 R09: 0000000000000000
+[  620.787283] R10: 0000000000000432 R11: 0000000000000246 R12: 0000000000000005
+[  620.788051] R13: 0000000000000000 R14: 0000000000001000 R15: 0000000000000006
+[  620.788927] Modules linked in:
+[  620.789340] ---[ end trace 9503b7417ffdbdb0 ]---
+[  620.790065] RIP: 0010:assfail+0x20/0x28
+[  620.790642] Code: 31 ff e8 83 fc ff ff 0f 0b c3 48 89 f1 41 89 d0 48 c7 c6 48 ca 8d 82 48 89 fa 38
+[  620.793038] RSP: 0018:ffffc9000898bc10 EFLAGS: 00010202
+[  620.793609] RAX: 0000000000000000 RBX: ffff88012f14ba40 RCX: 0000000000000000
+[  620.794317] RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffff828560d9
+[  620.795025] RBP: ffff88012f14b300 R08: 0000000000000000 R09: 0000000000000000
+[  620.795778] R10: 000000000000000a R11: f000000000000000 R12: ffffc9000898bc98
+[  620.796675] R13: ffffc9000898bc9c R14: ffff880130b5e2b8 R15: ffff88012a1fa2a8
+[  620.797782] FS:  00007fdc36e0fbc0(0000) GS:ffff88013ba00000(0000) knlGS:0000000000000000
+[  620.798908] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  620.799594] CR2: 00007fdc3604d000 CR3: 0000000132afc000 CR4: 00000000000006f0
+[  620.800424] Kernel panic - not syncing: Fatal exception
+[  620.801191] Kernel Offset: disabled
+[  620.801597] ---[ end Kernel panic - not syncing: Fatal exception ]---
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/read_write.c    |  191 ++++++++++++++++++++++++++--------------------------
- include/linux/fs.h |    3 -
- 2 files changed, 95 insertions(+), 99 deletions(-)
 
+Now only cancels the COW range on the target inode to address the comment
+from Brian.
 
-diff --git a/fs/read_write.c b/fs/read_write.c
-index 86a8c2557d18..ce3d5c4b1d34 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -1714,6 +1714,101 @@ static int remap_verify_area(struct file *file, loff_t pos, loff_t len,
- 	return security_file_permission(file, write ? MAY_WRITE : MAY_READ);
- }
+ fs/xfs/xfs_bmap_util.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 7cfda25f1bb1..5d263dfdb3bc 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1775,6 +1775,12 @@ xfs_swap_extents(
+ 	if (error)
+ 		goto out_unlock;
  
-+/*
-+ * Read a page's worth of file data into the page cache.  Return the page
-+ * locked.
-+ */
-+static struct page *vfs_dedupe_get_page(struct inode *inode, loff_t offset)
-+{
-+	struct address_space *mapping;
-+	struct page *page;
-+	pgoff_t n;
-+
-+	n = offset >> PAGE_SHIFT;
-+	mapping = inode->i_mapping;
-+	page = read_mapping_page(mapping, n, NULL);
-+	if (IS_ERR(page))
-+		return page;
-+	if (!PageUptodate(page)) {
-+		put_page(page);
-+		return ERR_PTR(-EIO);
-+	}
-+	lock_page(page);
-+	return page;
-+}
-+
-+/*
-+ * Compare extents of two files to see if they are the same.
-+ * Caller must have locked both inodes to prevent write races.
-+ */
-+static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
-+					 struct inode *dest, loff_t destoff,
-+					 loff_t len, bool *is_same)
-+{
-+	loff_t src_poff;
-+	loff_t dest_poff;
-+	void *src_addr;
-+	void *dest_addr;
-+	struct page *src_page;
-+	struct page *dest_page;
-+	loff_t cmp_len;
-+	bool same;
-+	int error;
-+
-+	error = -EINVAL;
-+	same = true;
-+	while (len) {
-+		src_poff = srcoff & (PAGE_SIZE - 1);
-+		dest_poff = destoff & (PAGE_SIZE - 1);
-+		cmp_len = min(PAGE_SIZE - src_poff,
-+			      PAGE_SIZE - dest_poff);
-+		cmp_len = min(cmp_len, len);
-+		if (cmp_len <= 0)
-+			goto out_error;
-+
-+		src_page = vfs_dedupe_get_page(src, srcoff);
-+		if (IS_ERR(src_page)) {
-+			error = PTR_ERR(src_page);
-+			goto out_error;
-+		}
-+		dest_page = vfs_dedupe_get_page(dest, destoff);
-+		if (IS_ERR(dest_page)) {
-+			error = PTR_ERR(dest_page);
-+			unlock_page(src_page);
-+			put_page(src_page);
-+			goto out_error;
-+		}
-+		src_addr = kmap_atomic(src_page);
-+		dest_addr = kmap_atomic(dest_page);
-+
-+		flush_dcache_page(src_page);
-+		flush_dcache_page(dest_page);
-+
-+		if (memcmp(src_addr + src_poff, dest_addr + dest_poff, cmp_len))
-+			same = false;
-+
-+		kunmap_atomic(dest_addr);
-+		kunmap_atomic(src_addr);
-+		unlock_page(dest_page);
-+		unlock_page(src_page);
-+		put_page(dest_page);
-+		put_page(src_page);
-+
-+		if (!same)
-+			break;
-+
-+		srcoff += cmp_len;
-+		destoff += cmp_len;
-+		len -= cmp_len;
++	if (xfs_inode_has_cow_data(tip)) {
++		error = xfs_reflink_cancel_cow_range(tip, 0, NULLFILEOFF, true);
++		if (error)
++			return error;
 +	}
 +
-+	*is_same = same;
-+	return 0;
-+
-+out_error:
-+	return error;
-+}
-+
- /*
-  * Check that the two inodes are eligible for cloning, the ranges make
-  * sense, and then flush all dirty data.  Caller must ensure that the
-@@ -1912,102 +2007,6 @@ loff_t vfs_clone_file_range(struct file *file_in, loff_t pos_in,
- }
- EXPORT_SYMBOL(vfs_clone_file_range);
- 
--/*
-- * Read a page's worth of file data into the page cache.  Return the page
-- * locked.
-- */
--static struct page *vfs_dedupe_get_page(struct inode *inode, loff_t offset)
--{
--	struct address_space *mapping;
--	struct page *page;
--	pgoff_t n;
--
--	n = offset >> PAGE_SHIFT;
--	mapping = inode->i_mapping;
--	page = read_mapping_page(mapping, n, NULL);
--	if (IS_ERR(page))
--		return page;
--	if (!PageUptodate(page)) {
--		put_page(page);
--		return ERR_PTR(-EIO);
--	}
--	lock_page(page);
--	return page;
--}
--
--/*
-- * Compare extents of two files to see if they are the same.
-- * Caller must have locked both inodes to prevent write races.
-- */
--int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
--				  struct inode *dest, loff_t destoff,
--				  loff_t len, bool *is_same)
--{
--	loff_t src_poff;
--	loff_t dest_poff;
--	void *src_addr;
--	void *dest_addr;
--	struct page *src_page;
--	struct page *dest_page;
--	loff_t cmp_len;
--	bool same;
--	int error;
--
--	error = -EINVAL;
--	same = true;
--	while (len) {
--		src_poff = srcoff & (PAGE_SIZE - 1);
--		dest_poff = destoff & (PAGE_SIZE - 1);
--		cmp_len = min(PAGE_SIZE - src_poff,
--			      PAGE_SIZE - dest_poff);
--		cmp_len = min(cmp_len, len);
--		if (cmp_len <= 0)
--			goto out_error;
--
--		src_page = vfs_dedupe_get_page(src, srcoff);
--		if (IS_ERR(src_page)) {
--			error = PTR_ERR(src_page);
--			goto out_error;
--		}
--		dest_page = vfs_dedupe_get_page(dest, destoff);
--		if (IS_ERR(dest_page)) {
--			error = PTR_ERR(dest_page);
--			unlock_page(src_page);
--			put_page(src_page);
--			goto out_error;
--		}
--		src_addr = kmap_atomic(src_page);
--		dest_addr = kmap_atomic(dest_page);
--
--		flush_dcache_page(src_page);
--		flush_dcache_page(dest_page);
--
--		if (memcmp(src_addr + src_poff, dest_addr + dest_poff, cmp_len))
--			same = false;
--
--		kunmap_atomic(dest_addr);
--		kunmap_atomic(src_addr);
--		unlock_page(dest_page);
--		unlock_page(src_page);
--		put_page(dest_page);
--		put_page(src_page);
--
--		if (!same)
--			break;
--
--		srcoff += cmp_len;
--		destoff += cmp_len;
--		len -= cmp_len;
--	}
--
--	*is_same = same;
--	return 0;
--
--out_error:
--	return error;
--}
--EXPORT_SYMBOL(vfs_dedupe_file_range_compare);
--
- loff_t vfs_dedupe_file_range_one(struct file *src_file, loff_t src_pos,
- 				 struct file *dst_file, loff_t dst_pos,
- 				 loff_t len, unsigned int remap_flags)
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 57cb56bbc30a..f0603ed007e9 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1865,9 +1865,6 @@ extern loff_t do_clone_file_range(struct file *file_in, loff_t pos_in,
- extern loff_t vfs_clone_file_range(struct file *file_in, loff_t pos_in,
- 				   struct file *file_out, loff_t pos_out,
- 				   loff_t len, unsigned int remap_flags);
--extern int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
--					 struct inode *dest, loff_t destoff,
--					 loff_t len, bool *is_same);
- extern int vfs_dedupe_file_range(struct file *file,
- 				 struct file_dedupe_range *same);
- extern loff_t vfs_dedupe_file_range_one(struct file *src_file, loff_t src_pos,
+ 	/*
+ 	 * Extent "swapping" with rmap requires a permanent reservation and
+ 	 * a block reservation because it's really just a remap operation
+-- 
+2.19.1
