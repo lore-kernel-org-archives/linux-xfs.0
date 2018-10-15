@@ -1,66 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb1-f196.google.com ([209.85.219.196]:38505 "EHLO
-        mail-yb1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725887AbeJONsL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Oct 2018 09:48:11 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:60042 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726422AbeJORkV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Oct 2018 13:40:21 -0400
+Date: Mon, 15 Oct 2018 02:55:49 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 00/22] xfs-4.20: major documentation surgery
+Message-ID: <20181015095549.GA23946@infradead.org>
+References: <153862669110.26427.16504658853992750743.stgit@magnolia>
+ <20181006005154.GM12041@dastard>
+ <20181011112735.4f696d8a@lwn.net>
 MIME-Version: 1.0
-References: <153938912912.8361.13446310416406388958.stgit@magnolia>
- <153938919123.8361.13059492965161549195.stgit@magnolia> <20181014171927.GD30673@infradead.org>
-In-Reply-To: <20181014171927.GD30673@infradead.org>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Mon, 15 Oct 2018 09:04:13 +0300
-Message-ID: <CAOQ4uxiReFJRxKJbsoUgWWNP75_Qsoh1fWC_dLYV_zBU_jaGbA@mail.gmail.com>
-Subject: Re: [PATCH 07/25] vfs: combine the clone and dedupe into a single remap_file_range
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181011112735.4f696d8a@lwn.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-cifs@vger.kernel.org, overlayfs <linux-unionfs@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, ocfs2-devel@oss.oracle.com
+To: Jonathan Corbet <corbet@lwn.net>
+Cc: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org
 
-> > +/*
-> > + * These flags control the behavior of the remap_file_range function pointer.
-> > + *
-> > + * RFR_SAME_DATA: only remap if contents identical (i.e. deduplicate)
-> > + */
-> > +#define RFR_SAME_DATA                (1 << 0)
-> > +
-> > +#define RFR_VALID_FLAGS              (RFR_SAME_DATA)
->
-> RFR?  Why not REMAP_FILE_*  Also why not the well understood
-> REMAP_FILE_DEDUP instead of the odd SAME_DATA?
->
-> > +
-> > +/*
-> > + * Filesystem remapping implementations should call this helper on their
-> > + * remap flags to filter out flags that the implementation doesn't support.
-> > + *
-> > + * Returns true if the flags are ok, false otherwise.
-> > + */
-> > +static inline bool remap_check_flags(unsigned int remap_flags,
-> > +                                  unsigned int supported_flags)
-> > +{
-> > +     return (remap_flags & ~(supported_flags & RFR_VALID_FLAGS)) == 0;
-> > +}
->
-> Any reason to even bother with a helper for this?  ->fallocate
-> seems to be doing fine without the helper, and the resulting code
-> seems a lot easier to understand to me.
+On Thu, Oct 11, 2018 at 11:27:35AM -0600, Jonathan Corbet wrote:
+> On Sat, 6 Oct 2018 10:51:54 +1000
+> Dave Chinner <david@fromorbit.com> wrote:
+> 
+> > Can you let us know whether the CC-by-SA 4.0 license is acceptible
+> > or not? That's really the only thing that we need clarified at this
+> > point - if it's OK I'll to pull this into the XFS tree for the 4.20
+> > merge window. If not, we'll go back to the drawing board....
+> 
+> OK, I've had a long conversation with the LF lawyer, and she said clearly
+> that we really should not be introducing CC-SA material into the kernel
+> source tree.  It's a pain; I really do like CC-SA better for
+> documentation, but it's not GPL-compatible, and that creates a problem for
+> the processed docs.
 
-I supposed you figured out the reason already.
-It makes it appearance in patch 16/25 as RFR_VFS_FLAGS.
-All those "advisory" flags, we want to pass them in to filesystem as FYI,
-but we don't want to explicitly add support for e.g. RFR_CAN_SHORTEN
-to every filesystem, when vfs has already taken care of the advice.
+That was exactly my concern with this patchset.
 
-The reason a similar helper doesn't make sense for ->fallocate()
-is because vfs does not take any action on behalf of filesystem
-nor does vfs pass any internal flags to filesystem.
-
-I argued that fiemap_check_flags() should similarly mask out
-FIEMAP_FLAG_SYNC before checking supported fs_flags,
-because ioctl_fiemap() respects this flag regardless if filesystem
-(or generic helper) declares support for FIEMAP_FLAG_SYNC.
-
-Thanks,
-Amir.
+Btw, I think we have the same issue with idr.rst, and unless we can
+relicense it we should drop it from the tree, as it actually includes
+kernel source files.
