@@ -1,41 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:51390 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726482AbeJQQlz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Oct 2018 12:41:55 -0400
-Date: Wed, 17 Oct 2018 01:47:16 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: ENSOPC on a 10% used disk
-Message-ID: <20181017084716.GL16896@infradead.org>
-References: <40c52a7b-2520-8ae4-11d5-ae4b33e1dc29@scylladb.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:45634 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726678AbeJPAQU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Oct 2018 20:16:20 -0400
+Date: Mon, 15 Oct 2018 09:30:01 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 10/25] vfs: create generic_remap_file_range_touch to
+ update inode metadata
+Message-ID: <20181015163001.GK28243@magnolia>
+References: <153938912912.8361.13446310416406388958.stgit@magnolia>
+ <153938921180.8361.13556945128095535605.stgit@magnolia>
+ <20181014172131.GE30673@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <40c52a7b-2520-8ae4-11d5-ae4b33e1dc29@scylladb.com>
+In-Reply-To: <20181014172131.GE30673@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Avi Kivity <avi@scylladb.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: david@fromorbit.com, sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
-On Wed, Oct 17, 2018 at 10:52:48AM +0300, Avi Kivity wrote:
-> I have a user running a 1.7TB filesystem with ~10% usage (as shown by df),
-> getting sporadic ENOSPC errors. The disk is mounted with inode64 and has a
-> relatively small number of large files. The disk is a single-member RAID0
-> array, with 1MB chunk size. There are 32 AGs. Running Linux 4.9.17.
+On Sun, Oct 14, 2018 at 10:21:31AM -0700, Christoph Hellwig wrote:
+> > +/* Update inode timestamps and remove security privileges when remapping. */
+> > +int generic_remap_file_range_touch(struct file *file, bool is_dedupe)
+> > +{
+> > +	int ret;
+> > +
+> > +	/* If can't alter the file contents, we're done. */
+> > +	if (is_dedupe)
+> > +		return 0;
+> > +
+> > +	/* Update the timestamps, since we can alter file contents. */
+> > +	if (!(file->f_mode & FMODE_NOCMTIME)) {
+> > +		ret = file_update_time(file);
+> > +		if (ret)
+> > +			return ret;
+> > +	}
+> > +
+> > +	/*
+> > +	 * Clear the security bits if the process is not being run by root.
+> > +	 * This keeps people from modifying setuid and setgid binaries.
+> > +	 */
+> > +	return file_remove_privs(file);
+> > +}
+> > +EXPORT_SYMBOL(generic_remap_file_range_touch);
+> 
+> The name seems a little out of touch with what it actually does.
 
-4.9.17 is rather old and you'll have a hard time finding someone
-familiar with it..
+I originally thought "touch" because it updates [cm]time. :)
 
-> Is this a known issue? Would upgrading the kernel help?
+Though looking at the final code, I think this can just be called from
+the end of generic_remap_file_range_prep, so we can skip the export and
+all that other stuff.
 
-Two things that come to mind:
+> Also why a bool argument instead of the more descriptive flags which
+> introduced a few patches ago?
 
- - are you sure there is no open fd to the unlinked files?  That would
-   keep the space allocated until the last link is dropped.
- - even once we drop the inode the space only becomes available once
-   the transaction has committed.  We do force the log if we found
-   a busy extent, but there might be some issues.  Try seeing if you
-   hit the xfs_extent_busy_force trace point with your workload.
- - if you have online discard (-o discard) enabled there might be
-   more issues like the above, especially on old kernels.
+Hmm, yes, the remap_flags transition can move up to before this patch.
+
+--D
