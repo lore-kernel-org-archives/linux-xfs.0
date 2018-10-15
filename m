@@ -1,70 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb1-f194.google.com ([209.85.219.194]:32800 "EHLO
-        mail-yb1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726498AbeJOUkL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Oct 2018 16:40:11 -0400
-MIME-Version: 1.0
+Received: from bombadil.infradead.org ([198.137.202.133]:55102 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726400AbeJOVDW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Oct 2018 17:03:22 -0400
+Date: Mon, 15 Oct 2018 06:18:03 -0700
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH 07/25] vfs: combine the clone and dedupe into a single
+ remap_file_range
+Message-ID: <20181015131803.GA9845@bombadil.infradead.org>
 References: <153938912912.8361.13446310416406388958.stgit@magnolia>
- <153938919123.8361.13059492965161549195.stgit@magnolia> <20181014171927.GD30673@infradead.org>
- <CAOQ4uxiReFJRxKJbsoUgWWNP75_Qsoh1fWC_dLYV_zBU_jaGbA@mail.gmail.com> <20181015124719.GA15379@infradead.org>
-In-Reply-To: <20181015124719.GA15379@infradead.org>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Mon, 15 Oct 2018 15:54:47 +0300
-Message-ID: <CAOQ4uxi7AuNHapyfkLYDSjkZAiDsZFUiPDDWTgGJJSEcOOtaPg@mail.gmail.com>
-Subject: Re: [PATCH 07/25] vfs: combine the clone and dedupe into a single remap_file_range
-Content-Type: text/plain; charset="UTF-8"
+ <153938919123.8361.13059492965161549195.stgit@magnolia>
+ <20181014171927.GD30673@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181014171927.GD30673@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@infradead.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-cifs@vger.kernel.org, overlayfs <linux-unionfs@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, ocfs2-devel@oss.oracle.com
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, david@fromorbit.com, sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
-On Mon, Oct 15, 2018 at 3:47 PM Christoph Hellwig <hch@infradead.org> wrote:
->
-> On Mon, Oct 15, 2018 at 09:04:13AM +0300, Amir Goldstein wrote:
-> > I supposed you figured out the reason already.
->
-> No, I hadn't.
->
-> > It makes it appearance in patch 16/25 as RFR_VFS_FLAGS.
-> > All those "advisory" flags, we want to pass them in to filesystem as FYI,
-> > but we don't want to explicitly add support for e.g. RFR_CAN_SHORTEN
-> > to every filesystem, when vfs has already taken care of the advice.
->
-> I don't think this model makes sense.  If they really are purely
-> handled in the VFS we can mask them before passing them to the file
-> system, if not we need to check them, or the they are avisory and
-> we can have a simple #define instead of the helper.
->
-> RFR_TO_SRC_EOF is checked in generic_remap_file_range_prep,
-> so the file system should know about it  Also looking at it again now
-> it seems entirely superflous - we can just pass down then len == we
-> use in higher level code instead of having a flag and will side step
-> the issue here.
->
-> RFR_CAN_SHORTEN is advisory as no one has to shorten, but that can
-> easily be solved by including it everywhere.
->
-> RFR_SHORT_DEDUPE is as far as I can tell entirely superflous to
-> start with, as RFR_CAN_SHORTEN can be used instead.
->
-> So something like this in fs.h:
->
-> #define REMAP_FILE_ADVISORY_FLAGS       REMAP_FILE_CAN_SHORTEN
->
-> And then in the file system:
->
->         if (flags & ~REMAP_FILE_ADVISORY_FLAGS)
->                 -EINVAL;
->
-> or
->
->         if (flags & ~(REMAP_FILE_ADVISORY_FLAGS | REMAP_FILE_DEDUP))
->                 -EINVAL;
->
-> should be all that is needed.
+On Sun, Oct 14, 2018 at 10:19:27AM -0700, Christoph Hellwig wrote:
+> >  	unsigned (*mmap_capabilities)(struct file *);
+> >  #endif
+> >  	ssize_t (*copy_file_range)(struct file *, loff_t, struct file *, loff_t, size_t, unsigned int);
+> > -	int (*clone_file_range)(struct file *, loff_t, struct file *, loff_t, u64);
+> > -	int (*dedupe_file_range)(struct file *, loff_t, struct file *, loff_t, u64);
+> > +	int (*remap_file_range)(struct file *file_in, loff_t pos_in,
+> > +				struct file *file_out, loff_t pos_out,
+> > +				u64 len, unsigned int remap_flags);
+> 
+> None of the other methods in this file name their parameters.  While
+> I generally don't like people leaving them out, in the end consistency
+> is even more important.
 
-Yeh, I suppose that makes sense.
+I would agree with you *except* that the parameters do not follow memcpy()
+traditional order (dst, src, len).  Instead they are (src, dst, len), so we
+should probably name them to advise the poor sod who has to implement this
+that we've chosen an inconsistent API.
 
-Thanks,
-Amir.
+Or we could fix it.
