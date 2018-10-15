@@ -1,65 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:24155 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726487AbeJOJkd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Oct 2018 05:40:33 -0400
-Date: Mon, 15 Oct 2018 12:57:27 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: clear ail delwri queued bufs on unmount of shutdown
- fs
-Message-ID: <20181015015727.GA6311@dastard>
-References: <20181012174654.2557-1-bfoster@redhat.com>
- <20181013022914.GX6311@dastard>
+Received: from mail-yb1-f196.google.com ([209.85.219.196]:38505 "EHLO
+        mail-yb1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725887AbeJONsL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Oct 2018 09:48:11 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181013022914.GX6311@dastard>
+References: <153938912912.8361.13446310416406388958.stgit@magnolia>
+ <153938919123.8361.13059492965161549195.stgit@magnolia> <20181014171927.GD30673@infradead.org>
+In-Reply-To: <20181014171927.GD30673@infradead.org>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Mon, 15 Oct 2018 09:04:13 +0300
+Message-ID: <CAOQ4uxiReFJRxKJbsoUgWWNP75_Qsoh1fWC_dLYV_zBU_jaGbA@mail.gmail.com>
+Subject: Re: [PATCH 07/25] vfs: combine the clone and dedupe into a single remap_file_range
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, linux-cifs@vger.kernel.org, overlayfs <linux-unionfs@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, ocfs2-devel@oss.oracle.com
 
-On Sat, Oct 13, 2018 at 01:29:14PM +1100, Dave Chinner wrote:
-> On Fri, Oct 12, 2018 at 01:46:54PM -0400, Brian Foster wrote:
-> > In the typical unmount case, the AIL is forced out by the unmount
-> > sequence before the xfsaild task is stopped. Since AIL items are
-> > removed on writeback completion, this means that the AIL
-> > ->ail_buf_list delwri queue has been drained. This is not always
-> > true in the shutdown case, however.
-> > 
-> > It's possible for buffers to sit on a delwri queue for a period of
-> > time across submission attempts if said items are locked or have
-> > been relogged and pinned since first added to the queue.
-> 
-> Can you add this as a comment to xfs_buf_delwri_submit_nowait() to
-> document that callers either need to check that everything was
-> submitted and/or cancel the delwri list before they tear it down?
+> > +/*
+> > + * These flags control the behavior of the remap_file_range function pointer.
+> > + *
+> > + * RFR_SAME_DATA: only remap if contents identical (i.e. deduplicate)
+> > + */
+> > +#define RFR_SAME_DATA                (1 << 0)
+> > +
+> > +#define RFR_VALID_FLAGS              (RFR_SAME_DATA)
+>
+> RFR?  Why not REMAP_FILE_*  Also why not the well understood
+> REMAP_FILE_DEDUP instead of the odd SAME_DATA?
+>
+> > +
+> > +/*
+> > + * Filesystem remapping implementations should call this helper on their
+> > + * remap flags to filter out flags that the implementation doesn't support.
+> > + *
+> > + * Returns true if the flags are ok, false otherwise.
+> > + */
+> > +static inline bool remap_check_flags(unsigned int remap_flags,
+> > +                                  unsigned int supported_flags)
+> > +{
+> > +     return (remap_flags & ~(supported_flags & RFR_VALID_FLAGS)) == 0;
+> > +}
+>
+> Any reason to even bother with a helper for this?  ->fallocate
+> seems to be doing fine without the helper, and the resulting code
+> seems a lot easier to understand to me.
 
-I added this comment to the patch when I pulled it in:
+I supposed you figured out the reason already.
+It makes it appearance in patch 16/25 as RFR_VFS_FLAGS.
+All those "advisory" flags, we want to pass them in to filesystem as FYI,
+but we don't want to explicitly add support for e.g. RFR_CAN_SHORTEN
+to every filesystem, when vfs has already taken care of the advice.
 
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -2055,6 +2055,13 @@ xfs_buf_delwri_submit_buffers(
-  * is only safely useable for callers that can track I/O completion by higher
-  * level means, e.g. AIL pushing as the @buffer_list is consumed in this
-  * function.
-+ *
-+ * Note: this function will skip buffers it would block on, and in doing so
-+ * leaves them on @buffer_list so they can be retried on a later pass. As such,
-+ * it is up to the caller to ensure that the buffer list is fully submitted or
-+ * cancelled appropriately when they are finished with the list. Failure to
-+ * cancel or resubmit the list until it is empty will result in leaked buffers
-+ * at unmount time.
-  */
- int
- xfs_buf_delwri_submit_nowait(
+The reason a similar helper doesn't make sense for ->fallocate()
+is because vfs does not take any action on behalf of filesystem
+nor does vfs pass any internal flags to filesystem.
 
-Does that look reasonable?
+I argued that fiemap_check_flags() should similarly mask out
+FIEMAP_FLAG_SYNC before checking supported fs_flags,
+because ioctl_fiemap() respects this flag regardless if filesystem
+(or generic helper) declares support for FIEMAP_FLAG_SYNC.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Amir.
