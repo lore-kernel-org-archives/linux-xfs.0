@@ -1,86 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:33410 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727013AbeJRBPG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Oct 2018 21:15:06 -0400
-Date: Wed, 17 Oct 2018 10:18:12 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfsprogs: don't include all xfs headers just for crc32
-Message-ID: <20181017171812.GQ28243@magnolia>
-References: <e1259a8b-b5aa-cfa2-aeab-13d63757d7a5@redhat.com>
- <20181011195859.GA114854@rodete-desktop-imager.corp.google.com>
- <b6ee7861-3bf0-7192-d26e-5d57bcb10d19@sandeen.net>
- <20181011224536.GC28243@magnolia>
+Received: from mail-wr1-f54.google.com ([209.85.221.54]:46816 "EHLO
+        mail-wr1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726778AbeJPUri (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Oct 2018 16:47:38 -0400
+Received: by mail-wr1-f54.google.com with SMTP id n11-v6so25316300wru.13
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Oct 2018 05:57:15 -0700 (PDT)
+Date: Tue, 16 Oct 2018 14:57:12 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [QUESTION] multiple fsync() vs single sync()
+Message-ID: <20181016125712.5k5xt4lzhi76qaj6@odin.usersys.redhat.com>
+References: <6A65F394-C1BA-4339-AC9B-051885D12F65@corp.ovh.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20181011224536.GC28243@magnolia>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <6A65F394-C1BA-4339-AC9B-051885D12F65@corp.ovh.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Brian Norris <briannorris@chromium.org>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Romain Le Disez <romain.le-disez@corp.ovh.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-On Thu, Oct 11, 2018 at 03:45:36PM -0700, Darrick J. Wong wrote:
-> On Thu, Oct 11, 2018 at 05:36:36PM -0500, Eric Sandeen wrote:
-> > 
-> > 
-> > On 10/11/18 2:59 PM, Brian Norris wrote:
-> > > On Wed, Oct 10, 2018 at 03:55:32PM -0500, Eric Sandeen wrote:
-> > >> Brian Norris reported that "The $BUILD_CC toolchain might have an
-> > >> older set of Linux headers than the $CC toolchain. It's generally
-> > >> unsafe to try to build both with the same definitions, but in
-> > >> particular, this one can cause compilation failures in the local
-> > >> crc32selftest build: [failure to find fsmap.h]"
-> > >>
-> > >> It seems like the most straightforward thing to do here is include
-> > >> a specific set of system headers, instead of pulling in the whole
-> > >> xfs.h header chain which has multiple tests and definitions in
-> > >> place for headers that may or may not be there during the build.
-> > >>
-> > >> Reported-by: Brian Norris <briannorris@chromium.org>
-> > >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> > >> ---
-> > >>
-> > >> Brian, here's try #3, does this also work for you?
-> > > 
-> > > Tested-by: Brian Norris <briannorris@chromium.org>
-> > > 
-> > > This still leaves $BUILD_CFLAGS with bad entries, but as long as they
-> > > don't get used anywhere that matters, it'll be OK.
-> > 
-> > Thanks.  At this point I think you have a better grasp of what all the
-> > $FOO_FLAGS do than I do ;)  It may be  to keep things sorted
-> > and separate, but it also seemed useful to get a giant tangle of
-> > xfs header out of a non-xfs library file.
-> > 
-> > I'm also on the fence about whether cross-compiling the self-check
-> > really even gains us much, given that it may be built or optimized
-> > completely differently from the code on the target arch ...
+
+Hi,
+
 > 
-> So long as it's a software algorithm with a big lookup table I guess
-> it's a serviceable sanity check that nobody totally goobered up the
-> source code, but I don't know if it adds much value in the cross
-> compilation case either.  If you ever wanted to add a faster
-> implementation in the built libxfs <cough> that would be more of an
-> issue.
+> In this pseudo-code (extracted from OpenStack Swift [1]):
+>     fd=open("/tmp/tempfile", O_CREAT | O_WRONLY);
+>     write(fd, ...);
+>     fsetxattr(fd, ...);
+>     fsync(fd);
+>     rename("/tmp/tempfile", "/data/foobar");
+>     dirfd = open("/data", O_DIRECTORY | O_RDONLY);
+>     fsync(dirfd);
 > 
-> (Granted, I've been running a patched xfsprogs with hw accelerated
-> crc32c for a year now and haven't noticed any difference in runtime.
-> Maybe now that I've finished upgrading everything to flash...)
+> OR (the same without temporary file):
+>     fd=open("/data", O_TMPFILE | O_WRONLY);
+>     write(fd, ...);
+>     fsetxattr(fd, ...);
+>     fsync(fd);
+>     linkat(AT_FDCWD, "/proc/self/fd/" + fd, AT_FDCWD, "/data/foobar", AT_SYMLINK_FOLLOW);
+>     dirfd = open("/data", O_DIRECTORY | O_RDONLY);
+>     fsync(dirfd);
+> 
+> 
+> I’m guaranteed that, what ever happen, I’ll have a complete file (data+xattr) or no file at all in the directory /data.
+> 
+> First question: is that a correct assumption or is there any loopholes?
+
+Unless you have broken storage, and you are not using volatile write-cache, an
+fsync of both file and directory is enough.
+
+> 
+> Second question, if I replace the two fsync() by one sync(), do I get the same guarantee?
+>     fd=open("/data", O_TMPFILE | O_WRONLY);
+>     write(fd, ...);
+>     fsetxattr(fd, ...);
+>     linkat(AT_FDCWD, « /proc/self/fd/" + fd, AT_FDCWD, "/data/foobar", AT_SYMLINK_FOLLOW);
+>     sync();
+
+IIRC, sync() on Linux is supposed to have the same guarantees of syncfs(), once
+we wait for IO completion on sync (POSIX doesn't guarantee sync() will return
+until everything is written to backing storage, but Linux does wait for IO
+completion).
+
+Short answer is, sync() does work the same way as if you run fsync() on every
+file on your filesystem. The question would be. Do you want to fsync() all files
+in your filesystem? This may take way longer than a pair of fsync() on the file
+and its directory. But it's your call, as I said sync() will behave as if you
+have ran a fsyn() on every file/directory on your filesystem.
+
+Cheers
+
+> 
+> From what I understand of the FAQ [1], write_barrier guarantee that journal (aka log) will be written before the inode (aka metadata). Did I miss something?
+> 
+> Many thanks for your help.
+> 
+> [1] https://github.com/openstack/swift/blob/2.19.0/swift/obj/diskfile.py#L1674-L1694
+> [2] http://xfs.org/index.php/XFS_FAQ#Q:_What_is_the_problem_with_the_write_cache_on_journaled_filesystems.3F
+> 
+> -- 
+> Romain
 > 
 
-Looks ok, I guess...
-
-(...and by "I guess" what I really mean is that given a lot of people
-cross-compiling things these days I think I want a similar test of the
-libxfs builtin crc32c algorithm that we can call from xfstests... but
-that's not what's under review here. :))
-
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> --D
-> 
-> > -Eric
+-- 
+Carlos
