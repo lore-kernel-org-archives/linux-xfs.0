@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:47008 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727094AbeJPK7b (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Oct 2018 06:59:31 -0400
-Subject: [PATCH 11/26] vfs: pass remap flags to generic_remap_file_range_prep
+Received: from userp2130.oracle.com ([156.151.31.86]:59680 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726934AbeJPLIO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Oct 2018 07:08:14 -0400
+Subject: [PATCH 17/26] vfs: enable remap callers that can handle short
+ operations
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 15 Oct 2018 20:11:12 -0700
-Message-ID: <153965947208.1256.13169150057249233851.stgit@magnolia>
+Date: Mon, 15 Oct 2018 20:19:54 -0700
+Message-ID: <153965999426.3607.3221368918901209000.stgit@magnolia>
 In-Reply-To: <153965939489.1256.7400115244528045860.stgit@magnolia>
 References: <153965939489.1256.7400115244528045860.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,267 +21,153 @@ Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, A
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Plumb the remap flags through the filesystem from the vfs function
-dispatcher all the way to the prep function to prepare for behavior
-changes in subsequent patches.
+Plumb in a remap flag that enables the filesystem remap handler to
+shorten remapping requests for callers that can handle it.  Now
+copy_file_range can report partial success (in case we run up against
+alignment problems, resource limits, etc.).
+
+We also enable CAN_SHORTEN for fideduperange to maintain existing
+userspace-visible behavior where xfs/btrfs shorten the dedupe range to
+avoid stale post-eof data exposure.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 ---
- fs/ocfs2/file.c         |    2 +-
- fs/ocfs2/refcounttree.c |    4 ++--
- fs/ocfs2/refcounttree.h |    2 +-
- fs/read_write.c         |   14 +++++++-------
- fs/xfs/xfs_file.c       |    2 +-
- fs/xfs/xfs_reflink.c    |   21 +++++++++++----------
- fs/xfs/xfs_reflink.h    |    3 ++-
- include/linux/fs.h      |    2 +-
- 8 files changed, 26 insertions(+), 24 deletions(-)
+ fs/read_write.c    |   28 ++++++++++++++++++++--------
+ include/linux/fs.h |    7 +++++--
+ mm/filemap.c       |   16 ++++++++++++----
+ 3 files changed, 37 insertions(+), 14 deletions(-)
 
 
-diff --git a/fs/ocfs2/file.c b/fs/ocfs2/file.c
-index 0b757a24567c..9809b0e5746f 100644
---- a/fs/ocfs2/file.c
-+++ b/fs/ocfs2/file.c
-@@ -2538,7 +2538,7 @@ static int ocfs2_remap_file_range(struct file *file_in,
- 		return -EINVAL;
- 
- 	return ocfs2_reflink_remap_range(file_in, pos_in, file_out, pos_out,
--					 len, remap_flags & REMAP_FILE_DEDUP);
-+					 len, remap_flags);
- }
- 
- const struct inode_operations ocfs2_file_iops = {
-diff --git a/fs/ocfs2/refcounttree.c b/fs/ocfs2/refcounttree.c
-index 36c56dfbe485..df9781567ec0 100644
---- a/fs/ocfs2/refcounttree.c
-+++ b/fs/ocfs2/refcounttree.c
-@@ -4825,7 +4825,7 @@ int ocfs2_reflink_remap_range(struct file *file_in,
- 			      struct file *file_out,
- 			      loff_t pos_out,
- 			      u64 len,
--			      bool is_dedupe)
-+			      unsigned int remap_flags)
- {
- 	struct inode *inode_in = file_inode(file_in);
- 	struct inode *inode_out = file_inode(file_out);
-@@ -4851,7 +4851,7 @@ int ocfs2_reflink_remap_range(struct file *file_in,
- 		goto out_unlock;
- 
- 	ret = generic_remap_file_range_prep(file_in, pos_in, file_out, pos_out,
--			&len, is_dedupe);
-+			&len, remap_flags);
- 	if (ret <= 0)
- 		goto out_unlock;
- 
-diff --git a/fs/ocfs2/refcounttree.h b/fs/ocfs2/refcounttree.h
-index 4af55bf4b35b..d2c5f526edff 100644
---- a/fs/ocfs2/refcounttree.h
-+++ b/fs/ocfs2/refcounttree.h
-@@ -120,6 +120,6 @@ int ocfs2_reflink_remap_range(struct file *file_in,
- 			      struct file *file_out,
- 			      loff_t pos_out,
- 			      u64 len,
--			      bool is_dedupe);
-+			      unsigned int remap_flags);
- 
- #endif /* OCFS2_REFCOUNTTREE_H */
 diff --git a/fs/read_write.c b/fs/read_write.c
-index 766bdcb381f3..201381689284 100644
+index f6ab5beb935a..ee9314b7bfc3 100644
 --- a/fs/read_write.c
 +++ b/fs/read_write.c
-@@ -1722,14 +1722,14 @@ static int generic_remap_check_len(struct inode *inode_in,
+@@ -1593,7 +1593,8 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
+ 
+ 		cloned = file_in->f_op->remap_file_range(file_in, pos_in,
+ 				file_out, pos_out,
+-				min_t(loff_t, MAX_RW_COUNT, len), 0);
++				min_t(loff_t, MAX_RW_COUNT, len),
++				REMAP_FILE_CAN_SHORTEN);
+ 		if (cloned > 0) {
+ 			ret = cloned;
+ 			goto done;
+@@ -1721,6 +1722,8 @@ static int remap_verify_area(struct file *file, loff_t pos, loff_t len,
+  * can't meaningfully compare post-EOF contents.
+  *
+  * For clone we only link a partial EOF block above the destination file's EOF.
++ *
++ * Shorten the request if possible.
+  */
+ static int generic_remap_check_len(struct inode *inode_in,
  				   struct inode *inode_out,
- 				   loff_t pos_out,
- 				   u64 *len,
--				   bool is_dedupe)
-+				   unsigned int remap_flags)
+@@ -1729,16 +1732,24 @@ static int generic_remap_check_len(struct inode *inode_in,
+ 				   unsigned int remap_flags)
  {
  	u64 blkmask = i_blocksize(inode_in) - 1;
++	loff_t new_len = *len;
  
  	if ((*len & blkmask) == 0)
  		return 0;
  
--	if (is_dedupe)
-+	if (remap_flags & REMAP_FILE_DEDUP)
- 		*len &= ~blkmask;
- 	else if (pos_out + *len < i_size_read(inode_out))
- 		return -EINVAL;
-@@ -1747,7 +1747,7 @@ static int generic_remap_check_len(struct inode *inode_in,
-  */
- int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
- 				  struct file *file_out, loff_t pos_out,
--				  u64 *len, bool is_dedupe)
-+				  u64 *len, unsigned int remap_flags)
- {
- 	struct inode *inode_in = file_inode(file_in);
- 	struct inode *inode_out = file_inode(file_out);
-@@ -1771,7 +1771,7 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
- 	if (*len == 0) {
- 		loff_t isize = i_size_read(inode_in);
+-	if (remap_flags & REMAP_FILE_DEDUP)
+-		*len &= ~blkmask;
+-	else if (pos_out + *len < i_size_read(inode_out))
+-		return -EINVAL;
++	if ((remap_flags & REMAP_FILE_DEDUP) ||
++	    pos_out + *len < i_size_read(inode_out))
++		new_len &= ~blkmask;
  
--		if (is_dedupe || pos_in == isize)
-+		if ((remap_flags & REMAP_FILE_DEDUP) || pos_in == isize)
- 			return 0;
- 		if (pos_in > isize)
- 			return -EINVAL;
-@@ -1782,7 +1782,7 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
- 
- 	/* Check that we don't violate system file offset limits. */
- 	ret = generic_remap_checks(file_in, pos_in, file_out, pos_out, len,
--			is_dedupe);
-+			(remap_flags & REMAP_FILE_DEDUP));
- 	if (ret)
- 		return ret;
- 
-@@ -1804,7 +1804,7 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
- 	/*
- 	 * Check that the extents are the same.
- 	 */
--	if (is_dedupe) {
-+	if (remap_flags & REMAP_FILE_DEDUP) {
- 		bool		is_same = false;
- 
- 		ret = vfs_dedupe_file_range_compare(inode_in, pos_in,
-@@ -1816,7 +1816,7 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
- 	}
- 
- 	ret = generic_remap_check_len(inode_in, inode_out, pos_out, len,
--			is_dedupe);
-+			remap_flags);
- 	if (ret)
- 		return ret;
- 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 2ad94d508f80..20314eb4677a 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -932,7 +932,7 @@ xfs_file_remap_range(
- 		return -EINVAL;
- 
- 	return xfs_reflink_remap_range(file_in, pos_in, file_out, pos_out,
--			len, remap_flags & REMAP_FILE_DEDUP);
-+			len, remap_flags);
+-	return 0;
++	if (new_len == *len)
++		return 0;
++
++	if (remap_flags & REMAP_FILE_CAN_SHORTEN) {
++		*len = new_len;
++		return 0;
++	}
++
++	return (remap_flags & REMAP_FILE_DEDUP) ? -EBADE : -EINVAL;
  }
  
- STATIC int
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index a7757a128a78..29aab196ce7e 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -921,13 +921,14 @@ xfs_reflink_update_dest(
- 	struct xfs_inode	*dest,
- 	xfs_off_t		newlen,
- 	xfs_extlen_t		cowextsize,
--	bool			is_dedupe)
-+	unsigned int		remap_flags)
+ /* Update inode timestamps and remove security privileges when remapping. */
+@@ -2023,7 +2034,8 @@ loff_t vfs_dedupe_file_range_one(struct file *src_file, loff_t src_pos,
  {
- 	struct xfs_mount	*mp = dest->i_mount;
- 	struct xfs_trans	*tp;
- 	int			error;
+ 	loff_t ret;
  
--	if (is_dedupe && newlen <= i_size_read(VFS_I(dest)) && cowextsize == 0)
-+	if ((remap_flags & REMAP_FILE_DEDUP) &&
-+	    newlen <= i_size_read(VFS_I(dest)) && cowextsize == 0)
- 		return 0;
+-	WARN_ON_ONCE(remap_flags & ~(REMAP_FILE_DEDUP));
++	WARN_ON_ONCE(remap_flags & ~(REMAP_FILE_DEDUP |
++				     REMAP_FILE_CAN_SHORTEN));
  
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0, 0, 0, &tp);
-@@ -948,7 +949,7 @@ xfs_reflink_update_dest(
- 		dest->i_d.di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
- 	}
+ 	ret = mnt_want_write_file(dst_file);
+ 	if (ret)
+@@ -2124,7 +2136,7 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
  
--	if (!is_dedupe) {
-+	if (!(remap_flags & REMAP_FILE_DEDUP)) {
- 		xfs_trans_ichgtime(tp, dest,
- 				   XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
- 	}
-@@ -1296,7 +1297,7 @@ xfs_reflink_remap_prep(
- 	struct file		*file_out,
- 	loff_t			pos_out,
- 	u64			*len,
--	bool			is_dedupe)
-+	unsigned int		remap_flags)
- {
- 	struct inode		*inode_in = file_inode(file_in);
- 	struct xfs_inode	*src = XFS_I(inode_in);
-@@ -1327,7 +1328,7 @@ xfs_reflink_remap_prep(
- 		goto out_unlock;
- 
- 	ret = generic_remap_file_range_prep(file_in, pos_in, file_out, pos_out,
--			len, is_dedupe);
-+			len, remap_flags);
- 	if (ret <= 0)
- 		goto out_unlock;
- 
-@@ -1336,7 +1337,7 @@ xfs_reflink_remap_prep(
- 	 * from the source file so we don't try to dedupe the partial
- 	 * EOF block.
- 	 */
--	if (is_dedupe) {
-+	if (remap_flags & REMAP_FILE_DEDUP) {
- 		*len &= ~blkmask;
- 	} else if (*len & blkmask) {
- 		/*
-@@ -1372,7 +1373,7 @@ xfs_reflink_remap_prep(
- 				   PAGE_ALIGN(pos_out + *len) - 1);
- 
- 	/* If we're altering the file contents... */
--	if (!is_dedupe) {
-+	if (!(remap_flags & REMAP_FILE_DEDUP)) {
- 		/*
- 		 * ...update the timestamps (which will grab the ilock again
- 		 * from xfs_fs_dirty_inode, so we have to call it before we
-@@ -1410,7 +1411,7 @@ xfs_reflink_remap_range(
- 	struct file		*file_out,
- 	loff_t			pos_out,
- 	u64			len,
--	bool			is_dedupe)
-+	unsigned int		remap_flags)
- {
- 	struct inode		*inode_in = file_inode(file_in);
- 	struct xfs_inode	*src = XFS_I(inode_in);
-@@ -1430,7 +1431,7 @@ xfs_reflink_remap_range(
- 
- 	/* Prepare and then clone file data. */
- 	ret = xfs_reflink_remap_prep(file_in, pos_in, file_out, pos_out,
--			&len, is_dedupe);
-+			&len, remap_flags);
- 	if (ret <= 0)
- 		return ret;
- 
-@@ -1457,7 +1458,7 @@ xfs_reflink_remap_range(
- 		cowextsize = src->i_d.di_cowextsize;
- 
- 	ret = xfs_reflink_update_dest(dest, pos_out + len, cowextsize,
--			is_dedupe);
-+			remap_flags);
- 
- out_unlock:
- 	xfs_reflink_remap_unlock(file_in, file_out);
-diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index c585ad9552b2..6f82d628bf17 100644
---- a/fs/xfs/xfs_reflink.h
-+++ b/fs/xfs/xfs_reflink.h
-@@ -28,7 +28,8 @@ extern int xfs_reflink_end_cow(struct xfs_inode *ip, xfs_off_t offset,
- 		xfs_off_t count);
- extern int xfs_reflink_recover_cow(struct xfs_mount *mp);
- extern int xfs_reflink_remap_range(struct file *file_in, loff_t pos_in,
--		struct file *file_out, loff_t pos_out, u64 len, bool is_dedupe);
-+		struct file *file_out, loff_t pos_out, u64 len,
-+		unsigned int remap_flags);
- extern int xfs_reflink_inode_has_shared_extents(struct xfs_trans *tp,
- 		struct xfs_inode *ip, bool *has_shared);
- extern int xfs_reflink_clear_inode_flag(struct xfs_inode *ip,
+ 		deduped = vfs_dedupe_file_range_one(file, off, dst_file,
+ 						    info->dest_offset, len,
+-						    0);
++						    REMAP_FILE_CAN_SHORTEN);
+ 		if (deduped == -EBADE)
+ 			info->status = FILE_DEDUPE_RANGE_DIFFERS;
+ 		else if (deduped < 0)
 diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 794d1b83eded..c2800953937a 100644
+index c0ae85a7bd9d..594fe4ba0b15 100644
 --- a/include/linux/fs.h
 +++ b/include/linux/fs.h
-@@ -1839,7 +1839,7 @@ extern ssize_t vfs_copy_file_range(struct file *, loff_t , struct file *,
- 				   loff_t, size_t, unsigned int);
- extern int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
- 					 struct file *file_out, loff_t pos_out,
--					 u64 *count, bool is_dedupe);
-+					 u64 *count, unsigned int remap_flags);
- extern int do_clone_file_range(struct file *file_in, loff_t pos_in,
- 			       struct file *file_out, loff_t pos_out, u64 len);
- extern int vfs_clone_file_range(struct file *file_in, loff_t pos_in,
+@@ -1726,14 +1726,17 @@ struct block_device_operations;
+  * If it is called with len == 0 that means "remap to end of source file".
+  *
+  * REMAP_FILE_DEDUP: only remap if contents identical (i.e. deduplicate)
++ * REMAP_FILE_CAN_SHORTEN: caller can handle a shortened request
+  */
+ #define REMAP_FILE_DEDUP		(1 << 0)
++#define REMAP_FILE_CAN_SHORTEN		(1 << 1)
+ 
+ /* All valid REMAP_FILE flags */
+-#define REMAP_FILE_VALID_FLAGS		(REMAP_FILE_DEDUP)
++#define REMAP_FILE_VALID_FLAGS		(REMAP_FILE_DEDUP | \
++					 REMAP_FILE_CAN_SHORTEN)
+ 
+ /* REMAP_FILE flags taken care of by the vfs. */
+-#define REMAP_FILE_ADVISORY		(0)
++#define REMAP_FILE_ADVISORY		(REMAP_FILE_CAN_SHORTEN)
+ 
+ struct iov_iter;
+ 
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 1e93269efafe..898eb358f7d2 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -3051,8 +3051,12 @@ int generic_remap_checks(struct file *file_in, loff_t pos_in,
+ 	if (pos_in + count == size_in) {
+ 		bcount = ALIGN(size_in, bs) - pos_in;
+ 	} else {
+-		if (!IS_ALIGNED(count, bs))
+-			return -EINVAL;
++		if (!IS_ALIGNED(count, bs)) {
++			if (remap_flags & REMAP_FILE_CAN_SHORTEN)
++				count = ALIGN_DOWN(count, bs);
++			else
++				return -EINVAL;
++		}
+ 
+ 		bcount = count;
+ 	}
+@@ -3063,10 +3067,14 @@ int generic_remap_checks(struct file *file_in, loff_t pos_in,
+ 	    pos_out < pos_in + bcount)
+ 		return -EINVAL;
+ 
+-	/* For now we don't support changing the length. */
+-	if (*req_count != count)
++	/*
++	 * We shortened the request but the caller can't deal with that, so
++	 * bounce the request back to userspace.
++	 */
++	if (*req_count != count && !(remap_flags & REMAP_FILE_CAN_SHORTEN))
+ 		return -EINVAL;
+ 
++	*req_count = count;
+ 	return 0;
+ }
+ 
