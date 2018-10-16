@@ -1,33 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:41028 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727303AbeJRBqT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Oct 2018 21:46:19 -0400
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id F2C68284DC
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Oct 2018 17:49:33 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 201453] Bug 1640090 - [xfstests xfs/490]: xfs_db print a bad
- (negative number) as agi freecount
-Date: Wed, 17 Oct 2018 17:49:33 +0000
-Message-ID: <bug-201453-201763-qioL0HCrGu@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-201453-201763@https.bugzilla.kernel.org/>
-References: <bug-201453-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Received: from userp2130.oracle.com ([156.151.31.86]:51726 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726944AbeJPK60 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Oct 2018 06:58:26 -0400
+Subject: [PATCH 01/26] xfs: add a per-xfs trace_printk macro
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 15 Oct 2018 20:10:03 -0700
+Message-ID: <153965940329.1256.12407610006092032283.stgit@magnolia>
+In-Reply-To: <153965939489.1256.7400115244528045860.stgit@magnolia>
+References: <153965939489.1256.7400115244528045860.stgit@magnolia>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
-https://bugzilla.kernel.org/show_bug.cgi?id=201453
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
---- Comment #1 from Zorro Lang (zlang@redhat.com) ---
-Created attachment 279077
-  --> https://bugzilla.kernel.org/attachment.cgi?id=279077&action=edit
-xfs metadump
+Add a "xfs_tprintk" macro so that developers can use trace_printk to
+print out arbitrary debugging information with the XFS device name
+attached to the trace output.
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_error.h |    6 ++++++
+ 1 file changed, 6 insertions(+)
+
+
+diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+index 246d3e989c6c..5caa8bdf6c38 100644
+--- a/fs/xfs/xfs_error.h
++++ b/fs/xfs/xfs_error.h
+@@ -76,6 +76,11 @@ extern int xfs_errortag_set(struct xfs_mount *mp, unsigned int error_tag,
+ 		unsigned int tag_value);
+ extern int xfs_errortag_add(struct xfs_mount *mp, unsigned int error_tag);
+ extern int xfs_errortag_clearall(struct xfs_mount *mp);
++
++/* trace printk version of xfs_err and friends */
++#define xfs_tprintk(mp, fmt, args...) \
++	trace_printk("dev %d:%d " fmt, MAJOR((mp)->m_super->s_dev), \
++			MINOR((mp)->m_super->s_dev), ##args)
+ #else
+ #define xfs_errortag_init(mp)			(0)
+ #define xfs_errortag_del(mp)
+@@ -83,6 +88,7 @@ extern int xfs_errortag_clearall(struct xfs_mount *mp);
+ #define xfs_errortag_set(mp, tag, val)		(ENOSYS)
+ #define xfs_errortag_add(mp, tag)		(ENOSYS)
+ #define xfs_errortag_clearall(mp)		(ENOSYS)
++#define xfs_tprintk(mp, fmt, args...)		do { } while (0)
+ #endif /* DEBUG */
+ 
+ /*
