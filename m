@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:49040 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:55926 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727094AbeJPK7I (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Oct 2018 06:59:08 -0400
-Subject: [PATCH 08/26] vfs: rename vfs_clone_file_prep to be more descriptive
+        with ESMTP id S1726934AbeJPLHr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Oct 2018 07:07:47 -0400
+Subject: [PATCH 13/26] vfs: create generic_remap_file_range_touch to update
+ inode metadata
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 15 Oct 2018 20:10:51 -0700
-Message-ID: <153965945139.1256.17779918536496926662.stgit@magnolia>
+Date: Mon, 15 Oct 2018 20:19:26 -0700
+Message-ID: <153965996673.3607.133184523000924340.stgit@magnolia>
 In-Reply-To: <153965939489.1256.7400115244528045860.stgit@magnolia>
 References: <153965939489.1256.7400115244528045860.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,86 +21,97 @@ Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, A
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-The vfs_clone_file_prep is a generic function to be called by filesystem
-implementations only.  Rename the prefix to generic_ and make it more
-clear that it applies to remap operations, not just clones.
+Create a new VFS helper to handle inode metadata updates when remapping
+into a file.  If the operation can possibly alter the file contents, we
+must update the ctime and mtime and remove security privileges, just
+like we do for regular file writes.  Wire up ocfs2 to ensure consistent
+behavior.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 ---
- fs/ocfs2/refcounttree.c |    2 +-
- fs/read_write.c         |    8 ++++----
- fs/xfs/xfs_reflink.c    |    2 +-
- include/linux/fs.h      |    6 +++---
- 4 files changed, 9 insertions(+), 9 deletions(-)
+ fs/read_write.c      |   28 ++++++++++++++++++++++++++++
+ fs/xfs/xfs_reflink.c |   23 -----------------------
+ 2 files changed, 28 insertions(+), 23 deletions(-)
 
 
-diff --git a/fs/ocfs2/refcounttree.c b/fs/ocfs2/refcounttree.c
-index 19e03936c5e1..36c56dfbe485 100644
---- a/fs/ocfs2/refcounttree.c
-+++ b/fs/ocfs2/refcounttree.c
-@@ -4850,7 +4850,7 @@ int ocfs2_reflink_remap_range(struct file *file_in,
- 	    (OCFS2_I(inode_out)->ip_flags & OCFS2_INODE_SYSTEM_FILE))
- 		goto out_unlock;
- 
--	ret = vfs_clone_file_prep(file_in, pos_in, file_out, pos_out,
-+	ret = generic_remap_file_range_prep(file_in, pos_in, file_out, pos_out,
- 			&len, is_dedupe);
- 	if (ret <= 0)
- 		goto out_unlock;
 diff --git a/fs/read_write.c b/fs/read_write.c
-index f5395d8da741..aca75a97a695 100644
+index ebcbfc4f2907..3f6392f1d5d4 100644
 --- a/fs/read_write.c
 +++ b/fs/read_write.c
-@@ -1745,9 +1745,9 @@ static int generic_remap_check_len(struct inode *inode_in,
-  * Returns: 0 for "nothing to clone", 1 for "something to clone", or
-  * the usual negative error code.
-  */
--int vfs_clone_file_prep(struct file *file_in, loff_t pos_in,
--			struct file *file_out, loff_t pos_out,
--			u64 *len, bool is_dedupe)
-+int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-+				  struct file *file_out, loff_t pos_out,
-+				  u64 *len, bool is_dedupe)
- {
- 	struct inode *inode_in = file_inode(file_in);
- 	struct inode *inode_out = file_inode(file_out);
-@@ -1822,7 +1822,7 @@ int vfs_clone_file_prep(struct file *file_in, loff_t pos_in,
+@@ -1737,6 +1737,30 @@ static int generic_remap_check_len(struct inode *inode_in,
+ 	return 0;
+ }
  
++/* Update inode timestamps and remove security privileges when remapping. */
++static int generic_remap_file_range_target(struct file *file,
++					   unsigned int remap_flags)
++{
++	int ret;
++
++	/* If can't alter the file contents, we're done. */
++	if (remap_flags & REMAP_FILE_DEDUP)
++		return 0;
++
++	/* Update the timestamps, since we can alter file contents. */
++	if (!(file->f_mode & FMODE_NOCMTIME)) {
++		ret = file_update_time(file);
++		if (ret)
++			return ret;
++	}
++
++	/*
++	 * Clear the security bits if the process is not being run by root.
++	 * This keeps people from modifying setuid and setgid binaries.
++	 */
++	return file_remove_privs(file);
++}
++
+ /*
+  * Check that the two inodes are eligible for cloning, the ranges make
+  * sense, and then flush all dirty data.  Caller must ensure that the
+@@ -1820,6 +1844,10 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
+ 	if (ret)
+ 		return ret;
+ 
++	ret = generic_remap_file_range_target(file_out, remap_flags);
++	if (ret)
++		return ret;
++
  	return 1;
  }
--EXPORT_SYMBOL(vfs_clone_file_prep);
-+EXPORT_SYMBOL(generic_remap_file_range_prep);
- 
- int do_clone_file_range(struct file *file_in, loff_t pos_in,
- 			struct file *file_out, loff_t pos_out, u64 len)
+ EXPORT_SYMBOL(generic_remap_file_range_prep);
 diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 281d5f53f2ec..a7757a128a78 100644
+index 29aab196ce7e..2d7dd8b28d7c 100644
 --- a/fs/xfs/xfs_reflink.c
 +++ b/fs/xfs/xfs_reflink.c
-@@ -1326,7 +1326,7 @@ xfs_reflink_remap_prep(
- 	if (IS_DAX(inode_in) || IS_DAX(inode_out))
- 		goto out_unlock;
+@@ -1372,29 +1372,6 @@ xfs_reflink_remap_prep(
+ 	truncate_inode_pages_range(&inode_out->i_data, pos_out,
+ 				   PAGE_ALIGN(pos_out + *len) - 1);
  
--	ret = vfs_clone_file_prep(file_in, pos_in, file_out, pos_out,
-+	ret = generic_remap_file_range_prep(file_in, pos_in, file_out, pos_out,
- 			len, is_dedupe);
- 	if (ret <= 0)
- 		goto out_unlock;
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index ba93a6e7dac4..55729e1c2e75 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1825,9 +1825,9 @@ extern ssize_t vfs_readv(struct file *, const struct iovec __user *,
- 		unsigned long, loff_t *, rwf_t);
- extern ssize_t vfs_copy_file_range(struct file *, loff_t , struct file *,
- 				   loff_t, size_t, unsigned int);
--extern int vfs_clone_file_prep(struct file *file_in, loff_t pos_in,
--			       struct file *file_out, loff_t pos_out,
--			       u64 *count, bool is_dedupe);
-+extern int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
-+					 struct file *file_out, loff_t pos_out,
-+					 u64 *count, bool is_dedupe);
- extern int do_clone_file_range(struct file *file_in, loff_t pos_in,
- 			       struct file *file_out, loff_t pos_out, u64 len);
- extern int vfs_clone_file_range(struct file *file_in, loff_t pos_in,
+-	/* If we're altering the file contents... */
+-	if (!(remap_flags & REMAP_FILE_DEDUP)) {
+-		/*
+-		 * ...update the timestamps (which will grab the ilock again
+-		 * from xfs_fs_dirty_inode, so we have to call it before we
+-		 * take the ilock).
+-		 */
+-		if (!(file_out->f_mode & FMODE_NOCMTIME)) {
+-			ret = file_update_time(file_out);
+-			if (ret)
+-				goto out_unlock;
+-		}
+-
+-		/*
+-		 * ...clear the security bits if the process is not being run
+-		 * by root.  This keeps people from modifying setuid and setgid
+-		 * binaries.
+-		 */
+-		ret = file_remove_privs(file_out);
+-		if (ret)
+-			goto out_unlock;
+-	}
+-
+ 	return 1;
+ out_unlock:
+ 	xfs_reflink_remap_unlock(file_in, file_out);
