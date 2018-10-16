@@ -1,109 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:56916 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726175AbeJOCaV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 14 Oct 2018 22:30:21 -0400
-Received: from 089144199123.atnat0008.highway.a1.net ([89.144.199.123] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1gBlRA-0000xQ-3B
-        for linux-xfs@vger.kernel.org; Sun, 14 Oct 2018 18:48:24 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] xfs: cancel COW blocks before swapext
-Date: Sun, 14 Oct 2018 20:48:22 +0200
-Message-Id: <20181014184822.25016-1-hch@lst.de>
+Received: from userp2130.oracle.com ([156.151.31.86]:60210 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727082AbeJPLIr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Oct 2018 07:08:47 -0400
+Subject: [PATCH 21/26] ocfs2: fix pagecache truncation prior to reflink
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 15 Oct 2018 20:20:28 -0700
+Message-ID: <153966002809.3607.17959416355714610983.stgit@magnolia>
+In-Reply-To: <153965939489.1256.7400115244528045860.stgit@magnolia>
+References: <153965939489.1256.7400115244528045860.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
-We need to make sure we have no outstanding COW blocks before we swap
-extents, as there is nothing preventing us from having preallocated COW
-delalloc on either inode that swapext is called on.  That case can
-easily be reproduced by running generic/324 in always_cow mode:
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-[  620.760572] XFS: Assertion failed: tip->i_delayed_blks == 0, file: fs/xfs/xfs_bmap_util.c, line: 1669
-[  620.761608] ------------[ cut here ]------------
-[  620.762171] kernel BUG at fs/xfs/xfs_message.c:102!
-[  620.762732] invalid opcode: 0000 [#1] SMP PTI
-[  620.763272] CPU: 0 PID: 24153 Comm: xfs_fsr Tainted: G        W         4.19.0-rc1+ #4182
-[  620.764203] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.11.1-1 04/01/2014
-[  620.765202] RIP: 0010:assfail+0x20/0x28
-[  620.765646] Code: 31 ff e8 83 fc ff ff 0f 0b c3 48 89 f1 41 89 d0 48 c7 c6 48 ca 8d 82 48 89 fa 38
-[  620.767758] RSP: 0018:ffffc9000898bc10 EFLAGS: 00010202
-[  620.768359] RAX: 0000000000000000 RBX: ffff88012f14ba40 RCX: 0000000000000000
-[  620.769174] RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffff828560d9
-[  620.769982] RBP: ffff88012f14b300 R08: 0000000000000000 R09: 0000000000000000
-[  620.770788] R10: 000000000000000a R11: f000000000000000 R12: ffffc9000898bc98
-[  620.771638] R13: ffffc9000898bc9c R14: ffff880130b5e2b8 R15: ffff88012a1fa2a8
-[  620.772504] FS:  00007fdc36e0fbc0(0000) GS:ffff88013ba00000(0000) knlGS:0000000000000000
-[  620.773475] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  620.774168] CR2: 00007fdc3604d000 CR3: 0000000132afc000 CR4: 00000000000006f0
-[  620.774978] Call Trace:
-[  620.775274]  xfs_swap_extent_forks+0x2a0/0x2e0
-[  620.775792]  xfs_swap_extents+0x38b/0xab0
-[  620.776256]  xfs_ioc_swapext+0x121/0x140
-[  620.776709]  xfs_file_ioctl+0x328/0xc90
-[  620.777154]  ? rcu_read_lock_sched_held+0x50/0x60
-[  620.777694]  ? xfs_iunlock+0x233/0x260
-[  620.778127]  ? xfs_setattr_nonsize+0x3be/0x6a0
-[  620.778647]  do_vfs_ioctl+0x9d/0x680
-[  620.779071]  ? ksys_fchown+0x47/0x80
-[  620.779552]  ksys_ioctl+0x35/0x70
-[  620.780040]  __x64_sys_ioctl+0x11/0x20
-[  620.780530]  do_syscall_64+0x4b/0x190
-[  620.780927]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-[  620.781467] RIP: 0033:0x7fdc364d0f07
-[  620.781900] Code: b3 66 90 48 8b 05 81 5f 2c 00 64 c7 00 26 00 00 00 48 c7 c0 ff ff ff ff c3 66 28
-[  620.784044] RSP: 002b:00007ffe2a766038 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
-[  620.784896] RAX: ffffffffffffffda RBX: 0000000000000025 RCX: 00007fdc364d0f07
-[  620.785667] RDX: 0000560296ca2fc0 RSI: 00000000c0c0586d RDI: 0000000000000005
-[  620.786398] RBP: 0000000000000025 R08: 0000000000001200 R09: 0000000000000000
-[  620.787283] R10: 0000000000000432 R11: 0000000000000246 R12: 0000000000000005
-[  620.788051] R13: 0000000000000000 R14: 0000000000001000 R15: 0000000000000006
-[  620.788927] Modules linked in:
-[  620.789340] ---[ end trace 9503b7417ffdbdb0 ]---
-[  620.790065] RIP: 0010:assfail+0x20/0x28
-[  620.790642] Code: 31 ff e8 83 fc ff ff 0f 0b c3 48 89 f1 41 89 d0 48 c7 c6 48 ca 8d 82 48 89 fa 38
-[  620.793038] RSP: 0018:ffffc9000898bc10 EFLAGS: 00010202
-[  620.793609] RAX: 0000000000000000 RBX: ffff88012f14ba40 RCX: 0000000000000000
-[  620.794317] RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffff828560d9
-[  620.795025] RBP: ffff88012f14b300 R08: 0000000000000000 R09: 0000000000000000
-[  620.795778] R10: 000000000000000a R11: f000000000000000 R12: ffffc9000898bc98
-[  620.796675] R13: ffffc9000898bc9c R14: ffff880130b5e2b8 R15: ffff88012a1fa2a8
-[  620.797782] FS:  00007fdc36e0fbc0(0000) GS:ffff88013ba00000(0000) knlGS:0000000000000000
-[  620.798908] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  620.799594] CR2: 00007fdc3604d000 CR3: 0000000132afc000 CR4: 00000000000006f0
-[  620.800424] Kernel panic - not syncing: Fatal exception
-[  620.801191] Kernel Offset: disabled
-[  620.801597] ---[ end Kernel panic - not syncing: Fatal exception ]---
+Prior to remapping blocks, it is necessary to remove pages from the
+destination file's page cache.  Unfortunately, the truncation is not
+aggressive enough -- if page size > block size, we'll end up zeroing
+subpage blocks instead of removing them.  So, round the start offset
+down and the end offset up to page boundaries.  We already wrote all
+the dirty data so the larger range should be fine.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
+ fs/ocfs2/refcounttree.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-Now only cancels the COW range on the target inode to address the comment
-from Brian.
 
- fs/xfs/xfs_bmap_util.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 7cfda25f1bb1..5d263dfdb3bc 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1775,6 +1775,12 @@ xfs_swap_extents(
- 	if (error)
- 		goto out_unlock;
+diff --git a/fs/ocfs2/refcounttree.c b/fs/ocfs2/refcounttree.c
+index 2a5c96bc9677..7c709229e108 100644
+--- a/fs/ocfs2/refcounttree.c
++++ b/fs/ocfs2/refcounttree.c
+@@ -4862,8 +4862,9 @@ int ocfs2_reflink_remap_range(struct file *file_in,
+ 				  SINGLE_DEPTH_NESTING);
  
-+	if (xfs_inode_has_cow_data(tip)) {
-+		error = xfs_reflink_cancel_cow_range(tip, 0, NULLFILEOFF, true);
-+		if (error)
-+			return error;
-+	}
-+
- 	/*
- 	 * Extent "swapping" with rmap requires a permanent reservation and
- 	 * a block reservation because it's really just a remap operation
--- 
-2.19.1
+ 	/* Zap any page cache for the destination file's range. */
+-	truncate_inode_pages_range(&inode_out->i_data, pos_out,
+-				   PAGE_ALIGN(pos_out + len) - 1);
++	truncate_inode_pages_range(&inode_out->i_data,
++				   round_down(pos_out, PAGE_SIZE),
++				   round_up(pos_out + len, PAGE_SIZE) - 1);
+ 
+ 	ret = ocfs2_reflink_remap_blocks(inode_in, in_bh, pos_in, inode_out,
+ 					 out_bh, pos_out, len);
