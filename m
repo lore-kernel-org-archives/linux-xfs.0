@@ -1,80 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from 2.mo302.mail-out.ovh.net ([137.74.110.75]:52383 "EHLO
-        2.mo302.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726584AbeJSQVf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Oct 2018 12:21:35 -0400
-From: Romain Le Disez <romain.le-disez@corp.ovh.com>
-Subject: Re: [QUESTION] multiple fsync() vs single sync()
-Date: Fri, 19 Oct 2018 08:16:27 +0000
-Message-ID: <0C4E81C1-739F-432E-88A3-C2B1E4B1A310@corp.ovh.com>
-References: <6A65F394-C1BA-4339-AC9B-051885D12F65@corp.ovh.com>
- <20181017011624.GB6311@dastard>
-In-Reply-To: <20181017011624.GB6311@dastard>
-Content-Language: en-US
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <25567AD2D8A7574F9179F8287C62E139@corp.ovh.com>
-Content-Transfer-Encoding: base64
+Received: from userp2130.oracle.com ([156.151.31.86]:38962 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727418AbeJRGog (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Oct 2018 02:44:36 -0400
+Subject: [PATCH 20/29] ocfs2: fix pagecache truncation prior to reflink
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 17 Oct 2018 15:46:39 -0700
+Message-ID: <153981639941.5568.14471990950819406360.stgit@magnolia>
+In-Reply-To: <153981625504.5568.2708520119290577378.stgit@magnolia>
+References: <153981625504.5568.2708520119290577378.stgit@magnolia>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
-VGhhbmtzIGFsbCBmb3IgeW91ciBhbnN3ZXJzLCBpdCBpcyByZWFsbHkgaGVscGZ1bCwgSSBoYXZl
-IG5vdyBhIGNsZWFyZXIgdmlzaW9uIG9mIGhvdyBpdCB3b3Jrcy4NCg0KSSBoYXZlIG9uZSBsYXN0
-IHF1ZXN0aW9uLg0KDQpJZiBJ4oCZbSBpbiB0aGUgcHJvY2VzcyBvZiBjcmVhdGluZyAxMDAwIGZp
-bGVzIHRoaXMgd2F5LCBidXQgdGhlIHNlcnZlciBjcmFzaGVzIGJlZm9yZSB0aGUgc3luY2ZzKCkg
-ZnVuY3Rpb24gd2FzIGNhbGxlZCwgd2hhdCB3aWxsIGhhcHBlbiB0byB0aGUgZmlsZXMgdGhhdCB3
-ZXJlIGFscmVhZHkgcmVuYW1lKCkvbGlua2F0KCk/DQoNCkRvIHRoZXkgZm9sbG93IHRoZSBzYW1l
-IG9yZGVyaW5nLCBzbyBJ4oCZbSBzdXJlIHRoZXkgYXJlIGVpdGhlciBjb21wbGV0ZSAoYWxsIGRh
-dGEveGF0dHIgKyB4ZnMgbWV0YWRhdGEpIG9yIG5vdCBpbiB0aGUgZGVzdGluYXRpb24gZGlyZWN0
-b3J5Pw0KDQpPciwgaXMgc3luY2ZzKCkgdGhlIG9ubHkgd2F5IHRvIGVuc3VyZSB0aGlzIG9yZGVy
-aW5nPw0KDQpUaGFua3MgYSBsb3QgZm9yIHlvdXIgdGltZS4NCg0KPiBMZSAxNyBvY3QuIDIwMTgg
-w6AgMDM6MTYsIERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJvbW9yYml0LmNvbT4gYSDDqWNyaXQgOg0K
-PiANCj4gT24gVHVlLCBPY3QgMTYsIDIwMTggYXQgMTA6MjI6MThBTSArMDAwMCwgUm9tYWluIExl
-IERpc2V6IHdyb3RlOg0KPj4gSGkgYWxsLA0KPj4gDQo+PiBJbiB0aGlzIHBzZXVkby1jb2RlIChl
-eHRyYWN0ZWQgZnJvbSBPcGVuU3RhY2sgU3dpZnQgWzFdKToNCj4+ICAgIGZkPW9wZW4oIi90bXAv
-dGVtcGZpbGUiLCBPX0NSRUFUIHwgT19XUk9OTFkpOw0KPj4gICAgd3JpdGUoZmQsIC4uLik7DQo+
-PiAgICBmc2V0eGF0dHIoZmQsIC4uLik7DQo+PiAgICBmc3luYyhmZCk7DQo+PiAgICByZW5hbWUo
-Ii90bXAvdGVtcGZpbGUiLCAiL2RhdGEvZm9vYmFyIik7DQo+PiAgICBkaXJmZCA9IG9wZW4oIi9k
-YXRhIiwgT19ESVJFQ1RPUlkgfCBPX1JET05MWSk7DQo+PiAgICBmc3luYyhkaXJmZCk7DQo+PiAN
-Cj4+IE9SICh0aGUgc2FtZSB3aXRob3V0IHRlbXBvcmFyeSBmaWxlKToNCj4+ICAgIGZkPW9wZW4o
-Ii9kYXRhIiwgT19UTVBGSUxFIHwgT19XUk9OTFkpOw0KPj4gICAgd3JpdGUoZmQsIC4uLik7DQo+
-PiAgICBmc2V0eGF0dHIoZmQsIC4uLik7DQo+PiAgICBmc3luYyhmZCk7DQo+PiAgICBsaW5rYXQo
-QVRfRkRDV0QsICIvcHJvYy9zZWxmL2ZkLyIgKyBmZCwgQVRfRkRDV0QsICIvZGF0YS9mb29iYXIi
-LCBBVF9TWU1MSU5LX0ZPTExPVyk7DQo+IA0KPiAJbGlua2F0KGZkLCAiIiwgIEFUX0ZEQ1dELCAi
-L2RhdGEvZm9vYmFyIiwgQVRfRU1QVFlfUEFUSCk7DQo+IA0KPj4gICAgZGlyZmQgPSBvcGVuKCIv
-ZGF0YSIsIE9fRElSRUNUT1JZIHwgT19SRE9OTFkpOw0KPj4gICAgZnN5bmMoZGlyZmQpOw0KPiAN
-Cj4+IEnigJltIGd1YXJhbnRlZWQgdGhhdCwgd2hhdCBldmVyIGhhcHBlbiwgSeKAmWxsIGhhdmUg
-YQ0KPj4gY29tcGxldGUgZmlsZSAoZGF0YSt4YXR0cikgb3Igbm8gZmlsZSBhdCBhbGwgaW4gdGhl
-IGRpcmVjdG9yeQ0KPj4gL2RhdGEuDQo+IA0KPiBZZXMuDQo+IA0KPj4gU2Vjb25kIHF1ZXN0aW9u
-LCBpZiBJIHJlcGxhY2UgdGhlIHR3byBmc3luYygpIGJ5IG9uZSBzeW5jKCksIGRvIEkNCj4+IGdl
-dCB0aGUgc2FtZSBndWFyYW50ZWU/DQo+PiAgICBmZD1vcGVuKCIvZGF0YSIsIE9fVE1QRklMRSB8
-IE9fV1JPTkxZKTsNCj4+ICAgIHdyaXRlKGZkLCAuLi4pOw0KPj4gICAgZnNldHhhdHRyKGZkLCAu
-Li4pOw0KPj4gICAgbGlua2F0KEFUX0ZEQ1dELCDCqyAvcHJvYy9zZWxmL2ZkLyIgKyBmZCwgQVRf
-RkRDV0QsICIvZGF0YS9mb29iYXIiLCBBVF9TWU1MSU5LX0ZPTExPVyk7DQo+PiAgICBzeW5jKCk7
-DQo+PiANCj4+IEZyb20gd2hhdCBJIHVuZGVyc3RhbmQgb2YgdGhlIEZBUSBbMV0sIHdyaXRlX2Jh
-cnJpZXIgZ3VhcmFudGVlDQo+PiB0aGF0IGpvdXJuYWwgKGFrYSBsb2cpIHdpbGwgYmUgd3JpdHRl
-biBiZWZvcmUgdGhlIGlub2RlIChha2ENCj4+IG1ldGFkYXRhKS4gRGlkIEkgbWlzcyBzb21ldGhp
-bmc/DQo+IA0KPiAid3JpdGUgYmFycmllcnMiIGRvbid0IGV4aXN0IGFueW1vcmUuIFdoYXQgd2Ug
-aGF2ZSB0aGVzZSBkYXlzIGFyZQ0KPiBjYWNoZSBmbHVzaGVzIHRvIGNvcnJlY3RseSBvcmRlciBk
-YXRhL21ldGFkYXRhIElPIHZzIGpvdXJuYWwgSU8uDQo+IA0KPiBUaGUgc3luY2ZzKCkgb3BlcmF0
-aW9uIChhbmQgc3luYygpLCB3aGljaCBpcyBqdXN0IHN5bmNmcygpIGFjcm9zcw0KPiBhbGwgZmls
-ZXN5c3RlbXMpIHdyaXRlcyBvdXN0YW5kaW5nIGRhdGEgZmlyc3QsIHRoZW4gYXNrcyB0aGUNCj4g
-ZmlsZXN5c3RlbSB0byBmb3JjZSBtZXRhZGF0YSB0byBzdGFibGUgc3RvcmFnZS4gWEZTIGRvZXMg
-dGhhdCB3aXRoDQo+IGEgbG9nIGZsdXNoLCB3aGljaCBpc3N1ZXMgYSBjYWNoZSBmbHVzaCAoZGF0
-YSBub3cgb24gc3RhYmxlIHN0b3JhZ2UpDQo+IGZvbGxvd2VkIGJ5IEZVQSBsb2cgd3JpdGVzICht
-ZXRhZGF0YSBub3cgb24gc3RhYmxlIHN0b3JhZ2UgaW4gdGhlDQo+IGpvdXJuYWwpLg0KPiANCj4g
-U28sIGVmZmVjdGl2ZWx5LCB5b3UgZ2V0IHRoZSBzYW1lIHRoaW5nIGluIGJvdGggY2FzZXMuIFRo
-ZSBvbmx5DQo+IGRpZmZlcmVuY2UgaXMgdGhhdCBzeW5jKCkgZG9lcyBhIGxvdCBtb3JlIHdvcmsg
-dGhhbiBhIGNvdXBsZSBvZg0KPiBmc3luYygpIG9wZXJhdGlvbnMsIGFuZCBkb2VzIHdvcmsgc3lz
-dGVtIHdpZGUgb24gZmlsZXN5c3RlbXMgYW5kDQo+IGZpbGVzIHlvdSBkb24ndCBjYXJlIGFib3V0
-LiBmc3luYygpIHdpbGwgYWx3YXlzIHBlcmZvcm0gYmV0dGVyIG9uIGENCj4gYnVzeSBzeXN0ZW0g
-dGhhbiBhIHN5bmMgY2FsbC4NCj4gDQo+IExldCB0aGUgZmlsZXN5c3RlbSB3b3JyeSBhYm91dCBv
-cHRpbWlzaW5nIGZzeW5jIGNhbGxzIG5lY2Vzc2FyeSBmb3INCj4gY29uc2lzdGVuY3kgYW5kIGlu
-dGVncml0eSBwdXJwb3Nlcy4gSWYgdGhlcmUgd2FzIGEgZmFzdGVyIHdheSB0aGFuDQo+IGlzc3Vp
-bmcgZnN5bmMgb24gb25seSB0aGUgb2JqZWN0cyB0aGF0IG5lZWQgaXQgd2hlbiByZXF1aXJlZCwg
-dGhlbg0KPiBldmVyeW9uZSB3b3VsZCBiZSB1c2luZyBpdCBhbGwgdGhlIHRpbWUuLi4uDQo+IA0K
-PiBDaGVlcnMsDQo+IA0KPiBEYXZlLg0KPiAtLSANCj4gRGF2ZSBDaGlubmVyDQo+IGRhdmlkQGZy
-b21vcmJpdC5jb20NCg0KLS0gDQpSb21haW4NCg0K
+From: Darrick J. Wong <darrick.wong@oracle.com>
+
+Prior to remapping blocks, it is necessary to remove pages from the
+destination file's page cache.  Unfortunately, the truncation is not
+aggressive enough -- if page size > block size, we'll end up zeroing
+subpage blocks instead of removing them.  So, round the start offset
+down and the end offset up to page boundaries.  We already wrote all
+the dirty data so the larger range should be fine.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/ocfs2/refcounttree.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+
+diff --git a/fs/ocfs2/refcounttree.c b/fs/ocfs2/refcounttree.c
+index 2a5c96bc9677..7c709229e108 100644
+--- a/fs/ocfs2/refcounttree.c
++++ b/fs/ocfs2/refcounttree.c
+@@ -4862,8 +4862,9 @@ int ocfs2_reflink_remap_range(struct file *file_in,
+ 				  SINGLE_DEPTH_NESTING);
+ 
+ 	/* Zap any page cache for the destination file's range. */
+-	truncate_inode_pages_range(&inode_out->i_data, pos_out,
+-				   PAGE_ALIGN(pos_out + len) - 1);
++	truncate_inode_pages_range(&inode_out->i_data,
++				   round_down(pos_out, PAGE_SIZE),
++				   round_up(pos_out + len, PAGE_SIZE) - 1);
+ 
+ 	ret = ocfs2_reflink_remap_blocks(inode_in, in_bh, pos_in, inode_out,
+ 					 out_bh, pos_out, len);
