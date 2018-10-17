@@ -1,53 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:55596 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727175AbeJRAhb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Oct 2018 20:37:31 -0400
-Date: Wed, 17 Oct 2018 09:40:39 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 25/26] xfs: support returning partial reflink results
-Message-ID: <20181017164039.GP28243@magnolia>
-References: <153965939489.1256.7400115244528045860.stgit@magnolia>
- <153966005536.3607.787445581785795364.stgit@magnolia>
- <20181017084002.GI16896@infradead.org>
+Received: from mx1.redhat.com ([209.132.183.28]:39409 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726334AbeJRF2q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 18 Oct 2018 01:28:46 -0400
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: [PATCH 0/3] ext2, ext4, xfs: hard fail dax mount on unsupported devices
+References: <1539027169-23332-1-git-send-email-sandeen@sandeen.net>
+        <20181011103636.GC9467@quack2.suse.cz>
+        <CAPcyv4iAD_wkjY1way1rOxr4=gC_TGx71VquF13ooAuUPz9RJw@mail.gmail.com>
+        <5a8e54e8-4845-1c85-e4e9-0b9b551a9ce2@sandeen.net>
+        <20181012082154.GB30154@lst.de>
+        <CAOxpaSWf=6RBTa3WM=Hnbr7MwpQ5mMSMAZ+B5FfZo3zKv4Nu7w@mail.gmail.com>
+        <116ef687-f23d-b45c-1b48-fd444b346719@sandeen.net>
+Date: Wed, 17 Oct 2018 17:31:09 -0400
+In-Reply-To: <116ef687-f23d-b45c-1b48-fd444b346719@sandeen.net> (Eric
+        Sandeen's message of "Wed, 17 Oct 2018 14:42:36 -0500")
+Message-ID: <x491s8ofeg2.fsf@segfault.boston.devel.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181017084002.GI16896@infradead.org>
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: david@fromorbit.com, sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Ross Zwisler <zwisler@kernel.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, linux-xfs <linux-xfs@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-fsdevel@vger.kernel.org
 
-On Wed, Oct 17, 2018 at 01:40:02AM -0700, Christoph Hellwig wrote:
-> > @@ -1415,11 +1419,17 @@ xfs_reflink_remap_range(
-> >  
-> >  	trace_xfs_reflink_remap_range(src, pos_in, len, dest, pos_out);
-> >  
-> > +	if (len == 0) {
-> > +		ret = 0;
-> > +		goto out_unlock;
-> > +	}
-> > +
-> 
-> As pointed out last time this check is superflous, right above we have
-> this check:
-> 
-> 	if (ret < 0 || len == 0)
-> 		return ret;
+Eric Sandeen <sandeen@sandeen.net> writes:
 
-Oops, sorry I missed that, will fix now.
+> I've been thinking about the per-inode stuff a bit, and while I don't know
+> how to resolve some of the trickier issues, at least the expected behavior
+> seems like something we can narrow down and specify.
+>
+> Because it's an on-disk flag (in xfs today, in any case) it seems that
+> the only sane behavior to expect is either/or, i.e.:
+>
+> Mount option: All files always dax, per-inode flags ignored (or rejected)
+> Per-inode: Mount option cannot be specified; only inodes explicitly flagged are dax
+>
+> Think about it; what would mount-option-plus-per-inode mean?  We have
+> no "negative" dax flag, so while mount-option-with-flag surely means
+> "dax", what the heck does mount-option-without-flag mean, and how is it
+> distinguishable from mount option only?
+>
+> I submit that flags can only have meaning w/o the fs-wide mount option
+> enabled, so the question of "should we hard fail mount -o dax for devices
+> that cannot support it" seems to be orthogonal to the per-inode question.
+>
+> i.e. mount -o dax really can only mean "I want dax on everything" and so
+> again, I think we probably need to fail the mount if that can't be honored.
 
-> >  	ret = xfs_reflink_remap_blocks(src, sfsbno, dest, dfsbno, fsblen,
-> > -			pos_out + len);
-> > +			&remappedfsb, pos_out + len);
-> > +	remapped_bytes = min_t(loff_t, len, XFS_FSB_TO_B(mp, remappedfsb));
-> 
-> I still think returning the bytes from the function would be saner,
-> but maybe that's just me.
+I hate to even open up this can of worms, but what about killing the dax
+mount option?
 
-Hmmm, this call site is getting messy; I'll tack on another patch to
-clean that up too.
+To quote Christoph:
+  How does an application "make use of DAX"?  What actual user visible
+  semantics are associated with a file that has this flag set?
 
---D
+We're already talking about making caching decisions automatically, so
+does DAX even mean anything at that point?  If the storage and the file
+system support it, enable it.
+
+>From what we've seen so far, aplications want:
+1) to be able to make data persistent from userspace
+   For this, we have MAP_SYNC.
+2) to determine whether or not page cache will be used
+   For this, we have O_DIRECT for read/write access, and MAP_SYNC for
+   mmap access (and maybe a third option coming, we'll see).
+
+The only thing users gain from a mount option is the ability to turn OFF
+dax.  I suppose there might be a use case that wants this, but I'm not
+aware of it.
+
+Cheers,
+Jeff
