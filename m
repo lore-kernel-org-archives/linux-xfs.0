@@ -1,113 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:33426 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728015AbeJRX4F (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 18 Oct 2018 19:56:05 -0400
-Subject: Re: ENSOPC on a 10% used disk
-References: <40c52a7b-2520-8ae4-11d5-ae4b33e1dc29@scylladb.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <f5f7cd96-1a7a-3a3b-90f9-6415450b02a0@sandeen.net>
-Date: Thu, 18 Oct 2018 10:54:26 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:43714 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726673AbeJRGm5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Oct 2018 02:42:57 -0400
+Subject: [PATCH 06/29] vfs: skip zero-length dedupe requests
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 17 Oct 2018 15:44:56 -0700
+Message-ID: <153981629660.5568.10517610908803733732.stgit@magnolia>
+In-Reply-To: <153981625504.5568.2708520119290577378.stgit@magnolia>
+References: <153981625504.5568.2708520119290577378.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <40c52a7b-2520-8ae4-11d5-ae4b33e1dc29@scylladb.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Avi Kivity <avi@scylladb.com>, linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, ocfs2-devel@oss.oracle.com
 
-On 10/17/18 2:52 AM, Avi Kivity wrote:
-> I have a user running a 1.7TB filesystem with ~10% usage (as shown by df), getting sporadic ENOSPC errors. The disk is mounted with inode64 and has a relatively small number of large files. The disk is a single-member RAID0 array, with 1MB chunk size. There are 32 AGs. Running Linux 4.9.17.
-> 
-> 
-> The write load consists of AIO/DIO writes, followed by unlinks of these files. The writes are non-size-changing (we truncate ahead) and we use XFS_IOC_FSSETXATTR/XFS_FLAG_EXTSIZE with a hint size of 32MB. The errors happen on commit logs, which have a target size of 32MB (but may exceed it a little).
-> 
-> 
-> The errors are sporadic and after restarting the workload they go away for a few hours to a few days, but then return. During one of the crashes I used xfs_db to look at fragmentation and saw that most AGs had free extents of size categories up to 128-255, but a few had more. I tried xfs_fsr but it did not help.
-> 
-> 
-> Is this a known issue? Would upgrading the kernel help?
-> 
-> 
-> I'll try to get a metadata dump next time this happens, and I'll be happy to supply more information.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-It sounds like you all figured this out, but I'll drop a reference to
-One Weird Trick to figure out just what function is returning a specific
-error value (the example below is EINVAL)
+Don't bother calling the filesystem for a zero-length dedupe request;
+we can return zero and exit.
 
-First is my hack, what follows was Dave's refinement.  We should get this
-into scripts/ some day.
-
-> # for FUNCTION in `grep "t xfs_" /proc/kallsyms | awk '{print $3}'`; do echo "r:ret_$FUNCTION $FUNCTION \$retval" >> /sys/kernel/debug/tracing/kprobe_events; done
-> 
-> # for ENABLE in /sys/kernel/debug/tracing/events/kprobes/ret_xfs_*/enable; do echo 1 > $ENABLE; done
-> 
-> run a test that fails:
-> 
-> # dd if=/dev/zero of=newfile bs=513 oflag=direct
-> dd: writing `newfile': Invalid argument
-> 
-> # for ENABLE in /sys/kernel/debug/tracing/events/kprobes/ret_xfs_*/enable; do echo 0 > $ENABLE; done
-> 
-> # cat /sys/kernel/debug/tracing/trace
-> <snip>
->            <...>-63791 [000] d... 705435.568913: ret_xfs_vn_mknod: (xfs_vn_create+0x13/0x20 [xfs] <- xfs_vn_mknod) arg1=0
->            <...>-63791 [000] d... 705435.568913: ret_xfs_vn_create: (vfs_create+0xdb/0x100 <- xfs_vn_create) arg1=0
->            <...>-63791 [000] d... 705435.568918: ret_xfs_file_open: (do_dentry_open+0x24e/0x2e0 <- xfs_file_open) arg1=0
->            <...>-63791 [000] d... 705435.568934: ret_xfs_file_dio_aio_write: (xfs_file_aio_write+0x147/0x150 [xfs] <- xfs_file_dio_aio_write) arg1=ffffffffffffffea
-> 
-> Hey look, it's "-22" in hex!  
-> 
-> so it's possible, but bleah.
-
-Dave later refined that to:
-
-> #!/bin/bash
-> 
-> TRACEDIR=/sys/kernel/debug/tracing
-> 
-> grep -i 't xfs_' /proc/kallsyms | awk '{print $3}' ; while read F; do
-> 	echo "r:ret_$F $F \$retval" >> $TRACEDIR/kprobe_events
-> done
-> 
-> for E in $TRACEDIR/events/kprobes/ret_xfs_*/enable; do
-> 	echo 1 > $E
-> done;
-> 
-> echo 'arg1 > 0xffffffffffffff00' > $TRACEDIR/events/kprobes/filter
-> 
-> for T in $TRACEDIR/events/kprobes/ret_xfs_*/trigger; do
-> 	echo 'traceoff if arg1 > 0xffffffffffffff00' > $T
-> done
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+---
+ fs/read_write.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
 
-
-> And that gives:
-> 
-> # dd if=/dev/zero of=/mnt/scratch/newfile bs=513 oflag=direct
-> dd: error writing ¿/mnt/scratch/newfile¿: Invalid argument
-> 1+0 records in
-> 0+0 records out
-> 0 bytes (0 B) copied, 0.000259882 s, 0.0 kB/s
-> root@test4:~# cat /sys/kernel/debug/tracing/trace
-> # tracer: nop
-> #
-> # entries-in-buffer/entries-written: 1/1   #P:16
-> #
-> #                              _-----=> irqs-off
-> #                             / _----=> need-resched
-> #                            | / _---=> hardirq/softirq
-> #                            || / _--=> preempt-depth
-> #                            ||| /     delay
-> #           TASK-PID   CPU#  ||||    TIMESTAMP  FUNCTION
-> #              | |       |   ||||       |         |
->            <...>-8073  [006] d... 145740.460546: ret_xfs_file_dio_aio_write: (xfs_file_aio_write+0x170/0x180 <- xfs_file_dio_aio_write) arg1=0xffffffffffffffea
-> 
-> Which is precisely the detection that XFS_ERROR would have given us.
-> Ok, so I guess we can now add whatever need need to that trigger...
-> 
-> Basically, pass in teh XFs function names you want to trace, the
-> sets up teh events, whatever trigger beahviour you want, and
-> we're off to the races...
+diff --git a/fs/read_write.c b/fs/read_write.c
+index 0f0a6efdd502..f5395d8da741 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -2009,6 +2009,11 @@ int vfs_dedupe_file_range_one(struct file *src_file, loff_t src_pos,
+ 	if (!dst_file->f_op->dedupe_file_range)
+ 		goto out_drop_write;
+ 
++	if (len == 0) {
++		ret = 0;
++		goto out_drop_write;
++	}
++
+ 	ret = dst_file->f_op->dedupe_file_range(src_file, src_pos,
+ 						dst_file, dst_pos, len);
+ out_drop_write:
