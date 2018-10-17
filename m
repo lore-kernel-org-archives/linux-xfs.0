@@ -1,58 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm1-f45.google.com ([209.85.128.45]:40714 "EHLO
-        mail-wm1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727541AbeJRToT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Oct 2018 15:44:19 -0400
-Received: by mail-wm1-f45.google.com with SMTP id z204-v6so5440943wmc.5
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Oct 2018 04:43:40 -0700 (PDT)
-Date: Thu, 18 Oct 2018 13:43:35 +0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [QUESTION] multiple fsync() vs single sync()
-Message-ID: <20181018114335.vc7cdqpgcv34mnez@odin.usersys.redhat.com>
-References: <6A65F394-C1BA-4339-AC9B-051885D12F65@corp.ovh.com>
- <20181016125712.5k5xt4lzhi76qaj6@odin.usersys.redhat.com>
- <CAAxjCEyUL4nJ_Ds+ATragxGtUCyHjkZ9howsMHjc5H7VEe3xUg@mail.gmail.com>
- <2C57B701-747D-4603-9DA7-F4D766858C36@corp.ovh.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:54406 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727175AbeJRGmO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Oct 2018 02:42:14 -0400
+Subject: [PATCH v6 00/29] fs: fixes for serious clone/dedupe problems
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 17 Oct 2018 15:44:15 -0700
+Message-ID: <153981625504.5568.2708520119290577378.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <2C57B701-747D-4603-9DA7-F4D766858C36@corp.ovh.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Romain Le Disez <romain.le-disez@corp.ovh.com>
-Cc: Stefan Ring <stefanrin@gmail.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
-On Tue, Oct 16, 2018 at 02:09:27PM +0000, Romain Le Disez wrote:
-> 
-> > Le 16 oct. 2018 à 15:53, Stefan Ring <stefanrin@gmail.com> a écrit :
-> > 
-> > But in what order? If I understood correctly, with the single sync()
-> > call, he might end up with a directory entry referencing an incomplete
-> > file. Which should not be possible in the case with the two fsyncs.
-> 
-> In what order, this is exactly my question :)
-> 
-> We are creating hundreds or thousands of files in a row. Converting thousands of fsync() to one sync() would be a great performance improvement, but I want to be sure we are not taking any risk with data consistency.
+Hi all,
 
-I honestly don't remember on the top of my head, a sync() will cause the whole
-XFS log to be flushed, and the flush order, I believe, will be according to how
-the metadata got logged in. But, I do not believe it comes to the case. Reality
-is, doesn't matter which is flushed first, file or directory metadata. If sync()
-fails, you must assume nothing got flushed at all, and not 'guess' if something
-got flushed in.
-But, as I mentioned before, and also did Dave, unless you want to cause a whole
-filesystem flush every time you have a file modified, use fsync() on the
-specific files, instead a global sync().
+Dave, Eric, and I have been chasing a stale data exposure bug in the XFS
+reflink implementation, and tracked it down to reflink forgetting to do
+some of the file-extending activities that must happen for regular
+writes.
 
-Cheers
+We then started auditing the clone, dedupe, and copyfile code and
+realized that from a file contents perspective, clonerange isn't any
+different from a regular file write.  Unfortunately, we also noticed
+that *unlike* a regular write, clonerange skips a ton of overflow
+checks, such as validating the ranges against s_maxbytes, MAX_NON_LFS,
+and RLIMIT_FSIZE.  We also observed that cloning into a file did not
+strip security privileges (suid, capabilities) like a regular write
+would.  I also noticed that xfs and ocfs2 need to dump the page cache
+before remapping blocks, not after.
 
+In fixing the range checking problems I also realized that both dedupe
+and copyfile tell userspace how much of the requested operation was
+acted upon.  Since the range validation can shorten a clone request (or
+we can ENOSPC midway through), we might as well plumb the short
+operation reporting back through the VFS indirection code to userspace.
+I added a few more cleanups to the xfs code per reviewer suggestions.
 
-> 
-> -- 
-> Romain
-> 
+So, here's the whole giant pile of patches[1] that fix all the problems.
+This branch is against current upstream (4.19-rc8).  The patch
+"generic: test reflink side effects" recently sent to fstests exercises
+the fixes in this series.  Tests are in [2].
 
--- 
-Carlos
+--D
+
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=djwong-devel
+[2] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git/log/?h=djwong-devel
