@@ -1,77 +1,299 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it1-f193.google.com ([209.85.166.193]:50894 "EHLO
-        mail-it1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726648AbeJSMKa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Oct 2018 08:10:30 -0400
-Received: by mail-it1-f193.google.com with SMTP id k206-v6so2949164ite.0
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Oct 2018 21:06:16 -0700 (PDT)
-Subject: Re: [PATCH 4/5] block: introduce helpers for allocating IO buffers
- from slab
-References: <20181018131817.11813-1-ming.lei@redhat.com>
- <20181018131817.11813-5-ming.lei@redhat.com> <20181018144207.GD26828@lst.de>
- <20181018151123.GD32429@bombadil.infradead.org>
- <20181018152219.GB28300@lst.de> <20181019025348.GB14531@ming.t460p>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <368d23d7-e35e-a078-50bc-d8da97552990@kernel.dk>
-Date: Thu, 18 Oct 2018 22:06:11 -0600
+Received: from aserp2120.oracle.com ([141.146.126.78]:46658 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727267AbeJRGov (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Oct 2018 02:44:51 -0400
+Subject: [PATCH 22/29] ocfs2: remove ocfs2_reflink_remap_range
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 17 Oct 2018 15:46:53 -0700
+Message-ID: <153981641295.5568.12054121625513548926.stgit@magnolia>
+In-Reply-To: <153981625504.5568.2708520119290577378.stgit@magnolia>
+References: <153981625504.5568.2708520119290577378.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20181019025348.GB14531@ming.t460p>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>
-Cc: Matthew Wilcox <willy@infradead.org>, linux-block@vger.kernel.org, Vitaly Kuznetsov <vkuznets@redhat.com>, Dave Chinner <dchinner@redhat.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
-On 10/18/18 8:53 PM, Ming Lei wrote:
-> On Thu, Oct 18, 2018 at 05:22:19PM +0200, Christoph Hellwig wrote:
->> On Thu, Oct 18, 2018 at 08:11:23AM -0700, Matthew Wilcox wrote:
->>> On Thu, Oct 18, 2018 at 04:42:07PM +0200, Christoph Hellwig wrote:
->>>> This all seems quite complicated.
->>>>
->>>> I think the interface we'd want is more one that has a little
->>>> cache of a single page in the queue, and a little bitmap which
->>>> sub-page size blocks of it are used.
->>>>
->>>> Something like (pseudo code minus locking):
->>>>
->>>> void *blk_alloc_sector_buffer(struct block_device *bdev, gfp_t gfp)
->>>> {
->>>> 	unsigned block_size = block_size(bdev);
->>>>
->>>> 	if (blocksize >= PAGE_SIZE)
->>>> 		return (void *)__get_free_pages(gfp, get_order(blocksize));
->>>>
->>>> 	if (bdev->fragment_cache_page) {
->>>> 		[ <find fragment in bdev->fragment_cache_page using
->>>> 		  e.g. bitmap and return if found]
->>>> 	}
->>>>
->>>> 	bdev->fragment_cache_page = (void *)__get_free_page(gfp);
->>>> 	goto find_again;
->>>> }
->>>
->>> This looks a lot like page_frag_alloc() except I think page_frag_alloc()
->>> may be more efficient.
->>
->> Oh, nice. Sounds like XFS should just use page_frag_alloc.  I'll give
->> it a spin.
-> 
-> XFS or other fs can use page_frag_alloc() directly, seems not necessary to
-> introduce this change in block layer any more given 512-aligned buffer
-> should be fine everywhere.
-> 
-> The only benefit to make it as block helper is that the offset or size
-> can be checked with q->dma_alignment.
-> 
-> Dave/Jens, do you think which way is better? Put allocation as block
-> helper or fs uses page_frag_alloc() directly for allocating 512*N-byte 
-> buffer(total size is less than PAGE_SIZE)?
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I'd greatly prefer having the FS use that directly, seems kind of
-pointless to provide an abstraction for that at that point.
+Since ocfs2_remap_file_range is a thin shell around
+ocfs2_remap_remap_range, move everything from the latter into the
+former.
 
--- 
-Jens Axboe
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/ocfs2/file.c         |   68 +++++++++++++++++++++++++++-
+ fs/ocfs2/refcounttree.c |  113 +++++++----------------------------------------
+ fs/ocfs2/refcounttree.h |   24 +++++++---
+ 3 files changed, 102 insertions(+), 103 deletions(-)
+
+
+diff --git a/fs/ocfs2/file.c b/fs/ocfs2/file.c
+index 8125c5ccf821..fe570824b991 100644
+--- a/fs/ocfs2/file.c
++++ b/fs/ocfs2/file.c
+@@ -2531,11 +2531,75 @@ static loff_t ocfs2_remap_file_range(struct file *file_in, loff_t pos_in,
+ 				     struct file *file_out, loff_t pos_out,
+ 				     loff_t len, unsigned int remap_flags)
+ {
++	struct inode *inode_in = file_inode(file_in);
++	struct inode *inode_out = file_inode(file_out);
++	struct ocfs2_super *osb = OCFS2_SB(inode_in->i_sb);
++	struct buffer_head *in_bh = NULL, *out_bh = NULL;
++	bool same_inode = (inode_in == inode_out);
++	loff_t remapped = 0;
++	ssize_t ret;
++
+ 	if (remap_flags & ~(REMAP_FILE_DEDUP | REMAP_FILE_ADVISORY))
+ 		return -EINVAL;
++	if (!ocfs2_refcount_tree(osb))
++		return -EOPNOTSUPP;
++	if (ocfs2_is_hard_readonly(osb) || ocfs2_is_soft_readonly(osb))
++		return -EROFS;
+ 
+-	return ocfs2_reflink_remap_range(file_in, pos_in, file_out, pos_out,
+-			len, remap_flags);
++	/* Lock both files against IO */
++	ret = ocfs2_reflink_inodes_lock(inode_in, &in_bh, inode_out, &out_bh);
++	if (ret)
++		return ret;
++
++	/* Check file eligibility and prepare for block sharing. */
++	ret = -EINVAL;
++	if ((OCFS2_I(inode_in)->ip_flags & OCFS2_INODE_SYSTEM_FILE) ||
++	    (OCFS2_I(inode_out)->ip_flags & OCFS2_INODE_SYSTEM_FILE))
++		goto out_unlock;
++
++	ret = generic_remap_file_range_prep(file_in, pos_in, file_out, pos_out,
++			&len, remap_flags);
++	if (ret < 0 || len == 0)
++		goto out_unlock;
++
++	/* Lock out changes to the allocation maps and remap. */
++	down_write(&OCFS2_I(inode_in)->ip_alloc_sem);
++	if (!same_inode)
++		down_write_nested(&OCFS2_I(inode_out)->ip_alloc_sem,
++				  SINGLE_DEPTH_NESTING);
++
++	/* Zap any page cache for the destination file's range. */
++	truncate_inode_pages_range(&inode_out->i_data,
++				   round_down(pos_out, PAGE_SIZE),
++				   round_up(pos_out + len, PAGE_SIZE) - 1);
++
++	remapped = ocfs2_reflink_remap_blocks(inode_in, in_bh, pos_in,
++			inode_out, out_bh, pos_out, len);
++	up_write(&OCFS2_I(inode_in)->ip_alloc_sem);
++	if (!same_inode)
++		up_write(&OCFS2_I(inode_out)->ip_alloc_sem);
++	if (remapped < 0) {
++		ret = remapped;
++		mlog_errno(ret);
++		goto out_unlock;
++	}
++
++	/*
++	 * Empty the extent map so that we may get the right extent
++	 * record from the disk.
++	 */
++	ocfs2_extent_map_trunc(inode_in, 0);
++	ocfs2_extent_map_trunc(inode_out, 0);
++
++	ret = ocfs2_reflink_update_dest(inode_out, out_bh, pos_out + len);
++	if (ret) {
++		mlog_errno(ret);
++		goto out_unlock;
++	}
++
++out_unlock:
++	ocfs2_reflink_inodes_unlock(inode_in, in_bh, inode_out, out_bh);
++	return remapped > 0 ? remapped : ret;
+ }
+ 
+ const struct inode_operations ocfs2_file_iops = {
+diff --git a/fs/ocfs2/refcounttree.c b/fs/ocfs2/refcounttree.c
+index c7409578657b..dc66b80585ec 100644
+--- a/fs/ocfs2/refcounttree.c
++++ b/fs/ocfs2/refcounttree.c
+@@ -4468,9 +4468,9 @@ int ocfs2_reflink_ioctl(struct inode *inode,
+ }
+ 
+ /* Update destination inode size, if necessary. */
+-static int ocfs2_reflink_update_dest(struct inode *dest,
+-				     struct buffer_head *d_bh,
+-				     loff_t newlen)
++int ocfs2_reflink_update_dest(struct inode *dest,
++			      struct buffer_head *d_bh,
++			      loff_t newlen)
+ {
+ 	handle_t *handle;
+ 	int ret;
+@@ -4621,13 +4621,13 @@ static loff_t ocfs2_reflink_remap_extent(struct inode *s_inode,
+ }
+ 
+ /* Set up refcount tree and remap s_inode to t_inode. */
+-static loff_t ocfs2_reflink_remap_blocks(struct inode *s_inode,
+-					 struct buffer_head *s_bh,
+-					 loff_t pos_in,
+-					 struct inode *t_inode,
+-					 struct buffer_head *t_bh,
+-					 loff_t pos_out,
+-					 loff_t len)
++loff_t ocfs2_reflink_remap_blocks(struct inode *s_inode,
++				  struct buffer_head *s_bh,
++				  loff_t pos_in,
++				  struct inode *t_inode,
++				  struct buffer_head *t_bh,
++				  loff_t pos_out,
++				  loff_t len)
+ {
+ 	struct ocfs2_cached_dealloc_ctxt dealloc;
+ 	struct ocfs2_super *osb;
+@@ -4720,10 +4720,10 @@ static loff_t ocfs2_reflink_remap_blocks(struct inode *s_inode,
+ }
+ 
+ /* Lock an inode and grab a bh pointing to the inode. */
+-static int ocfs2_reflink_inodes_lock(struct inode *s_inode,
+-				     struct buffer_head **bh1,
+-				     struct inode *t_inode,
+-				     struct buffer_head **bh2)
++int ocfs2_reflink_inodes_lock(struct inode *s_inode,
++			      struct buffer_head **bh1,
++			      struct inode *t_inode,
++			      struct buffer_head **bh2)
+ {
+ 	struct inode *inode1;
+ 	struct inode *inode2;
+@@ -4808,10 +4808,10 @@ static int ocfs2_reflink_inodes_lock(struct inode *s_inode,
+ }
+ 
+ /* Unlock both inodes and release buffers. */
+-static void ocfs2_reflink_inodes_unlock(struct inode *s_inode,
+-					struct buffer_head *s_bh,
+-					struct inode *t_inode,
+-					struct buffer_head *t_bh)
++void ocfs2_reflink_inodes_unlock(struct inode *s_inode,
++				 struct buffer_head *s_bh,
++				 struct inode *t_inode,
++				 struct buffer_head *t_bh)
+ {
+ 	ocfs2_inode_unlock(s_inode, 1);
+ 	ocfs2_rw_unlock(s_inode, 1);
+@@ -4823,80 +4823,3 @@ static void ocfs2_reflink_inodes_unlock(struct inode *s_inode,
+ 	}
+ 	unlock_two_nondirectories(s_inode, t_inode);
+ }
+-
+-/* Link a range of blocks from one file to another. */
+-loff_t ocfs2_reflink_remap_range(struct file *file_in,
+-				 loff_t pos_in,
+-				 struct file *file_out,
+-				 loff_t pos_out,
+-				 loff_t len,
+-				 unsigned int remap_flags)
+-{
+-	struct inode *inode_in = file_inode(file_in);
+-	struct inode *inode_out = file_inode(file_out);
+-	struct ocfs2_super *osb = OCFS2_SB(inode_in->i_sb);
+-	struct buffer_head *in_bh = NULL, *out_bh = NULL;
+-	bool same_inode = (inode_in == inode_out);
+-	loff_t remapped = 0;
+-	ssize_t ret;
+-
+-	if (!ocfs2_refcount_tree(osb))
+-		return -EOPNOTSUPP;
+-	if (ocfs2_is_hard_readonly(osb) || ocfs2_is_soft_readonly(osb))
+-		return -EROFS;
+-
+-	/* Lock both files against IO */
+-	ret = ocfs2_reflink_inodes_lock(inode_in, &in_bh, inode_out, &out_bh);
+-	if (ret)
+-		return ret;
+-
+-	/* Check file eligibility and prepare for block sharing. */
+-	ret = -EINVAL;
+-	if ((OCFS2_I(inode_in)->ip_flags & OCFS2_INODE_SYSTEM_FILE) ||
+-	    (OCFS2_I(inode_out)->ip_flags & OCFS2_INODE_SYSTEM_FILE))
+-		goto out_unlock;
+-
+-	ret = generic_remap_file_range_prep(file_in, pos_in, file_out, pos_out,
+-			&len, remap_flags);
+-	if (ret < 0 || len == 0)
+-		goto out_unlock;
+-
+-	/* Lock out changes to the allocation maps and remap. */
+-	down_write(&OCFS2_I(inode_in)->ip_alloc_sem);
+-	if (!same_inode)
+-		down_write_nested(&OCFS2_I(inode_out)->ip_alloc_sem,
+-				  SINGLE_DEPTH_NESTING);
+-
+-	/* Zap any page cache for the destination file's range. */
+-	truncate_inode_pages_range(&inode_out->i_data,
+-				   round_down(pos_out, PAGE_SIZE),
+-				   round_up(pos_out + len, PAGE_SIZE) - 1);
+-
+-	remapped = ocfs2_reflink_remap_blocks(inode_in, in_bh, pos_in,
+-			inode_out, out_bh, pos_out, len);
+-	up_write(&OCFS2_I(inode_in)->ip_alloc_sem);
+-	if (!same_inode)
+-		up_write(&OCFS2_I(inode_out)->ip_alloc_sem);
+-	if (remapped < 0) {
+-		ret = remapped;
+-		mlog_errno(ret);
+-		goto out_unlock;
+-	}
+-
+-	/*
+-	 * Empty the extent map so that we may get the right extent
+-	 * record from the disk.
+-	 */
+-	ocfs2_extent_map_trunc(inode_in, 0);
+-	ocfs2_extent_map_trunc(inode_out, 0);
+-
+-	ret = ocfs2_reflink_update_dest(inode_out, out_bh, pos_out + len);
+-	if (ret) {
+-		mlog_errno(ret);
+-		goto out_unlock;
+-	}
+-
+-out_unlock:
+-	ocfs2_reflink_inodes_unlock(inode_in, in_bh, inode_out, out_bh);
+-	return remapped > 0 ? remapped : ret;
+-}
+diff --git a/fs/ocfs2/refcounttree.h b/fs/ocfs2/refcounttree.h
+index 9e64daba395d..e9e862be4a1e 100644
+--- a/fs/ocfs2/refcounttree.h
++++ b/fs/ocfs2/refcounttree.h
+@@ -115,11 +115,23 @@ int ocfs2_reflink_ioctl(struct inode *inode,
+ 			const char __user *oldname,
+ 			const char __user *newname,
+ 			bool preserve);
+-loff_t ocfs2_reflink_remap_range(struct file *file_in,
+-				 loff_t pos_in,
+-				 struct file *file_out,
+-				 loff_t pos_out,
+-				 loff_t len,
+-				 unsigned int remap_flags);
++loff_t ocfs2_reflink_remap_blocks(struct inode *s_inode,
++				  struct buffer_head *s_bh,
++				  loff_t pos_in,
++				  struct inode *t_inode,
++				  struct buffer_head *t_bh,
++				  loff_t pos_out,
++				  loff_t len);
++int ocfs2_reflink_inodes_lock(struct inode *s_inode,
++			      struct buffer_head **bh1,
++			      struct inode *t_inode,
++			      struct buffer_head **bh2);
++void ocfs2_reflink_inodes_unlock(struct inode *s_inode,
++				 struct buffer_head *s_bh,
++				 struct inode *t_inode,
++				 struct buffer_head *t_bh);
++int ocfs2_reflink_update_dest(struct inode *dest,
++			      struct buffer_head *d_bh,
++			      loff_t newlen);
+ 
+ #endif /* OCFS2_REFCOUNTTREE_H */
