@@ -1,80 +1,122 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:2536 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726987AbeJSNr4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Oct 2018 09:47:56 -0400
-Date: Fri, 19 Oct 2018 16:43:19 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/5] block: introduce helpers for allocating IO buffers
- from slab
-Message-ID: <20181019054319.GL6311@dastard>
-References: <20181018131817.11813-1-ming.lei@redhat.com>
- <20181018131817.11813-5-ming.lei@redhat.com>
- <20181018144207.GD26828@lst.de>
- <20181018151123.GD32429@bombadil.infradead.org>
- <20181018152219.GB28300@lst.de>
- <20181019025348.GB14531@ming.t460p>
+Received: from userp2130.oracle.com ([156.151.31.86]:39816 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727365AbeJRGpP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Oct 2018 02:45:15 -0400
+Subject: [PATCH 25/29] xfs: clean up xfs_reflink_remap_blocks call site
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 17 Oct 2018 15:47:13 -0700
+Message-ID: <153981643329.5568.5878961664707094374.stgit@magnolia>
+In-Reply-To: <153981625504.5568.2708520119290577378.stgit@magnolia>
+References: <153981625504.5568.2708520119290577378.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181019025348.GB14531@ming.t460p>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Matthew Wilcox <willy@infradead.org>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Vitaly Kuznetsov <vkuznets@redhat.com>, Dave Chinner <dchinner@redhat.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
-On Fri, Oct 19, 2018 at 10:53:49AM +0800, Ming Lei wrote:
-> On Thu, Oct 18, 2018 at 05:22:19PM +0200, Christoph Hellwig wrote:
-> > On Thu, Oct 18, 2018 at 08:11:23AM -0700, Matthew Wilcox wrote:
-> > > On Thu, Oct 18, 2018 at 04:42:07PM +0200, Christoph Hellwig wrote:
-> > > > This all seems quite complicated.
-> > > > 
-> > > > I think the interface we'd want is more one that has a little
-> > > > cache of a single page in the queue, and a little bitmap which
-> > > > sub-page size blocks of it are used.
-> > > > 
-> > > > Something like (pseudo code minus locking):
-> > > > 
-> > > > void *blk_alloc_sector_buffer(struct block_device *bdev, gfp_t gfp)
-> > > > {
-> > > > 	unsigned block_size = block_size(bdev);
-> > > > 
-> > > > 	if (blocksize >= PAGE_SIZE)
-> > > > 		return (void *)__get_free_pages(gfp, get_order(blocksize));
-> > > > 
-> > > > 	if (bdev->fragment_cache_page) {
-> > > > 		[ <find fragment in bdev->fragment_cache_page using
-> > > > 		  e.g. bitmap and return if found]
-> > > > 	}
-> > > > 
-> > > > 	bdev->fragment_cache_page = (void *)__get_free_page(gfp);
-> > > > 	goto find_again;
-> > > > }
-> > > 
-> > > This looks a lot like page_frag_alloc() except I think page_frag_alloc()
-> > > may be more efficient.
-> > 
-> > Oh, nice. Sounds like XFS should just use page_frag_alloc.  I'll give
-> > it a spin.
-> 
-> XFS or other fs can use page_frag_alloc() directly, seems not necessary to
-> introduce this change in block layer any more given 512-aligned buffer
-> should be fine everywhere.
-> 
-> The only benefit to make it as block helper is that the offset or size
-> can be checked with q->dma_alignment.
-> 
-> Dave/Jens, do you think which way is better? Put allocation as block
-> helper or fs uses page_frag_alloc() directly for allocating 512*N-byte 
-> buffer(total size is less than PAGE_SIZE)?
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Cristoph has already said he's looking at using page_frag_alloc()
-directly in XFS....
+Move the offset <-> blocks unit conversions into
+xfs_reflink_remap_blocks to make the call site less ugly.
 
-Cheers,
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_reflink.c |   37 ++++++++++++++++++-------------------
+ 1 file changed, 18 insertions(+), 19 deletions(-)
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index e8e86646bb4b..79dec457f7fb 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -1119,16 +1119,23 @@ xfs_reflink_remap_extent(
+ STATIC int
+ xfs_reflink_remap_blocks(
+ 	struct xfs_inode	*src,
+-	xfs_fileoff_t		srcoff,
++	loff_t			pos_in,
+ 	struct xfs_inode	*dest,
+-	xfs_fileoff_t		destoff,
+-	xfs_filblks_t		len,
+-	xfs_off_t		new_isize)
++	loff_t			pos_out,
++	loff_t			remap_len)
+ {
+ 	struct xfs_bmbt_irec	imap;
++	xfs_fileoff_t		srcoff;
++	xfs_fileoff_t		destoff;
++	xfs_filblks_t		len;
++	xfs_filblks_t		range_len;
++	xfs_off_t		new_isize = pos_out + remap_len;
+ 	int			nimaps;
+ 	int			error = 0;
+-	xfs_filblks_t		range_len;
++
++	destoff = XFS_B_TO_FSBT(src->i_mount, pos_out);
++	srcoff = XFS_B_TO_FSBT(src->i_mount, pos_in);
++	len = XFS_B_TO_FSB(src->i_mount, remap_len);
+ 
+ 	/* drange = (destoff, destoff + len); srange = (srcoff, srcoff + len) */
+ 	while (len) {
+@@ -1143,7 +1150,7 @@ xfs_reflink_remap_blocks(
+ 		error = xfs_bmapi_read(src, srcoff, len, &imap, &nimaps, 0);
+ 		xfs_iunlock(src, lock_mode);
+ 		if (error)
+-			goto err;
++			break;
+ 		ASSERT(nimaps == 1);
+ 
+ 		trace_xfs_reflink_remap_imap(src, srcoff, len, XFS_IO_OVERWRITE,
+@@ -1157,11 +1164,11 @@ xfs_reflink_remap_blocks(
+ 		error = xfs_reflink_remap_extent(dest, &imap, destoff,
+ 				new_isize);
+ 		if (error)
+-			goto err;
++			break;
+ 
+ 		if (fatal_signal_pending(current)) {
+ 			error = -EINTR;
+-			goto err;
++			break;
+ 		}
+ 
+ 		/* Advance drange/srange */
+@@ -1170,10 +1177,8 @@ xfs_reflink_remap_blocks(
+ 		len -= range_len;
+ 	}
+ 
+-	return 0;
+-
+-err:
+-	trace_xfs_reflink_remap_blocks_error(dest, error, _RET_IP_);
++	if (error)
++		trace_xfs_reflink_remap_blocks_error(dest, error, _RET_IP_);
+ 	return error;
+ }
+ 
+@@ -1396,8 +1401,6 @@ xfs_reflink_remap_range(
+ 	struct inode		*inode_out = file_inode(file_out);
+ 	struct xfs_inode	*dest = XFS_I(inode_out);
+ 	struct xfs_mount	*mp = src->i_mount;
+-	xfs_fileoff_t		sfsbno, dfsbno;
+-	xfs_filblks_t		fsblen;
+ 	xfs_extlen_t		cowextsize;
+ 	ssize_t			ret;
+ 
+@@ -1415,11 +1418,7 @@ xfs_reflink_remap_range(
+ 
+ 	trace_xfs_reflink_remap_range(src, pos_in, len, dest, pos_out);
+ 
+-	dfsbno = XFS_B_TO_FSBT(mp, pos_out);
+-	sfsbno = XFS_B_TO_FSBT(mp, pos_in);
+-	fsblen = XFS_B_TO_FSB(mp, len);
+-	ret = xfs_reflink_remap_blocks(src, sfsbno, dest, dfsbno, fsblen,
+-			pos_out + len);
++	ret = xfs_reflink_remap_blocks(src, pos_in, dest, pos_out, len);
+ 	if (ret)
+ 		goto out_unlock;
+ 
