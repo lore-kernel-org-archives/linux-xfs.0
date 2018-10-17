@@ -1,68 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59834 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727633AbeJRVSS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 18 Oct 2018 17:18:18 -0400
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 1/2] vfs: Provide function to grab superblock reference
-Date: Thu, 18 Oct 2018 15:17:08 +0200
-Message-Id: <20181018131709.11976-2-jack@suse.cz>
-In-Reply-To: <20181018131709.11976-1-jack@suse.cz>
-References: <20181018131709.11976-1-jack@suse.cz>
+Received: from userp2120.oracle.com ([156.151.31.85]:54624 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726853AbeJRGm1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Oct 2018 02:42:27 -0400
+Subject: [PATCH 01/29] vfs: vfs_clone_file_prep_inodes should return EINVAL
+ for a clone from beyond EOF
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 17 Oct 2018 15:44:22 -0700
+Message-ID: <153981626223.5568.3466392756612301245.stgit@magnolia>
+In-Reply-To: <153981625504.5568.2708520119290577378.stgit@magnolia>
+References: <153981625504.5568.2708520119290577378.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: Ted Tso <tytso@mit.edu>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, ocfs2-devel@oss.oracle.com
 
-Provide function to hold superblock reference when we are sure the
-superblock is active. This function will get used by code reading
-/proc/mounts and friends.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Jan Kara <jack@suse.cz>
+vfs_clone_file_prep_inodes cannot return 0 if it is asked to remap from
+a zero byte file because that's what btrfs does.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/internal.h |  1 +
- fs/super.c    | 16 ++++++++++++++++
- 2 files changed, 17 insertions(+)
+ fs/read_write.c |    3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/fs/internal.h b/fs/internal.h
-index d410186bc369..608f4f276ba5 100644
---- a/fs/internal.h
-+++ b/fs/internal.h
-@@ -104,6 +104,7 @@ extern bool trylock_super(struct super_block *sb);
- extern struct dentry *mount_fs(struct file_system_type *,
- 			       int, const char *, void *);
- extern struct super_block *user_get_super(dev_t);
-+extern void hold_sb(struct super_block *sb);
+
+diff --git a/fs/read_write.c b/fs/read_write.c
+index 8a2737f0d61d..260797b01851 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1740,10 +1740,7 @@ int vfs_clone_file_prep_inodes(struct inode *inode_in, loff_t pos_in,
+ 	if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
+ 		return -EINVAL;
  
- /*
-  * open.c
-diff --git a/fs/super.c b/fs/super.c
-index f3a8c008e164..f60a07f794cc 100644
---- a/fs/super.c
-+++ b/fs/super.c
-@@ -775,6 +775,22 @@ struct super_block *get_super_exclusive_thawed(struct block_device *bdev)
- }
- EXPORT_SYMBOL(get_super_exclusive_thawed);
+-	/* Are we going all the way to the end? */
+ 	isize = i_size_read(inode_in);
+-	if (isize == 0)
+-		return 0;
  
-+/**
-+ *	hold_sb - get superblock reference for active superblock
-+ *	@sb: superblock to get reference for
-+ *
-+ *	Get reference to superblock. The caller must make sure the superblock
-+ *	is currently active by other means (e.g. holding an active reference
-+ * 	itself or holding namespace_sem preventing unmount).
-+ */
-+void hold_sb(struct super_block *sb)
-+{
-+	spin_lock(&sb_lock);
-+	WARN_ON_ONCE(!atomic_read(&sb->s_active));
-+	sb->s_count++;
-+	spin_unlock(&sb_lock);
-+}
-+
- /**
-  * get_active_super - get an active reference to the superblock of a device
-  * @bdev: device to get the superblock for
--- 
-2.16.4
+ 	/* Zero length dedupe exits immediately; reflink goes to EOF. */
+ 	if (*len == 0) {
