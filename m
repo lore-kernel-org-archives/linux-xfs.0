@@ -1,68 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:10151 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726359AbeJSJ2L (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Oct 2018 05:28:11 -0400
-Date: Fri, 19 Oct 2018 12:24:23 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: ENSOPC on a 10% used disk
-Message-ID: <20181019012423.GK6311@dastard>
-References: <40c52a7b-2520-8ae4-11d5-ae4b33e1dc29@scylladb.com>
- <20181018013727.GE6311@dastard>
- <39c3af2d-d591-c6bc-d586-245f1ca69a71@scylladb.com>
- <20181018100504.GH6311@dastard>
- <87bf239a-29c2-6db5-6781-42743c9c7d5d@scylladb.com>
- <5516031c-6c4f-072f-e9f9-9f0ecee9927d@scylladb.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:41470 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727546AbeJRGqm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Oct 2018 02:46:42 -0400
+Subject: [PATCH 18/29] vfs: clean up generic_remap_file_range_prep return
+ value
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 17 Oct 2018 15:46:25 -0700
+Message-ID: <153981638588.5568.15494557106783144592.stgit@magnolia>
+In-Reply-To: <153981625504.5568.2708520119290577378.stgit@magnolia>
+References: <153981625504.5568.2708520119290577378.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5516031c-6c4f-072f-e9f9-9f0ecee9927d@scylladb.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Avi Kivity <avi@scylladb.com>
-Cc: linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, ocfs2-devel@oss.oracle.com
 
-On Thu, Oct 18, 2018 at 06:44:54PM +0300, Avi Kivity wrote:
-> 
-> On 18/10/2018 14.00, Avi Kivity wrote:
-> >
-> >
-> >This can happen, and indeed I see our default hint is 1MB, so our
-> >small files use a 1MB hint. Looks like we should remove that 1MB
-> >hint since it's reducing allocation flexibility for XFS without a
-> >good return.
-> 
-> 
-> I convinced myself that this is the root cause, it fits perfectly
-> with your explanation. I still think that XFS should allocate
-> *something* rather than ENOSPC, but I can also understand someone
-> wanting a guarantee.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Yup, it's a classic catch 22.
+Since the remap prep function can update the length of the remap
+request, we can change this function to return the usual return status
+instead of the odd behavior it has now.
 
-> >On the other hand, I worry that because we bypass the page cache,
-> >XFS doesn't get to see the entire file at one time and so it will
-> >get fragmented.
-> 
-> 
-> That's what happens. I write 1000 4k writes to 400 files, in
-> parallel, AIO+DIO. I got 400 perfectly-fragmented files, each had
-> 1000 extents.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/ocfs2/refcounttree.c |    2 +-
+ fs/read_write.c         |    6 +++---
+ fs/xfs/xfs_reflink.c    |    4 ++--
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
-Yup, you wrote them all in the one directory, didn't you? :)
 
-> So I'll remove the default hint for small files, and replace it with
-> larger buffer sizes so we batch more and don't get 8k-sized extents
-> (which is our default buffer size).
-
-Or you could just mount with the "noalign" mount option to turn off
-stripe alignment. After all, you don't need stripe alignment for a
-single spindle....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/fs/ocfs2/refcounttree.c b/fs/ocfs2/refcounttree.c
+index 6a42c04ac0ab..46bbd315c39f 100644
+--- a/fs/ocfs2/refcounttree.c
++++ b/fs/ocfs2/refcounttree.c
+@@ -4852,7 +4852,7 @@ int ocfs2_reflink_remap_range(struct file *file_in,
+ 
+ 	ret = generic_remap_file_range_prep(file_in, pos_in, file_out, pos_out,
+ 			&len, remap_flags);
+-	if (ret <= 0)
++	if (ret < 0 || len == 0)
+ 		goto out_unlock;
+ 
+ 	/* Lock out changes to the allocation maps and remap. */
+diff --git a/fs/read_write.c b/fs/read_write.c
+index e4d295d0d236..6b40a43edf18 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1848,8 +1848,8 @@ static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
+  * sense, and then flush all dirty data.  Caller must ensure that the
+  * inodes have been locked against any other modifications.
+  *
+- * Returns: 0 for "nothing to clone", 1 for "something to clone", or
+- * the usual negative error code.
++ * If there's an error, then the usual negative error code is returned.
++ * Otherwise returns 0 with *len set to the request length.
+  */
+ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
+ 				  struct file *file_out, loff_t pos_out,
+@@ -1945,7 +1945,7 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
+ 			return ret;
+ 	}
+ 
+-	return 1;
++	return 0;
+ }
+ EXPORT_SYMBOL(generic_remap_file_range_prep);
+ 
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 3dbe5fb7e9c0..9b1ea42c81d1 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -1329,7 +1329,7 @@ xfs_reflink_remap_prep(
+ 
+ 	ret = generic_remap_file_range_prep(file_in, pos_in, file_out, pos_out,
+ 			len, remap_flags);
+-	if (ret <= 0)
++	if (ret < 0 || *len == 0)
+ 		goto out_unlock;
+ 
+ 	/*
+@@ -1409,7 +1409,7 @@ xfs_reflink_remap_range(
+ 	/* Prepare and then clone file data. */
+ 	ret = xfs_reflink_remap_prep(file_in, pos_in, file_out, pos_out,
+ 			&len, remap_flags);
+-	if (ret <= 0)
++	if (ret < 0 || len == 0)
+ 		return ret;
+ 
+ 	trace_xfs_reflink_remap_range(src, pos_in, len, dest, pos_out);
