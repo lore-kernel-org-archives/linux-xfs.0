@@ -1,77 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f46.google.com ([209.85.221.46]:46333 "EHLO
-        mail-wr1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726980AbeJURN4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 Oct 2018 13:13:56 -0400
-Received: by mail-wr1-f46.google.com with SMTP id i4-v6so2893093wrr.13
-        for <linux-xfs@vger.kernel.org>; Sun, 21 Oct 2018 02:00:19 -0700 (PDT)
-Subject: Re: ENSOPC on a 10% used disk
-References: <40c52a7b-2520-8ae4-11d5-ae4b33e1dc29@scylladb.com>
- <20181018013727.GE6311@dastard>
- <39c3af2d-d591-c6bc-d586-245f1ca69a71@scylladb.com>
- <20181018100504.GH6311@dastard>
- <87bf239a-29c2-6db5-6781-42743c9c7d5d@scylladb.com>
- <5516031c-6c4f-072f-e9f9-9f0ecee9927d@scylladb.com>
- <20181019012423.GK6311@dastard>
-From: Avi Kivity <avi@scylladb.com>
-Message-ID: <0fcfc274-fbb1-5a3e-6335-6993d616df97@scylladb.com>
-Date: Sun, 21 Oct 2018 12:00:16 +0300
+Received: from sandeen.net ([63.231.237.45]:37942 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726412AbeJRGr0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 18 Oct 2018 02:47:26 -0400
+Subject: Re: [PATCH] xfs: reject per-inode dax flag on reflink filesystems
+References: <c1ad993d-5330-88c3-b859-06e33dcd75d8@redhat.com>
+ <20181017223047.GR28243@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <7ea6bd8c-fcda-e1bc-0438-1d741a575e75@sandeen.net>
+Date: Wed, 17 Oct 2018 17:49:32 -0500
 MIME-Version: 1.0
-In-Reply-To: <20181019012423.GK6311@dastard>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20181017223047.GR28243@magnolia>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, Jeff Moyer <jmoyer@redhat.com>
 
 
-On 19/10/2018 04.24, Dave Chinner wrote:
-> On Thu, Oct 18, 2018 at 06:44:54PM +0300, Avi Kivity wrote:
->> On 18/10/2018 14.00, Avi Kivity wrote:
->>>
->>> This can happen, and indeed I see our default hint is 1MB, so our
->>> small files use a 1MB hint. Looks like we should remove that 1MB
->>> hint since it's reducing allocation flexibility for XFS without a
->>> good return.
+
+On 10/17/18 5:30 PM, Darrick J. Wong wrote:
+> On Wed, Oct 17, 2018 at 05:20:56PM -0500, Eric Sandeen wrote:
+>> Today we reject this flag on an already-reflinked inode, but we really
+>> need to reject it for any inode on a reflink-capable filesystem until
+>> reflink+dax is supported.
 >>
->> I convinced myself that this is the root cause, it fits perfectly
->> with your explanation. I still think that XFS should allocate
->> *something* rather than ENOSPC, but I can also understand someone
->> wanting a guarantee.
-> Yup, it's a classic catch 22.
->
->>> On the other hand, I worry that because we bypass the page cache,
->>> XFS doesn't get to see the entire file at one time and so it will
->>> get fragmented.
+>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>> ---
 >>
->> That's what happens. I write 1000 4k writes to 400 files, in
->> parallel, AIO+DIO. I got 400 perfectly-fragmented files, each had
->> 1000 extents.
-> Yup, you wrote them all in the one directory, didn't you? :)
+>> (um, do we need to catch this when reading from disk as well?  If we
+>> found a dax-flagged inode on a reflinked fs, then what would we do with it?)
+> 
+> Ignore the DAX flag.  See xfs_inode_supports_dax.
 
+Oh, ok.
 
-Yes :(
+Hohum, by that measure shouldn't we allow mount -o dax on reflink filesystems,
+and just ignore/reject dax behavior on actually reflinked inodes?
 
+>> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+>> index 0ef5ece5634c..63d579c652f2 100644
+>> --- a/fs/xfs/xfs_ioctl.c
+>> +++ b/fs/xfs/xfs_ioctl.c
+>> @@ -1031,8 +1031,9 @@ xfs_ioctl_setattr_xflags(
+>>  	if ((fa->fsx_xflags & FS_XFLAG_REALTIME) && xfs_is_reflink_inode(ip))
+>>  		ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
+>>  
+>> -	/* Don't allow us to set DAX mode for a reflinked file for now. */
+>> -	if ((fa->fsx_xflags & FS_XFLAG_DAX) && xfs_is_reflink_inode(ip))
+>> +	/* Don't allow us to set DAX mode on a reflink filesystem for now. */
+>> +	if ((fa->fsx_xflags & FS_XFLAG_DAX) &&
+>> +	    xfs_sb_version_hasreflink(&ip->i_mount->m_sb))
+>>  		return -EINVAL;
+> 
+> Not sure we need this, since DAX always loses to REFLINK, whether it's
+> at inode loading time or if someone's trying to set it in the ioctl.
 
-But if I have more concurrently-written files than AGs, I'd get the same 
-behavior with multiple directories, no?
+loses to a reflinked /inode/ but not to a reflink-capable fs, like
+mount does.
 
+> Ofc it's hard to say what the behavior should be since the dax iflag
+> semantics are poorly defined (it's been more or less advisory this whole
+> time)...
+> 
+> ...but I gather you're sending this patch because you don't like this
+> wishy washy "ok you change this flag but it doesn't tell you if that had
+> any effect and there's no way to find out either" behavior? :)
 
->> So I'll remove the default hint for small files, and replace it with
->> larger buffer sizes so we batch more and don't get 8k-sized extents
->> (which is our default buffer size).
-> Or you could just mount with the "noalign" mount option to turn off
-> stripe alignment. After all, you don't need stripe alignment for a
-> single spindle....
+Just aiming for some semblance of consistency.  Today we have:
 
+mount -o dax + xfs_sb_version_hasreflink =>
+	ignore mount option, disable dax for all inodes regardless of reflinked status
 
-For a single spindle, sure. But most deployments have multiple spindles.
+chattr +x + xfs_sb_version_hasreflink =>
+	inode is dax until it gets reflinked, then it's ignored
 
+right?
 
-Since these aren't real spindles, the advantages of alignment are not as 
-great, but they still exist. The files are written with aligned offsets, 
-and some of the reads are also aligned, so it saves IOPS whenever we 
-cross an alignment boundary.
+(and what happens if we have a daxified inode that gets reflinked later?)
+
+-Eric
