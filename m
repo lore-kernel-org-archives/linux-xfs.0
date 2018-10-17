@@ -1,72 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55560 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726400AbeJOUIQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 15 Oct 2018 16:08:16 -0400
-Date: Mon, 15 Oct 2018 08:23:10 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: clear ail delwri queued bufs on unmount of shutdown
- fs
-Message-ID: <20181015122310.GA12988@bfoster>
-References: <20181012174654.2557-1-bfoster@redhat.com>
- <20181013022914.GX6311@dastard>
- <20181015015727.GA6311@dastard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181015015727.GA6311@dastard>
+Received: from out04.smtpout.orange.fr ([193.252.22.213]:45698 "EHLO
+        out.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727095AbeJQOXU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Oct 2018 10:23:20 -0400
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH] xfs: Fix error code in 'xfs_ioc_getbmap()'
+Date: Wed, 17 Oct 2018 08:21:38 +0200
+Message-Id: <20181017062138.1721-1-christophe.jaillet@wanadoo.fr>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 
-On Mon, Oct 15, 2018 at 12:57:27PM +1100, Dave Chinner wrote:
-> On Sat, Oct 13, 2018 at 01:29:14PM +1100, Dave Chinner wrote:
-> > On Fri, Oct 12, 2018 at 01:46:54PM -0400, Brian Foster wrote:
-> > > In the typical unmount case, the AIL is forced out by the unmount
-> > > sequence before the xfsaild task is stopped. Since AIL items are
-> > > removed on writeback completion, this means that the AIL
-> > > ->ail_buf_list delwri queue has been drained. This is not always
-> > > true in the shutdown case, however.
-> > > 
-> > > It's possible for buffers to sit on a delwri queue for a period of
-> > > time across submission attempts if said items are locked or have
-> > > been relogged and pinned since first added to the queue.
-> > 
-> > Can you add this as a comment to xfs_buf_delwri_submit_nowait() to
-> > document that callers either need to check that everything was
-> > submitted and/or cancel the delwri list before they tear it down?
-> 
-> I added this comment to the patch when I pulled it in:
-> 
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -2055,6 +2055,13 @@ xfs_buf_delwri_submit_buffers(
->   * is only safely useable for callers that can track I/O completion by higher
->   * level means, e.g. AIL pushing as the @buffer_list is consumed in this
->   * function.
-> + *
-> + * Note: this function will skip buffers it would block on, and in doing so
-> + * leaves them on @buffer_list so they can be retried on a later pass. As such,
-> + * it is up to the caller to ensure that the buffer list is fully submitted or
-> + * cancelled appropriately when they are finished with the list. Failure to
-> + * cancel or resubmit the list until it is empty will result in leaked buffers
-> + * at unmount time.
->   */
->  int
->  xfs_buf_delwri_submit_nowait(
-> 
-> Does that look reasonable?
-> 
+In this function, once 'buf' has been allocated, we unconditionally
+return 0.
+However, 'error' is set to some error codes in several error handling
+paths.
+Before commit 232b51948b99 ("xfs: simplify the xfs_getbmap interface")
+this was not an issue because all error paths were returning directly,
+but now that some cleanup at the end may be needed, we must propagate the
+error code.
 
-Looks fine to me, thanks!
+Fixes: 232b51948b99 ("xfs: simplify the xfs_getbmap interface")
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+ fs/xfs/xfs_ioctl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Brian
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 0ef5ece5634c..bad90479ade2 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1616,7 +1616,7 @@ xfs_ioc_getbmap(
+ 	error = 0;
+ out_free_buf:
+ 	kmem_free(buf);
+-	return 0;
++	return error;
+ }
+ 
+ struct getfsmap_info {
+-- 
+2.17.1
