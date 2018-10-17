@@ -1,173 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:59680 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726934AbeJPLIO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Oct 2018 07:08:14 -0400
-Subject: [PATCH 17/26] vfs: enable remap callers that can handle short
- operations
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 15 Oct 2018 20:19:54 -0700
-Message-ID: <153965999426.3607.3221368918901209000.stgit@magnolia>
-In-Reply-To: <153965939489.1256.7400115244528045860.stgit@magnolia>
-References: <153965939489.1256.7400115244528045860.stgit@magnolia>
+Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:7747 "EHLO
+        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726691AbeJQJJg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Oct 2018 05:09:36 -0400
+Date: Wed, 17 Oct 2018 12:16:24 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [QUESTION] multiple fsync() vs single sync()
+Message-ID: <20181017011624.GB6311@dastard>
+References: <6A65F394-C1BA-4339-AC9B-051885D12F65@corp.ovh.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <6A65F394-C1BA-4339-AC9B-051885D12F65@corp.ovh.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
+To: Romain Le Disez <romain.le-disez@corp.ovh.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Oct 16, 2018 at 10:22:18AM +0000, Romain Le Disez wrote:
+> Hi all,
+> 
+> In this pseudo-code (extracted from OpenStack Swift [1]):
+>     fd=open("/tmp/tempfile", O_CREAT | O_WRONLY);
+>     write(fd, ...);
+>     fsetxattr(fd, ...);
+>     fsync(fd);
+>     rename("/tmp/tempfile", "/data/foobar");
+>     dirfd = open("/data", O_DIRECTORY | O_RDONLY);
+>     fsync(dirfd);
+> 
+> OR (the same without temporary file):
+>     fd=open("/data", O_TMPFILE | O_WRONLY);
+>     write(fd, ...);
+>     fsetxattr(fd, ...);
+>     fsync(fd);
+>     linkat(AT_FDCWD, "/proc/self/fd/" + fd, AT_FDCWD, "/data/foobar", AT_SYMLINK_FOLLOW);
 
-Plumb in a remap flag that enables the filesystem remap handler to
-shorten remapping requests for callers that can handle it.  Now
-copy_file_range can report partial success (in case we run up against
-alignment problems, resource limits, etc.).
+	linkat(fd, "",  AT_FDCWD, "/data/foobar", AT_EMPTY_PATH);
 
-We also enable CAN_SHORTEN for fideduperange to maintain existing
-userspace-visible behavior where xfs/btrfs shorten the dedupe range to
-avoid stale post-eof data exposure.
+>     dirfd = open("/data", O_DIRECTORY | O_RDONLY);
+>     fsync(dirfd);
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Amir Goldstein <amir73il@gmail.com>
----
- fs/read_write.c    |   28 ++++++++++++++++++++--------
- include/linux/fs.h |    7 +++++--
- mm/filemap.c       |   16 ++++++++++++----
- 3 files changed, 37 insertions(+), 14 deletions(-)
+> I’m guaranteed that, what ever happen, I’ll have a
+> complete file (data+xattr) or no file at all in the directory
+> /data.
 
+Yes.
 
-diff --git a/fs/read_write.c b/fs/read_write.c
-index f6ab5beb935a..ee9314b7bfc3 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -1593,7 +1593,8 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
- 
- 		cloned = file_in->f_op->remap_file_range(file_in, pos_in,
- 				file_out, pos_out,
--				min_t(loff_t, MAX_RW_COUNT, len), 0);
-+				min_t(loff_t, MAX_RW_COUNT, len),
-+				REMAP_FILE_CAN_SHORTEN);
- 		if (cloned > 0) {
- 			ret = cloned;
- 			goto done;
-@@ -1721,6 +1722,8 @@ static int remap_verify_area(struct file *file, loff_t pos, loff_t len,
-  * can't meaningfully compare post-EOF contents.
-  *
-  * For clone we only link a partial EOF block above the destination file's EOF.
-+ *
-+ * Shorten the request if possible.
-  */
- static int generic_remap_check_len(struct inode *inode_in,
- 				   struct inode *inode_out,
-@@ -1729,16 +1732,24 @@ static int generic_remap_check_len(struct inode *inode_in,
- 				   unsigned int remap_flags)
- {
- 	u64 blkmask = i_blocksize(inode_in) - 1;
-+	loff_t new_len = *len;
- 
- 	if ((*len & blkmask) == 0)
- 		return 0;
- 
--	if (remap_flags & REMAP_FILE_DEDUP)
--		*len &= ~blkmask;
--	else if (pos_out + *len < i_size_read(inode_out))
--		return -EINVAL;
-+	if ((remap_flags & REMAP_FILE_DEDUP) ||
-+	    pos_out + *len < i_size_read(inode_out))
-+		new_len &= ~blkmask;
- 
--	return 0;
-+	if (new_len == *len)
-+		return 0;
-+
-+	if (remap_flags & REMAP_FILE_CAN_SHORTEN) {
-+		*len = new_len;
-+		return 0;
-+	}
-+
-+	return (remap_flags & REMAP_FILE_DEDUP) ? -EBADE : -EINVAL;
- }
- 
- /* Update inode timestamps and remove security privileges when remapping. */
-@@ -2023,7 +2034,8 @@ loff_t vfs_dedupe_file_range_one(struct file *src_file, loff_t src_pos,
- {
- 	loff_t ret;
- 
--	WARN_ON_ONCE(remap_flags & ~(REMAP_FILE_DEDUP));
-+	WARN_ON_ONCE(remap_flags & ~(REMAP_FILE_DEDUP |
-+				     REMAP_FILE_CAN_SHORTEN));
- 
- 	ret = mnt_want_write_file(dst_file);
- 	if (ret)
-@@ -2124,7 +2136,7 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
- 
- 		deduped = vfs_dedupe_file_range_one(file, off, dst_file,
- 						    info->dest_offset, len,
--						    0);
-+						    REMAP_FILE_CAN_SHORTEN);
- 		if (deduped == -EBADE)
- 			info->status = FILE_DEDUPE_RANGE_DIFFERS;
- 		else if (deduped < 0)
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index c0ae85a7bd9d..594fe4ba0b15 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1726,14 +1726,17 @@ struct block_device_operations;
-  * If it is called with len == 0 that means "remap to end of source file".
-  *
-  * REMAP_FILE_DEDUP: only remap if contents identical (i.e. deduplicate)
-+ * REMAP_FILE_CAN_SHORTEN: caller can handle a shortened request
-  */
- #define REMAP_FILE_DEDUP		(1 << 0)
-+#define REMAP_FILE_CAN_SHORTEN		(1 << 1)
- 
- /* All valid REMAP_FILE flags */
--#define REMAP_FILE_VALID_FLAGS		(REMAP_FILE_DEDUP)
-+#define REMAP_FILE_VALID_FLAGS		(REMAP_FILE_DEDUP | \
-+					 REMAP_FILE_CAN_SHORTEN)
- 
- /* REMAP_FILE flags taken care of by the vfs. */
--#define REMAP_FILE_ADVISORY		(0)
-+#define REMAP_FILE_ADVISORY		(REMAP_FILE_CAN_SHORTEN)
- 
- struct iov_iter;
- 
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 1e93269efafe..898eb358f7d2 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -3051,8 +3051,12 @@ int generic_remap_checks(struct file *file_in, loff_t pos_in,
- 	if (pos_in + count == size_in) {
- 		bcount = ALIGN(size_in, bs) - pos_in;
- 	} else {
--		if (!IS_ALIGNED(count, bs))
--			return -EINVAL;
-+		if (!IS_ALIGNED(count, bs)) {
-+			if (remap_flags & REMAP_FILE_CAN_SHORTEN)
-+				count = ALIGN_DOWN(count, bs);
-+			else
-+				return -EINVAL;
-+		}
- 
- 		bcount = count;
- 	}
-@@ -3063,10 +3067,14 @@ int generic_remap_checks(struct file *file_in, loff_t pos_in,
- 	    pos_out < pos_in + bcount)
- 		return -EINVAL;
- 
--	/* For now we don't support changing the length. */
--	if (*req_count != count)
-+	/*
-+	 * We shortened the request but the caller can't deal with that, so
-+	 * bounce the request back to userspace.
-+	 */
-+	if (*req_count != count && !(remap_flags & REMAP_FILE_CAN_SHORTEN))
- 		return -EINVAL;
- 
-+	*req_count = count;
- 	return 0;
- }
- 
+> Second question, if I replace the two fsync() by one sync(), do I
+> get the same guarantee?
+>     fd=open("/data", O_TMPFILE | O_WRONLY);
+>     write(fd, ...);
+>     fsetxattr(fd, ...);
+>     linkat(AT_FDCWD, « /proc/self/fd/" + fd, AT_FDCWD, "/data/foobar", AT_SYMLINK_FOLLOW);
+>     sync();
+> 
+> From what I understand of the FAQ [1], write_barrier guarantee
+> that journal (aka log) will be written before the inode (aka
+> metadata). Did I miss something?
+
+"write barriers" don't exist anymore. What we have these days are
+cache flushes to correctly order data/metadata IO vs journal IO.
+
+The syncfs() operation (and sync(), which is just syncfs() across
+all filesystems) writes oustanding data first, then asks the
+filesystem to force metadata to stable storage. XFS does that with
+a log flush, which issues a cache flush (data now on stable storage)
+followed by FUA log writes (metadata now on stable storage in the
+journal).
+
+So, effectively, you get the same thing in both cases. The only
+difference is that sync() does a lot more work than a couple of
+fsync() operations, and does work system wide on filesystems and
+files you don't care about. fsync() will always perform better on a
+busy system than a sync call.
+
+Let the filesystem worry about optimising fsync calls necessary for
+consistency and integrity purposes. If there was a faster way than
+issuing fsync on only the objects that need it when required, then
+everyone would be using it all the time....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
