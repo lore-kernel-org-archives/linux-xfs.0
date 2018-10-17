@@ -1,65 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:39400 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726644AbeJRIkW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Oct 2018 04:40:22 -0400
-Date: Thu, 18 Oct 2018 01:41:56 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: [PATCH 04/29] vfs: strengthen checking of file range inputs to
- generic_remap_checks
-Message-ID: <20181018004156.GA12386@ZenIV.linux.org.uk>
+Received: from userp2130.oracle.com ([156.151.31.86]:36816 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726673AbeJRGnF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Oct 2018 02:43:05 -0400
+Subject: [PATCH 07/29] vfs: rename vfs_clone_file_prep to be more descriptive
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 17 Oct 2018 15:45:03 -0700
+Message-ID: <153981630347.5568.10618491872993138395.stgit@magnolia>
+In-Reply-To: <153981625504.5568.2708520119290577378.stgit@magnolia>
 References: <153981625504.5568.2708520119290577378.stgit@magnolia>
- <153981628292.5568.2466587869276881561.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <153981628292.5568.2466587869276881561.stgit@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: david@fromorbit.com, sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, ocfs2-devel@oss.oracle.com
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
-On Wed, Oct 17, 2018 at 03:44:43PM -0700, Darrick J. Wong wrote:
-> +static int generic_access_check_limits(struct file *file, loff_t pos,
-> +				       loff_t *count)
-> +{
-> +	struct inode *inode = file->f_mapping->host;
-> +
-> +	/* Don't exceed the LFS limits. */
-> +	if (unlikely(pos + *count > MAX_NON_LFS &&
-> +				!(file->f_flags & O_LARGEFILE))) {
-> +		if (pos >= MAX_NON_LFS)
-> +			return -EFBIG;
-> +		*count = min(*count, (loff_t)MAX_NON_LFS - pos);
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-	Can that can be different from MAX_NON_LFS - pos?
+The vfs_clone_file_prep is a generic function to be called by filesystem
+implementations only.  Rename the prefix to generic_ and make it more
+clear that it applies to remap operations, not just clones.
 
-> +	}
-> +
-> +	/*
-> +	 * Don't operate on ranges the page cache doesn't support.
-> +	 *
-> +	 * If we have written data it becomes a short write.  If we have
-> +	 * exceeded without writing data we send a signal and return EFBIG.
-> +	 * Linus frestrict idea will clean these up nicely..
-> +	 */
-> +	if (unlikely(pos >= inode->i_sb->s_maxbytes))
-> +		return -EFBIG;
-> +
-> +	*count = min(*count, inode->i_sb->s_maxbytes - pos);
-> +	return 0;
-> +}
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+---
+ fs/ocfs2/refcounttree.c |    2 +-
+ fs/read_write.c         |    8 ++++----
+ fs/xfs/xfs_reflink.c    |    2 +-
+ include/linux/fs.h      |    6 +++---
+ 4 files changed, 9 insertions(+), 9 deletions(-)
 
-Anyway, I would rather do this here:
 
-	struct inode *inode = file->f_mapping->host;
-	loff_t max_size = inode->i_sb->s_maxbytes;
-
-	if (!(file->f_flags & O_LARGEFILE))
-		max_size = MAX_NON_LFS;
-
-	if (unlikely(pos >= max_size))
-		return -EFBIG;
-	*count = min(*count, max_size - pos);
-	return 0;
+diff --git a/fs/ocfs2/refcounttree.c b/fs/ocfs2/refcounttree.c
+index 19e03936c5e1..36c56dfbe485 100644
+--- a/fs/ocfs2/refcounttree.c
++++ b/fs/ocfs2/refcounttree.c
+@@ -4850,7 +4850,7 @@ int ocfs2_reflink_remap_range(struct file *file_in,
+ 	    (OCFS2_I(inode_out)->ip_flags & OCFS2_INODE_SYSTEM_FILE))
+ 		goto out_unlock;
+ 
+-	ret = vfs_clone_file_prep(file_in, pos_in, file_out, pos_out,
++	ret = generic_remap_file_range_prep(file_in, pos_in, file_out, pos_out,
+ 			&len, is_dedupe);
+ 	if (ret <= 0)
+ 		goto out_unlock;
+diff --git a/fs/read_write.c b/fs/read_write.c
+index f5395d8da741..aca75a97a695 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1745,9 +1745,9 @@ static int generic_remap_check_len(struct inode *inode_in,
+  * Returns: 0 for "nothing to clone", 1 for "something to clone", or
+  * the usual negative error code.
+  */
+-int vfs_clone_file_prep(struct file *file_in, loff_t pos_in,
+-			struct file *file_out, loff_t pos_out,
+-			u64 *len, bool is_dedupe)
++int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
++				  struct file *file_out, loff_t pos_out,
++				  u64 *len, bool is_dedupe)
+ {
+ 	struct inode *inode_in = file_inode(file_in);
+ 	struct inode *inode_out = file_inode(file_out);
+@@ -1822,7 +1822,7 @@ int vfs_clone_file_prep(struct file *file_in, loff_t pos_in,
+ 
+ 	return 1;
+ }
+-EXPORT_SYMBOL(vfs_clone_file_prep);
++EXPORT_SYMBOL(generic_remap_file_range_prep);
+ 
+ int do_clone_file_range(struct file *file_in, loff_t pos_in,
+ 			struct file *file_out, loff_t pos_out, u64 len)
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 281d5f53f2ec..a7757a128a78 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -1326,7 +1326,7 @@ xfs_reflink_remap_prep(
+ 	if (IS_DAX(inode_in) || IS_DAX(inode_out))
+ 		goto out_unlock;
+ 
+-	ret = vfs_clone_file_prep(file_in, pos_in, file_out, pos_out,
++	ret = generic_remap_file_range_prep(file_in, pos_in, file_out, pos_out,
+ 			len, is_dedupe);
+ 	if (ret <= 0)
+ 		goto out_unlock;
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index ba93a6e7dac4..55729e1c2e75 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1825,9 +1825,9 @@ extern ssize_t vfs_readv(struct file *, const struct iovec __user *,
+ 		unsigned long, loff_t *, rwf_t);
+ extern ssize_t vfs_copy_file_range(struct file *, loff_t , struct file *,
+ 				   loff_t, size_t, unsigned int);
+-extern int vfs_clone_file_prep(struct file *file_in, loff_t pos_in,
+-			       struct file *file_out, loff_t pos_out,
+-			       u64 *count, bool is_dedupe);
++extern int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
++					 struct file *file_out, loff_t pos_out,
++					 u64 *count, bool is_dedupe);
+ extern int do_clone_file_range(struct file *file_in, loff_t pos_in,
+ 			       struct file *file_out, loff_t pos_out, u64 len);
+ extern int vfs_clone_file_range(struct file *file_in, loff_t pos_in,
