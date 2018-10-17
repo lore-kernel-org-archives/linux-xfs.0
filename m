@@ -1,101 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:36186 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727067AbeJWMo0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Oct 2018 08:44:26 -0400
-Date: Mon, 22 Oct 2018 21:22:41 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2] xfs_repair: continue after xfs_bunmapi deadlock
- avoidance
-Message-ID: <20181023042241.GZ28243@magnolia>
-References: <9070c949-2720-75ea-01c3-74261bf62f87@sandeen.net>
- <18102abe-0101-bd08-dc5b-2f288dc0d8d3@sandeen.net>
+Received: from sandeen.net ([63.231.237.45]:39402 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727101AbeJRHBY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 18 Oct 2018 03:01:24 -0400
+Subject: Re: [PATCH] xfs: reject per-inode dax flag on reflink filesystems
+From: Eric Sandeen <sandeen@sandeen.net>
+References: <c1ad993d-5330-88c3-b859-06e33dcd75d8@redhat.com>
+ <20181017223047.GR28243@magnolia>
+ <7ea6bd8c-fcda-e1bc-0438-1d741a575e75@sandeen.net>
+Message-ID: <38b1c213-e8a3-6785-264f-b84c7ed2b2f9@sandeen.net>
+Date: Wed, 17 Oct 2018 18:03:27 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <18102abe-0101-bd08-dc5b-2f288dc0d8d3@sandeen.net>
+In-Reply-To: <7ea6bd8c-fcda-e1bc-0438-1d741a575e75@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, Jeff Moyer <jmoyer@redhat.com>
 
-On Mon, Oct 22, 2018 at 11:08:49PM -0500, Eric Sandeen wrote:
-> After commit:
+
+
+On 10/17/18 5:49 PM, Eric Sandeen wrote:
 > 
-> 15a8bcc xfs: fix multi-AG deadlock in xfs_bunmapi
 > 
-> xfs_bunmapi can legitimately return before all work is done.
-> Sadly nobody told xfs_repair, so it fires an assert:
+> On 10/17/18 5:30 PM, Darrick J. Wong wrote:
+>> On Wed, Oct 17, 2018 at 05:20:56PM -0500, Eric Sandeen wrote:
+>>> Today we reject this flag on an already-reflinked inode, but we really
+>>> need to reject it for any inode on a reflink-capable filesystem until
+>>> reflink+dax is supported.
+>>>
+>>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>>> ---
+>>>
+>>> (um, do we need to catch this when reading from disk as well?  If we
+>>> found a dax-flagged inode on a reflinked fs, then what would we do with it?)
+>>
+>> Ignore the DAX flag.  See xfs_inode_supports_dax.
 > 
->  phase6.c:1410: longform_dir2_rebuild: Assertion `done' failed. 
+> Oh, ok.
 > 
-> Fix this by calling back in until all work is done, as we do
-> in the kernel.
-
-Looking at the rest of xfsprogs, I think the other directory-related
-xfs_bunmapi callers probably need to be able to roll-and-continue, but
-that seems like a topic for (a) the kernel and (b) separate patches.
-
-> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1641116
-> Reported-by: Tomasz Torcz <tomek@pipebreaker.pl>
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+> Hohum, by that measure shouldn't we allow mount -o dax on reflink filesystems,
+> and just ignore/reject dax behavior on actually reflinked inodes?
 > 
-> diff --git a/repair/phase6.c b/repair/phase6.c
-> index e017326..b87c751 100644
-> --- a/repair/phase6.c
-> +++ b/repair/phase6.c
-> @@ -1317,7 +1317,7 @@ longform_dir2_rebuild(
->  	xfs_fileoff_t		lastblock;
->  	xfs_inode_t		pip;
->  	dir_hash_ent_t		*p;
-> -	int			done;
-> +	int			done = 0;
->  
->  	/*
->  	 * trash directory completely and rebuild from scratch using the
-> @@ -1352,12 +1352,25 @@ longform_dir2_rebuild(
->  			error);
->  
->  	/* free all data, leaf, node and freespace blocks */
-> -	error = -libxfs_bunmapi(tp, ip, 0, lastblock, XFS_BMAPI_METADATA, 0,
-> -				&done);
-> -	if (error) {
-> -		do_warn(_("xfs_bunmapi failed -- error - %d\n"), error);
-> -		goto out_bmap_cancel;
-> -	}
-> +	while (!done) {
-> +	       error = -libxfs_bunmapi(tp, ip, 0, lastblock, XFS_BMAPI_METADATA,
-> +			               0, &done);
-> +	       if (error) {
-> +		       do_warn(_("xfs_bunmapi failed -- error - %d\n"), error);
-> +		       goto out_bmap_cancel;
-> +	       }
-> +	       error = xfs_defer_finish(&tp);
-
-error = -libxfs_defer_finish(...);
-
-> +	       if (error) {
-> +		       do_warn(("defer_finish failed -- error - %d\n"), error);
-> +		       goto out_bmap_cancel;
-> +	       }
-> +	       /*
-> +		* Close out trans and start the next one in the chain.
-> +		*/
-> +	       error = xfs_trans_roll_inode(&tp, ip);
-
-error = -libxfs_trans_roll_inode(...);
-
-> +	       if (error)
-> +			goto out_bmap_cancel;
-> +        }
->  
->  	ASSERT(done);
-
-This assert can go away since !done is the loop test condition.
-
---D
-
->  
+>>> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+>>> index 0ef5ece5634c..63d579c652f2 100644
+>>> --- a/fs/xfs/xfs_ioctl.c
+>>> +++ b/fs/xfs/xfs_ioctl.c
+>>> @@ -1031,8 +1031,9 @@ xfs_ioctl_setattr_xflags(
+>>>  	if ((fa->fsx_xflags & FS_XFLAG_REALTIME) && xfs_is_reflink_inode(ip))
+>>>  		ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
+>>>  
+>>> -	/* Don't allow us to set DAX mode for a reflinked file for now. */
+>>> -	if ((fa->fsx_xflags & FS_XFLAG_DAX) && xfs_is_reflink_inode(ip))
+>>> +	/* Don't allow us to set DAX mode on a reflink filesystem for now. */
+>>> +	if ((fa->fsx_xflags & FS_XFLAG_DAX) &&
+>>> +	    xfs_sb_version_hasreflink(&ip->i_mount->m_sb))
+>>>  		return -EINVAL;
+>>
+>> Not sure we need this, since DAX always loses to REFLINK, whether it's
+>> at inode loading time or if someone's trying to set it in the ioctl.
 > 
+> loses to a reflinked /inode/ but not to a reflink-capable fs, like
+> mount does.
+> 
+>> Ofc it's hard to say what the behavior should be since the dax iflag
+>> semantics are poorly defined (it's been more or less advisory this whole
+>> time)...
+>>
+>> ...but I gather you're sending this patch because you don't like this
+>> wishy washy "ok you change this flag but it doesn't tell you if that had
+>> any effect and there's no way to find out either" behavior? :)
+> 
+> Just aiming for some semblance of consistency.  Today we have:
+> 
+> mount -o dax + xfs_sb_version_hasreflink =>
+> 	ignore mount option, disable dax for all inodes regardless of reflinked status
+> 
+> chattr +x + xfs_sb_version_hasreflink =>
+> 	inode is dax until it gets reflinked, then it's ignored
+> 
+> right?
+> 
+> (and what happens if we have a daxified inode that gets reflinked later?)
+
+              Bit 15 (0x8000) - XFS_XFLAG_DAX
+                        If the filesystem lives on directly accessible persistent  mem‐
+                        ory, reads and writes to this file will go straight to the per‐
+                        sistent memory, bypassing the page cache.   A  file  cannot  be
+                        reflinked  and  have  the  XFS_XFLAG_DAX  set at the same time.
+                        That is to say that DAX files cannot share blocks.
+
+# xfs_io -c "lsattr" /mnt/test/dax
+--------------x- /mnt/test/dax 
+
+# cp --reflink=always /mnt/test/dax /mnt/test/reflink
+
+# xfs_io -c "lsattr" /mnt/test/reflink 
+---------------- /mnt/test/reflink 
+
+# xfs_bmap -v /mnt/test/dax /mnt/test/reflink
+/mnt/test/dax:
+ EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
+   0: [0..7]:          104..111          0 (104..111)           8 100000
+/mnt/test/reflink:
+ EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
+   0: [0..7]:          104..111          0 (104..111)           8 100000
+
+# xfs_io -c "lsattr" /mnt/test/dax
+--------------x- /mnt/test/dax 
