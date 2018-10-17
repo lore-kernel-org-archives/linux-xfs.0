@@ -1,49 +1,30 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:56322 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726525AbeJOXtj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Oct 2018 19:49:39 -0400
-Date: Mon, 15 Oct 2018 09:03:44 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs_scrub: lack of kernel support is not a service failure
-Message-ID: <20181015160344.GJ28243@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:45834 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726691AbeJQQWu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Oct 2018 12:22:50 -0400
+Date: Wed, 17 Oct 2018 01:28:14 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 10/26] vfs: combine the clone and dedupe into a single
+ remap_file_range
+Message-ID: <20181017082814.GB16896@infradead.org>
+References: <153965939489.1256.7400115244528045860.stgit@magnolia>
+ <153965946503.1256.14921970220584184352.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <153965946503.1256.14921970220584184352.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: david@fromorbit.com, sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+> +/* All valid REMAP_FILE flags */
+> +#define REMAP_FILE_VALID_FLAGS		(REMAP_FILE_DEDUP)
 
-Don't treat a lack of kernel support for scrubbing as an automated
-service failure because we have not actually determined that there's
-anything wrong with the filesystem.
+It looks like this still isn't used after the whole series.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- scrub/xfs_scrub.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+With it removed:
 
-diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index 33b83a5f..6a0304d2 100644
---- a/scrub/xfs_scrub.c
-+++ b/scrub/xfs_scrub.c
-@@ -779,9 +779,15 @@ main(
- 	 * for capturing all the log messages if the scrub fails, because the
- 	 * fail service uses the service name to gather log messages for the
- 	 * error report.
-+	 *
-+	 * Note: We don't count a lack of kernel support as a service failure
-+	 * because we haven't determined that there's anything wrong with the
-+	 * filesystem.
- 	 */
- 	if (is_service) {
- 		sleep(2);
-+		if (!ctx.scrub_setup_succeeded)
-+			return 0;
- 		if (ret != SCRUB_RET_SUCCESS)
- 			return 1;
- 	}
+Reviewed-by: Christoph Hellwig <hch@lst.de>
