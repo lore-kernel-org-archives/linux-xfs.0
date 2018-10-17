@@ -1,46 +1,178 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm1-f44.google.com ([209.85.128.44]:39578 "EHLO
-        mail-wm1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726691AbeJQPrT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Oct 2018 11:47:19 -0400
-Received: by mail-wm1-f44.google.com with SMTP id y144-v6so1056955wmd.4
-        for <linux-xfs@vger.kernel.org>; Wed, 17 Oct 2018 00:52:52 -0700 (PDT)
-From: Avi Kivity <avi@scylladb.com>
-Subject: ENSOPC on a 10% used disk
-Message-ID: <40c52a7b-2520-8ae4-11d5-ae4b33e1dc29@scylladb.com>
-Date: Wed, 17 Oct 2018 10:52:48 +0300
+Received: from userp2130.oracle.com ([156.151.31.86]:36538 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726673AbeJRGms (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Oct 2018 02:42:48 -0400
+Subject: [PATCH 04/29] vfs: strengthen checking of file range inputs to
+ generic_remap_checks
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 17 Oct 2018 15:44:43 -0700
+Message-ID: <153981628292.5568.2466587869276881561.stgit@magnolia>
+In-Reply-To: <153981625504.5568.2708520119290577378.stgit@magnolia>
+References: <153981625504.5568.2708520119290577378.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: david@fromorbit.com, darrick.wong@oracle.com
+Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, ocfs2-devel@oss.oracle.com
 
-I have a user running a 1.7TB filesystem with ~10% usage (as shown by 
-df), getting sporadic ENOSPC errors. The disk is mounted with inode64 
-and has a relatively small number of large files. The disk is a 
-single-member RAID0 array, with 1MB chunk size. There are 32 AGs. 
-Running Linux 4.9.17.
+From: Darrick J. Wong <darrick.wong@oracle.com>
+
+File range remapping, if allowed to run past the destination file's EOF,
+is an optimization on a regular file write.  Regular file writes that
+extend the file length are subject to various constraints which are not
+checked by range cloning.
+
+This is a correctness problem because we're never allowed to touch
+ranges that the page cache can't support (s_maxbytes); we're not
+supposed to deal with large offsets (MAX_NON_LFS) if O_LARGEFILE isn't
+set; and we must obey resource limits (RLIMIT_FSIZE).
+
+Therefore, add these checks to the new generic_remap_checks function so
+that we curtail unexpected behavior.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ mm/filemap.c |   91 ++++++++++++++++++++++++++++++++++++++--------------------
+ 1 file changed, 59 insertions(+), 32 deletions(-)
 
 
-The write load consists of AIO/DIO writes, followed by unlinks of these 
-files. The writes are non-size-changing (we truncate ahead) and we use 
-XFS_IOC_FSSETXATTR/XFS_FLAG_EXTSIZE with a hint size of 32MB. The errors 
-happen on commit logs, which have a target size of 32MB (but may exceed 
-it a little).
-
-
-The errors are sporadic and after restarting the workload they go away 
-for a few hours to a few days, but then return. During one of the 
-crashes I used xfs_db to look at fragmentation and saw that most AGs had 
-free extents of size categories up to 128-255, but a few had more. I 
-tried xfs_fsr but it did not help.
-
-
-Is this a known issue? Would upgrading the kernel help?
-
-
-I'll try to get a metadata dump next time this happens, and I'll be 
-happy to supply more information.
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 47e6bfd45a91..08ad210fee49 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -2915,6 +2915,49 @@ struct page *read_cache_page_gfp(struct address_space *mapping,
+ }
+ EXPORT_SYMBOL(read_cache_page_gfp);
+ 
++static int generic_access_check_limits(struct file *file, loff_t pos,
++				       loff_t *count)
++{
++	struct inode *inode = file->f_mapping->host;
++
++	/* Don't exceed the LFS limits. */
++	if (unlikely(pos + *count > MAX_NON_LFS &&
++				!(file->f_flags & O_LARGEFILE))) {
++		if (pos >= MAX_NON_LFS)
++			return -EFBIG;
++		*count = min(*count, (loff_t)MAX_NON_LFS - pos);
++	}
++
++	/*
++	 * Don't operate on ranges the page cache doesn't support.
++	 *
++	 * If we have written data it becomes a short write.  If we have
++	 * exceeded without writing data we send a signal and return EFBIG.
++	 * Linus frestrict idea will clean these up nicely..
++	 */
++	if (unlikely(pos >= inode->i_sb->s_maxbytes))
++		return -EFBIG;
++
++	*count = min(*count, inode->i_sb->s_maxbytes - pos);
++	return 0;
++}
++
++static int generic_write_check_limits(struct file *file, loff_t pos,
++				      loff_t *count)
++{
++	unsigned long limit = rlimit(RLIMIT_FSIZE);
++
++	if (limit != RLIM_INFINITY) {
++		if (pos >= limit) {
++			send_sig(SIGXFSZ, current, 0);
++			return -EFBIG;
++		}
++		*count = min(*count, (loff_t)limit - pos);
++	}
++
++	return generic_access_check_limits(file, pos, count);
++}
++
+ /*
+  * Performs necessary checks before doing a write
+  *
+@@ -2926,8 +2969,8 @@ inline ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
+ {
+ 	struct file *file = iocb->ki_filp;
+ 	struct inode *inode = file->f_mapping->host;
+-	unsigned long limit = rlimit(RLIMIT_FSIZE);
+-	loff_t pos;
++	loff_t count;
++	int ret;
+ 
+ 	if (!iov_iter_count(from))
+ 		return 0;
+@@ -2936,40 +2979,15 @@ inline ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
+ 	if (iocb->ki_flags & IOCB_APPEND)
+ 		iocb->ki_pos = i_size_read(inode);
+ 
+-	pos = iocb->ki_pos;
+-
+ 	if ((iocb->ki_flags & IOCB_NOWAIT) && !(iocb->ki_flags & IOCB_DIRECT))
+ 		return -EINVAL;
+ 
+-	if (limit != RLIM_INFINITY) {
+-		if (iocb->ki_pos >= limit) {
+-			send_sig(SIGXFSZ, current, 0);
+-			return -EFBIG;
+-		}
+-		iov_iter_truncate(from, limit - (unsigned long)pos);
+-	}
++	count = iov_iter_count(from);
++	ret = generic_write_check_limits(file, iocb->ki_pos, &count);
++	if (ret)
++		return ret;
+ 
+-	/*
+-	 * LFS rule
+-	 */
+-	if (unlikely(pos + iov_iter_count(from) > MAX_NON_LFS &&
+-				!(file->f_flags & O_LARGEFILE))) {
+-		if (pos >= MAX_NON_LFS)
+-			return -EFBIG;
+-		iov_iter_truncate(from, MAX_NON_LFS - (unsigned long)pos);
+-	}
+-
+-	/*
+-	 * Are we about to exceed the fs block limit ?
+-	 *
+-	 * If we have written data it becomes a short write.  If we have
+-	 * exceeded without writing data we send a signal and return EFBIG.
+-	 * Linus frestrict idea will clean these up nicely..
+-	 */
+-	if (unlikely(pos >= inode->i_sb->s_maxbytes))
+-		return -EFBIG;
+-
+-	iov_iter_truncate(from, inode->i_sb->s_maxbytes - pos);
++	iov_iter_truncate(from, count);
+ 	return iov_iter_count(from);
+ }
+ EXPORT_SYMBOL(generic_write_checks);
+@@ -2991,6 +3009,7 @@ int generic_remap_checks(struct file *file_in, loff_t pos_in,
+ 	uint64_t bcount;
+ 	loff_t size_in, size_out;
+ 	loff_t bs = inode_out->i_sb->s_blocksize;
++	int ret;
+ 
+ 	/* The start of both ranges must be aligned to an fs block. */
+ 	if (!IS_ALIGNED(pos_in, bs) || !IS_ALIGNED(pos_out, bs))
+@@ -3014,6 +3033,14 @@ int generic_remap_checks(struct file *file_in, loff_t pos_in,
+ 		return -EINVAL;
+ 	count = min(count, size_in - (uint64_t)pos_in);
+ 
++	ret = generic_access_check_limits(file_in, pos_in, &count);
++	if (ret)
++		return ret;
++
++	ret = generic_write_check_limits(file_out, pos_out, &count);
++	if (ret)
++		return ret;
++
+ 	/*
+ 	 * If the user wanted us to link to the infile's EOF, round up to the
+ 	 * next block boundary for this check.
