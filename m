@@ -1,74 +1,83 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39409 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:39532 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726334AbeJRF2q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 18 Oct 2018 01:28:46 -0400
+        id S1726133AbeJREVO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 18 Oct 2018 00:21:14 -0400
 From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [PATCH 0/3] ext2, ext4, xfs: hard fail dax mount on unsupported devices
-References: <1539027169-23332-1-git-send-email-sandeen@sandeen.net>
-        <20181011103636.GC9467@quack2.suse.cz>
-        <CAPcyv4iAD_wkjY1way1rOxr4=gC_TGx71VquF13ooAuUPz9RJw@mail.gmail.com>
-        <5a8e54e8-4845-1c85-e4e9-0b9b551a9ce2@sandeen.net>
-        <20181012082154.GB30154@lst.de>
-        <CAOxpaSWf=6RBTa3WM=Hnbr7MwpQ5mMSMAZ+B5FfZo3zKv4Nu7w@mail.gmail.com>
-        <116ef687-f23d-b45c-1b48-fd444b346719@sandeen.net>
-Date: Wed, 17 Oct 2018 17:31:09 -0400
-In-Reply-To: <116ef687-f23d-b45c-1b48-fd444b346719@sandeen.net> (Eric
-        Sandeen's message of "Wed, 17 Oct 2018 14:42:36 -0500")
-Message-ID: <x491s8ofeg2.fsf@segfault.boston.devel.redhat.com>
+Subject: Re: Problems with VM_MIXEDMAP removal from /proc/<pid>/smaps
+References: <20181002100531.GC4135@quack2.suse.cz>
+        <20181002121039.GA3274@linux-x5ow.site>
+        <20181002142959.GD9127@quack2.suse.cz>
+Date: Wed, 17 Oct 2018 16:23:50 -0400
+In-Reply-To: <20181002142959.GD9127@quack2.suse.cz> (Jan Kara's message of
+        "Tue, 2 Oct 2018 16:29:59 +0200")
+Message-ID: <x49h8hkfhk9.fsf@segfault.boston.devel.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Ross Zwisler <zwisler@kernel.org>, Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, linux-xfs <linux-xfs@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-fsdevel@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>, Dan Williams <dan.j.williams@intel.com>, Dave Jiang <dave.jiang@intel.com>, linux-nvdimm@lists.01.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org
 
-Eric Sandeen <sandeen@sandeen.net> writes:
+Jan Kara <jack@suse.cz> writes:
 
-> I've been thinking about the per-inode stuff a bit, and while I don't know
-> how to resolve some of the trickier issues, at least the expected behavior
-> seems like something we can narrow down and specify.
+> [Added ext4, xfs, and linux-api folks to CC for the interface discussion]
 >
-> Because it's an on-disk flag (in xfs today, in any case) it seems that
-> the only sane behavior to expect is either/or, i.e.:
+> On Tue 02-10-18 14:10:39, Johannes Thumshirn wrote:
+>> On Tue, Oct 02, 2018 at 12:05:31PM +0200, Jan Kara wrote:
+>> > Hello,
+>> > 
+>> > commit e1fb4a086495 "dax: remove VM_MIXEDMAP for fsdax and device dax" has
+>> > removed VM_MIXEDMAP flag from DAX VMAs. Now our testing shows that in the
+>> > mean time certain customer of ours started poking into /proc/<pid>/smaps
+>> > and looks at VMA flags there and if VM_MIXEDMAP is missing among the VMA
+>> > flags, the application just fails to start complaining that DAX support is
+>> > missing in the kernel. The question now is how do we go about this?
+>> 
+>> OK naive question from me, how do we want an application to be able to
+>> check if it is running on a DAX mapping?
 >
-> Mount option: All files always dax, per-inode flags ignored (or rejected)
-> Per-inode: Mount option cannot be specified; only inodes explicitly flagged are dax
->
-> Think about it; what would mount-option-plus-per-inode mean?  We have
-> no "negative" dax flag, so while mount-option-with-flag surely means
-> "dax", what the heck does mount-option-without-flag mean, and how is it
-> distinguishable from mount option only?
->
-> I submit that flags can only have meaning w/o the fs-wide mount option
-> enabled, so the question of "should we hard fail mount -o dax for devices
-> that cannot support it" seems to be orthogonal to the per-inode question.
->
-> i.e. mount -o dax really can only mean "I want dax on everything" and so
-> again, I think we probably need to fail the mount if that can't be honored.
+> The question from me is: Should application really care? After all DAX is
+> just a caching decision. Sure it affects performance characteristics and
+> memory usage of the kernel but it is not a correctness issue (in particular
+> we took care for MAP_SYNC to return EOPNOTSUPP if the feature cannot be
+> supported for current mapping). And in the future the details of what we do
+> with DAX mapping can change - e.g. I could imagine we might decide to cache
+> writes in DRAM but do direct PMEM access on reads. And all this could be
+> auto-tuned based on media properties. And we don't want to tie our hands by
+> specifying too narrowly how the kernel is going to behave.
 
-I hate to even open up this can of worms, but what about killing the dax
-mount option?
+For read and write, I would expect the O_DIRECT open flag to still work,
+even for dax-capable persistent memory.  Is that a contentious opinion?
 
-To quote Christoph:
-  How does an application "make use of DAX"?  What actual user visible
-  semantics are associated with a file that has this flag set?
+So, what we're really discussing is the behavior for mmap.  MAP_SYNC
+will certainly ensure that the page cache is not used for writes.  It
+would also be odd for us to decide to cache reads.  The only issue I can
+see is that perhaps the application doesn't want to take a performance
+hit on write faults.  I haven't heard that concern expressed in this
+thread, though.
 
-We're already talking about making caching decisions automatically, so
-does DAX even mean anything at that point?  If the storage and the file
-system support it, enable it.
+Just to be clear, this is my understanding of the world:
 
->From what we've seen so far, aplications want:
-1) to be able to make data persistent from userspace
-   For this, we have MAP_SYNC.
-2) to determine whether or not page cache will be used
-   For this, we have O_DIRECT for read/write access, and MAP_SYNC for
-   mmap access (and maybe a third option coming, we'll see).
+MAP_SYNC
+- file system guarantees that metadata required to reach faulted-in file
+  data is consistent on media before a write fault is completed.  A
+  side-effect is that the page cache will not be used for
+  writably-mapped pages.
 
-The only thing users gain from a mount option is the ability to turn OFF
-dax.  I suppose there might be a use case that wants this, but I'm not
-aware of it.
+and what I think Dan had proposed:
+
+mmap flag, MAP_DIRECT
+- file system guarantees that page cache will not be used to front storage.
+  storage MUST be directly addressable.  This *almost* implies MAP_SYNC.
+  The subtle difference is that a write fault /may/ not result in metadata
+  being written back to media.
+
+and this is what I think you were proposing, Jan:
+
+madvise flag, MADV_DIRECT_ACCESS
+- same semantics as MAP_DIRECT, but specified via the madvise system call
 
 Cheers,
 Jeff
