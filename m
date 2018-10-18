@@ -1,176 +1,239 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:29908 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726644AbeJRIXc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Oct 2018 04:23:32 -0400
-Date: Thu, 18 Oct 2018 11:25:10 +1100
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:23930 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727363AbeJRSFb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Oct 2018 14:05:31 -0400
+Date: Thu, 18 Oct 2018 21:05:04 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Problems with VM_MIXEDMAP removal from /proc/<pid>/smaps
-Message-ID: <20181018002510.GC6311@dastard>
-References: <20181002100531.GC4135@quack2.suse.cz>
- <20181002121039.GA3274@linux-x5ow.site>
- <20181002142959.GD9127@quack2.suse.cz>
- <x49h8hkfhk9.fsf@segfault.boston.devel.redhat.com>
+Subject: Re: ENSOPC on a 10% used disk
+Message-ID: <20181018100504.GH6311@dastard>
+References: <40c52a7b-2520-8ae4-11d5-ae4b33e1dc29@scylladb.com>
+ <20181018013727.GE6311@dastard>
+ <39c3af2d-d591-c6bc-d586-245f1ca69a71@scylladb.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <x49h8hkfhk9.fsf@segfault.boston.devel.redhat.com>
+In-Reply-To: <39c3af2d-d591-c6bc-d586-245f1ca69a71@scylladb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: Jan Kara <jack@suse.cz>, Johannes Thumshirn <jthumshirn@suse.de>, Dan Williams <dan.j.williams@intel.com>, Dave Jiang <dave.jiang@intel.com>, linux-nvdimm@lists.01.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, linux-api@vger.kernel.org
+To: Avi Kivity <avi@scylladb.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Oct 17, 2018 at 04:23:50PM -0400, Jeff Moyer wrote:
-> Jan Kara <jack@suse.cz> writes:
+[ hmmm, there's some whacky utf-8 whitespace characters in the
+ copy-n-pasted text... ]
+
+On Thu, Oct 18, 2018 at 10:55:18AM +0300, Avi Kivity wrote:
 > 
-> > [Added ext4, xfs, and linux-api folks to CC for the interface discussion]
-> >
-> > On Tue 02-10-18 14:10:39, Johannes Thumshirn wrote:
-> >> On Tue, Oct 02, 2018 at 12:05:31PM +0200, Jan Kara wrote:
-> >> > Hello,
-> >> > 
-> >> > commit e1fb4a086495 "dax: remove VM_MIXEDMAP for fsdax and device dax" has
-> >> > removed VM_MIXEDMAP flag from DAX VMAs. Now our testing shows that in the
-> >> > mean time certain customer of ours started poking into /proc/<pid>/smaps
-> >> > and looks at VMA flags there and if VM_MIXEDMAP is missing among the VMA
-> >> > flags, the application just fails to start complaining that DAX support is
-> >> > missing in the kernel. The question now is how do we go about this?
-> >> 
-> >> OK naive question from me, how do we want an application to be able to
-> >> check if it is running on a DAX mapping?
-> >
-> > The question from me is: Should application really care? After all DAX is
-> > just a caching decision. Sure it affects performance characteristics and
-> > memory usage of the kernel but it is not a correctness issue (in particular
-> > we took care for MAP_SYNC to return EOPNOTSUPP if the feature cannot be
-> > supported for current mapping). And in the future the details of what we do
-> > with DAX mapping can change - e.g. I could imagine we might decide to cache
-> > writes in DRAM but do direct PMEM access on reads. And all this could be
-> > auto-tuned based on media properties. And we don't want to tie our hands by
-> > specifying too narrowly how the kernel is going to behave.
+> On 18/10/2018 04.37, Dave Chinner wrote:
+> >On Wed, Oct 17, 2018 at 10:52:48AM +0300, Avi Kivity wrote:
+> >>I have a user running a 1.7TB filesystem with ~10% usage (as shown
+> >>by df), getting sporadic ENOSPC errors. The disk is mounted with
+> >>inode64 and has a relatively small number of large files. The disk
+> >>is a single-member RAID0 array, with 1MB chunk size. There are 32
+
+Ok, now I need to know what "single member RAID0 array" means,
+becuase this is clearly related to allocation alignment and I need
+to know why the FS was configured the way it was.
+
+It's one disk? Or is it a hardware RAID0 array that presents as a
+single lun with a stripe width of 1MB? if so, how many disks aer in
+it? If the chunk size the stripe unit (per disk chunk size) or the
+stripe width (all disks get hit by a 1MB IO)
+
+Or something else? 
+
+> >>AGs. Running Linux 4.9.17.
+> >ENOSPC on what operation? write? open(O_CREAT)? something else?
 > 
-> For read and write, I would expect the O_DIRECT open flag to still work,
-> even for dax-capable persistent memory.  Is that a contentious opinion?
-
-Not contentious at all, because that's the way it currently works.
-FYI, XFS decides what to do with read (and similarly writes) like
-this:
-
-        if (IS_DAX(inode))
-                ret = xfs_file_dax_read(iocb, to);
-        else if (iocb->ki_flags & IOCB_DIRECT)
-                ret = xfs_file_dio_aio_read(iocb, to);
-        else
-                ret = xfs_file_buffered_aio_read(iocb, to);
-
-Neither DAX or O_DIRECT on pmem use the page cache - the only difference
-between the DAX read/write path and the O_DIRECT read/write path
-is where the memcpy() into the user buffer is done. For DAX
-it's done in the fsdax layer, for O_DIRECT it's done in the pmem
-block driver.
-
-> So, what we're really discussing is the behavior for mmap.
-
-Yes.
-
-> MAP_SYNC
-> will certainly ensure that the page cache is not used for writes.  It
-> would also be odd for us to decide to cache reads.  The only issue I can
-> see is that perhaps the application doesn't want to take a performance
-> hit on write faults.  I haven't heard that concern expressed in this
-> thread, though.
 > 
-> Just to be clear, this is my understanding of the world:
+> Unknown.
 > 
-> MAP_SYNC
-> - file system guarantees that metadata required to reach faulted-in file
->   data is consistent on media before a write fault is completed.  A
->   side-effect is that the page cache will not be used for
->   writably-mapped pages.
-
-I think you are conflating current implementation with API
-requirements - MAP_SYNC doesn't guarantee anything about page cache
-use. The man page definition simply says "supported only for files
-supporting DAX" and that it provides certain data integrity
-guarantees. It does not define the implementation.
-
-We've /implemented MAP_SYNC/ as O_DSYNC page fault behaviour,
-because that's the only way we can currently provide the required
-behaviour to userspace. However, if a filesystem can use the page
-cache to provide the required functionality, then it's free to do
-so.
-
-i.e. if someone implements a pmem-based page cache, MAP_SYNC data
-integrity could be provided /without DAX/ by any filesystem using
-that persistent page cache. i.e. MAP_SYNC really only requires
-mmap() of CPU addressable persistent memory - it does not require
-DAX. Right now, however, the only way to get this functionality is
-through a DAX capable filesystem on dax capable storage.
-
-And, FWIW, this is pretty much how NOVA maintains DAX w/ COW - it
-COWs new pages in pmem and attaches them a special per-inode cache
-on clean->dirty transition. Then on data sync, background writeback
-or crash recovery, it migrates them from the cache into the file map
-proper via atomic metadata pointer swaps.
-
-IOWs, NOVA provides the correct MAP_SYNC semantics by using a
-separate persistent per-inode write cache to provide the correct
-crash recovery semantics for MAP_SYNC.
-
-> and what I think Dan had proposed:
 > 
-> mmap flag, MAP_DIRECT
-> - file system guarantees that page cache will not be used to front storage.
->   storage MUST be directly addressable.  This *almost* implies MAP_SYNC.
->   The subtle difference is that a write fault /may/ not result in metadata
->   being written back to media.
-
-SIimilar to O_DIRECT, these semantics do not allow userspace apps to
-replace msync/fsync with CPU cache flush operations. So any
-application that uses this mode still needs to use either MAP_SYNC
-or issue msync/fsync for data integrity.
-
-If the app is using MAP_DIRECT, the what do we do if the filesystem
-can't provide the required semantics for that specific operation? In
-the case of O_DIRECT, we fall back to buffered IO because it has the
-same data integrity semantics as O_DIRECT and will always work. It's
-just slower and consumes more memory, but the app continues to work
-just fine.
-
-Sending SIGBUS to apps when we can't perform MAP_DIRECT operations
-without using the pagecache seems extremely problematic to me.  e.g.
-an app already has an open MAP_DIRECT file, and a third party
-reflinks it or dedupes it and the fs has to fall back to buffered IO
-to do COW operations. This isn't the app's fault - the kernel should
-just fall back transparently to using the page cache for the
-MAP_DIRECT app and just keep working, just like it would if it was
-using O_DIRECT read/write.
-
-The point I'm trying to make here is that O_DIRECT is a /hint/, not
-a guarantee, and it's done that way to prevent applications from
-being presented with transient, potentially fatal error cases
-because a filesystem implementation can't do a specific operation
-through the direct IO path.
-
-IMO, MAP_DIRECT needs to be a hint like O_DIRECT and not a
-guarantee. Over time we'll end up with filesystems that can
-guarantee that MAP_DIRECT is always going to use DAX, in the same
-way we have filesystems that guarantee O_DIRECT will always be
-O_DIRECT (e.g. XFS). But if we decide that MAP_DIRECT must guarantee
-no page cache will ever be used, then we are basically saying
-"filesystems won't provide MAP_DIRECT even in common, useful cases
-because they can't provide MAP_DIRECT in all cases." And that
-doesn't seem like a very good solution to me.
-
-> and this is what I think you were proposing, Jan:
+> >What's the filesystem config (xfs_info output)?
 > 
-> madvise flag, MADV_DIRECT_ACCESS
-> - same semantics as MAP_DIRECT, but specified via the madvise system call
+> 
+> (restored from metadata dump)
+> 
+> 
+> meta-data=/dev/loop2		isize=512 agcount=32, agsize=14494720 blks
+>          =                    sectsz=512 attr=2, projid32bit=1
+>          =                    crc=1 finobt=0 spinodes=0 rmapbt=0
+>          =                    reflink=0
+> data     =                    bsize=4096 blocks=463831040, imaxpct=5
+>          =                    sunit=256 swidth=256 blks
 
-Seems to be the equivalent of fcntl(F_SETFL, O_DIRECT). Makes sense
-to have both MAP_DIRECT and MADV_DIRECT_ACCESS to me - one is an
-init time flag, the other is a run time flag.
+sunit=swidth is unusual for a RAID0 array, unless it's hardware RAID
+and the array only reports one number to mkfs. What this chosen by
+mkfs, or specifically configured by the user? If specifically
+configured, why?
+
+What is important is that it means aligned allocations will be used
+for any allocation that is over sunit (1MB) and that's where all the
+problems seem to come from.
+
+> naming   =version 2           bsize=4096 ascii-ci=0 ftype=1
+> log      =internal            bsize=4096 blocks=226480, version=2
+>          =                    sectsz=512 sunit=8 blks, lazy-count=1
+> realtime =none                extsz=4096 blocks=0, rtextents=0
+> 
+> > Has xfs_fsr been run on this filesystem
+> >regularly?
+> 
+> 
+> xfs_fsr has never been run, until we saw the problem (and then did
+> not fix it).  IIUC the workload should be self-defragmenting: it
+> consists of writing large files, then erasing them. I estimate that
+> around 100 files are written concurrently (from 14 threads), and
+> they are written with large extent hints. With every large file,
+> another smaller (but still large) file is written, and a few
+> smallish metadata files.
+
+Do those smaller files get removed when the big files are removed?
+
+> I understood from xfs_fsr that it attempts to defragment files, not
+> free space, although that may come as a side effect. In any case I
+> ran xfs_db after xfs_fsr and did not see an improvement.
+
+xfs_fsr takes fragmented files and contiguous free space and turns
+it into contiguous files and fragmented free space. You have
+fragmented free space, so I needed to know if xfs_fsr was
+responsible for that....
+
+> >If the ENOSPC errors are only from files with a 32MB extent size
+> >hints on them, then it may be that there isn't sufficient contiguous
+> >free space to allocate an entire 32MB extent. I'm not sure what the
+> >allocator behaviour here is (the code is a maze of twisty passages),
+> >so I'll have to look more into this.
+> 
+> There are other files with 32MB hints that do not show the error
+> (but on the other hand, the error has been observed few enough times
+> for that to be a fluke).
+
+*nod*
+
+> >In the mean time, can you post the output of the freespace command
+> >(both global and per-ag) so we can see just how much free space
+> >there is and how badly fragmented it has become? I might be able to
+> >reproduce the behaviour if I know the conditions under which it is
+> >occuring.
+> 
+> 
+> xfs_db> freesp
+>  from      to  extents    blocks    pct
+>  1          1     5916      5916   0.00
+>  2          3    10235     22678   0.01
+>  4          7    12251     66829   0.02
+>  8         15     5521     59556   0.01
+>  16        31     5703    132031   0.03
+>  32        63     9754    463825   0.11
+>  64       127    16742   1590339   0.37
+>  128      255   550511 390108625  89.87
+>  256      511    71516  29178504   6.72
+>  512     1023       19     15355   0.00
+>  1024    2047      287    461824   0.11
+>  2048    4095      528   1611413   0.37
+>  4096    8191     1537  10352304   2.38
+>  8192   16383        2     19015   0.00
+> 
+> Just 2 extents >= 32MB (and they may have been freed after the error).
+
+Yes, and the vast majority of free space is in lengths between 512kB
+and 1020kB. This is what I'd expect if you have large, stripe
+aligned allocations interleaved with smaller, sub-stripe unit
+allocations.
+
+As an example of behaviour that can leads to this sort of free space
+fragmentation, start with 10 stripe units of contiguous free space:
+
+  0    1    2    3    4    5    6    7    8    9    10
+  +----+----+----+----+----+----+----+----+----+----+----+
+
+Now allocate a > stripe unit extent (say 2 units):
+
+  0    1    2    3    4    5    6    7    8    9    10
+  LLLLLLLLLL+----+----+----+----+----+----+----+----+----+
+
+Now allocate a small file A:
+
+  0    1    2    3    4    5    6    7    8    9    10
+  LLLLLLLLLLAA---+----+----+----+----+----+----+----+----+
+
+Now allocate another large extent:
+
+  0    1    2    3    4    5    6    7    8    9    10
+  LLLLLLLLLLAA---LLLLLLLLLL+----+----+----+----+----+----+
+
+After a while, a significant part of your filesystem looks like
+this repeating pattern:
+
+  0    1    2    3    4    5    6    7    8    9    10
+  LLLLLLLLLLAA---LLLLLLLLLLBB---LLLLLLLLLLCC---LLLLLLLLLLDD---+
+
+i.e. there are lots of small, isolated sub stripe unit free spaces.
+If you now start removing large extents but leaving the small
+files behind, you end up with this:
+
+  0    1    2    3    4    5    6    7    8    9    10
+  LLLLLLLLLLAA---+---------BB---LLLLLLLLLLCC---+----+----DD---+
+
+And now we go to allocate a new large+small file pair (M+n)
+they'll get laid out like this:
+
+  0    1    2    3    4    5    6    7    8    9    10
+  LLLLLLLLLLAA---MMMMMMMMMMBB---LLLLLLLLLLCC---nn---+----DD---+
+
+See how we lost a large aligned 2MB freespace @ 9 when the small
+file "nn" was laid down? repeat this fill and free pattern over and
+over again, and eventually it fragments the free space until there's
+no large contiguous free spaces left, and large aligned extents can
+no longer be allocated.
+
+For this to trigger you need the small files to be larger than 1
+stripe unit, but still much smaller than the extent size hint, and
+the small files need to hang around as the large files come and go.
+
+> >>Is this a known issue?
+
+The effect and symptom is - it's a generic large aligned extent vs small unaligned extent
+issue, but I've never seen it manifest in a user workload outside of
+a very constrained multistream realtime video ingest/playout
+workload (i.e. the workload the filestreams allocator was written
+for). And before you ask, no, the filestreams allocator does not
+solve this problem.
+
+The most common manifestation of this problem has been inode
+allocation on filesystems full of small files - inodes are allocated
+in large aligned extents compared to small files, and so eventually
+the filesystem runs out of large contigouous freespace and inodes
+can't be allocated. The sparse inodes mkfs option fixed this by
+allowing inodes to be allocated as sparse chunks so they could
+interleave into any free space available....
+
+> >>Would upgrading the kernel help?
+> >Not that I know of. If it's an extszhint vs free space fragmentation
+> >issue, then a kernel upgrade is unlikely to fix it.
+
+Upgrading the kernel won't fix it, because it's an extszhint vs free
+space fragmentation issue.
+
+Filesystems that get into this state are generally considered
+unrecoverable.  Well, you can recover them by deleting everythign
+from them to reform contiguous free space, but you may as well just
+mkfs and restore from backup because it's much, much faster than
+waiting for rm -rf....
+
+And, really, I expect that a different filesystem geometry and/or
+mount options are going to be needed to avoid getting into this
+state again. However, I don't really know enough yet about what in
+the workload and allocator is triggering to cause the issue to say
+yet.
+
+Can I get access to the metadump to dig around in the filesystem
+directly so I can see how everything has ended up laid out? that
+will help me work out what is actually occurring and determine if
+mkfs/mount options can address the problem or whether deeper
+allocator algorithm changes may be necessary....
 
 Cheers,
 
