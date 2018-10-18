@@ -1,56 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:58414 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726412AbeJRGpi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Oct 2018 02:45:38 -0400
-Subject: [PATCH 29/29] xfs: remove [cm]time update from reflink calls
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Oct 2018 15:47:40 -0700
-Message-ID: <153981646034.5568.15367504587850383353.stgit@magnolia>
-In-Reply-To: <153981625504.5568.2708520119290577378.stgit@magnolia>
-References: <153981625504.5568.2708520119290577378.stgit@magnolia>
+Received: from mail-wm1-f49.google.com ([209.85.128.49]:35723 "EHLO
+        mail-wm1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728422AbeJSANL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Oct 2018 20:13:11 -0400
+Received: by mail-wm1-f49.google.com with SMTP id o17-v6so167305wmh.0
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Oct 2018 09:11:30 -0700 (PDT)
+Subject: Re: ENSOPC on a 10% used disk
+From: Avi Kivity <avi@scylladb.com>
+References: <40c52a7b-2520-8ae4-11d5-ae4b33e1dc29@scylladb.com>
+ <20181018013727.GE6311@dastard>
+ <39c3af2d-d591-c6bc-d586-245f1ca69a71@scylladb.com>
+ <20181018100504.GH6311@dastard>
+ <87bf239a-29c2-6db5-6781-42743c9c7d5d@scylladb.com>
+ <5516031c-6c4f-072f-e9f9-9f0ecee9927d@scylladb.com>
+Message-ID: <2e49a425-e81c-f5ba-2ff1-6fe69fe47055@scylladb.com>
+Date: Thu, 18 Oct 2018 19:11:23 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <5516031c-6c4f-072f-e9f9-9f0ecee9927d@scylladb.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
-
-From: Darrick J. Wong <darrick.wong@oracle.com>
-
-Now that the vfs remap helper dirties the inode [cm]time for us, xfs no
-longer needs to do that on its own.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_reflink.c |    7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 84f372f7ea04..e72218477bf2 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -927,8 +927,7 @@ xfs_reflink_update_dest(
- 	struct xfs_trans	*tp;
- 	int			error;
- 
--	if ((remap_flags & REMAP_FILE_DEDUP) &&
--	    newlen <= i_size_read(VFS_I(dest)) && cowextsize == 0)
-+	if (newlen <= i_size_read(VFS_I(dest)) && cowextsize == 0)
- 		return 0;
- 
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0, 0, 0, &tp);
-@@ -949,10 +948,6 @@ xfs_reflink_update_dest(
- 		dest->i_d.di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
- 	}
- 
--	if (!(remap_flags & REMAP_FILE_DEDUP)) {
--		xfs_trans_ichgtime(tp, dest,
--				   XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
--	}
- 	xfs_trans_log_inode(tp, dest, XFS_ILOG_CORE);
- 
- 	error = xfs_trans_commit(tp);
+On 18/10/2018 18.44, Avi Kivity wrote:
+>
+> On 18/10/2018 14.00, Avi Kivity wrote:
+>>
+>>
+>> This can happen, and indeed I see our default hint is 1MB, so our 
+>> small files use a 1MB hint. Looks like we should remove that 1MB hint 
+>> since it's reducing allocation flexibility for XFS without a good 
+>> return.
+>
+>
+> I convinced myself that this is the root cause, it fits perfectly with 
+> your explanation. I still think that XFS should allocate *something* 
+> rather than ENOSPC, but I can also understand someone wanting a 
+> guarantee.
+>
+
+A small twist: there were in fact lots of small files on that system, 
+caused by snapshots that the user did not remove. But I think the 
+explanation still holds.
