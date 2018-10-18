@@ -1,71 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:49012 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727410AbeJRMgp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Oct 2018 08:36:45 -0400
-Date: Wed, 17 Oct 2018 21:37:24 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 04/29] vfs: strengthen checking of file range inputs to
- generic_remap_checks
-Message-ID: <20181018043724.GS28243@magnolia>
-References: <153981625504.5568.2708520119290577378.stgit@magnolia>
- <153981628292.5568.2466587869276881561.stgit@magnolia>
- <20181018004156.GA12386@ZenIV.linux.org.uk>
+Received: from mail-wm1-f45.google.com ([209.85.128.45]:40714 "EHLO
+        mail-wm1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727541AbeJRToT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Oct 2018 15:44:19 -0400
+Received: by mail-wm1-f45.google.com with SMTP id z204-v6so5440943wmc.5
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Oct 2018 04:43:40 -0700 (PDT)
+Date: Thu, 18 Oct 2018 13:43:35 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [QUESTION] multiple fsync() vs single sync()
+Message-ID: <20181018114335.vc7cdqpgcv34mnez@odin.usersys.redhat.com>
+References: <6A65F394-C1BA-4339-AC9B-051885D12F65@corp.ovh.com>
+ <20181016125712.5k5xt4lzhi76qaj6@odin.usersys.redhat.com>
+ <CAAxjCEyUL4nJ_Ds+ATragxGtUCyHjkZ9howsMHjc5H7VEe3xUg@mail.gmail.com>
+ <2C57B701-747D-4603-9DA7-F4D766858C36@corp.ovh.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20181018004156.GA12386@ZenIV.linux.org.uk>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <2C57B701-747D-4603-9DA7-F4D766858C36@corp.ovh.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: david@fromorbit.com, sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, ocfs2-devel@oss.oracle.com
+To: Romain Le Disez <romain.le-disez@corp.ovh.com>
+Cc: Stefan Ring <stefanrin@gmail.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-On Thu, Oct 18, 2018 at 01:41:56AM +0100, Al Viro wrote:
-> On Wed, Oct 17, 2018 at 03:44:43PM -0700, Darrick J. Wong wrote:
-> > +static int generic_access_check_limits(struct file *file, loff_t pos,
-> > +				       loff_t *count)
-> > +{
-> > +	struct inode *inode = file->f_mapping->host;
-> > +
-> > +	/* Don't exceed the LFS limits. */
-> > +	if (unlikely(pos + *count > MAX_NON_LFS &&
-> > +				!(file->f_flags & O_LARGEFILE))) {
-> > +		if (pos >= MAX_NON_LFS)
-> > +			return -EFBIG;
-> > +		*count = min(*count, (loff_t)MAX_NON_LFS - pos);
+On Tue, Oct 16, 2018 at 02:09:27PM +0000, Romain Le Disez wrote:
 > 
-> 	Can that can be different from MAX_NON_LFS - pos?
+> > Le 16 oct. 2018 à 15:53, Stefan Ring <stefanrin@gmail.com> a écrit :
+> > 
+> > But in what order? If I understood correctly, with the single sync()
+> > call, he might end up with a directory entry referencing an incomplete
+> > file. Which should not be possible in the case with the two fsyncs.
 > 
-> > +	}
-> > +
-> > +	/*
-> > +	 * Don't operate on ranges the page cache doesn't support.
-> > +	 *
-> > +	 * If we have written data it becomes a short write.  If we have
-> > +	 * exceeded without writing data we send a signal and return EFBIG.
-> > +	 * Linus frestrict idea will clean these up nicely..
-> > +	 */
-> > +	if (unlikely(pos >= inode->i_sb->s_maxbytes))
-> > +		return -EFBIG;
-> > +
-> > +	*count = min(*count, inode->i_sb->s_maxbytes - pos);
-> > +	return 0;
-> > +}
+> In what order, this is exactly my question :)
 > 
-> Anyway, I would rather do this here:
-> 
-> 	struct inode *inode = file->f_mapping->host;
-> 	loff_t max_size = inode->i_sb->s_maxbytes;
-> 
-> 	if (!(file->f_flags & O_LARGEFILE))
-> 		max_size = MAX_NON_LFS;
-> 
-> 	if (unlikely(pos >= max_size))
-> 		return -EFBIG;
-> 	*count = min(*count, max_size - pos);
-> 	return 0;
+> We are creating hundreds or thousands of files in a row. Converting thousands of fsync() to one sync() would be a great performance improvement, but I want to be sure we are not taking any risk with data consistency.
 
-Sounds much better to me. :)
+I honestly don't remember on the top of my head, a sync() will cause the whole
+XFS log to be flushed, and the flush order, I believe, will be according to how
+the metadata got logged in. But, I do not believe it comes to the case. Reality
+is, doesn't matter which is flushed first, file or directory metadata. If sync()
+fails, you must assume nothing got flushed at all, and not 'guess' if something
+got flushed in.
+But, as I mentioned before, and also did Dave, unless you want to cause a whole
+filesystem flush every time you have a file modified, use fsync() on the
+specific files, instead a global sync().
 
---D
+Cheers
+
+
+> 
+> -- 
+> Romain
+> 
+
+-- 
+Carlos
