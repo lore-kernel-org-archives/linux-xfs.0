@@ -1,107 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:36634 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726673AbeJRGmx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Oct 2018 02:42:53 -0400
-Subject: [PATCH 05/29] vfs: avoid problematic remapping requests into
- partial EOF block
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Oct 2018 15:44:49 -0700
-Message-ID: <153981628984.5568.13713064343145585532.stgit@magnolia>
-In-Reply-To: <153981625504.5568.2708520119290577378.stgit@magnolia>
-References: <153981625504.5568.2708520119290577378.stgit@magnolia>
+Received: from sandeen.net ([63.231.237.45]:33426 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728015AbeJRX4F (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 18 Oct 2018 19:56:05 -0400
+Subject: Re: ENSOPC on a 10% used disk
+References: <40c52a7b-2520-8ae4-11d5-ae4b33e1dc29@scylladb.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <f5f7cd96-1a7a-3a3b-90f9-6415450b02a0@sandeen.net>
+Date: Thu, 18 Oct 2018 10:54:26 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <40c52a7b-2520-8ae4-11d5-ae4b33e1dc29@scylladb.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, ocfs2-devel@oss.oracle.com
+To: Avi Kivity <avi@scylladb.com>, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 10/17/18 2:52 AM, Avi Kivity wrote:
+> I have a user running a 1.7TB filesystem with ~10% usage (as shown by df), getting sporadic ENOSPC errors. The disk is mounted with inode64 and has a relatively small number of large files. The disk is a single-member RAID0 array, with 1MB chunk size. There are 32 AGs. Running Linux 4.9.17.
+> 
+> 
+> The write load consists of AIO/DIO writes, followed by unlinks of these files. The writes are non-size-changing (we truncate ahead) and we use XFS_IOC_FSSETXATTR/XFS_FLAG_EXTSIZE with a hint size of 32MB. The errors happen on commit logs, which have a target size of 32MB (but may exceed it a little).
+> 
+> 
+> The errors are sporadic and after restarting the workload they go away for a few hours to a few days, but then return. During one of the crashes I used xfs_db to look at fragmentation and saw that most AGs had free extents of size categories up to 128-255, but a few had more. I tried xfs_fsr but it did not help.
+> 
+> 
+> Is this a known issue? Would upgrading the kernel help?
+> 
+> 
+> I'll try to get a metadata dump next time this happens, and I'll be happy to supply more information.
 
-A deduplication data corruption is exposed in XFS and btrfs. It is
-caused by extending the block match range to include the partial EOF
-block, but then allowing unknown data beyond EOF to be considered a
-"match" to data in the destination file because the comparison is only
-made to the end of the source file. This corrupts the destination file
-when the source extent is shared with it.
+It sounds like you all figured this out, but I'll drop a reference to
+One Weird Trick to figure out just what function is returning a specific
+error value (the example below is EINVAL)
 
-The VFS remapping prep functions  only support whole block dedupe, but
-we still need to appear to support whole file dedupe correctly.  Hence
-if the dedupe request includes the last block of the souce file, don't
-include it in the actual dedupe operation. If the rest of the range
-dedupes successfully, then reject the entire request.  A subsequent
-patch will enable us to shorten dedupe requests correctly.
+First is my hack, what follows was Dave's refinement.  We should get this
+into scripts/ some day.
 
-When reflinking sub-file ranges, a data corruption can occur when the
-source file range includes a partial EOF block. This shares the unknown
-data beyond EOF into the second file at a position inside EOF, exposing
-stale data in the second file.
+> # for FUNCTION in `grep "t xfs_" /proc/kallsyms | awk '{print $3}'`; do echo "r:ret_$FUNCTION $FUNCTION \$retval" >> /sys/kernel/debug/tracing/kprobe_events; done
+> 
+> # for ENABLE in /sys/kernel/debug/tracing/events/kprobes/ret_xfs_*/enable; do echo 1 > $ENABLE; done
+> 
+> run a test that fails:
+> 
+> # dd if=/dev/zero of=newfile bs=513 oflag=direct
+> dd: writing `newfile': Invalid argument
+> 
+> # for ENABLE in /sys/kernel/debug/tracing/events/kprobes/ret_xfs_*/enable; do echo 0 > $ENABLE; done
+> 
+> # cat /sys/kernel/debug/tracing/trace
+> <snip>
+>            <...>-63791 [000] d... 705435.568913: ret_xfs_vn_mknod: (xfs_vn_create+0x13/0x20 [xfs] <- xfs_vn_mknod) arg1=0
+>            <...>-63791 [000] d... 705435.568913: ret_xfs_vn_create: (vfs_create+0xdb/0x100 <- xfs_vn_create) arg1=0
+>            <...>-63791 [000] d... 705435.568918: ret_xfs_file_open: (do_dentry_open+0x24e/0x2e0 <- xfs_file_open) arg1=0
+>            <...>-63791 [000] d... 705435.568934: ret_xfs_file_dio_aio_write: (xfs_file_aio_write+0x147/0x150 [xfs] <- xfs_file_dio_aio_write) arg1=ffffffffffffffea
+> 
+> Hey look, it's "-22" in hex!  
+> 
+> so it's possible, but bleah.
 
-If the reflink request includes the last block of the souce file, only
-proceed with the reflink operation if it lands at or past the
-destination file's current EOF. If it lands within the destination file
-EOF, reject the entire request with -EINVAL and make the caller go the
-hard way.  A subsequent patch will enable us to shorten reflink requests
-correctly.
+Dave later refined that to:
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/read_write.c |   33 +++++++++++++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
+> #!/bin/bash
+> 
+> TRACEDIR=/sys/kernel/debug/tracing
+> 
+> grep -i 't xfs_' /proc/kallsyms | awk '{print $3}' ; while read F; do
+> 	echo "r:ret_$F $F \$retval" >> $TRACEDIR/kprobe_events
+> done
+> 
+> for E in $TRACEDIR/events/kprobes/ret_xfs_*/enable; do
+> 	echo 1 > $E
+> done;
+> 
+> echo 'arg1 > 0xffffffffffffff00' > $TRACEDIR/events/kprobes/filter
+> 
+> for T in $TRACEDIR/events/kprobes/ret_xfs_*/trigger; do
+> 	echo 'traceoff if arg1 > 0xffffffffffffff00' > $T
+> done
 
 
-diff --git a/fs/read_write.c b/fs/read_write.c
-index 2456da3f8a41..0f0a6efdd502 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -1708,6 +1708,34 @@ static int clone_verify_area(struct file *file, loff_t pos, u64 len, bool write)
- 
- 	return security_file_permission(file, write ? MAY_WRITE : MAY_READ);
- }
-+/*
-+ * Ensure that we don't remap a partial EOF block in the middle of something
-+ * else.  Assume that the offsets have already been checked for block
-+ * alignment.
-+ *
-+ * For deduplication we always scale down to the previous block because we
-+ * can't meaningfully compare post-EOF contents.
-+ *
-+ * For clone we only link a partial EOF block above the destination file's EOF.
-+ */
-+static int generic_remap_check_len(struct inode *inode_in,
-+				   struct inode *inode_out,
-+				   loff_t pos_out,
-+				   u64 *len,
-+				   bool is_dedupe)
-+{
-+	u64 blkmask = i_blocksize(inode_in) - 1;
-+
-+	if ((*len & blkmask) == 0)
-+		return 0;
-+
-+	if (is_dedupe)
-+		*len &= ~blkmask;
-+	else if (pos_out + *len < i_size_read(inode_out))
-+		return -EINVAL;
-+
-+	return 0;
-+}
- 
- /*
-  * Check that the two inodes are eligible for cloning, the ranges make
-@@ -1787,6 +1815,11 @@ int vfs_clone_file_prep(struct file *file_in, loff_t pos_in,
- 			return -EBADE;
- 	}
- 
-+	ret = generic_remap_check_len(inode_in, inode_out, pos_out, len,
-+			is_dedupe);
-+	if (ret)
-+		return ret;
-+
- 	return 1;
- }
- EXPORT_SYMBOL(vfs_clone_file_prep);
+
+> And that gives:
+> 
+> # dd if=/dev/zero of=/mnt/scratch/newfile bs=513 oflag=direct
+> dd: error writing ¿/mnt/scratch/newfile¿: Invalid argument
+> 1+0 records in
+> 0+0 records out
+> 0 bytes (0 B) copied, 0.000259882 s, 0.0 kB/s
+> root@test4:~# cat /sys/kernel/debug/tracing/trace
+> # tracer: nop
+> #
+> # entries-in-buffer/entries-written: 1/1   #P:16
+> #
+> #                              _-----=> irqs-off
+> #                             / _----=> need-resched
+> #                            | / _---=> hardirq/softirq
+> #                            || / _--=> preempt-depth
+> #                            ||| /     delay
+> #           TASK-PID   CPU#  ||||    TIMESTAMP  FUNCTION
+> #              | |       |   ||||       |         |
+>            <...>-8073  [006] d... 145740.460546: ret_xfs_file_dio_aio_write: (xfs_file_aio_write+0x170/0x180 <- xfs_file_dio_aio_write) arg1=0xffffffffffffffea
+> 
+> Which is precisely the detection that XFS_ERROR would have given us.
+> Ok, so I guess we can now add whatever need need to that trigger...
+> 
+> Basically, pass in teh XFs function names you want to trace, the
+> sets up teh events, whatever trigger beahviour you want, and
+> we're off to the races...
