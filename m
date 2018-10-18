@@ -1,223 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:39252 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727267AbeJRGos (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Oct 2018 02:44:48 -0400
-Subject: [PATCH 21/29] ocfs2: support partial clone range and dedupe range
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Oct 2018 15:46:46 -0700
-Message-ID: <153981640612.5568.3581451993357141348.stgit@magnolia>
-In-Reply-To: <153981625504.5568.2708520119290577378.stgit@magnolia>
-References: <153981625504.5568.2708520119290577378.stgit@magnolia>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:40988 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727040AbeJRJtb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Oct 2018 05:49:31 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 62243287A2
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Oct 2018 01:50:59 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 201453] Bug 1640090 - [xfstests xfs/490]: xfs_db print a bad
+ (negative number) as agi freecount
+Date: Thu, 18 Oct 2018 01:50:58 +0000
+Message-ID: <bug-201453-201763-AJnFFkMzC4@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-201453-201763@https.bugzilla.kernel.org/>
+References: <bug-201453-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=201453
 
-Change the ocfs2 remap code to allow for returning partial results.
+Eric Sandeen (sandeen@sandeen.net) changed:
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/ocfs2/file.c         |    7 +----
- fs/ocfs2/refcounttree.c |   72 +++++++++++++++++++++++++----------------------
- fs/ocfs2/refcounttree.h |   12 ++++----
- 3 files changed, 46 insertions(+), 45 deletions(-)
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |sandeen@sandeen.net
 
+--- Comment #3 from Eric Sandeen (sandeen@sandeen.net) ---
+Yep, does this fix it?
 
-diff --git a/fs/ocfs2/file.c b/fs/ocfs2/file.c
-index fbaeafe44b5f..8125c5ccf821 100644
---- a/fs/ocfs2/file.c
-+++ b/fs/ocfs2/file.c
-@@ -2531,14 +2531,11 @@ static loff_t ocfs2_remap_file_range(struct file *file_in, loff_t pos_in,
- 				     struct file *file_out, loff_t pos_out,
- 				     loff_t len, unsigned int remap_flags)
- {
--	int ret;
--
- 	if (remap_flags & ~(REMAP_FILE_DEDUP | REMAP_FILE_ADVISORY))
- 		return -EINVAL;
- 
--	ret = ocfs2_reflink_remap_range(file_in, pos_in, file_out, pos_out,
--					len, remap_flags);
--	return ret < 0 ? ret : len;
-+	return ocfs2_reflink_remap_range(file_in, pos_in, file_out, pos_out,
-+			len, remap_flags);
- }
- 
- const struct inode_operations ocfs2_file_iops = {
-diff --git a/fs/ocfs2/refcounttree.c b/fs/ocfs2/refcounttree.c
-index 7c709229e108..c7409578657b 100644
---- a/fs/ocfs2/refcounttree.c
-+++ b/fs/ocfs2/refcounttree.c
-@@ -4507,14 +4507,14 @@ static int ocfs2_reflink_update_dest(struct inode *dest,
- }
- 
- /* Remap the range pos_in:len in s_inode to pos_out:len in t_inode. */
--static int ocfs2_reflink_remap_extent(struct inode *s_inode,
--				      struct buffer_head *s_bh,
--				      loff_t pos_in,
--				      struct inode *t_inode,
--				      struct buffer_head *t_bh,
--				      loff_t pos_out,
--				      loff_t len,
--				      struct ocfs2_cached_dealloc_ctxt *dealloc)
-+static loff_t ocfs2_reflink_remap_extent(struct inode *s_inode,
-+					 struct buffer_head *s_bh,
-+					 loff_t pos_in,
-+					 struct inode *t_inode,
-+					 struct buffer_head *t_bh,
-+					 loff_t pos_out,
-+					 loff_t len,
-+					 struct ocfs2_cached_dealloc_ctxt *dealloc)
- {
- 	struct ocfs2_extent_tree s_et;
- 	struct ocfs2_extent_tree t_et;
-@@ -4522,8 +4522,9 @@ static int ocfs2_reflink_remap_extent(struct inode *s_inode,
- 	struct buffer_head *ref_root_bh = NULL;
- 	struct ocfs2_refcount_tree *ref_tree;
- 	struct ocfs2_super *osb;
-+	loff_t remapped_bytes = 0;
- 	loff_t pstart, plen;
--	u32 p_cluster, num_clusters, slast, spos, tpos;
-+	u32 p_cluster, num_clusters, slast, spos, tpos, remapped_clus = 0;
- 	unsigned int ext_flags;
- 	int ret = 0;
- 
-@@ -4605,30 +4606,34 @@ static int ocfs2_reflink_remap_extent(struct inode *s_inode,
- next_loop:
- 		spos += num_clusters;
- 		tpos += num_clusters;
-+		remapped_clus += num_clusters;
- 	}
- 
--out:
--	return ret;
-+	goto out;
- out_unlock_refcount:
- 	ocfs2_unlock_refcount_tree(osb, ref_tree, 1);
- 	brelse(ref_root_bh);
--	return ret;
-+out:
-+	remapped_bytes = ocfs2_clusters_to_bytes(t_inode->i_sb, remapped_clus);
-+	remapped_bytes = min_t(loff_t, len, remapped_bytes);
-+
-+	return remapped_bytes > 0 ? remapped_bytes : ret;
- }
- 
- /* Set up refcount tree and remap s_inode to t_inode. */
--static int ocfs2_reflink_remap_blocks(struct inode *s_inode,
--				      struct buffer_head *s_bh,
--				      loff_t pos_in,
--				      struct inode *t_inode,
--				      struct buffer_head *t_bh,
--				      loff_t pos_out,
--				      loff_t len)
-+static loff_t ocfs2_reflink_remap_blocks(struct inode *s_inode,
-+					 struct buffer_head *s_bh,
-+					 loff_t pos_in,
-+					 struct inode *t_inode,
-+					 struct buffer_head *t_bh,
-+					 loff_t pos_out,
-+					 loff_t len)
- {
- 	struct ocfs2_cached_dealloc_ctxt dealloc;
- 	struct ocfs2_super *osb;
- 	struct ocfs2_dinode *dis;
- 	struct ocfs2_dinode *dit;
--	int ret;
-+	loff_t ret;
- 
- 	osb = OCFS2_SB(s_inode->i_sb);
- 	dis = (struct ocfs2_dinode *)s_bh->b_data;
-@@ -4700,7 +4705,7 @@ static int ocfs2_reflink_remap_blocks(struct inode *s_inode,
- 	/* Actually remap extents now. */
- 	ret = ocfs2_reflink_remap_extent(s_inode, s_bh, pos_in, t_inode, t_bh,
- 					 pos_out, len, &dealloc);
--	if (ret) {
-+	if (ret < 0) {
- 		mlog_errno(ret);
- 		goto out;
- 	}
-@@ -4820,18 +4825,19 @@ static void ocfs2_reflink_inodes_unlock(struct inode *s_inode,
- }
- 
- /* Link a range of blocks from one file to another. */
--int ocfs2_reflink_remap_range(struct file *file_in,
--			      loff_t pos_in,
--			      struct file *file_out,
--			      loff_t pos_out,
--			      loff_t len,
--			      unsigned int remap_flags)
-+loff_t ocfs2_reflink_remap_range(struct file *file_in,
-+				 loff_t pos_in,
-+				 struct file *file_out,
-+				 loff_t pos_out,
-+				 loff_t len,
-+				 unsigned int remap_flags)
- {
- 	struct inode *inode_in = file_inode(file_in);
- 	struct inode *inode_out = file_inode(file_out);
- 	struct ocfs2_super *osb = OCFS2_SB(inode_in->i_sb);
- 	struct buffer_head *in_bh = NULL, *out_bh = NULL;
- 	bool same_inode = (inode_in == inode_out);
-+	loff_t remapped = 0;
- 	ssize_t ret;
- 
- 	if (!ocfs2_refcount_tree(osb))
-@@ -4866,12 +4872,13 @@ int ocfs2_reflink_remap_range(struct file *file_in,
- 				   round_down(pos_out, PAGE_SIZE),
- 				   round_up(pos_out + len, PAGE_SIZE) - 1);
- 
--	ret = ocfs2_reflink_remap_blocks(inode_in, in_bh, pos_in, inode_out,
--					 out_bh, pos_out, len);
-+	remapped = ocfs2_reflink_remap_blocks(inode_in, in_bh, pos_in,
-+			inode_out, out_bh, pos_out, len);
- 	up_write(&OCFS2_I(inode_in)->ip_alloc_sem);
- 	if (!same_inode)
- 		up_write(&OCFS2_I(inode_out)->ip_alloc_sem);
--	if (ret) {
-+	if (remapped < 0) {
-+		ret = remapped;
- 		mlog_errno(ret);
- 		goto out_unlock;
- 	}
-@@ -4889,10 +4896,7 @@ int ocfs2_reflink_remap_range(struct file *file_in,
- 		goto out_unlock;
- 	}
- 
--	ocfs2_reflink_inodes_unlock(inode_in, in_bh, inode_out, out_bh);
--	return 0;
--
- out_unlock:
- 	ocfs2_reflink_inodes_unlock(inode_in, in_bh, inode_out, out_bh);
--	return ret;
-+	return remapped > 0 ? remapped : ret;
- }
-diff --git a/fs/ocfs2/refcounttree.h b/fs/ocfs2/refcounttree.h
-index eb65c1d0843c..9e64daba395d 100644
---- a/fs/ocfs2/refcounttree.h
-+++ b/fs/ocfs2/refcounttree.h
-@@ -115,11 +115,11 @@ int ocfs2_reflink_ioctl(struct inode *inode,
- 			const char __user *oldname,
- 			const char __user *newname,
- 			bool preserve);
--int ocfs2_reflink_remap_range(struct file *file_in,
--			      loff_t pos_in,
--			      struct file *file_out,
--			      loff_t pos_out,
--			      loff_t len,
--			      unsigned int remap_flags);
-+loff_t ocfs2_reflink_remap_range(struct file *file_in,
-+				 loff_t pos_in,
-+				 struct file *file_out,
-+				 loff_t pos_out,
-+				 loff_t len,
-+				 unsigned int remap_flags);
- 
- #endif /* OCFS2_REFCOUNTTREE_H */
+diff --git a/db/btblock.c b/db/btblock.c
+index cbd2990..5a5b061 100644
+--- a/db/btblock.c
++++ b/db/btblock.c
+@@ -513,7 +513,7 @@ const field_t       inobt_sprec_flds[] = {
+        { "holemask", FLDT_UINT16X, OI(ROFF(ir_u.sp.ir_holemask)), C1, 0,
+          TYP_NONE },
+        { "count", FLDT_UINT8D, OI(ROFF(ir_u.sp.ir_count)), C1, 0, TYP_NONE },
+-       { "freecount", FLDT_INT8D, OI(ROFF(ir_u.sp.ir_freecount)), C1, 0,
++       { "freecount", FLDT_UINT8D, OI(ROFF(ir_u.sp.ir_freecount)), C1, 0,
+          TYP_NONE },
+        { "free", FLDT_INOFREE, OI(ROFF(ir_free)), C1, 0, TYP_NONE },
+        { NULL }
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
