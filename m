@@ -1,244 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:47756 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727365AbeJRGpc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Oct 2018 02:45:32 -0400
-Subject: [PATCH 28/29] xfs: remove xfs_reflink_remap_range
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Oct 2018 15:47:33 -0700
-Message-ID: <153981645357.5568.13554065440987931594.stgit@magnolia>
-In-Reply-To: <153981625504.5568.2708520119290577378.stgit@magnolia>
-References: <153981625504.5568.2708520119290577378.stgit@magnolia>
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:38488 "EHLO
+        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727170AbeJSUSL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Oct 2018 16:18:11 -0400
+Date: Fri, 19 Oct 2018 23:12:17 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [QUESTION] multiple fsync() vs single sync()
+Message-ID: <20181019121217.GN6311@dastard>
+References: <6A65F394-C1BA-4339-AC9B-051885D12F65@corp.ovh.com>
+ <20181017011624.GB6311@dastard>
+ <0C4E81C1-739F-432E-88A3-C2B1E4B1A310@corp.ovh.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <0C4E81C1-739F-432E-88A3-C2B1E4B1A310@corp.ovh.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
+To: Romain Le Disez <romain.le-disez@corp.ovh.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Oct 19, 2018 at 08:16:27AM +0000, Romain Le Disez wrote:
+> Thanks all for your answers, it is really helpful, I have now a clearer vision of how it works.
+> 
+> I have one last question.
+> 
+> If I’m in the process of creating 1000 files this way, but the server crashes before the syncfs() function was called, what will happen to the files that were already rename()/linkat()?
 
-Since xfs_file_remap_range is a thin wrapper, move the contents of
-xfs_reflink_remap_range into the shell.  This cuts down on the vfs
-calls being made from internal xfs code.
+files up to a certain point will be there in order, data in those
+files is likely to be missing. What files are there and what files
+have data will be completely random.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_file.c    |   65 ++++++++++++++++++++++++++++++++++++++++------
- fs/xfs/xfs_reflink.c |   70 +++-----------------------------------------------
- fs/xfs/xfs_reflink.h |   10 +++++++
- 3 files changed, 70 insertions(+), 75 deletions(-)
+i.e. you'll have a mess to clean up.
 
+> Do they follow the same ordering, so I’m sure they are either complete (all data/xattr + xfs metadata) or not in the destination directory?
+> 
+> Or, is syncfs() the only way to ensure this ordering?
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 7d42ab8fe6e1..53c9ab8fb777 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -919,20 +919,67 @@ xfs_file_fallocate(
- 	return error;
- }
- 
--STATIC loff_t
-+
-+loff_t
- xfs_file_remap_range(
--	struct file	*file_in,
--	loff_t		pos_in,
--	struct file	*file_out,
--	loff_t		pos_out,
--	loff_t		len,
--	unsigned int	remap_flags)
-+	struct file		*file_in,
-+	loff_t			pos_in,
-+	struct file		*file_out,
-+	loff_t			pos_out,
-+	loff_t			len,
-+	unsigned int		remap_flags)
- {
-+	struct inode		*inode_in = file_inode(file_in);
-+	struct xfs_inode	*src = XFS_I(inode_in);
-+	struct inode		*inode_out = file_inode(file_out);
-+	struct xfs_inode	*dest = XFS_I(inode_out);
-+	struct xfs_mount	*mp = src->i_mount;
-+	loff_t			remapped = 0;
-+	xfs_extlen_t		cowextsize;
-+	int			ret;
-+
- 	if (remap_flags & ~(REMAP_FILE_DEDUP | REMAP_FILE_ADVISORY))
- 		return -EINVAL;
- 
--	return xfs_reflink_remap_range(file_in, pos_in, file_out, pos_out,
--			len, remap_flags);
-+	if (!xfs_sb_version_hasreflink(&mp->m_sb))
-+		return -EOPNOTSUPP;
-+
-+	if (XFS_FORCED_SHUTDOWN(mp))
-+		return -EIO;
-+
-+	/* Prepare and then clone file data. */
-+	ret = xfs_reflink_remap_prep(file_in, pos_in, file_out, pos_out,
-+			&len, remap_flags);
-+	if (ret < 0 || len == 0)
-+		return ret;
-+
-+	trace_xfs_reflink_remap_range(src, pos_in, len, dest, pos_out);
-+
-+	ret = xfs_reflink_remap_blocks(src, pos_in, dest, pos_out, len,
-+			&remapped);
-+	if (ret)
-+		goto out_unlock;
-+
-+	/*
-+	 * Carry the cowextsize hint from src to dest if we're sharing the
-+	 * entire source file to the entire destination file, the source file
-+	 * has a cowextsize hint, and the destination file does not.
-+	 */
-+	cowextsize = 0;
-+	if (pos_in == 0 && len == i_size_read(inode_in) &&
-+	    (src->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE) &&
-+	    pos_out == 0 && len >= i_size_read(inode_out) &&
-+	    !(dest->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE))
-+		cowextsize = src->i_d.di_cowextsize;
-+
-+	ret = xfs_reflink_update_dest(dest, pos_out + len, cowextsize,
-+			remap_flags);
-+
-+out_unlock:
-+	xfs_reflink_remap_unlock(file_in, file_out);
-+	if (ret)
-+		trace_xfs_reflink_remap_range_error(dest, ret, _RET_IP_);
-+	return remapped > 0 ? remapped : ret;
- }
- 
- STATIC int
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index bccc66316cc4..84f372f7ea04 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -916,7 +916,7 @@ xfs_reflink_set_inode_flag(
- /*
-  * Update destination inode size & cowextsize hint, if necessary.
-  */
--STATIC int
-+int
- xfs_reflink_update_dest(
- 	struct xfs_inode	*dest,
- 	xfs_off_t		newlen,
-@@ -1116,7 +1116,7 @@ xfs_reflink_remap_extent(
- /*
-  * Iteratively remap one file's extents (and holes) to another's.
-  */
--STATIC int
-+int
- xfs_reflink_remap_blocks(
- 	struct xfs_inode	*src,
- 	loff_t			pos_in,
-@@ -1232,7 +1232,7 @@ xfs_iolock_two_inodes_and_break_layout(
- }
- 
- /* Unlock both inodes after they've been prepped for a range clone. */
--STATIC void
-+void
- xfs_reflink_remap_unlock(
- 	struct file		*file_in,
- 	struct file		*file_out)
-@@ -1300,7 +1300,7 @@ xfs_reflink_zero_posteof(
-  * stale data in the destination file. Hence we reject these clone attempts with
-  * -EINVAL in this case.
-  */
--STATIC int
-+int
- xfs_reflink_remap_prep(
- 	struct file		*file_in,
- 	loff_t			pos_in,
-@@ -1370,68 +1370,6 @@ xfs_reflink_remap_prep(
- 	return ret;
- }
- 
--/*
-- * Link a range of blocks from one file to another.
-- */
--loff_t
--xfs_reflink_remap_range(
--	struct file		*file_in,
--	loff_t			pos_in,
--	struct file		*file_out,
--	loff_t			pos_out,
--	loff_t			len,
--	unsigned int		remap_flags)
--{
--	struct inode		*inode_in = file_inode(file_in);
--	struct xfs_inode	*src = XFS_I(inode_in);
--	struct inode		*inode_out = file_inode(file_out);
--	struct xfs_inode	*dest = XFS_I(inode_out);
--	struct xfs_mount	*mp = src->i_mount;
--	loff_t			remapped = 0;
--	xfs_extlen_t		cowextsize;
--	int			ret;
--
--	if (!xfs_sb_version_hasreflink(&mp->m_sb))
--		return -EOPNOTSUPP;
--
--	if (XFS_FORCED_SHUTDOWN(mp))
--		return -EIO;
--
--	/* Prepare and then clone file data. */
--	ret = xfs_reflink_remap_prep(file_in, pos_in, file_out, pos_out,
--			&len, remap_flags);
--	if (ret < 0 || len == 0)
--		return ret;
--
--	trace_xfs_reflink_remap_range(src, pos_in, len, dest, pos_out);
--
--	ret = xfs_reflink_remap_blocks(src, pos_in, dest, pos_out, len,
--			&remapped);
--	if (ret)
--		goto out_unlock;
--
--	/*
--	 * Carry the cowextsize hint from src to dest if we're sharing the
--	 * entire source file to the entire destination file, the source file
--	 * has a cowextsize hint, and the destination file does not.
--	 */
--	cowextsize = 0;
--	if (pos_in == 0 && len == i_size_read(inode_in) &&
--	    (src->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE) &&
--	    pos_out == 0 && len >= i_size_read(inode_out) &&
--	    !(dest->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE))
--		cowextsize = src->i_d.di_cowextsize;
--
--	ret = xfs_reflink_update_dest(dest, pos_out + len, cowextsize,
--			remap_flags);
--
--out_unlock:
--	xfs_reflink_remap_unlock(file_in, file_out);
--	if (ret)
--		trace_xfs_reflink_remap_range_error(dest, ret, _RET_IP_);
--	return remapped > 0 ? remapped : ret;
--}
--
- /*
-  * The user wants to preemptively CoW all shared blocks in this file,
-  * which enables us to turn off the reflink flag.  Iterate all
-diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index cbc26ff79a8f..28a84edda889 100644
---- a/fs/xfs/xfs_reflink.h
-+++ b/fs/xfs/xfs_reflink.h
-@@ -36,5 +36,15 @@ extern int xfs_reflink_clear_inode_flag(struct xfs_inode *ip,
- 		struct xfs_trans **tpp);
- extern int xfs_reflink_unshare(struct xfs_inode *ip, xfs_off_t offset,
- 		xfs_off_t len);
-+extern int xfs_reflink_remap_prep(struct file *file_in, loff_t pos_in,
-+		struct file *file_out, loff_t pos_out, loff_t *len,
-+		unsigned int remap_flags);
-+extern int xfs_reflink_remap_blocks(struct xfs_inode *src, loff_t pos_in,
-+		struct xfs_inode *dest, loff_t pos_out, loff_t remap_len,
-+		loff_t *remapped);
-+extern int xfs_reflink_update_dest(struct xfs_inode *dest, xfs_off_t newlen,
-+		xfs_extlen_t cowextsize, unsigned int remap_flags);
-+extern void xfs_reflink_remap_unlock(struct file *file_in,
-+		struct file *file_out);
- 
- #endif /* __XFS_REFLINK_H */
+syncfs is like a bulk checkpoint. Until it completes, there are no
+guarantees about anything. Only way to guarantee per file data
+integrity and ordering is to use fsync.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
