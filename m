@@ -1,55 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:46294 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725918AbeJRGog (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Oct 2018 02:44:36 -0400
-Subject: [PATCH 19/29] ocfs2: truncate page cache for clone destination file
- before remapping
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Oct 2018 15:46:32 -0700
-Message-ID: <153981639268.5568.1964703365268884972.stgit@magnolia>
-In-Reply-To: <153981625504.5568.2708520119290577378.stgit@magnolia>
-References: <153981625504.5568.2708520119290577378.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:36274 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726245AbeJSK6D (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 19 Oct 2018 06:58:03 -0400
+Date: Fri, 19 Oct 2018 10:53:49 +0800
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH 4/5] block: introduce helpers for allocating IO buffers
+ from slab
+Message-ID: <20181019025348.GB14531@ming.t460p>
+References: <20181018131817.11813-1-ming.lei@redhat.com>
+ <20181018131817.11813-5-ming.lei@redhat.com>
+ <20181018144207.GD26828@lst.de>
+ <20181018151123.GD32429@bombadil.infradead.org>
+ <20181018152219.GB28300@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181018152219.GB28300@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: Matthew Wilcox <willy@infradead.org>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Vitaly Kuznetsov <vkuznets@redhat.com>, Dave Chinner <dchinner@redhat.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Oct 18, 2018 at 05:22:19PM +0200, Christoph Hellwig wrote:
+> On Thu, Oct 18, 2018 at 08:11:23AM -0700, Matthew Wilcox wrote:
+> > On Thu, Oct 18, 2018 at 04:42:07PM +0200, Christoph Hellwig wrote:
+> > > This all seems quite complicated.
+> > > 
+> > > I think the interface we'd want is more one that has a little
+> > > cache of a single page in the queue, and a little bitmap which
+> > > sub-page size blocks of it are used.
+> > > 
+> > > Something like (pseudo code minus locking):
+> > > 
+> > > void *blk_alloc_sector_buffer(struct block_device *bdev, gfp_t gfp)
+> > > {
+> > > 	unsigned block_size = block_size(bdev);
+> > > 
+> > > 	if (blocksize >= PAGE_SIZE)
+> > > 		return (void *)__get_free_pages(gfp, get_order(blocksize));
+> > > 
+> > > 	if (bdev->fragment_cache_page) {
+> > > 		[ <find fragment in bdev->fragment_cache_page using
+> > > 		  e.g. bitmap and return if found]
+> > > 	}
+> > > 
+> > > 	bdev->fragment_cache_page = (void *)__get_free_page(gfp);
+> > > 	goto find_again;
+> > > }
+> > 
+> > This looks a lot like page_frag_alloc() except I think page_frag_alloc()
+> > may be more efficient.
+> 
+> Oh, nice. Sounds like XFS should just use page_frag_alloc.  I'll give
+> it a spin.
 
-When cloning blocks into another file, truncate the page cache before we
-start remapping blocks so that concurrent reads wait for us to finish.
+XFS or other fs can use page_frag_alloc() directly, seems not necessary to
+introduce this change in block layer any more given 512-aligned buffer
+should be fine everywhere.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/ocfs2/refcounttree.c |   10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+The only benefit to make it as block helper is that the offset or size
+can be checked with q->dma_alignment.
 
+Dave/Jens, do you think which way is better? Put allocation as block
+helper or fs uses page_frag_alloc() directly for allocating 512*N-byte 
+buffer(total size is less than PAGE_SIZE)?
 
-diff --git a/fs/ocfs2/refcounttree.c b/fs/ocfs2/refcounttree.c
-index 46bbd315c39f..2a5c96bc9677 100644
---- a/fs/ocfs2/refcounttree.c
-+++ b/fs/ocfs2/refcounttree.c
-@@ -4861,14 +4861,12 @@ int ocfs2_reflink_remap_range(struct file *file_in,
- 		down_write_nested(&OCFS2_I(inode_out)->ip_alloc_sem,
- 				  SINGLE_DEPTH_NESTING);
- 
--	ret = ocfs2_reflink_remap_blocks(inode_in, in_bh, pos_in, inode_out,
--					 out_bh, pos_out, len);
--
- 	/* Zap any page cache for the destination file's range. */
--	if (!ret)
--		truncate_inode_pages_range(&inode_out->i_data, pos_out,
--					   PAGE_ALIGN(pos_out + len) - 1);
-+	truncate_inode_pages_range(&inode_out->i_data, pos_out,
-+				   PAGE_ALIGN(pos_out + len) - 1);
- 
-+	ret = ocfs2_reflink_remap_blocks(inode_in, in_bh, pos_in, inode_out,
-+					 out_bh, pos_out, len);
- 	up_write(&OCFS2_I(inode_in)->ip_alloc_sem);
- 	if (!same_inode)
- 		up_write(&OCFS2_I(inode_out)->ip_alloc_sem);
+Thanks,
+Ming
