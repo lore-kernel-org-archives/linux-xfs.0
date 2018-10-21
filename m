@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:43652 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727724AbeJVAaK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 Oct 2018 20:30:10 -0400
-Subject: [PATCH 01/28] vfs: vfs_clone_file_prep_inodes should return EINVAL
- for a clone from beyond EOF
+Received: from aserp2120.oracle.com ([141.146.126.78]:40758 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727876AbeJVAaV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 Oct 2018 20:30:21 -0400
+Subject: [PATCH 03/28] vfs: exit early from zero length remap operations
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sun, 21 Oct 2018 09:15:10 -0700
-Message-ID: <154013851007.29026.6847850518000401463.stgit@magnolia>
+Date: Sun, 21 Oct 2018 09:15:23 -0700
+Message-ID: <154013852390.29026.2594942938207791308.stgit@magnolia>
 In-Reply-To: <154013850285.29026.16168387526580596209.stgit@magnolia>
 References: <154013850285.29026.16168387526580596209.stgit@magnolia>
 MIME-Version: 1.0
@@ -21,28 +20,26 @@ Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, l
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-vfs_clone_file_prep_inodes cannot return 0 if it is asked to remap from
-a zero byte file because that's what btrfs does.
+If a remap caller asks us to remap to the source file's EOF and the
+source file length leaves us with a zero byte request, exit early.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/read_write.c |    3 ---
- 1 file changed, 3 deletions(-)
+ fs/read_write.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
 
 diff --git a/fs/read_write.c b/fs/read_write.c
-index 8a2737f0d61d..260797b01851 100644
+index d6e8e242a15f..2456da3f8a41 100644
 --- a/fs/read_write.c
 +++ b/fs/read_write.c
-@@ -1740,10 +1740,7 @@ int vfs_clone_file_prep_inodes(struct inode *inode_in, loff_t pos_in,
- 	if (!S_ISREG(inode_in->i_mode) || !S_ISREG(inode_out->i_mode))
- 		return -EINVAL;
+@@ -1748,6 +1748,8 @@ int vfs_clone_file_prep(struct file *file_in, loff_t pos_in,
+ 		if (pos_in > isize)
+ 			return -EINVAL;
+ 		*len = isize - pos_in;
++		if (*len == 0)
++			return 0;
+ 	}
  
--	/* Are we going all the way to the end? */
- 	isize = i_size_read(inode_in);
--	if (isize == 0)
--		return 0;
- 
- 	/* Zero length dedupe exits immediately; reflink goes to EOF. */
- 	if (*len == 0) {
+ 	/* Check that we don't violate system file offset limits. */
