@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:41830 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728016AbeJVAdT (ORCPT
+Received: from userp2120.oracle.com ([156.151.31.85]:46120 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728077AbeJVAdT (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 Oct 2018 20:33:19 -0400
-Subject: [PATCH 28/28] xfs: remove [cm]time update from reflink calls
+Subject: [PATCH 11/28] vfs: pass remap flags to generic_remap_checks
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sun, 21 Oct 2018 09:18:17 -0700
-Message-ID: <154013869780.29026.674362788764806472.stgit@magnolia>
+Date: Sun, 21 Oct 2018 09:16:20 -0700
+Message-ID: <154013858003.29026.16188863826706349189.stgit@magnolia>
 In-Reply-To: <154013850285.29026.16168387526580596209.stgit@magnolia>
 References: <154013850285.29026.16168387526580596209.stgit@magnolia>
 MIME-Version: 1.0
@@ -16,41 +16,67 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
+Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, ocfs2-devel@oss.oracle.com
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Now that the vfs remap helper dirties the inode [cm]time for us, xfs no
-longer needs to do that on its own.
+Pass the same remap flags to generic_remap_checks for consistency.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_reflink.c |    7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+ fs/read_write.c    |    2 +-
+ include/linux/fs.h |    2 +-
+ mm/filemap.c       |    4 ++--
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 84f372f7ea04..e72218477bf2 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -927,8 +927,7 @@ xfs_reflink_update_dest(
- 	struct xfs_trans	*tp;
- 	int			error;
+diff --git a/fs/read_write.c b/fs/read_write.c
+index 201381689284..ebcbfc4f2907 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1782,7 +1782,7 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
  
--	if ((remap_flags & REMAP_FILE_DEDUP) &&
--	    newlen <= i_size_read(VFS_I(dest)) && cowextsize == 0)
-+	if (newlen <= i_size_read(VFS_I(dest)) && cowextsize == 0)
- 		return 0;
+ 	/* Check that we don't violate system file offset limits. */
+ 	ret = generic_remap_checks(file_in, pos_in, file_out, pos_out, len,
+-			(remap_flags & REMAP_FILE_DEDUP));
++			remap_flags);
+ 	if (ret)
+ 		return ret;
  
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0, 0, 0, &tp);
-@@ -949,10 +948,6 @@ xfs_reflink_update_dest(
- 		dest->i_d.di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
- 	}
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 631c28ce1436..c5435ca81132 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2986,7 +2986,7 @@ extern int generic_file_readonly_mmap(struct file *, struct vm_area_struct *);
+ extern ssize_t generic_write_checks(struct kiocb *, struct iov_iter *);
+ extern int generic_remap_checks(struct file *file_in, loff_t pos_in,
+ 				struct file *file_out, loff_t pos_out,
+-				uint64_t *count, bool is_dedupe);
++				uint64_t *count, unsigned int remap_flags);
+ extern ssize_t generic_file_read_iter(struct kiocb *, struct iov_iter *);
+ extern ssize_t __generic_file_write_iter(struct kiocb *, struct iov_iter *);
+ extern ssize_t generic_file_write_iter(struct kiocb *, struct iov_iter *);
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 84b7301e41a0..410dc58f7b16 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -2994,7 +2994,7 @@ EXPORT_SYMBOL(generic_write_checks);
+  */
+ int generic_remap_checks(struct file *file_in, loff_t pos_in,
+ 			 struct file *file_out, loff_t pos_out,
+-			 uint64_t *req_count, bool is_dedupe)
++			 uint64_t *req_count, unsigned int remap_flags)
+ {
+ 	struct inode *inode_in = file_in->f_mapping->host;
+ 	struct inode *inode_out = file_out->f_mapping->host;
+@@ -3016,7 +3016,7 @@ int generic_remap_checks(struct file *file_in, loff_t pos_in,
+ 	size_out = i_size_read(inode_out);
  
--	if (!(remap_flags & REMAP_FILE_DEDUP)) {
--		xfs_trans_ichgtime(tp, dest,
--				   XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
--	}
- 	xfs_trans_log_inode(tp, dest, XFS_ILOG_CORE);
- 
- 	error = xfs_trans_commit(tp);
+ 	/* Dedupe requires both ranges to be within EOF. */
+-	if (is_dedupe &&
++	if ((remap_flags & REMAP_FILE_DEDUP) &&
+ 	    (pos_in >= size_in || pos_in + count > size_in ||
+ 	     pos_out >= size_out || pos_out + count > size_out))
+ 		return -EINVAL;
