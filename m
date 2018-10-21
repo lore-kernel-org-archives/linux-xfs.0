@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:46120 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728077AbeJVAdT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 Oct 2018 20:33:19 -0400
-Subject: [PATCH 11/28] vfs: pass remap flags to generic_remap_checks
+Received: from aserp2120.oracle.com ([141.146.126.78]:43920 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728077AbeJVAeH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 Oct 2018 20:34:07 -0400
+Subject: [PATCH 17/28] vfs: hide file range comparison function
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sun, 21 Oct 2018 09:16:20 -0700
-Message-ID: <154013858003.29026.16188863826706349189.stgit@magnolia>
+Date: Sun, 21 Oct 2018 09:17:02 -0700
+Message-ID: <154013862267.29026.2582062504282772214.stgit@magnolia>
 In-Reply-To: <154013850285.29026.16168387526580596209.stgit@magnolia>
 References: <154013850285.29026.16168387526580596209.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,63 +20,234 @@ Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, A
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Pass the same remap flags to generic_remap_checks for consistency.
+There are no callers of vfs_dedupe_file_range_compare, so we might as
+well make it a static helper and remove the export.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/read_write.c    |    2 +-
- include/linux/fs.h |    2 +-
- mm/filemap.c       |    4 ++--
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ fs/read_write.c    |  187 +++++++++++++++++++++++++---------------------------
+ include/linux/fs.h |    3 -
+ 2 files changed, 91 insertions(+), 99 deletions(-)
 
 
 diff --git a/fs/read_write.c b/fs/read_write.c
-index 201381689284..ebcbfc4f2907 100644
+index c0bcc1a20650..e4d295d0d236 100644
 --- a/fs/read_write.c
 +++ b/fs/read_write.c
-@@ -1782,7 +1782,7 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
+@@ -1752,6 +1752,97 @@ static int generic_remap_check_len(struct inode *inode_in,
+ 	return (remap_flags & REMAP_FILE_DEDUP) ? -EBADE : -EINVAL;
+ }
  
- 	/* Check that we don't violate system file offset limits. */
- 	ret = generic_remap_checks(file_in, pos_in, file_out, pos_out, len,
--			(remap_flags & REMAP_FILE_DEDUP));
-+			remap_flags);
- 	if (ret)
- 		return ret;
++/*
++ * Read a page's worth of file data into the page cache.  Return the page
++ * locked.
++ */
++static struct page *vfs_dedupe_get_page(struct inode *inode, loff_t offset)
++{
++	struct page *page;
++
++	page = read_mapping_page(inode->i_mapping, offset >> PAGE_SHIFT, NULL);
++	if (IS_ERR(page))
++		return page;
++	if (!PageUptodate(page)) {
++		put_page(page);
++		return ERR_PTR(-EIO);
++	}
++	lock_page(page);
++	return page;
++}
++
++/*
++ * Compare extents of two files to see if they are the same.
++ * Caller must have locked both inodes to prevent write races.
++ */
++static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
++					 struct inode *dest, loff_t destoff,
++					 loff_t len, bool *is_same)
++{
++	loff_t src_poff;
++	loff_t dest_poff;
++	void *src_addr;
++	void *dest_addr;
++	struct page *src_page;
++	struct page *dest_page;
++	loff_t cmp_len;
++	bool same;
++	int error;
++
++	error = -EINVAL;
++	same = true;
++	while (len) {
++		src_poff = srcoff & (PAGE_SIZE - 1);
++		dest_poff = destoff & (PAGE_SIZE - 1);
++		cmp_len = min(PAGE_SIZE - src_poff,
++			      PAGE_SIZE - dest_poff);
++		cmp_len = min(cmp_len, len);
++		if (cmp_len <= 0)
++			goto out_error;
++
++		src_page = vfs_dedupe_get_page(src, srcoff);
++		if (IS_ERR(src_page)) {
++			error = PTR_ERR(src_page);
++			goto out_error;
++		}
++		dest_page = vfs_dedupe_get_page(dest, destoff);
++		if (IS_ERR(dest_page)) {
++			error = PTR_ERR(dest_page);
++			unlock_page(src_page);
++			put_page(src_page);
++			goto out_error;
++		}
++		src_addr = kmap_atomic(src_page);
++		dest_addr = kmap_atomic(dest_page);
++
++		flush_dcache_page(src_page);
++		flush_dcache_page(dest_page);
++
++		if (memcmp(src_addr + src_poff, dest_addr + dest_poff, cmp_len))
++			same = false;
++
++		kunmap_atomic(dest_addr);
++		kunmap_atomic(src_addr);
++		unlock_page(dest_page);
++		unlock_page(src_page);
++		put_page(dest_page);
++		put_page(src_page);
++
++		if (!same)
++			break;
++
++		srcoff += cmp_len;
++		destoff += cmp_len;
++		len -= cmp_len;
++	}
++
++	*is_same = same;
++	return 0;
++
++out_error:
++	return error;
++}
++
+ /*
+  * Check that the two inodes are eligible for cloning, the ranges make
+  * sense, and then flush all dirty data.  Caller must ensure that the
+@@ -1923,102 +2014,6 @@ loff_t vfs_clone_file_range(struct file *file_in, loff_t pos_in,
+ }
+ EXPORT_SYMBOL(vfs_clone_file_range);
  
+-/*
+- * Read a page's worth of file data into the page cache.  Return the page
+- * locked.
+- */
+-static struct page *vfs_dedupe_get_page(struct inode *inode, loff_t offset)
+-{
+-	struct address_space *mapping;
+-	struct page *page;
+-	pgoff_t n;
+-
+-	n = offset >> PAGE_SHIFT;
+-	mapping = inode->i_mapping;
+-	page = read_mapping_page(mapping, n, NULL);
+-	if (IS_ERR(page))
+-		return page;
+-	if (!PageUptodate(page)) {
+-		put_page(page);
+-		return ERR_PTR(-EIO);
+-	}
+-	lock_page(page);
+-	return page;
+-}
+-
+-/*
+- * Compare extents of two files to see if they are the same.
+- * Caller must have locked both inodes to prevent write races.
+- */
+-int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
+-				  struct inode *dest, loff_t destoff,
+-				  loff_t len, bool *is_same)
+-{
+-	loff_t src_poff;
+-	loff_t dest_poff;
+-	void *src_addr;
+-	void *dest_addr;
+-	struct page *src_page;
+-	struct page *dest_page;
+-	loff_t cmp_len;
+-	bool same;
+-	int error;
+-
+-	error = -EINVAL;
+-	same = true;
+-	while (len) {
+-		src_poff = srcoff & (PAGE_SIZE - 1);
+-		dest_poff = destoff & (PAGE_SIZE - 1);
+-		cmp_len = min(PAGE_SIZE - src_poff,
+-			      PAGE_SIZE - dest_poff);
+-		cmp_len = min(cmp_len, len);
+-		if (cmp_len <= 0)
+-			goto out_error;
+-
+-		src_page = vfs_dedupe_get_page(src, srcoff);
+-		if (IS_ERR(src_page)) {
+-			error = PTR_ERR(src_page);
+-			goto out_error;
+-		}
+-		dest_page = vfs_dedupe_get_page(dest, destoff);
+-		if (IS_ERR(dest_page)) {
+-			error = PTR_ERR(dest_page);
+-			unlock_page(src_page);
+-			put_page(src_page);
+-			goto out_error;
+-		}
+-		src_addr = kmap_atomic(src_page);
+-		dest_addr = kmap_atomic(dest_page);
+-
+-		flush_dcache_page(src_page);
+-		flush_dcache_page(dest_page);
+-
+-		if (memcmp(src_addr + src_poff, dest_addr + dest_poff, cmp_len))
+-			same = false;
+-
+-		kunmap_atomic(dest_addr);
+-		kunmap_atomic(src_addr);
+-		unlock_page(dest_page);
+-		unlock_page(src_page);
+-		put_page(dest_page);
+-		put_page(src_page);
+-
+-		if (!same)
+-			break;
+-
+-		srcoff += cmp_len;
+-		destoff += cmp_len;
+-		len -= cmp_len;
+-	}
+-
+-	*is_same = same;
+-	return 0;
+-
+-out_error:
+-	return error;
+-}
+-EXPORT_SYMBOL(vfs_dedupe_file_range_compare);
+-
+ loff_t vfs_dedupe_file_range_one(struct file *src_file, loff_t src_pos,
+ 				 struct file *dst_file, loff_t dst_pos,
+ 				 loff_t len, unsigned int remap_flags)
 diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 631c28ce1436..c5435ca81132 100644
+index 34c22d695011..346036a84f18 100644
 --- a/include/linux/fs.h
 +++ b/include/linux/fs.h
-@@ -2986,7 +2986,7 @@ extern int generic_file_readonly_mmap(struct file *, struct vm_area_struct *);
- extern ssize_t generic_write_checks(struct kiocb *, struct iov_iter *);
- extern int generic_remap_checks(struct file *file_in, loff_t pos_in,
- 				struct file *file_out, loff_t pos_out,
--				uint64_t *count, bool is_dedupe);
-+				uint64_t *count, unsigned int remap_flags);
- extern ssize_t generic_file_read_iter(struct kiocb *, struct iov_iter *);
- extern ssize_t __generic_file_write_iter(struct kiocb *, struct iov_iter *);
- extern ssize_t generic_file_write_iter(struct kiocb *, struct iov_iter *);
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 84b7301e41a0..410dc58f7b16 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -2994,7 +2994,7 @@ EXPORT_SYMBOL(generic_write_checks);
-  */
- int generic_remap_checks(struct file *file_in, loff_t pos_in,
- 			 struct file *file_out, loff_t pos_out,
--			 uint64_t *req_count, bool is_dedupe)
-+			 uint64_t *req_count, unsigned int remap_flags)
- {
- 	struct inode *inode_in = file_in->f_mapping->host;
- 	struct inode *inode_out = file_out->f_mapping->host;
-@@ -3016,7 +3016,7 @@ int generic_remap_checks(struct file *file_in, loff_t pos_in,
- 	size_out = i_size_read(inode_out);
- 
- 	/* Dedupe requires both ranges to be within EOF. */
--	if (is_dedupe &&
-+	if ((remap_flags & REMAP_FILE_DEDUP) &&
- 	    (pos_in >= size_in || pos_in + count > size_in ||
- 	     pos_out >= size_out || pos_out + count > size_out))
- 		return -EINVAL;
+@@ -1853,9 +1853,6 @@ extern loff_t do_clone_file_range(struct file *file_in, loff_t pos_in,
+ extern loff_t vfs_clone_file_range(struct file *file_in, loff_t pos_in,
+ 				   struct file *file_out, loff_t pos_out,
+ 				   loff_t len, unsigned int remap_flags);
+-extern int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
+-					 struct inode *dest, loff_t destoff,
+-					 loff_t len, bool *is_same);
+ extern int vfs_dedupe_file_range(struct file *file,
+ 				 struct file_dedupe_range *same);
+ extern loff_t vfs_dedupe_file_range_one(struct file *src_file, loff_t src_pos,
