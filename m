@@ -1,51 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:51404 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728545AbeJWASP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 22 Oct 2018 20:18:15 -0400
-Subject: Re: Segmentation fault in xfs_repair
-From: Eric Sandeen <sandeen@sandeen.net>
-References: <CA+MkmrPWg=pD5t-bt8ye36bi8prep+FjM_n-L4XnG-PRJc--7w@mail.gmail.com>
- <1ec797d1-3875-467c-8d46-335a1668fa06@sandeen.net>
-Message-ID: <3078c092-02cb-9c3f-a4b9-e0c4ab822583@sandeen.net>
-Date: Mon, 22 Oct 2018 10:59:08 -0500
+Received: from mail-wr1-f48.google.com ([209.85.221.48]:37785 "EHLO
+        mail-wr1-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728732AbeJWBpy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Oct 2018 21:45:54 -0400
+Received: by mail-wr1-f48.google.com with SMTP id g9-v6so4577767wrq.4
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Oct 2018 10:26:29 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1ec797d1-3875-467c-8d46-335a1668fa06@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+From: Jan Tulak <jtulak@redhat.com>
+Date: Mon, 22 Oct 2018 19:26:17 +0200
+Message-ID: <CACj3i73FyABTkX1eCDvL+ccUhD1kWowS92=PFVyGiPvi6HWGFQ@mail.gmail.com>
+Subject: xfsdump cleaning patchset
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Oleg Davydov <burunduk3@gmail.com>, linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Cc: Eric Sandeen <sandeen@sandeen.net>
+
+Hi guys
+
+I did some xfsdump cleaning where I focused on getting rid of all the
+memory leaks reported by Coverity. There is still a lot of things to
+do for another time: issues by Coverity that were not fixed in this
+set, sprintf -> snprintf because there is a plenty of places for
+buffer overflow, etc...
+
+The set has about 30 patches, so I won't spam the mailing list with
+the first iteration of review and instead, I uploaded it here:
+https://github.com/jtulak/xfsdump/tree/for-review
 
 
+The changes:
 
-On 10/22/18 10:06 AM, Eric Sandeen wrote:
-> On 10/20/18 7:43 AM, Oleg Davydov wrote:
->> I try to repair file system from corrupter drive and this leads to
->> Segmentaion Fault in xfs_repair. You can see some logs here (incl.
->> stack trace from coredump): https://pastebin.com/farKCDRi
->>
->> I tried xfsprogs-4.14.0 (currently installed on my system), custom
->> build from git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git, from
->> master (3caeb69c) and from libxfs-4.19-sync (b5c71bcd), all ended in
->> the same result.
->>
->> Please suggest me how to fix it, how to get some more information
->> about the problem or how can I workaround it. Additional problem is
->> that I can't even mount filesystem now (mount fails with Corruption
->> warning: Metadata has LSN (1674570203:54480) ahead of current LSN
->> (1:8). Please unmount and run xfs_repair (>= v4.3) to resolve.)
-> 
-> If you could provide an xfs_metadump image (compressed) I can take a look
-> at it.  A metadump contains no file data, should obfuscate most metadata,
-> and should zero out unused portions of metadata sectors.  Feel free to
-> provide it off-list for maximum privacy.
-> 
-> I'm actually looking at something right now that may be similar, so
-> you have good timing.
+- Whitespace fixes. After speaking with Eric and because nobody
+touches xfsdump anyway, I run a few sed commands and tried to fix the
+crazy indentation to kernel style. It was an automated replacement, so
+there can be places where it didn't work as intended, but in overall,
+it helps with readability. Other whitespace issues I tackled are
+trailing whitespaces.
 
-got it offline, thanks.
+- A lot of free(ptr) and close(fd). Xfsdump did not clean on errors,
+so most of these are added to return -ERR; statements. These
+after-error leaks were not an issue on itself, but it really polluted
+the Coverity output.
 
--Eric
+- Other changes like dead code removal, null dereference, or
+enlargement of a too small buffer for snprintf.
+
+
+The patches are organised in this way:
+
+- Whitespace issues are in two patches (indentation and trailing spaces).
+- Resource leaks are one patch per file, with Coverity issue IDs (CID)
+mentioned in the commit message for issues reported by the web scan. I
+also used a custom instance of Coverity that reported some other
+leaks, and those do not have any CID. If that seems still too
+cluttered, I can break it to one patch per function, but that might
+produce too many commits with two or three changes.
+- And the remaining changes, like a dead code removal, are one patch
+per issue/CID
+
+
+I tested it as I could, but xfstests coverage is not large and part of
+the tests requires a tape I don't have anyway. I also tested it with
+valgrind to see if any errors got introduced, and from this
+comparison, it came out clean (as much as I can tell when valgrind
+throws 2k errors on me both pre and post patch).
+
+
+Have a look.
+
+Cheers,
+Jan
+--
+Jan Tulak
