@@ -1,61 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35640 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726443AbeJYHls (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 25 Oct 2018 03:41:48 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 28D3E81DFE
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Oct 2018 23:11:47 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id EDE175D9C8
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Oct 2018 23:11:46 +0000 (UTC)
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs_repair: kick processing thread if ra_count is at limit
-Message-ID: <6e32c568-731b-4e19-5e54-5e44aa129f37@redhat.com>
-Date: Wed, 24 Oct 2018 18:11:46 -0500
+Received: from mail-io1-f46.google.com ([209.85.166.46]:35520 "EHLO
+        mail-io1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728517AbeJVU67 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Oct 2018 16:58:59 -0400
+Received: by mail-io1-f46.google.com with SMTP id 79-v6so7102150iou.2
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Oct 2018 05:40:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+From: Mao Cheng <chengmao2010@gmail.com>
+Date: Mon, 22 Oct 2018 20:40:21 +0800
+Message-ID: <CAGiyNfAC9-GkoJ+8w=a4y8bGMuMxFOZfdVAwR12Rx+L3oat3VA@mail.gmail.com>
+Subject: xfs_alloc_vextent_near takes about 30ms to complete.
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-Zorro hit an xfs_repair hang on a 500T filesystem where
-all the prefetch threads were sleeping and nothing progressed.
+we have a XFS mkfs with "-k" and mount with the default options(
+rw,relatime,attr2,inode64,noquota), the size is about 2.2TB=EF=BC=8Cand
+exported via samba.
 
-The problem is that if every buffer we tried to read ahead in
-phase6 was already up to date, pf_start_io_workers has no effect;
-there is no io to do, and the sem_wait in pf_queuing_worker waits
-forever.
+[root@test1 home]# xfs_info /dev/sdk
+meta-data=3D/dev/sdk               isize=3D512    agcount=3D4, agsize=3D131=
+072000 blks
+         =3D                       sectsz=3D4096  attr=3D2, projid32bit=3D1
+         =3D                       crc=3D1        finobt=3D0 spinodes=3D0
+data     =3D                       bsize=3D4096   blocks=3D524288000, imaxp=
+ct=3D5
+         =3D                       sunit=3D0      swidth=3D0 blks
+naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0 ftype=3D1
+log      =3Dinternal               bsize=3D4096   blocks=3D256000, version=
+=3D2
+         =3D                       sectsz=3D4096  sunit=3D1 blks, lazy-coun=
+t=3D1
+realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtextents=3D0
 
-Kick the processing thread to avoid this situation.
+free space about allocation groups:
+   from      to extents  blocks    pct
+      1       1       9       9   0.00
+      2       3   14291   29124   0.19
+      4       7    5689   22981   0.15
+      8      15     119    1422   0.01
+     16      31  754657 15093035  99.65
+     32      63       1      33   0.00
+total free extents 774766
+total free blocks 15146604
+average free extent size 19.5499
+   from      to extents  blocks    pct
+      1       1     253     253   0.00
+      2       3    7706   16266   0.21
+      4       7    7718   30882   0.39
+      8      15      24     296   0.00
+     16      31  381976 7638130  96.71
+     32      63     753   38744   0.49
+ 131072  262143       1  173552   2.20
+total free extents 398431
+total free blocks 7898123
+average free extent size 19.8231
+   from      to extents  blocks    pct
+      1       1     370     370   0.00
+      2       3    2704    5775   0.01
+      4       7    1016    4070   0.01
+      8      15      24     254   0.00
+     16      31  546614 10931743  20.26
+     32      63   19191 1112600   2.06
+     64     127       2     184   0.00
+ 131072  262143       1  163713   0.30
+ 524288 1048575       2 1438626   2.67
+1048576 2097151       4 5654463  10.48
+2097152 4194303       1 3489060   6.47
+4194304 8388607       2 12656637  23.46
+16777216 33554431       1 18502975  34.29
+total free extents 569932
+total free blocks 53960470
+average free extent size 94.6788
+   from      to extents  blocks    pct
+      1       1       8       8   0.00
+      2       3    5566   11229   0.06
+      4       7    9622   38537   0.21
+      8      15      57     686   0.00
+     16      31  747242 14944852  80.31
+     32      63     570   32236   0.17
+2097152 4194303       1 3582074  19.25
+total free extents 763066
+total free blocks 18609622
+average free extent size 24.38
 
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=201173
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+we copy small files(about 150kb) from windows to xfs via SMB protocal,
+sometines  kworker process consumes 100% of one CPU, and "perf top"
+shows xfs_extent_busy_trim and xfs_btree_increment  consume too much
+cpu resources, ftrace show xfs_alloc_vextent_near takes about 30ms to
+complete.
 
-My brains started leaking out debugging this, but it works,
-and it seems harmless. :D  Happy to have review from anyone who groks
-the prefetch thread management better than I do...
+In addition all tests were performed on Centos7.4.
 
-diff --git a/repair/prefetch.c b/repair/prefetch.c
-index 9571b24..1de0e2f 100644
---- a/repair/prefetch.c
-+++ b/repair/prefetch.c
-@@ -768,8 +768,12 @@ pf_queuing_worker(
- 			 * might get stuck on a buffer that has been locked
- 			 * and added to the I/O queue but is waiting for
- 			 * the thread to be woken.
-+			 * Start processing as well, in case everything so
-+			 * far was already prefetched and the queue is empty.
- 			 */
-+			
- 			pf_start_io_workers(args);
-+			pf_start_processing(args);
- 			sem_wait(&args->ra_count);
- 		}
- 
+Any suggestions are welcome.
