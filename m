@@ -1,53 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:42810 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727998AbeJVAe6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 Oct 2018 20:34:58 -0400
-Subject: [PATCH 23/28] xfs: fix pagecache truncation prior to reflink
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sun, 21 Oct 2018 09:17:43 -0700
-Message-ID: <154013866350.29026.11722237862126200267.stgit@magnolia>
-In-Reply-To: <154013850285.29026.16168387526580596209.stgit@magnolia>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:52807 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725884AbeJVK1j (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Oct 2018 06:27:39 -0400
+Date: Mon, 22 Oct 2018 13:11:07 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 24/28] xfs: clean up xfs_reflink_remap_blocks call site
+Message-ID: <20181022021107.GS6311@dastard>
 References: <154013850285.29026.16168387526580596209.stgit@magnolia>
+ <154013867045.29026.12266020817835171751.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <154013867045.29026.12266020817835171751.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, ocfs2-devel@oss.oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Sun, Oct 21, 2018 at 09:17:50AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Move the offset <-> blocks unit conversions into
+> xfs_reflink_remap_blocks to make the call site less ugly.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Prior to remapping blocks, it is necessary to remove pages from the
-destination file's page cache.  Unfortunately, the truncation is not
-aggressive enough -- if page size > block size, we'll end up zeroing
-subpage blocks instead of removing them.  So, round the start offset
-down and the end offset up to page boundaries.  We already wrote all
-the dirty data so the larger range shouldn't be a problem.
+Looks fine.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_reflink.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 9b1ea42c81d1..e8e86646bb4b 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1369,8 +1369,9 @@ xfs_reflink_remap_prep(
- 		goto out_unlock;
- 
- 	/* Zap any page cache for the destination file's range. */
--	truncate_inode_pages_range(&inode_out->i_data, pos_out,
--				   PAGE_ALIGN(pos_out + *len) - 1);
-+	truncate_inode_pages_range(&inode_out->i_data,
-+			round_down(pos_out, PAGE_SIZE),
-+			round_up(pos_out + *len, PAGE_SIZE) - 1);
- 
- 	return 1;
- out_unlock:
+-- 
+Dave Chinner
+david@fromorbit.com
