@@ -1,107 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:45478 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727408AbeJVAck (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 Oct 2018 20:32:40 -0400
-Subject: [PATCH 05/28] vfs: avoid problematic remapping requests into
- partial EOF block
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sun, 21 Oct 2018 09:15:37 -0700
-Message-ID: <154013853780.29026.5441191187672186537.stgit@magnolia>
-In-Reply-To: <154013850285.29026.16168387526580596209.stgit@magnolia>
-References: <154013850285.29026.16168387526580596209.stgit@magnolia>
+Received: from sandeen.net ([63.231.237.45]:45820 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727554AbeJVXZl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 22 Oct 2018 19:25:41 -0400
+Subject: Re: Segmentation fault in xfs_repair
+References: <CA+MkmrPWg=pD5t-bt8ye36bi8prep+FjM_n-L4XnG-PRJc--7w@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <1ec797d1-3875-467c-8d46-335a1668fa06@sandeen.net>
+Date: Mon, 22 Oct 2018 10:06:45 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <CA+MkmrPWg=pD5t-bt8ye36bi8prep+FjM_n-L4XnG-PRJc--7w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, ocfs2-devel@oss.oracle.com
+To: Oleg Davydov <burunduk3@gmail.com>, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 10/20/18 7:43 AM, Oleg Davydov wrote:
+> I try to repair file system from corrupter drive and this leads to
+> Segmentaion Fault in xfs_repair. You can see some logs here (incl.
+> stack trace from coredump): https://pastebin.com/farKCDRi
+> 
+> I tried xfsprogs-4.14.0 (currently installed on my system), custom
+> build from git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git, from
+> master (3caeb69c) and from libxfs-4.19-sync (b5c71bcd), all ended in
+> the same result.
+> 
+> Please suggest me how to fix it, how to get some more information
+> about the problem or how can I workaround it. Additional problem is
+> that I can't even mount filesystem now (mount fails with Corruption
+> warning: Metadata has LSN (1674570203:54480) ahead of current LSN
+> (1:8). Please unmount and run xfs_repair (>= v4.3) to resolve.)
 
-A deduplication data corruption is exposed in XFS and btrfs. It is
-caused by extending the block match range to include the partial EOF
-block, but then allowing unknown data beyond EOF to be considered a
-"match" to data in the destination file because the comparison is only
-made to the end of the source file. This corrupts the destination file
-when the source extent is shared with it.
+If you could provide an xfs_metadump image (compressed) I can take a look
+at it.  A metadump contains no file data, should obfuscate most metadata,
+and should zero out unused portions of metadata sectors.  Feel free to
+provide it off-list for maximum privacy.
 
-The VFS remapping prep functions  only support whole block dedupe, but
-we still need to appear to support whole file dedupe correctly.  Hence
-if the dedupe request includes the last block of the souce file, don't
-include it in the actual dedupe operation. If the rest of the range
-dedupes successfully, then reject the entire request.  A subsequent
-patch will enable us to shorten dedupe requests correctly.
+I'm actually looking at something right now that may be similar, so
+you have good timing.
 
-When reflinking sub-file ranges, a data corruption can occur when the
-source file range includes a partial EOF block. This shares the unknown
-data beyond EOF into the second file at a position inside EOF, exposing
-stale data in the second file.
-
-If the reflink request includes the last block of the souce file, only
-proceed with the reflink operation if it lands at or past the
-destination file's current EOF. If it lands within the destination file
-EOF, reject the entire request with -EINVAL and make the caller go the
-hard way.  A subsequent patch will enable us to shorten reflink requests
-correctly.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/read_write.c |   33 +++++++++++++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
-
-
-diff --git a/fs/read_write.c b/fs/read_write.c
-index 2456da3f8a41..0f0a6efdd502 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -1708,6 +1708,34 @@ static int clone_verify_area(struct file *file, loff_t pos, u64 len, bool write)
- 
- 	return security_file_permission(file, write ? MAY_WRITE : MAY_READ);
- }
-+/*
-+ * Ensure that we don't remap a partial EOF block in the middle of something
-+ * else.  Assume that the offsets have already been checked for block
-+ * alignment.
-+ *
-+ * For deduplication we always scale down to the previous block because we
-+ * can't meaningfully compare post-EOF contents.
-+ *
-+ * For clone we only link a partial EOF block above the destination file's EOF.
-+ */
-+static int generic_remap_check_len(struct inode *inode_in,
-+				   struct inode *inode_out,
-+				   loff_t pos_out,
-+				   u64 *len,
-+				   bool is_dedupe)
-+{
-+	u64 blkmask = i_blocksize(inode_in) - 1;
-+
-+	if ((*len & blkmask) == 0)
-+		return 0;
-+
-+	if (is_dedupe)
-+		*len &= ~blkmask;
-+	else if (pos_out + *len < i_size_read(inode_out))
-+		return -EINVAL;
-+
-+	return 0;
-+}
- 
- /*
-  * Check that the two inodes are eligible for cloning, the ranges make
-@@ -1787,6 +1815,11 @@ int vfs_clone_file_prep(struct file *file_in, loff_t pos_in,
- 			return -EBADE;
- 	}
- 
-+	ret = generic_remap_check_len(inode_in, inode_out, pos_out, len,
-+			is_dedupe);
-+	if (ret)
-+		return ret;
-+
- 	return 1;
- }
- EXPORT_SYMBOL(vfs_clone_file_prep);
+Thanks,
+-Eric
