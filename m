@@ -1,46 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:45820 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727554AbeJVXZl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 22 Oct 2018 19:25:41 -0400
-Subject: Re: Segmentation fault in xfs_repair
-References: <CA+MkmrPWg=pD5t-bt8ye36bi8prep+FjM_n-L4XnG-PRJc--7w@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <1ec797d1-3875-467c-8d46-335a1668fa06@sandeen.net>
-Date: Mon, 22 Oct 2018 10:06:45 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:53428 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727330AbeJWCCp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Oct 2018 22:02:45 -0400
+Date: Mon, 22 Oct 2018 10:43:16 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: xfsdump cleaning patchset
+Message-ID: <20181022174316.GA28561@infradead.org>
+References: <CACj3i73FyABTkX1eCDvL+ccUhD1kWowS92=PFVyGiPvi6HWGFQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CA+MkmrPWg=pD5t-bt8ye36bi8prep+FjM_n-L4XnG-PRJc--7w@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CACj3i73FyABTkX1eCDvL+ccUhD1kWowS92=PFVyGiPvi6HWGFQ@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Oleg Davydov <burunduk3@gmail.com>, linux-xfs@vger.kernel.org
+To: Jan Tulak <jtulak@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
 
-On 10/20/18 7:43 AM, Oleg Davydov wrote:
-> I try to repair file system from corrupter drive and this leads to
-> Segmentaion Fault in xfs_repair. You can see some logs here (incl.
-> stack trace from coredump): https://pastebin.com/farKCDRi
+On Mon, Oct 22, 2018 at 07:26:17PM +0200, Jan Tulak wrote:
+> Hi guys
 > 
-> I tried xfsprogs-4.14.0 (currently installed on my system), custom
-> build from git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git, from
-> master (3caeb69c) and from libxfs-4.19-sync (b5c71bcd), all ended in
-> the same result.
+> I did some xfsdump cleaning where I focused on getting rid of all the
+> memory leaks reported by Coverity. There is still a lot of things to
+> do for another time: issues by Coverity that were not fixed in this
+> set, sprintf -> snprintf because there is a plenty of places for
+> buffer overflow, etc...
 > 
-> Please suggest me how to fix it, how to get some more information
-> about the problem or how can I workaround it. Additional problem is
-> that I can't even mount filesystem now (mount fails with Corruption
-> warning: Metadata has LSN (1674570203:54480) ahead of current LSN
-> (1:8). Please unmount and run xfs_repair (>= v4.3) to resolve.)
+> The set has about 30 patches, so I won't spam the mailing list with
+> the first iteration of review and instead, I uploaded it here:
+> https://github.com/jtulak/xfsdump/tree/for-review
 
-If you could provide an xfs_metadump image (compressed) I can take a look
-at it.  A metadump contains no file data, should obfuscate most metadata,
-and should zero out unused portions of metadata sectors.  Feel free to
-provide it off-list for maximum privacy.
-
-I'm actually looking at something right now that may be similar, so
-you have good timing.
-
-Thanks,
--Eric
+Please send an actual patch series, github is completely unusable
+for reviews..
