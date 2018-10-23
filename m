@@ -1,230 +1,133 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:37320 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727758AbeJXANW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Oct 2018 20:13:22 -0400
-Date: Tue, 23 Oct 2018 08:49:22 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2] xfs_metadump: Zap more stale data
-Message-ID: <20181023154922.GC28243@magnolia>
-References: <20181011194424.20306-1-stefanrin@gmail.com>
- <20181011194424.20306-3-stefanrin@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:52814 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726277AbeJWXR2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 23 Oct 2018 19:17:28 -0400
+Date: Tue, 23 Oct 2018 10:53:40 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: xfs_alloc_ag_vextent_near() takes about 30ms to complete
+Message-ID: <20181023145339.GA7537@bfoster>
+References: <CAGiyNfAUewzAjASPBccOk91PJ+nLS0nF4U3EvO4n59XsYu5P-w@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20181011194424.20306-3-stefanrin@gmail.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAGiyNfAUewzAjASPBccOk91PJ+nLS0nF4U3EvO4n59XsYu5P-w@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Stefan Ring <stefanrin@gmail.com>
+To: Mao Cheng <chengmao2010@gmail.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Oct 11, 2018 at 09:44:24PM +0200, Stefan Ring wrote:
-> I have empirically found and tried to fix some places where stale data was not
-> properly zeroed out.
+On Tue, Oct 23, 2018 at 03:56:51PM +0800, Mao Cheng wrote:
+> Sorry for trouble again. I just wrote wrong function name in previous
+> sending, so resend it.
+> If you have received previous email please ignore it, thanks
 > 
-> In the order of the code changes:
+> we have a XFS mkfs with "-k" and mount with the default options(
+> rw,relatime,attr2,inode64,noquota), the size is about 2.2TB，and
+> exported via samba.
 > 
-> - The "freeindex" blocks in inode directories, from last entry to end of block.
-> - XFS_DIR{2,3}_LEAFN_MAGIC, from last entry to end of block.
-> - In btree format inodes before as well as after the btree pointers.
-> - In dev inodes, everything after the header.
-> ---
->  db/metadump.c | 106 +++++++++++++++++++++++++++++++++++++++++++++++++++++-----
->  1 file changed, 98 insertions(+), 8 deletions(-)
+> [root@test1 home]# xfs_info /dev/sdk
+> meta-data=/dev/sdk               isize=512    agcount=4, agsize=131072000 blks
+>          =                       sectsz=4096  attr=2, projid32bit=1
+>          =                       crc=1        finobt=0 spinodes=0
+> data     =                       bsize=4096   blocks=524288000, imaxpct=5
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+> log      =internal               bsize=4096   blocks=256000, version=2
+>          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
 > 
-> diff --git a/db/metadump.c b/db/metadump.c
-> index ff96860d..c8213d41 100644
-> --- a/db/metadump.c
-> +++ b/db/metadump.c
-> @@ -1421,12 +1421,49 @@ process_sf_attr(
->  		memset(asfep, 0, XFS_DFORK_ASIZE(dip, mp) - ino_attr_size);
->  }
->  
-> +static void
-> +process_dir_free_block(
-
-I think patch 1 references this function in patch 2?
-
-> +	char				*block)
-> +{
-> +	struct xfs_dir2_free		*free;
-> +	struct xfs_dir3_icfree_hdr	freehdr;
-> +
-> +	if (!zero_stale_data)
-> +		return;
-> +
-> +	free = (struct xfs_dir2_free *)block;
-> +	M_DIROPS(mp)->free_hdr_from_disk(&freehdr, free);
-> +
-> +	switch (freehdr.magic) {
-> +	case XFS_DIR2_FREE_MAGIC:
-> +	case XFS_DIR3_FREE_MAGIC: {
-> +		__be16			*bests;
-> +		char			*high;
-> +		int			used;
-> +
-> +		/* Zero out space from end of bests[] to end of block */
-> +		bests = M_DIROPS(mp)->free_bests_p(free);
-> +		high = (char *)&bests[freehdr.nvalid];
-> +		used = high - (char*)free;
-> +		memset(high, 0, mp->m_dir_geo->blksize - used);
-> +		iocur_top->need_crc = 1;
-> +		break;
-> +	}
-> +	default:
-> +		if (show_warnings)
-> +			print_warning("invalid magic in dir inode %llu "
-> +				      "free block",
-> +				      (unsigned long long)cur_ino);
-> +		break;
-> +	}
-> +}
-> +
->  static void
->  process_dir_leaf_block(
->  	char				*block)
->  {
->  	struct xfs_dir2_leaf		*leaf;
-> -	struct xfs_dir3_icleaf_hdr 	leafhdr;
-> +	struct xfs_dir3_icleaf_hdr	leafhdr;
->  
->  	if (!zero_stale_data)
->  		return;
-> @@ -1435,20 +1472,39 @@ process_dir_leaf_block(
->  	leaf = (struct xfs_dir2_leaf *)block;
->  	M_DIROPS(mp)->leaf_hdr_from_disk(&leafhdr, leaf);
->  
-> -	/* Zero out space from end of ents[] to bests */
-> -	if (leafhdr.magic == XFS_DIR2_LEAF1_MAGIC ||
-> -	    leafhdr.magic == XFS_DIR3_LEAF1_MAGIC) {
-> +	switch (leafhdr.magic) {
-> +	case XFS_DIR2_LEAF1_MAGIC:
-> +	case XFS_DIR3_LEAF1_MAGIC: {
->  		struct xfs_dir2_leaf_tail	*ltp;
->  		__be16				*lbp;
->  		struct xfs_dir2_leaf_entry	*ents;
->  		char				*free; /* end of ents */
->  
-> +		/* Zero out space from end of ents[] to bests */
->  		ents = M_DIROPS(mp)->leaf_ents_p(leaf);
->  		free = (char *)&ents[leafhdr.count];
->  		ltp = xfs_dir2_leaf_tail_p(mp->m_dir_geo, leaf);
->  		lbp = xfs_dir2_leaf_bests_p(ltp);
->  		memset(free, 0, (char *)lbp - free);
->  		iocur_top->need_crc = 1;
-> +		break;
-> +	}
-> +	case XFS_DIR2_LEAFN_MAGIC:
-> +	case XFS_DIR3_LEAFN_MAGIC: {
-> +		struct xfs_dir2_leaf_entry	*ents;
-> +		char				*free;
-> +		int				used;
-> +
-> +		/* Zero out space from end of ents[] to end of block */
-> +		ents = M_DIROPS(mp)->leaf_ents_p(leaf);
-> +		free = (char *)&ents[leafhdr.count];
-> +		used = free - (char*)leaf;
-> +		memset(free, 0, mp->m_dir_geo->blksize - used);
-> +		iocur_top->need_crc = 1;
-> +		break;
-> +	}
-> +	default:
-> +		break;
->  	}
->  }
->  
-> @@ -1499,7 +1555,7 @@ process_dir_data_block(
->  		if (show_warnings)
->  			print_warning(
->  		"invalid magic in dir inode %llu block %ld",
-> -					(long long)cur_ino, (long)offset);
-> +					(unsigned long long)cur_ino, (long)offset);
->  		return;
->  	}
->  
-> @@ -1813,8 +1869,7 @@ process_single_fsb_objects(
->  		switch (btype) {
->  		case TYP_DIR2:
->  			if (o >= mp->m_dir_geo->freeblk) {
-> -				/* TODO, zap any stale data */
-> -				break;
-> +				process_dir_free_block(dp);
->  			} else if (o >= mp->m_dir_geo->leafblk) {
->  				process_dir_leaf_block(dp);
->  			} else {
-> @@ -2118,6 +2173,21 @@ process_btinode(
->  	}
->  
->  	pp = XFS_BMDR_PTR_ADDR(dib, 1, maxrecs);
-> +
-> +	if (zero_stale_data) {
-> +		char	*top;
-> +		int	used;
-> +
-> +		/* Space before btree pointers */
-> +		top = (char*)XFS_BMDR_PTR_ADDR(dib, 1, nrecs);
-> +		memset(top, 0, (char*)pp - top);
-> +
-> +		/* Space after btree pointers */
-> +		top = (char*)&pp[nrecs];
-> +		used = top - (char*)dip;
-> +		memset(top, 0, mp->m_sb.sb_inodesize - used);
-
-Er... this zaps everything past the end of the bmbt pointers, which
-means that this can zero the attr fork root.
-
-> +	}
-> +
->  	for (i = 0; i < nrecs; i++) {
->  		xfs_agnumber_t	ag;
->  		xfs_agblock_t	bno;
-> @@ -2201,6 +2271,24 @@ process_inode_data(
->  	return 1;
->  }
->  
-> +static int
-> +process_dev_inode(
-> +	xfs_dinode_t		*dip)
-> +{
-> +	if (XFS_DFORK_NEXTENTS(dip, XFS_ATTR_FORK) ||
-> +	    XFS_DFORK_NEXTENTS(dip, XFS_DATA_FORK)) {
-> +		if (show_warnings)
-> +			print_warning("inode %llu has unexpected extents",
-> +				      (unsigned long long)cur_ino);
-> +		return 0;
-> +	} else {
-
-No need for else here.
-
-> +		int used = XFS_DFORK_DPTR(dip) - (char*)dip;
-> +
-> +		memset(XFS_DFORK_DPTR(dip), 0, mp->m_sb.sb_inodesize - used);
-
-This zeroes both data fork and attr fork roots for fifo and device
-inodes.  Wouldn't we want to preserve the device number information?
-And whatever attrs are attached to the inode, if any?
-
---D
-
-> +		return 1;
-> +	}
-> +}
-> +
->  /*
->   * when we process the inode, we may change the data in the data and/or
->   * attribute fork if they are in short form and we are obfuscating names.
-> @@ -2253,7 +2341,9 @@ process_inode(
->  		case S_IFREG:
->  			success = process_inode_data(dip, TYP_DATA);
->  			break;
-> -		default: ;
-> +		default:
-> +			success = process_dev_inode(dip);
-> +			break;
->  	}
->  	nametable_clear();
->  
-> -- 
-> 2.14.4
+> free space about allocation groups:
+>    from      to extents  blocks    pct
+>       1       1       9       9   0.00
+>       2       3   14291   29124   0.19
+>       4       7    5689   22981   0.15
+>       8      15     119    1422   0.01
+>      16      31  754657 15093035  99.65
+>      32      63       1      33   0.00
+> total free extents 774766
+> total free blocks 15146604
+> average free extent size 19.5499
+>    from      to extents  blocks    pct
+>       1       1     253     253   0.00
+>       2       3    7706   16266   0.21
+>       4       7    7718   30882   0.39
+>       8      15      24     296   0.00
+>      16      31  381976 7638130  96.71
+>      32      63     753   38744   0.49
+>  131072  262143       1  173552   2.20
+> total free extents 398431
+> total free blocks 7898123
+> average free extent size 19.8231
+>    from      to extents  blocks    pct
+>       1       1     370     370   0.00
+>       2       3    2704    5775   0.01
+>       4       7    1016    4070   0.01
+>       8      15      24     254   0.00
+>      16      31  546614 10931743  20.26
+>      32      63   19191 1112600   2.06
+>      64     127       2     184   0.00
+>  131072  262143       1  163713   0.30
+>  524288 1048575       2 1438626   2.67
+> 1048576 2097151       4 5654463  10.48
+> 2097152 4194303       1 3489060   6.47
+> 4194304 8388607       2 12656637  23.46
+> 16777216 33554431       1 18502975  34.29
+> total free extents 569932
+> total free blocks 53960470
+> average free extent size 94.6788
+>    from      to extents  blocks    pct
+>       1       1       8       8   0.00
+>       2       3    5566   11229   0.06
+>       4       7    9622   38537   0.21
+>       8      15      57     686   0.00
+>      16      31  747242 14944852  80.31
+>      32      63     570   32236   0.17
+> 2097152 4194303       1 3582074  19.25
+> total free extents 763066
+> total free blocks 18609622
+> average free extent size 24.38
 > 
+
+So it looks like free space in 3 out of 4 AGs is mostly fragmented to
+16-31 block extents. Those same AGs appear to have a much higher number
+(~15k-20k) of even smaller extents.
+
+> we copy small files(about 150kb) from windows to xfs via SMB protocal,
+> sometines  kworker process consumes 100% of one CPU, and "perf top"
+> shows xfs_extent_busy_trim() and xfs_btree_increment()  consume too much
+> cpu resources, ftrace also show xfs_alloc_ag_vextent_near takes about 30ms to
+> complete.
+> 
+
+This is kind of a vague performance report. Some process consumes a full
+CPU and this is a problem for some (??) reason given unknown CPU and
+unknown storage (with unknown amount of RAM). I assume that kworker task
+is writeback, but you haven't really specified that either.
+
+xfs_alloc_ag_vextent_near() is one of the several block allocation
+algorithms in XFS. That function itself includes a couple different
+algorithms for the "near" allocation based on the state of the AG. One
+looks like an intra-block search of the by-size free space btree (if not
+many suitably sized extents are available) and the second looks like an
+outward sweep of the by-block free space btree to find a suitably sized
+extent. I could certainly see the latter taking some time for certain
+sized allocation requests under fragmented free space conditions. If you
+wanted more detail over what's going on here, I'd suggest to capture a
+sample of the xfs_alloc* (and perhaps xfs_extent_busy*) tracepoints
+during the workload.
+
+That aside, it's probably best to step back and describe for the list
+the overall environment, workload and performance problem you observed
+that caused this level of digging in the first place. For example, has
+throughput degraded over time? Latency increased? How many writers are
+active at once? Is preallocation involved (I thought Samba/Windows
+triggered it certain cases, but I don't recall)?
+
+Brian
+
+> In addition all tests were performed on Centos7.4(3.10.0-693.el7.x86_64).
+> 
+> Any suggestions are welcome.
