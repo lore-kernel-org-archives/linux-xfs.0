@@ -1,56 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49900 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:51022 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726297AbeJYGuC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 25 Oct 2018 02:50:02 -0400
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 0FF81C0293BE
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Oct 2018 22:20:10 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id CA3E410018F9
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Oct 2018 22:20:09 +0000 (UTC)
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs_db: print freecount in xfs_inobt_rec as unsigned
-Message-ID: <3fb12611-2ce0-7e8d-0c65-dcbddf5e55b7@redhat.com>
-Date: Wed, 24 Oct 2018 17:20:08 -0500
+        id S1726953AbeJWWUj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 23 Oct 2018 18:20:39 -0400
+Subject: [PATCH 2/2 V2] xfs_repair: continue after xfs_bunmapi deadlock
+ avoidance
+From: Eric Sandeen <sandeen@sandeen.net>
+References: <9070c949-2720-75ea-01c3-74261bf62f87@sandeen.net>
+ <18102abe-0101-bd08-dc5b-2f288dc0d8d3@sandeen.net>
+Message-ID: <7dbb215e-761d-8a9e-87e8-e285e551b64b@sandeen.net>
+Date: Tue, 23 Oct 2018 08:57:03 -0500
 MIME-Version: 1.0
+In-Reply-To: <18102abe-0101-bd08-dc5b-2f288dc0d8d3@sandeen.net>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs <linux-xfs@vger.kernel.org>
+Cc: Tomasz Torcz <tomek@pipebreaker.pl>
 
-"freecount" in the xfs_inobt_rec is unsigned, so xfs_db should
-print it as such.
+xfs_bunmapi can legitimately return before all work is done, to
+avoid deadlocks across AGs.
 
-Not doing so tickles a bug in getbitval() where we try to handle
-sign extension for signed fields and fail badly on big endian
-machines, causing us to incorrectly report negative numbers when
-printing structures even when the number is nowhere near the
-signed maximum value.
+Sadly nobody told xfs_repair, so it fires an assert if this happens:
 
-So this fix works around that bug by properly marking this field
-as unsigned, because I have yet to convince myself of the proper
-fix for the underlying bug.
+ phase6.c:1410: longform_dir2_rebuild: Assertion `done' failed. 
 
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=201453
+Fix this by calling back in until all work is done, as we do
+in the kernel.
+
+Fixes: 5a8bcc ("xfs: fix multi-AG deadlock in xfs_bunmapi")
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1641116
+Reported-by: Tomasz Torcz <tomek@pipebreaker.pl>
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
-diff --git a/db/btblock.c b/db/btblock.c
-index cbd2990..5a5b061 100644
---- a/db/btblock.c
-+++ b/db/btblock.c
-@@ -513,7 +513,7 @@ const field_t	inobt_sprec_flds[] = {
- 	{ "holemask", FLDT_UINT16X, OI(ROFF(ir_u.sp.ir_holemask)), C1, 0,
- 	  TYP_NONE },
- 	{ "count", FLDT_UINT8D, OI(ROFF(ir_u.sp.ir_count)), C1, 0, TYP_NONE },
--	{ "freecount", FLDT_INT8D, OI(ROFF(ir_u.sp.ir_freecount)), C1, 0,
-+	{ "freecount", FLDT_UINT8D, OI(ROFF(ir_u.sp.ir_freecount)), C1, 0,
- 	  TYP_NONE },
- 	{ "free", FLDT_INOFREE, OI(ROFF(ir_free)), C1, 0, TYP_NONE },
- 	{ NULL }
+V2: libxfs-ify the code, remove now-pointless assert, thanks Darrick!
+
+
+diff --git a/repair/phase6.c b/repair/phase6.c
+index e017326..bdbbbaa 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -1317,7 +1317,7 @@ longform_dir2_rebuild(
+ 	xfs_fileoff_t		lastblock;
+ 	xfs_inode_t		pip;
+ 	dir_hash_ent_t		*p;
+-	int			done;
++	int			done = 0;
+ 
+ 	/*
+ 	 * trash directory completely and rebuild from scratch using the
+@@ -1352,14 +1352,25 @@ longform_dir2_rebuild(
+ 			error);
+ 
+ 	/* free all data, leaf, node and freespace blocks */
+-	error = -libxfs_bunmapi(tp, ip, 0, lastblock, XFS_BMAPI_METADATA, 0,
+-				&done);
+-	if (error) {
+-		do_warn(_("xfs_bunmapi failed -- error - %d\n"), error);
+-		goto out_bmap_cancel;
+-	}
+-
+-	ASSERT(done);
++	while (!done) {
++	       error = -libxfs_bunmapi(tp, ip, 0, lastblock, XFS_BMAPI_METADATA,
++			               0, &done);
++	       if (error) {
++		       do_warn(_("xfs_bunmapi failed -- error - %d\n"), error);
++		       goto out_bmap_cancel;
++	       }
++	       error = -libxfs_defer_finish(&tp);
++	       if (error) {
++		       do_warn(("defer_finish failed -- error - %d\n"), error);
++		       goto out_bmap_cancel;
++	       }
++	       /*
++		* Close out trans and start the next one in the chain.
++		*/
++	       error = -libxfs_trans_roll_inode(&tp, ip);
++	       if (error)
++			goto out_bmap_cancel;
++        }
+ 
+ 	error = -libxfs_dir_init(tp, ip, &pip);
+ 	if (error) {
