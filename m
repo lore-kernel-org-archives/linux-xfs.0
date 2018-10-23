@@ -1,451 +1,230 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:27343 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725829AbeJYH13 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Oct 2018 03:27:29 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1gFS5W-0006J5-W2
-        for linux-xfs@vger.kernel.org; Thu, 25 Oct 2018 09:57:19 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.91)
-        (envelope-from <david@fromorbit.com>)
-        id 1gFS5W-0005D5-Um
-        for linux-xfs@vger.kernel.org; Thu, 25 Oct 2018 09:57:18 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/5] xfs: factor data block addition from xfs_dir2_node_addname_int()
-Date: Thu, 25 Oct 2018 09:57:13 +1100
-Message-Id: <20181024225716.19459-3-david@fromorbit.com>
-In-Reply-To: <20181024225716.19459-1-david@fromorbit.com>
-References: <20181024225716.19459-1-david@fromorbit.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:37320 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727758AbeJXANW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Oct 2018 20:13:22 -0400
+Date: Tue, 23 Oct 2018 08:49:22 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/2] xfs_metadump: Zap more stale data
+Message-ID: <20181023154922.GC28243@magnolia>
+References: <20181011194424.20306-1-stefanrin@gmail.com>
+ <20181011194424.20306-3-stefanrin@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181011194424.20306-3-stefanrin@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Stefan Ring <stefanrin@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Thu, Oct 11, 2018 at 09:44:24PM +0200, Stefan Ring wrote:
+> I have empirically found and tried to fix some places where stale data was not
+> properly zeroed out.
+> 
+> In the order of the code changes:
+> 
+> - The "freeindex" blocks in inode directories, from last entry to end of block.
+> - XFS_DIR{2,3}_LEAFN_MAGIC, from last entry to end of block.
+> - In btree format inodes before as well as after the btree pointers.
+> - In dev inodes, everything after the header.
+> ---
+>  db/metadump.c | 106 +++++++++++++++++++++++++++++++++++++++++++++++++++++-----
+>  1 file changed, 98 insertions(+), 8 deletions(-)
+> 
+> diff --git a/db/metadump.c b/db/metadump.c
+> index ff96860d..c8213d41 100644
+> --- a/db/metadump.c
+> +++ b/db/metadump.c
+> @@ -1421,12 +1421,49 @@ process_sf_attr(
+>  		memset(asfep, 0, XFS_DFORK_ASIZE(dip, mp) - ino_attr_size);
+>  }
+>  
+> +static void
+> +process_dir_free_block(
 
-Factor out the code that adds a data block to a directory from
-xfs_dir2_node_addname_int(). This makes the code flow cleaner and
-more obvious and provides clear isolation of upcoming optimsations.
+I think patch 1 references this function in patch 2?
 
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/libxfs/xfs_dir2_node.c | 328 +++++++++++++++++-----------------
- 1 file changed, 162 insertions(+), 166 deletions(-)
+> +	char				*block)
+> +{
+> +	struct xfs_dir2_free		*free;
+> +	struct xfs_dir3_icfree_hdr	freehdr;
+> +
+> +	if (!zero_stale_data)
+> +		return;
+> +
+> +	free = (struct xfs_dir2_free *)block;
+> +	M_DIROPS(mp)->free_hdr_from_disk(&freehdr, free);
+> +
+> +	switch (freehdr.magic) {
+> +	case XFS_DIR2_FREE_MAGIC:
+> +	case XFS_DIR3_FREE_MAGIC: {
+> +		__be16			*bests;
+> +		char			*high;
+> +		int			used;
+> +
+> +		/* Zero out space from end of bests[] to end of block */
+> +		bests = M_DIROPS(mp)->free_bests_p(free);
+> +		high = (char *)&bests[freehdr.nvalid];
+> +		used = high - (char*)free;
+> +		memset(high, 0, mp->m_dir_geo->blksize - used);
+> +		iocur_top->need_crc = 1;
+> +		break;
+> +	}
+> +	default:
+> +		if (show_warnings)
+> +			print_warning("invalid magic in dir inode %llu "
+> +				      "free block",
+> +				      (unsigned long long)cur_ino);
+> +		break;
+> +	}
+> +}
+> +
+>  static void
+>  process_dir_leaf_block(
+>  	char				*block)
+>  {
+>  	struct xfs_dir2_leaf		*leaf;
+> -	struct xfs_dir3_icleaf_hdr 	leafhdr;
+> +	struct xfs_dir3_icleaf_hdr	leafhdr;
+>  
+>  	if (!zero_stale_data)
+>  		return;
+> @@ -1435,20 +1472,39 @@ process_dir_leaf_block(
+>  	leaf = (struct xfs_dir2_leaf *)block;
+>  	M_DIROPS(mp)->leaf_hdr_from_disk(&leafhdr, leaf);
+>  
+> -	/* Zero out space from end of ents[] to bests */
+> -	if (leafhdr.magic == XFS_DIR2_LEAF1_MAGIC ||
+> -	    leafhdr.magic == XFS_DIR3_LEAF1_MAGIC) {
+> +	switch (leafhdr.magic) {
+> +	case XFS_DIR2_LEAF1_MAGIC:
+> +	case XFS_DIR3_LEAF1_MAGIC: {
+>  		struct xfs_dir2_leaf_tail	*ltp;
+>  		__be16				*lbp;
+>  		struct xfs_dir2_leaf_entry	*ents;
+>  		char				*free; /* end of ents */
+>  
+> +		/* Zero out space from end of ents[] to bests */
+>  		ents = M_DIROPS(mp)->leaf_ents_p(leaf);
+>  		free = (char *)&ents[leafhdr.count];
+>  		ltp = xfs_dir2_leaf_tail_p(mp->m_dir_geo, leaf);
+>  		lbp = xfs_dir2_leaf_bests_p(ltp);
+>  		memset(free, 0, (char *)lbp - free);
+>  		iocur_top->need_crc = 1;
+> +		break;
+> +	}
+> +	case XFS_DIR2_LEAFN_MAGIC:
+> +	case XFS_DIR3_LEAFN_MAGIC: {
+> +		struct xfs_dir2_leaf_entry	*ents;
+> +		char				*free;
+> +		int				used;
+> +
+> +		/* Zero out space from end of ents[] to end of block */
+> +		ents = M_DIROPS(mp)->leaf_ents_p(leaf);
+> +		free = (char *)&ents[leafhdr.count];
+> +		used = free - (char*)leaf;
+> +		memset(free, 0, mp->m_dir_geo->blksize - used);
+> +		iocur_top->need_crc = 1;
+> +		break;
+> +	}
+> +	default:
+> +		break;
+>  	}
+>  }
+>  
+> @@ -1499,7 +1555,7 @@ process_dir_data_block(
+>  		if (show_warnings)
+>  			print_warning(
+>  		"invalid magic in dir inode %llu block %ld",
+> -					(long long)cur_ino, (long)offset);
+> +					(unsigned long long)cur_ino, (long)offset);
+>  		return;
+>  	}
+>  
+> @@ -1813,8 +1869,7 @@ process_single_fsb_objects(
+>  		switch (btype) {
+>  		case TYP_DIR2:
+>  			if (o >= mp->m_dir_geo->freeblk) {
+> -				/* TODO, zap any stale data */
+> -				break;
+> +				process_dir_free_block(dp);
+>  			} else if (o >= mp->m_dir_geo->leafblk) {
+>  				process_dir_leaf_block(dp);
+>  			} else {
+> @@ -2118,6 +2173,21 @@ process_btinode(
+>  	}
+>  
+>  	pp = XFS_BMDR_PTR_ADDR(dib, 1, maxrecs);
+> +
+> +	if (zero_stale_data) {
+> +		char	*top;
+> +		int	used;
+> +
+> +		/* Space before btree pointers */
+> +		top = (char*)XFS_BMDR_PTR_ADDR(dib, 1, nrecs);
+> +		memset(top, 0, (char*)pp - top);
+> +
+> +		/* Space after btree pointers */
+> +		top = (char*)&pp[nrecs];
+> +		used = top - (char*)dip;
+> +		memset(top, 0, mp->m_sb.sb_inodesize - used);
 
-diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-index 3661988906b0..7c674c55e004 100644
---- a/fs/xfs/libxfs/xfs_dir2_node.c
-+++ b/fs/xfs/libxfs/xfs_dir2_node.c
-@@ -1611,6 +1611,130 @@ xfs_dir2_leafn_unbalance(
- 	xfs_dir3_leaf_check(dp, drop_blk->bp);
- }
- 
-+/*
-+ * Add a new data block to the directory at the free space index that the caller
-+ * has specified.
-+ */
-+static int
-+xfs_dir2_node_add_datablk(
-+	struct xfs_da_args	*args,
-+	struct xfs_da_state_blk	*fblk,
-+	xfs_dir2_db_t		*dbno,
-+	struct xfs_buf		**dbpp,
-+	struct xfs_buf		**fbpp,
-+	int			*findex)
-+{
-+	struct xfs_inode	*dp = args->dp;
-+	struct xfs_trans	*tp = args->trans;
-+	struct xfs_mount	*mp = dp->i_mount;
-+	struct xfs_dir3_icfree_hdr freehdr;
-+	struct xfs_dir2_data_free *bf;
-+	struct xfs_dir2_data_hdr *hdr;
-+	struct xfs_dir2_free	*free = NULL;
-+	xfs_dir2_db_t		fbno;
-+	struct xfs_buf		*fbp;
-+	struct xfs_buf		*dbp;
-+	__be16			*bests = NULL;
-+	int			error;
-+
-+	/* Not allowed to allocate, return failure. */
-+	if ((args->op_flags & XFS_DA_OP_JUSTCHECK) || args->total == 0)
-+		return -ENOSPC;
-+
-+	/* Allocate and initialize the new data block.  */
-+	error = xfs_dir2_grow_inode(args, XFS_DIR2_DATA_SPACE, dbno);
-+	if (error)
-+		return error;
-+	error = xfs_dir3_data_init(args, *dbno, &dbp);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * Get the freespace block corresponding to the data block
-+	 * that was just allocated.
-+	 */
-+	fbno = dp->d_ops->db_to_fdb(args->geo, *dbno);
-+	error = xfs_dir2_free_try_read(tp, dp,
-+			       xfs_dir2_db_to_da(args->geo, fbno), &fbp);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * If there wasn't a freespace block, the read will
-+	 * return a NULL fbp.  Allocate and initialize a new one.
-+	 */
-+	if (!fbp) {
-+		error = xfs_dir2_grow_inode(args, XFS_DIR2_FREE_SPACE, &fbno);
-+		if (error)
-+			return error;
-+
-+		if (dp->d_ops->db_to_fdb(args->geo, *dbno) != fbno) {
-+			xfs_alert(mp,
-+"%s: dir ino %llu needed freesp block %lld for data block %lld, got %lld",
-+				__func__, (unsigned long long)dp->i_ino,
-+				(long long)dp->d_ops->db_to_fdb(args->geo, *dbno),
-+				(long long)*dbno, (long long)fbno);
-+			if (fblk) {
-+				xfs_alert(mp,
-+			" fblk "PTR_FMT" blkno %llu index %d magic 0x%x",
-+					fblk, (unsigned long long)fblk->blkno,
-+					fblk->index, fblk->magic);
-+			} else {
-+				xfs_alert(mp, " ... fblk is NULL");
-+			}
-+			XFS_ERROR_REPORT("xfs_dir2_node_addname_int",
-+					 XFS_ERRLEVEL_LOW, mp);
-+			return -EFSCORRUPTED;
-+		}
-+
-+		/* Get a buffer for the new block. */
-+		error = xfs_dir3_free_get_buf(args, fbno, &fbp);
-+		if (error)
-+			return error;
-+		free = fbp->b_addr;
-+		bests = dp->d_ops->free_bests_p(free);
-+		dp->d_ops->free_hdr_from_disk(&freehdr, free);
-+
-+		/* Remember the first slot as our empty slot. */
-+		freehdr.firstdb = (fbno - xfs_dir2_byte_to_db(args->geo,
-+							XFS_DIR2_FREE_OFFSET)) *
-+				dp->d_ops->free_max_bests(args->geo);
-+	} else {
-+		free = fbp->b_addr;
-+		bests = dp->d_ops->free_bests_p(free);
-+		dp->d_ops->free_hdr_from_disk(&freehdr, free);
-+	}
-+
-+	/* Set the freespace block index from the data block number. */
-+	*findex = dp->d_ops->db_to_fdindex(args->geo, *dbno);
-+
-+	/* Extend the freespace table if the new data block is off the end. */
-+	if (*findex >= freehdr.nvalid) {
-+		ASSERT(*findex < dp->d_ops->free_max_bests(args->geo));
-+		freehdr.nvalid = *findex + 1;
-+		bests[*findex] = cpu_to_be16(NULLDATAOFF);
-+	}
-+
-+	/*
-+	 * If this entry was for an empty data block (this should always be
-+	 * true) then update the header.
-+	 */
-+	if (bests[*findex] == cpu_to_be16(NULLDATAOFF)) {
-+		freehdr.nused++;
-+		dp->d_ops->free_hdr_to_disk(fbp->b_addr, &freehdr);
-+		xfs_dir2_free_log_header(args, fbp);
-+	}
-+
-+	/* Update the freespace value for the new block in the table. */
-+	hdr = dbp->b_addr;
-+	bf = dp->d_ops->data_bestfree_p(hdr);
-+	bests[*findex] = bf[0].length;
-+
-+	*dbpp = dbp;
-+	*fbpp = fbp;
-+	return 0;
-+}
-+
- /*
-  * Add the data entry for a node-format directory name addition.
-  * The leaf entry is added in xfs_dir2_leafn_add.
-@@ -1635,10 +1759,9 @@ xfs_dir2_node_addname_int(
- 	xfs_dir2_db_t		ifbno;		/* initial freespace block no */
- 	xfs_dir2_db_t		lastfbno=0;	/* highest freespace block no */
- 	int			length;		/* length of the new entry */
--	int			logfree;	/* need to log free entry */
--	xfs_mount_t		*mp;		/* filesystem mount point */
--	int			needlog;	/* need to log data header */
--	int			needscan;	/* need to rescan data frees */
-+	int			logfree = 0;	/* need to log free entry */
-+	int			needlog = 0;	/* need to log data header */
-+	int			needscan = 0;	/* need to rescan data frees */
- 	__be16			*tagp;		/* data entry tag pointer */
- 	xfs_trans_t		*tp;		/* transaction pointer */
- 	__be16			*bests;
-@@ -1647,7 +1770,6 @@ xfs_dir2_node_addname_int(
- 	xfs_dir2_data_aoff_t	aoff;
- 
- 	dp = args->dp;
--	mp = dp->i_mount;
- 	tp = args->trans;
- 	length = dp->d_ops->data_entsize(args->namelen);
- 	/*
-@@ -1676,6 +1798,7 @@ xfs_dir2_node_addname_int(
- 			ASSERT(be16_to_cpu(bests[findex]) != NULLDATAOFF);
- 			ASSERT(be16_to_cpu(bests[findex]) >= length);
- 			dbno = freehdr.firstdb + findex;
-+			goto found_block;
- 		} else {
- 			/*
- 			 * The data block looked at didn't have enough room.
-@@ -1777,168 +1900,50 @@ xfs_dir2_node_addname_int(
- 			}
- 		}
- 	}
-+
- 	/*
- 	 * If we don't have a data block, we need to allocate one and make
- 	 * the freespace entries refer to it.
- 	 */
--	if (unlikely(dbno == -1)) {
--		/*
--		 * Not allowed to allocate, return failure.
--		 */
--		if ((args->op_flags & XFS_DA_OP_JUSTCHECK) || args->total == 0)
--			return -ENOSPC;
--
--		/*
--		 * Allocate and initialize the new data block.
--		 */
--		if (unlikely((error = xfs_dir2_grow_inode(args,
--							 XFS_DIR2_DATA_SPACE,
--							 &dbno)) ||
--		    (error = xfs_dir3_data_init(args, dbno, &dbp))))
--			return error;
--
--		/*
--		 * If (somehow) we have a freespace block, get rid of it.
--		 */
--		if (fbp)
--			xfs_trans_brelse(tp, fbp);
--		if (fblk && fblk->bp)
--			fblk->bp = NULL;
--
--		/*
--		 * Get the freespace block corresponding to the data block
--		 * that was just allocated.
--		 */
--		fbno = dp->d_ops->db_to_fdb(args->geo, dbno);
--		error = xfs_dir2_free_try_read(tp, dp,
--				       xfs_dir2_db_to_da(args->geo, fbno),
--				       &fbp);
-+	if (dbno == -1) {
-+		error = xfs_dir2_node_add_datablk(args, fblk, &dbno, &dbp, &fbp,
-+						  &findex);
- 		if (error)
- 			return error;
- 
--		/*
--		 * If there wasn't a freespace block, the read will
--		 * return a NULL fbp.  Allocate and initialize a new one.
--		 */
--		if (!fbp) {
--			error = xfs_dir2_grow_inode(args, XFS_DIR2_FREE_SPACE,
--						    &fbno);
--			if (error)
--				return error;
--
--			if (dp->d_ops->db_to_fdb(args->geo, dbno) != fbno) {
--				xfs_alert(mp,
--"%s: dir ino %llu needed freesp block %lld for data block %lld, got %lld ifbno %llu lastfbno %d",
--					__func__, (unsigned long long)dp->i_ino,
--					(long long)dp->d_ops->db_to_fdb(
--								args->geo, dbno),
--					(long long)dbno, (long long)fbno,
--					(unsigned long long)ifbno, lastfbno);
--				if (fblk) {
--					xfs_alert(mp,
--				" fblk "PTR_FMT" blkno %llu index %d magic 0x%x",
--						fblk,
--						(unsigned long long)fblk->blkno,
--						fblk->index,
--						fblk->magic);
--				} else {
--					xfs_alert(mp, " ... fblk is NULL");
--				}
--				XFS_ERROR_REPORT("xfs_dir2_node_addname_int",
--						 XFS_ERRLEVEL_LOW, mp);
--				return -EFSCORRUPTED;
--			}
--
--			/*
--			 * Get a buffer for the new block.
--			 */
--			error = xfs_dir3_free_get_buf(args, fbno, &fbp);
--			if (error)
--				return error;
--			free = fbp->b_addr;
--			bests = dp->d_ops->free_bests_p(free);
--			dp->d_ops->free_hdr_from_disk(&freehdr, free);
--
--			/*
--			 * Remember the first slot as our empty slot.
--			 */
--			freehdr.firstdb =
--				(fbno - xfs_dir2_byte_to_db(args->geo,
--							XFS_DIR2_FREE_OFFSET)) *
--					dp->d_ops->free_max_bests(args->geo);
--		} else {
--			free = fbp->b_addr;
--			bests = dp->d_ops->free_bests_p(free);
--			dp->d_ops->free_hdr_from_disk(&freehdr, free);
--		}
-+		/* setup current free block buffer */
-+		free = fbp->b_addr;
-+		bests = dp->d_ops->free_bests_p(free);
- 
--		/*
--		 * Set the freespace block index from the data block number.
--		 */
--		findex = dp->d_ops->db_to_fdindex(args->geo, dbno);
--		/*
--		 * If it's after the end of the current entries in the
--		 * freespace block, extend that table.
--		 */
--		if (findex >= freehdr.nvalid) {
--			ASSERT(findex < dp->d_ops->free_max_bests(args->geo));
--			freehdr.nvalid = findex + 1;
--			/*
--			 * Tag new entry so nused will go up.
--			 */
--			bests[findex] = cpu_to_be16(NULLDATAOFF);
--		}
--		/*
--		 * If this entry was for an empty data block
--		 * (this should always be true) then update the header.
--		 */
--		if (bests[findex] == cpu_to_be16(NULLDATAOFF)) {
--			freehdr.nused++;
--			dp->d_ops->free_hdr_to_disk(fbp->b_addr, &freehdr);
--			xfs_dir2_free_log_header(args, fbp);
--		}
--		/*
--		 * Update the real value in the table.
--		 * We haven't allocated the data entry yet so this will
--		 * change again.
--		 */
--		hdr = dbp->b_addr;
--		bf = dp->d_ops->data_bestfree_p(hdr);
--		bests[findex] = bf[0].length;
-+		/* we're going to have to log the free block index later */
- 		logfree = 1;
--	}
--	/*
--	 * We had a data block so we don't have to make a new one.
--	 */
--	else {
--		/*
--		 * If just checking, we succeeded.
--		 */
-+	} else {
-+found_block:
-+		/* If just checking, we succeeded. */
- 		if (args->op_flags & XFS_DA_OP_JUSTCHECK)
- 			return 0;
- 
--		/*
--		 * Read the data block in.
--		 */
-+		/* Read the data block in. */
- 		error = xfs_dir3_data_read(tp, dp,
- 					   xfs_dir2_db_to_da(args->geo, dbno),
- 					   -1, &dbp);
- 		if (error)
- 			return error;
--		hdr = dbp->b_addr;
--		bf = dp->d_ops->data_bestfree_p(hdr);
--		logfree = 0;
-+
-+		/* suppress gcc maybe-used-initialised warning */
-+		bests = dp->d_ops->free_bests_p(free);
- 	}
-+
-+	/* setup for data block up now */
-+	hdr = dbp->b_addr;
-+	bf = dp->d_ops->data_bestfree_p(hdr);
- 	ASSERT(be16_to_cpu(bf[0].length) >= length);
--	/*
--	 * Point to the existing unused space.
--	 */
-+
-+	/* Point to the existing unused space. */
- 	dup = (xfs_dir2_data_unused_t *)
- 	      ((char *)hdr + be16_to_cpu(bf[0].offset));
--	needscan = needlog = 0;
--	/*
--	 * Mark the first part of the unused space, inuse for us.
--	 */
-+
-+	/* Mark the first part of the unused space, inuse for us. */
- 	aoff = (xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr);
- 	error = xfs_dir2_data_use_free(args, dbp, dup, aoff, length,
- 			&needlog, &needscan);
-@@ -1946,9 +1951,8 @@ xfs_dir2_node_addname_int(
- 		xfs_trans_brelse(tp, dbp);
- 		return error;
- 	}
--	/*
--	 * Fill in the new entry and log it.
--	 */
-+
-+	/* Fill in the new entry and log it. */
- 	dep = (xfs_dir2_data_entry_t *)dup;
- 	dep->inumber = cpu_to_be64(args->inumber);
- 	dep->namelen = args->namelen;
-@@ -1957,32 +1961,24 @@ xfs_dir2_node_addname_int(
- 	tagp = dp->d_ops->data_entry_tag_p(dep);
- 	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
- 	xfs_dir2_data_log_entry(args, dbp, dep);
--	/*
--	 * Rescan the block for bestfree if needed.
--	 */
-+
-+	/* Rescan the freespace and log the data block if needed. */
- 	if (needscan)
- 		xfs_dir2_data_freescan(dp, hdr, &needlog);
--	/*
--	 * Log the data block header if needed.
--	 */
- 	if (needlog)
- 		xfs_dir2_data_log_header(args, dbp);
--	/*
--	 * If the freespace entry is now wrong, update it.
--	 */
--	bests = dp->d_ops->free_bests_p(free); /* gcc is so stupid */
--	if (be16_to_cpu(bests[findex]) != be16_to_cpu(bf[0].length)) {
-+
-+	/* If the freespace block entry is now wrong, update it. */
-+	if (bests[findex] != bf[0].length) {
- 		bests[findex] = bf[0].length;
- 		logfree = 1;
- 	}
--	/*
--	 * Log the freespace entry if needed.
--	 */
-+
-+	/* Log the freespace entry if needed. */
- 	if (logfree)
- 		xfs_dir2_free_log_bests(args, fbp, findex, findex);
--	/*
--	 * Return the data block and offset in args, then drop the data block.
--	 */
-+
-+	/* Return the data block and offset in args. */
- 	args->blkno = (xfs_dablk_t)dbno;
- 	args->index = be16_to_cpu(*tagp);
- 	return 0;
--- 
-2.19.1
+Er... this zaps everything past the end of the bmbt pointers, which
+means that this can zero the attr fork root.
+
+> +	}
+> +
+>  	for (i = 0; i < nrecs; i++) {
+>  		xfs_agnumber_t	ag;
+>  		xfs_agblock_t	bno;
+> @@ -2201,6 +2271,24 @@ process_inode_data(
+>  	return 1;
+>  }
+>  
+> +static int
+> +process_dev_inode(
+> +	xfs_dinode_t		*dip)
+> +{
+> +	if (XFS_DFORK_NEXTENTS(dip, XFS_ATTR_FORK) ||
+> +	    XFS_DFORK_NEXTENTS(dip, XFS_DATA_FORK)) {
+> +		if (show_warnings)
+> +			print_warning("inode %llu has unexpected extents",
+> +				      (unsigned long long)cur_ino);
+> +		return 0;
+> +	} else {
+
+No need for else here.
+
+> +		int used = XFS_DFORK_DPTR(dip) - (char*)dip;
+> +
+> +		memset(XFS_DFORK_DPTR(dip), 0, mp->m_sb.sb_inodesize - used);
+
+This zeroes both data fork and attr fork roots for fifo and device
+inodes.  Wouldn't we want to preserve the device number information?
+And whatever attrs are attached to the inode, if any?
+
+--D
+
+> +		return 1;
+> +	}
+> +}
+> +
+>  /*
+>   * when we process the inode, we may change the data in the data and/or
+>   * attribute fork if they are in short form and we are obfuscating names.
+> @@ -2253,7 +2341,9 @@ process_inode(
+>  		case S_IFREG:
+>  			success = process_inode_data(dip, TYP_DATA);
+>  			break;
+> -		default: ;
+> +		default:
+> +			success = process_dev_inode(dip);
+> +			break;
+>  	}
+>  	nametable_clear();
+>  
+> -- 
+> 2.14.4
+> 
