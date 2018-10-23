@@ -1,87 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:45062 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:44652 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726438AbeJWMaW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 23 Oct 2018 08:30:22 -0400
+        id S1726885AbeJWM0E (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 23 Oct 2018 08:26:04 -0400
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 77F51B6A
-        for <linux-xfs@vger.kernel.org>; Mon, 22 Oct 2018 23:08:17 -0500 (CDT)
-Subject: [PATCH 2/2] xfs_repair: continue after xfs_bunmapi deadlock avoidance
+        by sandeen.net (Postfix) with ESMTPSA id 25737B6A
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Oct 2018 23:04:00 -0500 (CDT)
+Subject: [PATCH 1/2] xfs_repair: initialize realloced bplist in
+ longform_dir2_entry_check
 From: Eric Sandeen <sandeen@sandeen.net>
 References: <9070c949-2720-75ea-01c3-74261bf62f87@sandeen.net>
-Message-ID: <18102abe-0101-bd08-dc5b-2f288dc0d8d3@sandeen.net>
-Date: Mon, 22 Oct 2018 23:08:49 -0500
+Message-ID: <480fc460-e8cd-cb34-924c-59c874ab393e@sandeen.net>
+Date: Mon, 22 Oct 2018 23:04:31 -0500
 MIME-Version: 1.0
 In-Reply-To: <9070c949-2720-75ea-01c3-74261bf62f87@sandeen.net>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs <linux-xfs@vger.kernel.org>
 
-After commit:
+If we need to realloc the bplist[] array holding buffers for a given
+directory, we don't initialize the new slots.  This causes a problem
+if the directory has holes, because those slots never get filled in.
 
-15a8bcc xfs: fix multi-AG deadlock in xfs_bunmapi
+At the end of the function we call libxfs_putbuf for every non-null
+slot, and any uninitialized slots are segfault landmines.
 
-xfs_bunmapi can legitimately return before all work is done.
-Sadly nobody told xfs_repair, so it fires an assert:
+Make sure we initialize all new slots to NULL for this reason.
 
- phase6.c:1410: longform_dir2_rebuild: Assertion `done' failed. 
-
-Fix this by calling back in until all work is done, as we do
-in the kernel.
-
-Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1641116
-Reported-by: Tomasz Torcz <tomek@pipebreaker.pl>
+Reported-by: Oleg Davydov <burunduk3@gmail.com>
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
 diff --git a/repair/phase6.c b/repair/phase6.c
-index e017326..b87c751 100644
+index b87c751..9d24a4f 100644
 --- a/repair/phase6.c
 +++ b/repair/phase6.c
-@@ -1317,7 +1317,7 @@ longform_dir2_rebuild(
- 	xfs_fileoff_t		lastblock;
- 	xfs_inode_t		pip;
- 	dir_hash_ent_t		*p;
--	int			done;
-+	int			done = 0;
+@@ -2348,6 +2348,8 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
  
- 	/*
- 	 * trash directory completely and rebuild from scratch using the
-@@ -1352,12 +1352,25 @@ longform_dir2_rebuild(
- 			error);
+ 		db = xfs_dir2_da_to_db(mp->m_dir_geo, da_bno);
+ 		if (db >= num_bps) {
++			int last_size = num_bps;
++
+ 			/* more data blocks than expected */
+ 			num_bps = db + 1;
+ 			bplist = realloc(bplist, num_bps * sizeof(struct xfs_buf*));
+@@ -2355,6 +2357,9 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
+ 				do_error(_("realloc failed in %s (%zu bytes)\n"),
+ 					__func__,
+ 					num_bps * sizeof(struct xfs_buf*));
++			/* Initialize the new elements */
++			for (i = last_size; i < num_bps; i++)
++				bplist[i] = NULL;
+ 		}
  
- 	/* free all data, leaf, node and freespace blocks */
--	error = -libxfs_bunmapi(tp, ip, 0, lastblock, XFS_BMAPI_METADATA, 0,
--				&done);
--	if (error) {
--		do_warn(_("xfs_bunmapi failed -- error - %d\n"), error);
--		goto out_bmap_cancel;
--	}
-+	while (!done) {
-+	       error = -libxfs_bunmapi(tp, ip, 0, lastblock, XFS_BMAPI_METADATA,
-+			               0, &done);
-+	       if (error) {
-+		       do_warn(_("xfs_bunmapi failed -- error - %d\n"), error);
-+		       goto out_bmap_cancel;
-+	       }
-+	       error = xfs_defer_finish(&tp);
-+	       if (error) {
-+		       do_warn(("defer_finish failed -- error - %d\n"), error);
-+		       goto out_bmap_cancel;
-+	       }
-+	       /*
-+		* Close out trans and start the next one in the chain.
-+		*/
-+	       error = xfs_trans_roll_inode(&tp, ip);
-+	       if (error)
-+			goto out_bmap_cancel;
-+        }
- 
- 	ASSERT(done);
- 
+ 		if (isblock)
