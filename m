@@ -1,197 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:27343 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725829AbeJYH1Y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Oct 2018 03:27:24 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1gFS5X-0006J7-1h
-        for linux-xfs@vger.kernel.org; Thu, 25 Oct 2018 09:57:19 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.91)
-        (envelope-from <david@fromorbit.com>)
-        id 1gFS5X-0005DB-0H
-        for linux-xfs@vger.kernel.org; Thu, 25 Oct 2018 09:57:19 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/5] xfs: speed up directory bestfree block scanning
-Date: Thu, 25 Oct 2018 09:57:15 +1100
-Message-Id: <20181024225716.19459-5-david@fromorbit.com>
-In-Reply-To: <20181024225716.19459-1-david@fromorbit.com>
-References: <20181024225716.19459-1-david@fromorbit.com>
+Received: from mail-wr1-f52.google.com ([209.85.221.52]:35549 "EHLO
+        mail-wr1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726277AbeJWVjW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Oct 2018 17:39:22 -0400
+Received: by mail-wr1-f52.google.com with SMTP id w5-v6so1679407wrt.2
+        for <linux-xfs@vger.kernel.org>; Tue, 23 Oct 2018 06:15:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <CACj3i73FyABTkX1eCDvL+ccUhD1kWowS92=PFVyGiPvi6HWGFQ@mail.gmail.com>
+ <20181022174316.GA28561@infradead.org> <90559dfb-5222-4faf-a9bb-a314cc645129@sandeen.net>
+ <83eb725e-800d-b597-29d9-52d8a672c82c@sandeen.net> <CACj3i72hTgnkiM7Z99UVYYNJZaTQ2BM8hFYURDhxXbSX7enWgQ@mail.gmail.com>
+ <392a4c28-9800-fe40-73b9-632370093d50@sandeen.net>
+In-Reply-To: <392a4c28-9800-fe40-73b9-632370093d50@sandeen.net>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Tue, 23 Oct 2018 15:15:44 +0200
+Message-ID: <CACj3i71nxp+ktvCm31Gb3k4A8nYVaLHO1WxwruhbDjmwwyz1Jw@mail.gmail.com>
+Subject: Re: xfsdump cleaning patchset
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Dave Chinner <dchinner@redhat.com>
+On Tue, Oct 23, 2018 at 2:10 PM Eric Sandeen <sandeen@sandeen.net> wrote:
+>
+>
+>
+> On 10/23/18 3:16 AM, Jan Tulak wrote:
+> >> I'm not a huge fan of "fix buffer overflows by making them arbitrarily
+> >> bigger" - can we use i.e. snprintf to make sure it won't happen again,
+> >> and maybe size them based on ... something, instead of "eh, [5000] is
+> >> hopefully enough?"
+> > I based the new size on gcc outputs, it said how much it can overflow.
+> > But I checked the numbers only once or twice and didn't verify it for
+> > other reports.
+>
+> It's always possible that I'm wrong and I'm missing something.  :)
+> What did gcc say for the cases I pointed out?
 
-When running a "create millions inodes in a directory" test
-recently, I noticed we were spending a huge amount of time
-converting freespace block headers from disk format to in-memory
-format:
+For the txt[256] -> 300:
 
- 31.47%  [kernel]  [k] xfs_dir2_node_addname
- 17.86%  [kernel]  [k] xfs_dir3_free_hdr_from_disk
-  3.55%  [kernel]  [k] xfs_dir3_free_bests_p
+stobj.c: In function ‘stobjstrm_highlight’:
+stobj.c:227:55: warning: ‘%s’ directive output may be truncated
+writing up to 255 bytes into a regi
+on of size between 230 and 231 [-Wformat-truncation=]
+  snprintf(txt, sizeof(txt), "interrupted: %s, cmdarg: %s",
+                                                       ^~
+stobj.c:227:2: note: ‘snprintf’ output between 26 and 282 bytes into a
+destination of size 256
+  snprintf(txt, sizeof(txt), "interrupted: %s, cmdarg: %s",
+  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   (stobjstrm->st_interrupted == BOOL_TRUE) ? "yes" : "no",
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   stobjstrm->st_cmdarg);
+   ~~~~~~~~~~~~~~~~~~~~~
 
-We shouldn't be hitting the best free block scanning code so hard
-when doing sequential directory creates, and it turns out there's
-a highly suboptimal loop searching the the best free array in
-the freespace block - it decodes the block header before checking
-each entry inside a loop, instead of decoding the header once before
-running the entry search loop.
+So, I took the 282, added something, and rounded it to a number that
+felt good and wasn't much larger than that.
 
-This makes a massive difference to create rates. Profile now looks
-like this:
+Thanks,
+Jan
 
-  13.15%  [kernel]  [k] xfs_dir2_node_addname
-   3.52%  [kernel]  [k] xfs_dir3_leaf_check_int
-   3.11%  [kernel]  [k] xfs_log_commit_cil
-
-And the wall time/average file create rate differences are
-just as stark:
-
-		create time(sec) / rate (files/s)
-File count	     vanilla		    patched
-  10k		   0.54 / 18.5k		   0.53 / 18.9k
-  20k		   1.10	/ 18.1k		   1.05 / 19.0k
- 100k		   4.21	/ 23.8k		   3.91 / 25.6k
- 200k		   9.66	/ 20,7k		   7.37 / 27.1k
-   1M		  86.61	/ 11.5k		  48.26 / 20.7k
-   2M		 206.13	/  9.7k		 129.71 / 15.4k
-
-The larger the directory, the bigger the performance improvement.
-
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/libxfs/xfs_dir2_node.c | 83 ++++++++++++++---------------------
- 1 file changed, 32 insertions(+), 51 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-index 1ecf41e380fb..621f63de075c 100644
---- a/fs/xfs/libxfs/xfs_dir2_node.c
-+++ b/fs/xfs/libxfs/xfs_dir2_node.c
-@@ -1754,7 +1754,7 @@ xfs_dir2_node_find_freeblk(
- 	xfs_dir2_db_t		fbno = -1;
- 	xfs_dir2_free_t		*free = NULL;
- 	struct xfs_dir3_icfree_hdr freehdr;
--	__be16			*bests;
-+	__be16			*bests = NULL;
- 	xfs_fileoff_t		fo;
- 	int			error;
- 
-@@ -1767,11 +1767,10 @@ xfs_dir2_node_find_freeblk(
- 		fbp = fblk->bp;
- 		free = fbp->b_addr;
- 		findex = fblk->index;
-+		bests = dp->d_ops->free_bests_p(free);
-+		dp->d_ops->free_hdr_from_disk(&freehdr, free);
- 		if (findex >= 0) {
- 			/* caller already found the freespace for us. */
--			bests = dp->d_ops->free_bests_p(free);
--			dp->d_ops->free_hdr_from_disk(&freehdr, free);
--
- 			ASSERT(findex < freehdr.nvalid);
- 			ASSERT(be16_to_cpu(bests[findex]) != NULLDATAOFF);
- 			ASSERT(be16_to_cpu(bests[findex]) >= length);
-@@ -1805,29 +1804,19 @@ xfs_dir2_node_find_freeblk(
- 
- 	/*
- 	 * While we haven't identified a data block, search the freeblock
--	 * data for a good data block.  If we find a null freeblock entry,
--	 * indicating a hole in the data blocks, remember that.
-+	 * data for a data block with enough free space in it.
- 	 */
--	while (dbno == -1) {
--		/*
--		 * If we don't have a freeblock in hand, get the next one.
--		 */
-+	for ( ; fbno < lastfbno; fbno++) {
-+		/* If we don't have a freeblock in hand, get the next one. */
- 		if (fbp == NULL) {
-+			/* If it's ifbno we already looked at it. */
-+			if (fbno == ifbno)
-+				continue;
-+
- 			/*
--			 * If it's ifbno we already looked at it.
--			 */
--			if (++fbno == ifbno)
--				fbno++;
--			/*
--			 * If it's off the end we're done.
--			 */
--			if (fbno >= lastfbno)
--				break;
--			/*
--			 * Read the block.  There can be holes in the
--			 * freespace blocks, so this might not succeed.
--			 * This should be really rare, so there's no reason
--			 * to avoid it.
-+			 * Read the block.  There can be holes in the freespace
-+			 * blocks, so this might not succeed.  This should be
-+			 * really rare, so there's no reason to avoid it.
- 			 */
- 			error = xfs_dir2_free_try_read(tp, dp,
- 					xfs_dir2_db_to_da(args->geo, fbno),
-@@ -1836,37 +1825,29 @@ xfs_dir2_node_find_freeblk(
- 				return error;
- 			if (!fbp)
- 				continue;
--			free = fbp->b_addr;
-+
- 			findex = 0;
-+			free = fbp->b_addr;
-+			bests = dp->d_ops->free_bests_p(free);
-+			dp->d_ops->free_hdr_from_disk(&freehdr, free);
- 		}
--		/*
--		 * Look at the current free entry.  Is it good enough?
--		 *
--		 * The bests initialisation should be where the bufer is read in
--		 * the above branch. But gcc is too stupid to realise that bests
--		 * and the freehdr are actually initialised if they are placed
--		 * there, so we have to do it here to avoid warnings. Blech.
--		 */
--		bests = dp->d_ops->free_bests_p(free);
--		dp->d_ops->free_hdr_from_disk(&freehdr, free);
--		if (be16_to_cpu(bests[findex]) != NULLDATAOFF &&
--		    be16_to_cpu(bests[findex]) >= length)
--			dbno = freehdr.firstdb + findex;
--		else {
--			/*
--			 * Are we done with the freeblock?
--			 */
--			if (++findex == freehdr.nvalid) {
--				/*
--				 * Drop the block.
--				 */
--				xfs_trans_brelse(tp, fbp);
--				fbp = NULL;
--				if (fblk && fblk->bp)
--					fblk->bp = NULL;
-+
-+		/* Scan the free entry array for a large enough free space. */
-+		do {
-+			if (be16_to_cpu(bests[findex]) != NULLDATAOFF &&
-+			    be16_to_cpu(bests[findex]) >= length) {
-+				dbno = freehdr.firstdb + findex;
-+				goto out;
- 			}
--		}
-+		} while (++findex < freehdr.nvalid);
-+
-+		/* Didn't find free space, go on to next free block */
-+		xfs_trans_brelse(tp, fbp);
-+		fbp = NULL;
-+		if (fblk)
-+			fblk->bp = NULL;
- 	}
-+
- out:
- 	*dbnop = dbno;
- 	*fbpp = fbp;
 -- 
-2.19.1
+Jan Tulak
