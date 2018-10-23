@@ -1,54 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:48848 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727328AbeJRNDB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Oct 2018 09:03:01 -0400
-Date: Wed, 17 Oct 2018 22:03:34 -0700
+Received: from aserp2120.oracle.com ([141.146.126.78]:36186 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727067AbeJWMo0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Oct 2018 08:44:26 -0400
+Date: Mon, 22 Oct 2018 21:22:41 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 09/29] vfs: combine the clone and dedupe into a single
- remap_file_range
-Message-ID: <20181018050334.GU28243@magnolia>
-References: <153981625504.5568.2708520119290577378.stgit@magnolia>
- <153981631706.5568.6473120432728396978.stgit@magnolia>
- <20181018004826.GB12386@ZenIV.linux.org.uk>
- <20181018044718.GT28243@magnolia>
- <20181018045429.GF32577@ZenIV.linux.org.uk>
+Subject: Re: [PATCH 2/2] xfs_repair: continue after xfs_bunmapi deadlock
+ avoidance
+Message-ID: <20181023042241.GZ28243@magnolia>
+References: <9070c949-2720-75ea-01c3-74261bf62f87@sandeen.net>
+ <18102abe-0101-bd08-dc5b-2f288dc0d8d3@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181018045429.GF32577@ZenIV.linux.org.uk>
+In-Reply-To: <18102abe-0101-bd08-dc5b-2f288dc0d8d3@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: david@fromorbit.com, sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, ocfs2-devel@oss.oracle.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Thu, Oct 18, 2018 at 05:54:29AM +0100, Al Viro wrote:
-> On Wed, Oct 17, 2018 at 09:47:18PM -0700, Darrick J. Wong wrote:
+On Mon, Oct 22, 2018 at 11:08:49PM -0500, Eric Sandeen wrote:
+> After commit:
 > 
-> > > > +#define REMAP_FILE_DEDUP		(1 << 0)
-> > > > +
-> > > > +/*
-> > > > + * These flags should be taken care of by the implementation (possibly using
-> > > > + * vfs helpers) but can be ignored by the implementation.
-> > > > + */
-> > > > +#define REMAP_FILE_ADVISORY		(0)
-> > > 
-> > > ???
-> > 
-> > Sorry if this wasn't clear.  How about this?
-> > 
-> > /*
-> >  * These flags signal that the caller is ok with altering various aspects of
-> >  * the behavior of the remap operation.  The changes must be made by the
-> >  * implementation; the vfs remap helper functions can take advantage of them.
-> >  * Flags in this category exist to preserve the quirky behavior of the hoisted
-> >  * btrfs clone/dedupe ioctls.
-> >  */
+> 15a8bcc xfs: fix multi-AG deadlock in xfs_bunmapi
 > 
-> Something like "currently we have no such flags, but some will appear
-> in subsequent commits", removed once such flags do appear, perhaps?
+> xfs_bunmapi can legitimately return before all work is done.
+> Sadly nobody told xfs_repair, so it fires an assert:
+> 
+>  phase6.c:1410: longform_dir2_rebuild: Assertion `done' failed. 
+> 
+> Fix this by calling back in until all work is done, as we do
+> in the kernel.
 
-Done.
+Looking at the rest of xfsprogs, I think the other directory-related
+xfs_bunmapi callers probably need to be able to roll-and-continue, but
+that seems like a topic for (a) the kernel and (b) separate patches.
+
+> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1641116
+> Reported-by: Tomasz Torcz <tomek@pipebreaker.pl>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> diff --git a/repair/phase6.c b/repair/phase6.c
+> index e017326..b87c751 100644
+> --- a/repair/phase6.c
+> +++ b/repair/phase6.c
+> @@ -1317,7 +1317,7 @@ longform_dir2_rebuild(
+>  	xfs_fileoff_t		lastblock;
+>  	xfs_inode_t		pip;
+>  	dir_hash_ent_t		*p;
+> -	int			done;
+> +	int			done = 0;
+>  
+>  	/*
+>  	 * trash directory completely and rebuild from scratch using the
+> @@ -1352,12 +1352,25 @@ longform_dir2_rebuild(
+>  			error);
+>  
+>  	/* free all data, leaf, node and freespace blocks */
+> -	error = -libxfs_bunmapi(tp, ip, 0, lastblock, XFS_BMAPI_METADATA, 0,
+> -				&done);
+> -	if (error) {
+> -		do_warn(_("xfs_bunmapi failed -- error - %d\n"), error);
+> -		goto out_bmap_cancel;
+> -	}
+> +	while (!done) {
+> +	       error = -libxfs_bunmapi(tp, ip, 0, lastblock, XFS_BMAPI_METADATA,
+> +			               0, &done);
+> +	       if (error) {
+> +		       do_warn(_("xfs_bunmapi failed -- error - %d\n"), error);
+> +		       goto out_bmap_cancel;
+> +	       }
+> +	       error = xfs_defer_finish(&tp);
+
+error = -libxfs_defer_finish(...);
+
+> +	       if (error) {
+> +		       do_warn(("defer_finish failed -- error - %d\n"), error);
+> +		       goto out_bmap_cancel;
+> +	       }
+> +	       /*
+> +		* Close out trans and start the next one in the chain.
+> +		*/
+> +	       error = xfs_trans_roll_inode(&tp, ip);
+
+error = -libxfs_trans_roll_inode(...);
+
+> +	       if (error)
+> +			goto out_bmap_cancel;
+> +        }
+>  
+>  	ASSERT(done);
+
+This assert can go away since !done is the loop test condition.
 
 --D
+
+>  
+> 
