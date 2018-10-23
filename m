@@ -1,132 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:23872 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725826AbeJXLtP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Oct 2018 07:49:15 -0400
-Date: Wed, 24 Oct 2018 11:00:22 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [GIT PULL] xfs: 4.20 merge
-Message-ID: <20181024000022.GP18822@dastard>
+Received: from mail-wr1-f44.google.com ([209.85.221.44]:42806 "EHLO
+        mail-wr1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727210AbeJWQi4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Oct 2018 12:38:56 -0400
+Received: by mail-wr1-f44.google.com with SMTP id a9so595943wrx.9
+        for <linux-xfs@vger.kernel.org>; Tue, 23 Oct 2018 01:16:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+References: <CACj3i73FyABTkX1eCDvL+ccUhD1kWowS92=PFVyGiPvi6HWGFQ@mail.gmail.com>
+ <20181022174316.GA28561@infradead.org> <90559dfb-5222-4faf-a9bb-a314cc645129@sandeen.net>
+ <83eb725e-800d-b597-29d9-52d8a672c82c@sandeen.net>
+In-Reply-To: <83eb725e-800d-b597-29d9-52d8a672c82c@sandeen.net>
+From: Jan Tulak <jtulak@redhat.com>
+Date: Tue, 23 Oct 2018 10:16:25 +0200
+Message-ID: <CACj3i72hTgnkiM7Z99UVYYNJZaTQ2BM8hFYURDhxXbSX7enWgQ@mail.gmail.com>
+Subject: Re: xfsdump cleaning patchset
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: torvalds@linux-foundation.org
-Cc: djwong@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, sandeen@sandeen.net
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-Hi Linus,
+On Mon, Oct 22, 2018 at 9:25 PM Eric Sandeen <sandeen@sandeen.net> wrote:
+>
+> First, what testing was done on the patchset?
 
-Can you please pull the XFS 4.20 update from the tag listed below?
-There's not a huge amount of change in this cycle - Darrick has been
-out of action for a couple of months (hence me sending the last few
-pull requests), so we decided a quiet cycle mainly focussed on bug
-fixes was a good idea. Darrick will take the helm again at the end of
-this merge window.
+Except for xfstests, I tried some combinations of arguments by hand,
+but not all possible ones.
 
-The branch has applied cleanly to your current tree, so you
-shouldn't see any problems with it.
+>
+> For Coverity issues, please use:
+>
+> Addresses-Coverity-ID: XYZ
+>
+> or even i.e.
+>
+> Addresses-Coverity-ID: XYZ ("Missing break in switch")
 
-FYI, I may be sending another update later in the cycle - there's a
-pending rework of the clone/dedupe_file_range code that fixes
-numerous bugs that is spread amongst the VFS, XFS and ocfs2 code. It
-has been reviewed and tested, Al and I just need to work out the
-details of the merge, so it may come from him rather than me.
+OK
 
-Thanks!
+[snip]
 
--Dave.
+>
+> I'd also kind of hoped to do more whitespace/style fixup before
+> making code changes but that'll make your later patches impossible
+> to apply, so maybe we'll just leave it for now.
+
+Yeah, I realized that too, but it was already too late.
+
+>
+>
+> I'm not a huge fan of "fix buffer overflows by making them arbitrarily
+> bigger" - can we use i.e. snprintf to make sure it won't happen again,
+> and maybe size them based on ... something, instead of "eh, [5000] is
+> hopefully enough?"
+
+I based the new size on gcc outputs, it said how much it can overflow.
+But I checked the numbers only once or twice and didn't verify it for
+other reports.
+
+[snip]
+
+>
+>
+> From spot-checking a few commits, please take another careful pass
+> through to look at context and code history to be sure that you're
+> really fixing the code properly and not just making coverity and/or
+> gcc be quiet; for example in
+>
+> 0ab032a8 common/drive_minrmt.c: remove a dead code (CID 1056289)
+>
+> you saw that coverity spotted dead code and so you removed it, but it
+> shouldn't be dead, it should be somewhere else, I think - look up about
+> 30 lines from your change for a hint.  :)
+>
+
+I see...
+
+>
+> For some of the resource leak fixes, you might consider using something
+> like "goto out_free;" rather than adding cleanup repeatedly at multiple
+> return points.  Sometimes that's cleaner.
+
+OK, I will consider that.
 
 
-The following changes since commit b39989009bdb84992915c9869f58094ed5becf10:
+>
+>
+> TBH each of these is going to take careful review, nobody really
+> knows how xfsdump works anymore so we'll have to be very careful that
+> nothing breaks.
+>
+> Anyway, give it another check through, make sure you understand the
+> code you're changing to be sure you aren't just taking the fast path
+> to making coverity shut up, reformat the changelogs as above, be ready
+> to tell us what fairly comprehensive testing you did on the result, and we
+> can take a pass at review on the list.
+>
+>
 
-  xfs: fix data corruption w/ unaligned reflink ranges (2018-10-06 11:44:39 +1000)
+Sure. Well, back to the drawing board. :-)
 
-are available in the git repository at:
 
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux tags/xfs-4.20-merge-1
+Thanks,
+Jan
 
-for you to fetch changes up to 96987eea537d6ccd98704a71958f9ba02da80843:
-
-  xfs: cancel COW blocks before swapext (2018-10-18 17:21:55 +1100)
-
-----------------------------------------------------------------
-xfs: Changes for 4.20
-
-- only support filesystems with unwritten extents
-- add definition for statfs XFS magic number
-- remove unused parameters around reflink code
-- more debug for dangling delalloc extents
-- cancel COW extents on extent swap targets
-- fix quota stats output and clean up the code
-- refactor some of the attribute code in preparation for parent pointers
-- fix several buffer handling bugs
-
-----------------------------------------------------------------
-Adam Borowski (1):
-      xfs: add a define for statfs magic to uapi
-
-Allison Henderson (4):
-      xfs: Move fs/xfs/xfs_attr.h to fs/xfs/libxfs/xfs_attr.h
-      xfs: Add helper function xfs_attr_try_sf_addname
-      xfs: Add attibute set and helper functions
-      xfs: Add attibute remove and helper functions
-
-Brian Foster (1):
-      xfs: clear ail delwri queued bufs on unmount of shutdown fs
-
-Carlos Maiolino (2):
-      xfs: Fix xqmstats offsets in /proc/fs/xfs/xqmstat
-      xfs: use offsetof() in place of offset macros for __xfsstats
-
-Christoph Hellwig (8):
-      xfs: remove XFS_IO_INVALID
-      xfs: remove suport for filesystems without unwritten extent flag
-      xfs: handle zeroing in xfs_file_iomap_begin_delay
-      xfs: remove the unused shared argument to xfs_reflink_reserve_cow
-      xfs: remove the unused trimmed argument from xfs_reflink_trim_around_shared
-      xfs: fix fork selection in xfs_find_trim_cow_extent
-      xfs: print dangling delalloc extents
-      xfs: cancel COW blocks before swapext
-
-Darrick J. Wong (3):
-      xfs: xrep_findroot_block should reject root blocks with siblings
-      xfs: always assign buffer verifiers when one is provided
-      xfs: fix buffer state management in xrep_findroot_block
-
-Dave Chinner (2):
-      xfs: issue log message on user force shutdown
-      xfs: fix use-after-free race in xfs_buf_rele
-
- fs/xfs/libxfs/xfs_attr.c       | 236 ++++++++++++++++++++++++-----------------
- fs/xfs/{ => libxfs}/xfs_attr.h |   2 +
- fs/xfs/libxfs/xfs_bmap.c       |  70 ++++++------
- fs/xfs/libxfs/xfs_bmap.h       |   1 +
- fs/xfs/libxfs/xfs_format.h     |   8 +-
- fs/xfs/libxfs/xfs_sb.c         |   5 +-
- fs/xfs/scrub/repair.c          | 128 +++++++++++++++++-----
- fs/xfs/scrub/scrub.c           |  13 ---
- fs/xfs/xfs_aops.c              |   4 +-
- fs/xfs/xfs_aops.h              |  14 ++-
- fs/xfs/xfs_bmap_util.c         |  61 ++---------
- fs/xfs/xfs_buf.c               | 109 +++++++++++++++----
- fs/xfs/xfs_buf.h               |   2 +
- fs/xfs/xfs_fsops.c             |  50 ++++-----
- fs/xfs/xfs_ioctl.c             |   8 --
- fs/xfs/xfs_iomap.c             |  53 ++++++---
- fs/xfs/xfs_reflink.c           |  33 +++---
- fs/xfs/xfs_reflink.h           |   4 +-
- fs/xfs/xfs_stats.c             |  52 ++++-----
- fs/xfs/xfs_stats.h             |  28 +----
- fs/xfs/xfs_super.c             |  38 ++++++-
- fs/xfs/xfs_trans.h             |   1 +
- fs/xfs/xfs_trans_ail.c         |  28 +++--
- fs/xfs/xfs_trans_buf.c         |  42 ++++++++
- include/uapi/linux/magic.h     |   1 +
- 25 files changed, 608 insertions(+), 383 deletions(-)
- rename fs/xfs/{ => libxfs}/xfs_attr.h (97%)
 
 -- 
-Dave Chinner
-david@fromorbit.com
+Jan Tulak
