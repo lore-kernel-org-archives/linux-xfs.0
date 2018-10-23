@@ -1,140 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:45392 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:43976 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728161AbeJWDou (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 22 Oct 2018 23:44:50 -0400
-Subject: Re: xfsdump cleaning patchset
+        id S1726764AbeJWMUs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 23 Oct 2018 08:20:48 -0400
+Subject: Re: Segmentation fault in xfs_repair
+References: <CA+MkmrPWg=pD5t-bt8ye36bi8prep+FjM_n-L4XnG-PRJc--7w@mail.gmail.com>
 From: Eric Sandeen <sandeen@sandeen.net>
-References: <CACj3i73FyABTkX1eCDvL+ccUhD1kWowS92=PFVyGiPvi6HWGFQ@mail.gmail.com>
- <20181022174316.GA28561@infradead.org>
- <90559dfb-5222-4faf-a9bb-a314cc645129@sandeen.net>
-Message-ID: <83eb725e-800d-b597-29d9-52d8a672c82c@sandeen.net>
-Date: Mon, 22 Oct 2018 14:25:00 -0500
+Message-ID: <6af24679-cc41-3a11-7461-174b82fb9ed1@sandeen.net>
+Date: Mon, 22 Oct 2018 22:59:16 -0500
 MIME-Version: 1.0
-In-Reply-To: <90559dfb-5222-4faf-a9bb-a314cc645129@sandeen.net>
+In-Reply-To: <CA+MkmrPWg=pD5t-bt8ye36bi8prep+FjM_n-L4XnG-PRJc--7w@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>, Jan Tulak <jtulak@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Oleg Davydov <burunduk3@gmail.com>, linux-xfs@vger.kernel.org
 
-
-
-On 10/22/18 1:07 PM, Eric Sandeen wrote:
-> On 10/22/18 12:43 PM, Christoph Hellwig wrote:
->> Please send an actual patch series, github is completely unusable
+On 10/20/18 7:43 AM, Oleg Davydov wrote:
+> I try to repair file system from corrupter drive and this leads to
+> Segmentaion Fault in xfs_repair. You can see some logs here (incl.
+> stack trace from coredump): https://pastebin.com/farKCDRi
 > 
-> Sorry, I had asked Jan to put up a git tree first as a sanity
-> check before sending $UNKNOWN_NR patches to the list, I just
-> wanted to quickly get a sense of the work he'd done, and have
-> the full patch series sent if it looked like it was on the right
-> path.
+> I tried xfsprogs-4.14.0 (currently installed on my system), custom
+> build from git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git, from
+> master (3caeb69c) and from libxfs-4.19-sync (b5c71bcd), all ended in
+> the same result.
 > 
-> So, my bad.
-> 
-> -Eric
-> 
+> Please suggest me how to fix it, how to get some more information
+> about the problem or how can I workaround it. Additional problem is
+> that I can't even mount filesystem now (mount fails with Corruption
+> warning: Metadata has LSN (1674570203:54480) ahead of current LSN
+> (1:8). Please unmount and run xfs_repair (>= v4.3) to resolve.)
 
-I mostly just wanted to see how it was broken up and the patch
-style, which looks mostly ok.  But while we're here:
+This should fix it.  If you'd like to test it with an abundance of
+caution, you can do this:
 
-First, what testing was done on the patchset?
+xfs_metadump -o /dev/original - | xfs_mdrestore - xfs-test.img
 
-For Coverity issues, please use:
+then run repair on xfs-test.img and see what it would do to your real
+fs.  You can even mount the image to see what files remain, what was
+moved to lost+found etc  (but note that all files will appear to be
+empty in the restored metadump image.)
 
-Addresses-Coverity-ID: XYZ
+====== 8< ======
 
-or even i.e.
+xfs_repair: initialize realloced bplist space in longform_dir2_entry_check
 
-Addresses-Coverity-ID: XYZ ("Missing break in switch")
+If we need to realloc the bplist[] array holding buffers for a given
+directory, we don't initialize the new slots.  This causes a problem
+if the directory has holes, because those slots never get filled in.
 
-in the body instead of putting the CID in the subject (which wasn't
-done consistently in any case).  It'd be good to have the coverity
-ID in each patch that addresses one; more than one CID mentioned
-via several patch tags is fine.
+At the end of the function we call libxfs_putbuf for every non-null
+slot, and any uninitialized slots are segfault landmines.
 
+Make sure we initialize all new slots to NULL for this reason.
 
-I'd also kind of hoped to do more whitespace/style fixup before
-making code changes but that'll make your later patches impossible
-to apply, so maybe we'll just leave it for now.
+Reported-by: Oleg Davydov <burunduk3@gmail.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-
-I'm not a huge fan of "fix buffer overflows by making them arbitrarily
-bigger" - can we use i.e. snprintf to make sure it won't happen again,
-and maybe size them based on ... something, instead of "eh, [5000] is
-hopefully enough?"
-
-i.e. in 
-
-df48737f  xfsdump: fix string truncation 
-
-"cmd" gets:
-
-snprintf(cmd, sizeof(cmd), "cp %s %s", stobjfile, dst_stobjfile);
-
-Each of those is up to MAXPATHLEN, which (I think) is 4096,
-so even your 5000 isn't enough in extreme cases.  OTOH you may not
-want a 2*4096+5 array on the stack, so maybe it should be allocated.
-Or, maybe system("cp A B") is crazy in the first place, don't we have
-rename() for that purpose?
-
-In the same file, 
-
--static char txt[256];
-+static char txt[300];
-
-we snprintf to txt in 3 places:
-
-snprintf(txt, sizeof(txt), "path:  %s", invtentry->ie_filename);
-ie_filename is 128 chars so this should be fine.
-
-and 2 more similar to:
-snprintf(txt, sizeof(txt), "start: %s", ctime32(&invtentry->ie_timeperiod.tp_start));
-
-where "ctime32" calls ctime() which in general isn't going to be returning
-anywhere near 250 bytes, so it's not clear why 300 is any "better."
-
-similar for the change to:
-
-#define MAX_UNAMECMD MAXHOSTLEN+40
-
-there is no indication that "+100" is sufficient - rsh_path could again
-be up to PATH_MAX.  For this kind of stuff don't guess, either figure out
-the max, or gracefully detect an overflow and use error handling if it does,
-or find a way to do it that doesn't require allocating 10k of buffer
-on the stack.  ;)
-
-
->From spot-checking a few commits, please take another careful pass
-through to look at context and code history to be sure that you're
-really fixing the code properly and not just making coverity and/or
-gcc be quiet; for example in
-
-0ab032a8 common/drive_minrmt.c: remove a dead code (CID 1056289) 
-
-you saw that coverity spotted dead code and so you removed it, but it
-shouldn't be dead, it should be somewhere else, I think - look up about
-30 lines from your change for a hint.  :)
-
-
-For some of the resource leak fixes, you might consider using something
-like "goto out_free;" rather than adding cleanup repeatedly at multiple
-return points.  Sometimes that's cleaner.
-
-
-TBH each of these is going to take careful review, nobody really
-knows how xfsdump works anymore so we'll have to be very careful that
-nothing breaks.
-
-Anyway, give it another check through, make sure you understand the
-code you're changing to be sure you aren't just taking the fast path
-to making coverity shut up, reformat the changelogs as above, be ready
-to tell us what fairly comprehensive testing you did on the result, and we
-can take a pass at review on the list.
-
-
-Thanks,
--Eric
+diff --git a/repair/phase6.c b/repair/phase6.c
+index b87c751..9d24a4f 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -2348,6 +2348,8 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
+ 
+ 		db = xfs_dir2_da_to_db(mp->m_dir_geo, da_bno);
+ 		if (db >= num_bps) {
++			int last_size = num_bps;
++
+ 			/* more data blocks than expected */
+ 			num_bps = db + 1;
+ 			bplist = realloc(bplist, num_bps * sizeof(struct xfs_buf*));
+@@ -2355,6 +2357,9 @@ longform_dir2_entry_check(xfs_mount_t	*mp,
+ 				do_error(_("realloc failed in %s (%zu bytes)\n"),
+ 					__func__,
+ 					num_bps * sizeof(struct xfs_buf*));
++			/* Initialize the new elements */
++			for (i = last_size; i < num_bps; i++)
++				bplist[i] = NULL;
+ 		}
+ 
+ 		if (isblock)
