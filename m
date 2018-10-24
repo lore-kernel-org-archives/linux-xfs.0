@@ -1,238 +1,192 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it1-f178.google.com ([209.85.166.178]:36173 "EHLO
-        mail-it1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726465AbeJYMcL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Oct 2018 08:32:11 -0400
-Received: by mail-it1-f178.google.com with SMTP id h14-v6so10135itf.1
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Oct 2018 21:01:17 -0700 (PDT)
-MIME-Version: 1.0
-References: <CAGiyNfAUewzAjASPBccOk91PJ+nLS0nF4U3EvO4n59XsYu5P-w@mail.gmail.com>
- <20181023145339.GA7537@bfoster> <CAGiyNfAy+eTq+oba0Rb8Oe_kajFqD5a6rPnOkWPjC_E=foSqkg@mail.gmail.com>
- <20181024043416.GA19305@dastard> <CAGiyNfBMjQPD0bxqHNMeUVZzr_uVdqRqMZpDOkVUEnenEobxNQ@mail.gmail.com>
- <20181024121112.GB46681@bfoster>
-In-Reply-To: <20181024121112.GB46681@bfoster>
-From: Mao Cheng <chengmao2010@gmail.com>
-Date: Thu, 25 Oct 2018 12:01:06 +0800
-Message-ID: <CAGiyNfC7H6nRXFyNZ-wQDBGecePtcciFh7_v2gi+jtrST9Q-mw@mail.gmail.com>
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:9551 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726317AbeJYHGC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Oct 2018 03:06:02 -0400
+Date: Thu, 25 Oct 2018 09:35:23 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: xfs_alloc_ag_vextent_near() takes about 30ms to complete
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Message-ID: <20181024223523.GB19305@dastard>
+References: <CAGiyNfAUewzAjASPBccOk91PJ+nLS0nF4U3EvO4n59XsYu5P-w@mail.gmail.com>
+ <20181023145339.GA7537@bfoster>
+ <CAGiyNfAy+eTq+oba0Rb8Oe_kajFqD5a6rPnOkWPjC_E=foSqkg@mail.gmail.com>
+ <20181024043416.GA19305@dastard>
+ <20181024120926.GA46681@bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20181024120926.GA46681@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: bfoster@redhat.com
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Mao Cheng <chengmao2010@gmail.com>, linux-xfs@vger.kernel.org
 
-Brian Foster <bfoster@redhat.com> =E4=BA=8E2018=E5=B9=B410=E6=9C=8824=E6=97=
-=A5=E5=91=A8=E4=B8=89 =E4=B8=8B=E5=8D=888:11=E5=86=99=E9=81=93=EF=BC=9A
->
-> On Wed, Oct 24, 2018 at 05:02:11PM +0800, Mao Cheng wrote:
-> > Hi,
-> > Dave Chinner <david@fromorbit.com> =E4=BA=8E2018=E5=B9=B410=E6=9C=8824=
-=E6=97=A5=E5=91=A8=E4=B8=89 =E4=B8=8B=E5=8D=8812:34=E5=86=99=E9=81=93=EF=BC=
-=9A
-> > >
-> > > On Wed, Oct 24, 2018 at 11:01:13AM +0800, Mao Cheng wrote:
-> > > > Hi Brian,
-> > > > Thanks for your response.
-> > > > Brian Foster <bfoster@redhat.com> =E4=BA=8E2018=E5=B9=B410=E6=9C=88=
-23=E6=97=A5=E5=91=A8=E4=BA=8C =E4=B8=8B=E5=8D=8810:53=E5=86=99=E9=81=93=EF=
-=BC=9A
+On Wed, Oct 24, 2018 at 08:09:27AM -0400, Brian Foster wrote:
+> On Wed, Oct 24, 2018 at 03:34:16PM +1100, Dave Chinner wrote:
+> > On Wed, Oct 24, 2018 at 11:01:13AM +0800, Mao Cheng wrote:
+> > > Hi Brian,
+> > > Thanks for your response.
+> > > Brian Foster <bfoster@redhat.com> 于2018年10月23日周二 下午10:53写道：
+> > > >
+> > > > On Tue, Oct 23, 2018 at 03:56:51PM +0800, Mao Cheng wrote:
+> > > > > Sorry for trouble again. I just wrote wrong function name in previous
+> > > > > sending, so resend it.
+> > > > > If you have received previous email please ignore it, thanks
 > > > > >
-> > > > > On Tue, Oct 23, 2018 at 03:56:51PM +0800, Mao Cheng wrote:
-> > > > > > Sorry for trouble again. I just wrote wrong function name in pr=
-evious
-> > > > > > sending, so resend it.
-> > > > > > If you have received previous email please ignore it, thanks
-> > > > > >
-> > > > > > we have a XFS mkfs with "-k" and mount with the default options=
-(
-> > > > > > rw,relatime,attr2,inode64,noquota), the size is about 2.2TB=EF=
-=BC=8Cand
-> > > > > > exported via samba.
-> > > > > >
-> > > > > > [root@test1 home]# xfs_info /dev/sdk
-> > > > > > meta-data=3D/dev/sdk               isize=3D512    agcount=3D4, =
-agsize=3D131072000 blks
-> > > > > >          =3D                       sectsz=3D4096  attr=3D2, pro=
-jid32bit=3D1
-> > > > > >          =3D                       crc=3D1        finobt=3D0 sp=
-inodes=3D0
-> > > > > > data     =3D                       bsize=3D4096   blocks=3D5242=
-88000, imaxpct=3D5
-> > > > > >          =3D                       sunit=3D0      swidth=3D0 bl=
-ks
-> > > > > > naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0 =
-ftype=3D1
-> > > > > > log      =3Dinternal               bsize=3D4096   blocks=3D2560=
-00, version=3D2
-> > > > > >          =3D                       sectsz=3D4096  sunit=3D1 blk=
-s, lazy-count=3D1
-> > > > > > realtime =3Dnone                   extsz=3D4096   blocks=3D0, r=
-textents=3D0
-> > > > > >
-> > > > > > free space about allocation groups:
-> > > > > >    from      to extents  blocks    pct
-> > > > > >       1       1       9       9   0.00
-> > > > > >       2       3   14291   29124   0.19
-> > > > > >       4       7    5689   22981   0.15
-> > > > > >       8      15     119    1422   0.01
-> > > > > >      16      31  754657 15093035  99.65
-> > >
-> > > 750,000 fragmented free extents means something like 1600 btree
-> > > leaf blocks to hold them all.....
-> > >
-> > > > > xfs_alloc_ag_vextent_near() is one of the several block allocatio=
-n
-> > > > > algorithms in XFS. That function itself includes a couple differe=
-nt
-> > > > > algorithms for the "near" allocation based on the state of the AG=
-. One
-> > > > > looks like an intra-block search of the by-size free space btree =
-(if not
-> > > > > many suitably sized extents are available) and the second looks l=
-ike an
-> > > > > outward sweep of the by-block free space btree to find a suitably=
- sized
-> > > > > extent.
-> > >
-> > > Yup, just like the free inode allocation search, which is capped
-> > > at about 10 btree blocks left and right to prevent searching the
-> > > entire tree for the one free inode that remains in it.
-> > >
-> > > The problem here is that the first algorithm fails immediately
-> > > because there isn't a contiguous free space large enough for the
-> > > allocation being requested, and so it finds the largest block whose
-> > > /location/ is less than target block as the start point for the
-> > > nearest largest freespace.
-> > >
-> > > IOW, we do an expanding radius size search based on physical
-> > > locality rather than finding a free space based on size. Once we
-> > > find a good extent to either the left or right, we then stop that
-> > > search and try to find a better extent to the other direction
-> > > (xfs_alloc_find_best_extent()). That search is not bound, so can
-> > > search the entire of the tree in that remaining directory without
-> > > finding a better match.
-> > >
-> > > We can't cut the initial left/right search shorter - we've got to
-> > > find a large enough free extent to succeed, but we can chop
-> > > xfs_alloc_find_best_extent() short, similar to searchdistance in
-> > > xfs_dialloc_ag_inobt(). The patch below does that.
-> > >
-> > > Really, though, I think what we need to a better size based search
-> > > before falling back to a locality based search. This is more
-> > > complex, so not a few minutes work and requires a lot more thought
-> > > and testing.
-> > >
-> > > > We share an xfs filesystem to windows via SMB protocol.
-> > > > There are about 5 windows copy small files to the samba share at th=
-e same time.
-> > > > The main problem is the throughput degraded from 30MB/s to around
-> > > > 10KB/s periodically and recovered about 5s later.
-> > > > The kworker consumes 100% of one CPU when the throughput degraded a=
-nd
-> > > > kworker task is wrteback.
-> > > > /proc/vmstat shows nr_dirty is very close to nr_dirty_threshold
-> > > > and nr_writeback is too small(is that means there too many dirty pa=
-ges
-> > > > in page cache and can't be written out to disk?)
-> > >
-> > > incoming writes are throttled at the rate writeback makes progress,
-> > > hence the system will sit at the threshold. This is normal.
-> > > Writeback is just slow because of the freespace fragmentation in the
-> > > filesystem.
-> > Does running xfs_fsr periodically alleviate this problem?
-> > And is it advisable to run xfs_fsr regularly to reduce the
-> > fragmentation in xfs filesystems?
-> >
->
-> I think xfs_fsr is more likely to contribute to this problem than
-> alleviate it. xfs_fsr defragments files whereas the problem here is
-> fragmentation of free space.
->
-> Could you determine whether Dave's patch helps with performance at all?
-I will test the patch later.
->
-> Also, would you be able to share a metadump of this filesystem?
-The metadump has been uploaded to google driver, and link as follows:
-https://drive.google.com/open?id=3D1RLekC-BnbAujXDl-xZ-vteMudrl2xC9D
+> > > > > we have a XFS mkfs with "-k" and mount with the default options(
+> > > > > rw,relatime,attr2,inode64,noquota), the size is about 2.2TB，and
+> > > > > exported via samba.
+> > > > >
+> > > > > [root@test1 home]# xfs_info /dev/sdk
+> > > > > meta-data=/dev/sdk               isize=512    agcount=4, agsize=131072000 blks
+> > > > >          =                       sectsz=4096  attr=2, projid32bit=1
+> > > > >          =                       crc=1        finobt=0 spinodes=0
+> > > > > data     =                       bsize=4096   blocks=524288000, imaxpct=5
+> > > > >          =                       sunit=0      swidth=0 blks
+> > > > > naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
+> > > > > log      =internal               bsize=4096   blocks=256000, version=2
+> > > > >          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+> > > > > realtime =none                   extsz=4096   blocks=0, rtextents=0
+> > > > >
+> > > > > free space about allocation groups:
+> > > > >    from      to extents  blocks    pct
+> > > > >       1       1       9       9   0.00
+> > > > >       2       3   14291   29124   0.19
+> > > > >       4       7    5689   22981   0.15
+> > > > >       8      15     119    1422   0.01
+> > > > >      16      31  754657 15093035  99.65
+> > 
+> > 750,000 fragmented free extents means something like 1600 btree
+> > leaf blocks to hold them all.....
+> > 
+> > > > xfs_alloc_ag_vextent_near() is one of the several block allocation
+> > > > algorithms in XFS. That function itself includes a couple different
+> > > > algorithms for the "near" allocation based on the state of the AG. One
+> > > > looks like an intra-block search of the by-size free space btree (if not
+> > > > many suitably sized extents are available) and the second looks like an
+> > > > outward sweep of the by-block free space btree to find a suitably sized
+> > > > extent.
+> > 
+> > Yup, just like the free inode allocation search, which is capped
+> > at about 10 btree blocks left and right to prevent searching the
+> > entire tree for the one free inode that remains in it.
+> > 
+> > The problem here is that the first algorithm fails immediately
+> > because there isn't a contiguous free space large enough for the
+> > allocation being requested, and so it finds the largest block whose
+> > /location/ is less than target block as the start point for the
+> > nearest largest freespace.
+> > 
+> 
+> Hmm, not sure I follow what you're saying here wrt to why we end up in
+> the second algorithm.
 
-Thanks,
+I probably didn't explain it well. I wrote it quickly, didn't proof
+read. What I meant was "...because there isn't enough contiguous
+free space large for the allocation requested to land in the last
+btree block, and so...."
 
-Mao
->
-> Brian
->
-> > Regards,
-> >
-> > Mao.
-> > >
-> > > Cheers,
-> > >
-> > > Dave.
-> > > --
-> > > Dave Chinner
-> > > david@fromorbit.com
-> > >
-> > >
-> > > xfs: cap search distance in xfs_alloc_ag_vextent_near()
-> > >
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > >
-> > > Don't waste too much CPU time finding the perfect free extent when
-> > > we don't have a large enough contiguous free space and there are
-> > > many, many small free spaces that we'd do a linear search through.
-> > > Modelled on searchdistance in xfs_dialloc_ag_inobt() which solved
-> > > the same problem with the cost of finding the last free inodes in
-> > > the inode allocation btree.
-> > >
-> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > ---
-> > >  fs/xfs/libxfs/xfs_alloc.c | 13 ++++++++++---
-> > >  1 file changed, 10 insertions(+), 3 deletions(-)
-> > >
-> > > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> > > index e1c0c0d2f1b0..c0c0a018e3bb 100644
-> > > --- a/fs/xfs/libxfs/xfs_alloc.c
-> > > +++ b/fs/xfs/libxfs/xfs_alloc.c
-> > > @@ -886,8 +886,14 @@ xfs_alloc_ag_vextent_exact(
-> > >  }
-> > >
-> > >  /*
-> > > - * Search the btree in a given direction via the search cursor and c=
-ompare
-> > > - * the records found against the good extent we've already found.
-> > > + * Search the btree in a given direction via the search cursor and c=
-ompare the
-> > > + * records found against the good extent we've already found.
-> > > + *
-> > > + * We cap this search to a number of records to prevent searching hu=
-ndreds of
-> > > + * thousands of records in a potentially futile search for a larger =
-freespace
-> > > + * when free space is really badly fragmented. Spending more CPU tim=
-e than the
-> > > + * IO cost of a sub-optimal allocation is a bad tradeoff - cap it at=
- searching
-> > > + * a full btree block (~500 records on a 4k block size fs).
-> > >   */
-> > >  STATIC int
-> > >  xfs_alloc_find_best_extent(
-> > > @@ -906,6 +912,7 @@ xfs_alloc_find_best_extent(
-> > >         int                     error;
-> > >         int                     i;
-> > >         unsigned                busy_gen;
-> > > +       int                     searchdistance =3D args->mp->m_alloc_=
-mxr[0];
-> > >
-> > >         /* The good extent is perfect, no need to  search. */
-> > >         if (!gdiff)
-> > > @@ -963,7 +970,7 @@ xfs_alloc_find_best_extent(
-> > >                         error =3D xfs_btree_decrement(*scur, 0, &i);
-> > >                 if (error)
-> > >                         goto error0;
-> > > -       } while (i);
-> > > +       } while (i && searchdistance-- > 0);
-> > >
-> > >  out_use_good:
-> > >         xfs_btree_del_cursor(*scur, XFS_BTREE_NOERROR);
+> I was thinking the most likely condition is that
+> there are actually plenty of suitably sized extents, but as shown by the
+> free space data, they're amidst a huge number of too small extents. The
+
+Yup, if we do a by-size lookup for >= 22 blocks and there are a
+1000 free 22 block extents, the lookup doesn't land in the last
+block. Straight to physical locality search.
+
+> first algorithm is only active if a lookup in the cntbt lands in the
+> last block (the far right leaf) of the btree, so unless I'm missing
+> something this would mean we'd skip right past it to the second
+> algorithm if the last N blocks (where N > 1) of the cnt_bt have large
+> enough extents.
+
+*nod*.
+
+> IOW, the first algo seems like an optimization for when we know there
+> are only a small number of minimum sized extents available and the
+> second (location based) algorithm would mostly churn. Regardless, we end
+> up in the same place in the end...
+> 
+> > IOW, we do an expanding radius size search based on physical
+> > locality rather than finding a free space based on size. Once we
+> > find a good extent to either the left or right, we then stop that
+> > search and try to find a better extent to the other direction
+> > (xfs_alloc_find_best_extent()). That search is not bound, so can
+> > search the entire of the tree in that remaining directory without
+> > finding a better match.
+> > 
+> > We can't cut the initial left/right search shorter - we've got to
+> > find a large enough free extent to succeed, but we can chop
+> > xfs_alloc_find_best_extent() short, similar to searchdistance in
+> > xfs_dialloc_ag_inobt(). The patch below does that.
+> > 
+> 
+> This search looks like it goes as far in the opposite direction as the
+> current candidate extent.  So I take it this could potentially go off the
+> rails if we find one suitable extent in one direction that is relatively
+> far off wrt to startblock, and then the opposite direction happens to be
+> populated with a ton of too small extents before we extend to the range
+> that breaks the search.
+
+Precisely.
+
+> I'm curious whether this contributes to the reporter's problem at all,
+> but this sounds like a reasonable change to me either way.
+
+So am I. It's the low hanging fruit - we have ot search until we
+find the first candidate block (no chioce in that) but we can chose
+to terminate the "is there a better choice" search.
+
+> > Really, though, I think what we need to a better size based search
+> > before falling back to a locality based search. This is more
+> > complex, so not a few minutes work and requires a lot more thought
+> > and testing.
+> > 
+> 
+> Indeed. As noted above, the current size based search strikes me as an
+> optimization that only executes under particular conditions.
+
+It's the common condition in a typical filesystem - if large,
+contiguous free spaces in the filesystem, then the lookup will
+almost always land in the last block of the btree.
+
+> Since the purpose of this function is locality allocation,
+
+Well, locality is the /second/ consideration - the first algorithm
+prioritises maxlen for contiguous allocation, then selects the best
+candidate by locality. The second alogortihm prioiritises locality
+over allocation length.
+
+> I'm wondering
+> if we could implement a smarter location based search using information
+> available in the by-size tree. For example, suppose we could identify
+> the closest minimally sized extents to agbno in order to better seed the
+> left/right starting points of the location based search. This of course
+> would require careful heuristics/tradeoffs to make sure we don't just
+> replace a bnobt scan with a cntbt scan.
+
+I wouldn't bother. I'd just take the "last block" algorithm and make
+it search all the >= contiguous free space extents for best locality
+before dropping back to the minlen search.
+
+Really, that's what the first algorithm should be. Looking at the
+last block and selecting the best free space by size and then
+locality is really just a degenerate case of the more general
+algorithm.
+
+Back when this algorithm was designed, AGs could only be 4GB in
+size, so searching the oly the last block by size made sense - the
+total number of free space extents is fairly well bound by the
+AG size. That bound essentially went away with expanding AGs to 1TB,
+but the algorithm wasn't changed to reflect that even a small amount
+of free space fragmentation could result almost never hitting the
+last block of the btree....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
