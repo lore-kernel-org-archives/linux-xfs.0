@@ -1,71 +1,205 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm1-f51.google.com ([209.85.128.51]:55566 "EHLO
-        mail-wm1-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727274AbeJRXqf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Oct 2018 19:46:35 -0400
-Received: by mail-wm1-f51.google.com with SMTP id 206-v6so744356wmb.5
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Oct 2018 08:44:58 -0700 (PDT)
-Subject: Re: ENSOPC on a 10% used disk
-From: Avi Kivity <avi@scylladb.com>
-References: <40c52a7b-2520-8ae4-11d5-ae4b33e1dc29@scylladb.com>
- <20181018013727.GE6311@dastard>
- <39c3af2d-d591-c6bc-d586-245f1ca69a71@scylladb.com>
- <20181018100504.GH6311@dastard>
- <87bf239a-29c2-6db5-6781-42743c9c7d5d@scylladb.com>
-Message-ID: <5516031c-6c4f-072f-e9f9-9f0ecee9927d@scylladb.com>
-Date: Thu, 18 Oct 2018 18:44:54 +0300
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:27343 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725829AbeJYH10 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Oct 2018 03:27:26 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1gFS5W-0006J4-V6
+        for linux-xfs@vger.kernel.org; Thu, 25 Oct 2018 09:57:19 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1gFS5W-0005D2-U0
+        for linux-xfs@vger.kernel.org; Thu, 25 Oct 2018 09:57:18 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 1/5] xfs: move xfs_dir2_addname()
+Date: Thu, 25 Oct 2018 09:57:12 +1100
+Message-Id: <20181024225716.19459-2-david@fromorbit.com>
+In-Reply-To: <20181024225716.19459-1-david@fromorbit.com>
+References: <20181024225716.19459-1-david@fromorbit.com>
 MIME-Version: 1.0
-In-Reply-To: <87bf239a-29c2-6db5-6781-42743c9c7d5d@scylladb.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
+From: Dave Chinner <dchinner@redhat.com>
 
-On 18/10/2018 14.00, Avi Kivity wrote:
->
->
-> This can happen, and indeed I see our default hint is 1MB, so our 
-> small files use a 1MB hint. Looks like we should remove that 1MB hint 
-> since it's reducing allocation flexibility for XFS without a good return.
+This gets rid of the need for a forward  declaration of the static
+function xfs_dir2_addname_int() and readies the code for factoring
+of xfs_dir2_addname_int().
 
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/libxfs/xfs_dir2_node.c | 140 +++++++++++++++++-----------------
+ 1 file changed, 69 insertions(+), 71 deletions(-)
 
-I convinced myself that this is the root cause, it fits perfectly with 
-your explanation. I still think that XFS should allocate *something* 
-rather than ENOSPC, but I can also understand someone wanting a guarantee.
-
-
-> On the other hand, I worry that because we bypass the page cache, XFS 
-> doesn't get to see the entire file at one time and so it will get 
-> fragmented.
-
-
-That's what happens. I write 1000 4k writes to 400 files, in parallel, 
-AIO+DIO. I got 400 perfectly-fragmented files, each had 1000 extents.
-
-
-So I'll remove the default hint for small files, and replace it with 
-larger buffer sizes so we batch more and don't get 8k-sized extents 
-(which is our default buffer size).
-
-
->
->
-> Suppose I write a 4k file with a 1MB hint. How is that trailing 
-> (1MB-4k) marked? Free extent, free extent with extra annotation, or 
-> allocated extent? We may need to deallocate those extents? (will 
-> FALLOC_FL_PUNCH_HOLE do the trick?)
->
-
-I found an 11-year-old post from you that says those reservations are 
-freed on close:
-
-
-https://linux-xfs.oss.sgi.narkive.com/Bpctu4DN/reducing-memory-requirements-for-high-extent-xfs-files#post6
-
-
-This is consistent with xfs_db reporting those areas are free.
+diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+index f1bb3434f51c..3661988906b0 100644
+--- a/fs/xfs/libxfs/xfs_dir2_node.c
++++ b/fs/xfs/libxfs/xfs_dir2_node.c
+@@ -34,8 +34,6 @@ static void xfs_dir2_leafn_rebalance(xfs_da_state_t *state,
+ static int xfs_dir2_leafn_remove(xfs_da_args_t *args, struct xfs_buf *bp,
+ 				 int index, xfs_da_state_blk_t *dblk,
+ 				 int *rval);
+-static int xfs_dir2_node_addname_int(xfs_da_args_t *args,
+-				     xfs_da_state_blk_t *fblk);
+ 
+ /*
+  * Check internal consistency of a leafn block.
+@@ -1613,75 +1611,6 @@ xfs_dir2_leafn_unbalance(
+ 	xfs_dir3_leaf_check(dp, drop_blk->bp);
+ }
+ 
+-/*
+- * Top-level node form directory addname routine.
+- */
+-int						/* error */
+-xfs_dir2_node_addname(
+-	xfs_da_args_t		*args)		/* operation arguments */
+-{
+-	xfs_da_state_blk_t	*blk;		/* leaf block for insert */
+-	int			error;		/* error return value */
+-	int			rval;		/* sub-return value */
+-	xfs_da_state_t		*state;		/* btree cursor */
+-
+-	trace_xfs_dir2_node_addname(args);
+-
+-	/*
+-	 * Allocate and initialize the state (btree cursor).
+-	 */
+-	state = xfs_da_state_alloc();
+-	state->args = args;
+-	state->mp = args->dp->i_mount;
+-	/*
+-	 * Look up the name.  We're not supposed to find it, but
+-	 * this gives us the insertion point.
+-	 */
+-	error = xfs_da3_node_lookup_int(state, &rval);
+-	if (error)
+-		rval = error;
+-	if (rval != -ENOENT) {
+-		goto done;
+-	}
+-	/*
+-	 * Add the data entry to a data block.
+-	 * Extravalid is set to a freeblock found by lookup.
+-	 */
+-	rval = xfs_dir2_node_addname_int(args,
+-		state->extravalid ? &state->extrablk : NULL);
+-	if (rval) {
+-		goto done;
+-	}
+-	blk = &state->path.blk[state->path.active - 1];
+-	ASSERT(blk->magic == XFS_DIR2_LEAFN_MAGIC);
+-	/*
+-	 * Add the new leaf entry.
+-	 */
+-	rval = xfs_dir2_leafn_add(blk->bp, args, blk->index);
+-	if (rval == 0) {
+-		/*
+-		 * It worked, fix the hash values up the btree.
+-		 */
+-		if (!(args->op_flags & XFS_DA_OP_JUSTCHECK))
+-			xfs_da3_fixhashpath(state, &state->path);
+-	} else {
+-		/*
+-		 * It didn't work, we need to split the leaf block.
+-		 */
+-		if (args->total == 0) {
+-			ASSERT(rval == -ENOSPC);
+-			goto done;
+-		}
+-		/*
+-		 * Split the leaf block and insert the new entry.
+-		 */
+-		rval = xfs_da3_split(state);
+-	}
+-done:
+-	xfs_da_state_free(state);
+-	return rval;
+-}
+-
+ /*
+  * Add the data entry for a node-format directory name addition.
+  * The leaf entry is added in xfs_dir2_leafn_add.
+@@ -2059,6 +1988,75 @@ xfs_dir2_node_addname_int(
+ 	return 0;
+ }
+ 
++/*
++ * Top-level node form directory addname routine.
++ */
++int						/* error */
++xfs_dir2_node_addname(
++	xfs_da_args_t		*args)		/* operation arguments */
++{
++	xfs_da_state_blk_t	*blk;		/* leaf block for insert */
++	int			error;		/* error return value */
++	int			rval;		/* sub-return value */
++	xfs_da_state_t		*state;		/* btree cursor */
++
++	trace_xfs_dir2_node_addname(args);
++
++	/*
++	 * Allocate and initialize the state (btree cursor).
++	 */
++	state = xfs_da_state_alloc();
++	state->args = args;
++	state->mp = args->dp->i_mount;
++	/*
++	 * Look up the name.  We're not supposed to find it, but
++	 * this gives us the insertion point.
++	 */
++	error = xfs_da3_node_lookup_int(state, &rval);
++	if (error)
++		rval = error;
++	if (rval != -ENOENT) {
++		goto done;
++	}
++	/*
++	 * Add the data entry to a data block.
++	 * Extravalid is set to a freeblock found by lookup.
++	 */
++	rval = xfs_dir2_node_addname_int(args,
++		state->extravalid ? &state->extrablk : NULL);
++	if (rval) {
++		goto done;
++	}
++	blk = &state->path.blk[state->path.active - 1];
++	ASSERT(blk->magic == XFS_DIR2_LEAFN_MAGIC);
++	/*
++	 * Add the new leaf entry.
++	 */
++	rval = xfs_dir2_leafn_add(blk->bp, args, blk->index);
++	if (rval == 0) {
++		/*
++		 * It worked, fix the hash values up the btree.
++		 */
++		if (!(args->op_flags & XFS_DA_OP_JUSTCHECK))
++			xfs_da3_fixhashpath(state, &state->path);
++	} else {
++		/*
++		 * It didn't work, we need to split the leaf block.
++		 */
++		if (args->total == 0) {
++			ASSERT(rval == -ENOSPC);
++			goto done;
++		}
++		/*
++		 * Split the leaf block and insert the new entry.
++		 */
++		rval = xfs_da3_split(state);
++	}
++done:
++	xfs_da_state_free(state);
++	return rval;
++}
++
+ /*
+  * Lookup an entry in a node-format directory.
+  * All the real work happens in xfs_da3_node_lookup_int.
+-- 
+2.19.1
