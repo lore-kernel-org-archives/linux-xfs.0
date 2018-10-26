@@ -1,31 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf1-f65.google.com ([209.85.167.65]:45301 "EHLO
-        mail-lf1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725857AbeJZOFQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Oct 2018 10:05:16 -0400
-Received: by mail-lf1-f65.google.com with SMTP id c24-v6so8525291lfi.12
-        for <linux-xfs@vger.kernel.org>; Thu, 25 Oct 2018 22:29:42 -0700 (PDT)
+Received: from userp2120.oracle.com ([156.151.31.85]:43686 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726113AbeJ0AZq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Oct 2018 20:25:46 -0400
+Date: Fri, 26 Oct 2018 08:48:04 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs_db: print freecount in xfs_inobt_rec as unsigned
+Message-ID: <20181026154804.GF28243@magnolia>
+References: <3fb12611-2ce0-7e8d-0c65-dcbddf5e55b7@redhat.com>
 MIME-Version: 1.0
-References: <20181011194424.20306-1-stefanrin@gmail.com> <5209fec0-c7b3-ae1f-a909-23adfdee1072@sandeen.net>
- <69b32a73-f6c1-8991-af1e-d1818266c985@sandeen.net>
-In-Reply-To: <69b32a73-f6c1-8991-af1e-d1818266c985@sandeen.net>
-From: Stefan Ring <stefanrin@gmail.com>
-Date: Fri, 26 Oct 2018 07:29:29 +0200
-Message-ID: <CAAxjCEwKqkK6RuE34tXXW=hZXyw5JsU2bhVh73ZRfyW2rGxmXQ@mail.gmail.com>
-Subject: Re: [PATCH v3 0/2] Try to squash metadump data leaks
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <3fb12611-2ce0-7e8d-0c65-dcbddf5e55b7@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Oct 26, 2018 at 2:36 AM Eric Sandeen <sandeen@sandeen.net> wrote:
->> Hm, I think another case we're missing is interior nodes on multi-fsb objects,
-> i.e. everything under /* Zero unused part of interior nodes */ seems to be
-> missing for the process_multi_fsb_objects case as well.  Urk, what a mess.
+On Wed, Oct 24, 2018 at 05:20:08PM -0500, Eric Sandeen wrote:
+> "freecount" in the xfs_inobt_rec is unsigned, so xfs_db should
+> print it as such.
+> 
+> Not doing so tickles a bug in getbitval() where we try to handle
+> sign extension for signed fields and fail badly on big endian
+> machines, causing us to incorrectly report negative numbers when
+> printing structures even when the number is nowhere near the
+> signed maximum value.
+> 
+> So this fix works around that bug by properly marking this field
+> as unsigned, because I have yet to convince myself of the proper
+> fix for the underlying bug.
+> 
+> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=201453
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-It is a classic game of whack-a-mole ;). I do understand that it is
-this way for historical reasons, but if it would be redone today, it
-should obviously use zeroed buffers for writing out and copy just the
-bits that are known to be needed.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> ---
+> 
+> diff --git a/db/btblock.c b/db/btblock.c
+> index cbd2990..5a5b061 100644
+> --- a/db/btblock.c
+> +++ b/db/btblock.c
+> @@ -513,7 +513,7 @@ const field_t	inobt_sprec_flds[] = {
+>  	{ "holemask", FLDT_UINT16X, OI(ROFF(ir_u.sp.ir_holemask)), C1, 0,
+>  	  TYP_NONE },
+>  	{ "count", FLDT_UINT8D, OI(ROFF(ir_u.sp.ir_count)), C1, 0, TYP_NONE },
+> -	{ "freecount", FLDT_INT8D, OI(ROFF(ir_u.sp.ir_freecount)), C1, 0,
+> +	{ "freecount", FLDT_UINT8D, OI(ROFF(ir_u.sp.ir_freecount)), C1, 0,
+>  	  TYP_NONE },
+>  	{ "free", FLDT_INOFREE, OI(ROFF(ir_free)), C1, 0, TYP_NONE },
+>  	{ NULL }
+> 
