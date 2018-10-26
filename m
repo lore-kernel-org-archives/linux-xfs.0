@@ -1,83 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:50204 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726113AbeJ0D5U (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Oct 2018 23:57:20 -0400
-Date: Fri, 26 Oct 2018 12:18:51 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] libxfs: check all defer ops types
-Message-ID: <20181026191851.GI28243@magnolia>
-References: <20181026161905.GH28243@magnolia>
- <0dc53e1c-2ad6-b04f-2747-451b6760e1d5@sandeen.net>
- <d13db2aa-3e73-7dd6-8677-7e19f9b7ffcd@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d13db2aa-3e73-7dd6-8677-7e19f9b7ffcd@sandeen.net>
+Received: from mail-wm1-f52.google.com ([209.85.128.52]:39903 "EHLO
+        mail-wm1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727636AbeJ0E6m (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 27 Oct 2018 00:58:42 -0400
+Received: by mail-wm1-f52.google.com with SMTP id y144-v6so2532307wmd.4
+        for <linux-xfs@vger.kernel.org>; Fri, 26 Oct 2018 13:20:17 -0700 (PDT)
+Received: from dyn.cm.kabsi.at (h081217199198.dyn.cm.kabsi.at. [81.217.199.198])
+        by smtp.gmail.com with ESMTPSA id 193-v6sm7669219wmj.21.2018.10.26.13.20.14
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Fri, 26 Oct 2018 13:20:15 -0700 (PDT)
+From: Stefan Ring <stefanrin@gmail.com>
+Subject: [PATCH 5/5] xfs_metadump: Zap dev inodes
+Date: Fri, 26 Oct 2018 22:19:43 +0200
+Message-Id: <20181026201943.24131-6-stefanrin@gmail.com>
+In-Reply-To: <20181026201943.24131-1-stefanrin@gmail.com>
+References: <20181026201943.24131-1-stefanrin@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-On Fri, Oct 26, 2018 at 02:11:47PM -0500, Eric Sandeen wrote:
-> 
-> 
-> On 10/26/18 2:02 PM, Eric Sandeen wrote:
-> > On 10/26/18 11:19 AM, Darrick J. Wong wrote:
-> >> From: Darrick J. Wong <darrick.wong@oracle.com>
-> >>
-> >> Make sure we have all the defer ops types loaded before proceeding.
-> > 
-> > So, the only reason we have this problem is that userspace doesn't
-> > exactly share the code which handles all the defer ops.
-> > 
-> > I think this really needs to be a BUILD_BUG_ON if anything, by the
-> > time we get to runtime it's really too late, and a weird thing to
-> > run at every invocation.
-> > 
-> > The only thing I can think of is to make an array containing each
-> > of the xfs_defer_op_types, and iterate over it in some sort of
-> > xfs_defer_ops_init(), then we can compare the size of that array to
-> > XFS_DEFER_OPS_TYPE_MAX with a BUILD_BUG_ON.  Worth it?
-> 
-> Uh, or just make a statically initialized array?
-> I guess nothing about this directly enforces that the ->type number
-> is in the right slot of the array.
-> 
-> static const struct
-> xfs_defer_op_type *defer_op_types[XFS_DEFER_OPS_TYPE_MAX] = {
->        xfs_bmap_update_defer_type,
->        xfs_refcount_update_defer_type,
->        xfs_rmap_update_defer_type,
->        xfs_extent_free_defer_type,
->        xfs_agfl_free_defer_type,
-> };
+---
+ db/metadump.c | 22 +++++++++++++++++++++-
+ 1 file changed, 21 insertions(+), 1 deletion(-)
 
-I was thinking more:
-
-static const struct
-xfs_defer_op_type defer_op_types[XFS_DEFER_OPS_TYPE_MAX] = {
-	[XFS_DEFER_OPS_TYPE_AGFL_FREE] = {
-		.type		= XFS_DEFER_OPS_TYPE_AGFL_FREE,
-		.diff_items	= xfs_extent_free_diff_items,
-		.create_intent	= xfs_extent_free_create_intent,
-		.abort_intent	= xfs_extent_free_abort_intent,
-		.log_item	= xfs_extent_free_log_item,
-		.create_done	= xfs_extent_free_create_done,
-		.finish_item	= xfs_agfl_free_finish_item,
-		.cancel_item	= xfs_extent_free_cancel_item,
-	},
-	...
-};
-
-The downside of this is that now we have to declare all those functions
-somewhere so that the fs/xfs/ and libxfs/defer_item.c can match the
-prototypes.  But that's probably better than what we have now, which is
-a big gaping hole in xfsprogs 4.18.
-
---D
-> 
-> 
-> 
-> 
+diff --git a/db/metadump.c b/db/metadump.c
+index 39183fb7..bdc6f2f4 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -2269,6 +2269,24 @@ process_inode_data(
+ 	return 1;
+ }
+ 
++static int
++process_dev_inode(
++	xfs_dinode_t		*dip)
++{
++	if (XFS_DFORK_NEXTENTS(dip, XFS_ATTR_FORK) ||
++	    XFS_DFORK_NEXTENTS(dip, XFS_DATA_FORK)) {
++		if (show_warnings)
++			print_warning("inode %llu has unexpected extents",
++				      (unsigned long long)cur_ino);
++		return 0;
++	} else {
++		int used = XFS_DFORK_DPTR(dip) - (char*)dip;
++
++		memset(XFS_DFORK_DPTR(dip), 0, mp->m_sb.sb_inodesize - used);
++		return 1;
++	}
++}
++
+ /*
+  * when we process the inode, we may change the data in the data and/or
+  * attribute fork if they are in short form and we are obfuscating names.
+@@ -2321,7 +2339,9 @@ process_inode(
+ 		case S_IFREG:
+ 			success = process_inode_data(dip, TYP_DATA);
+ 			break;
+-		default: ;
++		default:
++			success = process_dev_inode(dip);
++			break;
+ 	}
+ 	nametable_clear();
+ 
+-- 
+2.14.5
