@@ -1,52 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:3053 "EHLO
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:10987 "EHLO
         ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726493AbeJZT3Y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Oct 2018 15:29:24 -0400
-Date: Fri, 26 Oct 2018 21:52:45 +1100
+        by vger.kernel.org with ESMTP id S1726275AbeJZTfV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Oct 2018 15:35:21 -0400
+Date: Fri, 26 Oct 2018 21:58:42 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/5] xfs: factor data block addition from
- xfs_dir2_node_addname_int()
-Message-ID: <20181026105245.GF19305@dastard>
+Subject: Re: [PATCH 4/5] xfs: speed up directory bestfree block scanning
+Message-ID: <20181026105842.GG19305@dastard>
 References: <20181024225716.19459-1-david@fromorbit.com>
- <20181024225716.19459-3-david@fromorbit.com>
- <20181026094529.GA29302@infradead.org>
+ <20181024225716.19459-5-david@fromorbit.com>
+ <20181026102424.GC29302@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181026094529.GA29302@infradead.org>
+In-Reply-To: <20181026102424.GC29302@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Oct 26, 2018 at 02:45:29AM -0700, Christoph Hellwig wrote:
-> > +	} else {
-> > +found_block:
-> 
-> This jumping into branch is a little ugly, but given that the next
-> patch cleans it up it is probably ok.
-> 
-> > +		/* suppress gcc maybe-used-initialised warning */
+On Fri, Oct 26, 2018 at 03:24:24AM -0700, Christoph Hellwig wrote:
+> > @@ -1767,11 +1767,10 @@ xfs_dir2_node_find_freeblk(
+> >  		fbp = fblk->bp;
+> >  		free = fbp->b_addr;
+> >  		findex = fblk->index;
 > > +		bests = dp->d_ops->free_bests_p(free);
+> > +		dp->d_ops->free_hdr_from_disk(&freehdr, free);
+> >  		if (findex >= 0) {
+> >  			/* caller already found the freespace for us. */
+> > -			bests = dp->d_ops->free_bests_p(free);
+> > -			dp->d_ops->free_hdr_from_disk(&freehdr, free);
+> > -
 > 
-> > -	 * If the freespace entry is now wrong, update it.
-> > -	 */
-> > -	bests = dp->d_ops->free_bests_p(free); /* gcc is so stupid */
+> This hunk just undoes a move in the previous patch, might be better
+> idea to just keep it as before there.
 > 
-> So this moves bests from the common path of execution into the
-> branch, where it duplicates one in the other branch just for later
-> patches to move it back to almost where it was.  If it isn't to
-> painful to redo the patch I'd suggest to just keep it in the common
-> path here.
+> > +	for ( ; fbno < lastfbno; fbno++) {
+> > +		/* If we don't have a freeblock in hand, get the next one. */
+> >  		if (fbp == NULL) {
+> > +			/* If it's ifbno we already looked at it. */
+> > +			if (fbno == ifbno)
+> > +				continue;
+> > +
+> 
+> The only case where we have a fbp here is if we had a fblk passed in,
+> but it it did have the index set to -1.  But as far as I can tell
+> searching that again doesn't make any sense at all, so I'd apply
+> something like this in top of your patch (some of this also seems
+> to be in your next patch, so independent of the logic change might
+> be worth moving over here):
 
-Which causes build warnings because gcc can't work out the code flow
-if I leave it alone. And seeing as I use -Werror on the fs/xfs/
-directories, that breaks the build.
+So you've done a bunch of the rework that already in the next patch
+in the series, plus a "fbno = fblk->blkno + 1;" logic change. 
 
-So I'd prefer to leave it like this without a transient build
-warning....
+Perhaps put this logic change at end of the series, rather than in
+the middle where it breaks the rest of the changes?
 
 Cheers,
 
