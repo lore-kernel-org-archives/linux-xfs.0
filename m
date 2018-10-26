@@ -1,79 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:26562 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725886AbeJ2KSn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Oct 2018 06:18:43 -0400
-Date: Mon, 29 Oct 2018 12:20:59 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS: Hang and dmesg flood on mounting invalid FS image
-Message-ID: <20181029012058.GK19305@dastard>
-References: <CAE5jQCc3hrq6E-Ff1oiYUOSDA08PMrqnu80XQtaD5adcUQvV8w@mail.gmail.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:44852 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726531AbeJ0A4H (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Oct 2018 20:56:07 -0400
+Date: Fri, 26 Oct 2018 09:18:24 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: check all defer ops types
+Message-ID: <20181026161824.GG28243@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAE5jQCc3hrq6E-Ff1oiYUOSDA08PMrqnu80XQtaD5adcUQvV8w@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Anatoly Trosinenko <anatoly.trosinenko@gmail.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Sun, Oct 28, 2018 at 08:50:46PM +0300, Anatoly Trosinenko wrote:
-> Hello,
-> 
-> When mounting a broken XFS image, the kernel hangs and floods dmesg
-> with stack traces.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-How did the corruption occur?
+Make sure we have all the defer ops types loaded before proceeding.
 
-$ sudo xfs_logprint -d /dev/vdc
-xfs_logprint:
-    data device: 0xfd20
-    log device: 0xfd20 daddr: 131112 length: 6840
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_defer.c |   12 ++++++++++++
+ fs/xfs/libxfs/xfs_defer.h |    1 +
+ fs/xfs/xfs_super.c        |    6 ++++++
+ 3 files changed, 19 insertions(+)
 
-     0 HEADER Cycle 1 tail 1:000000 len    512 ops 1
-[00000 - 00000] Cycle 0xffffffff New Cycle 0x00000001
-     2 HEADER Cycle 1 tail 1:000002 len    512 ops 5
-     4 HEADER Cycle 1 tail -2147483647:000002 len    512 ops 1
-                           ^^^^^^^^^^^^
-     6 HEADER Cycle 0 tail 1:000000 len      0 ops 0
-[00000 - 00006] Cycle 0x00000001 New Cycle 0x00000000
-     7 HEADER Cycle 0 tail 1:000000 len      0 ops 0
-
-Ok, so from this the head of the log is block 4, and it has a
-corrupt tail pointer it points to:
-
-
-$ sudo xfs_logprint -D -s 4 /dev/vdc |head -10
-xfs_logprint:
-    data device: 0xfd20
-    log device: 0xfd20 daddr: 131112 length: 6840
-
-BLKNO: 4
- 0 bebaedfe  1000000  2000000    20000  1000000  3610000  1000080  2000000 
-                                                 ^^^^^^^       ^   ^
-						 wrong       wrong wrong
-
- 8 2f27bae6  2000000  1000000 dabdbab0        0        0        0        0 
-10        0        0        0        0        0        0        0        0 
-18        0        0        0        0        0        0        0        0 
-20        0        0        0        0        0        0        0        0 
-
-They decode as:
-
-cycle: 1        version: 2              lsn: 1,24835    tail_lsn: 2147483649,2
-
-So the tail LSN points to an invalid log cycle and the previous
-block. IOWs, the block number in the tail indicates the whole log is
-valid and needs to be scanned. but the cycle is not valid.
-
-And that's the problem. Neither the head or tail blocks are
-validated before they are used. CRC checking of the head and tail
-blocks comes later....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+index e792b167150a..997a7420026b 100644
+--- a/fs/xfs/libxfs/xfs_defer.c
++++ b/fs/xfs/libxfs/xfs_defer.c
+@@ -547,3 +547,15 @@ xfs_defer_move(
+ 
+ 	xfs_defer_reset(stp);
+ }
++
++/* Make sure we filled out all the defer_ops types. */
++bool
++xfs_defer_check_all_present(void)
++{
++	int		x;
++
++	for(x = 0; x < XFS_DEFER_OPS_TYPE_MAX; x++)
++		if (defer_op_types[x] == NULL)
++			return false;
++	return true;
++}
+diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
+index 2584a5b95b0d..bc7ae7ff3917 100644
+--- a/fs/xfs/libxfs/xfs_defer.h
++++ b/fs/xfs/libxfs/xfs_defer.h
+@@ -57,5 +57,6 @@ struct xfs_defer_op_type {
+ };
+ 
+ void xfs_defer_init_op_type(const struct xfs_defer_op_type *type);
++bool xfs_defer_check_all_present(void);
+ 
+ #endif /* __XFS_DEFER_H__ */
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 52ee659f97e2..49d1045fe71e 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -38,6 +38,7 @@
+ #include "xfs_refcount_item.h"
+ #include "xfs_bmap_item.h"
+ #include "xfs_reflink.h"
++#include "xfs_defer.h"
+ 
+ #include <linux/namei.h>
+ #include <linux/dax.h>
+@@ -2220,6 +2221,11 @@ init_xfs_fs(void)
+ 	xfs_rmap_update_init_defer_op();
+ 	xfs_refcount_update_init_defer_op();
+ 	xfs_bmap_update_init_defer_op();
++	if (!xfs_defer_check_all_present()) {
++		printk(KERN_ERR "XFS: missing defer ops types\n");
++		error = -EINVAL;
++		goto out;
++	}
+ 
+ 	xfs_dir_startup();
+ 
