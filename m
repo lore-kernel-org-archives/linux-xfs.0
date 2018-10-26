@@ -1,100 +1,85 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:43864 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728488AbeJ3D05 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 29 Oct 2018 23:26:57 -0400
-Subject: Re: [PATCH 5/5] xfs_metadump: Zap dev inodes
+Received: from mail-wm1-f51.google.com ([209.85.128.51]:37758 "EHLO
+        mail-wm1-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725965AbeJ0E6f (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 27 Oct 2018 00:58:35 -0400
+Received: by mail-wm1-f51.google.com with SMTP id p2-v6so2530187wmc.2
+        for <linux-xfs@vger.kernel.org>; Fri, 26 Oct 2018 13:20:09 -0700 (PDT)
+Received: from dyn.cm.kabsi.at (h081217199198.dyn.cm.kabsi.at. [81.217.199.198])
+        by smtp.gmail.com with ESMTPSA id 193-v6sm7669219wmj.21.2018.10.26.13.20.07
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Fri, 26 Oct 2018 13:20:07 -0700 (PDT)
+From: Stefan Ring <stefanrin@gmail.com>
+Subject: [PATCH 1/5] xfs_metadump: Extend data zapping to XFS_DIR{2,3}_LEAFN_MAGIC blocks
+Date: Fri, 26 Oct 2018 22:19:39 +0200
+Message-Id: <20181026201943.24131-2-stefanrin@gmail.com>
+In-Reply-To: <20181026201943.24131-1-stefanrin@gmail.com>
 References: <20181026201943.24131-1-stefanrin@gmail.com>
- <20181026201943.24131-6-stefanrin@gmail.com>
- <e9fb6661-858a-250a-ec2f-a9232e0309ae@sandeen.net>
- <CAAxjCEwi5i0B1Gg4fE-KPf3px4zNgvksY_z=RDfwR_=u=5zAEA@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <e74e127c-e0a0-20e8-f34c-7775bc5f972f@sandeen.net>
-Date: Mon, 29 Oct 2018 13:37:04 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAAxjCEwi5i0B1Gg4fE-KPf3px4zNgvksY_z=RDfwR_=u=5zAEA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Stefan Ring <stefanrin@gmail.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On 10/29/18 1:33 PM, Stefan Ring wrote:
-> On Mon, Oct 29, 2018 at 4:38 PM Eric Sandeen <sandeen@sandeen.net> wrote:
->> On 10/26/18 3:19 PM, Stefan Ring wrote:
->>> ---
->>>  db/metadump.c | 22 +++++++++++++++++++++-
->>>  1 file changed, 21 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/db/metadump.c b/db/metadump.c
->>> index 39183fb7..bdc6f2f4 100644
->>> --- a/db/metadump.c
->>> +++ b/db/metadump.c
->>> @@ -2269,6 +2269,24 @@ process_inode_data(
->>>       return 1;
->>>  }
->>>
->>> +static int
->>> +process_dev_inode(
->>> +     xfs_dinode_t            *dip)
->>> +{
->>> +     if (XFS_DFORK_NEXTENTS(dip, XFS_ATTR_FORK) ||
->>> +         XFS_DFORK_NEXTENTS(dip, XFS_DATA_FORK)) {
->>> +             if (show_warnings)
->>> +                     print_warning("inode %llu has unexpected extents",
->>> +                                   (unsigned long long)cur_ino);
->>> +             return 0;
->>> +     } else {
->>> +             int used = XFS_DFORK_DPTR(dip) - (char*)dip;
->>> +
->>> +             memset(XFS_DFORK_DPTR(dip), 0, mp->m_sb.sb_inodesize - used);
->>> +             return 1;
->>> +     }
->>> +}
->>> +
->>>  /*
->>>   * when we process the inode, we may change the data in the data and/or
->>>   * attribute fork if they are in short form and we are obfuscating names.
->>> @@ -2321,7 +2339,9 @@ process_inode(
->>>               case S_IFREG:
->>>                       success = process_inode_data(dip, TYP_DATA);
->>>                       break;
->>> -             default: ;
->>> +             default:
->>> +                     success = process_dev_inode(dip);
->>> +                     break;
->>
->> Probably:
->>                 case S_IFBLK:
->>                 case S_IFCHR:
->>                         success = process_dev_inode(dip);
->>                         break;
->>                 default:
->>                         break;
->>
->> no?
-> 
-> Does this catch pipes and sockets, which are also dev inodes?
+---
+ db/metadump.c | 27 +++++++++++++++++++++++----
+ 1 file changed, 23 insertions(+), 4 deletions(-)
 
-heh, whooops, nope.
-
-        case S_IFIFO:
-        case S_IFCHR:
-        case S_IFBLK:
-        case S_IFSOCK:
-...
-
-sorry, my point was just that it's probably better to explicitly name them
-than to fall through to a default but I forgot about 2 formats.
-
--Eric
-
->>
->>>       }
->>>       nametable_clear();
->>>
->>>
-> 
+diff --git a/db/metadump.c b/db/metadump.c
+index cc2ae9af..97d2a490 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -1426,7 +1426,7 @@ process_dir_leaf_block(
+ 	char				*block)
+ {
+ 	struct xfs_dir2_leaf		*leaf;
+-	struct xfs_dir3_icleaf_hdr 	leafhdr;
++	struct xfs_dir3_icleaf_hdr	leafhdr;
+ 
+ 	if (!zero_stale_data)
+ 		return;
+@@ -1435,20 +1435,39 @@ process_dir_leaf_block(
+ 	leaf = (struct xfs_dir2_leaf *)block;
+ 	M_DIROPS(mp)->leaf_hdr_from_disk(&leafhdr, leaf);
+ 
+-	/* Zero out space from end of ents[] to bests */
+-	if (leafhdr.magic == XFS_DIR2_LEAF1_MAGIC ||
+-	    leafhdr.magic == XFS_DIR3_LEAF1_MAGIC) {
++	switch (leafhdr.magic) {
++	case XFS_DIR2_LEAF1_MAGIC:
++	case XFS_DIR3_LEAF1_MAGIC: {
+ 		struct xfs_dir2_leaf_tail	*ltp;
+ 		__be16				*lbp;
+ 		struct xfs_dir2_leaf_entry	*ents;
+ 		char				*free; /* end of ents */
+ 
++		/* Zero out space from end of ents[] to bests */
+ 		ents = M_DIROPS(mp)->leaf_ents_p(leaf);
+ 		free = (char *)&ents[leafhdr.count];
+ 		ltp = xfs_dir2_leaf_tail_p(mp->m_dir_geo, leaf);
+ 		lbp = xfs_dir2_leaf_bests_p(ltp);
+ 		memset(free, 0, (char *)lbp - free);
+ 		iocur_top->need_crc = 1;
++		break;
++	}
++	case XFS_DIR2_LEAFN_MAGIC:
++	case XFS_DIR3_LEAFN_MAGIC: {
++		struct xfs_dir2_leaf_entry	*ents;
++		char				*free;
++		int				used;
++
++		/* Zero out space from end of ents[] to end of block */
++		ents = M_DIROPS(mp)->leaf_ents_p(leaf);
++		free = (char *)&ents[leafhdr.count];
++		used = free - (char*)leaf;
++		memset(free, 0, mp->m_dir_geo->blksize - used);
++		iocur_top->need_crc = 1;
++		break;
++	}
++	default:
++		break;
+ 	}
+ }
+ 
+-- 
+2.14.5
