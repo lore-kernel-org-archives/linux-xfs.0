@@ -1,44 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:37642 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727607AbeJZVN0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 26 Oct 2018 17:13:26 -0400
-Subject: Re: [PATCH v3 0/2] Try to squash metadump data leaks
-References: <20181011194424.20306-1-stefanrin@gmail.com>
- <5209fec0-c7b3-ae1f-a909-23adfdee1072@sandeen.net>
- <69b32a73-f6c1-8991-af1e-d1818266c985@sandeen.net>
- <CAAxjCEwKqkK6RuE34tXXW=hZXyw5JsU2bhVh73ZRfyW2rGxmXQ@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <db5b1207-0b8f-cbc6-370f-c2c9d07e8407@sandeen.net>
-Date: Fri, 26 Oct 2018 07:36:28 -0500
+Received: from mail-lj1-f196.google.com ([209.85.208.196]:46353 "EHLO
+        mail-lj1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725857AbeJZOIW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Oct 2018 10:08:22 -0400
+Received: by mail-lj1-f196.google.com with SMTP id x3-v6so10344649lji.13
+        for <linux-xfs@vger.kernel.org>; Thu, 25 Oct 2018 22:32:48 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAAxjCEwKqkK6RuE34tXXW=hZXyw5JsU2bhVh73ZRfyW2rGxmXQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+References: <20181011194424.20306-1-stefanrin@gmail.com> <20181011194424.20306-3-stefanrin@gmail.com>
+ <20181023154922.GC28243@magnolia>
+In-Reply-To: <20181023154922.GC28243@magnolia>
+From: Stefan Ring <stefanrin@gmail.com>
+Date: Fri, 26 Oct 2018 07:32:35 +0200
+Message-ID: <CAAxjCEw5GTy+aK2e13ZeofJARA9OaLMYO-Etmo=DRA-MfVSQAw@mail.gmail.com>
+Subject: Re: [PATCH 2/2] xfs_metadump: Zap more stale data
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Stefan Ring <stefanrin@gmail.com>
+To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
+On Tue, Oct 23, 2018 at 5:49 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> On Thu, Oct 11, 2018 at 09:44:24PM +0200, Stefan Ring wrote:
+> > I have empirically found and tried to fix some places where stale data was not
+> > properly zeroed out.
+> >
+> > In the order of the code changes:
+> >
+> > - The "freeindex" blocks in inode directories, from last entry to end of block.
+> > - XFS_DIR{2,3}_LEAFN_MAGIC, from last entry to end of block.
+> > - In btree format inodes before as well as after the btree pointers.
+> > - In dev inodes, everything after the header.
+> > ---
+> >  db/metadump.c | 106 +++++++++++++++++++++++++++++++++++++++++++++++++++++-----
+> >  1 file changed, 98 insertions(+), 8 deletions(-)
+> >
+> > diff --git a/db/metadump.c b/db/metadump.c
+> > index ff96860d..c8213d41 100644
+> > --- a/db/metadump.c
+> > +++ b/db/metadump.c
+> > @@ -2118,6 +2173,21 @@ process_btinode(
+> >       }
+> >
+> >       pp = XFS_BMDR_PTR_ADDR(dib, 1, maxrecs);
+> > +
+> > +     if (zero_stale_data) {
+> > +             char    *top;
+> > +             int     used;
+> > +
+> > +             /* Space before btree pointers */
+> > +             top = (char*)XFS_BMDR_PTR_ADDR(dib, 1, nrecs);
+> > +             memset(top, 0, (char*)pp - top);
+> > +
+> > +             /* Space after btree pointers */
+> > +             top = (char*)&pp[nrecs];
+> > +             used = top - (char*)dip;
+> > +             memset(top, 0, mp->m_sb.sb_inodesize - used);
+>
+> Er... this zaps everything past the end of the bmbt pointers, which
+> means that this can zero the attr fork root.
 
-
-On 10/26/18 12:29 AM, Stefan Ring wrote:
-> On Fri, Oct 26, 2018 at 2:36 AM Eric Sandeen <sandeen@sandeen.net> wrote:
->>> Hm, I think another case we're missing is interior nodes on multi-fsb objects,
->> i.e. everything under /* Zero unused part of interior nodes */ seems to be
->> missing for the process_multi_fsb_objects case as well.  Urk, what a mess.
-> 
-> It is a classic game of whack-a-mole ;). I do understand that it is
-> this way for historical reasons, but if it would be redone today, it
-> should obviously use zeroed buffers for writing out and copy just the
-> bits that are known to be needed.
-
-Yeah, I was thinking about that last night.  I'm not sure it'd be a whole
-lot easier, though - for every single type of metadata block we either
-need to zap the holes or copy the bits, but every boundary is the same
-and would need to be computed and handled regardless.
-I'm not sure it'd be a win.
-
--Eric
+True, this is broken. I'll play around a little more with this one.
