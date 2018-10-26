@@ -1,32 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f45.google.com ([209.85.221.45]:38538 "EHLO
-        mail-wr1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726636AbeJLDN1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Oct 2018 23:13:27 -0400
-Received: by mail-wr1-f45.google.com with SMTP id a13-v6so10984563wrt.5
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Oct 2018 12:44:43 -0700 (PDT)
+Received: from mail-wm1-f51.google.com ([209.85.128.51]:53355 "EHLO
+        mail-wm1-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727636AbeJ0E6k (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 27 Oct 2018 00:58:40 -0400
+Received: by mail-wm1-f51.google.com with SMTP id l26-v6so2620702wmh.3
+        for <linux-xfs@vger.kernel.org>; Fri, 26 Oct 2018 13:20:14 -0700 (PDT)
 Received: from dyn.cm.kabsi.at (h081217199198.dyn.cm.kabsi.at. [81.217.199.198])
-        by smtp.gmail.com with ESMTPSA id x203-v6sm17909785wmg.42.2018.10.11.12.44.41
+        by smtp.gmail.com with ESMTPSA id 193-v6sm7669219wmj.21.2018.10.26.13.20.12
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 11 Oct 2018 12:44:41 -0700 (PDT)
+        Fri, 26 Oct 2018 13:20:12 -0700 (PDT)
 From: Stefan Ring <stefanrin@gmail.com>
-Subject: [PATCH v3 0/2] Try to squash metadump data leaks
-Date: Thu, 11 Oct 2018 21:44:22 +0200
-Message-Id: <20181011194424.20306-1-stefanrin@gmail.com>
+Subject: [PATCH 4/5] xfs_metadump: Zap unused space in inode btrees
+Date: Fri, 26 Oct 2018 22:19:42 +0200
+Message-Id: <20181026201943.24131-5-stefanrin@gmail.com>
+In-Reply-To: <20181026201943.24131-1-stefanrin@gmail.com>
+References: <20181026201943.24131-1-stefanrin@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-This is the same as v2, but with the correct e-mail address this time. Sorry!
+---
+ db/metadump.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-Stefan Ring (2):
-  xfs_metadump: Extend zapping to multi fsb dir blocks
-  xfs_metadump: Zap more stale data
-
- db/metadump.c | 121 +++++++++++++++++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 107 insertions(+), 14 deletions(-)
-
+diff --git a/db/metadump.c b/db/metadump.c
+index a4867783..39183fb7 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -2173,6 +2173,19 @@ process_btinode(
+ 	}
+ 
+ 	pp = XFS_BMDR_PTR_ADDR(dib, 1, maxrecs);
++
++	if (zero_stale_data) {
++		char	*top;
++
++		/* Unused btree key space */
++		top = (char*)XFS_BMDR_KEY_ADDR(dib, nrecs + 1);
++		memset(top, 'a', (char*)pp - top);
++
++		/* Unused btree ptr space */
++		top = (char*)&pp[nrecs];
++		memset(top, 'b', (char*)dib + XFS_DFORK_SIZE(dip, mp, whichfork) - top);
++	}
++
+ 	for (i = 0; i < nrecs; i++) {
+ 		xfs_agnumber_t	ag;
+ 		xfs_agblock_t	bno;
 -- 
-2.14.4
+2.14.5
