@@ -1,43 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:51614 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:51680 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727333AbeJZUdM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Oct 2018 16:33:12 -0400
-Date: Fri, 26 Oct 2018 04:56:23 -0700
+        with ESMTP id S1727469AbeJZUi2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Oct 2018 16:38:28 -0400
+Date: Fri, 26 Oct 2018 05:01:37 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/5] xfs: speed up directory bestfree block scanning
-Message-ID: <20181026115623.GA8116@infradead.org>
+Subject: Re: [PATCH 2/5] xfs: factor data block addition from
+ xfs_dir2_node_addname_int()
+Message-ID: <20181026120137.GB8116@infradead.org>
 References: <20181024225716.19459-1-david@fromorbit.com>
- <20181024225716.19459-5-david@fromorbit.com>
- <20181026102424.GC29302@infradead.org>
- <20181026105842.GG19305@dastard>
+ <20181024225716.19459-3-david@fromorbit.com>
+ <20181026094529.GA29302@infradead.org>
+ <20181026105245.GF19305@dastard>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181026105842.GG19305@dastard>
+In-Reply-To: <20181026105245.GF19305@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
 
-On Fri, Oct 26, 2018 at 09:58:42PM +1100, Dave Chinner wrote:
-> > The only case where we have a fbp here is if we had a fblk passed in,
-> > but it it did have the index set to -1.  But as far as I can tell
-> > searching that again doesn't make any sense at all, so I'd apply
-> > something like this in top of your patch (some of this also seems
-> > to be in your next patch, so independent of the logic change might
-> > be worth moving over here):
+On Fri, Oct 26, 2018 at 09:52:45PM +1100, Dave Chinner wrote:
+> Which causes build warnings because gcc can't work out the code flow
+> if I leave it alone. And seeing as I use -Werror on the fs/xfs/
+> directories, that breaks the build.
 > 
-> So you've done a bunch of the rework that already in the next patch
-> in the series, plus a "fbno = fblk->blkno + 1;" logic change. 
+> So I'd prefer to leave it like this without a transient build
+> warning....
 
-I don't think this is a new logic change, as we start at fbno
-already (both in the existing code and with your patch), but we got
-here because that block did not contain a suitable free space.
+With this incremental patch I don't see any warning, and I really
+can't see how it could cause any warnings:
 
-That being said with the reverse search in the next patch the + 1
-is pointless as that code changes again.  But many of the other changes
-in this patch or your next patch (which I hadn't looked at yet when
-I did this) should probably be in this one, otherwise we just create
-churn.
+(it is basically a revert of a tiny part of your patch).
+
+diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+index df109763db39..4ab2447cd343 100644
+--- a/fs/xfs/libxfs/xfs_dir2_node.c
++++ b/fs/xfs/libxfs/xfs_dir2_node.c
+@@ -1916,7 +1916,6 @@ xfs_dir2_node_addname_int(
+ 
+ 		/* setup current free block buffer */
+ 		free = fbp->b_addr;
+-		bests = dp->d_ops->free_bests_p(free);
+ 
+ 		/* we're going to have to log the free block index later */
+ 		logfree = 1;
+@@ -1932,9 +1931,6 @@ xfs_dir2_node_addname_int(
+ 					   -1, &dbp);
+ 		if (error)
+ 			return error;
+-
+-		/* suppress gcc maybe-used-initialised warning */
+-		bests = dp->d_ops->free_bests_p(free);
+ 	}
+ 
+ 	/* setup for data block up now */
+@@ -1972,6 +1968,7 @@ xfs_dir2_node_addname_int(
+ 		xfs_dir2_data_log_header(args, dbp);
+ 
+ 	/* If the freespace block entry is now wrong, update it. */
++	bests = dp->d_ops->free_bests_p(free); /* gcc is so stupid */
+ 	if (bests[findex] != bf[0].length) {
+ 		bests[findex] = bf[0].length;
+ 		logfree = 1;
