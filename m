@@ -1,75 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:9507 "EHLO
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:3053 "EHLO
         ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726493AbeJZT1s (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Oct 2018 15:27:48 -0400
-Date: Fri, 26 Oct 2018 21:49:06 +1100
+        by vger.kernel.org with ESMTP id S1726493AbeJZT3Y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Oct 2018 15:29:24 -0400
+Date: Fri, 26 Oct 2018 21:52:45 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/5] xfs: factor free block index lookup from
+Subject: Re: [PATCH 2/5] xfs: factor data block addition from
  xfs_dir2_node_addname_int()
-Message-ID: <20181026104906.GE19305@dastard>
+Message-ID: <20181026105245.GF19305@dastard>
 References: <20181024225716.19459-1-david@fromorbit.com>
- <20181024225716.19459-4-david@fromorbit.com>
- <20181026094805.GB29302@infradead.org>
+ <20181024225716.19459-3-david@fromorbit.com>
+ <20181026094529.GA29302@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181026094805.GB29302@infradead.org>
+In-Reply-To: <20181026094529.GA29302@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, Oct 26, 2018 at 02:48:05AM -0700, Christoph Hellwig wrote:
-> > +/*
-> > + * Add the data entry for a node-format directory name addition.
-> > + * The leaf entry is added in xfs_dir2_leafn_add.
-> > + * We may enter with a freespace block that the lookup found.
-> > + */
-> > +static int					/* error */
-> > +xfs_dir2_node_addname_int(
-> > +	xfs_da_args_t		*args,		/* operation arguments */
-> > +	xfs_da_state_blk_t	*fblk)		/* optional freespace block */
-> > +{
-> > +	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
-> > +	xfs_dir2_db_t		dbno;		/* data block number */
-> > +	struct xfs_buf		*dbp;		/* data block buffer */
-> > +	xfs_dir2_data_entry_t	*dep;		/* data entry pointer */
-> > +	xfs_inode_t		*dp;		/* incore directory inode */
-> > +	xfs_dir2_data_unused_t	*dup;		/* data unused entry pointer */
-> > +	int			error;		/* error return value */
-> > +	struct xfs_buf		*fbp;		/* freespace buffer */
-> > +	int			findex;		/* freespace entry index */
-> > +	xfs_dir2_free_t		*free=NULL;	/* freespace block structure */
-> > +	int			length;		/* length of the new entry */
-> > +	int			logfree = 0;	/* need to log free entry */
-> > +	int			needlog = 0;	/* need to log data header */
-> > +	int			needscan = 0;	/* need to rescan data frees */
-> > +	__be16			*tagp;		/* data entry tag pointer */
-> > +	xfs_trans_t		*tp;		/* transaction pointer */
-> > +	__be16			*bests;
-> > +	struct xfs_dir2_data_free *bf;
-> > +	xfs_dir2_data_aoff_t	aoff;
-> > +
-> > +	dp = args->dp;
-> > +	tp = args->trans;
-> > +	length = dp->d_ops->data_entsize(args->namelen);
+On Fri, Oct 26, 2018 at 02:45:29AM -0700, Christoph Hellwig wrote:
+> > +	} else {
+> > +found_block:
 > 
-> Can you remove the use of typedefs and move the trivial initializers
-> to the declaration like you've done for the new helpers here?
+> This jumping into branch is a little ugly, but given that the next
+> patch cleans it up it is probably ok.
+> 
+> > +		/* suppress gcc maybe-used-initialised warning */
+> > +		bests = dp->d_ops->free_bests_p(free);
+> 
+> > -	 * If the freespace entry is now wrong, update it.
+> > -	 */
+> > -	bests = dp->d_ops->free_bests_p(free); /* gcc is so stupid */
+> 
+> So this moves bests from the common path of execution into the
+> branch, where it duplicates one in the other branch just for later
+> patches to move it back to almost where it was.  If it isn't to
+> painful to redo the patch I'd suggest to just keep it in the common
+> path here.
 
-I didn't touch this code in xfs_dir2_node_addname_int()
-except to remove variables that are now in the new function.
+Which causes build warnings because gcc can't work out the code flow
+if I leave it alone. And seeing as I use -Werror on the fs/xfs/
+directories, that breaks the build.
 
-What you see here is a result of the diff generator deciding to
-replace the original declaration of this function with the new
-function I added, and so it looks like I add this code when in fact
-I didn't...
+So I'd prefer to leave it like this without a transient build
+warning....
 
-I'll go back an fixup up more code.
+Cheers,
 
--Dave.
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
