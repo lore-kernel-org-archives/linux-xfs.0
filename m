@@ -1,35 +1,44 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm1-f42.google.com ([209.85.128.42]:55934 "EHLO
-        mail-wm1-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725965AbeJ0E60 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 27 Oct 2018 00:58:26 -0400
-Received: by mail-wm1-f42.google.com with SMTP id s10-v6so2614091wmc.5
-        for <linux-xfs@vger.kernel.org>; Fri, 26 Oct 2018 13:20:00 -0700 (PDT)
-Received: from dyn.cm.kabsi.at (h081217199198.dyn.cm.kabsi.at. [81.217.199.198])
-        by smtp.gmail.com with ESMTPSA id 193-v6sm7669219wmj.21.2018.10.26.13.19.58
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 26 Oct 2018 13:19:58 -0700 (PDT)
-From: Stefan Ring <stefanrin@gmail.com>
-Subject: [PATCH 0/5] v4 Try to squash metadump data leaks
-Date: Fri, 26 Oct 2018 22:19:38 +0200
-Message-Id: <20181026201943.24131-1-stefanrin@gmail.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:33932 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726149AbeJZSVw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Oct 2018 14:21:52 -0400
+Date: Fri, 26 Oct 2018 02:45:29 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/5] xfs: factor data block addition from
+ xfs_dir2_node_addname_int()
+Message-ID: <20181026094529.GA29302@infradead.org>
+References: <20181024225716.19459-1-david@fromorbit.com>
+ <20181024225716.19459-3-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181024225716.19459-3-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-I reorganized the patches as suggested and fixed the btree case.
+> +	} else {
+> +found_block:
 
-Stefan Ring (5):
-  xfs_metadump: Extend data zapping to XFS_DIR{2,3}_LEAFN_MAGIC blocks
-  xfs_metadump: Zap multi fsb blocks
-  xfs_metadump: Zap freeindex blocks in directory inodes
-  xfs_metadump: Zap unused space in inode btrees
-  xfs_metadump: Zap dev inodes
+This jumping into branch is a little ugly, but given that the next
+patch cleans it up it is probably ok.
 
- db/metadump.c | 119 +++++++++++++++++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 105 insertions(+), 14 deletions(-)
+> +		/* suppress gcc maybe-used-initialised warning */
+> +		bests = dp->d_ops->free_bests_p(free);
 
--- 
-2.14.5
+> -	 * If the freespace entry is now wrong, update it.
+> -	 */
+> -	bests = dp->d_ops->free_bests_p(free); /* gcc is so stupid */
+
+So this moves bests from the common path of execution into the
+branch, where it duplicates one in the other branch just for later
+patches to move it back to almost where it was.  If it isn't to
+painful to redo the patch I'd suggest to just keep it in the common
+path here.
+
+Otherwise this looks fine to me:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
