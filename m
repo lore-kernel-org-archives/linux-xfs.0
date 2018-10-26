@@ -1,43 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lj1-f193.google.com ([209.85.208.193]:38151 "EHLO
-        mail-lj1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727734AbeJ0DPi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Oct 2018 23:15:38 -0400
-Received: by mail-lj1-f193.google.com with SMTP id k11-v6so2053138lja.5
-        for <linux-xfs@vger.kernel.org>; Fri, 26 Oct 2018 11:37:30 -0700 (PDT)
+Received: from userp2130.oracle.com ([156.151.31.86]:47320 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726531AbeJ0A4x (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 Oct 2018 20:56:53 -0400
+Date: Fri, 26 Oct 2018 09:19:05 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] libxfs: check all defer ops types
+Message-ID: <20181026161905.GH28243@magnolia>
 MIME-Version: 1.0
-References: <20181011194424.20306-1-stefanrin@gmail.com> <5209fec0-c7b3-ae1f-a909-23adfdee1072@sandeen.net>
- <69b32a73-f6c1-8991-af1e-d1818266c985@sandeen.net> <CAAxjCEwKqkK6RuE34tXXW=hZXyw5JsU2bhVh73ZRfyW2rGxmXQ@mail.gmail.com>
- <db5b1207-0b8f-cbc6-370f-c2c9d07e8407@sandeen.net>
-In-Reply-To: <db5b1207-0b8f-cbc6-370f-c2c9d07e8407@sandeen.net>
-From: Stefan Ring <stefanrin@gmail.com>
-Date: Fri, 26 Oct 2018 20:37:17 +0200
-Message-ID: <CAAxjCEzarDyUJuNSyFh8CKiF7zz-KHnze3eycEsZ4MsOx28KdQ@mail.gmail.com>
-Subject: Re: [PATCH v3 0/2] Try to squash metadump data leaks
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Oct 26, 2018 at 2:36 PM Eric Sandeen <sandeen@sandeen.net> wrote:
-> On 10/26/18 12:29 AM, Stefan Ring wrote:
-> > On Fri, Oct 26, 2018 at 2:36 AM Eric Sandeen <sandeen@sandeen.net> wrote:
-> >>> Hm, I think another case we're missing is interior nodes on multi-fsb objects,
-> >> i.e. everything under /* Zero unused part of interior nodes */ seems to be
-> >> missing for the process_multi_fsb_objects case as well.  Urk, what a mess.
-> >
-> > It is a classic game of whack-a-mole ;). I do understand that it is
-> > this way for historical reasons, but if it would be redone today, it
-> > should obviously use zeroed buffers for writing out and copy just the
-> > bits that are known to be needed.
->
-> Yeah, I was thinking about that last night.  I'm not sure it'd be a whole
-> lot easier, though - for every single type of metadata block we either
-> need to zap the holes or copy the bits, but every boundary is the same
-> and would need to be computed and handled regardless.
-> I'm not sure it'd be a win.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Yes, it would not be any easier. But it would be (amost) immediately
-obvious when something was missed.
+Make sure we have all the defer ops types loaded before proceeding.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ libxfs/init.c      |    5 +++++
+ libxfs/xfs_defer.c |   12 ++++++++++++
+ libxfs/xfs_defer.h |    1 +
+ 3 files changed, 18 insertions(+)
+
+diff --git a/libxfs/init.c b/libxfs/init.c
+index 750b8f20..d1fdc3a8 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -253,6 +253,11 @@ libxfs_init(libxfs_init_t *a)
+ 	xfs_rmap_update_init_defer_op();
+ 	xfs_refcount_update_init_defer_op();
+ 	xfs_bmap_update_init_defer_op();
++	if (!xfs_defer_check_all_present()) {
++		fprintf(stderr, _("%s: defer ops not all there\n"),
++			progname);
++		goto done;
++	}
+ 
+ 	radix_tree_init();
+ 
+diff --git a/libxfs/xfs_defer.c b/libxfs/xfs_defer.c
+index 5a6da0f3..cd3a8ef3 100644
+--- a/libxfs/xfs_defer.c
++++ b/libxfs/xfs_defer.c
+@@ -545,3 +545,15 @@ xfs_defer_move(
+ 
+ 	xfs_defer_reset(stp);
+ }
++
++/* Make sure we filled out all the defer_ops types. */
++bool
++xfs_defer_check_all_present(void)
++{
++	int		x;
++
++	for(x = 0; x < XFS_DEFER_OPS_TYPE_MAX; x++)
++		if (defer_op_types[x] == NULL)
++			return false;
++	return true;
++}
+diff --git a/libxfs/xfs_defer.h b/libxfs/xfs_defer.h
+index 2584a5b9..bc7ae7ff 100644
+--- a/libxfs/xfs_defer.h
++++ b/libxfs/xfs_defer.h
+@@ -57,5 +57,6 @@ struct xfs_defer_op_type {
+ };
+ 
+ void xfs_defer_init_op_type(const struct xfs_defer_op_type *type);
++bool xfs_defer_check_all_present(void);
+ 
+ #endif /* __XFS_DEFER_H__ */
