@@ -1,115 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:41290 "EHLO sandeen.net"
+Received: from mx1.redhat.com ([209.132.183.28]:49936 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728335AbeJ3DCs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 29 Oct 2018 23:02:48 -0400
-Subject: Re: [RFC PATCH] libxfs: add missing agfl free deferred op type
-References: <20181026003810.GE28243@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <59830eed-9b3d-23c6-b8b3-68733d1fa146@sandeen.net>
-Date: Mon, 29 Oct 2018 13:13:02 -0500
+        id S1726193AbeJZVki (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 26 Oct 2018 17:40:38 -0400
+Date: Fri, 26 Oct 2018 09:03:35 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: xfs_alloc_ag_vextent_near() takes about 30ms to complete
+Message-ID: <20181026130334.GA16468@bfoster>
+References: <CAGiyNfAUewzAjASPBccOk91PJ+nLS0nF4U3EvO4n59XsYu5P-w@mail.gmail.com>
+ <20181023145339.GA7537@bfoster>
+ <CAGiyNfAy+eTq+oba0Rb8Oe_kajFqD5a6rPnOkWPjC_E=foSqkg@mail.gmail.com>
+ <20181024043416.GA19305@dastard>
+ <20181024120926.GA46681@bfoster>
+ <20181024223523.GB19305@dastard>
+ <20181025132130.GA2819@bfoster>
+ <20181026010344.GD19305@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20181026003810.GE28243@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181026010344.GD19305@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
-Cc: xfs <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Mao Cheng <chengmao2010@gmail.com>, linux-xfs@vger.kernel.org
 
-On 10/25/18 7:38 PM, Darrick J. Wong wrote:
-> Soo... I tried to run xfs_repair in gdb on arekm's big filesystem, but
-> we forgot to port deferred agfl free defer ops type to xfsprogs so it
-> blew up earlier this afternoon.  This is a patch to add it in, but since
-> it takes a while to get far enough to start rebuilding directories, this
-> is basically an untested patch.
+On Fri, Oct 26, 2018 at 12:03:44PM +1100, Dave Chinner wrote:
+> On Thu, Oct 25, 2018 at 09:21:30AM -0400, Brian Foster wrote:
+> > On Thu, Oct 25, 2018 at 09:35:23AM +1100, Dave Chinner wrote:
+> > > On Wed, Oct 24, 2018 at 08:09:27AM -0400, Brian Foster wrote:
+> > > > I'm wondering
+> > > > if we could implement a smarter location based search using information
+> > > > available in the by-size tree. For example, suppose we could identify
+> > > > the closest minimally sized extents to agbno in order to better seed the
+> > > > left/right starting points of the location based search. This of course
+> > > > would require careful heuristics/tradeoffs to make sure we don't just
+> > > > replace a bnobt scan with a cntbt scan.
+> > > 
+> > > I wouldn't bother. I'd just take the "last block" algorithm and make
+> > > it search all the >= contiguous free space extents for best locality
+> > > before dropping back to the minlen search.
+> > > 
+> > 
+> > Ok, that makes sense. The caveat seems to be though that the "last
+> > block" algorithm searches all of the applicable records to discover the
+> > best locality. We could open up this search as such, but if free space
+> > happens to be completely fragmented to >= requested extents, that could
+> > mean every allocation falls into a full cntbt scan where a bnobt lookup
+> > would result in a much faster allocation.
 > 
-> Which I'm sending out in case sandeen/dchinner are doing the same thing
-> I am. :P
+> Yup, we'll need to bound it so it doesn't do stupid things. :P
 > 
-> --D
-> 
-> ---
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> When we added a new defer op type for agfl block freeing to the kernel,
-> we forgot to add that type to the userspace side of things.  This will
-> cause spontaneous combustion in xfs_repair if we try to rebuild
-> directories.
-> 
-> Fixes: d5c1b462232 ("xfs: defer agfl block frees when dfops is available")
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-I did review this and then other stuff started taking my attention.  :D
+Yep.
 
-I'll run it through my testing as well, thanks.
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> ---
->  libxfs/defer_item.c |   44 ++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 44 insertions(+)
+> > So ISTM that we still need some kind of intelligent heuristic to fall
+> > back to the second algorithm to cover the "too many" case. What exactly
+> > that is may take some more thought, experimentation and testing.
 > 
-> diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
-> index b7185c1a..82aa32a8 100644
-> --- a/libxfs/defer_item.c
-> +++ b/libxfs/defer_item.c
-> @@ -118,11 +118,55 @@ static const struct xfs_defer_op_type xfs_extent_free_defer_type = {
->  	.cancel_item	= xfs_extent_free_cancel_item,
->  };
->  
-> +/*
-> + * AGFL blocks are accounted differently in the reserve pools and are not
-> + * inserted into the busy extent list.
-> + */
-> +STATIC int
-> +xfs_agfl_free_finish_item(
-> +	struct xfs_trans		*tp,
-> +	struct list_head		*item,
-> +	void				*done_item,
-> +	void				**state)
-> +{
-> +	struct xfs_mount		*mp = tp->t_mountp;
-> +	struct xfs_extent_free_item	*free;
-> +	struct xfs_buf			*agbp;
-> +	int				error;
-> +	xfs_agnumber_t			agno;
-> +	xfs_agblock_t			agbno;
-> +
-> +	free = container_of(item, struct xfs_extent_free_item, xefi_list);
-> +	ASSERT(free->xefi_blockcount == 1);
-> +	agno = XFS_FSB_TO_AGNO(mp, free->xefi_startblock);
-> +	agbno = XFS_FSB_TO_AGBNO(mp, free->xefi_startblock);
-> +
-> +	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agbp);
-> +	if (!error)
-> +		error = xfs_free_agfl_block(tp, agno, agbno, agbp,
-> +					    &free->xefi_oinfo);
-> +	kmem_free(free);
-> +	return error;
-> +}
-> +
-> +/* sub-type with special handling for AGFL deferred frees */
-> +static const struct xfs_defer_op_type xfs_agfl_free_defer_type = {
-> +	.type		= XFS_DEFER_OPS_TYPE_AGFL_FREE,
-> +	.diff_items	= xfs_extent_free_diff_items,
-> +	.create_intent	= xfs_extent_free_create_intent,
-> +	.abort_intent	= xfs_extent_free_abort_intent,
-> +	.log_item	= xfs_extent_free_log_item,
-> +	.create_done	= xfs_extent_free_create_done,
-> +	.finish_item	= xfs_agfl_free_finish_item,
-> +	.cancel_item	= xfs_extent_free_cancel_item,
-> +};
-> +
->  /* Register the deferred op type. */
->  void
->  xfs_extent_free_init_defer_op(void)
->  {
->  	xfs_defer_init_op_type(&xfs_extent_free_defer_type);
-> +	xfs_defer_init_op_type(&xfs_agfl_free_defer_type);
->  }
->  
->  /* Reverse Mapping */
+> Yeah, that's the difficulty with making core allocator algorithm
+> changes - how to characterise the effect of the change. I'm not sure
+> that's a huge problem in this case, though, because selecting a
+> matching contig freespace is almost always going to be better for
+> filesystem longetivty and freespace fragmentation resistance than
+> slecting a shorter freespace and doing lots more small allocations.
+> it's the 'lots of small allocations' that really makes the freespace
+> framgmentation spiral out of control, so if we can avoid that until
+> we've used all the matching contig free spaces we'll be better off
+> in the long run.
 > 
+
+Ok, so I ran fs_mark against the metadump with your patch and a quick
+hack to unconditionally scan the cntbt if maxlen extents are available
+(up to mxr[0] records similar to your patch, to avoid excessive scans).
+The xfs_alloc_find_best_extent() patch alone didn't have much of a
+noticeable effect, but that is an isolated optimization and I'm only
+doing coarse measurements atm that probably hide it in the noise.
+
+The write workload improves quite a bit with the addition of the cntbt
+change. Both throughput (via iostat 60s intervals) and fs_mark files/sec
+change from a slow high/low sweeping behavior to much more consistent
+and faster results. I see a sweep between 3-30 MB/s and ~30-250 f/sec
+change to a much more consistent 27-39MB/s and ~200-300 f/s.
+
+A 5 minute tracepoint sample consists of 100% xfs_alloc_near_first
+events which means we never fell back to the bnobt based search. I'm not
+sure the mxr thing is the right approach necessarily, I just wanted
+something quick that would demonstrate the potential upside gains
+without going off the rails. One related concern I have with restricting
+the locality of the search too much, for example, is that we use
+NEAR_BNO allocs for other things like inode allocation locality that
+might not be represented in this simple write only workload.
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
