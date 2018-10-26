@@ -1,57 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:54482 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727868AbeJ2B6V (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 28 Oct 2018 21:58:21 -0400
-Subject: Re: [PATCH 0/5] v4 Try to squash metadump data leaks
-References: <20181026201943.24131-1-stefanrin@gmail.com>
- <3e653734-6470-3160-58e8-5bdf866dbd87@sandeen.net>
- <5228ed5f-b238-1596-a829-6bf482da7e2b@sandeen.net>
- <CAAxjCExbUX1hDDV_0yK5Uu1eGf3aC8XT0CN-eL66+9GNDtdRVg@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <4f1f1db3-8689-dff1-3845-0a3e582fd849@sandeen.net>
-Date: Sun, 28 Oct 2018 12:13:07 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:50102 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725783AbeJ0EDS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 27 Oct 2018 00:03:18 -0400
+Date: Fri, 26 Oct 2018 12:24:58 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] libxfs: check all defer ops types
+Message-ID: <20181026192458.GA8643@infradead.org>
+References: <20181026161905.GH28243@magnolia>
+ <0dc53e1c-2ad6-b04f-2747-451b6760e1d5@sandeen.net>
+ <d13db2aa-3e73-7dd6-8677-7e19f9b7ffcd@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <CAAxjCExbUX1hDDV_0yK5Uu1eGf3aC8XT0CN-eL66+9GNDtdRVg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <d13db2aa-3e73-7dd6-8677-7e19f9b7ffcd@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Stefan Ring <stefanrin@gmail.com>
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
 
+On Fri, Oct 26, 2018 at 02:11:47PM -0500, Eric Sandeen wrote:
+> static const struct
+> xfs_defer_op_type *defer_op_types[XFS_DEFER_OPS_TYPE_MAX] = {
+>        xfs_bmap_update_defer_type,
+>        xfs_refcount_update_defer_type,
+>        xfs_rmap_update_defer_type,
+>        xfs_extent_free_defer_type,
+>        xfs_agfl_free_defer_type,
+> };
 
+I think this should be:
 
-On 10/28/18 7:38 AM, Stefan Ring wrote:
-> On Sat, Oct 27, 2018 at 1:33 AM Eric Sandeen <sandeen@sandeen.net> wrote:
->>
->> Also, here's an old script I had lying around to test metadump.  It's hacky, sorry.
->>
->> Things to watch out for... it looks for an "fsstress" binary from xfstests, so adjust that path.
->> It freezes and unfreezes the test filesystem, if your mount fails it'll freeze
->> the fs you're on.  ;)  There may be other rough spots.
->>
->> It also runs the xfs_metadump/xfs_db in your path; you could change that to a
->> local ./xfs_metadump to run db/xfs_db from a git tree instead for testing
->> w/o make install.
->>
->> Right now this is detecting some corruption induced by metadump/mdrestore
->> with your full patchset in place, FWIW.
->>
->> Sorry I didn't send this sooner, kinda forgot I had it.  really should turn it into an xfstest.
-> 
-> Thanks! The corruption is caused by the last patch in the series. So
-> dev inodes can have attribute forks. I will have to zap the data and
-> the attr area separately.
+static const struct xfs_defer_op_type *defer_op_types[] = {
+	[XFS_DEFER_OPS_TYPE_BMAP]	= &xfs_bmap_update_defer_type,
+	[XFS_DEFER_OPS_TYPE_REFCOUNT]	= &xfs_refcount_update_defer_type,
+	[XFS_DEFER_OPS_TYPE_RMAP]	= &xfs_rmap_update_defer_type,
+	[XFS_DEFER_OPS_TYPE_FREE]	= &xfs_extent_free_defer_type,
+	[XFS_DEFER_OPS_TYPE_AGFL_FREE]	= &xfs_agfl_free_defer_type,
+};
 
-Cool, glad it was helpful.
-
-Check patch 2 as well, the "break;" is also causing corruption I think,
-and it should probably just be a no-op ";"
-
-It may get resolved by the time you get to patch5 but best to not have
-regressions along the way.  Sorry for the piecemeal review here ;)
-
--Eric
+somefunc()
+{
+	BUILD_BUG_ON(ARRAY_SIZE(defer_op_types) != XFS_DEFER_OPS_TYPE_MAX);
+}
