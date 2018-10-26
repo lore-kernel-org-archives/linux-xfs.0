@@ -1,76 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:36638 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726549AbeJaCPI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Oct 2018 22:15:08 -0400
-Date: Tue, 30 Oct 2018 10:20:39 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/7] Revert "xfs_repair: treat zero da btree pointers as
- corruption"
-Message-ID: <20181030172039.GG4135@magnolia>
-References: <20181030112043.6034-1-david@fromorbit.com>
- <20181030112043.6034-2-david@fromorbit.com>
+Received: from sandeen.net ([63.231.237.45]:51346 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725783AbeJ0EEj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 27 Oct 2018 00:04:39 -0400
+Subject: Re: [PATCH] libxfs: check all defer ops types
+References: <20181026161905.GH28243@magnolia>
+ <0dc53e1c-2ad6-b04f-2747-451b6760e1d5@sandeen.net>
+ <d13db2aa-3e73-7dd6-8677-7e19f9b7ffcd@sandeen.net>
+ <20181026192458.GA8643@infradead.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <e478230e-95fc-984f-c8bb-5a393b10fa56@sandeen.net>
+Date: Fri, 26 Oct 2018 14:26:22 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181030112043.6034-2-david@fromorbit.com>
+In-Reply-To: <20181026192458.GA8643@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Oct 30, 2018 at 10:20:37PM +1100, Dave Chinner wrote:
-> This reverts commit 67a79e2cc9320aaf269cd00e9c8d16892931886d.
-> 
-> A root LEAFN block can exist in a directory. When we convert from
-> leaf format (LEAF1 - internal free list) to node format (LEAFN -
-> external free list) the only change to the single root leaf block is
-> that it's magic number is changed from LEAF1 to LEAFN.
-> 
-> We don't actually end up with DA nodes in the tree until the LEAFN
-> node is split, and that requires a couple more dirents to be added
-> to the directory to fill the LEAFN block up completely. Then it will
-> split and create a DA node root block pointing to multiple LEAFN
-> leaf blocks.
-> 
-> Hence restore the old behaviour where we skip the DA node tree
-> rebuild if there is a LEAFN root block found as there is no tree to
-> rebuild.
 
-The trouble with reverting the patch is that xfs_repair goes back to
-tripping over an assertion in release_da_cursor_int if the reason why
-we got bno == 0 is that the directory has a da btree block with
-nbtree[0].before pointing to zero.
 
-Will post a better fix + regression tests for both issues shortly.
-
---D
-
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  repair/dir2.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+On 10/26/18 2:24 PM, Christoph Hellwig wrote:
+> On Fri, Oct 26, 2018 at 02:11:47PM -0500, Eric Sandeen wrote:
+>> static const struct
+>> xfs_defer_op_type *defer_op_types[XFS_DEFER_OPS_TYPE_MAX] = {
+>>        xfs_bmap_update_defer_type,
+>>        xfs_refcount_update_defer_type,
+>>        xfs_rmap_update_defer_type,
+>>        xfs_extent_free_defer_type,
+>>        xfs_agfl_free_defer_type,
+>> };
 > 
-> diff --git a/repair/dir2.c b/repair/dir2.c
-> index 3374ae722bf9..ba5763ed3d26 100644
-> --- a/repair/dir2.c
-> +++ b/repair/dir2.c
-> @@ -1242,11 +1242,11 @@ process_node_dir2(
->  		return 1;
->  
->  	/*
-> -	 * Directories with a root marked XFS_DIR2_LEAFN_MAGIC are corrupt
-> +	 * Skip directories with a root marked XFS_DIR2_LEAFN_MAGIC
->  	 */
->  	if (bno == 0) {
-> -		err_release_da_cursor(mp, &da_cursor, 0);
-> -		return 1;
-> +		release_da_cursor(mp, &da_cursor, 0);
-> +		return 0;
->  	} else {
->  		/*
->  		 * Now pass cursor and bno into leaf-block processing routine.
-> -- 
-> 2.19.1
+> I think this should be:
 > 
+> static const struct xfs_defer_op_type *defer_op_types[] = {
+> 	[XFS_DEFER_OPS_TYPE_BMAP]	= &xfs_bmap_update_defer_type,
+> 	[XFS_DEFER_OPS_TYPE_REFCOUNT]	= &xfs_refcount_update_defer_type,
+> 	[XFS_DEFER_OPS_TYPE_RMAP]	= &xfs_rmap_update_defer_type,
+> 	[XFS_DEFER_OPS_TYPE_FREE]	= &xfs_extent_free_defer_type,
+> 	[XFS_DEFER_OPS_TYPE_AGFL_FREE]	= &xfs_agfl_free_defer_type,
+> };
+> 
+> somefunc()
+> {
+> 	BUILD_BUG_ON(ARRAY_SIZE(defer_op_types) != XFS_DEFER_OPS_TYPE_MAX);
+> }
+> 
+
+Uh, yeah, that's what I was trying but pitifully failing to come
+up with, thanks.  :)
+
+-Eric
