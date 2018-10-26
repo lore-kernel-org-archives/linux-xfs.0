@@ -1,135 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:58360 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727461AbeJ3BSO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 29 Oct 2018 21:18:14 -0400
-Subject: Re: [PATCH] xfs_db: add crc32 self test
-References: <20181023155701.GD28243@magnolia>
- <ac96e362-a298-b171-ccc6-5fb22907c786@sandeen.net>
- <20181026201628.GJ28243@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <1bd96482-8901-365b-a16e-e3fefeea4ec3@sandeen.net>
-Date: Mon, 29 Oct 2018 11:28:53 -0500
-MIME-Version: 1.0
-In-Reply-To: <20181026201628.GJ28243@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Received: from mail-wm1-f68.google.com ([209.85.128.68]:54549 "EHLO
+        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725965AbeJ0E6i (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 27 Oct 2018 00:58:38 -0400
+Received: by mail-wm1-f68.google.com with SMTP id r63-v6so2616539wma.4
+        for <linux-xfs@vger.kernel.org>; Fri, 26 Oct 2018 13:20:12 -0700 (PDT)
+Received: from dyn.cm.kabsi.at (h081217199198.dyn.cm.kabsi.at. [81.217.199.198])
+        by smtp.gmail.com with ESMTPSA id 193-v6sm7669219wmj.21.2018.10.26.13.20.10
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Fri, 26 Oct 2018 13:20:11 -0700 (PDT)
+From: Stefan Ring <stefanrin@gmail.com>
+Subject: [PATCH 3/5] xfs_metadump: Zap freeindex blocks in directory inodes
+Date: Fri, 26 Oct 2018 22:19:41 +0200
+Message-Id: <20181026201943.24131-4-stefanrin@gmail.com>
+In-Reply-To: <20181026201943.24131-1-stefanrin@gmail.com>
+References: <20181026201943.24131-1-stefanrin@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
+---
+ db/metadump.c | 45 ++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 40 insertions(+), 5 deletions(-)
 
-
-On 10/26/18 3:16 PM, Darrick J. Wong wrote:
-> On Fri, Oct 26, 2018 at 03:06:06PM -0500, Eric Sandeen wrote:
->> On 10/23/18 10:57 AM, Darrick J. Wong wrote:
->>> From: Darrick J. Wong <darrick.wong@oracle.com>
->>>
->>> Add a self test for crc32 into xfs_db so that xfstests can check the
->>> operation of the (potentially cross-compiled) package binaries by
->>> isolating the self test code to a header file that can be included by
->>> the build system self test and xfs_db.
->>>
->>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
->>> ---
->>>  db/command.c            |    1 
->>>  db/crc.c                |   36 ++
->>>  db/crc.h                |    1 
->>>  include/crc32selftest.h |  706 +++++++++++++++++++++++++++++++++++++++++++++++
->>>  libfrog/crc32.c         |  669 ---------------------------------------------
->>>  man/man8/xfs_db.8       |    5 
->>>  6 files changed, 750 insertions(+), 668 deletions(-)
->>>  create mode 100644 include/crc32selftest.h
->>>
->>> diff --git a/db/command.c b/db/command.c
->>> index c7c52342..7b727986 100644
->>> --- a/db/command.c
->>> +++ b/db/command.c
->>> @@ -139,4 +139,5 @@ init_commands(void)
->>>  	write_init();
->>>  	dquot_init();
->>>  	fuzz_init();
->>> +	crc32selftest_init();
->>>  }
->>> diff --git a/db/crc.c b/db/crc.c
->>> index b6775bc7..93745003 100644
->>> --- a/db/crc.c
->>> +++ b/db/crc.c
->>> @@ -17,6 +17,7 @@
->>>  #include "output.h"
->>>  #include "bit.h"
->>>  #include "print.h"
->>> +#include "crc32selftest.h"
->>>  
->>>  static int crc_f(int argc, char **argv);
->>>  static void crc_help(void);
->>> @@ -175,3 +176,38 @@ crc_f(
->>>  	flist_free(fl);
->>>  	return 0;
->>>  }
->>> +
->>> +static int
->>> +crc32selftest_f(
->>> +	int		argc,
->>> +	char		**argv)
->>> +{
->>> +	int		c;
->>> +	int		errors;
->>> +
->>> +	while ((c = getopt(argc, argv, "")) != EOF) {
->>> +		switch (c) {
->>> +		default:
->>> +			dbprintf(_("Bad option for crc32selftest command.\n"));
->>> +			return 0;
->>> +		}
->>> +	}
->>> +
->>> +	if (argc != optind) {
->>> +		dbprintf(_("The crc32selftest command takes no arguments.\n"));
->>> +		return 0;
->>> +	}
->>
->> Isn't this redundant w/ the first "Bad option" message - can we even 
->> get here?
-> 
-> Hmm, I guess not.
-> 
->>> +
->>> +	errors = crc32c_test();
->>> +	return errors == 0 ? 0 : 1;
->>
->> Oh, ok, it can return number of errors, fine.
-> 
-> We might as well stop if crc32 is broken. :)
-
-Ok, so I think the way this is structured is a bit weird.
-
-We have to specify a device even though it's not used for
-this command:
-
-# xfs_db -x -c crc32selftest
-Usage: xfs_db [-ifFrxV] [-p prog] [-l logdev] [-c cmd]... device
-
-Also, patching to return a forced error still returns 1 on the xfs_db cmdline:
-
-#xfs_db -x -c crc32selftest fsfile
-crc32c: 1 self tests failed
-# echo $?
-0
-
-is that intentional or expected? (I know our subcommand error handling is a mess).
-
-I guess it does stop processing as expected:
-
-# xfs_db -x -c crc32selftest -c "sb 0" -c p fsfile
-crc32c: 1 self tests failed
-#
-
-But maybe this shouldn't be considered a command, and more like a weird bolt-on
-next to 'V' i.e. a top-level option which tests the crc and exits with status.
-I can't think of any reason it needs to be a chained command, can you?
-
--Eric
+diff --git a/db/metadump.c b/db/metadump.c
+index c1bfc818..a4867783 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -1421,6 +1421,43 @@ process_sf_attr(
+ 		memset(asfep, 0, XFS_DFORK_ASIZE(dip, mp) - ino_attr_size);
+ }
+ 
++static void
++process_dir_free_block(
++	char				*block)
++{
++	struct xfs_dir2_free		*free;
++	struct xfs_dir3_icfree_hdr	freehdr;
++
++	if (!zero_stale_data)
++		return;
++
++	free = (struct xfs_dir2_free *)block;
++	M_DIROPS(mp)->free_hdr_from_disk(&freehdr, free);
++
++	switch (freehdr.magic) {
++	case XFS_DIR2_FREE_MAGIC:
++	case XFS_DIR3_FREE_MAGIC: {
++		__be16			*bests;
++		char			*high;
++		int			used;
++
++		/* Zero out space from end of bests[] to end of block */
++		bests = M_DIROPS(mp)->free_bests_p(free);
++		high = (char *)&bests[freehdr.nvalid];
++		used = high - (char*)free;
++		memset(high, 0, mp->m_dir_geo->blksize - used);
++		iocur_top->need_crc = 1;
++		break;
++	}
++	default:
++		if (show_warnings)
++			print_warning("invalid magic in dir inode %llu "
++				      "free block",
++				      (unsigned long long)cur_ino);
++		break;
++	}
++}
++
+ static void
+ process_dir_leaf_block(
+ 	char				*block)
+@@ -1518,7 +1555,7 @@ process_dir_data_block(
+ 		if (show_warnings)
+ 			print_warning(
+ 		"invalid magic in dir inode %llu block %ld",
+-					(long long)cur_ino, (long)offset);
++					(unsigned long long)cur_ino, (long)offset);
+ 		return;
+ 	}
+ 
+@@ -1832,8 +1869,7 @@ process_single_fsb_objects(
+ 		switch (btype) {
+ 		case TYP_DIR2:
+ 			if (o >= mp->m_dir_geo->freeblk) {
+-				/* TODO, zap any stale data */
+-				break;
++				process_dir_free_block(dp);
+ 			} else if (o >= mp->m_dir_geo->leafblk) {
+ 				process_dir_leaf_block(dp);
+ 			} else {
+@@ -1924,8 +1960,7 @@ process_multi_fsb_objects(
+ 
+ 			dp = iocur_top->data;
+ 			if (o >= mp->m_dir_geo->freeblk) {
+-				/* TODO, zap any stale data */
+-				break;
++				process_dir_free_block(dp);
+ 			} else if (o >= mp->m_dir_geo->leafblk) {
+ 				process_dir_leaf_block(dp);
+ 			} else {
+-- 
+2.14.5
