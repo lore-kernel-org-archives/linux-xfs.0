@@ -1,57 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:51346 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725783AbeJ0EEj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 27 Oct 2018 00:04:39 -0400
-Subject: Re: [PATCH] libxfs: check all defer ops types
-References: <20181026161905.GH28243@magnolia>
- <0dc53e1c-2ad6-b04f-2747-451b6760e1d5@sandeen.net>
- <d13db2aa-3e73-7dd6-8677-7e19f9b7ffcd@sandeen.net>
- <20181026192458.GA8643@infradead.org>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <e478230e-95fc-984f-c8bb-5a393b10fa56@sandeen.net>
-Date: Fri, 26 Oct 2018 14:26:22 -0500
-MIME-Version: 1.0
-In-Reply-To: <20181026192458.GA8643@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Received: from mail-wm1-f42.google.com ([209.85.128.42]:55934 "EHLO
+        mail-wm1-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725965AbeJ0E60 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 27 Oct 2018 00:58:26 -0400
+Received: by mail-wm1-f42.google.com with SMTP id s10-v6so2614091wmc.5
+        for <linux-xfs@vger.kernel.org>; Fri, 26 Oct 2018 13:20:00 -0700 (PDT)
+Received: from dyn.cm.kabsi.at (h081217199198.dyn.cm.kabsi.at. [81.217.199.198])
+        by smtp.gmail.com with ESMTPSA id 193-v6sm7669219wmj.21.2018.10.26.13.19.58
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Fri, 26 Oct 2018 13:19:58 -0700 (PDT)
+From: Stefan Ring <stefanrin@gmail.com>
+Subject: [PATCH 0/5] v4 Try to squash metadump data leaks
+Date: Fri, 26 Oct 2018 22:19:38 +0200
+Message-Id: <20181026201943.24131-1-stefanrin@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
+I reorganized the patches as suggested and fixed the btree case.
 
+Stefan Ring (5):
+  xfs_metadump: Extend data zapping to XFS_DIR{2,3}_LEAFN_MAGIC blocks
+  xfs_metadump: Zap multi fsb blocks
+  xfs_metadump: Zap freeindex blocks in directory inodes
+  xfs_metadump: Zap unused space in inode btrees
+  xfs_metadump: Zap dev inodes
 
-On 10/26/18 2:24 PM, Christoph Hellwig wrote:
-> On Fri, Oct 26, 2018 at 02:11:47PM -0500, Eric Sandeen wrote:
->> static const struct
->> xfs_defer_op_type *defer_op_types[XFS_DEFER_OPS_TYPE_MAX] = {
->>        xfs_bmap_update_defer_type,
->>        xfs_refcount_update_defer_type,
->>        xfs_rmap_update_defer_type,
->>        xfs_extent_free_defer_type,
->>        xfs_agfl_free_defer_type,
->> };
-> 
-> I think this should be:
-> 
-> static const struct xfs_defer_op_type *defer_op_types[] = {
-> 	[XFS_DEFER_OPS_TYPE_BMAP]	= &xfs_bmap_update_defer_type,
-> 	[XFS_DEFER_OPS_TYPE_REFCOUNT]	= &xfs_refcount_update_defer_type,
-> 	[XFS_DEFER_OPS_TYPE_RMAP]	= &xfs_rmap_update_defer_type,
-> 	[XFS_DEFER_OPS_TYPE_FREE]	= &xfs_extent_free_defer_type,
-> 	[XFS_DEFER_OPS_TYPE_AGFL_FREE]	= &xfs_agfl_free_defer_type,
-> };
-> 
-> somefunc()
-> {
-> 	BUILD_BUG_ON(ARRAY_SIZE(defer_op_types) != XFS_DEFER_OPS_TYPE_MAX);
-> }
-> 
+ db/metadump.c | 119 +++++++++++++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 105 insertions(+), 14 deletions(-)
 
-Uh, yeah, that's what I was trying but pitifully failing to come
-up with, thanks.  :)
-
--Eric
+-- 
+2.14.5
