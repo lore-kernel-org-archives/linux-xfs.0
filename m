@@ -1,185 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:65492 "EHLO
-        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726238AbeJYH10 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Oct 2018 03:27:26 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1gFS5X-0006JC-33
-        for linux-xfs@vger.kernel.org; Thu, 25 Oct 2018 09:57:19 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.91)
-        (envelope-from <david@fromorbit.com>)
-        id 1gFS5X-0005DE-1S
-        for linux-xfs@vger.kernel.org; Thu, 25 Oct 2018 09:57:19 +1100
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:49483 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725828AbeJ0KYi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 27 Oct 2018 06:24:38 -0400
+Date: Sat, 27 Oct 2018 12:45:16 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/5] xfs: reverse search directory freespace indexes
-Date: Thu, 25 Oct 2018 09:57:16 +1100
-Message-Id: <20181024225716.19459-6-david@fromorbit.com>
-In-Reply-To: <20181024225716.19459-1-david@fromorbit.com>
-References: <20181024225716.19459-1-david@fromorbit.com>
+Subject: Re: [PATCH] misc: only build with lto if explicitly enabled
+Message-ID: <20181027014516.GH19305@dastard>
+References: <20181026232538.GK28243@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181026232538.GK28243@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
 
-From: Dave Chinner <dchinner@redhat.com>
+On Fri, Oct 26, 2018 at 04:25:38PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Change the LTO default to off from probe because it wastes build time on
+> developer machines.  Anyone who really wants it for release builds or
+> whatever can still turn it on.
 
-When a directory is growing rapidly, new blocks tend to get added at
-the end of the directory. These end up at the end of the freespace
-index, and when the directory gets large finding these new
-freespaces gets expensive. The code does a linear search across the
-frespace index from the first block in the directory to the last,
-hence meaning the newly added space is the last index searched.
+Build time is not the problem. Making the resultant binary
+completely unusable with gdb and hence undebuggable is the real
+problem with LTO.
 
-Instead, do a reverse order index search, starting from the last
-block and index in the freespace index. This makes most lookups for
-free space on rapidly growing directories O(1) instead of O(N), but
-should not have any impact on random insert workloads because the
-average search length is the same regardless of which end of the
-array we start at.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  configure.ac |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/configure.ac b/configure.ac
+> index 44a4b3a8..f8f29c07 100644
+> --- a/configure.ac
+> +++ b/configure.ac
+> @@ -109,8 +109,8 @@ AC_ARG_ENABLE(threadsan,
+>  AC_SUBST(enable_threadsan)
+>  
+>  AC_ARG_ENABLE(lto,
+> -[ --enable-lto=[yes/no]      Enable link time optimization (LTO) [default=probe]],,
+> -	enable_lto=probe)
+> +[ --enable-lto=[yes/no]      Enable link time optimization (LTO) [default=no]],,
+> +	enable_lto=no)
 
-The result is a major improvement in large directory grow rates:
+Looks good.
 
-                create time(sec) / rate (files/s)
- File count     vanilla             patched
-   10k        0.54 / 18.5k         0.52 / 19.3k
-   20k        1.10 / 18.1k         1.00 / 20.0k
-  100k        4.21 / 23.8k         3.58 / 27.9k
-  200k        9.66 / 20,7k         7.08 / 28.3k
-    1M       86.61 / 11.5k        38.33 / 26.1k
-    2M      206.13 /  9.7k        82.20 / 24.3k
-   10M     2843.57 /  3.5k       591.78 / 16.9k
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Signed-Off-By: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/libxfs/xfs_dir2_node.c | 69 +++++++++++++++++------------------
- 1 file changed, 34 insertions(+), 35 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-index 621f63de075c..aa52dc740305 100644
---- a/fs/xfs/libxfs/xfs_dir2_node.c
-+++ b/fs/xfs/libxfs/xfs_dir2_node.c
-@@ -1747,7 +1747,8 @@ xfs_dir2_node_find_freeblk(
- 	struct xfs_inode	*dp = args->dp;
- 	struct xfs_trans	*tp = args->trans;
- 	struct xfs_buf		*fbp = NULL;
--	int			findex;
-+	int			findex = 0;
-+	xfs_dir2_db_t		firstfbno;
- 	xfs_dir2_db_t		lastfbno;
- 	xfs_dir2_db_t		ifbno = -1;
- 	xfs_dir2_db_t		dbno = -1;
-@@ -1775,7 +1776,7 @@ xfs_dir2_node_find_freeblk(
- 			ASSERT(be16_to_cpu(bests[findex]) != NULLDATAOFF);
- 			ASSERT(be16_to_cpu(bests[findex]) >= length);
- 			dbno = freehdr.firstdb + findex;
--			goto out;
-+			goto found_block;
- 		}
- 
- 		/*
-@@ -1784,9 +1785,10 @@ xfs_dir2_node_find_freeblk(
- 		 */
- 		ifbno = fblk->blkno;
- 		fbno = ifbno;
-+		xfs_trans_brelse(tp, fbp);
-+		fbp = NULL;
-+		fblk->bp = NULL;
- 	}
--	ASSERT(dbno == -1);
--	findex = 0;
- 
- 	/*
- 	 * If we don't have a data block yet, we're going to scan the freespace
-@@ -1797,6 +1799,7 @@ xfs_dir2_node_find_freeblk(
- 	if (error)
- 		return error;
- 	lastfbno = xfs_dir2_da_to_db(args->geo, (xfs_dablk_t)fo);
-+	firstfbno = xfs_dir2_byte_to_db(args->geo, XFS_DIR2_FREE_OFFSET);
- 
- 	/* If we haven't get a search start block, set it now */
- 	if (fbno == -1)
-@@ -1804,51 +1807,47 @@ xfs_dir2_node_find_freeblk(
- 
- 	/*
- 	 * While we haven't identified a data block, search the freeblock
--	 * data for a data block with enough free space in it.
-+	 * data for a good data block. Do a reverse order search, as growing
-+	 * directories will put new blocks with free space at the end of the
-+	 * free space index.
- 	 */
--	for ( ; fbno < lastfbno; fbno++) {
--		/* If we don't have a freeblock in hand, get the next one. */
--		if (fbp == NULL) {
--			/* If it's ifbno we already looked at it. */
--			if (fbno == ifbno)
--				continue;
-+	for (fbno = lastfbno - 1; fbno >= firstfbno; fbno--) {
-+		/* If it's ifbno we already looked at it. */
-+		if (fbno == ifbno)
-+			continue;
- 
--			/*
--			 * Read the block.  There can be holes in the freespace
--			 * blocks, so this might not succeed.  This should be
--			 * really rare, so there's no reason to avoid it.
--			 */
--			error = xfs_dir2_free_try_read(tp, dp,
--					xfs_dir2_db_to_da(args->geo, fbno),
--					&fbp);
--			if (error)
--				return error;
--			if (!fbp)
--				continue;
-+		/*
-+		 * Read the block.  There can be holes in the freespace
-+		 * blocks, so this might not succeed.  This should be
-+		 * really rare, so there's no reason to avoid it.
-+		 */
-+		error = xfs_dir2_free_try_read(tp, dp,
-+				xfs_dir2_db_to_da(args->geo, fbno),
-+				&fbp);
-+		if (error)
-+			return error;
-+		if (!fbp)
-+			continue;
- 
--			findex = 0;
--			free = fbp->b_addr;
--			bests = dp->d_ops->free_bests_p(free);
--			dp->d_ops->free_hdr_from_disk(&freehdr, free);
--		}
-+		findex = 0;
-+		free = fbp->b_addr;
-+		bests = dp->d_ops->free_bests_p(free);
-+		dp->d_ops->free_hdr_from_disk(&freehdr, free);
- 
- 		/* Scan the free entry array for a large enough free space. */
--		do {
-+		for (findex = freehdr.nvalid - 1; findex >= 0; findex--) {
- 			if (be16_to_cpu(bests[findex]) != NULLDATAOFF &&
- 			    be16_to_cpu(bests[findex]) >= length) {
- 				dbno = freehdr.firstdb + findex;
--				goto out;
-+				goto found_block;
- 			}
--		} while (++findex < freehdr.nvalid);
-+		}
- 
- 		/* Didn't find free space, go on to next free block */
- 		xfs_trans_brelse(tp, fbp);
--		fbp = NULL;
--		if (fblk)
--			fblk->bp = NULL;
- 	}
- 
--out:
-+found_block:
- 	*dbnop = dbno;
- 	*fbpp = fbp;
- 	*findexp = findex;
 -- 
-2.19.1
+Dave Chinner
+david@fromorbit.com
