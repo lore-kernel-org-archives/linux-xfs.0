@@ -1,145 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:50402 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725920AbeJ3B4m (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Oct 2018 21:56:42 -0400
-Date: Mon, 29 Oct 2018 10:07:00 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs_db: add crc32 self test
-Message-ID: <20181029170700.GA4135@magnolia>
-References: <20181023155701.GD28243@magnolia>
- <ac96e362-a298-b171-ccc6-5fb22907c786@sandeen.net>
- <20181026201628.GJ28243@magnolia>
- <1bd96482-8901-365b-a16e-e3fefeea4ec3@sandeen.net>
+Received: from mail-lf1-f65.google.com ([209.85.167.65]:35844 "EHLO
+        mail-lf1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726828AbeJ1XVl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Oct 2018 19:21:41 -0400
+Received: by mail-lf1-f65.google.com with SMTP id h192so4155620lfg.3
+        for <linux-xfs@vger.kernel.org>; Sun, 28 Oct 2018 07:36:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1bd96482-8901-365b-a16e-e3fefeea4ec3@sandeen.net>
+References: <20181026201943.24131-1-stefanrin@gmail.com> <3e653734-6470-3160-58e8-5bdf866dbd87@sandeen.net>
+ <5228ed5f-b238-1596-a829-6bf482da7e2b@sandeen.net> <CAAxjCExbUX1hDDV_0yK5Uu1eGf3aC8XT0CN-eL66+9GNDtdRVg@mail.gmail.com>
+In-Reply-To: <CAAxjCExbUX1hDDV_0yK5Uu1eGf3aC8XT0CN-eL66+9GNDtdRVg@mail.gmail.com>
+From: Stefan Ring <stefanrin@gmail.com>
+Date: Sun, 28 Oct 2018 15:36:41 +0100
+Message-ID: <CAAxjCEyu9e4=umUMzxXZvDFHABwO6NVwihZbV2+gdwWJC8NkCQ@mail.gmail.com>
+Subject: Re: [PATCH 0/5] v4 Try to squash metadump data leaks
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Oct 29, 2018 at 11:28:53AM -0500, Eric Sandeen wrote:
-> 
-> 
-> On 10/26/18 3:16 PM, Darrick J. Wong wrote:
-> > On Fri, Oct 26, 2018 at 03:06:06PM -0500, Eric Sandeen wrote:
-> >> On 10/23/18 10:57 AM, Darrick J. Wong wrote:
-> >>> From: Darrick J. Wong <darrick.wong@oracle.com>
-> >>>
-> >>> Add a self test for crc32 into xfs_db so that xfstests can check the
-> >>> operation of the (potentially cross-compiled) package binaries by
-> >>> isolating the self test code to a header file that can be included by
-> >>> the build system self test and xfs_db.
-> >>>
-> >>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> >>> ---
-> >>>  db/command.c            |    1 
-> >>>  db/crc.c                |   36 ++
-> >>>  db/crc.h                |    1 
-> >>>  include/crc32selftest.h |  706 +++++++++++++++++++++++++++++++++++++++++++++++
-> >>>  libfrog/crc32.c         |  669 ---------------------------------------------
-> >>>  man/man8/xfs_db.8       |    5 
-> >>>  6 files changed, 750 insertions(+), 668 deletions(-)
-> >>>  create mode 100644 include/crc32selftest.h
-> >>>
-> >>> diff --git a/db/command.c b/db/command.c
-> >>> index c7c52342..7b727986 100644
-> >>> --- a/db/command.c
-> >>> +++ b/db/command.c
-> >>> @@ -139,4 +139,5 @@ init_commands(void)
-> >>>  	write_init();
-> >>>  	dquot_init();
-> >>>  	fuzz_init();
-> >>> +	crc32selftest_init();
-> >>>  }
-> >>> diff --git a/db/crc.c b/db/crc.c
-> >>> index b6775bc7..93745003 100644
-> >>> --- a/db/crc.c
-> >>> +++ b/db/crc.c
-> >>> @@ -17,6 +17,7 @@
-> >>>  #include "output.h"
-> >>>  #include "bit.h"
-> >>>  #include "print.h"
-> >>> +#include "crc32selftest.h"
-> >>>  
-> >>>  static int crc_f(int argc, char **argv);
-> >>>  static void crc_help(void);
-> >>> @@ -175,3 +176,38 @@ crc_f(
-> >>>  	flist_free(fl);
-> >>>  	return 0;
-> >>>  }
-> >>> +
-> >>> +static int
-> >>> +crc32selftest_f(
-> >>> +	int		argc,
-> >>> +	char		**argv)
-> >>> +{
-> >>> +	int		c;
-> >>> +	int		errors;
-> >>> +
-> >>> +	while ((c = getopt(argc, argv, "")) != EOF) {
-> >>> +		switch (c) {
-> >>> +		default:
-> >>> +			dbprintf(_("Bad option for crc32selftest command.\n"));
-> >>> +			return 0;
-> >>> +		}
-> >>> +	}
-> >>> +
-> >>> +	if (argc != optind) {
-> >>> +		dbprintf(_("The crc32selftest command takes no arguments.\n"));
-> >>> +		return 0;
-> >>> +	}
-> >>
-> >> Isn't this redundant w/ the first "Bad option" message - can we even 
-> >> get here?
-> > 
-> > Hmm, I guess not.
-> > 
-> >>> +
-> >>> +	errors = crc32c_test();
-> >>> +	return errors == 0 ? 0 : 1;
-> >>
-> >> Oh, ok, it can return number of errors, fine.
-> > 
-> > We might as well stop if crc32 is broken. :)
-> 
-> Ok, so I think the way this is structured is a bit weird.
-> 
-> We have to specify a device even though it's not used for
-> this command:
-> 
-> # xfs_db -x -c crc32selftest
-> Usage: xfs_db [-ifFrxV] [-p prog] [-l logdev] [-c cmd]... device
-> 
-> Also, patching to return a forced error still returns 1 on the xfs_db cmdline:
-> 
-> #xfs_db -x -c crc32selftest fsfile
-> crc32c: 1 self tests failed
-> # echo $?
-> 0
-> 
-> is that intentional or expected? (I know our subcommand error handling is a mess).
-> 
-> I guess it does stop processing as expected:
-> 
-> # xfs_db -x -c crc32selftest -c "sb 0" -c p fsfile
-> crc32c: 1 self tests failed
-> #
-> 
-> But maybe this shouldn't be considered a command, and more like a weird bolt-on
-> next to 'V' i.e. a top-level option which tests the crc and exits with status.
-> I can't think of any reason it needs to be a chained command, can you?
+On Sun, Oct 28, 2018 at 1:38 PM Stefan Ring <stefanrin@gmail.com> wrote:
+>
+> On Sat, Oct 27, 2018 at 1:33 AM Eric Sandeen <sandeen@sandeen.net> wrote:
+> >
+> > Also, here's an old script I had lying around to test metadump.  It's hacky, sorry.
+> >
+> > Things to watch out for... it looks for an "fsstress" binary from xfstests, so adjust that path.
+> > It freezes and unfreezes the test filesystem, if your mount fails it'll freeze
+> > the fs you're on.  ;)  There may be other rough spots.
+> >
+> > It also runs the xfs_metadump/xfs_db in your path; you could change that to a
+> > local ./xfs_metadump to run db/xfs_db from a git tree instead for testing
+> > w/o make install.
+> >
+> > Right now this is detecting some corruption induced by metadump/mdrestore
+> > with your full patchset in place, FWIW.
+> >
+> > Sorry I didn't send this sooner, kinda forgot I had it.  really should turn it into an xfstest.
+>
+> Thanks! The corruption is caused by the last patch in the series. So
+> dev inodes can have attribute forks. I will have to zap the data and
+> the attr area separately.
 
-<urk> I forgot that I moved crc32 to libfrog, so yes this should be a
-CMD_NOFILE_OK xfs_io command and then we can do:
+Ok, this is a better replacement for the fifth patch (copy/pasted into
+in-browser e-mail editor, might have broken formatting).
 
-$ xfs_io -c crc32selftest
+Apparently the dev's inode contents are xfs_dev_t, and the rest of the
+data fork can be cleared. The attribute fork is handled later in
+process_inode.
 
-Will fix and resubmit.
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -2270,6 +2270,25 @@ process_inode_data(
+        return 1;
+ }
 
---D
-
-> -Eric
++static int
++process_dev_inode(
++       xfs_dinode_t            *dip)
++{
++       if (XFS_DFORK_NEXTENTS(dip, XFS_DATA_FORK)) {
++               if (show_warnings)
++                       print_warning("inode %llu has unexpected extents",
++                                     (unsigned long long)cur_ino);
++               return 0;
++       } else {
++               if (zero_stale_data) {
++                       unsigned int size = sizeof(xfs_dev_t);
++                       memset(XFS_DFORK_DPTR(dip) + size, 0,
++                                       XFS_DFORK_DSIZE(dip, mp) - size);
++               }
++               return 1;
++       }
++}
++
+ /*
+  * when we process the inode, we may change the data in the data and/or
+  * attribute fork if they are in short form and we are obfuscating names.
+@@ -2322,7 +2341,10 @@ process_inode(
+                case S_IFREG:
+                        success = process_inode_data(dip, TYP_DATA);
+                        break;
+-               default: ;
++               default:
++                       success = process_dev_inode(dip);
++                       need_new_crc = 1;
++                       break;
+        }
+        nametable_clear();
