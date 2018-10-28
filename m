@@ -1,45 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:53436 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727313AbeJZAX6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 25 Oct 2018 20:23:58 -0400
-Subject: Re: [PATCH v3 0/2] Try to squash metadump data leaks
-References: <20181011194424.20306-1-stefanrin@gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5209fec0-c7b3-ae1f-a909-23adfdee1072@sandeen.net>
-Date: Thu, 25 Oct 2018 10:50:36 -0500
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:54538 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727115AbeJ1XFi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Oct 2018 19:05:38 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id C8CA929B38
+        for <linux-xfs@vger.kernel.org>; Sun, 28 Oct 2018 14:20:52 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 201549] New: [xfstests xfs/019]: mkfs.xfs: warning - iflush_int
+ failed (-117)
+Date: Sun, 28 Oct 2018 14:20:52 +0000
+Message-ID: <bug-201549-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-In-Reply-To: <20181011194424.20306-1-stefanrin@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Stefan Ring <stefanrin@gmail.com>, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On 10/11/18 2:44 PM, Stefan Ring wrote:
-> This is the same as v2, but with the correct e-mail address this time. Sorry!
-> 
-> Stefan Ring (2):
->   xfs_metadump: Extend zapping to multi fsb dir blocks
->   xfs_metadump: Zap more stale data
-> 
->  db/metadump.c | 121 +++++++++++++++++++++++++++++++++++++++++++++++++++-------
->  1 file changed, 107 insertions(+), 14 deletions(-)
+https://bugzilla.kernel.org/show_bug.cgi?id=201549
 
-Still reading through the patches (this stuff makes my brain hurt)
+            Bug ID: 201549
+           Summary: [xfstests xfs/019]: mkfs.xfs: warning - iflush_int
+                    failed (-117)
+           Product: File System
+           Version: 2.5
+    Kernel Version: v4.18
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: XFS
+          Assignee: filesystem_xfs@kernel-bugs.kernel.org
+          Reporter: zlang@redhat.com
+        Regression: No
 
-but I think it'd be nice to structure this in a more incremental way, perhaps:
+xfs/019 fails on s390x. mkfs.xfs always fails as below:
 
-1) fix dir leaf block processing to handle LEAFN
-2) add existing leaf block processing to multi-fsb dirs
-3) add the dir2 free processing function, and add it to both single & multi-fsb dirs
-4) add the process_btinode fixes
-5) add the device inode processing
+# mkfs.xfs -f -n version=2 -p /tmp/36771.proto /dev/loop1
+meta-data=/dev/loop1             isize=512    agcount=4, agsize=786496 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=0
+         =                       reflink=0
+data     =                       bsize=4096   blocks=3145984, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=2560, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+Metadata corruption detected at 0x101214a, inode 0x89 data fork
+mkfs.xfs: warning - iflush_int failed (-117)
+cache_purge: shake on cache 0x8e4be40 left 1 nodes!?
+cache_purge: shake on cache 0x8e4be40 left 1 nodes!?
+cache_purge: shake on cache 0x8e4be40 left 1 nodes!?
+cache_zero_check: refcount is 1, not zero (node=0x8e76a60)
 
-1,2,3 are dependent, 4 and 5 should be independent, they can each be
-reviewed for their sole purpose.  One change, one patch.  :)
+# cat /tmp/36771.proto
+DUMMY1
+0 0
+: root directory
+d--777 3 1
+: a directory
+directory d--755 3 1 
+file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_0 ---755 3 1 /tmp/36771.file
+file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_1 ---755 3 1 /tmp/36771.file
+file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_2 ---755 3 1 /tmp/36771.file
+file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_3 ---755 3 1 /tmp/36771.file
+file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_4 ---755 3 1 /tmp/36771.file
+$
+: back in the root
+setuid -u-666 0 0 /tmp/36771.file
+setgid --g666 0 0 /tmp/36771.file
+setugid -ug666 0 0 /tmp/36771.file
+block_device b--012 3 1 161 162 
+char_device c--345 3 1 177 178
+pipe p--670 0 0
+symlink l--123 0 0 bigfile
+: a file we actually read
+bigfile ---666 3 0 /tmp/36771.file.2
+: done
+$
 
-Thanks,
--Eric
+# cat /tmp/36711.file
+fish
+
+The file "/tmp/36771.file.2" is generated by:
+# xfstests/src/devzero -b 2048 -n 2 -c -v 44 /tmp/36771.file.2
+
+Version-Release number of selected component (if applicable):
+# mkfs.xfs -V
+mkfs.xfs version 4.19.0-rc0
+kernel 4.18
+
+How reproducible:
+100%
+
+Steps to Reproduce:
+run xfs/019 on s390x
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
