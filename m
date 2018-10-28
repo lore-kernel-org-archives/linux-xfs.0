@@ -1,225 +1,264 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46240 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727504AbeJYVyR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 25 Oct 2018 17:54:17 -0400
-Date: Thu, 25 Oct 2018 09:21:30 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: xfs_alloc_ag_vextent_near() takes about 30ms to complete
-Message-ID: <20181025132130.GA2819@bfoster>
-References: <CAGiyNfAUewzAjASPBccOk91PJ+nLS0nF4U3EvO4n59XsYu5P-w@mail.gmail.com>
- <20181023145339.GA7537@bfoster>
- <CAGiyNfAy+eTq+oba0Rb8Oe_kajFqD5a6rPnOkWPjC_E=foSqkg@mail.gmail.com>
- <20181024043416.GA19305@dastard>
- <20181024120926.GA46681@bfoster>
- <20181024223523.GB19305@dastard>
+Received: from mail-lj1-f181.google.com ([209.85.208.181]:44086 "EHLO
+        mail-lj1-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725814AbeJ2CgU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Oct 2018 22:36:20 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20181024223523.GB19305@dastard>
+From: Anatoly Trosinenko <anatoly.trosinenko@gmail.com>
+Date: Sun, 28 Oct 2018 20:50:46 +0300
+Message-ID: <CAE5jQCc3hrq6E-Ff1oiYUOSDA08PMrqnu80XQtaD5adcUQvV8w@mail.gmail.com>
+Subject: XFS: Hang and dmesg flood on mounting invalid FS image
+Content-Type: multipart/mixed; boundary="00000000000043aab105794d98d7"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Mao Cheng <chengmao2010@gmail.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Oct 25, 2018 at 09:35:23AM +1100, Dave Chinner wrote:
-> On Wed, Oct 24, 2018 at 08:09:27AM -0400, Brian Foster wrote:
-> > On Wed, Oct 24, 2018 at 03:34:16PM +1100, Dave Chinner wrote:
-> > > On Wed, Oct 24, 2018 at 11:01:13AM +0800, Mao Cheng wrote:
-> > > > Hi Brian,
-> > > > Thanks for your response.
-> > > > Brian Foster <bfoster@redhat.com> 于2018年10月23日周二 下午10:53写道：
-> > > > >
-> > > > > On Tue, Oct 23, 2018 at 03:56:51PM +0800, Mao Cheng wrote:
-> > > > > > Sorry for trouble again. I just wrote wrong function name in previous
-> > > > > > sending, so resend it.
-> > > > > > If you have received previous email please ignore it, thanks
-> > > > > >
-> > > > > > we have a XFS mkfs with "-k" and mount with the default options(
-> > > > > > rw,relatime,attr2,inode64,noquota), the size is about 2.2TB，and
-> > > > > > exported via samba.
-> > > > > >
-> > > > > > [root@test1 home]# xfs_info /dev/sdk
-> > > > > > meta-data=/dev/sdk               isize=512    agcount=4, agsize=131072000 blks
-> > > > > >          =                       sectsz=4096  attr=2, projid32bit=1
-> > > > > >          =                       crc=1        finobt=0 spinodes=0
-> > > > > > data     =                       bsize=4096   blocks=524288000, imaxpct=5
-> > > > > >          =                       sunit=0      swidth=0 blks
-> > > > > > naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-> > > > > > log      =internal               bsize=4096   blocks=256000, version=2
-> > > > > >          =                       sectsz=4096  sunit=1 blks, lazy-count=1
-> > > > > > realtime =none                   extsz=4096   blocks=0, rtextents=0
-> > > > > >
-> > > > > > free space about allocation groups:
-> > > > > >    from      to extents  blocks    pct
-> > > > > >       1       1       9       9   0.00
-> > > > > >       2       3   14291   29124   0.19
-> > > > > >       4       7    5689   22981   0.15
-> > > > > >       8      15     119    1422   0.01
-> > > > > >      16      31  754657 15093035  99.65
-> > > 
-> > > 750,000 fragmented free extents means something like 1600 btree
-> > > leaf blocks to hold them all.....
-> > > 
-> > > > > xfs_alloc_ag_vextent_near() is one of the several block allocation
-> > > > > algorithms in XFS. That function itself includes a couple different
-> > > > > algorithms for the "near" allocation based on the state of the AG. One
-> > > > > looks like an intra-block search of the by-size free space btree (if not
-> > > > > many suitably sized extents are available) and the second looks like an
-> > > > > outward sweep of the by-block free space btree to find a suitably sized
-> > > > > extent.
-> > > 
-> > > Yup, just like the free inode allocation search, which is capped
-> > > at about 10 btree blocks left and right to prevent searching the
-> > > entire tree for the one free inode that remains in it.
-> > > 
-> > > The problem here is that the first algorithm fails immediately
-> > > because there isn't a contiguous free space large enough for the
-> > > allocation being requested, and so it finds the largest block whose
-> > > /location/ is less than target block as the start point for the
-> > > nearest largest freespace.
-> > > 
-> > 
-> > Hmm, not sure I follow what you're saying here wrt to why we end up in
-> > the second algorithm.
-> 
-> I probably didn't explain it well. I wrote it quickly, didn't proof
-> read. What I meant was "...because there isn't enough contiguous
-> free space large for the allocation requested to land in the last
-> btree block, and so...."
-> 
-> > I was thinking the most likely condition is that
-> > there are actually plenty of suitably sized extents, but as shown by the
-> > free space data, they're amidst a huge number of too small extents. The
-> 
-> Yup, if we do a by-size lookup for >= 22 blocks and there are a
-> 1000 free 22 block extents, the lookup doesn't land in the last
-> block. Straight to physical locality search.
-> 
-> > first algorithm is only active if a lookup in the cntbt lands in the
-> > last block (the far right leaf) of the btree, so unless I'm missing
-> > something this would mean we'd skip right past it to the second
-> > algorithm if the last N blocks (where N > 1) of the cnt_bt have large
-> > enough extents.
-> 
-> *nod*.
-> 
-> > IOW, the first algo seems like an optimization for when we know there
-> > are only a small number of minimum sized extents available and the
-> > second (location based) algorithm would mostly churn. Regardless, we end
-> > up in the same place in the end...
-> > 
-> > > IOW, we do an expanding radius size search based on physical
-> > > locality rather than finding a free space based on size. Once we
-> > > find a good extent to either the left or right, we then stop that
-> > > search and try to find a better extent to the other direction
-> > > (xfs_alloc_find_best_extent()). That search is not bound, so can
-> > > search the entire of the tree in that remaining directory without
-> > > finding a better match.
-> > > 
-> > > We can't cut the initial left/right search shorter - we've got to
-> > > find a large enough free extent to succeed, but we can chop
-> > > xfs_alloc_find_best_extent() short, similar to searchdistance in
-> > > xfs_dialloc_ag_inobt(). The patch below does that.
-> > > 
-> > 
-> > This search looks like it goes as far in the opposite direction as the
-> > current candidate extent.  So I take it this could potentially go off the
-> > rails if we find one suitable extent in one direction that is relatively
-> > far off wrt to startblock, and then the opposite direction happens to be
-> > populated with a ton of too small extents before we extend to the range
-> > that breaks the search.
-> 
-> Precisely.
-> 
-> > I'm curious whether this contributes to the reporter's problem at all,
-> > but this sounds like a reasonable change to me either way.
-> 
-> So am I. It's the low hanging fruit - we have ot search until we
-> find the first candidate block (no chioce in that) but we can chose
-> to terminate the "is there a better choice" search.
-> 
-> > > Really, though, I think what we need to a better size based search
-> > > before falling back to a locality based search. This is more
-> > > complex, so not a few minutes work and requires a lot more thought
-> > > and testing.
-> > > 
-> > 
-> > Indeed. As noted above, the current size based search strikes me as an
-> > optimization that only executes under particular conditions.
-> 
-> It's the common condition in a typical filesystem - if large,
-> contiguous free spaces in the filesystem, then the lookup will
-> almost always land in the last block of the btree.
-> 
+--00000000000043aab105794d98d7
+Content-Type: text/plain; charset="UTF-8"
 
-I guess that makes sense for a clean fs. I wonder how long that state
-persists in practice as usage increases, however. The more smaller free
-extents that are created, the more this algorithm decision varies to the
-size (or maxlen at least) of the request.
+Hello,
 
-> > Since the purpose of this function is locality allocation,
-> 
-> Well, locality is the /second/ consideration - the first algorithm
-> prioritises maxlen for contiguous allocation, then selects the best
-> candidate by locality. The second alogortihm prioiritises locality
-> over allocation length.
-> 
+When mounting a broken XFS image, the kernel hangs and floods dmesg
+with stack traces.
 
-Ah yes, good point. I missed the maxlen/minlen dynamic on my first read
-through. So if we have some small number of extents that satisfy maxlen
-(as opposed to the [minlen, maxlen] range), we prioritize those extents
-and apply locality to that subset. If we have none of such extents or
-too many, we move on to the bno-based fan out search. There, we find the
-closest extent that satisfies the [minlen, maxlen] request.
+How to reproduce with kvm-xfstests:
+1) Checkout v4.19, copy x86_64-config-4.14 to .config, `make
+olddefconfig` and compile
+2) Unpack the attached image (128 Mb uncompressed) to /tmp/kvm-xfstests-$USER
+3) Inside the `kvm-xfstests shell`:
 
-> > I'm wondering
-> > if we could implement a smarter location based search using information
-> > available in the by-size tree. For example, suppose we could identify
-> > the closest minimally sized extents to agbno in order to better seed the
-> > left/right starting points of the location based search. This of course
-> > would require careful heuristics/tradeoffs to make sure we don't just
-> > replace a bnobt scan with a cntbt scan.
-> 
-> I wouldn't bother. I'd just take the "last block" algorithm and make
-> it search all the >= contiguous free space extents for best locality
-> before dropping back to the minlen search.
-> 
+root@kvm-xfstests:~# mount /vtmp
+root@kvm-xfstests:~# mount /vtmp/xfs.img /mnt
+[   39.280840] XFS (loop0): Mounting V5 Filesystem
+[   39.303657] XFS (loop0): Internal error xlog_valid_rec_header(2) at
+line 5283 of file fs/xfs/xfs_log_recover.c.  Caller
+xlog_do_recovery_pass+0x2bd/0x5d0
+[   39.304886] CPU: 0 PID: 373 Comm: mount Not tainted 4.19.0-xfstests #1
+[   39.305491] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996),
+BIOS 1.11.1-1ubuntu1 04/01/2014
+[   39.306247] Call Trace:
+[   39.306464]  dump_stack+0x85/0xc0
+[   39.306751]  xlog_valid_rec_header.isra.6+0xd5/0xe0
+[   39.307250]  xlog_do_recovery_pass+0x2bd/0x5d0
+[   39.307624]  ? xlog_bread_noalign+0x98/0x110
+[   39.307983]  ? xlog_bread_noalign+0x98/0x110
+[   39.308344]  xlog_verify_head+0xab/0x190
+[   39.308675]  xlog_find_tail+0x208/0x350
+[   39.308999]  xlog_recover+0x2b/0x160
+[   39.309307]  xfs_log_mount+0x280/0x2a0
+[   39.309625]  xfs_mountfs+0x42f/0x890
+[   39.309928]  ? xfs_mru_cache_create+0x18b/0x1f0
+[   39.310309]  xfs_fs_fill_super+0x4f8/0x6d0
+[   39.310655]  ? xfs_test_remount_options+0x60/0x60
+[   39.311050]  mount_bdev+0x17f/0x1b0
+[   39.311347]  mount_fs+0x3b/0x170
+[   39.311624]  ? __init_waitqueue_head+0x36/0x50
+[   39.311999]  vfs_kern_mount.part.16+0x54/0x160
+[   39.312374]  do_mount+0x20e/0xdf0
+[   39.312657]  ? memdup_user+0x3e/0x70
+[   39.312961]  __ia32_compat_sys_mount+0xa3/0x140
+[   39.313346]  do_fast_syscall_32+0x9d/0x2f0
+[   39.313694]  entry_SYSENTER_compat+0x84/0x96
+[   39.314126] XFS (loop0): Torn write (CRC failure) detected at log
+block 0xaaf. Truncating head block from 0xab7.
+[   39.316912] XFS (loop0): Internal error xlog_valid_rec_header(2) at
+line 5283 of file fs/xfs/xfs_log_recover.c.  Caller
+xlog_do_recovery_pass+0x2bd/0x5d0
+[   39.318057] CPU: 0 PID: 373 Comm: mount Not tainted 4.19.0-xfstests #1
+[   39.318601] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996),
+BIOS 1.11.1-1ubuntu1 04/01/2014
+[   39.319339] Call Trace:
+[   39.319552]  dump_stack+0x85/0xc0
+[   39.319834]  xlog_valid_rec_header.isra.6+0xd5/0xe0
+[   39.320244]  xlog_do_recovery_pass+0x2bd/0x5d0
+[   39.320618]  ? xlog_bread_noalign+0x98/0x110
+[   39.320979]  ? xlog_bread_noalign+0x98/0x110
+[   39.321344]  xlog_verify_tail+0x144/0x1e0
+[   39.321686]  xlog_verify_head+0xd4/0x190
+[   39.322021]  xlog_find_tail+0x208/0x350
+[   39.322348]  xlog_recover+0x2b/0x160
+[   39.322654]  xfs_log_mount+0x280/0x2a0
+[   39.322974]  xfs_mountfs+0x42f/0x890
+[   39.323280]  ? xfs_mru_cache_create+0x18b/0x1f0
+[   39.323664]  xfs_fs_fill_super+0x4f8/0x6d0
+[   39.324013]  ? xfs_test_remount_options+0x60/0x60
+[   39.324411]  mount_bdev+0x17f/0x1b0
+[   39.324710]  mount_fs+0x3b/0x170
+[   39.324988]  ? __init_waitqueue_head+0x36/0x50
+[   39.325369]  vfs_kern_mount.part.16+0x54/0x160
+[   39.325747]  do_mount+0x20e/0xdf0
+[   39.326063]  ? memdup_user+0x3e/0x70
+[   39.326369]  __ia32_compat_sys_mount+0xa3/0x140
+[   39.326753]  do_fast_syscall_32+0x9d/0x2f0
+[   39.327101]  entry_SYSENTER_compat+0x84/0x96
+[   39.328873] XFS (loop0): Internal error xlog_valid_rec_header(2) at
+line 5283 of file fs/xfs/xfs_log_recover.c.  Caller
+xlog_do_recovery_pass+0x2bd/0x5d0
+[   39.330024] CPU: 0 PID: 373 Comm: mount Not tainted 4.19.0-xfstests #1
+[   39.330574] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996),
+BIOS 1.11.1-1ubuntu1 04/01/2014
+[   39.331349] Call Trace:
+[   39.331565]  dump_stack+0x85/0xc0
+[   39.331850]  xlog_valid_rec_header.isra.6+0xd5/0xe0
+[   39.332264]  xlog_do_recovery_pass+0x2bd/0x5d0
+[   39.332642]  ? xlog_bread_noalign+0x98/0x110
+[   39.333005]  ? xlog_bread_noalign+0x98/0x110
+[   39.333371]  xlog_verify_tail+0x144/0x1e0
+[   39.333713]  xlog_verify_head+0xd4/0x190
+[   39.334048]  xlog_find_tail+0x208/0x350
+[   39.334376]  xlog_recover+0x2b/0x160
+[   39.334682]  xfs_log_mount+0x280/0x2a0
+[   39.335003]  xfs_mountfs+0x42f/0x890
+[   39.335309]  ? xfs_mru_cache_create+0x18b/0x1f0
+[   39.335693]  xfs_fs_fill_super+0x4f8/0x6d0
+[   39.336041]  ? xfs_test_remount_options+0x60/0x60
+[   39.336439]  mount_bdev+0x17f/0x1b0
+[   39.336739]  mount_fs+0x3b/0x170
+[   39.337016]  ? __init_waitqueue_head+0x36/0x50
+[   39.337396]  vfs_kern_mount.part.16+0x54/0x160
+[   39.337774]  do_mount+0x20e/0xdf0
+[   39.338059]  ? memdup_user+0x3e/0x70
+[   39.338365]  __ia32_compat_sys_mount+0xa3/0x140
+[   39.338749]  do_fast_syscall_32+0x9d/0x2f0
+[   39.339098]  entry_SYSENTER_compat+0x84/0x96
+[   39.340891] XFS (loop0): Internal error xlog_valid_rec_header(2) at
+line 5283 of file fs/xfs/xfs_log_recover.c.  Caller
+xlog_do_recovery_pass+0x2bd/0x5d0
+[   39.342084] CPU: 0 PID: 373 Comm: mount Not tainted 4.19.0-xfstests #1
+[   39.342636] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996),
+BIOS 1.11.1-1ubuntu1 04/01/2014
+[   39.343385] Call Trace:
+[   39.343601]  dump_stack+0x85/0xc0
+[   39.343890]  xlog_valid_rec_header.isra.6+0xd5/0xe0
+[   39.344309]  xlog_do_recovery_pass+0x2bd/0x5d0
+[   39.344692]  ? xlog_bread_noalign+0x98/0x110
+[   39.345092]  ? xlog_bread_noalign+0x98/0x110
+[   39.345709]  xlog_verify_tail+0x144/0x1e0
+[   39.346059]  xlog_verify_head+0xd4/0x190
+[   39.346392]  xlog_find_tail+0x208/0x350
+[   39.346718]  xlog_recover+0x2b/0x160
+[   39.347025]  xfs_log_mount+0x280/0x2a0
+[   39.347345]  xfs_mountfs+0x42f/0x890
+[   39.347650]  ? xfs_mru_cache_create+0x18b/0x1f0
+[   39.348032]  xfs_fs_fill_super+0x4f8/0x6d0
+[   39.348380]  ? xfs_test_remount_options+0x60/0x60
+[   39.348778]  mount_bdev+0x17f/0x1b0
+[   39.349077]  mount_fs+0x3b/0x170
+[   39.349366]  ? __init_waitqueue_head+0x36/0x50
+[   39.349753]  vfs_kern_mount.part.16+0x54/0x160
+[   39.350138]  do_mount+0x20e/0xdf0
+[   39.350425]  ? memdup_user+0x3e/0x70
+[   39.350731]  __ia32_compat_sys_mount+0xa3/0x140
+[   39.351115]  do_fast_syscall_32+0x9d/0x2f0
+[   39.351464]  entry_SYSENTER_compat+0x84/0x96
+[   39.353323] XFS (loop0): Internal error xlog_valid_rec_header(2) at
+line 5283 of file fs/xfs/xfs_log_recover.c.  Caller
+xlog_do_recovery_pass+0x2bd/0x5d0
+// ... and so on ...
 
-Ok, that makes sense. The caveat seems to be though that the "last
-block" algorithm searches all of the applicable records to discover the
-best locality. We could open up this search as such, but if free space
-happens to be completely fragmented to >= requested extents, that could
-mean every allocation falls into a full cntbt scan where a bnobt lookup
-would result in a much faster allocation.
+Best regards
+Anatoly
 
-So ISTM that we still need some kind of intelligent heuristic to fall
-back to the second algorithm to cover the "too many" case. What exactly
-that is may take some more thought, experimentation and testing.
+--00000000000043aab105794d98d7
+Content-Type: application/octet-stream; name="xfs_128mb.img.bz2"
+Content-Disposition: attachment; filename="xfs_128mb.img.bz2"
+Content-Transfer-Encoding: base64
+Content-ID: <f_jnt61atq0>
+X-Attachment-Id: f_jnt61atq0
 
-> Really, that's what the first algorithm should be. Looking at the
-> last block and selecting the best free space by size and then
-> locality is really just a degenerate case of the more general
-> algorithm.
-> 
-> Back when this algorithm was designed, AGs could only be 4GB in
-> size, so searching the oly the last block by size made sense - the
-> total number of free space extents is fairly well bound by the
-> AG size. That bound essentially went away with expanding AGs to 1TB,
-> but the algorithm wasn't changed to reflect that even a small amount
-> of free space fragmentation could result almost never hitting the
-> last block of the btree....
-> 
-
-Ok, thanks for the historical context.
-
-Brian
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+QlpoOTFBWSZTWcvTZUEFfUf////v/u7+1+33e696+v//////////9/f399v7raT/f8X90AQzu8oA
+o8w9s5EUo0AADQAAAAAADTQGg0DQADQAADQAGgABoANA0AADRiaADQaAAaqNqNJoCYAANTIxME02
+gACaaaYAQxoBAMCMNAAAJgJhMATEwmJgABMAAmAA00iSBADI0AyeiGgNA0A000NHqDTQaAZMmmho
+PUGJoNDQAMmTRoAAAA0zSGgaBoaBkxA5AAMgADQAGgAGhpo0AAyA9QAeoAANAA000AGgDQ0DQyaA
+NAaAAGhoxMgIlJNJoU2KGQHqDRoGQNNANqAAGgaZB6gxMI9NQ0NDQaAGgA0B6mQA0AyAGmRkZB6m
+hoaDFYwHDn4j4BYOsggyHQaANmQQFBpmQjg9aUZFGNRQG9dTzRmCaPWvHgmhTTesLBDZZDJCT5tR
+BYTACksU2yhBxbOHAnJaSWdLMFDJNsdgBe7HehcBkaD3H8fgAqWkb89WleW09Jw9PMjxv75bWbVv
+cTMc5152XQGquMXX7YzTSU+9qOzY/HHPCChRERC/oERFV4I8KGICCI4xErMsGatCrRRecgh95DLw
+DEwROOpfmMsIAtiIAIAABa1lAURQVLtLw2vP9nUc+VVVjHHIuTVwCUglKTeTlQ6RxEa3RSwaiBII
+FAmferHhgUJLnCZDtdPWrbkVAut3KKAGiuM1UIIqiomaLJRQ7ZFYKO+kRMSQDoImywTdMZt5S4Cy
+AoIKoltF2cEuCIoZgiJVACQZAritIEINIBIISlCLBQCEhEVgRiSMYBCJISMIEIQgSJABRUVE2y0U
+KBB5QgVhEriB05g2S2jYdQRDhoiuIl6Q2URtiJdEEuS3gUIFM9dFVhkRxZgUKpZ/Ch0USqJ7wAkU
+uTGlOXgcfLczpTCtyhokIFIGT2NOqh52qoZjIWqqGRpi8lQTpSQQCvpGAC8FCYE075caRImgSs2N
+VFOCO2XXjWvDPe7wsoED/gBLtq8Mzk1PBeNe8iFpgWhV1faX95+l90eox2UAEveMVQ+LWU3y7cfS
+m/G2gCdRn7F+XJfebhDh5PiTCK7UkDDvKzX7h6RsMtaMQQLysu68ydYiuFXT5d59wASyeCACAoAB
+GQBHEGC22/rpLbIjCw6/0zSeNNbm5smS5TgtIkwX3yeFVFeblgCBgxyavFPjjfOaM3RIzkSJoyb0
+Y42beiGS9AGFUhODQEEEEIAAAAHgCiJ6TPA8GXdygaERErBBdN8KZ862sUsC+qT5lWpVzcm13BQs
+jLKwzV1WS2aiYzZjKNU85qnc6zgHpHiRK9HLfpggwAEBrY36shjCkHXYHMtaaQqasU34mG/Jzjsf
+iSZBa2fo3G3krgldjcBZSv37K40pgCRNr6DdzpIVb1W/DKNkowBUg4i6MhDOH6Vi/l/k5xsJYLxS
+wnmgAGB0JRrfAAMBAUX5uwn3ZylCOedU0dgigUDILqSiWjqTJ+22fTkCHubX4IkkWAAAQNXHHiyu
+0Uf7Y6c7VUB65giABf23fw5FjKxF9Jc6KwZVk7APp3SsuNLjAAEDqpnI+X1Tt1YWdEwOnq9Q/2io
+ZptkeeX6xUW0xMzZMuZqxZLdoZRezDl6bOji8g2Op5Ph8msdX3/AAIFzuRoWY8w5qDoTXaeHTfTY
+0OzpXge/9nu6r/cchbBoM8XGBg6EATUgCWAQRUVE4APuvu4qEADlQDpYCSINnzMM5MqN8FC3Jyet
+ygtgB/zFBWSZTWa2zKfcA1xp/////////////////////////////////////////////4Bo/BDA
+AAAAAAAAAAAAwAAAAOo8iVVSlNahRIFESlBCCqKKq1EAEwCMABMQwAaAAJ6Aj1DDQANACMDQAAEx
+oCMJsgNAaAAAAANANCZomBGQGEYBMAISAAAAAJgAAAATEwAAAAAAABGATAEYAAAAAAABoAAAAAAA
+AAf/6qqH/+9VVUIVUk2/bVRU9P//KRVKaAD1A0AAADQAeoAAAAABoAAAAAAAAAAAAAANAAAAAAAA
+AB0mlH/+p6qqZ7f/qSqp+UhAAAAAAAADQAAAAAABkNAAAAAAAAAAAAAAAAAAAAAASYACYAAmAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAk1UgaKp+Pyaqn+pRMI0epo0D/VQAAAAGmgAADQxAxA
+aADQAaDQGgAAA9QAAAABoHqAGgABkAN5UuucmXNn0X6dXNtjZ2qV51Qrceou5l6Wb67bCGIbqdWO
+r5uTNj5ASSSSS3C9c4bhO88XtlZt/+4fnOTNXlGpAAJIpCSTMYnJeTNQSSSSSjn9HdNmcBfdq4HT
+MxCSSSTOT7TmCSSSSa95kJxQkIfVQkOdn8+UyQAkhCGpIQhIEJJyHDfjqGya7rrc9yZNvNm4XXr4
+PXr3/n2vXr8iIiowBDR0hCP/MkpSWmJoBOT1BRUlNU84FVVldYWVr0ekEC9Xr9i2uLq8DAg19gBs
+LExsjKzM7Q0hGprbG1ub3BxcvaE9zm6Ors7vAV5egoVwe3x9fn+AgYKDhIWGh4iJivfFxkaGjo+Q
+DSMlJ/CP+MpKy0v8pGYDhxEyImpucnZ4TPiaChoqOkFUtNT1Aqpqqusra6vsLGys7S1tre4ubq7v
+L2+v8DBwsPEFi8XGx8jJyssZmZozO+efoDdEbpfTT1NXW1vb9z2fd973/g+H4vj+T5fm+f6Pp+r6
+/s+37fu+/8Px/L8/y/T9f2/efx/P8/1QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAtttttttttttttttttttttttttttttttttttttttttttttttttttttt
+tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttoAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+kkjVZgaRgu57d0H14bgsDCsIweDxHA9HCMFgYXgYD874bkTJcEgAAbrIQAklzCSSIwAAAOCVh6pE
+Zq/7dJAAAPwoAAQhIBybJr0eQNJlC+IEgABzO93u9y+28XdJIAAGgYG2Mkkkkk/wzwm9N3Psjmku
+T9ZwEuyIZUkgBCAQL2QLhAhAABYRSSSSSRYRYEgABlYEkkCBAOae6s4HytxJJJJJdL9F2rdv4Lc3
+Nzc3K7m5wlYGxYvMk3m0XAh9tIFyEJokJJJJOjGS7IEJcwEUSQEZJAYssEkkkkz445MdjRjjjjTH
+HHGp6Vk5rkiwbUyjCSIiigLJIsAUWCyARSErktbJbNa1rWta1r6BqQkkkkiKKBpGSQuYoE2hhcqq
+LEWEiPxUIBchJN0Lj/OGTZtfltbTsW2barWtbDULJJFkEEhCrAgFw77DDDDDPhhhhhhhhhpqyEDB
+gSbSQkmDhhlwwzYYYYYYYYYX4akAAFAABQAAUAAFAABQAAUAAFAABQAAUAAFAABQAAUAAFAABQAA
+VhCjISEaUpTNopSlKUpS+mqLFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVEZSlKUz6KUpSlKUv0hKCQkDeAQAAELhJCFa1rX
+NfWta1rWt+mXjE7RvJmYmZADe0bgcZArciIiIiPcqrthVaUpfpqIsJJJv1a1rXPfWta1rWt+mBpG
+SEk2gDe4wAAVvo3YiZiLjeRExMwvCrvcKqrW5EREREABvdgAArciIiIiGVV2wqqte43bmJmZmZmb
+u7varu7u7ugANgAArgXmZmZeZmZmZYFAF7Oq5mZmXmZmZmWBQBYFAF8JJJJpJJJJchhVcKqrT4n9
+2c5znO5nOc5znNZVVwqqtKquFVVpiFVcKqrQAGwAAUABsAAFMwqrhVVa8PCquJJJJLySSTSSSSSw
+KALAoAsCgC+58FJJOM6SSSSWBQAArvKquFVVr5SquFVVoADYAWBQBYFAFgUAAoADYAAK6JERMRER
+EQqrhVVb/bwMzMzLzMzMzLAoAsCgCuYQqrhVVaYVVwqqtAAbAAFgUAWBQBYFAFAAbAABXOoiJiIi
+IiFVcKqrQAGwAAVwImZmZmZlVXCqq0xEa3kF3u5mXmZmZmWBQBYFAF5rk4RXCqq1w0foiImIiIiI
+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
+--00000000000043aab105794d98d7--
