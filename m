@@ -1,133 +1,135 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52814 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:58360 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726277AbeJWXR2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 23 Oct 2018 19:17:28 -0400
-Date: Tue, 23 Oct 2018 10:53:40 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: xfs_alloc_ag_vextent_near() takes about 30ms to complete
-Message-ID: <20181023145339.GA7537@bfoster>
-References: <CAGiyNfAUewzAjASPBccOk91PJ+nLS0nF4U3EvO4n59XsYu5P-w@mail.gmail.com>
+        id S1727461AbeJ3BSO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 29 Oct 2018 21:18:14 -0400
+Subject: Re: [PATCH] xfs_db: add crc32 self test
+References: <20181023155701.GD28243@magnolia>
+ <ac96e362-a298-b171-ccc6-5fb22907c786@sandeen.net>
+ <20181026201628.GJ28243@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <1bd96482-8901-365b-a16e-e3fefeea4ec3@sandeen.net>
+Date: Mon, 29 Oct 2018 11:28:53 -0500
 MIME-Version: 1.0
+In-Reply-To: <20181026201628.GJ28243@magnolia>
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAGiyNfAUewzAjASPBccOk91PJ+nLS0nF4U3EvO4n59XsYu5P-w@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Mao Cheng <chengmao2010@gmail.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Oct 23, 2018 at 03:56:51PM +0800, Mao Cheng wrote:
-> Sorry for trouble again. I just wrote wrong function name in previous
-> sending, so resend it.
-> If you have received previous email please ignore it, thanks
+
+
+On 10/26/18 3:16 PM, Darrick J. Wong wrote:
+> On Fri, Oct 26, 2018 at 03:06:06PM -0500, Eric Sandeen wrote:
+>> On 10/23/18 10:57 AM, Darrick J. Wong wrote:
+>>> From: Darrick J. Wong <darrick.wong@oracle.com>
+>>>
+>>> Add a self test for crc32 into xfs_db so that xfstests can check the
+>>> operation of the (potentially cross-compiled) package binaries by
+>>> isolating the self test code to a header file that can be included by
+>>> the build system self test and xfs_db.
+>>>
+>>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+>>> ---
+>>>  db/command.c            |    1 
+>>>  db/crc.c                |   36 ++
+>>>  db/crc.h                |    1 
+>>>  include/crc32selftest.h |  706 +++++++++++++++++++++++++++++++++++++++++++++++
+>>>  libfrog/crc32.c         |  669 ---------------------------------------------
+>>>  man/man8/xfs_db.8       |    5 
+>>>  6 files changed, 750 insertions(+), 668 deletions(-)
+>>>  create mode 100644 include/crc32selftest.h
+>>>
+>>> diff --git a/db/command.c b/db/command.c
+>>> index c7c52342..7b727986 100644
+>>> --- a/db/command.c
+>>> +++ b/db/command.c
+>>> @@ -139,4 +139,5 @@ init_commands(void)
+>>>  	write_init();
+>>>  	dquot_init();
+>>>  	fuzz_init();
+>>> +	crc32selftest_init();
+>>>  }
+>>> diff --git a/db/crc.c b/db/crc.c
+>>> index b6775bc7..93745003 100644
+>>> --- a/db/crc.c
+>>> +++ b/db/crc.c
+>>> @@ -17,6 +17,7 @@
+>>>  #include "output.h"
+>>>  #include "bit.h"
+>>>  #include "print.h"
+>>> +#include "crc32selftest.h"
+>>>  
+>>>  static int crc_f(int argc, char **argv);
+>>>  static void crc_help(void);
+>>> @@ -175,3 +176,38 @@ crc_f(
+>>>  	flist_free(fl);
+>>>  	return 0;
+>>>  }
+>>> +
+>>> +static int
+>>> +crc32selftest_f(
+>>> +	int		argc,
+>>> +	char		**argv)
+>>> +{
+>>> +	int		c;
+>>> +	int		errors;
+>>> +
+>>> +	while ((c = getopt(argc, argv, "")) != EOF) {
+>>> +		switch (c) {
+>>> +		default:
+>>> +			dbprintf(_("Bad option for crc32selftest command.\n"));
+>>> +			return 0;
+>>> +		}
+>>> +	}
+>>> +
+>>> +	if (argc != optind) {
+>>> +		dbprintf(_("The crc32selftest command takes no arguments.\n"));
+>>> +		return 0;
+>>> +	}
+>>
+>> Isn't this redundant w/ the first "Bad option" message - can we even 
+>> get here?
 > 
-> we have a XFS mkfs with "-k" and mount with the default options(
-> rw,relatime,attr2,inode64,noquota), the size is about 2.2TB，and
-> exported via samba.
+> Hmm, I guess not.
 > 
-> [root@test1 home]# xfs_info /dev/sdk
-> meta-data=/dev/sdk               isize=512    agcount=4, agsize=131072000 blks
->          =                       sectsz=4096  attr=2, projid32bit=1
->          =                       crc=1        finobt=0 spinodes=0
-> data     =                       bsize=4096   blocks=524288000, imaxpct=5
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-> log      =internal               bsize=4096   blocks=256000, version=2
->          =                       sectsz=4096  sunit=1 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
+>>> +
+>>> +	errors = crc32c_test();
+>>> +	return errors == 0 ? 0 : 1;
+>>
+>> Oh, ok, it can return number of errors, fine.
 > 
-> free space about allocation groups:
->    from      to extents  blocks    pct
->       1       1       9       9   0.00
->       2       3   14291   29124   0.19
->       4       7    5689   22981   0.15
->       8      15     119    1422   0.01
->      16      31  754657 15093035  99.65
->      32      63       1      33   0.00
-> total free extents 774766
-> total free blocks 15146604
-> average free extent size 19.5499
->    from      to extents  blocks    pct
->       1       1     253     253   0.00
->       2       3    7706   16266   0.21
->       4       7    7718   30882   0.39
->       8      15      24     296   0.00
->      16      31  381976 7638130  96.71
->      32      63     753   38744   0.49
->  131072  262143       1  173552   2.20
-> total free extents 398431
-> total free blocks 7898123
-> average free extent size 19.8231
->    from      to extents  blocks    pct
->       1       1     370     370   0.00
->       2       3    2704    5775   0.01
->       4       7    1016    4070   0.01
->       8      15      24     254   0.00
->      16      31  546614 10931743  20.26
->      32      63   19191 1112600   2.06
->      64     127       2     184   0.00
->  131072  262143       1  163713   0.30
->  524288 1048575       2 1438626   2.67
-> 1048576 2097151       4 5654463  10.48
-> 2097152 4194303       1 3489060   6.47
-> 4194304 8388607       2 12656637  23.46
-> 16777216 33554431       1 18502975  34.29
-> total free extents 569932
-> total free blocks 53960470
-> average free extent size 94.6788
->    from      to extents  blocks    pct
->       1       1       8       8   0.00
->       2       3    5566   11229   0.06
->       4       7    9622   38537   0.21
->       8      15      57     686   0.00
->      16      31  747242 14944852  80.31
->      32      63     570   32236   0.17
-> 2097152 4194303       1 3582074  19.25
-> total free extents 763066
-> total free blocks 18609622
-> average free extent size 24.38
-> 
+> We might as well stop if crc32 is broken. :)
 
-So it looks like free space in 3 out of 4 AGs is mostly fragmented to
-16-31 block extents. Those same AGs appear to have a much higher number
-(~15k-20k) of even smaller extents.
+Ok, so I think the way this is structured is a bit weird.
 
-> we copy small files(about 150kb) from windows to xfs via SMB protocal,
-> sometines  kworker process consumes 100% of one CPU, and "perf top"
-> shows xfs_extent_busy_trim() and xfs_btree_increment()  consume too much
-> cpu resources, ftrace also show xfs_alloc_ag_vextent_near takes about 30ms to
-> complete.
-> 
+We have to specify a device even though it's not used for
+this command:
 
-This is kind of a vague performance report. Some process consumes a full
-CPU and this is a problem for some (??) reason given unknown CPU and
-unknown storage (with unknown amount of RAM). I assume that kworker task
-is writeback, but you haven't really specified that either.
+# xfs_db -x -c crc32selftest
+Usage: xfs_db [-ifFrxV] [-p prog] [-l logdev] [-c cmd]... device
 
-xfs_alloc_ag_vextent_near() is one of the several block allocation
-algorithms in XFS. That function itself includes a couple different
-algorithms for the "near" allocation based on the state of the AG. One
-looks like an intra-block search of the by-size free space btree (if not
-many suitably sized extents are available) and the second looks like an
-outward sweep of the by-block free space btree to find a suitably sized
-extent. I could certainly see the latter taking some time for certain
-sized allocation requests under fragmented free space conditions. If you
-wanted more detail over what's going on here, I'd suggest to capture a
-sample of the xfs_alloc* (and perhaps xfs_extent_busy*) tracepoints
-during the workload.
+Also, patching to return a forced error still returns 1 on the xfs_db cmdline:
 
-That aside, it's probably best to step back and describe for the list
-the overall environment, workload and performance problem you observed
-that caused this level of digging in the first place. For example, has
-throughput degraded over time? Latency increased? How many writers are
-active at once? Is preallocation involved (I thought Samba/Windows
-triggered it certain cases, but I don't recall)?
+#xfs_db -x -c crc32selftest fsfile
+crc32c: 1 self tests failed
+# echo $?
+0
 
-Brian
+is that intentional or expected? (I know our subcommand error handling is a mess).
 
-> In addition all tests were performed on Centos7.4(3.10.0-693.el7.x86_64).
-> 
-> Any suggestions are welcome.
+I guess it does stop processing as expected:
+
+# xfs_db -x -c crc32selftest -c "sb 0" -c p fsfile
+crc32c: 1 self tests failed
+#
+
+But maybe this shouldn't be considered a command, and more like a weird bolt-on
+next to 'V' i.e. a top-level option which tests the crc and exits with status.
+I can't think of any reason it needs to be a chained command, can you?
+
+-Eric
