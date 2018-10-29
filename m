@@ -1,89 +1,158 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail01.adl2.internode.on.net ([150.101.137.133]:6728 "EHLO
-        ipmail01.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725755AbeKAICk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Nov 2018 04:02:40 -0400
-Date: Thu, 1 Nov 2018 10:02:25 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfs: don't preempt writeback sequence on single page
- wb error
-Message-ID: <20181031230225.GX19305@dastard>
-References: <20181031140155.17996-1-bfoster@redhat.com>
- <20181031140155.17996-3-bfoster@redhat.com>
+Received: from sandeen.net ([63.231.237.45]:43132 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726852AbeJ3DUX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 29 Oct 2018 23:20:23 -0400
+Subject: Re: [PATCH] xfs_io: add crc32 self test
+References: <20181029181107.GC4135@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <a9f99690-418e-9fcd-ecd0-bbed071b0a6f@sandeen.net>
+Date: Mon, 29 Oct 2018 13:30:32 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181031140155.17996-3-bfoster@redhat.com>
+In-Reply-To: <20181029181107.GC4135@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Wed, Oct 31, 2018 at 10:01:55AM -0400, Brian Foster wrote:
-> xfs_do_writepage() currently returns errors directly regardless of
-> whether it is called via ->writepages() or ->writepage(). In the
-> case of ->writepages(), an xfs_do_writepage() error return breaks
-> the current writeback sequence in write_cache_pages(). This means
-> that an integrity writeback (i.e., sync), for example, returns
-> before all associated pages have been processed.
-
-That sounds like a bug in write_cache_pages(). It sends pages
-one at a time to the writepage context, and it is supposed to
-iterate the entire range on a data sync operation. If you look at
-the code, is clearly stopping at the first error.
-
-IOWs, every filesystem that uses write_cache_pages() for data
-integrity writes is broken in the same way.
-
-And a quick look as fs specific writepages implementations indicates
-that ext4_writepages() and ibtrfs's extent_write_cache_pages() have
-the same issue.
-
-> This can be problematic in cases like unmount. If the writeback
-> doesn't process all delalloc pages before unmounting, we end up
-> reclaiming inodes with non-zero delalloc block counts. In turn, this
-> breaks block accounting and leaves the fs inconsistent.
-
-XFS is probably the only filesystem that leaves detectable state
-around and then detects and reports it....
-
-> XFS explicitly discards delalloc blocks on such writepage failures
-> to avoid this problem. This isn't terribly useful if we allow an
-> integrity writeback to complete (and thus a filesystem to unmount)
-> without addressing the entire set of dirty pages on an inode.
-> Therefore, change ->writepage[s]() to track high level error state
-> in the xfs_writepage_ctx structure and return it from the higher
-> level operation callout rather than xfs_do_writepage(). This ensures
-> that write_cache_pages() does not exit prematurely when called via
-> ->writepages(), but both ->writepage() and ->writepages() still
-> ultimately return an error for the higher level operation.
+On 10/29/18 1:11 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> This patch introduces a subtle change in the behavior of background
-> writeback in the event of persistent errors. The current behavior of
-> returning an error preempts the background writeback. Writeback
-> eventually comes around again and repeats the process for a few more
-> pages (in practice) before it once again fails. This repeats over
-> and over until the entire set of dirty pages is cleaned. This
-> behavior results in a somewhat slower stream of "page discard"
-> errors in the system log and dictates that many repeated fsync calls
-> may be required before the entire data set is processed and mapping
-> error consumed. With this change in place, background writeback
-> executes on as many pages as necessary as if each page writeback
-> were successful. The pages are cleaned immediately and significantly
-> more page discard errors can be observed at once.
+> Add a self test for crc32 into xfs_io so that xfstests can check the
+> operation of the (potentially cross-compiled) package binaries by
+> isolating the self test code to a header file that can be included by
+> the build system self test and xfs_io.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  include/crc32selftest.h |  706 +++++++++++++++++++++++++++++++++++++++++++++++
+>  io/Makefile             |    8 -
+>  io/crc32selftest.c      |   51 +++
+>  io/init.c               |    1 
+>  io/io.h                 |    1 
+>  libfrog/crc32.c         |  669 ---------------------------------------------
 
-Yeah, this is a good change in behaviour, but I think the
-implementation is wrong. write_cache_pages() needs to continue
-iterating the range if WB_SYNC_ALL is set even when errors occur.
+needs a manpage change as well I think.
 
-i.e. the error state should be maintained by write_cache_pages and
-returned on completion, not require the filesystem to hide errors
-from wcp in it's own specific writepage structure...
+>  6 files changed, 764 insertions(+), 672 deletions(-)
+>  create mode 100644 include/crc32selftest.h
+>  create mode 100644 io/crc32selftest.c
+> 
 
-Cheers,
+...
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> diff --git a/io/crc32selftest.c b/io/crc32selftest.c
+> new file mode 100644
+> index 00000000..c0b4b2f4
+> --- /dev/null
+> +++ b/io/crc32selftest.c
+> @@ -0,0 +1,51 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Copyright (c) 2018 Oracle, Inc.
+> + * All Rights Reserved.
+> + */
+> +
+> +#include "platform_defs.h"
+> +#include "command.h"
+> +#include "init.h"
+> +#include "io.h"
+> +#include "crc32c.h"
+> +#include "crc32selftest.h"
+> +
+> +static int
+> +crc32selftest_f(
+> +	int		argc,
+> +	char		**argv)
+> +{
+> +	int		c;
+> +	int		errors;
+> +
+> +	while ((c = getopt(argc, argv, "")) != EOF) {
+> +		switch (c) {
+> +		default:
+> +			fprintf(stderr,
+> +_("Bad option for crc32selftest command.\n"));
+> +			return 0;
+> +		}
+> +	}
+
+I think we can drop the getopt bits altogether because:
+
+> +	errors = crc32c_test();
+> +	return errors == 0 ? 0 : 1;
+> +}
+> +
+> +static const cmdinfo_t	crc32selftest_cmd = {
+> +	.name		= "crc32selftest",
+> +	.cfunc		= crc32selftest_f,
+> +	.argmin		= 0,
+> +	.argmax		= 0,
+
+This command structure doesn't even let us get there:
+
+# io/xfs_io -c "crc32selftest foo"
+bad argument count 1 to crc32selftest, expected 0 arguments
+# io/xfs_io -c "crc32selftest -f"
+bad argument count 1 to crc32selftest, expected 0 arguments
+
+and other "argmax" functions (freeze, thaw, close, munmap...) don't bother
+with getopt at all.
+
+> +	.canpush	= 0,
+> +	.args		= "",
+
+drop this I think, otherwise we get a weird space in usage:
+
+crc32selftest  -- crc32c self test
+
+vs
+
+crc32selftest -- crc32c self test
+
+because
+
+        if (ct->args)
+                printf("%s ", ct->args);
+        printf("-- %s\n", ct->oneline);
+
+
+> +	.flags		= CMD_FLAG_ONESHOT | CMD_FLAG_FOREIGN_OK |
+> +			  CMD_NOFILE_OK | CMD_NOMAP_OK,
+> +	.oneline	= N_("crc32c self test"),
+
+> +};
+> +
+> +void
+> +crc32selftest_init(void)
+> +{
+> +	add_command(&crc32selftest_cmd);
+> +}
+
+ok is it better to call this crc32c selftest or crc32 selftest?  Seems a little inconsistent in the naming.
+
+> diff --git a/io/init.c b/io/init.c
+> index b5eade39..53b754e4 100644
+> --- a/io/init.c
+> +++ b/io/init.c
+> @@ -85,6 +85,7 @@ init_commands(void)
+>  	sync_range_init();
+>  	truncate_init();
+>  	utimes_init();
+> +	crc32selftest_init();
+>  }
+>  
+>  /*
+> diff --git a/io/io.h b/io/io.h
+> index 9278ad00..847b4759 100644
+> --- a/io/io.h
+> +++ b/io/io.h
+> @@ -182,3 +182,4 @@ extern void		log_writes_init(void);
+>  
+>  extern void		scrub_init(void);
+>  extern void		repair_init(void);
+> +extern void		crc32selftest_init(void);
