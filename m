@@ -1,312 +1,190 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37846 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726450AbeJ1Wxy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 28 Oct 2018 18:53:54 -0400
-Date: Sun, 28 Oct 2018 10:09:08 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: xfs_alloc_ag_vextent_near() takes about 30ms to complete
-Message-ID: <20181028140907.GA2050@bfoster>
-References: <CAGiyNfAUewzAjASPBccOk91PJ+nLS0nF4U3EvO4n59XsYu5P-w@mail.gmail.com>
- <20181023145339.GA7537@bfoster>
- <CAGiyNfAy+eTq+oba0Rb8Oe_kajFqD5a6rPnOkWPjC_E=foSqkg@mail.gmail.com>
- <20181024043416.GA19305@dastard>
- <20181024120926.GA46681@bfoster>
- <20181024223523.GB19305@dastard>
- <20181025132130.GA2819@bfoster>
- <20181026010344.GD19305@dastard>
- <20181026130334.GA16468@bfoster>
- <20181027031607.GI19305@dastard>
+Received: from esa18.fujitsucc.c3s2.iphmx.com ([216.71.158.38]:46078 "EHLO
+        esa18.fujitsucc.c3s2.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729455AbeJ2Rz7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Oct 2018 13:55:59 -0400
+From: "y-goto@fujitsu.com" <y-goto@fujitsu.com>
+Subject: About remain issues of FS-DAX
+Date: Mon, 29 Oct 2018 08:57:54 +0000
+Message-ID: <TYAPR01MB32611EC1FF23669346456BEB90F30@TYAPR01MB3261.jpnprd01.prod.outlook.com>
+Content-Language: ja-JP
+Content-Type: text/plain; charset="iso-2022-jp"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181027031607.GI19305@dastard>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Mao Cheng <chengmao2010@gmail.com>, linux-xfs@vger.kernel.org
+To: linux-nvdimm <linux-nvdimm@lists.01.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "'linux-ext4@vger.kernel.org'" <linux-ext4@vger.kernel.org>
+Cc: 'Dan Williams' <dan.j.williams@intel.com>, 'Dave Chinner' <david@fromorbit.com>
 
-On Sat, Oct 27, 2018 at 02:16:07PM +1100, Dave Chinner wrote:
-> On Fri, Oct 26, 2018 at 09:03:35AM -0400, Brian Foster wrote:
-> > On Fri, Oct 26, 2018 at 12:03:44PM +1100, Dave Chinner wrote:
-> > > On Thu, Oct 25, 2018 at 09:21:30AM -0400, Brian Foster wrote:
-> > > > On Thu, Oct 25, 2018 at 09:35:23AM +1100, Dave Chinner wrote:
-> > > > > On Wed, Oct 24, 2018 at 08:09:27AM -0400, Brian Foster wrote:
-> > > > > > I'm wondering
-> > > > > > if we could implement a smarter location based search using information
-> > > > > > available in the by-size tree. For example, suppose we could identify
-> > > > > > the closest minimally sized extents to agbno in order to better seed the
-> > > > > > left/right starting points of the location based search. This of course
-> > > > > > would require careful heuristics/tradeoffs to make sure we don't just
-> > > > > > replace a bnobt scan with a cntbt scan.
-> > > > > 
-> > > > > I wouldn't bother. I'd just take the "last block" algorithm and make
-> > > > > it search all the >= contiguous free space extents for best locality
-> > > > > before dropping back to the minlen search.
-> > > > > 
-> > > > 
-> > > > Ok, that makes sense. The caveat seems to be though that the "last
-> > > > block" algorithm searches all of the applicable records to discover the
-> > > > best locality. We could open up this search as such, but if free space
-> > > > happens to be completely fragmented to >= requested extents, that could
-> > > > mean every allocation falls into a full cntbt scan where a bnobt lookup
-> > > > would result in a much faster allocation.
-> > > 
-> > > Yup, we'll need to bound it so it doesn't do stupid things. :P
-> > > 
-> > 
-> > Yep.
-> > 
-> > > > So ISTM that we still need some kind of intelligent heuristic to fall
-> > > > back to the second algorithm to cover the "too many" case. What exactly
-> > > > that is may take some more thought, experimentation and testing.
-> > > 
-> > > Yeah, that's the difficulty with making core allocator algorithm
-> > > changes - how to characterise the effect of the change. I'm not sure
-> > > that's a huge problem in this case, though, because selecting a
-> > > matching contig freespace is almost always going to be better for
-> > > filesystem longetivty and freespace fragmentation resistance than
-> > > slecting a shorter freespace and doing lots more small allocations.
-> > > it's the 'lots of small allocations' that really makes the freespace
-> > > framgmentation spiral out of control, so if we can avoid that until
-> > > we've used all the matching contig free spaces we'll be better off
-> > > in the long run.
-> > > 
-> > 
-> > Ok, so I ran fs_mark against the metadump with your patch and a quick
-> > hack to unconditionally scan the cntbt if maxlen extents are available
-> > (up to mxr[0] records similar to your patch, to avoid excessive scans).
-> > The xfs_alloc_find_best_extent() patch alone didn't have much of a
-> > noticeable effect, but that is an isolated optimization and I'm only
-> > doing coarse measurements atm that probably hide it in the noise.
-> > 
-> > The write workload improves quite a bit with the addition of the cntbt
-> > change. Both throughput (via iostat 60s intervals) and fs_mark files/sec
-> > change from a slow high/low sweeping behavior to much more consistent
-> > and faster results. I see a sweep between 3-30 MB/s and ~30-250 f/sec
-> > change to a much more consistent 27-39MB/s and ~200-300 f/s.
-> 
-> That looks really promising. :)
-> 
-> > A 5 minute tracepoint sample consists of 100% xfs_alloc_near_first
-> > events which means we never fell back to the bnobt based search. I'm not
-> > sure the mxr thing is the right approach necessarily, I just wanted
-> > something quick that would demonstrate the potential upside gains
-> > without going off the rails.
-> 
-> *nod*. it's a good first approximation, though. The inobt limits
-> search to ~10 inobt records left and right (~1200 nearest inodes)
-> and if there were none free it allocated a new chunk.
-> 
-> The records in the by-size tree have a secondary sort order of
-> by-bno, so we know that as we walk the records of the same size,
-> we'll get closer to the target we want.
-> 
 
-Yeah, this occurred to me while poking at the state of the cntbt trees
-of the metadump. I was thinking specifically about whether we could use
-that to optimize the existing algorithm a bit. For example, if we skip
-the lastblock logic and do find many maxlen extents, use the agbno of
-the first record to avoid sifting through the entire set. If the agbno
-was > the requested agbno, for example, we could probably end the search
-right there...
+Hello,
 
-> Hmmm. I wonder.
-> 
-> xfs_cntbt_key_diff() discriminates first by size, and then if size
-> matches by startblock. 
-> 
-> But xfs_alloc_vextent_near() does this:
-> 
->       if ((error = xfs_alloc_lookup_ge(cnt_cur, 0, args->maxlen, &i)))
->                 goto error0;
-> 
-> It sets the startblock of the target lookup to be 0, which means it
-> will always find the extent closest to the start of the AG of the
-> same size of larger. IOWs, it looks for size without considering
-> locality.
-> 
+I noticed the discussion what is necessary for fs-dax
+in the following thread of xfs/ext4 Mailing list.
 
-... but I wasn't aware we could do this. ;)
+https://patchwork.kernel.org/cover/10631363/
 
-> But the lookup can do both. ~if we change that to be:
-> 
-> 	error = xfs_alloc_lookup_ge(cnt_cur, args->agbno, args->maxlen, &i);
-> 
-> if will actually find the first block of size >= args->maxlen and
-> >= args->agbno. IOWs, it does the majority of the locality search
-> for us. All we need to do is check that the extent on the left side
-> of the return extent is closer to the target than the extent that is
-> returned.....
-> 
-> Which makes me wonder - can we just get rid of that first algorithm
-> (the lastblock search for largest) and replace it with a simple
-> lookup for args->agbno, args->maxlen + args->alignment?
-> 
-> That way we'll get an extent that will be big enough for alignment
-> to succeed if alignment is required, big enough to fit if alignment
-> is not required, or if nothing is found, we can then do a <= to find
-> the first extent smaller and closest to the target:
-> 
-> 	error = xfs_alloc_lookup_le(cnt_cur, args->agbno, args->maxlen, &i);
-> 
-> If the record returned has a length = args->maxlen, then we've
-> got the physically closest exact match and we should use it.
-> 
-> if the record is shorter than args->maxlen but > args->minlen, then
-> there are no extents large enough for maxlen, then we should check
-> if the right side record is closer to target and select between the
-> two.
-> 
-> And that can replace the entirity of xfs_alloc_ag_vextent_near.
-> 
+(I didn't subscribe xfs or ext4 ML, so I didn't know at first.)
 
-My general sense to this point from the code and your feedback about the
-priority of the algorithm is the fundamental problem here is that the
-scope of the first algorithm is simply too narrow and the
-second/fallback algorithm too expensive. At minimum, I think applying
-agbno lookups to the cntbt lookup as you describe here allows us to
-incorporate more locality into the first (maxlen) algorithm and widen
-its scope accordingly. This sounds like a great starting point to me.
-The tradeoff may be that we don't get the locality benefit of all >
-maxlen sized extents since the agbno part of the lookup is secondary to
-the size, but that may be a fine tradeoff if the benefit is we can use
-the first/faster algorithm for a whole lot more cases.
+Though there may be discussed them already,
+I would like to mention my humble opinion about them from normal user's vie=
+w point
+(or as technical support engineers)
 
-I'm actually curious if doing that as a first step to open up the first
-algo to _all_ maxlen cases has a noticeable effect on this workload. If
-so, that could be a nice intermediate step to avoid paying the penalty
-for the "too many >= maxlen extents" case before rewriting the broader
-algorithm. The remaining effort is then to absorb the second algorithm
-into the first such that the second is eventually no longer necessary.
+I hope this is good for progress to remove "Experimental" status of FS-DAX.
 
-> The existing "nothing >= maxlen" case that goes to
-> xfs_alloc_ag_vextent_small() selects the largest free extent at the
-> highest block number (right nost record) and so ignores locality.
-> The xfs_alloc_lookup_le() lookup does they same thing, except it
-> also picks the physically closest extent of the largest size. That's
-> an improvement.
-> 
+>From Dave Chinner
+-----
+> I think we need to decide on:
+>=20
+> - default filesystem behaviour on dax-capable block devices
 
-That looks like another point where the first algorithm bails out too
-quickly as well. We find !maxlen extents, decrement to get the next
-(highest agbno) smallest record, then go on to check it for alignment
-and whatnot without any consideration for any other records that may
-exist of the same size. Unless I'm missing something, the fact that we
-decrement in the _small() case and jump back to the incrementing
-algorithm of the caller pretty much ensures we'll only consider one such
-record before going into the fan out search.
+In my first impression of filesystem DAX, I felt that "-o dax" mount option
+was a bit strange. Because system administrator can specify fs-dax capable =
+area
+by ndctl create-namespace. Then I couldn't find why he/she need to specify
+dax again at mount option. It is second time of specify fsdax, I thought it=
+ is not needed.
 
-> The lastblock case currently selects the physically closest largest
-> free extent in the block that will fit the (aligned) length we
-> require. We can get really close to that with a >= (args->agbno,
-> args->maxlen + args->alignment) lookup
-> 
-> And the  <= (args->agbno, args->maxlen) finds us the largest,
-> closest free extent that we can check against minlen and return
-> that...
-> 
-> IOWs, something like this, which is a whole lot simpler and faster
-> than the linear searches we do now and should return much better
-> candidate extents:
-> 
+So, I think Filesystem should detect FS-DAX capable area,
+and should enable it. It is easier for administrator to use fs-dax.
 
-This all sounds pretty reasonable to me. I need to think more about the
-details. I.e., whether we'd still want/need to fallback to a worst case
-scan in certain cases, which may not be a problem if the first algorithm
-is updated to find extents in almost all cases instead of being limited
-to when there are a small number of maxlen extents.
 
-I'm also wondering if we could enhance this further by repeating the
-agbno lookup at the top for the next smallest extent size in the min/max
-range when no suitable extent is found. Then perhaps the high level
-algorithm is truly simplified to find the "largest available extent with
-best locality for that size."
+> - what information about DAX do applications actually need? What
+>   makes sense to provide them with that information?
 
-> 	check_left = true;
-> 
-> 	/* look for size and closeness */
-> 	error = xfs_alloc_lookup_ge(cnt_cur, args->agbno,
-> 				args->maxlen + alignment, &i);
-> 	if (error)
-> 		goto error0;
-> 
-> 	if (!i) {
-> 		/*
-> 		 * nothing >= target. Search for best <= instead so
-> 		 * we get the get the largest closest match to what
-> 		 * we are asking for.
-> 		 */
-> 		error = xfs_alloc_lookup_le(cnt_cur, args->agbno,
-> 					args->maxlen + alignment, &i);
-> 		if (error)
-> 			goto error0;
-> 
-> 		/* try off the free list */
-> 		if (!i) {
-> 			error = xfs_alloc_ag_vextent_small(args, cnt_cur, &ltbno
-> 			                                &ltlen, &i);
-> 			......
-> 			return ....;
-> 		}
-> 		check_left = false;
-> 	}
-> 
-> 	/* best candidate found, get the record and check adjacent */
-> 	error = xfs_alloc_get_rec(cnt_cur, &bno, &len, &i)
-> 	....
-> 
-> 	if (check_left) {
-> 		xfs_btree_increment(cnt_cur)
-> 		xfs_alloc_get_rec(cnt_cur, altbno, &altlen &i)
-> 		....
-> 	} else {
-> 		xfs_btree_decrement(cnt_cur)
-> 		xfs_alloc_get_rec(cnt_cur, altbno, &altlen &i)
-> 		....
-> 	}
-> 
-> 	/* align results if required */
-> 
-> 	/* check against minlen */
-> 
-> 	/* compute distance diff to target */
-> 
-> 	/* select best extent, fixup trees */
-> 
-> 	/* return best extent */
-> 
-> > One related concern I have with restricting
-> > the locality of the search too much, for example, is that we use
-> > NEAR_BNO allocs for other things like inode allocation locality that
-> > might not be represented in this simple write only workload.
-> 
-> Inode chunk allocation sets minlen == maxlen, in which case we
-> should run your new by-size search to exhaustion and never hit the
-> existing second algorithm. (i.e. don't bound it if minlen = maxlen)
-> i.e. your new algorithm should get the same result as the existing
-> code, but much faster because it's sonly searching extents we know
-> can satisfy the allocation requirements. The proposed algorithm
-> above would be even faster :P
-> 
+I suppose that application should not grep dax mount option to confirm "fs-=
+dax enabled".
+Instead, OS should provide information fs-dax is certainly enabled or not f=
+or application.
 
-Yes, that makes sense. The search can potentially be made simpler in
-that case. Also note that minlen == maxlen for most of the data extent
-allocations in the test case I ran as well. It looks like the
-xfs_bmap_btalloc*() path can use the longest free extent in the AG to
-set a starting minlen and then we loosen constraints over multiple
-allocation attempts if the first happen to fail.
+> - how to provide hints to the kernel for desired behaviour
+>  - on-disk inode flags, or something else?
+>  - dax/nodax mount options or root dir inode flags become default
+>    global hints?
+>  - is a single hint flag sufficient or do we also need an
+>    explicit "do not use dax" flag?
 
-Anyways, I'll play around with this more next week. Thanks for all of
-the thoughts.
+Are there any reason each inode must be remember dax flags?
+It seems to be simpler that the root dir inode only know it as a global hin=
+t.
 
-Brian
+> - behaviour of MAP_SYNC w.r.t. non-DAX filesystems that can provide
+>   required MAP_SYNC semnatics
 
-> Cheers,
-> 
-> Dave.
-> 
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Hmm, if there is a usecase of MAP_SYNC with non-DAX filesystem,
+It should be allowed.
+But I could not find any positive reason for it....
+
+
+> - behaviour of MAP_DIRECT - hint like O_DIRECT or guarantee?
+
+I would like to bet "guarantee".
+If system cannot use the feature which user specified,
+then I suppose system should return error to notify it.
+
+If there is no way of guarantee due to technical reason, and
+system selects falling back from MAP_DIRECT, then I think system
+should notify or output somewhere for user to detect such event.
+
+> - default read/write path behaviour of dax-capable block devices
+>   - automatically bypass the pagecache if bdev is capable?
+
+I prefer automatically bypass the pagecache for users to use easily...
+
+
+> - default mmap behaviour on dax capable devices
+>   - use dax always?
+
+I suppose "always" is easy for user to understand.....
+If not, I suppose document should describe what is necessary to use dax.
+
+
+> - DAX vs get_user_pages_longterm
+>   - turns off DAX dynamically?
+
+If turn off can not be avoided, its event notification will be necessary
+for software using DAX and/or for system administrator.
+
+>   - how do DAX-enabled filesystems interact with page fault capable
+>     hardware? Can we allow DAX in those cases?
+
+I have no comment here.=20
+(To be honest, I don't understand what is problem...
+ I'm glad if someone tell me it.)
+
+>From Dan Williams
+---
+> - Is MADV_DIRECT_ACCESS a hint or a requirement?
+
+If MADV_DIRECT_ACCESS becomes a hint, how and when FS-DAX is falling down?
+In such case, a software needs to change its behavior to call msync()
+instead of cpu cache flush to make persistent data.
+
+So, I suppose requirement is better....
+
+
+> - How does the kernel communicate the effective mode of a mapping
+>   taking into account madvise(), inode flags, mount options, and / or
+>   default fs behavior? New madvice() syscall?
+
+hmmmmmm,  sysfs?
+
+
+> - What is the behavior of dax in the presence of reflink'd extents?
+>   Just failing seems the 'experimental' behavior. What to do about
+>   page->index when page belongs to more than 1 file via reflink?
+
+Sorry, I don't have good idea about this.
+To be honest, I'm not sure how reflink is necessary for NVDIMM...
+
+
+> - Is there ever a case to force disable dax operation? To date we've
+>   only ever thought about interfaces to force *enable* dax operation
+
+If something becomes wrong on dax, administrator may want to disable dax fo=
+rcely
+as a emergency mode and try to rescue the data in the filesystem.
+
+Maybe "-o nodax" option?
+
+> - The virtio-pmem use case wants dax mappings but requires an explicit
+>   fsync() instead of MAP_SYNC to flush software buffers, it's a DAX
+>   sub-set, should it have it's own name?
+
+Is this just naming problem?
+"DAX_with sync"?
+
+> - DAX operation is loosely tied to block devices. There has been
+>   discussions of mounting filesystems on /dev/dax devices directly.
+>   Should we take that to its logical conclusion and support a
+>   block-layer-less conversion of dax-capable file systems?
+
+To be honest, I'm not sure how this is necessary.
+May I have what is use-case?
+It seems to be not current issue, but it is feature request=20
+for future. IOW, it seems not to be cause of "Experimental" at least.
+
+> - Willy has proposed that the Xarray cache file-offset-to-physical
+>   address lookups, currently it only tracks dirty mapping state
+
+It seems to be refactoring or some kind of code improvements for future, ri=
+ght?
+Or, is it essential to solve a problem?
+
+> - The NVDIMM sub-system tracks badblocks, but the filesytem currently
+>   only finds out about them late when it attempts dax_direct_access().
+>   Applications want to be able to list files+offsets that have
+>   experienced media corruption.
+
+I suppose it will be necessary.=20
+However, IIRC, there many objection about it due to cause of layer destruct=
+ion
+among filesystem, mm, and block layer....
+
+If I overlooked something like current background, sorry for noise...
+
+Thanks,
+---
+Yasunori Goto
