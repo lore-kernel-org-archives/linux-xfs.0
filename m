@@ -1,106 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:54538 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727115AbeJ1XFi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Oct 2018 19:05:38 -0400
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id C8CA929B38
-        for <linux-xfs@vger.kernel.org>; Sun, 28 Oct 2018 14:20:52 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 201549] New: [xfstests xfs/019]: mkfs.xfs: warning - iflush_int
- failed (-117)
-Date: Sun, 28 Oct 2018 14:20:52 +0000
-Message-ID: <bug-201549-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:19212 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729225AbeJ2P6E (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Oct 2018 11:58:04 -0400
+Date: Mon, 29 Oct 2018 18:10:38 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS: Hang and dmesg flood on mounting invalid FS image
+Message-ID: <20181029071038.GL19305@dastard>
+References: <CAE5jQCc3hrq6E-Ff1oiYUOSDA08PMrqnu80XQtaD5adcUQvV8w@mail.gmail.com>
+ <20181029012058.GK19305@dastard>
+ <CAE5jQCeT4hONkK8cmkMoReoW-HqVLqnYN6c3YrxDjwNAf=nfEA@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAE5jQCeT4hONkK8cmkMoReoW-HqVLqnYN6c3YrxDjwNAf=nfEA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Anatoly Trosinenko <anatoly.trosinenko@gmail.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=201549
+On Mon, Oct 29, 2018 at 09:57:20AM +0300, Anatoly Trosinenko wrote:
+> > How did the corruption occur?
+> 
+> It is a fuzzed image. Most probably, it was artificially "patched" by
+> fuzzer. Or do you mean "what particular bytes were changed"?
 
-            Bug ID: 201549
-           Summary: [xfstests xfs/019]: mkfs.xfs: warning - iflush_int
-                    failed (-117)
-           Product: File System
-           Version: 2.5
-    Kernel Version: v4.18
-          Hardware: All
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: XFS
-          Assignee: filesystem_xfs@kernel-bugs.kernel.org
-          Reporter: zlang@redhat.com
-        Regression: No
+I wondered how this specific corruption occurred in the real world.
+If i was a real world problem, it would have been indicative of a
+code bug if it did occur (i.e. whatever wrote the log record would
+have been broken) but seeing as it's a fuzzer problem, I don't need
+to look for any code bugs other than "we didn't validate the input
+properly".
 
-xfs/019 fails on s390x. mkfs.xfs always fails as below:
+Cheers,
 
-# mkfs.xfs -f -n version=2 -p /tmp/36771.proto /dev/loop1
-meta-data=/dev/loop1             isize=512    agcount=4, agsize=786496 blks
-         =                       sectsz=512   attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=1, rmapbt=0
-         =                       reflink=0
-data     =                       bsize=4096   blocks=3145984, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-log      =internal log           bsize=4096   blocks=2560, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-Metadata corruption detected at 0x101214a, inode 0x89 data fork
-mkfs.xfs: warning - iflush_int failed (-117)
-cache_purge: shake on cache 0x8e4be40 left 1 nodes!?
-cache_purge: shake on cache 0x8e4be40 left 1 nodes!?
-cache_purge: shake on cache 0x8e4be40 left 1 nodes!?
-cache_zero_check: refcount is 1, not zero (node=0x8e76a60)
-
-# cat /tmp/36771.proto
-DUMMY1
-0 0
-: root directory
-d--777 3 1
-: a directory
-directory d--755 3 1 
-file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_0 ---755 3 1 /tmp/36771.file
-file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_1 ---755 3 1 /tmp/36771.file
-file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_2 ---755 3 1 /tmp/36771.file
-file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_3 ---755 3 1 /tmp/36771.file
-file_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_4 ---755 3 1 /tmp/36771.file
-$
-: back in the root
-setuid -u-666 0 0 /tmp/36771.file
-setgid --g666 0 0 /tmp/36771.file
-setugid -ug666 0 0 /tmp/36771.file
-block_device b--012 3 1 161 162 
-char_device c--345 3 1 177 178
-pipe p--670 0 0
-symlink l--123 0 0 bigfile
-: a file we actually read
-bigfile ---666 3 0 /tmp/36771.file.2
-: done
-$
-
-# cat /tmp/36711.file
-fish
-
-The file "/tmp/36771.file.2" is generated by:
-# xfstests/src/devzero -b 2048 -n 2 -c -v 44 /tmp/36771.file.2
-
-Version-Release number of selected component (if applicable):
-# mkfs.xfs -V
-mkfs.xfs version 4.19.0-rc0
-kernel 4.18
-
-How reproducible:
-100%
-
-Steps to Reproduce:
-run xfs/019 on s390x
-
+Dave.
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Dave Chinner
+david@fromorbit.com
