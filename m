@@ -1,297 +1,302 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:54680 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728340AbeJ3DPp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Oct 2018 23:15:45 -0400
-Subject: [PATCH 1/2] xfs: idiotproof defer op type configuration
+Received: from aserp2120.oracle.com ([141.146.126.78]:40312 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728435AbeJ3DQ1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Oct 2018 23:16:27 -0400
+Subject: [PATCH 2/2] libxfs: streamline defer op type handling
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 29 Oct 2018 11:25:52 -0700
-Message-ID: <154083755233.16857.4514650502336344947.stgit@magnolia>
-In-Reply-To: <154083754598.16857.4909403030667946114.stgit@magnolia>
-References: <154083754598.16857.4909403030667946114.stgit@magnolia>
+Date: Mon, 29 Oct 2018 11:26:33 -0700
+Message-ID: <154083759379.17015.3772462618596721180.stgit@magnolia>
+In-Reply-To: <154083758133.17015.16047588822481256587.stgit@magnolia>
+References: <154083758133.17015.16047588822481256587.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
+To: sandeen@redhat.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Recently, we forgot to port a new defer op type to xfsprogs, which
-caused us some userspace pain.  Reorganize the way we make libxfs
-clients supply defer op type information so that all type information
-has to be provided at build time instead of risky runtime dynamic
-configuration.
+There's no need to bundle a pointer to the defer op type into the defer
+op control structure.  Instead, store the defer op type enum, which
+enables us to shorten some of the lines.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_defer.c   |   17 ++++++++---------
- fs/xfs/libxfs/xfs_defer.h   |    6 +++++-
- fs/xfs/xfs_super.c          |    6 +-----
- fs/xfs/xfs_trans.h          |    4 ----
- fs/xfs/xfs_trans_bmap.c     |   10 ++--------
- fs/xfs/xfs_trans_extfree.c  |   13 +++----------
- fs/xfs/xfs_trans_refcount.c |   10 ++--------
- fs/xfs/xfs_trans_rmap.c     |   10 ++--------
- 8 files changed, 23 insertions(+), 53 deletions(-)
+ libxfs/defer_item.c |    5 -----
+ libxfs/xfs_defer.c  |   50 +++++++++++++++++++++++++++-----------------------
+ libxfs/xfs_defer.h  |   31 +++++++++++++++----------------
+ 3 files changed, 42 insertions(+), 44 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index e792b167150a..277117a8ad13 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -172,7 +172,13 @@
-  * reoccur.
-  */
- 
--static const struct xfs_defer_op_type *defer_op_types[XFS_DEFER_OPS_TYPE_MAX];
-+static const struct xfs_defer_op_type *defer_op_types[] = {
-+	[XFS_DEFER_OPS_TYPE_BMAP]	= &xfs_bmap_update_defer_type,
-+	[XFS_DEFER_OPS_TYPE_REFCOUNT]	= &xfs_refcount_update_defer_type,
-+	[XFS_DEFER_OPS_TYPE_RMAP]	= &xfs_rmap_update_defer_type,
-+	[XFS_DEFER_OPS_TYPE_FREE]	= &xfs_extent_free_defer_type,
-+	[XFS_DEFER_OPS_TYPE_AGFL_FREE]	= &xfs_agfl_free_defer_type,
-+};
- 
- /*
-  * For each pending item in the intake list, log its intent item and the
-@@ -488,6 +494,7 @@ xfs_defer_add(
- 	struct xfs_defer_pending	*dfp = NULL;
- 
- 	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
-+	BUILD_BUG_ON(ARRAY_SIZE(defer_op_types) != XFS_DEFER_OPS_TYPE_MAX);
- 
- 	/*
- 	 * Add the item to a pending item at the end of the intake list.
-@@ -517,14 +524,6 @@ xfs_defer_add(
- 	dfp->dfp_count++;
+diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
+index d36f9d9e..2ebc12bd 100644
+--- a/libxfs/defer_item.c
++++ b/libxfs/defer_item.c
+@@ -108,7 +108,6 @@ xfs_extent_free_cancel_item(
  }
  
--/* Initialize a deferred operation list. */
--void
--xfs_defer_init_op_type(
--	const struct xfs_defer_op_type	*type)
--{
--	defer_op_types[type->type] = type;
--}
--
- /*
-  * Move deferred ops from one transaction to another and reset the source to
-  * initial state. This is primarily used to carry state forward across
-diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-index 2584a5b95b0d..0a4b88e3df74 100644
---- a/fs/xfs/libxfs/xfs_defer.h
-+++ b/fs/xfs/libxfs/xfs_defer.h
-@@ -56,6 +56,10 @@ struct xfs_defer_op_type {
- 	void (*log_item)(struct xfs_trans *, void *, struct list_head *);
- };
- 
--void xfs_defer_init_op_type(const struct xfs_defer_op_type *type);
-+extern const struct xfs_defer_op_type xfs_bmap_update_defer_type;
-+extern const struct xfs_defer_op_type xfs_refcount_update_defer_type;
-+extern const struct xfs_defer_op_type xfs_rmap_update_defer_type;
-+extern const struct xfs_defer_op_type xfs_extent_free_defer_type;
-+extern const struct xfs_defer_op_type xfs_agfl_free_defer_type;
- 
- #endif /* __XFS_DEFER_H__ */
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index d3e6cd063688..a2e944b80d2a 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -38,6 +38,7 @@
- #include "xfs_refcount_item.h"
- #include "xfs_bmap_item.h"
- #include "xfs_reflink.h"
-+#include "xfs_defer.h"
- 
- #include <linux/namei.h>
- #include <linux/dax.h>
-@@ -2085,11 +2086,6 @@ init_xfs_fs(void)
- 	printk(KERN_INFO XFS_VERSION_STRING " with "
- 			 XFS_BUILD_OPTIONS " enabled\n");
- 
--	xfs_extent_free_init_defer_op();
--	xfs_rmap_update_init_defer_op();
--	xfs_refcount_update_init_defer_op();
--	xfs_bmap_update_init_defer_op();
--
- 	xfs_dir_startup();
- 
- 	error = xfs_init_zones();
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index a0c5dbda18aa..3ba14ebb7a3b 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -223,7 +223,6 @@ void		xfs_trans_dirty_buf(struct xfs_trans *, struct xfs_buf *);
- bool		xfs_trans_buf_is_dirty(struct xfs_buf *bp);
- void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
- 
--void		xfs_extent_free_init_defer_op(void);
- struct xfs_efd_log_item	*xfs_trans_get_efd(struct xfs_trans *,
- 				  struct xfs_efi_log_item *,
- 				  uint);
-@@ -248,7 +247,6 @@ extern kmem_zone_t	*xfs_trans_zone;
- /* rmap updates */
- enum xfs_rmap_intent_type;
- 
--void xfs_rmap_update_init_defer_op(void);
- struct xfs_rud_log_item *xfs_trans_get_rud(struct xfs_trans *tp,
- 		struct xfs_rui_log_item *ruip);
- int xfs_trans_log_finish_rmap_update(struct xfs_trans *tp,
-@@ -260,7 +258,6 @@ int xfs_trans_log_finish_rmap_update(struct xfs_trans *tp,
- /* refcount updates */
- enum xfs_refcount_intent_type;
- 
--void xfs_refcount_update_init_defer_op(void);
- struct xfs_cud_log_item *xfs_trans_get_cud(struct xfs_trans *tp,
- 		struct xfs_cui_log_item *cuip);
- int xfs_trans_log_finish_refcount_update(struct xfs_trans *tp,
-@@ -272,7 +269,6 @@ int xfs_trans_log_finish_refcount_update(struct xfs_trans *tp,
- /* mapping updates */
- enum xfs_bmap_intent_type;
- 
--void xfs_bmap_update_init_defer_op(void);
- struct xfs_bud_log_item *xfs_trans_get_bud(struct xfs_trans *tp,
- 		struct xfs_bui_log_item *buip);
- int xfs_trans_log_finish_bmap_update(struct xfs_trans *tp,
-diff --git a/fs/xfs/xfs_trans_bmap.c b/fs/xfs/xfs_trans_bmap.c
-index 741c558b2179..e027e68b4f9e 100644
---- a/fs/xfs/xfs_trans_bmap.c
-+++ b/fs/xfs/xfs_trans_bmap.c
-@@ -17,6 +17,7 @@
- #include "xfs_alloc.h"
- #include "xfs_bmap.h"
- #include "xfs_inode.h"
-+#include "xfs_defer.h"
- 
- /*
-  * This routine is called to allocate a "bmap update done"
-@@ -220,7 +221,7 @@ xfs_bmap_update_cancel_item(
- 	kmem_free(bmap);
- }
- 
--static const struct xfs_defer_op_type xfs_bmap_update_defer_type = {
-+const struct xfs_defer_op_type xfs_bmap_update_defer_type = {
- 	.type		= XFS_DEFER_OPS_TYPE_BMAP,
- 	.max_items	= XFS_BUI_MAX_FAST_EXTENTS,
- 	.diff_items	= xfs_bmap_update_diff_items,
-@@ -231,10 +232,3 @@ static const struct xfs_defer_op_type xfs_bmap_update_defer_type = {
- 	.finish_item	= xfs_bmap_update_finish_item,
- 	.cancel_item	= xfs_bmap_update_cancel_item,
- };
--
--/* Register the deferred op type. */
--void
--xfs_bmap_update_init_defer_op(void)
--{
--	xfs_defer_init_op_type(&xfs_bmap_update_defer_type);
--}
-diff --git a/fs/xfs/xfs_trans_extfree.c b/fs/xfs/xfs_trans_extfree.c
-index 855c0b651fd4..1872962aa470 100644
---- a/fs/xfs/xfs_trans_extfree.c
-+++ b/fs/xfs/xfs_trans_extfree.c
-@@ -18,6 +18,7 @@
- #include "xfs_alloc.h"
- #include "xfs_bmap.h"
- #include "xfs_trace.h"
-+#include "xfs_defer.h"
- 
- /*
-  * This routine is called to allocate an "extent free done"
-@@ -206,7 +207,7 @@ xfs_extent_free_cancel_item(
- 	kmem_free(free);
- }
- 
--static const struct xfs_defer_op_type xfs_extent_free_defer_type = {
-+const struct xfs_defer_op_type xfs_extent_free_defer_type = {
- 	.type		= XFS_DEFER_OPS_TYPE_FREE,
- 	.max_items	= XFS_EFI_MAX_FAST_EXTENTS,
+ const struct xfs_defer_op_type xfs_extent_free_defer_type = {
+-	.type		= XFS_DEFER_OPS_TYPE_FREE,
  	.diff_items	= xfs_extent_free_diff_items,
-@@ -274,7 +275,7 @@ xfs_agfl_free_finish_item(
- 
+ 	.create_intent	= xfs_extent_free_create_intent,
+ 	.abort_intent	= xfs_extent_free_abort_intent,
+@@ -151,7 +150,6 @@ xfs_agfl_free_finish_item(
  
  /* sub-type with special handling for AGFL deferred frees */
--static const struct xfs_defer_op_type xfs_agfl_free_defer_type = {
-+const struct xfs_defer_op_type xfs_agfl_free_defer_type = {
- 	.type		= XFS_DEFER_OPS_TYPE_AGFL_FREE,
- 	.max_items	= XFS_EFI_MAX_FAST_EXTENTS,
+ const struct xfs_defer_op_type xfs_agfl_free_defer_type = {
+-	.type		= XFS_DEFER_OPS_TYPE_AGFL_FREE,
  	.diff_items	= xfs_extent_free_diff_items,
-@@ -285,11 +286,3 @@ static const struct xfs_defer_op_type xfs_agfl_free_defer_type = {
- 	.finish_item	= xfs_agfl_free_finish_item,
- 	.cancel_item	= xfs_extent_free_cancel_item,
- };
--
--/* Register the deferred op type. */
--void
--xfs_extent_free_init_defer_op(void)
--{
--	xfs_defer_init_op_type(&xfs_extent_free_defer_type);
--	xfs_defer_init_op_type(&xfs_agfl_free_defer_type);
--}
-diff --git a/fs/xfs/xfs_trans_refcount.c b/fs/xfs/xfs_trans_refcount.c
-index 523c55663954..116c040d54bd 100644
---- a/fs/xfs/xfs_trans_refcount.c
-+++ b/fs/xfs/xfs_trans_refcount.c
-@@ -16,6 +16,7 @@
- #include "xfs_refcount_item.h"
- #include "xfs_alloc.h"
- #include "xfs_refcount.h"
-+#include "xfs_defer.h"
- 
- /*
-  * This routine is called to allocate a "refcount update done"
-@@ -227,7 +228,7 @@ xfs_refcount_update_cancel_item(
- 	kmem_free(refc);
+ 	.create_intent	= xfs_extent_free_create_intent,
+ 	.abort_intent	= xfs_extent_free_abort_intent,
+@@ -263,7 +261,6 @@ xfs_rmap_update_cancel_item(
  }
  
--static const struct xfs_defer_op_type xfs_refcount_update_defer_type = {
-+const struct xfs_defer_op_type xfs_refcount_update_defer_type = {
- 	.type		= XFS_DEFER_OPS_TYPE_REFCOUNT,
- 	.max_items	= XFS_CUI_MAX_FAST_EXTENTS,
- 	.diff_items	= xfs_refcount_update_diff_items,
-@@ -239,10 +240,3 @@ static const struct xfs_defer_op_type xfs_refcount_update_defer_type = {
- 	.finish_cleanup = xfs_refcount_update_finish_cleanup,
- 	.cancel_item	= xfs_refcount_update_cancel_item,
- };
--
--/* Register the deferred op type. */
--void
--xfs_refcount_update_init_defer_op(void)
--{
--	xfs_defer_init_op_type(&xfs_refcount_update_defer_type);
--}
-diff --git a/fs/xfs/xfs_trans_rmap.c b/fs/xfs/xfs_trans_rmap.c
-index 05b00e40251f..f75cdc5b578a 100644
---- a/fs/xfs/xfs_trans_rmap.c
-+++ b/fs/xfs/xfs_trans_rmap.c
-@@ -16,6 +16,7 @@
- #include "xfs_rmap_item.h"
- #include "xfs_alloc.h"
- #include "xfs_rmap.h"
-+#include "xfs_defer.h"
- 
- /* Set the map extent flags for this reverse mapping. */
- static void
-@@ -244,7 +245,7 @@ xfs_rmap_update_cancel_item(
- 	kmem_free(rmap);
- }
- 
--static const struct xfs_defer_op_type xfs_rmap_update_defer_type = {
-+const struct xfs_defer_op_type xfs_rmap_update_defer_type = {
- 	.type		= XFS_DEFER_OPS_TYPE_RMAP,
- 	.max_items	= XFS_RUI_MAX_FAST_EXTENTS,
+ const struct xfs_defer_op_type xfs_rmap_update_defer_type = {
+-	.type		= XFS_DEFER_OPS_TYPE_RMAP,
  	.diff_items	= xfs_rmap_update_diff_items,
-@@ -256,10 +257,3 @@ static const struct xfs_defer_op_type xfs_rmap_update_defer_type = {
- 	.finish_cleanup = xfs_rmap_update_finish_cleanup,
- 	.cancel_item	= xfs_rmap_update_cancel_item,
- };
+ 	.create_intent	= xfs_rmap_update_create_intent,
+ 	.abort_intent	= xfs_rmap_update_abort_intent,
+@@ -384,7 +381,6 @@ xfs_refcount_update_cancel_item(
+ }
+ 
+ const struct xfs_defer_op_type xfs_refcount_update_defer_type = {
+-	.type		= XFS_DEFER_OPS_TYPE_REFCOUNT,
+ 	.diff_items	= xfs_refcount_update_diff_items,
+ 	.create_intent	= xfs_refcount_update_create_intent,
+ 	.abort_intent	= xfs_refcount_update_abort_intent,
+@@ -489,7 +485,6 @@ xfs_bmap_update_cancel_item(
+ }
+ 
+ const struct xfs_defer_op_type xfs_bmap_update_defer_type = {
+-	.type		= XFS_DEFER_OPS_TYPE_BMAP,
+ 	.diff_items	= xfs_bmap_update_diff_items,
+ 	.create_intent	= xfs_bmap_update_create_intent,
+ 	.abort_intent	= xfs_bmap_update_abort_intent,
+diff --git a/libxfs/xfs_defer.c b/libxfs/xfs_defer.c
+index 68fe07a4..d9d42713 100644
+--- a/libxfs/xfs_defer.c
++++ b/libxfs/xfs_defer.c
+@@ -189,15 +189,15 @@ xfs_defer_create_intents(
+ {
+ 	struct list_head		*li;
+ 	struct xfs_defer_pending	*dfp;
++	const struct xfs_defer_op_type	*ops;
+ 
+ 	list_for_each_entry(dfp, &tp->t_dfops, dfp_list) {
+-		dfp->dfp_intent = dfp->dfp_type->create_intent(tp,
+-				dfp->dfp_count);
++		ops = defer_op_types[dfp->dfp_type];
++		dfp->dfp_intent = ops->create_intent(tp, dfp->dfp_count);
+ 		trace_xfs_defer_create_intent(tp->t_mountp, dfp);
+-		list_sort(tp->t_mountp, &dfp->dfp_work,
+-				dfp->dfp_type->diff_items);
++		list_sort(tp->t_mountp, &dfp->dfp_work, ops->diff_items);
+ 		list_for_each(li, &dfp->dfp_work)
+-			dfp->dfp_type->log_item(tp, dfp->dfp_intent, li);
++			ops->log_item(tp, dfp->dfp_intent, li);
+ 	}
+ }
+ 
+@@ -208,14 +208,16 @@ xfs_defer_trans_abort(
+ 	struct list_head		*dop_pending)
+ {
+ 	struct xfs_defer_pending	*dfp;
++	const struct xfs_defer_op_type	*ops;
+ 
+ 	trace_xfs_defer_trans_abort(tp, _RET_IP_);
+ 
+ 	/* Abort intent items that don't have a done item. */
+ 	list_for_each_entry(dfp, dop_pending, dfp_list) {
++		ops = defer_op_types[dfp->dfp_type];
+ 		trace_xfs_defer_pending_abort(tp->t_mountp, dfp);
+ 		if (dfp->dfp_intent && !dfp->dfp_done) {
+-			dfp->dfp_type->abort_intent(dfp->dfp_intent);
++			ops->abort_intent(dfp->dfp_intent);
+ 			dfp->dfp_intent = NULL;
+ 		}
+ 	}
+@@ -319,18 +321,20 @@ xfs_defer_cancel_list(
+ 	struct xfs_defer_pending	*pli;
+ 	struct list_head		*pwi;
+ 	struct list_head		*n;
++	const struct xfs_defer_op_type	*ops;
+ 
+ 	/*
+ 	 * Free the pending items.  Caller should already have arranged
+ 	 * for the intent items to be released.
+ 	 */
+ 	list_for_each_entry_safe(dfp, pli, dop_list, dfp_list) {
++		ops = defer_op_types[dfp->dfp_type];
+ 		trace_xfs_defer_cancel_list(mp, dfp);
+ 		list_del(&dfp->dfp_list);
+ 		list_for_each_safe(pwi, n, &dfp->dfp_work) {
+ 			list_del(pwi);
+ 			dfp->dfp_count--;
+-			dfp->dfp_type->cancel_item(pwi);
++			ops->cancel_item(pwi);
+ 		}
+ 		ASSERT(dfp->dfp_count == 0);
+ 		kmem_free(dfp);
+@@ -354,7 +358,7 @@ xfs_defer_finish_noroll(
+ 	struct list_head		*n;
+ 	void				*state;
+ 	int				error = 0;
+-	void				(*cleanup_fn)(struct xfs_trans *, void *, int);
++	const struct xfs_defer_op_type	*ops;
+ 	LIST_HEAD(dop_pending);
+ 
+ 	ASSERT((*tp)->t_flags & XFS_TRANS_PERM_LOG_RES);
+@@ -377,18 +381,18 @@ xfs_defer_finish_noroll(
+ 		/* Log an intent-done item for the first pending item. */
+ 		dfp = list_first_entry(&dop_pending, struct xfs_defer_pending,
+ 				       dfp_list);
++		ops = defer_op_types[dfp->dfp_type];
+ 		trace_xfs_defer_pending_finish((*tp)->t_mountp, dfp);
+-		dfp->dfp_done = dfp->dfp_type->create_done(*tp, dfp->dfp_intent,
++		dfp->dfp_done = ops->create_done(*tp, dfp->dfp_intent,
+ 				dfp->dfp_count);
+-		cleanup_fn = dfp->dfp_type->finish_cleanup;
+ 
+ 		/* Finish the work items. */
+ 		state = NULL;
+ 		list_for_each_safe(li, n, &dfp->dfp_work) {
+ 			list_del(li);
+ 			dfp->dfp_count--;
+-			error = dfp->dfp_type->finish_item(*tp, li,
+-					dfp->dfp_done, &state);
++			error = ops->finish_item(*tp, li, dfp->dfp_done,
++					&state);
+ 			if (error == -EAGAIN) {
+ 				/*
+ 				 * Caller wants a fresh transaction;
+@@ -404,8 +408,8 @@ xfs_defer_finish_noroll(
+ 				 * xfs_defer_cancel will take care of freeing
+ 				 * all these lists and stuff.
+ 				 */
+-				if (cleanup_fn)
+-					cleanup_fn(*tp, state, error);
++				if (ops->finish_cleanup)
++					ops->finish_cleanup(*tp, state, error);
+ 				goto out;
+ 			}
+ 		}
+@@ -417,20 +421,19 @@ xfs_defer_finish_noroll(
+ 			 * a Fresh Transaction while Finishing
+ 			 * Deferred Work" above.
+ 			 */
+-			dfp->dfp_intent = dfp->dfp_type->create_intent(*tp,
++			dfp->dfp_intent = ops->create_intent(*tp,
+ 					dfp->dfp_count);
+ 			dfp->dfp_done = NULL;
+ 			list_for_each(li, &dfp->dfp_work)
+-				dfp->dfp_type->log_item(*tp, dfp->dfp_intent,
+-						li);
++				ops->log_item(*tp, dfp->dfp_intent, li);
+ 		} else {
+ 			/* Done with the dfp, free it. */
+ 			list_del(&dfp->dfp_list);
+ 			kmem_free(dfp);
+ 		}
+ 
+-		if (cleanup_fn)
+-			cleanup_fn(*tp, state, error);
++		if (ops->finish_cleanup)
++			ops->finish_cleanup(*tp, state, error);
+ 	}
+ 
+ out:
+@@ -490,6 +493,7 @@ xfs_defer_add(
+ 	struct list_head		*li)
+ {
+ 	struct xfs_defer_pending	*dfp = NULL;
++	const struct xfs_defer_op_type	*ops;
+ 
+ 	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
+ 	BUILD_BUG_ON(ARRAY_SIZE(defer_op_types) != XFS_DEFER_OPS_TYPE_MAX);
+@@ -502,15 +506,15 @@ xfs_defer_add(
+ 	if (!list_empty(&tp->t_dfops)) {
+ 		dfp = list_last_entry(&tp->t_dfops,
+ 				struct xfs_defer_pending, dfp_list);
+-		if (dfp->dfp_type->type != type ||
+-		    (dfp->dfp_type->max_items &&
+-		     dfp->dfp_count >= dfp->dfp_type->max_items))
++		ops = defer_op_types[dfp->dfp_type];
++		if (dfp->dfp_type != type ||
++		    (ops->max_items && dfp->dfp_count >= ops->max_items))
+ 			dfp = NULL;
+ 	}
+ 	if (!dfp) {
+ 		dfp = kmem_alloc(sizeof(struct xfs_defer_pending),
+ 				KM_SLEEP | KM_NOFS);
+-		dfp->dfp_type = defer_op_types[type];
++		dfp->dfp_type = type;
+ 		dfp->dfp_intent = NULL;
+ 		dfp->dfp_done = NULL;
+ 		dfp->dfp_count = 0;
+diff --git a/libxfs/xfs_defer.h b/libxfs/xfs_defer.h
+index 0a4b88e3..7c28d760 100644
+--- a/libxfs/xfs_defer.h
++++ b/libxfs/xfs_defer.h
+@@ -8,20 +8,6 @@
+ 
+ struct xfs_defer_op_type;
+ 
+-/*
+- * Save a log intent item and a list of extents, so that we can replay
+- * whatever action had to happen to the extent list and file the log done
+- * item.
+- */
+-struct xfs_defer_pending {
+-	const struct xfs_defer_op_type	*dfp_type;	/* function pointers */
+-	struct list_head		dfp_list;	/* pending items */
+-	void				*dfp_intent;	/* log intent item */
+-	void				*dfp_done;	/* log done item */
+-	struct list_head		dfp_work;	/* work items */
+-	unsigned int			dfp_count;	/* # extent items */
+-};
 -
--/* Register the deferred op type. */
--void
--xfs_rmap_update_init_defer_op(void)
--{
--	xfs_defer_init_op_type(&xfs_rmap_update_defer_type);
--}
+ /*
+  * Header for deferred operation list.
+  */
+@@ -34,6 +20,20 @@ enum xfs_defer_ops_type {
+ 	XFS_DEFER_OPS_TYPE_MAX,
+ };
+ 
++/*
++ * Save a log intent item and a list of extents, so that we can replay
++ * whatever action had to happen to the extent list and file the log done
++ * item.
++ */
++struct xfs_defer_pending {
++	struct list_head		dfp_list;	/* pending items */
++	struct list_head		dfp_work;	/* work items */
++	void				*dfp_intent;	/* log intent item */
++	void				*dfp_done;	/* log done item */
++	unsigned int			dfp_count;	/* # extent items */
++	enum xfs_defer_ops_type		dfp_type;
++};
++
+ void xfs_defer_add(struct xfs_trans *tp, enum xfs_defer_ops_type type,
+ 		struct list_head *h);
+ int xfs_defer_finish_noroll(struct xfs_trans **tp);
+@@ -43,8 +43,6 @@ void xfs_defer_move(struct xfs_trans *dtp, struct xfs_trans *stp);
+ 
+ /* Description of a deferred type. */
+ struct xfs_defer_op_type {
+-	enum xfs_defer_ops_type	type;
+-	unsigned int		max_items;
+ 	void (*abort_intent)(void *);
+ 	void *(*create_done)(struct xfs_trans *, void *, unsigned int);
+ 	int (*finish_item)(struct xfs_trans *, struct list_head *, void *,
+@@ -54,6 +52,7 @@ struct xfs_defer_op_type {
+ 	int (*diff_items)(void *, struct list_head *, struct list_head *);
+ 	void *(*create_intent)(struct xfs_trans *, uint);
+ 	void (*log_item)(struct xfs_trans *, void *, struct list_head *);
++	unsigned int		max_items;
+ };
+ 
+ extern const struct xfs_defer_op_type xfs_bmap_update_defer_type;
