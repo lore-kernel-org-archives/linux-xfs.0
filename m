@@ -1,92 +1,156 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.11.71.1]:36097 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727739AbeJaJSc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 31 Oct 2018 05:18:32 -0400
-Date: Wed, 31 Oct 2018 11:22:44 +1100
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: linux-next: manual merge of the xfs tree with Linus' tree
-Message-ID: <20181031112244.71b62e67@canb.auug.org.au>
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:52328 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727689AbeJ3UN6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Oct 2018 16:13:58 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1gHS4k-0005bt-VM
+        for linux-xfs@vger.kernel.org; Tue, 30 Oct 2018 22:20:47 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1gHS4k-0001jf-Ts
+        for linux-xfs@vger.kernel.org; Tue, 30 Oct 2018 22:20:46 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 4/7] workqueue: bound maximum queue depth
+Date: Tue, 30 Oct 2018 22:20:40 +1100
+Message-Id: <20181030112043.6034-5-david@fromorbit.com>
+In-Reply-To: <20181030112043.6034-1-david@fromorbit.com>
+References: <20181030112043.6034-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/UUSPbcXU+t.755lGC47ucM="; protocol="application/pgp-signature"
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Cc: Linux-Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>
+To: linux-xfs@vger.kernel.org
 
---Sig_/UUSPbcXU+t.755lGC47ucM=
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+From: Dave Chinner <dchinner@redhat.com>
 
-Hi all,
+Existing users of workqueues have bound maximum queue depths in
+their external algorithms (e.g. prefetch counts). For parallelising
+work that doesn't have an external bound, allow workqueues to
+throttle incoming requests at a maximum bound. bounded workqueues
+also need to distribute work over all worker threads themselves as
+there is no external bounding or worker function throttling
+provided.
 
-Today's linux-next merge of the xfs tree got a conflict in:
+Existing callers are not throttled and retain direct control of
+worker threads, only users of the new create interface will be
+throttled and concurrency managed.
 
-  Documentation/filesystems/porting
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ include/workqueue.h |  4 ++++
+ libfrog/workqueue.c | 30 +++++++++++++++++++++++++++---
+ 2 files changed, 31 insertions(+), 3 deletions(-)
 
-between commit:
-
-  1a16dbaf798c ("Document d_splice_alias() calling conventions for ->lookup=
-() users.")
-
-from Linus' tree and commit:
-
-  2e5dfc99f2e6 ("vfs: combine the clone and dedupe into a single remap_file=
-_range")
-
-from the xfs tree.
-
-I fixed it up (see below) and can carry the fix as necessary. This
-is now fixed as far as linux-next is concerned, but any non trivial
-conflicts should be mentioned to your upstream maintainer when your tree
-is submitted for merging.  You may also want to consider cooperating
-with the maintainer of the conflicting tree to minimise any particularly
-complex conflicts.
-
---=20
-Cheers,
-Stephen Rothwell
-
-diff --cc Documentation/filesystems/porting
-index 321d74b73937,e6d4466268dd..000000000000
---- a/Documentation/filesystems/porting
-+++ b/Documentation/filesystems/porting
-@@@ -623,13 -623,7 +623,18 @@@ in your dentry operations instead
-  	On success you get a new struct file sharing the mount/dentry with the
-  	original, on failure - ERR_PTR().
-  --
- +[recommended]
- +	->lookup() instances doing an equivalent of
- +		if (IS_ERR(inode))
- +			return ERR_CAST(inode);
- +		return d_splice_alias(inode, dentry);
- +	don't need to bother with the check - d_splice_alias() will do the
- +	right thing when given ERR_PTR(...) as inode.  Moreover, passing NULL
- +	inode to d_splice_alias() will also do the right thing (equivalent of
- +	d_add(dentry, NULL); return NULL;), so that kind of special cases
- +	also doesn't need a separate treatment.
-++--
-+ [mandatory]
-+ 	->clone_file_range() and ->dedupe_file_range have been replaced with
-+ 	->remap_file_range().  See Documentation/filesystems/vfs.txt for more
-+ 	information.
-
---Sig_/UUSPbcXU+t.755lGC47ucM=
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAlvY9dQACgkQAVBC80lX
-0GwAnAf/W1trKamURUrsaeJdnjHRf6Ln93h+z9RzjBgCx7tIRK+HvGVwQuUVgsjK
-WUtZasJffW18z0jS1673oCBvKe5hhZ3AZIhuyA++m0FXfPAKYnQaCC/eJzO4yE4y
-6Pp9Pheu98Z+FP8sSSLMNGo0US1cGAIX2JRLBA1gthfZtn5a6d81iNtTjd+div0H
-cfF2iodUtSeE9B2blhAYeNjR9rPnSJ08L7QdB5D33nG2k78WSdnD7P+CCkE5dyV3
-oPqorp0aA+7Y2gJ/b8FC1QQdJNFo+udolKFpyVOvtZE4vAgOz4kOuPT8rjhYQFet
-pObV1nOay8DCtw77yWzD8OsNDg0pFQ==
-=MLav
------END PGP SIGNATURE-----
-
---Sig_/UUSPbcXU+t.755lGC47ucM=--
+diff --git a/include/workqueue.h b/include/workqueue.h
+index c45dc4fbcf64..504da9403b85 100644
+--- a/include/workqueue.h
++++ b/include/workqueue.h
+@@ -30,10 +30,14 @@ struct workqueue {
+ 	unsigned int		item_count;
+ 	unsigned int		thread_count;
+ 	bool			terminate;
++	int			max_queued;
++	pthread_cond_t		queue_full;
+ };
+ 
+ int workqueue_create(struct workqueue *wq, void *wq_ctx,
+ 		unsigned int nr_workers);
++int workqueue_create_bound(struct workqueue *wq, void *wq_ctx,
++		unsigned int nr_workers, int max_queue);
+ int workqueue_add(struct workqueue *wq, workqueue_func_t fn,
+ 		uint32_t index, void *arg);
+ void workqueue_destroy(struct workqueue *wq);
+diff --git a/libfrog/workqueue.c b/libfrog/workqueue.c
+index 7311477374b4..8fe0dc7249f5 100644
+--- a/libfrog/workqueue.c
++++ b/libfrog/workqueue.c
+@@ -40,13 +40,21 @@ workqueue_thread(void *arg)
+ 		}
+ 
+ 		/*
+-		 *  Dequeue work from the head of the list.
++		 *  Dequeue work from the head of the list. If the queue was
++		 *  full then send a wakeup if we're configured to do so.
+ 		 */
+ 		assert(wq->item_count > 0);
++		if (wq->max_queued && wq->item_count == wq->max_queued)
++			pthread_cond_signal(&wq->queue_full);
++
+ 		wi = wq->next_item;
+ 		wq->next_item = wi->next;
+ 		wq->item_count--;
+ 
++		if (wq->max_queued && wq->next_item) {
++			/* more work, wake up another worker */
++			pthread_cond_signal(&wq->wakeup);
++		}
+ 		pthread_mutex_unlock(&wq->lock);
+ 
+ 		(wi->function)(wi->queue, wi->index, wi->arg);
+@@ -58,22 +66,25 @@ workqueue_thread(void *arg)
+ 
+ /* Allocate a work queue and threads. */
+ int
+-workqueue_create(
++workqueue_create_bound(
+ 	struct workqueue	*wq,
+ 	void			*wq_ctx,
+-	unsigned int		nr_workers)
++	unsigned int		nr_workers,
++	int			max_queue)
+ {
+ 	unsigned int		i;
+ 	int			err = 0;
+ 
+ 	memset(wq, 0, sizeof(*wq));
+ 	pthread_cond_init(&wq->wakeup, NULL);
++	pthread_cond_init(&wq->queue_full, NULL);
+ 	pthread_mutex_init(&wq->lock, NULL);
+ 
+ 	wq->wq_ctx = wq_ctx;
+ 	wq->thread_count = nr_workers;
+ 	wq->threads = malloc(nr_workers * sizeof(pthread_t));
+ 	wq->terminate = false;
++	wq->max_queued = max_queue;
+ 
+ 	for (i = 0; i < nr_workers; i++) {
+ 		err = pthread_create(&wq->threads[i], NULL, workqueue_thread,
+@@ -87,6 +98,15 @@ workqueue_create(
+ 	return err;
+ }
+ 
++int
++workqueue_create(
++	struct workqueue	*wq,
++	void			*wq_ctx,
++	unsigned int		nr_workers)
++{
++	return workqueue_create_bound(wq, wq_ctx, nr_workers, 0);
++}
++
+ /*
+  * Create a work item consisting of a function and some arguments and
+  * schedule the work item to be run via the thread pool.
+@@ -122,6 +142,9 @@ workqueue_add(
+ 		assert(wq->item_count == 0);
+ 		pthread_cond_signal(&wq->wakeup);
+ 	} else {
++		/* throttle on a full queue if configured */
++		if (wq->max_queued && wq->item_count == wq->max_queued)
++			pthread_cond_wait(&wq->queue_full, &wq->lock);
+ 		wq->last_item->next = wi;
+ 	}
+ 	wq->last_item = wi;
+@@ -153,5 +176,6 @@ workqueue_destroy(
+ 	free(wq->threads);
+ 	pthread_mutex_destroy(&wq->lock);
+ 	pthread_cond_destroy(&wq->wakeup);
++	pthread_cond_destroy(&wq->queue_full);
+ 	memset(wq, 0, sizeof(*wq));
+ }
+-- 
+2.19.1
