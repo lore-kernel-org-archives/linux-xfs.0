@@ -1,125 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:6739 "EHLO
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:18387 "EHLO
         ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726219AbeJaFs0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Oct 2018 01:48:26 -0400
-Date: Wed, 31 Oct 2018 07:53:20 +1100
+        by vger.kernel.org with ESMTP id S1725743AbeJaFa5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Oct 2018 01:30:57 -0400
+Date: Wed, 31 Oct 2018 07:35:53 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/7] workqueue: bound maximum queue depth
-Message-ID: <20181030205320.GP19305@dastard>
+Subject: Re: [PATCH 3/7] cache: prevent expansion races
+Message-ID: <20181030203553.GO19305@dastard>
 References: <20181030112043.6034-1-david@fromorbit.com>
- <20181030112043.6034-5-david@fromorbit.com>
- <20181030175839.GM4135@magnolia>
+ <20181030112043.6034-4-david@fromorbit.com>
+ <20181030173901.GI4135@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181030175839.GM4135@magnolia>
+In-Reply-To: <20181030173901.GI4135@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Oct 30, 2018 at 10:58:39AM -0700, Darrick J. Wong wrote:
-> On Tue, Oct 30, 2018 at 10:20:40PM +1100, Dave Chinner wrote:
+On Tue, Oct 30, 2018 at 10:39:01AM -0700, Darrick J. Wong wrote:
+> On Tue, Oct 30, 2018 at 10:20:39PM +1100, Dave Chinner wrote:
 > > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > Existing users of workqueues have bound maximum queue depths in
-> > their external algorithms (e.g. prefetch counts). For parallelising
-> > work that doesn't have an external bound, allow workqueues to
-> > throttle incoming requests at a maximum bound. bounded workqueues
-> > also need to distribute work over all worker threads themselves as
-> > there is no external bounding or worker function throttling
-> > provided.
+> > When a sudden buffer cache growth demand occurs from multiple
+> > concurrent sources, they can all fail shaking the cache at the same
+> > time and expand the cache. This results in the cache doubling in
+> > size multiple times when only a single expansion was really
+> > necessary. The resultant massive cache can cause repair to OOM as
+> > the cache will grow to much larger than memory can actually hold.
 > > 
-> > Existing callers are not throttled and retain direct control of
-> > worker threads, only users of the new create interface will be
-> > throttled and concurrency managed.
+> > Prevent this sudden and unnecessary expansion by rate limiting cache
+> > growth to one size increase every tens seconds. This is sufficient
+> > to prevent racing expansion calls from doing the wrong thing, but
+> > not too long to prevent necesary cache growth when it is undersized.
 > > 
 > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > > ---
-> >  include/workqueue.h |  4 ++++
-> >  libfrog/workqueue.c | 30 +++++++++++++++++++++++++++---
-> >  2 files changed, 31 insertions(+), 3 deletions(-)
+> >  include/cache.h |  1 +
+> >  libxfs/cache.c  | 17 ++++++++++++++---
+> >  2 files changed, 15 insertions(+), 3 deletions(-)
 > > 
-> > diff --git a/include/workqueue.h b/include/workqueue.h
-> > index c45dc4fbcf64..504da9403b85 100644
-> > --- a/include/workqueue.h
-> > +++ b/include/workqueue.h
-> > @@ -30,10 +30,14 @@ struct workqueue {
-> >  	unsigned int		item_count;
-> >  	unsigned int		thread_count;
-> >  	bool			terminate;
-> > +	int			max_queued;
-> > +	pthread_cond_t		queue_full;
+> > diff --git a/include/cache.h b/include/cache.h
+> > index 552b92489e46..1b774619f7a0 100644
+> > --- a/include/cache.h
+> > +++ b/include/cache.h
+> > @@ -114,6 +114,7 @@ struct cache {
+> >  	unsigned long long	c_misses;	/* cache misses */
+> >  	unsigned long long	c_hits;		/* cache hits */
+> >  	unsigned int 		c_max;		/* max nodes ever used */
+> > +	time_t			expand_time;	/* time of last expansion */
 > >  };
 > >  
-> >  int workqueue_create(struct workqueue *wq, void *wq_ctx,
-> >  		unsigned int nr_workers);
-> > +int workqueue_create_bound(struct workqueue *wq, void *wq_ctx,
-> > +		unsigned int nr_workers, int max_queue);
-> 
-> What does negative max_queue mean?
-
-Nothing. it can be made unsigned.
-
-> 
-> >  int workqueue_add(struct workqueue *wq, workqueue_func_t fn,
-> >  		uint32_t index, void *arg);
-> >  void workqueue_destroy(struct workqueue *wq);
-> > diff --git a/libfrog/workqueue.c b/libfrog/workqueue.c
-> > index 7311477374b4..8fe0dc7249f5 100644
-> > --- a/libfrog/workqueue.c
-> > +++ b/libfrog/workqueue.c
-> > @@ -40,13 +40,21 @@ workqueue_thread(void *arg)
-> >  		}
+> >  struct cache *cache_init(int, unsigned int, struct cache_operations *);
+> > diff --git a/libxfs/cache.c b/libxfs/cache.c
+> > index 139c7c1b9e71..e10df395e60e 100644
+> > --- a/libxfs/cache.c
+> > +++ b/libxfs/cache.c
+> > @@ -62,6 +62,7 @@ cache_init(
+> >  	cache->bulkrelse = cache_operations->bulkrelse ?
+> >  		cache_operations->bulkrelse : cache_generic_bulkrelse;
+> >  	pthread_mutex_init(&cache->c_mutex, NULL);
+> > +	time(&cache->expand_time);
 > >  
-> >  		/*
-> > -		 *  Dequeue work from the head of the list.
-> > +		 *  Dequeue work from the head of the list. If the queue was
-> > +		 *  full then send a wakeup if we're configured to do so.
-> >  		 */
-> >  		assert(wq->item_count > 0);
-> > +		if (wq->max_queued && wq->item_count == wq->max_queued)
-> > +			pthread_cond_signal(&wq->queue_full);
+> >  	for (i = 0; i < hashsize; i++) {
+> >  		list_head_init(&cache->c_hash[i].ch_list);
+> > @@ -77,15 +78,25 @@ cache_init(
+> >  	return cache;
+> >  }
+> >  
+> > +/*
+> > + * rate limit expansion so several concurrent shakes don't instantly all
+> > + * expand the cache multiple times and blow repair to OOM death.
+> > + */
+> >  static void
+> >  cache_expand(
+> > -	struct cache *		cache)
+> > +	struct cache	*cache)
+> >  {
+> > +	time_t		now;
 > > +
-> >  		wi = wq->next_item;
-> >  		wq->next_item = wi->next;
-> >  		wq->item_count--;
-> >  
-> > +		if (wq->max_queued && wq->next_item) {
-> > +			/* more work, wake up another worker */
-> > +			pthread_cond_signal(&wq->wakeup);
-> > +		}
+> >  	pthread_mutex_lock(&cache->c_mutex);
+> > +	time(&now);
+> > +	if (now - cache->expand_time > 10) {
 > 
-> It seems a little funny to me that the worker thread wakes up other
-> worker threads when there is more work to do (vs. workqueue_add which
-> actually added more work)...
+> At first I wondered to myself about what happens if we fill the cache
+> fast enough that we run out of space in less than ten seconds, but
+> (afaict) the cache_expand caller will keep trying shake/expand until it
+> gets something, right?
 
-The problem is that workqueue_add() delegates all concurrency and
-queue throttling to the worker thread callback function. The work
-queue doesn't function as a "queue" at all - it functions as a
-method of starting long running functions that do there own work
-queuing and throttling.  Hence these externally co-ordinated worker
-threads only require kicking off when the first work item is queued,
-otherwise they completely manage themselves and never return to the
-worker thread itself until they are done.
-
-This is one of the reasons the prefetch code is so damn complex - it
-has to do all this queue throttling and worker thread co-ordination
-itself with it's own infrastructure, rather than just having a
-thread walking the block maps calling "queue_work" on each object it
-needs read. Instead it's got counting semaphores,
-start/done/restart/maybe start/maybe stop logic to manage the queue
-depth, etc.
-
-What the above change does is enable us to use workqueues for
-queuing small pieces of work that need to be processed, and allows
-them to be processed concurrently without the caller having to do
-anything to manage that concurrency. This way the concurrency will
-grow automatically to the maximum bound of the workqueue and we
-don't have to worry about doing any extra wakeups or tracking
-anything in workqueue_add...
+Yes. Expansion occurs when the shaker fails to make progress because
+the cache is full and nothing can be reclaimed after many attempts.
 
 Cheers,
 
