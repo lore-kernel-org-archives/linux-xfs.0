@@ -1,65 +1,125 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:17980 "EHLO
-        ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725926AbeJaFGk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Oct 2018 01:06:40 -0400
-Date: Wed, 31 Oct 2018 07:11:40 +1100
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:6739 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726219AbeJaFs0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Oct 2018 01:48:26 -0400
+Date: Wed, 31 Oct 2018 07:53:20 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/7] Revert "xfs_repair: treat zero da btree pointers as
- corruption"
-Message-ID: <20181030201140.GM19305@dastard>
+Subject: Re: [PATCH 4/7] workqueue: bound maximum queue depth
+Message-ID: <20181030205320.GP19305@dastard>
 References: <20181030112043.6034-1-david@fromorbit.com>
- <20181030112043.6034-2-david@fromorbit.com>
- <20181030172039.GG4135@magnolia>
- <3781527d-4691-1c74-8e18-43bae49f44ff@sandeen.net>
+ <20181030112043.6034-5-david@fromorbit.com>
+ <20181030175839.GM4135@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3781527d-4691-1c74-8e18-43bae49f44ff@sandeen.net>
+In-Reply-To: <20181030175839.GM4135@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Tue, Oct 30, 2018 at 02:35:29PM -0500, Eric Sandeen wrote:
-> 
-> 
-> On 10/30/18 12:20 PM, Darrick J. Wong wrote:
-> > On Tue, Oct 30, 2018 at 10:20:37PM +1100, Dave Chinner wrote:
-> >> This reverts commit 67a79e2cc9320aaf269cd00e9c8d16892931886d.
-> >>
-> >> A root LEAFN block can exist in a directory. When we convert from
-> >> leaf format (LEAF1 - internal free list) to node format (LEAFN -
-> >> external free list) the only change to the single root leaf block is
-> >> that it's magic number is changed from LEAF1 to LEAFN.
-> >>
-> >> We don't actually end up with DA nodes in the tree until the LEAFN
-> >> node is split, and that requires a couple more dirents to be added
-> >> to the directory to fill the LEAFN block up completely. Then it will
-> >> split and create a DA node root block pointing to multiple LEAFN
-> >> leaf blocks.
-> >>
-> >> Hence restore the old behaviour where we skip the DA node tree
-> >> rebuild if there is a LEAFN root block found as there is no tree to
-> >> rebuild.
+On Tue, Oct 30, 2018 at 10:58:39AM -0700, Darrick J. Wong wrote:
+> On Tue, Oct 30, 2018 at 10:20:40PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > The trouble with reverting the patch is that xfs_repair goes back to
-> > tripping over an assertion in release_da_cursor_int if the reason why
-> > we got bno == 0 is that the directory has a da btree block with
-> > nbtree[0].before pointing to zero.
+> > Existing users of workqueues have bound maximum queue depths in
+> > their external algorithms (e.g. prefetch counts). For parallelising
+> > work that doesn't have an external bound, allow workqueues to
+> > throttle incoming requests at a maximum bound. bounded workqueues
+> > also need to distribute work over all worker threads themselves as
+> > there is no external bounding or worker function throttling
+> > provided.
 > > 
-> > Will post a better fix + regression tests for both issues shortly.
+> > Existing callers are not throttled and retain direct control of
+> > worker threads, only users of the new create interface will be
+> > throttled and concurrency managed.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  include/workqueue.h |  4 ++++
+> >  libfrog/workqueue.c | 30 +++++++++++++++++++++++++++---
+> >  2 files changed, 31 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/include/workqueue.h b/include/workqueue.h
+> > index c45dc4fbcf64..504da9403b85 100644
+> > --- a/include/workqueue.h
+> > +++ b/include/workqueue.h
+> > @@ -30,10 +30,14 @@ struct workqueue {
+> >  	unsigned int		item_count;
+> >  	unsigned int		thread_count;
+> >  	bool			terminate;
+> > +	int			max_queued;
+> > +	pthread_cond_t		queue_full;
+> >  };
+> >  
+> >  int workqueue_create(struct workqueue *wq, void *wq_ctx,
+> >  		unsigned int nr_workers);
+> > +int workqueue_create_bound(struct workqueue *wq, void *wq_ctx,
+> > +		unsigned int nr_workers, int max_queue);
 > 
-> Well let's discuss pros/cons & risks/rewards on that, I'm semi-inclined
-> to just revert it for 4.19 and fix it properly in 4.20, because I don't think
-> it's ever been seen in the wild...?
+> What does negative max_queue mean?
 
-I'd prefer a revert if we are closing on a release.
+Nothing. it can be made unsigned.
 
-A fix is essentially going to have to first revert the change
-anyway, so if the replacement fix is simple and tesed then it can
-just go straight in on top of the revert...
+> 
+> >  int workqueue_add(struct workqueue *wq, workqueue_func_t fn,
+> >  		uint32_t index, void *arg);
+> >  void workqueue_destroy(struct workqueue *wq);
+> > diff --git a/libfrog/workqueue.c b/libfrog/workqueue.c
+> > index 7311477374b4..8fe0dc7249f5 100644
+> > --- a/libfrog/workqueue.c
+> > +++ b/libfrog/workqueue.c
+> > @@ -40,13 +40,21 @@ workqueue_thread(void *arg)
+> >  		}
+> >  
+> >  		/*
+> > -		 *  Dequeue work from the head of the list.
+> > +		 *  Dequeue work from the head of the list. If the queue was
+> > +		 *  full then send a wakeup if we're configured to do so.
+> >  		 */
+> >  		assert(wq->item_count > 0);
+> > +		if (wq->max_queued && wq->item_count == wq->max_queued)
+> > +			pthread_cond_signal(&wq->queue_full);
+> > +
+> >  		wi = wq->next_item;
+> >  		wq->next_item = wi->next;
+> >  		wq->item_count--;
+> >  
+> > +		if (wq->max_queued && wq->next_item) {
+> > +			/* more work, wake up another worker */
+> > +			pthread_cond_signal(&wq->wakeup);
+> > +		}
+> 
+> It seems a little funny to me that the worker thread wakes up other
+> worker threads when there is more work to do (vs. workqueue_add which
+> actually added more work)...
+
+The problem is that workqueue_add() delegates all concurrency and
+queue throttling to the worker thread callback function. The work
+queue doesn't function as a "queue" at all - it functions as a
+method of starting long running functions that do there own work
+queuing and throttling.  Hence these externally co-ordinated worker
+threads only require kicking off when the first work item is queued,
+otherwise they completely manage themselves and never return to the
+worker thread itself until they are done.
+
+This is one of the reasons the prefetch code is so damn complex - it
+has to do all this queue throttling and worker thread co-ordination
+itself with it's own infrastructure, rather than just having a
+thread walking the block maps calling "queue_work" on each object it
+needs read. Instead it's got counting semaphores,
+start/done/restart/maybe start/maybe stop logic to manage the queue
+depth, etc.
+
+What the above change does is enable us to use workqueues for
+queuing small pieces of work that need to be processed, and allows
+them to be processed concurrently without the caller having to do
+anything to manage that concurrency. This way the concurrency will
+grow automatically to the maximum bound of the workqueue and we
+don't have to worry about doing any extra wakeups or tracking
+anything in workqueue_add...
 
 Cheers,
 
