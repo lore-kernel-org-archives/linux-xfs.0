@@ -1,113 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:56296 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726863AbeJaE6e (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 31 Oct 2018 00:58:34 -0400
-Subject: Re: [PATCH 2/7] repair: don't dirty inodes which are not unlinked
+Received: from userp2120.oracle.com ([156.151.31.85]:51430 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727732AbeJaCjJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Oct 2018 22:39:09 -0400
+Date: Tue, 30 Oct 2018 10:44:34 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 5/7] repair: Protect bad inode list with mutex
+Message-ID: <20181030174434.GJ4135@magnolia>
 References: <20181030112043.6034-1-david@fromorbit.com>
- <20181030112043.6034-3-david@fromorbit.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <539a02d8-f9fd-e9b4-d928-dcdced642376@sandeen.net>
-Date: Tue, 30 Oct 2018 15:03:38 -0500
+ <20181030112043.6034-6-david@fromorbit.com>
 MIME-Version: 1.0
-In-Reply-To: <20181030112043.6034-3-david@fromorbit.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181030112043.6034-6-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 10/30/18 6:20 AM, Dave Chinner wrote:
+On Tue, Oct 30, 2018 at 10:20:41PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> I noticed phase 4 writing back lots of inode buffers during recent
-> testing. The recent rework of clear_inode() in commit 0724d0f4cb53
-> ("xfs_repair: clear_dinode should simply clear, not check contents")
-> accidentally caught a call to clear_inode_unlinked() as well,
-> resulting in all inodes being marked dirty whether then needed
-> updating or not.
+> To enable phase 6 parallelisation, we need to protect the bad inode
+> list from concurrent modification and/or access. Wrap it with a
+> mutex and clean up the nasty typedefs.
 > 
-> Fix it by reverting the erroneous hunk and adding warnings so taht
-> this corruption is no longer silently fixed.
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  repair/dir2.c | 32 +++++++++++++++++++++-----------
+>  1 file changed, 21 insertions(+), 11 deletions(-)
+> 
+> diff --git a/repair/dir2.c b/repair/dir2.c
+> index ba5763ed3d26..a73a675b97c8 100644
+> --- a/repair/dir2.c
+> +++ b/repair/dir2.c
+> @@ -20,40 +20,50 @@
+>   * Known bad inode list.  These are seen when the leaf and node
+>   * block linkages are incorrect.
+>   */
+> -typedef struct dir2_bad {
+> +struct dir2_bad {
+>  	xfs_ino_t	ino;
+>  	struct dir2_bad	*next;
+> -} dir2_bad_t;
+> +};
 
-I find it confusing that "clear_dinode_unlinked" may or may not clear
-unlinked.  Can we change it to actually do as it's named, and move the
-test to the (one) caller where it's needed, something like:
+Just out of curiosity, how fast does this linked list grow?  In theory
+we could hoist scrub/bitmap.c to libfrog and turn this into a bitmap,
+but that probably depends on how often we find inodes with bad link
+counts...?  And admittedly, avlnodes aren't cheap either...
 
-===
+Anyway, this patch itself looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-repair: don't dirty inodes unconditionally when testing unlinked state
+--D
 
-Dave noticed phase 4 writing back lots of inode buffers during recent
-testing. The recent rework of clear_inode() in commit 0724d0f4cb53
-("xfs_repair: clear_dinode should simply clear, not check contents")
-accidentally caught a call to clear_inode_unlinked() as well,
-resulting in all inodes being marked dirty whether then needed
-updating or not.
-
-Fix it by making clear_inode_unlinked unconditionally do the clear
-(as was done for clear_inode), and move the test to the caller.
-Add warnings as well so that this corruption is no longer silently
-fixed.
-
-Reported-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-(I can keep Dave's SOB if preferred with a [sandeen: do it different]
-tag if this looks ok and that approach is preferred)
-
-(this also fixes unlinked_next lysdexia in the warnings)
-
-diff --git a/repair/dinode.c b/repair/dinode.c
-index 379f85c..c0fa3df 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -125,23 +125,16 @@ clear_dinode_core(struct xfs_mount *mp, xfs_dinode_t *dinoc, xfs_ino_t ino_num)
- 	return;
- }
- 
--static int
-+static void
- clear_dinode_unlinked(xfs_mount_t *mp, xfs_dinode_t *dino)
- {
- 
--	if (be32_to_cpu(dino->di_next_unlinked) != NULLAGINO)  {
--		if (!no_modify)
--			dino->di_next_unlinked = cpu_to_be32(NULLAGINO);
--		return(1);
--	}
--
--	return(0);
-+	dino->di_next_unlinked = cpu_to_be32(NULLAGINO);
- }
- 
- /*
-  * this clears the unlinked list too so it should not be called
-  * until after the agi unlinked lists are walked in phase 3.
-- * returns > zero if the inode has been altered while being cleared
-  */
- static void
- clear_dinode(xfs_mount_t *mp, xfs_dinode_t *dino, xfs_ino_t ino_num)
-@@ -2675,9 +2668,16 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
- 	 * we're going to find.  check_dups is set to 1 only during
- 	 * phase 4.  Ugly.
- 	 */
--	if (check_dups && !no_modify) {
--		clear_dinode_unlinked(mp, dino);
--		*dirty += 1;
-+	if (check_dups && be32_to_cpu(dino->di_next_unlinked) != NULLAGINO) {
-+		if (no_modify) {
-+			do_warn(
-+	_("Would clear next_unlinked in inode %" PRIu64 "\n"), lino);
-+		} else  {
-+			clear_dinode_unlinked(mp, dino);
-+			do_warn(
-+	_("Cleared next_unlinked in inode %" PRIu64 "\n"), lino);
-+			*dirty += 1;
-+		}
- 	}
- 
- 	/* set type and map type info */
+>  
+> -static dir2_bad_t *dir2_bad_list;
+> +static struct dir2_bad	*dir2_bad_list;
+> +pthread_mutex_t		dir2_bad_list_lock = PTHREAD_MUTEX_INITIALIZER;
+>  
+>  static void
+>  dir2_add_badlist(
+>  	xfs_ino_t	ino)
+>  {
+> -	dir2_bad_t	*l;
+> +	struct dir2_bad	*l;
+>  
+> -	if ((l = malloc(sizeof(dir2_bad_t))) == NULL) {
+> +	l = malloc(sizeof(*l));
+> +	if (!l) {
+>  		do_error(
+>  _("malloc failed (%zu bytes) dir2_add_badlist:ino %" PRIu64 "\n"),
+> -			sizeof(dir2_bad_t), ino);
+> +			sizeof(*l), ino);
+>  		exit(1);
+>  	}
+> +	pthread_mutex_lock(&dir2_bad_list_lock);
+>  	l->next = dir2_bad_list;
+>  	dir2_bad_list = l;
+>  	l->ino = ino;
+> +	pthread_mutex_unlock(&dir2_bad_list_lock);
+>  }
+>  
+>  int
+>  dir2_is_badino(
+>  	xfs_ino_t	ino)
+>  {
+> -	dir2_bad_t	*l;
+> +	struct dir2_bad	*l;
+> +	int		ret = 0;
+>  
+> -	for (l = dir2_bad_list; l; l = l->next)
+> -		if (l->ino == ino)
+> -			return 1;
+> -	return 0;
+> +	pthread_mutex_lock(&dir2_bad_list_lock);
+> +	for (l = dir2_bad_list; l; l = l->next) {
+> +		if (l->ino == ino) {
+> +			ret = 1;
+> +			break;
+> +		}
+> +	}
+> +	pthread_mutex_unlock(&dir2_bad_list_lock);
+> +	return ret;
+>  }
+>  
+>  /*
+> -- 
+> 2.19.1
+> 
