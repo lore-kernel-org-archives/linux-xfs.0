@@ -1,31 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lj1-f194.google.com ([209.85.208.194]:32945 "EHLO
-        mail-lj1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726036AbeJ3DfP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Oct 2018 23:35:15 -0400
-Received: by mail-lj1-f194.google.com with SMTP id z21-v6so8875531ljz.0
-        for <linux-xfs@vger.kernel.org>; Mon, 29 Oct 2018 11:45:20 -0700 (PDT)
+Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:52098 "EHLO
+        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726840AbeJaFte (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Oct 2018 01:49:34 -0400
+Date: Wed, 31 Oct 2018 07:54:27 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 5/7] repair: Protect bad inode list with mutex
+Message-ID: <20181030205427.GQ19305@dastard>
+References: <20181030112043.6034-1-david@fromorbit.com>
+ <20181030112043.6034-6-david@fromorbit.com>
+ <20181030174434.GJ4135@magnolia>
 MIME-Version: 1.0
-References: <20181026201943.24131-1-stefanrin@gmail.com> <20181026201943.24131-6-stefanrin@gmail.com>
- <e9fb6661-858a-250a-ec2f-a9232e0309ae@sandeen.net> <CAAxjCEwi5i0B1Gg4fE-KPf3px4zNgvksY_z=RDfwR_=u=5zAEA@mail.gmail.com>
- <e74e127c-e0a0-20e8-f34c-7775bc5f972f@sandeen.net>
-In-Reply-To: <e74e127c-e0a0-20e8-f34c-7775bc5f972f@sandeen.net>
-From: Stefan Ring <stefanrin@gmail.com>
-Date: Mon, 29 Oct 2018 19:45:06 +0100
-Message-ID: <CAAxjCEyNGnXTqFBr3xxZNpmhUA8C9EjT=UNPZQC-KCSak2AA1Q@mail.gmail.com>
-Subject: Re: [PATCH 5/5] xfs_metadump: Zap dev inodes
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181030174434.GJ4135@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Mon, Oct 29, 2018 at 7:37 PM Eric Sandeen <sandeen@sandeen.net> wrote:
->
-> sorry, my point was just that it's probably better to explicitly name them
-> than to fall through to a default but I forgot about 2 formats.
+On Tue, Oct 30, 2018 at 10:44:34AM -0700, Darrick J. Wong wrote:
+> On Tue, Oct 30, 2018 at 10:20:41PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > To enable phase 6 parallelisation, we need to protect the bad inode
+> > list from concurrent modification and/or access. Wrap it with a
+> > mutex and clean up the nasty typedefs.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  repair/dir2.c | 32 +++++++++++++++++++++-----------
+> >  1 file changed, 21 insertions(+), 11 deletions(-)
+> > 
+> > diff --git a/repair/dir2.c b/repair/dir2.c
+> > index ba5763ed3d26..a73a675b97c8 100644
+> > --- a/repair/dir2.c
+> > +++ b/repair/dir2.c
+> > @@ -20,40 +20,50 @@
+> >   * Known bad inode list.  These are seen when the leaf and node
+> >   * block linkages are incorrect.
+> >   */
+> > -typedef struct dir2_bad {
+> > +struct dir2_bad {
+> >  	xfs_ino_t	ino;
+> >  	struct dir2_bad	*next;
+> > -} dir2_bad_t;
+> > +};
+> 
+> Just out of curiosity, how fast does this linked list grow?  In theory
+> we could hoist scrub/bitmap.c to libfrog and turn this into a bitmap,
+> but that probably depends on how often we find inodes with bad link
+> counts...?  And admittedly, avlnodes aren't cheap either...
 
-It's basically down to preference and a choice only you can make.
-Either you forget one and do too little, or you forget one and do too
-much. If this is the exhaustive list, I believe you ;).
+Never seen it in profiles, so I don't see it as problem we need to
+solve at this point. The dir_hash code, OTOH....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
