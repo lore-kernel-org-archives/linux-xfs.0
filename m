@@ -1,13 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:52602 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726549AbeJaC6C (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Oct 2018 22:58:02 -0400
-Subject: [PATCH 1/3] populate: create leafn dir when populating xfs
- filesystem
+Received: from userp2120.oracle.com ([156.151.31.85]:43406 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726501AbeJaC6O (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Oct 2018 22:58:14 -0400
+Subject: [PATCH 2/3] xfs: test repair regression of dir w/ single leafn block
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 30 Oct 2018 11:03:28 -0700
-Message-ID: <154092260885.14882.10714249211090490549.stgit@magnolia>
+Date: Tue, 30 Oct 2018 11:03:35 -0700
+Message-ID: <154092261507.14882.18255990570055324009.stgit@magnolia>
+In-Reply-To: <154092260885.14882.10714249211090490549.stgit@magnolia>
+References: <154092260885.14882.10714249211090490549.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -19,67 +20,111 @@ Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-We've had some problems lately with directories containing a single
-leafn directory.  It turns out that the populate script doesn't create
-these, so teach it to do so.
-
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- common/populate |   15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ tests/xfs/1421     |   70 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1421.out |    7 +++++
+ tests/xfs/group    |    1 +
+ 3 files changed, 78 insertions(+)
+ create mode 100644 tests/xfs/1421
+ create mode 100644 tests/xfs/1421.out
 
 
-diff --git a/common/populate b/common/populate
-index 8c08f516..610425f9 100644
---- a/common/populate
-+++ b/common/populate
-@@ -136,6 +136,12 @@ _scratch_xfs_populate() {
- 	_scratch_mount
- 	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
- 	dblksz="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
-+	crc="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep crc= | sed -e 's/^.*crc=//g' -e 's/\([0-9]*\).*$/\1/g')"
-+	if [ $crc -eq 1 ]; then
-+		leaf_hdr_size=64
-+	else
-+		leaf_hdr_size=16
-+	fi
- 	leaf_lblk="$((32 * 1073741824 / blksz))"
- 	node_lblk="$((64 * 1073741824 / blksz))"
- 
-@@ -171,6 +177,10 @@ _scratch_xfs_populate() {
- 	echo "+ leaf dir"
- 	__populate_create_dir "${SCRATCH_MNT}/S_IFDIR.FMT_LEAF" "$((dblksz / 12))"
- 
-+	# - LEAFN
-+	echo "+ leafn dir"
-+	__populate_create_dir "${SCRATCH_MNT}/S_IFDIR.FMT_LEAFN" "$(( ((dblksz - leaf_hdr_size) / 8) - 3 ))"
+diff --git a/tests/xfs/1421 b/tests/xfs/1421
+new file mode 100644
+index 00000000..a63705bb
+--- /dev/null
++++ b/tests/xfs/1421
+@@ -0,0 +1,70 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2018 Oracle, Inc.  All Rights Reserved.
++#
++# FS QA Test No. 1421
++#
++# Test for two related regressions -- first, check that repair doesn't
++# repeatedly rebuild directories with a single leafn block; and check that
++# repair also doesn't crash when it hits a corrupt da btree with a zero before
++# pointer.
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
 +
- 	# - NODE
- 	echo "+ node dir"
- 	__populate_create_dir "${SCRATCH_MNT}/S_IFDIR.FMT_NODE" "$((16 * dblksz / 40))" true
-@@ -433,6 +443,9 @@ __populate_check_xfs_dir() {
- 	"leaf")
- 		(test "${datab}" -eq 1 && test "${leafb}" -eq 1 && test "${freeb}" -eq 0) || _fail "failed to create ${dtype} dir ino ${inode} datab ${datab} leafb ${leafb} freeb ${freeb}"
- 		;;
-+	"leafn")
-+		_scratch_xfs_db -x -c "inode ${inode}" -c "dblock ${leaf_lblk}" -c "p lhdr.info.hdr.magic" | egrep -q '(0x3dff|0xd2ff)' || _fail "failed to create ${dtype} dir ino ${inode} datab ${datab} leafb ${leafb} freeb ${freeb}"
-+		;;
- 	"node"|"btree")
- 		(test "${datab}" -eq 1 && test "${leafb}" -eq 1 && test "${freeb}" -eq 1) || _fail "failed to create ${dtype} dir ino ${inode} datab ${datab} leafb ${leafb} freeb ${freeb}"
- 		;;
-@@ -508,6 +521,7 @@ _scratch_xfs_populate_check() {
- 	inline_dir="$(__populate_find_inode "${SCRATCH_MNT}/S_IFDIR.FMT_INLINE")"
- 	block_dir="$(__populate_find_inode "${SCRATCH_MNT}/S_IFDIR.FMT_BLOCK")"
- 	leaf_dir="$(__populate_find_inode "${SCRATCH_MNT}/S_IFDIR.FMT_LEAF")"
-+	leafn_dir="$(__populate_find_inode "${SCRATCH_MNT}/S_IFDIR.FMT_LEAFN")"
- 	node_dir="$(__populate_find_inode "${SCRATCH_MNT}/S_IFDIR.FMT_NODE")"
- 	btree_dir="$(__populate_find_inode "${SCRATCH_MNT}/S_IFDIR.FMT_BTREE")"
- 	local_slink="$(__populate_find_inode "${SCRATCH_MNT}/S_IFLNK.FMT_LOCAL")"
-@@ -533,6 +547,7 @@ _scratch_xfs_populate_check() {
- 	__populate_check_xfs_dir "${inline_dir}" "inline"
- 	__populate_check_xfs_dir "${block_dir}" "block"
- 	__populate_check_xfs_dir "${leaf_dir}" "leaf"
-+	__populate_check_xfs_dir "${leafn_dir}" "leafn"
- 	__populate_check_xfs_dir "${node_dir}" "node"
- 	__populate_check_xfs_dir "${btree_dir}" "btree"
- 	__populate_check_xfs_dformat "${btree_dir}" "btree"
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 7 15
++
++_cleanup()
++{
++	cd /
++	rm -rf $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs xfs
++_require_scratch_xfs_fuzz_fields
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++filter_nbrepair() {
++	grep rebuilding | sed -e 's/directory inode [0-9]*/directory inode XXX/g'
++}
++
++run_repair() {
++	_scratch_xfs_repair > $tmp.repair 2>&1
++	cat $tmp.repair >> $seqres.full
++	cat $tmp.repair | filter_nbrepair
++}
++
++echo "Check leafn rebuilds"
++run_repair
++run_repair
++
++echo "Fuzz nbtree[0].before to zero"
++_scratch_mount
++inum=$(stat -c '%i' $SCRATCH_MNT/S_IFDIR.FMT_NODE)
++blk_sz=$(_get_block_size $SCRATCH_MNT)
++_scratch_unmount
++leaf_offset=$(( (2 ** 35) / blk_sz ))
++_scratch_xfs_fuzz_metadata_field "nbtree[0].before" "zeroes" "inode ${inum}" "dblock ${leaf_offset}" >> $seqres.full
++
++echo "Check nbtree[0].before repair"
++run_repair
++run_repair
++
++# success, all done
++echo Done
++status=0
++exit
+diff --git a/tests/xfs/1421.out b/tests/xfs/1421.out
+new file mode 100644
+index 00000000..69711ab0
+--- /dev/null
++++ b/tests/xfs/1421.out
+@@ -0,0 +1,7 @@
++QA output created by 1421
++Format and populate
++Check leafn rebuilds
++Fuzz nbtree[0].before to zero
++Check nbtree[0].before repair
++rebuilding directory inode XXX
++Done
+diff --git a/tests/xfs/group b/tests/xfs/group
+index de66378f..4b0552b9 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -492,3 +492,4 @@
+ 492 auto quick fuzz
+ 493 auto quick fuzz
+ 734 auto quick
++1421 auto quick repair
