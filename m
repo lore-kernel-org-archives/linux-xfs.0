@@ -1,306 +1,155 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53420 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728600AbeJaVJL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 31 Oct 2018 17:09:11 -0400
-Date: Wed, 31 Oct 2018 08:11:23 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/2] xfs: idiotproof defer op type configuration
-Message-ID: <20181031121122.GB15869@bfoster>
-References: <154083754598.16857.4909403030667946114.stgit@magnolia>
- <154083755233.16857.4514650502336344947.stgit@magnolia>
+Received: from mail-ot1-f51.google.com ([209.85.210.51]:35800 "EHLO
+        mail-ot1-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728108AbeJaHyr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Oct 2018 03:54:47 -0400
+Received: by mail-ot1-f51.google.com with SMTP id 14so12837664oth.2
+        for <linux-xfs@vger.kernel.org>; Tue, 30 Oct 2018 15:59:21 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <154083755233.16857.4514650502336344947.stgit@magnolia>
+References: <20181002100531.GC4135@quack2.suse.cz> <20181002121039.GA3274@linux-x5ow.site>
+ <20181002142959.GD9127@quack2.suse.cz> <x49h8hkfhk9.fsf@segfault.boston.devel.redhat.com>
+ <20181018002510.GC6311@dastard> <20181018145555.GS23493@quack2.suse.cz>
+ <20181019004303.GI6311@dastard> <CAPcyv4ixoAh7HEMfm+B4sRDx1Qwm6SHGjtQ+5r3EKsxreRydrA@mail.gmail.com>
+ <20181030224904.GT19305@dastard>
+In-Reply-To: <20181030224904.GT19305@dastard>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Tue, 30 Oct 2018 15:59:09 -0700
+Message-ID: <CAPcyv4gwBJ65170Gy+EaDLpomA93kxuWTM10mZeaPYV6Rq=SRw@mail.gmail.com>
+Subject: Re: Problems with VM_MIXEDMAP removal from /proc/<pid>/smaps
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: david@fromorbit.com, linux-xfs@vger.kernel.org
+To: david <david@fromorbit.com>
+Cc: Jan Kara <jack@suse.cz>, jmoyer <jmoyer@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>, Dave Jiang <dave.jiang@intel.com>, linux-nvdimm <linux-nvdimm@lists.01.org>, Linux MM <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>
 
-On Mon, Oct 29, 2018 at 11:25:52AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Recently, we forgot to port a new defer op type to xfsprogs, which
-> caused us some userspace pain.  Reorganize the way we make libxfs
-> clients supply defer op type information so that all type information
-> has to be provided at build time instead of risky runtime dynamic
-> configuration.
-> 
+On Tue, Oct 30, 2018 at 3:49 PM Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Mon, Oct 29, 2018 at 11:30:41PM -0700, Dan Williams wrote:
+> > On Thu, Oct 18, 2018 at 5:58 PM Dave Chinner <david@fromorbit.com> wrote:
+> > > On Thu, Oct 18, 2018 at 04:55:55PM +0200, Jan Kara wrote:
+> > > > On Thu 18-10-18 11:25:10, Dave Chinner wrote:
+> > > > > On Wed, Oct 17, 2018 at 04:23:50PM -0400, Jeff Moyer wrote:
+> > > > > > MAP_SYNC
+> > > > > > - file system guarantees that metadata required to reach faulted-in file
+> > > > > >   data is consistent on media before a write fault is completed.  A
+> > > > > >   side-effect is that the page cache will not be used for
+> > > > > >   writably-mapped pages.
+> > > > >
+> > > > > I think you are conflating current implementation with API
+> > > > > requirements - MAP_SYNC doesn't guarantee anything about page cache
+> > > > > use. The man page definition simply says "supported only for files
+> > > > > supporting DAX" and that it provides certain data integrity
+> > > > > guarantees. It does not define the implementation.
+> ....
+> > > > With O_DIRECT the fallback to buffered IO is quite rare (at least for major
+> > > > filesystems) so usually people just won't notice. If fallback for
+> > > > MAP_DIRECT will be easy to hit, I'm not sure it would be very useful.
+> > >
+> > > Which is just like the situation where O_DIRECT on ext3 was not very
+> > > useful, but on other filesystems like XFS it was fully functional.
+> > >
+> > > IMO, the fact that a specific filesytem has a suboptimal fallback
+> > > path for an uncommon behaviour isn't an argument against MAP_DIRECT
+> > > as a hint - it's actually a feature. If MAP_DIRECT can't be used
+> > > until it's always direct access, then most filesystems wouldn't be
+> > > able to provide any faster paths at all. It's much better to have
+> > > partial functionality now than it is to never have the functionality
+> > > at all, and so we need to design in the flexibility we need to
+> > > iteratively improve implementations without needing API changes that
+> > > will break applications.
+> >
+> > The hard guarantee requirement still remains though because an
+> > application that expects combined MAP_SYNC|MAP_DIRECT semantics will
+> > be surprised if the MAP_DIRECT property silently disappears.
+>
+> Why would they be surprised? They won't even notice it if the
+> filesystem can provide MAP_SYNC without MAP_DIRECT.
+>
+> And that's the whole point.
+>
+> MAP_DIRECT is a private mapping state. So is MAP_SYNC. They are not
+> visible to the filesystem and the filesystem does nothing to enforce
+> them. If someone does something that requires the page cache (e.g.
+> calls do_splice_direct()) then that MAP_DIRECT mapping has a whole
+> heap of new work to do. And, in some cases, the filesystem may not
+> be able to provide MAP_DIRECT as a result..
+>
+> IOWs, the filesystem cannot guarantee MAP_DIRECT and the
+> circumstances under which MAP_DIRECT will and will not work are
+> dynamic. If MAP_DIRECT is supposed to be a guarantee then we'll have
+> applications randomly segfaulting in production as things like
+> backups, indexers, etc run over the filesystem and do their work.
+>
+> This is why MAP_DIRECT needs to be an optimisation, not a
+> requirement - things will still work if MAP_DIRECT is not used. What
+> matters to these applications is MAP_SYNC - if we break MAP_SYNC,
+> then the application data integrity model is violated. That's not an
+> acceptible outcome.
+>
+> The problem, it seems to me, is that people are unable to separate
+> MAP_DIRECT and MAP_SYNC. I suspect that is because, at present,
+> MAP_SYNC on XFS and ext4 requires MAP_DIRECT. i.e. we can only
+> provide MAP_SYNC functionality on DAX mappings. However, that's a
+> /filesystem implementation issue/, not an API guarantee we need to
+> provide to userspace.
+>
+> If we implement a persistent page cache (e.g. allocate page cache
+> pages out of ZONE_DEVICE pmem), then filesystems like XFS and ext4
+> could provide applications with the MAP_SYNC data integrity model
+> without MAP_DIRECT. Indeed, those filesystems would not even be able
+> to provide MAP_DIRECT semantics because they aren't backed by pmem.
+>
+> Hence if applications that want MAP_SYNC are hard coded
+> MAP_SYNC|MAP_DIRECT and we make MAP_DIRECT a hard guarantee, then
+> those applications are going to fail on a filesystem that provides
+> only MAP_SYNC. This is despite the fact the applications would
+> function correctly and the data integrity model would be maintained.
+> i.e. the failure is because applications have assumed MAP_SYNC can
+> only be provided by a DAX implementation, not because MAP_SYNC is
+> not supported.
+>
+> MAP_SYNC really isn't about DAX at all. It's about enabling a data
+> integrity model that requires the filesystem to provide userspace
+> access to CPU addressable persistent memory.  DAX+MAP_DIRECT is just
+> one method of providing this functionality, but it's not the only
+> method. Our API needs to be future proof rather than an encoding of
+> the existing implementation limitations, otherwise apps will have to
+> be re-written as every new MAP_SYNC capable technology comes along.
+>
+> In summary:
+>
+>         MAP_DIRECT is an access hint.
+>
+>         MAP_SYNC provides a data integrity model guarantee.
+>
+>         MAP_SYNC may imply MAP_DIRECT for specific implementations,
+>         but it does not require or guarantee MAP_DIRECT.
+>
+> Let's compare that with O_DIRECT:
+>
+>         O_DIRECT in an access hint.
+>
+>         O_DSYNC provides a data integrity model guarantee.
+>
+>         O_DSYNC may imply O_DIRECT for specific implementations, but
+>         it does not require or guarantee O_DIRECT.
+>
+> Consistency in access and data integrity models is a good thing. DAX
+> and pmem is not an exception. We need to use a model we know works
+> and has proven itself over a long period of time.
+>
+> > I think
+> > it still makes some sense as a hint for apps that want to minimize
+> > page cache, but for the applications with a flush from userspace model
+> > I think that wants to be an F_SETLEASE / F_DIRECTLCK operation. This
+> > still gives the filesystem the option to inject page-cache at will,
+> > but with an application coordination point.
+>
+> Why make it more complex for applications than it needs to be?
 
-https://youtu.be/Ya2xifdO_l0
-
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/libxfs/xfs_defer.c   |   17 ++++++++---------
->  fs/xfs/libxfs/xfs_defer.h   |    6 +++++-
->  fs/xfs/xfs_super.c          |    6 +-----
->  fs/xfs/xfs_trans.h          |    4 ----
->  fs/xfs/xfs_trans_bmap.c     |   10 ++--------
->  fs/xfs/xfs_trans_extfree.c  |   13 +++----------
->  fs/xfs/xfs_trans_refcount.c |   10 ++--------
->  fs/xfs/xfs_trans_rmap.c     |   10 ++--------
->  8 files changed, 23 insertions(+), 53 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-> index e792b167150a..277117a8ad13 100644
-> --- a/fs/xfs/libxfs/xfs_defer.c
-> +++ b/fs/xfs/libxfs/xfs_defer.c
-> @@ -172,7 +172,13 @@
->   * reoccur.
->   */
->  
-> -static const struct xfs_defer_op_type *defer_op_types[XFS_DEFER_OPS_TYPE_MAX];
-> +static const struct xfs_defer_op_type *defer_op_types[] = {
-> +	[XFS_DEFER_OPS_TYPE_BMAP]	= &xfs_bmap_update_defer_type,
-> +	[XFS_DEFER_OPS_TYPE_REFCOUNT]	= &xfs_refcount_update_defer_type,
-> +	[XFS_DEFER_OPS_TYPE_RMAP]	= &xfs_rmap_update_defer_type,
-> +	[XFS_DEFER_OPS_TYPE_FREE]	= &xfs_extent_free_defer_type,
-> +	[XFS_DEFER_OPS_TYPE_AGFL_FREE]	= &xfs_agfl_free_defer_type,
-> +};
->  
->  /*
->   * For each pending item in the intake list, log its intent item and the
-> @@ -488,6 +494,7 @@ xfs_defer_add(
->  	struct xfs_defer_pending	*dfp = NULL;
->  
->  	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
-> +	BUILD_BUG_ON(ARRAY_SIZE(defer_op_types) != XFS_DEFER_OPS_TYPE_MAX);
->  
->  	/*
->  	 * Add the item to a pending item at the end of the intake list.
-> @@ -517,14 +524,6 @@ xfs_defer_add(
->  	dfp->dfp_count++;
->  }
->  
-> -/* Initialize a deferred operation list. */
-> -void
-> -xfs_defer_init_op_type(
-> -	const struct xfs_defer_op_type	*type)
-> -{
-> -	defer_op_types[type->type] = type;
-> -}
-> -
->  /*
->   * Move deferred ops from one transaction to another and reset the source to
->   * initial state. This is primarily used to carry state forward across
-> diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-> index 2584a5b95b0d..0a4b88e3df74 100644
-> --- a/fs/xfs/libxfs/xfs_defer.h
-> +++ b/fs/xfs/libxfs/xfs_defer.h
-> @@ -56,6 +56,10 @@ struct xfs_defer_op_type {
->  	void (*log_item)(struct xfs_trans *, void *, struct list_head *);
->  };
->  
-> -void xfs_defer_init_op_type(const struct xfs_defer_op_type *type);
-> +extern const struct xfs_defer_op_type xfs_bmap_update_defer_type;
-> +extern const struct xfs_defer_op_type xfs_refcount_update_defer_type;
-> +extern const struct xfs_defer_op_type xfs_rmap_update_defer_type;
-> +extern const struct xfs_defer_op_type xfs_extent_free_defer_type;
-> +extern const struct xfs_defer_op_type xfs_agfl_free_defer_type;
->  
->  #endif /* __XFS_DEFER_H__ */
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index d3e6cd063688..a2e944b80d2a 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -38,6 +38,7 @@
->  #include "xfs_refcount_item.h"
->  #include "xfs_bmap_item.h"
->  #include "xfs_reflink.h"
-> +#include "xfs_defer.h"
->  
->  #include <linux/namei.h>
->  #include <linux/dax.h>
-> @@ -2085,11 +2086,6 @@ init_xfs_fs(void)
->  	printk(KERN_INFO XFS_VERSION_STRING " with "
->  			 XFS_BUILD_OPTIONS " enabled\n");
->  
-> -	xfs_extent_free_init_defer_op();
-> -	xfs_rmap_update_init_defer_op();
-> -	xfs_refcount_update_init_defer_op();
-> -	xfs_bmap_update_init_defer_op();
-> -
->  	xfs_dir_startup();
->  
->  	error = xfs_init_zones();
-> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> index a0c5dbda18aa..3ba14ebb7a3b 100644
-> --- a/fs/xfs/xfs_trans.h
-> +++ b/fs/xfs/xfs_trans.h
-> @@ -223,7 +223,6 @@ void		xfs_trans_dirty_buf(struct xfs_trans *, struct xfs_buf *);
->  bool		xfs_trans_buf_is_dirty(struct xfs_buf *bp);
->  void		xfs_trans_log_inode(xfs_trans_t *, struct xfs_inode *, uint);
->  
-> -void		xfs_extent_free_init_defer_op(void);
->  struct xfs_efd_log_item	*xfs_trans_get_efd(struct xfs_trans *,
->  				  struct xfs_efi_log_item *,
->  				  uint);
-> @@ -248,7 +247,6 @@ extern kmem_zone_t	*xfs_trans_zone;
->  /* rmap updates */
->  enum xfs_rmap_intent_type;
->  
-> -void xfs_rmap_update_init_defer_op(void);
->  struct xfs_rud_log_item *xfs_trans_get_rud(struct xfs_trans *tp,
->  		struct xfs_rui_log_item *ruip);
->  int xfs_trans_log_finish_rmap_update(struct xfs_trans *tp,
-> @@ -260,7 +258,6 @@ int xfs_trans_log_finish_rmap_update(struct xfs_trans *tp,
->  /* refcount updates */
->  enum xfs_refcount_intent_type;
->  
-> -void xfs_refcount_update_init_defer_op(void);
->  struct xfs_cud_log_item *xfs_trans_get_cud(struct xfs_trans *tp,
->  		struct xfs_cui_log_item *cuip);
->  int xfs_trans_log_finish_refcount_update(struct xfs_trans *tp,
-> @@ -272,7 +269,6 @@ int xfs_trans_log_finish_refcount_update(struct xfs_trans *tp,
->  /* mapping updates */
->  enum xfs_bmap_intent_type;
->  
-> -void xfs_bmap_update_init_defer_op(void);
->  struct xfs_bud_log_item *xfs_trans_get_bud(struct xfs_trans *tp,
->  		struct xfs_bui_log_item *buip);
->  int xfs_trans_log_finish_bmap_update(struct xfs_trans *tp,
-> diff --git a/fs/xfs/xfs_trans_bmap.c b/fs/xfs/xfs_trans_bmap.c
-> index 741c558b2179..e027e68b4f9e 100644
-> --- a/fs/xfs/xfs_trans_bmap.c
-> +++ b/fs/xfs/xfs_trans_bmap.c
-> @@ -17,6 +17,7 @@
->  #include "xfs_alloc.h"
->  #include "xfs_bmap.h"
->  #include "xfs_inode.h"
-> +#include "xfs_defer.h"
->  
->  /*
->   * This routine is called to allocate a "bmap update done"
-> @@ -220,7 +221,7 @@ xfs_bmap_update_cancel_item(
->  	kmem_free(bmap);
->  }
->  
-> -static const struct xfs_defer_op_type xfs_bmap_update_defer_type = {
-> +const struct xfs_defer_op_type xfs_bmap_update_defer_type = {
->  	.type		= XFS_DEFER_OPS_TYPE_BMAP,
->  	.max_items	= XFS_BUI_MAX_FAST_EXTENTS,
->  	.diff_items	= xfs_bmap_update_diff_items,
-> @@ -231,10 +232,3 @@ static const struct xfs_defer_op_type xfs_bmap_update_defer_type = {
->  	.finish_item	= xfs_bmap_update_finish_item,
->  	.cancel_item	= xfs_bmap_update_cancel_item,
->  };
-> -
-> -/* Register the deferred op type. */
-> -void
-> -xfs_bmap_update_init_defer_op(void)
-> -{
-> -	xfs_defer_init_op_type(&xfs_bmap_update_defer_type);
-> -}
-> diff --git a/fs/xfs/xfs_trans_extfree.c b/fs/xfs/xfs_trans_extfree.c
-> index 855c0b651fd4..1872962aa470 100644
-> --- a/fs/xfs/xfs_trans_extfree.c
-> +++ b/fs/xfs/xfs_trans_extfree.c
-> @@ -18,6 +18,7 @@
->  #include "xfs_alloc.h"
->  #include "xfs_bmap.h"
->  #include "xfs_trace.h"
-> +#include "xfs_defer.h"
->  
->  /*
->   * This routine is called to allocate an "extent free done"
-> @@ -206,7 +207,7 @@ xfs_extent_free_cancel_item(
->  	kmem_free(free);
->  }
->  
-> -static const struct xfs_defer_op_type xfs_extent_free_defer_type = {
-> +const struct xfs_defer_op_type xfs_extent_free_defer_type = {
->  	.type		= XFS_DEFER_OPS_TYPE_FREE,
->  	.max_items	= XFS_EFI_MAX_FAST_EXTENTS,
->  	.diff_items	= xfs_extent_free_diff_items,
-> @@ -274,7 +275,7 @@ xfs_agfl_free_finish_item(
->  
->  
->  /* sub-type with special handling for AGFL deferred frees */
-> -static const struct xfs_defer_op_type xfs_agfl_free_defer_type = {
-> +const struct xfs_defer_op_type xfs_agfl_free_defer_type = {
->  	.type		= XFS_DEFER_OPS_TYPE_AGFL_FREE,
->  	.max_items	= XFS_EFI_MAX_FAST_EXTENTS,
->  	.diff_items	= xfs_extent_free_diff_items,
-> @@ -285,11 +286,3 @@ static const struct xfs_defer_op_type xfs_agfl_free_defer_type = {
->  	.finish_item	= xfs_agfl_free_finish_item,
->  	.cancel_item	= xfs_extent_free_cancel_item,
->  };
-> -
-> -/* Register the deferred op type. */
-> -void
-> -xfs_extent_free_init_defer_op(void)
-> -{
-> -	xfs_defer_init_op_type(&xfs_extent_free_defer_type);
-> -	xfs_defer_init_op_type(&xfs_agfl_free_defer_type);
-> -}
-> diff --git a/fs/xfs/xfs_trans_refcount.c b/fs/xfs/xfs_trans_refcount.c
-> index 523c55663954..116c040d54bd 100644
-> --- a/fs/xfs/xfs_trans_refcount.c
-> +++ b/fs/xfs/xfs_trans_refcount.c
-> @@ -16,6 +16,7 @@
->  #include "xfs_refcount_item.h"
->  #include "xfs_alloc.h"
->  #include "xfs_refcount.h"
-> +#include "xfs_defer.h"
->  
->  /*
->   * This routine is called to allocate a "refcount update done"
-> @@ -227,7 +228,7 @@ xfs_refcount_update_cancel_item(
->  	kmem_free(refc);
->  }
->  
-> -static const struct xfs_defer_op_type xfs_refcount_update_defer_type = {
-> +const struct xfs_defer_op_type xfs_refcount_update_defer_type = {
->  	.type		= XFS_DEFER_OPS_TYPE_REFCOUNT,
->  	.max_items	= XFS_CUI_MAX_FAST_EXTENTS,
->  	.diff_items	= xfs_refcount_update_diff_items,
-> @@ -239,10 +240,3 @@ static const struct xfs_defer_op_type xfs_refcount_update_defer_type = {
->  	.finish_cleanup = xfs_refcount_update_finish_cleanup,
->  	.cancel_item	= xfs_refcount_update_cancel_item,
->  };
-> -
-> -/* Register the deferred op type. */
-> -void
-> -xfs_refcount_update_init_defer_op(void)
-> -{
-> -	xfs_defer_init_op_type(&xfs_refcount_update_defer_type);
-> -}
-> diff --git a/fs/xfs/xfs_trans_rmap.c b/fs/xfs/xfs_trans_rmap.c
-> index 05b00e40251f..f75cdc5b578a 100644
-> --- a/fs/xfs/xfs_trans_rmap.c
-> +++ b/fs/xfs/xfs_trans_rmap.c
-> @@ -16,6 +16,7 @@
->  #include "xfs_rmap_item.h"
->  #include "xfs_alloc.h"
->  #include "xfs_rmap.h"
-> +#include "xfs_defer.h"
->  
->  /* Set the map extent flags for this reverse mapping. */
->  static void
-> @@ -244,7 +245,7 @@ xfs_rmap_update_cancel_item(
->  	kmem_free(rmap);
->  }
->  
-> -static const struct xfs_defer_op_type xfs_rmap_update_defer_type = {
-> +const struct xfs_defer_op_type xfs_rmap_update_defer_type = {
->  	.type		= XFS_DEFER_OPS_TYPE_RMAP,
->  	.max_items	= XFS_RUI_MAX_FAST_EXTENTS,
->  	.diff_items	= xfs_rmap_update_diff_items,
-> @@ -256,10 +257,3 @@ static const struct xfs_defer_op_type xfs_rmap_update_defer_type = {
->  	.finish_cleanup = xfs_rmap_update_finish_cleanup,
->  	.cancel_item	= xfs_rmap_update_cancel_item,
->  };
-> -
-> -/* Register the deferred op type. */
-> -void
-> -xfs_rmap_update_init_defer_op(void)
-> -{
-> -	xfs_defer_init_op_type(&xfs_rmap_update_defer_type);
-> -}
-> 
+With the clarification that MAP_SYNC implies "cpu cache flush to
+persistent memory page-cache *or* dax to persistent memory" I think
+all of the concerns are addressed. I was conflating MAP_DIRECT as "no
+page cache indirection", but the indirection does not matter if the
+page cache itself is persisted.
