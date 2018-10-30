@@ -1,130 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:36616 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728698AbeKAAg1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Oct 2018 20:36:27 -0400
-Date: Wed, 31 Oct 2018 08:33:05 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: flush CoW fork reservations before processing quota
- get request
-Message-ID: <20181031153305.GO4135@magnolia>
-References: <20181023064808.23374-1-chandan@linux.vnet.ibm.com>
+Received: from sandeen.net ([63.231.237.45]:38374 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726108AbeJ3V3o (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 30 Oct 2018 17:29:44 -0400
+Subject: Re: [PATCH 0/5] v4 Try to squash metadump data leaks
+References: <20181026201943.24131-1-stefanrin@gmail.com>
+ <3e653734-6470-3160-58e8-5bdf866dbd87@sandeen.net>
+ <5228ed5f-b238-1596-a829-6bf482da7e2b@sandeen.net>
+ <CAAxjCExbUX1hDDV_0yK5Uu1eGf3aC8XT0CN-eL66+9GNDtdRVg@mail.gmail.com>
+ <4f1f1db3-8689-dff1-3845-0a3e582fd849@sandeen.net>
+ <CAAxjCEzE9dkTHQ7hZuUnTpNMCs4AzusFKyxejy1h8ZMXz3n8Qg@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <f003934c-025f-845c-6836-36f5b4a7e10f@sandeen.net>
+Date: Tue, 30 Oct 2018 07:36:26 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181023064808.23374-1-chandan@linux.vnet.ibm.com>
+In-Reply-To: <CAAxjCEzE9dkTHQ7hZuUnTpNMCs4AzusFKyxejy1h8ZMXz3n8Qg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+To: Stefan Ring <stefanrin@gmail.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Oct 23, 2018 at 12:18:08PM +0530, Chandan Rajendra wrote:
-> generic/305 fails on a 64k block sized filesystem due to the following
-> interaction,
-> 
-> 1. We are writing 8 blocks (i.e. [0, 512k-1]) of data to a 1 MiB file.
-> 2. XFS reserves 32 blocks of space in the CoW fork.
->    xfs_bmap_extsize_align() calculates XFS_DEFAULT_COWEXTSZ_HINT (32
->    blocks) as the number of blocks to be reserved.
-> 3. The reserved space in the range [1M(i.e. i_size), 1M + 16
->    blocks] is  freed by __fput(). This corresponds to freeing "eof
->    blocks" i.e. space reserved beyond EOF of a file.
-> 
-> The reserved space to which data was never written i.e. [9th block,
-> 1M(EOF)], remains reserved in the CoW fork until either the CoW block
-> reservation trimming worker gets invoked or the filesystem is
-> unmounted.
-> 
-> This commit fixes the issue by freeing unused CoW block reservations
-> whenever quota numbers are requested by userspace application.
-> 
-> Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
-> ---
-> 
-> PS: With the above patch, the tests xfs/214 & xfs/440 fail because the
-> value passed to xfs_io's cowextsize does not have any effect when CoW
-> fork reservations are flushed before querying for quota usage numbers.
 
-Hmmm.  I restarted looking into all the weird quota count mismatches in
-xfstests and noticed (with a generous amount of trace_printks) that most
-of the discrepancies can be traced to speculative preallocations in the
-cow fork that don't get cleaned out.  So we're on the same page. :)
 
-I thought about enhancing the XFS_IOC_FREE_EOFBLOCKS ioctl with a new
-mode to clean out CoW stuff too, but then I started thinking about what
-_check_quota_usage is actually looking for, and realized that (for xfs
-anyway) it compares an aged quota report (reflective of thousands of
-individual fs ops) against a freshly quotacheck'd quota report to look
-for accounting leaks.
-
-Then I tried replacing the $XFS_SPACEMAN_PROG -c 'prealloc -s' call in
-_check_quota_usage with a umount/mount cycle so that we know we've
-cleaned out all the reservations and *poof* the discrepancies all went
-away.  The test is still useful since we're comparing the accumulated
-quota counts against freshly computed counts, but now we know that we've
-cleaned out any speculative preallocations that xfs might have decided
-to try (assuming xfs never changes behavior to speculate on a fresh
-mount).
-
-It's awfully tempting to just leave it that way... but what do you
-think?  I think it's a better solution than forcing /every/ quota
-report to iterate the in-core inodes looking for cow blocks to dump.
-
-Granted maybe we still want the ioctl to do it for us?  Though that
-could get tricky since written extents in the cow fork represent writes
-in progress and can't ever be removed except by xfs_inactive.
-
---D
-
-> fs/xfs/xfs_quotaops.c | 13 +++++++++++++
->  1 file changed, 13 insertions(+)
+On 10/30/18 7:29 AM, Stefan Ring wrote:
+> On Sun, Oct 28, 2018 at 6:13 PM Eric Sandeen <sandeen@sandeen.net> wrote:
+>> Check patch 2 as well, the "break;" is also causing corruption I think,
+>> and it should probably just be a no-op ";"
 > 
-> diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
-> index a7c0c65..9236a38 100644
-> --- a/fs/xfs/xfs_quotaops.c
-> +++ b/fs/xfs/xfs_quotaops.c
-> @@ -218,14 +218,21 @@ xfs_fs_get_dqblk(
->  	struct kqid		qid,
->  	struct qc_dqblk		*qdq)
->  {
-> +	int			ret;
->  	struct xfs_mount	*mp = XFS_M(sb);
->  	xfs_dqid_t		id;
-> +	struct xfs_eofblocks	eofb = { 0 };
->  
->  	if (!XFS_IS_QUOTA_RUNNING(mp))
->  		return -ENOSYS;
->  	if (!XFS_IS_QUOTA_ON(mp))
->  		return -ESRCH;
->  
-> +	eofb.eof_flags = XFS_EOF_FLAGS_SYNC;
-> +	ret = xfs_icache_free_cowblocks(mp, &eofb);
-> +	if (ret)
-> +		return ret;
-> +
->  	id = from_kqid(&init_user_ns, qid);
->  	return xfs_qm_scall_getquota(mp, id, xfs_quota_type(qid.type), qdq);
->  }
-> @@ -240,12 +247,18 @@ xfs_fs_get_nextdqblk(
->  	int			ret;
->  	struct xfs_mount	*mp = XFS_M(sb);
->  	xfs_dqid_t		id;
-> +	struct xfs_eofblocks	eofb = { 0 };
->  
->  	if (!XFS_IS_QUOTA_RUNNING(mp))
->  		return -ENOSYS;
->  	if (!XFS_IS_QUOTA_ON(mp))
->  		return -ESRCH;
->  
-> +	eofb.eof_flags = XFS_EOF_FLAGS_SYNC;
-> +	ret = xfs_icache_free_cowblocks(mp, &eofb);
-> +	if (ret)
-> +		return ret;
-> +
->  	id = from_kqid(&init_user_ns, *qid);
->  	ret = xfs_qm_scall_getquota_next(mp, &id, xfs_quota_type(qid->type),
->  			qdq);
-> -- 
-> 2.9.5
-> 
+> Sorry about that. I think it's more than that. The single_fsb function
+> takes care to only write something out when there is something to
+> write and to only recalculate the crc when there has been a change.
+> I'd like to carry over this spirit, but I have the impression that in
+> the end the two functions would become so similar that they will just
+> merge into one.
+
+I think the "recalculate crc" flagging is a little inconsistent, tbh - 
+or maybe I should say it consistently recalculates it more often than it
+needs to?  It probably makes sense to follow the existing examples of
+when it's set, and if there's any cleanup/optimization to do, that can
+be done later.
+
+-Eric
