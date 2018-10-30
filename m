@@ -1,69 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wm1-f52.google.com ([209.85.128.52]:39903 "EHLO
-        mail-wm1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727636AbeJ0E6m (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 27 Oct 2018 00:58:42 -0400
-Received: by mail-wm1-f52.google.com with SMTP id y144-v6so2532307wmd.4
-        for <linux-xfs@vger.kernel.org>; Fri, 26 Oct 2018 13:20:17 -0700 (PDT)
-Received: from dyn.cm.kabsi.at (h081217199198.dyn.cm.kabsi.at. [81.217.199.198])
-        by smtp.gmail.com with ESMTPSA id 193-v6sm7669219wmj.21.2018.10.26.13.20.14
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 26 Oct 2018 13:20:15 -0700 (PDT)
-From: Stefan Ring <stefanrin@gmail.com>
-Subject: [PATCH 5/5] xfs_metadump: Zap dev inodes
-Date: Fri, 26 Oct 2018 22:19:43 +0200
-Message-Id: <20181026201943.24131-6-stefanrin@gmail.com>
-In-Reply-To: <20181026201943.24131-1-stefanrin@gmail.com>
-References: <20181026201943.24131-1-stefanrin@gmail.com>
+Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:63819 "EHLO
+        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727151AbeJ3UNy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Oct 2018 16:13:54 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1gHS4k-0005br-TH
+        for linux-xfs@vger.kernel.org; Tue, 30 Oct 2018 22:20:47 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1gHS4k-0001jZ-Rn
+        for linux-xfs@vger.kernel.org; Tue, 30 Oct 2018 22:20:46 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 2/7] repair: don't dirty inodes which are not unlinked
+Date: Tue, 30 Oct 2018 22:20:38 +1100
+Message-Id: <20181030112043.6034-3-david@fromorbit.com>
+In-Reply-To: <20181030112043.6034-1-david@fromorbit.com>
+References: <20181030112043.6034-1-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
----
- db/metadump.c | 22 +++++++++++++++++++++-
- 1 file changed, 21 insertions(+), 1 deletion(-)
+From: Dave Chinner <dchinner@redhat.com>
 
-diff --git a/db/metadump.c b/db/metadump.c
-index 39183fb7..bdc6f2f4 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -2269,6 +2269,24 @@ process_inode_data(
- 	return 1;
- }
- 
-+static int
-+process_dev_inode(
-+	xfs_dinode_t		*dip)
-+{
-+	if (XFS_DFORK_NEXTENTS(dip, XFS_ATTR_FORK) ||
-+	    XFS_DFORK_NEXTENTS(dip, XFS_DATA_FORK)) {
-+		if (show_warnings)
-+			print_warning("inode %llu has unexpected extents",
-+				      (unsigned long long)cur_ino);
-+		return 0;
-+	} else {
-+		int used = XFS_DFORK_DPTR(dip) - (char*)dip;
-+
-+		memset(XFS_DFORK_DPTR(dip), 0, mp->m_sb.sb_inodesize - used);
-+		return 1;
-+	}
-+}
-+
- /*
-  * when we process the inode, we may change the data in the data and/or
-  * attribute fork if they are in short form and we are obfuscating names.
-@@ -2321,7 +2339,9 @@ process_inode(
- 		case S_IFREG:
- 			success = process_inode_data(dip, TYP_DATA);
- 			break;
--		default: ;
-+		default:
-+			success = process_dev_inode(dip);
-+			break;
+I noticed phase 4 writing back lots of inode buffers during recent
+testing. The recent rework of clear_inode() in commit 0724d0f4cb53
+("xfs_repair: clear_dinode should simply clear, not check contents")
+accidentally caught a call to clear_inode_unlinked() as well,
+resulting in all inodes being marked dirty whether then needed
+updating or not.
+
+Fix it by reverting the erroneous hunk and adding warnings so taht
+this corruption is no longer silently fixed.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ repair/dinode.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/repair/dinode.c b/repair/dinode.c
+index 379f85cf1268..90400128d4bb 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -2675,9 +2675,15 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
+ 	 * we're going to find.  check_dups is set to 1 only during
+ 	 * phase 4.  Ugly.
+ 	 */
+-	if (check_dups && !no_modify) {
+-		clear_dinode_unlinked(mp, dino);
+-		*dirty += 1;
++	if (check_dups && clear_dinode_unlinked(mp, dino)) {
++		if (no_modify) {
++			do_warn(
++	_("Would clear unlinked_next in inode %" PRIu64 "\n"), lino);
++		} else  {
++			do_warn(
++	_("Cleared unlinked_next in inode %" PRIu64 "\n"), lino);
++			*dirty += 1;
++		}
  	}
- 	nametable_clear();
  
+ 	/* set type and map type info */
 -- 
-2.14.5
+2.19.1
