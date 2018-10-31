@@ -1,53 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52230 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725930AbeJKET1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 Oct 2018 00:19:27 -0400
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfsprogs: don't include all xfs headers just for crc32
-Message-ID: <e1259a8b-b5aa-cfa2-aeab-13d63757d7a5@redhat.com>
-Date: Wed, 10 Oct 2018 15:55:32 -0500
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:45538 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725970AbeKAHnA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Nov 2018 03:43:00 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id C2DA82BB6E
+        for <linux-xfs@vger.kernel.org>; Wed, 31 Oct 2018 22:42:54 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 201577] [xfstests generic/070]: XFS corruption and Oops when
+ setxattr on 64k blocksize XFS
+Date: Wed, 31 Oct 2018 22:42:54 +0000
+Message-ID: <bug-201577-201763-k2wEXF0DfO@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-201577-201763@https.bugzilla.kernel.org/>
+References: <bug-201577-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Cc: Brian Norris <briannorris@chromium.org>
+To: linux-xfs@vger.kernel.org
 
-Brian Norris reported that "The $BUILD_CC toolchain might have an
-older set of Linux headers than the $CC toolchain. It's generally
-unsafe to try to build both with the same definitions, but in
-particular, this one can cause compilation failures in the local
-crc32selftest build: [failure to find fsmap.h]"
+https://bugzilla.kernel.org/show_bug.cgi?id=201577
 
-It seems like the most straightforward thing to do here is include
-a specific set of system headers, instead of pulling in the whole
-xfs.h header chain which has multiple tests and definitions in
-place for headers that may or may not be there during the build.
+--- Comment #1 from Dave Chinner (david@fromorbit.com) ---
+On Wed, Oct 31, 2018 at 07:34:49AM +0000, bugzilla-daemon@bugzilla.kernel.org
+wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=201577
+> 
+>             Bug ID: 201577
+>            Summary: [xfstests generic/070]: XFS corruption and Oops when
+>                     setxattr on 64k blocksize XFS
+......
+> How reproducible:
+> nearly 100% on 64k blocksize XFS on ppc64le
+> 
+> Additional info:
+> Can't reproduce this bug on 4k blocksize XFS
 
-Reported-by: Brian Norris <briannorris@chromium.org>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+I saw both these (the corruption and the assert on shutdown) a few
+days ago on a 4k block size filesystem. Not reproducable, though,
+but it doesn't have anything specifically to do with 64k block size.
 
-Brian, here's try #3, does this also work for you?
+What kernel are you running, exactly? A plain 4.19 release kernel?
 
-diff --git a/libfrog/crc32.c b/libfrog/crc32.c
-index 1d52f68..220b33b 100644
---- a/libfrog/crc32.c
-+++ b/libfrog/crc32.c
-@@ -29,8 +29,11 @@
-  * match the hardware acceleration available on Intel CPUs.
-  */
- 
-+#include <inttypes.h>
-+#include <asm/types.h>
-+#include <sys/time.h>
- #include "platform_defs.h"
--#include "xfs.h"
-+/* For endian conversion routines */
- #include "xfs_arch.h"
- #include "crc32defs.h"
- 
+Cheers,
+
+Dave.
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
