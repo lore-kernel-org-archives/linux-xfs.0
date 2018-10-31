@@ -1,601 +1,312 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:45052 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725918AbeJRGnq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Oct 2018 02:43:46 -0400
-Subject: [PATCH 13/29] vfs: make remap_file_range functions take and return
- bytes completed
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 17 Oct 2018 15:45:44 -0700
-Message-ID: <153981634479.5568.15302566721707849625.stgit@magnolia>
-In-Reply-To: <153981625504.5568.2708520119290577378.stgit@magnolia>
-References: <153981625504.5568.2708520119290577378.stgit@magnolia>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:59452 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725955AbeJaQbt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Oct 2018 12:31:49 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 2E4F72A64B
+        for <linux-xfs@vger.kernel.org>; Wed, 31 Oct 2018 07:34:51 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 201577] New: [xfstests generic/070]: XFS corruption and Oops
+ when setxattr on 64k blocksize XFS
+Date: Wed, 31 Oct 2018 07:34:49 +0000
+Message-ID: <bug-201577-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: david@fromorbit.com, darrick.wong@oracle.com
-Cc: sandeen@redhat.com, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=201577
 
-Change the remap_file_range functions to take a number of bytes to
-operate upon and return the number of bytes they operated on.  This is a
-requirement for allowing fs implementations to return short clone/dedupe
-results to the user, which will enable us to obey resource limits in a
-graceful manner.
+            Bug ID: 201577
+           Summary: [xfstests generic/070]: XFS corruption and Oops when
+                    setxattr on 64k blocksize XFS
+           Product: File System
+           Version: 2.5
+    Kernel Version: v4.19
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: XFS
+          Assignee: filesystem_xfs@kernel-bugs.kernel.org
+          Reporter: zlang@redhat.com
+        Regression: No
 
-A subsequent patch will enable copy_file_range to signal to the
-->clone_file_range implementation that it can handle a short length,
-which will be returned in the function's return value.  For now the
-short return is not implemented anywhere so the behavior won't change --
-either copy_file_range manages to clone the entire range or it tries an
-alternative.
+Description of problem:
+xfstests generic/070 fails on kernel 4.19, when test on 64k blocksize XFS:
+# ./check generic/070
+FSTYP         -- xfs (non-debug)
+PLATFORM      -- Linux/ppc64le ibm-p9z-06-lp1 4.19.0+
+MKFS_OPTIONS  -- -f -b size=65536 /dev/sda5
+MOUNT_OPTIONS -- -o context=system_u:object_r:nfs_t:s0 /dev/sda5
+/mnt/xfstests/mnt2
 
-Neither clone ioctl can take advantage of this, alas.
+generic/070 3s ... _check_xfs_filesystem: filesystem on /dev/sda3 has dirty log
+(see /var/lib/xfstests/results//generic/070.full for details)
+_check_xfs_filesystem: filesystem on /dev/sda3 is inconsistent (c)
+(see /var/lib/xfstests/results//generic/070.full for details)
+_check_xfs_filesystem: filesystem on /dev/sda3 is inconsistent (r)
+(see /var/lib/xfstests/results//generic/070.full for details)
+- output mismatch (see /var/lib/xfstests/results//generic/070.out.bad)
+    --- tests/generic/070.out   2018-10-30 02:53:01.357248735 -0400
+    +++ /var/lib/xfstests/results//generic/070.out.bad  2018-10-31
+03:23:51.821967706 -0400
+    @@ -1 +1,2 @@
+     QA output created by 070
+    +rm: cannot remove '/mnt/xfstests/mnt1/fsstress': Is a directory
+    ...
+    (Run 'diff -u tests/generic/070.out
+/var/lib/xfstests/results//generic/070.out.bad'  to see the entire diff)
+Ran: generic/070
+Failures: generic/070
+Failed 1 of 1 tests
+# dmesg
+[ 1737.798270] run fstests generic/070 at 2018-10-31 03:23:47
+[ 1740.657734] XFS (sda3): Metadata corruption detected at
+xfs_attr3_leaf_verify+0x2f0/0x320 [xfs], xfs_attr3_leaf block 0x2d05a00 
+[ 1740.657755] XFS (sda3): Unmount and run xfs_repair
+[ 1740.657767] XFS (sda3): First 128 bytes of corrupted metadata buffer:
+[ 1740.657779] 00000000b4bb4297: 00 00 00 00 00 00 00 00 3b ee 00 00 00 00 00
+00  ........;.......
+[ 1740.657791] 000000005ec77e26: 00 00 00 00 02 d0 5a 00 00 00 00 00 00 00 00
+00  ......Z.........
+[ 1740.657803] 0000000015938018: 21 98 e8 b4 fd de 4c 07 bc ea 3c e5 ae b4 7c
+48  !.....L...<...|H
+[ 1740.657815] 000000004bb71ab9: 00 00 00 00 03 00 05 26 00 04 0e 1c ee 28 01
+00  .......&.....(..
+[ 1740.657827] 00000000bf96d940: 00 70 ed b8 ff f4 00 0c fb e4 03 b0 00 00 00
+00  .p..............
+[ 1740.657839] 000000003dbe20a7: 0c 38 5c 34 fa c4 01 00 0c 38 73 31 ee 28 01
+00  .8\4.....8s1.(..
+[ 1740.657850] 00000000512e45c5: 0c 38 b1 b2 ff 94 01 00 cd 3a 75 d6 ff c4 05
+00  .8.......:u.....
+[ 1740.657863] 000000008c9563dc: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00  ................
+[ 1740.705766] XFS (sda3): xfs_do_force_shutdown(0x8) called from line 1453 of
+file fs/xfs/xfs_buf.c. Return address = 00000000debd573a
+[ 1740.705783] XFS (sda3): Corruption of in-memory data detected.  Shutting
+down filesystem
+[ 1740.705795] XFS (sda3): Please unmount the filesystem and rectify the
+problem(s)
+[ 1741.373384] XFS (sda3): Unmounting Filesystem
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Amir Goldstein <amir73il@gmail.com>
----
- Documentation/filesystems/vfs.txt |    6 ++---
- fs/btrfs/ctree.h                  |    6 ++---
- fs/btrfs/ioctl.c                  |   13 ++++++----
- fs/cifs/cifsfs.c                  |    6 ++---
- fs/ioctl.c                        |   10 +++++++-
- fs/nfs/nfs4file.c                 |    6 ++---
- fs/nfsd/vfs.c                     |    8 +++++-
- fs/ocfs2/file.c                   |   16 ++++++------
- fs/ocfs2/refcounttree.c           |    2 +-
- fs/ocfs2/refcounttree.h           |    2 +-
- fs/overlayfs/copy_up.c            |    6 ++---
- fs/overlayfs/file.c               |   12 +++++----
- fs/read_write.c                   |   49 ++++++++++++++++++++-----------------
- fs/xfs/xfs_file.c                 |    9 +++++--
- fs/xfs/xfs_reflink.c              |    4 ++-
- fs/xfs/xfs_reflink.h              |    2 +-
- include/linux/fs.h                |   27 +++++++++++---------
- mm/filemap.c                      |    2 +-
- 18 files changed, 106 insertions(+), 80 deletions(-)
+If keep running, run generic/070 again (after mkfs), it even cause a Assertion
+failure and kernel Oops:
+# # mkfs.xfs -f -b size=65536 /dev/sda3
+meta-data=/dev/sda3              isize=512    agcount=4, agsize=122880 blks
+         =                       sectsz=4096  attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=0
+         =                       reflink=1
+data     =                       bsize=65536  blocks=491520, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=65536  ascii-ci=0, ftype=1
+log      =internal log           bsize=65536  blocks=951, version=2
+         =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=65536  blocks=0, rtextents=0
+# mkfs.xfs -f -b size=65536 /dev/sda5
+meta-data=/dev/sda5              isize=512    agcount=4, agsize=122880 blks
+         =                       sectsz=4096  attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=0
+         =                       reflink=1
+data     =                       bsize=65536  blocks=491520, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=65536  ascii-ci=0, ftype=1
+log      =internal log           bsize=65536  blocks=951, version=2
+         =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=65536  blocks=0, rtextents=0
+# ./check generic/070
+FSTYP         -- xfs (non-debug)
+PLATFORM      -- Linux/ppc64le ibm-p9z-06-lp1 4.19.0+
+MKFS_OPTIONS  -- -f -b size=65536 /dev/sda5
+MOUNT_OPTIONS -- -o context=system_u:object_r:nfs_t:s0 /dev/sda5
+/mnt/xfstests/mnt2
 
+generic/070 3s ... umount: /mnt/xfstests/mnt1: target is busy.
+_check_xfs_filesystem: filesystem on /dev/sda3 has dirty log
+(see /var/lib/xfstests/results//generic/070.full for details)
+_check_xfs_filesystem: filesystem on /dev/sda3 is inconsistent (c)
+(see /var/lib/xfstests/results//generic/070.full for details)
+_check_xfs_filesystem: filesystem on /dev/sda3 is inconsistent (r)
+(see /var/lib/xfstests/results//generic/070.full for details)
+_check_dmesg: something found in dmesg (see
+/var/lib/xfstests/results//generic/070.dmesg)
+- output mismatch (see /var/lib/xfstests/results//generic/070.out.bad)
+    --- tests/generic/070.out   2018-10-30 02:53:01.357248735 -0400
+    +++ /var/lib/xfstests/results//generic/070.out.bad  2018-10-31
+03:28:46.923211040 -0400
+    @@ -1 +1,2 @@
+     QA output created by 070
+    +rm: cannot remove '/mnt/xfstests/mnt1/fsstress': Is a directory
+    ...
+    (Run 'diff -u tests/generic/070.out
+/var/lib/xfstests/results//generic/070.out.bad'  to see the entire diff)
+Ran: generic/070
+Failures: generic/070
+Failed 1 of 1 tests
+# dmesg
+[ 2034.152185] run fstests generic/070 at 2018-10-31 03:28:44                  
+                                                                               
+                      [40/9430]
+[ 2036.434743] XFS (sda3): Metadata corruption detected at
+xfs_attr3_leaf_verify+0x2f0/0x320 [xfs], xfs_attr3_leaf block 0xf00980          
+[ 2036.434759] XFS (sda3): Unmount and run xfs_repair                           
+[ 2036.434766] XFS (sda3): First 128 bytes of corrupted metadata buffer:        
+[ 2036.434774] 0000000023a43335: 00 00 00 00 00 00 00 00 3b ee 00 00 00 00 00
+00  ........;.......                                                            
+[ 2036.434782] 0000000049638a65: 00 00 00 00 00 f0 09 80 00 00 00 00 00 00 00
+00  ................                                                            
+[ 2036.434790] 00000000f96e216a: 94 89 69 36 6b 3f 43 85 87 94 d9 a6 ca 87 65
+12  ..i6k?C.......e.                                                            
+[ 2036.434798] 00000000656aab6b: 00 00 00 00 01 00 05 12 00 02 01 c4 fe 2c 01
+00  .............,..                                                            
+[ 2036.434806] 00000000241e6087: 00 60 fd cc ff f0 00 10 00 00 00 00 00 00 00
+00  .`..............                                                            
+[ 2036.434813] 0000000051fe854f: 0c 2e 18 b9 fe 2c 01 00 cd 3a 75 d6 ff c0 05
+00  .....,...:u.....                                                            
+[ 2036.434821] 0000000088866c7a: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00  ................                                                            
+[ 2036.434829] 000000009f826903: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00  ................                                                            
+[ 2036.451454] XFS (sda3): xfs_do_force_shutdown(0x8) called from line 1453 of
+file fs/xfs/xfs_buf.c. Return address = 00000000debd573a                        
+[ 2036.451470] XFS (sda3): Corruption of in-memory data detected.  Shutting
+down filesystem                                                                 
+[ 2036.451482] XFS (sda3): Please unmount the filesystem and rectify the
+problem(s)                                                                      
+[ 2036.451853] XFS: Assertion failed: bp->b_transp == tp, file:
+fs/xfs/xfs_trans_buf.c, line: 385                                               
+[ 2036.452007] WARNING: CPU: 3 PID: 3096 at fs/xfs/xfs_message.c:93
+asswarn+0x38/0x54 [xfs]                                                         
+[ 2036.452015] Modules linked in: sunrpc sg pseries_rng xfs libcrc32c sd_mod
+ibmvscsi scsi_transport_srp ibmveth                                             
+[ 2036.452030] CPU: 3 PID: 3096 Comm: fsstress Not tainted 4.19.0+ #1           
+[ 2036.452037] NIP:  d000000008def69c LR: d000000008def69c CTR:
+c0000000006dc990                                                                
+[ 2036.452044] REGS: c0000007b776b690 TRAP: 0700   Not tainted  (4.19.0+)       
+[ 2036.452050] MSR:  800000010282b033 <SF,VEC,VSX,EE,FP,ME,IR,DR,RI,LE,TM[E]> 
+CR: 28004428  XER: 00000003                                                     
+[ 2036.452064] CFAR: d000000008def394 IRQMASK: 0                                
+[ 2036.452064] GPR00: d000000008def69c c0000007b776b918 d000000008e77800
+ffffffffffffffea                                                                
+[ 2036.452064] GPR04: 000000000000000a c0000007b776b818 d000000008e12f00
+0000000000000000                                                                
+[ 2036.452064] GPR08: ffffffffffffffc0 0000000000000000 0000000000000000
+0000000000000000                                                                
+[ 2036.452064] GPR12: c0000000006dc990 c00000001ecaae80 0000000000000000
+0000000000000000                                                                
+[ 2036.452064] GPR16: 0000000010030a40 00000000100121d0 0000000000000001
+0000000010030b7c                                                                
+[ 2036.452064] GPR20: 0000000000000001 0000000010005a70 0000000010030c08
+000000000000024f                                                                
+[ 2036.452064] GPR24: 00000100370a3700 0000000000000000 c0000007c52fc000
+fffffffffffffffb                                                                
+[ 2036.452064] GPR28: 0000000000000000 c0000007f31cc900 c0000007e10d3100
+0000000000000000                                                                
+[ 2036.452144] NIP [d000000008def69c] asswarn+0x38/0x54 [xfs]                   
+[ 2036.452187] LR [d000000008def69c] asswarn+0x38/0x54 [xfs]                    
+[ 2036.452196] Call Trace:                                                      
+[ 2036.452232] [c0000007b776b918] [d000000008def69c] asswarn+0x38/0x54 [xfs]
+(unreliable)                                                                    
+[ 2036.452266] [c0000007b776b978] [d000000008dd0498]
+xfs_trans_brelse+0x2d0/0x3c0 [xfs]                                              
+[ 2036.452295] [c0000007b776b9c8] [d000000008ce3314] xfs_attr_set+0x31c/0x3a0
+[xfs]
+[ 2036.452329] [c0000007b776bac8] [d000000008da9720] xfs_xattr_set+0x78/0x130
+[xfs]
+[ 2036.452338] [c0000007b776bb08] [c0000000004cbeac] __vfs_setxattr+0x9c/0x110
+[ 2036.452346] [c0000007b776bb68] [c0000000004cdacc]
+__vfs_setxattr_noperm+0xbc/0x320
+[ 2036.452354] [c0000007b776bbc8] [c0000000004cde1c] vfs_setxattr+0xec/0x130
+[ 2036.452361] [c0000007b776bc28] [c0000000004ce168] setxattr+0x308/0x6a0
+[ 2036.452368] [c0000007b776bd88] [c0000000004ce758] path_setxattr+0x128/0x150
+[ 2036.452375] [c0000007b776be08] [c0000000004ce7e8] sys_lsetxattr+0x28/0x40
+[ 2036.452383] [c0000007b776be28] [c00000000000b488] system_call+0x5c/0x70
+[ 2036.452389] Instruction dump:
+[ 2036.452395] 7c0802a6 60000000 7c0802a6 7c862378 3c820000 e884cd78 7ca72b78
+7c651b78
+[ 2036.452406] 38600000 f8010010 f821ffa1 4bfffc25 <0fe00000> 38210060 e8010010
+7c0803a6
+[ 2036.452417] irq event stamp: 898510
+[ 2036.452424] hardirqs last  enabled at (898509): [<c0000000001e1654>]
+console_unlock+0x664/0x8b0
+[ 2036.452433] hardirqs last disabled at (898510): [<c000000000008ea8>]
+program_check_common+0x138/0x150
+[ 2036.452462] softirqs last  enabled at (897034): [<d000000008d68948>]
+xfs_buf_find+0x7b0/0xf90 [xfs]
+[ 2036.452494] softirqs last disabled at (897032): [<d000000008d6859c>]
+xfs_buf_find+0x404/0xf90 [xfs]
+[ 2036.452502] ---[ end trace 09823b36a21fc04c ]---
+[ 2036.452512] Unable to handle kernel paging request for data at address
+0x00000038
+[ 2036.452520] Faulting instruction address: 0xd000000008dd0258
+[ 2036.452527] Oops: Kernel access of bad area, sig: 11 [#1]
+[ 2036.452531] LE SMP NR_CPUS=2048 NUMA pSeries
+[ 2036.452537] Modules linked in: sunrpc sg pseries_rng xfs libcrc32c sd_mod
+ibmvscsi scsi_transport_srp ibmveth
+[ 2036.452548] CPU: 3 PID: 3096 Comm: fsstress Tainted: G        W        
+4.19.0+ #1
+[ 2036.452554] NIP:  d000000008dd0258 LR: d000000008dd0514 CTR:
+c0000000001f57f0
+[ 2036.452560] REGS: c0000007b776b6f0 TRAP: 0300   Tainted: G        W         
+(4.19.0+)
+[ 2036.452565] MSR:  800000010280b033 <SF,VEC,VSX,EE,FP,ME,IR,DR,RI,LE,TM[E]> 
+CR: 28004424  XER: 20040003
+[ 2036.452576] CFAR: c00000000000e038 DAR: 0000000000000038 DSISR: 40000000
+IRQMASK: 0
+[ 2036.452576] GPR00: d000000008dd0514 c0000007b776b978 d000000008e77800
+0000000000000001
+[ 2036.452576] GPR04: c0000000019dac30 c0000007b776b818 d000000008e12f00
+0000000000000000
+[ 2036.452576] GPR08: c0000000019dae00 0000000000000000 c0000007b7768000
+d000000008df18e8
+[ 2036.452576] GPR12: c0000000001f57f0 c00000001ecaae80 0000000000000000
+0000000000000000
+[ 2036.452576] GPR16: 0000000010030a40 00000000100121d0 0000000000000001
+0000000010030b7c
+[ 2036.452576] GPR20: 0000000000000001 0000000010005a70 0000000010030c08
+000000000000024f
+[ 2036.452576] GPR24: 00000100370a3700 0000000000000000 c0000007c52fc000
+c000000001b8a424
+[ 2036.452576] GPR28: c000000001b89de0 c0000007f31cc900 d000000008e9f204
+0000000000000000
+[ 2036.452653] NIP [d000000008dd0258] xfs_trans_brelse+0x90/0x3c0 [xfs]
+[ 2036.452686] LR [d000000008dd0514] xfs_trans_brelse+0x34c/0x3c0 [xfs]
+[ 2036.452691] Call Trace:
+[ 2036.452721] [c0000007b776b978] [d000000008dd0514]
+xfs_trans_brelse+0x34c/0x3c0 [xfs] (unreliable)
+[ 2036.452744] [c0000007b776b9c8] [d000000008ce3314] xfs_attr_set+0x31c/0x3a0
+[xfs]
+[ 2036.452778] [c0000007b776bac8] [d000000008da9720] xfs_xattr_set+0x78/0x130
+[xfs]
+[ 2036.452785] [c0000007b776bb08] [c0000000004cbeac] __vfs_setxattr+0x9c/0x110
+[ 2036.452791] [c0000007b776bb68] [c0000000004cdacc]
+__vfs_setxattr_noperm+0xbc/0x320
+[ 2036.452797] [c0000007b776bbc8] [c0000000004cde1c] vfs_setxattr+0xec/0x130
+[ 2036.452803] [c0000007b776bc28] [c0000000004ce168] setxattr+0x308/0x6a0
+[ 2036.452809] [c0000007b776bd88] [c0000000004ce758] path_setxattr+0x128/0x150
+[ 2036.452815] [c0000007b776be08] [c0000000004ce7e8] sys_lsetxattr+0x28/0x40
+[ 2036.452821] [c0000007b776be28] [c00000000000b488] system_call+0x5c/0x70
+[ 2036.452826] Instruction dump:
+[ 2036.452831] eb9cec20 a12d0008 815b0000 7f8a4840 7d2807b4 409d02c4 5508ecf8
+552a06be
+[ 2036.452839] 7d3c402a 7d295436 71290001 408201cc <813f0038> 2f89123c 409e0280
+813f00a8
+[ 2036.452849] ---[ end trace 09823b36a21fc04d ]---
+[ 2036.455943]
+[ 2036.986931] XFS (sda5): Unmounting Filesystem
 
-diff --git a/Documentation/filesystems/vfs.txt b/Documentation/filesystems/vfs.txt
-index bb3183334ab9..8ba47d9d6cae 100644
---- a/Documentation/filesystems/vfs.txt
-+++ b/Documentation/filesystems/vfs.txt
-@@ -883,9 +883,9 @@ struct file_operations {
- 	unsigned (*mmap_capabilities)(struct file *);
- #endif
- 	ssize_t (*copy_file_range)(struct file *, loff_t, struct file *, loff_t, size_t, unsigned int);
--	int (*remap_file_range)(struct file *file_in, loff_t pos_in,
--				struct file *file_out, loff_t pos_out,
--				u64 len, unsigned int remap_flags);
-+	loff_t (*remap_file_range)(struct file *file_in, loff_t pos_in,
-+				   struct file *file_out, loff_t pos_out,
-+				   loff_t len, unsigned int remap_flags);
- 	int (*fadvise)(struct file *, loff_t, loff_t, int);
- };
- 
-diff --git a/fs/btrfs/ctree.h b/fs/btrfs/ctree.h
-index 124a05662fc2..771a961d77ad 100644
---- a/fs/btrfs/ctree.h
-+++ b/fs/btrfs/ctree.h
-@@ -3247,9 +3247,9 @@ int btrfs_dirty_pages(struct inode *inode, struct page **pages,
- 		      size_t num_pages, loff_t pos, size_t write_bytes,
- 		      struct extent_state **cached);
- int btrfs_fdatawrite_range(struct inode *inode, loff_t start, loff_t end);
--int btrfs_remap_file_range(struct file *file_in, loff_t pos_in,
--			   struct file *file_out, loff_t pos_out, u64 len,
--			   unsigned int remap_flags);
-+loff_t btrfs_remap_file_range(struct file *file_in, loff_t pos_in,
-+			      struct file *file_out, loff_t pos_out,
-+			      loff_t len, unsigned int remap_flags);
- 
- /* tree-defrag.c */
- int btrfs_defrag_leaves(struct btrfs_trans_handle *trans,
-diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c
-index bfd99c66723e..b0c513e10977 100644
---- a/fs/btrfs/ioctl.c
-+++ b/fs/btrfs/ioctl.c
-@@ -4328,10 +4328,12 @@ static noinline int btrfs_clone_files(struct file *file, struct file *file_src,
- 	return ret;
- }
- 
--int btrfs_remap_file_range(struct file *src_file, loff_t off,
--		struct file *dst_file, loff_t destoff, u64 len,
-+loff_t btrfs_remap_file_range(struct file *src_file, loff_t off,
-+		struct file *dst_file, loff_t destoff, loff_t len,
- 		unsigned int remap_flags)
- {
-+	int ret;
-+
- 	if (remap_flags & ~(REMAP_FILE_DEDUP | REMAP_FILE_ADVISORY))
- 		return -EINVAL;
- 
-@@ -4349,10 +4351,11 @@ int btrfs_remap_file_range(struct file *src_file, loff_t off,
- 			return -EINVAL;
- 		}
- 
--		return btrfs_extent_same(src, off, len, dst, destoff);
-+		ret = btrfs_extent_same(src, off, len, dst, destoff);
-+	} else {
-+		ret = btrfs_clone_files(dst_file, src_file, off, len, destoff);
- 	}
--
--	return btrfs_clone_files(dst_file, src_file, off, len, destoff);
-+	return ret < 0 ? ret : len;
- }
- 
- static long btrfs_ioctl_default_subvol(struct file *file, void __user *argp)
-diff --git a/fs/cifs/cifsfs.c b/fs/cifs/cifsfs.c
-index e8144d0dcde2..5ca71c6c8be2 100644
---- a/fs/cifs/cifsfs.c
-+++ b/fs/cifs/cifsfs.c
-@@ -975,8 +975,8 @@ const struct inode_operations cifs_symlink_inode_ops = {
- 	.listxattr = cifs_listxattr,
- };
- 
--static int cifs_remap_file_range(struct file *src_file, loff_t off,
--		struct file *dst_file, loff_t destoff, u64 len,
-+static loff_t cifs_remap_file_range(struct file *src_file, loff_t off,
-+		struct file *dst_file, loff_t destoff, loff_t len,
- 		unsigned int remap_flags)
- {
- 	struct inode *src_inode = file_inode(src_file);
-@@ -1029,7 +1029,7 @@ static int cifs_remap_file_range(struct file *src_file, loff_t off,
- 	unlock_two_nondirectories(src_inode, target_inode);
- out:
- 	free_xid(xid);
--	return rc;
-+	return rc < 0 ? rc : len;
- }
- 
- ssize_t cifs_file_copychunk_range(unsigned int xid,
-diff --git a/fs/ioctl.c b/fs/ioctl.c
-index 2005529af560..72537b68c272 100644
---- a/fs/ioctl.c
-+++ b/fs/ioctl.c
-@@ -223,6 +223,7 @@ static long ioctl_file_clone(struct file *dst_file, unsigned long srcfd,
- 			     u64 off, u64 olen, u64 destoff)
- {
- 	struct fd src_file = fdget(srcfd);
-+	loff_t cloned;
- 	int ret;
- 
- 	if (!src_file.file)
-@@ -230,7 +231,14 @@ static long ioctl_file_clone(struct file *dst_file, unsigned long srcfd,
- 	ret = -EXDEV;
- 	if (src_file.file->f_path.mnt != dst_file->f_path.mnt)
- 		goto fdput;
--	ret = vfs_clone_file_range(src_file.file, off, dst_file, destoff, olen);
-+	cloned = vfs_clone_file_range(src_file.file, off, dst_file, destoff,
-+				      olen);
-+	if (cloned < 0)
-+		ret = cloned;
-+	else if (olen && cloned != olen)
-+		ret = -EINVAL;
-+	else
-+		ret = 0;
- fdput:
- 	fdput(src_file);
- 	return ret;
-diff --git a/fs/nfs/nfs4file.c b/fs/nfs/nfs4file.c
-index ae5780ce41dc..46d691ba04bc 100644
---- a/fs/nfs/nfs4file.c
-+++ b/fs/nfs/nfs4file.c
-@@ -180,8 +180,8 @@ static long nfs42_fallocate(struct file *filep, int mode, loff_t offset, loff_t
- 	return nfs42_proc_allocate(filep, offset, len);
- }
- 
--static int nfs42_remap_file_range(struct file *src_file, loff_t src_off,
--		struct file *dst_file, loff_t dst_off, u64 count,
-+static loff_t nfs42_remap_file_range(struct file *src_file, loff_t src_off,
-+		struct file *dst_file, loff_t dst_off, loff_t count,
- 		unsigned int remap_flags)
- {
- 	struct inode *dst_inode = file_inode(dst_file);
-@@ -244,7 +244,7 @@ static int nfs42_remap_file_range(struct file *src_file, loff_t src_off,
- 		inode_unlock(src_inode);
- 	}
- out:
--	return ret;
-+	return ret < 0 ? ret : count;
- }
- #endif /* CONFIG_NFS_V4_2 */
- 
-diff --git a/fs/nfsd/vfs.c b/fs/nfsd/vfs.c
-index b53e76391e52..ac6cb6101cbe 100644
---- a/fs/nfsd/vfs.c
-+++ b/fs/nfsd/vfs.c
-@@ -541,8 +541,12 @@ __be32 nfsd4_set_nfs4_label(struct svc_rqst *rqstp, struct svc_fh *fhp,
- __be32 nfsd4_clone_file_range(struct file *src, u64 src_pos, struct file *dst,
- 		u64 dst_pos, u64 count)
- {
--	return nfserrno(vfs_clone_file_range(src, src_pos, dst, dst_pos,
--					     count));
-+	loff_t cloned;
-+
-+	cloned = vfs_clone_file_range(src, src_pos, dst, dst_pos, count);
-+	if (count && cloned != count)
-+		cloned = -EINVAL;
-+	return nfserrno(cloned < 0 ? cloned : 0);
- }
- 
- ssize_t nfsd_copy_file_range(struct file *src, u64 src_pos, struct file *dst,
-diff --git a/fs/ocfs2/file.c b/fs/ocfs2/file.c
-index 9809b0e5746f..fbaeafe44b5f 100644
---- a/fs/ocfs2/file.c
-+++ b/fs/ocfs2/file.c
-@@ -2527,18 +2527,18 @@ static loff_t ocfs2_file_llseek(struct file *file, loff_t offset, int whence)
- 	return offset;
- }
- 
--static int ocfs2_remap_file_range(struct file *file_in,
--				  loff_t pos_in,
--				  struct file *file_out,
--				  loff_t pos_out,
--				  u64 len,
--				  unsigned int remap_flags)
-+static loff_t ocfs2_remap_file_range(struct file *file_in, loff_t pos_in,
-+				     struct file *file_out, loff_t pos_out,
-+				     loff_t len, unsigned int remap_flags)
- {
-+	int ret;
-+
- 	if (remap_flags & ~(REMAP_FILE_DEDUP | REMAP_FILE_ADVISORY))
- 		return -EINVAL;
- 
--	return ocfs2_reflink_remap_range(file_in, pos_in, file_out, pos_out,
--					 len, remap_flags);
-+	ret = ocfs2_reflink_remap_range(file_in, pos_in, file_out, pos_out,
-+					len, remap_flags);
-+	return ret < 0 ? ret : len;
- }
- 
- const struct inode_operations ocfs2_file_iops = {
-diff --git a/fs/ocfs2/refcounttree.c b/fs/ocfs2/refcounttree.c
-index df9781567ec0..6a42c04ac0ab 100644
---- a/fs/ocfs2/refcounttree.c
-+++ b/fs/ocfs2/refcounttree.c
-@@ -4824,7 +4824,7 @@ int ocfs2_reflink_remap_range(struct file *file_in,
- 			      loff_t pos_in,
- 			      struct file *file_out,
- 			      loff_t pos_out,
--			      u64 len,
-+			      loff_t len,
- 			      unsigned int remap_flags)
- {
- 	struct inode *inode_in = file_inode(file_in);
-diff --git a/fs/ocfs2/refcounttree.h b/fs/ocfs2/refcounttree.h
-index d2c5f526edff..eb65c1d0843c 100644
---- a/fs/ocfs2/refcounttree.h
-+++ b/fs/ocfs2/refcounttree.h
-@@ -119,7 +119,7 @@ int ocfs2_reflink_remap_range(struct file *file_in,
- 			      loff_t pos_in,
- 			      struct file *file_out,
- 			      loff_t pos_out,
--			      u64 len,
-+			      loff_t len,
- 			      unsigned int remap_flags);
- 
- #endif /* OCFS2_REFCOUNTTREE_H */
-diff --git a/fs/overlayfs/copy_up.c b/fs/overlayfs/copy_up.c
-index 1cc797a08a5b..8750b7235516 100644
---- a/fs/overlayfs/copy_up.c
-+++ b/fs/overlayfs/copy_up.c
-@@ -125,6 +125,7 @@ static int ovl_copy_up_data(struct path *old, struct path *new, loff_t len)
- 	struct file *new_file;
- 	loff_t old_pos = 0;
- 	loff_t new_pos = 0;
-+	loff_t cloned;
- 	int error = 0;
- 
- 	if (len == 0)
-@@ -141,11 +142,10 @@ static int ovl_copy_up_data(struct path *old, struct path *new, loff_t len)
- 	}
- 
- 	/* Try to use clone_file_range to clone up within the same fs */
--	error = do_clone_file_range(old_file, 0, new_file, 0, len);
--	if (!error)
-+	cloned = do_clone_file_range(old_file, 0, new_file, 0, len);
-+	if (cloned == len)
- 		goto out;
- 	/* Couldn't clone, so now we try to copy the data */
--	error = 0;
- 
- 	/* FIXME: copy up sparse files efficiently */
- 	while (len) {
-diff --git a/fs/overlayfs/file.c b/fs/overlayfs/file.c
-index fffb36fd5920..6c3fec6168e9 100644
---- a/fs/overlayfs/file.c
-+++ b/fs/overlayfs/file.c
-@@ -434,14 +434,14 @@ enum ovl_copyop {
- 	OVL_DEDUPE,
- };
- 
--static ssize_t ovl_copyfile(struct file *file_in, loff_t pos_in,
-+static loff_t ovl_copyfile(struct file *file_in, loff_t pos_in,
- 			    struct file *file_out, loff_t pos_out,
--			    u64 len, unsigned int flags, enum ovl_copyop op)
-+			    loff_t len, unsigned int flags, enum ovl_copyop op)
- {
- 	struct inode *inode_out = file_inode(file_out);
- 	struct fd real_in, real_out;
- 	const struct cred *old_cred;
--	ssize_t ret;
-+	loff_t ret;
- 
- 	ret = ovl_real_fdget(file_out, &real_out);
- 	if (ret)
-@@ -489,9 +489,9 @@ static ssize_t ovl_copy_file_range(struct file *file_in, loff_t pos_in,
- 			    OVL_COPY);
- }
- 
--static int ovl_remap_file_range(struct file *file_in, loff_t pos_in,
--				struct file *file_out, loff_t pos_out,
--				u64 len, unsigned int remap_flags)
-+static loff_t ovl_remap_file_range(struct file *file_in, loff_t pos_in,
-+				   struct file *file_out, loff_t pos_out,
-+				   loff_t len, unsigned int remap_flags)
- {
- 	enum ovl_copyop op;
- 
-diff --git a/fs/read_write.c b/fs/read_write.c
-index b61bd3fc7154..356641afa487 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -1589,10 +1589,13 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
- 	 * more efficient if both clone and copy are supported (e.g. NFS).
- 	 */
- 	if (file_in->f_op->remap_file_range) {
--		ret = file_in->f_op->remap_file_range(file_in, pos_in,
--				file_out, pos_out, len, 0);
--		if (ret == 0) {
--			ret = len;
-+		loff_t cloned;
-+
-+		cloned = file_in->f_op->remap_file_range(file_in, pos_in,
-+				file_out, pos_out,
-+				min_t(loff_t, MAX_RW_COUNT, len), 0);
-+		if (cloned > 0) {
-+			ret = cloned;
- 			goto done;
- 		}
- 	}
-@@ -1686,11 +1689,12 @@ SYSCALL_DEFINE6(copy_file_range, int, fd_in, loff_t __user *, off_in,
- 	return ret;
- }
- 
--static int remap_verify_area(struct file *file, loff_t pos, u64 len, bool write)
-+static int remap_verify_area(struct file *file, loff_t pos, loff_t len,
-+			     bool write)
- {
- 	struct inode *inode = file_inode(file);
- 
--	if (unlikely(pos < 0))
-+	if (unlikely(pos < 0 || len < 0))
- 		return -EINVAL;
- 
- 	 if (unlikely((loff_t) (pos + len) < 0))
-@@ -1721,7 +1725,7 @@ static int remap_verify_area(struct file *file, loff_t pos, u64 len, bool write)
- static int generic_remap_check_len(struct inode *inode_in,
- 				   struct inode *inode_out,
- 				   loff_t pos_out,
--				   u64 *len,
-+				   loff_t *len,
- 				   unsigned int remap_flags)
- {
- 	u64 blkmask = i_blocksize(inode_in) - 1;
-@@ -1747,7 +1751,7 @@ static int generic_remap_check_len(struct inode *inode_in,
-  */
- int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
- 				  struct file *file_out, loff_t pos_out,
--				  u64 *len, unsigned int remap_flags)
-+				  loff_t *len, unsigned int remap_flags)
- {
- 	struct inode *inode_in = file_inode(file_in);
- 	struct inode *inode_out = file_inode(file_out);
-@@ -1843,12 +1847,12 @@ int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
- }
- EXPORT_SYMBOL(generic_remap_file_range_prep);
- 
--int do_clone_file_range(struct file *file_in, loff_t pos_in,
--			struct file *file_out, loff_t pos_out, u64 len)
-+loff_t do_clone_file_range(struct file *file_in, loff_t pos_in,
-+			   struct file *file_out, loff_t pos_out, loff_t len)
- {
- 	struct inode *inode_in = file_inode(file_in);
- 	struct inode *inode_out = file_inode(file_out);
--	int ret;
-+	loff_t ret;
- 
- 	if (S_ISDIR(inode_in->i_mode) || S_ISDIR(inode_out->i_mode))
- 		return -EISDIR;
-@@ -1881,19 +1885,19 @@ int do_clone_file_range(struct file *file_in, loff_t pos_in,
- 
- 	ret = file_in->f_op->remap_file_range(file_in, pos_in,
- 			file_out, pos_out, len, 0);
--	if (!ret) {
--		fsnotify_access(file_in);
--		fsnotify_modify(file_out);
--	}
-+	if (ret < 0)
-+		return ret;
- 
-+	fsnotify_access(file_in);
-+	fsnotify_modify(file_out);
- 	return ret;
- }
- EXPORT_SYMBOL(do_clone_file_range);
- 
--int vfs_clone_file_range(struct file *file_in, loff_t pos_in,
--			 struct file *file_out, loff_t pos_out, u64 len)
-+loff_t vfs_clone_file_range(struct file *file_in, loff_t pos_in,
-+			    struct file *file_out, loff_t pos_out, loff_t len)
- {
--	int ret;
-+	loff_t ret;
- 
- 	file_start_write(file_out);
- 	ret = do_clone_file_range(file_in, pos_in, file_out, pos_out, len);
-@@ -1999,10 +2003,11 @@ int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
- }
- EXPORT_SYMBOL(vfs_dedupe_file_range_compare);
- 
--int vfs_dedupe_file_range_one(struct file *src_file, loff_t src_pos,
--			      struct file *dst_file, loff_t dst_pos, u64 len)
-+loff_t vfs_dedupe_file_range_one(struct file *src_file, loff_t src_pos,
-+				 struct file *dst_file, loff_t dst_pos,
-+				 loff_t len)
- {
--	s64 ret;
-+	loff_t ret;
- 
- 	ret = mnt_want_write_file(dst_file);
- 	if (ret)
-@@ -2051,7 +2056,7 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
- 	int i;
- 	int ret;
- 	u16 count = same->dest_count;
--	int deduped;
-+	loff_t deduped;
- 
- 	if (!(file->f_mode & FMODE_READ))
- 		return -EINVAL;
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 20314eb4677a..38fde4e11714 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -919,20 +919,23 @@ xfs_file_fallocate(
- 	return error;
- }
- 
--STATIC int
-+STATIC loff_t
- xfs_file_remap_range(
- 	struct file	*file_in,
- 	loff_t		pos_in,
- 	struct file	*file_out,
- 	loff_t		pos_out,
--	u64		len,
-+	loff_t		len,
- 	unsigned int	remap_flags)
- {
-+	int		ret;
-+
- 	if (remap_flags & ~(REMAP_FILE_DEDUP | REMAP_FILE_ADVISORY))
- 		return -EINVAL;
- 
--	return xfs_reflink_remap_range(file_in, pos_in, file_out, pos_out,
-+	ret = xfs_reflink_remap_range(file_in, pos_in, file_out, pos_out,
- 			len, remap_flags);
-+	return ret < 0 ? ret : len;
- }
- 
- STATIC int
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 2d7dd8b28d7c..3dbe5fb7e9c0 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1296,7 +1296,7 @@ xfs_reflink_remap_prep(
- 	loff_t			pos_in,
- 	struct file		*file_out,
- 	loff_t			pos_out,
--	u64			*len,
-+	loff_t			*len,
- 	unsigned int		remap_flags)
- {
- 	struct inode		*inode_in = file_inode(file_in);
-@@ -1387,7 +1387,7 @@ xfs_reflink_remap_range(
- 	loff_t			pos_in,
- 	struct file		*file_out,
- 	loff_t			pos_out,
--	u64			len,
-+	loff_t			len,
- 	unsigned int		remap_flags)
- {
- 	struct inode		*inode_in = file_inode(file_in);
-diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index 6f82d628bf17..c3c46c276fe1 100644
---- a/fs/xfs/xfs_reflink.h
-+++ b/fs/xfs/xfs_reflink.h
-@@ -28,7 +28,7 @@ extern int xfs_reflink_end_cow(struct xfs_inode *ip, xfs_off_t offset,
- 		xfs_off_t count);
- extern int xfs_reflink_recover_cow(struct xfs_mount *mp);
- extern int xfs_reflink_remap_range(struct file *file_in, loff_t pos_in,
--		struct file *file_out, loff_t pos_out, u64 len,
-+		struct file *file_out, loff_t pos_out, loff_t len,
- 		unsigned int remap_flags);
- extern int xfs_reflink_inode_has_shared_extents(struct xfs_trans *tp,
- 		struct xfs_inode *ip, bool *has_shared);
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index c3e807f1f022..80485efad457 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1772,9 +1772,9 @@ struct file_operations {
- #endif
- 	ssize_t (*copy_file_range)(struct file *, loff_t, struct file *,
- 			loff_t, size_t, unsigned int);
--	int (*remap_file_range)(struct file *file_in, loff_t pos_in,
--				struct file *file_out, loff_t pos_out,
--				u64 len, unsigned int remap_flags);
-+	loff_t (*remap_file_range)(struct file *file_in, loff_t pos_in,
-+				   struct file *file_out, loff_t pos_out,
-+				   loff_t len, unsigned int remap_flags);
- 	int (*fadvise)(struct file *, loff_t, loff_t, int);
- } __randomize_layout;
- 
-@@ -1839,19 +1839,22 @@ extern ssize_t vfs_copy_file_range(struct file *, loff_t , struct file *,
- 				   loff_t, size_t, unsigned int);
- extern int generic_remap_file_range_prep(struct file *file_in, loff_t pos_in,
- 					 struct file *file_out, loff_t pos_out,
--					 u64 *count, unsigned int remap_flags);
--extern int do_clone_file_range(struct file *file_in, loff_t pos_in,
--			       struct file *file_out, loff_t pos_out, u64 len);
--extern int vfs_clone_file_range(struct file *file_in, loff_t pos_in,
--				struct file *file_out, loff_t pos_out, u64 len);
-+					 loff_t *count,
-+					 unsigned int remap_flags);
-+extern loff_t do_clone_file_range(struct file *file_in, loff_t pos_in,
-+				  struct file *file_out, loff_t pos_out,
-+				  loff_t len);
-+extern loff_t vfs_clone_file_range(struct file *file_in, loff_t pos_in,
-+				   struct file *file_out, loff_t pos_out,
-+				   loff_t len);
- extern int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
- 					 struct inode *dest, loff_t destoff,
- 					 loff_t len, bool *is_same);
- extern int vfs_dedupe_file_range(struct file *file,
- 				 struct file_dedupe_range *same);
--extern int vfs_dedupe_file_range_one(struct file *src_file, loff_t src_pos,
--				     struct file *dst_file, loff_t dst_pos,
--				     u64 len);
-+extern loff_t vfs_dedupe_file_range_one(struct file *src_file, loff_t src_pos,
-+					struct file *dst_file, loff_t dst_pos,
-+					loff_t len);
- 
- 
- struct super_operations {
-@@ -2981,7 +2984,7 @@ extern int generic_file_readonly_mmap(struct file *, struct vm_area_struct *);
- extern ssize_t generic_write_checks(struct kiocb *, struct iov_iter *);
- extern int generic_remap_checks(struct file *file_in, loff_t pos_in,
- 				struct file *file_out, loff_t pos_out,
--				uint64_t *count, unsigned int remap_flags);
-+				loff_t *count, unsigned int remap_flags);
- extern ssize_t generic_file_read_iter(struct kiocb *, struct iov_iter *);
- extern ssize_t __generic_file_write_iter(struct kiocb *, struct iov_iter *);
- extern ssize_t generic_file_write_iter(struct kiocb *, struct iov_iter *);
-diff --git a/mm/filemap.c b/mm/filemap.c
-index b0f1f6d93d9c..1e93269efafe 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -3001,7 +3001,7 @@ EXPORT_SYMBOL(generic_write_checks);
-  */
- int generic_remap_checks(struct file *file_in, loff_t pos_in,
- 			 struct file *file_out, loff_t pos_out,
--			 uint64_t *req_count, unsigned int remap_flags)
-+			 loff_t *req_count, unsigned int remap_flags)
- {
- 	struct inode *inode_in = file_in->f_mapping->host;
- 	struct inode *inode_out = file_out->f_mapping->host;
+How reproducible:
+nearly 100% on 64k blocksize XFS on ppc64le
+
+Additional info:
+Can't reproduce this bug on 4k blocksize XFS
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
