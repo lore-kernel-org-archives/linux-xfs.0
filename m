@@ -1,161 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl2.internode.on.net ([150.101.137.141]:63819 "EHLO
-        ipmail03.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727151AbeJ3UNx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Oct 2018 16:13:53 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1gHS4l-0005c0-2X
-        for linux-xfs@vger.kernel.org; Tue, 30 Oct 2018 22:20:47 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.91)
-        (envelope-from <david@fromorbit.com>)
-        id 1gHS4l-0001jp-0r
-        for linux-xfs@vger.kernel.org; Tue, 30 Oct 2018 22:20:47 +1100
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:43959 "EHLO
+        ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729014AbeJaKId (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Oct 2018 06:08:33 -0400
+Date: Wed, 31 Oct 2018 12:12:41 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 7/7] repair: parallelise phase 6
-Date: Tue, 30 Oct 2018 22:20:43 +1100
-Message-Id: <20181030112043.6034-8-david@fromorbit.com>
-In-Reply-To: <20181030112043.6034-1-david@fromorbit.com>
-References: <20181030112043.6034-1-david@fromorbit.com>
+Subject: Re: linux-next: manual merge of the vfs tree with the xfs tree
+Message-ID: <20181031011241.GV19305@dastard>
+References: <20181031115247.6adcb659@canb.auug.org.au>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181031115247.6adcb659@canb.auug.org.au>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Al Viro <viro@ZenIV.linux.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Linux-Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mark Fasheh <mfasheh@suse.de>
 
-From: Dave Chinner <dchinner@redhat.com>
+On Wed, Oct 31, 2018 at 11:52:47AM +1100, Stephen Rothwell wrote:
+> Hi all,
+> 
+> [I don't understand why all this new work turned up in the xfs tree
+> during the merge window ...]
+> 
+> Today's linux-next merge of the vfs tree got a conflict in:
+> 
+>   fs/read_write.c
+> 
+> between commits:
+> 
+>   42ec3d4c0218 ("vfs: make remap_file_range functions take and return bytes completed")
+>   eca3654e3cc7 ("vfs: enable remap callers that can handle short operations")
+> 
+> from the xfs tree and commit:
+> 
+>   5de4480ae7f8 ("vfs: allow dedupe of user owned read-only files")
+> 
+> from the vfs tree.
+> 
+> I fixed it up (see below) and can carry the fix as necessary. This
+> is now fixed as far as linux-next is concerned, but any non trivial
+> conflicts should be mentioned to your upstream maintainer when your tree
+> is submitted for merging.  You may also want to consider cooperating
+> with the maintainer of the conflicting tree to minimise any particularly
+> complex conflicts.
 
-A recent metadump provided to us caused repair to take hours in
-phase6. It wasn't IO bound - it was fully CPU bound the entire time.
-The only way to speed it up is to make phase 6 run multiple
-concurrent processing threads.
+Looks ok. I didn't expect this conflict, but looks simple enough
+to resolve. Thanks!
 
-The obvious way to do this is to spread the concurrency across AGs,
-like the other phases, and while this works it is not optimal. When
-a processing thread hits a really large directory, it essentially
-sits CPU bound until that directory is processed. IF an AG has lots
-of large directories, we end up with a really long single threaded
-tail that limits concurrency.
+Cheers,
 
-Hence we also need to have concurrency /within/ the AG. This is
-realtively easy, as the inode chunk records allow for a simple
-concurrency mechanism within an AG. We can simply feed each chunk
-record to a workqueue, and we get concurrency within the AG for
-free. However, this allows prefetch to run way ahead of processing
-and this blows out the buffer cache size and can cause OOM.
-
-However, we can use the new workqueue depth limiting to limit the
-number of inode chunks queued, and this then backs up the inode
-prefetching to it's maximum queue depth. Hence we prevent having the
-prefetch code queue the entire AG's inode chunks on the workqueue
-blowing out memory by throttling the prefetch consumer.
-
-This takes phase 6 from taking many, many hours down to:
-
-Phase 6:        10/30 21:12:58  10/30 21:40:48  27 minutes, 50 seconds
-
-And burning 20-30 cpus that entire time on my test rig.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- repair/phase6.c | 43 +++++++++++++++++++++++++++++++++++--------
- 1 file changed, 35 insertions(+), 8 deletions(-)
-
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 9477bc2527f3..422a53bca6c7 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -6,6 +6,7 @@
- 
- #include "libxfs.h"
- #include "threads.h"
-+#include "threads.h"
- #include "prefetch.h"
- #include "avl.h"
- #include "globals.h"
-@@ -3169,20 +3170,45 @@ check_for_orphaned_inodes(
- }
- 
- static void
--traverse_function(
-+do_dir_inode(
- 	struct workqueue	*wq,
--	xfs_agnumber_t 		agno,
-+	xfs_agnumber_t		agno,
- 	void			*arg)
- {
--	ino_tree_node_t 	*irec;
-+	struct ino_tree_node	*irec = arg;
- 	int			i;
-+
-+	for (i = 0; i < XFS_INODES_PER_CHUNK; i++)  {
-+		if (inode_isadir(irec, i))
-+			process_dir_inode(wq->wq_ctx, agno, irec, i);
-+	}
-+}
-+
-+static void
-+traverse_function(
-+	struct workqueue	*wq,
-+	xfs_agnumber_t		agno,
-+	void			*arg)
-+{
-+	struct ino_tree_node	*irec;
- 	prefetch_args_t		*pf_args = arg;
-+	struct workqueue	lwq;
-+	struct xfs_mount	*mp = wq->wq_ctx;
-+
- 
- 	wait_for_inode_prefetch(pf_args);
- 
- 	if (verbose)
- 		do_log(_("        - agno = %d\n"), agno);
- 
-+	/*
-+	 * The more AGs we have in flight at once, the fewer processing threads
-+	 * per AG. This means we don't overwhelm the machine with hundreds of
-+	 * threads when we start acting on lots of AGs at once. We just want
-+	 * enough that we can keep multiple CPUs busy across multiple AGs.
-+	 */
-+	workqueue_create_bound(&lwq, mp, ag_stride, 1000);
-+
- 	for (irec = findfirst_inode_rec(agno); irec; irec = next_ino_rec(irec)) {
- 		if (irec->ino_isa_dir == 0)
- 			continue;
-@@ -3190,18 +3216,19 @@ traverse_function(
- 		if (pf_args) {
- 			sem_post(&pf_args->ra_count);
- #ifdef XR_PF_TRACE
-+			{
-+			int	i;
- 			sem_getvalue(&pf_args->ra_count, &i);
- 			pftrace(
- 		"processing inode chunk %p in AG %d (sem count = %d)",
- 				irec, agno, i);
-+			}
- #endif
- 		}
- 
--		for (i = 0; i < XFS_INODES_PER_CHUNK; i++)  {
--			if (inode_isadir(irec, i))
--				process_dir_inode(wq->wq_ctx, agno, irec, i);
--		}
-+		queue_work(&lwq, do_dir_inode, agno, irec);
- 	}
-+	destroy_work_queue(&lwq);
- 	cleanup_inode_prefetch(pf_args);
- }
- 
-@@ -3229,7 +3256,7 @@ static void
- traverse_ags(
- 	struct xfs_mount	*mp)
- {
--	do_inode_prefetch(mp, 0, traverse_function, false, true);
-+	do_inode_prefetch(mp, ag_stride, traverse_function, false, true);
- }
- 
- void
+Dave.
 -- 
-2.19.1
+Dave Chinner
+david@fromorbit.com
