@@ -1,134 +1,159 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43436 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726762AbeKGXMw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 7 Nov 2018 18:12:52 -0500
-Date: Wed, 7 Nov 2018 08:42:24 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: defer online discard submission to a workqueue
-Message-ID: <20181107134223.GA50224@bfoster>
-References: <20181105181021.8174-1-bfoster@redhat.com>
- <20181105215139.GA3160@infradead.org>
- <20181106142310.GA2773@bfoster>
- <20181106211802.GN19305@dastard>
+Received: from aserp2120.oracle.com ([141.146.126.78]:53832 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727115AbeKBH4Y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Nov 2018 03:56:24 -0400
+Date: Thu, 1 Nov 2018 15:51:22 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 4/7] xfs: filter out mount options that don't work on v4
+ filesystems
+Message-ID: <20181101225122.GB4131@magnolia>
+References: <153067984748.28393.1595618163831671652.stgit@magnolia>
+ <153067987261.28393.13229691209356951536.stgit@magnolia>
+ <20180714114128.GD2830@desktop>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181106211802.GN19305@dastard>
+In-Reply-To: <20180714114128.GD2830@desktop>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Wed, Nov 07, 2018 at 08:18:02AM +1100, Dave Chinner wrote:
-> On Tue, Nov 06, 2018 at 09:23:11AM -0500, Brian Foster wrote:
-> > On Mon, Nov 05, 2018 at 01:51:39PM -0800, Christoph Hellwig wrote:
-> > > On Mon, Nov 05, 2018 at 01:10:21PM -0500, Brian Foster wrote:
-> > > > When online discard is enabled, discards of busy extents are
-> > > > submitted asynchronously as a bio chain. bio completion and
-> > > > resulting busy extent cleanup is deferred to a workqueue. Async
-> > > > discard submission is intended to avoid blocking log forces on a
-> > > > full discard sequence which can take a noticeable amount of time in
-> > > > some cases.
-> > > > 
-> > > > We've had reports of this still producing log force stalls with XFS
-> > > > on VDO,
-> > > 
-> > > Please fix this in VDO instead.  We should not work around out of
-> > > tree code making stupid decisions.
+On Sat, Jul 14, 2018 at 07:41:28PM +0800, Eryu Guan wrote:
+> On Tue, Jul 03, 2018 at 09:51:12PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > I assume the "stupid decision" refers to sync discard execution. I'm not
-> > familiar with the internals of VDO, this is just what I was told.
+> > A few tests require v4 filesystems and enforce this by disabling crc's
+> > in the _scratch_mkfs call.  However, if the user specified MOUNT_OPTIONS
+> > that only work with v5 filesystems, these tests fail.  Filter out
+> > incompatible mount options that don't work on v4, such as simultaneous
+> > group/project quota.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  common/xfs    |   23 +++++++++++++++++++++++
+> >  tests/xfs/002 |    2 ++
+> >  tests/xfs/194 |    2 ++
+> >  tests/xfs/199 |    2 ++
+> >  4 files changed, 29 insertions(+)
+> > 
+> > 
+> > diff --git a/common/xfs b/common/xfs
+> > index 5b632df1..33d819d7 100644
+> > --- a/common/xfs
+> > +++ b/common/xfs
+> > @@ -780,3 +780,26 @@ _scratch_get_bmx_prefix() {
+> >  	_scratch_xfs_db -c "inode ${ino}" -c 'p' >> $seqres.full
+> >  	return 1
+> >  }
+> > +
+> > +#
+> > +# Ensures that we don't pass any mount options incompatible with XFS v4
+> > +#
+> > +_filter_xfsv4_mount_options()
 > 
-> IMO, what VDO does is irrelevant - any call to submit_bio() can
-> block if the request queue is full. Hence if we've drowned the queue
-> in discards and the device is slow at discards, then we are going to
-> block submitting discards.
-> 
-> > My
-> > understanding is that these discards can stack up and take enough time
-> > that a limit on outstanding discards is required, which now that I think
-> > of it makes me somewhat skeptical of the whole serial execution thing.
-> > Hitting that outstanding discard request limit is what bubbles up the
-> > stack and affects XFS by holding up log forces, since new discard
-> > submissions are presumably blocked on completion of the oldest
-> > outstanding request.
-> 
-> Exactly.
-> 
-> > I'm not quite sure what happens in the block layer if that limit were
-> > lifted. Perhaps it assumes throttling responsibility directly via
-> > queues/plugs? I'd guess that at minimum we'd end up blocking indirectly
-> > somewhere (via memory allocation pressure?) anyways, so ISTM that some
-> > kind of throttling is inevitable in this situation. What am I missing?
-> 
-> We still need to throttle discards - they have to play nice with all
-> the other IO we need to dispatch concurrently.
-> 
-> I have two issues with the proposed patch:
-> 
-> 1. it puts both discard dispatch and completion processing on the
-> one work qeueue, so if the queue is filled with dispatch requests,
-> IO completion queuing gets blocked. That's not the best thing to be
-> doing.
-> 
+> "_filter" usually indicates a filter function that gets input from a
+> pipe, e.g. <some cmd> | _filter_scratch, but this helper doesn't follow
+> the convention. It'd better to rename it to ... I don't know, just
+> _xfsv4_mount_options?
 
-This is an unbound workqueue with max_active == 0. AIUI, that means we
-can have something like 256 execution contexts (worker threads?) per
-cpu. Given that, plus the batching that occurs in XFS due to delayed
-logging and discard bio chaining, that seems rather unlikely. Unless I'm
-misunderstanding the mechanism, I think that means filling the queue as
-such and blocking discard submission basically consumes one of those
-contexts.
+_force_xfsv4_mount_options?
 
-Of course, the CIL context structure appears to be technically unbound
-as well and it's trivial to just add a separate submission workqueue,
-but I'd like to at least make sure we're on the same page as to the need
-(so it can be documented clearly as well).
-
-> 2. log forces no longer wait for discards to be dispatched - they
-> just queue them. This means the mechanism xfs_extent_busy_flush()
-> uses to dispatch pending discards (synchrnous log force) can return
-> before discards have even been dispatched to disk. Hence we can
-> expect to see longer wait and tail latencies when busy extents are
-> encountered by the allocator. Whether this is a problem or not needs
-> further investigation.
+> > +{
+> > +	local gquota=0
+> > +	local pquota=0
+> > +
+> > +	# Can't have group and project quotas in XFS v4
+> > +	echo "$MOUNT_OPTIONS" | egrep -q "(gquota|grpquota|grpjquota=|gqnoenforce)" && gquota=1
+> > +	echo "$MOUNT_OPTIONS" | egrep -q "(\bpquota|prjquota|pqnoenforce)" && pquota=1
+> > +
+> > +	if [ $gquota -gt 0 ] && [ $pquota -gt 0 ]; then
+> > +		export MOUNT_OPTIONS=$(echo $MOUNT_OPTIONS \
+> > +			| sed   -e 's/gquota/QUOTA/g'      \
+> > +				-e 's/grpquota/QUOTA/g'    \
+> > +				-e 's/grpjquota=[^, ]/QUOTA/g' \
+> > +				-e 's/gqnoenforce/QUOTA/g' \
+> > +				-e "s/QUOTA/defaults/g")
+> > +	fi
+> > +	echo "MOUNT_OPTIONS = $MOUNT_OPTIONS" >>$seqres.full
+> > +}
+> > diff --git a/tests/xfs/002 b/tests/xfs/002
+> > index bd1c0a7a..f987575c 100755
+> > --- a/tests/xfs/002
+> > +++ b/tests/xfs/002
+> > @@ -45,6 +45,8 @@ rm -f $seqres.full
+> >  
+> >  _scratch_mkfs_xfs -m crc=0 -d size=128m >> $seqres.full 2>&1 || _fail "mkfs failed"
+> >  
+> > +_filter_xfsv4_mount_options
 > 
-
-Firstly, I think latency is kind of moot in the problematic case. The
-queue is already drowning in requests that presumably are going to take
-minutes to complete. In that case, the overhead of kicking a workqueue
-to do the submission is probably negligible.
-
-That leaves the normal/active case. I suspect that the overhead here may
-still be hard to notice given the broader overhead of online discard in
-the first place. The aforementioned batching means we could be sending a
-good number of discards all at once that ultimately need to be processed
-(with no priority to the particular one an allocator could be waiting
-on). The larger the chain, the longer the whole sequence is going to
-take to clear a particular busy extent relative to the additional
-latency of a workqueue. We could also just be sending one discard,
-though waiting on that one particular extent could mean that we're
-either not being as smart as we could be in extent selection or that
-we're simply running low on free space.
-
-I suppose if this approach is ultimately problemic for whatever reason,
-we could look into some kind of heuristic to track outstanding
-discards/chains and continue to do direct submission until we cross some
-magic threshold. I'm not sure it's worth that complexity given the
-limited use cases for online discard unless there's some serious
-unforeseen problem, though. IIRC, this was all doing synchronous,
-serialized submission not too long ago after all.
-
-Anyways, I'll run some file creation/deletion tests against an SSD
-and/or a thin vol and see what falls out..
-
-Brian
-
-> Cheers,
+> Hmm, this way future test writers have to remember to add a
+> _filter_xfsv4_mount_options call everytime after making a v4 xfs. It's
+> so easy to get lost and hard to maintain.
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> How about make _scratch_mkfs_xfs do the work automatically if it finds
+> the newly created fs is a v4 xfs?
+
+Sure, sounds good to me.
+
+> And I went through all tests that have explicit "-m crc=0" mkfs option,
+> and I found that there're some other tests need fix too.
+> 
+> xfs/045, it doesn't fail, but the test expects a mount failure anyway,
+> just that it's caused by quota options now.
+> 
+> xfs/132, it fails to mount xfs and needs the fix. But it still fails
+> even after the fix, but that's a different issue.
+
+I think this is fixed by a subsequent patch which ... eh, this thread
+was from too long ago, I'll just resend the whole thing.
+
+> xfs/300, the test itself passes, it just causes subsequent
+> _scratch_mount to fail in _check_xfs_filesystem(). I think we could just
+> umount $SCRATCH_DEV explicitly after test, so _check_xfs_filesystem()
+> won't try to mount it again.
+
+Hm, I'll take a look at that one too.
+
+--D
+
+> Thanks,
+> Eryu
+> 
+> > +
+> >  # Scribble past a couple V4 secondary superblocks to populate sb_crc
+> >  # (We can't write to the structure member because it doesn't exist
+> >  # on a v4 superblock, so we use the data type & "write fill")
+> > diff --git a/tests/xfs/194 b/tests/xfs/194
+> > index 6c1eddba..09a3840d 100755
+> > --- a/tests/xfs/194
+> > +++ b/tests/xfs/194
+> > @@ -74,6 +74,8 @@ _require_scratch
+> >  unset MKFS_OPTIONS
+> >  unset XFS_MKFS_OPTIONS
+> >  
+> > +_filter_xfsv4_mount_options
+> > +
+> >  # we need 512 byte block size, so crc's are turned off
+> >  _scratch_mkfs_xfs -m crc=0 -b size=$blksize >/dev/null 2>&1
+> >  _scratch_mount
+> > diff --git a/tests/xfs/199 b/tests/xfs/199
+> > index dd909b09..54fe54fe 100755
+> > --- a/tests/xfs/199
+> > +++ b/tests/xfs/199
+> > @@ -34,6 +34,8 @@ _supported_os Linux
+> >  
+> >  _require_scratch
+> >  
+> > +_filter_xfsv4_mount_options
+> > +
+> >  # clear any mkfs options so that we can directly specify the options we need to
+> >  # be able to test the features bitmask behaviour correctly.
+> >  MKFS_OPTIONS=
+> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe fstests" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
