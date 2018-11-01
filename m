@@ -1,114 +1,154 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:37576 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727008AbeKBNhI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Nov 2018 09:37:08 -0400
-Received: from discord.disaster.area ([192.168.1.111])
-        by dastard with esmtp (Exim 4.80)
-        (envelope-from <david@fromorbit.com>)
-        id 1gIR77-0001AX-0G
-        for linux-xfs@vger.kernel.org; Fri, 02 Nov 2018 15:31:17 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.91)
-        (envelope-from <david@fromorbit.com>)
-        id 1gIR76-0006R2-VK
-        for linux-xfs@vger.kernel.org; Fri, 02 Nov 2018 15:31:16 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: fix overflow in xfs_attr3_leaf_verify
-Date: Fri,  2 Nov 2018 15:31:16 +1100
-Message-Id: <20181102043116.24695-1-david@fromorbit.com>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:49344 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727572AbeKAOtr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Nov 2018 10:49:47 -0400
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.22/8.16.0.22) with SMTP id wA15ijaW101000
+        for <linux-xfs@vger.kernel.org>; Thu, 1 Nov 2018 01:48:17 -0400
+Received: from e06smtp04.uk.ibm.com (e06smtp04.uk.ibm.com [195.75.94.100])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2nfsq9v1da-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Thu, 01 Nov 2018 01:48:17 -0400
+Received: from localhost
+        by e06smtp04.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.vnet.ibm.com>;
+        Thu, 1 Nov 2018 05:48:16 -0000
+From: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+Subject: Re: [PATCH] xfs: flush CoW fork reservations before processing quota get request
+Date: Thu, 01 Nov 2018 11:20:43 +0530
+In-Reply-To: <20181031153305.GO4135@magnolia>
+References: <20181023064808.23374-1-chandan@linux.vnet.ibm.com> <20181031153305.GO4135@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+Message-Id: <3502469.Yu3HPCoafl@localhost.localdomain>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Wednesday, October 31, 2018 9:03:05 PM IST Darrick J. Wong wrote:
+> On Tue, Oct 23, 2018 at 12:18:08PM +0530, Chandan Rajendra wrote:
+> > generic/305 fails on a 64k block sized filesystem due to the following
+> > interaction,
+> > 
+> > 1. We are writing 8 blocks (i.e. [0, 512k-1]) of data to a 1 MiB file.
+> > 2. XFS reserves 32 blocks of space in the CoW fork.
+> >    xfs_bmap_extsize_align() calculates XFS_DEFAULT_COWEXTSZ_HINT (32
+> >    blocks) as the number of blocks to be reserved.
+> > 3. The reserved space in the range [1M(i.e. i_size), 1M + 16
+> >    blocks] is  freed by __fput(). This corresponds to freeing "eof
+> >    blocks" i.e. space reserved beyond EOF of a file.
+> > 
+> > The reserved space to which data was never written i.e. [9th block,
+> > 1M(EOF)], remains reserved in the CoW fork until either the CoW block
+> > reservation trimming worker gets invoked or the filesystem is
+> > unmounted.
+> > 
+> > This commit fixes the issue by freeing unused CoW block reservations
+> > whenever quota numbers are requested by userspace application.
+> > 
+> > Signed-off-by: Chandan Rajendra <chandan@linux.vnet.ibm.com>
+> > ---
+> > 
+> > PS: With the above patch, the tests xfs/214 & xfs/440 fail because the
+> > value passed to xfs_io's cowextsize does not have any effect when CoW
+> > fork reservations are flushed before querying for quota usage numbers.
+> 
+> Hmmm.  I restarted looking into all the weird quota count mismatches in
+> xfstests and noticed (with a generous amount of trace_printks) that most
+> of the discrepancies can be traced to speculative preallocations in the
+> cow fork that don't get cleaned out.  So we're on the same page. :)
+> 
+> I thought about enhancing the XFS_IOC_FREE_EOFBLOCKS ioctl with a new
+> mode to clean out CoW stuff too, but then I started thinking about what
+> _check_quota_usage is actually looking for, and realized that (for xfs
+> anyway) it compares an aged quota report (reflective of thousands of
+> individual fs ops) against a freshly quotacheck'd quota report to look
+> for accounting leaks.
+> 
+> Then I tried replacing the $XFS_SPACEMAN_PROG -c 'prealloc -s' call in
+> _check_quota_usage with a umount/mount cycle so that we know we've
+> cleaned out all the reservations and *poof* the discrepancies all went
+> away.  The test is still useful since we're comparing the accumulated
+> quota counts against freshly computed counts, but now we know that we've
+> cleaned out any speculative preallocations that xfs might have decided
+> to try (assuming xfs never changes behavior to speculate on a fresh
+> mount).
+> 
+> It's awfully tempting to just leave it that way... but what do you
+> think?  I think it's a better solution than forcing /every/ quota
+> report to iterate the in-core inodes looking for cow blocks to dump.
+> 
+> Granted maybe we still want the ioctl to do it for us?  Though that
+> could get tricky since written extents in the cow fork represent writes
+> in progress and can't ever be removed except by xfs_inactive.
 
-generic/070 on 64k block size filesystems is failing with a verifier
-corruption on writeback or an attribute leaf block:
+Hmm. W.r.t Preallocated EOF blocks, it is easy to identify the blocks to be
+removed by the ioctl i.e. blocks which are present beyond inode->i_size.
 
-[   94.973083] XFS (pmem0): Metadata corruption detected at xfs_attr3_leaf_verify+0x246/0x260, xfs_attr3_leaf block 0x811480
-[   94.975623] XFS (pmem0): Unmount and run xfs_repair
-[   94.976720] XFS (pmem0): First 128 bytes of corrupted metadata buffer:
-[   94.978270] 000000004b2e7b45: 00 00 00 00 00 00 00 00 3b ee 00 00 00 00 00 00  ........;.......
-[   94.980268] 000000006b1db90b: 00 00 00 00 00 81 14 80 00 00 00 00 00 00 00 00  ................
-[   94.982251] 00000000433f2407: 22 7b 5c 82 2d 5c 47 4c bb 31 1c 37 fa a9 ce d6  "{\.-\GL.1.7....
-[   94.984157] 0000000010dc7dfb: 00 00 00 00 00 81 04 8a 00 0a 18 e8 dd 94 01 00  ................
-[   94.986215] 00000000d5a19229: 00 a0 dc f4 fe 98 01 68 f0 d8 07 e0 00 00 00 00  .......h........
-[   94.988171] 00000000521df36c: 0c 2d 32 e2 fe 20 01 00 0c 2d 58 65 fe 0c 01 00  .-2.. ...-Xe....
-[   94.990162] 000000008477ae06: 0c 2d 5b 66 fe 8c 01 00 0c 2d 71 35 fe 7c 01 00  .-[f.....-q5.|..
-[   94.992139] 00000000a4a6bca6: 0c 2d 72 37 fc d4 01 00 0c 2d d8 b8 f0 90 01 00  .-r7.....-......
-[   94.994789] XFS (pmem0): xfs_do_force_shutdown(0x8) called from line 1453 of file fs/xfs/xfs_buf.c. Return address = ffffffff815365f3
+You are right about the inability to do so for CoW blocks since some of the
+unused CoW blocks fall within inode->i_size. Hence I agree with your approach
+of replacing "$XFS_SPACEMAN_PROG -c 'prealloc -s' call' in _check_quota_usage
+with umount/mount.
 
-This is failing this check:
+If you are fine with it, I can fix _check_quota_usage() and also the relevant
+tests.
 
-                end = ichdr.freemap[i].base + ichdr.freemap[i].size;
-                if (end < ichdr.freemap[i].base)
->>>>>                   return __this_address;
-                if (end > mp->m_attr_geo->blksize)
-                        return __this_address;
+> 
+> > fs/xfs/xfs_quotaops.c | 13 +++++++++++++
+> >  1 file changed, 13 insertions(+)
+> > 
+> > diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
+> > index a7c0c65..9236a38 100644
+> > --- a/fs/xfs/xfs_quotaops.c
+> > +++ b/fs/xfs/xfs_quotaops.c
+> > @@ -218,14 +218,21 @@ xfs_fs_get_dqblk(
+> >  	struct kqid		qid,
+> >  	struct qc_dqblk		*qdq)
+> >  {
+> > +	int			ret;
+> >  	struct xfs_mount	*mp = XFS_M(sb);
+> >  	xfs_dqid_t		id;
+> > +	struct xfs_eofblocks	eofb = { 0 };
+> >  
+> >  	if (!XFS_IS_QUOTA_RUNNING(mp))
+> >  		return -ENOSYS;
+> >  	if (!XFS_IS_QUOTA_ON(mp))
+> >  		return -ESRCH;
+> >  
+> > +	eofb.eof_flags = XFS_EOF_FLAGS_SYNC;
+> > +	ret = xfs_icache_free_cowblocks(mp, &eofb);
+> > +	if (ret)
+> > +		return ret;
+> > +
+> >  	id = from_kqid(&init_user_ns, qid);
+> >  	return xfs_qm_scall_getquota(mp, id, xfs_quota_type(qid.type), qdq);
+> >  }
+> > @@ -240,12 +247,18 @@ xfs_fs_get_nextdqblk(
+> >  	int			ret;
+> >  	struct xfs_mount	*mp = XFS_M(sb);
+> >  	xfs_dqid_t		id;
+> > +	struct xfs_eofblocks	eofb = { 0 };
+> >  
+> >  	if (!XFS_IS_QUOTA_RUNNING(mp))
+> >  		return -ENOSYS;
+> >  	if (!XFS_IS_QUOTA_ON(mp))
+> >  		return -ESRCH;
+> >  
+> > +	eofb.eof_flags = XFS_EOF_FLAGS_SYNC;
+> > +	ret = xfs_icache_free_cowblocks(mp, &eofb);
+> > +	if (ret)
+> > +		return ret;
+> > +
+> >  	id = from_kqid(&init_user_ns, *qid);
+> >  	ret = xfs_qm_scall_getquota_next(mp, &id, xfs_quota_type(qid->type),
+> >  			qdq);
+> 
+> 
 
-And from the buffer output above, the freemap array is:
 
-	freemap[0].base = 0x00a0
-	freemap[0].size = 0xdcf4	end = 0xdd94
-	freemap[1].base = 0xfe98
-	freemap[1].size = 0x0168	end = 0x10000
-	freemap[2].base = 0xf0d8
-	freemap[2].size = 0x07e0	end = 0xf8b8
-
-These all look valid - the block size is 0x10000 and so from the
-last check in the above verifier fragment we know that the end
-of freemap[1] is valid. The problem is that end is declared as:
-
-	uint16_t	end;
-
-And (uint16_t)0x10000 = 0. So we have a verifier bug here, not a
-corruption. Fix the verifier to use uint32_t types for the check and
-hence avoid the overflow.
-
-Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=201577
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/libxfs/xfs_attr_leaf.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index 6fc5425b1474..2652d00842d6 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -243,7 +243,7 @@ xfs_attr3_leaf_verify(
- 	struct xfs_mount		*mp = bp->b_target->bt_mount;
- 	struct xfs_attr_leafblock	*leaf = bp->b_addr;
- 	struct xfs_attr_leaf_entry	*entries;
--	uint16_t			end;
-+	uint32_t			end;	/* must be 32bit - see below */
- 	int				i;
- 
- 	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &ichdr, leaf);
-@@ -293,6 +293,11 @@ xfs_attr3_leaf_verify(
- 	/*
- 	 * Quickly check the freemap information.  Attribute data has to be
- 	 * aligned to 4-byte boundaries, and likewise for the free space.
-+	 *
-+	 * Note that for 64k block size filesystems, the freemap entries cannot
-+	 * overflow as they are only be16 fields. However, when checking end
-+	 * pointer of the freemap, we have to be careful to detect overflows and
-+	 * so use uint32_t for those checks.
- 	 */
- 	for (i = 0; i < XFS_ATTR_LEAF_MAPSIZE; i++) {
- 		if (ichdr.freemap[i].base > mp->m_attr_geo->blksize)
-@@ -303,7 +308,9 @@ xfs_attr3_leaf_verify(
- 			return __this_address;
- 		if (ichdr.freemap[i].size & 0x3)
- 			return __this_address;
--		end = ichdr.freemap[i].base + ichdr.freemap[i].size;
-+
-+		/* be care of 16 bit overflows here */
-+		end = (uint32_t)ichdr.freemap[i].base + ichdr.freemap[i].size;
- 		if (end < ichdr.freemap[i].base)
- 			return __this_address;
- 		if (end > mp->m_attr_geo->blksize)
 -- 
-2.19.1
+chandan
