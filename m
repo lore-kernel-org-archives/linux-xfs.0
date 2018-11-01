@@ -1,147 +1,135 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail03.adl6.internode.on.net ([150.101.137.143]:52515 "EHLO
-        ipmail03.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726355AbeKBGnR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Nov 2018 02:43:17 -0400
-Date: Fri, 2 Nov 2018 08:37:40 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfs: don't preempt writeback sequence on single page
- wb error
-Message-ID: <20181101213740.GA19305@dastard>
-References: <20181031140155.17996-1-bfoster@redhat.com>
- <20181031140155.17996-3-bfoster@redhat.com>
- <20181031230225.GX19305@dastard>
- <20181101141726.GA25816@bfoster>
+Received: from mx1.redhat.com ([209.132.183.28]:39956 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726520AbeKAUED (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 1 Nov 2018 16:04:03 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 205F6308A948
+        for <linux-xfs@vger.kernel.org>; Thu,  1 Nov 2018 11:01:36 +0000 (UTC)
+From: Jan Tulak <jtulak@redhat.com>
+Subject: [PATCH 0/2] xfsdump whitespace changes
+Date: Thu,  1 Nov 2018 12:01:28 +0100
+Message-Id: <20181101110130.19489-1-jtulak@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181101141726.GA25816@bfoster>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Jan Tulak <jtulak@redhat.com>
 
-On Thu, Nov 01, 2018 at 10:17:26AM -0400, Brian Foster wrote:
-> On Thu, Nov 01, 2018 at 10:02:25AM +1100, Dave Chinner wrote:
-> > On Wed, Oct 31, 2018 at 10:01:55AM -0400, Brian Foster wrote:
-> > > xfs_do_writepage() currently returns errors directly regardless of
-> > > whether it is called via ->writepages() or ->writepage(). In the
-> > > case of ->writepages(), an xfs_do_writepage() error return breaks
-> > > the current writeback sequence in write_cache_pages(). This means
-> > > that an integrity writeback (i.e., sync), for example, returns
-> > > before all associated pages have been processed.
-> > 
-> > That sounds like a bug in write_cache_pages(). It sends pages
-> > one at a time to the writepage context, and it is supposed to
-> > iterate the entire range on a data sync operation. If you look at
-> > the code, is clearly stopping at the first error.
-> > 
-> > IOWs, every filesystem that uses write_cache_pages() for data
-> > integrity writes is broken in the same way.
-> > 
-> > And a quick look as fs specific writepages implementations indicates
-> > that ext4_writepages() and ibtrfs's extent_write_cache_pages() have
-> > the same issue.
-> > 
-> 
-> I veered away from this approach initially because I didn't want to risk
-> breaking behavior of other filesystems. I can revisit it if more
-> appropriate and is broadly safe.
+(I'm splitting the previous set into smaller ones, so changes doesn't
+ have to wait.)
 
-We should fix problems in the generic code if that's where the
-problem lies. You can ignore filesystems with their own custom code,
-though, because you are more likely to break them that generic
-code...
+This set is dealing with whitespaces only, no functional change, code
+shuffling, etc. should be present. The first patch clears out trailing
+whitespaces, the second one sorts out the crazy mishmash of tabs and
+spaces.
 
-> > > This can be problematic in cases like unmount. If the writeback
-> > > doesn't process all delalloc pages before unmounting, we end up
-> > > reclaiming inodes with non-zero delalloc block counts. In turn, this
-> > > breaks block accounting and leaves the fs inconsistent.
-> > 
-> > XFS is probably the only filesystem that leaves detectable state
-> > around and then detects and reports it....
-> > 
-> > > XFS explicitly discards delalloc blocks on such writepage failures
-> > > to avoid this problem. This isn't terribly useful if we allow an
-> > > integrity writeback to complete (and thus a filesystem to unmount)
-> > > without addressing the entire set of dirty pages on an inode.
-> > > Therefore, change ->writepage[s]() to track high level error state
-> > > in the xfs_writepage_ctx structure and return it from the higher
-> > > level operation callout rather than xfs_do_writepage(). This ensures
-> > > that write_cache_pages() does not exit prematurely when called via
-> > > ->writepages(), but both ->writepage() and ->writepages() still
-> > > ultimately return an error for the higher level operation.
-> > > 
-> > > This patch introduces a subtle change in the behavior of background
-> > > writeback in the event of persistent errors. The current behavior of
-> > > returning an error preempts the background writeback. Writeback
-> > > eventually comes around again and repeats the process for a few more
-> > > pages (in practice) before it once again fails. This repeats over
-> > > and over until the entire set of dirty pages is cleaned. This
-> > > behavior results in a somewhat slower stream of "page discard"
-> > > errors in the system log and dictates that many repeated fsync calls
-> > > may be required before the entire data set is processed and mapping
-> > > error consumed. With this change in place, background writeback
-> > > executes on as many pages as necessary as if each page writeback
-> > > were successful. The pages are cleaned immediately and significantly
-> > > more page discard errors can be observed at once.
-> > 
-> > Yeah, this is a good change in behaviour, but I think the
-> > implementation is wrong. write_cache_pages() needs to continue
-> > iterating the range if WB_SYNC_ALL is set even when errors occur.
-> > 
-> 
-> The other thing that comes to mind is that any time we have this kind of
-> iterative/callback interface, it's usually appropriate to have some kind
-> of means for the callback to signal the caller to stop processing. You
-> could argue that right now write_cache_pages() works as expected,
-> returning an error is that stop mechanism and XFS has the bug as it is
-> the only filesystem that depends on completely processing integrity wbs
-> for fs correctness (or we're all just using it wrong ;P, I haven't
-> investigated enough yet to say one way or the other).
+I know that these kind of changes are usually not welcomed as they
+conflict with other people's work, but that should not be an issue for
+xfsdump.
 
-The comment on wcp error handling is enlightening:
+Jan Tulak (2):
+  xfsdump: remove trailing whitespaces
+  xfsdump: change indentation to tabs
 
-		ret = (*writepage)(page, wbc, data);
-		if (unlikely(ret)) {
-			if (ret == AOP_WRITEPAGE_ACTIVATE) {
-				unlock_page(page);
-				ret = 0;
-			} else {
-				/*
-				 * done_index is set past this page,
-				 * so media errors will not choke
-				 * background writeout for the entire
-				 * file. This has consequences for
-				 * range_cyclic semantics (ie. it may
-				 * not be suitable for data integrity
-				 * writeout).
-				 */
-				done_index = page->index + 1;
-				done = 1;
-				break;
-			}
-		}
+ common/arch_xlate.c     |  330 ++--
+ common/cldmgr.c         |   38 +-
+ common/cldmgr.h         |    6 +-
+ common/cleanup.c        |   10 +-
+ common/cleanup.h        |   12 +-
+ common/content.h        |   14 +-
+ common/content_common.c |   28 +-
+ common/content_inode.h  |   14 +-
+ common/dlog.c           |   94 +-
+ common/dlog.h           |   42 +-
+ common/drive.c          |   38 +-
+ common/drive.h          |   74 +-
+ common/drive_minrmt.c   |  926 +++++-----
+ common/drive_scsitape.c | 1377 ++++++++-------
+ common/drive_simple.c   |  308 ++--
+ common/fs.c             |   28 +-
+ common/fs.h             |   22 +-
+ common/getdents.c       |   14 +-
+ common/global.c         |  120 +-
+ common/global.h         |    4 +-
+ common/hsmapi.c         |   50 +-
+ common/inventory.c      |  142 +-
+ common/inventory.h      |   46 +-
+ common/main.c           |  604 +++----
+ common/media.c          |   62 +-
+ common/media_rmvtape.h  |    2 +-
+ common/mlog.c           |   78 +-
+ common/mlog.h           |    2 +-
+ common/openutil.c       |   14 +-
+ common/qlock.c          |   26 +-
+ common/rec_hdr.h        |    2 +-
+ common/ring.c           |   32 +-
+ common/ring.h           |   46 +-
+ common/stream.c         |   16 +-
+ common/stream.h         |   20 +-
+ common/ts_mtio.h        |  110 +-
+ common/types.h          |   76 +-
+ common/util.c           |  178 +-
+ common/util.h           |   46 +-
+ dump/content.c          | 2172 ++++++++++++------------
+ dump/inomap.c           |  402 ++---
+ dump/inomap.h           |   34 +-
+ dump/var.c              |   38 +-
+ inventory/inv_api.c     |  354 ++--
+ inventory/inv_core.c    |   40 +-
+ inventory/inv_files.c   |    2 +-
+ inventory/inv_fstab.c   |   92 +-
+ inventory/inv_idx.c     |  197 ++-
+ inventory/inv_mgr.c     |  175 +-
+ inventory/inv_oref.c    |  140 +-
+ inventory/inv_oref.h    |   82 +-
+ inventory/inv_priv.h    |  128 +-
+ inventory/inv_stobj.c   |  516 +++---
+ inventory/inventory.h   |   70 +-
+ inventory/testmain.c    |  147 +-
+ invutil/cmenu.c         |  654 +++----
+ invutil/cmenu.h         |   82 +-
+ invutil/fstab.c         |  414 ++---
+ invutil/invidx.c        | 1574 +++++++++--------
+ invutil/invutil.c       | 1161 +++++++------
+ invutil/invutil.h       |   12 +-
+ invutil/list.c          |  148 +-
+ invutil/list.h          |   37 +-
+ invutil/menu.c          |  292 ++--
+ invutil/screen.c        |   64 +-
+ invutil/stobj.c         |  654 +++----
+ librmt/rmtabort.c       |    2 +-
+ librmt/rmtaccess.c      |    2 -
+ librmt/rmtclose.c       |    2 -
+ librmt/rmtcommand.c     |    3 -
+ librmt/rmtcreat.c       |    2 -
+ librmt/rmtdev.c         |    2 -
+ librmt/rmtfstat.c       |    2 +-
+ librmt/rmtioctl.c       |  222 +--
+ librmt/rmtlib.h         |    2 +-
+ librmt/rmtlseek.c       |    2 -
+ librmt/rmtmsg.c         |   26 +-
+ librmt/rmtopen.c        |   72 +-
+ librmt/rmtstatus.c      |    3 -
+ restore/bag.c           |   22 +-
+ restore/bag.h           |    4 +-
+ restore/content.c       | 3568 +++++++++++++++++++--------------------
+ restore/dirattr.c       |  308 ++--
+ restore/dirattr.h       |    6 +-
+ restore/inomap.c        |  118 +-
+ restore/mmap.c          |   16 +-
+ restore/namreg.c        |   82 +-
+ restore/node.c          |   98 +-
+ restore/node.h          |   12 +-
+ restore/tree.c          | 1082 ++++++------
+ restore/tree.h          |    8 +-
+ restore/win.c           |   28 +-
+ restore/win.h           |   10 +-
+ 93 files changed, 10202 insertions(+), 10234 deletions(-)
 
-"ie it may not be suitable for data integrity writeout"
-
-In a nutshell. The current error handling behaviour is not suitable
-for data integrity writeout, as your proposed patch has demonstrated.
-
-
-> OTOH, we could maintain the ability to interrupt the scan with a magic
-> error return or some such, that just may require a bit more care and
-> attention across the set of existing callers. Thoughts?
-
-I'm not sure why we'd want "stop on error" for data integrity
-writeback given the problems you've pointed out.  For WB_SYNC_NONE
-writeback, the current behaviour (stop on error) is fine, so i don't
-see a big need to make unnecessary API changes here.
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+2.19.1
