@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:53210 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:53364 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727749AbeKBIYr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Nov 2018 04:24:47 -0400
-Subject: [PATCH 6/8] xfs/205: update for v5 filesystems
+        with ESMTP id S1727749AbeKBIYz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Nov 2018 04:24:55 -0400
+Subject: [PATCH 7/8] misc: force the exact quota options coded into the test
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 01 Nov 2018 16:19:40 -0700
-Message-ID: <154111437994.6577.18298654458777481642.stgit@magnolia>
+Date: Thu, 01 Nov 2018 16:19:46 -0700
+Message-ID: <154111438630.6577.12698243646066699280.stgit@magnolia>
 In-Reply-To: <154111434286.6577.15010861884505931015.stgit@magnolia>
 References: <154111434286.6577.15010861884505931015.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,66 +20,109 @@ Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Update this test to work with v5 filesystems, which have a minimum block
-size of 1k.  Adapt the script to sense the amount of free space reported
-so that we can get close to ENOSPC instead of hardcoding.
+Several tests require setting exactly the quota mount options that are
+encoded in the test.  Unfortunately, quota mount options set by the user
+in MOUNT_OPTIONS can turn on other quota types, which causes the golden
+outputs to be off for various reasons (quota report output, behavior
+changes, etc.)
+
+So use _qmount_option to delete all the quota mount options in these
+tests so that the test itself can run with exactly the config for which
+it was written.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tests/xfs/205 |   21 ++++++++++++++-------
- 1 file changed, 14 insertions(+), 7 deletions(-)
+ tests/generic/230 |    3 +++
+ tests/xfs/075     |    4 ++++
+ tests/xfs/116     |    3 +++
+ tests/xfs/132     |    5 +++++
+ tests/xfs/220     |    3 +++
+ 5 files changed, 18 insertions(+)
 
 
-diff --git a/tests/xfs/205 b/tests/xfs/205
-index ed07d165..9cc9b599 100755
---- a/tests/xfs/205
-+++ b/tests/xfs/205
-@@ -27,14 +27,15 @@ _require_scratch_nocheck
+diff --git a/tests/generic/230 b/tests/generic/230
+index 66b12d2f..e0a876ba 100755
+--- a/tests/generic/230
++++ b/tests/generic/230
+@@ -99,6 +99,9 @@ rm -f $seqres.full
  
+ grace=2
+ 
++# Test only the quota type specified in each _scratch_mount clause below.
++_qmount_option 'defaults'
++
+ _scratch_mkfs >> $seqres.full 2>&1
+ _scratch_mount "-o usrquota,grpquota"
+ BLOCK_SIZE=$(_get_file_block_size $SCRATCH_MNT)
+diff --git a/tests/xfs/075 b/tests/xfs/075
+index caf612bb..dee01462 100755
+--- a/tests/xfs/075
++++ b/tests/xfs/075
+@@ -25,12 +25,16 @@ _cleanup()
+ # get standard environment, filters and checks
+ . ./common/rc
+ . ./common/filter
++. ./common/quota
+ 
+ # real QA test starts here
+ _supported_fs xfs
+ _supported_os Linux
+ _require_scratch
+ 
++# norecovery mounts do not succeed with quotas eanbled, so shut them off
++_qmount_option "defaults"
++
+ echo "Silence is golden"
+ _scratch_mkfs_sized $((512 * 1024 * 1024)) >$seqres.full
+ 
+diff --git a/tests/xfs/116 b/tests/xfs/116
+index 6887d7e5..4422eb50 100755
+--- a/tests/xfs/116
++++ b/tests/xfs/116
+@@ -36,6 +36,9 @@ _supported_os Linux
+ _require_scratch
+ _require_xfs_quota
+ 
++# Only mount with the quota options we specify below
++_qmount_option "defaults"
++
+ _scratch_mkfs >/dev/null 2>&1
+ _scratch_mount "-o uquota"
+ _scratch_unmount
+diff --git a/tests/xfs/132 b/tests/xfs/132
+index c5fe8b5a..a421f727 100755
+--- a/tests/xfs/132
++++ b/tests/xfs/132
+@@ -24,6 +24,7 @@ _cleanup()
+ # get standard environment, filters and checks
+ . ./common/rc
+ . ./common/filter
++. ./common/quota
+ 
+ # remove previous $seqres.full before test
  rm -f $seqres.full
+@@ -43,6 +44,10 @@ _disable_dmesg_check
+ _require_xfs_mkfs_crc
+ _scratch_mkfs -m crc=0 > $seqres.full 2>&1
  
--_scratch_mkfs_xfs -d size=16m -b size=512 -l size=4944b >> $seqres.full 2>&1
-+fsblksz=1024
-+_scratch_mkfs_xfs -d size=$((32768*fsblksz)) -b size=$fsblksz >> $seqres.full 2>&1
- _scratch_mount
++# The files that EIO in the golden output changes if we have quotas enabled
++# so leave it off.
++_qmount_option "defaults"
++
+ # corrupt an inode in the root inode chunk
+ root_ino=$(_scratch_xfs_get_metadata_field 'rootino' 'sb 0')
+ corrupt_ino=$((root_ino + 15))
+diff --git a/tests/xfs/220 b/tests/xfs/220
+index 227d5452..61319c9d 100755
+--- a/tests/xfs/220
++++ b/tests/xfs/220
+@@ -36,6 +36,9 @@ _supported_os Linux
+ _require_scratch
+ _require_quota
  
- # fix the reserve block pool to a known size so that the enospc calculations
- # work out correctly.
- _scratch_resvblks 1024 >> $seqres.full 2>&1
++# Only mount with the specific quota options mentioned below
++_qmount_option "defaults"
++
+ echo "Silence is golden."
  
--# on a 16MB filesystem, there's 32768x512byte blocks. used is:
-+# on a 16MB filesystem, there's 32768x$fsblkszbyte blocks. used is:
- #	- 4944 in the log,
- #	- 32+1 for the root inode cluster
- #	- 4 for the AG header
-@@ -50,19 +51,25 @@ _scratch_resvblks 1024 >> $seqres.full 2>&1
- # Filesystem           1K-blocks      Used Available Use% Mounted on
- # /dev/ubdc                13912     13908         4 100% /mnt/scratch
- #
--dd if=/dev/zero of=$SCRATCH_MNT/fred bs=512 count=25000 2>&1 | _filter_dd
--dd if=/dev/zero of=$SCRATCH_MNT/fred2 bs=512 count=500 2>&1 | _filter_dd
--dd if=/dev/zero of=$SCRATCH_MNT/fred3 bs=512 count=245 2>&1 | _filter_dd
-+blks=$(( ($(_get_available_space $SCRATCH_MNT) / $fsblksz) - 15 ))
-+test $blks -gt 1100 || _notrun "not enough space"
-+b1=$(echo $blks | sed -e 's/[0-9][0-9][0-9]$/000/g')
-+b2=$(echo $blks | sed -e 's/^[0-9][0-9]//g')
-+echo "blks: $blks b1: $b1 b2: $b2" >> $seqres.full
-+dd if=/dev/zero of=$SCRATCH_MNT/fred bs=$fsblksz count=$((b1 - 1000)) 2>&1 | _filter_dd
-+dd if=/dev/zero of=$SCRATCH_MNT/fred2 bs=$fsblksz count=$b2 2>&1 | _filter_dd
-+dd if=/dev/zero of=$SCRATCH_MNT/fred3 bs=$fsblksz count=$((blks - (b1 + b2))) 2>&1 | _filter_dd
- rm -f $SCRATCH_MNT/fred*
- 
- echo "*** one file"
- # now try a single file of that size
--dd if=/dev/zero of=$SCRATCH_MNT/fred bs=512 count=26745 2>&1 | _filter_dd
-+dd if=/dev/zero of=$SCRATCH_MNT/fred bs=$fsblksz count=$blks 2>&1 | _filter_dd
- #rm -f $SCRATCH_MNT/fred*
- 
- echo "*** one file, a few bytes at a time"
- # now try a single file of that size
--dd if=/dev/zero of=$SCRATCH_MNT/fred bs=15 count=$[26745/15*512] 2>&1 | _filter_dd
-+dd if=/dev/zero of=$SCRATCH_MNT/fred bs=15 count=$[blks/15*$fsblksz] 2>&1 | _filter_dd
-+echo space: $(_get_available_space $SCRATCH_MNT) >> $seqres.full
- 
- # success, all done
- echo "*** done"
+ # create scratch filesystem
