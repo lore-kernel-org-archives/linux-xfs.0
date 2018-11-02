@@ -1,135 +1,172 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39956 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726520AbeKAUED (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Nov 2018 16:04:03 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 205F6308A948
-        for <linux-xfs@vger.kernel.org>; Thu,  1 Nov 2018 11:01:36 +0000 (UTC)
-From: Jan Tulak <jtulak@redhat.com>
-Subject: [PATCH 0/2] xfsdump whitespace changes
-Date: Thu,  1 Nov 2018 12:01:28 +0100
-Message-Id: <20181101110130.19489-1-jtulak@redhat.com>
+Received: from esa7.fujitsucc.c3s2.iphmx.com ([68.232.159.87]:36495 "EHLO
+        esa7.fujitsucc.c3s2.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725961AbeKBKtB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Nov 2018 06:49:01 -0400
+From: "y-goto@fujitsu.com" <y-goto@fujitsu.com>
+Subject: RE: Problems with VM_MIXEDMAP removal from /proc/<pid>/smaps
+Date: Fri, 2 Nov 2018 01:43:27 +0000
+Message-ID: <TYAPR01MB32612BE7B72B099FBFB00DF190CF0@TYAPR01MB3261.jpnprd01.prod.outlook.com>
+References: <20181002100531.GC4135@quack2.suse.cz>
+ <20181002121039.GA3274@linux-x5ow.site>
+ <20181002142959.GD9127@quack2.suse.cz>
+ <x49h8hkfhk9.fsf@segfault.boston.devel.redhat.com>
+ <20181018002510.GC6311@dastard> <20181018145555.GS23493@quack2.suse.cz>
+ <20181019004303.GI6311@dastard>
+ <CAPcyv4ixoAh7HEMfm+B4sRDx1Qwm6SHGjtQ+5r3EKsxreRydrA@mail.gmail.com>
+ <20181030224904.GT19305@dastard>
+ <TYAPR01MB32619CCA488DD0DA86EDB17E90CD0@TYAPR01MB3261.jpnprd01.prod.outlook.com>
+ <20181101230012.GC19305@dastard>
+In-Reply-To: <20181101230012.GC19305@dastard>
+Content-Language: ja-JP
+Content-Type: text/plain; charset="iso-2022-jp"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Jan Tulak <jtulak@redhat.com>
+To: 'Dave Chinner' <david@fromorbit.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, jmoyer <jmoyer@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>, Dave Jiang <dave.jiang@intel.com>, linux-nvdimm <linux-nvdimm@lists.01.org>, Linux MM <linux-mm@kvack.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>
 
-(I'm splitting the previous set into smaller ones, so changes doesn't
- have to wait.)
 
-This set is dealing with whitespaces only, no functional change, code
-shuffling, etc. should be present. The first patch clears out trailing
-whitespaces, the second one sorts out the crazy mishmash of tabs and
-spaces.
+> > > 	MAP_DIRECT is an access hint.
+> > >
+> > > 	MAP_SYNC provides a data integrity model guarantee.
+> > >
+> > > 	MAP_SYNC may imply MAP_DIRECT for specific implementations,
+> > > 	but it does not require or guarantee MAP_DIRECT.
+> > >
+> > > Let's compare that with O_DIRECT:
+> > >
+> > > 	O_DIRECT in an access hint.
+> > >
+> > > 	O_DSYNC provides a data integrity model guarantee.
+> > >
+> > > 	O_DSYNC may imply O_DIRECT for specific implementations, but
+> > > 	it does not require or guarantee O_DIRECT.
+> > >
+> > > Consistency in access and data integrity models is a good thing. DAX
+> > > and pmem is not an exception. We need to use a model we know works
+> > > and has proven itself over a long period of time.
+> >
+> > Hmmm, then, I would like to know all of the reasons of breakage of MAP_=
+DIRECT.
+> > (I'm not opposed to your opinion, but I need to know it.)
+> >
+> > In O_DIRECT case, in my understanding, the reason of breakage of O_DIRE=
+CT is
+> > "wrong alignment is specified by application", right?
+>=20
+> O_DIRECT has defined memory and offset alignment restrictions, and
+> will return an error to userspace when they are violated. It does
+> not fall back to buffered IO in this case. MAP_DIRECT has no
+> equivalent restriction, so IO alignment of O_DIRECT is largely
+> irrelevant here.
+>=20
+> What we are talking about here is that some filesystems can only do
+> certain operations through buffered IO, such as block allocation or
+> file extension, and so silently fall back to doing them via buffered
+> IO even when O_DIRECT is specified. The old direct IO code used to
+> be full of conditionals to allow this - I think DIO_SKIP_HOLES is
+> only one remaining:
+>=20
+>                 /*
+>                  * For writes that could fill holes inside i_size on a
+>                  * DIO_SKIP_HOLES filesystem we forbid block creations: o=
+nly
+>                  * overwrites are permitted. We will return early to the =
+caller
+>                  * once we see an unmapped buffer head returned, and the =
+caller
+>                  * will fall back to buffered I/O.
+>                  *
+>                  * Otherwise the decision is left to the get_blocks metho=
+d,
+>                  * which may decide to handle it or also return an unmapp=
+ed
+>                  * buffer head.
+>                  */
+>                 create =3D dio->op =3D=3D REQ_OP_WRITE;
+>                 if (dio->flags & DIO_SKIP_HOLES) {
+>                         if (fs_startblk <=3D ((i_size_read(dio->inode) - =
+1) >>
+>                                                         i_blkbits))
+>                                 create =3D 0;
+>                 }
+>=20
+> Other cases like file extension cases are caught by the filesystems
+> before calling into the DIO code itself, so there's multiple avenues
+> for O_DIRECT transparently falling back to buffered IO.
+>=20
+> This means the applications don't fail just because the filesystem
+> can't do a specific operation via O_DIRECT. The data writes still
+> succeed because they fall back to buffered IO, and the application
+> is blissfully unaware that the filesystem behaved that way.
+>=20
+> > When filesystem can not use O_DIRECT and it uses page cache instead,
+> > then system uses more memory resource than user's expectation.
+>=20
+> That's far better than failing unexpectedly because the app
+> unexpectedly came across a hole in the file (e.g. someone ran
+> sparsify across the filesystem).
+>=20
+> > So, there is a side effect, and it may cause other trouble.
+> > (memory pressure, expected performance can not be gained, and so on ..)
+>=20
+> Which is why people are supposed to test their systems before they
+> put them into production.
+>=20
+> I've lost count of the number of times I've heard "but O_DIRECT is
+> supposed to make things faster!" because people don't understand
+> exactly what it does or means. Bypassing the page cache does not
+> magically make applications go faster - it puts the responsibility
+> for doing optimal IO on the application, not the kernel.
+>=20
+> MAP_DIRECT will be no different. It's no guarantee that it will make
+> things faster, or that everything will just work as users expect
+> them to. It specifically places the responsibility for performing IO
+> in an optimal fashion on the application and the user for making
+> sure that it is fit for their purposes. Like O_DIRECT, using
+> MAP_DIRECT means "I, the application, know exactly what I'm doing,
+> so get out of the way as much as possible because I'm taking
+> responsibility for issuing IO in the most optimal manner now".
+>=20
+> > In such case its administrator (or technical support engineer) needs to=
+ struggle to
+> > investigate what is the reason.
+>=20
+> That's no different to performance problems that arise from
+> inappropriate use of O_DIRECT. It requires a certain level of
+> expertise to be able to understand and diagnose such issues.
+>=20
+> > So, I would like to know in MAP_DIRECT case, what is the reasons?
+> > I think it will be helpful for users.
+> > Only splice?
+>=20
+> The filesystem can ignore MAP_DIRECT for any reason it needs to. I'm
+> certain that filesystem developers will try to maintain MAP_DIRECT
+> semantics as much as possible, but it's not going to be possible in
+> /all situations/ on XFS and ext4 because they simply haven't been
+> designed with DAX in mind. Filesystems designed specifically for
+> pmem and DAX might be able to provide MAP_DIRECT in all situations,
+> but those filesystems don't really exist yet.
+>=20
+> This is no different to the early days of O_DIRECT. e.g.  ext3
+> couldn't do O_DIRECT for all operations when it was first
+> introduced, but over time the functionality improved as the
+> underlying issues were solved. If O_DIRECT was a guarantee, then
+> ext3 would have never supported O_DIRECT at all...
 
-I know that these kind of changes are usually not welcomed as they
-conflict with other people's work, but that should not be an issue for
-xfsdump.
+Hmm, Ok. I see.
+Thank you very much for your detail explanation.
 
-Jan Tulak (2):
-  xfsdump: remove trailing whitespaces
-  xfsdump: change indentation to tabs
+>=20
+> > (Maybe such document will be necessary....)
+>=20
+> The semantics will need to be documented in the relevant man pages.
 
- common/arch_xlate.c     |  330 ++--
- common/cldmgr.c         |   38 +-
- common/cldmgr.h         |    6 +-
- common/cleanup.c        |   10 +-
- common/cleanup.h        |   12 +-
- common/content.h        |   14 +-
- common/content_common.c |   28 +-
- common/content_inode.h  |   14 +-
- common/dlog.c           |   94 +-
- common/dlog.h           |   42 +-
- common/drive.c          |   38 +-
- common/drive.h          |   74 +-
- common/drive_minrmt.c   |  926 +++++-----
- common/drive_scsitape.c | 1377 ++++++++-------
- common/drive_simple.c   |  308 ++--
- common/fs.c             |   28 +-
- common/fs.h             |   22 +-
- common/getdents.c       |   14 +-
- common/global.c         |  120 +-
- common/global.h         |    4 +-
- common/hsmapi.c         |   50 +-
- common/inventory.c      |  142 +-
- common/inventory.h      |   46 +-
- common/main.c           |  604 +++----
- common/media.c          |   62 +-
- common/media_rmvtape.h  |    2 +-
- common/mlog.c           |   78 +-
- common/mlog.h           |    2 +-
- common/openutil.c       |   14 +-
- common/qlock.c          |   26 +-
- common/rec_hdr.h        |    2 +-
- common/ring.c           |   32 +-
- common/ring.h           |   46 +-
- common/stream.c         |   16 +-
- common/stream.h         |   20 +-
- common/ts_mtio.h        |  110 +-
- common/types.h          |   76 +-
- common/util.c           |  178 +-
- common/util.h           |   46 +-
- dump/content.c          | 2172 ++++++++++++------------
- dump/inomap.c           |  402 ++---
- dump/inomap.h           |   34 +-
- dump/var.c              |   38 +-
- inventory/inv_api.c     |  354 ++--
- inventory/inv_core.c    |   40 +-
- inventory/inv_files.c   |    2 +-
- inventory/inv_fstab.c   |   92 +-
- inventory/inv_idx.c     |  197 ++-
- inventory/inv_mgr.c     |  175 +-
- inventory/inv_oref.c    |  140 +-
- inventory/inv_oref.h    |   82 +-
- inventory/inv_priv.h    |  128 +-
- inventory/inv_stobj.c   |  516 +++---
- inventory/inventory.h   |   70 +-
- inventory/testmain.c    |  147 +-
- invutil/cmenu.c         |  654 +++----
- invutil/cmenu.h         |   82 +-
- invutil/fstab.c         |  414 ++---
- invutil/invidx.c        | 1574 +++++++++--------
- invutil/invutil.c       | 1161 +++++++------
- invutil/invutil.h       |   12 +-
- invutil/list.c          |  148 +-
- invutil/list.h          |   37 +-
- invutil/menu.c          |  292 ++--
- invutil/screen.c        |   64 +-
- invutil/stobj.c         |  654 +++----
- librmt/rmtabort.c       |    2 +-
- librmt/rmtaccess.c      |    2 -
- librmt/rmtclose.c       |    2 -
- librmt/rmtcommand.c     |    3 -
- librmt/rmtcreat.c       |    2 -
- librmt/rmtdev.c         |    2 -
- librmt/rmtfstat.c       |    2 +-
- librmt/rmtioctl.c       |  222 +--
- librmt/rmtlib.h         |    2 +-
- librmt/rmtlseek.c       |    2 -
- librmt/rmtmsg.c         |   26 +-
- librmt/rmtopen.c        |   72 +-
- librmt/rmtstatus.c      |    3 -
- restore/bag.c           |   22 +-
- restore/bag.h           |    4 +-
- restore/content.c       | 3568 +++++++++++++++++++--------------------
- restore/dirattr.c       |  308 ++--
- restore/dirattr.h       |    6 +-
- restore/inomap.c        |  118 +-
- restore/mmap.c          |   16 +-
- restore/namreg.c        |   82 +-
- restore/node.c          |   98 +-
- restore/node.h          |   12 +-
- restore/tree.c          | 1082 ++++++------
- restore/tree.h          |    8 +-
- restore/win.c           |   28 +-
- restore/win.h           |   10 +-
- 93 files changed, 10202 insertions(+), 10234 deletions(-)
+I agree.
 
--- 
-2.19.1
+Thanks, again.
+----
+Yasunori Goto
