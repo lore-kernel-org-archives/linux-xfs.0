@@ -1,146 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50744 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727644AbeKAWUb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Nov 2018 18:20:31 -0400
-Date: Thu, 1 Nov 2018 09:17:32 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 3/7] cache: prevent expansion races
-Message-ID: <20181101131732.GB21654@bfoster>
-References: <20181030112043.6034-1-david@fromorbit.com>
- <20181030112043.6034-4-david@fromorbit.com>
- <20181031171302.GA16769@bfoster>
- <20181101012739.GY19305@dastard>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:37576 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727008AbeKBNhI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Nov 2018 09:37:08 -0400
+Received: from discord.disaster.area ([192.168.1.111])
+        by dastard with esmtp (Exim 4.80)
+        (envelope-from <david@fromorbit.com>)
+        id 1gIR77-0001AX-0G
+        for linux-xfs@vger.kernel.org; Fri, 02 Nov 2018 15:31:17 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.91)
+        (envelope-from <david@fromorbit.com>)
+        id 1gIR76-0006R2-VK
+        for linux-xfs@vger.kernel.org; Fri, 02 Nov 2018 15:31:16 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfs: fix overflow in xfs_attr3_leaf_verify
+Date: Fri,  2 Nov 2018 15:31:16 +1100
+Message-Id: <20181102043116.24695-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181101012739.GY19305@dastard>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Thu, Nov 01, 2018 at 12:27:39PM +1100, Dave Chinner wrote:
-> On Wed, Oct 31, 2018 at 01:13:02PM -0400, Brian Foster wrote:
-> > On Tue, Oct 30, 2018 at 10:20:39PM +1100, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > When a sudden buffer cache growth demand occurs from multiple
-> > > concurrent sources, they can all fail shaking the cache at the same
-> > > time and expand the cache. This results in the cache doubling in
-> > > size multiple times when only a single expansion was really
-> > > necessary. The resultant massive cache can cause repair to OOM as
-> > > the cache will grow to much larger than memory can actually hold.
-> > > 
-> > > Prevent this sudden and unnecessary expansion by rate limiting cache
-> > > growth to one size increase every tens seconds. This is sufficient
-> > > to prevent racing expansion calls from doing the wrong thing, but
-> > > not too long to prevent necesary cache growth when it is undersized.
-> > > 
-> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > ---
-> > 
-> > This seems fairly harmless, but I'm not really a fan of this kind of
-> > time-based algorithm in general. Could we do something similarly
-> > effective that doesn't require a magic time value?
-> > 
-> > For example, suppose we sample the current cache size at the top of the
-> > function, pass that value along to cache_expand() and have the latter
-> > only bump ->c_maxcount if it still matches the parameter value. Then
-> > return-assign the local var with the latest value:
-> > 
-> > 	max_sample = cache_expand(cache, max_sample);
-> > 
-> > The end result is that an allocator must shake every mru under a given
-> > cache size before it's allowed to grow the cache. Hm?
-> 
-> I tried that and it still causes excessive cache expansion on my
-> really fast IO subsystem.  I'm seeing peaks of 300,000 IOPS when cache
-> expansion bursts occur. They are lasting for up to 20s on my machine
-> and it's enough to cause the cache to double in size multiple times.
-> Once the initial bursts have run their course, demand drops to a
-> steady state of 130-150kiops which the original cache size is quite
-> capable of sustaining.
-> 
+From: Dave Chinner <dchinner@redhat.com>
 
-Interesting.
+generic/070 on 64k block size filesystems is failing with a verifier
+corruption on writeback or an attribute leaf block:
 
-> These bursts are driven by the initial read-ahead queues being
-> filled and stop when the queues fill up.  If the IO is slow, then
-> there isn't cache pressure because processing keeps up with
-> readahead. If IO is fast, it fills the RA queues and then throttles
-> back to processing speed. It's filling the RA queues that causes the
-> buffer cache growth pressure, and it's really not necessary - the RA
-> queues are already full enough to maximise performance in phase 6,
-> and so growing memory footprint doesn't gain us anything.
-> 
+[   94.973083] XFS (pmem0): Metadata corruption detected at xfs_attr3_leaf_verify+0x246/0x260, xfs_attr3_leaf block 0x811480
+[   94.975623] XFS (pmem0): Unmount and run xfs_repair
+[   94.976720] XFS (pmem0): First 128 bytes of corrupted metadata buffer:
+[   94.978270] 000000004b2e7b45: 00 00 00 00 00 00 00 00 3b ee 00 00 00 00 00 00  ........;.......
+[   94.980268] 000000006b1db90b: 00 00 00 00 00 81 14 80 00 00 00 00 00 00 00 00  ................
+[   94.982251] 00000000433f2407: 22 7b 5c 82 2d 5c 47 4c bb 31 1c 37 fa a9 ce d6  "{\.-\GL.1.7....
+[   94.984157] 0000000010dc7dfb: 00 00 00 00 00 81 04 8a 00 0a 18 e8 dd 94 01 00  ................
+[   94.986215] 00000000d5a19229: 00 a0 dc f4 fe 98 01 68 f0 d8 07 e0 00 00 00 00  .......h........
+[   94.988171] 00000000521df36c: 0c 2d 32 e2 fe 20 01 00 0c 2d 58 65 fe 0c 01 00  .-2.. ...-Xe....
+[   94.990162] 000000008477ae06: 0c 2d 5b 66 fe 8c 01 00 0c 2d 71 35 fe 7c 01 00  .-[f.....-q5.|..
+[   94.992139] 00000000a4a6bca6: 0c 2d 72 37 fc d4 01 00 0c 2d d8 b8 f0 90 01 00  .-r7.....-......
+[   94.994789] XFS (pmem0): xfs_do_force_shutdown(0x8) called from line 1453 of file fs/xfs/xfs_buf.c. Return address = ffffffff815365f3
 
-Makes sense..
+This is failing this check:
 
-> i.e. the buffer cache on large filesystems like this is used as a
-> prefetch buffer. It is not a cache that stores anything for repeated
-> use - there's 500GB of metadata (>450 million inodes) in this
-> filesystem and we're only running w/ 128GB RAM, so we have no hope
-> of caching the entire working set in RAM. Hence we want to keep the
-> cache size down to just what is necessary to sustain effective
-> prefetch.
-> 
-> The problem with throttling on "scanned the whole cache" is that
-> this happens really quickly when you have a buffer demand of ~300k/s
-> When I start with a cache size of 800k buffers (-o bhash=101031)
-> doubling the cache size from 800k objects to 1.6m objects occurs
-> within a couple of seconds of phase 6 starting. A couple of seconds
-> later it doubles again, and by the time the initial 20s burst has
-> finished, it's doubled 3 or 4 times.
-> 
+                end = ichdr.freemap[i].base + ichdr.freemap[i].size;
+                if (end < ichdr.freemap[i].base)
+>>>>>                   return __this_address;
+                if (end > mp->m_attr_geo->blksize)
+                        return __this_address;
 
-Ok, but I'm curious how much of this boils down to lock contention
-exacerbated by the fast I/O. I can see how reduced I/O latency could
-contribute to the rapid growth rate. At the same time, it looks like all
-the shaker does in this pattern is flush buffers if dirty (which seems
-unlikely if we're in some kind of prefetch overload?) and move them to
-another list (for potential reuse of memory). 
+And from the buffer output above, the freemap array is:
 
-We clearly have multiple lookup/fail/expand races going on as evidenced
-by the need for this patch in the first place. The cache growth is
-driven by cache misses (i.e. prefetch). The buffer lookups acquire hash
-locks and the cache lock (for the node allocation attempt). If the alloc
-is allowed, we read the buf and add it to the hash. If not, we shake the
-mru and retry the same mru or next. The shake trylocks each node (buf)
-and hash lock in the mru. If either lock fails, we skip to the next
-buffer.
+	freemap[0].base = 0x00a0
+	freemap[0].size = 0xdcf4	end = 0xdd94
+	freemap[1].base = 0xfe98
+	freemap[1].size = 0x0168	end = 0x10000
+	freemap[2].base = 0xf0d8
+	freemap[2].size = 0x07e0	end = 0xf8b8
 
-I'm not sure how likely this is, but what are the chances the shakes are
-contending with eachother such that lock contention prevents real work
-from being done in the shaker? That seems like a reasonable possibility
-to me given that you're clearly reproducing enough parallel shakes to
-explode the cache rather quickly. Each shake is essentially iterating
-through the same dataset, right? Of course, I don't have the complete
-picture so perhaps there are other factors at play. I think it's at
-least worth looking into if you haven't already because if something
-like that is going on, it could be more likely that the time-based
-implementation basically trades one kind of resource (memory) wastage
-for another (cpu).
+These all look valid - the block size is 0x10000 and so from the
+last check in the above verifier fragment we know that the end
+of freemap[1] is valid. The problem is that end is declared as:
 
-Brian
+	uint16_t	end;
 
-> After the last expansion, the buffer cache can now grow way beyond
-> what we can fit in memory and reapir eventually gets OOM killed on a
-> 128GB RAM machine even though it really only needs ~70GB RAM to
-> complete successfully.
-> 
-> IOWs, throttling expansion based on "cache full" demand doesn't
-> throttle hard enough to prevent OOM kill in these cases. The time
-> based throttling is based around preventing bursts for driving
-> unnecessary expansion. If the sudden burst turns out ot be sustained
-> demand and hence the cache really does need to be expanded multiple
-> times, then the cache will grow quickly enough to meet that demand.
-> We just don't want bursts to trigger that.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+And (uint16_t)0x10000 = 0. So we have a verifier bug here, not a
+corruption. Fix the verifier to use uint32_t types for the check and
+hence avoid the overflow.
+
+Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=201577
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/libxfs/xfs_attr_leaf.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 6fc5425b1474..2652d00842d6 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -243,7 +243,7 @@ xfs_attr3_leaf_verify(
+ 	struct xfs_mount		*mp = bp->b_target->bt_mount;
+ 	struct xfs_attr_leafblock	*leaf = bp->b_addr;
+ 	struct xfs_attr_leaf_entry	*entries;
+-	uint16_t			end;
++	uint32_t			end;	/* must be 32bit - see below */
+ 	int				i;
+ 
+ 	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &ichdr, leaf);
+@@ -293,6 +293,11 @@ xfs_attr3_leaf_verify(
+ 	/*
+ 	 * Quickly check the freemap information.  Attribute data has to be
+ 	 * aligned to 4-byte boundaries, and likewise for the free space.
++	 *
++	 * Note that for 64k block size filesystems, the freemap entries cannot
++	 * overflow as they are only be16 fields. However, when checking end
++	 * pointer of the freemap, we have to be careful to detect overflows and
++	 * so use uint32_t for those checks.
+ 	 */
+ 	for (i = 0; i < XFS_ATTR_LEAF_MAPSIZE; i++) {
+ 		if (ichdr.freemap[i].base > mp->m_attr_geo->blksize)
+@@ -303,7 +308,9 @@ xfs_attr3_leaf_verify(
+ 			return __this_address;
+ 		if (ichdr.freemap[i].size & 0x3)
+ 			return __this_address;
+-		end = ichdr.freemap[i].base + ichdr.freemap[i].size;
++
++		/* be care of 16 bit overflows here */
++		end = (uint32_t)ichdr.freemap[i].base + ichdr.freemap[i].size;
+ 		if (end < ichdr.freemap[i].base)
+ 			return __this_address;
+ 		if (end > mp->m_attr_geo->blksize)
+-- 
+2.19.1
