@@ -1,149 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:51182 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727950AbeKBApN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Nov 2018 20:45:13 -0400
-Subject: Re: [PATCH] xfs_io: prevents the usage in FIFO files
-References: <20181016094343.21102-1-cmaiolino@redhat.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <fa4344fc-31b1-8381-981c-d9c83daa981f@sandeen.net>
-Date: Thu, 1 Nov 2018 10:41:42 -0500
+Received: from ipmail02.adl2.internode.on.net ([150.101.137.139]:7720 "EHLO
+        ipmail02.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726729AbeKCIf2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Nov 2018 04:35:28 -0400
+Date: Sat, 3 Nov 2018 10:26:13 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/7] cache: prevent expansion races
+Message-ID: <20181102232613.GG19305@dastard>
+References: <20181030112043.6034-1-david@fromorbit.com>
+ <20181030112043.6034-4-david@fromorbit.com>
+ <20181031171302.GA16769@bfoster>
+ <20181101012739.GY19305@dastard>
+ <20181101131732.GB21654@bfoster>
+ <20181101212344.GZ19305@dastard>
+ <20181102113138.GA6794@bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20181016094343.21102-1-cmaiolino@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181102113138.GA6794@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Carlos Maiolino <cmaiolino@redhat.com>, linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 10/16/18 4:43 AM, Carlos Maiolino wrote:
-> Recently we had a bug report of xfs_io frozen on a file, which ended up
-> being a pipe, and xfs_io was waiting for data on the other side of the
-> pipe.
+On Fri, Nov 02, 2018 at 07:31:38AM -0400, Brian Foster wrote:
+> Fair enough, but I'm still curious if doing something like changing the
+> hash trylock in the shaker to a blocking lock would improve shaker
+> effectiveness enough to avoid the need for the time-based hackery. It's
+> possible it has no effect or just replaces one problem with a set of
+> others, but it's an even more trivial change than this patch is.
 > 
-> Although xfs_io was not stuck due a bug itself, we can do better and
-> check the file type before opening the file. xfs_io has very limited
-> usage on pipes, so, just check and deny opening of FIFO files.
+> Another approach may be to lift the cache shaker from a per-lookup-miss
+> execution context to something more central (like its own thread(s))
+> such that lookups can block on (bounded) shakes without introducing too
+> much concurrency therein. That is certainly more involved than bolting a
+> throttle onto cache expansion and may not be worth the effort if the
+> long term plan is to replace the whole cache mechanism.
 
-This seems a little too heavy-handed.  Operating on pipes is probably
-rare, but xfs_io is supposed to be a generic I/O tool.
+I'm more inclined to kill the entire libxfs buffer cache
+implementation and MRUs and port the kernel code across with it's
+reference based LRU and shrinker. And with that, use AIO so that we
+don't need huge numbers of prefetch threads to keep IO in flight.
 
-Today I can do for example:
+Getting rid of the repair prefetcher threads removes the major
+concurrency component that is placed on the cache. Using the kernel
+infrastrucutre also moves from a global cache to a per-ag cache
+which matches how xfs_repair operates and hence further reduces lock
+contention. i.e. it allows threads working within an AG to work
+without interfence from other AGs.
 
-# mkfifo pipe
+Basically, we are hitting on the scalability limits of the libxfs
+architecture right now, and we have an architecure in the kernel
+that scales way beyond what we have in userspace. And it fits right
+in with the way userspace algorithms operate.
 
-# xfs_io -c stat pipe
-fd.path = "pipe"
-fd.flags = non-sync,non-direct,read-write
-stat.ino = 102077957
-stat.type = fifo
-stat.size = 0
-stat.blocks = 0
+Add to that the need for AIO and delwri lists to scale mkfs to
+really large filesystems, and it really comes down to "we need to
+port the kernel code and move to AIO" rather than tinker around the
+edges with an architecture that we can't easily scale further that
+it current does...
 
-What xfs_io command was stuck in particular?  These all seem to be handled uh, at least without a hang, if not correctly:
+Cheers,
 
-# xfs_io -c "pread 0 4096" pipe
-pread: Illegal seek
-# xfs_io -c "pwrite 0 4096" pipe
-pwrite: Illegal seek
-# xfs_io -c "bmap" pipe
-foreign file active, bmap command is for XFS filesystems only
-
-(?!)
-
-Oh, this one is interesting ;)
-
-# xfs_io -c "fiemap" pipe
-pipe:
-xfs_io: ioctl(FS_IOC_FIEMAP) ["pipe"]: Structure needs cleaning
-
-...
-
-[149881.306316] XFS (dm-0): Internal error xfs_bmapi_read at line 3817 of file fs/xfs/libxfs/xfs_bmap.c.  Caller xfs_file_iomap_begin+0x16c/0x9f0 [xfs]
-
-
-(eek?)
-
-Anyway, I wonder if we can be more targeted in denying pipes if necessary, maybe CMD_PIPE_OK or CMD_NO_PIPE if that makes sense?
-
--Eric
-
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
-> 
-> I belive having a generic helper to check the file type may have other uses too,
-> so I opted to make it a generic helper.
-> 
->  include/libfrog.h |  2 ++
->  io/open.c         |  6 ++++++
->  libfrog/util.c    | 12 ++++++++++++
->  3 files changed, 20 insertions(+)
-> 
-> diff --git a/include/libfrog.h b/include/libfrog.h
-> index d33f0146..693d026d 100644
-> --- a/include/libfrog.h
-> +++ b/include/libfrog.h
-> @@ -5,7 +5,9 @@
->   */
->  #ifndef __LIBFROG_UTIL_H_
->  #define __LIBFROG_UTIL_H_
-> +#include <sys/types.h>
->  
->  unsigned int	log2_roundup(unsigned int i);
-> +unsigned int	check_file_type(char *name, mode_t mode);
->  
->  #endif /* __LIBFROG_UTIL_H_ */
-> diff --git a/io/open.c b/io/open.c
-> index 6ea3e9a2..25f44b64 100644
-> --- a/io/open.c
-> +++ b/io/open.c
-> @@ -9,6 +9,7 @@
->  #include "init.h"
->  #include "io.h"
->  #include "libxfs.h"
-> +#include "libfrog.h"
->  
->  #ifndef __O_TMPFILE
->  #if defined __alpha__
-> @@ -59,6 +60,11 @@ openfile(
->  	int		fd;
->  	int		oflags;
->  
-> +	if (check_file_type(path, S_IFIFO)) {
-> +		fprintf(stderr, _("xfs_io does not work on FIFO files\n"));
-> +		return -1;
-> +	}
-> +
->  	oflags = flags & IO_READONLY ? O_RDONLY : O_RDWR;
->  	if (flags & IO_APPEND)
->  		oflags |= O_APPEND;
-> diff --git a/libfrog/util.c b/libfrog/util.c
-> index ff935184..de0b8542 100644
-> --- a/libfrog/util.c
-> +++ b/libfrog/util.c
-> @@ -5,6 +5,9 @@
->   */
->  #include "platform_defs.h"
->  #include "libfrog.h"
-> +#include <sys/types.h>
-> +#include <sys/stat.h>
-> +#include <unistd.h>
->  
->  /*
->   * libfrog is a collection of miscellaneous userspace utilities.
-> @@ -22,3 +25,12 @@ log2_roundup(unsigned int i)
->  	}
->  	return rval;
->  }
-> +
-> +unsigned int
-> +check_file_type(char *name, mode_t mode)
-> +{
-> +	struct stat sb;
-> +
-> +	lstat(name, &sb);
-> +	return (sb.st_mode & mode);
-> +}
-> 
+Dave
+-- 
+Dave Chinner
+david@fromorbit.com
