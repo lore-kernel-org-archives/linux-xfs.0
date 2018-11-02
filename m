@@ -1,130 +1,140 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:60822 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728961AbeKFNb2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Nov 2018 08:31:28 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id wA640A4X031258
-        for <linux-xfs@vger.kernel.org>; Tue, 6 Nov 2018 04:08:15 GMT
-Received: from aserv0021.oracle.com (aserv0021.oracle.com [141.146.126.233])
-        by aserp2120.oracle.com with ESMTP id 2nh3mpjt1f-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 06 Nov 2018 04:08:14 +0000
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserv0021.oracle.com (8.14.4/8.14.4) with ESMTP id wA648EeA012065
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 6 Nov 2018 04:08:14 GMT
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id wA648DqE011390
-        for <linux-xfs@vger.kernel.org>; Tue, 6 Nov 2018 04:08:14 GMT
-Subject: [PATCH 1/8] xfs: count inode blocks correctly in inobt scrub
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 05 Nov 2018 20:08:12 -0800
-Message-ID: <154147729274.32496.16585638036818485278.stgit@magnolia>
-In-Reply-To: <154147728649.32496.4515247239602322709.stgit@magnolia>
-References: <154147728649.32496.4515247239602322709.stgit@magnolia>
+Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:33602 "EHLO
+        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727736AbeKBOVC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Nov 2018 10:21:02 -0400
+Date: Fri, 2 Nov 2018 16:14:59 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [GIT PULL] vfs: fix many problems in vfs clone/dedupe implementation
+Message-ID: <20181102051459.GS6311@dastard>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: djwong@kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, sandeen@sandeen.net, david@fromorbit.com
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Hi Linus,
 
-A big block filesystem might require more than one inobt record to cover
-all the inodes in the block.  In these cases it is not correct to round
-the irec count up to the nearest block because this causes us to
-overestimate the number of inode blocks we expect to find.
+Can you please pull update containing a rework of the VFS clone and
+dedupe file range infrastructure from the tag listed below?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/scrub/ialloc.c |   23 +++++++++++++++--------
- 1 file changed, 15 insertions(+), 8 deletions(-)
+We discovered many issues with these interfaces late in the 4.19
+cycle - the worst of them (data corruption, setuid stripping) were
+fixed for XFS in 4.19-rc8, but a larger rework of the infrastructure
+fixing all the problems was needed. That rework is the contents of
+this pull request.
 
+The base tree is 4.19 because there was an unrelated
+vfs_clone_file_range API cleanup merged in v4.19-rc7, and combined
+with the mods in 4.19-rc8 it was simpler for everyone to base this
+work on a tree with all those changes already in it.
 
-diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-index 224dba937492..76ae8338a42e 100644
---- a/fs/xfs/scrub/ialloc.c
-+++ b/fs/xfs/scrub/ialloc.c
-@@ -44,6 +44,11 @@ xchk_setup_ag_iallocbt(
- 
- /* Inode btree scrubber. */
- 
-+struct xchk_iallocbt {
-+	/* Number of inodes we see while scanning inobt. */
-+	unsigned long long	inodes;
-+};
-+
- /*
-  * If we're checking the finobt, cross-reference with the inobt.
-  * Otherwise we're checking the inobt; if there is an finobt, make sure
-@@ -272,7 +277,7 @@ xchk_iallocbt_rec(
- 	union xfs_btree_rec		*rec)
- {
- 	struct xfs_mount		*mp = bs->cur->bc_mp;
--	xfs_filblks_t			*inode_blocks = bs->private;
-+	struct xchk_iallocbt		*iabt = bs->private;
- 	struct xfs_inobt_rec_incore	irec;
- 	uint64_t			holes;
- 	xfs_agnumber_t			agno = bs->cur->bc_private.a.agno;
-@@ -310,8 +315,7 @@ xchk_iallocbt_rec(
- 	    (agbno & (xfs_icluster_size_fsb(mp) - 1)))
- 		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
- 
--	*inode_blocks += XFS_B_TO_FSB(mp,
--			irec.ir_count * mp->m_sb.sb_inodesize);
-+	iabt->inodes += irec.ir_count;
- 
- 	/* Handle non-sparse inodes */
- 	if (!xfs_inobt_issparse(irec.ir_holemask)) {
-@@ -405,10 +409,11 @@ STATIC void
- xchk_iallocbt_xref_rmap_inodes(
- 	struct xfs_scrub	*sc,
- 	int			which,
--	xfs_filblks_t		inode_blocks)
-+	unsigned long long	inodes)
- {
- 	struct xfs_owner_info	oinfo;
- 	xfs_filblks_t		blocks;
-+	xfs_filblks_t		inode_blocks;
- 	int			error;
- 
- 	if (!sc->sa.rmap_cur || xchk_skip_xref(sc->sm))
-@@ -420,6 +425,7 @@ xchk_iallocbt_xref_rmap_inodes(
- 			&blocks);
- 	if (!xchk_should_check_xref(sc, &error, &sc->sa.rmap_cur))
- 		return;
-+	inode_blocks = XFS_B_TO_FSB(sc->mp, inodes * sc->mp->m_sb.sb_inodesize);
- 	if (blocks != inode_blocks)
- 		xchk_btree_xref_set_corrupt(sc, sc->sa.rmap_cur, 0);
- }
-@@ -432,13 +438,14 @@ xchk_iallocbt(
- {
- 	struct xfs_btree_cur	*cur;
- 	struct xfs_owner_info	oinfo;
--	xfs_filblks_t		inode_blocks = 0;
-+	struct xchk_iallocbt	iabt = {
-+		.inodes		= 0,
-+	};
- 	int			error;
- 
- 	xfs_rmap_ag_owner(&oinfo, XFS_RMAP_OWN_INOBT);
- 	cur = which == XFS_BTNUM_INO ? sc->sa.ino_cur : sc->sa.fino_cur;
--	error = xchk_btree(sc, cur, xchk_iallocbt_rec, &oinfo,
--			&inode_blocks);
-+	error = xchk_btree(sc, cur, xchk_iallocbt_rec, &oinfo, &iabt);
- 	if (error)
- 		return error;
- 
-@@ -452,7 +459,7 @@ xchk_iallocbt(
- 	 * to inode chunks with free inodes.
- 	 */
- 	if (which == XFS_BTNUM_INO)
--		xchk_iallocbt_xref_rmap_inodes(sc, which, inode_blocks);
-+		xchk_iallocbt_xref_rmap_inodes(sc, which, iabt.inodes);
- 
- 	return error;
- }
+There is a simple conflict with your current tree in
+Documentation/filesystems/porting. However, if you pull Al's pending
+VFS tree before this there will also be a more significant conflict
+fs/read_write.c in the vfs_dedupe_file_range_one() function rework.
+The details of the conflict  and the resolution that the linux-next
+tree is carrying can be found here:
+
+https://lore.kernel.org/lkml/20181031115247.6adcb659@canb.auug.org.au/
+
+If you need any more info or a tree with the conflicts already
+resolved, please let me know.
+
+Thanks,
+
+Dave.
+
+PS. Darrick is back up to speed so the next XFS pull request for
+fixes later in the -rc cycle will probably come from him again.
+
+The following changes since commit 84df9525b0c27f3ebc2ebb1864fa62a97fdedb7d:
+
+  Linux 4.19 (2018-10-22 07:37:37 +0100)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux tags/xfs-4.20-merge-2
+
+for you to fetch changes up to bf4a1fcf0bc18d52cf0fce6571d6f327ab5eaf22:
+
+  xfs: remove [cm]time update from reflink calls (2018-10-30 10:47:48 +1100)
+
+----------------------------------------------------------------
+vfs: rework data cloning infrastructure
+
+Rework the vfs_clone_file_range and vfs_dedupe_file_range infrastructure to use
+a common .remap_file_range method and supply generic bounds and sanity checking
+functions that are shared with the data write path. The current VFS
+infrastructure has problems with rlimit, LFS file sizes, file time stamps,
+maximum filesystem file sizes, stripping setuid bits, etc and so they are
+addressed in these commits.
+
+We also introduce the ability for the ->remap_file_range methods to return short
+clones so that clones for vfs_copy_file_range() don't get rejected if the entire
+range can't be cloned. It also allows filesystems to sliently skip deduplication
+of partial EOF blocks if they are not capable of doing so without requiring
+errors to be thrown to userspace.
+
+All existing filesystems are converted to user the new .remap_file_range method,
+and both XFS and ocfs2 are modified to make use of the new generic checking
+infrastructure.
+
+----------------------------------------------------------------
+Darrick J. Wong (28):
+      vfs: vfs_clone_file_prep_inodes should return EINVAL for a clone from beyond EOF
+      vfs: check file ranges before cloning files
+      vfs: exit early from zero length remap operations
+      vfs: strengthen checking of file range inputs to generic_remap_checks
+      vfs: avoid problematic remapping requests into partial EOF block
+      vfs: skip zero-length dedupe requests
+      vfs: rename vfs_clone_file_prep to be more descriptive
+      vfs: rename clone_verify_area to remap_verify_area
+      vfs: combine the clone and dedupe into a single remap_file_range
+      vfs: pass remap flags to generic_remap_file_range_prep
+      vfs: pass remap flags to generic_remap_checks
+      vfs: remap helper should update destination inode metadata
+      vfs: make remap_file_range functions take and return bytes completed
+      vfs: plumb remap flags through the vfs clone functions
+      vfs: plumb remap flags through the vfs dedupe functions
+      vfs: enable remap callers that can handle short operations
+      vfs: hide file range comparison function
+      vfs: clean up generic_remap_file_range_prep return value
+      ocfs2: truncate page cache for clone destination file before remapping
+      ocfs2: fix pagecache truncation prior to reflink
+      ocfs2: support partial clone range and dedupe range
+      ocfs2: remove ocfs2_reflink_remap_range
+      xfs: fix pagecache truncation prior to reflink
+      xfs: clean up xfs_reflink_remap_blocks call site
+      xfs: support returning partial reflink results
+      xfs: remove redundant remap partial EOF block checks
+      xfs: remove xfs_reflink_remap_range
+      xfs: remove [cm]time update from reflink calls
+
+ Documentation/filesystems/porting |   5 +
+ Documentation/filesystems/vfs.txt |  22 ++-
+ fs/btrfs/ctree.h                  |   8 +-
+ fs/btrfs/file.c                   |   3 +-
+ fs/btrfs/ioctl.c                  |  50 ++---
+ fs/cifs/cifsfs.c                  |  24 ++-
+ fs/ioctl.c                        |  10 +-
+ fs/nfs/nfs4file.c                 |  12 +-
+ fs/nfsd/vfs.c                     |   8 +-
+ fs/ocfs2/file.c                   |  93 +++++++--
+ fs/ocfs2/refcounttree.c           | 148 ++++----------
+ fs/ocfs2/refcounttree.h           |  24 ++-
+ fs/overlayfs/copy_up.c            |   6 +-
+ fs/overlayfs/file.c               |  43 ++--
+ fs/read_write.c                   | 403 +++++++++++++++++++++-----------------
+ fs/xfs/xfs_file.c                 |  82 +++++---
+ fs/xfs/xfs_reflink.c              | 173 ++++------------
+ fs/xfs/xfs_reflink.h              |  15 +-
+ include/linux/fs.h                |  55 ++++--
+ mm/filemap.c                      | 146 +++++++++++---
+ 20 files changed, 734 insertions(+), 596 deletions(-)
+-- 
+Dave Chinner
+david@fromorbit.com
