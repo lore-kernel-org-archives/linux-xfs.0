@@ -1,171 +1,118 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-it1-f194.google.com ([209.85.166.194]:35739 "EHLO
-        mail-it1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726051AbeKCEqp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Nov 2018 00:46:45 -0400
-Received: by mail-it1-f194.google.com with SMTP id p64-v6so4712104itp.0
-        for <linux-xfs@vger.kernel.org>; Fri, 02 Nov 2018 12:38:18 -0700 (PDT)
-From: Omar Sandoval <osandov@osandov.com>
-Subject: [PATCH] xfs: cache minimum realtime summary level
-Date: Fri,  2 Nov 2018 12:38:00 -0700
-Message-Id: <74441433f31eeb7f0c9fb49a04173ac2417d349a.1541187228.git.osandov@fb.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:57500 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726318AbeKCARn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Nov 2018 20:17:43 -0400
+Date: Fri, 2 Nov 2018 08:10:09 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: fix overflow in xfs_attr3_leaf_verify
+Message-ID: <20181102151009.GS4135@magnolia>
+References: <20181102043116.24695-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181102043116.24695-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: kernel-team@fb.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Omar Sandoval <osandov@fb.com>
+On Fri, Nov 02, 2018 at 03:31:16PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> generic/070 on 64k block size filesystems is failing with a verifier
+> corruption on writeback or an attribute leaf block:
+> 
+> [   94.973083] XFS (pmem0): Metadata corruption detected at xfs_attr3_leaf_verify+0x246/0x260, xfs_attr3_leaf block 0x811480
+> [   94.975623] XFS (pmem0): Unmount and run xfs_repair
+> [   94.976720] XFS (pmem0): First 128 bytes of corrupted metadata buffer:
+> [   94.978270] 000000004b2e7b45: 00 00 00 00 00 00 00 00 3b ee 00 00 00 00 00 00  ........;.......
+> [   94.980268] 000000006b1db90b: 00 00 00 00 00 81 14 80 00 00 00 00 00 00 00 00  ................
+> [   94.982251] 00000000433f2407: 22 7b 5c 82 2d 5c 47 4c bb 31 1c 37 fa a9 ce d6  "{\.-\GL.1.7....
+> [   94.984157] 0000000010dc7dfb: 00 00 00 00 00 81 04 8a 00 0a 18 e8 dd 94 01 00  ................
+> [   94.986215] 00000000d5a19229: 00 a0 dc f4 fe 98 01 68 f0 d8 07 e0 00 00 00 00  .......h........
+> [   94.988171] 00000000521df36c: 0c 2d 32 e2 fe 20 01 00 0c 2d 58 65 fe 0c 01 00  .-2.. ...-Xe....
+> [   94.990162] 000000008477ae06: 0c 2d 5b 66 fe 8c 01 00 0c 2d 71 35 fe 7c 01 00  .-[f.....-q5.|..
+> [   94.992139] 00000000a4a6bca6: 0c 2d 72 37 fc d4 01 00 0c 2d d8 b8 f0 90 01 00  .-r7.....-......
+> [   94.994789] XFS (pmem0): xfs_do_force_shutdown(0x8) called from line 1453 of file fs/xfs/xfs_buf.c. Return address = ffffffff815365f3
+> 
+> This is failing this check:
+> 
+>                 end = ichdr.freemap[i].base + ichdr.freemap[i].size;
+>                 if (end < ichdr.freemap[i].base)
+> >>>>>                   return __this_address;
+>                 if (end > mp->m_attr_geo->blksize)
+>                         return __this_address;
+> 
+> And from the buffer output above, the freemap array is:
+> 
+> 	freemap[0].base = 0x00a0
+> 	freemap[0].size = 0xdcf4	end = 0xdd94
+> 	freemap[1].base = 0xfe98
+> 	freemap[1].size = 0x0168	end = 0x10000
+> 	freemap[2].base = 0xf0d8
+> 	freemap[2].size = 0x07e0	end = 0xf8b8
+> 
+> These all look valid - the block size is 0x10000 and so from the
+> last check in the above verifier fragment we know that the end
+> of freemap[1] is valid. The problem is that end is declared as:
+> 
+> 	uint16_t	end;
+> 
+> And (uint16_t)0x10000 = 0. So we have a verifier bug here, not a
+> corruption. Fix the verifier to use uint32_t types for the check and
+> hence avoid the overflow.
+> 
+> Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=201577
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-The realtime summary is a two-dimensional array on disk, effectively:
+DOH. :(
 
-u32 rsum[log2(number of realtime extents) + 1][number of blocks in the bitmap]
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-rsum[log][bbno] is the number of extents of size 2**log which start in
-bitmap block bbno.
+--D
 
-xfs_rtallocate_extent_near() uses xfs_rtany_summary() to check whether
-rsum[log][bbno] != 0 for any log level. However, the summary array is
-stored in row-major order (i.e., like an array in C), so all of these
-entries are not adjacent, but rather spread across the entire summary
-file. In the worst case (a full bitmap block), xfs_rtany_summary() has
-to check every level.
-
-This means that on a moderately-used realtime device, an allocation will
-waste a lot of time finding, reading, and releasing buffers for the
-realtime summary. In particular, one of our storage services (which runs
-on servers with 8 very slow CPUs and 15 8 TB XFS realtime filesystems)
-spends almost 5% of its CPU cycles in xfs_rtbuf_get() and
-xfs_trans_brelse() called from xfs_rtany_summary().
-
-One solution would be to swap the dimensions of the summary array so
-that different sizes on the same bitmap block are adjacent. However,
-this would require a disk format change to a very old component of XFS,
-and it would slow down xfs_rtallocate_extent_size().
-
-Instead, we can cache the minimum size which contains any extents. We do
-so lazily; rather than guaranteeing that the cache contains the precise
-minimum, it always contains a loose lower bound which we tighten when we
-read or update a summary block. This only uses a few kilobytes of memory
-and is already serialized via the realtime bitmap and summary inode
-locks, so the cost is minimal. With this change, the same workload only
-spends 0.2% of its CPU cycles in the realtime allocator.
-
-Signed-off-by: Omar Sandoval <osandov@fb.com>
----
-This patch is based on Linus' current master branch.
-
- fs/xfs/libxfs/xfs_rtbitmap.c |  4 ++++
- fs/xfs/xfs_mount.h           |  6 ++++++
- fs/xfs/xfs_rtalloc.c         | 27 +++++++++++++++++++++++----
- 3 files changed, 33 insertions(+), 4 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
-index b228c821bae6..6d4990717cee 100644
---- a/fs/xfs/libxfs/xfs_rtbitmap.c
-+++ b/fs/xfs/libxfs/xfs_rtbitmap.c
-@@ -505,6 +505,10 @@ xfs_rtmodify_summary_int(
- 		uint first = (uint)((char *)sp - (char *)bp->b_addr);
- 
- 		*sp += delta;
-+		if (*sp == 0 && log == mp->m_rsum_cache[bbno])
-+			mp->m_rsum_cache[bbno]++;
-+		if (*sp != 0 && log < mp->m_rsum_cache[bbno])
-+			mp->m_rsum_cache[bbno] = log;
- 		xfs_trans_log_buf(tp, bp, first, first + sizeof(*sp) - 1);
- 	}
- 	if (sum)
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 7964513c3128..2b626a4b4824 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -89,6 +89,12 @@ typedef struct xfs_mount {
- 	int			m_logbsize;	/* size of each log buffer */
- 	uint			m_rsumlevels;	/* rt summary levels */
- 	uint			m_rsumsize;	/* size of rt summary, bytes */
-+	/*
-+	 * Cache of rt summary level per bitmap block with the invariant that
-+	 * m_rsum_cache[bbno] <= the minimum i for which rsum[i][bbno] != 0.
-+	 * Reads and writes are serialized by the rsumip inode lock.
-+	 */
-+	uint8_t			*m_rsum_cache;
- 	struct xfs_inode	*m_rbmip;	/* pointer to bitmap inode */
- 	struct xfs_inode	*m_rsumip;	/* pointer to summary inode */
- 	struct xfs_inode	*m_rootip;	/* pointer to root directory */
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 926ed314ffba..351bdc6a84cb 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -64,8 +64,12 @@ xfs_rtany_summary(
- 	int		log;		/* loop counter, log2 of ext. size */
- 	xfs_suminfo_t	sum;		/* summary data */
- 
-+	/* There are no extents at levels < m_rsum_cache[bbno]. */
-+	if (low < mp->m_rsum_cache[bbno])
-+		low = mp->m_rsum_cache[bbno];
-+
- 	/*
--	 * Loop over logs of extent sizes.  Order is irrelevant.
-+	 * Loop over logs of extent sizes.
- 	 */
- 	for (log = low; log <= high; log++) {
- 		/*
-@@ -80,13 +84,17 @@ xfs_rtany_summary(
- 		 */
- 		if (sum) {
- 			*stat = 1;
--			return 0;
-+			goto out;
- 		}
- 	}
- 	/*
- 	 * Found nothing, return failure.
- 	 */
- 	*stat = 0;
-+out:
-+	/* There were no extents at levels < log. */
-+	if (log > mp->m_rsum_cache[bbno])
-+		mp->m_rsum_cache[bbno] = log;
- 	return 0;
- }
- 
-@@ -1187,8 +1195,8 @@ xfs_rtmount_init(
- }
- 
- /*
-- * Get the bitmap and summary inodes into the mount structure
-- * at mount time.
-+ * Get the bitmap and summary inodes and the summary cache into the mount
-+ * structure at mount time.
-  */
- int					/* error */
- xfs_rtmount_inodes(
-@@ -1211,6 +1219,16 @@ xfs_rtmount_inodes(
- 		return error;
- 	}
- 	ASSERT(mp->m_rsumip != NULL);
-+	/*
-+	 * The rsum cache is initialized to all zeroes, which trivially
-+	 * satisfies the invariant.
-+	 */
-+	mp->m_rsum_cache = kvzalloc(sbp->sb_rbmblocks, GFP_KERNEL);
-+	if (!mp->m_rsum_cache) {
-+		xfs_irele(mp->m_rbmip);
-+		xfs_irele(mp->m_rsumip);
-+		return -ENOMEM;
-+	}
- 	return 0;
- }
- 
-@@ -1218,6 +1236,7 @@ void
- xfs_rtunmount_inodes(
- 	struct xfs_mount	*mp)
- {
-+	kvfree(mp->m_rsum_cache);
- 	if (mp->m_rbmip)
- 		xfs_irele(mp->m_rbmip);
- 	if (mp->m_rsumip)
--- 
-2.19.1
+> ---
+>  fs/xfs/libxfs/xfs_attr_leaf.c | 11 +++++++++--
+>  1 file changed, 9 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index 6fc5425b1474..2652d00842d6 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> @@ -243,7 +243,7 @@ xfs_attr3_leaf_verify(
+>  	struct xfs_mount		*mp = bp->b_target->bt_mount;
+>  	struct xfs_attr_leafblock	*leaf = bp->b_addr;
+>  	struct xfs_attr_leaf_entry	*entries;
+> -	uint16_t			end;
+> +	uint32_t			end;	/* must be 32bit - see below */
+>  	int				i;
+>  
+>  	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &ichdr, leaf);
+> @@ -293,6 +293,11 @@ xfs_attr3_leaf_verify(
+>  	/*
+>  	 * Quickly check the freemap information.  Attribute data has to be
+>  	 * aligned to 4-byte boundaries, and likewise for the free space.
+> +	 *
+> +	 * Note that for 64k block size filesystems, the freemap entries cannot
+> +	 * overflow as they are only be16 fields. However, when checking end
+> +	 * pointer of the freemap, we have to be careful to detect overflows and
+> +	 * so use uint32_t for those checks.
+>  	 */
+>  	for (i = 0; i < XFS_ATTR_LEAF_MAPSIZE; i++) {
+>  		if (ichdr.freemap[i].base > mp->m_attr_geo->blksize)
+> @@ -303,7 +308,9 @@ xfs_attr3_leaf_verify(
+>  			return __this_address;
+>  		if (ichdr.freemap[i].size & 0x3)
+>  			return __this_address;
+> -		end = ichdr.freemap[i].base + ichdr.freemap[i].size;
+> +
+> +		/* be care of 16 bit overflows here */
+> +		end = (uint32_t)ichdr.freemap[i].base + ichdr.freemap[i].size;
+>  		if (end < ichdr.freemap[i].base)
+>  			return __this_address;
+>  		if (end > mp->m_attr_geo->blksize)
+> -- 
+> 2.19.1
+> 
