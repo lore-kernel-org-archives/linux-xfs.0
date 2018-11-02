@@ -1,94 +1,171 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:45052 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725935AbeKBUuE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Nov 2018 16:50:04 -0400
-Received: by mail-wr1-f65.google.com with SMTP id d17-v6so1649029wre.11
-        for <linux-xfs@vger.kernel.org>; Fri, 02 Nov 2018 04:43:09 -0700 (PDT)
+Received: from mail-it1-f194.google.com ([209.85.166.194]:35739 "EHLO
+        mail-it1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726051AbeKCEqp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Nov 2018 00:46:45 -0400
+Received: by mail-it1-f194.google.com with SMTP id p64-v6so4712104itp.0
+        for <linux-xfs@vger.kernel.org>; Fri, 02 Nov 2018 12:38:18 -0700 (PDT)
+From: Omar Sandoval <osandov@osandov.com>
+Subject: [PATCH] xfs: cache minimum realtime summary level
+Date: Fri,  2 Nov 2018 12:38:00 -0700
+Message-Id: <74441433f31eeb7f0c9fb49a04173ac2417d349a.1541187228.git.osandov@fb.com>
 MIME-Version: 1.0
-References: <20181101110130.19489-1-jtulak@redhat.com> <20181102013618.GD19305@dastard>
-In-Reply-To: <20181102013618.GD19305@dastard>
-From: Jan Tulak <jtulak@redhat.com>
-Date: Fri, 2 Nov 2018 12:43:18 +0100
-Message-ID: <CACj3i71FUf84iUCFKVhVPQVhjUOdb-_TDTsPVvrFe8hC_zLMeg@mail.gmail.com>
-Subject: Re: [PATCH 0/2] xfsdump whitespace changes
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Chinner, Dave" <david@fromorbit.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: kernel-team@fb.com
 
-On Fri, Nov 2, 2018 at 2:36 AM Dave Chinner <david@fromorbit.com> wrote:
->
-> On Thu, Nov 01, 2018 at 12:01:28PM +0100, Jan Tulak wrote:
-> > (I'm splitting the previous set into smaller ones, so changes doesn't
-> >  have to wait.)
-> >
-> > This set is dealing with whitespaces only, no functional change, code
-> > shuffling, etc. should be present. The first patch clears out trailing
-> > whitespaces, the second one sorts out the crazy mishmash of tabs and
-> > spaces.
->
-> patch 2 Didn't come through - it'll be too large for the list.
+From: Omar Sandoval <osandov@fb.com>
 
-Ah, I see.
+The realtime summary is a two-dimensional array on disk, effectively:
 
->
-> However, it's is the same change as what you originally posted to a
+u32 rsum[log2(number of realtime extents) + 1][number of blocks in the bitmap]
 
-Yes, it is the same thing, with changes where I found something
-misaligned on top.
+rsum[log][bbno] is the number of extents of size 2**log which start in
+bitmap block bbno.
 
-> git tree, then it needs revision. basically, most of the change was
-> converting vertically aligned function call parameters to use tabs,
-> and that broke the vertical alignment.
+xfs_rtallocate_extent_near() uses xfs_rtany_summary() to check whether
+rsum[log][bbno] != 0 for any log level. However, the summary array is
+stored in row-major order (i.e., like an array in C), so all of these
+entries are not adjacent, but rather spread across the entire summary
+file. In the worst case (a full bitmap block), xfs_rtany_summary() has
+to check every level.
 
-It is "s/    /\t/" limited to the beginning of the line. The function
-parameters were caught in it too, but I don't think they would make
-the most of the lines.
+This means that on a moderately-used realtime device, an allocation will
+waste a lot of time finding, reading, and releasing buffers for the
+realtime summary. In particular, one of our storage services (which runs
+on servers with 8 very slow CPUs and 15 8 TB XFS realtime filesystems)
+spends almost 5% of its CPU cycles in xfs_rtbuf_get() and
+xfs_trans_brelse() called from xfs_rtany_summary().
 
->
-> I'd suggest that this is the least of the whitespace sins of
-> xfsdump. yes, it's easy to script, but I don't think it's the right
-> thing to do. The biggest problems I think we need to start with are:
->
-> - reformat all the function definitions according to common XFS style
-> - get rid of all the "( foo )" style white space aroudn parenthesis
+One solution would be to swap the dimensions of the summary array so
+that different sizes on the same bitmap block are adjacent. However,
+this would require a disk format change to a very old component of XFS,
+and it would slow down xfs_rtallocate_extent_size().
 
-I already started working on it. It is too complex for awk/sed, so I'm
-trying to find some better way through IDEs with autoformatting
-capabilities.
+Instead, we can cache the minimum size which contains any extents. We do
+so lazily; rather than guaranteeing that the cache contains the precise
+minimum, it always contains a loose lower bound which we tighten when we
+read or update a summary block. This only uses a few kilobytes of memory
+and is already serialized via the realtime bitmap and summary inode
+locks, so the cost is minimal. With this change, the same workload only
+spends 0.2% of its CPU cycles in the realtime allocator.
 
-> - convert all the code with 4 space indents to tabs, leaving
->   vertically aligned function call parameters alone.
+Signed-off-by: Omar Sandoval <osandov@fb.com>
+---
+This patch is based on Linus' current master branch.
 
-Part of the issue is that xfsdump is not even consistently using the
-number of spaces. E.g. just a two random functions in
-invutil/stobj.c:335-486 in master, you find that both 2 and 4 spaces
-per indent level are used and even stuff like \t<space*4> inside of
-"if", without it being a function parameter.
+ fs/xfs/libxfs/xfs_rtbitmap.c |  4 ++++
+ fs/xfs/xfs_mount.h           |  6 ++++++
+ fs/xfs/xfs_rtalloc.c         | 27 +++++++++++++++++++++++----
+ 3 files changed, 33 insertions(+), 4 deletions(-)
 
-And the indentation of the parameters will change anyway, as we have
-parameters indented with tabs only, and with spaces only, and with
-some mix that makes no sense unless you configure your editor to show
-\t as an odd number of spaces except on the first Thursday of a month,
-but only on years that make a power of 2... Same as the rest of the
-code. :-) So I expect the resulting set to be roughly the same size as
-it is now. But I will break the patch by component, it should pass
-through then.
-
-Thanks,
-Jan
-
-
->
-> This will be a much smaller set of cleanups than a blanket
-> space-to-tab script does...
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
+index b228c821bae6..6d4990717cee 100644
+--- a/fs/xfs/libxfs/xfs_rtbitmap.c
++++ b/fs/xfs/libxfs/xfs_rtbitmap.c
+@@ -505,6 +505,10 @@ xfs_rtmodify_summary_int(
+ 		uint first = (uint)((char *)sp - (char *)bp->b_addr);
+ 
+ 		*sp += delta;
++		if (*sp == 0 && log == mp->m_rsum_cache[bbno])
++			mp->m_rsum_cache[bbno]++;
++		if (*sp != 0 && log < mp->m_rsum_cache[bbno])
++			mp->m_rsum_cache[bbno] = log;
+ 		xfs_trans_log_buf(tp, bp, first, first + sizeof(*sp) - 1);
+ 	}
+ 	if (sum)
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 7964513c3128..2b626a4b4824 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -89,6 +89,12 @@ typedef struct xfs_mount {
+ 	int			m_logbsize;	/* size of each log buffer */
+ 	uint			m_rsumlevels;	/* rt summary levels */
+ 	uint			m_rsumsize;	/* size of rt summary, bytes */
++	/*
++	 * Cache of rt summary level per bitmap block with the invariant that
++	 * m_rsum_cache[bbno] <= the minimum i for which rsum[i][bbno] != 0.
++	 * Reads and writes are serialized by the rsumip inode lock.
++	 */
++	uint8_t			*m_rsum_cache;
+ 	struct xfs_inode	*m_rbmip;	/* pointer to bitmap inode */
+ 	struct xfs_inode	*m_rsumip;	/* pointer to summary inode */
+ 	struct xfs_inode	*m_rootip;	/* pointer to root directory */
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 926ed314ffba..351bdc6a84cb 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -64,8 +64,12 @@ xfs_rtany_summary(
+ 	int		log;		/* loop counter, log2 of ext. size */
+ 	xfs_suminfo_t	sum;		/* summary data */
+ 
++	/* There are no extents at levels < m_rsum_cache[bbno]. */
++	if (low < mp->m_rsum_cache[bbno])
++		low = mp->m_rsum_cache[bbno];
++
+ 	/*
+-	 * Loop over logs of extent sizes.  Order is irrelevant.
++	 * Loop over logs of extent sizes.
+ 	 */
+ 	for (log = low; log <= high; log++) {
+ 		/*
+@@ -80,13 +84,17 @@ xfs_rtany_summary(
+ 		 */
+ 		if (sum) {
+ 			*stat = 1;
+-			return 0;
++			goto out;
+ 		}
+ 	}
+ 	/*
+ 	 * Found nothing, return failure.
+ 	 */
+ 	*stat = 0;
++out:
++	/* There were no extents at levels < log. */
++	if (log > mp->m_rsum_cache[bbno])
++		mp->m_rsum_cache[bbno] = log;
+ 	return 0;
+ }
+ 
+@@ -1187,8 +1195,8 @@ xfs_rtmount_init(
+ }
+ 
+ /*
+- * Get the bitmap and summary inodes into the mount structure
+- * at mount time.
++ * Get the bitmap and summary inodes and the summary cache into the mount
++ * structure at mount time.
+  */
+ int					/* error */
+ xfs_rtmount_inodes(
+@@ -1211,6 +1219,16 @@ xfs_rtmount_inodes(
+ 		return error;
+ 	}
+ 	ASSERT(mp->m_rsumip != NULL);
++	/*
++	 * The rsum cache is initialized to all zeroes, which trivially
++	 * satisfies the invariant.
++	 */
++	mp->m_rsum_cache = kvzalloc(sbp->sb_rbmblocks, GFP_KERNEL);
++	if (!mp->m_rsum_cache) {
++		xfs_irele(mp->m_rbmip);
++		xfs_irele(mp->m_rsumip);
++		return -ENOMEM;
++	}
+ 	return 0;
+ }
+ 
+@@ -1218,6 +1236,7 @@ void
+ xfs_rtunmount_inodes(
+ 	struct xfs_mount	*mp)
+ {
++	kvfree(mp->m_rsum_cache);
+ 	if (mp->m_rbmip)
+ 		xfs_irele(mp->m_rbmip);
+ 	if (mp->m_rsumip)
+-- 
+2.19.1
