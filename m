@@ -1,94 +1,132 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:11018 "EHLO
-        ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726310AbeK3Izr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Nov 2018 03:55:47 -0500
-Date: Fri, 30 Nov 2018 08:48:51 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] mkfs.xfs: don't go into multidisk mode if there is only
- one stripe
-Message-ID: <20181129214851.GU6311@dastard>
-References: <20181004175839.18736-1-idryomov@gmail.com>
- <24d229f3-1a75-a65d-5ad3-c8565cb32e76@sandeen.net>
- <20181004222952.GV31060@dastard>
- <CAOi1vP_U-QpABgs+a9oYpYvLWs4D2qVmff=-JEikn7S_=eCAXQ@mail.gmail.com>
- <67627995-714c-5c38-a796-32b503de7d13@sandeen.net>
- <20181005232710.GH12041@dastard>
- <CAOi1vP-Z7xZk1YvWHYWQGOHfyWccFCkyn8je0HBvGhGuUrXmaQ@mail.gmail.com>
- <20181006232037.GB18095@dastard>
- <36bc3f17-e7d1-ce8b-2088-36ff5d7b1e8b@sandeen.net>
- <0290ec9f-ab2b-7c1b-faaf-409d72f99e5f@gmail.com>
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:35794 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726104AbeKBWSd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Nov 2018 18:18:33 -0400
+Received: by mail-wr1-f68.google.com with SMTP id z16-v6so1959103wrv.2
+        for <linux-xfs@vger.kernel.org>; Fri, 02 Nov 2018 06:11:25 -0700 (PDT)
+Date: Fri, 2 Nov 2018 14:11:20 +0100
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] xfs_io: prevents the usage in FIFO files
+Message-ID: <20181102131120.jpflu5jhxxvpoucz@odin.usersys.redhat.com>
+References: <20181016094343.21102-1-cmaiolino@redhat.com>
+ <fa4344fc-31b1-8381-981c-d9c83daa981f@sandeen.net>
+ <20181101163209.GQ4135@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <0290ec9f-ab2b-7c1b-faaf-409d72f99e5f@gmail.com>
+In-Reply-To: <20181101163209.GQ4135@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ric Wheeler <ricwheeler@gmail.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Ilya Dryomov <idryomov@gmail.com>, xfs <linux-xfs@vger.kernel.org>, Mark Nelson <mnelson@redhat.com>, Eric Sandeen <sandeen@redhat.com>, Mike Snitzer <snitzer@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
 
-On Thu, Nov 29, 2018 at 08:53:39AM -0500, Ric Wheeler wrote:
-> On 10/6/18 8:14 PM, Eric Sandeen wrote:
-> >On 10/6/18 6:20 PM, Dave Chinner wrote:
-> >>>Can you give an example of a use case that would be negatively affected
-> >>>if this heuristic was switched from "sunit" to "sunit < swidth"?
-> >>Any time you only know a single alignment characteristic of the
-> >>underlying multi-disk storage. e.g. hardware RAID0/5/6 that sets
-> >>iomin = ioopt, multi-level RAID constructs where only the largest
-> >>alignment requirement is exposed, RAID1 devices exposing their chunk
-> >>size, remote replication chunk alignment (because remote rep. is
-> >>slow and so we need more concurrency to keep the pipeline full),
-> >>etc.
-> >So the tl;dr here is "given any iomin > 512, we should infer low seek
-> >latency and parallelism and adjust geometry accordingly?"
-> >
-> >-Eric
+Hi guys.
+
+On Thu, Nov 01, 2018 at 09:32:09AM -0700, Darrick J. Wong wrote:
+> On Thu, Nov 01, 2018 at 10:41:42AM -0500, Eric Sandeen wrote:
+> > On 10/16/18 4:43 AM, Carlos Maiolino wrote:
+> > 
+> > This seems a little too heavy-handed.  Operating on pipes is probably
+> > rare, but xfs_io is supposed to be a generic I/O tool.
 > 
-> Chiming in late here, but I do think that every decade or two (no
-> disrespect to xfs!), it is worth having a second look at how the
-> storage has changed under us.
+> Agreed.  Suppose I want to try reflinking a pipe in an xfstest? ;)
 > 
-> The workload that has lots of file systems pounding on a shared
-> device for example is one way to lay out container storage.
+> > Today I can do for example:
+> > 
+> > # mkfifo pipe
+> > 
+> > # xfs_io -c stat pipe
+> > fd.path = "pipe"
+> > fd.flags = non-sync,non-direct,read-write
+> > stat.ino = 102077957
+> > stat.type = fifo
+> > stat.size = 0
+> > stat.blocks = 0
+> > 
+> > What xfs_io command was stuck in particular?  These all seem to be handled uh, at least without a hang, if not correctly:
+> > 
+> > # xfs_io -c "pread 0 4096" pipe
+> > pread: Illegal seek
+> > # xfs_io -c "pwrite 0 4096" pipe
+> > pwrite: Illegal seek
+> > # xfs_io -c "bmap" pipe
+> > foreign file active, bmap command is for XFS filesystems only
+> > 
 
-The problem is that defaults can't cater for every use case.
-And in this case, we've got nothing to tell us that this is
-aggregated/shared storage rather than "the fileystem owns the
-entire device".
+I just did a quick look at the FIFO code in kernel to better understand what's
+going on and what can we do about it.
 
-> No argument about documenting how to fix this with command line
-> tweaks for now, but maybe this would be a good topic for the next
-> LSF/MM shared track of file & storage people to debate?
+What happens is if the pipe is opened for Write only or read only, it will block
+waiting for the other side of the pipe (if NONBLOCK isn't used). While, if the
+file is opened as O_RDWR, the same is not true, as the following snippet taken
+from fifo_open():
 
-Doubt it - this is really only an XFS problem at this point.
+===============================
 
-i.e. if we can't infer what the user wants from existing
-information, then I don't see how the storage is going to be able to
-tell us anything different, either.  i.e. somewhere in the stack the
-user is going to have to tell the block device that this is
-aggregated storage.
+	switch (filp->f_mode) {
+		case FMODE_READ:
+		...
+		if (!is_pipe && !pipe->writers) {
+			if (wait_for_partner(pipe, &pipe->w_counter))
+		...
 
-But even then, if it's aggregated solid state storage, we still want
-to make use of the concurency on increased AG count because there is
-no seek penalty like spinning drives end up with. Or if the
-aggregated storage is thinly provisioned, the AG count of filesystem
-just doesn't matter because the IO is going to be massively
-randomised (i.e take random seek penalties) by the thinp layout.
+		case FMODE_WRITE:
+...
+			if (!is_pipe && !pipe->readers) {
+				if (wait_for_partner(pipe, &pipe->r_counter))
+...
+.
+.
+	case FMODE_READ | FMODE_WRITE:
+	/*
+	 *  O_RDWR
+	 *  POSIX.1 leaves this case "undefined" when O_NONBLOCK is set.
+	 *  This implementation will NEVER block on a O_RDWR open, since
+	 *  the process can at least talk to itself.
+	 */
 
-So there's really no good way of "guessing" whether aggregated
-storage should or shouldn't use elevated AG counts even if the
-storage says "this is aggregated storage". The user still has to
-give us some kind of explict hint about how the filesystem should
-be configured.
+		pipe->readers++;
+		pipe->writers++;
+		pipe->r_counter++;
+		pipe->w_counter++;
 
-What we need is for a solid, reliable detection hueristic to be
-suggested by the people that need this functionality before there's
-anything we can talk about.
+		if (pipe->readers == 1 || pipe->writers == 1)
+			wake_up_partner(pipe);
+		break;
 
-Cheers,
+================================
 
-Dave.
+So, I was wondering if maybe, we should only deny the usage of pipes when
+`xfs_io -r` is used? Or should we keep the granularity of each command having
+its own decision if it's allowed over pipes or not.
+Or even a new argument allowing the usage of pipes or not (I'm not a fan of new
+arguments, but this is still a feasible option).
+
+Cheers
+
+
+> > (?!)
+> > 
+> > Oh, this one is interesting ;)
+> > 
+> > # xfs_io -c "fiemap" pipe
+> > pipe:
+> > xfs_io: ioctl(FS_IOC_FIEMAP) ["pipe"]: Structure needs cleaning
+> > 
+> > ...
+> > 
+> > [149881.306316] XFS (dm-0): Internal error xfs_bmapi_read at line 3817 of file fs/xfs/libxfs/xfs_bmap.c.  Caller xfs_file_iomap_begin+0x16c/0x9f0 [xfs]
+> > 
+> > 
+> > (eek?)
+> 
+> /me suspects we should change the vfs ioctl_fiemap() to return zero
+> records (or EOPNOTSUPP?) for non-file, non-dir fds...
+> 
+> --D
+> 
+
 -- 
-Dave Chinner
-david@fromorbit.com
+Carlos
